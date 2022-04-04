@@ -103,8 +103,7 @@
 
 .mono {
   font-family: var(--ifm-font-family-monospace);
-  font-family: var(--ifm-font-family-monospace);
-  font-size: var(--ifm-code-font-size);
+  font-size: 14px;
 }
 
 /** Hide sidebar scrollbars **/

@@ -173,10 +173,7 @@ export class Stack extends cdk.Stack {
     });
   }
 
-  /**
-   * @internal
-   */
-  public addConstructsMetadata(metadata: any): void {
+  addConstructsMetadata(metadata: any): void {
     this.metadata.addMetadata("sst:constructs", metadata);
   }
 

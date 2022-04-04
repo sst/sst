@@ -189,7 +189,7 @@ async function run(json) {
         lines.push(
           `${signature.name}(${signature.parameters
             .map(
-              (p) => `${p.name}: ${"name" in p.type ? p.type.name : "unknown"}`
+              (p) => `${p.name}`
             )
             .join(", ")})`
         );
@@ -201,6 +201,7 @@ async function run(json) {
           lines.push(
             `- __${parameter.name}__ ${renderType(
               file,
+              json.children,
               parameter.name,
               parameter.type
             )}`
@@ -235,7 +236,7 @@ async function run(json) {
     lines.push(
       `An instance of \`${construct.name}\` has the following properties.`
     );
-    lines.push(...renderProperties(file, construct.children, "", true));
+    lines.push(...renderProperties(file, json.children, construct.children, "", true));
 
     // Methods
     const methods =
@@ -257,11 +258,8 @@ async function run(json) {
           lines.push("```ts");
           lines.push(
             `${signature.name}(${signature.parameters
-              ?.map(
-                (p) =>
-                  `${p.name}: ${"name" in p.type ? p.type.name : "unknown"}`
-              )
-              .join(", ")})`
+              ?.map((p) => `${p.name}`)
+              .join(", ") || ""})`
           );
           lines.push("```");
           if (signature.parameters) {
@@ -271,6 +269,7 @@ async function run(json) {
               lines.push(
                 `- __${parameter.name}__ ${renderType(
                   file,
+                  json.children,
                   parameter.name,
                   parameter.type
                 )}`
@@ -308,7 +307,7 @@ async function run(json) {
         if (examples.length) {
           hoisted.push(...examples.map(renderTag));
         }
-        hoisted.push(...renderProperties(file, child.children));
+        hoisted.push(...renderProperties(file, json.children, child.children));
       }
     }
 
@@ -324,32 +323,24 @@ function renderTag(tag) {
   return tag.text;
 }
 
+
 /**
  * @param file {JSONOutput.DeclarationReflection}
+ * @param files {JSONOutput.DeclarationReflection[]}
  * @param prefix {string}
  * @param parameter {JSONOutput.ParameterReflection["type"]}
  *
  * @returns {string}
  */
-function renderType(file, prefix, parameter) {
-  return [renderTypeInner(file, prefix, parameter)].join("");
-}
-
-
-/**
- * @param file {JSONOutput.DeclarationReflection}
- * @param prefix {string}
- * @param parameter {JSONOutput.ParameterReflection["type"]}
- *
- * @returns {string}
- */
-function renderTypeInner(file, prefix, parameter) {
+function renderType(file, files, prefix, parameter) {
   if (!parameter) throw new Error("No parameter");
   if (!parameter.type) throw new Error(`No type for ${parameter}`);
+  if (parameter.type === "conditional")
+    return renderType(file, files, prefix, parameter.checkType)
   if (parameter.type === "array")
     return (
       "<span class='mono'>Array&lt;" +
-      renderTypeInner(file, prefix, parameter.elementType) +
+      renderType(file, files, prefix, parameter.elementType) +
       "&gt;</span>"
     );
   if (parameter.type === "intrinsic")
@@ -371,21 +362,21 @@ function renderTypeInner(file, prefix, parameter) {
     const sig = parameter.declaration.signatures[0];
     if (sig.kind === ReflectionKind.CallSignature) {
       return `${sig.parameters
-        .map((p) => renderTypeInner(file, prefix, p.type))
-        .join(", ")} => ${renderTypeInner(file, prefix, sig.type)}`;
+        .map((p) => renderType(file, files, prefix, p.type))
+        .join(", ")} => ${renderType(file, files, prefix, sig.type)}`;
     }
   }
   if (parameter.type === "reflection" && prefix) {
     return (
       "\n" +
-      renderProperties(file, parameter.declaration?.children, prefix).join("\n")
+      renderProperties(file, files, parameter.declaration?.children, prefix).join("\n")
     );
   }
   if (parameter.type === "union") {
     return (
       "<span class='mono'>" +
       parameter.types
-        .map((t) => renderTypeInner(file, prefix, t))
+        .map((t) => renderType(file, files, prefix, t))
         .filter((x) => x)
         .join(" | ") +
       "</span>"
@@ -394,7 +385,7 @@ function renderTypeInner(file, prefix, parameter) {
   if (parameter.type === "reference") {
     if (parameter.package === "typescript")
       return `<span class="mono">${parameter.name}&lt;${parameter.typeArguments
-        .map((x) => renderTypeInner(file, prefix, x))
+        .map((x) => renderType(file, files, prefix, x))
         .join(", ")}&gt;</span>`;
 
     if (parameter.package) {
@@ -422,25 +413,21 @@ function renderTypeInner(file, prefix, parameter) {
         const sig = cons.signatures?.find(x => x.kindString === "Constructor signature")
         if (sig) {
           const param = sig.typeParameter?.find(x => x.name === parameter.name)
-          if (param) return renderType(file, prefix, param.type)
+          if (param) return renderType(file, files, prefix, param.type)
         }
       }
     }
-    /*
-    if (GENERIC_MAP[parameter.name])
-      return `<span class="mono">${GENERIC_MAP[parameter.name]}</span>`;
-    */
 
     const id = parameter.id;
-    const ref = file.children?.find((c) => c.id === id);
+    const ref = files.flatMap(x => x.children || []).find((c) => c.id === id && c.kindString === "Type alias")
     if (ref?.kindString === "Type alias")
-      return renderTypeInner(file, prefix, ref.type);
+      return renderType(file, files, prefix, ref.type);
 
     const link = (() => {
-      if (ref)
+      if (file.children?.find(c => c.id === id))
         return `#${parameter.name.toLowerCase()}`
-      if (parameter.name.startsWith("Function"))
-        return "Function"
+      if (parameter.name.startsWith("Function") && parameter.name !== "Function")
+        return "Function#" + parameter.name.toLowerCase()
       if (parameter.name === "Authorizers")
         return `<span class="mono">Record<string, [ApiAuthorizer]()></span>`
       return parameter.name
@@ -454,13 +441,14 @@ function renderTypeInner(file, prefix, parameter) {
 
 /**
  * @param file {JSONOutput.DeclarationReflection}
+ * @param files {JSONOutput.DeclarationReflection[]}
  * @param properties {JSONOutput.DeclarationReflection[]}
  * @param prefix {string}
  * @param onlyPublic {boolean}
  *
  * @returns {string}
  */
-function renderProperties(file, properties, prefix, onlyPublic) {
+function renderProperties(file, files, properties, prefix, onlyPublic) {
   const filtered =
     properties?.filter(
       (c) =>
@@ -482,7 +470,7 @@ function renderProperties(file, properties, prefix, onlyPublic) {
       lines.push(`### ${nextPrefix}${signature.flags.isOptional ? "?" : ""}\n`);
     lines.push(
       (signature.type?.type === "reflection" ? "" : "_Type_ : ") +
-        renderType(file, nextPrefix, signature.type) +
+        renderType(file, files, nextPrefix, signature.type) +
         "\n"
     );
     if (signature.comment) {
