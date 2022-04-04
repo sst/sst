@@ -60,7 +60,11 @@ export type Runtime =
   | "dotnetcore3.1"
   | "go1.x";
 
-export interface FunctionProps {
+export interface FunctionProps
+  extends Omit<
+    lambda.FunctionOptions,
+    "functionName" | "timeout" | "runtime" | "tracing" | "layers"
+  > {
   /**
    * Override the automatically generated name
    *
