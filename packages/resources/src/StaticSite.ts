@@ -261,9 +261,10 @@ export interface StaticSiteProps {
   waitForInvalidation?: boolean;
 }
 
-export type StaticSiteDomainProps = BaseSiteDomainProps;
-export type StaticSiteReplaceProps = BaseSiteReplaceProps;
-export type StaticSiteCdkDistributionProps = BaseSiteCdkDistributionProps;
+export interface StaticSiteDomainProps extends BaseSiteDomainProps {}
+export interface StaticSiteReplaceProps extends BaseSiteReplaceProps {}
+export interface StaticSiteCdkDistributionProps
+  extends BaseSiteCdkDistributionProps {}
 
 /////////////////////
 // Construct
