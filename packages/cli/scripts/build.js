@@ -1,6 +1,7 @@
 "use strict";
 
 const chalk = require("chalk");
+const paths = require("./util/paths");
 const { logger, Stacks } = require("@serverless-stack/core");
 
 const { synth } = require("./util/cdkHelpers");
