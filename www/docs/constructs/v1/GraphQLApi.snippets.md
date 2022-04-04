@@ -61,4 +61,4 @@ new GraphQLApi(this, "Api", {
 
 ### More examples
 
-For more examples, refer to the [`Api`](Api.md#examples) examples.
+For more examples, refer to the [`Api`](Api#examples) examples.
