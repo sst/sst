@@ -384,7 +384,7 @@ export interface ApiProps<
      *
      * new Api(stack, "Api", {
      *   cdk: {
-     *     httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
+     *     httpApi: HttpApi.fromHttpApiAttributes(stack, "MyHttpApi", {
      *       httpApiId,
      *     }),
      *   }
@@ -396,7 +396,7 @@ export interface ApiProps<
      * import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
      *
      * new Api({
-     *   httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
+     *   httpApi: HttpApi.fromHttpApiAttributes(stack, "MyHttpApi", {
      *     httpApiId,
      *   }),
      * });
@@ -445,7 +445,7 @@ interface ApiBaseRouteProps<AuthorizersKeys = never> {
  *
  * @example
  * ```js
- * api.addRoutes(this, {
+ * api.addRoutes(stack, {
  *   "GET /notes/{id}": {
  *     type: "function",
  *     function: "src/get.main",
@@ -474,7 +474,7 @@ export interface ApiFunctionRouteProps<AuthorizersKeys = never>
  *
  * @example
  * ```js
- * api.addRoutes(this, {
+ * api.addRoutes(stack, {
  *   "GET /notes/{id}": {
  *     type: "url",
  *     url: "https://example.com/notes/{id}",
@@ -505,7 +505,7 @@ export interface ApiHttpRouteProps<AuthorizersKeys>
  *
  * @example
  * ```js
- * api.addRoutes(this, {
+ * api.addRoutes(stack, {
  *   "GET /notes/{id}": {
  *     type: "alb",
  *     cdk: {

@@ -10,7 +10,12 @@ import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations-alpha"
 import { App } from "./App";
 import { Stack } from "./Stack";
 import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
-import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
+import {
+  Function as Fn,
+  FunctionProps,
+  FunctionInlineDefinition,
+  FunctionDefinition,
+} from "./Function";
 import { Permissions } from "./util/permission";
 import * as apigV2Domain from "./util/apiGatewayV2Domain";
 import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog";
@@ -19,8 +24,8 @@ import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog";
 // Interfaces
 /////////////////////
 
-export type WebSocketApiDomainProps = apigV2Domain.CustomDomainProps
-export type WebSocketApiAccessLogProps = apigV2AccessLog.AccessLogProps
+export type WebSocketApiDomainProps = apigV2Domain.CustomDomainProps;
+export type WebSocketApiAccessLogProps = apigV2AccessLog.AccessLogProps;
 
 export interface WebSocketApiProps {
   cdk?: {
@@ -70,7 +75,10 @@ export interface WebSocketApiProps {
    * })
    * ```
    */
-  routes?: Record<string, FunctionDefinition>;
+  routes?: Record<
+    string,
+    FunctionInlineDefinition | WebSocketApiFunctionRouteProps
+  >;
   /**
    * Enable CloudWatch access logs for this API
    *
@@ -157,6 +165,26 @@ export interface WebSocketApiProps {
      */
     function?: FunctionProps;
   };
+}
+
+/**
+ * Specify a function route handler and configure additional options
+ *
+ * @example
+ * ```js
+ * api.addRoutes(stack, {
+ *   sendMessage : {
+ *     function: "src/sendMessage.main",
+ *   }
+ * });
+ * ```
+ */
+export interface WebSocketApiFunctionRouteProps {
+  type?: "function";
+  /**
+   *The function definition used to create the function for this route.
+   */
+  function: FunctionDefinition;
 }
 
 /**
@@ -306,9 +334,10 @@ export class WebSocketApi extends Construct implements SSTConstruct {
    */
   public addRoutes(
     scope: Construct,
-    routes: {
-      [key: string]: FunctionDefinition;
-    }
+    routes: Record<
+      string,
+      FunctionInlineDefinition | WebSocketApiFunctionRouteProps
+    >
   ): void {
     Object.keys(routes).forEach((routeKey: string) => {
       // add route
@@ -504,7 +533,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
   private addRoute(
     scope: Construct,
     routeKey: string,
-    routeValue: FunctionDefinition
+    routeValue: FunctionInlineDefinition | WebSocketApiFunctionRouteProps
   ): Fn {
     ///////////////////
     // Normalize routeKey
@@ -520,7 +549,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
     const lambda = Fn.fromDefinition(
       scope,
       routeKey,
-      routeValue,
+      Fn.isInlineDefinition(routeValue) ? routeValue : routeValue.function,
       this.props.defaults?.function,
       `The "defaults.function" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the routes using FunctionProps, so the Api construct can apply the "defaults.function" to them.`
     );

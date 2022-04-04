@@ -739,14 +739,14 @@ test("authorizationType-custom: override identitySource", async () => {
   });
 });
 
-test("routes-undefined", async () => {
+test("routes: undefined", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api");
   countResources(stack, "AWS::ApiGatewayV2::Api", 1);
   countResources(stack, "AWS::ApiGatewayV2::Route", 0);
 });
 
-test("routes-empty", async () => {
+test("routes: empty", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api", {
     routes: {},
@@ -755,7 +755,7 @@ test("routes-empty", async () => {
   countResources(stack, "AWS::ApiGatewayV2::Route", 0);
 });
 
-test("route-string", async () => {
+test("routes: route is string", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api", {
     routes: {
@@ -771,7 +771,7 @@ test("route-string", async () => {
   });
 });
 
-test("route-string-with-defaultFunctionProps", async () => {
+test("routes: route is string-with-defaultFunctionProps", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api", {
     routes: {
@@ -798,7 +798,7 @@ test("route-string-with-defaultFunctionProps", async () => {
   });
 });
 
-test("route-Function", async () => {
+test("routes: route is Function", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
   new WebSocketApi(stack, "Api", {
@@ -812,7 +812,7 @@ test("route-Function", async () => {
   });
 });
 
-test("route-Function-with-defaultFunctionProps", async () => {
+test("routes: route is Function-with-defaultFunctionProps", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
   expect(() => {
@@ -829,12 +829,14 @@ test("route-Function-with-defaultFunctionProps", async () => {
   }).toThrow(/The "defaults.function" cannot be applied/);
 });
 
-test("route-FunctionProps", async () => {
+test("routes: route is prop", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api", {
     routes: {
       $connect: {
-        handler: "test/lambda.handler",
+        function: {
+          handler: "test/lambda.handler",
+        },
       },
     },
   });
@@ -843,12 +845,14 @@ test("route-FunctionProps", async () => {
   });
 });
 
-test("route-FunctionProps-with-defaultFunctionProps", async () => {
+test("routes: route is prop-with-defaultFunctionProps", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api", {
     routes: {
       $connect: {
-        handler: "test/lambda.handler",
+        function: {
+          handler: "test/lambda.handler",
+        },
       },
     },
     defaults: {
@@ -863,15 +867,17 @@ test("route-FunctionProps-with-defaultFunctionProps", async () => {
   });
 });
 
-test("route-FunctionProps-with-defaultFunctionProps-override", async () => {
+test("routes: route is prop-with-defaultFunctionProps-override", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api", {
     routes: {
       $connect: {
-        handler: "test/lambda.handler",
-        timeout: 5,
-        environment: {
-          keyA: "valueA",
+        function: {
+          handler: "test/lambda.handler",
+          timeout: 5,
+          environment: {
+            keyA: "valueA",
+          },
         },
       },
     },
@@ -897,7 +903,7 @@ test("route-FunctionProps-with-defaultFunctionProps-override", async () => {
   });
 });
 
-test("route-FunctionProps-with-defaultFunctionProps-override-with-app-defaultFunctionProps", async () => {
+test("routes: route is prop-with-defaultFunctionProps-override-with-app-defaultFunctionProps", async () => {
   const app = new App({ name: "websocket" });
   app.setDefaultFunctionProps({
     timeout: 15,
@@ -908,10 +914,12 @@ test("route-FunctionProps-with-defaultFunctionProps-override-with-app-defaultFun
   new WebSocketApi(stack, "Api", {
     routes: {
       $connect: {
-        handler: "test/lambda.handler",
-        timeout: 5,
-        environment: {
-          keyA: "valueA",
+        function: {
+          handler: "test/lambda.handler",
+          timeout: 5,
+          environment: {
+            keyA: "valueA",
+          },
         },
       },
     },
