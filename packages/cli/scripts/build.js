@@ -1,7 +1,7 @@
 "use strict";
 
 const chalk = require("chalk");
-const { logger } = require("@serverless-stack/core");
+const { logger, Stacks } = require("@serverless-stack/core");
 
 const { synth } = require("./util/cdkHelpers");
 
@@ -28,5 +28,10 @@ module.exports = async function (argv, config, cliInfo) {
   logger.info(chalk.grey("Synthesizing CDK"));
 
   const { stacks } = await synth(cliInfo.cdkOptions);
+  if (config.main.endsWith(".js")) {
+    const errors = Stacks.check(paths.appPath, config);
+    if (errors.length)
+      console.log(Stacks.formatDiagnostics(errors).join("\n") + "\n");
+  }
   printStacks(stacks, cliInfo.yarn);
 };
