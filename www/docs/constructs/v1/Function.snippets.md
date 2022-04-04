@@ -1,4 +1,4 @@
-### Configure Bundling a Node.js Function
+### Bundling Node.js Functions
 
 #### Disabling bundling
 
@@ -65,7 +65,7 @@ new Function(this, "MySnsLambda", {
 });
 ```
 
-### Configure Bundling a Python Function
+### Bundling Python Functions
 
 ```js
 new Function(this, "MySnsLambda", {
@@ -94,14 +94,23 @@ new Function(this, "MyApiLambda", {
 });
 ```
 
-### Configuring a Dead Letter Queue
+### Setting default props
 
-```js {5}
-const queue = new Queue(this, "MyDLQ");
+If you have properties that need to be applied to all the functions in your app, they can be set on the App construct using the `setDefaultFunctionProps` method.
 
-new Function(this, "MyApiLambda", {
-  handler: "src/api.main",
-  deadLetterQueue: queue.cdk.queue,
+```js
+app.setDefaultFunctionProps({
+  timeout: 20,
+  memorySize: 512,
+});
+```
+
+Similarly, you can apply properties to all the functions in a specific Stack.
+
+```js
+stack.setDefaultFunctionProps({
+  timeout: 20,
+  memorySize: 512,
 });
 ```
 
@@ -122,7 +131,32 @@ new Function(this, "MyApiLambda", {
 
 The `API_KEY` environment variable can be accessed as `process.env.API_KEY` within the Lambda function.
 
-### Configuring Provisioned Concurrency
+### Using IS_LOCAL environment variable
+
+```js
+export async function main(event) {
+  return {
+    statusCode: 200,
+    headers: { "Content-Type": "text/plain" },
+    body: `Hello, World! Are we running locally: ${!!process.env.IS_LOCAL}`,
+  };
+}
+```
+
+### Advanced examples
+
+#### Configuring a Dead Letter Queue
+
+```js {5}
+const queue = new Queue(this, "MyDLQ");
+
+new Function(this, "MyApiLambda", {
+  handler: "src/api.main",
+  deadLetterQueue: queue.cdk.queue,
+});
+```
+
+#### Configuring Provisioned Concurrency
 
 ```js {3-5,8}
 const fn = new Function(this, "MyApiLambda", {
@@ -136,15 +170,3 @@ const version = fn.currentVersion;
 ```
 
 Note that Provisioned Concurrency needs to be configured on a specific Function version. By default, versioning is not enabled, and setting `currentVersionOptions` has no effect. By accessing the `currentVersion` property, a version is automatically created with the provided options. 
-
-### Use the IS_LOCAL environment variable
-
-```js
-export async function main(event) {
-  return {
-    statusCode: 200,
-    headers: { "Content-Type": "text/plain" },
-    body: `Hello, World! Are we running locally: ${!!process.env.IS_LOCAL}`,
-  };
-}
-```

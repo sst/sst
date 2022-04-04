@@ -109,7 +109,7 @@ export interface StaticSiteProps {
      * });
      * ```
      */
-    distribution?: BaseSiteCdkDistributionProps;
+    distribution?: StaticSiteCdkDistributionProps;
   };
   /**
    * Path to the directory where the website source is located.
@@ -211,7 +211,7 @@ export interface StaticSiteProps {
    * });
    * ```
    */
-  replaceValues?: BaseSiteReplaceProps[];
+  replaceValues?: StaticSiteReplaceProps[];
   /**
    * The customDomain for this website. SST supports domains that are hosted either on [Route 53](https://aws.amazon.com/route53/) or externally.
    *
@@ -294,10 +294,9 @@ export interface StaticSiteProps {
   waitForInvalidation?: boolean;
 }
 
-/**
- * Used to configure StaticSite domain properties
- */
-export type StaticSiteDomainProps = BaseSiteDomainProps;
+export type StaticSiteDomainProps = BaseSiteDomainProps
+export type StaticSiteReplaceProps = BaseSiteReplaceProps
+export type StaticSiteCdkDistributionProps = BaseSiteCdkDistributionProps
 
 /////////////////////
 // Construct
@@ -943,8 +942,8 @@ export class StaticSite extends Construct implements SSTConstruct {
   // Helper Functions
   /////////////////////
 
-  private getS3ContentReplaceValues(): BaseSiteReplaceProps[] {
-    const replaceValues: BaseSiteReplaceProps[] =
+  private getS3ContentReplaceValues(): StaticSiteReplaceProps[] {
+    const replaceValues: StaticSiteReplaceProps[] =
       this.props.replaceValues || [];
 
     Object.entries(this.props.environment || {})

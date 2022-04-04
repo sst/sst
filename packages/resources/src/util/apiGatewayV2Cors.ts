@@ -29,11 +29,38 @@ export const CorsPropsSchema = z.object({
   maxAge: z.string().optional(),
 });
 export interface CorsProps {
+  /**
+   * Specifies whether credentials are included in the CORS request.
+   */
   allowCredentials?: boolean;
+  /**
+   * The collection of allowed headers.
+   */
   allowHeaders?: string[];
+  /**
+   * The collection of allowed HTTP methods.
+   */
   allowMethods?: (keyof typeof apig.CorsHttpMethod)[];
+  /**
+   * The collection of allowed origins.
+   *
+   * @example
+   * ```js
+   * // Allow all origins
+   * allowOrigins: ["*"]
+   *
+   * // Allow specific origins. Note that the url protocol, ie. "https://", is required.
+   * allowOrigins: ["https://domain.com"]
+   * ```
+   */
   allowOrigins?: string[];
+  /**
+   * The collection of exposed headers.
+   */
   exposeHeaders?: string[];
+  /**
+   * The duration that the browser should cache preflight request results.
+   */
   maxAge?: Duration;
 }
 

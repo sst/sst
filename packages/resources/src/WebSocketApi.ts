@@ -19,6 +19,9 @@ import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog";
 // Interfaces
 /////////////////////
 
+export type WebSocketApiDomainProps = apigV2Domain.CustomDomainProps
+export type WebSocketApiAccessLogProps = apigV2AccessLog.AccessLogProps
+
 export interface WebSocketApiProps {
   cdk?: {
     /**
@@ -87,7 +90,7 @@ export interface WebSocketApiProps {
    * });
    * ```
    */
-  accessLog?: boolean | string | apigV2AccessLog.AccessLogProps;
+  accessLog?: boolean | string | WebSocketApiAccessLogProps;
   /**
    * Specify a custom domain to use in addition to the automatically generated one. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/)
    *
@@ -109,7 +112,7 @@ export interface WebSocketApiProps {
    * })
    * ```
    */
-  customDomain?: string | apigV2Domain.CustomDomainProps;
+  customDomain?: string | WebSocketApiDomainProps;
 
   /**
    * The default authorizer for the API.

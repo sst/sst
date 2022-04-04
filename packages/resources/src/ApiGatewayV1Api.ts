@@ -37,6 +37,8 @@ const allowedMethods = [
 // Interfaces
 /////////////////////
 
+export type ApiGatewayV1ApiAccessLogProps = apigV1AccessLog.AccessLogProps
+
 export interface ApiGatewayV1ApiProps<
   Authorizers extends Record<string, ApiGatewayV1ApiAuthorizer> = Record<
     string,
@@ -137,7 +139,7 @@ export interface ApiGatewayV1ApiProps<
    * });
    * ```
    */
-  accessLog?: boolean | string | apigV1AccessLog.AccessLogProps;
+  accessLog?: boolean | string | ApiGatewayV1ApiAccessLogProps;
   /**
    * Specify a custom domain to use in addition to the automatically generated one. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/)
    *

@@ -211,7 +211,16 @@ export class App extends cdk.App {
     }
   }
 
-  logicalPrefixedName(logicalName: string): string {
+  /**
+   * Use this method to prefix resource names in your stacks to make sure they don't thrash when deployed to different stages in the same AWS account. This method will prefix a given resource name with the stage and app name. Using the format `${stage}-${name}-${logicalName}`.
+   * @example
+   * ```js
+   * console.log(app.logicalPrefixedName("myTopic"));
+   *
+   * // dev-my-app-myTopic
+   * ```
+   */
+  public logicalPrefixedName(logicalName: string): string {
     const namePrefix = this.name === "" ? "" : `${this.name}-`;
     return `${this.stage}-${namePrefix}${logicalName}`;
   }
