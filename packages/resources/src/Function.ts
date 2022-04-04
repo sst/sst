@@ -15,8 +15,7 @@ import { App } from "./App";
 import { Stack } from "./Stack";
 import { SSTConstruct } from "./Construct";
 import { Permissions, attachPermissionsToRole } from "./util/permission";
-import { State } from "@serverless-stack/core";
-import { Runtime } from "@serverless-stack/core";
+import { State, Runtime } from "@serverless-stack/core";
 
 const supportedRuntimes = [
   lambda.Runtime.NODEJS,
@@ -498,18 +497,6 @@ export class Function extends lambda.Function implements SSTConstruct {
   private readonly localId: string;
 
   constructor(scope: Construct, id: string, props: FunctionProps) {
-    // Normalize runtime
-    let runtime = props.runtime || lambda.Runtime.NODEJS_12_X;
-    const runtimeStr =
-      typeof runtime === "string" ? runtime : runtime.toString();
-    const runtimeClass = supportedRuntimes.find(
-      (per) => per.toString() === runtimeStr
-    );
-    if (!runtimeClass) {
-      throw new Error(
-        `The specified runtime is not supported for sst.Function. Only NodeJS, Python, Go, and .NET runtimes are currently supported.`
-      );
-    }
     const root = scope.node.root as App;
     const stack = Stack.of(scope) as Stack;
 
@@ -531,6 +518,7 @@ export class Function extends lambda.Function implements SSTConstruct {
     const handler = props.handler;
     const timeout = cdk.Duration.seconds(props.timeout || 10);
     const srcPath = Function.normalizeSrcPath(props.srcPath || ".");
+    const runtime = Function.normalizeRuntime(props.runtime);
     const memorySize = props.memorySize || 1024;
     const tracing =
       lambda.Tracing[
@@ -545,11 +533,9 @@ export class Function extends lambda.Function implements SSTConstruct {
       throw new Error(`No handler defined for the "${id}" Lambda function`);
     }
 
-    runtime = runtimeClass;
-
     // Validate input
-    const isNodeRuntime = runtimeStr.startsWith("nodejs");
-    const isPythonRuntime = runtimeStr.startsWith("python");
+    const isNodeRuntime = runtime.toString().startsWith("nodejs");
+    const isPythonRuntime = runtime.toString().startsWith("python");
     if (isNodeRuntime) {
       bundle = bundle === undefined ? true : props.bundle;
       if (!bundle && srcPath === ".") {
@@ -769,6 +755,19 @@ export class Function extends lambda.Function implements SSTConstruct {
       }
       return Function.handleImportedLayer(scope, layer);
     });
+  }
+
+  static normalizeRuntime(runtime?: string): lambda.Runtime {
+    runtime = runtime || "nodejs14.x";
+    const runtimeClass = supportedRuntimes.find(
+      (per) => per.toString() === runtime
+    );
+    if (!runtimeClass) {
+      throw new Error(
+        `The specified runtime is not supported for sst.Function. Only NodeJS, Python, Go, and .NET runtimes are currently supported.`
+      );
+    }
+    return runtimeClass;
   }
 
   static normalizeSrcPath(srcPath: string): string {
