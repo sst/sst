@@ -182,9 +182,9 @@ export interface ApiLambdaAuthorizer extends ApiBaseAuthorizer {
   };
 }
 
-export type ApiCorsProps = apigV2Cors.CorsProps;
-export type ApiDomainProps = apigV2Domain.CustomDomainProps;
-export type ApiAccessLogProps = apigV2AccessLog.AccessLogProps;
+export interface ApiCorsProps extends apigV2Cors.CorsProps {}
+export interface ApiDomainProps extends apigV2Domain.CustomDomainProps {}
+export interface ApiAccessLogProps extends apigV2AccessLog.AccessLogProps {}
 
 export interface ApiProps<
   Authorizers extends Record<string, ApiAuthorizer> = Record<string, never>,
