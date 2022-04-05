@@ -4,12 +4,15 @@ description: "Docs for the constructs in the @serverless-stack/resources package
 ---
 
 ## Goal
-The v1 constructs were restrucrtured with the following goals in mind:
-1. Consistent interface for customizing underlying AWS resources.
-1. Consistent interface to underlying AWS resource name and ARNs via properties.
-1. Reduce the need to import CDK libraries.
-1. Laying the foundation for providing full typesafey.
-1. Full support for inline TS Doc.
+
+The v1 SST constructs were restrucrtured with the following goals in mind:
+
+1. Consistent interfaces for:
+   - Customizing the underlying AWS resources
+   - Accessing the underlying AWS resource names and ARNs
+2. Reduce the need for CDK imports
+3. Complete support for inline TS Docs
+4. Laying the foundation for full typesafey
 
 ## Steps
 1. Run `npx sst update 1.0.0-beta.3`
