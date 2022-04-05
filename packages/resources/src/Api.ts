@@ -1010,12 +1010,7 @@ export class Api<
       }
       if ("handler" in routeValue)
         throw new Error(
-          `Function definition must be nested under the "function" key in the route props. For example:` +
-          `{` +
-          `  function: {` +
-          `    handler: "myfunc.handler"` +
-          `  }` +
-          `}`
+          `Function definition must be nested under the "function" key in the route props for "${routeKey}". ie. { function: { handler: "myfunc.handler" } }`
         );
       throw new Error(`Invalid route type for "${routeKey}". Must be one of: alb, url, function`);
     })();

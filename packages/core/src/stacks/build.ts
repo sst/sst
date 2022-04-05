@@ -79,7 +79,7 @@ export function formatDiagnostics(list: Diagnostic[]) {
         `${line - 1}. ${diagnostic.file.text.split("\n")[line - 1]}`,
         chalk.yellow(`${line}. ${diagnostic.file.text.split("\n")[line]}`),
         `${line + 1}. ${diagnostic.file.text.split("\n")[line + 1]}`,
-      ].join("\n\n");
+      ].join("\n");
     } else {
       return bottom(diagnostic.messageText);
     }

@@ -2,9 +2,9 @@
 
 const chalk = require("chalk");
 const paths = require("./util/paths");
-const { logger, Stacks } = require("@serverless-stack/core");
+const { logger } = require("@serverless-stack/core");
 
-const { synth } = require("./util/cdkHelpers");
+const { synth, validatePropsForJs } = require("./util/cdkHelpers");
 
 function printStacks(stacks, usingYarn) {
   const l = stacks.length;
@@ -29,10 +29,6 @@ module.exports = async function (argv, config, cliInfo) {
   logger.info(chalk.grey("Synthesizing CDK"));
 
   const { stacks } = await synth(cliInfo.cdkOptions);
-  if (config.main.endsWith(".js")) {
-    const errors = Stacks.check(paths.appPath, config);
-    if (errors.length)
-      console.log(Stacks.formatDiagnostics(errors).join("\n") + "\n");
-  }
+  validatePropsForJs(config);
   printStacks(stacks, cliInfo.yarn);
 };

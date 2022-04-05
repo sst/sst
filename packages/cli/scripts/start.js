@@ -13,7 +13,6 @@ const {
   STACK_DEPLOY_STATUS,
   Runtime,
   State,
-  Stacks,
   useStacksBuilder,
   useFunctionBuilder,
   useLocalServer,
@@ -27,6 +26,7 @@ const {
   writeConfig,
   checkFileExists,
   writeOutputsFile,
+  validatePropsForJs,
 } = require("./util/cdkHelpers");
 const objectUtil = require("../lib/object");
 const spawn = require("cross-spawn");
@@ -504,11 +504,7 @@ async function deployApp(argv, config, cliInfo) {
 
   // Build
   await synth(cliInfo.cdkOptions);
-  if (config.main.endsWith(".js")) {
-    const errors = Stacks.check(paths.appPath, config);
-    if (errors.length)
-      console.log(Stacks.formatDiagnostics(errors).join("\n") + "\n");
-  }
+  validatePropsForJs(config);
 
   let deployRet;
   if (IS_TEST) {
