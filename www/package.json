@@ -6,7 +6,7 @@
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
     "watch": "node ./generate.mjs watch",
-    "build": "node ./generate.mjs build && docusaurus build",
+    "build": "cd ../packages/core && npm run build && cd ../resources && npm run build && cd ../../www && node ./generate.mjs build && docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "serve": "docusaurus serve",
