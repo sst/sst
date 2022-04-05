@@ -8,26 +8,30 @@ class MySampleStack extends sst.Stack {
 
     // Create an SNS topic
     const topic = new sst.Topic(this, "MyTopic", {
-      subscribers: [
-        {
+      subscribers: {
+        0: {
           function: "src/sns/sub-folder/sns.handler",
-          subscriberProps: {
-            filterPolicy: {
-              color: sns.SubscriptionFilter.stringFilter({
-                whitelist: ["red"],
-              }),
+          cdk: {
+            subscription: {
+              filterPolicy: {
+                color: sns.SubscriptionFilter.stringFilter({
+                  allowlist: ["red"],
+                }),
+              },
             },
           },
         },
-      ],
+      },
     });
 
     // Create the HTTP API
     const api = new sst.Api(this, "Api", {
-      defaultFunctionProps: {
-        srcPath: "src/api",
-        environment: {
-          TOPIC_ARN: topic.snsTopic.topicArn,
+      defaults: {
+        function: {
+          srcPath: "src/api",
+          environment: {
+            TOPIC_ARN: topic.topicArn,
+          },
         },
       },
       routes: {
@@ -38,7 +42,7 @@ class MySampleStack extends sst.Stack {
 
     // Show API endpoint in output
     new cdk.CfnOutput(this, "ApiEndpoint", {
-      value: api.httpApi.apiEndpoint,
+      value: api.url,
     });
   }
 }

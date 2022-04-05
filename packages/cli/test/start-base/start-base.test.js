@@ -15,7 +15,7 @@ afterAll(async () => {
  * Test that the synth command ran successfully
  */
 test("start-base", async () => {
-  await runStartCommand(__dirname);
+  console.log(await runStartCommand(__dirname));
 
   // Check --outputs-file
   const outputsPath = path.join(__dirname, "outputs.json");

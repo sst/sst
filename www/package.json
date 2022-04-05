@@ -5,18 +5,20 @@
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
-    "build": "docusaurus build",
+    "watch": "node ./generate.mjs watch",
+    "build": "node ./generate.mjs build && docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "serve": "docusaurus serve",
     "clear": "docusaurus clear"
   },
   "dependencies": {
-    "@docusaurus/core": "^2.0.0-beta.15",
-    "@docusaurus/plugin-client-redirects": "^2.0.0-beta.15",
-    "@docusaurus/plugin-google-analytics": "^2.0.0-beta.15",
-    "@docusaurus/preset-classic": "^2.0.0-beta.15",
+    "@docusaurus/core": "^2.0.0-beta.18",
+    "@docusaurus/plugin-client-redirects": "^2.0.0-beta.18",
+    "@docusaurus/plugin-google-analytics": "^2.0.0-beta.18",
+    "@docusaurus/preset-classic": "^2.0.0-beta.18",
     "@mdx-js/react": "^1.6.21",
+    "chokidar": "^3.5.3",
     "clsx": "^1.1.1",
     "js-base64": "^3.6.1",
     "react": "^16.8.4",
@@ -33,5 +35,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "typedoc": "^0.22.13"
   }
 }

@@ -7,24 +7,123 @@ import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
 export interface ScriptProps {
-  readonly onCreate?: FunctionDefinition;
-  readonly onUpdate?: FunctionDefinition;
-  readonly onDelete?: FunctionDefinition;
-  readonly params?: { [key: string]: any };
-  readonly defaultFunctionProps?: FunctionProps;
+  /**
+   * An object of input parameters to be passed to the script. Made available in the `event` object of the function.
+   *
+   * @example
+   * ```js
+   * import { Script } from "@serverless-stack/resources";
+   *
+   * new Script(stack, "Script", {
+   *   onCreate: "src/script.create",
+   *   params: {
+   *     hello: "world",
+   *   },
+   * });
+   * ```
+   */
+  params?: Record<string, any>;
+  defaults?: {
+    /**
+     * The default function props to be applied to all the Lambda functions in the API. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
+     *
+     * @example
+     * ```js
+     * new Script(stack, "Api", {
+     *   defaults: {
+     *     function: {
+     *       timeout: 20,
+     *     }
+     *   }
+     * });
+     * ```
+     */
+    function?: FunctionProps;
+  };
+  /**
+   * Creates the function that runs when the Script is created.
+   *
+   * @example
+   * ```js
+   * new Script(stack, "Api", {
+   *   onCreate: "src/function.handler",
+   * })
+   * ```
+   */
+  onCreate?: FunctionDefinition;
+  /**
+   * Creates the function that runs on every deploy after the Script is created
+   *
+   * @example
+   * ```js
+   * new Script(stack, "Api", {
+   *   onUpdate: "src/function.handler",
+   * })
+   * ```
+   */
+  onUpdate?: FunctionDefinition;
+  /**
+   * Create the function that runs when the Script is deleted from the stack.
+   *
+   * @example
+   * ```js
+   * new Script(stack, "Api", {
+   *   onDelete: "src/function.handler",
+   * })
+   * ```
+   */
+  onDelete?: FunctionDefinition;
 }
 
+/////////////////////
+// Construct
+/////////////////////
+
+/**
+ * The `Script` construct is a higher level CDK construct that makes it easy to run a script in a Lambda function during the deployment process. It provides a simple way to build and bundle the script function; and allows you to pass parameter values based on outputs from other constructs in your SST app. So you don't have to hard code values in your script. You can configure a script to run before or after any of the stacks or resources are deployed in your app.
+ *
+ * Since the script is running inside a Lambda function, it can interact with resources like the RDS databases, that are inside a VPC; and make AWS API calls to services that the IAM credentials in your local environment or CI might not have permissions to.
+ *
+ * A few things to note:
+ * - It does not run locally. It runs inside a Lambda function.
+ * - It gets run on every deployment.
+ * - It can run for a maximum of 15 minutes.
+ * - [Live Lambda Dev](../../live-lambda-development.md) is not enabled for these functions.
+ *
+ * @example
+ * ### Minimal config
+ *
+ * ```js
+ * import { Script } from "@serverless-stack/resources";
+ *
+ * new Script(stack, "Script", {
+ *   onCreate: "src/function.create",
+ *   onUpdate: "src/function.update",
+ *   onDelete: "src/function.delete",
+ * });
+ * ```
+ *
+ */
 export class Script extends Construct {
+  /**
+   * The internally created onCreate `Function` instance.
+   */
   public readonly createFunction?: Fn;
+  /**
+   * The internally created onUpdate `Function` instance.
+   */
   public readonly updateFunction?: Fn;
+  /**
+   * The internally created onDelete `Function` instance.
+   */
   public readonly deleteFunction?: Fn;
   protected readonly props: ScriptProps;
 
   constructor(scope: Construct, id: string, props: ScriptProps) {
     super(scope, id);
+    if ((props as any).function) this.checkDeprecatedFunction();
 
     // Validate deprecated "function" prop
-    if ((props as any).function) this.checkDeprecatedFunction();
 
     // Validate at least 1 function is provided
     if (!props.onCreate && !props.onUpdate && !props.onDelete) {
@@ -43,6 +142,14 @@ export class Script extends Construct {
     this.createCustomResource(root, crFunction);
   }
 
+  /**
+   * Grants additional permissions to the script
+   *
+   * @example
+   * ```js
+   * script.attachPermissions(["s3"]);
+   * ```
+   */
   public attachPermissions(permissions: Permissions): void {
     this.createFunction?.attachPermissions(permissions);
     this.updateFunction?.attachPermissions(permissions);
@@ -70,8 +177,8 @@ export class Script extends Construct {
         this,
         `${type}Function`,
         fnDef,
-        this.props.defaultFunctionProps,
-        `The "defaultFunctionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define the "${type}" function using FunctionProps, so the Script construct can apply the "defaultFunctionProps" to them.`
+        this.props.defaults?.function,
+        `The "defaults.function" cannot be applied if an instance of a Function construct is passed in. Make sure to define the "${type}" function using FunctionProps, so the Script construct can apply the "defaults.function" to them.`
       );
     }
 
@@ -86,7 +193,7 @@ export class Script extends Construct {
         },
         {
           timeout: 900,
-          ...this.props.defaultFunctionProps,
+          ...this.props.defaults?.function,
         }
       );
     }
@@ -101,7 +208,7 @@ export class Script extends Construct {
       },
       {
         timeout: 900,
-        ...this.props.defaultFunctionProps,
+        ...this.props.defaults?.function,
       }
     );
   }

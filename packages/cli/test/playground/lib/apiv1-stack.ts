@@ -2,6 +2,8 @@ import * as apig from "aws-cdk-lib/aws-apigateway";
 import * as sst from "@serverless-stack/resources";
 
 export class MainStack extends sst.Stack {
+  public readonly api: sst.ApiGatewayV1Api;
+
   constructor(scope: sst.App, id: string, props?: sst.StackProps) {
     super(scope, id, props);
 
@@ -10,11 +12,6 @@ export class MainStack extends sst.Stack {
     ////////////////////////
     const authorizerFn = new sst.Function(this, "MyAuthorizerFunction", {
       handler: "src/authorizer.main",
-    });
-
-    const authorizer = new apig.RequestAuthorizer(this, "MyAuthorizer", {
-      handler: authorizerFn,
-      identitySources: [apig.IdentitySource.header("Authorization")],
     });
 
     const api = new sst.ApiGatewayV1Api(this, "LegacyApi", {
@@ -26,13 +23,21 @@ export class MainStack extends sst.Stack {
       //        endpointType: apig.EndpointType.EDGE,
       //        path: "hello",
       //      },
-      defaultFunctionProps: {
-        environment: {
-          TABLE_NAME: "dummy",
+      authorizers: {
+        MyAuthorizer: {
+          type: "lambda_request",
+          function: authorizerFn,
+          identitySources: [apig.IdentitySource.header("Authorization")],
         },
       },
-      defaultAuthorizer: authorizer,
-      defaultAuthorizationType: apig.AuthorizationType.CUSTOM,
+      defaults: {
+        functionProps: {
+          environment: {
+            TABLE_NAME: "dummy",
+          },
+        },
+        authorizer: "MyAuthorizer",
+      },
       routes: {
         "GET /": "src/lambda.main",
         "GET /sub": "src/lambda.main",
@@ -42,7 +47,7 @@ export class MainStack extends sst.Stack {
     });
 
     // Add header for BASIC auth
-    api.restApi.addGatewayResponse("UNAUTHORIZED", {
+    api.cdk.restApi.addGatewayResponse("UNAUTHORIZED", {
       type: apig.ResponseType.UNAUTHORIZED,
       responseHeaders: {
         "WWW-Authenticate": "'Basic realm=\"Secure Area\"'",

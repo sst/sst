@@ -5,7 +5,7 @@ test("server-undefined-error", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new GraphQLApi(stack, "Api", {} as GraphQLApiProps);
-  }).toThrow(/Missing "server"/);
+  }).toThrow(/server/);
 });
 
 test("server-string", async () => {

@@ -9,7 +9,6 @@ import {
   ANY,
   ABSENT,
 } from "./helper";
-import * as cdk from "aws-cdk-lib";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as sns from "aws-cdk-lib/aws-sns";
@@ -24,14 +23,10 @@ import {
   RDS,
   Stack,
   Table,
-  TableFieldType,
   Bucket,
   EventBus,
   Function,
-  HandlerProps,
   FunctionProps,
-  FunctionHandlerProps,
-  PermissionType,
 } from "../src";
 
 const lambdaDefaultPolicy = {
@@ -43,16 +38,6 @@ const lambdaDefaultPolicy = {
 /////////////////////////////
 // Test constructor
 /////////////////////////////
-
-test("non-namespaced-props", async () => {
-  const handlerProps = { srcPath: "a", handler: "b" } as HandlerProps;
-  expect(handlerProps).toBeDefined();
-});
-
-test("namespaced-props", async () => {
-  const handlerProps = { srcPath: "a", handler: "b" } as FunctionHandlerProps;
-  expect(handlerProps).toBeDefined();
-});
 
 test("handlerPath: entry + no src", async () => {
   const stack = new Stack(new App(), "stack");
@@ -209,7 +194,7 @@ test("constructor: python: srcPath not set", async () => {
   expect(() => {
     new Function(stack, "Function", {
       handler: "test/lambda.handler",
-      runtime: lambda.Runtime.PYTHON_3_8,
+      runtime: "python3.8",
     });
   }).toThrow(/Cannot set the "srcPath" to the project root/);
 });
@@ -220,7 +205,7 @@ test("constructor: python: srcPath is project root", async () => {
     new Function(stack, "Function", {
       srcPath: ".",
       handler: "test/lambda.handler",
-      runtime: lambda.Runtime.PYTHON_3_8,
+      runtime: "python3.8",
     });
   }).toThrow(/Cannot set the "srcPath" to the project root/);
 });
@@ -326,27 +311,6 @@ test("runtime-string-invalid", async () => {
   }).toThrow(/The specified runtime is not supported/);
 });
 
-test("runtime-class", async () => {
-  const stack = new Stack(new App(), "stack");
-  new Function(stack, "Function", {
-    handler: "test/lambda.handler",
-    runtime: lambda.Runtime.NODEJS_10_X,
-  });
-  hasResource(stack, "AWS::Lambda::Function", {
-    Runtime: "nodejs10.x",
-  });
-});
-
-test("runtime-class-invalid", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Function(stack, "Function", {
-      handler: "test/lambda.handler",
-      runtime: lambda.Runtime.JAVA_11,
-    });
-  }).toThrow(/The specified runtime is not supported/);
-});
-
 test("timeout-number", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
@@ -358,22 +322,11 @@ test("timeout-number", async () => {
   });
 });
 
-test("timeout-class", async () => {
-  const stack = new Stack(new App(), "stack");
-  new Function(stack, "Function", {
-    handler: "test/lambda.handler",
-    timeout: cdk.Duration.seconds(15),
-  });
-  hasResource(stack, "AWS::Lambda::Function", {
-    Timeout: 15,
-  });
-});
-
 test("xray-disabled", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
-    tracing: lambda.Tracing.DISABLED,
+    tracing: "disabled",
   });
   hasResource(stack, "AWS::Lambda::Function", {
     TracingConfig: ABSENT,
@@ -639,7 +592,7 @@ test("attachPermissions: string: all", async () => {
   const f = new Function(stack, "Function", {
     handler: "test/lambda.handler",
   });
-  f.attachPermissions(PermissionType.ALL);
+  f.attachPermissions("*");
   hasResource(stack, "AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
@@ -657,7 +610,8 @@ test("attachPermissions: string: invalid", async () => {
     handler: "test/lambda.handler",
   });
   expect(() => {
-    f.attachPermissions("abc" as PermissionType.ALL);
+    // @ts-ignore Allow type casting
+    f.attachPermissions("abc" as Permissions);
   }).toThrow(/The specified permissions are not supported/);
 });
 
@@ -944,26 +898,26 @@ test("attachPermissions: array: sst RDS", async () => {
               [
                 "arn:",
                 {
-                  "Ref": "AWS::Partition"
+                  Ref: "AWS::Partition",
                 },
                 ":rds:us-east-1:my-account:cluster:",
                 {
-                  "Ref": "clusterCluster4486A143"
-                }
-              ]
-            ]
-          }
+                  Ref: "clusterCluster4486A143",
+                },
+              ],
+            ],
+          },
         },
         {
           Action: [
             "secretsmanager:GetSecretValue",
-            "secretsmanager:DescribeSecret"
+            "secretsmanager:DescribeSecret",
           ],
           Effect: "Allow",
           Resource: {
-            Ref: "clusterClusterSecretAttachment92A36E7C"
-          }
-        }
+            Ref: "clusterClusterSecretAttachment92A36E7C",
+          },
+        },
       ],
       Version: "2012-10-17",
     },
@@ -1096,7 +1050,7 @@ test("attachPermissions: array: dynamodb table", async () => {
   const stack = new Stack(new App(), "stack");
   const table = new Table(stack, "Table", {
     fields: {
-      id: TableFieldType.STRING,
+      id: "string",
     },
     primaryIndex: { partitionKey: "id" },
   });
@@ -1227,25 +1181,16 @@ test("mergeProps-environment", async () => {
 
 test("mergeProps-permissions", async () => {
   expect(
-    Function.mergeProps(
-      { permissions: PermissionType.ALL },
-      { permissions: PermissionType.ALL }
-    )
-  ).toEqual({ permissions: PermissionType.ALL });
+    Function.mergeProps({ permissions: "*" }, { permissions: "*" })
+  ).toEqual({ permissions: "*" });
 
   expect(
-    Function.mergeProps(
-      { permissions: ["s3"] },
-      { permissions: PermissionType.ALL }
-    )
-  ).toEqual({ permissions: PermissionType.ALL });
+    Function.mergeProps({ permissions: ["s3"] }, { permissions: "*" })
+  ).toEqual({ permissions: "*" });
 
   expect(
-    Function.mergeProps(
-      { permissions: PermissionType.ALL },
-      { permissions: ["s3"] }
-    )
-  ).toEqual({ permissions: PermissionType.ALL });
+    Function.mergeProps({ permissions: "*" }, { permissions: ["s3"] })
+  ).toEqual({ permissions: "*" });
 
   expect(
     Function.mergeProps({ permissions: ["s3"] }, { permissions: ["dynamodb"] })
@@ -1709,7 +1654,7 @@ test("fromDefinition-props-inherit", async () => {
       environment: { KEY_A: "a" },
     },
     {
-      runtime: lambda.Runtime.NODEJS_10_X,
+      runtime: "nodejs10.x",
       memorySize: 512,
       environment: { KEY_B: "b" },
     }
@@ -1746,7 +1691,7 @@ test("fromDefinition-props-inherit-with-app-defaultFunctionProps", async () => {
       environment: { KEY_B: "b" },
     },
     {
-      runtime: lambda.Runtime.NODEJS_10_X,
+      runtime: "nodejs10.x",
       memorySize: 512,
       environment: { KEY_C: "c" },
     }

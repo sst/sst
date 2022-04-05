@@ -1,77 +1,162 @@
 import { Construct } from "constructs";
-import * as cdk from "aws-cdk-lib";
 import * as events from "aws-cdk-lib/aws-events";
 import * as eventsTargets from "aws-cdk-lib/aws-events-targets";
 
 import { getFunctionRef, SSTConstruct } from "./Construct";
-import { Function as Func, FunctionDefinition } from "./Function";
+import {
+  Function as Func,
+  FunctionInlineDefinition,
+  FunctionDefinition,
+} from "./Function";
 import { Permissions } from "./util/permission";
 
-export interface CronProps {
-  readonly job: FunctionDefinition | CronJobProps;
-  readonly schedule?: string | cdk.Duration | events.CronOptions;
-  readonly eventsRule?: events.RuleProps;
-}
-
 export interface CronJobProps {
-  readonly function: FunctionDefinition;
-  readonly jobProps?: eventsTargets.LambdaFunctionProps;
+  /**
+   * The function that will be executed when the job runs.
+   *
+   * @example
+   * ```js
+   *   new Cron(stack, "Cron", {
+   *     job: {
+   *       function: "src/lambda.main",
+   *     },
+   *   });
+   * ```
+   */
+  function: FunctionDefinition;
+  cdk?: {
+    /**
+     * Override the default settings this construct uses internally to create the events rule.
+     */
+    target?: eventsTargets.LambdaFunctionProps;
+  };
 }
 
+export interface CronProps {
+  cdk?: {
+    /**
+     * Override the default settings this construct uses internally to create the events rule.
+     */
+    rule?: events.RuleProps;
+  };
+
+  /**
+   * The definition of the function to be executed
+   *
+   * @example
+   * ```js
+   * new Cron(stack, "Cron", {
+   *   function : "src/function.handler",
+   * })
+   * ```
+   */
+  job: FunctionInlineDefinition | CronJobProps;
+  /**
+   * The schedule for the cron job.
+   *
+   * The string format takes a [rate expression](https://docs.aws.amazon.com/lambda/latest/dg/services-cloudwatchevents-expressions.html).
+   *
+   * ```txt
+   * rate(1 minute)
+   * rate(5 minutes)
+   * rate(1 hour)
+   * rate(5 hours)
+   * rate(1 day)
+   * rate(5 days)
+   * ```
+   * Or as a [cron expression](https://en.wikipedia.org/wiki/Cron#CRON_expression).
+   *
+   * ```txt
+   * cron(15 10 * * ? *)    // 10:15 AM (UTC) every day.
+   * ```
+   *
+   * @example
+   * ```js
+   * new Cron(stack, "Cron", {
+   *   job: "src/lambda.main",
+   *   schedule: "rate(5 minutes)",
+   * });
+   * ```
+   * ```js
+   * new Cron(stack, "Cron", {
+   *   job: "src/lambda.main",
+   *   schedule: "cron(15 10 * * ? *)",
+   * });
+   * ```
+   */
+  schedule?: `rate(${string})` | `cron(${string})`;
+}
+
+/////////////////////
+// Construct
+/////////////////////
+
+/**
+ * The `Cron` construct is a higher level CDK construct that makes it easy to create a cron job. You can create a cron job by handler function and specifying the schedule it needs to run on. Internally this construct uses a [EventBridge Rule](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events.Rule.html).
+ */
 export class Cron extends Construct implements SSTConstruct {
-  public readonly eventsRule: events.Rule;
+  public readonly cdk: {
+    /**
+     * The internally created CDK EventBridge Rule instance.
+     */
+    rule: events.Rule;
+  };
+  /**
+   * The internally created Function instance that'll be run on schedule.
+   */
   public readonly jobFunction: Func;
+  private props: CronProps;
 
   constructor(scope: Construct, id: string, props: CronProps) {
     super(scope, id);
 
-    const {
-      // Topic props
-      schedule,
-      eventsRule,
-      // Function props
-      job,
-    } = props;
+    this.props = props;
+    this.cdk = {} as any;
 
-    ///////////////////////////
-    // Create Rule
-    ///////////////////////////
+    this.createEventsRule();
+    this.jobFunction = this.createRuleTarget();
+  }
 
-    const eventsRuleProps = (eventsRule || {}) as events.RuleProps;
+  /**
+   * Attaches the given list of [permissions](Permissions.md) to the `jobFunction`. This allows the function to access other AWS resources.
+   *
+   * Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
+   *
+   */
+  public attachPermissions(permissions: Permissions): void {
+    this.jobFunction.attachPermissions(permissions);
+  }
 
-    // Validate: cannot set eventsRule.schedule
-    if (eventsRuleProps.schedule) {
-      throw new Error(
-        `Do not configure the "eventsRule.schedule". Use the "schedule" to configure the Cron schedule.`
-      );
-    }
+  public getConstructMetadata() {
+    const cfnRule = this.cdk.rule.node.defaultChild as events.CfnRule;
+    return {
+      type: "Cron" as const,
+      data: {
+        schedule: cfnRule.scheduleExpression,
+        ruleName: this.cdk.rule.ruleName,
+        job: getFunctionRef(this.jobFunction),
+      },
+    };
+  }
 
-    // Validate: schedule is set
-    if (!schedule) {
+  private createEventsRule() {
+    const { cdk, schedule } = this.props;
+    const id = this.node.id;
+
+    // Configure Schedule
+    if (!schedule && !cdk?.rule?.schedule) {
       throw new Error(`No schedule defined for the "${id}" Cron`);
     }
 
-    // Configure Schedule
-    let propSchedule: events.Schedule;
-    if (
-      typeof schedule === "string" &&
-      (schedule.startsWith("rate(") || schedule.startsWith("cron("))
-    ) {
-      propSchedule = events.Schedule.expression(schedule);
-    } else if (schedule instanceof cdk.Duration) {
-      propSchedule = events.Schedule.rate(schedule);
-    } else {
-      propSchedule = events.Schedule.cron(schedule as events.CronOptions);
-    }
-
-    this.eventsRule = new events.Rule(this, "Rule", {
-      schedule: propSchedule,
-      ...eventsRuleProps,
+    this.cdk.rule = new events.Rule(this, "Rule", {
+      schedule: schedule && events.Schedule.expression(schedule),
+      ...cdk?.rule,
     });
+  }
 
-    ///////////////////////////
-    // Create Targets
-    ///////////////////////////
+  private createRuleTarget() {
+    const { job } = this.props;
+    const id = this.node.id;
 
     if (!job) {
       throw new Error(`No job defined for the "${id}" Cron`);
@@ -81,32 +166,16 @@ export class Cron extends Construct implements SSTConstruct {
     let jobFunction, jobProps;
     if ((job as CronJobProps).function) {
       jobFunction = (job as CronJobProps).function;
-      jobProps = (job as CronJobProps).jobProps;
+      jobProps = (job as CronJobProps).cdk?.target;
     } else {
-      jobFunction = job as FunctionDefinition;
+      jobFunction = job as FunctionInlineDefinition;
       jobProps = {};
     }
 
     // create function
-    this.jobFunction = Func.fromDefinition(this, "Job", jobFunction);
-    this.eventsRule.addTarget(
-      new eventsTargets.LambdaFunction(this.jobFunction, jobProps)
-    );
-  }
+    const fn = Func.fromDefinition(this, "Job", jobFunction);
+    this.cdk.rule.addTarget(new eventsTargets.LambdaFunction(fn, jobProps));
 
-  public attachPermissions(permissions: Permissions): void {
-    this.jobFunction.attachPermissions(permissions);
-  }
-
-  public getConstructMetadata() {
-    const cfnRule = this.eventsRule.node.defaultChild as events.CfnRule;
-    return {
-      type: "Cron" as const,
-      data: {
-        schedule: cfnRule.scheduleExpression,
-        ruleName: this.eventsRule.ruleName,
-        job: getFunctionRef(this.jobFunction),
-      },
-    };
+    return fn;
   }
 }

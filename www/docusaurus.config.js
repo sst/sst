@@ -42,6 +42,17 @@ module.exports = {
       },
       items: [
         {
+          to: "/constructs",
+          label: "Constructs",
+          position: "left",
+          activeBaseRegex: "^/constructs$|^/constructs/(?!v1)",
+        },
+        {
+          to: "/constructs/v1",
+          label: "v1 Constructs",
+          position: "left",
+        },
+        {
           href: config.guide,
           label: "Guide",
           position: "left",
@@ -153,8 +164,20 @@ module.exports = {
           sidebarPath: require.resolve("./sidebars.js"),
           showLastUpdateTime: true,
           // Please change this to your repo.
-          editUrl:
-            "https://github.com/serverless-stack/serverless-stack/edit/master/www/",
+          editUrl: (params) => {
+            if (params.docPath.startsWith("constructs/v1")) {
+              const splits = params.docPath.split("/");
+              const name = splits[splits.length - 1].replace(".md", ".ts");
+              return (
+                "https://github.com/serverless-stack/serverless-stack/blob/master/packages/resources/src/" +
+                name
+              );
+            }
+            return (
+              "https://github.com/serverless-stack/serverless-stack/blob/master/www/docs/" +
+              params.docPath
+            );
+          },
         },
         theme: {
           customCss: require.resolve("./src/css/custom.css"),

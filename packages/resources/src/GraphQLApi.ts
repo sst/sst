@@ -4,35 +4,74 @@ import spawn from "cross-spawn";
 import { Construct } from "constructs";
 import { Api, ApiFunctionRouteProps, ApiProps } from "./Api";
 import { Function as Fn, FunctionDefinition } from "./Function";
-import { ApiPayloadFormatVersion } from ".";
+import { Validate } from "./util/validate";
 
-export interface GraphQLApiProps extends Omit<ApiProps, "routes"> {
+export interface GraphQLApiProps extends Omit<ApiProps<never>, "routes"> {
   /**
    * Path to graphql-codegen configuration file
+   *
+   * @example
+   * ```js
+   * new GraphQLApi(stack, "api", {
+   *   codegen: "./graphql/codegen.yml"
+   * })
+   * ```
    */
   codegen?: string;
+  /**
+   * Path to function that will be invoked to resolve GraphQL queries.
+   *
+   * @example
+   * ```js
+   * new GraphQLApi(stack, "api", {
+   *   codegen: "./graphql/codegen.yml"
+   * })
+   * ```
+   */
   server: FunctionDefinition;
   rootPath?: string;
 }
 
+/**
+ * The `GraphQLApi` construct is a higher level CDK construct that makes it easy to create GraphQL servers with AWS Lambda. It provides a simple way to define the GraphQL handler route in your API. And allows you to configure the specific Lambda function if necessary. It also allows you to configure authorization, custom domains, etc.
+ *
+ * The `GraphQLApi` construct internally extends the [`Api`](Api) construct.
+ *
+ * ## Initializer
+ *
+ * ```ts
+ * new GraphQLApi(scope: Construct, id: string, props: GraphQLApiProps)
+ * ```
+ *
+ * _Parameters_
+ *
+ * - scope [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
+ * - id `string`
+ * - props [`GraphQLApiProps`](#graphqlapiprops)
+ *
+ * @example
+ * ### Using the minimal config
+ *
+ * ```js
+ * import { GraphQLApi } from "@serverless-stack/resources";
+ *
+ * new GraphQLApi(stack, "Api", {
+ *   server: "src/graphql.handler",
+ * });
+ * ```
+ */
 export class GraphQLApi extends Api {
   private readonly codegen?: string;
   private lambdaIntegration?: HttpRouteIntegration;
   private rootPath?: string;
 
   constructor(scope: Construct, id: string, props: GraphQLApiProps) {
-    // Validate server
-    if (!props.server) {
-      throw new Error(`Missing "server" in the "${id}" GraphQLApi`);
-    }
-
-    if ("routes" in props) {
+    if ("routes" in props || !props.server) {
       throw new Error(
         `Please use the "server" option instead of the "routes" to configure the handler for the "${id}" GraphQLApi`
       );
     }
 
-    /*
     if (props.codegen) {
       const app = App.of(scope) as App;
       if (!app.local) {
@@ -50,17 +89,14 @@ export class GraphQLApi extends Api {
         }
       }
     }
-    */
 
     const rootPath = props.rootPath || "/";
 
     super(scope, id, {
       ...props,
-      defaultPayloadFormatVersion:
-        props.defaultPayloadFormatVersion || ApiPayloadFormatVersion.V1,
       routes: {
-        [`GET ${rootPath}`]: props.server,
-        [`POST ${rootPath}`]: props.server,
+        [`GET ${rootPath}`]: { function: props.server },
+        [`POST ${rootPath}`]: { function: props.server },
       },
     });
     this.rootPath = rootPath;
@@ -91,7 +127,7 @@ export class GraphQLApi extends Api {
   protected createFunctionIntegration(
     scope: Construct,
     routeKey: string,
-    routeProps: ApiFunctionRouteProps,
+    routeProps: ApiFunctionRouteProps<string>,
     postfixName: string
   ): HttpRouteIntegration {
     if (!this.lambdaIntegration) {

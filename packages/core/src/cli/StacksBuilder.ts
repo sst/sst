@@ -178,6 +178,11 @@ export function useStacksBuilder(
         services: {
           build: async () => {
             await Stacks.build(root, config);
+            if (config.main.endsWith(".js"))
+              setTimeout(() => {
+                const result = Stacks.check(root, config);
+                console.log(Stacks.formatDiagnostics(result).join("\n"));
+              }, 1);
           },
           synth: async () => {
             await synth(cdkOptions);

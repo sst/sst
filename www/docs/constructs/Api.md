@@ -816,7 +816,7 @@ props.api.addRoutes(this, {
 });
 ```
 
-In this case, the 3 routes added in the second stack are also secured by the Lambda authorizer.
+In this case, tTypeScripthe 3 routes added in the second stack are also secured by the Lambda authorizer.
 
 ### Advanced examples
 
