@@ -6,7 +6,7 @@ hide_table_of_contents: true
 ---
 
 :::note
-This is the SST v0.x Constructs doc. SST v1 is now in public beta. If you are using v1, see the [v1 Constructs doc](/constructs/v1/index). If you are looking to upgrade to v1, [check out the migration steps](/constructs/migration).
+This is the SST v0.x Constructs doc. SST v1 is now in public beta. If you are using v1, see the [v1 Constructs doc](/constructs/v1). If you are looking to upgrade to v1, [check out the migration steps](/constructs/migration).
 :::
 
 Constructs are the basic building blocks of SST apps. Each construct consists of multiple AWS resources to make up a functional unit. SST picks sensible defaults for the underlying resources, so you are not exposed to all the complexity up front.
