@@ -37,6 +37,7 @@
     ]
   },
   "devDependencies": {
-    "typedoc": "^0.22.13"
+    "typedoc": "^0.22.13",
+    "typescript": "^4.6.3"
   }
 }
