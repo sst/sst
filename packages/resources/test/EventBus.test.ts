@@ -18,17 +18,19 @@ const lambdaDefaultPolicy = {
 // Test Constructor
 ///////////////////
 
-test("eventBridgeEventBus: is events.EventBus construct", async () => {
+test("cdk.eventBus: is created construct", async () => {
   const stack = new Stack(new App(), "stack");
   const iBus = new events.EventBus(stack, "T", {
     eventBusName: "my-bus",
   });
   const bus = new EventBus(stack, "EventBus", {
-    eventBridgeEventBus: iBus,
+    cdk: {
+      eventBus: iBus,
+    },
     rules: {
       rule1: {
-        eventPattern: { source: ["aws.codebuild"] },
-        targets: ["test/lambda.handler"],
+        pattern: { source: ["aws.codebuild"] },
+        targets: { "0": "test/lambda.handler" },
       },
     },
   });
@@ -56,18 +58,20 @@ test("eventBridgeEventBus: is events.EventBus construct", async () => {
   });
 });
 
-test("eventBridgeEventBus: is imported by eventBusArn", async () => {
+test("cdk.eventBus: is imported by eventBusArn", async () => {
   const stack = new Stack(new App(), "stack");
   const bus = new EventBus(stack, "EventBus", {
-    eventBridgeEventBus: events.EventBus.fromEventBusArn(
-      stack,
-      "B",
-      "arn:aws:events:us-east-1:123456789:event-bus/default"
-    ),
+    cdk: {
+      eventBus: events.EventBus.fromEventBusArn(
+        stack,
+        "B",
+        "arn:aws:events:us-east-1:123456789:event-bus/default"
+      ),
+    },
     rules: {
       rule1: {
-        eventPattern: { source: ["aws.codebuild"] },
-        targets: ["test/lambda.handler"],
+        pattern: { source: ["aws.codebuild"] },
+        targets: { "0": "test/lambda.handler" },
       },
     },
   });
@@ -89,29 +93,29 @@ test("eventBridgeEventBus: is imported by eventBusArn", async () => {
   });
 });
 
-test("eventBridgeEventBus: is imported by eventBusName", async () => {
+test("cdk.eventBus: is imported by eventBusName", async () => {
   const stack = new Stack(new App(), "stack");
   const bus = new EventBus(stack, "EventBus", {
-    eventBridgeEventBus: events.EventBus.fromEventBusName(
-      stack,
-      "B",
-      "default"
-    ),
+    cdk: {
+      eventBus: events.EventBus.fromEventBusName(stack, "B", "default"),
+    },
   });
   expect(bus.eventBusArn).toBeDefined();
   expect(bus.eventBusName).toBeDefined();
 });
 
-test("eventBridgeEventBus: is props with eventBusName", async () => {
+test("cdk.eventBus: is props with eventBusName", async () => {
   const stack = new Stack(new App(), "stack");
   const bus = new EventBus(stack, "EventBus", {
-    eventBridgeEventBus: {
-      eventBusName: "my-bus",
+    cdk: {
+      eventBus: {
+        eventBusName: "my-bus",
+      },
     },
     rules: {
       rule1: {
-        eventPattern: { source: ["aws.codebuild"] },
-        targets: ["test/lambda.handler"],
+        pattern: { source: ["aws.codebuild"] },
+        targets: { "0": "test/lambda.handler" },
       },
     },
   });
@@ -133,16 +137,18 @@ test("eventBridgeEventBus: is props with eventBusName", async () => {
   });
 });
 
-test("eventBridgeEventBus: is props with eventSourceName", async () => {
+test("cdk.eventBus: is props with eventSourceName", async () => {
   const stack = new Stack(new App(), "stack");
   const bus = new EventBus(stack, "EventBus", {
-    eventBridgeEventBus: {
-      eventSourceName: "aws.partner/auth0.com/source",
+    cdk: {
+      eventBus: {
+        eventSourceName: "aws.partner/auth0.com/source",
+      },
     },
     rules: {
       rule1: {
-        eventPattern: { source: ["aws.codebuild"] },
-        targets: ["test/lambda.handler"],
+        pattern: { source: ["aws.codebuild"] },
+        targets: { "0": "test/lambda.handler" },
       },
     },
   });
@@ -157,13 +163,13 @@ test("eventBridgeEventBus: is props with eventSourceName", async () => {
   countResources(stack, "AWS::Events::Rule", 1);
 });
 
-test("eventBridgeEventBus: is undefined", async () => {
+test("cdk.eventBus: is undefined", async () => {
   const stack = new Stack(new App(), "stack");
   const bus = new EventBus(stack, "EventBus", {
     rules: {
       rule1: {
-        eventPattern: { source: ["aws.codebuild"] },
-        targets: ["test/lambda.handler"],
+        pattern: { source: ["aws.codebuild"] },
+        targets: { "0": "test/lambda.handler" },
       },
     },
   });
@@ -193,9 +199,45 @@ test("rules: props", async () => {
   new EventBus(stack, "EventBus", {
     rules: {
       rule1: {
-        ruleName: "my-rule",
-        eventPattern: { source: ["aws.codebuild"] },
-        targets: ["test/lambda.handler"],
+        cdk: {
+          rule: {
+            ruleName: "my-rule",
+            eventPattern: { source: ["aws.ec2"] },
+          },
+        },
+        targets: { "0": "test/lambda.handler" },
+      },
+    },
+  });
+  countResources(stack, "AWS::Lambda::Function", 1);
+  countResources(stack, "AWS::Events::EventBus", 1);
+  countResources(stack, "AWS::Events::Rule", 1);
+  hasResource(stack, "AWS::Events::Rule", {
+    Name: "my-rule",
+    EventBusName: { Ref: "EventBusE9ABF535" },
+    EventPattern: { source: ["aws.ec2"] },
+    State: "ENABLED",
+    Targets: [
+      objectLike({
+        Id: "Target0",
+      }),
+    ],
+  });
+});
+
+test("rules: props pattern override cdk.rule.eventPattern", async () => {
+  const stack = new Stack(new App(), "stack");
+  new EventBus(stack, "EventBus", {
+    rules: {
+      rule1: {
+        cdk: {
+          rule: {
+            ruleName: "my-rule",
+            eventPattern: { source: ["aws.ec2"] },
+          },
+        },
+        pattern: { source: ["aws.codebuild"] },
+        targets: { "0": "test/lambda.handler" },
       },
     },
   });
@@ -221,16 +263,22 @@ test("rules: eventBus defined error", async () => {
     new EventBus(stack, "EventBus", {
       rules: {
         rule1: {
-          // @ts-expect-error "eventBus" is not a prop
-          eventBus: new events.EventBus(stack, "T", {
-            eventBusName: "my-bus",
-          }),
-          eventPattern: { source: ["aws.codebuild"] },
-          targets: ["test/lambda.handler"],
+          cdk: {
+            rule: {
+              // @ts-expect-error "eventBus" is not a prop
+              eventBus: new events.EventBus(stack, "T", {
+                eventBusName: "my-bus",
+              }),
+            },
+          },
+          pattern: { source: ["aws.codebuild"] },
+          targets: { "0": "test/lambda.handler" },
         },
       },
     });
-  }).toThrow(/Cannot configure the "rule.eventBus" in the "EventBus" EventBus/);
+  }).toThrow(
+    /Cannot configure the "rule.cdk.rule.eventBus" in the "EventBus" EventBus/
+  );
 });
 
 test("targets: Function string single", async () => {
@@ -238,8 +286,8 @@ test("targets: Function string single", async () => {
   new EventBus(stack, "EventBus", {
     rules: {
       rule1: {
-        eventPattern: { source: ["aws.codebuild"] },
-        targets: ["test/lambda.handler"],
+        pattern: { source: ["aws.codebuild"] },
+        targets: { "0": "test/lambda.handler" },
       },
     },
   });
@@ -259,8 +307,11 @@ test("targets: Function strings multi", async () => {
   new EventBus(stack, "EventBus", {
     rules: {
       rule1: {
-        eventPattern: { source: ["aws.codebuild"] },
-        targets: ["test/lambda.handler", "test/lambda.handler"],
+        pattern: { source: ["aws.codebuild"] },
+        targets: {
+          "0": "test/lambda.handler",
+          "1": "test/lambda.handler",
+        },
       },
     },
   });
@@ -285,8 +336,8 @@ test("targets: Function construct", async () => {
   new EventBus(stack, "EventBus", {
     rules: {
       rule1: {
-        eventPattern: { source: ["aws.codebuild"] },
-        targets: [f],
+        pattern: { source: ["aws.codebuild"] },
+        targets: { "0": f },
       },
     },
   });
@@ -298,71 +349,22 @@ test("targets: Function construct", async () => {
   });
 });
 
-test("targets: Function props", async () => {
-  const stack = new Stack(new App(), "stack");
-  new EventBus(stack, "EventBus", {
-    rules: {
-      rule1: {
-        eventPattern: { source: ["aws.codebuild"] },
-        targets: [{ handler: "test/lambda.handler" }],
-      },
-    },
-  });
-  hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
-  });
-  countResources(stack, "AWS::Events::EventBus", 1);
-  countResources(stack, "AWS::Events::Rule", 1);
-  hasResource(stack, "AWS::Events::Rule", {
-    Targets: [objectLike({ Id: "Target0" })],
-  });
-});
-
-test("targets: Function with defaultFunctionProps", async () => {
-  const stack = new Stack(new App(), "stack");
-  new EventBus(stack, "EventBus", {
-    defaultFunctionProps: {
-      timeout: 3,
-      environment: {
-        keyA: "valueA",
-      },
-    },
-    rules: {
-      rule1: {
-        eventPattern: { source: ["aws.codebuild"] },
-        targets: [{ handler: "test/lambda.handler" }],
-      },
-    },
-  });
-  hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
-
-    Timeout: 3,
-    Environment: {
-      Variables: {
-        keyA: "valueA",
-        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
-      },
-    },
-  });
-  countResources(stack, "AWS::Events::EventBus", 1);
-  countResources(stack, "AWS::Events::Rule", 1);
-});
-
 test("targets: EventBusFunctionTargetProps", async () => {
   const stack = new Stack(new App(), "stack");
   new EventBus(stack, "EventBus", {
     rules: {
       rule1: {
-        eventPattern: { source: ["aws.codebuild"] },
-        targets: [
-          {
+        pattern: { source: ["aws.codebuild"] },
+        targets: {
+          "0": {
             function: "test/lambda.handler",
-            targetProps: {
-              retryAttempts: 20,
+            cdk: {
+              target: {
+                retryAttempts: 20,
+              },
             },
           },
-        ],
+        },
       },
     },
   });
@@ -389,8 +391,8 @@ test("targets: Queue", async () => {
   new EventBus(stack, "EventBus", {
     rules: {
       rule1: {
-        eventPattern: { source: ["aws.codebuild"] },
-        targets: [queue],
+        pattern: { source: ["aws.codebuild"] },
+        targets: { "0": queue },
       },
     },
   });
@@ -413,23 +415,28 @@ test("targets: Queue", async () => {
 test("targets: EventBusQueueTargetProps", async () => {
   const stack = new Stack(new App(), "stack");
   const queue = new Queue(stack, "Queue", {
-    sqsQueue: {
-      queueName: "queue.fifo",
-      fifo: true,
+    cdk: {
+      queue: {
+        queueName: "queue.fifo",
+        fifo: true,
+      },
     },
   });
   new EventBus(stack, "EventBus", {
     rules: {
       rule1: {
-        eventPattern: { source: ["aws.codebuild"] },
-        targets: [
-          {
+        pattern: { source: ["aws.codebuild"] },
+        targets: {
+          "0": {
+            type: "queue",
             queue,
-            targetProps: {
-              messageGroupId: "group-id",
+            cdk: {
+              target: {
+                messageGroupId: "group-id",
+              },
             },
           },
-        ],
+        },
       },
     },
   });
@@ -457,8 +464,8 @@ test("targets: empty", async () => {
   new EventBus(stack, "EventBus", {
     rules: {
       rule1: {
-        eventPattern: { source: ["aws.codebuild"] },
-        targets: [],
+        pattern: { source: ["aws.codebuild"] },
+        targets: {},
       },
     },
   });
@@ -474,7 +481,7 @@ test("targets: undefined", async () => {
   new EventBus(stack, "EventBus", {
     rules: {
       rule1: {
-        eventPattern: { source: ["aws.codebuild"] },
+        pattern: { source: ["aws.codebuild"] },
       },
     },
   });
@@ -494,15 +501,15 @@ test("addRules: add Function targets", async () => {
   const bus = new EventBus(stack, "EventBus", {
     rules: {
       rule1: {
-        eventPattern: { source: ["aws.codebuild"] },
-        targets: ["test/lambda.handler"],
+        pattern: { source: ["aws.codebuild"] },
+        targets: { "0": "test/lambda.handler" },
       },
     },
   });
   bus.addRules(stack, {
     rule2: {
-      eventPattern: { source: ["aws.codebuild"] },
-      targets: ["test/lambda.handler"],
+      pattern: { source: ["aws.codebuild"] },
+      targets: { "0": "test/lambda.handler" },
     },
   });
   countResources(stack, "AWS::Lambda::Function", 2);
@@ -513,7 +520,7 @@ test("addRules: add Function targets", async () => {
       {
         Id: "Target0",
         Arn: {
-          "Fn::GetAtt": [stringLike(/EventBusrule1target0.*/), "Arn"],
+          "Fn::GetAtt": [stringLike(/EventBusTarget.*/), "Arn"],
         },
       },
     ],
@@ -523,7 +530,7 @@ test("addRules: add Function targets", async () => {
       {
         Id: "Target0",
         Arn: {
-          "Fn::GetAtt": [stringLike(/rule2target0468369E9.*/), "Arn"],
+          "Fn::GetAtt": [stringLike(/Target.*/), "Arn"],
         },
       },
     ],
@@ -536,15 +543,15 @@ test("addRules: add Queue targets", async () => {
   const bus = new EventBus(stack, "EventBus", {
     rules: {
       rule1: {
-        eventPattern: { source: ["aws.codebuild"] },
-        targets: ["test/lambda.handler"],
+        pattern: { source: ["aws.codebuild"] },
+        targets: { "0": "test/lambda.handler" },
       },
     },
   });
   bus.addRules(stack, {
     rule2: {
-      eventPattern: { source: ["aws.codebuild"] },
-      targets: [queue],
+      pattern: { source: ["aws.codebuild"] },
+      targets: { "0": queue },
     },
   });
   countResources(stack, "AWS::Lambda::Function", 1);
@@ -555,7 +562,7 @@ test("addRules: add Queue targets", async () => {
       {
         Id: "Target0",
         Arn: {
-          "Fn::GetAtt": [stringLike(/EventBusrule1target0.*/), "Arn"],
+          "Fn::GetAtt": [stringLike(/EventBusTarget.*/), "Arn"],
         },
       },
     ],
@@ -577,8 +584,8 @@ test("addRules: thrashing rule name error", async () => {
   const bus = new EventBus(stack, "EventBus", {
     rules: {
       rule1: {
-        eventPattern: { source: ["aws.codebuild"] },
-        targets: ["test/lambda.handler"],
+        pattern: { source: ["aws.codebuild"] },
+        targets: { "0": "test/lambda.handler" },
       },
     },
   });
@@ -586,8 +593,8 @@ test("addRules: thrashing rule name error", async () => {
   expect(() => {
     bus.addRules(stack, {
       rule1: {
-        eventPattern: { source: ["aws.codebuild"] },
-        targets: ["test/lambda.handler"],
+        pattern: { source: ["aws.codebuild"] },
+        targets: { "0": "test/lambda.handler" },
       },
     });
   }).toThrow(/A rule already exists for "rule1"/);
@@ -598,8 +605,11 @@ test("attachPermissions", async () => {
   const bus = new EventBus(stack, "EventBus", {
     rules: {
       rule1: {
-        eventPattern: { source: ["aws.codebuild"] },
-        targets: ["test/lambda.handler", "test/lambda.handler"],
+        pattern: { source: ["aws.codebuild"] },
+        targets: {
+          "0": "test/lambda.handler",
+          "1": "test/lambda.handler",
+        },
       },
     },
   });
@@ -612,7 +622,7 @@ test("attachPermissions", async () => {
       ],
       Version: "2012-10-17",
     },
-    PolicyName: "EventBusrule1target0ServiceRoleDefaultPolicy28662B2E",
+    PolicyName: "EventBusTargetEventBusrule10ServiceRoleDefaultPolicy43D252A7",
   });
   hasResource(stack, "AWS::IAM::Policy", {
     PolicyDocument: {
@@ -622,7 +632,7 @@ test("attachPermissions", async () => {
       ],
       Version: "2012-10-17",
     },
-    PolicyName: "EventBusrule1target1ServiceRoleDefaultPolicy99BF5409",
+    PolicyName: "EventBusTargetEventBusrule11ServiceRoleDefaultPolicy5C865C6D",
   });
 });
 
@@ -631,12 +641,15 @@ test("attachPermissionsToTarget", async () => {
   const bus = new EventBus(stack, "EventBus", {
     rules: {
       rule1: {
-        eventPattern: { source: ["aws.codebuild"] },
-        targets: ["test/lambda.handler", "test/lambda.handler"],
+        pattern: { source: ["aws.codebuild"] },
+        targets: {
+          "0": "test/lambda.handler",
+          "1": "test/lambda.handler",
+        },
       },
     },
   });
-  bus.attachPermissionsToTarget("rule1", 0, ["s3"]);
+  bus.attachPermissionsToTarget("rule1", "0", ["s3"]);
   hasResource(stack, "AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
@@ -645,14 +658,14 @@ test("attachPermissionsToTarget", async () => {
       ],
       Version: "2012-10-17",
     },
-    PolicyName: "EventBusrule1target0ServiceRoleDefaultPolicy28662B2E",
+    PolicyName: "EventBusTargetEventBusrule10ServiceRoleDefaultPolicy43D252A7",
   });
   hasResource(stack, "AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [lambdaDefaultPolicy],
       Version: "2012-10-17",
     },
-    PolicyName: "EventBusrule1target1ServiceRoleDefaultPolicy99BF5409",
+    PolicyName: "EventBusTargetEventBusrule11ServiceRoleDefaultPolicy5C865C6D",
   });
 });
 
@@ -661,13 +674,13 @@ test("attachPermissionsToTarget: rule not exist", async () => {
   const bus = new EventBus(stack, "EventBus", {
     rules: {
       rule1: {
-        eventPattern: { source: ["aws.codebuild"] },
-        targets: ["test/lambda.handler"],
+        pattern: { source: ["aws.codebuild"] },
+        targets: { "0": "test/lambda.handler" },
       },
     },
   });
   expect(() => {
-    bus.attachPermissionsToTarget("unknown-rule", 0, ["s3"]);
+    bus.attachPermissionsToTarget("unknown-rule", "0", ["s3"]);
   }).toThrow(/Cannot find the rule "unknown-rule" in the "EventBus" EventBus./);
 });
 
@@ -676,13 +689,13 @@ test("attachPermissionsToTarget: target not exist", async () => {
   const bus = new EventBus(stack, "EventBus", {
     rules: {
       rule1: {
-        eventPattern: { source: ["aws.codebuild"] },
-        targets: ["test/lambda.handler"],
+        pattern: { source: ["aws.codebuild"] },
+        targets: { "0": "test/lambda.handler" },
       },
     },
   });
   expect(() => {
-    bus.attachPermissionsToTarget("rule1", 100, ["s3"]);
+    bus.attachPermissionsToTarget("rule1", "100", ["s3"]);
   }).toThrow(/Cannot attach permissions/);
 });
 
@@ -692,13 +705,16 @@ test("attachPermissionsToTarget: target is Queue", async () => {
   const bus = new EventBus(stack, "EventBus", {
     rules: {
       rule1: {
-        eventPattern: { source: ["aws.codebuild"] },
-        targets: ["test/lambda.handler", queue],
+        pattern: { source: ["aws.codebuild"] },
+        targets: {
+          "0": "test/lambda.handler",
+          "1": queue,
+        },
       },
     },
   });
   expect(() => {
-    bus.attachPermissionsToTarget("rule1", 1, ["s3"]);
+    bus.attachPermissionsToTarget("rule1", "1", ["s3"]);
   }).toThrow(/Cannot attach permissions/);
 });
 
@@ -709,16 +725,16 @@ test("attachPermissions-after-addRules", async () => {
   const bus = new EventBus(stackA, "EventBus", {
     rules: {
       rule1: {
-        eventPattern: { source: ["aws.codebuild"] },
-        targets: ["test/lambda.handler"],
+        pattern: { source: ["aws.codebuild"] },
+        targets: { "0": "test/lambda.handler" },
       },
     },
   });
   bus.attachPermissions(["s3"]);
   bus.addRules(stackB, {
     rule2: {
-      eventPattern: { source: ["aws.codebuild"] },
-      targets: ["test/lambda.handler"],
+      pattern: { source: ["aws.codebuild"] },
+      targets: { "0": "test/lambda.handler" },
     },
   });
   countResources(stackA, "AWS::Events::Rule", 1);
@@ -730,7 +746,7 @@ test("attachPermissions-after-addRules", async () => {
       ],
       Version: "2012-10-17",
     },
-    PolicyName: "EventBusrule1target0ServiceRoleDefaultPolicy28662B2E",
+    PolicyName: "EventBusTargetEventBusrule10ServiceRoleDefaultPolicy43D252A7",
   });
   countResources(stackB, "AWS::Events::Rule", 1);
   hasResource(stackB, "AWS::IAM::Policy", {
@@ -741,6 +757,6 @@ test("attachPermissions-after-addRules", async () => {
       ],
       Version: "2012-10-17",
     },
-    PolicyName: "rule2target0ServiceRoleDefaultPolicy1AE526DF",
+    PolicyName: "TargetEventBusrule20ServiceRoleDefaultPolicy451500AE",
   });
 });

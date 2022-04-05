@@ -43,6 +43,14 @@ async function checkFileExists(file) {
     .catch(() => false);
 }
 
+function validatePropsForJs(config) {
+  if (config.main.endsWith(".js")) {
+    const errors = Stacks.check(paths.appPath, config);
+    if (errors.length)
+      console.log(Stacks.formatDiagnostics(errors).join("\n\n"));
+  }
+}
+
 function getEsbuildTarget() {
   return "node" + process.version.slice(1);
 }
@@ -548,6 +556,7 @@ module.exports = {
   destroyInit,
   destroyPoll,
   writeOutputsFile,
+  validatePropsForJs,
 
   // Exported for unit tests
   _filterOutputKeys: filterOutputKeys,

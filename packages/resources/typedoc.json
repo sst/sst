@@ -1,0 +1,4 @@
+{
+  "entryPoints": ["./src/Api.ts", "./src/Cron.ts"],
+  "json": "out.json"
+}

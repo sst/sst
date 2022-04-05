@@ -1,5 +1,4 @@
 import { hasResource, hasResourceTemplate } from "./helper";
-import { RemovalPolicy } from "aws-cdk-lib";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import * as logs from "aws-cdk-lib/aws-logs";
 
@@ -7,10 +6,10 @@ export type AccessLogRetentionConfig =
   | keyof typeof logs.RetentionDays
   | logs.RetentionDays;
 
-import { App, AppDeployProps, Auth, DeployProps, Stack } from "../src";
+import { App, AppDeployProps, Auth, Stack } from "../src";
 
 test("non-namespaced-props", async () => {
-  const deployProps = {} as DeployProps;
+  const deployProps = {} as AppDeployProps;
   expect(deployProps).toBeDefined();
 });
 
@@ -21,9 +20,9 @@ test("namespaced-props", async () => {
 
 test("defaultRemovalPolicy", () => {
   const app = new App();
-  app.setDefaultRemovalPolicy(RemovalPolicy.DESTROY);
+  app.setDefaultRemovalPolicy("destroy");
   const stack = new Stack(app, "stack");
-  new Auth(stack, "Auth", { cognito: true });
+  new Auth(stack, "Auth", {});
   hasResourceTemplate(stack, "AWS::Cognito::UserPool", {
     DeletionPolicy: "Delete",
   });
@@ -31,7 +30,7 @@ test("defaultRemovalPolicy", () => {
 
 test("defaultRemovalPolicy bucket", () => {
   const app = new App();
-  app.setDefaultRemovalPolicy(RemovalPolicy.DESTROY);
+  app.setDefaultRemovalPolicy("destroy");
   const stack = new Stack(app, "stack");
   new Bucket(stack, "Bucket");
   hasResource(stack, "Custom::S3AutoDeleteObjects", {});

@@ -22,16 +22,26 @@ import { isCDKConstruct, isCDKConstructOf } from "../Construct";
 
 const logger = getChildLogger("resources");
 
-export type Permissions = PermissionType | Permission[];
+export type Permissions = "*" | Permission[];
+type SupportedPermissions =
+  | "execute-api"
+  | "appsync"
+  | "dynamodb"
+  | "sns"
+  | "sqs"
+  | "events"
+  | "kinesis"
+  | "s3"
+  | "rds-data"
+  | "secretsmanager"
+  | "lambda"
+  | "ssm";
 type Permission =
-  | string
+  | SupportedPermissions
+  | Omit<string, SupportedPermissions>
   | IConstruct
   | [IConstruct, string]
   | iam.PolicyStatement;
-
-export enum PermissionType {
-  ALL = "*",
-}
 
 export function attachPermissionsToRole(
   role: iam.Role,
@@ -39,7 +49,7 @@ export function attachPermissionsToRole(
 ): void {
   // Four patterns
   //
-  // attachPermissions(PermissionType.ALL);
+  // attachPermissions("*");
   // attachPermissions([ 'sns', 'sqs' ]);
   // attachPermissions([ event, queue ]);
   // attachPermissions([
@@ -59,18 +69,14 @@ export function attachPermissionsToRole(
   ////////////////////////////////////
   // Case: 'admin' permissions => '*'
   ////////////////////////////////////
-  if (typeof permissions === "string") {
-    if (permissions === PermissionType.ALL) {
-      role.addToPolicy(buildPolicy(permissions, ["*"]));
-    } else {
-      throw new Error(`The specified permissions are not supported.`);
-    }
+  if (permissions === "*") {
+    role.addToPolicy(buildPolicy(permissions, ["*"]));
     return;
   }
 
   if (!Array.isArray(permissions)) {
     throw new Error(
-      `The specified permissions are not supported. They are expected to be PermissionType.ALL or an array.`
+      `The specified permissions are not supported. They are expected to be "*" or an array.`
     );
   }
 
@@ -99,7 +105,7 @@ export function attachPermissionsToRole(
     // Case: SST construct
     ////////////////////////////////////
     else if (permission instanceof Api) {
-      const httpApi = permission.httpApi;
+      const httpApi = permission.cdk.httpApi;
       const { account, region } = Stack.of(httpApi);
       role.addToPolicy(
         buildPolicy("execute-api:Invoke", [
@@ -107,7 +113,7 @@ export function attachPermissionsToRole(
         ])
       );
     } else if (permission instanceof ApiGatewayV1Api) {
-      const restApi = permission.restApi;
+      const restApi = permission.cdk.restApi;
       const { account, region } = Stack.of(restApi);
       role.addToPolicy(
         buildPolicy("execute-api:Invoke", [
@@ -115,7 +121,7 @@ export function attachPermissionsToRole(
         ])
       );
     } else if (permission instanceof WebSocketApi) {
-      const webSocketApi = permission.webSocketApi;
+      const webSocketApi = permission.cdk.webSocketApi;
       const { account, region } = Stack.of(webSocketApi);
       role.addToPolicy(
         buildPolicy("execute-api:Invoke", [
@@ -128,7 +134,7 @@ export function attachPermissionsToRole(
         ])
       );
     } else if (permission instanceof AppSyncApi) {
-      const graphqlApi = permission.graphqlApi;
+      const graphqlApi = permission.cdk.graphqlApi;
       const { account, region } = Stack.of(graphqlApi);
       role.addToPolicy(
         buildPolicy("appsync:GraphQL", [
@@ -136,28 +142,31 @@ export function attachPermissionsToRole(
         ])
       );
     } else if (permission instanceof Table) {
-      const tableArn = permission.dynamodbTable.tableArn;
+      const tableArn = permission.cdk.table.tableArn;
       role.addToPolicy(buildPolicy("dynamodb:*", [tableArn, `${tableArn}/*`]));
     } else if (permission instanceof Topic) {
-      role.addToPolicy(buildPolicy("sns:*", [permission.snsTopic.topicArn]));
+      role.addToPolicy(buildPolicy("sns:*", [permission.cdk.topic.topicArn]));
     } else if (permission instanceof Queue) {
-      role.addToPolicy(buildPolicy("sqs:*", [permission.sqsQueue.queueArn]));
+      role.addToPolicy(buildPolicy("sqs:*", [permission.cdk.queue.queueArn]));
     } else if (permission instanceof EventBus) {
       role.addToPolicy(
-        buildPolicy("events:*", [permission.eventBridgeEventBus.eventBusArn])
+        buildPolicy("events:*", [permission.cdk.eventBus.eventBusArn])
       );
     } else if (permission instanceof KinesisStream) {
       role.addToPolicy(
-        buildPolicy("kinesis:*", [permission.kinesisStream.streamArn])
+        buildPolicy("kinesis:*", [permission.cdk.stream.streamArn])
       );
     } else if (permission instanceof Bucket) {
-      const bucketArn = permission.s3Bucket.bucketArn;
+      const bucketArn = permission.cdk.bucket.bucketArn;
       role.addToPolicy(buildPolicy("s3:*", [bucketArn, `${bucketArn}/*`]));
     } else if (permission instanceof RDS) {
       role.addToPolicy(buildPolicy("rds-data:*", [permission.clusterArn]));
-      if (permission.rdsServerlessCluster.secret) {
+      if (permission.cdk.cluster.secret) {
         role.addToPolicy(
-          buildPolicy(["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"], [permission.rdsServerlessCluster.secret.secretArn])
+          buildPolicy(
+            ["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"],
+            [permission.cdk.cluster.secret.secretArn]
+          )
         );
       }
     } else if (permission instanceof Function) {
@@ -207,11 +216,16 @@ export function attachPermissionsToRole(
       // - permisssions to access the Data API;
       // - permisssions to access the Secret Manager (required by Data API).
       // No need to grant the permissions for IAM database authentication
-      role.addToPolicy(buildPolicy("rds-data:*", [(permission as any).clusterArn]));
+      role.addToPolicy(
+        buildPolicy("rds-data:*", [(permission as any).clusterArn])
+      );
       const secret = (permission as any).secret;
       if (secret) {
         role.addToPolicy(
-          buildPolicy(["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"], [secret.secretArn])
+          buildPolicy(
+            ["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"],
+            [secret.secretArn]
+          )
         );
       }
     }
@@ -239,7 +253,10 @@ export function attachPermissionsToRole(
   });
 }
 
-function buildPolicy(actions: string | string[], resources: string[]): iam.PolicyStatement {
+function buildPolicy(
+  actions: string | string[],
+  resources: string[]
+): iam.PolicyStatement {
   return new iam.PolicyStatement({
     effect: iam.Effect.ALLOW,
     actions: typeof actions === "string" ? [actions] : actions,

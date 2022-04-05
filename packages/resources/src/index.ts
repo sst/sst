@@ -23,6 +23,7 @@ export * from "./StaticSite";
 export * from "./ViteStaticSite";
 export * from "./ReactStaticSite";
 
+export * from "./util/duration";
 export * from "./util/permission";
 export * as Metadata from "./Metadata";
 

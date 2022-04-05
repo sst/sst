@@ -12,7 +12,7 @@ import { DebugApp } from "./DebugApp";
 /**
  * Stack properties for the DebugStack.
  */
- export interface DebugStackProps extends cdk.StackProps {
+export interface DebugStackProps extends cdk.StackProps {
   /**
    * S3 bucket to store large websocket payloads.
    */
@@ -23,6 +23,13 @@ import { DebugApp } from "./DebugApp";
   websocketHandlerRoleArn?: string;
 }
 
+/**
+ * The `DebugStack` construct is used internally to create the resources needed to power [Live Lambda Development](../../live-lambda-development.md). Note that, the `DebugStack` construct should only be created inside the [`DebugApp`](DebugApp).
+ *
+ * It extends [`cdk.Stack`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Stack.html). It automatically prefixes the stack names with the stage and app name to ensure that they can be deployed to multiple regions in the same AWS account. It also ensures that the stack uses the same AWS profile and region as the app.
+ *
+ * @example
+ */
 export class DebugStack extends cdk.Stack {
   public readonly stage: string;
   private readonly api: apig.CfnApi;
@@ -56,17 +63,17 @@ export class DebugStack extends cdk.Stack {
     this.bucket = props?.payloadBucketArn
       ? s3.Bucket.fromBucketArn(this, "Bucket", props.payloadBucketArn)
       : new s3.Bucket(this, "Bucket", {
-        lifecycleRules: [
-          {
-            expiration: cdk.Duration.days(1),
-            prefix: "payloads/",
-          },
-        ],
-        encryption: s3.BucketEncryption.S3_MANAGED,
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-        autoDeleteObjects: true,
-        blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      });
+          lifecycleRules: [
+            {
+              expiration: cdk.Duration.days(1),
+              prefix: "payloads/",
+            },
+          ],
+          encryption: s3.BucketEncryption.S3_MANAGED,
+          removalPolicy: cdk.RemovalPolicy.DESTROY,
+          autoDeleteObjects: true,
+          blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+        });
 
     // Create API
     this.api = new apig.CfnApi(this, "Api", {
@@ -100,7 +107,12 @@ export class DebugStack extends cdk.Stack {
     });
   }
 
-  private addApiRoute(id: string, routeKey: string, handler: string, role?: iam.IRole) {
+  private addApiRoute(
+    id: string,
+    routeKey: string,
+    handler: string,
+    role?: iam.IRole
+  ) {
     // Create execution policy
     const policyStatement = new iam.PolicyStatement();
     policyStatement.addAllResources();

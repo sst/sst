@@ -40,7 +40,9 @@ export function isSSTConstruct(construct: any): construct is SSTConstruct {
 }
 
 export function isSSTDebugStack(construct: any): construct is cdk.Stack {
-  return isStackConstruct(construct) && construct.constructor.name === "DebugStack";
+  return (
+    isStackConstruct(construct) && construct.constructor.name === "DebugStack"
+  );
 }
 
 export function isCDKConstructOf(

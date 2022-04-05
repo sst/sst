@@ -1,7 +1,7 @@
 import * as sst from "@serverless-stack/resources";
 
 interface StackProps extends sst.StackProps {
-  readonly api: sst.Api;
+  readonly api: sst.Api<any>;
 }
 
 export class MainStack extends sst.Stack {

@@ -24,11 +24,9 @@ const lambdaDefaultPolicy = {
 // Test Constructor
 ///////////////////
 
-test("cognito-true", async () => {
+test("cdk.userPool is undefined", async () => {
   const stack = new Stack(new App(), "stack");
-  const auth = new Auth(stack, "Auth", {
-    cognito: true,
-  });
+  const auth = new Auth(stack, "Auth", {});
 
   expect(auth.cognitoIdentityPoolId).toBeDefined();
 
@@ -54,11 +52,11 @@ test("cognito-true", async () => {
             "",
             [
               "cognito-idp.us-east-1.",
-              { "Ref": "AWS::URLSuffix" },
+              { Ref: "AWS::URLSuffix" },
               "/",
-              { "Ref": "AuthUserPool8115E87F" }
-            ]
-          ]
+              { Ref: "AuthUserPool8115E87F" },
+            ],
+          ],
         },
       },
     ],
@@ -115,10 +113,10 @@ test("cognito-true", async () => {
   });
 });
 
-test("cognito-props", async () => {
+test("cdk.userPool is prop", async () => {
   const stack = new Stack(new App(), "stack");
   new Auth(stack, "Auth", {
-    cognito: {
+    cdk: {
       userPool: {
         signInAliases: { email: true },
       },
@@ -140,13 +138,15 @@ test("cognito-props", async () => {
   });
 });
 
-test("cognito: userPool is cognito.UserPool construct", async () => {
+test("cdk.userPool is construct", async () => {
   const stack = new Stack(new App(), "stack");
   const userPool = new cognito.UserPool(stack, "UserPool", {
     userPoolName: "user-pool",
   });
   new Auth(stack, "Auth", {
-    cognito: { userPool },
+    cdk: {
+      userPool,
+    },
   });
   countResources(stack, "AWS::Cognito::UserPool", 1);
   hasResource(stack, "AWS::Cognito::UserPool", {
@@ -155,7 +155,7 @@ test("cognito: userPool is cognito.UserPool construct", async () => {
   countResources(stack, "AWS::Cognito::UserPoolClient", 1);
 });
 
-test("cognito: userPoolClient is cognito.UserPoolClient construct", async () => {
+test("cdk.userPoolClient is construct", async () => {
   const stack = new Stack(new App(), "stack");
   const userPool = new cognito.UserPool(stack, "UserPool", {
     userPoolName: "user-pool",
@@ -165,7 +165,10 @@ test("cognito: userPoolClient is cognito.UserPoolClient construct", async () => 
     disableOAuth: true,
   });
   new Auth(stack, "Auth", {
-    cognito: { userPool, userPoolClient },
+    cdk: {
+      userPool,
+      userPoolClient,
+    },
   });
   countResources(stack, "AWS::Cognito::UserPool", 1);
   hasResource(stack, "AWS::Cognito::UserPool", {
@@ -177,7 +180,7 @@ test("cognito: userPoolClient is cognito.UserPoolClient construct", async () => 
   });
 });
 
-test("cognito: userPool is prop and userPoolClient is construct", async () => {
+test("cdk.userPool is prop and cdk.userPoolClient is construct", async () => {
   const stack = new Stack(new App(), "stack");
   const userPool = new cognito.UserPool(stack, "UserPool", {
     userPoolName: "user-pool",
@@ -188,7 +191,7 @@ test("cognito: userPool is prop and userPoolClient is construct", async () => {
   });
   expect(() => {
     new Auth(stack, "Auth", {
-      cognito: {
+      cdk: {
         userPool: { signInAliases: { email: true } },
         userPoolClient,
       },
@@ -198,10 +201,10 @@ test("cognito: userPool is prop and userPoolClient is construct", async () => {
   );
 });
 
-test("cognito: userPool is imported by userPoolName", async () => {
+test("cdk.userPool is imported by userPoolName", async () => {
   const stack = new Stack(new App(), "stack");
   new Auth(stack, "Auth", {
-    cognito: {
+    cdk: {
       userPool: cognito.UserPool.fromUserPoolId(stack, "IPool", "my-user-pool"),
     },
   });
@@ -218,10 +221,10 @@ test("cognito: userPool is imported by userPoolName", async () => {
             "",
             [
               "cognito-idp.us-east-1.",
-              { "Ref": "AWS::URLSuffix" },
-              "/my-user-pool"
-            ]
-          ]
+              { Ref: "AWS::URLSuffix" },
+              "/my-user-pool",
+            ],
+          ],
         },
       },
     ],
@@ -229,73 +232,37 @@ test("cognito: userPool is imported by userPoolName", async () => {
   });
 });
 
-test("cognito: userPool is imported by userPoolName with triggers", async () => {
+test("cdk.userPool is imported by userPoolName with triggers", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Auth(stack, "Auth", {
-      cognito: {
-        userPool: cognito.UserPool.fromUserPoolId(stack, "IPool", "my-user-pool"),
-        triggers: {
-          createAuthChallenge: "test/lambda.handler",
-        },
+      cdk: {
+        userPool: cognito.UserPool.fromUserPoolId(
+          stack,
+          "IPool",
+          "my-user-pool"
+        ),
+      },
+      triggers: {
+        createAuthChallenge: "test/lambda.handler",
       },
     });
   }).toThrow(/Cannot add triggers when the "userPool" is imported./);
 });
 
-test("cognito-deprecated-signInAliases", async () => {
+test("triggers is undefined", async () => {
   const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Auth(stack, "Auth", {
-      cognito: {
-        signInAliases: { email: true },
-      },
-    });
-  }).toThrow(/The "cognito.signInAliases" property is deprecated./);
-});
-
-test("cognito-deprecated-user-pool", async () => {
-  const stack = new Stack(new App(), "stack");
-  const userPool = new cognito.UserPool(stack, "UserPool", {
-    userPoolName: "user-pool",
-  });
-  expect(() => {
-    new Auth(stack, "Auth", {
-      cognitoUserPool: userPool,
-    });
-  }).toThrow(/The "cognitoUserPool" property is deprecated./);
-});
-
-test("cognito-deprecated-user-pool-client", async () => {
-  const stack = new Stack(new App(), "stack");
-  const userPool = new cognito.UserPool(stack, "UserPool", {
-    userPoolName: "user-pool",
-  });
-  const userPoolClient = new cognito.UserPoolClient(stack, "UserPoolClient", {
-    userPool,
-  });
-  expect(() => {
-    new Auth(stack, "Auth", {
-      cognitoUserPoolClient: userPoolClient,
-    });
-  }).toThrow(/The "cognitoUserPoolClient" property is deprecated./);
-});
-
-test("cognito-triggers-undefined", async () => {
-  const stack = new Stack(new App(), "stack");
-  new Auth(stack, "Auth", { cognito: true });
+  new Auth(stack, "Auth", {});
   countResources(stack, "AWS::Lambda::Function", 0);
   hasResource(stack, "AWS::Cognito::UserPool", {
     LambdaConfig: ABSENT,
   });
 });
 
-test("cognito-triggers-empty", async () => {
+test("triggers is empty", async () => {
   const stack = new Stack(new App(), "stack");
   new Auth(stack, "Auth", {
-    cognito: {
-      triggers: {},
-    },
+    triggers: {},
   });
   countResources(stack, "AWS::Lambda::Function", 0);
   hasResource(stack, "AWS::Cognito::UserPool", {
@@ -303,13 +270,11 @@ test("cognito-triggers-empty", async () => {
   });
 });
 
-test("cognito-triggers-string", async () => {
+test("triggers is string", async () => {
   const stack = new Stack(new App(), "stack");
   new Auth(stack, "Auth", {
-    cognito: {
-      triggers: {
-        createAuthChallenge: "test/lambda.handler",
-      },
+    triggers: {
+      createAuthChallenge: "test/lambda.handler",
     },
   });
   hasResource(stack, "AWS::Cognito::UserPool", {
@@ -325,14 +290,14 @@ test("cognito-triggers-string", async () => {
   });
 });
 
-test("cognito-triggers-string-with-defaultFunctionProps", async () => {
+test("triggers is string with defaults.function", async () => {
   const stack = new Stack(new App(), "stack");
   new Auth(stack, "Auth", {
-    cognito: {
-      triggers: {
-        createAuthChallenge: "test/lambda.handler",
-      },
-      defaultFunctionProps: {
+    triggers: {
+      createAuthChallenge: "test/lambda.handler",
+    },
+    defaults: {
+      function: {
         timeout: 3,
         environment: {
           keyA: "valueA",
@@ -352,14 +317,12 @@ test("cognito-triggers-string-with-defaultFunctionProps", async () => {
   });
 });
 
-test("cognito-triggers-Function", async () => {
+test("triggers is Function", async () => {
   const stack = new Stack(new App(), "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
   new Auth(stack, "Auth", {
-    cognito: {
-      triggers: {
-        createAuthChallenge: f,
-      },
+    triggers: {
+      createAuthChallenge: f,
     },
   });
   countResources(stack, "AWS::Lambda::Function", 1);
@@ -368,31 +331,29 @@ test("cognito-triggers-Function", async () => {
   });
 });
 
-test("cognito-triggers-Function-with-defaultFunctionProps", async () => {
+test("triggers is Function with defaults.function", async () => {
   const stack = new Stack(new App(), "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
   expect(() => {
     new Auth(stack, "Auth", {
-      cognito: {
-        triggers: {
-          createAuthChallenge: f,
-        },
-        defaultFunctionProps: {
+      triggers: {
+        createAuthChallenge: f,
+      },
+      defaults: {
+        function: {
           timeout: 3,
         },
       },
     });
-  }).toThrow(/The "defaultFunctionProps" cannot be applied/);
+  }).toThrow(/The "defaults.function" cannot be applied/);
 });
 
-test("cognito-triggers-FunctionProps", async () => {
+test("triggers is FunctionProps", async () => {
   const stack = new Stack(new App(), "stack");
   new Auth(stack, "Auth", {
-    cognito: {
-      triggers: {
-        createAuthChallenge: {
-          handler: "test/lambda.handler",
-        },
+    triggers: {
+      createAuthChallenge: {
+        handler: "test/lambda.handler",
       },
     },
   });
@@ -401,16 +362,16 @@ test("cognito-triggers-FunctionProps", async () => {
   });
 });
 
-test("cognito-triggers-FunctionProps-with-defaultFunctionProps", async () => {
+test("triggers is FunctionProps with defaults.function", async () => {
   const stack = new Stack(new App(), "stack");
   new Auth(stack, "Auth", {
-    cognito: {
-      triggers: {
-        createAuthChallenge: {
-          handler: "test/lambda.handler",
-        },
+    triggers: {
+      createAuthChallenge: {
+        handler: "test/lambda.handler",
       },
-      defaultFunctionProps: {
+    },
+    defaults: {
+      function: {
         timeout: 3,
       },
     },
@@ -421,15 +382,15 @@ test("cognito-triggers-FunctionProps-with-defaultFunctionProps", async () => {
   });
 });
 
-test("cognito-triggers-redefined-error", async () => {
+test("triggers is redefined error", async () => {
   const stack = new Stack(new App(), "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
   expect(() => {
     new Auth(stack, "Auth", {
-      cognito: {
-        triggers: {
-          createAuthChallenge: "test/lambda.handler",
-        },
+      triggers: {
+        createAuthChallenge: "test/lambda.handler",
+      },
+      cdk: {
         userPool: {
           lambdaTriggers: {
             customMessage: f,
@@ -437,16 +398,18 @@ test("cognito-triggers-redefined-error", async () => {
         },
       },
     });
-  }).toThrow(/Cannot configure the "cognito.userPool.lambdaTriggers"/);
+  }).toThrow(/Cannot configure the "cdk.userPool.lambdaTriggers"/);
 });
 
-test("auth0", async () => {
+test("identityPoolFederation auth0", async () => {
   const stack = new Stack(new App(), "stack");
   new Auth(stack, "Auth", {
-    auth0: { domain: "https://domain", clientId: "id" },
+    identityPoolFederation: {
+      auth0: { domain: "https://domain", clientId: "id" },
+    },
   });
-  countResources(stack, "AWS::Cognito::UserPool", 0);
-  countResources(stack, "AWS::Cognito::UserPoolClient", 0);
+  countResources(stack, "AWS::Cognito::UserPool", 1);
+  countResources(stack, "AWS::Cognito::UserPoolClient", 1);
   countResources(stack, "AWS::IAM::Role", 3);
   hasResource(stack, "Custom::AWSCDKOpenIdConnectProvider", {
     Url: "https://domain",
@@ -456,96 +419,6 @@ test("auth0", async () => {
     IdentityPoolName: "dev-my-app-Auth",
     AllowUnauthenticatedIdentities: true,
     OpenIdConnectProviderARNs: [{ Ref: "AuthAuth0Provider57F70580" }],
-  });
-});
-
-test("auth0-domain-without-https", async () => {
-  const stack = new Stack(new App(), "stack");
-  new Auth(stack, "Auth", {
-    auth0: { domain: "domain", clientId: "id" },
-  });
-  hasResource(stack, "Custom::AWSCDKOpenIdConnectProvider", {
-    Url: "https://domain",
-    ClientIDList: ["id"],
-  });
-});
-
-test("auth0-error-missing-domain", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Auth(stack, "Auth", {
-      auth0: { clientId: "s" } as AuthAuth0Props,
-    });
-  }).toThrow(/No Auth0 domain/);
-});
-
-test("auth0-error-missing-clientId", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Auth(stack, "Auth", {
-      auth0: { domain: "https://domain" } as AuthAuth0Props,
-    });
-  }).toThrow(/No Auth0 clientId/);
-});
-
-test("amazon-error-missing-appId", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Auth(stack, "Auth", { amazon: {} as AuthAmazonProps });
-  }).toThrow(/No Amazon/);
-});
-
-test("facebook-error-missing-appId", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Auth(stack, "Auth", { facebook: {} as AuthFacebookProps });
-  }).toThrow(/No Facebook/);
-});
-
-test("google-error-missing-clientId", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Auth(stack, "Auth", { google: {} as AuthGoogleProps });
-  }).toThrow(/No Google/);
-});
-
-test("twitter-error-missing-consumerKey", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Auth(stack, "Auth", {
-      twitter: { consumerSecret: "secret" } as AuthTwitterProps,
-    });
-  }).toThrow(/No Twitter consumer key/);
-});
-
-test("twitter-error-missing-consumerSecret", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Auth(stack, "Auth", {
-      twitter: { consumerKey: "key" } as AuthTwitterProps,
-    });
-  }).toThrow(/No Twitter consumer secret/);
-});
-
-test("apple-error-missing-servicesId", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Auth(stack, "Auth", { apple: {} as AuthAppleProps });
-  }).toThrow(/No Apple/);
-});
-
-test("cognito-and-social", async () => {
-  const stack = new Stack(new App(), "stack");
-  new Auth(stack, "Auth", {
-    cognito: true,
-    twitter: { consumerKey: "k", consumerSecret: "s" },
-  });
-  countResources(stack, "AWS::Cognito::UserPool", 1);
-  countResources(stack, "AWS::Cognito::UserPoolClient", 1);
-  countResources(stack, "AWS::IAM::Role", 2);
-  hasResource(stack, "AWS::Cognito::IdentityPool", {
-    IdentityPoolName: "dev-my-app-Auth",
-    AllowUnauthenticatedIdentities: true,
     CognitoIdentityProviders: [
       {
         ClientId: { Ref: "AuthUserPoolClient0AA456E4" },
@@ -554,28 +427,129 @@ test("cognito-and-social", async () => {
             "",
             [
               "cognito-idp.us-east-1.",
-              { "Ref": "AWS::URLSuffix" },
+              { Ref: "AWS::URLSuffix" },
               "/",
-              { "Ref": "AuthUserPool8115E87F" }
-            ]
-          ]
+              { Ref: "AuthUserPool8115E87F" },
+            ],
+          ],
         },
       },
     ],
-    SupportedLoginProviders: { "api.twitter.com": "k;s" },
   });
+});
+test("identityPoolFederation auth0-domain-without-https", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Auth(stack, "Auth", {
+    identityPoolFederation: {
+      auth0: { domain: "domain", clientId: "id" },
+    },
+  });
+  hasResource(stack, "Custom::AWSCDKOpenIdConnectProvider", {
+    Url: "https://domain",
+    ClientIDList: ["id"],
+  });
+});
+
+test("identityPoolFederation auth0-error-missing-domain", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Auth(stack, "Auth", {
+      identityPoolFederation: {
+        auth0: { clientId: "s" } as AuthAuth0Props,
+      },
+    });
+  }).toThrow(/Auth0Domain/);
+});
+
+test("identityPoolFederation auth0-error-missing-clientId", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Auth(stack, "Auth", {
+      identityPoolFederation: {
+        auth0: { domain: "https://domain" } as AuthAuth0Props,
+      },
+    });
+  }).toThrow(/Auth0ClientId/);
+});
+
+test("identityPoolFederation amazon-error-missing-appId", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Auth(stack, "Auth", {
+      identityPoolFederation: {
+        amazon: {} as AuthAmazonProps,
+      },
+    });
+  }).toThrow(/AmazonAppId/);
+});
+
+test("identityPoolFederation facebook-error-missing-appId", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Auth(stack, "Auth", {
+      identityPoolFederation: {
+        facebook: {} as AuthFacebookProps,
+      },
+    });
+  }).toThrow(/FacebookAppId/);
+});
+
+test("identityPoolFederation google-error-missing-clientId", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Auth(stack, "Auth", {
+      identityPoolFederation: {
+        google: {} as AuthGoogleProps,
+      },
+    });
+  }).toThrow(/GoogleClientId/);
+});
+
+test("identityPoolFederation twitter-error-missing-consumerKey", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Auth(stack, "Auth", {
+      identityPoolFederation: {
+        twitter: { consumerSecret: "secret" } as AuthTwitterProps,
+      },
+    });
+  }).toThrow(/TwitterConsumerKey/);
+});
+
+test("identityPoolFederation twitter-error-missing-consumerSecret", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Auth(stack, "Auth", {
+      identityPoolFederation: {
+        twitter: { consumerKey: "key" } as AuthTwitterProps,
+      },
+    });
+  }).toThrow(/TwitterConsumerSecret/);
+});
+
+test("identityPoolFederation apple-error-missing-servicesId", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Auth(stack, "Auth", {
+      identityPoolFederation: {
+        apple: {} as AuthAppleProps,
+      },
+    });
+  }).toThrow(/AppleServicesId/);
 });
 
 test("multi-social", async () => {
   const stack = new Stack(new App(), "stack");
   new Auth(stack, "Auth", {
-    amazon: { appId: "1" },
-    apple: { servicesId: "2" },
-    facebook: { appId: "3" },
-    google: { clientId: "4" },
+    identityPoolFederation: {
+      amazon: { appId: "1" },
+      apple: { servicesId: "2" },
+      facebook: { appId: "3" },
+      google: { clientId: "4" },
+    },
   });
-  countResources(stack, "AWS::Cognito::UserPool", 0);
-  countResources(stack, "AWS::Cognito::UserPoolClient", 0);
+  countResources(stack, "AWS::Cognito::UserPool", 1);
+  countResources(stack, "AWS::Cognito::UserPoolClient", 1);
   hasResource(stack, "AWS::Cognito::IdentityPool", {
     SupportedLoginProviders: {
       "www.amazon.com": "1",
@@ -589,8 +563,12 @@ test("multi-social", async () => {
 test("identity-pool-props", async () => {
   const stack = new Stack(new App(), "stack");
   new Auth(stack, "Auth", {
-    identityPool: {
-      allowUnauthenticatedIdentities: false,
+    identityPoolFederation: {
+      cdk: {
+        cfnIdentityPool: {
+          allowUnauthenticatedIdentities: false,
+        },
+      },
     },
   });
   hasResource(stack, "AWS::Cognito::IdentityPool", {
@@ -606,10 +584,8 @@ test("identity-pool-props", async () => {
 test("getFunction", async () => {
   const stack = new Stack(new App(), "stack");
   const ret = new Auth(stack, "Auth", {
-    cognito: {
-      triggers: {
-        createAuthChallenge: "test/lambda.handler",
-      },
+    triggers: {
+      createAuthChallenge: "test/lambda.handler",
     },
   });
   expect(ret.getFunction("createAuthChallenge")).toBeDefined();
@@ -618,10 +594,8 @@ test("getFunction", async () => {
 test("getFunction-undefined", async () => {
   const stack = new Stack(new App(), "stack");
   const ret = new Auth(stack, "Auth", {
-    cognito: {
-      triggers: {
-        createAuthChallenge: "test/lambda.handler",
-      },
+    triggers: {
+      createAuthChallenge: "test/lambda.handler",
     },
   });
   expect(ret.getFunction("customMessage")).toBeUndefined();
@@ -630,11 +604,9 @@ test("getFunction-undefined", async () => {
 test("attachPermissionsForTrigger", async () => {
   const stack = new Stack(new App(), "stack");
   const auth = new Auth(stack, "Auth", {
-    cognito: {
-      triggers: {
-        createAuthChallenge: "test/lambda.handler",
-        customMessage: "test/lambda.handler",
-      },
+    triggers: {
+      createAuthChallenge: "test/lambda.handler",
+      customMessage: "test/lambda.handler",
     },
   });
   auth.attachPermissionsForTrigger("createAuthChallenge", ["s3"]);
@@ -660,11 +632,9 @@ test("attachPermissionsForTrigger", async () => {
 test("attachPermissionsForTriggers", async () => {
   const stack = new Stack(new App(), "stack");
   const auth = new Auth(stack, "Auth", {
-    cognito: {
-      triggers: {
-        createAuthChallenge: "test/lambda.handler",
-        customMessage: "test/lambda.handler",
-      },
+    triggers: {
+      createAuthChallenge: "test/lambda.handler",
+      customMessage: "test/lambda.handler",
     },
   });
   auth.attachPermissionsForTriggers(["s3"]);
@@ -692,9 +662,7 @@ test("attachPermissionsForTriggers", async () => {
 
 test("attachPermissionsForAuthUsers", async () => {
   const stack = new Stack(new App(), "stack");
-  const auth = new Auth(stack, "Auth", {
-    cognito: true,
-  });
+  const auth = new Auth(stack, "Auth", {});
   auth.attachPermissionsForAuthUsers([
     new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
@@ -727,9 +695,7 @@ test("attachPermissionsForAuthUsers", async () => {
 
 test("attachPermissionsForUnauthUsers", async () => {
   const stack = new Stack(new App(), "stack");
-  const auth = new Auth(stack, "Auth", {
-    cognito: true,
-  });
+  const auth = new Auth(stack, "Auth", {});
   auth.attachPermissionsForUnauthUsers([
     new iam.PolicyStatement({
       effect: iam.Effect.DENY,

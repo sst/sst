@@ -7,16 +7,9 @@ import {
 } from "./helper";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
-import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as logs from "aws-cdk-lib/aws-logs";
-import {
-  App,
-  Stack,
-  WebSocketApi,
-  WebSocketApiAuthorizationType,
-  Function,
-} from "../src";
+import { App, Stack, WebSocketApi, Function } from "../src";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
@@ -68,11 +61,13 @@ test("constructor: webSocketApi is undefined", async () => {
 test("constructor: webSocketApi is props", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api", {
-    webSocketApi: {
-      description: "New WebSocket API",
-    },
-    webSocketStage: {
-      autoDeploy: false,
+    cdk: {
+      webSocketApi: {
+        description: "New WebSocket API",
+      },
+      webSocketStage: {
+        autoDeploy: false,
+      },
     },
   });
   hasResource(stack, "AWS::ApiGatewayV2::Api", {
@@ -89,8 +84,10 @@ test("constructor: webSocketApi is construct", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
   const iApi = importWebSocketApiFromAnotherStack(stack);
   new WebSocketApi(stack, "Api", {
-    webSocketApi: iApi.webSocketApi,
-    webSocketStage: iApi.webSocketStage,
+    cdk: {
+      webSocketApi: iApi.cdk.webSocketApi,
+      webSocketStage: iApi.cdk.webSocketStage,
+    },
   });
   countResources(stack, "AWS::ApiGatewayV2::Api", 0);
   countResources(stack, "AWS::ApiGatewayV2::Stage", 0);
@@ -101,7 +98,9 @@ test("constructor: webSocketApi stage-imported-api-no-imported", async () => {
   const iApi = importWebSocketApiFromAnotherStack(stack);
   expect(() => {
     new WebSocketApi(stack, "Api", {
-      webSocketStage: iApi.webSocketStage,
+      cdk: {
+        webSocketStage: iApi.cdk.webSocketStage,
+      },
     });
   }).toThrow(
     /Cannot import the "webSocketStage" when the "webSocketApi" is not imported./
@@ -182,7 +181,7 @@ test("accessLog-props-with-retention", async () => {
   new WebSocketApi(stack, "Api", {
     accessLog: {
       format: "$context.requestTime",
-      retention: "ONE_WEEK",
+      retention: "one_week",
     },
   });
   hasResource(stack, "AWS::ApiGatewayV2::Stage", {
@@ -212,8 +211,10 @@ test("accessLog-redefined", async () => {
   const iApi = importWebSocketApiFromAnotherStack(stack);
   expect(() => {
     new WebSocketApi(stack, "Api", {
-      webSocketApi: iApi.webSocketApi,
-      webSocketStage: iApi.webSocketStage,
+      cdk: {
+        webSocketApi: iApi.cdk.webSocketApi,
+        webSocketStage: iApi.cdk.webSocketStage,
+      },
       accessLog: true,
     });
   }).toThrow(
@@ -233,8 +234,8 @@ test("customDomain is string", async () => {
     customDomain: "api.domain.com",
   });
   expect(api.customDomainUrl).toMatch(/wss:\/\/api.domain.com/);
-  expect(api.apiGatewayDomain).toBeDefined();
-  expect(api.acmCertificate).toBeDefined();
+  expect(api.cdk.domainName).toBeDefined();
+  expect(api.cdk.certificate).toBeDefined();
   hasResource(stack, "AWS::ApiGatewayV2::Api", {
     Name: "dev-websocket-Api",
   });
@@ -292,7 +293,7 @@ test("customDomain is string", async () => {
   });
 });
 
-test("customDomain is props: domainName is string", async () => {
+test("customDomain.domainName is string", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
   route53.HostedZone.fromLookup = jest
     .fn()
@@ -341,7 +342,7 @@ test("customDomain is props: domainName is string", async () => {
   });
 });
 
-test("customDomain is props: domainName is uppercase string error", async () => {
+test("customDomain.domainName is string (uppercase error)", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
   expect(() => {
     new WebSocketApi(stack, "Api", {
@@ -386,7 +387,7 @@ test("customDomain is props: hostedZone-generated-from-full-domainName", async (
   });
 });
 
-test("customDomain is props: domainName-apigDomainName", async () => {
+test("customDomain: cdk.domainName is apigDomainName", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
   apig.DomainName.fromDomainNameAttributes = jest
     .fn()
@@ -401,16 +402,18 @@ test("customDomain is props: domainName-apigDomainName", async () => {
 
   new WebSocketApi(stack, "Api", {
     customDomain: {
-      domainName: apig.DomainName.fromDomainNameAttributes(
-        stack,
-        "DomainName",
-        {
-          name: "name",
-          regionalDomainName: "api.domain.com",
-          regionalHostedZoneId: "id",
-        }
-      ) as apig.DomainName,
       path: "users",
+      cdk: {
+        domainName: apig.DomainName.fromDomainNameAttributes(
+          stack,
+          "DomainName",
+          {
+            name: "name",
+            regionalDomainName: "api.domain.com",
+            regionalHostedZoneId: "id",
+          }
+        ) as apig.DomainName,
+      },
     },
   });
   hasResource(stack, "AWS::ApiGatewayV2::Api", {
@@ -435,7 +438,7 @@ test("customDomain is props: domainName-apigDomainName", async () => {
   countResources(stack, "AWS::Route53::HostedZone", 0);
 });
 
-test("customDomain is props: domainName-apigDomainName-hostedZone-redefined-error", async () => {
+test("customDomain: cdk.domainName and hostedZone co-exist error", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
   apig.DomainName.fromDomainNameAttributes = jest
     .fn()
@@ -451,15 +454,17 @@ test("customDomain is props: domainName-apigDomainName-hostedZone-redefined-erro
   expect(() => {
     new WebSocketApi(stack, "Api", {
       customDomain: {
-        domainName: apig.DomainName.fromDomainNameAttributes(
-          stack,
-          "DomainName",
-          {
-            name: "name",
-            regionalDomainName: "api.domain.com",
-            regionalHostedZoneId: "id",
-          }
-        ) as apig.DomainName,
+        cdk: {
+          domainName: apig.DomainName.fromDomainNameAttributes(
+            stack,
+            "DomainName",
+            {
+              name: "name",
+              regionalDomainName: "api.domain.com",
+              regionalHostedZoneId: "id",
+            }
+          ) as apig.DomainName,
+        },
         hostedZone: "domain.com",
       },
     });
@@ -468,7 +473,7 @@ test("customDomain is props: domainName-apigDomainName-hostedZone-redefined-erro
   );
 });
 
-test("customDomain is props: domainName-apigDomainName-certificate-redefined-error", async () => {
+test("customDomain: cdk.domainName and cdk.certificate co-exist error", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
   apig.DomainName.fromDomainNameAttributes = jest
     .fn()
@@ -484,18 +489,20 @@ test("customDomain is props: domainName-apigDomainName-certificate-redefined-err
   expect(() => {
     new WebSocketApi(stack, "Api", {
       customDomain: {
-        domainName: apig.DomainName.fromDomainNameAttributes(
-          stack,
-          "DomainName",
-          {
-            name: "name",
-            regionalDomainName: "api.domain.com",
-            regionalHostedZoneId: "id",
-          }
-        ) as apig.DomainName,
-        certificate: new acm.Certificate(stack, "Cert", {
-          domainName: "api.domain.com",
-        }),
+        cdk: {
+          domainName: apig.DomainName.fromDomainNameAttributes(
+            stack,
+            "DomainName",
+            {
+              name: "name",
+              regionalDomainName: "api.domain.com",
+              regionalHostedZoneId: "id",
+            }
+          ) as apig.DomainName,
+          certificate: new acm.Certificate(stack, "Cert", {
+            domainName: "api.domain.com",
+          }),
+        },
       },
     });
   }).toThrow(
@@ -508,10 +515,12 @@ test("customDomain: isExternalDomain true", async () => {
   const site = new WebSocketApi(stack, "Site", {
     customDomain: {
       domainName: "www.domain.com",
-      certificate: new acm.Certificate(stack, "Cert", {
-        domainName: "domain.com",
-      }),
       isExternalDomain: true,
+      cdk: {
+        certificate: new acm.Certificate(stack, "Cert", {
+          domainName: "domain.com",
+        }),
+      },
     },
   });
   expect(site.customDomainUrl).toEqual("wss://www.domain.com");
@@ -550,10 +559,12 @@ test("customDomain: isExternalDomain true and hostedZone set", async () => {
       customDomain: {
         domainName: "www.domain.com",
         hostedZone: "domain.com",
-        certificate: new acm.Certificate(stack, "Cert", {
-          domainName: "domain.com",
-        }),
         isExternalDomain: true,
+        cdk: {
+          certificate: new acm.Certificate(stack, "Cert", {
+            domainName: "domain.com",
+          }),
+        },
       },
     });
   }).toThrow(
@@ -567,8 +578,10 @@ test("customDomain is props: stage-is-imported-error", async () => {
   expect(() => {
     new WebSocketApi(stack, "Api", {
       customDomain: "api.domain.com",
-      webSocketApi: iApi.webSocketApi,
-      webSocketStage: iApi.webSocketStage,
+      cdk: {
+        webSocketApi: iApi.cdk.webSocketApi,
+        webSocketStage: iApi.cdk.webSocketStage,
+      },
     });
   }).toThrow(
     /Cannot configure the "customDomain" when "webSocketStage" is a construct/
@@ -588,27 +601,14 @@ test("customDomain is props: domainName-defined-in-stage", async () => {
   );
   expect(() => {
     new WebSocketApi(stack, "Api", {
-      webSocketStage: {
-        domainMapping: { domainName },
+      cdk: {
+        webSocketStage: {
+          domainMapping: { domainName },
+        },
       },
     });
   }).toThrow(
     /Do not configure the "webSocketStage.domainMapping". Use the "customDomain" to configure the Api domain./
-  );
-});
-
-test("authorizationType-invalid", async () => {
-  const stack = new Stack(new App({ name: "websocket" }), "stack");
-  expect(() => {
-    new WebSocketApi(stack, "Api", {
-      routes: {
-        $connect: "test/lambda.handler",
-        $default: "test/lambda.handler",
-      },
-      authorizationType: "ABC" as WebSocketApiAuthorizationType.IAM,
-    });
-  }).toThrow(
-    /sst.WebSocketApi does not currently support ABC. Only "IAM" and "CUSTOM" are currently supported./
   );
 });
 
@@ -619,7 +619,7 @@ test("authorizationType-iam", async () => {
       $connect: "test/lambda.handler",
       $default: "test/lambda.handler",
     },
-    authorizationType: WebSocketApiAuthorizationType.IAM,
+    authorizer: "iam",
   });
   countResources(stack, "AWS::ApiGatewayV2::Route", 2);
   countResourcesLike(stack, "AWS::ApiGatewayV2::Route", 1, {
@@ -638,7 +638,7 @@ test("authorizationType-none", async () => {
       $connect: "test/lambda.handler",
       $default: "test/lambda.handler",
     },
-    authorizationType: WebSocketApiAuthorizationType.NONE,
+    authorizer: "none",
   });
   countResources(stack, "AWS::ApiGatewayV2::Route", 2);
   countResourcesLike(stack, "AWS::ApiGatewayV2::Route", 2, {
@@ -665,20 +665,16 @@ test("authorizationType-custom", async () => {
   const handler = new Function(stack, "Authorizer", {
     handler: "test/lambda.handler",
   });
-  const authorizer = new apigAuthorizers.WebSocketLambdaAuthorizer(
-    "Authorizer",
-    handler,
-    {
-      authorizerName: "LambdaAuthorizer",
-    }
-  );
   new WebSocketApi(stack, "Api", {
     routes: {
       $connect: "test/lambda.handler",
       $default: "test/lambda.handler",
     },
-    authorizationType: WebSocketApiAuthorizationType.CUSTOM,
-    authorizer: authorizer,
+    authorizer: {
+      type: "lambda",
+      function: handler,
+      name: "LambdaAuthorizer",
+    },
   });
   countResourcesLike(stack, "AWS::ApiGatewayV2::Route", 1, {
     AuthorizationType: "NONE",
@@ -708,21 +704,17 @@ test("authorizationType-custom: override identitySource", async () => {
   const handler = new Function(stack, "Authorizer", {
     handler: "test/lambda.handler",
   });
-  const authorizer = new apigAuthorizers.WebSocketLambdaAuthorizer(
-    "Authorizer",
-    handler,
-    {
-      authorizerName: "LambdaAuthorizer",
-      identitySource: ["route.request.querystring.Auth"],
-    }
-  );
   new WebSocketApi(stack, "Api", {
     routes: {
       $connect: "test/lambda.handler",
       $default: "test/lambda.handler",
     },
-    authorizationType: WebSocketApiAuthorizationType.CUSTOM,
-    authorizer: authorizer,
+    authorizer: {
+      type: "lambda",
+      function: handler,
+      name: "LambdaAuthorizer",
+      identitySource: ["route.request.querystring.Auth"],
+    },
   });
   countResourcesLike(stack, "AWS::ApiGatewayV2::Route", 1, {
     AuthorizationType: "NONE",
@@ -747,14 +739,14 @@ test("authorizationType-custom: override identitySource", async () => {
   });
 });
 
-test("routes-undefined", async () => {
+test("routes: undefined", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api");
   countResources(stack, "AWS::ApiGatewayV2::Api", 1);
   countResources(stack, "AWS::ApiGatewayV2::Route", 0);
 });
 
-test("routes-empty", async () => {
+test("routes: empty", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api", {
     routes: {},
@@ -763,7 +755,7 @@ test("routes-empty", async () => {
   countResources(stack, "AWS::ApiGatewayV2::Route", 0);
 });
 
-test("route-string", async () => {
+test("routes: route is string", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api", {
     routes: {
@@ -779,16 +771,18 @@ test("route-string", async () => {
   });
 });
 
-test("route-string-with-defaultFunctionProps", async () => {
+test("routes: route is string-with-defaultFunctionProps", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api", {
     routes: {
       $connect: "test/lambda.handler",
     },
-    defaultFunctionProps: {
-      timeout: 3,
-      environment: {
-        keyA: "valueA",
+    defaults: {
+      function: {
+        timeout: 3,
+        environment: {
+          keyA: "valueA",
+        },
       },
     },
   });
@@ -804,7 +798,7 @@ test("route-string-with-defaultFunctionProps", async () => {
   });
 });
 
-test("route-Function", async () => {
+test("routes: route is Function", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
   new WebSocketApi(stack, "Api", {
@@ -818,7 +812,7 @@ test("route-Function", async () => {
   });
 });
 
-test("route-Function-with-defaultFunctionProps", async () => {
+test("routes: route is Function-with-defaultFunctionProps", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
   expect(() => {
@@ -826,19 +820,23 @@ test("route-Function-with-defaultFunctionProps", async () => {
       routes: {
         $connect: f,
       },
-      defaultFunctionProps: {
-        timeout: 3,
+      defaults: {
+        function: {
+          timeout: 3,
+        },
       },
     });
-  }).toThrow(/The "defaultFunctionProps" cannot be applied/);
+  }).toThrow(/The "defaults.function" cannot be applied/);
 });
 
-test("route-FunctionProps", async () => {
+test("routes: route is prop", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api", {
     routes: {
       $connect: {
-        handler: "test/lambda.handler",
+        function: {
+          handler: "test/lambda.handler",
+        },
       },
     },
   });
@@ -847,16 +845,20 @@ test("route-FunctionProps", async () => {
   });
 });
 
-test("route-FunctionProps-with-defaultFunctionProps", async () => {
+test("routes: route is prop-with-defaultFunctionProps", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api", {
     routes: {
       $connect: {
-        handler: "test/lambda.handler",
+        function: {
+          handler: "test/lambda.handler",
+        },
       },
     },
-    defaultFunctionProps: {
-      timeout: 3,
+    defaults: {
+      function: {
+        timeout: 3,
+      },
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
@@ -865,22 +867,26 @@ test("route-FunctionProps-with-defaultFunctionProps", async () => {
   });
 });
 
-test("route-FunctionProps-with-defaultFunctionProps-override", async () => {
+test("routes: route is prop-with-defaultFunctionProps-override", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api", {
     routes: {
       $connect: {
-        handler: "test/lambda.handler",
-        timeout: 5,
-        environment: {
-          keyA: "valueA",
+        function: {
+          handler: "test/lambda.handler",
+          timeout: 5,
+          environment: {
+            keyA: "valueA",
+          },
         },
       },
     },
-    defaultFunctionProps: {
-      timeout: 3,
-      environment: {
-        keyB: "valueB",
+    defaults: {
+      function: {
+        timeout: 3,
+        environment: {
+          keyB: "valueB",
+        },
       },
     },
   });
@@ -897,7 +903,7 @@ test("route-FunctionProps-with-defaultFunctionProps-override", async () => {
   });
 });
 
-test("route-FunctionProps-with-defaultFunctionProps-override-with-app-defaultFunctionProps", async () => {
+test("routes: route is prop-with-defaultFunctionProps-override-with-app-defaultFunctionProps", async () => {
   const app = new App({ name: "websocket" });
   app.setDefaultFunctionProps({
     timeout: 15,
@@ -908,17 +914,21 @@ test("route-FunctionProps-with-defaultFunctionProps-override-with-app-defaultFun
   new WebSocketApi(stack, "Api", {
     routes: {
       $connect: {
-        handler: "test/lambda.handler",
-        timeout: 5,
-        environment: {
-          keyA: "valueA",
+        function: {
+          handler: "test/lambda.handler",
+          timeout: 5,
+          environment: {
+            keyA: "valueA",
+          },
         },
       },
     },
-    defaultFunctionProps: {
-      timeout: 3,
-      environment: {
-        keyB: "valueB",
+    defaults: {
+      function: {
+        timeout: 3,
+        environment: {
+          keyB: "valueB",
+        },
       },
     },
   });

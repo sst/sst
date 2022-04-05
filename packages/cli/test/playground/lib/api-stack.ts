@@ -8,9 +8,7 @@ export class MainStack extends sst.Stack {
     super(scope, id, props);
 
     new sst.Auth(this, "Auth", {
-      cognito: {
-        userPool: true,
-      },
+      cognito: true,
     });
 
     new sst.Queue(this, "MyQueue", {
@@ -20,8 +18,10 @@ export class MainStack extends sst.Stack {
     // Create Api with custom domain
     const api = new sst.Api(this, "Api", {
       customDomain: "api.sst.sh",
-      defaultFunctionProps: {
-        timeout: 10,
+      defaults: {
+        functionProps: {
+          timeout: 10,
+        },
       },
       routes: {
         "GET /": "src/lambda.main",
@@ -46,15 +46,17 @@ export class MainStack extends sst.Stack {
 
     // Create Api with custom stages
     const customStageApi = new sst.Api(this, "CustomStage", {
-      httpApi: {
-        createDefaultStage: false,
+      cdk: {
+        httpApi: {
+          createDefaultStage: false,
+        },
       },
       routes: {
         "GET /": "src/lambda.main",
       },
     });
     new apig.HttpStage(this, "Stage", {
-      httpApi: customStageApi.httpApi,
+      httpApi: customStageApi.cdk.httpApi,
       stageName: "my-stage",
       autoDeploy: true,
     });

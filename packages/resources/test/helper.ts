@@ -85,3 +85,9 @@ export function hasOutput(stack: Stack, logicalId: string, props: any): void {
   const template = Template.fromStack(stack);
   template.hasOutput(logicalId, props);
 }
+
+export function printResource(stack: Stack, type: string): void {
+  const template = Template.fromStack(stack);
+  const resources = template.findResources(type);
+  console.log(JSON.stringify(resources, null, 2));
+}

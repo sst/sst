@@ -1,16 +1,8 @@
-import {
-  countResources,
-  hasResource,
-  not,
-  objectLike,
-  stringLike,
-  ANY,
-  ABSENT,
-} from "./helper";
+import { countResources, hasResource, objectLike, ANY, ABSENT } from "./helper";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as cf from "aws-cdk-lib/aws-cloudfront";
-import { App, Api, Stack, StaticSite, StaticSiteErrorOptions } from "../src";
+import { App, Api, Stack, StaticSite } from "../src";
 
 /////////////////////////////
 // Test Constructor
@@ -27,7 +19,7 @@ test("constructor: no domain", async () => {
   expect(site.bucketName).toBeDefined();
   expect(site.distributionId).toBeDefined();
   expect(site.distributionDomain).toBeDefined();
-  expect(site.acmCertificate).toBeUndefined();
+  expect(site.cdk.certificate).toBeUndefined();
   countResources(stack, "AWS::S3::Bucket", 1);
   countResources(stack, "AWS::CloudFront::Distribution", 1);
   hasResource(stack, "AWS::CloudFront::Distribution", {
@@ -106,7 +98,7 @@ test("constructor: with domain", async () => {
   expect(site.bucketName).toBeDefined();
   expect(site.distributionId).toBeDefined();
   expect(site.distributionDomain).toBeDefined();
-  expect(site.acmCertificate).toBeDefined();
+  expect(site.cdk.certificate).toBeDefined();
   countResources(stack, "AWS::S3::Bucket", 1);
   countResources(stack, "AWS::CloudFront::Distribution", 1);
   hasResource(stack, "AWS::CloudFront::Distribution", {
@@ -183,7 +175,7 @@ test("constructor: with domain with alias", async () => {
   expect(site.bucketName).toBeDefined();
   expect(site.distributionId).toBeDefined();
   expect(site.distributionDomain).toBeDefined();
-  expect(site.acmCertificate).toBeDefined();
+  expect(site.cdk.certificate).toBeDefined();
   countResources(stack, "AWS::S3::Bucket", 2);
   hasResource(stack, "AWS::S3::Bucket", {
     WebsiteConfiguration: {
@@ -326,9 +318,11 @@ test("customDomain: hostedZone construct", async () => {
     path: "test/site",
     customDomain: {
       domainName: "www.domain.com",
-      hostedZone: route53.HostedZone.fromLookup(stack, "HostedZone", {
-        domainName: "domain.com",
-      }),
+      cdk: {
+        hostedZone: route53.HostedZone.fromLookup(stack, "HostedZone", {
+          domainName: "domain.com",
+        }),
+      },
     },
   });
   expect(route53.HostedZone.fromLookup).toHaveBeenCalledTimes(1);
@@ -363,9 +357,11 @@ test("customDomain: certificate imported", async () => {
     customDomain: {
       domainName: "www.domain.com",
       hostedZone: "domain.com",
-      certificate: new acm.Certificate(stack, "Cert", {
-        domainName: "domain.com",
-      }),
+      cdk: {
+        certificate: new acm.Certificate(stack, "Cert", {
+          domainName: "domain.com",
+        }),
+      },
     },
   });
   expect(site.customDomainUrl).toEqual("https://www.domain.com");
@@ -389,9 +385,11 @@ test("customDomain: isExternalDomain true", async () => {
     path: "test/site",
     customDomain: {
       domainName: "www.domain.com",
-      certificate: new acm.Certificate(stack, "Cert", {
-        domainName: "domain.com",
-      }),
+      cdk: {
+        certificate: new acm.Certificate(stack, "Cert", {
+          domainName: "domain.com",
+        }),
+      },
       isExternalDomain: true,
     },
   });
@@ -430,9 +428,11 @@ test("customDomain: isExternalDomain true and domainAlias set", async () => {
       customDomain: {
         domainName: "domain.com",
         domainAlias: "www.domain.com",
-        certificate: new acm.Certificate(stack, "Cert", {
-          domainName: "domain.com",
-        }),
+        cdk: {
+          certificate: new acm.Certificate(stack, "Cert", {
+            domainName: "domain.com",
+          }),
+        },
         isExternalDomain: true,
       },
     });
@@ -449,9 +449,11 @@ test("customDomain: isExternalDomain true and hostedZone set", async () => {
       customDomain: {
         domainName: "www.domain.com",
         hostedZone: "domain.com",
-        certificate: new acm.Certificate(stack, "Cert", {
-          domainName: "domain.com",
-        }),
+        cdk: {
+          certificate: new acm.Certificate(stack, "Cert", {
+            domainName: "domain.com",
+          }),
+        },
         isExternalDomain: true,
       },
     });
@@ -511,7 +513,7 @@ test("constructor: errorPage is enum", async () => {
   const stack = new Stack(new App(), "stack");
   new StaticSite(stack, "Site", {
     path: "test/site",
-    errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
+    errorPage: "redirect_to_index_page",
   });
   hasResource(stack, "AWS::CloudFront::Distribution", {
     DistributionConfig: objectLike({
@@ -712,8 +714,10 @@ test("constructor: s3Bucket props", async () => {
   const stack = new Stack(new App(), "stack");
   new StaticSite(stack, "Site", {
     path: "test/site",
-    s3Bucket: {
-      bucketName: "my-bucket",
+    cdk: {
+      bucket: {
+        bucketName: "my-bucket",
+      },
     },
   });
   countResources(stack, "AWS::S3::Bucket", 1);
@@ -727,8 +731,10 @@ test("constructor: s3Bucket websiteIndexDocument", async () => {
   expect(() => {
     new StaticSite(stack, "Site", {
       path: "test/site",
-      s3Bucket: {
-        websiteIndexDocument: "index.html",
+      cdk: {
+        bucket: {
+          websiteIndexDocument: "index.html",
+        },
       },
     });
   }).toThrow(/Do not configure the "s3Bucket.websiteIndexDocument"./);
@@ -739,8 +745,10 @@ test("constructor: s3Bucket websiteErrorDocument", async () => {
   expect(() => {
     new StaticSite(stack, "Site", {
       path: "test/site",
-      s3Bucket: {
-        websiteErrorDocument: "error.html",
+      cdk: {
+        bucket: {
+          websiteErrorDocument: "error.html",
+        },
       },
     });
   }).toThrow(/Do not configure the "s3Bucket.websiteErrorDocument"./);
@@ -750,8 +758,10 @@ test("constructor: cfDistribution props", async () => {
   const stack = new Stack(new App(), "stack");
   new StaticSite(stack, "Site", {
     path: "test/site",
-    cfDistribution: {
-      comment: "My Comment",
+    cdk: {
+      distribution: {
+        comment: "My Comment",
+      },
     },
   });
   countResources(stack, "AWS::CloudFront::Distribution", 1);
@@ -766,14 +776,16 @@ test("constructor: cfDistribution props override errorResponses", async () => {
   const stack = new Stack(new App(), "stack");
   new StaticSite(stack, "Site", {
     path: "test/site",
-    cfDistribution: {
-      errorResponses: [
-        {
-          httpStatus: 403,
-          responsePagePath: `/new.html`,
-          responseHttpStatus: 200,
-        },
-      ],
+    cdk: {
+      distribution: {
+        errorResponses: [
+          {
+            httpStatus: 403,
+            responsePagePath: `/new.html`,
+            responseHttpStatus: 200,
+          },
+        ],
+      },
     },
   });
   countResources(stack, "AWS::CloudFront::Distribution", 1);
@@ -796,14 +808,16 @@ test("constructor: cfDistribution props override errorResponses error", async ()
     new StaticSite(stack, "Site", {
       path: "test/site",
       errorPage: "error.html",
-      cfDistribution: {
-        errorResponses: [
-          {
-            httpStatus: 403,
-            responsePagePath: `/new.html`,
-            responseHttpStatus: 200,
-          },
-        ],
+      cdk: {
+        distribution: {
+          errorResponses: [
+            {
+              httpStatus: 403,
+              responsePagePath: `/new.html`,
+              responseHttpStatus: 200,
+            },
+          ],
+        },
       },
     });
   }).toThrow(
@@ -815,10 +829,12 @@ test("constructor: cfDistribution defaultBehavior override", async () => {
   const stack = new Stack(new App(), "stack");
   new StaticSite(stack, "Site", {
     path: "test/site",
-    cfDistribution: {
-      defaultBehavior: {
-        viewerProtocolPolicy: cf.ViewerProtocolPolicy.HTTPS_ONLY,
-        allowedMethods: cf.AllowedMethods.ALLOW_ALL,
+    cdk: {
+      distribution: {
+        defaultBehavior: {
+          viewerProtocolPolicy: cf.ViewerProtocolPolicy.HTTPS_ONLY,
+          allowedMethods: cf.AllowedMethods.ALLOW_ALL,
+        },
       },
     },
   });
@@ -846,10 +862,12 @@ test("constructor: cfDistribution certificate conflict", async () => {
   expect(() => {
     new StaticSite(stack, "Site", {
       path: "test/site",
-      cfDistribution: {
-        certificate: new acm.Certificate(stack, "Cert", {
-          domainName: "domain.com",
-        }),
+      cdk: {
+        distribution: {
+          certificate: new acm.Certificate(stack, "Cert", {
+            domainName: "domain.com",
+          }),
+        },
       },
     });
   }).toThrow(/Do not configure the "cfDistribution.certificate"/);
@@ -860,8 +878,10 @@ test("constructor: cfDistribution domainNames conflict", async () => {
   expect(() => {
     new StaticSite(stack, "Site", {
       path: "test/site",
-      cfDistribution: {
-        domainNames: ["domain.com"],
+      cdk: {
+        distribution: {
+          domainNames: ["domain.com"],
+        },
       },
     });
   }).toThrow(/Do not configure the "cfDistribution.domainNames"/);

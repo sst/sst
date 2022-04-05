@@ -4,126 +4,317 @@ import * as s3Notifications from "aws-cdk-lib/aws-s3-notifications";
 import { Queue } from "./Queue";
 import { Topic } from "./Topic";
 import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
-import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
+import {
+  Function as Fn,
+  FunctionProps,
+  FunctionInlineDefinition,
+  FunctionDefinition,
+} from "./Function";
 import { Permissions } from "./util/permission";
 
 /////////////////////
 // Interfaces
 /////////////////////
 
+interface BucketBaseNotificationProps {
+  /**
+   * The S3 event types that will trigger the notification.
+   */
+  events?: Lowercase<keyof typeof s3.EventType>[];
+  /**
+   * S3 object key filter rules to determine which objects trigger this event.
+   */
+  filters?: BucketFilter[];
+}
+
+export interface BucketFilter {
+  /**
+   * Filter what the key starts with
+   */
+  prefix?: string;
+  /**
+   * Filter what the key ends with
+   */
+  suffix?: string;
+}
+
+/**
+ * Used to define a function listener for the bucket
+ *
+ * @example
+ * ```js
+ * new Bucket(stack, "Bucket", {
+ *   notifications: {
+ *     myNotification: {
+ *       function: "src/notification.main"
+ *     }
+ *   }
+ * }
+ * ```
+ */
+export interface BucketFunctionNotificationProps
+  extends BucketBaseNotificationProps {
+  /**
+   * String literal to signify that the notification is a function
+   */
+  type?: "function";
+  /**
+   * The function to send notifications to
+   */
+  function: FunctionDefinition;
+}
+
+/**
+ * Used to define a queue listener for the bucket
+ *
+ * @example
+ * ```js
+ * new Bucket(stack, "Bucket", {
+ *   notifications: {
+ *     myNotification: {
+ *       type: "queue",
+ *       queue: new Queue(stack, "Queue")
+ *     }
+ *   }
+ * }
+ * ```
+ */
+export interface BucketQueueNotificationProps
+  extends BucketBaseNotificationProps {
+  /**
+   * String literal to signify that the notification is a queue
+   */
+  type: "queue";
+  /**
+   * The queue to send notifications to
+   */
+  queue: Queue;
+}
+
+/**
+ * Used to define a topic listener for the bucket
+ *
+ * @example
+ * ```js
+ * new Bucket(stack, "Bucket", {
+ *   notifications: {
+ *     myNotification: {
+ *       type: "topic",
+ *       topic: new Topic(stack, "Topic")
+ *     }
+ *   }],
+ * }
+ * ```
+ */
+export interface BucketTopicNotificationProps
+  extends BucketBaseNotificationProps {
+  type: "topic";
+  /**
+   * The topic to send notifications to
+   */
+  topic: Topic;
+}
+
 export interface BucketProps {
-  readonly s3Bucket?: s3.Bucket | s3.BucketProps;
-  readonly notifications?: (
-    | FunctionDefinition
+  /**
+   * The name of the bucket.
+   *
+   * Note that it's not recommended to hard code a name for the bucket, because they must be globally unique.
+   *
+   * @example
+   * ```js
+   * new Bucket(stack, "Bucket", {
+   *   name: "my-bucket",
+   * });
+   * ```
+   */
+  name?: string;
+  /**
+   * The default function props to be applied to all the Lambda functions in the API. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
+   *
+   * @example
+   * ```js
+   * new Bucket(stack, "Bucket", {
+   *   defaults: {
+   *     function: {
+   *       timeout: 20,
+   *     }
+   *   },
+   * });
+   * ```
+   */
+  defaults?: {
+    function?: FunctionProps;
+  };
+  /**
+   * Used to create notifications for various bucket events
+   *
+   * @example
+   * ```js
+   * new Bucket(stack, "Bucket", {
+   *   notifications: {
+   *     myNotification: "src/notification.main",
+   *   }
+   * });
+   * ```
+   */
+  notifications?: Record<
+    string,
+    | FunctionInlineDefinition
     | BucketFunctionNotificationProps
     | Queue
     | BucketQueueNotificationProps
     | Topic
     | BucketTopicNotificationProps
-  )[];
-  readonly defaultFunctionProps?: FunctionProps;
-}
-
-export interface BucketNotificationProps {
-  readonly events?: s3.EventType[];
-  readonly filters?: s3.NotificationKeyFilter[];
-}
-
-export interface BucketFunctionNotificationProps {
-  readonly function: FunctionDefinition;
-  readonly notificationProps?: BucketNotificationProps;
-}
-
-export interface BucketQueueNotificationProps {
-  readonly queue: Queue;
-  readonly notificationProps?: BucketNotificationProps;
-}
-
-export interface BucketTopicNotificationProps {
-  readonly topic: Topic;
-  readonly notificationProps?: BucketNotificationProps;
+  >;
+  cdk?: {
+    /**
+     * Allows you to override default settings this construct uses internally to ceate the bucket
+     *
+     * @example
+     * ```js
+     * new Bucket(stack, "Bucket", {
+     *   cdk: {
+     *     bucket: {
+     *       bucketName: "my-bucket",
+     *     },
+     *   }
+     * });
+     * ```
+     */
+    bucket?: s3.Bucket | s3.BucketProps;
+  };
 }
 
 /////////////////////
 // Construct
 /////////////////////
 
+/**
+ * The `Bucket` construct is a higher level CDK construct that makes it easy to create an S3 Bucket and to define its notifications. It also internally connects the notifications and bucket together.
+ *
+ * @example
+ * ### Using the minimal config
+ *
+ * ```js
+ * import { Bucket } from "@serverless-stack/resources";
+ *
+ * new Bucket(stack, "Bucket");
+ * ```
+ */
 export class Bucket extends Construct implements SSTConstruct {
-  public readonly s3Bucket: s3.Bucket;
-  private readonly notifications: (Fn | Queue | Topic)[];
-  private readonly permissionsAttachedForAllNotifications: Permissions[];
-  private readonly defaultFunctionProps?: FunctionProps;
+  public readonly cdk: {
+    /**
+     * The internally created CDK `Bucket` instance.
+     */
+    bucket: s3.Bucket;
+  };
+  readonly notifications: Record<string, Fn | Queue | Topic>;
+  readonly permissionsAttachedForAllNotifications: Permissions[];
+  readonly props: BucketProps;
 
   constructor(scope: Construct, id: string, props?: BucketProps) {
     super(scope, id);
 
-    const { s3Bucket, notifications, defaultFunctionProps } = props || {};
-    this.notifications = [];
+    this.props = props || {};
+    this.cdk = {} as any;
+    this.notifications = {};
     this.permissionsAttachedForAllNotifications = [];
-    this.defaultFunctionProps = defaultFunctionProps;
 
-    ////////////////////
-    // Create Bucket
-    ////////////////////
-
-    if (isCDKConstruct(s3Bucket)) {
-      this.s3Bucket = s3Bucket as s3.Bucket;
-    } else {
-      const s3BucketProps = (s3Bucket || {}) as s3.BucketProps;
-      this.s3Bucket = new s3.Bucket(this, "Bucket", {
-        ...s3BucketProps,
-      });
-    }
-
-    ///////////////////////////
-    // Create Notifications
-    ///////////////////////////
-
-    this.addNotifications(this, notifications || []);
+    this.createBucket();
+    this.addNotifications(this, props?.notifications || {});
   }
 
+  /**
+   * The ARN of the internally created `Bucket` instance.
+   */
   public get bucketArn(): string {
-    return this.s3Bucket.bucketArn;
+    return this.cdk.bucket.bucketArn;
   }
 
+  /**
+   * The name of the internally created `Bucket` instance.
+   */
   public get bucketName(): string {
-    return this.s3Bucket.bucketName;
+    return this.cdk.bucket.bucketName;
   }
 
+  /**
+   * A list of the internally created functions for the notifications.
+   */
   public get notificationFunctions(): Fn[] {
-    return this.notifications.filter(
+    return Object.values(this.notifications).filter(
       (notification) => notification instanceof Fn
     ) as Fn[];
   }
 
+  /**
+   * Add notification subscriptions after the bucket has been created
+   *
+   * @example
+   * ```js {3}
+   * const bucket = new Bucket(stack, "Bucket");
+   * bucket.addNotifications(stack, ["src/notification.main"]);
+   * ```
+   */
   public addNotifications(
     scope: Construct,
-    notifications: (
-      | FunctionDefinition
+    notifications: Record<
+      string,
+      | FunctionInlineDefinition
       | BucketFunctionNotificationProps
       | Queue
       | BucketQueueNotificationProps
       | Topic
       | BucketTopicNotificationProps
-    )[]
+    >
   ): void {
-    notifications.forEach((notification) =>
-      this.addNotification(scope, notification)
+    Object.entries(notifications).forEach(
+      ([notificationName, notification]) => {
+        this.addNotification(scope, notificationName, notification);
+      }
     );
   }
 
+  /**
+   * Attaches additional permissions to all bucket notifications
+   * @example
+   * ```js {20}
+   * const bucket = new Bucket(stack, "Bucket", {
+   *   notifications: {
+   *     myNotification: "src/function.handler",
+   *   }
+   * });
+   *
+   * bucket.attachPermissions(["s3"]);
+   * ```
+   */
   public attachPermissions(permissions: Permissions): void {
-    this.notifications
-      .filter((notification) => notification instanceof Fn)
-      .forEach((notification) => notification.attachPermissions(permissions));
+    this.notificationFunctions.forEach((notification) =>
+      notification.attachPermissions(permissions)
+    );
     this.permissionsAttachedForAllNotifications.push(permissions);
   }
 
+  /**
+   * Attaches additional permissions to a specific bucket notification
+   *
+   * @example
+   * ```js {20}
+   * const bucket = new Bucket(stack, "Bucket", {
+   *   notifications: {
+   *     myNotification: "src/function.handler",
+   *   }
+   * });
+   *
+   * bucket.attachPermissions("myNotification", ["s3"]);
+   * ```
+   */
   public attachPermissionsToNotification(
-    index: number,
+    notificationName: string,
     permissions: Permissions
   ): void {
-    const notification = this.notifications[index];
+    const notification = this.notifications[notificationName];
     if (!(notification instanceof Fn)) {
       throw new Error(
         `Cannot attach permissions to the "${this.node.id}" Bucket notification because it's not a Lambda function`
@@ -136,16 +327,31 @@ export class Bucket extends Construct implements SSTConstruct {
     return {
       type: "Bucket" as const,
       data: {
-        name: this.s3Bucket.bucketName,
-        notifications: this.notifications.map((n) => getFunctionRef(n)),
+        name: this.cdk.bucket.bucketName,
+        notifications: Object.values(this.notifications).map(getFunctionRef),
+        notificationNames: Object.keys(this.notifications),
       },
     };
   }
 
+  private createBucket() {
+    const { name, cdk } = this.props;
+
+    if (isCDKConstruct(cdk?.bucket)) {
+      this.cdk.bucket = cdk?.bucket as s3.Bucket;
+    } else {
+      this.cdk.bucket = new s3.Bucket(this, "Bucket", {
+        bucketName: name,
+        ...cdk?.bucket,
+      });
+    }
+  }
+
   private addNotification(
     scope: Construct,
+    notificationName: string,
     notification:
-      | FunctionDefinition
+      | FunctionInlineDefinition
       | BucketFunctionNotificationProps
       | Queue
       | BucketQueueNotificationProps
@@ -157,23 +363,24 @@ export class Bucket extends Construct implements SSTConstruct {
       (notification as BucketQueueNotificationProps).queue
     ) {
       notification = notification as Queue | BucketQueueNotificationProps;
-      this.addQueueNotification(scope, notification);
+      this.addQueueNotification(scope, notificationName, notification);
     } else if (
       notification instanceof Topic ||
       (notification as BucketTopicNotificationProps).topic
     ) {
       notification = notification as Topic | BucketTopicNotificationProps;
-      this.addTopicNotification(scope, notification);
+      this.addTopicNotification(scope, notificationName, notification);
     } else {
       notification = notification as
-        | FunctionDefinition
+        | FunctionInlineDefinition
         | BucketFunctionNotificationProps;
-      this.addFunctionNotification(scope, notification);
+      this.addFunctionNotification(scope, notificationName, notification);
     }
   }
 
   private addQueueNotification(
     scope: Construct,
+    notificationName: string,
     notification: Queue | BucketQueueNotificationProps
   ): void {
     // Parse notification props
@@ -184,21 +391,24 @@ export class Bucket extends Construct implements SSTConstruct {
       queue = notification;
     } else {
       notification = notification as BucketQueueNotificationProps;
-      notificationProps = notification.notificationProps;
+      notificationProps = {
+        events: notification.events,
+        filters: notification.filters,
+      };
       queue = notification.queue;
     }
-    this.notifications.push(queue);
+    this.notifications[notificationName] = queue;
 
     // Create Notifications
     const events = notificationProps?.events || [
-      s3.EventType.OBJECT_CREATED,
-      s3.EventType.OBJECT_REMOVED,
+      "object_created",
+      "object_removed",
     ];
     const filters = notificationProps?.filters || [];
     events.forEach((event) =>
-      this.s3Bucket.addEventNotification(
-        event,
-        new s3Notifications.SqsDestination(queue.sqsQueue),
+      this.cdk.bucket.addEventNotification(
+        s3.EventType[event.toUpperCase() as keyof typeof s3.EventType],
+        new s3Notifications.SqsDestination(queue.cdk.queue),
         ...filters
       )
     );
@@ -206,6 +416,7 @@ export class Bucket extends Construct implements SSTConstruct {
 
   private addTopicNotification(
     scope: Construct,
+    notificationName: string,
     notification: Topic | BucketTopicNotificationProps
   ): void {
     // Parse notification props
@@ -216,21 +427,24 @@ export class Bucket extends Construct implements SSTConstruct {
       topic = notification;
     } else {
       notification = notification as BucketTopicNotificationProps;
-      notificationProps = notification.notificationProps;
+      notificationProps = {
+        events: notification.events,
+        filters: notification.filters,
+      };
       topic = notification.topic;
     }
-    this.notifications.push(topic);
+    this.notifications[notificationName] = topic;
 
     // Create Notifications
     const events = notificationProps?.events || [
-      s3.EventType.OBJECT_CREATED,
-      s3.EventType.OBJECT_REMOVED,
+      "object_created",
+      "object_removed",
     ];
     const filters = notificationProps?.filters || [];
     events.forEach((event) =>
-      this.s3Bucket.addEventNotification(
-        event,
-        new s3Notifications.SnsDestination(topic.snsTopic),
+      this.cdk.bucket.addEventNotification(
+        s3.EventType[event.toUpperCase() as keyof typeof s3.EventType],
+        new s3Notifications.SnsDestination(topic.cdk.topic),
         ...filters
       )
     );
@@ -238,38 +452,41 @@ export class Bucket extends Construct implements SSTConstruct {
 
   private addFunctionNotification(
     scope: Construct,
-    notification: FunctionDefinition | BucketFunctionNotificationProps
+    notificationName: string,
+    notification: FunctionInlineDefinition | BucketFunctionNotificationProps
   ): void {
     // parse notification
     let notificationFunction, notificationProps;
     if ((notification as BucketFunctionNotificationProps).function) {
       notification = notification as BucketFunctionNotificationProps;
       notificationFunction = notification.function;
-      notificationProps = notification.notificationProps;
+      notificationProps = {
+        events: notification.events,
+        filters: notification.filters,
+      };
     } else {
-      notificationFunction = notification as FunctionDefinition;
+      notificationFunction = notification as FunctionInlineDefinition;
     }
 
     // create function
-    const i = this.notifications.length;
     const fn = Fn.fromDefinition(
       scope,
-      `Notification_${this.node.id}_${i}`,
+      `Notification_${this.node.id}_${notificationName}`,
       notificationFunction,
-      this.defaultFunctionProps,
-      `The "defaultFunctionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the consumers using FunctionProps, so the Table construct can apply the "defaultFunctionProps" to them.`
+      this.props.defaults?.function,
+      `The "defaults.function" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the consumers using FunctionProps, so the Table construct can apply the "defaults.function" to them.`
     );
-    this.notifications.push(fn);
+    this.notifications[notificationName] = fn;
 
     // create Notifications
     const events = notificationProps?.events || [
-      s3.EventType.OBJECT_CREATED,
-      s3.EventType.OBJECT_REMOVED,
+      "object_created",
+      "object_removed",
     ];
     const filters = notificationProps?.filters || [];
     events.forEach((event) =>
-      this.s3Bucket.addEventNotification(
-        event,
+      this.cdk.bucket.addEventNotification(
+        s3.EventType[event.toUpperCase() as keyof typeof s3.EventType],
         new s3Notifications.LambdaDestination(fn),
         ...filters
       )

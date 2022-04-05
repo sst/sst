@@ -10,18 +10,12 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as lambdaNode from "aws-cdk-lib/aws-lambda-nodejs";
 import * as ssm from "aws-cdk-lib/aws-ssm";
-import crypto from "crypto";
 
 import { App } from "./App";
 import { Stack } from "./Stack";
 import { SSTConstruct } from "./Construct";
-import {
-  PermissionType,
-  Permissions,
-  attachPermissionsToRole,
-} from "./util/permission";
-import { State } from "@serverless-stack/core";
-import { Runtime } from "@serverless-stack/core";
+import { Permissions, attachPermissionsToRole } from "./util/permission";
+import { State, Runtime } from "@serverless-stack/core";
 
 const supportedRuntimes = [
   lambda.Runtime.NODEJS,
@@ -43,92 +37,194 @@ const supportedRuntimes = [
   lambda.Runtime.GO_1_X,
 ];
 
-export type HandlerProps = FunctionHandlerProps;
+export type FunctionInlineDefinition = string | Function;
 export type FunctionDefinition = string | Function | FunctionProps;
 
+export type Runtime =
+  | "nodejs"
+  | "nodejs4.3"
+  | "nodejs6.10"
+  | "nodejs8.10"
+  | "nodejs10.x"
+  | "nodejs12.x"
+  | "nodejs14.x"
+  | "python2.7"
+  | "python3.6"
+  | "python3.7"
+  | "python3.8"
+  | "python3.9"
+  | "dotnetcore1.0"
+  | "dotnetcore2.0"
+  | "dotnetcore2.1"
+  | "dotnetcore3.1"
+  | "go1.x";
+
 export interface FunctionProps
-  extends Omit<lambda.FunctionOptions, "functionName" | "timeout" | "runtime"> {
+  extends Omit<
+    lambda.FunctionOptions,
+    "functionName" | "timeout" | "runtime" | "tracing" | "layers"
+  > {
   /**
-   * The source directory where the entry point is located. The node_modules in this
-   * directory is used to generate the bundle.
+   * Override the automatically generated name
    *
-   * @default - A name for the function or a callback that returns the name.
+   * @default An automatically generated name
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   functionName: "my-function",
+   * })
+   *```
    */
   functionName?: string | ((props: FunctionNameProps) => string);
   /**
    * Path to the entry point and handler function. Of the format:
    * `/path/to/file.function`.
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
+   * })
+   *```
    */
   handler?: string;
   /**
-   * The source directory where the entry point is located. The node_modules in this
-   * directory is used to generate the bundle.
+   * Root directory of the project, typically where package.json is located. Set if using a monorepo with multiple subpackages
    *
-   * @default - Defaults to the app directory.
+   * @default Defaults to the same directory as sst.json
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   srcPath: "packages/backend",
+   *   handler: "function.handler",
+   * })
+   *```
    */
   srcPath?: string;
   /**
    * The runtime environment.
    *
-   * @default - Defaults to NODEJS_12_X
+   * @default "nodejs12.x"
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   runtime: "nodejs14.x",
+   * })
+   *```
    */
-  runtime?:
-    | "nodejs"
-    | "nodejs4.3"
-    | "nodejs6.10"
-    | "nodejs8.10"
-    | "nodejs10.x"
-    | "nodejs12.x"
-    | "nodejs14.x"
-    | "python2.7"
-    | "python3.6"
-    | "python3.7"
-    | "python3.8"
-    | "python3.9"
-    | "dotnetcore1.0"
-    | "dotnetcore2.0"
-    | "dotnetcore2.1"
-    | "dotnetcore3.1"
-    | "go1.x"
-    | lambda.Runtime;
+  runtime?: Runtime;
   /**
    * The amount of memory in MB allocated.
    *
-   * @default - Defaults to 1024
+   * @default 1024
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   memorySize: 2048,
+   * })
+   *```
    */
   memorySize?: number;
   /**
    * The execution timeout in seconds.
    *
-   * @default - number
+   * @default 10
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   timeout: 30,
+   * })
+   *```
    */
-  timeout?: number | cdk.Duration;
+  timeout?: number;
   /**
    * Enable AWS X-Ray Tracing.
    *
-   * @default - Defaults to ACTIVE
+   * @default "active"
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   tracing: "pass_through",
+   * })
+   *```
    */
-  tracing?: lambda.Tracing;
-
+  tracing?: Lowercase<keyof typeof lambda.Tracing>;
   /**
    * Enable local development
    *
-   * @default - Defaults to true
+   * @default true
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   enableLiveDev: false
+   * })
+   *```
    */
   enableLiveDev?: boolean;
-
   /**
-   * Disable bundling with esbuild.
+   * Configure environment variables for the function
    *
-   * @default - Defaults to true
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   environment: {
+   *     TABLE_NAME: table.tableName,
+   *   }
+   * })
+   * ```
+   */
+  environment?: Record<string, string>;
+  /**
+   * Configure or disable bundling options
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   bundle: {
+   *     copyFiles: [{ from: "src/index.js" }]
+   *   }
+   * })
+   *```
    */
   bundle?: FunctionBundleProp;
+  /**
+   * Configure permissions for the function
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   permissions: ["ses", bucket]
+   * })
+   * ```
+   */
   permissions?: Permissions;
-  layers?: lambda.ILayerVersion[];
+  /**
+   * Configure layers for the function
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   layers: ["arn:aws:lambda:us-east-1:764866452798:layer:chrome-aws-lambda:22", myLayer]
+   * })
+   * ```
+   */
+  layers?: (string | lambda.ILayerVersion)[];
 }
 
 export interface FunctionNameProps {
+  /**
+   * The stack the function is being created in
+   */
   stack: Stack;
+  /**
+   * The function properties
+   */
   functionProps: FunctionProps;
 }
 
@@ -139,40 +235,263 @@ export interface FunctionHandlerProps {
   runtime: string;
 }
 
-export type FunctionBundleProp = FunctionBundleObject | boolean;
+export type FunctionBundleProp =
+  | FunctionBundleNodejsProps
+  | FunctionBundlePythonProps
+  | boolean;
 
-export type FunctionBundleObject = FunctionBundleBase &
-  (FunctionBundleNodejsProps | FunctionBundlePythonProps);
+interface FunctionBundleBase {
+  /**
+   * Used to configure additional files to copy into the function bundle
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   bundle: {
+   *     copyFiles: [{ from: "src/index.js" }]
+   *   }
+   * })
+   *```
+   */
+  copyFiles?: FunctionBundleCopyFilesProps[];
+}
 
-export type FunctionBundleBase = {
-  readonly copyFiles?: FunctionBundleCopyFilesProps[];
-};
-
-export interface FunctionBundleNodejsProps {
-  loader?: { [ext: string]: esbuild.Loader };
+/**
+ * Used to configure NodeJS bundling options
+ *
+ * @example
+ * ```js
+ * new Function(stack, "Function", {
+ *   bundle: {
+ *    format: "esm",
+ *    minify: false
+ *   }
+ * })
+ * ```
+ */
+export interface FunctionBundleNodejsProps extends FunctionBundleBase {
+  /**
+   * Configure additional esbuild loaders for other file extensions
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   bundle: {
+   *     loader: {
+   *      ".png": "file"
+   *     }
+   *   }
+   * })
+   * ```
+   */
+  loader?: Record<string, esbuild.Loader>;
+  /**
+   * Packages that will not be included in the bundle. Usually used to exclude dependencies that are provided in layers
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   bundle: {
+   *     external: ["prisma"]
+   *   }
+   * })
+   * ```
+   */
   externalModules?: string[];
+  /**
+   * Packages that will be excluded from the bundle and installed into node_modules instead. Useful for dependencies that cannot be bundled, like those with binary dependencies.
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   bundle: {
+   *     nodeModules: ["pg"]
+   *   }
+   * })
+   * ```
+   */
   nodeModules?: string[];
+  /**
+   * Hooks to run at various stages of bundling
+   */
   commandHooks?: lambdaNode.ICommandHooks;
-  esbuildConfig?: FunctionBundleEsbuildConfig;
+  /**
+   * This allows you to customize esbuild config.
+   */
+  esbuildConfig?: {
+    /**
+     * Replace global identifiers with constant expressions.
+     *
+     * @example
+     * ```js
+     * new Function(stack, "Function", {
+     *   bundle: {
+     *     esbuildConfig: {
+     *       define: {
+     *         str: "text"
+     *       }
+     *     }
+     *   }
+     * })
+     * ```
+     */
+    define?: Record<string, string>;
+    /**
+     * When minifying preserve names of functions and variables
+     *
+     * @example
+     * ```js
+     * new Function(stack, "Function", {
+     *   bundle: {
+     *     esbuild: {
+     *       keepNames: true
+     *     }
+     *   }
+     * })
+     * ```
+     */
+    keepNames?: boolean;
+    /**
+     * Path to a file that returns an array of esbuild plugins
+     *
+     * @example
+     * ```js
+     * new Function(stack, "Function", {
+     *   bundle: {
+     *     esbuild: {
+     *       plugins: "path/to/plugins.js"
+     *     }
+     *   }
+     * })
+     * ```
+     *
+     * Where `path/to/plugins.js` looks something like this:
+     *
+     * ```js
+     * const { esbuildDecorators } = require("@anatine/esbuild-decorators");
+     *
+     * module.exports = [
+     *   esbuildDecorators(),
+     * ];
+     * ```
+     */
+    plugins?: string;
+  };
+  /**
+   * Enable or disable minification
+   *
+   * @default true
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   bundle: {
+   *     minify: false
+   *   }
+   * })
+   * ```
+   */
   minify?: boolean;
+  /**
+   * Configure bundle format
+   *
+   * @default "cjs"
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   bundle: {
+   *     format: "esm"
+   *   }
+   * })
+   * ```
+   */
   format?: "cjs" | "esm";
 }
 
-export interface FunctionBundlePythonProps {
+/**
+ * Used to configure Python bundling options
+ *
+ * @example
+ * ```js
+ * new Function(stack, "Function", {
+ *   bundle: {
+ *     installCommands: [
+ *       'export VARNAME="my value"',
+ *       'pip install --index-url https://domain.com/pypi/myprivatemodule/simple/ --extra-index-url https://pypi.org/simple',
+ *     ]
+ *   }
+ * })
+ * ```
+ */
+export interface FunctionBundlePythonProps extends FunctionBundleBase {
+  /**
+   * A list of commands to override the [default installing behavior](Function#bundle) for Python dependencies.
+   *
+   * Each string in the array is a command that'll be run. For example:
+   *
+   * @default "[]"
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   bundle: {
+   *     installCommands: [
+   *       'export VARNAME="my value"',
+   *       'pip install --index-url https://domain.com/pypi/myprivatemodule/simple/ --extra-index-url https://pypi.org/simple',
+   *     ]
+   *   }
+   * })
+   * ```
+   */
   installCommands?: string[];
 }
 
+/**
+ * Used to configure additional files to copy into the function bundle
+ *
+ * @example
+ * ```js
+ * new Function(stack, "Function", {
+ *   bundle: {
+ *     copyFiles: [{ from: "src/index.js" }]
+ *   }
+ * })
+ *```
+ */
+
 export interface FunctionBundleCopyFilesProps {
+  /**
+   * Source path relative to sst.json
+   */
   from: string;
+  /**
+   * Destination path relative to function root in bundle
+   */
   to?: string;
 }
 
-export interface FunctionBundleEsbuildConfig {
-  define?: { [key: string]: string };
-  keepNames?: boolean;
-  plugins?: string;
-}
-
+/**
+ * A construct for a Lambda Function that allows you to [develop your it locally](live-lambda-development.md). Supports JS, TypeScript, Python, Golang, and C#. It also applies a couple of defaults:
+ *
+ * - Sets the default memory setting to 1024MB.
+ * - Sets the default Lambda function timeout to 10 seconds.
+ * - [Enables AWS X-Ray](https://docs.aws.amazon.com/lambda/latest/dg/nodejs-tracing.html) by default so you can trace your serverless applications.
+ * - `AWS_NODEJS_CONNECTION_REUSE_ENABLED` is turned on. Meaning that the Lambda function will automatically reuse TCP connections when working with the AWS SDK. [Read more about this here](https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/node-reusing-connections.html).
+ * - Sets the `IS_LOCAL` environment variable for the Lambda function when it is invoked locally through the `sst start` command.
+ *
+ * @example
+ *
+ * ### Creating a Function
+ *
+ * ```js
+ * import { Function } from "@serverless-stack/resources";
+ *
+ * new Function(stack, "MySnsLambda", {
+ *   handler: "src/sns/index.main",
+ * });
+ * ```
+ */
 export class Function extends lambda.Function implements SSTConstruct {
   public readonly _isLiveDevEnabled: boolean;
   private readonly localId: string;
@@ -197,11 +516,14 @@ export class Function extends lambda.Function implements SSTConstruct {
         ? props.functionName
         : props.functionName({ stack, functionProps: props }));
     const handler = props.handler;
-    let timeout = props.timeout || 10;
+    const timeout = cdk.Duration.seconds(props.timeout || 10);
     const srcPath = Function.normalizeSrcPath(props.srcPath || ".");
+    const runtime = Function.normalizeRuntime(props.runtime);
     const memorySize = props.memorySize || 1024;
-    const tracing = props.tracing || lambda.Tracing.ACTIVE;
-    let runtime = props.runtime || lambda.Runtime.NODEJS_12_X;
+    const tracing =
+      lambda.Tracing[
+        (props.tracing || "active").toUpperCase() as keyof typeof lambda.Tracing
+      ];
     let bundle = props.bundle;
     const permissions = props.permissions;
     const isLiveDevEnabled = props.enableLiveDev === false ? false : true;
@@ -211,27 +533,9 @@ export class Function extends lambda.Function implements SSTConstruct {
       throw new Error(`No handler defined for the "${id}" Lambda function`);
     }
 
-    // Normalize runtime
-    const runtimeStr =
-      typeof runtime === "string" ? runtime : runtime.toString();
-    const runtimeClass = supportedRuntimes.find(
-      (per) => per.toString() === runtimeStr
-    );
-    if (!runtimeClass) {
-      throw new Error(
-        `The specified runtime is not supported for sst.Function. Only NodeJS, Python, Go, and .NET runtimes are currently supported.`
-      );
-    }
-    runtime = runtimeClass;
-
-    // Normalize timeout
-    if (typeof timeout === "number") {
-      timeout = cdk.Duration.seconds(timeout);
-    }
-
     // Validate input
-    const isNodeRuntime = runtimeStr.startsWith("nodejs");
-    const isPythonRuntime = runtimeStr.startsWith("python");
+    const isNodeRuntime = runtime.toString().startsWith("nodejs");
+    const isPythonRuntime = runtime.toString().startsWith("python");
     if (isNodeRuntime) {
       bundle = bundle === undefined ? true : props.bundle;
       if (!bundle && srcPath === ".") {
@@ -281,15 +585,15 @@ export class Function extends lambda.Function implements SSTConstruct {
       if (root.debugBridge) {
         super(scope, id, {
           ...props,
-          functionName,
-          runtime: lambda.Runtime.GO_1_X,
-          tracing,
-          timeout,
-          memorySize,
-          handler: "handler",
           code: lambda.Code.fromAsset(
             path.resolve(__dirname, "../dist/bridge_client/")
           ),
+          handler: "handler",
+          functionName,
+          runtime: lambda.Runtime.GO_1_X,
+          memorySize,
+          timeout,
+          tracing,
           environment: {
             ...(props.environment || {}),
             SST_DEBUG_BRIDGE: root.debugBridge,
@@ -297,22 +601,21 @@ export class Function extends lambda.Function implements SSTConstruct {
             SST_DEBUG_SRC_HANDLER: handler,
             SST_DEBUG_ENDPOINT: root.debugEndpoint,
           },
-          layers: Function.handleImportedLayers(scope, props.layers || []),
+          layers: Function.buildLayers(scope, id, props),
           ...(debugOverrideProps || {}),
         });
       } else {
         super(scope, id, {
           ...props,
-          functionName,
-          runtime: isNodeRuntime ? runtime : lambda.Runtime.NODEJS_12_X,
-          tracing,
-          timeout,
-          memorySize,
-          handler: "index.main",
-          retryAttempts: 0,
           code: lambda.Code.fromAsset(
             path.resolve(__dirname, "../dist/stub.zip")
           ),
+          handler: "index.main",
+          functionName,
+          runtime: isNodeRuntime ? runtime : lambda.Runtime.NODEJS_12_X,
+          memorySize,
+          timeout,
+          tracing,
           environment: {
             ...(props.environment || {}),
             SST_DEBUG_SRC_PATH: srcPath,
@@ -320,7 +623,8 @@ export class Function extends lambda.Function implements SSTConstruct {
             SST_DEBUG_ENDPOINT: root.debugEndpoint,
             SST_DEBUG_BUCKET_NAME: root.debugBucketName,
           },
-          layers: Function.handleImportedLayers(scope, props.layers || []),
+          layers: Function.buildLayers(scope, id, props),
+          retryAttempts: 0,
           ...(debugOverrideProps || {}),
         });
       }
@@ -346,14 +650,17 @@ export class Function extends lambda.Function implements SSTConstruct {
       //       for some runtimes.
       super(scope, id, {
         ...props,
-        functionName,
-        runtime: lambda.Runtime.NODEJS_12_X,
-        handler: "placeholder",
         code: lambda.Code.fromAsset(
           path.resolve(__dirname, "../assets/Function/placeholder-stub")
         ),
+        handler: "placeholder",
+        functionName,
+        runtime: lambda.Runtime.NODEJS_12_X,
+        memorySize,
         timeout,
-        layers: Function.handleImportedLayers(scope, props.layers || []),
+        tracing,
+        environment: props.environment,
+        layers: Function.buildLayers(scope, id, props),
       });
     }
     // Handle build
@@ -379,14 +686,15 @@ export class Function extends lambda.Function implements SSTConstruct {
 
       super(scope, id, {
         ...props,
+        code: code!,
+        handler: bundled.handler,
         functionName,
         runtime,
-        tracing,
         memorySize,
-        handler: bundled.handler,
-        code: code!,
         timeout,
-        layers: Function.handleImportedLayers(scope, props.layers || []),
+        tracing,
+        environment: props.environment,
+        layers: Function.buildLayers(scope, id, props),
       });
     }
 
@@ -412,6 +720,14 @@ export class Function extends lambda.Function implements SSTConstruct {
     this.localId = localId;
   }
 
+  /**
+   * Attaches additional permissions to function
+   *
+   * @example
+   * ```js {20}
+   * fn.attachPermissions(["s3"]);
+   * ```
+   */
   public attachPermissions(permissions: Permissions): void {
     if (this.role) {
       attachPermissionsToRole(this.role as iam.Role, permissions);
@@ -426,6 +742,32 @@ export class Function extends lambda.Function implements SSTConstruct {
         arn: this.functionArn,
       },
     };
+  }
+
+  static buildLayers(scope: Construct, id: string, props: FunctionProps) {
+    return (props.layers || []).map((layer) => {
+      if (typeof layer === "string") {
+        return lambda.LayerVersion.fromLayerVersionArn(
+          scope,
+          `${id}${layer}`,
+          layer
+        );
+      }
+      return Function.handleImportedLayer(scope, layer);
+    });
+  }
+
+  static normalizeRuntime(runtime?: string): lambda.Runtime {
+    runtime = runtime || "nodejs14.x";
+    const runtimeClass = supportedRuntimes.find(
+      (per) => per.toString() === runtime
+    );
+    if (!runtimeClass) {
+      throw new Error(
+        `The specified runtime is not supported for sst.Function. Only NodeJS, Python, Go, and .NET runtimes are currently supported.`
+      );
+    }
+    return runtimeClass;
   }
 
   static normalizeSrcPath(srcPath: string): string {
@@ -457,50 +799,54 @@ export class Function extends lambda.Function implements SSTConstruct {
     });
   }
 
-  static handleImportedLayers(
+  static handleImportedLayer(
     scope: Construct,
-    layers: lambda.ILayerVersion[]
-  ): lambda.ILayerVersion[] {
-    return layers.map((layer) => {
-      const layerStack = Stack.of(layer);
-      const currentStack = Stack.of(scope);
-      // Use layer directly if:
-      // - layer is created in the current stack; OR
-      // - layer is imported (ie. layerArn is a string)
-      if (
-        layerStack === currentStack ||
-        !cdk.Token.isUnresolved(layer.layerVersionArn)
-      ) {
-        return layer;
+    layer: lambda.ILayerVersion
+  ): lambda.ILayerVersion {
+    const layerStack = Stack.of(layer);
+    const currentStack = Stack.of(scope);
+    // Use layer directly if:
+    // - layer is created in the current stack; OR
+    // - layer is imported (ie. layerArn is a string)
+    if (
+      layerStack === currentStack ||
+      !cdk.Token.isUnresolved(layer.layerVersionArn)
+    ) {
+      return layer;
+    }
+    // layer is created from another stack
+    else {
+      // set stack dependency b/c layerStack need to create the SSM first
+      currentStack.addDependency(layerStack);
+      // store layer ARN in SSM in layer's stack
+      const parameterId = `${layer.node.id}Arn-${layer.node.addr}`;
+      const parameterName = `/layers/${layerStack.node.id}/${parameterId}`;
+      const existingSsmParam = layerStack.node.tryFindChild(parameterId);
+      if (!existingSsmParam) {
+        new ssm.StringParameter(layerStack, parameterId, {
+          parameterName,
+          stringValue: layer.layerVersionArn,
+        });
       }
-      // layer is created from another stack
-      else {
-        // set stack dependency b/c layerStack need to create the SSM first
-        currentStack.addDependency(layerStack);
-        // store layer ARN in SSM in layer's stack
-        const parameterId = `${layer.node.id}Arn-${layer.node.addr}`;
-        const parameterName = `/layers/${layerStack.node.id}/${parameterId}`;
-        const existingSsmParam = layerStack.node.tryFindChild(parameterId);
-        if (!existingSsmParam) {
-          new ssm.StringParameter(layerStack, parameterId, {
-            parameterName,
-            stringValue: layer.layerVersionArn,
-          });
-        }
-        // import layer from SSM value
-        const layerId = `I${layer.node.id}-${layer.node.addr}`;
-        const existingLayer = scope.node.tryFindChild(layerId);
-        if (existingLayer) {
-          return existingLayer as lambda.LayerVersion;
-        } else {
-          return lambda.LayerVersion.fromLayerVersionArn(
-            scope,
-            layerId,
-            ssm.StringParameter.valueForStringParameter(scope, parameterName)
-          );
-        }
+      // import layer from SSM value
+      const layerId = `I${layer.node.id}-${layer.node.addr}`;
+      const existingLayer = scope.node.tryFindChild(layerId);
+      if (existingLayer) {
+        return existingLayer as lambda.LayerVersion;
+      } else {
+        return lambda.LayerVersion.fromLayerVersionArn(
+          scope,
+          layerId,
+          ssm.StringParameter.valueForStringParameter(scope, parameterName)
+        );
       }
-    });
+    }
+  }
+
+  static isInlineDefinition(
+    definition: any
+  ): definition is FunctionInlineDefinition {
+    return typeof definition === "string" || definition instanceof Function;
   }
 
   static fromDefinition(
@@ -555,11 +901,10 @@ export class Function extends lambda.Function implements SSTConstruct {
 
     // Merge permissions
     let permissionsProp;
-    if (
-      baseProps?.permissions === PermissionType.ALL ||
-      props?.permissions === PermissionType.ALL
-    ) {
-      permissionsProp = { permissions: PermissionType.ALL };
+    if (baseProps?.permissions === "*") {
+      permissionsProp = { permissions: baseProps.permissions };
+    } else if (props?.permissions === "*") {
+      permissionsProp = { permissions: props.permissions };
     } else {
       const permissions = (baseProps?.permissions || []).concat(
         props?.permissions || []

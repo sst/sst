@@ -27,6 +27,7 @@ const {
   writeConfig,
   checkFileExists,
   writeOutputsFile,
+  validatePropsForJs,
 } = require("./util/cdkHelpers");
 const objectUtil = require("../lib/object");
 const spawn = require("cross-spawn");
@@ -508,6 +509,7 @@ async function deployApp(argv, config, cliInfo) {
 
   // Build
   await synth(cliInfo.cdkOptions);
+  validatePropsForJs(config);
 
   let deployRet;
   if (IS_TEST) {

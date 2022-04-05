@@ -5,9 +5,7 @@ import {
   countResources,
   countResourcesLike,
   hasResource,
-  not,
   objectLike,
-  stringLike,
   arrayWith,
   ANY,
   ABSENT,
@@ -75,7 +73,7 @@ test("constructor: no domain", async () => {
   expect(site.bucketName).toBeDefined();
   expect(site.distributionId).toBeDefined();
   expect(site.distributionDomain).toBeDefined();
-  expect(site.acmCertificate).toBeUndefined();
+  expect(site.cdk.certificate).toBeUndefined();
   countResources(stack, "AWS::S3::Bucket", 1);
   countResources(stack, "AWS::Lambda::Function", 10);
   countResources(stack, "AWS::CloudFront::Distribution", 1);
@@ -313,7 +311,7 @@ test("constructor: with domain", async () => {
   expect(site.bucketName).toBeDefined();
   expect(site.distributionId).toBeDefined();
   expect(site.distributionDomain).toBeDefined();
-  expect(site.acmCertificate).toBeDefined();
+  expect(site.cdk.certificate).toBeDefined();
   countResources(stack, "AWS::S3::Bucket", 1);
   countResources(stack, "AWS::CloudFront::Distribution", 1);
   hasResource(stack, "AWS::CloudFront::Distribution", {
@@ -393,7 +391,7 @@ test("constructor: with domain with alias", async () => {
   expect(site.bucketName).toBeDefined();
   expect(site.distributionId).toBeDefined();
   expect(site.distributionDomain).toBeDefined();
-  expect(site.acmCertificate).toBeDefined();
+  expect(site.cdk.certificate).toBeDefined();
   countResources(stack, "AWS::S3::Bucket", 2);
   hasResource(stack, "AWS::S3::Bucket", {
     WebsiteConfiguration: {
@@ -545,9 +543,11 @@ test("customDomain: hostedZone construct", async () => {
     path: "test/nextjs-site",
     customDomain: {
       domainName: "www.domain.com",
-      hostedZone: route53.HostedZone.fromLookup(stack, "HostedZone", {
-        domainName: "domain.com",
-      }),
+      cdk: {
+        hostedZone: route53.HostedZone.fromLookup(stack, "HostedZone", {
+          domainName: "domain.com",
+        }),
+      },
     },
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore: "jestBuildOutputPath" not exposed in props
@@ -585,9 +585,11 @@ test("customDomain: certificate imported", async () => {
     customDomain: {
       domainName: "www.domain.com",
       hostedZone: "domain.com",
-      certificate: new acm.Certificate(stack, "Cert", {
-        domainName: "domain.com",
-      }),
+      cdk: {
+        certificate: new acm.Certificate(stack, "Cert", {
+          domainName: "domain.com",
+        }),
+      },
     },
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore: "jestBuildOutputPath" not exposed in props
@@ -614,9 +616,11 @@ test("customDomain: isExternalDomain true", async () => {
     path: "test/nextjs-site",
     customDomain: {
       domainName: "www.domain.com",
-      certificate: new acm.Certificate(stack, "Cert", {
-        domainName: "domain.com",
-      }),
+      cdk: {
+        certificate: new acm.Certificate(stack, "Cert", {
+          domainName: "domain.com",
+        }),
+      },
       isExternalDomain: true,
     },
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -661,9 +665,11 @@ test("customDomain: isExternalDomain true and domainAlias set", async () => {
       customDomain: {
         domainName: "domain.com",
         domainAlias: "www.domain.com",
-        certificate: new acm.Certificate(stack, "Cert", {
-          domainName: "domain.com",
-        }),
+        cdk: {
+          certificate: new acm.Certificate(stack, "Cert", {
+            domainName: "domain.com",
+          }),
+        },
         isExternalDomain: true,
       },
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -683,9 +689,11 @@ test("customDomain: isExternalDomain true and hostedZone set", async () => {
       customDomain: {
         domainName: "www.domain.com",
         hostedZone: "domain.com",
-        certificate: new acm.Certificate(stack, "Cert", {
-          domainName: "domain.com",
-        }),
+        cdk: {
+          certificate: new acm.Certificate(stack, "Cert", {
+            domainName: "domain.com",
+          }),
+        },
         isExternalDomain: true,
       },
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -724,8 +732,10 @@ test("constructor: s3Bucket props", async () => {
   const stack = new Stack(new App(), "stack");
   new NextjsSite(stack, "Site", {
     path: "test/nextjs-site",
-    s3Bucket: {
-      bucketName: "my-bucket",
+    cdk: {
+      bucket: {
+        bucketName: "my-bucket",
+      },
     },
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore: "jestBuildOutputPath" not exposed in props
@@ -741,8 +751,10 @@ test("constructor: sqsRegenerationQueue props", async () => {
   const stack = new Stack(new App(), "stack");
   new NextjsSite(stack, "Site", {
     path: "test/nextjs-site",
-    sqsRegenerationQueue: {
-      deliveryDelay: cdk.Duration.seconds(30),
+    cdk: {
+      regenerationQueue: {
+        deliveryDelay: cdk.Duration.seconds(30),
+      },
     },
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore: "jestBuildOutputPath" not exposed in props
@@ -784,22 +796,24 @@ test("constructor: cfCachePolicies props override", async () => {
   const stack = new Stack(new App(), "stack");
   new NextjsSite(stack, "Site", {
     path: "test/nextjs-site",
-    cfCachePolicies: {
-      imageCachePolicy: cf.CachePolicy.fromCachePolicyId(
-        stack,
-        "ImageCachePolicy",
-        "imageCachePolicyId"
-      ),
-      lambdaCachePolicy: cf.CachePolicy.fromCachePolicyId(
-        stack,
-        "LambdaCachePolicy",
-        "lambdaCachePolicyId"
-      ),
-      staticCachePolicy: cf.CachePolicy.fromCachePolicyId(
-        stack,
-        "StaticCachePolicy",
-        "staticCachePolicyId"
-      ),
+    cdk: {
+      cachePolicies: {
+        imageCachePolicy: cf.CachePolicy.fromCachePolicyId(
+          stack,
+          "ImageCachePolicy",
+          "imageCachePolicyId"
+        ),
+        lambdaCachePolicy: cf.CachePolicy.fromCachePolicyId(
+          stack,
+          "LambdaCachePolicy",
+          "lambdaCachePolicyId"
+        ),
+        staticCachePolicy: cf.CachePolicy.fromCachePolicyId(
+          stack,
+          "StaticCachePolicy",
+          "staticCachePolicyId"
+        ),
+      },
     },
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore: "jestBuildOutputPath" not exposed in props
@@ -812,8 +826,10 @@ test("constructor: cfDistribution props", async () => {
   const stack = new Stack(new App(), "stack");
   new NextjsSite(stack, "Site", {
     path: "test/nextjs-site",
-    cfDistribution: {
-      comment: "My Comment",
+    cdk: {
+      distribution: {
+        comment: "My Comment",
+      },
     },
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore: "jestBuildOutputPath" not exposed in props
@@ -831,10 +847,12 @@ test("constructor: cfDistribution defaultBehavior override", async () => {
   const stack = new Stack(new App(), "stack");
   new NextjsSite(stack, "Site", {
     path: "test/nextjs-site",
-    cfDistribution: {
-      defaultBehavior: {
-        viewerProtocolPolicy: cf.ViewerProtocolPolicy.HTTPS_ONLY,
-        allowedMethods: cf.AllowedMethods.ALLOW_ALL,
+    cdk: {
+      distribution: {
+        defaultBehavior: {
+          viewerProtocolPolicy: cf.ViewerProtocolPolicy.HTTPS_ONLY,
+          allowedMethods: cf.AllowedMethods.ALLOW_ALL,
+        },
       },
     },
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -865,10 +883,12 @@ test("constructor: cfDistribution certificate conflict", async () => {
   expect(() => {
     new NextjsSite(stack, "Site", {
       path: "test/nextjs-site",
-      cfDistribution: {
-        certificate: new acm.Certificate(stack, "Cert", {
-          domainName: "domain.com",
-        }),
+      cdk: {
+        distribution: {
+          certificate: new acm.Certificate(stack, "Cert", {
+            domainName: "domain.com",
+          }),
+        },
       },
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore: "jestBuildOutputPath" not exposed in props
@@ -882,8 +902,10 @@ test("constructor: cfDistribution domainNames conflict", async () => {
   expect(() => {
     new NextjsSite(stack, "Site", {
       path: "test/nextjs-site",
-      cfDistribution: {
-        domainNames: ["domain.com"],
+      cdk: {
+        distribution: {
+          domainNames: ["domain.com"],
+        },
       },
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore: "jestBuildOutputPath" not exposed in props
@@ -1038,7 +1060,7 @@ test("constructor: us-east-1", async () => {
   expect(site.bucketName).toBeDefined();
   expect(site.distributionId).toBeDefined();
   expect(site.distributionDomain).toBeDefined();
-  expect(site.acmCertificate).toBeUndefined();
+  expect(site.cdk.certificate).toBeUndefined();
   countResources(stack, "AWS::S3::Bucket", 1);
   countResources(stack, "AWS::Lambda::Function", 10);
   countResources(stack, "AWS::CloudFront::Distribution", 1);
@@ -1065,7 +1087,7 @@ test("constructor: ca-central-1", async () => {
   expect(site.bucketName).toBeDefined();
   expect(site.distributionId).toBeDefined();
   expect(site.distributionDomain).toBeDefined();
-  expect(site.acmCertificate).toBeUndefined();
+  expect(site.cdk.certificate).toBeUndefined();
   countResources(stack, "AWS::S3::Bucket", 1);
   countResources(stack, "AWS::Lambda::Function", 9);
   countResources(stack, "AWS::CloudFront::Distribution", 1);

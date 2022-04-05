@@ -14,7 +14,7 @@ export default class MyStack extends sst.Stack {
 
     // Show API endpoint in output
     new cdk.CfnOutput(this, "ApiEndpoint", {
-      value: api.httpApi.apiEndpoint,
+      value: api.cdk.httpApi.apiEndpoint,
     });
   }
 }

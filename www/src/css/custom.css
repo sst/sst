@@ -101,6 +101,11 @@
   background: #f4c9bc;
 }
 
+.mono {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 14px;
+}
+
 /** Hide sidebar scrollbars **/
 nav.menu.thin-scrollbar::-webkit-scrollbar,
 div.theme-doc-toc-desktop.thin-scrollbar::-webkit-scrollbar {
@@ -141,21 +146,37 @@ body {
 .navbar__link {
   font-weight: bold;
 }
-.navbar__link span svg:last-child {
+.navbar__link svg:last-child {
   /** Hide external link icon **/
   display: none;
+}
+
+/** Navbar: resize dark mode button **/
+.navbar__items svg[class^="lightToggleIcon_node_"] {
+  width: 32px;
+  height: 32px;
+}
+.navbar__items svg[class^="darkToggleIcon_node_"] {
+  width: 32px;
+  height: 32px;
 }
 
 /** Sidebar **/
 nav.menu {
   padding: var(--ifm-navbar-padding-horizontal);
 }
+
+/** Sidebar: hide non-collapsable toggle **/
+nav.menu > ul.menu__list > li > div.menu__list-item-collapsible > a:after {
+  display: none;
+}
+
 nav.menu
   > ul.menu__list
   > li
   > div.menu__list-item-collapsible
   > a:first-child {
-  opacity: 0.65;
+  opacity: 0.4;
   font-size: 0.85em;
   font-weight: 700;
   text-transform: uppercase;
@@ -188,7 +209,7 @@ nav.menu > ul > li:not(:last-child) {
 }
 .menu__link {
   font-size: 0.9375rem;
-  line-height: 1.35;
+  line-height: 1.1;
   transition: color 0.3s;
   padding: var(--ifm-menu-link-padding-vertical);
 }
@@ -330,6 +351,11 @@ div[class^="tableOfContents"] a.table-of-contents__link code {
   text-transform: uppercase;
 }
 .footer .footer__item a svg {
+  display: none;
+}
+
+/** Breadcrumb **/
+.theme-doc-breadcrumbs {
   display: none;
 }
 
