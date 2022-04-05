@@ -13,7 +13,7 @@ export function assert(schema: ZodSchema<any, any, any>, value: any): void {
         return [issue];
       });
 
-      for (let issue of issues) {
+      for (const issue of issues) {
         message.push("-> " + issue.path.join(".") + ": " + issue.message);
       }
       throw new Error(message.join("\n"));
