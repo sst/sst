@@ -1,4 +1,3 @@
-import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as sst from "@serverless-stack/resources";
 
 class MySampleStack extends sst.Stack {
