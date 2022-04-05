@@ -3,12 +3,14 @@
   "version": "0.0.0",
   "license": "MIT",
   "private": true,
-  "workspaces": [
-    "packages/*",
-    "packages/cli/test/*",
-    "packages/static-site-env/test/*",
-    "www"
-  ],
+  "workspaces": {
+    "packages": [
+      "packages/*",
+      "packages/cli/test/*",
+      "packages/static-site-env/test/*",
+      "www"
+    ]
+  },
   "scripts": {
     "lint": "eslint . --fix --ext .js,.ts",
     "watch": "tsc -b -w",
