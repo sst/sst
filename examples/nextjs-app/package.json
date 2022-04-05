@@ -18,6 +18,6 @@
     "@serverless-stack/cli": "0.63.0",
     "@serverless-stack/resources": "0.63.0",
     "@sls-next/lambda-at-edge": "^3.7.0-alpha.7",
-    "aws-cdk-lib": "2.7.0"
+    "aws-cdk-lib": "2.15.0"
   }
 }

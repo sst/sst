@@ -12,15 +12,18 @@ export default class MyStack extends sst.Stack {
       },
     });
 
-    // Configure Datadog
-    const datadog = new Datadog(this, "Datadog", {
-      nodeLayerVersion: 65,
-      extensionLayerVersion: 13,
-      apiKey: process.env.DATADOG_API_KEY,
-    });
+    // Configure Datadog only in prod
+    if (!scope.local) {
+      // Configure Datadog
+      const datadog = new Datadog(this, "Datadog", {
+        nodeLayerVersion: 65,
+        extensionLayerVersion: 13,
+        apiKey: process.env.DATADOG_API_KEY,
+      });
 
-    // Monitor all functions in the stack
-    datadog.addLambdaFunctions(this.getAllFunctions());
+      // Monitor all functions in the stack
+      datadog.addLambdaFunctions(this.getAllFunctions());
+    }
 
     // Show the endpoint in the output
     this.addOutputs({

@@ -41,6 +41,8 @@ export default class MyStack extends sst.Stack {
     // Show the AppSync API Id in the output
     this.addOutputs({
       ApiId: api.graphqlApi.apiId,
+      ApiKey: api.graphqlApi.apiKey,
+      APiUrl: api.graphqlApi.graphqlUrl,
     });
   }
 }
