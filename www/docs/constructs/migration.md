@@ -8,16 +8,57 @@ description: "Docs for the constructs in the @serverless-stack/resources package
 The v1 SST constructs were restrucrtured with the following goals in mind:
 
 1. Consistent interfaces for:
+
     - Customizing the underlying AWS resources
+
+      SST provides a convenient way for you to configure commonly used properties, such as custom domain and access log for `Api`. You can still configure other properties. In v1, you can do that in a consistent way using the `cdk` prop. For example:
+      ```js
+      const api = new sst.Api(stack, "Api", {
+        cdk: {
+          httpApi: {
+            disableExecuteApiEndpoint: true,
+          },
+        }
+      });
+      ```
+
     - Accessing the underlying AWS resource names and ARNs
+
+      Similarly, you can access the internally created CDK constructs in a consistent way using the `cdk` attribute. For example:
+      ```js
+      api.cdk.httpApi;        // cdk.apigatewayv2.HttpApi construct
+      api.cdk.accessLogGroup; // cdk.logs.LogGroup construct
+      ```
+
 1. Reduce the need for CDK imports
+    Unless you are customizing the underlying CDK constructs, you no longer need to have CDK packages as a dependency. For example, configuring CORS used to depend on the `aws-cdk-lib` and the `@aws-cdk/aws-apigatewayv2-alpha`:
+    ```js
+    import { Duration } from "aws-cdk-lib";
+    import { CorsHttpMethod } from "@aws-cdk/aws-apigatewayv2-alpha";
+
+    new sst.Api(stack, "Api", {
+      cors: {
+        allowMethods: [CorsHttpMethod.GET],
+        maxAge: Duration.days(5),
+      },
+    });
+    ```
+    Now you can do it like this. And the string values are auto-completed in your IDE.
+    ```js
+    new sst.Api(stack, "Api", {
+      cors: {
+        allowMethods: ["GET"],
+        maxAge: "3 Days",
+      },
+    });
+    ```
 1. Complete support for inline TS Docs
 1. Laying the foundation for full typesafey
 
 ## Steps
 Estimated time: 15 minutes
 
-1. Run `npx sst update 1.0.0-beta.3`
+1. Run `npx sst update 1.0.0-beta.5`
 1. For each SST construct used in your app, find its corresponding section in the [Changelog](#changelog) below, and follow the steps to update.
 1. Check all constructs have been updated:
     - For TS projects (ie. using `index.ts`), run `npx run tsc --noEmit` or `yarn run tsc --noEmit` to ensure there are not type errors.
