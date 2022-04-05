@@ -1,4 +1,3 @@
-import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as sst from "@serverless-stack/resources";
 
 class MySampleStack extends sst.Stack {
@@ -9,7 +8,7 @@ class MySampleStack extends sst.Stack {
     new sst.Function(this, "MyLambda", {
       bundle: true,
       handler: "lambda.handler",
-      runtime: lambda.Runtime.NODEJS_12_X,
+      runtime: "nodejs14.x",
       timeout: 10,
     });
   }
