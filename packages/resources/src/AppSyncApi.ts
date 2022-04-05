@@ -167,20 +167,20 @@ export interface AppSyncApiHttpDataSourceProps
   };
 }
 
-interface MappingTemplateFile {
+export interface MappingTemplateFile {
   /**
    * Path to the file containing the VTL mapping template
    */
   file: string;
 }
-interface MappingTemplateInline {
+export interface MappingTemplateInline {
   /**
    * Inline definition of the VTL mapping template
    */
   inline: string;
 }
 
-type MappingTemplate = MappingTemplateFile | MappingTemplateInline;
+export type MappingTemplate = MappingTemplateFile | MappingTemplateInline;
 
 /**
  * Used to define full resolver config

@@ -24,8 +24,10 @@ import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog";
 // Interfaces
 /////////////////////
 
-export type WebSocketApiDomainProps = apigV2Domain.CustomDomainProps;
-export type WebSocketApiAccessLogProps = apigV2AccessLog.AccessLogProps;
+export interface WebSocketApiDomainProps
+  extends apigV2Domain.CustomDomainProps {}
+export interface WebSocketApiAccessLogProps
+  extends apigV2AccessLog.AccessLogProps {}
 
 export interface WebSocketApiProps {
   cdk?: {

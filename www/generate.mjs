@@ -402,6 +402,10 @@ function renderType(file, files, prefix, parameter) {
         const [_, pkg] = parameter.package.split("/");
         return `<span class="mono">[${parameter.name}](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_${pkg}.${parameter.name}.html)</span>`;
       }
+      if (parameter.package === "esbuild")
+        return `<span class="mono">[${parameter.name}](https://esbuild.github.io/api/#${parameter.name.toLowerCase()})</span>`;
+
+      throw "Did not implement handler for package " + parameter.package
     }
 
     // Find generic params

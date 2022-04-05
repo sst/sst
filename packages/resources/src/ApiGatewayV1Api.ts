@@ -37,7 +37,8 @@ const allowedMethods = [
 // Interfaces
 /////////////////////
 
-export type ApiGatewayV1ApiAccessLogProps = apigV1AccessLog.AccessLogProps
+export interface ApiGatewayV1ApiAccessLogProps
+  extends apigV1AccessLog.AccessLogProps {}
 
 export interface ApiGatewayV1ApiProps<
   Authorizers extends Record<string, ApiGatewayV1ApiAuthorizer> = Record<
@@ -235,7 +236,7 @@ export interface ApiGatewayV1ApiProps<
   };
 }
 
-type ApiGatewayV1ApiRouteProps<AuthorizerKeys> =
+export type ApiGatewayV1ApiRouteProps<AuthorizerKeys> =
   | FunctionInlineDefinition
   | ApiGatewayV1ApiFunctionRouteProps<AuthorizerKeys>;
 
@@ -269,7 +270,7 @@ export interface ApiGatewayV1ApiFunctionRouteProps<AuthorizerKeys = never> {
   };
 }
 
-type ApiGatewayV1ApiAuthorizer =
+export type ApiGatewayV1ApiAuthorizer =
   | ApiGatewayV1ApiUserPoolsAuthorizer
   | ApiGatewayV1ApiLambdaTokenAuthorizer
   | ApiGatewayV1ApiLambdaRequestAuthorizer;

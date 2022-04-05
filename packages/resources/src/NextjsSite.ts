@@ -42,6 +42,9 @@ import { Permissions, attachPermissionsToRole } from "./util/permission";
 import { getHandlerHash } from "./util/builder";
 import * as crossRegionHelper from "./nextjs-site/cross-region-helper";
 
+export interface NextjsDomainProps extends BaseSiteDomainProps {}
+export interface NextjsCdkDistributionProps
+  extends BaseSiteCdkDistributionProps {}
 export interface NextjsSiteProps {
   cdk?: {
     /**
@@ -51,7 +54,7 @@ export interface NextjsSiteProps {
     /**
      * Pass in a value to override the default settings this construct uses to create the CDK `Distribution` internally.
      */
-    distribution?: BaseSiteCdkDistributionProps;
+    distribution?: NextjsCdkDistributionProps;
     /**
      * Override the default CloudFront cache policies created internally.
      * @example
@@ -117,7 +120,7 @@ export interface NextjsSiteProps {
    * });
    * ```
    */
-  customDomain?: string | BaseSiteDomainProps;
+  customDomain?: string | NextjsDomainProps;
   /**
    * An object with the key being the environment variable name.
    *
