@@ -1,3 +1,4 @@
 *.md
 !index.md
+!Permissions.md
 !*.snippets.md
