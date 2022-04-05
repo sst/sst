@@ -311,7 +311,9 @@ async function run(json) {
     }
 
     const output = lines.flat(100).join("\n");
-    await fs.writeFile(`docs/constructs/v1/${file.name}.md`, output);
+    const path = `docs/constructs/v1/${file.name}.md`
+    await fs.writeFile(path, output);
+    console.log("Wrote file", path)
   }
 }
 
