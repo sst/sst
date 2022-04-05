@@ -30,7 +30,6 @@ const {
   validatePropsForJs,
 } = require("./util/cdkHelpers");
 const objectUtil = require("../lib/object");
-const spawn = require("cross-spawn");
 const { CloudFormation } = require("aws-sdk");
 
 let isConsoleEnabled = false;
