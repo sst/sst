@@ -63,6 +63,8 @@ The v1 SST constructs were restrucrtured with the following goals in mind:
 ## Upgrade Steps
 Estimated time: 15 minutes
 
+Prerequisite: Update SST to v0.59.0 or later
+
 1. Run `npx sst update 1.0.0-beta.5`
 2. For each SST construct used in your app, find its corresponding section in the [Changelog](#changelog) below, and follow the steps to update.
 3. Ensure that all the constructs have been updated:
