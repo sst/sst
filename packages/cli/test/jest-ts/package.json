@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-jest-ts",
   "private": true,
   "description": "tests",
-  "version": "1.0.0-beta.4",
+  "version": "1.0.0-beta.5",
   "scripts": {
     "build": "sst build",
     "test": "sst test"
@@ -13,8 +13,8 @@
     ]
   },
   "dependencies": {
-    "@serverless-stack/cli": "^1.0.0-beta.4",
-    "@serverless-stack/resources": "^1.0.0-beta.4"
+    "@serverless-stack/cli": "^1.0.0-beta.5",
+    "@serverless-stack/resources": "^1.0.0-beta.5"
   },
   "license": "ISC",
   "devDependencies": {
