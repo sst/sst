@@ -8,16 +8,21 @@ description: "Docs for the constructs in the @serverless-stack/resources package
 The v1 SST constructs were restrucrtured with the following goals in mind:
 
 1. Consistent interfaces for:
-   - Customizing the underlying AWS resources
-   - Accessing the underlying AWS resource names and ARNs
-2. Reduce the need for CDK imports
-3. Complete support for inline TS Docs
-4. Laying the foundation for full typesafey
+    - Customizing the underlying AWS resources
+    - Accessing the underlying AWS resource names and ARNs
+1. Reduce the need for CDK imports
+1. Complete support for inline TS Docs
+1. Laying the foundation for full typesafey
 
 ## Steps
+Estimated time: 15 minutes
+
 1. Run `npx sst update 1.0.0-beta.3`
-2. Follow the [Changelog](#changelog) below to update each constructs in your SST app.
-3. Run `npx sst diff` to review the changes.
+1. For each SST construct used in your app, find its corresponding section in the [Changelog](#changelog) below, and follow the steps to update.
+1. Check all constructs have been updated:
+    - For TS projects (ie. using `index.ts`), run `npx run tsc --noEmit` or `yarn run tsc --noEmit` to ensure there are not type errors.
+    - For JS projects (ie. using `index.js`), run `npx sst build` or `yarn sst build` to ensure there are no build warning.
+1. As a final check, run `npx sst diff` prior to deploying and review the changes.
 
 ## Changelog
 ### App Changelog
@@ -43,6 +48,7 @@ permissions: "*"
 ### Function Changelog
 
 #### Constructor
+- runtime: default updated to "nodejs14.x"
 - runtime: type `string | cdk.lambda.Runtime` ⇒ `string`
 - timeout: type `number | cdk.Duration` ⇒ `number`
 - tracing: type `cdk.lambda.Tracing` ⇒ `"active" | "disabled" | "pass_through"`
@@ -501,7 +507,7 @@ api.cdk.certificate;
 ### GraphQLApi Changelog
 
 - Refer to the changes in [Api Changelog](#api-changelog)
-- Updated default payloadFormatVersion to "2.0"
+- defaults.payloadFormatVersion: default updated to "2.0"
 
 To set payloadFormationVersion to "1.0":
 
@@ -669,6 +675,29 @@ new WebSocketApi(stack, "Api", {
 });
 ```
 
+#### Routes
+- Function routes: Always use full props format
+
+```js
+// from
+routes: {
+  sendMessage: {
+    handler: "lambda.main",
+    timeout: 10,
+  }
+}
+
+// to
+routes: {
+  sendMessage: {
+    function: {
+      handler: "lambda.main",
+      timeout: 10,
+    }
+  }
+}
+```
+
 #### Properties
 - Moved webSocketApi ⇒ cdk.webSocketApi
 - Moved webSocketStage ⇒ cdk.webSocketStage
@@ -722,8 +751,30 @@ api.cdk.certificate;
 ```
 
 #### Data sources
-- Function routes: moved options.name ⇒ name
-- Function routes: moved options.description ⇒ description
+- Function data sources: Always use full props format
+
+```js
+// from
+dataSources: {
+  notesDs: {
+    handler: "lambda.main",
+    timeout: 10,
+  }
+}
+
+// to
+dataSources: {
+  notesDs: {
+    function: {
+      handler: "lambda.main",
+      timeout: 10,
+    }
+  }
+}
+```
+
+- Function data sources: moved options.name ⇒ name
+- Function data sources: moved options.description ⇒ description
 
 ```js
 // from
@@ -747,9 +798,9 @@ dataSources: {
 },
 ```
 
-- DynamoDB routes: moved options.name ⇒ name
-- DynamoDB routes: moved options.description ⇒ description
-- DynamoDB routes: moved table (if type is `cdk.dynamodb.Table`) ⇒ cdk.dataSource.table
+- DynamoDB data sources: moved options.name ⇒ name
+- DynamoDB data sources: moved options.description ⇒ description
+- DynamoDB data sources: moved table (if type is `cdk.dynamodb.Table`) ⇒ cdk.dataSource.table
 
 ```js
 // from
@@ -778,12 +829,12 @@ dataSources: {
 },
 ```
 
-- RDS routes: moved options.name ⇒ name
-- RDS routes: moved options.description ⇒ description
-- RDS routes: moved serverlessCluster (if type is `sst.RDS`) ⇒ rds
-- RDS routes: moved serverlessCluster (if type is `cdk.rds.ServerlessCluster`) ⇒ cdk.dataSource.serverlessCluster
-- RDS routes: moved secretStore ⇒ cdk.dataSource.secretStore
-- RDS routes: moved databaseName ⇒ cdk.dataSource.databaseName
+- RDS data sources: moved options.name ⇒ name
+- RDS data sources: moved options.description ⇒ description
+- RDS data sources: moved serverlessCluster (if type is `sst.RDS`) ⇒ rds
+- RDS data sources: moved serverlessCluster (if type is `cdk.rds.ServerlessCluster`) ⇒ cdk.dataSource.serverlessCluster
+- RDS data sources: moved secretStore ⇒ cdk.dataSource.secretStore
+- RDS data sources: moved databaseName ⇒ cdk.dataSource.databaseName
 
 ```js
 // from
@@ -816,9 +867,9 @@ dataSources: {
 },
 ```
 
-- HTTP routes: moved options.name ⇒ name
-- HTTP routes: moved options.description ⇒ description
-- HTTP routes: moved options.authorizationConfig ⇒ cdk.dataSource.authorizationConfig
+- HTTP data sources: moved options.name ⇒ name
+- HTTP data sources: moved options.description ⇒ description
+- HTTP data sources: moved options.authorizationConfig ⇒ cdk.dataSource.authorizationConfig
 
 ```js
 // from
@@ -855,6 +906,28 @@ dataSources: {
 },
 
 #### Resolvers
+- Always use full props format
+
+```js
+// from
+resolvers: {
+  "Query listNotes": {
+    handler: "lambda.main",
+    timeout: 10,
+  }
+}
+
+// to
+resolvers: {
+  "Query listNotes": {
+    function: {
+      handler: "lambda.main",
+      timeout: 10,
+    }
+  }
+}
+```
+
 - Moved resolverProps ⇒ cdk.resolver
 
 ```js
@@ -1739,6 +1812,28 @@ bus.attachPermissionsToTarget("myRule", "myTarget", [...]);
 ```
 
 #### Consumers
+- Always use full props format
+
+```js
+// from
+consumers: {
+  myConsumer: {
+    handler: "lambda.main",
+    timeout: 10,
+  }
+}
+
+// to
+consumers: {
+  myConsumer: {
+    function: {
+      handler: "lambda.main",
+      timeout: 10,
+    }
+  }
+}
+```
+
 - Moved consumerProps ⇒ cdk.eventSource
 ```js
 // from
@@ -1880,6 +1975,7 @@ const table = new Table(this, "Notes", {
     key: TableFieldType.BINARY,
   },
 });
+
 // to
 const table = new Table(this, "Notes", {
   fields: {
@@ -1914,6 +2010,7 @@ const table = new table(this, "notes", {
     },
   },
 });
+
 // to
 const table = new table(this, "notes", {
   globalindexes: {
