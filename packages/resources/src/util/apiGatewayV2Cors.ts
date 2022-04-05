@@ -59,7 +59,7 @@ export function buildCorsConfig(
     return {
       allowCredentials: cors.allowCredentials,
       allowHeaders: cors.allowHeaders,
-      allowMethods: cors.allowMethods as apig.CorsHttpMethod[],
+      allowMethods: (cors.allowMethods || []).map((method) => apig.CorsHttpMethod[method as keyof typeof apig.CorsHttpMethod]),
       allowOrigins: cors.allowOrigins,
       exposeHeaders: cors.exposeHeaders,
       maxAge: cors.maxAge && toCdkDuration(cors.maxAge),
