@@ -43,14 +43,6 @@ export const InvocationRow = memo((props: Props) => {
   const observer = useRef<ResizeObserver>();
 
   useEffect(() => {
-    if (ref.current) observer.current.observe(ref.current);
-
-    return () => {
-      if (ref.current) observer.current.unobserve(ref.current);
-    };
-  }, [ref.current]);
-
-  useEffect(() => {
     observer.current = new ResizeObserver((entries) => {
       const { height } = entries[0].contentRect;
       setHeight(height + 80);
@@ -59,7 +51,16 @@ export const InvocationRow = memo((props: Props) => {
     return () => {
       observer.current.disconnect();
     };
-  });
+  }, []);
+
+  useEffect(() => {
+    if (!observer.current) return;
+    if (ref.current) observer.current.observe(ref.current);
+
+    return () => {
+      if (ref.current) observer.current.unobserve(ref.current);
+    };
+  }, [ref.current]);
 
   return (
     <InvocationRoot
