@@ -51,7 +51,7 @@
     "react-json-view": "^1.21.3",
     "react-query": "^3.34.2",
     "react-redux": "7.2.6",
-    "react-router-dom": "^6.1.1",
+    "react-router-dom": "^6.3.0",
     "react-spinners": "^0.11.0",
     "react-virtual": "^2.10.0",
     "remeda": "^0.0.32"
