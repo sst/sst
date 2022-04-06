@@ -204,6 +204,7 @@ export function useStacksBuilder(
       persistent: true,
       ignoreInitial: true,
       followSymlinks: false,
+      ignored: ["**/node_modules/**", "**/.build/**", "**/.sst/**"],
     })
     .on("change", () => {
       service.send("FILE_CHANGE");
