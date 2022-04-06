@@ -1,8 +1,4 @@
-const {
-  runJestCommand,
-  runBuildCommand,
-  clearBuildOutput,
-} = require("../helpers");
+const { runBuildCommand, clearBuildOutput } = require("../helpers");
 
 beforeEach(async () => {
   await clearBuildOutput(__dirname);
@@ -19,13 +15,4 @@ test("template-app", async () => {
   const result = await runBuildCommand(__dirname);
 
   expect(result).toMatch(/Successfully compiled \d+ stack/);
-});
-
-/**
- * Test that the jest tests run successfully
- */
-test("template-app-jest", async () => {
-  const result = await runJestCommand(__dirname);
-
-  expect(result).toContain("JESTTESTSUCCESS-----");
 });
