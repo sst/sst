@@ -224,7 +224,7 @@ export function Explorer() {
         .join("/");
 
       const searchParams = new URLSearchParams();
-      for (let item of data.query) {
+      for (const item of data.query) {
         if (item.name && item.value) searchParams.append(item.name, item.value);
       }
       const proxy = false ? `http://localhost:12557/proxy/` : "";

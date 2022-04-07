@@ -81,7 +81,7 @@ export class Cognito {
   }
 
   private trigger() {
-    for (let cb of this.callbacks) {
+    for (const cb of this.callbacks) {
       cb(this);
     }
   }

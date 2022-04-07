@@ -13,11 +13,6 @@
     "backend",
     "web/*"
   ],
-  "eslintConfig": {
-    "extends": [
-      "serverless-stack"
-    ]
-  },
   "devDependencies": {
     "@serverless-stack/cli": "0.69.2",
     "@serverless-stack/resources": "0.69.2",

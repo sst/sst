@@ -76,7 +76,7 @@ export const HeaderGroup = styled("div", {
   },
 });
 
-export function HeaderPortal(props: React.PropsWithChildren<{}>) {
+export function HeaderPortal(props: React.PropsWithChildren<any>) {
   const toolbar = document.querySelector("#outlet");
   if (!toolbar) return null;
   return ReactDOM.createPortal(props.children, toolbar);
