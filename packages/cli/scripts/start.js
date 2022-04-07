@@ -102,10 +102,10 @@ module.exports = async function (argv, config, cliInfo) {
     cliInfo
   );
   await updateStaticSiteEnvironmentOutputs(appStackDeployRet);
-  const cfn = new CloudFormation();
   const constructs = (
     await Promise.all(
       appStackDeployRet.map(async (stack) => {
+        const cfn = new CloudFormation({ region: stack.region });
         const result = await cfn
           .describeStackResource({
             StackName: stack.id,
