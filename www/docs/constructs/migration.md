@@ -58,7 +58,7 @@ The v1 SST constructs were restrucrtured with the following goals in mind:
    
    v1 SST constructs also come with TS Docs. So you can see helpful docs in your IDE and the new construct docs are also auto-generated from them.
    
-4. Laying the foundation for full typesafey
+4. Laying the foundation for full typesafety
 
 ## Upgrade Steps
 Estimated time: 15 minutes
