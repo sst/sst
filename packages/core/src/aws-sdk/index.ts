@@ -10,7 +10,8 @@ export interface AwsCredentialsOptions {
   readonly profile: string;
 }
 
-export async function getAwsCredentials(options?: AwsCredentialsOptions) {
+export async function configureAwsCredentials(options?: AwsCredentialsOptions) {
+  // Get credentials
   if (!credentials) {
     const chain = await AwsCliCompatible.credentialChain({
       profile: options?.profile,
@@ -20,5 +21,16 @@ export async function getAwsCredentials(options?: AwsCredentialsOptions) {
     });
     credentials = await chain.resolvePromise();
   }
-  return credentials;
+
+  // Configure AWS SDK
+  // Note that this is required when SST make AWS SDK calls directly
+  aws.config.credentials = credentials;
+
+  // Configure environment variable
+  // Note that this is required when SST invokes CDK CLI
+  process.env.AWS_ACCESS_KEY_ID = credentials.accessKeyId;
+  process.env.AWS_SECRET_ACCESS_KEY = credentials.secretAccessKey;
+  if (credentials.sessionToken) {
+    process.env.AWS_SESSION_TOKEN = credentials.sessionToken;
+  }
 }
