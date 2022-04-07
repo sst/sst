@@ -252,7 +252,7 @@ export interface EventBusProps {
  *     rule1: {
  *       eventPattern: { source: ["myevent"] },
  *       targets: {
- *         myTarget1: "src/function1.handler"
+ *         myTarget1: "src/function1.handler",
  *         myTarget2: "src/function2.handler"
  *       },
  *     },
