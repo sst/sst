@@ -51,6 +51,7 @@ export function Detail() {
     params.stack!,
     params.function!
   );
+
   const isLocal = useRealtimeState(
     (s) => s.functions[functionMetadata.data.localId] != undefined,
     [params.function]
