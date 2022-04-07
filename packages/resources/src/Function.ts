@@ -82,7 +82,7 @@ export interface FunctionProps
    * })
    * ```
    */
-  architecture: Lowercase<
+  architecture?: Lowercase<
     keyof Pick<typeof lambda.Architecture, "ARM_64" | "X86_64">
   >;
   /**
