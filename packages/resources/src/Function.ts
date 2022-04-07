@@ -74,6 +74,13 @@ export interface FunctionProps
    * The CPU architecture of the lambda function.
    *
    * @default "x86_64"
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   architecture: "arm_64",
+   * })
+   * ```
    */
   architecture: Lowercase<
     keyof Pick<typeof lambda.Architecture, "ARM_64" | "X86_64">
