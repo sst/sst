@@ -390,17 +390,6 @@ export interface ApiProps<
      *   }
      * });
      * ```
-     *
-     * @example
-     * ```js
-     * import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
-     *
-     * new Api({
-     *   httpApi: HttpApi.fromHttpApiAttributes(stack, "MyHttpApi", {
-     *     httpApiId,
-     *   }),
-     * });
-     * ```
      */
     httpApi?: apig.IHttpApi | apig.HttpApiProps;
     /**
