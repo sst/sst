@@ -23,7 +23,7 @@ type Props = {
 
 const InvocationRoot = styled("div", {
   width: "100%",
-  overflow: "auto",
+  overflowY: "hidden",
   position: "relative",
   fontSize: "$sm",
 });
@@ -220,7 +220,7 @@ type LogsProps = {
 };
 
 const LogsRoot = styled("div", {
-  flexGrow: 1,
+  width: "100%",
 });
 
 function Logs(props: LogsProps) {
