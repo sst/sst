@@ -86,7 +86,7 @@ export function use() {
   };
 }
 
-export function Provider(props: PropsWithChildren<{}>) {
+export function Provider(props: PropsWithChildren<any>) {
   const [toasts] = useAtom(ToastsAtom);
   return (
     <Root>

@@ -9,11 +9,6 @@
     "deploy": "sst deploy",
     "remove": "sst remove"
   },
-  "eslintConfig": {
-    "extends": [
-      "serverless-stack"
-    ]
-  },
   "dependencies": {
     "aws-cdk-lib": "2.15.0",
     "@serverless-stack/cli": "0.69.2",

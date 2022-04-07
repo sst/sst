@@ -53,7 +53,7 @@ export function Splash(
   );
 }
 
-export function EmptyState(props: React.PropsWithChildren<{}>) {
+export function EmptyState(props: React.PropsWithChildren<any>) {
   return (
     <Content>
       <Row alignVertical="center">

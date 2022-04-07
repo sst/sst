@@ -2382,3 +2382,30 @@ site.cdk.distribution
 site.cdk.hostedZone
 site.cdk.certificate
 ```
+
+### Eslint Changelog
+
+SST no longer directly integrates with eslint. Linting is better configured externally and run as a seperate step in CI.
+
+To setup eslint in your project first make sure you remove references to SST's eslint config
+
+```json {3-7}
+// Delete these lines in package.json
+{
+  "eslintConfig": {
+    "extends": [
+      "serverless-stack"
+    ]
+  }
+}
+```
+
+From there you can follow [eslint's getting started guide](https://eslint.org/docs/user-guide/getting-started)
+
+### Jest Changelog
+
+SST no longer directly integrates with jest. Testing is better configured externally and run as a seperate step in CI.
+
+Remove all references to `sst test` in your package.json scripts
+
+From there you can follow [jest's getting started guide](https://jestjs.io/docs/getting-started)

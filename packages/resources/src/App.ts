@@ -50,8 +50,6 @@ export interface AppDeployProps {
    */
   readonly region?: string;
 
-  readonly lint?: boolean;
-  readonly typeCheck?: boolean;
   readonly buildDir?: string;
   readonly skipBuild?: boolean;
   readonly esbuildConfig?: string;
@@ -116,10 +114,6 @@ export class App extends cdk.App {
    * The AWS account the app is being deployed to. This comes from the IAM credentials being used to run the SST CLI.
    */
   public readonly account: string;
-  /** @internal */
-  public readonly lint: boolean;
-  /** @internal */
-  public readonly typeCheck: boolean;
   /** @internal */
   public readonly buildDir: string;
   /** @internal */
@@ -190,9 +184,7 @@ export class App extends cdk.App {
     this.name = deployProps.name || "my-app";
     this.region =
       deployProps.region || process.env.CDK_DEFAULT_REGION || "us-east-1";
-    this.lint = deployProps.lint === false ? false : true;
     this.account = process.env.CDK_DEFAULT_ACCOUNT || "my-account";
-    this.typeCheck = deployProps.typeCheck === false ? false : true;
     this.esbuildConfig = deployProps.esbuildConfig;
     this.buildDir = deployProps.buildDir || ".build";
     this.skipBuild = deployProps.skipBuild || false;

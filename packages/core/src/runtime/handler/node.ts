@@ -1,65 +1,14 @@
 import path from "path";
 import chalk from "chalk";
-import { Definition, Issue } from "./definition";
+import { Definition } from "./definition";
 import fs from "fs-extra";
 import { State } from "../../state";
-import { ChildProcess, execSync } from "child_process";
+import { execSync } from "child_process";
 import spawn from "cross-spawn";
 import * as esbuild from "esbuild";
 import { ICommandHooks } from "aws-cdk-lib/aws-lambda-nodejs";
-import DataLoader from "dataloader";
 
 const BUILD_CACHE: Record<string, esbuild.BuildResult> = {};
-
-const TSC_CACHE: Record<string, ChildProcess> = {};
-const LINT_CACHE: Record<string, ChildProcess> = {};
-
-// If multiple functions are effected by a change only run tsc once per srcPath
-// TODO: Use the compiler API - this is way too slow
-const TYPESCRIPT_LOADER = new DataLoader<string, Issue[]>(
-  async (paths) => {
-    const proms = paths.map((srcPath) => {
-      const cmd = {
-        command: "npx",
-        args: ["tsc", "--noEmit"],
-      };
-      const existing = TSC_CACHE[srcPath];
-      if (existing) existing.kill();
-      const proc = spawn(cmd.command, cmd.args, {
-        env: {
-          ...process.env,
-        },
-        stdio: "pipe",
-        cwd: srcPath,
-      });
-      let collect = "";
-      proc.stderr?.on("data", (data) => (collect += data));
-      proc.stdout?.on("data", (data) => (collect += data));
-      TSC_CACHE[srcPath] = proc;
-      return new Promise<Issue[]>((resolve) => {
-        proc.on("exit", () => {
-          const errs = collect.trim();
-          if (!errs) {
-            resolve([]);
-            return;
-          }
-          resolve([
-            {
-              location: {
-                file: srcPath,
-              },
-              message: errs,
-            },
-          ]);
-        });
-      });
-    });
-    return Promise.all(proms);
-  },
-  {
-    cache: false,
-  }
-);
 
 type Bundle = {
   loader?: { [ext: string]: esbuild.Loader };
@@ -110,11 +59,14 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
     keepNames: bundle.esbuildConfig?.keepNames,
     entryPoints: [path.join(opts.srcPath, file)],
     bundle: opts.bundle !== false,
-    external: opts.bundle === false ? [] : [
-      ...(bundle.format === "esm" ? [] : ["aws-sdk"]),
-      ...(bundle.externalModules || []),
-      ...(bundle.nodeModules || []),
-    ],
+    external:
+      opts.bundle === false
+        ? []
+        : [
+            ...(bundle.format === "esm" ? [] : ["aws-sdk"]),
+            ...(bundle.externalModules || []),
+            ...(bundle.nodeModules || []),
+          ],
     mainFields:
       bundle.format === "esm" ? ["module", "main"] : ["main", "module"],
     sourcemap: true,
@@ -269,28 +221,6 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
         path.resolve(path.join(opts.srcPath, glob))
       ),
       ignore: [],
-    },
-    checks: {
-      type: () => {
-        return TYPESCRIPT_LOADER.load(opts.srcPath);
-      },
-      lint: async () => {
-        const existing = LINT_CACHE[opts.srcPath];
-        if (existing) existing.kill();
-        const cmd = {
-          command: "npx",
-          args: ["eslint", file],
-        };
-        const proc = spawn(cmd.command, cmd.args, {
-          env: {
-            ...process.env,
-          },
-          stdio: "inherit",
-          cwd: opts.srcPath,
-        });
-        LINT_CACHE[opts.srcPath] = proc;
-        return [];
-      },
     },
   };
 };

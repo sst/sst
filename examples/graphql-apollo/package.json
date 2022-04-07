@@ -9,11 +9,6 @@
     "deploy": "sst deploy",
     "remove": "sst remove"
   },
-  "eslintConfig": {
-    "extends": [
-      "serverless-stack"
-    ]
-  },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.70"
   },

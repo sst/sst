@@ -9,9 +9,6 @@
     "deploy": "sst deploy",
     "remove": "sst remove"
   },
-  "eslintConfig": {
-    "extends": ["serverless-stack"]
-  },
   "dependencies": {
     "@serverless-stack/cli": "%sst-version%",
     "@serverless-stack/resources": "%sst-version%",
