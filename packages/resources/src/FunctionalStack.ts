@@ -20,7 +20,7 @@ export function stack(
     app,
     stack,
   };
-  const returns = fn(ctx);
+  const returns = fn.bind(stack)(ctx);
   if (returns && "then" in returns)
     return returns.then((data: any) => {
       getExports(app).set(fn, data);
@@ -54,7 +54,7 @@ export type StackContext = {
   stack: Stack;
 };
 
-export type FunctionalStack<T> = (ctx: StackContext) => T | Promise<T>;
+export type FunctionalStack<T> = (this: Stack, ctx: StackContext) => T | Promise<T>;
 
 class EmptyStack extends Stack {
   constructor(scope: App, id: string, props?: StackProps) {
