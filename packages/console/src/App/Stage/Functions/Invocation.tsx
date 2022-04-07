@@ -44,8 +44,10 @@ export const InvocationRow = memo((props: Props) => {
 
   useEffect(() => {
     observer.current = new ResizeObserver((entries) => {
-      const { height } = entries[0].contentRect;
-      setHeight(height + 80);
+      window.requestAnimationFrame(() => {
+        const { height } = entries[0].contentRect;
+        setHeight(height + 80);
+      });
     });
 
     return () => {
