@@ -152,7 +152,7 @@ function StackItem(props: { stack: StackInfo }) {
               <FunctionName>{c.id}</FunctionName>
               <FunctionVia>
                 Bucket Notifications{" "}
-                {c.data.notifications?.[index] || "#" + index}
+                {c.data.notificationNames?.[index] || "#" + index}
               </FunctionVia>
             </Stack>
             <FunctionIcons stack={n!.stack} addr={n!.node} />
