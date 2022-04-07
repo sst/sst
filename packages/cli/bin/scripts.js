@@ -27,7 +27,7 @@ const {
   State,
   Telemetry,
   getCdkVersion,
-  getAwsCredentials,
+  configureAwsCredentials,
 } = require("@serverless-stack/core");
 
 const packageJson = require("../package.json");
@@ -56,16 +56,6 @@ const cmd = {
   addCdk: "add-cdk",
   update: "update",
   telemetry: "telemetry",
-};
-
-const internals = {
-  [cmd.diff]: require("../scripts/diff"),
-  [cmd.start]: require("../scripts/start"),
-  [cmd.build]: require("../scripts/build"),
-  [cmd.deploy]: require("../scripts/deploy"),
-  [cmd.remove]: require("../scripts/remove"),
-  [cmd.addCdk]: require("../scripts/add-cdk"),
-  [cmd.console]: require("../scripts/console"),
 };
 
 const DEFAULT_STAGE = "dev";
@@ -229,12 +219,7 @@ async function loadAwsCredentials(script, argv) {
   // the credentials from the environment variables will be used. So if
   // MFA is configured for the AWS profile, SST will prompt for MFA, and
   // CDK CLI won't prompt again.
-  const credentials = await getAwsCredentials({ profile: argv.profile });
-  process.env.AWS_ACCESS_KEY_ID = credentials.accessKeyId;
-  process.env.AWS_SECRET_ACCESS_KEY = credentials.secretAccessKey;
-  if (credentials.sessionToken) {
-    process.env.AWS_SESSION_TOKEN = credentials.sessionToken;
-  }
+  await configureAwsCredentials({ profile: argv.profile });
 }
 
 async function getStage(argv, config) {
@@ -511,10 +496,24 @@ async function run() {
 
   const config = await applyConfig(argv);
 
+  // Load AWS credentials
   await loadAwsCredentials(script, argv);
 
   // Track
   Telemetry.trackCli(script);
+
+  // Initialize internals after loading AWS credentials b/c some of the required
+  // packages (ie. "../scripts/start") requires "aws-sdk". Need to load AWS
+  // credentials first.
+  const internals = {
+    [cmd.diff]: require("../scripts/diff"),
+    [cmd.start]: require("../scripts/start"),
+    [cmd.build]: require("../scripts/build"),
+    [cmd.deploy]: require("../scripts/deploy"),
+    [cmd.remove]: require("../scripts/remove"),
+    [cmd.addCdk]: require("../scripts/add-cdk"),
+    [cmd.console]: require("../scripts/console"),
+  };
 
   switch (script) {
     case cmd.diff:
