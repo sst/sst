@@ -16,6 +16,7 @@ import { Stack } from "./Stack";
 import { SSTConstruct } from "./Construct";
 import { Permissions, attachPermissionsToRole } from "./util/permission";
 import { State, Runtime } from "@serverless-stack/core";
+import { Architecture } from "aws-cdk-lib/aws-lambda";
 
 const supportedRuntimes = [
   lambda.Runtime.NODEJS,
@@ -62,8 +63,28 @@ export type Runtime =
 export interface FunctionProps
   extends Omit<
     lambda.FunctionOptions,
-    "functionName" | "timeout" | "runtime" | "tracing" | "layers"
+    | "functionName"
+    | "timeout"
+    | "runtime"
+    | "tracing"
+    | "layers"
+    | "architecture"
   > {
+  /**
+   * The CPU architecture of the lambda function.
+   *
+   * @default "x86_64"
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   architecture: "arm_64",
+   * })
+   * ```
+   */
+  architecture?: Lowercase<
+    keyof Pick<typeof lambda.Architecture, "ARM_64" | "X86_64">
+  >;
   /**
    * Override the automatically generated name
    *
@@ -519,6 +540,11 @@ export class Function extends lambda.Function implements SSTConstruct {
     const timeout = cdk.Duration.seconds(props.timeout || 10);
     const srcPath = Function.normalizeSrcPath(props.srcPath || ".");
     const runtime = Function.normalizeRuntime(props.runtime);
+    const architecture = (() => {
+      if (props.architecture === "arm_64") return lambda.Architecture.ARM_64;
+      if (props.architecture === "x86_64") return lambda.Architecture.X86_64;
+      return undefined;
+    })();
     const memorySize = props.memorySize || 1024;
     const tracing =
       lambda.Tracing[
@@ -585,6 +611,7 @@ export class Function extends lambda.Function implements SSTConstruct {
       if (root.debugBridge) {
         super(scope, id, {
           ...props,
+          architecture,
           code: lambda.Code.fromAsset(
             path.resolve(__dirname, "../dist/bridge_client/")
           ),
@@ -607,6 +634,7 @@ export class Function extends lambda.Function implements SSTConstruct {
       } else {
         super(scope, id, {
           ...props,
+          architecture,
           code: lambda.Code.fromAsset(
             path.resolve(__dirname, "../dist/stub.zip")
           ),
@@ -650,6 +678,7 @@ export class Function extends lambda.Function implements SSTConstruct {
       //       for some runtimes.
       super(scope, id, {
         ...props,
+        architecture,
         code: lambda.Code.fromAsset(
           path.resolve(__dirname, "../assets/Function/placeholder-stub")
         ),
@@ -686,6 +715,7 @@ export class Function extends lambda.Function implements SSTConstruct {
 
       super(scope, id, {
         ...props,
+        architecture,
         code: code!,
         handler: bundled.handler,
         functionName,
