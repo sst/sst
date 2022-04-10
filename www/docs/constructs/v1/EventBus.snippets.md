@@ -12,7 +12,10 @@ const bus = new EventBus(this, "Bus", {
   rules: {
     rule1: {
       pattern: { source: ["myevent"] },
-      targets: ["src/target1.main", "src/target2.main"],
+      targets: {
+        myTarget1: "src/target1.main",
+        myTarget2: "src/target2.main",
+      },
     },
   },
 });
@@ -20,7 +23,10 @@ const bus = new EventBus(this, "Bus", {
 bus.addRules(this, {
   rule2: {
     pattern: { source: ["myevent"] },
-    targets: ["src/target3.main", "src/target4.main"],
+    targets: {
+      myTarget3: "src/target3.main",
+      myTarget4: "src/target4.main",
+    },
   },
 });
 ```
@@ -35,7 +41,10 @@ new EventBus(this, "Bus", {
     rule1: {
       ruleName: "MyRule",
       pattern: { source: ["myevent"] },
-      targets: ["src/target1.main", "src/target2.main"],
+      targets: {
+        myTarget1: "src/target1.main",
+        myTarget2: "src/target2.main",
+      },
     },
   },
 });
@@ -47,12 +56,14 @@ new EventBus(this, "Bus", {
 
 You can directly pass in the path to the [`Function`](Function.md).
 
-```js {5}
+```js {6}
 new EventBus(this, "Bus", {
   rules: {
     rule1: {
       pattern: { source: ["myevent"] },
-      targets: ["src/target1.main"],
+      targets: {
+        myTarget1: "src/target1.main",
+      },
     },
   },
 });
@@ -74,7 +85,10 @@ new EventBus(this, "Bus", {
   rules: {
     rule1: {
       pattern: { source: ["myevent"] },
-      targets: ["src/target1.main", "src/target2.main"],
+      targets: {
+        myTarget1: "src/target1.main",
+        myTarget2: "src/target2.main",
+      },
     },
   },
 });
@@ -89,8 +103,8 @@ new EventBus(this, "Bus", {
   rules: {
     rule1: {
       pattern: { source: ["myevent"] },
-      targets: [
-        {
+      targets: {
+        myTarget1: {
           function: {
             srcPath: "src/",
             handler: "target1.main",
@@ -98,7 +112,7 @@ new EventBus(this, "Bus", {
             permissions: [table],
           },
         },
-      ],
+      },
     },
   },
 });
@@ -118,8 +132,8 @@ new EventBus(this, "Bus", {
   rules: {
     rule1: {
       pattern: { source: ["myevent"] },
-      targets: [
-        {
+      targets: {
+        myTarget1: {
           function: {
             handler: "src/target1.main",
             timeout: 10,
@@ -127,8 +141,8 @@ new EventBus(this, "Bus", {
             permissions: [bucket],
           },
         },
-        "src/target2.main",
-      ],
+        myTarget2: "src/target2.main",
+      },
     },
   },
 });
@@ -147,8 +161,8 @@ new EventBus(this, "Bus", {
   rules: {
     rule1: {
       pattern: { source: ["myevent"] },
-      targets: [
-        {
+      targets: {
+        myTarget1: {
           function: "src/target1.main",
           cdk: {
             target: {
@@ -157,7 +171,7 @@ new EventBus(this, "Bus", {
             },
           },
         },
-      ],
+      },
     },
   },
 });
@@ -168,12 +182,15 @@ In the example above, the function is invoked with the contents of the `detail` 
 
 Allow all the targets in the entire EventBus to access S3.
 
-```js {10}
+```js {13}
 const bus = new EventBus(this, "Bus", {
   rules: {
     rule1: {
       pattern: { source: ["myevent"] },
-      targets: ["src/target1.main", "src/target2.main"],
+      targets: {
+        myTarget1: "src/target1.main",
+        myTarget2: "src/target2.main",
+      },
     },
   },
 });
@@ -185,12 +202,15 @@ bus.attachPermissions(["s3"]);
 
 Allow one of the targets to access S3.
 
-```js {10}
+```js {13}
 const bus = new EventBus(this, "Bus", {
   rules: {
     rule1: {
       pattern: { source: ["myevent"] },
-      targets: ["src/target1.main", "src/target2.main"],
+      targets: {
+        myTarget1: "src/target1.main",
+        myTarget2: "src/target2.main",
+      },
     },
   },
 });
@@ -206,14 +226,16 @@ Here we are referring to the rule using the rule key, `rule1`.
 
 You can directly pass in a [`Queue`](Queue.md).
 
-```js {7}
+```js {8}
 const myQueue = new Queue(this, "MyQueue");
 
 new EventBus(this, "Bus", {
   rules: {
     rule1: {
       pattern: { source: ["myevent"] },
-      targets: [myQueue],
+      targets: {
+        myTarget1: myQueue
+      },
     },
   },
 });
@@ -228,8 +250,8 @@ new EventBus(this, "Bus", {
   rules: {
     rule1: {
       pattern: { source: ["myevent"] },
-      targets: [
-        {
+      targets: {
+        myTarget1: {
           queue: myQueue,
           cdk: {
             target: {
@@ -237,7 +259,7 @@ new EventBus(this, "Bus", {
             },
           },
         },
-      ],
+      },
     },
   },
 });
@@ -259,7 +281,10 @@ new EventBus(this, "Bus", {
   rules: {
     rule1: {
       pattern: { source: ["aws.codebuild"] },
-      targets: ["src/target1.main", "src/target2.main"],
+      targets: {
+        myTarget1: "src/target1.main",
+        myTarget2: "src/target2.main",
+      },
     },
   },
 });
@@ -281,7 +306,10 @@ new EventBus(this, "Bus", {
   rules: {
     rule1: {
       pattern: { source: ["myevent"] },
-      targets: ["src/target1.main", "src/target2.main"],
+      targets: {
+        myTarget1: "src/target1.main",
+        myTarget2: "src/target2.main",
+      },
     },
   },
 });
@@ -303,7 +331,10 @@ new EventBus(this, "Bus", {
   rules: {
     rule1: {
       pattern: { source: ["myevent"] },
-      targets: ["src/target1.main", "src/target2.main"],
+      targets: {
+        myTarget1: "src/target1.main",
+        myTarget2: "src/target2.main",
+      },
     },
   },
 });
@@ -327,7 +358,10 @@ export class MainStack extends Stack {
       rules: {
         rule1: {
           pattern: { source: ["myevent"] },
-          targets: ["src/target1.main", "src/target2.main"],
+          targets: {
+            myTarget1: "src/target1.main",
+            myTarget2: "src/target2.main",
+          },
         },
       },
     });
@@ -351,7 +385,10 @@ export class MainStack extends Stack {
       rules: {
         rule1: {
           pattern: { source: ["myevent"] },
-          targets: ["src/target1.main", "src/target2.main"],
+          targets: {
+            myTarget1: "src/target1.main",
+            myTarget2: "src/target2.main",
+          },
         },
       },
     });
@@ -399,7 +436,10 @@ export class AnotherStack extends Stack {
 
     bus.addRules(this, {
       rule2: {
-        targets: ["src/target3.main", "src/target4.main"],
+        targets: {
+          myTarget3: "src/target3.main",
+          myTarget4: "src/target4.main",
+        },
       },
     });
   }
@@ -418,7 +458,10 @@ export class AnotherStack extends Stack {
 
     bus.addRules(this, {
       rule2: {
-        targets: ["src/target3.main", "src/target4.main"],
+        targets: {
+          myTarget3: "src/target3.main",
+          myTarget4: "src/target4.main",
+        },
       },
     });
   }
