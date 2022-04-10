@@ -250,7 +250,7 @@ export interface EventBusProps {
  * new EventBus(stack, "Bus", {
  *   rules: {
  *     rule1: {
- *       eventPattern: { source: ["myevent"] },
+ *       pattern: { source: ["myevent"] },
  *       targets: {
  *         myTarget1: "src/function1.handler",
  *         myTarget2: "src/function2.handler"
@@ -306,7 +306,7 @@ export class EventBus extends Construct implements SSTConstruct {
    * ```js
    * bus.addRules(stack, {
    *   rule2: {
-   *     eventPattern: { source: ["myevent"] },
+   *     pattern: { source: ["myevent"] },
    *       targets: {
    *         myTarget3: "src/function3.handler"
    *         myTarget4: "src/function4.handler"
@@ -350,7 +350,7 @@ export class EventBus extends Construct implements SSTConstruct {
    * const bus = new EventBus(stack, "Bus", {
    *   rules: {
    *     rule1: {
-   *       eventPattern: { source: ["myevent"] },
+   *       pattern: { source: ["myevent"] },
    *       targets: {
    *         myTarget1: "src/function1.handler"
    *         myTarget2: "src/function2.handler"
