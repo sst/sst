@@ -155,14 +155,14 @@ export interface EventBusRuleProps {
      * Configure the internally created CDK `Rule` instance.
      *
      * @example
-     * ```js {4}
+     * ```js {5-8}
      * new EventBus(stack, "Bus", {
      *   rules: {
      *     rule1: {
      *       cdk: {
      *         rule: {
      *           ruleName: "my-rule",
-     *           eventPattern: { source: ["aws.ec2"] },
+     *           enabled: false,
      *         },
      *       },
      *       targets: {

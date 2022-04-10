@@ -1736,7 +1736,6 @@ cron.cdk.rule;
 #### Rules
 - Moved description ⇒ cdk.rule.description
 - Moved enabled ⇒ cdk.rule.enabled
-- Moved eventPattern ⇒ cdk.rule.eventPattern
 - Moved ruleName ⇒ cdk.rule.ruleName
 - Moved schedule ⇒ cdk.rule.schedule
 
@@ -1744,13 +1743,10 @@ cron.cdk.rule;
 new EventBus(stack, "Bus", {
   rules: {
     rule1: {
-      eventPattern: {
-        description,
-        enabled,
-        eventPattern,
-        ruleName,
-        schedule,
-      },
+      description,
+      enabled,
+      ruleName,
+      schedule,
     },
   },
 });
@@ -1762,7 +1758,6 @@ new EventBus(stack, "Bus", {
       cdk: {
         description,
         enabled,
-        eventPattern,
         ruleName,
         schedule,
       }
