@@ -313,7 +313,7 @@ export interface FunctionBundleNodejsProps extends FunctionBundleBase {
    * ```js
    * new Function(stack, "Function", {
    *   bundle: {
-   *     external: ["prisma"]
+   *     externalModules: ["prisma"]
    *   }
    * })
    * ```
