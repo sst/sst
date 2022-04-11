@@ -298,6 +298,8 @@ new Api(stack, "Api", {
 
 - JWT authorizer
 
+Note that, use the name of the `HttpJwtAuthorizer` as the authorizers key to ensure the authorizer resources does not get recreated.
+
 ```js
 // from
 import { HttpJwtAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
@@ -323,7 +325,7 @@ new Api(stack, "Api", {
 // to
 new Api(stack, "Api", {
   authorizers: {
-    myAuthorizer: {
+    Authorizer: {
       type: "jwt",
       jwt: {
         issuer: "https://myorg.us.auth0.com",
@@ -332,14 +334,14 @@ new Api(stack, "Api", {
     },
   },
   defaults: {
-    authorizer: "myAuthorizer",
+    authorizer: "Authorizer",
     authorizationScopes: ["user.id", "user.email"],
   },
   routes: {
     "GET /notes": "src/list.main",
     "POST /notes": {
       function: "create.main",
-      authorizer: "myAuthorizer",
+      authorizer: "Authorizer",
       authorizationScopes: ["user.id", "user.email"],
     }
   },
@@ -347,6 +349,8 @@ new Api(stack, "Api", {
 ```
 
 - User Pool authorizer
+
+Note that, use the name of the `HttpUserPoolAuthorizer` as the authorizers key to ensure the authorizer resources does not get recreated.
 
 ```js
 // from
@@ -374,7 +378,7 @@ new Api(stack, "Api", {
 // to
 new Api(stack, "Api", {
   authorizers: {
-    myAuthorizer: {
+    Authorizer: {
       type: "user_pool",
       userPool: {
         id: userPool.userPoolId,
@@ -383,14 +387,14 @@ new Api(stack, "Api", {
     },
   },
   defaults: {
-    authorizer: "myAuthorizer",
+    authorizer: "Authorizer",
     authorizationScopes: ["user.id", "user.email"],
   },
   routes: {
     "GET /notes": "src/list.main",
     "POST /notes": {
       function: "create.main",
-      authorizer: "myAuthorizer",
+      authorizer: "Authorizer",
       authorizationScopes: ["user.id", "user.email"],
     }
   },
@@ -398,6 +402,8 @@ new Api(stack, "Api", {
 ```
 
 - Lambda authorizer
+
+Note that, use the name of the `HttpLambdaAuthorizer` as the authorizers key to ensure the authorizer resources does not get recreated.
 
 ```js
 // from
@@ -433,20 +439,20 @@ const authHandler = new Function(stack, "AuthHandler", {
 
 new Api(stack, "Api", {
   authorizers: {
-    myAuthorizer: {
+    Authorizer: {
       type: "lambda",
       function: authHandler,
       resultsCacheTtl: "30 seconds",
     },
   },
   defaults: {
-    authorizer: "myAuthorizer",
+    authorizer: "Authorizer",
   },
   routes: {
     "GET /notes": "src/list.main",
     "POST /notes": {
       function: "create.main",
-      authorizer: "myAuthorizer",
+      authorizer: "Authorizer",
     }
   },
 }
@@ -1207,13 +1213,13 @@ new ApiGatewayV1Api(stack, "Api", {
 // to
 new ApiGatewayV1Api(stack, "Api", {
   authorizers: {
-    myAuthorizer: {
+    Authorizer: {
       type: "user_pools",
       userPoolIds: [userPool.userPoolId],
     }
   },
   defaults: {
-    authorizer: "myAuthorizer",
+    authorizer: "Authorizer",
     authorizationScopes: ["user.id", "user.email"],
   },
   routes: {
@@ -1261,7 +1267,7 @@ const authHandler = new Function(stack, "AuthHandler", {
 
 new ApiGatewayV1Api(stack, "Api", {
   authorizers: {
-    myAuthorizer: {
+    Authorizer: {
       type: "lambda_token",
       function: authHandler,
       resultsCacheTtl: "30 seconds",
@@ -1269,13 +1275,13 @@ new ApiGatewayV1Api(stack, "Api", {
     },
   },
   defaults: {
-    authorizer: "myAuthorizer",
+    authorizer: "Authorizer",
   },
   routes: {
     "GET /notes": "src/list.main",
     "POST /notes": {
       function: "create.main",
-      authorizer: "myAuthorizer",
+      authorizer: "Authorizer",
     }
   },
 }
@@ -1320,7 +1326,7 @@ const authHandler = new Function(stack, "AuthHandler", {
 
 new ApiGatewayV1Api(stack, "Api", {
   authorizers: {
-    myAuthorizer: {
+    Authorizer: {
       type: "lambda_request",
       function: authHandler,
       resultsCacheTtl: "30 seconds",
@@ -1328,13 +1334,13 @@ new ApiGatewayV1Api(stack, "Api", {
     },
   },
   defaults: {
-    authorizer: "myAuthorizer",
+    authorizer: "Authorizer",
   },
   routes: {
     "GET /notes": "src/list.main",
     "POST /notes": {
       function: "create.main",
-      authorizer: "myAuthorizer",
+      authorizer: "Authorizer",
     }
   },
 }
