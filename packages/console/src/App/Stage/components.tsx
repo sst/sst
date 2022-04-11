@@ -35,6 +35,10 @@ export const HeaderTitle = styled("div", {
   userSelect: "none",
 });
 
+export const Empty = styled("div", {
+  padding: "$lg",
+});
+
 const HeaderSwitcherValue = styled("div", {
   padding: "0 $md",
   cursor: "pointer",

@@ -206,9 +206,11 @@ function Explorer() {
                 <Route
                   path="/"
                   element={
-                    <Button as={Link} color="accent" to="migrations">
-                      Migrations
-                    </Button>
+                    cluster.data.migrator && (
+                      <Button as={Link} color="accent" to="migrations">
+                        Migrations
+                      </Button>
+                    )
                   }
                 />
               </Routes>
@@ -308,7 +310,8 @@ function Explorer() {
 const MigrationRoot = styled("div", {
   border: "1px solid $border",
   borderRadius: 4,
-  padding: "0 $md",
+  padding: "$md",
+  lineHeight: 1.4,
   minHeight: 60,
   display: "flex",
   alignItems: "center",
@@ -338,6 +341,11 @@ const MigrationDate = styled("div", {
   color: "$gray11",
 });
 
+const MigrationInstructions = styled("div", {
+  fontSize: "$sm",
+  lineHeight: 1.5,
+});
+
 function Panel() {
   const params = useParams();
   const cluster = useConstruct("RDS", params.stack!, params.cluster!);
@@ -364,6 +372,9 @@ function Panel() {
       </SidePanel.Header>
       <SidePanel.Content>
         <Stack space="md">
+          <MigrationInstructions>
+            You can reset your database to any migration by clicking on it.
+          </MigrationInstructions>
           {migrations.data?.map((item) => (
             <Migration
               database={params.database!}
@@ -410,8 +421,8 @@ function Migration(props: MigrationProps) {
       done={props.info.executedAt != undefined}
     >
       <Row alignVertical="center" alignHorizontal="justify">
-        <Stack space="sm">
-          <MigrationName>{props.info.name}</MigrationName>
+        <Stack space="0">
+          <MigrationName>{props.info.name} </MigrationName>
           {props.info.executedAt && (
             <MigrationDate>
               {new Intl.DateTimeFormat([], {

@@ -29,8 +29,11 @@ export async function handler(evt) {
   });
 
   if (!evt.type || evt.type === "latest") {
-    const response = await migrator.migrateToLatest();
-    return response;
+    const result = await migrator.migrateToLatest();
+    const err =
+      result.error || result.results?.find((r) => r.status === "Error");
+    if (err) throw err;
+    return result;
   }
 
   if (evt.type === "to") {
