@@ -1,9 +1,12 @@
-import { Link } from "react-router-dom";
-import { Badge, Row, Table } from "~/components";
+import { Row, Table } from "~/components";
 import { Stack } from "~/components/Stack";
 import { useStacks } from "~/data/aws/stacks";
 import { styled } from "~/stitches.config";
-import { H1, H3 } from "../components";
+import { Header, HeaderTitle } from "../components";
+
+const Content = styled("div", {
+  padding: "$lg",
+});
 
 const StackItem = styled("div", {
   padding: "$xl 0",
@@ -24,10 +27,6 @@ const StackName = styled("div", {
 const StackMetric = styled("div", {
   fontSize: "$sm",
   color: "$gray11",
-});
-
-const Root = styled("div", {
-  padding: "$xl",
 });
 
 const Constructs = styled("div", {
@@ -61,45 +60,46 @@ export function Stacks() {
   const stacks = useStacks();
 
   return (
-    <Root>
-      <Stack space="xl">
-        <H1>Stacks</H1>
-        <Stack space="0">
-          {stacks.data!.all.map((s) => (
-            <StackItem key={s.info.StackName}>
-              <Stack space="lg">
-                <Row alignHorizontal="justify" alignVertical="start">
-                  <Stack space="sm">
-                    <StackName>{s.info.StackName}</StackName>
-                    {!s.info.Outputs?.length && !s.constructs.all.length && (
-                      <StackMetric>No exports in this stack</StackMetric>
-                    )}
-                  </Stack>
-                </Row>
-                {Boolean(s.info.Outputs?.length) && (
-                  <Table.Root>
-                    <Table.Head>
-                      <Table.Row>
-                        <Table.Header>Output</Table.Header>
-                        <Table.Header>Value</Table.Header>
+    <>
+      <Header>
+        <HeaderTitle>Stacks</HeaderTitle>
+      </Header>
+      <Content>
+        {stacks.data!.all.map((s) => (
+          <StackItem key={s.info.StackName}>
+            <Stack space="lg">
+              <Row alignHorizontal="justify" alignVertical="start">
+                <Stack space="sm">
+                  <StackName>{s.info.StackName}</StackName>
+                  {!s.info.Outputs?.length && !s.constructs.all.length && (
+                    <StackMetric>No exports in this stack</StackMetric>
+                  )}
+                </Stack>
+              </Row>
+              {Boolean(s.info.Outputs?.length) && (
+                <Table.Root>
+                  <Table.Head>
+                    <Table.Row>
+                      <Table.Header>Output</Table.Header>
+                      <Table.Header>Value</Table.Header>
+                    </Table.Row>
+                  </Table.Head>
+                  <Table.Body>
+                    {s.info.Outputs?.map((o) => (
+                      <Table.Row key={o.OutputKey}>
+                        <Table.Cell>{o.OutputKey}</Table.Cell>
+                        <Table.Cell>{o.OutputValue}</Table.Cell>
                       </Table.Row>
-                    </Table.Head>
-                    <Table.Body>
-                      {s.info.Outputs?.map((o) => (
-                        <Table.Row key={o.OutputKey}>
-                          <Table.Cell>{o.OutputKey}</Table.Cell>
-                          <Table.Cell>{o.OutputValue}</Table.Cell>
-                        </Table.Row>
-                      ))}
-                    </Table.Body>
-                  </Table.Root>
-                )}
-                {s.constructs.all.length > 0 && (
-                  <Constructs>
-                    {s.constructs.all
-                      .filter((c) => c.type !== "Function")
-                      .map((c) => {
-                        /*
+                    ))}
+                  </Table.Body>
+                </Table.Root>
+              )}
+              {s.constructs.all.length > 0 && (
+                <Constructs>
+                  {s.constructs.all
+                    .filter((c) => c.type !== "Function")
+                    .map((c) => {
+                      /*
                         const _link = (() => {
                           switch (c.type) {
                             case "Auth":
@@ -122,24 +122,24 @@ export function Stacks() {
                           }
                         })();
                         */
-                        return (
-                          <ConstructsItem>
-                            <Stack space="xs">
-                              <ConstructsItemName title={c.id}>
-                                {c.id}
-                              </ConstructsItemName>
-                              <ConstructsItemType>{c.type}</ConstructsItemType>
-                            </Stack>
-                          </ConstructsItem>
-                        );
-                      })}
-                  </Constructs>
-                )}
-              </Stack>
-            </StackItem>
-          ))}
-        </Stack>
-      </Stack>
-    </Root>
+                      return (
+                        <ConstructsItem>
+                          <Stack space="xs">
+                            <ConstructsItemName title={c.id}>
+                              {c.id}
+                            </ConstructsItemName>
+                            <ConstructsItemType>{c.type}</ConstructsItemType>
+                          </Stack>
+                        </ConstructsItem>
+                      );
+                    })}
+                </Constructs>
+              )}
+            </Stack>
+          </StackItem>
+        ))}
+      </Content>
+      )
+    </>
   );
 }
