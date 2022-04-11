@@ -6123,10 +6123,10 @@
     "@sentry/types" "6.19.4"
     tslib "^1.9.3"
 
-"@serverless-stack/aws-lambda-ric@^2.0.12":
-  version "2.0.12"
-  resolved "https://registry.yarnpkg.com/@serverless-stack/aws-lambda-ric/-/aws-lambda-ric-2.0.12.tgz#f12f31b08013c7744fb48e0e4bbcec4e20b9d47e"
-  integrity sha512-AV8MGoCGCdUC5Z3VAtZrAY8K0GRTQPaTBUNK9EN9FNCGRCry6jSiBwd71fBt9/E+22SDuwPR+ylM78f9M2wemQ==
+"@serverless-stack/aws-lambda-ric@^2.0.13":
+  version "2.0.13"
+  resolved "https://registry.yarnpkg.com/@serverless-stack/aws-lambda-ric/-/aws-lambda-ric-2.0.13.tgz#8e2397479a19318795a99bc4ab3058e97ca002cc"
+  integrity sha512-Aj4X2wMW6O5/PQoKoBdQGC3LwQyGTgW1XZtF0rs07WE9s6Q+46zWaVgURQjoNmTNQKpHSGJYo6B+ycp9u7/CSA==
   dependencies:
     node-addon-api "3.2.1"
     node-gyp "8.1.0"

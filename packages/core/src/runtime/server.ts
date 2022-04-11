@@ -101,7 +101,11 @@ export class Server {
         type: ["application/json", "application/*+json"],
         limit: "10mb",
       }),
-      async (_req, res) => {
+      async (req, res) => {
+        this.response(req.params.fun, this.lastRequest[req.params.proc], {
+          type: "failure",
+          error: req.body,
+        });
         res.json("ok");
       }
     );
