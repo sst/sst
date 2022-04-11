@@ -1,0 +1,37 @@
+{
+  "name": "create-sst",
+  "version": "1.0.0-beta.9",
+  "homepage": "https://serverless-stack.com",
+  "description": "Create Serverless Stack apps.",
+  "bin": {
+    "create-sst": "./bin/index.mjs"
+  },
+  "author": {
+    "name": "Serverless Stack",
+    "url": "https://serverless-stack.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/serverless-stack/serverless-stack.git",
+    "directory": "packages/create-sst"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@preset/core": "^0.5.8",
+    "cli-spinners": "^2.6.1",
+    "commander": "^9.1.0",
+    "inquirer": "^8.2.2",
+    "ora": "^6.1.0"
+  },
+  "gitHead": "09f1e601a38a7fac1c161cfddd1435804cdcfb56",
+  "devDependencies": {
+    "@tsconfig/node14": "^1.0.1",
+    "@types/aws-lambda": "^8.10.93",
+    "@types/inquirer": "^8.2.1",
+    "@types/node": "^17.0.23",
+    "typescript": "^4.6.3"
+  }
+}
