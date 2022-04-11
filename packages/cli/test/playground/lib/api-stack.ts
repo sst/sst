@@ -7,9 +7,7 @@ export class MainStack extends sst.Stack {
   constructor(scope: sst.App, id: string, props?: sst.StackProps) {
     super(scope, id, props);
 
-    new sst.Auth(this, "Auth", {
-      cognito: true,
-    });
+    new sst.Auth(this, "Auth");
 
     new sst.Queue(this, "MyQueue", {
       consumer: "src/lambda.main",
@@ -19,7 +17,7 @@ export class MainStack extends sst.Stack {
     const api = new sst.Api(this, "Api", {
       customDomain: "api.sst.sh",
       defaults: {
-        functionProps: {
+        function: {
           timeout: 10,
         },
       },
