@@ -98,7 +98,7 @@ permissions: "*"
 #### Constructor
 - runtime: default updated to "nodejs14.x"
 - runtime: type `string | cdk.lambda.Runtime` ⇒ `string`
-- timeout: type `number | cdk.Duration` ⇒ `number`
+- timeout: type `number | cdk.Duration` ⇒ `number | sst.Duration`
 - tracing: type `cdk.lambda.Tracing` ⇒ `"active" | "disabled" | "pass_through"`
 ```js
 // from
@@ -110,7 +110,7 @@ permissions: "*"
 // to
 {
   runtime: "nodejs14.x",
-  timeout: 10,
+  timeout: "10 seconds",
   tracing: "active",
 }
 ```

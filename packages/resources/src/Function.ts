@@ -13,6 +13,7 @@ import * as ssm from "aws-cdk-lib/aws-ssm";
 
 import { App } from "./App";
 import { Stack } from "./Stack";
+import { Duration, toCdkDuration } from "./util/duration";
 import { SSTConstruct } from "./Construct";
 import { Permissions, attachPermissionsToRole } from "./util/permission";
 import { State, Runtime } from "@serverless-stack/core";
@@ -153,16 +154,16 @@ export interface FunctionProps
   /**
    * The execution timeout in seconds.
    *
-   * @default 10
+   * @default "10 seconds"
    *
    * @example
    * ```js
    * new Function(stack, "Function", {
-   *   timeout: 30,
+   *   timeout: "30 seconds",
    * })
    *```
    */
-  timeout?: number;
+  timeout?: number | Duration;
   /**
    * Enable AWS X-Ray Tracing.
    *
@@ -537,7 +538,7 @@ export class Function extends lambda.Function implements SSTConstruct {
         ? props.functionName
         : props.functionName({ stack, functionProps: props }));
     const handler = props.handler;
-    const timeout = cdk.Duration.seconds(props.timeout || 10);
+    const timeout = Function.normalizeTimeout(props.timeout);
     const srcPath = Function.normalizeSrcPath(props.srcPath || ".");
     const runtime = Function.normalizeRuntime(props.runtime);
     const architecture = (() => {
@@ -597,7 +598,7 @@ export class Function extends lambda.Function implements SSTConstruct {
       root.debugBucketArn
     ) {
       // If debugIncreaseTimeout is enabled:
-      //   set timeout to 900. This will give people more time to debug the function
+      //   set timeout to 900s. This will give people more time to debug the function
       //   without timing out the request. Note API Gateway requests have a maximum
       //   timeout of 29s. In this case, the API will timeout, but the Lambda function
       //   will continue to run.
@@ -785,6 +786,13 @@ export class Function extends lambda.Function implements SSTConstruct {
       }
       return Function.handleImportedLayer(scope, layer);
     });
+  }
+
+  static normalizeTimeout(timeout?: number | Duration): cdk.Duration {
+    if (typeof timeout === "string") {
+      return toCdkDuration(timeout);
+    }
+    return cdk.Duration.seconds(timeout || 10);
   }
 
   static normalizeRuntime(runtime?: string): lambda.Runtime {
