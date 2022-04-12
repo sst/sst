@@ -12,19 +12,16 @@ import { Permissions } from "./util/permission";
 export type StackProps = cdk.StackProps;
 
 /**
- * The Stack construct extends cdk.Stack. It automatically prefixes the stack names with the stage and app name to ensure that they can be deployed to multiple regions in the same AWS account. It also ensure that the stack uses the same AWS profile and region as the app.
+ * The Stack construct extends cdk.Stack. It automatically prefixes the stack names with the stage and app name to ensure that they can be deployed to multiple regions in the same AWS account. It also ensure that the stack uses the same AWS profile and region as the app. They're defined using functions that return resources that can be imported by other stacks.
  *
  * @example
  * ### Creating a new stack
  *
  * ```js
- * import { Stack } from "@serverless-stack/resources";
+ * import { StackContext } from "@serverless-stack/resources";
  *
- * export default class MyStack extends Stack {
- *   constructor(scope, id, props) {
- *     super(scope, id, props);
- *     // Define your stack
- *   }
+ * export function MyStack({ stack }: StackContext) {
+ *   // Define your stack
  * }
  * ```
  */

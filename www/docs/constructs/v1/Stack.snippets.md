@@ -3,10 +3,13 @@
 Add it to your app in `stacks/index.js`.
 
 ```ts
-import { MyStack } from "./MyStack";
+import { StackA } from "./MyStack";
+import { StackB } from "./MyStack";
 
 export default function main(app) {
-  app.stack(MyStack)
+  app
+    .stack(StackA)
+    .stack(StackB)
 
   // Add more stacks
 }
@@ -27,6 +30,55 @@ Error: Do not directly set the environment for a stack
 ```
 
 This is by design. The stacks in SST are meant to be re-deployed for multiple stages (like Serverless Framework). And so they depend on the region and AWS profile that's passed in through the CLI. If a stack is hardcoded to be deployed to a specific account or region, it can break your deployment pipeline.
+
+### Sharing resources between stacks
+Resources defined in a stack can be used by other stacks. This allows you to have granular stacks that contain only related resources.
+
+Stack functions can return any resources they want to expose to other stacks.
+```ts
+import { StackContext } from "@serverless-stack/resources"
+
+export function MyStack({ stack }: StackContext) {
+  const table = new Table(stack, "table")
+  return {
+    table
+  }
+}
+```
+
+Other stacks can import these resources by utilizing the `use` function
+
+```ts
+import { StackContext, use } from "@serverless-stack/resources"
+import { MyStack } from "./MyStack"
+
+export function AnotherStack({ stack }: StackContext) {
+  const { table } = use(MyStack)
+  // Use table
+}
+```
+
+### Async stacks
+Asynchronous calls are supported in stack functions but be careful when using this as you can introduce external state that makes your deployments less deterministic
+
+Simple add an `async` modifier to your function definition
+```ts
+import { StackContext } from "@serverless-stack/resources"
+
+export async function MyStack({ stack }: StackContext) {
+  const foo = await someAsynCall()
+  // Define stack
+}
+```
+
+When initializing the stack, make sure you call `await`
+
+```ts
+import { MyStack } from "./MyStack"
+export default function main(app: sst.App) {
+  await app.stack(MyStack)
+}
+```
 
 ### Accessing app properties
 
