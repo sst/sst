@@ -1419,7 +1419,8 @@ api.cdk.certificate;
 ### Auth Changelog
 
 #### Constructor
-- Moved cognito.userPool ⇒ cdk.userPool
+- Moved cognito.userPool.signInAliases ⇒ login
+- Moved cognito.userPool.xxxx ⇒ cdk.userPool.xxxx
 - Moved cognito.userPoolClient ⇒ cdk.userPoolClient
 - Moved cognito.triggers ⇒ triggers
 - Moved cognito.defaultFunctionProps ⇒ defaults.function
@@ -1428,7 +1429,10 @@ api.cdk.certificate;
 // from
 {
   cognito: {
-    userPool,
+    userPool: {
+      signInAliases: { email: true, phone: true }
+      mfa: cognito.Mfa.OPTIONAL,
+    },
     userPoolClient,
     triggers: {
       preAuthentication: "src/preAuthentication.main",
@@ -1441,6 +1445,7 @@ api.cdk.certificate;
 
 // to
 {
+  login: ["email", "phone"],
   triggers: {
     preAuthentication: "src/preAuthentication.main",
   },
@@ -1450,7 +1455,9 @@ api.cdk.certificate;
     },
   },
   cdk: {
-    userPool,
+    userPool: {
+      mfa: cognito.Mfa.OPTIONAL,
+    },
     userPoolClient,
   },
 }
