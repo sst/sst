@@ -525,7 +525,7 @@ export interface ApiGatewayV1ApiCustomDomainProps {
  * ```js
  * import { ApiGatewayV1Api } from "@serverless-stack/resources";
  *
- * new ApiGatewayV1Api(this, "Api", {
+ * new ApiGatewayV1Api(stack, "Api", {
  *   routes: {
  *     "GET    /notes"     : "src/list.main",
  *     "POST   /notes"     : "src/create.main",

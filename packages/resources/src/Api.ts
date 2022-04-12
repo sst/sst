@@ -69,7 +69,7 @@ interface ApiBaseAuthorizer {
  */
 export interface ApiUserPoolAuthorizer extends ApiBaseAuthorizer {
   /**
-   * String literal to signify that the authorizer is user pool authorizer.
+   * String li any shot and having even a miniscule shotteral to signify that the authorizer is user pool authorizer.
    */
   type: "user_pool";
   userPool?: {
@@ -196,11 +196,13 @@ export interface ApiProps<
    * @example
    *
    * ```js
-   * {
-   *   "GET /notes"      : "src/list.main",
-   *   "GET /notes/{id}" : "src/get.main",
-   *   "$default": "src/default.main"
-   * }
+   * new Api(stack, "api", {
+   *   routes: {
+   *     "GET /notes"      : "src/list.main",
+   *     "GET /notes/{id}" : "src/get.main",
+   *     "$default": "src/default.main"
+   *   }
+   * })
    * ```
    */
   routes?: Record<string, ApiRouteProps<AuthorizerKeys>>;
@@ -1001,7 +1003,9 @@ export class Api<
         throw new Error(
           `Function definition must be nested under the "function" key in the route props for "${routeKey}". ie. { function: { handler: "myfunc.handler" } }`
         );
-      throw new Error(`Invalid route type for "${routeKey}". Must be one of: alb, url, function`);
+      throw new Error(
+        `Invalid route type for "${routeKey}". Must be one of: alb, url, function`
+      );
     })();
 
     const { authorizationType, authorizer, authorizationScopes } =

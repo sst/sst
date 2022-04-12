@@ -37,18 +37,6 @@ export interface GraphQLApiProps extends Omit<ApiProps<never>, "routes"> {
  *
  * The `GraphQLApi` construct internally extends the [`Api`](Api) construct.
  *
- * ## Initializer
- *
- * ```ts
- * new GraphQLApi(scope: Construct, id: string, props: GraphQLApiProps)
- * ```
- *
- * _Parameters_
- *
- * - scope [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
- * - id `string`
- * - props [`GraphQLApiProps`](#graphqlapiprops)
- *
  * @example
  * ### Using the minimal config
  *
