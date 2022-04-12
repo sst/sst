@@ -2035,57 +2035,6 @@ const table = new Table(this, "Notes", {
 });
 ```
 
-- globalIndexes[].indexProps ⇒ globalIndexes[].cdk.index
-- localIndexes[].indexProps ⇒ localIndexes[].cdk.index
-
-```js
-// from
-const table = new table(this, "notes", {
-  globalindexes: {
-    myglobalindex: {
-      partitionkey: "userid",
-      sortkey: "time",
-      indexprops: {
-        projectiontype: cdk.dynamodb.projectiontype.all,
-      },
-    },
-  },
-  localindexes: {
-    mylocalindex: {
-      sortkey: "time",
-      indexprops: {
-        projectiontype: cdk.dynamodb.projectiontype.all,
-      },
-    },
-  },
-});
-
-// to
-const table = new table(this, "notes", {
-  globalindexes: {
-    myglobalindex: {
-      partitionkey: "userid",
-      sortkey: "time",
-      cdk: {
-        index: {
-          projectiontype: cdk.dynamodb.projectiontype.all,
-        },
-      },
-    },
-  },
-  localindexes: {
-    mylocalindex: {
-      sortkey: "time",
-      cdk: {
-        index: {
-          projectiontype: cdk.dynamodb.projectiontype.all,
-        },
-      },
-    },
-  },
-});
-```
-
 - stream: type `cdk.dynamodb.StreamViewType` ⇒ `string`
 
 ```js
@@ -2099,6 +2048,92 @@ const table = new Table(this, "Notes", {
 const table = new Table(this, "Notes", {
   stream: "new_image",
 });
+```
+
+#### Global Secondary Indexes
+- globalIndexes[].indexProps.projectionType ⇒ globalIndexes[].projection
+- globalIndexes[].indexProps.nonKeyAttributes ⇒ globalIndexes[].projection
+- globalIndexes[].indexProps.readCapacity ⇒ globalIndexes[].cdk.index.readCapacity
+- globalIndexes[].indexProps.writeCapacity ⇒ globalIndexes[].cdk.index.writeCapacity
+
+```js
+// from
+{
+  myGlobalIndex1: {
+    partitionKey: "userId",
+    sortKey: "time",
+    indexProps: {
+      projectionType: cdk.dynamodb.ProjectionType.ALL,
+      readCapacity: 20,
+      writeCapacity: 10,
+    },
+  },
+  myGlobalIndex2: {
+    partitionKey: "userId",
+    sortKey: "time",
+    indexProps: {
+      projectionType: cdk.dynamodb.ProjectionType.INCLUDE,
+      nonKeyAttributes: ["key1", "key2"],
+    },
+  },
+},
+
+// to
+{
+  myGlobalIndex1: {
+    partitionKey: "userId",
+    sortKey: "time",
+    projection: "all",
+    cdk: {
+      index: {
+        readCapacity: 20,
+        writeCapacity: 10,
+      }
+    }
+  },
+},
+{
+  myGlobalIndex2: {
+    partitionKey: "userId",
+    sortKey: "time",
+    projection: ["key1", "key2"],
+  },
+},
+```
+
+#### Local Secondary Indexes
+- localIndexes[].indexProps.projectionType ⇒ localIndexes[].projection
+- localIndexes[].indexProps.nonKeyAttributes ⇒ localIndexes[].projection
+
+```js
+// from
+{
+  myLocalIndex1: {
+    sortKey: "time",
+    indexProps: {
+      projectionType: cdk.dynamodb.ProjectionType.ALL,
+    },
+  },
+  myLocalIndex2: {
+    sortKey: "time",
+    indexProps: {
+      projectionType: cdk.dynamodb.ProjectionType.INCLUDE,
+      nonKeyAttributes: ["key1", "key2"],
+    },
+  },
+}
+
+// to
+{
+  myLocalIndex1: {
+    sortKey: "time",
+    projection: "all",
+  },
+  myLocalIndex2: {
+    sortKey: "time",
+    projection: ["key1", "key2"],
+  },
+},
 ```
 
 #### Consumers

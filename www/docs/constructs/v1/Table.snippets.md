@@ -28,13 +28,9 @@ new Table(stack, "Notes", {
 });
 ```
 
-#### Configuring a global index
+#### Configuring index projection
 
-Configure the internally created CDK `GlobalSecondaryIndex`.
-
-```js {15-17}
-import { ProjectionType } from "aws-cdk-lib/aws-dynamodb";
-
+```js {12}
 new Table(stack, "Table", {
   fields: {
     userId: "string",
@@ -46,11 +42,7 @@ new Table(stack, "Table", {
     userTimeIndex: {
       partitionKey: "userId",
       sortKey: "time",
-      cdk: {
-        index: {
-          projectionType: ProjectionType.KEYS_ONLY,
-        },
-      },
+      projection: "keys_only",
     },
   },
 });

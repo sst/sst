@@ -323,6 +323,142 @@ test("constructor: fields-dynamodbTable-props-with-sortKey-error", async () => {
   }).toThrow(/Cannot configure the "cdk.table.sortKey"/);
 });
 
+test("globalIndexes: projection undefined", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Table(stack, "Table", {
+    fields: {
+      noteId: "string",
+      userId: "string",
+      time: "number",
+    },
+    primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
+    globalIndexes: {
+      userTimeIndex: {
+        partitionKey: "userId",
+        sortKey: "time",
+      },
+    },
+  });
+  hasResource(stack, "AWS::DynamoDB::Table", {
+    TableName: "dev-my-app-Table",
+    GlobalSecondaryIndexes: [
+      {
+        IndexName: "userTimeIndex",
+        KeySchema: [
+          { AttributeName: "userId", KeyType: "HASH" },
+          { AttributeName: "time", KeyType: "RANGE" },
+        ],
+        Projection: {
+          ProjectionType: "ALL",
+        },
+      },
+    ],
+  });
+});
+
+test("globalIndexes: projection keys_only", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Table(stack, "Table", {
+    fields: {
+      noteId: "string",
+      userId: "string",
+      time: "number",
+    },
+    primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
+    globalIndexes: {
+      userTimeIndex: {
+        partitionKey: "userId",
+        sortKey: "time",
+        projection: "keys_only",
+      },
+    },
+  });
+  hasResource(stack, "AWS::DynamoDB::Table", {
+    TableName: "dev-my-app-Table",
+    GlobalSecondaryIndexes: [
+      {
+        IndexName: "userTimeIndex",
+        KeySchema: [
+          { AttributeName: "userId", KeyType: "HASH" },
+          { AttributeName: "time", KeyType: "RANGE" },
+        ],
+        Projection: {
+          ProjectionType: "KEYS_ONLY",
+        },
+      },
+    ],
+  });
+});
+
+test("globalIndexes: projection all", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Table(stack, "Table", {
+    fields: {
+      noteId: "string",
+      userId: "string",
+      time: "number",
+    },
+    primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
+    globalIndexes: {
+      userTimeIndex: {
+        partitionKey: "userId",
+        sortKey: "time",
+        projection: "all",
+      },
+    },
+  });
+  hasResource(stack, "AWS::DynamoDB::Table", {
+    TableName: "dev-my-app-Table",
+    GlobalSecondaryIndexes: [
+      {
+        IndexName: "userTimeIndex",
+        KeySchema: [
+          { AttributeName: "userId", KeyType: "HASH" },
+          { AttributeName: "time", KeyType: "RANGE" },
+        ],
+        Projection: {
+          ProjectionType: "ALL",
+        },
+      },
+    ],
+  });
+});
+
+test("globalIndexes: projection include", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Table(stack, "Table", {
+    fields: {
+      noteId: "string",
+      userId: "string",
+      time: "number",
+    },
+    primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
+    globalIndexes: {
+      userTimeIndex: {
+        partitionKey: "userId",
+        sortKey: "time",
+        projection: ["a", "b"],
+      },
+    },
+  });
+  hasResource(stack, "AWS::DynamoDB::Table", {
+    TableName: "dev-my-app-Table",
+    GlobalSecondaryIndexes: [
+      {
+        IndexName: "userTimeIndex",
+        KeySchema: [
+          { AttributeName: "userId", KeyType: "HASH" },
+          { AttributeName: "time", KeyType: "RANGE" },
+        ],
+        Projection: {
+          ProjectionType: "INCLUDE",
+          NonKeyAttributes: ["a", "b"],
+        },
+      },
+    ],
+  });
+});
+
 test("globalIndexes-options", async () => {
   const stack = new Stack(new App(), "stack");
   new Table(stack, "Table", {
@@ -338,11 +474,16 @@ test("globalIndexes-options", async () => {
         sortKey: "time",
         cdk: {
           index: {
-            projectionType: dynamodb.ProjectionType.KEYS_ONLY,
+            readCapacity: 10,
           },
         },
       },
     },
+    cdk: {
+      table: {
+        billingMode: dynamodb.BillingMode.PROVISIONED
+      }
+    }
   });
   hasResource(stack, "AWS::DynamoDB::Table", {
     TableName: "dev-my-app-Table",
@@ -354,7 +495,11 @@ test("globalIndexes-options", async () => {
           { AttributeName: "time", KeyType: "RANGE" },
         ],
         Projection: {
-          ProjectionType: "KEYS_ONLY",
+          ProjectionType: "ALL",
+        },
+        ProvisionedThroughput: {
+          ReadCapacityUnits: 10,
+          WriteCapacityUnits: 5,
         },
       },
     ],
@@ -445,7 +590,7 @@ test("globalIndexes-index-sortKey-exists-error", async () => {
   }).toThrow(/Cannot configure the "cdk.index.sortKey"/);
 });
 
-test("localIndexes-options", async () => {
+test("localIndexes: projection undefined", async () => {
   const stack = new Stack(new App(), "stack");
   new Table(stack, "Table", {
     fields: {
@@ -457,11 +602,39 @@ test("localIndexes-options", async () => {
     localIndexes: {
       userTimeIndex: {
         sortKey: "time",
-        cdk: {
-          index: {
-            projectionType: dynamodb.ProjectionType.KEYS_ONLY,
-          },
+      },
+    },
+  });
+  hasResource(stack, "AWS::DynamoDB::Table", {
+    TableName: "dev-my-app-Table",
+    LocalSecondaryIndexes: [
+      {
+        IndexName: "userTimeIndex",
+        KeySchema: [
+          { AttributeName: "noteId", KeyType: "HASH" },
+          { AttributeName: "time", KeyType: "RANGE" },
+        ],
+        Projection: {
+          ProjectionType: "ALL",
         },
+      },
+    ],
+  });
+});
+
+test("localIndexes: projection keys_only", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Table(stack, "Table", {
+    fields: {
+      noteId: "string",
+      userId: "string",
+      time: "number",
+    },
+    primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
+    localIndexes: {
+      userTimeIndex: {
+        sortKey: "time",
+        projection: "keys_only",
       },
     },
   });
@@ -476,6 +649,73 @@ test("localIndexes-options", async () => {
         ],
         Projection: {
           ProjectionType: "KEYS_ONLY",
+        },
+      },
+    ],
+  });
+});
+
+test("localIndexes: projection all", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Table(stack, "Table", {
+    fields: {
+      noteId: "string",
+      userId: "string",
+      time: "number",
+    },
+    primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
+    localIndexes: {
+      userTimeIndex: {
+        sortKey: "time",
+        projection: "all",
+      },
+    },
+  });
+  hasResource(stack, "AWS::DynamoDB::Table", {
+    TableName: "dev-my-app-Table",
+    LocalSecondaryIndexes: [
+      {
+        IndexName: "userTimeIndex",
+        KeySchema: [
+          { AttributeName: "noteId", KeyType: "HASH" },
+          { AttributeName: "time", KeyType: "RANGE" },
+        ],
+        Projection: {
+          ProjectionType: "ALL",
+        },
+      },
+    ],
+  });
+});
+
+test("localIndexes: projection include", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Table(stack, "Table", {
+    fields: {
+      noteId: "string",
+      userId: "string",
+      time: "number",
+    },
+    primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
+    localIndexes: {
+      userTimeIndex: {
+        sortKey: "time",
+        projection: ["a", "b"],
+      },
+    },
+  });
+  hasResource(stack, "AWS::DynamoDB::Table", {
+    TableName: "dev-my-app-Table",
+    LocalSecondaryIndexes: [
+      {
+        IndexName: "userTimeIndex",
+        KeySchema: [
+          { AttributeName: "noteId", KeyType: "HASH" },
+          { AttributeName: "time", KeyType: "RANGE" },
+        ],
+        Projection: {
+          ProjectionType: "INCLUDE",
+          NonKeyAttributes: ["a", "b"],
         },
       },
     ],
