@@ -5,7 +5,7 @@
 Add subscribers after the topic has been created.
 
 ```js {8-10}
-const topic = new Topic(this, "Topic", {
+const topic = new Topic(stack, "Topic", {
   subscribers: {
     subscriber1: "src/subscriber1.main",
     subscriber2: "src/subscriber2.main",
@@ -24,7 +24,7 @@ topic.addSubscribers(this, {
 You can extend the minimal config, to set some function props and have them apply to all the subscribers.
 
 ```js {3-7}
-new Topic(this, "Topic", {
+new Topic(stack, "Topic", {
   defaults: {
     function: {
       timeout: 20,
@@ -44,7 +44,7 @@ new Topic(this, "Topic", {
 Configure each Lambda function separately.
 
 ```js
-new Topic(this, "Topic", {
+new Topic(stack, "Topic", {
   subscribers: {
     subscriber: {
       function: {
@@ -61,7 +61,7 @@ new Topic(this, "Topic", {
 Note that, you can set the `defaultFunctionProps` while using the `function` per subscriber. The `function` will just override the `defaultFunctionProps`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
 
 ```js
-new Topic(this, "Topic", {
+new Topic(stack, "Topic", {
   defaults: {
     function: {
       timeout: 20,
@@ -90,7 +90,7 @@ So in the above example, the `subscriber1` function doesn't use the `timeout` th
 Allow the subscriber functions to access S3.
 
 ```js {8}
-const topic = new Topic(this, "Topic", {
+const topic = new Topic(stack, "Topic", {
   subscribers: {
     subscriber1: "src/subscriber1.main",
     subscriber2: "src/subscriber2.main",
@@ -105,7 +105,7 @@ topic.attachPermissions(["s3"]);
 Allow the first subscriber function to access S3.
 
 ```js {8}
-const topic = new Topic(this, "Topic", {
+const topic = new Topic(stack, "Topic", {
   subscribers: {
     subscriber1: "src/subscriber1.main",
     subscriber2: "src/subscriber2.main",
@@ -122,7 +122,7 @@ Configure the internally created CDK `Subscription`.
 ```js {8-14}
 import { SubscriptionFilter } from "aws-cdk-lib/aws-sns";
 
-new Topic(this, "Topic", {
+new Topic(stack, "Topic", {
   subscribers: {
     subscriber1: {
       function: "src/subscriber1.main",
@@ -149,7 +149,7 @@ You can directly pass in an instance of the Queue construct.
 ```js {5}
 const myQueue = new Queue(this, "MyQueue");
 
-new Topic(this, "Topic", {
+new Topic(stack, "Topic", {
   subscribers: {
     subscriber: myQueue
   },
@@ -165,7 +165,7 @@ import { SubscriptionFilter } from "aws-cdk-lib/aws-sns";
 
 const myQueue = new Queue(this, "MyQueue");
 
-new Topic(this, "Topic", {
+new Topic(stack, "Topic", {
   subscribers: {
     subscriber: {
       queue: myQueue,
@@ -186,7 +186,7 @@ new Topic(this, "Topic", {
 ### FIFO topic
 
 ```js {7-9}
-new Topic(this, "Topic", {
+new Topic(stack, "Topic", {
   subscribers: {
     subscriber1: "src/subscriber1.main",
     subscriber2: "src/subscriber2.main",
@@ -206,7 +206,7 @@ new Topic(this, "Topic", {
 Configure the internally created CDK `Topic` instance.
 
 ```js {7-9}
-new Topic(this, "Topic", {
+new Topic(stack, "Topic", {
   subscribers: {
     subscriber1: "src/subscriber1.main",
     subscriber2: "src/subscriber2.main",
@@ -226,7 +226,7 @@ Override the internally created CDK `Topic` instance.
 ```js {9}
 import * as sns from "aws-cdk-lib/aws-sns";
 
-new Topic(this, "Topic", {
+new Topic(stack, "Topic", {
   subscribers: {
     subscriber1: "src/subscriber1.main",
     subscriber2: "src/subscriber2.main",

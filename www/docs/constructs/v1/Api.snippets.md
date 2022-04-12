@@ -8,7 +8,7 @@ import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
 You can use the `ANY` method to match all methods that you haven't defined.
 
 ```js {4}
-new Api(this, "Api", {
+new Api(stack, "Api", {
   routes: {
     "GET /notes": "src/list.main",
     "ANY /notes": "src/any.main",
@@ -19,7 +19,7 @@ new Api(this, "Api", {
 #### Using path variable
 
 ```js {4}
-new Api(this, "Api", {
+new Api(stack, "Api", {
   routes: {
     "GET /notes"     : "src/list.main",
     "GET /notes/{id}": "src/get.main",
@@ -32,7 +32,7 @@ new Api(this, "Api", {
 A path variable `{proxy+}` catches all child routes. The greedy path variable must be at the end of the resource path.
 
 ```js {4}
-new Api(this, "Api", {
+new Api(stack, "Api", {
   routes: {
     "GET /notes"         : "src/list.main",
     "GET /notes/{proxy+}": "src/greedy.main",
@@ -45,7 +45,7 @@ new Api(this, "Api", {
 To add a catch-all route, add a route called `$default`. This will catch requests that don't match any other routes.
 
 ```js {5}
-new Api(this, "Api", {
+new Api(stack, "Api", {
   routes: {
     "GET  /notes": "src/list.main",
     "POST /notes": "src/create.main",
@@ -59,7 +59,7 @@ new Api(this, "Api", {
 Add routes after the API has been created.
 
 ```js
-const api = new Api(this, "Api", {
+const api = new Api(stack, "Api", {
   routes: {
     "GET  /notes": "src/list.main",
     "POST /notes": "src/create.main",
@@ -80,7 +80,7 @@ api.addRoutes(this, {
 You can set some function props and have them apply to all the routes.
 
 ```js {2-8}
-new Api(this, "Api", {
+new Api(stack, "Api", {
   defaults: {
     function: {
       timeout: 20,
@@ -100,7 +100,7 @@ new Api(this, "Api", {
 Configure each Lambda function separately.
 
 ```js
-new Api(this, "Api", {
+new Api(stack, "Api", {
   routes: {
     "GET /notes": {
       function: {
@@ -117,7 +117,7 @@ new Api(this, "Api", {
 Note that, you can set the `defaults.function` while using the `function` per route. The `function` will just override the `defaults.function`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
 
 ```js
-new Api(this, "Api", {
+new Api(stack, "Api", {
   defaults: {
     function: {
       timeout: 20,
@@ -146,7 +146,7 @@ So in the above example, the `GET /notes` function doesn't use the `timeout` tha
 Allow the entire API to access S3.
 
 ```js {11}
-const api = new Api(this, "Api", {
+const api = new Api(stack, "Api", {
   routes: {
     "GET    /notes"     : "src/list.main",
     "POST   /notes"     : "src/create.main",
@@ -164,7 +164,7 @@ api.attachPermissions(["s3"]);
 Allow one of the routes to access S3.
 
 ```js {11}
-const api = new Api(this, "Api", {
+const api = new Api(stack, "Api", {
   routes: {
     "GET    /notes"     : "src/list.main",
     "POST   /notes"     : "src/create.main",
@@ -180,7 +180,7 @@ api.attachPermissionsToRoute("GET /notes", ["s3"]);
 #### Getting the function for a route
 
 ```js {11}
-const api = new Api(this, "Api", {
+const api = new Api(stack, "Api", {
   routes: {
     "GET    /notes": "src/list.main",
     "POST   /notes": "src/create.main",
@@ -198,7 +198,7 @@ const listFunction = api.getFunction("GET /notes");
 You can configure a route to integrate with Application Load Balancers in your VPC.
 
 ```js
-new Api(this, "Api", {
+new Api(stack, "Api", {
   routes: {
     "GET /": {
       type: "alb",
@@ -215,7 +215,7 @@ new Api(this, "Api", {
 You can configure a route to pass the entire request to a publicly routable HTTP endpoint.
 
 ```js
-new Api(this, "Api", {
+new Api(stack, "Api", {
   routes: {
     "GET /": {
       type: "url",
@@ -232,7 +232,7 @@ You can also configure the API with a custom domain. SST currently supports doma
 #### Using the basic config
 
 ```js {2}
-new Api(this, "Api", {
+new Api(stack, "Api", {
   customDomain: "api.domain.com",
   routes: {
     "GET /notes": "src/list.main",
@@ -243,7 +243,7 @@ new Api(this, "Api", {
 #### Configuring with a wildcard
 
 ```js {2}
-new Api(this, "Api", {
+new Api(stack, "Api", {
   customDomain: "*.domain.com",
   routes: {
     "GET /notes": "src/list.main",
@@ -254,7 +254,7 @@ new Api(this, "Api", {
 #### Using the full config
 
 ```js {2-6}
-new Api(this, "Api", {
+new Api(stack, "Api", {
   customDomain: {
     domainName: "api.domain.com",
     hostedZone: "domain.com",
@@ -269,14 +269,14 @@ new Api(this, "Api", {
 #### Mapping multiple APIs to the same domain
 
 ```js {11-13}
-const usersApi = new Api(this, "UsersApi", {
+const usersApi = new Api(stack, "UsersApi", {
   customDomain: {
     domainName: "api.domain.com",
     path: "users",
   },
 });
 
-new Api(this, "PostsApi", {
+new Api(stack, "PostsApi", {
   customDomain: {
     path: "posts",
     cdk: {
@@ -291,7 +291,7 @@ new Api(this, "PostsApi", {
 ```js {6-12}
 import { DomainName } from "@aws-cdk/aws-apigatewayv2-alpha";
 
-new Api(this, "Api", {
+new Api(stack, "Api", {
   customDomain: {
     path: "newPath",
     cdk: {
@@ -313,7 +313,7 @@ new Api(this, "Api", {
 ```js {6-8}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
-new Api(this, "Api", {
+new Api(stack, "Api", {
   customDomain: {
     domainName: "api.domain.com",
     cdk: {
@@ -333,7 +333,7 @@ If you have multiple hosted zones for a given domain, you can choose the one you
 ```js {6-11}
 import { HostedZone } from "aws-cdk-lib/aws-route53";
 
-new Api(this, "Api", {
+new Api(stack, "Api", {
   customDomain: {
     domainName: "api.domain.com",
     cdk: {
@@ -358,7 +358,7 @@ import { StringParameter } from "aws-cdk-lib/aws-ssm";
 
 const rootDomain = StringParameter.valueForStringParameter(this, `/myApp/domain`);
 
-new Api(this, "Api", {
+new Api(stack, "Api", {
   customDomain: {
     domainName: `api.${rootDomain}`,
     hostedZone: rootDomain,
@@ -376,7 +376,7 @@ Note that, normally SST will look for a hosted zone by stripping out the first p
 ```js {5,7-9}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
-new Api(this, "Api", {
+new Api(stack, "Api", {
   customDomain: {
     isExternalDomain: true,
     domainName: "api.domain.com",
@@ -401,7 +401,7 @@ You can use IAM, JWT, or a Lambda authorizer to add auth to your APIs.
 You can secure all your API routess by setting the `defaults.authorizer`.
 
 ```js {2-4}
-new Api(this, "Api", {
+new Api(stack, "Api", {
   defaults: {
     authorizer: "iam",
   },
@@ -417,7 +417,7 @@ new Api(this, "Api", {
 You can also secure specific routes in your API.
 
 ```js {5}
-new Api(this, "Api", {
+new Api(stack, "Api", {
   routes: {
     "GET /public": "src/public.main",
     "GET /private": {
@@ -433,7 +433,7 @@ new Api(this, "Api", {
 [JWT](https://jwt.io/introduction) allows authorized users to access your API. Note that, this is a different authorization method when compared to using `iam`, which allows you to secure other AWS resources as well.
 
 ```js
-new Api(this, "Api", {
+new Api(stack, "Api", {
   authorizers: {
     myAuthorizer: {
       type: "jwt",
@@ -458,7 +458,7 @@ new Api(this, "Api", {
 You can also secure specific routes using JWT by setting the `authorizer` per route.
 
 ```js {14}
-new Api(this, "Api", {
+new Api(stack, "Api", {
   authorizers: {
     myAuthorizer: {
       type: "jwt",
@@ -483,7 +483,7 @@ new Api(this, "Api", {
 JWT can also use a Cognito User Pool as an authorizer.
 
 ```js
-new Api(this, "Api", {
+new Api(stack, "Api", {
   authorizers: {
     myAuthorizer: {
       type: "user_pool",
@@ -511,7 +511,7 @@ You can also use a Lambda function to authorize users to access your API. Like u
 ```js
 import { Function, Api } from "@serverless-stack/resources";
 
-new Api(this, "Api", {
+new Api(stack, "Api", {
   authorizers: {
     myAuthorizer: {
       type: "lambda",
@@ -540,7 +540,7 @@ You can also secure specific routes using a Lambda authorizer by setting the `au
 ```js {16}
 import { Function, Api } from "@serverless-stack/resources";
 
-new Api(this, "Api", {
+new Api(stack, "Api", {
   authorizers: {
     myAuthorizer: {
       type: "lambda",
@@ -565,7 +565,7 @@ new Api(this, "Api", {
 If `defaults.authorizer` is configured for the Api, it will be applied to all routes, across all stacks.
 
 ```js {11-13} title="stacks/MainStack.js"
-const api = new Api(this, "Api", {
+const api = new Api(stack, "Api", {
   authorizers: {
     myAuthorizer: {
       type: "lambda",
@@ -604,7 +604,7 @@ In this case, the 3 routes added in the second stack are also secured by the Lam
 Use a CSV format instead of default JSON format.
 
 ```js {2-3}
-new Api(this, "Api", {
+new Api(stack, "Api", {
   accessLog:
     "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
   routes: {
@@ -616,7 +616,7 @@ new Api(this, "Api", {
 #### Configuring the log retention setting
 
 ```js {2-4}
-new Api(this, "Api", {
+new Api(stack, "Api", {
   accessLog: {
     retention: "one_week",
   },
@@ -631,7 +631,7 @@ new Api(this, "Api", {
 Override the default behavior of allowing all methods, and only allow the GET method.
 
 ```js {2-4}
-new Api(this, "Api", {
+new Api(stack, "Api", {
   cors: {
     allowMethods: ["GET"],
   },
@@ -644,7 +644,7 @@ new Api(this, "Api", {
 ### Throttling
 
 ```js {2-7}
-new Api(this, "Api", {
+new Api(stack, "Api", {
   defaults: {
     throttle: {
       rate: 2000,
@@ -665,7 +665,7 @@ new Api(this, "Api", {
 Configure the internally created CDK `HttpApi` instance.
 
 ```js {2-6}
-new Api(this, "Api", {
+new Api(stack, "Api", {
   cdk: {
     httpApi: {
       disableExecuteApiEndpoint: true,
@@ -684,7 +684,7 @@ Override the internally created CDK `HttpApi` instance.
 ```js {4-8}
 import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
 
-new Api(this, "Api", {
+new Api(stack, "Api", {
   cdk: {
     httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
       httpApiId,
@@ -698,118 +698,40 @@ new Api(this, "Api", {
 
 #### Sharing an API across stacks
 
-You can create the Api construct in one stack, and add routes in other stacks. To do this, expose the Api as a class property.
+You can create the Api construct in one stack, and add routes in other stacks. To do this, return the API from your stack function.
 
-<MultiLanguageCode>
-<TabItem value="js">
+```ts title="stacks/MainStack.ts"
+import { Api, StackContext } from "@serverless-stack/resources";
 
-```js {7-12} title="stacks/MainStack.js"
-import { Api, Stack } from "@serverless-stack/resources";
+export function MainStack(ctx: StackContext) {
+  const api = new Api(ctx.stack, "Api", {
+    routes: {
+      "GET    /notes": "src/list.main",
+      "POST   /notes": "src/create.main",
+    },
+  });
 
-export class MainStack extends Stack {
-  constructor(scope, id) {
-    super(scope, id);
-
-    this.api = new Api(this, "Api", {
-      routes: {
-        "GET    /notes": "src/list.main",
-        "POST   /notes": "src/create.main",
-      },
-    });
+  return {
+    api
   }
 }
 ```
 
-</TabItem>
-<TabItem value="ts">
-
-```js {4,9-14} title="stacks/MainStack.ts"
-import { Api, App, Stack } from "@serverless-stack/resources";
-
-export class MainStack extends Stack {
-  public readonly api: Api;
-
-  constructor(scope: App, id: string) {
-    super(scope, id);
-
-    this.api = new Api(this, "Api", {
-      routes: {
-        "GET    /notes": "src/list.main",
-        "POST   /notes": "src/create.main",
-      },
-    });
-  }
-}
-```
-
-</TabItem>
-</MultiLanguageCode>
-
-Then pass the Api to a different stack. Behind the scenes, the Api Id is exported as an output of the `MainStack`, and imported to `AnotherStack`.
-
-<MultiLanguageCode>
-<TabItem value="js">
-
-```js {3} title="stacks/index.js"
-const mainStack = new MainStack(app, "main");
-
-new AnotherStack(app, "another", mainStack.api);
-```
-
-</TabItem>
-<TabItem value="ts">
-
-```ts {3} title="stacks/index.ts"
-const mainStack = new MainStack(app, "main");
-
-new AnotherStack(app, "another", mainStack.api);
-```
-
-</TabItem>
-</MultiLanguageCode>
-
-Finally, call `addRoutes`. Note that the AWS resources for the added routes will be created in `AnotherStack`.
-
-<MultiLanguageCode>
-<TabItem value="js">
-
-```js title="stacks/AnotherStack.js"
-import { Stack } from "@serverless-stack/resources";
-
-export class AnotherStack extends Stack {
-  constructor(scope, id, api) {
-    super(scope, id);
-
-    api.addRoutes(this, {
-      "GET    /notes/{id}": "src/get.main",
-      "PUT    /notes/{id}": "src/update.main",
-      "DELETE /notes/{id}": "src/delete.main",
-    });
-  }
-}
-```
-
-</TabItem>
-<TabItem value="ts">
+Then in another stack, utilize `use` to import the first stack's API. Finally, call `addRoutes`. Note that the AWS resources for the added routes will be created in `AnotherStack`.
 
 ```ts title="stacks/AnotherStack.ts"
-import { Api, App, Stack } from "@serverless-stack/resources";
+import { StackContext, use } from "@serverless-stack/resources";
+import { MainStack } from "./MainStack"
 
-export class AnotherStack extends Stack {
-  constructor(scope: App, id: string, api: Api) {
-    super(scope, id);
-
-    api.addRoutes(this, {
-      "GET    /notes/{id}": "src/get.main",
-      "PUT    /notes/{id}": "src/update.main",
-      "DELETE /notes/{id}": "src/delete.main",
-    });
-  }
+export function AnotherStack(ctx: StackContext) {
+  const { api } = use(MainStack)
+  api.addRoutes(ctx.stack, {
+    "GET    /notes/{id}": "src/get.main",
+    "PUT    /notes/{id}": "src/update.main",
+    "DELETE /notes/{id}": "src/delete.main",
+  });
 }
 ```
-
-</TabItem>
-</MultiLanguageCode>
 
 #### Using 1 role for all routes
 
@@ -833,7 +755,7 @@ const role = new iam.Role(this, "ApiRole", {
   },
 });
 
-new Api(this, "Api", {
+new Api(stack, "Api", {
   defaults: {
     function: {
       role,

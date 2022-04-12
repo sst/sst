@@ -2,11 +2,11 @@
 
 Add it to your app in `stacks/index.js`.
 
-```js
-import MyStack from "./MyStack";
+```ts
+import { MyStack } from "./MyStack";
 
 export default function main(app) {
-  new MyStack(app, "my-stack");
+  app.stack(MyStack)
 
   // Add more stacks
 }
@@ -17,7 +17,7 @@ Here `app` is an instance of [`App`](./App.md).
 Note that, setting the env for an individual stack is not allowed.
 
 ```js
-new MyStack(app, "my-stack", { env: { account: "1234", region: "us-east-1" } });
+app.stack(MyStack, { env: { account: "1234", region: "us-east-1" } });
 ```
 
 It will throw this error.
@@ -32,29 +32,11 @@ This is by design. The stacks in SST are meant to be re-deployed for multiple st
 
 The stage, region, and app name can be accessed through the app object. In your stacks (for example, `stacks/MyStack.js`) you can use.
 
-```js
-class MyStack extends sst.Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
-
-    scope.stage;
-    scope.region;
-    scope.name;
-  }
-}
-```
-
-And in TypeScript.
-
 ```ts
-class MyStack extends sst.Stack {
-  constructor(scope: sst.App, id: string, props?: sst.StackProps) {
-    super(scope, id, props);
-
-    scope.stage;
-    scope.region;
-    scope.name;
-  }
+function MyStack({ stack, app }: StackContext) {
+  ctx.app.stage;
+  ctx.app.region;
+  ctx.app.name;
 }
 ```
 
@@ -64,20 +46,14 @@ You can use this to conditionally add stacks or resources to your app.
 
 You can set some function props and have them apply to all the functions in a stack. This **must be called before** any functions have been added to the stack; so that all functions will be created with these defaults.
 
-```js
-class MyStack extends sst.Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
-
-    this.setDefaultFunctionProps({
-      timeout: 20,
-      memorySize: 512,
-      runtime: "go1.x",
-      environment: { TABLE_NAME: "NOTES_TABLE" },
-    });
-
-    // Start adding resources
-  }
+```ts
+function MyStack({ stack }: StackContext) {
+  stack.setDefaultFunctionProps({
+    timeout: 20,
+    memorySize: 512,
+    runtime: "go1.x",
+    environment: { TABLE_NAME: "NOTES_TABLE" },
+  });
 }
 ```
 
@@ -89,33 +65,27 @@ You can also use [`addDefaultFunctionPermissions`](#adddefaultfunctionpermission
 
 However, they only affect the functions that are created after the call.
 
-```js
-class MyStack extends sst.Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
+```ts
+function MyStack({ stack }: StackContext) {
+  new Api(stack, "Api1", {
+    routes: {
+      "GET /": "src/hello.main",
+    },
+  });
 
-    new Api(this, "Api1", {
-      routes: {
-        "GET /": "src/hello.main",
-      },
-    });
+  stack.addDefaultFunctionEnv({
+    TABLE_NAME: "NOTES_TABLE"
+  });
 
-    this.addDefaultFunctionEnv({
-      TABLE_NAME: "NOTES_TABLE"
-    });
+  stack.addDefaultFunctionPermissions(["s3"]);
 
-    this.addDefaultFunctionPermissions(["s3"]);
+  stack.addDefaultFunctionLayers([mylayer]);
 
-    this.addDefaultFunctionLayers([mylayer]);
-
-    new Api(this, "Api2", {
-      routes: {
-        "GET /": "src/world.main",
-      },
-    });
-
-    // Add more resources
-  }
+  new Api(stack, "Api2", {
+    routes: {
+      "GET /": "src/world.main",
+    },
+  });
 }
 ```
 
@@ -127,7 +97,7 @@ You can optionally prefix resource names to make sure they don't thrash when dep
 
 You can do so in your stacks.
 
-```js
+```ts
 scope.logicalPrefixedName("MyResource"); // Returns "dev-my-sst-app-MyResource"
 ```
 
@@ -135,35 +105,26 @@ This invokes the `logicalPrefixedName` method in [`App`](./App.md) that your sta
 
 ### Adding stack outputs
 
-```js {8-11}
-export default class MyStack extends Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
-
-    const topic = new Topic(this, "Topic");
-    const queue = new Queue(this, "Queue");
-
-    this.addOutputs({
-      TopicArn: topic.snsTopic.topicArn,
-      QueueArn: topic.sqsQueue.queueArn,
-    });
-  }
+```ts
+export function MyStack({ stack }: StackContext) {
+  const topic = new Topic(stack, "Topic");
+  const queue = new Queue(stack, "Queue");
+  stack.addOutputs({
+    TopicArn: topic.snsTopic.topicArn,
+    QueueArn: topic.sqsQueue.queueArn,
+  });
 }
 ```
 
 ### Adding stack exports
 
-```js {7-9}
-export default class MyStack extends Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
+```ts
+export function MyStack({ stack }: StackContext) {
+  const topic = new Topic(stack, "Topic");
 
-    const topic = new Topic(this, "Topic");
-
-    this.addOutputs({
-      TopicArn: { value: topic.snsTopic.topicArn, exportName: "MyTopicArn" },
-    });
-  }
+  stack.addOutputs({
+    TopicArn: { value: topic.snsTopic.topicArn, exportName: "MyTopicArn" },
+  });
 }
 ```
 
@@ -172,8 +133,8 @@ export default class MyStack extends Stack {
 To access the AWS account and region your app is being deployed to, use the following in your `Stack` instances.
 
 ```js
-this.region;
-this.account;
+stack.region;
+stack.account;
 ```
 
-The region here is the same as the one you can find in the `scope` instance in the constructor.
+The region here is the same as the one you can find in the `app` instance in the constructor.

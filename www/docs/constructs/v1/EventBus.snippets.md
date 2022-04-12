@@ -8,7 +8,7 @@ import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
 Add rules after the EventBus has been created.
 
 ```js
-const bus = new EventBus(this, "Bus", {
+const bus = new EventBus(stack, "Bus", {
   rules: {
     rule1: {
       pattern: { source: ["myevent"] },
@@ -36,7 +36,7 @@ bus.addRules(this, {
 Configure the internally created CDK `Rule` instance.
 
 ```js {4}
-new EventBus(this, "Bus", {
+new EventBus(stack, "Bus", {
   rules: {
     rule1: {
       ruleName: "MyRule",
@@ -57,7 +57,7 @@ new EventBus(this, "Bus", {
 You can directly pass in the path to the [`Function`](Function.md).
 
 ```js {6}
-new EventBus(this, "Bus", {
+new EventBus(stack, "Bus", {
   rules: {
     rule1: {
       pattern: { source: ["myevent"] },
@@ -74,7 +74,7 @@ new EventBus(this, "Bus", {
 You can extend the minimal config, to set some function props and have them apply to all the rules.
 
 ```js {3-7}
-new EventBus(this, "Bus", {
+new EventBus(stack, "Bus", {
   defaults: {
     function: {
       timeout: 20,
@@ -99,7 +99,7 @@ new EventBus(this, "Bus", {
 Configure each Lambda function separately.
 
 ```js {10-11}
-new EventBus(this, "Bus", {
+new EventBus(stack, "Bus", {
   rules: {
     rule1: {
       pattern: { source: ["myevent"] },
@@ -121,7 +121,7 @@ new EventBus(this, "Bus", {
 Note that, you can set the `defaultFunctionProps` while using the `function` per target. The `function` will just override the `defaultFunctionProps`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
 
 ```js
-new EventBus(this, "Bus", {
+new EventBus(stack, "Bus", {
   defaults: {
     function: {
       timeout: 20,
@@ -157,7 +157,7 @@ Configure the internally created CDK `Target`.
 ```js {11-14}
 import { RuleTargetInput } from 'aws-cdk-lib/aws-events';
 
-new EventBus(this, "Bus", {
+new EventBus(stack, "Bus", {
   rules: {
     rule1: {
       pattern: { source: ["myevent"] },
@@ -183,7 +183,7 @@ In the example above, the function is invoked with the contents of the `detail` 
 Allow all the targets in the entire EventBus to access S3.
 
 ```js {13}
-const bus = new EventBus(this, "Bus", {
+const bus = new EventBus(stack, "Bus", {
   rules: {
     rule1: {
       pattern: { source: ["myevent"] },
@@ -203,7 +203,7 @@ bus.attachPermissions(["s3"]);
 Allow one of the targets to access S3.
 
 ```js {13}
-const bus = new EventBus(this, "Bus", {
+const bus = new EventBus(stack, "Bus", {
   rules: {
     rule1: {
       pattern: { source: ["myevent"] },
@@ -229,7 +229,7 @@ You can directly pass in a [`Queue`](Queue.md).
 ```js {8}
 const myQueue = new Queue(this, "MyQueue");
 
-new EventBus(this, "Bus", {
+new EventBus(stack, "Bus", {
   rules: {
     rule1: {
       pattern: { source: ["myevent"] },
@@ -246,7 +246,7 @@ new EventBus(this, "Bus", {
 Configure the internally created CDK `Target`.
 
 ```js {9-11}
-new EventBus(this, "Bus", {
+new EventBus(stack, "Bus", {
   rules: {
     rule1: {
       pattern: { source: ["myevent"] },
@@ -272,7 +272,7 @@ When an AWS service in your account emits an event, it goes to your account’s 
 ```js {5-7}
 import * as events from "aws-cdk-lib/aws-events";
 
-new EventBus(this, "Bus", {
+new EventBus(stack, "Bus", {
   cdk: {
     eventBus: events.EventBus.fromEventBusName(
       this, "ImportedBus", "default"
@@ -297,7 +297,7 @@ new EventBus(this, "Bus", {
 Configure the internally created CDK [`EventBus`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events.EventBus.html) instance.
 
 ```js {3-5}
-new EventBus(this, "Bus", {
+new EventBus(stack, "Bus", {
   cdk: {
     eventBus: {
       eventBusName: "MyEventBus",
@@ -322,7 +322,7 @@ Override the internally created CDK `EventBus` instance.
 ```js {5-7}
 import * as events from "aws-cdk-lib/aws-events";
 
-new EventBus(this, "Bus", {
+new EventBus(stack, "Bus", {
   cdk: {
     eventBus: events.EventBus.fromEventBusName(
       this, "ImportedBus", eventBusArn
@@ -342,131 +342,45 @@ new EventBus(this, "Bus", {
 
 #### Sharing an EventBus across stacks
 
-You can create the EventBus construct in one stack, and add rules in other stacks. To do this, expose the EventBus as a class property.
+You can create the EventBus construct in one stack, and add rules in other stacks. To do this, return the EventBus from the stack function
 
-<MultiLanguageCode>
-<TabItem value="js">
+```ts title="stacks/MainStack.ts"
+import { EventBus, App, StackContext } from "@serverless-stack/resources";
 
-```js {7-14} title="stacks/MainStack.js"
-import { EventBus, Stack } from "@serverless-stack/resources";
-
-export class MainStack extends Stack {
-  constructor(scope, id) {
-    super(scope, id);
-
-    this.bus = new EventBus(this, "Bus", {
-      rules: {
-        rule1: {
-          pattern: { source: ["myevent"] },
-          targets: {
-            myTarget1: "src/target1.main",
-            myTarget2: "src/target2.main",
-          },
-        },
-      },
-    });
-  }
-}
-```
-
-</TabItem>
-<TabItem value="ts">
-
-```js {4,9-16} title="stacks/MainStack.ts"
-import { EventBus, App, Stack, StackProps } from "@serverless-stack/resources";
-
-export class MainStack extends Stack {
-  public readonly bus: EventBus;
-
-  constructor(scope: App, id: string) {
-    super(scope, id);
-
-    this.bus = new EventBus(this, "Bus", {
-      rules: {
-        rule1: {
-          pattern: { source: ["myevent"] },
-          targets: {
-            myTarget1: "src/target1.main",
-            myTarget2: "src/target2.main",
-          },
-        },
-      },
-    });
-  }
-}
-```
-
-</TabItem>
-</MultiLanguageCode>
-
-Then pass the EventBus to a different stack. Behind the scenes, the EventBus Arn is exported as an output of the `MainStack`, and imported to `AnotherStack`.
-
-<MultiLanguageCode>
-<TabItem value="js">
-
-```js {3} title="stacks/index.js"
-const mainStack = new MainStack(app, "main");
-
-new AnotherStack(app, "another", mainStack.bus);
-```
-
-</TabItem>
-<TabItem value="ts">
-
-```ts {3} title="stacks/index.ts"
-const mainStack = new MainStack(app, "main");
-
-new AnotherStack(app, "another", mainStack.bus);
-```
-
-</TabItem>
-</MultiLanguageCode>
-
-Finally, call `addRules`. Note that the AWS resources for the added routes will be created in `AnotherStack`.
-
-<MultiLanguageCode>
-<TabItem value="js">
-
-```js title="stacks/AnotherStack.js"
-import { Stack } from "@serverless-stack/resources";
-
-export class AnotherStack extends Stack {
-  constructor(scope, id, bus) {
-    super(scope, id);
-
-    bus.addRules(this, {
-      rule2: {
+export function MainStack(ctx: StackContext) {
+  const bus = new EventBus(ctx.stack, "Bus", {
+    rules: {
+      rule1: {
+        pattern: { source: ["myevent"] },
         targets: {
-          myTarget3: "src/target3.main",
-          myTarget4: "src/target4.main",
+          myTarget1: "src/target1.main",
+          myTarget2: "src/target2.main",
         },
       },
-    });
+    },
+  });
+
+  return {
+    bus
   }
 }
 ```
 
-</TabItem>
-<TabItem value="ts">
+Then import the auth construct into another stack with `use` and call `addRules`. Note that the AWS resources for the added routes will be created in `AnotherStack`.
 
 ```ts title="stacks/AnotherStack.ts"
-import { EventBus, App, Stack } from "@serverless-stack/resources";
+import { EventBus, StackContext } from "@serverless-stack/resources";
+import { MainStack } from "./MainStack"
 
-export class AnotherStack extends Stack {
-  constructor(scope: App, id: string, bus: EventBus) {
-    super(scope, id);
-
-    bus.addRules(this, {
-      rule2: {
-        targets: {
-          myTarget3: "src/target3.main",
-          myTarget4: "src/target4.main",
-        },
+export function AnotherStack(ctx: StackContext) {
+  const { bus } = use(MainStack);
+  bus.addRules(ctx.stack, {
+    rule2: {
+      targets: {
+        myTarget3: "src/target3.main",
+        myTarget4: "src/target4.main",
       },
-    });
-  }
+    },
+  });
 }
 ```
-
-</TabItem>
-</MultiLanguageCode>

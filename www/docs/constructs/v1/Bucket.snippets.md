@@ -5,7 +5,7 @@
 ```js
 import { Bucket } from "@serverless-stack/resources";
 
-new Bucket(this, "Bucket", {
+new Bucket(stack, "Bucket", {
   notifications: ["src/notification.main"],
 });
 ```
@@ -15,7 +15,7 @@ Or configuring the notification events.
 ```js {y}
 import { EventType } from "aws-cdk-lib/aws-s3";
 
-const bucket = new Bucket(this, "Bucket", {
+const bucket = new Bucket(stack, "Bucket", {
   notifications: [
     {
       function: "src/notification.main",
@@ -30,7 +30,7 @@ const bucket = new Bucket(this, "Bucket", {
 Create an _empty_ bucket and lazily add the notifications.
 
 ```js {3}
-const bucket = new Bucket(this, "Bucket");
+const bucket = new Bucket(stack, "Bucket");
 
 bucket.addNotifications(this, ["src/notification.main"]);
 ```
@@ -42,7 +42,7 @@ bucket.addNotifications(this, ["src/notification.main"]);
 You can extend the minimal config, to set some function props and have them apply to all the notifications.
 
 ```js {3-7}
-new Bucket(this, "Bucket", {
+new Bucket(stack, "Bucket", {
   defaults: {
     function: {
       timeout: 20,
@@ -68,7 +68,7 @@ new Bucket(this, "Bucket", {
 Configure each Lambda function separately.
 
 ```js
-new Bucket(this, "Bucket", {
+new Bucket(stack, "Bucket", {
   notifications: [
     {
       function: {
@@ -86,7 +86,7 @@ new Bucket(this, "Bucket", {
 Note that, you can set the `defaults.function` while using the `function` per notification. The `function` will just override the `defaults.function`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
 
 ```js
-new Bucket(this, "Bucket", {
+new Bucket(stack, "Bucket", {
   defaults: {
     function: {
       timeout: 20,
@@ -121,7 +121,7 @@ Allow the notification functions to access S3.
 ```js {16}
 import { EventType } from "aws-cdk-lib/aws-s3";
 
-const bucket = new Bucket(this, "Bucket", {
+const bucket = new Bucket(stack, "Bucket", {
   notifications: [
     {
       function: "src/notification1.main",
@@ -144,7 +144,7 @@ Allow the first notification function to access S3.
 ```js {16}
 import { EventType } from "aws-cdk-lib/aws-s3";
 
-const bucket = new Bucket(this, "Bucket", {
+const bucket = new Bucket(stack, "Bucket", {
   notifications: [
     {
       function: "src/notification1.main",
@@ -171,7 +171,7 @@ import { Queue } from "@serverless-stack/resources";
 
 const myQueue = new Queue(this, "MyQueue");
 
-new Bucket(this, "Bucket", {
+new Bucket(stack, "Bucket", {
   notifications: [myQueue],
 });
 ```
@@ -181,7 +181,7 @@ new Bucket(this, "Bucket", {
 ```js {5-9}
 const myQueue = new Queue(this, "MyQueue");
 
-new Bucket(this, "Bucket", {
+new Bucket(stack, "Bucket", {
   notifications: [
     {
       queue: myQueue,
@@ -203,7 +203,7 @@ import { Topic } from "@serverless-stack/resources";
 
 const myTopic = new Topic(this, "MyTopic");
 
-new Bucket(this, "Bucket", {
+new Bucket(stack, "Bucket", {
   notifications: [myTopic],
 });
 ```
@@ -213,7 +213,7 @@ new Bucket(this, "Bucket", {
 ```js {5-9}
 const myTopic = new Topic(this, "MyTopic");
 
-new Bucket(this, "Bucket", {
+new Bucket(stack, "Bucket", {
   notifications: [
     {
       topic: myTopic,
@@ -229,7 +229,7 @@ new Bucket(this, "Bucket", {
 Configure the internally created CDK `Bucket` instance.
 
 ```js {3-5}
-new Bucket(this, "Bucket", {
+new Bucket(stack, "Bucket", {
   cdk: {
     bucket: {
       bucketName: "my-bucket",
@@ -245,7 +245,7 @@ Only empty S3 buckets can be deleted. However, you can configure the bucket to a
 ```js {5-8}
 import * as cdk from "aws-cdk-lib";
 
-new Bucket(this, "Bucket", {
+new Bucket(stack, "Bucket", {
   cdk: {
     bucket: {
       autoDeleteObjects: true,

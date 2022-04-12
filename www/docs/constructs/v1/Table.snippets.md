@@ -3,7 +3,7 @@
 ```js
 import { Table } from "@serverless-stack/resources";
 
-new Table(this, "Notes", {
+new Table(stack, "Notes", {
   fields: {
     userId: "string",
     noteId: "string",
@@ -15,7 +15,7 @@ new Table(this, "Notes", {
 ### Global indexes
 
 ```js
-new Table(this, "Notes", {
+new Table(stack, "Notes", {
   fields: {
     userId: "string",
     noteId: "string",
@@ -35,7 +35,7 @@ Configure the internally created CDK `GlobalSecondaryIndex`.
 ```js {15-17}
 import { ProjectionType } from "aws-cdk-lib/aws-dynamodb";
 
-new Table(this, "Table", {
+new Table(stack, "Table", {
   fields: {
     userId: "string",
     noteId: "string",
@@ -59,7 +59,7 @@ new Table(this, "Table", {
 ### Local indexes
 
 ```js
-new Table(this, "Notes", {
+new Table(stack, "Notes", {
   fields: {
     userId: "string",
     noteId: "string",
@@ -79,7 +79,7 @@ new Table(this, "Notes", {
 Enable DynamoDB Streams and add consumers.
 
 ```js {6-10}
-new Table(this, "Notes", {
+new Table(stack, "Notes", {
   fields: {
     noteId: "string",
   },
@@ -97,7 +97,7 @@ new Table(this, "Notes", {
 Lazily add the consumers after the table has been defined.
 
 ```js {9-12}
-const table = new Table(this, "Notes", {
+const table = new Table(stack, "Notes", {
   fields: {
     noteId: "string",
   },
@@ -116,7 +116,7 @@ table.addConsumers(this, {
 You can extend the minimal config, to set some function props and have them apply to all the consumers.
 
 ```js {3-7}
-new Table(this, "Notes", {
+new Table(stack, "Notes", {
   defaults: {
     function: {
       timeout: 20,
@@ -137,7 +137,7 @@ new Table(this, "Notes", {
 Configure each Lambda function separately.
 
 ```js
-new Table(this, "Notes", {
+new Table(stack, "Notes", {
   stream: true,
   consumers: {
     consumer1: {
@@ -155,7 +155,7 @@ new Table(this, "Notes", {
 Note that, you can set the `defaults.function` while using the `function` per consumer. The `function` will just override the `defaults.function`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
 
 ```js
-new Table(this, "Notes", {
+new Table(stack, "Notes", {
   defaults: {
     function: {
       timeout: 20,
@@ -185,7 +185,7 @@ So in the above example, the `consumer1` function doesn't use the `timeout` that
 Allow the consumer functions to access S3.
 
 ```js {13}
-const table = new Table(this, "Notes", {
+const table = new Table(stack, "Notes", {
   fields: {
     noteId: "string",
   },
@@ -205,7 +205,7 @@ table.attachPermissions(["s3"]);
 Allow the first consumer function to access S3.
 
 ```js {13}
-const table = new Table(this, "Notes", {
+const table = new Table(stack, "Notes", {
   fields: {
     noteId: "string",
   },
@@ -225,7 +225,7 @@ table.attachPermissionsToConsumer("consumer1", ["s3"]);
 Configure the information that will be written to the Stream.
 
 ```js {6}
-new Table(this, "Notes", {
+new Table(stack, "Notes", {
   fields: {
     noteId: "string",
   },
@@ -245,7 +245,7 @@ Configure the internally created CDK Event Source.
 ```js {13-15}
 import { StartingPosition } from "aws-cdk-lib/aws-lambda";
 
-new Table(this, "Notes", {
+new Table(stack, "Notes", {
   fields: {
     noteId: "string",
   },
@@ -271,7 +271,7 @@ import { KinesisStream } from "@serverless-stack/resources";
 
 const stream = new KinesisStream(this, "Stream");
 
-new Table(this, "Notes", {
+new Table(stack, "Notes", {
   fields: {
     noteId: "string",
   },
@@ -293,7 +293,7 @@ Configure the internally created CDK `Table` instance.
 ```js {10-12}
 import { RemovalPolicy } from "aws-cdk-lib";
 
-new Table(this, "Table", {
+new Table(stack, "Table", {
   fields: {
     userId: "string",
     noteId: "string",
@@ -314,7 +314,7 @@ Override the internally created CDK `Table` instance.
 ```js {5}
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 
-new Table(this, "Table", {
+new Table(stack, "Table", {
   cdk: {
     table: dynamodb.Table.fromTableArn(this, "ImportedTable", tableArn),
   },
@@ -326,7 +326,7 @@ new Table(this, "Table", {
 ```js {9-12}
 import { Duration } from "aws-cdk-lib";
 
-const table = new Table(this, "Notes", {
+const table = new Table(stack, "Notes", {
   fields: {
     noteId: "string",
   },

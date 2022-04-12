@@ -18,7 +18,7 @@ const devConfig = {
   maxCapacity: "ACU_2",
 };
 
-new RDS(this, "Database", {
+new RDS(stack, "Database", {
   engine: "postgresql10.14",
   defaultDatabaseName: "acme",
   scaling: app.stage === "prod" ? prodConfig : devConfig,
@@ -30,7 +30,7 @@ new RDS(this, "Database", {
 ### Migrations
 
 ```js
-new RDS(this, "Database", {
+new RDS(stack, "Database", {
   engine: "postgresql10.14",
   defaultDatabaseName: "acme",
   migrations: "path/to/migration/scripts",
@@ -112,7 +112,7 @@ You can configure the internally created CDK `ServerlessCluster` instance.
 ```js {7-9}
 import * as cdk from "aws-cdk-lib";
 
-new RDS(this, "Database", {
+new RDS(stack, "Database", {
   engine: "postgresql10.14",
   defaultDatabaseName: "acme",
   cdk: {
@@ -136,7 +136,7 @@ Yo can override the internally created `VPC` instance.
 ```js {7-14}
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 
-new RDS(this, "Database", {
+new RDS(stack, "Database", {
   engine: "postgresql10.14",
   defaultDatabaseName: "acme",
   cdk: {

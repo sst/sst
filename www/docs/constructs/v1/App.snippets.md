@@ -58,8 +58,7 @@ However, they only affect the functions that are created after the call.
 
 ```js title="stacks/index.js"
 export default function main(app) {
-
-  new StackA(app, "stack-a");
+  app.stack(StackA)
 
   app.addDefaultFunctionEnv({
     TABLE_NAME: "NOTES_TABLE"
@@ -69,7 +68,7 @@ export default function main(app) {
 
   app.addDefaultFunctionLayers([mylayer]);
 
-  new StackB(app, "stack-b");
+  app.stack(StackB)
 
   // Add more stacks
 }

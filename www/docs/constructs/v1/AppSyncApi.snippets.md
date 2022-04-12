@@ -5,7 +5,7 @@
 If the data sources are not configured, a Lambda data source is automatically created for each resolver.
 
 ```js
-new AppSyncApi(this, "GraphqlApi", {
+new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
   resolvers: {
     "Query    listNotes": "src/list.main",
@@ -22,7 +22,7 @@ new AppSyncApi(this, "GraphqlApi", {
 You can set some function props and have them apply to all the Lambda data sources.
 
 ```js {4-7}
-new AppSyncApi(this, "GraphqlApi", {
+new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
   defaults: {
     function: {
@@ -43,7 +43,7 @@ new AppSyncApi(this, "GraphqlApi", {
 Note that, you can set the `defaultFunctionProps` while configuring the function per data source. The function one will just override the `defaultFunctionProps`.
 
 ```js {4-6,12}
-new AppSyncApi(this, "GraphqlApi", {
+new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
   defaults: {
     function: {
@@ -70,7 +70,7 @@ So in the above example, the `notesDS` data source doesn't use the `timeout` tha
 Similarly, the `defaultFunctionProps` also applies when the Lambda data sources are auto-created.
 
 ```js {4-6,10}
-new AppSyncApi(this, "GraphqlApi", {
+new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
   defaults: {
     function: {
@@ -94,7 +94,7 @@ new AppSyncApi(this, "GraphqlApi", {
 Allow the entire API to access S3.
 
 ```js {12}
-const api = new AppSyncApi(this, "GraphqlApi", {
+const api = new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
   resolvers: {
     "Query    listNotes": "src/list.main",
@@ -113,7 +113,7 @@ api.attachPermissions(["s3"]);
 Allow one of the data sources to access S3.
 
 ```js {9}
-const api = new AppSyncApi(this, "GraphqlApi", {
+const api = new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
   dataSources: {
     notesDS: "src/notes.main",
@@ -129,7 +129,7 @@ api.attachPermissionsToDataSource("billingDS", ["s3"]);
 Allow one of the resolvers to access S3.
 
 ```js {9}
-const api = new AppSyncApi(this, "GraphqlApi", {
+const api = new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
   resolvers: {
     "Query    listNotes": "src/list.main",
@@ -143,7 +143,7 @@ api.attachPermissionsToDataSource("Query listNotes", ["s3"]);
 #### Using multiple data sources
 
 ```js {4-5}
-new AppSyncApi(this, "GraphqlApi", {
+new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
   dataSources: {
     notesDS: "src/notes.main",
@@ -160,7 +160,7 @@ new AppSyncApi(this, "GraphqlApi", {
 #### Getting the function for a data source
 
 ```js {9-10}
-const api = new AppSyncApi(this, "GraphqlApi", {
+const api = new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
   dataSources: {
     notesDS: "src/notes.main",
@@ -175,7 +175,7 @@ const dataSource = api.getDataSource("notesDS");
 #### Getting the function for a auto-created data source
 
 ```js {9-10}
-const api = new AppSyncApi(this, "GraphqlApi", {
+const api = new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
   resolvers: {
     "Query    listNotes": "src/list.main",
@@ -199,7 +199,7 @@ const notesTable = new Table(this, "Notes", {
   primaryIndex: { partitionKey: "id" },
 });
 
-new AppSyncApi(this, "GraphqlApi", {
+new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
   dataSources: {
     tableDS: {
@@ -224,7 +224,7 @@ new AppSyncApi(this, "GraphqlApi", {
 ### Data source: RDS
 
 ```js {4-7}
-new AppSyncApi(this, "GraphqlApi", {
+new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
   dataSources: {
     rdsDS: {
@@ -258,7 +258,7 @@ new AppSyncApi(this, "GraphqlApi", {
 Starting a Step Function execution on the Mutation `callStepFunction`.
 
 ```js {4-15}
-new AppSyncApi(this, "GraphqlApi", {
+new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
   dataSources: {
     httpDS: {
@@ -291,7 +291,7 @@ You can also add data sources and resolvers after the API has been created.
 #### Adding data sources and resolvers
 
 ```js {12-18}
-const api = new AppSyncApi(this, "GraphqlApi", {
+const api = new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
   dataSources: {
     notesDS: "src/notes.main",
@@ -314,7 +314,7 @@ api.addResolvers(this, {
 #### Auto-creating Lambda data sources
 
 ```js {10-13}
-const api = new AppSyncApi(this, "GraphqlApi", {
+const api = new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
   resolvers: {
     "Query    listNotes": "src/list.main",
@@ -332,7 +332,7 @@ api.addResolvers(this, {
 #### Lazily adding resolvers
 
 ```js {5-8}
-const api = new AppSyncApi(this, "GraphqlApi", {
+const api = new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
 });
 
@@ -345,7 +345,7 @@ api.addResolvers(this, {
 #### Getting the function for a resolver
 
 ```js {18}
-const api = new AppSyncApi(this, "GraphqlApi", {
+const api = new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
   dataSources: {
     notesDS: "src/notes.main",
@@ -369,7 +369,7 @@ const resolver = api.getResolver("Mutation charge");
 import * as cdk from "aws-cdk-lib";
 import * as appsync from "@aws-cdk/aws-appsync-alpha";
 
-new AppSyncApi(this, "GraphqlApi", {
+new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
   cdk: {
     graphqlApi: {
@@ -391,7 +391,7 @@ new AppSyncApi(this, "GraphqlApi", {
 ```js {7-14}
 import * as appsync from "@aws-cdk/aws-appsync-alpha";
 
-new AppSyncApi(this, "GraphqlApi", {
+new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
   cdk: {
     graphqlApi: {
@@ -413,7 +413,7 @@ new AppSyncApi(this, "GraphqlApi", {
 ```js {7-11}
 import * as appsync from "@aws-cdk/aws-appsync-alpha";
 
-new AppSyncApi(this, "GraphqlApi", {
+new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
   cdk: {
     graphqlApi: {
@@ -432,7 +432,7 @@ new AppSyncApi(this, "GraphqlApi", {
 ```js {7-14}
 import * as appsync from "@aws-cdk/aws-appsync-alpha";
 
-new AppSyncApi(this, "GraphqlApi", {
+new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
   cdk: {
     graphqlApi: {
@@ -458,7 +458,7 @@ Configure the internally created CDK `GraphqlApi` instance.
 ```js {6-11}
 import * as appsync from "@aws-cdk/aws-appsync-alpha";
 
-new AppSyncApi(this, "GraphqlApi", {
+new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
   cdk: {
     graphqlApi: {
@@ -480,7 +480,7 @@ Override the internally created CDK `GraphqlApi` instance.
 ```js {7-10}
 import { GraphqlApi } from "@aws-cdk/aws-appsync-alpha";
 
-new AppSyncApi(this, "GraphqlApi", {
+new AppSyncApi(stack, "GraphqlApi", {
   cdk: {
     graphqlApi: GraphqlApi.fromGraphqlApiAttributes(this, "IGraphqlApi", {
       graphqlApiId,

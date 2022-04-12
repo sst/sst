@@ -3,7 +3,7 @@
 #### Disabling bundling
 
 ```js
-new Function(this, "MySnsLambda", {
+new Function(stack, "MySnsLambda", {
   bundle: false,
   srcPath: "src/",
   handler: "sns/index.main",
@@ -15,7 +15,7 @@ In this case, SST will zip the entire `src/` directory for the Lambda function.
 #### Configure bundling
 
 ```js
-new Function(this, "MySnsLambda", {
+new Function(stack, "MySnsLambda", {
   bundle: {
     externalModules: ["fsevents"],
     nodeModules: ["uuid"],
@@ -55,7 +55,7 @@ module.exports = [
 You can now reference the config file in your functions.
 
 ```js title="stacks/MyStack.js" {3}
-new Function(this, "MySnsLambda", {
+new Function(stack, "MySnsLambda", {
   bundle: {
     esbuildConfig: {
       plugins: "config/esbuild.js",
@@ -68,7 +68,7 @@ new Function(this, "MySnsLambda", {
 ### Bundling Python Functions
 
 ```js
-new Function(this, "MySnsLambda", {
+new Function(stack, "MySnsLambda", {
   bundle: {
     installCommands: [
       "pip install --index-url https://domain.com/pypi/myprivatemodule/simple/ --extra-index-url https://pypi.org/simple"
@@ -85,7 +85,7 @@ new Function(this, "MySnsLambda", {
 Use the [`cdk.lambda.FunctionOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.FunctionOptions.html) to set additional props.
 
 ```js
-new Function(this, "MyApiLambda", {
+new Function(stack, "MyApiLambda", {
   handler: "src/api.main",
   timeout: 10,
   environment: {
@@ -121,7 +121,7 @@ import { StringParameter } from "aws-cdk-lib/aws-ssm";
 
 const apiKey = StringParameter.valueFromLookup(this, "my_api_key");
 
-new Function(this, "MyApiLambda", {
+new Function(stack, "MyApiLambda", {
   handler: "src/api.main",
   environment: {
     API_KEY: apiKey,
@@ -150,7 +150,7 @@ export async function main(event) {
 ```js {5}
 const queue = new Queue(this, "MyDLQ");
 
-new Function(this, "MyApiLambda", {
+new Function(stack, "MyApiLambda", {
   handler: "src/api.main",
   deadLetterQueue: queue.cdk.queue,
 });
@@ -159,7 +159,7 @@ new Function(this, "MyApiLambda", {
 #### Configuring Provisioned Concurrency
 
 ```js {3-5,8}
-const fn = new Function(this, "MyApiLambda", {
+const fn = new Function(stack, "MyApiLambda", {
   handler: "src/api.main",
   currentVersionOptions: {
     provisionedConcurrentExecutions: 5,

@@ -12,7 +12,7 @@ const table = new Table(this, "Table", {
   primaryIndex: { partitionKey: "userId" },
 });
 
-new Script(this, "Script", {
+new Script(stack, "Script", {
   onCreate: "src/script.create",
   params: {
     hello: "world",
@@ -32,7 +32,7 @@ Note that, the value for `tableName` will be resolved at deploy time. For exampl
 You can extend the minimal config, to set some function props and have them apply to all the functions.
 
 ```js {3-7}
-new Script(this, "Script", {
+new Script(stack, "Script", {
   defaults: {
     function: {
       timeout: 20,
@@ -49,7 +49,7 @@ new Script(this, "Script", {
 Configure each Lambda function separately.
 
 ```js
-new Script(this, "Script", {
+new Script(stack, "Script", {
   onCreate: {
     srcPath: "src/",
     handler: "script.create",
@@ -62,7 +62,7 @@ new Script(this, "Script", {
 Note that, you can set the `defaults.function` while configuring a Lambda function. The function's props will just override the `defaults.function`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
 
 ```js
-new Script(this, "Script", {
+new Script(stack, "Script", {
   defaults: {
     function: {
       timeout: 20,
@@ -87,7 +87,7 @@ So in the above example, the `onCreate` function doesn't use the `timeout` that 
 You can grant additional [permissions](Permissions.md) to the script.
 
 ```js {7}
-const script = new Script(this, "Script", {
+const script = new Script(stack, "Script", {
   onCreate: "src/script.create",
   onUpdate: "src/script.update",
   onDelete: "src/script.delete",
@@ -125,7 +125,7 @@ export class BeforeDeployStack extends Stack {
   constructor(scope, id, props) {
     super(scope, id, props);
 
-    new Script(this, "BeforeDeploy", {
+    new Script(stack, "BeforeDeploy", {
       onCreate: "src/script.create",
     });
   }
@@ -165,7 +165,7 @@ export class AfterDeployStack extends Stack {
   constructor(scope, id, props) {
     super(scope, id, props);
 
-    new Script(this, "AfterDeploy", {
+    new Script(stack, "AfterDeploy", {
       onCreate: "src/script.create",
     });
   }
@@ -181,11 +181,11 @@ Note that, if the script fails to run, the entire deploy is marked as failed. An
 Multiple scripts within the same Stack can run concurrently. You can manage the order in which they get run by specifying a dependency relationship.
 
 ```js {9}
-const scriptA = new Script(this, "Script", {
+const scriptA = new Script(stack, "Script", {
   onCreate: "src/scriptA.create",
 });
 
-const scriptB = new Script(this, "Script", {
+const scriptB = new Script(stack, "Script", {
   onCreate: "src/scriptB.create",
 });
 

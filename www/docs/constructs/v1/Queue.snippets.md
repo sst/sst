@@ -5,7 +5,7 @@
 Create an _empty_ queue and lazily add the consumer.
 
 ```js {3}
-const queue = new Queue(this, "Queue");
+const queue = new Queue(stack, "Queue");
 
 queue.addConsumer(this, "src/queueConsumer.main");
 ```
@@ -13,7 +13,7 @@ queue.addConsumer(this, "src/queueConsumer.main");
 #### Configuring the consumer function
 
 ```js {3-8}
-new Queue(this, "Queue", {
+new Queue(stack, "Queue", {
   consumer: {
     function: {
       handler: "src/queueConsumer.main",
@@ -30,7 +30,7 @@ new Queue(this, "Queue", {
 Configure the internally created CDK `Event Source`.
 
 ```js {5-7}
-new Queue(this, "Queue", {
+new Queue(stack, "Queue", {
   consumer: {
     function: "src/queueConsumer.main",
     cdk: {
@@ -47,7 +47,7 @@ new Queue(this, "Queue", {
 Allow the consumer function to access S3.
 
 ```js {5}
-const queue = new Queue(this, "Queue", {
+const queue = new Queue(stack, "Queue", {
   consumer: "src/queueConsumer.main",
 });
 
@@ -57,7 +57,7 @@ queue.attachPermissions(["s3"]);
 ### FIFO queue
 
 ```js {4-6}
-new Queue(this, "Queue", {
+new Queue(stack, "Queue", {
   consumer: "src/queueConsumer.main",
   cdk: {
     queue: {
@@ -76,7 +76,7 @@ Configure the internally created CDK `Queue` instance.
 ```js {6-9}
 import { Duration } from "aws-cdk-lib";
 
-new Queue(this, "Queue", {
+new Queue(stack, "Queue", {
   consumer: "src/queueConsumer.main",
   cdk: {
     queue: {
@@ -94,7 +94,7 @@ Override the internally created CDK `Queue` instance.
 ```js {6}
 import { Queue } from "aws-cdk-lib/aws-sqs";
 
-new Queue(this, "Queue", {
+new Queue(stack, "Queue", {
   consumer: "src/queueConsumer.main",
   cdk: {
     queue: Queue.fromQueueArn(this, "MySqsQueue", queueArn),

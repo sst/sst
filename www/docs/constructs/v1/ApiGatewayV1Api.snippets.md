@@ -5,7 +5,7 @@
 Add routes after the API has been created.
 
 ```js {4}
-const api = new ApiGatewayV1Api(this, "Api", {
+const api = new ApiGatewayV1Api(stack, "Api", {
   routes: {
     "GET /notes"   : "src/list.main",
     "ANY /{proxy+}": "src/catch.main",
@@ -18,7 +18,7 @@ const api = new ApiGatewayV1Api(this, "Api", {
 Add routes after the API has been created.
 
 ```js
-const api = new ApiGatewayV1Api(this, "Api", {
+const api = new ApiGatewayV1Api(stack, "Api", {
   routes: {
     "GET    /notes": "src/list.main",
     "POST   /notes": "src/create.main",
@@ -37,7 +37,7 @@ api.addRoutes(this, {
 You can extend the minimal config, to set some function props and have them apply to all the routes.
 
 ```js {2-8}
-new ApiGatewayV1Api(this, "Api", {
+new ApiGatewayV1Api(stack, "Api", {
   defaults: {
     function: {
       timeout: 20,
@@ -57,7 +57,7 @@ new ApiGatewayV1Api(this, "Api", {
 Configure each Lambda function separately.
 
 ```js
-new ApiGatewayV1Api(this, "Api", {
+new ApiGatewayV1Api(stack, "Api", {
   routes: {
     "GET /notes": {
       function: {
@@ -74,7 +74,7 @@ new ApiGatewayV1Api(this, "Api", {
 Note that, you can set the `defaults.function` while using the `function` per route. The `function` will just override the `defaults.function`. Except for the `environment`, the `layers`, and the `permissions` properties, which will be merged.
 
 ```js
-new ApiGatewayV1Api(this, "Api", {
+new ApiGatewayV1Api(stack, "Api", {
   defaults: {
     function: {
       timeout: 20,
@@ -101,7 +101,7 @@ So in the above example, the `GET /notes` function doesn't use the `timeout` tha
 Allow the entire API to access S3.
 
 ```js {11}
-const api = new ApiGatewayV1Api(this, "Api", {
+const api = new ApiGatewayV1Api(stack, "Api", {
   routes: {
     "GET    /notes"     : "src/list.main",
     "POST   /notes"     : "src/create.main",
@@ -119,7 +119,7 @@ api.attachPermissions(["s3"]);
 Allow one of the routes to access S3.
 
 ```js {11}
-const api = new ApiGatewayV1Api(this, "Api", {
+const api = new ApiGatewayV1Api(stack, "Api", {
   routes: {
     "GET    /notes"     : "src/list.main",
     "POST   /notes"     : "src/create.main",
@@ -135,7 +135,7 @@ api.attachPermissionsToRoute("GET /notes", ["s3"]);
 #### Getting the function for a route
 
 ```js {11}
-const api = new ApiGatewayV1Api(this, "Api", {
+const api = new ApiGatewayV1Api(stack, "Api", {
   routes: {
     "GET    /notes"     : "src/list.main",
     "POST   /notes"     : "src/create.main",
@@ -155,7 +155,7 @@ You can also configure the API with a custom domain. SST currently supports doma
 #### Using the basic config
 
 ```js {2}
-new ApiGatewayV1Api(this, "Api", {
+new ApiGatewayV1Api(stack, "Api", {
   customDomain: "api.domain.com",
   routes: {
     "GET /notes": "src/list.main",
@@ -166,7 +166,7 @@ new ApiGatewayV1Api(this, "Api", {
 #### Using the full config
 
 ```js {2-7}
-new ApiGatewayV1Api(this, "Api", {
+new ApiGatewayV1Api(stack, "Api", {
   customDomain: {
     domainName: "api.domain.com",
     hostedZone: "domain.com",
@@ -182,14 +182,14 @@ new ApiGatewayV1Api(this, "Api", {
 #### Mapping multiple APIs to the same domain
 
 ```js {11-13}
-const usersApi = new ApiGatewayV1Api(this, "UsersApi", {
+const usersApi = new ApiGatewayV1Api(stack, "UsersApi", {
   customDomain: {
     domainName: "api.domain.com",
     path: "users",
   },
 });
 
-new ApiGatewayV1Api(this, "PostsApi", {
+new ApiGatewayV1Api(stack, "PostsApi", {
   customDomain: {
     path: "posts",
     cdk: {
@@ -204,7 +204,7 @@ new ApiGatewayV1Api(this, "PostsApi", {
 ```js {6-12}
 import { DomainName } from "aws-cdk-lib/aws-apigateway";
 
-new ApiGatewayV1Api(this, "Api", {
+new ApiGatewayV1Api(stack, "Api", {
   customDomain: {
     path: "newPath",
     cdk: {
@@ -226,7 +226,7 @@ new ApiGatewayV1Api(this, "Api", {
 ```js {6-8}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
-new ApiGatewayV1Api(this, "Api", {
+new ApiGatewayV1Api(stack, "Api", {
   customDomain: {
     domainName: "api.domain.com",
     cdk: {
@@ -248,7 +248,7 @@ import { StringParameter } from "aws-cdk-lib/aws-ssm";
 
 const rootDomain = StringParameter.valueForStringParameter(this, `/myApp/domain`);
 
-new ApiGatewayV1Api(this, "Api", {
+new ApiGatewayV1Api(stack, "Api", {
   customDomain: {
     domainName: `api.${rootDomain}`,
     hostedZone: rootDomain,
@@ -270,7 +270,7 @@ You can use IAM or JWT to add auth to your APIs.
 You can secure your APIs (and other AWS resources) by setting the `defaults.authorizer`.
 
 ```js {2-4}
-new ApiGatewayV1Api(this, "Api", {
+new ApiGatewayV1Api(stack, "Api", {
   defaults: {
     authorizer: "iam",
   },
@@ -286,7 +286,7 @@ new ApiGatewayV1Api(this, "Api", {
 You can also secure specific routes in your API.
 
 ```js {5}
-new ApiGatewayV1Api(this, "Api", {
+new ApiGatewayV1Api(stack, "Api", {
   routes: {
     "GET /public": "src/public.main",
     "GET /private": {
@@ -304,7 +304,7 @@ You can also use a Lambda function to authorize users to access your API. Note t
 ```js
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 
-new ApiGatewayV1Api(this, "Api", {
+new ApiGatewayV1Api(stack, "Api", {
   authorizers: {
     myAuthorizer: {
       type: "lambda_request",
@@ -331,7 +331,7 @@ You can also secure specific routes by setting the `authorizer` per route.
 ```js {16}
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 
-new ApiGatewayV1Api(this, "Api", {
+new ApiGatewayV1Api(stack, "Api", {
   authorizers: {
     myAuthorizer: {
       type: "lambda_request",
@@ -356,7 +356,7 @@ new ApiGatewayV1Api(this, "Api", {
 You can also use Cognito User Pools as an authorizer.
 
 ```js
-new ApiGatewayV1Api(this, "Api", {
+new ApiGatewayV1Api(stack, "Api", {
   authorizers: {
     myAuthorizer: {
       type: "user_pools",
@@ -381,7 +381,7 @@ new ApiGatewayV1Api(this, "Api", {
 Use a CSV format instead of default JSON format.
 
 ```js {2-3}
-new ApiGatewayV1Api(this, "Api", {
+new ApiGatewayV1Api(stack, "Api", {
   accessLog:
     "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
   routes: {
@@ -393,7 +393,7 @@ new ApiGatewayV1Api(this, "Api", {
 #### Configuring the log retention setting
 
 ```js {2-4}
-new ApiGatewayV1Api(this, "Api", {
+new ApiGatewayV1Api(stack, "Api", {
   accessLog: {
     retention: "one_week",
   },
@@ -408,7 +408,7 @@ new ApiGatewayV1Api(this, "Api", {
 Override the default behavior of allowing all methods, and only allow the GET method.
 
 ```js {3-5}
-new ApiGatewayV1Api(this, "Api", {
+new ApiGatewayV1Api(stack, "Api", {
   cdk: {
     restApi: {
       defaultCorsPreflightOptions: {
@@ -431,7 +431,7 @@ Configure the internally created CDK `RestApi` instance.
 ```js {4-10}
 import { EndpointType } from "aws-cdk-lib/aws-apigateway";
 
-new ApiGatewayV1Api(this, "Api", {
+new ApiGatewayV1Api(stack, "Api", {
   cdk: {
     restApi: {
       endpointConfiguration: {
@@ -452,7 +452,7 @@ Override the internally created CDK `RestApi` instance.
 ```js {4-13}
 import { RestApi } from "aws-cdk-lib/aws-apigateway";
 
-new ApiGatewayV1Api(this, "Api", {
+new ApiGatewayV1Api(stack, "Api", {
   cdk: {
     restApi: RestApi.fromRestApiAttributes(this, "MyRestApi", {
       restApiId,

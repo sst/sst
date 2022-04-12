@@ -13,7 +13,7 @@ console.log(import.meta.env.VITE_USER_POOL_CLIENT);
 You can pass these in directly from the construct.
 
 ```js {3-6}
-new ViteStaticSite(this, "Site", {
+new ViteStaticSite(stack, "Site", {
   path: "path/to/src",
   environment: {
     VITE_API_URL: api.url,
@@ -48,7 +48,7 @@ This tells your editor the environment variables that are available and autocomp
 You can also override the path for the generated type definitions file.
 
 ```js {7}
-new ViteStaticSite(this, "Site", {
+new ViteStaticSite(stack, "Site", {
   path: "path/to/src",
   environment: {
     VITE_API_URL: api.url,
@@ -116,7 +116,7 @@ You can also configure custom domains for your Vite app. SST supports domains th
 Using the basic config for a domain hosted on [Route 53](https://aws.amazon.com/route53/).
 
 ```js {3}
-new ViteStaticSite(this, "Site", {
+new ViteStaticSite(stack, "Site", {
   path: "path/to/src",
   customDomain: "domain.com",
 });

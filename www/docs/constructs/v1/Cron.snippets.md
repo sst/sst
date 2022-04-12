@@ -3,7 +3,7 @@
 ```js
 import { Cron } from "@serverless-stack/resources";
 
-new Cron(this, "Cron", {
+new Cron(stack, "Cron", {
   schedule: "rate(1 minute)",
   job: "src/lambda.main",
 });
@@ -12,7 +12,7 @@ new Cron(this, "Cron", {
 ### Cron schedule
 
 ```js
-new Cron(this, "Cron", {
+new Cron(stack, "Cron", {
   schedule: "cron(15 10 * * ? *)",
   job: "src/lambda.main",
 });
@@ -23,7 +23,7 @@ new Cron(this, "Cron", {
 Allow the function to access S3.
 
 ```js {6}
-const cron = new Cron(this, "Cron", {
+const cron = new Cron(stack, "Cron", {
   schedule: "rate(1 minute)",
   job: "src/lambda.main",
 });
@@ -38,7 +38,7 @@ cron.attachPermissions(["s3"]);
 Configure the internally created EventBus Rule.
 
 ```js {4}
-new Cron(this, "Cron", {
+new Cron(stack, "Cron", {
   job: "src/lambda.main",
   cdk: {
     cronOptions: { minute: "0", hour: "4" },
@@ -53,7 +53,7 @@ Configure the internally created EventBus Target.
 ```js {8-12}
 import { RuleTargetInput } from "aws-cdk-lib/aws-events";
 
-new Cron(this, "Cron", {
+new Cron(stack, "Cron", {
   schedule: "rate(1 minute)",
   job: {
     function: "src/lambda.main",

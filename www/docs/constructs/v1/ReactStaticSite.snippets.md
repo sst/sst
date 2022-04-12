@@ -20,7 +20,7 @@ And in your HTML files:
 You can pass these in directly from the construct.
 
 ```js {3-6}
-new ReactStaticSite(this, "ReactSite", {
+new ReactStaticSite(stack, "ReactSite", {
   path: "path/to/src",
   environment: {
     REACT_APP_API_URL: api.url,
@@ -90,7 +90,7 @@ You can also configure custom domains for your React app. SST supports domains t
 Using the basic config for a domain hosted on [Route 53](https://aws.amazon.com/route53/).
 
 ```js {3}
-new ReactStaticSite(this, "ReactSite", {
+new ReactStaticSite(stack, "ReactSite", {
   path: "path/to/src",
   customDomain: "domain.com",
 });

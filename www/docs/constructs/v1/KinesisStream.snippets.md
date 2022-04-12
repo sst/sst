@@ -5,7 +5,7 @@
 Add consumers after the stream has been created.
 
 ```js {8-10}
-const stream = new KinesisStream(this, "Stream", {
+const stream = new KinesisStream(stack, "Stream", {
   consumers: {
     consumer1: "src/consumer1.main",
     consumer2: "src/consumer2.main",
@@ -22,7 +22,7 @@ stream.addConsumers(this, {
 You can extend the minimal config, to set some function props and have them apply to all the consumers.
 
 ```js {3-7}
-new KinesisStream(this, "Stream", {
+new KinesisStream(stack, "Stream", {
   defaults: {
     function: {
       timeout: 20,
@@ -42,7 +42,7 @@ new KinesisStream(this, "Stream", {
 Configure each Lambda function separately.
 
 ```js
-new KinesisStream(this, "Stream", {
+new KinesisStream(stack, "Stream", {
   consumers: {
     consumer1: {
       function: {
@@ -59,7 +59,7 @@ new KinesisStream(this, "Stream", {
 Note that, you can set the `defaults.function` while using the `function` per consumer. The `function` will just override the `defaults.function`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
 
 ```js
-new KinesisStream(this, "Stream", {
+new KinesisStream(stack, "Stream", {
   defaults: {
     function: {
       timeout: 20,
@@ -90,7 +90,7 @@ Configure the internally created CDK Event Source.
 ```js {8-10}
 import { StartingPosition } from "aws-cdk-lib/aws-lambda";
 
-new KinesisStream(this, "Stream", {
+new KinesisStream(stack, "Stream", {
   consumers: {
     consumer1: {
       function: "src/consumer1.main",
@@ -109,7 +109,7 @@ new KinesisStream(this, "Stream", {
 Allow the consumer functions to access S3.
 
 ```js {8}
-const stream = new KinesisStream(this, "Stream", {
+const stream = new KinesisStream(stack, "Stream", {
   consumers: {
     consumer1: "src/consumer1.main",
     consumer2: "src/consumer2.main",
@@ -124,7 +124,7 @@ stream.attachPermissions(["s3"]);
 Allow a specific consumer function to access S3.
 
 ```js {8}
-const stream = new KinesisStream(this, "Stream", {
+const stream = new KinesisStream(stack, "Stream", {
   consumers: {
     consumer1: "src/consumer1.main",
     consumer2: "src/consumer2.main",
@@ -141,7 +141,7 @@ stream.attachPermissionsToConsumer("consumer1", ["s3"]);
 Configure the internally created CDK `Stream` instance.
 
 ```js {7-9}
-new KinesisStream(this, "Stream", {
+new KinesisStream(stack, "Stream", {
   consumers: {
     consumer1: "src/consumer1.main",
     consumer2: "src/consumer2.main",
@@ -161,7 +161,7 @@ Override the internally created CDK `Stream` instance.
 ```js {5}
 import { Stream } from "aws-cdk-lib/aws-kinesis";
 
-new KinesisStream(this, "Stream", {
+new KinesisStream(stack, "Stream", {
   cdk: {
     stream: Stream.fromStreamArn(this, "ImportedStream", streamArn),
   },

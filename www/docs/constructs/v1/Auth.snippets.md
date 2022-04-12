@@ -200,109 +200,33 @@ new Auth(this, "Auth", {
 
 #### Sharing Auth across stacks
 
-You can create the Auth construct in one stack, and attach permissions in other stacks. To do this, expose the Auth as a class property.
+You can create the Auth construct in one stack, and attach permissions in other stacks. To do this, return the Auth construct from your stack function.
 
-<MultiLanguageCode>
-<TabItem value="js">
+```ts title="stacks/AuthStack.ts"
+import { Auth, StackContext } from "@serverless-stack/resources";
 
-```js {7} title="stacks/AuthStack.js"
-import { Auth, Stack } from "@serverless-stack/resources";
-
-export class AuthStack extends Stack {
-  constructor(scope, id) {
-    super(scope, id);
-
-    this.auth = new Auth(this, "Auth");
+export function AuthStack(ctx: StackContext) {
+  const auth = new Auth(ctx.stack, "Auth");
+  return {
+    auth
   }
 }
 ```
 
-</TabItem>
-<TabItem value="ts">
+Then import the auth construct into another stack with `use` and attach the permissions.
 
-```js {4,9} title="stacks/AuthStack.ts"
-import { App, Auth, Stack } from "@serverless-stack/resources";
-
-export class AuthStack extends Stack {
-  public readonly auth: Auth;
-
-  constructor(scope: App, id: string) {
-    super(scope, id);
-
-    this.auth = new Auth(this, "Auth");
-  }
-}
-```
-
-</TabItem>
-</MultiLanguageCode>
-
-Then pass the Auth to a different stack.
-
-<MultiLanguageCode>
-<TabItem value="js">
-
-```js {3} title="stacks/index.js"
-const authStack = new AuthStack(app, "auth");
-
-new ApiStack(app, "api", authStack.auth);
-```
-
-</TabItem>
-<TabItem value="ts">
-
-```ts {3} title="stacks/index.ts"
-const authStack = new AuthStack(app, "auth");
-
-new ApiStack(app, "api", authStack.auth);
-```
-
-</TabItem>
-</MultiLanguageCode>
-
-Finally, attach the permissions.
-
-<MultiLanguageCode>
-<TabItem value="js">
-
-```js {13} title="stacks/ApiStack.js"
+```js {13} title="stacks/ApiStack.ts"
 import { Api, Stack } from "@serverless-stack/resources";
+import { AuthStack } from "./AuthStack"
 
-export class ApiStack extends Stack {
-  constructor(scope, id, auth) {
-    super(scope, id);
-
-    const api = new Api(this, "Api", {
-      routes: {
-        "GET  /notes": "src/list.main",
-        "POST /notes": "src/create.main",
-      },
-    });
-    auth.attachPermissionsForAuthUsers([api]);
-  }
+export function ApiStack(ctx: StackContext) {
+  const { auth } = use(AuthStack)
+  const api = new Api(ctx.stack, "Api", {
+    routes: {
+      "GET  /notes": "src/list.main",
+      "POST /notes": "src/create.main",
+    },
+  });
+  auth.attachPermissionsForAuthUsers([api]);
 }
 ```
-
-</TabItem>
-<TabItem value="ts">
-
-```ts {13} title="stacks/ApiStack.ts"
-import { Api, App, Auth, Stack } from "@serverless-stack/resources";
-
-export class ApiStack extends Stack {
-  constructor(scope: App, id: string, auth: Auth) {
-    super(scope, id, props);
-
-    const api = new Api(this, "Api", {
-      routes: {
-        "GET  /notes": "src/list.main",
-        "POST /notes": "src/create.main",
-      },
-    });
-    auth.attachPermissionsForAuthUsers([api]);
-  }
-}
-```
-
-</TabItem>
-</MultiLanguageCode>

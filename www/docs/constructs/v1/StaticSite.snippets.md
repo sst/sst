@@ -1,7 +1,7 @@
 ### Creating a React site
 
 ```js
-new StaticSite(this, "ReactSite", {
+new StaticSite(stack, "ReactSite", {
   path: "path/to/src",
   buildOutput: "build",
   buildCommand: "npm run build",
@@ -14,7 +14,7 @@ If you are using [Create React App](https://create-react-app.dev), we created th
 ### Creating a Vue.js site
 
 ```js
-new StaticSite(this, "VueJSSite", {
+new StaticSite(stack, "VueJSSite", {
   path: "path/to/src",
   buildOutput: "dist",
   buildCommand: "npm run build",
@@ -25,7 +25,7 @@ new StaticSite(this, "VueJSSite", {
 ### Creating a Gatsby site
 
 ```js
-new StaticSite(this, "GatsbySite", {
+new StaticSite(stack, "GatsbySite", {
   path: "path/to/src",
   errorPage: "404.html",
   buildOutput: "public",
@@ -36,7 +36,7 @@ new StaticSite(this, "GatsbySite", {
 ### Creating a Jekyll site
 
 ```js
-new StaticSite(this, "JekyllSite", {
+new StaticSite(stack, "JekyllSite", {
   path: "path/to/src",
   errorPage: "404.html",
   buildOutput: "_site",
@@ -47,7 +47,7 @@ new StaticSite(this, "JekyllSite", {
 ### Creating an Angular site
 
 ```js
-new StaticSite(this, "AngularSite", {
+new StaticSite(stack, "AngularSite", {
   path: "path/to/src",
   buildOutput: "dist",
   buildCommand: "ng build --output-path dist",
@@ -58,7 +58,7 @@ new StaticSite(this, "AngularSite", {
 ### Creating a Svelte site
 
 ```js
-new StaticSite(this, "SvelteSite", {
+new StaticSite(stack, "SvelteSite", {
   path: "path/to/src",
   buildOutput: "dist",
   buildCommand: "npm run build",
@@ -92,7 +92,7 @@ And in your HTML files:
 You can pass these in directly from the construct.
 
 ```js {3-6}
-new StaticSite(this, "ReactSite", {
+new StaticSite(stack, "ReactSite", {
   path: "path/to/src",
   environment: {
     REACT_APP_API_URL: api.url,
@@ -163,7 +163,7 @@ You can configure the website with a custom domain hosted either on [Route 53](h
 #### Using the basic config (Route 53 domains)
 
 ```js {3}
-new StaticSite(this, "Site", {
+new StaticSite(stack, "Site", {
   path: "path/to/src",
   customDomain: "domain.com",
 });
@@ -172,7 +172,7 @@ new StaticSite(this, "Site", {
 #### Redirect www to non-www (Route 53 domains)
 
 ```js {3-6}
-new StaticSite(this, "Site", {
+new StaticSite(stack, "Site", {
   path: "path/to/src",
   customDomain: {
     domainName: "domain.com",
@@ -184,7 +184,7 @@ new StaticSite(this, "Site", {
 #### Configuring domains across stages (Route 53 domains)
 
 ```js {3-7}
-new StaticSite(this, "Site", {
+new StaticSite(stack, "Site", {
   path: "path/to/src",
   customDomain: {
     domainName:
@@ -197,7 +197,7 @@ new StaticSite(this, "Site", {
 #### Using the full config (Route 53 domains)
 
 ```js {3-7}
-new StaticSite(this, "Site", {
+new StaticSite(stack, "Site", {
   path: "path/to/src",
   customDomain: {
     domainName: "domain.com",
@@ -212,7 +212,7 @@ new StaticSite(this, "Site", {
 ```js {8}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
-new StaticSite(this, "Site", {
+new StaticSite(stack, "Site", {
   path: "path/to/src",
   customDomain: {
     domainName: "domain.com",
@@ -232,7 +232,7 @@ If you have multiple hosted zones for a given domain, you can choose the one you
 ```js {8-11}
 import { HostedZone } from "aws-cdk-lib/aws-route53";
 
-new StaticSite(this, "Site", {
+new StaticSite(stack, "Site", {
   path: "path/to/src",
   customDomain: {
     domainName: "domain.com",
@@ -251,7 +251,7 @@ new StaticSite(this, "Site", {
 ```js {5-11}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
-new StaticSite(this, "Site", {
+new StaticSite(stack, "Site", {
   path: "path/to/src",
   customDomain: {
     isExternalDomain: true,
@@ -272,7 +272,7 @@ Also note that you can also migrate externally hosted domains to Route 53 by [fo
 Configure the Cache Control settings based on different file types.
 
 ```js {6-17}
-new StaticSite(this, "Site", {
+new StaticSite(stack, "Site", {
   path: "path/to/src",
   buildOutput: "build",
   buildCommand: "npm run build",
@@ -305,7 +305,7 @@ Configure the internally created CDK `Bucket` instance.
 ```js {6-8}
 import { RemovalPolicy } from "aws-cdk-lib";
 
-new StaticSite(this, "Site", {
+new StaticSite(stack, "Site", {
   path: "path/to/src",
   cdk: {
     bucket: {
@@ -320,7 +320,7 @@ new StaticSite(this, "Site", {
 Configure the internally created CDK `Distribution` instance.
 
 ```js {4-6}
-new StaticSite(this, "Site", {
+new StaticSite(stack, "Site", {
   path: "path/to/src",
   cdk: {
     distribution: {
@@ -337,7 +337,7 @@ The default behavior of the CloudFront distribution uses the internally created 
 ```js {6-11}
 import { ViewerProtocolPolicy, AllowedMethods } from "aws-cdk-lib/aws-cloudfront";
 
-new StaticSite(this, "Site", {
+new StaticSite(stack, "Site", {
   path: "path/to/src",
   cdk: {
     distribution: {
@@ -363,7 +363,7 @@ const edgeFunc = new experimental.EdgeFunction(this, "MyFunction", {
   stackId: `${scope.logicalPrefixedName("edge-lambda")}`,
 });
 
-new StaticSite(this, "Site", {
+new StaticSite(stack, "Site", {
   path: "path/to/src",
   cdk: {
     distribution: {
