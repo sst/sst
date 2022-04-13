@@ -1,0 +1,18 @@
+{
+  "name": "foo",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "sst:start": "sst start",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@serverless-stack/cli": "^1.0.0-beta.9",
+    "@serverless-stack/resources": "^1.0.0-beta.9",
+    "@tsconfig/node14": "^1.0.1",
+    "typescript": "^4.6.3"
+  },
+  "workspaces": [
+    "backend"
+  ]
+}

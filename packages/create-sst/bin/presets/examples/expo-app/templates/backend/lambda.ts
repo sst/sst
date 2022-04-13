@@ -1,4 +1,4 @@
-import AWS from "aws-sdk";
+jmport AWS from "aws-sdk";
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
