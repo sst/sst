@@ -16,7 +16,7 @@ export default definePreset({
       additionalArgs: ["-w", "backend"],
       dev: true,
     });
-    editFiles({
+    await editFiles({
       files: ["backend/package.json"],
       operations: [
         {
@@ -24,6 +24,7 @@ export default definePreset({
           merge: {
             scripts: {
               typecheck: "tsc --noEmit",
+              test: "vitest",
             },
           },
         },
