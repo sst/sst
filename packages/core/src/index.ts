@@ -72,8 +72,9 @@ function runCdkSynth(cdkOptions) {
     (cdkOptions.context || []).forEach((c) => context.push("-c", c));
 
     child = spawn(
-      getCdkBinPath(),
+      process.execPath,
       [
+        getCdkBinPath(),
         "synth",
         "--no-version-reporting",
         "--app",
@@ -145,8 +146,9 @@ async function diff(cdkOptions, stackIds) {
   logger.debug("diff", cdkOptions);
 
   const response = spawn.sync(
-    getCdkBinPath(),
+    process.execPath,
     [
+      getCdkBinPath(),
       "diff",
       "--no-version-reporting",
       "--app",
@@ -177,8 +179,9 @@ async function bootstrap(cdkOptions) {
   logger.debug("bootstrap", cdkOptions);
 
   const response = spawn.sync(
-    getCdkBinPath(),
+    process.execPath,
     [
+      getCdkBinPath(),
       "bootstrap",
       "--no-version-reporting",
       // use synthesized output, do not synthesize again
@@ -657,6 +660,7 @@ async function deployStack(cdkOptions, stackState) {
   let cpCode;
   let cpStdChunks = [];
   const args = [
+    getCdkBinPath(),
     "deploy",
     stackId,
     "--no-version-reporting",
@@ -678,7 +682,7 @@ async function deployStack(cdkOptions, stackState) {
     ...(cdkOptions.noColor ? ["--no-color"] : []),
     ...(cdkOptions.verbose === 0 ? [] : ["--verbose"]),
   ];
-  const cp = spawn(getCdkBinPath(), args, {
+  const cp = spawn(process.execPath, args, {
     stdio: "pipe",
     env: buildCDKSpawnEnv(cdkOptions),
   });
@@ -1446,8 +1450,9 @@ async function destroyStack(cdkOptions, stackState) {
   let cpCode;
   let cpStdChunks = [];
   const cp = spawn(
-    getCdkBinPath(),
+    process.execPath,
     [
+      getCdkBinPath(),
       "destroy",
       stackId,
       "--no-version-reporting",
@@ -1628,17 +1633,21 @@ async function destroyStackTemplate(cdkOptions, stackState) {
 function getCdkBinPath() {
   const pkg = "aws-cdk";
   const filePath = require.resolve(`${pkg}/package.json`);
-  const matches = filePath.match(/(^.*[/\\]node_modules)[/\\].*$/);
 
-  if (matches === null || !matches[1]) {
+  if (!filePath) {
     throw new Error(`There was a problem finding ${pkg}`);
   }
 
   // Note: that as of CDK v2.15.0, "node_modules/aws-cdk/bin/cdk" cannot be invoked
   //  directly on Windows. Need to invoke with node, ie.
   //  "node node_modules/aws-cdk/bin/cdk"
-  //  Therefore, we will invoke "node_modules/.bin/cdk" instead.
-  return path.join(matches[1], ".bin", "cdk");
+  const binPath = path.join(filePath, "../bin/cdk");
+  if (!fs.existsSync(binPath)) {
+    throw new Error(
+      `There was a problem finding the ${pkg}/bin/sdk entry point`
+    );
+  }
+  return binPath;
 }
 
 function buildCDKSpawnEnv(cdkOptions) {
