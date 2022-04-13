@@ -67,7 +67,7 @@ export function useScanTable(name?: string, index?: string, opts?: ScanOpts) {
         .filter(
           (item) => !isQuery || ![opts.pk?.key, opts.sk?.key].includes(item.key)
         )
-        .map((item) => `${item.key} ${item.op} :${item.key}`);
+        .map((item) => `#${item.key} ${item.op} :${item.key}`);
 
       const expressionAttributes = [opts.pk, opts.sk, ...opts.filters]
         .filter((item) => Boolean(item?.op))
@@ -84,6 +84,9 @@ export function useScanTable(name?: string, index?: string, opts?: ScanOpts) {
           ];
         });
 
+      const expressionAttributesNames = [opts.pk, opts.sk, ...opts.filters]
+        .filter((item) => Boolean(item?.op))
+        .map((item) => [`#${item.key}`, item.key]);
       const params: ScanCommandInput = {
         TableName: name,
         IndexName: index === "Primary" ? undefined : index,
@@ -91,6 +94,9 @@ export function useScanTable(name?: string, index?: string, opts?: ScanOpts) {
         Limit: 50,
         FilterExpression: filterExpression.length
           ? filterExpression.join(" AND ")
+          : undefined,
+        ExpressionAttributeNames: expressionAttributesNames.length
+          ? Object.fromEntries(expressionAttributesNames)
           : undefined,
         ExpressionAttributeValues: expressionAttributes.length
           ? Object.fromEntries(expressionAttributes)
