@@ -3,10 +3,10 @@
   "version": "0.0.0",
   "type": "module",
   "dependencies": {
-    "aws-sdk": "^2.1114.0",
-    "uuid": "^8.3.2"
+    "apollo-server-lambda": "^3.6.7",
+    "aws-sdk": "^2.1114.0"
   },
   "devDependencies": {
-    "datadog-cdk-constructs-v2": "^0.2.0"
+    "@types/aws-lambda": "^8.10.93"
   }
 }

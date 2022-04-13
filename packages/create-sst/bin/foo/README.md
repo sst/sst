@@ -1,40 +1,40 @@
-# How to use Datadog to monitor your serverless app
+# How to create an Apollo GraphQL API
 
-An example SST serverless app monitored with [Datadog](https://www.datadoghq.com).
+An example serverless app created with SST.
 
 ## Getting Started
 
-[**Read the tutorial**](https://serverless-stack.com/examples/how-to-use-datadog-to-monitor-your-serverless-app.html)
+[**Read the tutorial**](https://serverless-stack.com/examples/how-to-create-an-apollo-graphql-api-with-serverless.html)
 
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example datadog
+$ npm init serverless-stack --example graphql-apollo
 # Or with Yarn
-$ yarn create serverless-stack --example datadog
+$ yarn create serverless-stack --example graphql-apollo
 ```
 
 ## Commands
 
-### `yarn run start`
+### `npm run start`
 
 Starts the local Lambda development environment.
 
-### `yarn run build`
+### `npm run build`
 
 Build your app and synthesize your stacks.
 
 Generates a `.build/` directory with the compiled files and a `.build/cdk.out/` directory with the synthesized CloudFormation stacks.
 
-### `yarn run deploy [stack]`
+### `npm run deploy [stack]`
 
-Deploy all your stacks to AWS. Or optionally deploy, a specific stack.
+Deploy all your stacks to AWS. Or optionally deploy a specific stack.
 
-### `yarn run remove [stack]`
+### `npm run remove [stack]`
 
-Remove all your stacks and all of their resources from AWS. Or optionally removes, a specific stack.
+Remove all your stacks and all of their resources from AWS. Or optionally remove a specific stack.
 
-### `yarn run test`
+### `npm run test`
 
 Runs your tests using Jest. Takes all the [Jest CLI options](https://jestjs.io/docs/en/cli).
 

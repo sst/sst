@@ -6,16 +6,9 @@ export default definePreset({
       preset: "presets/base/example",
     });
     await extractTemplates({});
-    await editFiles({
-      files: ["package.json"],
-      operations: [
-        {
-          type: "edit-json",
-          merge: {
-            workspaces: ["frontend"],
-          },
-        },
-      ],
+    await installPackages({
+      packages: ["apollo-server-lambda"],
+      additionalArgs: ["-w", "backend"],
     });
   },
 });

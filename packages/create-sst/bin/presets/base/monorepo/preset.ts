@@ -27,5 +27,14 @@ export default definePreset({
       ],
     });
     await installPackages({});
+    await installPackages({
+      packages: ["aws-sdk"],
+      additionalArgs: ["-w", "backend"],
+    });
+    await installPackages({
+      packages: ["@types/aws-lambda"],
+      additionalArgs: ["-w", "backend"],
+      dev: true,
+    });
   },
 });

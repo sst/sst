@@ -7,24 +7,24 @@ export default class MyStack extends sst.Stack {
     // Create a notes table
     const notesTable = new sst.Table(this, "Notes", {
       fields: {
-        id: sst.TableFieldType.STRING,
+        id: "string",
       },
       primaryIndex: { partitionKey: "id" },
     });
 
     // Create the AppSync GraphQL API
     const api = new sst.AppSyncApi(this, "AppSyncApi", {
-      graphqlApi: {
-        schema: "graphql/schema.graphql",
-      },
-      defaultFunctionProps: {
-        // Pass the table name to the function
-        environment: {
-          NOTES_TABLE: notesTable.dynamodbTable.tableName,
+      schema: "graphql/schema.graphql",
+      defaults: {
+        function: {
+          // Pass the table name to the function
+          environment: {
+            NOTES_TABLE: notesTable.tableName,
+          },
         },
       },
       dataSources: {
-        notes: "src/main.handler",
+        notes: "main.handler",
       },
       resolvers: {
         "Query    listNotes": "notes",
@@ -40,9 +40,8 @@ export default class MyStack extends sst.Stack {
 
     // Show the AppSync API Id in the output
     this.addOutputs({
-      ApiId: api.graphqlApi.apiId,
-      ApiKey: api.graphqlApi.apiKey,
-      APiUrl: api.graphqlApi.graphqlUrl,
+      ApiId: api.apiId,
+      APiUrl: api.url,
     });
   }
 }

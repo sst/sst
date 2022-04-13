@@ -6,16 +6,9 @@ export default definePreset({
       preset: "presets/base/example",
     });
     await extractTemplates({});
-    await editFiles({
-      files: ["package.json"],
-      operations: [
-        {
-          type: "edit-json",
-          merge: {
-            workspaces: ["frontend"],
-          },
-        },
-      ],
+    await installPackages({
+      packages: ["chrome-aws-lambda", "puppeteer", "puppeteer-core"],
+      additionalArgs: ["-w", "backend"],
     });
   },
 });
