@@ -35,6 +35,11 @@ export interface TableLocalIndexProps {
    * The field that's to be used as the sort key for the index.
    */
   sortKey: string;
+  /**
+   * The set of attributes that are projected into the secondary index.
+   * @default "all"
+   */
+  projection?: Lowercase<keyof Pick<typeof dynamodb.ProjectionType, "ALL" | "KEYS_ONLY">> | string[];
   cdk?: {
     /**
      * Override the settings of the internally created local secondary indexes
@@ -52,6 +57,11 @@ export interface TableGlobalIndexProps {
    * The field that's to be used as the sort key for the index.
    */
   sortKey?: string;
+  /**
+   * The set of attributes that are projected into the secondary index.
+   * @default "all"
+   */
+  projection?: Lowercase<keyof Pick<typeof dynamodb.ProjectionType, "ALL" | "KEYS_ONLY">> | string[];
   cdk?: {
     /**
      * Override the settings of the internally created global secondary index
@@ -299,7 +309,7 @@ export class Table extends Construct implements SSTConstruct {
       throw new Error(
         `Cannot add secondary indexes to "${this.node.id}" Table without defining "fields"`
       );
-    for (const [indexName, { partitionKey, sortKey, cdk }] of Object.entries(
+    for (const [indexName, { partitionKey, sortKey, projection, cdk }] of Object.entries(
       secondaryIndexes
     )) {
       // Validate index does not contain "indexName", "partitionKey" and "sortKey"
@@ -325,6 +335,20 @@ export class Table extends Construct implements SSTConstruct {
         sortKey: sortKey
           ? this.buildAttribute(this.fields, sortKey)
           : undefined,
+        ...(() => {
+          if (!projection) {
+            return undefined;
+          }
+          else if (Array.isArray(projection)) {
+            return {
+              projectionType: dynamodb.ProjectionType.INCLUDE,
+              nonKeyAttributes: projection,
+            };
+          }
+          return {
+            projectionType: dynamodb.ProjectionType[projection.toUpperCase() as keyof typeof dynamodb.ProjectionType]
+          };
+        })(),
         ...cdk?.index,
       });
     }
@@ -349,7 +373,7 @@ export class Table extends Construct implements SSTConstruct {
       throw new Error(
         `Cannot add local secondary indexes to "${this.node.id}" Table without defining "fields"`
       );
-    for (const [indexName, { sortKey, cdk }] of Object.entries(
+    for (const [indexName, { sortKey, projection, cdk }] of Object.entries(
       secondaryIndexes!
     )) {
       // Validate index does not contain "indexName", "partitionKey" and "sortKey"
@@ -367,6 +391,20 @@ export class Table extends Construct implements SSTConstruct {
       (this.cdk.table as dynamodb.Table).addLocalSecondaryIndex({
         indexName,
         sortKey: this.buildAttribute(this.fields, sortKey),
+        ...(() => {
+          if (!projection) {
+            return undefined;
+          }
+          else if (Array.isArray(projection)) {
+            return {
+              projectionType: dynamodb.ProjectionType.INCLUDE,
+              nonKeyAttributes: projection,
+            };
+          }
+          return {
+            projectionType: dynamodb.ProjectionType[projection.toUpperCase() as keyof typeof dynamodb.ProjectionType]
+          };
+        })(),
         ...cdk?.index,
       });
     }

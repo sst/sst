@@ -118,7 +118,7 @@ test("cdk.userPool is prop", async () => {
   new Auth(stack, "Auth", {
     cdk: {
       userPool: {
-        signInAliases: { email: true },
+        mfa: cognito.Mfa.OPTIONAL,
       },
       userPoolClient: {
         disableOAuth: true,
@@ -128,8 +128,8 @@ test("cdk.userPool is prop", async () => {
   hasResource(stack, "AWS::Cognito::UserPool", {
     UserPoolName: "dev-my-app-Auth",
     AdminCreateUserConfig: { AllowAdminCreateUserOnly: false },
-    AutoVerifiedAttributes: ["email"],
-    UsernameAttributes: ["email"],
+    MfaConfiguration: "OPTIONAL",
+    UsernameAttributes: ABSENT,
     UsernameConfiguration: { CaseSensitive: false },
   });
   hasResource(stack, "AWS::Cognito::UserPoolClient", {
@@ -192,7 +192,7 @@ test("cdk.userPool is prop and cdk.userPoolClient is construct", async () => {
   expect(() => {
     new Auth(stack, "Auth", {
       cdk: {
-        userPool: { signInAliases: { email: true } },
+        userPool: { mfa: cognito.Mfa.OPTIONAL },
         userPoolClient,
       },
     });
@@ -248,6 +248,28 @@ test("cdk.userPool is imported by userPoolName with triggers", async () => {
       },
     });
   }).toThrow(/Cannot add triggers when the "userPool" is imported./);
+});
+
+test("login is undefined", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Auth(stack, "Auth");
+  hasResource(stack, "AWS::Cognito::UserPool", {
+    AutoVerifiedAttributes: ABSENT,
+    UsernameAttributes: ABSENT,
+    UsernameConfiguration: { CaseSensitive: false },
+  });
+});
+
+test("login is email", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Auth(stack, "Auth", {
+    login: ["email"]
+  });
+  hasResource(stack, "AWS::Cognito::UserPool", {
+    AutoVerifiedAttributes: ["email"],
+    UsernameAttributes: ["email"],
+    UsernameConfiguration: { CaseSensitive: false },
+  });
 });
 
 test("triggers is undefined", async () => {

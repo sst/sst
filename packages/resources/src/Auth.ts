@@ -84,12 +84,64 @@ export interface AuthCognitoIdentityPoolFederationProps {
 
 export interface AuthProps {
   defaults?: {
+    /**
+     * The default function props to be applied to all the triggers in the UserPool. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
+     *
+     * @example
+     *
+     * ```js
+     * new Auth(stack, "Auth", {
+     *   defaults: {
+     *     function: {
+     *       timeout: 20,
+     *       environment: { topicName: topic.topicName },
+     *       permissions: [topic],
+     *     }
+     *   },
+     * });
+     * ```
+     */
     function?: FunctionProps;
   };
+  /**
+   * Configure the different ways a user can sign in to our application for our User Pool. For example, you might want a user to be able to sign in with their email or username. Or with their phone number.
+   * 
+   * :::caution
+   * You cannot change the login property once the User Pool has been created.
+   * :::
+   * 
+   * @default `["username"]`
+   */
+  login?: ("email" | "phone" | "username" | "preferredUsername")[];
+  /**
+   * Configure triggers for this User Pool
+   * @default No triggers
+   *
+   * @example
+   *
+   * ```js
+   * new Auth(stack, "Auth", {
+   *   triggers: {
+   *     preAuthentication: "src/preAuthentication.main",
+   *     postAuthentication: "src/postAuthentication.main",
+   *   },
+   * });
+   * ```
+   */
   triggers?: AuthUserPoolTriggers;
+  /**
+   * Configure the Cognito Identity Pool and its authentication providers.
+   * @default Identity Pool created with the User Pool as the authentication provider
+   */
   identityPoolFederation?: boolean | AuthCognitoIdentityPoolFederationProps;
   cdk?: {
+    /**
+     * This allows you to override the default settings this construct uses internally to create the User Pool.
+     */
     userPool?: cognito.UserPoolProps | cognito.IUserPool;
+    /**
+     * This allows you to override the default settings this construct uses internally to create the User Pool client.
+     */
     userPoolClient?: cognito.UserPoolClientOptions | cognito.IUserPoolClient;
   };
 }
@@ -203,7 +255,7 @@ export class Auth extends Construct implements SSTConstruct {
   }
 
   private createUserPool(): void {
-    const { cdk } = this.props;
+    const { login, cdk } = this.props;
 
     const app = this.node.root as App;
 
@@ -229,6 +281,7 @@ export class Auth extends Construct implements SSTConstruct {
         userPoolName: app.logicalPrefixedName(this.node.id),
         selfSignUpEnabled: true,
         signInCaseSensitive: false,
+        signInAliases: this.buildSignInAliases(login),
         ...cognitoUserPoolProps,
       });
     }
@@ -499,5 +552,20 @@ export class Auth extends Construct implements SSTConstruct {
     );
 
     return role;
+  }
+
+  private buildSignInAliases(
+    login?: ("email" | "phone" | "username" | "preferredUsername")[],
+  ): cognito.SignInAliases | undefined {
+    if (!login) {
+      return;
+    }
+
+    return {
+      email: login.includes("email"),
+      phone: login.includes("phone"),
+      username: login.includes("username"),
+      preferredUsername: login.includes("preferredUsername"),
+    };
   }
 }

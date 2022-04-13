@@ -1,17 +1,51 @@
 import TabItem from "@theme/TabItem";
 import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
 
-### Configuring sign in with their email or phone number
+### Configuring login
 
-```js
-new Auth(this, "Auth", {
-  cdk: {
-    userPool: {
-      signInAliases: { email: true, phone: true },
-    },
-  },
-});
-```
+You can configure how a user can sign in to our application for our User Pool. For example, you might want a user to be able to sign in with their email or username. Or with their phone number.
+
+There are two ways of setting this up.
+
+1. User signs up with username and signs in with username or alias
+
+   A user signs up with a username. In addition to the username, you can optionally allow users to sign in with one or more of the following aliases:
+
+   Note that, the _username_ that Cognito refers to, is an internally used _user id_. So in practice, you'll ask a user to create a new username, this is called the _preferred username_ by Cognito.
+
+   - A verified email address
+   - A verified phone number
+   - A preferred username
+
+   These aliases can be changed after the user signs up.
+
+   To use this option, set the `login` prop to:
+
+   ```js
+   new Auth(this, "Auth", {
+     login: ["email", "phone", "username", "preferredUsername"]
+   });
+   ```
+
+   [Read more on this over on the AWS docs](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#user-pool-settings-aliases-settings).
+
+2. User signs up and signs in with email or phone number instead of username
+
+   A user signs up with an email address or phone number as their username. You can choose whether to allow sign-up with only email addresses, only phone numbers, or either one.
+
+   Note that, the email or phone number that gets set as a username needs to be unique. This is because when Cognito refers to the _username_, it really refers to an internally used _user id_.
+
+   In addition, if a user signs up with an email address, they can only change it to another email address and not a phone number. The same applies if they sign up with a phone number. It cannot be changed to an email.
+
+   To use this option, set the `login` prop to:
+
+   ```js
+   new Auth(this, "Auth", {
+     login: ["email", "phone"]
+   });
+   ```
+
+   [Read more on this over on the AWS docs](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#user-pool-settings-aliases-settings-option-2).
 
 ### Configuring triggers
 

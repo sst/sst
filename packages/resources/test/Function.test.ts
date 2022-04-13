@@ -322,6 +322,17 @@ test("timeout-number", async () => {
   });
 });
 
+test("timeout-Duration", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    timeout: "15 seconds",
+  });
+  hasResource(stack, "AWS::Lambda::Function", {
+    Timeout: 15,
+  });
+});
+
 test("xray-disabled", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {

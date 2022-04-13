@@ -98,7 +98,7 @@ permissions: "*"
 #### Constructor
 - runtime: default updated to "nodejs14.x"
 - runtime: type `string | cdk.lambda.Runtime` ⇒ `string`
-- timeout: type `number | cdk.Duration` ⇒ `number`
+- timeout: type `number | cdk.Duration` ⇒ `number | sst.Duration`
 - tracing: type `cdk.lambda.Tracing` ⇒ `"active" | "disabled" | "pass_through"`
 ```js
 // from
@@ -110,7 +110,7 @@ permissions: "*"
 // to
 {
   runtime: "nodejs14.x",
-  timeout: 10,
+  timeout: "10 seconds",
   tracing: "active",
 }
 ```
@@ -1419,7 +1419,8 @@ api.cdk.certificate;
 ### Auth Changelog
 
 #### Constructor
-- Moved cognito.userPool ⇒ cdk.userPool
+- Moved cognito.userPool.signInAliases ⇒ login
+- Moved cognito.userPool.xxxx ⇒ cdk.userPool.xxxx
 - Moved cognito.userPoolClient ⇒ cdk.userPoolClient
 - Moved cognito.triggers ⇒ triggers
 - Moved cognito.defaultFunctionProps ⇒ defaults.function
@@ -1428,7 +1429,10 @@ api.cdk.certificate;
 // from
 {
   cognito: {
-    userPool,
+    userPool: {
+      signInAliases: { email: true, phone: true }
+      mfa: cognito.Mfa.OPTIONAL,
+    },
     userPoolClient,
     triggers: {
       preAuthentication: "src/preAuthentication.main",
@@ -1441,6 +1445,7 @@ api.cdk.certificate;
 
 // to
 {
+  login: ["email", "phone"],
   triggers: {
     preAuthentication: "src/preAuthentication.main",
   },
@@ -1450,7 +1455,9 @@ api.cdk.certificate;
     },
   },
   cdk: {
-    userPool,
+    userPool: {
+      mfa: cognito.Mfa.OPTIONAL,
+    },
     userPoolClient,
   },
 }
@@ -2035,57 +2042,6 @@ const table = new Table(this, "Notes", {
 });
 ```
 
-- globalIndexes[].indexProps ⇒ globalIndexes[].cdk.index
-- localIndexes[].indexProps ⇒ localIndexes[].cdk.index
-
-```js
-// from
-const table = new table(this, "notes", {
-  globalindexes: {
-    myglobalindex: {
-      partitionkey: "userid",
-      sortkey: "time",
-      indexprops: {
-        projectiontype: cdk.dynamodb.projectiontype.all,
-      },
-    },
-  },
-  localindexes: {
-    mylocalindex: {
-      sortkey: "time",
-      indexprops: {
-        projectiontype: cdk.dynamodb.projectiontype.all,
-      },
-    },
-  },
-});
-
-// to
-const table = new table(this, "notes", {
-  globalindexes: {
-    myglobalindex: {
-      partitionkey: "userid",
-      sortkey: "time",
-      cdk: {
-        index: {
-          projectiontype: cdk.dynamodb.projectiontype.all,
-        },
-      },
-    },
-  },
-  localindexes: {
-    mylocalindex: {
-      sortkey: "time",
-      cdk: {
-        index: {
-          projectiontype: cdk.dynamodb.projectiontype.all,
-        },
-      },
-    },
-  },
-});
-```
-
 - stream: type `cdk.dynamodb.StreamViewType` ⇒ `string`
 
 ```js
@@ -2099,6 +2055,92 @@ const table = new Table(this, "Notes", {
 const table = new Table(this, "Notes", {
   stream: "new_image",
 });
+```
+
+#### Global Secondary Indexes
+- globalIndexes[].indexProps.projectionType ⇒ globalIndexes[].projection
+- globalIndexes[].indexProps.nonKeyAttributes ⇒ globalIndexes[].projection
+- globalIndexes[].indexProps.readCapacity ⇒ globalIndexes[].cdk.index.readCapacity
+- globalIndexes[].indexProps.writeCapacity ⇒ globalIndexes[].cdk.index.writeCapacity
+
+```js
+// from
+{
+  myGlobalIndex1: {
+    partitionKey: "userId",
+    sortKey: "time",
+    indexProps: {
+      projectionType: cdk.dynamodb.ProjectionType.ALL,
+      readCapacity: 20,
+      writeCapacity: 10,
+    },
+  },
+  myGlobalIndex2: {
+    partitionKey: "userId",
+    sortKey: "time",
+    indexProps: {
+      projectionType: cdk.dynamodb.ProjectionType.INCLUDE,
+      nonKeyAttributes: ["key1", "key2"],
+    },
+  },
+},
+
+// to
+{
+  myGlobalIndex1: {
+    partitionKey: "userId",
+    sortKey: "time",
+    projection: "all",
+    cdk: {
+      index: {
+        readCapacity: 20,
+        writeCapacity: 10,
+      }
+    }
+  },
+},
+{
+  myGlobalIndex2: {
+    partitionKey: "userId",
+    sortKey: "time",
+    projection: ["key1", "key2"],
+  },
+},
+```
+
+#### Local Secondary Indexes
+- localIndexes[].indexProps.projectionType ⇒ localIndexes[].projection
+- localIndexes[].indexProps.nonKeyAttributes ⇒ localIndexes[].projection
+
+```js
+// from
+{
+  myLocalIndex1: {
+    sortKey: "time",
+    indexProps: {
+      projectionType: cdk.dynamodb.ProjectionType.ALL,
+    },
+  },
+  myLocalIndex2: {
+    sortKey: "time",
+    indexProps: {
+      projectionType: cdk.dynamodb.ProjectionType.INCLUDE,
+      nonKeyAttributes: ["key1", "key2"],
+    },
+  },
+}
+
+// to
+{
+  myLocalIndex1: {
+    sortKey: "time",
+    projection: "all",
+  },
+  myLocalIndex2: {
+    sortKey: "time",
+    projection: ["key1", "key2"],
+  },
+},
 ```
 
 #### Consumers
