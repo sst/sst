@@ -16,8 +16,8 @@ const cdkOptions = require("./util/cdkOptions");
 
 // CDK command
 const result = spawn.sync(
-  getCdkBinPath(),
-  ["--app", cdkOptions.app].concat(argv),
+  "node",
+  [getCdkBinPath(), "--app", cdkOptions.app].concat(argv),
   {
     stdio: "inherit",
   }
