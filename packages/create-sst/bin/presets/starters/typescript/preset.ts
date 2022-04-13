@@ -10,9 +10,7 @@ export default definePreset({
     });
     await extractTemplates();
     await installPackages({
-      for: "node",
       packages: ["@types/node", "@types/aws-lambda"],
-      packageManager: "npm",
       additionalArgs: ["-w", "backend"],
       dev: true,
     });

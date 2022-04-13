@@ -7,13 +7,19 @@ export default definePreset({
     });
     await extractTemplates({});
     await installPackages({
-      packages: [
-        "@middy/core",
-        "@middy/http-error-handler",
-        "@middy/http-json-body-parser",
-        "@middy/validator",
-      ],
+      packages: ["@sls-next/lambda-at-edge"],
       additionalArgs: ["-w", "backend"],
+    });
+    await editFiles({
+      files: ["package.json"],
+      operations: [
+        {
+          type: "edit-json",
+          merge: {
+            workspaces: ["frontend"],
+          },
+        },
+      ],
     });
   },
 });
