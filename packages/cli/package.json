@@ -41,7 +41,6 @@
   "dependencies": {
     "@aws-cdk/aws-apigatewayv2-alpha": "2.15.0-alpha.0",
     "@graphql-codegen/cli": "^2.6.2",
-    "@serverless-stack/aws-lambda-ric": "^2.0.13",
     "@serverless-stack/core": "1.0.0-beta.9",
     "@serverless-stack/resources": "1.0.0-beta.9",
     "aws-cdk": "2.15.0",
