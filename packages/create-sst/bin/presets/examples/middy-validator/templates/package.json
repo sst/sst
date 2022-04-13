@@ -1,0 +1,21 @@
+{
+  "name": "middy-validator",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "sst test",
+    "start": "sst start",
+    "build": "sst build",
+    "deploy": "sst deploy",
+    "remove": "sst remove"
+  },
+  "dependencies": {
+    "@middy/core": "^2.5.3",
+    "@middy/http-error-handler": "^2.5.3",
+    "@middy/http-json-body-parser": "^2.5.3",
+    "@middy/validator": "^2.5.3",
+    "@serverless-stack/cli": "0.69.2",
+    "@serverless-stack/resources": "0.69.2",
+    "aws-cdk-lib": "2.15.0"
+  }
+}

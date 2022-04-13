@@ -1,0 +1,5 @@
+{
+  "name": "api-auth-jwt-cognito-user-pool",
+  "region": "us-east-1",
+  "main": "stacks/index.js"
+}

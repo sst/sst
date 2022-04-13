@@ -15,7 +15,7 @@ export default definePreset({
         },
       ],
     });
-    editFiles({
+    await editFiles({
       files: ["package.json"],
       operations: [
         {
@@ -26,5 +26,6 @@ export default definePreset({
         },
       ],
     });
+    await installPackages({});
   },
 });

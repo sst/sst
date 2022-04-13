@@ -1,0 +1,18 @@
+{
+  "name": "api-oauth-google",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "sst test",
+    "start": "sst start",
+    "build": "sst build",
+    "deploy": "sst deploy",
+    "remove": "sst remove"
+  },
+  "dependencies": {
+    "@aws-cdk/aws-apigatewayv2-authorizers-alpha": "2.15.0-alpha.0",
+    "@serverless-stack/cli": "0.69.5",
+    "@serverless-stack/resources": "0.69.5",
+    "aws-cdk-lib": "2.15.0"
+  }
+}
