@@ -72,7 +72,7 @@ function runCdkSynth(cdkOptions) {
     (cdkOptions.context || []).forEach((c) => context.push("-c", c));
 
     child = spawn(
-      "node",
+      process.execPath,
       [
         getCdkBinPath(),
         "synth",
@@ -146,7 +146,7 @@ async function diff(cdkOptions, stackIds) {
   logger.debug("diff", cdkOptions);
 
   const response = spawn.sync(
-    "node",
+    process.execPath,
     [
       getCdkBinPath(),
       "diff",
@@ -179,7 +179,7 @@ async function bootstrap(cdkOptions) {
   logger.debug("bootstrap", cdkOptions);
 
   const response = spawn.sync(
-    "node",
+    process.execPath,
     [
       getCdkBinPath(),
       "bootstrap",
@@ -682,7 +682,7 @@ async function deployStack(cdkOptions, stackState) {
     ...(cdkOptions.noColor ? ["--no-color"] : []),
     ...(cdkOptions.verbose === 0 ? [] : ["--verbose"]),
   ];
-  const cp = spawn("node", args, {
+  const cp = spawn(process.execPath, args, {
     stdio: "pipe",
     env: buildCDKSpawnEnv(cdkOptions),
   });
@@ -1450,7 +1450,7 @@ async function destroyStack(cdkOptions, stackState) {
   let cpCode;
   let cpStdChunks = [];
   const cp = spawn(
-    "node",
+    process.execPath,
     [
       getCdkBinPath(),
       "destroy",
@@ -1633,7 +1633,20 @@ async function destroyStackTemplate(cdkOptions, stackState) {
 function getCdkBinPath() {
   const pkg = "aws-cdk";
   const filePath = require.resolve(`${pkg}/package.json`);
-  return path.join(path.dirname(filePath), "bin", "cdk");
+  if (!filePath) {
+    throw new Error(`There was a problem finding ${pkg}`);
+  }
+
+  // Note: that as of CDK v2.15.0, "node_modules/aws-cdk/bin/cdk" cannot be invoked
+  //  directly on Windows. Need to invoke with node, ie.
+  //  "node node_modules/aws-cdk/bin/cdk"
+  const binPath = path.join(filePath, "../bin/cdk");
+  if (!fs.existsSync(binPath)) {
+    throw new Error(
+      `There was a problem finding the ${pkg}/bin/sdk entry point`
+    );
+  }
+  return binPath;
 }
 
 function buildCDKSpawnEnv(cdkOptions) {
