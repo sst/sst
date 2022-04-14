@@ -464,6 +464,9 @@ html[data-theme="dark"] .navbar__link__github:before {
   .menu__link {
     font-size: 1em;
   }
+  div[class^="announcementBar_"] > div {
+    font-size: 80%;
+  }
 }
 
 /* laptop */
