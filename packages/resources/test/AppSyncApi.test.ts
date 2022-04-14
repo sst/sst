@@ -6,10 +6,13 @@ import {
   stringLike,
   printResource,
 } from "./helper";
-import * as ec2 from "aws-cdk-lib/aws-ec2";
-import * as rds from "aws-cdk-lib/aws-rds";
+import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as appsync from "@aws-cdk/aws-appsync-alpha";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+import * as ec2 from "aws-cdk-lib/aws-ec2";
+import * as rds from "aws-cdk-lib/aws-rds";
+import * as ssm from "aws-cdk-lib/aws-ssm";
+import * as route53 from "aws-cdk-lib/aws-route53";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 import { App, RDS, Stack, Table, AppSyncApi, Function } from "../src";
 
@@ -30,6 +33,7 @@ test("constructor: graphqlApi is undefined", async () => {
   expect(api.apiArn).toBeDefined();
   expect(api.apiName).toBeDefined();
   expect(api.url).toBeDefined();
+  expect(api.customDomainUrl).toBeUndefined();
   hasResource(stack, "AWS::AppSync::GraphQLApi", {
     AuthenticationType: "API_KEY",
     Name: "dev-my-app-Api",
@@ -111,6 +115,257 @@ test("constructor: graphqlApi is imported", async () => {
     },
   });
   countResources(stack, "AWS::AppSync::GraphQLApi", 0);
+});
+
+test("customDomain is string", async () => {
+  const stack = new Stack(new App({ name: "api" }), "stack");
+  route53.HostedZone.fromLookup = jest
+    .fn()
+    .mockImplementation((scope, id, { domainName }) => {
+      return new route53.HostedZone(scope, id, { zoneName: domainName });
+    });
+
+  const api = new AppSyncApi(stack, "Api", {
+    customDomain: "api.domain.com",
+  });
+  expect(api.customDomainUrl).toMatch(/https:\/\/api.domain.com/);
+  expect(api.cdk.certificate).toBeDefined();
+  hasResource(stack, "AWS::AppSync::GraphQLApi", {
+    Name: "dev-api-Api",
+  });
+  hasResource(stack, "AWS::AppSync::DomainName", {
+    DomainName: "api.domain.com",
+  });
+  hasResource(stack, "AWS::AppSync::DomainNameApiAssociation", {
+    DomainName: "api.domain.com",
+  });
+  hasResource(stack, "AWS::CertificateManager::Certificate", {
+    DomainName: "api.domain.com",
+    ValidationMethod: "DNS",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "api.domain.com.",
+    Type: "CNAME",
+    ResourceRecords: [
+      {
+        "Fn::GetAtt": ["ApiDomainNameF7396156", "AppSyncDomainName"],
+      },
+    ],
+    HostedZoneId: { Ref: "ApiHostedZone826B96E5" },
+  });
+  hasResource(stack, "AWS::Route53::HostedZone", {
+    Name: "domain.com.",
+  });
+});
+
+test("customDomain is string (uppercase error)", async () => {
+  const stack = new Stack(new App({ name: "api" }), "stack");
+  expect(() => {
+    new AppSyncApi(stack, "Api", {
+      customDomain: "API.domain.com",
+    });
+  }).toThrow(/The domain name needs to be in lowercase/);
+});
+
+test("customDomain is string (imported ssm)", async () => {
+  const stack = new Stack(new App({ name: "api" }), "stack");
+  const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
+  expect(() => {
+    new AppSyncApi(stack, "Api", {
+      customDomain: domain,
+    });
+  }).toThrow(
+    /You also need to specify the "hostedZone" if the "domainName" is passed in as a reference./
+  );
+});
+
+test("customDomain.domainName is string", async () => {
+  const stack = new Stack(new App({ name: "api" }), "stack");
+  route53.HostedZone.fromLookup = jest
+    .fn()
+    .mockImplementation((scope, id, { domainName }) => {
+      return new route53.HostedZone(scope, id, { zoneName: domainName });
+    });
+
+  const api = new AppSyncApi(stack, "Api", {
+    customDomain: {
+      domainName: "api.domain.com",
+      hostedZone: "api.domain.com",
+    },
+  });
+  hasResource(stack, "AWS::AppSync::GraphQLApi", {
+    Name: "dev-api-Api",
+  });
+  hasResource(stack, "AWS::AppSync::DomainName", {
+    DomainName: "api.domain.com",
+  });
+  hasResource(stack, "AWS::CertificateManager::Certificate", {
+    DomainName: "api.domain.com",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "api.domain.com.",
+    Type: "CNAME",
+  });
+  hasResource(stack, "AWS::Route53::HostedZone", {
+    Name: "api.domain.com.",
+  });
+});
+
+test("customDomain.domainName is string (uppercase error)", async () => {
+  const stack = new Stack(new App({ name: "api" }), "stack");
+  expect(() => {
+    new AppSyncApi(stack, "Api", {
+      customDomain: {
+        domainName: "API.domain.com",
+      },
+    });
+  }).toThrow(/The domain name needs to be in lowercase/);
+});
+
+test("customDomain.domainName is string (imported ssm), hostedZone undefined", async () => {
+  const stack = new Stack(new App({ name: "api" }), "stack");
+  const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
+  expect(() => {
+    new AppSyncApi(stack, "Api", {
+      customDomain: {
+        domainName: domain,
+      },
+    });
+  }).toThrow(
+    /You also need to specify the "hostedZone" if the "domainName" is passed in as a reference./
+  );
+});
+
+test("customDomain: isExternalDomain true", async () => {
+  const stack = new Stack(new App({ name: "api" }), "stack");
+  const api = new AppSyncApi(stack, "Api", {
+    customDomain: {
+      domainName: "api.domain.com",
+      isExternalDomain: true,
+      cdk: {
+        certificate: new acm.Certificate(stack, "Cert", {
+          domainName: "domain.com",
+        }),
+      },
+    },
+  });
+  expect(api.customDomainUrl).toEqual("https://api.domain.com/graphql");
+  hasResource(stack, "AWS::AppSync::GraphQLApi", {
+    Name: "dev-api-Api",
+  });
+  hasResource(stack, "AWS::AppSync::DomainName", {
+    DomainName: "api.domain.com",
+  });
+});
+
+test("customDomain: isExternalDomain true and no certificate", async () => {
+  const stack = new Stack(new App({ name: "api" }), "stack");
+  expect(() => {
+    new AppSyncApi(stack, "Site", {
+      customDomain: {
+        domainName: "www.domain.com",
+        isExternalDomain: true,
+      },
+    });
+  }).toThrow(
+    /A valid certificate is required when "isExternalDomain" is set to "true"./
+  );
+});
+
+test("customDomain: isExternalDomain true and hostedZone set", async () => {
+  const stack = new Stack(new App({ name: "api" }), "stack");
+  expect(() => {
+    new AppSyncApi(stack, "Site", {
+      customDomain: {
+        domainName: "www.domain.com",
+        isExternalDomain: true,
+        hostedZone: "domain.com",
+        cdk: {
+          certificate: new acm.Certificate(stack, "Cert", {
+            domainName: "domain.com",
+          }),
+        },
+      },
+    });
+  }).toThrow(
+    /Hosted zones can only be configured for domains hosted on Amazon Route 53/
+  );
+});
+
+test("customDomain.domainName is string (imported ssm), hostedZone defined", async () => {
+  const stack = new Stack(new App({ name: "api" }), "stack");
+  const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
+  new AppSyncApi(stack, "Api", {
+    customDomain: {
+      domainName: domain,
+      hostedZone: "domain.com",
+    },
+  });
+
+  hasResource(stack, "AWS::AppSync::DomainName", {
+    DomainName: {
+      Ref: "SsmParameterValuedomainC96584B6F00A464EAD1953AFF4B05118Parameter",
+    },
+  });
+  hasResource(stack, "AWS::Route53::HostedZone", {
+    Name: "domain.com.",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: {
+      Ref: "SsmParameterValuedomainC96584B6F00A464EAD1953AFF4B05118Parameter",
+    },
+    Type: "CNAME",
+  });
+});
+
+test("customDomain.hostedZone-generated-from-minimal-domainName", async () => {
+  const stack = new Stack(new App({ name: "api" }), "stack");
+  route53.HostedZone.fromLookup = jest
+    .fn()
+    .mockImplementation((scope, id, { domainName }) => {
+      return new route53.HostedZone(scope, id, { zoneName: domainName });
+    });
+
+  new AppSyncApi(stack, "Api", {
+    customDomain: "api.domain.com",
+  });
+  hasResource(stack, "AWS::Route53::HostedZone", {
+    Name: "domain.com.",
+  });
+});
+
+test("customDomain.hostedZone-generated-from-full-domainName", async () => {
+  const stack = new Stack(new App({ name: "api" }), "stack");
+  route53.HostedZone.fromLookup = jest
+    .fn()
+    .mockImplementation((scope, id, { domainName }) => {
+      return new route53.HostedZone(scope, id, { zoneName: domainName });
+    });
+
+  new AppSyncApi(stack, "Api", {
+    customDomain: {
+      domainName: "api.domain.com",
+    },
+  });
+  hasResource(stack, "AWS::Route53::HostedZone", {
+    Name: "domain.com.",
+  });
+});
+
+test("customDomain props-redefined", async () => {
+  const stack = new Stack(new App({ name: "api" }), "stack");
+  expect(() => {
+    new AppSyncApi(stack, "Api", {
+      customDomain: "api.domain.com",
+      cdk: {
+        graphqlApi: new appsync.GraphqlApi(stack, "GraphQLApi", {
+          name: "Api",
+        }),
+      },
+    });
+  }).toThrow(
+    /Cannot configure the "customDomain" when "graphqlApi" is a construct/
+  );
 });
 
 test("dataSources-undefined", async () => {

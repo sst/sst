@@ -6,13 +6,16 @@ import { loadFilesSync } from "@graphql-tools/load-files";
 
 import { Construct } from "constructs";
 import * as rds from "aws-cdk-lib/aws-rds";
+import * as cfnAppsync from "aws-cdk-lib/aws-appsync";
 import * as appsync from "@aws-cdk/aws-appsync-alpha";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 
 import { App } from "./App";
 import { Table } from "./Table";
 import { RDS } from "./RDS";
+import * as appSyncApiDomain from "./util/appSyncApiDomain";
 import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
 import {
   Function as Fn,
@@ -21,10 +24,14 @@ import {
   FunctionDefinition,
 } from "./Function";
 import { Permissions } from "./util/permission";
+import { domain } from "process";
 
 /////////////////////
 // Interfaces
 /////////////////////
+
+export interface AppSyncApiDomainProps
+  extends appSyncApiDomain.CustomDomainProps {}
 
 interface AppSyncApiBaseDataSourceProps {
   /**
@@ -255,6 +262,27 @@ export interface AppSyncApiProps {
    */
   schema?: string | string[];
   /**
+   * Specify a custom domain to use in addition to the automatically generated one. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/)
+   *
+   * @example
+   * ```js
+   * new AppSyncApi(stack, "GraphqlApi", {
+   *   customDomain: "api.example.com"
+   * })
+   * ```
+   *
+   * @example
+   * ```js
+   * new AppSyncApi(stack, "GraphqlApi", {
+   *   customDomain: {
+   *     domainName: "api.example.com",
+   *     hostedZone: "domain.com",
+   *   }
+   * })
+   * ```
+   */
+  customDomain?: string | AppSyncApiDomainProps;
+  /**
    * Define datasources. Can be a function, dynamodb table, rds cluster or http endpoint
    *
    * @example
@@ -363,7 +391,14 @@ export class AppSyncApi extends Construct implements SSTConstruct {
      * The internally created appsync api
      */
     graphqlApi: appsync.GraphqlApi;
+    /**
+     * If custom domain is enabled, this is the internally created CDK Certificate instance.
+     */
+    certificate?: acm.ICertificate;
   };
+  readonly props: AppSyncApiProps;
+  private _customDomainUrl?: string;
+  _cfnDomainName?: cfnAppsync.CfnDomainName;
   readonly functionsByDsKey: { [key: string]: Fn };
   readonly dataSourcesByDsKey: {
     [key: string]: appsync.BaseDataSource;
@@ -371,7 +406,6 @@ export class AppSyncApi extends Construct implements SSTConstruct {
   readonly dsKeysByResKey: { [key: string]: string };
   readonly resolversByResKey: { [key: string]: appsync.Resolver };
   readonly permissionsAttachedForAllFunctions: Permissions[];
-  readonly props: AppSyncApiProps;
 
   constructor(scope: Construct, id: string, props?: AppSyncApiProps) {
     super(scope, id);
@@ -422,8 +456,18 @@ export class AppSyncApi extends Construct implements SSTConstruct {
     return this.cdk.graphqlApi.name;
   }
 
+  /**
+   * The AWS generated URL of the Api.
+   */
   public get url(): string {
     return this.cdk.graphqlApi.graphqlUrl;
+  }
+
+  /**
+   * If custom domain is enabled, this is the custom domain URL of the Api.
+   */
+  public get customDomainUrl(): string | undefined {
+    return this._customDomainUrl;
   }
 
   /**
@@ -582,6 +626,8 @@ export class AppSyncApi extends Construct implements SSTConstruct {
       data: {
         url: this.cdk.graphqlApi.graphqlUrl,
         appSyncApiId: this.cdk.graphqlApi.apiId,
+        appSyncApiKey: this.cdk.graphqlApi.apiKey,
+        customDomainUrl: this._customDomainUrl,
         dataSources: Object.entries(this.dataSourcesByDsKey).map(([key]) => ({
           name: key,
           fn: getFunctionRef(this.functionsByDsKey[key]),
@@ -591,11 +637,16 @@ export class AppSyncApi extends Construct implements SSTConstruct {
   }
 
   private createGraphApi() {
-    const { schema, cdk } = this.props;
+    const { schema, customDomain, cdk } = this.props;
     const id = this.node.id;
     const app = this.node.root as App;
 
     if (isCDKConstruct(cdk?.graphqlApi)) {
+      if (customDomain !== undefined) {
+        throw new Error(
+          `Cannot configure the "customDomain" when "graphqlApi" is a construct`
+        );
+      }
       this.cdk.graphqlApi = cdk?.graphqlApi as appsync.GraphqlApi;
     } else {
       const graphqlApiProps = (cdk?.graphqlApi ||
@@ -618,12 +669,45 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         }
       }
 
+      // build domain
+      const domainData = appSyncApiDomain.buildCustomDomainData(
+        this,
+        customDomain
+      );
+      this._customDomainUrl =
+        domainData && `https://${domainData.domainName}/graphql`;
+
       this.cdk.graphqlApi = new appsync.GraphqlApi(this, "Api", {
         name: app.logicalPrefixedName(id),
         xrayEnabled: true,
         schema: mainSchema,
+        domainName: domainData,
         ...graphqlApiProps,
       });
+      this.cdk.certificate = domainData?.certificate;
+
+      // note: As of CDK 2.20.0, the "AWS::AppSync::DomainNameApiAssociation" resource
+      //       is not dependent on the "AWS::AppSync::DomainName" resource. This leads
+      //       CloudFormation deploy error if DomainNameApiAssociation is created before
+      //       DomainName is created.
+      //       https://github.com/aws/aws-cdk/issues/18395#issuecomment-1099455502
+      //       To workaround this issue, we need to add a dependency manually.
+      if (domainData) {
+        this._cfnDomainName = this.cdk.graphqlApi.node.children.find(
+          (child) =>
+            (child as cfnAppsync.CfnDomainName).cfnResourceType ===
+            "AWS::AppSync::DomainName"
+        ) as cfnAppsync.CfnDomainName;
+        const cfnDomainNameApiAssociation =
+          this.cdk.graphqlApi.node.children.find(
+            (child) =>
+              (child as cfnAppsync.CfnDomainNameApiAssociation)
+                .cfnResourceType === "AWS::AppSync::DomainNameApiAssociation"
+          );
+        if (this._cfnDomainName && cfnDomainNameApiAssociation) {
+          cfnDomainNameApiAssociation.node.addDependency(this._cfnDomainName);
+        }
+      }
     }
   }
 
