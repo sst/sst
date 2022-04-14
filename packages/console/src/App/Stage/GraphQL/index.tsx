@@ -66,7 +66,7 @@ export function Explorer() {
     const grouped = groupBy(constructs, (x) => x.stack);
     return [constructs, grouped];
   }, [stacks.data]);
-  const selected = useConstruct("Api", params.stack!, params.addr!);
+  const selected = useConstruct("AppSync", params.stack!, params.addr!);
   const dm = useDarkMode();
 
   if (constructs.length > 0 && !selected)
@@ -102,11 +102,14 @@ export function Explorer() {
             <iframe
               src={`/graphql.html?config=${btoa(
                 JSON.stringify({
-                  endpoint: selected.data.url,
+                  endpoint: selected.data.customDomainUrl || selected.data.url,
                   settings: {
                     "editor.fontFamily": "'Jetbrains Mono', monospace",
                     "editor.theme": dm.enabled ? "dark" : "light",
                     "schema.polling.endpointFilter": "*",
+                  },
+                  headers: {
+                    "x-api-key": selected.data.appSyncApiKey,
                   },
                 })
               )}`}

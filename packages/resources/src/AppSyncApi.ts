@@ -674,7 +674,8 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         this,
         customDomain
       );
-      this._customDomainUrl = domainData && `https://${domainData.domainName}`;
+      this._customDomainUrl =
+        domainData && `https://${domainData.domainName}/graphql`;
 
       this.cdk.graphqlApi = new appsync.GraphqlApi(this, "Api", {
         name: app.logicalPrefixedName(id),
