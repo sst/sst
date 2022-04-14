@@ -522,7 +522,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
       throw new Error(`Missing "function" for authorizer`);
     } else {
       this.authorizer = new apigAuthorizers.WebSocketLambdaAuthorizer(
-        "Authorizer",
+        "WebSocketAuthorizer",
         authorizer.function,
         {
           authorizerName: authorizer.name,
