@@ -7,7 +7,7 @@ export function MyStack({ stack }: StackContext) {
       lambda: {
         type: "lambda",
         function: new Function(stack, "authorizer", {
-          handler: "src/authorizer.main",
+          handler: "authorizer.main",
         }),
       },
     },

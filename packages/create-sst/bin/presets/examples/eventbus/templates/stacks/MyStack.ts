@@ -26,7 +26,7 @@ export function MyStack({ stack }: StackContext) {
       },
     },
     routes: {
-      "POST /order": "src/order.handler",
+      "POST /order": "order.handler",
     },
   });
 

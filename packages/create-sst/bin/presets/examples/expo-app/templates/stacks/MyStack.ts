@@ -19,7 +19,7 @@ export function MyStack({ stack }: StackContext) {
       },
     },
     routes: {
-      "POST /": "src/lambda.main",
+      "POST /": "lambda.main",
     },
   });
 

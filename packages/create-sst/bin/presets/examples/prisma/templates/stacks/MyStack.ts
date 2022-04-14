@@ -48,7 +48,7 @@ export function MyStack({ stack, app }: StackContext) {
       },
     },
     routes: {
-      "GET /post": "src/index.handler",
+      "GET /post": "index.handler",
     },
   });
 

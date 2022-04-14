@@ -7,7 +7,7 @@ export function MyStack({ stack }: StackContext) {
     notifications: {
       resize: {
         function: {
-          handler: "src/resize.main",
+          handler: "resize.main",
           bundle: {
             externalModules: ["sharp"],
           },
