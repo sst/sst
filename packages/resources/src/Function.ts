@@ -13,6 +13,7 @@ import * as ssm from "aws-cdk-lib/aws-ssm";
 
 import { App } from "./App";
 import { Stack } from "./Stack";
+import { Size, toCdkSize } from "./util/size";
 import { Duration, toCdkDuration } from "./util/duration";
 import { SSTConstruct } from "./Construct";
 import { Permissions, attachPermissionsToRole } from "./util/permission";
@@ -65,6 +66,7 @@ export interface FunctionProps
   extends Omit<
     lambda.FunctionOptions,
     | "functionName"
+    | "memorySize"
     | "timeout"
     | "runtime"
     | "tracing"
@@ -139,18 +141,31 @@ export interface FunctionProps
    */
   runtime?: Runtime;
   /**
-   * The amount of memory in MB allocated.
+   * The amount of disk storage in MB allocated.
    *
-   * @default 1024
+   * @default "512 MB"
    *
    * @example
    * ```js
    * new Function(stack, "Function", {
-   *   memorySize: 2048,
+   *   diskSize: "2 GB",
    * })
    *```
    */
-  memorySize?: number;
+  diskSize?: number | Size;
+  /**
+   * The amount of memory in MB allocated.
+   *
+   * @default "1 GB"
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   memorySize: "2 GB",
+   * })
+   *```
+   */
+  memorySize?: number | Size;
   /**
    * The execution timeout in seconds.
    *
@@ -546,7 +561,8 @@ export class Function extends lambda.Function implements SSTConstruct {
       if (props.architecture === "x86_64") return lambda.Architecture.X86_64;
       return undefined;
     })();
-    const memorySize = props.memorySize || 1024;
+    const memorySize = Function.normalizeMemorySize(props.memorySize);
+    const diskSize = Function.normalizeDiskSize(props.diskSize);
     const tracing =
       lambda.Tracing[
         (props.tracing || "active").toUpperCase() as keyof typeof lambda.Tracing
@@ -620,6 +636,7 @@ export class Function extends lambda.Function implements SSTConstruct {
           functionName,
           runtime: lambda.Runtime.GO_1_X,
           memorySize,
+          ephemeralStorageSize: diskSize,
           timeout,
           tracing,
           environment: {
@@ -643,6 +660,7 @@ export class Function extends lambda.Function implements SSTConstruct {
           functionName,
           runtime: isNodeRuntime ? runtime : lambda.Runtime.NODEJS_12_X,
           memorySize,
+          ephemeralStorageSize: diskSize,
           timeout,
           tracing,
           environment: {
@@ -687,6 +705,7 @@ export class Function extends lambda.Function implements SSTConstruct {
         functionName,
         runtime: lambda.Runtime.NODEJS_12_X,
         memorySize,
+        ephemeralStorageSize: diskSize,
         timeout,
         tracing,
         environment: props.environment,
@@ -722,6 +741,7 @@ export class Function extends lambda.Function implements SSTConstruct {
         functionName,
         runtime,
         memorySize,
+        ephemeralStorageSize: diskSize,
         timeout,
         tracing,
         environment: props.environment,
@@ -786,6 +806,20 @@ export class Function extends lambda.Function implements SSTConstruct {
       }
       return Function.handleImportedLayer(scope, layer);
     });
+  }
+
+  static normalizeMemorySize(memorySize?: number | Size): number {
+    if (typeof memorySize === "string") {
+      return toCdkSize(memorySize).toMebibytes();
+    }
+    return memorySize || 1024;
+  }
+
+  static normalizeDiskSize(diskSize?: number | Size): cdk.Size {
+    if (typeof diskSize === "string") {
+      return toCdkSize(diskSize);
+    }
+    return cdk.Size.mebibytes(diskSize || 512);
   }
 
   static normalizeTimeout(timeout?: number | Duration): cdk.Duration {
