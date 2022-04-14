@@ -4,11 +4,13 @@ export function MyStack({ stack }: StackContext) {
   // Create the HTTP API
   const api = new Api(stack, "Api", {
     routes: {
-      "GET /": "lambda.handler",
+      "GET /notes": "list.go",
+      "GET /notes/{id}": "get.go",
+      "PUT /notes/{id}": "update.go",
     },
   });
 
-  // Show the API endpoint in the output
+  // Show API endpoint in output
   stack.addOutputs({
     ApiEndpoint: api.url,
   });
