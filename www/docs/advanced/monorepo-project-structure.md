@@ -10,7 +10,7 @@ SST gives you the flexibility to configure your projects in many different ways.
 We have a <a href={`${config.github}/tree/master/examples/typescript-monorepo`}>starter repo</a> that we are using for reference. You can install it by running:
 
 ``` bash
-yarn create serverless-stack --use-yarn --example typescript
+yarn create serverless-stack --use-yarn --example typescript-monorepo
 ```
 
 There are some decisions made in this repo that reflect certain tradeoffs. We've picked what we feel makes sense for most teams and documented our thought process.
