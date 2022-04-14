@@ -249,7 +249,7 @@ test("customDomain: isExternalDomain true", async () => {
       },
     },
   });
-  expect(api.customDomainUrl).toEqual("https://api.domain.com");
+  expect(api.customDomainUrl).toEqual("https://api.domain.com/graphql");
   hasResource(stack, "AWS::AppSync::GraphQLApi", {
     Name: "dev-api-Api",
   });
