@@ -217,6 +217,34 @@ auth.attachPermissionsForUnauthUsers([api, "s3"]);
 
 ### Advanced examples
 
+#### Configuring attributes
+
+```js
+import {
+  StringAttribute,
+  NumberAttribute,
+  BooleanAttribute,
+  DateTimeAttribute,
+} from "aws-cdk-lib/aws-cognito";
+
+new Auth(this, "Auth", {
+  cdk: {
+    userPool: {
+      standardAttributes: {
+        fullname: { required: true, mutable: false },
+        address: { required: false, mutable: true },
+      },
+      customAttributes: {
+        'gameId': new StringAttribute({ minLen: 5, maxLen: 15, mutable: false }),
+        'participants': new NumberAttribute({ min: 1, max: 3, mutable: true }),
+        'isCompleted': new BooleanAttribute({ mutable: true }),
+        'startedAt': new DateTimeAttribute(),
+      },
+    }
+  },
+});
+```
+
 #### Importing an existing User Pool
 
 Override the internally created CDK `UserPool` and `UserPoolClient` instance.
