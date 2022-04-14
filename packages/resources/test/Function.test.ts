@@ -333,6 +333,54 @@ test("timeout-Duration", async () => {
   });
 });
 
+test("memorySize-number", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    memorySize: 2048,
+  });
+  hasResource(stack, "AWS::Lambda::Function", {
+    MemorySize: 2048,
+  });
+});
+
+test("memorySize-Size", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    memorySize: "2 GB",
+  });
+  hasResource(stack, "AWS::Lambda::Function", {
+    MemorySize: 2048,
+  });
+});
+
+test("diskSize-number", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    diskSize: 2048,
+  });
+  hasResource(stack, "AWS::Lambda::Function", {
+    EphemeralStorage: {
+      Size: 2048,
+    },
+  });
+});
+
+test("diskSize-Size", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    diskSize: "2 GB",
+  });
+  hasResource(stack, "AWS::Lambda::Function", {
+    EphemeralStorage: {
+      Size: 2048,
+    },
+  });
+});
+
 test("xray-disabled", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
