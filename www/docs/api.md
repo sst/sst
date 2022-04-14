@@ -30,7 +30,7 @@ new Api(this, "Api", {
 
 It makes it easy to add routes and have Lambda functions respond to them.
 
-:::info Example
+:::tip Example
 
 Here's a tutorial on how to build a simple SST app with a RESTful API.
 
@@ -51,7 +51,7 @@ new Api(this, "Api", {
   routes: {
     "GET    /notes": "src/list.main",
     "POST   /notes": "src/create.main",
-    "$default"     : "src/default.main",
+    $default: "src/default.main",
   },
 });
 ```
@@ -68,7 +68,7 @@ new GraphQLApi(this, "Api", {
 });
 ```
 
-:::info Example
+:::tip Example
 
 Here's a tutorial on building a serverless GraphQL API with Apollo.
 
@@ -97,7 +97,7 @@ new WebSocketApi(this, "Api", {
 });
 ```
 
-:::info Example
+:::tip Example
 
 Follow this tutorial to create a simple SST app with a WebSocket API.
 
@@ -130,7 +130,7 @@ new Api(this, "Api", {
 });
 ```
 
-:::info Example
+:::tip Example
 
 Learn more about adding JWT authentication to your API with Cognito User Pool.
 
@@ -157,7 +157,7 @@ new Api(this, "Api", {
 });
 ```
 
-:::info Example
+:::tip Example
 
 Check out this example on adding JWT authentication with Auth0 to your API.
 
@@ -167,7 +167,7 @@ Check out this example on adding JWT authentication with Auth0 to your API.
 
 ### Cognito Identity Pool
 
-You can also use Cognito Identity Pool to grant temporary IAM permissions for users in your Cognito User Pool or 3rd party auth provider. Take a look at the  [`Auth`](constructs/Auth.md) on how to configure an Identity Pool.
+You can also use Cognito Identity Pool to grant temporary IAM permissions for users in your Cognito User Pool or 3rd party auth provider. Take a look at the [`Auth`](constructs/Auth.md) on how to configure an Identity Pool.
 
 ```js
 const auth = new Auth(this, "Auth", { ... });
@@ -191,7 +191,7 @@ import { API } from "aws-amplify";
 await API.get("MyApi", "/");
 ```
 
-:::info Example
+:::tip Example
 
 Here's a tutorial on authenticating an API with Cognito User Pool and Identity Pool.
 
@@ -250,7 +250,8 @@ Access logs are enabled by default for all APIs. The default log format is a JSO
 ```js {3}
 new Api(this, "Api", {
   // Write access log in CSV format
-  accessLog: "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
+  accessLog:
+    "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
   routes: {
     "GET /": "src/lambda.main",
   },
@@ -263,7 +264,8 @@ new Api(this, "Api", {
 ```js {3}
 new GraphQLApi(this, "GraphApi", {
   // Write access log in CSV format
-  accessLog: "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
+  accessLog:
+    "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
   server: "src/server.handler",
 });
 ```
@@ -274,7 +276,8 @@ new GraphQLApi(this, "GraphApi", {
 ```js {3}
 new WebSocketApi(this, "WebSocketApi", {
   // Write access log in CSV format
-  accessLog: "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
+  accessLog:
+    "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
   routes: {
     $default: "src/default.main",
   },
@@ -346,7 +349,7 @@ new AppSyncApi(this, "GraphqlApi", {
 });
 ```
 
-:::info Example
+:::tip Example
 
 Learn how to add an AppSync GraphQL API to your SST app.
 

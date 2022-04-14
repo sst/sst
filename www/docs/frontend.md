@@ -59,7 +59,7 @@ new StaticSite(this, "Site", {
 
 Here the `path` points to the location of the frontend app. Note that the frontend app is built alongside the backend resources in the SST app. We'll look at why this is helpful below.
 
-:::info Example
+:::tip Example
 
 Here are a couple of examples using your favorite frontend frameworks to build a simple full-stack click counter app with SST:
 
@@ -313,9 +313,9 @@ $ REACT_APP_API_URL="{{ REACT_APP_API_URL }}" REACT_APP_HELLO="world" npm run bu
 
 After the `Api` construct is deployed, SST will replace all occurrences of `{{ REACT_APP_API_URL }}` with the real value.
 
-#### Editor autocomplete 
+#### Editor autocomplete
 
-The [`ViteStaticSite`](constructs/ViteStaticSite.md) construct also [creates a type definition file](constructs/ViteStaticSite.md#type-definitions) for the environment variables in `src/sst-env.d.ts`. This tells your editor the environment variables that are available and autocompletes them for you. 
+The [`ViteStaticSite`](constructs/ViteStaticSite.md) construct also [creates a type definition file](constructs/ViteStaticSite.md#type-definitions) for the environment variables in `src/sst-env.d.ts`. This tells your editor the environment variables that are available and autocompletes them for you.
 
 ![Vite environment variables autocomplete](/img/screens/vite-environment-variables-autocomplete.png)
 
@@ -413,7 +413,7 @@ For mobile apps, you want to make sure to set the references to the backend reso
 
 We have a couple of examples of creating mobile apps with [Expo](https://expo.dev) and [Flutter](https://flutter.dev).
 
-:::info Example
+:::tip Example
 
 Learn how to build a click counter native mobile app with Expo, Flutter, and SST.
 

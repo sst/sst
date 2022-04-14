@@ -13,7 +13,7 @@ SST provides a cloud native local development environment that gives you instant
 Live Lambda Development is an SST feature that allows you to **debug and test your Lambda functions locally**, while being **invoked remotely by resources in AWS**. It works by proxying requests from your AWS account to your local machine.
 
 <div class={styles.videoWrapper}>
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/hnTSTm5n11g" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/hnTSTm5n11g" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
 ### Starting the local environment
@@ -134,7 +134,7 @@ If you are running this in a CI, set the [`--stage`](packages/cli.md#--stage) op
 The Live Lambda Development environment runs a Node.js process locally. This allows you to use [Visual Studio Code](https://code.visualstudio.com) to debug your serverless apps live.
 
 <div class={styles.videoWrapper}>
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/2w4A06IsBlU" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/2w4A06IsBlU" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
 You can also configure VS Code to debug your tests.
@@ -178,11 +178,11 @@ To set these up, add the following to `.vscode/launch.json`.
 This contains two launch configurations:
 
 - **Debug SST Start**
-  
+
   Runs the `sst start` command in debug mode. Allowing you to set breakpoints to your Lambda functions. It also uses the `integratedTerminal` mode to allow you to [_press ENTER_](#watching-infrastructure-changes) when you need to update your CDK infrastructure.
 
 - **Debug SST Tests**
-  
+
   Runs the `sst test` command in debug mode. Allowing you to set breakpoints in your Jest tests.
 
 #### Debug Lambda functions
@@ -197,7 +197,7 @@ Now you can set a breakpoint and start your app by pressing `F5` or by clicking 
 
 By default the timeout for a Lambda function might not be long enough for you to view the breakpoint info. So we need to increase this. We use the [`--increase-timeout`](packages/cli.md#options) option for the `sst start` command in our `launch.json`.
 
-``` js title="launch.json
+```js title="launch.json
 "runtimeArgs": ["start", "--increase-timeout"],
 ```
 
@@ -220,7 +220,7 @@ We have <a href={ `${config.github}/tree/master/examples/vscode` }>an example pr
 You can also set breakpoints and debug your Lambda functions locally with [WebStorm](http://www.jetbrains.com/webstorm/) and SST. [Check out this tutorial for more details](https://serverless-stack.com/examples/how-to-debug-lambda-functions-with-webstorm.html).
 
 <div class={styles.videoWrapper}>
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/_cLM_0On_Cc" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/_cLM_0On_Cc" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
 ## Debugging with IntelliJ IDEA
@@ -228,7 +228,7 @@ You can also set breakpoints and debug your Lambda functions locally with [WebSt
 If you are using [IntelliJ IDEA](https://www.jetbrains.com/idea/), [follow this tutorial to set breakpoints in your Lambda functions](https://serverless-stack.com/examples/how-to-debug-lambda-functions-with-intellij-idea.html).
 
 <div class={styles.videoWrapper}>
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/iABx-4bjWJ0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/iABx-4bjWJ0" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
 ## Watching infrastructure changes
@@ -238,7 +238,7 @@ The above steps apply to the Lambda functions in your app. For the CDK code in y
 Instead, it'll first compare the generated CloudFormation template to the previously built one. If there are new infrastructure changes, it'll prompt you to _press ENTER_ to deploy them. And once you do, it'll deploy your new infrastructure.
 
 <div class={styles.videoWrapper}>
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/44SXlXGUpC0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/44SXlXGUpC0" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
 ## Working with a VPC
