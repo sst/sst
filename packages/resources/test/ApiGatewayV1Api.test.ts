@@ -804,7 +804,7 @@ test("defaultAuthorizationType-lambda_token", async () => {
   });
   hasResource(stack, "AWS::ApiGateway::Method", {
     AuthorizationType: "CUSTOM",
-    AuthorizerId: { Ref: "ApiApiApiAuthorizerMyAuthorizer1698E1C1" },
+    AuthorizerId: { Ref: "ApiMyAuthorizer6B7BC41E" },
   });
   hasResource(stack, "AWS::ApiGateway::Authorizer", {
     Type: "TOKEN",
@@ -835,7 +835,7 @@ test("defaultAuthorizationType-lambda_request", async () => {
   });
   hasResource(stack, "AWS::ApiGateway::Method", {
     AuthorizationType: "CUSTOM",
-    AuthorizerId: { Ref: "ApiApiApiAuthorizerMyAuthorizer1698E1C1" },
+    AuthorizerId: { Ref: "ApiMyAuthorizer6B7BC41E" },
   });
   hasResource(stack, "AWS::ApiGateway::Authorizer", {
     Type: "REQUEST",
@@ -866,7 +866,7 @@ test("defaultAuthorizationType-user_pools", async () => {
   });
   hasResource(stack, "AWS::ApiGateway::Method", {
     AuthorizationType: "COGNITO_USER_POOLS",
-    AuthorizerId: { Ref: "ApiApiApiAuthorizerMyAuthorizer1698E1C1" },
+    AuthorizerId: { Ref: "ApiMyAuthorizer6B7BC41E" },
     AuthorizationScopes: ["user.id", "user.email"],
   });
   hasResource(stack, "AWS::ApiGateway::Authorizer", {
@@ -1285,7 +1285,7 @@ test("routes: authorizationScopes override", async () => {
   });
   hasResource(stack, "AWS::ApiGateway::Method", {
     AuthorizationType: "COGNITO_USER_POOLS",
-    AuthorizerId: { Ref: "ApiApiApiAuthorizerMyAuthorizer1698E1C1" },
+    AuthorizerId: { Ref: "ApiMyAuthorizer6B7BC41E" },
     AuthorizationScopes: ["user.id"],
   });
 });

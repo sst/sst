@@ -1170,13 +1170,13 @@ export class ApiGatewayV1Api<
           const userPools = value.userPoolIds.map((userPoolId) =>
             cognito.UserPool.fromUserPoolId(
               this,
-              `Api-${this.node.id}-Authorizer-${key}-UserPool`,
+              `${key}-ImportedUserPool`,
               userPoolId
             )
           );
           this.authorizersData[key] = new apig.CognitoUserPoolsAuthorizer(
             this,
-            `Api-${this.node.id}-Authorizer-${key}`,
+            key,
             {
               cognitoUserPools: userPools,
               authorizerName: value.name,
@@ -1194,20 +1194,16 @@ export class ApiGatewayV1Api<
           if (!value.function) {
             throw new Error(`Missing "function" for "${key}" authorizer`);
           }
-          this.authorizersData[key] = new apig.TokenAuthorizer(
-            this,
-            `Api-${this.node.id}-Authorizer-${key}`,
-            {
-              handler: value.function,
-              authorizerName: value.name,
-              identitySource: value.identitySource,
-              validationRegex: value.validationRegex,
-              assumeRole: value.cdk?.assumeRole,
-              resultsCacheTtl: value.resultsCacheTtl
-                ? toCdkDuration(value.resultsCacheTtl)
-                : cdk.Duration.seconds(0),
-            }
-          );
+          this.authorizersData[key] = new apig.TokenAuthorizer(this, key, {
+            handler: value.function,
+            authorizerName: value.name,
+            identitySource: value.identitySource,
+            validationRegex: value.validationRegex,
+            assumeRole: value.cdk?.assumeRole,
+            resultsCacheTtl: value.resultsCacheTtl
+              ? toCdkDuration(value.resultsCacheTtl)
+              : cdk.Duration.seconds(0),
+          });
         }
       } else if (value.type === "lambda_request") {
         if (value.cdk?.authorizer) {
@@ -1220,19 +1216,15 @@ export class ApiGatewayV1Api<
               `Missing "identitySources" for "${key}" authorizer`
             );
           }
-          this.authorizersData[key] = new apig.RequestAuthorizer(
-            this,
-            `Api-${this.node.id}-Authorizer-${key}`,
-            {
-              handler: value.function,
-              authorizerName: value.name,
-              identitySources: value.identitySources,
-              assumeRole: value.cdk?.assumeRole,
-              resultsCacheTtl: value.resultsCacheTtl
-                ? toCdkDuration(value.resultsCacheTtl)
-                : cdk.Duration.seconds(0),
-            }
-          );
+          this.authorizersData[key] = new apig.RequestAuthorizer(this, key, {
+            handler: value.function,
+            authorizerName: value.name,
+            identitySources: value.identitySources,
+            assumeRole: value.cdk?.assumeRole,
+            resultsCacheTtl: value.resultsCacheTtl
+              ? toCdkDuration(value.resultsCacheTtl)
+              : cdk.Duration.seconds(0),
+          });
         }
       }
     });
