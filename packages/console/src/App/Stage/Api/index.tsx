@@ -227,7 +227,7 @@ export function Explorer() {
       for (const item of data.query) {
         if (item.name && item.value) searchParams.append(item.name, item.value);
       }
-      const proxy = false ? `http://localhost:12557/proxy/` : "";
+      const proxy = false ? `https://localhost:12557/proxy/` : "";
       const query = searchParams.toString();
       const result = await fetch(
         `${proxy}${selected.data.url}${processedPath}${

@@ -56,7 +56,7 @@ globalCss({
 // create persistent WebSocket connection
 const ws = createWSClient({
   url:
-    `ws://localhost:` +
+    `wss://localhost:` +
     (new URLSearchParams(location.search).get("_port") || "13557"),
   retryDelayMs: () => 5000,
 });
