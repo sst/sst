@@ -5,9 +5,8 @@ export class MainStack extends sst.Stack {
     super(scope, id, props);
 
     const api = new sst.AppSyncApi(this, "AppSyncApi", {
-      graphqlApi: {
-        schema: "src/appsync/schema.graphql",
-      },
+      schema: "src/appsync/schema.graphql",
+      customDomain: "appsync.sst.sh",
       dataSources: {
         mainDS: "src/appsync/lambda.main",
       },
@@ -17,7 +16,9 @@ export class MainStack extends sst.Stack {
     });
 
     this.addOutputs({
-      ApiId: api.graphqlApi.apiId,
+      ApiId: api.apiId,
+      ApiKey: api.cdk.graphqlApi.apiKey!,
+      CustomDomain: api.customDomainUrl!,
     });
   }
 }

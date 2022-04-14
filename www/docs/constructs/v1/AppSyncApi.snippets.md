@@ -361,6 +361,107 @@ const api = new AppSyncApi(stack, "GraphqlApi", {
 const resolver = api.getResolver("Mutation charge");
 ```
 
+### Custom domains
+
+You can configure the API with a custom domain hosted either on [Route 53](https://aws.amazon.com/route53/) or [externally](#using-externally-hosted-domain).
+
+#### Using the basic config
+
+```js {3}
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  customDomain: "api.domain.com",
+});
+```
+
+#### Using the full config
+
+```js {3-6}
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  customDomain: {
+    domainName: "api.domain.com",
+    hostedZone: "domain.com",
+  },
+});
+```
+
+#### Importing an existing certificate
+
+```js {8}
+import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
+
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  customDomain: {
+    domainName: "api.domain.com",
+    cdk: {
+      certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+    },
+  },
+});
+```
+
+#### Specifying a hosted zone
+
+If you have multiple hosted zones for a given domain, you can choose the one you want to use to configure the domain.
+
+```js {8-11}
+import { HostedZone } from "aws-cdk-lib/aws-route53";
+
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  customDomain: {
+    domainName: "api.domain.com",
+    cdk: {
+      hostedZone: HostedZone.fromHostedZoneAttributes(this, "MyZone", {
+        hostedZoneId,
+        zoneName,
+      }),
+    },
+  },
+});
+```
+
+#### Loading domain name from SSM parameter
+
+If you have the domain name stored in AWS SSM Parameter Store, you can reference the value as the domain name:
+
+```js {3,8-9}
+import { StringParameter } from "aws-cdk-lib/aws-ssm";
+
+const rootDomain = StringParameter.valueForStringParameter(this, `/myApp/domain`);
+
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  customDomain: {
+    domainName: `api.${rootDomain}`,
+    hostedZone: rootDomain,
+  },
+});
+```
+
+Note that, normally SST will look for a hosted zone by stripping out the first part of the `domainName`. But this is not possible when the `domainName` is a reference. Since its value will be resolved at deploy time. So you'll need to specify the `hostedZone` explicitly.
+
+#### Using externally hosted domain
+
+```js {6-10}
+import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
+
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  customDomain: {
+    isExternalDomain: true,
+    domainName: "api.domain.com",
+    cdk: {
+      certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+    },
+  },
+});
+```
+
+Note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+
 ### Authorization
 
 #### Using API Key
