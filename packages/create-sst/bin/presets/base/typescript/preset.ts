@@ -7,9 +7,7 @@ export default definePreset({
     });
     await extractTemplates({});
     await installPackages({
-      for: "node",
       packages: ["typescript", "@tsconfig/node14"],
-      packageManager: "npm",
       dev: true,
     });
     await editFiles({
