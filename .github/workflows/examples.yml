@@ -49,6 +49,7 @@ jobs:
           path: |
             examples/${{ matrix.example}}
             !examples/${{ matrix.example}}/node_modules
+            !examples/${{ matrix.example}}/package-lock.json
   commit:
     needs: generate
     runs-on: ubuntu-latest
@@ -56,6 +57,9 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+
+      - name: Clear
+        run: rm -rf examples/*
 
       - uses: actions/download-artifact@v3
         with:
