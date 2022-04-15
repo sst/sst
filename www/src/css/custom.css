@@ -437,9 +437,7 @@ svg[class^="darkToggleIcon_"] {
 .toggle_---node_modules-\@docusaurus-theme-classic-lib-next-theme-ColorModeToggle-styles-module {
   width: 23px !important;
   height: 23px !important;
-  margin: 0 10px;
-  box-shadow: none !important;
-  background: transparent !important;
+  margin: 0 10px !important;
 }
 
 .navbar__link__slack:before {
