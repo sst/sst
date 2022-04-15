@@ -61,7 +61,7 @@ program
     preset = opts.preset || preset;
     preset = path.join(
       "presets",
-      preset.includes("/") ? undefined : DEFAULT_CATEGORY,
+      preset.includes("/") ? "" : DEFAULT_CATEGORY,
       preset,
       "preset.ts"
     );
@@ -78,9 +78,7 @@ program
       resolvable: preset,
       targetDirectory: destination,
       rawArguments: [preset, destination],
-      parsedOptions: {
-        cache: false,
-      },
+      parsedOptions: {},
     });
     if (result) {
       spinner.succeed("Complete!");

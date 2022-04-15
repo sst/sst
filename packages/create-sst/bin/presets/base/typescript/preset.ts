@@ -7,16 +7,14 @@ export default definePreset({
     });
     await extractTemplates({});
     await installPackages({
-      for: "node",
       packages: ["typescript", "@tsconfig/node14"],
-      packageManager: "npm",
       dev: true,
     });
-    editFiles({
+    await editFiles({
       files: ["sst.json"],
       operations: [{ type: "edit-json", merge: { main: "stacks/index.ts" } }],
     });
-    editFiles({
+    await editFiles({
       files: ["package.json"],
       operations: [
         {

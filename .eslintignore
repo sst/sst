@@ -42,4 +42,4 @@ cdk.out
 /examples/**/frontend/
 
 # Ignore presets
-/packages/create-sst/*
+/packages/create-sst/**

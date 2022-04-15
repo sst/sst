@@ -1,0 +1,30 @@
+name: Examples
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: yarn --frozen-lockfile
+
+      - name: Generate
+        working-directory: examples
+        run: node ./bin/generate.mjs
+
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Generated examples
+          file_pattern: examples/**/*

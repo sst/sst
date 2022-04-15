@@ -16,12 +16,10 @@ export default definePreset({
       ],
     });
     await installPackages({
-      for: "node",
       packages: [
         "@serverless-stack/cli@1.0.0-beta.9",
         "@serverless-stack/resources@1.0.0-beta.9",
       ],
-      packageManager: "npm",
       dev: true,
     });
   },
