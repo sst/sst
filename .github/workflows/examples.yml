@@ -2,6 +2,9 @@ name: Examples
 
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - '*'
 
 jobs:
   list:
