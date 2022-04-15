@@ -3,7 +3,9 @@ import { basename } from "path";
 export default definePreset({
   name: "Base: Javascript",
   handler: async (ctx) => {
-    await extractTemplates({});
+    await extractTemplates({
+      extractDotFiles: true,
+    });
     await editFiles({
       files: ["**"],
       operations: [
