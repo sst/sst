@@ -69,8 +69,9 @@ jobs:
         run: |
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
+          git rebase origin master
           git add .
-          git commit --allow-empty -m "Generated Examples" -a
+          git commit --allow-empty -m "Generated Examples"
 
       - name: Push changes
         uses: ad-m/github-push-action@master
