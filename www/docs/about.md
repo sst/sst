@@ -50,7 +50,7 @@ Serverless Stack (SST) is a framework that makes it easy to build serverless app
     </span>
     <div className={styles.startPanelContent}>
       <h4>Follow the guide</h4>
-      <p>Follow along step-by-step with our Serverless Stack guide.</p>
+      <p>Follow along step-by-step with our Serverless Stack Guide.</p>
     </div>
   </a>
 </div>
