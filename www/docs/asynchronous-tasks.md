@@ -30,9 +30,9 @@ new Queue(this, "MyQueue", {
 });
 ```
 
-:::info Example
+:::tip Example
 
-Follow this tutorial on how to create a simple queue system in SST. 
+Follow this tutorial on how to create a simple queue system in SST.
 
 [READ TUTORIAL](https://serverless-stack.com/examples/how-to-use-queues-in-your-serverless-app.html)
 
@@ -61,7 +61,7 @@ new Topic(this, "MyQueue", {
 });
 ```
 
-:::info Example
+:::tip Example
 
 This example shows you how to create a simple pub/sub system in SST.
 
@@ -80,7 +80,7 @@ new KinesisStream(this, "Stream", {
   consumers: {
     consumer1: "src/consumer1.main",
     consumer2: "src/consumer2.main",
-  }
+  },
 });
 ```
 

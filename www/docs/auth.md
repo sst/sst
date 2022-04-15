@@ -44,7 +44,7 @@ new Api(this, "Api", {
 });
 ```
 
-:::info Example
+:::tip Example
 
 Here's a detailed tutorial on how to add JWT authentication with Cognito to your API.
 
@@ -122,7 +122,7 @@ If you are using a third-party auth provider, you don't need to use the [Auth](c
 
 :::
 
-However if you wanted your users to be able to access other AWS resources while using a third party auth provider; you'll need to use a [Cognito Identity Pool](https://en.wikipedia.org/wiki/JSON_Web_Token) via the [`Auth`](constructs/Auth.md) construct.  It'll assign temporary IAM credentials to your users. Read more about [how to access other resources](#accessing-other-resources-1) below.
+However if you wanted your users to be able to access other AWS resources while using a third party auth provider; you'll need to use a [Cognito Identity Pool](https://en.wikipedia.org/wiki/JSON_Web_Token) via the [`Auth`](constructs/Auth.md) construct. It'll assign temporary IAM credentials to your users. Read more about [how to access other resources](#accessing-other-resources-1) below.
 
 ### Accessing APIs
 
@@ -143,7 +143,7 @@ new Api(this, "Api", {
 });
 ```
 
-:::info Example
+:::tip Example
 
 Here's a detailed tutorial on how to add JWT authentication with Auth0.
 
@@ -171,7 +171,7 @@ const auth = new Auth(this, "Auth", {
 auth.attachPermissionsForAuthUsers([table]);
 ```
 
-:::info Example
+:::tip Example
 
 Follow this tutorial on how to authenticate a serverless API with Auth0.
 

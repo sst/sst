@@ -22,6 +22,8 @@ module.exports = {
   themeConfig: {
     prism: {
       additionalLanguages: ["csharp"],
+      theme: require("prism-react-renderer/themes/github"),
+      darkTheme: require("prism-react-renderer/themes/oceanicNext"),
     },
     // The following are used as defaults but are overriden by
     // the "socialCardsUrl" in the "customFields" below.

@@ -159,7 +159,7 @@ new Bucket(this, "MyBucket", {
 
 Check out more Bucket notification examples over on the [`Bucket`](constructs/Bucket.md#enabling-s3-event-notifications) construct doc.
 
-:::info Example
+:::tip Example
 
 Read this tutorial on automatically resizing images uploaded to a Bucket.
 

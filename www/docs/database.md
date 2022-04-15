@@ -68,7 +68,7 @@ export async function handler() {
 
 You can [read more about how Aurora works](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.html).
 
-:::info Example
+:::tip Example
 
 Check out this tutorial on using PostgreSQL and Aurora in your SST app.
 
@@ -76,15 +76,13 @@ Check out this tutorial on using PostgreSQL and Aurora in your SST app.
 
 :::
 
-
 #### Data migrations
 
-The `RDS` construct uses [Kysely](https://koskimas.github.io/kysely/) to run and manage schema migrations. You can point `migrations` to the folder where your migration files are. 
+The `RDS` construct uses [Kysely](https://koskimas.github.io/kysely/) to run and manage schema migrations. You can point `migrations` to the folder where your migration files are.
 
 On `sst deploy`, all migrations that have not yet been run will be run as a part of the deploy process. The migrations are executed in alphabetical order by their name.
 
 On `sst start`, migrations are not automatically run. You can use the [SST Console](console.md) to view all of your migrations and apply them.
-
 
 ```js
 const cluster = new RDS(this, "Cluster", {
@@ -104,11 +102,11 @@ async function up(db) {
     .addColumn("first_name", "varchar", (col) => col.notNull())
     .addColumn("last_name", "varchar")
     .addColumn("gender", "varchar(50)", (col) => col.notNull())
-    .execute()
+    .execute();
 }
 
 async function down(db) {
-  await db.schema.dropTable("person").execute()
+  await db.schema.dropTable("person").execute();
 }
 
 module.exports = { up, down };
@@ -166,7 +164,7 @@ export async function main(event) {
 }
 ```
 
-:::info Example
+:::tip Example
 
 Here's a complete tutorial on how to add a DynamoDB table to your serverless app.
 
@@ -198,7 +196,7 @@ Aside from AWS's serverless database offerings, there are a couple of other real
 
 You can use [the new serverless instance of MongoDB Atlas](https://www.mongodb.com/atlas/database?utm_campaign=serverless_stack&utm_source=serverlessstack&utm_medium=website&utm_term=partner). It's a NoSQL database with a JSON-like document model.
 
-:::info Example
+:::tip Example
 
 Follow this tutorial on how to use MongoDB Atlas and SST.
 
@@ -212,7 +210,7 @@ Follow this tutorial on how to use MongoDB Atlas and SST.
 
 [PlanetScale](https://planetscale.com) is a MySQL-compatible serverless database.
 
-:::info Example (TODO)
+:::tip Example (TODO)
 
 Check out this tutorial on how to use PlanetScale as the database in your SST app.
 
