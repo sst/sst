@@ -434,7 +434,7 @@ svg[class^="darkToggleIcon_"] {
   height: 23px;
 }
 
-.toggle_---node_modules-\@docusaurus-theme-classic-lib-next-theme-ColorModeToggle-styles-module {
+div[class^="toggle_"] {
   width: 23px !important;
   height: 23px !important;
   margin: 0 10px !important;
