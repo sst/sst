@@ -170,6 +170,8 @@ export default async function (argv, config, cliInfo) {
   const local = useLocalServer({
     live: true,
     port: await chooseServerPort(13557),
+    key: cert.key,
+    cert: cert.cert,
     app: config.name,
     stage: config.stage,
     region: config.region,

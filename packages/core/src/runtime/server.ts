@@ -6,7 +6,7 @@ import { v4 } from "uuid";
 import https from "https";
 import url from "url";
 
-const logger = getChildLogger("client");
+const logger = getChildLogger("runtime");
 
 import { Handler } from "./handler/index.js";
 
@@ -14,6 +14,8 @@ const API_VERSION = "2018-06-01";
 
 type ServerOpts = {
   port: number;
+  key: any;
+  cert: any;
 };
 
 type Payload = {
@@ -250,9 +252,15 @@ export class Server {
 
   listen() {
     logger.debug("Starting runtime server on port:", this.opts.port);
-    this.app.listen({
-      port: this.opts.port,
-    });
+    https
+      .createServer(
+        {
+          key: this.opts.key,
+          cert: this.opts.cert,
+        },
+        this.app
+      )
+      .listen(this.opts.port);
   }
 
   private pool(fun: string) {

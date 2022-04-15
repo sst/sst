@@ -2,6 +2,7 @@ import { produceWithPatches, enablePatches } from "immer";
 enablePatches();
 
 import { WebSocketServer } from "ws";
+import https from "https";
 import { applyWSSHandler } from "@trpc/server/adapters/ws/dist/trpc-server-adapters-ws.cjs.js";
 import { FunctionState, router, State } from "./router.js";
 import { EventDelegate } from "../events.js";
@@ -10,6 +11,8 @@ import { DendriformPatch, optimise } from "dendriform-immer-patch-optimiser";
 
 type Opts = {
   port: number;
+  key: any;
+  cert: any;
   region: string;
   app: string;
   stage: string;
@@ -29,10 +32,12 @@ export function useLocalServer(opts: Opts) {
   const onStateChange = new EventDelegate<DendriformPatch[]>();
   const onDeploy = new EventDelegate<void>();
 
-  // Wire up websocket
-  const wss = new WebSocketServer({
-    port: opts.port,
+  const server = https.createServer({
+    key: opts.key,
+    cert: opts.cert,
   });
+  const wss = new WebSocketServer({ server });
+  server.listen(opts.port);
   const handler = applyWSSHandler({
     wss,
     router,
