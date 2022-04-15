@@ -21,7 +21,7 @@
 
   --custom-color-black: #383736;
   --custom-border-color: rgba(0, 0, 0, 0.1);
-  --custom-code-block-selection-color: #dcddde;
+  --custom-code-block-selection-color: #e2e8f0;
 
   --ifm-font-color-base: var(--custom-color-black);
   --ifm-heading-color: var(--custom-color-black);
@@ -150,7 +150,8 @@ html[data-theme="dark"] {
   --ifm-heading-color: #ffffff;
   --ifm-background-color: #111827;
   --custom-selection-color: var(--ifm-color-secondary-contrast-background);
-  --custom-code-block-selection-color: #484d5b;
+  --custom-code-block-selection-color: #334155;
+  --ifm-color-success-contrast-background: #047857;
 }
 
 body {
@@ -238,13 +239,14 @@ nav.menu > ul > li:not(:last-child) {
   /* padding: var(--ifm-menu-link-padding-vertical); */
   /* transition: transform ease-in-out 0.15s; */
   transition: all ease-in-out 0.3s;
+  outline: none;
 }
 
 .menu__link:hover,
 .menu__link--active:not(.menu__link--sublist) {
-  color: var(--ifm-menu-color-active);
+  color: var(--ifm-color-primary-lighter);
   background: none;
-  border-left: 2px solid var(--ifm-menu-color-active);
+  border-left: 2px solid var(--ifm-color-primary-lightest);
   border-radius: 0;
 }
 
@@ -252,6 +254,10 @@ nav.menu > ul > li:not(:last-child) {
   font-weight: 600;
 }
 .menu__link--sublist:after {
+  background: var(--ifm-menu-link-sublist-icon) 50% / 1.5rem 1.5rem;
+}
+
+.menu__link--sublist-caret:after {
   background: var(--ifm-menu-link-sublist-icon) 50% / 1.5rem 1.5rem;
 }
 
@@ -328,6 +334,14 @@ nav.navbar span[class^="toggleIcon"] {
   display: block;
   margin: 0 calc(-1 * var(--ifm-pre-padding));
   padding: 0 var(--ifm-pre-padding);
+}
+
+div[class^="codeBlockContainer_"] {
+  box-shadow: none;
+}
+
+div.theme-code-block > div[class^="codeBlockTitle"] {
+  border-bottom: none !important;
 }
 
 /** Admonitions **/
@@ -413,12 +427,19 @@ div[class^="tableOfContents"] a.table-of-contents__link code {
   opacity: 0.8;
 }
 
-/* dark theme toggle */
-nav
-  > div.navbar__inner
-  > div.navbar__items.navbar__items--right
-  > div.toggle_---node_modules-\@docusaurus-theme-classic-lib-next-theme-ColorModeToggle-styles-module.colorModeToggle_---node_modules-\@docusaurus-theme-classic-lib-next-theme-Navbar-Content-styles-module {
-  margin: 0 5px;
+/* Theme toggle */
+svg[class^="lightToggleIcon_"],
+svg[class^="darkToggleIcon_"] {
+  width: 23px;
+  height: 23px;
+}
+
+.toggle_---node_modules-\@docusaurus-theme-classic-lib-next-theme-ColorModeToggle-styles-module {
+  width: 23px !important;
+  height: 23px !important;
+  margin: 0 10px;
+  box-shadow: none !important;
+  background: transparent !important;
 }
 
 .navbar__link__slack:before {
