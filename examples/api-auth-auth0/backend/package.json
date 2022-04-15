@@ -1,0 +1,11 @@
+{
+  "name": "@api-auth-auth0/backend",
+  "version": "0.0.0",
+  "type": "module",
+  "dependencies": {
+    "aws-sdk": "^2.1115.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.93"
+  }
+}
