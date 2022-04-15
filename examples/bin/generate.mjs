@@ -17,4 +17,5 @@ for (const example of await fs.readdir(path.join(create, "presets/examples"))) {
   console.log("Generating", example);
   cp.sync(`npx`, [`create-sst`, `examples/${example}`, example]);
   console.log("Finished in", (Date.now() - now) / 1000 + "s");
+  break;
 }
