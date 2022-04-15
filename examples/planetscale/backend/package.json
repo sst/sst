@@ -1,0 +1,12 @@
+{
+  "name": "@planetscale/backend",
+  "version": "0.0.0",
+  "type": "module",
+  "dependencies": {
+    "aws-sdk": "^2.1115.0",
+    "planetscale-node": "^0.3.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.93"
+  }
+}

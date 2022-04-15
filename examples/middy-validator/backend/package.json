@@ -1,0 +1,15 @@
+{
+  "name": "@middy-validator/backend",
+  "version": "0.0.0",
+  "type": "module",
+  "dependencies": {
+    "@middy/core": "^2.5.7",
+    "@middy/http-error-handler": "^2.5.7",
+    "@middy/http-json-body-parser": "^2.5.7",
+    "@middy/validator": "^2.5.7",
+    "aws-sdk": "^2.1115.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.93"
+  }
+}

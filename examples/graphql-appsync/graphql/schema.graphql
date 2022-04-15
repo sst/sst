@@ -1,0 +1,25 @@
+type Note {
+  id: ID!
+  content: String!
+}
+
+input NoteInput {
+  id: ID!
+  content: String!
+}
+
+input UpdateNoteInput {
+  id: ID!
+  content: String
+}
+
+type Query {
+  listNotes: [Note]
+  getNoteById(noteId: String!): Note
+}
+
+type Mutation {
+  createNote(note: NoteInput!): Note
+  deleteNote(noteId: String!): String
+  updateNote(note: UpdateNoteInput!): Note
+}

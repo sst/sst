@@ -1,0 +1,12 @@
+{
+  "name": "@graphql-apollo/backend",
+  "version": "0.0.0",
+  "type": "module",
+  "dependencies": {
+    "apollo-server-lambda": "^3.6.7",
+    "aws-sdk": "^2.1115.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.93"
+  }
+}

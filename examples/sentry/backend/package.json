@@ -1,0 +1,12 @@
+{
+  "name": "@sentry/backend",
+  "version": "0.0.0",
+  "type": "module",
+  "dependencies": {
+    "@sentry/serverless": "^6.19.6",
+    "aws-sdk": "^2.1115.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.93"
+  }
+}

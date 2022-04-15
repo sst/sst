@@ -1,0 +1,13 @@
+{
+  "name": "@cron-job/backend",
+  "version": "0.0.0",
+  "type": "module",
+  "dependencies": {
+    "aws-sdk": "^2.1115.0",
+    "sharp": "^0.30.3"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.93",
+    "@types/sharp": "^0.30.2"
+  }
+}

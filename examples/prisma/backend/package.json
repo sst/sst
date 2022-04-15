@@ -1,0 +1,15 @@
+{
+  "name": "@prisma/backend",
+  "version": "0.0.0",
+  "type": "module",
+  "dependencies": {
+    "@prisma/client": "^3.12.0",
+    "aws-sdk": "^2.1115.0",
+    "fs-extra": "^10.0.1"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.93",
+    "@types/fs-extra": "^9.0.13",
+    "prisma": "^3.12.0"
+  }
+}
