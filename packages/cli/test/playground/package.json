@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-playground",
   "private": true,
   "description": "tests",
-  "version": "1.0.0-beta.9",
+  "version": "1.0.0-beta.21",
   "scripts": {
     "add-cdk": "sst add-cdk",
     "diff": "sst diff",
@@ -15,8 +15,8 @@
   "dependencies": {
     "@aws-cdk/aws-kinesisfirehose-alpha": "2.20.0-alpha.0",
     "@aws-cdk/aws-kinesisfirehose-destinations-alpha": "2.20.0-alpha.0",
-    "@serverless-stack/cli": "1.0.0-beta.9",
-    "@serverless-stack/resources": "1.0.0-beta.9",
+    "@serverless-stack/cli": "1.0.0-beta.21",
+    "@serverless-stack/resources": "1.0.0-beta.21",
     "apollo-server-lambda": "^2.25.2"
   },
   "license": "ISC",

@@ -1,6 +1,6 @@
 {
   "name": "create-sst",
-  "version": "1.0.0-beta.9",
+  "version": "1.0.0-beta.21",
   "homepage": "https://serverless-stack.com",
   "description": "Create Serverless Stack apps.",
   "bin": {
