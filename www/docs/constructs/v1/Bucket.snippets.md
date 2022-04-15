@@ -6,7 +6,9 @@
 import { Bucket } from "@serverless-stack/resources";
 
 new Bucket(stack, "Bucket", {
-  notifications: ["src/notification.main"],
+  notifications: {
+    myNotification: "src/notification.main",
+  },
 });
 ```
 
@@ -16,12 +18,12 @@ Or configuring the notification events.
 import { EventType } from "aws-cdk-lib/aws-s3";
 
 const bucket = new Bucket(stack, "Bucket", {
-  notifications: [
-    {
+  notifications: {
+    myNotification: {
       function: "src/notification.main",
       events: ["object_created"],
     },
-  ],
+  },
 });
 ```
 
@@ -32,7 +34,9 @@ Create an _empty_ bucket and lazily add the notifications.
 ```js {3}
 const bucket = new Bucket(stack, "Bucket");
 
-bucket.addNotifications(this, ["src/notification.main"]);
+bucket.addNotifications(this, {
+  myNotification: "src/notification.main",
+});
 ```
 
 ### Configuring Function notifications
@@ -50,16 +54,16 @@ new Bucket(stack, "Bucket", {
       permissions: [table],
     },
   },
-  notifications: [
-    {
+  notifications: {
+    myNotification1: {
       function: "src/notification1.main",
       events: ["object_created"],
     },
-    {
+    myNotification2: {
       function: "src/notification2.main",
       events: ["object_removed"],
     },
-  ],
+  },
 });
 ```
 
@@ -69,8 +73,8 @@ Configure each Lambda function separately.
 
 ```js
 new Bucket(stack, "Bucket", {
-  notifications: [
-    {
+  notifications: {
+    myNotification: {
       function: {
         srcPath: "src/",
         handler: "notification.main",
@@ -79,7 +83,7 @@ new Bucket(stack, "Bucket", {
       },
       events: ["object_created"],
     },
-  ],
+  },
 });
 ```
 
@@ -94,8 +98,8 @@ new Bucket(stack, "Bucket", {
       permissions: [table],
     },
   },
-  notifications: [
-    {
+  notifications: {
+    myNotification1: {
       function: {
         handler: "src/notification1.main",
         timeout: 10,
@@ -104,15 +108,15 @@ new Bucket(stack, "Bucket", {
       },
       events: ["object_created"],
     },
-    {
+    myNotification2: {
       function: "src/notification2.main",
       events: ["object_removed"],
     },
-  ],
+  },
 });
 ```
 
-So in the above example, the `notification1` function doesn't use the `timeout` that is set in the `defaults.function`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
+So in the above example, the `myNotification1` function doesn't use the `timeout` that is set in the `defaults.function`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
 
 #### Giving the notifications some permissions
 
@@ -122,16 +126,16 @@ Allow the notification functions to access S3.
 import { EventType } from "aws-cdk-lib/aws-s3";
 
 const bucket = new Bucket(stack, "Bucket", {
-  notifications: [
-    {
+  notifications: {
+    myNotification1: {
       function: "src/notification1.main",
       events: ["object_created"],
     },
-    {
+    myNotification2: {
       function: "src/notification2.main",
       events: ["object_removed"],
     },
-  ],
+  },
 });
 
 bucket.attachPermissions(["s3"]);
@@ -145,16 +149,16 @@ Allow the first notification function to access S3.
 import { EventType } from "aws-cdk-lib/aws-s3";
 
 const bucket = new Bucket(stack, "Bucket", {
-  notifications: [
-    {
+  notifications: {
+    myNotification1: {
       function: "src/notification1.main",
       events: ["object_created"],
     },
-    {
+    myNotification2: {
       function: "src/notification2.main",
       events: ["object_removed"],
     },
-  ],
+  },
 });
 
 bucket.attachPermissionsToNotification(0, ["s3"]);
@@ -172,7 +176,9 @@ import { Queue } from "@serverless-stack/resources";
 const myQueue = new Queue(this, "MyQueue");
 
 new Bucket(stack, "Bucket", {
-  notifications: [myQueue],
+  notifications: {
+    myNotification: myQueue,
+  },
 });
 ```
 
@@ -182,13 +188,13 @@ new Bucket(stack, "Bucket", {
 const myQueue = new Queue(this, "MyQueue");
 
 new Bucket(stack, "Bucket", {
-  notifications: [
-    {
+  notifications: {
+    myNotification: {
       queue: myQueue,
       events: ["object_created_put"],
       filters: [{ prefix: "imports/" }, { suffix: ".jpg" }],
     }
-  ],
+  },
 });
 ```
 
@@ -204,7 +210,9 @@ import { Topic } from "@serverless-stack/resources";
 const myTopic = new Topic(this, "MyTopic");
 
 new Bucket(stack, "Bucket", {
-  notifications: [myTopic],
+  notifications: {
+    myNotification: myTopic,
+  },
 });
 ```
 
@@ -214,13 +222,13 @@ new Bucket(stack, "Bucket", {
 const myTopic = new Topic(this, "MyTopic");
 
 new Bucket(stack, "Bucket", {
-  notifications: [
-    {
+  notifications: {
+    myNotification: {
       topic: myTopic,
       events: ["object_created_put"],
       filters: [{ prefix: "imports/" }, { suffix: ".jpg" }],
     }
-  ],
+  },
 });
 ```
 
