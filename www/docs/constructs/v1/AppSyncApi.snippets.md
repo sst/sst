@@ -284,7 +284,7 @@ new AppSyncApi(stack, "GraphqlApi", {
 });
 ```
 
-### Wroking with resolvers
+### Configuring resolvers
 
 You can also add data sources and resolvers after the API has been created.
 
