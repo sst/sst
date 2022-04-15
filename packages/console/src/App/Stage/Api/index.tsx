@@ -227,7 +227,7 @@ export function Explorer() {
       for (const item of data.query) {
         if (item.name && item.value) searchParams.append(item.name, item.value);
       }
-      const proxy = false ? `https://local2.serverless-stack.com:12557/proxy/` : "";
+      const proxy = false ? `https://local.serverless-stack.com:12557/proxy/` : "";
       const query = searchParams.toString();
       const result = await fetch(
         `${proxy}${selected.data.url}${processedPath}${

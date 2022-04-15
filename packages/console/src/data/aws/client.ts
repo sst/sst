@@ -13,7 +13,7 @@ class CustomHandler extends FetchHttpHandler {
   handle(req: any, opts: any) {
     const { protocol, hostname, path } = req;
     req.protocol = "https:";
-    req.hostname = "local2.serverless-stack.com:12557";
+    req.hostname = "local.serverless-stack.com:12557";
     req.path = `/proxy/${protocol}//${hostname}${path}`;
     return super.handle(req, opts);
   }

@@ -56,7 +56,7 @@ globalCss({
 // create persistent WebSocket connection
 const ws = createWSClient({
   url:
-    `wss://local2.serverless-stack.com:` +
+    `wss://local.serverless-stack.com:` +
     (new URLSearchParams(location.search).get("_port") || "13557"),
   retryDelayMs: () => 5000,
 });
