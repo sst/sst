@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - id: set-matrix
-        run: echo "::set-output name=matrix::$(ls packages/create-sst/bin/presets/examples/ | head -n 3 | jq -R -s -c 'split("\n")[:-1]')"
+        run: echo "::set-output name=matrix::$(ls packages/create-sst/bin/presets/examples/ | jq -R -s -c 'split("\n")[:-1]')"
   generate:
     needs: list
     runs-on: ubuntu-latest
