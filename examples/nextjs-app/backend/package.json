@@ -4,7 +4,7 @@
   "type": "module",
   "dependencies": {
     "@sls-next/lambda-at-edge": "^3.7.0",
-    "aws-sdk": "^2.1115.0"
+    "aws-sdk": "^2.1116.0"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.93"

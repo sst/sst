@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "type": "module",
   "dependencies": {
-    "aws-sdk": "^2.1115.0",
+    "aws-sdk": "^2.1116.0",
     "data-api-client": "^1.3.0"
   },
   "devDependencies": {
