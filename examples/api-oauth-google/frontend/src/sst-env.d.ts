@@ -2,6 +2,7 @@
 
 interface ImportMetaEnv {
   readonly VITE_APP_COGNITO_DOMAIN: string
+  readonly VITE_APP_API_STAGE: string
   readonly VITE_APP_API_URL: string
   readonly VITE_APP_REGION: string
   readonly VITE_APP_USER_POOL_ID: string

@@ -19,8 +19,8 @@ Amplify.configure({
         ".amazoncognito.com"
       }`,
       scope: ["email", "profile", "openid", "aws.cognito.signin.user.admin"],
-      redirectSignIn: "http://localhost:3000", // Make sure to use the exact URL
-      redirectSignOut: "http://localhost:3000", // Make sure to use the exact URL
+      redirectSignIn: import.meta.env.VITE_APP_API_STAGE === 'prod' ? "production-url": "http://localhost:3000", // Make sure to use the exact URL
+      redirectSignOut: import.meta.env.VITE_APP_API_STAGE === 'prod' ? "production-url": "http://localhost:3000", // Make sure to use the exact URL
       responseType: "token", // or 'token', note that REFRESH token will only be generated when the responseType is code
     },
   },
