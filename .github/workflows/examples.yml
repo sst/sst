@@ -40,16 +40,16 @@ jobs:
 
       - name: Generate
         run: |
-          rm -rf ./examples/${{ matrix.example }}
-          npx create-sst examples/${{ matrix.example }} ./examples/${{ matrix.example }}
-          find ./examples/${{ matrix.example }}
+          rm -rf ./examples/v1/${{ matrix.example }}
+          npx create-sst examples/${{ matrix.example }} ./examples/v1/${{ matrix.example }}
+          find ./examples/v1/${{ matrix.example }}
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.example }}
           path: |
-            examples/${{ matrix.example}}
-            !examples/${{ matrix.example}}/node_modules
-            !examples/${{ matrix.example}}/package-lock.json
+            examples/v1/${{ matrix.example}}
+            !examples/v1/${{ matrix.example}}/node_modules
+            !examples/v1/${{ matrix.example}}/package-lock.json
   commit:
     needs: generate
     runs-on: ubuntu-latest
@@ -59,11 +59,11 @@ jobs:
           fetch-depth: 0
 
       - name: Clear
-        run: rm -rf examples/*
+        run: rm -rf examples/v1/*
 
       - uses: actions/download-artifact@v3
         with:
-          path: examples/
+          path: examples/v1/
 
       - name: Commit files
         run: |
