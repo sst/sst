@@ -1,0 +1,11 @@
+{
+  "name": "@pub-sub/backend",
+  "version": "0.0.0",
+  "type": "module",
+  "dependencies": {
+    "aws-sdk": "^2.1116.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.93"
+  }
+}
