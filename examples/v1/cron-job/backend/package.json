@@ -4,7 +4,7 @@
   "type": "module",
   "dependencies": {
     "aws-sdk": "^2.1116.0",
-    "sharp": "^0.30.3"
+    "sharp": "^0.30.4"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.93",
