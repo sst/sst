@@ -1,0 +1,5 @@
+{
+  "name": "pub-sub",
+  "region": "us-east-1",
+  "main": "stacks/index.js"
+}

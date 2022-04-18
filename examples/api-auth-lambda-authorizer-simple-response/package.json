@@ -1,0 +1,20 @@
+{
+  "name": "@serverless-stack/api-auth-lambda-authorizer-simple-response",
+  "private": true,
+  "description": "tests",
+  "version": "0.1.0",
+  "scripts": {
+    "add-package": "sst add-package",
+    "start": "sst start",
+    "build": "sst build",
+    "deploy": "sst deploy",
+    "remove": "sst remove",
+    "cdk": "sst cdk"
+  },
+  "dependencies": {
+    "@serverless-stack/cli": "0.69.2",
+    "@serverless-stack/resources": "0.69.2",
+    "aws-cdk-lib": "2.15.0"
+  },
+  "license": "ISC"
+}

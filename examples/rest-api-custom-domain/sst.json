@@ -1,0 +1,5 @@
+{
+  "name": "rest-api-custom-domain",
+  "region": "us-east-1",
+  "main": "stacks/index.js"
+}

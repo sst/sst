@@ -1,0 +1,5 @@
+{
+  "name": "graphql-appsync",
+  "region": "us-east-1",
+  "main": "stacks/index.ts"
+}
