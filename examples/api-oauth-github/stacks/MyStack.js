@@ -66,8 +66,8 @@ export default class MyStack extends sst.Stack {
         preventUserExistenceErrors: "ENABLED",
         generateSecret: false,
         refreshTokenValidity: 1,
-        callbackUrLs: ["http://localhost:3000"],
-        logoutUrLs: ["http://localhost:3000"],
+        callbackUrLs: [scope.stage === 'prod' ? "production-url" : "http://localhost:3000"],
+        logoutUrLs: [scope.stage === 'prod' ? "production-url" : "http://localhost:3000"],
         userPoolId: auth.cognitoUserPool.userPoolId,
       }
     );
@@ -107,6 +107,7 @@ export default class MyStack extends sst.Stack {
       path: "frontend",
       environment: {
         VITE_APP_COGNITO_DOMAIN: domain.domainName,
+        VITE_APP_STAGE: scope.stage,
         VITE_APP_API_URL: api.url,
         VITE_APP_REGION: scope.region,
         VITE_APP_USER_POOL_ID: auth.cognitoUserPool.userPoolId,
@@ -117,8 +118,8 @@ export default class MyStack extends sst.Stack {
 
     // Show the endpoint in the output
     this.addOutputs({
-      ApiEndpoint: api.url,
-      authClientId: auth.cognitoUserPoolClient.userPoolClientId,
+      api_endpoint: api.url,
+      auth_client_id: auth.cognitoUserPoolClient.userPoolClientId,
       domain: domain.domainName,
       site_url: site.url,
     });
