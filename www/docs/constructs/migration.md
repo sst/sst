@@ -298,13 +298,13 @@ new Api(stack, "Api", {
 
 - JWT authorizer
 
-Note that, use the name of the `HttpJwtAuthorizer` as the authorizers key to ensure the authorizer resources does not get recreated.
+Note that, use the previously defined HttpJwtAuthorizer name (ie. `MyAuthorizer`) as the authorizers key to ensure the authorizer resources does not get recreated.
 
 ```js
 // from
 import { HttpJwtAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
 
-const authorizer = new HttpJwtAuthorizer("Authorizer", "https://myorg.us.auth0.com", {
+const authorizer = new HttpJwtAuthorizer("MyAuthorizer", "https://myorg.us.auth0.com", {
   jwtAudience: ["UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif"],
 });
 
@@ -325,7 +325,7 @@ new Api(stack, "Api", {
 // to
 new Api(stack, "Api", {
   authorizers: {
-    Authorizer: {
+    MyAuthorizer: {
       type: "jwt",
       jwt: {
         issuer: "https://myorg.us.auth0.com",
@@ -334,14 +334,14 @@ new Api(stack, "Api", {
     },
   },
   defaults: {
-    authorizer: "Authorizer",
+    authorizer: "MyAuthorizer",
     authorizationScopes: ["user.id", "user.email"],
   },
   routes: {
     "GET /notes": "src/list.main",
     "POST /notes": {
       function: "create.main",
-      authorizer: "Authorizer",
+      authorizer: "MyAuthorizer",
       authorizationScopes: ["user.id", "user.email"],
     }
   },
@@ -350,13 +350,13 @@ new Api(stack, "Api", {
 
 - User Pool authorizer
 
-Note that, use the name of the `HttpUserPoolAuthorizer` as the authorizers key to ensure the authorizer resources does not get recreated.
+Note that, use the previously defined HttpUserPoolAuthorizer name (ie. `MyAuthorizer`) as the authorizers key to ensure the authorizer resources does not get recreated.
 
 ```js
 // from
 import { HttpUserPoolAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
 
-const authorizer = new HttpUserPoolAuthorizer("Authorizer", userPool, {
+const authorizer = new HttpUserPoolAuthorizer("MyAuthorizer", userPool, {
   userPoolClients: [userPoolClient],
 });
 
@@ -378,7 +378,7 @@ new Api(stack, "Api", {
 // to
 new Api(stack, "Api", {
   authorizers: {
-    Authorizer: {
+    MyAuthorizer: {
       type: "user_pool",
       userPool: {
         id: userPool.userPoolId,
@@ -387,14 +387,14 @@ new Api(stack, "Api", {
     },
   },
   defaults: {
-    authorizer: "Authorizer",
+    authorizer: "MyAuthorizer",
     authorizationScopes: ["user.id", "user.email"],
   },
   routes: {
     "GET /notes": "src/list.main",
     "POST /notes": {
       function: "create.main",
-      authorizer: "Authorizer",
+      authorizer: "MyAuthorizer",
       authorizationScopes: ["user.id", "user.email"],
     }
   },
@@ -403,7 +403,7 @@ new Api(stack, "Api", {
 
 - Lambda authorizer
 
-Note that, use the name of the `HttpLambdaAuthorizer` as the authorizers key to ensure the authorizer resources does not get recreated.
+Note that, use the previously defined HttpLambdaAuthorizer name (ie. `MyAuthorizer`) as the authorizers key to ensure the authorizer resources does not get recreated.
 
 ```js
 // from
@@ -414,7 +414,7 @@ const authHandler = new Function(stack, "AuthHandler", {
   handler: "src/authorizer.main",
 });
 
-const authorizer = new HttpLambdaAuthorizer("Authorizer", authHandler, {
+const authorizer = new HttpLambdaAuthorizer("MyAuthorizer", authHandler, {
   authorizerName: "LambdaAuthorizer",
   resultsCacheTtl: Duration.seconds(30),
 });
@@ -439,20 +439,20 @@ const authHandler = new Function(stack, "AuthHandler", {
 
 new Api(stack, "Api", {
   authorizers: {
-    Authorizer: {
+    MyAuthorizer: {
       type: "lambda",
       function: authHandler,
       resultsCacheTtl: "30 seconds",
     },
   },
   defaults: {
-    authorizer: "Authorizer",
+    authorizer: "MyAuthorizer",
   },
   routes: {
     "GET /notes": "src/list.main",
     "POST /notes": {
       function: "create.main",
-      authorizer: "Authorizer",
+      authorizer: "MyAuthorizer",
     }
   },
 }
@@ -1500,6 +1500,8 @@ api.cdk.certificate;
 }
 ```
 
+Note that, for backward compatibility, Identity Pool federation is enabled by default. You can disable it by setting `identityPoolFederation` to `false`. And the previously created Cognito Identity Pool will be removed on the next deploy.
+
 #### Properties
 - Moved cognitoUserPool ⇒ cdk.userPool
 - Moved cognitoUserPoolClient ⇒ cdk.userPoolClient
@@ -1584,7 +1586,7 @@ notifications: {
 
 - Moved notificationProps.filters ⇒ filters
 - Moved notificationProps.events ⇒ events
-- events: type `s3.EventType[]` ⇒ `string`
+- events: type `s3.EventType[]` ⇒ `string[]`
 
 ```js
 // from
@@ -2428,7 +2430,7 @@ site.cdk.certificate
 
 ### Eslint Changelog
 
-SST no longer directly integrates with eslint. Linting is better configured externally and run as a seperate step in CI.
+SST no longer directly integrates with eslint. Linting is better configured externally and run as a separate step in CI.
 
 To setup eslint in your project first make sure you remove references to SST's eslint config
 
@@ -2447,7 +2449,7 @@ From there you can follow [eslint's getting started guide](https://eslint.org/do
 
 ### Jest Changelog
 
-SST no longer directly integrates with jest. Testing is better configured externally and run as a seperate step in CI.
+SST no longer directly integrates with jest. Testing is better configured externally and run as a separate step in CI.
 
 Remove all references to `sst test` in your package.json scripts
 
