@@ -1,0 +1,23 @@
+{
+  "name": "api-oauth-github",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "sst test",
+    "start": "sst start",
+    "build": "sst build",
+    "deploy": "sst deploy",
+    "remove": "sst remove"
+  },
+  "eslintConfig": {
+    "extends": [
+      "serverless-stack"
+    ]
+  },
+  "dependencies": {
+    "@serverless-stack/cli": "0.69.5",
+    "@serverless-stack/resources": "0.69.5",
+    "aws-cdk-lib": "2.15.0",
+    "lambda-multipart-parser": "^1.0.1"
+  }
+}
