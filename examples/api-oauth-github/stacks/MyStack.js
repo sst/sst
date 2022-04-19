@@ -1,6 +1,7 @@
 import * as sst from "@serverless-stack/resources";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
+import { Lazy } from "aws-cdk-lib";
 
 export default class MyStack extends sst.Stack {
   constructor(scope, id, props) {
@@ -11,14 +12,7 @@ export default class MyStack extends sst.Stack {
       cognito: true,
     });
 
-    // Create a HTTP API
-    const api = new sst.Api(this, "Api", {
-      routes: {
-        "GET /public": "src/public.handler",
-        "GET /user": "src/user.handler",
-        "POST /token": "src/token.handler",
-      },
-    });
+    let api;
 
     // Create a GitHub OIDC IDP
     const idp = new cognito.CfnUserPoolIdentityProvider(
@@ -35,9 +29,21 @@ export default class MyStack extends sst.Stack {
           oidc_issuer: "https://github.com",
           authorize_scopes: "openid user",
           authorize_url: "https://github.com/login/oauth/authorize",
-          token_url: api.url + "/token",
-          attributes_url: api.url + "/user",
-          jwks_uri: api.url + "/token",
+          token_url: Lazy.string({
+            produce() {
+                return api.url + "/token"
+            }
+          }),
+          attributes_url: Lazy.string({
+            produce() {
+                return api.url + "/user"
+            }
+          }),
+          jwks_uri: Lazy.string({
+            produce() {
+                return api.url + "/token"
+            }
+          }),
         },
         attributeMapping: {
           email: "email",
@@ -77,18 +83,24 @@ export default class MyStack extends sst.Stack {
       cfnUserPoolClient.node.addDependency(idp);
     }
 
-    // create a private API route
-    api.addRoutes(this, {
-      "GET /private": {
-        handler: "src/private.handler",
-        authorizer: new apigAuthorizers.HttpUserPoolAuthorizer(
-          "Authorizer",
-          auth.cognitoUserPool,
-          {
-            userPoolClients: [cfnUserPoolClient],
-          }
-        ),
-        authorizationType: sst.ApiAuthorizationType.JWT,
+
+    // Create a HTTP API
+     api = new sst.Api(this, "Api", {
+      routes: {
+        "GET /public": "src/public.handler",
+        "GET /user": "src/user.handler",
+        "POST /token": "src/token.handler",
+        "GET /private": {
+          handler: "src/private.handler",
+          authorizer: new apigAuthorizers.HttpUserPoolAuthorizer(
+            "Authorizer",
+            auth.cognitoUserPool,
+            {
+              userPoolClients: [cfnUserPoolClient],
+            }
+          ),
+          authorizationType: sst.ApiAuthorizationType.JWT,
+        },
       },
     });
 
