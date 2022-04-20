@@ -133,7 +133,7 @@ test("cors-redefined", async () => {
         httpApi: new apig.HttpApi(stack, "HttpApi"),
       },
     });
-  }).toThrow(/Cannot configure the "cors" when "httpApi" is a construct/);
+  }).toThrow(/Cannot configure the "cors" when "cdk.httpApi" is a construct/);
 });
 
 test("accessLog-undefined", async () => {
@@ -271,7 +271,9 @@ test("accessLog-redefined", async () => {
         httpApi: new apig.HttpApi(stack, "HttpApi"),
       },
     });
-  }).toThrow(/Cannot configure the "accessLog" when "httpApi" is a construct/);
+  }).toThrow(
+    /Cannot configure the "accessLog" when "cdk.httpApi" is a construct/
+  );
 });
 
 test("throttling: not throttled", async () => {
@@ -654,7 +656,7 @@ test("customDomain props-redefined", async () => {
       },
     });
   }).toThrow(
-    /Cannot configure the "customDomain" when "httpApi" is a construct/
+    /Cannot configure the "customDomain" when "cdk.httpApi" is a construct/
   );
 });
 
