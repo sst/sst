@@ -113,9 +113,9 @@ module.exports = {
         "constructs/v1/WebSocketApi",
       ],
       Frontend: [
-        "constructs/v1/StaticSite", // shorter in length viewed in browser
+        "constructs/v1/StaticSite",
         "constructs/v1/NextjsSite",
-        "constructs/v1/ViteStaticSite", // shorter in length viewed in browser
+        "constructs/v1/ViteStaticSite",
         "constructs/v1/ReactStaticSite",
       ],
       Database: ["constructs/v1/RDS", "constructs/v1/Table"],
@@ -124,12 +124,14 @@ module.exports = {
         "constructs/v1/Topic",
         "constructs/v1/Queue",
         "constructs/v1/EventBus",
-        "constructs/v1/KinesisStream", // shorter in length viewed in browser
+        "constructs/v1/KinesisStream",
       ],
       Storage: ["constructs/v1/Bucket"],
       Auth: ["constructs/v1/Auth"],
       Other: [
-        "constructs/v1/Script", // shorter in length viewed in browser
+        "constructs/v1/Script",
+        "constructs/v1/Size",
+        "constructs/v1/Duration",
         "constructs/v1/ApiGatewayV1Api",
         "constructs/v1/DebugApp",
         "constructs/v1/DebugStack",
