@@ -11,10 +11,47 @@ import {
   FunctionDefinition,
 } from "./Function";
 import { Permissions } from "./util/permission";
+import { Duration, toCdkDuration } from "./util/duration";
 
 /////////////////////
 // Interfaces
 /////////////////////
+
+export interface BucketCorsRule {
+  /**
+   * The collection of allowed HTTP methods.
+   */
+  allowedMethods: (keyof typeof s3.HttpMethods)[];
+  /**
+   * The collection of allowed origins.
+   *
+   * @example
+   * ```js
+   * // Allow all origins
+   * allowOrigins: ["*"]
+   *
+   * // Allow specific origins. Note that the url protocol, ie. "https://", is required.
+   * allowOrigins: ["https://domain.com"]
+   * ```
+   */
+  allowedOrigins: string[];
+  /**
+   * The collection of allowed headers.
+   */
+  allowedHeaders?: string[];
+  /**
+   * The collection of exposed headers.
+   */
+  exposedHeaders?: string[];
+  /**
+   * A unique identifier for this rule.
+   */
+  id?: string;
+  /**
+   * Specify how long the results of a preflight response can be cached
+   */
+  maxAge?: Duration;
+}
 
 interface BucketBaseNotificationProps {
   /**
@@ -129,6 +166,29 @@ export interface BucketProps {
    * ```
    */
   name?: string;
+  /**
+   * The CORS configuration of this bucket.
+   *
+   * @example
+   *
+   * ```js
+   * new Bucket(stack, "Bucket", {
+   *   cors: true,
+   * });
+   * ```
+   *
+   * ```js
+   * new Bucket(stack, "Bucket", {
+   *   cors: [
+   *     {
+   *       allowedMethods: ["GET"],
+   *       allowedOrigins: ["https://www.example.com"],
+   *     }
+   *   ],
+   * });
+   * ```
+   */
+  cors?: boolean | BucketCorsRule[];
   /**
    * The default function props to be applied to all the Lambda functions in the API. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
    *
@@ -335,13 +395,19 @@ export class Bucket extends Construct implements SSTConstruct {
   }
 
   private createBucket() {
-    const { name, cdk } = this.props;
+    const { name, cors, cdk } = this.props;
 
     if (isCDKConstruct(cdk?.bucket)) {
+      if (cors !== undefined) {
+        throw new Error(
+          `Cannot configure the "cors" when "cdk.bucket" is a construct`
+        );
+      }
       this.cdk.bucket = cdk?.bucket as s3.Bucket;
     } else {
       this.cdk.bucket = new s3.Bucket(this, "Bucket", {
         bucketName: name,
+        cors: this.buildCorsConfig(cors),
         ...cdk?.bucket,
       });
     }
@@ -496,5 +562,39 @@ export class Bucket extends Construct implements SSTConstruct {
     this.permissionsAttachedForAllNotifications.forEach((permissions) =>
       fn.attachPermissions(permissions)
     );
+  }
+
+  private buildCorsConfig(
+    cors?: boolean | BucketCorsRule[]
+  ): s3.CorsRule[] | undefined {
+    if (cors === undefined || cors === false) {
+      return;
+    }
+    if (cors === true) {
+      return [
+        {
+          allowedHeaders: ["*"],
+          allowedMethods: [
+            s3.HttpMethods.GET,
+            s3.HttpMethods.PUT,
+            s3.HttpMethods.HEAD,
+            s3.HttpMethods.POST,
+            s3.HttpMethods.DELETE,
+          ],
+          allowedOrigins: ["*"],
+        },
+      ];
+    }
+
+    return cors.map((e) => ({
+      allowedMethods: (e.allowedMethods || []).map(
+        (method) => s3.HttpMethods[method as keyof typeof s3.HttpMethods]
+      ),
+      allowedOrigins: e.allowedOrigins,
+      allowedHeaders: e.allowedHeaders,
+      exposedHeaders: e.exposedHeaders,
+      id: e.id,
+      maxAge: e.maxAge && toCdkDuration(e.maxAge).toSeconds(),
+    }));
   }
 }

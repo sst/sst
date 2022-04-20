@@ -40,6 +40,7 @@ cdk.out
 
 # Example React apps
 /examples/**/frontend/
+/examples/**
 
 # Ignore presets
 /packages/create-sst/**

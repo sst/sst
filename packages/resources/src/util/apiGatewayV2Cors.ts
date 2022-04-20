@@ -32,7 +32,7 @@ export interface CorsProps {
    */
   exposeHeaders?: string[];
   /**
-   * Specify how long the results of a preflight request can be cached
+   * Specify how long the results of a preflight response can be cached
    */
   maxAge?: Duration;
 }
@@ -59,7 +59,10 @@ export function buildCorsConfig(
     return {
       allowCredentials: cors.allowCredentials,
       allowHeaders: cors.allowHeaders,
-      allowMethods: (cors.allowMethods || []).map((method) => apig.CorsHttpMethod[method as keyof typeof apig.CorsHttpMethod]),
+      allowMethods: (cors.allowMethods || []).map(
+        (method) =>
+          apig.CorsHttpMethod[method as keyof typeof apig.CorsHttpMethod]
+      ),
       allowOrigins: cors.allowOrigins,
       exposeHeaders: cors.exposeHeaders,
       maxAge: cors.maxAge && toCdkDuration(cors.maxAge),

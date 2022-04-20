@@ -741,22 +741,22 @@ export class Api<
     if (isCDKConstruct(cdk?.httpApi)) {
       if (cors !== undefined) {
         throw new Error(
-          `Cannot configure the "cors" when "httpApi" is a construct`
+          `Cannot configure the "cors" when "cdk.httpApi" is a construct`
         );
       }
       if (accessLog !== undefined) {
         throw new Error(
-          `Cannot configure the "accessLog" when "httpApi" is a construct`
+          `Cannot configure the "accessLog" when "cdk.httpApi" is a construct`
         );
       }
       if (customDomain !== undefined) {
         throw new Error(
-          `Cannot configure the "customDomain" when "httpApi" is a construct`
+          `Cannot configure the "customDomain" when "cdk.httpApi" is a construct`
         );
       }
       if (cdk?.httpStages !== undefined) {
         throw new Error(
-          `Cannot configure the "stages" when "httpApi" is a construct`
+          `Cannot configure the "stages" when "cdk.httpApi" is a construct`
         );
       }
       this.cdk.httpApi = cdk?.httpApi as apig.HttpApi;

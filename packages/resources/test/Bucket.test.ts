@@ -1,4 +1,5 @@
 import {
+  ABSENT,
   countResources,
   countResourcesLike,
   hasResource,
@@ -68,6 +69,62 @@ test("constructor: cdk.bucket is props", async () => {
     BucketName: "my-bucket",
   });
   countResources(stack, "Custom::S3BucketNotifications", 0);
+});
+
+test("cors: undefined", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "Bucket");
+  hasResource(stack, "AWS::S3::Bucket", {
+    CorsConfiguration: ABSENT,
+  });
+});
+
+test("cors: false", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "Bucket");
+  hasResource(stack, "AWS::S3::Bucket", {
+    CorsConfiguration: ABSENT,
+  });
+});
+
+test("cors: defined", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "Bucket", {
+    cors: [
+      {
+        allowedMethods: ["GET"],
+        allowedOrigins: ["https://domain.com"],
+      },
+    ],
+  });
+  hasResource(stack, "AWS::S3::Bucket", {
+    CorsConfiguration: {
+      CorsRules: [
+        {
+          AllowedMethods: ["GET"],
+          AllowedOrigins: ["https://domain.com"],
+        },
+      ],
+    },
+  });
+});
+
+test("cors: true", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "Bucket", {
+    cors: true,
+  });
+  hasResource(stack, "AWS::S3::Bucket", {
+    CorsConfiguration: {
+      CorsRules: [
+        {
+          AllowedHeaders: ["*"],
+          AllowedMethods: ["GET", "PUT", "HEAD", "POST", "DELETE"],
+          AllowedOrigins: ["*"],
+        },
+      ],
+    },
+  });
 });
 
 /////////////////////////////
