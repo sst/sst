@@ -29,7 +29,6 @@ const {
   writeOutputsFile,
 } = require("./util/cdkHelpers");
 const objectUtil = require("../lib/object");
-const spawn = require("cross-spawn");
 const { CloudFormation } = require("aws-sdk");
 
 let isConsoleEnabled = false;
@@ -108,7 +107,7 @@ module.exports = async function (argv, config, cliInfo) {
         const cfn = new CloudFormation({ region: stack.region });
         const result = await cfn
           .describeStackResource({
-            StackName: stack.id,
+            StackName: stack.name,
             LogicalResourceId: "SSTMetadata",
           })
           .promise();
