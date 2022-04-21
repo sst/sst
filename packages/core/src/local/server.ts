@@ -1,4 +1,5 @@
 import { produceWithPatches, enablePatches } from "immer";
+import express from "express";
 enablePatches();
 
 import { WebSocketServer } from "ws";
@@ -32,10 +33,69 @@ export function useLocalServer(opts: Opts) {
   const onStateChange = new EventDelegate<DendriformPatch[]>();
   const onDeploy = new EventDelegate<void>();
 
-  const server = https.createServer({
-    key: opts.key,
-    cert: opts.cert,
-  });
+  const rest = express();
+
+  rest.all<{
+    href: string;
+  }>(
+    `/proxy*`,
+    express.raw({
+      type: "*/*",
+      limit: "1024mb",
+    }),
+    (req, res) => {
+      res.header("Access-Control-Allow-Origin", "*");
+      res.header(
+        "Access-Control-Allow-Methods",
+        "GET, PUT, PATCH, POST, DELETE"
+      );
+      res.header(
+        "Access-Control-Allow-Headers",
+        req.header("access-control-request-headers")
+      );
+
+      if (req.method === "OPTIONS") return res.send();
+      const u = new URL(req.url.substring(7));
+      const forward = https.request(
+        u,
+        {
+          headers: {
+            ...req.headers,
+            host: u.hostname,
+          },
+          method: req.method,
+        },
+        (proxied) => {
+          res.status(proxied.statusCode!);
+          for (const [key, value] of Object.entries(proxied.headers)) {
+            res.header(key, value);
+          }
+          proxied.pipe(res);
+        }
+      );
+      if (
+        req.method !== "GET" &&
+        req.method !== "DELETE" &&
+        req.method !== "HEAD" &&
+        req.body
+      )
+        forward.write(req.body);
+      forward.end();
+      forward.on("error", (e) => {
+        console.log(e.message);
+      });
+    }
+  );
+
+  // Wire up websocket
+  const server = https.createServer(
+    {
+      key: opts.key,
+      cert: opts.cert,
+    },
+    rest
+  );
+
   const wss = new WebSocketServer({ server });
   server.listen(opts.port);
   const handler = applyWSSHandler({

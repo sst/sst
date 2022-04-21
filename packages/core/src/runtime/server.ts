@@ -14,8 +14,6 @@ const API_VERSION = "2018-06-01";
 
 type ServerOpts = {
   port: number;
-  key: any;
-  cert: any;
 };
 
 type Payload = {
@@ -252,15 +250,9 @@ export class Server {
 
   listen() {
     logger.debug("Starting runtime server on port:", this.opts.port);
-    https
-      .createServer(
-        {
-          key: this.opts.key,
-          cert: this.opts.cert,
-        },
-        this.app
-      )
-      .listen(this.opts.port);
+    this.app.listen({
+      port: this.opts.port,
+    });
   }
 
   private pool(fun: string) {
