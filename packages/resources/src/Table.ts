@@ -39,7 +39,9 @@ export interface TableLocalIndexProps {
    * The set of attributes that are projected into the secondary index.
    * @default "all"
    */
-  projection?: Lowercase<keyof Pick<typeof dynamodb.ProjectionType, "ALL" | "KEYS_ONLY">> | string[];
+  projection?:
+    | Lowercase<keyof Pick<typeof dynamodb.ProjectionType, "ALL" | "KEYS_ONLY">>
+    | string[];
   cdk?: {
     /**
      * Override the settings of the internally created local secondary indexes
@@ -61,7 +63,9 @@ export interface TableGlobalIndexProps {
    * The set of attributes that are projected into the secondary index.
    * @default "all"
    */
-  projection?: Lowercase<keyof Pick<typeof dynamodb.ProjectionType, "ALL" | "KEYS_ONLY">> | string[];
+  projection?:
+    | Lowercase<keyof Pick<typeof dynamodb.ProjectionType, "ALL" | "KEYS_ONLY">>
+    | string[];
   cdk?: {
     /**
      * Override the settings of the internally created global secondary index
@@ -162,6 +166,19 @@ export interface TableProps {
    * ```
    */
   localIndexes?: Record<string, TableLocalIndexProps>;
+  /**
+   * Configure the KinesisStream to capture item-level changes for the table.
+   *
+   * @example
+   *
+   * ```js
+   * const stream = new KinesisStream(stack, "Stream");
+   *
+   * new Table(stack, "Table", {
+   *   kinesisStream: stream,
+   * });
+   * ```
+   */
   kinesisStream?: KinesisStream;
   /**
    * Configure the information that will be written to the Stream.
@@ -309,9 +326,10 @@ export class Table extends Construct implements SSTConstruct {
       throw new Error(
         `Cannot add secondary indexes to "${this.node.id}" Table without defining "fields"`
       );
-    for (const [indexName, { partitionKey, sortKey, projection, cdk }] of Object.entries(
-      secondaryIndexes
-    )) {
+    for (const [
+      indexName,
+      { partitionKey, sortKey, projection, cdk },
+    ] of Object.entries(secondaryIndexes)) {
       // Validate index does not contain "indexName", "partitionKey" and "sortKey"
       if ((cdk?.index as dynamodb.GlobalSecondaryIndexProps)?.indexName) {
         throw new Error(
@@ -338,15 +356,17 @@ export class Table extends Construct implements SSTConstruct {
         ...(() => {
           if (!projection) {
             return undefined;
-          }
-          else if (Array.isArray(projection)) {
+          } else if (Array.isArray(projection)) {
             return {
               projectionType: dynamodb.ProjectionType.INCLUDE,
               nonKeyAttributes: projection,
             };
           }
           return {
-            projectionType: dynamodb.ProjectionType[projection.toUpperCase() as keyof typeof dynamodb.ProjectionType]
+            projectionType:
+              dynamodb.ProjectionType[
+                projection.toUpperCase() as keyof typeof dynamodb.ProjectionType
+              ],
           };
         })(),
         ...cdk?.index,
@@ -394,15 +414,17 @@ export class Table extends Construct implements SSTConstruct {
         ...(() => {
           if (!projection) {
             return undefined;
-          }
-          else if (Array.isArray(projection)) {
+          } else if (Array.isArray(projection)) {
             return {
               projectionType: dynamodb.ProjectionType.INCLUDE,
               nonKeyAttributes: projection,
             };
           }
           return {
-            projectionType: dynamodb.ProjectionType[projection.toUpperCase() as keyof typeof dynamodb.ProjectionType]
+            projectionType:
+              dynamodb.ProjectionType[
+                projection.toUpperCase() as keyof typeof dynamodb.ProjectionType
+              ],
           };
         })(),
         ...cdk?.index,

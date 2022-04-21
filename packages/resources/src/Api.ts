@@ -209,6 +209,8 @@ export interface ApiProps<
   /**
    * CORS support applied to all endpoints in this API
    *
+   * @default true
+   *
    * @example
    *
    * ```js
@@ -224,13 +226,15 @@ export interface ApiProps<
   /**
    * Enable CloudWatch access logs for this API
    *
+   * @default true
+   *
    * @example
    * ```js
    * new Api(stack, "Api", {
    *   accessLog: true
    * });
    * ```
-   * @example
+   *
    * ```js
    * new Api(stack, "Api", {
    *   accessLog: {
@@ -250,7 +254,6 @@ export interface ApiProps<
    * })
    * ```
    *
-   * @example
    * ```js
    * new Api(stack, "Api", {
    *   customDomain: {
