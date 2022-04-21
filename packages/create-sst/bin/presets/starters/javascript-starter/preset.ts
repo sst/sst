@@ -3,7 +3,7 @@ export default definePreset({
   options: {},
   handler: async () => {
     await applyNestedPreset({
-      preset: "presets/base/javascript",
+      preset: "presets/base/starter",
     });
     await applyNestedPreset({
       preset: "presets/base/monorepo",

@@ -4,9 +4,6 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    dir: "./test",
-  },
-  esbuild: {
-    sourcemap: "both",
+    testTimeout: 30000,
   },
 });

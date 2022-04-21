@@ -1,27 +1,23 @@
 export default definePreset({
-  name: "Starter: Typescript",
+  name: "Starter",
   options: {},
   handler: async () => {
     await applyNestedPreset({
-      preset: "presets/base/starter",
-    });
-    await applyNestedPreset({
-      preset: "presets/base/monorepo",
+      preset: "presets/base/typescript",
     });
     await extractTemplates();
     await installPackages({
-      packages: ["@types/node", "@types/aws-lambda"],
-      additionalArgs: ["-w", "backend"],
       dev: true,
+      packages: ["vitest"],
     });
     await editFiles({
-      files: ["backend/package.json"],
+      files: ["package.json"],
       operations: [
         {
           type: "edit-json",
           merge: {
             scripts: {
-              typecheck: "tsc --noEmit",
+              test: "vitest run",
             },
           },
         },

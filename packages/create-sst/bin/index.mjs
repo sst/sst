@@ -13,26 +13,26 @@ const DEFAULT_CATEGORY = "starters";
 program
   .name("create-sst")
   .description("CLI to create SST projects")
-  .option("--examples", "Include example presets", false)
+  .option("--examples", "Only show example presets", false)
   .argument("[string]", "The preset to clone")
   .argument("[string]", "The destination directory")
   .action(async (preset, destination) => {
+    const opts = program.opts();
     const cwd = process.cwd();
     const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
     process.chdir(__dirname);
 
+    const scan = !opts.examples ? ["starters"] : ["examples"];
     const presets = (
       await Promise.all(
-        ["starters", program.opts().examples ? "examples" : ""]
-          .filter(Boolean)
-          .map(async (category) => {
-            const folders = await fs.readdir(
-              path.join(__dirname, "presets", category)
-            );
-            return folders.map((folder) =>
-              path.join(category === DEFAULT_CATEGORY ? "" : category, folder)
-            );
-          })
+        scan.map(async (category) => {
+          const folders = await fs.readdir(
+            path.join(__dirname, "presets", category)
+          );
+          return folders.map((folder) =>
+            path.join(category === DEFAULT_CATEGORY ? "" : category, folder)
+          );
+        })
       )
     ).flat();
     const answers = await inquirer.prompt([
@@ -50,15 +50,17 @@ program
         message: "Destination directory",
       },
     ]);
-    const opts = Object.assign(
+    const selection = Object.assign(
       {
         preset,
         destination,
       },
       answers
     );
-    destination = path.resolve(path.join(cwd, opts.destination || destination));
-    preset = opts.preset || preset;
+    destination = path.resolve(
+      path.join(cwd, selection.destination || destination)
+    );
+    preset = selection.preset || preset;
     preset = path.join(
       "presets",
       preset.includes("/") ? "" : DEFAULT_CATEGORY,

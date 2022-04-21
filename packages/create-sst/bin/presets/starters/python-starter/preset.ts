@@ -3,10 +3,7 @@ export default definePreset({
   options: {},
   handler: async () => {
     await applyNestedPreset({
-      preset: "presets/base/typescript",
-    });
-    await applyNestedPreset({
-      preset: "presets/base/monorepo",
+      preset: "presets/base/starter",
     });
     await extractTemplates();
     await installPackages({
