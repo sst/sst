@@ -7,6 +7,7 @@ const chalk = require("chalk");
 const readline = require("readline");
 const detect = require("detect-port-alt");
 const Codegen = require("@graphql-codegen/cli");
+const openBrowser = require("react-dev-utils/openBrowser");
 
 const {
   logger,
@@ -425,11 +426,10 @@ module.exports = async function (argv, config, cliInfo) {
     }
   }
 
-  clientLogger.info(
-    `SST Console: https://console.serverless-stack.com/${config.name}/${
-      config.stage
-    }/local${local.port !== 13557 ? "?_port=" + local.port : ""}`
-  );
+  const url = `https://console.serverless-stack.com/${config.name}/${
+    config.stage
+  }/local${local.port !== 13557 ? "?_port=" + local.port : ""}`;
+  openBrowser(url);
 };
 
 async function deployDebugStack(config, cliInfo) {
