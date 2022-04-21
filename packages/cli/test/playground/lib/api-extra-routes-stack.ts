@@ -1,16 +1,11 @@
 import * as sst from "@serverless-stack/resources";
+import { MainStack as ApiStack } from "./api-stack";
 
-interface StackProps extends sst.StackProps {
-  readonly api: sst.Api<any>;
-}
+export function MainStack({ stack }: sst.StackContext) {
+  const { api } = sst.use(ApiStack);
 
-export class MainStack extends sst.Stack {
-  constructor(scope: sst.App, id: string, props: StackProps) {
-    super(scope, id, props);
-
-    props.api.addRoutes(this, {
-      "GET /extraRoute1": "src/lambda.main",
-      "POST /extraRoute2": "src/lambda.main",
-    });
-  }
+  api.addRoutes(stack, {
+    "GET /extraRoute1": "src/lambda.main",
+    "POST /extraRoute2": "src/lambda.main",
+  });
 }
