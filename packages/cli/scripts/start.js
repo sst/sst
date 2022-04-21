@@ -108,7 +108,7 @@ module.exports = async function (argv, config, cliInfo) {
         const cfn = new CloudFormation({ region: stack.region });
         const result = await cfn
           .describeStackResource({
-            StackName: stack.id,
+            StackName: stack.name,
             LogicalResourceId: "SSTMetadata",
           })
           .promise();
