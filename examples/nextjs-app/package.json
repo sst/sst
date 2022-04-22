@@ -10,8 +10,8 @@
     "remove": "sst remove"
   },
   "dependencies": {
-    "@serverless-stack/cli": "0.63.0",
-    "@serverless-stack/resources": "0.63.0",
+    "@serverless-stack/cli": "0.69.7",
+    "@serverless-stack/resources": "0.69.7",
     "@sls-next/lambda-at-edge": "^3.7.0-alpha.7",
     "aws-cdk-lib": "2.15.0"
   }

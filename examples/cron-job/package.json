@@ -12,8 +12,8 @@
     "cdk": "sst cdk"
   },
   "dependencies": {
-    "@serverless-stack/cli": "0.69.2",
-    "@serverless-stack/resources": "0.69.2",
+    "@serverless-stack/cli": "0.69.7",
+    "@serverless-stack/resources": "0.69.7",
     "aws-cdk-lib": "2.15.0",
     "node-fetch": "^2.6.1"
   },

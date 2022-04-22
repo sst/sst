@@ -8,8 +8,8 @@
     "fs-extra": "^10.0.0"
   },
   "devDependencies": {
-    "@serverless-stack/cli": "0.69.2",
-    "@serverless-stack/resources": "0.69.2",
+    "@serverless-stack/cli": "0.69.7",
+    "@serverless-stack/resources": "0.69.7",
     "aws-cdk-lib": "2.15.0",
     "@types/aws-lambda": "^8.10.83",
     "@types/fs-extra": "^9.0.13",
