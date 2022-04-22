@@ -661,7 +661,7 @@ export class Api<
    * ```js
    * const api = new Api(stack, "Api", {
    *   routes: {
-   *     "GET    /notes": "src/list.main",
+   *     "GET /notes": "src/list.main",
    *   },
    * });
    *
