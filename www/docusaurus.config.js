@@ -162,6 +162,7 @@ module.exports = {
       {
         docs: {
           routeBasePath: "/",
+          exclude: ["constructs/v1/*.snippets.md"],
           sidebarCollapsible: false,
           sidebarPath: require.resolve("./sidebars.js"),
           showLastUpdateTime: true,
