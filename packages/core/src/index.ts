@@ -176,7 +176,7 @@ async function diff(cdkOptions, stackIds) {
 }
 
 async function bootstrap(cdkOptions) {
-  logger.debug("bootstrap", cdkOptions);
+  logger.debug("bootstrap");
 
   const response = spawn.sync(
     process.execPath,
@@ -241,6 +241,9 @@ async function deployInit(cdkOptions, stackId) {
     errorMessage: undefined,
     outputs: undefined,
   }));
+
+  // Ensure bootstrap stacks are not stuck in REVIEW_IN_PROGRESS state
+  await checkInReviewBootstrapStacks(cdkOptions, stackStates);
 
   return { stackStates, isCompleted: false };
 }
@@ -923,6 +926,55 @@ async function deployStackTemplate(cdkOptions, stackState) {
   }
 
   return buildDeployResponse({ stackName, stackRet, status, statusReason });
+}
+
+async function checkInReviewBootstrapStacks(cdkOptions, stackStates) {
+  logger.debug("checkInReviewBootstrapStacks");
+
+  // Check bootstrap stacks in each region
+  const regions = stackStates.map(({ region }) => region);
+  const uniqueRegions = regions.filter((x, i) => i === regions.indexOf(x));
+  await Promise.all(
+    uniqueRegions.map((region) =>
+      checkInReviewBootstrapStackInRegion(cdkOptions, region)
+    )
+  );
+}
+
+async function checkInReviewBootstrapStackInRegion(cdkOptions, region) {
+  logger.debug("checkInReviewBootstrapStackInRegion", region);
+
+  // Get existing bootstrap stack
+  const stackName = "CDKToolkit";
+  let stack;
+  try {
+    const ret = await describeStackWithRetry({ region, stackName });
+    stack = ret.Stacks[0];
+  } catch (e) {
+    if (isStackNotExistException(e)) {
+      logger.debug(
+        "checkInReviewBootstrapStackInRegion: bootstrap stack does not exist"
+      );
+    } else {
+      logger.debug(
+        "checkInReviewBootstrapStackInRegion: bootstrap stack describe error"
+      );
+      logger.debug(e);
+    }
+    // ignore
+  }
+
+  // Remove existing bootstrap stack if stuck in REVIEW_IN_PROGERESS
+  if (
+    stack &&
+    stack.StackStatus === "REVIEW_IN_PROGRESS" &&
+    Date.parse(stack.CreationTime) < Date.now() - 60000
+  ) {
+    logger.debug(
+      "checkInReviewBootstrapStackInRegion: removing bootstrap stack"
+    );
+    await deleteStackWithRetry({ region, stackName });
+  }
 }
 
 async function isTemplateChanged({
@@ -1749,6 +1801,21 @@ async function listImportsWithRetry({ region, exportName }) {
     if (isRetryableException(e)) {
       await new Promise((resolve) => setTimeout(resolve, 3000));
       return await listImportsWithRetry({ region, exportName });
+    }
+    throw e;
+  }
+  return ret;
+}
+
+async function deleteStackWithRetry({ region, stackName }) {
+  let ret;
+  try {
+    const cfn = new aws.CloudFormation({ region });
+    ret = await cfn.deleteStack({ StackName: stackName }).promise();
+  } catch (e) {
+    if (isRetryableException(e)) {
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      return await deleteStackWithRetry({ region, stackName });
     }
     throw e;
   }
