@@ -612,12 +612,16 @@ async function chooseServerPort(defaultPort) {
 
 function buildInvokeEnv(reqEnv) {
   // Get system env
+  const systemEnv = { ...process.env };
   // Note: AWS_PROFILE is defined if users run `AWS_PROFILE=xx sst start`, and in
   //       aws sdk v3, AWS_PROFILE takes precedence over AWS_ACCESS_KEY_ID and
   //       AWS_SECRET_ACCESS_KEY. Hence we need to remove it to ensure the invoked
   //       function uses the IAM credentials from the remote Lambda.
-  const systemEnv = { ...process.env };
   delete systemEnv.AWS_PROFILE;
+  // Note: AWS_SECURITY_TOKEN is defined if aws-vault is used to manage credentials.
+  //       When both the AWS_SECURITY_TOKEN and the AWS credentials from the Lambda
+  //       function are set, the credentials are invalid.
+  delete systemEnv.AWS_SECURITY_TOKEN;
 
   const env = {
     ...systemEnv,
