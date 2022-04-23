@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-start-base",
   "private": true,
   "description": "tests",
-  "version": "1.0.0-beta.22",
+  "version": "1.0.0-beta.23",
   "scripts": {
     "start": "sst start",
     "build": "sst build",
@@ -11,8 +11,8 @@
     "cdk": "sst cdk"
   },
   "dependencies": {
-    "@serverless-stack/cli": "1.0.0-beta.22",
-    "@serverless-stack/resources": "1.0.0-beta.22"
+    "@serverless-stack/cli": "1.0.0-beta.23",
+    "@serverless-stack/resources": "1.0.0-beta.23"
   },
   "license": "ISC"
 }
