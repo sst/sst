@@ -387,7 +387,7 @@ export interface FunctionBundleNodejsProps extends FunctionBundleBase {
      * ```js
      * new Function(stack, "Function", {
      *   bundle: {
-     *     esbuild: {
+     *     esbuildConfig: {
      *       keepNames: true
      *     }
      *   }
@@ -402,7 +402,7 @@ export interface FunctionBundleNodejsProps extends FunctionBundleBase {
      * ```js
      * new Function(stack, "Function", {
      *   bundle: {
-     *     esbuild: {
+     *     esbuildConfig: {
      *       plugins: "path/to/plugins.js"
      *     }
      *   }

@@ -41,7 +41,7 @@ export interface RDSProps {
      * ```js
      * new RDS(stack, "Database", {
      *   scaling: {
-     *     autoPause: props.app.local,
+     *     autoPause: props.app.stage !== "prod"
      *   }
      * })
      * ```
