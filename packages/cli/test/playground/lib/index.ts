@@ -1,6 +1,6 @@
 import * as cdk from "aws-cdk-lib";
 import { MainStack as ApiStack } from "./api-stack";
-import { MainStack as ApiExtraRoutesStack } from "./api-extra-routes-stack";
+//import { MainStack as ApiExtraRoutesStack } from "./api-extra-routes-stack";
 //import { MainStack as EventBusStack } from "./eventbus-stack";
 //import { MainStack as ApolloStack } from "./apollo-api-stack";
 //import { MainStack as CronStack } from "./cron-stack";
@@ -31,16 +31,15 @@ import { MainStack as ApiExtraRoutesStack } from "./api-extra-routes-stack";
 import * as sst from "@serverless-stack/resources";
 
 export default async function main(app: sst.App) {
-  app
-    .stack(ApiStack, { id: "api" })
-    .stack(ApiExtraRoutesStack, { id: "api-extra-routes" });
+  app.stack(ApiStack, { id: "api" });
+  //.stack(ApiExtraRoutesStack, { id: "api-extra-routes" })
   //new ApiV1Stack(app, "apiv1");
   //new ApolloStack(app, "apollo");
   //new AppsyncStack(app, "appsync");
   //new WebsocketStack(app, "websocket");
 
   //new TableStack(app, "table");
-  //new RDSStack(app, "rds");
+  //.stack(RDSStack, { id: "rds"})
   //new CronStack(app, "cron");
   //new BucketStack(app, "bucket");
   //new TopicStack(app, "topic");
