@@ -12,8 +12,8 @@ type Config = RegionInputConfig & RetryInputConfig & AwsAuthInputConfig;
 class CustomHandler extends FetchHttpHandler {
   handle(req: any, opts: any) {
     const { protocol, hostname, path } = req;
-    req.protocol = "https:";
-    req.hostname = "local.serverless-stack.com:13557";
+    req.protocol = "http:";
+    req.hostname = "localhost:12557";
     req.path = `/proxy/${protocol}//${hostname}${path}`;
     return super.handle(req, opts);
   }

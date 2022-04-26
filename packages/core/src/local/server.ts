@@ -1,14 +1,17 @@
 import { produceWithPatches, enablePatches } from "immer";
 import express from "express";
+import fs from "fs/promises";
 enablePatches();
 
 import { WebSocketServer } from "ws";
 import https from "https";
+import http from "http";
 import { applyWSSHandler } from "@trpc/server/adapters/ws/dist/trpc-server-adapters-ws.cjs.js";
 import { FunctionState, router, State } from "./router.js";
 import { EventDelegate } from "../events.js";
 import { WritableDraft } from "immer/dist/internal";
 import { DendriformPatch, optimise } from "dendriform-immer-patch-optimiser";
+import { sync } from "cross-spawn";
 
 type Opts = {
   port: number;
@@ -20,7 +23,7 @@ type Opts = {
   live: boolean;
 };
 
-export function useLocalServer(opts: Opts) {
+export async function useLocalServer(opts: Opts) {
   let state: State = {
     app: opts.app,
     stage: opts.stage,
@@ -34,6 +37,11 @@ export function useLocalServer(opts: Opts) {
   const onDeploy = new EventDelegate<void>();
 
   const rest = express();
+
+  rest.get(`/ping`, (_, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.sendStatus(200);
+  });
 
   rest.all<{
     href: string;
@@ -87,16 +95,45 @@ export function useLocalServer(opts: Opts) {
     }
   );
 
+  const server = await (async () => {
+    const result = sync("mkcert", ["--help"]);
+    const KEY_PATH = ".sst/localhost-key.pem";
+    const CERT_PATH = ".sst/localhost.pem";
+    if (result.status === 0) {
+      try {
+        await Promise.all([fs.access(KEY_PATH), fs.access(CERT_PATH)]);
+      } catch (e) {
+        sync("mkcert", ["localhost"], {
+          cwd: ".sst",
+        });
+      }
+      const [key, cert] = await Promise.all([
+        fs.readFile(KEY_PATH),
+        fs.readFile(CERT_PATH),
+      ]);
+      return https.createServer(
+        {
+          key: key,
+          cert: cert,
+        },
+        rest
+      );
+    }
+
+    return http.createServer({}, rest);
+  })();
+
   // Wire up websocket
-  const server = https.createServer(
-    {
-      key: opts.key,
-      cert: opts.cert,
-    },
-    rest
-  );
 
   const wss = new WebSocketServer({ server });
+  wss.on("connection", (socket, req) => {
+    if (req.headers.origin?.endsWith("localhost:3000")) return;
+    if (req.headers.origin?.endsWith("console.serverless-stack.com")) return;
+    if (req.headers.origin?.endsWith("console.sst.dev")) return;
+    console.log("Rejecting unauthorized connection from " + req.headers.origin);
+    socket.terminate();
+  });
+
   server.listen(opts.port);
   const handler = applyWSSHandler({
     wss,

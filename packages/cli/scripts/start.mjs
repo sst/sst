@@ -167,7 +167,7 @@ export default async function (argv, config, cliInfo) {
     port: argv.port || (await chooseServerPort(12557)),
   });
 
-  const local = useLocalServer({
+  const local = await useLocalServer({
     live: true,
     port: await chooseServerPort(13557),
     key: cert.key,

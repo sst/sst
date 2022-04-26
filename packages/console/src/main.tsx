@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect } from "react";
+import React, { PropsWithChildren, useEffect, useState } from "react";
 import "@fontsource/jetbrains-mono/latin.css";
 import ReactDOM from "react-dom";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
@@ -53,22 +53,6 @@ globalCss({
   },
 })();
 
-// create persistent WebSocket connection
-const ws = createWSClient({
-  url:
-    `wss://local.serverless-stack.com:` +
-    (new URLSearchParams(location.search).get("_port") || "13557"),
-  retryDelayMs: () => 5000,
-});
-
-const trpcClient = trpc.createClient({
-  links: [
-    wsLink({
-      client: ws,
-    }),
-  ],
-});
-
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -79,23 +63,68 @@ const queryClient = new QueryClient({
 
 ReactDOM.render(
   <React.StrictMode>
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        <DarkMode />
-        <Main />
-      </QueryClientProvider>
-    </trpc.Provider>
+    <QueryClientProvider client={queryClient}>
+      <Trpc>
+        <DarkMode>
+          <Main />
+        </DarkMode>
+      </Trpc>
+    </QueryClientProvider>
   </React.StrictMode>,
   document.getElementById("root")
 );
 
-function DarkMode() {
-  const darkMode = useDarkMode();
+function Trpc(props: PropsWithChildren<{}>) {
+  const [client, setClient] = useState<ReturnType<typeof trpc.createClient>>();
+
   useEffect(() => {
-    const body = document.querySelector("body");
-    body?.setAttribute("class", darkMode.enabled ? darkTheme : "");
-  }, [darkMode.enabled]);
-  return null;
+    async function boot() {
+      let isSSL = true;
+      const port = new URLSearchParams(location.search).get("_port") || "13557";
+
+      while (true) {
+        const protocol = isSSL ? "https" : "http";
+        const resp = await fetch(`${protocol}://localhost:${port}/ping`).catch(
+          () => {}
+        );
+        if (resp && resp.status === 200) break;
+        await new Promise((r) => setTimeout(r, 1000));
+        isSSL = !isSSL;
+      }
+
+      // create persistent WebSocket connection
+      const ws = createWSClient({
+        url: `${isSSL ? "wss" : "ws"}://localhost:${port}`,
+        retryDelayMs: () => 5000,
+      });
+
+      const trpcClient = trpc.createClient({
+        links: [
+          wsLink({
+            client: ws,
+          }),
+        ],
+      });
+
+      setClient(trpcClient);
+    }
+
+    boot();
+  }, []);
+
+  if (!client) return <Splash spinner>Waiting for CLI</Splash>;
+  return (
+    <trpc.Provider client={client} queryClient={queryClient}>
+      {props.children}
+    </trpc.Provider>
+  );
+}
+
+function DarkMode(props: PropsWithChildren<{}>) {
+  const darkMode = useDarkMode();
+  return (
+    <div className={darkMode.enabled ? darkTheme : ""}>{props.children}</div>
+  );
 }
 
 function Main() {
@@ -141,7 +170,7 @@ function CatchAll() {
   return null;
 }
 
-function Realtime(props: { state: State }) {
+function Realtime(props: { state: State }): null {
   const [realtimeState, setRealtimeState] = useAtom(RealtimeStateAtom);
 
   trpc.useSubscription(["onStateChange"], {
