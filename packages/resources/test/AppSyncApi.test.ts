@@ -720,6 +720,39 @@ test("dataSources-HttpDataSource-with-options", async () => {
   });
 });
 
+test("dataSources-NoneDataSource", async () => {
+  const stack = new Stack(new App(), "stack");
+  new AppSyncApi(stack, "Api", {
+    dataSources: {
+      noneDS: {
+        type: "none",
+      },
+    },
+  });
+  countResources(stack, "AWS::AppSync::DataSource", 1);
+  hasResource(stack, "AWS::AppSync::DataSource", {
+    Name: "noneDS",
+    Type: "NONE",
+  });
+});
+
+test("dataSources-NoneDataSource-with-options", async () => {
+  const stack = new Stack(new App(), "stack");
+  new AppSyncApi(stack, "Api", {
+    dataSources: {
+      noneDS: {
+        type: "none",
+        name: "My NONE DS",
+      },
+    },
+  });
+  countResources(stack, "AWS::AppSync::DataSource", 1);
+  hasResource(stack, "AWS::AppSync::DataSource", {
+    Name: "MyNONEDS",
+    Type: "NONE",
+  });
+});
+
 test("resolvers: undefined", async () => {
   const stack = new Stack(new App(), "stack");
   new AppSyncApi(stack, "Api");
