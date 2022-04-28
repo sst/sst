@@ -9,7 +9,7 @@ import { StackB } from "./MyStack";
 export default function main(app) {
   app
     .stack(StackA)
-    .stack(StackB)
+    .stack(StackB);
 
   // Add more stacks
 }
@@ -31,6 +31,31 @@ Error: Do not directly set the environment for a stack
 
 This is by design. The stacks in SST are meant to be re-deployed for multiple stages (like Serverless Framework). And so they depend on the region and AWS profile that's passed in through the CLI. If a stack is hardcoded to be deployed to a specific account or region, it can break your deployment pipeline.
 
+### Configuring stack name
+By default, the name of the CloudFormation stack is the stage name, app name, and the stack function name joined by `-`, ie. `stage-app-MyStack`.
+
+You can override the stack function name by passing in `id`. In this case, the CloudFormation stack name is `stage-app-my-stack`.
+
+```ts
+import { MyStack } from "./MyStack";
+
+export default function main(app) {
+  app.stack(MyStack, { id: "my-stack" });
+}
+```
+
+Alternatively, you can override the CloudFormation stack name directly by passing in `stackName`.
+
+```ts
+import { MyStack } from "./MyStack";
+
+export default function main(app) {
+  app.stack(MyStack, { stackName: `${app.stage}-my-hello-stack` });
+}
+```
+
+Note that, `stackName` need to be parameterized with the stage name. This ensure an app can be deployed to multiple stages with unique stack names.
+
 ### Sharing resources between stacks
 Resources defined in a stack can be used by other stacks. This allows you to have granular stacks that contain only related resources.
 
@@ -42,7 +67,7 @@ export function MyStack({ stack }: StackContext) {
   const table = new Table(stack, "table")
   return {
     table
-  }
+  };
 }
 ```
 
@@ -53,7 +78,7 @@ import { StackContext, use } from "@serverless-stack/resources"
 import { MyStack } from "./MyStack"
 
 export function AnotherStack({ stack }: StackContext) {
-  const { table } = use(MyStack)
+  const { table } = use(MyStack);
   // Use table
 }
 ```
@@ -66,7 +91,7 @@ Simple add an `async` modifier to your function definition
 import { StackContext } from "@serverless-stack/resources"
 
 export async function MyStack({ stack }: StackContext) {
-  const foo = await someAsynCall()
+  const foo = await someAsynCall();
   // Define stack
 }
 ```
@@ -76,7 +101,7 @@ When initializing the stack, make sure you call `await`
 ```ts
 import { MyStack } from "./MyStack"
 export default function main(app: sst.App) {
-  await app.stack(MyStack)
+  await app.stack(MyStack);
 }
 ```
 
@@ -86,9 +111,9 @@ The stage, region, and app name can be accessed through the app object. In your 
 
 ```ts
 function MyStack({ stack, app }: StackContext) {
-  ctx.app.stage;
-  ctx.app.region;
-  ctx.app.name;
+  app.stage;
+  app.region;
+  app.name;
 }
 ```
 
@@ -126,7 +151,7 @@ function MyStack({ stack }: StackContext) {
   });
 
   stack.addDefaultFunctionEnv({
-    TABLE_NAME: "NOTES_TABLE"
+    TABLE_NAME: "NOTES_TABLE",
   });
 
   stack.addDefaultFunctionPermissions(["s3"]);
@@ -175,7 +200,10 @@ export function MyStack({ stack }: StackContext) {
   const topic = new Topic(stack, "Topic");
 
   stack.addOutputs({
-    TopicArn: { value: topic.snsTopic.topicArn, exportName: "MyTopicArn" },
+    TopicArn: {
+      value: topic.snsTopic.topicArn,
+      exportName: "MyTopicArn"
+    },
   });
 }
 ```

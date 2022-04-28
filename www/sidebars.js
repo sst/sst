@@ -104,7 +104,6 @@ module.exports = {
         "constructs/v1/App",
         "constructs/v1/Stack",
         "constructs/v1/Function",
-        "constructs/v1/Permissions",
       ],
       Api: [
         "constructs/v1/Api",
@@ -128,13 +127,16 @@ module.exports = {
       ],
       Storage: ["constructs/v1/Bucket"],
       Auth: ["constructs/v1/Auth"],
-      Other: [
-        "constructs/v1/Script",
+      Types: [
         "constructs/v1/Size",
         "constructs/v1/Duration",
-        "constructs/v1/ApiGatewayV1Api",
+        "constructs/v1/Permissions",
+      ],
+      Other: [
+        "constructs/v1/Script",
         "constructs/v1/DebugApp",
         "constructs/v1/DebugStack",
+        "constructs/v1/ApiGatewayV1Api",
       ],
     },
   ],

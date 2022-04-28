@@ -445,6 +445,29 @@ new ApiGatewayV1Api(stack, "Api", {
 });
 ```
 
+#### Usage Plan & API Keys
+
+Usage plans allow configuring who can access the API, and setting throttling limits and quota limits.
+
+```js
+const api = new ApiGatewayV1Api(stack, "Api", {
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+
+const plan = api.cdk.restApi.addUsagePlan("UsagePlan", {
+  throttle: {
+    rateLimit: 10,
+    burstLimit: 2
+  }
+});
+
+const key = api.cdk.restApi.addApiKey("ApiKey");
+
+plan.addApiKey(key);
+```
+
 #### Importing an existing Rest Api
 
 Override the internally created CDK `RestApi` instance.

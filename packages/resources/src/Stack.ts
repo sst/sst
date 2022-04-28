@@ -68,7 +68,7 @@ export class Stack extends cdk.Stack {
    * stack.setDefaultFunctionProps({
    *   srcPath: "backend",
    *   runtime: "nodejs14.x",
-   * })
+   * });
    * ```
    */
   public setDefaultFunctionProps(props: FunctionProps): void {
@@ -85,7 +85,7 @@ export class Stack extends cdk.Stack {
    *
    * @example
    * ```js
-   * stack.addDefaultFunctionPermissions(["sqs", "s3"])
+   * stack.addDefaultFunctionPermissions(["sqs", "s3"]);
    * ```
    */
   public addDefaultFunctionPermissions(permissions: Permissions) {
@@ -101,7 +101,7 @@ export class Stack extends cdk.Stack {
    * ```js
    * stack.addDefaultFunctionEnv({
    *   DYNAMO_TABLE: table.name
-   * })
+   * });
    * ```
    */
   public addDefaultFunctionEnv(environment: Record<string, string>) {
@@ -115,7 +115,7 @@ export class Stack extends cdk.Stack {
    *
    * @example
    * ```js
-   *   stack.addDefaultFunctionLayers(["arn:aws:lambda:us-east-1:123456789012:layer:nodejs:3"])
+   * stack.addDefaultFunctionLayers(["arn:aws:lambda:us-east-1:123456789012:layer:nodejs:3"]);
    * ```
    */
   public addDefaultFunctionLayers(layers: lambda.ILayerVersion[]) {
@@ -129,7 +129,7 @@ export class Stack extends cdk.Stack {
    *
    * @example
    * ```js
-   * stack.getAllFunctions()
+   * stack.getAllFunctions();
    * ```
    */
   public getAllFunctions() {
@@ -151,8 +151,17 @@ export class Stack extends cdk.Stack {
    * @example
    * ```js
    * stack.addOutputs({
-   *   table: table.name,
-   * })
+   *   TableName: table.name,
+   * });
+   * ```
+   *
+   * ```js
+   * stack.addOutputs({
+   *   TableName: {
+   *     value: table.name,
+   *     exportName: "MyTableName",
+   *   }
+   * });
    * ```
    */
   public addOutputs(

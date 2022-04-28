@@ -54,11 +54,73 @@ The v1 SST constructs were restrucrtured with the following goals in mind:
     });
     ```
     And the string values are auto-completed in your IDE.
+
 3. Complete support for inline TS Docs
    
    v1 SST constructs also come with TS Docs. So you can see helpful docs in your IDE and the new construct docs are also auto-generated from them.
    
-4. Laying the foundation for full typesafety
+4. Cross stack reference made easy
+
+   v1 introduces the concept of Functional Stack. It has a couple of advantages over the previous class constructor way of creating stacks:
+   - Definition is more concise;
+   - Support async tasks in creating stacks;
+   - Most importantly, cross stack references are made easier and fully type safe.
+
+  Here is how you used to reference an S3 bucket from another stack:
+  ```js
+  // In BucketStack.ts
+  import { App, Bucket, Stack } from "@serverless-stack/resources";
+
+  export class BucketStack extends Stack {
+    public readonly bucket: Bucket;
+
+    constructor(scope: App, id: string) {
+      super(scope, id);
+
+      this.bucket = new Bucket(this, "MyBucket");
+    }
+  }
+
+  // In index.ts
+  const bucketStack = new BucketStack(app, "bucket");
+  new ApiStack(app, "api", bucketStack.bucket);
+
+  // In ApiStack.ts
+  import { Api, App, Bucket, Stack } from "@serverless-stack/resources";
+
+  export class ApiStack extends Stack {
+    constructor(scope: App, id: string, bucket: Bucket) {
+      super(scope, id, props);
+
+      bucket;
+    }
+  }
+  ```
+  Now you can just do.
+  ```js
+  // In BucketStack.ts
+  import { Bucket, StackContext } from "@serverless-stack/resources";
+
+  export function BucketStack({ stack }: StackContext) {
+    const bucket = new Bucket(stack, "MyBucket");
+    return { bucket };
+  }
+
+  // In index.ts
+  app
+    .stack(BucketStack)
+    .stack(ApiStack);
+
+  // In ApiStack.ts
+  import { Bucket, StackContext, use } from "@serverless-stack/resources";
+  import { BucketStack } from "./BucketStack";
+
+  export function ApiStack({ stack }: StackContext) {
+    const { bucket } = use(BucketStack)
+  }
+  ```
+
+5. Laying the foundation for full typesafety
 
 ## Upgrade Steps
 Estimated time: 15 minutes
@@ -81,6 +143,41 @@ Prerequisite: Update SST to [v0.59.0](https://github.com/serverless-stack/server
 app.setDefaultRemovalPolicy(cdk.RemovalPolicy.DESTROY);
 // to
 app.setDefaultRemovalPolicy("destroy");
+```
+
+### Stack Changelog (optional)
+You can optionally adopt Functional stack.
+
+#### Adding stack to app
+```js title="stacks/index.ts"
+// from
+import { MyStack } from "./MyStack";
+new MyStack(app, "my-stack");
+
+// to
+import { MyStack } from "./MyStack";
+app.stack(MyStack);
+```
+
+#### Defining stack
+```js title="stacks/ApiStack.ts"
+// from
+import { Api, App, Stack, StackProps } from "@serverless-stack/resources";
+
+export class ApiStack extends Stack {
+  constructor(scope: App, id: string, props: StackProps) {
+    super(scope, id, props);
+
+    new Api(this, "Api");
+  }
+}
+
+// to
+import { Api, StackContext } from "@serverless-stack/resources";
+
+export function ApiStack({ stack }: StackContext) {
+  new Api(stack, "Api");
+}
 ```
 
 ### Permissions Changelog
