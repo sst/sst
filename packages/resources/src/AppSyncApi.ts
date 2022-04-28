@@ -73,7 +73,7 @@ export interface AppSyncApiLambdaDataSourceProps
 }
 
 /**
- * Used to define a lambda data source
+ * Used to define a DynamoDB data source
  *
  * @example
  * ```js
@@ -105,7 +105,7 @@ export interface AppSyncApiDynamoDbDataSourceProps
 }
 
 /**
- * Used to define a lambda data source
+ * Used to define a RDS data source
  *
  * @example
  * ```js
@@ -172,6 +172,29 @@ export interface AppSyncApiHttpDataSourceProps
       authorizationConfig?: appsync.AwsIamConfig;
     };
   };
+}
+
+/**
+ * Used to define a none data source
+ *
+ * @example
+ * ```js
+ * new AppSyncApi(stack, "AppSync", {
+ *   dataSources: {
+ *     http: {
+ *       type: "http",
+ *       endpoint: "https://example.com"
+ *     },
+ *   },
+ * });
+ * ```
+ */
+export interface AppSyncApiNoneDataSourceProps
+  extends AppSyncApiBaseDataSourceProps {
+  /**
+   * String literal to signify that this data source is an HTTP endpoint
+   */
+  type: "none";
 }
 
 export interface MappingTemplateFile {
@@ -304,6 +327,7 @@ export interface AppSyncApiProps {
     | AppSyncApiDynamoDbDataSourceProps
     | AppSyncApiRdsDataSourceProps
     | AppSyncApiHttpDataSourceProps
+    | AppSyncApiNoneDataSourceProps
   >;
   /**
    * The resolvers for this API. Takes an object, with the key being the type name and field name as a string and the value is either a string with the name of existing data source.
@@ -488,7 +512,8 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         | AppSyncApiLambdaDataSourceProps
         | AppSyncApiDynamoDbDataSourceProps
         | AppSyncApiRdsDataSourceProps
-        | AppSyncApiHttpDataSourceProps;
+        | AppSyncApiHttpDataSourceProps
+        | AppSyncApiNoneDataSourceProps;
     }
   ): void {
     Object.keys(dataSources).forEach((key: string) => {
@@ -720,31 +745,24 @@ export class AppSyncApi extends Construct implements SSTConstruct {
       | AppSyncApiDynamoDbDataSourceProps
       | AppSyncApiRdsDataSourceProps
       | AppSyncApiHttpDataSourceProps
+      | AppSyncApiNoneDataSourceProps
   ): Fn | undefined {
     let dataSource;
     let lambda;
 
-    // Lambda ds
-    if ((dsValue as AppSyncApiLambdaDataSourceProps).function) {
-      dsValue = dsValue as AppSyncApiLambdaDataSourceProps;
+    // Lambda function
+    if (Fn.isInlineDefinition(dsValue)) {
       lambda = Fn.fromDefinition(
         scope,
         `Lambda_${dsKey}`,
-        dsValue.function,
+        dsValue,
         this.props.defaults?.function,
         `Cannot define defaults.function when a Function is passed in to the "${dsKey} data source`
       );
-      dataSource = this.cdk.graphqlApi.addLambdaDataSource(dsKey, lambda, {
-        name: dsValue.name,
-        description: dsValue.description,
-      });
+      dataSource = this.cdk.graphqlApi.addLambdaDataSource(dsKey, lambda);
     }
     // DynamoDb ds
-    else if (
-      (dsValue as AppSyncApiDynamoDbDataSourceProps).table ||
-      (dsValue as AppSyncApiDynamoDbDataSourceProps).cdk?.dataSource?.table
-    ) {
-      dsValue = dsValue as AppSyncApiDynamoDbDataSourceProps;
+    else if (dsValue.type === "dynamodb") {
       dataSource = this.cdk.graphqlApi.addDynamoDbDataSource(
         dsKey,
         dsValue.table
@@ -757,12 +775,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
       );
     }
     // Rds ds
-    else if (
-      (dsValue as AppSyncApiRdsDataSourceProps).rds ||
-      (dsValue as AppSyncApiRdsDataSourceProps).cdk?.dataSource
-        ?.serverlessCluster
-    ) {
-      dsValue = dsValue as AppSyncApiRdsDataSourceProps;
+    else if (dsValue.type === "rds") {
       dataSource = this.cdk.graphqlApi.addRdsDataSource(
         dsKey,
         dsValue.rds
@@ -781,8 +794,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
       );
     }
     // Http ds
-    else if ((dsValue as AppSyncApiHttpDataSourceProps).endpoint) {
-      dsValue = dsValue as AppSyncApiHttpDataSourceProps;
+    else if (dsValue.type === "http") {
       dataSource = this.cdk.graphqlApi.addHttpDataSource(
         dsKey,
         dsValue.endpoint,
@@ -792,17 +804,26 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         }
       );
     }
-    // Lambda function
+    // Http ds
+    else if (dsValue.type === "none") {
+      dataSource = this.cdk.graphqlApi.addNoneDataSource(dsKey, {
+        name: dsValue.name,
+        description: dsValue.description,
+      });
+    }
+    // Lambda ds
     else {
-      dsValue = dsValue as FunctionInlineDefinition;
       lambda = Fn.fromDefinition(
         scope,
         `Lambda_${dsKey}`,
-        dsValue,
+        dsValue.function,
         this.props.defaults?.function,
         `Cannot define defaults.function when a Function is passed in to the "${dsKey} data source`
       );
-      dataSource = this.cdk.graphqlApi.addLambdaDataSource(dsKey, lambda);
+      dataSource = this.cdk.graphqlApi.addLambdaDataSource(dsKey, lambda, {
+        name: dsValue.name,
+        description: dsValue.description,
+      });
     }
     this.dataSourcesByDsKey[dsKey] = dataSource;
     if (lambda) {
