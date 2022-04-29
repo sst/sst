@@ -28,7 +28,7 @@ Make sure to not set the default removal policy to `DESTROY` for production envi
 :::
 
 ```js title="stacks/index.js"
-import { RemovalPolicy } from "@aws-cdk/core";
+import { RemovalPolicy } from "aws-cdk-lib";
 
 export default function main(app) {
   // Remove all resources when non-prod stages are removed
