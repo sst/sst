@@ -139,7 +139,6 @@ export function Stacks() {
           </StackItem>
         ))}
       </Content>
-      )
     </>
   );
 }
