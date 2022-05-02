@@ -36,6 +36,17 @@ class Context(object):
     def log(self):
         return sys.stdout.write
 
+
+def handleUnserializable(obj):
+    print(
+        "Unserializable {}: {} when returning result {!r}".format(
+            type(obj), repr(obj), result
+        )
+    )
+
+    raise TypeError("Unserializable {}: {!r}".format(type(obj), obj))
+
+
 logging.basicConfig()
 
 parser = argparse.ArgumentParser(
@@ -77,6 +88,8 @@ if __name__ == '__main__':
         module = import_module(args.handler_module)
         handler = getattr(module, args.handler_name)
         result = handler(event, context)
+        data = json.dumps(result, default=handleUnserializable).encode("utf-8")
+
     except Exception as e:
         has_error = True
         # print error in bootstrap because we won't be able to print the Python
@@ -89,6 +102,7 @@ if __name__ == '__main__':
             "errorMessage": str(ex_value),
             "trace": traceback.format_tb(ex_traceback),
         }
+        data = json.dumps(result).encode("utf-8")
 
     # send response
     if has_error == False:
@@ -96,7 +110,6 @@ if __name__ == '__main__':
     else:
         url_destination = '/error'
     url = "http://{}/2018-06-01/runtime/invocation/{}{}".format(os.environ['AWS_LAMBDA_RUNTIME_API'], context.aws_request_id, url_destination)
-    data = json.dumps(result).encode('utf-8')
     req =  request.Request(url, method="POST", data=data)
     req.add_header('Content-Type', 'application/json')
     r = request.urlopen(req, data=data)
