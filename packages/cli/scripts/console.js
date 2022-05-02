@@ -3,7 +3,6 @@ const {
   useLocalServer,
   Runtime,
 } = require("@serverless-stack/core");
-const openBrowser = require("react-dev-utils/openBrowser");
 const detect = require("detect-port-alt");
 const chalk = require("chalk");
 
@@ -23,7 +22,8 @@ module.exports = async function (_argv, config) {
   const url = `https://console.serverless-stack.com/${config.name}/${
     config.stage
   }/stacks${local.port !== 13557 ? "?_port=" + local.port : ""}`;
-  openBrowser(url);
+  console.log("SST Console:", url);
+  // openBrowser(url);
 };
 
 async function chooseServerPort(defaultPort) {
