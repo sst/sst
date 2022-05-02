@@ -61,6 +61,7 @@ export function extend(path) {
  * @param {{
  *   source: string
  *   destination: string
+ *   extended?: boolean
  * }} opts
  */
 export async function execute(opts) {
@@ -81,6 +82,7 @@ export async function execute(opts) {
         await execute({
           source: step.path,
           destination: opts.destination,
+          extended: true,
         });
         break;
       }
@@ -111,6 +113,25 @@ export async function execute(opts) {
         break;
       }
     }
+  }
+
+  if (!opts.extended) {
+    const app = path.basename(opts.destination);
+
+    async function replace(dir) {
+      for (const file of await fs.readdir(dir)) {
+        const p = path.join(dir, file);
+        const stat = await fs.stat(p);
+        if (stat.isDirectory()) {
+          await replace(p);
+          continue;
+        }
+        const contents = await fs.readFile(p, "utf8");
+        await fs.writeFile(p, contents.replace(/\@\@app/g, app));
+      }
+    }
+
+    await replace(opts.destination);
   }
 }
 
