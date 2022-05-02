@@ -1,5 +1,6 @@
 {
   "name": "@@@app/backend",
   "version": "0.0.0",
-  "type": "module"
+  "type": "module",
+  "scripts": {}
 }

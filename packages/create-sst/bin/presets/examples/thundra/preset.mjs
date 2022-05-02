@@ -1,0 +1,15 @@
+import { extend, extract, install } from "create-sst";
+
+export default [
+  extend("presets/base/example"),
+  extract(),
+  install({
+    packages: ["@thundra/esbuild-plugin"],
+    path: "backend",
+    dev: true,
+  }),
+  patch({
+    file: "package.json",
+    operations: [{ op: "add", path: "/workspaces/-", value: "frontend" }],
+  }),
+];

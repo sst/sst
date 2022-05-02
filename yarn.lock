@@ -6161,90 +6161,6 @@
     node-addon-api "3.2.1"
     node-gyp "8.1.0"
 
-"@serverless-stack/cli@1.0.0-beta.21":
-  version "1.0.0-beta.21"
-  resolved "https://registry.yarnpkg.com/@serverless-stack/cli/-/cli-1.0.0-beta.21.tgz#1fad20d1a0efa68259abe581bd27171d7345fa12"
-  integrity sha512-6JG0a1LdLoh1p9kOdBjvCmeFmcfkKimambl9SvziTR5VEQaU4zDK1VeF/IL/IHnE6/ujswtXg52XPmGBkY0wwQ==
-  dependencies:
-    "@aws-cdk/aws-apigatewayv2-alpha" "2.20.0-alpha.0"
-    "@graphql-codegen/cli" "^2.6.2"
-    "@serverless-stack/core" "1.0.0-beta.21"
-    "@serverless-stack/resources" "1.0.0-beta.21"
-    aws-cdk "2.20.0"
-    aws-cdk-lib "2.20.0"
-    aws-sdk "^2.1110.0"
-    body-parser "^1.19.0"
-    chalk "^4.1.0"
-    chokidar "^3.4.3"
-    cross-spawn "^7.0.3"
-    detect-port-alt "^1.1.6"
-    esbuild "^0.12.20"
-    esbuild-runner "^2.2.1"
-    express "^4.17.1"
-    fs-extra "^9.0.1"
-    remeda "^0.0.32"
-    source-map-support "^0.5.19"
-    ws "^7.4.0"
-    yargs "^15.4.1"
-
-"@serverless-stack/core@1.0.0-beta.21":
-  version "1.0.0-beta.21"
-  resolved "https://registry.yarnpkg.com/@serverless-stack/core/-/core-1.0.0-beta.21.tgz#2953be96b391903ca00565983cf4d5283d838e8b"
-  integrity sha512-vPv+hA+0jVQPuJW1GLz+JgWEuJ/4GsCh5XI9cafTZO187YPCkUvIJoy3Zpwm4u/p7q4nPWaMla0zA3kmBq/E3Q==
-  dependencies:
-    "@serverless-stack/aws-lambda-ric" "^2.0.13"
-    "@trpc/server" "^9.16.0"
-    async-retry "^1.3.3"
-    aws-cdk "2.20.0"
-    aws-cdk-lib "2.20.0"
-    aws-sdk "^2.1110.0"
-    chalk "^4.1.0"
-    chokidar "^3.5.2"
-    ci-info "^3.3.0"
-    conf "^10.1.1"
-    constructs "^10.0.29"
-    cross-spawn "^7.0.3"
-    dataloader "^2.0.0"
-    dendriform-immer-patch-optimiser "^2.1.0"
-    dotenv "^10.0.0"
-    dotenv-expand "^5.1.0"
-    esbuild "^0.14.11"
-    express "^4.17.1"
-    fs-extra "^9.0.1"
-    immer "^9.0.7"
-    js-yaml "^4.1.0"
-    lerna "^4.0.0"
-    log4js "^6.3.0"
-    picomatch "^2.3.0"
-    remeda "^0.0.32"
-    typescript "^4.6.2"
-    uuid "^8.3.2"
-    xstate "4.26.1"
-    zod "^3.11.6"
-
-"@serverless-stack/resources@1.0.0-beta.21":
-  version "1.0.0-beta.21"
-  resolved "https://registry.yarnpkg.com/@serverless-stack/resources/-/resources-1.0.0-beta.21.tgz#601b7ac3994810e56233718d3f34ca7698aa7422"
-  integrity sha512-++G4E5tR9KtOGh4Ga3pfWj6b73o6kjpqqNM3MwCtKtE35rf+iV0uU1D90Heq2JJzTygSir77r1CJbb8DI4owXA==
-  dependencies:
-    "@aws-cdk/aws-apigatewayv2-alpha" "2.20.0-alpha.0"
-    "@aws-cdk/aws-apigatewayv2-authorizers-alpha" "2.20.0-alpha.0"
-    "@aws-cdk/aws-apigatewayv2-integrations-alpha" "2.20.0-alpha.0"
-    "@aws-cdk/aws-appsync-alpha" "2.20.0-alpha.0"
-    "@graphql-tools/load-files" "^6.3.2"
-    "@graphql-tools/merge" "^6.2.14"
-    "@serverless-stack/core" "1.0.0-beta.21"
-    archiver "^5.3.0"
-    aws-cdk-lib "2.20.0"
-    chalk "^4.1.0"
-    constructs "^10.0.29"
-    cross-spawn "^7.0.3"
-    fs-extra "^9.0.1"
-    glob "^7.1.7"
-    graphql "^15.5.1"
-    zip-local "^0.3.4"
-    zod "^3.14.3"
-
 "@sideway/address@^4.1.3":
   version "4.1.4"
   resolved "https://registry.npmjs.org/@sideway/address/-/address-4.1.4.tgz"
@@ -11862,6 +11778,11 @@ fast-glob@3.2.11, fast-glob@^3.1.1, fast-glob@^3.2.11, fast-glob@^3.2.7, fast-gl
     glob-parent "^5.1.2"
     merge2 "^1.3.0"
     micromatch "^4.0.4"
+
+fast-json-patch@^3.1.1:
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/fast-json-patch/-/fast-json-patch-3.1.1.tgz#85064ea1b1ebf97a3f7ad01e23f9337e72c66947"
+  integrity sha512-vf6IHUX2SBcA+5/+4883dsIjpBTqmfBjmYiWK1savxQmFk4JfBMLa7ynTYOs1Rolp/T1betJxHiGD3g1Mn8lUQ==
 
 fast-json-stable-stringify@2.x, fast-json-stable-stringify@^2.0.0:
   version "2.1.0"
