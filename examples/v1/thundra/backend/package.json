@@ -3,10 +3,10 @@
   "version": "0.0.0",
   "type": "module",
   "dependencies": {
-    "aws-sdk": "^2.1116.0"
+    "aws-sdk": "^2.1125.0"
   },
   "devDependencies": {
     "@thundra/esbuild-plugin": "^1.0.3",
-    "@types/aws-lambda": "^8.10.93"
+    "@types/aws-lambda": "^8.10.95"
   }
 }

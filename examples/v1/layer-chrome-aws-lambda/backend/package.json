@@ -3,12 +3,12 @@
   "version": "0.0.0",
   "type": "module",
   "dependencies": {
-    "aws-sdk": "^2.1116.0",
+    "aws-sdk": "^2.1125.0",
     "chrome-aws-lambda": "^10.1.0",
-    "puppeteer": "^13.5.2",
-    "puppeteer-core": "^13.5.2"
+    "puppeteer": "^13.7.0",
+    "puppeteer-core": "^13.7.0"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.93"
+    "@types/aws-lambda": "^8.10.95"
   }
 }
