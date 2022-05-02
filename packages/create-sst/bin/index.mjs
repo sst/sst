@@ -13,8 +13,8 @@ const DEFAULT_CATEGORY = "starters";
 program
   .name("create-sst")
   .description("CLI to create SST projects")
-  .option("--examples", "Only show example presets", false)
-  .argument("[string]", "The preset to clone")
+  .option("--examples", "Only show example templates", false)
+  .argument("[string]", "The template to clone")
   .argument("[string]", "The destination directory")
   .action(async (preset, destination) => {
     const opts = program.opts();
@@ -41,7 +41,7 @@ program
         type: "list",
         when: !preset,
         choices: presets.flat(),
-        message: "Select a preset",
+        message: "Select a template",
       },
       {
         name: "destination",
@@ -72,7 +72,7 @@ program
     try {
       await fs.access(preset);
     } catch {
-      spinner.fail(`Preset not found`);
+      spinner.fail(`Template not found`);
       return;
     }
     spinner.start("Creating project");
