@@ -1,0 +1,14 @@
+{
+  "name": "@bucket-image-resize/backend",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {},
+  "dependencies": {
+    "aws-sdk": "^2.1126.0",
+    "sharp": "^0.30.4"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.95",
+    "@types/sharp": "^0.30.2"
+  }
+}

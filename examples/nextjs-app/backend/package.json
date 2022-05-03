@@ -1,0 +1,13 @@
+{
+  "name": "@nextjs-app/backend",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {},
+  "dependencies": {
+    "aws-sdk": "^2.1126.0",
+    "@sls-next/lambda-at-edge": "^3.7.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.95"
+  }
+}

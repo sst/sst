@@ -1,0 +1,12 @@
+{
+  "name": "@api-auth-cognito/backend",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {},
+  "dependencies": {
+    "aws-sdk": "^2.1126.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.95"
+  }
+}
