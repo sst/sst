@@ -15,7 +15,7 @@ program
   .description("CLI to create SST projects")
   .option("--examples", "Only show example templates", false)
   .argument("[template]", "The template to clone")
-  .argument("[destination]", "The destination directory")
+  .argument("[]", "The destination directory")
   .action(async (preset, destination) => {
     const opts = program.opts();
     const cwd = process.cwd();
@@ -87,7 +87,7 @@ program
       console.log(`Next steps:`);
       console.log(`  1: cd ${selection.destination}`);
       console.log(`  2: npm install (or pnpm install, or yarn)`);
-      console.log(`  3: npm run sst:start`);
+      console.log(`  3: npm start`);
     } catch (e) {
       spinner.fail("Failed");
       console.error(e);
