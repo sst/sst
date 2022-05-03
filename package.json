@@ -17,7 +17,6 @@
     "prettier": "prettier --write \"**/*.{js,ts,tsx,json,md}\"",
     "changelog": "lerna-changelog",
     "release": "lerna publish --force-publish",
-    "release-beta": "lerna publish --exact --preid beta --dist-tag=beta --force-publish=*",
     "release-canary": "lerna publish --canary minor --exact --preid next --dist-tag=next --force-publish=*",
     "clean": "lerna run clean",
     "depcheck": "for I in packages/*/; do cd $I; npx depcheck; cd -; done",
