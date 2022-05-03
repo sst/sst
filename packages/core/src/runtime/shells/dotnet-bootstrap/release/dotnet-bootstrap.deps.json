@@ -8,13 +8,13 @@
     ".NETCoreApp,Version=v3.1": {
       "dotnet-bootstrap/1.0.0": {
         "dependencies": {
-          "Amazon.Lambda.RuntimeSupport": "1.3.0"
+          "Amazon.Lambda.RuntimeSupport": "1.7.0"
         },
         "runtime": {
           "dotnet-bootstrap.dll": {}
         }
       },
-      "Amazon.Lambda.Core/1.2.0": {
+      "Amazon.Lambda.Core/2.1.0": {
         "runtime": {
           "lib/netstandard2.0/Amazon.Lambda.Core.dll": {
             "assemblyVersion": "1.0.0.0",
@@ -22,22 +22,21 @@
           }
         }
       },
-      "Amazon.Lambda.RuntimeSupport/1.3.0": {
+      "Amazon.Lambda.RuntimeSupport/1.7.0": {
         "dependencies": {
-          "Amazon.Lambda.Core": "1.2.0",
-          "NSwag.MSBuild": "12.0.4",
-          "System.Runtime.Loader": "4.3.0"
+          "Amazon.Lambda.Core": "2.1.0",
+          "System.Runtime.Loader": "4.3.0",
+          "System.Text.Json": "6.0.0"
         },
         "runtime": {
           "lib/netstandard2.0/Amazon.Lambda.RuntimeSupport.dll": {
-            "assemblyVersion": "1.3.0.0",
-            "fileVersion": "1.3.0.0"
+            "assemblyVersion": "1.7.0.0",
+            "fileVersion": "1.7.0.0"
           }
         }
       },
       "Microsoft.NETCore.Platforms/1.1.0": {},
       "Microsoft.NETCore.Targets/1.1.0": {},
-      "NSwag.MSBuild/12.0.4": {},
       "System.IO/4.3.0": {
         "dependencies": {
           "Microsoft.NETCore.Platforms": "1.1.0",
@@ -69,6 +68,14 @@
           "Microsoft.NETCore.Targets": "1.1.0"
         }
       },
+      "System.Runtime.CompilerServices.Unsafe/6.0.0": {
+        "runtime": {
+          "lib/netcoreapp3.1/System.Runtime.CompilerServices.Unsafe.dll": {
+            "assemblyVersion": "6.0.0.0",
+            "fileVersion": "6.0.21.52210"
+          }
+        }
+      },
       "System.Runtime.Loader/4.3.0": {
         "dependencies": {
           "System.IO": "4.3.0",
@@ -81,6 +88,29 @@
           "Microsoft.NETCore.Platforms": "1.1.0",
           "Microsoft.NETCore.Targets": "1.1.0",
           "System.Runtime": "4.3.0"
+        }
+      },
+      "System.Text.Encodings.Web/6.0.0": {
+        "dependencies": {
+          "System.Runtime.CompilerServices.Unsafe": "6.0.0"
+        },
+        "runtime": {
+          "lib/netcoreapp3.1/System.Text.Encodings.Web.dll": {
+            "assemblyVersion": "6.0.0.0",
+            "fileVersion": "6.0.21.52210"
+          }
+        }
+      },
+      "System.Text.Json/6.0.0": {
+        "dependencies": {
+          "System.Runtime.CompilerServices.Unsafe": "6.0.0",
+          "System.Text.Encodings.Web": "6.0.0"
+        },
+        "runtime": {
+          "lib/netcoreapp3.1/System.Text.Json.dll": {
+            "assemblyVersion": "6.0.0.0",
+            "fileVersion": "6.0.21.52210"
+          }
         }
       },
       "System.Threading.Tasks/4.3.0": {
@@ -98,19 +128,19 @@
       "serviceable": false,
       "sha512": ""
     },
-    "Amazon.Lambda.Core/1.2.0": {
+    "Amazon.Lambda.Core/2.1.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-goaq1LaH1UJB18BNG/Apxmn0P7dAlLWFbxU2nKxK+M4lH2KJaZDbtlP2gFEAJ+aENOMBHthaLPEtk3944J2OOg==",
-      "path": "amazon.lambda.core/1.2.0",
-      "hashPath": "amazon.lambda.core.1.2.0.nupkg.sha512"
+      "sha512": "sha512-ok06UhfBZw6j6+PhiJR9C0EOMuJvnq8rMCHVkaFmPFrlI/q447ukwGZQKaAKqodV+MNTfpb/iPxjgUPVbSlVVw==",
+      "path": "amazon.lambda.core/2.1.0",
+      "hashPath": "amazon.lambda.core.2.1.0.nupkg.sha512"
     },
-    "Amazon.Lambda.RuntimeSupport/1.3.0": {
+    "Amazon.Lambda.RuntimeSupport/1.7.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-fDsgOBTW5BRfu9d6XMuiVjti9iBTx5N1FIH1Lb3HSXMD0PV/tYUIRX1j63I0yBKzguxScqMzvusr5VvZcWWinw==",
-      "path": "amazon.lambda.runtimesupport/1.3.0",
-      "hashPath": "amazon.lambda.runtimesupport.1.3.0.nupkg.sha512"
+      "sha512": "sha512-sXEKbh03H5v/6XiFWUhlaz21dS2KpCOyRjLiJeTyeXEq0alpoyIReh0AbiAhct0R8faGxjDB93Vxp3sMI1Jnbw==",
+      "path": "amazon.lambda.runtimesupport/1.7.0",
+      "hashPath": "amazon.lambda.runtimesupport.1.7.0.nupkg.sha512"
     },
     "Microsoft.NETCore.Platforms/1.1.0": {
       "type": "package",
@@ -125,13 +155,6 @@
       "sha512": "sha512-aOZA3BWfz9RXjpzt0sRJJMjAscAUm3Hoa4UWAfceV9UTYxgwZ1lZt5nO2myFf+/jetYQo4uTP7zS8sJY67BBxg==",
       "path": "microsoft.netcore.targets/1.1.0",
       "hashPath": "microsoft.netcore.targets.1.1.0.nupkg.sha512"
-    },
-    "NSwag.MSBuild/12.0.4": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-4Gqf64I2j3Y5UyxtdvPW4H8h8RgY2e6Cp6++T30/v0aXS9UhErPKg35GKz3nSKRUesjYQh7Duy3cPnDCDdGlMg==",
-      "path": "nswag.msbuild/12.0.4",
-      "hashPath": "nswag.msbuild.12.0.4.nupkg.sha512"
     },
     "System.IO/4.3.0": {
       "type": "package",
@@ -161,6 +184,13 @@
       "path": "system.runtime/4.3.0",
       "hashPath": "system.runtime.4.3.0.nupkg.sha512"
     },
+    "System.Runtime.CompilerServices.Unsafe/6.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-/iUeP3tq1S0XdNNoMz5C9twLSrM/TH+qElHkXWaPvuNOt+99G75NrV0OS2EqHx5wMN7popYjpc8oTjC1y16DLg==",
+      "path": "system.runtime.compilerservices.unsafe/6.0.0",
+      "hashPath": "system.runtime.compilerservices.unsafe.6.0.0.nupkg.sha512"
+    },
     "System.Runtime.Loader/4.3.0": {
       "type": "package",
       "serviceable": true,
@@ -174,6 +204,20 @@
       "sha512": "sha512-BiIg+KWaSDOITze6jGQynxg64naAPtqGHBwDrLaCtixsa5bKiR8dpPOHA7ge3C0JJQizJE+sfkz1wV+BAKAYZw==",
       "path": "system.text.encoding/4.3.0",
       "hashPath": "system.text.encoding.4.3.0.nupkg.sha512"
+    },
+    "System.Text.Encodings.Web/6.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-Vg8eB5Tawm1IFqj4TVK1czJX89rhFxJo9ELqc/Eiq0eXy13RK00eubyU6TJE6y+GQXjyV5gSfiewDUZjQgSE0w==",
+      "path": "system.text.encodings.web/6.0.0",
+      "hashPath": "system.text.encodings.web.6.0.0.nupkg.sha512"
+    },
+    "System.Text.Json/6.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-zaJsHfESQvJ11vbXnNlkrR46IaMULk/gHxYsJphzSF+07kTjPHv+Oc14w6QEOfo3Q4hqLJgStUaYB9DBl0TmWg==",
+      "path": "system.text.json/6.0.0",
+      "hashPath": "system.text.json.6.0.0.nupkg.sha512"
     },
     "System.Threading.Tasks/4.3.0": {
       "type": "package",
