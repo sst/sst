@@ -13,7 +13,7 @@ export default [
       {
         op: "add",
         path: "/scripts/test",
-        valye: "vitest run",
+        value: "vitest run",
       },
     ],
   }),
