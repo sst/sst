@@ -80,7 +80,12 @@ program
         source: preset,
         destination,
       });
-      spinner.succeed("Complete!");
+      spinner.succeed("Copied template files");
+      console.log();
+      console.log(`Next steps:`);
+      console.log(`  1: cd ${selection.destination}`);
+      console.log(`  2: npm install (or pnpm install, or yarn)`);
+      console.log(`  3: npm run sst:start`);
     } catch (e) {
       spinner.fail("Failed");
       console.error(e);
