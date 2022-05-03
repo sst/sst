@@ -2,13 +2,13 @@
   "name": "@serverless-stack/cli-test-context",
   "private": true,
   "description": "tests",
-  "version": "1.0.0-beta.25",
+  "version": "1.0.0-beta.26",
   "scripts": {
     "build": "sst build"
   },
   "dependencies": {
-    "@serverless-stack/cli": "1.0.0-beta.25",
-    "@serverless-stack/resources": "1.0.0-beta.25"
+    "@serverless-stack/cli": "1.0.0-beta.26",
+    "@serverless-stack/resources": "1.0.0-beta.26"
   },
   "license": "ISC"
 }

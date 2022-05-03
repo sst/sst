@@ -2,12 +2,12 @@
   "name": "@serverless-stack/cli-test-add-cdk",
   "private": true,
   "description": "tests",
-  "version": "1.0.0-beta.25",
+  "version": "1.0.0-beta.26",
   "scripts": {
     "add-cdk": "sst add-cdk"
   },
   "dependencies": {
-    "@serverless-stack/cli": "1.0.0-beta.25"
+    "@serverless-stack/cli": "1.0.0-beta.26"
   },
   "license": "ISC"
 }
