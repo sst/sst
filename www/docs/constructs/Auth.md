@@ -1,625 +1,30 @@
 ---
 description: "Docs for the sst.Auth construct in the @serverless-stack/resources package"
 ---
+<!--
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!                                                           !!
+!!  This file has been automatically generated, do not edit  !!
+!!                                                           !!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-->
+The `Auth` construct is a higher level CDK construct that makes it easy to configure a [Cognito User Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html) and [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/identity-pools.html). Also, allows setting up Auth0, Facebook, Google, Twitter, Apple, and Amazon as authentication providers.
+
+## Constructor
+```ts
+new Auth(scope, id, props)
+```
+_Parameters_
+- __scope__ <span class="mono">[Construct](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)</span>
+- __id__ <span class="mono">string</span>
+- __props__ <span class="mono">[AuthProps](#authprops)</span>
 
 import TabItem from "@theme/TabItem";
 import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
 
-The `Auth` construct is a higher level CDK construct that makes it easy to configure a [Cognito User Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html) and [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/identity-pools.html). Also, allows setting up Auth0, Facebook, Google, Twitter, Apple, and Amazon as authentication providers.
+### Configuring login
 
-## Initializer
-
-```ts
-new Auth(scope: Construct, id: string, props: AuthProps)
-```
-
-_Parameters_
-
-- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
-- id `string`
-- props [`AuthProps`](#authprops)
-
-## Examples
-
-### Allowing users to sign in using User Pool
-
-```js
-import { Auth } from "@serverless-stack/resources";
-
-new Auth(this, "Auth", {
-  cognito: true,
-});
-```
-
-### Allowing users to sign in with their email or phone number
-
-```js
-new Auth(this, "Auth", {
-  cognito: {
-    userPool: {
-      signInAliases: { email: true, phone: true },
-    },
-  },
-});
-```
-
-### Configuring User Pool triggers
-
-The Cognito User Pool can invoke a Lambda function for specific [triggers](#triggers).
-
-#### Adding triggers
-
-```js
-new Auth(this, "Auth", {
-  cognito: {
-    triggers: {
-      preAuthentication: "src/preAuthentication.main",
-      postAuthentication: "src/postAuthentication.main",
-    },
-  },
-});
-```
-
-#### Specifying function props for all the triggers
-
-```js
-new Auth(this, "Auth", {
-  cognito: {
-    defaultFunctionProps: {
-      timeout: 20,
-      environment: { tableName: table.tableName },
-      permissions: [table],
-    },
-    triggers: {
-      preAuthentication: "src/preAuthentication.main",
-      postAuthentication: "src/postAuthentication.main",
-    },
-  },
-});
-```
-
-#### Using the full config for a trigger
-
-If you wanted to configure each Lambda function separately, you can pass in the [`FunctionProps`](Function.md#functionprops).
-
-```js
-new Auth(this, "Auth", {
-  cognito: {
-    triggers: {
-      preAuthentication: {
-        handler: "src/preAuthentication.main",
-        timeout: 10,
-        environment: { bucketName: bucket.bucketName },
-        permissions: [bucket],
-      },
-      postAuthentication: "src/postAuthentication.main",
-    },
-  },
-});
-```
-
-Note that, you can set the `defaultFunctionProps` while using the `FunctionProps` per trigger. The `function` will just override the `defaultFunctionProps`. Except for the `environment`, the `layers`, and the `permissions` properties, it will be merged.
-
-```js
-new Auth(this, "Auth", {
-  cognito: {
-    defaultFunctionProps: {
-      timeout: 20,
-      environment: { tableName: table.tableName },
-      permissions: [table],
-    },
-    triggers: {
-      preAuthentication: {
-        handler: "src/preAuthentication.main",
-        timeout: 10,
-        environment: { bucketName: bucket.bucketName },
-        permissions: [bucket],
-      },
-      postAuthentication: "src/postAuthentication.main",
-    },
-  },
-});
-```
-
-So in the above example, the `preAuthentication` function doesn't use the `timeout` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
-
-#### Attaching permissions for all triggers
-
-Allow all the triggers to access S3.
-
-```js {10}
-const auth = new Auth(this, "Auth", {
-  cognito: {
-    triggers: {
-      preAuthentication: "src/preAuthentication.main",
-      postAuthentication: "src/postAuthentication.main",
-    },
-  },
-});
-
-auth.attachPermissionsForTriggers(["s3"]);
-```
-
-#### Attaching permissions for a specific trigger
-
-Allow one of the triggers to access S3.
-
-```js {10}
-const auth = new Auth(this, "Auth", {
-  cognito: {
-    triggers: {
-      preAuthentication: "src/preAuthentication.main",
-      postAuthentication: "src/postAuthentication.main",
-    },
-  },
-});
-
-auth.attachPermissionsForTriggers("preAuthentication", ["s3"]);
-```
-
-Here we are referring to the trigger using the trigger key, `preAuthentication`. 
-
-### Allowing Twitter auth and a User Pool
-
-```js
-new Auth(this, "Auth", {
-  cognito: true,
-  twitter: {
-    consumerKey: "gyMbPOiwefr6x63SjIW8NN2d9",
-    consumerSecret: "qxld1zic5c2eyahqK3gjGLGQaOTogGfAgGh17MYOIcOUR9l2Nz",
-  },
-});
-```
-
-### Adding all the supported social logins
-
-```js
-new Auth(this, "Auth", {
-  facebook: { appId: "419718329085014" },
-  apple: { servicesId: "com.myapp.client" },
-  amazon: { appId: "amzn1.application.24ebe4ee4aef41e5acff038aee2ee65f" },
-  google: {
-    clientId:
-      "38017095028-abcdjaaaidbgt3kfhuoh3n5ts08vodt3.apps.googleusercontent.com",
-  },
-});
-```
-
-### Allowing users to login using Auth0
-
-```js
-new Auth(this, "Auth", {
-  auth0: {
-    domain: "https://myorg.us.auth0.com",
-    clientId: "UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif",
-  },
-});
-```
-
-### Attaching permissions for authenticated users
-
-```js {9-16}
-import * as iam from "aws-cdk-lib/aws-iam";
-
-const auth = new Auth(this, "Auth", {
-  cognito: {
-    userPool: { signInAliases: { email: true } },
-  },
-});
-
-auth.attachPermissionsForAuthUsers([
-  api,
-  new iam.PolicyStatement({
-    effect: iam.Effect.ALLOW,
-    actions: ["s3:*"],
-    resources: ["*"],
-  }),
-]);
-```
-
-Aside from IAM policy statements, you can pass in certain other SST constructs.
-
-### Attaching permissions for unauthenticated users
-
-```js {9-16}
-import * as iam from "aws-cdk-lib/aws-iam";
-
-const auth = new Auth(this, "Auth", {
-  cognito: {
-    userPool: { signInAliases: { email: true } },
-  },
-});
-
-auth.attachPermissionsForUnauthUsers([
-  api,
-  new iam.PolicyStatement({
-    effect: iam.Effect.ALLOW,
-    actions: ["s3:*"],
-    resources: ["*"],
-  }),
-]);
-```
-
-Similar to the example above. Aside from IAM policy statements, you can pass in certain other SST constructs.
-
-### Sharing Auth across stacks
-
-You can create the Auth construct in one stack, and attach permissions in other stacks. To do this, expose the Auth as a class property.
-
-<MultiLanguageCode>
-<TabItem value="js">
-
-```js {7-9} title="stacks/AuthStack.js"
-import { Auth, Stack } from "@serverless-stack/resources";
-
-export class AuthStack extends Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
-
-    this.auth = new Auth(this, "Auth", {
-      cognito: true,
-    });
-  }
-}
-```
-
-</TabItem>
-<TabItem value="ts">
-
-```js {4,9-11} title="stacks/AuthStack.ts"
-import { App, Auth, Stack, StackProps } from "@serverless-stack/resources";
-
-export class AuthStack extends Stack {
-  public readonly auth: Auth;
-
-  constructor(scope: App, id: string, props?: StackProps) {
-    super(scope, id, props);
-
-    this.auth = new Auth(this, "Auth", {
-      cognito: true,
-    });
-  }
-}
-```
-
-</TabItem>
-</MultiLanguageCode>
-
-Then pass the Auth to a different stack.
-
-<MultiLanguageCode>
-<TabItem value="js">
-
-```js {3} title="stacks/index.js"
-const authStack = new AuthStack(app, "auth");
-
-new ApiStack(app, "api", { auth: authStack.auth });
-```
-
-</TabItem>
-<TabItem value="ts">
-
-```ts {3} title="stacks/index.ts"
-const authStack = new AuthStack(app, "auth");
-
-new ApiStack(app, "api", { auth: authStack.auth });
-```
-
-</TabItem>
-</MultiLanguageCode>
-
-Finally, attach the permissions.
-
-<MultiLanguageCode>
-<TabItem value="js">
-
-```js title="stacks/ApiStack.js"
-import { Api, Stack } from "@serverless-stack/resources";
-
-export class ApiStack extends Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
-
-    const api = new Api(this, "Api", {
-      routes: {
-        "GET    /notes": "src/list.main",
-        "POST   /notes": "src/create.main",
-      },
-    });
-    props.auth.attachPermissionsForAuthUsers([api]);
-  }
-}
-```
-
-</TabItem>
-<TabItem value="ts">
-
-```ts title="stacks/ApiStack.ts"
-import { Api, App, Auth, Stack, StackProps } from "@serverless-stack/resources";
-
-interface ApiStackProps extends StackProps {
-  readonly auth: Auth;
-}
-
-export class ApiStack extends Stack {
-  constructor(scope: App, id: string, props: ApiStackProps) {
-    super(scope, id, props);
-
-    const api = new Api(this, "Api", {
-      routes: {
-        "GET    /notes": "src/list.main",
-        "POST   /notes": "src/create.main",
-      },
-    });
-    props.auth.attachPermissionsForAuthUsers([api]);
-  }
-}
-```
-
-</TabItem>
-</MultiLanguageCode>
-
-### Importing an existing User Pool
-
-Override the internally created CDK `UserPool` and `UserPoolClient` instance.
-
-```js {5,6}
-import { UserPool, UserPoolClient } from "aws-cdk-lib/aws-cognito";
-
-new Auth(this, "Auth", {
-  cognito: {
-    userPool: UserPool.fromUserPoolId(this, "IUserPool", "pool-id"),
-    userPoolClient: UserPoolClient.fromUserPoolClientId(this, "IUserPoolClient", "pool-client-id"),
-  }
-});
-```
-
-### Upgrading to v0.12.0
-
-The v0.12.0 release of the Auth construct includes a small breaking change. You might be impacted by this change if:
-
-- You are currently using any version `< v0.12.0`
-- And using Cognito as the authentication provider
-
-#### Using `signInAliases`
-
-If you are configuring the `signInAliases` like so:
-
-```js
-new Auth(this, "Auth", {
-  cognito: {
-    signInAliases: { email: true, phone: true },
-  },
-});
-```
-
-Change it to:
-
-```js
-new Auth(this, "Auth", {
-  cognito: {
-    userPool: {
-      signInAliases: { email: true, phone: true },
-    },
-  },
-});
-```
-
-Note the `userPool` prop is expected as a part of the `cognito` prop.
-
-#### Using cognitoUserPool and cognitoUserPoolClient
-
-If you are creating the `UserPool` and the `UserPoolClient` manually like this:
-
-```js
-import * as cognito from "aws-cdk-lib/aws-cognito";
-
-const userPool = new cognito.UserPool(this, "UserPool", {
-  userPoolName: "my-user-pool",
-  signInAliases: { email: true, phone: true },
-});
-const userPoolClient = new cognito.UserPoolClient(this, "UserPoolClient", {
-  userPool,
-  disableOAuth: true,
-});
-
-new Auth(this, "Auth", {
-  cognitoUserPool: userPool,
-  cognitoUserPoolClient: userPoolClient,
-});
-```
-
-Change it to:
-
-```js
-import * as cognito from "aws-cdk-lib/aws-cognito";
-
-const userPool = new cognito.UserPool(this, "UserPool", {
-  userPoolName: "my-user-pool",
-  signInAliases: { email: true, phone: true },
-});
-const userPoolClient = new cognito.UserPoolClient(this, "UserPoolClient", {
-  userPool,
-  disableOAuth: true,
-});
-
-new Auth(this, "Auth", {
-  cognito: {
-    userPool,
-    userPoolClient,
-  },
-});
-```
-
-Read more about the [`AuthCognitoProps`](#authcognitoprops) below.
-
-## Properties
-
-An instance of `Auth` contains the following properties.
-
-### cognitoIdentityPoolId
-
-_Type_ : `string`
-
-The ID of the Cognito Identity Pool.
-
-### cognitoCfnIdentityPool
-
-_Type_ : [`cdk.aws-cognito.CfnIdentityPool`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.CfnIdentityPool.html)
-
-The internally created CDK `CfnIdentityPool` instance.
-
-### cognitoUserPool?
-
-_Type_ : [`cdk.aws-cognito.IUserPool`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.IUserPool.html)
-
-The internally created CDK `UserPool` instance. Not available if only social logins are used.
-
-### cognitoUserPoolClient?
-
-_Type_ : [`cdk.aws-cognito.IUserPoolClient`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.IUserPoolClient.html)
-
-The internally created CDK `UserPoolClient` instance. Not available if only social logins are used.
-
-### iamAuthRole
-
-_Type_ : [`cdk.aws-iam.Role`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_iam.Role.html)
-
-The internally created CDK IAM `Role` instance for the authenticated users of the Identity Pool.
-
-### iamUnauthRole
-
-_Type_ : [`cdk.aws-iam.Role`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_iam.Role.html)
-
-The internally created CDK IAM `Role` instance for the unauthenticated users of the Identity Pool.
-
-## Methods
-
-An instance of `Auth` contains the following methods.
-
-### attachPermissionsForAuthUsers
-
-```ts
-attachPermissionsForAuthUsers(permissions: Permissions)
-```
-
-_Parameters_
-
-- **permissions** [`Permissions`](../util/Permissions.md)
-
-Attaches the given list of [permissions](../util/Permissions.md) to [IAM role used for authenticated users](#iamauthrole). This dictates which resources an authenticated user has access to.
-
-Follows the same format as [`Function.attachPermissions`](Function.md#attachpermissions).
-
-### attachPermissionsForUnauthUsers
-
-```ts
-attachPermissionsForUnauthUsers(permissions: Permissions)
-```
-
-_Parameters_
-
-- **permissions** [`Permissions`](../util/Permissions.md)
-
-Attaches the given list of [permissions](../util/Permissions.md) to [IAM role used for unauthenticated users](#iamunauthrole). This dictates which resources an unauthenticated user has access to.
-
-Follows the same format as [`Function.attachPermissions`](Function.md#attachpermissions).
-
-### attachPermissionsForTriggers
-
-```ts
-attachPermissions(permissions: Permissions)
-```
-
-_Parameters_
-
-- **permissions** [`Permissions`](../util/Permissions.md)
-
-Attaches the given list of [permissions](../util/Permissions.md) to all the triggers in the User Pool. This allows the functions to access other AWS resources.
-
-Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
-
-### attachPermissionsForTrigger
-
-```ts
-attachPermissionsToTarget(triggerKey: keyof AuthUserPoolTriggers, permissions: Permissions)
-```
-
-_Parameters_
-
-- **triggerKey** `keyof AuthUserPoolTriggers`
-
-- **permissions** [`Permissions`](../util/Permissions.md)
-
-Attaches the given list of [permissions](../util/Permissions.md) to a specific trigger in the User Pool. This allows that function to access other AWS resources.
-
-Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
-
-## AuthProps
-
-### cognito?
-
-_Type_ : [`AuthCognitoProps`](#authcognitoprops)
-
-The [props](#authcognitoprops) that'll be used to configure a Cognito User Pool.
-
-### apple?
-
-_Type_ : [`AuthAppleProps`](#authappleprops)
-
-The [props](#authappleprops) necessary to configure Apple as an authentication provider for the Identity Pool.
-
-### auth0?
-
-_Type_ : [`AuthAuth0Props`](#authauth0props)
-
-The [props](#authauth0props) necessary to configure Auth0 as an authentication provider for the Identity Pool.
-
-### google?
-
-_Type_ : [`AuthGoogleProps`](#authgoogleprops)
-
-The [props](#authgoogleprops) necessary to configure Google as an authentication provider for the Identity Pool.
-
-### facebook?
-
-_Type_ : [`AuthFacebookProps`](#authfacebookprops)
-
-The [props](#authfacebookprops) necessary to configure Facebook as an authentication provider for the Identity Pool.
-
-### twitter?
-
-_Type_ : [`AuthTwitterProps`](#authtwitterprops)
-
-The [props](#authtwitterprops) necessary to configure Twitter as an authentication provider for the Identity Pool.
-
-### amazon?
-
-_Type_ : [`AuthAmazonProps`](#authamazonprops)
-
-The [props](#authamazonprops) necessary to configure Amazon as an authentication provider for the Identity Pool.
-
-### identityPool?
-
-_Type_ : [`AuthCdkCfnIdentityPoolProps`](#authcdkcfnidentitypoolprops)
-
-The [props](#authcdkcfnidentitypoolprops) that'll be used to configure the Cognito Identity Pool.
-
-## AuthCognitoProps
-
-### userPool?
-
-_Type_ : `cdk.aws-cognito.UserPoolProps | cdk.aws-cognito.IUserPool`
-
-Optionally, pass in an instance of the CDK [`cdk.aws-cognito.UserPoolProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.UserPoolProps.html) or [`cdk.aws-cognito.IUserPool`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.IUserPool.html). This will override the default settings this construct uses to create the CDK `UserPool` internally.
-
-:::caution
-You cannot change some of the User Pool properties once the it has been created.
-:::
-
-For example, [`SignInAliases`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.SignInAliases.html) cannot be changed after the User Pool has been created.
-
-The different aliases a user can use to sign in to our application for our User Pool. For example, you might want a user to be able to sign in with their email or username. Or with their phone number.
+You can configure how a user can sign in to our application for our User Pool. For example, you might want a user to be able to sign in with their email or username. Or with their phone number.
 
 There are two ways of setting this up.
 
@@ -635,17 +40,12 @@ There are two ways of setting this up.
 
    These aliases can be changed after the user signs up.
 
-   To use this option, set the `userPool` prop to:
+   To use this option, set the `login` prop to:
 
    ```js
-   {
-     signInAliases: {
-       username: true,
-       email: true,
-       phone: true,
-       preferredUsername: true,
-     }
-   }
+   new Auth(this, "Auth", {
+     login: ["email", "phone", "username", "preferredUsername"]
+   });
    ```
 
    [Read more on this over on the AWS docs](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#user-pool-settings-aliases-settings).
@@ -658,163 +58,562 @@ There are two ways of setting this up.
 
    In addition, if a user signs up with an email address, they can only change it to another email address and not a phone number. The same applies if they sign up with a phone number. It cannot be changed to an email.
 
-   To use this option, set the `userPool` prop to:
+   To use this option, set the `login` prop to:
 
    ```js
-   {
-     signInAliases: {
-       email: true,
-       phone: true,
-     }
-   }
+   new Auth(this, "Auth", {
+     login: ["email", "phone"]
+   });
    ```
 
    [Read more on this over on the AWS docs](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#user-pool-settings-aliases-settings-option-2).
 
-### userPoolClient?
+### Configuring triggers
 
-_Type_ : `cdk.aws-cognito.UserPoolClientOptions | cdk.aws-cognito.IUserPoolClient`
+The Cognito User Pool can invoke a Lambda function for specific [triggers](#triggers).
 
-Optionally, pass in an instance of the CDK [`cdk.aws-cognito.UserPoolClientOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.UserPoolClientOptions.html) or [`cdk.aws-cognito.IUserPoolClient`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.IUserPoolClient.html). This will override the default settings this construct uses to create the CDK `UserPoolClient` internally.
+#### Adding triggers
+
+```js
+new Auth(this, "Auth", {
+  triggers: {
+    preAuthentication: "src/preAuthentication.main",
+    postAuthentication: "src/postAuthentication.main",
+  },
+});
+```
+
+#### Specifying function props for all the triggers
+
+```js
+new Auth(this, "Auth", {
+  defaults: {
+    function: {
+      timeout: 20,
+      environment: { tableName: table.tableName },
+      permissions: [table],
+    },
+  },
+  triggers: {
+    preAuthentication: "src/preAuthentication.main",
+    postAuthentication: "src/postAuthentication.main",
+  },
+});
+```
+
+#### Configuring an individual trigger
+
+Configure each Lambda function separately.
+
+```js
+new Auth(this, "Auth", {
+  triggers: {
+    preAuthentication: {
+      handler: "src/preAuthentication.main",
+      timeout: 10,
+      environment: { bucketName: bucket.bucketName },
+      permissions: [bucket],
+    },
+    postAuthentication: "src/postAuthentication.main",
+  },
+});
+```
+
+Note that, you can set the `defaults.function` while using the `FunctionProps` per trigger. The `function` will just override the `defaults.function`. Except for the `environment`, the `layers`, and the `permissions` properties, it will be merged.
+
+```js
+new Auth(this, "Auth", {
+    defaults: {
+    function: {
+      timeout: 20,
+      environment: { tableName: table.tableName },
+      permissions: [table],
+    },
+  },
+  triggers: {
+    preAuthentication: {
+      handler: "src/preAuthentication.main",
+      timeout: 10,
+      environment: { bucketName: bucket.bucketName },
+      permissions: [bucket],
+    },
+    postAuthentication: "src/postAuthentication.main",
+  },
+});
+```
+
+So in the above example, the `preAuthentication` function doesn't use the `timeout` that is set in the `defaults.function`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
+
+#### Attaching permissions for all triggers
+
+Allow all the triggers to access S3.
+
+```js {8}
+const auth = new Auth(this, "Auth", {
+  triggers: {
+    preAuthentication: "src/preAuthentication.main",
+    postAuthentication: "src/postAuthentication.main",
+  },
+});
+
+auth.attachPermissionsForTriggers(["s3"]);
+```
+
+#### Attaching permissions for a specific trigger
+
+Allow one of the triggers to access S3.
+
+```js {8}
+const auth = new Auth(this, "Auth", {
+  triggers: {
+    preAuthentication: "src/preAuthentication.main",
+    postAuthentication: "src/postAuthentication.main",
+  },
+});
+
+auth.attachPermissionsForTriggers("preAuthentication", ["s3"]);
+```
+
+Here we are referring to the trigger using the trigger key, `preAuthentication`. 
+
+### Identity Pool federation
+
+#### Enabling federation with Auth0
+
+```js
+new Auth(this, "Auth", {
+  identityPoolFederation: {
+    auth0: {
+      domain: "https://myorg.us.auth0.com",
+      clientId: "UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif",
+    },
+  },
+});
+```
+
+#### Enabling federation with Twitter
+
+```js
+new Auth(this, "Auth", {
+  identityPoolFederation: {
+    twitter: {
+      consumerKey: "gyMbPOiwefr6x63SjIW8NN2d9",
+      consumerSecret: "qxld1zic5c2eyahqK3gjGLGQaOTogGfAgGh17MYOIcOUR9l2Nz",
+    },
+  },
+});
+```
+
+#### Enabling federation with multiple social logins
+
+```js
+new Auth(this, "Auth", {
+  identityPoolFederation: {
+    facebook: { appId: "419718329085014" },
+    apple: { servicesId: "com.myapp.client" },
+    amazon: { appId: "amzn1.application.24ebe4ee4aef41e5acff038aee2ee65f" },
+    google: {
+      clientId:
+        "38017095028-abcdjaaaidbgt3kfhuoh3n5ts08vodt3.apps.googleusercontent.com",
+    },
+  },
+});
+```
+
+#### Attaching permissions for authenticated federation identity
+
+```js {3}
+const auth = new Auth(this, "Auth");
+
+auth.attachPermissionsForAuthUsers([api, "s3"]);
+```
+
+#### Attaching permissions for unauthenticated federation identity
+
+```js {3}
+const auth = new Auth(this, "Auth");
+
+auth.attachPermissionsForUnauthUsers([api, "s3"]);
+```
+
+### Advanced examples
+
+#### Configuring attributes
+
+```js
+import {
+  StringAttribute,
+  NumberAttribute,
+  BooleanAttribute,
+  DateTimeAttribute,
+} from "aws-cdk-lib/aws-cognito";
+
+new Auth(this, "Auth", {
+  cdk: {
+    userPool: {
+      standardAttributes: {
+        fullname: { required: true, mutable: false },
+        address: { required: false, mutable: true },
+      },
+      customAttributes: {
+        'gameId': new StringAttribute({ minLen: 5, maxLen: 15, mutable: false }),
+        'participants': new NumberAttribute({ min: 1, max: 3, mutable: true }),
+        'isCompleted': new BooleanAttribute({ mutable: true }),
+        'startedAt': new DateTimeAttribute(),
+      },
+    }
+  },
+});
+```
+
+#### Importing an existing User Pool
+
+Override the internally created CDK `UserPool` and `UserPoolClient` instance.
+
+```js {5-6}
+import { UserPool, UserPoolClient } from "aws-cdk-lib/aws-cognito";
+
+new Auth(this, "Auth", {
+  cdk: {
+    userPool: UserPool.fromUserPoolId(this, "IUserPool", "pool-id"),
+    userPoolClient: UserPoolClient.fromUserPoolClientId(this, "IUserPoolClient", "pool-client-id"),
+  },
+});
+```
+
+#### Sharing Auth across stacks
+
+You can create the Auth construct in one stack, and attach permissions in other stacks. To do this, return the Auth construct from your stack function.
+
+```ts title="stacks/AuthStack.ts"
+import { Auth, StackContext } from "@serverless-stack/resources";
+
+export function AuthStack(ctx: StackContext) {
+  const auth = new Auth(ctx.stack, "Auth");
+  return {
+    auth
+  }
+}
+```
+
+Then import the auth construct into another stack with `use` and attach the permissions.
+
+```js {13} title="stacks/ApiStack.ts"
+import { Api, Stack } from "@serverless-stack/resources";
+import { AuthStack } from "./AuthStack"
+
+export function ApiStack(ctx: StackContext) {
+  const { auth } = use(AuthStack)
+  const api = new Api(ctx.stack, "Api", {
+    routes: {
+      "GET  /notes": "src/list.main",
+      "POST /notes": "src/create.main",
+    },
+  });
+  auth.attachPermissionsForAuthUsers([api]);
+}
+```
+
+## AuthProps
+
+
+
+### defaults.function?
+
+_Type_ : <span class="mono">[FunctionProps](Function#functionprops)</span>
+
+The default function props to be applied to all the triggers in the UserPool. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
+
+
+
+```js
+new Auth(stack, "Auth", {
+  defaults: {
+    function: {
+      timeout: 20,
+      environment: { topicName: topic.topicName },
+      permissions: [topic],
+    }
+  },
+});
+```
+
+
+### identityPoolFederation?
+
+_Type_ : <span class='mono'><span class="mono">boolean</span> | <span class="mono">[AuthCognitoIdentityPoolFederationProps](#authcognitoidentitypoolfederationprops)</span></span>
+
+_Default_ : <span class="mono">Identity Pool created with the User Pool as the authentication provider</span>
+
+Configure the Cognito Identity Pool and its authentication providers.
+
+### login?
+
+_Type_ : <span class='mono'>Array&lt;<span class='mono'><span class="mono">"email"</span> | <span class="mono">"phone"</span> | <span class="mono">"username"</span> | <span class="mono">"preferredUsername"</span></span>&gt;</span>
+
+_Default_ : <span class="mono">`["username"]`</span>
+
+Configure the different ways a user can sign in to our application for our User Pool. For example, you might want a user to be able to sign in with their email or username. Or with their phone number.
+:::caution
+You cannot change the login property once the User Pool has been created.
+:::
 
 ### triggers?
 
-_Type_ : [AuthUserPoolTriggers](#authuserpooltriggers), _defaults to undefined_
+_Type_ : <span class="mono">[AuthUserPoolTriggers](#authuserpooltriggers)</span>
 
-The triggers for the User Pool. Takes an associative array, where the key is the trigger type and the value is a [`FunctionDefinition`](Function.md#functiondefinition).
+_Default_ : <span class="mono">No triggers</span>
 
-### defaultFunctionProps?
+Configure triggers for this User Pool
 
-_Type_ : [`FunctionProps`](Function.md#functionprops), _defaults to_ `{}`
 
-The default function props to be applied to all the Lambda functions for the triggers. These default values are overridden by the function props for each trigger. Except for the `environment`, the `layers`, and the `permissions` properties, it will be merged.
 
-## AuthAuth0Props
+```js
+new Auth(stack, "Auth", {
+  triggers: {
+    preAuthentication: "src/preAuthentication.main",
+    postAuthentication: "src/postAuthentication.main",
+  },
+});
+```
 
-### domain
 
-_Type_ : `string`
+### cdk.userPool?
 
-The Domain for your Auth0 app.
+_Type_ : <span class='mono'><span class="mono">[UserPoolProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.UserPoolProps.html)</span> | <span class="mono">[IUserPool](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.IUserPool.html)</span></span>
 
-### clientId
+This allows you to override the default settings this construct uses internally to create the User Pool.
 
-_Type_ : `string`
+### cdk.userPoolClient?
 
-The Client ID for your Auth0 app.
+_Type_ : <span class='mono'><span class="mono">[UserPoolClientOptions](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.UserPoolClientOptions.html)</span> | <span class="mono">[IUserPoolClient](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.IUserPoolClient.html)</span></span>
 
+This allows you to override the default settings this construct uses internally to create the User Pool client.
+
+
+## Properties
+An instance of `Auth` has the following properties.
+### cognitoIdentityPoolId
+
+_Type_ : <span class='mono'><span class="mono">undefined</span> | <span class="mono">string</span></span>
+
+The id of the internally created `IdentityPool` instance.
+
+### userPoolArn
+
+_Type_ : <span class="mono">string</span>
+
+The ARN of the internally created Cognito User Pool.
+
+### userPoolClientId
+
+_Type_ : <span class="mono">string</span>
+
+The id of the internally created Cognito User Pool client.
+
+### userPoolId
+
+_Type_ : <span class="mono">string</span>
+
+The id of the internally created Cognito User Pool.
+
+
+### cdk.authRole
+
+_Type_ : <span class="mono">[Role](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_iam.Role.html)</span>
+
+### cdk.cfnIdentityPool?
+
+_Type_ : <span class="mono">[CfnIdentityPool](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.CfnIdentityPool.html)</span>
+
+### cdk.unauthRole
+
+_Type_ : <span class="mono">[Role](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_iam.Role.html)</span>
+
+### cdk.userPool
+
+_Type_ : <span class="mono">[IUserPool](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.IUserPool.html)</span>
+
+### cdk.userPoolClient
+
+_Type_ : <span class="mono">[IUserPoolClient](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.IUserPoolClient.html)</span>
+
+
+## Methods
+An instance of `Auth` has the following methods.
+### attachPermissionsForAuthUsers
+
+```ts
+attachPermissionsForAuthUsers(permissions)
+```
+_Parameters_
+- __permissions__ <span class="mono">[Permissions](Permissions)</span>
+### attachPermissionsForTrigger
+
+```ts
+attachPermissionsForTrigger(triggerKey, permissions)
+```
+_Parameters_
+- __triggerKey__ 
+- __permissions__ <span class="mono">[Permissions](Permissions)</span>
+### attachPermissionsForTriggers
+
+```ts
+attachPermissionsForTriggers(permissions)
+```
+_Parameters_
+- __permissions__ <span class="mono">[Permissions](Permissions)</span>
+### attachPermissionsForUnauthUsers
+
+```ts
+attachPermissionsForUnauthUsers(permissions)
+```
+_Parameters_
+- __permissions__ <span class="mono">[Permissions](Permissions)</span>
+### getFunction
+
+```ts
+getFunction(triggerKey)
+```
+_Parameters_
+- __triggerKey__ 
 ## AuthAppleProps
+
 
 ### servicesId
 
-_Type_ : `string`
+_Type_ : <span class="mono">string</span>
 
-The Services id of your Apple app.
+## AuthAuth0Props
 
-## AuthGoogleProps
 
 ### clientId
 
-_Type_ : `string`
+_Type_ : <span class="mono">string</span>
 
-The client id of your Google app.
+### domain
 
-## AuthFacebookProps
-
-### appId
-
-_Type_ : `string`
-
-The id of your Facebook app.
-
-## AuthTwitterProps
-
-### consumerKey
-
-_Type_ : `string`
-
-The Consumer key for your Twitter app.
-
-### consumerSecret
-
-_Type_ : `string`
-
-The Consumer secret key for your Twitter app.
+_Type_ : <span class="mono">string</span>
 
 ## AuthAmazonProps
 
+
 ### appId
 
-_Type_ : `string`
+_Type_ : <span class="mono">string</span>
 
-The id of your Amazon app.
+## AuthGoogleProps
+
+
+### clientId
+
+_Type_ : <span class="mono">string</span>
+
+## AuthTwitterProps
+
+
+### consumerKey
+
+_Type_ : <span class="mono">string</span>
+
+### consumerSecret
+
+_Type_ : <span class="mono">string</span>
+
+## AuthFacebookProps
+
+
+### appId
+
+_Type_ : <span class="mono">string</span>
 
 ## AuthUserPoolTriggers
 
-The following User Pool triggers can be connected to Lambda functions in your app. Read more about this [over on the AWS docs](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools-working-with-aws-lambda-triggers.html).
 
 ### createAuthChallenge?
 
-_Type_: [`FunctionDefinition`](Function.md#functiondefinition)
+_Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span> | <span class="mono">[FunctionProps](Function#functionprops)</span></span>
 
-Creates a challenge in a custom auth flow.
+### customEmailSender?
+
+_Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span> | <span class="mono">[FunctionProps](Function#functionprops)</span></span>
 
 ### customMessage?
 
-_Type_: [`FunctionDefinition`](Function.md#functiondefinition)
+_Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span> | <span class="mono">[FunctionProps](Function#functionprops)</span></span>
 
-Customize the message that is sent to a user.
+### customSmsSender?
+
+_Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span> | <span class="mono">[FunctionProps](Function#functionprops)</span></span>
 
 ### defineAuthChallenge?
 
-_Type_: [`FunctionDefinition`](Function.md#functiondefinition)
-
-Determine the next challenge in a custom auth flow.
+_Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span> | <span class="mono">[FunctionProps](Function#functionprops)</span></span>
 
 ### postAuthentication?
 
-_Type_: [`FunctionDefinition`](Function.md#functiondefinition)
-
-Triggered after a user is authenticated.
+_Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span> | <span class="mono">[FunctionProps](Function#functionprops)</span></span>
 
 ### postConfirmation?
 
-_Type_: [`FunctionDefinition`](Function.md#functiondefinition)
-
-Triggered after a user has been confirmed.
+_Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span> | <span class="mono">[FunctionProps](Function#functionprops)</span></span>
 
 ### preAuthentication?
 
-_Type_: [`FunctionDefinition`](Function.md#functiondefinition)
-
-Custom validation to accept or deny the sign-in request.
+_Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span> | <span class="mono">[FunctionProps](Function#functionprops)</span></span>
 
 ### preSignUp?
 
-_Type_: [`FunctionDefinition`](Function.md#functiondefinition)
-
-Custom validation to accept or deny the sign-up request.
+_Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span> | <span class="mono">[FunctionProps](Function#functionprops)</span></span>
 
 ### preTokenGeneration?
 
-_Type_: [`FunctionDefinition`](Function.md#functiondefinition)
-
-Add or remove attributes in Id tokens.
+_Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span> | <span class="mono">[FunctionProps](Function#functionprops)</span></span>
 
 ### userMigration?
 
-_Type_: [`FunctionDefinition`](Function.md#functiondefinition)
-
-Migrate a user from an existing user directory to User Pools.
+_Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span> | <span class="mono">[FunctionProps](Function#functionprops)</span></span>
 
 ### verifyAuthChallengeResponse?
 
-_Type_: [`FunctionDefinition`](Function.md#functiondefinition)
-
-Determines if a response is correct in a custom auth flow.
+_Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span> | <span class="mono">[FunctionProps](Function#functionprops)</span></span>
 
 ## AuthCdkCfnIdentityPoolProps
 
-`AuthCdkCfnIdentityPoolProps` extends [`cdk.aws-cognito.CfnIdentityPoolProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.CfnIdentityPoolProps.html) with the exception that the `allowUnauthenticatedIdentities` fields is **optional**, and defaults to `true`.
 
-You can use `AuthCdkCfnIdentityPoolProps` to configure the other Identity Pool properties.
+### allowUnauthenticatedIdentities?
+
+_Type_ : <span class="mono">boolean</span>
+
+## AuthCognitoIdentityPoolFederationProps
+
+
+### amazon?
+
+_Type_ : <span class="mono">[AuthAmazonProps](#authamazonprops)</span>
+
+### apple?
+
+_Type_ : <span class="mono">[AuthAppleProps](#authappleprops)</span>
+
+### auth0?
+
+_Type_ : <span class="mono">[AuthAuth0Props](#authauth0props)</span>
+
+### facebook?
+
+_Type_ : <span class="mono">[AuthFacebookProps](#authfacebookprops)</span>
+
+### google?
+
+_Type_ : <span class="mono">[AuthGoogleProps](#authgoogleprops)</span>
+
+### twitter?
+
+_Type_ : <span class="mono">[AuthTwitterProps](#authtwitterprops)</span>
+
+
+### cdk.cfnIdentityPool?
+
+_Type_ : <span class="mono">[AuthCdkCfnIdentityPoolProps](#authcdkcfnidentitypoolprops)</span>
+

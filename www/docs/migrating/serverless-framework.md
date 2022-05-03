@@ -20,7 +20,7 @@ To make it an easier transition, we'll start by merging your existing Serverless
 
 Your existing app can either have one service or be a monorepo with multiple services.
 
-1. In a temporary location, run `npx create-serverless-stack@latest my-sst-app` or use the `--language typescript` option if your project is in TypeScript.
+1. In a temporary location, run `npm init sst` 
 2. Copy the `sst.json` file and the `src/` and `stacks/` directories.
 3. Copy the `scripts`, `dependencies`, and `devDependencies` from the `package.json` file in the new SST project root.
 4. Copy the `.gitignore` file and append it to your existing `.gitignore` file.

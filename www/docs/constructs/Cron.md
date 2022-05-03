@@ -1,69 +1,50 @@
 ---
-description: "Docs for the sst.Cron construct in the @serverless-stack/resources package. This construct creates a CDK event rule."
+description: "Docs for the sst.Cron construct in the @serverless-stack/resources package"
 ---
-
+<!--
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!                                                           !!
+!!  This file has been automatically generated, do not edit  !!
+!!                                                           !!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-->
 The `Cron` construct is a higher level CDK construct that makes it easy to create a cron job. You can create a cron job by handler function and specifying the schedule it needs to run on. Internally this construct uses a [EventBridge Rule](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events.Rule.html).
 
-## Initializer
-
+## Constructor
 ```ts
-new Cron(scope: Construct, id: string, props: CronProps)
+new Cron(scope, id, props)
 ```
-
 _Parameters_
+- __scope__ <span class="mono">[Construct](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)</span>
+- __id__ <span class="mono">string</span>
+- __props__ <span class="mono">[CronProps](#cronprops)</span>
 
-- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
-- id `string`
-- props [`CronProps`](#cronprops)
-
-## Examples
-
-### Using the rate expression
+### Rate schedule
 
 ```js
 import { Cron } from "@serverless-stack/resources";
 
-new Cron(this, "Cron", {
+new Cron(stack, "Cron", {
   schedule: "rate(1 minute)",
   job: "src/lambda.main",
 });
 ```
 
-### Using the cron expression
+### Cron schedule
 
 ```js
-new Cron(this, "Cron", {
+new Cron(stack, "Cron", {
   schedule: "cron(15 10 * * ? *)",
   job: "src/lambda.main",
 });
 ```
 
-### Using Duration
-
-```js
-import { Duration } from "aws-cdk-lib";
-
-new Cron(this, "Cron", {
-  schedule: Duration.days(1),
-  job: "src/lambda.main",
-});
-```
-
-### Using CronOptions
-
-```js
-new Cron(this, "Cron", {
-  schedule: { minute: "0", hour: "4" },
-  job: "src/lambda.main",
-});
-```
-
-### Giving the cron job some permissions
+### Permissions
 
 Allow the function to access S3.
 
 ```js {6}
-const cron = new Cron(this, "Cron", {
+const cron = new Cron(stack, "Cron", {
   schedule: "rate(1 minute)",
   job: "src/lambda.main",
 });
@@ -71,132 +52,155 @@ const cron = new Cron(this, "Cron", {
 cron.attachPermissions(["s3"]);
 ```
 
-### Configuring the job
+### Advanced examples
 
-Configure the internally created CDK `Event Target`.
+#### Configuring the event rule
 
-```js {7-11}
+Configure the internally created EventBus Rule.
+
+```js {4}
+new Cron(stack, "Cron", {
+  job: "src/lambda.main",
+  cdk: {
+    cronOptions: { minute: "0", hour: "4" },
+  }
+});
+```
+
+#### Configuring the event target
+
+Configure the internally created EventBus Target.
+
+```js {8-12}
 import { RuleTargetInput } from "aws-cdk-lib/aws-events";
 
-new Cron(this, "Cron", {
+new Cron(stack, "Cron", {
   schedule: "rate(1 minute)",
   job: {
     function: "src/lambda.main",
-    jobProps: {
-      event: RuleTargetInput.fromObject({
-        key: "value"
-      }),
+    cdk: {
+      target: {
+        event: RuleTargetInput.fromObject({
+          key: "value"
+        }),
+      },
     },
   },
 });
 ```
 
-## Properties
-
-An instance of `Cron` contains the following properties.
-
-### eventsRule
-
-_Type_ : [`cdk.aws-events.Rule`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events.Rule.html)
-
-The internally created CDK EventBridge `Rule` instance.
-
-### jobFunction
-
-_Type_ : [`Function`](Function.md)
-
-The internally created `Function` instance that'll be run on schedule.
-
-## Methods
-
-An instance of `Queue` contains the following methods.
-
-### attachPermissions
-
-```ts
-attachPermissions(permissions: Permissions)
-```
-
-_Parameters_
-
-- **permissions** [`Permissions`](../util/Permissions.md)
-
-Attaches the given list of [permissions](../util/Permissions.md) to the `jobFunction`. This allows the function to access other AWS resources.
-
-Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
-
 ## CronProps
+
 
 ### job
 
-_Type_ : `FunctionDefinition | CronJobProps`, _defaults to_ `undefined`
+_Type_ : <span class='mono'><span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span></span> | <span class="mono">[CronJobProps](#cronjobprops)</span></span>
 
-Takes [`FunctionDefinition`](Function.md#functiondefinition) or [`CronJobProps`](#cronjobprops) object used to create the function for the cron job.
+The definition of the function to be executed
+
+
+```js
+new Cron(stack, "Cron", {
+  function : "src/function.handler",
+})
+```
 
 ### schedule?
 
-_Type_ : `string | cdk.Duration | cdk.aws-events.CronOptions`
+_Type_ : <span class='mono'><span class="mono">rate(${string})</span> | <span class="mono">cron(${string})</span></span>
 
-The schedule for the cron job. Can be specified as a string. The string format takes a [rate expression](https://docs.aws.amazon.com/lambda/latest/dg/services-cloudwatchevents-expressions.html).
+The schedule for the cron job.
+The string format takes a [rate expression](https://docs.aws.amazon.com/lambda/latest/dg/services-cloudwatchevents-expressions.html).
 
+```txt
+rate(1 minute)
+rate(5 minutes)
+rate(1 hour)
+rate(5 hours)
+rate(1 day)
+rate(5 days)
 ```
-"rate(_Value Unit_)"
-
-// For example, every 5 minutes
-"rate(5 minutes)"
-```
-
 Or as a [cron expression](https://en.wikipedia.org/wiki/Cron#CRON_expression).
 
-```
-"cron(Minutes Hours Day-of-month Month Day-of-week Year)"
-
-// For example, 10:15 AM (UTC) every day
-"cron(15 10 * * ? *)"
+```txt
+cron(15 10 * * ? *)    // 10:15 AM (UTC) every day.
 ```
 
-You can also use the [`cdk.Duration`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Duration.html) as an alternative to defining the rate expression.
 
-```txt {6}
-import { Duration } from "aws-cdk-lib";
-
-// Repeat every 5 minutes
-
-// As cdk.Duration
-Duration.minutes(5)
-
-// The equivalent rate expression
-"rate(5 minutes)"
+```js
+new Cron(stack, "Cron", {
+  job: "src/lambda.main",
+  schedule: "rate(5 minutes)",
+});
+```
+```js
+new Cron(stack, "Cron", {
+  job: "src/lambda.main",
+  schedule: "cron(15 10 * * ? *)",
+});
 ```
 
-Similarly, you can specify the cron expression using [`cdk.aws-events.CronOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events.CronOptions.html).
 
-```txt {4}
-// 10:15 AM (UTC) every day
+### cdk.rule?
 
-// As cdk.aws-events.CronOptions
-{ minute: "15", hour: "10" }
+_Type_ : <span class="mono">[RuleProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events.RuleProps.html)</span>
 
-// The equivalent cron expression
-"cron(15 10 * * ? *)"
+Override the default settings this construct uses internally to create the events rule.
+
+
+## Properties
+An instance of `Cron` has the following properties.
+### jobFunction
+
+_Type_ : <span class="mono">[Function](Function#function)</span>
+
+The internally created Function instance that'll be run on schedule.
+
+
+### cdk.rule
+
+_Type_ : <span class="mono">[Rule](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events.Rule.html)</span>
+
+The internally created CDK EventBridge Rule instance.
+
+
+## Methods
+An instance of `Cron` has the following methods.
+### attachPermissions
+
+```ts
+attachPermissions(permissions)
 ```
+_Parameters_
+- __permissions__ <span class="mono">[Permissions](Permissions)</span>
 
-### eventsRule?
 
-_Type_ : [`cdk.aws-events.RuleProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events.RuleProps.html), _defaults to_ `undefined`
+Attaches the given list of [permissions](Permissions.md) to the `jobFunction`. This allows the function to access other AWS resources.
+Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
-Or optionally pass in a CDK EventBridge `RuleProps`. This allows you to override the default settings this construct uses internally to create the events rule.
 
 ## CronJobProps
 
+
 ### function
 
-_Type_ : `FunctionDefinition`
+_Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span> | <span class="mono">[FunctionProps](Function#functionprops)</span></span>
 
-A [`FunctionDefinition`](Function.md#functiondefinition) object that'll be used to create the job function for the cron.
+The function that will be executed when the job runs.
 
-### jobProps?
 
-_Type_ : [`cdk.aws-events-targets.LambdaFunctionProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events_targets.LambdaFunctionProps.html), _defaults to_ `undefined`
+```js
+  new Cron(stack, "Cron", {
+    job: {
+      function: "src/lambda.main",
+    },
+  });
+```
 
-Or optionally pass in a CDK `LambdaFunctionProps`. This allows you to override the default settings this construct uses internally to create the job.
+
+### cdk.target?
+
+_Type_ : <span class="mono">[LambdaFunctionProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events_targets.LambdaFunctionProps.html)</span>
+
+Override the default settings this construct uses internally to create the events rule.
+

@@ -1,64 +1,60 @@
 ---
 description: "Docs for the sst.Stack construct in the @serverless-stack/resources package"
 ---
+<!--
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!                                                           !!
+!!  This file has been automatically generated, do not edit  !!
+!!                                                           !!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-->
+The Stack construct extends cdk.Stack. It automatically prefixes the stack names with the stage and app name to ensure that they can be deployed to multiple regions in the same AWS account. It also ensure that the stack uses the same AWS profile and region as the app. They're defined using functions that return resources that can be imported by other stacks.
 
-The `Stack` construct extends [`cdk.Stack`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Stack.html). It automatically prefixes the stack names with the stage and app name to ensure that they can be deployed to multiple regions in the same AWS account. It also ensure that the stack uses the same AWS profile and region as the app.
-
-## Initializer
-
+## Constructor
 ```ts
-new Stack(scope: Construct, id: string, props: StackProps)
+new Stack(scope, id, props)
 ```
-
 _Parameters_
-
-- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
-- id `string`
-- props [`StackProps`](#stackprops)
+- __scope__ <span class="mono">[Construct](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)</span>
+- __id__ <span class="mono">string</span>
+- __props__ <span class="mono">[StackProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.StackProps.html)</span>
 
 ## Examples
 
 ### Creating a new stack
 
-Create a new stack by adding this in `stacks/MyStack.js`.
-
 ```js
-import { Stack } from "@serverless-stack/resources";
+import { StackContext } from "@serverless-stack/resources";
 
-export default class MyStack extends Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
-
-    // Define your stack
-  }
+export function MyStack({ stack }: StackContext) {
+  // Define your stack
 }
 ```
+
 
 ### Adding to an app
 
 Add it to your app in `stacks/index.js`.
 
-```js
-import MyStack from "./MyStack";
+```ts
+import { StackA } from "./MyStack";
+import { StackB } from "./MyStack";
 
 export default function main(app) {
-  // Set default runtime for all functions
-  app.setDefaultFunctionProps({
-    runtime: "nodejs14.x"
-  });
-
-  new MyStack(app, "my-stack");
+  app
+    .stack(StackA)
+    .stack(StackB);
 
   // Add more stacks
 }
 ```
 
-Here `app` is an instance of [`App`](constructs/App.md).
+Here `app` is an instance of [`App`](./App.md).
 
 Note that, setting the env for an individual stack is not allowed.
 
 ```js
-new MyStack(app, "my-stack", { env: { account: "1234", region: "us-east-1" } });
+app.stack(MyStack, { env: { account: "1234", region: "us-east-1" } });
 ```
 
 It will throw this error.
@@ -69,33 +65,89 @@ Error: Do not directly set the environment for a stack
 
 This is by design. The stacks in SST are meant to be re-deployed for multiple stages (like Serverless Framework). And so they depend on the region and AWS profile that's passed in through the CLI. If a stack is hardcoded to be deployed to a specific account or region, it can break your deployment pipeline.
 
+### Configuring stack name
+By default, the name of the CloudFormation stack is the stage name, app name, and the stack function name joined by `-`, ie. `stage-app-MyStack`.
+
+You can override the stack function name by passing in `id`. In this case, the CloudFormation stack name is `stage-app-my-stack`.
+
+```ts
+import { MyStack } from "./MyStack";
+
+export default function main(app) {
+  app.stack(MyStack, { id: "my-stack" });
+}
+```
+
+Alternatively, you can override the CloudFormation stack name directly by passing in `stackName`.
+
+```ts
+import { MyStack } from "./MyStack";
+
+export default function main(app) {
+  app.stack(MyStack, { stackName: `${app.stage}-my-hello-stack` });
+}
+```
+
+Note that, `stackName` need to be parameterized with the stage name. This ensure an app can be deployed to multiple stages with unique stack names.
+
+### Sharing resources between stacks
+Resources defined in a stack can be used by other stacks. This allows you to have granular stacks that contain only related resources.
+
+Stack functions can return any resources they want to expose to other stacks.
+```ts
+import { StackContext } from "@serverless-stack/resources"
+
+export function MyStack({ stack }: StackContext) {
+  const table = new Table(stack, "table")
+  return {
+    table
+  };
+}
+```
+
+Other stacks can import these resources by utilizing the `use` function
+
+```ts
+import { StackContext, use } from "@serverless-stack/resources"
+import { MyStack } from "./MyStack"
+
+export function AnotherStack({ stack }: StackContext) {
+  const { table } = use(MyStack);
+  // Use table
+}
+```
+
+### Async stacks
+Asynchronous calls are supported in stack functions but be careful when using this as you can introduce external state that makes your deployments less deterministic
+
+Simple add an `async` modifier to your function definition
+```ts
+import { StackContext } from "@serverless-stack/resources"
+
+export async function MyStack({ stack }: StackContext) {
+  const foo = await someAsynCall();
+  // Define stack
+}
+```
+
+When initializing the stack, make sure you call `await`
+
+```ts
+import { MyStack } from "./MyStack"
+export default function main(app: sst.App) {
+  await app.stack(MyStack);
+}
+```
+
 ### Accessing app properties
 
 The stage, region, and app name can be accessed through the app object. In your stacks (for example, `stacks/MyStack.js`) you can use.
 
-```js
-class MyStack extends sst.Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
-
-    scope.stage;
-    scope.region;
-    scope.name;
-  }
-}
-```
-
-And in TypeScript.
-
 ```ts
-class MyStack extends sst.Stack {
-  constructor(scope: sst.App, id: string, props?: sst.StackProps) {
-    super(scope, id, props);
-
-    scope.stage;
-    scope.region;
-    scope.name;
-  }
+function MyStack({ stack, app }: StackContext) {
+  app.stage;
+  app.region;
+  app.name;
 }
 ```
 
@@ -105,20 +157,14 @@ You can use this to conditionally add stacks or resources to your app.
 
 You can set some function props and have them apply to all the functions in a stack. This **must be called before** any functions have been added to the stack; so that all functions will be created with these defaults.
 
-```js
-class MyStack extends sst.Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
-
-    this.setDefaultFunctionProps({
-      timeout: 20,
-      memorySize: 512,
-      runtime: "go1.x",
-      environment: { TABLE_NAME: "NOTES_TABLE" },
-    });
-
-    // Start adding resources
-  }
+```ts
+function MyStack({ stack }: StackContext) {
+  stack.setDefaultFunctionProps({
+    timeout: 20,
+    memorySize: 512,
+    runtime: "go1.x",
+    environment: { TABLE_NAME: "NOTES_TABLE" },
+  });
 }
 ```
 
@@ -130,33 +176,27 @@ You can also use [`addDefaultFunctionPermissions`](#adddefaultfunctionpermission
 
 However, they only affect the functions that are created after the call.
 
-```js
-class MyStack extends sst.Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
+```ts
+function MyStack({ stack }: StackContext) {
+  new Api(stack, "Api1", {
+    routes: {
+      "GET /": "src/hello.main",
+    },
+  });
 
-    new Api(this, "Api1", {
-      routes: {
-        "GET /": "src/hello.main",
-      },
-    });
+  stack.addDefaultFunctionEnv({
+    TABLE_NAME: "NOTES_TABLE",
+  });
 
-    this.addDefaultFunctionEnv({
-      TABLE_NAME: "NOTES_TABLE"
-    });
+  stack.addDefaultFunctionPermissions(["s3"]);
 
-    this.addDefaultFunctionPermissions(["s3"]);
+  stack.addDefaultFunctionLayers([mylayer]);
 
-    this.addDefaultFunctionLayers([mylayer]);
-
-    new Api(this, "Api2", {
-      routes: {
-        "GET /": "src/world.main",
-      },
-    });
-
-    // Add more resources
-  }
+  new Api(stack, "Api2", {
+    routes: {
+      "GET /": "src/world.main",
+    },
+  });
 }
 ```
 
@@ -168,43 +208,37 @@ You can optionally prefix resource names to make sure they don't thrash when dep
 
 You can do so in your stacks.
 
-```js
+```ts
 scope.logicalPrefixedName("MyResource"); // Returns "dev-my-sst-app-MyResource"
 ```
 
-This invokes the `logicalPrefixedName` method in [`App`](constructs/App.md) that your stack is added to. This'll return `dev-my-sst-app-MyResource`, where `dev` is the current stage and `my-sst-app` is the name of the app.
+This invokes the `logicalPrefixedName` method in [`App`](./App.md) that your stack is added to. This'll return `dev-my-sst-app-MyResource`, where `dev` is the current stage and `my-sst-app` is the name of the app.
 
 ### Adding stack outputs
 
-```js {8-11}
-export default class MyStack extends Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
-
-    const topic = new Topic(this, "Topic");
-    const queue = new Queue(this, "Queue");
-
-    this.addOutputs({
-      TopicArn: topic.snsTopic.topicArn,
-      QueueArn: topic.sqsQueue.queueArn,
-    });
-  }
+```ts
+export function MyStack({ stack }: StackContext) {
+  const topic = new Topic(stack, "Topic");
+  const queue = new Queue(stack, "Queue");
+  stack.addOutputs({
+    TopicArn: topic.snsTopic.topicArn,
+    QueueArn: topic.sqsQueue.queueArn,
+  });
 }
 ```
 
 ### Adding stack exports
 
-```js {7-9}
-export default class MyStack extends Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
+```ts
+export function MyStack({ stack }: StackContext) {
+  const topic = new Topic(stack, "Topic");
 
-    const topic = new Topic(this, "Topic");
-
-    this.addOutputs({
-      TopicArn: { value: topic.snsTopic.topicArn, exportName: "MyTopicArn" },
-    });
-  }
+  stack.addOutputs({
+    TopicArn: {
+      value: topic.snsTopic.topicArn,
+      exportName: "MyTopicArn"
+    },
+  });
 }
 ```
 
@@ -213,108 +247,128 @@ export default class MyStack extends Stack {
 To access the AWS account and region your app is being deployed to, use the following in your `Stack` instances.
 
 ```js
-this.region;
-this.account;
+stack.region;
+stack.account;
 ```
 
-The region here is the same as the one you can find in the `scope` instance in the constructor.
+The region here is the same as the one you can find in the `app` instance in the constructor.
+
+## Properties
+An instance of `Stack` has the following properties.
+### stage
+
+_Type_ : <span class="mono">string</span>
+
+The current stage of the stack.
 
 ## Methods
-
-An instance of `Stack` contains the following methods.
-
-### getAllFunctions
-
-```ts
-getAllFunctions(): Function
-```
-
-_Returns_
-
-- [`Function[]`](Function.md)
-
-Returns all the [`Function`](Function.md) instances in this stack.
-
-### setDefaultFunctionProps
-
-```ts
-setDefaultFunctionProps(props: FunctionProps)
-```
-
-_Parameters_
-
-- **props** `FunctionProps`
-
-The default function props to be applied to all the Lambda functions in the stack. These default values will be overridden if a [`Function`](Function.md) sets its own props. This cannot be called after any functions have been added to the stack.
-
-:::note
-The `setDefaultFunctionProps` function must be called before any functions have been added.
-:::
-
-Takes the [`FunctionProps`](Function.md#functionprops).
-
-This overrides the props from the [App's `setDefaultFunctionProps`](App.md#setdefaultfunctionprops), while merging the `permissions` and `environment` props.
-
+An instance of `Stack` has the following methods.
 ### addDefaultFunctionEnv
 
 ```ts
-addDefaultFunctionEnv(env: { [key: string]: string })
+addDefaultFunctionEnv(environment)
 ```
-
 _Parameters_
+- __environment__ <span class="mono">Record&lt;<span class="mono">string</span>, <span class="mono">string</span>&gt;</span>
 
-- **env** `{ [key: string]: string }`
 
 Adds additional default environment variables to be applied to all Lambda functions in the stack.
 
-:::note
-Only functions created after a `addDefaultFunctionEnv` call will contain the new values.
-:::
 
-### addDefaultFunctionPermissions
-
-```ts
-addDefaultFunctionPermissions(permissions: Permissions)
+```js
+stack.addDefaultFunctionEnv({
+  DYNAMO_TABLE: table.name
+});
 ```
-
-_Parameters_
-
-- **permissions** `Permissions`
-
-Adds additional default [`Permissions`](../util/Permissions.md) to be applied to all Lambda functions in the stack.
-
-:::note
-Only functions created after a `addDefaultFunctionPermissions` call will contain the new values.
-:::
 
 ### addDefaultFunctionLayers
 
 ```ts
-addDefaultFunctionLayers(layers: lambda.ILayerVersion[])
+addDefaultFunctionLayers(layers)
 ```
-
 _Parameters_
+- __layers__ <span class='mono'>Array&lt;<span class="mono">[ILayerVersion](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.ILayerVersion.html)</span>&gt;</span>
 
-- **layers** [`lambda.ILayerVersion[]`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.ILayerVersion.html)
 
 Adds additional default layers to be applied to all Lambda functions in the stack.
 
-:::note
-Only functions created after a `addDefaultFunctionLayers` call will contain the new values.
-:::
+
+```js
+stack.addDefaultFunctionLayers(["arn:aws:lambda:us-east-1:123456789012:layer:nodejs:3"]);
+```
+
+### addDefaultFunctionPermissions
+
+```ts
+addDefaultFunctionPermissions(permissions)
+```
+_Parameters_
+- __permissions__ <span class="mono">[Permissions](Permissions)</span>
+
+
+Adds additional default Permissions to be applied to all Lambda functions in the stack.
+
+
+```js
+stack.addDefaultFunctionPermissions(["sqs", "s3"]);
+```
 
 ### addOutputs
 
 ```ts
-addOutputs(outputs: { [key: string]: string | cdk.CfnOutputProps })
+addOutputs(outputs)
+```
+_Parameters_
+- __outputs__ <span class="mono">Record&lt;<span class="mono">string</span>, <span class='mono'><span class="mono">string</span> | <span class="mono">[CfnOutputProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.CfnOutputProps.html)</span></span>&gt;</span>
+
+
+Add outputs to this stack
+
+
+```js
+stack.addOutputs({
+  TableName: table.name,
+});
 ```
 
+```js
+stack.addOutputs({
+  TableName: {
+    value: table.name,
+    exportName: "MyTableName",
+  }
+});
+```
+
+### getAllFunctions
+
+```ts
+getAllFunctions()
+```
+
+
+Returns all the Function instances in this stack.
+
+
+```js
+stack.getAllFunctions();
+```
+
+### setDefaultFunctionProps
+
+```ts
+setDefaultFunctionProps(props)
+```
 _Parameters_
+- __props__ <span class="mono">[FunctionProps](Function#functionprops)</span>
 
-- **outputs** `{ [key: string]: string | cdk.CfnOutputProps }`
 
-An associative array with the key being the output name as a string and the value is either a `string` as the output value or the [`cdk.CfnOutputProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.CfnOutputProps.html).
+The default function props to be applied to all the Lambda functions in the stack.
 
-## StackProps
 
-Extends [`cdk.StackProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.StackProps.html).
+```js
+stack.setDefaultFunctionProps({
+  srcPath: "backend",
+  runtime: "nodejs14.x",
+});
+```

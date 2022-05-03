@@ -5,50 +5,13 @@ description: "Learn how to configure tests in Serverless Stack (SST)."
 
 ## Testing your app
 
-You can run your tests using.
+If you created your app with `create-sst` a [vitest](https://vitest.dev/config/) config was setup for you. You can run tests using
 
 ```bash
 # With npm
 npm test
 # Or with Yarn
 yarn test
-```
-
-This runs the tests for your infrastructure (CDK) and application (Lambda). Internally, SST uses [Jest](https://jestjs.io/). You'll just need to add your tests to the `test/` directory.
-
-## Configuring Jest
-
-The default configuration that SST uses for Jest can be overridden by adding any of the following supported keys to a [Jest config](https://jestjs.io/docs/configuration) in your `package.json`.
-
-Supported overrides include:
-
-- `clearMocks`
-- `collectCoverageFrom`
-- `coveragePathIgnorePatterns`
-- `coverageReporters`
-- `coverageThreshold`
-- `displayName`
-- `extraGlobals`
-- `globalSetup`
-- `globalTeardown`
-- `moduleNameMapper`
-- `resetMocks`
-- `resetModules`
-- `restoreMocks`
-- `snapshotSerializers`
-- `testMatch`
-- `transform`
-- `transformIgnorePatterns`
-- `watchPathIgnorePatterns`
-
-For example.
-
-```json {3}
-{
-  "jest": {
-    "resetMocks": true
-  }
-}
 ```
 
 ## Integration tests
@@ -64,7 +27,7 @@ const api = new Api(this, "Api", {
   },
 });
 
-this.addOutputs({
+stack.addOutputs({
   ApiUrl: api.url,
 });
 ```

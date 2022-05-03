@@ -1,31 +1,30 @@
 ---
 description: "Docs for the sst.WebSocketApi construct in the @serverless-stack/resources package"
 ---
-
+<!--
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!                                                           !!
+!!  This file has been automatically generated, do not edit  !!
+!!                                                           !!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-->
 The `WebSocketApi` construct is a higher level CDK construct that makes it easy to create a WebSocket API. It provides a simple way to define your routes and allows you to configure the specific Lambda functions if necessary. It also allows you to configure authorization and custom domains. See the [examples](#examples) for more details.
 
-## Initializer
-
+## Constructor
 ```ts
-new WebSocketApi(scope: Construct, id: string, props: WebSocketApiProps)
+new WebSocketApi(scope, id, props)
 ```
-
 _Parameters_
-
-- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
-- id `string`
-- props [`WebSocketApiProps`](#websocketapiprops)
+- __scope__ <span class="mono">[Construct](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)</span>
+- __id__ <span class="mono">string</span>
+- __props__ <span class="mono">[WebSocketApiProps](#websocketapiprops)</span>
 
 ## Examples
-
-The `WebSocketApi` construct is designed to make it easy to get started with, while allowing for a way to fully configure it as well. Let's look at how, through a couple of examples.
-
-### Using the minimal config
 
 ```js
 import { WebSocketApi } from "@serverless-stack/resources";
 
-new WebSocketApi(this, "Api", {
+new WebSocketApi(stack, "Api", {
   routes: {
     $connect: "src/connect.main",
     $default: "src/default.main",
@@ -35,12 +34,15 @@ new WebSocketApi(this, "Api", {
 });
 ```
 
-### Adding routes
+
+### Configuring routes
+
+#### Lazily adding routes
 
 Add routes after the API has been created.
 
 ```js
-const api = new WebSocketApi(this, "Api", {
+const api = new WebSocketApi(stack, "Api", {
   routes: {
     $connect: "src/connect.main",
     $default: "src/default.main",
@@ -53,132 +55,96 @@ api.addRoutes(this, {
 });
 ```
 
-### Lazily adding routes
-
-Create an _empty_ Api construct and lazily add the routes.
-
-```js {3-8}
-const api = new WebSocketApi(this, "Api");
-
-api.addRoutes(this, {
-  $connect: "src/connect.main",
-  $default: "src/default.main",
-  $disconnect: "src/disconnect.main",
-  sendMessage: "src/sendMessage.main",
-});
-```
-
-### Specifying function props for all the routes
+#### Specifying function props for all the routes
 
 You can extend the minimal config, to set some function props and have them apply to all the routes.
 
-```js {2-6}
-new WebSocketApi(this, "Api", {
-  defaultFunctionProps: {
-    timeout: 20,
-    permissions: [table],
-    environment: { tableName: table.tableName },
-  },
-  routes: {
-    $connect: "src/connect.main",
-    $default: "src/default.main",
-    $disconnect: "src/disconnect.main",
-  },
-});
-```
-
-### Using the full config
-
-If you wanted to configure each Lambda function separately, you can pass in the [`FunctionDefinition`](Function.md#functiondefinition).
-
-```js
-new WebSocketApi(this, "Api", {
-  routes: {
-    $default: {
-      srcPath: "src/",
-      handler: "default.main",
+```js {2-8}
+new WebSocketApi(stack, "Api", {
+  defaults: {
+    function: {
+      timeout: 20,
       permissions: [table],
       environment: { tableName: table.tableName },
     },
   },
+  routes: {
+    $connect: "src/connect.main",
+    $default: "src/default.main",
+    $disconnect: "src/disconnect.main",
+  },
 });
 ```
 
-Note that, you can set the `defaultFunctionProps` while using the `function` per route. The `function` will just override the `defaultFunctionProps`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
+#### Configuring an individual route
+
+Configure each Lambda route separately.
 
 ```js
-new WebSocketApi(this, "Api", {
-  defaultFunctionProps: {
-    timeout: 20,
-    permissions: [table],
-    environment: { tableName: table.tableName },
+new WebSocketApi(stack, "Api", {
+  routes: {
+    $default: {
+      function: {
+        timeout: 20,
+        handler: "src/default.main",
+        permissions: [table],
+        environment: { tableName: table.tableName },
+      }
+    },
+  },
+});
+```
+
+Note that, you can set the `defaults.functionProps` while using the `function` per route. The `function` will just override the `defaults.functionProps`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
+
+```js
+new WebSocketApi(stack, "Api", {
+  defaults: {
+    function: {
+      timeout: 20,
+      permissions: [table],
+      environment: { tableName: table.tableName },
+    },
   },
   routes: {
     $default: {
-      handler: "src/default.main",
-      timeout: 10,
-      permissions: [bucket],
-      environment: { bucketName: bucket.bucketName },
+      function: {
+        handler: "src/default.main",
+        timeout: 10,
+        permissions: [bucket],
+        environment: { bucketName: bucket.bucketName },
+      },
     },
     $connect: "src/connect.main",
   },
 });
 ```
 
-So in the above example, the `$default` function doesn't use the `timeout` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
+So in the above example, the `$default` function doesn't use the `timeout` that is set in the `defaults.functionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
 
-### Configuring the WebSocket Api
+#### Getting the function for a route
 
-Configure the internally created CDK `WebSocketApi` instance.
-
-```js {2-4}
-new WebSocketApi(this, "Api", {
-  webSocketApi: {
-    apiName: "chat-app-api",
-  },
+```js {10}
+const api = new WebSocketApi(stack, "Api", {
   routes: {
+    $connect: "src/connect.main",
     $default: "src/default.main",
+    $disconnect: "src/disconnect.main",
+    sendMessage: "src/sendMessage.main",
   },
 });
+
+const function = api.getFunction("sendMessage");
 ```
 
-### Configuring access log
-
-#### Configuring the log format
-
-Use a CSV format instead of default JSON format.
-
-```js {2-3}
-new WebSocketApi(this, "Api", {
-  accessLog:
-    "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
-  routes: {
-    $default: "src/default.main",
-  },
-});
-```
-
-#### Configuring the log retention setting
-
-```js {3}
-new WebSocketApi(this, "Api", {
-  accessLog: {
-    retention: "ONE_WEEK",
-  },
-  routes: {
-    "GET /notes": "src/list.main",
-  },
-});
-```
-
-### Configuring custom domains
+### Custom domains
 
 You can also configure the API with a custom domain. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/). If your domains are hosted elsewhere, you can [follow this guide to migrate them to Route 53](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
 
 #### Using the basic config
 
 ```js {2}
-new WebSocketApi(this, "Api", {
+new WebSocketApi(stack, "Api", {
   customDomain: "api.domain.com",
   routes: {
     $default: "src/default.main",
@@ -189,7 +155,7 @@ new WebSocketApi(this, "Api", {
 #### Configuring with a wildcard
 
 ```js {2}
-new WebSocketApi(this, "Api", {
+new WebSocketApi(stack, "Api", {
   customDomain: "*.domain.com",
   routes: {
     $default: "src/default.main",
@@ -200,7 +166,7 @@ new WebSocketApi(this, "Api", {
 #### Using the full config
 
 ```js {2-6}
-new WebSocketApi(this, "Api", {
+new WebSocketApi(stack, "Api", {
   customDomain: {
     domainName: "api.domain.com",
     hostedZone: "domain.com",
@@ -214,35 +180,39 @@ new WebSocketApi(this, "Api", {
 
 #### Mapping multiple APIs to the same domain
 
-```js {9-12}
-const api = new HttpApi(this, "HttpApi", {
+```js {11-13}
+const coreApi = new HttpApi(this, "HttpApi", {
   customDomain: {
     domainName: "api.domain.com",
     path: "core",
   },
 });
 
-new WebSocketApi(this, "WebSocketApi", {
+new WebSocketApi(stack, "WebSocketApi", {
   customDomain: {
-    domainName: api.apiGatewayDomain,
     path: "chat",
+    cdk: {
+      domainName: coreApi.cdk.domainName,
+    }
   },
 });
 ```
 
 #### Importing an existing API Gateway custom domain
 
-```js {5-9}
+```js {6-12}
 import { DomainName } from "@aws-cdk/aws-apigatewayv2-alpha";
 
-new WebSocketApi(this, "Api", {
+new WebSocketApi(stack, "Api", {
   customDomain: {
-    domainName: DomainName.fromDomainNameAttributes(this, "MyDomain", {
-      name,
-      regionalDomainName,
-      regionalHostedZoneId,
-    }),
     path: "newPath",
+    cdk: {
+      domainName: DomainName.fromDomainNameAttributes(this, "MyDomain", {
+        name,
+        regionalDomainName,
+        regionalHostedZoneId,
+      }),
+    },
   },
   routes: {
     $default: "src/default.main",
@@ -252,13 +222,15 @@ new WebSocketApi(this, "Api", {
 
 #### Importing an existing certificate
 
-```js {6}
+```js {6-8}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
-new WebSocketApi(this, "Api", {
+new WebSocketApi(stack, "Api", {
   customDomain: {
     domainName: "api.domain.com",
-    certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+    cdk: {
+      certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+    },
   },
   routes: {
     $default: "src/default.main",
@@ -268,14 +240,16 @@ new WebSocketApi(this, "Api", {
 
 #### Using externally hosted domain
 
-```js {4-8}
+```js {5,7-9}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
-new WebSocketApi(this, "Api", {
+new WebSocketApi(stack, "Api", {
   customDomain: {
     isExternalDomain: true,
     domainName: "api.domain.com",
-    certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+    cdk: {
+      certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+    },
   },
   routes: {
     $default: "src/default.main",
@@ -285,61 +259,17 @@ new WebSocketApi(this, "Api", {
 
 Note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
 
-### Attaching permissions
+### Authorization
 
-You can attach a set of permissions to all or some of the routes.
-
-:::note
-By default all routes are granted the `execute-api:ManageConnections` permission to manage the WebSocket connections.
-:::
-
-For example, the route handler functions have the permissions make the `ApiGatewayManagementApi.postToConnection` call using the AWS SDK.
-
-#### For the entire API
-
-Allow the entire API to access S3.
-
-```js {10}
-const api = new WebSocketApi(this, "Api", {
-  routes: {
-    $connect: "src/connect.main",
-    $default: "src/default.main",
-    $disconnect: "src/disconnect.main",
-    sendMessage: "src/sendMessage.main",
-  },
-});
-
-api.attachPermissions(["s3"]);
-```
-
-#### For a specific route
-
-Allow one of the routes to access S3.
-
-```js {10}
-const api = new WebSocketApi(this, "Api", {
-  routes: {
-    $connect: "src/connect.main",
-    $default: "src/default.main",
-    $disconnect: "src/disconnect.main",
-    sendMessage: "src/sendMessage.main",
-  },
-});
-
-api.attachPermissionsToRoute("$default", ["s3"]);
-```
-
-### Adding auth
-
-You can use IAM, or a Lambda authorizer to add auth to your APIs.
+You can use IAM or a Lambda authorizer to add auth to your APIs.
 
 #### Adding IAM authorization
 
-You can secure your APIs (and other AWS resources) by setting the `authorizationType` to `IAM` and using the [`Auth`](Auth.md) construct.
+You can secure all your API routes by setting the `defaults.authorizer`.
 
 ```js {2}
-new WebSocketApi(this, "Api", {
-  authorizationType: WebSocketApiAuthorizationType.IAM,
+new WebSocketApi(stack, "Api", {
+  authorizer: "iam",
   routes: {
     $connect: "src/connect.main",
     $default: "src/default.main",
@@ -352,19 +282,16 @@ new WebSocketApi(this, "Api", {
 
 You can also use a Lambda function to authorize users to access your API.
 
-```js {9-12}
-import { WebSocketLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
+```js {4-9}
 import { Function, WebSocketApi } from "@serverless-stack/resources";
 
-const authorizer = new sst.Function(this, "AuthorizerFn", {
-  handler: "src/authorizer.main",
-});
-
-new WebSocketApi(this, "Api", {
-  authorizationType: WebSocketApiAuthorizationType.CUSTOM,
-  authorizer: new WebSocketLambdaAuthorizer("Authorizer", authorizer, {
-    authorizerName: "LambdaAuthorizer",
-  }),
+new WebSocketApi(stack, "Api", {
+  authorizer: {
+    type: "lambda",
+    function: new Function(this, "Authorizer", {
+      handler: "src/authorizer.main",
+    }),
+  },
   routes: {
     $connect: "src/connect.main",
     $default: "src/default.main",
@@ -373,10 +300,51 @@ new WebSocketApi(this, "Api", {
 });
 ```
 
-### Getting the function for a route
+### Access log
 
-```js {11}
-const api = new WebSocketApi(this, "Api", {
+#### Configuring the log format
+
+Use a CSV format instead of default JSON format.
+
+```js {2-3}
+new WebSocketApi(stack, "Api", {
+  accessLog:
+    "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
+  routes: {
+    $default: "src/default.main",
+  },
+});
+```
+
+#### Configuring the log retention setting
+
+```js {2-4}
+new WebSocketApi(stack, "Api", {
+  accessLog: {
+    retention: "one_week",
+  },
+  routes: {
+    $default: "src/default.main",
+  },
+});
+```
+
+### Permissions
+
+You can attach a set of permissions to all or some of the routes.
+
+:::note
+By default all routes are granted the `execute-api:ManageConnections` permission to manage the WebSocket connections.
+:::
+
+For example, the route handler functions have the permissions to make the `ApiGatewayManagementApi.postToConnection` call using the AWS SDK.
+
+#### Attaching permissions for the entire API
+
+Allow the entire API to access S3.
+
+```js {10}
+const api = new WebSocketApi(stack, "Api", {
   routes: {
     $connect: "src/connect.main",
     $default: "src/default.main",
@@ -385,292 +353,443 @@ const api = new WebSocketApi(this, "Api", {
   },
 });
 
-const function = api.getFunction("sendMessage");
+api.attachPermissions(["s3"]);
 ```
 
+#### Attaching permissions for a specific route
+
+Allow one of the routes to access S3.
+
+```js {10}
+const api = new WebSocketApi(stack, "Api", {
+  routes: {
+    $connect: "src/connect.main",
+    $default: "src/default.main",
+    $disconnect: "src/disconnect.main",
+    sendMessage: "src/sendMessage.main",
+  },
+});
+
+api.attachPermissionsToRoute("$default", ["s3"]);
+```
+
+### Advanced examples
+
+#### Configuring the WebSocket Api
+
+Configure the internally created CDK `WebSocketApi` instance.
+
+```js {2-6}
+new WebSocketApi(stack, "Api", {
+  cdk: {
+    webSocketApi: {
+      apiName: "chat-app-api",
+    },
+  },
+  routes: {
+    $default: "src/default.main",
+  },
+});
+```
+
+## WebSocketApiProps
+
+
+### accessLog?
+
+_Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">boolean</span> | <span class="mono">[WebSocketApiAccessLogProps](#websocketapiaccesslogprops)</span></span>
+
+Enable CloudWatch access logs for this API
+
+
+```js
+new WebSocketApi(stack, "Api", {
+  accessLog: true
+});
+```
+
+
+```js
+new WebSocketApi(stack, "Api", {
+  accessLog: {
+    retention: "one_week",
+  },
+});
+```
+
+### authorizer?
+
+_Type_ : <span class='mono'><span class="mono">"iam"</span> | <span class="mono">"none"</span> | <span class="mono">[WebSocketApiLambdaAuthorizer](#websocketapilambdaauthorizer)</span></span>
+
+The default authorizer for the API.
+
+
+```js
+new WebSocketApi(stack, "Api", {
+  authorizer: "iam",
+});
+```
+
+
+```js
+new WebSocketApi(stack, "Api", {
+  authorizer: {
+    type: "lambda",
+    function: new WebSocketApi(stack, "Authorizer", {
+      handler: "test/lambda.handler",
+    }),
+  },
+});
+```
+
+### customDomain?
+
+_Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[WebSocketApiDomainProps](#websocketapidomainprops)</span></span>
+
+Specify a custom domain to use in addition to the automatically generated one. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/)
+
+
+```js
+new WebSocketApi(stack, "Api", {
+  customDomain: "api.example.com"
+})
+```
+
+
+```js
+new WebSocketApi(stack, "Api", {
+  customDomain: {
+    domainName: "api.example.com",
+    hostedZone: "domain.com",
+    path: "v1"
+  }
+})
+```
+
+
+### defaults.function?
+
+_Type_ : <span class="mono">[FunctionProps](Function#functionprops)</span>
+
+The default function props to be applied to all the Lambda functions in the API. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
+
+
+```js
+new WebSocketApi(stack, "Api", {
+  defaults: {
+    function: {
+      timeout: 20,
+      environment: { tableName: table.tableName },
+      permissions: [table],
+    }
+  },
+});
+```
+
+
+### routes?
+
+_Type_ : <span class="mono">Record&lt;<span class="mono">string</span>, <span class='mono'><span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span></span> | <span class="mono">[WebSocketApiFunctionRouteProps](#websocketapifunctionrouteprops)</span></span>&gt;</span>
+
+The routes for the Websocket API
+
+
+```js
+new WebSocketApi(stack, "Api", {
+  routes: {
+    $connect    : "src/connect.main",
+    $default    : "src/default.main",
+    $disconnect : "src/disconnect.main",
+    sendMessage : "src/sendMessage.main",
+  }
+})
+```
+
+
+### cdk.webSocketApi?
+
+_Type_ : <span class='mono'><span class="mono">[IWebSocketApi](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.IWebSocketApi.html)</span> | <span class="mono">[WebSocketApiProps](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.WebSocketApiProps.html)</span></span>
+
+Override the internally created WebSocket API
+
+
+```js
+new WebSocketApi(stack, "WebSocketApi", {
+  cdk: {
+    webSocketApi: {
+      apiName: "my-websocket-api"
+    }
+  }
+})
+```
+
+### cdk.webSocketStage?
+
+_Type_ : <span class='mono'><span class="mono">[IWebSocketStage](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.IWebSocketStage.html)</span> | <span class="mono">[WebSocketApiCdkStageProps](#websocketapicdkstageprops)</span></span>
+
+Override the internally created WebSocket Stage
+
+
+```js
+new WebSocketApi(stack, "WebSocketApi", {
+  cdk: {
+    webSocketStage: {
+      autoDeploy: false
+    }
+  }
+})
+```
+
+
 ## Properties
+An instance of `WebSocketApi` has the following properties.
+### customDomainUrl
 
-An instance of `WebSocketApi` contains the following properties.
+_Type_ : <span class='mono'><span class="mono">undefined</span> | <span class="mono">string</span></span>
 
-### url
-
-_Type_: `string`
-
-The URL of the WebSocket Api.
+Custom domain url if it's configured
 
 ### routes
 
-_Type_: `string[]`
+_Type_ : <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
 
-The routes for the WebSocket Api.
+List of routes of the websocket api
 
-### webSocketApi
+### url
 
-_Type_: [`cdk.aws-apigatewayv2-alpha.WebSocketApi`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.WebSocketApi.html)
+_Type_ : <span class="mono">string</span>
 
-The internally created CDK `WebSocketApi` instance.
+Url of the WebSocket API
 
-### webSocketStage
 
-_Type_: [`cdk.aws-apigatewayv2-alpha.WebSocketStage`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.WebSocketStage.html)
+### cdk.accessLogGroup?
 
-The internally created CDK `WebSocketStage` instance.
+_Type_ : <span class="mono">[LogGroup](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_logs.LogGroup.html)</span>
 
-### accessLogGroup?
+The internally created log group
 
-_Type_: [`cdk.aws-logs.LogGroup`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_logs.LogGroup.html)
+### cdk.certificate?
 
-If access logs are enabled, this is the internally created CDK `LogGroup` instance.
+_Type_ : <span class="mono">[Certificate](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_certificatemanager.Certificate.html)</span>
 
-### customDomainUrl?
+The internally created certificate
 
-_Type_: `string`
+### cdk.domainName?
 
-If custom domain is enabled, this is the custom domain URL of the WebSocket Api.
+_Type_ : <span class="mono">[DomainName](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.DomainName.html)</span>
 
-### apiGatewayDomain?
+The internally created domain name
 
-_Type_: [`cdk.aws-apigatewayv2-alpha.DomainName`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.DomainName.html)
+### cdk.webSocketApi
 
-If custom domain is enabled, this is the internally created CDK `DomainName` instance.
+_Type_ : <span class="mono">[WebSocketApi](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.WebSocketApi.html)</span>
 
-### acmCertificate?
+The internally created websocket api
 
-_Type_: [`cdk.aws-certificatemanager.Certificate`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_certificatemanager.Certificate.html)
+### cdk.webSocketStage
 
-If custom domain is enabled, this is the internally created CDK `Certificate` instance.
+_Type_ : <span class="mono">[WebSocketStage](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.WebSocketStage.html)</span>
+
+The internally created websocket stage
+
 
 ## Methods
-
-An instance of `WebSocketApi` contains the following methods.
-
-### getFunction
-
-```ts
-getFunction(routeKey: string): Function
-```
-
-_Parameters_
-
-- **routeKey** `string`
-
-_Returns_
-
-- [`Function`](Function.md)
-
-Get the instance of the internally created [`Function`](Function.md), for a given route key. Where the `routeKey` is the key used to define a route. For example, `$connect`.
-
+An instance of `WebSocketApi` has the following methods.
 ### addRoutes
 
 ```ts
-addRoutes(scope: cdk.Construct, routes: { [key: string]: FunctionDefinition })
+addRoutes(scope, routes)
 ```
-
 _Parameters_
+- __scope__ <span class="mono">[Construct](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)</span>
+- __routes__ <span class="mono">Record&lt;<span class="mono">string</span>, <span class='mono'><span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span></span> | <span class="mono">[WebSocketApiFunctionRouteProps](#websocketapifunctionrouteprops)</span></span>&gt;</span>
 
-- **scope** `cdk.Construct`
-- **routes** `{ [key: string]: FunctionDefinition }`
 
-An associative array with the key being the route as a string and the value is the [`FunctionDefinition`](Function.md#functiondefinition).
+Add routes to an already created WebSocket API
+
+
+```js
+api.addRoutes(stack, {
+  "$connect": "src/connect.main",
+})
+```
 
 ### attachPermissions
 
 ```ts
-attachPermissions(permissions: Permissions)
+attachPermissions(permissions)
 ```
-
 _Parameters_
+- __permissions__ <span class="mono">[Permissions](Permissions)</span>
 
-- **permissions** [`Permissions`](../util/Permissions.md)
 
-:::note
-By default all routes are granted the `execute-api:ManageConnections` permission to manage the WebSocket connections.
-:::
+Attaches the given list of permissions to all the routes. This allows the functions to access other AWS resources.
 
-Attaches the given list of [permissions](../util/Permissions.md) to all the routes. This allows the functions to access other AWS resources.
 
-Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
+
+```js
+api.attachPermissions(["s3"]);
+```
 
 ### attachPermissionsToRoute
 
 ```ts
-attachPermissionsToRoute(routeKey: string, permissions: Permissions)
+attachPermissionsToRoute(routeKey, permissions)
 ```
-
 _Parameters_
+- __routeKey__ <span class="mono">string</span>
+- __permissions__ <span class="mono">[Permissions](Permissions)</span>
 
-- **routeKey** `string`
 
-- **permissions** [`Permissions`](../util/Permissions.md)
+Attaches the given list of permissions to a specific route. This allows that function to access other AWS resources.
 
-:::note
-By default all routes are granted the `execute-api:ManageConnections` permission to manage the WebSocket connections.
-:::
-
-Attaches the given list of [permissions](../util/Permissions.md) to a specific route. This allows that function to access other AWS resources.
-
-Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
-
-## WebSocketApiProps
-
-### routes?
-
-_Type_ : `{ [key: string]: FunctionDefinition }`, _defaults to_ `{}`
-
-The routes for this API. Takes an associative array, with the key being the route as a string and the value is a [`FunctionDefinition`](Function.md#functiondefinition).
 
 ```js
-{
-  $connect    : "src/connect.main",
-  $default    : "src/default.main",
-  $disconnect : "src/disconnect.main",
-  sendMessage : "src/sendMessage.main",
-}
+api.attachPermissionsToRoute("$connect", ["s3"]);
 ```
 
-And here is an example with the full definition.
+
+### getFunction
+
+```ts
+getFunction(routeKey)
+```
+_Parameters_
+- __routeKey__ <span class="mono">string</span>
+
+
+Get the instance of the internally created Function, for a given route key where the `routeKey` is the key used to define a route. For example, `$connect`.
+
 
 ```js
-{
-  $connect: {
-    handler: "src/connect.main",
-    environment: {
-      TABLE_NAME: "notesTable",
-    },
-  },
-}
+const fn = api.getFunction("$connect");
 ```
 
-### accessLog?
+## WebSocketApiDomainProps
 
-_Type_ : `boolean | string | WebSocketApiAcccessLogProps`, _defaults to_ `true`
 
-CloudWatch access logs for the API. Takes a `boolean` value, a `string` with log format, or a [`WebSocketApiAcccessLogProps`](#websocketapiaccesslogprops).
+### domainName?
 
-### customDomain?
+_Type_ : <span class="mono">string</span>
 
-_Type_ : `string | WebSocketApiCustomDomainProps`
-
-The customDomain for this API. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/). If your domains are hosted elsewhere, you can [follow this guide to migrate them to Route 53](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
-
-Takes either the domain as a string.
-
-```
-"api.domain.com"
-```
-
-Or the [WebSocketApiCustomDomainProps](#websocketapicustomdomainprops).
-
-```js
-{
-  domainName: "api.domain.com",
-  hostedZone: "domain.com",
-  path: "v1",
-}
-```
-
-### webSocketApi?
-
-_Type_ : `cdk.aws-apigatewayv2-alpha.WebSocketApiProps | cdk.aws-apigatewayv2-alpha.IWebSocketApi`
-
-Pass in a [`cdk.aws-apigatewayv2-alpha.WebSocketApiProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.WebSocketApiProps.html) value to override the default settings this construct uses to create the CDK `WebSocketApi` internally.
-
-Or, pass in an instance of the CDK [`cdk.aws-apigatewayv2-alpha.IWebSocketApi`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.IWebSocketApi.html). SST will use the provided CDK `IWebSocketApi` instead of creating one internally.
-
-### webSocketStage?
-
-_Type_ : `WebSocketApiCdkStageProps | cdk.aws-apigatewayv2-alpha.IWebSocketStage`
-
-Pass in a [`WebSocketApiCdkStageProps`](#websocketapicdkstageprops) value to override the default settings this construct uses to create the CDK `WebSocketStage` internally.
-
-Or, pass in an instance of the CDK [`cdk.aws-apigatewayv2-alpha.IWebSocketStage`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.IWebSocketStage.html). SST will use the provided CDK `IWebSocketStage` instead of creating one internally.
-
-### authorizationType?
-
-_Type_ : `WebSocketApiAuthorizationType`, _defaults to_ `WebSocketApiAuthorizationType.NONE`
-
-The authorization type for the `$connect` route of the API. Set using [`WebSocketApiAuthorizationType`](#websocketapiauthorizationtype). Supports AWS IAM and a custom Lambda authorizer. Defaults to no authorization, `WebSocketApiAuthorizationType.NONE`.
-
-While both IAM and Lambda authorizers all allows you to secure your APIs. The IAM method together with the [`Auth`](Auth.md) construct uses the [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/identity-pools.html). This allows you to secure other AWS resources as well.
-
-On the other hand, the Lambda authorizers are for securing APIs specifically.
-
-### authorizer?
-
-_Type_ : [`cdk.aws-apigatewayv2-authorizers-alpha.WebSocketLambdaAuthorizer`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-authorizers-alpha.WebSocketLambdaAuthorizer.html)
-
-The authorizer for the `$connect` route of the API.
-
-### defaultFunctionProps?
-
-_Type_ : [`FunctionProps`](Function.md#functionprops), _defaults to_ `{}`
-
-The default function props to be applied to all the Lambda functions in the API. If the `function` is specified for a route, these default values are overridden. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
-
-## WebSocketApiAccessLogProps
-
-Takes the following props in addition to the [`cdk.aws-apigatewayv2.CfnStage.AccessLogSettingsProperty`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib_aws-apigatewayv2.CfnStage.AccessLogSettingsProperty.html).
-
-### retention?
-
-_Type_ : `string | cdk.aws_logs.RetentionDays`, _defaults to_ `INFINITE`
-
-The following values are accepted: "ONE_DAY", "THREE_DAYS", "FIVE_DAYS", "ONE_WEEK", "TWO_WEEKS", "ONE_MONTH", "TWO_MONTHS", "THREE_MONTHS", "FOUR_MONTHS", "FIVE_MONTHS", "SIX_MONTHS", "ONE_YEAR", "THIRTEEN_MONTHS", "EIGHTEEN_MONTHS", "TWO_YEARS", "FIVE_YEARS", "TEN_YEARS", and "INFINITE".
-
-Or, pass in an enum value of the CDK [`cdk.aws_logs.RetentionDays`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_logs.RetentionDays.html).
-
-## WebSocketApiCustomDomainProps
-
-### domainName
-
-_Type_ : `string | cdk.aws-apigatewayv2-alpha.DomainName`
-
-The domain to be assigned to the API endpoint. Takes the custom domain as a `string` (ie. `api.domain.com`) or a [`cdk.aws-apigatewayv2-alpha.DomainName`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.DomainName.html).
-
-Currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/).
+The domain to be assigned to the API endpoint (ie. api.domain.com)
 
 ### hostedZone?
 
-_Type_ : `string | cdk.aws-route53.HostedZone`, _defaults to the base domain_
+_Type_ : <span class="mono">string</span>
 
-The hosted zone in Route 53 that contains the domain. Takes the name of the hosted zone as a `string` or the hosted zone construct [`cdk.aws-route53.HostedZone`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_route53.HostedZone.html). By default, SST will look for a hosted zone by stripping out the first part of the `domainName` that's passed in. So, if your `domainName` is `api.domain.com`. SST will default the `hostedZone` to `domain.com`.
+The hosted zone in Route 53 that contains the domain. By default, SST will look for a hosted zone by stripping out the first part of the domainName that's passed in. So, if your domainName is api.domain.com. SST will default the hostedZone to domain.com.
 
-Set this option if SST cannot find the hosted zone in Route 53.
+### isExternalDomain?
 
-### certificate?
+_Type_ : <span class="mono">boolean</span>
 
-_Type_ : [`cdk.aws-certificatemanager.Certificate`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_certificatemanager.Certificate.html), _defaults to `undefined`_
-
-The certificate for the domain. By default, SST will create a certificate with the domain name from the `domainName` option.
-
-Set this option if you have an existing certificate in AWS Certificate Manager you want to use.
+Set this option if the domain is not hosted on Amazon Route 53.
 
 ### path?
 
-_Type_ : `string`, _defaults to_ `undefined`
+_Type_ : <span class="mono">string</span>
 
-The base mapping for the custom domain. For example, by setting the `domainName` to `api.domain.com` and `path` to `v1`, the custom domain URL for the WebSocket API will become `wss://api.domain.com/v1`. If the `path` is not set, the custom domain URL will be `wss://api.domain.com`.
+The base mapping for the custom domain.
+For example, by setting the domainName to api.domain.com and the path to v1, the custom domain URL of the API will become https://api.domain.com/v1/. If the path is not set, the custom domain URL will be https://api.domain.com. Note the additional trailing slash in the former case.
 
-:::caution
-You cannot change the path once it has been set.
-:::
 
-Note, if the `path` was not defined initially, it cannot be defined later. If the `path` was initially defined, it cannot be later changed to _undefined_. Instead, you'd need to remove the `customDomain` option from the construct, deploy it. And then set it to the new path value.
+### cdk.certificate?
+
+_Type_ : <span class="mono">[ICertificate](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_certificatemanager.ICertificate.html)</span>
+
+Override the internally created certificate
+
+### cdk.domainName?
+
+_Type_ : <span class="mono">[IDomainName](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.IDomainName.html)</span>
+
+Override the internally created domain name
+
+### cdk.hostedZone?
+
+_Type_ : <span class="mono">[IHostedZone](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_route53.IHostedZone.html)</span>
+
+Override the internally created hosted zone
+
 
 ## WebSocketApiCdkStageProps
 
-`WebSocketApiCdkStageProps` extends [`cdk.aws-apigatewayv2-alpha.WebSocketStageProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.WebSocketStageProps.html) with the exception that the `webSocketApi` field is **not accepted** and the `stageName` field is **optional**. The `stageName` defaults to the stage of the app.
 
-You can use `WebSocketApiCdkStageProps` to configure the other stage properties.
+### stageName?
 
-## WebSocketApiAuthorizationType
+_Type_ : <span class="mono">string</span>
 
-An enum with the following members representing the authorization types.
+## WebSocketApiAccessLogProps
 
-| Member | Description                                                                                         |
-| ------ | --------------------------------------------------------------------------------------------------- |
-| CUSTOM | Using a custom Lambda function as an authorizer.                                                    |
-| IAM    | Used along with the [`Auth`](Auth.md) construct to add Cognito Identity Pool and IAM authorization. |
-| NONE   | No authorization type is set.                                                                       |
 
-For example, to use IAM, set `WebSocketApiAuthorizationType.IAM`.
+### destinationArn?
+
+_Type_ : <span class="mono">string</span>
+
+### format?
+
+_Type_ : <span class="mono">string</span>
+
+### retention?
+
+_Type_ : <span class='mono'><span class="mono">"one_day"</span> | <span class="mono">"three_days"</span> | <span class="mono">"five_days"</span> | <span class="mono">"one_week"</span> | <span class="mono">"two_weeks"</span> | <span class="mono">"one_month"</span> | <span class="mono">"two_months"</span> | <span class="mono">"three_months"</span> | <span class="mono">"four_months"</span> | <span class="mono">"five_months"</span> | <span class="mono">"six_months"</span> | <span class="mono">"one_year"</span> | <span class="mono">"thirteen_months"</span> | <span class="mono">"eighteen_months"</span> | <span class="mono">"two_years"</span> | <span class="mono">"five_years"</span> | <span class="mono">"ten_years"</span> | <span class="mono">"infinite"</span></span>
+
+## WebSocketApiLambdaAuthorizer
+Specify a Lambda authorizer and configure additional options.
+
+
+```js
+new WebSocketApi(stack, "Api", {
+  authorizer: {
+    type: "lambda",
+    function: new Function(stack, "Authorizer", {
+      handler: "test/lambda.handler",
+    }),
+  },
+});
+```
+
+### function?
+
+_Type_ : <span class="mono">[Function](Function#function)</span>
+
+### identitySource?
+
+_Type_ : <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
+
+### name?
+
+_Type_ : <span class="mono">string</span>
+
+### type
+
+_Type_ : <span class="mono">"lambda"</span>
+
+
+### cdk.authorizer
+
+_Type_ : <span class="mono">[WebSocketLambdaAuthorizer](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-authorizers-alpha.WebSocketLambdaAuthorizer.html)</span>
+
+
+## WebSocketApiFunctionRouteProps
+Specify a function route handler and configure additional options
+
+
+```js
+api.addRoutes(stack, {
+  sendMessage : {
+    function: "src/sendMessage.main",
+  }
+});
+```
+
+### function
+
+_Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span> | <span class="mono">[FunctionProps](Function#functionprops)</span></span>
+
+The function definition used to create the function for this route.
+
+### type?
+
+_Type_ : <span class="mono">"function"</span>

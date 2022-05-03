@@ -25,7 +25,7 @@ Here is an example of a spec in action:
 
 - [ ] Research: How is it currently done in other popular frameworks, ie. Create React App.
 - [ ] Implement: Add an eslint section in the `package.json` to allow users to specify a list of linting packages.
-- [ ] Implement: Update the `create-serverless-stack` template to prefill the `package.json` with SST's default linting package.
+- [ ] Implement: Update the `create-sst` template to prefill the `package.json` with SST's default linting package.
 - [ ] Test: Add a test with SST's default linting package and check the `no-unused-vars` rule is enforced.
 - [ ] Test: Add a test with custom linting packages and check that the `no-unused-vars` rule is not enforced.
 - [ ] Doc: Document the default linting package in "Working Locally" doc.
@@ -151,7 +151,7 @@ To cut a release, start by merging the PRs that are going into this release.
 
    We are not currently updating the major version until our 1.0 release.
 
-   Verify that only the 5 core packages (`core`, `cli`, `resources`, `create-serverless-stack`, `static-site-env`) are getting published.
+   Verify that only the 5 core packages (`core`, `cli`, `resources`, `create-sst`, `static-site-env`) are getting published.
 
    Confirm and publish!
 

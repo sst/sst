@@ -47,11 +47,11 @@ module.exports = {
           to: "/constructs",
           label: "Constructs",
           position: "left",
-          activeBaseRegex: "^/constructs$|^/constructs/(?!v1)",
+          activeBaseRegex: "^/constructs$|^/constructs/(?!v0)",
         },
         {
-          to: "/constructs/v1",
-          label: "v1 Constructs",
+          to: "/constructs/v0",
+          label: "v0 Constructs",
           position: "left",
         },
         {
@@ -162,13 +162,13 @@ module.exports = {
       {
         docs: {
           routeBasePath: "/",
-          exclude: ["constructs/v1/*.snippets.md"],
+          exclude: ["constructs/*.snippets.md"],
           sidebarCollapsible: false,
           sidebarPath: require.resolve("./sidebars.js"),
           showLastUpdateTime: true,
           // Please change this to your repo.
           editUrl: (params) => {
-            if (params.docPath.startsWith("constructs/v1")) {
+            if (params.docPath.startsWith("constructs")) {
               const splits = params.docPath.split("/");
               const name = splits[splits.length - 1].replace(".md", ".ts");
               return (

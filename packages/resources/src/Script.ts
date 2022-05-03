@@ -88,7 +88,7 @@ export interface ScriptProps {
  * - It does not run locally. It runs inside a Lambda function.
  * - It gets run on every deployment.
  * - It can run for a maximum of 15 minutes.
- * - [Live Lambda Dev](../../live-lambda-development.md) is not enabled for these functions.
+ * - [Live Lambda Dev](/live-lambda-development.md) is not enabled for these functions.
  *
  * @example
  * ### Minimal config

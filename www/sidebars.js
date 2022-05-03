@@ -54,40 +54,40 @@ module.exports = {
     {
       Packages: [
         "packages/cli",
-        "packages/create-serverless-stack",
+        "packages/create-sst",
         "packages/resources",
         "packages/static-site-env",
       ],
     },
   ],
-  constructs: [
+  constructsv0: [
     {
-      " ": ["constructs/index", "constructs/migration"],
+      " ": ["constructs/v0/index", "constructs/v0/migration"],
     },
     {
       Constructs: [
-        "constructs/Api",
-        "constructs/App",
-        "constructs/RDS",
-        "constructs/Cron",
-        "constructs/Auth",
-        "constructs/Table",
-        "constructs/Topic",
-        "constructs/Stack",
-        "constructs/Script", // shorter in length viewed in browser
-        "constructs/Queue",
-        "constructs/Bucket",
-        "constructs/Function",
-        "constructs/EventBus",
-        "constructs/StaticSite", // shorter in length viewed in browser
-        "constructs/NextjsSite",
-        "constructs/AppSyncApi",
-        "constructs/GraphQLApi",
-        "constructs/ViteStaticSite", // shorter in length viewed in browser
-        "constructs/KinesisStream", // shorter in length viewed in browser
-        "constructs/WebSocketApi",
-        "constructs/ReactStaticSite",
-        "constructs/ApiGatewayV1Api",
+        "constructs/v0/Api",
+        "constructs/v0/App",
+        "constructs/v0/RDS",
+        "constructs/v0/Cron",
+        "constructs/v0/Auth",
+        "constructs/v0/Table",
+        "constructs/v0/Topic",
+        "constructs/v0/Stack",
+        "constructs/v0/Script", // shorter in length viewed in browser
+        "constructs/v0/Queue",
+        "constructs/v0/Bucket",
+        "constructs/v0/Function",
+        "constructs/v0/EventBus",
+        "constructs/v0/StaticSite", // shorter in length viewed in browser
+        "constructs/v0/NextjsSite",
+        "constructs/v0/AppSyncApi",
+        "constructs/v0/GraphQLApi",
+        "constructs/v0/ViteStaticSite", // shorter in length viewed in browser
+        "constructs/v0/KinesisStream", // shorter in length viewed in browser
+        "constructs/v0/WebSocketApi",
+        "constructs/v0/ReactStaticSite",
+        "constructs/v0/ApiGatewayV1Api",
       ],
     },
     {
@@ -97,46 +97,42 @@ module.exports = {
       Internals: ["constructs/DebugApp", "constructs/DebugStack"],
     },
   ],
-  constructsV1: [
-    "constructs/v1/index",
+  constructs: [
+    "constructs/index",
     {
-      Core: [
-        "constructs/v1/App",
-        "constructs/v1/Stack",
-        "constructs/v1/Function",
-      ],
+      Core: ["constructs/App", "constructs/Stack", "constructs/Function"],
       Api: [
-        "constructs/v1/Api",
-        "constructs/v1/GraphQLApi",
-        "constructs/v1/AppSyncApi",
-        "constructs/v1/WebSocketApi",
+        "constructs/Api",
+        "constructs/GraphQLApi",
+        "constructs/AppSyncApi",
+        "constructs/WebSocketApi",
       ],
       Frontend: [
-        "constructs/v1/StaticSite",
-        "constructs/v1/NextjsSite",
-        "constructs/v1/ViteStaticSite",
-        "constructs/v1/ReactStaticSite",
+        "constructs/StaticSite",
+        "constructs/NextjsSite",
+        "constructs/ViteStaticSite",
+        "constructs/ReactStaticSite",
       ],
-      Database: ["constructs/v1/RDS", "constructs/v1/Table"],
+      Database: ["constructs/RDS", "constructs/Table"],
       Async: [
-        "constructs/v1/Cron",
-        "constructs/v1/Topic",
-        "constructs/v1/Queue",
-        "constructs/v1/EventBus",
-        "constructs/v1/KinesisStream",
+        "constructs/Cron",
+        "constructs/Topic",
+        "constructs/Queue",
+        "constructs/EventBus",
+        "constructs/KinesisStream",
       ],
-      Storage: ["constructs/v1/Bucket"],
-      Auth: ["constructs/v1/Auth"],
+      Storage: ["constructs/Bucket"],
+      Auth: ["constructs/Auth"],
       Types: [
-        "constructs/v1/Size",
-        "constructs/v1/Duration",
-        "constructs/v1/Permissions",
+        "constructs/Size",
+        "constructs/Duration",
+        "constructs/Permissions",
       ],
       Other: [
-        "constructs/v1/Script",
-        "constructs/v1/DebugApp",
-        "constructs/v1/DebugStack",
-        "constructs/v1/ApiGatewayV1Api",
+        "constructs/Script",
+        "constructs/DebugApp",
+        "constructs/DebugStack",
+        "constructs/ApiGatewayV1Api",
       ],
     },
   ],

@@ -159,7 +159,7 @@ async function applyConfig(argv) {
       `\nAdd the ${chalk.bold(
         "sst.json"
       )} config file in your project root to get started. Or use the ${chalk.bold(
-        "create-serverless-stack"
+        "create-sst"
       )} CLI to create a new project.\n`
     );
   }

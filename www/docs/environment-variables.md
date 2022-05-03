@@ -32,10 +32,6 @@ TABLE_READ_CAPACITY=20
 
 You can also add `.env.local` and `.env.$STAGE.local` files to set up environment variables that are specific to your local machine.
 
-#### `.env.test`
-
-For your tests, you can add a `.env.test` file to override the default values when running `npx sst test`.
-
 #### Priority
 
 Here's the priority in which these files are loaded. Starting with the one that has the highest priority.
@@ -47,15 +43,9 @@ Here's the priority in which these files are loaded. Starting with the one that 
 
 Assume that the current stage is `dev`.
 
-And here's the priority when running your tests.
-
-1. `.env.test`
-2. `.env.local`
-3. `.env`
-
 ## Committing `.env` files
 
-The `.env`, `.env.$STAGE`, and `.env.test` files can be committed to your Git repository. On the other hand, the `.env.local` and `.env.$STAGE.local` shouldn't.
+The `.env` and `.env.$STAGE` files can be committed to your Git repository. On the other hand, the `.env.local` and `.env.$STAGE.local` shouldn't.
 
 The `.env*.local` files are meant to specify sensitive information specific to your machine. They should be ignored through the `.gitignore` file.
 

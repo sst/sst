@@ -1,34 +1,33 @@
 ---
 description: "Docs for the sst.AppSyncApi construct in the @serverless-stack/resources package"
 ---
-
+<!--
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!                                                           !!
+!!  This file has been automatically generated, do not edit  !!
+!!                                                           !!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-->
 The `AppSyncApi` construct is a higher level CDK construct that makes it easy to create an AppSync GraphQL API. It provides a simple way to define the data sources and the resolvers in your API. And allows you to configure the specific Lambda functions if necessary. See the [examples](#examples) for more details.
 
-## Initializer
-
+## Constructor
 ```ts
-new AppSyncApi(scope: Construct, id: string, props: AppSyncApiProps)
+new AppSyncApi(scope, id, props)
 ```
-
 _Parameters_
-
-- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
-- id `string`
-- props [`AppSyncApiProps`](#appsyncapiprops)
+- __scope__ <span class="mono">[Construct](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)</span>
+- __id__ <span class="mono">string</span>
+- __props__ <span class="mono">[AppSyncApiProps](#appsyncapiprops)</span>
 
 ## Examples
-
-The `AppSyncApi` construct is designed to make it easy to get started with, while allowing for a way to fully configure it as well. Let's look at how, through a couple of examples.
 
 ### Using the minimal config
 
 ```js
 import { AppSyncApi } from "@serverless-stack/resources";
 
-new AppSyncApi(this, "GraphqlApi", {
-  graphqlApi: {
-    schema: "graphql/schema.graphql",
-  },
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
   dataSources: {
     notesDS: "src/notes.main",
   },
@@ -44,15 +43,16 @@ new AppSyncApi(this, "GraphqlApi", {
 
 Note that, the resolver key can have extra spaces in between, they are just ignored.
 
-### Auto-creating Lambda data sources
+
+### Data source: Function
+
+#### Auto-creating Lambda data sources
 
 If the data sources are not configured, a Lambda data source is automatically created for each resolver.
 
 ```js
-new AppSyncApi(this, "GraphqlApi", {
-  graphqlApi: {
-    schema: "graphql/schema.graphql",
-  },
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
   resolvers: {
     "Query    listNotes": "src/list.main",
     "Query    getNoteById": "src/get.main",
@@ -63,18 +63,18 @@ new AppSyncApi(this, "GraphqlApi", {
 });
 ```
 
-### Specifying function props for all the data sources
+#### Specifying function props for all the data sources
 
 You can set some function props and have them apply to all the Lambda data sources.
 
-```js {5-8}
-new AppSyncApi(this, "GraphqlApi", {
-  graphqlApi: {
-    schema: "graphql/schema.graphql",
-  },
-  defaultFunctionProps: {
-    timeout: 20,
-    environment: { tableName: "NOTES_TABLE" },
+```js {4-7}
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  defaults: {
+    function: {
+      timeout: 20,
+      environment: { tableName: "NOTES_TABLE" },
+    },
   },
   dataSources: {
     notesDS: "src/notes.main",
@@ -88,18 +88,20 @@ new AppSyncApi(this, "GraphqlApi", {
 
 Note that, you can set the `defaultFunctionProps` while configuring the function per data source. The function one will just override the `defaultFunctionProps`.
 
-```js {5-7,11}
-new AppSyncApi(this, "GraphqlApi", {
-  graphqlApi: {
-    schema: "graphql/schema.graphql",
-  },
-  defaultFunctionProps: {
-    timeout: 20,
+```js {4-6,12}
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  defaults: {
+    function: {
+      timeout: 20,
+    },
   },
   dataSources: {
     notesDS: {
-      handler: "src/notes.main",
-      timeout: 10,
+      function: {
+        handler: "src/notes.main",
+        timeout: 10,
+      },
     },
   },
   resolvers: {
@@ -113,31 +115,82 @@ So in the above example, the `notesDS` data source doesn't use the `timeout` tha
 
 Similarly, the `defaultFunctionProps` also applies when the Lambda data sources are auto-created.
 
-```js {5-7,11}
-new AppSyncApi(this, "GraphqlApi", {
-  graphqlApi: {
-    schema: "graphql/schema.graphql",
-  },
-  defaultFunctionProps: {
-    timeout: 20,
+```js {4-6,10}
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  defaults: {
+    function: {
+      timeout: 20,
+    },
   },
   resolvers: {
     "Query listNotes": {
-      handler: "src/list.main",
-      timeout: 10,
+      function: {
+        handler: "src/list.main",
+        timeout: 10,
+      },
     },
     "Mutation createNote": "src/create.main",
   },
 });
 ```
 
-### Using multiple data sources
+#### Attaching permissions for the entire API
 
-```js {5-8}
-new AppSyncApi(this, "GraphqlApi", {
-  graphqlApi: {
-    schema: "graphql/schema.graphql",
+Allow the entire API to access S3.
+
+```js {12}
+const api = new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  resolvers: {
+    "Query    listNotes": "src/list.main",
+    "Query    getNoteById": "src/get.main",
+    "Mutation createNote": "src/create.main",
+    "Mutation updateNote": "src/update.main",
+    "Mutation deleteNote": "src/delete.main",
   },
+});
+
+api.attachPermissions(["s3"]);
+```
+
+#### Attaching permissions for a specific route
+
+Allow one of the data sources to access S3.
+
+```js {9}
+const api = new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  dataSources: {
+    notesDS: "src/notes.main",
+    billingDS: "src/billing.main",
+  },
+});
+
+api.attachPermissionsToDataSource("billingDS", ["s3"]);
+```
+
+#### Attaching permissions for an auto-created data source
+
+Allow one of the resolvers to access S3.
+
+```js {9}
+const api = new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  resolvers: {
+    "Query    listNotes": "src/list.main",
+    "Mutation createNote": "src/create.main",
+  },
+});
+
+api.attachPermissionsToDataSource("Query listNotes", ["s3"]);
+```
+
+#### Using multiple data sources
+
+```js {4-5}
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
   dataSources: {
     notesDS: "src/notes.main",
     billingDS: "src/billing.main",
@@ -150,93 +203,119 @@ new AppSyncApi(this, "GraphqlApi", {
 });
 ```
 
-### Using other data sources
+#### Getting the function for a data source
 
-#### Using DynamoDB data source
+```js {9-10}
+const api = new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  dataSources: {
+    notesDS: "src/notes.main",
+    billingDS: "src/billing.main",
+  },
+});
 
-```js {15}
+const listFunction = api.getFunction("notesDS");
+const dataSource = api.getDataSource("notesDS");
+```
+
+#### Getting the function for a auto-created data source
+
+```js {9-10}
+const api = new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  resolvers: {
+    "Query    listNotes": "src/list.main",
+    "Mutation createNote": "src/create.main",
+  },
+});
+
+const listFunction = api.getFunction("Query listNotes");
+const dataSource = api.getDataSource("Query listNotes");
+```
+
+### Data source: DynamoDB
+
+```js {14}
 import { MappingTemplate } from "@aws-cdk/aws-appsync-alpha";
 
 const notesTable = new Table(this, "Notes", {
   fields: {
-    id: TableFieldType.STRING,
+    id: "string"
   },
   primaryIndex: { partitionKey: "id" },
 });
 
-new AppSyncApi(this, "GraphqlApi", {
-  graphqlApi: {
-    schema: "graphql/schema.graphql",
-  },
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
   dataSources: {
-    tableDS: { table: notesTable },
+    tableDS: {
+      type: "dynamodb",
+      table: notesTable
+    },
   },
   resolvers: {
     "Query listNotes": {
       dataSource: "tableDS",
-      resolverProps: {
-        requestMappingTemplate: MappingTemplate.dynamoDbScanTable(),
-        responseMappingTemplate: MappingTemplate.dynamoDbResultList(),
+      cdk: {
+        resolver: {
+          requestMappingTemplate: MappingTemplate.dynamoDbScanTable(),
+          responseMappingTemplate: MappingTemplate.dynamoDbResultList(),
+        },
       },
     },
   },
 });
 ```
 
-#### Using RDS data source
+### Data source: RDS
 
-```js {8-11}
-import { MappingTemplate } from "@aws-cdk/aws-appsync-alpha";
-
-new AppSyncApi(this, "GraphqlApi", {
-  graphqlApi: {
-    schema: "graphql/schema.graphql",
-  },
+```js {4-7}
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
   dataSources: {
     rdsDS: {
-      serverlessCluster: cluster,
-      secretStore: secret,
+      type: "rds",
+      rds: cluster,
     },
   },
   resolvers: {
     "Query listNotes": {
       dataSource: "rdsDS",
-      resolverProps: {
-        requestMappingTemplate: MappingTemplate.fromString(`
-        {
-          "version": "2018-05-29",
-          "statements": [
-            "SELECT * FROM notes"
-          ]
-        }
-        `),
-        responseMappingTemplate: MappingTemplate.fromString(`
-          $util.rds.toJsonObject($ctx.result)
-        `),
+      requestMapping: {
+        inline: `
+          {
+            "version": "2018-05-29",
+            "statements": [
+              "SELECT * FROM notes"
+            ]
+          }
+        `,
+      },
+      responseMapping: {
+        inline: `$util.rds.toJsonObject($ctx.result)`,
       },
     },
   },
 });
 ```
 
-#### Using HTTP data source
+### Data source: HTTP
 
 Starting a Step Function execution on the Mutation `callStepFunction`.
 
-```js {8-16}
-import { MappingTemplate } from "@aws-cdk/aws-appsync-alpha";
-
-new AppSyncApi(this, "GraphqlApi", {
-  graphqlApi: {
-    schema: "graphql/schema.graphql",
-  },
+```js {4-15}
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
   dataSources: {
     httpDS: {
+      type: "http",
       endpoint: "https://states.amazonaws.com",
-      options: {
-        authorizationConfig: {
-          signingRegion: "us-east-1",
-          signingServiceName: "states",
+      cdk: {
+        dataSource: {
+          authorizationConfig: {
+            signingRegion: "us-east-1",
+            signingServiceName: "states",
+          },
         },
       },
     },
@@ -244,26 +323,22 @@ new AppSyncApi(this, "GraphqlApi", {
   resolvers: {
     "Mutation callStepFunction": {
       dataSource: "httpDS",
-      resolverProps: {
-        requestMappingTemplate: MappingTemplate.fromFile("request.vtl"),
-        responseMappingTemplate: MappingTemplate.fromFile("response.vtl"),
-      },
+      requestMapping: { file: "request.vtl" },
+      responseMapping: { file: "response.vtl" },
     },
   },
 });
 ```
 
-### Adding resolvers
+### Configuring resolvers
 
 You can also add data sources and resolvers after the API has been created.
 
 #### Adding data sources and resolvers
 
-```js {14-20}
-const api = new AppSyncApi(this, "GraphqlApi", {
-  graphqlApi: {
-    schema: "graphql/schema.graphql",
-  },
+```js {12-18}
+const api = new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
   dataSources: {
     notesDS: "src/notes.main",
   },
@@ -284,11 +359,9 @@ api.addResolvers(this, {
 
 #### Auto-creating Lambda data sources
 
-```js {12-15}
-const api = new AppSyncApi(this, "GraphqlApi", {
-  graphqlApi: {
-    schema: "graphql/schema.graphql",
-  },
+```js {10-13}
+const api = new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
   resolvers: {
     "Query    listNotes": "src/list.main",
     "Query    getNoteById": "src/get.main",
@@ -304,11 +377,9 @@ api.addResolvers(this, {
 
 #### Lazily adding resolvers
 
-```js {7-10}
-const api = new AppSyncApi(this, "GraphqlApi", {
-  graphqlApi: {
-    schema: "graphql/schema.graphql",
-  },
+```js {5-8}
+const api = new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
 });
 
 api.addResolvers(this, {
@@ -317,238 +388,11 @@ api.addResolvers(this, {
 });
 ```
 
-### Configuring Auth
+#### Getting the function for a resolver
 
-#### Using API Key
-
-```js {7-14}
-import * as cdk from "aws-cdk-lib";
-import * as appsync from "@aws-cdk/aws-appsync-alpha";
-
-new AppSyncApi(this, "GraphqlApi", {
-  graphqlApi: {
-    schema: "graphql/schema.graphql",
-    authorizationConfig: {
-      defaultAuthorization: {
-        authorizationType: appsync.AuthorizationType.API_KEY,
-        apiKeyConfig: {
-          expires: cdk.Expiration.after(cdk.Duration.days(365)),
-        },
-      },
-    },
-  },
-});
-```
-
-#### Using Cognito User Pool
-
-```js {6-13}
-import * as appsync from "@aws-cdk/aws-appsync-alpha";
-
-new AppSyncApi(this, "GraphqlApi", {
-  graphqlApi: {
-    schema: "graphql/schema.graphql",
-    authorizationConfig: {
-      defaultAuthorization: {
-        authorizationType: appsync.AuthorizationType.USER_POOL,
-        userPoolConfig: {
-          userPool: userPool,
-        },
-      },
-    },
-  },
-});
-```
-
-#### Using AWS IAM
-
-```js {6-10}
-import * as appsync from "@aws-cdk/aws-appsync-alpha";
-
-new AppSyncApi(this, "GraphqlApi", {
-  graphqlApi: {
-    schema: "graphql/schema.graphql",
-    authorizationConfig: {
-      defaultAuthorization: {
-        authorizationType: appsync.AuthorizationType.IAM,
-      },
-    },
-  },
-});
-```
-
-#### Using OpenID Connect
-
-```js {6-13}
-import * as appsync from "@aws-cdk/aws-appsync-alpha";
-
-new AppSyncApi(this, "GraphqlApi", {
-  graphqlApi: {
-    schema: "graphql/schema.graphql",
-    authorizationConfig: {
-      defaultAuthorization: {
-        authorizationType: appsync.AuthorizationType.OIDC,
-        openIdConnectConfig: {
-          oidcProvider: "https://myorg.us.auth0.com",
-        },
-      },
-    },
-  },
-});
-```
-
-### Configuring the GraphQL Api
-
-Configure the internally created CDK `GraphqlApi` instance.
-
-```js {5-10}
-import * as appsync from "@aws-cdk/aws-appsync-alpha";
-
-new AppSyncApi(this, "GraphqlApi", {
-  graphqlApi: {
-    name: "My GraphQL API",
-    logConfig: {
-      excludeVerboseContent: false,
-      fieldLogLevel: appsync.FieldLogLevel.ALL,
-    },
-    xrayEnabled: false,
-  },
-});
-```
-
-### Configuring data source
-
-```js {11-13}
-new AppSyncApi(this, "GraphqlApi", {
-  graphqlApi: {
-    schema: "graphql/schema.graphql",
-  },
-  dataSources: {
-    notesDS: {
-      function: {
-        handler: "src/notes.main",
-        timeout: 10,
-      },
-      options: {
-        name: "Notes Data Source",
-      },
-    },
-  },
-});
-```
-
-### Configuring resolver
-
-```js {13-16}
-import { MappingTemplate } from "@aws-cdk/aws-appsync-alpha";
-
-new AppSyncApi(this, "GraphqlApi", {
-  graphqlApi: {
-    schema: "graphql/schema.graphql",
-  },
-  resolvers: {
-    "Query listNotes": {
-      function: {
-        handler: "src/notes.main",
-        timeout: 10,
-      },
-      resolverProps: {
-        requestMappingTemplate: MappingTemplate.fromFile("request.vtl"),
-        responseMappingTemplate: MappingTemplate.fromFile("response.vtl"),
-      },
-    },
-  },
-});
-```
-
-### Importing an existing GraphQL Api
-
-Override the internally created CDK `GraphqlApi` instance.
-
-```js {7-10}
-import { GraphqlApi } from "@aws-cdk/aws-appsync-alpha";
-
-new AppSyncApi(this, "GraphqlApi", {
-  graphqlApi: GraphqlApi.fromGraphqlApiAttributes(this, "IGraphqlApi", {
-    graphqlApiId,
-  }),
-  resolvers: {
-    "Query    listNotes": "src/list.main",
-    "Mutation createNote": "src/create.main",
-  },
-});
-```
-
-### Attaching permissions
-
-You can attach a set of permissions to all or some of the Lambda functions.
-
-#### For the entire API
-
-Allow the entire API to access S3.
-
-```js {14}
-const api = new AppSyncApi(this, "GraphqlApi", {
-  graphqlApi: {
-    schema: "graphql/schema.graphql",
-  },
-  resolvers: {
-    "Query    listNotes": "src/list.main",
-    "Query    getNoteById": "src/get.main",
-    "Mutation createNote": "src/create.main",
-    "Mutation updateNote": "src/update.main",
-    "Mutation deleteNote": "src/delete.main",
-  },
-});
-
-api.attachPermissions(["s3"]);
-```
-
-#### For a specific data source
-
-Allow one of the data sources to access S3.
-
-```js {11}
-const api = new AppSyncApi(this, "GraphqlApi", {
-  graphqlApi: {
-    schema: "graphql/schema.graphql",
-  },
-  dataSources: {
-    notesDS: "src/notes.main",
-    billingDS: "src/billing.main",
-  },
-});
-
-api.attachPermissionsToDataSource("billingDS", ["s3"]);
-```
-
-#### For an auto-created data source
-
-Allow one of the resolvers to access S3.
-
-```js {11}
-const api = new AppSyncApi(this, "GraphqlApi", {
-  graphqlApi: {
-    schema: "graphql/schema.graphql",
-  },
-  resolvers: {
-    "Query    listNotes": "src/list.main",
-    "Mutation createNote": "src/create.main",
-  },
-});
-
-api.attachPermissionsToDataSource("Query listNotes", ["s3"]);
-```
-
-### Getting the data source and resolver
-
-#### For explicitly configured data source
-
-```js {16-18}
-const api = new AppSyncApi(this, "GraphqlApi", {
-  graphqlApi: {
-    schema: "graphql/schema.graphql",
-  },
+```js {18}
+const api = new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
   dataSources: {
     notesDS: "src/notes.main",
     billingDS: "src/billing.main",
@@ -560,373 +404,862 @@ const api = new AppSyncApi(this, "GraphqlApi", {
   },
 });
 
-const listFunction = api.getFunction("notesDS");
-const dataSource = api.getDataSource("notesDS");
 const resolver = api.getResolver("Mutation charge");
 ```
 
-#### For an auto-created data source
+### Custom domains
 
-```js {11-13}
-const api = new AppSyncApi(this, "GraphqlApi", {
-  graphqlApi: {
-    schema: "graphql/schema.graphql",
+You can configure the API with a custom domain hosted either on [Route 53](https://aws.amazon.com/route53/) or [externally](#using-externally-hosted-domain).
+
+#### Using the basic config
+
+```js {3}
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  customDomain: "api.domain.com",
+});
+```
+
+#### Using the full config
+
+```js {3-6}
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  customDomain: {
+    domainName: "api.domain.com",
+    hostedZone: "domain.com",
+  },
+});
+```
+
+#### Importing an existing certificate
+
+```js {8}
+import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
+
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  customDomain: {
+    domainName: "api.domain.com",
+    cdk: {
+      certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+    },
+  },
+});
+```
+
+#### Specifying a hosted zone
+
+If you have multiple hosted zones for a given domain, you can choose the one you want to use to configure the domain.
+
+```js {8-11}
+import { HostedZone } from "aws-cdk-lib/aws-route53";
+
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  customDomain: {
+    domainName: "api.domain.com",
+    cdk: {
+      hostedZone: HostedZone.fromHostedZoneAttributes(this, "MyZone", {
+        hostedZoneId,
+        zoneName,
+      }),
+    },
+  },
+});
+```
+
+#### Loading domain name from SSM parameter
+
+If you have the domain name stored in AWS SSM Parameter Store, you can reference the value as the domain name:
+
+```js {3,8-9}
+import { StringParameter } from "aws-cdk-lib/aws-ssm";
+
+const rootDomain = StringParameter.valueForStringParameter(this, `/myApp/domain`);
+
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  customDomain: {
+    domainName: `api.${rootDomain}`,
+    hostedZone: rootDomain,
+  },
+});
+```
+
+Note that, normally SST will look for a hosted zone by stripping out the first part of the `domainName`. But this is not possible when the `domainName` is a reference. Since its value will be resolved at deploy time. So you'll need to specify the `hostedZone` explicitly.
+
+#### Using externally hosted domain
+
+```js {6-10}
+import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
+
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  customDomain: {
+    isExternalDomain: true,
+    domainName: "api.domain.com",
+    cdk: {
+      certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+    },
+  },
+});
+```
+
+Note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+
+### Authorization
+
+#### Using API Key
+
+```js {8-15}
+import * as cdk from "aws-cdk-lib";
+import * as appsync from "@aws-cdk/aws-appsync-alpha";
+
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  cdk: {
+    graphqlApi: {
+      authorizationConfig: {
+        defaultAuthorization: {
+          authorizationType: appsync.AuthorizationType.API_KEY,
+          apiKeyConfig: {
+            expires: cdk.Expiration.after(cdk.Duration.days(365)),
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+#### Using Cognito User Pool
+
+```js {7-14}
+import * as appsync from "@aws-cdk/aws-appsync-alpha";
+
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  cdk: {
+    graphqlApi: {
+      authorizationConfig: {
+        defaultAuthorization: {
+          authorizationType: appsync.AuthorizationType.USER_POOL,
+          userPoolConfig: {
+            userPool: userPool,
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+#### Using AWS IAM
+
+```js {7-11}
+import * as appsync from "@aws-cdk/aws-appsync-alpha";
+
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  cdk: {
+    graphqlApi: {
+      authorizationConfig: {
+        defaultAuthorization: {
+          authorizationType: appsync.AuthorizationType.IAM,
+        },
+      },
+    },
+  },
+});
+```
+
+#### Using OpenID Connect
+
+```js {7-14}
+import * as appsync from "@aws-cdk/aws-appsync-alpha";
+
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  cdk: {
+    graphqlApi: {
+      authorizationConfig: {
+        defaultAuthorization: {
+          authorizationType: appsync.AuthorizationType.OIDC,
+          openIdConnectConfig: {
+            oidcProvider: "https://myorg.us.auth0.com",
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+### Advanced examples
+
+#### Configuring the GraphQL Api
+
+Configure the internally created CDK `GraphqlApi` instance.
+
+```js {6-11}
+import * as appsync from "@aws-cdk/aws-appsync-alpha";
+
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  cdk: {
+    graphqlApi: {
+      name: "My GraphQL API",
+      logConfig: {
+        excludeVerboseContent: false,
+        fieldLogLevel: appsync.FieldLogLevel.ALL,
+      },
+      xrayEnabled: false,
+    },
+  },
+});
+```
+
+#### Importing an existing GraphQL Api
+
+Override the internally created CDK `GraphqlApi` instance.
+
+```js {7-10}
+import { GraphqlApi } from "@aws-cdk/aws-appsync-alpha";
+
+new AppSyncApi(stack, "GraphqlApi", {
+  cdk: {
+    graphqlApi: GraphqlApi.fromGraphqlApiAttributes(this, "IGraphqlApi", {
+      graphqlApiId,
+    }),
   },
   resolvers: {
     "Query    listNotes": "src/list.main",
     "Mutation createNote": "src/create.main",
   },
 });
-
-const listFunction = api.getFunction("Query listNotes");
-const dataSource = api.getDataSource("Query listNotes");
-const resolver = api.getResolver("Query listNotes");
 ```
 
-## Properties
+## AppSyncApiProps
 
-An instance of `AppSyncApi` contains the following properties.
+
+### customDomain?
+
+_Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[AppSyncApiDomainProps](#appsyncapidomainprops)</span></span>
+
+Specify a custom domain to use in addition to the automatically generated one. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/)
+
+
+```js
+new AppSyncApi(stack, "GraphqlApi", {
+  customDomain: "api.example.com"
+})
+```
+
+
+```js
+new AppSyncApi(stack, "GraphqlApi", {
+  customDomain: {
+    domainName: "api.example.com",
+    hostedZone: "domain.com",
+  }
+})
+```
+
+### dataSources?
+
+_Type_ : <span class="mono">Record&lt;<span class="mono">string</span>, <span class='mono'><span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span></span> | <span class="mono">[AppSyncApiLambdaDataSourceProps](#appsyncapilambdadatasourceprops)</span> | <span class="mono">[AppSyncApiDynamoDbDataSourceProps](#appsyncapidynamodbdatasourceprops)</span> | <span class="mono">[AppSyncApiRdsDataSourceProps](#appsyncapirdsdatasourceprops)</span> | <span class="mono">[AppSyncApiHttpDataSourceProps](#appsyncapihttpdatasourceprops)</span> | <span class="mono">[AppSyncApiNoneDataSourceProps](#appsyncapinonedatasourceprops)</span></span>&gt;</span>
+
+Define datasources. Can be a function, dynamodb table, rds cluster or http endpoint
+
+
+```js
+new AppSyncApi(stack, "GraphqlApi", {
+  dataSources: {
+    notes: "src/notes.main",
+  },
+  resolvers: {
+    "Query    listNotes": "notes",
+  },
+});
+```
+
+
+### defaults.function?
+
+_Type_ : <span class="mono">[FunctionProps](Function#functionprops)</span>
+
+The default function props to be applied to all the Lambda functions in the AppSyncApi. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
+
+
+```js
+new AppSyncApi(stack, "AppSync", {
+  defaults: {
+    function: {
+      timeout: 20,
+      environment: { tableName: table.tableName },
+      permissions: [table],
+    }
+  },
+});
+```
+
+
+### resolvers?
+
+_Type_ : <span class="mono">Record&lt;<span class="mono">string</span>, <span class='mono'><span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span></span> | <span class="mono">[AppSyncApiResolverProps](#appsyncapiresolverprops)</span></span>&gt;</span>
+
+The resolvers for this API. Takes an object, with the key being the type name and field name as a string and the value is either a string with the name of existing data source.
+
+
+```js
+new AppSyncApi(stack, "GraphqlApi", {
+  resolvers: {
+    "Query    listNotes": "src/list.main",
+    "Query    getNoteById": "src/get.main",
+    "Mutation createNote": "src/create.main",
+    "Mutation updateNote": "src/update.main",
+    "Mutation deleteNote": "src/delete.main",
+  },
+});
+```
+
+### schema?
+
+_Type_ : <span class='mono'><span class="mono">string</span> | <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span></span>
+
+The GraphQL schema definition.
+
+
+
+```js
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+});
+```
+
+
+### cdk.graphqlApi?
+
+_Type_ : <span class='mono'><span class="mono">[IGraphqlApi](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-appsync-alpha.IGraphqlApi.html)</span> | <span class="mono">[AppSyncApiCdkGraphqlProps](#appsyncapicdkgraphqlprops)</span></span>
+
+
+## Properties
+An instance of `AppSyncApi` has the following properties.
+### apiArn
+
+_Type_ : <span class="mono">string</span>
+
+The ARN of the internally created AppSync GraphQL API.
+
+### apiId
+
+_Type_ : <span class="mono">string</span>
+
+The Id of the internally created AppSync GraphQL API.
+
+### apiName
+
+_Type_ : <span class="mono">string</span>
+
+The name of the internally created AppSync GraphQL API.
+
+### customDomainUrl
+
+_Type_ : <span class='mono'><span class="mono">undefined</span> | <span class="mono">string</span></span>
+
+If custom domain is enabled, this is the custom domain URL of the Api.
 
 ### url
 
-_Type_: `string`
+_Type_ : <span class="mono">string</span>
 
-The URL of the GraphQL Api.
+The AWS generated URL of the Api.
 
-### graphqlApi
 
-_Type_: [`cdk.aws-appsync-alpha.GraphqlApi`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-appsync-alpha.GraphqlApi.html)
+### cdk.certificate?
 
-The internally created CDK `AppSyncApi` instance.
+_Type_ : <span class="mono">[ICertificate](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_certificatemanager.ICertificate.html)</span>
+
+If custom domain is enabled, this is the internally created CDK Certificate instance.
+
+### cdk.graphqlApi
+
+_Type_ : <span class="mono">[GraphqlApi](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-appsync-alpha.GraphqlApi.html)</span>
+
+The internally created appsync api
+
 
 ## Methods
-
-An instance of `Api` contains the following methods.
-
-### getFunction
-
-```ts
-getFunction(key: string): Function
-```
-
-_Parameters_
-
-- **key** `string`
-
-_Returns_
-
-- [`Function`](Function.md)
-
-Get the instance of the internally created [`Function`](Function.md), for a given data source key. Where the `key` is the key used to define a data source. For example, `lambdaDS`.
-
-For auto-created Lambda data sources, pass in the key used to defined a resolver. For example, `Query listNotes`.
-
-### getDataSource
-
-```ts
-getDataSource(key: string): BaseDataSource
-```
-
-_Parameters_
-
-- **key** `string`
-
-_Returns_
-
-- [`cdk.aws-appsync-alpha.BaseDataSource`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-appsync-alpha.BaseDataSource.html)
-
-Get the instance of the internally created data source. Where the `key` is the key used to define a data source. For example, `lambdaDS`.
-
-For auto-created Lambda data sources, pass in the key used to defined a resolver. For example, `Query listNotes`.
-
-### getResolver
-
-```ts
-getResolver(key: string): Resolver
-```
-
-_Parameters_
-
-- **key** `string`
-
-_Returns_
-
-- [`cdk.aws-appsync-alpha.Resolver`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-appsync-alpha.Resolver.html)
-
-Get the instance of the internally created resolver. Where the `key` is the key used to defined a resolver. For example, `Query listNotes`.
-
+An instance of `AppSyncApi` has the following methods.
 ### addDataSources
 
 ```ts
-addDataSources(scope: cdk.Construct, dataSources: { [key: string]: FunctionDefinition | ApiRouteProps })
+addDataSources(scope, dataSources)
 ```
-
 _Parameters_
+- __scope__ <span class="mono">[Construct](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)</span>
+- __dataSources__ 
 
-- **scope** `cdk.Construct`
-- **dataSources** `{ [key: string]: FunctionDefinition | AppSyncApiLambdaDataSourceProps | AppSyncApiDynamoDbDataSourceProps | AppSyncApiRdsDataSourceProps | AppSyncApiHttpDataSourceProps }`
 
-An associative array with the key being the name as a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition) or one of the [AppSyncApiLambdaDataSourceProps](#appsyncapilambdadatasourceprops), [AppSyncApiDynamoDbDataSourceProps](#appsyncapidynamodbdatasourceprops), [AppSyncApiRdsDataSourceProps](#appsyncapirdsdatasourceprops), or [AppSyncApiHttpDataSourceProps](#appsyncapihttpdatasourceprops).
+
+Add data sources after the construct has been created
+
+
+```js
+api.addDataSources(stack, {
+  billingDS: "src/billing.main",
+});
+```
 
 ### addResolvers
 
 ```ts
-addResolvers(scope: cdk.Construct, resolvers: { [key: string]: string | FunctionDefinition | AppSyncApiResolverProps })
+addResolvers(scope, resolvers)
 ```
-
 _Parameters_
+- __scope__ <span class="mono">[Construct](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)</span>
+- __resolvers__ 
 
-- **scope** `cdk.Construct`
-- **resolvers** `{ [key: string]: string | FunctionDefinition | AppSyncApiResolverProps }`
 
-An associative array with the key being the type name and field name as a string and the value is either a `string`, the [`FunctionDefinition`](Function.md#functiondefinition) or the [`AppSyncApiResolverProps`](#appsyncapiresolverprops).
+
+Add resolvers the construct has been created
+
+
+```js
+api.addResolvers(stack, {
+  "Mutation charge": "billingDS",
+});
+```
 
 ### attachPermissions
 
 ```ts
-attachPermissions(permissions: Permissions)
+attachPermissions(permissions)
 ```
-
 _Parameters_
+- __permissions__ <span class="mono">[Permissions](Permissions)</span>
 
-- **permissions** [`Permissions`](../util/Permissions.md)
 
-Attaches the given list of [permissions](../util/Permissions.md) to all the routes. This allows the functions to access other AWS resources.
+Attaches the given list of permissions to all function datasources
 
-Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
+
+
+```js
+api.attachPermissions(["s3"]);
+```
 
 ### attachPermissionsToDataSource
 
 ```ts
-attachPermissionsToDataSource(key: string, permissions: Permissions)
+attachPermissionsToDataSource(key, permissions)
 ```
-
 _Parameters_
+- __key__ <span class="mono">string</span>
+- __permissions__ <span class="mono">[Permissions](Permissions)</span>
 
-- **key** `string`
 
-- **permissions** [`Permissions`](../util/Permissions.md)
+Attaches the given list of permissions to a specific function datasource. This allows that function to access other AWS resources.
 
-Attaches the given list of [permissions](../util/Permissions.md) to a specific data source. This allows that function to access other AWS resources.
 
-Pass in the key used to define a data source. For example, `lambdaDS`. Or for auto-created Lambda data sources, pass in the key used to defined a resolver. For example, `Query listNotes`.
-
-Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
-
-## AppSyncApiProps
-
-### dataSources?
-
-_Type_ : `{ [key: string]: FunctionDefinition | AppSyncApiLambdaDataSourceProps | AppSyncApiDynamoDbDataSourceProps | AppSyncApiRdsDataSourceProps | AppSyncApiHttpDataSourceProps }`, _defaults to_ `{}`
-
-The data sources for this API. Takes an associative array, with the key being the name as a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition).
-
-```js
-{
-  lambdaDataSource: "src/list.main",
-}
+api.attachPermissionsToRoute("Mutation charge", ["s3"]);
 ```
 
-Or one of the [AppSyncApiLambdaDataSourceProps](#appsyncapilambdadatasourceprops), [AppSyncApiDynamoDbDataSourceProps](#appsyncapidynamodbdatasourceprops), [AppSyncApiRdsDataSourceProps](#appsyncapirdsdatasourceprops), or [AppSyncApiHttpDataSourceProps](#appsyncapihttpdatasourceprops).
+### getDataSource
+
+```ts
+getDataSource(key)
+```
+_Parameters_
+- __key__ <span class="mono">string</span>
+
+
+Get a datasource by name
+
 
 ```js
-{
-  lambdaDataSource: {
-    function: "src/list.main",
-    options: {
-      name: "Lambda DS",
-    },
-  }
-}
+api.getDataSource("billingDS");
 ```
 
-### resolvers?
+### getFunction
 
-_Type_ : `{ [key: string]: string | FunctionDefinition | AppSyncApiResolverProps }`, _defaults to_ `{}`
+```ts
+getFunction(key)
+```
+_Parameters_
+- __key__ <span class="mono">string</span>
 
-The resolvers for this API. Takes an associative array, with the key being the type name and field name as a string and the value is either a `string` with the name of an existing data source.
+
+Get the instance of the internally created Function, for a given resolver.
+
 
 ```js
-{
-  "Query listNotes": "lambdaDS",
-}
+const func = api.getFunction("Mutation charge");
 ```
 
-A [`FunctionDefinition`](Function.md#functiondefinition). And the data source is automatically created.
+### getResolver
+
+```ts
+getResolver(key)
+```
+_Parameters_
+- __key__ <span class="mono">string</span>
+
+
+Get a resolver
+
 
 ```js
-{
-  "Query listNotes": "src/list.main",
-}
+api.getResolver("Mutation charge");
 ```
 
-Or the [AppSyncApiResolverProps](#appsyncapiresolverprops).
+## MappingTemplateFile
 
-```js
-import { MappingTemplate } from "@aws-cdk/aws-appsync-alpha";
 
-{
-  "Query listNotes": {
-    dataSource: "dynamoDbDataSource",
-    resolverProps: {
-      requestMappingTemplate: MappingTemplate.dynamoDbScanTable(),
-      responseMappingTemplate: MappingTemplate.dynamoDbResultList(),
-    },
-  }
-}
-```
+### file
 
-### graphqlApi?
+_Type_ : <span class="mono">string</span>
 
-_Type_ : `cdk.aws-appsync.IGraphqlApi | AppSyncApiCdkGraphqlProps`, _defaults to_ `undefined`
+Path to the file containing the VTL mapping template
 
-Optionally, pass in an instance of the CDK [`cdk.aws-appsync.IGraphqlApi-alpha`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-appsync-alpha.IGraphqlApi.html) or [`AppSyncApiCdkGraphqlProps`](#appsyncapicdkgraphqlprops). This will override the default settings this construct uses to create the CDK `GraphqlApi` internally.
+## AppSyncApiDomainProps
 
-### defaultFunctionProps?
 
-_Type_ : [`FunctionProps`](Function.md#functionprops), _defaults to_ `{}`
+### domainName?
 
-The default function props to be applied to all the Lambda functions in the API. If the `function` is specified for a data source, these default values are overridden.
+_Type_ : <span class="mono">string</span>
 
-## AppSyncApiLambdaDataSourceProps
+The domain to be assigned to the API endpoint (ie. api.domain.com)
 
-### function
+### hostedZone?
 
-_Type_ : [`FunctionDefinition`](Function.md#functiondefinition)
+_Type_ : <span class="mono">string</span>
 
-The function definition used to create this data source.
+The hosted zone in Route 53 that contains the domain. By default, SST will look for a hosted zone by stripping out the first part of the domainName that's passed in. So, if your domainName is api.domain.com. SST will default the hostedZone to domain.com.
 
-### options?
+### isExternalDomain?
 
-_Type_ : [`cdk.aws-appsync-alpha.DataSourceOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-appsync-alpha.DataSourceOptions.html)
+_Type_ : <span class="mono">boolean</span>
 
-The optional configuration for this data source.
+Set this option if the domain is not hosted on Amazon Route 53.
 
-## AppSyncApiDynamoDbDataSourceProps
 
-### table
+### cdk.certificate?
 
-_Type_ : `Table | cdk.aws-dynamodb.Table`
+_Type_ : <span class="mono">[ICertificate](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_certificatemanager.ICertificate.html)</span>
 
-The DynamoDB table used to create this data source. Takes a [`Table`](Table.md) or a [`cdk.aws-dynamodb.Table`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_dynamodb.Table.html).
+Override the internally created certificate
 
-### options?
+### cdk.hostedZone?
 
-_Type_ : [`cdk.aws-appsync-alpha.DataSourceOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-appsync-alpha.DataSourceOptions.html)
+_Type_ : <span class="mono">[IHostedZone](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_route53.IHostedZone.html)</span>
 
-The optional configuration for this data source.
+Override the internally created hosted zone
 
-## AppSyncApiRdsDataSourceProps
 
-### serverlessCluster
+## MappingTemplateInline
 
-_Type_ : [`cdk.aws-rds.IServerlessCluster`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_rds.IServerlessCluster.html)
 
-The serverless cluster to interact with this data source.
+### inline
 
-### secretStore
+_Type_ : <span class="mono">string</span>
 
-_Type_ : [`cdk.aws-secretsmanager.ISecret`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_secretsmanager.ISecret.html)
-
-The secret store that contains the username and password for the serverless cluster.
-
-### databaseName?
-
-_Type_ : `string`
-
-The optional name of the database to use within the cluster.
-
-### options?
-
-_Type_ : [`cdk.aws-appsync-alpha.DataSourceOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-appsync-alpha.DataSourceOptions.html)
-
-The optional configuration for this data source.
-
-## AppSyncApiHttpDataSourceProps
-
-### endpoint
-
-_Type_ : `string`
-
-The http endpoint used to create this data source.
-
-### options?
-
-_Type_ : [`cdk.aws-appsync-alpha.HttpDataSourceOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-appsync-alpha.HttpDataSourceOptions.html)
-
-The optional configuration for this data source.
+Inline definition of the VTL mapping template
 
 ## AppSyncApiResolverProps
+Used to define full resolver config
 
 ### dataSource?
 
-_Type_ : `string`, _defaults to `undefined`_
+_Type_ : <span class="mono">string</span>
 
 The data source for this resolver. The data source must be already created.
 
 ### function?
 
-_Type_ : [`FunctionDefinition`](Function.md#functiondefinition)
+_Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span> | <span class="mono">[FunctionProps](Function#functionprops)</span></span>
 
 The function definition used to create the data source for this resolver.
 
-### resolverProps?
+### requestMapping?
 
-_Type_ : [`AppSyncApiCdkResolverProps`](#appsyncapicdkresolverprops), _defaults to_ `undefined`
+_Type_ : <span class='mono'><span class="mono">[MappingTemplateFile](#mappingtemplatefile)</span> | <span class="mono">[MappingTemplateInline](#mappingtemplateinline)</span></span>
 
-Or optionally pass in a `AppSyncApiCdkResolverProps`. This allows you to override the default settings this construct uses internally to create the resolver.
+VTL request mapping template
+
+
+```js
+  requestMapping: {
+    inline: '{"version" : "2017-02-28", "operation" : "Scan"}',
+  },
+```
+
+
+```js
+  requestMapping: {
+    file: "path/to/template.vtl",
+  },
+```
+
+### responseMapping?
+
+_Type_ : <span class='mono'><span class="mono">[MappingTemplateFile](#mappingtemplatefile)</span> | <span class="mono">[MappingTemplateInline](#mappingtemplateinline)</span></span>
+
+VTL response mapping template
+
+
+```js
+  responseMapping: {
+    inline: "$util.toJson($ctx.result.items)",
+  },
+```
+
+
+```js
+  responseMapping: {
+    file: "path/to/template.vtl",
+  },
+```
+
+
+### cdk.resolver
+
+_Type_ : <span class="mono">Omit&lt;<span class="mono">[ResolverProps](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-appsync-alpha.ResolverProps.html)</span>, <span class='mono'><span class="mono">"api"</span> | <span class="mono">"fieldName"</span> | <span class="mono">"typeName"</span> | <span class="mono">"dataSource"</span></span>&gt;</span>
+
+This allows you to override the default settings this construct uses internally to create the resolver.
+
 
 ## AppSyncApiCdkGraphqlProps
 
-`AppSyncApiCdkGraphqlProps` extends [`cdk.aws-appsync-alpha.GraphqlApiProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-appsync-alpha.GraphqlApiProps.html) with the following exceptions.
 
 ### name?
 
-_Type_ : `string`, _defaults to the id of the construct_
+_Type_ : <span class="mono">string</span>
 
-The `name` field is **optional**.
+## AppSyncApiRdsDataSourceProps
+Used to define a RDS data source
 
-### schema?
 
-_Type_ : `string | string[] | appsync.Schema`, _defaults to `undefined`_
-
-Pass in the path to the schema attached to this api. Takes either a `string`.
-
-```
-{
-  schema: "src/schema.graphql"
-}
-```
-
-A list of `string`. And the schemas are merged using [@graphql-tools/merge](https://www.graphql-tools.com/docs/schema-merging).
-
-```
-{
-  schema: [
-    "src/schema.graphql",
-    "src/schema2.graphql",
-  ]
-}
+```js
+new AppSyncApi(stack, "AppSync", {
+  dataSources: {
+    rds: {
+      type: "rds",
+      rds: MyRDSCluster
+    },
+  },
+});
 ```
 
-Or the [`cdk.aws-appsync-alpha.Schema`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-appsync-alpha.Schema.html).
+### databaseName?
 
+_Type_ : <span class="mono">string</span>
+
+The name of the database to connect to
+
+### description?
+
+_Type_ : <span class="mono">string</span>
+
+Description of the data source
+
+### name?
+
+_Type_ : <span class="mono">string</span>
+
+Name of the data source
+
+### rds?
+
+_Type_ : <span class="mono">[RDS](RDS#rds)</span>
+
+Target RDS construct
+
+### type
+
+_Type_ : <span class="mono">"rds"</span>
+
+String literal to signify that this data source is an RDS database
+
+
+
+### cdk.dataSource.databaseName?
+
+_Type_ : <span class="mono">string</span>
+
+### cdk.dataSource.secretStore
+
+_Type_ : <span class="mono">[ISecret](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_secretsmanager.ISecret.html)</span>
+
+### cdk.dataSource.serverlessCluster
+
+_Type_ : <span class="mono">[IServerlessCluster](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_rds.IServerlessCluster.html)</span>
+
+
+
+## AppSyncApiHttpDataSourceProps
+Used to define an http data source
+
+
+```js
+new AppSyncApi(stack, "AppSync", {
+  dataSources: {
+    http: {
+      type: "http",
+      endpoint: "https://example.com"
+    },
+  },
+});
 ```
-import { Schema } from "@aws-cdk/aws-appsync-alpha";
 
-{
-  schema: Schema.fromAsset(schema)
-}
+### description?
+
+_Type_ : <span class="mono">string</span>
+
+Description of the data source
+
+### endpoint
+
+_Type_ : <span class="mono">string</span>
+
+URL to forward requests to
+
+### name?
+
+_Type_ : <span class="mono">string</span>
+
+Name of the data source
+
+### type
+
+_Type_ : <span class="mono">"http"</span>
+
+String literal to signify that this data source is an HTTP endpoint
+
+
+
+### cdk.dataSource.authorizationConfig?
+
+_Type_ : <span class="mono">[AwsIamConfig](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-appsync-alpha.AwsIamConfig.html)</span>
+
+
+
+## AppSyncApiNoneDataSourceProps
+Used to define a none data source
+
+
+```js
+new AppSyncApi(stack, "AppSync", {
+  dataSources: {
+    http: {
+      type: "http",
+      endpoint: "https://example.com"
+    },
+  },
+});
 ```
 
-### xrayEnabled?
+### description?
 
-_Type_ : `boolean`, _defaults to `true`_
+_Type_ : <span class="mono">string</span>
 
-A flag indicating whether or not X-Ray tracing is enabled for this api.
+Description of the data source
 
-## AppSyncApiCdkResolverProps
+### name?
 
-`AppSyncApiCdkResolverProps` extends [`cdk.aws-appsync-alpha.BaseResolverProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-appsync-alpha.BaseResolverProps.html) with the exception that the `fieldName` and the `typeName` fields are **not accepted**. The field name and the type name should be configured using the keys of [`resolvers`](#resolvers) field.
+_Type_ : <span class="mono">string</span>
 
-You can use `AppSyncApiCdkResolverProps` to configure the other resolver properties.
+Name of the data source
+
+### type
+
+_Type_ : <span class="mono">"none"</span>
+
+String literal to signify that this data source is an HTTP endpoint
+
+## AppSyncApiLambdaDataSourceProps
+Used to define a lambda data source
+
+
+```js
+new AppSyncApi(stack, "AppSync", {
+  dataSources: {
+    lambda: {
+      type: "function",
+      function: "src/function.handler"
+    },
+  },
+});
+```
+
+
+### description?
+
+_Type_ : <span class="mono">string</span>
+
+Description of the data source
+
+### function
+
+_Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span> | <span class="mono">[FunctionProps](Function#functionprops)</span></span>
+
+Function definition
+
+### name?
+
+_Type_ : <span class="mono">string</span>
+
+Name of the data source
+
+### type?
+
+_Type_ : <span class="mono">"function"</span>
+
+String literal to signify that this data source is a function
+
+## AppSyncApiDynamoDbDataSourceProps
+Used to define a DynamoDB data source
+
+
+```js
+new AppSyncApi(stack, "AppSync", {
+  dataSources: {
+    table: {
+      type: "table",
+      table: MyTable
+    },
+  },
+});
+```
+
+### description?
+
+_Type_ : <span class="mono">string</span>
+
+Description of the data source
+
+### name?
+
+_Type_ : <span class="mono">string</span>
+
+Name of the data source
+
+### table?
+
+_Type_ : <span class="mono">[Table](Table#table)</span>
+
+Target table
+
+### type
+
+_Type_ : <span class="mono">"dynamodb"</span>
+
+String literal to signify that this data source is a dynamodb table
+
+
+
+### cdk.dataSource.table
+
+_Type_ : <span class="mono">[Table](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_dynamodb.Table.html)</span>
+
+

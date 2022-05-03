@@ -334,7 +334,7 @@ AWS_PROFILE=production npx sst deploy
 
 ## Package scripts
 
-If you used the `create-serverless-stack` CLI to create your app, the above commands (`start`, `build`, `deploy`, and `remove`) are also available in your `package.json`. So you can run them using.
+If you used the `create-sst` CLI to create your app, the above commands (`start`, `build`, `deploy`, and `remove`) are also available in your `package.json`. So you can run them using.
 
 ```bash
 # With npm
