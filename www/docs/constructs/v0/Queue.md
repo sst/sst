@@ -167,9 +167,9 @@ attachPermissions(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../util/Permissions.md)
+- **permissions** [`Permissions`](../../util/Permissions.md)
 
-Attaches the given list of [permissions](../util/Permissions.md) to the `consumerFunction`. This allows the consumer to access other AWS resources.
+Attaches the given list of [permissions](../../util/Permissions.md) to the `consumerFunction`. This allows the consumer to access other AWS resources.
 
 Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 

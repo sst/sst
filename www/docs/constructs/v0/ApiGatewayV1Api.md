@@ -605,9 +605,9 @@ attachPermissions(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../util/Permissions.md)
+- **permissions** [`Permissions`](../../util/Permissions.md)
 
-Attaches the given list of [permissions](../util/Permissions.md) to all the routes. This allows the functions to access other AWS resources.
+Attaches the given list of [permissions](../../util/Permissions.md) to all the routes. This allows the functions to access other AWS resources.
 
 Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
@@ -621,9 +621,9 @@ _Parameters_
 
 - **routeKey** `string`
 
-- **permissions** [`Permissions`](../util/Permissions.md)
+- **permissions** [`Permissions`](../../util/Permissions.md)
 
-Attaches the given list of [permissions](../util/Permissions.md) to a specific route. This allows that function to access other AWS resources.
+Attaches the given list of [permissions](../../util/Permissions.md) to a specific route. This allows that function to access other AWS resources.
 
 Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 

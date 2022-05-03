@@ -95,13 +95,13 @@ There are a couple of work arounds:
 
 #### While developing
 
-To use these values while developing, run `sst start` to start the [Live Lambda Development](../live-lambda-development.md) environment.
+To use these values while developing, run `sst start` to start the [Live Lambda Development](../../live-lambda-development.md) environment.
 
 ``` bash
 npx sst start
 ```
 
-Then in your Next.js app to reference these variables, add the [`sst-env`](../packages/static-site-env.md) package.
+Then in your Next.js app to reference these variables, add the [`sst-env`](../../packages/static-site-env.md) package.
 
 ```bash
 npm install --save-dev @serverless-stack/static-site-env
@@ -268,7 +268,7 @@ new NextjsSite(this, "Site", {
 
 ### Attaching permissions
 
-You can attach a set of [permissions](../util/Permissions.md) to allow the Next.js API routes and Server Side rendering `getServerSideProps` to access other AWS resources.
+You can attach a set of [permissions](../../util/Permissions.md) to allow the Next.js API routes and Server Side rendering `getServerSideProps` to access other AWS resources.
 
 ```js {5}
 const site = new NextjsSite(this, "Site", {
@@ -402,9 +402,9 @@ attachPermissions(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../util/Permissions.md)
+- **permissions** [`Permissions`](../../util/Permissions.md)
 
-Attaches the given list of [permissions](../util/Permissions.md) to allow the Next.js API routes and Server Side rendering `getServerSideProps` to access other AWS resources.
+Attaches the given list of [permissions](../../util/Permissions.md) to allow the Next.js API routes and Server Side rendering `getServerSideProps` to access other AWS resources.
 
 ## NextjsSiteProps
 
@@ -548,9 +548,9 @@ The amount of memory in MB allocated to this Lambda function.
 
 ### permissions?
 
-_Type_ : [`Permissions`](../util/Permissions.md), _defaults to_ `[]`
+_Type_ : [`Permissions`](../../util/Permissions.md), _defaults to_ `[]`
 
-Attaches the given list of [permissions](../util/Permissions.md) to the function.
+Attaches the given list of [permissions](../../util/Permissions.md) to the function.
 
 ## NextjsSiteCachePolicyProps
 

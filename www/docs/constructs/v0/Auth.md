@@ -505,9 +505,9 @@ attachPermissionsForAuthUsers(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../util/Permissions.md)
+- **permissions** [`Permissions`](../../util/Permissions.md)
 
-Attaches the given list of [permissions](../util/Permissions.md) to [IAM role used for authenticated users](#iamauthrole). This dictates which resources an authenticated user has access to.
+Attaches the given list of [permissions](../../util/Permissions.md) to [IAM role used for authenticated users](#iamauthrole). This dictates which resources an authenticated user has access to.
 
 Follows the same format as [`Function.attachPermissions`](Function.md#attachpermissions).
 
@@ -519,9 +519,9 @@ attachPermissionsForUnauthUsers(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../util/Permissions.md)
+- **permissions** [`Permissions`](../../util/Permissions.md)
 
-Attaches the given list of [permissions](../util/Permissions.md) to [IAM role used for unauthenticated users](#iamunauthrole). This dictates which resources an unauthenticated user has access to.
+Attaches the given list of [permissions](../../util/Permissions.md) to [IAM role used for unauthenticated users](#iamunauthrole). This dictates which resources an unauthenticated user has access to.
 
 Follows the same format as [`Function.attachPermissions`](Function.md#attachpermissions).
 
@@ -533,9 +533,9 @@ attachPermissions(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../util/Permissions.md)
+- **permissions** [`Permissions`](../../util/Permissions.md)
 
-Attaches the given list of [permissions](../util/Permissions.md) to all the triggers in the User Pool. This allows the functions to access other AWS resources.
+Attaches the given list of [permissions](../../util/Permissions.md) to all the triggers in the User Pool. This allows the functions to access other AWS resources.
 
 Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
@@ -549,9 +549,9 @@ _Parameters_
 
 - **triggerKey** `keyof AuthUserPoolTriggers`
 
-- **permissions** [`Permissions`](../util/Permissions.md)
+- **permissions** [`Permissions`](../../util/Permissions.md)
 
-Attaches the given list of [permissions](../util/Permissions.md) to a specific trigger in the User Pool. This allows that function to access other AWS resources.
+Attaches the given list of [permissions](../../util/Permissions.md) to a specific trigger in the User Pool. This allows that function to access other AWS resources.
 
 Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 

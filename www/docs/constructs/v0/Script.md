@@ -10,7 +10,7 @@ A few things to note:
 - It does not run locally. It runs inside a Lambda function.
 - It gets run on every deployment.
 - It can run for a maximum of 15 minutes.
-- [Live Lambda Dev](../live-lambda-development.md) is not enabled for these functions.
+- [Live Lambda Dev](../../live-lambda-development.md) is not enabled for these functions.
 
 ## Initializer
 
@@ -122,7 +122,7 @@ Note that, the value for `tableName` will be resolved at deploy time. For exampl
 
 ### Attaching permissions
 
-You can grant additional [permissions](../util/Permissions.md) to the script.
+You can grant additional [permissions](../../util/Permissions.md) to the script.
 
 ```js {7}
 const script = new Script(this, "Script", {
@@ -308,9 +308,9 @@ attachPermissions(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../util/Permissions.md)
+- **permissions** [`Permissions`](../../util/Permissions.md)
 
-Attaches the given list of [permissions](../util/Permissions.md) to the `function`. This allows the script to access other AWS resources.
+Attaches the given list of [permissions](../../util/Permissions.md) to the `function`. This allows the script to access other AWS resources.
 
 Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 

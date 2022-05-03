@@ -207,11 +207,11 @@ attachPermissions(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../util/Permissions.md)
+- **permissions** [`Permissions`](../../util/Permissions.md)
 
-Attaches the given list of [permissions](../util/Permissions.md) to the function. This method makes it easy to control the permissions you want the function to have access to. It can range from complete access to all AWS resources, all the way to a specific permission for a resource.
+Attaches the given list of [permissions](../../util/Permissions.md) to the function. This method makes it easy to control the permissions you want the function to have access to. It can range from complete access to all AWS resources, all the way to a specific permission for a resource.
 
-Head over to the [`Permissions`](../util/Permissions.md) docs to read about this in detail.
+Head over to the [`Permissions`](../../util/Permissions.md) docs to read about this in detail.
 
 ## FunctionProps
 
@@ -377,7 +377,7 @@ The directory where `.fsproj` is found.
 
 _Type_ : `boolean`, _defaults to true_
 
-Can be used to disable [Live Lambda Development](../live-lambda-development.md) when using `sst start`. Useful for things like Custom Resources that need to execute during deployment.
+Can be used to disable [Live Lambda Development](../../live-lambda-development.md) when using `sst start`. Useful for things like Custom Resources that need to execute during deployment.
 
 ### memorySize?
 
@@ -405,9 +405,9 @@ Turns on [AWS X-RAY for the Lambda function](https://docs.aws.amazon.com/lambda/
 
 ### permissions?
 
-_Type_ : [`Permissions`](../util/Permissions.md), _defaults to_ `[]`
+_Type_ : [`Permissions`](../../util/Permissions.md), _defaults to_ `[]`
 
-Attaches the given list of [permissions](../util/Permissions.md) to the function. Configuring this property is equivalent to calling [`attachPermissions`](#attachpermissions) after the function is created.
+Attaches the given list of [permissions](../../util/Permissions.md) to the function. Configuring this property is equivalent to calling [`attachPermissions`](#attachpermissions) after the function is created.
 
 ### layers?
 

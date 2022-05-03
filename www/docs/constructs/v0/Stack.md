@@ -281,7 +281,7 @@ _Parameters_
 
 - **permissions** `Permissions`
 
-Adds additional default [`Permissions`](../util/Permissions.md) to be applied to all Lambda functions in the stack.
+Adds additional default [`Permissions`](../../util/Permissions.md) to be applied to all Lambda functions in the stack.
 
 :::note
 Only functions created after a `addDefaultFunctionPermissions` call will contain the new values.

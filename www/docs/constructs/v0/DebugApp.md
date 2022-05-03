@@ -7,7 +7,7 @@ import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
 
 The `DebugApp` construct is used internally by SST to:
 
-- Deploy the [`DebugStack`](DebugStack.md). It contains the resources that powers [Live Lambda Development](../live-lambda-development.md).
+- Deploy the [`DebugStack`](DebugStack.md). It contains the resources that powers [Live Lambda Development](../../live-lambda-development.md).
 - Automatically prefix the debug stack name with the stage and app name.
 
 It extends [`cdk.App`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.App.html). It's made available as the `app` in the `debugApp()` callback in the `stacks/index.js` of your SST app.
@@ -64,13 +64,13 @@ The name of the app. This comes from the `name` in your `sst.json`.
 
 _Type_ : `string`
 
-The stage the app is being deployed to. If this is not specified as the [`--stage`](../packages/cli.md#--stage) option, it'll default to the stage configured during the initial run of the SST CLI.
+The stage the app is being deployed to. If this is not specified as the [`--stage`](../../packages/cli.md#--stage) option, it'll default to the stage configured during the initial run of the SST CLI.
 
 ### region
 
 _Type_ : `string`
 
-The region the app is being deployed to. If this is not specified as the [`--region`](../packages/cli.md#--region) option in the SST CLI, it'll default to the `region` in your `sst.json`.
+The region the app is being deployed to. If this is not specified as the [`--region`](../../packages/cli.md#--region) option in the SST CLI, it'll default to the `region` in your `sst.json`.
 
 ### account
 
