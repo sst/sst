@@ -26,17 +26,17 @@ Create your first SST app.
 
 ```bash
 # Create a new SST app
-npx create-serverless-stack@latest my-sst-app
+npm init sst
 cd my-sst-app
 
 # Start Live Lambda Dev
-npx sst start
+npm start
 
 # Open the SST Console
 open console.serverless-stack.com
 
 # Deploy to prod
-npx sst deploy --stage prod
+npm deploy --stage prod
 ```
 
 ## Documentation

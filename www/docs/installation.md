@@ -20,73 +20,11 @@ To use SST you'll need:
 Create a new project using.
 
 ```bash
-npx create-serverless-stack@latest my-sst-app
-```
-
-Or alternatively, with a newer version of npm or Yarn.
-
-```bash
 # With npm 6+
-npm init serverless-stack@latest my-sst-app
+npm init sst
 # Or with Yarn 0.25+
-yarn create serverless-stack my-sst-app
+yarn create sst
 ```
-
-By default your project is using npm as the package manager, if you'd like to use **Yarn**.
-
-```bash
-npx create-serverless-stack@latest my-sst-app --use-yarn
-```
-
-Note that, if you are using `npm init`, you'll need to add an extra `--` before the options.
-
-```bash
-npm init serverless-stack@latest my-sst-app -- --language typescript
-```
-
-This by default creates a JavaScript/ES project.
-
-### TypeScript
-
-If you instead want to use **TypeScript**.
-
-```bash
-npx create-serverless-stack@latest my-sst-app --language typescript
-```
-
-### Python
-
-Or if you want to use **Python**.
-
-```bash
-npx create-serverless-stack@latest my-sst-app --language python
-```
-
-### Golang
-
-Or if you want to use **Go**.
-
-```bash
-npx create-serverless-stack@latest my-sst-app --language go
-```
-
-### C#
-
-Or if you want to use **C#**.
-
-```bash
-npx create-serverless-stack@latest my-sst-app --language csharp
-```
-
-### F#
-
-Or if you want to use **F#**.
-
-```bash
-npx create-serverless-stack@latest my-sst-app --language fsharp
-```
-
-You can read more about the [**create-serverless-stack** CLI here](packages/create-serverless-stack.md).
 
 ## Language support
 
@@ -112,13 +50,12 @@ my-sst-app
 ├── .gitignore
 ├── package.json
 ├── sst.json
-├── test
-│   └── MyStack.test.js
 ├── stacks
-|   ├── MyStack.js
-|   └── index.js
-└── src
-    └── lambda.js
+|   ├── MyStack.ts
+|   └── index.ts
+└── backend
+    └── functions
+        └── lambda.ts
 ```
 
 An SST app is made up of a couple of parts.
@@ -127,32 +64,29 @@ An SST app is made up of a couple of parts.
 
   The code that describes the infrastructure of your serverless app is placed in the `stacks/` directory of your project. SST uses [AWS CDK](https://aws.amazon.com/cdk/), to create the infrastructure.
 
-- `src/` — App Code
+- `backend/` — App Code
 
-  The code that’s run when your app is invoked is placed in the `src/` directory of your project. These are your Lambda functions.
-
-- `test/` — Unit tests
-
-  There's also a `test/` directory where you can add your tests. SST uses [Jest](https://jestjs.io/) internally to run your tests.
+  The code that’s run when your app is invoked is placed in the `backend/` directory of your project. These are your Lambda functions.
 
 You can change this structure around to fit your workflow. This is just a good way to get started.
 
 ### Infrastructure
 
-The `stacks/index.js` file is the entry point for defining the infrastructure of your app. It has a default export function to add your stacks.
+The `stacks/index.ts` file is the entry point for defining the infrastructure of your app. It has a default export function to add your stacks.
 
-```jsx title="stacks/index.js"
-import MyStack from "./MyStack";
+```tsx title="stacks/index.ts"
+import { MyStack } from "./MyStack";
+import { App } from "@serverless-stack/resources";
 
-export default function main(app) {
-  // Set default runtime for all functions
+export default function (app: App) {
   app.setDefaultFunctionProps({
-    runtime: "nodejs14.x"
+    runtime: "nodejs14.x",
+    srcPath: "backend",
+    bundle: {
+      format: "esm",
+    },
   });
-
-  new MyStack(app, "my-stack");
-
-  // Add more stacks
+  app.stack(MyStack);
 }
 ```
 
@@ -160,23 +94,21 @@ You'll notice that we are using `import` and `export`. This is because SST autom
 
 In the sample `stacks/MyStack.js` you can add the resources to your stack.
 
-```jsx title="stacks/MyStack.js"
-import * as sst from "@serverless-stack/resources";
+```tsx title="stacks/MyStack.js"
+import { StackContext, Api } from "@serverless-stack/resources";
 
-export default class MyStack extends sst.Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
-
-    // Define your stack
-  }
+export function MyStack({ stack }: StackContext) {
+  new Api(stack, "api", {
+    routes: {
+      "GET /": "functions/lambda.handler",
+    },
+  });
 }
 ```
 
-Note that the stacks in SST use [`sst.Stack`](constructs/Stack.md) as opposed to `cdk.Stack`. This allows us to deploy the same stack to multiple environments.
-
 In the sample app we are using [a higher-level API construct](constructs/Api.md) to define a simple API endpoint.
 
-```js
+```ts
 const api = new sst.Api(this, "Api", {
   routes: {
     "GET /": "src/lambda.handler",
@@ -188,14 +120,16 @@ const api = new sst.Api(this, "Api", {
 
 The above API endpoint invokes the `handler` function in `src/lambda.js`.
 
-```js title="src/lambda.js"
-export async function handler() {
+```ts title="backend/functions/lambda.ts"
+import { APIGatewayProxyHandlerV2 } from "aws-lambda";
+
+export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   return {
     statusCode: 200,
-    body: "Hello World!",
     headers: { "Content-Type": "text/plain" },
+    body: `Hello, World! Your request was received at ${event.requestContext.time}.`,
   };
-}
+};
 ```
 
 Notice that we are using `export` here as well. SST also transpiles your function code.
@@ -208,9 +142,7 @@ Your SST app also includes a config file in `sst.json`.
 {
   "name": "my-sst-app",
   "region": "us-east-1",
-  "lint": true,
-  "typeCheck": true,
-  "main": "infra/index.ts"
+  "main": "stacks/index.ts"
 }
 ```
 
@@ -224,21 +156,13 @@ Let's look at these options in detail.
 
   Defaults for your app and can be overridden using the [`--region`](packages/cli.md#--region) CLI option.
 
-- **lint**
-
-  For JavaScript and TypeScript apps, SST automatically lints your CDK and Lambda function code using [ESLint](https://eslint.org). The **lint** option allows you to turn this off.
-
-- **typeCheck**
-
-  For TypeScript apps, SST also automatically type checks your CDK and Lambda function code using [tsc](https://www.typescriptlang.org). The **typeCheck** option allows you to turn this off.
-
 - **main**
 
   The entry point to your SST app. Defaults to `stacks/index.ts` or `stacks/index.js` for TypeScript and JavaScript respectively.
 
 Note that, you can access the **stage**, **region**, and **name** in the entry point of your app.
 
-```js title="stacks/index.js"
+```ts title="stacks/index.ts"
 app.stage; // "dev"
 app.region; // "us-east-1"
 app.name; // "my-sst-app"
@@ -246,40 +170,13 @@ app.name; // "my-sst-app"
 
 You can also access them in your stacks.
 
-<MultiLanguageCode>
-<TabItem value="js">
-
-```js title="stacks/MyStack.js"
-class MyStack extends sst.Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
-
-    scope.stage; // "dev"
-    scope.region; // "us-east-1"
-    scope.name; // "my-sst-app"
-  }
-}
-```
-
-</TabItem>
-<TabItem value="ts">
-
 ```ts title="stacks/MyStack.ts"
-class MyStack extends sst.Stack {
-  constructor(
-    scope: sst.App, id: string, props?: sst.StackProps
-  ) {
-    super(scope, id, props);
-
-    scope.stage; // "dev"
-    scope.region; // "us-east-1"
-    scope.name; // "my-sst-app"
-  }
+export function MyStack({ stack }: StackContext) {
+  scope.stage; // "dev"
+  scope.region; // "us-east-1"
+  scope.name; // "my-sst-app"
 }
 ```
-
-</TabItem>
-</MultiLanguageCode>
 
 ## Building your app
 
@@ -287,7 +184,7 @@ Once you are ready to build your app and convert your CDK code to CloudFormation
 
 ```bash
 # With npm
-npx sst build
+npm run build
 # Or with Yarn
 yarn sst build
 ```
@@ -300,9 +197,9 @@ Once your app has been built and tested successfully, you are ready to deploy it
 
 ```bash
 # With npm
-npx sst deploy
+npm run deploy
 # Or with Yarn
-yarn sst deploy
+yarn deploy
 ```
 
 This command uses your **default AWS Profile** and the **region** and **stage** specified in your `sst.json`.
@@ -310,13 +207,13 @@ This command uses your **default AWS Profile** and the **region** and **stage** 
 Or if you want to deploy to a different stage.
 
 ```bash
-npx sst deploy --stage prod
+npm run deploy --stage prod
 ```
 
 And if your prod environment is in a different AWS account or region, you can do:
 
 ```bash
-AWS_PROFILE=my-profile npx sst deploy --stage prod --region eu-west-1
+AWS_PROFILE=my-profile npm run deploy --stage prod --region eu-west-1
 ```
 
 :::note
@@ -335,15 +232,15 @@ Finally, you can remove all your stacks and their resources from AWS using.
 
 ```bash
 # With npm
-npx sst remove
+npm run remove
 # Or with Yarn
-yarn sst remove
+yarn remove
 ```
 
 Or if you've deployed to a different stage.
 
 ```bash
-npx sst remove --stage prod
+npm run remove --stage prod
 ```
 
 Note that this command permanently removes your resources from AWS. It also removes the stack that's created as a part of the debugger.

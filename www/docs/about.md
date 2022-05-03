@@ -59,17 +59,18 @@ Serverless Stack (SST) is a framework that makes it easy to build serverless app
 
 ```bash
 # Create a new SST app
-npx create-serverless-stack@latest my-sst-app
+npm init sst
 cd my-sst-app
+npm i
 
 # Start Live Lambda Dev
-npx sst start
+npm start
 
 # Open the SST Console
 open console.serverless-stack.com
 
 # Deploy to prod
-npx sst deploy --stage prod
+npm deploy --stage prod
 ```
 
 ## Join our community

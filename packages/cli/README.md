@@ -12,14 +12,15 @@ Create your first SST app.
 
 ```bash
 # Create your app
-$ npx create-serverless-stack@latest my-sst-app
+$ npm init sst
 $ cd my-sst-app
+$ npm i
 
 # Start Live Lambda Development
-$ npx sst start
+$ npm start
 
 # Deploy to prod
-$ npx sst deploy --stage prod
+$ npm deploy --stage prod
 ```
 
 [![sst start](https://d1ne2nltv07ycv.cloudfront.net/SST/sst-start-demo/sst-start-demo-2.gif)](https://d1ne2nltv07ycv.cloudfront.net/SST/sst-start-demo/sst-start-demo-2.mp4)

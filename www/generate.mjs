@@ -113,7 +113,7 @@ app.bootstrap({
     "../packages/resources/src/DebugStack.ts",
   ],
   tsconfig: path.resolve("../packages/resources/tsconfig.json"),
-  includes: "docs/constructs/v1/*.snippets.md",
+  includes: "docs/constructs/*.snippets.md",
   preserveWatchOutput: true,
 });
 
@@ -126,14 +126,16 @@ if (cmd === "watch") {
     console.log("Generated docs");
   });
   // Watch snippets files
-  chokidar.watch(`docs/constructs/v1/*.snippets.md`).on("change", async (event, path) => {
-    console.log("Snippet change detected. Starting compilation...");
-    const reflection = app.convert();
-    await app.generateJson(reflection, "out.json");
-    const json = await fs.readFile("./out.json").then(JSON.parse);
-    await run(json);
-    console.log("Generated docs");
-  });
+  chokidar
+    .watch(`docs/constructs/snippets.md`)
+    .on("change", async (event, path) => {
+      console.log("Snippet change detected. Starting compilation...");
+      const reflection = app.convert();
+      await app.generateJson(reflection, "out.json");
+      const json = await fs.readFile("./out.json").then(JSON.parse);
+      await run(json);
+      console.log("Generated docs");
+    });
 }
 
 if (cmd === "build") {
@@ -188,9 +190,7 @@ async function run(json) {
         lines.push("```ts");
         lines.push(
           `${signature.name}(${signature.parameters
-            .map(
-              (p) => `${p.name}`
-            )
+            .map((p) => `${p.name}`)
             .join(", ")})`
         );
         lines.push("```");
@@ -217,26 +217,28 @@ async function run(json) {
       lines.push("\n## Examples");
       lines.push(...examples.map(renderTag));
     }
-    lines.push("")
+    lines.push("");
     try {
-      const contents = await fs.readFile(`docs/constructs/v1/${file.name}.snippets.md`)
-      lines.push(...contents.toString().split("\n"))
+      const contents = await fs.readFile(
+        `docs/constructs/${file.name}.snippets.md`
+      );
+      lines.push(...contents.toString().split("\n"));
     } catch (ex) {
       // No snippets provided
-      console.warn(`No snippets provided for ${file.name}`)
+      console.warn(`No snippets provided for ${file.name}`);
     }
 
     const props = [];
     lines.push(props);
-    
-
 
     // Properties
     lines.push("## Properties");
     lines.push(
       `An instance of \`${construct.name}\` has the following properties.`
     );
-    lines.push(...renderProperties(file, json.children, construct.children, "", true));
+    lines.push(
+      ...renderProperties(file, json.children, construct.children, "", true)
+    );
 
     // Methods
     const methods =
@@ -257,9 +259,9 @@ async function run(json) {
         for (const signature of method.signatures) {
           lines.push("```ts");
           lines.push(
-            `${signature.name}(${signature.parameters
-              ?.map((p) => `${p.name}`)
-              .join(", ") || ""})`
+            `${signature.name}(${
+              signature.parameters?.map((p) => `${p.name}`).join(", ") || ""
+            })`
           );
           lines.push("```");
           if (signature.parameters) {
@@ -311,9 +313,9 @@ async function run(json) {
     }
 
     const output = lines.flat(100).join("\n");
-    const path = `docs/constructs/v1/${file.name}.md`
+    const path = `docs/constructs/${file.name}.md`;
     await fs.writeFile(path, output);
-    console.log("Wrote file", path)
+    console.log("Wrote file", path);
   }
 }
 
@@ -323,7 +325,6 @@ async function run(json) {
 function renderTag(tag) {
   return tag.text;
 }
-
 
 /**
  * @param file {JSONOutput.DeclarationReflection}
@@ -337,7 +338,7 @@ function renderType(file, files, prefix, parameter) {
   if (!parameter) throw new Error("No parameter");
   if (!parameter.type) throw new Error(`No type for ${parameter}`);
   if (parameter.type === "conditional")
-    return renderType(file, files, prefix, parameter.checkType)
+    return renderType(file, files, prefix, parameter.checkType);
   if (parameter.type === "array")
     return (
       "<span class='mono'>Array&lt;" +
@@ -370,7 +371,12 @@ function renderType(file, files, prefix, parameter) {
   if (parameter.type === "reflection" && prefix) {
     return (
       "\n" +
-      renderProperties(file, files, parameter.declaration?.children, prefix).join("\n")
+      renderProperties(
+        file,
+        files,
+        parameter.declaration?.children,
+        prefix
+      ).join("\n")
     );
   }
   if (parameter.type === "union") {
@@ -405,39 +411,45 @@ function renderType(file, files, prefix, parameter) {
         return `<span class="mono">[${parameter.name}](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_${pkg}.${parameter.name}.html)</span>`;
       }
       if (parameter.package === "esbuild")
-        return `<span class="mono">[${parameter.name}](https://esbuild.github.io/api/#${parameter.name.toLowerCase()})</span>`;
+        return `<span class="mono">[${
+          parameter.name
+        }](https://esbuild.github.io/api/#${parameter.name.toLowerCase()})</span>`;
 
-      throw "Did not implement handler for package " + parameter.package
+      throw "Did not implement handler for package " + parameter.package;
     }
 
     // Find generic params
-    const cls = file.children?.find(x => x.kindString === "Class")
+    const cls = file.children?.find((x) => x.kindString === "Class");
     if (cls) {
-      const cons = cls.children?.find(x => x.kindString === "Constructor");
+      const cons = cls.children?.find((x) => x.kindString === "Constructor");
       if (cons) {
-        const sig = cons.signatures?.find(x => x.kindString === "Constructor signature")
+        const sig = cons.signatures?.find(
+          (x) => x.kindString === "Constructor signature"
+        );
         if (sig) {
-          const param = sig.typeParameter?.find(x => x.name === parameter.name)
-          if (param) return renderType(file, files, prefix, param.type)
+          const param = sig.typeParameter?.find(
+            (x) => x.name === parameter.name
+          );
+          if (param) return renderType(file, files, prefix, param.type);
         }
       }
     }
 
     const id = parameter.id;
-    const ref = files.flatMap(x => x.children || []).find((c) => c.id === id && c.kindString === "Type alias")
+    const ref = files
+      .flatMap((x) => x.children || [])
+      .find((c) => c.id === id && c.kindString === "Type alias");
     if (ref?.kindString === "Type alias")
       return renderType(file, files, prefix, ref.type);
 
     const link = (() => {
-      if (file.children?.find(c => c.id === id))
-        return `#${parameter.name.toLowerCase()}`
-      const otherFile = files.find(x => x.children?.find(c => c.id === id))
-      if (otherFile)
-        return otherFile.name + "#" + parameter.name.toLowerCase()
-      return parameter.name
-    })()
-    if (!link)
-      return `<span class="mono">${parameter.name}</span>`;
+      if (file.children?.find((c) => c.id === id))
+        return `#${parameter.name.toLowerCase()}`;
+      const otherFile = files.find((x) => x.children?.find((c) => c.id === id));
+      if (otherFile) return otherFile.name + "#" + parameter.name.toLowerCase();
+      return parameter.name;
+    })();
+    if (!link) return `<span class="mono">${parameter.name}</span>`;
     return `<span class="mono">[${parameter.name}](${link})</span>`;
   }
   return "";
@@ -480,7 +492,9 @@ function renderProperties(file, files, properties, prefix, onlyPublic) {
     if (signature.comment) {
       const def = signature.comment.tags?.find((x) => x.tag === "default");
       if (def)
-        lines.push(`_Default_ : <span class="mono">${def.text.trim()}</span>\n`);
+        lines.push(
+          `_Default_ : <span class="mono">${def.text.trim()}</span>\n`
+        );
       lines.push(signature.comment.shortText);
       lines.push(signature.comment.text);
       const tags = signature.comment.tags || [];

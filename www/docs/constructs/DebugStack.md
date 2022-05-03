@@ -1,27 +1,33 @@
 ---
 description: "Docs for the sst.DebugStack construct in the @serverless-stack/resources package"
 ---
-
-import TabItem from "@theme/TabItem";
-import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
-
-The `DebugStack` construct is used internally to create the resources needed to power [Live Lambda Development](../live-lambda-development.md). Note that, the `DebugStack` construct should only be created inside the [`DebugApp`](DebugApp).
+<!--
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!                                                           !!
+!!  This file has been automatically generated, do not edit  !!
+!!                                                           !!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-->
+The `DebugStack` construct is used internally to create the resources needed to power [Live Lambda Development](../live-lambda-development). Note that, the `DebugStack` construct should only be created inside the [`DebugApp`](DebugApp).
 
 It extends [`cdk.Stack`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Stack.html). It automatically prefixes the stack names with the stage and app name to ensure that they can be deployed to multiple regions in the same AWS account. It also ensures that the stack uses the same AWS profile and region as the app.
 
-## Initializer
 
+## Constructor
 ```ts
-new DebugStack(scope: Construct, id: string, props: StackProps)
+new DebugStack(scope, id, props)
 ```
-
 _Parameters_
-
-- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
-- id `string`
-- props [`StackProps`](#stackprops)
+- __scope__ <span class="mono">[Construct](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)</span>
+- __id__ <span class="mono">string</span>
+- __props__ <span class="mono">[DebugStackProps](#debugstackprops)</span>
 
 ## Examples
+
+
+
+import TabItem from "@theme/TabItem";
+import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
 
 ### Adding to an app
 
@@ -142,18 +148,23 @@ export function debugApp(app) {
 }
 ```
 
-## StackProps
-
-Takes the following construct props in addition to the [`cdk.StackProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.StackProps.html).
+## DebugStackProps
+Stack properties for the DebugStack.
 
 ### payloadBucketArn?
 
-_Type_ : `string`, _defaults to a new bucket will be created_
+_Type_ : <span class="mono">string</span>
 
-By default, an S3 bucket is created as temporary storage for passing large requests/responses between the client and the Lambda Function. You can provide the ARN of an existing S3 bucket.
+S3 bucket to store large websocket payloads.
 
 ### websocketHandlerRoleArn?
 
-_Type_ : `string`, _defaults to new roles will be created_
+_Type_ : <span class="mono">string</span>
 
-This is the role that will be assumed by the WebSocket API handler function. It controls the permissions that the function will have. The role must be assumable by the `lambda.amazonaws.com` service principal.
+Lambda function props for WebSocket request handlers.
+
+## Properties
+An instance of `DebugStack` has the following properties.
+### stage
+
+_Type_ : <span class="mono">string</span>
