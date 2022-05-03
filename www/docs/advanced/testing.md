@@ -41,3 +41,20 @@ yarn deploy --outputs-file outputs.json
 ```
 
 You can now parse the JSON file to get the value of the `ApiUrl` and use it in your integration tests.
+
+## Stacks tests
+
+If you'd like to test your stack code itself without deploying anything you can do so with [`aws-cdk-lib/assertions`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.assertions-readme.html)
+
+Here is an example test
+
+```ts
+import { Stack, App } from "@serverless-stack/resources"
+
+test("cdk.queue: is undefined", async () => {
+  const app = new App()
+  const stack = new MyStack(app)
+  const template = Template.fromStack(MyStack);
+  template.resourceCountIs("AWS::SQS::Queue, 1);
+});
+```
