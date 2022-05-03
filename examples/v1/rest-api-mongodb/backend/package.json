@@ -2,8 +2,9 @@
   "name": "@rest-api-mongodb/backend",
   "version": "0.0.0",
   "type": "module",
+  "scripts": {},
   "dependencies": {
-    "aws-sdk": "^2.1125.0",
+    "aws-sdk": "^2.1126.0",
     "mongodb": "^4.5.0"
   },
   "devDependencies": {

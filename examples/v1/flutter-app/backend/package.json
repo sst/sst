@@ -2,8 +2,9 @@
   "name": "@flutter-app/backend",
   "version": "0.0.0",
   "type": "module",
+  "scripts": {},
   "dependencies": {
-    "aws-sdk": "^2.1125.0"
+    "aws-sdk": "^2.1126.0"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.95"

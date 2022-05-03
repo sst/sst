@@ -9,8 +9,8 @@
   "devDependencies": {
     "@serverless-stack/cli": "^1.0.0-beta.9",
     "@serverless-stack/resources": "^1.0.0-beta.9",
-    "@tsconfig/node14": "^1.0.1",
-    "typescript": "^4.6.4"
+    "typescript": "^4.6.4",
+    "@tsconfig/node14": "^1.0.1"
   },
   "workspaces": [
     "backend"

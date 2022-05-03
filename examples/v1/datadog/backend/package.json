@@ -2,12 +2,11 @@
   "name": "@datadog/backend",
   "version": "0.0.0",
   "type": "module",
+  "scripts": {},
   "dependencies": {
-    "aws-sdk": "^2.1125.0",
-    "uuid": "^8.3.2"
+    "aws-sdk": "^2.1126.0"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.95",
-    "datadog-cdk-constructs-v2": "^0.3.1"
+    "@types/aws-lambda": "^8.10.95"
   }
 }
