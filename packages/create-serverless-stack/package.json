@@ -1,6 +1,6 @@
 {
   "name": "create-serverless-stack",
-  "version": "1.0.0-beta.24",
+  "version": "1.0.0-beta.25",
   "homepage": "https://serverless-stack.com",
   "description": "Create Serverless Stack apps.",
   "bin": {
@@ -29,5 +29,5 @@
     "unzipper": "^0.10.11",
     "yargs": "^15.4.1"
   },
-  "gitHead": "09f1e601a38a7fac1c161cfddd1435804cdcfb56"
+  "gitHead": "8ac2d0abc11d5de721c87658bb445e3d6c211dcf"
 }

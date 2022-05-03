@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/node",
-  "version": "1.0.0-beta.24",
+  "version": "1.0.0-beta.25",
   "type": "module",
   "exports": {
     "./*": "./*/index.js"
@@ -22,5 +22,5 @@
     "@types/aws-lambda": "^8.10.90",
     "@types/node": "^17.0.10"
   },
-  "gitHead": "6f33aa5fbc00b7eb58dcb043e739e88ad9389093"
+  "gitHead": "8ac2d0abc11d5de721c87658bb445e3d6c211dcf"
 }
