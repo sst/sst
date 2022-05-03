@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "sst:start": "sst start"
+    "start": "sst start",
+    "build": "sst build",
+    "deploy": "sst deploy",
+    "remove": "sst remove",
+    "console": "sst console"
   }
 }
