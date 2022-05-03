@@ -14,8 +14,8 @@ program
   .name("create-sst")
   .description("CLI to create SST projects")
   .option("--examples", "Only show example templates", false)
-  .argument("[string]", "The template to clone")
-  .argument("[string]", "The destination directory")
+  .argument("[template]", "The template to clone")
+  .argument("[destination]", "The destination directory")
   .action(async (preset, destination) => {
     const opts = program.opts();
     const cwd = process.cwd();
@@ -41,12 +41,14 @@ program
         type: "list",
         when: !preset,
         choices: presets.flat(),
+        default: "typescript-starter",
         message: "Select a template",
       },
       {
         name: "destination",
         type: "input",
         when: !destination,
+        default: "my-sst-app",
         message: "Destination directory",
       },
     ]);

@@ -73,9 +73,14 @@ export async function execute(opts) {
   for (const step of steps) {
     switch (step.type) {
       case "extract": {
-        await fs.cp(path.join(source, "templates"), opts.destination, {
-          recursive: true,
-        });
+        const templates = path.join(source, "templates");
+        const files = await listFiles(templates);
+        for (const file of files) {
+          const relative = path.relative(templates, file);
+          const destination = path.join(opts.destination, relative);
+          await fs.mkdir(path.dirname(destination), { recursive: true });
+          await fs.copyFile(file, destination);
+        }
         break;
       }
       case "extend": {
@@ -118,21 +123,28 @@ export async function execute(opts) {
   if (!opts.extended) {
     const app = path.basename(opts.destination);
 
-    async function replace(dir) {
-      for (const file of await fs.readdir(dir)) {
-        const p = path.join(dir, file);
-        const stat = await fs.stat(p);
-        if (stat.isDirectory()) {
-          await replace(p);
-          continue;
-        }
-        const contents = await fs.readFile(p, "utf8");
-        await fs.writeFile(p, contents.replace(/\@\@app/g, app));
-      }
+    for (const file of await listFiles(opts.destination)) {
+      const contents = await fs.readFile(file, "utf8");
+      await fs.writeFile(file, contents.replace(/\@\@app/g, app));
     }
-
-    await replace(opts.destination);
   }
+}
+
+/**
+ * @param {string} dir
+ */
+async function listFiles(dir) {
+  const results = [];
+  for (const file of await fs.readdir(dir)) {
+    const p = path.join(dir, file);
+    const stat = await fs.stat(p);
+    if (stat.isDirectory()) {
+      results.push(...(await listFiles(p)));
+      continue;
+    }
+    results.push(p);
+  }
+  return results;
 }
 
 /**
