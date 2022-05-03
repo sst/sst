@@ -41,7 +41,6 @@ export const DotnetHandler: Definition = (opts: any) => {
   };
   return {
     build: async () => {
-      fs.removeSync(dir);
       fs.mkdirpSync(dir);
       return buildAsync(opts, cmd);
     },
