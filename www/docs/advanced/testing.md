@@ -50,11 +50,12 @@ Here is an example test
 
 ```ts
 import { Stack, App } from "@serverless-stack/resources"
+import { Template } from "aws-cdk-lib/assertions"
 
-test("cdk.queue: is undefined", async () => {
+test("queue exists", async () => {
   const app = new App()
   const stack = new MyStack(app)
   const template = Template.fromStack(MyStack);
-  template.resourceCountIs("AWS::SQS::Queue, 1);
+  template.resourceCountIs("AWS::SQS::Queue", 1);
 });
 ```
