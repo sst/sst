@@ -440,6 +440,9 @@ async function printDeployResults(stackStates) {
       // Print StaticSite environment outputs
       environmentData
         .filter(({ stack }) => stack === name)
+        .filter(
+          ({ environmentOutputs }) => Object.keys(environmentOutputs).length > 0
+        )
         .forEach(({ id, environmentOutputs }) => {
           logger.info(`  ${id}:`);
           Object.keys(environmentOutputs)
