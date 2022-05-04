@@ -5,7 +5,7 @@ slug: /constructs
 ---
 
 :::note
-This is the SST v1 Constructs doc. If you are using v0.x, see the [Constructs doc here](/constructs).
+This is the SST v1 Constructs doc. If you are using v0.x, see the [Constructs doc here](/constructs/v0).
 :::
 
 Constructs are the basic building blocks of SST apps. Each construct consists of multiple AWS resources to make up a functional unit. SST picks sensible defaults for the underlying resources, so you are not exposed to all the complexity up front.
