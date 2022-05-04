@@ -50,11 +50,6 @@ module.exports = {
           activeBaseRegex: "^/constructs$|^/constructs/(?!v0)",
         },
         {
-          to: "/constructs/v0",
-          label: "v0 Constructs",
-          position: "left",
-        },
-        {
           href: config.guide,
           label: "Guide",
           position: "left",

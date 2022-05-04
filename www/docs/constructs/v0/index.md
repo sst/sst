@@ -1,5 +1,5 @@
 ---
-title: Overview
+title: v0 Constructs
 description: "Docs for the constructs in the @serverless-stack/resources package"
 slug: /constructs/v0
 hide_table_of_contents: true
