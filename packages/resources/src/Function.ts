@@ -605,7 +605,8 @@ export class Function extends lambda.Function implements SSTConstruct {
     const localId = path.posix
       .join(scope.node.path, id)
       .replace(/\$/g, "-")
-      .replace(/\//g, "-");
+      .replace(/\//g, "-")
+      .replace(/\./g, "-");
 
     // Handle local development (ie. sst start)
     // - set runtime to nodejs12.x for non-Node runtimes (b/c the stub is in Node)
