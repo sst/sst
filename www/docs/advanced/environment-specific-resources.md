@@ -12,15 +12,11 @@ Here are a couple of examples on how to do that.
 For example, set a Lambda function's memory size based on the environment.
 
 ```js {7} title="stacks/MyStack.js"
-class MyStack extends sst.Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
-
-    new sst.Function(this, "MyFunction", {
-      handler: "src/lambda.main",
-      memorySize: scope.stage === "prod" ? 2048 : 256,
-    });
-  }
+export function MyStack(ctx) {
+  new sst.Function(ctx.stack, "MyFunction", {
+    handler: "src/lambda.main",
+    memorySize: ctx.app.stage === "prod" ? 2048 : 256,
+  });
 }
 ```
 
@@ -29,19 +25,15 @@ class MyStack extends sst.Stack {
 For example, run a cron job to perform a periodic task only in the `prod` environment.
 
 ```js {5-10} title="stacks/MyStack.js"
-class MyStack extends sst.Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
-
-    if (scope.stage === "prod") {
-      new Cron(this, "Cron", {
-        schedule: "rate(1 minute)",
-        job: "src/lambda.main",
-      });
-    }
-
-    // Add more resources
+export function MyStack(ctx) {
+  if (ctx.app.stage === "prod") {
+    new Cron(ctx.stack, "Cron", {
+      schedule: "rate(1 minute)",
+      job: "src/lambda.main",
+    });
   }
+
+  // Add more resources
 }
 ```
 
@@ -68,17 +60,13 @@ Here is an example of creating a VPC in the `dev` stage, and sharing it with the
 ```js title="stacks/VPCStack.js"
 import * as ec2 from "@aws-cdk/aws-ec2";
 
-class VPCStack extends sst.Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
-
-    if (scope.stage === "dev") {
-      this.vpc = new ec2.Vpc(this, "VPC");
-    }
-    else if (scope.stage.startsWith("dev-feature-")) {
-      const vpcId = ""; // look up the ID of the VPC created in the "dev" stage
-      this.vpc = ec2.Vpc.fromLookup(this, 'VPC', { vpcId });
-    }
+function MyStack(ctx) {
+  if (scope.stage === "dev") {
+    ctx.stack.vpc = new ec2.Vpc(ctx.stack, "VPC");
+  }
+  else if (scope.stage.startsWith("dev-feature-")) {
+    const vpcId = ""; // look up the ID of the VPC created in the "dev" stage
+    ctx.stack.vpc = ec2.Vpc.fromLookup(ctx.stack, 'VPC', { vpcId });
   }
 }
 ```

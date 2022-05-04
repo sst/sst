@@ -36,15 +36,14 @@ SST is an extension of [AWS CDK](https://aws.amazon.com/cdk/). It's fairly simpl
    }
    ```
 
-3. Stacks extend `sst.Stack`
+3. Stacks are written as functions
 
-   Your stack classes extend [`sst.Stack`](constructs/Stack.md) instead of `cdk.Stack`. Here is what the JavaScript version looks like.
+   Your classes are written as functions instead of `cdk.Stack`. Here is what the JavaScript version looks like.
 
    ```js
    import * as sst from "@serverless-stack/resources";
 
-   export default class MyStack extends sst.Stack {
-     constructor(scope, id, props) {}
+   export function MyStack(ctx) {
    }
    ```
 
@@ -53,8 +52,7 @@ SST is an extension of [AWS CDK](https://aws.amazon.com/cdk/). It's fairly simpl
    ```ts
    import * as sst from "@serverless-stack/resources";
 
-   export class MyStack extends sst.Stack {
-     constructor(scope: sst.App, id: string, props?: sst.StackProps) {}
+   export function MyStack(ctx: sst.StackContext) {
    }
    ```
 

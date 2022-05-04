@@ -13,25 +13,21 @@ All CDK constructs and CloudFormation resources are supported in SST apps.
 
 Here is an example of creating a VPC using the CDK construct, and then using the VPC inside the [`Api`](../constructs/Api.md) construct.
 
-```js {13} title="stacks/MyStack.js"
+```js title="stacks/MyStack.js"
 import { Vpc } from "@aws-cdk/aws-ec2";
 import { Api } from "@serverless-stack/resources";
 
-class MyStack extends sst.Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
+function Stack(ctx) {
+  // Create a VPC using CDK construct
+  const vpc = new Vpc(this, "VPC");
 
-    // Create a VPC using CDK construct
-    const vpc = new Vpc(this, "VPC");
-
-    // Create an Api using SST construct
-    const api = new Api(this, "Api", {
-      defaultFunctionProps: { vpc },
-      routes: {
-        "GET /": "src/lambda.main",
-      },
-    });
-  }
+  // Create an Api using SST construct
+  const api = new Api(this, "Api", {
+    defaultFunctionProps: { vpc },
+    routes: {
+      "GET /": "src/lambda.main",
+    },
+  });
 }
 ```
 

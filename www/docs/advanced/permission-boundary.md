@@ -12,22 +12,18 @@ To set a permission boundary on all IAM users and roles created in your [`Stack`
 ```js title="stacks/MyStack.js"
 import * as iam from '@aws-cdk/aws-iam';
 
-class MyStack extends sst.Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
+export function MyStack(ctx) {
+  const boundary = new iam.ManagedPolicy(ctx.stack, "Boundary", {
+    statements: [
+      new iam.PolicyStatement({
+        effect: iam.Effect.DENY,
+        actions: ["iam:*"],
+        resources: ["*"],
+      }),
+    ],
+  });
 
-    const boundary = new iam.ManagedPolicy(this, "Boundary", {
-      statements: [
-        new iam.PolicyStatement({
-          effect: iam.Effect.DENY,
-          actions: ["iam:*"],
-          resources: ["*"],
-        }),
-      ],
-    });
-
-    iam.PermissionsBoundary.of(this).apply(boundary);
-  }
+  iam.PermissionsBoundary.of(ctx.stack).apply(boundary);
 }
 ```
 

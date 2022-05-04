@@ -137,17 +137,13 @@ The `process.env.IS_LOCAL` is set in both the CDK and Lambda function code.
 So in your CDK code you can do something like. 
 
 ``` js title="stacks/MyStack.js" {6}
-export default class MyStack extends sst.Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
+function Stack(ctx) {
+  // Increase the timeout locally
+  const timeout = process.env.IS_LOCAL
+    ? 900
+    : 15;
 
-    // Increase the timeout locally
-    const timeout = process.env.IS_LOCAL
-      ? 900
-      : 15;
-
-    // Rest of the resources
-  }
+  // Rest of the resources
 }
 ```
 

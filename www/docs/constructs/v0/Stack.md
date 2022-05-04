@@ -74,28 +74,20 @@ This is by design. The stacks in SST are meant to be re-deployed for multiple st
 The stage, region, and app name can be accessed through the app object. In your stacks (for example, `stacks/MyStack.js`) you can use.
 
 ```js
-class MyStack extends sst.Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
-
-    scope.stage;
-    scope.region;
-    scope.name;
-  }
+export function MyStack(ctx) {
+  ctx.app.stage;
+  ctx.app.region;
+  ctx.app.name;
 }
 ```
 
 And in TypeScript.
 
 ```ts
-class MyStack extends sst.Stack {
-  constructor(scope: sst.App, id: string, props?: sst.StackProps) {
-    super(scope, id, props);
-
-    scope.stage;
-    scope.region;
-    scope.name;
-  }
+export function MyStack(ctx: StackContext) {
+  ctx.app.stage;
+  ctx.app.region;
+  ctx.app.name;
 }
 ```
 
@@ -106,19 +98,14 @@ You can use this to conditionally add stacks or resources to your app.
 You can set some function props and have them apply to all the functions in a stack. This **must be called before** any functions have been added to the stack; so that all functions will be created with these defaults.
 
 ```js
-class MyStack extends sst.Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
-
-    this.setDefaultFunctionProps({
-      timeout: 20,
-      memorySize: 512,
-      runtime: "go1.x",
-      environment: { TABLE_NAME: "NOTES_TABLE" },
-    });
-
-    // Start adding resources
-  }
+function MyStack(ctx) {
+  ctx.stack.setDefaultFunctionProps({
+    timeout: 20,
+    memorySize: 512,
+    runtime: "go1.x",
+    environment: { TABLE_NAME: "NOTES_TABLE" },
+  });
+  // Start adding resources
 }
 ```
 
@@ -131,32 +118,26 @@ You can also use [`addDefaultFunctionPermissions`](#adddefaultfunctionpermission
 However, they only affect the functions that are created after the call.
 
 ```js
-class MyStack extends sst.Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
+function MyStack(ctx) {
+  new Api(ctx.stack, "Api1", {
+    routes: {
+      "GET /": "src/hello.main",
+    },
+  });
 
-    new Api(this, "Api1", {
-      routes: {
-        "GET /": "src/hello.main",
-      },
-    });
+  ctx.stack.addDefaultFunctionEnv({
+    TABLE_NAME: "NOTES_TABLE"
+  });
 
-    this.addDefaultFunctionEnv({
-      TABLE_NAME: "NOTES_TABLE"
-    });
+  ctx.stack.addDefaultFunctionPermissions(["s3"]);
 
-    this.addDefaultFunctionPermissions(["s3"]);
+  ctx.stack.addDefaultFunctionLayers([mylayer]);
 
-    this.addDefaultFunctionLayers([mylayer]);
-
-    new Api(this, "Api2", {
-      routes: {
-        "GET /": "src/world.main",
-      },
-    });
-
-    // Add more resources
-  }
+  new Api(ctx.stack, "Api2", {
+    routes: {
+      "GET /": "src/world.main",
+    },
+  });
 }
 ```
 
@@ -176,35 +157,27 @@ This invokes the `logicalPrefixedName` method in [`App`](constructs/App.md) that
 
 ### Adding stack outputs
 
-```js {8-11}
-export default class MyStack extends Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
+```js
+function MyStack(ctx) {
+  const topic = new Topic(ctx.stack, "Topic");
+  const queue = new Queue(stc.stack, "Queue");
 
-    const topic = new Topic(this, "Topic");
-    const queue = new Queue(this, "Queue");
-
-    this.addOutputs({
-      TopicArn: topic.snsTopic.topicArn,
-      QueueArn: topic.sqsQueue.queueArn,
-    });
-  }
+  ctx.stack.addOutputs({
+    TopicArn: topic.snsTopic.topicArn,
+    QueueArn: topic.sqsQueue.queueArn,
+  });
 }
 ```
 
 ### Adding stack exports
 
 ```js {7-9}
-export default class MyStack extends Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
+function MyStack(ctx) {
+  const topic = new Topic(ctx.stack, "Topic");
 
-    const topic = new Topic(this, "Topic");
-
-    this.addOutputs({
-      TopicArn: { value: topic.snsTopic.topicArn, exportName: "MyTopicArn" },
-    });
-  }
+  ctx.stack.addOutputs({
+    TopicArn: { value: topic.snsTopic.topicArn, exportName: "MyTopicArn" },
+  });
 }
 ```
 
