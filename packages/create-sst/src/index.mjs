@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
-import { exec, execSync } from "child_process";
+import { exec } from "child_process";
 import { applyOperation } from "fast-json-patch/index.mjs";
 
 export function extract() {
@@ -15,6 +15,16 @@ export function extract() {
  *   merge: any
  * }} EditJsonOperation
  */
+
+/**
+ * @param {string} path
+ */
+export function remove(path) {
+  return /** @type {const} */ ({
+    type: "remove",
+    path,
+  });
+}
 
 /**
  * @param {{
@@ -54,7 +64,7 @@ export function extend(path) {
 }
 
 /**
- * @typedef {ReturnType<typeof patch> | ReturnType<typeof install> | ReturnType<typeof extract> | ReturnType<typeof extend>} Step
+ * @typedef {ReturnType<typeof remove> | ReturnType<typeof patch> | ReturnType<typeof install> | ReturnType<typeof extract> | ReturnType<typeof extend>} Step
  */
 
 /**
@@ -88,6 +98,13 @@ export async function execute(opts) {
           source: step.path,
           destination: opts.destination,
           extended: true,
+        });
+        break;
+      }
+      case "remove": {
+        await fs.rm(path.join(opts.destination, step.path), {
+          recursive: true,
+          force: true,
         });
         break;
       }
