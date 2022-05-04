@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-go-build",
   "private": true,
   "description": "tests",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "scripts": {
     "start": "sst start",
     "build": "sst build",
@@ -11,8 +11,8 @@
     "cdk": "sst cdk"
   },
   "dependencies": {
-    "@serverless-stack/cli": "1.0.0",
-    "@serverless-stack/resources": "1.0.0"
+    "@serverless-stack/cli": "1.0.1",
+    "@serverless-stack/resources": "1.0.1"
   },
   "license": "ISC"
 }
