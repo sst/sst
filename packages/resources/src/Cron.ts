@@ -46,7 +46,7 @@ export interface CronProps {
    * @example
    * ```js
    * new Cron(stack, "Cron", {
-   *   function : "src/function.handler",
+   *   job : "src/function.handler",
    * })
    * ```
    */

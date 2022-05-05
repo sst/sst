@@ -1814,6 +1814,25 @@ new Cron(this, "Cron", {
 });
 ```
 
+#### Job
+- Always use full props format
+
+```js
+// from
+job: {
+  handler: "lambda.main",
+  timeout: 10,
+}
+
+// to
+job: {
+  function: {
+    handler: "lambda.main",
+    timeout: 10,
+  }
+}
+```
+
 #### Properties
 - Moved eventsRule ⇒ cdk.rule
 
@@ -1892,6 +1911,28 @@ targets: [
 targets: {
   "0": "src/target1.main",
   "1": "src/target2.main",
+}
+```
+
+- Always use full props format
+
+```js
+// from
+targets: {
+  myTarget: {
+    handler: "lambda.main",
+    timeout: 10,
+  }
+}
+
+// to
+targets: {
+  myTarget: {
+    function: {
+      handler: "lambda.main",
+      timeout: 10,
+    }
+  }
 }
 ```
 
@@ -2039,6 +2080,24 @@ stream.cdk.stream;
 ```
 
 #### Consumer
+- Always use full props format
+
+```js
+// from
+consumer: {
+  handler: "lambda.main",
+  timeout: 10,
+}
+
+// to
+consumer: {
+  function: {
+    handler: "lambda.main",
+    timeout: 10,
+  }
+}
+```
+
 - Moved consumerProps ⇒ cdk.eventSource
 ```js
 // from
@@ -2243,6 +2302,28 @@ const table = new Table(this, "Notes", {
 ```
 
 #### Consumers
+- Always use full props format
+
+```js
+// from
+consumers: {
+  myConsumer: {
+    handler: "lambda.main",
+    timeout: 10,
+  }
+}
+
+// to
+consumers: {
+  myConsumer: {
+    function: {
+      handler: "lambda.main",
+      timeout: 10,
+    }
+  }
+}
+```
+
 - QueueProps.consumers[ANY].consumerProps ⇒ QueueProps.consumers[ANY].cdk.eventSource
 ```js
 // from
@@ -2306,6 +2387,28 @@ subscribers: [
 notifications: {
   "0": "src/subscriber1.main",
   "1": "src/subscriber2.main",
+}
+```
+
+- Always use full props format
+
+```js
+// from
+subscribers: {
+  mySubscriber: {
+    handler: "lambda.main",
+    timeout: 10,
+  }
+}
+
+// to
+subscribers: {
+  mySubscriber: {
+    function: {
+      handler: "lambda.main",
+      timeout: 10,
+    }
+  }
 }
 ```
 
