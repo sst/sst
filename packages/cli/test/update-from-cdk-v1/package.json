@@ -9,7 +9,7 @@
   "dependencies": {
     "@serverless-stack/cli": "1.0.2",
     "@serverless-stack/resources": "1.0.2",
-    "aws-cdk": "2.20.0"
+    "aws-cdk": "2.22.0"
   },
   "license": "ISC"
 }
