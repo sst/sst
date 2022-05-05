@@ -58,7 +58,7 @@ export interface NextjsSiteProps {
     /**
      * Override the default CloudFront cache policies created internally.
      * @example
-     * ### Reusng CloudFront cache policies
+     * ### Reusing CloudFront cache policies
      *
      * CloudFront has a limit of 20 cache policies per AWS account. This is a hard limit, and cannot be increased. Each `NextjsSite` creates 3 cache policies. If you plan to deploy multiple Next.js sites, you can have the constructs share the same cache policies by reusing them across sites.
      *
@@ -87,6 +87,30 @@ export interface NextjsSiteProps {
       imageCachePolicy?: cloudfront.ICachePolicy;
       lambdaCachePolicy?: cloudfront.ICachePolicy;
     };
+    /**
+     * Override the default CloudFront image origin request policy created internally
+     * @example
+     * ### Reusing CloudFront image cache policy
+     *
+     * CloudFront has a limit of 20 origin request policies per AWS account. This is a hard limit, and cannot be increased. Each `NextjsSite` creates 3 cache policies. If you plan to deploy multiple Next.js sites, you can have the constructs share the same cache policies by reusing them across sites.
+     *
+     * ```js
+     * import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
+     *
+     * const imageOriginRequestPolicy = new cloudfront.OriginRequestPolicy(stack, "ImageOriginRequest", NextjsSite.imageOriginRequestPolicyProps);
+     *
+     * new NextjsSite(stack, "Site1", {
+     *   path: "path/to/site1",
+     *   imageOriginRequestPolicy,
+     * });
+     *
+     * new NextjsSite(stack, "Site2", {
+     *   path: "path/to/site2",
+     *   imageOriginRequestPolicy,
+     * });
+     * ```
+     */
+    imageOriginRequestPolicy?: cloudfront.IOriginRequestPolicy;
     /**
      * Override the default settings this construct uses to create the CDK `Queue` internally.
      */
@@ -260,6 +284,15 @@ export class NextjsSite extends Construct implements SSTConstruct {
     enableAcceptEncodingGzip: true,
     comment: "SST NextjsSite Lambda Default Cache Policy",
   };
+
+  /**
+   * The default CloudFront image origin request policy properties for Lambda@Edge.
+   */
+  public static imageOriginRequestPolicyProps: cloudfront.OriginRequestPolicyProps =
+    {
+      queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.all(),
+      comment: "SST NextjsSite Lambda Default Origin Request Policy",
+    };
 
   public readonly cdk: {
     /**
@@ -981,7 +1014,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
       },
     ];
 
-    // Build cache policy
+    // Build cache policies
     const staticCachePolicy =
       cdk?.cachePolicies?.staticCachePolicy ??
       this.createCloudFrontStaticCachePolicy();
@@ -991,6 +1024,11 @@ export class NextjsSite extends Construct implements SSTConstruct {
     const lambdaCachePolicy =
       cdk?.cachePolicies?.lambdaCachePolicy ??
       this.createCloudFrontLambdaCachePolicy();
+
+    // Build origin request policy
+    const imageOriginRequestPolicy =
+      cdk?.imageOriginRequestPolicy ??
+      this.createCloudFrontImageOriginRequestPolicy();
 
     // Create Distribution
     return new cloudfront.Distribution(this, "Distribution", {
@@ -1023,14 +1061,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
           cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
           compress: true,
           cachePolicy: imageCachePolicy,
-          originRequestPolicy: new cloudfront.OriginRequestPolicy(
-            this,
-            "ImageOriginRequest",
-            {
-              queryStringBehavior:
-                cloudfront.OriginRequestQueryStringBehavior.all(),
-            }
-          ),
+          originRequestPolicy: imageOriginRequestPolicy,
           edgeLambdas: [
             {
               eventType: cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST,
@@ -1104,6 +1135,14 @@ export class NextjsSite extends Construct implements SSTConstruct {
       this,
       "LambdaCache",
       NextjsSite.lambdaCachePolicyProps
+    );
+  }
+
+  private createCloudFrontImageOriginRequestPolicy(): cloudfront.OriginRequestPolicy {
+    return new cloudfront.OriginRequestPolicy(
+      this,
+      "ImageOriginRequest",
+      NextjsSite.imageOriginRequestPolicyProps
     );
   }
 
