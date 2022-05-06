@@ -187,7 +187,10 @@ export interface ApiDomainProps extends apigV2Domain.CustomDomainProps {}
 export interface ApiAccessLogProps extends apigV2AccessLog.AccessLogProps {}
 
 export interface ApiProps<
-  Authorizers extends Record<string, ApiAuthorizer> = Record<string, never>,
+  Authorizers extends Record<string, ApiAuthorizer> = Record<
+    string,
+    ApiAuthorizer
+  >,
   AuthorizerKeys = keyof Authorizers
 > {
   /**
@@ -335,7 +338,9 @@ export interface ApiProps<
     authorizer?:
       | "none"
       | "iam"
-      | (string extends AuthorizerKeys ? never : AuthorizerKeys);
+      | (string extends AuthorizerKeys
+          ? Omit<AuthorizerKeys, "none" | "iam">
+          : AuthorizerKeys);
     /**
      * An array of scopes to include in the authorization when using `user_pool` or `jwt` authorizers. These will be merged with the scopes from the attached authorizer.
      * @default []
@@ -426,11 +431,13 @@ export type ApiRouteProps<AuthorizerKeys> =
   | ApiHttpRouteProps<AuthorizerKeys>
   | ApiAlbRouteProps<AuthorizerKeys>;
 
-interface ApiBaseRouteProps<AuthorizersKeys = never> {
+interface ApiBaseRouteProps<AuthorizerKeys = string> {
   authorizer?:
     | "none"
     | "iam"
-    | (string extends AuthorizersKeys ? never : AuthorizersKeys);
+    | (string extends AuthorizerKeys
+        ? Omit<AuthorizerKeys, "none" | "iam">
+        : AuthorizerKeys);
   authorizationScopes?: string[];
 }
 
@@ -448,7 +455,7 @@ interface ApiBaseRouteProps<AuthorizersKeys = never> {
  * });
  * ```
  */
-export interface ApiFunctionRouteProps<AuthorizersKeys = never>
+export interface ApiFunctionRouteProps<AuthorizersKeys = string>
   extends ApiBaseRouteProps<AuthorizersKeys> {
   type?: "function";
   /**
@@ -548,7 +555,10 @@ export interface ApiAlbRouteProps<AuthorizersKeys>
  * ```
  */
 export class Api<
-    Authorizers extends Record<string, ApiAuthorizer> = Record<string, never>
+    Authorizers extends Record<string, ApiAuthorizer> = Record<
+      string,
+      ApiAuthorizer
+    >
   >
   extends Construct
   implements SSTConstruct
@@ -1164,12 +1174,16 @@ export class Api<
       };
     }
 
-    if (!this.props.authorizers || !this.props.authorizers[authorizerKey]) {
+    if (
+      !this.props.authorizers ||
+      !this.props.authorizers[authorizerKey as string]
+    ) {
       throw new Error(`Cannot find authorizer "${authorizerKey}"`);
     }
 
     const authorizer = this.authorizersData[authorizerKey as string];
-    const authorizationType = this.props.authorizers[authorizerKey].type;
+    const authorizationType =
+      this.props.authorizers[authorizerKey as string].type;
     const authorizationScopes =
       authorizationType === "jwt" || authorizationType === "user_pool"
         ? routeProps.authorizationScopes ||

@@ -6,7 +6,7 @@ import { Api, ApiFunctionRouteProps, ApiProps } from "./Api";
 import { Function as Fn, FunctionDefinition } from "./Function";
 import { Validate } from "./util/validate";
 
-export interface GraphQLApiProps extends Omit<ApiProps<never>, "routes"> {
+export interface GraphQLApiProps extends Omit<ApiProps, "routes"> {
   /**
    * Path to graphql-codegen configuration file
    *
