@@ -195,6 +195,23 @@ Note that the certificate needs be created in the `us-east-1`(N. Virginia) regio
 
 Also note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
 
+### Configuring the Lambda Functions
+
+Configure the internally created CDK [`Lambda Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html) instance.
+
+```js {4-8}
+new NextjsSite(stack, "Site", {
+  path: "path/to/site",
+  defaults: {
+    function: {
+      timeout: 20,
+      memorySize: 2048,
+      permissions: ["sns"],
+    }
+  },
+});
+```
+
 ### Permissions
 
 You can attach a set of [permissions](Permissions.md) to allow the Next.js API routes and Server Side rendering `getServerSideProps` to access other AWS resources.

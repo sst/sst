@@ -57,30 +57,6 @@ export interface NextjsSiteProps {
     distribution?: NextjsCdkDistributionProps;
     /**
      * Override the default CloudFront cache policies created internally.
-     * @example
-     * ### Reusng CloudFront cache policies
-     *
-     * CloudFront has a limit of 20 cache policies per AWS account. This is a hard limit, and cannot be increased. Each `NextjsSite` creates 3 cache policies. If you plan to deploy multiple Next.js sites, you can have the constructs share the same cache policies by reusing them across sites.
-     *
-     * ```js
-     * import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
-     *
-     * const cachePolicies = {
-     *   staticCachePolicy: new cloudfront.CachePolicy(stack, "StaticCache", NextjsSite.staticCachePolicyProps),
-     *   imageCachePolicy: new cloudfront.CachePolicy(stack, "ImageCache", NextjsSite.imageCachePolicyProps),
-     *   lambdaCachePolicy: new cloudfront.CachePolicy(stack, "LambdaCache", NextjsSite.lambdaCachePolicyProps),
-     * };
-     *
-     * new NextjsSite(stack, "Site1", {
-     *   path: "path/to/site1",
-     *   cfCachePolicies: cachePolicies,
-     * });
-     *
-     * new NextjsSite(stack, "Site2", {
-     *   path: "path/to/site2",
-     *   cfCachePolicies: cachePolicies,
-     * });
-     * ```
      */
     cachePolicies?: {
       staticCachePolicy?: cloudfront.ICachePolicy;
@@ -137,27 +113,6 @@ export interface NextjsSiteProps {
    */
   environment?: { [key: string]: string };
   defaults?: {
-    /**
-     * The default function props to be applied to all the Lambda Functions created by this construct.
-     *
-     * @example
-     * ### Configuring the Lambda Functions
-     *
-     * Configure the internally created CDK [`Lambda Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html) instance.
-     *
-     * ```js {4-8}
-     * new NextjsSite(stack, "Site", {
-     *   path: "path/to/site",
-     *   defaults: {
-     *     function: {
-     *       timeout: 20,
-     *       memorySize: 2048,
-     *       permissions: ["sns"],
-     *     }
-     *   },
-     * });
-     * ```
-     */
     function?: {
       timeout?: number;
       memorySize?: number;
@@ -166,6 +121,14 @@ export interface NextjsSiteProps {
   };
   /**
    * When running `sst start`, a placeholder site is deployed. This is to ensure that the site content remains unchanged, and subsequent `sst start` can start up quickly.
+   *
+   * @example
+   * ```js {3-6}
+   * new NextjsSite(stack, "NextSite", {
+   *   path: "path/to/site",
+   *   disablePlaceholder: true,
+   * });
+   * ```
    */
   disablePlaceholder?: boolean;
   /**
