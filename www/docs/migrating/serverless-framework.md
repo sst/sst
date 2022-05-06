@@ -203,7 +203,7 @@ new sst.Topic(stack, "MyTopic", {
   subscribers: {
     subscriber1: "src/subscriber1.main",
     subscriber2: "src/subscriber2.main"
-  ],
+  },
 });
 ```
 
