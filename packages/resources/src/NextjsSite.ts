@@ -123,7 +123,7 @@ export interface NextjsSiteProps {
    * When running `sst start`, a placeholder site is deployed. This is to ensure that the site content remains unchanged, and subsequent `sst start` can start up quickly.
    *
    * @example
-   * ```js {3-6}
+   * ```js {3}
    * new NextjsSite(stack, "NextSite", {
    *   path: "path/to/site",
    *   disablePlaceholder: true,

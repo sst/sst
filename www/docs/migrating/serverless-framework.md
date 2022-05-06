@@ -59,7 +59,7 @@ functions:
 You can now create a function in your SST app using the same source.
 
 ```js title="SST"
-new sst.Function(this, "MySnsLambda", {
+new sst.Function(stack, "MySnsLambda", {
   handler: "src/lambda1.main",
 });
 ```
@@ -116,10 +116,12 @@ For example:
 // all the Lambda functions in the new API.
 import { Fn } from "aws-cdk-lib";
 
-new sst.Api(this, "MyApi", {
-  defaultFunctionProps:
-    environment: {
-      myKey: Fn.importValue("exported_key_in_serverless_framework")
+new sst.Api(stack, "MyApi", {
+  defaults:
+    function: {
+      environment: {
+        myKey: Fn.importValue("exported_key_in_serverless_framework")
+      }
     }
   },
   routes: {
@@ -138,12 +140,12 @@ You might also want to reference a newly created resource in SST in Serverless F
 
 ```js title="SST"
 // Export in an SST stack
-import { CfnOutput } from "aws-cdk-lib";
-
-new CfnOutput(this, "TableName", {
-  value: bucket.bucketArn,
-  exportName: "MyBucketArn",
-});
+stack.addOutputs({
+  TableName: {
+    value: bucket.bucketArn,
+    exportName: "MyBucketArn",
+  }
+})
 ```
 
 ```js title="Serverless Framework"
@@ -156,15 +158,27 @@ new CfnOutput(this, "TableName", {
 And finally, to reference stack outputs across stacks in your SST app.
 
 ```js title="StackA.js"
-this.bucket = new s3.Bucket(this, "MyBucket");
+import { StackContext, Bucket } from "@serverless-stack/resources";
+
+export function StackA(ctx: StackContext) {
+  const bucket = new s3.Bucket(ctx.stack, "MyBucket");
+
+  return { bucket };
+}
 ```
 
 ```js title="StackB.js"
-// stackA's bucket is passed to stackB
-const { bucket } = this.props;
-// SST will implicitly set the exports in stackA
-// and imports in stackB
-bucket.bucketArn;
+import { StackContext, use } from "@serverless-stack/resources";
+import { StackA } from "./StackA"
+
+export function StackA(ctx: StackContext) {
+  // stackA's return value is passed to stackB
+  const { bucket } = use(StackA)
+
+  // SST will implicitly set the exports in stackA
+  // and imports in stackB
+  bucket.bucketArn;
+}
 ```
 
 ### Reference Serverless Framework resources
@@ -184,9 +198,12 @@ const snsTopic = Topic.fromTopicArn(
 );
 
 // Add 2 new subscribers
-new sst.Topic(this, "MyTopic", {
+new sst.Topic(stack, "MyTopic", {
   snsTopic,
-  subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
+  subscribers: {
+    subscriber1: "src/subscriber1.main",
+    subscriber2: "src/subscriber2.main"
+  ],
 });
 ```
 
@@ -226,7 +243,7 @@ And you are ready to migrate the `/users` endpoint but don't want to touch the o
 You can add the route you want to migrate, and set a catch all route to proxy requests the rest to the old API.
 
 ```js
-const api = new sst.Api(this, "Api", {
+const api = new sst.Api(stack, "Api", {
   routes: {
     "GET /users": "src/usersList.main",
     // "$default"   : proxy to old api,
@@ -289,7 +306,7 @@ const table = dynamodb.fromTableName(
 );
 
 // Create a Lambda function
-const processor = new sst.Function(this, "Processor", "processor.main");
+const processor = new sst.Function(stack, "Processor", "processor.main");
 
 // Subscribe function to the streams
 processor.addEventSource(
@@ -461,7 +478,7 @@ functions:
 ```
 
 ```js title="SST"
-new Api(this, "Api", {
+new Api(stack, "Api", {
   routes: {
     "GET    /users": "listUsers.main",
     "POST   /users": "createUser.main",
@@ -497,7 +514,7 @@ functions:
 ```
 
 ```js title="SST"
-new ApiGatewayV1Api(this, "Api", {
+new ApiGatewayV1Api(stack, "Api", {
   routes: {
     "GET    /users": "listUsers.main",
     "POST   /users": "createUser.main",
@@ -535,7 +552,7 @@ functions:
 ```
 
 ```js title="SST"
-new WebSocketApi(this, "Api", {
+new WebSocketApi(stack, "Api", {
   routes: {
     $connect: "src/connect.main",
     $default: "src/default.main",
@@ -556,7 +573,7 @@ functions:
 ```
 
 ```js title="SST"
-new Cron(this, "Crawl", {
+new Cron(stack, "Crawl", {
   schedule: "rate(2 hours)",
   job: "crawl.main",
 });
@@ -577,8 +594,11 @@ functions:
 ```
 
 ```js title="SST"
-new Topic(this, "Dispatch", {
-  subscribers: ["subscriber.main", "subscriber2.main"],
+new Topic(stack, "Dispatch", {
+  subscribers: {
+    subscriber1: "subscriber.main",
+    subscriber2: "subscriber2.main"
+  },
 });
 ```
 
@@ -604,7 +624,7 @@ resources:
 ```
 
 ```js title="SST"
-new Queue(this, "MyQueue", {
+new Queue(stack, "MyQueue", {
   consumer: "consumer.main",
 });
 ```
@@ -645,7 +665,7 @@ resources:
 ```
 
 ```js title="SST"
-new Table(this, "MyTable", {
+new Table(stack, "MyTable", {
   fields: {
     userId: TableFieldType.STRING,
     noteId: TableFieldType.STRING,
@@ -678,10 +698,10 @@ functions:
 
 ```js title="SST"
 // Create stream
-const stream = new kinesis.Stream(this, "MyStream");
+const stream = new kinesis.Stream(stack, "MyStream");
 
 // Create Lambda function
-const processor = new sst.Function(this, "Processor", "processor.main");
+const processor = new sst.Function(stack, "Processor", "processor.main");
 
 // Subscribe function to streams
 processor.addEventSource(
@@ -707,10 +727,10 @@ functions:
 
 ```js title="SST"
 // Create bucket
-const bucket = new s3.Bucket(this, "MyBucket");
+const bucket = new s3.Bucket(stack, "MyBucket");
 
 // Create Lambda function
-const processor = new sst.Function(this, "Processor", "processor.main");
+const processor = new sst.Function(stack, "Processor", "processor.main");
 
 // Subscribe function to streams
 processor.addEventSource(
@@ -740,8 +760,8 @@ functions:
 ```
 
 ```js title="SST"
-const processor = new sst.Function(this, "Processor", "processor.main");
-const rule = new events.Rule(this, "Rule", {
+const processor = new sst.Function(stack, "Processor", "processor.main");
+const rule = new events.Rule(stack, "Rule", {
   eventPattern: {
     source: ["aws.ec2"],
     detailType: ["EC2 Instance State-change Notification"],
@@ -763,8 +783,8 @@ functions:
 ```
 
 ```js title="SST"
-const processor = new sst.Function(this, "Processor", "processor.main");
-new SubscriptionFilter(this, "Subscription", {
+const processor = new sst.Function(stack, "Processor", "processor.main");
+new SubscriptionFilter(stack, "Subscription", {
   logGroup,
   destination: new LogsDestinations.LambdaDestination(processor),
   filterPattern: FilterPattern.booleanValue("$.error", true),
@@ -796,9 +816,9 @@ resources:
 ```
 
 ```js title="SST"
-const processor = new sst.Function(this, "Processor", "processor.main");
-const rule = new events.Rule(this, "MyEventRule", {
-  eventBus: new events.EventBus(this, "MyEventBus"),
+const processor = new sst.Function(stack, "Processor", "processor.main");
+const rule = new events.Rule(stack, "MyEventRule", {
+  eventBus: new events.EventBus(stack, "MyEventBus"),
   eventPattern: {
     source: ["acme.transactions.xyz"],
   },
@@ -825,8 +845,8 @@ functions:
 ```
 
 ```js title="SST"
-const processor = new sst.Function(this, "Processor", "processor.main");
-const rule = new events.Rule(this, "rule", {
+const processor = new sst.Function(stack, "Processor", "processor.main");
+const rule = new events.Rule(stack, "rule", {
   eventPattern: {
     source: ["aws.cloudformation"],
     detailType: ["AWS API Call via CloudTrail"],
@@ -852,11 +872,9 @@ functions:
 ```
 
 ```js title="SST"
-new sst.Auth(this, "Auth", {
-  cognito: {
-    triggers: {
-      preSignUp: "src/preSignUp.main",
-    },
+new sst.Auth(stack, "Auth", {
+  triggers: {
+    preSignUp: "src/preSignUp.main",
   },
 });
 ```
@@ -883,7 +901,7 @@ function:
 ```
 
 ```js title="SST"
-new Api(this, "Api", {
+new Api(stack, "Api", {
   customDomain: "api.domain.com",
   routes: {
     "GET /users": "src/listUsers.main",
@@ -907,7 +925,7 @@ resources:
 ```
 
 ```js title="SST"
-new s3.Bucket(this, "S3Bucket", {
+new s3.Bucket(stack, "S3Bucket", {
   bucketName: `photos-${stack.account}`
 };
 ```
@@ -952,21 +970,21 @@ States:
 import * as cdk from "aws-cdk-lib";
 
 // Define each state
-const sWait = new sfn.Wait(this, "Wait", {
+const sWait = new sfn.Wait(stack, "Wait", {
   time: sfn.WaitTime.duration(cdk.Duration.seconds(300)),
 });
-const sHello = new tasks.LambdaInvoke(this, "Hello", {
-  lambdaFunction: new sst.Function(this, "Hello", "hello.main"),
+const sHello = new tasks.LambdaInvoke(stack, "Hello", {
+  lambdaFunction: new sst.Function(stack, "Hello", "hello.main"),
 });
-const sFailed = new sfn.Fail(this, "Failed");
-const sSuccess = new sfn.Succeed(this, "Success");
+const sFailed = new sfn.Fail(stack, "Failed");
+const sSuccess = new sfn.Succeed(stack, "Success");
 
 // Define state machine
-new sfn.StateMachine(this, "StateMachine", {
+new sfn.StateMachine(stack, "StateMachine", {
   definition: sWait
     .next(sHello)
     .next(
-      new sfn.Choice(this, "Job Approved?")
+      new sfn.Choice(stack, "Job Approved?")
         .when(sfn.Condition.stringEquals("$.status", "Approved"), sSuccess)
         .otherwise(sFailed)
     ),
@@ -999,7 +1017,7 @@ const topic = new sns.Topic(stack, "AlarmTopic");
 topic.addSubscription(new subscriptions.EmailSubscription("foo@bar.com"));
 
 // Post a message to topic when an alarm breaches
-new cloudwatch.Alarm(this, "Alarm", {
+new cloudwatch.Alarm(stack, "Alarm", {
   metric: lambda.metricAllErrors(),
   threshold: 100,
   evaluationPeriods: 2,
