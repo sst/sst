@@ -127,10 +127,10 @@ Estimated time: 15 minutes
 
 Prerequisite: Update SST to [v0.59.0](https://github.com/serverless-stack/serverless-stack/releases/tag/v0.59.0) or later
 
-1. Run `npx sst update 1.0.0-beta.21`
+1. Run `npx sst update 1.0.2`
 2. For each SST construct used in your app, find its corresponding section in the [Changelog](#changelog) below, and follow the steps to update.
 3. Ensure that all the constructs have been updated:
-    - For TS projects (ie. using `index.ts`), run `npx run tsc --noEmit` or `yarn run tsc --noEmit` to ensure there are no type errors.
+    - For TS projects (ie. using `index.ts`), run `npx tsc --noEmit` or `yarn run tsc --noEmit` to ensure there are no type errors.
     - For JS projects (ie. using `index.js`), run `npx sst build` or `yarn sst build` to ensure there are no build warnings.
 4. As a final check, run `npx sst diff` prior to deploying and review the proposed changes.
 
