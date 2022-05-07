@@ -735,6 +735,26 @@ new GraphQLApi(stack, "Api", {
 }
 ```
 
+#### Default settings
+- Moved defaultFunctionProps ⇒ WebSocketApiProps.defaults.function
+
+```js
+// from
+{
+  defaultFunctionProps: {
+    timeout: 10
+  },
+}
+// to
+{
+  defaults: {
+    functionProps: {
+      timeout: 10
+    },
+  }
+}
+```
+
 #### Authorizers
 - NONE authorizer
 
@@ -2007,6 +2027,26 @@ bus.attachPermissionsToTarget("myRule", "myTarget", [...]);
 }
 ```
 
+#### Default settings
+- Moved defaultFunctionProps ⇒ KinesisStreamProps.defaults.function
+
+```js
+// from
+{
+  defaultFunctionProps: {
+    timeout: 10
+  },
+}
+// to
+{
+  defaults: {
+    functionProps: {
+      timeout: 10
+    },
+  }
+}
+```
+
 #### Consumers
 - Always use full props format
 
@@ -2064,7 +2104,7 @@ stream.cdk.stream;
 ### Queue Changelog
 
 #### Constructor
-- Moved kinesisStream ⇒ cdk.stream
+- Moved sqsQueue ⇒ cdk.queue
 
 ```js
 // from
@@ -2654,3 +2694,25 @@ SST no longer directly integrates with jest. Testing is better configured extern
 Remove all references to `sst test` in your package.json scripts
 
 From there you can follow [jest's getting started guide](https://jestjs.io/docs/getting-started)
+
+### Script Changelog
+
+#### Default settings
+- Moved defaultFunctionProps ⇒ ScriptProps.defaults.function
+
+```js
+// from
+{
+  defaultFunctionProps: {
+    timeout: 10
+  },
+}
+// to
+{
+  defaults: {
+    functionProps: {
+      timeout: 10
+    },
+  }
+}
+```
