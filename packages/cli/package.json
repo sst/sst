@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/cli",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A CLI to help deploy Serverless Stack apps.",
   "scripts": {
     "prepare": "node ./bin/sync-cdk-version.js",
@@ -40,8 +40,8 @@
   "dependencies": {
     "@aws-cdk/aws-apigatewayv2-alpha": "2.22.0-alpha.0",
     "@graphql-codegen/cli": "^2.6.2",
-    "@serverless-stack/core": "1.0.2",
-    "@serverless-stack/resources": "1.0.2",
+    "@serverless-stack/core": "1.0.3",
+    "@serverless-stack/resources": "1.0.3",
     "aws-cdk": "2.22.0",
     "aws-cdk-lib": "2.22.0",
     "aws-sdk": "^2.1110.0",

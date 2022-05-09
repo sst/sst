@@ -2,13 +2,13 @@
   "name": "@serverless-stack/cli-test-stack-no-prefix",
   "private": true,
   "description": "tests",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "scripts": {
     "build": "sst build"
   },
   "dependencies": {
-    "@serverless-stack/cli": "1.0.2",
-    "@serverless-stack/resources": "1.0.2"
+    "@serverless-stack/cli": "1.0.3",
+    "@serverless-stack/resources": "1.0.3"
   },
   "license": "ISC"
 }
