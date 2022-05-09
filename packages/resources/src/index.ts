@@ -31,4 +31,4 @@ export * as Metadata from "./Metadata";
 export * from "./DebugApp";
 export * from "./DebugStack";
 
-export { StackContext, use } from "./FunctionalStack";
+export { StackContext, use, dependsOn, getStack } from "./FunctionalStack";
