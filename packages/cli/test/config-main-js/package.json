@@ -2,13 +2,13 @@
   "name": "@serverless-stack/cli-test-config-main-js",
   "private": true,
   "description": "tests",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "scripts": {
     "build": "sst build"
   },
   "dependencies": {
-    "@serverless-stack/cli": "1.0.3",
-    "@serverless-stack/resources": "1.0.3"
+    "@serverless-stack/cli": "1.0.4",
+    "@serverless-stack/resources": "1.0.4"
   },
   "license": "ISC"
 }

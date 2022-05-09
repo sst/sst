@@ -2,7 +2,7 @@
   "name": "@serverless-stack/template-app-ts",
   "private": true,
   "description": "tests",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "scripts": {
     "start": "sst start",
     "build": "sst build",
@@ -18,8 +18,8 @@
   },
   "license": "ISC",
   "dependencies": {
-    "@serverless-stack/cli": "1.0.3",
-    "@serverless-stack/resources": "1.0.3"
+    "@serverless-stack/cli": "1.0.4",
+    "@serverless-stack/resources": "1.0.4"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.70"
