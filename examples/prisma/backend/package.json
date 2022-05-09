@@ -4,13 +4,13 @@
   "type": "module",
   "scripts": {},
   "dependencies": {
-    "aws-sdk": "^2.1128.0",
+    "aws-sdk": "^2.1130.0",
     "prisma": "^3.13.0",
     "fs-extra": "^10.1.0",
     "@prisma/client": "^3.13.0"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.95",
+    "@types/aws-lambda": "^8.10.96",
     "@types/fs-extra": "^9.0.13",
     "prisma": "^3.13.0"
   }

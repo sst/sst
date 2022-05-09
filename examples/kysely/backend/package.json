@@ -1,0 +1,14 @@
+{
+  "name": "@kysely/backend",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {},
+  "dependencies": {
+    "aws-sdk": "^2.1130.0",
+    "kysely": "^0.18.1",
+    "kysely-data-api": "^0.0.9"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.96"
+  }
+}
