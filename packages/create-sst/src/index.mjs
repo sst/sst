@@ -2,6 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import { exec } from "child_process";
 import { applyOperation } from "fast-json-patch/index.mjs";
+import { pathToFileURL } from "url";
 
 export function extract() {
   return /** @type {const} */ ({
@@ -76,7 +77,9 @@ export function extend(path) {
  */
 export async function execute(opts) {
   const source = path.resolve(opts.source);
-  const result = await import(path.join(source, "preset.mjs"));
+  const result = await import(
+    pathToFileURL(path.join(source, "preset.mjs")).href
+  );
   /** @type {Step[]} */
   const steps = result.default;
 
