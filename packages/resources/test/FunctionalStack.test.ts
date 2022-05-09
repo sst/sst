@@ -1,4 +1,5 @@
 import { App, StackContext, use } from "../src";
+import { dependsOn, getStack } from "../src/FunctionalStack";
 
 function StackA(_ctx: StackContext) {
   return { value: "a" };
@@ -60,5 +61,18 @@ describe("functional stack", () => {
     expect(
       app.synth().manifest.artifacts?.["my-app-dev-custom"]
     ).not.toBeNull();
+  });
+
+  it("getStack", () => {
+    new App().stack(StackA).stack(StackB);
+    const stack = getStack(StackA);
+    expect(stack).not.toBeNull();
+  });
+
+  it("dependsOn", () => {
+    const dependent = (_ctx: StackContext) => {
+      dependsOn(StackA);
+    };
+    new App().stack(StackA).stack(dependent);
   });
 });

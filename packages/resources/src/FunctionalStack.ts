@@ -16,6 +16,7 @@ export function stack(
     );
 
   const stack = new EmptyStack(app, id, props);
+  getStacks(app).set(fn, stack);
   const ctx: StackContext = {
     app,
     stack,
@@ -32,11 +33,17 @@ export function stack(
 
 let currentApp: App;
 let currentStack: FunctionalStack<any>;
-const cache = new Map<App, Map<FunctionalStack<any>, any>>();
+const exportsCache = new Map<App, Map<FunctionalStack<any>, any>>();
+const stackCache = new Map<App, Map<FunctionalStack<any>, Stack>>();
 
 function getExports(app: App) {
-  if (!cache.has(app)) cache.set(app, new Map());
-  return cache.get(app)!;
+  if (!exportsCache.has(app)) exportsCache.set(app, new Map());
+  return exportsCache.get(app)!;
+}
+
+function getStacks(app: App) {
+  if (!stackCache.has(app)) stackCache.set(app, new Map());
+  return stackCache.get(app)!;
 }
 
 export function use<T>(stack: FunctionalStack<T>): T {
@@ -47,6 +54,23 @@ export function use<T>(stack: FunctionalStack<T>): T {
       `StackWrongOrder: Initialize "${stack.name}" stack before "${currentStack?.name}" stack`
     );
   return exports.get(stack);
+}
+
+export function dependsOn(stack: FunctionalStack<any>) {
+  const current = getStack(currentStack);
+  const target = getStack(stack)!;
+  current!.addDependency(target);
+}
+
+export function getStack(stack: FunctionalStack<any>) {
+  if (!currentApp) throw new Error("No app is set");
+  const stacks = getStacks(currentApp);
+  if (!stacks.has(stack))
+    throw new Error(
+      `StackWrongOrder: Initialize "${stack.name}" stack before "${currentStack?.name}" stack`
+    );
+
+  return stacks.get(stack)!;
 }
 
 export type StackContext = {
