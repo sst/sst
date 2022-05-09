@@ -1,8 +1,8 @@
 import {
   Api,
   StackContext,
-  StaticSite,
   Table,
+  ViteStaticSite,
 } from "@serverless-stack/resources";
 
 export function MyStack({ stack }: StackContext) {
@@ -31,14 +31,11 @@ export function MyStack({ stack }: StackContext) {
   // Allow the API to access the table
   api.attachPermissions([table]);
 
-  const site = new StaticSite(stack, "VueJSSite", {
+  const site = new ViteStaticSite(stack, "VueJSSite", {
     path: "frontend",
-    buildOutput: "dist",
-    buildCommand: "npm run build",
-    errorPage: "redirect_to_index_page",
     environment: {
       // Pass in the API endpoint to our app
-      VUE_APP_API_URL: api.url,
+      VITE_APP_API_URL: api.url,
     },
   });
 

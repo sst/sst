@@ -14,7 +14,7 @@ export default {
   },
   methods: {
     onClick() {
-      fetch(process.env.VUE_APP_API_URL, {
+      fetch(import.meta.env.VITE_APP_API_URL, {
         method: "POST",
       })
         .then((response) => response.text())
