@@ -1,5 +1,6 @@
 import { App } from "@serverless-stack/resources";
 import { Api } from "./Api";
+import { Web } from "./Web";
 import { Database } from "./Database";
 
 export default function (app: App) {
@@ -10,5 +11,5 @@ export default function (app: App) {
       format: "esm",
     },
   });
-  app.stack(Database).stack(Api);
+  app.stack(Database).stack(Api).stack(Web);
 }

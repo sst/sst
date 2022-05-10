@@ -19,7 +19,6 @@
   "license": "MIT",
   "devDependencies": {
     "@types/react": "^17.0.38",
-    "amazon-cognito-identity-js": "^5.2.4",
     "react": "^17.0.2"
   },
   "peerDependencies": {
@@ -27,6 +26,6 @@
   },
   "gitHead": "8ac2d0abc11d5de721c87658bb445e3d6c211dcf",
   "dependencies": {
-    "react-textarea-autosize": "false8.3.3"
+    "amazon-cognito-identity-js": "^5.2.4"
   }
 }
