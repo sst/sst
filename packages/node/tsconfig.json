@@ -4,7 +4,7 @@
     "declaration": true,
     "module": "esnext",
     "moduleResolution": "node",
-    "outDir": "./dist"
+    "outDir": "./"
   },
   "include": ["src"],
   "exclude": []
