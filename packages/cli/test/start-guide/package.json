@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-start-guide",
   "private": true,
   "description": "tests",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "scripts": {
     "add-package": "sst add-package",
     "start": "sst start",
@@ -12,8 +12,8 @@
     "cdk": "sst cdk"
   },
   "dependencies": {
-    "@serverless-stack/cli": "1.0.5",
-    "@serverless-stack/resources": "1.0.5"
+    "@serverless-stack/cli": "1.0.6",
+    "@serverless-stack/resources": "1.0.6"
   },
   "license": "ISC"
 }
