@@ -4,8 +4,7 @@
     "declaration": true,
     "module": "esnext",
     "moduleResolution": "node",
-    "target": "es2018",
-    "outDir": "./"
+    "outDir": "./dist"
   },
   "include": ["src"],
   "exclude": []

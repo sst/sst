@@ -8,32 +8,39 @@ import {
 } from "graphql-helix";
 
 import {
-  IExecutableSchemaDefinition,
-  makeExecutableSchema,
-} from "@graphql-tools/schema";
-
-import {
   Context,
   APIGatewayProxyEventV2,
   APIGatewayProxyHandlerV2,
 } from "aws-lambda";
+import { GraphQLSchema } from "graphql";
+import {
+  IExecutableSchemaDefinition,
+  makeExecutableSchema,
+} from "@graphql-tools/schema";
 
 type HandlerConfig<C> = {
-  resolvers: IExecutableSchemaDefinition<C>["resolvers"];
-  typeDefs: IExecutableSchemaDefinition<C>["typeDefs"];
   formatPayload?: (params: FormatPayloadParams<C, any>) => any;
   context?: (request: {
     event: APIGatewayProxyEventV2;
     context: Context;
     execution: ExecutionContext;
   }) => Promise<C>;
-};
+} & (
+  | { schema: GraphQLSchema }
+  | {
+      resolvers: IExecutableSchemaDefinition<C>["resolvers"];
+      typeDefs: IExecutableSchemaDefinition<C>["typeDefs"];
+    }
+);
 
 export function createGQLHandler<T>(config: HandlerConfig<T>) {
-  const schema = makeExecutableSchema({
-    typeDefs: config.typeDefs,
-    resolvers: config.resolvers,
-  });
+  const schema =
+    "schema" in config
+      ? config.schema
+      : makeExecutableSchema({
+          typeDefs: config.typeDefs,
+          resolvers: config.resolvers,
+        });
   const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
     const request: Request = {
       body: event.body ? JSON.parse(event.body) : undefined,
