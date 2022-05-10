@@ -18,7 +18,7 @@ export function MyStack({ stack }: StackContext) {
     environment: {
       RDS_SECRET_ARN: rds.secretArn,
       RDS_ARN: rds.clusterArn,
-      database: rds.defaultDatabaseName,
+      RDS_DATABASE: rds.defaultDatabaseName,
     },
   });
 }
