@@ -9,7 +9,7 @@
       "dependsOn": ["^clean"]
     },
     "test": {
-      "dependsOn": ["^test"]
+      "dependsOn": ["^test", "build"]
     }
   }
 }
