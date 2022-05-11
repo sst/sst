@@ -489,8 +489,12 @@ new AppSyncApi(stack, "GraphqlApi", {
 
 #### Using Cognito User Pool
 
-```js {7-14}
+```js {11-19}
 import * as appsync from "@aws-cdk/aws-appsync-alpha";
+import { Auth, AppSyncApi } from "@serverless-stack/resources";
+
+// Create a User Pool using the Auth construct
+const auth = new Auth(this, "Auth");
 
 new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
@@ -500,7 +504,7 @@ new AppSyncApi(stack, "GraphqlApi", {
         defaultAuthorization: {
           authorizationType: appsync.AuthorizationType.USER_POOL,
           userPoolConfig: {
-            userPool: userPool,
+            userPool: auth.cdk.userPool,
           },
         },
       },
