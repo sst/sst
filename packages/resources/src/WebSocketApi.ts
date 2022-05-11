@@ -265,6 +265,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
   };
   private _customDomainUrl?: string;
   private functions: { [key: string]: Fn };
+  private _routes: { [key: string]: apig.WebSocketRoute };
   private permissionsAttachedForAllRoutes: Permissions[];
   private authorizer?:
     | "none"
@@ -278,6 +279,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
     this.props = props || {};
     this.cdk = {} as any;
     this.functions = {};
+    this._routes = {};
     this.permissionsAttachedForAllRoutes = [];
 
     this.createWebSocketApi();
@@ -362,6 +364,18 @@ export class WebSocketApi extends Construct implements SSTConstruct {
    */
   public getFunction(routeKey: string): Fn | undefined {
     return this.functions[this.normalizeRouteKey(routeKey)];
+  }
+
+  /**
+   * Get the instance of the internally created Route, for a given route key where the `routeKey` is the key used to define a route. For example, `$connect`.
+   *
+   * @example
+   * ```js
+   * const route = api.getRoute("$connect");
+   * ```
+   */
+  public getRoute(routeKey: string): apig.WebSocketRoute | undefined {
+    return this._routes[this.normalizeRouteKey(routeKey)];
   }
 
   /**
@@ -574,6 +588,8 @@ export class WebSocketApi extends Construct implements SSTConstruct {
       authorizer: routeKey === "$connect" ? authorizer : undefined,
     });
 
+    this._routes[routeKey] = route;
+
     ///////////////////
     // Configure authorization
     ///////////////////
@@ -590,6 +606,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
       const cfnRoute = route.node.defaultChild as cfnApig.CfnRoute;
       cfnRoute.authorizationType = authorizationType;
     }
+
 
     ///////////////////
     // Store function
