@@ -1,4 +1,5 @@
 {
+  "baseBranch": "master",
   "pipeline": {
     "build": {
       "dependsOn": ["^build", "clean"],
