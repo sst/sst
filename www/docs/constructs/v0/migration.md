@@ -5,7 +5,7 @@ description: "Docs for the constructs in the @serverless-stack/resources package
 
 ## Goals
 
-The v1 SST constructs were restrucrtured with the following goals in mind:
+The v1 SST constructs were restructured with the following goals in mind:
 
 1. Consistent interfaces for:
 
@@ -303,7 +303,7 @@ permissions: "*"
 - Moved defaultAuthorizationType ⇒ removed (See [Authorizer](#authorizers))
 - Moved defaultAuthorizationScopes ⇒ ApiProps.defaults.authorizationScopes
 - Moved defaultPayloadFormatVersion ⇒ ApiProps.defaults.payloadFormatVersion
-- Moved defaultThrottlingBurstLimit ⇒ ApiProps.defaults.throtte.burst
+- Moved defaultThrottlingBurstLimit ⇒ ApiProps.defaults.throttle.burst
 - Moved defaultThrottlingRateLimit ⇒ ApiProps.defaults.throttle.rate
 
 ```js
@@ -1359,7 +1359,7 @@ const authHandler = new Function(stack, "Authhandler", {
 const authorizer = new TokenAuthorizer(stack, "Authorizer", {
   handler: authHandler,
   resultsCacheTtl: Duration.seconds(30),
-  identitySource: IdentitySource.heade"Authorization"),
+  identitySource: IdentitySource.header("Authorization"),
 });
 
 new ApiGatewayV1Api(stack, "Api", {
@@ -1369,7 +1369,7 @@ new ApiGatewayV1Api(stack, "Api", {
     "GET /notes": "src/list.main",
     "POST /notes": {
       function: "create.main",
-      authorizer: authorizer
+      authorizer: authorizer,
       authorizationType: ApiAuthorizationType.CUSTOM,
     }
   },
@@ -1418,7 +1418,7 @@ const authHandler = new Function(stack, "Authhandler", {
 const authorizer = new RequestAuthorizer(stack, "Authorizer", {
   handler: authHandler,
   resultsCacheTtl: Duration.seconds(30),
-  identitySources: [IdentitySource.heade"Authorization")],
+  identitySources: [IdentitySource.header("Authorization")],
 });
 
 new ApiGatewayV1Api(stack, "Api", {
@@ -1428,7 +1428,7 @@ new ApiGatewayV1Api(stack, "Api", {
     "GET /notes": "src/list.main",
     "POST /notes": {
       function: "create.main",
-      authorizer: authorizer
+      authorizer: authorizer,
       authorizationType: ApiAuthorizationType.CUSTOM,
     }
   },
@@ -1668,8 +1668,8 @@ auth.cdk.unauthRole;
 ```js
 // from
 notifications: [
-  "src/notification1.main"
-  "src/notification2.main"
+  "src/notification1.main",
+  "src/notification2.main",
 ]
 
 // to
