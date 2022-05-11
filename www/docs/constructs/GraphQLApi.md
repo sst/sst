@@ -128,7 +128,7 @@ new GraphQLApi(stack, "Api", {
 
 ### authorizers?
 
-_Type_ : <span class="mono">undefined</span>
+_Type_ : <span class="mono">Record&lt;<span class="mono">string</span>, <span class='mono'><span class="mono">[ApiUserPoolAuthorizer](Api#apiuserpoolauthorizer)</span> | <span class="mono">[ApiJwtAuthorizer](Api#apijwtauthorizer)</span> | <span class="mono">[ApiLambdaAuthorizer](Api#apilambdaauthorizer)</span></span>&gt;</span>
 
 Define the authorizers for the API. Can be a user pool, JWT, or Lambda authorizers.
 
@@ -213,7 +213,7 @@ An array of scopes to include in the authorization when using `user_pool` or `jw
 
 ### defaults.authorizer?
 
-_Type_ : <span class='mono'><span class="mono">"iam"</span> | <span class="mono">"none"</span></span>
+_Type_ : <span class='mono'><span class="mono">"iam"</span> | <span class="mono">"none"</span> | <span class="mono">Omit&lt;<span class="mono">string</span>, <span class='mono'><span class="mono">"iam"</span> | <span class="mono">"none"</span></span>&gt;</span></span>
 
 The default authorizer for all the routes in the API.
 

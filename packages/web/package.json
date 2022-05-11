@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/web",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
   "exports": {
@@ -13,7 +13,6 @@
     "build": "yarn run build:esm && yarn run build:cjs",
     "build:esm": "tsc -p tsconfig-esm.json",
     "build:cjs": "tsc -p tsconfig-cjs.json",
-    "prepare": "yarn run build",
     "clean": "rm -rf dist"
   },
   "license": "MIT",
