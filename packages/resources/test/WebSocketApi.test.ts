@@ -756,6 +756,7 @@ test("routes: empty", async () => {
   countResources(stack, "AWS::ApiGatewayV2::Route", 0);
 });
 
+
 test("routes: route is string", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api", {
@@ -982,6 +983,17 @@ test("get-function", async () => {
     },
   });
   expect(ret.getFunction("$connect")).toBeDefined();
+});
+
+test("get-route", async () => {
+  const app = new App({ name: "websocket" });
+  const stack = new Stack(app, "stack");
+  const ret = new WebSocketApi(stack, "Api", {
+    routes: {
+      $connect: "test/lambda.handler",
+    },
+  });
+  expect(ret.getRoute("$connect")).toBeDefined();
 });
 
 test("get-function-trailing-spaces", async () => {
