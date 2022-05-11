@@ -101,7 +101,7 @@ The definition of the function to be executed
 
 ```js
 new Cron(stack, "Cron", {
-  function : "src/function.handler",
+  job : "src/function.handler",
 })
 ```
 

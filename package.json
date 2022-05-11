@@ -6,22 +6,13 @@
   "workspaces": {
     "packages": [
       "packages/*",
-      "packages/cli/test/*",
-      "packages/static-site-env/test/*",
       "www"
     ]
   },
   "scripts": {
-    "lint": "eslint . --fix --ext .js,.ts",
-    "watch": "tsc -b -w",
-    "prettier": "prettier --write \"**/*.{js,ts,tsx,json,md}\"",
-    "changelog": "lerna-changelog",
-    "release": "lerna publish --force-publish",
-    "release-canary": "lerna publish --canary patch --exact --preid next --dist-tag=next --force-publish=*",
-    "clean": "lerna run clean",
-    "depcheck": "for I in packages/*/; do cd $I; npx depcheck; cd -; done",
-    "postinstall": "lerna run prepare --scope='{@serverless-stack/core,@serverless-stack/resources,@serverless-stack/cli,create-sst}'",
-    "test": "lerna run prepare && lerna run test --stream --scope='{@serverless-stack/core,@serverless-stack/resources,@serverless-stack/cli,@serverless-stack/static-site-env}'"
+    "build": "turbo run build --filter=!@serverless-stack/docs --filter=!@serverless-stack/console",
+    "release": "yarn build && yarn changeset publish",
+    "version": "yarn changeset version"
   },
   "repository": {
     "type": "git",
@@ -32,6 +23,7 @@
     "@babel/eslint-plugin": "^7.11.3",
     "@babel/preset-env": "^7.16.11",
     "@babel/preset-react": "^7.16.7",
+    "@changesets/cli": "^2.22.0",
     "@types/jest": "^27.4.1",
     "@typescript-eslint/eslint-plugin": "^5.18.0",
     "@typescript-eslint/parser": "^4.15.1",
@@ -45,6 +37,7 @@
     "lint-staged": "^10.5.3",
     "prettier": "^2.2.1",
     "ts-jest": "^27.1.3",
+    "turbo": "^1.2.8",
     "typescript": "^4.6.2"
   },
   "husky": {

@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/core",
-  "version": "1.0.7",
+  "version": "1.0.10",
   "homepage": "https://serverless-stack.com",
   "description": "Core of Serverless Stack.",
   "main": "dist/index.js",
@@ -61,7 +61,6 @@
     "build": "tsc",
     "build:dotnet-bootstrap": "docker run --rm -v ${PWD}/src/runtime/shells/dotnet-bootstrap:/tmp/bootstrap mcr.microsoft.com/dotnet/sdk:3.1 bash -c \"cd /tmp/bootstrap && dotnet publish --output release --configuration Release --framework netcoreapp3.1 --self-contained false -nologo --verbosity minimal /target:Rebuild\"",
     "clean": "rm -rf dist",
-    "prepare": "yarn run build",
     "test": "jest"
   }
 }
