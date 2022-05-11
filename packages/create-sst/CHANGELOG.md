@@ -1,5 +1,11 @@
 # create-sst
 
+## 1.0.9
+
+### Patch Changes
+
+- 609880c0: test package
+
 ## 1.1.0
 
 ### Minor Changes
