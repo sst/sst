@@ -20,8 +20,15 @@ jobs:
         with:
           node-version: 16.x
 
-      - name: Install Dependencies
-        run: yarn
+      - uses: actions/cache@v2
+        id: yarn-cache
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Install dependencies
+        if: steps.yarn-cache.outputs.cache-hit != 'true'
+        run: yarn --frozen-lockfile --ignore-scripts
 
       - name: Create Release Pull Request or Publish to npm
         # https://github.com/changesets/action
@@ -30,3 +37,5 @@ jobs:
           # this expects you to have a script called release which does a build for your packages and calls changeset publish
           publish: yarn release
           version: yarn changeset version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
