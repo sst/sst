@@ -489,7 +489,7 @@ new AppSyncApi(stack, "GraphqlApi", {
 
 #### Using Cognito User Pool
 
-```js {11-19}
+```js {11-18}
 import * as appsync from "@aws-cdk/aws-appsync-alpha";
 import { Auth, AppSyncApi } from "@serverless-stack/resources";
 
