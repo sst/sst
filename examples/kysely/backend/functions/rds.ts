@@ -2,12 +2,7 @@ import { RDSDataService } from "aws-sdk";
 import { Kysely } from "kysely";
 import { DataApiDialect } from "kysely-data-api";
 
-interface Database {
-  user: {
-    id: string;
-    name: string;
-  };
-}
+export interface Database {}
 
 const db = new Kysely<Database>({
   dialect: new DataApiDialect({

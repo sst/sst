@@ -1,0 +1,22 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@2.0.0/schema.json",
+  "changelog": "@changesets/cli/changelog",
+  "commit": false,
+  "fixed": [
+    [
+      "@serverless-stack/resources",
+      "@serverless-stack/cli",
+      "@serverless-stack/core",
+      "@serverless-stack/console",
+      "create-sst",
+      "@serverless-stack/node",
+      "@serverless-stack/web",
+      "@serverless-stack/static-site-env"
+    ]
+  ],
+  "linked": [],
+  "access": "restricted",
+  "baseBranch": "master",
+  "updateInternalDependencies": "patch",
+  "ignore": []
+}

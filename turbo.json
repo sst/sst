@@ -1,0 +1,15 @@
+{
+  "baseBranch": "master",
+  "pipeline": {
+    "build": {
+      "dependsOn": ["^build", "clean"],
+      "outputs": ["dist"]
+    },
+    "clean": {
+      "dependsOn": ["^clean"]
+    },
+    "test": {
+      "dependsOn": ["^test", "build"]
+    }
+  }
+}

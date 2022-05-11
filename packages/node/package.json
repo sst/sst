@@ -1,7 +1,10 @@
 {
   "name": "@serverless-stack/node",
-  "version": "1.0.4",
+  "version": "1.0.10",
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     "./*": "./*/index.js"
   },
@@ -11,12 +14,12 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@graphql-tools/schema": "^8.3.1",
+    "@graphql-tools/schema": "^8.3.11",
     "@tsconfig/node14": "^1.0.1",
     "aws-jwt-verify": "^2.1.3",
     "aws-sdk": "^2.1061.0",
-    "graphql": "^16.2.0",
-    "graphql-helix": "^1.11.0"
+    "graphql": "^16.5.0",
+    "graphql-helix": "^1.12.0"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.90",
