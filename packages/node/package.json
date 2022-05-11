@@ -2,6 +2,9 @@
   "name": "@serverless-stack/node",
   "version": "1.0.10",
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     "./*": "./*/index.js"
   },
