@@ -24,7 +24,7 @@ export function MyStack({ stack }: StackContext) {
   auth.attachPermissionsForAuthUsers([api]);
 
   // Show the API endpoint and other info in the output
-  this.addOutputs({
+  stack.addOutputs({
     ApiEndpoint: api.url,
     UserPoolId: auth.userPoolId,
     UserPoolClientId: auth.userPoolClientId,

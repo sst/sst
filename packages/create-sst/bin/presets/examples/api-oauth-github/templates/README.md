@@ -1,17 +1,17 @@
-# How to add Google OAuth to a serverless app
+# How to add GitHub OAuth to a serverless app
 
 An example serverless app created with SST.
 
 ## Getting Started
 
-[**Read the tutorial**](https://serverless-stack.com/examples/how-to-add-google-login-to-your-cognito-user-pool.html)
+[**Read the tutorial**](https://serverless-stack.com/examples/how-to-add-github-login-to-your-cognito-user-pool.html)
 
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example api-oauth-google
+$ npm init serverless-stack --example api-oauth-github
 # Or with Yarn
-$ yarn create serverless-stack --example api-oauth-google
+$ yarn create serverless-stack --example api-oauth-github
 ```
 
 ## Commands
