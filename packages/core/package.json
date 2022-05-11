@@ -30,7 +30,6 @@
     "conf": "^10.1.1",
     "constructs": "^10.0.29",
     "cross-spawn": "^7.0.3",
-    "dataloader": "^2.0.0",
     "dendriform-immer-patch-optimiser": "^2.1.0",
     "dotenv": "^10.0.0",
     "dotenv-expand": "^5.1.0",
