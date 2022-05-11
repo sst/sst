@@ -23,7 +23,7 @@ export function MyStack({ stack, app }: StackContext) {
   }
 
   // Show the endpoint in the output
-  this.addOutputs({
+  stack.addOutputs({
     ApiEndpoint: api.url,
   });
 }
