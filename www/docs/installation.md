@@ -171,10 +171,10 @@ app.name; // "my-sst-app"
 You can also access them in your stacks.
 
 ```ts title="stacks/MyStack.ts"
-export function MyStack({ stack }: StackContext) {
-  scope.stage; // "dev"
-  scope.region; // "us-east-1"
-  scope.name; // "my-sst-app"
+export function MyStack({ app }: StackContext) {
+  app.stage; // "dev"
+  app.region; // "us-east-1"
+  app.name; // "my-sst-app"
 }
 ```
 
