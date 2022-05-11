@@ -10,7 +10,8 @@
     ]
   },
   "scripts": {
-    "build": "turbo run build --filter=!@serverless-stack/docs"
+    "build": "turbo run build --filter=!@serverless-stack/docs --filter=!@serverless-stack/console",
+    "release": "yarn build && yarn changeset publish"
   },
   "repository": {
     "type": "git",
