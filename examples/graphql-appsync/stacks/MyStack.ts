@@ -39,7 +39,7 @@ export default class MyStack extends sst.Stack {
     api.attachPermissions([notesTable]);
 
     // Show the AppSync API Id in the output
-    this.addOutputs({
+    stack.addOutputs({
       ApiId: api.apiId,
       APiUrl: api.url,
     });

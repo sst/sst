@@ -4,7 +4,7 @@ An example serverless app created with SST.
 
 ## Getting Started
 
-[**Read the tutorial**](https://serverless-stack.com/examples/how-to-add-google-authentication-to-a-serverless-api.html)
+[**Read the tutorial**](https://serverless-stack.com/examples/how-to-add-google-login-to-your-cognito-user-pool.html)
 
 Install the example.
 
@@ -13,7 +13,6 @@ $ npm init serverless-stack --example api-oauth-google
 # Or with Yarn
 $ yarn create serverless-stack --example api-oauth-google
 ```
-
 
 ## Commands
 
@@ -42,6 +41,7 @@ Runs your tests using Jest. Takes all the [Jest CLI options](https://jestjs.io/d
 ## Documentation
 
 Learn more about the Serverless Stack.
+
 - [Docs](https://docs.serverless-stack.com)
 - [@serverless-stack/cli](https://docs.serverless-stack.com/packages/cli)
 - [@serverless-stack/resources](https://docs.serverless-stack.com/packages/resources)
