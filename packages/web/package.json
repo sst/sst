@@ -13,7 +13,6 @@
     "build": "yarn run build:esm && yarn run build:cjs",
     "build:esm": "tsc -p tsconfig-esm.json",
     "build:cjs": "tsc -p tsconfig-cjs.json",
-    "prepare": "yarn run build",
     "clean": "rm -rf dist"
   },
   "license": "MIT",

@@ -1,5 +1,5 @@
 {
-  "name": "my-website",
+  "name": "@serverless-stack/docs",
   "version": "1.0.7",
   "private": true,
   "scripts": {

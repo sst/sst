@@ -253,6 +253,23 @@ Note that the certificate needs be created in the `us-east-1`(N. Virginia) regio
 
 Also note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
 
+### Configuring the Lambda Functions
+
+Configure the internally created CDK [`Lambda Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html) instance.
+
+```js {4-8}
+new NextjsSite(stack, "Site", {
+  path: "path/to/site",
+  defaults: {
+    function: {
+      timeout: 20,
+      memorySize: 2048,
+      permissions: ["sns"],
+    }
+  },
+});
+```
+
 ### Permissions
 
 You can attach a set of [permissions](Permissions.md) to allow the Next.js API routes and Server Side rendering `getServerSideProps` to access other AWS resources.
@@ -356,32 +373,20 @@ _Type_ : <span class="mono">[Permissions](Permissions)</span>
 _Type_ : <span class="mono">number</span>
 
 
-The default function props to be applied to all the Lambda Functions created by this construct.
-
-
-### Configuring the Lambda Functions
-
-Configure the internally created CDK [`Lambda Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html) instance.
-
-```js {4-8}
-new NextjsSite(stack, "Site", {
-  path: "path/to/site",
-  defaults: {
-    function: {
-      timeout: 20,
-      memorySize: 2048,
-      permissions: ["sns"],
-    }
-  },
-});
-```
-
 
 ### disablePlaceholder?
 
 _Type_ : <span class="mono">boolean</span>
 
 When running `sst start`, a placeholder site is deployed. This is to ensure that the site content remains unchanged, and subsequent `sst start` can start up quickly.
+
+
+```js {3}
+new NextjsSite(stack, "NextSite", {
+  path: "path/to/site",
+  disablePlaceholder: true,
+});
+```
 
 
 
@@ -433,31 +438,6 @@ _Type_ : <span class="mono">[ICachePolicy](https://docs.aws.amazon.com/cdk/api/v
 
 
 Override the default CloudFront cache policies created internally.
-
-
-### Reusng CloudFront cache policies
-
-CloudFront has a limit of 20 cache policies per AWS account. This is a hard limit, and cannot be increased. Each `NextjsSite` creates 3 cache policies. If you plan to deploy multiple Next.js sites, you can have the constructs share the same cache policies by reusing them across sites.
-
-```js
-import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
-
-const cachePolicies = {
-  staticCachePolicy: new NextjsSite(stack, "StaticCache", NextjsSite.staticCachePolicyProps),
-  imageCachePolicy: new NextjsSite(stack, "ImageCache", NextjsSite.imageCachePolicyProps),
-  lambdaCachePolicy: new NextjsSite(stack, "LambdaCache", NextjsSite.lambdaCachePolicyProps),
-};
-
-new NextjsSite(stack, "Site1", {
-  path: "path/to/site1",
-  cfCachePolicies: cachePolicies,
-});
-
-new NextjsSite(stack, "Site2", {
-  path: "path/to/site2",
-  cfCachePolicies: cachePolicies,
-});
-```
 
 ### cdk.distribution?
 
