@@ -6,7 +6,7 @@ import { App } from "@serverless-stack/resources";
  */
 export default function (app) {
   app.setDefaultFunctionProps({
-    runtime: "nodejs14.x",
+    runtime: "nodejs16.x",
     srcPath: "backend",
     bundle: {
       format: "esm",

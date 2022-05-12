@@ -5,7 +5,7 @@ import { Database } from "./Database";
 
 export default function (app: App) {
   app.setDefaultFunctionProps({
-    runtime: "nodejs14.x",
+    runtime: "nodejs16.x",
     srcPath: "backend",
     bundle: {
       format: "esm",

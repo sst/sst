@@ -28,6 +28,7 @@ const supportedRuntimes = [
   lambda.Runtime.NODEJS_10_X,
   lambda.Runtime.NODEJS_12_X,
   lambda.Runtime.NODEJS_14_X,
+  lambda.Runtime.NODEJS_16_X,
   lambda.Runtime.PYTHON_2_7,
   lambda.Runtime.PYTHON_3_6,
   lambda.Runtime.PYTHON_3_7,
@@ -51,6 +52,7 @@ export type Runtime =
   | "nodejs10.x"
   | "nodejs12.x"
   | "nodejs14.x"
+  | "nodejs16.x"
   | "python2.7"
   | "python3.6"
   | "python3.7"
@@ -130,12 +132,12 @@ export interface FunctionProps
   /**
    * The runtime environment. Only runtimes of the Node.js, Python, Go, and .NET (C# and F#) family are supported.
    *
-   * @default "nodejs12.x"
+   * @default "nodejs14.x"
    *
    * @example
    * ```js
    * new Function(stack, "Function", {
-   *   runtime: "nodejs14.x",
+   *   runtime: "nodejs16.x",
    * })
    *```
    */
