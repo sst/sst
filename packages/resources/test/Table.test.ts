@@ -123,6 +123,18 @@ test("constructor: fields-primaryIndex-undefined", async () => {
   }).toThrow(/Missing "primaryIndex" in "Table" Table/);
 });
 
+test("constructor: fields-primaryIndex-field-not-defined", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Table(stack, "Table", {
+      fields: {
+        noteId: "string",
+      },
+      primaryIndex: { partitionKey: "noteId2" },
+    });
+  }).toThrow(/Please define "noteId2" in "fields"/);
+});
+
 test("constructor: fields-globalIndexes-defined", async () => {
   const stack = new Stack(new App(), "stack");
   new Table(stack, "Table", {
