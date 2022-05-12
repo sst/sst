@@ -5,8 +5,8 @@ const TIMEOUT = 30000;
 const root = process.cwd();
 
 // Prepare resources
-execSync("yarn run prepare", {
-  cwd: path.resolve(root, "../resources"),
+execSync("yarn build", {
+  cwd: path.resolve(root, "../.."),
   TIMEOUT,
 });
 
