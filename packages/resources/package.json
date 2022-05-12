@@ -6,6 +6,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "cdk-version-check": "node ./bin/aws-cdk-version-check.js",
     "build": "tsc --rootDir src --outDir dist && yarn build:stub && yarn build:rds-migrator && yarn build:bridge",
     "build:stub": "cd assets/stub && yarn && cd ../.. && node ./bin/create-stub-zip.js",
     "build:rds-migrator": "cd assets/RDS/migrator && yarn && cd ../../.. && node ./bin/copy-rds-migrator.js",

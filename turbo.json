@@ -2,9 +2,10 @@
   "baseBranch": "master",
   "pipeline": {
     "build": {
-      "dependsOn": ["^build", "clean"],
+      "dependsOn": ["^build", "clean", "cdk-version-check"],
       "outputs": ["dist"]
     },
+    "cdk-version-check": {},
     "clean": {
       "dependsOn": ["^clean"]
     },
