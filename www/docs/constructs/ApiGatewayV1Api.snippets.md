@@ -468,6 +468,21 @@ const key = api.cdk.restApi.addApiKey("ApiKey");
 plan.addApiKey(key);
 ```
 
+#### Request Validator
+
+```js
+const api = new ApiGatewayV1Api(stack, "Api", {
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+
+api.cdk.restApi.addRequestValidator("RequestValidator", {
+  validateRequestBody: true,
+  validateRequestParameters: false,
+});
+```
+
 #### Importing an existing Rest Api
 
 Override the internally created CDK `RestApi` instance.

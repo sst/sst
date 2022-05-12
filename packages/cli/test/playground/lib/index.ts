@@ -31,9 +31,9 @@ import { MainStack as ApiStack } from "./api-stack";
 import * as sst from "@serverless-stack/resources";
 
 export default async function main(app: sst.App) {
-  app.stack(ApiStack, { id: "api" });
+  app.stack(ApiStack, { id: "api" })
   //.stack(ApiExtraRoutesStack, { id: "api-extra-routes" })
-  //new ApiV1Stack(app, "apiv1");
+  //.stack(ApiV1Stack, { id: "apiv1" });
   //new ApolloStack(app, "apollo");
   //new AppsyncStack(app, "appsync");
   //new WebsocketStack(app, "websocket");
