@@ -3,6 +3,7 @@
   "version": "1.0.11",
   "description": "A CLI to help deploy Serverless Stack apps.",
   "scripts": {
+    "cdk-version-check": "node ./bin/sync-cdk-version.js",
     "test": "jest"
   },
   "bin": {

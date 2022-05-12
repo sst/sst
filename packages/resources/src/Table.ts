@@ -651,6 +651,11 @@ export class Table extends Construct implements SSTConstruct {
     fields: { [key: string]: TableFieldType },
     name: string
   ): dynamodb.Attribute {
+    // Ensure the key is specified in "fields"
+    if (!fields[name]) {
+      throw new Error(`Please define "${name}" in "fields" to create the index in the "${this.node.id}" Table.`);
+    }
+
     return {
       name,
       type: dynamodb.AttributeType[

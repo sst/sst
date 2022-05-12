@@ -1,34 +1,35 @@
 import { RemovalPolicy } from "aws-cdk-lib";
 import * as sst from "@serverless-stack/resources";
 
-export class MainStack extends sst.Stack {
-  constructor(scope: sst.App, id: string, props?: sst.StackProps) {
-    super(scope, id, props);
-
-    const table = new sst.Table(this, "Table", {
-      fields: {
-        userId: sst.TableFieldType.STRING,
-        noteId: sst.TableFieldType.STRING,
-      },
-      primaryIndex: { partitionKey: "userId" },
-      globalIndexes: {
-        niIndex: { partitionKey: "noteId" },
-        niUiIndex: { partitionKey: "noteId", sortKey: "userId" },
-      },
-      dynamodbTable: {
+export function MainStack({ stack }: sst.StackContext) {
+  const table = new sst.Table(stack, "Table", {
+    fields: {
+      userId: "string",
+      noteId: "string",
+    },
+    primaryIndex: { partitionKey: "userId2" },
+    globalIndexes: {
+      niIndex: { partitionKey: "noteId" },
+      niUiIndex: { partitionKey: "noteId", sortKey: "userId" },
+    },
+    cdk: {
+      table: {
         removalPolicy: RemovalPolicy.DESTROY,
-      },
-      defaultFunctionProps: {
+        timeToLiveAttribute: 'ttl',
+      }
+    },
+    defaults: {
+      function: {
         timeout: 3,
-      },
-      stream: true,
-      consumers: {
-        consumerA: "src/lambda.main",
-      },
-    });
+      }
+    },
+    stream: true,
+    consumers: {
+      consumerA: "src/lambda.main",
+    },
+  });
 
-    this.addOutputs({
-      TableArn: table.tableArn,
-    });
-  }
+  stack.addOutputs({
+    TableArn: table.tableArn,
+  });
 }
