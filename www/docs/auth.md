@@ -14,9 +14,7 @@ SST's [`Auth`](constructs/Auth.md) construct makes it easy to manage your users 
 ```js
 import { Auth } from "@serverless-stack/resources";
 
-const auth = new Auth(this, "Auth", {
-  cognito: true,
-});
+const auth = new Auth(stack, "Auth");
 ```
 
 The [SST Console](console.md) also gives you a way to manage your User Pools.
@@ -30,14 +28,18 @@ You can create new users and delete existing users.
 Cognito User Pool supports [JSON web tokens (JWT)](https://en.wikipedia.org/wiki/JSON_Web_Token) that you can use to authorize access to your API.
 
 ```js
-import { HttpUserPoolAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
-
-new Api(this, "Api", {
-  defaultAuthorizationType: ApiAuthorizationType.JWT,
-  defaultAuthorizer: new HttpUserPoolAuthorizer({
-    userPool: auth.cognitoUserPool,
-    userPoolClients: [auth.cognitoUserPoolClient],
-  }),
+new Api(stack, "Api", {
+  authorizers: {
+    pool: {
+      type: "user_pool",
+      userPool: {
+        id: auth.userPoolId,
+      },
+    },
+  },
+  defaults: {
+    authorizer: "pool",
+  },
   routes: {
     "GET /": "src/lambda.main",
   },
@@ -78,10 +80,10 @@ Cognito Identity Pool is an AWS service that can assign temporary IAM credential
 
 ```js
 // Create a Table
-const table = new Table(this, "Notes", {
+const table = new Table(stack, "Notes", {
   fields: {
-    userId: TableFieldType.STRING,
-    noteId: TableFieldType.STRING,
+    userId: "string",
+    noteId: "string"
   },
   primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
 });
@@ -100,12 +102,10 @@ Note that, if you are using the Cognito Identity Pool, you have the option to al
 You can use Lambda functions to add authentication challenges, migrate users, and customize verification messages. These can be triggered during User Pool operations like user sign up, confirmation, and sign in.
 
 ```js
-new Auth(this, "Auth", {
-  cognito: {
-    triggers: {
-      preAuthentication: "src/preAuthentication.main",
-      postAuthentication: "src/postAuthentication.main",
-    },
+new Auth(stack, "Auth", {
+  triggers: {
+    preAuthentication: "src/preAuthentication.main",
+    postAuthentication: "src/postAuthentication.main",
   },
 });
 ```
@@ -129,14 +129,19 @@ However if you wanted your users to be able to access other AWS resources while 
 Set the third-party JWT authorizer in the [`Api`](constructs/Api.md) construct to grant access to your APIs.
 
 ```js
-import { HttpJwtAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
-
-new Api(this, "Api", {
-  defaultAuthorizationType: ApiAuthorizationType.JWT,
-  defaultAuthorizer: new HttpJwtAuthorizer({
-    jwtIssuer: "https://myorg.us.auth0.com",
-    jwtAudience: ["UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif"],
-  }),
+new Api(stack, "Api", {
+  authorizers: {
+    auth0: {
+      type: "jwt",
+      jwt: {
+        audience: ["UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif"],
+        issuer: "https://myorg.us.auth0.com",
+      },
+    },
+  },
+  defaults: {
+    authorizer: "auth0",
+  },
   routes: {
     "GET /": "src/lambda.main",
   },
@@ -160,10 +165,12 @@ You'll need to use presigned URLs to upload files to your S3 bucket. This is sim
 As mentioned above; if you want your users to be able to access other AWS resources, you can use the [`Auth`](constructs/Auth.md) construct to create a [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-identity.html). And use it to assign temporarily IAM credentials for your users to access other AWS services. The setup is similar to the [Cognito User Pool setup](#accessing-other-resources) above.
 
 ```js
-const auth = new Auth(this, "Auth", {
-  auth0: {
-    domain: "https://myorg.us.auth0.com",
-    clientId: "UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif",
+const auth = new Auth(stack, "Auth", {
+  identityPoolFederation: {
+    auth0: {
+      domain: "https://myorg.us.auth0.com",
+      clientId: "UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif",
+    },
   },
 });
 
