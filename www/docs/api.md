@@ -17,7 +17,7 @@ To create simple RESTful APIs you can use the [`Api`](constructs/Api.md) constru
 ```js
 import { Api } from "@serverless-stack/resources";
 
-new Api(this, "Api", {
+new Api(stack, "Api", {
   routes: {
     "GET    /notes": "src/list.main",
     "POST   /notes": "src/create.main",
@@ -47,7 +47,7 @@ The [SST Console](console.md) also gives you a way to make HTTP requests to your
 You can also add a catch-all route to catch requests that don't match any other routes.
 
 ```js {5}
-new Api(this, "Api", {
+new Api(stack, "Api", {
   routes: {
     "GET    /notes": "src/list.main",
     "POST   /notes": "src/create.main",
@@ -63,7 +63,7 @@ To create a serverless GraphQL API, use the [`GraphQLApi`](constructs/GraphQLApi
 ```js
 import { GraphQLApi } from "@serverless-stack/resources";
 
-new GraphQLApi(this, "Api", {
+new GraphQLApi(stack, "Api", {
   server: "src/graphql.handler",
 });
 ```
@@ -87,7 +87,7 @@ To create a WebSocket API use the [`WebSocketApi`](constructs/WebSocketApi.md) c
 ```js
 import { WebSocketApi } from "@serverless-stack/resources";
 
-new WebSocketApi(this, "Api", {
+new WebSocketApi(stack, "Api", {
   routes: {
     $connect: "src/connect.main",
     $default: "src/default.main",
@@ -114,16 +114,20 @@ APIs in SST support a few different forms of authentication.
 You can use the [`Auth`](constructs/Auth.md) construct with [Cognito User Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html) to manager your users. It can issue JSON web tokens (JWT) that you can use to authorize access to the API.
 
 ```js
-import { HttpUserPoolAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
+const auth = new Auth(stack, "Auth", { ... });
 
-const auth = new Auth(this, "Auth", { ... });
-
-new Api(this, "Api", {
-  defaultAuthorizationType: ApiAuthorizationType.JWT,
-  defaultAuthorizer: new HttpUserPoolAuthorizer({
-    userPool: auth.cognitoUserPool,
-    userPoolClients: [auth.cognitoUserPoolClient],
-  }),
+new Api(stack, "Api", {
+  authorizers: {
+    pool: {
+      type: "user_pool",
+      userPool: {
+        id: auth.userPoolId,
+      },
+    },
+  },
+  defaults: {
+    authorizer: "pool",
+  },
   routes: {
     "GET /": "src/lambda.main",
   },
@@ -145,12 +149,19 @@ If you want to use a third-party auth provider like [Auth0](https://auth0.com), 
 ```js
 import { HttpJwtAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
 
-new Api(this, "Api", {
-  defaultAuthorizationType: ApiAuthorizationType.JWT,
-  defaultAuthorizer: new HttpJwtAuthorizer({
-    jwtAudience: ["UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif"],
-    jwtIssuer: "https://myorg.us.auth0.com",
-  }),
+new Api(stack, "Api", {
+  authorizers: {
+    auth0: {
+      type: "jwt",
+      jwt: {
+        audience: ["UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif"],
+        issuer: "https://myorg.us.auth0.com",
+      },
+    },
+  },
+  defaults: {
+    authorizer: "auth0",
+  },
   routes: {
     "GET /": "src/lambda.main",
   },
@@ -170,10 +181,12 @@ Check out this example on adding JWT authentication with Auth0 to your API.
 You can also use Cognito Identity Pool to grant temporary IAM permissions for users in your Cognito User Pool or 3rd party auth provider. Take a look at the [`Auth`](constructs/Auth.md) on how to configure an Identity Pool.
 
 ```js
-const auth = new Auth(this, "Auth", { ... });
+const auth = new Auth(stack, "Auth", { ... });
 
-new Api(this, "Api", {
-  defaultAuthorizationType: ApiAuthorizationType.AWS_IAM,
+new Api(stack, "Api", {
+  defaults: {
+    authorizer: "iam",
+  },
   routes: {
     "GET /": "src/lambda.main",
   },
@@ -207,7 +220,7 @@ After you deploy your API, you'll get an auto-generated AWS endpoint. SST makes 
 <TabItem value="api">
 
 ```js {2}
-new Api(this, "Api", {
+new Api(stack, "Api", {
   customDomain: "api.domain.com",
   routes: {
     "GET /": "src/lambda.main",
@@ -219,7 +232,7 @@ new Api(this, "Api", {
 <TabItem value="graph">
 
 ```js {2}
-new GraphQLApi(this, "GraphApi", {
+new GraphQLApi(stack, "GraphApi", {
   customDomain: "graph.domain.com",
   server: "src/server.handler",
 });
@@ -229,7 +242,7 @@ new GraphQLApi(this, "GraphApi", {
 <TabItem value="websocket">
 
 ```js {2}
-new WebSocketApi(this, "WebSocketApi", {
+new WebSocketApi(stack, "WebSocketApi", {
   customDomain: "ws.domain.com",
   routes: {
     $default: "src/default.main",
@@ -248,7 +261,7 @@ Access logs are enabled by default for all APIs. The default log format is a JSO
 <TabItem value="api">
 
 ```js {3}
-new Api(this, "Api", {
+new Api(stack, "Api", {
   // Write access log in CSV format
   accessLog:
     "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
@@ -262,7 +275,7 @@ new Api(this, "Api", {
 <TabItem value="graph">
 
 ```js {3}
-new GraphQLApi(this, "GraphApi", {
+new GraphQLApi(stack, "GraphApi", {
   // Write access log in CSV format
   accessLog:
     "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
@@ -274,7 +287,7 @@ new GraphQLApi(this, "GraphApi", {
 <TabItem value="websocket">
 
 ```js {3}
-new WebSocketApi(this, "WebSocketApi", {
+new WebSocketApi(stack, "WebSocketApi", {
   // Write access log in CSV format
   accessLog:
     "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
@@ -294,12 +307,10 @@ new WebSocketApi(this, "WebSocketApi", {
 CORS is enabled by default for the `Api` construct to allow all HTTP methods with all HTTP headers from any origin. You can override this default behavior.
 
 ```js {4-8}
-import { CorsHttpMethod } from "@aws-cdk/aws-apigatewayv2";
-
-new Api(this, "Api", {
+new Api(stack, "Api", {
   cors: {
     allowHeaders: ["Authorization"],
-    allowMethods: [apig.CorsHttpMethod.ANY],
+    allowMethods: ["ANY"],
     allowOrigins: ["https://www.example.com"],
   },
   routes: {
@@ -311,12 +322,10 @@ new Api(this, "Api", {
 The same applies to the `GraphQLApi` construct as well.
 
 ```js {4-8}
-import { CorsHttpMethod } from "@aws-cdk/aws-apigatewayv2";
-
-new GraphQLApi(this, "GraphApi", {
+new GraphQLApi(stack, "GraphApi", {
   cors: {
     allowHeaders: ["Authorization"],
-    allowMethods: [apig.CorsHttpMethod.ANY],
+    allowMethods: ["ANY"],
     allowOrigins: ["https://www.example.com"],
   },
   server: "src/server.handler",
@@ -332,7 +341,7 @@ You can use the [`AppSyncApi`](constructs/AppSyncApi.md) construct to create an 
 ```js
 import { AppSyncApi } from "@serverless-stack/resources";
 
-new AppSyncApi(this, "GraphqlApi", {
+new AppSyncApi(stack, "GraphqlApi", {
   graphqlApi: {
     schema: "graphql/schema.graphql",
   },
