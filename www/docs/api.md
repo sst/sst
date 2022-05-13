@@ -147,8 +147,6 @@ Learn more about adding JWT authentication to your API with Cognito User Pool.
 If you want to use a third-party auth provider like [Auth0](https://auth0.com), you can use Auth0-issued JWT to authorize the API.
 
 ```js
-import { HttpJwtAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
-
 new Api(stack, "Api", {
   authorizers: {
     auth0: {

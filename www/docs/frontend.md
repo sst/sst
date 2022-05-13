@@ -22,7 +22,7 @@ SST provides out of the box support for [Create React App](https://reactjs.org),
 <TabItem value="next">
 
 ```js
-new NextjsSite(this, "Next", {
+new NextjsSite(stack, "Next", {
   path: "path/to/site",
 });
 ```
@@ -31,7 +31,7 @@ new NextjsSite(this, "Next", {
 <TabItem value="react">
 
 ```js
-new ReactStaticSite(this, "React", {
+new ReactStaticSite(stack, "React", {
   path: "path/to/site",
 });
 ```
@@ -40,7 +40,7 @@ new ReactStaticSite(this, "React", {
 <TabItem value="vite">
 
 ```js
-new ViteStaticSite(this, "Vite", {
+new ViteStaticSite(stack, "Vite", {
   path: "path/to/site",
 });
 ```
@@ -49,7 +49,7 @@ new ViteStaticSite(this, "Vite", {
 <TabItem value="static">
 
 ```js
-new StaticSite(this, "Site", {
+new StaticSite(stack, "Site", {
   path: "path/to/site",
 });
 ```
@@ -82,7 +82,7 @@ You can configure a custom domain (ie. `domain.com`) for your web app. And SST w
 <TabItem value="next">
 
 ```js {3}
-new NextjsSite(this, "Next", {
+new NextjsSite(stack, "Next", {
   path: "path/to/site",
   customDomain: "domain.com",
 });
@@ -92,7 +92,7 @@ new NextjsSite(this, "Next", {
 <TabItem value="react">
 
 ```js {3}
-new ReactStaticSite(this, "React", {
+new ReactStaticSite(stack, "React", {
   path: "path/to/site",
   customDomain: "domain.com",
 });
@@ -102,7 +102,7 @@ new ReactStaticSite(this, "React", {
 <TabItem value="vite">
 
 ```js {3}
-new ViteStaticSite(this, "Vite", {
+new ViteStaticSite(stack, "Vite", {
   path: "path/to/site",
   customDomain: "domain.com",
 });
@@ -112,7 +112,7 @@ new ViteStaticSite(this, "Vite", {
 <TabItem value="static">
 
 ```js {3}
-new StaticSite(this, "Site", {
+new StaticSite(stack, "Site", {
   path: "path/to/site",
   customDomain: "domain.com",
 });
@@ -129,7 +129,7 @@ If a domain alias is configured, visitors to the alias domain will be redirected
 <TabItem value="next">
 
 ```js {5}
-new NextjsSite(this, "Next", {
+new NextjsSite(stack, "Next", {
   path: "path/to/site",
   customDomain: {
     domainName: "domain.com",
@@ -142,7 +142,7 @@ new NextjsSite(this, "Next", {
 <TabItem value="react">
 
 ```js {5}
-new ReactStaticSite(this, "React", {
+new ReactStaticSite(stack, "React", {
   path: "path/to/site",
   customDomain: {
     domainName: "domain.com",
@@ -155,7 +155,7 @@ new ReactStaticSite(this, "React", {
 <TabItem value="vite">
 
 ```js {5}
-new ViteStaticSite(this, "Vite", {
+new ViteStaticSite(stack, "Vite", {
   path: "path/to/site",
   customDomain: {
     domainName: "domain.com",
@@ -168,7 +168,7 @@ new ViteStaticSite(this, "Vite", {
 <TabItem value="static">
 
 ```js {5}
-new StaticSite(this, "Site", {
+new StaticSite(stack, "Site", {
   path: "path/to/site",
   customDomain: {
     domainName: "domain.com",
@@ -188,13 +188,13 @@ A benefit of deploying the frontend web app alongside the backend is to be able 
 <TabItem value="next">
 
 ```js {9-11}
-const api = new Api(this, "Api", {
+const api = new Api(stack, "Api", {
   routes: {
     "GET /": "src/lambda.main",
   },
 });
 
-new NextjsSite(this, "Next", {
+new NextjsSite(stack, "Next", {
   path: "path/to/site",
   environment: {
     NEXT_PUBLIC_API_URL: api.url,
@@ -206,13 +206,13 @@ new NextjsSite(this, "Next", {
 <TabItem value="react">
 
 ```js {9-11}
-const api = new Api(this, "Api", {
+const api = new Api(stack, "Api", {
   routes: {
     "GET /": "src/lambda.main",
   },
 });
 
-new ReactStaticSite(this, "React", {
+new ReactStaticSite(stack, "React", {
   path: "path/to/site",
   environment: {
     REACT_APP_API_URL: api.url,
@@ -224,13 +224,13 @@ new ReactStaticSite(this, "React", {
 <TabItem value="vite">
 
 ```js {9-11}
-const api = new Api(this, "Api", {
+const api = new Api(stack, "Api", {
   routes: {
     "GET /": "src/lambda.main",
   },
 });
 
-new ReactStaticSite(this, "React", {
+new ReactStaticSite(stack, "React", {
   path: "path/to/site",
   environment: {
     VITE_API_URL: api.url,
@@ -242,13 +242,13 @@ new ReactStaticSite(this, "React", {
 <TabItem value="static">
 
 ```js {9-11}
-const api = new Api(this, "Api", {
+const api = new Api(stack, "Api", {
   routes: {
     "GET /": "src/lambda.main",
   },
 });
 
-new StaticSite(this, "Site", {
+new StaticSite(stack, "Site", {
   path: "path/to/site",
   environment: {
     VUE_APP_API_URL: api.url,
