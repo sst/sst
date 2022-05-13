@@ -1,0 +1,18 @@
+{
+  "mode": "pre",
+  "tag": "next",
+  "initialVersions": {
+    "@serverless-stack/cli": "1.0.11",
+    "@serverless-stack/console": "1.0.11",
+    "@serverless-stack/core": "1.0.11",
+    "create-sst": "1.0.11",
+    "@serverless-stack/node": "1.0.11",
+    "@serverless-stack/resources": "1.0.11",
+    "@serverless-stack/static-site-env": "1.0.11",
+    "@serverless-stack/web": "1.0.11",
+    "@serverless-stack/docs": "1.0.9"
+  },
+  "changesets": [
+    "shiny-ads-change"
+  ]
+}
