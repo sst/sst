@@ -12,7 +12,8 @@
   "scripts": {
     "watch": "tsc -b -w",
     "build": "turbo run build --filter=!@serverless-stack/docs --filter=!@serverless-stack/console",
-    "release": "yarn build && yarn changeset publish"
+    "release": "yarn build && yarn changeset publish",
+    "release-snapshot": "yarn changeset version --snapshot &&yarn changeset publish --no-git-tag"
   },
   "repository": {
     "type": "git",
