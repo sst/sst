@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/docs",
-  "version": "1.0.10",
+  "version": "1.1.0",
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
