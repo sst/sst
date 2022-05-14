@@ -36,10 +36,13 @@ jobs:
         # https://github.com/changesets/action
         uses: changesets/action@v1
         with:
-          # this expects you to have a script called release which does a build for your packages and calls changeset publish
           createGithubReleases: false
-          publish: yarn release
-          version: yarn changeset version
+
+      - name: Publish
+        if: steps.changesets.outputs.hasChangesets == 'false'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        # You can do something when a publish should happen.
+        run: |
+          node ./.changesets/aggregate.mjs
