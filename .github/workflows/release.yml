@@ -37,12 +37,13 @@ jobs:
         uses: changesets/action@v1
         with:
           createGithubReleases: false
+          publish: yarn release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish
-        if: steps.changesets.outputs.hasChangesets == 'false'
+        # if: steps.changesets.outputs.published == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
