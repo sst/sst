@@ -31,6 +31,10 @@ import { MainStack as ApiStack } from "./api-stack";
 import * as sst from "@serverless-stack/resources";
 
 export default async function main(app: sst.App) {
+  app.setDefaultFunctionProps({
+    runtime: "nodejs16.x",
+  });
+
   app.stack(ApiStack, { id: "api" })
   //.stack(ApiExtraRoutesStack, { id: "api-extra-routes" })
   //.stack(ApiV1Stack, { id: "apiv1" });

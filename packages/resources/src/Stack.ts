@@ -67,7 +67,7 @@ export class Stack extends cdk.Stack {
    * ```js
    * stack.setDefaultFunctionProps({
    *   srcPath: "backend",
-   *   runtime: "nodejs14.x",
+   *   runtime: "nodejs16.x",
    * });
    * ```
    */

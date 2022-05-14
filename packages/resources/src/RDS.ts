@@ -371,7 +371,7 @@ export class RDS extends Construct implements SSTConstruct {
     const fn = new Fn(this, "MigrationFunction", {
       srcPath,
       handler: "index.handler",
-      runtime: "nodejs14.x",
+      runtime: "nodejs16.x",
       timeout: 900,
       memorySize: 1024,
       environment: {
@@ -410,7 +410,7 @@ export class RDS extends Construct implements SSTConstruct {
     // Create custom resource handler
     const handler = new lambda.Function(this, "MigrationHandler", {
       code: lambda.Code.fromAsset(path.join(__dirname, "Script")),
-      runtime: lambda.Runtime.NODEJS_14_X,
+      runtime: lambda.Runtime.NODEJS_16_X,
       handler: "index.handler",
       timeout: cdk.Duration.minutes(15),
       memorySize: 1024,
