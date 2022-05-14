@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { exec } from "node:child_process";
+import { exec, execSync } from "node:child_process";
 
 const THANKLESS_COMMITTERS = ["thdxr", "fwang", "jayair"];
 
@@ -66,3 +66,6 @@ const notes = [
   "```",
 ];
 console.log(notes.join("\n"));
+
+execSync(`git tag v${version}`);
+execSync(`git push origin --tags`);
