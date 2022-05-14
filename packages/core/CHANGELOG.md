@@ -1,5 +1,11 @@
 # @serverless-stack/core
 
+## 1.1.1
+
+### Patch Changes
+
+- [#1698](https://github.com/serverless-stack/serverless-stack/pull/1698) [`b81522a4`](https://github.com/serverless-stack/serverless-stack/commit/b81522a4dd0789292a4300b5465c4cab13f7a0cc) Thanks [@thdxr](https://github.com/thdxr)! - My test feature
+
 ## 1.1.0
 
 ### Minor Changes
