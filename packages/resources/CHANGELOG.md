@@ -1,5 +1,16 @@
 # @serverless-stack/resources
 
+## 1.1.0
+
+### Minor Changes
+
+- 5860eb64: Update CDK to 2.24.0
+
+### Patch Changes
+
+- Updated dependencies [5860eb64]
+  - @serverless-stack/core@1.1.0
+
 ## 1.0.12
 
 ### Patch Changes
