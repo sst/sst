@@ -12,7 +12,7 @@ export function MyStack({ stack }: StackContext) {
     routes: {
       "GET /": {
         function: {
-          handler: "lambda.handler",
+          handler: "functions/lambda.handler",
           // Increase the timeout for generating screenshots
           timeout: 15,
           // Load Chrome in a Layer

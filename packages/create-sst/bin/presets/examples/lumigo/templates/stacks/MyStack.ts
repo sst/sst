@@ -5,7 +5,7 @@ export function MyStack({ stack, app }: StackContext) {
   // Create a HTTP API
   const api = new Api(stack, "Api", {
     routes: {
-      "GET /": "lambda.handler",
+      "GET /": "functions/lambda.handler",
     },
   });
 

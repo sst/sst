@@ -1,7 +1,7 @@
 import { extend, extract, install, patch } from "create-sst";
 
 export default [
-  extend("presets/base/example"),
+  extend("presets/starters/typescript-starter"),
   extract(),
   install({
     packages: ["@thundra/esbuild-plugin"],

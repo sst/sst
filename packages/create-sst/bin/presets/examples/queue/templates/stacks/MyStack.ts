@@ -3,7 +3,7 @@ import { StackContext, Queue, Api } from "@serverless-stack/resources";
 export function MyStack({ stack }: StackContext) {
   // Create Queue
   const queue = new Queue(stack, "Queue", {
-    consumer: "consumer.main",
+    consumer: "functions/consumer.main",
   });
 
   // Create the HTTP API
@@ -17,7 +17,7 @@ export function MyStack({ stack }: StackContext) {
       },
     },
     routes: {
-      "POST /": "lambda.main",
+      "POST /": "functions/lambda.main",
     },
   });
 

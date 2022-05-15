@@ -4,8 +4,8 @@ export function MyStack({ stack }: StackContext) {
   // Create Topic
   const topic = new Topic(stack, "Ordered", {
     subscribers: {
-      receipt: "receipt.main",
-      shipping: "shipping.main",
+      receipt: "functions/receipt.main",
+      shipping: "functions/shipping.main",
     },
   });
 
@@ -20,7 +20,7 @@ export function MyStack({ stack }: StackContext) {
       },
     },
     routes: {
-      "POST /order": "order.main",
+      "POST /order": "functions/order.main",
     },
   });
 
