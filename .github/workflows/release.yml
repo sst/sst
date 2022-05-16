@@ -33,13 +33,20 @@ jobs:
         run: yarn --frozen-lockfile --ignore-scripts
 
       - name: Create Release Pull Request or Publish to npm
+        id: changesets
         # https://github.com/changesets/action
         uses: changesets/action@v1
         with:
-          # this expects you to have a script called release which does a build for your packages and calls changeset publish
           createGithubReleases: false
           publish: yarn release
-          version: yarn changeset version
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Aggregate
+        if: steps.changesets.outputs.published == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          node ./.changeset/aggregate.mjs

@@ -21,7 +21,7 @@ When running integration tests, you often need to test against the deployed reso
 To do this, first add them as stack outputs:
 
 ```js {7-9}
-const api = new Api(this, "Api", {
+const api = new Api(stack, "Api", {
   routes: {
     "GET /": "src/lambda.main",
   },

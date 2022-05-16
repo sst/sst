@@ -11,10 +11,10 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@serverless-stack/cli": "^1.0.11",
-    "@serverless-stack/resources": "^1.0.11",
+    "@serverless-stack/cli": "^1.1.1",
+    "@serverless-stack/resources": "^1.1.1",
     "typescript": "^4.6.4",
-    "@tsconfig/node14": "^1.0.1",
+    "@tsconfig/node16": "^1.0.2",
     "datadog-cdk-constructs-v2": "^0.3.1"
   },
   "workspaces": [

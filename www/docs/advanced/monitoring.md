@@ -26,7 +26,7 @@ Next, you'll need to import it into a stack. Add pass in the functions you want 
 ```js
 import { Datadog } from "datadog-cdk-constructs";
 
-const datadog = new Datadog(this, "Datadog", {
+const datadog = new Datadog(stack, "Datadog", {
   nodeLayerVersion: 65,
   extensionLayerVersion: 13,
   apiKey: "<DATADOG_API_KEY>",
@@ -38,7 +38,7 @@ datadog.addLambdaFunctions([myfunc]);
 To monitor all the functions in a stack, you can use the Stack construct's [`getAllFunctions`](constructs/Stack.md#getallfunctions) method and do the following at the bottom of your stack definition.
 
 ```js
-datadog.addLambdaFunctions(this.getAllFunctions());
+datadog.addLambdaFunctions(stack.getAllFunctions());
 ```
 
 For more details, [check out the Datadog docs](https://docs.datadoghq.com/serverless/installation/nodejs/?tab=awscdk).
@@ -55,7 +55,7 @@ Then add the Layer to your stack.
 import { LayerVersion } from "aws-cdk-lib/aws-lambda";
 
 const sentry = LayerVersion.fromLayerVersionArn(
-  this,
+  stack,
   "SentryLayer",
   `arn:aws:lambda:${scope.region}:943013980633:layer:SentryNodeServerlessSDK:34`
 );
@@ -116,7 +116,7 @@ To monitor all the functions in a stack, you can use the [Stack](constructs/Stac
 ```js
 import * as cdk from "aws-cdk-lib";
 
-this.getAllFunctions().forEach(fn =>
+stack.getAllFunctions().forEach(fn =>
   cdk.Tags.of(fn).add("lumigo:auto-trace", "true")
 );
 ```
@@ -140,7 +140,7 @@ With the layer ARN, you can use the layer construct in your CDK code.
 ```ts
 import { LayerVersion } from "aws-cdk-lib/aws-lambda";
 
-const thundraLayer = LayerVersion.fromLayerVersionArn(this, "ThundraLayer", "<ARN>");
+const thundraLayer = LayerVersion.fromLayerVersionArn(stack, "ThundraLayer", "<ARN>");
 ```
 
 You can then set it for all the functions in your stack using the [`addDefaultFunctionLayers`](constructs/Stack.md#adddefaultfunctionlayers) and [`addDefaultFunctionEnv`](constructs/Stack.md#adddefaultfunctionenv). Note we only want to enable this when the function is deployed, not in [Live Lambda Dev](live-lambda-development.md) as the layer will prevent the debugger from connecting.
@@ -150,13 +150,13 @@ if (!scope.local) {
   const thundraAWSAccountNo = 269863060030;
   const thundraNodeLayerVersion = 94; // Latest version at time of writing
   const thundraLayer = LayerVersion.fromLayerVersionArn(
-    this,
+    stack,
     "ThundraLayer",
     `arn:aws:lambda:${scope.region}:${thundraAWSAccountNo}:layer:thundra-lambda-node-layer:${thundraNodeLayerVersion}`,
   );
-  this.addDefaultFunctionLayers([thundraLayer]);
+  stack.addDefaultFunctionLayers([thundraLayer]);
   
-  this.addDefaultFunctionEnv({
+  stack.addDefaultFunctionEnv({
     THUNDRA_APIKEY: process.env.THUNDRA_API_KEY,
     NODE_OPTIONS: "-r @thundra/core/dist/bootstrap/lambda",
   });
@@ -184,7 +184,7 @@ With the layer ARN, you can use the layer construct in your CDK code. To ensure 
 ```ts
 import { CfnFunction, LayerVersion } from "aws-cdk-lib/aws-lambda";
 
-const newRelicLayer = LayerVersion.fromLayerVersionArn(this, "NewRelicLayer", "<ARN>>");
+const newRelicLayer = LayerVersion.fromLayerVersionArn(stack, "NewRelicLayer", "<ARN>>");
 
 // Configure New Relic handler wrapper if not in local mode
 if (!scope.local) {

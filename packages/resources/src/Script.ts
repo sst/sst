@@ -216,7 +216,7 @@ export class Script extends Construct {
   private createCustomResourceFunction(): lambda.Function {
     const handler = new lambda.Function(this, "ScriptHandler", {
       code: lambda.Code.fromAsset(path.join(__dirname, "Script")),
-      runtime: lambda.Runtime.NODEJS_14_X,
+      runtime: lambda.Runtime.NODEJS_16_X,
       handler: "index.handler",
       timeout: cdk.Duration.minutes(15),
       memorySize: 1024,
