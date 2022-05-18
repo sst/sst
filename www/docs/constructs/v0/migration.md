@@ -320,7 +320,7 @@ permissions: "*"
 // to
 {
   defaults: {
-    functionProps: { timeout: 10 },
+    function: { timeout: 10 },
     authorizer: "lambda",
     authorizationScopes: [...],
     payloadFormatVersion: "2.0",
@@ -748,7 +748,7 @@ new GraphQLApi(stack, "Api", {
 // to
 {
   defaults: {
-    functionProps: {
+    function: {
       timeout: 10
     },
   }
@@ -1238,7 +1238,7 @@ api.cdk.graphqlApi;
 // to
 {
   defaults: {
-    functionProps: { timeout: 10 },
+    function: { timeout: 10 },
     authorizer: "user_pools",
     authorizationScopes: [...],
   }
@@ -2040,7 +2040,7 @@ bus.attachPermissionsToTarget("myRule", "myTarget", [...]);
 // to
 {
   defaults: {
-    functionProps: {
+    function: {
       timeout: 10
     },
   }
@@ -2710,7 +2710,7 @@ From there you can follow [jest's getting started guide](https://jestjs.io/docs/
 // to
 {
   defaults: {
-    functionProps: {
+    function: {
       timeout: 10
     },
   }
