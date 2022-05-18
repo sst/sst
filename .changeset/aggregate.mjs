@@ -61,11 +61,12 @@ const notes = [
   `---`,
   `Update using:`,
   "``` sh",
-  "$ npx sst update v1.1.0",
-  "$ yarn sst update v1.1.0",
+  "$ npx sst update v" + version,
+  "$ yarn sst update v" + version,
   "```",
 ];
-console.log(notes.join("\n"));
+console.log(`::set-output name=notes::${notes.join("%0A")}`);
+console.log(`::set-output name=version::v${version}`);
 
 execSync(`git tag v${version}`);
 execSync(`git push origin --tags`);
