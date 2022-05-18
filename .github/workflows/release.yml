@@ -43,9 +43,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: View outputs
+        run: echo ${{join(steps.changesets.outputs.*, ' ')}}
+
       - name: Aggregate
         id: aggregate
-          # if: steps.changesets.outputs.published == 'true'
+        if: steps.changesets.outputs.published == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -53,7 +56,7 @@ jobs:
           node ./.changeset/aggregate.mjs
 
       - name: Create Release
-        # if: steps.changesets.outputs.published == 'true'
+        if: steps.changesets.outputs.published == 'true'
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -61,5 +64,5 @@ jobs:
           tag_name: ${{ steps.aggregate.outputs.version }}
           release_name: ${{ steps.aggregate.outputs.version }}
           body: ${{ steps.aggregate.outputs.notes }}
-          draft: true
+          draft: false
           prerelease: false
