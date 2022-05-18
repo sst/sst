@@ -55,6 +55,7 @@ export function check(root: string, config: Config) {
       checkJs: true,
       noEmit: true,
       strict: true,
+      strictNullChecks: false,
       noImplicitAny: false,
     },
   });
