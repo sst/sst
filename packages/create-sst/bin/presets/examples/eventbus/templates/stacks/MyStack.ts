@@ -9,8 +9,8 @@ export function MyStack({ stack }: StackContext) {
           detailType: ["Order"],
         },
         targets: {
-          receipt: "receipt.handler",
-          shipping: "shipping.handler",
+          receipt: "functions/receipt.handler",
+          shipping: "functions/shipping.handler",
         },
       },
     },
@@ -26,7 +26,7 @@ export function MyStack({ stack }: StackContext) {
       },
     },
     routes: {
-      "POST /order": "order.handler",
+      "POST /order": "functions/order.handler",
     },
   });
 
