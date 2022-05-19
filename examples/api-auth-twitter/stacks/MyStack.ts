@@ -4,9 +4,9 @@ export function MyStack({ stack }: StackContext) {
   // Create Api
   const api = new Api(stack, "Api", {
     routes: {
-      "GET /private": "private.main",
+      "GET /private": "functions/private.main",
       "GET /public": {
-        function: "public.main",
+        function: "functions/public.main",
         authorizer: "iam",
       },
     },

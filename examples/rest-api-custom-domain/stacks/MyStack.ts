@@ -7,7 +7,7 @@ export function MyStack({ stack, app }: StackContext) {
   const api = new Api(stack, "Api", {
     customDomain: `${stage}.example.com`,
     routes: {
-      "GET /": "lambda.main",
+      "GET /": "functions/lambda.main",
     },
   });
 

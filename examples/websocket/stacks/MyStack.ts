@@ -19,9 +19,9 @@ export function MyStack({ stack }: StackContext) {
       },
     },
     routes: {
-      $connect: "connect.main",
-      $disconnect: "disconnect.main",
-      sendmessage: "sendMessage.main",
+      $connect: "functions/connect.main",
+      $disconnect: "functions/disconnect.main",
+      sendmessage: "functions/sendMessage.main",
     },
   });
 
