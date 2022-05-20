@@ -377,7 +377,7 @@ test("constructor: with domain with alias", async () => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
     });
   const site = new NextjsSite(stack, "Site", {
-    path: "test/nextjs-nextjs-site",
+    path: "test/nextjs-site",
     customDomain: {
       domainName: "domain.com",
       domainAlias: "www.domain.com",
