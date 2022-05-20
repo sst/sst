@@ -561,10 +561,6 @@ test("constructor: buildOutput multiple files", async () => {
         BucketName: ANY,
         ObjectKey: ANY,
       },
-      {
-        BucketName: ANY,
-        ObjectKey: ANY,
-      },
     ],
   });
 });

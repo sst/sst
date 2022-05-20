@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
-import { runBuildCommand, clearBuildOutput } from "../helpers";
 import paths from "../../scripts/util/paths";
+import { runBuildCommand, clearBuildOutput } from "../helpers";
 import { beforeEach, afterAll, test, expect } from "vitest";
 
 beforeEach(async () => {

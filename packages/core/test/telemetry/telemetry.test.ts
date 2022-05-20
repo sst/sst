@@ -1,3 +1,4 @@
+import { test, expect } from "vitest";
 import { normalizeGitUrl } from "../../src/telemetry/project-id";
 
 test("normalizeGitUrl git", async () => {
