@@ -417,7 +417,7 @@ test("bundle.esbuildConfig is object", async () => {
     handler: "test/lambda.handler",
     bundle: {
       esbuildConfig: {
-        plugins: "test/function/esbuild-config.js",
+        plugins: "test/function/esbuild-config.cjs",
         keepNames: true,
       },
     },
