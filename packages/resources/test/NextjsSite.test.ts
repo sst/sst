@@ -42,7 +42,7 @@ beforeAll(async () => {
   );
   const cmd = [
     "node",
-    path.join(__dirname, "../assets/NextjsSite/build/build.js"),
+    path.join(__dirname, "../assets/NextjsSite/build/build.cjs"),
     "--path",
     path.join(__dirname, "..", sitePath),
     "--output",

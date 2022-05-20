@@ -762,7 +762,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     const result = spawn.sync(
       "node",
       [
-        path.join(__dirname, "../assets/NextjsSite/build/build.js"),
+        path.join(__dirname, "../assets/NextjsSite/build/build.cjs"),
         "--path",
         path.resolve(sitePath),
         "--output",
