@@ -1,6 +1,6 @@
 import { test, expect, beforeAll, vi } from "vitest";
-import * as path from "path";
-import * as fs from "fs-extra";
+import path from "path";
+import fs from "fs-extra";
 import { execSync } from "child_process";
 import {
   countResources,

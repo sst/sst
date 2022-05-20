@@ -1,5 +1,4 @@
-import * as path from "path";
-import * as fs from "fs-extra";
+import fs from "fs-extra";
 import { print } from "graphql";
 import { mergeTypeDefs } from "@graphql-tools/merge";
 import { loadFilesSync } from "@graphql-tools/load-files";

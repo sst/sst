@@ -3,7 +3,7 @@ import * as os from "os";
 import * as path from "path";
 import * as util from "util";
 import AWS from "aws-sdk";
-import * as fs from "fs-extra";
+import fs from "fs-extra";
 import * as readline from "readline";
 import { PatchedSharedIniFileCredentials } from "./aws-sdk-inifile.js";
 import { SharedIniFile } from "./sdk_ini_file.js";

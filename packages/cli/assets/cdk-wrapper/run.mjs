@@ -18,7 +18,7 @@ import * as sst from "@serverless-stack/resources";
 import { initializeLogger, Util } from "@serverless-stack/core";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
-const config = fs.readJson(path.join(__dirname, "./sst-merged.json"));
+const config = fs.readJsonSync(path.join(__dirname, "./sst-merged.json"));
 const appPath = process.cwd();
 const buildDir = ".build";
 

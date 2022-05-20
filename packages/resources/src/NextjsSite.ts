@@ -1,6 +1,7 @@
 import chalk from "chalk";
-import * as path from "path";
-import * as fs from "fs-extra";
+import path from "path";
+import url from "url";
+import fs from "fs-extra";
 import spawn from "cross-spawn";
 
 import { Construct } from "constructs";
@@ -41,6 +42,8 @@ import {
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import { getHandlerHash } from "./util/builder.js";
 import * as crossRegionHelper from "./nextjs-site/cross-region-helper.js";
+
+const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 export interface NextjsDomainProps extends BaseSiteDomainProps {}
 export interface NextjsCdkDistributionProps
@@ -422,7 +425,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     }
 
     // create zip files
-    const script = path.join(__dirname, "../assets/BaseSite/archiver.js");
+    const script = path.join(__dirname, "../assets/BaseSite/archiver.cjs");
     const zipPath = path.resolve(
       path.join(buildDir, `NextjsSite-${this.node.id}-${this.node.addr}`)
     );

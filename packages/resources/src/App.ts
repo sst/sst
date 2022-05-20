@@ -1,5 +1,5 @@
-import * as path from "path";
-import * as fs from "fs-extra";
+import path from "path";
+import fs from "fs-extra";
 import * as cdk from "aws-cdk-lib";
 import { IConstruct } from "constructs";
 import * as s3 from "aws-cdk-lib/aws-s3";

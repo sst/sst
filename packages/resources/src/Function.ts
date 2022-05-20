@@ -2,8 +2,8 @@
 // Note: disabling ban-type rule so we don't get an error referencing the class Function
 
 import path from "path";
-import * as esbuild from "esbuild";
-import * as fs from "fs-extra";
+import esbuild from "esbuild";
+import fs from "fs-extra";
 import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
@@ -18,6 +18,9 @@ import { Duration, toCdkDuration } from "./util/duration.js";
 import { SSTConstruct } from "./Construct.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import { State, Runtime } from "@serverless-stack/core";
+
+import url from "url";
+const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 const supportedRuntimes = [
   lambda.Runtime.NODEJS,

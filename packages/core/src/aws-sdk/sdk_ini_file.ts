@@ -5,10 +5,10 @@
  * region at runtime, but unfortunately it is private upstream.
  */
 
-import * as os from 'os';
-import * as path from 'path';
-import * as AWS from 'aws-sdk';
-import * as fs from 'fs-extra';
+import * as os from "os";
+import * as path from "path";
+import * as AWS from "aws-sdk";
+import fs from "fs-extra";
 
 export interface SharedIniFileOptions {
   isConfig?: boolean;
@@ -29,8 +29,10 @@ export class SharedIniFile {
   public async getProfile(profile: string) {
     await this.ensureFileLoaded();
 
-    const profileIndex = profile !== (AWS as any).util.defaultProfile && this.isConfig ?
-      'profile ' + profile : profile;
+    const profileIndex =
+      profile !== (AWS as any).util.defaultProfile && this.isConfig
+        ? "profile " + profile
+        : profile;
 
     return this.parsedContents![profileIndex];
   }
@@ -38,8 +40,8 @@ export class SharedIniFile {
   private getDefaultFilepath(): string {
     return path.join(
       os.homedir(),
-      '.aws',
-      this.isConfig ? 'config' : 'credentials',
+      ".aws",
+      this.isConfig ? "config" : "credentials"
     );
   }
 
@@ -48,7 +50,7 @@ export class SharedIniFile {
       return;
     }
 
-    if (!await fs.pathExists(this.filename)) {
+    if (!(await fs.pathExists(this.filename))) {
       this.parsedContents = {};
       return;
     }

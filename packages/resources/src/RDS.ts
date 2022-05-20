@@ -1,6 +1,6 @@
 import path from "path";
 import glob from "glob";
-import * as fs from "fs-extra";
+import fs from "fs-extra";
 import * as crypto from "crypto";
 import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
