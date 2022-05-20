@@ -57,6 +57,19 @@ $ cd serverless-stack
 $ yarn
 ```
 
+Build the project
+```bash
+$ yarn build
+```
+
+### Core
+
+If you are working on the `packages/core` part, run the watcher at the root.
+
+```bash
+$ yarn watch
+```
+
 ### Resources
 
 If you are working on the `packages/resources` part, run the watcher at the root.
