@@ -1,7 +1,7 @@
-const fs = require("fs");
-const path = require("path");
-const { runStartCommand, clearBuildOutput } = require("../helpers");
-const { State } = require("@serverless-stack/core");
+import fs from "fs";
+import path from "path";
+import { runBuildCommand, runStartCommand, clearBuildOutput } from "../helpers";
+import { beforeEach, afterAll, test, expect } from "vitest";
 
 beforeEach(async () => {
   await clearBuildOutput(__dirname);
@@ -20,17 +20,4 @@ test("start-base", async () => {
   // Check --outputs-file
   const outputsPath = path.join(__dirname, "outputs.json");
   expect(fs.readFileSync(outputsPath, "utf8").trim()).toEqual("{}");
-
-  // Check test outputs
-  const funcs = State.Function.read(__dirname);
-  expect(funcs).toMatchObject([
-    {
-      handler: "src/sns/sub-folder/sns.handler",
-      srcPath: ".",
-    },
-    {
-      handler: "api.main",
-      srcPath: "src/api",
-    },
-  ]);
 });

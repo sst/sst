@@ -6,13 +6,13 @@ import {
   StateFrom,
 } from "xstate";
 import path from "path";
-import { Handler } from "../runtime/handler";
-import { State } from "../state";
-import picomatch from "picomatch";
-import { EventDelegate } from "../events";
-import chokidar from "chokidar";
-import { Issue } from "../runtime/handler/definition";
 import { fromPairs } from "remeda";
+import chokidar from "chokidar";
+import picomatch from "picomatch";
+import { Handler } from "../runtime/handler/index.js";
+import { State } from "../state/index.js";
+import { EventDelegate } from "../events.js";
+import { Issue } from "../runtime/handler/definition.js";
 
 type Context = {
   funcs: Record<string, InterpreterFrom<typeof funcMachine>>;

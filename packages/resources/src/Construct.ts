@@ -1,7 +1,7 @@
 import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
 import { Function as Fn } from "aws-cdk-lib/aws-lambda";
-import { Stack } from "./Stack";
+import { Stack } from "./Stack.js";
 
 const JSII_RTTI_SYMBOL_1 = Symbol.for("jsii.rtti");
 

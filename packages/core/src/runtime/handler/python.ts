@@ -1,8 +1,8 @@
 import { Definition } from "./definition";
 import os from "os";
 import path from "path";
-import { Paths } from "../../util";
-import { bundle as bundlePython } from "./pythonBundling";
+import { Paths } from "../../util/index.js";
+import { bundle as bundlePython } from "./pythonBundling.js";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 
 const RUNTIME_MAP: Record<string, lambda.Runtime> = {

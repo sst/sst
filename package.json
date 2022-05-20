@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "private": true,
+  "type": "module",
   "workspaces": {
     "packages": [
       "packages/*",
@@ -12,7 +13,7 @@
   "scripts": {
     "watch": "tsc -b -w",
     "build": "turbo run build --filter=!@serverless-stack/docs --filter=!@serverless-stack/console",
-    "release": "yarn build && yarn changeset publish --no-git-tag",
+    "release": "yarn build && yarn changeset publish",
     "release-snapshot": "yarn build && yarn changeset version --snapshot && yarn changeset publish --no-git-tag --tag=snapshot && git checkout ."
   },
   "repository": {
@@ -22,12 +23,10 @@
   "devDependencies": {
     "@changesets/changelog-github": "^0.4.4",
     "@changesets/cli": "^2.22.0",
-    "@types/jest": "^27.4.1",
-    "jest": "27.5.1",
     "prettier": "^2.2.1",
-    "ts-jest": "27.1.3",
     "turbo": "^1.2.8",
-    "typescript": "^4.6.2"
+    "typescript": "^4.6.2",
+    "vitest": "^0.12.7"
   },
   "lint-staged": {
     "*.{js,ts,css,json,md}": [

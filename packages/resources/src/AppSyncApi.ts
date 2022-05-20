@@ -12,19 +12,19 @@ import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 
-import { App } from "./App";
-import { Table } from "./Table";
-import { RDS } from "./RDS";
-import * as appSyncApiDomain from "./util/appSyncApiDomain";
-import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
+import { App } from "./App.js";
+import { Table } from "./Table.js";
+import { RDS } from "./RDS.js";
+import * as appSyncApiDomain from "./util/appSyncApiDomain.js";
+import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct.js";
 import {
   Function as Fn,
   FunctionProps,
   FunctionInlineDefinition,
   FunctionDefinition,
-} from "./Function";
-import { Permissions } from "./util/permission";
-import { domain } from "process";
+} from "./Function.js";
+import { State } from "@serverless-stack/core";
+import { Permissions } from "./util/permission.js";
 
 /////////////////////
 // Interfaces
@@ -685,8 +685,8 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         if (schema.length > 0) {
           // merge schema files
           const mergedSchema = mergeTypeDefs(loadFilesSync(schema));
-          const filePath = path.join(
-            app.buildDir,
+          const filePath = State.resolve(
+            app.appPath,
             `appsyncapi-${id}-${this.node.addr}.graphql`
           );
           fs.writeFileSync(filePath, print(mergedSchema));

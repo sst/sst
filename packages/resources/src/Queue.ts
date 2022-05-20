@@ -2,15 +2,14 @@ import { Construct } from "constructs";
 import * as sqs from "aws-cdk-lib/aws-sqs";
 import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
 import { App } from "./App";
-import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
+import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct.js";
 import {
   Function as Fn,
   FunctionInlineDefinition,
   FunctionDefinition,
-} from "./Function";
-import { toCdkDuration } from "./util/duration";
-import { Permissions } from "./util/permission";
-import { Validate } from "./util/validate";
+} from "./Function.js";
+import { toCdkDuration } from "./util/duration.js";
+import { Permissions } from "./util/permission.js";
 
 /**
  * Used to define the consumer for the queue and invocation details

@@ -1,3 +1,4 @@
+import { test, expect } from "vitest";
 /* eslint-disable @typescript-eslint/ban-ts-comment*/
 
 import {
@@ -493,9 +494,9 @@ test("globalIndexes-options", async () => {
     },
     cdk: {
       table: {
-        billingMode: dynamodb.BillingMode.PROVISIONED
-      }
-    }
+        billingMode: dynamodb.BillingMode.PROVISIONED,
+      },
+    },
   });
   hasResource(stack, "AWS::DynamoDB::Table", {
     TableName: "dev-my-app-Table",

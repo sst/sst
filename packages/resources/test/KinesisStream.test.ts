@@ -1,3 +1,4 @@
+import { test, expect } from "vitest";
 import { countResources, hasResource } from "./helper";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as kinesis from "aws-cdk-lib/aws-kinesis";

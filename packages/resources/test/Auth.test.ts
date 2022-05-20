@@ -1,3 +1,4 @@
+import { test, expect } from "vitest";
 import { ABSENT, hasResource, countResources } from "./helper";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as cognito from "aws-cdk-lib/aws-cognito";
@@ -263,7 +264,7 @@ test("login is undefined", async () => {
 test("login is email", async () => {
   const stack = new Stack(new App(), "stack");
   new Auth(stack, "Auth", {
-    login: ["email"]
+    login: ["email"],
   });
   hasResource(stack, "AWS::Cognito::UserPool", {
     AutoVerifiedAttributes: ["email"],

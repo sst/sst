@@ -12,6 +12,7 @@ async function yarnInstall(cwd) {
   if (hasPackageJson) {
     await execPromise("yarn", {
       cwd,
+      stdio: "inherit",
       TIMEOUT,
     });
   }

@@ -4,10 +4,10 @@ import { Construct, IConstruct } from "constructs";
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as regionInfo from "aws-cdk-lib/region-info";
-import { FunctionProps, Function as Fn } from "./Function";
-import { App } from "./App";
-import { isConstruct } from "./Construct";
-import { Permissions } from "./util/permission";
+import { FunctionProps, Function as Fn } from "./Function.js";
+import { App } from "./App.js";
+import { isConstruct } from "./Construct.js";
+import { Permissions } from "./util/permission.js";
 
 export type StackProps = cdk.StackProps;
 

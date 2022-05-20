@@ -1,3 +1,4 @@
+import { test, expect } from "vitest";
 /* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/ban-types, @typescript-eslint/no-empty-function */
 
 import path from "path";

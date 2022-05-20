@@ -1,3 +1,4 @@
+import { test, expect, beforeAll, afterAll } from "vitest";
 import * as path from "path";
 import * as fs from "fs-extra";
 import { hasResource, objectLike, ANY } from "./helper";

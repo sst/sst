@@ -9,20 +9,20 @@ import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations-alpha"
 import * as elb from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import * as logs from "aws-cdk-lib/aws-logs";
 
-import { App } from "./App";
-import { Stack } from "./Stack";
-import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
+import { App } from "./App.js";
+import { Stack } from "./Stack.js";
+import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct.js";
 import {
   Function as Fn,
   FunctionProps,
   FunctionInlineDefinition,
   FunctionDefinition,
-} from "./Function";
-import { Duration, toCdkDuration } from "./util/duration";
-import { Permissions } from "./util/permission";
-import * as apigV2Cors from "./util/apiGatewayV2Cors";
-import * as apigV2Domain from "./util/apiGatewayV2Domain";
-import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog";
+} from "./Function.js";
+import { Duration, toCdkDuration } from "./util/duration.js";
+import { Permissions } from "./util/permission.js";
+import * as apigV2Cors from "./util/apiGatewayV2Cors.js";
+import * as apigV2Domain from "./util/apiGatewayV2Domain.js";
+import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog.js";
 
 const PayloadFormatVersions = ["1.0", "2.0"] as const;
 export type ApiPayloadFormatVersion = typeof PayloadFormatVersions[number];
@@ -429,7 +429,8 @@ export type ApiRouteProps<AuthorizerKeys> =
   | FunctionInlineDefinition
   | ApiFunctionRouteProps<AuthorizerKeys>
   | ApiHttpRouteProps<AuthorizerKeys>
-  | ApiAlbRouteProps<AuthorizerKeys>;
+  | ApiAlbRouteProps<AuthorizerKeys>
+  | ApiPothosRouteProps<AuthorizerKeys>;
 
 interface ApiBaseRouteProps<AuthorizerKeys = string> {
   authorizer?:
@@ -528,6 +529,47 @@ export interface ApiAlbRouteProps<AuthorizersKeys>
   };
 }
 
+/**
+ * Specify a route handler that handles GraphQL queries using Pothos
+ *
+ * @example
+ * ```js
+ * api.addRoutes(stack, {
+ *   "POST /graphql": {
+ *      type: "pothos",
+ *      schema: "backend/functions/graphql/schema.ts",
+ *      output: "graphql/schema.graphql",
+ *      function: {
+ *        handler: "functions/graphql/graphql.ts",
+ *      },
+ *      commands: [
+ *        "./genql graphql/graphql.schema graphql/
+ *      ]
+ *   }
+ * })
+ * ```
+ */
+export interface ApiPothosRouteProps<AuthorizerKeys>
+  extends ApiBaseRouteProps<AuthorizerKeys> {
+  type: "pothos";
+  /**
+   * The function definition used to create the function for this route. Must be a graphql handler
+   */
+  function: FunctionDefinition;
+  /**
+   * Path to pothos schema
+   */
+  schema?: string;
+  /**
+   * File to write graphql schema to
+   */
+  output?: string;
+  /**
+   * Commands to run after generating schema. Useful for code generation steps
+   */
+  commands?: string[];
+}
+
 /////////////////////
 // Construct
 /////////////////////
@@ -584,7 +626,14 @@ export class Api<
   private props: ApiProps<Authorizers>;
   private _customDomainUrl?: string;
   private routesData: {
-    [key: string]: Fn | string | elb.IApplicationListener;
+    [key: string]:
+      | { type: "function"; function: Fn }
+      | ({ type: "pothos"; function: Fn } & Pick<
+          ApiPothosRouteProps<any>,
+          "schema" | "output" | "commands"
+        >)
+      | { type: "url"; url: string }
+      | { type: "alb"; alb: elb.IApplicationListener };
   };
   private authorizersData: Record<string, apig.IHttpRouteAuthorizer>;
   private permissionsAttachedForAllRoutes: Permissions[];
@@ -680,7 +729,8 @@ export class Api<
    */
   public getFunction(routeKey: string): Fn | undefined {
     const route = this.routesData[this.normalizeRouteKey(routeKey)];
-    return route instanceof Fn ? route : undefined;
+    if (route?.type === "function") return route.function;
+    return undefined;
   }
 
   /**
@@ -693,9 +743,11 @@ export class Api<
    * ```
    */
   public attachPermissions(permissions: Permissions): void {
-    Object.values(this.routesData)
-      .filter((route) => route instanceof Fn)
-      .forEach((route) => (route as Fn).attachPermissions(permissions));
+    for (const route of Object.values(this.routesData)) {
+      if ("function" in route) {
+        route.function.attachPermissions(permissions);
+      }
+    }
     this.permissionsAttachedForAllRoutes.push(permissions);
   }
 
@@ -737,10 +789,24 @@ export class Api<
         httpApiId: this.cdk.httpApi.apiId,
         customDomainUrl: this._customDomainUrl,
         routes: Object.entries(this.routesData).map(([key, data]) => {
-          return {
-            route: key,
-            fn: getFunctionRef(data),
-          };
+          if (data.type === "function")
+            return {
+              type: data.type,
+              route: key,
+              fn: getFunctionRef(data.function),
+            };
+
+          if (data.type === "pothos")
+            return {
+              type: data.type,
+              route: key,
+              fn: getFunctionRef(data.function),
+              schema: data.schema,
+              output: data.output,
+              commands: data.commands,
+            };
+
+          return { type: data.type, route: key };
         }),
       },
     };
@@ -978,7 +1044,9 @@ export class Api<
     ///////////////////
     const [routeProps, integration] = (() => {
       if (Fn.isInlineDefinition(routeValue)) {
-        const routeProps = { function: routeValue };
+        const routeProps: ApiFunctionRouteProps<keyof Authorizers> = {
+          function: routeValue,
+        };
         return [
           routeProps,
           this.createFunctionIntegration(
@@ -999,6 +1067,21 @@ export class Api<
         return [
           routeValue,
           this.createHttpIntegration(scope, routeKey, routeValue, postfixName),
+        ];
+      }
+      if (routeValue.type === "pothos") {
+        return [
+          routeValue,
+          this.createPothosIntegration(
+            scope,
+            routeKey,
+            {
+              ...routeValue,
+              type: "function",
+              payloadFormatVersion: "2.0",
+            },
+            postfixName
+          ),
         ];
       }
       if ("function" in routeValue) {
@@ -1063,7 +1146,10 @@ export class Api<
     );
 
     // Store route
-    this.routesData[routeKey] = routeProps.url;
+    this.routesData[routeKey] = {
+      type: "url",
+      url: routeProps.url,
+    };
 
     return integration;
   }
@@ -1084,9 +1170,26 @@ export class Api<
     );
 
     // Store route
-    this.routesData[routeKey] = routeProps.cdk?.albListener!;
+    this.routesData[routeKey] = {
+      type: "alb",
+      alb: routeProps.cdk?.albListener!,
+    };
 
     return integration;
+  }
+
+  protected createPothosIntegration(
+    scope: Construct,
+    routeKey: string,
+    routeProps: ApiFunctionRouteProps<keyof Authorizers>,
+    postfixName: string
+  ): apig.HttpRouteIntegration {
+    return this.createFunctionIntegration(
+      scope,
+      routeKey,
+      routeProps,
+      postfixName
+    );
   }
 
   protected createFunctionIntegration(
@@ -1144,7 +1247,10 @@ export class Api<
     );
 
     // Store route
-    this.routesData[routeKey] = lambda;
+    this.routesData[routeKey] = {
+      type: "function",
+      function: lambda,
+    };
 
     // Attached existing permissions
     this.permissionsAttachedForAllRoutes.forEach((permissions) =>
@@ -1154,14 +1260,9 @@ export class Api<
     return integration;
   }
 
-  private buildRouteAuth(
-    routeProps:
-      | ApiFunctionRouteProps<keyof Authorizers>
-      | ApiHttpRouteProps<keyof Authorizers>
-      | ApiAlbRouteProps<keyof Authorizers>
-  ) {
+  private buildRouteAuth(routeProps: ApiBaseRouteProps<keyof Authorizers>) {
     const authorizerKey =
-      routeProps.authorizer || this.props.defaults?.authorizer || "none";
+      routeProps?.authorizer || this.props.defaults?.authorizer || "none";
     if (authorizerKey === "none") {
       return {
         authorizationType: "none",
@@ -1186,7 +1287,7 @@ export class Api<
       this.props.authorizers[authorizerKey as string].type;
     const authorizationScopes =
       authorizationType === "jwt" || authorizationType === "user_pool"
-        ? routeProps.authorizationScopes ||
+        ? routeProps?.authorizationScopes ||
           this.props.defaults?.authorizationScopes
         : undefined;
 

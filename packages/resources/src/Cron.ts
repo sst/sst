@@ -2,13 +2,13 @@ import { Construct } from "constructs";
 import * as events from "aws-cdk-lib/aws-events";
 import * as eventsTargets from "aws-cdk-lib/aws-events-targets";
 
-import { getFunctionRef, SSTConstruct } from "./Construct";
+import { getFunctionRef, SSTConstruct } from "./Construct.js";
 import {
   Function as Func,
   FunctionInlineDefinition,
   FunctionDefinition,
-} from "./Function";
-import { Permissions } from "./util/permission";
+} from "./Function.js";
+import { Permissions } from "./util/permission.js";
 
 export interface CronJobProps {
   /**

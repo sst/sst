@@ -184,7 +184,7 @@ export function Explorer() {
     params.stack!,
     params.addr!
   );
-  const selected = selectedApi || selectedApiV1;
+  const selected = selectedApi;
 
   useEffect(() => {
     if (!selected) return;

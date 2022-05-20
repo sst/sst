@@ -1,3 +1,4 @@
+import { test, expect, beforeEach, afterAll } from "vitest";
 import * as fs from "fs-extra";
 import { hasResource, objectLike, ANY } from "./helper";
 import { App, Api, Stack, ViteStaticSite } from "../src";

@@ -1,5 +1,6 @@
 import * as trpc from "@trpc/server";
-import { Config, Credentials } from "aws-sdk";
+import type { Credentials } from "aws-sdk";
+import AWS from "aws-sdk";
 import { DendriformPatch } from "dendriform-immer-patch-optimiser";
 import { Runtime } from "..";
 import { EventDelegate } from "../events";
@@ -48,7 +49,7 @@ export const router = trpc
   .router<Context>()
   .query("getCredentials", {
     async resolve({ ctx }) {
-      const cfg = new Config();
+      const cfg = new AWS.Config();
       const result = await new Promise<Credentials | CredentialsOptions>(
         (res, rej) =>
           cfg.getCredentials((err, c) => {

@@ -1,8 +1,8 @@
 import chokidar from "chokidar";
 import { interpret, actions, assign, createMachine } from "xstate";
-import { Config } from "../config";
-import { Stacks } from "../stacks";
-import { synth } from "../";
+import { Config } from "../config/index.js";
+import { Stacks } from "../stacks/index.js";
+import { synth } from "../index.js";
 import path from "path";
 import fs from "fs-extra";
 import crypto from "crypto";

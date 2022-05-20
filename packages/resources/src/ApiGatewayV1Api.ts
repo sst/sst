@@ -7,20 +7,20 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as apig from "aws-cdk-lib/aws-apigateway";
-import * as apigV1AccessLog from "./util/apiGatewayV1AccessLog";
+import * as apigV1AccessLog from "./util/apiGatewayV1AccessLog.js";
 
-import { App } from "./App";
-import { Stack } from "./Stack";
-import { Bucket } from "./Bucket";
-import { Duration, toCdkDuration } from "./util/duration";
-import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
+import { App } from "./App.js";
+import { Stack } from "./Stack.js";
+import { Bucket } from "./Bucket.js";
+import { Duration, toCdkDuration } from "./util/duration.js";
+import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct.js";
 import {
   Function as Fn,
   FunctionProps,
   FunctionInlineDefinition,
   FunctionDefinition,
-} from "./Function";
-import { Permissions } from "./util/permission";
+} from "./Function.js";
+import { Permissions } from "./util/permission.js";
 
 const allowedMethods = [
   "ANY",
@@ -728,6 +728,7 @@ export class ApiGatewayV1Api<
         restApiId: this.cdk.restApi.restApiId,
         routes: Object.entries(this.functions).map(([key, data]) => {
           return {
+            type: "function" as const,
             route: key,
             fn: getFunctionRef(data),
           };

@@ -5,10 +5,13 @@ const TIMEOUT = 30000;
 const root = process.cwd();
 
 // Prepare resources
+/*
 execSync("yarn build", {
   cwd: path.resolve(root, "../.."),
+  stdio: "inherit",
   TIMEOUT,
 });
+*/
 
 /*
 The default timeout is 5000ms on async tests.

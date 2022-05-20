@@ -1,4 +1,5 @@
 import os from "os";
+import path from "path";
 import fs from "fs-extra";
 import ciInfo from "ci-info";
 
@@ -44,8 +45,15 @@ export function getEnvironmentData(): EnvironmentData {
   return data;
 }
 
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+
 function getSSTVersion(): string {
-  const module = "@serverless-stack/core/package.json";
-  const packageJson = fs.readJsonSync(require.resolve(module));
+  const module = path.join(
+    require.resolve("@serverless-stack/core"),
+    "../../",
+    "package.json"
+  );
+  const packageJson = fs.readJsonSync(module);
   return packageJson.version;
 }

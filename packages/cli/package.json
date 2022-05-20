@@ -4,23 +4,10 @@
   "description": "A CLI to help deploy Serverless Stack apps.",
   "scripts": {
     "cdk-version-check": "node ./bin/sync-cdk-version.js",
-    "test": "jest"
+    "test": "vitest run"
   },
   "bin": {
-    "sst": "./bin/scripts.js"
-  },
-  "jest": {
-    "setupFilesAfterEnv": [
-      "<rootDir>/test/helpers/setup-tests.js"
-    ],
-    "testPathIgnorePatterns": [
-      "<rootDir>/assets",
-      "<rootDir>/scripts",
-      "<rootDir>/test/jest/test",
-      "<rootDir>/test/jest-ts/test",
-      "<rootDir>/test/template-app/test",
-      "<rootDir>/test/template-app-ts/test"
-    ]
+    "sst": "./bin/scripts.mjs"
   },
   "author": {
     "name": "Serverless Stack",
@@ -61,7 +48,8 @@
   },
   "devDependencies": {
     "@types/node": "^14.0.27",
-    "replace-in-file": "^6.1.0"
+    "replace-in-file": "^6.1.0",
+    "vitest": "^0.12.7"
   },
   "gitHead": "8ac2d0abc11d5de721c87658bb445e3d6c211dcf"
 }

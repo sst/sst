@@ -11,14 +11,13 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as lambdaNode from "aws-cdk-lib/aws-lambda-nodejs";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 
-import { App } from "./App";
-import { Stack } from "./Stack";
-import { Size, toCdkSize } from "./util/size";
-import { Duration, toCdkDuration } from "./util/duration";
-import { SSTConstruct } from "./Construct";
-import { Permissions, attachPermissionsToRole } from "./util/permission";
+import { App } from "./App.js";
+import { Stack } from "./Stack.js";
+import { Size, toCdkSize } from "./util/size.js";
+import { Duration, toCdkDuration } from "./util/duration.js";
+import { SSTConstruct } from "./Construct.js";
+import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import { State, Runtime } from "@serverless-stack/core";
-import { Architecture } from "aws-cdk-lib/aws-lambda";
 
 const supportedRuntimes = [
   lambda.Runtime.NODEJS,
@@ -724,7 +723,6 @@ export class Function extends lambda.Function implements SSTConstruct {
     }
     // Handle build
     else {
-      console.log("Building function", handler);
       const bundled = Runtime.Handler.bundle({
         id: localId,
         root: root.appPath,

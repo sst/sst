@@ -27,9 +27,9 @@ import * as route53Patterns from "aws-cdk-lib/aws-route53-patterns";
 import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
 import type { RoutesManifest } from "@sls-next/lambda-at-edge";
 
-import { App } from "./App";
-import { Stack } from "./Stack";
-import { SSTConstruct } from "./Construct";
+import { App } from "./App.js";
+import { Stack } from "./Stack.js";
+import { SSTConstruct } from "./Construct.js";
 import {
   BaseSiteDomainProps,
   BaseSiteReplaceProps,
@@ -37,10 +37,10 @@ import {
   BaseSiteEnvironmentOutputsInfo,
   getBuildCmdEnvironment,
   buildErrorResponsesForRedirectToIndex,
-} from "./BaseSite";
-import { Permissions, attachPermissionsToRole } from "./util/permission";
-import { getHandlerHash } from "./util/builder";
-import * as crossRegionHelper from "./nextjs-site/cross-region-helper";
+} from "./BaseSite.js";
+import { Permissions, attachPermissionsToRole } from "./util/permission.js";
+import { getHandlerHash } from "./util/builder.js";
+import * as crossRegionHelper from "./nextjs-site/cross-region-helper.js";
 
 export interface NextjsDomainProps extends BaseSiteDomainProps {}
 export interface NextjsCdkDistributionProps

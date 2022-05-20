@@ -2,9 +2,13 @@ import path from "path";
 import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
-import { App } from "./App";
-import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
-import { Permissions } from "./util/permission";
+import { App } from "./App.js";
+import {
+  Function as Fn,
+  FunctionProps,
+  FunctionDefinition,
+} from "./Function.js";
+import { Permissions } from "./util/permission.js";
 
 export interface ScriptProps {
   /**

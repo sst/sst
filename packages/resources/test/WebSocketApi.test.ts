@@ -1,3 +1,4 @@
+import { test, expect, vi } from "vitest";
 import {
   ABSENT,
   countResources,
@@ -224,7 +225,7 @@ test("accessLog-redefined", async () => {
 
 test("customDomain is string", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
-  route53.HostedZone.fromLookup = jest
+  route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
@@ -295,7 +296,7 @@ test("customDomain is string", async () => {
 
 test("customDomain.domainName is string", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
-  route53.HostedZone.fromLookup = jest
+  route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
@@ -355,7 +356,7 @@ test("customDomain.domainName is string (uppercase error)", async () => {
 
 test("customDomain is props: hostedZone-generated-from-minimal-domainName", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
-  route53.HostedZone.fromLookup = jest
+  route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
@@ -371,7 +372,7 @@ test("customDomain is props: hostedZone-generated-from-minimal-domainName", asyn
 
 test("customDomain is props: hostedZone-generated-from-full-domainName", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
-  route53.HostedZone.fromLookup = jest
+  route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
@@ -389,7 +390,7 @@ test("customDomain is props: hostedZone-generated-from-full-domainName", async (
 
 test("customDomain: cdk.domainName is apigDomainName", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
-  apig.DomainName.fromDomainNameAttributes = jest
+  apig.DomainName.fromDomainNameAttributes = vi
     .fn()
     .mockImplementation((scope, id) => {
       return new apig.DomainName(scope, id, {
@@ -440,7 +441,7 @@ test("customDomain: cdk.domainName is apigDomainName", async () => {
 
 test("customDomain: cdk.domainName and hostedZone co-exist error", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
-  apig.DomainName.fromDomainNameAttributes = jest
+  apig.DomainName.fromDomainNameAttributes = vi
     .fn()
     .mockImplementation((scope, id) => {
       return new apig.DomainName(scope, id, {
@@ -475,7 +476,7 @@ test("customDomain: cdk.domainName and hostedZone co-exist error", async () => {
 
 test("customDomain: cdk.domainName and cdk.certificate co-exist error", async () => {
   const stack = new Stack(new App({ name: "websocket" }), "stack");
-  apig.DomainName.fromDomainNameAttributes = jest
+  apig.DomainName.fromDomainNameAttributes = vi
     .fn()
     .mockImplementation((scope, id) => {
       return new apig.DomainName(scope, id, {

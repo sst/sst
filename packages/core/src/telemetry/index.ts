@@ -1,1 +1,1 @@
-export * as Telemetry from "./telemetry";
+export * as Telemetry from "./telemetry.js";

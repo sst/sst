@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs-extra";
-import { State } from "../../state";
-import { Definition, Command, buildSync, buildAsync } from "./definition";
+import { State } from "../../state/index.js";
+import { Definition, Command, buildSync, buildAsync } from "./definition.js";
 
 export const GoHandler: Definition = (opts) => {
   const artifact = State.Function.artifactsPath(opts.root, opts.id);
