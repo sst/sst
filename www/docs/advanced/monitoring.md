@@ -88,7 +88,7 @@ This can be tuned between the values of 0 and 1. Where 0 means that no performan
 You also need to wrap your function handlers.
 
 ```js
-import Sentry from "@sentry/serverless";
+import * as Sentry from "@sentry/serverless";
 
 export const handler = Sentry.AWSLambda.wrapHandler(async (event) => {
   ...
