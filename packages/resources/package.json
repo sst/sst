@@ -15,7 +15,7 @@
     "build:rds-migrator": "cd assets/RDS/migrator && yarn && cd ../../.. && node ./bin/copy-rds-migrator.js",
     "build:bridge": "node ./bin/build-bridge-client.js",
     "clean": "rm -rf dist",
-    "test": "jest"
+    "test": "vitest run"
   },
   "author": {
     "name": "Serverless Stack",
