@@ -1,4 +1,4 @@
-function getHelperMessage(message) {
+export function getHelperMessage(message: string) {
   let helper;
 
   // Can run into this issue when enabling access logs for API Gateway
@@ -54,7 +54,3 @@ function getHelperMessage(message) {
 
   return helper;
 }
-
-module.exports = {
-  getHelperMessage,
-};

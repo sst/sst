@@ -1,14 +1,12 @@
 import { Config } from "../config";
 import * as esbuild from "esbuild";
 import fs from "fs-extra";
-import { State } from "..";
+import { State } from "../state/index.js";
 import path from "path";
-import {
-  createProgram,
-  Diagnostic,
-  getLineAndCharacterOfPosition,
-  getPreEmitDiagnostics,
-} from "typescript";
+import ts from "typescript";
+import type { Diagnostic } from "typescript";
+const { createProgram, getLineAndCharacterOfPosition, getPreEmitDiagnostics } =
+  ts;
 import chalk from "chalk";
 
 export async function build(root: string, config: Config) {
@@ -31,10 +29,16 @@ export async function build(root: string, config: Config) {
     ],
     keepNames: true,
     bundle: true,
-    format: "cjs",
     sourcemap: true,
     platform: "node",
-    target: "node14",
+    target: "esnext",
+    format: "esm",
+    banner: {
+      js: [
+        `import { createRequire as topLevelCreateRequire } from 'module'`,
+        `const require = topLevelCreateRequire(import.meta.url)`,
+      ].join("\n"),
+    },
     // The entry can have any file name (ie. "stacks/anything.ts"). We want the
     // build output to be always named "lib/index.js". This allow us to always
     // import from "buildDir" without needing to pass "anything" around.

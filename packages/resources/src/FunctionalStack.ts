@@ -1,5 +1,5 @@
-import { App } from "./App";
-import { Stack, StackProps } from "./Stack";
+import { App } from "./App.js";
+import { Stack, StackProps } from "./Stack.js";
 
 export function stack(
   app: App,

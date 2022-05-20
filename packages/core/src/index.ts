@@ -3,24 +3,23 @@
 
 /* eslint-disable */
 
-const path = require("path");
-const fs = require("fs-extra");
-const aws = require("aws-sdk");
-const chalk = require("chalk");
-const yaml = require("js-yaml");
-const spawn = require("cross-spawn");
+import path from "path";
+import fs from "fs-extra";
+import aws from "aws-sdk";
+import chalk from "chalk";
+import yaml from "js-yaml";
+import spawn from "cross-spawn";
 
-const {
-  logger: rootLogger,
+import {
+  logger as rootLogger,
   getChildLogger,
   initializeLogger,
-} = require("./logger");
-const logger = getChildLogger("core");
+} from "./logger.js";
 const cdkLogger = getChildLogger("cdk");
 
-const packageJson = require("../package.json");
-const { getHelperMessage } = require("./errorHelpers");
-const { makeCancelable } = require("./cancelablePromise");
+import packageJson from "../package.json" assert { type: "json" };
+import { getHelperMessage } from "./errorHelpers.js";
+import { makeCancelable } from "./cancelablePromise.js";
 
 const STACK_DEPLOY_STATUS = {
   PENDING: "pending",
@@ -1675,6 +1674,8 @@ async function destroyStackTemplate(cdkOptions, stackState) {
 ////////////////////////
 // Util functions
 ////////////////////////
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
 
 /**
  * Finds the path to the CDK package executable by converting the file path of:
@@ -1908,17 +1909,17 @@ function isStackNotExistException(e) {
   );
 }
 
-export * as Util from "./util";
-export * from "./update";
-export * from "./packager";
-export * from "./state";
-export * from "./runtime";
+export * as Util from "./util/index.js";
+export { Update } from "./update/index.js";
+export { Packager } from "./packager/index.js";
+export { State } from "./state/index.js";
+export { Runtime } from "./runtime/index.js";
 // export * from "./bridge";
-export * from "./stacks";
-export * from "./cli";
-export * from "./local";
-export * from "./telemetry";
-export * from "./aws-sdk";
+export { Stacks } from "./stacks/index.js";
+export * from "./cli/index.js";
+export * from "./local/index.js";
+export { Telemetry } from "./telemetry/index.js";
+export * from "./aws-sdk/index.js";
 
 export const logger = rootLogger;
 export {

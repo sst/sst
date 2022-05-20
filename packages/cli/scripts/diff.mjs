@@ -1,8 +1,8 @@
 "use strict";
 
-const { diff } = require("./util/cdkHelpers");
+import { diff } from "./util/cdkHelpers.mjs";
 
-module.exports = async function (argv, config, cliInfo) {
+export default async function (argv, config, cliInfo) {
   // Normalize stack name
   const stackPrefix = `${config.stage}-${config.name}-`;
   const stackIds = (argv.stacks || []).map((stackId) => {
@@ -13,4 +13,4 @@ module.exports = async function (argv, config, cliInfo) {
 
   // Run CDK Diff
   await diff(cliInfo.cdkOptions, stackIds);
-};
+}

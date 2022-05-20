@@ -1,7 +1,7 @@
 import WebSocket from "ws";
-import { EventDelegate } from "../events";
-import { getChildLogger } from "../logger";
-import S3 from "aws-sdk/clients/s3";
+import { EventDelegate } from "../events.js";
+import { getChildLogger } from "../logger.js";
+import S3 from "aws-sdk/clients/s3.js";
 import zlib from "zlib";
 
 const wsLogger = getChildLogger("websocket");
@@ -139,12 +139,10 @@ export class WS {
       const buffer = payload
         ? Buffer.from(payload, "base64")
         : ((
-            await this.s3!
-              .getObject({
-                Bucket: this.debugBucketName!,
-                Key: payloadS3Key,
-              })
-              .promise()
+            await this.s3!.getObject({
+              Bucket: this.debugBucketName!,
+              Key: payloadS3Key,
+            }).promise()
           ).Body! as Buffer);
 
       const req = JSON.parse(zlib.unzipSync(buffer).toString());
@@ -173,13 +171,11 @@ export class WS {
         return;
       }
       // payload does NOT fit into 1 WebSocket frame
-      const uploaded = await this.s3!
-        .upload({
-          Bucket: this.debugBucketName!,
-          Key: `payloads/${debugRequestId}-response`,
-          Body: zipped,
-        })
-        .promise();
+      const uploaded = await this.s3!.upload({
+        Bucket: this.debugBucketName!,
+        Key: `payloads/${debugRequestId}-response`,
+        Body: zipped,
+      }).promise();
       this.send({
         action: "client.lambdaResponse",
         debugRequestId,

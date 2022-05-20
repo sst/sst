@@ -24,8 +24,8 @@ import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as cfOrigins from "aws-cdk-lib/aws-cloudfront-origins";
 import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
 
-import { App } from "./App";
-import { Stack } from "./Stack";
+import { App } from "./App.js";
+import { Stack } from "./Stack.js";
 import {
   BaseSiteDomainProps,
   BaseSiteReplaceProps,
@@ -34,8 +34,8 @@ import {
   getBuildCmdEnvironment,
   buildErrorResponsesFor404ErrorPage,
   buildErrorResponsesForRedirectToIndex,
-} from "./BaseSite";
-import { SSTConstruct } from "./Construct";
+} from "./BaseSite.js";
+import { SSTConstruct } from "./Construct.js";
 
 export interface StaticSiteFileOptions {
   exclude: string | string[];

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-const { Util } = require("@serverless-stack/core");
-const { DebugApp, DebugStack } = require("@serverless-stack/resources");
+import { Util } from "@serverless-stack/core";
+import { DebugApp, DebugStack } from "@serverless-stack/resources";
 
 const name = process.argv[2];
 const stage = process.argv[3];
@@ -14,7 +14,7 @@ Util.Environment.load({
 });
 
 // Validate the `debugStack` option in user SST app's index
-const handler = require(appBuildLibPath);
+const handler = await import(appBuildLibPath + "/index.js");
 if (handler.debugStack) {
   console.error(
     `Error: Use of the "debugStack()" callback to configure the debug stack has been deprecated in favor of the "debugApp()" callback.\n\nMore details on using "debugApp()": https://github.com/serverless-stack/serverless-stack/releases/tag/v0.65.3\n`

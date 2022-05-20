@@ -17,8 +17,8 @@ import {
   KinesisStream,
   ApiGatewayV1Api,
   Stack,
-} from "../index";
-import { isCDKConstruct, isCDKConstructOf } from "../Construct";
+} from "../index.js";
+import { isCDKConstruct, isCDKConstructOf } from "../Construct.js";
 
 const logger = getChildLogger("resources");
 

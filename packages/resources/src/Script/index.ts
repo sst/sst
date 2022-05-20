@@ -2,11 +2,7 @@ import * as cfnResponse from "./cfn-response";
 import { invokeFunction } from "./outbound";
 import { log } from "./util";
 
-export = {
-  handler: cfnResponse.safeHandler(handler),
-};
-
-async function handler(
+export async function handler(
   cfnRequest: AWSLambda.CloudFormationCustomResourceEvent
 ) {
   log("onEventHandler", cfnRequest);

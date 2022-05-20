@@ -1,7 +1,7 @@
-import { State } from "../state";
+import { State } from "../state/index.js";
 import chokidar from "chokidar";
-import { Handler } from "./handler";
-import { EventDelegate } from "../events";
+import { Handler } from "./handler/index.js";
+import { EventDelegate } from "../events.js";
 import { uniq } from "remeda";
 
 type Event = {

@@ -4,55 +4,55 @@ type ExtractMetadata<T extends SSTConstruct> = ReturnType<
   T["getConstructMetadata"]
 > & { id: string; addr: string; stack: string };
 
-import { Api } from "./Api";
+import type { Api } from "./Api.js";
 export type ApiMetadata = ExtractMetadata<Api<any>>;
 
-import { GraphQLApi } from "./GraphQLApi";
+import { GraphQLApi } from "./GraphQLApi.js";
 export type GraphQLApiMetadata = ExtractMetadata<GraphQLApi>;
 
-import { ApiGatewayV1Api } from "./ApiGatewayV1Api";
+import type { ApiGatewayV1Api } from "./ApiGatewayV1Api.js";
 export type ApiGatewayV1ApiMetadata = ExtractMetadata<ApiGatewayV1Api<any>>;
 
-import { Auth } from "./Auth";
+import type { Auth } from "./Auth.js";
 export type AuthMetadata = ExtractMetadata<Auth>;
 
-import { AppSyncApi } from "./AppSyncApi";
+import type { AppSyncApi } from "./AppSyncApi.js";
 export type AppSyncApiMetadata = ExtractMetadata<AppSyncApi>;
 
-import { Bucket } from "./Bucket";
+import type { Bucket } from "./Bucket.js";
 export type BucketMetadata = ExtractMetadata<Bucket>;
 
-import { Cron } from "./Cron";
+import type { Cron } from "./Cron.js";
 export type CronMetadata = ExtractMetadata<Cron>;
 
-import { EventBus } from "./EventBus";
+import type { EventBus } from "./EventBus.js";
 export type EventBusMetadata = ExtractMetadata<EventBus>;
 
-import { Function as Fn } from "./Function";
+import type { Function as Fn } from "./Function.js";
 export type FunctionMetadata = ExtractMetadata<Fn>;
 
-import { KinesisStream } from "./KinesisStream";
+import type { KinesisStream } from "./KinesisStream.js";
 export type KinesisStreamMetadata = ExtractMetadata<KinesisStream>;
 
-import { NextjsSite } from "./NextjsSite";
+import type { NextjsSite } from "./NextjsSite.js";
 export type NextjsMetadata = ExtractMetadata<NextjsSite>;
 
-import { Queue } from "./Queue";
+import type { Queue } from "./Queue.js";
 export type QueueMetadata = ExtractMetadata<Queue>;
 
-import { StaticSite } from "./StaticSite";
+import type { StaticSite } from "./StaticSite.js";
 export type StaticSiteMetadata = ExtractMetadata<StaticSite>;
 
-import { Table } from "./Table";
+import type { Table } from "./Table.js";
 export type TableMetadata = ExtractMetadata<Table>;
 
-import { Topic } from "./Topic";
+import type { Topic } from "./Topic.js";
 export type TopicMetadata = ExtractMetadata<Topic>;
 
-import { WebSocketApi } from "./WebSocketApi";
+import type { WebSocketApi } from "./WebSocketApi.js";
 export type WebSocketApiMetadata = ExtractMetadata<WebSocketApi>;
 
-import { RDS } from "./RDS";
+import type { RDS } from "./RDS.js";
 export type RDSMetadata = ExtractMetadata<RDS>;
 
 export type Metadata =

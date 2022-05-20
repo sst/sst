@@ -1,15 +1,16 @@
 "use strict";
 
-const chalk = require("chalk");
-const spawn = require("cross-spawn");
-const { logger } = require("@serverless-stack/core");
+import chalk from "chalk";
+import spawn from "cross-spawn";
+import { logger } from "@serverless-stack/core";
+
 const {
   isCdkV1Dep,
   isCdkV2CoreDep,
   isCdkV2AlphaDep,
 } = require("./util/cdkHelpers");
 
-module.exports = async function (argv, config, cliInfo) {
+export default async function (argv, _config, cliInfo) {
   const npm = cliInfo.npm;
   const dryRun = argv.dryRun;
   const cdkVersion = cliInfo.cdkVersion;
@@ -47,4 +48,4 @@ module.exports = async function (argv, config, cliInfo) {
   }
 
   spawn.sync(command, args, { stdio: "inherit" });
-};
+}

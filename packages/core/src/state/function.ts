@@ -1,4 +1,4 @@
-import { resolve } from "./state";
+import { resolve } from "./index.js";
 import path from "path";
 import fs from "fs-extra";
 import { Runtime } from "../runtime";

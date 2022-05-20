@@ -2,12 +2,12 @@ import * as child_process from "child_process";
 import * as os from "os";
 import * as path from "path";
 import * as util from "util";
-import * as AWS from "aws-sdk";
+import AWS from "aws-sdk";
 import * as fs from "fs-extra";
 import * as readline from "readline";
-import { PatchedSharedIniFileCredentials } from "./aws-sdk-inifile";
-import { SharedIniFile } from "./sdk_ini_file";
-import { getChildLogger } from "../logger";
+import { PatchedSharedIniFileCredentials } from "./aws-sdk-inifile.js";
+import { SharedIniFile } from "./sdk_ini_file.js";
+import { getChildLogger } from "../logger.js";
 const logger = getChildLogger("aws-auth");
 
 /**

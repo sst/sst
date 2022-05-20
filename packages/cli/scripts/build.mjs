@@ -1,9 +1,9 @@
 "use strict";
 
-const chalk = require("chalk");
-const { logger } = require("@serverless-stack/core");
+import chalk from "chalk";
+import { logger } from "@serverless-stack/core";
 
-const { synth, validatePropsForJs } = require("./util/cdkHelpers");
+import { synth, validatePropsForJs } from "./util/cdkHelpers.mjs";
 
 function printStacks(stacks, usingYarn) {
   const l = stacks.length;
@@ -24,10 +24,10 @@ function printStacks(stacks, usingYarn) {
   logger.info(`\nRun ${chalk.cyan(deployCmd)} to deploy to AWS.`);
 }
 
-module.exports = async function (argv, config, cliInfo) {
+export default async function (argv, config, cliInfo) {
   logger.info(chalk.grey("Synthesizing CDK"));
 
   const { stacks } = await synth(cliInfo.cdkOptions);
   validatePropsForJs(config);
   printStacks(stacks, cliInfo.yarn);
-};
+}

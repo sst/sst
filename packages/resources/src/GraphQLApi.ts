@@ -1,10 +1,9 @@
 import { HttpRouteIntegration } from "@aws-cdk/aws-apigatewayv2-alpha";
-import { App } from "./App";
+import { App } from "./App.js";
 import spawn from "cross-spawn";
 import { Construct } from "constructs";
-import { Api, ApiFunctionRouteProps, ApiProps } from "./Api";
-import { Function as Fn, FunctionDefinition } from "./Function";
-import { Validate } from "./util/validate";
+import { Api, ApiFunctionRouteProps, ApiProps } from "./Api.js";
+import { Function as Fn, FunctionDefinition } from "./Function.js";
 
 export interface GraphQLApiProps extends Omit<ApiProps, "routes"> {
   /**

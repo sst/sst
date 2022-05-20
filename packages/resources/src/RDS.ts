@@ -7,9 +7,9 @@ import * as cdk from "aws-cdk-lib";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as rds from "aws-cdk-lib/aws-rds";
 import * as lambda from "aws-cdk-lib/aws-lambda";
-import { App } from "./App";
-import { getFunctionRef, SSTConstruct } from "./Construct";
-import { Function as Fn } from "./Function";
+import { App } from "./App.js";
+import { getFunctionRef, SSTConstruct } from "./Construct.js";
+import { Function as Fn } from "./Function.js";
 
 /////////////////////
 // Interfaces

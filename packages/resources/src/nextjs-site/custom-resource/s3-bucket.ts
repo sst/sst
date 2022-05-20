@@ -5,11 +5,7 @@ import { log } from "./util";
 import * as cfnResponse from "./cfn-response";
 const s3 = new AWS.S3({ region: "us-east-1" });
 
-export = {
-  handler: cfnResponse.safeHandler(handler),
-};
-
-async function handler(
+export async function handler(
   cfnRequest: AWSLambda.CloudFormationCustomResourceEvent
 ) {
   log("onEventHandler", cfnRequest);

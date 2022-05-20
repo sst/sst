@@ -1,9 +1,9 @@
 import Conf from "conf";
 import chalk from "chalk";
 import { BinaryLike, createHash, randomBytes } from "crypto";
-import { postPayload } from "./post-payload";
-import { getRawProjectId } from "./project-id";
-import { getEnvironmentData } from "./environment";
+import { postPayload } from "./post-payload.js";
+import { getRawProjectId } from "./project-id.js";
+import { getEnvironmentData } from "./environment.js";
 
 const TELEMETRY_API = "https://telemetry.serverless-stack.com/events";
 const TELEMETRY_KEY_ENABLED = "telemetry.enabled";

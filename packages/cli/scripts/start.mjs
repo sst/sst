@@ -1,14 +1,13 @@
 "use strict";
 
-const path = require("path");
-const array = require("../lib/array");
-const fs = require("fs-extra");
-const chalk = require("chalk");
-const readline = require("readline");
-const detect = require("detect-port-alt");
-const Codegen = require("@graphql-codegen/cli");
+import path from "path";
+import fs from "fs-extra";
+import chalk from "chalk";
+import readline from "readline";
+import detect from "detect-port-alt";
+import array from "../lib/array.mjs";
 
-const {
+import {
   logger,
   getChildLogger,
   STACK_DEPLOY_STATUS,
@@ -17,10 +16,10 @@ const {
   useStacksBuilder,
   useFunctionBuilder,
   useLocalServer,
-} = require("@serverless-stack/core");
+} from "@serverless-stack/core";
 
-const paths = require("./util/paths");
-const {
+import paths from "./util/paths.mjs";
+import {
   synth,
   deploy,
   prepareCdk,
@@ -28,9 +27,9 @@ const {
   checkFileExists,
   writeOutputsFile,
   validatePropsForJs,
-} = require("./util/cdkHelpers");
-const objectUtil = require("../lib/object");
-const { CloudFormation } = require("aws-sdk");
+} from "./util/cdkHelpers.mjs";
+import * as objectUtil from "../lib/object.mjs";
+import CloudFormation from "aws-sdk/clients/cloudformation.js";
 
 let isConsoleEnabled = false;
 // This flag is currently used by the "sst.Script" construct to make the "BuiltAt"
@@ -73,7 +72,7 @@ const clientLogger = {
   },
 };
 
-module.exports = async function (argv, config, cliInfo) {
+export default async function (argv, config, cliInfo) {
   await prepareCdk(argv, cliInfo, config);
 
   // Deploy debug stack
@@ -409,28 +408,12 @@ module.exports = async function (argv, config, cliInfo) {
   // bridge.onRequest(handleRequest);
   ws.onRequest(handleRequest);
 
-  // TODO: Figure out how to abstract this
-  for (let construct of constructs) {
-    if (construct.type === "Api" && construct.data && construct.data.codegen) {
-      const parsed = await Codegen.loadCodegenConfig({
-        configFilePath: construct.data.codegen,
-      });
-      parsed.config.hooks = {
-        onWatchTriggered: () => console.log("GraphQL: Running codegen..."),
-        afterAllFileWrite: () => console.log("GraphQL: Codegen complete"),
-      };
-      parsed.config.errorsOnly = true;
-      parsed.config.schema = parsed.config.schema || construct.data.url;
-      await Codegen.generate(parsed.config, true);
-    }
-  }
-
   const url = `https://console.serverless-stack.com/${config.name}/${
     config.stage
   }/local${local.port !== 13557 ? "?_port=" + local.port : ""}`;
   console.log("SST Console:", url);
   // openBrowser(url);
-};
+}
 
 async function deployDebugStack(config, cliInfo) {
   // Do not deploy if running test
@@ -452,7 +435,7 @@ async function deployDebugStack(config, cliInfo) {
     ...cliInfo.cdkOptions,
     app: [
       "node",
-      "bin/index.js",
+      "bin/index.mjs",
       config.name,
       config.stage,
       config.region,

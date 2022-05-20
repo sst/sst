@@ -7,7 +7,7 @@
     "test": "jest"
   },
   "bin": {
-    "sst": "./bin/scripts.js"
+    "sst": "./bin/scripts.mjs"
   },
   "jest": {
     "setupFilesAfterEnv": [

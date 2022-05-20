@@ -7,18 +7,18 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import { ILayerVersion } from "aws-cdk-lib/aws-lambda";
 import * as cxapi from "aws-cdk-lib/cx-api";
 import { State } from "@serverless-stack/core";
-import { Stack } from "./Stack";
+import { Stack } from "./Stack.js";
 import {
   SSTConstruct,
   SSTConstructMetadata,
   isSSTConstruct,
   isStackConstruct,
-} from "./Construct";
-import { FunctionProps, FunctionHandlerProps } from "./Function";
-import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite";
-import { Permissions } from "./util/permission";
-import { StackProps } from ".";
-import { FunctionalStack, stack } from "./FunctionalStack";
+} from "./Construct.js";
+import { FunctionProps, FunctionHandlerProps } from "./Function.js";
+import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite.js";
+import { Permissions } from "./util/permission.js";
+import { StackProps } from "./Stack.js";
+import { FunctionalStack, stack } from "./FunctionalStack.js";
 
 function exitWithMessage(message: string) {
   console.error(message);

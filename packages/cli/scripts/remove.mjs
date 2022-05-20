@@ -1,19 +1,19 @@
 "use strict";
 
-const path = require("path");
-const chalk = require("chalk");
-const { logger } = require("@serverless-stack/core");
+import path from "path";
+import chalk from "chalk";
+import { logger } from "@serverless-stack/core";
+import paths from "./util/paths.mjs";
 
-const paths = require("./util/paths");
-const {
+import {
   synth,
   writeConfig,
   destroyInit,
   destroyPoll,
-} = require("./util/cdkHelpers");
-const { STACK_DESTROY_STATUS } = require("@serverless-stack/core");
+} from "./util/cdkHelpers.mjs";
+import { STACK_DESTROY_STATUS } from "@serverless-stack/core";
 
-module.exports = async function (argv, config, cliInfo) {
+export default async function (argv, config, cliInfo) {
   // Skip building functions on remove
   await writeConfig({
     ...config,
@@ -74,7 +74,7 @@ module.exports = async function (argv, config, cliInfo) {
     name: stackState.name,
     status: stackState.status,
   }));
-};
+}
 
 async function removeApp(cdkOptions, stackId) {
   // Build

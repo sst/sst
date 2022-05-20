@@ -1,4 +1,4 @@
-import { AwsCliCompatible } from "./awscli-compatible";
+import { AwsCliCompatible } from "./awscli-compatible.js";
 import aws from "aws-sdk";
 
 let credentials: aws.Credentials;

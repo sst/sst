@@ -1,16 +1,10 @@
 {
+  "extends": "@tsconfig/node14/tsconfig.json",
   "compilerOptions": {
-    "lib": ["es2019"],
-    "outDir": "dist",
-    "target": "ES2015",
-    "module": "commonjs",
-    "strict": true,
+    "module": "esnext",
+    "moduleResolution": "node",
     "declaration": true,
-    "skipLibCheck": true,
-    "inlineSources": true,
-    "inlineSourceMap": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true
+    "outDir": "dist"
   },
   "include": ["src"]
 }

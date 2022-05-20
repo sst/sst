@@ -1,49 +1,45 @@
-/* eslint-disable */
-"use strict";
-
-const path = require("path");
-const fs = require("fs-extra");
-const chalk = require("chalk");
-const esbuild = require("esbuild");
-const sstCore = require("@serverless-stack/core");
-const { Stacks } = require("@serverless-stack/core");
-
-const paths = require("./paths");
-const array = require("../../lib/array");
+import path from "path";
+import fs from "fs-extra";
+import chalk from "chalk";
+import esbuild from "esbuild";
+import * as sstCore from "@serverless-stack/core";
+import { Stacks } from "@serverless-stack/core";
+import paths from "./paths.mjs";
+import array from "../../lib/array.mjs";
 
 const logger = sstCore.logger;
 
 const buildDir = path.join(paths.appBuildPath, "lib");
 let esbuildOptions;
 
-function sleep(ms) {
+export function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function isGoRuntime(runtime) {
+export function isGoRuntime(runtime) {
   return runtime.startsWith("go");
 }
 
-function isNodeRuntime(runtime) {
+export function isNodeRuntime(runtime) {
   return runtime.startsWith("nodejs");
 }
 
-function isDotnetRuntime(runtime) {
+export function isDotnetRuntime(runtime) {
   return runtime.startsWith("dotnetcore");
 }
 
-function isPythonRuntime(runtime) {
+export function isPythonRuntime(runtime) {
   return runtime.startsWith("python");
 }
 
-async function checkFileExists(file) {
+export async function checkFileExists(file) {
   return fs.promises
     .access(file, fs.constants.F_OK)
     .then(() => true)
     .catch(() => false);
 }
 
-function validatePropsForJs(config) {
+export function validatePropsForJs(config) {
   if (config.main.endsWith(".js")) {
     const errors = Stacks.check(paths.appPath, config);
     if (errors.length)
@@ -51,18 +47,18 @@ function validatePropsForJs(config) {
   }
 }
 
-function getEsbuildTarget() {
+export function getEsbuildTarget() {
   return "node" + process.version.slice(1);
 }
 
-function writePackageJson(dir) {
+export function writePackageJson(dir) {
   // write package.json that marks the build dir scripts as being commonjs
   // better would be to use .cjs endings for the scripts or output ESM
   const buildPackageJsonPath = path.join(dir, "package.json");
-  fs.writeFileSync(buildPackageJsonPath, JSON.stringify({ type: "commonjs" }));
+  fs.writeFileSync(buildPackageJsonPath, JSON.stringify({ type: "module" }));
 }
 
-async function getAppPackageJson() {
+export async function getAppPackageJson() {
   const srcPath = paths.appPackageJson;
 
   try {
@@ -72,7 +68,7 @@ async function getAppPackageJson() {
   }
 }
 
-function getExternalModules(packageJson) {
+export function getExternalModules(packageJson) {
   return Object.keys({
     ...(packageJson.dependencies || {}),
     ...(packageJson.devDependencies || {}),
@@ -153,7 +149,7 @@ function parseTypeCheckOutput(output) {
 // Prepare CDK function
 //////////////////////
 
-async function prepareCdk(_argv, cliInfo, config) {
+export async function prepareCdk(_argv, cliInfo, config) {
   logger.info(chalk.grey("Preparing your SST app"));
 
   writePackageJson(paths.appBuildPath);
@@ -167,7 +163,7 @@ async function prepareCdk(_argv, cliInfo, config) {
   await Stacks.build(paths.appPath, config);
 }
 
-async function writeConfig(config) {
+export async function writeConfig(config) {
   await fs.writeJson(path.join(paths.appBuildPath, "sst-merged.json"), config);
 }
 function copyWrapperFiles() {
@@ -300,19 +296,19 @@ function isCdkV1Dep(dep) {
 // CDK command wrappers
 //////////////////////
 
-function diff(cdkOptions, stackNames) {
+export function diff(cdkOptions, stackNames) {
   return sstCore.diff(cdkOptions, stackNames);
 }
 
-function synth(cdkOptions) {
+export function synth(cdkOptions) {
   return sstCore.synth(cdkOptions);
 }
 
-function destroyInit(cdkOptions, stackName) {
+export function destroyInit(cdkOptions, stackName) {
   return sstCore.destroyInit(cdkOptions, stackName);
 }
 
-function destroyPoll(cdkOptions, stackStates) {
+export function destroyPoll(cdkOptions, stackStates) {
   return sstCore.destroyPoll(cdkOptions, stackStates);
 }
 
@@ -341,7 +337,7 @@ async function getStaticSiteEnvironmentOutput() {
     : [];
 }
 
-async function deploy(cdkOptions, stackName) {
+export async function deploy(cdkOptions, stackName) {
   logger.info(chalk.grey("Deploying " + (stackName ? stackName : "stacks")));
 
   // Initialize deploy
@@ -516,7 +512,7 @@ function filterOutputKeys_isStaticSiteEnv(
   );
 }
 
-async function writeOutputsFile(stacksData, outputsFileWithPath) {
+export async function writeOutputsFile(stacksData, outputsFileWithPath) {
   // This is native CDK option. According to CDK documentation:
   //    If an outputs file has been specified, create the file path and write stack
   //    outputs to it once. Outputs are written after all stacks have been deployed.
@@ -552,38 +548,3 @@ async function writeOutputsFile(stacksData, outputsFileWithPath) {
     encoding: "utf8",
   });
 }
-
-module.exports = {
-  diff,
-  synth,
-  deploy,
-  destroyInit,
-  destroyPoll,
-  writeOutputsFile,
-  validatePropsForJs,
-
-  // Exported for unit tests
-  _filterOutputKeys: filterOutputKeys,
-  _getCdkV1Deps: getCdkV1Deps,
-  _getCdkV2MismatchedDeps: getCdkV2MismatchedDeps,
-
-  prepareCdk,
-  reTranspile,
-  writeConfig,
-
-  sleep,
-  getEsbuildTarget,
-  checkFileExists,
-  parseLintOutput,
-  parseTypeCheckOutput,
-  loadEsbuildConfigOverrides,
-
-  isGoRuntime,
-  isNodeRuntime,
-  isDotnetRuntime,
-  isPythonRuntime,
-
-  isCdkV1Dep,
-  isCdkV2CoreDep,
-  isCdkV2AlphaDep,
-};

@@ -7,18 +7,18 @@ import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
 import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
 import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
 
-import { App } from "./App";
-import { Stack } from "./Stack";
-import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
+import { App } from "./App.js";
+import { Stack } from "./Stack.js";
+import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct.js";
 import {
   Function as Fn,
   FunctionProps,
   FunctionInlineDefinition,
   FunctionDefinition,
-} from "./Function";
-import { Permissions } from "./util/permission";
-import * as apigV2Domain from "./util/apiGatewayV2Domain";
-import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog";
+} from "./Function.js";
+import { Permissions } from "./util/permission.js";
+import * as apigV2Domain from "./util/apiGatewayV2Domain.js";
+import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog.js";
 
 /////////////////////
 // Interfaces

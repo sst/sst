@@ -2,7 +2,7 @@ import path from "path";
 import chalk from "chalk";
 import { Definition } from "./definition";
 import fs from "fs-extra";
-import { State } from "../../state";
+import { State } from "../../state/index.js";
 import { execSync } from "child_process";
 import spawn from "cross-spawn";
 import * as esbuild from "esbuild";

@@ -1,4 +1,4 @@
-function truncate(obj, options) {
+export function truncate(obj, options) {
   let newString = JSON.stringify(truncateField(obj, options));
 
   // As a sanity check, ensure JSON.stringify produced a string. If not, set response
@@ -20,7 +20,7 @@ function truncate(obj, options) {
   return newString;
 }
 
-function truncateField(field, options) {
+export function truncateField(field, options) {
   // Truncate strings
   if (typeof field === "string") {
     const length = field.length;
@@ -55,7 +55,3 @@ function truncateField(field, options) {
   }
   return field;
 }
-
-module.exports = {
-  truncate,
-};

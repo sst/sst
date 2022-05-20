@@ -1,4 +1,5 @@
 import * as path from "path";
+import url from "url";
 import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
 import * as s3 from "aws-cdk-lib/aws-s3";
@@ -7,7 +8,9 @@ import * as logs from "aws-cdk-lib/aws-logs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as apig from "aws-cdk-lib/aws-apigatewayv2";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
-import { DebugApp } from "./DebugApp";
+import { DebugApp } from "./DebugApp.js";
+
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 /**
  * Stack properties for the DebugStack.

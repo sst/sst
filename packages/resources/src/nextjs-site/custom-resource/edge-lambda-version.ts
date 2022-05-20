@@ -6,11 +6,7 @@ import * as cfnResponse from "./cfn-response";
 const lambda = new AWS.Lambda({ region: "us-east-1" });
 const LIVE_ALIAS = "live";
 
-export = {
-  handler: cfnResponse.safeHandler(handler),
-};
-
-async function handler(
+export async function handler(
   cfnRequest: AWSLambda.CloudFormationCustomResourceEvent
 ) {
   log("onEventHandler", cfnRequest);

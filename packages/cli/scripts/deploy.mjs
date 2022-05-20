@@ -1,11 +1,16 @@
 "use strict";
 
-const path = require("path");
-const paths = require("./util/paths");
-const { synth, deploy, writeOutputsFile,validatePropsForJs } = require("./util/cdkHelpers");
-const { STACK_DEPLOY_STATUS } = require("@serverless-stack/core");
+import path from "path";
+import paths from "./util/paths.mjs";
+import {
+  synth,
+  deploy,
+  writeOutputsFile,
+  validatePropsForJs,
+} from "./util/cdkHelpers.mjs";
+import { STACK_DEPLOY_STATUS } from "@serverless-stack/core";
 
-module.exports = async function (argv, config, cliInfo) {
+export default async function (argv, config, cliInfo) {
   // Normalize stack name
   const stackPrefix = `${config.stage}-${config.name}-`;
   let stackId = argv.stack;
@@ -37,4 +42,4 @@ module.exports = async function (argv, config, cliInfo) {
   }
 
   return stacksData;
-};
+}

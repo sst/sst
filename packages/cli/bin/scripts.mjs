@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-"use strict";
-
 process.on("uncaughtException", (err) => {
   // Format any uncaught exceptions
   console.error("\n" + (err ? err.stack || err : "Uncaught exception") + "\n");
@@ -11,15 +9,16 @@ process.on("unhandledRejection", (err) => {
   throw err;
 });
 
-require("source-map-support").install();
+import smp from "source-map-support";
+smp.install();
+import path from "path";
+import fs from "fs-extra";
+import yargs from "yargs";
+import chalk from "chalk";
+import spawn from "cross-spawn";
+import readline from "readline";
 
-const path = require("path");
-const fs = require("fs-extra");
-const yargs = require("yargs");
-const chalk = require("chalk");
-const spawn = require("cross-spawn");
-const readline = require("readline");
-const {
+import {
   logger,
   initializeLogger,
   Packager,
@@ -28,12 +27,12 @@ const {
   Telemetry,
   getCdkVersion,
   configureAwsCredentials,
-} = require("@serverless-stack/core");
+} from "@serverless-stack/core";
 
-const packageJson = require("../package.json");
-const paths = require("../scripts/util/paths");
-const cdkOptions = require("../scripts/util/cdkOptions");
-const { prepareCdk } = require("../scripts/util/cdkHelpers");
+import packageJson from "../package.json" assert { type: "json" };
+import paths from "../scripts/util/paths.mjs";
+import * as cdkOptions from "../scripts/util/cdkOptions.mjs";
+import { prepareCdk } from "../scripts/util/cdkHelpers.mjs";
 
 const sstVersion = packageJson.version;
 const cdkVersion = getCdkVersion();
@@ -498,13 +497,12 @@ async function run() {
   // packages (ie. "../scripts/start") requires "aws-sdk". Need to load AWS
   // credentials first.
   const internals = {
-    [cmd.diff]: require("../scripts/diff"),
-    [cmd.start]: require("../scripts/start"),
-    [cmd.build]: require("../scripts/build"),
-    [cmd.deploy]: require("../scripts/deploy"),
-    [cmd.remove]: require("../scripts/remove"),
-    [cmd.addCdk]: require("../scripts/add-cdk"),
-    [cmd.console]: require("../scripts/console"),
+    [cmd.diff]: await import("../scripts/diff.mjs"),
+    [cmd.start]: await import("../scripts/start.mjs"),
+    [cmd.build]: await import("../scripts/build.mjs"),
+    [cmd.deploy]: await import("../scripts/deploy.mjs"),
+    [cmd.remove]: await import("../scripts/remove.mjs"),
+    [cmd.console]: await import("../scripts/console.mjs"),
   };
 
   switch (script) {
@@ -519,7 +517,7 @@ async function run() {
 
       // Prepare app
       prepareCdk(argv, cliInfo, config)
-        .then(() => internals[script](argv, config, cliInfo))
+        .then(() => internals[script].default(argv, config, cliInfo))
         .catch((e) => exitWithMessage(e.message));
 
       break;
@@ -527,7 +525,7 @@ async function run() {
     case cmd.start:
     case cmd.addCdk: {
       if (script === cmd.start) logger.info("Using stage:", config.stage);
-      internals[script](argv, config, cliInfo).catch((e) => {
+      internals[script].default(argv, config, cliInfo).catch((e) => {
         logger.debug(e);
         exitWithMessage(e.message);
       });
@@ -535,42 +533,10 @@ async function run() {
       break;
     }
     case cmd.console: {
-      internals[script](argv, config, cliInfo).catch((e) => {
+      internals[script].default(argv, config, cliInfo).catch((e) => {
         logger.debug(e);
         exitWithMessage(e.message);
       });
-      break;
-    }
-    case cmd.cdk: {
-      // Prepare app
-      prepareCdk(argv, cliInfo, config)
-        .then(() => {
-          const result = spawn.sync(
-            "node",
-            [require.resolve("../scripts/" + script)].concat(scriptArgs),
-            { stdio: "inherit" }
-          );
-          if (result.signal) {
-            if (result.signal === "SIGKILL") {
-              exitWithMessage(
-                "The command failed because the process exited too early. " +
-                  "This probably means the system ran out of memory or someone called " +
-                  "`kill -9` on the process."
-              );
-            } else if (result.signal === "SIGTERM") {
-              exitWithMessage(
-                "The command failed because the process exited too early. " +
-                  "Someone might have called `kill` or `killall`, or the system could " +
-                  "be shutting down."
-              );
-            }
-            exitWithMessage(
-              "The command failed because the process exited too early."
-            );
-          }
-          process.exit(result.status);
-        })
-        .catch((e) => exitWithMessage(e.message));
       break;
     }
     default:

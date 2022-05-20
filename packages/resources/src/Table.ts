@@ -2,16 +2,16 @@ import { Construct } from "constructs";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
-import { App } from "./App";
-import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
+import { App } from "./App.js";
+import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct.js";
 import {
   Function as Fn,
   FunctionProps,
   FunctionInlineDefinition,
   FunctionDefinition,
-} from "./Function";
-import { KinesisStream } from "./KinesisStream";
-import { Permissions } from "./util/permission";
+} from "./Function.js";
+import { KinesisStream } from "./KinesisStream.js";
+import { Permissions } from "./util/permission.js";
 
 /////////////////////
 // Interfaces
@@ -653,7 +653,9 @@ export class Table extends Construct implements SSTConstruct {
   ): dynamodb.Attribute {
     // Ensure the key is specified in "fields"
     if (!fields[name]) {
-      throw new Error(`Please define "${name}" in "fields" to create the index in the "${this.node.id}" Table.`);
+      throw new Error(
+        `Please define "${name}" in "fields" to create the index in the "${this.node.id}" Table.`
+      );
     }
 
     return {

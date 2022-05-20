@@ -1,8 +1,8 @@
 import path from "path";
-import { State } from "../../state";
-import { Paths } from "../../util";
+import { State } from "../../state/index.js";
+import { Paths } from "../../util/index.js";
 import fs from "fs-extra";
-import { buildAsync, buildSync, Command, Definition } from "./definition";
+import { buildAsync, buildSync, Command, Definition } from "./definition.js";
 
 export const DotnetHandler: Definition = (opts: any) => {
   const dir = State.Function.artifactsPath(

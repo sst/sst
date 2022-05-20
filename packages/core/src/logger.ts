@@ -1,7 +1,7 @@
 "use strict";
 
-const path = require("path");
-const log4js = require("log4js");
+import path from "path";
+import log4js from "log4js";
 
 log4js.configure({
   appenders: {
@@ -11,9 +11,9 @@ log4js.configure({
     default: { appenders: ["console"], level: "info" },
   },
 });
-const logger = log4js.getLogger();
+export const logger = log4js.getLogger();
 
-const initializeLogger = function (appBuildPath) {
+export const initializeLogger = function (appBuildPath: string) {
   // Initialize logger does 2 things:
   // - update 'console' appender's level based on the DEBUG flag
   // - create 'file' appender to log to sst-debug.log
@@ -36,8 +36,4 @@ const initializeLogger = function (appBuildPath) {
   });
 };
 
-module.exports = {
-  logger,
-  initializeLogger,
-  getChildLogger: log4js.getLogger,
-};
+export const getChildLogger = log4js.getLogger;
