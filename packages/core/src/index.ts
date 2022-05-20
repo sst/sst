@@ -15,9 +15,12 @@ import {
   getChildLogger,
   initializeLogger,
 } from "./logger.js";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const packageJson = fs.readJsonSync(require.resolve("../package.json"));
+
 const cdkLogger = getChildLogger("cdk");
 
-import packageJson from "../package.json" assert { type: "json" };
 import { getHelperMessage } from "./errorHelpers.js";
 import { makeCancelable } from "./cancelablePromise.js";
 
@@ -1674,8 +1677,6 @@ async function destroyStackTemplate(cdkOptions, stackState) {
 ////////////////////////
 // Util functions
 ////////////////////////
-import { createRequire } from "module";
-const require = createRequire(import.meta.url);
 
 /**
  * Finds the path to the CDK package executable by converting the file path of:

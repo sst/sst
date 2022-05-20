@@ -723,7 +723,6 @@ export class Function extends lambda.Function implements SSTConstruct {
     }
     // Handle build
     else {
-      console.log("Building function", handler);
       const bundled = Runtime.Handler.bundle({
         id: localId,
         root: root.appPath,

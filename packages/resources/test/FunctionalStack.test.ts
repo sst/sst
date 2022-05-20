@@ -1,3 +1,4 @@
+import { describe, it, expect } from "vitest";
 import { App, StackContext, use } from "../src";
 import { dependsOn, getStack } from "../src/FunctionalStack";
 

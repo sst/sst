@@ -1,8 +1,5 @@
-const {
-  runBuildCommand,
-  runStartCommand,
-  clearBuildOutput,
-} = require("../helpers");
+import { runBuildCommand, runStartCommand, clearBuildOutput } from "../helpers";
+import { beforeEach, afterAll, test, expect } from "vitest";
 
 beforeEach(async () => {
   await clearBuildOutput(__dirname);

@@ -1,3 +1,4 @@
+import { test, expect } from "vitest";
 import { countResources, hasResource, objectLike, ANY, ABSENT } from "./helper";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as route53 from "aws-cdk-lib/aws-route53";

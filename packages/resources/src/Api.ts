@@ -729,7 +729,8 @@ export class Api<
    */
   public getFunction(routeKey: string): Fn | undefined {
     const route = this.routesData[this.normalizeRouteKey(routeKey)];
-    return route instanceof Fn ? route : undefined;
+    if (route?.type === "function") return route.function;
+    return undefined;
   }
 
   /**

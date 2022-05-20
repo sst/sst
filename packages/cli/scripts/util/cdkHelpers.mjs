@@ -168,8 +168,8 @@ export async function writeConfig(config) {
 }
 function copyWrapperFiles() {
   return fs.copy(
-    path.join(paths.ownPath, "assets", "cdk-wrapper", "run.js"),
-    path.join(paths.appBuildPath, "run.js")
+    path.join(paths.ownPath, "assets", "cdk-wrapper", "run.mjs"),
+    path.join(paths.appBuildPath, "run.mjs")
   );
 }
 
@@ -253,11 +253,11 @@ function runCdkVersionMatch(packageJson, cliInfo) {
   );
 }
 
-function getCdkV1Deps(deps) {
+export function getCdkV1Deps(deps) {
   return Object.keys(deps || {}).filter(isCdkV1Dep);
 }
 
-function getCdkV2MismatchedDeps(deps, cdkVersion) {
+export function getCdkV2MismatchedDeps(deps, cdkVersion) {
   return Object.keys(deps || {}).filter((key) => {
     const version = deps[key];
     if (isCdkV2CoreDep(key)) {
@@ -477,7 +477,7 @@ async function printDeployResults(stackStates) {
   );
   logger.info("");
 }
-function filterOutputKeys(environmentData, stackName, outputs, exports) {
+export function filterOutputKeys(environmentData, stackName, outputs, exports) {
   // Filter out
   // - CDK exported outputs; and
   // - StaticSite environment outputs

@@ -1,3 +1,4 @@
+import { test, expect, vi } from "vitest";
 import {
   countResources,
   countResourcesLike,
@@ -119,7 +120,7 @@ test("constructor: graphqlApi is imported", async () => {
 
 test("customDomain is string", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
-  route53.HostedZone.fromLookup = jest
+  route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
@@ -181,7 +182,7 @@ test("customDomain is string (imported ssm)", async () => {
 
 test("customDomain.domainName is string", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
-  route53.HostedZone.fromLookup = jest
+  route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
@@ -320,7 +321,7 @@ test("customDomain.domainName is string (imported ssm), hostedZone defined", asy
 
 test("customDomain.hostedZone-generated-from-minimal-domainName", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
-  route53.HostedZone.fromLookup = jest
+  route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
@@ -336,7 +337,7 @@ test("customDomain.hostedZone-generated-from-minimal-domainName", async () => {
 
 test("customDomain.hostedZone-generated-from-full-domainName", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
-  route53.HostedZone.fromLookup = jest
+  route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });

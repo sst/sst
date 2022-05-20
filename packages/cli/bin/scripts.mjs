@@ -15,8 +15,11 @@ import path from "path";
 import fs from "fs-extra";
 import yargs from "yargs";
 import chalk from "chalk";
-import spawn from "cross-spawn";
 import readline from "readline";
+
+import { createRequire } from "module";
+
+const require = createRequire(import.meta.url);
 
 import {
   logger,
@@ -29,7 +32,8 @@ import {
   configureAwsCredentials,
 } from "@serverless-stack/core";
 
-import packageJson from "../package.json" assert { type: "json" };
+const packageJson = fs.readJsonSync(require.resolve("../package.json"));
+
 import paths from "../scripts/util/paths.mjs";
 import * as cdkOptions from "../scripts/util/cdkOptions.mjs";
 import { prepareCdk } from "../scripts/util/cdkHelpers.mjs";

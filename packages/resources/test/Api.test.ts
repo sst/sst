@@ -1,3 +1,4 @@
+import { test, expect, vi } from "vitest";
 import { ABSENT, objectLike, countResources, hasResource } from "./helper";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
@@ -333,7 +334,7 @@ test("constructor: stages", async () => {
 
 test("customDomain is string", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
-  route53.HostedZone.fromLookup = jest
+  route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
@@ -428,7 +429,7 @@ test("customDomain is string (imported ssm)", async () => {
 
 test("customDomain.domainName is string", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
-  route53.HostedZone.fromLookup = jest
+  route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
@@ -605,7 +606,7 @@ test("customDomain.domainName is string (imported ssm), hostedZone defined", asy
 
 test("customDomain.hostedZone-generated-from-minimal-domainName", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
-  route53.HostedZone.fromLookup = jest
+  route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
@@ -624,7 +625,7 @@ test("customDomain.hostedZone-generated-from-minimal-domainName", async () => {
 
 test("customDomain.hostedZone-generated-from-full-domainName", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
-  route53.HostedZone.fromLookup = jest
+  route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
@@ -662,7 +663,7 @@ test("customDomain props-redefined", async () => {
 
 test("customDomain: cdk.domainName is apigDomainName", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
-  apig.DomainName.fromDomainNameAttributes = jest
+  apig.DomainName.fromDomainNameAttributes = vi
     .fn()
     .mockImplementation((scope, id) => {
       return new apig.DomainName(scope, id, {
@@ -757,7 +758,7 @@ test("customDomain: cdk.domainName and cdk.hostedZone co-exist error", async () 
 
 test("customDomain.domainName-apigDomainName-certificate-redefined-error", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
-  apig.DomainName.fromDomainNameAttributes = jest
+  apig.DomainName.fromDomainNameAttributes = vi
     .fn()
     .mockImplementation((scope, id) => {
       return new apig.DomainName(scope, id, {

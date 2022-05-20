@@ -7,6 +7,8 @@ import { execSync } from "child_process";
 import spawn from "cross-spawn";
 import * as esbuild from "esbuild";
 import { ICommandHooks } from "aws-cdk-lib/aws-lambda-nodejs";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
 
 const BUILD_CACHE: Record<string, esbuild.BuildResult> = {};
 

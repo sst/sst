@@ -1,3 +1,4 @@
+import { test, expect } from "vitest";
 import { ABSENT, countResources, hasResource } from "./helper";
 import * as cdk from "aws-cdk-lib";
 import * as sqs from "aws-cdk-lib/aws-sqs";

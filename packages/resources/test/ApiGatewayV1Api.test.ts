@@ -1,3 +1,4 @@
+import { test, expect, vi } from "vitest";
 import {
   ABSENT,
   countResources,
@@ -317,7 +318,7 @@ test("accessLog-restApi-imported", async () => {
 
 test("customDomain is string", async () => {
   const stack = new Stack(new App({ name: "apiv1" }), "stack");
-  route53.HostedZone.fromLookup = jest
+  route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
@@ -408,7 +409,7 @@ test("customDomain is string (imported ssm)", async () => {
 
 test("customDomain.domainName is string", async () => {
   const stack = new Stack(new App({ name: "apiv1" }), "stack");
-  route53.HostedZone.fromLookup = jest
+  route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
@@ -519,7 +520,7 @@ test("customDomain.domainName is string (imported ssm), hostedZone defined", asy
 
 test("customDomain.domainName is type edge", async () => {
   const stack = new Stack(new App({ name: "apiv1" }), "stack");
-  route53.HostedZone.fromLookup = jest
+  route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
@@ -568,7 +569,7 @@ test("customDomain.domainName is type edge", async () => {
 
 test("customDomain.hostedZone generated from minimal domainName", async () => {
   const stack = new Stack(new App({ name: "apiv1" }), "stack");
-  route53.HostedZone.fromLookup = jest
+  route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
@@ -587,7 +588,7 @@ test("customDomain.hostedZone generated from minimal domainName", async () => {
 
 test("customDomain.hostedZone generated from full domainName", async () => {
   const stack = new Stack(new App({ name: "apiv1" }), "stack");
-  route53.HostedZone.fromLookup = jest
+  route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
@@ -649,7 +650,7 @@ test("customDomain is props-redefined", async () => {
 
 test("customDomain is props-domainName-apigDomainName", async () => {
   const stack = new Stack(new App({ name: "apiv1" }), "stack");
-  apig.DomainName.fromDomainNameAttributes = jest
+  apig.DomainName.fromDomainNameAttributes = vi
     .fn()
     .mockImplementation((scope, id) => {
       return new apig.DomainName(scope, id, {
@@ -695,7 +696,7 @@ test("customDomain is props-domainName-apigDomainName", async () => {
 
 test("customDomain: cdk.domainName and hostedZone co-exist error", async () => {
   const stack = new Stack(new App({ name: "apiv1" }), "stack");
-  apig.DomainName.fromDomainNameAttributes = jest
+  apig.DomainName.fromDomainNameAttributes = vi
     .fn()
     .mockImplementation((scope, id) => {
       return new apig.DomainName(scope, id, {
@@ -730,7 +731,7 @@ test("customDomain: cdk.domainName and hostedZone co-exist error", async () => {
 
 test("customDomain: cdk.domainName and cdk.hostedZone co-exist error", async () => {
   const stack = new Stack(new App({ name: "apiv1" }), "stack");
-  apig.DomainName.fromDomainNameAttributes = jest
+  apig.DomainName.fromDomainNameAttributes = vi
     .fn()
     .mockImplementation((scope, id) => {
       return new apig.DomainName(scope, id, {

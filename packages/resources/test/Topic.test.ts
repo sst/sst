@@ -1,3 +1,4 @@
+import { test, expect } from "vitest";
 import { countResources, hasResource } from "./helper";
 import * as sns from "aws-cdk-lib/aws-sns";
 import { App, Stack, Topic, Queue, Function } from "../src";

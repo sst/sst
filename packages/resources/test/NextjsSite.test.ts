@@ -1,3 +1,4 @@
+import { test, expect } from "vitest";
 import * as path from "path";
 import * as fs from "fs-extra";
 import { execSync } from "child_process";
