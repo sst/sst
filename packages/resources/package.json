@@ -5,15 +5,16 @@
   "description": "Helper AWS CDK constructs for Serverless Stack apps.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "type": "module",
   "exports": {
     "import": "./dist/index.js"
   },
   "scripts": {
     "cdk-version-check": "node ./bin/aws-cdk-version-check.cjs",
     "build": "tsc --rootDir src --outDir dist && yarn build:stub && yarn build:rds-migrator && yarn build:bridge",
-    "build:stub": "cd assets/stub && yarn && cd ../.. && node ./bin/create-stub-zip.js",
-    "build:rds-migrator": "cd assets/RDS/migrator && yarn && cd ../../.. && node ./bin/copy-rds-migrator.js",
-    "build:bridge": "node ./bin/build-bridge-client.js",
+    "build:stub": "cd assets/stub && yarn && cd ../.. && node ./bin/create-stub-zip.cjs",
+    "build:rds-migrator": "cd assets/RDS/migrator && yarn && cd ../../.. && node ./bin/copy-rds-migrator.cjs",
+    "build:bridge": "node ./bin/build-bridge-client.cjs",
     "clean": "rm -rf dist",
     "test": "vitest run --no-threads"
   },
