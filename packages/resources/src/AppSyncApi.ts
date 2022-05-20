@@ -23,6 +23,7 @@ import {
   FunctionInlineDefinition,
   FunctionDefinition,
 } from "./Function.js";
+import { State } from "@serverless-stack/core";
 import { Permissions } from "./util/permission.js";
 
 /////////////////////
@@ -684,8 +685,8 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         if (schema.length > 0) {
           // merge schema files
           const mergedSchema = mergeTypeDefs(loadFilesSync(schema));
-          const filePath = path.join(
-            app.buildDir,
+          const filePath = State.resolve(
+            app.appPath,
             `appsyncapi-${id}-${this.node.addr}.graphql`
           );
           fs.writeFileSync(filePath, print(mergedSchema));
