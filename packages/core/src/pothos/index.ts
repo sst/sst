@@ -1,3 +1,3 @@
-export * as Pothos from "./index";
+export * as Pothos from "./index.js";
 
-export * from "./generate";
+export * from "./generate.js";
