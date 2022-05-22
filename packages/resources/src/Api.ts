@@ -729,7 +729,7 @@ export class Api<
    */
   public getFunction(routeKey: string): Fn | undefined {
     const route = this.routesData[this.normalizeRouteKey(routeKey)];
-    if (route?.type === "function") return route.function;
+    if ("function" in route) return route.function;
     return undefined;
   }
 
@@ -1075,11 +1075,7 @@ export class Api<
           this.createPothosIntegration(
             scope,
             routeKey,
-            {
-              ...routeValue,
-              type: "function",
-              payloadFormatVersion: "2.0",
-            },
+            routeValue,
             postfixName
           ),
         ];
@@ -1181,15 +1177,30 @@ export class Api<
   protected createPothosIntegration(
     scope: Construct,
     routeKey: string,
-    routeProps: ApiFunctionRouteProps<keyof Authorizers>,
+    routeProps: ApiPothosRouteProps<keyof Authorizers>,
     postfixName: string
   ): apig.HttpRouteIntegration {
-    return this.createFunctionIntegration(
+    const result = this.createFunctionIntegration(
       scope,
       routeKey,
-      routeProps,
+      {
+        ...routeProps,
+        type: "function",
+        payloadFormatVersion: "2.0",
+      },
       postfixName
     );
+    const data = this.routesData[routeKey];
+    if (data.type === "function") {
+      this.routesData[routeKey] = {
+        ...data,
+        type: "pothos",
+        output: routeProps.output,
+        schema: routeProps.schema,
+        commands: routeProps.commands,
+      };
+    }
+    return result;
   }
 
   protected createFunctionIntegration(

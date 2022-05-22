@@ -2,6 +2,8 @@ import fs from "fs-extra";
 import path from "path";
 import chalk from "chalk";
 import { Packager } from "../packager/index.js";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
 
 export * as Update from "./index.js";
 
@@ -51,8 +53,8 @@ export function run(opts: RunOpts) {
   }
 
   // Update CDK dependencies
-  const module = "@serverless-stack/core/package.json";
-  const compare = fs.readJsonSync(require.resolve(module));
+  const module = require.resolve("@serverless-stack/core");
+  const compare = fs.readJsonSync(path.join(module, "../../", "package.json"));
   const cdkVersion = compare.dependencies["aws-cdk"];
 
   for (const type of ["dependencies", "devDependencies"] as const) {

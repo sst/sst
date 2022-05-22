@@ -1,11 +1,10 @@
-import { build } from "esbuild";
+import * as esbuild from "esbuild";
 import escodegen from "escodegen";
 import { parse } from "acorn";
 import { ancestor, fullAncestor, findNodeAt } from "acorn-walk";
 import { printSchema, lexicographicSortSchema } from "graphql";
 import url from "url";
 import fs from "fs/promises";
-import os from "os";
 import path from "path";
 
 interface GenerateOpts {
@@ -15,7 +14,7 @@ interface GenerateOpts {
 // This function has a ton of `any` because acorn unfortunately has really poor typing
 // We have to any escape hatch to avoid it, hopefully it improves one day
 export async function generate(opts: GenerateOpts) {
-  const result = await build({
+  const result = await esbuild.build({
     platform: "node",
     bundle: true,
     format: "esm",
@@ -28,20 +27,20 @@ export async function generate(opts: GenerateOpts) {
         name: "externalize",
         setup(build) {
           const filter = /^[^.\/]|^\.[^.\/]|^\.\.[^\/]/; // Must not start with "/" or "./" or "../"
-          build.onResolve({ filter }, args => {
+          build.onResolve({ filter }, (args) => {
             return {
               path: args.path,
-              external: true
+              external: true,
             };
           });
-        }
-      }
-    ]
+        },
+      },
+    ],
   });
 
   const ast = parse(result.outputFiles[0].text, {
     sourceType: "module",
-    ecmaVersion: 2022
+    ecmaVersion: 2022,
   });
 
   const schemaBuilderImport: any = findNodeAt(
@@ -92,8 +91,8 @@ export async function generate(opts: GenerateOpts) {
         node.arguments[0],
         {
           ...node.arguments[1],
-          name: "DUMMY_RESOLVER"
-        }
+          name: "DUMMY_RESOLVER",
+        },
       ];
     }
 
@@ -108,7 +107,7 @@ export async function generate(opts: GenerateOpts) {
     if (!related) return;
     references.add(ancestors[1]);
     // Keep track of variables related to pothos
-    const variable = ancestors.find(x => x.type === "VariableDeclarator");
+    const variable = ancestors.find((x) => x.type === "VariableDeclarator");
     if (!variable) return;
     if (!variable.id.name) return;
     variables.add(variable.id.name);
@@ -121,14 +120,14 @@ export async function generate(opts: GenerateOpts) {
         if (!["resolve", "validate"].includes(node.key.name)) return;
         const parent = ancestors[ancestors.length - 2];
         parent.properties = parent.properties.filter((p: any) => p !== node);
-      }
+      },
     });
   }
 
   (ast as any).body = [...references];
   const contents = [
     `const DUMMY_RESOLVER = { serialize: x => x, parseValue: x => x }; `,
-    escodegen.generate(ast)
+    escodegen.generate(ast),
   ].join("\n");
 
   const out = path.join(path.dirname(opts.schema), "out.mjs");

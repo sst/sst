@@ -3,9 +3,17 @@ import { interpret, actions, assign, createMachine } from "xstate";
 import { Config } from "../config/index.js";
 import { Stacks } from "../stacks/index.js";
 import { synth } from "../index.js";
+import { Bus } from "./Bus.js";
 import path from "path";
 import fs from "fs-extra";
 import crypto from "crypto";
+import { State } from "../state/index.js";
+
+declare module "./Bus" {
+  export interface Events {
+    "metadata.updated": any[];
+  }
+}
 
 type Events =
   | { type: "FILE_CHANGE" }
@@ -167,10 +175,16 @@ const machine = createMachine<Context, Events>(
 // TODO: The arguments here are hacky because we need to access code from cdkHelper. Should be refactored so that cdkHelpers don't really exist and everything is done inside here.
 export function useStacksBuilder(
   root: string,
+  bus: Bus,
   config: Config,
   cdkOptions: any,
   deployFunc: any
 ) {
+  const constructsJSON = State.resolve(root, "constructs.json");
+  function publishMetadata() {
+    const json = fs.readJsonSync(constructsJSON);
+    bus.publish("metadata.updated", json);
+  }
   const cdkOutPath = path.join(root, cdkOptions.output);
   const service = interpret(
     machine
@@ -190,6 +204,7 @@ export function useStacksBuilder(
           },
           deploy: async () => {
             await deployFunc(cdkOptions);
+            publishMetadata();
           },
         },
       })
@@ -209,6 +224,7 @@ export function useStacksBuilder(
     .on("change", () => {
       service.send("FILE_CHANGE");
     });
+  publishMetadata();
   service.start();
   return service;
 }

@@ -19,14 +19,6 @@ export async function build(root: string, config: Config) {
     );
 
   await esbuild.build({
-    external: [
-      "aws-cdk-lib",
-      ...Object.keys({
-        ...pkg.devDependencies,
-        ...pkg.dependencies,
-        ...pkg.peerDependencies,
-      }),
-    ],
     keepNames: true,
     bundle: true,
     sourcemap: true,
@@ -39,6 +31,20 @@ export async function build(root: string, config: Config) {
         `const require = topLevelCreateRequire(import.meta.url)`,
       ].join("\n"),
     },
+    plugins: [
+      {
+        name: "externalize",
+        setup(build) {
+          const filter = /^[^.\/]|^\.[^.\/]|^\.\.[^\/]/; // Must not start with "/" or "./" or "../"
+          build.onResolve({ filter }, (args) => {
+            return {
+              path: args.path,
+              external: true,
+            };
+          });
+        },
+      },
+    ],
     // The entry can have any file name (ie. "stacks/anything.ts"). We want the
     // build output to be always named "lib/index.js". This allow us to always
     // import from "buildDir" without needing to pass "anything" around.

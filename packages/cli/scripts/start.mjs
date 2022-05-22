@@ -16,6 +16,9 @@ import {
   useStacksBuilder,
   useFunctionBuilder,
   useLocalServer,
+  createProjectWatcher,
+  createBus,
+  createPothosBuilder,
 } from "@serverless-stack/core";
 
 import paths from "./util/paths.mjs";
@@ -128,6 +131,15 @@ export default async function (argv, config, cliInfo) {
   logger.info(" Starting Live Lambda Dev");
   logger.info("==========================");
   logger.info("");
+
+  const bus = createBus();
+  const pw = createProjectWatcher({
+    root: paths.appPath,
+    bus,
+  });
+  const pb = createPothosBuilder({
+    bus,
+  });
 
   const funcs = State.Function.read(paths.appPath);
 
@@ -249,6 +261,7 @@ export default async function (argv, config, cliInfo) {
 
   const stacksBuilder = useStacksBuilder(
     paths.appPath,
+    bus,
     config,
     cliInfo.cdkOptions,
     async (opts) => {
