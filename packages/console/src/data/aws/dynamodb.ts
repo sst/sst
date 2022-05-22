@@ -110,7 +110,7 @@ export function useScanTable(name?: string, index?: string, opts?: ScanOpts) {
               KeyConditionExpression: (["pk", "sk"] as const)
                 .map((key) => opts[key])
                 .filter((item) => Boolean(item?.op))
-                .map((item) => `${item.key} ${item.op} :${item.key}`)
+                .map((item) => `#${item.key} ${item.op} :${item.key}`)
                 .join(" AND "),
             })
           : new ScanCommand(params)
