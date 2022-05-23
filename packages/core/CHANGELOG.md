@@ -1,5 +1,11 @@
 # @serverless-stack/core
 
+## 1.2.1
+
+### Patch Changes
+
+- [`d90a1989`](https://github.com/serverless-stack/serverless-stack/commit/d90a1989411fa5d868778d2e686323ad08e33efb) Thanks [@thdxr](https://github.com/thdxr)! - Include graphql as a core dependency
+
 ## 1.2.0
 
 ### Minor Changes

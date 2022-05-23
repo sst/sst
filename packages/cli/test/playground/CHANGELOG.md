@@ -1,5 +1,13 @@
 # @serverless-stack/cli-test-playground
 
+## 1.0.9
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @serverless-stack/cli@1.2.1
+  - @serverless-stack/resources@1.2.1
+
 ## 1.0.8
 
 ### Patch Changes
