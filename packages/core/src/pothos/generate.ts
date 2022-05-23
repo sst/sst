@@ -136,8 +136,5 @@ export async function generate(opts: GenerateOpts) {
   const { schema } = await import(url.pathToFileURL(out).href);
   await fs.rm(out);
   const schemaAsString = printSchema(lexicographicSortSchema(schema));
-
-  await fs.writeFile("schema.graphql", schemaAsString);
-
   return schemaAsString;
 }

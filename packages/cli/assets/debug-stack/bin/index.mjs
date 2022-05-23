@@ -1,15 +1,18 @@
 #!/usr/bin/env node
 
-import { Util } from "@serverless-stack/core";
+import path from "path";
+import { Util, State } from "@serverless-stack/core";
 import { DebugApp, DebugStack } from "@serverless-stack/resources";
 
 const name = process.argv[2];
 const stage = process.argv[3];
 const region = process.argv[4];
-const appBuildLibPath = process.argv[5];
+const appPath = process.argv[5];
+const appBuildLibPath = State.stacksPath(appPath);
 
 // Load environment variables from dotenv
 Util.Environment.load({
+  root: appPath,
   searchPaths: [`.env.${stage}.local`, `.env.${stage}`],
 });
 

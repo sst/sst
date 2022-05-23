@@ -25,7 +25,7 @@ export function resolve(runtime: string): Definition {
   if (runtime.startsWith("node")) return NodeHandler;
   if (runtime.startsWith("go")) return GoHandler;
   if (runtime.startsWith("python")) return PythonHandler;
-  if (runtime.startsWith("dotnetcore")) return DotnetHandler;
+  if (runtime.startsWith("dotnet")) return DotnetHandler;
   throw new Error(`Unknown runtime ${runtime}`);
 }
 

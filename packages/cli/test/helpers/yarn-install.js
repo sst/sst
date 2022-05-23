@@ -1,6 +1,6 @@
 const { promisify } = require("util");
 const { exec } = require("child_process");
-const { exists } = require("fs");
+const { exists, symlink } = require("fs");
 
 const execPromise = promisify(exec);
 const existsPromise = promisify(exists);

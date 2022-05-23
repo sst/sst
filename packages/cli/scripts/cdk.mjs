@@ -9,10 +9,9 @@ process.on("unhandledRejection", (err) => {
 
 let argv = process.argv.slice(2);
 
-const spawn = require("cross-spawn");
-
-const { getCdkBinPath } = require("@serverless-stack/core");
-const cdkOptions = require("./util/cdkOptions");
+import spawn from "cross-spawn";
+import { getCdkBinPath } from "@serverless-stack/core";
+import * as cdkOptions from "./util/cdkOptions.mjs";
 
 // CDK command
 const result = spawn.sync(

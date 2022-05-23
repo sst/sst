@@ -4,11 +4,11 @@ import chalk from "chalk";
 import spawn from "cross-spawn";
 import { logger } from "@serverless-stack/core";
 
-const {
+import {
   isCdkV1Dep,
   isCdkV2CoreDep,
   isCdkV2AlphaDep,
-} = require("./util/cdkHelpers");
+} from "./util/cdkHelpers.mjs";
 
 export default async function (argv, _config, cliInfo) {
   const npm = cliInfo.npm;

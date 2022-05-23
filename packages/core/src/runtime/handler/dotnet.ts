@@ -4,6 +4,22 @@ import { Paths } from "../../util/index.js";
 import fs from "fs-extra";
 import { buildAsync, buildSync, Command, Definition } from "./definition.js";
 
+const FRAMEWORK_MAP: Record<string, string> = {
+  "dotnetcore1.0": "netcoreapp3.1",
+  "dotnetcore2.0": "netcoreapp3.1",
+  "dotnetcore2.1": "netcoreapp3.1",
+  "dotnetcore3.1": "netcoreapp3.1",
+  "dotnet6": "net6.0",
+};
+
+const BOOTSTRAP_MAP: Record<string, string> = {
+  "dotnetcore1.0": "dotnet31-bootstrap",
+  "dotnetcore2.0": "dotnet31-bootstrap",
+  "dotnetcore2.1": "dotnet31-bootstrap",
+  "dotnetcore3.1": "dotnet31-bootstrap",
+  "dotnet6": "dotnet6-bootstrap",
+};
+
 export const DotnetHandler: Definition = (opts: any) => {
   const dir = State.Function.artifactsPath(
     opts.root,
@@ -22,7 +38,7 @@ export const DotnetHandler: Definition = (opts: any) => {
       "--configuration",
       "Release",
       "--framework",
-      "netcoreapp3.1",
+      FRAMEWORK_MAP[opts.runtime],
       "/p:GenerateRuntimeConfigurationFiles=true",
       "/clp:ForceConsoleColor",
       // warnings are not reported for repeated builds by default and this flag
@@ -62,7 +78,7 @@ export const DotnetHandler: Definition = (opts: any) => {
           "../src/",
           "runtime",
           "shells",
-          "dotnet-bootstrap",
+          BOOTSTRAP_MAP[opts.runtime],
           "release",
           "dotnet-bootstrap.dll"
         ),
