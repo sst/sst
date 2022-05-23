@@ -123,8 +123,8 @@ module.exports = {
               href: config.twitter,
             },
             {
-              label: "Forums",
-              href: config.forum,
+              label: "YouTube",
+              href: config.youtube,
             },
           ],
         },
