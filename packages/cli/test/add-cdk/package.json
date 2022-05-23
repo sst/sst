@@ -6,8 +6,6 @@
   "scripts": {
     "add-cdk": "sst add-cdk"
   },
-  "dependencies": {
-    "@serverless-stack/cli": "1.0.7"
-  },
+  "dependencies": {},
   "license": "ISC"
 }

@@ -20,6 +20,7 @@ async function runCdkCommand(cwd, cmd) {
       }
     );
   } catch (e) {
+    console.log(e);
     error = e.toString() + e.stdout;
   }
 

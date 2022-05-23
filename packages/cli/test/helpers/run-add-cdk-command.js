@@ -12,7 +12,7 @@ async function runAddCdkCommand(cwd, packages) {
 
   try {
     result = await execPromise(
-      `yarn add-cdk --no-color --dry-run ${packages}`,
+      `yarn run add-cdk --no-color --dry-run ${packages}`,
       { cwd, TIMEOUT }
     );
   } catch (e) {

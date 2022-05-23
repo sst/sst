@@ -280,15 +280,15 @@ function formatDepsForInstall(depsList, version) {
     .join(" ");
 }
 
-function isCdkV2CoreDep(dep) {
+export function isCdkV2CoreDep(dep) {
   return dep === "aws-cdk" || dep === "aws-cdk-lib";
 }
 
-function isCdkV2AlphaDep(dep) {
+export function isCdkV2AlphaDep(dep) {
   return dep.startsWith("@aws-cdk/") && dep.endsWith("-alpha");
 }
 
-function isCdkV1Dep(dep) {
+export function isCdkV1Dep(dep) {
   return dep.startsWith("@aws-cdk/") && !dep.endsWith("-alpha");
 }
 

@@ -13,8 +13,8 @@
     "cdk": "sst cdk"
   },
   "dependencies": {
-    "@serverless-stack/cli": "1.0.7",
-    "@serverless-stack/resources": "1.0.7"
+    "@serverless-stack/cli": "1.1.2",
+    "@serverless-stack/resources": "1.1.2"
   },
   "license": "ISC",
   "devDependencies": {

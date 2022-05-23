@@ -16,6 +16,7 @@ import fs from "fs-extra";
 import yargs from "yargs";
 import chalk from "chalk";
 import readline from "readline";
+import spawn from "cross-spawn";
 
 import { createRequire } from "module";
 
@@ -507,6 +508,7 @@ async function run() {
     [cmd.deploy]: await import("../scripts/deploy.mjs"),
     [cmd.remove]: await import("../scripts/remove.mjs"),
     [cmd.console]: await import("../scripts/console.mjs"),
+    [cmd.addCdk]: await import("../scripts/add-cdk.mjs"),
   };
 
   switch (script) {
@@ -541,6 +543,40 @@ async function run() {
         logger.debug(e);
         exitWithMessage(e.message);
       });
+      break;
+    }
+    case cmd.cdk: {
+      // Prepare app
+      prepareCdk(argv, cliInfo, config)
+        .then(() => {
+          const result = spawn.sync(
+            "node",
+            [require.resolve("../scripts/" + script + ".mjs")].concat(
+              scriptArgs
+            ),
+            { stdio: "inherit" }
+          );
+          if (result.signal) {
+            if (result.signal === "SIGKILL") {
+              exitWithMessage(
+                "The command failed because the process exited too early. " +
+                  "This probably means the system ran out of memory or someone called " +
+                  "`kill -9` on the process."
+              );
+            } else if (result.signal === "SIGTERM") {
+              exitWithMessage(
+                "The command failed because the process exited too early. " +
+                  "Someone might have called `kill` or `killall`, or the system could " +
+                  "be shutting down."
+              );
+            }
+            exitWithMessage(
+              "The command failed because the process exited too early."
+            );
+          }
+          process.exit(result.status);
+        })
+        .catch((e) => exitWithMessage(e.message));
       break;
     }
     default:
