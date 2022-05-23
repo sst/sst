@@ -14,7 +14,7 @@
     "watch": "tsc -b -w",
     "build": "turbo run build --filter=!@serverless-stack/docs --filter=!@serverless-stack/console",
     "release": "yarn build && yarn changeset publish",
-    "release-snapshot": "yarn build && yarn changeset version --snapshot && yarn changeset publish --no-git-tag --tag=snapshot && git checkout ."
+    "release-snapshot": "./.changeset/snapshot"
   },
   "repository": {
     "type": "git",
