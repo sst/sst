@@ -1,8 +1,11 @@
 import { Bus } from "./Bus.js";
 import fs from "fs/promises";
 import path from "path";
-import { execSync } from "child_process";
+import { exec } from "child_process";
 import { Pothos } from "../pothos/index.js";
+import { promisify } from "util";
+
+const execAsync = promisify(exec);
 
 interface Opts {
   bus: Bus;
@@ -12,17 +15,11 @@ export function createPothosBuilder(opts: Opts) {
   let routes: any[] = [];
 
   async function build(route: any) {
-    console.log("Pothos: generating schema for", route.schema);
     const schema = await Pothos.generate({
       schema: route.schema,
     });
     await fs.writeFile(route.output, schema);
-    console.log("Pothos: schema generated", route.schema);
-
-    for (const cmd of route.commands) {
-      console.log("Pothos: executing", cmd);
-      execSync(cmd);
-    }
+    await Promise.all(route.commands.map((cmd: string) => execAsync(cmd)));
   }
 
   opts.bus.subscribe("file.changed", async (evt) => {

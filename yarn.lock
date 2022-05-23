@@ -13327,7 +13327,7 @@ ora@^5.4.1:
 
 ora@^6.1.0:
   version "6.1.0"
-  resolved "https://registry.npmjs.org/ora/-/ora-6.1.0.tgz"
+  resolved "https://registry.yarnpkg.com/ora/-/ora-6.1.0.tgz#86aa07058c4e9fb91444412d103b0d7e01aca973"
   integrity sha512-CxEP6845hLK+NHFWZ+LplGO4zfw4QSfxTlqMfvlJ988GoiUeZDMzCvqsZkFHv69sPICmJH1MDxZoQFOKXerAVw==
   dependencies:
     bl "^5.0.0"

@@ -10,6 +10,8 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import { App } from "./App.js";
 import { getFunctionRef, SSTConstruct } from "./Construct.js";
 import { Function as Fn } from "./Function.js";
+import url from "url";
+const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 /////////////////////
 // Interfaces
