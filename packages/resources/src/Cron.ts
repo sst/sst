@@ -34,7 +34,7 @@ export interface CronJobProps {
 
 export interface CronProps {
   /**
-   * The definition of the function to be executed
+   * The definition of the function to be executed.
    *
    * @example
    * ```js
@@ -80,7 +80,7 @@ export interface CronProps {
    */
   schedule?: `rate(${string})` | `cron(${string})`;
   /**
-   * The definition of the function to be executed
+   * Indicates whether the cron job is enabled.
    * @default true
    * @example
    * ```js
