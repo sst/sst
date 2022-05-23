@@ -26,6 +26,7 @@ test("constructor: eventsRule", async () => {
   });
   countResources(stack, "AWS::Events::Rule", 1);
   hasResource(stack, "AWS::Events::Rule", {
+    State: "ENABLED",
     ScheduleExpression: "rate(1 minute)",
   });
 });
@@ -59,6 +60,41 @@ test("schedule is undefined", async () => {
       job: "test/lambda.handler",
     });
   }).toThrow(/No schedule defined/);
+});
+
+test("enabled is undefined", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Cron(stack, "Cron", {
+    schedule: "rate(1 minute)",
+    job: "test/lambda.handler",
+  });
+  hasResource(stack, "AWS::Events::Rule", {
+    State: "ENABLED",
+  });
+});
+
+test("enabled is true", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Cron(stack, "Cron", {
+    schedule: "rate(1 minute)",
+    job: "test/lambda.handler",
+    enabled: true,
+  });
+  hasResource(stack, "AWS::Events::Rule", {
+    State: "ENABLED",
+  });
+});
+
+test("enabled is false", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Cron(stack, "Cron", {
+    schedule: "rate(1 minute)",
+    job: "test/lambda.handler",
+    enabled: false,
+  });
+  hasResource(stack, "AWS::Events::Rule", {
+    State: "DISABLED",
+  });
 });
 
 test("cdk.rule.schedule-rate", async () => {
