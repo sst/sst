@@ -87,7 +87,7 @@ export interface CronProps {
    * new Cron(stack, "Cron", {
    *   job: "src/lambda.main",
    *   schedule: "rate(5 minutes)",
-   *   enabled: false,
+   *   enabled: app.local,
    * })
    * ```
    */
