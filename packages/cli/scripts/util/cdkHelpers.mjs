@@ -25,7 +25,7 @@ export function isNodeRuntime(runtime) {
 }
 
 export function isDotnetRuntime(runtime) {
-  return runtime.startsWith("dotnetcore");
+  return runtime.startsWith("dotnet");
 }
 
 export function isPythonRuntime(runtime) {

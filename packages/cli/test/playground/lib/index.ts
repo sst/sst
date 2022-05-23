@@ -23,6 +23,7 @@ import { MainStack as ApiStack } from "./api-stack";
 //import { MainStack as AnotherStack } from "./topic-to-queue-stack";
 //import { MainStack as AnotherStack } from "./api-with-lambda-authorizer";
 //import { MainStack as AnotherStack } from "./step-functions-stack";
+//import RuntimeStack from "./runtime-stack";
 //import { MainStack as EmptyStack } from "./empty-stack";
 //import { MainStack as ErrorStack } from "./error-stack";
 //import { MainStack as LambdaErrorCasesStack } from "./lambda-error-cases-stack";
@@ -56,6 +57,7 @@ export default async function main(app: sst.App) {
   // Unsupported SST constructs
   //new KinesisFirehoseStack(app, "firehose");
 
+  //.stack(RuntimeStack, { id: "runtime"})
   //new EmptyStack(app, "empty");
   //new ErrorStack(app, "error");
   //new LambdaErrorCasesStack(app, "lambda-error-cases");
