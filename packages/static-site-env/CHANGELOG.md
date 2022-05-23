@@ -1,5 +1,11 @@
 # @serverless-stack/static-site-env
 
+## 1.2.0
+
+### Minor Changes
+
+- [#1710](https://github.com/serverless-stack/serverless-stack/pull/1710) [`e170ea3f`](https://github.com/serverless-stack/serverless-stack/commit/e170ea3fb586cbe36e11beb8f9d9af4f420c2d7e) Thanks [@thdxr](https://github.com/thdxr)! - Moved codebase to ESM. This should not have any impact on your codebase if you are not using ESM. If you are using ESM and you are using an esbuild plugin, be sure to rename your plugins file to have a .cjs extension
+
 ## 1.1.2
 
 ## 1.1.1

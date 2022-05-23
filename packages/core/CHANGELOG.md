@@ -1,5 +1,17 @@
 # @serverless-stack/core
 
+## 1.2.0
+
+### Minor Changes
+
+- [#1710](https://github.com/serverless-stack/serverless-stack/pull/1710) [`e170ea3f`](https://github.com/serverless-stack/serverless-stack/commit/e170ea3fb586cbe36e11beb8f9d9af4f420c2d7e) Thanks [@thdxr](https://github.com/thdxr)! - Moved codebase to ESM. This should not have any impact on your codebase if you are not using ESM. If you are using ESM and you are using an esbuild plugin, be sure to rename your plugins file to have a .cjs extension
+
+### Patch Changes
+
+- [#1719](https://github.com/serverless-stack/serverless-stack/pull/1719) [`3610b5da`](https://github.com/serverless-stack/serverless-stack/commit/3610b5da4f57fd35f1fb824701b7bfc4e8ce1a83) Thanks [@fwang](https://github.com/fwang)! - Function: add support for dotnet (.NET 6) runtime
+
+* [#1715](https://github.com/serverless-stack/serverless-stack/pull/1715) [`0bc69b52`](https://github.com/serverless-stack/serverless-stack/commit/0bc69b520f68dc5325b974386170d3db0d21416c) Thanks [@fwang](https://github.com/fwang)! - Load .env files for debug stack
+
 ## 1.1.2
 
 ### Patch Changes
