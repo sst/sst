@@ -36,7 +36,7 @@ for (const pkg of packages) {
     }
 
     if (start) {
-      if (line.startsWith("-")) {
+      if (line.startsWith("-") || line.startsWith("*")) {
         if (line.includes("Updated dependencies")) continue;
         if (line.includes("@serverless-stack/")) continue;
 
@@ -65,6 +65,7 @@ const notes = [
   "$ yarn sst update v" + version,
   "```",
 ];
+console.log(notes.join("\n"));
 console.log(`::set-output name=notes::${notes.join("%0A")}`);
 console.log(`::set-output name=version::v${version}`);
 
