@@ -729,8 +729,9 @@ export class Api<
    */
   public getFunction(routeKey: string): Fn | undefined {
     const route = this.routesData[this.normalizeRouteKey(routeKey)];
+    if (!route) return;
     if ("function" in route) return route.function;
-    return undefined;
+    return;
   }
 
   /**
