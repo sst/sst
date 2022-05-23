@@ -31,6 +31,7 @@ test("cdk.queue: is undefined", async () => {
   const stack = new Stack(new App(), "stack");
   const queue = new Queue(stack, "Queue");
   expect(queue.queueArn).toBeDefined();
+  expect(queue.queueUrl).toBeDefined();
   expect(queue.queueName).toBeDefined();
   countResources(stack, "AWS::SQS::Queue", 1);
   countResources(stack, "AWS::Lambda::EventSourceMapping", 0);

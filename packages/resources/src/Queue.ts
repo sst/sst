@@ -141,6 +141,13 @@ export class Queue extends Construct implements SSTConstruct {
   }
 
   /**
+   * The URL of the SQS Queue
+   */
+  public get queueUrl(): string {
+    return this.cdk.queue.queueUrl;
+  }
+
+  /**
    * The name of the SQS Queue
    */
   public get queueName(): string {
