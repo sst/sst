@@ -12,7 +12,7 @@
 
 <p align="center">
   <a href="https://v1conf.sst.dev">
-    <img alt="SST 1.0 Conf" src="https://v1conf.sst.dev/assets/social-share-no-logo.png" width="600" />
+    <img alt="SST 1.0 Conf" src="https://github.com/serverless-stack/v1-conf/raw/main/frontend/assets/social-share-no-logo.png" width="600" />
   </a>
 </p>
 
