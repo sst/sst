@@ -85,13 +85,13 @@ npm deploy --stage prod
       <p>Join us on Slack and chat with other folks in the community.</p>
     </div>
   </a>
-  <a className={styles.communityPanel} href={ config.github }>
-    <div className={styles.communityPanelIconGitHub}>
-      <i className="fab fa-github"></i>
+  <a className={styles.communityPanel} href={ config.youtube }>
+    <div className={styles.communityPanelIconYouTube}>
+      <i className="fab fa-youtube"></i>
     </div>
     <div className={styles.communityPanelContent}>
-      <h4>GitHub</h4>
-      <p>Star and watch our repo to be notified on releases and roadmap updates.</p>
+      <h4>YouTube</h4>
+      <p>Subscribe to our channel and watch tutorials, screencasts, and livestreams.</p>
     </div>
   </a>
   <a className={styles.communityPanel} href={ config.twitter }>
@@ -103,13 +103,13 @@ npm deploy --stage prod
       <p>Follow us on Twitter and stay up to date on the latest news and announcements.</p>
     </div>
   </a>
-  <a className={styles.communityPanel} href={ config.forum }>
-    <div className={styles.communityPanelIconDiscourse}>
-      <i className="fab fa-discourse"></i>
+  <a className={styles.communityPanel} href={ config.github }>
+    <div className={styles.communityPanelIconGitHub}>
+      <i className="fab fa-github"></i>
     </div>
     <div className={styles.communityPanelContent}>
-      <h4>Discourse</h4>
-      <p>Take part in the discussions and conversation in our Discourse forums.</p>
+      <h4>GitHub</h4>
+      <p>Star and watch our repo to be notified on releases and roadmap updates.</p>
     </div>
   </a>
 </div>

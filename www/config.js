@@ -10,5 +10,6 @@ module.exports = {
   newsletter: "https://serverless-stack.com/newsletter.html",
   examples: "https://serverless-stack.com/examples/index.html",
   github: "https://github.com/serverless-stack/serverless-stack",
+  youtube: "https://www.youtube.com/channel/UCho8kA4-HMolEq6qEMRJetg",
   roadmap: "https://github.com/serverless-stack/serverless-stack/projects/1",
 };
