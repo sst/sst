@@ -31,6 +31,18 @@ const cron = new Cron(stack, "Cron", {
 cron.attachPermissions(["s3"]);
 ```
 
+### Disabling
+
+Disable the cron job from automatically running while developing.
+
+```js {4}
+new Cron(stack, "Cron", {
+  schedule: "rate(1 minute)",
+  job: "src/lambda.main",
+  enabled: app.local,
+});
+```
+
 ### Advanced examples
 
 #### Configuring the event rule
