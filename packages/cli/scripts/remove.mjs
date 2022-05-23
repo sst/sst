@@ -40,10 +40,16 @@ export default async function (argv, config, cliInfo) {
     //       Lambda Function construct be able to reference code with relative path.
     process.chdir(path.join(paths.ownPath, "assets", "debug-stack"));
     try {
-      const appBuildLibPath = path.join(paths.appBuildPath, "lib");
       await removeApp({
         ...cliInfo.cdkOptions,
-        app: `node bin/index.js ${config.name} ${config.stage} ${config.region} ${appBuildLibPath}`,
+        app: [
+          "node",
+          "bin/index.mjs",
+          config.name,
+          config.stage,
+          config.region,
+          `"${paths.appPath}"`,
+        ].join(" "),
         output: "cdk.out",
       });
     } finally {
