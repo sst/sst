@@ -116,7 +116,7 @@ export function useStacks() {
         })
       ).filter(
         (x) =>
-          x.constructs.version.startsWith("0.0.0") &&
+          x.constructs.version.startsWith("0.0.0") ||
           x.constructs.version >= "0.56.0"
       );
 
