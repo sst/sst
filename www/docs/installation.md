@@ -207,13 +207,13 @@ This command uses your **default AWS Profile** and the **region** and **stage** 
 Or if you want to deploy to a different stage.
 
 ```bash
-npm run deploy --stage prod
+npm run deploy -- --stage prod
 ```
 
 And if your prod environment is in a different AWS account or region, you can do:
 
 ```bash
-AWS_PROFILE=my-profile npm run deploy --stage prod --region eu-west-1
+AWS_PROFILE=my-profile npm run deploy -- --stage prod --region eu-west-1
 ```
 
 :::note

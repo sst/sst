@@ -85,7 +85,7 @@ The SST Console operates in two separate modes; when it connects through the `ss
 When you run [`sst start`](packages/cli.md#start), the SST CLI will print out a link to the console that can connect to your local environment.
 
 ```
-$ npx sst start
+$ npm start
 
 ==========================
 Starting Live Lambda Dev
@@ -100,7 +100,7 @@ Debug session started. Listening for requests...
 Alternatively, you can run [`sst console`](packages/cli.md#console) and specify the stage you want the console to connect to.
 
 ```
-$ npx sst console --stage prod
+$ npm run console -- --stage prod
 
 SST Console: https://console.serverless-stack.com/acme/prod
 ```

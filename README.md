@@ -42,7 +42,7 @@ npm start
 open console.serverless-stack.com
 
 # Deploy to prod
-npm deploy --stage prod
+npm run deploy -- --stage prod
 ```
 
 ## Documentation

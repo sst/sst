@@ -35,7 +35,7 @@ yarn sst <command>
 
 ```bash
 # Start the Live Lambda Development environment
-npx sst start
+npm start
 
 # Build your SST app
 npx sst build
@@ -50,14 +50,14 @@ npx sst remove
 npx sst update
 
 # Launch the SST Console
-npx sst console
+npm run console
 ```
 
 #### Change the default stage and region
 
 ```bash
 # Start
-npx sst start --stage alpha --region us-west-1
+npm start -- --stage alpha --region us-west-1
 
 # Build
 npx sst build --stage alpha --region us-west-1
@@ -111,7 +111,7 @@ Instead, it'll first compare the generated CloudFormation template to the previo
 When you run `sst start`, it'll give you a link to the [SST Console](../console.md).
 
 ```
-$ npx sst start
+$ npm start
 
 ==========================
 Starting Live Lambda Dev
@@ -187,13 +187,13 @@ The stage you want connect to. If this is not specified, it will default to your
 Connecting to a different stage.
 
 ```bash
-npx sst console --stage=staging
+npm run console -- --stage=staging
 ```
 
 Using a different aws profile if your stage is in another AWS account.
 
 ```bash
-npx sst console --stage=production --profile=acme-production
+npm run console -- --stage=production --profile=acme-production
 ```
 
 ### `remove [stack]`
