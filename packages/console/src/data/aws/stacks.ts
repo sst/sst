@@ -114,7 +114,11 @@ export function useStacks() {
           constructs: c,
           info: s,
         })
-      ).filter((x) => x.constructs.version >= "0.56.0");
+      ).filter(
+        (x) =>
+          x.constructs.version.startsWith("0.0.0") &&
+          x.constructs.version >= "0.56.0"
+      );
 
       const result: Result = {
         app: params.app!,
