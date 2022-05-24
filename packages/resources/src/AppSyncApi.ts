@@ -1,9 +1,8 @@
 import fs from "fs-extra";
 
 import { Util } from "@serverless-stack/core";
-const { print } = await Util.weakImport("graphql");
+const { print, buildSchema } = await Util.weakImport("graphql");
 const { mergeTypeDefs } = await Util.weakImport("@graphql-tools/merge");
-const { loadFilesSync } = await Util.weakImport("@graphql-tools/load-files");
 
 import { Construct } from "constructs";
 import * as rds from "aws-cdk-lib/aws-rds";
@@ -685,7 +684,11 @@ export class AppSyncApi extends Construct implements SSTConstruct {
       } else if (Array.isArray(schema)) {
         if (schema.length > 0) {
           // merge schema files
-          const mergedSchema = mergeTypeDefs(loadFilesSync(schema));
+          const mergedSchema = mergeTypeDefs(
+            schema
+              .map((file) => fs.readFileSync(file).toString())
+              .map(buildSchema)
+          );
           const filePath = State.resolve(
             app.appPath,
             `appsyncapi-${id}-${this.node.addr}.graphql`
