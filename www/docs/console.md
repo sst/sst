@@ -100,7 +100,7 @@ Debug session started. Listening for requests...
 Alternatively, you can run [`sst console`](packages/cli.md#console) and specify the stage you want the console to connect to.
 
 ```
-$ npm run console -- --stage prod
+$ npx sst console --stage prod
 
 SST Console: https://console.serverless-stack.com/acme/prod
 ```

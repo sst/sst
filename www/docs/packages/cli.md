@@ -57,7 +57,7 @@ npm run console
 
 ```bash
 # Start
-npm start -- --stage alpha --region us-west-1
+npx sst start --stage alpha --region us-west-1
 
 # Build
 npx sst build --stage alpha --region us-west-1
@@ -187,7 +187,7 @@ The stage you want connect to. If this is not specified, it will default to your
 Connecting to a different stage.
 
 ```bash
-npm run console -- --stage=staging
+npx sst console --stage=staging
 ```
 
 Using a different aws profile if your stage is in another AWS account.
@@ -350,5 +350,5 @@ If you are using `npm run`, you'll need to add an extra `--` for the options.
 For example, to set the stage and region:
 
 ```bash
-npm run deploy -- --stage prod --region eu-west-1
+npx sst deploy --stage prod --region eu-west-1
 ```
