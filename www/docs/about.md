@@ -70,7 +70,7 @@ npm start
 open console.serverless-stack.com
 
 # Deploy to prod
-npm deploy --stage prod
+npx sst deploy --stage prod
 ```
 
 ## Join our community

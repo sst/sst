@@ -1912,7 +1912,7 @@ function isStackNotExistException(e) {
 
 export * as Util from "./util/index.js";
 export { Update } from "./update/index.js";
-export { Pothos } from "./pothos/index.js"
+export { Pothos } from "./pothos/index.js";
 export { Packager } from "./packager/index.js";
 export { State } from "./state/index.js";
 export { Runtime } from "./runtime/index.js";

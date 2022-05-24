@@ -1,5 +1,23 @@
 # @serverless-stack/cli
 
+## 1.2.3
+
+### Patch Changes
+
+- [#1730](https://github.com/serverless-stack/serverless-stack/pull/1730) [`a2086191`](https://github.com/serverless-stack/serverless-stack/commit/a20861911859b3a48f668b2eb1f113e896cb851b) Thanks [@thdxr](https://github.com/thdxr)! - Fix issue with ws dependency preventing local server from starting
+
+- Updated dependencies [[`a2086191`](https://github.com/serverless-stack/serverless-stack/commit/a20861911859b3a48f668b2eb1f113e896cb851b)]:
+  - @serverless-stack/core@1.2.3
+  - @serverless-stack/resources@1.2.3
+
+## 1.2.2
+
+### Patch Changes
+
+- Updated dependencies [[`3229694c`](https://github.com/serverless-stack/serverless-stack/commit/3229694ceee9f18d008a621705d46c28e9ca2f35)]:
+  - @serverless-stack/core@1.2.2
+  - @serverless-stack/resources@1.2.2
+
 ## 1.2.1
 
 ### Patch Changes

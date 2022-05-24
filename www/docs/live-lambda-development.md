@@ -22,9 +22,9 @@ Let's start the local development environment.
 
 ```bash
 # With npm
-npx sst start
+npm start
 # Or with Yarn
-yarn sst start
+yarn start
 ```
 
 When this command is first run for a project, you will be prompted for a default stage name.
