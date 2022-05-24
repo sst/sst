@@ -19,7 +19,7 @@ test("Test environment variables", () => {
   template.hasResourceProperties("AWS::Lambda::Function", {
     Environment: {
       Variables: {
-        GREETING: "I_AM_PROD",
+        MY_ENV_VAR: "i-am-in-production",
       },
     },
   });
