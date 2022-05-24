@@ -5,7 +5,7 @@ export function MyStack({ app, stack }: StackContext) {
     handler: "functions/lambda.handler",
     timeout: app.stage === "prod" ? 20 : 10,
     environment: {
-      GREETING: process.env.GREETING,
+      MY_ENV_VAR: process.env.MY_ENV_VAR,
     },
   });
 }
