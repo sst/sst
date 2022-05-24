@@ -25,7 +25,6 @@
   "homepage": "https://serverless-stack.com",
   "dependencies": {
     "@aws-cdk/aws-apigatewayv2-alpha": "2.24.0-alpha.0",
-    "@graphql-codegen/cli": "^2.6.2",
     "@serverless-stack/core": "1.2.1",
     "@serverless-stack/resources": "1.2.1",
     "aws-cdk": "2.24.0",
