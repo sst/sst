@@ -1,5 +1,11 @@
 # @serverless-stack/core
 
+## 1.2.2
+
+### Patch Changes
+
+- [#1728](https://github.com/serverless-stack/serverless-stack/pull/1728) [`3229694c`](https://github.com/serverless-stack/serverless-stack/commit/3229694ceee9f18d008a621705d46c28e9ca2f35) Thanks [@thdxr](https://github.com/thdxr)! - Move graphql to peer dependencies by implementing weakImport. If you are using the AppSyncApi construct be sure to add `graphql` and `@graphql-tools/merge` to your dependencies.
+
 ## 1.2.1
 
 ### Patch Changes
