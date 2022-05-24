@@ -1,7 +1,8 @@
 import fs from "fs-extra";
-import { print } from "graphql";
-import { mergeTypeDefs } from "@graphql-tools/merge";
-import { loadFilesSync } from "@graphql-tools/load-files";
+
+import { Util } from "@serverless-stack/core";
+const { print, buildSchema } = await Util.weakImport("graphql");
+const { mergeTypeDefs } = await Util.weakImport("@graphql-tools/merge");
 
 import { Construct } from "constructs";
 import * as rds from "aws-cdk-lib/aws-rds";
@@ -385,6 +386,8 @@ export interface AppSyncApiCdkGraphqlProps
  *
  * The `AppSyncApi` construct is a higher level CDK construct that makes it easy to create an AppSync GraphQL API. It provides a simple way to define the data sources and the resolvers in your API. And allows you to configure the specific Lambda functions if necessary. See the [examples](#examples) for more details.
  *
+ * Using this construct requires two additional dependencies. Make sure you install `graphql` and `@graphql-tools/merge` for schema merging
+ *
  * @example
  * ### Using the minimal config
  *
@@ -683,7 +686,11 @@ export class AppSyncApi extends Construct implements SSTConstruct {
       } else if (Array.isArray(schema)) {
         if (schema.length > 0) {
           // merge schema files
-          const mergedSchema = mergeTypeDefs(loadFilesSync(schema));
+          const mergedSchema = mergeTypeDefs(
+            schema
+              .map((file) => fs.readFileSync(file).toString())
+              .map(buildSchema)
+          );
           const filePath = State.resolve(
             app.appPath,
             `appsyncapi-${id}-${this.node.addr}.graphql`

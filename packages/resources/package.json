@@ -36,8 +36,6 @@
     "@aws-cdk/aws-apigatewayv2-authorizers-alpha": "2.24.0-alpha.0",
     "@aws-cdk/aws-apigatewayv2-integrations-alpha": "2.24.0-alpha.0",
     "@aws-cdk/aws-appsync-alpha": "2.24.0-alpha.0",
-    "@graphql-tools/load-files": "^6.5.3",
-    "@graphql-tools/merge": "^8.2.12",
     "@serverless-stack/core": "1.2.1",
     "archiver": "^5.3.0",
     "aws-cdk-lib": "2.24.0",
@@ -45,12 +43,12 @@
     "constructs": "^10.0.29",
     "cross-spawn": "^7.0.3",
     "fs-extra": "^9.0.1",
-    "graphql": "^16.5.0",
     "glob": "^7.1.7",
     "zip-local": "^0.3.4",
     "zod": "^3.14.3"
   },
   "devDependencies": {
+    "@graphql-tools/merge": "^8.2.12",
     "@sls-next/lambda-at-edge": "^3.7.0-alpha.7",
     "@types/cross-spawn": "^6.0.2",
     "@types/fs-extra": "^9.0.6",
@@ -62,6 +60,15 @@
   },
   "gitHead": "8ac2d0abc11d5de721c87658bb445e3d6c211dcf",
   "peerDependencies": {
-    "graphql": "^16.5.0"
+    "graphql": "^16.5.0",
+    "@graphql-tools/merge": "^8.2.12"
+  },
+  "peerDependenciesMeta": {
+    "graphql": {
+      "optional": true
+    },
+    "@graphql-tools/merge": {
+      "optional": true
+    }
   }
 }
