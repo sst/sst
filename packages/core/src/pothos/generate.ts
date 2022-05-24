@@ -1,8 +1,9 @@
 import * as esbuild from "esbuild";
+import { weakImport } from "../util/index.js";
 import escodegen from "escodegen";
 import { parse } from "acorn";
 import { ancestor, fullAncestor, findNodeAt } from "acorn-walk";
-import { printSchema, lexicographicSortSchema } from "graphql";
+const { printSchema, lexicographicSortSchema } = await weakImport("graphql");
 import url from "url";
 import fs from "fs/promises";
 import path from "path";

@@ -45,7 +45,6 @@
     "constructs": "^10.0.29",
     "cross-spawn": "^7.0.3",
     "fs-extra": "^9.0.1",
-    "graphql": "^16.5.0",
     "glob": "^7.1.7",
     "zip-local": "^0.3.4",
     "zod": "^3.14.3"
@@ -63,5 +62,10 @@
   "gitHead": "8ac2d0abc11d5de721c87658bb445e3d6c211dcf",
   "peerDependencies": {
     "graphql": "^16.5.0"
+  },
+  "peerDependenciesMeta": {
+    "graphql": {
+      "optional": true
+    }
   }
 }

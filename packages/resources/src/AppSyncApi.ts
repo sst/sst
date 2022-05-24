@@ -1,7 +1,9 @@
 import fs from "fs-extra";
-import { print } from "graphql";
-import { mergeTypeDefs } from "@graphql-tools/merge";
-import { loadFilesSync } from "@graphql-tools/load-files";
+
+import { Util } from "@serverless-stack/core";
+const { print } = await Util.weakImport("graphql");
+const { mergeTypeDefs } = await Util.weakImport("@graphql-tools/merge");
+const { loadFilesSync } = await Util.weakImport("@graphql-tools/load-files");
 
 import { Construct } from "constructs";
 import * as rds from "aws-cdk-lib/aws-rds";

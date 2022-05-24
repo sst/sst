@@ -44,7 +44,6 @@
     "escodegen": "^2.0.0",
     "express": "^4.17.1",
     "fs-extra": "^9.0.1",
-    "graphql": "^16.5.0",
     "immer": "^9.0.7",
     "js-yaml": "^4.1.0",
     "log4js": "^6.3.0",
@@ -76,5 +75,10 @@
   },
   "peerDependencies": {
     "graphql": "^16.5.0"
+  },
+  "peerDependenciesMeta": {
+    "graphql": {
+      "optional": true
+    }
   }
 }
