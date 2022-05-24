@@ -19,6 +19,8 @@ import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite.js";
 import { Permissions } from "./util/permission.js";
 import { StackProps } from "./Stack.js";
 import { FunctionalStack, stack } from "./FunctionalStack.js";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
 
 function exitWithMessage(message: string) {
   console.error(message);
