@@ -2,7 +2,7 @@ import notes from "../notes";
 import { APIGatewayProxyHandlerV2 } from "aws-lambda";
 
 export const main: APIGatewayProxyHandlerV2 = async (event) => {
-  const note = notes[event.pathParameters.id];
+  const note = notes[event.pathParameters?.id!];
   return note
     ? {
         statusCode: 200,
