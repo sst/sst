@@ -41,7 +41,7 @@
     "fs-extra": "^9.0.1",
     "remeda": "^0.0.32",
     "source-map-support": "^0.5.19",
-    "ws": "^7.4.0",
+    "ws": "^8.6.0",
     "yargs": "^15.4.1"
   },
   "devDependencies": {
