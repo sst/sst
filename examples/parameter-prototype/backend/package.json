@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {},
   "dependencies": {
-    "aws-sdk": "^2.1138.0",
-    "@serverless-stack/node": "^1.1.2"
+    "aws-sdk": "^2.1142.0",
+    "@serverless-stack/node": "^1.2.3"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.97"
