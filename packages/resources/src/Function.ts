@@ -2,7 +2,7 @@
 // Note: disabling ban-type rule so we don't get an error referencing the class Function
 
 import path from "path";
-import type esbuild from "esbuild";
+import type { Loader } from "esbuild";
 import fs from "fs-extra";
 import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
@@ -334,7 +334,7 @@ export interface FunctionBundleNodejsProps extends FunctionBundleBase {
    * })
    * ```
    */
-  loader?: Record<string, esbuild.Loader>;
+  loader?: Record<string, Loader>;
   /**
    * Packages that will not be included in the bundle. Usually used to exclude dependencies that are provided in layers
    *

@@ -1,7 +1,7 @@
 import { produceWithPatches, enablePatches } from "immer";
 enablePatches();
 
-import ws from "ws";
+import { WebSocketServer } from "ws";
 import { applyWSSHandler } from "@trpc/server/adapters/ws/dist/trpc-server-adapters-ws.cjs.js";
 import { FunctionState, router, State } from "./router.js";
 import { EventDelegate } from "../events.js";
@@ -30,7 +30,7 @@ export function useLocalServer(opts: Opts) {
   const onDeploy = new EventDelegate<void>();
 
   // Wire up websocket
-  const wss = new ws.Server({
+  const wss = new WebSocketServer({
     port: opts.port,
   });
   const handler = applyWSSHandler({
