@@ -193,7 +193,7 @@ npx sst console --stage=staging
 Using a different aws profile if your stage is in another AWS account.
 
 ```bash
-npm run console -- --stage=production --profile=acme-production
+npx sst console --stage=production --profile=acme-production
 ```
 
 ### `remove [stack]`

@@ -145,7 +145,7 @@ AWS makes it easy to spin up multiple environments with [AWS Organizations](http
 For local development you can start SST by specifying the profile associated with your personal AWS account and specifying a dev stage.
 
 ``` bash
-AWS_PROFILE=personal-profile npm start -- --stage dev
+AWS_PROFILE=personal-profile npx sst start --stage dev
 ```
 
 We can take this a step further. Locally you can set this profile as the `default` one in your `~/.aws/credentials`.
