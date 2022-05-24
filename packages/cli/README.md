@@ -20,7 +20,7 @@ $ npm i
 $ npm start
 
 # Deploy to prod
-$ npm deploy --stage prod
+$ npx sst deploy --stage prod
 ```
 
 [![sst start](https://d1ne2nltv07ycv.cloudfront.net/SST/sst-start-demo/sst-start-demo-2.gif)](https://d1ne2nltv07ycv.cloudfront.net/SST/sst-start-demo/sst-start-demo-2.mp4)

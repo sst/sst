@@ -328,7 +328,7 @@ Since dynamic environment values are not known at build time, they cannot be use
 To use the above environment variables while developing, first run `sst start` to start the local environment.
 
 ```bash
-npx sst start
+npm start
 ```
 
 Then in your frontend app add the [sst-env](https://www.npmjs.com/package/@serverless-stack/static-site-env) npm package to reference these variables.

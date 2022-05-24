@@ -35,7 +35,7 @@ yarn sst <command>
 
 ```bash
 # Start the Live Lambda Development environment
-npx sst start
+npm start
 
 # Build your SST app
 npx sst build
@@ -50,7 +50,7 @@ npx sst remove
 npx sst update
 
 # Launch the SST Console
-npx sst console
+npm run console
 ```
 
 #### Change the default stage and region
@@ -111,7 +111,7 @@ Instead, it'll first compare the generated CloudFormation template to the previo
 When you run `sst start`, it'll give you a link to the [SST Console](../console.md).
 
 ```
-$ npx sst start
+$ npm start
 
 ==========================
 Starting Live Lambda Dev
@@ -350,5 +350,5 @@ If you are using `npm run`, you'll need to add an extra `--` for the options.
 For example, to set the stage and region:
 
 ```bash
-npm run deploy -- --stage prod --region eu-west-1
+npx sst deploy --stage prod --region eu-west-1
 ```

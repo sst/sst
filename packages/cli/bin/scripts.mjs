@@ -303,7 +303,7 @@ function checkNpmScriptArgs() {
   if (commonStageAndRegions.indexOf(argv.stack) !== -1) {
     logger.warn(
       chalk.yellow(
-        `\nWarning: It looks like you might be setting the stack option to "${argv.stack}" by mistake. If you are using "npm run", make sure to add "--" before the options. For example, "npm run deploy -- --stage prod".\n`
+        `\nWarning: It looks like you might be setting the stack option to "${argv.stack}" by mistake. If you are using "npm run", make sure to add "--" before the options. For example, "npx sst deploy --stage prod".\n`
       )
     );
   }

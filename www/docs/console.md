@@ -85,7 +85,7 @@ The SST Console operates in two separate modes; when it connects through the `ss
 When you run [`sst start`](packages/cli.md#start), the SST CLI will print out a link to the console that can connect to your local environment.
 
 ```
-$ npx sst start
+$ npm start
 
 ==========================
 Starting Live Lambda Dev
