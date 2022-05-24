@@ -2,7 +2,7 @@
 // Note: disabling ban-type rule so we don't get an error referencing the class Function
 
 import path from "path";
-import esbuild from "esbuild";
+import type esbuild from "esbuild";
 import fs from "fs-extra";
 import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
