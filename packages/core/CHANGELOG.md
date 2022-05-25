@@ -1,5 +1,11 @@
 # @serverless-stack/core
 
+## 1.2.4
+
+### Patch Changes
+
+- [`66f763b8`](https://github.com/serverless-stack/serverless-stack/commit/66f763b899bdf5087c109384033a16860fac9b1c) Thanks [@thdxr](https://github.com/thdxr)! - Granular bundling for stacks code
+
 ## 1.2.3
 
 ### Patch Changes
