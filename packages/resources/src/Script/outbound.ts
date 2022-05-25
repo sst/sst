@@ -3,6 +3,7 @@ import * as https from "https";
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 const AWS = require("aws-sdk");
+import type { StepFunctions, Lambda } from "aws-sdk";
 import type { ConfigurationOptions } from "aws-sdk/lib/config-base";
 
 const FRAMEWORK_HANDLER_TIMEOUT = 900000; // 15 minutes
@@ -30,12 +31,12 @@ async function defaultHttpRequest(
   });
 }
 
-let sfn: AWS.StepFunctions;
-let lambda: AWS.Lambda;
+let sfn: StepFunctions;
+let lambda: Lambda;
 
 async function defaultStartExecution(
-  req: AWS.StepFunctions.StartExecutionInput
-): Promise<AWS.StepFunctions.StartExecutionOutput> {
+  req: StepFunctions.StartExecutionInput
+): Promise<StepFunctions.StartExecutionOutput> {
   if (!sfn) {
     sfn = new AWS.StepFunctions(awsSdkConfig);
   }
@@ -44,8 +45,8 @@ async function defaultStartExecution(
 }
 
 async function defaultInvokeFunction(
-  req: AWS.Lambda.InvocationRequest
-): Promise<AWS.Lambda.InvocationResponse> {
+  req: Lambda.InvocationRequest
+): Promise<Lambda.InvocationResponse> {
   if (!lambda) {
     lambda = new AWS.Lambda(awsSdkConfig);
   }
