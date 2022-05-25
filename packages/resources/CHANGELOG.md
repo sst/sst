@@ -1,5 +1,16 @@
 # @serverless-stack/resources
 
+## 1.2.8
+
+### Patch Changes
+
+- [#1744](https://github.com/serverless-stack/serverless-stack/pull/1744) [`6c94940d`](https://github.com/serverless-stack/serverless-stack/commit/6c94940d2548426f32503dea338d891f02d6676a) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: support reusing CloudFront Origin Request Policy
+
+* [#1742](https://github.com/serverless-stack/serverless-stack/pull/1742) [`b4f83734`](https://github.com/serverless-stack/serverless-stack/commit/b4f8373449a27ca0d9a87cb99053fa7d69828c66) Thanks [@fwang](https://github.com/fwang)! - WebSocketApi: add getRoute() to make WebSocketRoute accessible
+
+* Updated dependencies []:
+  - @serverless-stack/core@1.2.8
+
 ## 1.2.7
 
 ### Patch Changes
