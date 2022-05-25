@@ -165,6 +165,7 @@ export interface ApiLambdaAuthorizer extends ApiBaseAuthorizer {
    * The types of responses the lambda can return.
    *
    * If `simple` is included then response format 2.0 will be used.
+   * @default ["iam"]
    */
   responseTypes?: Lowercase<
     keyof typeof apigAuthorizers.HttpLambdaResponseType
