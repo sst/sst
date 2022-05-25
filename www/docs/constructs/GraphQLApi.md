@@ -441,7 +441,7 @@ addRoutes(scope, routes)
 ```
 _Parameters_
 - __scope__ <span class="mono">[Construct](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)</span>
-- __routes__ <span class="mono">Record&lt;<span class="mono">string</span>, <span class='mono'><span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span></span> | <span class="mono">[ApiFunctionRouteProps](Api#apifunctionrouteprops)</span> | <span class="mono">[ApiHttpRouteProps](Api#apihttprouteprops)</span> | <span class="mono">[ApiAlbRouteProps](Api#apialbrouteprops)</span></span>&gt;</span>
+- __routes__ <span class="mono">Record&lt;<span class="mono">string</span>, <span class='mono'><span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span></span> | <span class="mono">[ApiFunctionRouteProps](Api#apifunctionrouteprops)</span> | <span class="mono">[ApiHttpRouteProps](Api#apihttprouteprops)</span> | <span class="mono">[ApiAlbRouteProps](Api#apialbrouteprops)</span> | <span class="mono">[ApiPothosRouteProps](Api#apipothosrouteprops)</span></span>&gt;</span>
 
 
 Adds routes to the Api after it has been created.

@@ -195,6 +195,12 @@ _Type_ : <span class="mono">string</span>
 
 The name of the SQS Queue
 
+### queueUrl
+
+_Type_ : <span class="mono">string</span>
+
+The URL of the SQS Queue
+
 
 ### cdk.queue
 

@@ -52,17 +52,33 @@ const cron = new Cron(stack, "Cron", {
 cron.attachPermissions(["s3"]);
 ```
 
+### Disabling
+
+Disable the cron job from automatically running while developing.
+
+```js {4}
+new Cron(stack, "Cron", {
+  schedule: "rate(1 minute)",
+  job: "src/lambda.main",
+  enabled: app.local,
+});
+```
+
 ### Advanced examples
 
 #### Configuring the event rule
 
 Configure the internally created EventBus Rule.
 
-```js {4}
+```js {7}
+import { Schedule } from "aws-cdk-lib/aws-events";
+
 new Cron(stack, "Cron", {
   job: "src/lambda.main",
   cdk: {
-    cronOptions: { minute: "0", hour: "4" },
+    rule: {
+      schedule: Schedule.cron({ minute: "0", hour: "4" }),
+    }
   }
 });
 ```
@@ -92,16 +108,34 @@ new Cron(stack, "Cron", {
 ## CronProps
 
 
-### job
+### enabled?
 
-_Type_ : <span class='mono'><span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span></span> | <span class="mono">[CronJobProps](#cronjobprops)</span></span>
+_Type_ : <span class="mono">boolean</span>
 
-The definition of the function to be executed
+_Default_ : <span class="mono">true</span>
+
+Indicates whether the cron job is enabled.
 
 
 ```js
 new Cron(stack, "Cron", {
-  job : "src/function.handler",
+  job: "src/lambda.main",
+  schedule: "rate(5 minutes)",
+  enabled: app.local,
+})
+```
+
+### job
+
+_Type_ : <span class='mono'><span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span></span> | <span class="mono">[CronJobProps](#cronjobprops)</span></span>
+
+The definition of the function to be executed.
+
+
+```js
+new Cron(stack, "Cron", {
+  job : "src/lambda.main",
+  schedule: "rate(5 minutes)",
 })
 ```
 
