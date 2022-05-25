@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 1.1.2
+
+### Patch Changes
+
+- [#1709](https://github.com/serverless-stack/serverless-stack/pull/1709) [`cd476c4b`](https://github.com/serverless-stack/serverless-stack/commit/cd476c4b840477386bfa0a9edecd34f54cbaaf51) Thanks [@andreacavagna01](https://github.com/andreacavagna01)! - Update Leapp screenshot in IAM credentials doc
+
 ## 1.1.1
 
 ### Patch Changes
