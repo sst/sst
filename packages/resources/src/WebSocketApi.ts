@@ -265,7 +265,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
   };
   private _customDomainUrl?: string;
   private functions: { [key: string]: Fn };
-  private _routes: { [key: string]: apig.WebSocketRoute };
+  private apigRoutes: { [key: string]: apig.WebSocketRoute };
   private permissionsAttachedForAllRoutes: Permissions[];
   private authorizer?:
     | "none"
@@ -279,7 +279,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
     this.props = props || {};
     this.cdk = {} as any;
     this.functions = {};
-    this._routes = {};
+    this.apigRoutes = {};
     this.permissionsAttachedForAllRoutes = [];
 
     this.createWebSocketApi();
@@ -375,7 +375,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
    * ```
    */
   public getRoute(routeKey: string): apig.WebSocketRoute | undefined {
-    return this._routes[this.normalizeRouteKey(routeKey)];
+    return this.apigRoutes[this.normalizeRouteKey(routeKey)];
   }
 
   /**
@@ -588,12 +588,9 @@ export class WebSocketApi extends Construct implements SSTConstruct {
       authorizer: routeKey === "$connect" ? authorizer : undefined,
     });
 
-    this._routes[routeKey] = route;
-
     ///////////////////
     // Configure authorization
     ///////////////////
-
     // Note: as of CDK v1.138.0, aws-apigatewayv2.WebSocketRoute does not
     //       support IAM authorization type. We need to manually configure it.
     if (routeKey === "$connect") {
@@ -607,10 +604,10 @@ export class WebSocketApi extends Construct implements SSTConstruct {
       cfnRoute.authorizationType = authorizationType;
     }
 
-
     ///////////////////
     // Store function
     ///////////////////
+    this.apigRoutes[routeKey] = route;
     this.functions[routeKey] = lambda;
 
     return lambda;
