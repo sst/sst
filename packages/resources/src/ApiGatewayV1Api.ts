@@ -249,7 +249,6 @@ export type ApiGatewayV1ApiRouteProps<AuthorizerKeys> =
  *   "GET /notes/{id}": {
  *     type: "function",
  *     function: "src/get.main",
- *     payloadFormatVersion: "1.0",
  *   }
  * });
  * ```
