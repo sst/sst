@@ -68,8 +68,9 @@ class DynamicFileMigrationProvider {
 
     for (const fileName of files) {
       if (
-        (fileName.endsWith(".js") || fileName.endsWith(".ts")) &&
-        !fileName.endsWith(".d.ts")
+        fileName.endsWith(".js") ||
+        fileName.endsWith(".cjs") ||
+        fileName.endsWith(".mjs")
       ) {
         const fullPath = path.join(this.#migrationFolderPath, fileName);
         const copy = fullPath + Date.now().toString() + ".js";
