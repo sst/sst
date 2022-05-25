@@ -2,4 +2,4 @@
 "@serverless-stack/core": patch
 ---
 
-placeholder
+Fix __dirname issue with python bundler
