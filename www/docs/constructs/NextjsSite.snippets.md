@@ -270,3 +270,27 @@ new NextjsSite(this, "Site2", {
   }
 });
 ```
+
+#### Reusing CloudFront image origin request policy
+
+CloudFront has a limit of 20 origin request policies per AWS account. This is a hard limit, and cannot be increased. Each `NextjsSite` creates a new origin request policy by default. If you plan to deploy multiple Next.js sites, you can have the constructs share the same origin request policy by reusing them across sites.
+
+```js
+import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
+
+const imageOriginRequestPolicy = new cloudfront.OriginRequestPolicy(stack, "ImageOriginRequest", NextjsSite.imageOriginRequestPolicyProps);
+
+new NextjsSite(this, "Site1", {
+  path: "path/to/site1",
+  cdk: {
+    imageOriginRequestPolicy,
+  }
+});
+
+new NextjsSite(this, "Site2", {
+  path: "path/to/site2",
+  cdk: {
+    imageOriginRequestPolicy,
+  }
+});
+```

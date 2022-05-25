@@ -329,6 +329,30 @@ new NextjsSite(this, "Site2", {
 });
 ```
 
+#### Reusing CloudFront origin request policies
+
+Similar to the cache policies mentioned above, CloudFront has a limit of 20 origin request policies per AWS account. This is a hard limit, and cannot be increased. When using `next/image`, each `NextjsSite` creates a new origin request policy by default. If you plan to deploy multiple Next.js sites, you can have the constructs share the same origin request policy by reusing them across sites.
+
+```js
+import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
+
+const imageOriginRequestPolicy = new cloudfront.OriginRequestPolicy(stack, "ImageOriginRequest", NextjsSite.imageOriginRequestPolicyProps);
+
+new NextjsSite(this, "Site1", {
+  path: "path/to/site1",
+  cdk: {
+    imageOriginRequestPolicy,
+  }
+});
+
+new NextjsSite(this, "Site2", {
+  path: "path/to/site2",
+  cdk: {
+    imageOriginRequestPolicy,
+  }
+});
+```
+
 ## NextjsSiteProps
 
 
@@ -436,8 +460,13 @@ _Type_ : <span class="mono">[ICachePolicy](https://docs.aws.amazon.com/cdk/api/v
 
 _Type_ : <span class="mono">[ICachePolicy](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.ICachePolicy.html)</span>
 
-
 Override the default CloudFront cache policies created internally.
+
+### cdk.imageOriginRequestPolicy?
+
+_Type_ : <span class="mono">[IOriginRequestPolicy](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.IOriginRequestPolicy.html)</span>
+
+Override the default CloudFront origin request policy created internally.
 
 ### cdk.distribution?
 
@@ -451,9 +480,10 @@ _Type_ : <span class="mono">[QueueProps](https://docs.aws.amazon.com/cdk/api/v2/
 
 Override the default settings this construct uses to create the CDK `Queue` internally.
 
-
 ## Properties
+
 An instance of `NextjsSite` has the following properties.
+
 ### bucketArn
 
 _Type_ : <span class="mono">string</span>

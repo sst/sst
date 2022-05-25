@@ -823,6 +823,41 @@ test("constructor: cfCachePolicies props override", async () => {
   countResources(stack, "AWS::CloudFront::CachePolicy", 0);
 });
 
+test("constructor: cfImageOriginRequestPolicy props default", async () => {
+  const stack = new Stack(new App(), "stack");
+  new NextjsSite(stack, "Site", {
+    path: "test/nextjs-site",
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: "jestBuildOutputPath" not exposed in props
+    jestBuildOutputPath: buildOutputPath,
+  });
+  countResources(stack, "AWS::CloudFront::OriginRequestPolicy", 1);
+  hasResource(stack, "AWS::CloudFront::OriginRequestPolicy", {
+    OriginRequestPolicyConfig: objectLike({
+      Comment: "SST NextjsSite Lambda Default Origin Request Policy",
+    }),
+  });
+});
+
+test("constructor: cfImageOriginRequestPolicy props override", async () => {
+  const stack = new Stack(new App(), "stack");
+  new NextjsSite(stack, "Site", {
+    path: "test/nextjs-site",
+    cdk: {
+      imageOriginRequestPolicy:
+        cf.OriginRequestPolicy.fromOriginRequestPolicyId(
+          stack,
+          "ImageOriginRequestPolicy",
+          "imageOriginRequestPolicyId"
+        ),
+    },
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: "jestBuildOutputPath" not exposed in props
+    jestBuildOutputPath: buildOutputPath,
+  });
+  countResources(stack, "AWS::CloudFront::OriginRequestPolicy", 0);
+});
+
 test("constructor: cfDistribution props", async () => {
   const stack = new Stack(new App(), "stack");
   new NextjsSite(stack, "Site", {
