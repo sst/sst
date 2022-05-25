@@ -11,4 +11,12 @@ export default {
     createdAt: Date.now() - 10000,
     content: "Hello Old World! Old note.",
   },
-};
+} as Record<
+  string,
+  {
+    noteId: string;
+    userId: string;
+    createdAt: number;
+    content: string;
+  }
+>;
