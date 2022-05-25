@@ -1,6 +1,8 @@
 /* istanbul ignore file */
 import * as https from "https";
-import * as AWS from "aws-sdk";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const AWS = require("aws-sdk");
 import type { ConfigurationOptions } from "aws-sdk/lib/config-base";
 
 const FRAMEWORK_HANDLER_TIMEOUT = 900000; // 15 minutes
