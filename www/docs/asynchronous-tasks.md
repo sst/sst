@@ -14,7 +14,7 @@ The [`Queue`](constructs/Queue.md) construct uses [Amazon Simple Queue Service (
 ```js
 import { Queue } from "@serverless-stack/resources";
 
-new Queue(this, "MyQueue", {
+new Queue(stack, "MyQueue", {
   consumer: "src/consumer.main",
 });
 ```
@@ -22,9 +22,11 @@ new Queue(this, "MyQueue", {
 You can also create a FIFO version of the queue.
 
 ```js {3}
-new Queue(this, "MyQueue", {
-  sqsQueue: {
-    fifo: true,
+new Queue(stack, "MyQueue", {
+  cdk: {
+    queue: {
+      fifo: true,
+    }
   },
   consumer: "src/consumer.main",
 });
@@ -45,7 +47,7 @@ The [`Topic`](constructs/Topic.md) construct supports a pub/sub model using [Ama
 ```js
 import { Topic } from "@serverless-stack/resources";
 
-new Topic(this, "MyQueue", {
+new Topic(stack, "MyQueue", {
   subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
 });
 ```
@@ -53,9 +55,11 @@ new Topic(this, "MyQueue", {
 You can also create a FIFO version of the Topic.
 
 ```js {3}
-new Topic(this, "MyQueue", {
-  snsTopic: {
-    fifo: true,
+new Topic(stack, "MyQueue", {
+  cdk: {
+    topic: {
+      fifo: true,
+    }
   },
   subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
 });
@@ -76,7 +80,7 @@ The [`KinesisStream`](constructs/KinesisStream.md) construct uses [Amazon Kinesi
 ```js
 import { KinesisStream } from "@serverless-stack/resources";
 
-new KinesisStream(this, "Stream", {
+new KinesisStream(stack, "Stream", {
   consumers: {
     consumer1: "src/consumer1.main",
     consumer2: "src/consumer2.main",
@@ -91,7 +95,7 @@ The [`EventBus`](constructs/EventBus.md) construct uses [Amazon EventBridge](htt
 ```js
 import { EventBus } from "@serverless-stack/resources";
 
-new EventBus(this, "Bus", {
+new EventBus(stack, "Bus", {
   rules: {
     rule1: {
       eventPattern: { source: ["myevent"] },

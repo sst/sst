@@ -1,10 +1,10 @@
 import { produceWithPatches, enablePatches } from "immer";
 enablePatches();
 
-import ws from "ws";
-import { applyWSSHandler } from "@trpc/server/adapters/ws";
-import { FunctionState, router, State } from "./router";
-import { EventDelegate } from "../events";
+import { WebSocketServer } from "ws";
+import { applyWSSHandler } from "@trpc/server/adapters/ws/dist/trpc-server-adapters-ws.cjs.js";
+import { FunctionState, router, State } from "./router.js";
+import { EventDelegate } from "../events.js";
 import { WritableDraft } from "immer/dist/internal";
 import { DendriformPatch, optimise } from "dendriform-immer-patch-optimiser";
 
@@ -30,7 +30,7 @@ export function useLocalServer(opts: Opts) {
   const onDeploy = new EventDelegate<void>();
 
   // Wire up websocket
-  const wss = new ws.Server({
+  const wss = new WebSocketServer({
     port: opts.port,
   });
   const handler = applyWSSHandler({

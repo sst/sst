@@ -1,14 +1,14 @@
 import express from "express";
 import spawn from "cross-spawn";
 import { ChildProcess } from "child_process";
-import { getChildLogger } from "../logger";
+import { getChildLogger } from "../logger.js";
 import { v4 } from "uuid";
 import https from "https";
 import url from "url";
 
 const logger = getChildLogger("client");
 
-import { Handler } from "./handler";
+import { Handler } from "./handler/index.js";
 
 const API_VERSION = "2018-06-01";
 

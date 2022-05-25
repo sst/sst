@@ -1,3 +1,4 @@
+import { test, expect } from "vitest";
 /* eslint-disable @typescript-eslint/ban-ts-comment*/
 
 import {
@@ -121,6 +122,18 @@ test("constructor: fields-primaryIndex-undefined", async () => {
       },
     } as TableProps);
   }).toThrow(/Missing "primaryIndex" in "Table" Table/);
+});
+
+test("constructor: fields-primaryIndex-field-not-defined", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Table(stack, "Table", {
+      fields: {
+        noteId: "string",
+      },
+      primaryIndex: { partitionKey: "noteId2" },
+    });
+  }).toThrow(/Please define "noteId2" in "fields"/);
 });
 
 test("constructor: fields-globalIndexes-defined", async () => {
@@ -481,9 +494,9 @@ test("globalIndexes-options", async () => {
     },
     cdk: {
       table: {
-        billingMode: dynamodb.BillingMode.PROVISIONED
-      }
-    }
+        billingMode: dynamodb.BillingMode.PROVISIONED,
+      },
+    },
   });
   hasResource(stack, "AWS::DynamoDB::Table", {
     TableName: "dev-my-app-Table",

@@ -1,9 +1,9 @@
 import * as path from "path";
-import * as fs from "fs-extra";
+import fs from "fs-extra";
 import { Construct } from "constructs";
 
-import { StaticSite, StaticSiteProps } from "./StaticSite";
-import { SSTConstruct } from "./Construct";
+import { StaticSite, StaticSiteProps } from "./StaticSite.js";
+import { SSTConstruct } from "./Construct.js";
 
 /////////////////////
 // Construct

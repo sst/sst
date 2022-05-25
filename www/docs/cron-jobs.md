@@ -22,7 +22,7 @@ You can specify a rate at which a function runs. For example, every 5 minutes.
 ```js {4}
 import { Cron } from "@serverless-stack/resources";
 
-new Cron(this, "Cron", {
+new Cron(stack, "Cron", {
   schedule: "rate(5 minutes)",
   job: "src/lambda.main",
 });
@@ -52,7 +52,7 @@ Alternatively, you can specify a cron expression to have a function run at speci
 ```js {4}
 import { Cron } from "@serverless-stack/resources";
 
-new Cron(this, "Cron", {
+new Cron(stack, "Cron", {
   schedule: "cron(0 12 * * ? *)",
   job: "src/lambda.main",
 });

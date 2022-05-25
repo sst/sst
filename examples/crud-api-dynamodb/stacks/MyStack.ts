@@ -21,11 +21,11 @@ export function MyStack({ stack }: StackContext) {
       },
     },
     routes: {
-      "GET    /notes": "list.main",
-      "POST   /notes": "create.main",
-      "GET    /notes/{id}": "get.main",
-      "PUT    /notes/{id}": "update.main",
-      "DELETE /notes/{id}": "delete.main",
+      "GET    /notes": "functions/list.main",
+      "POST   /notes": "functions/create.main",
+      "GET    /notes/{id}": "functions/get.main",
+      "PUT    /notes/{id}": "functions/update.main",
+      "DELETE /notes/{id}": "functions/delete.main",
     },
   });
 

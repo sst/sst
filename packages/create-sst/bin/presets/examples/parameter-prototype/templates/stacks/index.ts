@@ -4,7 +4,7 @@ import { Parameter } from "./Parameter";
 
 export default function main(app: App) {
   app.setDefaultFunctionProps({
-    runtime: "nodejs14.x",
+    runtime: "nodejs16.x",
     srcPath: "backend",
   });
   app.stack(MyStack).stack(OtherStack);

@@ -19,13 +19,13 @@ import { RDS, Function } from "@serverless-stack/resources";
 const DATABASE = "MyDatabase";
 
 // Create the Aurora DB cluster
-const cluster = new RDS(this, "Cluster", {
+const cluster = new RDS(stack, "Cluster", {
   engine: "postgresql10.14",
   defaultDatabaseName: DATABASE,
 });
 
 // Create a Function that will access the DB
-new Function(this, "Function", {
+new Function(stack, "Function", {
   handler: "src/lambda.main",
   environment: {
     DATABASE,
@@ -85,7 +85,7 @@ On `sst deploy`, all migrations that have not yet been run will be run as a part
 On `sst start`, migrations are not automatically run. You can use the [SST Console](console.md) to view all of your migrations and apply them.
 
 ```js
-const cluster = new RDS(this, "Cluster", {
+const cluster = new RDS(stack, "Cluster", {
   engine: "postgresql10.14",
   defaultDatabaseName: DATABASE,
   migrations: "path/to/migrations",
@@ -119,19 +119,19 @@ The [`Table`](constructs/Table.md) construct allows you to use [DynamoDB](https:
 To add a DynamoDB table to your app:
 
 ```js
-import { Table, TableFieldType } from "@serverless-stack/resources";
+import { Table } from "@serverless-stack/resources";
 
 // Create a Table
-const table = new Table(this, "Notes", {
+const table = new Table(stack, "Notes", {
   fields: {
-    userId: TableFieldType.STRING,
-    noteId: TableFieldType.STRING,
+    userId: "string",
+    noteId: "string",
   },
   primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
 });
 
 // Create a Function that will access the Table
-new Function(this, "Function", {
+new Function(stack, "Function", {
   handler: "src/lambda.main",
   environment: {
     TABLE_NAME: table.tableName,
@@ -177,10 +177,10 @@ Here's a complete tutorial on how to add a DynamoDB table to your serverless app
 DynamoDB Streams allows you to subscribe to changes in your tables in real time. You can subscribe with a Lambda function and take action based on the changes.
 
 ```js {8-10}
-new Table(this, "Notes", {
+new Table(stack, "Notes", {
   fields: {
-    userId: TableFieldType.STRING,
-    noteId: TableFieldType.STRING,
+    userId: "string",
+    noteId: "string",
   },
   primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
   stream: true,
@@ -224,10 +224,12 @@ Check out this tutorial on how to use PlanetScale as the database in your SST ap
 SST offers a simple way to seed data into your database using the [`Script`](constructs/Script.md) construct. The `onCreate` function is only run once when the construct is first deployed; allowing you to use it to seed the data into your database.
 
 ```js
-new Script(this, "Script", {
-  defaultFunctionProps: {
-    environment: { tableName: table.tableName },
-    permissions: [table],
+new Script(stack, "Script", {
+  defaults: {
+    function: {
+      environment: { tableName: table.tableName },
+      permissions: [table],
+    }
   },
   onCreate: "src/seedDatabase.main",
 });

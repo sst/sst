@@ -1,6 +1,7 @@
 import chalk from "chalk";
-import * as path from "path";
-import * as fs from "fs-extra";
+import path from "path";
+import url from "url";
+import fs from "fs-extra";
 import spawn from "cross-spawn";
 
 import { Construct } from "constructs";
@@ -27,9 +28,9 @@ import * as route53Patterns from "aws-cdk-lib/aws-route53-patterns";
 import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
 import type { RoutesManifest } from "@sls-next/lambda-at-edge";
 
-import { App } from "./App";
-import { Stack } from "./Stack";
-import { SSTConstruct } from "./Construct";
+import { App } from "./App.js";
+import { Stack } from "./Stack.js";
+import { SSTConstruct } from "./Construct.js";
 import {
   BaseSiteDomainProps,
   BaseSiteReplaceProps,
@@ -37,10 +38,12 @@ import {
   BaseSiteEnvironmentOutputsInfo,
   getBuildCmdEnvironment,
   buildErrorResponsesForRedirectToIndex,
-} from "./BaseSite";
-import { Permissions, attachPermissionsToRole } from "./util/permission";
-import { getHandlerHash } from "./util/builder";
-import * as crossRegionHelper from "./nextjs-site/cross-region-helper";
+} from "./BaseSite.js";
+import { Permissions, attachPermissionsToRole } from "./util/permission.js";
+import { getHandlerHash } from "./util/builder.js";
+import * as crossRegionHelper from "./nextjs-site/cross-region-helper.js";
+
+const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 export interface NextjsDomainProps extends BaseSiteDomainProps {}
 export interface NextjsCdkDistributionProps
@@ -57,6 +60,7 @@ export interface NextjsSiteProps {
     distribution?: NextjsCdkDistributionProps;
     /**
      * Override the default CloudFront cache policies created internally.
+     *
      * @example
      * ### Reusing CloudFront cache policies
      *
@@ -161,27 +165,6 @@ export interface NextjsSiteProps {
    */
   environment?: { [key: string]: string };
   defaults?: {
-    /**
-     * The default function props to be applied to all the Lambda Functions created by this construct.
-     *
-     * @example
-     * ### Configuring the Lambda Functions
-     *
-     * Configure the internally created CDK [`Lambda Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html) instance.
-     *
-     * ```js {4-8}
-     * new NextjsSite(stack, "Site", {
-     *   path: "path/to/site",
-     *   defaults: {
-     *     function: {
-     *       timeout: 20,
-     *       memorySize: 2048,
-     *       permissions: ["sns"],
-     *     }
-     *   },
-     * });
-     * ```
-     */
     function?: {
       timeout?: number;
       memorySize?: number;
@@ -190,6 +173,14 @@ export interface NextjsSiteProps {
   };
   /**
    * When running `sst start`, a placeholder site is deployed. This is to ensure that the site content remains unchanged, and subsequent `sst start` can start up quickly.
+   *
+   * @example
+   * ```js {3}
+   * new NextjsSite(stack, "NextSite", {
+   *   path: "path/to/site",
+   *   disablePlaceholder: true,
+   * });
+   * ```
    */
   disablePlaceholder?: boolean;
   /**
@@ -492,7 +483,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     }
 
     // create zip files
-    const script = path.join(__dirname, "../assets/BaseSite/archiver.js");
+    const script = path.join(__dirname, "../assets/BaseSite/archiver.cjs");
     const zipPath = path.resolve(
       path.join(buildDir, `NextjsSite-${this.node.id}-${this.node.addr}`)
     );
@@ -829,7 +820,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     const result = spawn.sync(
       "node",
       [
-        path.join(__dirname, "../assets/NextjsSite/build/build.js"),
+        path.join(__dirname, "../assets/NextjsSite/build/build.cjs"),
         "--path",
         path.resolve(sitePath),
         "--output",

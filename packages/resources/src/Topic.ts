@@ -1,21 +1,21 @@
 import { Construct } from "constructs";
 import * as sns from "aws-cdk-lib/aws-sns";
 import * as snsSubscriptions from "aws-cdk-lib/aws-sns-subscriptions";
-import { App } from "./App";
+import { App } from "./App.js";
 import {
   getFunctionRef,
   SSTConstruct,
   isCDKConstruct,
   isCDKConstructOf,
-} from "./Construct";
+} from "./Construct.js";
 import {
   Function as Fn,
   FunctionProps,
   FunctionInlineDefinition,
   FunctionDefinition,
-} from "./Function";
-import { Queue } from "./Queue";
-import { Permissions } from "./util/permission";
+} from "./Function.js";
+import { Queue } from "./Queue.js";
+import { Permissions } from "./util/permission.js";
 
 /////////////////////
 // Interfaces

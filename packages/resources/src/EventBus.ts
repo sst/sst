@@ -1,16 +1,16 @@
 import { Construct } from "constructs";
 import * as events from "aws-cdk-lib/aws-events";
 import * as eventsTargets from "aws-cdk-lib/aws-events-targets";
-import { App } from "./App";
-import { Queue } from "./Queue";
-import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
+import { App } from "./App.js";
+import { Queue } from "./Queue.js";
+import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct.js";
 import {
   Function as Fn,
   FunctionProps,
   FunctionInlineDefinition,
   FunctionDefinition,
-} from "./Function";
-import { Permissions } from "./util/permission";
+} from "./Function.js";
+import { Permissions } from "./util/permission.js";
 
 /////////////////////
 // Interfaces

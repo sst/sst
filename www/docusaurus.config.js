@@ -29,9 +29,18 @@ module.exports = {
     // the "socialCardsUrl" in the "customFields" below.
     image: "img/og-image.png",
     metaImage: "img/og-image.png",
+    /**
     announcementBar: {
       id: "announcement",
       content: `If you like Serverless Stack, <a target="_blank" href="${config.github}">give it a star on GitHub</a>! <span class="icon" />`,
+      backgroundColor: "#395C6B",
+      textColor: "#FFFFFF",
+      isCloseable: true,
+    },
+    **/
+    announcementBar: {
+      id: "announcement",
+      content: `<a target="_blank" href="https://v1conf.sst.dev/#stream">Watch the replay of SST 1.0 Conf</a>, our first-ever conference!`,
       backgroundColor: "#395C6B",
       textColor: "#FFFFFF",
       isCloseable: true,
@@ -114,8 +123,8 @@ module.exports = {
               href: config.twitter,
             },
             {
-              label: "Forums",
-              href: config.forum,
+              label: "YouTube",
+              href: config.youtube,
             },
           ],
         },

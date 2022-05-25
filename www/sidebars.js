@@ -98,7 +98,21 @@ module.exports = {
     },
   ],
   constructs: [
-    "constructs/index",
+    {
+      " ": [
+        "constructs/index",
+        {
+          type: "link",
+          label: "v0 Constructs",
+          href: "/constructs/v0",
+        },
+        {
+          type: "link",
+          label: "Migrate to v1.0",
+          href: "/constructs/v0/migration",
+        },
+      ],
+    },
     {
       Core: ["constructs/App", "constructs/Stack", "constructs/Function"],
       Api: [

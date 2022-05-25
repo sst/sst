@@ -1,5 +1,5 @@
-import * as path from "path";
-import * as fs from "fs-extra";
+import path from "path";
+import fs from "fs-extra";
 import * as cdk from "aws-cdk-lib";
 import { IConstruct } from "constructs";
 import * as s3 from "aws-cdk-lib/aws-s3";
@@ -7,18 +7,20 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import { ILayerVersion } from "aws-cdk-lib/aws-lambda";
 import * as cxapi from "aws-cdk-lib/cx-api";
 import { State } from "@serverless-stack/core";
-import { Stack } from "./Stack";
+import { Stack } from "./Stack.js";
 import {
   SSTConstruct,
   SSTConstructMetadata,
   isSSTConstruct,
   isStackConstruct,
-} from "./Construct";
-import { FunctionProps, FunctionHandlerProps } from "./Function";
-import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite";
-import { Permissions } from "./util/permission";
-import { StackProps } from ".";
-import { FunctionalStack, stack } from "./FunctionalStack";
+} from "./Construct.js";
+import { FunctionProps, FunctionHandlerProps } from "./Function.js";
+import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite.js";
+import { Permissions } from "./util/permission.js";
+import { StackProps } from "./Stack.js";
+import { FunctionalStack, stack } from "./FunctionalStack.js";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
 
 function exitWithMessage(message: string) {
   console.error(message);

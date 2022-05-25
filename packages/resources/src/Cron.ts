@@ -2,13 +2,13 @@ import { Construct } from "constructs";
 import * as events from "aws-cdk-lib/aws-events";
 import * as eventsTargets from "aws-cdk-lib/aws-events-targets";
 
-import { getFunctionRef, SSTConstruct } from "./Construct";
+import { getFunctionRef, SSTConstruct } from "./Construct.js";
 import {
   Function as Func,
   FunctionInlineDefinition,
   FunctionDefinition,
-} from "./Function";
-import { Permissions } from "./util/permission";
+} from "./Function.js";
+import { Permissions } from "./util/permission.js";
 
 export interface CronJobProps {
   /**
@@ -33,20 +33,14 @@ export interface CronJobProps {
 }
 
 export interface CronProps {
-  cdk?: {
-    /**
-     * Override the default settings this construct uses internally to create the events rule.
-     */
-    rule?: events.RuleProps;
-  };
-
   /**
-   * The definition of the function to be executed
+   * The definition of the function to be executed.
    *
    * @example
    * ```js
    * new Cron(stack, "Cron", {
-   *   function : "src/function.handler",
+   *   job : "src/lambda.main",
+   *   schedule: "rate(5 minutes)",
    * })
    * ```
    */
@@ -85,6 +79,25 @@ export interface CronProps {
    * ```
    */
   schedule?: `rate(${string})` | `cron(${string})`;
+  /**
+   * Indicates whether the cron job is enabled.
+   * @default true
+   * @example
+   * ```js
+   * new Cron(stack, "Cron", {
+   *   job: "src/lambda.main",
+   *   schedule: "rate(5 minutes)",
+   *   enabled: app.local,
+   * })
+   * ```
+   */
+  enabled?: boolean;
+  cdk?: {
+    /**
+     * Override the default settings this construct uses internally to create the events rule.
+     */
+    rule?: events.RuleProps;
+  };
 }
 
 /////////////////////
@@ -140,7 +153,7 @@ export class Cron extends Construct implements SSTConstruct {
   }
 
   private createEventsRule() {
-    const { cdk, schedule } = this.props;
+    const { cdk, schedule, enabled } = this.props;
     const id = this.node.id;
 
     // Configure Schedule
@@ -150,6 +163,7 @@ export class Cron extends Construct implements SSTConstruct {
 
     this.cdk.rule = new events.Rule(this, "Rule", {
       schedule: schedule && events.Schedule.expression(schedule),
+      enabled: enabled === false ? false : true,
       ...cdk?.rule,
     });
   }

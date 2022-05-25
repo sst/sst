@@ -1,3 +1,4 @@
+import { test, expect } from "vitest";
 import { hasResource, hasResourceTemplate } from "./helper";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import * as logs from "aws-cdk-lib/aws-logs";

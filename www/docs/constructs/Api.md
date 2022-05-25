@@ -403,7 +403,12 @@ const rootDomain = StringParameter.valueForStringParameter(this, `/myApp/domain`
 new Api(stack, "Api", {
   customDomain: {
     domainName: `api.${rootDomain}`,
-    hostedZone: rootDomain,
+    cdk: {
+      hostedZone: HostedZone.fromHostedZoneAttributes(this, "MyZone", {
+        hostedZoneId,
+        zoneName,
+      }),
+    },
   },
   routes: {
     "GET /notes": "src/list.main",
@@ -411,7 +416,7 @@ new Api(stack, "Api", {
 });
 ```
 
-Note that, normally SST will look for a hosted zone by stripping out the first part of the `domainName`. But this is not possible when the `domainName` is a reference. Since its value will be resolved at deploy time. So you'll need to specify the `hostedZone` explicitly.
+Note that, normally SST will look for a hosted zone by stripping out the first part of the `domainName`. But this is not possible when the `domainName` is a reference. So you'll need to specify the `cdk.hostedZone` explicitly.
 
 #### Using externally hosted domain
 
@@ -1010,7 +1015,7 @@ new Api(stack, "Api", {
 
 ### routes?
 
-_Type_ : <span class="mono">Record&lt;<span class="mono">string</span>, <span class='mono'><span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span></span> | <span class="mono">[ApiFunctionRouteProps](#apifunctionrouteprops)</span> | <span class="mono">[ApiHttpRouteProps](#apihttprouteprops)</span> | <span class="mono">[ApiAlbRouteProps](#apialbrouteprops)</span></span>&gt;</span>
+_Type_ : <span class="mono">Record&lt;<span class="mono">string</span>, <span class='mono'><span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span></span> | <span class="mono">[ApiFunctionRouteProps](#apifunctionrouteprops)</span> | <span class="mono">[ApiHttpRouteProps](#apihttprouteprops)</span> | <span class="mono">[ApiAlbRouteProps](#apialbrouteprops)</span> | <span class="mono">[ApiPothosRouteProps](#apipothosrouteprops)</span></span>&gt;</span>
 
 Define the routes for the API. Can be a function, proxy to another API, or point to an ALB
 
@@ -1138,7 +1143,7 @@ addRoutes(scope, routes)
 ```
 _Parameters_
 - __scope__ <span class="mono">[Construct](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)</span>
-- __routes__ <span class="mono">Record&lt;<span class="mono">string</span>, <span class='mono'><span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span></span> | <span class="mono">[ApiFunctionRouteProps](#apifunctionrouteprops)</span> | <span class="mono">[ApiHttpRouteProps](#apihttprouteprops)</span> | <span class="mono">[ApiAlbRouteProps](#apialbrouteprops)</span></span>&gt;</span>
+- __routes__ <span class="mono">Record&lt;<span class="mono">string</span>, <span class='mono'><span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span></span> | <span class="mono">[ApiFunctionRouteProps](#apifunctionrouteprops)</span> | <span class="mono">[ApiHttpRouteProps](#apihttprouteprops)</span> | <span class="mono">[ApiAlbRouteProps](#apialbrouteprops)</span> | <span class="mono">[ApiPothosRouteProps](#apipothosrouteprops)</span></span>&gt;</span>
 
 
 Adds routes to the Api after it has been created.
@@ -1507,9 +1512,10 @@ The name of the authorizer.
 
 _Type_ : <span class='mono'>Array&lt;<span class='mono'><span class="mono">"simple"</span> | <span class="mono">"iam"</span></span>&gt;</span>
 
+_Default_ : <span class="mono">["iam"]</span>
+
 The types of responses the lambda can return.
 If `simple` is included then response format 2.0 will be used.
-
 ### resultsCacheTtl?
 
 _Type_ : <span class='mono'><span class="mono">${number} second</span> | <span class="mono">${number} seconds</span> | <span class="mono">${number} minute</span> | <span class="mono">${number} minutes</span> | <span class="mono">${number} hour</span> | <span class="mono">${number} hours</span> | <span class="mono">${number} day</span> | <span class="mono">${number} days</span></span>
@@ -1531,6 +1537,62 @@ _Type_ : <span class="mono">[HttpLambdaAuthorizer](https://docs.aws.amazon.com/c
 
 This allows you to override the default settings this construct uses internally to create the authorizer.
 
+
+## ApiPothosRouteProps
+Specify a route handler that handles GraphQL queries using Pothos
+
+
+```js
+api.addRoutes(stack, {
+  "POST /graphql": {
+     type: "pothos",
+     schema: "backend/functions/graphql/schema.ts",
+     output: "graphql/schema.graphql",
+     function: {
+       handler: "functions/graphql/graphql.ts",
+     },
+     commands: [
+       "./genql graphql/graphql.schema graphql/
+     ]
+  }
+})
+```
+
+### authorizationScopes?
+
+_Type_ : <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
+
+### authorizer?
+
+_Type_ : <span class='mono'><span class="mono">"iam"</span> | <span class="mono">"none"</span> | <span class="mono">string</span></span>
+
+### commands?
+
+_Type_ : <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
+
+Commands to run after generating schema. Useful for code generation steps
+
+### function
+
+_Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span> | <span class="mono">[FunctionProps](Function#functionprops)</span></span>
+
+The function definition used to create the function for this route. Must be a graphql handler
+
+### output?
+
+_Type_ : <span class="mono">string</span>
+
+File to write graphql schema to
+
+### schema?
+
+_Type_ : <span class="mono">string</span>
+
+Path to pothos schema
+
+### type
+
+_Type_ : <span class="mono">"pothos"</span>
 
 ## ApiFunctionRouteProps
 Specify a function route handler and configure additional options

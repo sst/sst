@@ -1,6 +1,7 @@
-const path = require("path");
-const fs = require("fs-extra");
-const { sleep, runStartCommand, clearBuildOutput } = require("../helpers");
+import path from "path";
+import fs from "fs-extra";
+import { sleep, runStartCommand, clearBuildOutput } from "../helpers";
+import { test, expect, beforeEach, afterAll } from "vitest";
 
 beforeEach(async () => {
   await clearBuildOutput(__dirname);

@@ -1,20 +1,14 @@
 import fs from "fs/promises";
 import path from "path";
-import { exec } from "child_process";
+import { exec, execSync } from "child_process";
 import { applyOperation } from "fast-json-patch/index.mjs";
+import { pathToFileURL } from "url";
 
 export function extract() {
   return /** @type {const} */ ({
     type: "extract",
   });
 }
-
-/**
- * @typedef {{
- *   type: "edit-json",
- *   merge: any
- * }} EditJsonOperation
- */
 
 /**
  * @param {string} path
@@ -54,6 +48,19 @@ export function install(opts) {
 }
 
 /**
+ * @param {{
+ * cmd: string
+ * cwd?: string
+ * }} opts
+ */
+export function cmd(opts) {
+  return /** @type {const} */ ({
+    type: "cmd",
+    ...opts,
+  });
+}
+
+/**
  * @param {string} path
  */
 export function extend(path) {
@@ -64,7 +71,7 @@ export function extend(path) {
 }
 
 /**
- * @typedef {ReturnType<typeof remove> | ReturnType<typeof patch> | ReturnType<typeof install> | ReturnType<typeof extract> | ReturnType<typeof extend>} Step
+ * @typedef {ReturnType<typeof remove> | ReturnType<typeof patch> | ReturnType<typeof install> | ReturnType<typeof extract> | ReturnType<typeof extend> | ReturnType<typeof cmd>} Step
  */
 
 /**
@@ -76,7 +83,9 @@ export function extend(path) {
  */
 export async function execute(opts) {
   const source = path.resolve(opts.source);
-  const result = await import(path.join(source, "preset.mjs"));
+  const result = await import(
+    pathToFileURL(path.join(source, "preset.mjs")).href
+  );
   /** @type {Step[]} */
   const steps = result.default;
 
@@ -117,6 +126,12 @@ export async function execute(opts) {
         await fs.writeFile(file, JSON.stringify(contents, null, 2));
         break;
       }
+      case "cmd": {
+        execSync(step.cmd, {
+          cwd: path.join(opts.destination, step.cwd || ""),
+        });
+        break;
+      }
       case "install": {
         const jsonPath = path.join(
           opts.destination,
@@ -126,10 +141,15 @@ export async function execute(opts) {
         const json = JSON.parse(await fs.readFile(jsonPath, "utf8"));
         const key = step.dev ? "devDependencies" : "dependencies";
         json[key] = json[key] || {};
-        for (const pkg of step.packages) {
-          let [, version] = pkg.substring(1).split("@");
-          if (!version) version = await getLatestPackageVersion(pkg);
-          json[key][pkg.replace("@" + version, "")] = "^" + version;
+        const results = await Promise.all(
+          step.packages.map(async (pkg) => {
+            let [, version] = pkg.substring(1).split("@");
+            if (!version) version = await getLatestPackageVersion(pkg);
+            return [pkg.replace("@" + version, ""), "^" + version];
+          })
+        );
+        for (const [name, value] of results) {
+          json[key][name] = value;
         }
         await fs.writeFile(jsonPath, JSON.stringify(json, null, 2));
         break;
@@ -139,10 +159,16 @@ export async function execute(opts) {
 
   if (!opts.extended) {
     const app = path.basename(opts.destination);
+    const appAlpha = app.replace(/[^a-zA-Z0-9]/g, "");
 
     for (const file of await listFiles(opts.destination)) {
       const contents = await fs.readFile(file, "utf8");
-      await fs.writeFile(file, contents.replace(/\@\@app/g, app));
+      await fs.writeFile(
+        file,
+        contents
+          .replace(/\@\@app/g, app)
+          .replace(/\@\@normalizedapp/g, appAlpha)
+      );
     }
   }
 }

@@ -57,6 +57,19 @@ $ cd serverless-stack
 $ yarn
 ```
 
+Build the project
+```bash
+$ yarn build
+```
+
+### Core
+
+If you are working on the `packages/core` part, run the watcher at the root.
+
+```bash
+$ yarn watch
+```
+
 ### Resources
 
 If you are working on the `packages/resources` part, run the watcher at the root.
@@ -240,29 +253,6 @@ Follow the checklist below when deprecating a Construct property or method.
 6. Construct tests: Ensure tests added for both the old and the new property (or method).
 
 See the `Table` construct for a deprecation example of renaming `secondaryIndexes` to `globalIndexes`.
-
----
-
-## Writing examples
-
-When submitting examples to the [`examples/`](https://github.com/serverless-stack/serverless-stack/tree/master/examples), ensure:
-
-- [ ] The latest version of SST is used in `package.json`
-- [ ] The name field in `sst.json` and `package.json` match the example folder name
-- [ ] The region field in `sst.json` is `us-east-1`
-- [ ] npm/yarn lock files are removed
-- [ ] Debug messages (ie. console.log) in the code are removed
-- [ ] README has the necessary steps to run the app. For example:
-  - If the app contains a frontend app, instruct users to run `npm install` in `frontend/`
-  - If the app requires adding deployed API endpoint to `.env`, instruct users to create the `.env` file
-- [ ] Add the new example in [`examples/README.md`](https://github.com/serverless-stack/serverless-stack/tree/master/examples/README.md)
-
-If a tutorial is also created on [Serverless-Stack.com](https://serverless-stack.com/examples/index.html), ensure:
-
-- [ ] The code in the tutorial and the example are consistent
-- [ ] The file name of the images in the tutorial are based on the description of the images
-
-It is a good practice to start from scratch and follow the example step by step to ensure the flow is intuitive and there are no gaps between the steps.
 
 ---
 

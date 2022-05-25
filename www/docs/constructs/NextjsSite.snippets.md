@@ -42,7 +42,7 @@ There are a couple of work arounds:
 To use these values while developing, run `sst start` to start the [Live Lambda Development](/live-lambda-development.md) environment.
 
 ``` bash
-npx sst start
+npm start
 ```
 
 Then in your Next.js app to reference these variables, add the [`sst-env`](/packages/static-site-env.md) package.
@@ -194,6 +194,23 @@ new NextjsSite(this, "Site", {
 Note that the certificate needs be created in the `us-east-1`(N. Virginia) region as required by AWS CloudFront, and validated. After the `Distribution` has been created, create a CNAME DNS record for your domain name with the `Distribution's` URL as the value. Here are more details on [configuring SSL Certificate on externally hosted domains](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/CNAMEs.html).
 
 Also note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+
+### Configuring the Lambda Functions
+
+Configure the internally created CDK [`Lambda Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html) instance.
+
+```js {4-8}
+new NextjsSite(stack, "Site", {
+  path: "path/to/site",
+  defaults: {
+    function: {
+      timeout: 20,
+      memorySize: 2048,
+      permissions: ["sns"],
+    }
+  },
+});
+```
 
 ### Permissions
 

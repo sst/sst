@@ -361,7 +361,12 @@ const rootDomain = StringParameter.valueForStringParameter(this, `/myApp/domain`
 new Api(stack, "Api", {
   customDomain: {
     domainName: `api.${rootDomain}`,
-    hostedZone: rootDomain,
+    cdk: {
+      hostedZone: HostedZone.fromHostedZoneAttributes(this, "MyZone", {
+        hostedZoneId,
+        zoneName,
+      }),
+    },
   },
   routes: {
     "GET /notes": "src/list.main",
@@ -369,7 +374,7 @@ new Api(stack, "Api", {
 });
 ```
 
-Note that, normally SST will look for a hosted zone by stripping out the first part of the `domainName`. But this is not possible when the `domainName` is a reference. Since its value will be resolved at deploy time. So you'll need to specify the `hostedZone` explicitly.
+Note that, normally SST will look for a hosted zone by stripping out the first part of the `domainName`. But this is not possible when the `domainName` is a reference. So you'll need to specify the `cdk.hostedZone` explicitly.
 
 #### Using externally hosted domain
 

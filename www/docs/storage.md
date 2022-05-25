@@ -24,7 +24,7 @@ It allows you upload, delete, and download files. You can also create and delete
 ```js
 import { Bucket } from "@serverless-stack/resources";
 
-new Bucket(this, "Bucket");
+new Bucket(stack, "Bucket");
 ```
 
 ## Accessing files in Lambda Functions
@@ -35,10 +35,10 @@ To access your files inside a Lambda Function, you need to pass the Bucket name 
 import { Bucket, Function } from "@serverless-stack/resources";
 
 // Create a Bucket
-const bucket = new Bucket(this, "Bucket");
+const bucket = new Bucket(stack, "Bucket");
 
 // Create a Function that will access the Bucket
-new Function(this, "Function", {
+new Function(stack, "Function", {
   handler: "src/lambda.main",
   environment: {
     BUCKET_NAME: bucket.bucketName,
@@ -71,9 +71,9 @@ export async function main(event) {
 Your users won't have direct access to files in your Bucket. You need to create an API endpoint that generates presigned URLs for the file they want to upload.
 
 ```js
-const bucket = new Bucket(this, "Bucket");
+const bucket = new Bucket(stack, "Bucket");
 
-new Api(this, "Api", {
+new Api(stack, "Api", {
   environment: {
     BUCKET_NAME: bucket.bucketName,
   },
@@ -114,7 +114,7 @@ fetch(signedUrl, {
 Another option is to use Cognito Identity Pool to grant temporary IAM permissions for both the authenticated and unauthenticated users in your web app. If you are using the [`Auth`](constructs/Auth.md) construct to manage your users, you can grant the permissions like so:
 
 ```js
-const bucket = new Bucket(this, "MyBucket");
+const bucket = new Bucket(stack, "MyBucket");
 
 const auth = new Auth(this, "Auth", { ... });
 

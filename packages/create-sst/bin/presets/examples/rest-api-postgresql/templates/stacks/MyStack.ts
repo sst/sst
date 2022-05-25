@@ -23,7 +23,7 @@ export function MyStack({ stack }: StackContext) {
       },
     },
     routes: {
-      "POST /": "lambda.handler",
+      "POST /": "functions/lambda.handler",
     },
   });
 

@@ -1,7 +1,8 @@
 import chalk from "chalk";
-import * as path from "path";
-import * as fs from "fs-extra";
-import * as crypto from "crypto";
+import path from "path";
+import url from "url";
+import fs from "fs-extra";
+import crypto from "crypto";
 import { execSync } from "child_process";
 
 import { Construct } from "constructs";
@@ -24,8 +25,8 @@ import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as cfOrigins from "aws-cdk-lib/aws-cloudfront-origins";
 import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
 
-import { App } from "./App";
-import { Stack } from "./Stack";
+import { App } from "./App.js";
+import { Stack } from "./Stack.js";
 import {
   BaseSiteDomainProps,
   BaseSiteReplaceProps,
@@ -34,8 +35,10 @@ import {
   getBuildCmdEnvironment,
   buildErrorResponsesFor404ErrorPage,
   buildErrorResponsesForRedirectToIndex,
-} from "./BaseSite";
-import { SSTConstruct } from "./Construct";
+} from "./BaseSite.js";
+import { SSTConstruct } from "./Construct.js";
+
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 export interface StaticSiteFileOptions {
   exclude: string | string[];
@@ -487,7 +490,7 @@ export class StaticSite extends Construct implements SSTConstruct {
     }
 
     // create zip files
-    const script = path.join(__dirname, "../assets/BaseSite/archiver.js");
+    const script = path.join(__dirname, "../assets/BaseSite/archiver.cjs");
     const zipPath = path.resolve(
       path.join(buildDir, `StaticSite-${this.node.id}-${this.node.addr}`)
     );

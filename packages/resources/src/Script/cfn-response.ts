@@ -1,8 +1,8 @@
 /* eslint-disable max-len */
 /* eslint-disable no-console */
-import * as url from "url";
-import { httpRequest } from "./outbound";
-import { log } from "./util";
+import url from "url";
+import { httpRequest } from "./outbound.js";
+import { log } from "./util.js";
 
 export const CREATE_FAILED_PHYSICAL_ID_MARKER =
   "AWSCDK::CustomResourceProviderFramework::CREATE_FAILED";

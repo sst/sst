@@ -1,10 +1,12 @@
 /**
  * This file is copied from https://github.com/aws/aws-cdk/blob/master/packages/@aws-cdk/aws-lambda-python/lib/bundling.ts
  */
-import * as fs from "fs";
-import * as path from "path";
+import fs from "fs";
+import url from "url";
+import path from "path";
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 /**
  * Dependency files to exclude from the asset hash.

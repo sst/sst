@@ -1,4 +1,5 @@
-const { runAddCdkCommand, clearBuildOutput } = require("../helpers");
+import { runAddCdkCommand, clearBuildOutput } from "../helpers";
+import { beforeEach, afterAll, test, expect } from "vitest";
 
 beforeEach(async () => {
   await clearBuildOutput(__dirname);

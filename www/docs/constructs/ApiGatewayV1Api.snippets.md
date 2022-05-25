@@ -251,7 +251,12 @@ const rootDomain = StringParameter.valueForStringParameter(this, `/myApp/domain`
 new ApiGatewayV1Api(stack, "Api", {
   customDomain: {
     domainName: `api.${rootDomain}`,
-    hostedZone: rootDomain,
+    cdk: {
+      hostedZone: HostedZone.fromHostedZoneAttributes(this, "MyZone", {
+        hostedZoneId,
+        zoneName,
+      }),
+    },
   },
   routes: {
     "GET /notes": "src/list.main",
@@ -259,7 +264,7 @@ new ApiGatewayV1Api(stack, "Api", {
 });
 ```
 
-Note that, normally SST will look for a hosted zone by stripping out the first part of the `domainName`. But this is not possible when the `domainName` is a reference. Since its value will be resolved at deploy time. So you'll need to specify the `hostedZone` explicitly.
+Note that, normally SST will look for a hosted zone by stripping out the first part of the `domainName`. But this is not possible when the `domainName` is a reference. So you'll need to specify the `cdk.hostedZone` explicitly.
 
 ### Authorization
 
@@ -466,6 +471,43 @@ const plan = api.cdk.restApi.addUsagePlan("UsagePlan", {
 const key = api.cdk.restApi.addApiKey("ApiKey");
 
 plan.addApiKey(key);
+```
+
+#### Working with models
+
+```js
+new ApiGatewayV1Api(stack, "Api", {
+  routes: {
+    "GET /notes": {
+      function: "src/list.main",
+      cdk: {
+        integration: {
+          requestParameters: {
+            "application/json": JSON.stringify({
+              action: "sayHello",
+              pollId: "$util.escapeJavaScript($input.params('who'))"
+            })
+          }
+        }
+      }
+    },
+  },
+});
+```
+
+#### Request Validator
+
+```js
+const api = new ApiGatewayV1Api(stack, "Api", {
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+
+api.cdk.restApi.addRequestValidator("RequestValidator", {
+  validateRequestBody: true,
+  validateRequestParameters: false,
+});
 ```
 
 #### Importing an existing Rest Api

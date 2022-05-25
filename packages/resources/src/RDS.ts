@@ -1,15 +1,17 @@
 import path from "path";
 import glob from "glob";
-import * as fs from "fs-extra";
+import fs from "fs-extra";
 import * as crypto from "crypto";
 import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as rds from "aws-cdk-lib/aws-rds";
 import * as lambda from "aws-cdk-lib/aws-lambda";
-import { App } from "./App";
-import { getFunctionRef, SSTConstruct } from "./Construct";
-import { Function as Fn } from "./Function";
+import { App } from "./App.js";
+import { getFunctionRef, SSTConstruct } from "./Construct.js";
+import { Function as Fn } from "./Function.js";
+import url from "url";
+const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 /////////////////////
 // Interfaces
@@ -371,7 +373,7 @@ export class RDS extends Construct implements SSTConstruct {
     const fn = new Fn(this, "MigrationFunction", {
       srcPath,
       handler: "index.handler",
-      runtime: "nodejs14.x",
+      runtime: "nodejs16.x",
       timeout: 900,
       memorySize: 1024,
       environment: {
@@ -410,7 +412,7 @@ export class RDS extends Construct implements SSTConstruct {
     // Create custom resource handler
     const handler = new lambda.Function(this, "MigrationHandler", {
       code: lambda.Code.fromAsset(path.join(__dirname, "Script")),
-      runtime: lambda.Runtime.NODEJS_14_X,
+      runtime: lambda.Runtime.NODEJS_16_X,
       handler: "index.handler",
       timeout: cdk.Duration.minutes(15),
       memorySize: 1024,

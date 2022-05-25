@@ -9,7 +9,7 @@ async function runRemoveCommand(cwd) {
   await yarnInstall(cwd);
 
   try {
-    const result = await execPromise(`yarn sst remove`, {
+    const result = await execPromise(`yarn run remove`, {
       cwd,
       env: { ...process.env, __TEST__: "true" },
       TIMEOUT,

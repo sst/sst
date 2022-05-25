@@ -100,7 +100,7 @@ There are a couple of work arounds:
 To use these values while developing, run `sst start` to start the [Live Lambda Development](/live-lambda-development.md) environment.
 
 ``` bash
-npx sst start
+npm start
 ```
 
 Then in your Next.js app to reference these variables, add the [`sst-env`](/packages/static-site-env.md) package.
@@ -253,6 +253,23 @@ Note that the certificate needs be created in the `us-east-1`(N. Virginia) regio
 
 Also note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
 
+### Configuring the Lambda Functions
+
+Configure the internally created CDK [`Lambda Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html) instance.
+
+```js {4-8}
+new NextjsSite(stack, "Site", {
+  path: "path/to/site",
+  defaults: {
+    function: {
+      timeout: 20,
+      memorySize: 2048,
+      permissions: ["sns"],
+    }
+  },
+});
+```
+
 ### Permissions
 
 You can attach a set of [permissions](Permissions.md) to allow the Next.js API routes and Server Side rendering `getServerSideProps` to access other AWS resources.
@@ -380,32 +397,20 @@ _Type_ : <span class="mono">[Permissions](Permissions)</span>
 _Type_ : <span class="mono">number</span>
 
 
-The default function props to be applied to all the Lambda Functions created by this construct.
-
-
-### Configuring the Lambda Functions
-
-Configure the internally created CDK [`Lambda Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html) instance.
-
-```js {4-8}
-new NextjsSite(stack, "Site", {
-  path: "path/to/site",
-  defaults: {
-    function: {
-      timeout: 20,
-      memorySize: 2048,
-      permissions: ["sns"],
-    }
-  },
-});
-```
-
 
 ### disablePlaceholder?
 
 _Type_ : <span class="mono">boolean</span>
 
 When running `sst start`, a placeholder site is deployed. This is to ensure that the site content remains unchanged, and subsequent `sst start` can start up quickly.
+
+
+```js {3}
+new NextjsSite(stack, "NextSite", {
+  path: "path/to/site",
+  disablePlaceholder: true,
+});
+```
 
 
 
@@ -457,13 +462,11 @@ _Type_ : <span class="mono">[ICachePolicy](https://docs.aws.amazon.com/cdk/api/v
 
 Override the default CloudFront cache policies created internally.
 
-
 ### cdk.imageOriginRequestPolicy?
 
 _Type_ : <span class="mono">[IOriginRequestPolicy](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.IOriginRequestPolicy.html)</span>
 
 Override the default CloudFront origin request policy created internally.
-
 
 ### cdk.distribution?
 

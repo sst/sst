@@ -1,16 +1,14 @@
-import * as AWS from "aws-sdk";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const AWS = require("aws-sdk");
 AWS.config.logger = console;
 
-import { log } from "./util";
-import * as cfnResponse from "./cfn-response";
+import { log } from "./util.js";
+import * as cfnResponse from "./cfn-response.js";
 const lambda = new AWS.Lambda({ region: "us-east-1" });
 const LIVE_ALIAS = "live";
 
-export = {
-  handler: cfnResponse.safeHandler(handler),
-};
-
-async function handler(
+export async function handler(
   cfnRequest: AWSLambda.CloudFormationCustomResourceEvent
 ) {
   log("onEventHandler", cfnRequest);

@@ -1,3 +1,4 @@
+import { test, expect } from "vitest";
 /* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/ban-types, @typescript-eslint/no-empty-function */
 
 import path from "path";
@@ -416,7 +417,7 @@ test("bundle.esbuildConfig is object", async () => {
     handler: "test/lambda.handler",
     bundle: {
       esbuildConfig: {
-        plugins: "test/function/esbuild-config.js",
+        plugins: "test/function/esbuild-config.cjs",
         keepNames: true,
       },
     },

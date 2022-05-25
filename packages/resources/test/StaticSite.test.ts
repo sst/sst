@@ -1,3 +1,4 @@
+import { test, expect, vi } from "vitest";
 import { countResources, hasResource, objectLike, ANY, ABSENT } from "./helper";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as route53 from "aws-cdk-lib/aws-route53";
@@ -83,7 +84,7 @@ test("constructor: no domain", async () => {
 
 test("constructor: with domain", async () => {
   const stack = new Stack(new App(), "stack");
-  route53.HostedZone.fromLookup = jest
+  route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
@@ -157,7 +158,7 @@ test("constructor: with domain", async () => {
 
 test("constructor: with domain with alias", async () => {
   const stack = new Stack(new App(), "stack");
-  route53.HostedZone.fromLookup = jest
+  route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
@@ -213,7 +214,7 @@ test("constructor: with domain with alias", async () => {
 
 test("customDomain: string", async () => {
   const stack = new Stack(new App(), "stack");
-  route53.HostedZone.fromLookup = jest
+  route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
@@ -243,7 +244,7 @@ test("customDomain: string", async () => {
 
 test("customDomain: domainName string", async () => {
   const stack = new Stack(new App(), "stack");
-  route53.HostedZone.fromLookup = jest
+  route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
@@ -275,7 +276,7 @@ test("customDomain: domainName string", async () => {
 
 test("customDomain: hostedZone string", async () => {
   const stack = new Stack(new App(), "stack");
-  route53.HostedZone.fromLookup = jest
+  route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
@@ -308,7 +309,7 @@ test("customDomain: hostedZone string", async () => {
 
 test("customDomain: hostedZone construct", async () => {
   const stack = new Stack(new App(), "stack");
-  route53.HostedZone.fromLookup = jest
+  route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
@@ -346,7 +347,7 @@ test("customDomain: hostedZone construct", async () => {
 
 test("customDomain: certificate imported", async () => {
   const stack = new Stack(new App(), "stack");
-  route53.HostedZone.fromLookup = jest
+  route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
@@ -556,10 +557,6 @@ test("constructor: buildOutput multiple files", async () => {
   });
   hasResource(stack, "Custom::SSTBucketDeployment", {
     Sources: [
-      {
-        BucketName: ANY,
-        ObjectKey: ANY,
-      },
       {
         BucketName: ANY,
         ObjectKey: ANY,
@@ -1058,7 +1055,7 @@ test("constructor: extending createRoute53Records", async () => {
   }
 
   const stack = new Stack(new App(), "stack");
-  route53.HostedZone.fromLookup = jest
+  route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });

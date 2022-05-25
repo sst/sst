@@ -31,17 +31,33 @@ const cron = new Cron(stack, "Cron", {
 cron.attachPermissions(["s3"]);
 ```
 
+### Disabling
+
+Disable the cron job from automatically running while developing.
+
+```js {4}
+new Cron(stack, "Cron", {
+  schedule: "rate(1 minute)",
+  job: "src/lambda.main",
+  enabled: app.local,
+});
+```
+
 ### Advanced examples
 
 #### Configuring the event rule
 
 Configure the internally created EventBus Rule.
 
-```js {4}
+```js {7}
+import { Schedule } from "aws-cdk-lib/aws-events";
+
 new Cron(stack, "Cron", {
   job: "src/lambda.main",
   cdk: {
-    cronOptions: { minute: "0", hour: "4" },
+    rule: {
+      schedule: Schedule.cron({ minute: "0", hour: "4" }),
+    }
   }
 });
 ```

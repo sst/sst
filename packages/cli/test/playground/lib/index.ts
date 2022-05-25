@@ -23,6 +23,7 @@ import { MainStack as ApiStack } from "./api-stack";
 //import { MainStack as AnotherStack } from "./topic-to-queue-stack";
 //import { MainStack as AnotherStack } from "./api-with-lambda-authorizer";
 //import { MainStack as AnotherStack } from "./step-functions-stack";
+//import RuntimeStack from "./runtime-stack";
 //import { MainStack as EmptyStack } from "./empty-stack";
 //import { MainStack as ErrorStack } from "./error-stack";
 //import { MainStack as LambdaErrorCasesStack } from "./lambda-error-cases-stack";
@@ -31,14 +32,18 @@ import { MainStack as ApiStack } from "./api-stack";
 import * as sst from "@serverless-stack/resources";
 
 export default async function main(app: sst.App) {
-  app.stack(ApiStack, { id: "api" });
+  app.setDefaultFunctionProps({
+    runtime: "nodejs16.x",
+  });
+
+  app.stack(ApiStack, { id: "api" })
   //.stack(ApiExtraRoutesStack, { id: "api-extra-routes" })
-  //new ApiV1Stack(app, "apiv1");
+  //.stack(ApiV1Stack, { id: "apiv1" });
   //new ApolloStack(app, "apollo");
   //new AppsyncStack(app, "appsync");
   //new WebsocketStack(app, "websocket");
 
-  //new TableStack(app, "table");
+  //.stack(TableStack, { id: "table" });
   //.stack(RDSStack, { id: "rds"})
   //new CronStack(app, "cron");
   //new BucketStack(app, "bucket");
@@ -52,6 +57,7 @@ export default async function main(app: sst.App) {
   // Unsupported SST constructs
   //new KinesisFirehoseStack(app, "firehose");
 
+  //.stack(RuntimeStack, { id: "runtime"})
   //new EmptyStack(app, "empty");
   //new ErrorStack(app, "error");
   //new LambdaErrorCasesStack(app, "lambda-error-cases");

@@ -18,10 +18,10 @@ export function MyStack({ stack, app }: StackContext) {
       authorizer: "iam",
     },
     routes: {
-      "GET /private": "private.handler",
+      "GET /private": "functions/private.handler",
       // Make an endpoint public
       "GET /public": {
-        function: "public.handler",
+        function: "functions/public.handler",
         authorizer: "none",
       },
     },

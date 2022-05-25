@@ -436,12 +436,17 @@ new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
   customDomain: {
     domainName: `api.${rootDomain}`,
-    hostedZone: rootDomain,
+    cdk: {
+      hostedZone: HostedZone.fromHostedZoneAttributes(this, "MyZone", {
+        hostedZoneId,
+        zoneName,
+      }),
+    },
   },
 });
 ```
 
-Note that, normally SST will look for a hosted zone by stripping out the first part of the `domainName`. But this is not possible when the `domainName` is a reference. Since its value will be resolved at deploy time. So you'll need to specify the `hostedZone` explicitly.
+Note that, normally SST will look for a hosted zone by stripping out the first part of the `domainName`. But this is not possible when the `domainName` is a reference. So you'll need to specify the `cdk.hostedZone` explicitly.
 
 #### Using externally hosted domain
 
@@ -489,8 +494,12 @@ new AppSyncApi(stack, "GraphqlApi", {
 
 #### Using Cognito User Pool
 
-```js {7-14}
+```js {11-18}
 import * as appsync from "@aws-cdk/aws-appsync-alpha";
+import { Auth, AppSyncApi } from "@serverless-stack/resources";
+
+// Create a User Pool using the Auth construct
+const auth = new Auth(this, "Auth");
 
 new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
@@ -500,7 +509,7 @@ new AppSyncApi(stack, "GraphqlApi", {
         defaultAuthorization: {
           authorizationType: appsync.AuthorizationType.USER_POOL,
           userPoolConfig: {
-            userPool: userPool,
+            userPool: auth.cdk.userPool,
           },
         },
       },

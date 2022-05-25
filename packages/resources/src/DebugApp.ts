@@ -1,6 +1,6 @@
 import * as cdk from "aws-cdk-lib";
 import * as cxapi from "aws-cdk-lib/cx-api";
-import { isStackConstruct, isSSTDebugStack } from "./Construct";
+import { isStackConstruct, isSSTDebugStack } from "./Construct.js";
 
 /**
  * Deploy props for apps.

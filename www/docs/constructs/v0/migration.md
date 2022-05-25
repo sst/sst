@@ -5,7 +5,7 @@ description: "Docs for the constructs in the @serverless-stack/resources package
 
 ## Goals
 
-The v1 SST constructs were restrucrtured with the following goals in mind:
+The v1 SST constructs were restructured with the following goals in mind:
 
 1. Consistent interfaces for:
 
@@ -127,10 +127,10 @@ Estimated time: 15 minutes
 
 Prerequisite: Update SST to [v0.59.0](https://github.com/serverless-stack/serverless-stack/releases/tag/v0.59.0) or later
 
-1. Run `npx sst update 1.0.0-beta.21`
+1. Run `npx sst update 1.0.2`
 2. For each SST construct used in your app, find its corresponding section in the [Changelog](#changelog) below, and follow the steps to update.
 3. Ensure that all the constructs have been updated:
-    - For TS projects (ie. using `index.ts`), run `npx run tsc --noEmit` or `yarn run tsc --noEmit` to ensure there are no type errors.
+    - For TS projects (ie. using `index.ts`), run `npx tsc --noEmit` or `yarn run tsc --noEmit` to ensure there are no type errors.
     - For JS projects (ie. using `index.js`), run `npx sst build` or `yarn sst build` to ensure there are no build warnings.
 4. As a final check, run `npx sst diff` prior to deploying and review the proposed changes.
 
@@ -303,7 +303,7 @@ permissions: "*"
 - Moved defaultAuthorizationType ⇒ removed (See [Authorizer](#authorizers))
 - Moved defaultAuthorizationScopes ⇒ ApiProps.defaults.authorizationScopes
 - Moved defaultPayloadFormatVersion ⇒ ApiProps.defaults.payloadFormatVersion
-- Moved defaultThrottlingBurstLimit ⇒ ApiProps.defaults.throtte.burst
+- Moved defaultThrottlingBurstLimit ⇒ ApiProps.defaults.throttle.burst
 - Moved defaultThrottlingRateLimit ⇒ ApiProps.defaults.throttle.rate
 
 ```js
@@ -320,7 +320,7 @@ permissions: "*"
 // to
 {
   defaults: {
-    functionProps: { timeout: 10 },
+    function: { timeout: 10 },
     authorizer: "lambda",
     authorizationScopes: [...],
     payloadFormatVersion: "2.0",
@@ -731,6 +731,26 @@ new GraphQLApi(stack, "Api", {
       hostedZone,
       acmCertificate,
     }
+  }
+}
+```
+
+#### Default settings
+- Moved defaultFunctionProps ⇒ WebSocketApiProps.defaults.function
+
+```js
+// from
+{
+  defaultFunctionProps: {
+    timeout: 10
+  },
+}
+// to
+{
+  defaults: {
+    function: {
+      timeout: 10
+    },
   }
 }
 ```
@@ -1218,7 +1238,7 @@ api.cdk.graphqlApi;
 // to
 {
   defaults: {
-    functionProps: { timeout: 10 },
+    function: { timeout: 10 },
     authorizer: "user_pools",
     authorizationScopes: [...],
   }
@@ -1339,7 +1359,7 @@ const authHandler = new Function(stack, "Authhandler", {
 const authorizer = new TokenAuthorizer(stack, "Authorizer", {
   handler: authHandler,
   resultsCacheTtl: Duration.seconds(30),
-  identitySource: IdentitySource.heade"Authorization"),
+  identitySource: IdentitySource.header("Authorization"),
 });
 
 new ApiGatewayV1Api(stack, "Api", {
@@ -1349,7 +1369,7 @@ new ApiGatewayV1Api(stack, "Api", {
     "GET /notes": "src/list.main",
     "POST /notes": {
       function: "create.main",
-      authorizer: authorizer
+      authorizer: authorizer,
       authorizationType: ApiAuthorizationType.CUSTOM,
     }
   },
@@ -1398,7 +1418,7 @@ const authHandler = new Function(stack, "Authhandler", {
 const authorizer = new RequestAuthorizer(stack, "Authorizer", {
   handler: authHandler,
   resultsCacheTtl: Duration.seconds(30),
-  identitySources: [IdentitySource.heade"Authorization")],
+  identitySources: [IdentitySource.header("Authorization")],
 });
 
 new ApiGatewayV1Api(stack, "Api", {
@@ -1408,7 +1428,7 @@ new ApiGatewayV1Api(stack, "Api", {
     "GET /notes": "src/list.main",
     "POST /notes": {
       function: "create.main",
-      authorizer: authorizer
+      authorizer: authorizer,
       authorizationType: ApiAuthorizationType.CUSTOM,
     }
   },
@@ -1648,8 +1668,8 @@ auth.cdk.unauthRole;
 ```js
 // from
 notifications: [
-  "src/notification1.main"
-  "src/notification2.main"
+  "src/notification1.main",
+  "src/notification2.main",
 ]
 
 // to
@@ -1814,6 +1834,25 @@ new Cron(this, "Cron", {
 });
 ```
 
+#### Job
+- Always use full props format
+
+```js
+// from
+job: {
+  handler: "lambda.main",
+  timeout: 10,
+}
+
+// to
+job: {
+  function: {
+    handler: "lambda.main",
+    timeout: 10,
+  }
+}
+```
+
 #### Properties
 - Moved eventsRule ⇒ cdk.rule
 
@@ -1895,6 +1934,28 @@ targets: {
 }
 ```
 
+- Always use full props format
+
+```js
+// from
+targets: {
+  myTarget: {
+    handler: "lambda.main",
+    timeout: 10,
+  }
+}
+
+// to
+targets: {
+  myTarget: {
+    function: {
+      handler: "lambda.main",
+      timeout: 10,
+    }
+  }
+}
+```
+
 - Moved targetProps ⇒ cdk.target
 
 ```js
@@ -1966,6 +2027,26 @@ bus.attachPermissionsToTarget("myRule", "myTarget", [...]);
 }
 ```
 
+#### Default settings
+- Moved defaultFunctionProps ⇒ KinesisStreamProps.defaults.function
+
+```js
+// from
+{
+  defaultFunctionProps: {
+    timeout: 10
+  },
+}
+// to
+{
+  defaults: {
+    function: {
+      timeout: 10
+    },
+  }
+}
+```
+
 #### Consumers
 - Always use full props format
 
@@ -2023,7 +2104,7 @@ stream.cdk.stream;
 ### Queue Changelog
 
 #### Constructor
-- Moved kinesisStream ⇒ cdk.stream
+- Moved sqsQueue ⇒ cdk.queue
 
 ```js
 // from
@@ -2039,6 +2120,24 @@ stream.cdk.stream;
 ```
 
 #### Consumer
+- Always use full props format
+
+```js
+// from
+consumer: {
+  handler: "lambda.main",
+  timeout: 10,
+}
+
+// to
+consumer: {
+  function: {
+    handler: "lambda.main",
+    timeout: 10,
+  }
+}
+```
+
 - Moved consumerProps ⇒ cdk.eventSource
 ```js
 // from
@@ -2243,6 +2342,28 @@ const table = new Table(this, "Notes", {
 ```
 
 #### Consumers
+- Always use full props format
+
+```js
+// from
+consumers: {
+  myConsumer: {
+    handler: "lambda.main",
+    timeout: 10,
+  }
+}
+
+// to
+consumers: {
+  myConsumer: {
+    function: {
+      handler: "lambda.main",
+      timeout: 10,
+    }
+  }
+}
+```
+
 - QueueProps.consumers[ANY].consumerProps ⇒ QueueProps.consumers[ANY].cdk.eventSource
 ```js
 // from
@@ -2306,6 +2427,28 @@ subscribers: [
 notifications: {
   "0": "src/subscriber1.main",
   "1": "src/subscriber2.main",
+}
+```
+
+- Always use full props format
+
+```js
+// from
+subscribers: {
+  mySubscriber: {
+    handler: "lambda.main",
+    timeout: 10,
+  }
+}
+
+// to
+subscribers: {
+  mySubscriber: {
+    function: {
+      handler: "lambda.main",
+      timeout: 10,
+    }
+  }
 }
 ```
 
@@ -2551,3 +2694,25 @@ SST no longer directly integrates with jest. Testing is better configured extern
 Remove all references to `sst test` in your package.json scripts
 
 From there you can follow [jest's getting started guide](https://jestjs.io/docs/getting-started)
+
+### Script Changelog
+
+#### Default settings
+- Moved defaultFunctionProps ⇒ ScriptProps.defaults.function
+
+```js
+// from
+{
+  defaultFunctionProps: {
+    timeout: 10
+  },
+}
+// to
+{
+  defaults: {
+    function: {
+      timeout: 10
+    },
+  }
+}
+```

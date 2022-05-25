@@ -1,6 +1,6 @@
 const { promisify } = require("util");
 const { exec } = require("child_process");
-const { exists } = require("fs");
+const { exists, symlink } = require("fs");
 
 const execPromise = promisify(exec);
 const existsPromise = promisify(exists);
@@ -12,6 +12,7 @@ async function yarnInstall(cwd) {
   if (hasPackageJson) {
     await execPromise("yarn", {
       cwd,
+      stdio: "inherit",
       TIMEOUT,
     });
   }

@@ -1,7 +1,6 @@
 // @ts-nocheck
 /* eslint-disable */
-import * as AWS from 'aws-sdk';
-
+import AWS from "aws-sdk";
 
 /**
  * Hack-fix
@@ -29,28 +28,35 @@ import * as AWS from 'aws-sdk';
  * See https://github.com/aws/aws-sdk-js/issues/1916 for some more glory details.
  */
 export class PatchedSharedIniFileCredentials extends AWS.SharedIniFileCredentials {
-  declare private profile: string;
-  declare private filename: string;
-  declare private disableAssumeRole: boolean;
-  declare private options: Record<string, string>;
-  declare private roleArn: string;
-  declare private httpOptions?: AWS.HTTPOptions;
-  declare private tokenCodeFn?: (mfaSerial: string, callback: (err?: Error, token?: string) => void) => void;
+  private declare profile: string;
+  private declare filename: string;
+  private declare disableAssumeRole: boolean;
+  private declare options: Record<string, string>;
+  private declare roleArn: string;
+  private declare httpOptions?: AWS.HTTPOptions;
+  private declare tokenCodeFn?: (
+    mfaSerial: string,
+    callback: (err?: Error, token?: string) => void
+  ) => void;
 
   public loadRoleProfile(
     creds: Record<string, Record<string, string>>,
     roleProfile: Record<string, string>,
-    callback: (err?: Error, data?: any) => void) {
-
+    callback: (err?: Error, data?: any) => void
+  ) {
     // Need to duplicate the whole implementation here -- the function is long and has been written in
     // such a way that there are no small monkey patches possible.
 
     if (this.disableAssumeRole) {
       throw (AWS as any).util.error(
-        new Error('Role assumption profiles are disabled. ' +
-                  'Failed to load profile ' + this.profile +
-                  ' from ' + creds.filename),
-        { code: 'SharedIniFileCredentialsProviderFailure' },
+        new Error(
+          "Role assumption profiles are disabled. " +
+            "Failed to load profile " +
+            this.profile +
+            " from " +
+            creds.filename
+        ),
+        { code: "SharedIniFileCredentialsProviderFailure" }
       );
     }
 
@@ -63,8 +69,10 @@ export class PatchedSharedIniFileCredentials extends AWS.SharedIniFileCredential
     var credentialSource = roleProfile.credential_source;
 
     const credentialError = (AWS as any).util.error(
-      new Error(`When using 'role_arn' in profile ('${this.profile}'), you must also configure exactly one of 'source_profile' or 'credential_source'`),
-      { code: 'SharedIniFileCredentialsProviderFailure' },
+      new Error(
+        `When using 'role_arn' in profile ('${this.profile}'), you must also configure exactly one of 'source_profile' or 'credential_source'`
+      ),
+      { code: "SharedIniFileCredentialsProviderFailure" }
     );
 
     if (sourceProfile && credentialSource) {
@@ -76,9 +84,12 @@ export class PatchedSharedIniFileCredentials extends AWS.SharedIniFileCredential
     }
 
     const profiles = loadProfilesProper(this.filename);
-    const region = profiles[this.profile]?.region ?? profiles.default?.region ?? 'us-east-1';
+    const region =
+      profiles[this.profile]?.region ?? profiles.default?.region ?? "us-east-1";
 
-    const stsCreds = sourceProfile ? this.sourceProfileCredentials(sourceProfile, creds) : this.credentialSourceCredentials(credentialSource);
+    const stsCreds = sourceProfile
+      ? this.sourceProfileCredentials(sourceProfile, creds)
+      : this.credentialSourceCredentials(credentialSource);
 
     this.roleArn = roleArn;
     var sts = new AWS.STS({
@@ -89,7 +100,7 @@ export class PatchedSharedIniFileCredentials extends AWS.SharedIniFileCredential
 
     var roleParams: AWS.STS.AssumeRoleRequest = {
       RoleArn: roleArn,
-      RoleSessionName: roleSessionName || 'aws-sdk-js-' + Date.now(),
+      RoleSessionName: roleSessionName || "aws-sdk-js-" + Date.now(),
     };
 
     if (externalId) {
@@ -98,7 +109,7 @@ export class PatchedSharedIniFileCredentials extends AWS.SharedIniFileCredential
 
     if (mfaSerial && self.tokenCodeFn) {
       roleParams.SerialNumber = mfaSerial;
-      self.tokenCodeFn(mfaSerial, function(err, token) {
+      self.tokenCodeFn(mfaSerial, function (err, token) {
         if (err) {
           var message;
           if (err instanceof Error) {
@@ -108,9 +119,10 @@ export class PatchedSharedIniFileCredentials extends AWS.SharedIniFileCredential
           }
           callback(
             (AWS as any).util.error(
-              new Error('Error fetching MFA token: ' + message),
-              { code: 'SharedIniFileCredentialsProviderFailure' },
-            ));
+              new Error("Error fetching MFA token: " + message),
+              { code: "SharedIniFileCredentialsProviderFailure" }
+            )
+          );
           return;
         }
 
@@ -122,15 +134,22 @@ export class PatchedSharedIniFileCredentials extends AWS.SharedIniFileCredential
     sts.assumeRole(roleParams, callback);
   }
 
-  private sourceProfileCredentials(sourceProfile: string, profiles: Record<string, Record<string, string>>) {
-
+  private sourceProfileCredentials(
+    sourceProfile: string,
+    profiles: Record<string, Record<string, string>>
+  ) {
     var sourceProfileExistanceTest = profiles[sourceProfile];
 
-    if (typeof sourceProfileExistanceTest !== 'object') {
+    if (typeof sourceProfileExistanceTest !== "object") {
       throw (AWS as any).util.error(
-        new Error('source_profile ' + sourceProfile + ' using profile '
-          + this.profile + ' does not exist'),
-        { code: 'SharedIniFileCredentialsProviderFailure' },
+        new Error(
+          "source_profile " +
+            sourceProfile +
+            " using profile " +
+            this.profile +
+            " does not exist"
+        ),
+        { code: "SharedIniFileCredentialsProviderFailure" }
       );
     }
 
@@ -138,31 +157,30 @@ export class PatchedSharedIniFileCredentials extends AWS.SharedIniFileCredential
       (AWS as any).util.merge(this.options || {}, {
         profile: sourceProfile,
         preferStaticCredentials: true,
-      }),
+      })
     );
-
   }
 
   // the aws-sdk for js does not support 'credential_source' (https://github.com/aws/aws-sdk-js/issues/1916)
   // so unfortunately we need to implement this ourselves.
   private credentialSourceCredentials(sourceCredential: string) {
-
     // see https://docs.aws.amazon.com/credref/latest/refdocs/setting-global-credential_source.html
     switch (sourceCredential) {
-      case 'Environment': {
-        return new AWS.EnvironmentCredentials('AWS');
+      case "Environment": {
+        return new AWS.EnvironmentCredentials("AWS");
       }
-      case 'Ec2InstanceMetadata': {
+      case "Ec2InstanceMetadata": {
         return new AWS.EC2MetadataCredentials();
       }
-      case 'EcsContainer': {
+      case "EcsContainer": {
         return new AWS.ECSCredentials();
       }
       default: {
-        throw new Error(`credential_source ${sourceCredential} in profile ${this.profile} is unsupported. choose one of [Environment, Ec2InstanceMetadata, EcsContainer]`);
+        throw new Error(
+          `credential_source ${sourceCredential} in profile ${this.profile} is unsupported. choose one of [Environment, Ec2InstanceMetadata, EcsContainer]`
+        );
       }
     }
-
   }
 }
 
@@ -182,9 +200,14 @@ function loadProfilesProper(filename: string) {
       filename: process.env[util.sharedConfigFileEnv],
     });
   }
-  var profilesFromCreds: Record<string, Record<string, string>> = iniLoader.loadFrom({
-    filename: filename ||
-      (process.env[util.configOptInEnv] && process.env[util.sharedCredentialsFileEnv]),
+  var profilesFromCreds: Record<
+    string,
+    Record<string, string>
+  > = iniLoader.loadFrom({
+    filename:
+      filename ||
+      (process.env[util.configOptInEnv] &&
+        process.env[util.sharedCredentialsFileEnv]),
   });
   for (const [name, profile] of Object.entries(profilesFromConfig)) {
     profiles[name] = profile;

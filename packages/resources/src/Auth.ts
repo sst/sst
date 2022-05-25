@@ -2,11 +2,15 @@ import { Construct } from "constructs";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 
-import { App } from "./App";
-import { Stack } from "./Stack";
-import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
-import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
-import { Permissions, attachPermissionsToRole } from "./util/permission";
+import { App } from "./App.js";
+import { Stack } from "./Stack.js";
+import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct.js";
+import {
+  Function as Fn,
+  FunctionProps,
+  FunctionDefinition,
+} from "./Function.js";
+import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 
 const AuthUserPoolTriggerOperationMapping = {
   createAuthChallenge: cognito.UserPoolOperation.CREATE_AUTH_CHALLENGE,
@@ -105,11 +109,11 @@ export interface AuthProps {
   };
   /**
    * Configure the different ways a user can sign in to our application for our User Pool. For example, you might want a user to be able to sign in with their email or username. Or with their phone number.
-   * 
+   *
    * :::caution
    * You cannot change the login property once the User Pool has been created.
    * :::
-   * 
+   *
    * @default `["username"]`
    */
   login?: ("email" | "phone" | "username" | "preferredUsername")[];
@@ -555,7 +559,7 @@ export class Auth extends Construct implements SSTConstruct {
   }
 
   private buildSignInAliases(
-    login?: ("email" | "phone" | "username" | "preferredUsername")[],
+    login?: ("email" | "phone" | "username" | "preferredUsername")[]
   ): cognito.SignInAliases | undefined {
     if (!login) {
       return;

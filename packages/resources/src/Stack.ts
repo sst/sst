@@ -1,13 +1,16 @@
-import * as path from "path";
-import * as fs from "fs-extra";
+import fs from "fs-extra";
 import { Construct, IConstruct } from "constructs";
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as regionInfo from "aws-cdk-lib/region-info";
-import { FunctionProps, Function as Fn } from "./Function";
-import { App } from "./App";
-import { isConstruct } from "./Construct";
-import { Permissions } from "./util/permission";
+import { FunctionProps, Function as Fn } from "./Function.js";
+import { App } from "./App.js";
+import { isConstruct } from "./Construct.js";
+import { Permissions } from "./util/permission.js";
+
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const packageJson = fs.readJsonSync(require.resolve("../package.json"));
 
 export type StackProps = cdk.StackProps;
 
@@ -67,7 +70,7 @@ export class Stack extends cdk.Stack {
    * ```js
    * stack.setDefaultFunctionProps({
    *   srcPath: "backend",
-   *   runtime: "nodejs14.x",
+   *   runtime: "nodejs16.x",
    * });
    * ```
    */
@@ -209,9 +212,6 @@ export class Stack extends cdk.Stack {
     const res = new cdk.CfnResource(this, "SSTMetadata", props);
 
     // Add version metadata
-    const packageJson = fs.readJsonSync(
-      path.join(__dirname, "..", "package.json")
-    );
     res.addMetadata("sst:version", packageJson.version);
 
     return res;

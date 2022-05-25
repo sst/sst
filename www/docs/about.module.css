@@ -166,10 +166,9 @@ div.desc > ul {
   composes: communityPanelIcon;
   background-color: #1da1f2;
 }
-.communityPanelIconDiscourse {
+.communityPanelIconYouTube {
   composes: communityPanelIcon;
-  background-color: #fbf4af;
-  border-color: #e4de9f;
+  background-color: #FF0000;
 }
 .communityPanelIcon > i {
   line-height: 48px;

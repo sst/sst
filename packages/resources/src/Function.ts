@@ -2,8 +2,8 @@
 // Note: disabling ban-type rule so we don't get an error referencing the class Function
 
 import path from "path";
-import * as esbuild from "esbuild";
-import * as fs from "fs-extra";
+import type { Loader } from "esbuild";
+import fs from "fs-extra";
 import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
@@ -11,14 +11,16 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as lambdaNode from "aws-cdk-lib/aws-lambda-nodejs";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 
-import { App } from "./App";
-import { Stack } from "./Stack";
-import { Size, toCdkSize } from "./util/size";
-import { Duration, toCdkDuration } from "./util/duration";
-import { SSTConstruct } from "./Construct";
-import { Permissions, attachPermissionsToRole } from "./util/permission";
+import { App } from "./App.js";
+import { Stack } from "./Stack.js";
+import { Size, toCdkSize } from "./util/size.js";
+import { Duration, toCdkDuration } from "./util/duration.js";
+import { SSTConstruct } from "./Construct.js";
+import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import { State, Runtime } from "@serverless-stack/core";
-import { Architecture } from "aws-cdk-lib/aws-lambda";
+
+import url from "url";
+const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 const supportedRuntimes = [
   lambda.Runtime.NODEJS,
@@ -28,6 +30,7 @@ const supportedRuntimes = [
   lambda.Runtime.NODEJS_10_X,
   lambda.Runtime.NODEJS_12_X,
   lambda.Runtime.NODEJS_14_X,
+  lambda.Runtime.NODEJS_16_X,
   lambda.Runtime.PYTHON_2_7,
   lambda.Runtime.PYTHON_3_6,
   lambda.Runtime.PYTHON_3_7,
@@ -37,6 +40,7 @@ const supportedRuntimes = [
   lambda.Runtime.DOTNET_CORE_2,
   lambda.Runtime.DOTNET_CORE_2_1,
   lambda.Runtime.DOTNET_CORE_3_1,
+  lambda.Runtime.DOTNET_6,
   lambda.Runtime.GO_1_X,
 ];
 
@@ -51,6 +55,7 @@ export type Runtime =
   | "nodejs10.x"
   | "nodejs12.x"
   | "nodejs14.x"
+  | "nodejs16.x"
   | "python2.7"
   | "python3.6"
   | "python3.7"
@@ -60,6 +65,7 @@ export type Runtime =
   | "dotnetcore2.0"
   | "dotnetcore2.1"
   | "dotnetcore3.1"
+  | "dotnet6"
   | "go1.x";
 
 export interface FunctionProps
@@ -130,12 +136,12 @@ export interface FunctionProps
   /**
    * The runtime environment. Only runtimes of the Node.js, Python, Go, and .NET (C# and F#) family are supported.
    *
-   * @default "nodejs12.x"
+   * @default "nodejs14.x"
    *
    * @example
    * ```js
    * new Function(stack, "Function", {
-   *   runtime: "nodejs14.x",
+   *   runtime: "nodejs16.x",
    * })
    *```
    */
@@ -328,7 +334,7 @@ export interface FunctionBundleNodejsProps extends FunctionBundleBase {
    * })
    * ```
    */
-  loader?: Record<string, esbuild.Loader>;
+  loader?: Record<string, Loader>;
   /**
    * Packages that will not be included in the bundle. Usually used to exclude dependencies that are provided in layers
    *
@@ -722,7 +728,6 @@ export class Function extends lambda.Function implements SSTConstruct {
     }
     // Handle build
     else {
-      console.log("Building function", handler);
       const bundled = Runtime.Handler.bundle({
         id: localId,
         root: root.appPath,

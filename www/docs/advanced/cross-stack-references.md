@@ -12,128 +12,47 @@ One of the more powerful features of CDK is, automatic cross-stack references. W
 
 So imagine you have a DynamoDB [`Table`](../constructs/Table.md) in one stack, and you need to add the table name as an environment variable (for the Lambda functions) in another stack.
 
-To do this, start by exposing the table as a class property.
+To do this, start by creating a table and then returning it.
 
-<MultiLanguageCode>
-<TabItem value="js">
+```ts
+import { StackContext, Table } from "@serverless-stack/resources";
 
-```js {7-12} title="stacks/StackA.js"
-import { Stack, Table, TableFieldType } from "@serverless-stack/resources";
+export function StackA(ctx: StackContext) {
+  const table = new Table(this, "MyTable", {
+    fields: {
+      pk: "string",
+    },
+    primaryIndex: { partitionKey: "pk" },
+  });
 
-export class StackA extends Stack {
-  constructor(scope, id) {
-    super(scope, id);
-
-    this.table = new Table(this, "MyTable", {
-      fields: {
-        pk: TableFieldType.STRING,
-      },
-      primaryIndex: { partitionKey: "pk" },
-    });
+  return {
+    table
   }
 }
 ```
 
-</TabItem>
-<TabItem value="ts">
+Then in `StackB` you can utilize the `use` function to reference the table.
 
-```js {9-14} title="stacks/StackA.ts"
-import { App, Stack, Table, TableFieldType } from "@serverless-stack/resources";
+```ts
+import { StackContext, use } from "@serverless-stack/resources";
+import { StackA } from "./StackA"
 
-export class StackA extends Stack {
-  public readonly table: Table;
-
-  constructor(scope: App, id: string) {
-    super(scope, id);
-
-    this.table = new Table(this, "MyTable", {
-      fields: {
-        pk: TableFieldType.STRING,
-      },
-      primaryIndex: { partitionKey: "pk" },
-    });
-  }
-}
-```
-
-</TabItem>
-</MultiLanguageCode>
-
-Then pass the table to `StackB`.
-
-<MultiLanguageCode>
-<TabItem value="js">
-
-```js {3} title="stacks/index.js"
-const stackA = new StackA(app, "StackA");
-
-new StackB(app, "StackB", stackA.table);
-```
-
-</TabItem>
-<TabItem value="ts">
-
-```js {3} title="stacks/index.ts"
-const stackA = new StackA(app, "StackA");
-
-new StackB(app, "StackB", stackA.table);
-```
-
-</TabItem>
-</MultiLanguageCode>
-
-Finally, reference the table's name in `StackB`.
-
-<MultiLanguageCode>
-<TabItem value="js">
-
-```js {10} title="stacks/StackB.js"
-import { Api, Stack } from "@serverless-stack/resources";
-
-export class StackB extends Stack {
-  constructor(scope, id, table) {
-    super(scope, id);
-
-    new Api(this, "Api", {
-      defaultFunctionProps: {
+export function StackB(ctx: StackContext) {
+  const { table } = use(StackA)
+  new Api(this, "Api", {
+    defaults: {
+      function: {
         environment: {
-          TABLE_NAME: table.tableName,
-        },
-      },
-      routes: {
-        "GET /": "src/lambda.main",
-      },
-    });
-  }
+          TABLE_NAME: table.tableName
+        }
+      }
+    },
+    routes: {
+      "GET /": "src/lambda.main",
+    },
+  });
 }
 ```
-
-</TabItem>
-<TabItem value="ts">
-
-```js {10} title="stacks/StackB.ts"
-import { Api, App, Stack, Table } from "@serverless-stack/resources";
-
-export class StackB extends Stack {
-  constructor(scope: App, id: string, table: Table) {
-    super(scope, id);
-
-    new Api(this, "Api", {
-      defaultFunctionProps: {
-        environment: {
-          TABLE_NAME: table.tableName,
-        },
-      },
-      routes: {
-        "GET /": "src/lambda.main",
-      },
-    });
-  }
-}
-```
-
-</TabItem>
-</MultiLanguageCode>
 
 Behind the scenes, the table name is exported as an output of `StackA`. If you head over to your AWS CloudFormation console and look at `StackA`'s outputs, you should see an output with:
 
@@ -151,7 +70,7 @@ By doing this, it will add a dependency between the stacks. And the stack export
 
 Now suppose in the example above, `StackB` no longer needs the table name as a Lambda environment variable. So we remove the `environment` option and change the `Api` to:
 
-```js
+```ts
 new Api(this, "Api", {
   routes: {
     "GET /": "src/lambda.main",
@@ -172,21 +91,20 @@ This will happen because:
 
 To fix this, we need to first remove `StackB`'s dependency on `StackA`, deploy it, then remove the export. It'll be a 2-step process:
 
-1. After we remove the reference in `StackB`, we'll tell CDK that we still want the output exported in `StackA`. We can do this by explicitly calling `this.exportValue`.
+1. After we remove the reference in `StackB`, we'll tell CDK that we still want the output exported in `StackA`. We can do this by explicitly calling `ctx.stack.exportValue`.
 
-   ```js {12} title="stacks/StackA.js"
-   export class StackA extends Stack {
-     constructor(scope, id) {
-       super(scope, id);
-   
-       this.table = new Table(this, "MyTable", {
+   ```ts
+   import { StackContext, Table } from "@serverless-stack/resources";
+
+   export function StackA(ctx: StackContext) {
+       const table = new Table(this, "MyTable", {
          fields: {
-           pk: TableFieldType.STRING,
+           pk: "string",
          },
          primaryIndex: { partitionKey: "pk" },
        });
 
-       this.exportValue(this.table.tableName);
+       ctx.stack.exportValue(this.table.tableName);
      }
    }
    ```
@@ -195,7 +113,7 @@ To fix this, we need to first remove `StackB`'s dependency on `StackA`, deploy i
 
    This changes the reference in `StackB` but leaves `StackA` as-is.
 
-2. After `StackB` finishes deploying, `StackA`'s export is no longer being imported. So you can remove the `this.exportValue` line.
+2. After `StackB` finishes deploying, `StackA`'s export is no longer being imported. So you can remove the `ctx.stack.exportValue` line.
 
    **And deploy again.**
 

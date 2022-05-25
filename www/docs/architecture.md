@@ -35,40 +35,14 @@ You can read more about SST's [Progressive disclosure design](design-principles#
 
 ### Stacks
 
-Stacks are a way to organize your constructs. There is no right or wrong way to organize your constructs.
+Stacks are a way to organize your constructs. There is no universal way to do this however you should try to opt for granular stacks. This is because cloudformation can be slow and the fewer resources there are in a stack, the less complexity there is during deployment.
 
-However, it's a common pattern to organize your constructs by domain. For example, if you are building a Twitter clone, you might have:
+For example, if you are building a Twitter clone, you might have:
 
-- A `core` stack with the API and the database
+- A `api` stack with the API
+- A `database` stack with the DynamoDB Table
 - A `web` stack with a React web app for the frontend
 - A `digest` stack with a Cron job that sends people daily email digest
-
-Here is an example of a stack with an API and a database table.
-
-```js title="stacks/CoreStack.js"
-class CoreStack extends Stack {
-
-  constructor(scope, id) {
-    super(scope, id);
-
-    // Create an API
-    new Api(this, "Api", {
-      routes: {
-        "GET    /notes": "src/list.main",
-        "POST   /notes": "src/create.main",
-      },
-    });
-
-    // Create an Table
-    new Table(this, "Notes", {
-      fields: {
-        noteId: TableFieldType.STRING,
-      },
-      primaryIndex: { partitionKey: "noteId" },
-    });
-  }
-}
-```
 
 A quick note on moving constructs across stacks. Once your app has been deployed, moving a construct between stacks requires destroying the construct from the old stack, and recreating it in the new stack. In the case of a [`Table`](constructs/Table.md) or [`Bucket`](constructs/Bucket.md) construct, the data is lost. And in the case of an [`Api`](constructs/Api.md), the API endpoint will change when it's recreated.
 
@@ -78,9 +52,10 @@ An app consists of one or more stacks. In most cases, all of your stacks should 
 
 ```js title="stacks/index.js"
 export default function main(app) {
-  new CoreStack(app, "core");
-  new WebStack(app, "web");
-  new DigestStack(app, "digest");
+  app
+    .stack(CoreStack)
+    .stack(WebStack)
+    .stack(DigestStack)
 }
 ```
 

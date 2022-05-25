@@ -1,3 +1,4 @@
+import { test, expect } from "vitest";
 /* eslint-disable @typescript-eslint/ban-ts-comment*/
 
 import { countResources, countResourcesLike, hasResource, ANY } from "./helper";

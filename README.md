@@ -10,6 +10,12 @@
   <a href="https://github.com/serverless-stack/serverless-stack/actions/workflows/ci.yml"><img alt="Build status" src="https://img.shields.io/github/workflow/status/serverless-stack/serverless-stack/CI?style=flat-square" /></a>
 </p>
 
+<p align="center">
+  <a href="https://v1conf.sst.dev">
+    <img alt="SST 1.0 Conf" src="https://github.com/serverless-stack/v1-conf/raw/main/frontend/assets/social-share-no-logo.png" width="600" />
+  </a>
+</p>
+
 ---
 
 Serverless Stack (SST) is a framework that makes it easy to build serverless apps. It's an extension of [AWS CDK](https://aws.amazon.com/cdk/) and it features:
@@ -36,7 +42,7 @@ npm start
 open console.serverless-stack.com
 
 # Deploy to prod
-npm deploy --stage prod
+npx sst deploy --stage prod
 ```
 
 ## Documentation

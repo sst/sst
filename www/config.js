@@ -7,6 +7,7 @@ module.exports = {
   forum: "https://discourse.serverless-stack.com/",
   console: "https://console.serverless-stack.com/",
   slack_invite: "https://serverless-stack.com/slack",
+  youtube: "https://www.youtube.com/c/ServerlessStack",
   newsletter: "https://serverless-stack.com/newsletter.html",
   examples: "https://serverless-stack.com/examples/index.html",
   github: "https://github.com/serverless-stack/serverless-stack",

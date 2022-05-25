@@ -100,37 +100,29 @@ script.attachPermissions(["s3"]);
 
 You can configure the `Script` to run at the beginning of the deployment, before any resources are deployed.
 
-First, create a stack for the construct. Let's call it `BeforeDeployStack` and add it to your `stacks/index.js`.
+Create a stack for the construct. Let's call it `BeforeDeployStack` and add it to your `stacks/index.js`.
 
-```js title="stacks/index.js"
-const beforeDeployStack = new BeforeDeployStack(app, "before-deploy");
+```ts
+import { dependsOn, StackContext, Script } from "@serverless-stack/resources"
 
-const apiStack = new ApiStack(app, "api");
-const dbStack = new DBStack(app, "db");
+function BeforeDeployStack(ctx: StackContext) {
+  new Script(stack, "BeforeDeploy", {
+    onCreate: "src/script.create",
+  });
+}
 
-apiStack.addDependency(beforeDeployStack);
-dbStack.addDependency(beforeDeployStack);
+function ApiStack(ctx: StackContext) {
+  dependsOn(BeforeDeployStack)
+}
+
+function DBStack(ctx: StackContext) {
+  dependsOn(BeforeDeployStack)
+}
 ```
 
 By making both `ApiStack` and `DBStack` depend on `BeforeDeployStack`, they will get deployed after `BeforeDeployStack` is done deploying.
 
 Here we are making use of the idea of [Stack dependencies](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib-readme.html#stack-dependencies) in CDK.
-
-Then, let's add the script to the `BeforeDeployStack`.
-
-```js title="stacks/BeforeDeployStack.js"
-import { Stack, Script } from "@serverless-stack/resources";
-
-export class BeforeDeployStack extends Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
-
-    new Script(stack, "BeforeDeploy", {
-      onCreate: "src/script.create",
-    });
-  }
-}
-```
 
 Now when you deploy this app, the `BeforeDeployStack` will get deployed first, which runs the `Script`.
 
@@ -142,35 +134,27 @@ Similarly, you can configure a `Script` to run at the end of the deployment, aft
 
 Create a `AfterDeployStack` in `stacks/index.js`.
 
-```js title="stacks/index.js"
-const apiStack = new ApiStack(app, "api");
-const dbStack = new DBStack(app, "db");
+```ts
+import { dependsOn, StackContext, Script } from "@serverless-stack/resources"
 
-const afterDeployStack = new AfterDeployStack(app, "after-deploy");
+function AfterDeployStack(ctx: StackContext) {
+  dependsOn(ApiStack)
+  dependsOn(DBStack)
+  new Script(stack, "AfterDeploy", {
+    onCreate: "src/script.create",
+  });
+}
 
-afterDeployStack.addDependency(apiStack);
-afterDeployStack.addDependency(dbStack);
+function ApiStack(ctx: StackContext) {
+}
+
+function DBStack(ctx: StackContext) {
+}
 ```
 
 By making the `AfterDeployStack` depend on both `ApiStack` and `DBStack`, it will get deployed after the two stacks are done deploying.
 
 Here we are making use of the idea of [Stack dependencies](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib-readme.html#stack-dependencies) in CDK.
-
-Then, let's add the script in the `AfterDeployStack`.
-
-```js title="stacks/AfterDeployStack.js"
-import { Stack, Script } from "@serverless-stack/resources";
-
-export class AfterDeployStack extends Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
-
-    new Script(stack, "AfterDeploy", {
-      onCreate: "src/script.create",
-    });
-  }
-}
-```
 
 Now when you deploy this app, the `AfterDeployStack` will get deployed at the end and run the `Script`.
 
@@ -180,7 +164,7 @@ Note that, if the script fails to run, the entire deploy is marked as failed. An
 
 Multiple scripts within the same Stack can run concurrently. You can manage the order in which they get run by specifying a dependency relationship.
 
-```js {9}
+```ts {9}
 const scriptA = new Script(stack, "Script", {
   onCreate: "src/scriptA.create",
 });

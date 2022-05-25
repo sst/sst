@@ -1,7 +1,7 @@
 import { patch, extend, extract, install } from "create-sst";
 
 export default [
-  extend("presets/base/example"),
+  extend("presets/starters/typescript-starter"),
   extract(),
   patch({
     file: "package.json",

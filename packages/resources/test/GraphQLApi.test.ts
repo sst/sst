@@ -1,3 +1,4 @@
+import { test, expect } from "vitest";
 import { countResources, countResourcesLike, hasResource } from "./helper";
 import { App, Stack, GraphQLApi, GraphQLApiProps } from "../src";
 

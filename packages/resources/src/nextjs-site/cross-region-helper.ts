@@ -1,9 +1,11 @@
-import * as path from "path";
-import * as crypto from "crypto";
+import path from "path";
+import crypto from "crypto";
+import url from "url";
 import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 export function getOrCreateBucket(scope: Construct): cdk.CustomResource {
   // Do not recreate if exist

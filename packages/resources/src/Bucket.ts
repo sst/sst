@@ -1,17 +1,17 @@
 import { Construct } from "constructs";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as s3Notifications from "aws-cdk-lib/aws-s3-notifications";
-import { Queue } from "./Queue";
-import { Topic } from "./Topic";
-import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
+import { Queue } from "./Queue.js";
+import { Topic } from "./Topic.js";
+import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct.js";
 import {
   Function as Fn,
   FunctionProps,
   FunctionInlineDefinition,
   FunctionDefinition,
-} from "./Function";
-import { Permissions } from "./util/permission";
-import { Duration, toCdkDuration } from "./util/duration";
+} from "./Function.js";
+import { Permissions } from "./util/permission.js";
+import { Duration, toCdkDuration } from "./util/duration.js";
 
 /////////////////////
 // Interfaces

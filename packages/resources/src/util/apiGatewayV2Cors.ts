@@ -1,5 +1,5 @@
 import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
-import { Duration, toCdkDuration } from "./duration";
+import { Duration, toCdkDuration } from "./duration.js";
 
 export interface CorsProps {
   /**

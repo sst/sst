@@ -1,8 +1,9 @@
-const {
-  _filterOutputKeys,
-  _getCdkV1Deps,
-  _getCdkV2MismatchedDeps,
-} = require("../../scripts/util/cdkHelpers");
+import {
+  filterOutputKeys,
+  getCdkV1Deps,
+  getCdkV2MismatchedDeps,
+} from "../../scripts/util/cdkHelpers";
+import { test, expect } from "vitest";
 
 const CDK_OUTPUT_KEY = "ExportsOutputRefAuthUserPool2J49SP10R8AB3A8B";
 const STATICSITE_OUTPUT_KEY = "FrontendSSTSTATICSITEENVREACTAPPAPIURLFAEF5D8C";
@@ -25,7 +26,7 @@ const ENVIRONMENT_OUTPUTS = [
 ];
 
 test("filterOutputKeys", async () => {
-  const ret = await _filterOutputKeys(
+  const ret = await filterOutputKeys(
     ENVIRONMENT_OUTPUTS,
     STACK_NAME,
     STACK_OUTPUTS,
@@ -35,7 +36,7 @@ test("filterOutputKeys", async () => {
 });
 
 test("getCdkV1Deps", async () => {
-  const ret = _getCdkV1Deps(
+  const ret = getCdkV1Deps(
     {
       "@aws-cdk/aws-service-a": "1.138.0",
       "@aws-cdk/aws-service-b": "1.138.0",
@@ -47,7 +48,7 @@ test("getCdkV1Deps", async () => {
 });
 
 test("getCdkV2MismatchedDeps", async () => {
-  const ret = _getCdkV2MismatchedDeps(
+  const ret = getCdkV2MismatchedDeps(
     {
       "aws-cdk-lib": "2.3.0",
       "@aws-cdk/aws-service-a-alpha": "2.3.0-alpha.0",

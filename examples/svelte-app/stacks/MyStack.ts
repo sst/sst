@@ -27,7 +27,7 @@ export function MyStack({ stack }: StackContext) {
       },
     },
     routes: {
-      "POST /": "lambda.main",
+      "POST /": "functions/lambda.main",
     },
   });
 

@@ -1,12 +1,8 @@
-import * as cfnResponse from "./cfn-response";
-import { invokeFunction } from "./outbound";
-import { log } from "./util";
+import * as cfnResponse from "./cfn-response.js";
+import { invokeFunction } from "./outbound.js";
+import { log } from "./util.js";
 
-export = {
-  handler: cfnResponse.safeHandler(handler),
-};
-
-async function handler(
+export async function handler(
   cfnRequest: AWSLambda.CloudFormationCustomResourceEvent
 ) {
   log("onEventHandler", cfnRequest);

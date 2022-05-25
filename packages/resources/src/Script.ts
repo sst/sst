@@ -1,10 +1,16 @@
 import path from "path";
+import url from "url";
 import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
-import { App } from "./App";
-import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
-import { Permissions } from "./util/permission";
+import { App } from "./App.js";
+import {
+  Function as Fn,
+  FunctionProps,
+  FunctionDefinition,
+} from "./Function.js";
+import { Permissions } from "./util/permission.js";
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 export interface ScriptProps {
   /**
@@ -216,7 +222,7 @@ export class Script extends Construct {
   private createCustomResourceFunction(): lambda.Function {
     const handler = new lambda.Function(this, "ScriptHandler", {
       code: lambda.Code.fromAsset(path.join(__dirname, "Script")),
-      runtime: lambda.Runtime.NODEJS_14_X,
+      runtime: lambda.Runtime.NODEJS_16_X,
       handler: "index.handler",
       timeout: cdk.Duration.minutes(15),
       memorySize: 1024,

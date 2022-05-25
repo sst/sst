@@ -2,16 +2,17 @@ import path from "path";
 import fs from "fs";
 import dotenv from "dotenv";
 import dotenvExpand from "dotenv-expand";
-import { Paths } from "./";
+import { Paths } from "./index.js";
 
 type LoadOpts = {
   searchPaths?: string[];
+  root?: string;
 };
 
 export async function load(opts?: LoadOpts) {
   const paths = [...(opts?.searchPaths || []), ".env.local", ".env"];
   paths
-    .map((file) => path.join(Paths.APP_PATH, file))
+    .map((file) => path.join(opts?.root || Paths.APP_PATH, file))
     .filter((path) => fs.existsSync(path))
     .map((path) => {
       const result = dotenv.config({

@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-base-go",
   "private": true,
   "description": "tests",
-  "version": "1.0.2",
+  "version": "1.0.7",
   "scripts": {
     "start": "sst start",
     "build": "sst build",
@@ -10,9 +10,6 @@
     "remove": "sst remove",
     "cdk": "sst cdk"
   },
-  "dependencies": {
-    "@serverless-stack/cli": "1.0.2",
-    "@serverless-stack/resources": "1.0.2"
-  },
+  "dependencies": {},
   "license": "ISC"
 }
