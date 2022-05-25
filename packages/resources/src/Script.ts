@@ -1,4 +1,5 @@
 import path from "path";
+import url from "url";
 import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
@@ -9,6 +10,7 @@ import {
   FunctionDefinition,
 } from "./Function.js";
 import { Permissions } from "./util/permission.js";
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 export interface ScriptProps {
   /**
