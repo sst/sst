@@ -1,5 +1,16 @@
 # @serverless-stack/resources
 
+## 1.2.6
+
+### Patch Changes
+
+- [`a245f5af`](https://github.com/serverless-stack/serverless-stack/commit/a245f5aff231fd3dd4828508adf70e708f6abb4d) Thanks [@thdxr](https://github.com/thdxr)! - Fix ESM issue in python bundling file
+
+* [`73fc7801`](https://github.com/serverless-stack/serverless-stack/commit/73fc78010581c6221e6a92e8fc5825a224ce6ec3) Thanks [@thdxr](https://github.com/thdxr)! - Fallback to require for aws-sdk in Script handler
+
+* Updated dependencies []:
+  - @serverless-stack/core@1.2.6
+
 ## 1.2.5
 
 ### Patch Changes
