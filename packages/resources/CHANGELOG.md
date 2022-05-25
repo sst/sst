@@ -1,5 +1,14 @@
 # @serverless-stack/resources
 
+## 1.2.5
+
+### Patch Changes
+
+- [`c08edd77`](https://github.com/serverless-stack/serverless-stack/commit/c08edd77f6c48efcf790d8e4403c43e9803073ec) Thanks [@thdxr](https://github.com/thdxr)! - Update Script function to use ESM properly
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.2.5
+
 ## 1.2.4
 
 ### Patch Changes

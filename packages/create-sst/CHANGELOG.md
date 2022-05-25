@@ -1,5 +1,11 @@
 # create-sst
 
+## 1.2.5
+
+### Patch Changes
+
+- [#1712](https://github.com/serverless-stack/serverless-stack/pull/1712) [`545b9ffe`](https://github.com/serverless-stack/serverless-stack/commit/545b9ffe20f1a86ca98752750942e75650a405e7) Thanks [@outaTiME](https://github.com/outaTiME)! - Example: fix responseType in simple Lambda authorizer example
+
 ## 1.2.4
 
 ## 1.2.3

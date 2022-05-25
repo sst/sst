@@ -1,5 +1,13 @@
 # @serverless-stack/cli-test-playground-region
 
+## 1.0.13
+
+### Patch Changes
+
+- Updated dependencies [[`c08edd77`](https://github.com/serverless-stack/serverless-stack/commit/c08edd77f6c48efcf790d8e4403c43e9803073ec)]:
+  - @serverless-stack/resources@1.2.5
+  - @serverless-stack/cli@1.2.5
+
 ## 1.0.12
 
 ### Patch Changes
