@@ -11,8 +11,9 @@
   },
   "scripts": {
     "cdk-version-check": "node ./bin/aws-cdk-version-check.cjs",
-    "build": "tsc --rootDir src --outDir dist && yarn build:stub && yarn build:rds-migrator && yarn build:bridge && yarn build:script",
+    "build": "tsc --rootDir src --outDir dist && yarn build:stub && yarn build:rds-migrator && yarn build:bridge && yarn build:script && yarn build:next",
     "build:script": "echo '{ \"type\": \"module\"}' > dist/Script/package.json",
+    "build:next": "echo '{ \"type\": \"module\"}' > dist/nextjs-site/custom-resource/package.json",
     "build:stub": "cd assets/stub && yarn && cd ../.. && node ./bin/create-stub-zip.cjs",
     "build:rds-migrator": "cd assets/RDS/migrator && yarn && cd ../../.. && node ./bin/copy-rds-migrator.cjs",
     "build:bridge": "node ./bin/build-bridge-client.cjs",

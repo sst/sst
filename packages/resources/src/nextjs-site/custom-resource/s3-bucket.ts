@@ -1,8 +1,10 @@
-import * as AWS from "aws-sdk";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const AWS = require("aws-sdk");
 AWS.config.logger = console;
 
-import { log } from "./util";
-import * as cfnResponse from "./cfn-response";
+import { log } from "./util.js";
+import * as cfnResponse from "./cfn-response.js";
 const s3 = new AWS.S3({ region: "us-east-1" });
 
 export async function handler(
