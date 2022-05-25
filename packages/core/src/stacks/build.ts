@@ -53,6 +53,7 @@ export function check(root: string, config: Config) {
   const program = createProgram({
     rootNames: [entry],
     options: {
+      lib: ["es2021"],
       incremental: true,
       tsBuildInfoFile: path.join(root, ".sst", "tsbuildinfo"),
       allowJs: true,
