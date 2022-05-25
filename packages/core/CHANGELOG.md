@@ -1,5 +1,11 @@
 # @serverless-stack/core
 
+## 1.2.7
+
+### Patch Changes
+
+- [#1740](https://github.com/serverless-stack/serverless-stack/pull/1740) [`4be3e5c7`](https://github.com/serverless-stack/serverless-stack/commit/4be3e5c76184d43303ee477cf51104a6f4f744a4) Thanks [@thdxr](https://github.com/thdxr)! - Fix \_\_dirname issue with python bundler
+
 ## 1.2.6
 
 ## 1.2.5
