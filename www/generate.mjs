@@ -80,6 +80,8 @@ const CDK_DOCS_MAP = {
   Distribution: "aws_cloudfront",
   ICachePolicy: "aws_cloudfront",
   CachePolicyProps: "aws_cloudfront",
+  IOriginRequestPolicy: "aws_cloudfront",
+  OriginRequestPolicyProps: "aws_cloudfront",
   AddBehaviorOptions: "aws_cloudfront",
 };
 

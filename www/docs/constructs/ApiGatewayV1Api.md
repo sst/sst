@@ -520,6 +520,28 @@ const key = api.cdk.restApi.addApiKey("ApiKey");
 plan.addApiKey(key);
 ```
 
+#### Working with models
+
+```js
+new ApiGatewayV1Api(stack, "Api", {
+  routes: {
+    "GET /notes": {
+      function: "src/list.main",
+      cdk: {
+        integration: {
+          requestParameters: {
+            "application/json": JSON.stringify({
+              action: "sayHello",
+              pollId: "$util.escapeJavaScript($input.params('who'))"
+            })
+          }
+        }
+      }
+    },
+  },
+});
+```
+
 #### Request Validator
 
 ```js
@@ -1042,7 +1064,6 @@ api.addRoutes(props.stack, {
   "GET /notes/{id}": {
     type: "function",
     function: "src/get.main",
-    payloadFormatVersion: "1.0",
   }
 });
 ```

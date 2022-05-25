@@ -665,6 +665,22 @@ Get the instance of the internally created Function, for a given route key where
 const fn = api.getFunction("$connect");
 ```
 
+### getRoute
+
+```ts
+getRoute(routeKey)
+```
+_Parameters_
+- __routeKey__ <span class="mono">string</span>
+
+
+Get the instance of the internally created Route, for a given route key where the `routeKey` is the key used to define a route. For example, `$connect`.
+
+
+```js
+const route = api.getRoute("$connect");
+```
+
 ## WebSocketApiDomainProps
 
 
