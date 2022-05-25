@@ -60,31 +60,6 @@ export interface NextjsSiteProps {
     distribution?: NextjsCdkDistributionProps;
     /**
      * Override the default CloudFront cache policies created internally.
-     *
-     * @example
-     * ### Reusing CloudFront cache policies
-     *
-     * CloudFront has a limit of 20 cache policies per AWS account. This is a hard limit, and cannot be increased. Each `NextjsSite` creates 3 cache policies. If you plan to deploy multiple Next.js sites, you can have the constructs share the same cache policies by reusing them across sites.
-     *
-     * ```js
-     * import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
-     *
-     * const cachePolicies = {
-     *   staticCachePolicy: new cloudfront.CachePolicy(stack, "StaticCache", NextjsSite.staticCachePolicyProps),
-     *   imageCachePolicy: new cloudfront.CachePolicy(stack, "ImageCache", NextjsSite.imageCachePolicyProps),
-     *   lambdaCachePolicy: new cloudfront.CachePolicy(stack, "LambdaCache", NextjsSite.lambdaCachePolicyProps),
-     * };
-     *
-     * new NextjsSite(stack, "Site1", {
-     *   path: "path/to/site1",
-     *   cfCachePolicies: cachePolicies,
-     * });
-     *
-     * new NextjsSite(stack, "Site2", {
-     *   path: "path/to/site2",
-     *   cfCachePolicies: cachePolicies,
-     * });
-     * ```
      */
     cachePolicies?: {
       staticCachePolicy?: cloudfront.ICachePolicy;
@@ -93,26 +68,6 @@ export interface NextjsSiteProps {
     };
     /**
      * Override the default CloudFront image origin request policy created internally
-     * @example
-     * ### Reusing CloudFront image cache policy
-     *
-     * CloudFront has a limit of 20 origin request policies per AWS account. This is a hard limit, and cannot be increased. Each `NextjsSite` creates 3 cache policies. If you plan to deploy multiple Next.js sites, you can have the constructs share the same cache policies by reusing them across sites.
-     *
-     * ```js
-     * import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
-     *
-     * const imageOriginRequestPolicy = new cloudfront.OriginRequestPolicy(stack, "ImageOriginRequest", NextjsSite.imageOriginRequestPolicyProps);
-     *
-     * new NextjsSite(stack, "Site1", {
-     *   path: "path/to/site1",
-     *   imageOriginRequestPolicy,
-     * });
-     *
-     * new NextjsSite(stack, "Site2", {
-     *   path: "path/to/site2",
-     *   imageOriginRequestPolicy,
-     * });
-     * ```
      */
     imageOriginRequestPolicy?: cloudfront.IOriginRequestPolicy;
     /**
