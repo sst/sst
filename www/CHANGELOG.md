@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 1.1.3
+
+### Patch Changes
+
+- [#1744](https://github.com/serverless-stack/serverless-stack/pull/1744) [`6c94940d`](https://github.com/serverless-stack/serverless-stack/commit/6c94940d2548426f32503dea338d891f02d6676a) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: support reusing CloudFront Origin Request Policy
+
 ## 1.1.2
 
 ### Patch Changes
