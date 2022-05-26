@@ -1,5 +1,15 @@
 # @serverless-stack/cli
 
+## 1.2.9
+
+### Patch Changes
+
+- [#1748](https://github.com/serverless-stack/serverless-stack/pull/1748) [`8188a77e`](https://github.com/serverless-stack/serverless-stack/commit/8188a77eedb3c98aefcd5d69a903b1b95a128e00) Thanks [@thdxr](https://github.com/thdxr)! - Fix issue loading stacks code in windows
+
+- Updated dependencies []:
+  - @serverless-stack/resources@1.2.9
+  - @serverless-stack/core@1.2.9
+
 ## 1.2.8
 
 ### Patch Changes

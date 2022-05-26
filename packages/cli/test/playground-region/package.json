@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-playground-region",
   "private": true,
   "description": "tests",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "scripts": {
     "add-cdk": "sst add-cdk",
     "diff": "sst diff",
@@ -13,8 +13,8 @@
     "cdk": "sst cdk"
   },
   "dependencies": {
-    "@serverless-stack/cli": "1.2.8",
-    "@serverless-stack/resources": "1.2.8"
+    "@serverless-stack/cli": "1.2.9",
+    "@serverless-stack/resources": "1.2.9"
   },
   "license": "ISC",
   "devDependencies": {
