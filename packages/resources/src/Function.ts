@@ -17,7 +17,7 @@ import { Size, toCdkSize } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { SSTConstruct } from "./Construct.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
-import { State, Runtime } from "@serverless-stack/core";
+import { State, Runtime, logger } from "@serverless-stack/core";
 
 import url from "url";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
@@ -42,6 +42,17 @@ const supportedRuntimes = [
   lambda.Runtime.DOTNET_CORE_3_1,
   lambda.Runtime.DOTNET_6,
   lambda.Runtime.GO_1_X,
+];
+
+const deprecatedRuntimes = [
+  lambda.Runtime.NODEJS_4_3,
+  lambda.Runtime.NODEJS_6_10,
+  lambda.Runtime.NODEJS_8_10,
+  lambda.Runtime.NODEJS_10_X,
+  lambda.Runtime.PYTHON_2_7,
+  lambda.Runtime.DOTNET_CORE_1,
+  lambda.Runtime.DOTNET_CORE_2,
+  lambda.Runtime.DOTNET_CORE_2_1,
 ];
 
 export type FunctionInlineDefinition = string | Function;
@@ -852,6 +863,16 @@ export class Function extends lambda.Function implements SSTConstruct {
         `The specified runtime is not supported for sst.Function. Only NodeJS, Python, Go, and .NET runtimes are currently supported.`
       );
     }
+    
+    // Check if we're trying to deploy a deprecated runtime and emit a friendly warning.
+    // https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-support-policy
+    if (deprecatedRuntimes.includes(runtimeClass)) {
+      logger.warn(
+        `The specified runtime ${runtimeClass.toString()} has been deprecated by AWS.\n`
+        + 'Deployment of this service will likely fail.\n'
+        + 'Please update your function to a more recent version or see the AWS documentation to find Amazon\'s deprecation policy.')
+    }
+
     return runtimeClass;
   }
 
