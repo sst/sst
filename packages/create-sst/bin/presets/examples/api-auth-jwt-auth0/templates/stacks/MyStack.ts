@@ -7,7 +7,7 @@ export function MyStack({ stack, app }: StackContext) {
       auth0: {
         type: "jwt",
         jwt: {
-          issuer: process.env.AUTH0_DOMAIN,
+          issuer: process.env.AUTH0_DOMAIN!,
           audience: [process.env.AUTH0_DOMAIN + "api/v2/"],
         },
       },
@@ -27,8 +27,8 @@ export function MyStack({ stack, app }: StackContext) {
   const site = new ViteStaticSite(stack, "Site", {
     path: "frontend",
     environment: {
-      VITE_APP_AUTH0_DOMAIN: process.env.AUTH0_DOMAIN,
-      VITE_APP_AUTH0_CLIENT_ID: process.env.AUTH0_CLIENT_ID,
+      VITE_APP_AUTH0_DOMAIN: process.env.AUTH0_DOMAIN!,
+      VITE_APP_AUTH0_CLIENT_ID: process.env.AUTH0_CLIENT_ID!,
       VITE_APP_API_URL: api.url,
       VITE_APP_REGION: app.region,
     },
