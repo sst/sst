@@ -1,37 +1,42 @@
-import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
-import { StackContext, Api } from "@serverless-stack/resources";
+import { StackContext, Api, ViteStaticSite } from "@serverless-stack/resources";
 
-export function MyStack({ stack }: StackContext) {
+export function MyStack({ stack, app }: StackContext) {
   // Create Api
   const api = new Api(stack, "Api", {
     authorizers: {
-      jwt: {
+      auth0: {
         type: "jwt",
-        cdk: {
-          authorizer: new apigAuthorizers.HttpJwtAuthorizer(
-            "Authorizer",
-            "https://sst-test.us.auth0.com/",
-            {
-              jwtAudience: ["r7MQkwTZjIzcKhGmlcy9QhMNXnT9qhwX"],
-            }
-          ),
+        jwt: {
+          issuer: process.env.AUTH0_DOMAIN,
+          audience: [process.env.AUTH0_DOMAIN + "api/v2/"],
         },
       },
     },
     defaults: {
-      authorizer: "jwt",
+      authorizer: "auth0",
     },
     routes: {
       "GET /private": "functions/private.main",
       "GET /public": {
         function: "functions/public.main",
-        authorizer: "jwt",
+        authorizer: "none",
       },
+    },
+  });
+
+  const site = new ViteStaticSite(stack, "Site", {
+    path: "frontend",
+    environment: {
+      VITE_APP_AUTH0_DOMAIN: process.env.AUTH0_DOMAIN,
+      VITE_APP_AUTH0_CLIENT_ID: process.env.AUTH0_CLIENT_ID,
+      VITE_APP_API_URL: api.url,
+      VITE_APP_REGION: app.region,
     },
   });
 
   // Show the API endpoint and other info in the output
   stack.addOutputs({
     ApiEndpoint: api.url,
+    SiteUrl: site.url,
   });
 }
