@@ -1,5 +1,11 @@
 # create-sst
 
+## 1.2.11
+
+### Patch Changes
+
+- [`6bf80a89`](https://github.com/serverless-stack/serverless-stack/commit/6bf80a89249cbb7b6b662988d33dcc3ef1ba7fa4) Thanks [@thdxr](https://github.com/thdxr)! - Workaround for npm not allowing gitingore files for starters
+
 ## 1.2.10
 
 ## 1.2.9
