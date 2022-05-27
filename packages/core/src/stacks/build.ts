@@ -54,9 +54,10 @@ export function check(root: string, config: Config) {
   const program = createProgram({
     rootNames: [entry],
     options: {
-      lib: ["es2021"],
+      lib: ["lib.es2021.d.ts"],
       incremental: true,
       tsBuildInfoFile: path.join(root, ".sst", "tsbuildinfo"),
+      skipLibCheck: true,
       allowJs: true,
       checkJs: true,
       noEmit: true,
