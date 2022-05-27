@@ -95,7 +95,10 @@ export async function execute(opts) {
         const templates = path.join(source, "templates");
         const files = await listFiles(templates);
         for (const file of files) {
-          const relative = path.relative(templates, file);
+          const relative = path.relative(
+            templates,
+            file.replace("gitignore", ".gitignore")
+          );
           const destination = path.join(opts.destination, relative);
           await fs.mkdir(path.dirname(destination), { recursive: true });
           await fs.copyFile(file, destination);
