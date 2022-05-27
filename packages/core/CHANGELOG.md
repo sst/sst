@@ -1,5 +1,11 @@
 # @serverless-stack/core
 
+## 1.2.11
+
+### Patch Changes
+
+- [`c829dfa6`](https://github.com/serverless-stack/serverless-stack/commit/c829dfa600b55a3d82495756e7489b858f8a01d0) Thanks [@thdxr](https://github.com/thdxr)! - Update JS typechecker to use latest lib + ignore node_modules
+
 ## 1.2.10
 
 ### Patch Changes
