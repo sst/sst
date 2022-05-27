@@ -7,7 +7,6 @@
   "workspaces": {
     "packages": [
       "packages/*",
-      "packages/cli/test/playground*",
       "www"
     ]
   },

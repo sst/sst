@@ -57,20 +57,10 @@
     "@types/glob": "^7.2.0",
     "@types/node": "^14.0.27",
     "esbuild-jest": "^0.5.0",
-    "graphql": "^16.5.0",
     "typedoc": "^0.22.13"
   },
-  "gitHead": "8ac2d0abc11d5de721c87658bb445e3d6c211dcf",
-  "peerDependencies": {
-    "graphql": "^16.5.0",
-    "@graphql-tools/merge": "^8.2.12"
+  "optionalDependencies": {
+    "graphql": "^16.5.0"
   },
-  "peerDependenciesMeta": {
-    "graphql": {
-      "optional": true
-    },
-    "@graphql-tools/merge": {
-      "optional": true
-    }
-  }
+  "gitHead": "8ac2d0abc11d5de721c87658bb445e3d6c211dcf"
 }

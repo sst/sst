@@ -77,6 +77,7 @@ export async function generate(opts: GenerateOpts) {
   });
   if (!builder) throw new Error("Could not find new SchemaBuilder(...)");
 
+  const hoisted: any[] = [];
   const references = new Set<any>();
   const variables = new Set();
   variables.add((builder.node as any).id.name);
@@ -85,25 +86,55 @@ export async function generate(opts: GenerateOpts) {
     // Rewrite addScalarType to dummy
     if (
       node.type === "CallExpression" &&
-      node.callee.property?.name === "addScalarType"
+      (node.callee.property?.name === "addScalarType" ||
+        node.callee.property?.name === "scalarType")
     ) {
       node.callee.property.name = "scalarType";
       node.arguments = [
         node.arguments[0],
-        {
-          ...node.arguments[1],
-          name: "DUMMY_RESOLVER",
-        },
+        { type: "Identifier", name: "DUMMY_RESOLVER" },
       ];
+    }
+
+    // Preserve enums
+    if (
+      node.type == "CallExpression" &&
+      node.callee.property?.name === "enumType"
+    ) {
+      const e = findNodeAt(ast, undefined, undefined, (type, child: any) => {
+        return (
+          type === "VariableDeclarator" &&
+          child.id.name === node.arguments[0].name
+        );
+      });
+      if (e)
+        hoisted.push({
+          type: "VariableDeclaration",
+          declarations: [e.node],
+          kind: "var",
+        });
+    }
+
+    // Rewrite objectType to dummy
+    if (
+      node.type === "CallExpression" &&
+      node.callee.property?.name === "objectType"
+    ) {
+      node.arguments[0] = { type: "Identifier", name: "DUMMY_CLASS" };
     }
 
     // Include nodes that are pothos related
     const related =
+      // Preserve any referenced variables
       (node.type === "Identifier" && variables.has(node.name)) ||
+      // Preserve imports from pothos
       (node.type === "ImportDeclaration" &&
         node.source.value.includes("@pothos")) ||
+      // Preserve any exported variables
       (node.type === "ExportNamedDeclaration" &&
         node.specifiers.some((x: any) => variables.has(x.local.name)));
+    node.type === "ExportNamedDeclaration" &&
+      node.specifiers.some((x: any) => variables.has(x.local.name));
 
     if (!related) return;
     references.add(ancestors[1]);
@@ -125,9 +156,10 @@ export async function generate(opts: GenerateOpts) {
     });
   }
 
-  (ast as any).body = [...references];
+  (ast as any).body = [...hoisted, ...references];
   const contents = [
     `const DUMMY_RESOLVER = { serialize: x => x, parseValue: x => x }; `,
+    `class DUMMY_CLASS {}; `,
     escodegen.generate(ast),
   ].join("\n");
 
@@ -135,7 +167,7 @@ export async function generate(opts: GenerateOpts) {
 
   await fs.writeFile(out, contents, "utf8");
   const { schema } = await import(url.pathToFileURL(out).href);
-  await fs.rm(out);
+  // await fs.rm(out);
   const schemaAsString = printSchema(lexicographicSortSchema(schema));
   return schemaAsString;
 }

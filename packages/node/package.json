@@ -22,11 +22,10 @@
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.90",
-    "@types/node": "^17.0.10",
-    "graphql": "^16.5.0"
+    "@types/node": "^17.0.10"
   },
   "gitHead": "8ac2d0abc11d5de721c87658bb445e3d6c211dcf",
-  "peerDependencies": {
+  "optionalDependencies": {
     "graphql": "^16.5.0"
   }
 }
