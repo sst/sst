@@ -1,5 +1,11 @@
 # @serverless-stack/core
 
+## 1.2.10
+
+### Patch Changes
+
+- [`95b508ce`](https://github.com/serverless-stack/serverless-stack/commit/95b508ce3e702531f2fe09bd3c83f5ed86eae015) Thanks [@thdxr](https://github.com/thdxr)! - Added support for Pothos classes and enums
+
 ## 1.2.9
 
 ## 1.2.8
