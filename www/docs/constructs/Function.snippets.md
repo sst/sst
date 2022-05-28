@@ -296,3 +296,27 @@ const version = fn.currentVersion;
 ```
 
 Note that Provisioned Concurrency needs to be configured on a specific Function version. By default, versioning is not enabled, and setting `currentVersionOptions` has no effect. By accessing the `currentVersion` property, a version is automatically created with the provided options. 
+
+#### Configuring VPC
+
+```js
+import * as ec2 from "aws-cdk-lib/aws-ec2";
+
+// Create a VPC
+const vpc = new ec2.Vpc(this, 'MyVPC');
+
+// Alternatively use an existing VPC
+const vpc = ec2.Vpc.fromLookup(stack, 'VPC', { ... });
+
+new Function(stack, "MyApiLambda", {
+  handler: "src/api.main",
+  vpc,
+  vpcSubnet: {
+    subnetType: ec2.SubnetType.PRIVATE_WITH_NAT,
+  }
+});
+```
+
+If you need access to resources within a VPC, then run your AWS Lambda function within a VPC. If you do not require this access, then do not run it within a VPC.
+
+Read more about [working with VPC](https://docs.serverless-stack.com/live-lambda-development#working-with-a-vpc).
