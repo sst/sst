@@ -26,6 +26,7 @@
     "graphql": "^16.5.0"
   },
   "dependencies": {
+    "@rmp135/sql-ts": "^1.13.0",
     "@serverless-stack/aws-lambda-ric": "^2.0.13",
     "@trpc/server": "^9.16.0",
     "acorn": "^8.7.1",
@@ -49,6 +50,8 @@
     "fs-extra": "^9.0.1",
     "immer": "^9.0.7",
     "js-yaml": "^4.1.0",
+    "knex": "^2.1.0",
+    "knex-aurora-data-api-client": "^1.8.0",
     "log4js": "^6.3.0",
     "picomatch": "^2.3.0",
     "remeda": "^0.0.32",

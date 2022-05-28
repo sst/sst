@@ -41,7 +41,8 @@ export function createPothosBuilder(opts: Opts) {
     routes = evt.properties
       .filter(c => c.type == "Api")
       .flatMap(c => c.data.routes)
-      .filter(r => r.type === "pothos");
+      .filter(r => r.type === "pothos")
+      .filter(r => r.schema);
     for (const route of routes) build(route);
   });
 }

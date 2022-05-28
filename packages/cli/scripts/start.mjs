@@ -19,6 +19,7 @@ import {
   createProjectWatcher,
   createBus,
   createPothosBuilder,
+  createKyselyTypeGenerator,
 } from "@serverless-stack/core";
 
 import paths from "./util/paths.mjs";
@@ -133,11 +134,14 @@ export default async function (argv, config, cliInfo) {
   logger.info("");
 
   const bus = createBus();
-  const pw = createProjectWatcher({
+  createProjectWatcher({
     root: paths.appPath,
     bus,
   });
-  const pb = createPothosBuilder({
+  createKyselyTypeGenerator({
+    bus,
+  });
+  createPothosBuilder({
     bus,
   });
 
@@ -357,6 +361,13 @@ export default async function (argv, config, cliInfo) {
     });
 
     clientLogger.debug("Invoking local function...");
+    bus.publish("function.requested", {
+      localID: func.id,
+      request: {
+        event: req.event,
+        context: req.context,
+      },
+    });
     const result = await server.invoke({
       function: {
         ...func,
@@ -367,6 +378,14 @@ export default async function (argv, config, cliInfo) {
         event: req.event,
         context: req.context,
         deadline: timeoutAt,
+      },
+    });
+    bus.publish("function.responded", {
+      localID: func.id,
+      response: result,
+      request: {
+        event: req.event,
+        context: req.context,
       },
     });
     local.updateFunction(func.id, (draft) => {
