@@ -1,18 +1,14 @@
-import * as cognito from "aws-cdk-lib/aws-cognito";
-import { Api, StackContext } from "@serverless-stack/resources";
+import {
+  Api,
+  Auth,
+  StackContext,
+  ViteStaticSite,
+} from "@serverless-stack/resources";
 
-export function MyStack({ stack }: StackContext) {
+export function MyStack({ stack, app }: StackContext) {
   // Create User Pool
-  const userPool = new cognito.UserPool(stack, "UserPool", {
-    selfSignUpEnabled: true,
-    signInAliases: { email: true },
-    signInCaseSensitive: false,
-  });
-
-  // Create User Pool Client
-  const userPoolClient = new cognito.UserPoolClient(stack, "UserPoolClient", {
-    userPool,
-    authFlows: { userPassword: true },
+  const auth = new Auth(stack, "Auth", {
+    login: ["email"],
   });
 
   // Create Api
@@ -21,8 +17,8 @@ export function MyStack({ stack }: StackContext) {
       jwt: {
         type: "user_pool",
         userPool: {
-          id: userPool.userPoolId,
-          clientIds: [userPoolClient.userPoolClientId],
+          id: auth.userPoolId,
+          clientIds: [auth.userPoolClientId],
         },
       },
     },
@@ -38,10 +34,24 @@ export function MyStack({ stack }: StackContext) {
     },
   });
 
+  // attach permissions for authenticated users to the api
+  auth.attachPermissionsForAuthUsers([api]);
+
+  const site = new ViteStaticSite(stack, "Site", {
+    path: "frontend",
+    environment: {
+      VITE_APP_API_URL: api.url,
+      VITE_APP_REGION: app.region,
+      VITE_APP_USER_POOL_ID: auth.userPoolId,
+      VITE_APP_USER_POOL_CLIENT_ID: auth.userPoolClientId,
+    },
+  });
+
   // Show the API endpoint and other info in the output
   stack.addOutputs({
     ApiEndpoint: api.url,
-    UserPoolId: userPool.userPoolId,
-    UserPoolClientId: userPoolClient.userPoolClientId,
+    UserPoolId: auth.userPoolId,
+    UserPoolClientId: auth.userPoolClientId,
+    SiteUrl: site.url,
   });
 }
