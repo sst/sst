@@ -14,7 +14,10 @@ export const GoHandler: Definition = (opts) => {
   const build: Command = {
     command: "go",
     args: ["build", "-ldflags", "-s -w", "-o", target, "./" + opts.handler],
-    env: {},
+    env: {
+      GOARCH: 'amd64',
+      GOOS:'linux'
+    },
   };
   return {
     build: () => {
