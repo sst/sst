@@ -79,6 +79,7 @@ export interface RDSProps {
    * ```
    */
   migrations?: string;
+
   /**
    * Path to place generated typescript types after running migrations
    *
