@@ -177,7 +177,7 @@ export async function generate(opts: GenerateOpts) {
 
   await fs.writeFile(out, contents, "utf8");
   const { schema } = await import(url.pathToFileURL(out).href);
-  // await fs.rm(out);
+  await fs.rm(out);
   const schemaAsString = printSchema(lexicographicSortSchema(schema));
   return schemaAsString;
 }
