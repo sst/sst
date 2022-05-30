@@ -28,20 +28,20 @@ export async function generate(opts: GenerateOpts) {
         name: "externalize",
         setup(build) {
           const filter = /^[^.\/]|^\.[^.\/]|^\.\.[^\/]/; // Must not start with "/" or "./" or "../"
-          build.onResolve({ filter }, (args) => {
+          build.onResolve({ filter }, args => {
             return {
               path: args.path,
-              external: true,
+              external: true
             };
           });
-        },
-      },
-    ],
+        }
+      }
+    ]
   });
 
   const ast = parse(result.outputFiles[0].text, {
     sourceType: "module",
-    ecmaVersion: 2022,
+    ecmaVersion: 2022
   });
 
   const schemaBuilderImport: any = findNodeAt(
@@ -92,14 +92,15 @@ export async function generate(opts: GenerateOpts) {
       node.callee.property.name = "scalarType";
       node.arguments = [
         node.arguments[0],
-        { type: "Identifier", name: "DUMMY_RESOLVER" },
+        { type: "Identifier", name: "DUMMY_RESOLVER" }
       ];
     }
 
     // Preserve enums
     if (
       node.type == "CallExpression" &&
-      node.callee.property?.name === "enumType"
+      node.callee.property?.name === "enumType" &&
+      node.arguments[0].type === "Identifier"
     ) {
       const e = findNodeAt(ast, undefined, undefined, (type, child: any) => {
         return (
@@ -111,7 +112,7 @@ export async function generate(opts: GenerateOpts) {
         hoisted.push({
           type: "VariableDeclaration",
           declarations: [e.node],
-          kind: "var",
+          kind: "var"
         });
     }
 
@@ -139,7 +140,7 @@ export async function generate(opts: GenerateOpts) {
     if (!related) return;
     references.add(ancestors[1]);
     // Keep track of variables related to pothos
-    const variable = ancestors.find((x) => x.type === "VariableDeclarator");
+    const variable = ancestors.find(x => x.type === "VariableDeclarator");
     if (!variable) return;
     if (!variable.id.name) return;
     variables.add(variable.id.name);
@@ -152,7 +153,7 @@ export async function generate(opts: GenerateOpts) {
         if (!["resolve", "validate"].includes(node.key.name)) return;
         const parent = ancestors[ancestors.length - 2];
         parent.properties = parent.properties.filter((p: any) => p !== node);
-      },
+      }
     });
   }
 
@@ -160,7 +161,7 @@ export async function generate(opts: GenerateOpts) {
   const contents = [
     `const DUMMY_RESOLVER = { serialize: x => x, parseValue: x => x }; `,
     `class DUMMY_CLASS {}; `,
-    escodegen.generate(ast),
+    escodegen.generate(ast)
   ].join("\n");
 
   const out = path.join(path.dirname(opts.schema), "out.mjs");
