@@ -15,14 +15,20 @@ export function createPothosBuilder(opts: Opts) {
   let routes: any[] = [];
 
   async function build(route: any) {
-    const schema = await Pothos.generate({
-      schema: route.schema,
-    });
-    await fs.writeFile(route.output, schema);
-    await Promise.all(route.commands.map((cmd: string) => execAsync(cmd)));
+    try {
+      const schema = await Pothos.generate({
+        schema: route.schema
+      });
+      await fs.writeFile(route.output, schema);
+      await Promise.all(route.commands.map((cmd: string) => execAsync(cmd)));
+    } catch (ex) {
+      console.error("Failed to extract schema from pothos");
+      console.error(ex);
+    }
   }
 
-  opts.bus.subscribe("file.changed", async (evt) => {
+  opts.bus.subscribe("file.changed", async evt => {
+    if (evt.properties.file.endsWith("out.mjs")) return;
     for (const route of routes) {
       const dir = path.dirname(route.schema);
       const relative = path.relative(dir, evt.properties.file);
@@ -31,11 +37,11 @@ export function createPothosBuilder(opts: Opts) {
     }
   });
 
-  opts.bus.subscribe("metadata.updated", (evt) => {
+  opts.bus.subscribe("metadata.updated", evt => {
     routes = evt.properties
-      .filter((c) => c.type == "Api")
-      .flatMap((c) => c.data.routes)
-      .filter((r) => r.type === "pothos");
+      .filter(c => c.type == "Api")
+      .flatMap(c => c.data.routes)
+      .filter(r => r.type === "pothos");
     for (const route of routes) build(route);
   });
 }
