@@ -468,7 +468,7 @@ export interface FunctionBundleNodejsProps extends FunctionBundleBase {
  *   bundle: {
  *     installCommands: [
  *       'export VARNAME="my value"',
- *       'pip install --index-url https://domain.com/pypi/myprivatemodule/simple/ --extra-index-url https://pypi.org/simple',
+ *       'pip install --index-url https://domain.com/pypi/myprivatemodule/simple/ --extra-index-url https://pypi.org/simple -r requirements.txt .',
  *     ]
  *   }
  * })
