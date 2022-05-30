@@ -166,7 +166,7 @@ For Python functions, `srcPath` is required. This is the directory where the `re
 new Function(stack, "MyLambda", {
   bundle: {
     installCommands: [
-      "pip install --index-url https://domain.com/pypi/myprivatemodule/simple/ --extra-index-url https://pypi.org/simple"
+      "pip install --index-url https://domain.com/pypi/myprivatemodule/simple/ --extra-index-url https://pypi.org/simple -r requirements.txt ."
     ],
   },
   srcPath: "src",

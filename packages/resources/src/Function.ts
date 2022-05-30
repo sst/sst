@@ -461,18 +461,6 @@ export interface FunctionBundleNodejsProps extends FunctionBundleBase {
 
 /**
  * Used to configure Python bundling options
- *
- * @example
- * ```js
- * new Function(stack, "Function", {
- *   bundle: {
- *     installCommands: [
- *       'export VARNAME="my value"',
- *       'pip install --index-url https://domain.com/pypi/myprivatemodule/simple/ --extra-index-url https://pypi.org/simple -r requirements.txt .',
- *     ]
- *   }
- * })
- * ```
  */
 export interface FunctionBundlePythonProps extends FunctionBundleBase {
   /**
@@ -488,7 +476,7 @@ export interface FunctionBundlePythonProps extends FunctionBundleBase {
    *   bundle: {
    *     installCommands: [
    *       'export VARNAME="my value"',
-   *       'pip install --index-url https://domain.com/pypi/myprivatemodule/simple/ --extra-index-url https://pypi.org/simple',
+   *       'pip install --index-url https://domain.com/pypi/myprivatemodule/simple/ --extra-index-url https://pypi.org/simple -r requirements.txt .',
    *     ]
    *   }
    * })
