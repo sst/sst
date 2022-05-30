@@ -9,8 +9,14 @@ import SchemaBuilder from '@pothos/core';
 var builder = new SchemaBuilder({});
 builder.scalarType('AddScalarType', DUMMY_RESOLVER);
 builder.scalarType('ScalarType', DUMMY_RESOLVER);
-builder.objectType(DUMMY_CLASS, {
-    name: 'MyClass',
+builder.objectType(class AlphaClass {
+}, {
+    name: 'AlphaClass',
+    fields: t => ({ test: t.exposeID('id') })
+});
+builder.objectType(class BetaClass {
+}, {
+    name: 'BetaClass',
     fields: t => ({ test: t.exposeID('id') })
 });
 builder.enumType(MyEnum, { name: 'MyEnum' });

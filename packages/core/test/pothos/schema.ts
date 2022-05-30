@@ -4,28 +4,39 @@ const builder = new SchemaBuilder({} as any);
 
 builder.addScalarType("AddScalarType" as any, {} as any, {});
 builder.scalarType("ScalarType" as any, {
-  serialize: (x) => x,
-  parseValue: () => 5,
+  serialize: x => x,
+  parseValue: () => 5
 });
 
-class MyClass {
+class AlphaClass {
   public readonly id: string;
 }
 
-builder.objectType(MyClass, {
-  name: "MyClass",
-  fields: (t) => ({
-    test: t.exposeID("id"),
-  }),
+class BetaClass {
+  public readonly id: string;
+}
+
+builder.objectType(AlphaClass, {
+  name: "AlphaClass",
+  fields: t => ({
+    test: t.exposeID("id")
+  })
+});
+
+builder.objectType(BetaClass, {
+  name: "BetaClass",
+  fields: t => ({
+    test: t.exposeID("id")
+  })
 });
 
 enum MyEnum {
   FOO,
-  BAR,
+  BAR
 }
 
 builder.enumType(MyEnum, {
-  name: "MyEnum",
+  name: "MyEnum"
 });
 
 builder.queryType({});

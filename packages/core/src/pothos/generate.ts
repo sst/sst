@@ -121,7 +121,17 @@ export async function generate(opts: GenerateOpts) {
       node.type === "CallExpression" &&
       node.callee.property?.name === "objectType"
     ) {
-      node.arguments[0] = { type: "Identifier", name: "DUMMY_CLASS" };
+      node.arguments[0] = {
+        type: "ClassExpression",
+        id: {
+          type: "Identifier",
+          name: node.arguments[0].name
+        },
+        body: {
+          type: "ClassBody",
+          body: []
+        }
+      };
     }
 
     // Include nodes that are pothos related
@@ -160,7 +170,6 @@ export async function generate(opts: GenerateOpts) {
   (ast as any).body = [...hoisted, ...references];
   const contents = [
     `const DUMMY_RESOLVER = { serialize: x => x, parseValue: x => x }; `,
-    `class DUMMY_CLASS {}; `,
     escodegen.generate(ast)
   ].join("\n");
 
