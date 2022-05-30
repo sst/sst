@@ -1,5 +1,15 @@
 # @serverless-stack/cli
 
+## 1.2.12
+
+### Patch Changes
+
+- [#1764](https://github.com/serverless-stack/serverless-stack/pull/1764) [`46314f3c`](https://github.com/serverless-stack/serverless-stack/commit/46314f3ca857f5a5c6a58e4c333bd9e670769279) Thanks [@thdxr](https://github.com/thdxr)! - Generate types for RDS construct using sql-ts
+
+- Updated dependencies [[`46314f3c`](https://github.com/serverless-stack/serverless-stack/commit/46314f3ca857f5a5c6a58e4c333bd9e670769279), [`3879c501`](https://github.com/serverless-stack/serverless-stack/commit/3879c501b36195b81c2717d848cc4d06a78c06b6)]:
+  - @serverless-stack/core@1.2.12
+  - @serverless-stack/resources@1.2.12
+
 ## 1.2.11
 
 ### Patch Changes
