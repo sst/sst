@@ -1,4 +1,23 @@
-export interface Events {}
+import { Response } from "../runtime";
+
+export interface Events {
+  // TODO: Temporarily here until moved to function builder
+  "function.requested": {
+    localID: string;
+    request: {
+      event: any;
+      context: any;
+    };
+  };
+  "function.responded": {
+    localID: string;
+    request: {
+      event: any;
+      context: any;
+    };
+    response: Response;
+  };
+}
 
 type EventTypes = keyof Events;
 

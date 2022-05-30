@@ -80,6 +80,22 @@ export interface RDSProps {
    */
   migrations?: string;
 
+  /**
+   * Path to place generated typescript types after running migrations
+   *
+   * @example
+   *
+   * ```js
+   * new RDS(stack, "Database", {
+   *   engine: "postgresql10.14",
+   *   defaultDatabaseName: "acme",
+   *   migrations: "path/to/migration/scripts",
+   *   types: "backend/core/sql/types.ts",
+   * });
+   * ```
+   */
+  types?: string;
+
   cdk?: {
     /**
      * Configure the internallly created RDS cluster.
@@ -147,6 +163,7 @@ export class RDS extends Construct implements SSTConstruct {
    */
   public readonly migratorFunction?: Fn;
   private engine: string;
+  private readonly types?: string;
 
   constructor(scope: Construct, id: string, props: RDSProps) {
     super(scope, id);
@@ -167,6 +184,7 @@ export class RDS extends Construct implements SSTConstruct {
     this.validateRequiredProps(props || ({} as RDSProps));
 
     this.engine = engine;
+    this.types = props.types;
     this.defaultDatabaseName = defaultDatabaseName;
     this.cdk.cluster = new rds.ServerlessCluster(this, "Cluster", {
       clusterIdentifier: app.logicalPrefixedName(id),
@@ -176,7 +194,7 @@ export class RDS extends Construct implements SSTConstruct {
       engine: this.getEngine(engine),
       scaling: this.getScaling(scaling),
       vpc: this.getVpc(rdsServerlessClusterProps),
-      vpcSubnets: this.getVpcSubnets(rdsServerlessClusterProps),
+      vpcSubnets: this.getVpcSubnets(rdsServerlessClusterProps)
     });
 
     ///////////////////////////
@@ -229,12 +247,12 @@ export class RDS extends Construct implements SSTConstruct {
       data: {
         engine: this.engine,
         secretArn: this.secretArn,
+        types: this.types,
         clusterArn: this.clusterArn,
         clusterIdentifier: this.clusterIdentifier,
         defaultDatabaseName: this.defaultDatabaseName,
-        migrator:
-          this.migratorFunction && getFunctionRef(this.migratorFunction),
-      },
+        migrator: this.migratorFunction && getFunctionRef(this.migratorFunction)
+      }
     };
   }
 
@@ -299,15 +317,15 @@ export class RDS extends Construct implements SSTConstruct {
   private getEngine(engine: RDSEngineType): rds.IClusterEngine {
     if (engine === "mysql5.6") {
       return rds.DatabaseClusterEngine.aurora({
-        version: rds.AuroraEngineVersion.VER_10A,
+        version: rds.AuroraEngineVersion.VER_10A
       });
     } else if (engine === "mysql5.7") {
       return rds.DatabaseClusterEngine.auroraMysql({
-        version: rds.AuroraMysqlEngineVersion.VER_2_07_1,
+        version: rds.AuroraMysqlEngineVersion.VER_2_07_1
       });
     } else if (engine === "postgresql10.14") {
       return rds.DatabaseClusterEngine.auroraPostgres({
-        version: rds.AuroraPostgresEngineVersion.VER_10_14,
+        version: rds.AuroraPostgresEngineVersion.VER_10_14
       });
     }
 
@@ -327,7 +345,7 @@ export class RDS extends Construct implements SSTConstruct {
           ? cdk.Duration.minutes(5)
           : cdk.Duration.minutes(scaling?.autoPause),
       minCapacity: rds.AuroraCapacityUnit[scaling?.minCapacity || "ACU_2"],
-      maxCapacity: rds.AuroraCapacityUnit[scaling?.maxCapacity || "ACU_16"],
+      maxCapacity: rds.AuroraCapacityUnit[scaling?.maxCapacity || "ACU_16"]
     };
   }
 
@@ -337,7 +355,7 @@ export class RDS extends Construct implements SSTConstruct {
     }
 
     return new ec2.Vpc(this, "vpc", {
-      natGateways: 0,
+      natGateways: 0
     });
   }
 
@@ -349,7 +367,7 @@ export class RDS extends Construct implements SSTConstruct {
     }
 
     return {
-      subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
+      subnetType: ec2.SubnetType.PRIVATE_ISOLATED
     };
   }
 
@@ -383,7 +401,7 @@ export class RDS extends Construct implements SSTConstruct {
         RDS_ENGINE_MODE: engine === "postgresql10.14" ? "postgres" : "mysql",
         // for live development, perserve the migrations path so the migrator
         // can locate the migration files
-        RDS_MIGRATIONS_PATH: app.local ? migrations : migrationsDestination,
+        RDS_MIGRATIONS_PATH: app.local ? migrations : migrationsDestination
       },
       bundle: {
         // Note that we need to generate a relative path of the migrations off the
@@ -395,10 +413,10 @@ export class RDS extends Construct implements SSTConstruct {
               path.resolve(srcPath),
               path.resolve(migrations)
             ),
-            to: migrationsDestination,
-          },
-        ],
-      },
+            to: migrationsDestination
+          }
+        ]
+      }
     });
 
     fn.attachPermissions([this.cdk.cluster]);
@@ -415,7 +433,7 @@ export class RDS extends Construct implements SSTConstruct {
       runtime: lambda.Runtime.NODEJS_16_X,
       handler: "index.handler",
       timeout: cdk.Duration.minutes(15),
-      memorySize: 1024,
+      memorySize: 1024
     });
     this.migratorFunction?.grantInvoke(handler);
 
@@ -439,8 +457,8 @@ export class RDS extends Construct implements SSTConstruct {
           ? undefined
           : this.migratorFunction?.functionName,
         UserParams: JSON.stringify({}),
-        MigrationsHash: hash,
-      },
+        MigrationsHash: hash
+      }
     });
   }
 
@@ -450,16 +468,14 @@ export class RDS extends Construct implements SSTConstruct {
       dot: true,
       nodir: true,
       follow: true,
-      cwd: migrations,
+      cwd: migrations
     });
 
     // Calculate hash of all files content
     return crypto
       .createHash("md5")
       .update(
-        files
-          .map((file) => fs.readFileSync(path.join(migrations, file)))
-          .join("")
+        files.map(file => fs.readFileSync(path.join(migrations, file))).join("")
       )
       .digest("hex");
   }

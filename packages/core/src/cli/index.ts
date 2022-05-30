@@ -5,5 +5,6 @@
 export * from "./StacksBuilder.js";
 export * from "./FunctionBuilder.js";
 export * from "./PothosBuilder.js";
+export * from "./KyselyTypeGenerator.js";
 export * from "./ProjectWatcher.js";
 export * from "./Bus.js";
