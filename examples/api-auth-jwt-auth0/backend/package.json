@@ -5,7 +5,7 @@
   "scripts": {},
   "dependencies": {
     "aws-sdk": "^2.1145.0",
-    "@types/node": "^17.0.36"
+    "@types/node": "^17.0.37"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.97"
