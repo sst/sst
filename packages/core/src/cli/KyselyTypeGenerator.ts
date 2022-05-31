@@ -25,6 +25,8 @@ export function createKyselyTypeGenerator(opts: Opts) {
   opts.bus.subscribe("metadata.updated", metadata => {
     databases = metadata.properties
       .filter(c => c.type === "RDS")
+      .filter(c => c.data.migrator)
+      .filter(c => c.data.types)
       .map(c => ({
         migratorID: metadata.properties.find(
           fn => fn.addr == c.data.migrator?.node
@@ -43,18 +45,6 @@ export function createKyselyTypeGenerator(opts: Opts) {
     if (!db.types) return;
     if (evt.properties.request.event.type !== "to") return;
 
-    // Trigger typegen
-    /*
-      *   "clusterArn": "arn:aws:rds:us-east-1:280826753141:cluster:thdxr2-my-sst-app-rds",
-                "defaultDatabaseName": "mysstapp",
-                "engine": "postgresql10.14",
-                "secretArn": "arn:aws:secretsmanager:us-east-1:280826753141:secret:rdsClusterSecret694AB211-ZOby5iWPpyac-c6vwdV",
-                "migrator": {
-                    "node": "c84162f63d6ed8a85a6e0614421d03c5f5f3718a47",
-                    "stack": "thdxr2-my-sst-app-Database"
-                },
-                "clusterIdentifier": "thdxr2-my-sst-app-rds"
-      */
     const k = knex({
       client: knexDataAPiClient.postgres,
       connection: {
@@ -65,18 +55,6 @@ export function createKyselyTypeGenerator(opts: Opts) {
       } as any
     });
 
-    console.log(
-      JSON.stringify(
-        await toObject(
-          {
-            interfaceNameFormat: "${table}"
-          },
-          k as any
-        ),
-        null,
-        4
-      )
-    );
     const result = await toTypeScript(
       {
         interfaceNameFormat: "${table}"
