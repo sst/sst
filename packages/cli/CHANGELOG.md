@@ -1,5 +1,15 @@
 # @serverless-stack/cli
 
+## 1.2.13
+
+### Patch Changes
+
+- [#1766](https://github.com/serverless-stack/serverless-stack/pull/1766) [`a8f56ae8`](https://github.com/serverless-stack/serverless-stack/commit/a8f56ae888d3860e126ed88ea539389985b5da9e) Thanks [@fwang](https://github.com/fwang)! - sst remove: add --debug-stack option to remove debug stack
+
+- Updated dependencies [[`fa1bea79`](https://github.com/serverless-stack/serverless-stack/commit/fa1bea79ba5592ce084f40447fc7f015bec1fc43)]:
+  - @serverless-stack/core@1.2.13
+  - @serverless-stack/resources@1.2.13
+
 ## 1.2.12
 
 ### Patch Changes

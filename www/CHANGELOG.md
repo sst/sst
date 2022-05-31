@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 1.1.4
+
+### Patch Changes
+
+- [#1766](https://github.com/serverless-stack/serverless-stack/pull/1766) [`a8f56ae8`](https://github.com/serverless-stack/serverless-stack/commit/a8f56ae888d3860e126ed88ea539389985b5da9e) Thanks [@fwang](https://github.com/fwang)! - sst remove: add --debug-stack option to remove debug stack
+
 ## 1.1.3
 
 ### Patch Changes

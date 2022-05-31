@@ -1,5 +1,11 @@
 # @serverless-stack/core
 
+## 1.2.13
+
+### Patch Changes
+
+- [`fa1bea79`](https://github.com/serverless-stack/serverless-stack/commit/fa1bea79ba5592ce084f40447fc7f015bec1fc43) Thanks [@thdxr](https://github.com/thdxr)! - Skip Kysely type generation when migrations are not in use
+
 ## 1.2.12
 
 ### Patch Changes
