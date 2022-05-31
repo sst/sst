@@ -200,6 +200,14 @@ npx sst console --stage=production --profile=acme-production
 
 Remove all your stacks and all of their resources from AWS. Or optionally remove a specific stack. Also removes the debug stack that might've been deployed along with `sst start`.
 
+#### Options
+
+In addition to the [global options](#global-options) below, the `remove` command also takes:
+
+- `--debug-stack`
+
+  Pass in the `--debug-stack` option if you want to remove the debug stack without removing stacks in the app. Note, that this option cannot be used when a stack is specified.
+
 ### `diff [stacks..]`
 
 Compares the current version of the stacks in your app with the ones that've been deployed to AWS. This can be helpful in doing a quick check before deploying your changes to prod. You can also optionally compare a list of stacks.
