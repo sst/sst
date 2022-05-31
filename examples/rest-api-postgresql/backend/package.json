@@ -5,7 +5,8 @@
   "scripts": {},
   "dependencies": {
     "aws-sdk": "^2.1145.0",
-    "data-api-client": "^1.3.0"
+    "kysely": "^0.19.2",
+    "kysely-data-api": "^0.0.9"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.97"

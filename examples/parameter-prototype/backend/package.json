@@ -5,7 +5,7 @@
   "scripts": {},
   "dependencies": {
     "aws-sdk": "^2.1145.0",
-    "@serverless-stack/node": "^1.2.12"
+    "@serverless-stack/node": "^1.2.13"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.97"
