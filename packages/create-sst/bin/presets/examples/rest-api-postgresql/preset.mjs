@@ -4,7 +4,7 @@ export default [
   extend("presets/starters/typescript-starter"),
   extract(),
   install({
-    packages: ["data-api-client"],
+    packages: ["kysely", "kysely-data-api"],
     path: "backend",
   }),
 ];
