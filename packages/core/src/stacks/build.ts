@@ -8,6 +8,7 @@ import type { Diagnostic } from "typescript";
 const { createProgram, getLineAndCharacterOfPosition, getPreEmitDiagnostics } =
   ts;
 import chalk from "chalk";
+import { pathToFileURL } from "url";
 
 export async function build(root: string, config: Config) {
   const buildDir = State.stacksPath(root);
@@ -44,7 +45,7 @@ export async function build(root: string, config: Config) {
     // build output to be always named "lib/index.js". This allow us to always
     // import from "buildDir" without needing to pass "anything" around.
     outfile: `${buildDir}/index.js`,
-    entryPoints: [entry],
+    entryPoints: [pathToFileURL(entry).href],
   });
 }
 
