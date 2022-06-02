@@ -5,6 +5,14 @@ import { exec } from "child_process";
 import { Pothos } from "../pothos/index.js";
 import { promisify } from "util";
 
+declare module "./Bus" {
+  export interface Events {
+    "pothos.extracted": {
+      file: string;
+    };
+  }
+}
+
 const execAsync = promisify(exec);
 
 interface Opts {
@@ -20,7 +28,9 @@ export function createPothosBuilder(opts: Opts) {
         schema: route.schema
       });
       await fs.writeFile(route.output, schema);
+      opts.bus.publish("pothos.extracted", { file: route.output });
       await Promise.all(route.commands.map((cmd: string) => execAsync(cmd)));
+      console.log("Done building pothos schema");
     } catch (ex) {
       console.error("Failed to extract schema from pothos");
       console.error(ex);
