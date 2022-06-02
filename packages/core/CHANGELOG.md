@@ -1,5 +1,13 @@
 # @serverless-stack/core
 
+## 1.2.14
+
+### Patch Changes
+
+- [`eec3ad28`](https://github.com/serverless-stack/serverless-stack/commit/eec3ad28a0edae50c2086019cb21c47a0b8526c5) Thanks [@thdxr](https://github.com/thdxr)! - Properly bust pothos cache when refreshing schema
+
+* [`db06a415`](https://github.com/serverless-stack/serverless-stack/commit/db06a415c6cee32d198e3582e6f1e775209eed5b) Thanks [@thdxr](https://github.com/thdxr)! - Fix for esbuild entrypoint in windows
+
 ## 1.2.13
 
 ### Patch Changes
