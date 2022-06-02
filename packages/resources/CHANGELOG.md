@@ -1,5 +1,14 @@
 # @serverless-stack/resources
 
+## 1.2.15
+
+### Patch Changes
+
+- [`f2f887bb`](https://github.com/serverless-stack/serverless-stack/commit/f2f887bbdec1e45e618da5a53ca526d95012285f) Thanks [@thdxr](https://github.com/thdxr)! - Fix for .mjs migrations not showing up when RDS is deployed
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.2.15
+
 ## 1.2.14
 
 ### Patch Changes
