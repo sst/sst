@@ -8,12 +8,11 @@ import type { Diagnostic } from "typescript";
 const { createProgram, getLineAndCharacterOfPosition, getPreEmitDiagnostics } =
   ts;
 import chalk from "chalk";
-import { pathToFileURL } from "url";
 
 export async function build(root: string, config: Config) {
   const buildDir = State.stacksPath(root);
   const pkg = await fs.readJson(path.join(root, "package.json"));
-  const entry = path.join(root, config.main);
+  const entry = path.relative(process.cwd(), path.join(root, config.main))
   if (!fs.existsSync(entry))
     throw new Error(
       `Cannot find app handler. Make sure to add a "${config.main}" file`
@@ -45,7 +44,7 @@ export async function build(root: string, config: Config) {
     // build output to be always named "lib/index.js". This allow us to always
     // import from "buildDir" without needing to pass "anything" around.
     outfile: `${buildDir}/index.js`,
-    entryPoints: [pathToFileURL(entry).href],
+    entryPoints: [entry],
   });
 }
 
