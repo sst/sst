@@ -1,8 +1,8 @@
 module.exports = {
   docs: [
+    "about",
     {
-      Overview: [
-        "about",
+      "Quick Start": [
         "installation",
         "architecture",
         "live-lambda-development",
@@ -10,17 +10,153 @@ module.exports = {
       ],
     },
     {
-      Usage: [
-        "api",
-        "auth",
-        "storage",
-        "database",
-        "frontend",
-        "cron-jobs",
-        "asynchronous-tasks",
-        "going-to-production",
-        "environment-variables",
-        "working-with-your-team",
+      Learn: [
+        {
+          type: "category",
+          label: "1 - Installation",
+          collapsible: true,
+          collapsed: true,
+          items: [
+            { type: "doc", id: "api", label: "Installation & Starting Development"},
+
+            // Describe file structure
+            { type: "doc", id: "api", label: "Project Structure"},
+
+            // Review launch.json
+            // Show auto-complete
+            // Show TS Doc
+            { type: "doc", id: "api", label: "Editor Integration"},
+
+            // Make a request in the Console
+            { type: "doc", id: "api", label: "API Explorer"},
+
+            // Show the function was ran locally
+            { type: "doc", id: "api", label: "Live Lambda Development"},
+          ],
+        },
+        {
+          type: "category",
+          label: "2 - Adding comments Table",
+          collapsible: true,
+          collapsed: true,
+          items: [
+            { type: "doc", id: "api", label: "What is RDS"},
+
+            { type: "doc", id: "api", label: "Add list and update functions"},
+
+            // Create an new migration
+            // Run the migration in the Console
+            { type: "doc", id: "api", label: "Running Migrations"},
+
+            // Review generated types
+            { type: "doc", id: "api", label: "Auto-generate Types"},
+
+            // Show the implementation again using DynamoDB
+            { type: "doc", id: "api", label: "Using DynamoDB"},
+
+            // Link to examples for DynamoDB, Mongo, etc
+            { type: "doc", id: "api", label: "Other Database options"},
+          ],
+        },
+        {
+          type: "category",
+          label: "3 - Building comments API",
+          collapsible: true,
+          collapsed: true,
+          items: [
+            { type: "doc", id: "api", label: "Adding an API Types"},
+            { type: "doc", id: "api", label: "Adding API Queries & Mutations"},
+            { type: "doc", id: "api", label: "Explain Pothos and CodeGen?"},
+          ],
+        },
+        {
+          type: "category",
+          label: "4 - Rendering comments",
+          collapsible: true,
+          collapsed: true,
+          items: [
+            { type: "doc", id: "api", label: "Calling the API"},
+            { type: "doc", id: "api", label: "Rendering in React"},
+
+            // Link to examples for Vue, Next.js
+            { type: "doc", id: "api", label: "Other Frontend options"},
+          ],
+        },
+        {
+          type: "category",
+          label: "5 - Deployment",
+          collapsible: true,
+          collapsed: true,
+          items: [
+            { type: "doc", id: "api", label: "Setup AWS Credentials"},
+            { type: "doc", id: "api", label: "Deployment"},
+            { type: "doc", id: "api", label: "Deploying with Seed"},
+          ],
+        },
+        {
+          type: "doc",
+          label: "Intermission",
+          id: "api",
+        },
+        {
+          type: "category",
+          label: "6 - Examples",
+          collapsible: true,
+          collapsed: true,
+          items: [
+            // Create a Bucket construct
+            // Add an API Mutation for generating prefixed url
+            // Implementing file upload in the frontend
+            // View the uploaded file in Console
+            { type: "doc", id: "api", label: "Upload files"},
+
+            // Create a Cron construct
+            { type: "doc", id: "api", label: "Cron Jobs"},
+
+            // Create comments created and comments removed SNS topics
+            // Fire events
+            // View comment count updated in SST Console
+            // Link to examples for Queues, EventBuses, and KinesisStreams
+            { type: "doc", id: "api", label: "Events"},
+
+            // Add a RESTful route
+            // Invoke the endpoint in Console
+            { type: "doc", id: "api", label: "Webhooks"},
+
+            // Add Cognito Auth construct
+            // Implement backend
+            // Implement signup/login on Frontend
+            // Create a user in Console
+            // Test out the auth flow
+            // Link to examples for Facebook, Google, GitHub examples
+            { type: "doc", id: "api", label: "Auth"},
+
+            // Link to examples for WebSocket and AppSyncApi
+            { type: "doc", id: "api", label: "Other API options"},
+          ],
+        },
+        {
+          type: "category",
+          label: "7 - Going to Production",
+          collapsible: true,
+          collapsed: true,
+          items: [
+            { type: "doc", id: "api", label: "Testing"},
+            { type: "doc", id: "api", label: "Going to Production"},
+            { type: "doc", id: "api", label: "Environment Variables"},
+            { type: "doc", id: "api", label: "Working with Your Team"},
+          ],
+        },
+        //"api",
+        //"auth",
+        //"storage",
+        //"database",
+        //"frontend",
+        //"cron-jobs",
+        //"asynchronous-tasks",
+        //"going-to-production",
+        //"environment-variables",
+        //"working-with-your-team",
         {
           type: "category",
           label: "Advanced",

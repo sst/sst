@@ -53,6 +53,12 @@ module.exports = {
       },
       items: [
         {
+          to: "/",
+          label: "Home",
+          position: "left",
+          activeBaseRegex: "^/(?!constructs)",
+        },
+        {
           to: "/constructs",
           label: "Constructs",
           position: "left",
