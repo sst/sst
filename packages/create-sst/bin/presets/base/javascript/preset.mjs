@@ -4,6 +4,6 @@ export default [
   extract(),
   install({
     packages: ["@serverless-stack/cli", "@serverless-stack/resources"],
-    dev: true,
-  }),
+    dev: true
+  })
 ];
