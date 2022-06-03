@@ -1,5 +1,7 @@
 # @serverless-stack/core
 
+## 1.2.15
+
 ## 1.2.14
 
 ### Patch Changes
