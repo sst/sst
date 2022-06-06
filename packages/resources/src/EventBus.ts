@@ -269,6 +269,7 @@ export class EventBus extends Construct implements SSTConstruct {
      */
     eventBus: events.IEventBus;
   };
+  private readonly rulesData: Record<string, events.Rule>;
   private readonly targetsData: Record<string, Record<string, Fn | Queue>>;
   private readonly permissionsAttachedForAllTargets: Permissions[];
   private readonly props: EventBusProps;
@@ -278,6 +279,7 @@ export class EventBus extends Construct implements SSTConstruct {
 
     this.props = props || {};
     this.cdk = {} as any;
+    this.rulesData = {};
     this.targetsData = {};
     this.permissionsAttachedForAllTargets = [];
 
@@ -322,6 +324,18 @@ export class EventBus extends Construct implements SSTConstruct {
     Object.entries(rules).forEach(([ruleKey, rule]) =>
       this.addRule(scope, ruleKey, rule)
     );
+  }
+
+  /**
+   * Get a rule
+   *
+   * @example
+   * ```js
+   * bus.getRule("myRule");
+   * ```
+   */
+  public getRule(key: string): events.Rule | undefined {
+    return this.rulesData[key];
   }
 
   /**
@@ -446,6 +460,7 @@ export class EventBus extends Construct implements SSTConstruct {
       eventBus: this.cdk.eventBus,
       targets: [],
     });
+    this.rulesData[ruleKey] = eventsRule;
 
     // Create Targets
     Object.entries(rule.targets || {}).forEach(([targetName, target]) =>

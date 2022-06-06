@@ -601,6 +601,20 @@ test("addRules: thrashing rule name error", async () => {
   }).toThrow(/A rule already exists for "rule1"/);
 });
 
+test("getRule", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new EventBus(stack, "EventBus", {
+    rules: {
+      rule1: {
+        pattern: { source: ["aws.codebuild"] },
+        targets: { "0": "test/lambda.handler" },
+      },
+    },
+  });
+  expect(api.getRule("rule1")).toBeDefined();
+  expect(api.getRule("rule2")).toBeUndefined();
+});
+
 test("attachPermissions", async () => {
   const stack = new Stack(new App(), "stack");
   const bus = new EventBus(stack, "EventBus", {
