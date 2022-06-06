@@ -335,7 +335,7 @@ export class App extends cdk.App {
 
   isRunningSSTTest(): boolean {
     // Check the env var set inside test/setup-tests.js
-    return process.env.JEST_RESOURCES_TESTS === "enabled";
+    return process.env.SST_RESOURCES_TESTS === "enabled";
   }
 
   registerLambdaHandler(handler: FunctionHandlerProps): void {

@@ -545,15 +545,13 @@ test("constructor: buildCommand error", async () => {
 });
 
 test("constructor: buildOutput multiple files", async () => {
-  process.env.JEST_RESOURCES_STATIC_SITE_FILE_SIZE_LIMIT = "0.000025";
-
   const stack = new Stack(new App(), "stack");
   new StaticSite(stack, "Site", {
     path: "test/site",
     buildOutput: "build-with-30b-data",
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: "jestFileSizeLimitOverride" not exposed in props
-    jestFileSizeLimitOverride: 0.000025,
+    // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
+    sstTestFileSizeLimitOverride: 0.000025,
   });
   hasResource(stack, "Custom::SSTBucketDeployment", {
     Sources: [
@@ -566,8 +564,6 @@ test("constructor: buildOutput multiple files", async () => {
 });
 
 test("constructor: buildOutput not exist", async () => {
-  process.env.JEST_RESOURCES_STATIC_SITE_FILE_SIZE_LIMIT = "0.000025";
-
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new StaticSite(stack, "Site", {
