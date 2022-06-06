@@ -1,5 +1,13 @@
 # @serverless-stack/core
 
+## 1.2.16
+
+### Patch Changes
+
+- [#1780](https://github.com/serverless-stack/serverless-stack/pull/1780) [`46831e9b`](https://github.com/serverless-stack/serverless-stack/commit/46831e9bc067116ca0281e5a0e98a86edae8971e) Thanks [@fwang](https://github.com/fwang)! - Function: referencing layers from another stack results in no changes when layer code did change
+
+* [#1784](https://github.com/serverless-stack/serverless-stack/pull/1784) [`1e02e312`](https://github.com/serverless-stack/serverless-stack/commit/1e02e312e54d1c8a7280a1d72da3b670575d67ae) Thanks [@thdxr](https://github.com/thdxr)! - Update RDS migrator to use ESM. Make sure to upgrade `kysely-data-api` to 0.0.11 as well.
+
 ## 1.2.15
 
 ## 1.2.14
