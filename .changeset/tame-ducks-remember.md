@@ -3,4 +3,4 @@
 "@serverless-stack/resources": patch
 ---
 
-placeholder
+Update RDS migrator to use ESM. Make sure to upgrade `kysely-data-api` to 0.0.11 as well.
