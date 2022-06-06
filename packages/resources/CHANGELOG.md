@@ -1,5 +1,18 @@
 # @serverless-stack/resources
 
+## 1.2.16
+
+### Patch Changes
+
+- [#1783](https://github.com/serverless-stack/serverless-stack/pull/1783) [`06666f06`](https://github.com/serverless-stack/serverless-stack/commit/06666f061e806592eb65159c422361926e8d098f) Thanks [@fwang](https://github.com/fwang)! - EventBus: support lambda.Function targets
+
+* [#1784](https://github.com/serverless-stack/serverless-stack/pull/1784) [`1e02e312`](https://github.com/serverless-stack/serverless-stack/commit/1e02e312e54d1c8a7280a1d72da3b670575d67ae) Thanks [@thdxr](https://github.com/thdxr)! - Update RDS migrator to use ESM. Make sure to upgrade `kysely-data-api` to 0.0.11 as well.
+
+- [#1783](https://github.com/serverless-stack/serverless-stack/pull/1783) [`06666f06`](https://github.com/serverless-stack/serverless-stack/commit/06666f061e806592eb65159c422361926e8d098f) Thanks [@fwang](https://github.com/fwang)! - EventBus: get rule by rule name
+
+- Updated dependencies [[`46831e9b`](https://github.com/serverless-stack/serverless-stack/commit/46831e9bc067116ca0281e5a0e98a86edae8971e), [`1e02e312`](https://github.com/serverless-stack/serverless-stack/commit/1e02e312e54d1c8a7280a1d72da3b670575d67ae)]:
+  - @serverless-stack/core@1.2.16
+
 ## 1.2.15
 
 ### Patch Changes

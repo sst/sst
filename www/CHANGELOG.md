@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 1.1.5
+
+### Patch Changes
+
+- [#1783](https://github.com/serverless-stack/serverless-stack/pull/1783) [`06666f06`](https://github.com/serverless-stack/serverless-stack/commit/06666f061e806592eb65159c422361926e8d098f) Thanks [@fwang](https://github.com/fwang)! - EventBus: support lambda.Function targets
+
 ## 1.1.4
 
 ### Patch Changes
