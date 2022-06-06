@@ -1,7 +1,7 @@
-import { SQL } from "@my-sst-app/core/sql";
-import { ulid } from "ulid";
-
 export * as Article from "./article";
+
+import { ulid } from "ulid";
+import { SQL } from "./sql";
 
 export async function addComment(articleID: string, text: string) {
   return await SQL.DB.insertInto("comment")

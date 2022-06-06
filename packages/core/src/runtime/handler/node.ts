@@ -50,7 +50,11 @@ export const NodeHandler: Definition<Bundle> = opts => {
   //       relative path.
   const target = path.join(
     artifact,
-    path.relative(opts.root, path.resolve(opts.srcPath)),
+    path
+      .relative(opts.root, path.resolve(opts.srcPath))
+      .split(path.sep)
+      .filter(x => x !== "node_modules")
+      .join(path.sep),
     path.dirname(file),
     base + ".js"
   );
@@ -201,16 +205,19 @@ export const NodeHandler: Definition<Bundle> = opts => {
 
       runAfterBundling(opts.srcPath, artifact, bundle);
 
-      // If handler is an absolute path, we need to convert it to an relative
-      // path. This is because the Lambda's handler path always needs to be
-      // an relative path.
-      // Note: absolute "srcPath" should only be used for RDS's internal
-      //       migrator function. User provided "srcPath" should always be
-      //       relative path.
-      const handler = path.join(opts.srcPath, opts.handler).replace(/\\/g, "/");
+      const handler = path
+        .join(
+          path
+            .relative(opts.root, path.resolve(opts.srcPath))
+            .split(path.sep)
+            .filter(x => x !== "node_modules")
+            .join(path.sep),
+          opts.handler
+        )
+        .replace(/\\/g, "/");
       return {
         directory: artifact,
-        handler: absolutePathToRelativePath(handler)
+        handler
       };
     },
     run: {
