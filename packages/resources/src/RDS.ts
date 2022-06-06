@@ -405,6 +405,7 @@ export class RDS extends Construct implements SSTConstruct {
       },
       bundle: {
         nodeModules: ["kysely", "kysely-data-api"],
+        format: "esm",
         // Note that we need to generate a relative path of the migrations off the
         // srcPath because sst.Function internally builds the copy "from" path by
         // joining the srcPath and the from path.
