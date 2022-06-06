@@ -282,7 +282,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     this.isPlaceholder =
       (root.local || root.skipBuild) && !props.disablePlaceholder;
     const buildDir = root.buildDir;
-    const fileSizeLimit = root.isJestTest()
+    const fileSizeLimit = root.isRunningSSTTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore: "jestFileSizeLimitOverride" not exposed in props
         props.jestFileSizeLimitOverride || 200
@@ -299,7 +299,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
       this.assets = this.zipAppStubAssets();
       this.routesManifest = null;
     } else {
-      this.buildOutDir = root.isJestTest()
+      this.buildOutDir = root.isRunningSSTTest()
         ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore: "jestBuildOutputPath" not exposed in props
           props.jestBuildOutputPath || this.buildApp()

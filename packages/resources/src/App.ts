@@ -333,7 +333,7 @@ export class App extends cdk.App {
     return cloudAssembly;
   }
 
-  isJestTest(): boolean {
+  isRunningSSTTest(): boolean {
     // Check the env var set inside test/setup-tests.js
     return process.env.JEST_RESOURCES_TESTS === "enabled";
   }

@@ -328,7 +328,7 @@ export class StaticSite extends Construct implements SSTConstruct {
     this.isPlaceholder =
       (root.local || root.skipBuild) && !props.disablePlaceholder;
     const buildDir = root.buildDir;
-    const fileSizeLimit = root.isJestTest()
+    const fileSizeLimit = root.isRunningSSTTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore: "jestFileSizeLimitOverride" not exposed in props
         props.jestFileSizeLimitOverride || 200
