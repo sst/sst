@@ -996,7 +996,21 @@ async function isTemplateChanged({
     ["CREATE_COMPLETE", "UPDATE_COMPLETE"].includes(stackRet.StackStatus)
   ) {
     try {
-      // Get stack template
+      // Get new template
+      const newTemplateStr = await getLocalTemplate(cdkOptions, stackId);
+      const newTemplateObj = yaml.load(newTemplateStr);
+      const newTemplateYml = yaml.dump(newTemplateObj);
+      // Return template changed (`true`) if template Parameters contain
+      // SSM values. B/c the SSM values could have changed while the
+      // template remains the same.
+      const hasSSMParam = Object.entries(newTemplateObj.Parameters || {})
+        .filter(([key]) => key !== "BootstrapVersion")
+        .find(([, value]) => value.Type.startsWith("AWS::SSM::Parameter"));
+      if (hasSSMParam) {
+        logger.debug("deploy stack: isTemplateChanged: has SSM in Parameters");
+        return true;
+      }
+      // Get existing template
       const templateRet = await getStackTemplateWithRetry({
         stackName,
         region,
@@ -1004,8 +1018,6 @@ async function isTemplateChanged({
       const existingTemplateYml = yaml.dump(
         yaml.load(templateRet.TemplateBody)
       );
-      const newTemplate = await getLocalTemplate(cdkOptions, stackId);
-      const newTemplateYml = yaml.dump(yaml.load(newTemplate));
       logger.debug(existingTemplateYml);
       logger.debug(newTemplateYml);
       if (
