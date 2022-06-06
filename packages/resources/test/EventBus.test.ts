@@ -6,6 +6,7 @@ import {
   stringLike,
   ABSENT,
 } from "./helper";
+import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as events from "aws-cdk-lib/aws-events";
 import { App, Stack, EventBus, Queue, Function } from "../src";
 
@@ -350,7 +351,7 @@ test("targets: Function construct", async () => {
   });
 });
 
-test("targets: EventBusFunctionTargetProps", async () => {
+test("targets: Function with target props", async () => {
   const stack = new Stack(new App(), "stack");
   new EventBus(stack, "EventBus", {
     rules: {
@@ -386,6 +387,51 @@ test("targets: EventBusFunctionTargetProps", async () => {
   });
 });
 
+test("targets: cdk.Function with target props", async () => {
+  const stack = new Stack(new App(), "stack");
+  new EventBus(stack, "EventBus", {
+    rules: {
+      rule1: {
+        pattern: { source: ["aws.codebuild"] },
+        targets: {
+          "0": {
+            function: "test/lambda.handler",
+            cdk: {
+              function: lambda.Function.fromFunctionName(stack, "IFunction", "arn:aws:lambda:us-east-1:123456789:function/test"),
+              target: {
+                retryAttempts: 20,
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+  countResources(stack, "AWS::Lambda::Function", 0);
+  countResources(stack, "AWS::Events::EventBus", 1);
+  countResources(stack, "AWS::Events::Rule", 1);
+  hasResource(stack, "AWS::Events::Rule", {
+    Targets: [
+      objectLike({
+        Id: "Target0",
+        Arn: {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              { Ref: "AWS::Partition" },
+              ":lambda:us-east-1:my-account:function:arn:aws:lambda:us-east-1:123456789:function/test",
+            ]
+          ]
+        },
+        RetryPolicy: {
+          MaximumRetryAttempts: 20,
+        },
+      }),
+    ],
+  });
+});
+
 test("targets: Queue", async () => {
   const stack = new Stack(new App(), "stack");
   const queue = new Queue(stack, "Queue");
@@ -413,7 +459,7 @@ test("targets: Queue", async () => {
   });
 });
 
-test("targets: EventBusQueueTargetProps", async () => {
+test("targets: Queue with target props", async () => {
   const stack = new Stack(new App(), "stack");
   const queue = new Queue(stack, "Queue", {
     cdk: {
@@ -599,6 +645,20 @@ test("addRules: thrashing rule name error", async () => {
       },
     });
   }).toThrow(/A rule already exists for "rule1"/);
+});
+
+test("getRule", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new EventBus(stack, "EventBus", {
+    rules: {
+      rule1: {
+        pattern: { source: ["aws.codebuild"] },
+        targets: { "0": "test/lambda.handler" },
+      },
+    },
+  });
+  expect(api.getRule("rule1")).toBeDefined();
+  expect(api.getRule("rule2")).toBeUndefined();
 });
 
 test("attachPermissions", async () => {
