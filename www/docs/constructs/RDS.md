@@ -264,6 +264,23 @@ _Default_ : <span class="mono">"ACU_2"</span>
 The minimum capacity for the cluster.
 
 
+### types?
+
+_Type_ : <span class="mono">string</span>
+
+Path to place generated typescript types after running migrations
+
+
+
+```js
+new RDS(stack, "Database", {
+  engine: "postgresql10.14",
+  defaultDatabaseName: "acme",
+  migrations: "path/to/migration/scripts",
+  types: "backend/core/sql/types.ts",
+});
+```
+
 
 ### cdk.cluster?
 
