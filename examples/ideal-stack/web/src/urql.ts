@@ -8,7 +8,7 @@ import {
   QueryResult,
   MutationRequest,
   MutationResult
-} from "@my-sst-app/graphql/genql";
+} from "@ideal-stack/graphql/genql";
 
 export function useTypedQuery<Query extends QueryRequest>(opts: {
   query: Query;

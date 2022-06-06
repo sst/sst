@@ -8,7 +8,7 @@
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "paths": {
-      "@my-sst-app/core/*": ["./core/*"]
+      "@ideal-stack/core/*": ["./core/*"]
     }
   }
 }
