@@ -340,6 +340,27 @@ new EventBus(stack, "Bus", {
 });
 ```
 
+#### Using existing Lambda functions as targets
+
+```js {9-11}
+import * as lambda from "aws-cdk-lib/aws-lambda";
+
+new EventBus(stack, "Bus", {
+  rules: {
+    rule1: {
+      pattern: { source: ["myevent"] },
+      targets: {
+        myTarget: {
+          cdk: {
+            function: lambda.Function.fromFunctionName(stack, "ITarget", "my-function"),
+          },
+        },
+      },
+    },
+  },
+});
+```
+
 #### Sharing an EventBus across stacks
 
 You can create the EventBus construct in one stack, and add rules in other stacks. To do this, return the EventBus from the stack function

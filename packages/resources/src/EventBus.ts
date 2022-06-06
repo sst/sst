@@ -1,4 +1,5 @@
 import { Construct } from "constructs";
+import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as events from "aws-cdk-lib/aws-events";
 import * as eventsTargets from "aws-cdk-lib/aws-events-targets";
 import { App } from "./App.js";
@@ -40,8 +41,9 @@ export interface EventBusFunctionTargetProps {
    * });
    * ```
    */
-  function: FunctionDefinition;
+  function?: FunctionDefinition;
   cdk?: {
+    function?: lambda.IFunction;
     target?: eventsTargets.LambdaFunctionProps;
   };
 }
@@ -270,7 +272,7 @@ export class EventBus extends Construct implements SSTConstruct {
     eventBus: events.IEventBus;
   };
   private readonly rulesData: Record<string, events.Rule>;
-  private readonly targetsData: Record<string, Record<string, Fn | Queue>>;
+  private readonly targetsData: Record<string, Record<string, Fn | Queue | lambda.IFunction>>;
   private readonly permissionsAttachedForAllTargets: Permissions[];
   private readonly props: EventBusProps;
 
@@ -350,7 +352,7 @@ export class EventBus extends Construct implements SSTConstruct {
     Object.values(this.targetsData).forEach((rule) =>
       Object.values(rule)
         .filter((target) => target instanceof Fn)
-        .forEach((target) => target.attachPermissions(permissions))
+        .forEach((target) => (target as Fn).attachPermissions(permissions))
     );
 
     this.permissionsAttachedForAllTargets.push(permissions);
@@ -484,6 +486,9 @@ export class EventBus extends Construct implements SSTConstruct {
     if (target instanceof Queue || (target as EventBusQueueTargetProps).queue) {
       target = target as Queue | EventBusQueueTargetProps;
       this.addQueueTarget(scope, ruleKey, eventsRule, targetName, target);
+    } else if ((target as EventBusFunctionTargetProps).cdk?.function) {
+      target = target as EventBusFunctionTargetProps;
+      this.addCdkFunctionTarget(scope, ruleKey, eventsRule, targetName, target);
     } else {
       target = target as FunctionInlineDefinition | EventBusFunctionTargetProps;
       this.addFunctionTarget(scope, ruleKey, eventsRule, targetName, target);
@@ -516,6 +521,22 @@ export class EventBus extends Construct implements SSTConstruct {
     );
   }
 
+  private addCdkFunctionTarget(
+    scope: Construct,
+    ruleKey: string,
+    eventsRule: events.Rule,
+    targetName: string,
+    target: EventBusFunctionTargetProps
+  ): void {
+    // Parse target props
+    const targetProps = target.cdk!.target;
+    const fn = target.cdk!.function!;
+    this.targetsData[ruleKey][targetName] = fn;
+
+    // Create target
+    eventsRule.addTarget(new eventsTargets.LambdaFunction(fn, targetProps));
+  }
+
   private addFunctionTarget(
     scope: Construct,
     ruleKey: string,
@@ -529,7 +550,7 @@ export class EventBus extends Construct implements SSTConstruct {
     if ((target as EventBusFunctionTargetProps).function) {
       target = target as EventBusFunctionTargetProps;
       targetProps = target.cdk?.target;
-      functionDefinition = target.function;
+      functionDefinition = target.function!;
     } else {
       target = target as FunctionInlineDefinition;
       functionDefinition = target;
