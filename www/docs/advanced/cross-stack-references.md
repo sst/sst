@@ -17,8 +17,8 @@ To do this, start by creating a table and then returning it.
 ```ts
 import { StackContext, Table } from "@serverless-stack/resources";
 
-export function StackA(ctx: StackContext) {
-  const table = new Table(this, "MyTable", {
+export function StackA({ stack }: StackContext) {
+  const table = new Table(stack, "MyTable", {
     fields: {
       pk: "string",
     },
@@ -37,9 +37,9 @@ Then in `StackB` you can utilize the `use` function to reference the table.
 import { StackContext, use } from "@serverless-stack/resources";
 import { StackA } from "./StackA"
 
-export function StackB(ctx: StackContext) {
+export function StackB({ stack }: StackContext) {
   const { table } = use(StackA)
-  new Api(this, "Api", {
+  new Api(stack, "Api", {
     defaults: {
       function: {
         environment: {
@@ -91,20 +91,20 @@ This will happen because:
 
 To fix this, we need to first remove `StackB`'s dependency on `StackA`, deploy it, then remove the export. It'll be a 2-step process:
 
-1. After we remove the reference in `StackB`, we'll tell CDK that we still want the output exported in `StackA`. We can do this by explicitly calling `ctx.stack.exportValue`.
+1. After we remove the reference in `StackB`, we'll tell CDK that we still want the output exported in `StackA`. We can do this by explicitly calling `stack.exportValue`.
 
    ```ts
    import { StackContext, Table } from "@serverless-stack/resources";
 
-   export function StackA(ctx: StackContext) {
-       const table = new Table(this, "MyTable", {
+   export function StackA({ stack }: StackContext) {
+       const table = new Table(stack, "MyTable", {
          fields: {
            pk: "string",
          },
          primaryIndex: { partitionKey: "pk" },
        });
 
-       ctx.stack.exportValue(this.table.tableName);
+       stack.exportValue(table.tableName);
      }
    }
    ```
@@ -113,7 +113,7 @@ To fix this, we need to first remove `StackB`'s dependency on `StackA`, deploy i
 
    This changes the reference in `StackB` but leaves `StackA` as-is.
 
-2. After `StackB` finishes deploying, `StackA`'s export is no longer being imported. So you can remove the `ctx.stack.exportValue` line.
+2. After `StackB` finishes deploying, `StackA`'s export is no longer being imported. So you can remove the `stack.exportValue` line.
 
    **And deploy again.**
 

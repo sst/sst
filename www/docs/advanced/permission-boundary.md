@@ -9,11 +9,12 @@ A Permission Boundary is a way to define the maximum scope of permissions a user
 
 To set a permission boundary on all IAM users and roles created in your [`Stack`](../constructs/Stack.md) instances, you can do the following.
 
-```js title="stacks/MyStack.js"
+```ts
 import * as iam from '@aws-cdk/aws-iam';
+import { StackContext } from "@serverless-stack/resources";
 
-export function MyStack(ctx) {
-  const boundary = new iam.ManagedPolicy(ctx.stack, "Boundary", {
+export function MyStack({ stack }: StackContext) {
+  const boundary = new iam.ManagedPolicy(stack, "Boundary", {
     statements: [
       new iam.PolicyStatement({
         effect: iam.Effect.DENY,
@@ -23,7 +24,7 @@ export function MyStack(ctx) {
     ],
   });
 
-  iam.PermissionsBoundary.of(ctx.stack).apply(boundary);
+  iam.PermissionsBoundary.of(stack).apply(boundary);
 }
 ```
 
@@ -31,13 +32,13 @@ export function MyStack(ctx) {
 
 To set a permission boundary on all IAM users and roles created in the [Debug Stack](../constructs/DebugStack.md) that SST deploys for the [Live Lambda Dev](../live-lambda-development.md) environment; you can use the `debugApp` callback in your `stacks/index.js`.
 
-```js title="stacks/index.js"
+```ts
 import * as iam from '@aws-cdk/aws-iam';
-import * as sst from "@serverless-stack/resources";
+import { DebugApp, DebugStack } from "@serverless-stack/resources";
 
-export function debugApp(app) {
+export function debugApp(app: DebugApp) {
   // Make sure to create the DebugStack when using the debugApp callback
-  const stack = new sst.DebugStack(app, "debug-stack");
+  const stack = new DebugStack(app, "debug-stack");
 
   const boundary = new iam.ManagedPolicy(stack, 'Boundary', {
     statements: [

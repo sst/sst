@@ -71,23 +71,13 @@ This is by design. The stacks in SST are meant to be re-deployed for multiple st
 
 ### Accessing app properties
 
-The stage, region, and app name can be accessed through the app object. In your stacks (for example, `stacks/MyStack.js`) you can use.
-
-```js
-export function MyStack(ctx) {
-  ctx.app.stage;
-  ctx.app.region;
-  ctx.app.name;
-}
-```
-
-And in TypeScript.
+The stage, region, and app name can be accessed through the app object. In your stacks (for example, `stacks/MyStack.ts`) you can use.
 
 ```ts
-export function MyStack(ctx: StackContext) {
-  ctx.app.stage;
-  ctx.app.region;
-  ctx.app.name;
+export function MyStack({ app }: StackContext) {
+  app.stage;
+  app.region;
+  app.name;
 }
 ```
 
@@ -98,8 +88,8 @@ You can use this to conditionally add stacks or resources to your app.
 You can set some function props and have them apply to all the functions in a stack. This **must be called before** any functions have been added to the stack; so that all functions will be created with these defaults.
 
 ```js
-function MyStack(ctx) {
-  ctx.stack.setDefaultFunctionProps({
+function MyStack({ stack }) {
+  stack.setDefaultFunctionProps({
     timeout: 20,
     memorySize: 512,
     runtime: "go1.x",
@@ -118,22 +108,22 @@ You can also use [`addDefaultFunctionPermissions`](#adddefaultfunctionpermission
 However, they only affect the functions that are created after the call.
 
 ```js
-function MyStack(ctx) {
-  new Api(ctx.stack, "Api1", {
+function MyStack({ stack }) {
+  new Api(stack, "Api1", {
     routes: {
       "GET /": "src/hello.main",
     },
   });
 
-  ctx.stack.addDefaultFunctionEnv({
+  stack.addDefaultFunctionEnv({
     TABLE_NAME: "NOTES_TABLE"
   });
 
-  ctx.stack.addDefaultFunctionPermissions(["s3"]);
+  stack.addDefaultFunctionPermissions(["s3"]);
 
-  ctx.stack.addDefaultFunctionLayers([mylayer]);
+  stack.addDefaultFunctionLayers([mylayer]);
 
-  new Api(ctx.stack, "Api2", {
+  new Api(stack, "Api2", {
     routes: {
       "GET /": "src/world.main",
     },
@@ -158,11 +148,11 @@ This invokes the `logicalPrefixedName` method in [`App`](constructs/App.md) that
 ### Adding stack outputs
 
 ```js
-function MyStack(ctx) {
-  const topic = new Topic(ctx.stack, "Topic");
-  const queue = new Queue(stc.stack, "Queue");
+function MyStack({ stack }) {
+  const topic = new Topic(stack, "Topic");
+  const queue = new Queue(stack, "Queue");
 
-  ctx.stack.addOutputs({
+  stack.addOutputs({
     TopicArn: topic.snsTopic.topicArn,
     QueueArn: topic.sqsQueue.queueArn,
   });
@@ -172,10 +162,10 @@ function MyStack(ctx) {
 ### Adding stack exports
 
 ```js {7-9}
-function MyStack(ctx) {
-  const topic = new Topic(ctx.stack, "Topic");
+function MyStack({ stack }) {
+  const topic = new Topic(stack, "Topic");
 
-  ctx.stack.addOutputs({
+  stack.addOutputs({
     TopicArn: { value: topic.snsTopic.topicArn, exportName: "MyTopicArn" },
   });
 }
