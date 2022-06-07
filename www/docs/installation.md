@@ -106,16 +106,6 @@ export function MyStack({ stack }: StackContext) {
 }
 ```
 
-In the sample app we are using [a higher-level API construct](constructs/Api.md) to define a simple API endpoint.
-
-```ts
-const api = new sst.Api(this, "Api", {
-  routes: {
-    "GET /": "src/lambda.handler",
-  },
-});
-```
-
 ### Functions
 
 The above API endpoint invokes the `handler` function in `src/lambda.js`.
