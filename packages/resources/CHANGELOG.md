@@ -1,5 +1,14 @@
 # @serverless-stack/resources
 
+## 1.2.17
+
+### Patch Changes
+
+- [#1772](https://github.com/serverless-stack/serverless-stack/pull/1772) [`1e0d5d12`](https://github.com/serverless-stack/serverless-stack/commit/1e0d5d127030d27efa86d12132f8bf331b6b2718) Thanks [@kamsar](https://github.com/kamsar)! - Api: allow cdk.hostedZone when domainName is token value
+
+- Updated dependencies [[`ebd05ff4`](https://github.com/serverless-stack/serverless-stack/commit/ebd05ff4c7d24498758c07c29b0d897fcfd4832f)]:
+  - @serverless-stack/core@1.2.17
+
 ## 1.2.16
 
 ### Patch Changes
