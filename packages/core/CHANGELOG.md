@@ -1,5 +1,11 @@
 # @serverless-stack/core
 
+## 1.2.18
+
+### Patch Changes
+
+- [`3983cf5f`](https://github.com/serverless-stack/serverless-stack/commit/3983cf5ff7b21cf4a41d59deffecf9b4f9e3f84c) Thanks [@thdxr](https://github.com/thdxr)! - Add sourcemap property to control sourcemap generation for NodeJS functions. This defaults to `false` when deployed so be sure to set it if you want sourcemap support
+
 ## 1.2.17
 
 ### Patch Changes
