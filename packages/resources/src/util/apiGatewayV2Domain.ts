@@ -111,7 +111,7 @@ function buildDataForInternalDomainInput(
   // If customDomain is a TOKEN string, "hostedZone" has to be passed in. This
   // is because "hostedZone" cannot be parsed from a TOKEN value.
   if (cdk.Token.isUnresolved(customDomain.domainName)) {
-    if (!customDomain.hostedZone) {
+    if (!customDomain.hostedZone && !customDomain.cdk?.hostedZone) {
       throw new Error(
         `You also need to specify the "hostedZone" if the "domainName" is passed in as a reference.`
       );

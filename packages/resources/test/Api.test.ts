@@ -1,5 +1,5 @@
 import { test, expect, vi } from "vitest";
-import { ABSENT, objectLike, countResources, hasResource } from "./helper";
+import { ANY, ABSENT, objectLike, countResources, hasResource } from "./helper";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
 import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
@@ -332,7 +332,7 @@ test("constructor: stages", async () => {
   });
 });
 
-test("customDomain is string", async () => {
+test("customDomain: string", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
   route53.HostedZone.fromLookup = vi
     .fn()
@@ -406,7 +406,7 @@ test("customDomain is string", async () => {
   });
 });
 
-test("customDomain is string (uppercase error)", async () => {
+test("customDomain: string (uppercase error)", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
   expect(() => {
     new Api(stack, "Api", {
@@ -415,7 +415,7 @@ test("customDomain is string (uppercase error)", async () => {
   }).toThrow(/The domain name needs to be in lowercase/);
 });
 
-test("customDomain is string (imported ssm)", async () => {
+test("customDomain: string (imported ssm)", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
   const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
   expect(() => {
@@ -427,7 +427,7 @@ test("customDomain is string (imported ssm)", async () => {
   );
 });
 
-test("customDomain.domainName is string", async () => {
+test("customDomain: internal domain: domainName is string", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
   route53.HostedZone.fromLookup = vi
     .fn()
@@ -479,7 +479,7 @@ test("customDomain.domainName is string", async () => {
   });
 });
 
-test("customDomain.domainName is string (uppercase error)", async () => {
+test("customDomain: internal domain: domainName is string (uppercase error)", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
   expect(() => {
     new Api(stack, "Api", {
@@ -490,7 +490,55 @@ test("customDomain.domainName is string (uppercase error)", async () => {
   }).toThrow(/The domain name needs to be in lowercase/);
 });
 
-test("customDomain.domainName is string (imported ssm), hostedZone undefined", async () => {
+test("customDomain: internal domain: domainName is string (imported ssm) AND hostedZone defined", async () => {
+  const stack = new Stack(new App({ name: "api" }), "stack");
+  const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
+  new Api(stack, "Api", {
+    customDomain: {
+      domainName: domain,
+      hostedZone: "domain.com",
+    },
+  });
+  hasResource(stack, "AWS::ApiGatewayV2::DomainName", {
+    DomainName: {
+      Ref: ANY
+    }
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: {
+      Ref: ANY
+    },
+    Type: "A",
+  });
+});
+
+test("customDomain: internal domain: domainName is string (imported ssm) AND cdk.hostedZone defined", async () => {
+  const stack = new Stack(new App({ name: "api" }), "stack");
+  const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
+  new Api(stack, "Api", {
+    customDomain: {
+      domainName: domain,
+      cdk: {
+        hostedZone: new route53.HostedZone(stack, "Zone", {
+          zoneName: "domain.com",
+        }),
+      }
+    },
+  });
+  hasResource(stack, "AWS::ApiGatewayV2::DomainName", {
+    DomainName: {
+      Ref: ANY
+    }
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: {
+      Ref: ANY
+    },
+    Type: "A",
+  });
+});
+
+test("customDomain: internal domain: domainName is string (imported ssm), hostedZone undefined", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
   const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
   expect(() => {

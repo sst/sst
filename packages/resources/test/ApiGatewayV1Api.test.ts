@@ -1,5 +1,6 @@
 import { test, expect, vi } from "vitest";
 import {
+  ANY,
   ABSENT,
   countResources,
   countResourcesLike,
@@ -316,7 +317,7 @@ test("accessLog-restApi-imported", async () => {
   }).toThrow(/Cannot configure the "accessLog" when the "restApi" is imported/);
 });
 
-test("customDomain is string", async () => {
+test("customDomain: string", async () => {
   const stack = new Stack(new App({ name: "apiv1" }), "stack");
   route53.HostedZone.fromLookup = vi
     .fn()
@@ -386,7 +387,7 @@ test("customDomain is string", async () => {
   });
 });
 
-test("customDomain is string (uppercase error)", async () => {
+test("customDomain: string (uppercase error)", async () => {
   const stack = new Stack(new App({ name: "apiv1" }), "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
@@ -395,7 +396,7 @@ test("customDomain is string (uppercase error)", async () => {
   }).toThrow(/The domain name needs to be in lowercase/);
 });
 
-test("customDomain is string (imported ssm)", async () => {
+test("customDomain: string (imported ssm)", async () => {
   const stack = new Stack(new App({ name: "apiv1" }), "stack");
   const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
   expect(() => {
@@ -407,7 +408,26 @@ test("customDomain is string (imported ssm)", async () => {
   );
 });
 
-test("customDomain.domainName is string", async () => {
+test("customDomain: string: hostedZone generated from minimal domainName", async () => {
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
+  route53.HostedZone.fromLookup = vi
+    .fn()
+    .mockImplementation((scope, id, { domainName }) => {
+      return new route53.HostedZone(scope, id, { zoneName: domainName });
+    });
+
+  new ApiGatewayV1Api(stack, "Api", {
+    customDomain: "api.domain.com",
+    routes: {
+      "GET /": "test/lambda.handler",
+    },
+  });
+  hasResource(stack, "AWS::Route53::HostedZone", {
+    Name: "domain.com.",
+  });
+});
+
+test("customDomain: internal domain: domainName is string", async () => {
   const stack = new Stack(new App({ name: "apiv1" }), "stack");
   route53.HostedZone.fromLookup = vi
     .fn()
@@ -454,7 +474,7 @@ test("customDomain.domainName is string", async () => {
   });
 });
 
-test("customDomain.domainName is string (uppercase error)", async () => {
+test("customDomain: internal domain: domainName is string (uppercase error)", async () => {
   const stack = new Stack(new App({ name: "apiv1" }), "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
@@ -465,21 +485,7 @@ test("customDomain.domainName is string (uppercase error)", async () => {
   }).toThrow(/The domain name needs to be in lowercase/);
 });
 
-test("customDomain.domainName is string (imported ssm), hostedZone undefined", async () => {
-  const stack = new Stack(new App({ name: "apiv1" }), "stack");
-  const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
-  expect(() => {
-    new ApiGatewayV1Api(stack, "Api", {
-      customDomain: {
-        domainName: domain,
-      },
-    });
-  }).toThrow(
-    /You also need to specify the "hostedZone" if the "domainName" is passed in as a reference./
-  );
-});
-
-test("customDomain.domainName is string (imported ssm), hostedZone defined", async () => {
+test("customDomain: internal domain: domainName is string (imported ssm), hostedZone defined", async () => {
   const stack = new Stack(new App({ name: "apiv1" }), "stack");
   const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
   new ApiGatewayV1Api(stack, "Api", {
@@ -518,7 +524,48 @@ test("customDomain.domainName is string (imported ssm), hostedZone defined", asy
   });
 });
 
-test("customDomain.domainName is type edge", async () => {
+test("customDomain: internal domain: domainName is string (imported ssm), cdk.hostedZone defined", async () => {
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
+  const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
+  new ApiGatewayV1Api(stack, "Api", {
+    customDomain: {
+      domainName: domain,
+      cdk: {
+        hostedZone: new route53.HostedZone(stack, "Zone", {
+          zoneName: "domain.com",
+        }),
+      }
+    },
+  });
+
+  hasResource(stack, "AWS::ApiGateway::DomainName", {
+    DomainName: {
+      Ref: ANY,
+    },
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: {
+      Ref: ANY,
+    },
+    Type: "A",
+  });
+});
+
+test("customDomain: internal domain: domainName is string (imported ssm), hostedZone undefined", async () => {
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
+  const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
+  expect(() => {
+    new ApiGatewayV1Api(stack, "Api", {
+      customDomain: {
+        domainName: domain,
+      },
+    });
+  }).toThrow(
+    /You also need to specify the "hostedZone" if the "domainName" is passed in as a reference./
+  );
+});
+
+test("customDomain: internal domain: domainName is type edge", async () => {
   const stack = new Stack(new App({ name: "apiv1" }), "stack");
   route53.HostedZone.fromLookup = vi
     .fn()
@@ -567,26 +614,7 @@ test("customDomain.domainName is type edge", async () => {
   });
 });
 
-test("customDomain.hostedZone generated from minimal domainName", async () => {
-  const stack = new Stack(new App({ name: "apiv1" }), "stack");
-  route53.HostedZone.fromLookup = vi
-    .fn()
-    .mockImplementation((scope, id, { domainName }) => {
-      return new route53.HostedZone(scope, id, { zoneName: domainName });
-    });
-
-  new ApiGatewayV1Api(stack, "Api", {
-    customDomain: "api.domain.com",
-    routes: {
-      "GET /": "test/lambda.handler",
-    },
-  });
-  hasResource(stack, "AWS::Route53::HostedZone", {
-    Name: "domain.com.",
-  });
-});
-
-test("customDomain.hostedZone generated from full domainName", async () => {
+test("customDomain: internal domain: hostedZone generated from full domainName", async () => {
   const stack = new Stack(new App({ name: "apiv1" }), "stack");
   route53.HostedZone.fromLookup = vi
     .fn()
