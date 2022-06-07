@@ -106,6 +106,7 @@ app.bootstrap({
     "../packages/resources/src/EventBus.ts",
     "../packages/resources/src/StaticSite.ts",
     "../packages/resources/src/NextjsSite.ts",
+    "../packages/resources/src/RemixSite.ts",
     "../packages/resources/src/AppSyncApi.ts",
     "../packages/resources/src/GraphQLApi.ts",
     "../packages/resources/src/ViteStaticSite.ts",

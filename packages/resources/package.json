@@ -44,8 +44,11 @@
     "chalk": "^4.1.0",
     "constructs": "^10.0.29",
     "cross-spawn": "^7.0.3",
+    "folder-hash": "^4.0.2",
     "fs-extra": "^9.0.1",
     "glob": "^7.1.7",
+    "indent-string": "^5.0.0",
+    "read-pkg": "^7.1.0",
     "zip-local": "^0.3.4",
     "zod": "^3.14.3"
   },
@@ -53,11 +56,13 @@
     "@graphql-tools/merge": "^8.2.12",
     "@sls-next/lambda-at-edge": "^3.7.0-alpha.7",
     "@types/cross-spawn": "^6.0.2",
+    "@types/folder-hash": "^4.0.1",
     "@types/fs-extra": "^9.0.6",
     "@types/glob": "^7.2.0",
     "@types/node": "^14.0.27",
     "esbuild-jest": "^0.5.0",
-    "typedoc": "^0.22.13"
+    "typedoc": "^0.22.13",
+    "vitest": "^0.15.1"
   },
   "optionalDependencies": {
     "graphql": "^16.5.0"
