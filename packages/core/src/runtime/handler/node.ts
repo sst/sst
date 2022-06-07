@@ -23,6 +23,7 @@ type Bundle = {
   };
   commandHooks?: ICommandHooks;
   minify?: boolean;
+  sourcemap?: boolean;
   format?: "esm" | "cjs";
 };
 
@@ -61,6 +62,7 @@ export const NodeHandler: Definition<Bundle> = opts => {
   const config: esbuild.BuildOptions = {
     loader: bundle.loader,
     minify: bundle.minify,
+    sourcemap: bundle.sourcemap || false,
     define: bundle.esbuildConfig?.define,
     keepNames: bundle.esbuildConfig?.keepNames,
     entryPoints: [path.join(opts.srcPath, file)],
@@ -75,7 +77,6 @@ export const NodeHandler: Definition<Bundle> = opts => {
           ],
     mainFields:
       bundle.format === "esm" ? ["module", "main"] : ["main", "module"],
-    sourcemap: true,
     platform: "node",
     ...(bundle.format === "esm"
       ? {
@@ -133,6 +134,7 @@ export const NodeHandler: Definition<Bundle> = opts => {
         const result = await esbuild.build({
           ...config,
           plugins: plugins ? require(plugins) : undefined,
+          sourcemap: true,
           metafile: true,
           minify: false,
           incremental: true
