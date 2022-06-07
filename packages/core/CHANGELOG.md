@@ -1,5 +1,11 @@
 # @serverless-stack/core
 
+## 1.2.17
+
+### Patch Changes
+
+- [#1758](https://github.com/serverless-stack/serverless-stack/pull/1758) [`ebd05ff4`](https://github.com/serverless-stack/serverless-stack/commit/ebd05ff4c7d24498758c07c29b0d897fcfd4832f) Thanks [@dennistruemper](https://github.com/dennistruemper)! - Golang: set GOARCH when bundling for `sst deploy`
+
 ## 1.2.16
 
 ### Patch Changes

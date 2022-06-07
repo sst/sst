@@ -1,5 +1,11 @@
 # create-sst
 
+## 1.2.17
+
+### Patch Changes
+
+- [`d67795d5`](https://github.com/serverless-stack/serverless-stack/commit/d67795d5898a382123998955e8f9bb9c830e413d) Thanks [@fwang](https://github.com/fwang)! - Examples: update .gitignore
+
 ## 1.2.16
 
 ## 1.2.15
