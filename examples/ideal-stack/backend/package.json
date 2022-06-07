@@ -4,9 +4,9 @@
   "type": "module",
   "scripts": {},
   "dependencies": {
-    "aws-sdk": "^2.1149.0",
+    "aws-sdk": "^2.1150.0",
     "@pothos/core": "^3.11.0",
-    "@serverless-stack/node": "^1.2.16",
+    "@serverless-stack/node": "^1.2.18",
     "graphql": "^16.5.0",
     "kysely": "^0.19.3",
     "kysely-data-api": "^0.0.11",
