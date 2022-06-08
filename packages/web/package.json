@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/web",
-  "version": "1.2.18",
+  "version": "1.2.19",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
   "publishConfig": {
