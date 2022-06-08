@@ -130,6 +130,7 @@ export async function useLocalServer(opts: Opts) {
     if (req.headers.origin?.endsWith("localhost:3000")) return;
     if (req.headers.origin?.endsWith("console.serverless-stack.com")) return;
     if (req.headers.origin?.endsWith("console.sst.dev")) return;
+    if (req.headers.origin?.endsWith("--sst-console.netlify.app")) return;
     console.log("Rejecting unauthorized connection from " + req.headers.origin);
     socket.terminate();
   });
