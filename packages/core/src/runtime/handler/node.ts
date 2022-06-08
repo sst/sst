@@ -31,7 +31,7 @@ export const NodeHandler: Definition<Bundle> = opts => {
   const dir = path.dirname(opts.handler);
   const ext = path.extname(opts.handler);
   const base = path.basename(opts.handler).split(".")[0];
-  const file = [".ts", ".tsx", ".js", ".jsx"]
+  const file = [".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"]
     .map(ext => path.join(dir, base + ext))
     .find(file => {
       const p = path.join(opts.srcPath, file);
@@ -231,7 +231,16 @@ export const NodeHandler: Definition<Bundle> = opts => {
       }
     },
     watcher: {
-      include: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"].map(glob =>
+      include: [
+        "**/*.ts",
+        "**/*.tsx",
+        "**/*.mts",
+        "**/*.cts",
+        "**/*.js",
+        "**/*.jsx",
+        "**/*.mjs",
+        "**/*.cjs",
+      ].map((glob) =>
         path.resolve(path.join(opts.srcPath, glob))
       ),
       ignore: []
