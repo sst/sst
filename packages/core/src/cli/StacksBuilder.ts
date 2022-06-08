@@ -27,9 +27,9 @@ type Context = {
 };
 
 function stub(name: string, duration = 1000) {
-  return function () {
+  return function() {
     console.log(name);
-    return new Promise((r) => setTimeout(r, duration));
+    return new Promise(r => setTimeout(r, duration));
   };
 }
 
@@ -41,49 +41,49 @@ const machine = createMachine<Context, Events>(
       idle: {
         initial: "none",
         on: {
-          FILE_CHANGE: "building",
+          FILE_CHANGE: "building"
         },
         states: {
           none: {},
           unchanged: {},
-          deployed: {},
-        },
+          deployed: {}
+        }
       },
       failed: {
         on: {
-          FILE_CHANGE: "building",
+          FILE_CHANGE: "building"
         },
         states: {
           build: {},
           synth: {},
-          deploy: {},
-        },
+          deploy: {}
+        }
       },
       building: {
         entry: assign<Context>({
-          dirty: () => false,
+          dirty: () => false
         }),
         invoke: {
           src: "build",
           onDone: [
             {
               cond: "isDirty",
-              target: "building",
+              target: "building"
             },
             {
-              target: "synthing",
-            },
+              target: "synthing"
+            }
           ],
           onError: [
             {
               cond: "isDirty",
-              target: "building",
+              target: "building"
             },
             {
-              target: "failed.build",
-            },
-          ],
-        },
+              target: "failed.build"
+            }
+          ]
+        }
       },
       synthing: {
         invoke: {
@@ -91,35 +91,35 @@ const machine = createMachine<Context, Events>(
           onDone: [
             {
               cond: "isDirty",
-              target: "building",
+              target: "building"
             },
             {
               cond: "isChanged",
               target: "deployable",
               actions: actions.assign({
-                pendingHash: (_, evt) => evt.data,
-              }),
+                pendingHash: (_, evt) => evt.data
+              })
             },
             {
-              target: "idle.unchanged",
-            },
+              target: "idle.unchanged"
+            }
           ],
           onError: [
             {
               cond: "isDirty",
-              target: "building",
+              target: "building"
             },
             {
-              target: "failed.synth",
-            },
-          ],
-        },
+              target: "failed.synth"
+            }
+          ]
+        }
       },
       deployable: {
         on: {
           TRIGGER_DEPLOY: "deploying",
-          FILE_CHANGE: "building",
-        },
+          FILE_CHANGE: "building"
+        }
       },
       deploying: {
         invoke: {
@@ -129,46 +129,46 @@ const machine = createMachine<Context, Events>(
               cond: "isDirty",
               target: "building",
               actions: actions.assign({
-                deployedHash: (ctx) => ctx.pendingHash,
-              }),
+                deployedHash: ctx => ctx.pendingHash
+              })
             },
             {
               target: "idle.deployed",
               actions: actions.assign({
-                deployedHash: (ctx) => ctx.pendingHash,
-              }),
-            },
+                deployedHash: ctx => ctx.pendingHash
+              })
+            }
           ],
           onError: [
             {
               cond: "isDirty",
-              target: "building",
+              target: "building"
             },
             {
-              target: "failed.deploy",
-            },
-          ],
-        },
-      },
+              target: "failed.deploy"
+            }
+          ]
+        }
+      }
     },
     on: {
       FILE_CHANGE: {
         actions: actions.assign({
-          dirty: (_ctx) => true,
-        }),
-      },
-    },
+          dirty: _ctx => true
+        })
+      }
+    }
   },
   {
     services: {
       build: stub("build"),
       deploy: stub("deploy"),
-      synth: stub("synth"),
+      synth: stub("synth")
     },
     guards: {
       isDirty,
-      isChanged,
-    },
+      isChanged
+    }
   }
 );
 
@@ -180,10 +180,9 @@ export function useStacksBuilder(
   cdkOptions: any,
   deployFunc: any
 ) {
-  const constructsJSON = State.resolve(root, "constructs.json");
-  function publishMetadata() {
-    const json = fs.readJsonSync(constructsJSON);
-    bus.publish("metadata.updated", json);
+  async function publishMetadata() {
+    const metadata = await Stacks.metadata(root, config);
+    bus.publish("metadata.updated", metadata);
   }
   const cdkOutPath = path.join(root, cdkOptions.output);
   const service = interpret(
@@ -205,13 +204,13 @@ export function useStacksBuilder(
           deploy: async () => {
             await deployFunc(cdkOptions);
             publishMetadata();
-          },
-        },
+          }
+        }
       })
       .withContext({
         dirty: false,
         pendingHash: "",
-        deployedHash: generateChecksum(cdkOutPath),
+        deployedHash: generateChecksum(cdkOutPath)
       })
   );
   chokidar
@@ -219,7 +218,7 @@ export function useStacksBuilder(
       persistent: true,
       ignoreInitial: true,
       followSymlinks: false,
-      ignored: ["**/node_modules/**", "**/.build/**", "**/.sst/**"],
+      ignored: ["**/node_modules/**", "**/.build/**", "**/.sst/**"]
     })
     .on("change", () => {
       service.send("FILE_CHANGE");
@@ -252,6 +251,9 @@ function generateChecksum(cdkOutPath: string) {
       return templateContent;
     })
     .join("\n");
-  const hash = crypto.createHash("sha256").update(checksumData).digest("hex");
+  const hash = crypto
+    .createHash("sha256")
+    .update(checksumData)
+    .digest("hex");
   return hash;
 }

@@ -107,6 +107,18 @@ SST Console: https://console.serverless-stack.com/acme/prod
 
 This allows you look at logs in production and manage resources in production as well.
 
+## Working with Gitpod
+
+If you are using [Gitpod](https://www.gitpod.io/), you can use the Gitpod Local Companion app to connect to the `sst start` or `sst console` process running inside your Gitpod workspace.
+
+The companion app runs locally and create a tunneled connection to your Gitpod workspace.
+
+To get started:
+
+1. [Install Gitpod Local Companion app](https://www.gitpod.io/blog/local-app#installation)
+2. [Run the Companion app](https://www.gitpod.io/blog/local-app#running)
+3. Naviate to <ConsoleUrl url={config.console} /> in the browser
+
 ## How it works
 
 The <a href={ config.console }>SST Console</a> is a hosted single-page app. It uses the local credentials from the SST CLI ([`sst start`](packages/cli.md#start) or [`sst console`](packages/cli.md#console)) to make calls to AWS.

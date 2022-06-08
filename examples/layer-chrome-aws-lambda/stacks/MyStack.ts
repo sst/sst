@@ -2,7 +2,7 @@ import { LayerVersion } from "aws-cdk-lib/aws-lambda";
 import { Api, StackContext } from "@serverless-stack/resources";
 
 const layerArn =
-  "arn:aws:lambda:us-east-1:764866452798:layer:chrome-aws-lambda:22";
+  "arn:aws:lambda:us-east-1:764866452798:layer:chrome-aws-lambda:25";
 
 export function MyStack({ stack }: StackContext) {
   const layer = LayerVersion.fromLayerVersionArn(stack, "Layer", layerArn);
@@ -13,6 +13,8 @@ export function MyStack({ stack }: StackContext) {
       "GET /": {
         function: {
           handler: "functions/lambda.handler",
+          // The chrome-aws-lambda layer currently does not work in Node.js 16
+          runtime: "nodejs14.x",
           // Increase the timeout for generating screenshots
           timeout: 15,
           // Load Chrome in a Layer

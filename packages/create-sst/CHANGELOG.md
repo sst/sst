@@ -1,5 +1,33 @@
 # create-sst
 
+## 1.2.18
+
+## 1.2.17
+
+### Patch Changes
+
+- [`d67795d5`](https://github.com/serverless-stack/serverless-stack/commit/d67795d5898a382123998955e8f9bb9c830e413d) Thanks [@fwang](https://github.com/fwang)! - Examples: update .gitignore
+
+## 1.2.16
+
+## 1.2.15
+
+## 1.2.14
+
+## 1.2.13
+
+## 1.2.12
+
+## 1.2.11
+
+### Patch Changes
+
+- [`6bf80a89`](https://github.com/serverless-stack/serverless-stack/commit/6bf80a89249cbb7b6b662988d33dcc3ef1ba7fa4) Thanks [@thdxr](https://github.com/thdxr)! - Workaround for npm not allowing gitingore files for starters
+
+## 1.2.10
+
+## 1.2.9
+
 ## 1.2.8
 
 ## 1.2.7

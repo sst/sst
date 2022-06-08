@@ -65,8 +65,8 @@ test("constructor: no domain", async () => {
   const site = new NextjsSite(stack, "Site", {
     path: "test/nextjs-site",
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: "jestBuildOutputPath" not exposed in props
-    jestBuildOutputPath: buildOutputPath,
+    // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+    sstTestBuildOutputPath: buildOutputPath,
   });
   expect(site.url).toBeDefined();
   expect(site.customDomainUrl).toBeUndefined();
@@ -303,8 +303,8 @@ test("constructor: with domain", async () => {
     path: "test/nextjs-site",
     customDomain: "domain.com",
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: "jestBuildOutputPath" not exposed in props
-    jestBuildOutputPath: buildOutputPath,
+    // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+    sstTestBuildOutputPath: buildOutputPath,
   });
   expect(site.url).toBeDefined();
   expect(site.customDomainUrl).toBeDefined();
@@ -383,8 +383,8 @@ test("constructor: with domain with alias", async () => {
       domainAlias: "www.domain.com",
     },
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: "jestBuildOutputPath" not exposed in props
-    jestBuildOutputPath: buildOutputPath,
+    // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+    sstTestBuildOutputPath: buildOutputPath,
   });
   expect(site.url).toBeDefined();
   expect(site.customDomainUrl).toBeDefined();
@@ -440,8 +440,8 @@ test("customDomain: string", async () => {
     path: "test/nextjs-site",
     customDomain: "domain.com",
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: "jestBuildOutputPath" not exposed in props
-    jestBuildOutputPath: buildOutputPath,
+    // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+    sstTestBuildOutputPath: buildOutputPath,
   });
   expect(site.customDomainUrl).toEqual("https://domain.com");
   hasResource(stack, "AWS::CloudFormation::CustomResource", {
@@ -475,8 +475,8 @@ test("customDomain: domainName string", async () => {
       domainName: "domain.com",
     },
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: "jestBuildOutputPath" not exposed in props
-    jestBuildOutputPath: buildOutputPath,
+    // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+    sstTestBuildOutputPath: buildOutputPath,
   });
   expect(site.customDomainUrl).toEqual("https://domain.com");
   hasResource(stack, "AWS::CloudFormation::CustomResource", {
@@ -511,8 +511,8 @@ test("customDomain: hostedZone string", async () => {
       hostedZone: "domain.com",
     },
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: "jestBuildOutputPath" not exposed in props
-    jestBuildOutputPath: buildOutputPath,
+    // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+    sstTestBuildOutputPath: buildOutputPath,
   });
   expect(site.customDomainUrl).toEqual("https://www.domain.com");
   hasResource(stack, "AWS::CloudFormation::CustomResource", {
@@ -551,8 +551,8 @@ test("customDomain: hostedZone construct", async () => {
       },
     },
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: "jestBuildOutputPath" not exposed in props
-    jestBuildOutputPath: buildOutputPath,
+    // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+    sstTestBuildOutputPath: buildOutputPath,
   });
   expect(route53.HostedZone.fromLookup).toHaveBeenCalledTimes(1);
   expect(site.customDomainUrl).toEqual("https://www.domain.com");
@@ -593,8 +593,8 @@ test("customDomain: certificate imported", async () => {
       },
     },
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: "jestBuildOutputPath" not exposed in props
-    jestBuildOutputPath: buildOutputPath,
+    // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+    sstTestBuildOutputPath: buildOutputPath,
   });
   expect(site.customDomainUrl).toEqual("https://www.domain.com");
   countResources(stack, "AWS::CloudFormation::CustomResource", 0);
@@ -625,8 +625,8 @@ test("customDomain: isExternalDomain true", async () => {
       isExternalDomain: true,
     },
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: "jestBuildOutputPath" not exposed in props
-    jestBuildOutputPath: buildOutputPath,
+    // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+    sstTestBuildOutputPath: buildOutputPath,
   });
   expect(site.customDomainUrl).toEqual("https://www.domain.com");
   countResources(stack, "AWS::CloudFront::Distribution", 1);
@@ -650,8 +650,8 @@ test("customDomain: isExternalDomain true and no certificate", async () => {
         isExternalDomain: true,
       },
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore: "jestBuildOutputPath" not exposed in props
-      jestBuildOutputPath: buildOutputPath,
+      // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+      sstTestBuildOutputPath: buildOutputPath,
     });
   }).toThrow(
     /A valid certificate is required when "isExternalDomain" is set to "true"./
@@ -674,8 +674,8 @@ test("customDomain: isExternalDomain true and domainAlias set", async () => {
         isExternalDomain: true,
       },
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore: "jestBuildOutputPath" not exposed in props
-      jestBuildOutputPath: buildOutputPath,
+      // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+      sstTestBuildOutputPath: buildOutputPath,
     });
   }).toThrow(
     /Domain alias is only supported for domains hosted on Amazon Route 53/
@@ -698,8 +698,8 @@ test("customDomain: isExternalDomain true and hostedZone set", async () => {
         isExternalDomain: true,
       },
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore: "jestBuildOutputPath" not exposed in props
-      jestBuildOutputPath: buildOutputPath,
+      // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+      sstTestBuildOutputPath: buildOutputPath,
     });
   }).toThrow(
     /Hosted zones can only be configured for domains hosted on Amazon Route 53/
@@ -739,8 +739,8 @@ test("constructor: s3Bucket props", async () => {
       },
     },
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: "jestBuildOutputPath" not exposed in props
-    jestBuildOutputPath: buildOutputPath,
+    // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+    sstTestBuildOutputPath: buildOutputPath,
   });
   countResources(stack, "AWS::S3::Bucket", 1);
   hasResource(stack, "AWS::S3::Bucket", {
@@ -758,8 +758,8 @@ test("constructor: sqsRegenerationQueue props", async () => {
       },
     },
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: "jestBuildOutputPath" not exposed in props
-    jestBuildOutputPath: buildOutputPath,
+    // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+    sstTestBuildOutputPath: buildOutputPath,
   });
   countResources(stack, "AWS::SQS::Queue", 1);
   hasResource(stack, "AWS::SQS::Queue", {
@@ -772,8 +772,8 @@ test("constructor: cfCachePolicies props default", async () => {
   new NextjsSite(stack, "Site", {
     path: "test/nextjs-site",
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: "jestBuildOutputPath" not exposed in props
-    jestBuildOutputPath: buildOutputPath,
+    // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+    sstTestBuildOutputPath: buildOutputPath,
   });
   countResources(stack, "AWS::CloudFront::CachePolicy", 3);
   hasResource(stack, "AWS::CloudFront::CachePolicy", {
@@ -817,8 +817,8 @@ test("constructor: cfCachePolicies props override", async () => {
       },
     },
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: "jestBuildOutputPath" not exposed in props
-    jestBuildOutputPath: buildOutputPath,
+    // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+    sstTestBuildOutputPath: buildOutputPath,
   });
   countResources(stack, "AWS::CloudFront::CachePolicy", 0);
 });
@@ -828,8 +828,8 @@ test("constructor: cfImageOriginRequestPolicy props default", async () => {
   new NextjsSite(stack, "Site", {
     path: "test/nextjs-site",
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: "jestBuildOutputPath" not exposed in props
-    jestBuildOutputPath: buildOutputPath,
+    // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+    sstTestBuildOutputPath: buildOutputPath,
   });
   countResources(stack, "AWS::CloudFront::OriginRequestPolicy", 1);
   hasResource(stack, "AWS::CloudFront::OriginRequestPolicy", {
@@ -852,8 +852,8 @@ test("constructor: cfImageOriginRequestPolicy props override", async () => {
         ),
     },
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: "jestBuildOutputPath" not exposed in props
-    jestBuildOutputPath: buildOutputPath,
+    // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+    sstTestBuildOutputPath: buildOutputPath,
   });
   countResources(stack, "AWS::CloudFront::OriginRequestPolicy", 0);
 });
@@ -868,8 +868,8 @@ test("constructor: cfDistribution props", async () => {
       },
     },
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: "jestBuildOutputPath" not exposed in props
-    jestBuildOutputPath: buildOutputPath,
+    // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+    sstTestBuildOutputPath: buildOutputPath,
   });
   countResources(stack, "AWS::CloudFront::Distribution", 1);
   hasResource(stack, "AWS::CloudFront::Distribution", {
@@ -892,8 +892,8 @@ test("constructor: cfDistribution defaultBehavior override", async () => {
       },
     },
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: "jestBuildOutputPath" not exposed in props
-    jestBuildOutputPath: buildOutputPath,
+    // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+    sstTestBuildOutputPath: buildOutputPath,
   });
   countResources(stack, "AWS::CloudFront::Distribution", 1);
   hasResource(stack, "AWS::CloudFront::Distribution", {
@@ -927,8 +927,8 @@ test("constructor: cfDistribution certificate conflict", async () => {
         },
       },
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore: "jestBuildOutputPath" not exposed in props
-      jestBuildOutputPath: buildOutputPath,
+      // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+      sstTestBuildOutputPath: buildOutputPath,
     });
   }).toThrow(/Do not configure the "cfDistribution.certificate"/);
 });
@@ -944,14 +944,14 @@ test("constructor: cfDistribution domainNames conflict", async () => {
         },
       },
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore: "jestBuildOutputPath" not exposed in props
-      jestBuildOutputPath: buildOutputPath,
+      // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+      sstTestBuildOutputPath: buildOutputPath,
     });
   }).toThrow(/Do not configure the "cfDistribution.domainNames"/);
 });
 
 test("constructor: environment generates placeholders", async () => {
-  // Note: Build for real, do not use jestBuildOutputPath
+  // Note: Build for real, do not use sstTestBuildOutputPath
 
   const stack = new Stack(new App(), "stack");
   const api = new Api(stack, "Api");
@@ -1051,7 +1051,7 @@ test("constructor: environment generates placeholders", async () => {
 });
 
 test("constructor: minimal feature (empty api lambda)", async () => {
-  // Note: Build for real, do not use jestBuildOutputPath
+  // Note: Build for real, do not use sstTestBuildOutputPath
 
   const stack = new Stack(new App(), "stack");
   const site = new NextjsSite(stack, "Site", {
@@ -1087,8 +1087,8 @@ test("constructor: us-east-1", async () => {
   const site = new NextjsSite(stack, "Site", {
     path: "test/nextjs-site",
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: "jestBuildOutputPath" not exposed in props
-    jestBuildOutputPath: buildOutputPath,
+    // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+    sstTestBuildOutputPath: buildOutputPath,
   });
   expect(site.url).toBeDefined();
   expect(site.customDomainUrl).toBeUndefined();
@@ -1114,8 +1114,8 @@ test("constructor: ca-central-1", async () => {
   const site = new NextjsSite(stack, "Site", {
     path: "test/nextjs-site",
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: "jestBuildOutputPath" not exposed in props
-    jestBuildOutputPath: buildOutputPath,
+    // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+    sstTestBuildOutputPath: buildOutputPath,
   });
   expect(site.url).toBeDefined();
   expect(site.customDomainUrl).toBeUndefined();
@@ -1233,8 +1233,8 @@ test("attachPermissions", async () => {
   const site = new NextjsSite(stack, "Site", {
     path: "test/nextjs-site",
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: "jestBuildOutputPath" not exposed in props
-    jestBuildOutputPath: buildOutputPath,
+    // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+    sstTestBuildOutputPath: buildOutputPath,
   });
   site.attachPermissions(["sns"]);
   countResourcesLike(stack, "AWS::IAM::Policy", 1, {

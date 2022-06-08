@@ -107,10 +107,30 @@ function addOptions(currentCmd) {
       });
 
     if (currentCmd === cmd.deploy || currentCmd === cmd.remove) {
-      yargs.positional("stack", {
-        type: "string",
-        describe: "Specify a stack, if you have multiple stacks",
-      });
+      yargs
+        .positional("stack", {
+          type: "string",
+          describe: "Specify a stack, if you have multiple stacks",
+        })
+        .option("debug-stack", {
+          type: "boolean",
+          describe: "Remove the debug stack",
+        })
+        .check(argv => {
+          if (argv.debugStack && argv.stack) {
+            exitWithMessage("\nCannot pass in a stack and --debug-stack at the same time");
+          }
+          return true;
+        })
+        .example([
+          [`$0 ${cmd.remove}`, "Remove all stacks and the debug stack"],
+          [`$0 ${cmd.remove} my-s3-stack`, "Remove a specific stack"],
+          [`$0 ${cmd.remove} --debug-stack`, "Remove the debug stack"],
+          [
+            `$0 ${cmd.remove} --stage prod --region us-west-1`,
+            "Remove stacks in a stage and region",
+          ],
+        ]);
     }
 
     if (currentCmd === cmd.deploy || currentCmd === cmd.start) {

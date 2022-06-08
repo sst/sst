@@ -12,7 +12,7 @@ import chalk from "chalk";
 export async function build(root: string, config: Config) {
   const buildDir = State.stacksPath(root);
   const pkg = await fs.readJson(path.join(root, "package.json"));
-  const entry = path.join(root, config.main);
+  const entry = path.relative(process.cwd(), path.join(root, config.main))
   if (!fs.existsSync(entry))
     throw new Error(
       `Cannot find app handler. Make sure to add a "${config.main}" file`
@@ -54,9 +54,10 @@ export function check(root: string, config: Config) {
   const program = createProgram({
     rootNames: [entry],
     options: {
-      lib: ["es2021"],
+      lib: ["lib.es2021.d.ts"],
       incremental: true,
       tsBuildInfoFile: path.join(root, ".sst", "tsbuildinfo"),
+      skipLibCheck: true,
       allowJs: true,
       checkJs: true,
       noEmit: true,

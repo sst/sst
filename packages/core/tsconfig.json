@@ -4,7 +4,11 @@
     "module": "esnext",
     "moduleResolution": "node",
     "declaration": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "@serverless-stack/core": ["./src/index.ts"]
+    }
   },
   "include": ["src"]
 }

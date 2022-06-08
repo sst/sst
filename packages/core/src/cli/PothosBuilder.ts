@@ -5,6 +5,14 @@ import { exec } from "child_process";
 import { Pothos } from "../pothos/index.js";
 import { promisify } from "util";
 
+declare module "./Bus" {
+  export interface Events {
+    "pothos.extracted": {
+      file: string;
+    };
+  }
+}
+
 const execAsync = promisify(exec);
 
 interface Opts {
@@ -15,14 +23,22 @@ export function createPothosBuilder(opts: Opts) {
   let routes: any[] = [];
 
   async function build(route: any) {
-    const schema = await Pothos.generate({
-      schema: route.schema,
-    });
-    await fs.writeFile(route.output, schema);
-    await Promise.all(route.commands.map((cmd: string) => execAsync(cmd)));
+    try {
+      const schema = await Pothos.generate({
+        schema: route.schema
+      });
+      await fs.writeFile(route.output, schema);
+      opts.bus.publish("pothos.extracted", { file: route.output });
+      await Promise.all(route.commands.map((cmd: string) => execAsync(cmd)));
+      console.log("Done building pothos schema");
+    } catch (ex) {
+      console.error("Failed to extract schema from pothos");
+      console.error(ex);
+    }
   }
 
-  opts.bus.subscribe("file.changed", async (evt) => {
+  opts.bus.subscribe("file.changed", async evt => {
+    if (evt.properties.file.endsWith("out.mjs")) return;
     for (const route of routes) {
       const dir = path.dirname(route.schema);
       const relative = path.relative(dir, evt.properties.file);
@@ -31,11 +47,12 @@ export function createPothosBuilder(opts: Opts) {
     }
   });
 
-  opts.bus.subscribe("metadata.updated", (evt) => {
+  opts.bus.subscribe("metadata.updated", evt => {
     routes = evt.properties
-      .filter((c) => c.type == "Api")
-      .flatMap((c) => c.data.routes)
-      .filter((r) => r.type === "pothos");
+      .filter(c => c.type == "Api")
+      .flatMap(c => c.data.routes)
+      .filter(r => r.type === "pothos")
+      .filter(r => r.schema);
     for (const route of routes) build(route);
   });
 }

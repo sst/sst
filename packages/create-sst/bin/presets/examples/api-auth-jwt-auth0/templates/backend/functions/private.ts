@@ -1,7 +1,8 @@
-import { APIGatewayProxyHandlerV2 } from "aws-lambda";
+import { APIGatewayProxyHandlerV2WithJWTAuthorizer } from "aws-lambda";
 
-export const main: APIGatewayProxyHandlerV2 = async (event) => {
-  console.log(event.requestContext.authorizer);
+export const main: APIGatewayProxyHandlerV2WithJWTAuthorizer = async (
+  event
+) => {
   return {
     statusCode: 200,
     body: `Hello ${event.requestContext.authorizer.jwt.claims.sub}!`,

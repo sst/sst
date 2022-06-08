@@ -1,7 +1,7 @@
 "use strict";
 
 import path from "path";
-import { Kysely, Migrator, NO_MIGRATIONS, FileMigrationProvider } from "kysely";
+import { Kysely, Migrator, NO_MIGRATIONS } from "kysely";
 import { DataApiDialect } from "kysely-data-api";
 import RDSDataService from "aws-sdk/clients/rdsdataservice";
 import url from "url";
@@ -14,24 +14,28 @@ export async function handler(evt) {
         client: new RDSDataService(),
         database: evt?.database || process.env.RDS_DATABASE,
         secretArn: process.env.RDS_SECRET,
-        resourceArn: process.env.RDS_ARN,
-      },
-    }),
+        resourceArn: process.env.RDS_ARN
+      }
+    })
   });
 
   const migrator = new Migrator({
     db,
+    provider: new DynamicFileMigrationProvider(
+      path.resolve(process.env.RDS_MIGRATIONS_PATH)
+    )
+    /*
     provider: process.env.LAMBDA_TASK_ROOT
       ? new FileMigrationProvider(path.resolve(process.env.RDS_MIGRATIONS_PATH))
       : new DynamicFileMigrationProvider(
           path.resolve(process.env.RDS_MIGRATIONS_PATH)
         ),
+    */
   });
 
   if (!evt.type || evt.type === "latest") {
     const result = await migrator.migrateToLatest();
-    const err =
-      result.error || result.results?.find((r) => r.status === "Error");
+    const err = result.error || result.results?.find(r => r.status === "Error");
     if (err) throw err;
     return result;
   }
@@ -39,8 +43,7 @@ export async function handler(evt) {
   if (evt.type === "to") {
     if (!evt.data.name) return await migrator.migrateTo(NO_MIGRATIONS);
     const result = await migrator.migrateTo(evt.data.name);
-    const err =
-      result.error || result.results?.find((r) => r.status === "Error");
+    const err = result.error || result.results?.find(r => r.status === "Error");
     if (err) throw err;
     return result;
   }
@@ -72,12 +75,18 @@ class DynamicFileMigrationProvider {
         fileName.endsWith(".cjs") ||
         fileName.endsWith(".mjs")
       ) {
+        const [name] = path.basename(fileName).split(".");
         const fullPath = path.join(this.#migrationFolderPath, fileName);
+        if (process.env.LAMBDA_TASK_ROOT) {
+          const migration = await import(fullPath);
+          migrations[name] = migration;
+          continue;
+        }
         const copy = fullPath + Date.now().toString() + ".js";
         try {
           await fs.copyFile(fullPath, copy);
           const migration = await import(url.pathToFileURL(copy).href);
-          migrations[fileName.substring(0, fileName.length - 3)] = migration;
+          migrations[name] = migration;
         } catch (ex) {
           console.error(ex);
         }

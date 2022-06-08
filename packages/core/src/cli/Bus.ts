@@ -1,4 +1,24 @@
-export interface Events {}
+import { Response } from "../runtime";
+import { Logger } from "./Logger.js";
+
+export interface Events {
+  // TODO: Temporarily here until moved to function builder
+  "function.requested": {
+    localID: string;
+    request: {
+      event: any;
+      context: any;
+    };
+  };
+  "function.responded": {
+    localID: string;
+    request: {
+      event: any;
+      context: any;
+    };
+    response: Response;
+  };
+}
 
 type EventTypes = keyof Events;
 
@@ -28,9 +48,10 @@ export function createBus() {
 
   return {
     publish<Type extends EventTypes>(type: Type, properties: Events[Type]) {
+      Logger.print("debug", `Publishing event`, type, properties);
       const payload: EventPayload<Type> = {
         type,
-        properties,
+        properties
       };
 
       for (const sub of subscribers(type)) sub.cb(payload);
@@ -49,10 +70,10 @@ export function createBus() {
     ) {
       const sub: Subscription = {
         type,
-        cb,
+        cb
       };
       subscribers(type).push(sub);
       return sub;
-    },
+    }
   };
 }

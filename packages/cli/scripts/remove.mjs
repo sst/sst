@@ -20,53 +20,60 @@ export default async function (argv, config, cliInfo) {
     skipBuild: true,
   });
 
-  // Normalize stack name
-  const stackPrefix = `${config.stage}-${config.name}-`;
-  let stackId = argv.stack;
-  if (stackId) {
-    stackId = stackId.startsWith(stackPrefix)
-      ? stackId
-      : `${stackPrefix}${stackId}`;
+  const { stack, debugStack } = argv;
+
+  // Case 1: --debug-stack is provided
+  if (debugStack) {
+    await removeDebugStack(config, cliInfo);
+    return;
   }
-
-  ////////////////////////
-  // Remove debug stack //
-  ////////////////////////
-
-  if (!stackId) {
-    logger.info(chalk.grey(`Removing debug stack`));
-    // Note: When removing the debug stack, the current working directory is user's app.
-    //       Setting the current working directory to debug stack cdk app directory to allow
-    //       Lambda Function construct be able to reference code with relative path.
-    process.chdir(path.join(paths.ownPath, "assets", "debug-stack"));
-    try {
-      await removeApp({
-        ...cliInfo.cdkOptions,
-        app: [
-          "node",
-          "bin/index.mjs",
-          config.name,
-          config.stage,
-          config.region,
-          `"${paths.appPath}"`,
-        ].join(" "),
-        output: "cdk.out",
-      });
-    } finally {
-      // Note: Restore working directory
-      process.chdir(paths.appPath);
-    }
+  // Case 2: a stack is provided
+  else if (stack) {
+    const stackId = stack && buildStackId(config, stack);
+    return await removeAppStacks(config, cliInfo, stackId);
+  }
+  // Case 3: remove all stacks and the debug stack
+  else {
+    await removeDebugStack(config, cliInfo);
+    return await removeAppStacks(config, cliInfo);
   }
 
   ////////////////
   // Remove app //
   ////////////////
+}
 
+async function removeDebugStack(config, cliInfo) {
+  logger.info(chalk.grey(`Removing debug stack`));
+
+  // Note: When removing the debug stack, the current working directory is user's app.
+  //       Setting the current working directory to debug stack cdk app directory to allow
+  //       Lambda Function construct be able to reference code with relative path.
+  process.chdir(path.join(paths.ownPath, "assets", "debug-stack"));
+  try {
+    await removeStacks({
+      ...cliInfo.cdkOptions,
+      app: [
+        "node",
+        "bin/index.mjs",
+        config.name,
+        config.stage,
+        config.region,
+        `"${paths.appPath}"`,
+      ].join(" "),
+      output: "cdk.out",
+    });
+  } finally {
+    // Note: Restore working directory
+    process.chdir(paths.appPath);
+  }
+}
+
+async function removeAppStacks(config, cliInfo, stackId) {
   logger.info(chalk.grey("Removing " + (stackId ? stackId : "stacks")));
 
-  const stackStates = await removeApp(cliInfo.cdkOptions, stackId);
-
   // Print remove result
+  const stackStates = await removeStacks(cliInfo.cdkOptions, stackId);
   printResults(stackStates);
 
   // Check all stacks deployed successfully
@@ -82,7 +89,7 @@ export default async function (argv, config, cliInfo) {
   }));
 }
 
-async function removeApp(cdkOptions, stackId) {
+async function removeStacks(cdkOptions, stackId) {
   // Build
   await synth(cdkOptions);
 
@@ -115,6 +122,13 @@ function printResults(stackStates) {
     }
   });
   logger.info("");
+}
+
+function buildStackId(config, stack) {
+  const stackPrefix = `${config.stage}-${config.name}-`;
+  return stack.startsWith(stackPrefix)
+    ? stack
+    : `${stackPrefix}${stack}`;
 }
 
 function formatStackStatus(status) {

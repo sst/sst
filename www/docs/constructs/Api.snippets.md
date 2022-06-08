@@ -708,8 +708,8 @@ You can create the Api construct in one stack, and add routes in other stacks. T
 ```ts title="stacks/MainStack.ts"
 import { Api, StackContext } from "@serverless-stack/resources";
 
-export function MainStack(ctx: StackContext) {
-  const api = new Api(ctx.stack, "Api", {
+export function MainStack({ stack }: StackContext) {
+  const api = new Api(stack, "Api", {
     routes: {
       "GET    /notes": "src/list.main",
       "POST   /notes": "src/create.main",
@@ -728,9 +728,9 @@ Then in another stack, utilize `use` to import the first stack's API. Finally, c
 import { StackContext, use } from "@serverless-stack/resources";
 import { MainStack } from "./MainStack"
 
-export function AnotherStack(ctx: StackContext) {
+export function AnotherStack({ stack }: StackContext) {
   const { api } = use(MainStack)
-  api.addRoutes(ctx.stack, {
+  api.addRoutes(stack, {
     "GET    /notes/{id}": "src/get.main",
     "PUT    /notes/{id}": "src/update.main",
     "DELETE /notes/{id}": "src/delete.main",

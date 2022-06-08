@@ -266,7 +266,7 @@ permissions: "*"
 // to
 {
   accessLog: {
-    retention: "two weeks",
+    retention: "two_weeks",
   }
 }
 ```
@@ -704,7 +704,7 @@ new GraphQLApi(stack, "Api", {
 // to
 {
   accessLog: {
-    retention: "two weeks",
+    retention: "two_weeks",
   }
 }
 ```
@@ -1175,7 +1175,7 @@ api.cdk.graphqlApi;
 // to
 {
   accessLog: {
-    retention: "two weeks",
+    retention: "two_weeks",
   }
 }
 ```

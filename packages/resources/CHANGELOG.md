@@ -1,5 +1,89 @@
 # @serverless-stack/resources
 
+## 1.2.18
+
+### Patch Changes
+
+- [`3983cf5f`](https://github.com/serverless-stack/serverless-stack/commit/3983cf5ff7b21cf4a41d59deffecf9b4f9e3f84c) Thanks [@thdxr](https://github.com/thdxr)! - Add sourcemap property to control sourcemap generation for NodeJS functions. This defaults to `false` when deployed so be sure to set it if you want sourcemap support
+
+- Updated dependencies [[`3983cf5f`](https://github.com/serverless-stack/serverless-stack/commit/3983cf5ff7b21cf4a41d59deffecf9b4f9e3f84c)]:
+  - @serverless-stack/core@1.2.18
+
+## 1.2.17
+
+### Patch Changes
+
+- [#1772](https://github.com/serverless-stack/serverless-stack/pull/1772) [`1e0d5d12`](https://github.com/serverless-stack/serverless-stack/commit/1e0d5d127030d27efa86d12132f8bf331b6b2718) Thanks [@kamsar](https://github.com/kamsar)! - Api: allow cdk.hostedZone when domainName is token value
+
+- Updated dependencies [[`ebd05ff4`](https://github.com/serverless-stack/serverless-stack/commit/ebd05ff4c7d24498758c07c29b0d897fcfd4832f)]:
+  - @serverless-stack/core@1.2.17
+
+## 1.2.16
+
+### Patch Changes
+
+- [#1783](https://github.com/serverless-stack/serverless-stack/pull/1783) [`06666f06`](https://github.com/serverless-stack/serverless-stack/commit/06666f061e806592eb65159c422361926e8d098f) Thanks [@fwang](https://github.com/fwang)! - EventBus: support lambda.Function targets
+
+* [#1784](https://github.com/serverless-stack/serverless-stack/pull/1784) [`1e02e312`](https://github.com/serverless-stack/serverless-stack/commit/1e02e312e54d1c8a7280a1d72da3b670575d67ae) Thanks [@thdxr](https://github.com/thdxr)! - Update RDS migrator to use ESM. Make sure to upgrade `kysely-data-api` to 0.0.11 as well.
+
+- [#1783](https://github.com/serverless-stack/serverless-stack/pull/1783) [`06666f06`](https://github.com/serverless-stack/serverless-stack/commit/06666f061e806592eb65159c422361926e8d098f) Thanks [@fwang](https://github.com/fwang)! - EventBus: get rule by rule name
+
+- Updated dependencies [[`46831e9b`](https://github.com/serverless-stack/serverless-stack/commit/46831e9bc067116ca0281e5a0e98a86edae8971e), [`1e02e312`](https://github.com/serverless-stack/serverless-stack/commit/1e02e312e54d1c8a7280a1d72da3b670575d67ae)]:
+  - @serverless-stack/core@1.2.16
+
+## 1.2.15
+
+### Patch Changes
+
+- [`f2f887bb`](https://github.com/serverless-stack/serverless-stack/commit/f2f887bbdec1e45e618da5a53ca526d95012285f) Thanks [@thdxr](https://github.com/thdxr)! - Fix for .mjs migrations not showing up when RDS is deployed
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.2.15
+
+## 1.2.14
+
+### Patch Changes
+
+- Updated dependencies [[`eec3ad28`](https://github.com/serverless-stack/serverless-stack/commit/eec3ad28a0edae50c2086019cb21c47a0b8526c5), [`db06a415`](https://github.com/serverless-stack/serverless-stack/commit/db06a415c6cee32d198e3582e6f1e775209eed5b)]:
+  - @serverless-stack/core@1.2.14
+
+## 1.2.13
+
+### Patch Changes
+
+- Updated dependencies [[`fa1bea79`](https://github.com/serverless-stack/serverless-stack/commit/fa1bea79ba5592ce084f40447fc7f015bec1fc43)]:
+  - @serverless-stack/core@1.2.13
+
+## 1.2.12
+
+### Patch Changes
+
+- [#1764](https://github.com/serverless-stack/serverless-stack/pull/1764) [`46314f3c`](https://github.com/serverless-stack/serverless-stack/commit/46314f3ca857f5a5c6a58e4c333bd9e670769279) Thanks [@thdxr](https://github.com/thdxr)! - Generate types for RDS construct using sql-ts
+
+- Updated dependencies [[`46314f3c`](https://github.com/serverless-stack/serverless-stack/commit/46314f3ca857f5a5c6a58e4c333bd9e670769279), [`3879c501`](https://github.com/serverless-stack/serverless-stack/commit/3879c501b36195b81c2717d848cc4d06a78c06b6)]:
+  - @serverless-stack/core@1.2.12
+
+## 1.2.11
+
+### Patch Changes
+
+- Updated dependencies [[`c829dfa6`](https://github.com/serverless-stack/serverless-stack/commit/c829dfa600b55a3d82495756e7489b858f8a01d0)]:
+  - @serverless-stack/core@1.2.11
+
+## 1.2.10
+
+### Patch Changes
+
+- Updated dependencies [[`95b508ce`](https://github.com/serverless-stack/serverless-stack/commit/95b508ce3e702531f2fe09bd3c83f5ed86eae015)]:
+  - @serverless-stack/core@1.2.10
+
+## 1.2.9
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.2.9
+
 ## 1.2.8
 
 ### Patch Changes

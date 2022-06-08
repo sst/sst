@@ -1,5 +1,0 @@
-{
-  "name": "playground",
-  "region": "us-east-1",
-  "main": "lib/index.ts"
-}

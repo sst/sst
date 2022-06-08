@@ -388,6 +388,27 @@ new EventBus(stack, "Bus", {
 });
 ```
 
+#### Using existing Lambda functions as targets
+
+```js {9-11}
+import * as lambda from "aws-cdk-lib/aws-lambda";
+
+new EventBus(stack, "Bus", {
+  rules: {
+    rule1: {
+      pattern: { source: ["myevent"] },
+      targets: {
+        myTarget: {
+          cdk: {
+            function: lambda.Function.fromFunctionName(stack, "ITarget", "my-function"),
+          },
+        },
+      },
+    },
+  },
+});
+```
+
 #### Sharing an EventBus across stacks
 
 You can create the EventBus construct in one stack, and add rules in other stacks. To do this, return the EventBus from the stack function
@@ -589,6 +610,22 @@ const bus = new EventBus(stack, "Bus", {
 bus.attachPermissionsToTarget("rule1", 0, ["s3"]);
 ```
 
+### getRule
+
+```ts
+getRule(key)
+```
+_Parameters_
+- __key__ <span class="mono">string</span>
+
+
+Get a rule
+
+
+```js
+bus.getRule("myRule");
+```
+
 ## EventBusRuleProps
 Used to configure an EventBus rule
 
@@ -731,7 +768,7 @@ _Type_ : <span class="mono">[SqsQueueProps](https://docs.aws.amazon.com/cdk/api/
 ## EventBusFunctionTargetProps
 Used to configure an EventBus function target
 
-### function
+### function?
 
 _Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span> | <span class="mono">[FunctionProps](Function#functionprops)</span></span>
 
@@ -756,6 +793,10 @@ _Type_ : <span class="mono">"function"</span>
 
 String literal to signify that the target is a function
 
+
+### cdk.function?
+
+_Type_ : <span class="mono">[IFunction](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.IFunction.html)</span>
 
 ### cdk.target?
 

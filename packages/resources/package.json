@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/resources",
-  "version": "1.2.8",
+  "version": "1.2.18",
   "homepage": "https://serverless-stack.com",
   "description": "Helper AWS CDK constructs for Serverless Stack apps.",
   "main": "dist/index.js",
@@ -15,7 +15,7 @@
     "build:script": "echo '{ \"type\": \"module\"}' > dist/Script/package.json",
     "build:next": "echo '{ \"type\": \"module\"}' > dist/nextjs-site/custom-resource/package.json",
     "build:stub": "cd assets/stub && yarn && cd ../.. && node ./bin/create-stub-zip.cjs",
-    "build:rds-migrator": "cd assets/RDS/migrator && yarn && cd ../../.. && node ./bin/copy-rds-migrator.cjs",
+    "build:rds-migrator": "cd assets/RDS/migrator && cd ../../.. && node ./bin/copy-rds-migrator.cjs",
     "build:bridge": "node ./bin/build-bridge-client.cjs",
     "clean": "rm -rf dist",
     "test": "vitest run --no-threads"
@@ -38,7 +38,7 @@
     "@aws-cdk/aws-apigatewayv2-authorizers-alpha": "2.24.0-alpha.0",
     "@aws-cdk/aws-apigatewayv2-integrations-alpha": "2.24.0-alpha.0",
     "@aws-cdk/aws-appsync-alpha": "2.24.0-alpha.0",
-    "@serverless-stack/core": "1.2.8",
+    "@serverless-stack/core": "1.2.18",
     "archiver": "^5.3.0",
     "aws-cdk-lib": "2.24.0",
     "chalk": "^4.1.0",
@@ -57,20 +57,10 @@
     "@types/glob": "^7.2.0",
     "@types/node": "^14.0.27",
     "esbuild-jest": "^0.5.0",
-    "graphql": "^16.5.0",
     "typedoc": "^0.22.13"
   },
-  "gitHead": "8ac2d0abc11d5de721c87658bb445e3d6c211dcf",
-  "peerDependencies": {
-    "graphql": "^16.5.0",
-    "@graphql-tools/merge": "^8.2.12"
+  "optionalDependencies": {
+    "graphql": "^16.5.0"
   },
-  "peerDependenciesMeta": {
-    "graphql": {
-      "optional": true
-    },
-    "@graphql-tools/merge": {
-      "optional": true
-    }
-  }
+  "gitHead": "8ac2d0abc11d5de721c87658bb445e3d6c211dcf"
 }

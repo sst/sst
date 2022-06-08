@@ -22,7 +22,7 @@ There are two ways of setting this up.
    To use this option, set the `login` prop to:
 
    ```js
-   new Auth(this, "Auth", {
+   new Auth(stack, "Auth", {
      login: ["email", "phone", "username", "preferredUsername"]
    });
    ```
@@ -40,7 +40,7 @@ There are two ways of setting this up.
    To use this option, set the `login` prop to:
 
    ```js
-   new Auth(this, "Auth", {
+   new Auth(stack, "Auth", {
      login: ["email", "phone"]
    });
    ```
@@ -54,7 +54,7 @@ The Cognito User Pool can invoke a Lambda function for specific [triggers](#trig
 #### Adding triggers
 
 ```js
-new Auth(this, "Auth", {
+new Auth(stack, "Auth", {
   triggers: {
     preAuthentication: "src/preAuthentication.main",
     postAuthentication: "src/postAuthentication.main",
@@ -65,7 +65,7 @@ new Auth(this, "Auth", {
 #### Specifying function props for all the triggers
 
 ```js
-new Auth(this, "Auth", {
+new Auth(stack, "Auth", {
   defaults: {
     function: {
       timeout: 20,
@@ -85,7 +85,7 @@ new Auth(this, "Auth", {
 Configure each Lambda function separately.
 
 ```js
-new Auth(this, "Auth", {
+new Auth(stack, "Auth", {
   triggers: {
     preAuthentication: {
       handler: "src/preAuthentication.main",
@@ -101,7 +101,7 @@ new Auth(this, "Auth", {
 Note that, you can set the `defaults.function` while using the `FunctionProps` per trigger. The `function` will just override the `defaults.function`. Except for the `environment`, the `layers`, and the `permissions` properties, it will be merged.
 
 ```js
-new Auth(this, "Auth", {
+new Auth(stack, "Auth", {
     defaults: {
     function: {
       timeout: 20,
@@ -128,7 +128,7 @@ So in the above example, the `preAuthentication` function doesn't use the `timeo
 Allow all the triggers to access S3.
 
 ```js {8}
-const auth = new Auth(this, "Auth", {
+const auth = new Auth(stack, "Auth", {
   triggers: {
     preAuthentication: "src/preAuthentication.main",
     postAuthentication: "src/postAuthentication.main",
@@ -143,7 +143,7 @@ auth.attachPermissionsForTriggers(["s3"]);
 Allow one of the triggers to access S3.
 
 ```js {8}
-const auth = new Auth(this, "Auth", {
+const auth = new Auth(stack, "Auth", {
   triggers: {
     preAuthentication: "src/preAuthentication.main",
     postAuthentication: "src/postAuthentication.main",
@@ -160,7 +160,7 @@ Here we are referring to the trigger using the trigger key, `preAuthentication`.
 #### Enabling federation with Auth0
 
 ```js
-new Auth(this, "Auth", {
+new Auth(stack, "Auth", {
   identityPoolFederation: {
     auth0: {
       domain: "https://myorg.us.auth0.com",
@@ -173,7 +173,7 @@ new Auth(this, "Auth", {
 #### Enabling federation with Twitter
 
 ```js
-new Auth(this, "Auth", {
+new Auth(stack, "Auth", {
   identityPoolFederation: {
     twitter: {
       consumerKey: "gyMbPOiwefr6x63SjIW8NN2d9",
@@ -186,7 +186,7 @@ new Auth(this, "Auth", {
 #### Enabling federation with multiple social logins
 
 ```js
-new Auth(this, "Auth", {
+new Auth(stack, "Auth", {
   identityPoolFederation: {
     facebook: { appId: "419718329085014" },
     apple: { servicesId: "com.myapp.client" },
@@ -202,7 +202,7 @@ new Auth(this, "Auth", {
 #### Attaching permissions for authenticated federation identity
 
 ```js {3}
-const auth = new Auth(this, "Auth");
+const auth = new Auth(stack, "Auth");
 
 auth.attachPermissionsForAuthUsers([api, "s3"]);
 ```
@@ -210,7 +210,7 @@ auth.attachPermissionsForAuthUsers([api, "s3"]);
 #### Attaching permissions for unauthenticated federation identity
 
 ```js {3}
-const auth = new Auth(this, "Auth");
+const auth = new Auth(stack, "Auth");
 
 auth.attachPermissionsForUnauthUsers([api, "s3"]);
 ```
@@ -227,7 +227,7 @@ import {
   DateTimeAttribute,
 } from "aws-cdk-lib/aws-cognito";
 
-new Auth(this, "Auth", {
+new Auth(stack, "Auth", {
   cdk: {
     userPool: {
       standardAttributes: {
@@ -252,10 +252,10 @@ Override the internally created CDK `UserPool` and `UserPoolClient` instance.
 ```js {5-6}
 import { UserPool, UserPoolClient } from "aws-cdk-lib/aws-cognito";
 
-new Auth(this, "Auth", {
+new Auth(stack, "Auth", {
   cdk: {
-    userPool: UserPool.fromUserPoolId(this, "IUserPool", "pool-id"),
-    userPoolClient: UserPoolClient.fromUserPoolClientId(this, "IUserPoolClient", "pool-client-id"),
+    userPool: UserPool.fromUserPoolId(stack, "IUserPool", "pool-id"),
+    userPoolClient: UserPoolClient.fromUserPoolClientId(stack, "IUserPoolClient", "pool-client-id"),
   },
 });
 ```
@@ -267,8 +267,8 @@ You can create the Auth construct in one stack, and attach permissions in other 
 ```ts title="stacks/AuthStack.ts"
 import { Auth, StackContext } from "@serverless-stack/resources";
 
-export function AuthStack(ctx: StackContext) {
-  const auth = new Auth(ctx.stack, "Auth");
+export function AuthStack({ stack }: StackContext) {
+  const auth = new Auth(stack, "Auth");
   return {
     auth
   }
@@ -278,12 +278,12 @@ export function AuthStack(ctx: StackContext) {
 Then import the auth construct into another stack with `use` and attach the permissions.
 
 ```js {13} title="stacks/ApiStack.ts"
-import { Api, Stack } from "@serverless-stack/resources";
+import { Api, StackContext } from "@serverless-stack/resources";
 import { AuthStack } from "./AuthStack"
 
-export function ApiStack(ctx: StackContext) {
+export function ApiStack({ stack }: StackContext) {
   const { auth } = use(AuthStack)
-  const api = new Api(ctx.stack, "Api", {
+  const api = new Api(stack, "Api", {
     routes: {
       "GET  /notes": "src/list.main",
       "POST /notes": "src/create.main",

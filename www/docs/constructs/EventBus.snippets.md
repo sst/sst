@@ -340,6 +340,27 @@ new EventBus(stack, "Bus", {
 });
 ```
 
+#### Using existing Lambda functions as targets
+
+```js {9-11}
+import * as lambda from "aws-cdk-lib/aws-lambda";
+
+new EventBus(stack, "Bus", {
+  rules: {
+    rule1: {
+      pattern: { source: ["myevent"] },
+      targets: {
+        myTarget: {
+          cdk: {
+            function: lambda.Function.fromFunctionName(stack, "ITarget", "my-function"),
+          },
+        },
+      },
+    },
+  },
+});
+```
+
 #### Sharing an EventBus across stacks
 
 You can create the EventBus construct in one stack, and add rules in other stacks. To do this, return the EventBus from the stack function
@@ -347,8 +368,8 @@ You can create the EventBus construct in one stack, and add rules in other stack
 ```ts title="stacks/MainStack.ts"
 import { EventBus, App, StackContext } from "@serverless-stack/resources";
 
-export function MainStack(ctx: StackContext) {
-  const bus = new EventBus(ctx.stack, "Bus", {
+export function MainStack({ stack }: StackContext) {
+  const bus = new EventBus(stack, "Bus", {
     rules: {
       rule1: {
         pattern: { source: ["myevent"] },
@@ -372,9 +393,9 @@ Then import the auth construct into another stack with `use` and call `addRules`
 import { EventBus, StackContext } from "@serverless-stack/resources";
 import { MainStack } from "./MainStack"
 
-export function AnotherStack(ctx: StackContext) {
+export function AnotherStack({ stack }: StackContext) {
   const { bus } = use(MainStack);
-  bus.addRules(ctx.stack, {
+  bus.addRules(stack, {
     rule2: {
       targets: {
         myTarget3: "src/target3.main",
