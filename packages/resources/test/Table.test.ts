@@ -336,6 +336,38 @@ test("constructor: fields-dynamodbTable-props-with-sortKey-error", async () => {
   }).toThrow(/Cannot configure the "cdk.table.sortKey"/);
 });
 
+test("timeToLiveAttribute: undefined", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Table(stack, "Table", {
+    fields: {
+      noteId: "string",
+    },
+    primaryIndex: { partitionKey: "noteId" },
+  });
+  hasResource(stack, "AWS::DynamoDB::Table", {
+    TableName: "dev-my-app-Table",
+    TimeToLiveSpecification: ABSENT,
+  });
+});
+
+test("timeToLiveAttribute: defined", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Table(stack, "Table", {
+    fields: {
+      noteId: "string",
+    },
+    primaryIndex: { partitionKey: "noteId" },
+    timeToLiveAttribute: "expireAt",
+  });
+  hasResource(stack, "AWS::DynamoDB::Table", {
+    TableName: "dev-my-app-Table",
+    TimeToLiveSpecification: {
+      AttributeName: "expireAt",
+      Enabled: true,
+    },
+  });
+});
+
 test("globalIndexes: projection undefined", async () => {
   const stack = new Stack(new App(), "stack");
   new Table(stack, "Table", {
