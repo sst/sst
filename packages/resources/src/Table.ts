@@ -167,6 +167,17 @@ export interface TableProps {
    */
   localIndexes?: Record<string, TableLocalIndexProps>;
   /**
+   * The field that's used to store the expiration time for items in the table.
+   *
+   * @example
+   * ```js {8}
+   * new Table(stack, "Table", {
+   *   timeToLiveAttribute: "expireAt",
+   * });
+   * ```
+   */
+  timeToLiveAttribute?: string;
+  /**
    * Configure the KinesisStream to capture item-level changes for the table.
    *
    * @example
@@ -520,7 +531,7 @@ export class Table extends Construct implements SSTConstruct {
   }
 
   private createTable() {
-    const { fields, primaryIndex, stream, cdk } = this.props;
+    const { fields, primaryIndex, stream, timeToLiveAttribute, cdk } = this.props;
     const app = this.node.root as App;
     const id = this.node.id;
 
@@ -582,6 +593,7 @@ export class Table extends Construct implements SSTConstruct {
         pointInTimeRecovery: true,
         billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
         stream: this.buildStreamConfig(stream),
+        timeToLiveAttribute,
         ...(dynamodbTableProps as dynamodb.TableProps),
       });
     }
