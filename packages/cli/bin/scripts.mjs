@@ -261,21 +261,35 @@ async function getStage(argv, config) {
 
   if (process.env.__TEST__ === "true") return DEFAULT_STAGE;
 
+  // Generate a suggested stage name as the default
   const suggested = await State.suggestStage();
+  const question = `Please enter a stage name you’d like to use locally. Or hit enter to use the one based on your AWS credentials (${suggested}): `;
+
+  // Prompt to enter a stage name
+  const input = await questionSync(`Look like you’re running sst for the first time in this directory. ${question}`);
+  let final = input.trim() || suggested;
+
+  // Re-prompt if stage name is invalid
+  while(!State.validateStage(final)) {
+    logger.error(chalk.red("Stage names must start with a letter, and contain only letters, numbers, and hyphens."));
+    const input = await questionSync(`\n${question}`);
+    final = input.trim() || suggested;
+  }
+
+  State.setStage(paths.appPath, final);
+  return final;
+}
+
+function questionSync(question) {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
   });
   return new Promise((resolve) => {
-    rl.question(
-      `Look like you’re running sst for the first time in this directory. Please enter a stage name you’d like to use locally. Or hit enter to use the one based on your AWS credentials (${suggested}): `,
-      (input) => {
-        const final = input.trim() || suggested;
-        State.setStage(paths.appPath, final);
-        rl.close();
-        resolve(final);
-      }
-    );
+    rl.question(question, (input) => {
+      rl.close();
+      resolve(input);
+    });
   });
 }
 
