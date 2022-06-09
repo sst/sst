@@ -52,3 +52,7 @@ export async function suggestStage() {
     .catch(() => os.userInfo().username);
   return result.replace(/[^A-Za-z0-9]/g, "-");
 }
+
+export function validateStage(stage: string) {
+  return stage.match(/^[A-Za-z][A-Za-z0-9-]*$/);
+}
