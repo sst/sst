@@ -552,7 +552,7 @@ test("customDomain: internal domain: domainName is string (imported ssm), hosted
   );
 });
 
-test("customDomain: isExternalDomain true", async () => {
+test("customDomain: isExternalDomain", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
   const site = new Api(stack, "Site", {
     customDomain: {
@@ -580,7 +580,32 @@ test("customDomain: isExternalDomain true", async () => {
   });
 });
 
-test("customDomain: isExternalDomain true and no certificate", async () => {
+test("customDomain: isExternalDomain and imported domainName", async () => {
+  const stack = new Stack(new App({ name: "api" }), "stack");
+  const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
+  const site = new Api(stack, "Site", {
+    customDomain: {
+      domainName: domain,
+      isExternalDomain: true,
+      cdk: {
+        certificate: new acm.Certificate(stack, "Cert", {
+          domainName: "domain.com",
+        }),
+      },
+    },
+  });
+  hasResource(stack, "AWS::ApiGatewayV2::DomainName", {
+    DomainName: { Ref: ANY },
+    DomainNameConfigurations: [
+      {
+        CertificateArn: { Ref: ANY },
+        EndpointType: "REGIONAL",
+      },
+    ],
+  });
+});
+
+test("customDomain: isExternalDomain and no certificate", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
   expect(() => {
     new Api(stack, "Site", {
@@ -594,7 +619,7 @@ test("customDomain: isExternalDomain true and no certificate", async () => {
   );
 });
 
-test("customDomain: isExternalDomain true and hostedZone set", async () => {
+test("customDomain: isExternalDomain and hostedZone set", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
   expect(() => {
     new Api(stack, "Site", {

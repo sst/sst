@@ -116,11 +116,12 @@ function buildDataForInternalDomainInput(
         `You also need to specify the "hostedZone" if the "domainName" is passed in as a reference.`
       );
     }
-  } else {
-    assertDomainNameIsLowerCase(customDomain.domainName as string);
   }
-
-  const domainName = customDomain.domainName as string;
+  // If domain is not a token, ensure it is lower case
+  else {
+    assertDomainNameIsLowerCase(customDomain.domainName!);
+  }
+  const domainName = customDomain.domainName!;
 
   // Lookup hosted zone
   // Note: Allow user passing in `hostedZone` object. The use case is when
@@ -181,8 +182,12 @@ function buildDataForExternalDomainInput(
     );
   }
 
-  const domainName = customDomain.domainName as string;
-  assertDomainNameIsLowerCase(domainName);
+  // If domain is not a token, ensure it is lower case
+  if (!cdk.Token.isUnresolved(customDomain.domainName)) {
+    assertDomainNameIsLowerCase(customDomain.domainName!);
+  }
+
+  const domainName = customDomain.domainName!;
   const certificate = customDomain.cdk.certificate;
   const apigDomain = createApigDomain(scope, domainName, certificate);
   const mappingKey = customDomain.path;
