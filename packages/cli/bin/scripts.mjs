@@ -271,7 +271,7 @@ async function getStage(argv, config) {
 
   // Re-prompt if stage name is invalid
   while(!State.validateStage(final)) {
-    logger.error(chalk.red("Stage name must start with a letter, and contain only letters, numbers, and hyphens."));
+    logger.error(chalk.red("Stage names must start with a letter, and contain only letters, numbers, and hyphens."));
     const input = await questionSync(`\n${question}`);
     final = input.trim() || suggested;
   }
