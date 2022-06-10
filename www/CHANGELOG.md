@@ -1,5 +1,13 @@
 # @serverless-stack/docs
 
+## 1.1.6
+
+### Patch Changes
+
+- [#1802](https://github.com/serverless-stack/serverless-stack/pull/1802) [`d8ad13fd`](https://github.com/serverless-stack/serverless-stack/commit/d8ad13fd412ea3457a05524d4692cb914773bb36) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: update runtime to Node.js 16
+
+* [#1802](https://github.com/serverless-stack/serverless-stack/pull/1802) [`d8ad13fd`](https://github.com/serverless-stack/serverless-stack/commit/d8ad13fd412ea3457a05524d4692cb914773bb36) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: allow overriding Lambda@Edge runtime
+
 ## 1.1.5
 
 ### Patch Changes
