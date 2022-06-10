@@ -11,7 +11,10 @@ import { State } from "../state/index.js";
 
 declare module "./Bus" {
   export interface Events {
-    "metadata.updated": any[];
+    "stacks.deployed": {
+      metadata: any[];
+      stacksData: any;
+    }
   }
 }
 
@@ -178,11 +181,15 @@ export function useStacksBuilder(
   bus: Bus,
   config: Config,
   cdkOptions: any,
-  deployFunc: any
+  deployFunc: any,
+  initialStacksData: any
 ) {
-  async function publishMetadata() {
+  async function publishStacksDeployed(stacksData: any) {
     const metadata = await Stacks.metadata(root, config);
-    bus.publish("metadata.updated", metadata);
+    bus.publish("stacks.deployed", {
+      metadata,
+      stacksData,
+    });
   }
   const cdkOutPath = path.join(root, cdkOptions.output);
   const service = interpret(
@@ -202,8 +209,8 @@ export function useStacksBuilder(
             return generateChecksum(cdkOutPath);
           },
           deploy: async () => {
-            await deployFunc(cdkOptions);
-            publishMetadata();
+            const stacksData = await deployFunc(cdkOptions);
+            publishStacksDeployed(stacksData);
           }
         }
       })
@@ -223,7 +230,7 @@ export function useStacksBuilder(
     .on("change", () => {
       service.send("FILE_CHANGE");
     });
-  publishMetadata();
+  publishStacksDeployed(initialStacksData);
   service.start();
   return service;
 }
