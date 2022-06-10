@@ -131,6 +131,7 @@ export interface NextjsSiteProps {
        * @example
        * ```js
        * new Function(stack, "Function", {
+       *   path: "path/to/site",
        *   runtime: "nodejs16.x",
        * })
        *```
