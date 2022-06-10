@@ -3,6 +3,7 @@ import path from "path";
 import url from "url";
 import fs from "fs-extra";
 import spawn from "cross-spawn";
+import { execSync } from "child_process";
 
 import { Construct } from "constructs";
 import {
@@ -142,6 +143,22 @@ export interface NextjsSiteProps {
    * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
    */
   waitForInvalidation?: boolean;
+  commandHooks?: {
+    /**
+     * Commands to run after building the Next.js app. Commands are chained with `&&`, and they are run inside the Next.js app folder.
+     *
+     * @example
+     * ```js {3}
+     * new NextjsSite(stack, "NextSite", {
+     *   path: "path/to/site",
+     *   commandHooks: {
+     *     afterBuild: ["npx next-sitemap"],
+     *   }
+     * });
+     * ```
+     */
+    afterBuild?: string[];
+  };
 }
 
 /////////////////////
@@ -277,12 +294,12 @@ export class NextjsSite extends Construct implements SSTConstruct {
   constructor(scope: Construct, id: string, props: NextjsSiteProps) {
     super(scope, id);
 
-    const root = scope.node.root as App;
+    const app = scope.node.root as App;
     // Local development or skip build => stub asset
     this.isPlaceholder =
-      (root.local || root.skipBuild) && !props.disablePlaceholder;
-    const buildDir = root.buildDir;
-    const fileSizeLimit = root.isRunningSSTTest()
+      (app.local || app.skipBuild) && !props.disablePlaceholder;
+    const buildDir = app.buildDir;
+    const fileSizeLimit = app.isRunningSSTTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
         props.sstTestFileSizeLimitOverride || 200
@@ -299,11 +316,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
       this.assets = this.zipAppStubAssets();
       this.routesManifest = null;
     } else {
-      this.buildOutDir = root.isRunningSSTTest()
-        ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
-          props.sstTestBuildOutputPath || this.buildApp()
-        : this.buildApp();
+      this.buildOutDir = this.buildApp();
       this.assets = this.zipAppAssets(fileSizeLimit, buildDir);
       this.routesManifest = this.readRoutesManifest();
     }
@@ -505,8 +518,8 @@ export class NextjsSite extends Construct implements SSTConstruct {
     });
 
     // Create function based on region
-    const root = this.node.root as App;
-    return root.region === "us-east-1"
+    const app = this.node.root as App;
+    return app.region === "us-east-1"
       ? this.createEdgeFunctionInUE1(name, assetPath, asset, hasRealCode)
       : this.createEdgeFunctionInNonUE1(name, assetPath, asset, hasRealCode);
   }
@@ -746,62 +759,6 @@ export class NextjsSite extends Construct implements SSTConstruct {
     return resource;
   }
 
-  private buildApp(): string {
-    const { path: sitePath } = this.props;
-
-    // validate site path exists
-    if (!fs.existsSync(sitePath)) {
-      throw new Error(
-        `No path found at "${path.resolve(sitePath)}" for the "${
-          this.node.id
-        }" NextjsSite.`
-      );
-    }
-
-    // Build command
-    // Note: probably could pass JSON string also, but this felt safer.
-    const root = this.node.root as App;
-    const pathHash = getHandlerHash(sitePath);
-    const buildOutput = path.join(root.buildDir, pathHash);
-    const configBuffer = Buffer.from(
-      JSON.stringify({
-        cwd: path.resolve(sitePath),
-        args: ["build"],
-      })
-    );
-
-    // Run build
-    console.log(chalk.grey(`Building Next.js site ${sitePath}`));
-    const result = spawn.sync(
-      "node",
-      [
-        path.join(__dirname, "../assets/NextjsSite/build/build.cjs"),
-        "--path",
-        path.resolve(sitePath),
-        "--output",
-        path.resolve(buildOutput),
-        "--config",
-        configBuffer.toString("base64"),
-      ],
-      {
-        cwd: sitePath,
-        stdio: "inherit",
-        env: {
-          ...process.env,
-          ...getBuildCmdEnvironment(this.props.environment),
-        },
-      }
-    );
-    if (result.status !== 0) {
-      console.error(
-        `There was a problem building the "${this.node.id}" NextjsSite.`
-      );
-      process.exit(1);
-    }
-
-    return buildOutput;
-  }
-
   private createS3Bucket(): s3.Bucket {
     const { cdk } = this.props;
 
@@ -897,6 +854,101 @@ export class NextjsSite extends Construct implements SSTConstruct {
         ReplaceValues: this.getS3ContentReplaceValues(),
       },
     });
+  }
+
+  /////////////////////
+  // Build App
+  /////////////////////
+
+  private buildApp(): string {
+    const app = this.node.root as App;
+    const buildOutput = app.isRunningSSTTest()
+      ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+        props.sstTestBuildOutputPath || this.runBuild()
+      : this.runBuild();
+
+    this.runAfterBuild();
+
+    return buildOutput;
+  }
+
+  private runBuild(): string {
+    const { path: sitePath } = this.props;
+
+    // validate site path exists
+    if (!fs.existsSync(sitePath)) {
+      throw new Error(
+        `No path found at "${path.resolve(sitePath)}" for the "${
+          this.node.id
+        }" NextjsSite.`
+      );
+    }
+
+    // Build command
+    // Note: probably could pass JSON string also, but this felt safer.
+    const app = this.node.root as App;
+    const pathHash = getHandlerHash(sitePath);
+    const buildOutput = path.join(app.buildDir, pathHash);
+    const configBuffer = Buffer.from(
+      JSON.stringify({
+        cwd: path.resolve(sitePath),
+        args: ["build"],
+      })
+    );
+
+    // Run build
+    console.log(chalk.grey(`Building Next.js site ${sitePath}`));
+    const result = spawn.sync(
+      "node",
+      [
+        path.join(__dirname, "../assets/NextjsSite/build/build.cjs"),
+        "--path",
+        path.resolve(sitePath),
+        "--output",
+        path.resolve(buildOutput),
+        "--config",
+        configBuffer.toString("base64"),
+      ],
+      {
+        cwd: sitePath,
+        stdio: "inherit",
+        env: {
+          ...process.env,
+          ...getBuildCmdEnvironment(this.props.environment),
+        },
+      }
+    );
+    if (result.status !== 0) {
+      console.error(
+        `There was a problem building the "${this.node.id}" NextjsSite.`
+      );
+      process.exit(1);
+    }
+
+    return buildOutput;
+  }
+
+  private runAfterBuild() {
+    const { path, commandHooks } = this.props;
+
+    // Build command
+    const cmds = commandHooks?.afterBuild ?? [];
+    if (cmds.length === 0) {
+      return;
+    }
+
+    try {
+      execSync(cmds.join(" && "), {
+        cwd: path,
+        stdio: "inherit"
+      });
+    } catch (e) {
+      console.log(
+        chalk.red(`There was a problem running "afterBuild" command.`)
+      );
+      throw e;
+    }
   }
 
   /////////////////////
@@ -1382,8 +1434,8 @@ export class NextjsSite extends Construct implements SSTConstruct {
       environmentOutputs[key] = Stack.of(this).getLogicalId(output);
     }
 
-    const root = this.node.root as App;
-    root.registerSiteEnvironment({
+    const app = this.node.root as App;
+    app.registerSiteEnvironment({
       id: this.node.id,
       path: this.props.path,
       stack: Stack.of(this).node.id,
