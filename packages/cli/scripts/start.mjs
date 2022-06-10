@@ -170,8 +170,6 @@ export default async function (argv, config, cliInfo) {
   const local = await useLocalServer({
     live: true,
     port: await chooseServerPort(13557),
-    key: cert.key,
-    cert: cert.cert,
     app: config.name,
     stage: config.stage,
     region: config.region,
@@ -433,9 +431,9 @@ export default async function (argv, config, cliInfo) {
   // bridge.onRequest(handleRequest);
   ws.onRequest(handleRequest);
 
-  const url = `https://console.sst.dev/${config.name}/${
-    config.stage
-  }/local${local.port !== 13557 ? "?_port=" + local.port : ""}`;
+  const url = `https://console.sst.dev/${config.name}/${config.stage}/local${
+    local.port !== 13557 ? "?_port=" + local.port : ""
+  }`;
   console.log("SST Console:", url);
   // openBrowser(url);
 }
