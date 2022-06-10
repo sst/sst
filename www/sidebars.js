@@ -2,8 +2,15 @@ module.exports = {
   docs: [
     "about",
     {
-      "Quick Start": [
-        "installation",
+      type: "doc",
+      id: "installation",
+      label: "Quick Start"
+    },
+    {
+      // Goal: the shortest path to the WOW experience
+      "Features": [
+        // Change this to Constructs
+        // - SST at a Glance
         "architecture",
         "live-lambda-development",
         "console"
