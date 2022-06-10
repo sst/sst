@@ -11,6 +11,7 @@ import {
   RealtimeStateAtom,
   useDarkMode,
   useRealtimeState,
+  useSSL,
 } from "./data/global";
 import { enablePatches } from "immer";
 import { applyPatches } from "dendriform-immer-patch-optimiser";
@@ -76,6 +77,7 @@ ReactDOM.render(
 
 function Trpc(props: PropsWithChildren<{}>) {
   const [client, setClient] = useState<ReturnType<typeof trpc.createClient>>();
+  const [, setSSL] = useSSL();
 
   useEffect(() => {
     async function boot() {
@@ -106,6 +108,7 @@ function Trpc(props: PropsWithChildren<{}>) {
         ],
       });
 
+      setSSL(isSSL);
       setClient(trpcClient);
     }
 
