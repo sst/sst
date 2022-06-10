@@ -104,7 +104,6 @@ export default async function(argv, config, cliInfo) {
     },
     cliInfo
   );
-  await updateStaticSiteEnvironmentOutputs(appStackDeployRet);
   const constructs = (
     await Promise.all(
       appStackDeployRet.map(async stack => {
@@ -145,6 +144,7 @@ export default async function(argv, config, cliInfo) {
   createPothosBuilder({
     bus
   });
+  bus.subscribe("stacks.deployed", updateSiteEnvironmentOutputs);
 
   const funcs = State.Function.read(paths.appPath);
 
@@ -273,7 +273,9 @@ export default async function(argv, config, cliInfo) {
       const result = await deploy(opts);
       if (result.some(r => r.status === "failed"))
         throw new Error("Stacks failed to deploy");
-    }
+      return result;
+    },
+    appStackDeployRet
   );
   stacksBuilder.onTransition(async state => {
     local.updateState(draft => {
@@ -558,7 +560,9 @@ async function deployApp(argv, config, cliInfo) {
 // Util functions //
 ////////////////////
 
-async function updateStaticSiteEnvironmentOutputs(deployRet) {
+async function updateSiteEnvironmentOutputs(evt) {
+  const deployRet = evt.properties.stacksData;
+
   // ie. environments outputs
   // [{
   //    id: "MyFrontend",

@@ -47,8 +47,8 @@ export function createPothosBuilder(opts: Opts) {
     }
   });
 
-  opts.bus.subscribe("metadata.updated", evt => {
-    routes = evt.properties
+  opts.bus.subscribe("stacks.deployed", evt => {
+    routes = evt.properties.metadata
       .filter(c => c.type == "Api")
       .flatMap(c => c.data.routes)
       .filter(r => r.type === "pothos")

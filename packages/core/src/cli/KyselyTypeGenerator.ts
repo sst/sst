@@ -22,13 +22,13 @@ interface Database {
 export function createKyselyTypeGenerator(opts: Opts) {
   let databases: Database[] = [];
 
-  opts.bus.subscribe("metadata.updated", metadata => {
-    databases = metadata.properties
+  opts.bus.subscribe("stacks.deployed", evt => {
+    databases = evt.properties.metadata
       .filter(c => c.type === "RDS")
       .filter(c => c.data.migrator)
       .filter(c => c.data.types)
       .map(c => ({
-        migratorID: metadata.properties.find(
+        migratorID: evt.properties.metadata.find(
           fn => fn.addr == c.data.migrator?.node
         ).data.localId,
         clusterArn: c.data.clusterArn,
