@@ -159,7 +159,7 @@ export interface NextjsSiteProps {
      * Commands to run after building the Next.js app. Commands are chained with `&&`, and they are run inside the Next.js app folder.
      *
      * @example
-     * ```js {3}
+     * ```js
      * new NextjsSite(stack, "NextSite", {
      *   path: "path/to/site",
      *   commandHooks: {
