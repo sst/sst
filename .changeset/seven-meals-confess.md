@@ -1,7 +1,6 @@
 ---
 "@serverless-stack/cli": patch
 "@serverless-stack/console": patch
-"@serverless-stack/console-cert": patch
 "@serverless-stack/core": patch
 ---
 
