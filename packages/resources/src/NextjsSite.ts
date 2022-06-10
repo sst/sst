@@ -125,6 +125,17 @@ export interface NextjsSiteProps {
       timeout?: number;
       memorySize?: number;
       permissions?: Permissions;
+      /**
+       * The runtime environment.
+       * @default "nodejs16.x"
+       * @example
+       * ```js
+       * new Function(stack, "Function", {
+       *   runtime: "nodejs16.x",
+       * })
+       *```
+      */
+      runtime?: "nodejs12.x" | "nodejs14.x" | "nodejs16.x";
     };
   };
   /**
@@ -541,7 +552,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
       },
       logRetention: logs.RetentionDays.THREE_DAYS,
       code: lambda.Code.fromAsset(assetPath),
-      runtime: lambda.Runtime.NODEJS_12_X,
+      runtime: this.normalizeRuntime(defaults?.function?.runtime),
       memorySize: defaults?.function?.memorySize || 512,
       timeout: Duration.seconds(defaults?.function?.timeout || 10),
       role: this.edgeLambdaRole,
@@ -588,7 +599,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
           S3Bucket: asset.s3BucketName,
           S3Key: asset.s3ObjectKey,
         },
-        Runtime: lambda.Runtime.NODEJS_12_X.name,
+        Runtime: this.normalizeRuntime(defaults?.function?.runtime).name,
         MemorySize: defaults?.function?.memorySize || 512,
         Timeout: Duration.seconds(
           defaults?.function?.timeout || 10
@@ -686,7 +697,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     const { defaults } = this.props;
     const fn = new lambda.Function(this, "RegenerationFunction", {
       handler: "index-wrapper.handler",
-      runtime: lambda.Runtime.NODEJS_12_X,
+      runtime: this.normalizeRuntime(defaults?.function?.runtime),
       memorySize: defaults?.function?.memorySize || 1024,
       timeout: Duration.seconds(defaults?.function?.timeout || 30),
       code,
@@ -1441,5 +1452,15 @@ export class NextjsSite extends Construct implements SSTConstruct {
       stack: Stack.of(this).node.id,
       environmentOutputs,
     } as BaseSiteEnvironmentOutputsInfo);
+  }
+
+  private normalizeRuntime(runtime?: string): lambda.Runtime {
+    if (runtime === "nodejs12.x") {
+      return lambda.Runtime.NODEJS_12_X;
+    }
+    else if (runtime === "nodejs14.x") {
+      return lambda.Runtime.NODEJS_14_X;
+    }
+    return lambda.Runtime.NODEJS_16_X;
   }
 }
