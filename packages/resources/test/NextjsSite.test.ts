@@ -706,6 +706,35 @@ test("customDomain: isExternalDomain true and hostedZone set", async () => {
   );
 });
 
+test("commandHooks: afterBuild success", async () => {
+  const stack = new Stack(new App(), "stack");
+  const site = new NextjsSite(stack, "Site", {
+    path: "test/nextjs-site",
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+    sstTestBuildOutputPath: buildOutputPath,
+    commandHooks: {
+      afterBuild: ["echo hi"]
+    }
+  });
+  expect(site.url).toBeDefined();
+});
+
+test("commandHooks: afterBuild failed", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new NextjsSite(stack, "Site", {
+      path: "test/nextjs-site",
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+      sstTestBuildOutputPath: buildOutputPath,
+      commandHooks: {
+        afterBuild: ["garbage"]
+      }
+    });
+  }).toThrow();
+});
+
 test("constructor: path not exist", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
