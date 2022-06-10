@@ -357,7 +357,7 @@ import { Code, Runtime } from "aws-cdk-lib/aws-lambda";
 import { LambdaEdgeEventType, experimental } from "aws-cdk-lib/aws-cloudfront";
 
 const edgeFunc = new experimental.EdgeFunction(this, "MyFunction", {
-  runtime: Runtime.NODEJS_12_X,
+  runtime: Runtime.NODEJS_16_X,
   handler: "lambda.handler",
   code: Code.fromAsset("path/to/dir"),
   stackId: `${scope.logicalPrefixedName("edge-lambda")}`,

@@ -541,7 +541,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
       },
       logRetention: logs.RetentionDays.THREE_DAYS,
       code: lambda.Code.fromAsset(assetPath),
-      runtime: lambda.Runtime.NODEJS_12_X,
+      runtime: lambda.Runtime.NODEJS_16_X,
       memorySize: defaults?.function?.memorySize || 512,
       timeout: Duration.seconds(defaults?.function?.timeout || 10),
       role: this.edgeLambdaRole,
@@ -588,7 +588,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
           S3Bucket: asset.s3BucketName,
           S3Key: asset.s3ObjectKey,
         },
-        Runtime: lambda.Runtime.NODEJS_12_X.name,
+        Runtime: lambda.Runtime.NODEJS_16_X.name,
         MemorySize: defaults?.function?.memorySize || 512,
         Timeout: Duration.seconds(
           defaults?.function?.timeout || 10
@@ -686,7 +686,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     const { defaults } = this.props;
     const fn = new lambda.Function(this, "RegenerationFunction", {
       handler: "index-wrapper.handler",
-      runtime: lambda.Runtime.NODEJS_12_X,
+      runtime: lambda.Runtime.NODEJS_16_X,
       memorySize: defaults?.function?.memorySize || 1024,
       timeout: Duration.seconds(defaults?.function?.timeout || 30),
       code,
