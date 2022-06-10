@@ -1,5 +1,13 @@
 # @serverless-stack/core
 
+## 1.2.20
+
+### Patch Changes
+
+- [#1801](https://github.com/serverless-stack/serverless-stack/pull/1801) [`edcd89d2`](https://github.com/serverless-stack/serverless-stack/commit/edcd89d2c3f803e801d744dd91c13fd301a5d87a) Thanks [@fwang](https://github.com/fwang)! - sst start: update static-site-environment-output-keys.json on redeploy
+
+* [#1793](https://github.com/serverless-stack/serverless-stack/pull/1793) [`960575f0`](https://github.com/serverless-stack/serverless-stack/commit/960575f0a66ba1b12806244b728f7fb6254674bc) Thanks [@fwang](https://github.com/fwang)! - Cli: check for invalid stages names
+
 ## 1.2.19
 
 ## 1.2.18

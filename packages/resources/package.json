@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/resources",
-  "version": "1.2.19",
+  "version": "1.2.20",
   "homepage": "https://serverless-stack.com",
   "description": "Helper AWS CDK constructs for Serverless Stack apps.",
   "main": "dist/index.js",
@@ -38,7 +38,7 @@
     "@aws-cdk/aws-apigatewayv2-authorizers-alpha": "2.24.0-alpha.0",
     "@aws-cdk/aws-apigatewayv2-integrations-alpha": "2.24.0-alpha.0",
     "@aws-cdk/aws-appsync-alpha": "2.24.0-alpha.0",
-    "@serverless-stack/core": "1.2.19",
+    "@serverless-stack/core": "1.2.20",
     "archiver": "^5.3.0",
     "aws-cdk-lib": "2.24.0",
     "chalk": "^4.1.0",

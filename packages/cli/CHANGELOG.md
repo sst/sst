@@ -1,5 +1,17 @@
 # @serverless-stack/cli
 
+## 1.2.20
+
+### Patch Changes
+
+- [#1801](https://github.com/serverless-stack/serverless-stack/pull/1801) [`edcd89d2`](https://github.com/serverless-stack/serverless-stack/commit/edcd89d2c3f803e801d744dd91c13fd301a5d87a) Thanks [@fwang](https://github.com/fwang)! - sst start: update static-site-environment-output-keys.json on redeploy
+
+* [#1793](https://github.com/serverless-stack/serverless-stack/pull/1793) [`960575f0`](https://github.com/serverless-stack/serverless-stack/commit/960575f0a66ba1b12806244b728f7fb6254674bc) Thanks [@fwang](https://github.com/fwang)! - Cli: check for invalid stages names
+
+* Updated dependencies [[`edcd89d2`](https://github.com/serverless-stack/serverless-stack/commit/edcd89d2c3f803e801d744dd91c13fd301a5d87a), [`d8ad13fd`](https://github.com/serverless-stack/serverless-stack/commit/d8ad13fd412ea3457a05524d4692cb914773bb36), [`9d7eba61`](https://github.com/serverless-stack/serverless-stack/commit/9d7eba61c5a5cd49803eecd86bbb0d7765820175), [`960575f0`](https://github.com/serverless-stack/serverless-stack/commit/960575f0a66ba1b12806244b728f7fb6254674bc), [`38937353`](https://github.com/serverless-stack/serverless-stack/commit/38937353582cba863ba3e5220468a2a9cb590f6a), [`d8ad13fd`](https://github.com/serverless-stack/serverless-stack/commit/d8ad13fd412ea3457a05524d4692cb914773bb36)]:
+  - @serverless-stack/core@1.2.20
+  - @serverless-stack/resources@1.2.20
+
 ## 1.2.19
 
 ### Patch Changes

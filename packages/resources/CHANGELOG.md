@@ -1,5 +1,20 @@
 # @serverless-stack/resources
 
+## 1.2.20
+
+### Patch Changes
+
+- [#1802](https://github.com/serverless-stack/serverless-stack/pull/1802) [`d8ad13fd`](https://github.com/serverless-stack/serverless-stack/commit/d8ad13fd412ea3457a05524d4692cb914773bb36) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: update runtime to Node.js 16
+
+* [#1795](https://github.com/serverless-stack/serverless-stack/pull/1795) [`9d7eba61`](https://github.com/serverless-stack/serverless-stack/commit/9d7eba61c5a5cd49803eecd86bbb0d7765820175) Thanks [@fwang](https://github.com/fwang)! - Api: allow external imported domain names
+
+- [#1799](https://github.com/serverless-stack/serverless-stack/pull/1799) [`38937353`](https://github.com/serverless-stack/serverless-stack/commit/38937353582cba863ba3e5220468a2a9cb590f6a) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: support after deploy command hooks
+
+* [#1802](https://github.com/serverless-stack/serverless-stack/pull/1802) [`d8ad13fd`](https://github.com/serverless-stack/serverless-stack/commit/d8ad13fd412ea3457a05524d4692cb914773bb36) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: allow overriding Lambda@Edge runtime
+
+* Updated dependencies [[`edcd89d2`](https://github.com/serverless-stack/serverless-stack/commit/edcd89d2c3f803e801d744dd91c13fd301a5d87a), [`960575f0`](https://github.com/serverless-stack/serverless-stack/commit/960575f0a66ba1b12806244b728f7fb6254674bc)]:
+  - @serverless-stack/core@1.2.20
+
 ## 1.2.19
 
 ### Patch Changes
