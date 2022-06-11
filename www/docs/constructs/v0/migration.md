@@ -1617,7 +1617,7 @@ api.cdk.certificate;
 }
 ```
 
-Note that, for backward compatibility, Identity Pool federation is enabled by default. You can disable it by setting `identityPoolFederation` to `false`. And the previously created Cognito Identity Pool will be removed on the next deploy.
+Note that, for backward compatibility, Identity Pool federation is enabled by default. You can disable it by setting `identityPoolFederation` to `false`. Once disabled, the previously created Cognito Identity Pool will be removed on the next deploy.
 
 #### Properties
 - Moved cognitoUserPool ⇒ cdk.userPool
