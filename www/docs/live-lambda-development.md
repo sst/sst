@@ -289,3 +289,13 @@ If you are using the `debugApp` callback, you'll need to make sure to create the
 :::
 
 The `DebugStack` is deployed as a CDK app, called [`DebugApp`](constructs/DebugApp.md). The `app` argument above in the `debugApp` callback is an instance of the `DebugApp` construct.
+
+## Language support
+
+The Live Lambda Development environment supports the following languages:
+- JavaScript
+- TypeScript
+- Python
+- Golang
+- C#
+- F#

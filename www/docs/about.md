@@ -1,7 +1,7 @@
 ---
 id: about
 title: Get Started With SST
-sidebar_label: Overview
+sidebar_label: Introduction
 hide_title: true
 hide_table_of_contents: true
 description: Serverless Stack (SST) Docs
@@ -12,7 +12,7 @@ import config from "../config";
 import styles from "./about.module.css";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 
-<h1 className={styles.title}>Get Started With SST</h1>
+<h1 className={styles.title}>Introduction</h1>
 
 <div className={styles.desc}>
 Serverless Stack (SST) is a framework that makes it easy to build serverless apps. It features:
@@ -55,16 +55,16 @@ Serverless Stack (SST) is a framework that makes it easy to build serverless app
   </a>
 </div>
 
-## Quick start
+## Installation
 
 ```bash
 # Create a new SST app
-npm init sst
+npx create-sst@latest
 cd my-sst-app
 npm i
 
 # Start Live Lambda Dev
-npm start
+npx sst start
 
 # Open the SST Console
 open console.serverless-stack.com

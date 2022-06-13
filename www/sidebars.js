@@ -1,14 +1,14 @@
 module.exports = {
   docs: [
-    "about",
     {
-      type: "doc",
-      id: "installation",
-      label: "Quick Start"
+      " ": [
+        "about",
+        "installation",
+      ]
     },
     {
       // Goal: the shortest path to the WOW experience
-      "Features": [
+      "Fundamentals": [
         // Change this to Constructs
         // - SST at a Glance
         "architecture",
@@ -24,76 +24,46 @@ module.exports = {
           collapsible: true,
           collapsed: true,
           items: [
-            {
-              type: "doc",
-              id: "api",
-              label: "Installation & Starting Development"
-            },
-
-            // Describe file Structure
-            { type: "doc", id: "api", label: "Project Structure" },
-
-            // Review launch.json
-            // Show auto-complete
-            // Show TS Doc
-            { type: "doc", id: "api", label: "Editor Integration" },
-
-            // Make a request in the Console
-            { type: "doc", id: "api", label: "API Explorer" },
-
-            // Show the function was ran locally
-            { type: "doc", id: "api", label: "Live Lambda Development" }
+            "learn/create-new-project",
+            "learn/project-structure",
+            "learn/editor-setup",
+            "learn/console",
+            "learn/local-development",
+            "learn/start-frontend",
           ]
         },
         {
           type: "category",
-          label: "2 - Adding comments Table",
+          label: "2 - Adding new Database entity",
           collapsible: true,
           collapsed: true,
           items: [
-            { type: "doc", id: "api", label: "What is RDS" },
-
-            // Explain the idea of keeping business logic seperate (D)
-            { type: "doc", id: "api", label: "Add list and update functions" },
-
-            // Create an new migration
-            // Run the migration in the Console
-            { type: "doc", id: "api", label: "Running Migrations" },
-
-            // Review generated types
-            { type: "doc", id: "api", label: "Auto-generate Types" },
-
-            // Show the implementation again using DynamoDB
-            { type: "doc", id: "api", label: "Using DynamoDB" },
-
-            // Link to examples for DynamoDB, Mongo, etc
-            { type: "doc", id: "api", label: "Other Database options" }
+            "learn/database-options",
+            "learn/rds-migrations",
+            "learn/rds-types",
+            "learn/dynamodb",
           ]
         },
         {
           type: "category",
-          label: "3 - Building comments API",
+          label: "3 - Adding new API routes",
           collapsible: true,
           collapsed: true,
           items: [
-            // Explain GraphQL and Pothos code first approach (D)
-            { type: "doc", id: "api", label: "GraphQL API" },
-            { type: "doc", id: "api", label: "Adding an API Types" },
-            // Explain thinking when designing queries and mutations (D)
-            { type: "doc", id: "api", label: "Adding API Queries & Mutations" }
+            "learn/graphql-api",
+            "learn/add-api-types",
+            "learn/queries-and-mutations",
           ]
         },
         {
           type: "category",
-          label: "4 - Rendering comments",
+          label: "4 - Rendering Components",
           collapsible: true,
           collapsed: true,
           items: [
-            { type: "doc", id: "api", label: "Calling the API" },
-            { type: "doc", id: "api", label: "Rendering in React" },
-
-            // Link to examples for Vue, Next.js
-            { type: "doc", id: "api", label: "Other Frontend options" }
+            "learn/call-api",
+            "learn/render-comments",
+            "learn/frontend-options",
           ]
         },
         {
@@ -102,9 +72,8 @@ module.exports = {
           collapsible: true,
           collapsed: true,
           items: [
-            { type: "doc", id: "api", label: "Setup AWS Credentials" },
-            { type: "doc", id: "api", label: "Deployment" },
-            { type: "doc", id: "api", label: "Deploying with Seed" }
+            "learn/deploy-to-prod",
+            "learn/deploy-with-seed",
           ]
         },
         {
