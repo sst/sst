@@ -1,4 +1,0 @@
-{
-  "extends": "@tsconfig/node16/tsconfig.json",
-  "include": ["stacks"]
-}
