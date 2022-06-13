@@ -1,5 +1,11 @@
 # @serverless-stack/core
 
+## 1.2.21
+
+### Patch Changes
+
+- [`b140d04e`](https://github.com/serverless-stack/serverless-stack/commit/b140d04e8d80ed03ab1547b01215d5eb0c1aebda) Thanks [@thdxr](https://github.com/thdxr)! - Support MySQL type generation
+
 ## 1.2.20
 
 ### Patch Changes
