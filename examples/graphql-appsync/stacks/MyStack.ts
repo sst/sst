@@ -14,7 +14,7 @@ export default class MyStack extends sst.Stack {
 
     // Create the AppSync GraphQL API
     const api = new sst.AppSyncApi(this, "AppSyncApi", {
-      schema: "backend/graphql/schema.graphql",
+      schema: "api/graphql/schema.graphql",
       defaults: {
         function: {
           // Pass the table name to the function
@@ -39,7 +39,7 @@ export default class MyStack extends sst.Stack {
     api.attachPermissions([notesTable]);
 
     // Show the AppSync API Id in the output
-    stack.addOutputs({
+    this.addOutputs({
       ApiId: api.apiId,
       APiUrl: api.url,
     });

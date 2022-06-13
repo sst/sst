@@ -1,0 +1,14 @@
+{
+  "name": "@bucket-image-resize/api",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {},
+  "dependencies": {
+    "aws-sdk": "^2.1152.0",
+    "sharp": "^0.30.6"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.100",
+    "@types/sharp": "^0.30.4"
+  }
+}

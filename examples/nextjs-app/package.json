@@ -13,14 +13,14 @@
   },
   "devDependencies": {
     "aws-cdk-lib": "2.24.0",
-    "@serverless-stack/cli": "^1.2.18",
-    "@serverless-stack/resources": "^1.2.18",
+    "@serverless-stack/cli": "^1.2.21",
+    "@serverless-stack/resources": "^1.2.21",
     "typescript": "^4.7.3",
-    "@tsconfig/node16": "^1.0.2",
-    "vitest": "^0.14.1"
+    "@tsconfig/node16": "^1.0.3",
+    "vitest": "^0.14.2"
   },
   "workspaces": [
-    "backend",
+    "api",
     "frontend"
   ]
 }

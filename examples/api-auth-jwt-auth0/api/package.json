@@ -1,0 +1,13 @@
+{
+  "name": "@api-auth-jwt-auth0/api",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {},
+  "dependencies": {
+    "aws-sdk": "^2.1152.0",
+    "@types/node": "^17.0.42"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.100"
+  }
+}

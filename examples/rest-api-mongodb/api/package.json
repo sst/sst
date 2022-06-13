@@ -1,0 +1,13 @@
+{
+  "name": "@rest-api-mongodb/api",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {},
+  "dependencies": {
+    "aws-sdk": "^2.1152.0",
+    "mongodb": "^4.7.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.100"
+  }
+}

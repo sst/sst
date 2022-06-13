@@ -1,0 +1,17 @@
+{
+  "name": "@prisma/api",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {},
+  "dependencies": {
+    "aws-sdk": "^2.1152.0",
+    "prisma": "^3.15.1",
+    "fs-extra": "^10.1.0",
+    "@prisma/client": "^3.15.1"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.100",
+    "@types/fs-extra": "^9.0.13",
+    "prisma": "^3.15.1"
+  }
+}

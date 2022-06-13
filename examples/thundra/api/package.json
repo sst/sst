@@ -1,0 +1,13 @@
+{
+  "name": "@thundra/api",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {},
+  "dependencies": {
+    "aws-sdk": "^2.1152.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.100",
+    "@thundra/esbuild-plugin": "^1.0.3"
+  }
+}
