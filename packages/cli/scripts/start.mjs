@@ -19,7 +19,7 @@ import {
   createProjectWatcher,
   createBus,
   createPothosBuilder,
-  createKyselyTypeGenerator
+  createKyselyTypeGenerator,
 } from "@serverless-stack/core";
 
 import paths from "./util/paths.mjs";
@@ -30,7 +30,7 @@ import {
   writeConfig,
   checkFileExists,
   writeOutputsFile,
-  validatePropsForJs
+  validatePropsForJs,
 } from "./util/cdkHelpers.mjs";
 import * as objectUtil from "../lib/object.mjs";
 import CloudFormation from "aws-sdk/clients/cloudformation.js";
@@ -59,7 +59,7 @@ const clientLogger = {
   // attached. Note that you cannot log multiple arguments with
   // "traceWithMetadata()", the first arg is the log message and the second arg
   // is the metadata.
-  traceWithMetadata: m => {
+  traceWithMetadata: (m) => {
     // If console is not enabled, print trace in terminal (ie. request logs)
     isConsoleEnabled
       ? getChildLogger("client").trace(m)
@@ -73,10 +73,10 @@ const clientLogger = {
   },
   error: (...m) => {
     getChildLogger("client").error(...m);
-  }
+  },
 };
 
-export default async function(argv, config, cliInfo) {
+export default async function (argv, config, cliInfo) {
   await prepareCdk(argv, cliInfo, config);
 
   // Deploy debug stack
@@ -100,27 +100,10 @@ export default async function(argv, config, cliInfo) {
       ...config,
       debugEndpoint,
       debugBucketArn,
-      debugBucketName
+      debugBucketName,
     },
     cliInfo
   );
-  const constructs = (
-    await Promise.all(
-      appStackDeployRet.map(async stack => {
-        const cfn = new CloudFormation({ region: stack.region });
-        const result = await cfn
-          .describeStackResource({
-            StackName: stack.name,
-            LogicalResourceId: "SSTMetadata"
-          })
-          .promise();
-        result.StackResourceDetail;
-        const parsed = JSON.parse(result.StackResourceDetail.Metadata);
-        const constructs = parsed["sst:constructs"];
-        return constructs;
-      })
-    )
-  ).flat();
 
   if (IS_TEST) {
     process.exit(0);
@@ -135,14 +118,14 @@ export default async function(argv, config, cliInfo) {
   const bus = createBus();
   createProjectWatcher({
     root: paths.appPath,
-    bus
+    bus,
   });
   createKyselyTypeGenerator({
     bus,
-    config
+    config,
   });
   createPothosBuilder({
-    bus
+    bus,
   });
   bus.subscribe("stacks.deployed", updateSiteEnvironmentOutputs);
 
@@ -150,7 +133,7 @@ export default async function(argv, config, cliInfo) {
 
   // Startup Websocket
   const ws = new Runtime.WS();
-  ws.onMessage.add(msg => {
+  ws.onMessage.add((msg) => {
     switch (msg.action) {
       case "register":
         // bridge.addPeer(msg.body);
@@ -176,7 +159,7 @@ export default async function(argv, config, cliInfo) {
   ws.start(config.region, debugEndpoint, debugBucketName);
 
   const server = new Runtime.Server({
-    port: argv.port || (await chooseServerPort(12557))
+    port: argv.port || (await chooseServerPort(12557)),
   });
 
   const local = useLocalServer({
@@ -184,35 +167,35 @@ export default async function(argv, config, cliInfo) {
     port: await chooseServerPort(13557),
     app: config.name,
     stage: config.stage,
-    region: config.region
+    region: config.region,
   });
-  server.onStdErr.add(arg => {
+  server.onStdErr.add((arg) => {
     arg.data.endsWith("\n")
       ? clientLogger.trace(arg.data.slice(0, -1))
       : clientLogger.trace(arg.data);
   });
-  server.onStdOut.add(arg => {
+  server.onStdOut.add((arg) => {
     arg.data.endsWith("\n")
       ? clientLogger.trace(arg.data.slice(0, -1))
       : clientLogger.trace(arg.data);
   });
-  server.onStdErr.add(arg => {
-    local.updateFunction(arg.funcId, s => {
-      const entry = s.invocations.find(i => i.id === arg.requestId);
+  server.onStdErr.add((arg) => {
+    local.updateFunction(arg.funcId, (s) => {
+      const entry = s.invocations.find((i) => i.id === arg.requestId);
       if (!entry) return;
       entry.logs.push({
         timestamp: Date.now(),
-        message: arg.data
+        message: arg.data,
       });
     });
   });
-  server.onStdOut.add(arg => {
-    local.updateFunction(arg.funcId, s => {
-      const entry = s.invocations.find(i => i.id === arg.requestId);
+  server.onStdOut.add((arg) => {
+    local.updateFunction(arg.funcId, (s) => {
+      const entry = s.invocations.find((i) => i.id === arg.requestId);
       if (!entry) return;
       entry.logs.push({
         timestamp: Date.now(),
-        message: arg.data
+        message: arg.data,
       });
     });
   });
@@ -225,14 +208,14 @@ export default async function(argv, config, cliInfo) {
     root: paths.appPath,
     checks: {
       type: config.typeCheck,
-      lint: config.lint
-    }
+      lint: config.lint,
+    },
   });
   functionBuilder.reload();
 
-  functionBuilder.onTransition.add(evt => {
+  functionBuilder.onTransition.add((evt) => {
     const { value, context } = evt.state;
-    local.updateFunction(context.info.id, draft => {
+    local.updateFunction(context.info.id, (draft) => {
       draft.warm = context.warm;
       draft.state = value;
       draft.issues = context.issues;
@@ -256,11 +239,11 @@ export default async function(argv, config, cliInfo) {
     }
   });
 
-  watcher.onChange.add(evt => {
+  watcher.onChange.add((evt) => {
     logger.debug("File changed: ", evt.files);
     functionBuilder.broadcast({
       type: "FILE_CHANGE",
-      file: evt.files[0]
+      file: evt.files[0],
     });
   });
 
@@ -269,21 +252,21 @@ export default async function(argv, config, cliInfo) {
     bus,
     config,
     cliInfo.cdkOptions,
-    async opts => {
+    async (opts) => {
       const result = await deploy(opts);
-      if (result.some(r => r.status === "failed"))
+      if (result.some((r) => r.status === "failed"))
         throw new Error("Stacks failed to deploy");
       return result;
     },
     appStackDeployRet
   );
-  stacksBuilder.onTransition(async state => {
-    local.updateState(draft => {
+  stacksBuilder.onTransition(async (state) => {
+    local.updateState((draft) => {
       draft.stacks.status = state.value;
     });
     if (state.value.idle) {
       if (state.value.idle === "unchanged") {
-        await Promise.all(funcs.map(f => server.drain(f).catch(() => {})));
+        await Promise.all(funcs.map((f) => server.drain(f).catch(() => {})));
         funcs.splice(0, funcs.length, ...State.Function.read(paths.appPath));
         clientLogger.info(chalk.grey("Stacks: No changes to deploy."));
       }
@@ -292,7 +275,7 @@ export default async function(argv, config, cliInfo) {
         watcher.reload(paths.appPath);
         functionBuilder.reload();
         // TODO: Move all this to functionBuilder state machine
-        await Promise.all(funcs.map(f => server.drain(f).catch(() => {})));
+        await Promise.all(funcs.map((f) => server.drain(f).catch(() => {})));
         funcs.splice(0, funcs.length, ...State.Function.read(paths.appPath));
       }
     }
@@ -315,9 +298,9 @@ export default async function(argv, config, cliInfo) {
   if (!IS_TEST) {
     readline.createInterface({
       input: process.stdin,
-      output: process.stdout
+      output: process.stdout,
     });
-    process.stdin.on("data", key => {
+    process.stdin.on("data", (key) => {
       // handle ctrl-c based on how the createInterface works
       // https://github.com/DefinitelyTyped/DefinitelyTyped/blob/0a2f0c574ce4fa573ef4e85f8c98f90c2fdf683a/types/node/readline.d.ts#L372
       if (key == "\u0003") {
@@ -330,14 +313,14 @@ export default async function(argv, config, cliInfo) {
   // Handle requests from udp or ws
   async function handleRequest(req) {
     const timeoutAt = Date.now() + req.debugRequestTimeoutInMs;
-    const func = funcs.find(f => f.id === req.functionId);
+    const func = funcs.find((f) => f.id === req.functionId);
     if (!func) {
       console.error(
         `Function "${req.functionId}" could not be found in your app`
       );
       return {
         type: "failure",
-        body: "Failed to find function"
+        body: "Failed to find function",
       };
     }
     functionBuilder.send(func.id, { type: "INVOKE" });
@@ -351,15 +334,15 @@ export default async function(argv, config, cliInfo) {
       { event: req.event }
     );
 
-    local.updateFunction(func.id, draft => {
+    local.updateFunction(func.id, (draft) => {
       if (draft.invocations.length >= 25) draft.invocations.pop();
       draft.invocations.unshift({
         id: req.context.awsRequestId,
         request: req.event,
         times: {
-          start: Date.now()
+          start: Date.now(),
         },
-        logs: []
+        logs: [],
       });
     });
 
@@ -368,32 +351,32 @@ export default async function(argv, config, cliInfo) {
       localID: func.id,
       request: {
         event: req.event,
-        context: req.context
-      }
+        context: req.context,
+      },
     });
     const result = await server.invoke({
       function: {
         ...func,
-        root: paths.appPath
+        root: paths.appPath,
       },
       env: buildInvokeEnv(req.env),
       payload: {
         event: req.event,
         context: req.context,
-        deadline: timeoutAt
-      }
+        deadline: timeoutAt,
+      },
     });
     bus.publish("function.responded", {
       localID: func.id,
       response: result,
       request: {
         event: req.event,
-        context: req.context
-      }
+        context: req.context,
+      },
     });
-    local.updateFunction(func.id, draft => {
+    local.updateFunction(func.id, (draft) => {
       const invocation = draft.invocations.find(
-        x => x.id === req.context.awsRequestId
+        (x) => x.id === req.context.awsRequestId
       );
       if (!invocation) return;
       invocation.response = result;
@@ -409,7 +392,7 @@ export default async function(argv, config, cliInfo) {
             {
               totalLength: 1500,
               arrayLength: 10,
-              stringLength: 100
+              stringLength: 100,
             }
           )}`
         ),
@@ -417,7 +400,7 @@ export default async function(argv, config, cliInfo) {
       );
       return {
         type: "success",
-        body: result.data
+        body: result.data,
       };
     }
 
@@ -434,8 +417,8 @@ export default async function(argv, config, cliInfo) {
         body: {
           errorMessage: result.error.errorMessage,
           errorType: result.error.errorType,
-          stackTrace: result.error.stackTrace
-        }
+          stackTrace: result.error.stackTrace,
+        },
       };
     }
   }
@@ -456,7 +439,7 @@ async function deployDebugStack(config, cliInfo) {
     return {
       Endpoint: "ws://test-endpoint",
       BucketArn: "bucket-arn",
-      BucketName: "bucket-name"
+      BucketName: "bucket-name",
     };
   }
 
@@ -475,9 +458,9 @@ async function deployDebugStack(config, cliInfo) {
       config.stage,
       config.region,
       // wrap paths in quotes to handle spaces in user's appPath
-      `"${paths.appPath}"`
+      `"${paths.appPath}"`,
     ].join(" "),
-    output: "cdk.out"
+    output: "cdk.out",
   };
 
   // Change working directory
@@ -521,7 +504,7 @@ async function deployApp(argv, config, cliInfo) {
   await writeConfig({
     ...config,
     debugStartedAt,
-    debugIncreaseTimeout: argv.increaseTimeout || false
+    debugIncreaseTimeout: argv.increaseTimeout || false,
   });
 
   // Build
@@ -535,11 +518,13 @@ async function deployApp(argv, config, cliInfo) {
     // Deploy
     deployRet = await deploy({
       ...cliInfo.cdkOptions,
-      hotswap: true
+      hotswap: true,
     });
 
     // Check all stacks deployed successfully
-    if (deployRet.some(stack => stack.status === STACK_DEPLOY_STATUS.FAILED)) {
+    if (
+      deployRet.some((stack) => stack.status === STACK_DEPLOY_STATUS.FAILED)
+    ) {
       throw new Error(`Failed to deploy the app`);
     }
   }
@@ -643,7 +628,7 @@ function buildInvokeEnv(reqEnv) {
 
   const env = {
     ...systemEnv,
-    ...reqEnv
+    ...reqEnv,
   };
 
   // Note: Need to merge `NODE_OPTIONS`. Otherwise, if `NODE_OPTIONS` is set in
@@ -677,7 +662,7 @@ function parseEventSource(event) {
       if (event.Records[0].EventSource === "aws:sns") {
         // TopicArn: arn:aws:sns:us-east-1:123456789012:ExampleTopic
         const topics = array.unique(
-          event.Records.map(record => record.Sns.TopicArn.split(":").pop())
+          event.Records.map((record) => record.Sns.TopicArn.split(":").pop())
         );
         return topics.length === 1
           ? `SNS topic ${topics[0]}`
@@ -687,7 +672,7 @@ function parseEventSource(event) {
       if (event.Records.EventSource === "aws:sqs") {
         // eventSourceARN: arn:aws:sqs:us-east-1:123456789012:MyQueue
         const names = array.unique(
-          event.Records.map(record => record.eventSourceARN.split(":").pop())
+          event.Records.map((record) => record.eventSourceARN.split(":").pop())
         );
         return names.length === 1
           ? `SQS queue ${names[0]}`
