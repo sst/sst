@@ -1,5 +1,15 @@
 # @serverless-stack/cli
 
+## 1.2.22
+
+### Patch Changes
+
+- [`856f1ad4`](https://github.com/serverless-stack/serverless-stack/commit/856f1ad4845e77c58fa7500c7e45fa8a578dd853) Thanks [@thdxr](https://github.com/thdxr)! - Removed unused requests to cloudformation on start that were printing rate limit error messages
+
+- Updated dependencies []:
+  - @serverless-stack/resources@1.2.22
+  - @serverless-stack/core@1.2.22
+
 ## 1.2.21
 
 ### Patch Changes
