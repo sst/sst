@@ -5,6 +5,6 @@ export default [
   extract(),
   install({
     packages: ["node-fetch", "lambda-multipart-parser"],
-    path: "backend",
+    path: "api",
   }),
 ];

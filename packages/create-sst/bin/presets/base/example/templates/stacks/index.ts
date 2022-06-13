@@ -4,7 +4,7 @@ import { MyStack } from "./MyStack";
 export default function main(app: App) {
   app.setDefaultFunctionProps({
     runtime: "nodejs16.x",
-    srcPath: "backend",
+    srcPath: "api",
   });
   app.stack(MyStack);
 }

@@ -7,7 +7,7 @@ export function MyStack({ stack }: StackContext) {
   const cluster = new RDS(stack, "Cluster", {
     engine: "postgresql10.14",
     defaultDatabaseName: DATABASE,
-    migrations: "backend/migrations",
+    migrations: "api/migrations",
   });
 
   // Create a HTTP API

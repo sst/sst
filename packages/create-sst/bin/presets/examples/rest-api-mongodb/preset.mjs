@@ -5,6 +5,6 @@ export default [
   extract(),
   install({
     packages: ["mongodb"],
-    path: "backend",
+    path: "api",
   }),
 ];

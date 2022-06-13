@@ -5,7 +5,7 @@ export default [
   extract(),
   install({
     packages: ["@thundra/esbuild-plugin"],
-    path: "backend",
+    path: "api",
     dev: true,
   }),
   patch({

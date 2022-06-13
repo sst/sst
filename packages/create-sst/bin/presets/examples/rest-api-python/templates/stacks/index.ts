@@ -4,7 +4,7 @@ import { MyStack } from "./MyStack";
 export default function main(app: App) {
   app.setDefaultFunctionProps({
     runtime: "python3.8",
-    srcPath: "backend",
+    srcPath: "api",
   });
   app.stack(MyStack);
   // Add more stacks

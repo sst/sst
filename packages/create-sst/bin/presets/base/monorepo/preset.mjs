@@ -8,17 +8,17 @@ export default [
       {
         op: "add",
         path: "/workspaces",
-        value: ["backend"],
+        value: ["api"],
       },
     ],
   }),
   install({
     packages: ["aws-sdk"],
-    path: "backend",
+    path: "api",
   }),
   install({
     packages: ["@types/aws-lambda"],
-    path: "backend",
+    path: "api",
     dev: true,
   }),
 ];

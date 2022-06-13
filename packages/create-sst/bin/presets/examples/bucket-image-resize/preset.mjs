@@ -5,11 +5,11 @@ export default [
   extract(),
   install({
     packages: ["sharp"],
-    path: "backend",
+    path: "api",
   }),
   install({
     packages: ["@types/sharp"],
-    path: "backend",
+    path: "api",
     dev: true,
   }),
 ];

@@ -5,6 +5,6 @@ export default [
   extract(),
   install({
     packages: ["chrome-aws-lambda", "puppeteer", "puppeteer-core"],
-    path: "backend",
+    path: "api",
   }),
 ];

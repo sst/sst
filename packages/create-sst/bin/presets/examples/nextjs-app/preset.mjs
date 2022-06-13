@@ -5,7 +5,7 @@ export default [
   extract(),
   install({
     packages: ["@sls-next/lambda-at-edge"],
-    path: "backend",
+    path: "api",
   }),
   patch({
     file: "package.json",
