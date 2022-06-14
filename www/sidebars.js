@@ -1,20 +1,17 @@
 module.exports = {
   docs: [
     {
-      " ": [
-        "about",
-        "installation",
-      ]
+      " ": ["about", "installation"],
     },
     {
       // Goal: the shortest path to the WOW experience
-      "Fundamentals": [
+      Fundamentals: [
         // Change this to Constructs
         // - SST at a Glance
         "architecture",
         "live-lambda-development",
-        "console"
-      ]
+        "console",
+      ],
     },
     {
       Learn: [
@@ -30,19 +27,19 @@ module.exports = {
             "learn/console",
             "learn/local-development",
             "learn/start-frontend",
-          ]
+          ],
         },
         {
           type: "category",
-          label: "2 - Adding new Database entity",
+          label: "2 - Adding new feature",
           collapsible: true,
           collapsed: true,
           items: [
+            "learn/domain-driven-design",
             "learn/database-options",
             "learn/rds-migrations",
-            "learn/rds-types",
             "learn/dynamodb",
-          ]
+          ],
         },
         {
           type: "category",
@@ -53,7 +50,7 @@ module.exports = {
             "learn/graphql-api",
             "learn/add-api-types",
             "learn/queries-and-mutations",
-          ]
+          ],
         },
         {
           type: "category",
@@ -64,22 +61,19 @@ module.exports = {
             "learn/call-api",
             "learn/render-comments",
             "learn/frontend-options",
-          ]
+          ],
         },
         {
           type: "category",
           label: "5 - Deployment",
           collapsible: true,
           collapsed: true,
-          items: [
-            "learn/deploy-to-prod",
-            "learn/deploy-with-seed",
-          ]
+          items: ["learn/deploy-to-prod", "learn/deploy-with-seed"],
         },
         {
           type: "doc",
           label: "Intermission",
-          id: "api"
+          id: "api",
         },
         {
           // I think each of these things deserves its own section (from dax)
@@ -116,8 +110,8 @@ module.exports = {
             { type: "doc", id: "api", label: "Auth" },
 
             // Link to examples for WebSocket and AppSyncApi
-            { type: "doc", id: "api", label: "Other API options" }
-          ]
+            { type: "doc", id: "api", label: "Other API options" },
+          ],
         },
         {
           type: "category",
@@ -128,8 +122,8 @@ module.exports = {
             { type: "doc", id: "api", label: "Testing" },
             { type: "doc", id: "api", label: "Going to Production" },
             { type: "doc", id: "api", label: "Environment Variables" },
-            { type: "doc", id: "api", label: "Working with Your Team" }
-          ]
+            { type: "doc", id: "api", label: "Working with Your Team" },
+          ],
         },
         //"api",
         //"auth",
@@ -160,29 +154,29 @@ module.exports = {
             "advanced/cross-stack-references",
             "advanced/linting-and-type-checking",
             //"advanced/monorepo-project-structure",
-            "advanced/environment-specific-resources"
-          ]
-        }
-      ]
+            "advanced/environment-specific-resources",
+          ],
+        },
+      ],
     },
     {
-      "Migrating From": ["migrating/cdk", "migrating/serverless-framework"]
+      "Migrating From": ["migrating/cdk", "migrating/serverless-framework"],
     },
     {
-      More: ["known-issues", "design-principles", "anonymous-telemetry", "faq"]
+      More: ["known-issues", "design-principles", "anonymous-telemetry", "faq"],
     },
     {
       Packages: [
         "packages/cli",
         "packages/create-sst",
         "packages/resources",
-        "packages/static-site-env"
-      ]
-    }
+        "packages/static-site-env",
+      ],
+    },
   ],
   constructsv0: [
     {
-      " ": ["constructs/v0/index", "constructs/v0/migration"]
+      " ": ["constructs/v0/index", "constructs/v0/migration"],
     },
     {
       Constructs: [
@@ -207,15 +201,15 @@ module.exports = {
         "constructs/v0/KinesisStream", // shorter in length viewed in browser
         "constructs/v0/WebSocketApi",
         "constructs/v0/ReactStaticSite",
-        "constructs/v0/ApiGatewayV1Api"
-      ]
+        "constructs/v0/ApiGatewayV1Api",
+      ],
     },
     {
-      Util: ["util/Permissions"]
+      Util: ["util/Permissions"],
     },
     {
-      Internals: ["constructs/DebugApp", "constructs/DebugStack"]
-    }
+      Internals: ["constructs/DebugApp", "constructs/DebugStack"],
+    },
   ],
   constructs: [
     {
@@ -224,14 +218,14 @@ module.exports = {
         {
           type: "link",
           label: "v0 Constructs",
-          href: "/constructs/v0"
+          href: "/constructs/v0",
         },
         {
           type: "link",
           label: "Migrate to v1.0",
-          href: "/constructs/v0/migration"
-        }
-      ]
+          href: "/constructs/v0/migration",
+        },
+      ],
     },
     {
       Core: ["constructs/App", "constructs/Stack", "constructs/Function"],
@@ -239,13 +233,13 @@ module.exports = {
         "constructs/Api",
         "constructs/GraphQLApi",
         "constructs/AppSyncApi",
-        "constructs/WebSocketApi"
+        "constructs/WebSocketApi",
       ],
       Frontend: [
         "constructs/StaticSite",
         "constructs/NextjsSite",
         "constructs/ViteStaticSite",
-        "constructs/ReactStaticSite"
+        "constructs/ReactStaticSite",
       ],
       Database: ["constructs/RDS", "constructs/Table"],
       Async: [
@@ -253,21 +247,21 @@ module.exports = {
         "constructs/Topic",
         "constructs/Queue",
         "constructs/EventBus",
-        "constructs/KinesisStream"
+        "constructs/KinesisStream",
       ],
       Storage: ["constructs/Bucket"],
       Auth: ["constructs/Auth"],
       Types: [
         "constructs/Size",
         "constructs/Duration",
-        "constructs/Permissions"
+        "constructs/Permissions",
       ],
       Other: [
         "constructs/Script",
         "constructs/DebugApp",
         "constructs/DebugStack",
-        "constructs/ApiGatewayV1Api"
-      ]
-    }
-  ]
+        "constructs/ApiGatewayV1Api",
+      ],
+    },
+  ],
 };

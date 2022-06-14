@@ -1,6 +1,6 @@
 ---
 id: project-structure
-title: Project Structure [D]
+title: Project Structure
 description: "Project structure of an SST app"
 ---
 
