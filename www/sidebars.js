@@ -37,8 +37,8 @@ module.exports = {
           items: [
             "learn/domain-driven-design",
             "learn/database-options",
-            "learn/rds-migrations",
-            "learn/dynamodb",
+            "learn/implementation-rds",
+            "learn/implementation-dynamo",
           ],
         },
         {

@@ -1,6 +1,6 @@
 ---
-id: rds-migrations
-title: Create New Migration [F]
+id: implementation-rds
+title: Implementing features with RDS
 description: "Database Migrations of an SST app"
 ---
 
