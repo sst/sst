@@ -4,10 +4,6 @@ title: Database Options [D]
 description: "Database Options of an SST app"
 ---
 
-Explain the idea of keeping business logic separate from the Database.
-
-Add list and create comments functions.
-
 The starter uses RDS, but you can use any database of your choice.
 
 What is RDS and when to use RDS?
