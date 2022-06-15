@@ -1,6 +1,6 @@
 ---
 id: database-options
-title: Database Options [D]
+title: Database Options
 description: "Database Options of an SST app"
 ---
 
