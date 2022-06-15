@@ -273,7 +273,7 @@ Only supported for the **Node.js** and **Python** runtimes.
 
 #### Using the basic config
 
-```js {5}
+```js
 new Function(stack, "MyFunction", {
   handler: "src/lambda.main",
   url: true,
@@ -282,7 +282,7 @@ new Function(stack, "MyFunction", {
 
 #### Authorization
 
-```js {5}
+```js
 new Function(stack, "MyFunction", {
   handler: "src/lambda.main",
   url: {
@@ -293,7 +293,7 @@ new Function(stack, "MyFunction", {
 
 #### Disabling CORS
 
-```js {5}
+```js
 new Function(stack, "MyFunction", {
   handler: "src/lambda.main",
   url: {
@@ -304,7 +304,7 @@ new Function(stack, "MyFunction", {
 
 #### Configuring CORS
 
-```js {5}
+```js
 new Function(stack, "MyFunction", {
   handler: "src/lambda.main",
   url: {
