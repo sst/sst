@@ -14,7 +14,7 @@ program
   .name("create-sst")
   .description("CLI to create SST projects")
   .option("--examples", "Show example templates", false)
-  .option("--minimal", "Show minimal templates", false)
+  .option("--minimal", "Show minimal templates", true)
   .argument("[directory]", "The destination directory")
   .action(async (destination) => {
     const opts = program.opts();
