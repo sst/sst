@@ -3,8 +3,8 @@
 Use the [`cdk.lambda.FunctionOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.FunctionOptions.html) to set additional props.
 
 ```js
-new Function(stack, "MyApiLambda", {
-  handler: "src/api.main",
+new Function(stack, "MyFunction", {
+  handler: "src/lambda.main",
   timeout: 10,
   environment: {
     TABLE_NAME: "notes",
@@ -39,8 +39,8 @@ import { StringParameter } from "aws-cdk-lib/aws-ssm";
 
 const apiKey = StringParameter.valueFromLookup(this, "my_api_key");
 
-new Function(stack, "MyApiLambda", {
-  handler: "src/api.main",
+new Function(stack, "MyFunction", {
+  handler: "src/lambda.main",
   environment: {
     API_KEY: apiKey,
   },
@@ -269,6 +269,53 @@ The directory where `.fsproj` is found.
 
 Only supported for the **Node.js** and **Python** runtimes.
 
+### Function URLs
+
+#### Using the basic config
+
+```js {5}
+new Function(stack, "MyFunction", {
+  handler: "src/lambda.main",
+  url: true,
+});
+```
+
+#### Authorization
+
+```js {5}
+new Function(stack, "MyFunction", {
+  handler: "src/lambda.main",
+  url: {
+    authorizer: "iam"
+  },
+});
+```
+
+#### Disabling CORS
+
+```js {5}
+new Function(stack, "MyFunction", {
+  handler: "src/lambda.main",
+  url: {
+    cors: false,
+  },
+});
+```
+
+#### Configuring CORS
+
+```js {5}
+new Function(stack, "MyFunction", {
+  handler: "src/lambda.main",
+  url: {
+    cors: {
+      allowMethods: ["GET", "POST"],
+      allowOrigins: ["https://domain.com"],
+    }
+  },
+});
+```
+
 ### Advanced examples
 
 #### Configuring a Dead Letter Queue
@@ -276,8 +323,8 @@ Only supported for the **Node.js** and **Python** runtimes.
 ```js {5}
 const queue = new Queue(this, "MyDLQ");
 
-new Function(stack, "MyApiLambda", {
-  handler: "src/api.main",
+new Function(stack, "MyFunction", {
+  handler: "src/lambda.main",
   deadLetterQueue: queue.cdk.queue,
 });
 ```
@@ -285,8 +332,8 @@ new Function(stack, "MyApiLambda", {
 #### Configuring Provisioned Concurrency
 
 ```js {3-5,8}
-const fn = new Function(stack, "MyApiLambda", {
-  handler: "src/api.main",
+const fn = new Function(stack, "MyFunction", {
+  handler: "src/lambda.main",
   currentVersionOptions: {
     provisionedConcurrentExecutions: 5,
   },
@@ -308,8 +355,8 @@ const vpc = new ec2.Vpc(this, 'MyVPC');
 // Alternatively use an existing VPC
 const vpc = ec2.Vpc.fromLookup(stack, 'VPC', { ... });
 
-new Function(stack, "MyApiLambda", {
-  handler: "src/api.main",
+new Function(stack, "MyFunction", {
+  handler: "src/lambda.main",
   vpc,
   vpcSubnet: {
     subnetType: ec2.SubnetType.PRIVATE_WITH_NAT,

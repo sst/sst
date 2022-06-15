@@ -1,4 +1,4 @@
-import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
+import { HttpMethod, FunctionUrlCorsOptions } from "aws-cdk-lib/aws-lambda";
 import { Duration, toCdkDuration } from "./duration.js";
 
 export interface CorsProps {
@@ -12,8 +12,17 @@ export interface CorsProps {
   allowHeaders?: string[];
   /**
    * The collection of allowed HTTP methods.
+   *
+   * @example
+   * ```js
+   * // Allow all methods
+   * allowMethods: ["*"]
+   *
+   * // Allow specific methods
+   * allowMethods: ["GET", "POST"]
+   * ```
    */
-  allowMethods?: (keyof typeof apig.CorsHttpMethod)[];
+  allowMethods?: (keyof Omit<typeof HttpMethod, "ALL"> | "*")[];
   /**
    * The collection of allowed origins.
    *
@@ -39,7 +48,7 @@ export interface CorsProps {
 
 export function buildCorsConfig(
   cors?: boolean | CorsProps
-): apig.CorsPreflightOptions | undefined {
+): FunctionUrlCorsOptions | undefined {
   // Handle cors: false
   if (cors === false) {
     return;
@@ -48,23 +57,25 @@ export function buildCorsConfig(
   // Handle cors: true | undefined
   else if (cors === undefined || cors === true) {
     return {
-      allowHeaders: ["*"],
-      allowMethods: [apig.CorsHttpMethod.ANY],
-      allowOrigins: ["*"],
+      allowedHeaders: ["*"],
+      allowedMethods: [HttpMethod.ALL],
+      allowedOrigins: ["*"],
     };
   }
 
-  // Handle cors: apig.CorsPreflightOptions
+  // Handle cors: FunctionUrlCorsOptions
   else {
     return {
       allowCredentials: cors.allowCredentials,
-      allowHeaders: cors.allowHeaders,
-      allowMethods: (cors.allowMethods || []).map(
+      allowedHeaders: cors.allowHeaders,
+      allowedMethods: (cors.allowMethods || []).map(
         (method) =>
-          apig.CorsHttpMethod[method as keyof typeof apig.CorsHttpMethod]
+          method === "*"
+            ? HttpMethod.ALL
+            : HttpMethod[method as keyof typeof HttpMethod]
       ),
-      allowOrigins: cors.allowOrigins,
-      exposeHeaders: cors.exposeHeaders,
+      allowedOrigins: cors.allowOrigins,
+      exposedHeaders: cors.exposeHeaders,
       maxAge: cors.maxAge && toCdkDuration(cors.maxAge),
     };
   }
