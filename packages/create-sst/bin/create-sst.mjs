@@ -13,37 +13,43 @@ const DEFAULT_CATEGORY = "starters";
 program
   .name("create-sst")
   .description("CLI to create SST projects")
-  .option("--examples", "Only show example templates", false)
-  .argument("[template]", "The template to clone")
-  .argument("[]", "The destination directory")
-  .action(async (preset, destination) => {
+  .option("--examples", "Show example templates", false)
+  .option("--minimal", "Show minimal templates", false)
+  .argument("[directory]", "The destination directory")
+  .action(async (destination) => {
     const opts = program.opts();
     const cwd = process.cwd();
     const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
     process.chdir(__dirname);
 
-    const scan = !opts.examples ? ["starters"] : ["examples"];
-    const presets = (
-      await Promise.all(
-        scan.map(async (category) => {
-          const folders = await fs.readdir(
-            path.join(__dirname, "presets", category)
-          );
-          return folders.map((folder) =>
-            path.join(category === DEFAULT_CATEGORY ? "" : category, folder)
-          );
-        })
-      )
-    ).flat();
+    let preset = path.join("presets", "default");
+
+    if (opts.examples || opts.minimal) {
+      const scan = opts.minimal ? ["starters"] : ["examples"];
+      const presets = (
+        await Promise.all(
+          scan.map(async (category) => {
+            const folders = await fs.readdir(
+              path.join(__dirname, "presets", category)
+            );
+            return folders.map((folder) =>
+              path.join(category === DEFAULT_CATEGORY ? "" : category, folder)
+            );
+          })
+        )
+      ).flat();
+      const answers = await inquirer.prompt([
+        {
+          name: "preset",
+          type: "list",
+          choices: presets.flat(),
+          message: "Select a template",
+        },
+      ]);
+      preset = path.join("presets", answers.preset);
+    }
+
     const answers = await inquirer.prompt([
-      {
-        name: "preset",
-        type: "list",
-        when: !preset,
-        choices: presets.flat(),
-        default: "typescript-starter",
-        message: "Select a template",
-      },
       {
         name: "destination",
         type: "input",
@@ -62,18 +68,12 @@ program
     destination = path.resolve(
       path.join(cwd, selection.destination || destination)
     );
-    preset = selection.preset || preset;
-    preset = path.join(
-      "presets",
-      preset.includes("/") ? "" : DEFAULT_CATEGORY,
-      preset
-    );
     const spinner = ora();
 
     try {
       await fs.access(preset);
     } catch {
-      spinner.fail(`Template not found`);
+      spinner.fail(`Template not found at ` + preset);
       return;
     }
     spinner.start("Creating project");
