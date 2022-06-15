@@ -1,5 +1,14 @@
 # @serverless-stack/resources
 
+## 1.2.23
+
+### Patch Changes
+
+- [#1811](https://github.com/serverless-stack/serverless-stack/pull/1811) [`fb7d3b02`](https://github.com/serverless-stack/serverless-stack/commit/fb7d3b02a9026b31e42167473d7d3eba21a63f7a) Thanks [@fwang](https://github.com/fwang)! - Function: lift function url to top level prop
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.2.23
+
 ## 1.2.22
 
 ### Patch Changes
