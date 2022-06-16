@@ -1,5 +1,11 @@
 # @serverless-stack/core
 
+## 1.2.25
+
+### Patch Changes
+
+- [#1816](https://github.com/serverless-stack/serverless-stack/pull/1816) [`fd8330bf`](https://github.com/serverless-stack/serverless-stack/commit/fd8330bfe53934691c9d74b273a0109120c68bcf) Thanks [@fwang](https://github.com/fwang)! - Cli: fix sst start error "stack does not exist" when custom stack name used
+
 ## 1.2.24
 
 ## 1.2.23
