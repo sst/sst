@@ -33,7 +33,7 @@ export async function metadata(root: string, config: Config) {
     stacks.map(async stack => {
       const resource = await cfn
         .describeStackResource({
-          StackName: stack.displayName,
+          StackName: stack.properties.stackName || stack.displayName,
           LogicalResourceId: "SSTMetadata"
         })
         .promise();
