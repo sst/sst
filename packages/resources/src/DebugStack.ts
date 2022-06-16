@@ -24,6 +24,12 @@ export interface DebugStackProps extends cdk.StackProps {
    * Lambda function props for WebSocket request handlers.
    */
   websocketHandlerRoleArn?: string;
+  cdk?: {
+    /**
+     * Override the settings of the internally created DynamoDB table
+     */
+    table?: Omit<dynamodb.TableProps, "partitionKey" | "sortKey">;
+  };
 }
 
 /**
@@ -60,6 +66,7 @@ export class DebugStack extends cdk.Stack {
       partitionKey: { name: "pk", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
+      ...props?.cdk?.table,
     });
 
     // Create S3 bucket for storing large payloads

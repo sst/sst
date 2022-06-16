@@ -1,5 +1,5 @@
 import { Match, Matcher, MatchResult, Template } from "aws-cdk-lib/assertions";
-import { Stack } from "../src";
+import { Stack } from "aws-cdk-lib";
 
 ///////////////////////
 // Matcher functions //
