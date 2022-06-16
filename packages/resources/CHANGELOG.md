@@ -1,5 +1,14 @@
 # @serverless-stack/resources
 
+## 1.2.24
+
+### Patch Changes
+
+- [#1814](https://github.com/serverless-stack/serverless-stack/pull/1814) [`33b89b64`](https://github.com/serverless-stack/serverless-stack/commit/33b89b64af3a9cec98dea0f3c5fcc7279a8142b0) Thanks [@fwang](https://github.com/fwang)! - DebugStack: allow customizing DynamoDB Table
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.2.24
+
 ## 1.2.23
 
 ### Patch Changes
