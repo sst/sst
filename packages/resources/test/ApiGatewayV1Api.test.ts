@@ -1,4 +1,4 @@
-import { test, expect, vi } from "vitest";
+import { test, expect, vi, beforeEach } from "vitest";
 import {
   ANY,
   ABSENT,
@@ -20,6 +20,12 @@ const lambdaDefaultPolicy = {
   Effect: "Allow",
   Resource: "*",
 };
+
+const actualHostedZoneFromLookup = route53.HostedZone.fromLookup;
+
+beforeEach(() => {
+  route53.HostedZone.fromLookup = actualHostedZoneFromLookup;
+})
 
 ///////////////////
 // Test Constructor
@@ -488,6 +494,11 @@ test("customDomain: internal domain: domainName is string (uppercase error)", as
 test("customDomain: internal domain: domainName is string (imported ssm), hostedZone defined", async () => {
   const stack = new Stack(new App({ name: "apiv1" }), "stack");
   const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
+  route53.HostedZone.fromLookup = vi
+    .fn()
+    .mockImplementation((scope, id, { domainName }) => {
+      return new route53.HostedZone(scope, id, { zoneName: domainName });
+    });
   new ApiGatewayV1Api(stack, "Api", {
     customDomain: {
       domainName: domain,
@@ -548,6 +559,49 @@ test("customDomain: internal domain: domainName is string (imported ssm), cdk.ho
       Ref: ANY,
     },
     Type: "A",
+  });
+});
+
+test("customDomain: internal domain: domainName is string, cdk.hostedZone defined", async () => {
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
+  route53.HostedZone.fromLookup = vi
+    .fn()
+    .mockImplementation(() => {
+      // If cdk.hostedZone is provided that should be used and no lookup should be required
+      throw new Error('No hosted zone should be looked up');
+    });
+  new ApiGatewayV1Api(stack, "Api", {
+    customDomain: {
+      domainName: 'api.domain.com',
+      cdk: {
+        hostedZone: new route53.HostedZone(stack, "Zone", {
+          zoneName: "domain.com",
+        }),
+      }
+    },
+  });
+
+  hasResource(stack, "AWS::ApiGateway::RestApi", {
+    Name: "dev-apiv1-Api",
+  });
+  hasResource(stack, "AWS::ApiGateway::DomainName", {
+    DomainName: "api.domain.com",
+    EndpointConfiguration: { Types: ["REGIONAL"] },
+    RegionalCertificateArn: { Ref: "ApiCertificate285C31EB" },
+  });
+  hasResource(stack, "AWS::CertificateManager::Certificate", {
+    DomainName: "api.domain.com",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "api.domain.com.",
+    Type: "A",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "api.domain.com.",
+    Type: "AAAA",
+  });
+  hasResource(stack, "AWS::Route53::HostedZone", {
+    Name: "domain.com.",
   });
 });
 

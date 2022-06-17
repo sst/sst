@@ -947,12 +947,17 @@ export class ApiGatewayV1Api<
       }
 
       // parse customDomain.hostedZone
-      if (!customDomain.hostedZone) {
+      if (customDomain.hostedZone && customDomain.cdk?.hostedZone) {
+        throw new Error(
+          `Cannot configure "hostedZone" when the "cdk.hostedZone" is provided`
+        );
+      }
+      if (customDomain.cdk?.hostedZone) {
+        hostedZone = customDomain.cdk?.hostedZone;
+      } else if (!customDomain.hostedZone) {
         hostedZoneDomain = domainName.split(".").slice(1).join(".");
       } else if (typeof customDomain.hostedZone === "string") {
         hostedZoneDomain = customDomain.hostedZone;
-      } else {
-        hostedZone = customDomain.hostedZone;
       }
 
       certificate = customDomain.cdk?.certificate;
