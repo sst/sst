@@ -605,6 +605,23 @@ test("customDomain: internal domain: domainName is string, cdk.hostedZone define
   });
 });
 
+test("customDomain: internal domain: domainName is string, hostedZone is string, cdk.hostedZone defined", async () => {
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
+  expect(() => {
+    new ApiGatewayV1Api(stack, "Api", {
+      customDomain: {
+        domainName: "api.domain.com",
+        hostedZone: 'domain.com',
+        cdk: {
+          hostedZone: new route53.HostedZone(stack, "Zone", {
+            zoneName: "domain.com",
+          }),
+        }
+      },
+    });
+  }).toThrow(/Cannot configure "hostedZone" when the "cdk\.hostedZone" is provided/);
+});
+
 test("customDomain: internal domain: domainName is string (imported ssm), hostedZone undefined", async () => {
   const stack = new Stack(new App({ name: "apiv1" }), "stack");
   const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
