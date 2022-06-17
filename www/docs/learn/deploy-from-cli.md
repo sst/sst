@@ -1,6 +1,6 @@
 ---
-id: deploy-to-prod
-title: Deploying to Production [F]
+id: deploy-from-cli
+title: Deploying from CLI [F]
 description: "Deploying an SST app to Production"
 ---
 

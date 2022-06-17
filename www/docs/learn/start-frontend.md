@@ -1,30 +1,31 @@
 ---
 id: start-frontend
-title: Start Frontend [F]
+title: Start Frontend [J]
 description: "Start frontend for an SST app"
 ---
 
-## Set up frontend
+Now let's start up our frontend locally.
 
 ```bash
 cd web
-npm i
+npm run dev
 ```
 
-## Start up frontend
-
-Open up `package.json`, the `dev` script is prepended with `sst-env --`.
-
-It passes the backend deployed resources, ie. API endpoint, to the frontend as environment variables.
+Once the site is up and running, you should see the following printed out in the terminal.
 
 ```bash
-npm dev
+  vite v2.9.12 dev server running at:
+
+  > Local: http://localhost:3000/
+  > Network: use `--host` to expose
+
+  ready in 346ms.
 ```
 
-Note that if `sst start` has not started up yet, the command 
+Open the link in the browser, you should no articles because we haven't created any.
 
-Go to `localhost:3000` in your browser.
+![](/img/start-frontend/frontend.png)
 
-Load articles.
+By opening this page, a GraphQL query was made to fetch all the articles in the DB. Now back to the Console, if you look at the Live Lambda logs under the `Local` tab, you should see a `POST /graphql` request made. And the response body says `"articles":[]`.
 
-See function logs in the Console.
+![](/img/start-frontend/console-log.png)

@@ -1,32 +1,17 @@
 ---
-title: Architecture
+title: Constructs [J]
 description: "Learn about how Serverless Stack (SST) apps are structured."
 ---
 
-SST provides all the basic building blocks you need to create a full-stack serverless application. An SST app is roughly made up of:
+SST provides all the basic building blocks you need to create a full-stack serverless application. These building blocks are called **Constructs**. Each construct consists of multiple AWS resources to make up a functional unit. SST picks sensible defaults for the underlying resources, so you are not exposed to all the complexity up front.
 
-1. Code that defines your infrastructure.
-2. Code that powers your Lambda functions, or your _application code_.
-
-Let's look at the two in detail.
-
-## Infrastructure
-
-The Infrastructure of your SST app is defined using [AWS CDK](https://aws.amazon.com/cdk/). It allows you to use real programming languages to define your infrastructure. SST currently supports JavaScript and TypeScript for your infrastructure code.
-
-The infrastructure portion of an SST app is made up of the following.
-
-### Constructs
-
-Constructs are the basic building blocks of SST apps. Each construct consists of multiple AWS resources to make up a functional unit. SST picks sensible defaults for the underlying resources, so you are not exposed to all the complexity up front.
-
-For example, [`Api`](constructs/Api.md) is a commonly used construct to create a RESTful backend API. It consists of an AWS API Gateway project, Lambda functions, and a few other AWS resources. But it's wrapped up with sensible defaults to help you get started.
+For example, [`Api`](constructs/Api.md) is a commonly used construct to create a backend API. It consists of an AWS API Gateway project, Lambda functions, and a few other AWS resources. But it's wrapped up with sensible defaults to help you get started.
 
 ```js
 new Api(this, "Api", {
   routes: {
-    "GET    /notes": "src/list.main",
-    "POST   /notes": "src/create.main",
+    "GET  /notes": "src/list.main",
+    "POST /notes": "src/create.main",
   },
 });
 ```
@@ -41,7 +26,7 @@ For example, if you are building a Twitter clone, you might have:
 
 - A `api` stack with the API
 - A `database` stack with the DynamoDB Table
-- A `web` stack with a React web app for the frontend
+- A `web` stack with a React web app for the frontendRESTful 
 - A `digest` stack with a Cron job that sends people daily email digest
 
 A quick note on moving constructs across stacks. Once your app has been deployed, moving a construct between stacks requires destroying the construct from the old stack, and recreating it in the new stack. In the case of a [`Table`](constructs/Table.md) or [`Bucket`](constructs/Bucket.md) construct, the data is lost. And in the case of an [`Api`](constructs/Api.md), the API endpoint will change when it's recreated.
@@ -53,7 +38,8 @@ An app consists of one or more stacks. In most cases, all of your stacks should 
 ```js title="stacks/index.js"
 export default function main(app) {
   app
-    .stack(CoreStack)
+    .stack(DBStack)
+    .stack(ApiStack)
     .stack(WebStack)
     .stack(DigestStack)
 }
@@ -91,7 +77,7 @@ A JavaScript or TypeScript Lambda function in SST is usually defined using the f
 
 Where `functionName` is the function exported by the given file.
 
-SST is designed to have both the infrastructure code and function code sit in the same repo. You can read more about SST's [Project layout](installation.md#project-layout).
+SST is designed to have both the infrastructure code and function code sit in the same repo. You can read more about SST's [Project layout](learn/project-structure).
 
 ## Deployed to your AWS account
 
@@ -100,3 +86,20 @@ Your SST app is deployed to your AWS account. Make sure to [set up the IAM crede
 ## CDK and CloudFormation
 
 Under the hood, SST uses AWS CDK to compile each stack into a [CloudFormation template](https://aws.amazon.com/cloudformation/resources/templates/), and deployed as a CloudFormation stack. 
+
+---
+
+## TODO ^^ REMOVE EVERYTHING BELOW ^^
+
+An SST app is roughly made up of:
+
+1. Code that defines your infrastructure.
+2. Code that powers your Lambda functions, or your _application code_.
+
+Let's look at the two in detail.
+
+## Infrastructure
+
+The Infrastructure of your SST app is defined using [AWS CDK](https://aws.amazon.com/cdk/). It allows you to use real programming languages to define your infrastructure. SST currently supports JavaScript and TypeScript for your infrastructure code.
+
+The infrastructure portion of an SST app is made up of the following.

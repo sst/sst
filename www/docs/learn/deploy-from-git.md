@@ -1,6 +1,6 @@
 ---
-id: deploy-with-seed
-title: Deploy with Seed [F]
+id: deploy-from-git
+title: Git Push to Deploy [F]
 description: "Deploying an SST app with Seed"
 ---
 
