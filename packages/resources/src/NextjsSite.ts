@@ -81,6 +81,13 @@ export interface NextjsSiteProps {
    */
   path: string;
   /**
+   * Path to the next executable, typically in node_modules.
+   * This should be used if next is installed in a non-standard location.
+   * 
+   * @default "./node_modules/.bin/next"
+   */
+  nextBinPath?: string;
+  /**
    * The customDomain for this website. SST supports domains that are hosted either on [Route 53](https://aws.amazon.com/route53/) or externally.
    *
    * Note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
@@ -906,6 +913,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
       JSON.stringify({
         cwd: path.resolve(sitePath),
         args: ["build"],
+        cmd: this.props.nextBinPath ?? "./node_modules/.bin/next"
       })
     );
 
