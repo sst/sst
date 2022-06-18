@@ -1,5 +1,14 @@
 # @serverless-stack/resources
 
+## 1.2.26
+
+### Patch Changes
+
+- [`2622d51e`](https://github.com/serverless-stack/serverless-stack/commit/2622d51e64451b79deea7f353f7789ecdf686c56) Thanks [@thdxr](https://github.com/thdxr)! - Support non-standard NextJS installation path
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.2.26
+
 ## 1.2.25
 
 ### Patch Changes
