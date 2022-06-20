@@ -57,9 +57,12 @@ module.exports = {
           collapsible: true,
           collapsed: true,
           items: [
-            "learn/call-api",
+            "learn/fetch-comments",
             "learn/render-comments",
-            "learn/frontend-options",
+
+            //Link to Vue example
+            //Link to Next.js example
+            //"learn/frontend-options",
           ],
         },
         {
@@ -82,26 +85,26 @@ module.exports = {
         // Create a user in Console
         // Test out the auth flow
         // Link to examples for Facebook, Google, GitHub examples
-        { type: "doc", id: "api", label: "Auth" },
+        //{ type: "doc", id: "api", label: "Auth" },
 
         // Create a Bucket construct
         // Add an API Mutation for generating prefixed url
         // Implementing file upload in the frontend
         // View the uploaded file in Console
-        { type: "doc", id: "api", label: "File Upload" },
+        //{ type: "doc", id: "api", label: "File Upload" },
 
         // Create a Cron construct
-        { type: "doc", id: "api", label: "Cron Jobs" },
+        //{ type: "doc", id: "api", label: "Cron Jobs" },
 
         // Create comments created and comments removed SNS topics
         // Fire events
         // View comment count updated in SST Console
         // Link to examples for Queues, EventBuses, and KinesisStreams
-        { type: "doc", id: "api", label: "Events" },
+        //{ type: "doc", id: "api", label: "Events" },
 
         // Add a RESTful route
         // Invoke the endpoint in Console
-        { type: "doc", id: "api", label: "RESTful routes" },
+        //{ type: "doc", id: "api", label: "RESTful routes" },
 
         //"api",
         //"auth",
@@ -134,8 +137,8 @@ module.exports = {
             "advanced/linting-and-type-checking",
             //"advanced/monorepo-project-structure",
             "advanced/environment-specific-resources",
-            { type: "doc", id: "api", label: "WebSocket" },
-            { type: "doc", id: "api", label: "AppSync" },
+            //{ type: "doc", id: "api", label: "WebSocket" },
+            //{ type: "doc", id: "api", label: "AppSync" },
           ],
         },
       ],
