@@ -3,7 +3,6 @@ h1.title {
   margin-bottom: 3px;
 }
 div.desc {
-  margin-bottom: calc(var(--ifm-h2-vertical-rhythm-top) * var(--ifm-leading));
   font-size: 1.05rem;
   color: var(--custom-font-color-secondary);
 }
@@ -15,6 +14,7 @@ div.desc > ul {
  * Start Options
  */
 .startPanels {
+  margin-top: calc(1.5 * var(--ifm-leading));
   display: flex;
   align-items: center;
 }

@@ -1,11 +1,10 @@
 ---
-id: about
-title: Get Started With SST
-sidebar_label: Introduction
-hide_title: true
-hide_table_of_contents: true
-description: Serverless Stack (SST) Docs
 slug: /
+id: about
+hide_title: true
+description: SST Docs
+sidebar_label: Introduction
+hide_table_of_contents: true
 ---
 
 import config from "../config";
@@ -25,13 +24,29 @@ Serverless Stack (SST) is a framework that makes it easy to build full-stack ser
 
 </div>
 
+```bash
+# Create a new SST app
+npx create-sst@latest
+cd my-sst-app
+npm i
+
+# Start Live Lambda Dev
+npx sst start
+
+# Open the SST Console
+open console.serverless-stack.com
+
+# Deploy to prod
+npx sst deploy --stage prod
+```
+
 <div className={styles.startPanels}>
   <a className={styles.startPanelDocs} href={useBaseUrl("/installation")}>
     <span className={styles.startPanelIcon}>
       <i className="fas fa-book-open"></i>
     </span>
     <div className={styles.startPanelContent}>
-      <h4>Read the docs</h4>
+      <h4>Learn about SST</h4>
       <p>Read our friendly docs and learn more about how SST works.</p>
     </div>
   </a>
@@ -54,24 +69,6 @@ Serverless Stack (SST) is a framework that makes it easy to build full-stack ser
     </div>
   </a>
 </div>
-
-## Installation
-
-```bash
-# Create a new SST app
-npx create-sst@latest
-cd my-sst-app
-npm i
-
-# Start Live Lambda Dev
-npx sst start
-
-# Open the SST Console
-open console.serverless-stack.com
-
-# Deploy to prod
-npx sst deploy --stage prod
-```
 
 ## Join our community
 
