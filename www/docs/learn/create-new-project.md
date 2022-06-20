@@ -28,7 +28,9 @@ npm i
 Start local environment
 
 ```bash
-npm start
+npx sst start
 ```
+
+The first time the SST command is run, you will be prompted to enter a default stage name to use. And the stage name will be stored locally in `.sst/stage`. Make sure to use one that is specific to you. In the case that you are sharing an AWS account with another members on the team, using the same stage name can cause local environment issues. You can read more about stage names and the best practices when working with your team [here](working-with-your-team).
 
 The initial deploy can take up to 5-10 minutes to complete. While you wait, lets take a look at the [project structure](/learn/project-structure).

@@ -10,7 +10,7 @@ It's important to be thoughtful about how you design your API. Queries tend to b
 
 Mutations however can be a bit trickier to design well. If coming from REST, it's tempting to provide generic `createArticle` and `updateArticle` mutations. However, it is better to provide granular actions that correlate to business actions. For example it's better to provide specific mutations like `updateArticleTitle` and `publishArticle`. Clients can always batch these together if they want to take multiple actions at once. If you want to learn more about this [here is a fantastic video](https://youtu.be/pJamhW2xPYw) on how to think about schema design.
 
-## Add `addComment` Mutations
+## Creating a new Mutation
 
 Open up `api/functions/graphql/types/article.ts`, and add this above the `createArticle` mutation:
 
@@ -29,4 +29,6 @@ builder.mutationFields(t => ({
 ...
 ```
 
-Test querying in GraphQL explorer (F)
+We added an `addComment` mutation that takes `articleID` and `text`; calls `Article.addComment()` to create a new comment; and returns the created comment.
+
+Next, we will look into how to call our API in our React web app.
