@@ -1,8 +1,7 @@
 ---
-id: installation
-title: Installation
-sidebar_label: Quick Start
-description: "Creating a new Serverless Stack (SST) app"
+id: quick-start
+title: Quick Start
+description: "Create a new SST app"
 ---
 
 import config from "../config";
@@ -21,17 +20,17 @@ To use SST you'll need:
 Create a new project using.
 
 <MultiPackagerCode>
-<TabItem value="npx">
-
-```bash
-npx create-sst@latest
-```
-
-</TabItem>
 <TabItem value="npm">
 
 ```bash
 npm init sst@latest
+```
+
+</TabItem>
+<TabItem value="npx">
+
+```bash
+npx create-sst@latest
 ```
 
 </TabItem>
@@ -48,12 +47,29 @@ yarn create sst
 
 Once you are ready to build your app and convert your CDK code to CloudFormation, run the following from your project root.
 
+<MultiPackagerCode>
+<TabItem value="npm">
+
 ```bash
-# With npm
 npm run build
-# Or with Yarn
+```
+
+</TabItem>
+<TabItem value="npx">
+
+```bash
+npx sst build
+```
+
+</TabItem>
+<TabItem value="yarn">
+
+```bash
 yarn sst build
 ```
+
+</TabItem>
+</MultiPackagerCode>
 
 This will compile your ES (or TS) code to the `.build/` directory in your app. And the synthesized CloudFormation templates are outputted to `.build/cdk.out/`. Note that, you shouldn't commit the `.build/` directory to source control and it's ignored by default in your project's `.gitignore`.
 
@@ -61,12 +77,29 @@ This will compile your ES (or TS) code to the `.build/` directory in your app. A
 
 Once your app has been built and tested successfully, you are ready to deploy it to AWS.
 
+<MultiPackagerCode>
+<TabItem value="npm">
+
 ```bash
-# With npm
 npm run deploy
-# Or with Yarn
+```
+
+</TabItem>
+<TabItem value="npx">
+
+```bash
+npx sst deploy
+```
+
+</TabItem>
+<TabItem value="yarn">
+
+```bash
 yarn deploy
 ```
+
+</TabItem>
+</MultiPackagerCode>
 
 This command uses your **default AWS Profile** and the **region** and **stage** specified in your `sst.json`.
 
@@ -96,12 +129,29 @@ npx sst deploy --stage prod --region eu-west-1
 
 Finally, you can remove all your stacks and their resources from AWS using.
 
+<MultiPackagerCode>
+<TabItem value="npm">
+
 ```bash
-# With npm
 npm run remove
-# Or with Yarn
+```
+
+</TabItem>
+<TabItem value="npx">
+
+```bash
+npx sst remove
+```
+
+</TabItem>
+<TabItem value="yarn">
+
+```bash
 yarn remove
 ```
+
+</TabItem>
+</MultiPackagerCode>
 
 Or if you've deployed to a different stage.
 
