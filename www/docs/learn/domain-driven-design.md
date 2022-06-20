@@ -25,8 +25,3 @@ It's simpler to think in terms of "business actions" than to think about the und
 By decoupling your API and your business logic you allow these to change independently. For example, if you realize that the `Articles` function would be better served using a different database, only code in that file needs to change. Anything dependant on it can remain unaware.
 
 Another example is backwards compatibility in the API. You can make breaking changes in your `core` library and isolate backwards compatibility to your API. Allows teams to stay nimble while staying safe.
-
-
-### Walk them through adding the new feature (F)
-
-TODO: Just show adding the functions for the new feature without showing the implementation

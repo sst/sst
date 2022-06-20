@@ -1,5 +1,4 @@
 ---
-id: dynamodb
 title: Using DynamoDB [D]
 description: "Using Single Table Design for an SST app"
 ---
