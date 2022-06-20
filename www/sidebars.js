@@ -33,9 +33,10 @@ module.exports = {
           collapsed: true,
           items: [
             "learn/domain-driven-design",
+            "learn/add-article-comments",
             "learn/database-options",
-            "learn/implementation-rds",
-            "learn/implementation-dynamo",
+            "learn/implement-rds",
+            "learn/implement-dynamo",
           ],
         },
         {
