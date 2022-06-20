@@ -12,17 +12,18 @@ module.exports = {
     },
     {
       Learn: [
+	"learn/preface",
         {
           type: "category",
           label: "1 - Installation",
           collapsible: true,
           collapsed: true,
           items: [
-            "learn/create-new-project",
+            "learn/create-a-new-project",
             "learn/project-structure",
             "learn/editor-setup",
-            "learn/initialize-database",
-            "learn/start-frontend",
+            "learn/initialize-the-database",
+            "learn/start-the-frontend",
             "learn/breakpoint-debugging",
           ],
         },

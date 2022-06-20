@@ -12,7 +12,7 @@ SST is an extension of [AWS CDK](https://aws.amazon.com/cdk/). It's fairly simpl
 
 1. There is no `cdk.json`
 
-   If you have a `context` block in your `cdk.json`, you can move it to a `cdk.context.json`. You can [read more about this here](https://docs.aws.amazon.com/cdk/latest/guide/context.html). You'll also need to add a `sst.json` config file, as [talked about here](installation.md#project-config). Here is a sample config for reference.
+   If you have a `context` block in your `cdk.json`, you can move it to a `cdk.context.json`. You can [read more about this here](https://docs.aws.amazon.com/cdk/latest/guide/context.html). You'll also need to add a `sst.json` config file, as [talked about here](../learn/project-structure.md#sstjson). Here is a sample config for reference.
 
    ```json
    {

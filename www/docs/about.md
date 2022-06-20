@@ -41,13 +41,13 @@ npx sst deploy --stage prod
 ```
 
 <div className={styles.startPanels}>
-  <a className={styles.startPanelDocs} href={useBaseUrl("/installation")}>
+  <a className={styles.startPanelDocs} href={useBaseUrl("/learn/preface")}>
     <span className={styles.startPanelIcon}>
       <i className="fas fa-book-open"></i>
     </span>
     <div className={styles.startPanelContent}>
       <h4>Learn about SST</h4>
-      <p>Read our friendly docs and learn more about how SST works.</p>
+      <p>Follow our simple tutorial and learn about how SST works.</p>
     </div>
   </a>
   <a className={styles.startPanelExamples} href={config.examples}>
@@ -64,8 +64,8 @@ npx sst deploy --stage prod
       <i className="fas fa-certificate"></i>
     </span>
     <div className={styles.startPanelContent}>
-      <h4>Follow the guide</h4>
-      <p>Follow along step-by-step with our Serverless Stack Guide.</p>
+      <h4>Read the guide</h4>
+      <p>Learn how to build a full-stack serverless app with SST.</p>
     </div>
   </a>
 </div>
