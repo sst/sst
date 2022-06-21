@@ -435,7 +435,7 @@ export function MainStack(ctx: StackContext) {
 }
 ```
 
-Then import the auth construct into another stack with `use` and call `addRules`. Note that the AWS resources for the added routes will be created in `AnotherStack`.
+Then import the construct into another stack with `use` and call `addRules`. Note that the AWS resources for the added rules will be created in `AnotherStack`.
 
 ```ts title="stacks/AnotherStack.ts"
 import { EventBus, StackContext } from "@serverless-stack/resources";
