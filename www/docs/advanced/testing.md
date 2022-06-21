@@ -49,13 +49,13 @@ If you'd like to test your stack code itself without deploying anything you can 
 Here is an example test
 
 ```ts
-import { Stack, App } from "@serverless-stack/resources"
+import { App, getStack } from "@serverless-stack/resources"
 import { Template } from "aws-cdk-lib/assertions"
 
 test("queue exists", async () => {
   const app = new App()
-  const stack = new MyStack(app)
-  const template = Template.fromStack(MyStack);
+  app.stack(MyStack)
+  const template = Template.fromStack(getStack(MyStack));
   template.resourceCountIs("AWS::SQS::Queue", 1);
 });
 ```
