@@ -40,7 +40,7 @@ module.exports = {
     **/
     announcementBar: {
       id: "announcement",
-      content: `<a target="_blank" href="https://v1conf.sst.dev/#stream">Watch the replay of SST 1.0 Conf</a>, our first-ever conference!`,
+      content: `<a target="_blank" href="https://www.youtube.com/watch?v=wBTDkLIyMhw">Tune in live to the \`create sst\` launch</a> &mdash; Jun 28, 9am PDT`,
       backgroundColor: "#395C6B",
       textColor: "#FFFFFF",
       isCloseable: true,
