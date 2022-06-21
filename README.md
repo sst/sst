@@ -11,12 +11,6 @@
 </p>
 
 <p align="center">
-  <a href="https://v1conf.sst.dev">
-    <img alt="SST 1.0 Conf" src="https://github.com/serverless-stack/v1-conf/raw/main/frontend/assets/social-share-no-logo.png" width="600" />
-  </a>
-</p>
-
-<p align="center">
   <a href="https://www.youtube.com/watch?v=wBTDkLIyMhw">
     <img alt="Launch: create sst" src="packages/create-sst/social-share.png?raw=true&sanitize=true" width="600" />
   </a>
