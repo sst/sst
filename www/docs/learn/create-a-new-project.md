@@ -31,4 +31,4 @@ The first time the SST command is run, you'll be prompted to enter a default sta
 
 Make sure to use a stage name that is specific to you. If you are sharing an AWS account with another team member, using the same stage name can cause issues locally. You can read more about stage names and the best practices when working with your team [here](../working-with-your-team.md).
 
-The initial deploy can take up to 5-10 minutes to complete. While we wait, let's take a look at the [project structure](/learn/project-structure.md) of an SST app and get our local development environment set up.
+The initial deploy can around 5-10 minutes. It'll create all the infrastructure we'll need for our simple Reddit clone. While we wait, let's take a look at the [project structure](project-structure.md) of an SST app and get our editor set up.
