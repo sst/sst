@@ -24,7 +24,7 @@ export function Api({ stack }: StackContext) {
         function: {
           handler: "functions/graphql/graphql.handler",
         },
-        schema: "api/functions/graphql/schema.ts",
+        schema: "services/functions/graphql/schema.ts",
         output: "graphql/schema.graphql",
         commands: [
           "npx genql --output ./graphql/genql --schema ./graphql/schema.graphql --esm",

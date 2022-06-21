@@ -3,7 +3,7 @@ title: create-sst
 description: "Docs for the create-sst package"
 ---
 
-A simple CLI [`create-sst`](https://www.npmjs.com/package/create-sst) that helps you create your SST projects.
+A simple CLI [`create-sst`](https://www.npmjs.com/package/create-sst) that sets up a modern web application powered by SST
 
 ## Usage
 
@@ -27,7 +27,7 @@ Or with Yarn 0.25+
 yarn create sst
 ```
 
-This will create an app in the `my-sst-app/` directory.
+This will prompt you for a folder name and bootstrap the application in that directory.
 
 ## Options
 
@@ -35,30 +35,28 @@ Pass in the following (optional) options.
 
 ### `--examples`
 
-Instead of the starters, this will list our examples if you'd like to copy one of them to try it out.
+Instead of the standard starter, this will list our examples if you'd like to copy one of them to try it out.
 
 ```bash
 npx create-sst@latest --examples
 ```
 
-## Arguments
+### `--minimal`
 
-Pass in the following (optional) arguments.
-
-### `<template>`
-
-Specify a template instead of choosing from the interactive menu
+Instead of the standard starter, this will list our minimal setups if you'd like to start from scratch.
 
 ```bash
-npx create-sst@latest typescript-starter
+npx create-sst@latest --minimal
 ```
+
+## Arguments
 
 ### `<destination>`
 
 Specify a destination directory instead of typing it into the interactive prompt
 
 ```bash
-npx create-sst@latest typescript-starter my-sst-app
+npx create-sst@latest my-sst-app
 ```
 
 Note that extra `--` when using `npm init`.

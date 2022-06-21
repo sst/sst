@@ -5,6 +5,6 @@ export default [
   extract(),
   install({
     packages: ["kysely", "kysely-data-api"],
-    path: "api",
+    path: "services",
   }),
 ];

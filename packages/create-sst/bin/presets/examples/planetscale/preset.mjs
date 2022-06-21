@@ -5,6 +5,6 @@ export default [
   extract(),
   install({
     packages: ["planetscale-node"],
-    path: "api",
+    path: "services",
   }),
 ];

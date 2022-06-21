@@ -2,6 +2,10 @@ import { remove, cmd, patch, extend, extract, install } from "create-sst";
 export default [
   extend("presets/base/starter"),
   extend("presets/base/monorepo"),
+  install({
+    packages: ["hygen"],
+    dev: true,
+  }),
   patch({
     file: "sst.json",
     operations: [{ op: "add", path: "/main", value: "stacks/index.ts" }],
@@ -9,6 +13,7 @@ export default [
   patch({
     file: "package.json",
     operations: [
+      { op: "add", path: "/scripts/gen", value: "hygen" },
       { op: "add", path: "/overrides", value: {} },
       { op: "add", path: "/overrides/graphql", value: "16.5.0" },
     ],
@@ -24,7 +29,7 @@ export default [
       "kysely-data-api",
       "ulid",
     ],
-    path: "api",
+    path: "services",
   }),
   install({
     packages: ["react-router-dom", "urql", "graphql"],
