@@ -1,10 +1,10 @@
 ---
-id: graphql-api
 title: GraphQL API
-description: "Using GraphQL API for an SST app"
 ---
 
-GraphQL is a fundamental part of the `create-sst` starter but you do not need to know anything about it ahead of time. As you follow this guide you will pick up the concepts needed to ship your product.
+We are now ready to expose the new comments functionality that we added to our core package. Let's look at how the API works in the `create sst` starter.
+
+[GraphQL](https://graphql.org) is a fundamental part of the starter but you don't need to know anything about it ahead of time. As you follow this tutorial you'll pick up the concepts you need.
 
 ### What is GraphQL
 
@@ -12,12 +12,22 @@ GraphQL is a query language for your API that provides a bit more structure than
 
 ### Code First GraphQL
 
-In our setup, we use [pothos](https://pothos-graphql.dev/) to do what is called "Code first GraphQL". What this means is you write all of your GraphQL API definitions in Typescript instead of splitting them between GraphQL files and TS files. It is a fantastically productive pattern and is what we recommend for everyone. Some of the benefits:
+In our setup, we use [Pothos](https://pothos-graphql.dev/) to do what is called _Code first GraphQL_. What this means is that you write all of your GraphQL API definitions in TypeScript instead of splitting them across GraphQL files and TS files. It is a fantastically productive pattern and we recommend it for everyone. Here are some of the reasons why:
 
-- **First class Typescript support**: Pothos is a Typescript first library. This means the entire API has been designed to maximize typesafety and inference. You will get useful autocomplete, full type-safety while having to write very few manual type annotations.
-- **Single source of truth** Seperating your schema from your resolver code usually requires code-generation to keep things in sync. This is a clunky workflow and can feel tedious to maintain things in two places. With Pothos you have a single source of truth for both the schema and the implementation.
-- **Plugin system** Pothos comes with a set of [incredibly useful plugins](https://pothos-graphql.dev/docs/plugins). These simplify implementing common patterns like paging, authorization, and more.
+- **First class Typescript support**
+
+  Pothos is a Typescript first library. This means the entire API has been designed to maximize type-safety and inference. You will get useful autocomplete, full type-safety, while having to write very few manual type annotations.
+
+- **Single source of truth**
+
+  Seperating your schema from your resolver code usually requires code-generation to keep things in sync. This is a clunky workflow and can feel tedious to maintain things in two places. With Pothos you have a single source of truth for both the schema and the implementation.
+
+- **Plugin system**
+
+  Pothos comes with a set of [incredibly useful plugins](https://pothos-graphql.dev/docs/plugins). These simplify implementing common patterns like paging, authorization, and more.
 
 ### Lambda Optimized
 
-Our GraphQL setup ships with a lambda optimized GraphQL server. We've taken care to make sure it is as small as possible to minimize cold starts while still including what you'll need to ship complete GraphQL APIs. 
+The GraphQL setup in our starter ships with a Lambda optimized GraphQL server. We've taken care to make sure it's as small as possible to minimize cold starts. While still including what you'll need to ship complete GraphQL APIs. 
+
+Now let's start by adding the types for our new comments feature.
