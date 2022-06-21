@@ -1,5 +1,16 @@
 # @serverless-stack/resources
 
+## 1.2.27
+
+### Patch Changes
+
+- [#1834](https://github.com/serverless-stack/serverless-stack/pull/1834) [`7c7756ec`](https://github.com/serverless-stack/serverless-stack/commit/7c7756ecb356dd1c8ce2449d875f51968d597af6) Thanks [@fwang](https://github.com/fwang)! - ApiGatewayV1Api: do not look up hosted zone when provided
+
+* [#1834](https://github.com/serverless-stack/serverless-stack/pull/1834) [`7c7756ec`](https://github.com/serverless-stack/serverless-stack/commit/7c7756ecb356dd1c8ce2449d875f51968d597af6) Thanks [@fwang](https://github.com/fwang)! - ApiGatewayV1Api: default cors setting allow all headers, methods, and origins
+
+* Updated dependencies []:
+  - @serverless-stack/core@1.2.27
+
 ## 1.2.26
 
 ### Patch Changes
