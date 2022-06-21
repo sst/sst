@@ -122,6 +122,17 @@ test("cors-undefined", async () => {
   new ApiGatewayV1Api(stack, "Api");
   countResourcesLike(stack, "AWS::ApiGateway::Method", 1, {
     HttpMethod: "OPTIONS",
+    Integration: objectLike({
+      IntegrationResponses: [
+        objectLike({
+          ResponseParameters: {
+            "method.response.header.Access-Control-Allow-Headers": "'*'",
+            "method.response.header.Access-Control-Allow-Origin": "'*'",
+            "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+          },
+        })
+      ],
+    }),
   });
 });
 
@@ -130,6 +141,17 @@ test("cors-true", async () => {
   new ApiGatewayV1Api(stack, "Api");
   countResourcesLike(stack, "AWS::ApiGateway::Method", 1, {
     HttpMethod: "OPTIONS",
+    Integration: objectLike({
+      IntegrationResponses: [
+        objectLike({
+          ResponseParameters: {
+            "method.response.header.Access-Control-Allow-Headers": "'*'",
+            "method.response.header.Access-Control-Allow-Origin": "'*'",
+            "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+          },
+        })
+      ],
+    }),
   });
 });
 
@@ -146,7 +168,7 @@ test("cors-false", async () => {
   });
 });
 
-test("cors-props", async () => {
+test("cors-cdk.props", async () => {
   const stack = new Stack(new App({ name: "apiv1" }), "stack");
   new ApiGatewayV1Api(stack, "Api", {
     cdk: {
