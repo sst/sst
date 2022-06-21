@@ -14,7 +14,7 @@ program
   .name("create-sst")
   .description("CLI to create SST projects")
   .option("--examples", "Show example templates", false)
-  .option("--minimal", "Show minimal templates", true)
+  .option("--minimal, --no-minimal", "Show minimal templates")
   .argument("[directory]", "The destination directory")
   .action(async (destination) => {
     const opts = program.opts();
@@ -25,7 +25,7 @@ program
     let preset = path.join("presets", "default");
 
     if (opts.examples || opts.minimal) {
-      const scan = opts.minimal ? ["starters"] : ["examples"];
+      const scan = opts.examples ? ["examples"] : ["starters"];
       const presets = (
         await Promise.all(
           scan.map(async (category) => {
