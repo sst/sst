@@ -16,6 +16,12 @@
   </a>
 </p>
 
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=wBTDkLIyMhw">
+    <img alt="Launch: create sst" src="packages/create-sst/social-share.png?raw=true&sanitize=true" width="600" />
+  </a>
+</p>
+
 ---
 
 Serverless Stack (SST) is a framework that makes it easy to build serverless apps. It's an extension of [AWS CDK](https://aws.amazon.com/cdk/) and it features:
