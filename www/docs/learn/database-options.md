@@ -1,45 +1,49 @@
 ---
-id: database-options
 title: Database Options
-description: "Database Options of an SST app"
 ---
 
-By default the starter creates an [AWS RDS](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.html) setup that can operate in Postgres or MySQL mode and is optimized for a serverless usecase. However, thanks to [DDD](./domain-driven-design.md) you can use any database you want or combine various databases for different parts of your application.
+By default our starter creates an [RDS](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.html) instance that can operate in PostgreSQL or MySQL mode and is optimized for a serverless usecase. However, thanks to [DDD](domain-driven-design.md) you can use any database you want, or combine various databases for different parts of your application.
 
-Here's how to think about what to use
+Before we save our comments to the database, let's compare the two popular serverless database options.
 
 ### RDS
 
-RDS is a fully managed database offering from AWS. Additionally, SST provisions a serverless flavor of it. While it is considered serverless, it's more of an effort to take a traditional DB and make it scale more automatically and does not have the same power as serverless-first databases.
+[RDS](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.html) is a fully-managed database offering from AWS. SST provisions a serverless flavor of it. While it is considered serverless, it's more of an effort to take a traditional DB and make it scale automatically and it doesn't have the same power as serverless-first databases.
 
 #### Pros
-- Familiar relational model with Postgres or MySQL engines
-- Can scale to 0 in dev environments
+
+- Familiar relational model with PostgreSQL or MySQL engines.
+- Can scale to 0 in dev environments.
 
 #### Cons
-- Not designed for serverless so will run into traditional scaling issues
-- VPC requirements create some rough edges in certain workflows
-- Autoscaling is slow
+
+- Not designed for serverless, so will run into traditional scaling issues.
+- VPC requirements create some rough edges in certain workflows.
+- Autoscaling is slow.
 
 ### DynamoDB
 
-DynamoDB is a NoSQL database offering from AWS. It is extremely performant and works extremely well with serverless-first systems. It's what we at SST use internally on our own projects and the only reason it's not the default in the starter is there's a bit of a learning curve which may be difficult if you're also new to serverless.
+[DynamoDB](https://aws.amazon.com/dynamodb/) is a NoSQL database offering from AWS. It's extremely performant and works extremely well with serverless-first systems. It's what we at SST use internally for our own projects. The only reason it's not the default in the starter is there's a bit of a learning curve. This can be hard to deal with if you're also new to serverless.
 
-Note, DynamoDB still supports relational data so it can be used for most use cases.
+:::note
+DynamoDB still supports relational data so it can be used for most use cases.
+:::
 
 #### Pros
-- Can scale to 0 when not being used
-- Single digit millisecond performance
-- Consistent performance at any scale
+
+- Can scale to 0 when not being used.
+- Single digit millisecond performance.
+- Consistent performance at any scale.
 
 #### Cons
-- Need to learn Single Table Design which is the preferred way to use DynamoDB
 
-If you'd like to use it, and we encourage you to try, you can skip ahead to [insert chapter](.)
+- Need to learn Single Table Design, the preferred way to use DynamoDB.
 
-### Other
+### Other options
 
-You're free to use other non-AWS databases if you'd like. We don't currently provide any native constructs for things like Planetscale or Mongo but we do have the following examples:
+You're free to use other non-AWS databases if you'd like. We don't currently provide any native constructs for services like PlanetScale or MongoDB, but we do have the following examples:
 
-- link to the MongoDB example
-- link to the Planet Scale example
+- [Example using MongoDB](https://serverless-stack.com/examples/how-to-use-mongodb-atlas-in-your-serverless-app.html)
+- [Example using PlanetScale](https://serverless-stack.com/examples/how-to-use-planetscale-in-your-serverless-app.html)
+
+Next, let's use RDS to store our comments.

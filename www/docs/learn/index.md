@@ -1,11 +1,12 @@
 ---
-title: Preface
+title: Learn SST
+sidebar_label: Preface
 description: "In this tutorial we'll create a simple SST app and go over some of its key concepts."
 ---
 
-Now that you have gotten a brief  overview of what SST is. We are ready to build something with it and look its key concepts.
+In this section we are going to build a full-stack app with SST and learn about its key concepts.
 
-The following sections is a brief tutorial on how to build a full-stack app with SST. We'll start by creating a new SST app and set up our local development environment. This will also create the starter we'll be using. The starter includes a database, GraphQL API, and a React frontend.
+We'll start by creating an app with our starter and set up our local development environment. The starter includes a database, GraphQL API, and a React frontend.
 
 The starter creates a very simple Reddit clone. You can submit links and it'll display all the links that've been submitted. We'll add a comments feature to our app.
 

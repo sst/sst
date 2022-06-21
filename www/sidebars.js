@@ -12,7 +12,7 @@ module.exports = {
     },
     {
       Learn: [
-	"learn/preface",
+        "learn/index",
         {
           type: "category",
           label: "1 - Installation",
@@ -29,20 +29,20 @@ module.exports = {
         },
         {
           type: "category",
-          label: "2 - Adding new feature",
+          label: "2 - Add a New Feature",
           collapsible: true,
           collapsed: true,
           items: [
             "learn/domain-driven-design",
-            "learn/add-article-comments",
+            "learn/update-the-core",
             "learn/database-options",
-            "learn/implement-rds",
-            "learn/implement-dynamo",
+            "learn/write-to-postgresql",
+            "learn/write-to-dynamodb",
           ],
         },
         {
           type: "category",
-          label: "3 - Adding new API routes",
+          label: "3 - Add to the API",
           collapsible: true,
           collapsed: true,
           items: [
@@ -53,7 +53,7 @@ module.exports = {
         },
         {
           type: "category",
-          label: "4 - Rendering Components",
+          label: "4 - Render Frontend",
           collapsible: true,
           collapsed: true,
           items: [

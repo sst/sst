@@ -41,12 +41,12 @@ npx sst deploy --stage prod
 ```
 
 <div className={styles.startPanels}>
-  <a className={styles.startPanelDocs} href={useBaseUrl("/learn/preface")}>
+  <a className={styles.startPanelDocs} href={useBaseUrl("/learn/")}>
     <span className={styles.startPanelIcon}>
       <i className="fas fa-book-open"></i>
     </span>
     <div className={styles.startPanelContent}>
-      <h4>Learn about SST</h4>
+      <h4>Follow the tutorial</h4>
       <p>Follow our simple tutorial and learn about how SST works.</p>
     </div>
   </a>

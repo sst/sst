@@ -1,9 +1,8 @@
 ---
-title: Adding Comments to Article
-description: "Add Comments to Article"
+title: Update the Core
 ---
 
-We are going to add comments to articles.
+We are ready to add our new comments feature. To do so, we'll first add the business logic for it to our `core` package.
 
 Open up `api/core/article.ts` and add the following two functions to the bottom of the file.
 
@@ -17,4 +16,4 @@ export async function comments(articleID: string) {
 }
 ```
 
-We are leaving the functions empty on purpose. Next, we will pick a database to use and implement the two functions.
+We are leaving the functions empty on purpose. We'll first pick a database to use and implement the two functions.
