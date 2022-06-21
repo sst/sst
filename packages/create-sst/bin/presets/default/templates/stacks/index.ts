@@ -6,7 +6,7 @@ import { Web } from "./Web";
 export default function main(app: App) {
   app.setDefaultFunctionProps({
     runtime: "nodejs16.x",
-    srcPath: "api",
+    srcPath: "services",
   });
   app.stack(Database).stack(Api).stack(Web);
 }
