@@ -113,9 +113,7 @@ export interface ApiGatewayV1ApiProps<
    *
    * ```js
    * new ApiGatewayV1Api(stack, "Api", {
-   *   cors: {
-   *     allowMethods: ["GET"],
-   *   },
+   *   cors: true,
    * });
    * ```
    *
@@ -854,7 +852,9 @@ export class ApiGatewayV1Api<
 
     // Case: cors is true or undefined
     return {
+      allowHeaders: ["*"],
       allowOrigins: apig.Cors.ALL_ORIGINS,
+      allowMethods: apig.Cors.ALL_METHODS,
     } as apig.CorsOptions;
   }
 
