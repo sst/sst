@@ -1,5 +1,17 @@
 # @serverless-stack/docs
 
+## 1.1.8
+
+### Patch Changes
+
+- [#1814](https://github.com/serverless-stack/serverless-stack/pull/1814) [`33b89b64`](https://github.com/serverless-stack/serverless-stack/commit/33b89b64af3a9cec98dea0f3c5fcc7279a8142b0) Thanks [@fwang](https://github.com/fwang)! - DebugStack: allow customizing DynamoDB Table
+
+## 1.1.7
+
+### Patch Changes
+
+- [#1811](https://github.com/serverless-stack/serverless-stack/pull/1811) [`fb7d3b02`](https://github.com/serverless-stack/serverless-stack/commit/fb7d3b02a9026b31e42167473d7d3eba21a63f7a) Thanks [@fwang](https://github.com/fwang)! - Function: lift function url to top level prop
+
 ## 1.1.6
 
 ### Patch Changes

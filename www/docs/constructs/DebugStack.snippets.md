@@ -97,12 +97,37 @@ scope.logicalPrefixedName("MyResource"); // Returns "dev-my-sst-app-MyResource"
 
 This invokes the [`logicalPrefixedName`](DebugApp.md#logicalprefixedname) method in `DebugApp` that the `DebugStack` is added to. This'll return `dev-my-sst-app-debug-stack`, where `dev` is the current stage and `my-sst-app` is the name of the app.
 
-### Configuring the debug stack
+### Customizing stack name
 
 ```js
 export function debugApp(app) {
   new DebugStack(app, "debug-stack", {
     stackName: app.logicalPrefixedName("my-debug-stack"),
+  });
+}
+```
+
+### Configuring the DynamoDB table
+
+Configure the internally created CDK `Table` instance.
+
+```js
+export function debugApp(app) {
+  new DebugStack(app, "debug-stack", {
+    cdk: {
+      table: {
+        pointInTimeRecovery: true,
+      }
+    }
+  });
+}
+```
+
+### Using existing resources
+
+```js
+export function debugApp(app) {
+  new DebugStack(app, "debug-stack", {
     payloadBucketArn: "arn:aws:s3:::my-bucket",
     websocketHandlerRoleArn: "arn:aws:iam::123456789012:role/my-role",
   });

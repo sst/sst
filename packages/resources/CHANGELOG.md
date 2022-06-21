@@ -1,5 +1,39 @@
 # @serverless-stack/resources
 
+## 1.2.26
+
+### Patch Changes
+
+- [`2622d51e`](https://github.com/serverless-stack/serverless-stack/commit/2622d51e64451b79deea7f353f7789ecdf686c56) Thanks [@thdxr](https://github.com/thdxr)! - Support non-standard NextJS installation path
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.2.26
+
+## 1.2.25
+
+### Patch Changes
+
+- Updated dependencies [[`fd8330bf`](https://github.com/serverless-stack/serverless-stack/commit/fd8330bfe53934691c9d74b273a0109120c68bcf)]:
+  - @serverless-stack/core@1.2.25
+
+## 1.2.24
+
+### Patch Changes
+
+- [#1814](https://github.com/serverless-stack/serverless-stack/pull/1814) [`33b89b64`](https://github.com/serverless-stack/serverless-stack/commit/33b89b64af3a9cec98dea0f3c5fcc7279a8142b0) Thanks [@fwang](https://github.com/fwang)! - DebugStack: allow customizing DynamoDB Table
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.2.24
+
+## 1.2.23
+
+### Patch Changes
+
+- [#1811](https://github.com/serverless-stack/serverless-stack/pull/1811) [`fb7d3b02`](https://github.com/serverless-stack/serverless-stack/commit/fb7d3b02a9026b31e42167473d7d3eba21a63f7a) Thanks [@fwang](https://github.com/fwang)! - Function: lift function url to top level prop
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.2.23
+
 ## 1.2.22
 
 ### Patch Changes

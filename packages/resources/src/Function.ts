@@ -17,6 +17,7 @@ import { Size, toCdkSize } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { SSTConstruct } from "./Construct.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
+import * as functionUrlCors from "./util/functionUrlCors.js";
 import { State, Runtime } from "@serverless-stack/core";
 
 import url from "url";
@@ -44,6 +45,7 @@ const supportedRuntimes = [
   lambda.Runtime.GO_1_X,
 ];
 
+export interface FunctionUrlCorsProps extends functionUrlCors.CorsProps {}
 export type FunctionInlineDefinition = string | Function;
 export type FunctionDefinition = string | Function | FunctionProps;
 
@@ -102,6 +104,7 @@ export interface FunctionProps
    * @example
    * ```js
    * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
    *   functionName: "my-function",
    * })
    *```
@@ -141,6 +144,7 @@ export interface FunctionProps
    * @example
    * ```js
    * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
    *   runtime: "nodejs16.x",
    * })
    *```
@@ -154,6 +158,7 @@ export interface FunctionProps
    * @example
    * ```js
    * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
    *   diskSize: "2 GB",
    * })
    *```
@@ -167,6 +172,7 @@ export interface FunctionProps
    * @example
    * ```js
    * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
    *   memorySize: "2 GB",
    * })
    *```
@@ -180,6 +186,7 @@ export interface FunctionProps
    * @example
    * ```js
    * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
    *   timeout: "30 seconds",
    * })
    *```
@@ -193,6 +200,7 @@ export interface FunctionProps
    * @example
    * ```js
    * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
    *   tracing: "pass_through",
    * })
    *```
@@ -206,6 +214,7 @@ export interface FunctionProps
    * @example
    * ```js
    * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
    *   enableLiveDev: false
    * })
    *```
@@ -217,6 +226,7 @@ export interface FunctionProps
    * @example
    * ```js
    * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
    *   environment: {
    *     TABLE_NAME: table.tableName,
    *   }
@@ -230,6 +240,7 @@ export interface FunctionProps
    * @example
    * ```js
    * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
    *   bundle: {
    *     copyFiles: [{ from: "src/index.js" }]
    *   }
@@ -243,11 +254,36 @@ export interface FunctionProps
    * @example
    * ```js
    * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
    *   permissions: ["ses", bucket]
    * })
    * ```
    */
   permissions?: Permissions;
+  /**
+   * Enable function URLs, a dedicated endpoint for your Lambda function.
+   * @default Disabled
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
+   *   url: true
+   * })
+   * ```
+   * 
+   * ```js
+   * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
+   *   url: {
+   *     authorizer: "iam",
+   *     cors: {
+   *       allowedOrigins: ['https://example.com'],
+   *     },
+   *   },
+   * })
+   * ```
+   */
+  url?: boolean | FunctionUrlProps;
   /**
    * A list of Layers to add to the function's execution environment.
    *
@@ -283,6 +319,49 @@ export interface FunctionHandlerProps {
   handler: string;
   bundle: FunctionBundleProp;
   runtime: string;
+}
+
+export interface FunctionUrlProps {
+  /**
+   * The authorizer for the function URL
+   * @default "none"
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
+   *   url: {
+   *     authorizer: "iam",
+   *   },
+   * })
+   * ```
+   */
+  authorizer?: "none" | "iam";
+  /**
+   * CORS support for the function URL
+   * @default true
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
+   *   url: {
+   *     cors: true,
+   *   },
+   * })
+   * ```
+   *
+   * ```js
+   * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
+   *   url: {
+   *     cors: {
+   *       allowedMethods: ["GET", "POST"]
+   *       allowedOrigins: ['https://example.com'],
+   *     },
+   *   },
+   * })
+   * ```
+   */
+  cors?: boolean | FunctionUrlCorsProps;
 }
 
 export type FunctionBundleProp =
@@ -548,6 +627,8 @@ export interface FunctionBundleCopyFilesProps {
 export class Function extends lambda.Function implements SSTConstruct {
   public readonly _isLiveDevEnabled: boolean;
   private readonly localId: string;
+  private functionUrl?: lambda.FunctionUrl;
+  private props: FunctionProps;
 
   constructor(scope: Construct, id: string, props: FunctionProps) {
     const root = scope.node.root as App;
@@ -765,6 +846,8 @@ export class Function extends lambda.Function implements SSTConstruct {
       });
     }
 
+    this.props = props || {};
+
     // Enable reusing connections with Keep-Alive for NodeJs Lambda function
     if (isNodeRuntime) {
       this.addEnvironment("AWS_NODEJS_CONNECTION_REUSE_ENABLED", "1", {
@@ -777,6 +860,9 @@ export class Function extends lambda.Function implements SSTConstruct {
       this.attachPermissions(permissions);
     }
 
+    // Create function URL
+    this.createUrl();
+
     root.registerLambdaHandler({
       bundle: props.bundle!,
       handler: handler,
@@ -785,6 +871,13 @@ export class Function extends lambda.Function implements SSTConstruct {
     });
     this._isLiveDevEnabled = isLiveDevEnabled;
     this.localId = localId;
+  }
+
+  /**
+   * The AWS generated URL of the Function.
+   */
+  public get url(): string | undefined {
+    return this.functionUrl?.url;
   }
 
   /**
@@ -809,6 +902,32 @@ export class Function extends lambda.Function implements SSTConstruct {
         arn: this.functionArn,
       },
     };
+  }
+
+  private createUrl() {
+    const { url } = this.props;
+    if (url === false || url === undefined) {
+      return;
+    }
+
+    let authType;
+    let cors;
+    if (url === true) {
+      authType = lambda.FunctionUrlAuthType.NONE;
+      cors = true;
+    }
+    else {
+      authType = url.authorizer === "iam"
+        ? lambda.FunctionUrlAuthType.AWS_IAM
+        : lambda.FunctionUrlAuthType.NONE;
+      cors = url.cors === undefined
+        ? true
+        : url.cors;
+    }
+    this.functionUrl = this.addFunctionUrl({
+      authType,
+      cors: functionUrlCors.buildCorsConfig(cors),
+    });
   }
 
   static buildLayers(scope: Construct, id: string, props: FunctionProps) {

@@ -113,9 +113,7 @@ export interface ApiGatewayV1ApiProps<
    *
    * ```js
    * new ApiGatewayV1Api(stack, "Api", {
-   *   cors: {
-   *     allowMethods: ["GET"],
-   *   },
+   *   cors: true,
    * });
    * ```
    *
@@ -854,7 +852,9 @@ export class ApiGatewayV1Api<
 
     // Case: cors is true or undefined
     return {
+      allowHeaders: ["*"],
       allowOrigins: apig.Cors.ALL_ORIGINS,
+      allowMethods: apig.Cors.ALL_METHODS,
     } as apig.CorsOptions;
   }
 
@@ -947,12 +947,17 @@ export class ApiGatewayV1Api<
       }
 
       // parse customDomain.hostedZone
-      if (!customDomain.hostedZone) {
-        hostedZoneDomain = domainName.split(".").slice(1).join(".");
-      } else if (typeof customDomain.hostedZone === "string") {
+      if (customDomain.hostedZone && customDomain.cdk?.hostedZone) {
+        throw new Error(
+          `Use either the "customDomain.hostedZone" or the "customDomain.cdk.hostedZone" to configure the custom domain hosted zone. Do not use both.`
+        );
+      }
+      if (customDomain.hostedZone) {
         hostedZoneDomain = customDomain.hostedZone;
+      } else if (customDomain.cdk?.hostedZone) {
+        hostedZone = customDomain.cdk?.hostedZone;
       } else {
-        hostedZone = customDomain.hostedZone;
+        hostedZoneDomain = domainName.split(".").slice(1).join(".");
       }
 
       certificate = customDomain.cdk?.certificate;

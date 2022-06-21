@@ -1,5 +1,37 @@
 # @serverless-stack/cli
 
+## 1.2.26
+
+### Patch Changes
+
+- Updated dependencies [[`2622d51e`](https://github.com/serverless-stack/serverless-stack/commit/2622d51e64451b79deea7f353f7789ecdf686c56)]:
+  - @serverless-stack/resources@1.2.26
+  - @serverless-stack/core@1.2.26
+
+## 1.2.25
+
+### Patch Changes
+
+- Updated dependencies [[`fd8330bf`](https://github.com/serverless-stack/serverless-stack/commit/fd8330bfe53934691c9d74b273a0109120c68bcf)]:
+  - @serverless-stack/core@1.2.25
+  - @serverless-stack/resources@1.2.25
+
+## 1.2.24
+
+### Patch Changes
+
+- Updated dependencies [[`33b89b64`](https://github.com/serverless-stack/serverless-stack/commit/33b89b64af3a9cec98dea0f3c5fcc7279a8142b0)]:
+  - @serverless-stack/resources@1.2.24
+  - @serverless-stack/core@1.2.24
+
+## 1.2.23
+
+### Patch Changes
+
+- Updated dependencies [[`fb7d3b02`](https://github.com/serverless-stack/serverless-stack/commit/fb7d3b02a9026b31e42167473d7d3eba21a63f7a)]:
+  - @serverless-stack/resources@1.2.23
+  - @serverless-stack/core@1.2.23
+
 ## 1.2.22
 
 ### Patch Changes

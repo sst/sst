@@ -482,6 +482,158 @@ test("bundle: commandHooks-beforeBundling failed", async () => {
   }).toThrow();
 });
 
+test("url: undefined", async () => {
+  const stack = new Stack(new App(), "stack");
+  const fn = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  expect(fn.url).toBeUndefined();
+  countResources(stack, "AWS::Lambda::Url", 0);
+});
+
+test("url: true", async () => {
+  const stack = new Stack(new App(), "stack");
+  const fn = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    url: true
+  });
+  expect(fn.url).toBeDefined();
+  hasResource(stack, "AWS::Lambda::Url", {
+    AuthType: "NONE",
+    Cors: {
+      AllowHeaders: ["*"],
+      AllowMethods: ["*"],
+      AllowOrigins: ["*"],
+    },
+  });
+});
+
+test("url.authorizer: undefined", async () => {
+  const stack = new Stack(new App(), "stack");
+  const fn = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    url: {}
+  });
+  expect(fn.url).toBeDefined();
+  hasResource(stack, "AWS::Lambda::Url", {
+    AuthType: "NONE",
+  });
+});
+
+test("url.authorizer: none", async () => {
+  const stack = new Stack(new App(), "stack");
+  const fn = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    url: {
+      authorizer: "none"
+    }
+  });
+  expect(fn.url).toBeDefined();
+  hasResource(stack, "AWS::Lambda::Url", {
+    AuthType: "NONE",
+  });
+});
+
+test("url.authorizer: iam", async () => {
+  const stack = new Stack(new App(), "stack");
+  const fn = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    url: {
+      authorizer: "iam"
+    }
+  });
+  expect(fn.url).toBeDefined();
+  hasResource(stack, "AWS::Lambda::Url", {
+    AuthType: "AWS_IAM",
+  });
+});
+
+test("url.cors: undefined", async () => {
+  const stack = new Stack(new App(), "stack");
+  const fn = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    url: { }
+  });
+  expect(fn.url).toBeDefined();
+  hasResource(stack, "AWS::Lambda::Url", {
+    Cors: {
+      AllowHeaders: ["*"],
+      AllowMethods: ["*"],
+      AllowOrigins: ["*"],
+    },
+  });
+});
+
+test("url.cors: true", async () => {
+  const stack = new Stack(new App(), "stack");
+  const fn = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    url: {
+      cors: true,
+    }
+  });
+  expect(fn.url).toBeDefined();
+  hasResource(stack, "AWS::Lambda::Url", {
+    Cors: {
+      AllowHeaders: ["*"],
+      AllowMethods: ["*"],
+      AllowOrigins: ["*"],
+    },
+  });
+});
+
+test("url.cors: false", async () => {
+  const stack = new Stack(new App(), "stack");
+  const fn = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    url: {
+      cors: false,
+    }
+  });
+  expect(fn.url).toBeDefined();
+  hasResource(stack, "AWS::Lambda::Url", {
+    Cors: ABSENT,
+  });
+});
+
+test("url.cors: props", async () => {
+  const stack = new Stack(new App(), "stack");
+  const fn = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    url: {
+      cors: {
+        allowMethods: ["GET"],
+        allowOrigins: ["https://example.com"],
+      }
+    }
+  });
+  expect(fn.url).toBeDefined();
+  hasResource(stack, "AWS::Lambda::Url", {
+    Cors: {
+      AllowMethods: ["GET"],
+      AllowOrigins: ["https://example.com"],
+    },
+  });
+});
+
+test("url.cors: allowMethods *", async () => {
+  const stack = new Stack(new App(), "stack");
+  const fn = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    url: {
+      cors: {
+        allowMethods: ["*"],
+      }
+    }
+  });
+  expect(fn.url).toBeDefined();
+  hasResource(stack, "AWS::Lambda::Url", {
+    Cors: {
+      AllowMethods: ["*"],
+    },
+  });
+});
+
 test("layers: imported from another stack", async () => {
   const app = new App();
   const stack1 = new Stack(app, "stack1");
