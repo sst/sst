@@ -388,9 +388,6 @@ test("customDomain: string", async () => {
     },
     HostedZoneId: { Ref: "ApiHostedZone826B96E5" },
   });
-  hasResource(stack, "AWS::Route53::HostedZone", {
-    Name: "domain.com.",
-  });
 });
 
 test("customDomain: string (uppercase error)", async () => {
@@ -427,9 +424,6 @@ test("customDomain: string: hostedZone generated from minimal domainName", async
     routes: {
       "GET /": "test/lambda.handler",
     },
-  });
-  hasResource(stack, "AWS::Route53::HostedZone", {
-    Name: "domain.com.",
   });
 });
 
@@ -475,9 +469,6 @@ test("customDomain: internal domain: domainName is string", async () => {
     Name: "api.domain.com.",
     Type: "AAAA",
   });
-  hasResource(stack, "AWS::Route53::HostedZone", {
-    Name: "api.domain.com.",
-  });
 });
 
 test("customDomain: internal domain: domainName is string (uppercase error)", async () => {
@@ -517,9 +508,6 @@ test("customDomain: internal domain: domainName is string (imported ssm), hosted
     DomainName: {
       Ref: "SsmParameterValuedomainC96584B6F00A464EAD1953AFF4B05118Parameter",
     },
-  });
-  hasResource(stack, "AWS::Route53::HostedZone", {
-    Name: "domain.com.",
   });
   hasResource(stack, "AWS::Route53::RecordSet", {
     Name: {
@@ -600,9 +588,6 @@ test("customDomain: internal domain: domainName is string, cdk.hostedZone define
     Name: "api.domain.com.",
     Type: "AAAA",
   });
-  hasResource(stack, "AWS::Route53::HostedZone", {
-    Name: "domain.com.",
-  });
 });
 
 test("customDomain: internal domain: domainName is string, hostedZone is string, cdk.hostedZone defined", async () => {
@@ -619,7 +604,7 @@ test("customDomain: internal domain: domainName is string, hostedZone is string,
         }
       },
     });
-  }).toThrow(/Cannot configure "hostedZone" when the "cdk\.hostedZone" is provided/);
+  }).toThrow(/Use either the "customDomain.hostedZone" or the "customDomain.cdk.hostedZone"/);
 });
 
 test("customDomain: internal domain: domainName is string (imported ssm), hostedZone undefined", async () => {
@@ -680,9 +665,6 @@ test("customDomain: internal domain: domainName is type edge", async () => {
     Name: "api.domain.com.",
     Type: "AAAA",
   });
-  hasResource(stack, "AWS::Route53::HostedZone", {
-    Name: "api.domain.com.",
-  });
 });
 
 test("customDomain: internal domain: hostedZone generated from full domainName", async () => {
@@ -700,9 +682,6 @@ test("customDomain: internal domain: hostedZone generated from full domainName",
     routes: {
       "GET /": "test/lambda.handler",
     },
-  });
-  hasResource(stack, "AWS::Route53::HostedZone", {
-    Name: "domain.com.",
   });
 });
 
@@ -790,7 +769,6 @@ test("customDomain is props-domainName-apigDomainName", async () => {
   });
   countResources(stack, "AWS::CertificateManager::Certificate", 1);
   countResources(stack, "AWS::Route53::RecordSet", 0);
-  countResources(stack, "AWS::Route53::HostedZone", 0);
 });
 
 test("customDomain: cdk.domainName and hostedZone co-exist error", async () => {

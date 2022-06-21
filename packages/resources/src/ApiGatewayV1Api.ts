@@ -949,15 +949,15 @@ export class ApiGatewayV1Api<
       // parse customDomain.hostedZone
       if (customDomain.hostedZone && customDomain.cdk?.hostedZone) {
         throw new Error(
-          `Cannot configure "hostedZone" when the "cdk.hostedZone" is provided`
+          `Use either the "customDomain.hostedZone" or the "customDomain.cdk.hostedZone" to configure the custom domain hosted zone. Do not use both.`
         );
       }
-      if (customDomain.cdk?.hostedZone) {
-        hostedZone = customDomain.cdk?.hostedZone;
-      } else if (!customDomain.hostedZone) {
-        hostedZoneDomain = domainName.split(".").slice(1).join(".");
-      } else if (typeof customDomain.hostedZone === "string") {
+      if (customDomain.hostedZone) {
         hostedZoneDomain = customDomain.hostedZone;
+      } else if (customDomain.cdk?.hostedZone) {
+        hostedZone = customDomain.cdk?.hostedZone;
+      } else {
+        hostedZoneDomain = domainName.split(".").slice(1).join(".");
       }
 
       certificate = customDomain.cdk?.certificate;
