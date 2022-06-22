@@ -1,5 +1,11 @@
 # @serverless-stack/core
 
+## 1.2.29
+
+### Patch Changes
+
+- [#1839](https://github.com/serverless-stack/serverless-stack/pull/1839) [`75145db8`](https://github.com/serverless-stack/serverless-stack/commit/75145db83f89e60694685b99c76851ca95d988e4) Thanks [@thdxr](https://github.com/thdxr)! - Warm up RDS instance on sst start in case it's asleep
+
 ## 1.2.28
 
 ## 1.2.27
