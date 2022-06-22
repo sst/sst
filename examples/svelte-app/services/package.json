@@ -1,0 +1,12 @@
+{
+  "name": "@svelte-app/services",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {},
+  "dependencies": {
+    "aws-sdk": "^2.1159.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.101"
+  }
+}

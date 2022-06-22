@@ -13,14 +13,14 @@
   },
   "devDependencies": {
     "aws-cdk-lib": "2.24.0",
-    "@serverless-stack/cli": "^1.2.21",
-    "@serverless-stack/resources": "^1.2.21",
-    "typescript": "^4.7.3",
+    "@serverless-stack/cli": "^1.2.27",
+    "@serverless-stack/resources": "^1.2.27",
+    "typescript": "^4.7.4",
     "@tsconfig/node16": "^1.0.3",
-    "vitest": "^0.14.2",
-    "datadog-cdk-constructs-v2": "^0.3.2"
+    "vitest": "^0.15.2",
+    "datadog-cdk-constructs-v2": "^0.3.3"
   },
   "workspaces": [
-    "api"
+    "services"
   ]
 }

@@ -1,0 +1,13 @@
+{
+  "name": "@parameter-prototype/services",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {},
+  "dependencies": {
+    "aws-sdk": "^2.1159.0",
+    "@serverless-stack/node": "^1.2.27"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.101"
+  }
+}
