@@ -9,3 +9,4 @@ export * from "./KyselyTypeGenerator.js";
 export * from "./ProjectWatcher.js";
 export * from "./Bus.js";
 export * from "./Logger.js";
+export * from "./RDSWarmer.js";
