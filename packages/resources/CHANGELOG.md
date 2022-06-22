@@ -1,5 +1,14 @@
 # @serverless-stack/resources
 
+## 1.2.28
+
+### Patch Changes
+
+- [#1840](https://github.com/serverless-stack/serverless-stack/pull/1840) [`54d794ef`](https://github.com/serverless-stack/serverless-stack/commit/54d794ef704aceaa54f15a28d6337ed48d55b1b5) Thanks [@fwang](https://github.com/fwang)! - RDS: fix migration error causes deploy to hang for 1 hour
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.2.28
+
 ## 1.2.27
 
 ### Patch Changes
