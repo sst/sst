@@ -2,6 +2,10 @@
 description: "Docs for the sst.Table construct in the @serverless-stack/resources package. This construct creates a DynamoDB table, and enable DynamoDB Streams and Kinesis Data Streams."
 ---
 
+:::caution
+This is the SST v0.x Constructs doc. SST v1 is now released. If you are using v1, see the [v1 Constructs doc](/constructs). If you are looking to upgrade to v1, [check out the migration steps](/constructs/v0/migration).
+:::
+
 The `Table` construct is a higher level CDK construct that makes it easy to create a [DynamoDB](https://aws.amazon.com/dynamodb/) table. It uses the following defaults:
 
 - Defaults to using the [On-Demand capacity](https://aws.amazon.com/dynamodb/pricing/on-demand/) to make it perfectly serverless.
@@ -520,9 +524,9 @@ attachPermissions(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../../util/Permissions.md)
+- **permissions** [`Permissions`](./Permissions)
 
-Attaches the given list of [permissions](../../util/Permissions.md) to all the `consumerFunctions`. This allows the consumers to access other AWS resources.
+Attaches the given list of [permissions](./Permissions) to all the `consumerFunctions`. This allows the consumers to access other AWS resources.
 
 Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
@@ -536,9 +540,9 @@ _Parameters_
 
 - **consumerName** `string`
 
-- **permissions** [`Permissions`](../../util/Permissions.md)
+- **permissions** [`Permissions`](./Permissions)
 
-Attaches the given list of [permissions](../../util/Permissions.md) to a specific function in the list of `consumerFunctions`. This allows that consumer to access other AWS resources.
+Attaches the given list of [permissions](./Permissions) to a specific function in the list of `consumerFunctions`. This allows that consumer to access other AWS resources.
 
 Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 

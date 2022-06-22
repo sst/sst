@@ -2,6 +2,10 @@
 description: "Docs for the sst.Script construct in the @serverless-stack/resources package"
 ---
 
+:::caution
+This is the SST v0.x Constructs doc. SST v1 is now released. If you are using v1, see the [v1 Constructs doc](/constructs). If you are looking to upgrade to v1, [check out the migration steps](/constructs/v0/migration).
+:::
+
 The `Script` construct is a higher level CDK construct that makes it easy to run a script in a Lambda function during the deployment process. It provides a simple way to build and bundle the script function; and allows you to pass parameter values based on outputs from other constructs in your SST app. So you don't have to hard code values in your script. You can configure a script to run before or after any of the stacks or resources are deployed in your app.
 
 Since the script is running inside a Lambda function, it can interact with resources like the RDS databases, that are inside a VPC; and make AWS API calls to services that the IAM credentials in your local environment or CI might not have permissions to.
@@ -122,7 +126,7 @@ Note that, the value for `tableName` will be resolved at deploy time. For exampl
 
 ### Attaching permissions
 
-You can grant additional [permissions](../../util/Permissions.md) to the script.
+You can grant additional [permissions](./Permissions) to the script.
 
 ```js {7}
 const script = new Script(this, "Script", {
@@ -308,9 +312,9 @@ attachPermissions(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../../util/Permissions.md)
+- **permissions** [`Permissions`](./Permissions)
 
-Attaches the given list of [permissions](../../util/Permissions.md) to the `function`. This allows the script to access other AWS resources.
+Attaches the given list of [permissions](./Permissions) to the `function`. This allows the script to access other AWS resources.
 
 Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 

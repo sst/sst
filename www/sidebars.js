@@ -91,10 +91,13 @@ module.exports = {
       ],
     },
     {
-      Util: ["util/Permissions"],
+      Util: ["constructs/v0/Permissions"],
     },
     {
-      Internals: ["constructs/DebugApp", "constructs/DebugStack"],
+      Internals: [
+        "constructs/v0/DebugApp",
+        "constructs/v0/DebugStack",
+      ],
     },
   ],
   constructs: [

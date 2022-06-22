@@ -2,6 +2,10 @@
 description: "Docs for the sst.Auth construct in the @serverless-stack/resources package"
 ---
 
+:::caution
+This is the SST v0.x Constructs doc. SST v1 is now released. If you are using v1, see the [v1 Constructs doc](/constructs). If you are looking to upgrade to v1, [check out the migration steps](/constructs/v0/migration).
+:::
+
 import TabItem from "@theme/TabItem";
 import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
 
@@ -505,9 +509,9 @@ attachPermissionsForAuthUsers(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../../util/Permissions.md)
+- **permissions** [`Permissions`](./Permissions)
 
-Attaches the given list of [permissions](../../util/Permissions.md) to [IAM role used for authenticated users](#iamauthrole). This dictates which resources an authenticated user has access to.
+Attaches the given list of [permissions](./Permissions) to [IAM role used for authenticated users](#iamauthrole). This dictates which resources an authenticated user has access to.
 
 Follows the same format as [`Function.attachPermissions`](Function.md#attachpermissions).
 
@@ -519,9 +523,9 @@ attachPermissionsForUnauthUsers(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../../util/Permissions.md)
+- **permissions** [`Permissions`](./Permissions)
 
-Attaches the given list of [permissions](../../util/Permissions.md) to [IAM role used for unauthenticated users](#iamunauthrole). This dictates which resources an unauthenticated user has access to.
+Attaches the given list of [permissions](./Permissions) to [IAM role used for unauthenticated users](#iamunauthrole). This dictates which resources an unauthenticated user has access to.
 
 Follows the same format as [`Function.attachPermissions`](Function.md#attachpermissions).
 
@@ -533,9 +537,9 @@ attachPermissions(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../../util/Permissions.md)
+- **permissions** [`Permissions`](./Permissions)
 
-Attaches the given list of [permissions](../../util/Permissions.md) to all the triggers in the User Pool. This allows the functions to access other AWS resources.
+Attaches the given list of [permissions](./Permissions) to all the triggers in the User Pool. This allows the functions to access other AWS resources.
 
 Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
@@ -549,9 +553,9 @@ _Parameters_
 
 - **triggerKey** `keyof AuthUserPoolTriggers`
 
-- **permissions** [`Permissions`](../../util/Permissions.md)
+- **permissions** [`Permissions`](./Permissions)
 
-Attaches the given list of [permissions](../../util/Permissions.md) to a specific trigger in the User Pool. This allows that function to access other AWS resources.
+Attaches the given list of [permissions](./Permissions) to a specific trigger in the User Pool. This allows that function to access other AWS resources.
 
 Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 

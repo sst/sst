@@ -2,6 +2,10 @@
 description: "Docs for the sst.NextjsSite construct in the @serverless-stack/resources package"
 ---
 
+:::caution
+This is the SST v0.x Constructs doc. SST v1 is now released. If you are using v1, see the [v1 Constructs doc](/constructs). If you are looking to upgrade to v1, [check out the migration steps](/constructs/v0/migration).
+:::
+
 The `NextjsSite` construct is a higher level CDK construct that makes it easy to create a Next.js app. It provides a simple way to build and deploy the site to an S3 bucket; setup a CloudFront CDN for fast content delivery; and configure a custom domain for the website URL.
 
 It also allows you to [automatically set the environment variables](#configuring-environment-variables) in your Next.js app directly from the outputs in your SST app.
@@ -268,7 +272,7 @@ new NextjsSite(this, "Site", {
 
 ### Attaching permissions
 
-You can attach a set of [permissions](../../util/Permissions.md) to allow the Next.js API routes and Server Side rendering `getServerSideProps` to access other AWS resources.
+You can attach a set of [permissions](./Permissions) to allow the Next.js API routes and Server Side rendering `getServerSideProps` to access other AWS resources.
 
 ```js {5}
 const site = new NextjsSite(this, "Site", {
@@ -402,9 +406,9 @@ attachPermissions(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../../util/Permissions.md)
+- **permissions** [`Permissions`](./Permissions)
 
-Attaches the given list of [permissions](../../util/Permissions.md) to allow the Next.js API routes and Server Side rendering `getServerSideProps` to access other AWS resources.
+Attaches the given list of [permissions](./Permissions) to allow the Next.js API routes and Server Side rendering `getServerSideProps` to access other AWS resources.
 
 ## NextjsSiteProps
 
@@ -548,9 +552,9 @@ The amount of memory in MB allocated to this Lambda function.
 
 ### permissions?
 
-_Type_ : [`Permissions`](../../util/Permissions.md), _defaults to_ `[]`
+_Type_ : [`Permissions`](./Permissions), _defaults to_ `[]`
 
-Attaches the given list of [permissions](../../util/Permissions.md) to the function.
+Attaches the given list of [permissions](./Permissions) to the function.
 
 ## NextjsSiteCachePolicyProps
 

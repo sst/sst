@@ -2,6 +2,10 @@
 description: "Docs for the sst.Stack construct in the @serverless-stack/resources package"
 ---
 
+:::caution
+This is the SST v0.x Constructs doc. SST v1 is now released. If you are using v1, see the [v1 Constructs doc](/constructs). If you are looking to upgrade to v1, [check out the migration steps](/constructs/v0/migration).
+:::
+
 The `Stack` construct extends [`cdk.Stack`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Stack.html). It automatically prefixes the stack names with the stage and app name to ensure that they can be deployed to multiple regions in the same AWS account. It also ensure that the stack uses the same AWS profile and region as the app.
 
 ## Initializer
@@ -244,7 +248,7 @@ _Parameters_
 
 - **permissions** `Permissions`
 
-Adds additional default [`Permissions`](../../util/Permissions.md) to be applied to all Lambda functions in the stack.
+Adds additional default [`Permissions`](./Permissions) to be applied to all Lambda functions in the stack.
 
 :::note
 Only functions created after a `addDefaultFunctionPermissions` call will contain the new values.

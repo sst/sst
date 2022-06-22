@@ -2,14 +2,18 @@
 description: "Docs for how permissions are handled in the @serverless-stack/resources"
 ---
 
-import config from "../../config";
+:::caution
+This is the SST v0.x Constructs doc. SST v1 is now released. If you are using v1, see the [v1 Constructs doc](/constructs). If you are looking to upgrade to v1, [check out the migration steps](/constructs/v0/migration).
+:::
+
+import config from "../../../config";
 
 SST makes it easy to select the level of access you want to grant while attaching permissions to your application.
 
 The `Permissions` type is used in:
 
-1. The various `attachPermissions` style functions. For example, [`attachPermissions`](../constructs/Function.md#attachpermissions) in the `Function` construct.
-2. The [`attachPermissionsForAuthUsers`](../constructs/Auth.md#attachpermissionsforauthusers) and [`attachPermissionsForUnauthUsers`](../constructs/Auth.md#attachpermissionsforunauthusers) in the `Auth` construct.
+1. The various `attachPermissions` style functions. For example, [`attachPermissions`](./Function.md#attachpermissions) in the `Function` construct.
+2. The [`attachPermissionsForAuthUsers`](./Auth.md#attachpermissionsforauthusers) and [`attachPermissionsForUnauthUsers`](./Auth.md#attachpermissionsforunauthusers) in the `Auth` construct.
 
 ## Examples
 
@@ -181,18 +185,18 @@ fun.attachPermissions([sns, table]);
 
 Currently the following SST and CDK constructs are supported.
 
-- [Api](../constructs/Api.md)
-- [Topic](../constructs/Topic.md)
-- [Table](../constructs/Table.md)
-- [Queue](../constructs/Queue.md)
-- [Bucket](../constructs/Bucket.md)
-- [Function](../constructs/Function.md)
-- [EventBus](../constructs/EventBus.md)
-- [GraphQLApi](../constructs/GraphQLApi.md)
-- [AppSyncApi](../constructs/AppSyncApi.md)
-- [KinesisStream](../constructs/KinesisStream.md)
-- [WebSocketApi](../constructs/WebSocketApi.md)
-- [ApiGatewayV1Api](../constructs/ApiGatewayV1Api.md)
+- [Api](./Api.md)
+- [Topic](./Topic.md)
+- [Table](./Table.md)
+- [Queue](./Queue.md)
+- [Bucket](./Bucket.md)
+- [Function](./Function.md)
+- [EventBus](./EventBus.md)
+- [GraphQLApi](./GraphQLApi.md)
+- [AppSyncApi](./AppSyncApi.md)
+- [KinesisStream](./KinesisStream.md)
+- [WebSocketApi](./WebSocketApi.md)
+- [ApiGatewayV1Api](./ApiGatewayV1Api.md)
 - [cdk.aws-sns.Topic](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_sns.Topic.html)
 - [cdk.aws-s3.Bucket](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.Bucket.html)
 - [cdk.aws-sqs.Queue](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_sqs.Queue.html)
