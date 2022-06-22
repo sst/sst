@@ -141,10 +141,6 @@ div.theme-doc-toc-desktop.thin-scrollbar::-webkit-scrollbar-track {
   --custom-border-color: #1f2937;
 }
 
-html {
-  scroll-behavior: smooth;
-}
-
 html[data-theme="dark"] {
   --ifm-font-color-base: #ffffff;
   --ifm-heading-color: #ffffff;
