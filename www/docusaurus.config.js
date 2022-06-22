@@ -166,7 +166,7 @@ module.exports = {
       {
         docs: {
           routeBasePath: "/",
-          exclude: ["constructs/*.snippets.md", "advanced/monorepo-project-structure"],
+          exclude: ["constructs/*.snippets.md", "advanced/monorepo-project-structure.md"],
           sidebarCollapsible: false,
           sidebarPath: require.resolve("./sidebars.js"),
           showLastUpdateTime: true,
