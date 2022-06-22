@@ -1,4 +1,4 @@
-import { RDSDataService } from "aws-sdk";
+import RDSDataService from "aws-sdk/clients/rdsdataservice";
 import { Kysely, Selectable } from "kysely";
 import { DataApiDialect } from "kysely-data-api";
 import type { Database } from "./sql.generated";
