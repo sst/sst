@@ -13,6 +13,7 @@ const DEFAULT_CATEGORY = "starters";
 program
   .name("create-sst")
   .description("CLI to create SST projects")
+  .option("--template <template>", "Use a specific template")
   .option("--examples", "Show example templates", false)
   .option("--minimal, --no-minimal", "Show minimal templates")
   .argument("[directory]", "The destination directory")
@@ -22,9 +23,9 @@ program
     const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
     process.chdir(__dirname);
 
-    let preset = path.join("presets", "default");
+    let preset = path.join("presets", opts.template || "default");
 
-    if (opts.examples || opts.minimal) {
+    if (!opts.template && (opts.examples || opts.minimal)) {
       const scan = opts.examples ? ["examples"] : ["starters"];
       const presets = (
         await Promise.all(
