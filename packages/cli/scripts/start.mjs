@@ -20,6 +20,7 @@ import {
   createBus,
   createPothosBuilder,
   createKyselyTypeGenerator,
+  createRDSWarmer,
 } from "@serverless-stack/core";
 
 import paths from "./util/paths.mjs";
@@ -126,6 +127,10 @@ export default async function (argv, config, cliInfo) {
   });
   createPothosBuilder({
     bus,
+  });
+  createRDSWarmer({
+    bus,
+    config,
   });
   bus.subscribe("stacks.deployed", updateSiteEnvironmentOutputs);
 
