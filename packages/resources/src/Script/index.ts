@@ -2,9 +2,9 @@ import * as cfnResponse from "./cfn-response.js";
 import { invokeFunction } from "./outbound.js";
 import { log } from "./util.js";
 
-export async function handler(
+export const handler = cfnResponse.safeHandler(async (
   cfnRequest: AWSLambda.CloudFormationCustomResourceEvent
-) {
+) => {
   log("onEventHandler", cfnRequest);
 
   // Invoke user function on Create and on Update
@@ -25,7 +25,7 @@ export async function handler(
     ...cfnRequest,
     PhysicalResourceId: defaultPhysicalResourceId(cfnRequest),
   });
-}
+});
 
 async function invokeUserFunction(functionName: string, payload: any) {
   log(`executing user function ${functionName} with payload`, payload);

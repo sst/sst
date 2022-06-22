@@ -8,9 +8,9 @@ import * as cfnResponse from "./cfn-response.js";
 const lambda = new AWS.Lambda({ region: "us-east-1" });
 const LIVE_ALIAS = "live";
 
-export async function handler(
+export const handler = cfnResponse.safeHandler(async (
   cfnRequest: AWSLambda.CloudFormationCustomResourceEvent
-) {
+) => {
   log("onEventHandler", cfnRequest);
 
   // Process request
@@ -47,7 +47,7 @@ export async function handler(
     PhysicalResourceId,
     Data,
   });
-}
+});
 
 async function createVersion(functionName: string) {
   log(`createVersion() called with functionName`, functionName);
