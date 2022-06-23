@@ -1,5 +1,11 @@
 # create-sst
 
+## 1.2.30
+
+### Patch Changes
+
+- [`8908e35b5`](https://github.com/serverless-stack/serverless-stack/commit/8908e35b5ff0809b4afcb95bfa1368e2b24ad854) Thanks [@thdxr](https://github.com/thdxr)! - Fix issue with create-sst when using minimal starters
+
 ## 1.2.29
 
 ### Patch Changes
