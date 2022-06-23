@@ -31,9 +31,9 @@ function streamToSharp(width) {
   return sharp().resize(width);
 }
 
-import { APIGatewayProxyHandlerV2 } from "aws-lambda";
+import { S3Handler } from "aws-lambda";
 
-export const main: APIGatewayProxyHandlerV2 = async (event) => {
+export const main: S3Handler = async (event) => {
   const s3Record = event.Records[0].s3;
 
   // Grab the filename and bucket name
@@ -42,7 +42,7 @@ export const main: APIGatewayProxyHandlerV2 = async (event) => {
 
   // Check if the file has already been resized
   if (Key.startsWith(prefix)) {
-    return false;
+    return;
   }
 
   // Create the new filename with the dimensions
@@ -63,6 +63,4 @@ export const main: APIGatewayProxyHandlerV2 = async (event) => {
 
   // Wait for the file to upload
   await upload;
-
-  return true;
 };

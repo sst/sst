@@ -2,9 +2,9 @@ import { DynamoDB } from "aws-sdk";
 
 const dynamoDb = new DynamoDB.DocumentClient();
 
-import { APIGatewayProxyHandlerV2 } from "aws-lambda";
+import { APIGatewayProxyHandler } from "aws-lambda";
 
-export const main: APIGatewayProxyHandlerV2 = async (event) => {
+export const main: APIGatewayProxyHandler = async (event) => {
   const params = {
     TableName: process.env.tableName,
     Item: {

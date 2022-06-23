@@ -3,9 +3,9 @@ import { DynamoDB, ApiGatewayManagementApi } from "aws-sdk";
 const TableName = process.env.tableName;
 const dynamoDb = new DynamoDB.DocumentClient();
 
-import { APIGatewayProxyHandlerV2 } from "aws-lambda";
+import { APIGatewayProxyHandler } from "aws-lambda";
 
-export const main: APIGatewayProxyHandlerV2 = async (event) => {
+export const main: APIGatewayProxyHandler = async (event) => {
   const messageData = JSON.parse(event.body).data;
   const { stage, domainName } = event.requestContext;
 
