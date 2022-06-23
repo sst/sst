@@ -120,7 +120,7 @@ export interface EventBusRuleProps {
      * new EventBus(stack, "Bus", {
      *   rules: {
      *     rule1: {
-     *       pattern: { detailTypes: ["foo"]  },
+     *       pattern: { detailType: ["foo"]  },
      *     },
      *   },
      * });
