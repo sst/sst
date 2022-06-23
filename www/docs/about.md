@@ -76,13 +76,13 @@ npx sst deploy --stage prod
 ## Join our community
 
 <div className={styles.communityPanels}>
-  <a className={styles.communityPanel} href={ config.slack_invite }>
+  <a className={styles.communityPanel} href={ config.discord_invite }>
     <div className={styles.communityPanelIconSlack}>
       <i className="fab fa-slack"></i>
     </div>
     <div className={styles.communityPanelContent}>
-      <h4>Slack</h4>
-      <p>Join us on Slack and chat with other folks in the community.</p>
+      <h4>Discord</h4>
+      <p>Join us on Discord and chat with other folks in the community.</p>
     </div>
   </a>
   <a className={styles.communityPanel} href={ config.youtube }>

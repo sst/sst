@@ -74,9 +74,9 @@ module.exports = {
           position: "left",
         },
         {
-          href: config.slack_invite,
+          href: config.discord_invite,
           position: "right",
-          "aria-label": "Slack community",
+          "aria-label": "Discord community",
           className: "navbar__link__slack",
         },
         {
@@ -111,8 +111,8 @@ module.exports = {
           title: "Community",
           items: [
             {
-              label: "Slack",
-              href: config.slack_invite,
+              label: "Discord",
+              href: config.discord_invite,
             },
             {
               label: "GitHub",
@@ -166,7 +166,10 @@ module.exports = {
       {
         docs: {
           routeBasePath: "/",
-          exclude: ["constructs/*.snippets.md", "advanced/monorepo-project-structure.md"],
+          exclude: [
+            "constructs/*.snippets.md",
+            "advanced/monorepo-project-structure.md",
+          ],
           sidebarCollapsible: false,
           sidebarPath: require.resolve("./sidebars.js"),
           showLastUpdateTime: true,
