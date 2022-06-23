@@ -47,7 +47,7 @@ program
           message: "Select a template",
         },
       ]);
-      preset = path.join("presets", answers.preset);
+      preset = path.join("presets", ...scan, answers.preset);
     }
 
     const answers = await inquirer.prompt([
