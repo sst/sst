@@ -15,5 +15,5 @@ afterAll(async () => {
 test("config-no-name", async () => {
   const result = await runBuildCommand(__dirname);
 
-  expect(result).toMatch(/Give your Serverless Stack app a name/);
+  expect(result).toMatch(/Give your SST app a name/);
 });

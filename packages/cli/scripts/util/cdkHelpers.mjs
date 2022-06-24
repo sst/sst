@@ -185,7 +185,7 @@ async function reTranspile() {
 
 /**
  * Check if the user's app is using the exact version of the currently supported
- * AWS CDK version that Serverless Stack is using. If not, then show an error
+ * AWS CDK version that SST is using. If not, then show an error
  * message with update instructions.
  * More here
  *  - For TS: https://github.com/aws/aws-cdk/issues/542
@@ -226,7 +226,7 @@ function runCdkVersionMatch(packageJson, cliInfo) {
 
   logger.info("");
   logger.error(
-    `Mismatched versions of AWS CDK packages. Serverless Stack currently supports ${chalk.bold(
+    `Mismatched versions of AWS CDK packages. SST currently supports ${chalk.bold(
       cdkVersion
     )}. Fix using:\n`
   );
@@ -249,7 +249,7 @@ function runCdkVersionMatch(packageJson, cliInfo) {
   }
 
   logger.info(
-    `\nLearn more about it here — https://docs.serverless-stack.com/known-issues\n`
+    `\nLearn more about it here — https://docs.sst.dev/known-issues\n`
   );
 }
 

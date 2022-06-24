@@ -1,9 +1,9 @@
 const config = require("./config");
 
 module.exports = {
-  title: "Serverless Stack (SST)",
-  tagline: "Serverless Stack Docs",
-  url: "https://docs.serverless-stack.com",
+  title: "SST (SST)",
+  tagline: "SST Docs",
+  url: "https://docs.sst.dev",
   baseUrl: "/",
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
@@ -32,7 +32,7 @@ module.exports = {
     /**
     announcementBar: {
       id: "announcement",
-      content: `If you like Serverless Stack, <a target="_blank" href="${config.github}">give it a star on GitHub</a>! <span class="icon" />`,
+      content: `If you like SST, <a target="_blank" href="${config.github}">give it a star on GitHub</a>! <span class="icon" />`,
       backgroundColor: "#395C6B",
       textColor: "#FFFFFF",
       isCloseable: true,
@@ -133,11 +133,11 @@ module.exports = {
           items: [
             {
               label: "Blog",
-              href: "https://serverless-stack.com/blog/",
+              href: "https://sst.dev/blog/",
             },
             {
               label: "About us",
-              href: "https://serverless-stack.com/about.html",
+              href: "https://sst.dev/about.html",
             },
             {
               label: "Contact us",
@@ -145,7 +145,7 @@ module.exports = {
             },
             {
               label: "Join our team!",
-              href: "https://serverless-stack.com/careers.html",
+              href: "https://sst.dev/careers.html",
             },
           ],
         },
@@ -241,6 +241,6 @@ module.exports = {
   ],
   customFields: {
     // Used in "src/theme/DocItem/index.js" to add og:image tags dynamically
-    socialCardsUrl: "https://social-cards.serverless-stack.com",
+    socialCardsUrl: "https://social-cards.sst.dev",
   },
 };

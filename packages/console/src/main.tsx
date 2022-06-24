@@ -25,7 +25,7 @@ import * as Sentry from "@sentry/react";
 import { BrowserTracing } from "@sentry/tracing";
 
 console.log(import.meta.env);
-if (location.host === "console.serverless-stack.com") {
+if (location.host === "console.sst.dev") {
   Sentry.init({
     dsn: "https://f9c6d13f812343a0887199063b2f97fc@o1150240.ingest.sentry.io/6228365",
     integrations: [new BrowserTracing()],

@@ -19,7 +19,7 @@ try {
   if (e.code === "MODULE_NOT_FOUND") {
     console.log(
       chalk.red(
-        `\nError: You need to add @sls-next/lambda-at-edge as a dependency in your package.json. Read more about it here - https://docs.serverless-stack.com/constructs/NextjsSite#nextjs-features\n`
+        `\nError: You need to add @sls-next/lambda-at-edge as a dependency in your package.json. Read more about it here - https://docs.sst.dev/constructs/NextjsSite#nextjs-features\n`
       )
     );
     process.exit(1);
