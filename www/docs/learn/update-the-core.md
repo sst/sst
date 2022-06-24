@@ -4,7 +4,7 @@ title: Update the Core
 
 We are ready to add our new comments feature. To do so, we'll first add the business logic for it to our `core` package.
 
-Open up `api/core/article.ts` and add the following two functions to the bottom of the file.
+Open up `services/core/article.ts` and add the following two functions to the bottom of the file.
 
 ```js
 export async function addComment(articleID: string, text: string) {

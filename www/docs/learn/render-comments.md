@@ -3,7 +3,7 @@ title: Rendering Comments
 description: "Rendering Comments in an SST app"
 ---
 
-Render comments and a comment form below each article.
+Open up `web/src/pages/Article.tsx`, render comments and a comment form below each article.
 
 ```ts {5-12,14-27}
               <div>

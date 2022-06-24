@@ -8,6 +8,10 @@ Once you are ready to go live with real users, you can deploy your SST app to a 
 
 ## Deploy app
 
+Stop the `npm start` process.
+
+Run from the root of the project.
+
 ```bash
 AWS_PROFILE=prod-profile npx sst deploy --stage prod
 ```
@@ -19,6 +23,8 @@ It is also recommended to not use the same stage used by `sst start`, and always
 You can read more about stage names and the best practices when working with your team [here](working-with-your-team).
 
 ## Manage app
+
+Run from the root of the project.
 
 ```bash
 AWS_PROFILE=prod-profile npx sst console --stage prod

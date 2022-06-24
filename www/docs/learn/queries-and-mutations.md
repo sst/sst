@@ -10,7 +10,7 @@ Mutations however can be a bit trickier to design well. If coming from REST, it'
 
 ## Creating a new Mutation
 
-Open `api/functions/graphql/types/article.ts`, and add this above the `createArticle` mutation:
+Open `services/functions/graphql/types/article.ts`, and add this above the `createArticle` mutation:
 
 ```ts {4-11}
 //...

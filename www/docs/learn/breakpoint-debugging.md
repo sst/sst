@@ -6,7 +6,7 @@ We now have our entire app; frontend and backend running locally. Before we star
 
 [Live Lambda Dev](../live-lambda-development.md) allows you debug Lambda functions locally by setting  breakpoints. Let's see it action!
 
-Open the `api/core/article.ts` file and set a breakpoint in the `list` function.
+Open the `services/core/article.ts` file and set a breakpoint in the `list` function.
 
 ![VS Code set breakpoint](/img/breakpoint-debugging/set-breakpoint.png)
 

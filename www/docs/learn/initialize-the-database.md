@@ -19,7 +19,7 @@ Open the [SST Console](../console.md) link in the browser, and select the **RDS*
 
 ![Console RDS tab](/img/initialize-database/console-rds-tab.png)
 
-Hit the **Migrations** button on the right, and apply the **first** migration. This will create a table named **article**. It'll be storing all the links that've been submitted to our app.
+Hit the **Migrations** button on the right, and apply the **article** migration. This will create a table named **article**. It'll be storing all the links that've been submitted to our app.
 
 ![Console apply migration](/img/initialize-database/console-apply-migration.png)
 

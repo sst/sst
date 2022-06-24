@@ -6,7 +6,7 @@ We don't want to just return a comment as a string from an API. We want to retur
 
 ## Create Comment type
 
-In `api/functions/graphql/types/article.ts` add this above the `ArticleType`.
+In `services/functions/graphql/types/article.ts` add this above the `ArticleType`.
 
 ```ts
 const CommentType = builder.objectRef<SQL.Row["comment"]>("Comment").implement({

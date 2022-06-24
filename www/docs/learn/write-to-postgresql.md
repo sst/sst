@@ -10,7 +10,28 @@ We first need to create a new table to store our comments.
 
 To do this, let's create a new migration.
 
-Create a new file at `api/migrations/second.mjs` with the following.
+Run from the root of the project.
+
+```bash
+npm run gen migration new
+```
+
+And enter `comment` for migration name.
+
+```bash
+? Migration name › comment
+```
+
+Once the migration is created, you should see the following printed out in the terminal.
+
+```bash
+✔ Migration name · comment
+
+Loaded templates: _templates
+       added: services/migrations/1656074109287_comment.mjs
+```
+
+Open up the created file `services/migrations/1656074109287_comment.mjs` and replace with the follow content.
 
 ```ts
 import { Kysely } from "kysely";
@@ -51,7 +72,7 @@ To verify that the table has been created; enter `SELECT * FROM comment` in the 
 
 Now let's implement the `addComment` and `comments` functions that we created back in the [Update the Core](update-the-core.md) chapter.
 
-Open `api/core/article.ts` and replace the two placeholder functions with:
+Open `services/core/article.ts` and replace the two placeholder functions with:
 
 ```ts
 export async function addComment(articleID: string, text: string) {
