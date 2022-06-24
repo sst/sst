@@ -1,6 +1,6 @@
 ---
 title: Tagging Resources
-description: "Learn how to tag resources in your SST (SST) app."
+description: "Learn how to tag resources in your SST app."
 ---
 
 [Tags](https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html) are key-value metadata that you can add to the resources in your SST app. A tag applied to a given construct and also applies to all of its taggable children. You can use tags to identify and categorize resources to simplify management, control costs, and for access control.

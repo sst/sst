@@ -1,12 +1,12 @@
 ---
 id: design-principles
 title: Design Principles
-description: "SST (SST) is designed around a few core principles."
+description: "SST is designed around a few core principles."
 ---
 
 import config from "../config";
 
-SST (SST) is designed around a few core principles.
+SST is designed around a few core principles.
 
 ## Progressive disclosure
 

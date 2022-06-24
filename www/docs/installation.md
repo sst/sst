@@ -1,7 +1,7 @@
 ---
 id: installation
 title: Installation
-description: "Creating a new SST (SST) app"
+description: "Creating a new SST app"
 ---
 
 import config from "../config";

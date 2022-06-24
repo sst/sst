@@ -4,7 +4,7 @@ title: Get Started With SST
 sidebar_label: Get Started
 hide_title: true
 hide_table_of_contents: true
-description: SST (SST) Docs
+description: SST Docs
 slug: /
 ---
 
@@ -15,7 +15,7 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 <h1 className={styles.title}>Get Started With SST</h1>
 
 <div className={styles.desc}>
-SST (SST) is a framework that makes it easy to build serverless apps. It features:
+SST is a framework that makes it easy to build serverless apps. It features:
 
 - A [Live Lambda Development](live-lambda-development.md) environment
 - A [web based dashboard](console.md) to manage your apps

@@ -1,6 +1,6 @@
 ---
 title: Frequently Asked Questions
-description: "Frequently asked questions about SST (SST)"
+description: "Frequently asked questions about SST"
 ---
 
 import config from "../config";

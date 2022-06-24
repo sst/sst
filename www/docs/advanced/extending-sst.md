@@ -1,6 +1,6 @@
 ---
 title: Extending SST
-description: "Learn how to extend SST (SST)'s built-in constructs."
+description: "Learn how to extend SST's built-in constructs."
 ---
 
 SST maintains a family of built-in constructs that makes it easy to build full-stack apps. We'll be adding more constructs like these to the family and it's usually based on the type of requests we get from the community. But it's possible that the resources you need to create are not yet supported by SST. In this case, you can fallback to using the underlying CDK constructs. And in the case an AWS resource is not yet supported by CDK, you can fallback all the way to using CloudFormation.

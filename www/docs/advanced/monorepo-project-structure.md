@@ -1,6 +1,6 @@
 ---
 title: Monorepo Project Structure
-description: "We explore an opinionated monorepo project structure for your SST (SST) apps."
+description: "We explore an opinionated monorepo project structure for your SST apps."
 ---
 
 import config from "../../config";

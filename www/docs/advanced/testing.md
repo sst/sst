@@ -1,6 +1,6 @@
 ---
 title: Testing
-description: "Learn how to configure tests in SST (SST)."
+description: "Learn how to configure tests in SST."
 ---
 
 ## Testing your app

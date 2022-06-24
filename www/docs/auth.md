@@ -1,6 +1,6 @@
 ---
 title: Auth
-description: "Learn to manage users and authentication in your SST (SST) app."
+description: "Learn to manage users and authentication in your SST app."
 ---
 
 You can handle authentication in your SST app using AWS's [Cognito User Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html) or via a third party auth provider like [Auth0](https://auth0.com/).

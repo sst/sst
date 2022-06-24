@@ -1,7 +1,7 @@
 ---
 title: Migrating From CDK
 sidebar_label: CDK
-description: "Migrating from AWS CDK to SST (SST)"
+description: "Migrating from AWS CDK to SST"
 ---
 
 :::note

@@ -1,6 +1,6 @@
 ---
 title: Going to Production
-description: "Learn how to take your SST (SST) app to production."
+description: "Learn how to take your SST app to production."
 ---
 
 Once you are ready to deploy your SST app to production and go live with real users, you should double check a couple of things.

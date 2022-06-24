@@ -1,6 +1,6 @@
 ---
 title: Importing Resources
-description: "Learn how to reference existing resources in your SST (SST) app."
+description: "Learn how to reference existing resources in your SST app."
 ---
 
 You might have some existing resources in your AWS account that you'd like to use in your SST app. To reference them, you can use the `fromXXX()` methods that most CDK Constructs support . Here are a couple of examples of it in action.
