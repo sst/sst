@@ -1,6 +1,6 @@
 ---
 title: IAM Credentials
-description: "Learn about how Serverless Stack (SST) apps use your IAM credentials."
+description: "Learn about how SST apps use your IAM credentials."
 ---
 
 SST uses your AWS credentials to run the [Live Lambda Development environment](../live-lambda-development.md) and deploy your app. Let's take a look at how to load these credentials, creating an IAM policy for SST, and the basic set of permissions that all CDK apps need.
@@ -18,8 +18,8 @@ You can keep you AWS credentials in a file. The credentials are found at:
 
 If the credentials file does not exist on your machine:
 
-1. Follow [this guide to create an IAM user](https://serverless-stack.com/chapters/create-an-iam-user.html)
-2. And then [use this guide to configure the credentials](https://serverless-stack.com/chapters/configure-the-aws-cli.html)
+1. Follow [this guide to create an IAM user](https://sst.dev/chapters/create-an-iam-user.html)
+2. And then [use this guide to configure the credentials](https://sst.dev/chapters/configure-the-aws-cli.html)
 
 The credentials file should look like:
 

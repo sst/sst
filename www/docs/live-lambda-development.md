@@ -123,7 +123,7 @@ This approach also works well when [working with multiple developers on your tea
 
 #### Deprecating the `stage` option in the `sst.json`
 
-Note that, starting from [v0.41.0](https://github.com/serverless-stack/serverless-stack/releases/tag/v0.41.0), SST will show a warning if the `stage` is specified in the `sst.json`. This option will soon be deprecated.
+Note that, starting from [v0.41.0](https://github.com/serverless-stack/sst/releases/tag/v0.41.0), SST will show a warning if the `stage` is specified in the `sst.json`. This option will soon be deprecated.
 
 If you are working locally, you can remove this option and on the next `sst start` you'll be prompted to enter the stage name. Use the same stage name as you were using before and SST will store that in the `.sst` directory as mentioned above.
 
@@ -204,7 +204,7 @@ We have <a href={ `${config.github}/tree/master/examples/vscode` }>an example pr
 
 ## Debugging with WebStorm
 
-You can also set breakpoints and debug your Lambda functions locally with [WebStorm](http://www.jetbrains.com/webstorm/) and SST. [Check out this tutorial for more details](https://serverless-stack.com/examples/how-to-debug-lambda-functions-with-webstorm.html).
+You can also set breakpoints and debug your Lambda functions locally with [WebStorm](http://www.jetbrains.com/webstorm/) and SST. [Check out this tutorial for more details](https://sst.dev/examples/how-to-debug-lambda-functions-with-webstorm.html).
 
 <div class={styles.videoWrapper}>
   <iframe width="560" height="315" src="https://www.youtube.com/embed/_cLM_0On_Cc" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
@@ -212,7 +212,7 @@ You can also set breakpoints and debug your Lambda functions locally with [WebSt
 
 ## Debugging with IntelliJ IDEA
 
-If you are using [IntelliJ IDEA](https://www.jetbrains.com/idea/), [follow this tutorial to set breakpoints in your Lambda functions](https://serverless-stack.com/examples/how-to-debug-lambda-functions-with-intellij-idea.html).
+If you are using [IntelliJ IDEA](https://www.jetbrains.com/idea/), [follow this tutorial to set breakpoints in your Lambda functions](https://sst.dev/examples/how-to-debug-lambda-functions-with-intellij-idea.html).
 
 <div class={styles.videoWrapper}>
   <iframe width="560" height="315" src="https://www.youtube.com/embed/iABx-4bjWJ0" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>

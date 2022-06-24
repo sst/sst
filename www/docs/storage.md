@@ -163,6 +163,6 @@ Check out more Bucket notification examples over on the [`Bucket`](constructs/Bu
 
 Read this tutorial on automatically resizing images uploaded to a Bucket.
 
-[READ TUTORIAL](https://serverless-stack.com/examples/how-to-automatically-resize-images-with-serverless.html)
+[READ TUTORIAL](https://sst.dev/examples/how-to-automatically-resize-images-with-serverless.html)
 
 :::

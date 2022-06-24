@@ -2,9 +2,9 @@
 
 <img alt="Logo" align="right" src="https://raw.githubusercontent.com/serverless-stack/identity/main/sst.svg" width="20%" />
 
-Part of the **[Serverless Stack Framework](https://github.com/serverless-stack/serverless-stack)**. The `sst` CLI allows you to build, deploy, and test Serverless Stack apps.
+Part of the **[SST Framework](https://github.com/serverless-stack/sst)**. The `sst` CLI allows you to build, deploy, and test SST apps.
 
-[View the @serverless-stack/cli docs here](https://docs.serverless-stack.com/packages/cli).
+[View the @serverless-stack/cli docs here](https://docs.sst.dev/packages/cli).
 
 ## Quick Start
 
@@ -34,8 +34,8 @@ The `sst start` command starts up a local development environment that opens a W
 - Supports real Lambda environment variables and Lambda IAM permissions
 - And it's fast. There's nothing to deploy when you make a change!
 
-[Read more about Live Lambda Development](https://docs.serverless-stack.com/live-lambda-development).
+[Read more about Live Lambda Development](https://docs.sst.dev/live-lambda-development).
 
 ## Documentation
 
-[**Check out the SST docs**](https://docs.serverless-stack.com)
+[**Check out the SST docs**](https://docs.sst.dev)

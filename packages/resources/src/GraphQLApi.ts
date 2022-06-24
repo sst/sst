@@ -105,7 +105,7 @@ export class GraphQLApi extends Api {
 
   // Note: We want to create 1 Lambda handling both the GET and POST request.
   //       This design is based on this discussion on GitHub
-  //       https://github.com/serverless-stack/serverless-stack/issues/601
+  //       https://github.com/serverless-stack/sst/issues/601
   // Also Note: We cannot use the "ANY /" route because if authorization
   //            were provided, the OPTIONS route will be protected. This
   //            causes CORS to fail.

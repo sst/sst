@@ -81,7 +81,7 @@ Note that for TypeScript functions, if the `srcPath` is not the project root, SS
 
 #### bundle
 
-Bundles your Lambda functions with [esbuild](https://esbuild.github.io). Turn this off if you have npm packages that cannot be bundled. Currently bundle cannot be disabled if the `srcPath` is set to the project root. [Read more about this here](https://github.com/serverless-stack/serverless-stack/issues/78).
+Bundles your Lambda functions with [esbuild](https://esbuild.github.io). Turn this off if you have npm packages that cannot be bundled. Currently bundle cannot be disabled if the `srcPath` is set to the project root. [Read more about this here](https://github.com/serverless-stack/sst/issues/78).
 
 If you want to configure the bundling process, you can pass in the [FunctionBundleNodejsProps](#functionbundlenodejsprops).
 
@@ -366,4 +366,4 @@ new Function(stack, "MyFunction", {
 
 If you need access to resources within a VPC, then run your AWS Lambda function within a VPC. If you do not require this access, then do not run it within a VPC.
 
-Read more about [working with VPC](https://docs.serverless-stack.com/live-lambda-development#working-with-a-vpc).
+Read more about [working with VPC](https://docs.sst.dev/live-lambda-development#working-with-a-vpc).

@@ -1,6 +1,6 @@
 # @serverless-stack/static-site-env [![npm](https://img.shields.io/npm/v/@serverless-stack/static-site-env.svg?style=flat-square)](https://www.npmjs.com/package/@serverless-stack/static-site-env)
 
-A simple CLI ([`@serverless-stack/static-site-env`](https://www.npmjs.com/package/@serverless-stack/static-site-env) that allows your static site or Next.js app to load the environment variables from your SST app. This means that you won't have to hard code the config from your backend. Supports [React.js](https://docs.serverless-stack.com/constructs/ReactStaticSite#configuring-environment-variables), [Next.js](https://docs.serverless-stack.com/constructs/NextjsSite#configuring-environment-variables), and [Svelte](https://docs.serverless-stack.com/constructs/StaticSite#creating-a-svelte-site).
+A simple CLI ([`@serverless-stack/static-site-env`](https://www.npmjs.com/package/@serverless-stack/static-site-env) that allows your static site or Next.js app to load the environment variables from your SST app. This means that you won't have to hard code the config from your backend. Supports [React.js](https://docs.sst.dev/constructs/ReactStaticSite#configuring-environment-variables), [Next.js](https://docs.sst.dev/constructs/NextjsSite#configuring-environment-variables), and [Svelte](https://docs.sst.dev/constructs/StaticSite#creating-a-svelte-site).
 
 ## Installation
 

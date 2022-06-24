@@ -2,7 +2,7 @@
 
 The `@serverless-stack/resources` package provides a set of additional CDK constructs necessary to build an SST app.
 
-[View the @serverless-stack/resources docs here](https://docs.serverless-stack.com/packages/resources).
+[View the @serverless-stack/resources docs here](https://docs.sst.dev/packages/resources).
 
 ## Installation
 
@@ -39,18 +39,18 @@ SST comes with a two types of constructs.
 
 These either extend or replace the native CDK constructs.
 
-- [`App`](https://docs.serverless-stack.com/constructs/App)
-- [`Stack`](https://docs.serverless-stack.com/constructs/Stack)
-- [`Function`](https://docs.serverless-stack.com/constructs/Function)
+- [`App`](https://docs.sst.dev/constructs/App)
+- [`Stack`](https://docs.sst.dev/constructs/Stack)
+- [`Function`](https://docs.sst.dev/constructs/Function)
 
 ### Higher-Level Constructs
 
 These are higher level abstractions that wrap around multiple constructs to serve specific use cases.
 
-- [`Api`](https://docs.serverless-stack.com/constructs/Api)
-- [`Auth`](https://docs.serverless-stack.com/constructs/Auth)
-- [`Cron`](https://docs.serverless-stack.com/constructs/Cron)
-- [`Table`](https://docs.serverless-stack.com/constructs/Table)
-- [`Topic`](https://docs.serverless-stack.com/constructs/Topic)
-- [`Queue`](https://docs.serverless-stack.com/constructs/Queue)
+- [`Api`](https://docs.sst.dev/constructs/Api)
+- [`Auth`](https://docs.sst.dev/constructs/Auth)
+- [`Cron`](https://docs.sst.dev/constructs/Cron)
+- [`Table`](https://docs.sst.dev/constructs/Table)
+- [`Topic`](https://docs.sst.dev/constructs/Topic)
+- [`Queue`](https://docs.sst.dev/constructs/Queue)
 - _And many more!_

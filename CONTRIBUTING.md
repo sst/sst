@@ -9,7 +9,7 @@ To be sure that you are not working on something that's already being worked on,
 
 ## How to Contribute
 
-In this section we'll talk about the workflow we recommend while working on SST. It's based on how we work internally, but catered specifically for our community contributors. For more context on how we work, you can [check out this document](https://serverless-stack.com/about/culture.html).
+In this section we'll talk about the workflow we recommend while working on SST. It's based on how we work internally, but catered specifically for our community contributors. For more context on how we work, you can [check out this document](https://sst.dev/about/culture.html).
 
 ### 1. Gather Requirements
 
@@ -33,7 +33,7 @@ Here is an example of a spec in action:
 
 Then, add the spec to the GitHub issue. It's necessary to come up with this list **before** working on the task. This gives the core team a chance to propose changes. And, a good spec is one where it can be handed to anyone on the team. That person is then able to follow through and complete the implementation.
 
-If the solution isn’t obvious or is a bigger design change, get the core team involved. Before the group discussion, come up with a proposed solution. [More on this here](https://serverless-stack.com/about/culture.html#our-design-process).
+If the solution isn’t obvious or is a bigger design change, get the core team involved. Before the group discussion, come up with a proposed solution. [More on this here](https://sst.dev/about/culture.html#our-design-process).
 
 The core team then reviews the spec.
 
@@ -52,7 +52,7 @@ Here's how to run SST locally.
 To run this project locally, clone the repo and initialize the project.
 
 ```bash
-$ git clone https://github.com/serverless-stack/serverless-stack.git
+$ git clone https://github.com/serverless-stack/sst.git
 $ cd serverless-stack
 $ yarn
 ```
@@ -170,12 +170,12 @@ To cut a release, start by merging the PRs that are going into this release.
 
 3. Draft a new release
 
-   Copy the changelog that was generated above and [draft a new release](https://github.com/serverless-stack/serverless-stack/releases/new).
+   Copy the changelog that was generated above and [draft a new release](https://github.com/serverless-stack/sst/releases/new).
 
    Make necessary edits to the changelog to make it more readable and helpful.
 
-   - For `breaking` changes, add a message at the top clearly documenting the change ([example](https://github.com/serverless-stack/serverless-stack/releases/tag/v0.26.0)).
-   - For major `enhancement` changes, add a code snippet on how to use the feature ([example](https://github.com/serverless-stack/serverless-stack/releases/tag/v0.36.0)).
+   - For `breaking` changes, add a message at the top clearly documenting the change ([example](https://github.com/serverless-stack/sst/releases/tag/v0.26.0)).
+   - For major `enhancement` changes, add a code snippet on how to use the feature ([example](https://github.com/serverless-stack/sst/releases/tag/v0.36.0)).
 
    Add this snippet at the bottom of the changelog and replace it with the version that's going to be released.
 
@@ -248,7 +248,7 @@ Follow the checklist below when deprecating a Construct property or method.
 4. Construct code: Ensure the old property (or method) will continue to work.
 5. Construct code: Print a warning in verbose mode if the old property (or method) is used.
    ```
-   WARNING: The "oldProp" property has been renamed to "newProp". "oldProp" will continue to work but will be removed at a later date. More details on the deprecation - https://docs.serverless-stack.com/constructs/Table#secondaryindexes-deprecated
+   WARNING: The "oldProp" property has been renamed to "newProp". "oldProp" will continue to work but will be removed at a later date. More details on the deprecation - https://docs.sst.dev/constructs/Table#secondaryindexes-deprecated
    ```
 6. Construct tests: Ensure tests added for both the old and the new property (or method).
 
@@ -258,5 +258,5 @@ See the `Table` construct for a deprecation example of renaming `secondaryIndexe
 
 Help us improve this doc. If you've had a chance to contribute to SST, feel free to edit this doc and submit a PR.
 
-[discord]: https://serverless-stack.com/discord
-[issue]: https://github.com/serverless-stack/serverless-stack/issues/new
+[discord]: https://sst.dev/discord
+[issue]: https://github.com/serverless-stack/sst/issues/new

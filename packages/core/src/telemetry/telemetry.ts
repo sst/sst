@@ -5,7 +5,7 @@ import { postPayload } from "./post-payload.js";
 import { getRawProjectId } from "./project-id.js";
 import { getEnvironmentData } from "./environment.js";
 
-const TELEMETRY_API = "https://telemetry.serverless-stack.com/events";
+const TELEMETRY_API = "https://telemetry.sst.dev/events";
 const TELEMETRY_KEY_ENABLED = "telemetry.enabled";
 const TELEMETRY_KEY_NOTIFY_DATE = "telemetry.notifiedAt";
 const TELEMETRY_KEY_ID = `telemetry.anonymousId`;

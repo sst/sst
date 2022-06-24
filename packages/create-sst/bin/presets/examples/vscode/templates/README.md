@@ -4,7 +4,7 @@ An example serverless app created with SST.
 
 ## Getting Started
 
-[**Read the tutorial**](https://serverless-stack.com/examples/how-to-debug-lambda-functions-with-visual-studio-code.html)
+[**Read the tutorial**](https://sst.dev/examples/how-to-debug-lambda-functions-with-visual-studio-code.html)
 
 Install the example.
 
@@ -30,6 +30,6 @@ This runs the `sst test` command in debug mode. Allowing you to set breakpoints 
 
 Learn more about the SST.
 
-- [Docs](https://docs.serverless-stack.com/)
-- [@serverless-stack/cli](https://docs.serverless-stack.com/packages/cli)
-- [@serverless-stack/resources](https://docs.serverless-stack.com/packages/resources)
+- [Docs](https://docs.sst.dev/)
+- [@serverless-stack/cli](https://docs.sst.dev/packages/cli)
+- [@serverless-stack/resources](https://docs.sst.dev/packages/resources)

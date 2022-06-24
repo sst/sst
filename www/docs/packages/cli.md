@@ -5,7 +5,7 @@ description: "Docs for the @serverless-stack/cli package"
 
 import config from "../../config";
 
-The SST CLI (`@serverless-stack/cli`) allows you to build, deploy, test, and remove Serverless Stack apps.
+The SST CLI (`@serverless-stack/cli`) allows you to build, deploy, test, and remove SST apps.
 
 ## Installation
 
@@ -114,7 +114,7 @@ $ npm start
 Starting Live Lambda Dev
 ==========================
 
-SST Console: https://console.serverless-stack.com/acme/Jay
+SST Console: https://console.sst.dev/acme/Jay
 Debug session started. Listening for requests...
 ```
 

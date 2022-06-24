@@ -6,7 +6,7 @@
 
 ### Patch Changes
 
-- [#1839](https://github.com/serverless-stack/serverless-stack/pull/1839) [`75145db8`](https://github.com/serverless-stack/serverless-stack/commit/75145db83f89e60694685b99c76851ca95d988e4) Thanks [@thdxr](https://github.com/thdxr)! - Warm up RDS instance on sst start in case it's asleep
+- [#1839](https://github.com/serverless-stack/sst/pull/1839) [`75145db8`](https://github.com/serverless-stack/sst/commit/75145db83f89e60694685b99c76851ca95d988e4) Thanks [@thdxr](https://github.com/thdxr)! - Warm up RDS instance on sst start in case it's asleep
 
 ## 1.2.28
 
@@ -18,7 +18,7 @@
 
 ### Patch Changes
 
-- [#1816](https://github.com/serverless-stack/serverless-stack/pull/1816) [`fd8330bf`](https://github.com/serverless-stack/serverless-stack/commit/fd8330bfe53934691c9d74b273a0109120c68bcf) Thanks [@fwang](https://github.com/fwang)! - Cli: fix sst start error "stack does not exist" when custom stack name used
+- [#1816](https://github.com/serverless-stack/sst/pull/1816) [`fd8330bf`](https://github.com/serverless-stack/sst/commit/fd8330bfe53934691c9d74b273a0109120c68bcf) Thanks [@fwang](https://github.com/fwang)! - Cli: fix sst start error "stack does not exist" when custom stack name used
 
 ## 1.2.24
 
@@ -30,15 +30,15 @@
 
 ### Patch Changes
 
-- [`b140d04e`](https://github.com/serverless-stack/serverless-stack/commit/b140d04e8d80ed03ab1547b01215d5eb0c1aebda) Thanks [@thdxr](https://github.com/thdxr)! - Support MySQL type generation
+- [`b140d04e`](https://github.com/serverless-stack/sst/commit/b140d04e8d80ed03ab1547b01215d5eb0c1aebda) Thanks [@thdxr](https://github.com/thdxr)! - Support MySQL type generation
 
 ## 1.2.20
 
 ### Patch Changes
 
-- [#1801](https://github.com/serverless-stack/serverless-stack/pull/1801) [`edcd89d2`](https://github.com/serverless-stack/serverless-stack/commit/edcd89d2c3f803e801d744dd91c13fd301a5d87a) Thanks [@fwang](https://github.com/fwang)! - sst start: update static-site-environment-output-keys.json on redeploy
+- [#1801](https://github.com/serverless-stack/sst/pull/1801) [`edcd89d2`](https://github.com/serverless-stack/sst/commit/edcd89d2c3f803e801d744dd91c13fd301a5d87a) Thanks [@fwang](https://github.com/fwang)! - sst start: update static-site-environment-output-keys.json on redeploy
 
-* [#1793](https://github.com/serverless-stack/serverless-stack/pull/1793) [`960575f0`](https://github.com/serverless-stack/serverless-stack/commit/960575f0a66ba1b12806244b728f7fb6254674bc) Thanks [@fwang](https://github.com/fwang)! - Cli: check for invalid stages names
+* [#1793](https://github.com/serverless-stack/sst/pull/1793) [`960575f0`](https://github.com/serverless-stack/sst/commit/960575f0a66ba1b12806244b728f7fb6254674bc) Thanks [@fwang](https://github.com/fwang)! - Cli: check for invalid stages names
 
 ## 1.2.19
 
@@ -46,21 +46,21 @@
 
 ### Patch Changes
 
-- [`3983cf5f`](https://github.com/serverless-stack/serverless-stack/commit/3983cf5ff7b21cf4a41d59deffecf9b4f9e3f84c) Thanks [@thdxr](https://github.com/thdxr)! - Add sourcemap property to control sourcemap generation for NodeJS functions. This defaults to `false` when deployed so be sure to set it if you want sourcemap support
+- [`3983cf5f`](https://github.com/serverless-stack/sst/commit/3983cf5ff7b21cf4a41d59deffecf9b4f9e3f84c) Thanks [@thdxr](https://github.com/thdxr)! - Add sourcemap property to control sourcemap generation for NodeJS functions. This defaults to `false` when deployed so be sure to set it if you want sourcemap support
 
 ## 1.2.17
 
 ### Patch Changes
 
-- [#1758](https://github.com/serverless-stack/serverless-stack/pull/1758) [`ebd05ff4`](https://github.com/serverless-stack/serverless-stack/commit/ebd05ff4c7d24498758c07c29b0d897fcfd4832f) Thanks [@dennistruemper](https://github.com/dennistruemper)! - Golang: set GOARCH when bundling for `sst deploy`
+- [#1758](https://github.com/serverless-stack/sst/pull/1758) [`ebd05ff4`](https://github.com/serverless-stack/sst/commit/ebd05ff4c7d24498758c07c29b0d897fcfd4832f) Thanks [@dennistruemper](https://github.com/dennistruemper)! - Golang: set GOARCH when bundling for `sst deploy`
 
 ## 1.2.16
 
 ### Patch Changes
 
-- [#1780](https://github.com/serverless-stack/serverless-stack/pull/1780) [`46831e9b`](https://github.com/serverless-stack/serverless-stack/commit/46831e9bc067116ca0281e5a0e98a86edae8971e) Thanks [@fwang](https://github.com/fwang)! - Function: referencing layers from another stack results in no changes when layer code did change
+- [#1780](https://github.com/serverless-stack/sst/pull/1780) [`46831e9b`](https://github.com/serverless-stack/sst/commit/46831e9bc067116ca0281e5a0e98a86edae8971e) Thanks [@fwang](https://github.com/fwang)! - Function: referencing layers from another stack results in no changes when layer code did change
 
-* [#1784](https://github.com/serverless-stack/serverless-stack/pull/1784) [`1e02e312`](https://github.com/serverless-stack/serverless-stack/commit/1e02e312e54d1c8a7280a1d72da3b670575d67ae) Thanks [@thdxr](https://github.com/thdxr)! - Update RDS migrator to use ESM. Make sure to upgrade `kysely-data-api` to 0.0.11 as well.
+* [#1784](https://github.com/serverless-stack/sst/pull/1784) [`1e02e312`](https://github.com/serverless-stack/sst/commit/1e02e312e54d1c8a7280a1d72da3b670575d67ae) Thanks [@thdxr](https://github.com/thdxr)! - Update RDS migrator to use ESM. Make sure to upgrade `kysely-data-api` to 0.0.11 as well.
 
 ## 1.2.15
 
@@ -68,35 +68,35 @@
 
 ### Patch Changes
 
-- [`eec3ad28`](https://github.com/serverless-stack/serverless-stack/commit/eec3ad28a0edae50c2086019cb21c47a0b8526c5) Thanks [@thdxr](https://github.com/thdxr)! - Properly bust pothos cache when refreshing schema
+- [`eec3ad28`](https://github.com/serverless-stack/sst/commit/eec3ad28a0edae50c2086019cb21c47a0b8526c5) Thanks [@thdxr](https://github.com/thdxr)! - Properly bust pothos cache when refreshing schema
 
-* [`db06a415`](https://github.com/serverless-stack/serverless-stack/commit/db06a415c6cee32d198e3582e6f1e775209eed5b) Thanks [@thdxr](https://github.com/thdxr)! - Fix for esbuild entrypoint in windows
+* [`db06a415`](https://github.com/serverless-stack/sst/commit/db06a415c6cee32d198e3582e6f1e775209eed5b) Thanks [@thdxr](https://github.com/thdxr)! - Fix for esbuild entrypoint in windows
 
 ## 1.2.13
 
 ### Patch Changes
 
-- [`fa1bea79`](https://github.com/serverless-stack/serverless-stack/commit/fa1bea79ba5592ce084f40447fc7f015bec1fc43) Thanks [@thdxr](https://github.com/thdxr)! - Skip Kysely type generation when migrations are not in use
+- [`fa1bea79`](https://github.com/serverless-stack/sst/commit/fa1bea79ba5592ce084f40447fc7f015bec1fc43) Thanks [@thdxr](https://github.com/thdxr)! - Skip Kysely type generation when migrations are not in use
 
 ## 1.2.12
 
 ### Patch Changes
 
-- [#1764](https://github.com/serverless-stack/serverless-stack/pull/1764) [`46314f3c`](https://github.com/serverless-stack/serverless-stack/commit/46314f3ca857f5a5c6a58e4c333bd9e670769279) Thanks [@thdxr](https://github.com/thdxr)! - Generate types for RDS construct using sql-ts
+- [#1764](https://github.com/serverless-stack/sst/pull/1764) [`46314f3c`](https://github.com/serverless-stack/sst/commit/46314f3ca857f5a5c6a58e4c333bd9e670769279) Thanks [@thdxr](https://github.com/thdxr)! - Generate types for RDS construct using sql-ts
 
-* [`3879c501`](https://github.com/serverless-stack/serverless-stack/commit/3879c501b36195b81c2717d848cc4d06a78c06b6) Thanks [@thdxr](https://github.com/thdxr)! - Fix for pothos extracting enumType when passed inline
+* [`3879c501`](https://github.com/serverless-stack/sst/commit/3879c501b36195b81c2717d848cc4d06a78c06b6) Thanks [@thdxr](https://github.com/thdxr)! - Fix for pothos extracting enumType when passed inline
 
 ## 1.2.11
 
 ### Patch Changes
 
-- [`c829dfa6`](https://github.com/serverless-stack/serverless-stack/commit/c829dfa600b55a3d82495756e7489b858f8a01d0) Thanks [@thdxr](https://github.com/thdxr)! - Update JS typechecker to use latest lib + ignore node_modules
+- [`c829dfa6`](https://github.com/serverless-stack/sst/commit/c829dfa600b55a3d82495756e7489b858f8a01d0) Thanks [@thdxr](https://github.com/thdxr)! - Update JS typechecker to use latest lib + ignore node_modules
 
 ## 1.2.10
 
 ### Patch Changes
 
-- [`95b508ce`](https://github.com/serverless-stack/serverless-stack/commit/95b508ce3e702531f2fe09bd3c83f5ed86eae015) Thanks [@thdxr](https://github.com/thdxr)! - Added support for Pothos classes and enums
+- [`95b508ce`](https://github.com/serverless-stack/sst/commit/95b508ce3e702531f2fe09bd3c83f5ed86eae015) Thanks [@thdxr](https://github.com/thdxr)! - Added support for Pothos classes and enums
 
 ## 1.2.9
 
@@ -106,7 +106,7 @@
 
 ### Patch Changes
 
-- [#1740](https://github.com/serverless-stack/serverless-stack/pull/1740) [`4be3e5c7`](https://github.com/serverless-stack/serverless-stack/commit/4be3e5c76184d43303ee477cf51104a6f4f744a4) Thanks [@thdxr](https://github.com/thdxr)! - Fix \_\_dirname issue with python bundler
+- [#1740](https://github.com/serverless-stack/sst/pull/1740) [`4be3e5c7`](https://github.com/serverless-stack/sst/commit/4be3e5c76184d43303ee477cf51104a6f4f744a4) Thanks [@thdxr](https://github.com/thdxr)! - Fix \_\_dirname issue with python bundler
 
 ## 1.2.6
 
@@ -116,49 +116,49 @@
 
 ### Patch Changes
 
-- [`66f763b8`](https://github.com/serverless-stack/serverless-stack/commit/66f763b899bdf5087c109384033a16860fac9b1c) Thanks [@thdxr](https://github.com/thdxr)! - Granular bundling for stacks code
+- [`66f763b8`](https://github.com/serverless-stack/sst/commit/66f763b899bdf5087c109384033a16860fac9b1c) Thanks [@thdxr](https://github.com/thdxr)! - Granular bundling for stacks code
 
 ## 1.2.3
 
 ### Patch Changes
 
-- [#1730](https://github.com/serverless-stack/serverless-stack/pull/1730) [`a2086191`](https://github.com/serverless-stack/serverless-stack/commit/a20861911859b3a48f668b2eb1f113e896cb851b) Thanks [@thdxr](https://github.com/thdxr)! - Fix issue with ws dependency preventing local server from starting
+- [#1730](https://github.com/serverless-stack/sst/pull/1730) [`a2086191`](https://github.com/serverless-stack/sst/commit/a20861911859b3a48f668b2eb1f113e896cb851b) Thanks [@thdxr](https://github.com/thdxr)! - Fix issue with ws dependency preventing local server from starting
 
 ## 1.2.2
 
 ### Patch Changes
 
-- [#1728](https://github.com/serverless-stack/serverless-stack/pull/1728) [`3229694c`](https://github.com/serverless-stack/serverless-stack/commit/3229694ceee9f18d008a621705d46c28e9ca2f35) Thanks [@thdxr](https://github.com/thdxr)! - Move graphql to peer dependencies by implementing weakImport. If you are using the AppSyncApi construct be sure to add `graphql` and `@graphql-tools/merge` to your dependencies.
+- [#1728](https://github.com/serverless-stack/sst/pull/1728) [`3229694c`](https://github.com/serverless-stack/sst/commit/3229694ceee9f18d008a621705d46c28e9ca2f35) Thanks [@thdxr](https://github.com/thdxr)! - Move graphql to peer dependencies by implementing weakImport. If you are using the AppSyncApi construct be sure to add `graphql` and `@graphql-tools/merge` to your dependencies.
 
 ## 1.2.1
 
 ### Patch Changes
 
-- [`d90a1989`](https://github.com/serverless-stack/serverless-stack/commit/d90a1989411fa5d868778d2e686323ad08e33efb) Thanks [@thdxr](https://github.com/thdxr)! - Include graphql as a core dependency
+- [`d90a1989`](https://github.com/serverless-stack/sst/commit/d90a1989411fa5d868778d2e686323ad08e33efb) Thanks [@thdxr](https://github.com/thdxr)! - Include graphql as a core dependency
 
 ## 1.2.0
 
 ### Minor Changes
 
-- [#1710](https://github.com/serverless-stack/serverless-stack/pull/1710) [`e170ea3f`](https://github.com/serverless-stack/serverless-stack/commit/e170ea3fb586cbe36e11beb8f9d9af4f420c2d7e) Thanks [@thdxr](https://github.com/thdxr)! - Moved codebase to ESM. This should not have any impact on your codebase if you are not using ESM. If you are using ESM and you are using an esbuild plugin, be sure to rename your plugins file to have a .cjs extension
+- [#1710](https://github.com/serverless-stack/sst/pull/1710) [`e170ea3f`](https://github.com/serverless-stack/sst/commit/e170ea3fb586cbe36e11beb8f9d9af4f420c2d7e) Thanks [@thdxr](https://github.com/thdxr)! - Moved codebase to ESM. This should not have any impact on your codebase if you are not using ESM. If you are using ESM and you are using an esbuild plugin, be sure to rename your plugins file to have a .cjs extension
 
 ### Patch Changes
 
-- [#1719](https://github.com/serverless-stack/serverless-stack/pull/1719) [`3610b5da`](https://github.com/serverless-stack/serverless-stack/commit/3610b5da4f57fd35f1fb824701b7bfc4e8ce1a83) Thanks [@fwang](https://github.com/fwang)! - Function: add support for dotnet (.NET 6) runtime
+- [#1719](https://github.com/serverless-stack/sst/pull/1719) [`3610b5da`](https://github.com/serverless-stack/sst/commit/3610b5da4f57fd35f1fb824701b7bfc4e8ce1a83) Thanks [@fwang](https://github.com/fwang)! - Function: add support for dotnet (.NET 6) runtime
 
-* [#1715](https://github.com/serverless-stack/serverless-stack/pull/1715) [`0bc69b52`](https://github.com/serverless-stack/serverless-stack/commit/0bc69b520f68dc5325b974386170d3db0d21416c) Thanks [@fwang](https://github.com/fwang)! - Load .env files for debug stack
+* [#1715](https://github.com/serverless-stack/sst/pull/1715) [`0bc69b52`](https://github.com/serverless-stack/sst/commit/0bc69b520f68dc5325b974386170d3db0d21416c) Thanks [@fwang](https://github.com/fwang)! - Load .env files for debug stack
 
 ## 1.1.2
 
 ### Patch Changes
 
-- [`3927251b`](https://github.com/serverless-stack/serverless-stack/commit/3927251bbc834009ea19654f54a4e6c935ea90e9) Thanks [@thdxr](https://github.com/thdxr)! - Remove strict null checks for warning JS users
+- [`3927251b`](https://github.com/serverless-stack/sst/commit/3927251bbc834009ea19654f54a4e6c935ea90e9) Thanks [@thdxr](https://github.com/thdxr)! - Remove strict null checks for warning JS users
 
 ## 1.1.1
 
 ### Patch Changes
 
-- [#1698](https://github.com/serverless-stack/serverless-stack/pull/1698) [`b81522a4`](https://github.com/serverless-stack/serverless-stack/commit/b81522a4dd0789292a4300b5465c4cab13f7a0cc) Thanks [@thdxr](https://github.com/thdxr)! - My test feature
+- [#1698](https://github.com/serverless-stack/sst/pull/1698) [`b81522a4`](https://github.com/serverless-stack/sst/commit/b81522a4dd0789292a4300b5465c4cab13f7a0cc) Thanks [@thdxr](https://github.com/thdxr)! - My test feature
 
 ## 1.1.0
 

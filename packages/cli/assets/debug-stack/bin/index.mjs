@@ -22,7 +22,7 @@ const handler = await import(
 );
 if (handler.debugStack) {
   console.error(
-    `Error: Use of the "debugStack()" callback to configure the debug stack has been deprecated in favor of the "debugApp()" callback.\n\nMore details on using "debugApp()": https://github.com/serverless-stack/serverless-stack/releases/tag/v0.65.3\n`
+    `Error: Use of the "debugStack()" callback to configure the debug stack has been deprecated in favor of the "debugApp()" callback.\n\nMore details on using "debugApp()": https://github.com/serverless-stack/sst/releases/tag/v0.65.3\n`
   );
   process.exit(1);
 }

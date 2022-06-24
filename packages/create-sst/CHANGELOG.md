@@ -4,13 +4,13 @@
 
 ### Patch Changes
 
-- [`8908e35b5`](https://github.com/serverless-stack/serverless-stack/commit/8908e35b5ff0809b4afcb95bfa1368e2b24ad854) Thanks [@thdxr](https://github.com/thdxr)! - Fix issue with create-sst when using minimal starters
+- [`8908e35b5`](https://github.com/serverless-stack/sst/commit/8908e35b5ff0809b4afcb95bfa1368e2b24ad854) Thanks [@thdxr](https://github.com/thdxr)! - Fix issue with create-sst when using minimal starters
 
 ## 1.2.29
 
 ### Patch Changes
 
-- [#1839](https://github.com/serverless-stack/serverless-stack/pull/1839) [`75145db8`](https://github.com/serverless-stack/serverless-stack/commit/75145db83f89e60694685b99c76851ca95d988e4) Thanks [@thdxr](https://github.com/thdxr)! - Warm up RDS instance on sst start in case it's asleep
+- [#1839](https://github.com/serverless-stack/sst/pull/1839) [`75145db8`](https://github.com/serverless-stack/sst/commit/75145db83f89e60694685b99c76851ca95d988e4) Thanks [@thdxr](https://github.com/thdxr)! - Warm up RDS instance on sst start in case it's asleep
 
 ## 1.2.28
 
@@ -38,7 +38,7 @@
 
 ### Patch Changes
 
-- [`d67795d5`](https://github.com/serverless-stack/serverless-stack/commit/d67795d5898a382123998955e8f9bb9c830e413d) Thanks [@fwang](https://github.com/fwang)! - Examples: update .gitignore
+- [`d67795d5`](https://github.com/serverless-stack/sst/commit/d67795d5898a382123998955e8f9bb9c830e413d) Thanks [@fwang](https://github.com/fwang)! - Examples: update .gitignore
 
 ## 1.2.16
 
@@ -54,7 +54,7 @@
 
 ### Patch Changes
 
-- [`6bf80a89`](https://github.com/serverless-stack/serverless-stack/commit/6bf80a89249cbb7b6b662988d33dcc3ef1ba7fa4) Thanks [@thdxr](https://github.com/thdxr)! - Workaround for npm not allowing gitingore files for starters
+- [`6bf80a89`](https://github.com/serverless-stack/sst/commit/6bf80a89249cbb7b6b662988d33dcc3ef1ba7fa4) Thanks [@thdxr](https://github.com/thdxr)! - Workaround for npm not allowing gitingore files for starters
 
 ## 1.2.10
 
@@ -70,7 +70,7 @@
 
 ### Patch Changes
 
-- [#1712](https://github.com/serverless-stack/serverless-stack/pull/1712) [`545b9ffe`](https://github.com/serverless-stack/serverless-stack/commit/545b9ffe20f1a86ca98752750942e75650a405e7) Thanks [@outaTiME](https://github.com/outaTiME)! - Example: fix responseType in simple Lambda authorizer example
+- [#1712](https://github.com/serverless-stack/sst/pull/1712) [`545b9ffe`](https://github.com/serverless-stack/sst/commit/545b9ffe20f1a86ca98752750942e75650a405e7) Thanks [@outaTiME](https://github.com/outaTiME)! - Example: fix responseType in simple Lambda authorizer example
 
 ## 1.2.4
 
@@ -88,7 +88,7 @@
 
 ### Patch Changes
 
-- [`eb009dae`](https://github.com/serverless-stack/serverless-stack/commit/eb009dae1e182647aa9e76dacfff7d09a877b731) Thanks [@thdxr](https://github.com/thdxr)! - Update starters + examples to node16
+- [`eb009dae`](https://github.com/serverless-stack/sst/commit/eb009dae1e182647aa9e76dacfff7d09a877b731) Thanks [@thdxr](https://github.com/thdxr)! - Update starters + examples to node16
 
 ## 1.1.0
 

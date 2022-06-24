@@ -206,7 +206,7 @@ function runCdkVersionMatch(packageJson, cliInfo) {
     );
     v1Deps.forEach((dep) => logger.error(chalk.red(`  - ${dep}`)));
     logger.error(
-      `\nMore details on upgrading to CDK v2: https://github.com/serverless-stack/serverless-stack/releases/tag/v0.59.0\n`
+      `\nMore details on upgrading to CDK v2: https://github.com/serverless-stack/sst/releases/tag/v0.59.0\n`
     );
     throw new Error(`AWS CDK packages need to be updated.`);
   }

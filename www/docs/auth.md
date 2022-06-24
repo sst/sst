@@ -1,6 +1,6 @@
 ---
 title: Auth
-description: "Learn to manage users and authentication in your Serverless Stack (SST) app."
+description: "Learn to manage users and authentication in your SST app."
 ---
 
 You can handle authentication in your SST app using AWS's [Cognito User Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html) or via a third party auth provider like [Auth0](https://auth0.com/).
@@ -50,7 +50,7 @@ new Api(stack, "Api", {
 
 Here's a detailed tutorial on how to add JWT authentication with Cognito to your API.
 
-[READ TUTORIAL](https://serverless-stack.com/examples/how-to-add-jwt-authorization-with-cognito-user-pool-to-a-serverless-api.html)
+[READ TUTORIAL](https://sst.dev/examples/how-to-add-jwt-authorization-with-cognito-user-pool-to-a-serverless-api.html)
 
 :::
 
@@ -152,7 +152,7 @@ new Api(stack, "Api", {
 
 Here's a detailed tutorial on how to add JWT authentication with Auth0.
 
-[READ TUTORIAL](https://serverless-stack.com/examples/how-to-add-jwt-authorization-with-auth0-to-a-serverless-api.html)
+[READ TUTORIAL](https://sst.dev/examples/how-to-add-jwt-authorization-with-auth0-to-a-serverless-api.html)
 
 :::
 
@@ -182,6 +182,6 @@ auth.attachPermissionsForAuthUsers([table]);
 
 Follow this tutorial on how to authenticate a serverless API with Auth0.
 
-[READ TUTORIAL](https://serverless-stack.com/examples/how-to-add-auth0-authentication-to-a-serverless-api.html)
+[READ TUTORIAL](https://sst.dev/examples/how-to-add-auth0-authentication-to-a-serverless-api.html)
 
 :::
