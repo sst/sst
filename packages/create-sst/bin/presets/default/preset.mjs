@@ -25,6 +25,7 @@ export default [
       "@pothos/core",
       "@serverless-stack/node",
       "graphql",
+      "electrodb",
       "kysely",
       "kysely-data-api",
       "ulid",
