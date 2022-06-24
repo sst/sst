@@ -1,6 +1,6 @@
 ---
 title: API
-description: "Learn to create REST, GraphQL, and WebSocket APIs in your Serverless Stack (SST) app."
+description: "Learn to create REST, GraphQL, and WebSocket APIs in your SST (SST) app."
 ---
 
 import TabItem from "@theme/TabItem";

@@ -1,6 +1,6 @@
 ---
 title: Lambda Layers
-description: "Using Lambda Layers in Serverless Stack (SST)."
+description: "Using Lambda Layers in SST (SST)."
 ---
 
 There are 2 common use cases for Lambda Layers. If your use case is not supported, feel free to open a new issue.

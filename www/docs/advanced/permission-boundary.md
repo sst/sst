@@ -1,6 +1,6 @@
 ---
 title: Permission Boundary
-description: "Learn how to set a permission boundary for the IAM users and roles in your Serverless Stack (SST) app."
+description: "Learn how to set a permission boundary for the IAM users and roles in your SST (SST) app."
 ---
 
 A Permission Boundary is a way to define the maximum scope of permissions a user or role can have. It limits the user or role's permissions but does not specify the actual permissions.

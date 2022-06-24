@@ -1,7 +1,7 @@
 ---
 title: Migrating From Serverless Framework
 sidebar_label: Serverless Framework
-description: "Migrating from Serverless Framework to Serverless Stack (SST)"
+description: "Migrating from Serverless Framework to SST (SST)"
 ---
 
 In this guide we'll look at how to migrate a Serverless Framework app to SST.

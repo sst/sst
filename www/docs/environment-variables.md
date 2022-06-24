@@ -1,6 +1,6 @@
 ---
 title: Environment Variables
-description: "Working with environment variables in Serverless Stack (SST)"
+description: "Working with environment variables in SST (SST)"
 ---
 
 SST has built-in support for loading environment variables from a `.env` file into `process.env` using [dotenv](https://github.com/motdotla/dotenv).

@@ -1,6 +1,6 @@
 ---
 title: Environment Specific Resources
-description: "Learn how to customize your resources based on the environment of a Serverless Stack (SST) app."
+description: "Learn how to customize your resources based on the environment of a SST (SST) app."
 ---
 
 For most of your resources, you want them to be identical across every environment (ie. dev, staging, prod). So your development environments are as close of a clone to the production environment as possible. But sometimes, you might want to customize resources based on the deployed environment.

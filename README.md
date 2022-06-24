@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://sst.dev/">
-    <img alt="Serverless Stack (SST)" src="https://raw.githubusercontent.com/serverless-stack/identity/main/sst.svg" width="300" />
+    <img alt="SST (SST)" src="https://raw.githubusercontent.com/serverless-stack/identity/main/sst.svg" width="300" />
   </a>
 </p>
 
@@ -18,7 +18,7 @@
 
 ---
 
-Serverless Stack (SST) is a framework that makes it easy to build serverless apps. It's an extension of [AWS CDK](https://aws.amazon.com/cdk/) and it features:
+SST (SST) is a framework that makes it easy to build serverless apps. It's an extension of [AWS CDK](https://aws.amazon.com/cdk/) and it features:
 
 - A [Live Lambda Development][live] environment
 - A [web based dashboard][console_doc] to manage your apps

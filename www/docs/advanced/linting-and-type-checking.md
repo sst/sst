@@ -1,6 +1,6 @@
 ---
 title: Linting and Type Checking
-description: "Configuring linting and type check in Serverless Stack (SST)"
+description: "Configuring linting and type check in SST (SST)"
 ---
 
 ## During development

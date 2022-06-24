@@ -1,6 +1,6 @@
 ---
 title: IAM Credentials
-description: "Learn about how Serverless Stack (SST) apps use your IAM credentials."
+description: "Learn about how SST (SST) apps use your IAM credentials."
 ---
 
 SST uses your AWS credentials to run the [Live Lambda Development environment](../live-lambda-development.md) and deploy your app. Let's take a look at how to load these credentials, creating an IAM policy for SST, and the basic set of permissions that all CDK apps need.

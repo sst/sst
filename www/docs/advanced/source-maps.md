@@ -1,6 +1,6 @@
 ---
 title: Source Maps
-description: "Enabling source maps for Lambda functions in Serverless Stack (SST)."
+description: "Enabling source maps for Lambda functions in SST (SST)."
 ---
 
 For Lambda functions with Node.js runtimes, SST will automatically generate source maps. The source maps are not used by default as it affects the startup time for Lambda functions.

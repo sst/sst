@@ -1,6 +1,6 @@
 ---
 title: Frequently Asked Questions
-description: "Frequently asked questions about Serverless Stack (SST)"
+description: "Frequently asked questions about SST (SST)"
 ---
 
 import config from "../config";
@@ -49,7 +49,7 @@ So feel free to give it a try and let us know if you run into any issues.
 
 ### Can I trust a new framework like SST for my projects at work?
 
-SST is relatively new but [the team behind it](https://anoma.ly) has been working on serverless related projects for the past few years. The <a href={ config.guide } target="\_blank">Serverless Stack Guide</a> has been around since 2017. [Seed](https://seed.run) has been generating revenue since 2018. We are also backed by some of the [most prominent investors in Silicon Valley](https://anoma.ly).
+SST is relatively new but [the team behind it](https://anoma.ly) has been working on serverless related projects for the past few years. The <a href={ config.guide } target="\_blank">SST Guide</a> has been around since 2017. [Seed](https://seed.run) has been generating revenue since 2018. We are also backed by some of the [most prominent investors in Silicon Valley](https://anoma.ly).
 
 So checkout <a href={ config.roadmap } target="\_blank">our public roadmap</a> to see where SST is headed.
 

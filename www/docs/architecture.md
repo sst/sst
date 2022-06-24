@@ -1,6 +1,6 @@
 ---
 title: Architecture
-description: "Learn about how Serverless Stack (SST) apps are structured."
+description: "Learn about how SST (SST) apps are structured."
 ---
 
 SST provides all the basic building blocks you need to create a full-stack serverless application. An SST app is roughly made up of:

@@ -1,7 +1,7 @@
 ---
 id: known-issues
 title: Known Issues
-description: "Known issues with AWS CDK and Serverless Stack (SST)"
+description: "Known issues with AWS CDK and SST (SST)"
 ---
 
 There is a known issue in AWS CDK when using mismatched versions of their NPM packages. This means that all your AWS CDK packages in your `package.json` should use the same exact version. And since SST uses AWS CDK internally, this means that your app needs to use the same versions as well.
@@ -9,7 +9,7 @@ There is a known issue in AWS CDK when using mismatched versions of their NPM pa
 To help with this, SST will show a message to let you know if you might potentially run into this issue. And help you fix it.
 
 ```bash
-Mismatched versions of AWS CDK packages. Serverless Stack currently supports 2.7.0. Fix using:
+Mismatched versions of AWS CDK packages. SST currently supports 2.7.0. Fix using:
 
   npm install @aws-cdk/aws-apigatewayv2-alpha@2.7.0-alpha.0 --save-exact
 ```

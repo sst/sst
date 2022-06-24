@@ -1,6 +1,6 @@
 ---
 title: Database
-description: "Learn how to add a serverless database like DynamoDB or RDS to your Serverless Stack (SST) app."
+description: "Learn how to add a serverless database like DynamoDB or RDS to your SST (SST) app."
 ---
 
 Let's look at how to work with databases in your SST app.

@@ -1,6 +1,6 @@
 ---
 title: Cross-Stack References
-description: "Managing cross-stack references in your Serverless Stack (SST) app."
+description: "Managing cross-stack references in your SST (SST) app."
 ---
 
 import TabItem from "@theme/TabItem";

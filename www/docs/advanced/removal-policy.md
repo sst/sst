@@ -1,6 +1,6 @@
 ---
 title: Removal Policy
-description: "Learn how to set the removal policy for resources in your Serverless Stack (SST) app."
+description: "Learn how to set the removal policy for resources in your SST (SST) app."
 ---
 
 A Removal Policy controls what happens to the resource when it's being removed. This can happen in one of three situations:

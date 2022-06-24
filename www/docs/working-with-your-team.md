@@ -1,6 +1,6 @@
 ---
 title: Working With Your Team
-description: "How to use Serverless Stack (SST) with a team of developers."
+description: "How to use SST (SST) with a team of developers."
 ---
 
 When using SST with a team of developers, there are a few different workflows you can choose to keep things organized. We've documented the three most common patterns below. We've also listed the various tradeoffs in security, complexity, and safety.
