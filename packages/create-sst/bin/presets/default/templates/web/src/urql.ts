@@ -1,6 +1,5 @@
 import { OperationContext, RequestPolicy, useQuery, useMutation } from "urql";
 import { useEffect, useState } from "react";
-import { TypedQueryDocumentNode } from "graphql";
 import {
   generateQueryOp,
   generateMutationOp,

@@ -5,21 +5,13 @@ interface ArticleForm {
   url: string;
 }
 
-interface CommentForm {
-  text: string;
-  articleID: string;
-}
-
 export function List() {
   const [articles] = useTypedQuery({
     query: {
       articles: {
         id: true,
         title: true,
-        url: true,
-        comments: {
-          text: true
-        }
+        url: true
       }
     }
   });
@@ -30,16 +22,6 @@ export function List() {
       {
         id: true,
         url: true
-      }
-    ]
-  }));
-
-  const [, addComment] = useTypedMutation((opts: CommentForm) => ({
-    addComment: [
-      { text: opts.text, articleID: opts.articleID },
-      {
-        id: true,
-        text: true
       }
     ]
   }));
@@ -71,28 +53,6 @@ export function List() {
               <div>
                 {article.title} - <a href={article.url}>{article.url}</a>
               </div>
-              <div>
-                <strong>Comments</strong>
-                <ol>
-                  {article.comments.map(comment => (
-                    <li>{comment.text}</li>
-                  ))}
-                </ol>
-              </div>
-              <form
-                onSubmit={async e => {
-                  const fd = new FormData(e.currentTarget);
-                  addComment({
-                    text: fd.get("text")!.toString(),
-                    articleID: article.id
-                  });
-                  e.currentTarget.reset();
-                  e.preventDefault();
-                }}
-              >
-                <input name="text" placeholder="Comment" />
-                <button type="submit">Submit</button>
-              </form>
             </div>
           </li>
         ))}

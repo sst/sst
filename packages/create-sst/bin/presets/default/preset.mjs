@@ -18,7 +18,7 @@ export default [
       { op: "add", path: "/overrides/graphql", value: "16.5.0" },
     ],
   }),
-  cmd({ cmd: "npm init vite -- web --template=react-ts" }),
+  cmd({ cmd: "npm init vite@latest -- web --template=react-ts" }),
   extract(),
   install({
     packages: [
@@ -59,4 +59,5 @@ export default [
     packages: ["@genql/cli"],
     path: "graphql",
   }),
+  cmd({ cmd: "npx @genql/cli --output ./graphql/genql --schema ./graphql/schema.graphql --esm" }),
 ];
