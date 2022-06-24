@@ -2,7 +2,7 @@
   "$schema": "https://unpkg.com/@changesets/config@2.0.0/schema.json",
   "changelog": [
     "@changesets/changelog-github",
-    { "repo": "serverless-stack/serverless-stack" }
+    { "repo": "serverless-stack/sst" }
   ],
   "commit": false,
   "fixed": [

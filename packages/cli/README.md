@@ -2,7 +2,7 @@
 
 <img alt="Logo" align="right" src="https://raw.githubusercontent.com/serverless-stack/identity/main/sst.svg" width="20%" />
 
-Part of the **[SST Framework](https://github.com/serverless-stack/serverless-stack)**. The `sst` CLI allows you to build, deploy, and test SST apps.
+Part of the **[SST Framework](https://github.com/serverless-stack/sst)**. The `sst` CLI allows you to build, deploy, and test SST apps.
 
 [View the @serverless-stack/cli docs here](https://docs.sst.dev/packages/cli).
 

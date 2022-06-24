@@ -52,7 +52,7 @@ Here's how to run SST locally.
 To run this project locally, clone the repo and initialize the project.
 
 ```bash
-$ git clone https://github.com/serverless-stack/serverless-stack.git
+$ git clone https://github.com/serverless-stack/sst.git
 $ cd serverless-stack
 $ yarn
 ```
@@ -170,12 +170,12 @@ To cut a release, start by merging the PRs that are going into this release.
 
 3. Draft a new release
 
-   Copy the changelog that was generated above and [draft a new release](https://github.com/serverless-stack/serverless-stack/releases/new).
+   Copy the changelog that was generated above and [draft a new release](https://github.com/serverless-stack/sst/releases/new).
 
    Make necessary edits to the changelog to make it more readable and helpful.
 
-   - For `breaking` changes, add a message at the top clearly documenting the change ([example](https://github.com/serverless-stack/serverless-stack/releases/tag/v0.26.0)).
-   - For major `enhancement` changes, add a code snippet on how to use the feature ([example](https://github.com/serverless-stack/serverless-stack/releases/tag/v0.36.0)).
+   - For `breaking` changes, add a message at the top clearly documenting the change ([example](https://github.com/serverless-stack/sst/releases/tag/v0.26.0)).
+   - For major `enhancement` changes, add a code snippet on how to use the feature ([example](https://github.com/serverless-stack/sst/releases/tag/v0.36.0)).
 
    Add this snippet at the bottom of the changelog and replace it with the version that's going to be released.
 
@@ -259,4 +259,4 @@ See the `Table` construct for a deprecation example of renaming `secondaryIndexe
 Help us improve this doc. If you've had a chance to contribute to SST, feel free to edit this doc and submit a PR.
 
 [discord]: https://sst.dev/discord
-[issue]: https://github.com/serverless-stack/serverless-stack/issues/new
+[issue]: https://github.com/serverless-stack/sst/issues/new

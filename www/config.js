@@ -12,6 +12,6 @@ module.exports = {
   youtube: "https://www.youtube.com/c/ServerlessStack",
   newsletter: "https://serverless-stack.com/newsletter.html",
   examples: "https://serverless-stack.com/examples/index.html",
-  github: "https://github.com/serverless-stack/serverless-stack",
-  roadmap: "https://github.com/serverless-stack/serverless-stack/projects/1",
+  github: "https://github.com/serverless-stack/sst",
+  roadmap: "https://github.com/serverless-stack/sst/projects/1",
 };
