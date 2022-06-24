@@ -34,7 +34,7 @@ It makes it easy to add routes and have Lambda functions respond to them.
 
 Here's a tutorial on how to build a simple SST app with a RESTful API.
 
-[READ TUTORIAL](https://serverless-stack.com/examples/how-to-create-a-rest-api-with-serverless.html)
+[READ TUTORIAL](https://sst.dev/examples/how-to-create-a-rest-api-with-serverless.html)
 
 :::
 
@@ -72,7 +72,7 @@ new GraphQLApi(stack, "Api", {
 
 Here's a tutorial on building a serverless GraphQL API with Apollo.
 
-[READ TUTORIAL](https://serverless-stack.com/examples/how-to-create-an-apollo-graphql-api-with-serverless.html)
+[READ TUTORIAL](https://sst.dev/examples/how-to-create-an-apollo-graphql-api-with-serverless.html)
 
 :::
 
@@ -101,7 +101,7 @@ new WebSocketApi(stack, "Api", {
 
 Follow this tutorial to create a simple SST app with a WebSocket API.
 
-[READ TUTORIAL](https://serverless-stack.com/examples/how-to-create-a-websocket-api-with-serverless.html)
+[READ TUTORIAL](https://sst.dev/examples/how-to-create-a-websocket-api-with-serverless.html)
 
 :::
 
@@ -138,7 +138,7 @@ new Api(stack, "Api", {
 
 Learn more about adding JWT authentication to your API with Cognito User Pool.
 
-[READ TUTORIAL](https://serverless-stack.com/examples/how-to-add-jwt-authorization-with-cognito-user-pool-to-a-serverless-api.html)
+[READ TUTORIAL](https://sst.dev/examples/how-to-add-jwt-authorization-with-cognito-user-pool-to-a-serverless-api.html)
 
 :::
 
@@ -170,7 +170,7 @@ new Api(stack, "Api", {
 
 Check out this example on adding JWT authentication with Auth0 to your API.
 
-[READ TUTORIAL](https://serverless-stack.com/examples/how-to-add-jwt-authorization-with-auth0-to-a-serverless-api.html)
+[READ TUTORIAL](https://sst.dev/examples/how-to-add-jwt-authorization-with-auth0-to-a-serverless-api.html)
 
 :::
 
@@ -206,7 +206,7 @@ await API.get("MyApi", "/");
 
 Here's a tutorial on authenticating an API with Cognito User Pool and Identity Pool.
 
-[READ TUTORIAL](https://serverless-stack.com/examples/how-to-add-cognito-authentication-to-a-serverless-api.html)
+[READ TUTORIAL](https://sst.dev/examples/how-to-add-cognito-authentication-to-a-serverless-api.html)
 
 :::
 
@@ -360,6 +360,6 @@ new AppSyncApi(stack, "GraphqlApi", {
 
 Learn how to add an AppSync GraphQL API to your SST app.
 
-[READ TUTORIAL](https://serverless-stack.com/examples/how-to-create-a-serverless-graphql-api-with-aws-appsync.html)
+[READ TUTORIAL](https://sst.dev/examples/how-to-create-a-serverless-graphql-api-with-aws-appsync.html)
 
 :::

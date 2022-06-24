@@ -13,7 +13,7 @@ SST is a collection of <a href={ `${ config.github }/tree/master/packages` }>npm
 To use SST you'll need:
 
 - [Node.js](https://nodejs.org/en/download/) >= 10.15.1
-- An [AWS account](https://serverless-stack.com/chapters/create-an-aws-account.html) with the [AWS CLI configured locally](https://serverless-stack.com/chapters/configure-the-aws-cli.html)
+- An [AWS account](https://sst.dev/chapters/create-an-aws-account.html) with the [AWS CLI configured locally](https://sst.dev/chapters/configure-the-aws-cli.html)
 
 ## Getting started
 

@@ -63,10 +63,10 @@ Here the `path` points to the location of the frontend app. Note that the fronte
 
 Here are a couple of examples using your favorite frontend frameworks to build a simple full-stack click counter app with SST:
 
-- [React example](https://serverless-stack.com/examples/how-to-create-a-reactjs-app-with-serverless.html)
-- [Next.js example](https://serverless-stack.com/examples/how-to-create-a-nextjs-app-with-serverless.html)
-- [Vue.js example](https://serverless-stack.com/examples/how-to-create-a-vuejs-app-with-serverless.html)
-- [Svelte example](https://serverless-stack.com/examples/how-to-create-a-svelte-app-with-serverless.html)
+- [React example](https://sst.dev/examples/how-to-create-a-reactjs-app-with-serverless.html)
+- [Next.js example](https://sst.dev/examples/how-to-create-a-nextjs-app-with-serverless.html)
+- [Vue.js example](https://sst.dev/examples/how-to-create-a-vuejs-app-with-serverless.html)
+- [Svelte example](https://sst.dev/examples/how-to-create-a-svelte-app-with-serverless.html)
 
 :::
 
@@ -417,7 +417,7 @@ We have a couple of examples of creating mobile apps with [Expo](https://expo.de
 
 Learn how to build a click counter native mobile app with Expo, Flutter, and SST.
 
-- [Expo example](https://serverless-stack.com/examples/how-to-create-an-expo-app-with-serverless.html)
-- [Flutter example](https://serverless-stack.com/examples/how-to-create-a-flutter-app-with-serverless.html)
+- [Expo example](https://sst.dev/examples/how-to-create-an-expo-app-with-serverless.html)
+- [Flutter example](https://sst.dev/examples/how-to-create-a-flutter-app-with-serverless.html)
 
 :::

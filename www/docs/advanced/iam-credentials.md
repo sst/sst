@@ -18,8 +18,8 @@ You can keep you AWS credentials in a file. The credentials are found at:
 
 If the credentials file does not exist on your machine:
 
-1. Follow [this guide to create an IAM user](https://serverless-stack.com/chapters/create-an-iam-user.html)
-2. And then [use this guide to configure the credentials](https://serverless-stack.com/chapters/configure-the-aws-cli.html)
+1. Follow [this guide to create an IAM user](https://sst.dev/chapters/create-an-iam-user.html)
+2. And then [use this guide to configure the credentials](https://sst.dev/chapters/configure-the-aws-cli.html)
 
 The credentials file should look like:
 

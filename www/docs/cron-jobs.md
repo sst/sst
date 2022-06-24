@@ -9,7 +9,7 @@ SST can help you schedule Lambda functions to run at specified time intervals. T
 
 Follow this tutorial on creating a simple serverless cron job in SST.
 
-[READ TUTORIAL](https://serverless-stack.com/examples/how-to-use-cron-jobs-in-your-serverless-app.html)
+[READ TUTORIAL](https://sst.dev/examples/how-to-use-cron-jobs-in-your-serverless-app.html)
 
 :::
 

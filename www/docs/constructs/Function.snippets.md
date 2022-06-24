@@ -366,4 +366,4 @@ new Function(stack, "MyFunction", {
 
 If you need access to resources within a VPC, then run your AWS Lambda function within a VPC. If you do not require this access, then do not run it within a VPC.
 
-Read more about [working with VPC](https://docs.serverless-stack.com/live-lambda-development#working-with-a-vpc).
+Read more about [working with VPC](https://docs.sst.dev/live-lambda-development#working-with-a-vpc).

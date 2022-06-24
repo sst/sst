@@ -114,7 +114,7 @@ $ npm start
 Starting Live Lambda Dev
 ==========================
 
-SST Console: https://console.serverless-stack.com/acme/Jay
+SST Console: https://console.sst.dev/acme/Jay
 Debug session started. Listening for requests...
 ```
 

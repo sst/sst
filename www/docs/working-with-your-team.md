@@ -11,7 +11,7 @@ In this doc we refer to the concept of an _"AWS Account"_. This is not the indiv
 
 ## AWS SSO
 
-Regardless of the workflow you choose, we strongly recommend setting up [AWS SSO](https://aws.amazon.com/blogs/security/how-to-create-and-manage-users-within-aws-sso/). Historically, you would issue [IAM credentials](https://serverless-stack.com/chapters/create-an-iam-user.html) to each developer on your team. However, these credentials usually had static keys associated with them that are easy to leak.
+Regardless of the workflow you choose, we strongly recommend setting up [AWS SSO](https://aws.amazon.com/blogs/security/how-to-create-and-manage-users-within-aws-sso/). Historically, you would issue [IAM credentials](https://sst.dev/chapters/create-an-iam-user.html) to each developer on your team. However, these credentials usually had static keys associated with them that are easy to leak.
 
 AWS SSO is built on issuing temporary credentials and implements best practices around credential management. It can be used stand-alone or with your existing SSO provider (Okta, Google Workspace, etc).
 
@@ -76,7 +76,7 @@ This deploys stacks that look like, `production-myapp-stack`.
 
 A moderately complex setup involves creating a new AWS Account for each environment - typically `dev`, `staging`, and `production`. Spinning up multiple AWS Accounts might seem strange but is actually best practice.
 
-AWS makes this easy to do with [AWS Organizations](https://serverless-stack.com/chapters/manage-aws-accounts-using-aws-organizations.html). You can create a master account associated with an organization and then easily create sub-accounts for each of your environments. Note, AWS SSO should be configured in the master account.
+AWS makes this easy to do with [AWS Organizations](https://sst.dev/chapters/manage-aws-accounts-using-aws-organizations.html). You can create a master account associated with an organization and then easily create sub-accounts for each of your environments. Note, AWS SSO should be configured in the master account.
 
 #### Local Development
 
@@ -138,7 +138,7 @@ This deploys stacks that look like, `production-myapp-stack` into the production
 
 This is the most complex setup and involves creating a new AWS Account for each environment - typically `dev`, `staging`, and `production`, and also one per developer. The benefits of doing this is that you can make sure developers do not accidentally touch each other's resources. Additionally, you can see billing easily broken down per developer, to ensure that nobody is misusing resources.
 
-AWS makes it easy to spin up multiple environments with [AWS Organizations](https://serverless-stack.com/chapters/manage-aws-accounts-using-aws-organizations.html). You can create a master account associated with an organization and then easily create sub-accounts for each of your environments and developers. Note, AWS SSO should be configured in the master account.
+AWS makes it easy to spin up multiple environments with [AWS Organizations](https://sst.dev/chapters/manage-aws-accounts-using-aws-organizations.html). You can create a master account associated with an organization and then easily create sub-accounts for each of your environments and developers. Note, AWS SSO should be configured in the master account.
 
 #### Local Development
 

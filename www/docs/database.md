@@ -72,7 +72,7 @@ You can [read more about how Aurora works](https://docs.aws.amazon.com/AmazonRDS
 
 Check out this tutorial on using PostgreSQL and Aurora in your SST app.
 
-[READ TUTORIAL](https://serverless-stack.com/examples/how-to-use-postgresql-in-your-serverless-app.html)
+[READ TUTORIAL](https://sst.dev/examples/how-to-use-postgresql-in-your-serverless-app.html)
 
 :::
 
@@ -168,7 +168,7 @@ export async function main(event) {
 
 Here's a complete tutorial on how to add a DynamoDB table to your serverless app.
 
-[READ TUTORIAL](https://serverless-stack.com/examples/how-to-use-dynamodb-in-your-serverless-app.html)
+[READ TUTORIAL](https://sst.dev/examples/how-to-use-dynamodb-in-your-serverless-app.html)
 
 :::
 
@@ -200,7 +200,7 @@ You can use [the new serverless instance of MongoDB Atlas](https://www.mongodb.c
 
 Follow this tutorial on how to use MongoDB Atlas and SST.
 
-[READ TUTORIAL](https://serverless-stack.com/examples/how-to-use-mongodb-in-your-serverless-app.html)
+[READ TUTORIAL](https://sst.dev/examples/how-to-use-mongodb-in-your-serverless-app.html)
 
 :::
 
@@ -214,7 +214,7 @@ Follow this tutorial on how to use MongoDB Atlas and SST.
 
 Check out this tutorial on how to use PlanetScale as the database in your SST app.
 
-[READ TUTORIAL](https://serverless-stack.com/examples/how-to-use-planetscale-in-your-serverless-app.html)
+[READ TUTORIAL](https://sst.dev/examples/how-to-use-planetscale-in-your-serverless-app.html)
 
 :::
 -->

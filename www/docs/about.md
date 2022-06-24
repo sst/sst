@@ -67,7 +67,7 @@ npm i
 npm start
 
 # Open the SST Console
-open console.serverless-stack.com
+open console.sst.dev
 
 # Deploy to prod
 npx sst deploy --stage prod

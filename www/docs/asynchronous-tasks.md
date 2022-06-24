@@ -36,7 +36,7 @@ new Queue(stack, "MyQueue", {
 
 Follow this tutorial on how to create a simple queue system in SST.
 
-[READ TUTORIAL](https://serverless-stack.com/examples/how-to-use-queues-in-your-serverless-app.html)
+[READ TUTORIAL](https://sst.dev/examples/how-to-use-queues-in-your-serverless-app.html)
 
 :::
 
@@ -69,7 +69,7 @@ new Topic(stack, "MyQueue", {
 
 This example shows you how to create a simple pub/sub system in SST.
 
-[READ TUTORIAL](https://serverless-stack.com/examples/how-to-use-pub-sub-in-your-serverless-app.html)
+[READ TUTORIAL](https://sst.dev/examples/how-to-use-pub-sub-in-your-serverless-app.html)
 
 :::
 

@@ -91,7 +91,7 @@ $ npm start
 Starting Live Lambda Dev
 ==========================
 
-SST Console: https://console.serverless-stack.com/acme/Jay
+SST Console: https://console.sst.dev/acme/Jay
 Debug session started. Listening for requests...
 ```
 
@@ -102,7 +102,7 @@ Alternatively, you can run [`sst console`](packages/cli.md#console) and specify 
 ```
 $ npx sst console --stage prod
 
-SST Console: https://console.serverless-stack.com/acme/prod
+SST Console: https://console.sst.dev/acme/prod
 ```
 
 This allows you look at logs in production and manage resources in production as well.
@@ -123,7 +123,7 @@ To get started:
 
 The <a href={ config.console }>SST Console</a> is a hosted single-page app. It uses the local credentials from the SST CLI ([`sst start`](packages/cli.md#start) or [`sst console`](packages/cli.md#console)) to make calls to AWS.
 
-When the Console starts up, it gets the credentials from a local server that is run as a part of the SST CLI. It also gets some metadata from the app that's running locally. The local server only allows access from localhost and console.serverless-stack.com.
+When the Console starts up, it gets the credentials from a local server that is run as a part of the SST CLI. It also gets some metadata from the app that's running locally. The local server only allows access from localhost and console.sst.dev.
 
 The Console then uses these credentials to make calls to AWS using the AWS SDK. For some resources (like S3), the Console will proxy calls through your local CLI to get around the CORS restrictions in the browser.
 

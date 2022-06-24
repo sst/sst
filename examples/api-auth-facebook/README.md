@@ -4,7 +4,7 @@ An example serverless app created with SST.
 
 ## Getting Started
 
-[**Read the tutorial**](https://serverless-stack.com/examples/how-to-add-facebook-authentication-to-a-serverless-api.html)
+[**Read the tutorial**](https://sst.dev/examples/how-to-add-facebook-authentication-to-a-serverless-api.html)
 
 Install the example.
 
@@ -40,6 +40,6 @@ Runs your tests using Jest. Takes all the [Jest CLI options](https://jestjs.io/d
 
 Learn more about the SST.
 
-- [Docs](https://docs.serverless-stack.com/)
-- [@serverless-stack/cli](https://docs.serverless-stack.com/packages/cli)
-- [@serverless-stack/resources](https://docs.serverless-stack.com/packages/resources)
+- [Docs](https://docs.sst.dev/)
+- [@serverless-stack/cli](https://docs.sst.dev/packages/cli)
+- [@serverless-stack/resources](https://docs.sst.dev/packages/resources)

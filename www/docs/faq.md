@@ -7,12 +7,12 @@ import config from "../config";
 
 ### Do we need another framework for serverless?
 
-While [Serverless Framework](https://github.com/serverless/serverless) and [SAM](https://github.com/aws/serverless-application-model) have been around for a while and are quite popular, the local development experience for them isn't great. And they require you to define your resources using the really verbose [CloudFormation YAML](https://serverless-stack.com/chapters/what-is-infrastructure-as-code.html#aws-cloudformation) (or JSON).
+While [Serverless Framework](https://github.com/serverless/serverless) and [SAM](https://github.com/aws/serverless-application-model) have been around for a while and are quite popular, the local development experience for them isn't great. And they require you to define your resources using the really verbose [CloudFormation YAML](https://sst.dev/chapters/what-is-infrastructure-as-code.html#aws-cloudformation) (or JSON).
 
 In comparison, SST features:
 
 - A [Live Lambda Development](live-lambda-development.md) environment, that introduces a completely new local development experience for serverless.
-- And it uses [AWS CDK](https://serverless-stack.com/chapters/what-is-aws-cdk.html), allowing you to define your resources using regular programming languages.
+- And it uses [AWS CDK](https://sst.dev/chapters/what-is-aws-cdk.html), allowing you to define your resources using regular programming languages.
 
 We think these two details, drastically sets SST apart from the rest of the options out there.
 
@@ -77,6 +77,6 @@ SST internally includes CDK, so you don't have to. We update this version fairly
 
 ### What's the connection to Serverless Framework?
 
-Originally when SST was released, it was meant to be a way to [use CDK alongside your Serverless Framework apps](https://serverless-stack.com/chapters/using-aws-cdk-with-serverless-framework.html). While you can still do that. SST's [Live Lambda Development](live-lambda-development.md) makes it a first-class dev environment for serverless apps.
+Originally when SST was released, it was meant to be a way to [use CDK alongside your Serverless Framework apps](https://sst.dev/chapters/using-aws-cdk-with-serverless-framework.html). While you can still do that. SST's [Live Lambda Development](live-lambda-development.md) makes it a first-class dev environment for serverless apps.
 
 So you don't have to use Serverless Framework together with SST.

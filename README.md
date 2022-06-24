@@ -1,11 +1,11 @@
 <p align="center">
-  <a href="https://serverless-stack.com/">
+  <a href="https://sst.dev/">
     <img alt="Serverless Stack (SST)" src="https://raw.githubusercontent.com/serverless-stack/identity/main/sst.svg" width="300" />
   </a>
 </p>
 
 <p align="center">
-  <a href="https://serverless-stack.com/discord"><img alt="Discord" src="https://img.shields.io/discord/983865673656705025?style=flat-square" /></a>
+  <a href="https://sst.dev/discord"><img alt="Discord" src="https://img.shields.io/discord/983865673656705025?style=flat-square" /></a>
   <a href="https://www.npmjs.com/package/@serverless-stack/resources"><img alt="npm" src="https://img.shields.io/npm/v/@serverless-stack/resources.svg?style=flat-square" /></a>
   <a href="https://github.com/serverless-stack/serverless-stack/actions/workflows/ci.yml"><img alt="Build status" src="https://img.shields.io/github/workflow/status/serverless-stack/serverless-stack/CI?style=flat-square" /></a>
 </p>
@@ -22,7 +22,7 @@ Serverless Stack (SST) is a framework that makes it easy to build serverless app
 
 - A [Live Lambda Development][live] environment
 - A [web based dashboard][console_doc] to manage your apps
-- Support for [setting breakpoints and debugging in VS Code](https://docs.serverless-stack.com/live-lambda-development#debugging-with-visual-studio-code)
+- Support for [setting breakpoints and debugging in VS Code](https://docs.sst.dev/live-lambda-development#debugging-with-visual-studio-code)
 - [Higher-level constructs][resources] designed specifically for serverless apps
 - Zero-config support for JS and TS (using [esbuild](https://esbuild.github.io)), Go, Python, C#, and F#
 
@@ -39,7 +39,7 @@ cd my-sst-app
 npm start
 
 # Open the SST Console
-open console.serverless-stack.com
+open console.sst.dev
 
 # Deploy to prod
 npx sst deploy --stage prod
@@ -47,13 +47,13 @@ npx sst deploy --stage prod
 
 ## Documentation
 
-- [SST docs](https://docs.serverless-stack.com)
-- [SST examples](https://serverless-stack.com/examples/index.html)
+- [SST docs](https://docs.sst.dev)
+- [SST examples](https://sst.dev/examples/index.html)
 - [Public roadmap][roadmap]
 - [Feature requests][requests]
 - [Contributing to SST](CONTRIBUTING.md)
 
-[Follow us on Twitter](https://twitter.com/ServerlessStack) and [subscribe to our newsletter](https://serverless-stack.com/newsletter.html) for updates.
+[Follow us on Twitter](https://twitter.com/ServerlessStack) and [subscribe to our newsletter](https://sst.dev/newsletter.html) for updates.
 
 ## About SST
 
@@ -96,25 +96,25 @@ It allows you to:
 
 SST also comes with [a set of serverless specific higher-level CDK constructs][resources]. This includes:
 
-- [Api](https://docs.serverless-stack.com/constructs/Api) for building APIs
-- [Cron](https://docs.serverless-stack.com/constructs/Cron) for building cron jobs
-- [Queue](https://docs.serverless-stack.com/constructs/Queue) for creating queues
-- [Bucket](https://docs.serverless-stack.com/constructs/Bucket) for adding S3 buckets
-- [Auth](https://docs.serverless-stack.com/constructs/Auth) for configuring authentication
-- [Table](https://docs.serverless-stack.com/constructs/Table) for adding DynamoDB tables
-- [Topic](https://docs.serverless-stack.com/constructs/Topic) for creating pub/sub systems
-- [StaticSite](https://docs.serverless-stack.com/constructs/StaticSite) for creating static websites
-- [NextjsSite](https://docs.serverless-stack.com/constructs/NextjsSite) for creating Next.js websites
-- [Script](https://docs.serverless-stack.com/constructs/Script) for running scripts while deploying
-- [ViteStaticSite](https://docs.serverless-stack.com/constructs/ViteStaticSite) for static sites built with Vite
-- [KinesisStream](https://docs.serverless-stack.com/constructs/KinesisStream) for real-time data streaming
-- [RDS](https://docs.serverless-stack.com/constructs/RDS) for creating an RDS Serverless Cluster
-- [WebSocketApi](https://docs.serverless-stack.com/constructs/WebSocketApi) for creating WebSocket APIs
-- [GraphQLApi](https://docs.serverless-stack.com/constructs/GraphQLApi) for using GraphQL with Lambda
-- [EventBus](https://docs.serverless-stack.com/constructs/EventBus) for creating EventBridge Event buses
-- [AppSyncApi](https://docs.serverless-stack.com/constructs/AppSyncApi) for creating AppSync GraphQL APIs
-- [ApiGatewayV1Api](https://docs.serverless-stack.com/constructs/ApiGatewayV1Api) for using AWS API Gateway v1
-- [ReactStaticSite](https://docs.serverless-stack.com/constructs/ReactStaticSite) for static sites built with Create React App
+- [Api](https://docs.sst.dev/constructs/Api) for building APIs
+- [Cron](https://docs.sst.dev/constructs/Cron) for building cron jobs
+- [Queue](https://docs.sst.dev/constructs/Queue) for creating queues
+- [Bucket](https://docs.sst.dev/constructs/Bucket) for adding S3 buckets
+- [Auth](https://docs.sst.dev/constructs/Auth) for configuring authentication
+- [Table](https://docs.sst.dev/constructs/Table) for adding DynamoDB tables
+- [Topic](https://docs.sst.dev/constructs/Topic) for creating pub/sub systems
+- [StaticSite](https://docs.sst.dev/constructs/StaticSite) for creating static websites
+- [NextjsSite](https://docs.sst.dev/constructs/NextjsSite) for creating Next.js websites
+- [Script](https://docs.sst.dev/constructs/Script) for running scripts while deploying
+- [ViteStaticSite](https://docs.sst.dev/constructs/ViteStaticSite) for static sites built with Vite
+- [KinesisStream](https://docs.sst.dev/constructs/KinesisStream) for real-time data streaming
+- [RDS](https://docs.sst.dev/constructs/RDS) for creating an RDS Serverless Cluster
+- [WebSocketApi](https://docs.sst.dev/constructs/WebSocketApi) for creating WebSocket APIs
+- [GraphQLApi](https://docs.sst.dev/constructs/GraphQLApi) for using GraphQL with Lambda
+- [EventBus](https://docs.sst.dev/constructs/EventBus) for creating EventBridge Event buses
+- [AppSyncApi](https://docs.sst.dev/constructs/AppSyncApi) for creating AppSync GraphQL APIs
+- [ApiGatewayV1Api](https://docs.sst.dev/constructs/ApiGatewayV1Api) for using AWS API Gateway v1
+- [ReactStaticSite](https://docs.sst.dev/constructs/ReactStaticSite) for static sites built with Create React App
 
 ### And more
 
@@ -127,9 +127,9 @@ SST also comes with a few other niceties:
 
 Internally, SST uses the CDK CLI to invoke the various CDK commands.
 
-[discord]: https://serverless-stack.com/discord
-[console_doc]: https://docs.serverless-stack.com/console
-[resources]: https://docs.serverless-stack.com/packages/resources
-[live]: https://docs.serverless-stack.com/live-lambda-development
+[discord]: https://sst.dev/discord
+[console_doc]: https://docs.sst.dev/console
+[resources]: https://docs.sst.dev/packages/resources
+[live]: https://docs.sst.dev/live-lambda-development
 [roadmap]: https://github.com/serverless-stack/serverless-stack/projects/2
 [requests]: https://github.com/serverless-stack/serverless-stack/discussions/categories/ideas?discussions_q=category%3AIdeas+sort%3Atop+is%3Aunanswered

@@ -4,7 +4,7 @@ An example SST serverless app monitored with [Sentry](https://www.sentry.io).
 
 ## Getting Started
 
-[**Read the tutorial**](https://serverless-stack.com/examples/how-to-use-sentry-to-monitor-your-serverless-app.html)
+[**Read the tutorial**](https://sst.dev/examples/how-to-use-sentry-to-monitor-your-serverless-app.html)
 
 Install the example.
 
@@ -42,10 +42,10 @@ Runs your tests using Jest. Takes all the [Jest CLI options](https://jestjs.io/d
 
 Learn more about the Serverless Stack.
 
-- [Docs](https://docs.serverless-stack.com)
-- [@serverless-stack/cli](https://docs.serverless-stack.com/packages/cli)
-- [@serverless-stack/resources](https://docs.serverless-stack.com/packages/resources)
+- [Docs](https://docs.sst.dev)
+- [@serverless-stack/cli](https://docs.sst.dev/packages/cli)
+- [@serverless-stack/resources](https://docs.sst.dev/packages/resources)
 
 ## Community
 
-[Follow us on Twitter](https://twitter.com/ServerlessStack) or [post on our forums](https://discourse.serverless-stack.com).
+[Follow us on Twitter](https://twitter.com/ServerlessStack) or [post on our forums](https://discourse.sst.dev).
