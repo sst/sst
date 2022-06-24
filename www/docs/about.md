@@ -1,17 +1,11 @@
 ---
 id: about
 title: Get Started With SST
-sidebar_label: Get Started
-hide_title: true
-hide_table_of_contents: true
-description: SST Docs
->>>>>>> origin/master
-slug: /
-id: about
-hide_title: true
-description: SST Docs
 sidebar_label: Introduction
+hide_title: true
 hide_table_of_contents: true
+description: SST Docs
+slug: /
 ---
 
 import config from "../config";
