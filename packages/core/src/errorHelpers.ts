@@ -5,7 +5,7 @@ export function getHelperMessage(message: string) {
   // note: this should be handled in SST as access log group names are now
   //       hardcoded with /aws/vendedlogs/apis prefix.
   if (message.indexOf("Insufficient permissions to enable logging") > -1) {
-    helper = `This is a common deploy error. Check out this GitHub issue for more details - https://github.com/serverless-stack/serverless-stack/issues/125`;
+    helper = `This is a common deploy error. Check out this GitHub issue for more details - https://github.com/serverless-stack/sst/issues/125`;
   }
 
   // Can run into this issue when updating an AppSyncApi resolver

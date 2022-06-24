@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://sst.dev/discord"><img alt="Discord" src="https://img.shields.io/discord/983865673656705025?style=flat-square" /></a>
   <a href="https://www.npmjs.com/package/@serverless-stack/resources"><img alt="npm" src="https://img.shields.io/npm/v/@serverless-stack/resources.svg?style=flat-square" /></a>
-  <a href="https://github.com/serverless-stack/serverless-stack/actions/workflows/ci.yml"><img alt="Build status" src="https://img.shields.io/github/workflow/status/serverless-stack/serverless-stack/CI?style=flat-square" /></a>
+  <a href="https://github.com/serverless-stack/sst/actions/workflows/ci.yml"><img alt="Build status" src="https://img.shields.io/github/workflow/status/serverless-stack/sst/CI?style=flat-square" /></a>
 </p>
 
 <p align="center">
@@ -131,5 +131,5 @@ Internally, SST uses the CDK CLI to invoke the various CDK commands.
 [console_doc]: https://docs.sst.dev/console
 [resources]: https://docs.sst.dev/packages/resources
 [live]: https://docs.sst.dev/live-lambda-development
-[roadmap]: https://github.com/serverless-stack/serverless-stack/projects/2
-[requests]: https://github.com/serverless-stack/serverless-stack/discussions/categories/ideas?discussions_q=category%3AIdeas+sort%3Atop+is%3Aunanswered
+[roadmap]: https://github.com/serverless-stack/sst/projects/2
+[requests]: https://github.com/serverless-stack/sst/discussions/categories/ideas?discussions_q=category%3AIdeas+sort%3Atop+is%3Aunanswered
