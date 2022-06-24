@@ -7,9 +7,9 @@ import { log } from "./util.js";
 import * as cfnResponse from "./cfn-response.js";
 const s3 = new AWS.S3({ region: "us-east-1" });
 
-export async function handler(
+export const handler = cfnResponse.safeHandler(async (
   cfnRequest: AWSLambda.CloudFormationCustomResourceEvent
-) {
+) => {
   log("onEventHandler", cfnRequest);
 
   // Get bucket name
@@ -43,7 +43,7 @@ export async function handler(
     PhysicalResourceId: bucketName,
     Data: responseData,
   });
-}
+});
 
 async function createBucket(bucketName: string) {
   log(`createBucket() called with bucketName`, bucketName);

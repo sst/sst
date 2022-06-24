@@ -2,6 +2,10 @@
 description: "Docs for the sst.GraphQL construct in the @serverless-stack/resources package"
 ---
 
+:::caution
+This is the SST v0.x Constructs doc. SST v1 is now released. If you are using v1, see the [v1 Constructs doc](/constructs). If you are looking to upgrade to v1, [check out the migration steps](/constructs/v0/migration).
+:::
+
 The `GraphQLApi` construct is a higher level CDK construct that makes it easy to create GraphQL servers with AWS Lambda. It provides a simple way to define the GraphQL handler route in your API. And allows you to configure the specific Lambda function if necessary. It also allows you to configure authorization, custom domains, etc.
 
 The `GraphQLApi` construct internally extends the [`Api`](Api.md) construct.

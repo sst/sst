@@ -1,5 +1,39 @@
 # @serverless-stack/cli
 
+## 1.2.30
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @serverless-stack/resources@1.2.30
+  - @serverless-stack/core@1.2.30
+
+## 1.2.29
+
+### Patch Changes
+
+- [#1839](https://github.com/serverless-stack/serverless-stack/pull/1839) [`75145db8`](https://github.com/serverless-stack/serverless-stack/commit/75145db83f89e60694685b99c76851ca95d988e4) Thanks [@thdxr](https://github.com/thdxr)! - Warm up RDS instance on sst start in case it's asleep
+
+- Updated dependencies [[`75145db8`](https://github.com/serverless-stack/serverless-stack/commit/75145db83f89e60694685b99c76851ca95d988e4)]:
+  - @serverless-stack/core@1.2.29
+  - @serverless-stack/resources@1.2.29
+
+## 1.2.28
+
+### Patch Changes
+
+- Updated dependencies [[`54d794ef`](https://github.com/serverless-stack/serverless-stack/commit/54d794ef704aceaa54f15a28d6337ed48d55b1b5)]:
+  - @serverless-stack/resources@1.2.28
+  - @serverless-stack/core@1.2.28
+
+## 1.2.27
+
+### Patch Changes
+
+- Updated dependencies [[`7c7756ec`](https://github.com/serverless-stack/serverless-stack/commit/7c7756ecb356dd1c8ce2449d875f51968d597af6), [`7c7756ec`](https://github.com/serverless-stack/serverless-stack/commit/7c7756ecb356dd1c8ce2449d875f51968d597af6)]:
+  - @serverless-stack/resources@1.2.27
+  - @serverless-stack/core@1.2.27
+
 ## 1.2.26
 
 ### Patch Changes

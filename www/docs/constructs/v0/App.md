@@ -2,6 +2,10 @@
 description: "Docs for the sst.App construct in the @serverless-stack/resources package"
 ---
 
+:::caution
+This is the SST v0.x Constructs doc. SST v1 is now released. If you are using v1, see the [v1 Constructs doc](/constructs). If you are looking to upgrade to v1, [check out the migration steps](/constructs/v0/migration).
+:::
+
 import TabItem from "@theme/TabItem";
 import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
 
@@ -298,7 +302,7 @@ _Parameters_
 
 - **permissions** `Permissions`
 
-Adds additional default [`Permissions`](../../util/Permissions.md) to be applied to all Lambda functions in the app.
+Adds additional default [`Permissions`](./Permissions) to be applied to all Lambda functions in the app.
 
 :::note
 Only functions created after a `addDefaultFunctionPermissions` call will contain the new values.

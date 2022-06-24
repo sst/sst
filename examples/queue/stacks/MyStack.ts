@@ -12,7 +12,7 @@ export function MyStack({ stack }: StackContext) {
       function: {
         // Pass in the queue to our API
         environment: {
-          queueUrl: queue.queueName,
+          queueUrl: queue.queueUrl,
         },
       },
     },

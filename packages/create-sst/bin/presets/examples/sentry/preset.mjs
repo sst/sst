@@ -5,6 +5,6 @@ export default [
   extract(),
   install({
     packages: "@sentry/serverless",
-    path: "api",
+    path: "services",
   }),
 ];

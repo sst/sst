@@ -1,5 +1,39 @@
 # @serverless-stack/resources
 
+## 1.2.30
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.2.30
+
+## 1.2.29
+
+### Patch Changes
+
+- Updated dependencies [[`75145db8`](https://github.com/serverless-stack/serverless-stack/commit/75145db83f89e60694685b99c76851ca95d988e4)]:
+  - @serverless-stack/core@1.2.29
+
+## 1.2.28
+
+### Patch Changes
+
+- [#1840](https://github.com/serverless-stack/serverless-stack/pull/1840) [`54d794ef`](https://github.com/serverless-stack/serverless-stack/commit/54d794ef704aceaa54f15a28d6337ed48d55b1b5) Thanks [@fwang](https://github.com/fwang)! - RDS: fix migration error causes deploy to hang for 1 hour
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.2.28
+
+## 1.2.27
+
+### Patch Changes
+
+- [#1834](https://github.com/serverless-stack/serverless-stack/pull/1834) [`7c7756ec`](https://github.com/serverless-stack/serverless-stack/commit/7c7756ecb356dd1c8ce2449d875f51968d597af6) Thanks [@fwang](https://github.com/fwang)! - ApiGatewayV1Api: do not look up hosted zone when provided
+
+* [#1834](https://github.com/serverless-stack/serverless-stack/pull/1834) [`7c7756ec`](https://github.com/serverless-stack/serverless-stack/commit/7c7756ecb356dd1c8ce2449d875f51968d597af6) Thanks [@fwang](https://github.com/fwang)! - ApiGatewayV1Api: default cors setting allow all headers, methods, and origins
+
+* Updated dependencies []:
+  - @serverless-stack/core@1.2.27
+
 ## 1.2.26
 
 ### Patch Changes

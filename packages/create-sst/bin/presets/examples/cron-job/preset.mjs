@@ -5,6 +5,6 @@ export default [
   extract(),
   install({
     packages: ["node-fetch"],
-    path: "api",
+    path: "services",
   }),
 ];

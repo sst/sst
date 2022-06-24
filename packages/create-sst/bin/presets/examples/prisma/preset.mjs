@@ -5,11 +5,11 @@ export default [
   extract(),
   install({
     packages: ["prisma", "fs-extra", "@prisma/client"],
-    path: "api",
+    path: "services",
   }),
   install({
     packages: ["@types/fs-extra", "prisma"],
-    path: "api",
+    path: "services",
     dev: true,
   }),
 ];

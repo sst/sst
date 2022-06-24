@@ -2,6 +2,10 @@
 description: "Docs for the sst.ApiGatewayV1Api construct in the @serverless-stack/resources package"
 ---
 
+:::caution
+This is the SST v0.x Constructs doc. SST v1 is now released. If you are using v1, see the [v1 Constructs doc](/constructs). If you are looking to upgrade to v1, [check out the migration steps](/constructs/v0/migration).
+:::
+
 The `ApiGatewayV1Api` construct is a higher level CDK construct that makes it easy to create an API Gateway REST API. It provides a simple way to define the routes in your API. And allows you to configure the specific Lambda functions if necessary. It also allows you to configure authorization and custom domains. See the [examples](#examples) for more details.
 
 :::note
@@ -605,9 +609,9 @@ attachPermissions(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../../util/Permissions.md)
+- **permissions** [`Permissions`](./Permissions)
 
-Attaches the given list of [permissions](../../util/Permissions.md) to all the routes. This allows the functions to access other AWS resources.
+Attaches the given list of [permissions](./Permissions) to all the routes. This allows the functions to access other AWS resources.
 
 Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
@@ -621,9 +625,9 @@ _Parameters_
 
 - **routeKey** `string`
 
-- **permissions** [`Permissions`](../../util/Permissions.md)
+- **permissions** [`Permissions`](./Permissions)
 
-Attaches the given list of [permissions](../../util/Permissions.md) to a specific route. This allows that function to access other AWS resources.
+Attaches the given list of [permissions](./Permissions) to a specific route. This allows that function to access other AWS resources.
 
 Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 

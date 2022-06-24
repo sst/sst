@@ -130,7 +130,7 @@ For more details, [check out the Lumigo docs on auto-tracing](https://docs.lumig
 To get started, [sign up for an account](https://console.thundra.io/landing/). Then [follow the steps in the quick start guide](https://apm.docs.thundra.io/getting-started/quick-start-guide/connect-thundra) to deploy their stack into the AWS account you wish to monitor.
 
 :::info
-Need help setting up? <a href={ config.slack_invite }>Join us on Slack</a> and head over to the <a href={ `${config.slack}app_redirect?channel=thundra` }>#thundra</a> channel. The Thundra team is ready to help.
+Need help setting up? <a href={ config.discord_invite }>Join us on Discord</a> and head over to the #thundra channel. The Thundra team is ready to help.
 :::
 
 To enable Lambda monitoring, you'll need to add a layer to the functions you want to monitor. To figure out the layer ARN for the latest version, [check the badge here](https://apm.docs.thundra.io/node.js/nodejs-integration-options).

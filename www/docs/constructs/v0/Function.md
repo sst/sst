@@ -2,6 +2,10 @@
 description: "Docs for the sst.Function construct in the @serverless-stack/resources package"
 ---
 
+:::caution
+This is the SST v0.x Constructs doc. SST v1 is now released. If you are using v1, see the [v1 Constructs doc](/constructs). If you are looking to upgrade to v1, [check out the migration steps](/constructs/v0/migration).
+:::
+
 import config from "../../../config";
 
 A replacement for the [`cdk.lambda.NodejsFunction`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda_nodejs-readme.html) that allows you to [develop your Lambda functions locally](live-lambda-development.md). Supports JS, TypeScript, Python, Golang, and C#. It also applies a couple of defaults:
@@ -207,11 +211,11 @@ attachPermissions(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../../util/Permissions.md)
+- **permissions** [`Permissions`](./Permissions)
 
-Attaches the given list of [permissions](../../util/Permissions.md) to the function. This method makes it easy to control the permissions you want the function to have access to. It can range from complete access to all AWS resources, all the way to a specific permission for a resource.
+Attaches the given list of [permissions](./Permissions) to the function. This method makes it easy to control the permissions you want the function to have access to. It can range from complete access to all AWS resources, all the way to a specific permission for a resource.
 
-Head over to the [`Permissions`](../../util/Permissions.md) docs to read about this in detail.
+Head over to the [`Permissions`](./Permissions) docs to read about this in detail.
 
 ## FunctionProps
 
@@ -405,9 +409,9 @@ Turns on [AWS X-RAY for the Lambda function](https://docs.aws.amazon.com/lambda/
 
 ### permissions?
 
-_Type_ : [`Permissions`](../../util/Permissions.md), _defaults to_ `[]`
+_Type_ : [`Permissions`](./Permissions), _defaults to_ `[]`
 
-Attaches the given list of [permissions](../../util/Permissions.md) to the function. Configuring this property is equivalent to calling [`attachPermissions`](#attachpermissions) after the function is created.
+Attaches the given list of [permissions](./Permissions) to the function. Configuring this property is equivalent to calling [`attachPermissions`](#attachpermissions) after the function is created.
 
 ### layers?
 

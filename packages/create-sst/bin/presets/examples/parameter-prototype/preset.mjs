@@ -5,6 +5,6 @@ export default [
   extract(),
   install({
     packages: ["@serverless-stack/node"],
-    path: "api",
+    path: "services",
   }),
 ];

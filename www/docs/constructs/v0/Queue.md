@@ -2,6 +2,10 @@
 description: "Docs for the sst.Queue construct in the @serverless-stack/resources package. This construct creates an SQS queue."
 ---
 
+:::caution
+This is the SST v0.x Constructs doc. SST v1 is now released. If you are using v1, see the [v1 Constructs doc](/constructs). If you are looking to upgrade to v1, [check out the migration steps](/constructs/v0/migration).
+:::
+
 The `Queue` construct is a higher level CDK construct that makes it easy to create a [SQS Queues](https://aws.amazon.com/sqs/). You can create a queue by specifying a consumer function. And then publish to the queue from any part of your serverless app.
 
 This construct makes it easier to define a queue and a consumer. It also internally connects the consumer and queue together.
@@ -167,9 +171,9 @@ attachPermissions(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../../util/Permissions.md)
+- **permissions** [`Permissions`](./Permissions)
 
-Attaches the given list of [permissions](../../util/Permissions.md) to the `consumerFunction`. This allows the consumer to access other AWS resources.
+Attaches the given list of [permissions](./Permissions) to the `consumerFunction`. This allows the consumer to access other AWS resources.
 
 Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 

@@ -5,7 +5,7 @@ Want to help improve SST? Thank you! Take a second to review this document befor
 To be sure that you are not working on something that's already being worked on, make sure to either:
 
 - [Open a new issue][issue] about it
-- Or [join us on Slack][slack] and send us a message
+- Or [join us on Discord][discord] and send us a message
 
 ## How to Contribute
 
@@ -13,7 +13,7 @@ In this section we'll talk about the workflow we recommend while working on SST.
 
 ### 1. Gather Requirements
 
-When assigned an issue, the first step is to get all the details and seek any necessary clarification. If the issue was brought up by a user, make sure you fully understand the requirement from the user. Contact the user on Slack or ask them on GitHub. Or, contact a member from the core team that opened the issue.
+When assigned an issue, the first step is to get all the details and seek any necessary clarification. If the issue was brought up by a user, make sure you fully understand the requirement from the user. Contact the user on Discord or ask them on GitHub. Or, contact a member from the core team that opened the issue.
 
 ### 2. Speccing
 
@@ -258,5 +258,5 @@ See the `Table` construct for a deprecation example of renaming `secondaryIndexe
 
 Help us improve this doc. If you've had a chance to contribute to SST, feel free to edit this doc and submit a PR.
 
-[slack]: https://launchpass.com/serverless-stack
+[discord]: https://serverless-stack.com/discord
 [issue]: https://github.com/serverless-stack/serverless-stack/issues/new

@@ -2,6 +2,10 @@
 description: "Docs for the sst.AppSyncApi construct in the @serverless-stack/resources package"
 ---
 
+:::caution
+This is the SST v0.x Constructs doc. SST v1 is now released. If you are using v1, see the [v1 Constructs doc](/constructs). If you are looking to upgrade to v1, [check out the migration steps](/constructs/v0/migration).
+:::
+
 The `AppSyncApi` construct is a higher level CDK construct that makes it easy to create an AppSync GraphQL API. It provides a simple way to define the data sources and the resolvers in your API. And allows you to configure the specific Lambda functions if necessary. See the [examples](#examples) for more details.
 
 ## Initializer
@@ -689,9 +693,9 @@ attachPermissions(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../../util/Permissions.md)
+- **permissions** [`Permissions`](./Permissions)
 
-Attaches the given list of [permissions](../../util/Permissions.md) to all the routes. This allows the functions to access other AWS resources.
+Attaches the given list of [permissions](./Permissions) to all the routes. This allows the functions to access other AWS resources.
 
 Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
@@ -705,9 +709,9 @@ _Parameters_
 
 - **key** `string`
 
-- **permissions** [`Permissions`](../../util/Permissions.md)
+- **permissions** [`Permissions`](./Permissions)
 
-Attaches the given list of [permissions](../../util/Permissions.md) to a specific data source. This allows that function to access other AWS resources.
+Attaches the given list of [permissions](./Permissions) to a specific data source. This allows that function to access other AWS resources.
 
 Pass in the key used to define a data source. For example, `lambdaDS`. Or for auto-created Lambda data sources, pass in the key used to defined a resolver. For example, `Query listNotes`.
 

@@ -2,6 +2,10 @@
 description: "Docs for the sst.Bucket construct in the @serverless-stack/resources package. This construct creates an S3 Bucket."
 ---
 
+:::caution
+This is the SST v0.x Constructs doc. SST v1 is now released. If you are using v1, see the [v1 Constructs doc](/constructs). If you are looking to upgrade to v1, [check out the migration steps](/constructs/v0/migration).
+:::
+
 The `Bucket` construct is a higher level CDK construct that makes it easy to create an S3 Bucket and to define its notifications. It also internally connects the notifications and bucket together.
 
 ## Initializer
@@ -372,9 +376,9 @@ attachPermissions(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../../util/Permissions.md)
+- **permissions** [`Permissions`](./Permissions)
 
-Attaches the given list of [permissions](../../util/Permissions.md) to all the `notificationFunctions`. This allows the notifications to access other AWS resources.
+Attaches the given list of [permissions](./Permissions) to all the `notificationFunctions`. This allows the notifications to access other AWS resources.
 
 Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
@@ -388,9 +392,9 @@ _Parameters_
 
 - **index** `number`
 
-- **permissions** [`Permissions`](../../util/Permissions.md)
+- **permissions** [`Permissions`](./Permissions)
 
-Attaches the given list of [permissions](../../util/Permissions.md) to a specific function in the list of `notificationFunctions`. Where `index` (starting at 0) is used to identify the notification. This allows that notification to access other AWS resources.
+Attaches the given list of [permissions](./Permissions) to a specific function in the list of `notificationFunctions`. Where `index` (starting at 0) is used to identify the notification. This allows that notification to access other AWS resources.
 
 Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
