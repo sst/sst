@@ -58,4 +58,5 @@ export default [
     packages: ["@genql/cli"],
     path: "graphql",
   }),
+  cmd({ cmd: "npx @genql/cli --output ./graphql/genql --schema ./graphql/schema.graphql --esm" }),
 ];

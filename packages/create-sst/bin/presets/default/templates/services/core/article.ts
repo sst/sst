@@ -17,4 +17,3 @@ export async function list() {
     .orderBy("created", "desc")
     .execute();
 }
-
