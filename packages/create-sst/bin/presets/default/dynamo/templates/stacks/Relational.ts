@@ -1,6 +1,6 @@
 import { RDS, StackContext } from "@serverless-stack/resources";
 
-export function Database({ stack }: StackContext) {
+export function Relational({ stack }: StackContext) {
   const rds = new RDS(stack, "rds", {
     engine: "postgresql10.14",
     migrations: "services/migrations",
