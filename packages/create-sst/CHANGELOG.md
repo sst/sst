@@ -1,5 +1,11 @@
 # create-sst
 
+## 1.2.31
+
+### Patch Changes
+
+- [`8a980a704`](https://github.com/serverless-stack/sst/commit/8a980a70487c113f97cc574b144c24f4a72db51b) Thanks [@thdxr](https://github.com/thdxr)! - Fix issue with cloning examples using `create-sst`
+
 ## 1.2.30
 
 ### Patch Changes
