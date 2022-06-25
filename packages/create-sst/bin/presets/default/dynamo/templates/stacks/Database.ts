@@ -1,11 +1,6 @@
-import {
-  StackContext,
-  use,
-  Api as ApiGateway,
-  Table,
-} from "@serverless-stack/resources";
+import { StackContext, Table } from "@serverless-stack/resources";
 
-export function Dynamo({ stack }: StackContext) {
+export function Database({ stack }: StackContext) {
   const table = new Table(stack, "table", {
     fields: {
       pk: "string",

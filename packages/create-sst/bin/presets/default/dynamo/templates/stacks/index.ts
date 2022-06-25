@@ -1,7 +1,6 @@
 import { App } from "@serverless-stack/resources";
 import { Api } from "./Api";
-import { Relational } from "./Relational";
-import { Dynamo } from "./Dynamo";
+import { Database } from "./Database";
 import { Web } from "./Web";
 
 export default function main(app: App) {
@@ -9,5 +8,5 @@ export default function main(app: App) {
     runtime: "nodejs16.x",
     srcPath: "services",
   });
-  app.stack(Relational).stack(Dynamo).stack(Api).stack(Web);
+  app.stack(Database).stack(Api).stack(Web);
 }

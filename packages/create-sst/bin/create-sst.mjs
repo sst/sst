@@ -8,8 +8,6 @@ import fs from "fs/promises";
 import ora from "ora";
 import { execute } from "create-sst";
 
-const DEFAULT_CATEGORY = "starters";
-
 program
   .name("create-sst")
   .description("CLI to create SST projects")
@@ -33,9 +31,7 @@ program
             const folders = await fs.readdir(
               path.join(__dirname, "presets", category)
             );
-            return folders.map((folder) =>
-              path.join(category === DEFAULT_CATEGORY ? "" : category, folder)
-            );
+            return folders.map((folder) => path.join(category, folder));
           })
         )
       ).flat();
@@ -47,7 +43,22 @@ program
           message: "Select a template",
         },
       ]);
-      preset = path.join("presets", ...scan, answers.preset);
+      preset = path.join("presets", answers.preset);
+    }
+
+    if (preset.endsWith("default")) {
+      const result = await inquirer.prompt([
+        {
+          name: "database",
+          type: "list",
+          choices: [
+            { name: "RDS (Postgres or MySQL)", value: "rds" },
+            { name: "DynamoDB", value: "dynamo" },
+          ],
+          message: "Select a database (you can change this later or use both)",
+        },
+      ]);
+      preset = path.join(preset, result.database);
     }
 
     const answers = await inquirer.prompt([

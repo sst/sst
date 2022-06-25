@@ -4,21 +4,16 @@ import {
   Api as ApiGateway,
 } from "@serverless-stack/resources";
 import { Database } from "./Database";
-import { Dynamo } from "./Dynamo";
 
 export function Api({ stack }: StackContext) {
-  const rds = use(Database);
-  const table = use(Dynamo);
+  const db = use(Database);
 
   const api = new ApiGateway(stack, "api", {
     defaults: {
       function: {
-        permissions: [rds, table],
+        permissions: [db],
         environment: {
-          RDS_SECRET_ARN: rds.secretArn,
-          RDS_ARN: rds.clusterArn,
-          RDS_DATABASE: rds.defaultDatabaseName,
-          DYNAMO_TABLE_NAME: table.tableName,
+          TABLE_NAME: db.tableName,
         },
       },
     },

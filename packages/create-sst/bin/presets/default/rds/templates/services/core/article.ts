@@ -1,8 +1,19 @@
 export * as Article from "./article";
-import {} from "electrodb";
 
 import { ulid } from "ulid";
+import { SQL } from "./sql";
 
-export async function create(title: string, url: string) {}
+export async function create(title: string, url: string) {
+  const [result] = await SQL.DB.insertInto("article")
+    .values({ articleID: ulid(), url, title })
+    .returningAll()
+    .execute();
+  return result;
+}
 
-export async function list() {}
+export async function list() {
+  return await SQL.DB.selectFrom("article")
+    .selectAll()
+    .orderBy("created", "desc")
+    .execute();
+}

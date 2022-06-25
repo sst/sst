@@ -2,10 +2,6 @@ import { remove, cmd, patch, extend, extract, install } from "create-sst";
 export default [
   extend("presets/base/starter"),
   extend("presets/base/monorepo"),
-  install({
-    packages: ["hygen"],
-    dev: true,
-  }),
   patch({
     file: "sst.json",
     operations: [{ op: "add", path: "/main", value: "stacks/index.ts" }],
@@ -21,15 +17,7 @@ export default [
   cmd({ cmd: "npm init vite@latest -- web --template=react-ts" }),
   extract(),
   install({
-    packages: [
-      "@pothos/core",
-      "@serverless-stack/node",
-      "graphql",
-      "electrodb",
-      "kysely",
-      "kysely-data-api",
-      "ulid",
-    ],
+    packages: ["@pothos/core", "@serverless-stack/node", "graphql", "ulid"],
     path: "services",
   }),
   install({
@@ -59,5 +47,7 @@ export default [
     packages: ["@genql/cli"],
     path: "graphql",
   }),
-  cmd({ cmd: "npx @genql/cli --output ./graphql/genql --schema ./graphql/schema.graphql --esm" }),
+  cmd({
+    cmd: "npx @genql/cli --output ./graphql/genql --schema ./graphql/schema.graphql --esm",
+  }),
 ];
