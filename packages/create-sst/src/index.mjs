@@ -147,8 +147,8 @@ export async function execute(opts) {
         const results = await Promise.all(
           step.packages.map(async (pkg) => {
             let [, version] = pkg.substring(1).split("@");
-            if (!version) version = await getLatestPackageVersion(pkg);
-            return [pkg.replace("@" + version, ""), "^" + version];
+            if (!version) version = "^" + (await getLatestPackageVersion(pkg));
+            return [pkg.replace("@" + version, ""), version];
           })
         );
         for (const [name, value] of results) {

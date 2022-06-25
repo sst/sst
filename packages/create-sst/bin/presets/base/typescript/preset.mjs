@@ -4,16 +4,13 @@ export default [
   extend("presets/base/javascript"),
   extract(),
   install({
-    packages: [
-      "@serverless-stack/cli@1.0.0-beta.9",
-      "@serverless-stack/resources@1.0.0-beta.9",
-    ],
+    packages: ["@serverless-stack/cli", "@serverless-stack/resources"],
     dev: true,
   }),
   extend("presets/base/javascript"),
   extract(),
   install({
-    packages: ["typescript", "@tsconfig/node16"],
+    packages: ["typescript@~4.6.4", "@tsconfig/node16"],
     dev: true,
   }),
   patch({

@@ -4,11 +4,7 @@ module.exports = {
       " ": ["about", "quick-start"],
     },
     {
-      Overview: [
-        "architecture",
-        "live-lambda-development",
-        "console",
-      ],
+      Overview: ["architecture", "live-lambda-development", "console"],
     },
     {
       Learn: [
@@ -34,7 +30,7 @@ module.exports = {
           collapsed: true,
           items: [
             "learn/domain-driven-design",
-            "learn/update-the-core",
+            "learn/scaffold-business-logic",
             "learn/database-options",
             "learn/write-to-postgresql",
             "learn/write-to-dynamodb",
@@ -70,10 +66,7 @@ module.exports = {
           label: "5 - Deployment",
           collapsible: true,
           collapsed: true,
-          items: [
-            "learn/deploy-from-cli",
-            "learn/deploy-from-git",
-          ],
+          items: ["learn/deploy-from-cli", "learn/deploy-from-git"],
         },
       ],
     },
@@ -192,10 +185,7 @@ module.exports = {
       Util: ["constructs/v0/Permissions"],
     },
     {
-      Internals: [
-        "constructs/v0/DebugApp",
-        "constructs/v0/DebugStack",
-      ],
+      Internals: ["constructs/v0/DebugApp", "constructs/v0/DebugStack"],
     },
   ],
   constructs: [

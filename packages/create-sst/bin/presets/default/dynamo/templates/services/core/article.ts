@@ -1,6 +1,6 @@
 export * as Article from "./article";
 import { Dynamo } from "./dynamo";
-import { Entity } from "electrodb";
+import { Entity, EntityItem } from "electrodb";
 import { ulid } from "ulid";
 
 export const ArticleEntity = new Entity(
@@ -8,7 +8,7 @@ export const ArticleEntity = new Entity(
     model: {
       version: "1",
       entity: "Article",
-      service: "@@app",
+      service: "scratch",
     },
     attributes: {
       articleID: {
@@ -41,8 +41,10 @@ export const ArticleEntity = new Entity(
   Dynamo.Configuration
 );
 
-export async function create(title: string, url: string) {
-  return await ArticleEntity.create({
+export type ArticleEntityType = EntityItem<typeof ArticleEntity>;
+
+export function create(title: string, url: string) {
+  return ArticleEntity.create({
     articleID: ulid(),
     title,
     url,
@@ -52,3 +54,4 @@ export async function create(title: string, url: string) {
 export async function list() {
   return ArticleEntity.query.primary({}).go();
 }
+

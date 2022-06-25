@@ -70,7 +70,7 @@ To verify that the table has been created; enter `SELECT * FROM comment` in the 
 
 ## Query the table
 
-Now let's implement the `addComment` and `comments` functions that we created back in the [Update the Core](update-the-core.md) chapter.
+Now let's implement the `addComment` and `comments` functions that we created back in the [Scaffold Business Logic](scaffold-business-logic.md) chapter.
 
 Open `services/core/article.ts` and replace the two placeholder functions with:
 

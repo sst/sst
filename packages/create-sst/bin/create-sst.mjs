@@ -14,8 +14,8 @@ program
   .option("--template <template>", "Use a specific template")
   .option("--examples", "Show example templates", false)
   .option("--minimal, --no-minimal", "Show minimal templates")
-  .argument("[directory]", "The destination directory")
-  .action(async (destination) => {
+  .argument("[name]", "The name of your project")
+  .action(async (name) => {
     const opts = program.opts();
     const cwd = process.cwd();
     const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
@@ -61,25 +61,17 @@ program
       preset = path.join(preset, result.database);
     }
 
-    const answers = await inquirer.prompt([
-      {
-        name: "destination",
-        type: "input",
-        when: !destination,
-        default: "my-sst-app",
-        message: "Destination directory",
-      },
-    ]);
-    const selection = Object.assign(
-      {
-        preset,
-        destination,
-      },
-      answers
-    );
-    destination = path.resolve(
-      path.join(cwd, selection.destination || destination)
-    );
+    if (!name) {
+      const answers = await inquirer.prompt([
+        {
+          name: "name",
+          type: "input",
+          default: "my-sst-app",
+          message: "Project name",
+        },
+      ]);
+      name = answers.name;
+    }
     const spinner = ora();
 
     try {
@@ -92,12 +84,12 @@ program
     try {
       await execute({
         source: preset,
-        destination,
+        destination: path.resolve(path.join(cwd, name)),
       });
       spinner.succeed("Copied template files");
       console.log();
       console.log(`Next steps:`);
-      console.log(`  1: cd ${selection.destination}`);
+      console.log(`  1: cd ${name}`);
       console.log(`  2: npm install (or pnpm install, or yarn)`);
       console.log(`  3: npm start`);
     } catch (e) {

@@ -1,5 +1,5 @@
 ---
-title: Update the Core
+title: Scaffold business logic
 ---
 
 We are ready to add our new comments feature. To do so, we'll first add the business logic for it to our `core` package.
