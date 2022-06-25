@@ -259,7 +259,7 @@ export class Script extends Construct {
 
   private checkDeprecatedFunction(): void {
     throw new Error(
-      `The "function" property has been replaced by "onCreate" and "onUpdate". More details on upgrading - https://docs.serverless-stack.com/constructs/Script#upgrading-to-v0460`
+      `The "function" property has been replaced by "onCreate" and "onUpdate". More details on upgrading - https://docs.sst.dev/constructs/Script#upgrading-to-v0460`
     );
   }
 }

@@ -202,7 +202,7 @@ async function applyConfig(argv) {
 
   if (!config.name || config.name.trim() === "") {
     exitWithMessage(
-      `\nGive your Serverless Stack app a ${chalk.bold(
+      `\nGive your SST app a ${chalk.bold(
         "name"
       )} in the ${chalk.bold("sst.json")}.\n\n  "name": "my-sst-app"\n`
     );
@@ -250,7 +250,7 @@ async function getStage(argv, config) {
   if (config.stage) {
     console.warn(
       chalk.yellow(
-        'Warning: Setting the stage in the "sst.json" will be deprecated soon. Read more about this change here: https://docs.serverless-stack.com/live-lambda-development#deprecating-the-stage-option-in-the-sstjson'
+        'Warning: Setting the stage in the "sst.json" will be deprecated soon. Read more about this change here: https://docs.sst.dev/live-lambda-development#deprecating-the-stage-option-in-the-sstjson'
       )
     );
     return config.stage;
@@ -453,7 +453,7 @@ const argv = yargs
   .alias("version", "v")
   .help("help")
   .alias("help", "h")
-  .epilogue("For more information, visit www.serverless-stack.com")
+  .epilogue("For more information, visit www.sst.dev")
 
   .wrap(yargs.terminalWidth())
 

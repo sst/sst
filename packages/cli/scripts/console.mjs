@@ -19,7 +19,7 @@ export default async function (_argv, config) {
   new Runtime.Server({
     port: await chooseServerPort(12557),
   }).listen();
-  const url = `https://console.serverless-stack.com/${config.name}/${
+  const url = `https://console.sst.dev/${config.name}/${
     config.stage
   }/stacks${local.port !== 13557 ? "?_port=" + local.port : ""}`;
   console.log("SST Console:", url);

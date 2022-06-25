@@ -253,7 +253,7 @@ export class App extends cdk.App {
   ): void {
     if (this.lambdaHandlers.length > 0)
       throw new Error(
-        "Cannot call 'setDefaultFunctionProps' after a stack with functions has been created. Please use 'addDefaultFunctionEnv' or 'addDefaultFunctionPermissions' to add more default properties. Read more about this change here: https://docs.serverless-stack.com/constructs/App#upgrading-to-v0420"
+        "Cannot call 'setDefaultFunctionProps' after a stack with functions has been created. Please use 'addDefaultFunctionEnv' or 'addDefaultFunctionPermissions' to add more default properties. Read more about this change here: https://docs.sst.dev/constructs/App#upgrading-to-v0420"
       );
     this.defaultFunctionProps.push(props);
   }

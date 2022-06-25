@@ -156,7 +156,7 @@ export default async function (argv, config, cliInfo) {
       case "server.failedToSendResponseDueToStubDisconnected":
         clientLogger.error(
           chalk.grey(msg.debugRequestId) +
-            ` Failed to send a response because the Lambda Function timed out. If this happens again, you can increase the function timeout or use the --increase-timeout option with "sst start". Read more about the option here: https://docs.serverless-stack.com/packages/cli#options`
+            ` Failed to send a response because the Lambda Function timed out. If this happens again, you can increase the function timeout or use the --increase-timeout option with "sst start". Read more about the option here: https://docs.sst.dev/packages/cli#options`
         );
         break;
     }
@@ -431,7 +431,7 @@ export default async function (argv, config, cliInfo) {
   // bridge.onRequest(handleRequest);
   ws.onRequest(handleRequest);
 
-  const url = `https://console.serverless-stack.com/${config.name}/${
+  const url = `https://console.sst.dev/${config.name}/${
     config.stage
   }/local${local.port !== 13557 ? "?_port=" + local.port : ""}`;
   console.log("SST Console:", url);

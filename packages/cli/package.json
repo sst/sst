@@ -1,7 +1,7 @@
 {
   "name": "@serverless-stack/cli",
   "version": "1.2.30",
-  "description": "A CLI to help deploy Serverless Stack apps.",
+  "description": "A CLI to help deploy SST apps.",
   "scripts": {
     "cdk-version-check": "node ./bin/sync-cdk-version.js",
     "test": "vitest run"
@@ -10,8 +10,8 @@
     "sst": "./bin/scripts.mjs"
   },
   "author": {
-    "name": "Serverless Stack",
-    "url": "https://serverless-stack.com"
+    "name": "SST",
+    "url": "https://sst.dev"
   },
   "license": "MIT",
   "publishConfig": {
@@ -22,7 +22,7 @@
     "url": "https://github.com/serverless-stack/sst.git",
     "directory": "packages/cli"
   },
-  "homepage": "https://serverless-stack.com",
+  "homepage": "https://sst.dev",
   "dependencies": {
     "@aws-cdk/aws-apigatewayv2-alpha": "2.24.0-alpha.0",
     "@serverless-stack/core": "1.2.30",

@@ -72,7 +72,7 @@ function notify() {
   console.log(
     `You can learn more, including how to opt-out of this anonymous program, by heading over to:`
   );
-  console.log("https://docs.serverless-stack.com/anonymous-telemetry");
+  console.log("https://docs.sst.dev/anonymous-telemetry");
   console.log();
 }
 

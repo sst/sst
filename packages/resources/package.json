@@ -1,8 +1,8 @@
 {
   "name": "@serverless-stack/resources",
   "version": "1.2.30",
-  "homepage": "https://serverless-stack.com",
-  "description": "Helper AWS CDK constructs for Serverless Stack apps.",
+  "homepage": "https://sst.dev",
+  "description": "Helper AWS CDK constructs for SST apps.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
@@ -21,8 +21,8 @@
     "test": "vitest run --no-threads"
   },
   "author": {
-    "name": "Serverless Stack",
-    "url": "https://serverless-stack.com"
+    "name": "SST",
+    "url": "https://sst.dev"
   },
   "repository": {
     "type": "git",

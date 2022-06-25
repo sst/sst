@@ -9,8 +9,8 @@
     "sst-env": "./bin/scripts.js"
   },
   "author": {
-    "name": "Serverless Stack",
-    "url": "https://serverless-stack.com"
+    "name": "SST",
+    "url": "https://sst.dev"
   },
   "license": "MIT",
   "publishConfig": {
@@ -21,7 +21,7 @@
     "url": "https://github.com/serverless-stack/sst.git",
     "directory": "packages/static-site-env"
   },
-  "homepage": "https://serverless-stack.com",
+  "homepage": "https://sst.dev",
   "dependencies": {
     "cross-spawn": "^7.0.3",
     "fs-extra": "^9.0.1",
