@@ -2,9 +2,7 @@
 title: Database Options
 ---
 
-By default our starter creates an [RDS](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.html) instance that can operate in PostgreSQL or MySQL mode and is optimized for a serverless usecase. However, thanks to [DDD](domain-driven-design.md) you can use any database you want, or combine various databases for different parts of your application.
-
-Before we save our comments to the database, let's compare the two popular serverless database options.
+Because of [DDD](domain-driven-design.md) you can use any database you want, or combine various databases for different parts of your application. Before we save our comments to the database, let's compare the two popular serverless database options.
 
 ### RDS
 

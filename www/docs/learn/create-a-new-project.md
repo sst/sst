@@ -11,13 +11,15 @@ If you haven't already, [follow these steps](../advanced/iam-credentials.md#load
 Create a new app using our [`create sst`](../packages/create-sst.md) starter. 
 
 ```bash
-npx create-sst@latest ideal-stack my-sst-app
-cd my-sst-app
+npx create-sst@latest my-sst-app
 ```
+
+This will prompt you to select a database. You can change this later (or use both) and if you want to learn more about the two options check out the [Database Options](database-options) chapter.
 
 Install the dependencies.
 
 ```bash
+cd my-sst-app
 npm i
 ```
 
