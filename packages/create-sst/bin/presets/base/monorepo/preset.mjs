@@ -5,6 +5,7 @@ export default [
   patch({
     file: "package.json",
     operations: [
+      { op: "add", path: "/scripts/typecheck", value: "tsc --noEmit" },
       {
         op: "add",
         path: "/workspaces",
