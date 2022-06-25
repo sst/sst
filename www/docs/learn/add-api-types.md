@@ -6,10 +6,13 @@ We don't want to just return a comment as a string from an API. We want to retur
 
 ## Create Comment type
 
-In `services/functions/graphql/types/article.ts` add this above the `ArticleType`.
+In `services/functions/graphql/types/article.ts` add this above the `ArticleType`. In Pothos you can specify the types for the underlying resource that the GraphQL Object is backed by. This will vary depending on which database you chose.
+
+- **DynamoDB** `Article.CommentTypeEntity`
+- **RDS** `SQL.Row["comment"]`
 
 ```ts
-const CommentType = builder.objectRef<SQL.Row["comment"]>("Comment").implement({
+const CommentType = builder.objectRef<[specify type]>("Comment").implement({
   fields: t => ({
     id: t.exposeString("commentID"),
     text: t.exposeString("text")
