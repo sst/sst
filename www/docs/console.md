@@ -119,6 +119,15 @@ To get started:
 2. [Run the Companion app](https://www.gitpod.io/blog/local-app#running)
 3. Naviate to <ConsoleUrl url={config.console} /> in the browser
 
+## Working with Safari or Brave
+
+Certain browsers like Safari and Brave require the local connection between the browser and the `sst start` cli to be running on HTTPS. SST integrates with [mkcert](https://github.com/FiloSottile/mkcert) to automatically generate a self signed certificate that is used. To setup
+
+1. Follow the mkcert [installation steps](https://github.com/FiloSottile/mkcert#installation).
+2. Run `mkcert install`
+3. Restart your browser
+4. Run `sst start` and visit [the console](https://console.sst.dev) and everything should work.
+
 ## How it works
 
 The <a href={ config.console }>SST Console</a> is a hosted single-page app. It uses the local credentials from the SST CLI ([`sst start`](packages/cli.md#start) or [`sst console`](packages/cli.md#console)) to make calls to AWS.
