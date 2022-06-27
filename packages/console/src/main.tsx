@@ -86,9 +86,9 @@ function Trpc(props: PropsWithChildren<{}>) {
 
       while (true) {
         const protocol = isSSL ? "https" : "http";
-        const resp = await fetch(`${protocol}://localhost:${port}/ping`).catch(
-          () => {}
-        );
+        const resp = await fetch(
+          `${protocol}://localhost:12557/proxy/https://example.com`
+        ).catch(() => {});
         if (resp && resp.status === 200) break;
         await new Promise((r) => setTimeout(r, 1000));
         isSSL = !isSSL;
