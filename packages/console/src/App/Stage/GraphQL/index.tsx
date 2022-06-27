@@ -77,6 +77,7 @@ export function Explorer() {
   const dm = useDarkMode();
 
   const url = useMemo(() => {
+    if (!selected) return;
     const base = selected.data.customDomainUrl || selected.data.url;
     if (selected.type === "Api") {
       const route = selected.data.routes.find((x) => x.type === "pothos");
