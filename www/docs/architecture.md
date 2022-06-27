@@ -3,48 +3,62 @@ title: Architecture
 description: "Learn about how SST apps are structured."
 ---
 
-SST provides all the basic building blocks you need to create a full-stack serverless application. An SST app is roughly made up of:
+SST provides all the basic building blocks you need to create a full-stack serverless application. In this chapter we'll look at how SST apps are structured.
 
-1. Code that defines your infrastructure.
-2. Code that powers your Lambda functions, or your _application code_.
+:::info
 
-Let's look at the two in detail.
+Under the hood, SST uses [CDK](https://aws.amazon.com/cdk/) to compile your infrastructure into a [CloudFormation template](https://aws.amazon.com/cloudformation/resources/templates/). These templates are then deployed as CloudFormation stacks. 
 
-## Infrastructure
-
-The Infrastructure of your SST app is defined using [AWS CDK](https://aws.amazon.com/cdk/). It allows you to use real programming languages to define your infrastructure. SST currently supports JavaScript and TypeScript for your infrastructure code.
-
-The infrastructure portion of an SST app is made up of the following.
+:::
 
 ### Constructs
 
-Constructs are the basic building blocks of SST apps. Each construct consists of multiple AWS resources to make up a functional unit. SST picks sensible defaults for the underlying resources, so you are not exposed to all the complexity up front.
+The infrastructure in an SST app is defined using basic building blocks called, [**Constructs**](constructs/index.md). Each construct consists of multiple AWS resources to make up a functional unit. SST picks sensible defaults for the underlying resources, so you are not exposed to all the complexity up front.
 
-For example, [`Api`](constructs/Api.md) is a commonly used construct to create a RESTful backend API. It consists of an AWS API Gateway project, Lambda functions, and a few other AWS resources. But it's wrapped up with sensible defaults to help you get started.
+For example, [`Api`](constructs/Api.md) is a commonly used construct to create a backend API. It consists of an AWS API Gateway project, Lambda functions, and a few other AWS resources. But it uses sensible defaults to help you get started quickly:
 
 ```js
 new Api(this, "Api", {
   routes: {
-    "GET    /notes": "src/list.main",
-    "POST   /notes": "src/create.main",
+    "GET  /notes": "src/list.main",
+    "POST /notes": "src/create.main",
   },
 });
 ```
 
-You can read more about SST's [Progressive disclosure design](design-principles#progressive-disclosure).
+Our constructs follow the principle of [Progressive disclosure design](design-principles.md#progressive-disclosure).
 
 ### Stacks
 
-Stacks are a way to organize your constructs. There is no universal way to do this however you should try to opt for granular stacks. This is because cloudformation can be slow and the fewer resources there are in a stack, the less complexity there is during deployment.
+Stacks are a way to organize your constructs.
+
+```js
+function ApiStack() {
+  const api = new Api(this, "Api", {
+    routes: {
+      "GET  /notes": "src/list.main",
+      "POST /notes": "src/create.main",
+    },
+  });
+
+  return { api };
+});
+```
+
+There is no universal way to organize them. However, you should try to opt for more granular stacks. This is because [CloudFormation](https://aws.amazon.com/cloudformation/) can be slow and the fewer resources there are in a stack, the less complexity there is during deployment.
 
 For example, if you are building a Twitter clone, you might have:
 
-- A `api` stack with the API
-- A `database` stack with the DynamoDB Table
-- A `web` stack with a React web app for the frontend
+- An `api` stack with the APIs
+- A `database` stack with a DynamoDB Table
+- A `web` stack with a React web app for the frontend 
 - A `digest` stack with a Cron job that sends people daily email digest
 
-A quick note on moving constructs across stacks. Once your app has been deployed, moving a construct between stacks requires destroying the construct from the old stack, and recreating it in the new stack. In the case of a [`Table`](constructs/Table.md) or [`Bucket`](constructs/Bucket.md) construct, the data is lost. And in the case of an [`Api`](constructs/Api.md), the API endpoint will change when it's recreated.
+:::caution Moving constructs
+
+Once your app has been deployed, moving a construct between stacks requires destroying the construct from the old stack, and recreating it in the new stack. In the case of a [`Table`](constructs/Table.md) or [`Bucket`](constructs/Bucket.md) construct, the data is lost. And in the case of an [`Api`](constructs/Api.md), the API endpoint will change when it's recreated.
+
+:::
 
 ### Apps
 
@@ -53,7 +67,8 @@ An app consists of one or more stacks. In most cases, all of your stacks should 
 ```js title="stacks/index.js"
 export default function main(app) {
   app
-    .stack(CoreStack)
+    .stack(DBStack)
+    .stack(ApiStack)
     .stack(WebStack)
     .stack(DigestStack)
 }
@@ -73,7 +88,7 @@ So if you want to deploy to a stage called prod:
 npx sst deploy --stage prod
 ```
 
-Behind the scenes, SST uses the name of the app and stage to prefix the resources in the app. This ensures that if an app is deployed to two different stages in the same AWS account, the resource names will not clash. You can also prefix resource names in your stacks by calling the [`logicalPrefixedName`](constructs/App.md#logicalprefixedname) method in [`sst.App`](constructs/App.md).
+Behind the scenes, SST uses the name of the app and stage to prefix the resources in the app. This ensures that if an app is deployed to two different stages in the same AWS account, the resource names will not clash. You can also prefix resource names in your stacks by calling the [`logicalPrefixedName`](constructs/App.md#logicalprefixedname) method in the [`App`](constructs/App.md) construct.
 
 ```js
 this.node.root.logicalPrefixedName("MyResource"); // "dev-my-sst-app-MyResource"
@@ -91,12 +106,10 @@ A JavaScript or TypeScript Lambda function in SST is usually defined using the f
 
 Where `functionName` is the function exported by the given file.
 
-SST is designed to have both the infrastructure code and function code sit in the same repo. You can read more about SST's [Project layout](installation.md#project-layout).
+SST is designed to have both the infrastructure code and function code sit in the same repo. You can read more about SST's [project layout](learn/project-structure.md).
 
-## Deployed to your AWS account
+## AWS accounts
 
-Your SST app is deployed to your AWS account. Make sure to [set up the IAM credentials](advanced/iam-credentials.md) that SST will use to deploy your app.
+An SST app is deployed to an AWS account. The `sst deploy` command uses the local IAM credentials to deploy your app.
 
-## CDK and CloudFormation
-
-Under the hood, SST uses AWS CDK to compile each stack into a [CloudFormation template](https://aws.amazon.com/cloudformation/resources/templates/), and deployed as a CloudFormation stack. 
+So make sure to [set up the IAM credentials](advanced/iam-credentials.md) in your local machine.

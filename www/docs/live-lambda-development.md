@@ -22,7 +22,7 @@ Let's start the local development environment.
 
 ```bash
 # With npm
-npm start
+npx sst start
 # Or with Yarn
 yarn start
 ```
@@ -157,19 +157,6 @@ To set these up, add the following to `.vscode/launch.json`.
       "runtimeArgs": ["start", "--increase-timeout"],
       "console": "integratedTerminal",
       "skipFiles": ["<node_internals>/**"]
-    },
-    {
-      "name": "Debug SST Tests",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/sst",
-      "args": ["test", "--runInBand", "--no-cache", "--watchAll=false"],
-      "cwd": "${workspaceRoot}",
-      "protocol": "inspector",
-      "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "env": { "CI": "true" },
-      "disableOptimisticBPs": true
     }
   ]
 }
@@ -289,3 +276,13 @@ If you are using the `debugApp` callback, you'll need to make sure to create the
 :::
 
 The `DebugStack` is deployed as a CDK app, called [`DebugApp`](constructs/DebugApp.md). The `app` argument above in the `debugApp` callback is an instance of the `DebugApp` construct.
+
+## Language support
+
+The Live Lambda Development environment supports the following languages:
+- JavaScript
+- TypeScript
+- Python
+- Golang
+- C#
+- F#

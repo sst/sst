@@ -31,7 +31,7 @@ You also need to create separate IAM accounts for each of your developers.
 For local development run.
 
 ``` bash
-npm start
+npx sst start
 ```
 
 This will prompt you for a local stage name when you first run it and will prefix all the stacks with it. You can [read more about this here](live-lambda-development.md#starting-the-local-environment).
@@ -83,7 +83,7 @@ AWS makes this easy to do with [AWS Organizations](https://sst.dev/chapters/mana
 For local development you can start SST by specifying the profile associated with the dev environment.
 
 ```
-AWS_PROFILE=dev-profile npm start
+AWS_PROFILE=dev-profile npx sst start
 ```
 
 Just like in the [Single AWS Account](#single-aws-account) setup, this will [prompt you for a local stage name](live-lambda-development.md#starting-the-local-environment) when first run and prefix all your stacks.
@@ -100,7 +100,7 @@ aws_access_key_id = BNMYJSSP5PTLBDBRSWPO
 aws_secret_access_key = 7yuIM8xNf17ue+DDyOcQizDCKaTVhYevKflZONTe
 ```
 
-Allowing you to run `npm start` just as before.
+Allowing you to run `npx sst start` just as before.
 
 #### Staging
 
@@ -171,7 +171,7 @@ Update the `start` script in your `package.json`.
 },
 ```
 
-Allowing everybody on your team to just run `npm run start`.
+Allowing everybody on your team to just run `npx sst start`.
 
 Note that, we don't need a unique stage name, since there are no other developers in your account.
 

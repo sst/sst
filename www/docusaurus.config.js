@@ -6,7 +6,7 @@ module.exports = {
   url: "https://docs.sst.dev",
   baseUrl: "/",
   onBrokenLinks: "throw",
-  onBrokenMarkdownLinks: "warn",
+  onBrokenMarkdownLinks: "throw",
   favicon: "img/favicon.ico",
   organizationName: "serverless-stack", // Usually your GitHub org/user name.
   projectName: "serverless-stack", // Usually your repo name.
@@ -53,6 +53,12 @@ module.exports = {
       },
       items: [
         {
+          to: "/",
+          label: "Home",
+          position: "left",
+          activeBaseRegex: "^/(?!constructs)",
+        },
+        {
           to: "/constructs",
           label: "Constructs",
           position: "left",
@@ -94,8 +100,12 @@ module.exports = {
           title: "Docs",
           items: [
             {
-              label: "Installation",
-              to: "installation",
+              label: "Learn SST",
+              to: "learn",
+            },
+            {
+              label: "Quick Start",
+              to: "quick-start",
             },
             {
               label: "@serverless-stack/cli",
@@ -212,7 +222,7 @@ module.exports = {
             from: "/constructs/ApolloApi",
           },
           {
-            to: "/installation",
+            to: "/quick-start",
             from: "/deploying-your-app",
           },
           {

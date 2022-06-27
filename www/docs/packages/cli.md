@@ -4,6 +4,7 @@ description: "Docs for the @serverless-stack/cli package"
 ---
 
 import config from "../../config";
+import MultiPackagerCode from "@site/src/components/MultiPackagerCode";
 
 The SST CLI (`@serverless-stack/cli`) allows you to build, deploy, test, and remove SST apps.
 
@@ -35,7 +36,7 @@ yarn sst <command>
 
 ```bash
 # Start the Live Lambda Development environment
-npm start
+npx sst start
 
 # Build your SST app
 npx sst build
@@ -50,7 +51,7 @@ npx sst remove
 npx sst update
 
 # Launch the SST Console
-npm run console
+npx sst console
 ```
 
 #### Change the default stage and region
@@ -108,7 +109,7 @@ Instead, it'll first compare the generated CloudFormation template to the previo
 When you run `sst start`, it'll give you a link to the [SST Console](../console.md).
 
 ```
-$ npm start
+$ npx sst start
 
 ==========================
 Starting Live Lambda Dev
@@ -341,12 +342,29 @@ AWS_PROFILE=production npx sst deploy
 
 If you used the `create-sst` CLI to create your app, the above commands (`start`, `build`, `deploy`, and `remove`) are also available in your `package.json`. So you can run them using.
 
+<MultiPackagerCode>
+<TabItem value="npm">
+
 ```bash
-# With npm
 npm run <command>
-# Or with Yarn
+```
+
+</TabItem>
+<TabItem value="npx">
+
+```bash
+npx sst <command>
+```
+
+</TabItem>
+<TabItem value="yarn">
+
+```bash
 yarn run <command>
 ```
+
+</TabItem>
+</MultiPackagerCode>
 
 :::note
 If you are using `npm run`, you'll need to add an extra `--` for the options.

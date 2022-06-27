@@ -1,7 +1,7 @@
 ---
 id: about
 title: Get Started With SST
-sidebar_label: Get Started
+sidebar_label: Introduction
 hide_title: true
 hide_table_of_contents: true
 description: SST Docs
@@ -12,10 +12,10 @@ import config from "../config";
 import styles from "./about.module.css";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 
-<h1 className={styles.title}>Get Started With SST</h1>
+<h1 className={styles.title}>Introduction</h1>
 
 <div className={styles.desc}>
-SST is a framework that makes it easy to build serverless apps. It features:
+SST is a framework that makes it easy to build full-stack serverless apps. It features:
 
 - A [Live Lambda Development](live-lambda-development.md) environment
 - A [web based dashboard](console.md) to manage your apps
@@ -25,14 +25,30 @@ SST is a framework that makes it easy to build serverless apps. It features:
 
 </div>
 
+```bash
+# Create a new SST app
+npx create-sst@latest
+cd my-sst-app
+npm i
+
+# Start Live Lambda Dev
+npx sst start
+
+# Open the SST Console
+open console.serverless-stack.com
+
+# Deploy to prod
+npx sst deploy --stage prod
+```
+
 <div className={styles.startPanels}>
-  <a className={styles.startPanelDocs} href={useBaseUrl("/installation")}>
+  <a className={styles.startPanelDocs} href={useBaseUrl("/learn/")}>
     <span className={styles.startPanelIcon}>
       <i className="fas fa-book-open"></i>
     </span>
     <div className={styles.startPanelContent}>
-      <h4>Read the docs</h4>
-      <p>Read our friendly docs and learn more about how SST works.</p>
+      <h4>Follow the tutorial</h4>
+      <p>Follow our simple tutorial and learn about how SST works.</p>
     </div>
   </a>
   <a className={styles.startPanelExamples} href={config.examples}>
@@ -49,29 +65,11 @@ SST is a framework that makes it easy to build serverless apps. It features:
       <i className="fas fa-certificate"></i>
     </span>
     <div className={styles.startPanelContent}>
-      <h4>Follow the guide</h4>
-      <p>Follow along step-by-step with our SST Guide.</p>
+      <h4>Read the guide</h4>
+      <p>Learn how to build a full-stack serverless app with SST.</p>
     </div>
   </a>
 </div>
-
-## Quick start
-
-```bash
-# Create a new SST app
-npm init sst
-cd my-sst-app
-npm i
-
-# Start Live Lambda Dev
-npm start
-
-# Open the SST Console
-open console.sst.dev
-
-# Deploy to prod
-npx sst deploy --stage prod
-```
 
 ## Join our community
 

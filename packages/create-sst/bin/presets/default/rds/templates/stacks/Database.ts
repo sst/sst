@@ -5,7 +5,7 @@ export function Database({ stack }: StackContext) {
     engine: "postgresql10.14",
     migrations: "services/migrations",
     types: "services/core/sql.generated.ts",
-    defaultDatabaseName: "default",
+    defaultDatabaseName: "main",
   });
 
   return rds;

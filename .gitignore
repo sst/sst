@@ -1,4 +1,5 @@
 node_modules
+**/*.swp
 .build
 *.log
 dist
