@@ -2,9 +2,12 @@ import { useMemo } from "react";
 import { Navigate, Route, Routes, useParams } from "react-router-dom";
 import { groupBy, pipe } from "remeda";
 import { useConstruct, useStacks } from "~/data/aws/stacks";
-import { useAuth, useDarkMode } from "~/data/global";
+import { useDarkMode } from "~/data/global";
 import { styled } from "~/stitches.config";
-import { GraphQLApiMetadata } from "../../../../../resources/src/Metadata";
+import {
+  ApiMetadata,
+  AppSyncApiMetadata,
+} from "../../../../../resources/src/Metadata";
 import {
   Header,
   HeaderTitle,
@@ -57,17 +60,31 @@ export function Explorer() {
   const params = useParams<{ stack: string; addr: string; "*": string }>();
   const [constructs, grouped] = useMemo(() => {
     const apis =
-      stacks.data?.constructs.byType.Api?.filter(
-        (item): item is GraphQLApiMetadata =>
-          (item.data.graphql as any) === "true"
-      ) || [];
+      stacks.data?.constructs.byType.Api?.filter((item) => {
+        return (
+          (item.data.graphql as any) === "true" ||
+          item.data.routes.some((x) => x.type === "pothos")
+        );
+      }) || [];
     const appsync = stacks.data?.constructs.byType.AppSync || [];
     const constructs = [...apis, ...appsync];
     const grouped = groupBy(constructs, (x) => x.stack);
     return [constructs, grouped];
   }, [stacks.data]);
-  const selected = useConstruct("AppSync", params.stack!, params.addr!);
+  const selected = useConstruct("AppSync", params.stack!, params.addr!) as
+    | ApiMetadata
+    | AppSyncApiMetadata;
   const dm = useDarkMode();
+
+  const url = useMemo(() => {
+    const base = selected.data.customDomainUrl || selected.data.url;
+    if (selected.type === "Api") {
+      const route = selected.data.routes.find((x) => x.type === "pothos");
+      if (!route) return base;
+      return base.replace(/[\/]+$/g, "") + route.route.split(" ")[1];
+    }
+    return base;
+  }, [selected]);
 
   if (constructs.length > 0 && !selected)
     return <Navigate to={`${constructs[0].stack}/${constructs[0].addr}`} />;
@@ -102,7 +119,7 @@ export function Explorer() {
             <iframe
               src={`/graphql.html?config=${btoa(
                 JSON.stringify({
-                  endpoint: selected.data.customDomainUrl || selected.data.url,
+                  endpoint: url,
                   settings: {
                     "editor.fontFamily": "'Jetbrains Mono', monospace",
                     "editor.theme": dm.enabled ? "dark" : "light",
