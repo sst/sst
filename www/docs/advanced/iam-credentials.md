@@ -48,7 +48,7 @@ aws_secret_access_key = <PRODUCTION_SECRET_ACCESS_KEY>
 By default, SST uses the credentials for the `[default]` profile. To use one of the other profiles, set the `AWS_PROFILE` environment variable. For example:
 
 ``` bash
-$ AWS_PROFILE=staging npm run deploy
+$ AWS_PROFILE=staging npx sst deploy
 ```
 
 ### Loading from environment variables

@@ -2,7 +2,7 @@
 title: Write to DynamoDB
 ---
 
-Skip this chapter if you are using RDS. If you have not created the list and create comments functions, go read [Scaffold Business Logic](scaffold-business-logic)
+Skip this chapter if you are using RDS. If you have not created the list and create comments functions, go read [Scaffold Business Logic](scaffold-business-logic.md)
 
 ## Overview
 

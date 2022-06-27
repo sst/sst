@@ -14,7 +14,7 @@ Create a new app using our [`create sst`](../packages/create-sst.md) starter.
 npx create-sst@latest my-sst-app
 ```
 
-This will prompt you to select a database. You can change this later (or use both) and if you want to learn more about the two options check out the [Database Options](database-options) chapter.
+This will prompt you to select a database. You can change this later (or use both) and if you want to learn more about the two options check out the [Database Options](database-options.md) chapter.
 
 Install the dependencies.
 
@@ -26,7 +26,7 @@ npm i
 Start the local environment.
 
 ```bash
-npm start
+npx sst start
 ```
 
 The first time the SST command is run, you'll be prompted to enter a default stage name to use. The stage name will be stored locally in a `.sst/` directory. This directory is automatically ignore from Git.

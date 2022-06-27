@@ -22,7 +22,7 @@ Let's start the local development environment.
 
 ```bash
 # With npm
-npm start
+npx sst start
 # Or with Yarn
 yarn start
 ```

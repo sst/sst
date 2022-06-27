@@ -65,7 +65,7 @@ npx sst build
 <TabItem value="yarn">
 
 ```bash
-yarn sst build
+yarn run build
 ```
 
 </TabItem>
@@ -105,15 +105,55 @@ This command uses your **default AWS Profile** and the **region** and **stage** 
 
 Or if you want to deploy to a different stage.
 
+<MultiPackagerCode>
+<TabItem value="npm">
+
+```bash
+npm run deploy -- --stage prod
+```
+
+</TabItem>
+<TabItem value="npx">
+
 ```bash
 npx sst deploy --stage prod
 ```
 
+</TabItem>
+<TabItem value="yarn">
+
+```bash
+yarn run deploy --stage prod
+```
+
+</TabItem>
+</MultiPackagerCode>
+
 And if your prod environment is in a different AWS account or region, you can do:
+
+<MultiPackagerCode>
+<TabItem value="npm">
+
+```bash
+AWS_PROFILE=my-profile npm run deploy -- --stage prod --region eu-west-1
+```
+
+</TabItem>
+<TabItem value="npx">
 
 ```bash
 AWS_PROFILE=my-profile npx sst deploy --stage prod --region eu-west-1
 ```
+
+</TabItem>
+<TabItem value="yarn">
+
+```bash
+AWS_PROFILE=my-profile yarn run deploy --stage prod --region eu-west-1
+```
+
+</TabItem>
+</MultiPackagerCode>
 
 :::note
 If you are using `npm run deploy`, you'll need to add an extra `--` for the options.
@@ -121,9 +161,29 @@ If you are using `npm run deploy`, you'll need to add an extra `--` for the opti
 
 For example, to set the stage and region:
 
+<MultiPackagerCode>
+<TabItem value="npm">
+
+```bash
+npm run deploy -- --stage prod --region eu-west-1
+```
+
+</TabItem>
+<TabItem value="npx">
+
 ```bash
 npx sst deploy --stage prod --region eu-west-1
 ```
+
+</TabItem>
+<TabItem value="yarn">
+
+```bash
+yarn run deploy --stage prod --region eu-west-1
+```
+
+</TabItem>
+</MultiPackagerCode>
 
 ## Removing an app
 
@@ -147,7 +207,7 @@ npx sst remove
 <TabItem value="yarn">
 
 ```bash
-yarn remove
+yarn run remove
 ```
 
 </TabItem>
@@ -155,8 +215,28 @@ yarn remove
 
 Or if you've deployed to a different stage.
 
+<MultiPackagerCode>
+<TabItem value="npm">
+
 ```bash
-npm run remove --stage prod
+npm run remove -- --stage prod
 ```
+
+</TabItem>
+<TabItem value="npx">
+
+```bash
+npx sst remove --stage prod
+```
+
+</TabItem>
+<TabItem value="yarn">
+
+```bash
+yarn run remove --stage prod
+```
+
+</TabItem>
+</MultiPackagerCode>
 
 Note that this command permanently removes your resources from AWS. It also removes the stack that's created as a part of the debugger.

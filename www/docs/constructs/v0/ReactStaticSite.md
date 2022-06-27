@@ -86,7 +86,7 @@ On `sst deploy`, the environment variables will first be replaced by placeholder
 To use these values while developing, run `sst start` to start the [Live Lambda Development](../../live-lambda-development.md) environment.
 
 ``` bash
-npm start
+npx sst start
 ```
 
 Then in your React app to reference these variables, add the [`sst-env`](../../packages/static-site-env.md) package.

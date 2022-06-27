@@ -6,7 +6,7 @@ Once you are ready to go live with real users, you can deploy your SST app to a 
 
 ## Deploy app
 
-Stop the `npm start` process.
+Stop the `npx sst start` process.
 
 Run from the root of the project.
 
@@ -18,7 +18,7 @@ Note that it is recommended to use different AWS accounts for local development 
 
 It is also recommended to not use the same stage used by `sst start`, and always pass in a stage name when deploying.
 
-You can read more about stage names and the best practices when working with your team [here](working-with-your-team).
+You can read more about stage names and the best practices when working with your team [here](working-with-your-team.md).
 
 ## Manage app
 
