@@ -1,5 +1,11 @@
 # @serverless-stack/console
 
+## 1.2.32
+
+### Patch Changes
+
+- [#1633](https://github.com/serverless-stack/sst/pull/1633) [`8d4ce71ca`](https://github.com/serverless-stack/sst/commit/8d4ce71ca8100da707feecf97d9393ac30130cc1) Thanks [@fwang](https://github.com/fwang)! - Support SSL cert generation for local server enabling Safari and Brave support
+
 ## 1.2.31
 
 ## 1.2.30

@@ -1,5 +1,7 @@
 # create-sst
 
+## 1.2.32
+
 ## 1.2.31
 
 ### Patch Changes
