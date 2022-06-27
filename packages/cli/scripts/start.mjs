@@ -167,7 +167,7 @@ export default async function (argv, config, cliInfo) {
     port: argv.port || (await chooseServerPort(12557)),
   });
 
-  const local = useLocalServer({
+  const local = await useLocalServer({
     live: true,
     port: await chooseServerPort(13557),
     app: config.name,
@@ -431,9 +431,9 @@ export default async function (argv, config, cliInfo) {
   // bridge.onRequest(handleRequest);
   ws.onRequest(handleRequest);
 
-  const url = `https://console.sst.dev/${config.name}/${
-    config.stage
-  }/local${local.port !== 13557 ? "?_port=" + local.port : ""}`;
+  const url = `https://console.sst.dev/${config.name}/${config.stage}/local${
+    local.port !== 13557 ? "?_port=" + local.port : ""
+  }`;
   console.log("SST Console:", url);
   // openBrowser(url);
 }

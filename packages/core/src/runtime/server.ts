@@ -6,7 +6,7 @@ import { v4 } from "uuid";
 import https from "https";
 import url from "url";
 
-const logger = getChildLogger("client");
+const logger = getChildLogger("runtime");
 
 import { Handler } from "./handler/index.js";
 
