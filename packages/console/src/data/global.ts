@@ -35,3 +35,9 @@ export function useRealtimeState<T>(select: (s: State) => T, deps: any[] = []) {
   const [read] = useAtom(atom);
   return read;
 }
+
+export const SSLAtom = atom(false);
+
+export function useSSL() {
+  return useAtom(SSLAtom);
+}
