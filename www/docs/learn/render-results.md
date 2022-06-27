@@ -1,6 +1,5 @@
 ---
-title: Rendering Comments
-description: "Rendering Comments in an SST app"
+title: Render Results
 ---
 
 Open up `web/src/pages/Article.tsx`, render comments and a comment form below each article.

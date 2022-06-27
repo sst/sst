@@ -1,7 +1,5 @@
 ---
-id: deploy-from-cli
-title: Deploying from CLI
-description: "Deploying an SST app to Production"
+title: Deploy from CLI
 ---
 
 Once you are ready to go live with real users, you can deploy your SST app to a live stage.

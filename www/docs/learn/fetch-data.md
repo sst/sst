@@ -1,6 +1,5 @@
 ---
-title: Fetching Comments
-description: "Fetching Comments in an SST app"
+title: Fetch Data
 ---
 
 Update the fetch articles query to include `comments` in each article.

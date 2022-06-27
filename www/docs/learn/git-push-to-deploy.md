@@ -1,6 +1,5 @@
 ---
 title: Git Push to Deploy
-description: "Deploying an SST app with Seed"
 ---
 
 It's a good idea to create a CI/CD pipeline to deploy your SST apps to production. Here are a couple of ways to do so. 

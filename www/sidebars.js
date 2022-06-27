@@ -53,8 +53,8 @@ module.exports = {
           collapsible: true,
           collapsed: true,
           items: [
-            "learn/fetch-comments",
-            "learn/render-comments",
+            "learn/fetch-data",
+            "learn/render-results",
 
             //Link to Vue example
             //Link to Next.js example
@@ -66,7 +66,7 @@ module.exports = {
           label: "5 - Deployment",
           collapsible: true,
           collapsed: true,
-          items: ["learn/deploy-from-cli", "learn/deploy-from-git"],
+          items: ["learn/deploy-from-cli", "learn/git-push-to-deploy"],
         },
       ],
     },
