@@ -126,7 +126,10 @@ export function Explorer() {
                     "schema.polling.endpointFilter": "*",
                   },
                   headers: {
-                    "x-api-key": selected.data.appSyncApiKey,
+                    "x-api-key":
+                      selected.type === "AppSync"
+                        ? selected.data.appSyncApiKey
+                        : "",
                   },
                 })
               )}`}
