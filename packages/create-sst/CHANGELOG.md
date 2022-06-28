@@ -1,5 +1,11 @@
 # create-sst
 
+## 1.2.34
+
+### Patch Changes
+
+- [`611f80ab5`](https://github.com/serverless-stack/sst/commit/611f80ab5fbc5dd4d18c1ac9398de9f0c6067e2a) Thanks [@thdxr](https://github.com/thdxr)! - Fix issues with DynamoDB starter
+
 ## 1.2.33
 
 ### Patch Changes
