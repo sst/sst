@@ -1,4 +1,4 @@
-import { Article } from "@scratch/core/article";
+import { Article } from "@@@app/core/article";
 import { builder } from "../builder";
 
 const ArticleType = builder

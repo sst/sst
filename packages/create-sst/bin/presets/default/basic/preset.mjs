@@ -9,7 +9,6 @@ export default [
   patch({
     file: "package.json",
     operations: [
-      { op: "add", path: "/scripts/gen", value: "hygen" },
       { op: "add", path: "/overrides", value: {} },
       { op: "add", path: "/overrides/graphql", value: "16.5.0" },
     ],
