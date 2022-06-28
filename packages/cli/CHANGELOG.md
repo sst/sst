@@ -1,5 +1,13 @@
 # @serverless-stack/cli
 
+## 1.2.34
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @serverless-stack/resources@1.2.34
+  - @serverless-stack/core@1.2.34
+
 ## 1.2.33
 
 ### Patch Changes
