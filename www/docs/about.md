@@ -27,7 +27,7 @@ SST is a framework that makes it easy to build full-stack serverless apps. It fe
 
 ```bash
 # Create a new SST app
-npx create-sst@latest
+npx create-sst@latest my-sst-app
 cd my-sst-app
 npm i
 
