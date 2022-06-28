@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 1.1.9
+
+### Patch Changes
+
+- [`cf0f81a77`](https://github.com/serverless-stack/sst/commit/cf0f81a778bf17d118ea4ca9e3996fdde420ed66) Thanks [@thdxr](https://github.com/thdxr)! - Flip create-sst to default to new stack
+
 ## 1.1.8
 
 ### Patch Changes
