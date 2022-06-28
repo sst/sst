@@ -158,9 +158,9 @@ div.desc > ul {
   background-color: #171515;
   border-color: rgba(255, 255, 255, 0.5);
 }
-.communityPanelIconSlack {
+.communityPanelIconDiscord {
   composes: communityPanelIcon;
-  background-color: #4a154b;
+  background-color: #5865f2;
 }
 .communityPanelIconTwitter {
   composes: communityPanelIcon;

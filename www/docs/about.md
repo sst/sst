@@ -75,8 +75,8 @@ npx sst deploy --stage prod
 
 <div className={styles.communityPanels}>
   <a className={styles.communityPanel} href={ config.discord_invite }>
-    <div className={styles.communityPanelIconSlack}>
-      <i className="fab fa-slack"></i>
+    <div className={styles.communityPanelIconDiscord}>
+      <i className="fab fa-discord"></i>
     </div>
     <div className={styles.communityPanelContent}>
       <h4>Discord</h4>
