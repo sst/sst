@@ -43,6 +43,8 @@ yarn create sst
 </TabItem>
 </MultiPackagerCode>
 
+If you would like to use a more minimal starter you can pass in `--minimal` to see all the options.
+
 ## Building your app
 
 Once you are ready to build your app and convert your CDK code to CloudFormation, run the following from your project root.

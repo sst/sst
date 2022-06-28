@@ -16,6 +16,8 @@ npx create-sst@latest my-sst-app
 
 This will prompt you to select a database. You can change this later (or use both) and if you want to learn more about the two options check out the [Database Options](database-options.md) chapter.
 
+This learn guide is built around a full-stack starter with a GraphQL API. If you'd like to use a more minimal setup you can pass in `--minimal` to the `create-sst` command.
+
 Install the dependencies.
 
 ```bash

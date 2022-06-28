@@ -13,7 +13,7 @@ program
   .description("CLI to create SST projects")
   .option("--template <template>", "Use a specific template")
   .option("--examples", "Show example templates", false)
-  .option("--minimal, --no-minimal", "Show minimal templates")
+  .option("--minimal", "Show minimal templates", false)
   .argument("[name]", "The name of your project")
   .action(async (name) => {
     const opts = program.opts();

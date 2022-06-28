@@ -2,6 +2,8 @@
 title: create-sst
 description: "Docs for the create-sst package"
 ---
+import MultiPackagerCode from "@site/src/components/MultiPackagerCode";
+import TabItem from "@theme/TabItem";
 
 A simple CLI [`create-sst`](https://www.npmjs.com/package/create-sst) that sets up a modern web application powered by SST
 
@@ -9,23 +11,32 @@ A simple CLI [`create-sst`](https://www.npmjs.com/package/create-sst) that sets 
 
 There's no need install this CLI. Just use it directly to create your projects.
 
-With npx.
+
+<MultiPackagerCode>
+<TabItem value="npx">
 
 ```bash
 npx create-sst@latest
 ```
 
-Or with npm 6+
+</TabItem>
+
+<TabItem value="npm">
 
 ```bash
 npm init sst
 ```
 
-Or with Yarn 0.25+
+</TabItem>
+
+<TabItem value="yarn">
 
 ```bash
 yarn create sst
 ```
+
+</TabItem>
+</MultiPackagerCode>
 
 This will prompt you for a folder name and bootstrap the application in that directory.
 
