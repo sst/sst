@@ -13,7 +13,7 @@ export default [
       { op: "add", path: "/overrides/graphql", value: "16.5.0" },
     ],
   }),
-  cmd({ cmd: "npm init vite@latest -- web --template=react-ts" }),
+  cmd({ cmd: "npx create-vite@latest web --template=react-ts" }),
   extract(),
   install({
     packages: ["@pothos/core", "@serverless-stack/node", "graphql", "ulid"],
