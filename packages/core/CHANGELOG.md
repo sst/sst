@@ -1,5 +1,7 @@
 # @serverless-stack/core
 
+## 1.2.35
+
 ## 1.2.34
 
 ## 1.2.33

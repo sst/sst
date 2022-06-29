@@ -1,5 +1,11 @@
 # create-sst
 
+## 1.2.35
+
+### Patch Changes
+
+- [`d8b082914`](https://github.com/serverless-stack/sst/commit/d8b0829141dda4cdc816720d6966295469934beb) Thanks [@thdxr](https://github.com/thdxr)! - Cleanup some issues with create-sst templates
+
 ## 1.2.34
 
 ### Patch Changes
