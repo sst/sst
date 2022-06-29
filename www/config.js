@@ -9,7 +9,7 @@ module.exports = {
   console: "https://console.sst.dev/",
   slack_invite: "https://sst.dev/discord",
   discord_invite: "https://sst.dev/discord",
-  youtube: "https://www.youtube.com/c/watch-sst",
+  youtube: "https://www.youtube.com/c/sst-dev",
   newsletter: "https://sst.dev/newsletter.html",
   examples: "https://sst.dev/examples/index.html",
   github: "https://github.com/serverless-stack/sst",
