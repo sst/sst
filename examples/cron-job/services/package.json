@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {},
   "dependencies": {
-    "aws-sdk": "^2.1161.0",
+    "aws-sdk": "^2.1165.0",
     "node-fetch": "^3.2.6"
   },
   "devDependencies": {

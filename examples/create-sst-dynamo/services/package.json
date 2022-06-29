@@ -1,0 +1,18 @@
+{
+  "name": "@create-sst-dynamo/services",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {},
+  "dependencies": {
+    "aws-sdk": "^2.1165.0",
+    "@pothos/core": "^3.12.1",
+    "@serverless-stack/node": "^1.2.35",
+    "graphql": "^16.5.0",
+    "ulid": "^2.3.0",
+    "electrodb": "^1.9.0",
+    "@aws-sdk/client-dynamodb": "^3.118.1"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.101"
+  }
+}
