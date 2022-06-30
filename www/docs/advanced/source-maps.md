@@ -13,6 +13,9 @@ new Function(stack, "MyFunction", {
   environment: {
     NODE_OPTIONS: "--enable-source-maps",
   },
+  bundle: {
+    sourcemaps: true
+  },
 });
 ```
 
@@ -23,6 +26,9 @@ export default function main(app) {
   app.setDefaultFunctionProps({
     environment: {
       NODE_OPTIONS: "--enable-source-maps",
+    },
+    bundle: {
+      sourcemaps: true
     },
   });
 
