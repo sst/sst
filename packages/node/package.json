@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/node",
-  "version": "1.2.35",
+  "version": "1.2.36",
   "type": "module",
   "publishConfig": {
     "access": "public"
