@@ -10,7 +10,7 @@ export default [
   extend("presets/base/javascript"),
   extract(),
   install({
-    packages: ["typescript@~4.6.4", "@tsconfig/node16"],
+    packages: ["typescript", "@tsconfig/node16"],
     dev: true,
   }),
   patch({
