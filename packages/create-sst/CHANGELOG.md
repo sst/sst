@@ -1,5 +1,13 @@
 # create-sst
 
+## 1.2.36
+
+### Patch Changes
+
+- [`61b63d542`](https://github.com/serverless-stack/sst/commit/61b63d542702fa27b0ab339822bbf412cc9c6869) Thanks [@thdxr](https://github.com/thdxr)! - Better demonstrate Go functions
+
+* [`d8f3ac70e`](https://github.com/serverless-stack/sst/commit/d8f3ac70ef9494ec792b1ef8dc40211fdc502ca8) Thanks [@thdxr](https://github.com/thdxr)! - Allow latest typescript in create-sst
+
 ## 1.2.35
 
 ### Patch Changes
