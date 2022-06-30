@@ -45,35 +45,79 @@ yarn create sst
 
 If you would like to use a more minimal starter you can pass in `--minimal` to see all the options.
 
-## Building your app
+## Starting local environment
 
-Once you are ready to build your app and convert your CDK code to CloudFormation, run the following from your project root.
+The first time the SST command is run, you'll be prompted to enter a default stage name to use. The stage name will be stored locally in a .sst/ directory. This directory is automatically ignore from Git.
+
+The initial deploy can around 5-10 minutes. It will deploy your app to AWS, and also setup [Live Lambda dev](live-lambda-development.md) environment.
 
 <MultiPackagerCode>
 <TabItem value="npm">
 
 ```bash
-npm run build
+npm run start
 ```
 
 </TabItem>
 <TabItem value="npx">
 
 ```bash
-npx sst build
+npx sst start
 ```
 
 </TabItem>
 <TabItem value="yarn">
 
 ```bash
-yarn run build
+yarn run start
 ```
 
 </TabItem>
 </MultiPackagerCode>
 
-This will compile your ES (or TS) code to the `.build/` directory in your app. And the synthesized CloudFormation templates are outputted to `.build/cdk.out/`. Note that, you shouldn't commit the `.build/` directory to source control and it's ignored by default in your project's `.gitignore`.
+This command uses your **default AWS Profile** and the **region** specified in your `sst.json`. If you want to use a different AWS account or region, you can do:
+
+<MultiPackagerCode>
+<TabItem value="npm">
+
+```bash
+# requires an extra `--` for the options
+AWS_PROFILE=my-profile npm run start -- --region eu-west-1
+```
+
+</TabItem>
+<TabItem value="npx">
+
+```bash
+AWS_PROFILE=my-profile npx sst start --region eu-west-1
+```
+
+</TabItem>
+<TabItem value="yarn">
+
+```bash
+AWS_PROFILE=my-profile yarn run start --region eu-west-1
+```
+
+</TabItem>
+</MultiPackagerCode>
+
+### Using SST Console
+
+The SST Console is a web based dashboard to manage your SST apps. Once `sst start` is up and running, you should see the following printed out in the terminal.
+
+```bash
+==========================
+Starting Live Lambda Dev
+==========================
+
+SST Console: https://console.serverless-stack.com/my-sst-app/frank/local
+Debug session started. Listening for requests...
+```
+
+Open the [SST Console](console.md) in the browser.
+
+![SST Console homescreen](/img/console/sst-console-homescreen.png)
 
 ## Deploying an app
 
@@ -83,34 +127,7 @@ Once your app has been built and tested successfully, you are ready to deploy it
 <TabItem value="npm">
 
 ```bash
-npm run deploy
-```
-
-</TabItem>
-<TabItem value="npx">
-
-```bash
-npx sst deploy
-```
-
-</TabItem>
-<TabItem value="yarn">
-
-```bash
-yarn deploy
-```
-
-</TabItem>
-</MultiPackagerCode>
-
-This command uses your **default AWS Profile** and the **region** and **stage** specified in your `sst.json`.
-
-Or if you want to deploy to a different stage.
-
-<MultiPackagerCode>
-<TabItem value="npm">
-
-```bash
+# requires an extra `--` for the options
 npm run deploy -- --stage prod
 ```
 
@@ -131,12 +148,13 @@ yarn run deploy --stage prod
 </TabItem>
 </MultiPackagerCode>
 
-And if your prod environment is in a different AWS account or region, you can do:
+Similarly, to deploy to a different AWS account or region, you can do:
 
 <MultiPackagerCode>
 <TabItem value="npm">
 
 ```bash
+# requires an extra `--` for the options
 AWS_PROFILE=my-profile npm run deploy -- --stage prod --region eu-west-1
 ```
 
@@ -157,31 +175,30 @@ AWS_PROFILE=my-profile yarn run deploy --stage prod --region eu-west-1
 </TabItem>
 </MultiPackagerCode>
 
-:::note
-If you are using `npm run deploy`, you'll need to add an extra `--` for the options.
-:::
+### Using SST Console
 
-For example, to set the stage and region:
+This allows you look at logs in production and manage resources in production as well.
 
 <MultiPackagerCode>
 <TabItem value="npm">
 
 ```bash
-npm run deploy -- --stage prod --region eu-west-1
+# requires an extra `--` for the options
+npm run console -- --stage prod
 ```
 
 </TabItem>
 <TabItem value="npx">
 
 ```bash
-npx sst deploy --stage prod --region eu-west-1
+npx sst console --stage prod
 ```
 
 </TabItem>
 <TabItem value="yarn">
 
 ```bash
-yarn run deploy --stage prod --region eu-west-1
+yarn run console --stage prod
 ```
 
 </TabItem>
@@ -221,6 +238,7 @@ Or if you've deployed to a different stage.
 <TabItem value="npm">
 
 ```bash
+# requires an extra `--` for the options
 npm run remove -- --stage prod
 ```
 

@@ -13,7 +13,7 @@ The SST Console is a web based dashboard to manage your SST apps — **<ConsoleU
 ![SST Console homescreen](/img/console/sst-console-homescreen.png)
 
 :::note
-Safari support for the SST Console is coming soon.
+Safari and Brave are now supported. Learn more about [Working with Safari or Brave.](#working-with-safari-or-brave)
 :::
 
 ## Features
