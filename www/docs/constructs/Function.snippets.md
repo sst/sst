@@ -358,7 +358,7 @@ const vpc = ec2.Vpc.fromLookup(stack, 'VPC', { ... });
 new Function(stack, "MyFunction", {
   handler: "src/lambda.main",
   vpc,
-  vpcSubnet: {
+  vpcSubnets: {
     subnetType: ec2.SubnetType.PRIVATE_WITH_NAT,
   }
 });
