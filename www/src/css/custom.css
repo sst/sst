@@ -476,21 +476,3 @@ html[data-theme="dark"] .navbar__link__github:before {
     font-size: 80%;
   }
 }
-
-/* laptop */
-@media (min-width: 996px) {
-  .menu__link--active::after {
-    content: "";
-    position: absolute;
-    width: 0px;
-    height: 5px;
-    left: 50%;
-    bottom: 0;
-    background-color: white;
-    transition: all ease-in-out 0.2s;
-  }
-  .menu__link--active:hover::after {
-    width: 100%;
-    left: 0;
-  }
-}
