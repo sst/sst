@@ -1,3 +1,4 @@
+---
 title: Learn SST
 sidebar_label: Preface
 description: "In this tutorial, we'll create a simple SST app and go over some of its key concepts."
