@@ -19,7 +19,7 @@ my-sst-app
 └─ web
 ```
 
-Let's look at what's in the starter in a little more detail.
+Let's look at this in a little more detail.
 
 ### `stacks/`
 
@@ -36,13 +36,13 @@ We typically group related resources together into stacks. In the `stacks/` dire
 
 The `services/` directory houses everything that powers your backend. This includes your GraphQL API but also all your business logic, other functions, and whatever else you need.
 
-- `services/core` contains all of your business logic. `create-sst` encourages Domain Driven Design so that you keep your business logic seperate from your API and Lambda functions. This allows you to write simple, reusable code that implements all the things your application can do which are then called by external facing services - like an API.
+- `services/core` contains all of your business logic. `create-sst` encourages Domain Driven Design so that you keep your business logic separate from your API and Lambda functions. This allows you to write simple, reusable code that implements all the things your application can do. These are then called by external facing services — like an API.
 
 - `services/functions` is where you can place all the code for your functions. Your functions should generally be fairly simple and mostly be calling into code defined in `services/core`.
 
 - `services/functions/graphql` is a predefined function and the supporting code that serves up a GraphQL API. It is wired up for code-generation and connected to an API construct defined in `stacks`.
 
-- `services/migrations` is created by default to house your SQL Migrations. The starter includes provisions a RDS instance. But you can delete or ignore this if you're opting to use a different database like DynamoDB.
+- `services/migrations` is created by default to house your SQL Migrations. The starter provisions a RDS instance. But you can delete or ignore this if you're opting to use a different database like DynamoDB.
 
 ### `graphql/`
 
@@ -86,10 +86,10 @@ You can also access them in your stacks.
 
 ```js title="stacks/MyStack.ts"
 export function ApiStack({ app }: StackContext) {
-  app.stage; // "dev"
+  app.stage;  // "dev"
   app.region; // "us-east-1"
-  app.name; // "my-sst-app"
+  app.name;   // "my-sst-app"
 }
 ```
 
-Next let's set up our code editor to work on our SST app.
+Next let's set up our code editor to work with our SST app.

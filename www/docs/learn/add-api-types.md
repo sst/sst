@@ -4,14 +4,16 @@ title: Add API Types
 
 We don't want to just return a comment as a string from an API. We want to return a comment object that contains the comment id, text, and creation date. So let's create a `Comment` type.
 
-## Create Comment type
+## Create a Comment type
 
-In `services/functions/graphql/types/article.ts` add this above the `ArticleType`. In Pothos you can specify the types for the underlying resource that the GraphQL Object is backed by. This will vary depending on which database you chose.
+In Pothos you can specify the types for the underlying resource that the GraphQL object is backed by. This will vary depending on which database you chose.
 
 - **DynamoDB** `Article.CommentTypeEntity`
 - **RDS** `SQL.Row["comment"]`
 
-```ts
+In `services/functions/graphql/types/article.ts`, add the following above the `ArticleType`.
+
+```ts title="services/functions/graphql/types/article.ts"
 const CommentType = builder.objectRef<[specify type]>("Comment").implement({
   fields: t => ({
     id: t.exposeString("commentID"),
@@ -22,11 +24,11 @@ const CommentType = builder.objectRef<[specify type]>("Comment").implement({
 
 Here our `CommentType` is exposing the fields from a row in the `comment` table. It's also defining the type for those fields.
 
-## Update Article type
+## Update the Article type
 
-We'll also add a `comments` field to the `ArticleType`. Replace `ArticleType` with:
+We'll also add a `comments` field to the `ArticleType`. Replace the `ArticleType` with:
 
-```ts {6-9}
+```ts {6-9} title="services/functions/graphql/types/article.ts"
 const ArticleType = builder.objectRef<SQL.Row["article"]>("Article").implement({
   fields: t => ({
     id: t.exposeID("articleID"),

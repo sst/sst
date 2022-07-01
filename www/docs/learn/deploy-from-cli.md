@@ -2,30 +2,36 @@
 title: Deploy from CLI
 ---
 
-Once you are ready to go live with real users, you can deploy your SST app to a live stage.
+Once you are ready to go live with real users, you can deploy your SST app to production.
 
-## Deploy app
+## Deploy the app
 
-Stop the `npx sst start` process.
-
-Run from the root of the project.
+Stop the `npx sst start` process in the CLI. And run this command instead.
 
 ```bash
 AWS_PROFILE=prod-profile npx sst deploy --stage prod
 ```
 
-Note that it is recommended to use different AWS accounts for local development and for production. If you are using the same AWS account, you can omit `AWS_PROFILE=prod-profile`.
+Make sure to run it at the root of the project.
 
-It is also recommended to not use the same stage used by `sst start`, and always pass in a stage name when deploying.
+Note that, it's recommended to use different AWS accounts for local development and production. If you are using the same AWS account, you can omit `AWS_PROFILE=prod-profile`.
 
-You can read more about stage names and the best practices when working with your team [here](working-with-your-team.md).
+:::info
+It's recommended to not use the same stage as `sst start`, and always pass in a stage name when deploying.
+:::
 
-## Manage app
+You can [read more](working-with-your-team.md) about stage names and the best practices when working with your team.
 
-Run from the root of the project.
+## Manage the app
+
+Now that your app is deployed, you can use the SST Console to manage it in production.
+
+Run the following from the root of the project.
 
 ```bash
 AWS_PROFILE=prod-profile npx sst console --stage prod
 ```
 
-This will start up SST Console in live mode. The console won't have the Local tab as the functions for deployed apps are not run locally. But you can use it to manage your app.
+This will start up the SST Console and connect it to the given `--stage`.
+
+The Console won't have the **Local** tab as the functions are not running locally. But you can still view the logs, and use it to manage the resources in your app.

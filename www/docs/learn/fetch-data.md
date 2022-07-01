@@ -2,25 +2,29 @@
 title: Fetch Data
 ---
 
-Update the fetch articles query to include `comments` in each article.
+Now that the comments have been added to our GraphQL API, we are ready to connect it to our frontend.
 
-Open up `web/src/pages/Article.tsx`, add `comments` in the articles query:
+Let's update the fetch articles query to include `comments` in each article.  In `web/src/pages/Article.tsx`, add `comments` in the articles query:
 
-```ts {7-9}
-  const [articles] = useTypedQuery({
-    query: {
-      articles: {
-        id: true,
-        title: true,
-        url: true,
-        comments: {
-          text: true
-        }
+```ts {7-9} title="web/src/pages/Article.tsx"
+const [articles] = useTypedQuery({
+  query: {
+    articles: {
+      id: true,
+      title: true,
+      url: true,
+      comments: {
+        text: true
       }
     }
-  });
+  }
+});
 ```
 
-If you refresh the page, you won't see any comments on the page. That's fine because we aren't rendering the comments on the page page. But in SST Console, you should see the article has no comments, ie. `"comments":[]`
+If you refresh the app, you won't see any comments on the page. That's because we aren't rendering the comments yet.
 
-![Fetch comments](/img/fetch-comments/console-get-articles-log.png)
+However in the SST Console, you should see the article is returning the comments. In this case it's an empty list, `"comments":[]`.
+
+![Console log for Comments in articles](/img/fetch-data/console-log-for-comments-in-articles.png)
+
+Now let's render the comments.
