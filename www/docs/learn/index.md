@@ -7,7 +7,7 @@ In this section, we are going to build a full-stack app with SST and learn about
 
 We'll start by creating an app with our starter and set up our local development environment. The starter includes a database, a GraphQL API, and a React frontend.
 
-The starter creates a very simple Reddit clone. You can submit links and it'll display all the links I've submitted. We'll add a comments feature to our app.
+The starter creates a very simple Reddit clone. You can submit links and it'll display all the links that have been submitted. We'll add a comments feature to our app.
 
 To do this, we'll start by adding a new database table. Then we'll add an API to our GraphQL endpoint. Finally, we'll connect it to our frontend. And deploy it to the world!
 
