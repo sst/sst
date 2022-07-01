@@ -23,21 +23,27 @@ Create a new project using.
 <TabItem value="npm">
 
 ```bash
-npm init sst@latest
+npm init sst@latest my-sst-app
+cd my-sst-app
+npm install
 ```
 
 </TabItem>
 <TabItem value="npx">
 
 ```bash
-npx create-sst@latest
+npx create-sst@latest my-sst-app
+cd my-sst-app
+npm install
 ```
 
 </TabItem>
 <TabItem value="yarn">
 
 ```bash
-yarn create sst
+yarn create sst my-sst-app
+cd my-sst-app
+yarn
 ```
 
 </TabItem>
