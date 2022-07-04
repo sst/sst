@@ -256,16 +256,6 @@ Where `x.x.x` is the version of CDK that's being used internally. Note, that it'
 
   You can also pass in the `--dev` option if you need the packages to be installed as `devDependencies`.
 
-### `test`
-
-Runs your tests using Jest. Takes all the [Jest CLI options](https://jestjs.io/docs/en/cli).
-
-#### Options
-
-- `--stage`
-
-The stage you want to test against. If this is not specified, it will default to `dev`.
-
 ### `cdk`
 
 The SST CLI comes with a version of AWS CDK that it uses internally. This command gives direct access to it. To use this command you'll need to pass in the location of the CDK app. In our cases this is going to be generated in `build/run.js`. For example, to run the CDK `list` command you'll need to.
