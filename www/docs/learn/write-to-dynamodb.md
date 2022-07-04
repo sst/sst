@@ -15,52 +15,55 @@ The details of Single Table Design can be a bit of work to learn but `create-sst
 In ElectroDB each concept in your data model is called an `Entity` and you can specify right in your application code. Let's start by creating a new Entity for comments in `services/core/article.ts`
 
 ```js
-const CommentEntity = new Entity({
-    model: {
-      version: "1",
-      entity: "Comment",
-      service: "myapp",
-    },
-    attributes: {
-      commentID: {
-        type: "string",
-        required: true,
-        readOnly: true,
-      },
-      articleID: {
-        type: "string",
-        required: true,
-        readOnly: true,
-      },
-      text: {
-        type: "string",
-        required: true,
-      },
-    },
-    indexes: {
-      primary: {
-        pk: {
-          field: "pk",
-          composite: ["commentID"]
+const CommentEntity = new Entity(
+    {
+        model: {
+          version: "1",
+          entity: "Comment",
+          service: "myapp",
         },
-        sk: {
-          field: "sk",
-          composite: [],
-        }
-      },
-      byArticle: {
-        index: "gsi1",
-        pk: {
-          field: "pk",
-          composite: ["articleID"]
+        attributes: {
+          commentID: {
+            type: "string",
+            required: true,
+            readOnly: true,
+          },
+          articleID: {
+            type: "string",
+            required: true,
+            readOnly: true,
+          },
+          text: {
+            type: "string",
+            required: true,
+          },
         },
-        sk: {
-          field: "sk",
-          composite: ["commentID"],
-        }
-      }
+        indexes: {
+          primary: {
+            pk: {
+              field: "pk",
+              composite: ["commentID"]
+            },
+            sk: {
+              field: "sk",
+              composite: [],
+            }
+          },
+          byArticle: {
+            index: "gsi1",
+            pk: {
+              field: "gsi1pk",
+              composite: ["articleID"]
+            },
+            sk: {
+              field: "gsi1sk",
+              composite: ["commentID"],
+            }
+          }
+        },
     },
-})
+    Dynamo.Configuration
+)
 ```
 
 This defines a new `CommentEntity` with the fields `articleID`, `commentID`, and `text`. `articleID` and `commentID` are marked `required` and `readOnly` (which means it cannot be changed after creation).
