@@ -137,8 +137,6 @@ The Live Lambda Development environment runs a Node.js process locally. This all
   <iframe width="560" height="315" src="https://www.youtube.com/embed/2w4A06IsBlU" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
-You can also configure VS Code to debug your tests.
-
 Let's look at how to set this up.
 
 #### Launch configurations
@@ -162,15 +160,7 @@ To set these up, add the following to `.vscode/launch.json`.
 }
 ```
 
-This contains two launch configurations:
-
-- **Debug SST Start**
-
-  Runs the `sst start` command in debug mode. Allowing you to set breakpoints to your Lambda functions. It also uses the `integratedTerminal` mode to allow you to [_press ENTER_](#watching-infrastructure-changes) when you need to update your CDK infrastructure.
-
-- **Debug SST Tests**
-
-  Runs the `sst test` command in debug mode. Allowing you to set breakpoints in your Jest tests.
+This contains the launch configuration to run the `sst start` command in debug mode. Allowing you to set breakpoints to your Lambda functions. It also uses the `integratedTerminal` mode to allow you to [_press ENTER_](#watching-infrastructure-changes) when you need to update your CDK infrastructure.
 
 #### Debug Lambda functions
 
@@ -189,14 +179,6 @@ By default the timeout for a Lambda function might not be long enough for you to
 ```
 
 This increases our Lambda function timeouts to their maximum value of 15 minutes. For APIs the timeout cannot be increased more than 30 seconds. But you can continue debugging the Lambda function, even after the API request times out.
-
-#### Debug tests
-
-Similarly, you can debug the tests in your project by selecting the **Debug SST Tests** option in the debug configuration dropdown.
-
-<img alt="VS Code debug SST tests" src={useBaseUrl("img/screens/vs-code-debug-sst-tests.png")} />
-
-This allows you to set breakpoints in your tests and debug them.
 
 #### Example project
 
