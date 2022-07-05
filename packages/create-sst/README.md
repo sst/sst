@@ -8,12 +8,6 @@
   <a href="https://github.com/serverless-stack/sst/actions/workflows/ci.yml"><img alt="Build status" src="https://img.shields.io/github/workflow/status/serverless-stack/sst/CI?style=flat-square" /></a>
 </p>
 
-<p align="center">
-  <a href="https://www.youtube.com/watch?v=wBTDkLIyMhw">
-    <img alt="Launch: create sst" src="social-share.png?raw=true&sanitize=true" width="600" />
-  </a>
-</p>
-
 ---
 
 A simple CLI [`create-sst`](https://www.npmjs.com/package/create-sst) that sets up a modern web application powered by SST

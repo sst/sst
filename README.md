@@ -10,12 +10,6 @@
   <a href="https://github.com/serverless-stack/sst/actions/workflows/ci.yml"><img alt="Build status" src="https://img.shields.io/github/workflow/status/serverless-stack/sst/CI?style=flat-square" /></a>
 </p>
 
-<p align="center">
-  <a href="https://www.youtube.com/watch?v=wBTDkLIyMhw">
-    <img alt="Launch: create sst" src="packages/create-sst/social-share.png?raw=true&sanitize=true" width="600" />
-  </a>
-</p>
-
 ---
 
 SST is a framework that makes it easy to build serverless apps. It's an extension of [AWS CDK](https://aws.amazon.com/cdk/) and it features:

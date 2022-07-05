@@ -29,18 +29,9 @@ module.exports = {
     // the "socialCardsUrl" in the "customFields" below.
     image: "img/og-image.png",
     metaImage: "img/og-image.png",
-    /**
     announcementBar: {
       id: "announcement",
       content: `If you like SST, <a target="_blank" href="${config.github}">give it a star on GitHub</a>! <span class="icon" />`,
-      backgroundColor: "#395C6B",
-      textColor: "#FFFFFF",
-      isCloseable: true,
-    },
-    **/
-    announcementBar: {
-      id: "announcement",
-      content: `<a target="_blank" href="https://www.youtube.com/watch?v=wBTDkLIyMhw">Tune in live to the \`create sst\` launch</a> &mdash; Jun 28, 9am PDT`,
       backgroundColor: "#395C6B",
       textColor: "#FFFFFF",
       isCloseable: true,
