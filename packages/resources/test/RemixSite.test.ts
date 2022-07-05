@@ -25,6 +25,8 @@ beforeAll(async () => {
   //   return;
   // }
 
+  process.env.SST_RESOURCES_TESTS = "enabled";
+
   // Install Remix app dependencies
   execSync("npm install", {
     cwd: sitePath,
@@ -41,10 +43,211 @@ beforeAll(async () => {
 // Test Constructor
 /////////////////////////////
 
-test("constructor: no domain", async () => {
+test("edge: undefined", async () => {
   const stack = new Stack(new App(), "stack");
   const site = new RemixSite(stack, "Site", {
     path: "test/remix-site",
+    // @ts-expect-error: "sstTest" is not exposed in props
+    sstTest: true,
+  });
+  expect(site.url).toBeDefined();
+  expect(site.customDomainUrl).toBeUndefined();
+  expect(site.bucketArn).toBeDefined();
+  expect(site.bucketName).toBeDefined();
+  expect(site.distributionId).toBeDefined();
+  expect(site.distributionDomain).toBeDefined();
+  expect(site.cdk.certificate).toBeUndefined();
+  countResources(stack, "AWS::S3::Bucket", 1);
+  countResources(stack, "AWS::Lambda::Function", 6);
+  countResources(stack, "AWS::CloudFront::Distribution", 1);
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: {
+      Aliases: [],
+      CacheBehaviors: [
+        {
+          AllowedMethods: ["GET", "HEAD", "OPTIONS"],
+          CachePolicyId: {
+            Ref: "SiteBrowserBuildAssetsCache280F56B5",
+          },
+          CachedMethods: ["GET", "HEAD", "OPTIONS"],
+          Compress: true,
+          PathPattern: "/build/*",
+          TargetOriginId: "devmyappstackSiteDistributionOrigin22B8FA4E2",
+          ViewerProtocolPolicy: "redirect-to-https",
+        },
+        {
+          AllowedMethods: ["GET", "HEAD", "OPTIONS"],
+          CachePolicyId: {
+            Ref: "SitePublicAssetsCache358A0E01",
+          },
+          CachedMethods: ["GET", "HEAD", "OPTIONS"],
+          Compress: true,
+          PathPattern: "/favicon.ico",
+          TargetOriginId: "devmyappstackSiteDistributionOrigin22B8FA4E2",
+          ViewerProtocolPolicy: "redirect-to-https",
+        },
+      ],
+      DefaultCacheBehavior: {
+        AllowedMethods: ["GET", "HEAD", "OPTIONS", "PUT", "PATCH", "POST", "DELETE"],
+        CachePolicyId: {
+          Ref: "SiteServerResponseCache00237CD2",
+        },
+        CachedMethods: ["GET", "HEAD", "OPTIONS"],
+        Compress: true,
+        TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
+        ViewerProtocolPolicy: "redirect-to-https",
+      },
+      DefaultRootObject: "",
+      Enabled: true,
+      HttpVersion: "http2",
+      IPV6Enabled: true,
+      Origins: [
+        {
+          "CustomOriginConfig": {
+            "OriginProtocolPolicy": "https-only",
+            "OriginSSLProtocols": ["TLSv1.2"]
+          },
+          "DomainName": {
+            "Fn::Select": ANY,
+          },
+          "Id": "devmyappstackSiteDistributionOrigin1F25265FA"
+        },
+        {
+          DomainName: {
+            "Fn::GetAtt": ["SiteS3Bucket43E5BB2F", "RegionalDomainName"],
+          },
+          Id: "devmyappstackSiteDistributionOrigin22B8FA4E2",
+          S3OriginConfig: {
+            OriginAccessIdentity: {
+              "Fn::Join": [
+                "",
+                [
+                  "origin-access-identity/cloudfront/",
+                  {
+                    Ref: "SiteDistributionOrigin2S3OriginD0424A5E",
+                  },
+                ],
+              ],
+            },
+          },
+        },
+      ],
+    },
+  });
+  countResources(stack, "AWS::Route53::RecordSet", 0);
+  countResources(stack, "AWS::Route53::HostedZone", 0);
+  countResources(stack, "Custom::SSTBucketDeployment", 1);
+  hasResource(stack, "Custom::SSTBucketDeployment", {
+    ServiceToken: {
+      "Fn::GetAtt": ["SiteS3Handler5F76C26E", "Arn"],
+    },
+    Sources: [
+      {
+        BucketName: ANY,
+        ObjectKey: ANY,
+      },
+    ],
+    DestinationBucketName: {
+      Ref: "SiteS3Bucket43E5BB2F",
+    },
+    FileOptions: [
+      [
+        "--exclude",
+        "*",
+        "--include",
+        "/build/*",
+        "--cache-control",
+        "public,max-age=31536000,immutable",
+      ],
+      [
+        "--exclude",
+        "*",
+        "--include",
+        "/favicon.ico",
+        "--cache-control",
+        "public,max-age=31536000,must-revalidate",
+      ],
+    ],
+  });
+  countResources(stack, "Custom::SSTCloudFrontInvalidation", 1);
+  hasResource(stack, "Custom::SSTCloudFrontInvalidation", {
+    DistributionPaths: ["/*"],
+  });
+});
+
+test("edge: undefined: environment set on server function", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new Api(stack, "Api");
+  new RemixSite(stack, "Site", {
+    path: "test/remix-site",
+    environment: {
+      CONSTANT_ENV: "my-url",
+      REFERENCE_ENV: api.url,
+    },
+    // @ts-expect-error: "sstTest" is not exposed in props
+    sstTest: true,
+  });
+
+  hasResource(stack, "AWS::Lambda::Function", {
+    Environment: {
+      Variables: {
+        CONSTANT_ENV: "my-url",
+        REFERENCE_ENV: ANY,
+      },
+    },
+  });
+});
+
+test("edge: false", async () => {
+  const stack = new Stack(new App(), "stack");
+  const site = new RemixSite(stack, "Site", {
+    path: "test/remix-site",
+    edge: false,
+    // @ts-expect-error: "sstTest" is not exposed in props
+    sstTest: true,
+  });
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      Origins: [
+        {
+          "CustomOriginConfig": {
+            "OriginProtocolPolicy": "https-only",
+            "OriginSSLProtocols": ["TLSv1.2"]
+          },
+          "DomainName": {
+            "Fn::Select": ANY,
+          },
+          "Id": "devmyappstackSiteDistributionOrigin1F25265FA"
+        },
+        {
+          DomainName: {
+            "Fn::GetAtt": ["SiteS3Bucket43E5BB2F", "RegionalDomainName"],
+          },
+          Id: "devmyappstackSiteDistributionOrigin22B8FA4E2",
+          S3OriginConfig: {
+            OriginAccessIdentity: {
+              "Fn::Join": [
+                "",
+                [
+                  "origin-access-identity/cloudfront/",
+                  {
+                    Ref: "SiteDistributionOrigin2S3OriginD0424A5E",
+                  },
+                ],
+              ],
+            },
+          },
+        },
+      ],
+    }),
+  });
+});
+
+test("edge: true", async () => {
+  const stack = new Stack(new App(), "stack");
+  const site = new RemixSite(stack, "Site", {
+    path: "test/remix-site",
+    edge: true,
     // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
   });
@@ -63,22 +266,22 @@ test("constructor: no domain", async () => {
       Aliases: [],
       CacheBehaviors: [
         {
-          AllowedMethods: ["GET", "HEAD"],
+          AllowedMethods: ["GET", "HEAD", "OPTIONS"],
           CachePolicyId: {
             Ref: "SiteBrowserBuildAssetsCache280F56B5",
           },
-          CachedMethods: ["GET", "HEAD"],
+          CachedMethods: ["GET", "HEAD", "OPTIONS"],
           Compress: true,
-          PathPattern: "build",
+          PathPattern: "/build/*",
           TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
           ViewerProtocolPolicy: "redirect-to-https",
         },
         {
-          AllowedMethods: ["GET", "HEAD"],
+          AllowedMethods: ["GET", "HEAD", "OPTIONS"],
           CachePolicyId: {
             Ref: "SitePublicAssetsCache358A0E01",
           },
-          CachedMethods: ["GET", "HEAD"],
+          CachedMethods: ["GET", "HEAD", "OPTIONS"],
           Compress: true,
           PathPattern: "/favicon.ico",
           TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
@@ -86,7 +289,7 @@ test("constructor: no domain", async () => {
         },
       ],
       DefaultCacheBehavior: {
-        AllowedMethods: ["GET", "HEAD", "OPTIONS"],
+        AllowedMethods: ["GET", "HEAD", "OPTIONS", "PUT", "PATCH", "POST", "DELETE"],
         CachePolicyId: {
           Ref: "SiteServerResponseCache00237CD2",
         },
@@ -96,10 +299,6 @@ test("constructor: no domain", async () => {
           {
             EventType: "origin-request",
             IncludeBody: true,
-            LambdaFunctionARN: ANY,
-          },
-          {
-            EventType: "origin-response",
             LambdaFunctionARN: ANY,
           },
         ],
@@ -156,15 +355,7 @@ test("constructor: no domain", async () => {
         "--include",
         "/build/*",
         "--cache-control",
-        "public,max-age=31536000,must-revalidate",
-      ],
-      [
-        "--exclude",
-        "*",
-        "--include",
-        "/build/*",
-        "--cache-control",
-        "public,max-age=31536000,must-revalidate",
+        "public,max-age=31536000,immutable",
       ],
       [
         "--exclude",
@@ -180,6 +371,94 @@ test("constructor: no domain", async () => {
   hasResource(stack, "Custom::SSTCloudFrontInvalidation", {
     DistributionPaths: ["/*"],
   });
+});
+
+test("edge: true: environment generates placeholders", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new Api(stack, "Api");
+  new RemixSite(stack, "Site", {
+    path: "test/remix-site",
+    edge: true,
+    environment: {
+      CONSTANT_ENV: "my-url",
+      REFERENCE_ENV: api.url,
+    },
+    // @ts-expect-error: "sstTest" is not exposed in props
+    sstTest: true,
+  });
+
+  countResourcesLike(stack, "Custom::SSTLambdaCodeUpdater", 1, {
+    ReplaceValues: [
+      {
+        files: "**/*.js",
+        search: '"{{ _SST_REMIX_SITE_ENVIRONMENT_ }}"',
+        replace: {
+          "Fn::Join": [
+            "",
+            [
+              '{"CONSTANT_ENV":"my-url","REFERENCE_ENV":"',
+              { "Fn::GetAtt": ANY },
+              '"}',
+            ],
+          ],
+        },
+      },
+    ],
+  });
+});
+
+test("edge: true: us-east-1", async () => {
+  const app = new App({ region: "us-east-1" });
+  const stack = new Stack(app, "stack");
+  const site = new RemixSite(stack, "Site", {
+    path: "test/remix-site",
+    edge: true,
+    // @ts-expect-error: "sstTest" is not exposed in props
+    sstTest: true,
+  });
+  expect(site.url).toBeDefined();
+  expect(site.customDomainUrl).toBeUndefined();
+  expect(site.bucketArn).toBeDefined();
+  expect(site.bucketName).toBeDefined();
+  expect(site.distributionId).toBeDefined();
+  expect(site.distributionDomain).toBeDefined();
+  expect(site.cdk.certificate).toBeUndefined();
+  countResources(stack, "AWS::S3::Bucket", 1);
+  countResources(stack, "AWS::Lambda::Function", 7);
+  countResources(stack, "AWS::CloudFront::Distribution", 1);
+  countResources(stack, "Custom::SSTEdgeLambdaBucket", 0);
+  countResources(stack, "Custom::SSTEdgeLambda", 0);
+  countResources(stack, "Custom::SSTEdgeLambdaVersion", 0);
+  countResources(stack, "Custom::SSTBucketDeployment", 1);
+  countResources(stack, "Custom::SSTLambdaCodeUpdater", 1);
+  countResources(stack, "Custom::SSTCloudFrontInvalidation", 1);
+});
+
+test("edge: true: ca-central-1", async () => {
+  const app = new App({ region: "ca-central-1" });
+  const stack = new Stack(app, "stack");
+  const site = new RemixSite(stack, "Site", {
+    path: "test/remix-site",
+    edge: true,
+    // @ts-expect-error: "sstTest" is not exposed in props
+    sstTest: true,
+  });
+  expect(site.url).toBeDefined();
+  expect(site.customDomainUrl).toBeUndefined();
+  expect(site.bucketArn).toBeDefined();
+  expect(site.bucketName).toBeDefined();
+  expect(site.distributionId).toBeDefined();
+  expect(site.distributionDomain).toBeDefined();
+  expect(site.cdk.certificate).toBeUndefined();
+  countResources(stack, "AWS::S3::Bucket", 1);
+  countResources(stack, "AWS::Lambda::Function", 8);
+  countResources(stack, "AWS::CloudFront::Distribution", 1);
+  countResources(stack, "Custom::SSTEdgeLambdaBucket", 1);
+  countResources(stack, "Custom::SSTEdgeLambda", 1);
+  countResources(stack, "Custom::SSTEdgeLambdaVersion", 1);
+  countResources(stack, "Custom::SSTBucketDeployment", 1);
+  countResources(stack, "Custom::SSTLambdaCodeUpdater", 1);
+  countResources(stack, "Custom::SSTCloudFrontInvalidation", 1);
 });
 
 test("constructor: with domain", async () => {
@@ -593,7 +872,7 @@ test("constructor: path not exist", async () => {
       // @ts-expect-error: "sstTest" is not exposed in props
       sstTest: true,
     });
-  }).toThrow(/No path found/);
+  }).toThrow(/Could not find "remix.config.js"/);
 });
 
 test("constructor: skipbuild doesn't expect path", async () => {
@@ -770,95 +1049,6 @@ test("constructor: cfDistribution domainNames conflict", async () => {
       sstTest: true,
     });
   }).toThrow(/Do not configure the "cfDistribution.domainNames"/);
-});
-
-test("constructor: environment generates placeholders", async () => {
-  const stack = new Stack(new App(), "stack");
-  const api = new Api(stack, "Api");
-  new RemixSite(stack, "Site", {
-    path: "test/remix-site",
-    environment: {
-      CONSTANT_ENV: "my-url",
-      REFERENCE_ENV: api.url,
-    },
-    // @ts-expect-error: "sstTest" is not exposed in props
-    sstTest: true,
-  });
-
-  countResourcesLike(stack, "Custom::SSTLambdaCodeUpdater", 1, {
-    ReplaceValues: [
-      {
-        files: "**/*.js",
-        search: '"{{ _SST_REMIX_SITE_ENVIRONMENT_ }}"',
-        replace: {
-          "Fn::Join": [
-            "",
-            [
-              '{"CONSTANT_ENV":"my-url","REFERENCE_ENV":"',
-              { "Fn::GetAtt": ANY },
-              '"}',
-            ],
-          ],
-        },
-      },
-    ],
-  });
-});
-
-/////////////////////////////
-// Test Constructor for non-us-east-1 region
-/////////////////////////////
-
-test("constructor: us-east-1", async () => {
-  const app = new App({ region: "us-east-1" });
-  const stack = new Stack(app, "stack");
-  const site = new RemixSite(stack, "Site", {
-    path: "test/remix-site",
-    // @ts-expect-error: "sstTest" is not exposed in props
-    sstTest: true,
-  });
-  expect(site.url).toBeDefined();
-  expect(site.customDomainUrl).toBeUndefined();
-  expect(site.bucketArn).toBeDefined();
-  expect(site.bucketName).toBeDefined();
-  expect(site.distributionId).toBeDefined();
-  expect(site.distributionDomain).toBeDefined();
-  expect(site.cdk.certificate).toBeUndefined();
-  countResources(stack, "AWS::S3::Bucket", 1);
-  countResources(stack, "AWS::Lambda::Function", 7);
-  countResources(stack, "AWS::CloudFront::Distribution", 1);
-  countResources(stack, "Custom::SSTEdgeLambdaBucket", 0);
-  countResources(stack, "Custom::SSTEdgeLambda", 0);
-  countResources(stack, "Custom::SSTEdgeLambdaVersion", 0);
-  countResources(stack, "Custom::SSTBucketDeployment", 1);
-  countResources(stack, "Custom::SSTLambdaCodeUpdater", 1);
-  countResources(stack, "Custom::SSTCloudFrontInvalidation", 1);
-});
-
-test("constructor: ca-central-1", async () => {
-  const app = new App({ region: "ca-central-1" });
-  const stack = new Stack(app, "stack");
-  const site = new RemixSite(stack, "Site", {
-    path: "test/remix-site",
-    // @ts-expect-error: "sstTest" is not exposed in props
-    sstTest: true,
-  });
-  expect(site.url).toBeDefined();
-  expect(site.customDomainUrl).toBeUndefined();
-  expect(site.bucketArn).toBeDefined();
-  expect(site.bucketName).toBeDefined();
-  expect(site.distributionId).toBeDefined();
-  expect(site.distributionDomain).toBeDefined();
-  expect(site.cdk.certificate).toBeUndefined();
-  countResources(stack, "AWS::S3::Bucket", 1);
-  countResources(stack, "AWS::Lambda::Function", 8);
-  countResources(stack, "AWS::CloudFront::Distribution", 1);
-  countResources(stack, "Custom::SSTEdgeLambdaBucket", 1);
-  countResources(stack, "Custom::SSTEdgeLambda", 1);
-  countResources(stack, "Custom::SSTEdgeLambdaVersion", 1);
-  countResources(stack, "Custom::SSTBucketDeployment", 1);
-  countResources(stack, "Custom::SSTLambdaCodeUpdater", 1);
-  countResources(stack, "Custom::SSTCloudFrontInvalidation", 1);
 });
 
 /////////////////////////////

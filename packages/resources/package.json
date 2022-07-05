@@ -48,9 +48,7 @@
     "fs-extra": "^9.0.1",
     "glob": "^7.1.7",
     "indent-string": "^5.0.0",
-    "read-pkg": "^7.1.0",
-    "zip-local": "^0.3.4",
-    "zod": "^3.14.3"
+    "zip-local": "^0.3.4"
   },
   "devDependencies": {
     "@graphql-tools/merge": "^8.2.12",

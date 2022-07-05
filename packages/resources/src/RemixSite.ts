@@ -2,14 +2,17 @@ import chalk from "chalk";
 import path from "path";
 import url from "url";
 import fs from "fs-extra";
+import glob from "glob";
+import crypto from "crypto";
 import spawn from "cross-spawn";
-import { readPackageSync } from "read-pkg";
-import * as z from "zod";
+import * as esbuild from "esbuild";
 import indent from "indent-string";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
 
 import { Construct } from "constructs";
 import {
-  Token,
+  Fn,
   Duration,
   CfnOutput,
   RemovalPolicy,
@@ -27,6 +30,8 @@ import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import * as route53Patterns from "aws-cdk-lib/aws-route53-patterns";
+import { getChildLogger } from "@serverless-stack/core";
+const logger = getChildLogger("RemixSite");
 
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
@@ -40,40 +45,17 @@ import {
   buildErrorResponsesForRedirectToIndex,
 } from "./BaseSite.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
-
-// This references a directory named after Nextjs, but the underlying code
-// appears to be generic enough to utilise in this case.
 import * as crossRegionHelper from "./nextjs-site/cross-region-helper.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
-// This aids us in ensuring the user is providing our expected remix.config.js
-// values. We will follow a required convention as is typical in some of the
-// official Remix templates for other deployment targets.
-// @see https://remix.run/docs/en/v1/api/conventions#remixconfigjs
-const expectedRemixConfigSchema = z.object({
-  // The path to the browser build, relative to remix.config.js. Defaults to
-  // "public/build". Should be deployed to static hosting.
-  assetsBuildDirectory: z.literal("public/build"),
-  // The URL prefix of the browser build with a trailing slash. Defaults to
-  // "/build/". This is the path the browser will use to find assets.
-  // Note: Remix additionally has a "public" folder, which should be considered
-  // different to this. We seperately need to deploy the "public" folder and
-  // ensure the files/directories are mapped relative to the root of the
-  // domain.
-  publicPath: z.literal("/build/"),
-  // The path to the server build file, relative to remix.config.js. This file
-  // should end in a .js extension and should be deployed to your server.
-  serverBuildPath: z.literal("build/index.js"),
-  // The target of the server build.
-  serverBuildTarget: z.literal("node-cjs"),
-  // A server entrypoint, relative to the root directory that becomes your
-  // server's main module. If specified, Remix will compile this file along with
-  // your application into a single file to be deployed to your server.
-  server: z.string().optional(),
-});
-
-type RemixConfig = z.infer<typeof expectedRemixConfigSchema>;
+type RemixConfig = {
+  assetsBuildDirectory: string;
+  publicPath: string;
+  serverBuildPath: string;
+  serverBuildTarget: string;
+  server?: string;
+};
 
 export interface RemixDomainProps extends BaseSiteDomainProps {}
 export interface RemixCdkDistributionProps
@@ -109,10 +91,21 @@ export interface RemixSiteProps {
       /**
        * Override the CloudFront cache policy properties for responses from the
        * server rendering Lambda.
+       * 
+       * @note The default cache policy that is used in the abscene of this property
+       * is one that performs no caching of the server response.
        */
       serverResponseCachePolicy?: cloudfront.ICachePolicy;
     };
   };
+
+  /**
+   * The Remix app server is deployed to a Lambda function behind an API Gateway
+   * HTTP API. Alternatively, you can choose to deploy to Lambda@Edge.
+   *
+   * @default false
+   */
+   edge?: boolean;
 
   /**
    * Path to the directory where the website source is located.
@@ -147,7 +140,7 @@ export interface RemixSiteProps {
    */
   customDomain?: string | RemixDomainProps;
 
-  /**z
+  /**
    * An object with the key being the environment variable name.
    *
    * @example
@@ -161,7 +154,7 @@ export interface RemixSiteProps {
    * });
    * ```
    */
-  environment?: { [key: string]: string };
+  environment?: Record<string, string>;
 
   /**
    * When running `sst start`, a placeholder site is deployed. This is to ensure
@@ -187,33 +180,21 @@ export interface RemixSiteProps {
   };
 
   /**
-   * While deploying, SST waits for the CloudFront cache invalidation process to
-   * finish. This ensures that the new content will be served once the deploy
-   * command finishes. However, this process can sometimes take more than 5
-   * mins. For non-prod environments it might make sense to pass in `false`.
-   * That'll skip waiting for the cache to invalidate and speed up the deploy
-   * process.
+   * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
    */
   waitForInvalidation?: boolean;
 }
 
 /**
- * The `RemixSite` construct is a higher level CDK construct that makes it easy
- * to create a Remix app.
+ * The `RemixSite` construct is a higher level CDK construct that makes it easy to create a Remix app. It provides a simple way to build and deploy the site to an S3 bucket; setup a CloudFront CDN for fast content delivery; and configure a custom domain for the website URL.
  *
- * It provides a simple way to build and deploy the site to CloudFront, the
- * server running on `Lambda@Edge`, with the browser build and public statics
- * backed by an S3 Bucket. In addition to this it supports environment variables
- * against your `Lambda@Edge` function, despite this being a limitation with the
- * AWS feature. CloudFront cache policies are implemented, along with cache
- * invalidation on deployment.
+ * By default, the Remix app server is deployed to a Lambda function behind API Gateway HTTP API Lambda. Alternatively, you can choose to deploy to Lambda@Edge.
+ * 
+ * In the case you have a centralized database, Edge locations are often far away from your database. If you are making multiple queries in your data loader, you might experience long latency.
  *
- * The construct enables you to customize many of the deployment features,
- * including the ability to configure a custom domain for the website URL.
+ * The browser build and public statics are backed by an S3 Bucket. CloudFront cache policies are configured, whilst also allowing for customization, and we include cache invalidation on deployment.
  *
- * It also allows you to [automatically set the environment
- * variables](#configuring-environment-variables) in your Remix app directly
- * from the outputs in your SST app.
+ * It also enables you to [automatically set the environment variables](#configuring-environment-variables) for your Remix app directly from the outputs in your SST app.
  */
 export class RemixSite extends Construct implements SSTConstruct {
   /**
@@ -238,7 +219,7 @@ export class RemixSite extends Construct implements SSTConstruct {
    * The default CloudFront cache policy properties for "public" folder
    * static files.
    *
-   * Note: This will not include the browser build files, which have a seperate
+   * @note This policy is not applied to the browser build files; they have a seperate
    * cache policy; @see `browserBuildCachePolicyProps`.
    */
   public static publicCachePolicyProps: cloudfront.CachePolicyProps = {
@@ -256,6 +237,8 @@ export class RemixSite extends Construct implements SSTConstruct {
   /**
    * The default CloudFront cache policy properties for responses from the
    * server rendering Lambda.
+   * 
+   * @note By default no caching is performed on the server rendering Lambda response.
    */
   public static serverResponseCachePolicyProps: cloudfront.CachePolicyProps = {
     queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
@@ -269,6 +252,9 @@ export class RemixSite extends Construct implements SSTConstruct {
     comment: "SST RemixSite Server Response Default Cache Policy",
   };
 
+  /**
+   * Exposes CDK instances created within the construct.
+   */
   public readonly cdk: {
     /**
      * The internally created CDK `Bucket` instance.
@@ -299,26 +285,20 @@ export class RemixSite extends Construct implements SSTConstruct {
    */
   private sstBuildDir: string;
   /**
-   * S3Asset references to the zip files containing the static files for the
-   * deployment.
-   */
-  private deploymentStaticsS3Assets: s3Assets.Asset[];
-  /**
    * The remix site config. It contains user configuration overrides which we
    * will need to consider when resolving Remix's build output.
    */
   private remixConfig: RemixConfig;
   private serverLambdaRole: iam.Role;
-  private serverLambdaVersion: lambda.IVersion;
+  private serverLambdaVersion?: lambda.IVersion;
+  private serverLambdaForApig?: lambda.Function;
   private awsCliLayer: AwsCliLayer;
 
   constructor(scope: Construct, id: string, props: RemixSiteProps) {
     super(scope, id);
 
+    const app = scope.node.root as App;
     try {
-      const app = scope.node.root as App;
-      const zipFileSizeLimitInMb = 200;
-
       this.isPlaceholder =
         (app.local || app.skipBuild) && !props.disablePlaceholder;
       this.sstBuildDir = app.buildDir;
@@ -331,57 +311,29 @@ export class RemixSite extends Construct implements SSTConstruct {
       if (this.isPlaceholder) {
         // Minimal configuration for the placeholder site
         this.remixConfig = {} as any;
-        this.deploymentStaticsS3Assets = this.zipAppStubAssets();
       } else {
-        // Validate application exists
-        if (!fs.existsSync(props.path)) {
-          throw new Error(`No path found`);
-        }
-
-        // Build the Remix site (only if not running an SST test)
-        // @ts-expect-error: "sstTest" is only passed in by SST tests
-        if (!props.sstTest) {
-          this.buildApp();
-        }
-
-        // Read the remix config as we need to ensure we are utilising
-        // any user defined overrides for the Remix build output.
         this.remixConfig = this.readRemixConfig();
-
-        const serverBuildFile = path.join(
-          this.props.path,
-          this.remixConfig.serverBuildPath
-        );
-
-        // Validate server build output exists
-        if (!fs.existsSync(serverBuildFile)) {
-          throw new Error(
-            `No server build output found at "${serverBuildFile}"`
-          );
-        }
-
-        // Create a directory that we will use to create the bundled version
-        // of the "core server build" along with our custom Lamba@Edge handler.
-        const deploymentWorkingDir = path.join(this.props.path, ".sst");
-        if (fs.existsSync(deploymentWorkingDir)) {
-          fs.removeSync(deploymentWorkingDir);
-        }
-        fs.mkdirSync(deploymentWorkingDir);
-
-        // Create the server lambda code bundle
-        this.createServerBundle();
-
-        // Create S3 assets from the browser build
-        this.deploymentStaticsS3Assets =
-          this.createStaticsS3Assets(zipFileSizeLimitInMb);
+        this.buildApp();
       }
 
       // Create Bucket which will be utilised to contain the statics
       this.cdk.bucket = this.createS3Bucket();
 
-      // Create Lambda@Edge functions (always created in us-east-1)
-      this.serverLambdaRole = this.createServerFunctionRole();
-      this.serverLambdaVersion = this.createServerFunction();
+      // Create Server functions
+      if (props.edge) {
+        const bundlePath = this.isPlaceholder
+          ? this.createServerLambdaBundleWithStub()
+          : this.createServerLambdaBundleForEdge();
+        this.serverLambdaRole = this.createServerFunctionRoleForEdge();
+        this.serverLambdaVersion = this.createServerFunctionForEdge(bundlePath);
+      }
+      else {
+        const bundlePath = this.isPlaceholder
+          ? this.createServerLambdaBundleWithStub()
+          : this.createServerLambdaBundleForApig();
+        this.serverLambdaRole = this.createServerFunctionRoleForApig();
+        this.serverLambdaForApig = this.createServerFunctionForApig(bundlePath);
+      }
 
       // Create Custom Domain
       this.validateCustomDomainSettings();
@@ -389,10 +341,23 @@ export class RemixSite extends Construct implements SSTConstruct {
       this.cdk.certificate = this.createCertificate();
 
       // Create S3 Deployment
-      const s3deployCR = this.createS3Deployment();
+      const assets = this.isPlaceholder
+        ? this.createStaticsS3AssetsWithStub()
+        : this.createStaticsS3Assets();
+      const s3deployCR = this.createS3Deployment(assets);
 
       // Create CloudFront
-      this.cdk.distribution = this.createCloudFrontDistribution();
+      this.validateCloudFrontDistributionSettings();
+      if (props.edge) {
+        this.cdk.distribution = this.isPlaceholder
+          ? this.createCloudFrontDistributionForStub()
+          : this.createCloudFrontDistributionForEdge();
+      }
+      else {
+        this.cdk.distribution = this.isPlaceholder
+          ? this.createCloudFrontDistributionForStub()
+          : this.createCloudFrontDistributionForApig();
+      }
       this.cdk.distribution.node.addDependency(s3deployCR);
 
       // Invalidate CloudFront
@@ -404,8 +369,7 @@ export class RemixSite extends Construct implements SSTConstruct {
     } catch (error) {
       // If running an SST test then re-throw the error so that it can be
       // tested
-      // @ts-expect-error: "sstTest" is only passed in by SST tests
-      if (props.sstTest) {
+      if (app.isRunningSSTTest()) {
         throw error;
       }
 
@@ -427,7 +391,9 @@ export class RemixSite extends Construct implements SSTConstruct {
     }
   }
 
-  // #region Public properties
+  /////////////////////
+  // Public Properties
+  /////////////////////
 
   /**
    * The CloudFront URL of the website.
@@ -481,9 +447,9 @@ export class RemixSite extends Construct implements SSTConstruct {
     return this.cdk.distribution.distributionDomainName;
   }
 
-  // #endregion
-
-  // #region Public methods
+  /////////////////////
+  // Public Methods
+  /////////////////////
 
   /**
    * Attaches the given list of permissions to allow the Remix server side
@@ -514,11 +480,31 @@ export class RemixSite extends Construct implements SSTConstruct {
     };
   }
 
-  // #endregion
-
-  // #region Building and Bundling
+  /////////////////////
+  // Build App
+  /////////////////////
 
   private buildApp() {
+    // Build
+    const app = this.node.root as App;
+    if (!app.isRunningSSTTest()) {
+      this.runNpmBuild();
+    }
+
+    // Validate build output exists
+    const serverBuildFile = path.join(
+      this.props.path,
+      this.remixConfig.serverBuildPath
+    );
+
+    if (!fs.existsSync(serverBuildFile)) {
+      throw new Error(
+        `No server build output found at "${serverBuildFile}"`
+      );
+    }
+  }
+
+  private runNpmBuild() {
     // Given that Remix apps tend to involve concatenation of other commands
     // such as Tailwind compilation, we feel that it is safest to target the
     // "build" script for the app in order to ensure all outputs are generated.
@@ -534,10 +520,7 @@ export class RemixSite extends Construct implements SSTConstruct {
     if (!fs.existsSync(path.join(sitePath, "package.json"))) {
       throw new Error(`No package.json found at "${sitePath}".`);
     }
-    const packageJson = readPackageSync({
-      cwd: sitePath,
-      normalize: false,
-    });
+    const packageJson = fs.readJsonSync(path.join(sitePath, "package.json"));
     if (!packageJson.scripts || !packageJson.scripts.build) {
       throw new Error(
         `No "build" script found within package.json in "${sitePath}".`
@@ -545,7 +528,7 @@ export class RemixSite extends Construct implements SSTConstruct {
     }
 
     // Run build
-    this.logInfo(`Running "build" script`);
+    logger.debug(`Running "npm build" script`);
     const buildResult = spawn.sync("npm", ["run", "build"], {
       cwd: sitePath,
       stdio: "inherit",
@@ -559,11 +542,18 @@ export class RemixSite extends Construct implements SSTConstruct {
     }
   }
 
-  // #endregion
+  /////////////////////
+  // Bundle S3 Assets
+  /////////////////////
 
-  // #region Statics
+  private createStaticsS3Assets(): s3Assets.Asset[] {
+    const app = this.node.root as App;
+    const fileSizeLimit = app.isRunningSSTTest()
+      ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
+        this.props.sstTestFileSizeLimitOverride || 200
+      : 200;
 
-  private createStaticsS3Assets(fileSizeLimit: number): s3Assets.Asset[] {
     // First we need to create zip files containing the statics
 
     const script = path.resolve(__dirname, "../assets/BaseSite/archiver.cjs");
@@ -605,7 +595,7 @@ export class RemixSite extends Construct implements SSTConstruct {
     return assets;
   }
 
-  private zipAppStubAssets(): s3Assets.Asset[] {
+  private createStaticsS3AssetsWithStub(): s3Assets.Asset[] {
     return [
       new s3Assets.Asset(this, "Asset", {
         path: path.resolve(__dirname, "../assets/RemixSite/site-sub"),
@@ -624,7 +614,7 @@ export class RemixSite extends Construct implements SSTConstruct {
     });
   }
 
-  private createS3Deployment(): CustomResource {
+  private createS3Deployment(assets: s3Assets.Asset[]): CustomResource {
     // Create a Lambda function that will be doing the uploading
     const uploader = new lambda.Function(this, "S3Uploader", {
       code: lambda.Code.fromAsset(
@@ -637,7 +627,7 @@ export class RemixSite extends Construct implements SSTConstruct {
       memorySize: 1024,
     });
     this.cdk.bucket.grantReadWrite(uploader);
-    this.deploymentStaticsS3Assets.forEach((asset) =>
+    assets.forEach((asset) =>
       asset.grantRead(uploader)
     );
 
@@ -658,33 +648,34 @@ export class RemixSite extends Construct implements SSTConstruct {
     this.cdk.bucket.grantReadWrite(handler);
     uploader.grantInvoke(handler);
 
+    // Build file options
+    const fileOptions = [];
     const publicPath = path.join(this.props.path, "public");
-    const publicFileOptions = [];
     for (const item of fs.readdirSync(publicPath)) {
-      const itemPath = path.join(publicPath, item);
-      publicFileOptions.push({
-        exclude: "*",
-        include: fs.statSync(itemPath).isDirectory()
-          ? `/${item}/*`
-          : `/${item}`,
-        cacheControl: "public,max-age=31536000,must-revalidate",
-      });
+      if (item === "build") {
+        fileOptions.push({
+          exclude: "*",
+          include: "/build/*",
+          cacheControl: "public,max-age=31536000,immutable",
+        });
+      } else {
+        const itemPath = path.join(publicPath, item);
+        fileOptions.push({
+          exclude: "*",
+          include: fs.statSync(itemPath).isDirectory()
+            ? `/${item}/*`
+            : `/${item}`,
+          cacheControl: "public,max-age=31536000,must-revalidate",
+        });
+      }
     }
 
     // Create custom resource
-    const fileOptions = [
-      {
-        exclude: "*",
-        include: `${this.remixConfig.publicPath}*`,
-        cacheControl: "public,max-age=31536000,must-revalidate",
-      },
-      ...publicFileOptions,
-    ];
     return new CustomResource(this, "S3Deployment", {
       serviceToken: handler.functionArn,
       resourceType: "Custom::SSTBucketDeployment",
       properties: {
-        Sources: this.deploymentStaticsS3Assets.map((asset) => ({
+        Sources: assets.map((asset) => ({
           BucketName: asset.s3BucketName,
           ObjectKey: asset.s3ObjectKey,
         })),
@@ -705,11 +696,27 @@ export class RemixSite extends Construct implements SSTConstruct {
     });
   }
 
-  // #endregion
+  /////////////////////
+  // Bundle Lambda Server
+  /////////////////////
 
-  // #region Server Lambda
+  private createServerLambdaBundleForApig(): string {
+    const templatePath = path.resolve(
+      __dirname,
+      "../assets/RemixSite/server-lambda/apig-server.js"
+    );
+    return this.createServerLambdaBundle(templatePath);
+  }
 
-  private createServerBundle() {
+  private createServerLambdaBundleForEdge(): string {
+    const templatePath = path.resolve(
+      __dirname,
+      "../assets/RemixSite/server-lambda/edge-server.js"
+    );
+    return this.createServerLambdaBundle(templatePath);
+  }
+
+  private createServerLambdaBundle(templatePath: string): string {
     // Create a Lambda@Edge handler for the Remix server bundle.
     //
     // Note: Remix does perform their own internal ESBuild process, but it
@@ -749,54 +756,67 @@ export class RemixSite extends Construct implements SSTConstruct {
       // template to create this wrapper within the "core server build" output
       // directory.
 
-      this.logInfo(`Creating Lambda@Edge handler for server`);
-
-      // Read in our lambda template file
-      const serverTemplate = fs.readFileSync(
-        path.resolve(
-          __dirname,
-          "../assets/RemixSite/server/server-template.js"
-        ),
-        "utf-8"
-      );
+      logger.debug(`Creating Lambda@Edge handler for server`);
 
       // Resolve the path to create the server lambda handler at.
       serverPath = path.join(this.props.path, "build/server.js");
 
       // Write the server lambda
-      fs.writeFileSync(serverPath, serverTemplate, "utf-8");
+      fs.copyFileSync(templatePath, serverPath);
     }
 
-    this.logInfo(`Bundling server`);
+    logger.debug(`Bundling server`);
 
-    const bundleResult = spawn.sync(
-      "npx",
-      [
-        `--no-install`,
-        `esbuild`,
-        `--bundle`,
-        serverPath,
-        `--target=node16`,
-        `--platform=node`,
-        `--outfile=${path.join(this.props.path, ".sst/server.js")}`,
-        `--external:aws-sdk`,
-      ],
-      { stdio: "inherit" }
+    // Create a directory that we will use to create the bundled version
+    // of the "core server build" along with our custom Lamba@Edge handler.
+    const outputPath = path.resolve(
+      path.join(this.sstBuildDir, `RemixSiteLambdaServer-${this.node.id}-${this.node.addr}`)
     );
 
-    if (bundleResult.error != null) {
+    const result = esbuild.buildSync({
+      entryPoints: [serverPath],
+      bundle: true,
+      target: "node16",
+      platform: "node",
+      external: ["aws-sdk"],
+      outfile: path.join(outputPath, "server.js"),
+      // Need to add the --ignore-annotations flag to ESBuild. It appears Remix templates by default include the "sideEffects": false, flag in their package.json. This causes ESBuild to remove the required polyfill module. I had removed the flag so it was working fine for me, but likely we will want to avoid having everyone update their Remix app like this. Remix includes polyfills so it is always going to be by nature with side effects. I've asked on their GH the reasoning for the flag being there in the first place. There is also an active PR to remove the need for this flag in their package.json, although the PR doesn't provide the original motivation for the flag being there. I will do more research and get back to ya'll. For sure we will want to address this. https://esbuild.github.io/api/#ignore-annotations
+      ignoreAnnotations: true,
+    })
+
+    if (result.errors.length > 0) {
+      result.errors.forEach((error) => console.error(error));
       throw new Error(`There was a problem bundling the server.`);
     }
+
+    return outputPath;
   }
 
-  private createServerFunctionRole(): iam.Role {
+  private createServerLambdaBundleWithStub(): string {
+    // Use existing stub bundle in assets
+    return path.resolve(__dirname, "../assets/RemixSite/server-lambda-stub");
+  }
+
+  private createServerFunctionRoleForApig(): iam.Role {
+    return this.createServerFunctionRole([
+      "lambda.amazonaws.com",
+    ]);
+  }
+
+  private createServerFunctionRoleForEdge(): iam.Role {
+    return this.createServerFunctionRole([
+      "lambda.amazonaws.com",
+      "edgelambda.amazonaws.com",
+    ]);
+  }
+
+  private createServerFunctionRole(principals: string[]): iam.Role {
     const { defaults } = this.props;
 
     // Create function role
     const role = new iam.Role(this, `ServerLambdaRole`, {
       assumedBy: new iam.CompositePrincipal(
-        new iam.ServicePrincipal("lambda.amazonaws.com"),
-        new iam.ServicePrincipal("edgelambda.amazonaws.com")
+        ...principals.map((principal) => new iam.ServicePrincipal(principal))
       ),
       managedPolicies: [
         iam.ManagedPolicy.fromManagedPolicyArn(
@@ -816,23 +836,38 @@ export class RemixSite extends Construct implements SSTConstruct {
     return role;
   }
 
-  private createServerFunction(): lambda.IVersion {
-    const name = "Server";
+  private createServerFunctionForApig(bundlePath: string): lambda.Function {
+    const { defaults, environment } = this.props;
 
-    const assetPath = this.isPlaceholder
-      ? path.resolve(__dirname, "../assets/RemixSite/server-lambda-stub")
-      : path.join(this.props.path, ".sst");
+    return new lambda.Function(this, `ServerFunction`, {
+      description: "Server handler for Remix",
+      handler: "server.handler",
+      currentVersionOptions: {
+        removalPolicy: RemovalPolicy.DESTROY,
+      },
+      logRetention: logs.RetentionDays.THREE_DAYS,
+      code: lambda.Code.fromAsset(bundlePath),
+      runtime: lambda.Runtime.NODEJS_16_X,
+      memorySize: defaults?.function?.memorySize || 512,
+      timeout: Duration.seconds(defaults?.function?.timeout || 10),
+      role: this.serverLambdaRole,
+      environment,
+    });
+  }
+
+  private createServerFunctionForEdge(bundlePath: string): lambda.IVersion {
+    const name = "Server";
 
     // Create function asset
     const asset = new s3Assets.Asset(this, `ServerFunctionAsset`, {
-      path: assetPath,
+      path: bundlePath,
     });
 
     // Create function based on region
     const root = this.node.root as App;
     return root.region === "us-east-1"
-      ? this.createServerFunctionInUE1(name, asset, assetPath)
-      : this.createServerFunctionInNonUE1(name, asset, assetPath);
+      ? this.createServerFunctionInUE1(name, asset, bundlePath)
+      : this.createServerFunctionInNonUE1(name, asset, bundlePath);
   }
 
   private createServerFunctionInUE1(
@@ -858,7 +893,7 @@ export class RemixSite extends Construct implements SSTConstruct {
     });
 
     // Create alias
-    fn.currentVersion.addAlias("live");
+    fn.addAlias("live");
 
     // Deploy after the code is updated
     if (!this.isPlaceholder) {
@@ -992,15 +1027,13 @@ export class RemixSite extends Construct implements SSTConstruct {
     return replaceValues;
   }
 
-  // #endregion
+  /////////////////////
+  // CloudFront Distribution
+  /////////////////////
 
-  // #region CloudFront Distribution
-
-  private createCloudFrontDistribution(): cloudfront.Distribution {
-    const { cdk, customDomain } = this.props;
+  private validateCloudFrontDistributionSettings() {
+    const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-
-    // Validate input
     if (cfDistributionProps.certificate) {
       throw new Error(
         `Do not configure the "cfDistribution.certificate". Use the "customDomain" to configure the RemixSite domain certificate.`
@@ -1011,8 +1044,65 @@ export class RemixSite extends Construct implements SSTConstruct {
         `Do not configure the "cfDistribution.domainNames". Use the "customDomain" to configure the RemixSite domain.`
       );
     }
+  }
 
-    // Build domainNames
+  private createCloudFrontDistributionForApig(): cloudfront.Distribution {
+    const { cdk } = this.props;
+    const cfDistributionProps = cdk?.distribution || {};
+    const s3Origin = new origins.S3Origin(this.cdk.bucket);
+
+    return new cloudfront.Distribution(this, "Distribution", {
+      // these values can be overwritten by cfDistributionProps
+      defaultRootObject: "",
+      // Override props.
+      ...cfDistributionProps,
+      // these values can NOT be overwritten by cfDistributionProps
+      domainNames: this.buildDistributionDomainNames(),
+      certificate: this.cdk.certificate,
+      defaultBehavior: this.buildDistributionDefaultBehaviorForApig(),
+      additionalBehaviors: {
+        ...this.buildDistributionStaticBehaviors(s3Origin),
+        ...(cfDistributionProps.additionalBehaviors || {}),
+      },
+    });
+  }
+
+  private createCloudFrontDistributionForEdge(): cloudfront.Distribution {
+    const { cdk } = this.props;
+    const cfDistributionProps = cdk?.distribution || {};
+    const s3Origin = new origins.S3Origin(this.cdk.bucket);
+
+    return new cloudfront.Distribution(this, "Distribution", {
+      // these values can be overwritten by cfDistributionProps
+      defaultRootObject: "",
+      // Override props.
+      ...cfDistributionProps,
+      // these values can NOT be overwritten by cfDistributionProps
+      domainNames: this.buildDistributionDomainNames(),
+      certificate: this.cdk.certificate,
+      defaultBehavior: this.buildDistributionDefaultBehaviorForEdge(s3Origin),
+      additionalBehaviors: {
+        ...this.buildDistributionStaticBehaviors(s3Origin),
+        ...(cfDistributionProps.additionalBehaviors || {}),
+      },
+    });
+  }
+
+  private createCloudFrontDistributionForStub(): cloudfront.Distribution {
+    return new cloudfront.Distribution(this, "Distribution", {
+      defaultRootObject: "index.html",
+      errorResponses: buildErrorResponsesForRedirectToIndex("index.html"),
+      domainNames: this.buildDistributionDomainNames(),
+      certificate: this.cdk.certificate,
+      defaultBehavior: {
+        origin: new origins.S3Origin(this.cdk.bucket),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      },
+    });
+  }
+
+  private buildDistributionDomainNames(): string[] {
+    const { customDomain } = this.props;
     const domainNames = [];
     if (!customDomain) {
       // no domain
@@ -1021,37 +1111,62 @@ export class RemixSite extends Construct implements SSTConstruct {
     } else {
       domainNames.push(customDomain.domainName);
     }
+    return domainNames;
+  }
 
-    // Build behavior
-    const origin = new origins.S3Origin(this.cdk.bucket);
-    const viewerProtocolPolicy =
-      cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS;
+  private buildDistributionDefaultBehaviorForApig(): cloudfront.BehaviorOptions {
+    const { cdk } = this.props;
+    const cfDistributionProps = cdk?.distribution || {};
 
-    if (this.isPlaceholder) {
-      return new cloudfront.Distribution(this, "Distribution", {
-        defaultRootObject: "index.html",
-        errorResponses: buildErrorResponsesForRedirectToIndex("index.html"),
-        domainNames,
-        certificate: this.cdk.certificate,
-        defaultBehavior: {
-          origin,
-          viewerProtocolPolicy,
+    const fnUrl = this.serverLambdaForApig!.addFunctionUrl({
+      authType: lambda.FunctionUrlAuthType.NONE,
+    });
+
+    const serverResponseCachePolicy =
+      cdk?.cachePolicies?.serverResponseCachePolicy ??
+      this.createCloudFrontServerResponseCachePolicy();
+
+    return {
+      viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      origin: new origins.HttpOrigin(Fn.parseDomainName(fnUrl.url)),
+      allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+      cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
+      compress: true,
+      cachePolicy: serverResponseCachePolicy,
+      ...(cfDistributionProps.defaultBehavior || {}),
+    };
+  }
+
+  private buildDistributionDefaultBehaviorForEdge(origin: origins.S3Origin): cloudfront.BehaviorOptions {
+    const { cdk } = this.props;
+    const cfDistributionProps = cdk?.distribution || {};
+
+    const serverResponseCachePolicy =
+      cdk?.cachePolicies?.serverResponseCachePolicy ??
+      this.createCloudFrontServerResponseCachePolicy();
+
+    return {
+      viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      origin,
+      allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+      cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
+      compress: true,
+      cachePolicy: serverResponseCachePolicy,
+      ...(cfDistributionProps.defaultBehavior || {}),
+      // concatenate edgeLambdas
+      edgeLambdas: [
+        {
+          includeBody: true,
+          eventType: cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST,
+          functionVersion: this.serverLambdaVersion!,
         },
-      });
-    }
+        ...(cfDistributionProps.defaultBehavior?.edgeLambdas || []),
+      ],
+    };
+  }
 
-    // Build Edge functions
-    const edgeLambdas: cloudfront.EdgeLambda[] = [
-      {
-        includeBody: true,
-        eventType: cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST,
-        functionVersion: this.serverLambdaVersion,
-      },
-      {
-        eventType: cloudfront.LambdaEdgeEventType.ORIGIN_RESPONSE,
-        functionVersion: this.serverLambdaVersion,
-      },
-    ];
+  private buildDistributionStaticBehaviors(origin: origins.S3Origin): Record<string, cloudfront.BehaviorOptions> {
+    const { cdk } = this.props;
 
     // Build cache policies
     const browserBuildCachePolicy =
@@ -1060,28 +1175,23 @@ export class RemixSite extends Construct implements SSTConstruct {
     const publicCachePolicy =
       cdk?.cachePolicies?.publicCachePolicy ??
       this.createCloudFrontPublicCachePolicy();
-    const serverResponseCachePolicy =
-      cdk?.cachePolicies?.serverResponseCachePolicy ??
-      this.createCloudFrontServerResponseCachePolicy();
 
-    // Behaviour options for public assets
-    const publicBehaviourOptions: cloudfront.BehaviorOptions = {
-      viewerProtocolPolicy,
+    // Create additional behaviours for statics
+    const publicPath = path.join(this.props.path, "public");
+    const staticsBehaviours: Record<string, cloudfront.BehaviorOptions> = {};
+    const staticBehaviourOptions: cloudfront.BehaviorOptions = {
+      viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       origin,
       allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
       cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
       cachePolicy: publicCachePolicy,
     };
-
-    // Create additional behaviours for statics
-    const publicPath = path.join(this.props.path, "public");
-    const staticsBehaviours: Record<string, cloudfront.BehaviorOptions> = {};
     for (const item of fs.readdirSync(publicPath)) {
       if (item === "build") {
         // This is the browser build, so it will have its own cache policy
         staticsBehaviours["/build/*"] = {
-          ...publicBehaviourOptions,
+          ...staticBehaviourOptions,
           cachePolicy: browserBuildCachePolicy,
         };
       } else {
@@ -1089,38 +1199,11 @@ export class RemixSite extends Construct implements SSTConstruct {
         const itemPath = path.join(publicPath, item);
         staticsBehaviours[
           fs.statSync(itemPath).isDirectory() ? `/${item}/*` : `/${item}`
-        ] = publicBehaviourOptions;
+        ] = staticBehaviourOptions;
       }
     }
 
-    // Create Distribution
-    return new cloudfront.Distribution(this, "Distribution", {
-      // these values can be overwritten by cfDistributionProps
-      defaultRootObject: "",
-      // Override props.
-      ...cfDistributionProps,
-      // these values can NOT be overwritten by cfDistributionProps
-      domainNames,
-      certificate: this.cdk.certificate,
-      defaultBehavior: {
-        viewerProtocolPolicy,
-        origin,
-        allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-        cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
-        compress: true,
-        cachePolicy: serverResponseCachePolicy,
-        ...(cfDistributionProps.defaultBehavior || {}),
-        // concatenate edgeLambdas
-        edgeLambdas: [
-          ...edgeLambdas,
-          ...(cfDistributionProps.defaultBehavior?.edgeLambdas || []),
-        ],
-      },
-      additionalBehaviors: {
-        ...staticsBehaviours,
-        ...(cfDistributionProps.additionalBehaviors || {}),
-      },
-    });
+    return staticsBehaviours;
   }
 
   private createCloudFrontBrowserBuildAssetsCachePolicy(): cloudfront.CachePolicy {
@@ -1172,45 +1255,6 @@ export class RemixSite extends Construct implements SSTConstruct {
       })
     );
 
-    // We need a versionId so that CR gets updated on each deploy
-    let versionId: string | undefined;
-    if (this.isPlaceholder) {
-      versionId = "live";
-    } else {
-      // We will generate a hash based on the contents of the "public" folder
-      // which will be used to indicate if we need to invalidate our CloudFront
-      // cache. As the browser build files are always uniquely hash in their
-      // filenames according to their content we can ignore the browser build
-      // files.
-
-      const result = spawn.sync("node", [
-        path.resolve(__dirname, "../assets/nodejs/folder-hash.cjs"),
-        "--path",
-        path.resolve(this.props.path, "public"),
-        // Ignore the browser build files;
-        "--ignore",
-        "build",
-      ]);
-      if (result.error != null) {
-        throw new Error(
-          `Failed to to create version hash for "public" directory.\n${result.error}`
-        );
-      }
-      if (result.status !== 0) {
-        throw new Error(
-          `Failed to to create version hash for "public" directory.\n${result.stderr}`
-        );
-      }
-      versionId = result.stdout.toString();
-      if (versionId == null) {
-        throw new Error(
-          `Could not resolve the versionId hash for the Remix "public" dir.`
-        );
-      }
-
-      this.logInfo(`CloudFront invalidation version: ${versionId}`);
-    }
-
     const waitForInvalidation =
       this.props.waitForInvalidation === false ? false : true;
 
@@ -1218,7 +1262,7 @@ export class RemixSite extends Construct implements SSTConstruct {
       serviceToken: invalidator.functionArn,
       resourceType: "Custom::SSTCloudFrontInvalidation",
       properties: {
-        BuildId: versionId,
+        BuildId: this.isPlaceholder ? "live" : this.generateBuildId(),
         DistributionId: this.cdk.distribution.distributionId,
         // TODO: Ignore the browser build path as it may speed up invalidation
         DistributionPaths: ["/*"],
@@ -1227,9 +1271,9 @@ export class RemixSite extends Construct implements SSTConstruct {
     });
   }
 
-  // #endregion
-
-  // #region Custom Domain
+  /////////////////////
+  // Custom Domain
+  /////////////////////
 
   protected validateCustomDomainSettings() {
     const { customDomain } = this.props;
@@ -1371,9 +1415,9 @@ export class RemixSite extends Construct implements SSTConstruct {
     }
   }
 
-  // #endregion
-
-  // #region Helper Functions
+  /////////////////////
+  // Helper Functions
+  /////////////////////
 
   private registerSiteEnvironment() {
     const environmentOutputs: Record<string, string> = {};
@@ -1395,49 +1439,68 @@ export class RemixSite extends Construct implements SSTConstruct {
   private readRemixConfig(): RemixConfig {
     const { path: sitePath } = this.props;
 
-    const result = spawn.sync("node", [
-      path.resolve(
-        __dirname,
-        "../assets/RemixSite/config/read-remix-config.cjs"
-      ),
-      "--path",
-      path.resolve(sitePath, "remix.config.js"),
-    ]);
-    if (result.error != null) {
-      throw new Error(`Failed to read the Remix config file.\n${result.error}`);
-    }
-    if (result.status !== 0) {
+    const configDefaults: RemixConfig = {
+      assetsBuildDirectory: "public/build",
+      publicPath: "/build/",
+      serverBuildPath: "build/index.js",
+      serverBuildTarget: "node-cjs",
+      server: undefined,
+    };
+
+    // Validate config path
+    const configPath = path.resolve(sitePath, "remix.config.js");
+    if (!fs.existsSync(configPath)) {
       throw new Error(
-        `Failed to read the Remix config file.\n${result.stderr}`
+        `Could not find "remix.config.js" at expected path "${configPath}".`
       );
     }
-    const output = result.stdout.toString();
 
-    const remixConfigParse = expectedRemixConfigSchema.safeParse(
-      JSON.parse(output)
-    );
-    if (remixConfigParse.success === false) {
-      throw new Error(
-        `\nYour remix.config.js has invalid values.
+    // Load config
+    const userConfig = require(configPath);
+    const config: RemixConfig = {
+      ...configDefaults,
+      ...userConfig,
+    };
 
-It needs to use the default Remix config values for the following properties:
+    // Validate config
+    Object.keys(configDefaults)
+      .filter((key) => key !== "server")
+      .forEach((key) => {
+        const k = key as keyof RemixConfig;
+        if (config[k] !== configDefaults[k]) {
+          throw new Error(`RemixSite: remix.config.js "${key}" must be "${configDefaults[k]}".`);
+        }
+    });
 
-module.exports ={
-  assetsBuildDirectory: "public/build",
-  publicPath: "/build/",
-  serverBuildPath: "build/index.js",
-  serverBuildTarget: "node-cjs",
-  server: undefined,
-}
-`
-      );
+    return config;
+  }
+
+  private generateBuildId(): string {
+    // We will generate a hash based on the contents of the "public" folder
+    // which will be used to indicate if we need to invalidate our CloudFront
+    // cache. As the browser build files are always uniquely hash in their
+    // filenames according to their content we can ignore the browser build
+    // files.
+
+    // The below options are needed to support following symlinks when building zip files:
+    // - nodir: This will prevent symlinks themselves from being copied into the zip.
+    // - follow: This will follow symlinks and copy the files within.
+    const globOptions = {
+      dot: true,
+      nodir: true,
+      follow: true,
+      ignore: ["build/**"],
+      cwd: path.resolve(this.props.path, "public"),
+    };
+    const files = glob.sync("**", globOptions);
+    const hash = crypto.createHash("sha1");
+    for (const file of files) {
+      hash.update(file);
     }
-    return remixConfigParse.data;
-  }
+    const buildId = hash.digest("hex");
 
-  private logInfo(msg: string) {
-    console.log(chalk.grey(`RemixSite(${this.props.path}): ${msg}`));
-  }
+    logger.debug(`Generated build ID ${buildId}`);
 
-  // #endregion
+    return buildId;
+  }
 }

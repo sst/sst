@@ -5,8 +5,6 @@
 // Lambda Replacer code to inject the appropriate environment variables. This
 // strategy is required as Lambda@Edge doesn't natively support environment
 // variables - they need to be inlined.
-//
-// Shout out to the Architect team, from which we drew inspiration.
 
 const { installGlobals, readableStreamToString } = require("@remix-run/node");
 installGlobals();
