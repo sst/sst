@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="https://sst.dev/discord"><img alt="DIscord" src="https://d33wubrfki0l68.cloudfront.net/3a002f10c7cfea08f0a84c28bd8ca497981f537e/b8bcd/assets/lander/discord-mark-dark.svg" /></a>
+  <a href="https://sst.dev/discord"><img alt="Discord" src="https://img.shields.io/discord/983865673656705025?style=flat-square" /></a>
   <a href="https://www.npmjs.com/package/create-sst"><img alt="npm" src="https://img.shields.io/npm/v/create-sst?style=flat-square" /></a>
   <a href="https://github.com/serverless-stack/sst/actions/workflows/ci.yml"><img alt="Build status" src="https://img.shields.io/github/workflow/status/serverless-stack/sst/CI?style=flat-square" /></a>
 </p>
