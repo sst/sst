@@ -290,8 +290,8 @@ export class RemixSite extends Construct implements SSTConstruct {
    */
   private remixConfig: RemixConfig;
   private serverLambdaRole: iam.Role;
-  private serverLambdaVersion?: lambda.IVersion;
-  private serverLambdaForApig?: lambda.Function;
+  private serverLambdaForEdge?: lambda.IVersion;
+  private serverLambdaForRegional?: lambda.Function;
   private awsCliLayer: AwsCliLayer;
 
   constructor(scope: Construct, id: string, props: RemixSiteProps) {
@@ -325,14 +325,14 @@ export class RemixSite extends Construct implements SSTConstruct {
           ? this.createServerLambdaBundleWithStub()
           : this.createServerLambdaBundleForEdge();
         this.serverLambdaRole = this.createServerFunctionRoleForEdge();
-        this.serverLambdaVersion = this.createServerFunctionForEdge(bundlePath);
+        this.serverLambdaForEdge = this.createServerFunctionForEdge(bundlePath);
       }
       else {
         const bundlePath = this.isPlaceholder
           ? this.createServerLambdaBundleWithStub()
-          : this.createServerLambdaBundleForApig();
-        this.serverLambdaRole = this.createServerFunctionRoleForApig();
-        this.serverLambdaForApig = this.createServerFunctionForApig(bundlePath);
+          : this.createServerLambdaBundleForRegional();
+        this.serverLambdaRole = this.createServerFunctionRoleForRegional();
+        this.serverLambdaForRegional = this.createServerFunctionForRegional(bundlePath);
       }
 
       // Create Custom Domain
@@ -356,7 +356,7 @@ export class RemixSite extends Construct implements SSTConstruct {
       else {
         this.cdk.distribution = this.isPlaceholder
           ? this.createCloudFrontDistributionForStub()
-          : this.createCloudFrontDistributionForApig();
+          : this.createCloudFrontDistributionForRegional();
       }
       this.cdk.distribution.node.addDependency(s3deployCR);
 
@@ -700,10 +700,10 @@ export class RemixSite extends Construct implements SSTConstruct {
   // Bundle Lambda Server
   /////////////////////
 
-  private createServerLambdaBundleForApig(): string {
+  private createServerLambdaBundleForRegional(): string {
     const templatePath = path.resolve(
       __dirname,
-      "../assets/RemixSite/server-lambda/apig-server.js"
+      "../assets/RemixSite/server-lambda/regional-server.js"
     );
     return this.createServerLambdaBundle(templatePath);
   }
@@ -797,7 +797,7 @@ export class RemixSite extends Construct implements SSTConstruct {
     return path.resolve(__dirname, "../assets/RemixSite/server-lambda-stub");
   }
 
-  private createServerFunctionRoleForApig(): iam.Role {
+  private createServerFunctionRoleForRegional(): iam.Role {
     return this.createServerFunctionRole([
       "lambda.amazonaws.com",
     ]);
@@ -836,7 +836,7 @@ export class RemixSite extends Construct implements SSTConstruct {
     return role;
   }
 
-  private createServerFunctionForApig(bundlePath: string): lambda.Function {
+  private createServerFunctionForRegional(bundlePath: string): lambda.Function {
     const { defaults, environment } = this.props;
 
     return new lambda.Function(this, `ServerFunction`, {
@@ -1046,7 +1046,7 @@ export class RemixSite extends Construct implements SSTConstruct {
     }
   }
 
-  private createCloudFrontDistributionForApig(): cloudfront.Distribution {
+  private createCloudFrontDistributionForRegional(): cloudfront.Distribution {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
     const s3Origin = new origins.S3Origin(this.cdk.bucket);
@@ -1059,7 +1059,7 @@ export class RemixSite extends Construct implements SSTConstruct {
       // these values can NOT be overwritten by cfDistributionProps
       domainNames: this.buildDistributionDomainNames(),
       certificate: this.cdk.certificate,
-      defaultBehavior: this.buildDistributionDefaultBehaviorForApig(),
+      defaultBehavior: this.buildDistributionDefaultBehaviorForRegional(),
       additionalBehaviors: {
         ...this.buildDistributionStaticBehaviors(s3Origin),
         ...(cfDistributionProps.additionalBehaviors || {}),
@@ -1114,11 +1114,11 @@ export class RemixSite extends Construct implements SSTConstruct {
     return domainNames;
   }
 
-  private buildDistributionDefaultBehaviorForApig(): cloudfront.BehaviorOptions {
+  private buildDistributionDefaultBehaviorForRegional(): cloudfront.BehaviorOptions {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
 
-    const fnUrl = this.serverLambdaForApig!.addFunctionUrl({
+    const fnUrl = this.serverLambdaForRegional!.addFunctionUrl({
       authType: lambda.FunctionUrlAuthType.NONE,
     });
 
@@ -1158,7 +1158,7 @@ export class RemixSite extends Construct implements SSTConstruct {
         {
           includeBody: true,
           eventType: cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST,
-          functionVersion: this.serverLambdaVersion!,
+          functionVersion: this.serverLambdaForEdge!,
         },
         ...(cfDistributionProps.defaultBehavior?.edgeLambdas || []),
       ],
