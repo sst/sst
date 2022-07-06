@@ -655,7 +655,7 @@ export class RemixSite extends Construct implements SSTConstruct {
       if (item === "build") {
         fileOptions.push({
           exclude: "*",
-          include: "/build/*",
+          include: "build/*",
           cacheControl: "public,max-age=31536000,immutable",
         });
       } else {
@@ -663,9 +663,9 @@ export class RemixSite extends Construct implements SSTConstruct {
         fileOptions.push({
           exclude: "*",
           include: fs.statSync(itemPath).isDirectory()
-            ? `/${item}/*`
-            : `/${item}`,
-          cacheControl: "public,max-age=31536000,must-revalidate",
+            ? `${item}/*`
+            : `${item}`,
+          cacheControl: "public,max-age=3600,must-revalidate",
         });
       }
     }
