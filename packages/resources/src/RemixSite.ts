@@ -1187,20 +1187,49 @@ export class RemixSite extends Construct implements SSTConstruct {
       compress: true,
       cachePolicy: staticsCachePolicy,
     };
-    for (const item of fs.readdirSync(publicPath)) {
-      if (item === "build") {
-        // This is the browser build, so it will have its own cache policy
-        staticsBehaviours["/build/*"] = {
-          ...staticBehaviourOptions,
-          cachePolicy: buildCachePolicy,
-        };
-      } else {
-        // This is a public asset, so it will use the public cache policy
-        const itemPath = path.join(publicPath, item);
-        staticsBehaviours[
-          fs.statSync(itemPath).isDirectory() ? `/${item}/*` : `/${item}`
-        ] = staticBehaviourOptions;
+
+    // This is the browser build, so it will have its own cache policy
+    const buildBehaviour: cloudfront.BehaviorOptions = {
+      ...staticBehaviourOptions,
+      cachePolicy: buildCachePolicy,
+    };
+    staticsBehaviours["/build/_assets/*"] = buildBehaviour;
+    staticsBehaviours["/build/_shared/*"] = buildBehaviour;
+    staticsBehaviours["/build/routes/*"] = buildBehaviour;
+    staticsBehaviours["/build/*"] = buildBehaviour;
+
+    // Add behaviour for public folder statics (excluding build)
+    // We have to recurse the public folder we can't just supply a '*' in a
+    // behaviour path pattern, as it does not recursively match directories.
+    // Therefore we have to do the recursing ourselves so we can establish
+    // path patterns similar to;
+    // /favicon.ico
+    // /images/*
+    // /images/logos/*
+    // /fonts/*
+    const publicDir = path.join(this.props.path, "public");
+    const buildDir = path.join(publicDir, "build");
+    const publicPaths: string[] = [];
+    const recursePublicDir = (dir: string): void => {
+      const items = fs.readdirSync(dir);
+      for (const item of items) {
+        const itemPath = path.join(dir, item);
+        if (fs.statSync(itemPath).isDirectory()) {
+          if (itemPath !== buildDir) {
+            publicPaths.push(`${itemPath}/*`);
+            recursePublicDir(itemPath);
+          }
+        } else {
+          if (dir === publicDir) {
+            publicPaths.push(itemPath);
+          }
+        }
       }
+    };
+    recursePublicDir(publicDir);
+    for (const publicPath of publicPaths) {
+      const pathRelativeToPublicDir = publicPath.replace(publicDir, "");
+      staticsBehaviours[pathRelativeToPublicDir] = staticBehaviourOptions;
     }
 
     return staticsBehaviours;
