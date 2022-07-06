@@ -1188,48 +1188,24 @@ export class RemixSite extends Construct implements SSTConstruct {
       cachePolicy: staticsCachePolicy,
     };
 
-    // This is the browser build, so it will have its own cache policy
-    const buildBehaviour: cloudfront.BehaviorOptions = {
+    // Add behaviour for browser build
+    staticsBehaviours["build/*"] = {
       ...staticBehaviourOptions,
       cachePolicy: buildCachePolicy,
     };
-    staticsBehaviours["/build/_assets/*"] = buildBehaviour;
-    staticsBehaviours["/build/_shared/*"] = buildBehaviour;
-    staticsBehaviours["/build/routes/*"] = buildBehaviour;
-    staticsBehaviours["/build/*"] = buildBehaviour;
 
     // Add behaviour for public folder statics (excluding build)
-    // We have to recurse the public folder we can't just supply a '*' in a
-    // behaviour path pattern, as it does not recursively match directories.
-    // Therefore we have to do the recursing ourselves so we can establish
-    // path patterns similar to;
-    // /favicon.ico
-    // /images/*
-    // /images/logos/*
-    // /fonts/*
     const publicDir = path.join(this.props.path, "public");
-    const buildDir = path.join(publicDir, "build");
-    const publicPaths: string[] = [];
-    const recursePublicDir = (dir: string): void => {
-      const items = fs.readdirSync(dir);
-      for (const item of items) {
-        const itemPath = path.join(dir, item);
-        if (fs.statSync(itemPath).isDirectory()) {
-          if (itemPath !== buildDir) {
-            publicPaths.push(`${itemPath}/*`);
-            recursePublicDir(itemPath);
-          }
-        } else {
-          if (dir === publicDir) {
-            publicPaths.push(itemPath);
-          }
-        }
+    for (const item of fs.readdirSync(publicDir)) {
+      if (item === "build") {
+        continue;
       }
-    };
-    recursePublicDir(publicDir);
-    for (const publicPath of publicPaths) {
-      const pathRelativeToPublicDir = publicPath.replace(publicDir, "");
-      staticsBehaviours[pathRelativeToPublicDir] = staticBehaviourOptions;
+      const itemPath = path.join(publicDir, item);
+      if (fs.statSync(itemPath).isDirectory()) {
+        staticsBehaviours[`${item}/*`] = staticBehaviourOptions;
+      } else {
+        staticsBehaviours[item] = staticBehaviourOptions;
+      }
     }
 
     return staticsBehaviours;
