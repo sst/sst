@@ -71,6 +71,39 @@ test("edge: undefined", async () => {
           },
           CachedMethods: ["GET", "HEAD", "OPTIONS"],
           Compress: true,
+          PathPattern: "/build/_assets/*",
+          TargetOriginId: "devmyappstackSiteDistributionOrigin22B8FA4E2",
+          ViewerProtocolPolicy: "redirect-to-https",
+        },
+        {
+          AllowedMethods: ["GET", "HEAD", "OPTIONS"],
+          CachePolicyId: {
+            Ref: "SiteBuildCache0ED8AF59",
+          },
+          CachedMethods: ["GET", "HEAD", "OPTIONS"],
+          Compress: true,
+          PathPattern: "/build/_shared/*",
+          TargetOriginId: "devmyappstackSiteDistributionOrigin22B8FA4E2",
+          ViewerProtocolPolicy: "redirect-to-https",
+        },
+        {
+          AllowedMethods: ["GET", "HEAD", "OPTIONS"],
+          CachePolicyId: {
+            Ref: "SiteBuildCache0ED8AF59",
+          },
+          CachedMethods: ["GET", "HEAD", "OPTIONS"],
+          Compress: true,
+          PathPattern: "/build/routes/*",
+          TargetOriginId: "devmyappstackSiteDistributionOrigin22B8FA4E2",
+          ViewerProtocolPolicy: "redirect-to-https",
+        },
+        {
+          AllowedMethods: ["GET", "HEAD", "OPTIONS"],
+          CachePolicyId: {
+            Ref: "SiteBuildCache0ED8AF59",
+          },
+          CachedMethods: ["GET", "HEAD", "OPTIONS"],
+          Compress: true,
           PathPattern: "/build/*",
           TargetOriginId: "devmyappstackSiteDistributionOrigin22B8FA4E2",
           ViewerProtocolPolicy: "redirect-to-https",
@@ -86,9 +119,39 @@ test("edge: undefined", async () => {
           TargetOriginId: "devmyappstackSiteDistributionOrigin22B8FA4E2",
           ViewerProtocolPolicy: "redirect-to-https",
         },
+        {
+          AllowedMethods: ["GET", "HEAD", "OPTIONS"],
+          CachePolicyId: {
+            Ref: "SiteStaticsCache29AFAE7C",
+          },
+          CachedMethods: ["GET", "HEAD", "OPTIONS"],
+          Compress: true,
+          PathPattern: "/foo/*",
+          TargetOriginId: "devmyappstackSiteDistributionOrigin22B8FA4E2",
+          ViewerProtocolPolicy: "redirect-to-https",
+        },
+        {
+          AllowedMethods: ["GET", "HEAD", "OPTIONS"],
+          CachePolicyId: {
+            Ref: "SiteStaticsCache29AFAE7C",
+          },
+          CachedMethods: ["GET", "HEAD", "OPTIONS"],
+          Compress: true,
+          PathPattern: "/foo/bar/*",
+          TargetOriginId: "devmyappstackSiteDistributionOrigin22B8FA4E2",
+          ViewerProtocolPolicy: "redirect-to-https",
+        },
       ],
       DefaultCacheBehavior: {
-        AllowedMethods: ["GET", "HEAD", "OPTIONS", "PUT", "PATCH", "POST", "DELETE"],
+        AllowedMethods: [
+          "GET",
+          "HEAD",
+          "OPTIONS",
+          "PUT",
+          "PATCH",
+          "POST",
+          "DELETE",
+        ],
         CachePolicyId: {
           Ref: "SiteServerCacheC3EA2799",
         },
@@ -103,14 +166,14 @@ test("edge: undefined", async () => {
       IPV6Enabled: true,
       Origins: [
         {
-          "CustomOriginConfig": {
-            "OriginProtocolPolicy": "https-only",
-            "OriginSSLProtocols": ["TLSv1.2"]
+          CustomOriginConfig: {
+            OriginProtocolPolicy: "https-only",
+            OriginSSLProtocols: ["TLSv1.2"],
           },
-          "DomainName": {
+          DomainName: {
             "Fn::Select": ANY,
           },
-          "Id": "devmyappstackSiteDistributionOrigin1F25265FA"
+          Id: "devmyappstackSiteDistributionOrigin1F25265FA",
         },
         {
           DomainName: {
@@ -155,7 +218,7 @@ test("edge: undefined", async () => {
         "--exclude",
         "*",
         "--include",
-        "/build/*",
+        "build/*",
         "--cache-control",
         "public,max-age=31536000,immutable",
       ],
@@ -163,9 +226,17 @@ test("edge: undefined", async () => {
         "--exclude",
         "*",
         "--include",
-        "/favicon.ico",
+        "favicon.ico",
         "--cache-control",
-        "public,max-age=31536000,must-revalidate",
+        "public,max-age=3600,must-revalidate",
+      ],
+      [
+        "--exclude",
+        "*",
+        "--include",
+        "foo/*",
+        "--cache-control",
+        "public,max-age=3600,must-revalidate",
       ],
     ],
   });
@@ -210,14 +281,14 @@ test("edge: false", async () => {
     DistributionConfig: objectLike({
       Origins: [
         {
-          "CustomOriginConfig": {
-            "OriginProtocolPolicy": "https-only",
-            "OriginSSLProtocols": ["TLSv1.2"]
+          CustomOriginConfig: {
+            OriginProtocolPolicy: "https-only",
+            OriginSSLProtocols: ["TLSv1.2"],
           },
-          "DomainName": {
+          DomainName: {
             "Fn::Select": ANY,
           },
-          "Id": "devmyappstackSiteDistributionOrigin1F25265FA"
+          Id: "devmyappstackSiteDistributionOrigin1F25265FA",
         },
         {
           DomainName: {
@@ -272,6 +343,39 @@ test("edge: true", async () => {
           },
           CachedMethods: ["GET", "HEAD", "OPTIONS"],
           Compress: true,
+          PathPattern: "/build/_assets/*",
+          TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
+          ViewerProtocolPolicy: "redirect-to-https",
+        },
+        {
+          AllowedMethods: ["GET", "HEAD", "OPTIONS"],
+          CachePolicyId: {
+            Ref: "SiteBuildCache0ED8AF59",
+          },
+          CachedMethods: ["GET", "HEAD", "OPTIONS"],
+          Compress: true,
+          PathPattern: "/build/_shared/*",
+          TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
+          ViewerProtocolPolicy: "redirect-to-https",
+        },
+        {
+          AllowedMethods: ["GET", "HEAD", "OPTIONS"],
+          CachePolicyId: {
+            Ref: "SiteBuildCache0ED8AF59",
+          },
+          CachedMethods: ["GET", "HEAD", "OPTIONS"],
+          Compress: true,
+          PathPattern: "/build/routes/*",
+          TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
+          ViewerProtocolPolicy: "redirect-to-https",
+        },
+        {
+          AllowedMethods: ["GET", "HEAD", "OPTIONS"],
+          CachePolicyId: {
+            Ref: "SiteBuildCache0ED8AF59",
+          },
+          CachedMethods: ["GET", "HEAD", "OPTIONS"],
+          Compress: true,
           PathPattern: "/build/*",
           TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
           ViewerProtocolPolicy: "redirect-to-https",
@@ -287,9 +391,39 @@ test("edge: true", async () => {
           TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
           ViewerProtocolPolicy: "redirect-to-https",
         },
+        {
+          AllowedMethods: ["GET", "HEAD", "OPTIONS"],
+          CachePolicyId: {
+            Ref: "SiteStaticsCache29AFAE7C",
+          },
+          CachedMethods: ["GET", "HEAD", "OPTIONS"],
+          Compress: true,
+          PathPattern: "/foo/*",
+          TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
+          ViewerProtocolPolicy: "redirect-to-https",
+        },
+        {
+          AllowedMethods: ["GET", "HEAD", "OPTIONS"],
+          CachePolicyId: {
+            Ref: "SiteStaticsCache29AFAE7C",
+          },
+          CachedMethods: ["GET", "HEAD", "OPTIONS"],
+          Compress: true,
+          PathPattern: "/foo/bar/*",
+          TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
+          ViewerProtocolPolicy: "redirect-to-https",
+        },
       ],
       DefaultCacheBehavior: {
-        AllowedMethods: ["GET", "HEAD", "OPTIONS", "PUT", "PATCH", "POST", "DELETE"],
+        AllowedMethods: [
+          "GET",
+          "HEAD",
+          "OPTIONS",
+          "PUT",
+          "PATCH",
+          "POST",
+          "DELETE",
+        ],
         CachePolicyId: {
           Ref: "SiteServerCacheC3EA2799",
         },
@@ -353,7 +487,7 @@ test("edge: true", async () => {
         "--exclude",
         "*",
         "--include",
-        "/build/*",
+        "build/*",
         "--cache-control",
         "public,max-age=31536000,immutable",
       ],
@@ -361,9 +495,17 @@ test("edge: true", async () => {
         "--exclude",
         "*",
         "--include",
-        "/favicon.ico",
+        "favicon.ico",
         "--cache-control",
-        "public,max-age=31536000,must-revalidate",
+        "public,max-age=3600,must-revalidate",
+      ],
+      [
+        "--exclude",
+        "*",
+        "--include",
+        "foo/*",
+        "--cache-control",
+        "public,max-age=3600,must-revalidate",
       ],
     ],
   });
