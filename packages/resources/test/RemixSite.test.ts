@@ -67,7 +67,7 @@ test("edge: undefined", async () => {
         {
           AllowedMethods: ["GET", "HEAD", "OPTIONS"],
           CachePolicyId: {
-            Ref: "SiteBrowserBuildAssetsCache280F56B5",
+            Ref: "SiteBuildCache0ED8AF59",
           },
           CachedMethods: ["GET", "HEAD", "OPTIONS"],
           Compress: true,
@@ -78,7 +78,7 @@ test("edge: undefined", async () => {
         {
           AllowedMethods: ["GET", "HEAD", "OPTIONS"],
           CachePolicyId: {
-            Ref: "SitePublicAssetsCache358A0E01",
+            Ref: "SiteStaticsCache29AFAE7C",
           },
           CachedMethods: ["GET", "HEAD", "OPTIONS"],
           Compress: true,
@@ -90,7 +90,7 @@ test("edge: undefined", async () => {
       DefaultCacheBehavior: {
         AllowedMethods: ["GET", "HEAD", "OPTIONS", "PUT", "PATCH", "POST", "DELETE"],
         CachePolicyId: {
-          Ref: "SiteServerResponseCache00237CD2",
+          Ref: "SiteServerCacheC3EA2799",
         },
         CachedMethods: ["GET", "HEAD", "OPTIONS"],
         Compress: true,
@@ -268,7 +268,7 @@ test("edge: true", async () => {
         {
           AllowedMethods: ["GET", "HEAD", "OPTIONS"],
           CachePolicyId: {
-            Ref: "SiteBrowserBuildAssetsCache280F56B5",
+            Ref: "SiteBuildCache0ED8AF59",
           },
           CachedMethods: ["GET", "HEAD", "OPTIONS"],
           Compress: true,
@@ -279,7 +279,7 @@ test("edge: true", async () => {
         {
           AllowedMethods: ["GET", "HEAD", "OPTIONS"],
           CachePolicyId: {
-            Ref: "SitePublicAssetsCache358A0E01",
+            Ref: "SiteStaticsCache29AFAE7C",
           },
           CachedMethods: ["GET", "HEAD", "OPTIONS"],
           Compress: true,
@@ -291,7 +291,7 @@ test("edge: true", async () => {
       DefaultCacheBehavior: {
         AllowedMethods: ["GET", "HEAD", "OPTIONS", "PUT", "PATCH", "POST", "DELETE"],
         CachePolicyId: {
-          Ref: "SiteServerResponseCache00237CD2",
+          Ref: "SiteServerCacheC3EA2799",
         },
         CachedMethods: ["GET", "HEAD", "OPTIONS"],
         Compress: true,
@@ -940,20 +940,20 @@ test("constructor: cfCachePolicies props override", async () => {
     path: "test/remix-site",
     cdk: {
       cachePolicies: {
-        browserBuildCachePolicy: cf.CachePolicy.fromCachePolicyId(
+        buildCachePolicy: cf.CachePolicy.fromCachePolicyId(
           stack,
-          "BrowserBuildCachePolicy",
-          "BrowserBuildCachePolicyId"
+          "BuildCachePolicy",
+          "BuildCachePolicyId"
         ),
-        publicCachePolicy: cf.CachePolicy.fromCachePolicyId(
+        staticsCachePolicy: cf.CachePolicy.fromCachePolicyId(
           stack,
-          "PublicCachePolicy",
-          "PublicCachePolicyId"
+          "StaticsCachePolicy",
+          "StaticsCachePolicyId"
         ),
-        serverResponseCachePolicy: cf.CachePolicy.fromCachePolicyId(
+        serverCachePolicy: cf.CachePolicy.fromCachePolicyId(
           stack,
-          "ServerResponseCachePolicy",
-          "ServerResponseCachePolicyId"
+          "ServerCachePolicy",
+          "ServerCachePolicyId"
         ),
       },
     },

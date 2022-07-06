@@ -79,15 +79,15 @@ export interface RemixSiteProps {
       /**
        * Override the CloudFront cache policy properties for browser build files.
        */
-      browserBuildCachePolicy?: cloudfront.ICachePolicy;
+      buildCachePolicy?: cloudfront.ICachePolicy;
       /**
        * Override the CloudFront cache policy properties for "public" folder
        * static files.
        *
        * Note: This will not include the browser build files, which have a seperate
-       * cache policy; @see `browserBuildCachePolicy`.
+       * cache policy; @see `buildCachePolicy`.
        */
-      publicCachePolicy?: cloudfront.ICachePolicy;
+      staticsCachePolicy?: cloudfront.ICachePolicy;
       /**
        * Override the CloudFront cache policy properties for responses from the
        * server rendering Lambda.
@@ -95,7 +95,7 @@ export interface RemixSiteProps {
        * @note The default cache policy that is used in the abscene of this property
        * is one that performs no caching of the server response.
        */
-      serverResponseCachePolicy?: cloudfront.ICachePolicy;
+      serverCachePolicy?: cloudfront.ICachePolicy;
     };
   };
 
@@ -200,7 +200,7 @@ export class RemixSite extends Construct implements SSTConstruct {
   /**
    * The default CloudFront cache policy properties for browser build files.
    */
-  public static browserBuildCachePolicyProps: cloudfront.CachePolicyProps = {
+  public static buildCachePolicyProps: cloudfront.CachePolicyProps = {
     queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
     headerBehavior: cloudfront.CacheHeaderBehavior.none(),
     cookieBehavior: cloudfront.CacheCookieBehavior.none(),
@@ -220,9 +220,9 @@ export class RemixSite extends Construct implements SSTConstruct {
    * static files.
    *
    * @note This policy is not applied to the browser build files; they have a seperate
-   * cache policy; @see `browserBuildCachePolicyProps`.
+   * cache policy; @see `buildCachePolicyProps`.
    */
-  public static publicCachePolicyProps: cloudfront.CachePolicyProps = {
+  public static staticsCachePolicyProps: cloudfront.CachePolicyProps = {
     queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
     headerBehavior: cloudfront.CacheHeaderBehavior.none(),
     cookieBehavior: cloudfront.CacheCookieBehavior.none(),
@@ -240,7 +240,7 @@ export class RemixSite extends Construct implements SSTConstruct {
    * 
    * @note By default no caching is performed on the server rendering Lambda response.
    */
-  public static serverResponseCachePolicyProps: cloudfront.CachePolicyProps = {
+  public static serverCachePolicyProps: cloudfront.CachePolicyProps = {
     queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
     headerBehavior: cloudfront.CacheHeaderBehavior.none(),
     cookieBehavior: cloudfront.CacheCookieBehavior.all(),
@@ -1122,9 +1122,9 @@ export class RemixSite extends Construct implements SSTConstruct {
       authType: lambda.FunctionUrlAuthType.NONE,
     });
 
-    const serverResponseCachePolicy =
-      cdk?.cachePolicies?.serverResponseCachePolicy ??
-      this.createCloudFrontServerResponseCachePolicy();
+    const serverCachePolicy =
+      cdk?.cachePolicies?.serverCachePolicy ??
+      this.createCloudFrontServerCachePolicy();
 
     return {
       viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
@@ -1132,7 +1132,7 @@ export class RemixSite extends Construct implements SSTConstruct {
       allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
       cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
-      cachePolicy: serverResponseCachePolicy,
+      cachePolicy: serverCachePolicy,
       ...(cfDistributionProps.defaultBehavior || {}),
     };
   }
@@ -1141,9 +1141,9 @@ export class RemixSite extends Construct implements SSTConstruct {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
 
-    const serverResponseCachePolicy =
-      cdk?.cachePolicies?.serverResponseCachePolicy ??
-      this.createCloudFrontServerResponseCachePolicy();
+    const serverCachePolicy =
+      cdk?.cachePolicies?.serverCachePolicy ??
+      this.createCloudFrontServerCachePolicy();
 
     return {
       viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
@@ -1151,7 +1151,7 @@ export class RemixSite extends Construct implements SSTConstruct {
       allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
       cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
-      cachePolicy: serverResponseCachePolicy,
+      cachePolicy: serverCachePolicy,
       ...(cfDistributionProps.defaultBehavior || {}),
       // concatenate edgeLambdas
       edgeLambdas: [
@@ -1169,12 +1169,12 @@ export class RemixSite extends Construct implements SSTConstruct {
     const { cdk } = this.props;
 
     // Build cache policies
-    const browserBuildCachePolicy =
-      cdk?.cachePolicies?.browserBuildCachePolicy ??
-      this.createCloudFrontBrowserBuildAssetsCachePolicy();
-    const publicCachePolicy =
-      cdk?.cachePolicies?.publicCachePolicy ??
-      this.createCloudFrontPublicCachePolicy();
+    const buildCachePolicy =
+      cdk?.cachePolicies?.buildCachePolicy ??
+      this.createCloudFrontBuildAssetsCachePolicy();
+    const staticsCachePolicy =
+      cdk?.cachePolicies?.staticsCachePolicy ??
+      this.createCloudFrontStaticsCachePolicy();
 
     // Create additional behaviours for statics
     const publicPath = path.join(this.props.path, "public");
@@ -1185,14 +1185,14 @@ export class RemixSite extends Construct implements SSTConstruct {
       allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
       cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
-      cachePolicy: publicCachePolicy,
+      cachePolicy: staticsCachePolicy,
     };
     for (const item of fs.readdirSync(publicPath)) {
       if (item === "build") {
         // This is the browser build, so it will have its own cache policy
         staticsBehaviours["/build/*"] = {
           ...staticBehaviourOptions,
-          cachePolicy: browserBuildCachePolicy,
+          cachePolicy: buildCachePolicy,
         };
       } else {
         // This is a public asset, so it will use the public cache policy
@@ -1206,27 +1206,27 @@ export class RemixSite extends Construct implements SSTConstruct {
     return staticsBehaviours;
   }
 
-  private createCloudFrontBrowserBuildAssetsCachePolicy(): cloudfront.CachePolicy {
+  private createCloudFrontBuildAssetsCachePolicy(): cloudfront.CachePolicy {
     return new cloudfront.CachePolicy(
       this,
-      "BrowserBuildAssetsCache",
-      RemixSite.browserBuildCachePolicyProps
+      "BuildCache",
+      RemixSite.buildCachePolicyProps
     );
   }
 
-  private createCloudFrontPublicCachePolicy(): cloudfront.CachePolicy {
+  private createCloudFrontStaticsCachePolicy(): cloudfront.CachePolicy {
     return new cloudfront.CachePolicy(
       this,
-      "PublicAssetsCache",
-      RemixSite.publicCachePolicyProps
+      "StaticsCache",
+      RemixSite.staticsCachePolicyProps
     );
   }
 
-  private createCloudFrontServerResponseCachePolicy(): cloudfront.CachePolicy {
+  private createCloudFrontServerCachePolicy(): cloudfront.CachePolicy {
     return new cloudfront.CachePolicy(
       this,
-      "ServerResponseCache",
-      RemixSite.serverResponseCachePolicyProps
+      "ServerCache",
+      RemixSite.serverCachePolicyProps
     );
   }
 
