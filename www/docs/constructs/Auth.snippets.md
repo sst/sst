@@ -212,7 +212,7 @@ auth.attachPermissionsForAuthUsers(stack, [api, "s3"]);
 ```js {3}
 const auth = new Auth(stack, "Auth");
 
-auth.attachPermissionsForUnauthUsers([api, "s3"]);
+auth.attachPermissionsForUnauthUsers(stack, [api, "s3"]);
 ```
 
 ### Advanced examples
