@@ -10,7 +10,11 @@ Let's create our first SST app.
 
 SST is built with Node.js, so make sure your local machine has it installed; [Node.js 14](https://nodejs.org/) and [npm 7](https://www.npmjs.com/). And we'll need a code editor. We use [VS Code](https://code.visualstudio.com/) in this tutorial.
 
-Some basic JavaScript, TypeScript, AWS, or React knowledge would help, but it's not necessary.
+Some basic TypeScript, AWS, or React knowledge would help, but it's not necessary.
+
+:::note
+We use TypeScript in this tutorial but you don't need to know it well. We've designed SST to let you take advantage of TypeScript without having to add type definitions everywhere.
+:::
 
 ### Configure AWS credentials
 
