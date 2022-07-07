@@ -71,7 +71,7 @@ module.exports = {
           position: "left",
         },
         {
-          href: config.discord_invite,
+          href: config.discord,
           position: "right",
           "aria-label": "Discord community",
           className: "navbar__link__slack",
@@ -112,16 +112,16 @@ module.exports = {
           title: "Community",
           items: [
             {
-              label: "Discord",
-              href: config.discord_invite,
-            },
-            {
               label: "GitHub",
               href: config.github,
             },
             {
               label: "Twitter",
               href: config.twitter,
+            },
+            {
+              label: "Discord",
+              href: config.discord,
             },
             {
               label: "YouTube",

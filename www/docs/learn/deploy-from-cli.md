@@ -24,7 +24,7 @@ You can [read more](working-with-your-team.md) about stage names and the best pr
 
 ## Manage the app
 
-Now that your app is deployed, you can use the SST Console to manage it in production.
+Now that your app is deployed, you can use the [SST Console](../console.md) to manage it in production.
 
 Run the following from the root of the project.
 
@@ -34,4 +34,4 @@ AWS_PROFILE=prod-profile npx sst console --stage prod
 
 This will start up the SST Console and connect it to the given `--stage`.
 
-The Console won't have the **Local** tab as the functions are not running locally. But you can still view the logs, and use it to manage the resources in your app.
+The Console won't have the **Local** tab as the functions are not running locally. Instead it'll you can view the CloudWatch logs for your functions.
