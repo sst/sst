@@ -1,5 +1,5 @@
 import { test, expect } from "vitest";
-import { ABSENT, hasResource, countResources } from "./helper";
+import { ANY, ABSENT, hasResource, countResources } from "./helper";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import {
@@ -683,7 +683,7 @@ test("attachPermissionsForTriggers", async () => {
   });
 });
 
-test("attachPermissionsForAuthUsers", async () => {
+test("attachPermissionsForAuthUsers: without scope (deprecated)", async () => {
   const stack = new Stack(new App(), "stack");
   const auth = new Auth(stack, "Auth", {});
   auth.attachPermissionsForAuthUsers([
@@ -716,7 +716,126 @@ test("attachPermissionsForAuthUsers", async () => {
   });
 });
 
-test("attachPermissionsForUnauthUsers", async () => {
+test("attachPermissionsForAuthUsers: with scope same stack", async () => {
+  const stack = new Stack(new App(), "stack");
+  const auth = new Auth(stack, "Auth", {});
+  auth.attachPermissionsForAuthUsers(stack, [
+    new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ["s3:*"],
+      resources: ["*"],
+    }),
+  ]);
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        {
+          Action: [
+            "mobileanalytics:PutEvents",
+            "cognito-sync:*",
+            "cognito-identity:*",
+          ],
+          Effect: "Allow",
+          Resource: "*",
+        },
+        {
+          Action: "s3:*",
+          Effect: "Allow",
+          Resource: "*",
+        },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+});
+
+test("attachPermissionsForAuthUsers: with scope diff stack", async () => {
+  const app = new App();
+  const stack = new Stack(app, "stack");
+  const stack2 = new Stack(app, "stack2");
+  const auth = new Auth(stack, "Auth", {});
+  auth.attachPermissionsForAuthUsers(stack2, [
+    new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ["s3:*"],
+      resources: ["*"],
+    }),
+  ]);
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        {
+          Action: [
+            "mobileanalytics:PutEvents",
+            "cognito-sync:*",
+            "cognito-identity:*",
+          ],
+          Effect: "Allow",
+          Resource: "*",
+        },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+  hasResource(stack2, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        {
+          Action: "s3:*",
+          Effect: "Allow",
+          Resource: "*",
+        },
+      ],
+      Version: "2012-10-17",
+    },
+    Roles: [
+      { "Fn::ImportValue": ANY }
+    ]
+  });
+});
+
+test("attachPermissionsForAuthUsers: with scope diff stack multiple calls", async () => {
+  const app = new App();
+  const stack = new Stack(app, "stack");
+  const stack2 = new Stack(app, "stack2");
+  const auth = new Auth(stack, "Auth", {});
+  auth.attachPermissionsForAuthUsers(stack2, [
+    new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ["s3:*"],
+      resources: ["*"],
+    }),
+  ]);
+  auth.attachPermissionsForAuthUsers(stack2, [
+    new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ["dynamodb:*"],
+      resources: ["*"],
+    }),
+  ]);
+  hasResource(stack2, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        {
+          Action: "s3:*",
+          Effect: "Allow",
+          Resource: "*",
+        },
+        {
+          Action: "dynamodb:*",
+          Effect: "Allow",
+          Resource: "*",
+        },
+      ],
+      Version: "2012-10-17",
+    },
+    Roles: [
+      { "Fn::ImportValue": ANY }
+    ]
+  });
+});
+
+test("attachPermissionsForUnauthUsers: without scope (deprecated)", async () => {
   const stack = new Stack(new App(), "stack");
   const auth = new Auth(stack, "Auth", {});
   auth.attachPermissionsForUnauthUsers([
@@ -742,5 +861,122 @@ test("attachPermissionsForUnauthUsers", async () => {
       ],
       Version: "2012-10-17",
     },
+  });
+});
+
+test("attachPermissionsForUnauthUsers: with scope same stack", async () => {
+  const stack = new Stack(new App(), "stack");
+  const auth = new Auth(stack, "Auth", {});
+  auth.attachPermissionsForUnauthUsers(stack, [
+    new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ["s3:*"],
+      resources: ["*"],
+    }),
+  ]);
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        {
+          Action: [
+            "mobileanalytics:PutEvents",
+            "cognito-sync:*",
+          ],
+          Effect: "Allow",
+          Resource: "*",
+        },
+        {
+          Action: "s3:*",
+          Effect: "Allow",
+          Resource: "*",
+        },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+});
+
+test("attachPermissionsForUnauthUsers: with scope diff stack", async () => {
+  const app = new App();
+  const stack = new Stack(app, "stack");
+  const stack2 = new Stack(app, "stack2");
+  const auth = new Auth(stack, "Auth", {});
+  auth.attachPermissionsForUnauthUsers(stack2, [
+    new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ["s3:*"],
+      resources: ["*"],
+    }),
+  ]);
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        {
+          Action: [
+            "mobileanalytics:PutEvents",
+            "cognito-sync:*",
+          ],
+          Effect: "Allow",
+          Resource: "*",
+        },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+  hasResource(stack2, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        {
+          Action: "s3:*",
+          Effect: "Allow",
+          Resource: "*",
+        },
+      ],
+      Version: "2012-10-17",
+    },
+    Roles: [
+      { "Fn::ImportValue": ANY }
+    ]
+  });
+});
+
+test("attachPermissionsForUnauthUsers: with scope diff stack multiple calls", async () => {
+  const app = new App();
+  const stack = new Stack(app, "stack");
+  const stack2 = new Stack(app, "stack2");
+  const auth = new Auth(stack, "Auth", {});
+  auth.attachPermissionsForUnauthUsers(stack2, [
+    new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ["s3:*"],
+      resources: ["*"],
+    }),
+  ]);
+  auth.attachPermissionsForUnauthUsers(stack2, [
+    new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ["dynamodb:*"],
+      resources: ["*"],
+    }),
+  ]);
+  hasResource(stack2, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        {
+          Action: "s3:*",
+          Effect: "Allow",
+          Resource: "*",
+        },
+        {
+          Action: "dynamodb:*",
+          Effect: "Allow",
+          Resource: "*",
+        },
+      ],
+      Version: "2012-10-17",
+    },
+    Roles: [
+      { "Fn::ImportValue": ANY }
+    ]
   });
 });

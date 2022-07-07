@@ -4,13 +4,13 @@ import * as cognito from "aws-cdk-lib/aws-cognito";
 
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
-import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct.js";
+import { getFunctionRef, SSTConstruct, isCDKConstruct, isConstruct } from "./Construct.js";
 import {
   Function as Fn,
   FunctionProps,
   FunctionDefinition,
 } from "./Function.js";
-import { Permissions, attachPermissionsToRole } from "./util/permission.js";
+import { Permissions, attachPermissionsToRole, attachPermissionsToPolicy } from "./util/permission.js";
 
 const AuthUserPoolTriggerOperationMapping = {
   createAuthChallenge: cognito.UserPoolOperation.CREATE_AUTH_CHALLENGE,
@@ -211,12 +211,56 @@ export class Auth extends Construct implements SSTConstruct {
     return this.cdk.cfnIdentityPool?.ref;
   }
 
-  public attachPermissionsForAuthUsers(permissions: Permissions): void {
-    attachPermissionsToRole(this.cdk.authRole, permissions);
+  /**
+   * Attaches the given list of permissions to the authenticated users. This allows the authenticated users to access other AWS resources.
+   *
+   * @deprecated You are now required to pass in a scope as the first argument. If you had
+   * ```js
+   * auth.attachPermissionsForAuthUsers(["s3"])`
+   * ```
+   * Change it to
+   * ```js
+   * auth.attachPermissionsForAuthUsers(auth, ["s3"])`
+   * ```
+   */
+  public attachPermissionsForAuthUsers(permissions: Permissions): void;
+  /**
+   * Attaches the given list of permissions to the authenticated users. This allows the authenticated users to access other AWS resources.
+   *
+   * @example
+   * ```js
+   * auth.attachPermissionsForAuthUsers(stack, ["s3"]);
+   * ```
+   */
+  public attachPermissionsForAuthUsers(scope: Construct, permissions: Permissions): void;
+  public attachPermissionsForAuthUsers(arg1: any, arg2?: any): void {
+    return this.attachPermissionsForUsers(this.cdk.authRole, arg1, arg2);
   }
 
-  public attachPermissionsForUnauthUsers(permissions: Permissions): void {
-    attachPermissionsToRole(this.cdk.unauthRole, permissions);
+  /**
+   * Attaches the given list of permissions to the unauthenticated users. This allows the unauthenticated users to access other AWS resources.
+   *
+   * @deprecated You are now required to pass in a scope as the first argument. If you had
+   * ```js
+   * auth.attachPermissionsForUnauthUsers(["s3"])`
+   * ```
+   * Change it to
+   * ```js
+   * auth.attachPermissionsForUnauthUsers(auth, ["s3"])`
+   * ```
+   */
+  public attachPermissionsForUnauthUsers(permissions: Permissions): void;
+  /**
+   * Attaches the given list of permissions to the authenticated users. This allows the authenticated users to access other AWS resources.
+   *
+   * @example
+   * ```js
+   * auth.attachPermissionsForUnauthUsers(stack, ["s3"]);
+   * ```
+   */
+  public attachPermissionsForUnauthUsers(scope: Construct, permissions: Permissions): void;
+  public attachPermissionsForUnauthUsers(arg1: any, arg2?: any): void {
+    return this.attachPermissionsForUsers(this.cdk.unauthRole, arg1, arg2);
   }
 
   public attachPermissionsForTriggers(permissions: Permissions): void {
@@ -256,6 +300,38 @@ export class Auth extends Construct implements SSTConstruct {
         })),
       },
     };
+  }
+
+  private attachPermissionsForUsers(role: iam.Role, arg1: any, arg2?: any): void {
+    let scope: Construct;
+    let permissions: Permissions;
+    if (arg2) {
+      scope = arg1;
+      permissions = arg2;
+    }
+    else {
+      scope = this;
+      permissions = arg1;
+    }
+
+    // If the scope is within the same stack as the `Auth` construct, attach the permissions
+    // directly to the auth role.
+    if (Stack.of(scope) === Stack.of(this)) {
+      attachPermissionsToRole(role, permissions);
+    }
+    // If the scope is within a different stack, we need to create a new role and attach the permissions to that role.
+    else {
+      const policyId = role === this.cdk.authRole
+        ? `Auth-${this.node.id}-AuthRole`
+        : `Auth-${this.node.id}-UnauthRole`;
+      let policy = scope.node.tryFindChild(policyId) as iam.Policy;
+      if (!policy) {
+        policy = new iam.Policy(scope, policyId);
+      }
+      role.attachInlinePolicy(policy);
+
+      attachPermissionsToPolicy(policy, permissions);
+    }
   }
 
   private createUserPool(): void {
