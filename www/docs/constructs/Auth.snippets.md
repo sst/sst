@@ -204,7 +204,7 @@ new Auth(stack, "Auth", {
 ```js {3}
 const auth = new Auth(stack, "Auth");
 
-auth.attachPermissionsForAuthUsers([api, "s3"]);
+auth.attachPermissionsForAuthUsers(stack, [api, "s3"]);
 ```
 
 #### Attaching permissions for unauthenticated federation identity
@@ -289,6 +289,6 @@ export function ApiStack({ stack }: StackContext) {
       "POST /notes": "src/create.main",
     },
   });
-  auth.attachPermissionsForAuthUsers([api]);
+  auth.attachPermissionsForAuthUsers(stack, [api]);
 }
 ```

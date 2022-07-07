@@ -62,7 +62,7 @@ export function MyStack({ stack, app }: StackContext) {
   });
 
   // Allow authenticated users invoke API
-  auth.attachPermissionsForAuthUsers([api]);
+  auth.attachPermissionsForAuthUsers(stack, [api]);
 
   // Throw error if client ID & secret are not provided
   if (!process.env.GITHUB_CLIENT_ID || !process.env.GITHUB_CLIENT_SECRET)

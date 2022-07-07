@@ -26,7 +26,7 @@ export function MyStack({ stack }: StackContext) {
   });
 
   // Allow authenticated users invoke API
-  auth.attachPermissionsForAuthUsers([api]);
+  auth.attachPermissionsForAuthUsers(stack, [api]);
 
   // Show the API endpoint and other info in the output
   stack.addOutputs({
