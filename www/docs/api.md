@@ -191,7 +191,7 @@ new Api(stack, "Api", {
 });
 
 // Granting permissions to authenticated users
-auth.attachPermissionsForAuthUsers([api]);
+auth.attachPermissionsForAuthUsers(stack, [api]);
 ```
 
 In your web app, you can use the [aws-amplify](https://www.npmjs.com/package/aws-amplify) package to call the authenticated API.
