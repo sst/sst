@@ -1,5 +1,16 @@
 # @serverless-stack/resources
 
+## 1.3.0
+
+### Minor Changes
+
+- [#1871](https://github.com/serverless-stack/sst/pull/1871) [`d3c30eb5b`](https://github.com/serverless-stack/sst/commit/d3c30eb5b906ab9790e4e9b97c8a84c4c4bcd9b4) Thanks [@fwang](https://github.com/fwang)! - Auth: make "attachPermissionsToAuthUsers" take scope to control stack dependencies when referening resources from another stack
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.3.0
+
 ## 1.2.36
 
 ### Patch Changes

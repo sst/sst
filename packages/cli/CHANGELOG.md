@@ -1,5 +1,15 @@
 # @serverless-stack/cli
 
+## 1.3.0
+
+### Patch Changes
+
+- [`430549cc8`](https://github.com/serverless-stack/sst/commit/430549cc850f6f6dcbcbc2bd54f0a4672abd143a) Thanks [@fwang](https://github.com/fwang)! - sst console: fix undefined port in the console link
+
+- Updated dependencies [[`d3c30eb5b`](https://github.com/serverless-stack/sst/commit/d3c30eb5b906ab9790e4e9b97c8a84c4c4bcd9b4)]:
+  - @serverless-stack/resources@1.3.0
+  - @serverless-stack/core@1.3.0
+
 ## 1.2.36
 
 ### Patch Changes
