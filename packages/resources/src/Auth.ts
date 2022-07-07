@@ -156,6 +156,15 @@ export interface AuthProps {
 
 /**
  * The `Auth` construct is a higher level CDK construct that makes it easy to configure a [Cognito User Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html) and [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/identity-pools.html). Also, allows setting up Auth0, Facebook, Google, Twitter, Apple, and Amazon as authentication providers.
+ *
+ * @example
+ * ### Using the minimal config
+ *
+ * ```js
+ * import { Auth } from "@serverless-stack/resources";
+ *
+ * new Auth(stack, "Auth");
+ * ```
  */
 export class Auth extends Construct implements SSTConstruct {
   public readonly cdk: {
@@ -214,42 +223,27 @@ export class Auth extends Construct implements SSTConstruct {
   /**
    * Attaches the given list of permissions to the authenticated users. This allows the authenticated users to access other AWS resources.
    *
-   * @deprecated You are now required to pass in a scope as the first argument. If you had
-   * ```js
-   * auth.attachPermissionsForAuthUsers(["s3"])`
-   * ```
-   * Change it to
-   * ```js
-   * auth.attachPermissionsForAuthUsers(auth, ["s3"])`
-   * ```
-   */
-  public attachPermissionsForAuthUsers(permissions: Permissions): void;
-  /**
-   * Attaches the given list of permissions to the authenticated users. This allows the authenticated users to access other AWS resources.
-   *
    * @example
    * ```js
    * auth.attachPermissionsForAuthUsers(stack, ["s3"]);
    * ```
    */
   public attachPermissionsForAuthUsers(scope: Construct, permissions: Permissions): void;
+  /**
+   * @deprecated You are now required to pass in a scope as the first argument.
+   * 
+   * ```js
+   * // Change
+   * auth.attachPermissionsForAuthUsers(["s3"]);
+   * // to
+   * auth.attachPermissionsForAuthUsers(auth, ["s3"]);
+   * ```
+   */
+  public attachPermissionsForAuthUsers(permissions: Permissions): void;
   public attachPermissionsForAuthUsers(arg1: any, arg2?: any): void {
     return this.attachPermissionsForUsers(this.cdk.authRole, arg1, arg2);
   }
 
-  /**
-   * Attaches the given list of permissions to the unauthenticated users. This allows the unauthenticated users to access other AWS resources.
-   *
-   * @deprecated You are now required to pass in a scope as the first argument. If you had
-   * ```js
-   * auth.attachPermissionsForUnauthUsers(["s3"])`
-   * ```
-   * Change it to
-   * ```js
-   * auth.attachPermissionsForUnauthUsers(auth, ["s3"])`
-   * ```
-   */
-  public attachPermissionsForUnauthUsers(permissions: Permissions): void;
   /**
    * Attaches the given list of permissions to the authenticated users. This allows the authenticated users to access other AWS resources.
    *
@@ -259,6 +253,16 @@ export class Auth extends Construct implements SSTConstruct {
    * ```
    */
   public attachPermissionsForUnauthUsers(scope: Construct, permissions: Permissions): void;
+  /**
+   * @deprecated You are now required to pass in a scope as the first argument.
+   * ```js
+   * // Change
+   * auth.attachPermissionsForUnauthUsers(["s3"]);
+   * // to
+   * auth.attachPermissionsForUnauthUsers(auth, ["s3"]);
+   * ```
+   */
+  public attachPermissionsForUnauthUsers(permissions: Permissions): void;
   public attachPermissionsForUnauthUsers(arg1: any, arg2?: any): void {
     return this.attachPermissionsForUsers(this.cdk.unauthRole, arg1, arg2);
   }
