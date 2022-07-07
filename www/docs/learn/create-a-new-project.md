@@ -45,18 +45,22 @@ You can always change this later, or even use both. We'll talk about both these 
 
 <ChangeText>
 
-Install the dependencies.
+Next, install the dependencies.
 
 </ChangeText>
 
 ```bash
 cd my-sst-app
-npm i
+npm install
 ```
+
+The `create sst` CLI by default bootstraps the full-stack starter that we'll be using in this tutorial. It can also create a more minimal setup, if you pass in `--minimal`.
+
+### Start Live Lambda Dev
 
 <ChangeText>
 
-Start the local environment.
+And let's start the local development environment or what SST calls the [Live Lambda Dev](../live-lambda-development.md).
 
 </ChangeText>
 
@@ -64,14 +68,36 @@ Start the local environment.
 npx sst start
 ```
 
-The first time the SST command is run, you'll be prompted to enter a default stage name to use. The stage name will be stored locally in a `.sst/` directory. This directory is automatically ignored from Git.
+The first time the SST command is run, you'll be prompted to enter a default stage name to use. The stage name will be stored locally in a `.sst/` directory; that's automatically ignored from Git.
 
-Make sure to use a stage name that is specific to you. If you are sharing an AWS account with another team member, using the same stage name can cause issues locally. You can read more about stage names and the best practices when working with your team [here](../working-with-your-team.md).
+``` bash
+Look like you’re running sst for the first time in this directory. Please enter
+a stage name you’d like to use locally. Or hit enter to use the one based on
+your AWS credentials (frank):
+```
 
-The initial deploy can take around 5-10 minutes. It'll create all the infrastructure we'll need for our simple Reddit clone.
+SST will automatically suggest a stage name based on the AWS credentials you are using. You can hit _Enter_ to use the suggested one.
 
-:::note
-The `create sst` CLI by default bootstraps the full-stack starter that we'll be using in this tutorial. It can also create a more minimal setup, if you pass in `--minimal`.
+Or if you are picking your own, make sure to use a stage name that is specific to you. SST uses the stage names to namespace your resources. So, if you are sharing an AWS account with another team member, using the same stage name can be a problem.
+
+:::tip
+SST uses the stage names to namespace your resources.
 :::
 
-While we wait, let's take a look at the [project structure](project-structure.md) of an SST app and get our editor set up.
+You can read more about stage names and the best practices when working with your team [here](../working-with-your-team.md).
+
+The `sst start` command, as you might've guessed, deploys to your AWS account. It does a couple of interesting things:
+
+1. Deploys the infrastructure to run the Live Lambda Dev environment.
+2. Deploys your app to AWS.
+3. Runs a local server to:
+   1. Proxy Lambda requests to your local machine.
+   2. Power the [SST Console](../console.md).
+
+:::info
+The `sst start` command starts up the [Live Lambda Dev](../live-lambda-development.md) environment.
+:::
+
+The first time you run `sst start` it can take around 5-10 minutes. While we wait, let's take a look at the [project structure](project-structure.md) of an SST app and get our editor set up.
+
+And don't worry, we'll look at how the local dev environment and Console works in the coming chapters.
