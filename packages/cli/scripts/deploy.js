@@ -19,7 +19,7 @@ module.exports = async function (argv, config, cliInfo) {
   await synth(cliInfo.cdkOptions);
 
   // Run CDK Deploy
-  const stacksData = await deploy(cliInfo.cdkOptions, stackId);
+  const stacksData = await deploy(cliInfo.cdkOptions, stackId, argv.timeout);
 
   // Write outputsFile
   if (argv.outputsFile) {

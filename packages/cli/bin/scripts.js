@@ -107,7 +107,13 @@ function addOptions(currentCmd) {
       yargs.positional("stack", {
         type: "string",
         describe: "Specify a stack, if you have multiple stacks",
-      });
+      })
+      .option("timeout", {
+          type: "number",
+          describe:
+            "Increase the timeout (ms) to avoid DescribeStack throttling on stack deploy/remove",
+          default: 5000,
+        })
     }
 
     if (currentCmd === cmd.deploy || currentCmd === cmd.start) {

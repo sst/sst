@@ -45,7 +45,7 @@ module.exports = async function (argv, config, cliInfo) {
         ...cliInfo.cdkOptions,
         app: `node bin/index.js ${config.name} ${config.stage} ${config.region} ${appBuildLibPath}`,
         output: "cdk.out",
-      });
+      }, undefined, argv.timeout);
     } finally {
       // Note: Restore working directory
       process.chdir(paths.appPath);
@@ -58,7 +58,7 @@ module.exports = async function (argv, config, cliInfo) {
 
   logger.info(chalk.grey("Removing " + (stackId ? stackId : "stacks")));
 
-  const stackStates = await removeApp(cliInfo.cdkOptions, stackId);
+  const stackStates = await removeApp(cliInfo.cdkOptions, stackId, argv.timeout);
 
   // Print remove result
   printResults(stackStates);
@@ -76,7 +76,7 @@ module.exports = async function (argv, config, cliInfo) {
   }));
 };
 
-async function removeApp(cdkOptions, stackId) {
+async function removeApp(cdkOptions, stackId, timeout = 5000) {
   // Build
   await synth(cdkOptions);
 
@@ -93,7 +93,7 @@ async function removeApp(cdkOptions, stackId) {
     // Wait for 5 seconds
     if (!isCompleted) {
       logger.info("Checking remove status...");
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+      await new Promise((resolve) => setTimeout(resolve, timeout));
     }
   } while (!isCompleted);
 

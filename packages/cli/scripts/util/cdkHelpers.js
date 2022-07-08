@@ -333,7 +333,7 @@ async function getStaticSiteEnvironmentOutput() {
     : [];
 }
 
-async function deploy(cdkOptions, stackName) {
+async function deploy(cdkOptions, stackName, timeout = 5000) {
   logger.info(chalk.grey("Deploying " + (stackName ? stackName : "stacks")));
 
   // Initialize deploy
@@ -358,7 +358,7 @@ async function deploy(cdkOptions, stackName) {
         logger.info("Checking deploy status...");
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+      await new Promise((resolve) => setTimeout(resolve, timeout));
     }
   } while (!isCompleted);
 
