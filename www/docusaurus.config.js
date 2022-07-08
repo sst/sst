@@ -1,7 +1,7 @@
 const config = require("./config");
 
 module.exports = {
-  title: "SST (SST)",
+  title: "SST",
   tagline: "SST Docs",
   url: "https://docs.sst.dev",
   baseUrl: "/",
