@@ -1,6 +1,4 @@
 import { test, expect, beforeAll, vi } from "vitest";
-import path from "path";
-import fs from "fs-extra";
 import { execSync } from "child_process";
 import {
   countResources,
@@ -11,12 +9,12 @@ import {
   ANY,
   ABSENT,
 } from "./helper";
-import * as cdk from "aws-cdk-lib";
 import * as cf from "aws-cdk-lib/aws-cloudfront";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import { App, Api, Stack, RemixSite } from "../src";
 
+process.env.SST_RESOURCES_TESTS = "enabled";
 const sitePath = "test/remix-site";
 
 beforeAll(async () => {
@@ -24,8 +22,6 @@ beforeAll(async () => {
   // if (fs.pathExistsSync(path.join(sitePath, "node_modules"))) {
   //   return;
   // }
-
-  process.env.SST_RESOURCES_TESTS = "enabled";
 
   // Install Remix app dependencies
   execSync("npm install", {

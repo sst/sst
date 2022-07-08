@@ -5,6 +5,8 @@ import * as route53 from "aws-cdk-lib/aws-route53";
 import * as cf from "aws-cdk-lib/aws-cloudfront";
 import { App, Api, Stack, StaticSite } from "../src";
 
+process.env.SST_RESOURCES_TESTS = "enabled";
+
 /////////////////////////////
 // Test Constructor
 /////////////////////////////
@@ -555,6 +557,10 @@ test("constructor: buildOutput multiple files", async () => {
   });
   hasResource(stack, "Custom::SSTBucketDeployment", {
     Sources: [
+      {
+        BucketName: ANY,
+        ObjectKey: ANY,
+      },
       {
         BucketName: ANY,
         ObjectKey: ANY,
