@@ -89,7 +89,7 @@ function Trpc(props: PropsWithChildren<{}>) {
         const resp = await fetch(
           isSSL
             ? `https://localhost:${port}/ping`
-            : `http://localhost:12557/proxy/https://sst.dev`
+            : `http://localhost:12557/proxy/http://jsonplaceholder.typicode.com/todos/1`
         ).catch((err) => {
           console.log(protocol, JSON.stringify(err));
         });
