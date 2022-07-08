@@ -892,9 +892,6 @@ export class RemixSite extends Construct implements SSTConstruct {
       role: this.serverLambdaRole,
     });
 
-    // Create alias
-    fn.addAlias("live");
-
     // Deploy after the code is updated
     if (!this.isPlaceholder) {
       const updaterCR = this.createLambdaCodeReplacer(name, asset);
