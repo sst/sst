@@ -54,7 +54,7 @@ We typically group related resources together into stacks. In the `stacks/` dire
 
   We pass in the database stack to it so that the functions in our GraphQL API have access to it.
 
-  ```ts
+  ```ts {2}
   function: {
     permissions: [db],
     environment: {
@@ -78,7 +78,7 @@ We typically group related resources together into stacks. In the `stacks/` dire
 
   We pass in the API to it so we can set the API URL as an environment variable in our frontend.
 
-  ```ts
+  ```ts {2}
   environment: {
     VITE_GRAPHQL_URL: api.url + "/graphql",
   },
@@ -120,42 +120,16 @@ The `web/` directory contains a React application created with [Vite](https://vi
 
 Finally, the `sst.json` contains the project config.
 
-```json title="sst.json"
+```js title="sst.json"
 {
+  // The name of your app, is used to prefix stack and resource names.
   "name": "my-sst-app",
+  // The default region your app is deployed to.
+  // Can be overridden using the `--region` CLI option
   "region": "us-east-1",
+  // The entry point to your app, defaults to `stacks/index.ts`.
   "main": "stacks/index.ts"
 }
 ```
 
-#### Config options
-
-Let's look at these options in detail.
-
-- **name** is  the name of your application and is used to prefix stack and resource names.
-
-- **region** is the default region your app is deployed to. It can be overridden using the [`--region`](../packages/cli.md#--region) CLI option.
-
-- **main** is the entry point to your SST app. It defaults to `stacks/index.ts`.
-
-Note that, you can access the **stage**, **region**, and **name** in the entry point of your app.
-
-```js title="stacks/index.ts"
-export default function(app: App) {
-  app.stage;  // "dev"
-  app.region; // "us-east-1"
-  app.name;   // "my-sst-app"
-}
-```
-
-You can also access them in your stacks.
-
-```js title="stacks/MyStack.ts"
-export function ApiStack({ app }: StackContext) {
-  app.stage;  // "dev"
-  app.region; // "us-east-1"
-  app.name;   // "my-sst-app"
-}
-```
-
-Next, let's set up our code editor to work with our SST app.
+Your `sst start` process in the CLI might've completed by now. But before we start working on our application, let's get our code editor to work with SST.

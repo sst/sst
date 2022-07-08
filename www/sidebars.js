@@ -17,7 +17,7 @@ module.exports = {
           items: [
             "learn/create-a-new-project",
             "learn/project-structure",
-            "learn/editor-setup",
+            "learn/editor-integration",
             "learn/initialize-the-database",
             "learn/start-the-frontend",
             "learn/breakpoint-debugging",
