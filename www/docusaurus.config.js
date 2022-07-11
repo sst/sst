@@ -1,7 +1,7 @@
 const config = require("./config");
 
 module.exports = {
-  title: "SST (SST)",
+  title: "SST",
   tagline: "SST Docs",
   url: "https://docs.sst.dev",
   baseUrl: "/",
@@ -9,7 +9,7 @@ module.exports = {
   onBrokenMarkdownLinks: "throw",
   favicon: "img/favicon.ico",
   organizationName: "serverless-stack", // Usually your GitHub org/user name.
-  projectName: "serverless-stack", // Usually your repo name.
+  projectName: "sst", // Usually your repo name.
   scripts: [
     {
       src: "https://kit.fontawesome.com/18c82fcd4d.js",

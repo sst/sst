@@ -9,7 +9,7 @@ import chalk from "chalk";
 const logger = getChildLogger("client");
 
 export default async function (_argv, config) {
-  const local = useLocalServer({
+  const local = await useLocalServer({
     port: await chooseServerPort(13557),
     app: config.name,
     stage: config.stage,

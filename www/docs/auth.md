@@ -89,7 +89,7 @@ const table = new Table(stack, "Notes", {
 });
 
 // Allow authenticated users to access the table
-auth.attachPermissionsForAuthUsers([table]);
+auth.attachPermissionsForAuthUsers(stack, [table]);
 ```
 
 Note that, if you are using the Cognito Identity Pool, you have the option to also:
@@ -175,7 +175,7 @@ const auth = new Auth(stack, "Auth", {
 });
 
 // Allow authenticated users to access the table
-auth.attachPermissionsForAuthUsers([table]);
+auth.attachPermissionsForAuthUsers(stack, [table]);
 ```
 
 :::tip Example

@@ -83,7 +83,7 @@ export function MyStack({ stack, app }: StackContext) {
   });
 
   // Allow authenticated users invoke API
-  auth.attachPermissionsForAuthUsers([api]);
+  auth.attachPermissionsForAuthUsers(stack, [api]);
 
   // Create a React Static Site
   const site = new ViteStaticSite(stack, "Site", {

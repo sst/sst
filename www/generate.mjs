@@ -260,40 +260,11 @@ async function run(json) {
       for (const method of methods) {
         lines.push(`### ${method.name}\n`);
         for (const signature of method.signatures) {
-          lines.push("```ts");
           lines.push(
-            `${signature.name}(${
-              signature.parameters?.map((p) => `${p.name}`).join(", ") || ""
-            })`
+            ...signatureIsDeprecated(signature)
+              ? renderSignatureForDeprecated(file, json.children, signature)
+              : renderSignature(file, json.children, signature)
           );
-          lines.push("```");
-          if (signature.parameters) {
-            lines.push("_Parameters_");
-            lines.push();
-            for (let parameter of signature.parameters) {
-              lines.push(
-                `- __${parameter.name}__ ${renderType(
-                  file,
-                  json.children,
-                  parameter.name,
-                  parameter.type
-                )}`
-              );
-            }
-          }
-          if (signature.comment) {
-            lines.push("\n");
-            lines.push(signature.comment.shortText);
-            lines.push(signature.comment.text);
-            const tags = signature.comment.tags || [];
-            const examples = tags.filter((x) => x.tag === "example");
-            if (examples.length) {
-              lines.push(...examples.map(renderTag));
-            }
-            lines.push(
-              ...tags.filter((x) => x.tag !== "example").map(renderTag)
-            );
-          }
         }
       }
     }
@@ -517,4 +488,98 @@ function renderProperties(file, files, properties, prefix, onlyPublic) {
     }
   }
   return lines;
+}
+
+/**
+ * @param file {JSONOutput.DeclarationReflection}
+ * @param children {JSONOutput.DeclarationReflection[]}
+ * @param signature {JSONOutput.DeclarationReflection}
+ *
+ * @returns {string}
+ */
+function renderSignature(file, children, signature) {
+  const lines = [];
+  lines.push("```ts");
+  lines.push(
+    `${signature.name}(${
+      signature.parameters?.map((p) => `${p.name}`).join(", ") || ""
+    })`
+  );
+  lines.push("```");
+  if (signature.parameters) {
+    lines.push("_Parameters_");
+    lines.push();
+    for (let parameter of signature.parameters) {
+      lines.push(
+        `- __${parameter.name}__ ${renderType(
+          file,
+          children,
+          parameter.name,
+          parameter.type
+        )}`
+      );
+    }
+  }
+  if (signature.comment) {
+    lines.push("\n");
+    lines.push(signature.comment.shortText);
+    lines.push(signature.comment.text);
+    const tags = signature.comment.tags || [];
+    const examples = tags.filter((x) => x.tag === "example");
+    if (examples.length) {
+      lines.push(...examples.map(renderTag));
+    }
+    lines.push(
+      ...tags.filter((x) => x.tag !== "example").map(renderTag)
+    );
+  }
+  return lines;
+}
+
+/**
+ * @param file {JSONOutput.DeclarationReflection}
+ * @param children {JSONOutput.DeclarationReflection[]}
+ * @param signature {JSONOutput.DeclarationReflection}
+ *
+ * @returns {string}
+ */
+function renderSignatureForDeprecated(file, children, signature) {
+  const lines = [];
+  lines.push(":::caution");
+  lines.push("This function signature has been deprecated.");
+
+  lines.push("```ts");
+  lines.push(
+    `${signature.name}(${
+      signature.parameters?.map((p) => `${p.name}`).join(", ") || ""
+    })`
+  );
+  lines.push("```");
+
+  if (signature.comment) {
+    lines.push("\n");
+    lines.push(signature.comment.shortText);
+    lines.push(signature.comment.text);
+    const tags = signature.comment.tags || [];
+    const examples = tags.filter((x) => x.tag === "example");
+    if (examples.length) {
+      lines.push(...examples.map(renderTag));
+    }
+    lines.push(
+      ...tags.filter((x) => x.tag !== "example").map(renderTag)
+    );
+  }
+
+  lines.push(":::");
+
+  return lines;
+}
+
+/**
+ * @param signature {JSONOutput.DeclarationReflection}
+ *
+ * @returns {boolean}
+ */
+function signatureIsDeprecated(signature) {
+  return signature.comment?.tags?.some((y) => y.tag === "deprecated");
 }

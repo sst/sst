@@ -116,16 +116,16 @@ Another option is to use Cognito Identity Pool to grant temporary IAM permission
 ```js
 const bucket = new Bucket(stack, "MyBucket");
 
-const auth = new Auth(this, "Auth", { ... });
+const auth = new Auth(stack, "Auth", { ... });
 
 // Granting permissions to authenticated users
-auth.attachPermissionsForAuthUsers([bucket]);
+auth.attachPermissionsForAuthUsers(stack, [bucket]);
 ```
 
 You can also grant authenticated users access to a specific folder.
 
 ```js
-auth.attachPermissionsForAuthUsers([
+auth.attachPermissionsForAuthUsers(stack, [
   // Policy granting access to the folder named with their user id
   new iam.PolicyStatement({
     actions: ["s3:*"],
@@ -152,7 +152,7 @@ await Storage.vault.put(filename, file, {
 You can receive notifications when certain events happen in the Bucket. These can be used to trigger a Lambda function.
 
 ```js
-new Bucket(this, "MyBucket", {
+new Bucket(stack, "MyBucket", {
   notifications: ["src/s3Notification.main"],
 });
 ```
