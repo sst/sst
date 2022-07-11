@@ -13,7 +13,7 @@ The SST Console is a web based dashboard to manage your SST apps — **<ConsoleU
 ![SST Console homescreen](/img/console/sst-console-homescreen.png)
 
 :::note
-Safari and Brave are now supported. Learn more about [Working with Safari or Brave.](#working-with-safari-or-brave)
+The SST Console now supports Safari and Brave. [Learn more below](#working-with-safari-or-brave).
 :::
 
 ## Features
@@ -115,18 +115,18 @@ The companion app runs locally and create a tunneled connection to your Gitpod w
 
 To get started:
 
-1. [Install Gitpod Local Companion app](https://www.gitpod.io/blog/local-app#installation)
-2. [Run the Companion app](https://www.gitpod.io/blog/local-app#running)
-3. Naviate to <ConsoleUrl url={config.console} /> in the browser
+1. [Install Gitpod Local Companion app](https://www.gitpod.io/blog/local-app#installation).
+2. [Run the Companion app](https://www.gitpod.io/blog/local-app#running).
+3. Navigate to <ConsoleUrl url={config.console} /> in the browser.
 
 ## Working with Safari or Brave
 
-Certain browsers like Safari and Brave require the local connection between the browser and the `sst start` cli to be running on HTTPS. SST integrates with [mkcert](https://github.com/FiloSottile/mkcert) to automatically generate a self signed certificate that is used. To setup
+Certain browsers like Safari and Brave require the local connection between the browser and the `sst start` CLI to be running on HTTPS. SST integrates with [mkcert](https://github.com/FiloSottile/mkcert) automatically to generate a self signed certificate to use. To configure:
 
 1. Follow the mkcert [installation steps](https://github.com/FiloSottile/mkcert#installation).
-2. Run `mkcert install`
-3. Restart your browser
-4. Run `sst start` and visit [the console](https://console.sst.dev) and everything should work.
+2. Run `mkcert install`.
+3. Restart your browser.
+4. Run `sst start` and navigate to <ConsoleUrl url={config.console} />.
 
 ## How it works
 

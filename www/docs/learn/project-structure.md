@@ -23,7 +23,13 @@ my-sst-app
 └─ web
 ```
 
-Let's look at these directories in a little more detail.
+We are using a monorepo setup. We recommend using it because it's the best way to manage a large project with interconnected parts (like the backend, frontend, or infrastructure). While it may seem a bit heavy upfront, it makes sense to get started on your projects with the right setup.
+
+:::info
+The `create sst` setup generates a [monorepo](https://en.wikipedia.org/wiki/Monorepo) + [Workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces) setup.
+:::
+
+We'll look at how our monorepo is split up with [Workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces) below. But first, let's start by looking at these directories do.
 
 ### `stacks/`
 
@@ -115,6 +121,67 @@ The `graphql/` directory will contain the outputs of GraphQL related code genera
 ### `web/`
 
 The `web/` directory contains a React application created with [Vite](https://vitejs.dev/). It's already wired up to be able to talk to the GraphQL API. If you are using a different frontend, for example NextJS, you can delete this folder and provision it yourself.
+
+### `package.json`
+
+The `package.json` for our app is relatively simple. But there are a couple of things of note.
+
+#### Workspaces
+
+As we had mentioned above, we are using [Workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces) to organize our monorepo setup.
+
+Workspaces are now supported in both [npm](https://docs.npmjs.com/cli/v7/using-npm/workspaces) and [Yarn](https://classic.yarnpkg.com/lang/en/docs/workspaces/) and you can learn more about them in their docs. In a nutshell, they help you manage dependencies for separate _packages_ inside your repo that have their own `package.json` files. 
+
+We have three workspaces in our setup.
+
+```json title="package.json workspaces"
+"workspaces": [
+  "services",
+  "graphql",
+  "web"
+]
+```
+
+You'll notice that all these directories have their own `package.json` file.
+
+So when you need to install/uninstall a dependency in one of those workspaces, you can do the following:
+
+``` bash
+$ npm install <package> -W <workspace>
+$ npm uninstall <package> -W <workspace>
+```
+
+For Yarn, you'll need to run `yarn add` in the package directory that you'd like to install. And at the root you'll need to run `yarn add` with [the `-W` flag](https://classic.yarnpkg.com/lang/en/docs/cli/add/).
+
+#### Scripts
+
+Our starter also comes with a few helpful scripts.
+
+```json title="package.json scripts"
+"scripts": {
+  "start": "sst start",
+  "build": "sst build",
+  "deploy": "sst deploy --stage=production",
+  "remove": "sst remove",
+  "console": "sst console",
+  "typecheck": "tsc --noEmit",
+  "test": "vitest run",
+  "gen": "hygen"
+}
+```
+
+Here's what these scripts do:
+
+- `start`: Start the [Live Lambda Dev](live-lambda-development.md) environment for the _default_ stage.
+- `build`: Build the [CloudFormation](https://aws.amazon.com/cloudformation/) for the infrastructure of the app for the _default_ stage. It converts the SST constructs to CloudFormation and packages the necessary assets, but it doesn't deploy them. This is helpful to check what's going to be deployed without actually deploying it.
+- `deploy`: Build the infrastructure and deploy the app to a stage called `production`.
+- `remove`: Completely remove the app's infrastructure from AWS for the _default_ stage. Use with caution!
+- `console`: Start the [SST Console](../console.md) for the _default_ stage. Useful for managing _non-local_ stages.
+- `typecheck`: Run typecheck for the entire project. By default, our editor should automatically typecheck our code using the `tsconfig.json` in our project root. However, this script lets you explicitly run typecheck as a part of our CI process.
+- `test`: Run our tests. Our starter uses [Vitest](https://vitest.dev).
+- `gen`: Uses [Hygen](http://www.hygen.io) to run built-in code gen tasks. Currently only supports `npm run gen migration new`. This will help you code gen a new migration.
+
+The _default_ stage that we are refering to above, is the one that you selected while first [creating the app](create-a-new-project.md).
 
 ### `sst.json`
 
