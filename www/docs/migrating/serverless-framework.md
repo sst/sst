@@ -66,7 +66,7 @@ new sst.Function(stack, "MySnsLambda", {
 
 ### Monorepo with multiple Serverless Framework services
 
-If you have a multple Serverless Framework services in the same repo, you can still follow the steps above to create a single SST app. This is because you can define multiple stacks in the same SST app. Where as each Serverless Framework service can only contain a single stack. 
+If you have multiple Serverless Framework services in the same repo, you can still follow the steps above to create a single SST app. This is because you can define multiple stacks in the same SST app. Whereas each Serverless Framework service can only contain a single stack. 
 
 After the SST app is created, your directory structure should look something like this.
 
