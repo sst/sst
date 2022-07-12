@@ -15,7 +15,7 @@ We'll be focussing on [VS Code](https://code.visualstudio.com) here but you can 
 
 First up, is setting break points and testing your apps locally. We mentioned [Live Lambda Development](../live-lambda-development.md) in the past chapters. It allows you to set breakpoints in your Lambda functions and test them locally. It does this by proxying requests from AWS directly to your local machine and executing them locally. You can [read about this in detail over here](../live-lambda-development.md).
 
-For [VS Code](https://code.visualstudio.com) you'll find a `launch.json` file at the project root. It hooks up Live Lambda Dev with VS Code automatically. Don't worry about trying it out right now, we'll go through that in an upcoming chapter.
+For [VS Code](https://code.visualstudio.com) you'll find a `launch.json` file in the `.vscode` folder. It hooks up Live Lambda Dev with VS Code automatically. Don't worry about trying it out right now, we'll go through that in an upcoming chapter.
 
 :::note
 If you are using WebStorm or IntelliJ, you can follow [these instructions](../live-lambda-development.md#debugging-with-webstorm) to get set up.
