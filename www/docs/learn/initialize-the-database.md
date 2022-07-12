@@ -80,7 +80,11 @@ This'll create a table named **article**. It stores all the links that've been s
 
 ### Run a query
 
-To verify that the table has been created successfully; enter `SELECT * FROM article` into the query editor, and click **Execute**.
+To verify that the table has been created successfully; enter the following query into the query editor, and hit **Execute**.
+
+```sql
+SELECT * FROM article
+```
 
 ![Console query article](/img/initialize-database/console-query-article.png)
 

@@ -2,27 +2,37 @@
 title: Write to PostgreSQL
 ---
 
-Let's store our comments in our RDS PostgreSQL database. If you'd like to use DynamoDB instead, you can skip ahead to the next chapter.
+import ChangeText from "@site/src/components/ChangeText";
 
-We first need to create a new table to store our comments.
+So you've decided you want to work with RDS PostgreSQL. Let's get started with storing our comments in our database.
 
-## Create a new migration
+To do that we'll first create a new table for them.
 
-To do this, let's create a new migration.
+### Create a new migration
 
-Run from the root of the project.
+We are going to create a new migration to make changes to our database.
+
+<ChangeText>
+
+Run this in the root of the project to create a new migration
+
+</ChangeText>
 
 ```bash
 npm run gen migration new
 ```
 
-And enter `comment` for migration name.
+<ChangeText>
+
+It'll ask you to name your migration. Type in `comment`.
+
+</ChangeText>
 
 ```bash
 ? Migration name › comment
 ```
 
-Once the migration is created, you should see the following printed out in the terminal.
+Once the migration is created, you should see the following in your terminal.
 
 ```bash
 ✔ Migration name · comment
@@ -31,9 +41,13 @@ Loaded templates: _templates
        added: services/migrations/1656074109287_comment.mjs
 ```
 
-Open up the created file `services/migrations/1656074109287_comment.mjs` and replace with the follow content.
+<ChangeText>
 
-```ts
+Open up the new migration and replace its content with:
+
+</ChangeText>
+
+```ts title="services/migrations/1656074109287_comment.mjs"
 import { Kysely } from "kysely";
 
 /**
@@ -56,25 +70,41 @@ export async function down(db) {
 }
 ```
 
-## Run migration
+Applying this migration will create a  new table called `comment`. While undoing it will drop the table.
 
-We can then go ahead and run the migration.
+### Run migration
 
-Go to the RDS tab in SST Console and click **Apply** on the `second` migration.
+Let's go ahead and run the migration.
+
+<ChangeText>
+
+Go to the RDS tab in SST Console and click **Apply** on our `comment` migration.
+
+</ChangeText>
 
 ![Console run migration](/img/implement-rds/run-migration.png)
 
-To verify that the table has been created; enter `SELECT * FROM comment` in the query editor, and click **Execute**. You should see **0 rows** being returned.
+Let's verify that the table has been created. Enter the following  in the query editor, and hit **Execute**.
+
+``` sql
+SELECT * FROM comment
+```
 
 ![Console query comments table](/img/implement-rds/console-query-comment.png)
 
-## Query the table
+You should see **0 rows** being returned.
 
-Now let's implement the `addComment` and `comments` functions that we created back in the [Scaffold Business Logic](scaffold-business-logic.md) chapter.
+### Query the table
 
-Open `services/core/article.ts` and replace the two placeholder functions with:
+We are now ready to implement the `addComment` and `comments` functions that we created back in the [Scaffold Business Logic](scaffold-business-logic.md) chapter.
 
-```ts
+<ChangeText>
+
+Replace the two placeholder functions in `services/core/article.ts` with:
+
+</ChangeText>
+
+```ts {2-9,13-16} title="services/core/article.ts"
 export async function addComment(articleID: string, text: string) {
   return await SQL.DB.insertInto("comment")
     .values({
@@ -94,4 +124,4 @@ export async function comments(articleID: string) {
 }
 ```
 
-Now that that we can talk to the database; let's hook up our API.
+Now with our business logic implemented, we are ready to hook up our API.
