@@ -14,7 +14,7 @@ In Pothos you can specify the types for the underlying resource that the GraphQL
 In `services/functions/graphql/types/article.ts`, add the following above the `ArticleType`.
 
 ```ts title="services/functions/graphql/types/article.ts"
-const CommentType = builder.objectRef<[specify type]>("Comment").implement({
+const CommentType = builder.objectRef<SQL.Row["comment"]>("Comment").implement({
   fields: t => ({
     id: t.exposeString("commentID"),
     text: t.exposeString("text")
