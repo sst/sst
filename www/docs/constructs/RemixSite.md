@@ -8,142 +8,216 @@ description: "Docs for the sst.RemixSite construct in the @serverless-stack/reso
 !!                                                           !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 -->
-The `RemixSite` construct is a higher level CDK construct that makes it easy
-to create a Remix app.
+The `RemixSite` construct is a higher level CDK construct that makes it easy to create a Remix app. It provides a simple way to build and deploy the app to AWS:
 
-It provides a simple way to build and deploy the site to CloudFront, the
-server running on `Lambda@Edge`, with the browser build and public statics
-backed by an S3 Bucket. In addition to this it supports environment variables
-against your `Lambda@Edge` function, despite this being a limitation with the
-AWS feature. CloudFront cache policies are implemented, along with cache
-invalidation on deployment.
+  - The browser build and public static assets are deployed to an S3 Bucket, and served out from a CloudFront CDN for fast content delivery.
+  - The app server is deployed to Lambda. You can deploy to Lambda@Edge instead if the `edge` flag is enabled. Read more about [Single region vs Edge](#single-region-vs-edge).
+  - It enables you to [configure custom domains](#custom-domains) for the website URL.
+  - It also enable you to [automatically set the environment variables](#environment-variables) for your Remix app directly from the outputs in your SST app.
+  - It provides a simple interface to [grant permissions](#using-aws-services) for your app to access AWS resources.
 
-The construct enables you to customize many of the deployment features,
-including the ability to configure a custom domain for the website URL.
+## Quick Start
 
-It also allows you to [automatically set the environment
-variables](#configuring-environment-variables) in your Remix app directly
-from the outputs in your SST app.
+1. If you are creating a new Remix app, run `create-remix` from the root of your SST app.
 
+  ```bash
+  npx create-remix@latest
+  ```
+  
+  And select `Remix App Server` as the deployment target.
+  
+  ![Selecte Remix App Server deployment target](/img/remix/bootstrap-remix.png)
 
-## Constructor
-```ts
-new RemixSite(scope, id, props)
-```
-_Parameters_
-- __scope__ <span class="mono">[Construct](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)</span>
-- __id__ <span class="mono">string</span>
-- __props__ <span class="mono">[RemixSiteProps](#remixsiteprops)</span>
+  After the Remix app is created, your SST app structure should look like:
 
-### Creating a Remix app
+  ```bash
+  my-sst-app
+  ├─ sst.json
+  ├─ services
+  ├─ stacks
+  └─ my-remix-app     <-- new Remix app
+     ├─ app
+     ├─ public
+     └─ remix.config.js
+  ```
 
-We recommend the following process to bootstrap a Remix application that will be compatible with this construct.
+  You can now jump to step 3 to complete the rest of the step.
 
-1. Within the root of your SST project run the Remix CLI to create an application;
+2. If you have an existing Remix app, move the app to the root of your SST app. Your SST app structure should look like:
 
-   ```bash title="Create a Remix application"
-   npx create-remix@latest
-   ```
+  ```bash
+  my-sst-app
+  ├─ sst.json
+  ├─ services
+  ├─ stacks
+  └─ my-remix-app     <-- your Remix app
+     ├─ app
+     ├─ public
+     └─ remix.config.js
+  ```
 
-2. When presented with the type of deployment question, select "Remix App Server";
+  When you created your Remix app, you might've picked a different deployment target. We need to set the deploymen target to `Remix App Server`. To do that, make sure your `remix.config.js` contain the follow values.
 
-   ![Selecting "Remix App Server" deployment](/img/remix/bootstrap-remix.png)
+  ```js
+  module.exports = {
+    // ...
+    assetsBuildDirectory: "public/build",
+    publicPath: "/build/",
+    serverBuildPath: "build/index.js",
+    serverBuildTarget: "node-cjs",
+    server: undefined,
+    // ...
+  };
+  ```
 
-3. After the installation has complete add the following dependency to your Remix application;
+  :::info
+  If you followed the `Developer Blog` or `Jokes App` tutorials on Remix's doc, it's likely you are using SQLite for database. SQLite databases cannot be deployed to a serverless environment. It is often used for local storage, and not recommended for modern web apps. It is recommended to use [PostgreSQL](../constructs/RDS.md), [DynamoDB](../constructs/Table.md), or one of third party services like MongoDB for your database.
+  :::
 
-   ```bash title="Install sst-env"
-   npm install --save-dev @serverless-stack/static-site-env
-   ```
+3. Go into your Remix app, and add the `static-site-env` dependency to your Remix application's `package.json`. `static-site-env` enables you to [automatically set the environment variables](#environment-variables) for your Remix app directly from the outputs in your SST app.
 
-   > Or use your package manager of choices form of the above.
+  ```bash
+  npm install --save-dev @serverless-stack/static-site-env
+  ```
 
-4. Update your package.json scripts;
+  Update the package.json scripts for your Remix application.
 
-   ```diff title="Update package.json scripts"
+   ```diff
      "scripts": {
        "build": "remix build",
    -   "dev": "remix dev",
    +   "dev": "sst-env -- remix dev",
-   -   "start": "remix-serve build"
+       "start": "remix-serve build"
      },
    ```
 
-5. Create your stack and add the `RemixSite` construct, pointing at the new application;
+4. Add the `RemixSite` construct to an existing stack in your SST app. You can also create a new stack for the app.
 
-   ```js title="Create RemixSite instance"
-   new RemixSite(stack, "RemixSite", {
-     path: "path/to/site",
-   });
-   ```
+  ```ts
+  import * as sst from "@serverless-stack/resources";
 
-> **Note**
->
-> We depend on your "build" script to bundle your Remix application. We are aware that Remix does not enable you to customise their underlying build configuration and that it is often the case that the "build" script is extended to perform additional functions such as Tailwind compilation. Therefore we feel that targetting the "build" script rather than the `remix build` command directly will ensure that all your required build artifacts are available prior to deployment.
+  export default function MyStack({ stack }: sst.StackContext) {
 
-### Environment variables
+    // ... existing constructs
 
-The `RemixSite` construct allows you to set the environment variables in your Remix app based on outputs from other constructs in your SST app. So you don't have to hard code the config from your backend. Let's look at how.
+    // Create the Remix site
+    const site = new RemixSite(stack, "Site", {
+      path: "my-remix-app/",
+    });
 
-Remix only supports environment variables in the server build. If your require environment variables within your routes/components then we recommend that you [follow their documentation](https://remix.run/docs/en/v1/guides/envvars#browser-environment-variables), returning the required environment variables within the `loader` associated within your Remix route.
+    // Add the site's URL to stack output
+    stack.addOutputs({
+      URL: site.url,
+    });
+  }
+  ```
 
-```js title="app/routes/index.tsx"
-// Loaders will only be included in your server build and the environment
-// variables will be available;
-export async function loader() {
-  return json({
-    ENV: {
-      apiUrl: process.env.API_URL,
-      userPoolClient: process.env.USER_POOL_CLIENT,
-    }
-  });
-}
+  When you are building your SST app, `RemixSite` will invoke `npm build` inside the Remix app directory. Make sure `path` is pointing to the your Remix app.
+
+  Note that we also added the site's URL to the stack output. After deploy succeeds, the URL will be printed out in the terminal.
+
+## Single region vs edge
+There are two ways you can deploy the Remix app to your AWS account.
+
+By default, the Remix app server is deployed to a single region defined in your `sst.json` or passed in via the `--region` flag. Alternatively, you can choose to deploy to the edge. When deployed to the edge, loaders/actions are running on edge location that is physically closer to the end user. In this case, the app server is deployed to AWS Lambda@Edge.
+
+You can enable edge like this:
+
+```ts
+const site = new RemixSite(stack, "Site", {
+  path: "my-remix-app/",
+  edge: true,
+});
 ```
 
-To expose environment variables to your Remix application you should utilise the `RemixSite` construct `environment` configuration property rather than an `.env` file within your Remix application root.
+Note that, in the case you have a centralized database, Edge locations are often far away from your database. If you are quering your database in your loaders/actions, you might experience much longer latency when deployed to the edge.
 
-```js {3-6}
-new RemixSite(this, "RemixSite", {
-  path: "path/to/site",
-  environment: {
-    API_URL: api.url,
-    USER_POOL_CLIENT: auth.cognitoUserPoolClient.userPoolClientId,
+:::info
+We recommend you to deploy to a single region when unsure.
+:::
+
+## Custom domains
+
+You can configure the website with a custom domain hosted either on [Route 53](https://aws.amazon.com/route53/) or [externally](#configuring-externally-hosted-domain).
+
+```js {5}
+const site = new RemixSite(this, "Site", {
+  path: "my-remix-site/",
+  customDomain: "my-app.com",
+});
+```
+
+Note that visitors to the `http://` URL will be redirected to the `https://` URL.
+
+You can also configure an alias domain to point to the main domain. For example, to setup `www.my-app.com` redirecting to `my-app.com`:
+
+```js {5}
+const site = new RemixSite(this, "Site", {
+  path: "my-remix-site/",
+  customDomain: {
+    domainName: "my-app.com",
+    domainAlias: "www.my-app.com",
   },
 });
 ```
 
-Where `api.url` or `auth.cognitoUserPoolClient.userPoolClientId` are coming from other constructs in your SST app.
+## Environment variables
 
-#### While deploying
+The `RemixSite` construct allows you to set the environment variables in your Remix app based on outputs from other constructs in your SST app. So you don't have to hard code the config from your backend. Let's look at how.
 
-On `sst deploy` we deploy your Remix server to Lamba@Edge, which does not support runtime environment. To get around this limitation the environment variables will first be replaced by placeholder values, `{{ API_URL }}` and `{{ USER_POOL_CLIENT }}`, when building the Remix app. And after the referenced resources have been created, the Api and User Pool in this case, the placeholders in the server JS will then be replaced with the actual values.
+To expose environment variables to your Remix application you should utilise the `RemixSite` construct `environment` configuration property rather than an `.env` file within your Remix application root.
 
-:::caution
-We only replace environment variables within the code that is deployed to your Lamba@Edge. i.e. the server for your Remix application. This keeps in line with Remix's expectations laid out in their documentation.
+Imagine you have an API created using the [`Api`](../constructs/Api.md) construct, and you want to fetch data from the API. You'd pass the API's endpoint to your Remix app.
 
-Do not use environment variables (e.g. `process.env.API_URL`) directly within any components that will be included in the browser build for your Remix application. You should instead pass the environment variables down via your route `loader`;
+```ts {7-9}
+const api = new Api(stack, "Api", {
+  // ...
+});
 
-```javascript
-// Loaders will only be included in your server build and the environment
-// variables will hence be substituted in the deployment process;
+new RemixSite(this, "Site", {
+  path: "path/to/site",
+  environment: {
+    API_URL: api.url,
+  },
+});
+```
+
+Then you can access the API's URL in your loaders/actions:
+
+```ts
+export async function loader() {
+  console.log(process.env.API_URL);
+}
+```
+
+:::info
+Remix only supports [server environment variables](https://remix.run/docs/en/v1/guides/envvars#server-environment-variables). If you are looking to access environment variables in your browser code, follow the Remix guide on [browser environment variables](https://remix.run/docs/en/v1/guides/envvars#browser-environment-variables).
+
+In our example, you'd return `ENV` for the client from the root loader.
+
+```js title="app/routes/index.tsx"
 export async function loader() {
   return json({
     ENV: {
-      apiUrl: process.env.API_URL,
-      userPoolClient: process.env.USER_POOL_CLIENT,
+      API_URL: process.env.API_URL,
     }
   });
 }
 ```
-
-You can read more about this strategy within the [Remix documentation](https://remix.run/docs/en/v1/guides/envvars#browser-environment-variables).
 :::
+
+In you are interested in know what is happening behind the scene, you can read more about:
+
+#### While deploying
+
+On `sst deploy`, the environment variables will first be replaced by placeholder values, `{{ API_URL }}`, when building the Remix app. And after the referenced resources have been created, the API in this case, the placeholders in the JS files will then be replaced with the actual values.
 
 #### While developing
 
 To use these values while developing, run `sst start` to start the [Live Lambda Development](/live-lambda-development.md) environment.
 
 ``` bash
-npm start
+npx sst start
 ```
 
 Then in your Remix app to reference these variables, add the [`sst-env`](/packages/static-site-env.md) package.
@@ -181,31 +255,76 @@ There are a couple of things happening behind the scenes here:
 ```
 /
   sst.json
-  remix-app/
+  my-remix-app/
 ```
 :::
 
-### Custom domains
+## Using AWS services
+
+Since the `RemixSite` construct deploys your Remix app to your AWS account, it's very convenient to access other resources in your AWS account in your Remix loaders/actions. `RemixSite` provides a simple way to grant [permissions](Permissions.md) to access specific AWS resources.
+
+Imagine you have a DynamoDB table created using the [`Table`](../constructs/Table.md) construct, and you want to fetch data from the Table.
+
+```ts {12}
+const table = new Table(stack, "Table", {
+  // ...
+});
+
+const site = new RemixSite(this, "Site", {
+  path: "my-remix-app/",
+  environment: {
+    TABLE_NAME: table.tableName,
+  },
+});
+
+site.attachPermissions([table]);
+```
+
+Note that we are also passing the table name into the environment, so the Remix loaders/actions can fetch the value `process.env.TABLE_NAME` when calling the DynamoDB API to query the table.
+
+## Constructor
+```ts
+new RemixSite(scope, id, props)
+```
+_Parameters_
+- __scope__ <span class="mono">[Construct](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)</span>
+- __id__ <span class="mono">string</span>
+- __props__ <span class="mono">[RemixSiteProps](#remixsiteprops)</span>
+
+## Examples
+
+### Using the minimal config
+
+Deploys a Remix app in the `my-remix-app` directory.
+
+```js
+new RemixSite(stack, "web", {
+  path: "my-remix-app/",
+});
+```
+
+
+### Configuring custom domains
 
 You can configure the website with a custom domain hosted either on [Route 53](https://aws.amazon.com/route53/) or [externally](#configuring-externally-hosted-domain).
 
 #### Using the basic config (Route 53 domains)
 
 ```js {3}
-new RemixSite(this, "Site", {
-  path: "path/to/site",
-  customDomain: "domain.com",
+new RemixSite(stack, "Site", {
+  path: "my-remix-site/",
+  customDomain: "my-app.com",
 });
 ```
 
 #### Redirect www to non-www (Route 53 domains)
 
 ```js {3-6}
-new RemixSite(this, "Site", {
-  path: "path/to/site",
+new RemixSite(stack, "Site", {
+  path: "my-remix-site/",
   customDomain: {
-    domainName: "domain.com",
-    domainAlias: "www.domain.com",
+    domainName: "my-app.com",
+    domainAlias: "www.my-app.com",
   },
 });
 ```
@@ -213,12 +332,12 @@ new RemixSite(this, "Site", {
 #### Configuring domains across stages (Route 53 domains)
 
 ```js {3-7}
-new RemixSite(this, "Site", {
-  path: "path/to/site",
+new RemixSite(stack, "Site", {
+  path: "my-remix-site/",
   customDomain: {
     domainName:
-      scope.stage === "prod" ? "domain.com" : `${scope.stage}.domain.com`,
-    domainAlias: scope.stage === "prod" ? "www.domain.com" : undefined,
+      scope.stage === "prod" ? "my-app.com" : `${scope.stage}.my-app.com`,
+    domainAlias: scope.stage === "prod" ? "www.my-app.com" : undefined,
   },
 });
 ```
@@ -226,12 +345,12 @@ new RemixSite(this, "Site", {
 #### Using the full config (Route 53 domains)
 
 ```js {3-7}
-new RemixSite(this, "Site", {
-  path: "path/to/site",
+new RemixSite(stack, "Site", {
+  path: "my-remix-site/",
   customDomain: {
-    domainName: "domain.com",
-    domainAlias: "www.domain.com",
-    hostedZone: "domain.com",
+    domainName: "my-app.com",
+    domainAlias: "www.my-app.com",
+    hostedZone: "my-app.com",
   },
 });
 ```
@@ -241,12 +360,12 @@ new RemixSite(this, "Site", {
 ```js {8}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
-new RemixSite(this, "Site", {
-  path: "path/to/site",
+new RemixSite(stack, "Site", {
+  path: "my-remix-site/",
   customDomain: {
-    domainName: "domain.com",
+    domainName: "my-app.com",
     cdk: {
-      certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+      certificate: Certificate.fromCertificateArn(stack, "MyCert", certArn),
     },
   },
 });
@@ -261,12 +380,12 @@ If you have multiple hosted zones for a given domain, you can choose the one you
 ```js {8-11}
 import { HostedZone } from "aws-cdk-lib/aws-route53";
 
-new RemixSite(this, "Site", {
-  path: "path/to/site",
+new RemixSite(stack, "Site", {
+  path: "my-remix-site/",
   customDomain: {
-    domainName: "domain.com",
+    domainName: "my-app.com",
     cdk: {
-      hostedZone: HostedZone.fromHostedZoneAttributes(this, "MyZone", {
+      hostedZone: HostedZone.fromHostedZoneAttributes(stack, "MyZone", {
         hostedZoneId,
         zoneName,
       }),
@@ -280,13 +399,13 @@ new RemixSite(this, "Site", {
 ```js {5-11}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
-new RemixSite(this, "Site", {
-  path: "path/to/site",
+new RemixSite(stack, "Site", {
+  path: "my-remix-site/",
   cutomDomain: {
     isExternalDomain: true,
-    domainName: "domain.com",
+    domainName: "my-app.com",
     cdk: {
-      certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+      certificate: Certificate.fromCertificateArn(stack, "MyCert", certArn),
     },
   },
 });
@@ -302,7 +421,7 @@ Configure the internally created CDK [`Lambda Function`](https://docs.aws.amazon
 
 ```js {4-8}
 new RemixSite(stack, "Site", {
-  path: "path/to/site",
+  path: "my-remix-site/",
   defaults: {
     function: {
       timeout: 20,
@@ -313,36 +432,7 @@ new RemixSite(stack, "Site", {
 });
 ```
 
-### Permissions
-
-You can attach a set of [permissions](Permissions.md) to allow the Remix server lambda, enabling it to access other AWS resources.
-
-```js {5}
-const site = new RemixSite(this, "Site", {
-  path: "path/to/site",
-});
-
-site.attachPermissions(["sns"]);
-```
-
 ### Advanced examples
-
-#### Configuring the Lambda Function
-
-Configure the internally created CDK [`Lambda Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html) instance.
-
-```js {4-8}
-new RemixSite(this, "Site", {
-  path: "path/to/site",
-  defaults: {
-    function: {
-      timeout: 20,
-      memorySize: 2048,
-      permissions: ["sns"],
-    },
-  },
-});
-```
 
 #### Reusing CloudFront cache policies
 
@@ -352,20 +442,20 @@ CloudFront has a limit of 20 cache policies per AWS account. This is a hard limi
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 
 const cachePolicies = {
-  browserBuildCachePolicy: new cloudfront.CachePolicy(this, "BrowserBuildStaticsCache", RemixSite.browserBuildCachePolicyProps),
-  publicCachePolicy: new cloudfront.CachePolicy(this, "PublicStaticsCache", RemixSite.publicCachePolicyProps),
-  serverResponseCachePolicy: new cloudfront.CachePolicy(this, "ServerResponseCache", RemixSite.serverResponseCachePolicyProps),
+  browserBuildCachePolicy: new cloudfront.CachePolicy(stack, "BrowserBuildStaticsCache", RemixSite.browserBuildCachePolicyProps),
+  publicCachePolicy: new cloudfront.CachePolicy(stack, "PublicStaticsCache", RemixSite.publicCachePolicyProps),
+  serverResponseCachePolicy: new cloudfront.CachePolicy(stack, "ServerResponseCache", RemixSite.serverResponseCachePolicyProps),
 };
 
-new RemixSite(this, "Site1", {
-  path: "path/to/site1",
+new RemixSite(stack, "Site1", {
+  path: "my-remix-site/",
   cdk: {
     cachePolicies,
   }
 });
 
-new RemixSite(this, "Site2", {
-  path: "path/to/site2",
+new RemixSite(stack, "Site2", {
+  path: "another-remix-site/",
   cdk: {
     cachePolicies,
   }
@@ -435,10 +525,19 @@ new RemixSite(stack, "RemixSite", {
 });
 ```
 
+### edge?
 
+_Type_ : <span class="mono">boolean</span>
 
+_Default_ : <span class="mono">false</span>
 
-z
+The Remix app server is deployed to a Lambda function behind an API Gateway
+HTTP API. Alternatively, you can choose to deploy to Lambda@Edge.
+
+### environment?
+
+_Type_ : <span class="mono">Record&lt;<span class="mono">string</span>, <span class="mono">string</span>&gt;</span>
+
 An object with the key being the environment variable name.
 
 
@@ -462,12 +561,7 @@ Path to the directory where the website source is located.
 
 _Type_ : <span class="mono">boolean</span>
 
-While deploying, SST waits for the CloudFront cache invalidation process to
-finish. This ensures that the new content will be served once the deploy
-command finishes. However, this process can sometimes take more than 5
-mins. For non-prod environments it might make sense to pass in `false`.
-That'll skip waiting for the cache to invalidate and speed up the deploy
-process.
+While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
 
 
 ### cdk.bucket?
@@ -478,27 +572,30 @@ Pass in bucket information to override the default settings this
 construct uses to create the CDK Bucket internally.
 
 
-### cdk.cachePolicies.browserBuildCachePolicy?
+### cdk.cachePolicies.buildCachePolicy?
 
 _Type_ : <span class="mono">[ICachePolicy](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.ICachePolicy.html)</span>
 
 Override the CloudFront cache policy properties for browser build files.
 
-### cdk.cachePolicies.publicCachePolicy?
+### cdk.cachePolicies.serverCachePolicy?
+
+_Type_ : <span class="mono">[ICachePolicy](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.ICachePolicy.html)</span>
+
+Override the CloudFront cache policy properties for responses from the
+server rendering Lambda.
+
+The default cache policy that is used in the abscene of this property
+is one that performs no caching of the server response.
+
+### cdk.cachePolicies.staticsCachePolicy?
 
 _Type_ : <span class="mono">[ICachePolicy](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.ICachePolicy.html)</span>
 
 Override the CloudFront cache policy properties for "public" folder
 static files.
 Note: This will not include the browser build files, which have a seperate
-cache policy; @see `browserBuildCachePolicy`.
-
-### cdk.cachePolicies.serverResponseCachePolicy?
-
-_Type_ : <span class="mono">[ICachePolicy](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.ICachePolicy.html)</span>
-
-Override the CloudFront cache policy properties for responses from the
-server rendering Lambda.
+cache policy; @see `buildCachePolicy`.
 
 
 Override the default CloudFront cache policies created internally.
@@ -513,12 +610,6 @@ create the CDK `Distribution` internally.
 
 ## Properties
 An instance of `RemixSite` has the following properties.
-### browserBuildCachePolicyProps
-
-_Type_ : <span class="mono">[CachePolicyProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.CachePolicyProps.html)</span>
-
-The default CloudFront cache policy properties for browser build files.
-
 ### bucketArn
 
 _Type_ : <span class="mono">string</span>
@@ -530,6 +621,12 @@ The ARN of the internally created S3 Bucket.
 _Type_ : <span class="mono">string</span>
 
 The name of the internally created S3 Bucket.
+
+### buildCachePolicyProps
+
+_Type_ : <span class="mono">[CachePolicyProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.CachePolicyProps.html)</span>
+
+The default CloudFront cache policy properties for browser build files.
 
 ### customDomainUrl
 
@@ -550,21 +647,24 @@ _Type_ : <span class="mono">string</span>
 
 The ID of the internally created CloudFront Distribution.
 
-### publicCachePolicyProps
-
-_Type_ : <span class="mono">[CachePolicyProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.CachePolicyProps.html)</span>
-
-The default CloudFront cache policy properties for "public" folder
-static files.
-Note: This will not include the browser build files, which have a seperate
-cache policy; @see `browserBuildCachePolicyProps`.
-
-### serverResponseCachePolicyProps
+### serverCachePolicyProps
 
 _Type_ : <span class="mono">[CachePolicyProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.CachePolicyProps.html)</span>
 
 The default CloudFront cache policy properties for responses from the
 server rendering Lambda.
+
+By default no caching is performed on the server rendering Lambda response.
+
+### staticsCachePolicyProps
+
+_Type_ : <span class="mono">[CachePolicyProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.CachePolicyProps.html)</span>
+
+The default CloudFront cache policy properties for "public" folder
+static files.
+
+This policy is not applied to the browser build files; they have a seperate
+cache policy; @see `buildCachePolicyProps`.
 
 ### url
 
@@ -598,6 +698,8 @@ _Type_ : <span class="mono">[IHostedZone](https://docs.aws.amazon.com/cdk/api/v2
 The Route 53 hosted zone for the custom domain.
 
 
+Exposes CDK instances created within the construct.
+
 ## Methods
 An instance of `RemixSite` has the following methods.
 ### attachPermissions
@@ -612,8 +714,6 @@ _Parameters_
 Attaches the given list of permissions to allow the Remix server side
 rendering to access other AWS resources.
 
-
-### Attaching permissions
 
 ```js {5}
 const site = new RemixSite(stack, "Site", {

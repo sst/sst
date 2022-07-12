@@ -525,6 +525,19 @@ new Table(stack, "Table", {
 });
 ```
 
+### timeToLiveAttribute?
+
+_Type_ : <span class="mono">string</span>
+
+The field that's used to store the expiration time for items in the table.
+
+
+```js {8}
+new Table(stack, "Table", {
+  timeToLiveAttribute: "expireAt",
+});
+```
+
 
 ### cdk.table?
 
@@ -683,7 +696,7 @@ Used to create the consumer function for the table.
 
 ### cdk.eventSource?
 
-_Type_ : <span class="mono">[DynamoEventSourceProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_dynamodb.DynamoEventSourceProps.html)</span>
+_Type_ : <span class="mono">[DynamoEventSourceProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.DynamoEventSourceProps.html)</span>
 
 Override the settings of the internally created event source
 

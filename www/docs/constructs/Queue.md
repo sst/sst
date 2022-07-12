@@ -272,7 +272,7 @@ new Queue(stack, "Queue", {
 
 ### cdk.eventSource?
 
-_Type_ : <span class="mono">[SqsEventSourceProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_sqs.SqsEventSourceProps.html)</span>
+_Type_ : <span class="mono">[SqsEventSourceProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.SqsEventSourceProps.html)</span>
 
 This allows you to override the default settings this construct uses internally to create the consumer.
 

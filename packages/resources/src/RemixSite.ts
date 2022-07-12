@@ -186,15 +186,18 @@ export interface RemixSiteProps {
 }
 
 /**
- * The `RemixSite` construct is a higher level CDK construct that makes it easy to create a Remix app. It provides a simple way to build and deploy the site to an S3 bucket; setup a CloudFront CDN for fast content delivery; and configure a custom domain for the website URL.
+ * The `RemixSite` construct is a higher level CDK construct that makes it easy to create a Remix app.
  *
- * By default, the Remix app server is deployed to a Lambda function behind API Gateway HTTP API Lambda. Alternatively, you can choose to deploy to Lambda@Edge.
- * 
- * In the case you have a centralized database, Edge locations are often far away from your database. If you are making multiple queries in your data loader, you might experience long latency.
+ * @example
+ * ### Using the minimal config
  *
- * The browser build and public statics are backed by an S3 Bucket. CloudFront cache policies are configured, whilst also allowing for customization, and we include cache invalidation on deployment.
+ * Deploys a Remix app in the `my-remix-app` directory.
  *
- * It also enables you to [automatically set the environment variables](#configuring-environment-variables) for your Remix app directly from the outputs in your SST app.
+ * ```js
+ * new RemixSite(stack, "web", {
+ *   path: "my-remix-app/",
+ * });
+ * ```
  */
 export class RemixSite extends Construct implements SSTConstruct {
   /**
@@ -456,8 +459,6 @@ export class RemixSite extends Construct implements SSTConstruct {
    * rendering to access other AWS resources.
    *
    * @example
-   * ### Attaching permissions
-   *
    * ```js {5}
    * const site = new RemixSite(stack, "Site", {
    *   path: "path/to/site",

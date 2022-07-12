@@ -416,8 +416,8 @@ You can create the EventBus construct in one stack, and add rules in other stack
 ```ts title="stacks/MainStack.ts"
 import { EventBus, App, StackContext } from "@serverless-stack/resources";
 
-export function MainStack(ctx: StackContext) {
-  const bus = new EventBus(ctx.stack, "Bus", {
+export function MainStack({ stack }: StackContext) {
+  const bus = new EventBus(stack, "Bus", {
     rules: {
       rule1: {
         pattern: { source: ["myevent"] },
@@ -435,15 +435,15 @@ export function MainStack(ctx: StackContext) {
 }
 ```
 
-Then import the construct into another stack with `use` and call `addRules`. Note that the AWS resources for the added rules will be created in `AnotherStack`.
+Then import the auth construct into another stack with `use` and call `addRules`. Note that the AWS resources for the added routes will be created in `AnotherStack`.
 
 ```ts title="stacks/AnotherStack.ts"
 import { EventBus, StackContext } from "@serverless-stack/resources";
 import { MainStack } from "./MainStack"
 
-export function AnotherStack(ctx: StackContext) {
+export function AnotherStack({ stack }: StackContext) {
   const { bus } = use(MainStack);
-  bus.addRules(ctx.stack, {
+  bus.addRules(stack, {
     rule2: {
       targets: {
         myTarget3: "src/target3.main",
@@ -657,7 +657,7 @@ A list of detailTypes to filter on
 new EventBus(stack, "Bus", {
   rules: {
     rule1: {
-      pattern: { detailTypes: ["foo"]  },
+      pattern: { detailType: ["foo"]  },
     },
   },
 });

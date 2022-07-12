@@ -16,6 +16,7 @@ It also allows you to [automatically set the environment variables](#configuring
 The `NextjsSite` construct uses the [`@sls-next/lambda-at-edge`](https://github.com/serverless-nextjs/serverless-next.js/tree/master/packages/libs/lambda-at-edge) package from the [`serverless-next.js`](https://github.com/serverless-nextjs/serverless-next.js) project to build and package your Next.js app so that it can be deployed to Lambda@Edge and CloudFront.
 
 :::note
+
 To use the `NextjsSite` construct, you have to install `@sls-next/lambda-at-edge` as a dependency in your `package.json`.
 
 ```bash
@@ -32,7 +33,6 @@ Most of the Next.js 11 features are supported, including:
 - [Image Optimization](https://nextjs.org/docs/basic-features/image-optimization): Images are resized and optimized at CloudFront edge locations using Lambda@Edge.
 
 Next.js 12 features like middleware and AVIF image are not yet supported. You can [read more about the features supported by `serverless-next.js`](https://github.com/serverless-nextjs/serverless-next.js#features). And you can [follow the progress on Next.js 12 support here](https://github.com/serverless-nextjs/serverless-next.js/issues/2016).
-
 
 ## Constructor
 ```ts
@@ -355,6 +355,24 @@ new NextjsSite(this, "Site2", {
 ## NextjsSiteProps
 
 
+
+### commandHooks.afterBuild?
+
+_Type_ : <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
+
+Commands to run after building the Next.js app. Commands are chained with `&&`, and they are run inside the Next.js app folder.
+
+
+```js
+new NextjsSite(stack, "NextSite", {
+  path: "path/to/site",
+  commandHooks: {
+    afterBuild: ["npx next-sitemap"],
+  }
+});
+```
+
+
 ### customDomain?
 
 _Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[NextjsDomainProps](#nextjsdomainprops)</span></span>
@@ -391,6 +409,22 @@ _Type_ : <span class="mono">number</span>
 
 _Type_ : <span class="mono">[Permissions](Permissions)</span>
 
+### defaults.function.runtime?
+
+_Type_ : <span class='mono'><span class="mono">"nodejs16.x"</span> | <span class="mono">"nodejs12.x"</span> | <span class="mono">"nodejs14.x"</span></span>
+
+_Default_ : <span class="mono">"nodejs16.x"</span>
+
+The runtime environment.
+
+
+```js
+new NextjsSite(stack, "Function", {
+  path: "path/to/site",
+  runtime: "nodejs16.x",
+})
+```
+
 ### defaults.function.timeout?
 
 _Type_ : <span class="mono">number</span>
@@ -426,6 +460,15 @@ new NextjsSite(stack, "NextSite", {
   },
 });
 ```
+
+### nextBinPath?
+
+_Type_ : <span class="mono">string</span>
+
+_Default_ : <span class="mono">"./node_modules/.bin/next"</span>
+
+Path to the next executable, typically in node_modules.
+This should be used if next is installed in a non-standard location.
 
 ### path
 
