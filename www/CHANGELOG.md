@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 1.3.0
+
+### Minor Changes
+
+- [#1800](https://github.com/serverless-stack/sst/pull/1800) [`30ca1ca82`](https://github.com/serverless-stack/sst/commit/30ca1ca8237ad666214e9d4e73a7e24f7cd094c8) Thanks [@ctrlplusb](https://github.com/ctrlplusb)! - Add RemixSite construct
+
 ## 1.2.0
 
 ### Minor Changes
