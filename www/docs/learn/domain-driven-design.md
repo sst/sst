@@ -10,7 +10,7 @@ The basic idea behind is to keep a seperate layer that purely implements your bu
 
 In the starter we provide a `core/article.ts` module which contains actions you can take that are related to the business concept of _Articles_. It exposes high level functions that handle the work of talking to the database, storing and retrieving them, and allows for more complex functionality in the future - like publishing notifications to an event bus.
 
-The API and Lambda function code is unaware of any of these details and simply calls into these modules to composes the logic together.
+The API and Lambda function code is unaware of any of these details and simply calls into these modules to compose the logic together.
 
 ### Why DDD
 
