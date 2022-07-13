@@ -97,6 +97,7 @@ SST also comes with [a set of serverless specific higher-level CDK constructs][r
 - [Auth](https://docs.sst.dev/constructs/Auth) for configuring authentication
 - [Table](https://docs.sst.dev/constructs/Table) for adding DynamoDB tables
 - [Topic](https://docs.sst.dev/constructs/Topic) for creating pub/sub systems
+- [RemixSite](https://docs.sst.dev/constructs/RemixSite) for creating Next.js websites
 - [StaticSite](https://docs.sst.dev/constructs/StaticSite) for creating static websites
 - [NextjsSite](https://docs.sst.dev/constructs/NextjsSite) for creating Next.js websites
 - [Script](https://docs.sst.dev/constructs/Script) for running scripts while deploying
