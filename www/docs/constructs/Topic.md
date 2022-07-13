@@ -229,10 +229,6 @@ new Topic(stack, "Topic", {
 
 ```js {7-9}
 new Topic(stack, "Topic", {
-  subscribers: {
-    subscriber1: "src/subscriber1.main",
-    subscriber2: "src/subscriber2.main",
-  },
   cdk: {
     topic: {
       fifo: true,
@@ -240,6 +236,8 @@ new Topic(stack, "Topic", {
   },
 });
 ```
+
+Note that as of June 2022, FIFO Topic does not support Lambda subscription.
 
 ### Advanced examples
 

@@ -106,6 +106,7 @@ app.bootstrap({
     "../packages/resources/src/EventBus.ts",
     "../packages/resources/src/StaticSite.ts",
     "../packages/resources/src/NextjsSite.ts",
+    "../packages/resources/src/RemixSite.ts",
     "../packages/resources/src/AppSyncApi.ts",
     "../packages/resources/src/GraphQLApi.ts",
     "../packages/resources/src/ViteStaticSite.ts",
@@ -116,7 +117,10 @@ app.bootstrap({
     "../packages/resources/src/DebugStack.ts",
   ],
   tsconfig: path.resolve("../packages/resources/tsconfig.json"),
-  includes: "docs/constructs/*.snippets.md",
+  includes: [
+    "docs/constructs/*.about.md",
+    "docs/constructs/*.snippets.md"
+  ],
   preserveWatchOutput: true,
 });
 
@@ -128,9 +132,12 @@ if (cmd === "watch") {
     await run(json);
     console.log("Generated docs");
   });
-  // Watch snippets files
+  // Watch about and snippets files
   chokidar
-    .watch(`docs/constructs/snippets.md`)
+    .watch([
+      `docs/constructs/*.about.md`,
+      `docs/constructs/*.snippets.md`,
+    ])
     .on("change", async (event, path) => {
       console.log("Snippet change detected. Starting compilation...");
       const reflection = app.convert();
@@ -175,8 +182,18 @@ async function run(json) {
       `-->`
     );
 
-    lines.push(construct.comment?.shortText);
-    if (construct.comment?.text) lines.push("\n" + construct.comment?.text);
+    // About
+    try {
+      const contents = await fs.readFile(
+        `docs/constructs/${file.name}.about.md`
+      );
+      // about file exists => render file
+      lines.push(...contents.toString().split("\n"));
+    } catch(e) {
+      // about file NOT exists => render from ts doc
+      lines.push(construct.comment?.shortText);
+      if (construct.comment?.text) lines.push("\n" + construct.comment?.text);
+    }
 
     // Constructor
     const constructor = construct.children?.find(

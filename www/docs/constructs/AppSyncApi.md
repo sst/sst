@@ -608,6 +608,34 @@ new AppSyncApi(stack, "GraphqlApi", {
 });
 ```
 
+#### Using multiple authorization methods
+
+```js {8-20}
+import * as cdk from "aws-cdk-lib";
+import * as appsync from "@aws-cdk/aws-appsync-alpha";
+
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  cdk: {
+    graphqlApi: {
+      authorizationConfig: {
+        defaultAuthorization: {
+          authorizationType: appsync.AuthorizationType.API_KEY,
+          apiKeyConfig: {
+            expires: cdk.Expiration.after(cdk.Duration.days(365)),
+          },
+        },
+        additionalAuthorizationModes: [
+          {
+            authorizationType: appsync.AuthorizationType.IAM,
+          }
+        ],
+      },
+    },
+  },
+});
+```
+
 ### Advanced examples
 
 #### Configuring the GraphQL Api

@@ -46,8 +46,8 @@
     "cross-spawn": "^7.0.3",
     "fs-extra": "^9.0.1",
     "glob": "^7.1.7",
-    "zip-local": "^0.3.4",
-    "zod": "^3.14.3"
+    "indent-string": "^5.0.0",
+    "zip-local": "^0.3.4"
   },
   "devDependencies": {
     "@graphql-tools/merge": "^8.2.12",
@@ -57,7 +57,8 @@
     "@types/glob": "^7.2.0",
     "@types/node": "^14.0.27",
     "esbuild-jest": "^0.5.0",
-    "typedoc": "^0.22.13"
+    "typedoc": "^0.22.13",
+    "vitest": "^0.15.1"
   },
   "optionalDependencies": {
     "graphql": "^16.5.0"

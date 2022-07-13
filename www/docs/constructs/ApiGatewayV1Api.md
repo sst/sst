@@ -635,9 +635,7 @@ CORS support applied to all endpoints in this API
 
 ```js
 new ApiGatewayV1Api(stack, "Api", {
-  cors: {
-    allowMethods: ["GET"],
-  },
+  cors: true,
 });
 ```
 
