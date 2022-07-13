@@ -41,7 +41,6 @@ import {
   BaseSiteReplaceProps,
   BaseSiteCdkDistributionProps,
   BaseSiteEnvironmentOutputsInfo,
-  getBuildCmdEnvironment,
   buildErrorResponsesForRedirectToIndex,
 } from "./BaseSite.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
@@ -535,7 +534,6 @@ export class RemixSite extends Construct implements SSTConstruct {
       stdio: "inherit",
       env: {
         ...process.env,
-        ...getBuildCmdEnvironment(this.props.environment),
       },
     });
     if (buildResult.status !== 0) {

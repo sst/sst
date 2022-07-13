@@ -196,11 +196,27 @@ export async function loader() {
 ```
 :::
 
-In you are interested in know what is happening behind the scene, you can read more about:
+Let's take look at what is happening behind the scene.
 
 #### While deploying
 
-On `sst deploy`, the environment variables will first be replaced by placeholder values, `{{ API_URL }}`, when building the Remix app. And after the referenced resources have been created, the API in this case, the placeholders in the JS files will then be replaced with the actual values.
+On `sst deploy`, the Remix app server is deployed to a Lambda function, and the RemixSite's `environment` values are set as Lambda function environment variables. In this case, `process.env.API_URL` will be available at runtime.
+
+If you enabled the `edge` option, the Remix app server will instead get deployed to a Lambda@Edge function. We have an issue here, AWS Lambda@Edge does not support runtime environment variables. To get around this limitation, we insert a snippet to the top of your app server:
+
+```ts
+const environment = "{{ _SST_REMIX_SITE_ENVIRONMENT_ }}";
+process.env = { ...process.env, ...environment };
+```
+
+And at deploy time, after the referenced resources have been created, the API in this case, a CloudFormation custom resource will update the app server's code and replace the placeholder `{{ _SST_REMIX_SITE_ENVIRONMENT_ }}` with the actual value:
+
+```ts
+const environment = { API_URL: "https://ioe7hbv67f.execute-api.us-east-1.amazonaws.com" };
+process.env = { ...process.env, ...environment };
+```
+
+This will make `process.env.API_URL` available at runtime.
 
 #### While developing
 
@@ -210,7 +226,7 @@ To use these values while developing, run `sst start` to start the [Live Lambda 
 npx sst start
 ```
 
-Then in your Remix app to reference these variables, add the [`sst-env`](/packages/static-site-env.md) package.
+Then in your Remix app to reference these variables, add the [`static-site-env`](/packages/static-site-env.md) package.
 
 ```bash
 npm install --save-dev @serverless-stack/static-site-env
