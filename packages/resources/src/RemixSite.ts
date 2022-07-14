@@ -99,8 +99,7 @@ export interface RemixSiteProps {
   };
 
   /**
-   * The Remix app server is deployed to a Lambda function behind an API Gateway
-   * HTTP API. Alternatively, you can choose to deploy to Lambda@Edge.
+   * The Remix app server is deployed to a Lambda function in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
    *
    * @default false
    */
