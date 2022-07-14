@@ -12,10 +12,10 @@ Let's look at how to add tags.
 To add tags to all the resources in your app.
 
 ```js title="stacks/index.js" {4}
-import * as cdk from "@aws-cdk/core";
+import { Tags } from "aws-cdk-lib";
 
 export default function main(app) {
-  cdk.Tags.of(app).add("my-tag", `${app.stage}-${app.region}`);
+  Tags.of(app).add("my-tag", `${app.stage}-${app.region}`);
 }
 ```
 
@@ -26,8 +26,8 @@ You can also add tags to the [Debug Stack](../constructs/DebugStack.md) that SST
 To do that use the `debugApp` callback method in your `stacks/index.js`.
 
 ```js title="stacks/index.js" {8-12}
-import * as cdk from "@aws-cdk/core";
-import * as sst from "@serverless-stack/resources";
+import { Tags } from "aws-cdk-lib";
+import { DebugStack } from "@serverless-stack/resources";
 
 export default function main(app) {
   // Define your stacks here
@@ -35,8 +35,8 @@ export default function main(app) {
 
 export function debugApp(app) {
   // Make sure to create the DebugStack when using the debugApp callback
-  new sst.DebugStack(app, "debug-stack");
-  cdk.Tags.of(app).add("my-tag", `${app.stage}-${app.region}`);
+  new DebugStack(app, "debug-stack");
+  Tags.of(app).add("my-tag", `${app.stage}-${app.region}`);
 }
 ```
 
