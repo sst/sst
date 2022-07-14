@@ -124,7 +124,7 @@ To get started:
 Certain browsers like Safari and Brave require the local connection between the browser and the `sst start` cli to be running on HTTPS. SST integrates with [mkcert](https://github.com/FiloSottile/mkcert) to automatically generate a self signed certificate that is used. To setup
 
 1. Follow the mkcert [installation steps](https://github.com/FiloSottile/mkcert#installation).
-2. Run `mkcert install`
+2. Run `mkcert -install`
 3. Restart your browser
 4. Run `sst start` and visit [the console](https://console.sst.dev) and everything should work.
 
