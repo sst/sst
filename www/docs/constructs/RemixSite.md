@@ -142,7 +142,7 @@ You can configure the website with a custom domain hosted either on [Route 53](h
 
 ```js {5}
 const site = new RemixSite(this, "Site", {
-  path: "my-remix-site/",
+  path: "my-remix-app/",
   customDomain: "my-app.com",
 });
 ```
@@ -153,7 +153,7 @@ You can also configure an alias domain to point to the main domain. For example,
 
 ```js {5}
 const site = new RemixSite(this, "Site", {
-  path: "my-remix-site/",
+  path: "my-remix-app/",
   customDomain: {
     domainName: "my-app.com",
     domainAlias: "www.my-app.com",
@@ -328,7 +328,7 @@ You can configure the website with a custom domain hosted either on [Route 53](h
 
 ```js {3}
 new RemixSite(stack, "Site", {
-  path: "my-remix-site/",
+  path: "my-remix-app/",
   customDomain: "my-app.com",
 });
 ```
@@ -337,7 +337,7 @@ new RemixSite(stack, "Site", {
 
 ```js {3-6}
 new RemixSite(stack, "Site", {
-  path: "my-remix-site/",
+  path: "my-remix-app/",
   customDomain: {
     domainName: "my-app.com",
     domainAlias: "www.my-app.com",
@@ -349,7 +349,7 @@ new RemixSite(stack, "Site", {
 
 ```js {3-7}
 new RemixSite(stack, "Site", {
-  path: "my-remix-site/",
+  path: "my-remix-app/",
   customDomain: {
     domainName:
       scope.stage === "prod" ? "my-app.com" : `${scope.stage}.my-app.com`,
@@ -362,7 +362,7 @@ new RemixSite(stack, "Site", {
 
 ```js {3-7}
 new RemixSite(stack, "Site", {
-  path: "my-remix-site/",
+  path: "my-remix-app/",
   customDomain: {
     domainName: "my-app.com",
     domainAlias: "www.my-app.com",
@@ -377,7 +377,7 @@ new RemixSite(stack, "Site", {
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new RemixSite(stack, "Site", {
-  path: "my-remix-site/",
+  path: "my-remix-app/",
   customDomain: {
     domainName: "my-app.com",
     cdk: {
@@ -397,7 +397,7 @@ If you have multiple hosted zones for a given domain, you can choose the one you
 import { HostedZone } from "aws-cdk-lib/aws-route53";
 
 new RemixSite(stack, "Site", {
-  path: "my-remix-site/",
+  path: "my-remix-app/",
   customDomain: {
     domainName: "my-app.com",
     cdk: {
@@ -416,7 +416,7 @@ new RemixSite(stack, "Site", {
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new RemixSite(stack, "Site", {
-  path: "my-remix-site/",
+  path: "my-remix-app/",
   cutomDomain: {
     isExternalDomain: true,
     domainName: "my-app.com",
@@ -437,7 +437,7 @@ Configure the internally created CDK [`Lambda Function`](https://docs.aws.amazon
 
 ```js {4-8}
 new RemixSite(stack, "Site", {
-  path: "my-remix-site/",
+  path: "my-remix-app/",
   defaults: {
     function: {
       timeout: 20,
@@ -464,7 +464,7 @@ const cachePolicies = {
 };
 
 new RemixSite(stack, "Site1", {
-  path: "my-remix-site/",
+  path: "my-remix-app/",
   cdk: {
     cachePolicies,
   }
