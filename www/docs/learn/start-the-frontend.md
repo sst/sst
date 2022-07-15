@@ -4,7 +4,11 @@ title: Start the Frontend
 
 import ChangeText from "@site/src/components/ChangeText";
 
-We are now ready to start up our frontend locally.
+We are now ready to move on to the frontend.
+
+Last chapter we talked about how our app is deployed to AWS. When working locally, SST deploys a placeholder website instead of your real frontend. We do this because we want to be able to work on our frontend locally, while still connecting to our API in AWS.
+
+So let's go ahead and start our frontend locally.
 
 <ChangeText>
 
@@ -45,7 +49,7 @@ There, should see a `POST /graphql` request being made. And the response body sh
 ![Console load articles log](/img/start-frontend/console-load-articles-log.png)
 
 :::info Behind the scenes
-This seemingly simple workflow deserves a quick _"behind the scenes"_ explanation. Here's what's happening here:
+This seemingly simple workflow deserves a quick "behind the scenes" look. Here's what's happening here:
 
 1. Your frontend is running locally.
 2. It makes a request to a GraphQL endpoint that's running in AWS.

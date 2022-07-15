@@ -90,4 +90,19 @@ SELECT * FROM article
 
 You should see the query returns **0 rows**.
 
-Next, let's start up our frontend locally.
+:::info Behind the scenes
+Let's quickly recap what we've done so far.
+
+1. We ran `sst start`.
+2. That started up our [Live Lambda Dev](../live-lambda-development.md) environment and the [SST Console](../console.md).
+3. Deployed the infrastructure for our app to AWS:
+   1. The RDS database in `stacks/Database.ts`.
+   2. The GraphQL API in `stacks/Api.ts` that connects to the database.
+   3. The React app as a static site in `stacks/Web.ts` that connects to the API.
+4. We then opened up the Console and ran the  migration in `services/migrations/`.
+5. It created an `article` table to store the links our users will submit.
+
+Finally, to test things we queried our database.
+:::
+
+Next, let's look at the frontend.

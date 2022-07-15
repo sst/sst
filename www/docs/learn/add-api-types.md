@@ -2,16 +2,38 @@
 title: Add API Types
 ---
 
-We don't want to just return a comment as a string from an API. We want to return a comment object that contains the comment id, text, and creation date. So let's create a `Comment` type.
+import ChangeText from "@site/src/components/ChangeText";
+
+The GraphQL setup we are using is a _Code-first_ GraphQL setup. This means that we write our schema definitions in TypeScript instead of the [standard GraphQL schema](https://graphql.org/learn/schema/). This allows us to have strong typing along and minimal boilerplate code.
+
+We use [Pothos](https://pothos-graphql.dev/) to do this. A key concept to understand here is that there are two different type systems involved:
+
+1. The underlying types that we get from the database queries we make. More on this later.
+2. The types that we need to define in our GraphQL schema.
+
+In this chapter, we'll be using the types from our database to define the types in our GraphQL schema.
+
+Let's start by creating a `Comment` type. Since the underlying types are coming from our database queries, this next step depends on the database and query builder you are using.
+
+Let's start with RDS PostgreSQL.
 
 ## Create a Comment type
 
-In Pothos you can specify the types for the underlying resource that the GraphQL object is backed by. This will vary depending on which database you chose.
+In the case of RDS, we are using [Kysely](https://koskimas.github.io/kysely/) to query our database.
+
+
+
+
+In [Pothos](https://pothos-graphql.dev/) you can specify the types for the underlying resource that the GraphQL object is backed by. This will vary depending on which database you chose.
 
 - **DynamoDB** `Article.CommentTypeEntity`
 - **RDS** `SQL.Row["comment"]`
 
+<ChangeText>
+
 In `services/functions/graphql/types/article.ts`, add the following above the `ArticleType`.
+
+</ChangeText>
 
 ```ts title="services/functions/graphql/types/article.ts"
 const CommentType = builder.objectRef<SQL.Row["comment"]>("Comment").implement({

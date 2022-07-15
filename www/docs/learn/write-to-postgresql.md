@@ -124,4 +124,72 @@ export async function comments(articleID: string) {
 }
 ```
 
-Now with our business logic implemented, we are ready to hook up our API.
+Here we are using [Kysely](https://koskimas.github.io/kysely/) to run queries against our database.
+
+:::info Behind the scenes
+There are a couple of interesting details here, let's dig in:
+
+1. `SQL.DB` is the Kysely instance from `services/core/sql.ts`.
+
+   ``` ts title="services/core/sql.ts"
+   export const DB = new Kysely<Database>({
+     dialect: new DataApiDialect({
+       mode: "postgres",
+       driver: {
+         secretArn: process.env.RDS_SECRET_ARN!,
+         resourceArn: process.env.RDS_ARN!,
+         database: process.env.RDS_DATABASE!,
+         client: new RDSDataService(),
+       },
+     }),
+   });
+   ```
+
+2. You might recall us setting the `process.env.` values back in the [Project Structure](project-structure.md#stacks) chapter. You can check the `stacks/Api.ts` for this.
+
+   ```ts title="stacks/Api.ts" {4-6}
+   function: {
+     permissions: [db],
+     environment: {
+       RDS_SECRET_ARN: db.secretArn,
+       RDS_ARN: db.clusterArn,
+       RDS_DATABASE: db.defaultDatabaseName,
+     },
+   }
+   ```
+
+3. The Kysely instance needs a `Database` type. This is coming from `services/core/sql.generated.ts`.
+
+   ```ts title="services/core/sql.generated.ts"
+   export interface Database {
+     "article": article
+     "comment": comment
+     "kysely_migration": kysely_migration
+     "kysely_migration_lock": kysely_migration_lock
+   }
+   ```
+
+   The keys of this interface are the table names in our database. And they in turn point to other interfaces that list the column types of the respective tables. For example, here's the new `comment` table we just created:
+
+```ts
+export interface comment {
+  'articleID': string;
+  'commentID': string;
+  'text': string;
+}
+```
+
+4. The `sql.generated.ts` file, as you might've guessed in generated. Our infrastructure code auto-generates this when a new migration is run!
+
+   ```ts title="stacks/Database.ts" {4}
+   const rds = new RDS(stack, "rds", {
+     engine: "postgresql10.14",
+     migrations: "services/migrations",
+     types: "services/core/sql.generated.ts",
+     defaultDatabaseName: "main",
+   });
+   ```
+   Even though this file is generated, you should check it into Git. We'll be relying on it in later on in this tutorial.
+:::
+
+Now with our business logic and database queries implemented, we are ready to hook up our API.
