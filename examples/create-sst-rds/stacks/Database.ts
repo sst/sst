@@ -1,7 +1,9 @@
 import { RDS, StackContext } from "@serverless-stack/resources";
 
 export function Database({ stack }: StackContext) {
-  const rds = new RDS(stack, "rds", {
+  const databaseName: string = process.env.DATABASE_NAME || "rds";
+
+  const rds = new RDS(stack, databaseName, {
     engine: "postgresql10.14",
     migrations: "services/migrations",
     types: "services/core/sql.generated.ts",

@@ -1,7 +1,9 @@
 import { StackContext, Table } from "@serverless-stack/resources";
 
 export function Database({ stack }: StackContext) {
-  const table = new Table(stack, "table", {
+  const tableName: string = process.env.TABLE_NAME || "table";
+
+  const table = new Table(stack, tableName, {
     fields: {
       pk: "string",
       sk: "string",
