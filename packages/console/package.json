@@ -62,6 +62,6 @@
     "@types/react-dom": "^17.0.10",
     "@vitejs/plugin-react": "^1.0.7",
     "vite": "^2.7.0",
-    "vite-plugin-sentry": "^1.0.14"
+    "vite-plugin-sentry": "1.0.14"
   }
 }
