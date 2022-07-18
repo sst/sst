@@ -2,10 +2,10 @@ import { Bus } from "./Bus.js";
 import { Config } from "../config/index.js";
 import { Kysely } from "kysely";
 import { DataApiDialect } from "kysely-data-api";
-import { RDSDataService } from "aws-sdk";
-import { CodegenDialectManager } from "kysely-codegen/dist/dialect-manager";
-import { CodegenSerializer } from "kysely-codegen/dist/serializer";
-import { CodegenFormat } from "kysely-codegen/dist/enums/format";
+import RDSDataService from "aws-sdk/clients/rdsdataservice.js";
+import { CodegenDialectManager } from "kysely-codegen/dist/dialect-manager.js";
+import { CodegenSerializer } from "kysely-codegen/dist/serializer.js";
+import { CodegenFormat } from "kysely-codegen/dist/enums/format.js";
 import * as fs from "fs/promises";
 
 interface Opts {
