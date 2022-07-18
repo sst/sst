@@ -132,7 +132,7 @@ You can configure the website with a custom domain hosted either on [Route 53](h
 
 ```js {5}
 const site = new RemixSite(this, "Site", {
-  path: "my-remix-site/",
+  path: "my-remix-app/",
   customDomain: "my-app.com",
 });
 ```
@@ -143,7 +143,7 @@ You can also configure an alias domain to point to the main domain. For example,
 
 ```js {5}
 const site = new RemixSite(this, "Site", {
-  path: "my-remix-site/",
+  path: "my-remix-app/",
   customDomain: {
     domainName: "my-app.com",
     domainAlias: "www.my-app.com",
