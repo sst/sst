@@ -8393,6 +8393,11 @@ dotenv@^10.0.0:
   resolved "https://registry.npmjs.org/dotenv/-/dotenv-10.0.0.tgz"
   integrity sha512-rlBi9d8jpv9Sf1klPjNfFAuWDjKLwTIJJ/VxtoTwIR6hnZxcEOQCZg2oIL3MWBYw5GpUDKOEnND7LXTbIpQ03Q==
 
+dotenv@^16.0.1:
+  version "16.0.1"
+  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-16.0.1.tgz#8f8f9d94876c35dac989876a5d3a82a267fdce1d"
+  integrity sha512-1K6hR6wtk2FviQ4kEiSjFiH5rpzEVi8WW0x96aztHVMhEspNpc4DVOUTEHtEva5VThQ8IaBX1Pe4gSzpVVUsKQ==
+
 dotenv@^8.1.0:
   version "8.6.0"
   resolved "https://registry.npmjs.org/dotenv/-/dotenv-8.6.0.tgz"
@@ -11129,6 +11134,25 @@ knex@^2.1.0:
     tarn "^3.0.2"
     tildify "2.0.0"
 
+kysely-codegen@^0.3.0:
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/kysely-codegen/-/kysely-codegen-0.3.0.tgz#befd54709614b01f3c6dfb9ecdac935383eae6ac"
+  integrity sha512-SH5GplkRIcmiv3GKPignj1Bq8F5QiWUyEEQiBSseIUyhwGTJy5+ZXvn8qJjdrcy3XPABNLhhNbUVkFC7/V1X+A==
+  dependencies:
+    chalk "^4.1.2"
+    dotenv "^16.0.1"
+    minimist "^1.2.6"
+
+kysely-data-api@^0.0.11:
+  version "0.0.11"
+  resolved "https://registry.yarnpkg.com/kysely-data-api/-/kysely-data-api-0.0.11.tgz#b3e4129886d35c2844b430d21a0fe580a782891b"
+  integrity sha512-QnMIDZS23iBH5ecRPC7e2lrBCIx+K80vji681abZ/GAHILDUqmKfX3l0LEq1wLMN9jJ697BJvdU7kcJCR/Leyw==
+
+kysely@^0.19.10:
+  version "0.19.10"
+  resolved "https://registry.yarnpkg.com/kysely/-/kysely-0.19.10.tgz#2555f5e3840172e28a308e01e487e414f5e8dfc2"
+  integrity sha512-s1H6yY8UtV/r2o8n9z3kXVaV1JQ6laBv7LjoY4gx9D4Us53BI9TlmxrkJWDIk8yUX/CUs3k4kpB1BWjHmrWidw==
+
 latest-version@^5.1.0:
   version "5.1.0"
   resolved "https://registry.npmjs.org/latest-version/-/latest-version-5.1.0.tgz"
@@ -11804,7 +11828,7 @@ minimist-options@^4.0.2:
     is-plain-obj "^1.1.0"
     kind-of "^6.0.3"
 
-minimist@^1.1.1:
+minimist@^1.1.1, minimist@^1.2.6:
   version "1.2.6"
   resolved "https://registry.npmjs.org/minimist/-/minimist-1.2.6.tgz"
   integrity sha512-Jsjnk4bw3YJqYzbdyBiNsPWHPfO++UGG749Cxs6peCu5Xg4nrena6OVxOYxrQTqww0Jmwt+Ref8rggumkTLz9Q==
