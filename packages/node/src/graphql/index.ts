@@ -1,3 +1,4 @@
+import { execute as defaultExecuteFn } from "graphql";
 import {
   ExecutionContext,
   FormatPayloadParams,
@@ -25,6 +26,10 @@ type HandlerConfig<C> = {
     context: Context;
     execution: ExecutionContext;
   }) => Promise<C>;
+  execute?: (
+    execute: typeof defaultExecuteFn,
+    ...args: unknown[]
+  ) => ReturnType<typeof defaultExecuteFn>;
 } & (
   | { schema: GraphQLSchema }
   | {
@@ -77,6 +82,7 @@ export function createGQLHandler<T>(config: HandlerConfig<T>) {
         }
         return undefined;
       },
+      ...(config.execute && { execute: config.execute }),
     });
     if (result.type === "RESPONSE") {
       return {
