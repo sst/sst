@@ -1,5 +1,4 @@
 import * as cognito from "aws-cdk-lib/aws-cognito";
-import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
 import {
   Api,
   Auth,
@@ -64,14 +63,9 @@ export function MyStack({ stack, app }: StackContext) {
     authorizers: {
       userPool: {
         type: "user_pool",
-        cdk: {
-          authorizer: new apigAuthorizers.HttpUserPoolAuthorizer(
-            "Authorizer",
-            auth.cdk.userPool,
-            {
-              userPoolClients: [auth.cdk.userPoolClient],
-            }
-          ),
+        userPool: {
+          id: auth.userPoolId,
+          clientIds: [auth.userPoolClientId],
         },
       },
     },
