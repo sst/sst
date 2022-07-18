@@ -29,17 +29,22 @@ export async function useLocalServer(opts: Opts) {
     stage: opts.stage,
     live: opts.live,
     stacks: {
-      status: "idle",
+      status: "idle"
     },
-    functions: {},
+    functions: {}
   };
   const onStateChange = new EventDelegate<DendriformPatch[]>();
   const onDeploy = new EventDelegate<void>();
 
   const rest = express();
 
-  rest.get(`/ping`, (_, res) => {
+  rest.all(`/ping`, (req, res) => {
     res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "GET, PUT, PATCH, POST, DELETE");
+    res.header(
+      "Access-Control-Allow-Headers",
+      req.header("access-control-request-headers")
+    );
     res.sendStatus(200);
   });
 
@@ -49,7 +54,7 @@ export async function useLocalServer(opts: Opts) {
     `/proxy*`,
     express.raw({
       type: "*/*",
-      limit: "1024mb",
+      limit: "1024mb"
     }),
     (req, res) => {
       res.header("Access-Control-Allow-Origin", "*");
@@ -69,11 +74,11 @@ export async function useLocalServer(opts: Opts) {
         {
           headers: {
             ...req.headers,
-            host: u.hostname,
+            host: u.hostname
           },
-          method: req.method,
+          method: req.method
         },
-        (proxied) => {
+        proxied => {
           res.status(proxied.statusCode!);
           for (const [key, value] of Object.entries(proxied.headers)) {
             res.header(key, value);
@@ -89,7 +94,7 @@ export async function useLocalServer(opts: Opts) {
       )
         forward.write(req.body);
       forward.end();
-      forward.on("error", (e) => {
+      forward.on("error", e => {
         console.log(e.message);
       });
     }
@@ -104,17 +109,17 @@ export async function useLocalServer(opts: Opts) {
         await Promise.all([fs.access(KEY_PATH), fs.access(CERT_PATH)]);
       } catch (e) {
         sync("mkcert", ["localhost"], {
-          cwd: ".sst",
+          cwd: ".sst"
         });
       }
       const [key, cert] = await Promise.all([
         fs.readFile(KEY_PATH),
-        fs.readFile(CERT_PATH),
+        fs.readFile(CERT_PATH)
       ]);
       return https.createServer(
         {
           key: key,
-          cert: cert,
+          cert: cert
         },
         rest
       );
@@ -144,9 +149,9 @@ export async function useLocalServer(opts: Opts) {
         region: opts.region,
         state,
         onStateChange,
-        onDeploy,
+        onDeploy
       };
-    },
+    }
   });
 
   process.on("SIGTERM", () => {
@@ -177,19 +182,19 @@ export async function useLocalServer(opts: Opts) {
       id: string,
       cb: (draft: WritableDraft<FunctionState>) => void
     ) {
-      return updateState((draft) => {
+      return updateState(draft => {
         let func = draft.functions[id];
         if (!func) {
           func = {
             warm: false,
             state: "idle",
             issues: {},
-            invocations: [],
+            invocations: []
           };
           draft.functions[id] = func;
         }
         cb(func);
       });
-    },
+    }
   };
 }
