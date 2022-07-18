@@ -144,25 +144,25 @@
   dependencies:
     "@jridgewell/trace-mapping" "^0.3.0"
 
-"@aws-cdk/aws-apigatewayv2-alpha@2.24.0-alpha.0":
-  version "2.24.0-alpha.0"
-  resolved "https://registry.npmjs.org/@aws-cdk/aws-apigatewayv2-alpha/-/aws-apigatewayv2-alpha-2.24.0-alpha.0.tgz"
-  integrity sha512-0Ajo4ENUh8RNorG66p1AfLkBAtZJkcxGsgyfz9PbvBAYl0OjpB7ALjEXS2+lrdMMJ8Ewhuhdqut7XfQYhyXtkA==
+"@aws-cdk/aws-apigatewayv2-alpha@2.32.0-alpha.0":
+  version "2.32.0-alpha.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-apigatewayv2-alpha/-/aws-apigatewayv2-alpha-2.32.0-alpha.0.tgz#03e6b830b1a67e35d21393e7a1d9544e8aa4adce"
+  integrity sha512-mZQX+L8USSwvN6Z3rbLzXZwiUPYUalLlIywxSPE/IcwmnarZiT40/4hHuUYggGgWmMkD2YUQ+acc23fC8ifjJQ==
 
-"@aws-cdk/aws-apigatewayv2-authorizers-alpha@2.24.0-alpha.0":
-  version "2.24.0-alpha.0"
-  resolved "https://registry.npmjs.org/@aws-cdk/aws-apigatewayv2-authorizers-alpha/-/aws-apigatewayv2-authorizers-alpha-2.24.0-alpha.0.tgz"
-  integrity sha512-h4SQiquBB6MQ1v6MrnlVaK68OLp6zn3NAMnORZh20qd44EgQhRmqClCLFvXRCt1o/kN/CferGFepPXy64qLyOQ==
+"@aws-cdk/aws-apigatewayv2-authorizers-alpha@2.32.0-alpha.0":
+  version "2.32.0-alpha.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-apigatewayv2-authorizers-alpha/-/aws-apigatewayv2-authorizers-alpha-2.32.0-alpha.0.tgz#b820cbf3a499e98bdd204193426951581790795d"
+  integrity sha512-tNlMiGQICZ8V8GaKLiwJuzNr3eqAh8hgOTezd0dkpdvszJIXkRusYIbMfiNnNfctbiSqobgN2rXkGsuESHuMIg==
 
-"@aws-cdk/aws-apigatewayv2-integrations-alpha@2.24.0-alpha.0":
-  version "2.24.0-alpha.0"
-  resolved "https://registry.npmjs.org/@aws-cdk/aws-apigatewayv2-integrations-alpha/-/aws-apigatewayv2-integrations-alpha-2.24.0-alpha.0.tgz"
-  integrity sha512-hDP1VQpYKmdgFXwron6weZlo4NV1qTQ6TJ5cRZl+JfOnWhsE6zcTiNog+U45ZQNLkQt7Is6JzdmB7+4Fpc0aLw==
+"@aws-cdk/aws-apigatewayv2-integrations-alpha@2.32.0-alpha.0":
+  version "2.32.0-alpha.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-apigatewayv2-integrations-alpha/-/aws-apigatewayv2-integrations-alpha-2.32.0-alpha.0.tgz#098a6be36365071c584eddd7f444ff94c304b44a"
+  integrity sha512-xVzW3PRVvvyqPA3aiPqTY082l67sNxWEa/lsTBqso8RkAbU+Cfbg1DNaI0cFV3Rd1IRnDQMr6xJxOCnopv7Cqg==
 
-"@aws-cdk/aws-appsync-alpha@2.24.0-alpha.0":
-  version "2.24.0-alpha.0"
-  resolved "https://registry.npmjs.org/@aws-cdk/aws-appsync-alpha/-/aws-appsync-alpha-2.24.0-alpha.0.tgz"
-  integrity sha512-kqv6mRXySBcQtAvHlumunJ7bWll38u8SP6ZSOPHS84uzu9BGhasIi3cFDdNNxvSqnN2eOJHoGf2LQJE4cPKxrw==
+"@aws-cdk/aws-appsync-alpha@2.32.0-alpha.0":
+  version "2.32.0-alpha.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-appsync-alpha/-/aws-appsync-alpha-2.32.0-alpha.0.tgz#7c3a5a8d5073d5ee3c84074e47e91180de81cd84"
+  integrity sha512-ued6lAwL0zF4tqLeMJ1UPbRPDHdZbB+nPHF79bXiaJnYnW5x/bw/MBMySZrIljNidFWn8I+WSgEL717+fPsRbQ==
 
 "@aws-crypto/crc32@2.0.0":
   version "2.0.0"
@@ -6211,25 +6211,25 @@ available-typed-arrays@^1.0.5:
   resolved "https://registry.npmjs.org/available-typed-arrays/-/available-typed-arrays-1.0.5.tgz"
   integrity sha512-DMD0KiN46eipeziST1LPP/STfDU0sufISXmjSgvVsoU2tqxctQeASejWcfNtxYKqETM1UxQ8sp2OrSBWpHY6sw==
 
-aws-cdk-lib@2.24.0:
-  version "2.24.0"
-  resolved "https://registry.npmjs.org/aws-cdk-lib/-/aws-cdk-lib-2.24.0.tgz"
-  integrity sha512-icYISk6uddpBDe2csqIpZ0PPo8ryg8Polyxyh9ri6rmRIElOJIkBmTpJc7ORcP9vv9LjFIH6BRV7OltUxpcWUg==
+aws-cdk-lib@2.32.0:
+  version "2.32.0"
+  resolved "https://registry.yarnpkg.com/aws-cdk-lib/-/aws-cdk-lib-2.32.0.tgz#495abc4c67b518c6ca4c83f1f05fe39f18216ed7"
+  integrity sha512-IItrnjoLWupP3c16m06hN+13h1trGQ+VMqEn/7aPpBd6rRHcPAdR1f/jr/XxkbNxW+AEfrobAniJwMxWBzbh+g==
   dependencies:
     "@balena/dockerignore" "^1.0.2"
     case "1.6.3"
     fs-extra "^9.1.0"
     ignore "^5.2.0"
-    jsonschema "^1.4.0"
+    jsonschema "^1.4.1"
     minimatch "^3.1.2"
     punycode "^2.1.1"
     semver "^7.3.7"
     yaml "1.10.2"
 
-aws-cdk@2.24.0:
-  version "2.24.0"
-  resolved "https://registry.npmjs.org/aws-cdk/-/aws-cdk-2.24.0.tgz"
-  integrity sha512-XqAyD2WIaKnglUPlePt6c7WMICemo6Rl9RPnKqI0IKnnzTORuXHyVw9i6F9S0jNV31iDw2uxZPDUfcZ83owq/Q==
+aws-cdk@2.32.0:
+  version "2.32.0"
+  resolved "https://registry.yarnpkg.com/aws-cdk/-/aws-cdk-2.32.0.tgz#be1a714d61e8d347799365fc396977e6e5e30bbc"
+  integrity sha512-+kXT92TI5dTZA65URHPgX6iqY+msS+srs89XkTzGhPT83GXNU1Tkr0rhVCbGHejT7x0UmwITukY+wBhueNaMUg==
   optionalDependencies:
     fsevents "2.3.2"
 
@@ -10973,10 +10973,10 @@ jsonfile@^6.0.1:
   optionalDependencies:
     graceful-fs "^4.1.6"
 
-jsonschema@^1.4.0:
-  version "1.4.0"
-  resolved "https://registry.npmjs.org/jsonschema/-/jsonschema-1.4.0.tgz"
-  integrity sha512-/YgW6pRMr6M7C+4o8kS+B/2myEpHCrxO4PEWnqJNBFMjn7EWXqlQ4tGwL6xTHeRplwuZmcAncdvfOad1nT2yMw==
+jsonschema@^1.4.1:
+  version "1.4.1"
+  resolved "https://registry.yarnpkg.com/jsonschema/-/jsonschema-1.4.1.tgz#cc4c3f0077fb4542982973d8a083b6b34f482dab"
+  integrity sha512-S6cATIPVv1z0IlxdN+zUk5EPjkGCdnhN4wVSBlvoUO1tOLJootbo9CquNJmbIh4yikWHiUedhRYrNPn1arpEmQ==
 
 jsonwebtoken@8.5.1:
   version "8.5.1"
