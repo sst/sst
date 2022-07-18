@@ -270,7 +270,7 @@ export interface FunctionProps
    *   url: true
    * })
    * ```
-   * 
+   *
    * ```js
    * new Function(stack, "Function", {
    *   handler: "src/function.handler",
@@ -505,6 +505,12 @@ export interface FunctionBundleNodejsProps extends FunctionBundleBase {
      * ```
      */
     plugins?: string;
+    /**
+     * Custom hook to inject into ESM bundles for CJS compatability.
+     *
+     * @see https://github.com/evanw/esbuild/pull/2067
+     */
+    cjsCompatShim?: string;
   };
   /**
    * Enable or disable minification
