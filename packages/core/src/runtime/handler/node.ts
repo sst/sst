@@ -12,6 +12,11 @@ const require = createRequire(import.meta.url);
 
 const BUILD_CACHE: Record<string, esbuild.BuildResult> = {};
 
+const CJS_COMPAT_SHIM = [
+  `import { createRequire as topLevelCreateRequire } from 'module'`,
+  `const require = topLevelCreateRequire(import.meta.url)`
+].join("\n")
+
 type Bundle = {
   loader?: { [ext: string]: esbuild.Loader };
   externalModules?: string[];
@@ -20,12 +25,14 @@ type Bundle = {
     define?: { [key: string]: string };
     keepNames?: boolean;
     plugins?: string;
+    cjsCompatShim?: string;
   };
   commandHooks?: ICommandHooks;
   minify?: boolean;
   sourcemap?: boolean;
   format?: "esm" | "cjs";
 };
+
 
 export const NodeHandler: Definition<Bundle> = opts => {
   const dir = path.dirname(opts.handler);
@@ -44,6 +51,7 @@ export const NodeHandler: Definition<Bundle> = opts => {
   const bundle = opts.bundle || {
     minify: true
   };
+  const cjsCompatShim = bundle.esbuildConfig?.cjsCompatShim || CJS_COMPAT_SHIM;
   // If srcPath is an absolute path, we need to convert it to an relative path
   // and append it to the artifact path.
   // Note: absolute "srcPath" should only be used for RDS's internal
@@ -83,10 +91,7 @@ export const NodeHandler: Definition<Bundle> = opts => {
           target: "esnext",
           format: "esm",
           banner: {
-            js: [
-              `import { createRequire as topLevelCreateRequire } from 'module'`,
-              `const require = topLevelCreateRequire(import.meta.url)`
-            ].join("\n")
+            js: cjsCompatShim
           }
         }
       : {
