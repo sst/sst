@@ -1,5 +1,16 @@
 # @serverless-stack/resources
 
+## 1.5.0
+
+### Minor Changes
+
+- [#1882](https://github.com/serverless-stack/sst/pull/1882) [`e4d350749`](https://github.com/serverless-stack/sst/commit/e4d35074904b8fdea0dfb4d9f3a9e6e19708038f) Thanks [@fwang](https://github.com/fwang)! - Update CDK to 2.32.0
+
+### Patch Changes
+
+- Updated dependencies [[`e4d350749`](https://github.com/serverless-stack/sst/commit/e4d35074904b8fdea0dfb4d9f3a9e6e19708038f)]:
+  - @serverless-stack/core@1.5.0
+
 ## 1.4.1
 
 ### Patch Changes
