@@ -5,7 +5,6 @@ import {
   ViteStaticSite,
 } from "@serverless-stack/resources";
 import * as cognito from "aws-cdk-lib/aws-cognito";
-import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
 
 export function MyStack({ stack, app }: StackContext) {
   const auth = new Auth(stack, "Auth", {
@@ -36,14 +35,9 @@ export function MyStack({ stack, app }: StackContext) {
     authorizers: {
       userPool: {
         type: "user_pool",
-        cdk: {
-          authorizer: new apigAuthorizers.HttpUserPoolAuthorizer(
-            "Authorizer",
-            auth.cdk.userPool,
-            {
-              userPoolClients: [auth.cdk.userPoolClient],
-            }
-          ),
+        userPool: {
+          id: auth.userPoolId,
+          clientIds: [auth.userPoolClientId],
         },
       },
     },
@@ -62,7 +56,7 @@ export function MyStack({ stack, app }: StackContext) {
   });
 
   // Allow authenticated users invoke API
-  auth.attachPermissionsForAuthUsers([api]);
+  auth.attachPermissionsForAuthUsers(stack, [api]);
 
   // Throw error if client ID & secret are not provided
   if (!process.env.GITHUB_CLIENT_ID || !process.env.GITHUB_CLIENT_SECRET)

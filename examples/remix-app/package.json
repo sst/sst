@@ -1,0 +1,26 @@
+{
+  "name": "remix-app",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "sst start",
+    "build": "sst build",
+    "deploy": "sst deploy --stage=production",
+    "remove": "sst remove",
+    "console": "sst console",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "aws-cdk-lib": "2.32.0",
+    "@serverless-stack/cli": "^1.5.0",
+    "@serverless-stack/resources": "^1.5.0",
+    "typescript": "^4.7.4",
+    "@tsconfig/node16": "^1.0.3",
+    "vitest": "^0.18.1"
+  },
+  "workspaces": [
+    "services",
+    "web"
+  ]
+}
