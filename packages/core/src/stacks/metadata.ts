@@ -24,13 +24,14 @@ export async function manifest(root: string) {
 }
 
 export async function metadata(root: string, config: Config) {
-  const cfn = new Cloudformation({ region: config.region });
   const man = await manifest(root);
   const stacks = Object.values(man.artifacts).filter(
     a => a.type === "aws:cloudformation:stack"
   );
   const constructs = await Promise.all(
     stacks.map(async stack => {
+      const region = (stack as any).environment.split("/").pop();
+      const cfn = new Cloudformation({ region });
       const resource = await cfn
         .describeStackResource({
           StackName: stack.properties.stackName || stack.displayName,
