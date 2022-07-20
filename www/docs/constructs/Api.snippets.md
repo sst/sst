@@ -742,7 +742,7 @@ export function AnotherStack({ stack }: StackContext) {
 
 By default, `Api` creates 1 [`IAM role`](https://docs.aws.amazon.com/cdk/api/v1/docs/@aws-cdk_aws-iam.Role.html) for each Function handling a route. To have all Functions reuse the same role, manually create a role, and pass it into `defaults.function`.
 
-Use [`managedPolicies`](https://docs.aws.amazon.com/cdk/api/v1/docs/@aws-cdk_aws-iam.Role.html#managedpolicies) and [`inlinePolicies`](https://docs.aws.amazon.com/cdk/api/v1/docs/@aws-cdk_aws-iam.Role.html#inlinepolicies) to grant IAM permissions for the role.
+Use `attachPermissionsToRole` to grant IAM permissions for the role.
 
 ```js {21-25}
 import * as iam from "aws-cdk-lib/aws-iam";
