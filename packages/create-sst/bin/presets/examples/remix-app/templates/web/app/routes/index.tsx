@@ -1,20 +1,34 @@
-import {
-  useLoaderData,
-} from "@remix-run/react";
+import type { ActionFunction, LoaderFunction, LinksFunction } from "@remix-run/node";
+import { json } from "@remix-run/node";
+import { Form, useLoaderData } from "@remix-run/react";
 
-export async function loader() {
-  return {
-    TABLE_NAME: process.env.TABLE_NAME,
-  };
+import { getCount, incrementCount } from "~/models/counter.server";
+import stylesUrl from "~/styles/index.css";
+
+export const links: LinksFunction = () => {
+  return [{ rel: "stylesheet", href: stylesUrl }];
+};
+
+export const loader: LoaderFunction = async() => {
+  return json({
+    count: await getCount()
+  });
+}
+
+export const action: ActionFunction = async() => {
+  return json({
+    count: await incrementCount()
+  });
 }
 
 export default function Index() {
-  const data = useLoaderData();
-  console.log(data);
+  const { count } = useLoaderData();
   return (
-    <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.4" }}>
-      <h1>Welcome to RemixSite demo</h1>
-      <p>Table name is: {data.TABLE_NAME}</p>
+    <div className="App">
+      <p>You clicked me {count} times.</p>
+      <Form method="post">
+        <button type="submit">Click Me!</button>
+      </Form>
     </div>
   );
 }
