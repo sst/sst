@@ -1,0 +1,18 @@
+body,
+html {
+  height: 100%;
+  display: grid;
+}
+#root {
+  margin: auto;
+}
+.App {
+  text-align: center;
+}
+p {
+  margin-top: 0;
+  font-size: 20px;
+}
+button {
+  font-size: 48px;
+}
