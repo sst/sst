@@ -1,5 +1,11 @@
 # create-sst
 
+## 1.5.2
+
+### Patch Changes
+
+- [#1896](https://github.com/serverless-stack/sst/pull/1896) [`5ed4f185b`](https://github.com/serverless-stack/sst/commit/5ed4f185b3441a0b5b637f0fbe640f8427daf2c9) Thanks [@fwang](https://github.com/fwang)! - Examples: updated Remix example to demonstrate quering DyanmoDB table
+
 ## 1.5.1
 
 ## 1.5.0
