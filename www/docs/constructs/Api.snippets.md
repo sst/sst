@@ -744,22 +744,26 @@ By default, `Api` creates 1 [`IAM role`](https://docs.aws.amazon.com/cdk/api/v1/
 
 Use [`managedPolicies`](https://docs.aws.amazon.com/cdk/api/v1/docs/@aws-cdk_aws-iam.Role.html#managedpolicies) and [`inlinePolicies`](https://docs.aws.amazon.com/cdk/api/v1/docs/@aws-cdk_aws-iam.Role.html#inlinepolicies) to grant IAM permissions for the role.
 
-```js {17-21}
+```js {21-25}
 import * as iam from "aws-cdk-lib/aws-iam";
+import { attachPermissionsToRole } from "@serverless-stack/resources";
 
-const role = new iam.Role(this, "ApiRole", {
+// Create an IAM role
+const role = new iam.Role(stack, "ApiRole", {
   assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
   managedPolicies: [
     {
       managedPolicyArn: "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-    },
-    // optionally add more managed policies
-  ],
-  inlinePolicies: {
-    // optionally add more inline policies
-  },
+    }
+  ]
 });
 
+// Attach permissions to role
+attachPermissionsToRole(role, [
+  // ie. table
+]);
+
+// Use the role for all routes
 new Api(stack, "Api", {
   defaults: {
     function: {
