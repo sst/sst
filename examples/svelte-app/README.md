@@ -9,9 +9,9 @@ An example full-stack serverless Svelte app created with SST.
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example svelte-app
+$ npx create-sst@latest --template=examples/svelte-app
 # Or with Yarn
-$ yarn create serverless-stack --example svelte-app
+$ yarn create sst --template=examples/svelte-app
 ```
 
 ## Commands

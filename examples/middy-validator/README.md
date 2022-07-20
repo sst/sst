@@ -9,9 +9,9 @@ An example serverless API created with SST and validated using Middy.
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example middy-validator
+$ npx create-sst@latest --template=examples/middy-validator
 # Or with Yarn
-$ yarn create serverless-stack --example middy-validator
+$ yarn create sst --template=examples/middy-validator
 ```
 
 ## Commands

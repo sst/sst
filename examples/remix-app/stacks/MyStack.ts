@@ -18,9 +18,11 @@ export function MyStack({ stack }: StackContext) {
   const site = new RemixSite(stack, "web", {
     path: "web/",
     environment: {
+      REGION: stack.region,
       TABLE_NAME: table.tableName,
     }
   })
+  site.attachPermissions([table]);
 
   stack.addOutputs({
     SiteURL: site.url,

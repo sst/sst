@@ -9,9 +9,9 @@ An example SST serverless app monitored with [Lumigo](https://www.lumigo.io).
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example lumigo
+$ npx create-sst@latest --template=examples/lumigo
 # Or with Yarn
-$ yarn create serverless-stack --example lumigo
+$ yarn create sst --template=examples/lumigo
 ```
 
 ## Commands

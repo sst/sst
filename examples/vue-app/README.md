@@ -9,9 +9,9 @@ An example full-stack serverless Vue.js app created with SST.
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example vue-app
+$ npx create-sst@latest --template=examples/vue-app
 # Or with Yarn
-$ yarn create serverless-stack --example vue-app
+$ yarn create sst --template=examples/vue-app
 ```
 
 ## Commands

@@ -9,9 +9,9 @@ An example serverless app created with SST.
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example rest-api-mongodb
+$ npx create-sst@latest --template=examples/rest-api-mongodb
 # Or with Yarn
-$ yarn create serverless-stack --example rest-api-mongodb
+$ yarn create sst --template=examples/rest-api-mongodb
 ```
 
 ## Commands

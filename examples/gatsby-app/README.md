@@ -9,9 +9,9 @@ An example full-stack serverless Gatsby.js app created with SST.
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example gatsby-app
+$ npx create-sst@latest --template=examples/gatsby-app
 # Or with Yarn
-$ yarn create serverless-stack --example gatsby-app
+$ yarn create sst --template=examples/gatsby-app
 ```
 
 ## Commands

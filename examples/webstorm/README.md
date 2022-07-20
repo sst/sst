@@ -9,9 +9,9 @@ An example serverless app created with SST.
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example webstorm
+$ npx create-sst@latest --template=examples/webstorm
 # Or with Yarn
-$ yarn create serverless-stack --example webstorm
+$ yarn create sst --template=examples/webstorm
 ```
 
 ## Commands

@@ -9,9 +9,9 @@ An example serverless app created with SST.
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example api-oauth-facebook
+$ npx create-sst@latest --template=examples/api-oauth-facebook
 # Or with Yarn
-$ yarn create serverless-stack --example api-oauth-facebook
+$ yarn create sst --template=examples/api-oauth-facebook
 ```
 
 ## Commands

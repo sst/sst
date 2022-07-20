@@ -9,9 +9,9 @@ An example serverless app created with SST.
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example api-oauth-google
+$ npx create-sst@latest --template=examples/api-oauth-google
 # Or with Yarn
-$ yarn create serverless-stack --example api-oauth-google
+$ yarn create sst --template=examples/api-oauth-google
 ```
 
 ## Commands

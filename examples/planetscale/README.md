@@ -9,9 +9,9 @@ An example serverless API created with SST talking to a PlanetScale Database.
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example planetscale
+$ npx create-sst@latest --template=examples/planetscale
 # Or with Yarn
-$ yarn create serverless-stack --example planetscale
+$ yarn create sst --template=examples/planetscale
 ``` 
 
 ## Commands

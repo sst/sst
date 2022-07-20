@@ -9,9 +9,9 @@ An example SST serverless app monitored with [Datadog](https://www.datadoghq.com
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example datadog
+$ npx create-sst@latest --template=examples/datadog
 # Or with Yarn
-$ yarn create serverless-stack --example datadog
+$ yarn create sst --template=examples/datadog
 ```
 
 ## Commands
