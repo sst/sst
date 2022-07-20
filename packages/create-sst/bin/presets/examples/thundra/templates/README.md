@@ -9,9 +9,9 @@ An example SST serverless app monitored with [Thundra APM](https://apm.docs.thun
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example thundra
+$ npx create-sst@latest --template=examples/thundra
 # Or with Yarn
-$ yarn create serverless-stack --example thundra
+$ yarn create sst --template=examples/thundra
 ```
 
 ## Commands

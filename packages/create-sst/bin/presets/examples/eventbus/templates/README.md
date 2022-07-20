@@ -9,9 +9,9 @@ An example serverless app created with SST.
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example eventbus
+$ npx create-sst@latest --template=examples/eventbus
 # Or with Yarn
-$ yarn create serverless-stack --example eventbus
+$ yarn create sst --template=examples/eventbus
 ```
 
 ## Commands

@@ -9,9 +9,9 @@ An example serverless app created with SST.
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example layer-chrome-aws-lambda
+$ npx create-sst@latest --template=examples/layer-chrome-aws-lambda
 # Or with Yarn
-$ yarn create serverless-stack --example layer-chrome-aws-lambda
+$ yarn create sst --template=examples/layer-chrome-aws-lambda
 ```
 
 ## Commands

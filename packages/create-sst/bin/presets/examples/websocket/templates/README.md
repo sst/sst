@@ -9,9 +9,9 @@ An example serverless app created with SST.
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example websocket
+$ npx create-sst@latest --template=examples/websocket
 # Or with Yarn
-$ yarn create serverless-stack --example websocket
+$ yarn create sst --template=examples/websocket
 ```
 
 ## Commands

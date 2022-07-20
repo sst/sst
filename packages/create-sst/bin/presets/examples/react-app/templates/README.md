@@ -9,9 +9,9 @@ An example full-stack serverless React.js app created with SST.
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example react-app
+$ npx create-sst@latest --template=examples/react-app
 # Or with Yarn
-$ yarn create serverless-stack --example react-app
+$ yarn create sst --template=examples/react-app
 ```
 
 ## Commands

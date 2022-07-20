@@ -9,9 +9,9 @@ An example SST serverless app monitored with [Sentry](https://www.sentry.io).
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example sentry
+$ npx create-sst@latest --template=examples/sentry
 # Or with Yarn
-$ yarn create serverless-stack --example sentry
+$ yarn create sst --template=examples/sentry
 ```
 
 ## Commands

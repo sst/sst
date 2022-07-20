@@ -7,9 +7,9 @@ An example serverless app created with SST.
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example rest-api-csharp
+$ npx create-sst@latest --template=examples/rest-api-csharp
 # Or with Yarn
-$ yarn create serverless-stack --example rest-api-csharp
+$ yarn create sst --template=examples/rest-api-csharp
 ```
 
 ## Commands

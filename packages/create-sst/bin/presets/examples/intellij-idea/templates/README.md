@@ -9,9 +9,9 @@ An example serverless app created with SST.
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example intellij-idea
+$ npx create-sst@latest --template=examples/intellij-idea
 # Or with Yarn
-$ yarn create serverless-stack --example intellij-idea
+$ yarn create sst --template=examples/intellij-idea
 ```
 
 ## Commands
