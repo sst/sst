@@ -1,5 +1,6 @@
 {
-  "private": true,
+  "name": "@remix-app/web",
+  "version": "0.0.0",
   "sideEffects": false,
   "scripts": {
     "build": "remix build",
