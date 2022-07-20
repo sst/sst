@@ -1,5 +1,13 @@
 # @serverless-stack/cli
 
+## 1.5.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @serverless-stack/resources@1.5.2
+  - @serverless-stack/core@1.5.2
+
 ## 1.5.1
 
 ### Patch Changes
