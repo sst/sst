@@ -1,17 +1,15 @@
-# How to create a Svelte app
+# How to create a Remix app
 
-An example full-stack serverless Svelte app created with SST.
+An example full-stack serverless Remix app created with SST.
 
 ## Getting Started
-
-[**Read the tutorial**](https://sst.dev/examples/how-to-create-a-svelte-app-with-serverless.html)
 
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example svelte-app
+$ npm init sst --example examples/remix-app
 # Or with Yarn
-$ yarn create serverless-stack --example svelte-app
+$ yarn create sst --example examples/remix-app
 ```
 
 ## Commands
@@ -36,7 +34,7 @@ Remove all your stacks and all of their resources from AWS. Or optionally remove
 
 ### `yarn run test`
 
-Runs your tests using Jest. Takes all the [Jest CLI options](https://jestjs.io/docs/en/cli).
+Runs your tests using vitest. Takes all the [Vitest CLI options](https://vitest.dev/guide/cli.html).
 
 ## Documentation
 
