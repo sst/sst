@@ -610,6 +610,7 @@ test("url.cors: props", async () => {
   expect(fn.url).toBeDefined();
   hasResource(stack, "AWS::Lambda::Url", {
     Cors: {
+      AllowHeaders: ["*"],
       AllowMethods: ["GET"],
       AllowOrigins: ["https://example.com"],
     },

@@ -126,7 +126,9 @@ test("cors-props", async () => {
   });
   hasResource(stack, "AWS::ApiGatewayV2::Api", {
     CorsConfiguration: {
+      AllowHeaders: ["*"],
       AllowMethods: ["GET"],
+      AllowOrigins: ["*"],
     },
   });
 });
