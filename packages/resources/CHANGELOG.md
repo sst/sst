@@ -1,5 +1,14 @@
 # @serverless-stack/resources
 
+## 1.6.1
+
+### Patch Changes
+
+- [#1900](https://github.com/serverless-stack/sst/pull/1900) [`9591e005f`](https://github.com/serverless-stack/sst/commit/9591e005f5c40a7f427daad972b8d7998e85eb2e) Thanks [@fwang](https://github.com/fwang)! - Api: update CORS default values
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.6.1
+
 ## 1.6.0
 
 ### Minor Changes
