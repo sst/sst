@@ -1,5 +1,16 @@
 # @serverless-stack/resources
 
+## 1.6.0
+
+### Minor Changes
+
+- [#1898](https://github.com/serverless-stack/sst/pull/1898) [`4bfd5915c`](https://github.com/serverless-stack/sst/commit/4bfd5915c97f7996d85f7a5cad3f273d836b60fe) Thanks [@fwang](https://github.com/fwang)! - RDS: support importing existing Aurora Serverless v1 cluster
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.6.0
+
 ## 1.5.2
 
 ### Patch Changes
