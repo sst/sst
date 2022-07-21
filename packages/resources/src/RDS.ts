@@ -7,8 +7,9 @@ import * as cdk from "aws-cdk-lib";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as rds from "aws-cdk-lib/aws-rds";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as secretsManager from "aws-cdk-lib/aws-secretsmanager";
 import { App } from "./App.js";
-import { getFunctionRef, SSTConstruct } from "./Construct.js";
+import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct.js";
 import { Function as Fn } from "./Function.js";
 import url from "url";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
@@ -110,8 +111,28 @@ export interface RDSProps {
      *   },
      * });
      * ```
+     * 
+     * Alternatively, you can import an existing RDS Serverless v1 Cluster in your AWS account.
+     * 
+     * @example
+     * ```js
+     * new RDS(stack, "Database", {
+     *   cdk: {
+     *     cluster: rds.ServerlessCluster.fromServerlessClusterAttributes(stack, "ICluster", {
+     *       clusterIdentifier: "my-cluster",
+     *     }),
+     *     secret: secretsManager.Secret.fromSecretAttributes(stack, "ISecret", {
+     *       secretPartialArn: "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret",
+     *     }),
+     *   },
+     * });
+     * ```
      */
-    cluster?: RDSCdkServerlessClusterProps;
+    cluster?: rds.IServerlessCluster | RDSCdkServerlessClusterProps;
+    /**
+     * Required when importing existing RDS Serverless v1 Cluster.
+     */
+    secret?: secretsManager.ISecret;
   };
 }
 
@@ -130,15 +151,12 @@ export interface RDSCdkServerlessClusterProps
 /////////////////////
 
 /**
- * The `RDS` construct is a higher level CDK construct that makes it easy to create an [RDS Serverless Cluster](https://aws.amazon.com/rds/). It uses the following defaults:
- *
- * - Defaults to using the [Serverless v1 On-Demand autoscaling configuration](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.html) to make it serverless.
- * - Provides a built-in interface for running schema migrations using [Kysely](https://koskimas.github.io/kysely/#migrations).
- * - Enables [Data API](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html) to allow your Lambda functions to access the database cluster without needing to deploy the functions in a VPC (virtual private cloud).
- * - Enables [Backup Snapshot](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/BackupRestoreAurora.html) to make sure that you don't lose your data.
+ * The `RDS` construct is a higher level CDK construct that makes it easy to create an [RDS Serverless Cluster](https://aws.amazon.com/rds/).
  *
  * @example
  * ### Using the minimal config
+ *
+ * Deploys an auto-scaling PostgreSQL database.
  *
  * ```js
  * import { RDS } from "@serverless-stack/resources";
@@ -157,58 +175,39 @@ export class RDS extends Construct implements SSTConstruct {
      */
     cluster: rds.ServerlessCluster;
   };
-  public readonly defaultDatabaseName: string;
   /**
    * The ARN of the internally created CDK ServerlessCluster instance.
    */
-  public readonly migratorFunction?: Fn;
-  private engine: string;
-  private readonly types?: string;
+  public migratorFunction?: Fn;
+  private props: RDSProps;
+  private secret: secretsManager.ISecret;
 
   constructor(scope: Construct, id: string, props: RDSProps) {
     super(scope, id);
 
-    const app = scope.node.root as App;
-    const { cdk, engine, defaultDatabaseName, scaling, migrations } =
-      props || {};
+    this.validateRequiredProps(props);
+
     this.cdk = {} as any;
+    this.props = props || {};
 
-    ////////////////////
-    // Create Bucket
-    ////////////////////
+    const { migrations, cdk } = this.props;
 
-    const rdsServerlessClusterProps = (cdk?.cluster ||
-      {}) as RDSCdkServerlessClusterProps;
+    // Create the cluster
+    if (cdk && isCDKConstruct(cdk.cluster)) {
+      this.validateCDKPropWhenIsConstruct();
+      this.cdk.cluster = this.importCluster();
+      this.secret = cdk.secret!;
+    }
+    else {
+      this.validateCDKPropWhenIsClusterProps();
+      this.cdk.cluster = this.createCluster();
+      this.secret = this.cdk.cluster.secret!;
+    }
 
-    this.validateRDSServerlessClusterProps(rdsServerlessClusterProps);
-    this.validateRequiredProps(props || ({} as RDSProps));
-
-    this.engine = engine;
-    this.types = props.types;
-    this.defaultDatabaseName = defaultDatabaseName;
-    this.cdk.cluster = new rds.ServerlessCluster(this, "Cluster", {
-      clusterIdentifier: app.logicalPrefixedName(id),
-      ...rdsServerlessClusterProps,
-      defaultDatabaseName,
-      enableDataApi: true,
-      engine: this.getEngine(engine),
-      scaling: this.getScaling(scaling),
-      vpc: this.getVpc(rdsServerlessClusterProps),
-      vpcSubnets: this.getVpcSubnets(rdsServerlessClusterProps)
-    });
-
-    ///////////////////////////
-    // Create Migrations
-    ///////////////////////////
-
+    // Create the migrator function
     if (migrations) {
       this.validateMigrationsFileExists(migrations);
-
-      this.migratorFunction = this.createMigrationsFunction(
-        engine,
-        defaultDatabaseName,
-        migrations
-      );
+      this.createMigrationsFunction(migrations);
       this.createMigrationCustomResource(migrations);
     }
   }
@@ -235,30 +234,60 @@ export class RDS extends Construct implements SSTConstruct {
   }
 
   /**
+   * The default database name of the RDS Serverless Cluster.
+   */
+  public get defaultDatabaseName(): string {
+    return this.props.defaultDatabaseName;
+  }
+
+  /**
    * The ARN of the internally created Secrets Manager Secret.
    */
   public get secretArn(): string {
-    return this.cdk.cluster.secret!.secretArn;
+    return this.secret.secretArn;
   }
 
   public getConstructMetadata() {
+    const { engine, defaultDatabaseName, types } = this.props;
     return {
       type: "RDS" as const,
       data: {
-        engine: this.engine,
+        engine,
         secretArn: this.secretArn,
-        types: this.types,
+        types,
         clusterArn: this.clusterArn,
         clusterIdentifier: this.clusterIdentifier,
-        defaultDatabaseName: this.defaultDatabaseName,
+        defaultDatabaseName,
         migrator: this.migratorFunction && getFunctionRef(this.migratorFunction)
       }
     };
   }
 
-  private validateRDSServerlessClusterProps(
-    props: RDSCdkServerlessClusterProps
-  ) {
+  private validateRequiredProps(props: RDSProps) {
+    if (!props.engine) {
+      throw new Error(`Missing "engine" in the "${this.node.id}" RDS`);
+    }
+
+    if (!props.defaultDatabaseName) {
+      throw new Error(
+        `Missing "defaultDatabaseName" in the "${this.node.id}" RDS`
+      );
+    }
+  }
+
+  private validateCDKPropWhenIsConstruct() {
+    const { cdk } = this.props;
+    if (!cdk?.secret) {
+      throw new Error(
+        `Missing "cdk.secret" in the "${this.node.id}" RDS. You must provide a secret to import an existing RDS Serverless Cluster.`
+      );
+    }
+  }
+
+  private validateCDKPropWhenIsClusterProps() {
+    const { cdk } = this.props;
+    const props = (cdk?.cluster || {}) as RDSCdkServerlessClusterProps;
+
     // Validate "engine" is passed in from the top level
     if ((props as any).engine) {
       throw new Error(
@@ -293,18 +322,8 @@ export class RDS extends Construct implements SSTConstruct {
         `Only credentials managed by SecretManager are supported for the "cdk.cluster.credentials".`
       );
     }
-  }
 
-  private validateRequiredProps(props: RDSProps) {
-    if (!props.engine) {
-      throw new Error(`Missing "engine" in the "${this.node.id}" RDS`);
-    }
-
-    if (!props.defaultDatabaseName) {
-      throw new Error(
-        `Missing "defaultDatabaseName" in the "${this.node.id}" RDS`
-      );
-    }
+    return props;
   }
 
   private validateMigrationsFileExists(migrations: string) {
@@ -371,11 +390,30 @@ export class RDS extends Construct implements SSTConstruct {
     };
   }
 
-  private createMigrationsFunction(
-    engine: string,
-    defaultDatabaseName: string,
-    migrations: string
-  ) {
+  private createCluster() {
+    const { engine, defaultDatabaseName, scaling, cdk } = this.props;
+    const app = this.node.root as App;
+    const clusterProps = (cdk?.cluster || {}) as RDSCdkServerlessClusterProps;
+
+    return new rds.ServerlessCluster(this, "Cluster", {
+      clusterIdentifier: app.logicalPrefixedName(this.node.id),
+      ...clusterProps,
+      defaultDatabaseName: defaultDatabaseName,
+      enableDataApi: true,
+      engine: this.getEngine(engine),
+      scaling: this.getScaling(scaling),
+      vpc: this.getVpc(clusterProps),
+      vpcSubnets: this.getVpcSubnets(clusterProps)
+    });
+  }
+
+  private importCluster() {
+    const { cdk } = this.props;
+    return cdk!.cluster as rds.ServerlessCluster;
+  }
+
+  private createMigrationsFunction(migrations: string) {
+    const { engine, defaultDatabaseName } = this.props;
     const app = this.node.root as App;
 
     // path to migration scripts inside the Lambda function
@@ -423,7 +461,7 @@ export class RDS extends Construct implements SSTConstruct {
 
     fn.attachPermissions([this.cdk.cluster]);
 
-    return fn;
+    this.migratorFunction = fn;
   }
 
   private createMigrationCustomResource(migrations: string) {
