@@ -1,4 +1,4 @@
-// This is a custom CloudFront Lambda@Edge handler which imports the Remix server
+// This is a custom Lambda@Edge handler which imports the Remix server
 // build and performs the Remix server rendering.
 
 // We have to ensure that our polyfills are imported prior to any other modules
@@ -131,32 +131,15 @@ function createCloudFrontResponseHeaders(responseHeaders) {
   return headers;
 }
 
-function createCloudFrontEdgeRequestHandler(build) {
-  // We expose an environment variable token which is used by our Lambda Replacer
-  // code to inject the environment variables assigned to the RemixSite construct.
-  // This inlining strategy is required as Lambda@Edge doesn't natively support
-  // runtime environment variables. A downside of this approach is that environment
-  // variables cannot be toggled after deployment, each change to one requires a
-  // redeployment.
-  try {
-    // The right hand side of this assignment will get replaced during
-    // deployment with an object of environment key-value pairs;
-    const environment = "{{ _SST_REMIX_SITE_ENVIRONMENT_ }}";
-
-    process.env = { ...process.env, ...environment };
-  } catch (e) {
-    console.log("Failed to set SST RemixSite environment.");
-    console.log(e);
-  }
-
-  const remixRequestHandler = createRemixRequestHandler(
+function createHandler(build) {
+  const requestHandler = createRemixRequestHandler(
     build,
     process.env.NODE_ENV
   );
 
   return async (event, _context) => {
     const request = createNodeRequest(event);
-    const response = await remixRequestHandler(request);
+    const response = await requestHandler(request);
     const contentType = response.headers.get("Content-Type");
     const isBase64Encoded = isBinaryType(contentType);
 
@@ -179,4 +162,4 @@ function createCloudFrontEdgeRequestHandler(build) {
   };
 }
 
-export const handler = createCloudFrontEdgeRequestHandler(remixServerBuild);
+export const handler = createHandler(remixServerBuild);

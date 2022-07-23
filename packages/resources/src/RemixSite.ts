@@ -36,15 +36,14 @@ const logger = getChildLogger("RemixSite");
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { SSTConstruct } from "./Construct.js";
+import { EdgeFunction } from "./EdgeFunction.js";
 import {
   BaseSiteDomainProps,
-  BaseSiteReplaceProps,
   BaseSiteCdkDistributionProps,
   BaseSiteEnvironmentOutputsInfo,
   buildErrorResponsesForRedirectToIndex,
 } from "./BaseSite.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
-import * as crossRegionHelper from "./nextjs-site/cross-region-helper.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -290,8 +289,7 @@ export class RemixSite extends Construct implements SSTConstruct {
    * will need to consider when resolving Remix's build output.
    */
   private remixConfig: RemixConfig;
-  private serverLambdaRole: iam.Role;
-  private serverLambdaForEdge?: lambda.IVersion;
+  private serverLambdaForEdge?: EdgeFunction;
   private serverLambdaForRegional?: lambda.Function;
   private awsCliLayer: AwsCliLayer;
 
@@ -325,14 +323,12 @@ export class RemixSite extends Construct implements SSTConstruct {
         const bundlePath = this.isPlaceholder
           ? this.createServerLambdaBundleWithStub()
           : this.createServerLambdaBundleForEdge();
-        this.serverLambdaRole = this.createServerFunctionRoleForEdge();
         this.serverLambdaForEdge = this.createServerFunctionForEdge(bundlePath);
       }
       else {
         const bundlePath = this.isPlaceholder
           ? this.createServerLambdaBundleWithStub()
           : this.createServerLambdaBundleForRegional();
-        this.serverLambdaRole = this.createServerFunctionRoleForRegional();
         this.serverLambdaForRegional = this.createServerFunctionForRegional(bundlePath);
       }
 
@@ -466,7 +462,11 @@ export class RemixSite extends Construct implements SSTConstruct {
    * ```
    */
   public attachPermissions(permissions: Permissions): void {
-    attachPermissionsToRole(this.serverLambdaRole, permissions);
+    if (this.serverLambdaForRegional) {
+      attachPermissionsToRole(this.serverLambdaForRegional.role as iam.Role, permissions);
+    }
+
+    this.serverLambdaForEdge?.attachPermissions(permissions);
   }
 
   public getConstructMetadata() {
@@ -795,49 +795,10 @@ export class RemixSite extends Construct implements SSTConstruct {
     return path.resolve(__dirname, "../assets/RemixSite/server-lambda-stub");
   }
 
-  private createServerFunctionRoleForRegional(): iam.Role {
-    return this.createServerFunctionRole([
-      "lambda.amazonaws.com",
-    ]);
-  }
-
-  private createServerFunctionRoleForEdge(): iam.Role {
-    return this.createServerFunctionRole([
-      "lambda.amazonaws.com",
-      "edgelambda.amazonaws.com",
-    ]);
-  }
-
-  private createServerFunctionRole(principals: string[]): iam.Role {
-    const { defaults } = this.props;
-
-    // Create function role
-    const role = new iam.Role(this, `ServerLambdaRole`, {
-      assumedBy: new iam.CompositePrincipal(
-        ...principals.map((principal) => new iam.ServicePrincipal(principal))
-      ),
-      managedPolicies: [
-        iam.ManagedPolicy.fromManagedPolicyArn(
-          this,
-          "EdgeLambdaPolicy",
-          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-        ),
-      ],
-    });
-
-    // Attach permission
-    this.cdk.bucket.grantReadWrite(role);
-    if (defaults?.function?.permissions) {
-      attachPermissionsToRole(role, defaults.function.permissions);
-    }
-
-    return role;
-  }
-
   private createServerFunctionForRegional(bundlePath: string): lambda.Function {
     const { defaults, environment } = this.props;
 
-    return new lambda.Function(this, `ServerFunction`, {
+    const fn = new lambda.Function(this, `ServerFunction`, {
       description: "Server handler for Remix",
       handler: "server.handler",
       currentVersionOptions: {
@@ -848,178 +809,35 @@ export class RemixSite extends Construct implements SSTConstruct {
       runtime: lambda.Runtime.NODEJS_16_X,
       memorySize: defaults?.function?.memorySize || 512,
       timeout: Duration.seconds(defaults?.function?.timeout || 10),
-      role: this.serverLambdaRole,
       environment,
     });
+
+    // Attach permission
+    this.cdk.bucket.grantReadWrite(fn.role!);
+    if (defaults?.function?.permissions) {
+      attachPermissionsToRole(fn.role as iam.Role, defaults.function.permissions);
+    }
+
+    return fn;
   }
 
-  private createServerFunctionForEdge(bundlePath: string): lambda.IVersion {
-    const name = "Server";
+  private createServerFunctionForEdge(bundlePath: string): EdgeFunction {
+    const { defaults, environment } = this.props;
 
-    // Create function asset
-    const asset = new s3Assets.Asset(this, `ServerFunctionAsset`, {
-      path: bundlePath,
-    });
-
-    // Create function based on region
-    const root = this.node.root as App;
-    return root.region === "us-east-1"
-      ? this.createServerFunctionInUE1(name, asset, bundlePath)
-      : this.createServerFunctionInNonUE1(name, asset, bundlePath);
-  }
-
-  private createServerFunctionInUE1(
-    name: string,
-    asset: s3Assets.Asset,
-    assetPath: string
-  ): lambda.IVersion {
-    const { defaults } = this.props;
-
-    // Create function
-    const fn = new lambda.Function(this, `${name}Function`, {
-      description: `${name} handler for Remix`,
+    const fn = new EdgeFunction(this, `Server`, {
+      scopeOverride: this,
+      bundlePath,
       handler: "server.handler",
-      currentVersionOptions: {
-        removalPolicy: RemovalPolicy.DESTROY,
-      },
-      logRetention: logs.RetentionDays.THREE_DAYS,
-      code: lambda.Code.fromAsset(assetPath),
-      runtime: lambda.Runtime.NODEJS_16_X,
-      memorySize: defaults?.function?.memorySize || 512,
-      timeout: Duration.seconds(defaults?.function?.timeout || 10),
-      role: this.serverLambdaRole,
+      timeout: defaults?.function?.timeout,
+      memory: defaults?.function?.memorySize,
+      permissions: defaults?.function?.permissions,
+      environment,
     });
 
-    // Deploy after the code is updated
-    if (!this.isPlaceholder) {
-      const updaterCR = this.createLambdaCodeReplacer(name, asset);
-      fn.node.addDependency(updaterCR);
-    }
+    // Attach permission
+    this.cdk.bucket.grantReadWrite(fn.role);
 
-    return fn.currentVersion;
-  }
-
-  private createServerFunctionInNonUE1(
-    name: string,
-    asset: s3Assets.Asset,
-    _assetPath: string
-  ): lambda.IVersion {
-    const { defaults } = this.props;
-
-    // If app region is NOT us-east-1, create a Function in us-east-1
-    // using a Custom Resource
-
-    // Create a S3 bucket in us-east-1 to store Lambda code. Create
-    // 1 bucket for all Edge functions.
-    const bucketCR = crossRegionHelper.getOrCreateBucket(this);
-    const bucketName = bucketCR.getAttString("BucketName");
-
-    // Create a Lambda function in us-east-1
-    const functionCR = crossRegionHelper.createFunction(
-      this,
-      name,
-      this.serverLambdaRole,
-      bucketName,
-      {
-        Description: `${name} handler for Remix`,
-        Handler: "server.handler",
-        Code: {
-          S3Bucket: asset.s3BucketName,
-          S3Key: asset.s3ObjectKey,
-        },
-        Runtime: lambda.Runtime.NODEJS_16_X.name,
-        MemorySize: defaults?.function?.memorySize || 512,
-        Timeout: Duration.seconds(
-          defaults?.function?.timeout || 10
-        ).toSeconds(),
-        Role: this.serverLambdaRole.roleArn,
-      }
-    );
-    const functionArn = functionCR.getAttString("FunctionArn");
-
-    // Create a Lambda function version in us-east-1
-    const versionCR = crossRegionHelper.createVersion(this, name, functionArn);
-    const versionId = versionCR.getAttString("Version");
-    crossRegionHelper.updateVersionLogicalId(functionCR, versionCR);
-
-    // Deploy after the code is updated
-    if (!this.isPlaceholder) {
-      const updaterCR = this.createLambdaCodeReplacer(name, asset);
-      functionCR.node.addDependency(updaterCR);
-    }
-
-    return lambda.Version.fromVersionArn(
-      this,
-      `${name}FunctionVersion`,
-      `${functionArn}:${versionId}`
-    );
-  }
-
-  private createLambdaCodeReplacer(
-    name: string,
-    asset: s3Assets.Asset
-  ): CustomResource {
-    // Note: Source code for the Lambda functions have "{{ ENV_KEY }}" in them.
-    //       They need to be replaced with real values before the Lambda
-    //       functions get deployed.
-
-    const providerId = "LambdaCodeReplacerProvider";
-    const resId = `${name}LambdaCodeReplacer`;
-    const stack = Stack.of(this);
-    let provider = stack.node.tryFindChild(providerId) as lambda.Function;
-
-    // Create provider if not already created
-    if (!provider) {
-      provider = new lambda.Function(stack, providerId, {
-        code: lambda.Code.fromAsset(
-          // TODO: Move this file into a shared folder
-          // This references a Nextjs directory, but the underlying
-          // code appears to be generic enough to utilise in this case.
-          path.join(__dirname, "../assets/NextjsSite/custom-resource")
-        ),
-        layers: [this.awsCliLayer],
-        runtime: lambda.Runtime.PYTHON_3_7,
-        handler: "lambda-code-updater.handler",
-        timeout: Duration.minutes(15),
-        memorySize: 1024,
-      });
-    }
-
-    // Allow provider to perform search/replace on the asset
-    provider.role?.addToPrincipalPolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: ["s3:*"],
-        resources: [`arn:aws:s3:::${asset.s3BucketName}/${asset.s3ObjectKey}`],
-      })
-    );
-
-    // Create custom resource
-    const resource = new CustomResource(this, resId, {
-      serviceToken: provider.functionArn,
-      resourceType: "Custom::SSTLambdaCodeUpdater",
-      properties: {
-        Source: {
-          BucketName: asset.s3BucketName,
-          ObjectKey: asset.s3ObjectKey,
-        },
-        ReplaceValues: this.getLambdaContentReplaceValues(),
-      },
-    });
-
-    return resource;
-  }
-
-  private getLambdaContentReplaceValues(): BaseSiteReplaceProps[] {
-    const replaceValues: BaseSiteReplaceProps[] = [];
-
-    replaceValues.push({
-      files: "**/*.js",
-      search: '"{{ _SST_REMIX_SITE_ENVIRONMENT_ }}"',
-      replace: JSON.stringify(this.props.environment || {}),
-    });
-
-    return replaceValues;
+    return fn;
   }
 
   /////////////////////
@@ -1153,7 +971,7 @@ export class RemixSite extends Construct implements SSTConstruct {
         {
           includeBody: true,
           eventType: cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST,
-          functionVersion: this.serverLambdaForEdge!,
+          functionVersion: this.serverLambdaForEdge!.currentVersion,
         },
         ...(cfDistributionProps.defaultBehavior?.edgeLambdas || []),
       ],

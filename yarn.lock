@@ -16124,9 +16124,9 @@ vfile@^4.0.0:
     unist-util-stringify-position "^2.0.0"
     vfile-message "^2.0.0"
 
-vite-plugin-sentry@^1.0.14:
+vite-plugin-sentry@1.0.14:
   version "1.0.14"
-  resolved "https://registry.npmjs.org/vite-plugin-sentry/-/vite-plugin-sentry-1.0.14.tgz"
+  resolved "https://registry.yarnpkg.com/vite-plugin-sentry/-/vite-plugin-sentry-1.0.14.tgz#2b66723015e0d586573b37d2be69844d9ed648d9"
   integrity sha512-G/nhHtzxATcWujCvC8gTrrDH+Ryq9tcTijwKySplBGGD6DBP+nwvvTPxPQ0e6lRVdMbJ1R4mYXa191t3mvDwww==
   dependencies:
     "@sentry/cli" "1.74.2"
