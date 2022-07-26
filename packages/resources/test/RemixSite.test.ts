@@ -282,7 +282,7 @@ test("edge: true", async () => {
   expect(site.distributionDomain).toBeDefined();
   expect(site.cdk.certificate).toBeUndefined();
   countResources(stack, "AWS::S3::Bucket", 1);
-  countResources(stack, "AWS::Lambda::Function", 7);
+  countResources(stack, "AWS::Lambda::Function", 8);
   countResources(stack, "AWS::CloudFront::Distribution", 1);
   hasResource(stack, "AWS::CloudFront::Distribution", {
     DistributionConfig: {
@@ -440,8 +440,8 @@ test("edge: true: environment generates placeholders", async () => {
   countResourcesLike(stack, "Custom::SSTLambdaCodeUpdater", 1, {
     ReplaceValues: [
       {
-        files: "**/*.js",
-        search: '"{{ _SST_REMIX_SITE_ENVIRONMENT_ }}"',
+        files: "index-wrapper.js",
+        search: '"{{ _SST_EDGE_FUNCTION_ENVIRONMENT_ }}"',
         replace: {
           "Fn::Join": [
             "",
@@ -455,60 +455,6 @@ test("edge: true: environment generates placeholders", async () => {
       },
     ],
   });
-});
-
-test("edge: true: us-east-1", async () => {
-  const app = new App({ region: "us-east-1" });
-  const stack = new Stack(app, "stack");
-  const site = new RemixSite(stack, "Site", {
-    path: "test/remix-site",
-    edge: true,
-    // @ts-expect-error: "sstTest" is not exposed in props
-    sstTest: true,
-  });
-  expect(site.url).toBeDefined();
-  expect(site.customDomainUrl).toBeUndefined();
-  expect(site.bucketArn).toBeDefined();
-  expect(site.bucketName).toBeDefined();
-  expect(site.distributionId).toBeDefined();
-  expect(site.distributionDomain).toBeDefined();
-  expect(site.cdk.certificate).toBeUndefined();
-  countResources(stack, "AWS::S3::Bucket", 1);
-  countResources(stack, "AWS::Lambda::Function", 7);
-  countResources(stack, "AWS::CloudFront::Distribution", 1);
-  countResources(stack, "Custom::SSTEdgeLambdaBucket", 0);
-  countResources(stack, "Custom::SSTEdgeLambda", 0);
-  countResources(stack, "Custom::SSTEdgeLambdaVersion", 0);
-  countResources(stack, "Custom::SSTBucketDeployment", 1);
-  countResources(stack, "Custom::SSTLambdaCodeUpdater", 1);
-  countResources(stack, "Custom::SSTCloudFrontInvalidation", 1);
-});
-
-test("edge: true: ca-central-1", async () => {
-  const app = new App({ region: "ca-central-1" });
-  const stack = new Stack(app, "stack");
-  const site = new RemixSite(stack, "Site", {
-    path: "test/remix-site",
-    edge: true,
-    // @ts-expect-error: "sstTest" is not exposed in props
-    sstTest: true,
-  });
-  expect(site.url).toBeDefined();
-  expect(site.customDomainUrl).toBeUndefined();
-  expect(site.bucketArn).toBeDefined();
-  expect(site.bucketName).toBeDefined();
-  expect(site.distributionId).toBeDefined();
-  expect(site.distributionDomain).toBeDefined();
-  expect(site.cdk.certificate).toBeUndefined();
-  countResources(stack, "AWS::S3::Bucket", 1);
-  countResources(stack, "AWS::Lambda::Function", 8);
-  countResources(stack, "AWS::CloudFront::Distribution", 1);
-  countResources(stack, "Custom::SSTEdgeLambdaBucket", 1);
-  countResources(stack, "Custom::SSTEdgeLambda", 1);
-  countResources(stack, "Custom::SSTEdgeLambdaVersion", 1);
-  countResources(stack, "Custom::SSTBucketDeployment", 1);
-  countResources(stack, "Custom::SSTLambdaCodeUpdater", 1);
-  countResources(stack, "Custom::SSTCloudFrontInvalidation", 1);
 });
 
 test("constructor: with domain", async () => {

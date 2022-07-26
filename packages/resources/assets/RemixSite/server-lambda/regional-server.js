@@ -1,4 +1,4 @@
-// This is a custom APIGatewayV2 Lambda handler which imports the Remix server
+// This is a custom Lambda URL handler which imports the Remix server
 // build and performs the Remix server rendering.
 
 // We have to ensure that our polyfills are imported prior to any other modules
@@ -156,7 +156,7 @@ async function sendRemixResponse(nodeResponse) {
   };
 }
 
-const createAPIGatewayV2RequestHandler = (build) => {
+const createHandler = (build) => {
   const requestHandler = createRemixRequestHandler(build, process.env.NODE_ENV);
 
   return async (event) => {
@@ -166,4 +166,4 @@ const createAPIGatewayV2RequestHandler = (build) => {
   };
 };
 
-export const handler = createAPIGatewayV2RequestHandler(remixServerBuild);
+export const handler = createHandler(remixServerBuild);
