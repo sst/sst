@@ -440,7 +440,7 @@ test("edge: true: environment generates placeholders", async () => {
   countResourcesLike(stack, "Custom::SSTLambdaCodeUpdater", 1, {
     ReplaceValues: [
       {
-        files: "server.js",
+        files: "index-wrapper.js",
         search: '"{{ _SST_EDGE_FUNCTION_ENVIRONMENT_ }}"',
         replace: {
           "Fn::Join": [
