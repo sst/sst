@@ -1,5 +1,14 @@
 # @serverless-stack/resources
 
+## 1.6.2
+
+### Patch Changes
+
+- [#1904](https://github.com/serverless-stack/sst/pull/1904) [`9da24d49c`](https://github.com/serverless-stack/sst/commit/9da24d49cebf2a166e3b947188de10767e8f03d1) Thanks [@fwang](https://github.com/fwang)! - Created internal EdgeFunction construct to use for RemixSite
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.6.2
+
 ## 1.6.1
 
 ### Patch Changes
