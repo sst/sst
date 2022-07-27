@@ -1,5 +1,13 @@
 # create-sst
 
+## 1.6.2
+
+### Patch Changes
+
+- [`3c135fb0d`](https://github.com/serverless-stack/sst/commit/3c135fb0d4d8994b997f99e833676ab9a6217c79) Thanks [@thdxr](https://github.com/thdxr)! - Add initial questions to create-sst
+
+* [`05fc58ea0`](https://github.com/serverless-stack/sst/commit/05fc58ea058fc5601ff5e7084aaa848f2a7fc083) Thanks [@thdxr](https://github.com/thdxr)! - Fix typos in create-sst for graphql stack
+
 ## 1.6.1
 
 ## 1.6.0
