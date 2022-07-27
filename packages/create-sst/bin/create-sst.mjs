@@ -12,54 +12,56 @@ program
   .name("create-sst")
   .description("CLI to create SST projects")
   .option("--template <template>", "Use a specific template")
-  .option("--examples", "Show example templates", false)
-  .option("--minimal", "Show minimal templates", false)
   .argument("[name]", "The name of your project")
-  .action(async (name) => {
+  .action(async name => {
     const opts = program.opts();
     const cwd = process.cwd();
     const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
     process.chdir(__dirname);
 
-    let preset = path.join("presets", opts.template || "default");
+    const preset = await (async function() {
+      if (opts.template) return path.join("presets", opts.template);
 
-    if (!opts.template && (opts.examples || opts.minimal)) {
-      const scan = opts.examples ? ["examples"] : ["starters"];
-      const presets = (
-        await Promise.all(
-          scan.map(async (category) => {
-            const folders = await fs.readdir(
-              path.join(__dirname, "presets", category)
-            );
-            return folders.map((folder) => path.join(category, folder));
-          })
-        )
-      ).flat();
-      const answers = await inquirer.prompt([
+      const { category } = await inquirer.prompt([
         {
-          name: "preset",
+          name: "category",
           type: "list",
-          choices: presets.flat(),
-          message: "Select a template",
-        },
+          choices: ["graphql", "minimal", "examples"],
+          message: "What kind of project do you want to create?"
+        }
       ]);
-      preset = path.join("presets", answers.preset);
-    }
 
-    if (preset.endsWith("default")) {
-      const result = await inquirer.prompt([
-        {
-          name: "database",
-          type: "list",
-          choices: [
-            { name: "RDS (Postgres or MySQL)", value: "rds" },
-            { name: "DynamoDB", value: "dynamo" },
-          ],
-          message: "Select a database (you can change this later or use both)",
-        },
-      ]);
-      preset = path.join(preset, result.database);
-    }
+      if (["minimal", "examples"].includes(category)) {
+        const folders = await fs.readdir(
+          path.join(__dirname, "presets", category)
+        );
+        const presets = folders.map(folder => path.join(category, folder));
+        const answers = await inquirer.prompt([
+          {
+            name: "preset",
+            type: "list",
+            choices: presets.flat(),
+            message: "Select a template"
+          }
+        ]);
+        return path.join("presets", answers.preset);
+      }
+
+      if (category === "graphql") {
+        const result = await inquirer.prompt([
+          {
+            name: "database",
+            type: "list",
+            choices: [
+              { name: "RDS (Postgres or MySQL)", value: "rds" },
+              { name: "DynamoDB", value: "dynamo" }
+            ],
+            message: "Select a database (you can change this later or use both)"
+          }
+        ]);
+        return path.join("presets", "graphql", result.database);
+      }
+    })();
 
     if (!name) {
       const answers = await inquirer.prompt([
@@ -67,11 +69,12 @@ program
           name: "name",
           type: "input",
           default: "my-sst-app",
-          message: "Project name",
-        },
+          message: "Project name"
+        }
       ]);
       name = answers.name;
     }
+
     const spinner = ora();
 
     try {
@@ -84,7 +87,7 @@ program
     try {
       await execute({
         source: preset,
-        destination: path.resolve(path.join(cwd, name)),
+        destination: path.resolve(path.join(cwd, name))
       });
       spinner.succeed("Copied template files");
       console.log();

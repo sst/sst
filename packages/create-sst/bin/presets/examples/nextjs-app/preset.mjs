@@ -1,7 +1,7 @@
 import { extend, extract, install, patch } from "create-sst";
 
 export default [
-  extend("presets/starters/typescript-starter"),
+  extend("presets/minimal/typescript-starter"),
   extract(),
   install({
     packages: ["@sls-next/lambda-at-edge"],

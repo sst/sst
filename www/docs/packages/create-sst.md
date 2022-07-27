@@ -48,23 +48,7 @@ Pass in the following (optional) options.
 Instead of the standard starter, you can choose to use one of our minimal setups or examples as the template to bootstrap.
 
 ```bash
-npx create-sst@latest --template=starters/javascript-starter
-```
-
-### `--minimal`
-
-Instead of the standard starter, this will list our minimal setups if you'd like to start from scratch.
-
-```bash
-npx create-sst@latest --minimal
-```
-
-### `--examples`
-
-Instead of the standard starter, this will list our examples if you'd like to copy one of them to try it out.
-
-```bash
-npx create-sst@latest --examples
+npx create-sst@latest --template=minimal/javascript-starter
 ```
 
 ## Arguments

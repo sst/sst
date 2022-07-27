@@ -1,9 +1,9 @@
 import { patch, extend, extract, install } from "create-sst";
 export default [
-  extend("presets/default/basic"),
+  extend("presets/graphql/basic"),
   extract(),
   install({
     packages: ["electrodb", "@aws-sdk/client-dynamodb"],
-    path: "services",
-  }),
+    path: "services"
+  })
 ];
