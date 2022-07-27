@@ -115,11 +115,6 @@ SST also comes with [a set of serverless specific higher-level CDK constructs][r
 
 SST also supports deploying your CloudFormation stacks asynchronously. [Seed](https://seed.run) natively supports concurrent asynchronous deployments for your SST apps. And SST deployments on Seed are free!
 
-SST also comes with a few other niceties:
-
-- Automatically lints your code using [ESLint](https://eslint.org/)
-- Runs your unit tests using [Jest](https://jestjs.io/)
-
 Internally, SST uses the CDK CLI to invoke the various CDK commands.
 
 [discord]: https://sst.dev/discord
