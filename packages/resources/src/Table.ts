@@ -159,7 +159,7 @@ export interface TableProps {
    *     sk: "string",
    *     lsi1sk: "string",
    *   },
-   *   globalIndexes: {
+   *   localIndexes: {
    *     "lsi1": { sortKey: "lsi1sk" },
    *   },
    * });
