@@ -427,6 +427,7 @@ export interface FunctionBundleNodejsProps extends FunctionBundleBase {
    * ```
    */
   externalModules?: string[];
+
   /**
    * Packages that will be excluded from the bundle and installed into node_modules instead. Useful for dependencies that cannot be bundled, like those with binary dependencies.
    *
@@ -440,6 +441,21 @@ export interface FunctionBundleNodejsProps extends FunctionBundleBase {
    * ```
    */
   nodeModules?: string[];
+
+  /**
+   * Use this to insert an arbitrary string at the beginning of generated JavaScript and CSS files.
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   bundle: {
+   *     banner: "console.log('Function starting')"
+   *   }
+   * })
+   * ```
+   */
+  banner?: string;
+
   /**
    * Hooks to run at various stages of bundling
    */
