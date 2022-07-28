@@ -1,5 +1,11 @@
 # create-sst
 
+## 1.6.3
+
+### Patch Changes
+
+- [`51efb4ff5`](https://github.com/serverless-stack/sst/commit/51efb4ff508f0b32fcf69f583ab48a623397f629) Thanks [@thdxr](https://github.com/thdxr)! - create-sst stack should be ESM by default
+
 ## 1.6.2
 
 ### Patch Changes
