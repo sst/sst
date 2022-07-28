@@ -1,5 +1,14 @@
 # @serverless-stack/resources
 
+## 1.6.4
+
+### Patch Changes
+
+- [`1618cd8d5`](https://github.com/serverless-stack/sst/commit/1618cd8d5ad8e7e1270027a6ab01b9a908c1127a) Thanks [@thdxr](https://github.com/thdxr)! - Support banner option in node functions
+
+- Updated dependencies [[`1618cd8d5`](https://github.com/serverless-stack/sst/commit/1618cd8d5ad8e7e1270027a6ab01b9a908c1127a)]:
+  - @serverless-stack/core@1.6.4
+
 ## 1.6.3
 
 ### Patch Changes
