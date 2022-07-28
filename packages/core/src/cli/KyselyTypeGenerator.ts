@@ -3,10 +3,14 @@ import { Config } from "../config/index.js";
 import { Kysely } from "kysely";
 import { DataApiDialect } from "kysely-data-api";
 import RDSDataService from "aws-sdk/clients/rdsdataservice.js";
-import { CodegenSerializer } from "kysely-codegen/dist/serializer.js";
-import { CodegenFormat } from "kysely-codegen/dist/enums/format.js";
 import * as fs from "fs/promises";
-import { CodegenDialect } from "kysely-codegen/dist/dialect.js";
+import {
+  ExportStatementNode,
+  NodeType,
+  PostgresDialect,
+  Serializer,
+  Transformer
+} from "kysely-codegen";
 
 interface Opts {
   bus: Bus;
@@ -42,12 +46,22 @@ export function createKyselyTypeGenerator(opts: Opts) {
       })
     });
     const tables = await k.introspection.getTables();
-    const serializr = new CodegenSerializer({
-      dialect: new CodegenPostgresDialect(),
-      format: CodegenFormat.INTERFACE,
-      tables
-    });
-    const data = serializr.serialize();
+    console.log("Tables", JSON.stringify(tables, null, 4));
+    const transformer = new Transformer(new PostgresDialect());
+    const nodes = transformer.transform(tables);
+    const lastIndex = nodes.length - 1;
+    const last = nodes[lastIndex] as ExportStatementNode;
+    nodes[lastIndex] = {
+      ...last,
+      argument: {
+        ...last.argument,
+        name: "Database"
+      }
+    };
+    console.log("Nodes", nodes);
+    const serializer = new Serializer();
+    const data = serializer.serialize(nodes);
+    console.log("Data", data);
     await fs.writeFile(db.types!, data);
   }
 
@@ -66,50 +80,13 @@ export function createKyselyTypeGenerator(opts: Opts) {
         defaultDatabaseName: c.data.defaultDatabaseName,
         secretArn: c.data.secretArn
       }));
-    databases.map(db => generate(db))
+    databases.map(db => generate(db));
   });
 
   opts.bus.subscribe("function.responded", async evt => {
     if (evt.properties.request.event.type !== "to") return;
     const db = databases.find(db => db.migratorID === evt.properties.localID);
     if (!db) return;
-    generate(db)
+    generate(db);
   });
-}
-
-export class CodegenPostgresDialect extends CodegenDialect {
-  override readonly defaultType = 'string';
-  readonly definitions = {
-    Circle: {
-      radius: 'number',
-      x: 'number',
-      y: 'number',
-    },
-  };
-  override readonly imports = {
-    IPostgresInterval: 'postgres-interval',
-  };
-  override readonly schema = 'public';
-  override readonly types = {
-    bool: 'boolean',
-    bytea: 'Buffer',
-    circle: 'Circle',
-    float4: 'number',
-    float8: 'number',
-    int2: 'number',
-    int4: 'number',
-    int8: 'number',
-    interval: 'IPostgresInterval',
-    json: 'unknown',
-    jsonb: 'unknown',
-    numeric: 'number',
-    oid: 'number',
-    text: 'string',
-    timestamp: 'number | string | Date',
-    timestamptz: 'number | string | Date',
-  };
-
-  instantiate(options: { connectionString: string; ssl: boolean }) {
-    return null as any
-  }
 }

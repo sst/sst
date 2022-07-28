@@ -11134,10 +11134,10 @@ knex@^2.1.0:
     tarn "^3.0.2"
     tildify "2.0.0"
 
-kysely-codegen@^0.3.0:
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/kysely-codegen/-/kysely-codegen-0.3.0.tgz#befd54709614b01f3c6dfb9ecdac935383eae6ac"
-  integrity sha512-SH5GplkRIcmiv3GKPignj1Bq8F5QiWUyEEQiBSseIUyhwGTJy5+ZXvn8qJjdrcy3XPABNLhhNbUVkFC7/V1X+A==
+kysely-codegen@^0.4.0-beta.2:
+  version "0.4.0-beta.2"
+  resolved "https://registry.yarnpkg.com/kysely-codegen/-/kysely-codegen-0.4.0-beta.2.tgz#8efc8bcec9b30ee119c004e7b076da2a6cd0f632"
+  integrity sha512-XqmjchpN5BmpQN/8D0OCbjXzxUStjZb6xXgKTIegBocFwYuMjdPXI4dkMQcyofIBtih2g5dh+n5vthB/7Uqetg==
   dependencies:
     chalk "^4.1.2"
     dotenv "^16.0.1"
