@@ -49,8 +49,6 @@ yarn
 </TabItem>
 </MultiPackagerCode>
 
-If you would like to use a more minimal starter you can pass in `--minimal` to see all the options.
-
 ## Starting local environment
 
 The first time the SST command is run, you'll be prompted to enter a default stage name to use. The stage name will be stored locally in a .sst/ directory. This directory is automatically ignore from Git.
