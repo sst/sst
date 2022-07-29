@@ -11,14 +11,15 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as lambdaNode from "aws-cdk-lib/aws-lambda-nodejs";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 
+import { State, Runtime, FunctionConfig } from "@serverless-stack/core";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
+import { Secret, Parameter } from "./Config.js";
+import { SSTConstruct } from "./Construct.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
-import { SSTConstruct } from "./Construct.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import * as functionUrlCors from "./util/functionUrlCors.js";
-import { State, Runtime } from "@serverless-stack/core";
 
 import url from "url";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
@@ -220,6 +221,21 @@ export interface FunctionProps
    *```
    */
   enableLiveDev?: boolean;
+  /**
+   * Configure environment variables for the function
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
+   *   config: [
+   *     STRIPE_KEY,
+   *     API_URL,
+   *   ]
+   * })
+   * ```
+   */
+  config?: (Secret | Parameter)[];
   /**
    * Configure environment variables for the function
    *
@@ -631,7 +647,7 @@ export class Function extends lambda.Function implements SSTConstruct {
   private props: FunctionProps;
 
   constructor(scope: Construct, id: string, props: FunctionProps) {
-    const root = scope.node.root as App;
+    const app = scope.node.root as App;
     const stack = Stack.of(scope) as Stack;
 
     // Merge with app defaultFunctionProps
@@ -706,10 +722,10 @@ export class Function extends lambda.Function implements SSTConstruct {
     //   from recent failed request will be received. And this behavior is confusing.
     if (
       isLiveDevEnabled &&
-      root.local &&
-      root.debugEndpoint &&
-      root.debugBucketName &&
-      root.debugBucketArn
+      app.local &&
+      app.debugEndpoint &&
+      app.debugBucketName &&
+      app.debugBucketArn
     ) {
       // If debugIncreaseTimeout is enabled:
       //   set timeout to 900s. This will give people more time to debug the function
@@ -717,13 +733,13 @@ export class Function extends lambda.Function implements SSTConstruct {
       //   timeout of 29s. In this case, the API will timeout, but the Lambda function
       //   will continue to run.
       let debugOverrideProps;
-      if (root.debugIncreaseTimeout) {
+      if (app.debugIncreaseTimeout) {
         debugOverrideProps = {
           timeout: cdk.Duration.seconds(900),
         };
       }
 
-      if (root.debugBridge) {
+      if (app.debugBridge) {
         super(scope, id, {
           ...props,
           architecture,
@@ -739,10 +755,10 @@ export class Function extends lambda.Function implements SSTConstruct {
           tracing,
           environment: {
             ...(props.environment || {}),
-            SST_DEBUG_BRIDGE: root.debugBridge,
+            SST_DEBUG_BRIDGE: app.debugBridge,
             SST_DEBUG_SRC_PATH: srcPath,
             SST_DEBUG_SRC_HANDLER: handler,
-            SST_DEBUG_ENDPOINT: root.debugEndpoint,
+            SST_DEBUG_ENDPOINT: app.debugEndpoint,
           },
           layers: Function.buildLayers(scope, id, props),
           ...(debugOverrideProps || {}),
@@ -765,15 +781,15 @@ export class Function extends lambda.Function implements SSTConstruct {
             ...(props.environment || {}),
             SST_DEBUG_SRC_PATH: srcPath,
             SST_DEBUG_SRC_HANDLER: handler,
-            SST_DEBUG_ENDPOINT: root.debugEndpoint,
-            SST_DEBUG_BUCKET_NAME: root.debugBucketName,
+            SST_DEBUG_ENDPOINT: app.debugEndpoint,
+            SST_DEBUG_BUCKET_NAME: app.debugBucketName,
           },
           layers: Function.buildLayers(scope, id, props),
           retryAttempts: 0,
           ...(debugOverrideProps || {}),
         });
       }
-      State.Function.append(root.appPath, {
+      State.Function.append(app.appPath, {
         id: localId,
         handler: handler,
         runtime: runtime.toString(),
@@ -785,12 +801,12 @@ export class Function extends lambda.Function implements SSTConstruct {
         new iam.PolicyStatement({
           actions: ["s3:*"],
           effect: iam.Effect.ALLOW,
-          resources: [root.debugBucketArn, `${root.debugBucketArn}/*`],
+          resources: [app.debugBucketArn, `${app.debugBucketArn}/*`],
         }),
       ]);
     }
     // Handle remove (ie. sst remove)
-    else if (root.skipBuild) {
+    else if (app.skipBuild) {
       // Note: need to override runtime as CDK does not support inline code
       //       for some runtimes.
       super(scope, id, {
@@ -814,7 +830,7 @@ export class Function extends lambda.Function implements SSTConstruct {
     else {
       const bundled = Runtime.Handler.bundle({
         id: localId,
-        root: root.appPath,
+        root: app.appPath,
         handler: handler,
         runtime: runtime.toString(),
         srcPath: srcPath,
@@ -848,8 +864,9 @@ export class Function extends lambda.Function implements SSTConstruct {
 
     this.props = props || {};
 
-    // Enable reusing connections with Keep-Alive for NodeJs Lambda function
     if (isNodeRuntime) {
+      // Enable reusing connections with Keep-Alive for NodeJs
+      // Lambda function
       this.addEnvironment("AWS_NODEJS_CONNECTION_REUSE_ENABLED", "1", {
         removeInEdge: true,
       });
@@ -860,10 +877,10 @@ export class Function extends lambda.Function implements SSTConstruct {
       this.attachPermissions(permissions);
     }
 
-    // Create function URL
+    this.handleConfig();
     this.createUrl();
 
-    root.registerLambdaHandler({
+    app.registerLambdaHandler({
       bundle: props.bundle!,
       handler: handler,
       runtime: runtime.toString(),
@@ -928,6 +945,36 @@ export class Function extends lambda.Function implements SSTConstruct {
       authType,
       cors: functionUrlCors.buildCorsConfig(cors),
     });
+  }
+
+  private handleConfig() {
+    const app = this.node.root as App;
+    const { config } = this.props;
+
+    // Add environment variables
+    this.addEnvironment("SST_APP", app.name);
+    this.addEnvironment("SST_STAGE", app.stage);
+    (config || []).forEach((c) => {
+      if (c instanceof Secret) {
+        this.addEnvironment(`${FunctionConfig.SECRET_ENV_PREFIX}${c.name}`, "1");
+      }
+      else if (c instanceof Parameter) {
+        this.addEnvironment(`${FunctionConfig.PARAM_ENV_PREFIX}${c.name}`, c.value);
+      }
+    });
+
+    // Attach permissions
+    const hasSecrets = (config || []).some((c) => c instanceof Secret);
+    if (hasSecrets) {
+      this.attachPermissions([new iam.PolicyStatement({
+        actions: ["ssm:GetParameters"],
+        effect: iam.Effect.ALLOW,
+        resources: [
+          `arn:aws:ssm:${app.region}:${app.account}:parameter/sst/${app.name}/${app.stage}/*`,
+          `arn:aws:ssm:${app.region}:${app.account}:parameter/sst/${app.name}/${FunctionConfig.FALLBACK_STAGE}/*`,
+        ],
+      })]);
+    }
   }
 
   static buildLayers(scope: Construct, id: string, props: FunctionProps) {

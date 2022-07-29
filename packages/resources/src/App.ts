@@ -15,6 +15,7 @@ import {
   isStackConstruct,
 } from "./Construct.js";
 import { FunctionProps, FunctionHandlerProps } from "./Function.js";
+import * as Config from "./Config.js";
 import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite.js";
 import { Permissions } from "./util/permission.js";
 import { StackProps } from "./Stack.js";
@@ -298,6 +299,7 @@ export class App extends cdk.App {
   }
 
   synth(options: cdk.StageSynthesisOptions = {}): cxapi.CloudAssembly {
+    Config.codegen();
     this.buildConstructsMetadata();
 
     for (const child of this.node.children) {

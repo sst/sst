@@ -1932,6 +1932,7 @@ export { Runtime } from "./runtime/index.js";
 export { Stacks } from "./stacks/index.js";
 export * from "./cli/index.js";
 export * from "./local/index.js";
+export { FunctionConfig } from "./function-config/index.js";
 export { Telemetry } from "./telemetry/index.js";
 export * from "./aws-sdk/index.js";
 
