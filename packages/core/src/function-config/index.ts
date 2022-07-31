@@ -32,9 +32,7 @@ export async function listSecrets(app: string, stage: string, region: string) {
   const results: Record<string, Secret> = {};
 
   // Load all secrets
-  const secrets = stage === FALLBACK_STAGE
-    ? await page(buildSsmPrefixForSecretFallback(app))
-    : await page(buildSsmPrefixForSecret(app, stage));
+  const secrets = await page(buildSsmPrefixForSecret(app, stage));
   secrets.map((p) => {
     const name = parseSsmName(p.Name!).name;
     if (!results[name]) {
@@ -44,37 +42,26 @@ export async function listSecrets(app: string, stage: string, region: string) {
   });
 
   // Load all fallback secrets
-  // skip for fallback stage because we already loaded them above
-  if (stage !== FALLBACK_STAGE) {
-    const fallbacks = await page(buildSsmPrefixForSecretFallback(app));
-    fallbacks.map((p) => {
-      const name = parseSsmName(p.Name!).name;
-      if (!results[name]) {
-        results[name] = {};
-      }
-      results[name].fallbackValue = p.Value!;
-    });
-  }
+  const fallbacks = await page(buildSsmPrefixForSecretFallback(app));
+  fallbacks.map((p) => {
+    const name = parseSsmName(p.Name!).name;
+    if (!results[name]) {
+      results[name] = {};
+    }
+    results[name].fallbackValue = p.Value!;
+  });
 
   return results;
-}
-
-export async function listSecretsFallback(app: string, region: string) {
-  return await listSecrets(app, FALLBACK_STAGE, region);
 }
 
 export async function getSecret(app: string, stage: string, region: string, name: string) {
   const ssm = new SSM({ region });
   const result = await ssm
     .getParameters({
-      Names: stage === FALLBACK_STAGE
-        ? [
-          buildSsmNameForSecretFallback(app, name),
-        ]
-        : [
-          buildSsmNameForSecret(app, stage, name),
-          buildSsmNameForSecretFallback(app, name),
-        ],
+      Names: [
+        buildSsmNameForSecret(app, stage, name),
+        buildSsmNameForSecretFallback(app, name),
+      ],
       WithDecryption: true,
     })
     .promise();
@@ -90,10 +77,6 @@ export async function getSecret(app: string, stage: string, region: string, name
     }
   });
   return secret;
-}
-
-export async function getSecretFallback(app: string, region: string, name: string) {
-  return await getSecret(app, FALLBACK_STAGE, region, name);
 }
 
 export async function setSecret(app: string, stage: string, region: string, name: string, value: string) {

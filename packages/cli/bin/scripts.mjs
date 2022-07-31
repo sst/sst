@@ -439,7 +439,7 @@ const argv = yargs
       return yargs
         .positional("action", {
           type: "string",
-          choices: ["list", "get", "set", "remove"],
+          choices: ["list", "get", "set", "set-fallback", "remove", "remove-fallback"],
           description: "Action to perform",
         })
         .positional("name", {
@@ -450,17 +450,12 @@ const argv = yargs
           type: "string",
           description: "Value of the secret",
         })
-        .option("fallback", {
-          default: false,
-          type: "boolean",
-          describe: "Manage secret fallback value",
-        })
         .check((argv) => {
           const action = argv["action"];
-          if ((action === "get" || action === "remove") && !argv.name) {
+          if (["get", "remove", "remove-fallback"].includes(action) && !argv.name) {
             throw new Error("Please specify a secret name");
           }
-          if (action === "set" && (!argv.name || !argv.value)) {
+          if (["set", "set-fallback"].includes(action) && (!argv.name || !argv.value)) {
             throw new Error("Please specify a secret name and value");
           }
           return true;

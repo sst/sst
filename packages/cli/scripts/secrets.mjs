@@ -18,86 +18,86 @@ export default async function (argv, config) {
       await handleGet(argv, app, stage, region);
   } else if (action === "set") {
       await handleSet(argv, app, stage, region);
+  } else if (action === "set-fallback") {
+      await handleSetFallback(argv, app, region);
   } else if (action === "remove") {
       await handleRemove(argv, app, stage, region);
+  } else if (action === "remove-fallback") {
+      await handleRemoveFallback(argv, app, region);
   }
 
   logger.info("");
 }
 
 async function handleList(argv, app, stage, region) {
-  const { fallback } = argv;
-  const secrets = fallback
-    ? await FunctionConfig.listSecretsFallback(app, region)
-    : await FunctionConfig.listSecrets(app, stage, region);
+  const secrets = await FunctionConfig.listSecrets(app, stage, region);
   const keys = Object.keys(secrets);
 
   if (keys.length === 0) {
-    fallback
-      ? logger.info(`No fallback secrets found for the ${stage} stage.`)
-      : logger.info(`No secrets found for the ${stage} stage.`);
+    logger.info(`No secrets found for the ${stage} stage.`);
   }
   else {
-    const data = {};
+    const keyLen = Math.max(
+      "Secrets".length,
+      ...keys.map((key) => key.length),
+    );
+    const valueLen = Math.max(
+      "Values".length,
+      ...keys.map((key) => secrets[key].value
+        ? secrets[key].value.length
+        : `${secrets[key].fallbackValue} (fallback)`.length
+      ),
+    );
+
+    logger.info("┌".padEnd(keyLen + 3, "─") + "┬" + "".padEnd(valueLen + 2, "─") + "┐");
+    logger.info(`│ ${"Secrets".padEnd(keyLen)} │ ${"Values".padEnd(valueLen)} │`);
+    logger.info("├".padEnd(keyLen + 3, "─") + "┼" + "".padEnd(valueLen + 2, "─") + "┤");
     keys.forEach((key) => {
-      data[key] = secrets[key].value
+      const value = secrets[key].value
         ? secrets[key].value
-        : `${secrets[key].fallbackValue} (fallback)`;
+        : `${secrets[key].fallbackValue} ${chalk.gray("(fallback)")}`;
+      logger.info(`│ ${key.padEnd(keyLen)} │ ${value.padEnd(valueLen)} │`);
     });
-    printTable(data);
+    logger.info("└".padEnd(keyLen + 3, "─") + "┴" + "".padEnd(valueLen + 2, "─") + "┘");
   }
 }
 
 async function handleGet(argv, app, stage, region) {
-  const { name, fallback } = argv;
-  const secret = fallback
-    ? await FunctionConfig.getSecretFallback(app, region, name)
-    : await FunctionConfig.getSecret(app, stage, region, name);
+  const { name } = argv;
+  const secret = await FunctionConfig.getSecret(app, stage, region, name);
   if (secret.value) {
     logger.info(chalk.bold(secret.value));
   }
   if (secret.fallbackValue) {
-    logger.info(`${chalk.bold(secret.fallbackValue)} (fallback)`);
+    logger.info(`${chalk.bold(secret.fallbackValue)} ${chalk.gray("(fallback)")}`);
   }
   else {
-    logger.info(fallback
-      ? `Fallback value for ${name} is not set. To set it, run`
-      : `${name} is not set. To set it, run`
-    );
+    logger.info(`${name} is not set. To set it, run`);
     logger.info("");
-    logger.info(fallback
-      ? chalk.bold(`  sst secrets set ${name} <value> --fallback`)
-      : chalk.bold(`  sst secrets set ${name} <value>`)
-    );
+    logger.info(chalk.bold(`  sst secrets set ${name} <value>`));
   }
 }
 
 async function handleSet(argv, app, stage, region) {
-  const { name, value, fallback } = argv;
-  fallback
-    ? await FunctionConfig.setSecretFallback(app, region, name, value)
-    : await FunctionConfig.setSecret(app, stage, region, name, value);
+  const { name, value } = argv;
+  await FunctionConfig.setSecret(app, stage, region, name, value);
+  logger.info("✅ Updated");
+}
+
+async function handleSetFallback(argv, app, region) {
+  const { name, value } = argv;
+  await FunctionConfig.setSecretFallback(app, region, name, value);
   logger.info("✅ Updated");
 }
 
 async function handleRemove(argv, app, stage, region) {
-  const { name, fallback } = argv;
-  fallback
-    ? await FunctionConfig.removeSecretFallback(app, region, name)
-    : await FunctionConfig.removeSecret(app, stage, region, name);
+  const { name } = argv;
+  await FunctionConfig.removeSecret(app, stage, region, name);
   logger.info("✅ Removed");
 }
 
-function printTable(data) {
-  const keys = Object.keys(data);
-  const values = Object.values(data);
-  const keyLen = Math.max("Secrets".length, ...keys.map((key) => key.length));
-  const valueLen = Math.max("Values".length, ...values.map((value) => value.length));
-  logger.info("┌".padEnd(keyLen + 3, "─") + "┬" + "".padEnd(valueLen + 2, "─") + "┐");
-  logger.info(`│ ${"Secrets".padEnd(keyLen)} │ ${"Values".padEnd(valueLen)} │`);
-  logger.info("├".padEnd(keyLen + 3, "─") + "┼" + "".padEnd(valueLen + 2, "─") + "┤");
-  Object.entries(data).forEach(([key, value]) => {
-    logger.info(`│ ${key.padEnd(keyLen)} │ ${value.padEnd(valueLen)} │`);
-  });
-  logger.info("└".padEnd(keyLen + 3, "─") + "┴" + "".padEnd(valueLen + 2, "─") + "┘");
+async function handleRemoveFallback(argv, app, region) {
+  const { name } = argv;
+  await FunctionConfig.removeSecretFallback(app, region, name);
+  logger.info("✅ Removed");
 }
