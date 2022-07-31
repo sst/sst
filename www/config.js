@@ -10,7 +10,7 @@ module.exports = {
   discord_invite: "https://sst.dev/discord",
   youtube: "https://www.youtube.com/c/sst-dev",
   newsletter: "https://sst.dev/newsletter.html",
-  twitter: "https://twitter.com/ServerlessStack",
+  twitter: "https://twitter.com/sst_dev",
   examples: "https://sst.dev/examples/index.html",
   github: "https://github.com/serverless-stack/sst",
   roadmap: "https://github.com/serverless-stack/sst/projects/1",
