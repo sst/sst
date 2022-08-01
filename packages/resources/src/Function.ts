@@ -620,17 +620,9 @@ export interface FunctionBundleCopyFilesProps {
 }
 
 /**
- * A construct for a Lambda Function that allows you to [develop your it locally](live-lambda-development.md). Supports JS, TypeScript, Python, Golang, and C#. It also applies a couple of defaults:
- *
- * - Sets the default memory setting to 1024MB.
- * - Sets the default Lambda function timeout to 10 seconds.
- * - [Enables AWS X-Ray](https://docs.aws.amazon.com/lambda/latest/dg/nodejs-tracing.html) by default so you can trace your serverless applications.
- * - `AWS_NODEJS_CONNECTION_REUSE_ENABLED` is turned on. Meaning that the Lambda function will automatically reuse TCP connections when working with the AWS SDK. [Read more about this here](https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/node-reusing-connections.html).
- * - Sets the `IS_LOCAL` environment variable for the Lambda function when it is invoked locally through the `sst start` command.
+ * The `Function` construct is a higher level CDK construct that makes it easy to create a Lambda Function with support for Live Lambda Development.
  *
  * @example
- *
- * ### Creating a Function
  *
  * ```js
  * import { Function } from "@serverless-stack/resources";

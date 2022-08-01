@@ -252,11 +252,23 @@ export interface TableProps {
 /////////////////////
 
 /**
- * The `Table` construct is a higher level CDK construct that makes it easy to create a [DynamoDB](https://aws.amazon.com/dynamodb/) table. It uses the following defaults:
+ * The `Table` construct is a higher level CDK construct that makes it easy to create a DynamoDB table.
  *
- * - Defaults to using the [On-Demand capacity](https://aws.amazon.com/dynamodb/pricing/on-demand/) to make it perfectly serverless.
- * - Enables [Point-in-Time Recovery](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/PointInTimeRecovery.html) to make sure that you don't lose your data.
- * - Provides a nicer interface for defining indexes.
+ * @example
+ *
+ * Deploys a plain HTML website in the `path/to/src` directory.
+ *
+ * ```js
+ * import { Table } from "@serverless-stack/resources";
+ * 
+ * new Table(stack, "Notes", {
+ *   fields: {
+ *     userId: "string",
+ *     noteId: "string",
+ *   },
+ *   primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
+ * });
+ * ```
  */
 export class Table extends Construct implements SSTConstruct {
   public readonly cdk: {

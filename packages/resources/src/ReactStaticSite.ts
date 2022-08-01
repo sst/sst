@@ -10,21 +10,9 @@ import { SSTConstruct } from "./Construct.js";
 /////////////////////
 
 /**
- * The `ReactStaticSite` construct is a higher level CDK construct that makes it easy to create a React single page app. It provides a simple way to build and deploy the site to an S3 bucket; setup a CloudFront CDN for fast content delivery; and configure a custom domain for the website URL.
- *
- * It's designed to work with static sites built with [Create React App](https://create-react-app.dev/). It allows you to [automatically set environment variables](#configuring-environment-variables) in your React app directly from the outputs of your SST app. And it can also create a `.d.ts` type definition file for the environment variables.
- *
- * The `ReactStaticSite` construct internally extends the [`StaticSite`](StaticSite.md) construct with the following pre-configured defaults.
- *
- * - [`indexPage`](StaticSite.md#indexpage) is set to `index.html`.
- * - [`errorPage`](StaticSite.md#errorpage) is set to `redirect_to_index_page`. So error pages are redirected to the index page.
- * - [`buildCommand`](StaticSite.md#buildcommand) is `npm run build`.
- * - [`buildOutput`](StaticSite.md#buildoutput) is the `build` folder in your React app.
- * - [`fileOptions`](StaticSite.md#fileoptions) sets the cache control to `max-age=0,no-cache,no-store,must-revalidate` for HTML files; and `max-age=31536000,public,immutable` for JS/CSS files.
- *
+ * The `ReactStaticSite` construct is a higher level CDK construct that makes it easy to create a React single page app.
+ * 
  * @example
- *
- * ### Minimal Config
  *
  * Deploys a Create React App in the `path/to/src` directory.
  *

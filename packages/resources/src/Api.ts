@@ -576,12 +576,9 @@ export interface ApiPothosRouteProps<AuthorizerKeys>
 /////////////////////
 
 /**
- * The Api construct is a higher level CDK construct that makes it easy to create an API. It provides a simple way to define the routes in your API. And allows you to configure the specific Lambda functions if necessary. It also allows you to configure authorization and custom domains.
+ * The Api construct is a higher level CDK construct that makes it easy to create an API.
  *
  * @example
- * The `Api` construct is designed to make it easy to get started with, while allowing for a way to fully configure it as well. Let's look at how, through a couple of examples.
- *
- * ### Using the minimal config
  *
  * ```ts
  * import { Api } from "@serverless-stack/resources";

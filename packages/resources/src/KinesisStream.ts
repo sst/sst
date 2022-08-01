@@ -125,8 +125,19 @@ export interface KinesisStreamProps {
 /////////////////////
 
 /**
- * The `KinesisStream` construct is a higher level CDK construct that makes it easy to create a [Kinesis Data Stream](https://aws.amazon.com/kinesis/data-streams/). You can create a stream and add a list of consumers to it.
- * This construct makes it easy to define a stream and its consumers. It also internally connects the consumers and the stream together.
+ * The `KinesisStream` construct is a higher level CDK construct that makes it easy to create a Kinesis Data Stream and add a list of consumers to it.
+ *
+ * @example
+ *
+ * ```js
+ * import { KinesisStream } from "@serverless-stack/resources";
+ *
+ * new KinesisStream(stack, "Stream", {
+ *   consumers: {
+ *     myConsumer: "src/lambda.main",
+ *   }
+ * });
+ * ```
  */
 export class KinesisStream extends Construct implements SSTConstruct {
   public readonly cdk: {

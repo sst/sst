@@ -188,7 +188,6 @@ export interface NextjsSiteProps {
  * The `NextjsSite` construct is a higher level CDK construct that makes it easy to create a Next.js app.
  *
  * @example
- * ### Creating a Next.js app
  *
  * Deploys a Next.js app in the `path/to/site` directory.
  *
