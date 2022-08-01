@@ -59,7 +59,7 @@ class EventDelegate<T> {
   }
 
   public remove(handler: EventHandler<T>) {
-    this.handlers = this.handlers.filter((h) => h !== handler);
+    this.handlers = this.handlers.filter(h => h !== handler);
   }
 
   public trigger(input: T) {
@@ -99,12 +99,12 @@ export class Server {
       express.json({
         strict: false,
         type: ["application/json", "application/*+json"],
-        limit: "10mb",
+        limit: "10mb"
       }),
       async (req, res) => {
         this.response(req.params.fun, this.lastRequest[req.params.proc], {
           type: "failure",
-          error: req.body,
+          error: req.body
         });
         res.json("ok");
       }
@@ -134,7 +134,7 @@ export class Server {
           ),
           "Lambda-Runtime-Cognito-Identity": JSON.stringify(
             payload.context.clientContext || {}
-          ),
+          )
         });
         this.lastRequest[req.params.proc] = payload.context.awsRequestId;
         res.json(payload.event);
@@ -150,7 +150,7 @@ export class Server {
       express.json({
         strict: false,
         type: ["application/json", "application/*+json"],
-        limit: "10mb",
+        limit: "10mb"
       }),
       (req, res) => {
         logger.debug(
@@ -160,7 +160,7 @@ export class Server {
         );
         this.response(req.params.fun, req.params.awsRequestId, {
           type: "success",
-          data: req.body,
+          data: req.body
         });
         res.status(202).send();
       }
@@ -175,7 +175,7 @@ export class Server {
       express.json({
         strict: false,
         type: ["application/json", "application/*+json"],
-        limit: "10mb",
+        limit: "10mb"
       }),
       (req, res) => {
         logger.debug(
@@ -188,8 +188,8 @@ export class Server {
           error: {
             errorType: req.body.errorType,
             errorMessage: req.body.errorMessage,
-            stackTrace: req.body.trace,
-          },
+            stackTrace: req.body.trace
+          }
         });
         res.status(202).send();
       }
@@ -201,7 +201,7 @@ export class Server {
       `/proxy*`,
       express.raw({
         type: "*/*",
-        limit: "1024mb",
+        limit: "1024mb"
       }),
       (req, res) => {
         res.header("Access-Control-Allow-Origin", "*");
@@ -221,11 +221,11 @@ export class Server {
           {
             headers: {
               ...req.headers,
-              host: u.hostname,
+              host: u.hostname
             },
-            method: req.method,
+            method: req.method
           },
-          (proxied) => {
+          proxied => {
             res.status(proxied.statusCode!);
             for (const [key, value] of Object.entries(proxied.headers)) {
               res.header(key, value);
@@ -241,7 +241,7 @@ export class Server {
         )
           forward.write(req.body);
         forward.end();
-        forward.on("error", (e) => {
+        forward.on("error", e => {
           logger.error(e.message);
         });
       }
@@ -251,7 +251,7 @@ export class Server {
   listen() {
     logger.debug("Starting runtime server on port:", this.opts.port);
     this.app.listen({
-      port: this.opts.port,
+      port: this.opts.port
     });
   }
 
@@ -261,7 +261,7 @@ export class Server {
       waiting: [],
       processes: [],
       requests: {},
-      working: {},
+      working: {}
     };
     this.pools[fun] = result;
     return result;
@@ -274,7 +274,7 @@ export class Server {
     const pending = pool.pending.pop();
     if (pending) return pending;
 
-    return new Promise<Payload>((resolve) => {
+    return new Promise<Payload>(resolve => {
       pool.waiting[proc] = resolve;
     });
   }
@@ -325,15 +325,15 @@ export class Server {
           error: {
             errorType: "build_failure",
             errorMessage: `The function ${opts.function.handler} failed to build`,
-            stackTrace: [],
-          },
+            stackTrace: []
+          }
         };
       }
       this.warm[opts.function.id] = true;
       logger.debug("First build finished");
     }
 
-    return new Promise<Response>((resolve) => {
+    return new Promise<Response>(resolve => {
       pool.requests[opts.payload.context.awsRequestId] = resolve;
       const [key] = Object.keys(pool.waiting);
       if (key) {
@@ -363,30 +363,37 @@ export class Server {
         // "Error: Failed to get the current sub/segment from the context."
         AWS_XRAY_LOG_LEVEL: "silent",
         AWS_XRAY_CONTEXT_MISSING: "LOG_ERROR",
-        IS_LOCAL: "true",
+        IS_LOCAL: "true"
       };
       logger.debug("Spawning", instructions.run);
       const proc = spawn(instructions.run.command, instructions.run.args, {
-        env,
+        env
       });
-      proc.stdout!.on("data", (data) => {
+      proc.stdout!.on("data", data => {
         this.onStdOut.trigger({
           data: data.toString(),
           funcId: opts.function.id,
-          requestId: this.lastRequest[id],
+          requestId: this.lastRequest[id]
         });
       });
-      proc.stderr!.on("data", (data) => {
+      proc.stderr!.on("data", data => {
         this.onStdErr.trigger({
           data: data.toString(),
           funcId: opts.function.id,
-          requestId: this.lastRequest[id],
+          requestId: this.lastRequest[id]
         });
       });
       proc.on("exit", () => {
-        pool.processes = pool.processes.filter((p) => p !== proc);
+        pool.processes = pool.processes.filter(p => p !== proc);
         delete pool.waiting[id];
       });
+
+      // Kill process every 30 min to force credentials refresh
+      setTimeout(() => {
+        console.log("Killing proc");
+        proc.kill();
+      }, 1000 * 60 * 30);
+
       pool.processes.push(proc);
     });
   }
