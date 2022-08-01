@@ -1,5 +1,14 @@
 # @serverless-stack/resources
 
+## 1.6.6
+
+### Patch Changes
+
+- [#1918](https://github.com/serverless-stack/sst/pull/1918) [`abb1ae988`](https://github.com/serverless-stack/sst/commit/abb1ae9889b563d74060594ac1f90f222c5eeb36) Thanks [@fwang](https://github.com/fwang)! - Fix bucket creation hangs on Custom::S3AutoDeleteObjects
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.6.6
+
 ## 1.6.5
 
 ### Patch Changes
