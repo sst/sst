@@ -490,6 +490,21 @@ new Function(stack, "Function", {
 })
 ```
 
+### banner?
+
+_Type_ : <span class="mono">string</span>
+
+Use this to insert an arbitrary string at the beginning of generated JavaScript and CSS files.
+
+
+```js
+new Function(stack, "Function", {
+  bundle: {
+    banner: "console.log('Function starting')"
+  }
+})
+```
+
 ### commandHooks?
 
 _Type_ : <span class="mono">[ICommandHooks](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda_nodejs.ICommandHooks.html)</span>
