@@ -4449,7 +4449,7 @@
     "@docsearch/css" "3.0.0"
     algoliasearch "^4.0.0"
 
-"@docusaurus/core@2.0.0-beta.18", "@docusaurus/core@^2.0.0-beta.18":
+"@docusaurus/core@2.0.0-beta.18":
   version "2.0.0-beta.18"
   resolved "https://registry.npmjs.org/@docusaurus/core/-/core-2.0.0-beta.18.tgz"
   integrity sha512-puV7l+0/BPSi07Xmr8tVktfs1BzhC8P5pm6Bs2CfvysCJ4nefNCD1CosPc1PGBWy901KqeeEJ1aoGwj9tU3AUA==
@@ -4696,9 +4696,9 @@
     "@types/react-router-dom" "*"
     react-helmet-async "*"
 
-"@docusaurus/plugin-client-redirects@^2.0.0-beta.18":
+"@docusaurus/plugin-client-redirects@2.0.0-beta.18":
   version "2.0.0-beta.18"
-  resolved "https://registry.npmjs.org/@docusaurus/plugin-client-redirects/-/plugin-client-redirects-2.0.0-beta.18.tgz"
+  resolved "https://registry.yarnpkg.com/@docusaurus/plugin-client-redirects/-/plugin-client-redirects-2.0.0-beta.18.tgz#575e55853dbe5398d59f3dbbe92e7ec05db1613d"
   integrity sha512-Hx2Tz/suK+0hNEuxOAokF1NMpd5vKnpTHENnVXJ9poSOFMFipudyht6Yjcrscar4wW971K2lBfX03lh8mNBQtg==
   dependencies:
     "@docusaurus/core" "2.0.0-beta.18"
@@ -4777,7 +4777,7 @@
     react-json-view "^1.21.3"
     tslib "^2.3.1"
 
-"@docusaurus/plugin-google-analytics@2.0.0-beta.18", "@docusaurus/plugin-google-analytics@^2.0.0-beta.18":
+"@docusaurus/plugin-google-analytics@2.0.0-beta.18":
   version "2.0.0-beta.18"
   resolved "https://registry.npmjs.org/@docusaurus/plugin-google-analytics/-/plugin-google-analytics-2.0.0-beta.18.tgz"
   integrity sha512-s9dRBWDrZ1uu3wFXPCF7yVLo/+5LUFAeoxpXxzory8gn9GYDt8ZDj80h5DUyCLxiy72OG6bXWNOYS/Vc6cOPXQ==
@@ -4808,9 +4808,9 @@
     sitemap "^7.1.1"
     tslib "^2.3.1"
 
-"@docusaurus/preset-classic@^2.0.0-beta.18":
+"@docusaurus/preset-classic@2.0.0-beta.18":
   version "2.0.0-beta.18"
-  resolved "https://registry.npmjs.org/@docusaurus/preset-classic/-/preset-classic-2.0.0-beta.18.tgz"
+  resolved "https://registry.yarnpkg.com/@docusaurus/preset-classic/-/preset-classic-2.0.0-beta.18.tgz#82f6905d34a13e46289ac4d2f1125e47033bd9d8"
   integrity sha512-TfDulvFt/vLWr/Yy7O0yXgwHtJhdkZ739bTlFNwEkRMAy8ggi650e52I1I0T79s67llecb4JihgHPW+mwiVkCQ==
   dependencies:
     "@docusaurus/core" "2.0.0-beta.18"
