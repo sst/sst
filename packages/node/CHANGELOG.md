@@ -1,5 +1,7 @@
 # @serverless-stack/node
 
+## 1.6.5
+
 ## 1.6.4
 
 ## 1.6.3

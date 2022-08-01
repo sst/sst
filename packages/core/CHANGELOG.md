@@ -1,5 +1,11 @@
 # @serverless-stack/core
 
+## 1.6.5
+
+### Patch Changes
+
+- [`4cd71c933`](https://github.com/serverless-stack/sst/commit/4cd71c93392a7ffe53143ff8253fd326ee0bd058) Thanks [@thdxr](https://github.com/thdxr)! - Kill local function every 30min so that credentials refresh
+
 ## 1.6.4
 
 ### Patch Changes
