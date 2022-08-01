@@ -390,7 +390,6 @@ export class Server {
 
       // Kill process every 30 min to force credentials refresh
       setTimeout(() => {
-        console.log("Killing proc");
         proc.kill();
       }, 1000 * 60 * 30);
 
