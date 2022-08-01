@@ -508,16 +508,9 @@ export interface ApiGatewayV1ApiCustomDomainProps {
 
 /**
  *
- * The `ApiGatewayV1Api` construct is a higher level CDK construct that makes it easy to create an API Gateway REST API. It provides a simple way to define the routes in your API. And allows you to configure the specific Lambda functions if necessary. It also allows you to configure authorization and custom domains. See the [examples](#examples) for more details.
- *
- * :::note
- * If you are creating a new API, use the `Api` construct instead.
- * :::
- *
- * The Api construct uses [API Gateway V2](https://aws.amazon.com/blogs/compute/announcing-http-apis-for-amazon-api-gateway/). It's both faster and cheaper. However, if you need features like Usage Plans and API keys, use the `ApiGatewayV1Api` construct instead. You can [check out a detailed comparison here](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-vs-rest.html).
+ * The `ApiGatewayV1Api` construct is a higher level CDK construct that makes it easy to create an API Gateway REST API.
  *
  * @example
- * ### Minimal config
  *
  * ```js
  * import { ApiGatewayV1Api } from "@serverless-stack/resources";

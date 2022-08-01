@@ -86,18 +86,9 @@ export interface ScriptProps {
 /////////////////////
 
 /**
- * The `Script` construct is a higher level CDK construct that makes it easy to run a script in a Lambda function during the deployment process. It provides a simple way to build and bundle the script function; and allows you to pass parameter values based on outputs from other constructs in your SST app. So you don't have to hard code values in your script. You can configure a script to run before or after any of the stacks or resources are deployed in your app.
- *
- * Since the script is running inside a Lambda function, it can interact with resources like the RDS databases, that are inside a VPC; and make AWS API calls to services that the IAM credentials in your local environment or CI might not have permissions to.
- *
- * A few things to note:
- * - It does not run locally. It runs inside a Lambda function.
- * - It gets run on every deployment.
- * - It can run for a maximum of 15 minutes.
- * - [Live Lambda Dev](/live-lambda-development.md) is not enabled for these functions.
+ * The `Script` construct is a higher level CDK construct that makes it easy to run a script in a Lambda function during the deployment process.
  *
  * @example
- * ### Minimal config
  *
  * ```js
  * import { Script } from "@serverless-stack/resources";
@@ -108,7 +99,6 @@ export interface ScriptProps {
  *   onDelete: "src/function.delete",
  * });
  * ```
- *
  */
 export class Script extends Construct {
   /**

@@ -274,16 +274,9 @@ export interface StaticSiteCdkDistributionProps
 /////////////////////
 
 /**
- * The `StaticSite` construct is a higher level CDK construct that makes it easy to create a static website. It provides a simple way to build and deploy the site to an S3 bucket; setup a CloudFront CDN for fast content delivery; and configure a custom domain for the website URL. In addition:
- *
- * - Visitors to the `http://` url will be redirected to the `https://` URL.
- * - If a [domain alias](#domainalias) is configured, visitors to the alias domain will be redirected to the main one. So if `www.example.com` is the domain alias for `example.com`, visitors to `www.example.com` will be redirected to `example.com`.
+ * The `StaticSite` construct is a higher level CDK construct that makes it easy to create a static website.
  *
  * @example
- *
- * The `StaticSite` construct is designed to make it easy to get started with, while allowing for a way to fully configure it as well. Let's look at how, through a couple of examples.
- *
- * ### Creating a plain HTML site
  *
  * Deploys a plain HTML website in the `path/to/src` directory.
  *

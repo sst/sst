@@ -32,7 +32,7 @@ export interface EventBusFunctionTargetProps {
    * ```js
    * new EventBus(stack, "Bus", {
    *   rules: {
-   *     rule1: {
+   *     myRule: {
    *       targets: {
    *         myTarget: { function: "src/function.handler" },
    *       }
@@ -60,7 +60,7 @@ export interface EventBusQueueTargetProps {
    * ```js
    * new EventBus(stack, "Bus", {
    *   rules: {
-   *     rule1: {
+   *     myRule: {
    *       targets: {
    *         myTarget: {
    *           type: "queue",
@@ -89,7 +89,7 @@ export interface EventBusRuleProps {
      * ```js
      * new EventBus(stack, "Bus", {
      *   rules: {
-     *     rule1: {
+     *     myRule: {
      *       pattern: { source: ["myevent"] },
      *     },
      *   },
@@ -104,7 +104,7 @@ export interface EventBusRuleProps {
      * ```js
      * new EventBus(stack, "Bus", {
      *   rules: {
-     *     rule1: {
+     *     myRule: {
      *       pattern: { detail: { FOO: 1 }  },
      *     },
      *   },
@@ -119,7 +119,7 @@ export interface EventBusRuleProps {
      * ```js
      * new EventBus(stack, "Bus", {
      *   rules: {
-     *     rule1: {
+     *     myRule: {
      *       pattern: { detailType: ["foo"]  },
      *     },
      *   },
@@ -135,7 +135,7 @@ export interface EventBusRuleProps {
    * ```js
    * new EventBus(stack, "Bus", {
    *   rules: {
-   *     rule1: {
+   *     myRule: {
    *       targets: {
    *         myTarget1: "src/function.handler",
    *         myTarget2: new Queue(stack, "MyQueue"),
@@ -160,7 +160,7 @@ export interface EventBusRuleProps {
      * ```js {5-8}
      * new EventBus(stack, "Bus", {
      *   rules: {
-     *     rule1: {
+     *     myRule: {
      *       cdk: {
      *         rule: {
      *           ruleName: "my-rule",
@@ -204,7 +204,7 @@ export interface EventBusProps {
    * ```js {5}
    * new EventBus(stack, "Bus", {
    *   rules: {
-   *     rule1: {
+   *     myRule: {
    *       pattern: { source: ["myevent"] },
    *       targets: {
    *         myTarget: "src/function.handler"
@@ -238,20 +238,16 @@ export interface EventBusProps {
 /////////////////////
 
 /**
- * The `EventBus` construct is a higher level CDK construct that makes it easy to create an [EventBridge Event Bus](https://aws.amazon.com/eventbridge/). You can create a bus that has a list of rules and targets. And you can publish messages to it from any part of your serverless app.
- *
- * You can have two types of targets; Function targets (with a Lambda function) or Queue targets (with an SQS queue). See the [examples](#examples) for more details.
+ * The `EventBus` construct is a higher level CDK construct that makes it easy to create an EventBridge Event Bus.
  *
  * @example
- *
- * ### Using the minimal config
  *
  * ```js
  * import { EventBus } from "@serverless-stack/resources";
  *
  * new EventBus(stack, "Bus", {
  *   rules: {
- *     rule1: {
+ *     myRule: {
  *       pattern: { source: ["myevent"] },
  *       targets: {
  *         myTarget1: "src/function1.handler",
@@ -261,8 +257,6 @@ export interface EventBusProps {
  *   },
  * });
  * ```
- *
- * Note that, `rule1` here is simply a key to identify the rule.
  */
 export class EventBus extends Construct implements SSTConstruct {
   public readonly cdk: {
@@ -309,7 +303,7 @@ export class EventBus extends Construct implements SSTConstruct {
    * @example
    * ```js
    * bus.addRules(stack, {
-   *   rule2: {
+   *   myRule2: {
    *     pattern: { source: ["myevent"] },
    *       targets: {
    *         myTarget3: "src/function3.handler"
@@ -365,7 +359,7 @@ export class EventBus extends Construct implements SSTConstruct {
    * ```js {10}
    * const bus = new EventBus(stack, "Bus", {
    *   rules: {
-   *     rule1: {
+   *     myRule: {
    *       pattern: { source: ["myevent"] },
    *       targets: {
    *         myTarget1: "src/function1.handler"
@@ -375,7 +369,7 @@ export class EventBus extends Construct implements SSTConstruct {
    *   },
    * });
    *
-   * bus.attachPermissionsToTarget("rule1", 0, ["s3"]);
+   * bus.attachPermissionsToTarget("myRule", 0, ["s3"]);
    * ```
    */
   public attachPermissionsToTarget(

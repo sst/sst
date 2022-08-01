@@ -7,7 +7,6 @@ import {
   ReflectionKind,
 } from "typedoc";
 import path from "path";
-import chokidar from "chokidar";
 
 const cmd = process.argv[2];
 
@@ -94,14 +93,17 @@ app.bootstrap({
     "../packages/resources/src/Api.ts",
     "../packages/resources/src/ApiGatewayV1Api.ts",
     "../packages/resources/src/App.ts",
-    "../packages/resources/src/Cron.ts",
-    "../packages/resources/src/RDS.ts",
     "../packages/resources/src/Auth.ts",
+    "../packages/resources/src/Bucket.ts",
+    "../packages/resources/src/Cron.ts",
+    "../packages/resources/src/Config.ts",
+    "../packages/resources/src/RDS.ts",
     "../packages/resources/src/Table.ts",
     "../packages/resources/src/Topic.ts",
+    "../packages/resources/src/Parameter.ts",
     "../packages/resources/src/Script.ts",
+    "../packages/resources/src/Secret.ts",
     "../packages/resources/src/Queue.ts",
-    "../packages/resources/src/Bucket.ts",
     "../packages/resources/src/Function.ts",
     "../packages/resources/src/EventBus.ts",
     "../packages/resources/src/StaticSite.ts",
@@ -117,10 +119,6 @@ app.bootstrap({
     "../packages/resources/src/DebugStack.ts",
   ],
   tsconfig: path.resolve("../packages/resources/tsconfig.json"),
-  includes: [
-    "docs/constructs/*.about.md",
-    "docs/constructs/*.snippets.md"
-  ],
   preserveWatchOutput: true,
 });
 
@@ -132,20 +130,6 @@ if (cmd === "watch") {
     await run(json);
     console.log("Generated docs");
   });
-  // Watch about and snippets files
-  chokidar
-    .watch([
-      `docs/constructs/*.about.md`,
-      `docs/constructs/*.snippets.md`,
-    ])
-    .on("change", async (event, path) => {
-      console.log("Snippet change detected. Starting compilation...");
-      const reflection = app.convert();
-      await app.generateJson(reflection, "out.json");
-      const json = await fs.readFile("./out.json").then(JSON.parse);
-      await run(json);
-      console.log("Generated docs");
-    });
 }
 
 if (cmd === "build") {
@@ -167,11 +151,6 @@ async function run(json) {
       console.log("Skipping", file.name);
       continue;
     }
-    lines.push("---");
-    lines.push(
-      `description: "Docs for the sst.${file.name} construct in the @serverless-stack/resources package"`
-    );
-    lines.push("---");
     lines.push(
       `<!--`,
       `!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`,
@@ -181,19 +160,6 @@ async function run(json) {
       `!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`,
       `-->`
     );
-
-    // About
-    try {
-      const contents = await fs.readFile(
-        `docs/constructs/${file.name}.about.md`
-      );
-      // about file exists => render file
-      lines.push(...contents.toString().split("\n"));
-    } catch(e) {
-      // about file NOT exists => render from ts doc
-      lines.push(construct.comment?.shortText);
-      if (construct.comment?.text) lines.push("\n" + construct.comment?.text);
-    }
 
     // Constructor
     const constructor = construct.children?.find(
@@ -228,24 +194,6 @@ async function run(json) {
           );
         }
       }
-    }
-
-    // Class examples
-    const examples =
-      construct.comment?.tags?.filter((t) => t.tag === "example") || [];
-    if (examples.length) {
-      lines.push("\n## Examples");
-      lines.push(...examples.map(renderTag));
-    }
-    lines.push("");
-    try {
-      const contents = await fs.readFile(
-        `docs/constructs/${file.name}.snippets.md`
-      );
-      lines.push(...contents.toString().split("\n"));
-    } catch (ex) {
-      // No snippets provided
-      console.warn(`No snippets provided for ${file.name}`);
     }
 
     const props = [];
@@ -304,7 +252,7 @@ async function run(json) {
     }
 
     const output = lines.flat(100).join("\n");
-    const path = `docs/constructs/${file.name}.md`;
+    const path = `docs/constructs/${file.name}.tsdoc.md`;
     await fs.writeFile(path, output);
     console.log("Wrote file", path);
   }

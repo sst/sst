@@ -15,6 +15,7 @@ import {
   isStackConstruct,
 } from "./Construct.js";
 import { FunctionProps, FunctionHandlerProps } from "./Function.js";
+import * as Config from "./Config.js";
 import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite.js";
 import { Permissions } from "./util/permission.js";
 import { StackProps } from "./Stack.js";
@@ -78,21 +79,7 @@ type AppRemovalPolicy = Lowercase<keyof typeof cdk.RemovalPolicy>;
 export type AppProps = cdk.AppProps;
 
 /**
- * The App construct extends cdk.App and is used internally by SST to:
- * - Automatically prefix stack names with the stage and app name
- * - Deploy the entire app using the same AWS profile and region
- *
- * It is made available as the `app` in the `stacks/index.js` of your SST app.
- *
- * ```js
- * export default function main(app) {
- *   new MySampleStack(app, "sample");
- * }
- * ```
- *
- * Since it is initialized internally, the props that are passed to App cannot be changed.
- *
- * @example
+ * The App construct extends cdk.App and is used internally by SST.
  */
 export class App extends cdk.App {
   /**
@@ -298,6 +285,7 @@ export class App extends cdk.App {
   }
 
   synth(options: cdk.StageSynthesisOptions = {}): cxapi.CloudAssembly {
+    Config.codegen();
     this.buildConstructsMetadata();
 
     for (const child of this.node.children) {

@@ -154,9 +154,6 @@ export interface RDSCdkServerlessClusterProps
  * The `RDS` construct is a higher level CDK construct that makes it easy to create an [RDS Serverless Cluster](https://aws.amazon.com/rds/).
  *
  * @example
- * ### Using the minimal config
- *
- * Deploys an auto-scaling PostgreSQL database.
  *
  * ```js
  * import { RDS } from "@serverless-stack/resources";
@@ -166,7 +163,6 @@ export interface RDSCdkServerlessClusterProps
  *   defaultDatabaseName: "my_database",
  * });
  * ```
- *
  */
 export class RDS extends Construct implements SSTConstruct {
   public readonly cdk: {

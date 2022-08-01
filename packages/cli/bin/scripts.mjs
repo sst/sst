@@ -58,6 +58,7 @@ const cmd = {
   remove: "remove",
   addCdk: "add-cdk",
   update: "update",
+  secrets: "secrets",
   telemetry: "telemetry",
 };
 
@@ -343,12 +344,25 @@ function checkNpmScriptArgs() {
   }
 }
 
-function exitWithMessage(message) {
-  // Move newline before message
-  if (message.indexOf("\n") === 0) {
-    logger.info("");
+function exitWithMessage(e) {
+  // Handle message
+  if (typeof e === "string") {
+    // Move newline before message
+    if (e.indexOf("\n") === 0) {
+      logger.info("");
+    }
+    logger.error(e.trimStart());
   }
-  logger.error(message.trimStart());
+  // Handle error with message
+  else if (e.message) {
+    logger.info("");
+    logger.error(e.message.trimStart());
+  }
+  // Handle error without message
+  else {
+    logger.info("");
+    logger.error(e);
+  }
 
   process.exit(1);
 }
@@ -415,6 +429,60 @@ const argv = yargs
         type: "boolean",
         desc: "Do not install, but show the install command",
       },
+    }
+  )
+  .command(
+    `${cmd.secrets} [action] [name] [value]`,
+    "Manage app secrets",
+    (yargs) => {
+      addOptions(cmd.secrets)(yargs);
+      return yargs
+        .positional("action", {
+          type: "string",
+          choices: ["list", "get", "set", "set-fallback", "remove", "remove-fallback"],
+          description: "Action to perform",
+        })
+        .positional("name", {
+          type: "string",
+          description: "Name of the secret",
+        })
+        .positional("value", {
+          type: "string",
+          description: "Value of the secret",
+        })
+        .check((argv) => {
+          const action = argv["action"];
+          if (["get", "remove", "remove-fallback"].includes(action) && !argv.name) {
+            throw new Error("Please specify a secret name");
+          }
+          if (["set", "set-fallback"].includes(action) && (!argv.name || !argv.value)) {
+            throw new Error("Please specify a secret name and value");
+          }
+          return true;
+        })
+        .example([
+          [
+            `$0 ${cmd.secrets} list`,
+            "Fetch and decrypt all secret values"
+          ],
+          [
+            `$0 ${cmd.secrets} get STRIPE_KEY`,
+            "Fetch and decrypt the secret value"
+          ],
+          [
+            `$0 ${cmd.secrets} set STRIPE_KEY sk_test_123`,
+            "Encrypt and update the secret value"
+          ],
+          [
+            `$0 ${cmd.secrets} set STRIPE_KEY sk_test_123 --fallback`,
+            "Encrypt and update the fallback secret value"
+          ],
+          [
+            `$0 ${cmd.secrets} remove STRIPE_KEY`,
+            "Remove the secret value"
+          ],
+        ]);
+
     }
   )
   .command(
@@ -501,7 +569,7 @@ async function run() {
       });
     } catch (e) {
       logger.debug(e);
-      exitWithMessage(e.message);
+      exitWithMessage(e);
     }
     return;
   } else if (script === cmd.telemetry) {
@@ -542,6 +610,7 @@ async function run() {
     [cmd.deploy]: await import("../scripts/deploy.mjs"),
     [cmd.remove]: await import("../scripts/remove.mjs"),
     [cmd.console]: await import("../scripts/console.mjs"),
+    [cmd.secrets]: await import("../scripts/secrets.mjs"),
     [cmd.addCdk]: await import("../scripts/add-cdk.mjs"),
   };
 
@@ -558,24 +627,21 @@ async function run() {
       // Prepare app
       prepareCdk(argv, cliInfo, config)
         .then(() => internals[script].default(argv, config, cliInfo))
-        .catch((e) => exitWithMessage(e.message));
+        .catch((e) => exitWithMessage(e));
 
       break;
     }
     case cmd.start:
-    case cmd.addCdk: {
-      if (script === cmd.start) logger.info("Using stage:", config.stage);
+    case cmd.addCdk:
+    case cmd.console:
+    case cmd.secrets: {
+      if (script === cmd.start
+        || script === cmd.secrets) {
+        logger.info("Using stage:", config.stage);
+      }
       internals[script].default(argv, config, cliInfo).catch((e) => {
         logger.debug(e);
-        exitWithMessage(e.message);
-      });
-
-      break;
-    }
-    case cmd.console: {
-      internals[script].default(argv, config, cliInfo).catch((e) => {
-        logger.debug(e);
-        exitWithMessage(e.message);
+        exitWithMessage(e);
       });
       break;
     }
@@ -610,7 +676,7 @@ async function run() {
           }
           process.exit(result.status);
         })
-        .catch((e) => exitWithMessage(e.message));
+        .catch((e) => exitWithMessage(e));
       break;
     }
     default:

@@ -18,7 +18,6 @@
     "@docusaurus/plugin-google-analytics": "^2.0.0-beta.18",
     "@docusaurus/preset-classic": "^2.0.0-beta.18",
     "@mdx-js/react": "^1.6.21",
-    "chokidar": "^3.5.3",
     "clsx": "^1.1.1",
     "js-base64": "^3.6.1",
     "react": "^17.0.2",
@@ -37,6 +36,7 @@
     ]
   },
   "devDependencies": {
+    "docusaurus-plugin-includes": "^1.1.4",
     "typedoc": "^0.22.13",
     "typescript": "^4.6.3"
   }

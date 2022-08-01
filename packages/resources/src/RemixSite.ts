@@ -186,7 +186,6 @@ export interface RemixSiteProps {
  * The `RemixSite` construct is a higher level CDK construct that makes it easy to create a Remix app.
  *
  * @example
- * ### Using the minimal config
  *
  * Deploys a Remix app in the `my-remix-app` directory.
  *

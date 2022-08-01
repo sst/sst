@@ -1,4 +1,4 @@
-import { test, expect } from "vitest";
+import { test, expect, beforeEach } from "vitest";
 /* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/ban-types, @typescript-eslint/no-empty-function */
 
 import path from "path";
@@ -25,6 +25,7 @@ import {
   Stack,
   Table,
   Bucket,
+  Config,
   EventBus,
   Function,
   FunctionProps
@@ -35,6 +36,11 @@ const lambdaDefaultPolicy = {
   Effect: "Allow",
   Resource: "*"
 };
+
+beforeEach(async () => {
+  Config.Parameter.clear();
+  Config.Secret.clear();
+});
 
 /////////////////////////////
 // Test constructor
@@ -389,6 +395,43 @@ test("xray-disabled", async () => {
   });
   hasResource(stack, "AWS::Lambda::Function", {
     TracingConfig: ABSENT
+  });
+});
+
+test("config", async () => {
+  const stack = new Stack(new App(), "stack");
+  const s = new Config.Secret(stack, "MY_SECRET");
+  const p = new Config.Parameter(stack, "MY_PARAM", {
+    value: "value"
+  });
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    config: [s, p]
+  });
+  hasResource(stack, "AWS::Lambda::Function", {
+    Environment: {
+      Variables: {
+        SST_SECRET_MY_SECRET: "1",
+        SST_PARAM_MY_PARAM: "value",
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
+      }
+    }
+  });
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: "ssm:GetParameters",
+          Effect: "Allow",
+          Resource: [
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/*",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/*",
+          ],
+        },
+      ],
+      Version: "2012-10-17"
+    }
   });
 });
 

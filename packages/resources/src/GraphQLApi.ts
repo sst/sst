@@ -32,12 +32,9 @@ export interface GraphQLApiProps extends Omit<ApiProps, "routes"> {
 }
 
 /**
- * The `GraphQLApi` construct is a higher level CDK construct that makes it easy to create GraphQL servers with AWS Lambda. It provides a simple way to define the GraphQL handler route in your API. And allows you to configure the specific Lambda function if necessary. It also allows you to configure authorization, custom domains, etc.
- *
- * The `GraphQLApi` construct internally extends the [`Api`](Api) construct.
+ * The `GraphQLApi` construct is a higher level CDK construct that makes it easy to create GraphQL servers with AWS Lambda.
  *
  * @example
- * ### Using the minimal config
  *
  * ```js
  * import { GraphQLApi } from "@serverless-stack/resources";

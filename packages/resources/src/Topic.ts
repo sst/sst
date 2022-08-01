@@ -136,14 +136,9 @@ export interface TopicProps {
 /////////////////////
 
 /**
- * The `Topic` construct is a higher level CDK construct that makes it easy to create a serverless pub/sub service. You can create a topic that has a list of subscribers. And you can publish messages to it from any part of your serverless app.
- *
- * You can have two types of subscribers; Function subscribers (subscribe with a Lambda function) or Queue subscribers (subscribe with a SQS queue).
- *
- * This construct makes it easier to define a topic and its subscribers. It also internally connects the subscribers and topic together.
+ * The `Topic` construct is a higher level CDK construct that makes it easy to create an SNS Topic and configure a list of subscriber functions.
  *
  * @example
- * ### Using the minimal config
  *
  * ```js
  * import { Topic } from "@serverless-stack/resources";

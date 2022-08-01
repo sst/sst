@@ -27,6 +27,7 @@ export * from "./ReactStaticSite.js";
 export * from "./util/size.js";
 export * from "./util/duration.js";
 export * from "./util/permission.js";
+export * as Config from "./Config.js";
 export * as Metadata from "./Metadata.js";
 
 export * from "./DebugApp.js";
