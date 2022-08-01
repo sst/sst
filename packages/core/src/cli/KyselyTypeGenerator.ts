@@ -6,7 +6,6 @@ import RDSDataService from "aws-sdk/clients/rdsdataservice.js";
 import * as fs from "fs/promises";
 import {
   ExportStatementNode,
-  NodeType,
   PostgresDialect,
   Serializer,
   Transformer
@@ -46,7 +45,6 @@ export function createKyselyTypeGenerator(opts: Opts) {
       })
     });
     const tables = await k.introspection.getTables();
-    console.log("Tables", JSON.stringify(tables, null, 4));
     const transformer = new Transformer(new PostgresDialect());
     const nodes = transformer.transform(tables);
     const lastIndex = nodes.length - 1;
@@ -58,10 +56,8 @@ export function createKyselyTypeGenerator(opts: Opts) {
         name: "Database"
       }
     };
-    console.log("Nodes", nodes);
     const serializer = new Serializer();
     const data = serializer.serialize(nodes);
-    console.log("Data", data);
     await fs.writeFile(db.types!, data);
   }
 
