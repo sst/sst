@@ -17,6 +17,7 @@
     "@docusaurus/plugin-client-redirects": "2.0.0-beta.18",
     "@docusaurus/plugin-google-analytics": "2.0.0-beta.18",
     "@docusaurus/preset-classic": "2.0.0-beta.18",
+    "@jridgewell/gen-mapping": "^0.3.2",
     "@mdx-js/react": "^1.6.21",
     "clsx": "^1.1.1",
     "js-base64": "^3.6.1",
@@ -36,7 +37,6 @@
     ]
   },
   "devDependencies": {
-    "docusaurus-plugin-includes": "^1.1.4",
     "typedoc": "^0.22.13",
     "typescript": "^4.6.3"
   }

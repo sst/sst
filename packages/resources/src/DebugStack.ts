@@ -132,7 +132,7 @@ export class DebugStack extends cdk.Stack {
     const lambdaFunc = new lambda.Function(this, id, {
       code: lambda.Code.fromAsset(path.join(__dirname, "../assets/DebugStack")),
       handler,
-      runtime: lambda.Runtime.NODEJS_12_X,
+      runtime: lambda.Runtime.NODEJS_16_X,
       timeout: cdk.Duration.seconds(10),
       memorySize: 256,
       logRetention: logs.RetentionDays.ONE_WEEK,
