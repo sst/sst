@@ -125,7 +125,7 @@ new Table(stack, "Table", {
     sk: "string",
     lsi1sk: "string",
   },
-  globalIndexes: {
+  localIndexes: {
     "lsi1": { sortKey: "lsi1sk" },
   },
 });
