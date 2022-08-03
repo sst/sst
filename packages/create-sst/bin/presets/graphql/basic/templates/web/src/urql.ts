@@ -1,5 +1,16 @@
-import { OperationContext, RequestPolicy, useQuery, useMutation } from "urql";
-import { useEffect, useState } from "react";
+import {
+    OperationContext,
+    RequestPolicy,
+    useQuery,
+    createClient,
+    UseMutationState,
+    UseMutationResponse,
+    defaultExchanges,
+    OperationResult,
+    createRequest,
+  } from "urql";
+
+import { useEffect, useState, useCallback, useRef } from "react";
 import {
   generateQueryOp,
   generateMutationOp,
@@ -8,6 +19,13 @@ import {
   MutationRequest,
   MutationResult
 } from "@@@app/graphql/genql";
+
+import { pipe, toPromise } from "wonka";
+
+export const client = createClient({
+    url: import.meta.env.VITE_GRAPHQL_URL,
+    exchanges: defaultExchanges
+});
 
 export function useTypedQuery<Query extends QueryRequest>(opts: {
   query: Query;
@@ -23,27 +41,64 @@ export function useTypedQuery<Query extends QueryRequest>(opts: {
   });
 }
 
+const initialState = {
+  fetching: false,
+  stale: false,
+  error: undefined,
+  data: undefined,
+  extensions: undefined,
+  operation: undefined,
+};
+
 export function useTypedMutation<
   Variables extends Record<string, any>,
-  Mutation extends MutationRequest
->(builder: (vars: Variables) => Mutation) {
-  const [mutation, setMutation] = useState<string>();
-  const [variables, setVariables] = useState<any>();
-  const [result, execute] = useMutation<MutationResult<Mutation>, Variables>(
-    mutation as any
+  Mutation extends MutationRequest,
+  Data extends MutationResult<Mutation>
+>(
+  builder: (vars: Variables) => Mutation,
+  opts?: Partial<OperationContext>
+): UseMutationResponse<Data, Variables> {
+  const isMounted = useRef(true);
+  const [state, setState] =
+    useState<UseMutationState<Data, Variables>>(initialState);
+  const executeMutation = useCallback(
+    (
+      vars?: Variables,
+      context?: Partial<OperationContext>
+    ): Promise<OperationResult<Data, Variables>> => {
+      setState({ ...initialState, fetching: true });
+      const buildArgs = vars || ({} as Variables);
+      const built = builder(buildArgs);
+      const { query, variables } = generateMutationOp(built);
+      return pipe(
+        client.executeMutation<Data, Variables>(
+          createRequest(query, variables as Variables),
+          { ...opts, ...context}
+        ),
+        toPromise
+      ).then((result: OperationResult<Data, Variables>) => {
+        if (isMounted.current) {
+          setState({
+            fetching: false,
+            stale: !!result.stale,
+            data: result.data,
+            error: result.error,
+            extensions: result.extensions,
+            operation: result.operation,
+          });
+        }
+        return result;
+      });
+    },
+    [state, setState]
   );
 
-  function executeWrapper(vars: Variables) {
-    const mut = builder(vars);
-    const { query, variables } = generateMutationOp(mut);
-    setMutation(query);
-    setVariables(variables);
-  }
-
   useEffect(() => {
-    if (!mutation) return;
-    execute(variables).then(() => setMutation(undefined));
-  }, [mutation]);
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
-  return [result, executeWrapper] as const;
+  return [state, executeMutation];
 }
