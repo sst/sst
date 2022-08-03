@@ -14,7 +14,7 @@ export function MyStack({ stack }: StackContext) {
   });
 
   // Create a HTTP API
-  const api = new Api(this, "Api", {
+  const api = new Api(stack, "Api", {
     defaults: {
       function: {
         // Pass in the table name to our API
@@ -31,7 +31,7 @@ export function MyStack({ stack }: StackContext) {
   // Allow the API to access the table
   api.attachPermissions([table]);
 
-  const site = new StaticSite(this, "GatsbySite", {
+  const site = new StaticSite(stack, "GatsbySite", {
     path: "frontend",
     buildOutput: "public",
     buildCommand: "npm run build",

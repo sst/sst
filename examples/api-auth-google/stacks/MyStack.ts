@@ -16,7 +16,7 @@ export function MyStack({ stack }: StackContext) {
   });
 
   // Create auth provider
-  const auth = new Auth(this, "Auth", {
+  const auth = new Auth(stack, "Auth", {
     identityPoolFederation: {
       google: {
         clientId:
