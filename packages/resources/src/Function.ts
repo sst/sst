@@ -43,6 +43,7 @@ const supportedRuntimes = [
   lambda.Runtime.DOTNET_CORE_2_1,
   lambda.Runtime.DOTNET_CORE_3_1,
   lambda.Runtime.DOTNET_6,
+  lambda.Runtime.JAVA_11,
   lambda.Runtime.GO_1_X,
 ];
 
@@ -69,6 +70,7 @@ export type Runtime =
   | "dotnetcore2.1"
   | "dotnetcore3.1"
   | "dotnet6"
+  | "java11"
   | "go1.x";
 
 export interface FunctionProps
