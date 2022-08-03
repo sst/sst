@@ -2,7 +2,7 @@ import { NextjsSite, StackContext, Table } from "@serverless-stack/resources";
 
 export function MyStack({ stack, app }: StackContext) {
   // Create the table
-  const table = new Table(this, "Counter", {
+  const table = new Table(stack, "Counter", {
     fields: {
       counter: "string",
     },
@@ -10,7 +10,7 @@ export function MyStack({ stack, app }: StackContext) {
   });
 
   // Create a Next.js site
-  const site = new NextjsSite(this, "Site", {
+  const site = new NextjsSite(stack, "Site", {
     path: "frontend",
     environment: {
       // Pass the table details to our app

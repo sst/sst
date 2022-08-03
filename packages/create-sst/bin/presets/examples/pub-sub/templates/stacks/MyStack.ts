@@ -10,7 +10,7 @@ export function MyStack({ stack }: StackContext) {
   });
 
   // Create the HTTP API
-  const api = new Api(this, "Api", {
+  const api = new Api(stack, "Api", {
     defaults: {
       function: {
         // Pass in the topic to our API
