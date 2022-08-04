@@ -1,5 +1,14 @@
 # @serverless-stack/resources
 
+## 1.6.7
+
+### Patch Changes
+
+- [#1925](https://github.com/serverless-stack/sst/pull/1925) [`fd618d31d`](https://github.com/serverless-stack/sst/commit/fd618d31dc090a355b0eaab65b4905275234ea31) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: fix updating function timeout fail to deploy
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.6.7
+
 ## 1.6.6
 
 ### Patch Changes
