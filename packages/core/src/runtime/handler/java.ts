@@ -17,14 +17,12 @@ export const JavaHandler: Definition = (opts: any) => {
   const target = path.join(
     dir,
     path.basename(opts.handler).replace(/::/g, "-"),
-    "index.jar"
   );
   const cmd: Command = {
     command: "gradle",
     args: [
       "build",
-      //"--output",
-      //target,
+      `-Dorg.gradle.project.buildDir=${target}`,
       `-Dorg.gradle.logging.level=${process.env.DEBUG ? "debug" : "lifecycle"}`,
     ],
     env: {},
@@ -40,7 +38,7 @@ export const JavaHandler: Definition = (opts: any) => {
       buildSync(opts, cmd);
       return {
         handler: opts.handler,
-        directory: dir,
+        directory: `${target}/libs`,
       };
     },
     run: {
@@ -57,7 +55,11 @@ export const JavaHandler: Definition = (opts: any) => {
             "release",
             "*"
           ),
-          opts.entry,
+          path.join(
+            target,
+            "libs",
+            "*"
+          ),
         ].join(os.platform() === "win32" ? ";" : ":"),
         "com.amazonaws.services.lambda.runtime.api.client.AWSLambda",
         opts.handler,
