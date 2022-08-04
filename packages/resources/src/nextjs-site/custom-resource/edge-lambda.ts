@@ -117,6 +117,7 @@ async function updateFunctionConfiguration(functionName: string, params: any) {
 
   const resp = await lambda
     .updateFunctionConfiguration({
+      FunctionName: functionName,
       ...params,
       Code: undefined,
     })
