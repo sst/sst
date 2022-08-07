@@ -18,6 +18,10 @@ You don't need to know a lot about GraphQL upfront, this tutorial and our starte
 If you're interested in learning GraphQL, we recommend their [the tutorial in their docs](https://graphql.org/learn/).
 :::
 
+One of the biggest benefits of using GraphQL is that it can effectively separate your frontend and backend. In the REST API world, if you needed to make a change to the frontend and display some data differently or display different data, you needed to think about making a change to the APIs themselves. In the case of GraphQL, you describe all your data, the relationships, and the actions you can carry out on that data once. The frontend can request whatever it needs in a way that makes sense for it.
+
+These benefits become all the more valuable when you have mutliple clients. For example, imagine your desktop site shows all the articles along with their comments, while the mobile site only shows the articles. This is easy to do with GraphQL. Each client just specifies what it needs.
+
 GraphQL has a huge community that's built really great tooling around it for things like code-generation, authorization, logging, and much more.
 
 ### Code-first GraphQL
@@ -44,49 +48,7 @@ We use a library called [Pothos](https://pothos-graphql.dev/) to do this. And wh
 
   Pothos comes with a set of [incredibly useful plugins](https://pothos-graphql.dev/docs/plugins). These simplify implementing common patterns like paging, authorization, and more.
 
-### Creating a code-first schema
-
-Let's look at how we build a GraphQL schema with Pothos. We define the type for our article in `services/functions/graphql/types/article.ts`. We'll get into the details of this in the next chapter but for now, let's look at the 3 main aspects of it.
-
-1. Define the article type. 
-
-   ```ts title="services/functions/graphql/types/article.ts"
-   const ArticleType = builder.objectRef<SQL.Row["article"]>("Article").implement({
-     fields: (t) => ({
-       id: t.exposeID("articleID"),
-       title: t.exposeID("title"),
-       url: t.exposeID("url"),
-     }),
-   });
-   ```
-
-2. Use the type, and the SQL call from the [Write to PostgreSQL](write-to-postgresql.md) chapter to implement the query.
-
-   ```ts
-   builder.queryFields((t) => ({
-     articles: t.field({
-       type: [ArticleType],
-       resolve: () => Article.list(),
-     }),
-   }));
-   ```
-
-3. Define a mutation that creates an article. This also uses the SQL call that we implemented in `services/core/` before. 
-
-   ```ts
-   builder.mutationFields((t) => ({
-     createArticle: t.field({
-       type: ArticleType,
-       args: {
-         title: t.arg.string({ required: true }),
-         url: t.arg.string({ required: true }),
-       },
-       resolve: (_, args) => Article.create(args.title, args.url),
-     }),
-   }));
-   ```
-
-The `builder` here is an instance of a Pothos [`SchemaBuilder`](https://pothos-graphql.dev/docs/guide/schema-builder). We'll look at how this is all wired up below.
+In the next chapter we'll look at an example of this and add our new feature to the GraphQL schema, _in code_.
 
 ### Lambda optimized GraphQL
 
@@ -118,11 +80,11 @@ Let's take a look at how this is all wired up.
    Let's look at what we are configuring here:
 
       - The `handler` points to where the Lambda function is.
-      - The `schema` is the code version of the Pothos _code-first_ schema. More on this in a second.
-      - The `output` is where the Pothos schema, when run, generates a standard GraphQL schema.
+      - The `schema` is the reference to a GraphQL schema. More on this in a second.
+      - The `output` is where Pothos outputs the GraphQL schema to a file. By writing to a file, we are able to use other tools in the GraphQL ecosystem. 
       - Finally, the `commands` let you specify any scripts you want to run after the schema has been generated. We'll look at what we are running below.
 
-2. The Pothos schema is specified in `services/functions/graphql/schema.ts`.
+2. The GraphQL schema is specified in `services/functions/graphql/schema.ts`.
 
    ``` ts title="services/functions/graphql/schema.ts"
    import { builder } from "./builder";
@@ -134,7 +96,7 @@ Let's take a look at how this is all wired up.
 
    It's doing two things:
 
-     1. Creating an instance of the Pothos [`SchemaBuilder`](https://pothos-graphql.dev/docs/guide/schema-builder). This is defined in `services/functions/graphql/builder.ts`.
+     1. Get the Pothos [`SchemaBuilder`](https://pothos-graphql.dev/docs/guide/schema-builder) that we define in `services/functions/graphql/builder.ts`.
 
         ``` ts title="services/functions/graphql/builder.ts"
         import SchemaBuilder from "@pothos/core";
@@ -145,10 +107,13 @@ Let's take a look at how this is all wired up.
         builder.mutationType({});
         ```
 
-    2. Use the builder to define all our GraphQL schema types from the `services/functions/graphql/types/` directory. Right now we only have the the article type that we covered above.
+        This creates a new instance that we'll use to build out our GraphQL schema.
 
+    2. Import all our GraphQL schema types. Right now we only have the one for our article, `./types/article`. These use the `builder` from above to build out our schema. We'll look at this in detail in the [next chapter](add-api-types.md#creating-a-code-first-schema).
 
-3. We then pass this schema into the Lambda optimized GraphQL handler, `createGQLHandler`, that we talked about above.
+    3. Finally, get the GraphQL schema from Pothos by running `builder.toSchema()`.
+
+3. We then pass the GraphQL schema into the Lambda optimized GraphQL handler, `createGQLHandler`, that we talked about above.
 
    It's defined in `services/functions/graphql/graphql.ts`.
 
@@ -167,7 +132,7 @@ Let's take a look at how this is all wired up.
    npx genql --output ./graphql/genql --schema ./graphql/schema.graphql --esm
    ```
  
-   We are using [Genql](https://genql.vercel.app), to generate a typed GraphQL client to the `--output` directory. It use the GraphQL schema that our Pothos schema generates in the `--schema` directory. We'll be using this later in our frontend React app. 
+   We are using [Genql](https://genql.vercel.app), to generate a typed GraphQL client to the `--output` directory. It use the GraphQL schema that Pothos generates in the `--schema` directory. We'll be using this later in our frontend React app. 
  
    We internally have a watcher that regenerates the typed frontend client when we make changes to our Pothos schema. So the pipline looks like:
 

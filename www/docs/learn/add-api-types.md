@@ -6,55 +6,65 @@ import ChangeText from "@site/src/components/ChangeText";
 
 The GraphQL setup we are using is a _Code-first_ GraphQL setup. This means that we write our schema definitions in TypeScript instead of the [standard GraphQL schema](https://graphql.org/learn/schema/). This allows us to have strong typing along and minimal boilerplate code.
 
-We use [Pothos](https://pothos-graphql.dev/) to do this. A key concept to understand here is that there are two different types involved:
+We use [Pothos](https://pothos-graphql.dev/) to do this.
+
+
+:::info Backing Models
+A key concept to understand about Pothos is that there are two different types involved:
 
 1. The underlying types that we get from the database queries we make. More on this later.
-2. The types that we need to define in our GraphQL schema.
+2. And, the GraphQL schema types that we define.
 
 You can read more about this over on the [Pothos docs](https://pothos-graphql.dev/docs/guide/schema-builder#backing-models).
+:::
 
-In this chapter, we'll be using the types from our database to define the types in our GraphQL schema.
+In the last chapter we looked at how our GraphQL setup is wired up. if you recall, we build our GraphQL schema in Pothos using a [`SchemaBuilder`](https://pothos-graphql.dev/docs/guide/schema-builder). These GraphQL types are stored in `services/functions/graphql/types/`.
 
-Let's start by creating a `Comment` type.
+Currently we define the GraphQL schema for our article in `services/functions/graphql/types/article.ts`. It does 3 things — define a type, add a query, and define a mutation.
 
-## Create a Comment type
+In this chapter we'll look at how to add the type. We'll look at queries and mutations in the [next chapter](queries-and-mutations.md).
 
-You'll recall that we are using [Kysely](https://koskimas.github.io/kysely/) to query our database and to run migrations. We use it to define the types for our tables.
+Let's start by looking at what we have so far.
+
+### Defining types
+
+If you open up `services/functions/graphql/types/article.ts`, you'll see that we've define a type for our article.
+
+```ts title="services/functions/graphql/types/article.ts"
+const ArticleType = builder.objectRef<SQL.Row["article"]>("Article").implement({
+ fields: (t) => ({
+   id: t.exposeID("articleID"),
+   title: t.exposeString("title"),
+   url: t.exposeString("url"),
+ }),
+});
+```
+
+Let's look at what's going on here:
+
+- The `builder` here is the Pothos [`SchemaBuilder`](https://pothos-graphql.dev/docs/guide/schema-builder).
+- We are using the `ObjectRef` way of defining a new type. You can read more about this over on the [Pothos docs](https://pothos-graphql.dev/docs/guide/objects#using-refs).
+- We are creating a new type called `Article`.
+- This is backed by the `SQL.Row["article"]` database type. More on this below.
+- We explicitly state the fields we want to expose, along with their types.
 
 :::info Behind the scenes
-The `SQL.Row["comment"]` is the type for our `comment` table. This is defined in `services/core/sql.ts`.
+The `SQL.Row["article"]` is the type for our `article` table. This is defined in `services/core/sql.ts`.
 
-``` ts title="services/core/sql.ts" {1}
+``` ts title="services/core/sql.ts"
 export type Row = {
-  [Key in keyof Database]: Selectable<Database[Key]>;
+ [Key in keyof Database]: Selectable<Database[Key]>;
 };
 ```
 
 Where the `Database[Key]` is coming from `services/core/sql.generated.ts`, where each key is the type for each table.
 
-```ts title="services/core/sql.generated.ts"
-export interface Database {
- "article": article
- "comment": comment
- "kysely_migration": kysely_migration
- "kysely_migration_lock": kysely_migration_lock
-}
-```
-
-Here's what the type for our `comment` table looks like. 
-
-```ts title="services/core/sql.generated.ts"
-export interface comment {
- 'articleID': string;
- 'commentID': string;
- 'text': string;
-}
-```
-
 The types in `services/core/sql.generated.ts` are auto-generated when we run our migrations. We talked about this back in the [Write to PostgreSQL](write-to-postgresql.md) chapter.
 :::
 
-Let's use this type to back our GraphQL schema.
+Now lets add the `Comment` type for our new feature.
+
+### Create a comment type
 
 <ChangeText>
 
@@ -71,27 +81,15 @@ const CommentType = builder.objectRef<SQL.Row["comment"]>("Comment").implement({
 });
 ```
 
-Let's look at what's going on here:
+In this case we are exposing the `commentID` as type `ID` and the comment `text` as a `String`.
 
-- The `builder` here is building our GraphQL schema. It's a Pothos [`SchemaBuilder`](https://pothos-graphql.dev/docs/guide/schema-builder) that we initialize in `services/functions/graphql/builder.ts`.
-- We are using the `ObjectRef` way of defining a new type. You can read more about this over on the [pothos docs](https://pothos-graphql.dev/docs/guide/objects#using-refs).
-- We are creating a new type called `Comment`.
-- This is backed by the `SQL.Row["comment"]` database type from above.
-- We pick the specific fields from that we want to expose, along with their types. These types, you might recall, are the GraphQL schema types.
+## Return the comments 
 
-:::info
-We use the database types to define our GraphQL schema types in a _code-first_ approach.
-:::
-
-So in our case, we are exposing the `commentID` as an `ID` and the comment `text` as a `String`.
-
-## Return the Comment type
-
-We created this new `Comment` type because we want to return it as a part of the `Article`. So let's edit our `Article` type.
+We want to return our comments as a part of the article. So lets edit the existing article type.
 
 <ChangeText>
 
-Add a `comments` field to the `ArticleType`. Replace it with:
+Add a `comments` field to the `ArticleType` in `services/functions/graphql/types/article.ts`.
 
 </ChangeText>
 
@@ -99,8 +97,8 @@ Add a `comments` field to the `ArticleType`. Replace it with:
 const ArticleType = builder.objectRef<SQL.Row["article"]>("Article").implement({
   fields: t => ({
     id: t.exposeID("articleID"),
-    title: t.exposeID("title"),
-    url: t.exposeID("url"),
+    title: t.exposeString("title"),
+    url: t.exposeString("url"),
     comments: t.field({
       type: [CommentType],
       resolve: article => Article.comments(article.articleID)
@@ -109,19 +107,12 @@ const ArticleType = builder.objectRef<SQL.Row["article"]>("Article").implement({
 });
 ```
 
-Here we are using the `Comment` type from above and defining how to `resolve` it. So given an `article`, we call `Article.comments()` from `services/core/article.ts`.
+Here we are using the `Comment` type from above and defining a resolver. A resolver is a function that does an action, either read or write some data. We'll look at this in detail in the next chapter.
 
-We added this back in the [Write to PostgreSQL](write-to-postgresql.md) chapter.
+:::info
+As opposed to standard GraphQL, in the _code-first_ approach with Pothos, we define the resolvers and the schema together.
+:::
 
-```ts
-export async function comments(articleID: string) {
-  return await SQL.DB.selectFrom("comment")
-    .selectAll()
-    .where("articleID", "=", articleID)
-    .execute();
-}
-```
+So given an `article` object, we get the `articleID` and call `Article.comments()` from `services/core/article.ts`. You'll recall that we implemented this back in the [Write to PostgreSQL](write-to-postgresql.md) chapter.
 
-In this chapter we looked at how to define the type for our GraphQL schema using our auto-generated database types. And then we connected that to our query where we fetch the comments.
-
-Next, we'll update our GraphQL schema to add a comment.
+Now that the types are defined, let's look at the queries and mutations.
