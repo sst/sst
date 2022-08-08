@@ -4,7 +4,6 @@ import url from "url";
 import fs from "fs-extra";
 import crypto from "crypto";
 import { execSync } from "child_process";
-
 import { Construct } from "constructs";
 import {
   Token,
@@ -36,7 +35,7 @@ import {
   buildErrorResponsesFor404ErrorPage,
   buildErrorResponsesForRedirectToIndex,
 } from "./BaseSite.js";
-import { SSTConstruct } from "./Construct.js";
+import { SSTConstruct, isCDKConstruct } from "./Construct.js";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -49,7 +48,7 @@ export interface StaticSiteFileOptions {
 export interface StaticSiteProps {
   cdk?: {
     /**
-     * Pass in a bucket configuration to override the default settings this construct uses to create the CDK `Bucket` internally.
+     * Allows you to override default settings this construct uses internally to ceate the bucket
      *
      * @example
      * ```js
@@ -63,7 +62,7 @@ export interface StaticSiteProps {
      * });
      * ```
      */
-    bucket?: s3.BucketProps;
+    bucket?: s3.BucketProps | s3.IBucket;
     /**
      * Configure the internally created CDK `Distribution` instance.
      *
@@ -549,24 +548,32 @@ export class StaticSite extends Construct implements SSTConstruct {
   private createS3Bucket(): s3.Bucket {
     const { cdk } = this.props;
 
-    // Validate s3Bucket
-    if (cdk?.bucket?.websiteIndexDocument) {
-      throw new Error(
-        `Do not configure the "s3Bucket.websiteIndexDocument". Use the "indexPage" to configure the StaticSite index page.`
-      );
+    // cdk.bucket is an imported construct
+    if (cdk?.bucket && isCDKConstruct(cdk?.bucket)) {
+      return cdk.bucket as s3.Bucket;
     }
+    // cdk.bucket is a prop
+    else {
+      const bucketProps = cdk?.bucket as s3.BucketProps;
+      // Validate s3Bucket
+      if (bucketProps?.websiteIndexDocument) {
+        throw new Error(
+          `Do not configure the "s3Bucket.websiteIndexDocument". Use the "indexPage" to configure the StaticSite index page.`
+        );
+      }
 
-    if (cdk?.bucket?.websiteErrorDocument) {
-      throw new Error(
-        `Do not configure the "s3Bucket.websiteErrorDocument". Use the "errorPage" to configure the StaticSite index page.`
-      );
+      if (bucketProps?.websiteErrorDocument) {
+        throw new Error(
+          `Do not configure the "s3Bucket.websiteErrorDocument". Use the "errorPage" to configure the StaticSite index page.`
+        );
+      }
+
+      return new s3.Bucket(this, "S3Bucket", {
+        autoDeleteObjects: true,
+        removalPolicy: RemovalPolicy.DESTROY,
+        ...bucketProps,
+      });
     }
-
-    return new s3.Bucket(this, "S3Bucket", {
-      autoDeleteObjects: true,
-      removalPolicy: RemovalPolicy.DESTROY,
-      ...cdk?.bucket,
-    });
   }
 
   private createS3Deployment(): CustomResource {
