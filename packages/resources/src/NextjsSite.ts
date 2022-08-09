@@ -31,7 +31,7 @@ import type { RoutesManifest } from "@sls-next/lambda-at-edge";
 
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
-import { SSTConstruct } from "./Construct.js";
+import { SSTConstruct, isCDKConstruct } from "./Construct.js";
 import {
   BaseSiteDomainProps,
   BaseSiteReplaceProps,
@@ -52,9 +52,9 @@ export interface NextjsCdkDistributionProps
 export interface NextjsSiteProps {
   cdk?: {
     /**
-     * Pass in bucket information to override the default settings this construct uses to create the CDK Bucket internally.
+     * Allows you to override default settings this construct uses internally to ceate the bucket
      */
-    bucket?: s3.BucketProps;
+    bucket?: s3.BucketProps | s3.IBucket;
     /**
      * Pass in a value to override the default settings this construct uses to create the CDK `Distribution` internally.
      */
@@ -757,12 +757,20 @@ export class NextjsSite extends Construct implements SSTConstruct {
   private createS3Bucket(): s3.Bucket {
     const { cdk } = this.props;
 
-    return new s3.Bucket(this, "S3Bucket", {
-      publicReadAccess: true,
-      autoDeleteObjects: true,
-      removalPolicy: RemovalPolicy.DESTROY,
-      ...cdk?.bucket,
-    });
+    // cdk.bucket is an imported construct
+    if (cdk?.bucket && isCDKConstruct(cdk?.bucket)) {
+      return cdk.bucket as s3.Bucket;
+    }
+    // cdk.bucket is a prop
+    else {
+      const bucketProps = cdk?.bucket as s3.BucketProps;
+      return new s3.Bucket(this, "S3Bucket", {
+        publicReadAccess: true,
+        autoDeleteObjects: true,
+        removalPolicy: RemovalPolicy.DESTROY,
+        ...bucketProps,
+      });
+    }
   }
 
   private createS3Deployment(): CustomResource {

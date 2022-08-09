@@ -131,7 +131,7 @@ We recommend you to deploy to a single region when unsure.
 You can configure the website with a custom domain hosted either on [Route 53](https://aws.amazon.com/route53/) or [externally](#configuring-externally-hosted-domain).
 
 ```js {5}
-const site = new RemixSite(this, "Site", {
+const site = new RemixSite(stack, "Site", {
   path: "my-remix-app/",
   customDomain: "my-app.com",
 });
@@ -142,7 +142,7 @@ Note that visitors to the `http://` URL will be redirected to the `https://` URL
 You can also configure an alias domain to point to the main domain. For example, to setup `www.my-app.com` redirecting to `my-app.com`:
 
 ```js {5}
-const site = new RemixSite(this, "Site", {
+const site = new RemixSite(stack, "Site", {
   path: "my-remix-app/",
   customDomain: {
     domainName: "my-app.com",
@@ -164,7 +164,7 @@ const api = new Api(stack, "Api", {
   // ...
 });
 
-new RemixSite(this, "Site", {
+new RemixSite(stack, "Site", {
   path: "path/to/site",
   environment: {
     API_URL: api.url,
@@ -276,7 +276,7 @@ const table = new Table(stack, "Table", {
   // ...
 });
 
-const site = new RemixSite(this, "Site", {
+const site = new RemixSite(stack, "Site", {
   path: "my-remix-app/",
   environment: {
     TABLE_NAME: table.tableName,
@@ -419,6 +419,19 @@ new RemixSite(stack, "Site", {
 ```
 
 ### Advanced examples
+
+#### Using an existing S3 Bucket
+
+```js {5-7}
+import * as s3 from "aws-cdk-lib/aws-s3";
+
+new RemixSite(stack, "Site", {
+  path: "my-remix-app/",
+  cdk: {
+    bucket: s3.Bucket.fromBucketName(stack, "Bucket", "my-bucket"),
+  },
+});
+```
 
 #### Reusing CloudFront cache policies
 

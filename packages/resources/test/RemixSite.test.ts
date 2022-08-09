@@ -9,6 +9,7 @@ import {
   ANY,
   ABSENT,
 } from "./helper";
+import * as s3 from "aws-cdk-lib/aws-s3";
 import * as cf from "aws-cdk-lib/aws-cloudfront";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
@@ -887,7 +888,7 @@ test("constructor: skipbuild doesn't expect path", async () => {
   }).not.toThrow(/No path found/);
 });
 
-test("constructor: s3Bucket props", async () => {
+test("cdk.bucket is props", async () => {
   const stack = new Stack(new App(), "stack");
   new RemixSite(stack, "Site", {
     path: "test/remix-site",
@@ -902,6 +903,44 @@ test("constructor: s3Bucket props", async () => {
   countResources(stack, "AWS::S3::Bucket", 1);
   hasResource(stack, "AWS::S3::Bucket", {
     BucketName: "my-bucket",
+  });
+});
+
+test("cdk.bucket is construct", async () => {
+  const stack = new Stack(new App(), "stack");
+  new RemixSite(stack, "Site", {
+    path: "test/remix-site",
+    cdk: {
+      bucket: s3.Bucket.fromBucketName(stack, "Bucket", "my-bucket"),
+    },
+    // @ts-expect-error: "sstTest" is not exposed in props
+    sstTest: true,
+  });
+  countResources(stack, "AWS::S3::Bucket", 0);
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      Origins: [
+        ANY,
+        objectLike({
+          S3OriginConfig: {
+            OriginAccessIdentity: {
+              "Fn::Join": [
+                "",
+                [
+                  "origin-access-identity/cloudfront/",
+                  {
+                    Ref: "SiteDistributionOrigin2S3OriginD0424A5E",
+                  },
+                ],
+              ],
+            },
+          },
+        }),
+      ],
+    }),
+  });
+  hasResource(stack, "Custom::SSTBucketDeployment", {
+    DestinationBucketName: "my-bucket",
   });
 });
 

@@ -12,6 +12,7 @@ import {
   ABSENT,
 } from "./helper";
 import * as cdk from "aws-cdk-lib";
+import * as s3 from "aws-cdk-lib/aws-s3";
 import * as cf from "aws-cdk-lib/aws-cloudfront";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
@@ -758,7 +759,7 @@ test("constructor: skipbuild doesn't expect path", async () => {
   }).not.toThrow(/No path found/);
 });
 
-test("constructor: s3Bucket props", async () => {
+test("cdk.bucket is props", async () => {
   const stack = new Stack(new App(), "stack");
   new NextjsSite(stack, "Site", {
     path: "test/nextjs-site",
@@ -774,6 +775,44 @@ test("constructor: s3Bucket props", async () => {
   countResources(stack, "AWS::S3::Bucket", 1);
   hasResource(stack, "AWS::S3::Bucket", {
     BucketName: "my-bucket",
+  });
+});
+
+test("cdk.bucket is construct", async () => {
+  const stack = new Stack(new App(), "stack");
+  new NextjsSite(stack, "Site", {
+    path: "test/nextjs-site",
+    cdk: {
+      bucket: s3.Bucket.fromBucketName(stack, "Bucket", "my-bucket"),
+    },
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+    sstTestBuildOutputPath: buildOutputPath,
+  });
+  countResources(stack, "AWS::S3::Bucket", 0);
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      Origins: [
+        objectLike({
+          S3OriginConfig: {
+            OriginAccessIdentity: {
+              "Fn::Join": [
+                "",
+                [
+                  "origin-access-identity/cloudfront/",
+                  {
+                    Ref: "SiteDistributionOrigin1S3Origin76FD4338",
+                  },
+                ],
+              ],
+            },
+          },
+        }),
+      ],
+    }),
+  });
+  hasResource(stack, "Custom::SSTBucketDeployment", {
+    DestinationBucketName: "my-bucket",
   });
 });
 
