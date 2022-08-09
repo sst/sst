@@ -270,7 +270,7 @@ site.attachPermissions(["sns"]);
 import * as s3 from "aws-cdk-lib/aws-s3";
 
 new NextjsSite(stack, "Site", {
-  path: "my-remix-app/",
+  path: "path/to/site",
   cdk: {
     bucket: s3.Bucket.fromBucketName(stack, "Bucket", "my-bucket"),
   },
