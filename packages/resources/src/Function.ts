@@ -960,8 +960,8 @@ export class Function extends lambda.Function implements SSTConstruct {
     const { config } = this.props;
 
     // Add environment variables
-    this.addEnvironment("SST_APP", app.name);
-    this.addEnvironment("SST_STAGE", app.stage);
+    this.addEnvironment("SST_APP", app.name, { removeInEdge: true });
+    this.addEnvironment("SST_STAGE", app.stage, { removeInEdge: true });
     (config || []).forEach((c) => {
       if (c instanceof Secret) {
         this.addEnvironment(`${FunctionConfig.SECRET_ENV_PREFIX}${c.name}`, "1");
