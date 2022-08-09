@@ -238,7 +238,7 @@ new StaticSite(stack, "Site", {
   customDomain: {
     domainName: "domain.com",
     cdk: {
-      certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+      certificate: Certificate.fromCertificateArn(stack, "MyCert", certArn),
     },
   },
 });
@@ -258,7 +258,7 @@ new StaticSite(stack, "Site", {
   customDomain: {
     domainName: "domain.com",
     cdk: {
-      hostedZone: HostedZone.fromHostedZoneAttributes(this, "MyZone", {
+      hostedZone: HostedZone.fromHostedZoneAttributes(stack, "MyZone", {
         hostedZoneId,
         zoneName,
       }),
@@ -278,7 +278,7 @@ new StaticSite(stack, "Site", {
     isExternalDomain: true,
     domainName: "domain.com",
     cdk: {
-      certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+      certificate: Certificate.fromCertificateArn(stack, "MyCert", certArn),
     },
   },
 });
@@ -336,6 +336,19 @@ new StaticSite(stack, "Site", {
 });
 ```
 
+#### Using an existing S3 Bucket
+
+```js {5-7}
+import * as s3 from "aws-cdk-lib/aws-s3";
+
+new StaticSite(stack, "Site", {
+  path: "path/to/src",
+  cdk: {
+    bucket: s3.Bucket.fromBucketName(stack, "Bucket", "my-bucket"),
+  },
+});
+```
+
 #### Configuring the CloudFront Distribution
 
 Configure the internally created CDK `Distribution` instance.
@@ -377,7 +390,7 @@ new StaticSite(stack, "Site", {
 import { Code, Runtime } from "aws-cdk-lib/aws-lambda";
 import { LambdaEdgeEventType, experimental } from "aws-cdk-lib/aws-cloudfront";
 
-const edgeFunc = new experimental.EdgeFunction(this, "MyFunction", {
+const edgeFunc = new experimental.EdgeFunction(stack, "MyFunction", {
   runtime: Runtime.NODEJS_16_X,
   handler: "lambda.handler",
   code: Code.fromAsset("path/to/dir"),

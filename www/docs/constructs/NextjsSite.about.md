@@ -51,7 +51,7 @@ console.log(process.env.USER_POOL_CLIENT);
 You can pass these in directly from the construct.
 
 ```js {3-6}
-new NextjsSite(this, "NextSite", {
+new NextjsSite(stack, "NextSite", {
   path: "path/to/site",
   environment: {
     API_URL: api.url,
@@ -129,7 +129,7 @@ You can configure the website with a custom domain hosted either on [Route 53](h
 #### Using the basic config (Route 53 domains)
 
 ```js {3}
-new NextjsSite(this, "Site", {
+new NextjsSite(stack, "Site", {
   path: "path/to/site",
   customDomain: "domain.com",
 });
@@ -138,7 +138,7 @@ new NextjsSite(this, "Site", {
 #### Redirect www to non-www (Route 53 domains)
 
 ```js {3-6}
-new NextjsSite(this, "Site", {
+new NextjsSite(stack, "Site", {
   path: "path/to/site",
   customDomain: {
     domainName: "domain.com",
@@ -150,7 +150,7 @@ new NextjsSite(this, "Site", {
 #### Configuring domains across stages (Route 53 domains)
 
 ```js {3-7}
-new NextjsSite(this, "Site", {
+new NextjsSite(stack, "Site", {
   path: "path/to/site",
   customDomain: {
     domainName:
@@ -163,7 +163,7 @@ new NextjsSite(this, "Site", {
 #### Using the full config (Route 53 domains)
 
 ```js {3-7}
-new NextjsSite(this, "Site", {
+new NextjsSite(stack, "Site", {
   path: "path/to/site",
   customDomain: {
     domainName: "domain.com",
@@ -178,12 +178,12 @@ new NextjsSite(this, "Site", {
 ```js {8}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
-new NextjsSite(this, "Site", {
+new NextjsSite(stack, "Site", {
   path: "path/to/site",
   customDomain: {
     domainName: "domain.com",
     cdk: {
-      certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+      certificate: Certificate.fromCertificateArn(stack, "MyCert", certArn),
     },
   },
 });
@@ -198,12 +198,12 @@ If you have multiple hosted zones for a given domain, you can choose the one you
 ```js {8-11}
 import { HostedZone } from "aws-cdk-lib/aws-route53";
 
-new NextjsSite(this, "Site", {
+new NextjsSite(stack, "Site", {
   path: "path/to/site",
   customDomain: {
     domainName: "domain.com",
     cdk: {
-      hostedZone: HostedZone.fromHostedZoneAttributes(this, "MyZone", {
+      hostedZone: HostedZone.fromHostedZoneAttributes(stack, "MyZone", {
         hostedZoneId,
         zoneName,
       }),
@@ -217,13 +217,13 @@ new NextjsSite(this, "Site", {
 ```js {5-11}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
-new NextjsSite(this, "Site", {
+new NextjsSite(stack, "Site", {
   path: "path/to/site",
   cutomDomain: {
     isExternalDomain: true,
     domainName: "domain.com",
     cdk: {
-      certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+      certificate: Certificate.fromCertificateArn(stack, "MyCert", certArn),
     },
   },
 });
@@ -255,7 +255,7 @@ new NextjsSite(stack, "Site", {
 You can attach a set of [permissions](Permissions.md) to allow the Next.js API routes and Server Side rendering `getServerSideProps` to access other AWS resources.
 
 ```js {5}
-const site = new NextjsSite(this, "Site", {
+const site = new NextjsSite(stack, "Site", {
   path: "path/to/site",
 });
 
@@ -264,12 +264,25 @@ site.attachPermissions(["sns"]);
 
 ### Advanced examples
 
+#### Using an existing S3 Bucket
+
+```js {5-7}
+import * as s3 from "aws-cdk-lib/aws-s3";
+
+new NextjsSite(stack, "Site", {
+  path: "my-remix-app/",
+  cdk: {
+    bucket: s3.Bucket.fromBucketName(stack, "Bucket", "my-bucket"),
+  },
+});
+```
+
 #### Configuring Lambda Functions
 
 Configure the internally created CDK [`Lambda Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html) instance.
 
 ```js {4-8}
-new NextjsSite(this, "Site", {
+new NextjsSite(stack, "Site", {
   path: "path/to/site",
   defaults: {
     function: {
@@ -289,19 +302,19 @@ CloudFront has a limit of 20 cache policies per AWS account. This is a hard limi
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 
 const cachePolicies = {
-  staticCachePolicy: new cloudfront.CachePolicy(this, "StaticCache", NextjsSite.staticCachePolicyProps),
-  imageCachePolicy: new cloudfront.CachePolicy(this, "ImageCache", NextjsSite.imageCachePolicyProps),
-  lambdaCachePolicy: new cloudfront.CachePolicy(this, "LambdaCache", NextjsSite.lambdaCachePolicyProps),
+  staticCachePolicy: new cloudfront.CachePolicy(stack, "StaticCache", NextjsSite.staticCachePolicyProps),
+  imageCachePolicy: new cloudfront.CachePolicy(stack, "ImageCache", NextjsSite.imageCachePolicyProps),
+  lambdaCachePolicy: new cloudfront.CachePolicy(stack, "LambdaCache", NextjsSite.lambdaCachePolicyProps),
 };
 
-new NextjsSite(this, "Site1", {
+new NextjsSite(stack, "Site1", {
   path: "path/to/site1",
   cdk: {
     cachePolicies,
   }
 });
 
-new NextjsSite(this, "Site2", {
+new NextjsSite(stack, "Site2", {
   path: "path/to/site2",
   cdk: {
     cachePolicies,
@@ -318,14 +331,14 @@ import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 
 const imageOriginRequestPolicy = new cloudfront.OriginRequestPolicy(stack, "ImageOriginRequest", NextjsSite.imageOriginRequestPolicyProps);
 
-new NextjsSite(this, "Site1", {
+new NextjsSite(stack, "Site1", {
   path: "path/to/site1",
   cdk: {
     imageOriginRequestPolicy,
   }
 });
 
-new NextjsSite(this, "Site2", {
+new NextjsSite(stack, "Site2", {
   path: "path/to/site2",
   cdk: {
     imageOriginRequestPolicy,
