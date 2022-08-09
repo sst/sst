@@ -119,7 +119,9 @@ export function buildErrorResponsesFor404ErrorPage(
 
 export interface BaseSiteCdkDistributionProps
   extends Omit<cloudfront.DistributionProps, "defaultBehavior"> {
-  defaultBehavior?: cloudfront.AddBehaviorOptions;
+  defaultBehavior?: Omit<cloudfront.BehaviorOptions, "origin"> & {
+    origin?: cloudfront.IOrigin;
+  };
 }
 
 /////////////////////
