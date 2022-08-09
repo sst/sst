@@ -704,25 +704,6 @@ new Api(stack, "Api", {
 });
 ```
 
-#### Importing an existing Http Api
-
-Override the internally created CDK `HttpApi` instance.
-
-```js {4-8}
-import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
-
-new Api(stack, "Api", {
-  cdk: {
-    httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
-      httpApiId,
-    }),
-  },
-  routes: {
-    "GET /notes": "src/list.main",
-  },
-});
-```
-
 #### Sharing an API across stacks
 
 You can create the Api construct in one stack, and add routes in other stacks. To do this, return the API from your stack function.
@@ -798,6 +779,47 @@ new Api(stack, "Api", {
     "GET    /notes/{id}": "src/get.main",
     "PUT    /notes/{id}": "src/update.main",
     "DELETE /notes/{id}": "src/delete.main",
+  },
+});
+```
+
+#### Creating Lambda container images
+
+Override the internally created CDK `HttpApi` instance.
+
+```js
+import * as lambda from "aws-cdk-lib/aws-lambda";
+
+const fn = new lambda.DockerImageFunction(this, "DockerFunction", {
+  code: lambda.DockerImageCode.fromImageAsset("path/to/Dockerfile/folder"),
+});
+
+new Api(stack, "Api", {
+  routes: {
+    "GET /": {
+      cdk: {
+        function: fn,
+      }
+    },
+  },
+});
+```
+
+#### Importing an existing Http Api
+
+Override the internally created CDK `HttpApi` instance.
+
+```js {4-8}
+import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
+
+new Api(stack, "Api", {
+  cdk: {
+    httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
+      httpApiId,
+    }),
+  },
+  routes: {
+    "GET /notes": "src/list.main",
   },
 });
 ```
