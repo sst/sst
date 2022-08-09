@@ -255,6 +255,10 @@ export class RemixSite extends Construct implements SSTConstruct {
    */
   public readonly cdk: {
     /**
+     * The internally created CDK `Function` instance. Not available in the "edge" mode.
+     */
+    function?: lambda.Function;
+    /**
      * The internally created CDK `Bucket` instance.
      */
     bucket: s3.Bucket;
@@ -328,6 +332,7 @@ export class RemixSite extends Construct implements SSTConstruct {
           ? this.createServerLambdaBundleWithStub()
           : this.createServerLambdaBundleForRegional();
         this.serverLambdaForRegional = this.createServerFunctionForRegional(bundlePath);
+        this.cdk.function = this.serverLambdaForRegional;
       }
 
       // Create Custom Domain
