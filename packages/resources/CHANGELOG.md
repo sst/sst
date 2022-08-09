@@ -1,5 +1,14 @@
 # @serverless-stack/resources
 
+## 1.6.8
+
+### Patch Changes
+
+- [#1932](https://github.com/serverless-stack/sst/pull/1932) [`bad52a000`](https://github.com/serverless-stack/sst/commit/bad52a000fe0a0aee135ef8207fa726a564a54de) Thanks [@fwang](https://github.com/fwang)! - StaticSite: support importing existing S3 bucket
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.6.8
+
 ## 1.6.7
 
 ### Patch Changes
