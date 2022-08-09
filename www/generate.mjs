@@ -46,6 +46,7 @@ const CDK_DOCS_MAP = {
   UserPoolClientOptions: "aws_cognito",
   Bucket: "aws_s3",
   BucketProps: "aws_s3",
+  IBucket: "aws_s3",
   Rule: "aws_events",
   RuleProps: "aws_events",
   IEventBus: "aws_events",
