@@ -7,6 +7,7 @@ import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
 import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
 import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
 import * as elb from "aws-cdk-lib/aws-elasticloadbalancingv2";
+import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as logs from "aws-cdk-lib/aws-logs";
 
 import { App } from "./App.js";
@@ -463,13 +464,19 @@ export interface ApiFunctionRouteProps<AuthorizersKeys = string>
   /**
    *The function definition used to create the function for this route.
    */
-  function: FunctionDefinition;
+  function?: FunctionDefinition;
   /**
    * The payload format version for the route.
    *
    * @default "2.0"
    */
   payloadFormatVersion?: ApiPayloadFormatVersion;
+  cdk?: {
+    /**
+     * Use an existing Lambda function.
+     */
+    function?: lambda.IFunction;
+  };
 }
 
 /**
@@ -626,6 +633,7 @@ export class Api<
   private routesData: {
     [key: string]:
       | { type: "function"; function: Fn }
+      | { type: "lambda_function"; function: lambda.IFunction }
       | ({ type: "pothos"; function: Fn } & Pick<
           ApiPothosRouteProps<any>,
           "schema" | "output" | "commands"
@@ -728,8 +736,9 @@ export class Api<
   public getFunction(routeKey: string): Fn | undefined {
     const route = this.routesData[this.normalizeRouteKey(routeKey)];
     if (!route) return;
-    if ("function" in route) return route.function;
-    return;
+    if (route.type === "function" || route.type === "pothos") {
+      return route.function;
+    }
   }
 
   /**
@@ -743,7 +752,7 @@ export class Api<
    */
   public attachPermissions(permissions: Permissions): void {
     for (const route of Object.values(this.routesData)) {
-      if ("function" in route) {
+      if (route.type === "function" || route.type === "pothos") {
         route.function.attachPermissions(permissions);
       }
     }
@@ -1079,6 +1088,17 @@ export class Api<
           ),
         ];
       }
+      if (routeValue.cdk?.function) {
+        return [
+          routeValue,
+          this.createCdkFunctionIntegration(
+            scope,
+            routeKey,
+            routeValue,
+            postfixName
+          ),
+        ];
+      }
       if ("function" in routeValue) {
         return [
           routeValue,
@@ -1202,6 +1222,54 @@ export class Api<
     return result;
   }
 
+  protected createCdkFunctionIntegration(
+    scope: Construct,
+    routeKey: string,
+    routeProps: ApiFunctionRouteProps<keyof Authorizers>,
+    postfixName: string
+  ): apig.HttpRouteIntegration {
+    ///////////////////
+    // Get payload format
+    ///////////////////
+    const payloadFormatVersion: ApiPayloadFormatVersion =
+      routeProps.payloadFormatVersion ||
+      this.props.defaults?.payloadFormatVersion ||
+      "2.0";
+    if (!PayloadFormatVersions.includes(payloadFormatVersion)) {
+      throw new Error(
+        `PayloadFormatVersion: sst.Api does not currently support ${payloadFormatVersion} payload format version. Only "V1" and "V2" are currently supported.`
+      );
+    }
+    const integrationPayloadFormatVersion =
+      payloadFormatVersion === "1.0"
+        ? apig.PayloadFormatVersion.VERSION_1_0
+        : apig.PayloadFormatVersion.VERSION_2_0;
+
+    ///////////////////
+    // Create Function
+    ///////////////////
+    const lambda = routeProps.cdk?.function!;
+
+    ///////////////////
+    // Create integration
+    ///////////////////
+    const integration = new apigIntegrations.HttpLambdaIntegration(
+      `Integration_${postfixName}`,
+      lambda,
+      {
+        payloadFormatVersion: integrationPayloadFormatVersion,
+      }
+    );
+
+    // Store route
+    this.routesData[routeKey] = {
+      type: "lambda_function",
+      function: lambda,
+    };
+
+    return integration;
+  }
+
   protected createFunctionIntegration(
     scope: Construct,
     routeKey: string,
@@ -1231,7 +1299,7 @@ export class Api<
     const lambda = Fn.fromDefinition(
       scope,
       `Lambda_${postfixName}`,
-      routeProps.function,
+      routeProps.function!,
       this.props.defaults?.function,
       `The "defaults.function" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the routes using FunctionProps, so the Api construct can apply the "defaults.function" to them.`
     );

@@ -9,6 +9,7 @@ import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as elb from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as ssm from "aws-cdk-lib/aws-ssm";
+import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as logs from "aws-cdk-lib/aws-logs";
 import { App, Stack, Api, Function, FunctionDefinition } from "../src";
 
@@ -1584,6 +1585,26 @@ test("routes: ApiFunctionRouteProps-payloadFormatVersion-invalid", async () => {
     });
   }).toThrow(/PayloadFormatVersion/);
 });
+
+test("routes: ApiFunctionRouteProps cdk.function", async () => {
+  const stack = new Stack(new App({ name: "api" }), "stack");
+  new Api(stack, "Api", {
+    routes: {
+      "GET /": {
+        cdk: {
+          function: lambda.Function.fromFunctionArn(stack, "Fn", "arn:aws:lambda:us-east-1:123456789012:function:test-lambda"),
+        },
+      },
+    },
+  });
+  countResources(stack, "AWS::Lambda::Function", 0);
+  hasResource(stack, "AWS::ApiGatewayV2::Integration", {
+    PayloadFormatVersion: "2.0",
+    IntegrationType: "AWS_PROXY",
+    IntegrationUri: "arn:aws:lambda:us-east-1:123456789012:function:test-lambda",
+  });
+});
+
 
 test("routes: ApiAlbRouteProps method is undefined", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
