@@ -161,7 +161,13 @@ export async function execute(opts) {
   }
 
   if (!opts.extended) {
-    const app = path.basename(opts.destination);
+    // App name will be used in CloudFormation stack names,
+    // so we need to make sure it's valid.
+    const app = path.basename(opts.destination)
+      // replace _ with -
+      .replace(/_/g, "-")
+      // remove non-alpha numeric dash characters
+      .replace(/[^A-Za-z0-9-]/g, "");
     const appAlpha = app.replace(/[^a-zA-Z0-9]/g, "");
 
     for (const file of await listFiles(opts.destination)) {
