@@ -460,3 +460,34 @@ new RemixSite(stack, "Site2", {
   }
 });
 ```
+
+#### Protecting server function behind API Gateway
+
+When deployed to a single region, instead of sending the request to the server function directly, you can send the request to API Gateway and have API Gateway proxy the request to the server function. With this setup, you can use features like authorizers to project the server function.
+
+```js {5-7}
+import { Fn } from "aws-cdk-lib";
+import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
+
+const api = new Api(stack, "Api");
+
+const site = new RemixSite(stack, "Site", {
+  path: "my-remix-app/",
+  cdk: {
+    distribution: {
+      defaultBehavior: {
+        origin: new origins.HttpOrigin(Fn.parseDomainName(api.url)),
+      }
+    }
+  }
+});
+
+api.addRoutes(stack, {
+  "GET /": {
+    type: "function",
+    cdk: {
+      function: site.cdk.function
+    },
+  },
+});
+```
