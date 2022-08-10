@@ -49,7 +49,7 @@ export class Stack extends cdk.Stack {
     super(scope, stackId, {
       ...props,
       env: {
-        account: process.env.CDK_DEFAULT_ACCOUNT,
+        account: root.account,
         region: root.region,
       },
     });
