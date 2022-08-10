@@ -9,6 +9,7 @@ import * as cdk from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as lambdaNode from "aws-cdk-lib/aws-lambda-nodejs";
+import * as logs from "aws-cdk-lib/aws-logs";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 
 import { State, Runtime, FunctionConfig } from "@serverless-stack/core";
@@ -81,6 +82,7 @@ export interface FunctionProps
     | "tracing"
     | "layers"
     | "architecture"
+    | "logRetention"
   > {
   /**
    * The CPU architecture of the lambda function.
@@ -317,6 +319,20 @@ export interface FunctionProps
    * ```
    */
   layers?: (string | lambda.ILayerVersion)[];
+  /**
+   * The duration function logs are kept in CloudWatch Logs.
+   * 
+   * When updating this property, unsetting it doesn't retain the logs indefinitely. Explicitly set the value to "infinite".
+   * @default Logs retained indefinitely
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
+   *   logRetention: "one_week"
+   * })
+   * ```
+   */
+  logRetention?: Lowercase<keyof typeof logs.RetentionDays>;
 }
 
 export interface FunctionNameProps {
@@ -688,6 +704,9 @@ export class Function extends lambda.Function implements SSTConstruct {
       lambda.Tracing[
         (props.tracing || "active").toUpperCase() as keyof typeof lambda.Tracing
       ];
+    const logRetention = props.logRetention && logs.RetentionDays[
+      props.logRetention.toUpperCase() as keyof typeof logs.RetentionDays
+    ];
     let bundle = props.bundle;
     const permissions = props.permissions;
     const isLiveDevEnabled = props.enableLiveDev === false ? false : true;
@@ -769,6 +788,7 @@ export class Function extends lambda.Function implements SSTConstruct {
             SST_DEBUG_ENDPOINT: app.debugEndpoint,
           },
           layers: Function.buildLayers(scope, id, props),
+          logRetention,
           ...(debugOverrideProps || {}),
         });
       } else {
@@ -793,6 +813,7 @@ export class Function extends lambda.Function implements SSTConstruct {
             SST_DEBUG_BUCKET_NAME: app.debugBucketName,
           },
           layers: Function.buildLayers(scope, id, props),
+          logRetention,
           retryAttempts: 0,
           ...(debugOverrideProps || {}),
         });
@@ -832,6 +853,7 @@ export class Function extends lambda.Function implements SSTConstruct {
         tracing,
         environment: props.environment,
         layers: Function.buildLayers(scope, id, props),
+        logRetention,
       });
     }
     // Handle build
@@ -867,6 +889,7 @@ export class Function extends lambda.Function implements SSTConstruct {
         tracing,
         environment: props.environment,
         layers: Function.buildLayers(scope, id, props),
+        logRetention,
       });
     }
 

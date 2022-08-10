@@ -387,6 +387,36 @@ test("diskSize-Size", async () => {
   });
 });
 
+test("logRetention-undefined", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  countResources(stack, "Custom::LogRetention", 0);
+});
+
+test("logRetention-one-week", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    logRetention: "one_week",
+  });
+  hasResource(stack, "Custom::LogRetention", {
+    RetentionInDays: 7,
+  });
+});
+
+test("logRetention-infinite", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    logRetention: "infinite",
+  });
+  hasResource(stack, "Custom::LogRetention", {
+    RetentionInDays: ABSENT,
+  });
+});
+
 test("xray-disabled", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
