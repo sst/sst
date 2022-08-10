@@ -1,5 +1,14 @@
 # @serverless-stack/resources
 
+## 1.6.10
+
+### Patch Changes
+
+- [#1940](https://github.com/serverless-stack/sst/pull/1940) [`91d28a7d3`](https://github.com/serverless-stack/sst/commit/91d28a7d37e1a9c960c18ee419c19bf4d59da050) Thanks [@fwang](https://github.com/fwang)! - Api: support Lambda container routes
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.6.10
+
 ## 1.6.9
 
 ### Patch Changes

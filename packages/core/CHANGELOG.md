@@ -1,5 +1,7 @@
 # @serverless-stack/core
 
+## 1.6.10
+
 ## 1.6.9
 
 ## 1.6.8
