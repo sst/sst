@@ -785,8 +785,6 @@ new Api(stack, "Api", {
 
 #### Creating Lambda container images
 
-Override the internally created CDK `HttpApi` instance.
-
 ```js
 import * as lambda from "aws-cdk-lib/aws-lambda";
 
