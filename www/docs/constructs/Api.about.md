@@ -88,7 +88,7 @@ const api = new Api(stack, "Api", {
   },
 });
 
-api.addRoutes(this, {
+api.addRoutes(stack, {
   "GET    /notes/{id}": "src/get.main",
   "PUT    /notes/{id}": "src/update.main",
   "DELETE /notes/{id}": "src/delete.main",
@@ -317,7 +317,7 @@ new Api(stack, "Api", {
   customDomain: {
     path: "newPath",
     cdk: {
-      domainName: DomainName.fromDomainNameAttributes(this, "MyDomain", {
+      domainName: DomainName.fromDomainNameAttributes(stack, "MyDomain", {
         name,
         regionalDomainName,
         regionalHostedZoneId,
@@ -339,7 +339,7 @@ new Api(stack, "Api", {
   customDomain: {
     domainName: "api.domain.com",
     cdk: {
-      certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+      certificate: Certificate.fromCertificateArn(stack, "MyCert", certArn),
     },
   },
   routes: {
@@ -359,7 +359,7 @@ new Api(stack, "Api", {
   customDomain: {
     domainName: "api.domain.com",
     cdk: {
-      hostedZone: HostedZone.fromHostedZoneAttributes(this, "MyZone", {
+      hostedZone: HostedZone.fromHostedZoneAttributes(stack, "MyZone", {
         hostedZoneId,
         zoneName,
       }),
@@ -378,13 +378,13 @@ If you have the domain name stored in AWS SSM Parameter Store, you can reference
 ```js {3,6-9}
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
 
-const rootDomain = StringParameter.valueForStringParameter(this, `/myApp/domain`);
+const rootDomain = StringParameter.valueForStringParameter(stack, `/myApp/domain`);
 
 new Api(stack, "Api", {
   customDomain: {
     domainName: `api.${rootDomain}`,
     cdk: {
-      hostedZone: HostedZone.fromHostedZoneAttributes(this, "MyZone", {
+      hostedZone: HostedZone.fromHostedZoneAttributes(stack, "MyZone", {
         hostedZoneId,
         zoneName,
       }),
@@ -408,7 +408,7 @@ new Api(stack, "Api", {
     isExternalDomain: true,
     domainName: "api.domain.com",
     cdk: {
-      certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+      certificate: Certificate.fromCertificateArn(stack, "MyCert", certArn),
     },
   },
   routes: {
@@ -542,7 +542,7 @@ new Api(stack, "Api", {
   authorizers: {
     myAuthorizer: {
       type: "lambda",
-      function: new Function(this, "Authorizer", {
+      function: new Function(stack, "Authorizer", {
         handler: "src/authorizer.main",
       }),
       resultsCacheTtl: "30 seconds",
@@ -571,7 +571,7 @@ new Api(stack, "Api", {
   authorizers: {
     myAuthorizer: {
       type: "lambda",
-      function: new Function(this, "Authorizer", {
+      function: new Function(stack, "Authorizer", {
         handler: "src/authorizer.main",
       }),
       resultsCacheTtl: "30 seconds",
@@ -596,7 +596,7 @@ const api = new Api(stack, "Api", {
   authorizers: {
     myAuthorizer: {
       type: "lambda",
-      function: new Function(this, "Authorizer", {
+      function: new Function(stack, "Authorizer", {
         handler: "src/authorizer.main",
       }),
       resultsCacheTtl: "30 seconds",
@@ -615,7 +615,7 @@ this.api = api;
 ```
 
 ```js title="stacks/AnotherStack.js"
-api.addRoutes(this, {
+api.addRoutes(stack, {
   "GET    /notes/{id}": "src/get.main",
   "PUT    /notes/{id}": "src/update.main",
   "DELETE /notes/{id}": "src/delete.main",
@@ -788,7 +788,7 @@ new Api(stack, "Api", {
 ```js
 import * as lambda from "aws-cdk-lib/aws-lambda";
 
-const fn = new lambda.DockerImageFunction(this, "DockerFunction", {
+const fn = new lambda.DockerImageFunction(stack, "DockerFunction", {
   code: lambda.DockerImageCode.fromImageAsset("path/to/Dockerfile/folder"),
 });
 
@@ -812,7 +812,7 @@ import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
 
 new Api(stack, "Api", {
   cdk: {
-    httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
+    httpApi: HttpApi.fromHttpApiAttributes(stack, "MyHttpApi", {
       httpApiId,
     }),
   },
