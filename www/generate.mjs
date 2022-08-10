@@ -71,6 +71,7 @@ const CDK_DOCS_MAP = {
   LambdaSubscriptionProps: "aws_sns",
   Runtime: "aws_lambda",
   Tracing: "aws_lambda",
+  Function: "aws_lambda",
   IFunction: "aws_lambda",
   ILayerVersion: "aws_lambda",
   FunctionOptions: "aws_lambda",
