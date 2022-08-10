@@ -463,7 +463,7 @@ new RemixSite(stack, "Site2", {
 
 #### Protecting server function behind API Gateway
 
-When deployed to a single region, instead of sending the request to the server function directly, you can send the request to API Gateway and have API Gateway proxy the request to the server function. With this setup, you can use features like authorizers to project the server function.
+When deployed to a single region, instead of sending the request to the server function directly, you can send the request to API Gateway and have API Gateway proxy the request to the server function. With this setup, you can use features like authorizers to protect the server function.
 
 ```js
 import { Fn } from "aws-cdk-lib";
