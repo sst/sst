@@ -5,6 +5,14 @@ import { logger } from "@serverless-stack/core";
 
 import { synth, validatePropsForJs } from "./util/cdkHelpers.mjs";
 
+export default async function (argv, config, cliInfo) {
+  logger.info(chalk.grey("Synthesizing CDK"));
+
+  const { stacks } = await synth(cliInfo.cdkOptions);
+  validatePropsForJs(config);
+  printStacks(stacks, cliInfo.yarn);
+}
+
 function printStacks(stacks, usingYarn) {
   const l = stacks.length;
   const stacksCopy = l === 1 ? "stack" : "stacks";
@@ -22,12 +30,4 @@ function printStacks(stacks, usingYarn) {
   }
 
   logger.info(`\nRun ${chalk.cyan(deployCmd)} to deploy to AWS.`);
-}
-
-export default async function (argv, config, cliInfo) {
-  logger.info(chalk.grey("Synthesizing CDK"));
-
-  const { stacks } = await synth(cliInfo.cdkOptions);
-  validatePropsForJs(config);
-  printStacks(stacks, cliInfo.yarn);
 }

@@ -6,7 +6,7 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 import * as iam from "aws-cdk-lib/aws-iam";
 import { ILayerVersion } from "aws-cdk-lib/aws-lambda";
 import * as cxapi from "aws-cdk-lib/cx-api";
-import { State } from "@serverless-stack/core";
+import { Bootstrap, State } from "@serverless-stack/core";
 import { Stack } from "./Stack.js";
 import {
   SSTConstruct,
@@ -56,6 +56,7 @@ export interface AppDeployProps {
   readonly buildDir?: string;
   readonly skipBuild?: boolean;
   readonly esbuildConfig?: string;
+  readonly bootstrapAssets?: Bootstrap.Assets;
   readonly debugEndpoint?: string;
   readonly debugBucketArn?: string;
   readonly debugBucketName?: string;
@@ -107,6 +108,8 @@ export class App extends cdk.App {
   public readonly buildDir: string;
   /** @internal */
   public readonly esbuildConfig?: string;
+  /** @internal */
+  public readonly bootstrapAssets: Bootstrap.Assets;
   /** @internal */
   public readonly debugBridge?: string;
   /** @internal */
@@ -175,6 +178,7 @@ export class App extends cdk.App {
       deployProps.region || process.env.CDK_DEFAULT_REGION || "us-east-1";
     this.account = process.env.CDK_DEFAULT_ACCOUNT || "my-account";
     this.esbuildConfig = deployProps.esbuildConfig;
+    this.bootstrapAssets = deployProps.bootstrapAssets || {};
     this.buildDir = deployProps.buildDir || ".build";
     this.skipBuild = deployProps.skipBuild || false;
     this.defaultFunctionProps = [];
@@ -377,7 +381,7 @@ export class App extends cdk.App {
     for (const child of this.node.children) {
       if (child instanceof Stack) {
         const stackName = (child as Stack).node.id;
-        (child as Stack).addConstructsMetadata(byStack[stackName] || []);
+        (child as Stack).createStackMetadataResource(byStack[stackName] || []);
       }
     }
     fs.writeJSONSync(State.resolve(this.appPath, "constructs.json"), local);

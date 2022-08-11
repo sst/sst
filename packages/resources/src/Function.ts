@@ -947,11 +947,16 @@ export class Function extends lambda.Function implements SSTConstruct {
   }
 
   public getConstructMetadata() {
+    const { config } = this.props;
+
     return {
       type: "Function" as const,
       data: {
         localId: this.localId,
         arn: this.functionArn,
+        secrets: (config || [])
+          .filter((c) => c instanceof Secret)
+          .map((c) => c.name),
       },
     };
   }

@@ -15,7 +15,7 @@ import url from "url";
 import fs from "fs-extra";
 import chalk from "chalk";
 import * as sst from "@serverless-stack/resources";
-import { initializeLogger, Util } from "@serverless-stack/core";
+import { initializeLogger, Bootstrap, Util } from "@serverless-stack/core";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 const config = fs.readJsonSync(path.join(__dirname, "./sst-merged.json"));
@@ -65,6 +65,9 @@ const synthCallback = (lambdaHandlers, staticSiteEnvironments) => {
   );
 };
 
+// Load bootstrap data
+await Bootstrap.init();
+
 const app = new sst.App({
   buildDir,
   synthCallback,
@@ -73,6 +76,7 @@ const app = new sst.App({
   region: config.region,
   skipBuild: config.skipBuild,
   esbuildConfig: config.esbuildConfig,
+  bootstrapAssets: Bootstrap.assets,
   debugEndpoint: config.debugEndpoint,
   debugBucketArn: config.debugBucketArn,
   debugBucketName: config.debugBucketName,

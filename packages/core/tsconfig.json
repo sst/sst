@@ -10,5 +10,5 @@
       "@serverless-stack/core": ["./src/index.ts"]
     }
   },
-  "include": ["src"]
+  "include": ["src", "assets/bootstrap/cdk-app"]
 }

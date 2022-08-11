@@ -37,7 +37,6 @@ export class Stack extends cdk.Stack {
    * @internal
    */
   public readonly defaultFunctionProps: FunctionProps[];
-  private readonly metadata: cdk.CfnResource;
 
   constructor(scope: Construct, id: string, props?: StackProps) {
     const root = scope.node.root as App;
@@ -58,8 +57,6 @@ export class Stack extends cdk.Stack {
     this.defaultFunctionProps = root.defaultFunctionProps.map((dfp) =>
       typeof dfp === "function" ? dfp(this) : dfp
     );
-
-    this.metadata = this.createMetadataResource();
   }
 
   /**
@@ -181,39 +178,18 @@ export class Stack extends cdk.Stack {
     });
   }
 
-  addConstructsMetadata(metadata: any): void {
-    this.metadata.addMetadata("sst:constructs", metadata);
-  }
-
-  private createMetadataResource(): cdk.CfnResource {
-    // Add a placeholder resource to ensure stacks with just an imported construct
-    // has at least 1 resource, so the deployment succeeds.
-    // For example: users often create a stack and use it to import a VPC. The
-    //              stack does not have any resources.
-    //
-    // Note that the "AWS::CDK::Metadata" resource does not exist in GovCloud
-    // and a few other regions. In this case, we will use the "AWS::SSM::Parameter"
-    // resource. It does not matter what resource type we use. All we are interested
-    // in is the Metadata.
-    const props = this.isCDKMetadataResourceSupported()
-      ? {
-          type: "AWS::CDK::Metadata",
-        }
-      : {
-          type: "AWS::SSM::Parameter",
-          properties: {
-            Type: "String",
-            Name: `/sst/${this.stackName}`,
-            Value: "metadata-placeholder",
-            Description: "Parameter added by SST for storing stack metadata",
-          },
-        };
-    const res = new cdk.CfnResource(this, "SSTMetadata", props);
-
-    // Add version metadata
-    res.addMetadata("sst:version", packageJson.version);
-
-    return res;
+  public createStackMetadataResource(metadata: any) {
+    const app = this.node.root as App;
+    new cdk.CustomResource(this, "StackMetadata", {
+      serviceToken: app.bootstrapAssets.stackMetadataFunctionArn!,
+      resourceType: "Custom::StackMetadata",
+      properties: {
+        App: app.name,
+        Stage: this.stage,
+        Stack: this.stackName,
+        Metadata: metadata,
+      },
+    });
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
