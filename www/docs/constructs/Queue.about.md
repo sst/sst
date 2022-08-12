@@ -108,12 +108,13 @@ new Queue(stack, "Queue", {
 Override the internally created CDK `Queue` instance.
 
 ```js {6}
-import { Queue } from "aws-cdk-lib/aws-sqs";
+import { Queue } from "@serverless-stack/resources";
+import { Queue as CdkQueue } from 'aws-cdk-lib/aws-sqs';
 
 new Queue(stack, "Queue", {
   consumer: "src/queueConsumer.main",
   cdk: {
-    queue: Queue.fromQueueArn(this, "MySqsQueue", queueArn),
+    queue: CdkQueue.fromQueueArn(stack, "MySqsQueue", queueArn),
   },
 });
 ```
