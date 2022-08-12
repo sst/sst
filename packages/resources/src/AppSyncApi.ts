@@ -609,7 +609,6 @@ export class AppSyncApi extends Construct implements SSTConstruct {
    * Attaches the given list of permissions to all function datasources
    *
    * @example
-   *
    * ```js
    * api.attachPermissions(["s3"]);
    * ```
@@ -625,7 +624,8 @@ export class AppSyncApi extends Construct implements SSTConstruct {
    * Attaches the given list of permissions to a specific function datasource. This allows that function to access other AWS resources.
    *
    * @example
-   * api.attachPermissionsToRoute("Mutation charge", ["s3"]);
+   * ```js
+   * api.attachPermissionsToDataSource("Mutation charge", ["s3"]);
    * ```
    */
   public attachPermissionsToDataSource(
