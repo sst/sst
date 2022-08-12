@@ -23,7 +23,7 @@ Create an _empty_ queue and lazily add the consumer.
 ```js {3}
 const queue = new Queue(stack, "Queue");
 
-queue.addConsumer(this, "src/queueConsumer.main");
+queue.addConsumer(stack, "src/queueConsumer.main");
 ```
 
 #### Configuring the consumer function
@@ -108,13 +108,12 @@ new Queue(stack, "Queue", {
 Override the internally created CDK `Queue` instance.
 
 ```js {6}
-import { Queue } from "@serverless-stack/resources";
-import { Queue as CdkQueue } from "aws-cdk-lib/aws-sqs";
+import * as sqs from "aws-cdk-lib/aws-sqs";
 
 new Queue(stack, "Queue", {
   consumer: "src/queueConsumer.main",
   cdk: {
-    queue: CdkQueue.fromQueueArn(stack, "MySqsQueue", queueArn),
+    queue: sqs.Queue.fromQueueArn(stack, "MySqsQueue", queueArn),
   },
 });
 ```
