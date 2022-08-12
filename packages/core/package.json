@@ -59,7 +59,8 @@
     "typescript": "^4.6.2",
     "uuid": "^8.3.2",
     "ws": "^8.6.0",
-    "xstate": "4.26.1"
+    "xstate": "4.26.1",
+    "zip-local": "^0.3.4"
   },
   "gitHead": "8ac2d0abc11d5de721c87658bb445e3d6c211dcf",
   "devDependencies": {
@@ -77,6 +78,7 @@
     "build": "tsc",
     "build:dotnet31-bootstrap": "docker run --rm -v ${PWD}/src/runtime/shells/dotnet-bootstrap:/tmp/bootstrap mcr.microsoft.com/dotnet/sdk:3.1 bash -c \"cd /tmp/bootstrap && dotnet publish --output release --configuration Release --framework netcoreapp3.1 --self-contained false -nologo --verbosity minimal /target:Rebuild\"",
     "build:dotnet6-bootstrap": "docker run --rm -v ${PWD}/src/runtime/shells/dotnet-bootstrap:/tmp/bootstrap mcr.microsoft.com/dotnet/sdk:6.0 bash -c \"cd /tmp/bootstrap && dotnet publish --output release --configuration Release --framework net6.0 --self-contained false -nologo --verbosity minimal /target:Rebuild\"",
+    "build:java11-bootstrap": "cd src/runtime/shells/java11-bootstrap && ./install.sh",
     "clean": "rm -rf dist",
     "test": "vitest run"
   },

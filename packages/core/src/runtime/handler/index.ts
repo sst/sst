@@ -6,6 +6,7 @@ import { NodeHandler } from "./node.js";
 import { GoHandler } from "./go.js";
 import { PythonHandler } from "./python.js";
 import { DotnetHandler } from "./dotnet.js";
+import { JavaHandler } from "./java.js";
 
 export { Opts, Instructions } from "./definition.js";
 
@@ -26,6 +27,7 @@ export function resolve(runtime: string): Definition {
   if (runtime.startsWith("go")) return GoHandler;
   if (runtime.startsWith("python")) return PythonHandler;
   if (runtime.startsWith("dotnet")) return DotnetHandler;
+  if (runtime.startsWith("java")) return JavaHandler;
   throw new Error(`Unknown runtime ${runtime}`);
 }
 
