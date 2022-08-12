@@ -289,6 +289,74 @@ The directory where `.fsproj` is found.
 
 Only supported for the **Node.js** and **Python** runtimes.
 
+### Configuring Java runtime
+
+#### Building a deployment package with Gradle
+
+To create a deployment package with your function's code and dependencies, use the Zip build type. For example:
+
+```
+task buildZip(type: Zip) {
+    from compileJava
+    from processResources
+    into('lib') {
+        from configurations.runtimeClasspath
+    }
+}
+```
+
+This build configuration produces a deployment package in the `build/distributions` directory. The `compileJava` task compiles your function's classes. The `processResources` task copies the Java project resources into their target directory, potentially processing then. The statement `into('lib')` then copies dependency libraries from the build's classpath into a folder named `lib`.
+
+On `sst deploy`, SST runs `gradle build` to build the function. The build output has the follow content:
+```
+build
+├─ classes
+├─ distributions
+│  ├─ java-hello-world.tar
+│  └─ java-hello-world.zip
+├─ generated
+├─ libs
+│  └─ java-hello-world.jar
+├─ scripts
+└─ tmp
+```
+And SST uploads the `distributions/java-hello-world.zip` as the Lambda function's code.
+
+On `sst start`, SST runs `gradle build` first. And then it unzips `distributions/java-hello-world.zip` to `distributions`. Now the `distributions/lib` folder contains all the dependency libraries. Both `distributions/lib/*` and `libs/*` are included as class paths when invoking the function under [Live Lambda Dev](../live-lambda-development.md).
+
+:::note
+Currenly, we only support Java projects built with **Gradle**. If you need to support other build systems, please join our [Discord community](http://discord.gg/sst) and message us in the #help channel.
+:::
+
+#### handler
+
+The handler function. Uses the format, `package.Class::method`.
+
+- `package` is the package name.
+- `Class` is the class name.
+- `method` is the name of the function handler.
+
+Consider a project with the following handler function:
+```java
+package example
+
+public class Handler implements RequestHandler<Map<String,String>, String>{
+
+  @Override
+  public Map<String, Object> handleRequest(Map<String, String> input, Context context) {
+  }
+}
+```
+The handler would be: `example.Handler::handleRequest`.
+
+#### srcPath
+
+The directory where `build.gradle` is found.
+
+#### bundle
+
+Only supported for the **Node.js** and **Python** runtimes.
+
 ### Function URLs
 
 #### Using the basic config
