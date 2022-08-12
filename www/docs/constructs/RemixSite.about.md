@@ -517,7 +517,7 @@ const site = new RemixSite(stack, "Site", {
 });
 
 api.addRoutes(stack, {
-  "GET /": {
+  "ANY /{proxy+}": {
     type: "function",
     cdk: {
       function: site.cdk.function
