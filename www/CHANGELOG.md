@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 1.5.0
+
+### Minor Changes
+
+- [#1922](https://github.com/serverless-stack/sst/pull/1922) [`e0a5eba96`](https://github.com/serverless-stack/sst/commit/e0a5eba964a9fc2d413a132333d388a40a81faa9) Thanks [@fwang](https://github.com/fwang)! - Function: support Java runtime built with gradle
+
 ## 1.4.2
 
 ### Patch Changes

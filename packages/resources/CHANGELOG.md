@@ -1,5 +1,16 @@
 # @serverless-stack/resources
 
+## 1.7.0
+
+### Minor Changes
+
+- [#1922](https://github.com/serverless-stack/sst/pull/1922) [`e0a5eba96`](https://github.com/serverless-stack/sst/commit/e0a5eba964a9fc2d413a132333d388a40a81faa9) Thanks [@fwang](https://github.com/fwang)! - Function: support Java runtime built with gradle
+
+### Patch Changes
+
+- Updated dependencies [[`e0a5eba96`](https://github.com/serverless-stack/sst/commit/e0a5eba964a9fc2d413a132333d388a40a81faa9)]:
+  - @serverless-stack/core@1.7.0
+
 ## 1.6.10
 
 ### Patch Changes
