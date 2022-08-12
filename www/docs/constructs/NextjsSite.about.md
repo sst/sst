@@ -160,17 +160,51 @@ new NextjsSite(stack, "Site", {
 });
 ```
 
-#### Using the full config (Route 53 domains)
+#### Configuring alternate domain names (Route 53 domains)
 
-```js {3-7}
-new NextjsSite(stack, "Site", {
+You can specify additional domain names for the site url. Note that the certificate for these names will not be automatically generated, so the certificate option must be specified. Also note that you need to manually create the Route 53 records for the alternate domain names.
+
+```js
+import * as acm from "aws-cdk-lib/aws-certificatemanager";
+import * as route53 from "aws-cdk-lib/aws-route53";
+import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
+
+// Look up hosted zone
+const hostedZone = route53.HostedZone.fromLookup(stack, "HostedZone", {
+  domainName: "domain.com",
+});
+
+// Create a certificate with alternate domain names
+const certificate = new acm.DnsValidatedCertificate(stack, "Certificate", {
+  domainName: "foo.domain.com",
+  hostedZone,
+  region: "us-east-1",
+  subjectAlternativeNames: ["bar.domain.com"],
+});
+
+// Create site
+const site = new NextjsSite(stack, "Site", {
   path: "path/to/site",
   customDomain: {
-    domainName: "domain.com",
-    domainAlias: "www.domain.com",
-    hostedZone: "domain.com",
+    domainName: "foo.domain.com",
+    alternateNames: ["bar.domain.com"],
+    cdk: {
+      hostedZone,
+      certificate,
+    },
   },
 });
+
+// Create A and AAAA records for the alternate domain names
+const recordProps = {
+  recordName: "bar.domain.com",
+  zone: hostedZone,
+  target: route53.RecordTarget.fromAlias(
+    new route53Targets.CloudFrontTarget(site.cdk.distribution)
+  ),
+};
+new route53.ARecord(stack, "AlternateARecord", recordProps);
+new route53.AaaaRecord(stack, "AlternateAAAARecord", recordProps);
 ```
 
 #### Importing an existing certificate (Route 53 domains)
