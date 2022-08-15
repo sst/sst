@@ -66,7 +66,7 @@ const synthCallback = (lambdaHandlers, staticSiteEnvironments) => {
 };
 
 // Load bootstrap data
-await Bootstrap.init();
+await Bootstrap.init(config.region);
 
 const app = new sst.App({
   buildDir,
