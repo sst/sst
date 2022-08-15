@@ -235,6 +235,7 @@ module.exports = {
         "constructs/Permissions",
       ],
       Other: [
+        "constructs/Config",
         "constructs/Script",
         "constructs/DebugApp",
         "constructs/DebugStack",

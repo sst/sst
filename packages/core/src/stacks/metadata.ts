@@ -1,7 +1,6 @@
 import path from "path";
 import fs from "fs/promises";
 import { CloudFormationStackArtifact } from "aws-cdk-lib/cx-api";
-import Cloudformation from "aws-sdk/clients/cloudformation.js";
 import { Config } from "../config/index.js";
 import S3 from "aws-sdk/clients/s3.js";
 import { Bootstrap } from "../bootstrap/index.js";
@@ -47,6 +46,5 @@ export async function metadata(root: string, config: Config) {
       return json;
     })
   );
-  console.log(result.flat());
   return result.flat();
 }
