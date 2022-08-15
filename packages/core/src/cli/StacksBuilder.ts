@@ -14,7 +14,7 @@ declare module "./Bus" {
     "stacks.deployed": {
       metadata: any[];
       stacksData: any;
-    }
+    };
   }
 }
 
@@ -188,7 +188,7 @@ export function useStacksBuilder(
     const metadata = await Stacks.metadata(root, config);
     bus.publish("stacks.deployed", {
       metadata,
-      stacksData,
+      stacksData
     });
   }
   const cdkOutPath = path.join(root, cdkOptions.output);

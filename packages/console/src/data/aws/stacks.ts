@@ -26,7 +26,7 @@ import { GetObjectCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/clien
 export type StackInfo = {
   info: Stack;
   constructs: {
-    version: string;
+    version?: string;
     all: Metadata[];
     byAddr: Record<string, Metadata>;
     byType: { [key in Metadata["type"]]?: Extract<Metadata, { type: key }>[] };
@@ -56,6 +56,8 @@ export function useStacks() {
     ["stacks", params.app!, params.stage!],
     async () => {
       
+      let stacks: StackInfo[] = []
+
       try {
         const value = await ssm.send(new GetParameterCommand({
           Name: `/sst/bootstrap/bucket-name`,
@@ -65,79 +67,101 @@ export function useStacks() {
           Bucket: bucketName,
           Prefix: `stackMetadata/app.${params.app}/stage.${params.stage}/`,
         }))
-        const results = await Promise.all(list.Contents.map(async item => {
-          s3.send(new GetObjectCommand({
-            Bucket: bucketName,
-            Key: item.Key
-          }))
+        stacks = await Promise.all(list.Contents.map(async item => {
+          while (true) {
+            try {
+              const result = await s3.send(new GetObjectCommand({
+                Bucket: bucketName,
+                Key: item.Key
+              }))
+              const stackName = item.Key.split(".").at(-2)
+              const resp = new Response(result.Body as ReadableStream)
+              const constructs = await resp.json() as Metadata[]
+              const describe = await cf.send(new DescribeStacksCommand({
+                StackName: stackName,
+              }))
+              const info: StackInfo = {
+                info: describe.Stacks[0],
+                constructs: {
+                  all: constructs,
+                  byAddr: fromPairs(constructs.map((x) => [x.addr, x])),
+                  byType: groupBy(constructs, (x) => x.type),
+                }
+              };
+              return info
+            } catch {
+              await new Promise((resolve) => setTimeout(resolve, 1000))
+            }
+          }
         }))
 
       } catch (ex) {
+        console.error(ex)
         console.warn("Failed to get metadata from S3. Falling back to old method, please update SST", ex)
-      }
+        const tagFilter = [
+          {
+            Key: "sst:app",
+            Value: params.app!,
+          },
+          {
+            Key: "sst:stage",
+            Value: params.stage!,
+          },
+        ];
 
-      const tagFilter = [
-        {
-          Key: "sst:app",
-          Value: params.app!,
-        },
-        {
-          Key: "sst:stage",
-          Value: params.stage!,
-        },
-      ];
+        async function describeStacks(token?: string): Promise<Stack[]> {
+          const response = await cf.send(
+            new DescribeStacksCommand({
+              NextToken: token,
+            })
+          );
+          if (!response.Stacks) return [];
+          const filtered = response.Stacks.filter((stack) =>
+            requireTags(stack.Tags, tagFilter)
+          );
+          if (!response.NextToken) return filtered;
+          return [...filtered, ...(await describeStacks(response.NextToken))];
+        }
 
-      async function describeStacks(token?: string): Promise<Stack[]> {
-        const response = await cf.send(
-          new DescribeStacksCommand({
-            NextToken: token,
+        const filtered = await describeStacks();
+        const work = filtered.map((x) => async () => {
+          const response = await cf.send(
+            new DescribeStackResourceCommand({
+              StackName: x.StackName,
+              LogicalResourceId: "SSTMetadata",
+            })
+          );
+          const parsed = JSON.parse(response.StackResourceDetail!.Metadata!);
+          const constructs = parsed["sst:constructs"] as Metadata[];
+          const result: StackInfo["constructs"] = {
+            version: parsed["sst:version"],
+            all: constructs,
+            byAddr: fromPairs(constructs.map((x) => [x.addr, x])),
+            byType: groupBy(constructs, (x) => x.type),
+          };
+          return result;
+        });
+
+        // Limit to 3 at a time to avoid hitting AWS limits
+        const meta: Awaited<ReturnType<typeof work[number]>>[] = [];
+        while (work.length) {
+          meta.push(...(await Promise.all(work.splice(0, 3).map((f) => f()))));
+        }
+
+        stacks = zipWith(
+          filtered,
+          meta,
+          (s, c): StackInfo => ({
+            constructs: c,
+            info: s,
           })
+        ).filter(
+          (x) =>
+            x.constructs.version.startsWith("0.0.0") ||
+            x.constructs.version >= "0.56.0"
         );
-        if (!response.Stacks) return [];
-        const filtered = response.Stacks.filter((stack) =>
-          requireTags(stack.Tags, tagFilter)
-        );
-        if (!response.NextToken) return filtered;
-        return [...filtered, ...(await describeStacks(response.NextToken))];
       }
 
-      const filtered = await describeStacks();
-      const work = filtered.map((x) => async () => {
-        const response = await cf.send(
-          new DescribeStackResourceCommand({
-            StackName: x.StackName,
-            LogicalResourceId: "SSTMetadata",
-          })
-        );
-        const parsed = JSON.parse(response.StackResourceDetail!.Metadata!);
-        const constructs = parsed["sst:constructs"] as Metadata[];
-        const result: StackInfo["constructs"] = {
-          version: parsed["sst:version"],
-          all: constructs,
-          byAddr: fromPairs(constructs.map((x) => [x.addr, x])),
-          byType: groupBy(constructs, (x) => x.type),
-        };
-        return result;
-      });
-
-      // Limit to 3 at a time to avoid hitting AWS limits
-      const meta: Awaited<ReturnType<typeof work[number]>>[] = [];
-      while (work.length) {
-        meta.push(...(await Promise.all(work.splice(0, 3).map((f) => f()))));
-      }
-
-      const stacks = zipWith(
-        filtered,
-        meta,
-        (s, c): StackInfo => ({
-          constructs: c,
-          info: s,
-        })
-      ).filter(
-        (x) =>
-          x.constructs.version.startsWith("0.0.0") ||
-          x.constructs.version >= "0.56.0"
-      );
 
       const result: Result = {
         app: params.app!,
