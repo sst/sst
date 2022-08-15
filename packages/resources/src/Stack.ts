@@ -49,12 +49,12 @@ export class Stack extends cdk.Stack {
       ...props,
       env: {
         account: root.account,
-        region: root.region,
-      },
+        region: root.region
+      }
     });
 
     this.stage = root.stage;
-    this.defaultFunctionProps = root.defaultFunctionProps.map((dfp) =>
+    this.defaultFunctionProps = root.defaultFunctionProps.map(dfp =>
       typeof dfp === "function" ? dfp(this) : dfp
     );
   }
@@ -89,7 +89,7 @@ export class Stack extends cdk.Stack {
    */
   public addDefaultFunctionPermissions(permissions: Permissions) {
     this.defaultFunctionProps.push({
-      permissions,
+      permissions
     });
   }
 
@@ -105,7 +105,7 @@ export class Stack extends cdk.Stack {
    */
   public addDefaultFunctionEnv(environment: Record<string, string>) {
     this.defaultFunctionProps.push({
-      environment,
+      environment
     });
   }
 
@@ -119,7 +119,7 @@ export class Stack extends cdk.Stack {
    */
   public addDefaultFunctionLayers(layers: lambda.ILayerVersion[]) {
     this.defaultFunctionProps.push({
-      layers,
+      layers
     });
   }
 
@@ -166,7 +166,7 @@ export class Stack extends cdk.Stack {
   public addOutputs(
     outputs: Record<string, string | cdk.CfnOutputProps>
   ): void {
-    Object.keys(outputs).forEach((key) => {
+    Object.keys(outputs).forEach(key => {
       const value = outputs[key];
       if (value === undefined) {
         throw new Error(`The stack output "${key}" is undefined`);
@@ -187,8 +187,8 @@ export class Stack extends cdk.Stack {
         App: app.name,
         Stage: this.stage,
         Stack: this.stackName,
-        Metadata: metadata,
-      },
+        Metadata: metadata
+      }
     });
   }
 
@@ -238,7 +238,7 @@ export class Stack extends cdk.Stack {
         "us-gov-west-1",
         "us-iso-east-1",
         "us-isob-east-1",
-        "ap-northeast-3",
+        "ap-northeast-3"
       ].includes(app.region)
     ) {
       return false;

@@ -17,7 +17,7 @@ import {
   Function as Fn,
   FunctionProps,
   FunctionInlineDefinition,
-  FunctionDefinition,
+  FunctionDefinition
 } from "./Function.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions } from "./util/permission.js";
@@ -602,14 +602,11 @@ export interface ApiPothosRouteProps<AuthorizerKeys>
  * ```
  */
 export class Api<
-    Authorizers extends Record<string, ApiAuthorizer> = Record<
-      string,
-      ApiAuthorizer
-    >
+  Authorizers extends Record<string, ApiAuthorizer> = Record<
+    string,
+    ApiAuthorizer
   >
-  extends Construct
-  implements SSTConstruct
-{
+> extends Construct implements SSTConstruct {
   public readonly cdk: {
     /**
      * The internally created CDK HttpApi instance.
@@ -799,24 +796,24 @@ export class Api<
         routes: Object.entries(this.routesData).map(([key, data]) => {
           if (data.type === "function")
             return {
-              type: data.type,
+              type: "function" as const,
               route: key,
-              fn: getFunctionRef(data.function),
+              fn: getFunctionRef(data.function)
             };
 
           if (data.type === "pothos")
             return {
-              type: data.type,
+              type: "pothos" as const,
               route: key,
               fn: getFunctionRef(data.function),
               schema: data.schema,
               output: data.output,
-              commands: data.commands,
+              commands: data.commands
             };
 
           return { type: data.type, route: key };
-        }),
-      },
+        })
+      }
     };
   }
 
@@ -873,12 +870,11 @@ export class Api<
           this.cdk.domainName = customDomainData.apigDomain as apig.DomainName;
         }
         if (customDomainData.isCertificatedCreated) {
-          this.cdk.certificate =
-            customDomainData.certificate as acm.Certificate;
+          this.cdk.certificate = customDomainData.certificate as acm.Certificate;
         }
         defaultDomainMapping = {
           domainName: customDomainData.apigDomain,
-          mappingKey: customDomainData.mappingKey,
+          mappingKey: customDomainData.mappingKey
         };
         this._customDomainUrl = `https://${customDomainData.url}`;
       }
@@ -887,7 +883,7 @@ export class Api<
         apiName: app.logicalPrefixedName(id),
         corsPreflight: apigV2Cors.buildCorsConfig(cors),
         defaultDomainMapping,
-        ...httpApiProps,
+        ...httpApiProps
       });
 
       const httpStage = this.cdk.httpApi.defaultStage as apig.HttpStage;
@@ -898,7 +894,7 @@ export class Api<
         cfnStage.defaultRouteSettings = {
           ...(cfnStage.routeSettings || {}),
           throttlingBurstLimit: defaults.throttle.burst,
-          throttlingRateLimit: defaults.throttle.rate,
+          throttlingRateLimit: defaults.throttle.rate
         };
       }
 
@@ -906,7 +902,7 @@ export class Api<
       for (const def of cdk?.httpStages || []) {
         const stage = new apig.HttpStage(this, "Stage" + def.stageName, {
           ...def,
-          httpApi: this.cdk.httpApi,
+          httpApi: this.cdk.httpApi
         });
         apigV2AccessLog.buildAccessLogData(this, accessLog, stage, false);
       }
@@ -948,13 +944,14 @@ export class Api<
                 clientId
               )
             );
-          this.authorizersData[key] =
-            new apigAuthorizers.HttpUserPoolAuthorizer(key, userPool, {
-              authorizerName: value.name,
-              identitySource: value.identitySource,
-              userPoolClients,
-              userPoolRegion: value.userPool.region,
-            });
+          this.authorizersData[
+            key
+          ] = new apigAuthorizers.HttpUserPoolAuthorizer(key, userPool, {
+            authorizerName: value.name,
+            identitySource: value.identitySource,
+            userPoolClients,
+            userPoolRegion: value.userPool.region
+          });
         }
       } else if (value.type === "jwt") {
         if (value.cdk?.authorizer) {
@@ -969,7 +966,7 @@ export class Api<
             {
               authorizerName: value.name,
               identitySource: value.identitySource,
-              jwtAudience: value.jwt.audience,
+              jwtAudience: value.jwt.audience
             }
           );
         }
@@ -989,14 +986,14 @@ export class Api<
               responseTypes:
                 value.responseTypes &&
                 value.responseTypes.map(
-                  (type) =>
+                  type =>
                     apigAuthorizers.HttpLambdaResponseType[
                       type.toUpperCase() as keyof typeof apigAuthorizers.HttpLambdaResponseType
                     ]
                 ),
               resultsCacheTtl: value.resultsCacheTtl
                 ? toCdkDuration(value.resultsCacheTtl)
-                : cdk.Duration.seconds(0),
+                : cdk.Duration.seconds(0)
             }
           );
         }
@@ -1053,7 +1050,7 @@ export class Api<
     const [routeProps, integration] = (() => {
       if (Fn.isInlineDefinition(routeValue)) {
         const routeProps: ApiFunctionRouteProps<keyof Authorizers> = {
-          function: routeValue,
+          function: routeValue
         };
         return [
           routeProps,
@@ -1062,30 +1059,25 @@ export class Api<
             routeKey,
             routeProps,
             postfixName
-          ),
+          )
         ];
       }
       if (routeValue.type === "alb") {
         return [
           routeValue,
-          this.createAlbIntegration(scope, routeKey, routeValue, postfixName),
+          this.createAlbIntegration(scope, routeKey, routeValue, postfixName)
         ];
       }
       if (routeValue.type === "url") {
         return [
           routeValue,
-          this.createHttpIntegration(scope, routeKey, routeValue, postfixName),
+          this.createHttpIntegration(scope, routeKey, routeValue, postfixName)
         ];
       }
       if (routeValue.type === "pothos") {
         return [
           routeValue,
-          this.createPothosIntegration(
-            scope,
-            routeKey,
-            routeValue,
-            postfixName
-          ),
+          this.createPothosIntegration(scope, routeKey, routeValue, postfixName)
         ];
       }
       if (routeValue.cdk?.function) {
@@ -1096,7 +1088,7 @@ export class Api<
             routeKey,
             routeValue,
             postfixName
-          ),
+          )
         ];
       }
       if ("function" in routeValue) {
@@ -1107,7 +1099,7 @@ export class Api<
             routeKey,
             routeValue,
             postfixName
-          ),
+          )
         ];
       }
       if ("handler" in routeValue)
@@ -1119,14 +1111,17 @@ export class Api<
       );
     })();
 
-    const { authorizationType, authorizer, authorizationScopes } =
-      this.buildRouteAuth(routeProps);
+    const {
+      authorizationType,
+      authorizer,
+      authorizationScopes
+    } = this.buildRouteAuth(routeProps);
     const route = new apig.HttpRoute(scope, `Route_${postfixName}`, {
       httpApi: this.cdk.httpApi,
       routeKey: httpRouteKey,
       integration,
       authorizer,
-      authorizationScopes,
+      authorizationScopes
     });
 
     ////////////////////
@@ -1163,7 +1158,7 @@ export class Api<
     // Store route
     this.routesData[routeKey] = {
       type: "url",
-      url: routeProps.url,
+      url: routeProps.url
     };
 
     return integration;
@@ -1187,7 +1182,7 @@ export class Api<
     // Store route
     this.routesData[routeKey] = {
       type: "alb",
-      alb: routeProps.cdk?.albListener!,
+      alb: routeProps.cdk?.albListener!
     };
 
     return integration;
@@ -1205,7 +1200,7 @@ export class Api<
       {
         ...routeProps,
         type: "function",
-        payloadFormatVersion: "2.0",
+        payloadFormatVersion: "2.0"
       },
       postfixName
     );
@@ -1216,7 +1211,7 @@ export class Api<
         type: "pothos",
         output: routeProps.output,
         schema: routeProps.schema,
-        commands: routeProps.commands,
+        commands: routeProps.commands
       };
     }
     return result;
@@ -1257,14 +1252,14 @@ export class Api<
       `Integration_${postfixName}`,
       lambda,
       {
-        payloadFormatVersion: integrationPayloadFormatVersion,
+        payloadFormatVersion: integrationPayloadFormatVersion
       }
     );
 
     // Store route
     this.routesData[routeKey] = {
       type: "lambda_function",
-      function: lambda,
+      function: lambda
     };
 
     return integration;
@@ -1309,7 +1304,7 @@ export class Api<
     const root = scope.node.root as App;
     if (root.local) {
       lambda.addEnvironment("SST_DEBUG_IS_API_ROUTE", "1", {
-        removeInEdge: true,
+        removeInEdge: true
       });
     }
 
@@ -1320,18 +1315,18 @@ export class Api<
       `Integration_${postfixName}`,
       lambda,
       {
-        payloadFormatVersion: integrationPayloadFormatVersion,
+        payloadFormatVersion: integrationPayloadFormatVersion
       }
     );
 
     // Store route
     this.routesData[routeKey] = {
       type: "function",
-      function: lambda,
+      function: lambda
     };
 
     // Attached existing permissions
-    this.permissionsAttachedForAllRoutes.forEach((permissions) =>
+    this.permissionsAttachedForAllRoutes.forEach(permissions =>
       lambda.attachPermissions(permissions)
     );
 
@@ -1344,12 +1339,12 @@ export class Api<
     if (authorizerKey === "none") {
       return {
         authorizationType: "none",
-        authorizer: new apig.HttpNoneAuthorizer(),
+        authorizer: new apig.HttpNoneAuthorizer()
       };
     } else if (authorizerKey === "iam") {
       return {
         authorizationType: "iam",
-        authorizer: new apigAuthorizers.HttpIamAuthorizer(),
+        authorizer: new apigAuthorizers.HttpIamAuthorizer()
       };
     }
 
@@ -1361,8 +1356,8 @@ export class Api<
     }
 
     const authorizer = this.authorizersData[authorizerKey as string];
-    const authorizationType =
-      this.props.authorizers[authorizerKey as string].type;
+    const authorizationType = this.props.authorizers[authorizerKey as string]
+      .type;
     const authorizationScopes =
       authorizationType === "jwt" || authorizationType === "user_pool"
         ? routeProps?.authorizationScopes ||

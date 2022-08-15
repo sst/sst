@@ -6,6 +6,7 @@ import {
   DescribeStacksCommand,
   DescribeStackResourceCommand,
 } from "@aws-sdk/client-cloudformation";
+import { GetParameterCommand, SSMClient } from "@aws-sdk/client-ssm";
 import {
   flatMap,
   fromPairs,
@@ -20,6 +21,7 @@ import {
 import { useParams } from "react-router-dom";
 import type { Metadata } from "../../../../resources/src/Metadata";
 import { useClient } from "./client";
+import { GetObjectCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
 
 export type StackInfo = {
   info: Stack;
@@ -47,9 +49,33 @@ type Result = {
 export function useStacks() {
   const params = useParams<{ app: string; stage: string }>();
   const cf = useClient(CloudFormationClient);
+  const ssm = useClient(SSMClient);
+  const s3 = useClient(S3Client);
+
   return useQuery(
     ["stacks", params.app!, params.stage!],
     async () => {
+      
+      try {
+        const value = await ssm.send(new GetParameterCommand({
+          Name: `/sst/bootstrap/bucket-name`,
+        }))
+        const bucketName = value.Parameter.Value
+        const list = await s3.send(new ListObjectsV2Command({
+          Bucket: bucketName,
+          Prefix: `stackMetadata/app.${params.app}/stage.${params.stage}/`,
+        }))
+        const results = await Promise.all(list.Contents.map(async item => {
+          s3.send(new GetObjectCommand({
+            Bucket: bucketName,
+            Key: item.Key
+          }))
+        }))
+
+      } catch (ex) {
+        console.warn("Failed to get metadata from S3. Falling back to old method, please update SST", ex)
+      }
+
       const tagFilter = [
         {
           Key: "sst:app",
@@ -86,13 +112,6 @@ export function useStacks() {
         const parsed = JSON.parse(response.StackResourceDetail!.Metadata!);
         const constructs = parsed["sst:constructs"] as Metadata[];
         const result: StackInfo["constructs"] = {
-          /*
-            all: pipe(
-              constructs,
-              groupBy((x) => x.type),
-              mapValues((value) => fromPairs(value.map((x) => [x.addr, x])))
-            ),
-            */
           version: parsed["sst:version"],
           all: constructs,
           byAddr: fromPairs(constructs.map((x) => [x.addr, x])),
@@ -133,9 +152,12 @@ export function useStacks() {
               // TODO: Not sure why data is ever undefined but Phil Astle reported it
               if (!construct.data) return [];
               switch (construct.type) {
-                case "Api":
                 case "WebSocketApi":
                 case "ApiGatewayV1Api":
+                  return construct.data.routes
+                    .filter((r) => r.fn)
+                    .map((r) => [r.fn!.node, construct]);
+                case "Api":
                   return construct.data.routes
                     .filter((r) => r.fn)
                     .map((r) => [r.fn!.node, construct]);
@@ -211,7 +233,7 @@ export function useStackFromName(name: string) {
 
 export function useConstructsByType<T extends Metadata["type"]>(type: T) {
   const stacks = useStacks();
-  return stacks.data?.constructs.byType[type] || [];
+  return stacks.data?.constructs.byType[type]
 }
 
 export function useConstruct<T extends Metadata["type"]>(

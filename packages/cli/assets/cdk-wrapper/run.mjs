@@ -2,11 +2,11 @@
 
 "use strict";
 
-process.on("uncaughtException", function (err) {
+process.on("uncaughtException", function(err) {
   console.error("\n" + (err.stack || err) + "\n");
   process.exit(1);
 });
-process.on("unhandledRejection", (err) => {
+process.on("unhandledRejection", err => {
   throw err;
 });
 
@@ -37,7 +37,7 @@ if (config.debugEndpoint) {
 
 // Load environment variables from dotenv
 Util.Environment.load({
-  searchPaths: [`.env.${config.stage}.local`, `.env.${config.stage}`],
+  searchPaths: [`.env.${config.stage}.local`, `.env.${config.stage}`]
 });
 
 // Check first and throw an error
@@ -82,7 +82,7 @@ const app = new sst.App({
   debugBucketName: config.debugBucketName,
   debugStartedAt: config.debugStartedAt,
   debugIncreaseTimeout: config.debugIncreaseTimeout,
-  debugBridge: config.debugBridge,
+  debugBridge: config.debugBridge
 });
 
 // Run the handler
