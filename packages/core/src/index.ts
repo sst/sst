@@ -1952,6 +1952,17 @@ function getErrorMessageFromEvents(events) {
   return errorMessage;
 }
 
+async function callAwsWithRetry<T>(fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch(e) {
+    if (isRetryableException(e)) {
+      return await callAwsWithRetry(fn);
+    }
+    throw e;
+  }
+}
+
 function isRetryableException(e) {
   return (
     (e.code === "ThrottlingException" && e.message === "Rate exceeded") ||
@@ -2000,6 +2011,7 @@ export {
   getCdkVersion,
   getSstVersion,
   getChildLogger,
+  callAwsWithRetry,
   initializeLogger,
   isRetryableException,
   STACK_DEPLOY_STATUS,

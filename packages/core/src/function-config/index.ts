@@ -2,6 +2,7 @@ import S3 from "aws-sdk/clients/s3.js";
 import SSM, { ParameterList } from "aws-sdk/clients/ssm.js";
 import Lambda from "aws-sdk/clients/lambda.js";
 import { Bootstrap } from "../bootstrap/index.js";
+import { callAwsWithRetry } from "../index.js";
 
 type Secret = {
   value?: string,
@@ -84,6 +85,24 @@ export async function getSecret(app: string, stage: string, region: string, name
 }
 
 export async function setSecret(app: string, stage: string, region: string, name: string, value: string) {
+  await setSecretDo(app, stage, region, name, value);
+  await restartFunctionsUsingSecret(app, stage, region, name);
+}
+
+export async function setSecretFallback(app: string, region: string, name: string, value: string) {
+  await setSecretDo(app, FALLBACK_STAGE, region, name, value);
+}
+
+export async function removeSecret(app: string, stage: string, region: string, name: string) {
+  await removeSecretDo(app, stage, region, name);
+  await restartFunctionsUsingSecret(app, stage, region, name);
+}
+
+export async function removeSecretFallback(app: string, region: string, name: string) {
+  await removeSecretDo(app, FALLBACK_STAGE, region, name);
+}
+
+async function setSecretDo(app: string, stage: string, region: string, name: string, value: string) {
   const ssm = new SSM({ region });
 
   await ssm.putParameter({
@@ -92,15 +111,9 @@ export async function setSecret(app: string, stage: string, region: string, name
     Type: "SecureString",
     Overwrite: true,
   }).promise();
-
-  await restartFunctionsUsingSecret(app, stage, region, name);
 }
 
-export async function setSecretFallback(app: string, region: string, name: string, value: string) {
-  return await setSecret(app, FALLBACK_STAGE, region, name, value);
-}
-
-export async function removeSecret(app: string, stage: string, region: string, name: string) {
+async function removeSecretDo(app: string, stage: string, region: string, name: string) {
   const ssm = new SSM({ region });
   try {
     await ssm.deleteParameter({
@@ -112,10 +125,6 @@ export async function removeSecret(app: string, stage: string, region: string, n
     }
     throw e;
   }
-}
-
-export async function removeSecretFallback(app: string, region: string, name: string) {
-  return await removeSecret(app, FALLBACK_STAGE, region, name);
 }
 
 export function buildSsmPrefixForSecret(app: string, stage: string) {
@@ -166,35 +175,43 @@ async function restartFunctionsUsingSecret(app: string, stage: string, region: s
   console.log(`Restarting all functions using secret ${name}\n`);
 
   // Download all files in folder
-  const listRet = await s3.listObjectsV2({
-    Bucket: Bootstrap.assets.bucketName,
-    Prefix: `stackMetadata/app.${app}/stage.${stage}/`,
-  }).promise();
+  const listRet = await callAwsWithRetry(() =>
+    s3.listObjectsV2({
+      Bucket: Bootstrap.assets.bucketName!,
+      Prefix: `stackMetadata/app.${app}/stage.${stage}/`,
+    }).promise()
+  );
 
   // Get all functions using this secret
   await Promise.all((listRet.Contents || []).map(async (c) => {
     // Download the file
-    const ret = await s3.getObject({
-      Bucket: Bootstrap.assets.bucketName!,
-      Key: c.Key!,
-    }).promise();
+    const ret = await callAwsWithRetry(() =>
+      s3.getObject({
+        Bucket: Bootstrap.assets.bucketName!,
+        Key: c.Key!,
+      }).promise()
+    );
     // Parse the file
     const json = JSON.parse(ret.Body!.toString());
     await Promise.all(json
       .filter((p: any) => p.type === "Function" && p.data.secrets && p.data.secrets.includes(name))
       .map(async (p: any) => {
-        const ret = await lambda.getFunctionConfiguration({
-          FunctionName: p.data.arn,
-        }).promise();
-        await lambda.updateFunctionConfiguration({
-          FunctionName: p.data.arn,
-          Environment: {
-            Variables: {
-              ...(ret.Environment?.Variables || {}),
-              [SECRET_UPDATED_AT_ENV]: Date.now().toString(),
+        const ret = await callAwsWithRetry(() =>
+          lambda.getFunctionConfiguration({
+            FunctionName: p.data.arn,
+          }).promise()
+        );
+        await callAwsWithRetry(() =>
+          lambda.updateFunctionConfiguration({
+            FunctionName: p.data.arn,
+            Environment: {
+              Variables: {
+                ...(ret.Environment?.Variables || {}),
+                [SECRET_UPDATED_AT_ENV]: Date.now().toString(),
+              },
             },
-          },
-        }).promise();
+          }).promise()
+        );
       }));
   }));
 }

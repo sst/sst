@@ -67,10 +67,10 @@ Note that the values for the secrets are not defined here by design. You shouldn
   # Check the value of a secret
   npx sst secrets get STRIPE_KEY
 
-  # Check the values of all the secrets, run:
+  # Check the values of all the secrets
   npx sst secrets list
 
-  # Unset the value of a secret, run:
+  # Unset the value of a secret
   npx sst secrets remove STRIPE_KEY
   ```
 

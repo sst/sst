@@ -11,13 +11,17 @@ export const Config: ConfigType = {};
 
 // If SST_APP and SST_STAGE are not set, it is likely the
 // user is using an older version of SST.
-const errorMsg = "This is usually the case when you are using an older version of SST. Please update SST to 1.7.0 or later to use the SST Config feature.";
+const errorMsg = "This is usually the case when you are using an older version of SST. Please update SST to the latest version to use the SST Config feature.";
 if (!process.env.SST_APP) {
   throw new Error(`Cannot find the SST_APP environment variable. ${errorMsg}`);
 }
 if (!process.env.SST_STAGE) {
   throw new Error(`Cannot find the SST_STAGE environment variable. ${errorMsg}`);
 }
+// @ts-ignore
+Config.APP = process.env.SST_APP;
+// @ts-ignore
+Config.STAGE = process.env.SST_STAGE;
 
 await storeSecretsInConfig();
 storeParametersInConfig();

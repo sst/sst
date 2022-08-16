@@ -226,6 +226,30 @@ A convenience command to update SST to the latest version. It also updates any C
 npx sst update
 ```
 
+### `secrets [action]`
+
+Manage secret values in your app.
+
+```bash
+# Check the values of all the secrets, run:
+npx sst secrets list
+
+# Check the value of a secret
+npx sst secrets get STRIPE_KEY
+
+# Set the value of a secret
+npx sst secrets set STRIPE_KEY sk_test_abc123
+
+# Unset the value of a secret
+npx sst secrets remove STRIPE_KEY
+
+# Set the fallback value of a secret
+npx sst secrets set-fallback STRIPE_KEY sk_test_abc123
+
+# Unset the fallback value of a secret
+npx sst secrets remove-fallback STRIPE_KEY
+```
+
 ### `add-cdk [packages..]`
 
 Installs the given AWS CDK npm packages with the appropriate CDK version. This convenience method helps get around the [known CDK issue of version mismatches](known-issues.md). This command internally simply does and `npm install` or `yarn add`.

@@ -25,6 +25,8 @@ export function codegen() {
     declare module "@serverless-stack/node/config" {
     export interface ConfigType {
       ${[
+        "APP",
+        "STAGE",
         ...Parameter.getAllNames(),
         ...Secret.getAllNames()
       ].map((p) => `${p}: string`).join(",\n")}

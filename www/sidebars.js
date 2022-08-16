@@ -146,6 +146,7 @@ module.exports = {
       Packages: [
         "packages/create-sst",
         "packages/cli",
+        "packages/node",
         "packages/resources",
         "packages/static-site-env",
       ],
