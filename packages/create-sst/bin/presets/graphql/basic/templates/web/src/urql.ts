@@ -17,7 +17,7 @@ import {
   QueryResult,
   MutationRequest,
   MutationResult
-} from "@react/graphql/genql";
+} from "@@@app/graphql/genql";
 
 import { pipe, toPromise } from "wonka";
 
