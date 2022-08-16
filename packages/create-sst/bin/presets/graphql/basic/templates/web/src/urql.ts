@@ -8,6 +8,7 @@ import {
     defaultExchanges,
     OperationResult,
     createRequest,
+    useClient
   } from "urql";
 
 import { useEffect, useState, useCallback, useRef } from "react";
@@ -21,11 +22,6 @@ import {
 } from "@@@app/graphql/genql";
 
 import { pipe, toPromise } from "wonka";
-
-export const client = createClient({
-    url: import.meta.env.VITE_GRAPHQL_URL,
-    exchanges: defaultExchanges
-});
 
 export function useTypedQuery<Query extends QueryRequest>(opts: {
   query: Query;
@@ -58,6 +54,7 @@ export function useTypedMutation<
   builder: (vars: Variables) => Mutation,
   opts?: Partial<OperationContext>
 ): UseMutationResponse<Data, Variables> {
+  const client = useClient();
   const isMounted = useRef(true);
   const [state, setState] =
     useState<UseMutationState<Data, Variables>>(initialState);
