@@ -1,15 +1,13 @@
 import {
-    OperationContext,
-    RequestPolicy,
-    useQuery,
-    createClient,
-    UseMutationState,
-    UseMutationResponse,
-    defaultExchanges,
-    OperationResult,
-    createRequest,
-    useClient
-  } from "urql";
+  OperationContext,
+  RequestPolicy,
+  useQuery,
+  UseMutationState,
+  UseMutationResponse,
+  OperationResult,
+  createRequest,
+  useClient
+} from "urql";
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import {
@@ -19,7 +17,7 @@ import {
   QueryResult,
   MutationRequest,
   MutationResult
-} from "@@@app/graphql/genql";
+} from "@react/graphql/genql";
 
 import { pipe, toPromise } from "wonka";
 
@@ -43,7 +41,7 @@ const initialState = {
   error: undefined,
   data: undefined,
   extensions: undefined,
-  operation: undefined,
+  operation: undefined
 };
 
 export function useTypedMutation<
@@ -56,10 +54,11 @@ export function useTypedMutation<
 ): UseMutationResponse<Data, Variables> {
   const client = useClient();
   const isMounted = useRef(true);
-  const [state, setState] =
-    useState<UseMutationState<Data, Variables>>(initialState);
+  const [state, setState] = useState<UseMutationState<Data, Variables>>(
+    initialState
+  );
   const executeMutation = useCallback(
-    (
+    async (
       vars?: Variables,
       context?: Partial<OperationContext>
     ): Promise<OperationResult<Data, Variables>> => {
@@ -70,7 +69,7 @@ export function useTypedMutation<
       return pipe(
         client.executeMutation<Data, Variables>(
           createRequest(query, variables as Variables),
-          { ...opts, ...context}
+          { ...opts, ...context }
         ),
         toPromise
       ).then((result: OperationResult<Data, Variables>) => {
@@ -81,7 +80,7 @@ export function useTypedMutation<
             data: result.data,
             error: result.error,
             extensions: result.extensions,
-            operation: result.operation,
+            operation: result.operation
           });
         }
         return result;
