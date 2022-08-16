@@ -175,9 +175,16 @@ async function run(json) {
     if (!isInternal) {
       lines.push("\n## Constructor");
       for (const signature of constructor.signatures) {
+        let constructorName = signature.name;
+        if (constructorName === "new Secret") {
+          constructorName = "new Config.Secret";
+        }
+        else if (constructorName === "new Parameter") {
+          constructorName = "new Config.Parameter";
+        }
         lines.push("```ts");
         lines.push(
-          `${signature.name}(${signature.parameters
+          `${constructorName}(${signature.parameters
             .map((p) => `${p.name}`)
             .join(", ")})`
         );
@@ -212,13 +219,14 @@ async function run(json) {
 
     // Methods
     const methods =
-      construct.children?.filter(
-        (c) =>
-          c.kindString === "Method" &&
-          c.flags.isPublic &&
-          !c.flags.isExternal &&
-          !c.implementationOf
-      ) || [];
+      (construct.children || [])
+      .filter((c) => c.kindString === "Method")
+      .filter((c) =>
+        c.flags.isPublic &&
+        !c.flags.isExternal &&
+        !c.implementationOf
+      )
+      .filter((c) => !c.signatures[0].comment?.tags?.find((x) => x.tag === "internal"));
     if (methods.length) {
       lines.push("## Methods");
       lines.push(
@@ -236,22 +244,23 @@ async function run(json) {
       }
     }
 
-    for (const child of (file.children || []).sort(
-      (a, b) => a.name.length - b.name.length
-    )) {
-      if (child.kindString === "Interface") {
-        const hoisted = child.name === `${file.name}Props` ? props : lines;
-        hoisted.push(`## ${child.name}`);
-        hoisted.push(child.comment?.shortText);
-        hoisted.push(child.comment?.text);
+    // Interfaces
+    (file.children || [])
+      .sort((a, b) => a.name.length - b.name.length)
+      .filter((c) => c.kindString === "Interface")
+      .filter((c) => !c.comment?.tags?.find((x) => x.tag === "internal"))
+      .forEach((c) => {
+        const hoisted = c.name === `${file.name}Props` ? props : lines;
+        hoisted.push(`## ${c.name}`);
+        hoisted.push(c.comment?.shortText);
+        hoisted.push(c.comment?.text);
         const examples =
-          child.comment?.tags?.filter((x) => x.tag === "example") || [];
+          c.comment?.tags?.filter((x) => x.tag === "example") || [];
         if (examples.length) {
           hoisted.push(...examples.map(renderTag));
         }
-        hoisted.push(...renderProperties(file, json.children, child.children));
-      }
-    }
+        hoisted.push(...renderProperties(file, json.children, c.children));
+      });
 
     const output = lines.flat(100).join("\n");
     const path = `docs/constructs/${file.name}.tsdoc.md`;

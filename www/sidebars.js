@@ -205,7 +205,21 @@ module.exports = {
       ],
     },
     {
-      Core: ["constructs/App", "constructs/Stack", "constructs/Function"],
+      Core: [
+        "constructs/App",
+        "constructs/Stack",
+        "constructs/Function",
+        {
+          type: "category",
+          label: "Config",
+          collapsible: true,
+          collapsed: true,
+          items: [
+            "constructs/Secret",
+            "constructs/Parameter",
+          ],
+        }
+      ],
       Api: [
         "constructs/Api",
         "constructs/GraphQLApi",
@@ -235,7 +249,6 @@ module.exports = {
         "constructs/Permissions",
       ],
       Other: [
-        "constructs/Config",
         "constructs/Script",
         "constructs/DebugApp",
         "constructs/DebugStack",

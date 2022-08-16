@@ -847,7 +847,7 @@ _Type_ : <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
 
 _Type_ : <span class='mono'><span class="mono">"iam"</span> | <span class="mono">"none"</span> | <span class="mono">string</span></span>
 
-### function
+### function?
 
 _Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span> | <span class="mono">[FunctionProps](Function#functionprops)</span></span>
 
@@ -864,6 +864,14 @@ The payload format version for the route.
 ### type?
 
 _Type_ : <span class="mono">"function"</span>
+
+
+### cdk.function?
+
+_Type_ : <span class="mono">[IFunction](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.IFunction.html)</span>
+
+Use an existing Lambda function.
+
 
 ## ApiUserPoolAuthorizer
 Specify a user pool authorizer and configure additional options.

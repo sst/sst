@@ -117,10 +117,9 @@ While deploying, SST waits for the CloudFront cache invalidation process to fini
 
 ### cdk.bucket?
 
-_Type_ : <span class="mono">[BucketProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.BucketProps.html)</span>
+_Type_ : <span class='mono'><span class="mono">[BucketProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.BucketProps.html)</span> | <span class="mono">[IBucket](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.IBucket.html)</span></span>
 
-Pass in bucket information to override the default settings this
-construct uses to create the CDK Bucket internally.
+Allows you to override default settings this construct uses internally to ceate the bucket
 
 
 ### cdk.cachePolicies.buildCachePolicy?
@@ -242,6 +241,12 @@ _Type_ : <span class="mono">[Distribution](https://docs.aws.amazon.com/cdk/api/v
 
 The internally created CDK `Distribution` instance.
 
+### cdk.function?
+
+_Type_ : <span class="mono">[Function](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html)</span>
+
+The internally created CDK `Function` instance. Not available in the "edge" mode.
+
 ### cdk.hostedZone?
 
 _Type_ : <span class="mono">[IHostedZone](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_route53.IHostedZone.html)</span>
@@ -336,4 +341,4 @@ Import the underlying Route 53 hosted zone.
 
 ### defaultBehavior?
 
-_Type_ : <span class="mono">[AddBehaviorOptions](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.AddBehaviorOptions.html)</span>
+_Type_ : 

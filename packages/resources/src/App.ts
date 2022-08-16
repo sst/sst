@@ -178,7 +178,6 @@ export class App extends cdk.App {
       deployProps.region || process.env.CDK_DEFAULT_REGION || "us-east-1";
     this.account = process.env.CDK_DEFAULT_ACCOUNT || "my-account";
     this.esbuildConfig = deployProps.esbuildConfig;
-    console.log(deployProps.bootstrapAssets);
     this.bootstrapAssets = deployProps.bootstrapAssets || {};
     this.buildDir = deployProps.buildDir || ".build";
     this.skipBuild = deployProps.skipBuild || false;
