@@ -58,6 +58,11 @@ export class Parameter extends Construct {
   }
 
   /** @internal */
+  public static clear() {
+    Parameter.all.clear();
+  }
+
+  /** @internal */
   public getConstructMetadata() {
     return {
       type: "Parameter" as const,

@@ -11,7 +11,7 @@ test("scope-Stage", async () => {
   const stack = new Stack(stage, "stack");
   expect(app.stage).toBe("dev");
   expect(stack.stage).toBe("dev");
-  countResources(stack, "AWS::CDK::Metadata", 1);
+  countResources(stack, "Custom::StackMetadata", 1);
 });
 
 test("addOutputs", async () => {

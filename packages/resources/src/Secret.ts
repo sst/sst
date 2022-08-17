@@ -38,6 +38,11 @@ export class Secret extends Construct {
   }
 
   /** @internal */
+  public static clear() {
+    Secret.all.clear();
+  }
+
+  /** @internal */
   public getConstructMetadata() {
     return {
       type: "Secret" as const,
