@@ -1,5 +1,17 @@
 # @serverless-stack/core
 
+## 1.8.0
+
+### Minor Changes
+
+- [#1957](https://github.com/serverless-stack/sst/pull/1957) [`989a4f516`](https://github.com/serverless-stack/sst/commit/989a4f516175c2e51a649acad4478d3eec5319f1) Thanks [@fwang](https://github.com/fwang)! - Release Config
+
+### Patch Changes
+
+- [#1952](https://github.com/serverless-stack/sst/pull/1952) [`4b9d6bf6f`](https://github.com/serverless-stack/sst/commit/4b9d6bf6fe550727af1f04e6655f45ae8fe900cb) Thanks [@fwang](https://github.com/fwang)! - sst start: suppress errors from RDS warmer
+
+* [`fc7abc430`](https://github.com/serverless-stack/sst/commit/fc7abc43094b8eb9d3bb77902dfec5883fa1bac7) Thanks [@thdxr](https://github.com/thdxr)! - Fix issue with running go functions locally on Windows machiness
+
 ## 1.7.0
 
 ### Minor Changes
