@@ -14,6 +14,7 @@ The `Config` libraries include:
    2. [`Config.Parameter`](constructs/Parameter.md)
 2. CLI to set secrets [`sst secrets [action]`](packages/cli.md#secrets-action)
 3. Lambda helpers to fetch them [`@serverless-stack/node/config`](packages/node.md#config)
+   - Throw an error if they are not defined
    - Fetches them automatically at runtime
    - Provides typesafety and autocomplete
 
@@ -94,15 +95,25 @@ import { Config } from "@serverless-stack/node/config";
 
 The module reads the value from `process.env.SST_PARAM_USER_UPDATED_TOPIC` and assigns it to `Config.USER_UPDATED_TOPIC`. You can then reference `Config.USER_UPDATED_TOPIC` directly in your code.
 
+SST also stores a copy of the parameter values in [AWS SSM](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html). For each parameter, an SSM parameter of the type `String` is created with the name `/aws/{appName}/{stageName}/parameters/USER_UPDATED_TOPIC`, where `{appName}` is the name of your SST app, and `{stageName}` is the stage. The parameter value in this case is the topic name stored in plain text.
+
+Storing the parameter values in SSM might seem redundant. But it provides a convenient way to fetch all the parameters used in your application. This can be extremely useful for testing. This isn't possible when using Lambda environment variables and we are going to see why in the next section.
+
+#### Error handling
+
+If you reference a parameter that hasn't been set in the `config` prop for the function, you'll get an error. For example, if you reference something like `Config.XYZ` and it hasn't been set; you'll get the following runtime error.
+
+```
+Config.XYZ has not been set for this function.
+```
+
+#### Typesafety
+
 The `Config` object in your Lambda function code is also typesafe and your editor should be able to autocomplete it.
 
 :::info
 The `Config` object in your Lambda function code is typesafe.
 :::
-
-SST also stores a copy of the parameter values in [AWS SSM](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html). For each parameter, an SSM parameter of the type `String` is created with the name `/aws/{appName}/{stageName}/parameters/USER_UPDATED_TOPIC`, where `{appName}` is the name of your SST app, and `{stageName}` is the stage. The parameter value in this case is the topic name stored in plain text.
-
-Storing the parameter values in SSM might seem redundant. But it provides a convenient way to fetch all the parameters used in your application. This can be extremely useful for testing. This isn't possible when using Lambda environment variables and we are going to see why in the next section.
 
 ### Parameter vs Lambda environment
 
@@ -243,16 +254,26 @@ import { Config } from "@serverless-stack/node/config";
 
 The module performs a top-level await to fetch and decrypt `STRIPE_KEY` and `GITHUB_TOKEN` from SSM. Once fetched, you can reference `Config.STRIPE_KEY` and `Config.GITHUB_TOKEN` directly in your code.
 
-The `Config` object in your Lambda function code is also typesafe and your editor should be able to autocomplete it.
-
-:::info
-The `Config` object in your Lambda function code is typesafe.
-:::
-
 Note that the secret values are fetched once when the Lambda container first boots up, and the values are cached for subsequent invocations.
 
 :::note
 Due to the use of top-level await, your functions need to be bundled in the `esm` format. If you created your app using [`create-sst`](packages/create-sst.md), the bundle format is likely already set to `esm`. Read more about [Function bundle format](constructs/Function.md#format).
+:::
+
+#### Error handling
+
+If you reference a secret that hasn't been set in the `config` prop for the function, you'll get an error. For example, if you reference something like `Config.XYZ` and it hasn't been set; you'll get the following runtime error.
+
+```
+Config.XYZ has not been set for this function.
+```
+
+#### Typesafety
+
+The `Config` object in your Lambda function code is also typesafe and your editor should be able to autocomplete it.
+
+:::info
+The `Config` object in your Lambda function code is typesafe.
 :::
 
 ### Updating secrets
@@ -284,6 +305,10 @@ The fallback value can only be inherited by stages deployed in the same AWS acco
 :::
 
 If a function uses the `STRIPE_KEY` secret, but neither the secret value or the fallback value is set, you'll get a runtime error when importing `@serverless-stack/node/config`.
+
+```
+The following secrets were not found: STRIPE_KEY
+```
 
 ## `.env`
 
@@ -434,6 +459,8 @@ npx sst secrets set STRIPE_KEY sk_live_xyz789 --stage bar
 ```
 
 And at runtime, the functions are going to pick up the correct value based on the stage, whether they are running locally, inside a test, or in production.
+
+Finally, the `Config` object in your Lambda function handles errors and is typesafe. So unlike `process.env`, `Config.STRIPE_KEY` will autocomplete. And `Config.XYZ` will throw a runtime error.
 
 ## Built-in environment variables
 
