@@ -210,7 +210,7 @@ In addition to the [global options](#global-options) below, the `remove` command
 
 Compares the current version of the stacks in your app with the ones that've been deployed to AWS. This can be helpful in doing a quick check before deploying your changes to prod. You can also optionally compare a list of stacks.
 
-``` bash
+```bash
 # Compare all stacks
 npx sst diff
 
@@ -231,7 +231,7 @@ npx sst update
 Manage secret values in your app.
 
 ```bash
-# Check the values of all the secrets, run:
+# Check the values of all the secrets
 npx sst secrets list
 
 # Check the value of a secret
@@ -249,6 +249,10 @@ npx sst secrets set-fallback STRIPE_KEY sk_test_abc123
 # Unset the fallback value of a secret
 npx sst secrets remove-fallback STRIPE_KEY
 ```
+
+:::note
+The fallback value can only be inherited by stages deployed in the same AWS account and region.
+:::
 
 ### `add-cdk [packages..]`
 
