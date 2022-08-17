@@ -52,7 +52,7 @@ In this chapter we'll look at how they work.
    import TopicsStack from "./TopicsStack";
 
    export default function MyStack({ stack }: StackContext) {
-     const { USER_UPDATED_TOPIC } = use(SecretsStack);
+     const { USER_UPDATED_TOPIC } = use(TopicsStack);
 
      new Function(stack, "MyFunction", {
        handler: "lambda.handler",
@@ -75,7 +75,7 @@ In this chapter we'll look at how they work.
 
 ### How it works
 
-Behind the scenes, parameters are stored as Lambda function environments. When you pass a parameter into a function:
+Behind the scenes, parameters are stored as Lambda environment variables. When you pass a parameter into a function:
 
 ```ts {3}
 new Function(stack, "MyFunction", {

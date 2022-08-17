@@ -289,7 +289,8 @@ export class App extends cdk.App {
   }
 
   synth(options: cdk.StageSynthesisOptions = {}): cxapi.CloudAssembly {
-    Config.codegen();
+    this.createTypesFile();
+    Config.codegenTypes();
     this.buildConstructsMetadata();
 
     for (const child of this.node.children) {
@@ -465,6 +466,14 @@ export class App extends cdk.App {
     current.node.children.forEach(resource =>
       this.applyRemovalPolicy(resource, policy)
     );
+  }
+
+  private createTypesFile() {
+    fs.removeSync("node_modules/@types/serverless-stack__node");
+    fs.mkdirSync("node_modules/@types/serverless-stack__node", {
+      recursive: true,
+    });
+    fs.writeFileSync("node_modules/@types/serverless-stack__node/index.d.ts", "");
   }
 
   // Functional Stack

@@ -1,13 +1,11 @@
 import url from "url";
 import chalk from "chalk";
 import path from "path";
-import semver from "semver";
 import SSM from "aws-sdk/clients/ssm.js";
 import { getChildLogger } from "../logger.js";
 import {
   synth,
   deploy,
-  getSstVersion,
   isRetryableException,
   STACK_DEPLOY_STATUS
 } from "../index.js";
@@ -15,6 +13,7 @@ import {
 const logger = getChildLogger("bootstrap");
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
+export const LATEST_VERSION = "2";
 export const SSM_NAME_VERSION = `/sst/bootstrap/version`;
 export const SSM_NAME_STACK_NAME = `/sst/bootstrap/stack-name`;
 export const SSM_NAME_BUCKET_NAME = `/sst/bootstrap/bucket-name`;
@@ -34,8 +33,7 @@ export async function bootstrap(config: any, cliInfo: any) {
   const { region } = config;
   await init(region);
   const bootstrapVersion = assets.version;
-  const sstVersion = await getSstVersion();
-  if (isVersionUpToDate(sstVersion, bootstrapVersion)) {
+  if (isVersionUpToDate(bootstrapVersion)) {
     return;
   }
 
@@ -44,18 +42,13 @@ export async function bootstrap(config: any, cliInfo: any) {
   // Check bootstrap version again
   await init(region);
   const bootstrapVersionNew = assets.version;
-  if (!isVersionUpToDate(sstVersion, bootstrapVersionNew)) {
+  if (!isVersionUpToDate(bootstrapVersionNew)) {
     throw new Error(`Failed to update the bootstrap version.`);
   }
 }
 
-function isVersionUpToDate(sstVersion: string, bootstrapVersion?: string) {
-  try {
-    return bootstrapVersion && semver.lte(sstVersion, bootstrapVersion);
-  } catch(e) {
-    // handle invalid semver version
-    return false;
-  }
+function isVersionUpToDate(bootstrapVersion?: string) {
+  return parseInt(bootstrapVersion || "0") === parseInt(LATEST_VERSION);
 }
 
 export async function init(region: string) {

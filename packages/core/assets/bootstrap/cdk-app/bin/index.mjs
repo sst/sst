@@ -9,7 +9,6 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import {
   Bootstrap,
-  getSstVersion,
 } from "@serverless-stack/core";
 
 const region = process.argv[2];
@@ -27,7 +26,7 @@ const stack = new cdk.Stack(app, "SSTBootstrap", {
 const bucket = createS3Bucket();
 const fn = createStackMetadataFunction(bucket);
 createSsmParams({
-  [Bootstrap.SSM_NAME_VERSION]: getSstVersion(),
+  [Bootstrap.SSM_NAME_VERSION]: Bootstrap.LATEST_VERSION,
   [Bootstrap.SSM_NAME_STACK_NAME]: stack.stackName,
   [Bootstrap.SSM_NAME_BUCKET_NAME]: bucket.bucketName,
   [Bootstrap.SSM_NAME_STACK_METADATA_FUNCTION_ARN]: fn.functionArn,
