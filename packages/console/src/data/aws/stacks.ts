@@ -77,9 +77,18 @@ export function useStacks() {
               const stackName = item.Key.split(".").at(-2)
               const resp = new Response(result.Body as ReadableStream)
               const constructs = await resp.json() as Metadata[]
-              const describe = await cf.send(new DescribeStacksCommand({
-                StackName: stackName,
-              }))
+              // Get the stack info. Note that if stack is not found in CloudFormation,
+              // supress the error.
+              let describe;
+              try {
+                describe = await cf.send(new DescribeStacksCommand({
+                  StackName: stackName,
+                }))
+              } catch (e: any) {
+                if (e.name === "ValidationError" && e.message.includes("does not exist")) {
+                  return null
+                }
+              }
               const info: StackInfo = {
                 info: describe.Stacks[0],
                 constructs: {
@@ -90,11 +99,13 @@ export function useStacks() {
               };
               return info
             } catch {
+              console.log("hihhi")
               await new Promise((resolve) => setTimeout(resolve, 1000))
             }
           }
         }))
-
+        // Filter stacks that are not found in CloudFormation.
+        stacks = stacks.filter(x => x !== null);
       } catch (ex) {
         console.error(ex)
         console.warn("Failed to get metadata from S3. Falling back to old method, please update SST", ex)
