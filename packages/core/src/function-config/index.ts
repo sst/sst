@@ -85,6 +85,7 @@ export async function getSecret(app: string, stage: string, region: string, name
 }
 
 export async function setSecret(app: string, stage: string, region: string, name: string, value: string) {
+  console.log(`Setting ${name}`);
   await setSecretDo(app, stage, region, name, value);
   await restartFunctionsUsingSecret(app, stage, region, name);
 }
@@ -94,6 +95,7 @@ export async function setSecretFallback(app: string, region: string, name: strin
 }
 
 export async function removeSecret(app: string, stage: string, region: string, name: string) {
+  console.log(`Removing ${name}`);
   await removeSecretDo(app, stage, region, name);
   await restartFunctionsUsingSecret(app, stage, region, name);
 }
@@ -172,7 +174,7 @@ async function restartFunctionsUsingSecret(app: string, stage: string, region: s
     return [];
   }
 
-  console.log(`Restarting all functions using secret ${name}\n`);
+  console.log(`Restarting all functions using ${name}`);
 
   // Download all files in folder
   const listRet = await callAwsWithRetry(() =>

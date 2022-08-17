@@ -38,6 +38,8 @@ export class Stack extends cdk.Stack {
    */
   public readonly defaultFunctionProps: FunctionProps[];
 
+  private readonly metadata: cdk.CustomResource;
+
   constructor(scope: Construct, id: string, props?: StackProps) {
     const root = scope.node.root as App;
     const stackId = root.logicalPrefixedName(id);
@@ -57,6 +59,16 @@ export class Stack extends cdk.Stack {
     this.defaultFunctionProps = root.defaultFunctionProps.map(dfp =>
       typeof dfp === "function" ? dfp(this) : dfp
     );
+
+    // We created the Metadata resource first with empty metadata, and on
+    // app synthesis we'll update it with the actual metadata.
+    // We do this two step process because we call the "Template.fromStack"
+    // method in the tests. And the call triggers an app synethsis. And we
+    // end up synthesize an app multiple times. If we created the Metadata
+    // resource on app synth, the tests would fail because the resource
+    // would already exist.
+
+    this.metadata = this.createStackMetadataResource();
   }
 
   /**
@@ -178,16 +190,19 @@ export class Stack extends cdk.Stack {
     });
   }
 
-  public createStackMetadataResource(metadata: any) {
+  public setStackMetadata(metadata: any) {
+    (this.metadata.node.defaultChild as cdk.CfnResource).addPropertyOverride("Metadata", metadata);
+  }
+
+  private createStackMetadataResource() {
     const app = this.node.root as App;
-    new cdk.CustomResource(this, "StackMetadata", {
+    return new cdk.CustomResource(this, "StackMetadata", {
       serviceToken: app.bootstrapAssets.stackMetadataFunctionArn!,
       resourceType: "Custom::StackMetadata",
       properties: {
         App: app.name,
         Stage: this.stage,
         Stack: this.stackName,
-        Metadata: metadata
       }
     });
   }
@@ -218,32 +233,5 @@ export class Stack extends cdk.Stack {
         `Do not set the "env" prop while initializing "${id}" stack${envS}. Use the "AWS_PROFILE" environment variable and "--region" CLI option instead.`
       );
     }
-  }
-
-  private isCDKMetadataResourceSupported(): boolean {
-    const app = this.node.root as App;
-
-    // CDK Metadata resource currently not supported in the region
-    if (!regionInfo.RegionInfo.get(app.region).cdkMetadataResourceAvailable) {
-      return false;
-    }
-
-    // CDK Metadata resource used to not supported in the region
-    // Note that b/c we cannot change the resource type of a given logical id,
-    //           so if it used to not support, we will continue to mark it not
-    //           supportd.
-    if (
-      [
-        "us-gov-east-1",
-        "us-gov-west-1",
-        "us-iso-east-1",
-        "us-isob-east-1",
-        "ap-northeast-3"
-      ].includes(app.region)
-    ) {
-      return false;
-    }
-
-    return true;
   }
 }

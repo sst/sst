@@ -382,7 +382,7 @@ export class App extends cdk.App {
     for (const child of this.node.children) {
       if (child instanceof Stack) {
         const stackName = (child as Stack).node.id;
-        (child as Stack).createStackMetadataResource(byStack[stackName] || []);
+        (child as Stack).setStackMetadata(byStack[stackName] || []);
       }
     }
     fs.writeJSONSync(State.resolve(this.appPath, "constructs.json"), local);

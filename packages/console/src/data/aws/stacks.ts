@@ -99,7 +99,6 @@ export function useStacks() {
               };
               return info
             } catch {
-              console.log("hihhi")
               await new Promise((resolve) => setTimeout(resolve, 1000))
             }
           }

@@ -68,7 +68,7 @@ async function handleGet(argv, app, stage, region) {
   if (secret.value) {
     logger.info(chalk.bold(secret.value));
   }
-  if (secret.fallbackValue) {
+  else if (secret.fallbackValue) {
     logger.info(`${chalk.bold(secret.fallbackValue)} ${chalk.gray("(fallback)")}`);
   }
   else {
@@ -81,7 +81,7 @@ async function handleGet(argv, app, stage, region) {
 async function handleSet(argv, app, stage, region) {
   const { name, value } = argv;
   await FunctionConfig.setSecret(app, stage, region, name, value);
-  logger.info("✅ Updated");
+  logger.info("\n✅ Updated");
 }
 
 async function handleSetFallback(argv, app, region) {
@@ -93,7 +93,7 @@ async function handleSetFallback(argv, app, region) {
 async function handleRemove(argv, app, stage, region) {
   const { name } = argv;
   await FunctionConfig.removeSecret(app, stage, region, name);
-  logger.info("✅ Removed");
+  logger.info("\n✅ Removed");
 }
 
 async function handleRemoveFallback(argv, app, region) {
