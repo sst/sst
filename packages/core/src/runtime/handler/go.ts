@@ -3,7 +3,7 @@ import fs from "fs-extra";
 import { State } from "../../state/index.js";
 import { Definition, Command, buildSync, buildAsync } from "./definition.js";
 
-export const GoHandler: Definition = (opts) => {
+export const GoHandler: Definition = opts => {
   const artifact = State.Function.artifactsPath(opts.root, opts.id);
   const target = path.join(artifact, "handler");
 
@@ -14,13 +14,13 @@ export const GoHandler: Definition = (opts) => {
   const build: Command = {
     command: "go",
     args: ["build", "-ldflags", "-s -w", "-o", target, "./" + opts.handler],
-    env: {},
+    env: {}
   };
   return {
     build: () => {
       fs.removeSync(artifact);
       fs.mkdirpSync(artifact);
-      return buildAsync(opts, build);
+      buildAsync(opts, build);
     },
     bundle: () => {
       fs.removeSync(artifact);
@@ -30,22 +30,22 @@ export const GoHandler: Definition = (opts) => {
         env: {
           CGO_ENABLED: "0",
           GOARCH: "amd64",
-          GOOS: "linux",
-        },
+          GOOS: "linux"
+        }
       });
       return {
         handler: "handler",
-        directory: artifact,
+        directory: artifact
       };
     },
     run: {
-      command: target,
+      command: process.platform === "win32" ? `${target}.exe` : target,
       args: [],
-      env: {},
+      env: {}
     },
     watcher: {
       include: [path.join(opts.srcPath, "**/*.go")],
-      ignore: [],
-    },
+      ignore: []
+    }
   };
 };
