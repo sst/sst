@@ -11134,24 +11134,24 @@ knex@^2.1.0:
     tarn "^3.0.2"
     tildify "2.0.0"
 
-kysely-codegen@^0.4.0-beta.2:
-  version "0.4.0-beta.2"
-  resolved "https://registry.yarnpkg.com/kysely-codegen/-/kysely-codegen-0.4.0-beta.2.tgz#8efc8bcec9b30ee119c004e7b076da2a6cd0f632"
-  integrity sha512-XqmjchpN5BmpQN/8D0OCbjXzxUStjZb6xXgKTIegBocFwYuMjdPXI4dkMQcyofIBtih2g5dh+n5vthB/7Uqetg==
+kysely-codegen@^0.5.0:
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/kysely-codegen/-/kysely-codegen-0.5.0.tgz#ae004af396443da1dc97641d813521d3f2872502"
+  integrity sha512-H7oRq8RK+m6n3wAzgARY4uPVnJXPGmTjcDdyvfLr37OdJGo7gd7UrC0oDLjeORrqtV3IwH0NA9MV2AxmwbCxHA==
   dependencies:
     chalk "^4.1.2"
     dotenv "^16.0.1"
     minimist "^1.2.6"
 
-kysely-data-api@^0.0.11:
-  version "0.0.11"
-  resolved "https://registry.yarnpkg.com/kysely-data-api/-/kysely-data-api-0.0.11.tgz#b3e4129886d35c2844b430d21a0fe580a782891b"
-  integrity sha512-QnMIDZS23iBH5ecRPC7e2lrBCIx+K80vji681abZ/GAHILDUqmKfX3l0LEq1wLMN9jJ697BJvdU7kcJCR/Leyw==
+kysely-data-api@^0.1.2:
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/kysely-data-api/-/kysely-data-api-0.1.2.tgz#4055c1200b76496bf9b815f192511dd6ce994ac2"
+  integrity sha512-/7Oixh2thlWnPkXFCX8PWXNl8e4zt9IUjcaUjnkz9iDpi9NaFNIms+MAytRhkUoPqAyJkB2kB/6a6R2Nnp4IWA==
 
-kysely@^0.19.10:
-  version "0.19.10"
-  resolved "https://registry.yarnpkg.com/kysely/-/kysely-0.19.10.tgz#2555f5e3840172e28a308e01e487e414f5e8dfc2"
-  integrity sha512-s1H6yY8UtV/r2o8n9z3kXVaV1JQ6laBv7LjoY4gx9D4Us53BI9TlmxrkJWDIk8yUX/CUs3k4kpB1BWjHmrWidw==
+kysely@^0.21.3:
+  version "0.21.3"
+  resolved "https://registry.yarnpkg.com/kysely/-/kysely-0.21.3.tgz#f2d6ecaed2cb4c099d34a4ebdf3d6d6604986133"
+  integrity sha512-frAPICQjRn8Q9k8NpkuOXpwcSNhheHY7YWU28LMiNPugI4mKEc60fobnVk3OMXsgr4ZXOwCNYz616PUYMgYFog==
 
 latest-version@^5.1.0:
   version "5.1.0"
