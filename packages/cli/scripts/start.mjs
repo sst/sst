@@ -8,11 +8,14 @@ import detect from "detect-port-alt";
 import array from "../lib/array.mjs";
 
 import {
+  synth,
+  deploy,
   logger,
   getChildLogger,
   STACK_DEPLOY_STATUS,
   Runtime,
   State,
+  Bootstrap,
   useStacksBuilder,
   useFunctionBuilder,
   useLocalServer,
@@ -25,8 +28,6 @@ import {
 
 import paths from "./util/paths.mjs";
 import {
-  synth,
-  deploy,
   prepareCdk,
   writeConfig,
   checkFileExists,
@@ -34,7 +35,6 @@ import {
   validatePropsForJs,
 } from "./util/cdkHelpers.mjs";
 import * as objectUtil from "../lib/object.mjs";
-import CloudFormation from "aws-sdk/clients/cloudformation.js";
 
 let isConsoleEnabled = false;
 // This flag is currently used by the "sst.Script" construct to make the "BuiltAt"
@@ -79,6 +79,9 @@ const clientLogger = {
 
 export default async function (argv, config, cliInfo) {
   await prepareCdk(argv, cliInfo, config);
+
+  // Deploy bootstrap stack
+  await Bootstrap.bootstrap(config, cliInfo);
 
   // Deploy debug stack
   const debugStackOutputs = await deployDebugStack(config, cliInfo);

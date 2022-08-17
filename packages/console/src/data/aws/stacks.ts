@@ -6,6 +6,7 @@ import {
   DescribeStacksCommand,
   DescribeStackResourceCommand,
 } from "@aws-sdk/client-cloudformation";
+import { GetParameterCommand, SSMClient } from "@aws-sdk/client-ssm";
 import {
   flatMap,
   fromPairs,
@@ -20,11 +21,12 @@ import {
 import { useParams } from "react-router-dom";
 import type { Metadata } from "../../../../resources/src/Metadata";
 import { useClient } from "./client";
+import { GetObjectCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
 
 export type StackInfo = {
   info: Stack;
   constructs: {
-    version: string;
+    version?: string;
     all: Metadata[];
     byAddr: Record<string, Metadata>;
     byType: { [key in Metadata["type"]]?: Extract<Metadata, { type: key }>[] };
@@ -47,78 +49,129 @@ type Result = {
 export function useStacks() {
   const params = useParams<{ app: string; stage: string }>();
   const cf = useClient(CloudFormationClient);
+  const ssm = useClient(SSMClient);
+  const s3 = useClient(S3Client);
+
   return useQuery(
     ["stacks", params.app!, params.stage!],
     async () => {
-      const tagFilter = [
-        {
-          Key: "sst:app",
-          Value: params.app!,
-        },
-        {
-          Key: "sst:stage",
-          Value: params.stage!,
-        },
-      ];
+      
+      let stacks: StackInfo[] = []
 
-      async function describeStacks(token?: string): Promise<Stack[]> {
-        const response = await cf.send(
-          new DescribeStacksCommand({
-            NextToken: token,
+      try {
+        const value = await ssm.send(new GetParameterCommand({
+          Name: `/sst/bootstrap/bucket-name`,
+        }))
+        const bucketName = value.Parameter.Value
+        const list = await s3.send(new ListObjectsV2Command({
+          Bucket: bucketName,
+          Prefix: `stackMetadata/app.${params.app}/stage.${params.stage}/`,
+        }))
+        stacks = await Promise.all(list.Contents.map(async item => {
+          while (true) {
+            try {
+              const result = await s3.send(new GetObjectCommand({
+                Bucket: bucketName,
+                Key: item.Key
+              }))
+              const stackName = item.Key.split(".").at(-2)
+              const resp = new Response(result.Body as ReadableStream)
+              const constructs = await resp.json() as Metadata[]
+              // Get the stack info. Note that if stack is not found in CloudFormation,
+              // supress the error.
+              let describe;
+              try {
+                describe = await cf.send(new DescribeStacksCommand({
+                  StackName: stackName,
+                }))
+              } catch (e: any) {
+                if (e.name === "ValidationError" && e.message.includes("does not exist")) {
+                  return null
+                }
+              }
+              const info: StackInfo = {
+                info: describe.Stacks[0],
+                constructs: {
+                  all: constructs,
+                  byAddr: fromPairs(constructs.map((x) => [x.addr, x])),
+                  byType: groupBy(constructs, (x) => x.type),
+                }
+              };
+              return info
+            } catch {
+              await new Promise((resolve) => setTimeout(resolve, 1000))
+            }
+          }
+        }))
+        // Filter stacks that are not found in CloudFormation.
+        stacks = stacks.filter(x => x !== null);
+      } catch (ex) {
+        console.error(ex)
+        console.warn("Failed to get metadata from S3. Falling back to old method, please update SST", ex)
+        const tagFilter = [
+          {
+            Key: "sst:app",
+            Value: params.app!,
+          },
+          {
+            Key: "sst:stage",
+            Value: params.stage!,
+          },
+        ];
+
+        async function describeStacks(token?: string): Promise<Stack[]> {
+          const response = await cf.send(
+            new DescribeStacksCommand({
+              NextToken: token,
+            })
+          );
+          if (!response.Stacks) return [];
+          const filtered = response.Stacks.filter((stack) =>
+            requireTags(stack.Tags, tagFilter)
+          );
+          if (!response.NextToken) return filtered;
+          return [...filtered, ...(await describeStacks(response.NextToken))];
+        }
+
+        const filtered = await describeStacks();
+        const work = filtered.map((x) => async () => {
+          const response = await cf.send(
+            new DescribeStackResourceCommand({
+              StackName: x.StackName,
+              LogicalResourceId: "SSTMetadata",
+            })
+          );
+          const parsed = JSON.parse(response.StackResourceDetail!.Metadata!);
+          const constructs = parsed["sst:constructs"] as Metadata[];
+          const result: StackInfo["constructs"] = {
+            version: parsed["sst:version"],
+            all: constructs,
+            byAddr: fromPairs(constructs.map((x) => [x.addr, x])),
+            byType: groupBy(constructs, (x) => x.type),
+          };
+          return result;
+        });
+
+        // Limit to 3 at a time to avoid hitting AWS limits
+        const meta: Awaited<ReturnType<typeof work[number]>>[] = [];
+        while (work.length) {
+          meta.push(...(await Promise.all(work.splice(0, 3).map((f) => f()))));
+        }
+
+        stacks = zipWith(
+          filtered,
+          meta,
+          (s, c): StackInfo => ({
+            constructs: c,
+            info: s,
           })
+        ).filter(
+          (x) =>
+            x.constructs.version.startsWith("0.0.0") ||
+            x.constructs.version >= "0.56.0"
         );
-        if (!response.Stacks) return [];
-        const filtered = response.Stacks.filter((stack) =>
-          requireTags(stack.Tags, tagFilter)
-        );
-        if (!response.NextToken) return filtered;
-        return [...filtered, ...(await describeStacks(response.NextToken))];
       }
 
-      const filtered = await describeStacks();
-      const work = filtered.map((x) => async () => {
-        const response = await cf.send(
-          new DescribeStackResourceCommand({
-            StackName: x.StackName,
-            LogicalResourceId: "SSTMetadata",
-          })
-        );
-        const parsed = JSON.parse(response.StackResourceDetail!.Metadata!);
-        const constructs = parsed["sst:constructs"] as Metadata[];
-        const result: StackInfo["constructs"] = {
-          /*
-            all: pipe(
-              constructs,
-              groupBy((x) => x.type),
-              mapValues((value) => fromPairs(value.map((x) => [x.addr, x])))
-            ),
-            */
-          version: parsed["sst:version"],
-          all: constructs,
-          byAddr: fromPairs(constructs.map((x) => [x.addr, x])),
-          byType: groupBy(constructs, (x) => x.type),
-        };
-        return result;
-      });
-
-      // Limit to 3 at a time to avoid hitting AWS limits
-      const meta: Awaited<ReturnType<typeof work[number]>>[] = [];
-      while (work.length) {
-        meta.push(...(await Promise.all(work.splice(0, 3).map((f) => f()))));
-      }
-
-      const stacks = zipWith(
-        filtered,
-        meta,
-        (s, c): StackInfo => ({
-          constructs: c,
-          info: s,
-        })
-      ).filter(
-        (x) =>
-          x.constructs.version.startsWith("0.0.0") ||
-          x.constructs.version >= "0.56.0"
-      );
 
       const result: Result = {
         app: params.app!,
@@ -133,9 +186,12 @@ export function useStacks() {
               // TODO: Not sure why data is ever undefined but Phil Astle reported it
               if (!construct.data) return [];
               switch (construct.type) {
-                case "Api":
                 case "WebSocketApi":
                 case "ApiGatewayV1Api":
+                  return construct.data.routes
+                    .filter((r) => r.fn)
+                    .map((r) => [r.fn!.node, construct]);
+                case "Api":
                   return construct.data.routes
                     .filter((r) => r.fn)
                     .map((r) => [r.fn!.node, construct]);
@@ -211,7 +267,7 @@ export function useStackFromName(name: string) {
 
 export function useConstructsByType<T extends Metadata["type"]>(type: T) {
   const stacks = useStacks();
-  return stacks.data?.constructs.byType[type] || [];
+  return stacks.data?.constructs.byType[type]
 }
 
 export function useConstruct<T extends Metadata["type"]>(

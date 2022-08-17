@@ -47,18 +47,22 @@ export class Parameter extends Construct {
     });
   }
 
+  /** @internal */
   public static getAllNames() {
     return Array.from(Parameter.all);
   }
 
+  /** @internal */
   public static hasName(name: string) {
     return Parameter.all.has(name);
   }
 
+  /** @internal */
   public static clear() {
-    return Parameter.all = new Set<string>();
+    Parameter.all.clear();
   }
 
+  /** @internal */
   public getConstructMetadata() {
     return {
       type: "Parameter" as const,

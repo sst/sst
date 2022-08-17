@@ -7,24 +7,38 @@ const SECRET_SSM_PREFIX = `/sst/${process.env.SST_APP}/${process.env.SST_STAGE}/
 const SECRET_FALLBACK_SSM_PREFIX = `/sst/${process.env.SST_APP}/.fallback/secrets/`;
 
 export interface ConfigType {};
-export const Config: ConfigType = {};
+export const Config = new Proxy<ConfigType>({} as any, {
+  get(target, prop, receiver) {
+    if (!(prop in target)) {
+      throw new Error(`Config.${String(prop)} has not been set for this function.`);
+    }
+    return Reflect.get(target, prop, receiver);
+  }
+});
 
-// If SST_APP and SST_STAGE are not set, it is likely the
-// user is using an older version of SST.
-const errorMsg = "This is usually the case when you are using an older version of SST. Please update SST to 1.7.0 or later to use the SST Config feature.";
-if (!process.env.SST_APP) {
-  throw new Error(`Cannot find the SST_APP environment variable. ${errorMsg}`);
-}
-if (!process.env.SST_STAGE) {
-  throw new Error(`Cannot find the SST_STAGE environment variable. ${errorMsg}`);
-}
-
+storeMetadataInConfig();
 await storeSecretsInConfig();
 storeParametersInConfig();
 
 ///////////////
 // Functions
 ///////////////
+
+function storeMetadataInConfig() {
+  // If SST_APP and SST_STAGE are not set, it is likely the
+  // user is using an older version of SST.
+  const errorMsg = "This is usually the case when you are using an older version of SST. Please update SST to the latest version to use the SST Config feature.";
+  if (!process.env.SST_APP) {
+    throw new Error(`Cannot find the SST_APP environment variable. ${errorMsg}`);
+  }
+  if (!process.env.SST_STAGE) {
+    throw new Error(`Cannot find the SST_STAGE environment variable. ${errorMsg}`);
+  }
+  // @ts-ignore
+  Config.APP = process.env.SST_APP;
+  // @ts-ignore
+  Config.STAGE = process.env.SST_STAGE;
+}
 
 async function storeSecretsInConfig() {
   // Find all the secrets and params that match the prefix

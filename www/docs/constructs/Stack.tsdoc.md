@@ -101,6 +101,13 @@ stack.addOutputs({
 });
 ```
 
+### createStackMetadataResource
+
+```ts
+createStackMetadataResource(metadata)
+```
+_Parameters_
+- __metadata__ <span class="mono">any</span>
 ### getAllFunctions
 
 ```ts

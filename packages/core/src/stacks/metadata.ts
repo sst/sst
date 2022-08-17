@@ -1,8 +1,9 @@
 import path from "path";
 import fs from "fs/promises";
 import { CloudFormationStackArtifact } from "aws-cdk-lib/cx-api";
-import Cloudformation from "aws-sdk/clients/cloudformation.js";
 import { Config } from "../config/index.js";
+import S3 from "aws-sdk/clients/s3.js";
+import { Bootstrap } from "../bootstrap/index.js";
 
 interface Manifest {
   version: string;
@@ -24,24 +25,26 @@ export async function manifest(root: string) {
 }
 
 export async function metadata(root: string, config: Config) {
-  const man = await manifest(root);
-  const stacks = Object.values(man.artifacts).filter(
-    a => a.type === "aws:cloudformation:stack"
-  );
-  const constructs = await Promise.all(
-    stacks.map(async stack => {
-      const region = (stack as any).environment.split("/").pop();
-      const cfn = new Cloudformation({ region });
-      const resource = await cfn
-        .describeStackResource({
-          StackName: stack.properties.stackName || stack.displayName,
-          LogicalResourceId: "SSTMetadata"
+  const s3 = new S3({ region: config.region });
+  const list = await s3
+    .listObjectsV2({
+      Bucket: Bootstrap.assets.bucketName!,
+      Prefix: `stackMetadata/app.${config.name}/stage.${config.stage!}/`
+    })
+    .promise();
+  const result = await Promise.all(
+    (list.Contents || []).map(async c => {
+      // Download the file
+      const ret = await s3
+        .getObject({
+          Bucket: Bootstrap.assets.bucketName!,
+          Key: c.Key!
         })
         .promise();
-      const parsed = JSON.parse(resource.StackResourceDetail!.Metadata!);
-      const constructs = parsed["sst:constructs"];
-      return constructs;
+      // Parse the file
+      const json = JSON.parse(ret.Body!.toString());
+      return json;
     })
   );
-  return constructs.flat();
+  return result.flat();
 }

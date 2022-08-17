@@ -8,23 +8,20 @@ export function assertNameNotInUse(name: string) {
   }
 }
 
-export function codegen() {
-  fs.mkdirSync("node_modules/@serverless-stack/node/config", {
-    recursive: true,
-  });
-//    fs.writeFileSync(
-//      "node_modules/@types/sst-config/package.json",
-//      JSON.stringify({
-//        types: "index.d.ts",
-//      })
-//    );
+export function codegenTypes() {
+  fs.appendFileSync(
+    "node_modules/@types/serverless-stack__node/index.d.ts",
+    `export * from "./config";`
+  );
   fs.writeFileSync(
-    "node_modules/@serverless-stack/node/config/config.d.ts",
+    "node_modules/@types/serverless-stack__node/config.d.ts",
     `
     import "@serverless-stack/node/config";
     declare module "@serverless-stack/node/config" {
     export interface ConfigType {
       ${[
+        "APP",
+        "STAGE",
         ...Parameter.getAllNames(),
         ...Secret.getAllNames()
       ].map((p) => `${p}: string`).join(",\n")}

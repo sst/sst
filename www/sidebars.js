@@ -146,6 +146,7 @@ module.exports = {
       Packages: [
         "packages/create-sst",
         "packages/cli",
+        "packages/node",
         "packages/resources",
         "packages/static-site-env",
       ],
@@ -205,7 +206,21 @@ module.exports = {
       ],
     },
     {
-      Core: ["constructs/App", "constructs/Stack", "constructs/Function"],
+      Core: [
+        "constructs/App",
+        "constructs/Stack",
+        "constructs/Function",
+        {
+          type: "category",
+          label: "Config",
+          collapsible: true,
+          collapsed: true,
+          items: [
+            "constructs/Secret",
+            "constructs/Parameter",
+          ],
+        }
+      ],
       Api: [
         "constructs/Api",
         "constructs/GraphQLApi",

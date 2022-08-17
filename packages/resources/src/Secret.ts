@@ -27,18 +27,22 @@ export class Secret extends Construct {
     Secret.all.add(id);
   }
 
+  /** @internal */
   public static getAllNames(): string[] {
     return Array.from(Secret.all);
   }
 
+  /** @internal */
   public static hasName(name: string) {
     return Secret.all.has(name);
   }
 
+  /** @internal */
   public static clear() {
-    return Secret.all = new Set<string>();
+    Secret.all.clear();
   }
 
+  /** @internal */
   public getConstructMetadata() {
     return {
       type: "Secret" as const,

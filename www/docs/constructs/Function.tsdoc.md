@@ -161,6 +161,22 @@ new Function(stack, "Function", {
 })
 ```
 
+### logRetention?
+
+_Type_ : <span class='mono'><span class="mono">"one_day"</span> | <span class="mono">"three_days"</span> | <span class="mono">"five_days"</span> | <span class="mono">"one_week"</span> | <span class="mono">"two_weeks"</span> | <span class="mono">"one_month"</span> | <span class="mono">"two_months"</span> | <span class="mono">"three_months"</span> | <span class="mono">"four_months"</span> | <span class="mono">"five_months"</span> | <span class="mono">"six_months"</span> | <span class="mono">"one_year"</span> | <span class="mono">"thirteen_months"</span> | <span class="mono">"eighteen_months"</span> | <span class="mono">"two_years"</span> | <span class="mono">"five_years"</span> | <span class="mono">"six_years"</span> | <span class="mono">"seven_years"</span> | <span class="mono">"eight_years"</span> | <span class="mono">"nine_years"</span> | <span class="mono">"ten_years"</span> | <span class="mono">"infinite"</span></span>
+
+_Default_ : <span class="mono">Logs retained indefinitely</span>
+
+The duration function logs are kept in CloudWatch Logs.
+When updating this property, unsetting it doesn't retain the logs indefinitely. Explicitly set the value to "infinite".
+
+```js
+new Function(stack, "Function", {
+  handler: "src/function.handler",
+  logRetention: "one_week"
+})
+```
+
 ### memorySize?
 
 _Type_ : <span class='mono'><span class="mono">number</span> | <span class="mono">${number} MB</span> | <span class="mono">${number} GB</span></span>
@@ -193,7 +209,7 @@ new Function(stack, "Function", {
 
 ### runtime?
 
-_Type_ : <span class='mono'><span class="mono">"nodejs"</span> | <span class="mono">"nodejs4.3"</span> | <span class="mono">"nodejs6.10"</span> | <span class="mono">"nodejs8.10"</span> | <span class="mono">"nodejs10.x"</span> | <span class="mono">"nodejs12.x"</span> | <span class="mono">"nodejs14.x"</span> | <span class="mono">"nodejs16.x"</span> | <span class="mono">"python2.7"</span> | <span class="mono">"python3.6"</span> | <span class="mono">"python3.7"</span> | <span class="mono">"python3.8"</span> | <span class="mono">"python3.9"</span> | <span class="mono">"dotnetcore1.0"</span> | <span class="mono">"dotnetcore2.0"</span> | <span class="mono">"dotnetcore2.1"</span> | <span class="mono">"dotnetcore3.1"</span> | <span class="mono">"dotnet6"</span> | <span class="mono">"go1.x"</span></span>
+_Type_ : <span class='mono'><span class="mono">"nodejs"</span> | <span class="mono">"nodejs4.3"</span> | <span class="mono">"nodejs6.10"</span> | <span class="mono">"nodejs8.10"</span> | <span class="mono">"nodejs10.x"</span> | <span class="mono">"nodejs12.x"</span> | <span class="mono">"nodejs14.x"</span> | <span class="mono">"nodejs16.x"</span> | <span class="mono">"python2.7"</span> | <span class="mono">"python3.6"</span> | <span class="mono">"python3.7"</span> | <span class="mono">"python3.8"</span> | <span class="mono">"python3.9"</span> | <span class="mono">"dotnetcore1.0"</span> | <span class="mono">"dotnetcore2.0"</span> | <span class="mono">"dotnetcore2.1"</span> | <span class="mono">"dotnetcore3.1"</span> | <span class="mono">"dotnet6"</span> | <span class="mono">"java8"</span> | <span class="mono">"java11"</span> | <span class="mono">"go1.x"</span></span>
 
 _Default_ : <span class="mono">"nodejs14.x"</span>
 

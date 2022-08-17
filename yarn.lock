@@ -695,6 +695,45 @@
     fast-xml-parser "3.19.0"
     tslib "^2.3.0"
 
+"@aws-sdk/client-ssm@3.43.0":
+  version "3.43.0"
+  resolved "https://registry.yarnpkg.com/@aws-sdk/client-ssm/-/client-ssm-3.43.0.tgz#c480c20e46a433083189ecec72b5904b3a1ce567"
+  integrity sha512-yE3WmfJqrpy9cppqzt+qdOol17SNeIFofe5C13zQ7db7QYpvv4aM0usjRq9LE8ga8FPGLYdNxbg0tWSOnjkY9Q==
+  dependencies:
+    "@aws-crypto/sha256-browser" "2.0.0"
+    "@aws-crypto/sha256-js" "2.0.0"
+    "@aws-sdk/client-sts" "3.43.0"
+    "@aws-sdk/config-resolver" "3.40.0"
+    "@aws-sdk/credential-provider-node" "3.41.0"
+    "@aws-sdk/fetch-http-handler" "3.40.0"
+    "@aws-sdk/hash-node" "3.40.0"
+    "@aws-sdk/invalid-dependency" "3.40.0"
+    "@aws-sdk/middleware-content-length" "3.40.0"
+    "@aws-sdk/middleware-host-header" "3.40.0"
+    "@aws-sdk/middleware-logger" "3.40.0"
+    "@aws-sdk/middleware-retry" "3.40.0"
+    "@aws-sdk/middleware-serde" "3.40.0"
+    "@aws-sdk/middleware-signing" "3.40.0"
+    "@aws-sdk/middleware-stack" "3.40.0"
+    "@aws-sdk/middleware-user-agent" "3.40.0"
+    "@aws-sdk/node-config-provider" "3.40.0"
+    "@aws-sdk/node-http-handler" "3.40.0"
+    "@aws-sdk/protocol-http" "3.40.0"
+    "@aws-sdk/smithy-client" "3.41.0"
+    "@aws-sdk/types" "3.40.0"
+    "@aws-sdk/url-parser" "3.40.0"
+    "@aws-sdk/util-base64-browser" "3.37.0"
+    "@aws-sdk/util-base64-node" "3.37.0"
+    "@aws-sdk/util-body-length-browser" "3.37.0"
+    "@aws-sdk/util-body-length-node" "3.37.0"
+    "@aws-sdk/util-user-agent-browser" "3.40.0"
+    "@aws-sdk/util-user-agent-node" "3.40.0"
+    "@aws-sdk/util-utf8-browser" "3.37.0"
+    "@aws-sdk/util-utf8-node" "3.37.0"
+    "@aws-sdk/util-waiter" "3.40.0"
+    tslib "^2.3.0"
+    uuid "^8.3.2"
+
 "@aws-sdk/client-sso@3.41.0":
   version "3.41.0"
   resolved "https://registry.npmjs.org/@aws-sdk/client-sso/-/client-sso-3.41.0.tgz"
@@ -14410,7 +14449,7 @@ semver@^7.3.2, semver@^7.3.4, semver@^7.3.5:
 
 semver@^7.3.7:
   version "7.3.7"
-  resolved "https://registry.npmjs.org/semver/-/semver-7.3.7.tgz"
+  resolved "https://registry.yarnpkg.com/semver/-/semver-7.3.7.tgz#12c5b649afdbf9049707796e22a4028814ce523f"
   integrity sha512-QlYTucUYOews+WeEujDoEGziz4K6c47V/Bd+LjSSYcA94p+DmINdf7ncaUinThfvZyu13lN9OY1XDxt8C0Tw0g==
   dependencies:
     lru-cache "^6.0.0"

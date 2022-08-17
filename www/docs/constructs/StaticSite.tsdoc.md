@@ -222,9 +222,9 @@ new StaticSite(stack, "ReactSite", {
 
 ### cdk.bucket?
 
-_Type_ : <span class="mono">[BucketProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.BucketProps.html)</span>
+_Type_ : <span class='mono'><span class="mono">[BucketProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.BucketProps.html)</span> | <span class="mono">[IBucket](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.IBucket.html)</span></span>
 
-Pass in a bucket configuration to override the default settings this construct uses to create the CDK `Bucket` internally.
+Allows you to override default settings this construct uses internally to ceate the bucket
 
 
 ```js
@@ -411,4 +411,4 @@ _Type_ : <span class="mono">string</span>
 
 ### defaultBehavior?
 
-_Type_ : <span class="mono">[AddBehaviorOptions](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.AddBehaviorOptions.html)</span>
+_Type_ : 

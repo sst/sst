@@ -30,16 +30,15 @@ import {
   State,
   Telemetry,
   getCdkVersion,
+  getSstVersion,
   configureAwsCredentials,
 } from "@serverless-stack/core";
-
-const packageJson = fs.readJsonSync(require.resolve("../package.json"));
 
 import paths from "../scripts/util/paths.mjs";
 import * as cdkOptions from "../scripts/util/cdkOptions.mjs";
 import { prepareCdk } from "../scripts/util/cdkHelpers.mjs";
 
-const sstVersion = packageJson.version;
+const sstVersion = getSstVersion();
 const cdkVersion = getCdkVersion();
 
 const args = process.argv.slice(2);
@@ -439,7 +438,7 @@ const argv = yargs
       return yargs
         .positional("action", {
           type: "string",
-          choices: ["list", "get", "set", "set-fallback", "remove", "remove-fallback"],
+          choices: ["list", "get", "set", "remove", "set-fallback", "remove-fallback"],
           description: "Action to perform",
         })
         .positional("name", {
@@ -463,23 +462,27 @@ const argv = yargs
         .example([
           [
             `$0 ${cmd.secrets} list`,
-            "Fetch and decrypt all secret values"
+            "Fetch and decrypt all secrets"
           ],
           [
             `$0 ${cmd.secrets} get STRIPE_KEY`,
-            "Fetch and decrypt the secret value"
+            "Fetch and decrypt a secret"
           ],
           [
             `$0 ${cmd.secrets} set STRIPE_KEY sk_test_123`,
-            "Encrypt and update the secret value"
-          ],
-          [
-            `$0 ${cmd.secrets} set STRIPE_KEY sk_test_123 --fallback`,
-            "Encrypt and update the fallback secret value"
+            "Encrypt and update a secret"
           ],
           [
             `$0 ${cmd.secrets} remove STRIPE_KEY`,
-            "Remove the secret value"
+            "Remove a secret"
+          ],
+          [
+            `$0 ${cmd.secrets} set-fallback STRIPE_KEY sk_test_123`,
+            "Encrypt and update the fallback for a secret"
+          ],
+          [
+            `$0 ${cmd.secrets} remove-fallback STRIPE_KEY3`,
+            "Remove the fallback for a secret"
           ],
         ]);
 

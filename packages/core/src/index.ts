@@ -45,6 +45,10 @@ function getCdkVersion() {
   return packageJson.dependencies["aws-cdk"];
 }
 
+function getSstVersion() {
+  return packageJson.version;
+}
+
 function synth(cdkOptions) {
   logger.debug("synth", cdkOptions);
 
@@ -213,7 +217,46 @@ async function bootstrap(cdkOptions) {
 // Deploy functions
 ////////////////////////
 
-async function deployInit(cdkOptions, stackId) {
+async function deploy(cdkOptions, stackName?) {
+  // Initialize deploy
+  let { stackStates, isCompleted } = await deployInit(cdkOptions, stackName);
+
+  // Loop until deploy is complete
+  do {
+    // Get CFN events before update
+    const prevEventCount = getDeployEventCount(stackStates);
+
+    // Update deploy status
+    const response = await deployPoll(cdkOptions, stackStates);
+    stackStates = response.stackStates;
+    isCompleted = response.isCompleted;
+
+    // Wait for 5 seconds
+    if (!isCompleted) {
+      // Get CFN events after update. If events count did not change, we need to print out a
+      // message to let users know we are still checking.
+      const currEventCount = getDeployEventCount(stackStates);
+      if (currEventCount === prevEventCount) {
+        logger.info("Checking deploy status...");
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+    }
+  } while (!isCompleted);
+
+  return stackStates.map((stackState) => ({
+    id: stackState.id,
+    name: stackState.name,
+    region: stackState.region,
+    status: stackState.status,
+    errorHelper: stackState.errorHelper,
+    errorMessage: stackState.errorMessage,
+    outputs: stackState.outputs,
+    exports: stackState.exports,
+  }));
+}
+
+async function deployInit(cdkOptions, stackId?) {
   // Get all stacks
   let { stacks } = await parseManifest(cdkOptions);
 
@@ -1169,6 +1212,13 @@ async function saveLocalTemplate(cdkOptions, stackId, content) {
   await fs.writeFile(filePath, content);
 }
 
+function getDeployEventCount(stackStates) {
+  return stackStates.reduce(
+    (acc, stackState) => acc + (stackState.events || []).length,
+    0
+  );
+}
+
 ////////////////////////
 // Destroy functions
 ////////////////////////
@@ -1902,6 +1952,17 @@ function getErrorMessageFromEvents(events) {
   return errorMessage;
 }
 
+async function callAwsWithRetry<T>(fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch(e) {
+    if (isRetryableException(e)) {
+      return await callAwsWithRetry(fn);
+    }
+    throw e;
+  }
+}
+
 function isRetryableException(e) {
   return (
     (e.code === "ThrottlingException" && e.message === "Rate exceeded") ||
@@ -1933,6 +1994,7 @@ export { Stacks } from "./stacks/index.js";
 export * from "./cli/index.js";
 export * from "./local/index.js";
 export { FunctionConfig } from "./function-config/index.js";
+export { Bootstrap } from "./bootstrap/index.js";
 export { Telemetry } from "./telemetry/index.js";
 export * from "./aws-sdk/index.js";
 
@@ -1940,14 +2002,18 @@ export const logger = rootLogger;
 export {
   diff,
   synth,
+  deploy,
   deployInit,
   deployPoll,
   destroyInit,
   destroyPoll,
   getCdkBinPath,
   getCdkVersion,
+  getSstVersion,
   getChildLogger,
+  callAwsWithRetry,
   initializeLogger,
+  isRetryableException,
   STACK_DEPLOY_STATUS,
   STACK_DESTROY_STATUS,
 };
