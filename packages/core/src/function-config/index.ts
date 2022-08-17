@@ -1,10 +1,14 @@
+import S3 from "aws-sdk/clients/s3.js";
 import SSM, { ParameterList } from "aws-sdk/clients/ssm.js";
+import Lambda from "aws-sdk/clients/lambda.js";
+import { Bootstrap } from "../bootstrap/index.js";
 
 type Secret = {
   value?: string,
   fallbackValue?: string,
 }
 
+const SECRET_UPDATED_AT_ENV = "SST_ADMIN_SECRET_UPDATED_AT";
 export const SECRET_ENV_PREFIX = "SST_SECRET_";
 export const PARAM_ENV_PREFIX = "SST_PARAM_";
 export const FALLBACK_STAGE = ".fallback";
@@ -81,12 +85,15 @@ export async function getSecret(app: string, stage: string, region: string, name
 
 export async function setSecret(app: string, stage: string, region: string, name: string, value: string) {
   const ssm = new SSM({ region });
+
   await ssm.putParameter({
     Name: buildSsmNameForSecret(app, stage, name),
     Value: value,
     Type: "SecureString",
     Overwrite: true,
   }).promise();
+
+  await restartFunctionsUsingSecret(app, stage, region, name);
 }
 
 export async function setSecretFallback(app: string, region: string, name: string, value: string) {
@@ -143,6 +150,53 @@ function parseSsmName(ssmName: string) {
     type: parts[4],
     name: parts.slice(5).join("/"),
   };
+}
+
+async function restartFunctionsUsingSecret(app: string, stage: string, region: string, name: string) {
+  const s3 = new S3({ region });
+  const lambda = new Lambda({ region });
+
+  await Bootstrap.init(region);
+
+  // If the account is not in the bootstrap, it is not using this secret.
+  if (!Bootstrap.assets.bucketName) {
+    return [];
+  }
+
+  console.log(`Restarting all functions using secret ${name}\n`);
+
+  // Download all files in folder
+  const listRet = await s3.listObjectsV2({
+    Bucket: Bootstrap.assets.bucketName,
+    Prefix: `stackMetadata/app.${app}/stage.${stage}/`,
+  }).promise();
+
+  // Get all functions using this secret
+  await Promise.all((listRet.Contents || []).map(async (c) => {
+    // Download the file
+    const ret = await s3.getObject({
+      Bucket: Bootstrap.assets.bucketName!,
+      Key: c.Key!,
+    }).promise();
+    // Parse the file
+    const json = JSON.parse(ret.Body!.toString());
+    await Promise.all(json
+      .filter((p: any) => p.type === "Function" && p.data.secrets && p.data.secrets.includes(name))
+      .map(async (p: any) => {
+        const ret = await lambda.getFunctionConfiguration({
+          FunctionName: p.data.arn,
+        }).promise();
+        await lambda.updateFunctionConfiguration({
+          FunctionName: p.data.arn,
+          Environment: {
+            Variables: {
+              ...(ret.Environment?.Variables || {}),
+              [SECRET_UPDATED_AT_ENV]: Date.now().toString(),
+            },
+          },
+        }).promise();
+      }));
+  }));
 }
 
 export * as FunctionConfig from "./index.js";

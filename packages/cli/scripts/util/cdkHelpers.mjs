@@ -340,56 +340,11 @@ async function getStaticSiteEnvironmentOutput() {
 export async function deploy(cdkOptions, stackName) {
   logger.info(chalk.grey("Deploying " + (stackName ? stackName : "stacks")));
 
-  // Initialize deploy
-  let { stackStates, isCompleted } = await deployInit(cdkOptions, stackName);
+  const stackStates = await sstCore.deploy(cdkOptions, stackName);
 
-  // Loop until deploy is complete
-  do {
-    // Get CFN events before update
-    const prevEventCount = getDeployEventCount(stackStates);
-
-    // Update deploy status
-    const response = await deployPoll(cdkOptions, stackStates);
-    stackStates = response.stackStates;
-    isCompleted = response.isCompleted;
-
-    // Wait for 5 seconds
-    if (!isCompleted) {
-      // Get CFN events after update. If events count did not change, we need to print out a
-      // message to let users know we are still checking.
-      const currEventCount = getDeployEventCount(stackStates);
-      if (currEventCount === prevEventCount) {
-        logger.info("Checking deploy status...");
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-    }
-  } while (!isCompleted);
-
-  // Print deploy result
   await printDeployResults(stackStates, cdkOptions);
 
-  return stackStates.map((stackState) => ({
-    id: stackState.id,
-    name: stackState.name,
-    region: stackState.region,
-    status: stackState.status,
-    errorMessage: stackState.errorMessage,
-    outputs: stackState.outputs,
-    exports: stackState.exports,
-  }));
-}
-function deployInit(cdkOptions, stackName) {
-  return sstCore.deployInit(cdkOptions, stackName);
-}
-function deployPoll(cdkOptions, stackStates) {
-  return sstCore.deployPoll(cdkOptions, stackStates);
-}
-function getDeployEventCount(stackStates) {
-  return stackStates.reduce(
-    (acc, stackState) => acc + (stackState.events || []).length,
-    0
-  );
+  return stackStates;
 }
 function formatStackDeployStatus(status) {
   return {

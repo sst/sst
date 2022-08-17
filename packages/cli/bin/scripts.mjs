@@ -30,16 +30,15 @@ import {
   State,
   Telemetry,
   getCdkVersion,
+  getSstVersion,
   configureAwsCredentials,
 } from "@serverless-stack/core";
-
-const packageJson = fs.readJsonSync(require.resolve("../package.json"));
 
 import paths from "../scripts/util/paths.mjs";
 import * as cdkOptions from "../scripts/util/cdkOptions.mjs";
 import { prepareCdk } from "../scripts/util/cdkHelpers.mjs";
 
-const sstVersion = packageJson.version;
+const sstVersion = getSstVersion();
 const cdkVersion = getCdkVersion();
 
 const args = process.argv.slice(2);
