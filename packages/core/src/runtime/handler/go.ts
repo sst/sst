@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs-extra";
 import { State } from "../../state/index.js";
-import { Definition, Command, buildSync, buildAsync } from "./definition.js";
+import { Definition, buildSync, buildAsync } from "./definition.js";
 
 export const GoHandler: Definition = opts => {
   const artifact = State.Function.artifactsPath(opts.root, opts.id);
@@ -11,22 +11,32 @@ export const GoHandler: Definition = opts => {
   if (!fs.existsSync(path.join(full)))
     throw new Error("Cannot find handler at " + full);
 
-  const build: Command = {
-    command: "go",
-    args: ["build", "-ldflags", "-s -w", "-o", target, "./" + opts.handler],
-    env: {}
-  };
+  const platformTarget =
+    process.platform === "win32" ? `${target}.exe` : target;
+
   return {
     build: () => {
       fs.removeSync(artifact);
       fs.mkdirpSync(artifact);
-      return buildAsync(opts, build);
+      return buildAsync(opts, {
+        command: "go",
+        args: [
+          "build",
+          "-ldflags",
+          "-s -w",
+          "-o",
+          platformTarget,
+          "./" + opts.handler
+        ],
+        env: {}
+      });
     },
     bundle: () => {
       fs.removeSync(artifact);
       fs.mkdirpSync(artifact);
       buildSync(opts, {
-        ...build,
+        command: "go",
+        args: ["build", "-ldflags", "-s -w", "-o", target, "./" + opts.handler],
         env: {
           CGO_ENABLED: "0",
           GOARCH: "amd64",
@@ -39,7 +49,7 @@ export const GoHandler: Definition = opts => {
       };
     },
     run: {
-      command: process.platform === "win32" ? `${target}.exe` : target,
+      command: platformTarget,
       args: [],
       env: {}
     },
