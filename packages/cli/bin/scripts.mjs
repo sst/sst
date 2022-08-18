@@ -58,6 +58,7 @@ const cmd = {
   addCdk: "add-cdk",
   update: "update",
   secrets: "secrets",
+  bootstrap: "bootstrap",
   telemetry: "telemetry",
 };
 
@@ -489,6 +490,10 @@ const argv = yargs
     }
   )
   .command(
+    `${cmd.bootstrap}`,
+    "Create SST bootstrap stack",
+  )
+  .command(
     `${cmd.telemetry} [enable/disable]`,
     "Control SST's telemetry collection",
     (yargs) => {
@@ -615,6 +620,7 @@ async function run() {
     [cmd.console]: await import("../scripts/console.mjs"),
     [cmd.secrets]: await import("../scripts/secrets.mjs"),
     [cmd.addCdk]: await import("../scripts/add-cdk.mjs"),
+    [cmd.bootstrap]: await import("../scripts/bootstrap.mjs"),
   };
 
   switch (script) {
@@ -637,9 +643,11 @@ async function run() {
     case cmd.start:
     case cmd.addCdk:
     case cmd.console:
-    case cmd.secrets: {
+    case cmd.secrets:
+    case cmd.bootstrap: {
       if (script === cmd.start
-        || script === cmd.secrets) {
+        || script === cmd.secrets
+        || script === cmd.bootstrap) {
         logger.info("Using stage:", config.stage);
       }
       internals[script].default(argv, config, cliInfo).catch((e) => {
