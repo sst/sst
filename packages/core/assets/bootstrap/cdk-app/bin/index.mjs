@@ -5,8 +5,6 @@ import * as path from "path";
 import * as cdk from "aws-cdk-lib";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as ssm from "aws-cdk-lib/aws-ssm";
-import * as iam from "aws-cdk-lib/aws-iam";
-import * as lambda from "aws-cdk-lib/aws-lambda";
 import {
   Bootstrap,
 } from "@serverless-stack/core";
@@ -24,12 +22,10 @@ const stack = new cdk.Stack(app, "SSTBootstrap", {
 });
 
 const bucket = createS3Bucket();
-const fn = createStackMetadataFunction(bucket);
 createSsmParams({
   [Bootstrap.SSM_NAME_VERSION]: Bootstrap.LATEST_VERSION,
   [Bootstrap.SSM_NAME_STACK_NAME]: stack.stackName,
   [Bootstrap.SSM_NAME_BUCKET_NAME]: bucket.bucketName,
-  [Bootstrap.SSM_NAME_STACK_METADATA_FUNCTION_ARN]: fn.functionArn,
 });
 
 function createS3Bucket() {
@@ -38,28 +34,6 @@ function createS3Bucket() {
     removalPolicy: cdk.RemovalPolicy.DESTROY,
     autoDeleteObjects: true,
     blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-  });
-}
-
-function createStackMetadataFunction(bucket) {
-  // Create execution policy
-  const policyStatement = new iam.PolicyStatement();
-  policyStatement.addAllResources();
-  policyStatement.addActions(
-    "s3:*",
-  );
-
-  // Create Lambda
-  return new lambda.Function(stack, "stack-metadata", {
-    code: lambda.Code.fromAsset(path.join(__dirname, "../custom-resources")),
-    handler: "stack-metadata.handler",
-    runtime: lambda.Runtime.NODEJS_16_X,
-    timeout: cdk.Duration.seconds(900),
-    memorySize: 1024,
-    environment: {
-      BUCKET_NAME: bucket.bucketName,
-    },
-    initialPolicy: [policyStatement],
   });
 }
 
