@@ -1,5 +1,6 @@
 import express from "express";
 import spawn from "cross-spawn";
+import * as crypto from "crypto";
 import { ChildProcess } from "child_process";
 import { getChildLogger } from "../logger.js";
 import { v4 } from "uuid";
@@ -74,6 +75,7 @@ export class Server {
   private readonly pools: Record<string, Pool> = {};
   private readonly opts: ServerOpts;
   private readonly lastRequest: Record<string, string> = {};
+  private readonly lastRequestEnvHash: Record<string, string> = {};
 
   public onStdOut = new EventDelegate<{
     requestId: string;
@@ -310,6 +312,24 @@ export class Server {
     return this.warm[id];
   }
 
+  public isEnvChanged(id: string, hash: string) {
+    return this.lastRequestEnvHash[id] !== hash;
+  }
+
+  private generateEnvHash(env: Record<string, string>): string {
+    const raw = Object.keys(env)
+      .filter(k =>
+        k === "AWS_ACCESS_KEY_ID" ||
+        k === "AWS_SECRET_ACCESS_KEY" ||
+        k === "AWS_SESSION_TOKEN" ||
+        k.startsWith("SST_SECRET_")
+      )
+      .sort()
+      .map(k => `${k}=${env[k]}`)
+      .join(",");
+    return crypto.createHash("md5").update(raw).digest("hex");
+  }
+
   private warm: Record<string, true> = {};
   private async trigger(opts: InvokeOpts): Promise<Response> {
     logger.debug("Triggering", opts.function);
@@ -334,6 +354,16 @@ export class Server {
     }
 
     return new Promise<Response>(resolve => {
+      // Check if the environment hash has changed. Two scenarios this can change:
+      // 1. Config secret value has updated, ie. user updated secret value
+      // 2. Lambda function's AWS credential has changed, ie. container restarted
+      const envHash = this.generateEnvHash(opts.env);
+      if (this.isEnvChanged(opts.function.id, envHash)) {
+        logger.debug("Environment changed, restarting all processes");
+        this.drain(opts.function);
+        this.lastRequestEnvHash[opts.function.id] = envHash;
+      }
+
       pool.requests[opts.payload.context.awsRequestId] = resolve;
       const [key] = Object.keys(pool.waiting);
       if (key) {
@@ -387,11 +417,6 @@ export class Server {
         pool.processes = pool.processes.filter(p => p !== proc);
         delete pool.waiting[id];
       });
-
-      // Kill process every 30 min to force credentials refresh
-      setTimeout(() => {
-        proc.kill();
-      }, 1000 * 60 * 30);
 
       pool.processes.push(proc);
     });
