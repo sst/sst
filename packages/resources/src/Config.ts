@@ -19,9 +19,12 @@ export function codegenTypes() {
     import "@serverless-stack/node/config";
     declare module "@serverless-stack/node/config" {
     export interface ConfigType {
-      ${["APP", "STAGE", ...Parameter.getAllNames(), ...Secret.getAllNames()]
-        .map((p) => `readonly ${p}: string;`)
-        .join("\n")}
+      ${[
+        "APP",
+        "STAGE",
+        ...Parameter.getAllNames(),
+        ...Secret.getAllNames()
+      ].map((p) => `readonly ${p}: string;`).join("\n")}
     }
   }`
   );
