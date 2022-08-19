@@ -4,9 +4,9 @@ title: Fetch Data
 
 Now that the comments have been added to our GraphQL API, we are ready to connect it to our frontend.
 
-Let's update the fetch articles query to include `comments` in each article.  In `web/src/pages/Article.tsx`, add `comments` in the articles query:
+Let's update the fetch articles query to include `comments` in each article. In `web/src/pages/Article.tsx`, add `comments` in the articles query:
 
-```ts {7-9} title="web/src/pages/Article.tsx"
+```ts {7-10} title="web/src/pages/Article.tsx"
 const [articles] = useTypedQuery({
   query: {
     articles: {
@@ -14,10 +14,11 @@ const [articles] = useTypedQuery({
       title: true,
       url: true,
       comments: {
-        text: true
-      }
-    }
-  }
+        id: true,
+        text: true,
+      },
+    },
+  },
 });
 ```
 
