@@ -24,7 +24,7 @@ export function codegenTypes() {
         "STAGE",
         ...Parameter.getAllNames(),
         ...Secret.getAllNames()
-      ].map((p) => `${p}: string`).join(";\n")}
+      ].map((p) => `${p}: string;`).join("\n")}
     }
   }`
   );
