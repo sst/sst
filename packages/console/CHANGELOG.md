@@ -1,5 +1,7 @@
 # @serverless-stack/console
 
+## 1.8.1
+
 ## 1.8.0
 
 ### Minor Changes

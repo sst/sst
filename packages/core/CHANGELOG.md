@@ -1,5 +1,15 @@
 # @serverless-stack/core
 
+## 1.8.1
+
+### Patch Changes
+
+- [`1b7675d4d`](https://github.com/serverless-stack/sst/commit/1b7675d4d93764e5f4527f8e9196add63a2b9882) Thanks [@thdxr](https://github.com/thdxr)! - Fix for Go functions on windows requiring .exe
+
+* [#1962](https://github.com/serverless-stack/sst/pull/1962) [`1a1d405ca`](https://github.com/serverless-stack/sst/commit/1a1d405cac6463e3105c5212c6c50b1fb5a63191) Thanks [@fwang](https://github.com/fwang)! - Cli: run bootstrap prior to build
+
+- [#1963](https://github.com/serverless-stack/sst/pull/1963) [`308a53f66`](https://github.com/serverless-stack/sst/commit/308a53f66412dc7ec47a2131e8b551eb8b44ff68) Thanks [@fwang](https://github.com/fwang)! - Config: grant strict IAM permissions to specific SSM parameters
+
 ## 1.8.0
 
 ### Minor Changes

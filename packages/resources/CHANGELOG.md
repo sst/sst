@@ -1,5 +1,20 @@
 # @serverless-stack/resources
 
+## 1.8.1
+
+### Patch Changes
+
+- [`3b1de149f`](https://github.com/serverless-stack/sst/commit/3b1de149f31f7cc26a745a462b24a4ed2974c149) Thanks [@fwang](https://github.com/fwang)! - Config: codegen interface ends with ; not ,
+
+* [`1006a8471`](https://github.com/serverless-stack/sst/commit/1006a8471ac41394f8bdcf3059df3fc0a5705ee5) Thanks [@thdxr](https://github.com/thdxr)! - Fix issue running migration locally in cjs projects
+
+- [#1962](https://github.com/serverless-stack/sst/pull/1962) [`1a1d405ca`](https://github.com/serverless-stack/sst/commit/1a1d405cac6463e3105c5212c6c50b1fb5a63191) Thanks [@fwang](https://github.com/fwang)! - Cli: run bootstrap prior to build
+
+* [#1963](https://github.com/serverless-stack/sst/pull/1963) [`308a53f66`](https://github.com/serverless-stack/sst/commit/308a53f66412dc7ec47a2131e8b551eb8b44ff68) Thanks [@fwang](https://github.com/fwang)! - Config: grant strict IAM permissions to specific SSM parameters
+
+* Updated dependencies [[`1b7675d4d`](https://github.com/serverless-stack/sst/commit/1b7675d4d93764e5f4527f8e9196add63a2b9882), [`1a1d405ca`](https://github.com/serverless-stack/sst/commit/1a1d405cac6463e3105c5212c6c50b1fb5a63191), [`308a53f66`](https://github.com/serverless-stack/sst/commit/308a53f66412dc7ec47a2131e8b551eb8b44ff68)]:
+  - @serverless-stack/core@1.8.1
+
 ## 1.8.0
 
 ### Minor Changes
