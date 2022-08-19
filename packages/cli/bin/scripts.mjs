@@ -151,6 +151,11 @@ const argv = yargs
           type: "string",
           description: "Value of the secret",
         })
+        .option("format", {
+          type: "string",
+          choices: ["env"],
+          describe: "Output the secret values in the .env format. Only apply to the 'list' action.",
+        })
         .check((argv) => {
           const action = argv["action"];
           if (["get", "remove", "remove-fallback"].includes(action) && !argv.name) {
