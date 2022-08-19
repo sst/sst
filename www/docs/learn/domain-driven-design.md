@@ -28,7 +28,7 @@ At first this pattern may feel a bit extraneous. But it's key to creating a main
 
   By decoupling your API and your business logic you allow these to change independently. For example, if you realize that the _Articles_ function would be better served using a different database, only the code in that file needs to change. Anything dependant on it can remain unaware.
 
-  Another example is backwards compatibility in the API. You can make breaking changes in your `core` library and isolate backwards compatibility to your API. The allows teams to stay nimble while staying safe.
+  Another example is backwards compatibility in the API. You can make breaking changes in your `core` library and isolate backwards compatibility to your API. This allows teams to stay nimble while staying safe.
 
 There's a lot more to the Domain Driven Design pattern. But we want to make sure that you have a good idea of why our app is organized the way it is.
 
