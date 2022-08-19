@@ -31,9 +31,9 @@ interface BootstrapOptions {
 
 export const assets: Assets = {};
 
-export async function bootstrap(config: any, cliInfo: any, options: BootstrapOptions) {
+export async function bootstrap(config: any, cliInfo: any, options?: BootstrapOptions) {
   const { region } = config;
-  const { tags, force } = options;
+  const { tags, force } = options || {};
 
   // Check bootstrap version
   if (!force) {
