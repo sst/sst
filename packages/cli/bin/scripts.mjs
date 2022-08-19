@@ -68,6 +68,342 @@ const DEFAULT_LINT = true;
 const DEFAULT_TYPE_CHECK = true;
 const DEFAULT_ESBUILD_CONFIG = undefined;
 
+const argv = yargs
+  .parserConfiguration({ "boolean-negation": false })
+
+  .usage(`${cmd.s} <command>`)
+  .demandCommand(1)
+
+  .option("no-color", {
+    default: false,
+    type: "boolean",
+    desc: "Remove colors and other style from console output",
+  })
+  .option("verbose", {
+    default: false,
+    type: "boolean",
+    desc: "Show more debug info in the output",
+  })
+  .command(cmd.start, "Work on your SST app locally", addOptions(cmd.start))
+  .command(
+    `${cmd.diff} [stacks..]`,
+    "Compares all the stacks in your app with the deployed stacks"
+  )
+  .command(
+    `${cmd.deploy} [stack]`,
+    "Deploy all your stacks to AWS",
+    addOptions(cmd.deploy)
+  )
+  .command(
+    `${cmd.remove} [stack]`,
+    "Remove all your stacks and all of their resources from AWS",
+    addOptions(cmd.remove)
+  )
+  .command(
+    cmd.build,
+    "Build your app and synthesize your stacks",
+    addOptions(cmd.build)
+  )
+  .command(cmd.cdk, "Access the AWS CDK CLI")
+  .command(
+    `${cmd.update} [vsn]`,
+    "Update SST and CDK packages to a different version",
+    (yargs) => {
+      return yargs.positional("vsn", {
+        type: "string",
+        description: "Specific version of SST to upgrade to",
+        default: "latest",
+      });
+    }
+  )
+  .command(
+    `${cmd.addCdk} [packages..]`,
+    "Installs the given CDK package(s) in your app",
+    {
+      dev: {
+        default: false,
+        type: "boolean",
+        desc: "Install as a dev dependency",
+      },
+      "dry-run": {
+        default: false,
+        type: "boolean",
+        desc: "Do not install, but show the install command",
+      },
+    }
+  )
+  .command(
+    `${cmd.secrets} [action] [name] [value]`,
+    "Manage app secrets",
+    (yargs) => {
+      addOptions(cmd.secrets)(yargs);
+      return yargs
+        .positional("action", {
+          type: "string",
+          choices: ["list", "get", "set", "remove", "set-fallback", "remove-fallback"],
+          description: "Action to perform",
+        })
+        .positional("name", {
+          type: "string",
+          description: "Name of the secret",
+        })
+        .positional("value", {
+          type: "string",
+          description: "Value of the secret",
+        })
+        .check((argv) => {
+          const action = argv["action"];
+          if (["get", "remove", "remove-fallback"].includes(action) && !argv.name) {
+            throw new Error("Please specify a secret name");
+          }
+          if (["set", "set-fallback"].includes(action) && (!argv.name || !argv.value)) {
+            throw new Error("Please specify a secret name and value");
+          }
+          return true;
+        })
+        .example([
+          [
+            `$0 ${cmd.secrets} list`,
+            "Fetch and decrypt all secrets"
+          ],
+          [
+            `$0 ${cmd.secrets} get STRIPE_KEY`,
+            "Fetch and decrypt a secret"
+          ],
+          [
+            `$0 ${cmd.secrets} set STRIPE_KEY sk_test_123`,
+            "Encrypt and update a secret"
+          ],
+          [
+            `$0 ${cmd.secrets} remove STRIPE_KEY`,
+            "Remove a secret"
+          ],
+          [
+            `$0 ${cmd.secrets} set-fallback STRIPE_KEY sk_test_123`,
+            "Encrypt and update the fallback for a secret"
+          ],
+          [
+            `$0 ${cmd.secrets} remove-fallback STRIPE_KEY3`,
+            "Remove the fallback for a secret"
+          ],
+        ]);
+
+    }
+  )
+  .command(
+    `${cmd.telemetry} [enable/disable]`,
+    "Control SST's telemetry collection",
+    (yargs) => {
+      return yargs.positional("enable/disable", {
+        type: "string",
+        choices: ["enable", "disable"],
+        description:
+          "Specific 'enable' or 'disable' to turn SST's telemetry collection on or off",
+      });
+    }
+  )
+  .command(`console`, "Start up SST console", (yargs) => {
+    return yargs.option("stage", {
+      type: "string",
+      describe: "The stage you want the console to talk to",
+    });
+  })
+
+  .example([
+    [`$0 ${cmd.start}`, "Start using the defaults"],
+    [`$0 ${cmd.remove} my-s3-stack`, "Remove a specific stack"],
+    [
+      `$0 ${cmd.deploy} --stage prod --region us-west-1`,
+      "Deploy to a stage and region",
+    ],
+  ])
+
+  .version(
+    true,
+    "Show the version of SST and CDK",
+    `SST: ${sstVersion}\nCDK: ${cdkVersion}`
+  )
+  .alias("version", "v")
+  .help("help")
+  .alias("help", "h")
+  .epilogue("For more information, visit www.sst.dev")
+  .wrap(yargs.terminalWidth())
+  .fail((msg, err) => {
+    if (err) throw err;
+
+    console.log(chalk.red(msg) + "\n");
+
+    yargs.showHelp();
+
+    process.exit(1);
+  })
+  .parse();
+
+// Disable color
+if (!process.stdout.isTTY || argv.noColor) {
+  process.env.NO_COLOR = "true";
+  chalk.level = 0;
+}
+
+// Set debug flag
+if (argv.verbose) {
+  process.env.DEBUG = "true";
+}
+
+clearBuildPath();
+
+// Initialize logger after .build diretory is created, in which the debug log will be written
+initializeLogger(paths.appBuildPath);
+logger.debug("SST:", sstVersion);
+logger.debug("CDK:", cdkVersion);
+
+run();
+
+///////////////
+// Functions //
+///////////////
+
+async function run() {
+  // Parse cli input and load config
+  const cliInfo = getCliInfo();
+
+  // Do not load config for update
+  if (script === cmd.update) {
+    try {
+      Update.run({
+        rootDir: process.cwd(),
+        verbose: argv.verbose,
+        version: argv.vsn,
+      });
+    } catch (e) {
+      logger.debug(e);
+      exitWithMessage(e);
+    }
+    return;
+  } else if (script === cmd.telemetry) {
+    if (argv["enable/disable"] === "enable") {
+      Telemetry.enable();
+    } else if (argv["enable/disable"] === "disable") {
+      Telemetry.disable();
+    }
+
+    if (Telemetry.isEnabled()) {
+      logger.info("\nStatus:", chalk.bold(chalk.green("Enabled")), "\n");
+      logger.info(
+        "SST telemetry is completely anonymous. Thank you for participating!\n"
+      );
+    } else {
+      logger.info("\nStatus:", chalk.bold(chalk.red("Disabled")), "\n");
+      logger.info("You have opted out of SST's anonymous telemetry program.");
+      logger.info("No data will be collected from your machine.\n");
+    }
+    return;
+  }
+
+  const config = await applyConfig(argv);
+
+  // Load AWS credentials
+  await loadAwsCredentials(script, argv);
+
+  // Track
+  Telemetry.trackCli(script);
+
+  // Initialize internals after loading AWS credentials b/c some of the required
+  // packages (ie. "../scripts/start") requires "aws-sdk". Need to load AWS
+  // credentials first.
+  const internals = {
+    [cmd.diff]: await import("../scripts/diff.mjs"),
+    [cmd.start]: await import("../scripts/start.mjs"),
+    [cmd.build]: await import("../scripts/build.mjs"),
+    [cmd.deploy]: await import("../scripts/deploy.mjs"),
+    [cmd.remove]: await import("../scripts/remove.mjs"),
+    [cmd.console]: await import("../scripts/console.mjs"),
+    [cmd.secrets]: await import("../scripts/secrets.mjs"),
+    [cmd.addCdk]: await import("../scripts/add-cdk.mjs"),
+  };
+
+  switch (script) {
+    case cmd.diff:
+    case cmd.build:
+    case cmd.deploy:
+    case cmd.remove: {
+      logger.info("Using stage:", config.stage);
+      if (cliInfo.npm) {
+        checkNpmScriptArgs();
+      }
+
+      // Prepare app
+      prepareCdk(argv, cliInfo, config)
+        .then(() => internals[script].default(argv, config, cliInfo))
+        .catch((e) => exitWithMessage(e));
+
+      break;
+    }
+    case cmd.start:
+    case cmd.addCdk:
+    case cmd.console:
+    case cmd.secrets: {
+      if (script === cmd.start
+        || script === cmd.secrets) {
+        logger.info("Using stage:", config.stage);
+      }
+      internals[script].default(argv, config, cliInfo).catch((e) => {
+        logger.debug(e);
+        exitWithMessage(e);
+      });
+      break;
+    }
+    case cmd.cdk: {
+      // Prepare app
+      prepareCdk(argv, cliInfo, config)
+        .then(() => {
+          const result = spawn.sync(
+            "node",
+            [require.resolve("../scripts/" + script + ".mjs")].concat(
+              scriptArgs
+            ),
+            { stdio: "inherit" }
+          );
+          if (result.signal) {
+            if (result.signal === "SIGKILL") {
+              exitWithMessage(
+                "The command failed because the process exited too early. " +
+                  "This probably means the system ran out of memory or someone called " +
+                  "`kill -9` on the process."
+              );
+            } else if (result.signal === "SIGTERM") {
+              exitWithMessage(
+                "The command failed because the process exited too early. " +
+                  "Someone might have called `kill` or `killall`, or the system could " +
+                  "be shutting down."
+              );
+            }
+            exitWithMessage(
+              "The command failed because the process exited too early."
+            );
+          }
+          process.exit(result.status);
+        })
+        .catch((e) => exitWithMessage(e));
+      break;
+    }
+    default:
+      console.log('Unknown script "' + script + '".');
+      break;
+  }
+}
+
+function clearBuildPath() {
+  if ([
+    cmd.console,
+    cmd.secrets,
+  ].includes(script)) {
+    return;
+  }
+
+  fs.emptyDirSync(paths.appBuildPath);
+}
+
 function getCliInfo() {
   const usingYarn = Packager.getManager(paths.appPath).type === "yarn";
 
@@ -231,6 +567,7 @@ async function loadAwsCredentials(script, argv) {
       cmd.remove,
       cmd.start,
       cmd.console,
+      cmd.secrets,
       cmd.cdk,
     ].includes(script)
   ) {
@@ -365,326 +702,3 @@ function exitWithMessage(e) {
 
   process.exit(1);
 }
-
-const argv = yargs
-  .parserConfiguration({ "boolean-negation": false })
-
-  .usage(`${cmd.s} <command>`)
-  .demandCommand(1)
-
-  .option("no-color", {
-    default: false,
-    type: "boolean",
-    desc: "Remove colors and other style from console output",
-  })
-  .option("verbose", {
-    default: false,
-    type: "boolean",
-    desc: "Show more debug info in the output",
-  })
-  .command(cmd.start, "Work on your SST app locally", addOptions(cmd.start))
-  .command(
-    `${cmd.diff} [stacks..]`,
-    "Compares all the stacks in your app with the deployed stacks"
-  )
-  .command(
-    `${cmd.deploy} [stack]`,
-    "Deploy all your stacks to AWS",
-    addOptions(cmd.deploy)
-  )
-  .command(
-    `${cmd.remove} [stack]`,
-    "Remove all your stacks and all of their resources from AWS",
-    addOptions(cmd.remove)
-  )
-  .command(
-    cmd.build,
-    "Build your app and synthesize your stacks",
-    addOptions(cmd.build)
-  )
-  .command(cmd.cdk, "Access the AWS CDK CLI")
-  .command(
-    `${cmd.update} [vsn]`,
-    "Update SST and CDK packages to a different version",
-    (yargs) => {
-      return yargs.positional("vsn", {
-        type: "string",
-        description: "Specific version of SST to upgrade to",
-        default: "latest",
-      });
-    }
-  )
-  .command(
-    `${cmd.addCdk} [packages..]`,
-    "Installs the given CDK package(s) in your app",
-    {
-      dev: {
-        default: false,
-        type: "boolean",
-        desc: "Install as a dev dependency",
-      },
-      "dry-run": {
-        default: false,
-        type: "boolean",
-        desc: "Do not install, but show the install command",
-      },
-    }
-  )
-  .command(
-    `${cmd.secrets} [action] [name] [value]`,
-    "Manage app secrets",
-    (yargs) => {
-      addOptions(cmd.secrets)(yargs);
-      return yargs
-        .positional("action", {
-          type: "string",
-          choices: ["list", "get", "set", "remove", "set-fallback", "remove-fallback"],
-          description: "Action to perform",
-        })
-        .positional("name", {
-          type: "string",
-          description: "Name of the secret",
-        })
-        .positional("value", {
-          type: "string",
-          description: "Value of the secret",
-        })
-        .check((argv) => {
-          const action = argv["action"];
-          if (["get", "remove", "remove-fallback"].includes(action) && !argv.name) {
-            throw new Error("Please specify a secret name");
-          }
-          if (["set", "set-fallback"].includes(action) && (!argv.name || !argv.value)) {
-            throw new Error("Please specify a secret name and value");
-          }
-          return true;
-        })
-        .example([
-          [
-            `$0 ${cmd.secrets} list`,
-            "Fetch and decrypt all secrets"
-          ],
-          [
-            `$0 ${cmd.secrets} get STRIPE_KEY`,
-            "Fetch and decrypt a secret"
-          ],
-          [
-            `$0 ${cmd.secrets} set STRIPE_KEY sk_test_123`,
-            "Encrypt and update a secret"
-          ],
-          [
-            `$0 ${cmd.secrets} remove STRIPE_KEY`,
-            "Remove a secret"
-          ],
-          [
-            `$0 ${cmd.secrets} set-fallback STRIPE_KEY sk_test_123`,
-            "Encrypt and update the fallback for a secret"
-          ],
-          [
-            `$0 ${cmd.secrets} remove-fallback STRIPE_KEY3`,
-            "Remove the fallback for a secret"
-          ],
-        ]);
-
-    }
-  )
-  .command(
-    `${cmd.telemetry} [enable/disable]`,
-    "Control SST's telemetry collection",
-    (yargs) => {
-      return yargs.positional("enable/disable", {
-        type: "string",
-        choices: ["enable", "disable"],
-        description:
-          "Specific 'enable' or 'disable' to turn SST's telemetry collection on or off",
-      });
-    }
-  )
-  .command(`console`, "Start up SST console", (yargs) => {
-    return yargs.option("stage", {
-      type: "string",
-      describe: "The stage you want the console to talk to",
-    });
-  })
-
-  .example([
-    [`$0 ${cmd.start}`, "Start using the defaults"],
-    [`$0 ${cmd.remove} my-s3-stack`, "Remove a specific stack"],
-    [
-      `$0 ${cmd.deploy} --stage prod --region us-west-1`,
-      "Deploy to a stage and region",
-    ],
-  ])
-
-  .version(
-    true,
-    "Show the version of SST and CDK",
-    `SST: ${sstVersion}\nCDK: ${cdkVersion}`
-  )
-  .alias("version", "v")
-  .help("help")
-  .alias("help", "h")
-  .epilogue("For more information, visit www.sst.dev")
-
-  .wrap(yargs.terminalWidth())
-
-  .fail((msg, err) => {
-    if (err) throw err;
-
-    console.log(chalk.red(msg) + "\n");
-
-    yargs.showHelp();
-
-    process.exit(1);
-  })
-  .parse();
-
-// Disable color
-if (!process.stdout.isTTY || argv.noColor) {
-  process.env.NO_COLOR = "true";
-  chalk.level = 0;
-}
-
-// Set debug flag
-if (argv.verbose) {
-  process.env.DEBUG = "true";
-}
-
-// Cleanup build dir
-fs.emptyDirSync(paths.appBuildPath);
-
-// Initialize logger after .build diretory is created, in which the debug log will be written
-initializeLogger(paths.appBuildPath);
-logger.debug("SST:", sstVersion);
-logger.debug("CDK:", cdkVersion);
-
-async function run() {
-  // Parse cli input and load config
-  const cliInfo = getCliInfo();
-
-  // Do not load config for update
-  if (script === cmd.update) {
-    try {
-      Update.run({
-        rootDir: process.cwd(),
-        verbose: argv.verbose,
-        version: argv.vsn,
-      });
-    } catch (e) {
-      logger.debug(e);
-      exitWithMessage(e);
-    }
-    return;
-  } else if (script === cmd.telemetry) {
-    if (argv["enable/disable"] === "enable") {
-      Telemetry.enable();
-    } else if (argv["enable/disable"] === "disable") {
-      Telemetry.disable();
-    }
-
-    if (Telemetry.isEnabled()) {
-      logger.info("\nStatus:", chalk.bold(chalk.green("Enabled")), "\n");
-      logger.info(
-        "SST telemetry is completely anonymous. Thank you for participating!\n"
-      );
-    } else {
-      logger.info("\nStatus:", chalk.bold(chalk.red("Disabled")), "\n");
-      logger.info("You have opted out of SST's anonymous telemetry program.");
-      logger.info("No data will be collected from your machine.\n");
-    }
-    return;
-  }
-
-  const config = await applyConfig(argv);
-
-  // Load AWS credentials
-  await loadAwsCredentials(script, argv);
-
-  // Track
-  Telemetry.trackCli(script);
-
-  // Initialize internals after loading AWS credentials b/c some of the required
-  // packages (ie. "../scripts/start") requires "aws-sdk". Need to load AWS
-  // credentials first.
-  const internals = {
-    [cmd.diff]: await import("../scripts/diff.mjs"),
-    [cmd.start]: await import("../scripts/start.mjs"),
-    [cmd.build]: await import("../scripts/build.mjs"),
-    [cmd.deploy]: await import("../scripts/deploy.mjs"),
-    [cmd.remove]: await import("../scripts/remove.mjs"),
-    [cmd.console]: await import("../scripts/console.mjs"),
-    [cmd.secrets]: await import("../scripts/secrets.mjs"),
-    [cmd.addCdk]: await import("../scripts/add-cdk.mjs"),
-  };
-
-  switch (script) {
-    case cmd.diff:
-    case cmd.build:
-    case cmd.deploy:
-    case cmd.remove: {
-      logger.info("Using stage:", config.stage);
-      if (cliInfo.npm) {
-        checkNpmScriptArgs();
-      }
-
-      // Prepare app
-      prepareCdk(argv, cliInfo, config)
-        .then(() => internals[script].default(argv, config, cliInfo))
-        .catch((e) => exitWithMessage(e));
-
-      break;
-    }
-    case cmd.start:
-    case cmd.addCdk:
-    case cmd.console:
-    case cmd.secrets: {
-      if (script === cmd.start
-        || script === cmd.secrets) {
-        logger.info("Using stage:", config.stage);
-      }
-      internals[script].default(argv, config, cliInfo).catch((e) => {
-        logger.debug(e);
-        exitWithMessage(e);
-      });
-      break;
-    }
-    case cmd.cdk: {
-      // Prepare app
-      prepareCdk(argv, cliInfo, config)
-        .then(() => {
-          const result = spawn.sync(
-            "node",
-            [require.resolve("../scripts/" + script + ".mjs")].concat(
-              scriptArgs
-            ),
-            { stdio: "inherit" }
-          );
-          if (result.signal) {
-            if (result.signal === "SIGKILL") {
-              exitWithMessage(
-                "The command failed because the process exited too early. " +
-                  "This probably means the system ran out of memory or someone called " +
-                  "`kill -9` on the process."
-              );
-            } else if (result.signal === "SIGTERM") {
-              exitWithMessage(
-                "The command failed because the process exited too early. " +
-                  "Someone might have called `kill` or `killall`, or the system could " +
-                  "be shutting down."
-              );
-            }
-            exitWithMessage(
-              "The command failed because the process exited too early."
-            );
-          }
-          process.exit(result.status);
-        })
-        .catch((e) => exitWithMessage(e));
-      break;
-    }
-    default:
-      console.log('Unknown script "' + script + '".');
-      break;
-  }
-}
-run();
