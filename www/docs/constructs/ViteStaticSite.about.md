@@ -34,8 +34,8 @@ console.log(import.meta.env.VITE_API_URL);
 console.log(import.meta.env.VITE_USER_POOL_CLIENT);
 ```
 
-:::note
-Note that, Vite only exposes variables prefixed with `VITE_` in your app.
+:::info
+Vite only exposes environment variables prefixed with `VITE_` to your app.
 :::
 
 You can pass these in directly from the construct.
