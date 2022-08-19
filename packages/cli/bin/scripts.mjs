@@ -58,6 +58,7 @@ const cmd = {
   addCdk: "add-cdk",
   update: "update",
   secrets: "secrets",
+  bootstrap: "bootstrap",
   telemetry: "telemetry",
 };
 
@@ -196,6 +197,28 @@ const argv = yargs
     }
   )
   .command(
+    `${cmd.bootstrap}`,
+    "Deploys the SST Bootstrap stack into your AWS environment",
+    (yargs) => {
+      return yargs
+        .option("tags", {
+          type: "array",
+          describe: "Tags to add for the Bootstrap stack",
+          default: [],
+        })
+        .example([
+          [
+            `$0 ${cmd.bootstrap}`,
+            "Deploy the bootstrap stack"
+          ],
+          [
+            `$0 ${cmd.bootstrap} --tags key1=value1 key2=value2`,
+            "Tag the bootstrap stack"
+          ],
+        ]);
+    }
+  )
+  .command(
     `${cmd.telemetry} [enable/disable]`,
     "Control SST's telemetry collection",
     (yargs) => {
@@ -325,6 +348,7 @@ async function run() {
     [cmd.console]: await import("../scripts/console.mjs"),
     [cmd.secrets]: await import("../scripts/secrets.mjs"),
     [cmd.addCdk]: await import("../scripts/add-cdk.mjs"),
+    [cmd.bootstrap]: await import("../scripts/bootstrap.mjs"),
   };
 
   switch (script) {
@@ -347,9 +371,11 @@ async function run() {
     case cmd.start:
     case cmd.addCdk:
     case cmd.console:
-    case cmd.secrets: {
+    case cmd.secrets:
+    case cmd.bootstrap: {
       if (script === cmd.start
-        || script === cmd.secrets) {
+        || script === cmd.secrets
+        || script === cmd.bootstrap) {
         logger.info("Using stage:", config.stage);
       }
       internals[script].default(argv, config, cliInfo).catch((e) => {
@@ -573,6 +599,7 @@ async function loadAwsCredentials(script, argv) {
       cmd.start,
       cmd.console,
       cmd.secrets,
+      cmd.bootstrap,
       cmd.cdk,
     ].includes(script)
   ) {

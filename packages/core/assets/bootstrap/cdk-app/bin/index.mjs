@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-import url from "url";
-import * as path from "path";
 import * as cdk from "aws-cdk-lib";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as ssm from "aws-cdk-lib/aws-ssm";
@@ -10,7 +8,7 @@ import {
 } from "@serverless-stack/core";
 
 const region = process.argv[2];
-const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
+const tags = JSON.parse(process.argv[3]);
 
 // Create CDK App
 const app = new cdk.App();
@@ -19,6 +17,11 @@ const stack = new cdk.Stack(app, "SSTBootstrap", {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region,
   },
+});
+
+// Tag resources
+Object.entries(tags).forEach(([key, value]) => {
+  cdk.Tags.of(app).add(key, value);
 });
 
 const bucket = createS3Bucket();

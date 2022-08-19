@@ -254,6 +254,34 @@ npx sst secrets remove-fallback STRIPE_KEY
 The fallback value can only be inherited by stages deployed in the same AWS account and region.
 :::
 
+#### Options
+
+- `--format`
+
+Format the secret names and values in the specified format. Only apply to the 'list' action. Currently only supports the dotenv format 'env'.
+
+```bash
+npx sst secrets list --format=env
+```
+
+### `bootstrap`
+
+Deploys the SST Bootstrap stack into your AWS environment.
+
+```bash
+npx sst bootstrap
+```
+
+#### Options
+
+- `--tags`
+
+Tags to add for the Bootstrap stack.
+
+```bash
+npx sst bootstrap --tags key1=value1 key2=value2
+```
+
 ### `add-cdk [packages..]`
 
 Installs the given AWS CDK npm packages with the appropriate CDK version. This convenience method helps get around the [known CDK issue of version mismatches](known-issues.md). This command internally simply does and `npm install` or `yarn add`.
