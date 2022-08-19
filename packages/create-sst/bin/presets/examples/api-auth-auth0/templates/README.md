@@ -9,9 +9,9 @@ An example serverless app created with SST.
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example api-auth-auth0
+$ npx create-sst@latest --template=examples/api-auth-auth0
 # Or with Yarn
-$ yarn create serverless-stack --example api-auth-auth0
+$ yarn create sst --template=examples/api-auth-auth0
 ```
 
 ## Commands

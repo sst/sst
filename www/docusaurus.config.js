@@ -168,7 +168,8 @@ module.exports = {
         docs: {
           routeBasePath: "/",
           exclude: [
-            "constructs/*.snippets.md",
+            "constructs/*.about.md",
+            "constructs/*.tsdoc.md",
             "advanced/monorepo-project-structure.md",
           ],
           sidebarCollapsible: false,

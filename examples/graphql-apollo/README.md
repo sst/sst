@@ -9,9 +9,9 @@ An example serverless app created with SST.
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example graphql-apollo
+$ npx create-sst@latest --template=examples/graphql-apollo
 # Or with Yarn
-$ yarn create serverless-stack --example graphql-apollo
+$ yarn create sst --template=examples/graphql-apollo
 ```
 
 ## Commands
@@ -48,4 +48,4 @@ Learn more about SST.
 
 ## Community
 
-[Follow us on Twitter](https://twitter.com/ServerlessStack) or [post on our forums](https://discourse.sst.dev).
+[Follow us on Twitter](https://twitter.com/sst_dev) or [post on our forums](https://discourse.sst.dev).

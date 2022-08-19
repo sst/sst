@@ -1,9 +1,12 @@
 import { test, expect, vi } from "vitest";
 import { countResources, hasResource, objectLike, ANY, ABSENT } from "./helper";
+import * as s3 from "aws-cdk-lib/aws-s3";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as cf from "aws-cdk-lib/aws-cloudfront";
 import { App, Api, Stack, StaticSite } from "../src";
+
+process.env.SST_RESOURCES_TESTS = "enabled";
 
 /////////////////////////////
 // Test Constructor
@@ -559,6 +562,10 @@ test("constructor: buildOutput multiple files", async () => {
         BucketName: ANY,
         ObjectKey: ANY,
       },
+      {
+        BucketName: ANY,
+        ObjectKey: ANY,
+      },
     ],
   });
 });
@@ -703,7 +710,7 @@ test("constructor: replaceValues", async () => {
   });
 });
 
-test("constructor: s3Bucket props", async () => {
+test("cdk.bucket is props", async () => {
   const stack = new Stack(new App(), "stack");
   new StaticSite(stack, "Site", {
     path: "test/site",
@@ -719,7 +726,7 @@ test("constructor: s3Bucket props", async () => {
   });
 });
 
-test("constructor: s3Bucket websiteIndexDocument", async () => {
+test("cdk.bucket is props: s3Bucket websiteIndexDocument", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new StaticSite(stack, "Site", {
@@ -733,7 +740,7 @@ test("constructor: s3Bucket websiteIndexDocument", async () => {
   }).toThrow(/Do not configure the "s3Bucket.websiteIndexDocument"./);
 });
 
-test("constructor: s3Bucket websiteErrorDocument", async () => {
+test("cdk.bucket is props: s3Bucket websiteErrorDocument", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new StaticSite(stack, "Site", {
@@ -745,6 +752,41 @@ test("constructor: s3Bucket websiteErrorDocument", async () => {
       },
     });
   }).toThrow(/Do not configure the "s3Bucket.websiteErrorDocument"./);
+});
+
+test("cdk.bucket is construct", async () => {
+  const stack = new Stack(new App(), "stack");
+  new StaticSite(stack, "Site", {
+    path: "test/site",
+    cdk: {
+      bucket: s3.Bucket.fromBucketName(stack, "Bucket", "my-bucket"),
+    },
+  });
+  countResources(stack, "AWS::S3::Bucket", 0);
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      Origins: [
+        objectLike({
+          S3OriginConfig: {
+            OriginAccessIdentity: {
+              "Fn::Join": [
+                "",
+                [
+                  "origin-access-identity/cloudfront/",
+                  {
+                    Ref: "SiteDistributionOrigin1S3Origin76FD4338",
+                  },
+                ],
+              ],
+            },
+          },
+        }),
+      ],
+    }),
+  });
+  hasResource(stack, "Custom::SSTBucketDeployment", {
+    DestinationBucketName: "my-bucket",
+  });
 });
 
 test("constructor: cfDistribution props", async () => {

@@ -1,5 +1,89 @@
 # @serverless-stack/core
 
+## 1.8.1
+
+### Patch Changes
+
+- [`1b7675d4d`](https://github.com/serverless-stack/sst/commit/1b7675d4d93764e5f4527f8e9196add63a2b9882) Thanks [@thdxr](https://github.com/thdxr)! - Fix for Go functions on windows requiring .exe
+
+* [#1962](https://github.com/serverless-stack/sst/pull/1962) [`1a1d405ca`](https://github.com/serverless-stack/sst/commit/1a1d405cac6463e3105c5212c6c50b1fb5a63191) Thanks [@fwang](https://github.com/fwang)! - Cli: run bootstrap prior to build
+
+- [#1963](https://github.com/serverless-stack/sst/pull/1963) [`308a53f66`](https://github.com/serverless-stack/sst/commit/308a53f66412dc7ec47a2131e8b551eb8b44ff68) Thanks [@fwang](https://github.com/fwang)! - Config: grant strict IAM permissions to specific SSM parameters
+
+## 1.8.0
+
+### Minor Changes
+
+- [#1957](https://github.com/serverless-stack/sst/pull/1957) [`989a4f516`](https://github.com/serverless-stack/sst/commit/989a4f516175c2e51a649acad4478d3eec5319f1) Thanks [@fwang](https://github.com/fwang)! - Release Config
+
+### Patch Changes
+
+- [#1952](https://github.com/serverless-stack/sst/pull/1952) [`4b9d6bf6f`](https://github.com/serverless-stack/sst/commit/4b9d6bf6fe550727af1f04e6655f45ae8fe900cb) Thanks [@fwang](https://github.com/fwang)! - sst start: suppress errors from RDS warmer
+
+* [`fc7abc430`](https://github.com/serverless-stack/sst/commit/fc7abc43094b8eb9d3bb77902dfec5883fa1bac7) Thanks [@thdxr](https://github.com/thdxr)! - Fix issue with running go functions locally on Windows machiness
+
+## 1.7.0
+
+### Minor Changes
+
+- [#1922](https://github.com/serverless-stack/sst/pull/1922) [`e0a5eba96`](https://github.com/serverless-stack/sst/commit/e0a5eba964a9fc2d413a132333d388a40a81faa9) Thanks [@fwang](https://github.com/fwang)! - Function: support Java runtime built with gradle
+
+## 1.6.10
+
+## 1.6.9
+
+## 1.6.8
+
+## 1.6.7
+
+## 1.6.6
+
+## 1.6.5
+
+### Patch Changes
+
+- [`4cd71c933`](https://github.com/serverless-stack/sst/commit/4cd71c93392a7ffe53143ff8253fd326ee0bd058) Thanks [@thdxr](https://github.com/thdxr)! - Kill local function every 30min so that credentials refresh
+
+## 1.6.4
+
+### Patch Changes
+
+- [`1618cd8d5`](https://github.com/serverless-stack/sst/commit/1618cd8d5ad8e7e1270027a6ab01b9a908c1127a) Thanks [@thdxr](https://github.com/thdxr)! - Support banner option in node functions
+
+## 1.6.3
+
+## 1.6.2
+
+## 1.6.1
+
+## 1.6.0
+
+## 1.5.2
+
+## 1.5.1
+
+### Patch Changes
+
+- [`bb2d93c40`](https://github.com/serverless-stack/sst/commit/bb2d93c401f460ebfa36ec62457e70a653b292e7) Thanks [@thdxr](https://github.com/thdxr)! - Bug fix for multi region stacks crashing sst start
+
+## 1.5.0
+
+### Minor Changes
+
+- [#1882](https://github.com/serverless-stack/sst/pull/1882) [`e4d350749`](https://github.com/serverless-stack/sst/commit/e4d35074904b8fdea0dfb4d9f3a9e6e19708038f) Thanks [@fwang](https://github.com/fwang)! - Update CDK to 2.32.0
+
+## 1.4.1
+
+### Patch Changes
+
+- [`02d5c7ee9`](https://github.com/serverless-stack/sst/commit/02d5c7ee92a275f9ad07cb9840632c1901b43d92) Thanks [@thdxr](https://github.com/thdxr)! - Fix CORS issue on ping endpoint for console testing websocket
+
+## 1.4.0
+
+### Minor Changes
+
+- [#1800](https://github.com/serverless-stack/sst/pull/1800) [`30ca1ca82`](https://github.com/serverless-stack/sst/commit/30ca1ca8237ad666214e9d4e73a7e24f7cd094c8) Thanks [@ctrlplusb](https://github.com/ctrlplusb)! - Add RemixSite construct
+
 ## 1.3.0
 
 ## 1.2.36

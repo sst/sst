@@ -90,12 +90,9 @@ export interface QueueProps {
 /////////////////////
 
 /**
- * The `Queue` construct is a higher level CDK construct that makes it easy to create a [SQS Queues](https://aws.amazon.com/sqs/). You can create a queue by specifying a consumer function. And then publish to the queue from any part of your serverless app.
- *
- * This construct makes it easier to define a queue and a consumer. It also internally connects the consumer and queue together.
+ * The `Queue` construct is a higher level CDK construct that makes it easy to create an SQS Queue and configure a consumer function.
  *
  * @example
- * ### Using the minimal config
  *
  * ```js
  * import { Queue } from "@serverless-stack/resources";

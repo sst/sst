@@ -9,16 +9,18 @@ import * as cdk from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as lambdaNode from "aws-cdk-lib/aws-lambda-nodejs";
+import * as logs from "aws-cdk-lib/aws-logs";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 
+import { State, Runtime, FunctionConfig } from "@serverless-stack/core";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
+import { Secret, Parameter } from "./Config.js";
+import { SSTConstruct } from "./Construct.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
-import { SSTConstruct } from "./Construct.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import * as functionUrlCors from "./util/functionUrlCors.js";
-import { State, Runtime } from "@serverless-stack/core";
 
 import url from "url";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
@@ -42,6 +44,8 @@ const supportedRuntimes = [
   lambda.Runtime.DOTNET_CORE_2_1,
   lambda.Runtime.DOTNET_CORE_3_1,
   lambda.Runtime.DOTNET_6,
+  lambda.Runtime.JAVA_8,
+  lambda.Runtime.JAVA_11,
   lambda.Runtime.GO_1_X,
 ];
 
@@ -68,6 +72,8 @@ export type Runtime =
   | "dotnetcore2.1"
   | "dotnetcore3.1"
   | "dotnet6"
+  | "java8"
+  | "java11"
   | "go1.x";
 
 export interface FunctionProps
@@ -80,6 +86,7 @@ export interface FunctionProps
     | "tracing"
     | "layers"
     | "architecture"
+    | "logRetention"
   > {
   /**
    * The CPU architecture of the lambda function.
@@ -227,6 +234,21 @@ export interface FunctionProps
    * ```js
    * new Function(stack, "Function", {
    *   handler: "src/function.handler",
+   *   config: [
+   *     STRIPE_KEY,
+   *     API_URL,
+   *   ]
+   * })
+   * ```
+   */
+  config?: (Secret | Parameter)[];
+  /**
+   * Configure environment variables for the function
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
    *   environment: {
    *     TABLE_NAME: table.tableName,
    *   }
@@ -301,6 +323,20 @@ export interface FunctionProps
    * ```
    */
   layers?: (string | lambda.ILayerVersion)[];
+  /**
+   * The duration function logs are kept in CloudWatch Logs.
+   * 
+   * When updating this property, unsetting it doesn't retain the logs indefinitely. Explicitly set the value to "infinite".
+   * @default Logs retained indefinitely
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
+   *   logRetention: "one_week"
+   * })
+   * ```
+   */
+  logRetention?: Lowercase<keyof typeof logs.RetentionDays>;
 }
 
 export interface FunctionNameProps {
@@ -427,6 +463,7 @@ export interface FunctionBundleNodejsProps extends FunctionBundleBase {
    * ```
    */
   externalModules?: string[];
+
   /**
    * Packages that will be excluded from the bundle and installed into node_modules instead. Useful for dependencies that cannot be bundled, like those with binary dependencies.
    *
@@ -440,6 +477,21 @@ export interface FunctionBundleNodejsProps extends FunctionBundleBase {
    * ```
    */
   nodeModules?: string[];
+
+  /**
+   * Use this to insert an arbitrary string at the beginning of generated JavaScript and CSS files.
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   bundle: {
+   *     banner: "console.log('Function starting')"
+   *   }
+   * })
+   * ```
+   */
+  banner?: string;
+
   /**
    * Hooks to run at various stages of bundling
    */
@@ -604,17 +656,9 @@ export interface FunctionBundleCopyFilesProps {
 }
 
 /**
- * A construct for a Lambda Function that allows you to [develop your it locally](live-lambda-development.md). Supports JS, TypeScript, Python, Golang, and C#. It also applies a couple of defaults:
- *
- * - Sets the default memory setting to 1024MB.
- * - Sets the default Lambda function timeout to 10 seconds.
- * - [Enables AWS X-Ray](https://docs.aws.amazon.com/lambda/latest/dg/nodejs-tracing.html) by default so you can trace your serverless applications.
- * - `AWS_NODEJS_CONNECTION_REUSE_ENABLED` is turned on. Meaning that the Lambda function will automatically reuse TCP connections when working with the AWS SDK. [Read more about this here](https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/node-reusing-connections.html).
- * - Sets the `IS_LOCAL` environment variable for the Lambda function when it is invoked locally through the `sst start` command.
+ * The `Function` construct is a higher level CDK construct that makes it easy to create a Lambda Function with support for Live Lambda Development.
  *
  * @example
- *
- * ### Creating a Function
  *
  * ```js
  * import { Function } from "@serverless-stack/resources";
@@ -631,7 +675,7 @@ export class Function extends lambda.Function implements SSTConstruct {
   private props: FunctionProps;
 
   constructor(scope: Construct, id: string, props: FunctionProps) {
-    const root = scope.node.root as App;
+    const app = scope.node.root as App;
     const stack = Stack.of(scope) as Stack;
 
     // Merge with app defaultFunctionProps
@@ -664,6 +708,9 @@ export class Function extends lambda.Function implements SSTConstruct {
       lambda.Tracing[
         (props.tracing || "active").toUpperCase() as keyof typeof lambda.Tracing
       ];
+    const logRetention = props.logRetention && logs.RetentionDays[
+      props.logRetention.toUpperCase() as keyof typeof logs.RetentionDays
+    ];
     let bundle = props.bundle;
     const permissions = props.permissions;
     const isLiveDevEnabled = props.enableLiveDev === false ? false : true;
@@ -706,10 +753,10 @@ export class Function extends lambda.Function implements SSTConstruct {
     //   from recent failed request will be received. And this behavior is confusing.
     if (
       isLiveDevEnabled &&
-      root.local &&
-      root.debugEndpoint &&
-      root.debugBucketName &&
-      root.debugBucketArn
+      app.local &&
+      app.debugEndpoint &&
+      app.debugBucketName &&
+      app.debugBucketArn
     ) {
       // If debugIncreaseTimeout is enabled:
       //   set timeout to 900s. This will give people more time to debug the function
@@ -717,13 +764,13 @@ export class Function extends lambda.Function implements SSTConstruct {
       //   timeout of 29s. In this case, the API will timeout, but the Lambda function
       //   will continue to run.
       let debugOverrideProps;
-      if (root.debugIncreaseTimeout) {
+      if (app.debugIncreaseTimeout) {
         debugOverrideProps = {
           timeout: cdk.Duration.seconds(900),
         };
       }
 
-      if (root.debugBridge) {
+      if (app.debugBridge) {
         super(scope, id, {
           ...props,
           architecture,
@@ -739,12 +786,13 @@ export class Function extends lambda.Function implements SSTConstruct {
           tracing,
           environment: {
             ...(props.environment || {}),
-            SST_DEBUG_BRIDGE: root.debugBridge,
+            SST_DEBUG_BRIDGE: app.debugBridge,
             SST_DEBUG_SRC_PATH: srcPath,
             SST_DEBUG_SRC_HANDLER: handler,
-            SST_DEBUG_ENDPOINT: root.debugEndpoint,
+            SST_DEBUG_ENDPOINT: app.debugEndpoint,
           },
           layers: Function.buildLayers(scope, id, props),
+          logRetention,
           ...(debugOverrideProps || {}),
         });
       } else {
@@ -756,7 +804,7 @@ export class Function extends lambda.Function implements SSTConstruct {
           ),
           handler: "index.main",
           functionName,
-          runtime: isNodeRuntime ? runtime : lambda.Runtime.NODEJS_12_X,
+          runtime: isNodeRuntime ? runtime : lambda.Runtime.NODEJS_16_X,
           memorySize,
           ephemeralStorageSize: diskSize,
           timeout,
@@ -765,15 +813,16 @@ export class Function extends lambda.Function implements SSTConstruct {
             ...(props.environment || {}),
             SST_DEBUG_SRC_PATH: srcPath,
             SST_DEBUG_SRC_HANDLER: handler,
-            SST_DEBUG_ENDPOINT: root.debugEndpoint,
-            SST_DEBUG_BUCKET_NAME: root.debugBucketName,
+            SST_DEBUG_ENDPOINT: app.debugEndpoint,
+            SST_DEBUG_BUCKET_NAME: app.debugBucketName,
           },
           layers: Function.buildLayers(scope, id, props),
+          logRetention,
           retryAttempts: 0,
           ...(debugOverrideProps || {}),
         });
       }
-      State.Function.append(root.appPath, {
+      State.Function.append(app.appPath, {
         id: localId,
         handler: handler,
         runtime: runtime.toString(),
@@ -785,12 +834,12 @@ export class Function extends lambda.Function implements SSTConstruct {
         new iam.PolicyStatement({
           actions: ["s3:*"],
           effect: iam.Effect.ALLOW,
-          resources: [root.debugBucketArn, `${root.debugBucketArn}/*`],
+          resources: [app.debugBucketArn, `${app.debugBucketArn}/*`],
         }),
       ]);
     }
     // Handle remove (ie. sst remove)
-    else if (root.skipBuild) {
+    else if (app.skipBuild) {
       // Note: need to override runtime as CDK does not support inline code
       //       for some runtimes.
       super(scope, id, {
@@ -801,20 +850,21 @@ export class Function extends lambda.Function implements SSTConstruct {
         ),
         handler: "placeholder",
         functionName,
-        runtime: lambda.Runtime.NODEJS_12_X,
+        runtime: lambda.Runtime.NODEJS_16_X,
         memorySize,
         ephemeralStorageSize: diskSize,
         timeout,
         tracing,
         environment: props.environment,
         layers: Function.buildLayers(scope, id, props),
+        logRetention,
       });
     }
     // Handle build
     else {
       const bundled = Runtime.Handler.bundle({
         id: localId,
-        root: root.appPath,
+        root: app.appPath,
         handler: handler,
         runtime: runtime.toString(),
         srcPath: srcPath,
@@ -843,13 +893,15 @@ export class Function extends lambda.Function implements SSTConstruct {
         tracing,
         environment: props.environment,
         layers: Function.buildLayers(scope, id, props),
+        logRetention,
       });
     }
 
     this.props = props || {};
 
-    // Enable reusing connections with Keep-Alive for NodeJs Lambda function
     if (isNodeRuntime) {
+      // Enable reusing connections with Keep-Alive for NodeJs
+      // Lambda function
       this.addEnvironment("AWS_NODEJS_CONNECTION_REUSE_ENABLED", "1", {
         removeInEdge: true,
       });
@@ -860,10 +912,10 @@ export class Function extends lambda.Function implements SSTConstruct {
       this.attachPermissions(permissions);
     }
 
-    // Create function URL
+    this.handleConfig();
     this.createUrl();
 
-    root.registerLambdaHandler({
+    app.registerLambdaHandler({
       bundle: props.bundle!,
       handler: handler,
       runtime: runtime.toString(),
@@ -895,11 +947,16 @@ export class Function extends lambda.Function implements SSTConstruct {
   }
 
   public getConstructMetadata() {
+    const { config } = this.props;
+
     return {
       type: "Function" as const,
       data: {
         localId: this.localId,
         arn: this.functionArn,
+        secrets: (config || [])
+          .filter((c) => c instanceof Secret)
+          .map((c) => c.name),
       },
     };
   }
@@ -928,6 +985,39 @@ export class Function extends lambda.Function implements SSTConstruct {
       authType,
       cors: functionUrlCors.buildCorsConfig(cors),
     });
+  }
+
+  private handleConfig() {
+    const app = this.node.root as App;
+    const { config } = this.props;
+
+    // Add environment variables
+    this.addEnvironment("SST_APP", app.name, { removeInEdge: true });
+    this.addEnvironment("SST_STAGE", app.stage, { removeInEdge: true });
+    (config || []).forEach((c) => {
+      if (c instanceof Secret) {
+        this.addEnvironment(`${FunctionConfig.SECRET_ENV_PREFIX}${c.name}`, "1");
+      }
+      else if (c instanceof Parameter) {
+        this.addEnvironment(`${FunctionConfig.PARAM_ENV_PREFIX}${c.name}`, c.value);
+      }
+    });
+
+    // Attach permissions
+    const iamResources: string[] = [];
+    (config || [])
+      .filter((c) => c instanceof Secret)
+      .forEach((c) => iamResources.push(
+        `arn:aws:ssm:${app.region}:${app.account}:parameter${FunctionConfig.buildSsmNameForSecret(app.name, app.stage, c.name)}`,
+        `arn:aws:ssm:${app.region}:${app.account}:parameter${FunctionConfig.buildSsmNameForSecretFallback(app.name, c.name)}`,
+      ));
+    if (iamResources.length > 0) {
+      this.attachPermissions([new iam.PolicyStatement({
+        actions: ["ssm:GetParameters"],
+        effect: iam.Effect.ALLOW,
+        resources: iamResources,
+      })]);
+    }
   }
 
   static buildLayers(scope: Construct, id: string, props: FunctionProps) {

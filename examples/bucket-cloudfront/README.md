@@ -7,9 +7,9 @@ An example serverless app created with SST.
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example bucket-cloudfront
+$ npx create-sst@latest --template=examples/bucket-cloudfront
 # Or with Yarn
-$ yarn create serverless-stack --example bucket-cloudfront
+$ yarn create sst --template=examples/bucket-cloudfront
 ```
 
 ## Commands

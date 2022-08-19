@@ -1,8 +1,9 @@
-import fs from "fs-extra";
+import url from "url";
+import * as path from "path";
 import { Construct, IConstruct } from "constructs";
 import * as cdk from "aws-cdk-lib";
+import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as regionInfo from "aws-cdk-lib/region-info";
 import { FunctionProps, Function as Fn } from "./Function.js";
 import { App } from "./App.js";
 import { isConstruct } from "./Construct.js";
@@ -10,7 +11,7 @@ import { Permissions } from "./util/permission.js";
 
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
-const packageJson = fs.readJsonSync(require.resolve("../package.json"));
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 export type StackProps = cdk.StackProps;
 
@@ -18,7 +19,6 @@ export type StackProps = cdk.StackProps;
  * The Stack construct extends cdk.Stack. It automatically prefixes the stack names with the stage and app name to ensure that they can be deployed to multiple regions in the same AWS account. It also ensure that the stack uses the same AWS profile and region as the app. They're defined using functions that return resources that can be imported by other stacks.
  *
  * @example
- * ### Creating a new stack
  *
  * ```js
  * import { StackContext } from "@serverless-stack/resources";
@@ -38,7 +38,8 @@ export class Stack extends cdk.Stack {
    * @internal
    */
   public readonly defaultFunctionProps: FunctionProps[];
-  private readonly metadata: cdk.CfnResource;
+
+  private readonly metadata: cdk.CustomResource;
 
   constructor(scope: Construct, id: string, props?: StackProps) {
     const root = scope.node.root as App;
@@ -50,17 +51,25 @@ export class Stack extends cdk.Stack {
     super(scope, stackId, {
       ...props,
       env: {
-        account: process.env.CDK_DEFAULT_ACCOUNT,
-        region: root.region,
-      },
+        account: root.account,
+        region: root.region
+      }
     });
 
     this.stage = root.stage;
-    this.defaultFunctionProps = root.defaultFunctionProps.map((dfp) =>
+    this.defaultFunctionProps = root.defaultFunctionProps.map(dfp =>
       typeof dfp === "function" ? dfp(this) : dfp
     );
 
-    this.metadata = this.createMetadataResource();
+    // We created the Metadata resource first with empty metadata, and on
+    // app synthesis we'll update it with the actual metadata.
+    // We do this two step process because we call the "Template.fromStack"
+    // method in the tests. And the call triggers an app synethsis. And we
+    // end up synthesize an app multiple times. If we created the Metadata
+    // resource on app synth, the tests would fail because the resource
+    // would already exist.
+
+    this.metadata = this.createStackMetadataResource();
   }
 
   /**
@@ -93,7 +102,7 @@ export class Stack extends cdk.Stack {
    */
   public addDefaultFunctionPermissions(permissions: Permissions) {
     this.defaultFunctionProps.push({
-      permissions,
+      permissions
     });
   }
 
@@ -109,7 +118,7 @@ export class Stack extends cdk.Stack {
    */
   public addDefaultFunctionEnv(environment: Record<string, string>) {
     this.defaultFunctionProps.push({
-      environment,
+      environment
     });
   }
 
@@ -123,7 +132,7 @@ export class Stack extends cdk.Stack {
    */
   public addDefaultFunctionLayers(layers: lambda.ILayerVersion[]) {
     this.defaultFunctionProps.push({
-      layers,
+      layers
     });
   }
 
@@ -170,7 +179,7 @@ export class Stack extends cdk.Stack {
   public addOutputs(
     outputs: Record<string, string | cdk.CfnOutputProps>
   ): void {
-    Object.keys(outputs).forEach((key) => {
+    Object.keys(outputs).forEach(key => {
       const value = outputs[key];
       if (value === undefined) {
         throw new Error(`The stack output "${key}" is undefined`);
@@ -182,39 +191,44 @@ export class Stack extends cdk.Stack {
     });
   }
 
-  addConstructsMetadata(metadata: any): void {
-    this.metadata.addMetadata("sst:constructs", metadata);
+  public setStackMetadata(metadata: any) {
+    (this.metadata.node.defaultChild as cdk.CfnResource).addPropertyOverride("Metadata", metadata);
   }
 
-  private createMetadataResource(): cdk.CfnResource {
-    // Add a placeholder resource to ensure stacks with just an imported construct
-    // has at least 1 resource, so the deployment succeeds.
-    // For example: users often create a stack and use it to import a VPC. The
-    //              stack does not have any resources.
-    //
-    // Note that the "AWS::CDK::Metadata" resource does not exist in GovCloud
-    // and a few other regions. In this case, we will use the "AWS::SSM::Parameter"
-    // resource. It does not matter what resource type we use. All we are interested
-    // in is the Metadata.
-    const props = this.isCDKMetadataResourceSupported()
-      ? {
-          type: "AWS::CDK::Metadata",
-        }
-      : {
-          type: "AWS::SSM::Parameter",
-          properties: {
-            Type: "String",
-            Name: `/sst/${this.stackName}`,
-            Value: "metadata-placeholder",
-            Description: "Parameter added by SST for storing stack metadata",
-          },
-        };
-    const res = new cdk.CfnResource(this, "SSTMetadata", props);
+  private createStackMetadataResource() {
+    const app = this.node.root as App;
 
-    // Add version metadata
-    res.addMetadata("sst:version", packageJson.version);
+    // Create execution policy
+    const policyStatement = new iam.PolicyStatement();
+    policyStatement.addResources(`arn:aws:s3:::${app.bootstrapAssets.bucketName}/*`);
+    policyStatement.addActions(
+      "s3:PutObject",
+      "s3:DeleteObject",
+    );
 
-    return res;
+    // Create Lambda
+    const fn = new lambda.Function(this, "MetadataUploaderFunction", {
+      code: lambda.Code.fromAsset(path.join(__dirname, "../assets/Stack/custom-resources")),
+      handler: "stack-metadata.handler",
+      runtime: lambda.Runtime.NODEJS_16_X,
+      timeout: cdk.Duration.seconds(900),
+      memorySize: 1024,
+      environment: {
+        BUCKET_NAME: app.bootstrapAssets.bucketName!,
+      },
+      initialPolicy: [policyStatement],
+    });
+
+    // Create custom resource
+    return new cdk.CustomResource(this, "MetadataUploader", {
+      serviceToken: fn.functionArn,
+      resourceType: "Custom::StackMetadata",
+      properties: {
+        App: app.name,
+        Stage: this.stage,
+        Stack: this.stackName,
+      }
+    });
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -243,32 +257,5 @@ export class Stack extends cdk.Stack {
         `Do not set the "env" prop while initializing "${id}" stack${envS}. Use the "AWS_PROFILE" environment variable and "--region" CLI option instead.`
       );
     }
-  }
-
-  private isCDKMetadataResourceSupported(): boolean {
-    const app = this.node.root as App;
-
-    // CDK Metadata resource currently not supported in the region
-    if (!regionInfo.RegionInfo.get(app.region).cdkMetadataResourceAvailable) {
-      return false;
-    }
-
-    // CDK Metadata resource used to not supported in the region
-    // Note that b/c we cannot change the resource type of a given logical id,
-    //           so if it used to not support, we will continue to mark it not
-    //           supportd.
-    if (
-      [
-        "us-gov-east-1",
-        "us-gov-west-1",
-        "us-iso-east-1",
-        "us-isob-east-1",
-        "ap-northeast-3",
-      ].includes(app.region)
-    ) {
-      return false;
-    }
-
-    return true;
   }
 }

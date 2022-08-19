@@ -9,9 +9,9 @@ An example serverless app created with SST.
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example pub-sub
+$ npx create-sst@latest --template=examples/pub-sub
 # Or with Yarn
-$ yarn create serverless-stack --example pub-sub
+$ yarn create sst --template=examples/pub-sub
 ```
 
 ## Commands

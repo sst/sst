@@ -2,7 +2,7 @@ import { Api, StackContext } from "@serverless-stack/resources";
 
 export function MyStack({ stack }: StackContext) {
   // Create a HTTP API
-  const api = new Api(this, "Api", {
+  const api = new Api(stack, "Api", {
     defaults: {
       function: {
         environment: {

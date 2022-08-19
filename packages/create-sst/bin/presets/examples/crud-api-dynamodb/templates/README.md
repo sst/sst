@@ -9,9 +9,9 @@ An example serverless app created with SST.
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example crud-api-dynamodb
+$ npx create-sst@latest --template=examples/crud-api-dynamodb
 # Or with Yarn
-$ yarn create serverless-stack --example crud-api-dynamodb
+$ yarn create sst --template=examples/crud-api-dynamodb
 ```
 
 ## Commands

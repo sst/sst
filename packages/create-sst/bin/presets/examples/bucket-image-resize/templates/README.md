@@ -9,9 +9,9 @@ An example serverless app created with SST.
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example bucket-image-resize
+$ npx create-sst@latest --template=examples/bucket-image-resize
 # Or with Yarn
-$ yarn create serverless-stack --example bucket-image-resize
+$ yarn create sst --template=examples/bucket-image-resize
 ```
 
 ## Commands

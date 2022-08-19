@@ -1,4 +1,4 @@
-import { test, expect } from "vitest";
+import { test, expect, beforeEach } from "vitest";
 /* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/ban-types, @typescript-eslint/no-empty-function */
 
 import path from "path";
@@ -25,6 +25,7 @@ import {
   Stack,
   Table,
   Bucket,
+  Config,
   EventBus,
   Function,
   FunctionProps
@@ -35,6 +36,11 @@ const lambdaDefaultPolicy = {
   Effect: "Allow",
   Resource: "*"
 };
+
+beforeEach(async () => {
+  Config.Parameter.clear();
+  Config.Secret.clear();
+});
 
 /////////////////////////////
 // Test constructor
@@ -306,7 +312,7 @@ test("runtime-string-invalid", async () => {
   expect(() => {
     new Function(stack, "Function", {
       handler: "test/lambda.handler",
-      runtime: "java8" as any
+      runtime: "ruby" as any
     });
   }).toThrow(/The specified runtime is not supported/);
 });
@@ -381,6 +387,36 @@ test("diskSize-Size", async () => {
   });
 });
 
+test("logRetention-undefined", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  countResources(stack, "Custom::LogRetention", 0);
+});
+
+test("logRetention-one-week", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    logRetention: "one_week",
+  });
+  hasResource(stack, "Custom::LogRetention", {
+    RetentionInDays: 7,
+  });
+});
+
+test("logRetention-infinite", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    logRetention: "infinite",
+  });
+  hasResource(stack, "Custom::LogRetention", {
+    RetentionInDays: ABSENT,
+  });
+});
+
 test("xray-disabled", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
@@ -389,6 +425,43 @@ test("xray-disabled", async () => {
   });
   hasResource(stack, "AWS::Lambda::Function", {
     TracingConfig: ABSENT
+  });
+});
+
+test("config", async () => {
+  const stack = new Stack(new App(), "stack");
+  const s = new Config.Secret(stack, "MY_SECRET");
+  const p = new Config.Parameter(stack, "MY_PARAM", {
+    value: "value"
+  });
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    config: [s, p]
+  });
+  hasResource(stack, "AWS::Lambda::Function", {
+    Environment: {
+      Variables: {
+        SST_SECRET_MY_SECRET: "1",
+        SST_PARAM_MY_PARAM: "value",
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
+      }
+    }
+  });
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: "ssm:GetParameters",
+          Effect: "Allow",
+          Resource: [
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/secrets/MY_SECRET",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/secrets/MY_SECRET",
+          ],
+        },
+      ],
+      Version: "2012-10-17"
+    }
   });
 });
 
@@ -610,6 +683,7 @@ test("url.cors: props", async () => {
   expect(fn.url).toBeDefined();
   hasResource(stack, "AWS::Lambda::Url", {
     Cors: {
+      AllowHeaders: ["*"],
       AllowMethods: ["GET"],
       AllowOrigins: ["https://example.com"],
     },

@@ -9,9 +9,9 @@ An example serverless app created with SST.
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example api-auth-jwt-cognito-user-pool
+$ npx create-sst@latest --template=examples/api-auth-jwt-cognito-user-pool
 # Or with Yarn
-$ yarn create serverless-stack --example api-auth-jwt-cognito-user-pool
+$ yarn create sst --template=examples/api-auth-jwt-cognito-user-pool
 ```
 
 ## Commands

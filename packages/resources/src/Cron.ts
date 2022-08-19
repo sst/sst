@@ -58,7 +58,7 @@ export interface CronProps {
    * rate(1 day)
    * rate(5 days)
    * ```
-   * Or as a [cron expression](https://en.wikipedia.org/wiki/Cron#CRON_expression).
+   * Or as a [cron expression](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-create-rule-schedule.html#eb-cron-expressions).
    *
    * ```txt
    * cron(15 10 * * ? *)    // 10:15 AM (UTC) every day.
@@ -105,7 +105,18 @@ export interface CronProps {
 /////////////////////
 
 /**
- * The `Cron` construct is a higher level CDK construct that makes it easy to create a cron job. You can create a cron job by handler function and specifying the schedule it needs to run on. Internally this construct uses a [EventBridge Rule](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events.Rule.html).
+ * The `Cron` construct is a higher level CDK construct that makes it easy to create a cron job.
+ *
+ * @example
+ *
+ * ```js
+ * import { Cron } from "@serverless-stack/resources";
+ *
+ * new Cron(stack, "Cron", {
+ *   schedule: "rate(1 minute)",
+ *   job: "src/lambda.main",
+ * });
+ * ```
  */
 export class Cron extends Construct implements SSTConstruct {
   public readonly cdk: {

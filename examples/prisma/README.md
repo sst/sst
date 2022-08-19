@@ -5,9 +5,9 @@
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example prisma
+$ npx create-sst@latest --template=examples/prisma
 # Or with Yarn
-$ yarn create serverless-stack --example prisma
+$ yarn create sst --template=examples/prisma
 ```
 
 ## Prisma

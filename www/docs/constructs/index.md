@@ -19,6 +19,7 @@ Here's a rough list of the types of contructs that SST supports.
 - [`WebSocketApi`](./WebSocketApi.md)
 
 ## Frontend
+- [`RemixSite`](./RemixSite.md)
 - [`StaticSite`](./StaticSite.md)
 - [`NextjsSite`](./NextjsSite.md)
 - [`ViteStaticSite`](./ViteStaticSite.md)

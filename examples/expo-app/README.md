@@ -9,9 +9,9 @@ An example full-stack serverless Expo app created with SST.
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example expo-app
+$ npx create-sst@latest --template=examples/expo-app
 # Or with Yarn
-$ yarn create serverless-stack --example expo-app
+$ yarn create sst --template=examples/expo-app
 ```
 
 ## Commands
@@ -48,4 +48,4 @@ Learn more about SST.
 
 ## Community
 
-[Follow us on Twitter](https://twitter.com/ServerlessStack) or [post on our forums](https://discourse.sst.dev).
+[Follow us on Twitter](https://twitter.com/sst_dev) or [post on our forums](https://discourse.sst.dev).

@@ -251,10 +251,9 @@ export interface BucketProps {
 /////////////////////
 
 /**
- * The `Bucket` construct is a higher level CDK construct that makes it easy to create an S3 Bucket and to define its notifications. It also internally connects the notifications and bucket together.
+ * The `Bucket` construct is a higher level CDK construct that makes it easy to create an S3 Bucket and to define its notifications.
  *
  * @example
- * ### Using the minimal config
  *
  * ```js
  * import { Bucket } from "@serverless-stack/resources";

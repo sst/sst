@@ -19,6 +19,7 @@ export * from "./KinesisStream.js";
 export * from "./ApiGatewayV1Api.js";
 
 export * from "./NextjsSite.js";
+export * from "./RemixSite.js";
 export * from "./StaticSite.js";
 export * from "./ViteStaticSite.js";
 export * from "./ReactStaticSite.js";
@@ -26,6 +27,7 @@ export * from "./ReactStaticSite.js";
 export * from "./util/size.js";
 export * from "./util/duration.js";
 export * from "./util/permission.js";
+export * as Config from "./Config.js";
 export * as Metadata from "./Metadata.js";
 
 export * from "./DebugApp.js";

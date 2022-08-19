@@ -12,7 +12,7 @@ export function MyStack({ stack, app }: StackContext) {
   // Configure Datadog only in prod
   if (!app.local) {
     // Configure Datadog
-    const datadog = new Datadog(this, "Datadog", {
+    const datadog = new Datadog(stack, "Datadog", {
       nodeLayerVersion: 65,
       extensionLayerVersion: 13,
       apiKey: process.env.DATADOG_API_KEY,

@@ -4,14 +4,26 @@ import { Duration, toCdkDuration } from "./duration.js";
 export interface CorsProps {
   /**
    * Specifies whether credentials are included in the CORS request.
+   * @default false
    */
   allowCredentials?: boolean;
   /**
    * The collection of allowed headers.
+   * @default Allow all headers.
+   *
+   * @example
+   * ```js
+   * // Allow all headers
+   * allowHeaders: ["*"]
+   *
+   * // Allow specific headers
+   * allowHeaders: ["Accept", "Content-Type", "Authorization"]
+   * ```
    */
   allowHeaders?: string[];
   /**
    * The collection of allowed HTTP methods.
+   * @default Allow all methods.
    *
    * @example
    * ```js
@@ -25,6 +37,7 @@ export interface CorsProps {
   allowMethods?: (keyof Omit<typeof HttpMethod, "ALL"> | "*")[];
   /**
    * The collection of allowed origins.
+   * @default Allow all origins.
    *
    * @example
    * ```js
@@ -38,10 +51,17 @@ export interface CorsProps {
   allowOrigins?: string[];
   /**
    * The collection of exposed headers.
+   * @default No expose headers are allowed.
    */
   exposeHeaders?: string[];
   /**
    * Specify how long the results of a preflight response can be cached
+   * @default No caching
+   *
+   * @example
+   * ```js
+   * maxAge: "1 day"
+   * ```
    */
   maxAge?: Duration;
 }
@@ -55,28 +75,22 @@ export function buildCorsConfig(
   }
 
   // Handle cors: true | undefined
-  else if (cors === undefined || cors === true) {
-    return {
-      allowedHeaders: ["*"],
-      allowedMethods: [HttpMethod.ALL],
-      allowedOrigins: ["*"],
-    };
+  if (cors === undefined || cors === true) {
+    cors = {} as CorsProps;
   }
 
-  // Handle cors: FunctionUrlCorsOptions
-  else {
-    return {
-      allowCredentials: cors.allowCredentials,
-      allowedHeaders: cors.allowHeaders,
-      allowedMethods: (cors.allowMethods || []).map(
-        (method) =>
-          method === "*"
-            ? HttpMethod.ALL
-            : HttpMethod[method as keyof typeof HttpMethod]
-      ),
-      allowedOrigins: cors.allowOrigins,
-      exposedHeaders: cors.exposeHeaders,
-      maxAge: cors.maxAge && toCdkDuration(cors.maxAge),
-    };
-  }
+  // Handle cors: CorsProps
+  return {
+    allowCredentials: cors.allowCredentials,
+    allowedHeaders: cors.allowHeaders || ["*"],
+    allowedMethods: (cors.allowMethods || ["*"]).map(
+      (method) =>
+        method === "*"
+          ? HttpMethod.ALL
+          : HttpMethod[method as keyof typeof HttpMethod]
+    ),
+    allowedOrigins: cors.allowOrigins || ["*"],
+    exposedHeaders: cors.exposeHeaders,
+    maxAge: cors.maxAge && toCdkDuration(cors.maxAge),
+  };
 }

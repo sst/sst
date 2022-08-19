@@ -97,6 +97,7 @@ SST also comes with [a set of serverless specific higher-level CDK constructs][r
 - [Auth](https://docs.sst.dev/constructs/Auth) for configuring authentication
 - [Table](https://docs.sst.dev/constructs/Table) for adding DynamoDB tables
 - [Topic](https://docs.sst.dev/constructs/Topic) for creating pub/sub systems
+- [RemixSite](https://docs.sst.dev/constructs/RemixSite) for creating Next.js websites
 - [StaticSite](https://docs.sst.dev/constructs/StaticSite) for creating static websites
 - [NextjsSite](https://docs.sst.dev/constructs/NextjsSite) for creating Next.js websites
 - [Script](https://docs.sst.dev/constructs/Script) for running scripts while deploying
@@ -113,11 +114,6 @@ SST also comes with [a set of serverless specific higher-level CDK constructs][r
 ### And more
 
 SST also supports deploying your CloudFormation stacks asynchronously. [Seed](https://seed.run) natively supports concurrent asynchronous deployments for your SST apps. And SST deployments on Seed are free!
-
-SST also comes with a few other niceties:
-
-- Automatically lints your code using [ESLint](https://eslint.org/)
-- Runs your unit tests using [Jest](https://jestjs.io/)
 
 Internally, SST uses the CDK CLI to invoke the various CDK commands.
 

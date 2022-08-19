@@ -14,6 +14,7 @@ const BUILD_CACHE: Record<string, esbuild.BuildResult> = {};
 
 type Bundle = {
   loader?: { [ext: string]: esbuild.Loader };
+  banner?: string;
   externalModules?: string[];
   nodeModules?: string[];
   esbuildConfig?: {
@@ -85,13 +86,19 @@ export const NodeHandler: Definition<Bundle> = opts => {
           banner: {
             js: [
               `import { createRequire as topLevelCreateRequire } from 'module'`,
-              `const require = topLevelCreateRequire(import.meta.url)`
+              `const require = topLevelCreateRequire(import.meta.url)`,
+              bundle.banner || ""
             ].join("\n")
           }
         }
       : {
           target: "node14",
-          format: "cjs"
+          format: "cjs",
+          banner: bundle.banner
+            ? {
+                js: bundle.banner
+              }
+            : undefined
         }),
     outfile: target
   };
@@ -239,10 +246,8 @@ export const NodeHandler: Definition<Bundle> = opts => {
         "**/*.js",
         "**/*.jsx",
         "**/*.mjs",
-        "**/*.cjs",
-      ].map((glob) =>
-        path.resolve(path.join(opts.srcPath, glob))
-      ),
+        "**/*.cjs"
+      ].map(glob => path.resolve(path.join(opts.srcPath, glob))),
       ignore: []
     }
   };

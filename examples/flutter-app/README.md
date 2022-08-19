@@ -9,9 +9,9 @@ An example full-stack serverless Flutter app created with SST.
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example flutter-app
+$ npx create-sst@latest --template=examples/flutter-app
 # Or with Yarn
-$ yarn create serverless-stack --example flutter-app
+$ yarn create sst --template=examples/flutter-app
 ```
 
 Set the deployed API endpoint in Flutter. Create a `.env` file inside `frontend\` with the following content:
@@ -64,4 +64,4 @@ Learn more about SST.
 
 ## Community
 
-[Follow us on Twitter](https://twitter.com/ServerlessStack) or [post on our forums](https://discourse.sst.dev).
+[Follow us on Twitter](https://twitter.com/sst_dev) or [post on our forums](https://discourse.sst.dev).

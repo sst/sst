@@ -8,7 +8,10 @@ import {
   writeOutputsFile,
   validatePropsForJs,
 } from "./util/cdkHelpers.mjs";
-import { STACK_DEPLOY_STATUS } from "@serverless-stack/core";
+import {
+  Bootstrap,
+  STACK_DEPLOY_STATUS
+} from "@serverless-stack/core";
 
 export default async function (argv, config, cliInfo) {
   // Normalize stack name
@@ -19,6 +22,9 @@ export default async function (argv, config, cliInfo) {
       ? stackId
       : `${stackPrefix}${stackId}`;
   }
+
+  // Deploy bootstrap stack
+  await Bootstrap.bootstrap(config, cliInfo);
 
   // Run CDK Synth
   await synth(cliInfo.cdkOptions);

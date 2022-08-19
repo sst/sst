@@ -9,9 +9,9 @@ An example serverless API created with SST and validated using Middy.
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example middy-validator
+$ npx create-sst@latest --template=examples/middy-validator
 # Or with Yarn
-$ yarn create serverless-stack --example middy-validator
+$ yarn create sst --template=examples/middy-validator
 ```
 
 ## Commands
@@ -48,4 +48,4 @@ Learn more about SST.
 
 ## Community
 
-[Follow us on Twitter](https://twitter.com/ServerlessStack) or [post on our forums](https://discourse.sst.dev).
+[Follow us on Twitter](https://twitter.com/sst_dev) or [post on our forums](https://discourse.sst.dev).

@@ -35,7 +35,7 @@ export function MyStack({ stack, app }: StackContext) {
   });
 
   // attach permissions for authenticated users to the api
-  auth.attachPermissionsForAuthUsers([api]);
+  auth.attachPermissionsForAuthUsers(stack, [api]);
 
   const site = new ViteStaticSite(stack, "Site", {
     path: "frontend",

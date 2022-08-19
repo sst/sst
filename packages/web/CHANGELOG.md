@@ -1,5 +1,47 @@
 # @serverless-stack/web
 
+## 1.8.1
+
+## 1.8.0
+
+### Minor Changes
+
+- [#1957](https://github.com/serverless-stack/sst/pull/1957) [`989a4f516`](https://github.com/serverless-stack/sst/commit/989a4f516175c2e51a649acad4478d3eec5319f1) Thanks [@fwang](https://github.com/fwang)! - Release Config
+
+## 1.7.0
+
+## 1.6.10
+
+## 1.6.9
+
+## 1.6.8
+
+## 1.6.7
+
+## 1.6.6
+
+## 1.6.5
+
+## 1.6.4
+
+## 1.6.3
+
+## 1.6.2
+
+## 1.6.1
+
+## 1.6.0
+
+## 1.5.2
+
+## 1.5.1
+
+## 1.5.0
+
+## 1.4.1
+
+## 1.4.0
+
 ## 1.3.0
 
 ## 1.2.36

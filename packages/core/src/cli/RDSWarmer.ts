@@ -19,14 +19,20 @@ export function createRDSWarmer(opts: Opts) {
         });
         Logger.print("debug", `RDSWarmer: warming ${c.id}`);
 
-        client
-          .executeStatement({
-            sql: "SELECT 1",
-            secretArn: c.data.secretArn,
-            resourceArn: c.data.clusterArn,
-            database: c.data.defaultDatabaseName,
-          })
-          .promise();
+        try {
+          client
+            .executeStatement({
+              sql: "SELECT 1",
+              secretArn: c.data.secretArn,
+              resourceArn: c.data.clusterArn,
+              database: c.data.defaultDatabaseName,
+            })
+            .promise();
+        } catch(e) {
+          // Ignore error
+          // If the cluster is not warm, this will throw:
+          //   BadRequestException: Communication link failure
+        }
       });
   });
 }

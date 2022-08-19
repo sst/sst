@@ -16,7 +16,7 @@ export function MyStack({ stack }: StackContext) {
   });
 
   // Create auth provider
-  const auth = new Auth(this, "Auth", {
+  const auth = new Auth(stack, "Auth", {
     identityPoolFederation: {
       google: {
         clientId:
@@ -26,7 +26,7 @@ export function MyStack({ stack }: StackContext) {
   });
 
   // Allow authenticated users invoke API
-  auth.attachPermissionsForAuthUsers([api]);
+  auth.attachPermissionsForAuthUsers(stack, [api]);
 
   // Show the API endpoint and other info in the output
   stack.addOutputs({

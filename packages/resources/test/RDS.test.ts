@@ -5,6 +5,7 @@ import { countResources, hasResource } from "./helper";
 import * as cdk from "aws-cdk-lib";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as rds from "aws-cdk-lib/aws-rds";
+import * as secretsManager from "aws-cdk-lib/aws-secretsmanager";
 import { App, Stack, RDS, RDSProps } from "../src";
 
 /////////////////////////////
@@ -22,6 +23,8 @@ test("cdk.cluster is props", async () => {
       },
     },
   });
+  expect(cluster.defaultDatabaseName).toBe("acme");
+  expect(cluster.secretArn).toBeDefined();
   expect(cluster.clusterArn).toBeDefined();
   expect(cluster.clusterIdentifier).toBeDefined();
   expect(cluster.clusterEndpoint).toBeDefined();
@@ -106,6 +109,42 @@ test("cdk.cluster contains enableDataApi error", async () => {
         },
       } as RDSProps)
   ).toThrow(/Do not configure the "cdk.cluster.enableDataApi"/);
+});
+
+test("cdk.cluster is construct", async () => {
+  const stack = new Stack(new App(), "stack");
+  const cluster = new RDS(stack, "Cluster", {
+    engine: "postgresql10.14",
+    defaultDatabaseName: "acme",
+    cdk: {
+      cluster: rds.ServerlessCluster.fromServerlessClusterAttributes(stack, "ICluster", {
+        clusterIdentifier: "my-cluster",
+      }),
+      secret: secretsManager.Secret.fromSecretAttributes(stack, "ISecret", {
+        secretPartialArn: "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret",
+      }),
+    },
+  });
+  countResources(stack, "AWS::RDS::DBCluster", 0);
+  expect(cluster.defaultDatabaseName).toBe("acme");
+  expect(cluster.secretArn).toBe("arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret");
+});
+
+test("cdk.cluster is construct: no secret error", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(
+    () =>
+      new RDS(stack, "Cluster", {
+        engine: "postgresql10.14",
+        defaultDatabaseName: "acme",
+        cdk: {
+          cluster: new rds.ServerlessCluster(stack, "MyCluster", {
+            engine: rds.DatabaseClusterEngine.AURORA_MYSQL,
+            defaultDatabaseName: "acme",
+          }),
+        },
+      })
+  ).toThrow(/Missing "cdk.secret"/);
 });
 
 test("defaultDatabaseName missing", async () => {

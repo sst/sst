@@ -1,5 +1,41 @@
 # @serverless-stack/docs
 
+## 1.6.0
+
+### Minor Changes
+
+- [#1957](https://github.com/serverless-stack/sst/pull/1957) [`989a4f516`](https://github.com/serverless-stack/sst/commit/989a4f516175c2e51a649acad4478d3eec5319f1) Thanks [@fwang](https://github.com/fwang)! - Release Config
+
+## 1.5.0
+
+### Minor Changes
+
+- [#1922](https://github.com/serverless-stack/sst/pull/1922) [`e0a5eba96`](https://github.com/serverless-stack/sst/commit/e0a5eba964a9fc2d413a132333d388a40a81faa9) Thanks [@fwang](https://github.com/fwang)! - Function: support Java runtime built with gradle
+
+## 1.4.2
+
+### Patch Changes
+
+- [#1940](https://github.com/serverless-stack/sst/pull/1940) [`91d28a7d3`](https://github.com/serverless-stack/sst/commit/91d28a7d37e1a9c960c18ee419c19bf4d59da050) Thanks [@fwang](https://github.com/fwang)! - Api: support Lambda container routes
+
+## 1.4.1
+
+### Patch Changes
+
+- [#1932](https://github.com/serverless-stack/sst/pull/1932) [`bad52a000`](https://github.com/serverless-stack/sst/commit/bad52a000fe0a0aee135ef8207fa726a564a54de) Thanks [@fwang](https://github.com/fwang)! - StaticSite: support importing existing S3 bucket
+
+## 1.4.0
+
+### Minor Changes
+
+- [#1898](https://github.com/serverless-stack/sst/pull/1898) [`4bfd5915c`](https://github.com/serverless-stack/sst/commit/4bfd5915c97f7996d85f7a5cad3f273d836b60fe) Thanks [@fwang](https://github.com/fwang)! - RDS: support importing existing Aurora Serverless v1 cluster
+
+## 1.3.0
+
+### Minor Changes
+
+- [#1800](https://github.com/serverless-stack/sst/pull/1800) [`30ca1ca82`](https://github.com/serverless-stack/sst/commit/30ca1ca8237ad666214e9d4e73a7e24f7cd094c8) Thanks [@ctrlplusb](https://github.com/ctrlplusb)! - Add RemixSite construct
+
 ## 1.2.0
 
 ### Minor Changes

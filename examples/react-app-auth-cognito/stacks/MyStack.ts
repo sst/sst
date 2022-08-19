@@ -28,7 +28,7 @@ export function MyStack({ stack, app }: StackContext) {
   });
 
   // Allow authenticated users to invoke the API
-  auth.attachPermissionsForAuthUsers([api]);
+  auth.attachPermissionsForAuthUsers(stack, [api]);
 
   // Deploy our React app
   const site = new ReactStaticSite(stack, "ReactSite", {

@@ -6,15 +6,16 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 import * as iam from "aws-cdk-lib/aws-iam";
 import { ILayerVersion } from "aws-cdk-lib/aws-lambda";
 import * as cxapi from "aws-cdk-lib/cx-api";
-import { State } from "@serverless-stack/core";
+import { Bootstrap, State } from "@serverless-stack/core";
 import { Stack } from "./Stack.js";
 import {
   SSTConstruct,
   SSTConstructMetadata,
   isSSTConstruct,
-  isStackConstruct,
+  isStackConstruct
 } from "./Construct.js";
 import { FunctionProps, FunctionHandlerProps } from "./Function.js";
+import * as Config from "./Config.js";
 import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite.js";
 import { Permissions } from "./util/permission.js";
 import { StackProps } from "./Stack.js";
@@ -55,6 +56,7 @@ export interface AppDeployProps {
   readonly buildDir?: string;
   readonly skipBuild?: boolean;
   readonly esbuildConfig?: string;
+  readonly bootstrapAssets?: Bootstrap.Assets;
   readonly debugEndpoint?: string;
   readonly debugBucketArn?: string;
   readonly debugBucketName?: string;
@@ -78,21 +80,7 @@ type AppRemovalPolicy = Lowercase<keyof typeof cdk.RemovalPolicy>;
 export type AppProps = cdk.AppProps;
 
 /**
- * The App construct extends cdk.App and is used internally by SST to:
- * - Automatically prefix stack names with the stage and app name
- * - Deploy the entire app using the same AWS profile and region
- *
- * It is made available as the `app` in the `stacks/index.js` of your SST app.
- *
- * ```js
- * export default function main(app) {
- *   new MySampleStack(app, "sample");
- * }
- * ```
- *
- * Since it is initialized internally, the props that are passed to App cannot be changed.
- *
- * @example
+ * The App construct extends cdk.App and is used internally by SST.
  */
 export class App extends cdk.App {
   /**
@@ -120,6 +108,8 @@ export class App extends cdk.App {
   public readonly buildDir: string;
   /** @internal */
   public readonly esbuildConfig?: string;
+  /** @internal */
+  public readonly bootstrapAssets: Bootstrap.Assets;
   /** @internal */
   public readonly debugBridge?: string;
   /** @internal */
@@ -188,6 +178,7 @@ export class App extends cdk.App {
       deployProps.region || process.env.CDK_DEFAULT_REGION || "us-east-1";
     this.account = process.env.CDK_DEFAULT_ACCOUNT || "my-account";
     this.esbuildConfig = deployProps.esbuildConfig;
+    this.bootstrapAssets = deployProps.bootstrapAssets || {};
     this.buildDir = deployProps.buildDir || ".build";
     this.skipBuild = deployProps.skipBuild || false;
     this.defaultFunctionProps = [];
@@ -268,7 +259,7 @@ export class App extends cdk.App {
    */
   public addDefaultFunctionPermissions(permissions: Permissions) {
     this.defaultFunctionProps.push({
-      permissions,
+      permissions
     });
   }
 
@@ -284,7 +275,7 @@ export class App extends cdk.App {
    */
   public addDefaultFunctionEnv(environment: Record<string, string>) {
     this.defaultFunctionProps.push({
-      environment,
+      environment
     });
   }
 
@@ -293,11 +284,13 @@ export class App extends cdk.App {
    */
   public addDefaultFunctionLayers(layers: ILayerVersion[]) {
     this.defaultFunctionProps.push({
-      layers,
+      layers
     });
   }
 
   synth(options: cdk.StageSynthesisOptions = {}): cxapi.CloudAssembly {
+    this.createTypesFile();
+    Config.codegenTypes();
     this.buildConstructsMetadata();
 
     for (const child of this.node.children) {
@@ -355,7 +348,7 @@ export class App extends cdk.App {
       exitWithMessage("There was a problem reading the esbuild metafile.");
     }
 
-    return Object.keys(metaJson.inputs).map((input) => path.resolve(input));
+    return Object.keys(metaJson.inputs).map(input => path.resolve(input));
   }
 
   private buildConstructsMetadata(): void {
@@ -375,12 +368,12 @@ export class App extends cdk.App {
         id: c.node.id,
         addr: c.node.addr,
         stack: Stack.of(c).stackName,
-        ...metadata,
+        ...metadata
       };
       local.push(item);
       list.push({
         ...item,
-        local: undefined,
+        local: undefined
       });
       byStack[stack.node.id] = list;
     }
@@ -389,7 +382,7 @@ export class App extends cdk.App {
     for (const child of this.node.children) {
       if (child instanceof Stack) {
         const stackName = (child as Stack).node.id;
-        (child as Stack).addConstructsMetadata(byStack[stackName] || []);
+        (child as Stack).setStackMetadata(byStack[stackName] || []);
       }
     }
     fs.writeJSONSync(State.resolve(this.appPath, "constructs.json"), local);
@@ -400,9 +393,9 @@ export class App extends cdk.App {
   ): (SSTConstruct & IConstruct)[] {
     return [
       isSSTConstruct(construct) ? construct : undefined,
-      ...construct.node.children.flatMap((c) =>
+      ...construct.node.children.flatMap(c =>
         this.buildConstructsMetadata_collectConstructs(c)
-      ),
+      )
     ].filter((c): c is SSTConstruct & IConstruct => Boolean(c));
   }
 
@@ -430,8 +423,8 @@ export class App extends cdk.App {
             require.resolve("aws-cdk-lib/aws-s3"),
             "../lib/auto-delete-objects-handler"
           ),
-          runtime: cdk.CustomResourceProviderRuntime.NODEJS_12_X,
-          description: `Lambda function for auto-deleting objects in ${current.bucketName} S3 bucket.`,
+          runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
+          description: `Lambda function for auto-deleting objects in ${current.bucketName} S3 bucket.`
         }
       );
 
@@ -444,10 +437,10 @@ export class App extends cdk.App {
             "s3:GetBucket*",
             "s3:List*",
             // and then delete them
-            "s3:DeleteObject*",
+            "s3:DeleteObject*"
           ],
           resources: [current.bucketArn, current.arnForObjects("*")],
-          principals: [new iam.ArnPrincipal(provider.roleArn)],
+          principals: [new iam.ArnPrincipal(provider.roleArn)]
         })
       );
 
@@ -458,8 +451,8 @@ export class App extends cdk.App {
           resourceType: AUTO_DELETE_OBJECTS_RESOURCE_TYPE,
           serviceToken: provider.serviceToken,
           properties: {
-            BucketName: current.bucketName,
-          },
+            BucketName: current.bucketName
+          }
         }
       );
 
@@ -470,9 +463,17 @@ export class App extends cdk.App {
         customResource.node.addDependency(current.policy);
       }
     }
-    current.node.children.forEach((resource) =>
+    current.node.children.forEach(resource =>
       this.applyRemovalPolicy(resource, policy)
     );
+  }
+
+  private createTypesFile() {
+    fs.removeSync("node_modules/@types/serverless-stack__node");
+    fs.mkdirSync("node_modules/@types/serverless-stack__node", {
+      recursive: true,
+    });
+    fs.writeFileSync("node_modules/@types/serverless-stack__node/index.d.ts", "");
   }
 
   // Functional Stack

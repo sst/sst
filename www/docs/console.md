@@ -6,7 +6,7 @@ description: "The SST Console is a web based dashboard to manage your SST apps."
 import config from "../config";
 
 export const ConsoleUrl = ({url}) =>
-  <a href={url}>{url.replace("https://","").replace(/\/$/, "")}</a>;
+<a href={url}>{url.replace("https://","").replace(/\/$/, "")}</a>;
 
 The SST Console is a web based dashboard to manage your SST apps — **<ConsoleUrl url={config.console} />**
 
@@ -121,12 +121,12 @@ To get started:
 
 ## Working with Safari or Brave
 
-Certain browsers like Safari and Brave require the local connection between the browser and the `sst start` CLI to be running on HTTPS. SST integrates with [mkcert](https://github.com/FiloSottile/mkcert) automatically to generate a self signed certificate to use. To configure:
+Certain browsers like Safari and Brave require the local connection between the browser and the `sst start` CLI to be running on HTTPS. SST integrates with [mkcert](https://github.com/FiloSottile/mkcert) to automatically generate a self-signed certificate. To set this up:
 
 1. Follow the mkcert [installation steps](https://github.com/FiloSottile/mkcert#installation).
-2. Run `mkcert install`.
+2. Run `mkcert -install` in your terminal.
 3. Restart your browser.
-4. Run `sst start` and navigate to <ConsoleUrl url={config.console} />.
+4. Restart `sst start` and navigate to <ConsoleUrl url={config.console} /> in the browser.
 
 ## How it works
 

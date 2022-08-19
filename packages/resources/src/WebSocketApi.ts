@@ -224,7 +224,7 @@ export interface WebSocketApiCdkStageProps
 /////////////////////
 
 /**
- * The `WebSocketApi` construct is a higher level CDK construct that makes it easy to create a WebSocket API. It provides a simple way to define your routes and allows you to configure the specific Lambda functions if necessary. It also allows you to configure authorization and custom domains. See the [examples](#examples) for more details.
+ * The `WebSocketApi` construct is a higher level CDK construct that makes it easy to create a WebSocket API.
  *
  * @example
  * ```js

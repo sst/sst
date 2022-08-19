@@ -1,5 +1,65 @@
 # create-sst
 
+## 1.8.1
+
+## 1.8.0
+
+### Minor Changes
+
+- [#1957](https://github.com/serverless-stack/sst/pull/1957) [`989a4f516`](https://github.com/serverless-stack/sst/commit/989a4f516175c2e51a649acad4478d3eec5319f1) Thanks [@fwang](https://github.com/fwang)! - Release Config
+
+## 1.7.0
+
+### Patch Changes
+
+- [`69fc4c929`](https://github.com/serverless-stack/sst/commit/69fc4c9297f917c37153a4e50d3c7cfa2af90115) Thanks [@fwang](https://github.com/fwang)! - create-sst: normalize app name to be compatible with stack names
+
+## 1.6.10
+
+## 1.6.9
+
+## 1.6.8
+
+## 1.6.7
+
+## 1.6.6
+
+## 1.6.5
+
+## 1.6.4
+
+## 1.6.3
+
+### Patch Changes
+
+- [`51efb4ff5`](https://github.com/serverless-stack/sst/commit/51efb4ff508f0b32fcf69f583ab48a623397f629) Thanks [@thdxr](https://github.com/thdxr)! - create-sst stack should be ESM by default
+
+## 1.6.2
+
+### Patch Changes
+
+- [`3c135fb0d`](https://github.com/serverless-stack/sst/commit/3c135fb0d4d8994b997f99e833676ab9a6217c79) Thanks [@thdxr](https://github.com/thdxr)! - Add initial questions to create-sst
+
+* [`05fc58ea0`](https://github.com/serverless-stack/sst/commit/05fc58ea058fc5601ff5e7084aaa848f2a7fc083) Thanks [@thdxr](https://github.com/thdxr)! - Fix typos in create-sst for graphql stack
+
+## 1.6.1
+
+## 1.6.0
+
+## 1.5.2
+
+### Patch Changes
+
+- [#1896](https://github.com/serverless-stack/sst/pull/1896) [`5ed4f185b`](https://github.com/serverless-stack/sst/commit/5ed4f185b3441a0b5b637f0fbe640f8427daf2c9) Thanks [@fwang](https://github.com/fwang)! - Examples: updated Remix example to demonstrate quering DyanmoDB table
+
+## 1.5.1
+
+## 1.5.0
+
+## 1.4.1
+
+## 1.4.0
+
 ## 1.3.0
 
 ## 1.2.36

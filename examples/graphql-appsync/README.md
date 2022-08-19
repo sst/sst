@@ -9,9 +9,9 @@ An example serverless app created with SST.
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example graphql-appsync
+$ npx create-sst@latest --template=examples/graphql-appsync
 # Or with Yarn
-$ yarn create serverless-stack --example graphql-appsync
+$ yarn create sst --template=examples/graphql-appsync
 ```
 
 Start the Live Lambda Development environment.
@@ -92,4 +92,4 @@ Learn more about SST.
 
 ## Community
 
-[Follow us on Twitter](https://twitter.com/ServerlessStack) or [post on our forums](https://discourse.sst.dev).
+[Follow us on Twitter](https://twitter.com/sst_dev) or [post on our forums](https://discourse.sst.dev).

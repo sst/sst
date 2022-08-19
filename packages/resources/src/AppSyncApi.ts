@@ -384,12 +384,9 @@ export interface AppSyncApiCdkGraphqlProps
 
 /**
  *
- * The `AppSyncApi` construct is a higher level CDK construct that makes it easy to create an AppSync GraphQL API. It provides a simple way to define the data sources and the resolvers in your API. And allows you to configure the specific Lambda functions if necessary. See the [examples](#examples) for more details.
- *
- * Using this construct requires two additional dependencies. Make sure you install `graphql` and `@graphql-tools/merge` for schema merging
+ * The `AppSyncApi` construct is a higher level CDK construct that makes it easy to create an AppSync GraphQL API.
  *
  * @example
- * ### Using the minimal config
  *
  * ```js
  * import { AppSyncApi } from "@serverless-stack/resources";
@@ -408,8 +405,6 @@ export interface AppSyncApiCdkGraphqlProps
  *   },
  * });
  * ```
- *
- * Note that, the resolver key can have extra spaces in between, they are just ignored.
  */
 export class AppSyncApi extends Construct implements SSTConstruct {
   public readonly cdk: {
@@ -614,7 +609,6 @@ export class AppSyncApi extends Construct implements SSTConstruct {
    * Attaches the given list of permissions to all function datasources
    *
    * @example
-   *
    * ```js
    * api.attachPermissions(["s3"]);
    * ```
@@ -630,7 +624,8 @@ export class AppSyncApi extends Construct implements SSTConstruct {
    * Attaches the given list of permissions to a specific function datasource. This allows that function to access other AWS resources.
    *
    * @example
-   * api.attachPermissionsToRoute("Mutation charge", ["s3"]);
+   * ```js
+   * api.attachPermissionsToDataSource("Mutation charge", ["s3"]);
    * ```
    */
   public attachPermissionsToDataSource(

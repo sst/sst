@@ -1,5 +1,171 @@
 # @serverless-stack/cli
 
+## 1.8.1
+
+### Patch Changes
+
+- [#1962](https://github.com/serverless-stack/sst/pull/1962) [`1a1d405ca`](https://github.com/serverless-stack/sst/commit/1a1d405cac6463e3105c5212c6c50b1fb5a63191) Thanks [@fwang](https://github.com/fwang)! - Cli: run bootstrap prior to build
+
+- Updated dependencies [[`1b7675d4d`](https://github.com/serverless-stack/sst/commit/1b7675d4d93764e5f4527f8e9196add63a2b9882), [`3b1de149f`](https://github.com/serverless-stack/sst/commit/3b1de149f31f7cc26a745a462b24a4ed2974c149), [`1006a8471`](https://github.com/serverless-stack/sst/commit/1006a8471ac41394f8bdcf3059df3fc0a5705ee5), [`1a1d405ca`](https://github.com/serverless-stack/sst/commit/1a1d405cac6463e3105c5212c6c50b1fb5a63191), [`308a53f66`](https://github.com/serverless-stack/sst/commit/308a53f66412dc7ec47a2131e8b551eb8b44ff68)]:
+  - @serverless-stack/core@1.8.1
+  - @serverless-stack/resources@1.8.1
+
+## 1.8.0
+
+### Minor Changes
+
+- [#1957](https://github.com/serverless-stack/sst/pull/1957) [`989a4f516`](https://github.com/serverless-stack/sst/commit/989a4f516175c2e51a649acad4478d3eec5319f1) Thanks [@fwang](https://github.com/fwang)! - Release Config
+
+### Patch Changes
+
+- Updated dependencies [[`4b9d6bf6f`](https://github.com/serverless-stack/sst/commit/4b9d6bf6fe550727af1f04e6655f45ae8fe900cb), [`989a4f516`](https://github.com/serverless-stack/sst/commit/989a4f516175c2e51a649acad4478d3eec5319f1), [`fc7abc430`](https://github.com/serverless-stack/sst/commit/fc7abc43094b8eb9d3bb77902dfec5883fa1bac7)]:
+  - @serverless-stack/core@1.8.0
+  - @serverless-stack/resources@1.8.0
+
+## 1.7.0
+
+### Patch Changes
+
+- Updated dependencies [[`e0a5eba96`](https://github.com/serverless-stack/sst/commit/e0a5eba964a9fc2d413a132333d388a40a81faa9)]:
+  - @serverless-stack/core@1.7.0
+  - @serverless-stack/resources@1.7.0
+
+## 1.6.10
+
+### Patch Changes
+
+- Updated dependencies [[`91d28a7d3`](https://github.com/serverless-stack/sst/commit/91d28a7d37e1a9c960c18ee419c19bf4d59da050)]:
+  - @serverless-stack/resources@1.6.10
+  - @serverless-stack/core@1.6.10
+
+## 1.6.9
+
+### Patch Changes
+
+- Updated dependencies [[`e2436df7b`](https://github.com/serverless-stack/sst/commit/e2436df7b54677317e754d0ea0532eb4c2431b15), [`59dd4c023`](https://github.com/serverless-stack/sst/commit/59dd4c023c5ead3c99784542925267d54715d853), [`bd321f3c4`](https://github.com/serverless-stack/sst/commit/bd321f3c447e34d351d74fe4452f04560d274016)]:
+  - @serverless-stack/resources@1.6.9
+  - @serverless-stack/core@1.6.9
+
+## 1.6.8
+
+### Patch Changes
+
+- Updated dependencies [[`bad52a000`](https://github.com/serverless-stack/sst/commit/bad52a000fe0a0aee135ef8207fa726a564a54de)]:
+  - @serverless-stack/resources@1.6.8
+  - @serverless-stack/core@1.6.8
+
+## 1.6.7
+
+### Patch Changes
+
+- Updated dependencies [[`fd618d31d`](https://github.com/serverless-stack/sst/commit/fd618d31dc090a355b0eaab65b4905275234ea31)]:
+  - @serverless-stack/resources@1.6.7
+  - @serverless-stack/core@1.6.7
+
+## 1.6.6
+
+### Patch Changes
+
+- Updated dependencies [[`abb1ae988`](https://github.com/serverless-stack/sst/commit/abb1ae9889b563d74060594ac1f90f222c5eeb36)]:
+  - @serverless-stack/resources@1.6.6
+  - @serverless-stack/core@1.6.6
+
+## 1.6.5
+
+### Patch Changes
+
+- Updated dependencies [[`4cd71c933`](https://github.com/serverless-stack/sst/commit/4cd71c93392a7ffe53143ff8253fd326ee0bd058)]:
+  - @serverless-stack/core@1.6.5
+  - @serverless-stack/resources@1.6.5
+
+## 1.6.4
+
+### Patch Changes
+
+- Updated dependencies [[`1618cd8d5`](https://github.com/serverless-stack/sst/commit/1618cd8d5ad8e7e1270027a6ab01b9a908c1127a)]:
+  - @serverless-stack/core@1.6.4
+  - @serverless-stack/resources@1.6.4
+
+## 1.6.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @serverless-stack/resources@1.6.3
+  - @serverless-stack/core@1.6.3
+
+## 1.6.2
+
+### Patch Changes
+
+- Updated dependencies [[`9da24d49c`](https://github.com/serverless-stack/sst/commit/9da24d49cebf2a166e3b947188de10767e8f03d1)]:
+  - @serverless-stack/resources@1.6.2
+  - @serverless-stack/core@1.6.2
+
+## 1.6.1
+
+### Patch Changes
+
+- Updated dependencies [[`9591e005f`](https://github.com/serverless-stack/sst/commit/9591e005f5c40a7f427daad972b8d7998e85eb2e)]:
+  - @serverless-stack/resources@1.6.1
+  - @serverless-stack/core@1.6.1
+
+## 1.6.0
+
+### Patch Changes
+
+- Updated dependencies [[`4bfd5915c`](https://github.com/serverless-stack/sst/commit/4bfd5915c97f7996d85f7a5cad3f273d836b60fe)]:
+  - @serverless-stack/resources@1.6.0
+  - @serverless-stack/core@1.6.0
+
+## 1.5.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @serverless-stack/resources@1.5.2
+  - @serverless-stack/core@1.5.2
+
+## 1.5.1
+
+### Patch Changes
+
+- Updated dependencies [[`bb2d93c40`](https://github.com/serverless-stack/sst/commit/bb2d93c401f460ebfa36ec62457e70a653b292e7)]:
+  - @serverless-stack/core@1.5.1
+  - @serverless-stack/resources@1.5.1
+
+## 1.5.0
+
+### Minor Changes
+
+- [#1882](https://github.com/serverless-stack/sst/pull/1882) [`e4d350749`](https://github.com/serverless-stack/sst/commit/e4d35074904b8fdea0dfb4d9f3a9e6e19708038f) Thanks [@fwang](https://github.com/fwang)! - Update CDK to 2.32.0
+
+### Patch Changes
+
+- Updated dependencies [[`e4d350749`](https://github.com/serverless-stack/sst/commit/e4d35074904b8fdea0dfb4d9f3a9e6e19708038f)]:
+  - @serverless-stack/core@1.5.0
+  - @serverless-stack/resources@1.5.0
+
+## 1.4.1
+
+### Patch Changes
+
+- Updated dependencies [[`02d5c7ee9`](https://github.com/serverless-stack/sst/commit/02d5c7ee92a275f9ad07cb9840632c1901b43d92)]:
+  - @serverless-stack/core@1.4.1
+  - @serverless-stack/resources@1.4.1
+
+## 1.4.0
+
+### Minor Changes
+
+- [#1800](https://github.com/serverless-stack/sst/pull/1800) [`30ca1ca82`](https://github.com/serverless-stack/sst/commit/30ca1ca8237ad666214e9d4e73a7e24f7cd094c8) Thanks [@ctrlplusb](https://github.com/ctrlplusb)! - Add RemixSite construct
+
+### Patch Changes
+
+- Updated dependencies [[`30ca1ca82`](https://github.com/serverless-stack/sst/commit/30ca1ca8237ad666214e9d4e73a7e24f7cd094c8)]:
+  - @serverless-stack/core@1.4.0
+  - @serverless-stack/resources@1.4.0
+
 ## 1.3.0
 
 ### Patch Changes

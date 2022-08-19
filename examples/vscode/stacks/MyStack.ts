@@ -1,15 +1,12 @@
-import { Api, StackContext } from "@serverless-stack/resources";
+import { StackContext, Api } from "@serverless-stack/resources";
 
 export function MyStack({ stack }: StackContext) {
-  // Create the HTTP API
-  const api = new Api(stack, "Api", {
+  const api = new Api(stack, "api", {
     routes: {
       "GET /": "functions/lambda.handler",
     },
   });
-
-  // Show the API endpoint in the output
   stack.addOutputs({
-    ApiEndpoint: api.url,
+    ApiEndpoint: api.url
   });
 }

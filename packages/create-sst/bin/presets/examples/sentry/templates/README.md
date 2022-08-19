@@ -9,9 +9,9 @@ An example SST serverless app monitored with [Sentry](https://www.sentry.io).
 Install the example.
 
 ```bash
-$ npm init serverless-stack --example sentry
+$ npx create-sst@latest --template=examples/sentry
 # Or with Yarn
-$ yarn create serverless-stack --example sentry
+$ yarn create sst --template=examples/sentry
 ```
 
 ## Commands
@@ -48,4 +48,4 @@ Learn more about SST.
 
 ## Community
 
-[Follow us on Twitter](https://twitter.com/ServerlessStack) or [post on our forums](https://discourse.sst.dev).
+[Follow us on Twitter](https://twitter.com/sst_dev) or [post on our forums](https://discourse.sst.dev).
