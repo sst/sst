@@ -431,17 +431,19 @@ test("xray-disabled", async () => {
 test("config", async () => {
   const stack = new Stack(new App(), "stack");
   const s = new Config.Secret(stack, "MY_SECRET");
+  const s2 = new Config.Secret(stack, "MY_SECRET2");
   const p = new Config.Parameter(stack, "MY_PARAM", {
     value: "value"
   });
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
-    config: [s, p]
+    config: [s, s2, p]
   });
   hasResource(stack, "AWS::Lambda::Function", {
     Environment: {
       Variables: {
         SST_SECRET_MY_SECRET: "1",
+        SST_SECRET_MY_SECRET2: "1",
         SST_PARAM_MY_PARAM: "value",
         AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
       }
@@ -457,6 +459,8 @@ test("config", async () => {
           Resource: [
             "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/secrets/MY_SECRET",
             "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/secrets/MY_SECRET",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/secrets/MY_SECRET2",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/secrets/MY_SECRET2",
           ],
         },
       ],
@@ -869,7 +873,7 @@ test("constructor: skipBuild", async () => {
 });
 
 /////////////////////////////
-// Test attachPermissions - generic
+// Test functions
 /////////////////////////////
 
 test("attachPermissions: string: all", async () => {
@@ -1416,6 +1420,54 @@ test("attachPermissions: policy statement", async () => {
       Statement: [
         lambdaDefaultPolicy,
         { Action: "s3:*", Effect: "Allow", Resource: "*" }
+      ],
+      Version: "2012-10-17"
+    }
+  });
+});
+
+test("addConfig", async () => {
+  const stack = new Stack(new App(), "stack");
+  const s = new Config.Secret(stack, "MY_SECRET");
+  const s2 = new Config.Secret(stack, "MY_SECRET2");
+  const p = new Config.Parameter(stack, "MY_PARAM", {
+    value: "value"
+  });
+  const f = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    config: [s, p],
+  });
+  f.addConfig([s2]);
+  hasResource(stack, "AWS::Lambda::Function", {
+    Environment: {
+      Variables: {
+        SST_SECRET_MY_SECRET: "1",
+        SST_SECRET_MY_SECRET2: "1",
+        SST_PARAM_MY_PARAM: "value",
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
+      }
+    }
+  });
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: "ssm:GetParameters",
+          Effect: "Allow",
+          Resource: [
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/secrets/MY_SECRET",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/secrets/MY_SECRET",
+          ],
+        },
+        {
+          Action: "ssm:GetParameters",
+          Effect: "Allow",
+          Resource: [
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/secrets/MY_SECRET2",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/secrets/MY_SECRET2",
+          ],
+        },
       ],
       Version: "2012-10-17"
     }

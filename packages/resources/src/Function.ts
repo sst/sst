@@ -712,7 +712,6 @@ export class Function extends lambda.Function implements SSTConstruct {
       props.logRetention.toUpperCase() as keyof typeof logs.RetentionDays
     ];
     let bundle = props.bundle;
-    const permissions = props.permissions;
     const isLiveDevEnabled = props.enableLiveDev === false ? false : true;
 
     // Validate handler
@@ -908,11 +907,13 @@ export class Function extends lambda.Function implements SSTConstruct {
     }
 
     // Attach permissions
-    if (permissions) {
-      this.attachPermissions(permissions);
-    }
+    this.attachPermissions(props.permissions || []);
 
-    this.handleConfig();
+    // Add config
+    this.addEnvironment("SST_APP", app.name, { removeInEdge: true });
+    this.addEnvironment("SST_STAGE", app.stage, { removeInEdge: true });
+    this.addConfig(props.config || []);
+
     this.createUrl();
 
     app.registerLambdaHandler({
@@ -943,6 +944,46 @@ export class Function extends lambda.Function implements SSTConstruct {
   public attachPermissions(permissions: Permissions): void {
     if (this.role) {
       attachPermissionsToRole(this.role as iam.Role, permissions);
+    }
+  }
+
+  /**
+   * Attaches additional configs to function
+   *
+   * @example
+   * ```js
+   * const STRIPE_KEY = new Config.Secret(stack, "STRIPE_KEY");
+   * 
+   * fn.addConfig([STRIPE_KEY]);
+   * ```
+   */
+  public addConfig(config: (Secret | Parameter)[]): void {
+    const app = this.node.root as App;
+
+    // Add environment variables
+    (config || []).forEach((c) => {
+      if (c instanceof Secret) {
+        this.addEnvironment(`${FunctionConfig.SECRET_ENV_PREFIX}${c.name}`, "1");
+      }
+      else if (c instanceof Parameter) {
+        this.addEnvironment(`${FunctionConfig.PARAM_ENV_PREFIX}${c.name}`, c.value);
+      }
+    });
+
+    // Attach permissions
+    const iamResources: string[] = [];
+    (config || [])
+      .filter((c) => c instanceof Secret)
+      .forEach((c) => iamResources.push(
+        `arn:aws:ssm:${app.region}:${app.account}:parameter${FunctionConfig.buildSsmNameForSecret(app.name, app.stage, c.name)}`,
+        `arn:aws:ssm:${app.region}:${app.account}:parameter${FunctionConfig.buildSsmNameForSecretFallback(app.name, c.name)}`,
+      ));
+    if (iamResources.length > 0) {
+      this.attachPermissions([new iam.PolicyStatement({
+        actions: ["ssm:GetParameters"],
+        effect: iam.Effect.ALLOW,
+        resources: iamResources,
+      })]);
     }
   }
 
@@ -985,39 +1026,6 @@ export class Function extends lambda.Function implements SSTConstruct {
       authType,
       cors: functionUrlCors.buildCorsConfig(cors),
     });
-  }
-
-  private handleConfig() {
-    const app = this.node.root as App;
-    const { config } = this.props;
-
-    // Add environment variables
-    this.addEnvironment("SST_APP", app.name, { removeInEdge: true });
-    this.addEnvironment("SST_STAGE", app.stage, { removeInEdge: true });
-    (config || []).forEach((c) => {
-      if (c instanceof Secret) {
-        this.addEnvironment(`${FunctionConfig.SECRET_ENV_PREFIX}${c.name}`, "1");
-      }
-      else if (c instanceof Parameter) {
-        this.addEnvironment(`${FunctionConfig.PARAM_ENV_PREFIX}${c.name}`, c.value);
-      }
-    });
-
-    // Attach permissions
-    const iamResources: string[] = [];
-    (config || [])
-      .filter((c) => c instanceof Secret)
-      .forEach((c) => iamResources.push(
-        `arn:aws:ssm:${app.region}:${app.account}:parameter${FunctionConfig.buildSsmNameForSecret(app.name, app.stage, c.name)}`,
-        `arn:aws:ssm:${app.region}:${app.account}:parameter${FunctionConfig.buildSsmNameForSecretFallback(app.name, c.name)}`,
-      ));
-    if (iamResources.length > 0) {
-      this.attachPermissions([new iam.PolicyStatement({
-        actions: ["ssm:GetParameters"],
-        effect: iam.Effect.ALLOW,
-        resources: iamResources,
-      })]);
-    }
   }
 
   static buildLayers(scope: Construct, id: string, props: FunctionProps) {
