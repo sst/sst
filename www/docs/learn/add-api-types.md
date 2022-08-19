@@ -8,7 +8,6 @@ The GraphQL setup we are using is a _Code-first_ GraphQL setup. This means that 
 
 We use [Pothos](https://pothos-graphql.dev/) to do this.
 
-
 :::info Backing Models
 A key concept to understand about Pothos is that there are two different types involved:
 
@@ -32,11 +31,11 @@ If you open up `services/functions/graphql/types/article.ts`, you'll see that we
 
 ```ts title="services/functions/graphql/types/article.ts"
 const ArticleType = builder.objectRef<SQL.Row["article"]>("Article").implement({
- fields: (t) => ({
-   id: t.exposeID("articleID"),
-   title: t.exposeString("title"),
-   url: t.exposeString("url"),
- }),
+  fields: (t) => ({
+    id: t.exposeID("articleID"),
+    url: t.exposeString("url"),
+    title: t.exposeString("title"),
+  }),
 });
 ```
 
@@ -51,9 +50,9 @@ Let's look at what's going on here:
 :::info Behind the scenes
 The `SQL.Row["article"]` is the type for our `article` table. This is defined in `services/core/sql.ts`.
 
-``` ts title="services/core/sql.ts"
+```ts title="services/core/sql.ts"
 export type Row = {
- [Key in keyof Database]: Selectable<Database[Key]>;
+  [Key in keyof Database]: Selectable<Database[Key]>;
 };
 ```
 
@@ -74,16 +73,16 @@ In `services/functions/graphql/types/article.ts`, add the following above the `A
 
 ```ts title="services/functions/graphql/types/article.ts"
 const CommentType = builder.objectRef<SQL.Row["comment"]>("Comment").implement({
-  fields: t => ({
+  fields: (t) => ({
     id: t.exposeID("commentID"),
-    text: t.exposeString("text")
-  })
+    text: t.exposeString("text"),
+  }),
 });
 ```
 
 In this case we are exposing the `commentID` as type `ID` and the comment `text` as a `String`.
 
-## Return the comments 
+## Return the comments
 
 We want to return our comments as a part of the article. So lets edit the existing article type.
 
@@ -95,15 +94,15 @@ Add a `comments` field to the `ArticleType` in `services/functions/graphql/types
 
 ```ts {6-9} title="services/functions/graphql/types/article.ts"
 const ArticleType = builder.objectRef<SQL.Row["article"]>("Article").implement({
-  fields: t => ({
+  fields: (t) => ({
     id: t.exposeID("articleID"),
-    title: t.exposeString("title"),
     url: t.exposeString("url"),
+    title: t.exposeString("title"),
     comments: t.field({
       type: [CommentType],
-      resolve: article => Article.comments(article.articleID)
+      resolve: (article) => Article.comments(article.articleID),
     }),
-  })
+  }),
 });
 ```
 

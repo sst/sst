@@ -10,39 +10,46 @@ Let's look at what we have setup.
 
 ### Define Queries
 
-We need a query to fetch all the articles. Recall that we added a `Article.list()` function in `services/core/article.ts` back in the [Write to PostgreSQL](write-to-postgresql.md) chapter.
-
-To define the query we'll use that call and the article type that we looked at in the last chapter.
+We need a query to fetch all the articles and a single article.
 
 ```ts title="services/functions/graphql/types/article.ts"
 builder.queryFields((t) => ({
- articles: t.field({
-   type: [ArticleType],
-   resolve: () => Article.list(),
- }),
+  article: t.field({
+    type: ArticleType,
+    args: {
+      articleID: t.arg.string({ required: true }),
+    },
+    resolve: (_, args) => Article.get(args.articleID),
+  }),
+  articles: t.field({
+    type: [ArticleType],
+    resolve: () => Article.list(),
+  }),
 }));
 ```
 
-Here we are defining a new query called `articles`, setting the type it returns, and a resolver function.
+Here we are defining two new queries called `article` and `articles`. Setting the return types, a single `ArticleType` or an array of them. And defining their resolvers from our core package, `services/core/article.ts`.
+
+For the `article` query we need to be able to pass in the id of the article we want to query. To do this, we'll define the `args` of the query and specify that we want a required string called `articleID`. We grab this and pass it into the resolver as `args.articleID`.
 
 ### Define Mutations
 
-Just like above, we use the type and the `Article.create()` call to define a mutation called `createArticle`.
+Just like above, we use the type and the resolver `Article.create()` from our core package to define a mutation called `createArticle`.
 
 ```ts title="services/functions/graphql/types/article.ts"
 builder.mutationFields((t) => ({
- createArticle: t.field({
-   type: ArticleType,
-   args: {
-     title: t.arg.string({ required: true }),
-     url: t.arg.string({ required: true }),
-   },
-   resolve: (_, args) => Article.create(args.title, args.url),
- }),
+  createArticle: t.field({
+    type: ArticleType,
+    args: {
+      title: t.arg.string({ required: true }),
+      url: t.arg.string({ required: true }),
+    },
+    resolve: (_, args) => Article.create(args.title, args.url),
+  }),
 }));
 ```
 
-Aside from the type and resolver, we also need to specify the types of arguments it takes. We do this by setting the `args`. In this case, we need two strings called `title` and `url` to create a new article. These `args` get passed into our resolver.
+We also need a couple of `args`; the `title` and `url` of the new article.
 
 :::tip GraphQL API Design
 GraphQL API design is a little different from REST API design.
@@ -66,7 +73,7 @@ Let's add a mutation to create a comment.
 
 <ChangeText>
 
-In `services/functions/graphql/types/article.ts`, and add this above the `createArticle` mutation:
+In `services/functions/graphql/types/article.ts`, add this above the `createArticle` mutation:
 
 </ChangeText>
 
@@ -81,6 +88,6 @@ addComment: t.field({
 }),
 ```
 
-Similar to the `createArticle` mutation, it takes the `articleID` and `text` as `args`. And  calls `Article.addComment()` to create a new comment. And it returns the new comment as a `CommentType`.
+Similar to the `createArticle` mutation, it takes the `articleID` and `text` as `args`. And calls `Article.addComment()` to create a new comment. It returns the new comment as a `CommentType`.
 
 Next, let's connect these to our frontend React app.
