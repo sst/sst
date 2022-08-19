@@ -24,18 +24,27 @@ export interface Assets {
   bucketName?: string;
 }
 
+interface BootstrapOptions {
+  tags?: Record<string, string>;
+  force?: boolean;
+}
+
 export const assets: Assets = {};
 
-export async function bootstrap(config: any, cliInfo: any) {
-  // Check bootstrap version
+export async function bootstrap(config: any, cliInfo: any, options: BootstrapOptions) {
   const { region } = config;
-  await init(region);
-  const bootstrapVersion = assets.version;
-  if (isVersionUpToDate(bootstrapVersion)) {
-    return;
+  const { tags, force } = options;
+
+  // Check bootstrap version
+  if (!force) {
+    await init(region);
+    const bootstrapVersion = assets.version;
+    if (isVersionUpToDate(bootstrapVersion)) {
+      return;
+    }
   }
 
-  await deployStack(config, cliInfo);
+  await deployStack(config, cliInfo, tags || {});
   
   // Check bootstrap version again
   await init(region);
@@ -77,7 +86,7 @@ export async function init(region: string) {
   }
 }
 
-async function deployStack(config: any, cliInfo: any) {
+async function deployStack(config: any, cliInfo: any, tags: Record<string, string>) {
   const { region } = config;
   logger.info(chalk.grey(`Bootstrapping SST in the "${region}" region`));
 
@@ -87,6 +96,7 @@ async function deployStack(config: any, cliInfo: any) {
       "node",
       "bin/index.mjs",
       region,
+      `'${JSON.stringify(tags)}'`,
     ].join(" "),
     output: "cdk.out",
   };
