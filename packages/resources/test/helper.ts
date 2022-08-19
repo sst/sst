@@ -43,7 +43,7 @@ export function countResources(
   count: number
 ): void {
   // Each stack has a Lambda function "MetadataUploader", ignore it
-  if (type === "AWS::Lambda::Function") {
+  if (type === "AWS::Lambda::Function" || type === "AWS::IAM::Role") {
     count = count + 1;
   }
 
