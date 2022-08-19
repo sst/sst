@@ -1004,15 +1004,18 @@ export class Function extends lambda.Function implements SSTConstruct {
     });
 
     // Attach permissions
-    const hasSecrets = (config || []).some((c) => c instanceof Secret);
-    if (hasSecrets) {
+    const iamResources: string[] = [];
+    (config || [])
+      .filter((c) => c instanceof Secret)
+      .forEach((c) => iamResources.push(
+        `arn:aws:ssm:${app.region}:${app.account}:parameter${FunctionConfig.buildSsmNameForSecret(app.name, app.stage, c.name)}`,
+        `arn:aws:ssm:${app.region}:${app.account}:parameter${FunctionConfig.buildSsmNameForSecretFallback(app.name, c.name)}`,
+      ));
+    if (iamResources.length > 0) {
       this.attachPermissions([new iam.PolicyStatement({
         actions: ["ssm:GetParameters"],
         effect: iam.Effect.ALLOW,
-        resources: [
-          `arn:aws:ssm:${app.region}:${app.account}:parameter/sst/${app.name}/${app.stage}/*`,
-          `arn:aws:ssm:${app.region}:${app.account}:parameter/sst/${app.name}/${FunctionConfig.FALLBACK_STAGE}/*`,
-        ],
+        resources: iamResources,
       })]);
     }
   }
