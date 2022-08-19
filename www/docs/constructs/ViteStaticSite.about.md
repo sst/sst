@@ -34,6 +34,10 @@ console.log(import.meta.env.VITE_API_URL);
 console.log(import.meta.env.VITE_USER_POOL_CLIENT);
 ```
 
+:::note
+Note that, Vite only exposes variables prefixed with `VITE_` in your app.
+:::
+
 You can pass these in directly from the construct.
 
 ```js {3-6}
