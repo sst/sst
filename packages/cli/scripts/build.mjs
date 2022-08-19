@@ -1,12 +1,15 @@
 "use strict";
 
 import chalk from "chalk";
-import { logger } from "@serverless-stack/core";
+import { logger, Bootstrap } from "@serverless-stack/core";
 
 import { synth, validatePropsForJs } from "./util/cdkHelpers.mjs";
 
 export default async function (argv, config, cliInfo) {
   logger.info(chalk.grey("Synthesizing CDK"));
+
+  // Deploy bootstrap stack
+  await Bootstrap.bootstrap(config, cliInfo);
 
   const { stacks } = await synth(cliInfo.cdkOptions);
   validatePropsForJs(config);

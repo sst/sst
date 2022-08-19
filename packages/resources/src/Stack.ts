@@ -1,8 +1,9 @@
-import fs from "fs-extra";
+import url from "url";
+import * as path from "path";
 import { Construct, IConstruct } from "constructs";
 import * as cdk from "aws-cdk-lib";
+import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as regionInfo from "aws-cdk-lib/region-info";
 import { FunctionProps, Function as Fn } from "./Function.js";
 import { App } from "./App.js";
 import { isConstruct } from "./Construct.js";
@@ -10,7 +11,7 @@ import { Permissions } from "./util/permission.js";
 
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
-const packageJson = fs.readJsonSync(require.resolve("../package.json"));
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 export type StackProps = cdk.StackProps;
 
@@ -196,8 +197,31 @@ export class Stack extends cdk.Stack {
 
   private createStackMetadataResource() {
     const app = this.node.root as App;
-    return new cdk.CustomResource(this, "StackMetadata", {
-      serviceToken: app.bootstrapAssets.stackMetadataFunctionArn!,
+
+    // Create execution policy
+    const policyStatement = new iam.PolicyStatement();
+    policyStatement.addResources(`arn:aws:s3:::${app.bootstrapAssets.bucketName}/*`);
+    policyStatement.addActions(
+      "s3:PutObject",
+      "s3:DeleteObject",
+    );
+
+    // Create Lambda
+    const fn = new lambda.Function(this, "MetadataUploaderFunction", {
+      code: lambda.Code.fromAsset(path.join(__dirname, "../assets/Stack/custom-resources")),
+      handler: "stack-metadata.handler",
+      runtime: lambda.Runtime.NODEJS_16_X,
+      timeout: cdk.Duration.seconds(900),
+      memorySize: 1024,
+      environment: {
+        BUCKET_NAME: app.bootstrapAssets.bucketName!,
+      },
+      initialPolicy: [policyStatement],
+    });
+
+    // Create custom resource
+    return new cdk.CustomResource(this, "MetadataUploader", {
+      serviceToken: fn.functionArn,
       resourceType: "Custom::StackMetadata",
       properties: {
         App: app.name,

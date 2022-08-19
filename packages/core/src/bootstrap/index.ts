@@ -13,17 +13,15 @@ import {
 const logger = getChildLogger("bootstrap");
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
-export const LATEST_VERSION = "2";
+export const LATEST_VERSION = "3";
 export const SSM_NAME_VERSION = `/sst/bootstrap/version`;
 export const SSM_NAME_STACK_NAME = `/sst/bootstrap/stack-name`;
 export const SSM_NAME_BUCKET_NAME = `/sst/bootstrap/bucket-name`;
-export const SSM_NAME_STACK_METADATA_FUNCTION_ARN = `/sst/bootstrap/stack-metadata-function-arn`;
 
 export interface Assets {
   version?: string;
   stackName?: string;
   bucketName?: string;
-  stackMetadataFunctionArn?: string;
 }
 
 export const assets: Assets = {};
@@ -60,7 +58,6 @@ export async function init(region: string) {
         SSM_NAME_VERSION,
         SSM_NAME_STACK_NAME,
         SSM_NAME_BUCKET_NAME,
-        SSM_NAME_STACK_METADATA_FUNCTION_ARN,
       ],
     }).promise();
     (ret.Parameters || []).forEach(p => {
@@ -70,8 +67,6 @@ export async function init(region: string) {
         assets.stackName = p.Value;
       } else if (p.Name === SSM_NAME_BUCKET_NAME) {
         assets.bucketName = p.Value;
-      } else if (p.Name === SSM_NAME_STACK_METADATA_FUNCTION_ARN) {
-        assets.stackMetadataFunctionArn = p.Value;
       }
     });
   } catch(e: any) {
