@@ -141,11 +141,11 @@ export function buildSsmPrefixForParameter(app: string, stage: string) {
   return `/sst/${app}/${stage}/parameters/`;
 }
 
-function buildSsmNameForSecret(app: string, stage: string, name: string) {
+export function buildSsmNameForSecret(app: string, stage: string, name: string) {
   return `${buildSsmPrefixForSecret(app, stage)}${name}`;
 }
 
-function buildSsmNameForSecretFallback(app: string, name: string) {
+export function buildSsmNameForSecretFallback(app: string, name: string) {
   return buildSsmNameForSecret(app, FALLBACK_STAGE, name);
 }
 

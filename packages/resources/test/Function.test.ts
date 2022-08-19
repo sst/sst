@@ -455,8 +455,8 @@ test("config", async () => {
           Action: "ssm:GetParameters",
           Effect: "Allow",
           Resource: [
-            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/*",
-            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/*",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/secrets/MY_SECRET",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/secrets/MY_SECRET",
           ],
         },
       ],
