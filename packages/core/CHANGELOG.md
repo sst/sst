@@ -1,5 +1,13 @@
 # @serverless-stack/core
 
+## 1.8.2
+
+### Patch Changes
+
+- [#1971](https://github.com/serverless-stack/sst/pull/1971) [`d7ac80470`](https://github.com/serverless-stack/sst/commit/d7ac8047062f859d4a8e8c10900e7388ba7b4b1a) Thanks [@fwang](https://github.com/fwang)! - Cli: add bootstrap command with the ability to tag
+
+* [#1972](https://github.com/serverless-stack/sst/pull/1972) [`76a5e0ad6`](https://github.com/serverless-stack/sst/commit/76a5e0ad6396e418c0cf50427b1b2ddb502afd96) Thanks [@fwang](https://github.com/fwang)! - sst start: restart functions on secret value change
+
 ## 1.8.1
 
 ### Patch Changes

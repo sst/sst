@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 1.6.1
+
+### Patch Changes
+
+- [#1971](https://github.com/serverless-stack/sst/pull/1971) [`d7ac80470`](https://github.com/serverless-stack/sst/commit/d7ac8047062f859d4a8e8c10900e7388ba7b4b1a) Thanks [@fwang](https://github.com/fwang)! - Cli: add bootstrap command with the ability to tag
+
 ## 1.6.0
 
 ### Minor Changes

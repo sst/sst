@@ -1,5 +1,19 @@
 # @serverless-stack/cli
 
+## 1.8.2
+
+### Patch Changes
+
+- [#1970](https://github.com/serverless-stack/sst/pull/1970) [`5b49f6dc3`](https://github.com/serverless-stack/sst/commit/5b49f6dc3b4481a81aeb170a3e111f502760aa44) Thanks [@fwang](https://github.com/fwang)! - Cli: list secrets in dotenv format
+
+* [#1971](https://github.com/serverless-stack/sst/pull/1971) [`d7ac80470`](https://github.com/serverless-stack/sst/commit/d7ac8047062f859d4a8e8c10900e7388ba7b4b1a) Thanks [@fwang](https://github.com/fwang)! - Cli: add bootstrap command with the ability to tag
+
+- [#1965](https://github.com/serverless-stack/sst/pull/1965) [`a95bec646`](https://github.com/serverless-stack/sst/commit/a95bec6465637a1e95f9d447258f78aafc433354) Thanks [@fwang](https://github.com/fwang)! - Cli: config command respect --profile
+
+- Updated dependencies [[`d7ac80470`](https://github.com/serverless-stack/sst/commit/d7ac8047062f859d4a8e8c10900e7388ba7b4b1a), [`76a5e0ad6`](https://github.com/serverless-stack/sst/commit/76a5e0ad6396e418c0cf50427b1b2ddb502afd96), [`90071d0e2`](https://github.com/serverless-stack/sst/commit/90071d0e290a99ca944a620159d0aef37f584635)]:
+  - @serverless-stack/core@1.8.2
+  - @serverless-stack/resources@1.8.2
+
 ## 1.8.1
 
 ### Patch Changes
