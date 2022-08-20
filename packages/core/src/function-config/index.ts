@@ -9,7 +9,7 @@ type Secret = {
   fallbackValue?: string,
 }
 
-export const SECRET_UPDATED_AT_ENV = "SST_ADMIN_SECRET_UPDATED_AT";
+const SECRET_UPDATED_AT_ENV = "SST_ADMIN_SECRET_UPDATED_AT";
 export const SECRET_ENV_PREFIX = "SST_SECRET_";
 export const PARAM_ENV_PREFIX = "SST_PARAM_";
 export const FALLBACK_STAGE = ".fallback";

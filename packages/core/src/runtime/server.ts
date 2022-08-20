@@ -1,9 +1,7 @@
 import express from "express";
 import spawn from "cross-spawn";
-import * as crypto from "crypto";
 import { ChildProcess } from "child_process";
 import { getChildLogger } from "../logger.js";
-import { FunctionConfig } from "../function-config/index.js";
 import { v4 } from "uuid";
 import https from "https";
 import url from "url";
