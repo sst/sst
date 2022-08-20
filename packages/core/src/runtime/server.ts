@@ -3,6 +3,7 @@ import spawn from "cross-spawn";
 import * as crypto from "crypto";
 import { ChildProcess } from "child_process";
 import { getChildLogger } from "../logger.js";
+import { FunctionConfig } from "../function-config/index.js";
 import { v4 } from "uuid";
 import https from "https";
 import url from "url";
@@ -313,21 +314,15 @@ export class Server {
   }
 
   public isEnvChanged(id: string, hash: string) {
-    return this.lastRequestEnvHash[id] !== hash;
+    const oldHash = this.lastRequestEnvHash[id];
+    return oldHash !== undefined && oldHash !== hash;
   }
 
   private generateEnvHash(env: Record<string, string>): string {
-    const raw = Object.keys(env)
-      .filter(k =>
-        k === "AWS_ACCESS_KEY_ID" ||
-        k === "AWS_SECRET_ACCESS_KEY" ||
-        k === "AWS_SESSION_TOKEN" ||
-        k.startsWith("SST_SECRET_")
-      )
-      .sort()
-      .map(k => `${k}=${env[k]}`)
-      .join(",");
-    return crypto.createHash("md5").update(raw).digest("hex");
+    // Use AWS_ACCESS_KEY_ID as the env hash, because when
+    // Lambda environment changes, Lambda container will restart,
+    // and AWS_ACCESS_KEY_ID will change.
+    return env.AWS_ACCESS_KEY_ID;
   }
 
   private warm: Record<string, true> = {};
@@ -361,9 +356,10 @@ export class Server {
       if (this.isEnvChanged(opts.function.id, envHash)) {
         logger.debug("Environment changed, restarting all processes");
         this.drain(opts.function);
-        this.lastRequestEnvHash[opts.function.id] = envHash;
       }
+      this.lastRequestEnvHash[opts.function.id] = envHash;
 
+      // Use warm processes if any
       pool.requests[opts.payload.context.awsRequestId] = resolve;
       const [key] = Object.keys(pool.waiting);
       if (key) {
