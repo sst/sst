@@ -1,5 +1,14 @@
 # @serverless-stack/resources
 
+## 1.8.2
+
+### Patch Changes
+
+- [#1968](https://github.com/serverless-stack/sst/pull/1968) [`90071d0e2`](https://github.com/serverless-stack/sst/commit/90071d0e290a99ca944a620159d0aef37f584635) Thanks [@fwang](https://github.com/fwang)! - Function: lazy add config `Function.addConfig`
+
+- Updated dependencies [[`d7ac80470`](https://github.com/serverless-stack/sst/commit/d7ac8047062f859d4a8e8c10900e7388ba7b4b1a), [`76a5e0ad6`](https://github.com/serverless-stack/sst/commit/76a5e0ad6396e418c0cf50427b1b2ddb502afd96)]:
+  - @serverless-stack/core@1.8.2
+
 ## 1.8.1
 
 ### Patch Changes
