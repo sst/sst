@@ -14,30 +14,40 @@ export const SECRET_ENV_PREFIX = "SST_SECRET_";
 export const PARAM_ENV_PREFIX = "SST_PARAM_";
 export const FALLBACK_STAGE = ".fallback";
 
-export async function listSecrets(app: string, stage: string, region: string) {
+async function ssmGetPrametersByPath(region: string, prefix: string, token?: string): Promise<ParameterList> {
   const ssm = new SSM({ region });
 
   // Create a function that load all pages of secrets
-  async function page(prefix: string, token?: string): Promise<ParameterList> {
-    const result = await ssm
-      .getParametersByPath({
-        WithDecryption: true,
-        Recursive: true,
-        Path: prefix,
-        NextToken: token,
-      })
-      .promise();
-    return [
-      ...(result.Parameters || []),
-      ...(result.NextToken ? await page(prefix, result.NextToken) : []),
-    ];
-  }
+  const result = await ssm
+    .getParametersByPath({
+      WithDecryption: true,
+      Recursive: true,
+      Path: prefix,
+      NextToken: token,
+    })
+    .promise();
+  return [
+    ...(result.Parameters || []),
+    ...(result.NextToken ? await ssmGetPrametersByPath(region, prefix, result.NextToken) : []),
+  ];
+}
 
-  // Initialize results
+export async function listParameters(app: string, stage: string, region: string) {
+  const results: Record<string, string> = {};
+
+  const params = await ssmGetPrametersByPath(region, buildSsmPrefixForParameter(app, stage));
+  params.map((p) => {
+    const name = parseSsmName(p.Name!).name;
+    results[name] = p.Value!;
+  });
+  return results;
+}
+
+export async function listSecrets(app: string, stage: string, region: string) {
   const results: Record<string, Secret> = {};
 
   // Load all secrets
-  const secrets = await page(buildSsmPrefixForSecret(app, stage));
+  const secrets = await ssmGetPrametersByPath(region, buildSsmPrefixForSecret(app, stage));
   secrets.map((p) => {
     const name = parseSsmName(p.Name!).name;
     if (!results[name]) {
@@ -47,7 +57,7 @@ export async function listSecrets(app: string, stage: string, region: string) {
   });
 
   // Load all fallback secrets
-  const fallbacks = await page(buildSsmPrefixForSecretFallback(app));
+  const fallbacks = await ssmGetPrametersByPath(region, buildSsmPrefixForSecretFallback(app));
   fallbacks.map((p) => {
     const name = parseSsmName(p.Name!).name;
     if (!results[name]) {

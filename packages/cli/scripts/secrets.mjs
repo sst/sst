@@ -29,39 +29,6 @@ export default async function (argv, config) {
   logger.info("");
 }
 
-function printSecretsInEnvFormat(secrets) {
-  const keys = Object.keys(secrets);
-  keys.sort().forEach((key) => {
-    logger.info(`${key}=${secrets[key].value || secrets[key].fallbackValue}`);
-  });
-}
-
-function printSecretsInTableFormat(secrets) {
-  const keys = Object.keys(secrets);
-  const keyLen = Math.max(
-    "Secrets".length,
-    ...keys.map((key) => key.length),
-  );
-  const valueLen = Math.max(
-    "Values".length,
-    ...keys.map((key) => secrets[key].value
-      ? secrets[key].value.length
-      : `${secrets[key].fallbackValue} (fallback)`.length
-    ),
-  );
-
-  logger.info("┌".padEnd(keyLen + 3, "─") + "┬" + "".padEnd(valueLen + 2, "─") + "┐");
-  logger.info(`│ ${"Secrets".padEnd(keyLen)} │ ${"Values".padEnd(valueLen)} │`);
-  logger.info("├".padEnd(keyLen + 3, "─") + "┼" + "".padEnd(valueLen + 2, "─") + "┤");
-  keys.sort().forEach((key) => {
-    const value = secrets[key].value
-      ? secrets[key].value
-      : `${secrets[key].fallbackValue} ${chalk.gray("(fallback)")}`;
-    logger.info(`│ ${key.padEnd(keyLen)} │ ${value.padEnd(valueLen)} │`);
-  });
-  logger.info("└".padEnd(keyLen + 3, "─") + "┴" + "".padEnd(valueLen + 2, "─") + "┘");
-}
-
 async function handleList(argv, app, stage, region) {
   const secrets = await FunctionConfig.listSecrets(app, stage, region);
   const keys = Object.keys(secrets);
@@ -115,4 +82,37 @@ async function handleRemoveFallback(argv, app, region) {
   const { name } = argv;
   await FunctionConfig.removeSecretFallback(app, region, name);
   logger.info("✅ Removed");
+}
+
+function printSecretsInEnvFormat(secrets) {
+  const keys = Object.keys(secrets);
+  keys.sort().forEach((key) => {
+    logger.info(`${key}=${secrets[key].value || secrets[key].fallbackValue}`);
+  });
+}
+
+function printSecretsInTableFormat(secrets) {
+  const keys = Object.keys(secrets);
+  const keyLen = Math.max(
+    "Secrets".length,
+    ...keys.map((key) => key.length),
+  );
+  const valueLen = Math.max(
+    "Values".length,
+    ...keys.map((key) => secrets[key].value
+      ? secrets[key].value.length
+      : `${secrets[key].fallbackValue} (fallback)`.length
+    ),
+  );
+
+  logger.info("┌".padEnd(keyLen + 3, "─") + "┬" + "".padEnd(valueLen + 2, "─") + "┐");
+  logger.info(`│ ${"Secrets".padEnd(keyLen)} │ ${"Values".padEnd(valueLen)} │`);
+  logger.info("├".padEnd(keyLen + 3, "─") + "┼" + "".padEnd(valueLen + 2, "─") + "┤");
+  keys.sort().forEach((key) => {
+    const value = secrets[key].value
+      ? secrets[key].value
+      : `${secrets[key].fallbackValue} ${chalk.gray("(fallback)")}`;
+    logger.info(`│ ${key.padEnd(keyLen)} │ ${value.padEnd(valueLen)} │`);
+  });
+  logger.info("└".padEnd(keyLen + 3, "─") + "┴" + "".padEnd(valueLen + 2, "─") + "┘");
 }
