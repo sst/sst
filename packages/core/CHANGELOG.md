@@ -1,5 +1,11 @@
 # @serverless-stack/core
 
+## 1.8.3
+
+### Patch Changes
+
+- [#1977](https://github.com/serverless-stack/sst/pull/1977) [`af06c6dd9`](https://github.com/serverless-stack/sst/commit/af06c6dd91400b7f55b3824efcb450dae114020c) Thanks [@fwang](https://github.com/fwang)! - Bootstrap: encode tags in base64 to pass to bootstrap stack
+
 ## 1.8.2
 
 ### Patch Changes
