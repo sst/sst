@@ -60,6 +60,7 @@ const cmd = {
   secrets: "secrets",
   bootstrap: "bootstrap",
   telemetry: "telemetry",
+  loadConfig: "load-config",
 };
 
 const DEFAULT_STAGE = "dev";
@@ -195,6 +196,10 @@ const argv = yargs
         ]);
 
     }
+  )
+  .command(
+    `${cmd.loadConfig}`,
+    "Load config for app",
   )
   .command(
     `${cmd.bootstrap}`,
@@ -349,6 +354,7 @@ async function run() {
     [cmd.secrets]: await import("../scripts/secrets.mjs"),
     [cmd.addCdk]: await import("../scripts/add-cdk.mjs"),
     [cmd.bootstrap]: await import("../scripts/bootstrap.mjs"),
+    [cmd.loadConfig]: await import("../scripts/load-config.mjs"),
   };
 
   switch (script) {
@@ -372,10 +378,12 @@ async function run() {
     case cmd.addCdk:
     case cmd.console:
     case cmd.secrets:
-    case cmd.bootstrap: {
+    case cmd.bootstrap:
+    case cmd.loadConfig: {
       if (script === cmd.start
         || script === cmd.secrets
-        || script === cmd.bootstrap) {
+        || script === cmd.bootstrap
+        || script === cmd.loadConfig) {
         logger.info("Using stage:", config.stage);
       }
       internals[script].default(argv, config, cliInfo).catch((e) => {
@@ -428,6 +436,7 @@ function clearBuildPath() {
   if ([
     cmd.console,
     cmd.secrets,
+    cmd.loadConfig,
   ].includes(script)) {
     return;
   }
@@ -600,6 +609,7 @@ async function loadAwsCredentials(script, argv) {
       cmd.console,
       cmd.secrets,
       cmd.bootstrap,
+      cmd.loadConfig,
       cmd.cdk,
     ].includes(script)
   ) {
