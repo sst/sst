@@ -6,6 +6,7 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { FunctionProps, Function as Fn } from "./Function.js";
 import { App } from "./App.js";
+import * as Config from "./Config.js";
 import { isConstruct } from "./Construct.js";
 import { Permissions } from "./util/permission.js";
 
