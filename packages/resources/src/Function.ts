@@ -1204,6 +1204,10 @@ export class Function extends lambda.Function implements SSTConstruct {
     const layers = [...(baseProps?.layers || []), ...(props?.layers || [])];
     const layersProp = layers.length === 0 ? {} : { layers };
 
+    // Merge config
+    const config = [...(baseProps?.config || []), ...(props?.config || [])];
+    const configProp = config.length === 0 ? {} : { config };
+
     // Merge permissions
     let permissionsProp;
     if (baseProps?.permissions === "*") {
@@ -1220,6 +1224,7 @@ export class Function extends lambda.Function implements SSTConstruct {
     return {
       ...(baseProps || {}),
       ...(props || {}),
+      ...configProp,
       ...layersProp,
       ...environmentProp,
       ...permissionsProp,

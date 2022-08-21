@@ -30,6 +30,7 @@ import {
   Function,
   FunctionProps
 } from "../src";
+import G from "glob";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
@@ -1829,6 +1830,54 @@ test("App.defaultFunctionProps(): permissions", async () => {
         lambdaDefaultPolicy,
         { Action: "s3:*", Effect: "Allow", Resource: "*" },
         { Action: "dynamodb:*", Effect: "Allow", Resource: "*" }
+      ],
+      Version: "2012-10-17"
+    }
+  });
+});
+
+test("App.defaultFunctionProps(): config", async () => {
+  const app = new App();
+  // Create a stack with 1 secret
+  const stackA = new Stack(app, "stackA");
+  const SECRET_A = new Config.Secret(stackA, "SECRET_A");
+  app.setDefaultFunctionProps({
+    config: [SECRET_A]
+  });
+
+  // Create another stack with 1 secret
+  const stackB = new Stack(app, "stackB");
+  const SECRET_B = new Config.Secret(stackB, "SECRET_B");
+  app.addDefaultFunctionConfig([SECRET_B]);
+
+  // Test function's config is merged with default config
+  const stack = new Stack(app, "stack");
+  const SECRET_C = new Config.Secret(stack, "SECRET_C");
+  stack.addDefaultFunctionConfig([SECRET_C]);
+  const SECRET_D = new Config.Secret(stack, "SECRET_D");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    config: [SECRET_D],
+  });
+
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: "ssm:GetParameters",
+          Effect: "Allow",
+          Resource: [
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/secrets/SECRET_A",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/secrets/SECRET_A",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/secrets/SECRET_B",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/secrets/SECRET_B",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/secrets/SECRET_C",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/secrets/SECRET_C",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/secrets/SECRET_D",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/secrets/SECRET_D",
+          ],
+        },
       ],
       Version: "2012-10-17"
     }

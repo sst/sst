@@ -123,6 +123,18 @@ export class Stack extends cdk.Stack {
   }
 
   /**
+   * Adds additional default config to be applied to all Lambda functions in the stack.
+   *
+   * @example
+   * ```js
+   * stack.addDefaultFunctionConfig([STRIPE_KEY]);
+   * ```
+   */
+  public addDefaultFunctionConfig(config: (Config.Secret | Config.Parameter)[]) {
+    this.defaultFunctionProps.push({ config });
+  }
+
+  /**
    * Adds additional default layers to be applied to all Lambda functions in the stack.
    *
    * @example
