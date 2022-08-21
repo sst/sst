@@ -1,5 +1,7 @@
 # @serverless-stack/web
 
+## 1.8.4
+
 ## 1.8.3
 
 ## 1.8.2
