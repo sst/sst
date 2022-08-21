@@ -7,8 +7,10 @@ import {
   Bootstrap,
 } from "@serverless-stack/core";
 
+console.log(process.argv);
 const region = process.argv[2];
-const tags = JSON.parse(process.argv[3]);
+const tags = JSON.parse(Buffer.from(process.argv[3], "base64").toString());
+console.log(tags);
 
 // Create CDK App
 const app = new cdk.App();
