@@ -96,7 +96,7 @@ async function deployStack(config: any, cliInfo: any, tags: Record<string, strin
       "node",
       "bin/index.mjs",
       region,
-      `'${JSON.stringify(tags)}'`,
+      `${Buffer.from(JSON.stringify(tags)).toString("base64")}`,
     ].join(" "),
     output: "cdk.out",
   };
