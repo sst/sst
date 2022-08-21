@@ -1,5 +1,14 @@
 # @serverless-stack/resources
 
+## 1.8.4
+
+### Patch Changes
+
+- [#1979](https://github.com/serverless-stack/sst/pull/1979) [`e21d87a92`](https://github.com/serverless-stack/sst/commit/e21d87a925ab476a308cf7bae76b0ecea590cd27) Thanks [@fwang](https://github.com/fwang)! - Function: merge config with default function props
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.8.4
+
 ## 1.8.3
 
 ### Patch Changes
