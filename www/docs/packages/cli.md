@@ -226,6 +226,16 @@ A convenience command to update SST to the latest version. It also updates any C
 npx sst update
 ```
 
+### `load-config`
+
+A convenience command to load Config parameters and secrets, and invoke a script with the config values configured as environment variables.
+
+```bash
+npx sst load-config -- vitest run
+```
+
+This command can be useful for running tests. [Read more testing here](../advanced/testing.md).
+
 ### `secrets [action]`
 
 Manage secret values in your app.
