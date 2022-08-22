@@ -6299,7 +6299,7 @@ aws-jwt-verify@^2.1.3:
   resolved "https://registry.npmjs.org/aws-jwt-verify/-/aws-jwt-verify-2.1.3.tgz"
   integrity sha512-XAlt1IaQg9SRpuKPAhW1I1/E9Q63bPI/O+W5dcGniDwTJSbAUVZsH80XxeuADBCD2eIWEUlKOFfLmzhXZqt9tA==
 
-aws-sdk@^2.1061.0, aws-sdk@^2.1110.0:
+aws-sdk@^2.1110.0:
   version "2.1140.0"
   resolved "https://registry.npmjs.org/aws-sdk/-/aws-sdk-2.1140.0.tgz"
   integrity sha512-cNdq56UQrUzXmCgwo0/J5GGLmfHn+Vp38qgcK/Xd86Sch8P9v2o8tNv7J82mYU98YY2vO007BMxRylA4Sd8PkQ==

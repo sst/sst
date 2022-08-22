@@ -14,10 +14,10 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@aws-sdk/client-ssm": "3.43.0",
     "@graphql-tools/schema": "^8.3.11",
     "@tsconfig/node14": "^1.0.1",
     "aws-jwt-verify": "^2.1.3",
-    "aws-sdk": "^2.1061.0",
     "graphql-helix": "^1.12.0"
   },
   "devDependencies": {
