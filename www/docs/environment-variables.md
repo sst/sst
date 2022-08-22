@@ -18,6 +18,12 @@ The `Config` libraries include:
    - Fetches them automatically at runtime
    - Provides typesafety and autocomplete
 
+Behind the scenes, Secrets and Parameters are stored as [AWS SSM](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) Parameters in your AWS account.
+
+### Cost
+
+Secrets and Parameters are stored in AWS SSM with the _Standard Parameter type_ and _Standard Throughput_. This makes Config [free to use](https://aws.amazon.com/systems-manager/pricing/) in your SST apps.
+
 In this chapter we'll look at how they work.
 
 ## `Config.Parameter`
