@@ -1,5 +1,7 @@
 # @serverless-stack/console
 
+## 1.9.0
+
 ## 1.8.4
 
 ## 1.8.3

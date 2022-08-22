@@ -1,5 +1,17 @@
 # @serverless-stack/cli
 
+## 1.9.0
+
+### Minor Changes
+
+- [#1981](https://github.com/serverless-stack/sst/pull/1981) [`39a67838d`](https://github.com/serverless-stack/sst/commit/39a67838dc0aea9e80d5e24f2fbdf567a4ee199c) Thanks [@fwang](https://github.com/fwang)! - Add `load-config` cli command to help loading config for running tests
+
+### Patch Changes
+
+- Updated dependencies [[`39a67838d`](https://github.com/serverless-stack/sst/commit/39a67838dc0aea9e80d5e24f2fbdf567a4ee199c)]:
+  - @serverless-stack/core@1.9.0
+  - @serverless-stack/resources@1.9.0
+
 ## 1.8.4
 
 ### Patch Changes
