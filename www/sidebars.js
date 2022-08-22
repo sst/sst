@@ -49,12 +49,12 @@ module.exports = {
         },
         {
           type: "category",
-          label: "4 - Render Frontend",
+          label: "4 - Update the Frontend",
           collapsible: true,
           collapsed: true,
           items: [
-            "learn/fetch-data",
-            "learn/render-results",
+            "learn/render-queries",
+            "learn/make-updates",
 
             //Link to Vue example
             //Link to Next.js example

@@ -1,5 +1,5 @@
 ---
-title: Render Results
+title: Make Updates
 ---
 
 Let's render our new comments feature.
