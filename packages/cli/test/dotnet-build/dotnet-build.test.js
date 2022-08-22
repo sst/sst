@@ -29,9 +29,7 @@ test("dotnet-build", async () => {
   );
   const cfnResources = JSON.parse(cf).Resources;
   const cfnLambdas = Object.values(cfnResources).filter(
-    (r) => r.Type === "AWS::Lambda::Function"
+    (r) => r.Type === "AWS::Lambda::Function" && r.Properties.Handler === "SampleFunction::SampleFunction.Function::FunctionHandler"
   );
-  expect(cfnLambdas[0].Properties.Handler).toEqual(
-    "SampleFunction::SampleFunction.Function::FunctionHandler"
-  );
+  expect(cfnLambdas.length).toEqual(1);
 });
