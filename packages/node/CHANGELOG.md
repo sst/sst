@@ -1,5 +1,11 @@
 # @serverless-stack/node
 
+## 1.9.0
+
+### Patch Changes
+
+- [#1987](https://github.com/serverless-stack/sst/pull/1987) [`82cf416fb`](https://github.com/serverless-stack/sst/commit/82cf416fb3259501fbe8440c5a4c3c9cefa13e1a) Thanks [@fwang](https://github.com/fwang)! - Config: use aws sdk v3 in client library
+
 ## 1.8.4
 
 ## 1.8.3
