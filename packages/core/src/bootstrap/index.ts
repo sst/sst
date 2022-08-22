@@ -61,6 +61,16 @@ function isVersionUpToDate(bootstrapVersion?: string) {
 export async function init(region: string) {
   const ssm = new SSM({ region });
 
+  // Note: When running tests in CI, there is no AWS credentials
+  //       and the SSM parameters are not available. Need to fake
+  //       the Bootstrap values.
+  if (process.env.__TEST__) {
+    assets.version = LATEST_VERSION;
+    assets.stackName = "sst-bootstrap";
+    assets.bucketName = "sst-bootstrap";
+    return;
+  }
+
   try {
     const ret = await ssm.getParameters({
       Names: [
