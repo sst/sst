@@ -14,7 +14,7 @@ The `Config` libraries include:
    2. [`Config.Parameter`](constructs/Parameter.md)
 2. CLI to set secrets [`sst secrets [action]`](packages/cli.md#secrets-action)
 3. Lambda helpers to fetch them [`@serverless-stack/node/config`](packages/node.md#config)
-   - Throw an error if they are not defined
+   - Throws an error if they are not defined
    - Fetches them automatically at runtime
    - Provides typesafety and autocomplete
 
