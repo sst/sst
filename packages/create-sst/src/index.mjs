@@ -1,4 +1,5 @@
 import fs from "fs/promises";
+import { fetch } from "undici"
 import path from "path";
 import { exec, execSync } from "child_process";
 import { applyOperation } from "fast-json-patch/index.mjs";
@@ -202,15 +203,6 @@ async function listFiles(dir) {
 /**
  * @param {string} pkg
  */
-function getLatestPackageVersion(pkg) {
-  return new Promise((resolve) => {
-    let data = "";
-    const proc = exec(`npm show ${pkg} dist-tags.latest`, {
-      stdio: "pipe",
-    });
-    proc.stdout.on("data", (chunk) => (data += chunk));
-    proc.on("exit", () => {
-      resolve(data.trim());
-    });
-  });
+async function getLatestPackageVersion(pkg) {
+  return fetch(`https://registry.npmjs.org/${pkg}/latest`).then(res => res.json()).then(res => res.version)
 }

@@ -25,7 +25,8 @@
     "commander": "^9.1.0",
     "fast-json-patch": "^3.1.1",
     "inquirer": "^8.2.2",
-    "ora": "^6.1.0"
+    "ora": "^6.1.0",
+    "undici": "^5.9.1"
   },
   "gitHead": "8ac2d0abc11d5de721c87658bb445e3d6c211dcf",
   "devDependencies": {
