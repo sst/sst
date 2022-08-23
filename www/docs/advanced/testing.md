@@ -3,29 +3,66 @@ title: Testing
 description: "Learn how to configure tests in SST."
 ---
 
-## Testing your app
+When testing your code, one of the biggest challenges is ensuring the testing environment has the same environment variable values as the Lambda environment. SST has built-in support for securely loading environment variables and secrets values managed by [`Config`](../environment-variables.md) and using them in your tests.
 
-If you created your app with `create-sst` a [vitest](https://vitest.dev/config/) config was setup for you. You can run tests using
+:::tip
+If you created your app with `create-sst` a [vitest](https://vitest.dev/config/) config was setup for you. You can run tests using `vitest run`.
+:::
 
-```bash
-# With npm
-npm test
-# Or with Yarn
-yarn test
-```
+In this chapter we'll look at how they work.
+
+## Unit tests
+
+### Quick start
+
+1. Ensure you are using [`Config`](../environment-variables.md) to manage your environment variables. For example:
+
+  ```ts title="handler.ts"
+  import { Config } from "@serverless-stack/node/config";
+
+  export const main = async () => {
+    return Config.MY_TABLE_NAME;
+  };
+  ```
+
+2. Write tests to call the function.
+
+  ```ts title="handler.test.ts"
+  import { main } from "./handler.js";
+
+  it("test MY_TABLE_NAME is loaded", async() => {
+    expect(await main()).toBe("dev-app-my-table");
+  });
+  ```
+
+3. Run tests
+
+  ```bash
+  $ sst load-config -- vitest run
+  ```
+
+4. If you created your app with `create-sst`, `load-config` was already setup for your tests. If not, open up your `package.json`, and append `sst load-config --` to the `test` script.
+
+  ```diff
+  "scripts": {
+    // ...
+    - "test": "vitest run"
+    + "test": "sst load-config -- vitest run"
+  }, 
+  ```
+
+  And you can run tests using
+
+  ```bash
+  # With npm
+  npm test
+  # Or with Yarn
+  yarn test
+  ```
 
 ### How it works
 
-Behind the scene, a `test` script is configured in your `package.json`.
-
-```json
-  "scripts": {
-    // ...
-    "test": "sst load-config -- vitest run"
-  }, 
-```
-
-The `sst load-config` command fetches all the [`Config.Parameter`](constructs/Parameter.md) and [`Config.Secret`](constructs/Secret.md) used in your app, and invokes the `vitest run` with the config values configured as environment variables. This allows the [`@serverless-stack/node/config`](packages/node.md#config) helper library to work as if the code were running inside Lambda. Read more about [Config](../environment-variables.md).
+Behind the scene, the `sst load-config` command fetches all the Config values, [`Parameter`](constructs/Parameter.md) and [`Secret`](constructs/Secret.md), used in your app, and invokes the `vitest run` with the values configured as environment variables. This allows the [`@serverless-stack/node/config`](packages/node.md#config) helper library to work as if the code were running inside Lambda. Read more about [Config](../environment-variables.md).
 
 The following environment variables are set.
 - `SST_APP` with the name of your SST app
@@ -41,45 +78,48 @@ The following environment variables are set.
   Secret values ie. `/aws/{appName}/{stageName}/secrets/STRIPE_KEY` are stored as Parameter environment variables `SST_PARAM_STRIPE_KEY`. This is intentional so the [`@serverless-stack/node/config`](packages/node.md#config) helper library doesn't need to re-fetch the secret values at runtime.
   :::
 
-### Upgrading to v1.9.0
-
-The `sst load-config` command was added in the [`v1.9.0 release`](https://github.com/serverless-stack/sst/releases/tag/v1.9.0). If your app was created prior to that, the `test` script was likely configured as `vitest run`. To use `sst load-config`, change it to:
-
-```diff
-  "scripts": {
-    // ...
--   "test": "vitest run"
-+   "test": "sst load-config -- vitest run"
-  }, 
-```
-
 ## Integration tests
 
-When running integration tests, you often need to test against the deployed resources. You can have SST print out the relevant resource properties, like API endpoints and DynamoDB table names to a JSON file.
+Integration tests are often more useful than unit tests because they test the promises the edges of your application makes while the tests remain simple and ignorant of changing implementation details.
 
-To do this, first add them as stack outputs:
+The most common edge of your application is your API. Let's look at how to test against the API endpoint.
 
-```js {7-9}
-const api = new Api(stack, "Api", {
-  routes: {
-    "GET /": "src/lambda.main",
-  },
-});
+1. In your stacks code, create a parameter to store the API URL.
 
-stack.addOutputs({
-  ApiUrl: api.url,
-});
-```
+  ```ts {7-9}
+  const api = new Api(stack, "Api", {
+    routes: {
+      "GET /": "src/lambda.main",
+    },
+  });
 
-Then when you deploy your app, use the [`--outputs-file`](../packages/cli.md#deploy-stack) option to write these stack outputs to a JSON file.
+  const API_URL = new Config.Parameter(stack, "API_URL", {
+    value: api.url,
+  });
+  ```
 
-```bash
-npx sst deploy --outputs-file outputs.json
-// or
-yarn deploy --outputs-file outputs.json
-```
+2. In your tests initialize an HTTP client that makes requests to the API URL as though it's a real client.
 
-You can now parse the JSON file to get the value of the `ApiUrl` and use it in your integration tests.
+  ```ts
+  import fetch from "node-fetch";
+  import { expect, it } from "vitest";
+  import { Config } from "@serverless-stack/node/config";
+
+  it("test create an article", async () => {
+    const response = await fetch(Config.API_URL);
+    const body = await response.text();
+
+    expect(body).toBe("Hello world");
+  });
+  ```
+
+3. Run tests
+
+  ```bash
+  $ sst load-config -- vitest run
+  ```
+
+In the case of testing API routes that perform database updates, tests will usually involve triggering an HTTP endpoint and then calling some domain function to test of the expected data has been written.  For example you might call `createArticle` using the API and then do `Article.list()` to see if it was created.
 
 ## Stacks tests
 
