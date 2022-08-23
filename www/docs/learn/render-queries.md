@@ -10,11 +10,11 @@ Let's start by updating our homepage first to show how many comments each articl
 
 <ChangeText>
 
-In `web/src/pages/Article.tsx`, add `comments` in the articles query.
+In `web/src/pages/Home.tsx`, add `comments` in the articles query.
 
 </ChangeText>
 
-```ts {7-10} title="web/src/pages/Article.tsx"
+```ts {7-10} title="web/src/pages/Home.tsx"
 const [articles] = useTypedQuery({
   query: {
     articles: {
@@ -83,25 +83,21 @@ Replace the `<li>` tag in the `return` statement of the `Home` component with.
 
 </ChangeText>
 
-```tsx {14-18} title="web/src/pages/Article.tsx"
+```tsx {11-15} title="web/src/pages/Home.tsx"
 <li key={article.id} className={styles.article}>
   <div>
-    <div>
-      <div>
-        <h2 className={styles.title}>
-          <Link to={`/article/${article.id}`}>{article.title}</Link>
-        </h2>
-        &nbsp;
-        <a target="_blank" href={article.url} className={styles.url}>
-          ({article.url.replace(/(^\w+:|^)\/\//, "")})
-        </a>
-      </div>
-    </div>
-    <div className={styles.footer}>
-      <strong>{article.comments.length}</strong>
-      <span className={styles.footerSeparator}>&bull;</span>
-      <Link to={`/article/${article.id}`}>View Comments</Link>
-    </div>
+    <h2 className={styles.title}>
+      <Link to={`/article/${article.id}`}>{article.title}</Link>
+    </h2>
+    &nbsp;
+    <a target="_blank" href={article.url} className={styles.url}>
+      ({article.url.replace(/(^\w+:|^)\/\//, "")})
+    </a>
+  </div>
+  <div className={styles.footer}>
+    <strong>{article.comments.length}</strong>
+    <span className={styles.footerSeparator}>&bull;</span>
+    <Link to={`/article/${article.id}`}>View Comments</Link>
   </div>
 </li>
 ```
@@ -267,7 +263,7 @@ Now if you refresh the app, you should see the comment count being displayed und
 INSERT SCREENSHOT
 
 <!--
-![Comment count for articles in homepage](/img/fetch-data/comment-count-for-articles-in-homepage.png)
+![Comment count for articles in homepage](/img/render-queries/comment-count-for-articles-in-homepage.png)
 -->
 
-Next, let's allow our users to add comments to the posted articles.
+Next, let's allow our users to view and comments to the posted articles.
