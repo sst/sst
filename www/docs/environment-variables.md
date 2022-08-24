@@ -101,7 +101,7 @@ import { Config } from "@serverless-stack/node/config";
 
 The module reads the value from `process.env.SST_PARAM_USER_UPDATED_TOPIC` and assigns it to `Config.USER_UPDATED_TOPIC`. You can then reference `Config.USER_UPDATED_TOPIC` directly in your code.
 
-SST also stores a copy of the parameter values in [AWS SSM](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html). For each parameter, an SSM parameter of the type `String` is created with the name `/aws/{appName}/{stageName}/parameters/USER_UPDATED_TOPIC`, where `{appName}` is the name of your SST app, and `{stageName}` is the stage. The parameter value in this case is the topic name stored in plain text.
+SST also stores a copy of the parameter values in [AWS SSM](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html). For each parameter, an SSM parameter of the type `String` is created with the name `/sst/{appName}/{stageName}/parameters/USER_UPDATED_TOPIC`, where `{appName}` is the name of your SST app, and `{stageName}` is the stage. The parameter value in this case is the topic name stored in plain text.
 
 Storing the parameter values in SSM might seem redundant. But it provides a convenient way to fetch all the parameters used in your application. This can be extremely useful for testing. This isn't possible when using Lambda environment variables and we are going to see why in the next section.
 
@@ -151,7 +151,7 @@ export const handler = async () => {
 
 What should the `TOPIC_NAME` be in your tests?
 
-With `Config`, the value for each Parameter is stored in SSM. When running tests, you can easily look up the values by fetching all SSM Parameters prefixed with `/aws/{appName}/{stageName}/parameters/*`.
+With `Config`, the value for each Parameter is stored in SSM. When running tests, you can easily look up the values by fetching all SSM Parameters prefixed with `/sst/{appName}/{stageName}/parameters/*`.
 
 Since `Config` enforces Parameter values to be the same for all functions using them, you would not run into this issue.
 
@@ -239,7 +239,7 @@ When you run:
 npx sst secrets set STRIPE_KEY sk_test_abc123
 ```
 
-An SSM parameter of the type `SecureString` is created with the name `/aws/{appName}/{stageName}/secrets/STRIPE_KEY`, where `{appName}` is the name of your SST app, and `{stageName}` is the stage you are configuring for. The parameter value `sk_test_abc123` gets encrypted and stored in AWS SSM.
+An SSM parameter of the type `SecureString` is created with the name `/sst/{appName}/{stageName}/secrets/STRIPE_KEY`, where `{appName}` is the name of your SST app, and `{stageName}` is the stage you are configuring for. The parameter value `sk_test_abc123` gets encrypted and stored in AWS SSM.
 
 And when you pass secrets into a function:
 
@@ -304,7 +304,7 @@ To set a fallback value for `STRIPE_KEY`, run:
 npx sst secrets set-fallback STRIPE_KEY sk_test_abc123
 ```
 
-Similar to the `set` command, SST creates an AWS SSM Parameter of the type `SecureString`. And the parameter name in this case is `/aws/{appName}/.fallback/secrets/STRIPE_KEY`.
+Similar to the `set` command, SST creates an AWS SSM Parameter of the type `SecureString`. And the parameter name in this case is `/sst/{appName}/.fallback/secrets/STRIPE_KEY`.
 
 :::note
 The fallback value can only be inherited by stages deployed in the same AWS account and region.
