@@ -1,5 +1,37 @@
 # @serverless-stack/resources
 
+## 1.9.0
+
+### Patch Changes
+
+- Updated dependencies [[`39a67838d`](https://github.com/serverless-stack/sst/commit/39a67838dc0aea9e80d5e24f2fbdf567a4ee199c)]:
+  - @serverless-stack/core@1.9.0
+
+## 1.8.4
+
+### Patch Changes
+
+- [#1979](https://github.com/serverless-stack/sst/pull/1979) [`e21d87a92`](https://github.com/serverless-stack/sst/commit/e21d87a925ab476a308cf7bae76b0ecea590cd27) Thanks [@fwang](https://github.com/fwang)! - Function: merge config with default function props
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.8.4
+
+## 1.8.3
+
+### Patch Changes
+
+- Updated dependencies [[`af06c6dd9`](https://github.com/serverless-stack/sst/commit/af06c6dd91400b7f55b3824efcb450dae114020c)]:
+  - @serverless-stack/core@1.8.3
+
+## 1.8.2
+
+### Patch Changes
+
+- [#1968](https://github.com/serverless-stack/sst/pull/1968) [`90071d0e2`](https://github.com/serverless-stack/sst/commit/90071d0e290a99ca944a620159d0aef37f584635) Thanks [@fwang](https://github.com/fwang)! - Function: lazy add config `Function.addConfig`
+
+- Updated dependencies [[`d7ac80470`](https://github.com/serverless-stack/sst/commit/d7ac8047062f859d4a8e8c10900e7388ba7b4b1a), [`76a5e0ad6`](https://github.com/serverless-stack/sst/commit/76a5e0ad6396e418c0cf50427b1b2ddb502afd96)]:
+  - @serverless-stack/core@1.8.2
+
 ## 1.8.1
 
 ### Patch Changes

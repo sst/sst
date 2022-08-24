@@ -1,5 +1,27 @@
 # @serverless-stack/core
 
+## 1.9.0
+
+### Minor Changes
+
+- [#1981](https://github.com/serverless-stack/sst/pull/1981) [`39a67838d`](https://github.com/serverless-stack/sst/commit/39a67838dc0aea9e80d5e24f2fbdf567a4ee199c) Thanks [@fwang](https://github.com/fwang)! - Add `load-config` cli command to help loading config for running tests
+
+## 1.8.4
+
+## 1.8.3
+
+### Patch Changes
+
+- [#1977](https://github.com/serverless-stack/sst/pull/1977) [`af06c6dd9`](https://github.com/serverless-stack/sst/commit/af06c6dd91400b7f55b3824efcb450dae114020c) Thanks [@fwang](https://github.com/fwang)! - Bootstrap: encode tags in base64 to pass to bootstrap stack
+
+## 1.8.2
+
+### Patch Changes
+
+- [#1971](https://github.com/serverless-stack/sst/pull/1971) [`d7ac80470`](https://github.com/serverless-stack/sst/commit/d7ac8047062f859d4a8e8c10900e7388ba7b4b1a) Thanks [@fwang](https://github.com/fwang)! - Cli: add bootstrap command with the ability to tag
+
+* [#1972](https://github.com/serverless-stack/sst/pull/1972) [`76a5e0ad6`](https://github.com/serverless-stack/sst/commit/76a5e0ad6396e418c0cf50427b1b2ddb502afd96) Thanks [@fwang](https://github.com/fwang)! - sst start: restart functions on secret value change
+
 ## 1.8.1
 
 ### Patch Changes

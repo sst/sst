@@ -6,4 +6,13 @@ export default defineConfig({
   test: {
     testTimeout: 30000,
   },
+  logLevel: "info",
+  esbuild: {
+    sourcemap: "both",
+  },
+  resolve: {
+    alias: {
+      "@graphql-appsync/core": "./services/core",
+    },
+  },
 });

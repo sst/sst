@@ -1,5 +1,5 @@
-import SSM, { ParameterList } from "aws-sdk/clients/ssm.js";
-const ssm = new SSM();
+import { GetParametersCommand, SSMClient, Parameter } from "@aws-sdk/client-ssm";
+const ssm = new SSMClient({});
 
 const SECRET_ENV_PREFIX = "SST_SECRET_";
 const PARAM_ENV_PREFIX = "SST_PARAM_";
@@ -91,16 +91,15 @@ async function loadSecrets(prefix: string, keys: string[]) {
   }
 
   // Fetch secrets
-  const validParams: ParameterList = [];
+  const validParams: Parameter[] = [];
   const invalidParams: string[] = [];
   await Promise.all(
     chunks.map(async (chunk) => {
-      const result = await ssm
-        .getParameters({
-          Names: chunk.map((key) => `${prefix}${key}`),
-          WithDecryption: true,
-        })
-        .promise();
+      const command = new GetParametersCommand({
+        Names: chunk.map((key) => `${prefix}${key}`),
+        WithDecryption: true,
+      });
+      const result = await ssm.send(command);
       validParams.push(...(result.Parameters || []));
       invalidParams.push(...(result.InvalidParameters || []));
     })

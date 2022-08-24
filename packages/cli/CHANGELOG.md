@@ -1,5 +1,47 @@
 # @serverless-stack/cli
 
+## 1.9.0
+
+### Minor Changes
+
+- [#1981](https://github.com/serverless-stack/sst/pull/1981) [`39a67838d`](https://github.com/serverless-stack/sst/commit/39a67838dc0aea9e80d5e24f2fbdf567a4ee199c) Thanks [@fwang](https://github.com/fwang)! - Add `load-config` cli command to help loading config for running tests
+
+### Patch Changes
+
+- Updated dependencies [[`39a67838d`](https://github.com/serverless-stack/sst/commit/39a67838dc0aea9e80d5e24f2fbdf567a4ee199c)]:
+  - @serverless-stack/core@1.9.0
+  - @serverless-stack/resources@1.9.0
+
+## 1.8.4
+
+### Patch Changes
+
+- Updated dependencies [[`e21d87a92`](https://github.com/serverless-stack/sst/commit/e21d87a925ab476a308cf7bae76b0ecea590cd27)]:
+  - @serverless-stack/resources@1.8.4
+  - @serverless-stack/core@1.8.4
+
+## 1.8.3
+
+### Patch Changes
+
+- Updated dependencies [[`af06c6dd9`](https://github.com/serverless-stack/sst/commit/af06c6dd91400b7f55b3824efcb450dae114020c)]:
+  - @serverless-stack/core@1.8.3
+  - @serverless-stack/resources@1.8.3
+
+## 1.8.2
+
+### Patch Changes
+
+- [#1970](https://github.com/serverless-stack/sst/pull/1970) [`5b49f6dc3`](https://github.com/serverless-stack/sst/commit/5b49f6dc3b4481a81aeb170a3e111f502760aa44) Thanks [@fwang](https://github.com/fwang)! - Cli: list secrets in dotenv format
+
+* [#1971](https://github.com/serverless-stack/sst/pull/1971) [`d7ac80470`](https://github.com/serverless-stack/sst/commit/d7ac8047062f859d4a8e8c10900e7388ba7b4b1a) Thanks [@fwang](https://github.com/fwang)! - Cli: add bootstrap command with the ability to tag
+
+- [#1965](https://github.com/serverless-stack/sst/pull/1965) [`a95bec646`](https://github.com/serverless-stack/sst/commit/a95bec6465637a1e95f9d447258f78aafc433354) Thanks [@fwang](https://github.com/fwang)! - Cli: config command respect --profile
+
+- Updated dependencies [[`d7ac80470`](https://github.com/serverless-stack/sst/commit/d7ac8047062f859d4a8e8c10900e7388ba7b4b1a), [`76a5e0ad6`](https://github.com/serverless-stack/sst/commit/76a5e0ad6396e418c0cf50427b1b2ddb502afd96), [`90071d0e2`](https://github.com/serverless-stack/sst/commit/90071d0e290a99ca944a620159d0aef37f584635)]:
+  - @serverless-stack/core@1.8.2
+  - @serverless-stack/resources@1.8.2
+
 ## 1.8.1
 
 ### Patch Changes

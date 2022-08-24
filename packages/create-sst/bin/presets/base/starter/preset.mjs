@@ -13,7 +13,7 @@ export default [
       {
         op: "add",
         path: "/scripts/test",
-        value: "vitest run",
+        value: "sst load-config -- vitest run",
       },
     ],
   }),

@@ -1,4 +1,4 @@
-import { RDS, StackContext } from "@serverless-stack/resources";
+import { Config, RDS, StackContext } from "@serverless-stack/resources";
 
 export function Database({ stack }: StackContext) {
   const rds = new RDS(stack, "rds", {
@@ -8,5 +8,18 @@ export function Database({ stack }: StackContext) {
     defaultDatabaseName: "main",
   });
 
-  return rds;
+  return {
+    rds,
+    parameters: [
+      new Config.Parameter(stack, "RDS_SECRET_ARN", {
+        value: rds.secretArn,
+      }),
+      new Config.Parameter(stack, "RDS_ARN", {
+        value: rds.clusterArn,
+      }),
+      new Config.Parameter(stack, "RDS_ARN", {
+        value: rds.clusterArn,
+      }),
+    ],
+  };
 }

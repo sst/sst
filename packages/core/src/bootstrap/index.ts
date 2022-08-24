@@ -24,18 +24,27 @@ export interface Assets {
   bucketName?: string;
 }
 
+interface BootstrapOptions {
+  tags?: Record<string, string>;
+  force?: boolean;
+}
+
 export const assets: Assets = {};
 
-export async function bootstrap(config: any, cliInfo: any) {
-  // Check bootstrap version
+export async function bootstrap(config: any, cliInfo: any, options?: BootstrapOptions) {
   const { region } = config;
-  await init(region);
-  const bootstrapVersion = assets.version;
-  if (isVersionUpToDate(bootstrapVersion)) {
-    return;
+  const { tags, force } = options || {};
+
+  // Check bootstrap version
+  if (!force) {
+    await init(region);
+    const bootstrapVersion = assets.version;
+    if (isVersionUpToDate(bootstrapVersion)) {
+      return;
+    }
   }
 
-  await deployStack(config, cliInfo);
+  await deployStack(config, cliInfo, tags || {});
   
   // Check bootstrap version again
   await init(region);
@@ -51,6 +60,16 @@ function isVersionUpToDate(bootstrapVersion?: string) {
 
 export async function init(region: string) {
   const ssm = new SSM({ region });
+
+  // Note: When running tests in CI, there is no AWS credentials
+  //       and the SSM parameters are not available. Need to fake
+  //       the Bootstrap values.
+  if (process.env.__TEST__) {
+    assets.version = LATEST_VERSION;
+    assets.stackName = "sst-bootstrap";
+    assets.bucketName = "sst-bootstrap";
+    return;
+  }
 
   try {
     const ret = await ssm.getParameters({
@@ -77,7 +96,7 @@ export async function init(region: string) {
   }
 }
 
-async function deployStack(config: any, cliInfo: any) {
+async function deployStack(config: any, cliInfo: any, tags: Record<string, string>) {
   const { region } = config;
   logger.info(chalk.grey(`Bootstrapping SST in the "${region}" region`));
 
@@ -87,6 +106,7 @@ async function deployStack(config: any, cliInfo: any) {
       "node",
       "bin/index.mjs",
       region,
+      `${Buffer.from(JSON.stringify(tags)).toString("base64")}`,
     ].join(" "),
     output: "cdk.out",
   };

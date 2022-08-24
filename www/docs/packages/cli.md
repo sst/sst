@@ -226,6 +226,16 @@ A convenience command to update SST to the latest version. It also updates any C
 npx sst update
 ```
 
+### `load-config`
+
+A convenience command to load Config parameters and secrets, and invoke a script with the config values configured as environment variables.
+
+```bash
+npx sst load-config -- vitest run
+```
+
+This command can be useful for running tests. [Read more testing here](../advanced/testing.md).
+
 ### `secrets [action]`
 
 Manage secret values in your app.
@@ -253,6 +263,34 @@ npx sst secrets remove-fallback STRIPE_KEY
 :::note
 The fallback value can only be inherited by stages deployed in the same AWS account and region.
 :::
+
+#### Options
+
+- `--format`
+
+Format the secret names and values in the specified format. Only apply to the 'list' action. Currently only supports the dotenv format 'env'.
+
+```bash
+npx sst secrets list --format=env
+```
+
+### `bootstrap`
+
+Deploys the SST Bootstrap stack into your AWS environment.
+
+```bash
+npx sst bootstrap
+```
+
+#### Options
+
+- `--tags`
+
+Tags to add for the Bootstrap stack.
+
+```bash
+npx sst bootstrap --tags key1=value1 key2=value2
+```
 
 ### `add-cdk [packages..]`
 

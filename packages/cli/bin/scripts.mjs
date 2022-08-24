@@ -58,7 +58,9 @@ const cmd = {
   addCdk: "add-cdk",
   update: "update",
   secrets: "secrets",
+  bootstrap: "bootstrap",
   telemetry: "telemetry",
+  loadConfig: "load-config",
 };
 
 const DEFAULT_STAGE = "dev";
@@ -151,6 +153,11 @@ const argv = yargs
           type: "string",
           description: "Value of the secret",
         })
+        .option("format", {
+          type: "string",
+          choices: ["env"],
+          describe: "Output the secret values in the .env format. Only apply to the 'list' action.",
+        })
         .check((argv) => {
           const action = argv["action"];
           if (["get", "remove", "remove-fallback"].includes(action) && !argv.name) {
@@ -188,6 +195,32 @@ const argv = yargs
           ],
         ]);
 
+    }
+  )
+  .command(
+    `${cmd.loadConfig}`,
+    "Load config for app",
+  )
+  .command(
+    `${cmd.bootstrap}`,
+    "Deploys the SST Bootstrap stack into your AWS environment",
+    (yargs) => {
+      return yargs
+        .option("tags", {
+          type: "array",
+          describe: "Tags to add for the Bootstrap stack",
+          default: [],
+        })
+        .example([
+          [
+            `$0 ${cmd.bootstrap}`,
+            "Deploy the bootstrap stack"
+          ],
+          [
+            `$0 ${cmd.bootstrap} --tags key1=value1 key2=value2`,
+            "Tag the bootstrap stack"
+          ],
+        ]);
     }
   )
   .command(
@@ -320,6 +353,8 @@ async function run() {
     [cmd.console]: await import("../scripts/console.mjs"),
     [cmd.secrets]: await import("../scripts/secrets.mjs"),
     [cmd.addCdk]: await import("../scripts/add-cdk.mjs"),
+    [cmd.bootstrap]: await import("../scripts/bootstrap.mjs"),
+    [cmd.loadConfig]: await import("../scripts/load-config.mjs"),
   };
 
   switch (script) {
@@ -342,9 +377,13 @@ async function run() {
     case cmd.start:
     case cmd.addCdk:
     case cmd.console:
-    case cmd.secrets: {
+    case cmd.secrets:
+    case cmd.bootstrap:
+    case cmd.loadConfig: {
       if (script === cmd.start
-        || script === cmd.secrets) {
+        || script === cmd.secrets
+        || script === cmd.bootstrap
+        || script === cmd.loadConfig) {
         logger.info("Using stage:", config.stage);
       }
       internals[script].default(argv, config, cliInfo).catch((e) => {
@@ -397,6 +436,7 @@ function clearBuildPath() {
   if ([
     cmd.console,
     cmd.secrets,
+    cmd.loadConfig,
   ].includes(script)) {
     return;
   }
@@ -568,6 +608,8 @@ async function loadAwsCredentials(script, argv) {
       cmd.start,
       cmd.console,
       cmd.secrets,
+      cmd.bootstrap,
+      cmd.loadConfig,
       cmd.cdk,
     ].includes(script)
   ) {

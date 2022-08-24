@@ -74,6 +74,7 @@ export class Server {
   private readonly pools: Record<string, Pool> = {};
   private readonly opts: ServerOpts;
   private readonly lastRequest: Record<string, string> = {};
+  private readonly lastRequestEnvHash: Record<string, string> = {};
 
   public onStdOut = new EventDelegate<{
     requestId: string;
@@ -310,6 +311,18 @@ export class Server {
     return this.warm[id];
   }
 
+  public isEnvChanged(id: string, hash: string) {
+    const oldHash = this.lastRequestEnvHash[id];
+    return oldHash !== undefined && oldHash !== hash;
+  }
+
+  private generateEnvHash(env: Record<string, string>): string {
+    // Use AWS_ACCESS_KEY_ID as the env hash, because when
+    // Lambda environment changes, Lambda container will restart,
+    // and AWS_ACCESS_KEY_ID will change.
+    return env.AWS_ACCESS_KEY_ID;
+  }
+
   private warm: Record<string, true> = {};
   private async trigger(opts: InvokeOpts): Promise<Response> {
     logger.debug("Triggering", opts.function);
@@ -334,6 +347,17 @@ export class Server {
     }
 
     return new Promise<Response>(resolve => {
+      // Check if the environment hash has changed. Two scenarios this can change:
+      // 1. Config secret value has updated, ie. user updated secret value
+      // 2. Lambda function's AWS credential has changed, ie. container restarted
+      const envHash = this.generateEnvHash(opts.env);
+      if (this.isEnvChanged(opts.function.id, envHash)) {
+        logger.debug("Environment changed, restarting all processes");
+        this.drain(opts.function);
+      }
+      this.lastRequestEnvHash[opts.function.id] = envHash;
+
+      // Use warm processes if any
       pool.requests[opts.payload.context.awsRequestId] = resolve;
       const [key] = Object.keys(pool.waiting);
       if (key) {
@@ -387,11 +411,6 @@ export class Server {
         pool.processes = pool.processes.filter(p => p !== proc);
         delete pool.waiting[id];
       });
-
-      // Kill process every 30 min to force credentials refresh
-      setTimeout(() => {
-        proc.kill();
-      }, 1000 * 60 * 30);
 
       pool.processes.push(proc);
     });
