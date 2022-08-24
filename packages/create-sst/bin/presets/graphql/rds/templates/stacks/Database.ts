@@ -14,8 +14,8 @@ export function Database({ stack }: StackContext) {
       new Config.Parameter(stack, "RDS_SECRET_ARN", {
         value: rds.secretArn,
       }),
-      new Config.Parameter(stack, "RDS_ARN", {
-        value: rds.clusterArn,
+      new Config.Parameter(stack, "RDS_DATABASE_NAME", {
+        value: rds.defaultDatabaseName,
       }),
       new Config.Parameter(stack, "RDS_ARN", {
         value: rds.clusterArn,
