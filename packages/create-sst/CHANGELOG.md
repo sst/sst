@@ -1,5 +1,11 @@
 # create-sst
 
+## 1.9.1
+
+### Patch Changes
+
+- [`c24c50513`](https://github.com/serverless-stack/sst/commit/c24c50513a2da1b553d800a2a8ebe329d802d062) Thanks [@thdxr](https://github.com/thdxr)! - Updated create-sst to use new Config module and provided example of a sample integration test
+
 ## 1.9.0
 
 ## 1.8.4
