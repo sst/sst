@@ -67,15 +67,15 @@ Behind the scene, the `sst load-config` command fetches all the Config values, [
 The following environment variables are set.
 - `SST_APP` with the name of your SST app
 - `SST_STAGE` with the stage
-- For Secrets, `load-config` fetches and decryptes all SSM Parameters prefixed with `/aws/{appName}/{stageName}/secrets/*` and `/aws/{appName}/.fallback/secrets/*`, and sets corresponding environment varaibles `SST_PARAM_*`.
+- For Secrets, `load-config` fetches and decrypts all SSM Parameters prefixed with `/sst/{appName}/{stageName}/secrets/*` and `/sst/{appName}/.fallback/secrets/*`, and sets corresponding environment variables `SST_PARAM_*`.
 
-  ie. `SST_PARAM_STRIPE_KEY` is creatd with value from `/aws/{appName}/{stageName}/secrets/STRIPE_KEY`
-- For Parameters, `load-config` fetches all SSM Parameters prefixed with `/aws/{appName}/{stageName}/parameters/*`, and sets corresponding environment varaibles `SST_PARAM_*`.
+  ie. `SST_PARAM_STRIPE_KEY` is created with value from `/sst/{appName}/{stageName}/secrets/STRIPE_KEY`
+- For Parameters, `load-config` fetches all SSM Parameters prefixed with `/sst/{appName}/{stageName}/parameters/*`, and sets corresponding environment variables `SST_PARAM_*`.
 
-  ie. `SST_PARAM_USER_UPDATED_TOPIC` is created with value from `/aws/{appName}/{stageName}/parameters/USER_UPDATED_TOPIC`
+  ie. `SST_PARAM_USER_UPDATED_TOPIC` is created with value from `/sst/{appName}/{stageName}/parameters/USER_UPDATED_TOPIC`
 
   :::note
-  Secret values ie. `/aws/{appName}/{stageName}/secrets/STRIPE_KEY` are stored as Parameter environment variables `SST_PARAM_STRIPE_KEY`. This is intentional so the [`@serverless-stack/node/config`](packages/node.md#config) helper library doesn't need to re-fetch the secret values at runtime.
+  Secret values ie. `/sst/{appName}/{stageName}/secrets/STRIPE_KEY` are stored as Parameter environment variables `SST_PARAM_STRIPE_KEY`. This is intentional so the [`@serverless-stack/node/config`](packages/node.md#config) helper library doesn't need to re-fetch the secret values at runtime.
   :::
 
 ## Integration tests
