@@ -13,7 +13,7 @@ export function Web({ stack }: StackContext) {
   });
 
   stack.addOutputs({
-    SITE_URL: site.url,
+    SITE: site.url,
   });
 
   return api;
