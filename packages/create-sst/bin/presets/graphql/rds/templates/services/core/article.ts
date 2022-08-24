@@ -11,6 +11,13 @@ export async function create(title: string, url: string) {
   return result;
 }
 
+export async function get(articleID: string) {
+  return (await SQL.DB.selectFrom("article")
+    .selectAll()
+    .where("articleID", "=", articleID)
+    .executeTakeFirst()) as SQL.Row["article"];
+}
+
 export async function list() {
   return await SQL.DB.selectFrom("article")
     .selectAll()
