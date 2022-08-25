@@ -141,37 +141,13 @@ Testing APIs are often more useful than testing Domain code because they test th
 
 ### Testing async workflows
 
-Often you have business log that run asynchronously. For example, an API request can publish a message to a Topic, an EventBus, a Queue, or Kinesis Stream. And the function subscribed to the message gets invoked asychrounously, and writes some data to the DB. In this case, checking the database right after the API returns won't work. The data most likely has not been written to the database yet.
+In the above example, the API request only did 1 thing — creating a new article in the database. Imagine you need to perform more tasks like giving out a badge if it is the 100th article they posted. It is unnecessary to perform all tasks synchronously. Instead, you do the least, and fire an event. Then have a function listening for the event and finish the rest. This way, your API feels a lot faster.
 
-Since we know the the data would be written shortly, we can poll until the data gets written to the database, up to some time.
+For the purpose of demonstrating how to test an API reqeust involving async workflow, imagine for a second that we changed our API. Instead of creating the article synchronously, it fires an event `CREATE_ARTICLE_TOPIC`. And a function gets triggered by the event, and creates the article in the database. In this case, checking the database right after the API returns will no longer work. The article most likely has not been created yet.
 
-Imagine for a second that the article got created asynchronously. We can wrap this:
+However we know the article would eventaully be created, shortly. We can poll the database until the article gets created. If after polling for some time and the article does not show up in the database, we assume something probably went wrong, and mark the test as failed.
 
-```ts
-// List all articles
-const list = await Article.list();
-
-// Check the newly created article exists
-expect(
-  list.find((a) => a.articleID === article.createArticle.id)
-).not.toBeUndefined();
-```
-
-Inside a poller:
-
-```ts
-await eventually(async () => {
-  // List all articles
-  const list = await Article.list();
-
-  // Check the newly created article exists
-  expect(
-    list.find((a) => a.articleID === article.createArticle.id)
-  ).not.toBeUndefined();
-});
-```
-
-And create the poller like this:
+Create a poller function like this:
 
 ```ts
 export async function eventually<T>(cb: () => Promise<T>) {
@@ -192,8 +168,25 @@ export async function eventually<T>(cb: () => Promise<T>) {
 }
 ```
 
-We are polling every 1 second up to 5 seconds. This is often enough as the latency for async event and message is less than 1 second.
+We poll every second up to 5 seconds. 5 seconds is often more than enough as the latency for async event is less than 1 second.
 
+And then wrap the test inside the poller function:
+
+```ts
+await eventually(async () => {
+  // List all articles
+  const list = await Article.list();
+
+  // Check the newly created article exists
+  expect(
+    list.find((a) => a.articleID === article.createArticle.id)
+  ).not.toBeUndefined();
+});
+```
+
+This poller function can be helpful when testing asychronous workflows involving [`Topics`](../constructs/Topic.md), [`Queues`](../constructs/Queue.md), [`EventBuses`](../constructs/EventBus.md), and [`Kinesis Streams`](../constructs/KinesisStream.md)
+
+Note that the poller function is not meant to test scheduled taskses like [`Cron Jobs`](../constructs/Cron.md).
 
 ## Testing stacks
 
