@@ -76,7 +76,7 @@ it("create an article", async () => {
   // Check the newly created article exists
   expect(
     list.find((a) => a.articleID === article.articleID)
-  ).not.toBeNull();
+  ).not.toBeUndefined();
 });
 ```
 
@@ -127,7 +127,7 @@ it("create an article", async () => {
   // Check the newly created article exists
   expect(
     list.find((a) => a.articleID === article.createArticle.id)
-  ).not.toBeNull();
+  ).not.toBeUndefined();
 });
 ```
 
@@ -138,6 +138,61 @@ Note that this test is very similar to the request frontend makes when a user tr
 :::tip
 Testing APIs are often more useful than testing Domain code because they test the app from the perspective of a user. Ignoring most of the implementation details.
 :::
+
+### Testing async workflows
+
+Often you have business log that run asynchronously. For example, an API request can publish a message to a Topic, an EventBus, a Queue, or Kinesis Stream. And the function subscribed to the message gets invoked asychrounously, and writes some data to the DB. In this case, checking the database right after the API returns won't work. The data most likely has not been written to the database yet.
+
+Since we know the the data would be written shortly, we can poll until the data gets written to the database, up to some time.
+
+Imagine for a second that the article got created asynchronously. We can wrap this:
+
+```ts
+// List all articles
+const list = await Article.list();
+
+// Check the newly created article exists
+expect(
+  list.find((a) => a.articleID === article.createArticle.id)
+).not.toBeUndefined();
+```
+
+Inside a poller:
+
+```ts
+await eventually(async () => {
+  // List all articles
+  const list = await Article.list();
+
+  // Check the newly created article exists
+  expect(
+    list.find((a) => a.articleID === article.createArticle.id)
+  ).not.toBeUndefined();
+});
+```
+
+And create the poller like this:
+
+```ts
+export async function eventually<T>(cb: () => Promise<T>) {
+  let exit = false
+  const timeout = setTimeout(() => {
+    exit = true
+  }, 5000)
+  while (true) {
+    try {
+      const result = await cb()
+      clearTimeout(timeout)
+      return result
+    } catch (ex) {
+      if (exit) throw ex
+    }
+    await new Promise((r) => setTimeout(r, 1000))
+  }
+}
+```
+
+We are polling every 1 second up to 5 seconds. This is often enough as the latency for async event and message is less than 1 second.
 
 
 ## Testing stacks
@@ -206,7 +261,7 @@ Tests need to be structured in a way that they can be run reliably in parallel. 
 // Check the newly created article exists
 expect(
   list.find((a) => a.articleID === article.createArticle.id)
-).not.toBeNull();
+).not.toBeUndefined();
 ```
 
 Instead, if we had checked for the total article count, the test might fail if other tests were also creating articles.
