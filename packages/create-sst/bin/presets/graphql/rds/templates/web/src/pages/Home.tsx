@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useTypedQuery } from "@@@app/graphql/urql";
 import Empty from "../components/Empty";
@@ -6,6 +7,9 @@ import Loading from "../components/Loading";
 import * as styles from "./Home.css";
 
 export default function Home() {
+  // Handle empty document cache
+  // https://formidable.com/open-source/urql/docs/basics/document-caching/#adding-typenames
+  const context = useMemo(() => ({ additionalTypenames: ["Article"] }), []);
   const [articles] = useTypedQuery({
     query: {
       articles: {
@@ -14,6 +18,7 @@ export default function Home() {
         title: true,
       },
     },
+    context,
   });
 
   return (

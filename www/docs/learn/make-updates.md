@@ -15,7 +15,7 @@ In `web/src/pages/Article.tsx`, replace the `useTypedQuery` with:
 </ChangeText>
 
 ```ts title="web/src/pages/Article.tsx" {1-3,12-15,19}
-// Handle empty comments document cache
+// Handle empty document cache
 // https://formidable.com/open-source/urql/docs/basics/document-caching/#adding-typenames
 const context = useMemo(() => ({ additionalTypenames: ["Comment"] }), []);
 const [article] = useTypedQuery({
