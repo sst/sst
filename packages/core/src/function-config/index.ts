@@ -14,7 +14,7 @@ export const SECRET_ENV_PREFIX = "SST_SECRET_";
 export const PARAM_ENV_PREFIX = "SST_PARAM_";
 export const FALLBACK_STAGE = ".fallback";
 
-async function ssmGetPrametersByPath(region: string, prefix: string, token?: string): Promise<ParameterList> {
+async function ssmGetParametersByPath(region: string, prefix: string, token?: string): Promise<ParameterList> {
   const ssm = new SSM({ region });
 
   // Create a function that load all pages of secrets
@@ -28,14 +28,14 @@ async function ssmGetPrametersByPath(region: string, prefix: string, token?: str
     .promise();
   return [
     ...(result.Parameters || []),
-    ...(result.NextToken ? await ssmGetPrametersByPath(region, prefix, result.NextToken) : []),
+    ...(result.NextToken ? await ssmGetParametersByPath(region, prefix, result.NextToken) : []),
   ];
 }
 
 export async function listParameters(app: string, stage: string, region: string) {
   const results: Record<string, string> = {};
 
-  const params = await ssmGetPrametersByPath(region, buildSsmPrefixForParameter(app, stage));
+  const params = await ssmGetParametersByPath(region, buildSsmPrefixForParameter(app, stage));
   params.map((p) => {
     const name = parseSsmName(p.Name!).name;
     results[name] = p.Value!;
@@ -47,7 +47,7 @@ export async function listSecrets(app: string, stage: string, region: string) {
   const results: Record<string, Secret> = {};
 
   // Load all secrets
-  const secrets = await ssmGetPrametersByPath(region, buildSsmPrefixForSecret(app, stage));
+  const secrets = await ssmGetParametersByPath(region, buildSsmPrefixForSecret(app, stage));
   secrets.map((p) => {
     const name = parseSsmName(p.Name!).name;
     if (!results[name]) {
@@ -57,7 +57,7 @@ export async function listSecrets(app: string, stage: string, region: string) {
   });
 
   // Load all fallback secrets
-  const fallbacks = await ssmGetPrametersByPath(region, buildSsmPrefixForSecretFallback(app));
+  const fallbacks = await ssmGetParametersByPath(region, buildSsmPrefixForSecretFallback(app));
   fallbacks.map((p) => {
     const name = parseSsmName(p.Name!).name;
     if (!results[name]) {
@@ -131,7 +131,7 @@ async function removeSecretDo(app: string, stage: string, region: string, name: 
     await ssm.deleteParameter({
       Name: buildSsmNameForSecret(app, stage, name),
     }).promise();
-  } catch(e: any) {
+  } catch (e: any) {
     if (e.code === "ParameterNotFound") {
       return;
     }
