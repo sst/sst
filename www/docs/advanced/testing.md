@@ -141,13 +141,13 @@ Testing APIs are often more useful than testing Domain code because they test th
 
 ### Testing async workflows
 
-In the above example, the API request only did 1 thing — creating a new article in the database. Imagine you need to perform more tasks like giving out a badge if it is the 100th article they posted. It is unnecessary to perform all tasks synchronously. Instead, you do the least, and fire an event. Then have a function listening for the event and finish the rest. This way, your API feels a lot faster.
+In the above example, the API request only did one thing — creating a new article in the database. Imagine you needed to perform more tasks like giving out a badge if it's the 100th article they posted. It's unnecessary to perform all tasks synchronously. Instead, you do the least, and fire an event. Then have a function listening for the event and finish the rest. This way, your API is a lot faster.
 
-For the purpose of demonstrating how to test an API reqeust involving async workflow, imagine for a second that we changed our API. Instead of creating the article synchronously, it fires an event `CREATE_ARTICLE_TOPIC`. And a function gets triggered by the event, and creates the article in the database. In this case, checking the database right after the API returns will no longer work. The article most likely has not been created yet.
+For the purpose of demonstrating how to test an API request involving an async workflow, imagine for a second that we changed our API. Instead of creating the article synchronously, it fires an event `CREATE_ARTICLE_TOPIC`. And a function gets triggered by the event, and creates the article in the database. In this case, checking the database right after the API returns will no longer work. The article most likely would not have been created yet.
 
-However we know the article would eventaully be created, shortly. We can poll the database until the article gets created. If after polling for some time and the article does not show up in the database, we assume something probably went wrong, and mark the test as failed.
+However, we know that the article will eventually be created. We can poll the database until the article gets created. If after polling for sometime the article does not show up in the database, we assume something probably went wrong, and mark the test as failed.
 
-Create a poller function like this:
+You can create a poller function that looks something like this:
 
 ```ts
 export async function eventually<T>(cb: () => Promise<T>) {
@@ -168,7 +168,7 @@ export async function eventually<T>(cb: () => Promise<T>) {
 }
 ```
 
-We poll every second up to 5 seconds. 5 seconds is often more than enough as the latency for async event is less than 1 second.
+We poll every second up to 5 seconds. 5 seconds is often more than enough as the latency for async event is less than a second.
 
 And then wrap the test inside the poller function:
 
@@ -186,7 +186,9 @@ await eventually(async () => {
 
 This poller function can be helpful when testing asychronous workflows involving [`Topics`](../constructs/Topic.md), [`Queues`](../constructs/Queue.md), [`EventBuses`](../constructs/EventBus.md), and [`Kinesis Streams`](../constructs/KinesisStream.md)
 
-Note that the poller function is not meant to test scheduled taskses like [`Cron Jobs`](../constructs/Cron.md).
+:::note
+The poller function is not meant to test scheduled tasks like [`Cron Jobs`](../constructs/Cron.md), since these are typically scheduled for much later. It makes more sense to test their domain code instead.
+:::
 
 ## Testing stacks
 
