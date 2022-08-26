@@ -1,5 +1,5 @@
 import fs from "fs/promises";
-import { fetch } from "node-fetch";
+import fetch from "node-fetch";
 import path from "path";
 import { exec, execSync } from "child_process";
 import { applyOperation } from "fast-json-patch/index.mjs";
