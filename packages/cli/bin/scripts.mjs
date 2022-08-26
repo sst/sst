@@ -58,6 +58,7 @@ const cmd = {
   addCdk: "add-cdk",
   update: "update",
   secrets: "secrets",
+  parameters: "parameters",
   bootstrap: "bootstrap",
   telemetry: "telemetry",
   loadConfig: "load-config",
@@ -192,6 +193,69 @@ const argv = yargs
           [
             `$0 ${cmd.secrets} remove-fallback STRIPE_KEY3`,
             "Remove the fallback for a secret"
+          ],
+        ]);
+
+    }
+  )
+  .command(
+    `${cmd.parameters} [action] [name] [value]`,
+    "Manage app parameters",
+    (yargs) => {
+      addOptions(cmd.parameters)(yargs);
+      return yargs
+        .positional("action", {
+          type: "string",
+          choices: ["list", "get", "set", "remove", "set-fallback", "remove-fallback"],
+          description: "Action to perform",
+        })
+        .positional("name", {
+          type: "string",
+          description: "Name of the parameter",
+        })
+        .positional("value", {
+          type: "string",
+          description: "Value of the parameter",
+        })
+        .option("format", {
+          type: "string",
+          choices: ["env"],
+          describe: "Output the parameter values in the .env format. Only apply to the 'list' action.",
+        })
+        .check((argv) => {
+          const action = argv["action"];
+          if (["get", "remove", "remove-fallback"].includes(action) && !argv.name) {
+            throw new Error("Please specify a parameter name");
+          }
+          if (["set", "set-fallback"].includes(action) && (!argv.name || !argv.value)) {
+            throw new Error("Please specify a parameter name and value");
+          }
+          return true;
+        })
+        .example([
+          [
+            `$0 ${cmd.parameters} list`,
+            "Fetch and decrypt all parameters"
+          ],
+          [
+            `$0 ${cmd.parameters} get STRIPE_KEY`,
+            "Fetch and decrypt a parameter"
+          ],
+          [
+            `$0 ${cmd.parameters} set STRIPE_KEY sk_test_123`,
+            "Encrypt and update a parameter"
+          ],
+          [
+            `$0 ${cmd.parameters} remove STRIPE_KEY`,
+            "Remove a parameter"
+          ],
+          [
+            `$0 ${cmd.parameters} set-fallback STRIPE_KEY sk_test_123`,
+            "Encrypt and update the fallback for a parameter"
+          ],
+          [
+            `$0 ${cmd.parameters} remove-fallback STRIPE_KEY3`,
+            "Remove the fallback for a parameter"
           ],
         ]);
 
@@ -352,6 +416,7 @@ async function run() {
     [cmd.remove]: await import("../scripts/remove.mjs"),
     [cmd.console]: await import("../scripts/console.mjs"),
     [cmd.secrets]: await import("../scripts/secrets.mjs"),
+    [cmd.parameters]: await import("../scripts/parameters.mjs"),
     [cmd.addCdk]: await import("../scripts/add-cdk.mjs"),
     [cmd.bootstrap]: await import("../scripts/bootstrap.mjs"),
     [cmd.loadConfig]: await import("../scripts/load-config.mjs"),
@@ -378,6 +443,7 @@ async function run() {
     case cmd.addCdk:
     case cmd.console:
     case cmd.secrets:
+    case cmd.parameters:
     case cmd.bootstrap:
     case cmd.loadConfig: {
       if (script === cmd.start
