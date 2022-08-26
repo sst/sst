@@ -1,5 +1,11 @@
 # create-sst
 
+## 1.9.3
+
+### Patch Changes
+
+- [`db955a264`](https://github.com/serverless-stack/sst/commit/db955a2644c436e0ba2600289e7e2a74c4753791) Thanks [@thdxr](https://github.com/thdxr)! - Fix node-fetch import
+
 ## 1.9.2
 
 ### Patch Changes
