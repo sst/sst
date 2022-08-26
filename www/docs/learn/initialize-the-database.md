@@ -4,32 +4,52 @@ title: Initialize the Database
 
 import ChangeText from "@site/src/components/ChangeText";
 
-Now let's check back in on the `sst start` command that we ran back in the [Create a New Project](create-a-new-project.md) chapter.
+Now let's check back in on the `sst start` command that we started in the [Create a New Project](create-a-new-project.md) chapter.
 
 Once your local development environment is up and running, you should see the following printed out in the terminal.
 
-```bash
+```
 ==========================
 Starting Live Lambda Dev
 ==========================
 
-SST Console: https://console.sst.dev/my-sst-app/frank/local
+SST Console: https://console.sst.dev/my-sst-app/Jay/local
 Debug session started. Listening for requests...
 ```
 
-Head over to the [SST Console](../console.md) link: `https://console.sst.dev/my-sst-app/frank/local` in the browser, and select the **RDS** explorer.
+<ChangeText>
+
+Head over to the [Console](../console.md) link in your browser — `https://console.sst.dev/my-sst-app/Jay/local`
+
+</ChangeText>
+
+:::info
+The SST Console is a web based dashboard to manage your SST apps.
+:::
+
+<ChangeText>
+
+Then navigate to the **RDS** tab.
+
+</ChangeText>
 
 ![Console RDS tab](/img/initialize-database/console-rds-tab.png)
 
+:::tip
+The Console needs a self-signed certificate to work with Safari or Brave. [Follow these steps to set it up.](../console.md#working-with-safari-or-brave).
+:::
+
+At this point we don't have any tables in our database. To add them in, we are going to run a migration.
+
 ### Migrations
 
-Here's you'll see all the migrations that are available in our app. Recall from the [Project Structure](project-structure.md) chapter that all our database migrations are placed in `services/migrations`.
+Migrations are a set of files that contain the queries necessary to make updates to our database schema. They have an `up` function, that's run while applying the migration. And a `down` function, that's run while rolling back the migration.
 
-You can create a new migration by running `npm run gen migration new`. This command will ask for the name of a migration and it'll generate a new file with the current timestamp.
+Recall from the [Project Structure](project-structure.md) chapter that the migration files are placed in `services/migrations/`.
 
-By default we have the first migration for you, called `article`. You'll find a `services/migrations/1650000012557_article.mjs` file.
+The starter creates the first migration for you. It's called `article` and you'll find it in `services/migrations/1650000012557_article.mjs`.
 
-We use [Kysely](https://koskimas.github.io/kysely/) to build our SQL queries in a type-safe way. We use that for our migrations as well.
+We use [Kysely](https://koskimas.github.io/kysely/) to build our SQL queries in a typesafe way. We use that for our migrations as well.
 
 ```js title="services/migrations/1650000012557_article.mjs"
 import { Kysely } from "kysely";
@@ -40,10 +60,10 @@ import { Kysely } from "kysely";
 export async function up(db) {
   await db.schema
     .createTable("article")
-    .addColumn("articleID", "text", col => col.primaryKey())
-    .addColumn("title", "text", col => col.notNull())
-    .addColumn("url", "text", col => col.notNull())
-    .addColumn("created", "timestamp", col => col.defaultTo("now()"))
+    .addColumn("articleID", "text", (col) => col.primaryKey())
+    .addColumn("title", "text", (col) => col.notNull())
+    .addColumn("url", "text", (col) => col.notNull())
+    .addColumn("created", "timestamp", (col) => col.defaultTo("now()"))
     .execute();
 
   await db.schema
@@ -62,21 +82,29 @@ export async function down(db) {
 }
 ```
 
-Our migrations have an `up` function, this is run when applying the migration. While the `down` function is called while rolling back the migration.
+In this case, our migration is creating a table, called `article`, to store the links that are submitted. We are also adding an index to fetch them. The `down` function just removes the table and the index.
 
-In this case, our migration is creating a table (called `article`) to store our links and adding an index to it. The `down` function just removes them.
+:::info
+Migration files are named with a timestamp to prevent naming conflicts when you are working with your team.
+:::
+
+You can create a new migration by running `npm run gen migration new`. This command will ask for the name of a migration and it'll generate a new file with the current timestamp.
+
+We'll do this later in the tutorial. For now, let's apply our first migration.
 
 ### Run a migration
 
 <ChangeText>
 
-Hit the **Migrations** button on the right, and apply the **article** migration.
+Click on the **Migrations** button on the top left. And click the **Apply** button on the **article** migration.
 
 </ChangeText>
 
 ![Console apply migration](/img/initialize-database/console-apply-migration.png)
 
-This'll create a table named **article**. It stores all the links that've been submitted to our app.
+This'll create a table named `article`.
+
+In the **Migrations** tab you'll see all the migrations in our app, and their status.
 
 ### Run a query
 
@@ -93,16 +121,13 @@ You should see the query returns **0 rows**.
 :::info Behind the scenes
 Let's quickly recap what we've done so far.
 
-1. We ran `sst start`.
-2. That started up our [Live Lambda Dev](../live-lambda-development.md) environment and the [SST Console](../console.md).
-3. Deployed the infrastructure for our app to AWS:
-   1. The RDS database in `stacks/Database.ts`.
-   2. The GraphQL API in `stacks/Api.ts` that connects to the database.
-   3. The React app as a static site in `stacks/Web.ts` that connects to the API.
-4. We then opened up the Console and ran the  migration in `services/migrations/`.
-5. It created an `article` table to store the links our users will submit.
+1. We ran `sst start` to start the [Live Lambda Dev](../live-lambda-development.md) environment and the [SST Console](../console.md).
+2. Deployed the infrastructure for our app to AWS:
+   - Including a RDS PostgreSQL database based on `stacks/Database.ts`.
+3. We then opened up the Console and ran a migration in `services/migrations/`.
+4. It created an `article` table that we'll use to store the links our users will submit.
 
-Finally, to test things we queried our database.
+Finally, to test that everything is working, we queried our database.
 :::
 
 Next, let's look at the frontend.
