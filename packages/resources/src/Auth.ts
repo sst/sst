@@ -5,14 +5,16 @@ import { FunctionDefinition } from "./Function";
 
 export interface AuthProps {
   /**
-   * The API to attach auth routes to
-   */
-  api: Api;
-
-  /**
    * The function that will handle authentication
    */
   authenticator: FunctionDefinition;
+}
+
+export interface ApiAttachmentProps {
+  /**
+   * The API to attach auth routes to
+   */
+  api: Api;
 
   /**
    * Optionally specify the prefix to mount authentication routes
@@ -35,19 +37,23 @@ export interface AuthProps {
  * })
  */
 export class Auth extends Construct {
+  public readonly SST_AUTH_TOKEN: Secret;
+  private readonly authenticator: FunctionDefinition;
   constructor(scope: Construct, id: string, props: AuthProps) {
     super(scope, id);
+    this.SST_AUTH_TOKEN = new Secret(scope, "SST_AUTH_TOKEN");
+    this.authenticator = props.authenticator;
+  }
+
+  public attach(scope: Construct, props: ApiAttachmentProps) {
     const prefix = props.prefix || "/auth";
     const path = `ANY ${prefix}/{proxy+}`;
-
     props.api.addRoutes(scope, {
       [path]: {
         type: "function",
-        function: props.authenticator,
+        function: this.authenticator,
       },
     });
-    props.api
-      .getFunction(path)!
-      .addConfig([new Secret(scope, "SST_AUTH_TOKEN")]);
+    props.api.getFunction(path)!.addConfig([this.SST_AUTH_TOKEN]);
   }
 }
