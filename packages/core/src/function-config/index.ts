@@ -9,7 +9,10 @@ type Secret = {
   fallbackValue?: string,
 }
 
+type Parameter = string | undefined;
+
 const SECRET_UPDATED_AT_ENV = "SST_ADMIN_SECRET_UPDATED_AT";
+const PARAMETER_UPDATED_AT_ENV = "SST_ADMIN_PARAMETER_UPDATED_AT";
 export const SECRET_ENV_PREFIX = "SST_SECRET_";
 export const PARAM_ENV_PREFIX = "SST_PARAM_";
 export const FALLBACK_STAGE = ".fallback";
@@ -139,6 +142,59 @@ async function removeSecretDo(app: string, stage: string, region: string, name: 
   }
 }
 
+export async function getParameter(app: string, stage: string, region: string, name: string) {
+  const ssm = new SSM({ region });
+  const result = await ssm
+    .getParameter({
+      Name: buildSsmNameForParameter(app, stage, name),
+    })
+    .promise();
+
+  let parameter: Parameter;
+  const parts = parseSsmName(result.Parameter?.Name!);
+  if (parts.stage === stage) {
+    parameter = result.Parameter?.Value;
+  }
+  return parameter;
+}
+
+export async function setParameter(app: string, stage: string, region: string, name: string, value: string) {
+  console.log(`Setting ${name}`);
+  await setParameterDo(app, stage, region, name, value);
+  await restartFunctionsUsingParameter(app, stage, region, name);
+}
+
+export async function removeParameter(app: string, stage: string, region: string, name: string) {
+  console.log(`Removing ${name}`);
+  await removeParameterDo(app, stage, region, name);
+  await restartFunctionsUsingParameter(app, stage, region, name);
+}
+
+async function setParameterDo(app: string, stage: string, region: string, name: string, value: string) {
+  const ssm = new SSM({ region });
+
+  await ssm.putParameter({
+    Name: buildSsmNameForParameter(app, stage, name),
+    Value: value,
+    Type: "String",
+    Overwrite: true,
+  }).promise();
+}
+
+async function removeParameterDo(app: string, stage: string, region: string, name: string) {
+  const ssm = new SSM({ region });
+  try {
+    await ssm.deleteParameter({
+      Name: buildSsmNameForParameter(app, stage, name),
+    }).promise();
+  } catch (e: any) {
+    if (e.code === "ParameterNotFound") {
+      return;
+    }
+    throw e;
+  }
+}
+
 export function buildSsmPrefixForSecret(app: string, stage: string) {
   return `/sst/${app}/${stage}/secrets/`;
 }
@@ -220,6 +276,61 @@ async function restartFunctionsUsingSecret(app: string, stage: string, region: s
               Variables: {
                 ...(ret.Environment?.Variables || {}),
                 [SECRET_UPDATED_AT_ENV]: Date.now().toString(),
+              },
+            },
+          }).promise()
+        );
+      }));
+  }));
+}
+
+async function restartFunctionsUsingParameter(app: string, stage: string, region: string, name: string) {
+  const s3 = new S3({ region });
+  const lambda = new Lambda({ region });
+
+  await Bootstrap.init(region);
+
+  // If the account is not in the bootstrap, it is not using this secret.
+  if (!Bootstrap.assets.bucketName) {
+    return [];
+  }
+
+  console.log(`Restarting all functions using ${name}`);
+
+  // Download all files in folder
+  const listRet = await callAwsWithRetry(() =>
+    s3.listObjectsV2({
+      Bucket: Bootstrap.assets.bucketName!,
+      Prefix: `stackMetadata/app.${app}/stage.${stage}/`,
+    }).promise()
+  );
+
+  // Get all functions using this secret
+  await Promise.all((listRet.Contents || []).map(async (c) => {
+    // Download the file
+    const ret = await callAwsWithRetry(() =>
+      s3.getObject({
+        Bucket: Bootstrap.assets.bucketName!,
+        Key: c.Key!,
+      }).promise()
+    );
+    // Parse the file
+    const json = JSON.parse(ret.Body!.toString());
+    await Promise.all(json
+      .filter((p: any) => p.type === "Function" && p.data.parameters && p.data.parameters.includes(name))
+      .map(async (p: any) => {
+        const ret = await callAwsWithRetry(() =>
+          lambda.getFunctionConfiguration({
+            FunctionName: p.data.arn,
+          }).promise()
+        );
+        await callAwsWithRetry(() =>
+          lambda.updateFunctionConfiguration({
+            FunctionName: p.data.arn,
+            Environment: {
+              Variables: {
+                ...(ret.Environment?.Variables || {}),
+                [PARAMETER_UPDATED_AT_ENV]: Date.now().toString(),
               },
             },
           }).promise()
