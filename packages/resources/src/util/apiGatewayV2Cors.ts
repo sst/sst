@@ -81,7 +81,7 @@ export function buildCorsConfig(
 
   // Handle cors: CorsProps
   return {
-    allowCredentials: cors.allowCredentials,
+    allowCredentials: cors.allowCredentials || false,
     allowHeaders: cors.allowHeaders || ["*"],
     allowMethods: (cors.allowMethods || ["ANY"]).map(
       (method) =>
