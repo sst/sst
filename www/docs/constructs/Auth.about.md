@@ -289,7 +289,7 @@ export function AuthStack({ stack }: StackContext) {
 
 Then import the auth construct into another stack with `use` and attach the permissions.
 
-```js {13} title="stacks/ApiStack.ts"
+```js {12} title="stacks/ApiStack.ts"
 import { Api, StackContext } from "@serverless-stack/resources";
 import { AuthStack } from "./AuthStack"
 
