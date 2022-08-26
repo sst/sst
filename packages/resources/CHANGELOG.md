@@ -1,5 +1,14 @@
 # @serverless-stack/resources
 
+## 1.9.4
+
+### Patch Changes
+
+- [#2005](https://github.com/serverless-stack/sst/pull/2005) [`c6232577d`](https://github.com/serverless-stack/sst/commit/c6232577d1b1e2d3aef4202ef5298630a3142927) Thanks [@fwang](https://github.com/fwang)! - Api: fix removing cors options causes error
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.9.4
+
 ## 1.9.3
 
 ### Patch Changes
