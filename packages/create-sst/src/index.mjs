@@ -1,5 +1,5 @@
 import fs from "fs/promises";
-import { fetch } from "undici"
+import { fetch } from "node-fetch";
 import path from "path";
 import { exec, execSync } from "child_process";
 import { applyOperation } from "fast-json-patch/index.mjs";
@@ -7,7 +7,7 @@ import { pathToFileURL } from "url";
 
 export function extract() {
   return /** @type {const} */ ({
-    type: "extract",
+    type: "extract"
   });
 }
 
@@ -17,7 +17,7 @@ export function extract() {
 export function remove(path) {
   return /** @type {const} */ ({
     type: "remove",
-    path,
+    path
   });
 }
 
@@ -30,7 +30,7 @@ export function remove(path) {
 export function patch(opts) {
   return /** @type {const} */ ({
     type: "patch",
-    ...opts,
+    ...opts
   });
 }
 
@@ -44,7 +44,7 @@ export function patch(opts) {
 export function install(opts) {
   return /** @type {const} */ ({
     type: "install",
-    ...opts,
+    ...opts
   });
 }
 
@@ -57,7 +57,7 @@ export function install(opts) {
 export function cmd(opts) {
   return /** @type {const} */ ({
     type: "cmd",
-    ...opts,
+    ...opts
   });
 }
 
@@ -67,7 +67,7 @@ export function cmd(opts) {
 export function extend(path) {
   return /** @type {const} */ ({
     type: "extend",
-    path: path,
+    path: path
   });
 }
 
@@ -110,14 +110,14 @@ export async function execute(opts) {
         await execute({
           source: step.path,
           destination: opts.destination,
-          extended: true,
+          extended: true
         });
         break;
       }
       case "remove": {
         await fs.rm(path.join(opts.destination, step.path), {
           recursive: true,
-          force: true,
+          force: true
         });
         break;
       }
@@ -132,7 +132,7 @@ export async function execute(opts) {
       }
       case "cmd": {
         execSync(step.cmd, {
-          cwd: path.join(opts.destination, step.cwd || ""),
+          cwd: path.join(opts.destination, step.cwd || "")
         });
         break;
       }
@@ -146,7 +146,7 @@ export async function execute(opts) {
         const key = step.dev ? "devDependencies" : "dependencies";
         json[key] = json[key] || {};
         const results = await Promise.all(
-          step.packages.map(async (pkg) => {
+          step.packages.map(async pkg => {
             let [, version] = pkg.substring(1).split("@");
             if (!version) version = "^" + (await getLatestPackageVersion(pkg));
             return [pkg.replace("@" + version, ""), version];
@@ -164,7 +164,8 @@ export async function execute(opts) {
   if (!opts.extended) {
     // App name will be used in CloudFormation stack names,
     // so we need to make sure it's valid.
-    const app = path.basename(opts.destination)
+    const app = path
+      .basename(opts.destination)
       // replace _ with -
       .replace(/_/g, "-")
       // remove non-alpha numeric dash characters
@@ -204,5 +205,7 @@ async function listFiles(dir) {
  * @param {string} pkg
  */
 async function getLatestPackageVersion(pkg) {
-  return fetch(`https://registry.npmjs.org/${pkg}/latest`).then(res => res.json()).then(res => res.version)
+  return fetch(`https://registry.npmjs.org/${pkg}/latest`)
+    .then(res => res.json())
+    .then(res => res.version);
 }
