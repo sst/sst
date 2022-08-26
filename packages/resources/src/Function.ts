@@ -998,6 +998,9 @@ export class Function extends lambda.Function implements SSTConstruct {
         secrets: (config || [])
           .filter((c) => c instanceof Secret)
           .map((c) => c.name),
+        parameters: (config || [])
+          .filter((c) => c instanceof Parameter)
+          .map((c) => c.name),
       },
     };
   }
