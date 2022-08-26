@@ -28,16 +28,19 @@ export const handler = AuthHandler({
 })
 ```
 
-### Attach to API
+### Setup construct
 
-SST Auth works by adding additional routes to your API to handle authentication. Import the construct and attach it to your API and point it to your auth function.
+SST Auth works by adding additional routes to your API to handle authentication. Import the construct and attach it to your API and point it to your auth function. You can use the same auth construct with multiple APIs.
 
 ```js title="stacks/api.ts"
 import { Auth } from "@serverless-stack/resources"
 
-new Auth(stack, "auth", {
+const auth = new Auth(stack, "auth", {
+  authenticator: "functions/auth.handler",
+})
+
+auth.attach(stack, {
   api: myApi,
-  function: "functions/auth.handler",
   prefix: "/auth" // optional
 })
 ```
@@ -147,7 +150,18 @@ In this case we're forwarding the token through a query parameter but we also su
 
 ### Using the session
 
-The session token can either be passed as a cookie, which will happen automatically with the cookie strategy, or passed explicitly by your frontend in a header: `authorization: Bearer <token>`.
+The session token can either be passed as a cookie, which will happen automatically with the cookie strategy, or passed explicitly by your frontend in a header: `authorization: Bearer <token>`. Make sure your API routes can access `SST_AUTH_TOKEN` - you can do this easily by setting it as a default for all routes.
+
+```js title="stacks/api.ts"
+const api = new Api(stack, "api", {
+  defaults: {
+    function: {
+      config: [auth.SST_AUTH_TOKEN],
+    }
+  },
+  routes: { ... }
+})
+```
 
 Then you can retreive the session with `useSession()`. Here's an example of a GraphQL query to return 
 
