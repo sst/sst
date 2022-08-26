@@ -1,5 +1,11 @@
 # create-sst
 
+## 1.9.2
+
+### Patch Changes
+
+- [`ba4044adb`](https://github.com/serverless-stack/sst/commit/ba4044adb25570ab671479901878d9003798cba5) Thanks [@thdxr](https://github.com/thdxr)! - Switch to node-fetch from undici to avoid node 16.5 requirement
+
 ## 1.9.1
 
 ### Patch Changes
