@@ -7,7 +7,7 @@ export type AccessLogRetentionConfig =
   | keyof typeof logs.RetentionDays
   | logs.RetentionDays;
 
-import { App, AppDeployProps, Auth, Stack } from "../src";
+import { App, AppDeployProps, Auth, Cognito, Stack } from "../src";
 
 test("non-namespaced-props", async () => {
   const deployProps = {} as AppDeployProps;
@@ -23,9 +23,9 @@ test("defaultRemovalPolicy", () => {
   const app = new App();
   app.setDefaultRemovalPolicy("destroy");
   const stack = new Stack(app, "stack");
-  new Auth(stack, "Auth", {});
+  new Cognito(stack, "Auth", {});
   hasResourceTemplate(stack, "AWS::Cognito::UserPool", {
-    DeletionPolicy: "Delete",
+    DeletionPolicy: "Delete"
   });
 });
 
@@ -49,7 +49,7 @@ test("stackName is default", () => {
 test("stackName is parameterized", () => {
   const app = new App();
   const stack = new Stack(app, "stack", {
-    stackName: "my-app-dev-stack",
+    stackName: "my-app-dev-stack"
   });
   expect(stack.stackName).toBe("my-app-dev-stack");
   expect(() => {
@@ -60,7 +60,7 @@ test("stackName is parameterized", () => {
 test("stackName is not parameterized", () => {
   const app = new App();
   new Stack(app, "stack", {
-    stackName: "my-stack",
+    stackName: "my-stack"
   });
   expect(() => {
     app.synth();
@@ -75,6 +75,6 @@ test("stack tags", () => {
   app.synth();
   expect(stack.tags.tagValues()).toEqual({
     "sst:app": "my-app",
-    "sst:stage": "dev",
+    "sst:stage": "dev"
   });
 });

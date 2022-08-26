@@ -4,8 +4,13 @@
 import fs from "fs";
 import url from "url";
 import path from "path";
-import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import {
+  AssetHashType,
+  AssetStaging,
+  DockerImage,
+  FileSystem,
+} from "aws-cdk-lib";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 /**
@@ -59,7 +64,7 @@ export interface BundlingOptions {
    * default is `CUSTOM`. This means that only updates to the source will cause
    * the asset to rebuild.
    */
-  readonly assetHashType?: cdk.AssetHashType;
+  readonly assetHashType?: AssetHashType;
 
   /**
    * Specify a custom hash for this asset. If `assetHashType` is set it must
@@ -86,7 +91,7 @@ export interface BundlingOptions {
 export function bundle(options: BundlingOptions): lambda.AssetCode {
   const { entry, runtime, outputPathSuffix, installCommands } = options;
 
-  const stagedir = cdk.FileSystem.mkdtemp("python-bundling-");
+  const stagedir = FileSystem.mkdtemp("python-bundling-");
   const hasDeps = stageDependencies(entry, stagedir);
   const hasInstallCommands = stageInstallCommands(
     installCommands || [],
@@ -95,9 +100,9 @@ export function bundle(options: BundlingOptions): lambda.AssetCode {
 
   const depsCommand = chain([
     hasDeps || hasInstallCommands
-      ? `rsync -r ${BUNDLER_DEPENDENCIES_CACHE}/. ${cdk.AssetStaging.BUNDLING_OUTPUT_DIR}/${outputPathSuffix}`
+      ? `rsync -r ${BUNDLER_DEPENDENCIES_CACHE}/. ${AssetStaging.BUNDLING_OUTPUT_DIR}/${outputPathSuffix}`
       : "",
-    `rsync -r . ${cdk.AssetStaging.BUNDLING_OUTPUT_DIR}/${outputPathSuffix}`,
+    `rsync -r . ${AssetStaging.BUNDLING_OUTPUT_DIR}/${outputPathSuffix}`,
   ]);
 
   // Determine which dockerfile to use. When dependencies are present, we use a
@@ -116,7 +121,7 @@ export function bundle(options: BundlingOptions): lambda.AssetCode {
     path.join(stagedir, dockerfile)
   );
 
-  const image = cdk.DockerImage.fromBuild(stagedir, {
+  const image = DockerImage.fromBuild(stagedir, {
     buildArgs: {
       IMAGE: runtime.bundlingImage.image,
     },

@@ -2,6 +2,7 @@ node_modules
 **/*.swp
 .build
 *.log
-dist
 cdk.out
 .DS_Store
+dist
+

@@ -527,7 +527,7 @@ import * as appsync from "@aws-cdk/aws-appsync-alpha";
 import { Auth, AppSyncApi } from "@serverless-stack/resources";
 
 // Create a User Pool using the Auth construct
-const auth = new Auth(this, "Auth");
+const auth = new Cognito(this, "Auth");
 
 new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",

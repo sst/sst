@@ -1,5 +1,5 @@
-import * as cdk from "aws-cdk-lib";
-import * as cxapi from "aws-cdk-lib/cx-api";
+import { App, StageSynthesisOptions } from "aws-cdk-lib";
+import { CloudAssembly } from "aws-cdk-lib/cx-api";
 import { isStackConstruct, isSSTDebugStack } from "./Construct.js";
 
 /**
@@ -23,7 +23,7 @@ export interface DebugAppDeployProps {
 /**
  * The DebugApp construct is used internally by SST to create the resources needed to power Live Lambda Development.
  */
-export class DebugApp extends cdk.App {
+export class DebugApp extends App {
   /**
    * The name of the app. This comes from the `name` in your `sst.json`.
    */
@@ -53,7 +53,7 @@ export class DebugApp extends cdk.App {
     this.account = process.env.CDK_DEFAULT_ACCOUNT || "my-account";
   }
 
-  synth(options: cdk.StageSynthesisOptions = {}): cxapi.CloudAssembly {
+  synth(options: StageSynthesisOptions = {}): CloudAssembly {
     // Check app has stack
     const stacks = this.node.children.filter((child) => isSSTDebugStack(child));
     if (stacks.length > 1) {

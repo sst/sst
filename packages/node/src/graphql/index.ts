@@ -1,83 +1,67 @@
+import { Context } from "aws-lambda";
+import { APIGatewayProxyEventV2 } from "aws-lambda/trigger/api-gateway-proxy";
+import { GraphQLSchema } from "graphql";
 import {
   ExecutionContext,
   FormatPayloadParams,
   getGraphQLParameters,
   processRequest,
+  ProcessRequestOptions,
   Request,
-  shouldRenderGraphiQL,
 } from "graphql-helix";
-
+import { Handler, useEvent, useLambdaContext } from "../context/handler";
 import {
-  Context,
-  APIGatewayProxyEventV2,
-  APIGatewayProxyHandlerV2,
-} from "aws-lambda";
-import { GraphQLSchema } from "graphql";
-import {
-  IExecutableSchemaDefinition,
-  makeExecutableSchema,
-} from "@graphql-tools/schema";
+  useHeaders,
+  useMethod,
+  useJsonBody,
+  useQueryParams,
+} from "../context/http";
 
-type HandlerConfig<C> = {
+interface GraphQLHandlerConfig<C> {
   formatPayload?: (params: FormatPayloadParams<C, any>) => any;
+  /**
+   * This function specifies the ctx object passed to the GraphQL resolver. This is usually not needed
+   */
   context?: (request: {
     event: APIGatewayProxyEventV2;
     context: Context;
     execution: ExecutionContext;
   }) => Promise<C>;
-} & (
-  | { schema: GraphQLSchema }
-  | {
-      resolvers: IExecutableSchemaDefinition<C>["resolvers"];
-      typeDefs: IExecutableSchemaDefinition<C>["typeDefs"];
-    }
-);
+  schema: GraphQLSchema;
+  execute?: ProcessRequestOptions<any, any>["execute"];
+}
 
-export function createGQLHandler<T>(config: HandlerConfig<T>) {
-  const schema =
-    "schema" in config
-      ? config.schema
-      : makeExecutableSchema({
-          typeDefs: config.typeDefs,
-          resolvers: config.resolvers,
-        });
-  const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
+export function GraphQLHandler<C>(config: GraphQLHandlerConfig<C>) {
+  return Handler("api", async () => {
     const request: Request = {
-      body: event.body ? JSON.parse(event.body) : undefined,
-      query: event.queryStringParameters,
-      method: event.requestContext.http.method,
-      headers: event.headers,
+      body: useJsonBody(),
+      query: useQueryParams(),
+      method: useMethod(),
+      headers: useHeaders(),
     };
 
-    if (shouldRenderGraphiQL(request)) {
-      return {
-        statusCode: 302,
-        headers: {
-          Location: `https://studio.apollographql.com/sandbox/explorer?endpoint=https://${event.requestContext.domainName}`,
-        },
-      };
-    }
     const { operationName, query, variables } = getGraphQLParameters(request);
 
-    // Validate and execute the query
     const result = await processRequest({
       operationName,
       query,
       variables,
       request,
-      schema,
+      execute: config.execute,
+      schema: config.schema,
       formatPayload: config.formatPayload as any,
       contextFactory: async (execution) => {
         if (config.context) {
           return config.context({
-            event: event,
-            context,
+            event: useEvent("api"),
+            context: useLambdaContext(),
             execution,
           });
         }
-        return undefined;
+        return;
       },
     });
+
     if (result.type === "RESPONSE") {
       return {
         statusCode: result.status,
@@ -87,10 +71,9 @@ export function createGQLHandler<T>(config: HandlerConfig<T>) {
         ),
       };
     }
+
     return {
       statusCode: 500,
     };
-  };
-
-  return handler;
+  });
 }

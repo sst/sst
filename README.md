@@ -94,7 +94,7 @@ SST also comes with [a set of serverless specific higher-level CDK constructs][r
 - [Cron](https://docs.sst.dev/constructs/Cron) for building cron jobs
 - [Queue](https://docs.sst.dev/constructs/Queue) for creating queues
 - [Bucket](https://docs.sst.dev/constructs/Bucket) for adding S3 buckets
-- [Auth](https://docs.sst.dev/constructs/Auth) for configuring authentication
+- [Cognito](https://docs.sst.dev/constructs/Cognito) for configuring cognito
 - [Table](https://docs.sst.dev/constructs/Table) for adding DynamoDB tables
 - [Topic](https://docs.sst.dev/constructs/Topic) for creating pub/sub systems
 - [RemixSite](https://docs.sst.dev/constructs/RemixSite) for creating Next.js websites

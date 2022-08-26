@@ -96,6 +96,7 @@ app.bootstrap({
     "../packages/resources/src/ApiGatewayV1Api.ts",
     "../packages/resources/src/App.ts",
     "../packages/resources/src/Auth.ts",
+    "../packages/resources/src/Cognito.ts",
     "../packages/resources/src/Bucket.ts",
     "../packages/resources/src/Cron.ts",
     "../packages/resources/src/Config.ts",

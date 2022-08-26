@@ -1,4 +1,4 @@
-import { Api, Auth, StackContext } from "@serverless-stack/resources";
+import { Api, Cognito, StackContext } from "@serverless-stack/resources";
 
 export function MyStack({ stack }: StackContext) {
   // Create Api
@@ -7,19 +7,19 @@ export function MyStack({ stack }: StackContext) {
       "GET /private": "functions/private.main",
       "GET /public": {
         function: "functions/public.main",
-        authorizer: "iam",
-      },
-    },
+        authorizer: "iam"
+      }
+    }
   });
 
   // Create auth provider
-  const auth = new Auth(stack, "Auth", {
+  const auth = new Cognito(stack, "Auth", {
     identityPoolFederation: {
       twitter: {
         consumerKey: "gyMbPOiwefr6x63SjIW8NN0d1",
-        consumerSecret: "qxld8zic5c2eyahqK3gjGLGQaOTogGfAgHh17MYOIcOUR9l2Nz",
-      },
-    },
+        consumerSecret: "qxld8zic5c2eyahqK3gjGLGQaOTogGfAgHh17MYOIcOUR9l2Nz"
+      }
+    }
   });
 
   // Allow authenticated users invoke API
@@ -28,6 +28,6 @@ export function MyStack({ stack }: StackContext) {
   // Show the API endpoint and other info in the output
   stack.addOutputs({
     ApiEndpoint: api.url,
-    IdentityPoolId: auth.cognitoIdentityPoolId,
+    IdentityPoolId: auth.cognitoIdentityPoolId
   });
 }
