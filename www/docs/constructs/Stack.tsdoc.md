@@ -24,6 +24,22 @@ The current stage of the stack.
 
 ## Methods
 An instance of `Stack` has the following methods.
+### addDefaultFunctionConfig
+
+```ts
+addDefaultFunctionConfig(config)
+```
+_Parameters_
+- __config__ <span class='mono'>Array&lt;<span class='mono'><span class="mono">[Secret](Secret#secret)</span> | <span class="mono">[Parameter](Parameter#parameter)</span></span>&gt;</span>
+
+
+Adds additional default config to be applied to all Lambda functions in the stack.
+
+
+```js
+stack.addDefaultFunctionConfig([STRIPE_KEY]);
+```
+
 ### addDefaultFunctionEnv
 
 ```ts
@@ -101,13 +117,6 @@ stack.addOutputs({
 });
 ```
 
-### createStackMetadataResource
-
-```ts
-createStackMetadataResource(metadata)
-```
-_Parameters_
-- __metadata__ <span class="mono">any</span>
 ### getAllFunctions
 
 ```ts
@@ -140,3 +149,11 @@ stack.setDefaultFunctionProps({
   runtime: "nodejs16.x",
 });
 ```
+
+### setStackMetadata
+
+```ts
+setStackMetadata(metadata)
+```
+_Parameters_
+- __metadata__ <span class="mono">any</span>

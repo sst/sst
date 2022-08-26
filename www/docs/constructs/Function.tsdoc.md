@@ -50,7 +50,7 @@ new Function(stack, "Function", {
 
 ### config?
 
-_Type_ : <span class='mono'>Array&lt;<span class='mono'><span class="mono">[Parameter](Parameter#parameter)</span> | <span class="mono">[Secret](Secret#secret)</span></span>&gt;</span>
+_Type_ : <span class='mono'>Array&lt;<span class='mono'><span class="mono">[Secret](Secret#secret)</span> | <span class="mono">[Parameter](Parameter#parameter)</span></span>&gt;</span>
 
 Configure environment variables for the function
 
@@ -309,6 +309,24 @@ The AWS generated URL of the Function.
 
 ## Methods
 An instance of `Function` has the following methods.
+### addConfig
+
+```ts
+addConfig(config)
+```
+_Parameters_
+- __config__ <span class='mono'>Array&lt;<span class='mono'><span class="mono">[Secret](Secret#secret)</span> | <span class="mono">[Parameter](Parameter#parameter)</span></span>&gt;</span>
+
+
+Attaches additional configs to function
+
+
+```js
+const STRIPE_KEY = new Config.Secret(stack, "STRIPE_KEY");
+
+fn.addConfig([STRIPE_KEY]);
+```
+
 ### attachPermissions
 
 ```ts
