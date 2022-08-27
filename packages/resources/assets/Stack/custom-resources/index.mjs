@@ -9,15 +9,22 @@ const s3 = new AWS.S3();
 export const handler = wrapper(async (cfnRequest) => {
   log("onEventHandler", cfnRequest);
 
-  const bucket = process.env.BUCKET_NAME;
+  if (cfnRequest.ResourceType === "Custom::StackMetadata") {
+    handleStackMetadata(cfnRequest);
+  }
+  else if (cfnRequest.ResourceType === "Custom::AuthJWTKeys") {
+  }
+});
+
+async function handleStackMetadata(cfnRequest) {
   const {
     App: app,
     Stage: stage,
     Stack: stack,
     Metadata: metadata,
+    BootstrapBucketName: bucket,
   } = cfnRequest.ResourceProperties;
 
-  // Process request
   switch (cfnRequest.RequestType) {
     case "Create":
     case "Update":
@@ -29,7 +36,7 @@ export const handler = wrapper(async (cfnRequest) => {
     default:
       throw new Error("Unsupported request type");
   }
-});
+}
 
 async function saveMetadata(bucket, app, stage, stack, metadata) {
   log("saveMetadata()", { bucket, app, stage, stack });
@@ -47,11 +54,17 @@ async function saveMetadata(bucket, app, stage, stack, metadata) {
 async function removeMetadata(bucket, app, stage, stack) {
   log("removeMetadata()", bucket, stack);
 
-  // delete metadata from S3 bucket
-  const resp = await s3.deleteObject({
-    Bucket: bucket,
-    Key: `stackMetadata/app.${app}/stage.${stage}/stack.${stack}.json`,
-  }).promise();
-
-  log(`response`, resp);
+  try {
+    const resp = await s3.deleteObject({
+      Bucket: bucket,
+      Key: `stackMetadata/app.${app}/stage.${stage}/stack.${stack}.json`,
+    }).promise();
+    log(`response`, resp);
+  } catch(e) {
+    if (e.code === "NoSuchBucket") {
+      log(e);
+      return;
+    }
+    throw e;
+  }
 }
