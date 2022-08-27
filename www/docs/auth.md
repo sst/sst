@@ -196,6 +196,8 @@ The `useSession` hook relies on SST's context system to discover the authenticat
 There is also a barebones `Handler` function that can be used to handle other types of requests. Here's how you'd implement a typical API request to a rest route handled by a lambda. Since this is typesafe, `event` will be properly typed as will the expected response type.
 
 ```js title="services/functions/rest/foo.ts"
+import { Handler } from "@serverless-stack/node/context"
+
 export const getSessionTypeHandler = Handler("api", async (event) => {
   const session = useSession()
 
@@ -319,6 +321,30 @@ LinkAdapter({
 })
 ```
 
+### Custom Adapters
+
+You can create your own adapters for handling flows that do not work out of the box. A common example would be to conditionally use different providers based on multi-tenant configuration.
+
+Here is an example:
+```js
+import { createAdapter } from "@serverless-stack/node/auth"
+
+const google = GoogleAdapter({...})
+const link = LinkAdapter({...})
+
+export const MultiTenantAdapter = createAdapter(
+  () => {
+    const tenantID = useQueryParam("tenantID")
+    const tenantInfo = Tenant.fromID(tenantID)
+
+    if (tenantInfo.googleAuth)
+      return google()
+
+    return link()
+  }
+);
+```
+
 ## Session
 
 The Session module can be used to generate a response for the `onSuccess` callbacks across the various adapters.
@@ -401,3 +427,18 @@ const jwt = Session.create({
   },
 })
 ```
+
+## FAQ
+
+### Is SST Auth storing any sensitive data?
+
+SST Auth is 100% stateless and all of its mechanisms are implemented through short lived JWT tokens. While there are some tradeoffs with this approach it greatly reduces the complexity of the API and simplifies the implementation.
+
+### What about password based auth?
+
+As of now all of SST Auth's adapters can be implemented in a stateless way and do not require storing anything in a database.
+
+Introducing password auth would require storing and retreiving password data. Additionally it requires more complicated integrations for registering, logging in, reset password flows, which we cannot handle much of automatically since there are heavy UX implications.
+
+We strongly recommend passwordless auth mechanisms to keep things simple for yourself and your users. That said if you are interested in passwords drop us a message in our [Discord](https://discord.gg/sst) and we can chat about your needs.
+
