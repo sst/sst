@@ -9,6 +9,7 @@ export async function analyze(input: Input) {
     platform: "node",
     entryPoints: [input.target],
     format: "esm",
+    mainFields: ["module", "main"],
     bundle: true,
     metafile: true,
     write: false,
