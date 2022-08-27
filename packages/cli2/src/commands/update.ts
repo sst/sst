@@ -23,7 +23,7 @@ export async function Update(opts: Opts) {
   const files = await find(root);
   const version =
     opts.version ||
-    (await fetch("https://registry.npmjs.org/@serverless-stack/core/latest")
+    (await fetch(`https://registry.npmjs.org/@serverless-stack/core/latest`)
       .then((resp) => resp.json())
       .then((resp: any) => resp.version));
 

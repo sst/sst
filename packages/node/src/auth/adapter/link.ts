@@ -25,7 +25,7 @@ export const LinkAdapter = /* @__PURE__ */ createAdapter(
     const signer = createSigner({
       expiresIn: 1000 * 60 * 10,
       /* @ts-expect-error */
-      key: Config.SST_AUTH_PUBLIC,
+      key: Config.SST_AUTH_PRIVATE,
       algorithm: "RS512",
     });
 
@@ -50,7 +50,7 @@ export const LinkAdapter = /* @__PURE__ */ createAdapter(
           const verifier = createVerifier({
             algorithms: ["RS512"],
             /* @ts-expect-error */
-            key: Config.SST_AUTH_PRIVATE,
+            key: Config.SST_AUTH_PUBLIC,
           });
           const jwt = verifier(token);
           return config.onSuccess(jwt);
