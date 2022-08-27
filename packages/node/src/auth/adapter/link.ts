@@ -1,5 +1,5 @@
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
-import { Config } from "aws-sdk";
+import { Config } from "../../config/index.js";
 import { createSigner, createVerifier } from "fast-jwt";
 import {
   useDomainName,
