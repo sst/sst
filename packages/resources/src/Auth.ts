@@ -43,8 +43,12 @@ export class Auth extends Construct {
 
   private readonly apis = new Set<Api>();
 
+  /** @internal */
+  public static list = new Set<Auth>();
+
   constructor(scope: Construct, id: string, props: AuthProps) {
     super(scope, id);
+    Auth.list.add(this);
     this.SST_AUTH_PUBLIC = new Secret(scope, "SST_AUTH_PUBLIC");
     this.SST_AUTH_PRIVATE = new Secret(scope, "SST_AUTH_PRIVATE");
     this.authenticator = props.authenticator;
@@ -75,6 +79,11 @@ export class Auth extends Construct {
         if (!fn) continue;
         fn.addConfig([this.SST_AUTH_PUBLIC]);
       }
+    }
+  }
+  public static injectConfig() {
+    for (const auth of Auth.list) {
+      auth.injectConfig();
     }
   }
 }
