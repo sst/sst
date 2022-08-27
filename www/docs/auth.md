@@ -31,15 +31,18 @@ SST Auth is designed quite differently from those services. The typical authenti
 2. The result of this handshake is a set of validated claims about who the user is, like their email. These claims should be looked up in a user database to see if the user exists, creating the user otherwise.
 3. A session token should be generated so that following requests contain information about which user is making them.
 
-The key here is SST Auth has out of the box support for steps 1 and 3. It **intentionally** does not manage user storage. These details tend to be very specific to your application as best if they live alongside the rest of your data and business logic.
+The key here is SST Auth has out of the box support for steps 1 and 3. It **intentionally** does not manage user storage. These details tend to be very specific to your application and is best if they live alongside the rest of your data and business logic.
 
-The seperation of responsibilities into things that are undifferentiated (1+3) and things that are not (2) is what makes SST Auth powerful and flexible to even the most complex authentication scenarios.
+The seperation of responsibilities into things that are undifferentiated (1 + 3) and things that are not (2) is what makes SST Auth powerful and flexible to even the most complex authentication scenarios.
 
 ## Setup
 
 ### Create AuthHandler
 
-Create a new function in your functions folder that will handle authentication requests. Typically this will be in `services/functions/auth.ts`. We'll leave the provider configuration empty for now.
+Create a new function in your functions folder that will handle authentication requests. Typically this will be in `services/functions/auth.ts`.
+
+`AuthHandler` returns an authenticator function that do authentication handshakes and issue sessions with simple configuration.
+We'll leave the provider configuration empty for now.
 
 ```ts title="services/functions/auth.ts"
 import { AuthHandler } from "@serverless-stack/node/auth"
@@ -50,7 +53,7 @@ export const handler = AuthHandler({
 
 ### Setup construct
 
-SST Auth works by adding additional routes to your API to handle authentication. Import the construct and attach it to your API and point it to your auth function. You can use the same auth construct with multiple APIs.
+SST Auth works by adding additional routes to your API to handle authentication. Import the construct, attach it to your API and point it to your auth function. You can use the same auth construct with multiple APIs.
 
 ```js title="stacks/api.ts"
 import { Auth } from "@serverless-stack/resources"
@@ -113,31 +116,28 @@ You can follow the Config docs to understand how to set values across your vario
 
 ### Create session
 
-At this point your frontend can redirect to `/auth/google/authorize` to kick off the authentication flow. If everything is configured right your browser will print out the set of claims returned from Google.
+At this point your frontend can redirect to `/auth/<provider-name>/authorize` to kick off the authentication flow. If everything is configured right your browser will print out the set of claims returned from Google.
 
-For a real application you'll want to handle User lookup/creation in the `onSuccess` callback. SST Auth very intentionally avoids providing abstractions for user management, these tend to be very specific to what you're building so should be managed by you.
+For a real application you'll want to handle User lookup/creation in the `onSuccess` callback. SST Auth very intentionally avoids providing abstractions for user management, these tend to be very specific to what you're building so this should be managed by you.
 
-However we do provide a way to issue a session once you have retreived the User. 
+However, we do provide a way to create a session once you have retreived the User.
 
-First make sure to generate an `SST_AUTH_TOKEN` to securely sign your tokens.
-
-```bash
-sst secrets set SST_AUTH_TOKEN $(openssl rand -hex 24)
-```
-
-Then, if you're using Typescript, you can define the shape of your various sessions like this.
+When using Typescript you can define the various session types in your application so that creating them and retreiving them in requests is completely typesafe.
 
 ```js title="services/functions/auth.ts"
 declare module "@serverless-stack/node/auth" {
   export interface SessionTypes {
     user: {
       userID: string
+      tenantID: string // example for a multi tenant app
     }
   }
 }
 ```
 
-This declares a new session of type `user` which will contain a `userID` in its properties. Then you can update your `onSuccess` callback to a token representing the session and redirect the user. 
+At first you may only have a `user` session that represents a user and contains a `userID` in its properties. In the future you may support other types of sessions like an `apikey` that represents server to server communication.
+
+Once the session type is defined, you can update your `onSuccess` callback to do user lookup and creation from the claims. Once you know the userID, you can generate create a new session and redirect them back to your frontend with the token in the query parameter.
 
 ```js title="services/functions/auth.ts"
 import { AuthHandler, Session } from "@serverless-stack/node/auth"
@@ -150,10 +150,16 @@ export const handler = AuthHandler({
       clientID: Config.GOOGLE_CLIENT_ID,
       onSuccess: async (tokenset) => {
         const claims = tokenset.claims()
-        const user = /* lookup user by claims.email or create if they don't exist */
+        const user = 
+        /* ------------ To Implement ------------ */
+        /* This is where you will lookup the user */
+        /* in your database by the email in the   */
+        /* claims and create them if they do not  */
+        /* exist.                                 */
+        /* -------------------------------------- */
 
         // Will redirect to https://example.com?token=xxx
-        return Session.parameter({
+        return Session.queryParameter({
           redirect: "https://example.com",
           type: "user",
           properties: {
@@ -166,24 +172,11 @@ export const handler = AuthHandler({
 })
 ```
 
-In this case we're forwarding the token through a query parameter but we also support cookies, which requires a bit more configuratioin but reduces the burden on your frontend.
-
 ### Using the session
 
-The session token can either be passed as a cookie, which will happen automatically with the cookie strategy, or passed explicitly by your frontend in a header: `authorization: Bearer <token>`. Make sure your API routes can access `SST_AUTH_TOKEN` - you can do this easily by setting it as a default for all routes.
+The session token must be passed by your frontend in a header in this format: `authorization: Bearer <token>` for all authenticated requests.
 
-```js title="stacks/api.ts"
-const api = new Api(stack, "api", {
-  defaults: {
-    function: {
-      config: [auth.SST_AUTH_TOKEN],
-    }
-  },
-  routes: { ... }
-})
-```
-
-Then you can retreive the session with `useSession()`. Here's an example of a GraphQL query to return 
+This allows you to retreive the session with `useSession()`. Here's an example of a GraphQL query that uses the current user.
 
 ```js title="services/functions/graphql/types/foo.ts"
 builder.mutationFields(t => ({
@@ -198,15 +191,24 @@ builder.mutationFields(t => ({
 }))
 ```
 
-If you are not using our GraphQL handler and instead using normal REST routes, be sure to define your function with the `Handler` function.
+The `useSession` hook relies on SST's context system to discover the authentication token. If using the `GraphQLHandler` it will transparently initialize this system so everything should work without additional configuration. 
+
+There is also a barebones `Handler` function that can be used to handle other types of requests. Here's how you'd implement a typical API request to a rest route handled by a lambda. Since this is typesafe, `event` will be properly typed as will the expected response type.
 
 ```js title="services/functions/rest/foo.ts"
-export const handler = Handler("api", async () => {
+export const getSessionTypeHandler = Handler("api", async (event) => {
   const session = useSession()
+
+  return {
+    statusCode: 200,
+    body: session.type
+  }
 })
 ```
 
 ## Adapters
+
+Adapters provide out of the box functionality for various authentication providers and are used to configure providers. This includes third parties over OAuth and OIDC as well as internal flows like magic link.
 
 ### OauthAdapter
 
@@ -302,25 +304,26 @@ You will need to implement an `onLink` callback to send the link through your pr
 
 ```js
 // Frontend
-location.href = "https://api.example.com/auth/link/start?email=user@example.com"
+location.href = "https://api.example.com/auth/link/authorize?email=user@example.com"
 
 // Provider configuration
 LinkAdapter({
   onLink: async (link, claims) => {
-    emailLinkTo(claims.email, link)
+  /* ------------ To Implement ------------ */
+  /* This function receives a link that     */
+  /* you can send over email or sms so      */
+  /* that the user can login.               */
+  /* -------------------------------------- */
   },
-  onSuccess: async (claims) => {
-    const user = User.fromEmail(claims.email)
-    // Create session
-  },
+  onSuccess: async (claims) => {},
 })
 ```
 
 ## Session
 
-The Session module can be used to generate a response for the `onSuccess` callbacks across the various adapters. It'll generate a session and redirect the user back to your frontend. Note this depends on a secret being set: `SST_AUTH_TOKEN`
+The Session module can be used to generate a response for the `onSuccess` callbacks across the various adapters.
 
-### parameter
+### queryParameter
 
 This issues a new Session and redirects to the specified url with a `token=xxx` query parameter added.
 ```js title="services/functions/auth.ts"
@@ -335,7 +338,9 @@ return Session.parameter({
 
 ### cookie
 
-The cookie strategy for Session management requires some additional configuration on your API but less work on your frontend. You must allow cookies to be sent cross-origin from your frontend, which is usually running on `localhost` during development and another subdomain in production.
+The cookie strategy for Session management requires some additional configuration on your API but is less work on your frontend. The API will issue a cookie that can be automatically included with all future requests so your frontend does not have to think about token storage.
+
+You must allow cookies to be sent cross-origin from your frontend, which is usually running on `localhost` during development and another subdomain in production.
 
 Update your API with the correct `cors` options
 
@@ -350,4 +355,49 @@ new Api(stack, "api", {
 })
 ```
 
-Then in your frontend when making `fetch` requests to your api, make sure you specify `credentials: include` with the request.
+Then when creating the session use the `cookie` function instead of `queryParameter`
+
+```js title="services/functions/auth.ts"
+return Session.cookie({
+  redirect: "https://example.com",
+  type: "user",
+  properties: {
+    userID: user.userID
+  },
+})
+```
+
+In your frontend when making requests to your api, make sure you specify `credentials: include` with the request so that the cookie is included.
+
+#### fetch
+
+```js
+fetch("/path", {
+  credentials: "include"
+})
+```
+
+#### urql
+
+```js
+export const urql = createClient({
+  fetchOptions: () => {
+    return {
+      credentials: include
+    }
+  },
+})
+```
+
+### create
+
+You can also directly generate the token and then handle it however you want. This is most useful in integration tests when creating dummy users to make requests to your API.
+
+```js
+const jwt = Session.create({
+  type: "user",
+  properties: {
+    userID: user.userID
+  },
+})
+```
