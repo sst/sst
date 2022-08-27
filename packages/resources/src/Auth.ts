@@ -40,6 +40,9 @@ export class Auth extends Construct {
   private readonly SST_AUTH_PUBLIC: Secret;
   private readonly SST_AUTH_PRIVATE: Secret;
   private readonly authenticator: FunctionDefinition;
+
+  private readonly apis = new Set<Api>();
+
   constructor(scope: Construct, id: string, props: AuthProps) {
     super(scope, id);
     this.SST_AUTH_PUBLIC = new Secret(scope, "SST_AUTH_PUBLIC");
@@ -48,6 +51,11 @@ export class Auth extends Construct {
   }
 
   public attach(scope: Construct, props: ApiAttachmentProps) {
+    if (this.apis.has(props.api))
+      throw new Error(
+        "This auth construct has already been attached to this API"
+      );
+    this.apis.add(props.api);
     const prefix = props.prefix || "/auth";
     const path = `ANY ${prefix}/{proxy+}`;
     props.api.addRoutes(scope, {
@@ -57,5 +65,16 @@ export class Auth extends Construct {
       },
     });
     props.api.getFunction(path)!.addConfig([this.SST_AUTH_PRIVATE]);
+  }
+
+  /** @internal */
+  public injectConfig() {
+    for (const api of this.apis) {
+      for (const route of api.routes) {
+        const fn = api.getFunction(route);
+        if (!fn) continue;
+        fn.addConfig([this.SST_AUTH_PUBLIC]);
+      }
+    }
   }
 }
