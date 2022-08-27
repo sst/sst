@@ -24,6 +24,7 @@ import { Update } from "./commands/update.js";
 import { Scrap } from "./commands/scrap.js";
 import { Build } from "./commands/build.js";
 import { Secrets } from "./commands/secrets.js";
+import { analyze } from "./commands/analyze.js";
 const { program } = caporal;
 
 program
@@ -38,6 +39,15 @@ program
   .action((req) => {
     Update({
       version: req.args.version?.toString(),
+    });
+  });
+
+program
+  .command("analyze", "Analyze function")
+  .argument("[target]", "Function to analyze")
+  .action((req) => {
+    analyze({
+      target: req.args.target!.toString(),
     });
   });
 
