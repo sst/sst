@@ -37,11 +37,13 @@ export interface ApiAttachmentProps {
  * })
  */
 export class Auth extends Construct {
-  private readonly SST_AUTH_TOKEN: Secret;
+  private readonly SST_AUTH_PUBLIC: Secret;
+  private readonly SST_AUTH_PRIVATE: Secret;
   private readonly authenticator: FunctionDefinition;
   constructor(scope: Construct, id: string, props: AuthProps) {
     super(scope, id);
-    this.SST_AUTH_TOKEN = new Secret(scope, "SST_AUTH_TOKEN");
+    this.SST_AUTH_PUBLIC = new Secret(scope, "SST_AUTH_PUBLIC");
+    this.SST_AUTH_PRIVATE = new Secret(scope, "SST_AUTH_PRIVATE");
     this.authenticator = props.authenticator;
   }
 
@@ -54,6 +56,6 @@ export class Auth extends Construct {
         function: this.authenticator,
       },
     });
-    props.api.getFunction(path)!.addConfig([this.SST_AUTH_TOKEN]);
+    props.api.getFunction(path)!.addConfig([this.SST_AUTH_PRIVATE]);
   }
 }
