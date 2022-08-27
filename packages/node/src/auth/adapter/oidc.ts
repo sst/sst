@@ -4,7 +4,7 @@ import {
   useCookie,
   useDomainName,
   useFormData,
-  usePath
+  usePath,
 } from "../../context/http.js";
 import { createAdapter } from "./adapter.js";
 
@@ -23,7 +23,7 @@ export interface OidcConfig extends OidcBasicConfig {
 
 export const OidcAdapter = /* @__PURE__ */ createAdapter(
   (config: OidcConfig) => {
-    return async function() {
+    return async function () {
       const [step] = usePath().slice(-1);
       const callback =
         "https://" +
@@ -33,7 +33,7 @@ export const OidcAdapter = /* @__PURE__ */ createAdapter(
       const client = new config.issuer.Client({
         client_id: config.clientID,
         redirect_uris: [callback],
-        response_types: ["id_token"]
+        response_types: ["id_token"],
       });
 
       if (step === "authorize") {
@@ -43,7 +43,7 @@ export const OidcAdapter = /* @__PURE__ */ createAdapter(
           scope: config.scope,
           response_mode: "form_post",
           nonce,
-          state
+          state,
         });
 
         const expires = new Date(Date.now() + 1000 * 30).toUTCString();
@@ -51,11 +51,11 @@ export const OidcAdapter = /* @__PURE__ */ createAdapter(
           statusCode: 302,
           cookies: [
             `auth-nonce=${nonce}; HttpOnly; expires=${expires}`,
-            `auth-state=${state}; HttpOnly; expires=${expires}`
+            `auth-state=${state}; HttpOnly; expires=${expires}`,
           ],
           headers: {
-            location: url
-          }
+            location: url,
+          },
         };
       }
 
@@ -63,12 +63,11 @@ export const OidcAdapter = /* @__PURE__ */ createAdapter(
         const form = useFormData();
         if (!form) throw new Error("Missing body");
         const params = Object.fromEntries(form.entries());
-        console.log(params);
         const nonce = useCookie("auth-nonce");
         const state = useCookie("auth-state");
         const tokenset = await client.callback(callback, params, {
           nonce,
-          state
+          state,
         });
         return config.onSuccess(tokenset, client);
       }

@@ -5,15 +5,35 @@ description: "Learn to manage users and authentication in your SST app."
 
 SST Auth is a lightweight authentication solution for your applications. With a simple set of configuration you can deploy a function attached to your API that can handle various authentication flows.
 
-When compared to other alternatives like Cognito, SST Auth does much less. It's focused entirely on handling the authentication flow and not on application level concerns like user storage or permissions. This is an intentional decision and it allows for simplicity and flexibility while supporting things that are difficult with other solutions, like integration testing, multi-tenancy and typesafety.
+## Overview
 
+SST Auth is composed of the following pieces:
 
-### Features
-- Designed to work with OAuth and OIDC providers
-- Out of the box support for popular sign-in services
-- Support for magic link based login
-- Utilities for creating and retreiving sessions
-- Can be extended with custom providers to support more complex workflows, like multi-tenant SSO
+1. A construct that can be attached to your API that provides authentication routes.
+   - Handles secure generation of RSA keypair to sign sessions
+2. `AuthHandler` that can be used to define an authenticator function that handles authentication flows across various providers.
+   - High level adapters for common providers like Google and Twitch
+   - OIDC and OAuth adapters that work with any compatible service
+   - Link adapter to generate login links that can be sent over email or SMS
+   - Can be extended with custom adapters to support more complex workflows, like multi-tenant SSO
+3. `Session` library for issuing and validating authentication sessions.
+   - Implemented with stateless JWT tokens that are signed with public/private keypairs
+   - Various strategies for passing token to frontend (query parameter or cookie)
+   - Fully typesafe to ensure session issuing and validating 
+
+## Architecture
+
+Auth is thought to be complex but with modern standards, it is simple to implement. Managed auth services you may have tried before tend to bundle many several seemingly related features together which usually leads to a challenging situations.
+
+SST Auth is designed quite differently from those services. The typical authentication flow can be thought of like this:
+
+1. Perform handshake with authentication strategy. This could be OAuth with a third party provider or something as simple as an email link that needs to be clicked.
+2. The result of this handshake is a set of validated claims about who the user is, like their email. These claims should be looked up in a user database to see if the user exists, creating the user otherwise.
+3. A session token should be generated so that following requests contain information about which user is making them.
+
+The key here is SST Auth has out of the box support for steps 1 and 3. It **intentionally** does not manage user storage. These details tend to be very specific to your application as best if they live alongside the rest of your data and business logic.
+
+The seperation of responsibilities into things that are undifferentiated (1+3) and things that are not (2) is what makes SST Auth powerful and flexible to even the most complex authentication scenarios.
 
 ## Setup
 

@@ -1,12 +1,12 @@
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
-import { createSigner } from "fast-jwt";
+import { Config } from "aws-sdk";
+import { createSigner, createVerifier } from "fast-jwt";
 import {
   useDomainName,
   usePath,
   useQueryParam,
   useQueryParams,
 } from "../../context/http.js";
-import { KEY, verifier } from "../jwt.js";
 import { createAdapter } from "./adapter.js";
 
 interface LinkConfig {
@@ -22,7 +22,12 @@ interface LinkConfig {
 
 export const LinkAdapter = /* @__PURE__ */ createAdapter(
   (config: LinkConfig) => {
-    const signer = createSigner({ expiresIn: 1000 * 60 * 10, key: KEY });
+    const signer = createSigner({
+      expiresIn: 1000 * 60 * 10,
+      /* @ts-expect-error */
+      key: Config.SST_AUTH_PUBLIC,
+      algorithm: "RS512",
+    });
 
     return async function () {
       const [step] = usePath().slice(-1);
@@ -42,6 +47,11 @@ export const LinkAdapter = /* @__PURE__ */ createAdapter(
         const token = useQueryParam("token");
         if (!token) throw new Error("Missing token parameter");
         try {
+          const verifier = createVerifier({
+            algorithms: ["RS512"],
+            /* @ts-expect-error */
+            key: Config.SST_AUTH_PRIVATE,
+          });
           const jwt = verifier(token);
           return config.onSuccess(jwt);
         } catch {

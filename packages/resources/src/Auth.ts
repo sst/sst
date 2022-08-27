@@ -37,7 +37,7 @@ export interface ApiAttachmentProps {
  * })
  */
 export class Auth extends Construct {
-  public readonly SST_AUTH_TOKEN: Secret;
+  private readonly SST_AUTH_TOKEN: Secret;
   private readonly authenticator: FunctionDefinition;
   constructor(scope: Construct, id: string, props: AuthProps) {
     super(scope, id);
