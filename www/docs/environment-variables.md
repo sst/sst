@@ -68,7 +68,7 @@ In this chapter we'll look at how they work.
    };
    ```
 
-3. In your function code, use the [`@serverless-stack/node/config`](packages/node.md#config) helper library to reference the parameter value:
+3. In your function code, use the [`@serverless-stack/node/config`](packages/node.md#config) helper library to reference the parameter value (you may need to manually install the library with npm/yarn if you created your app using [`create-sst`](packages/create-sst.md) ):
 
    ```ts
    import { Config } from "@serverless-stack/node/config";
@@ -198,7 +198,7 @@ Since `Config` enforces Parameter values to be the same for all functions using 
    npx sst secrets set STRIPE_KEY sk_test_abc123
    ```
 
-4. Finally in your function code, use the [`@serverless-stack/node/config`](packages/node.md#config) helper library to reference the secret value:
+4. Finally in your function code, use the [`@serverless-stack/node/config`](packages/node.md#config) helper library to reference the secret value (you may need to manually install the library with npm/yarn if you created your app using [`create-sst`](packages/create-sst.md) ) :
 
    ```ts
    import { Config } from "@serverless-stack/node/config";
