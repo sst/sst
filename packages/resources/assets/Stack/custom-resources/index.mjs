@@ -9,10 +9,11 @@ const s3 = new AWS.S3();
 export const handler = wrapper(async (cfnRequest) => {
   log("onEventHandler", cfnRequest);
 
-  if (cfnRequest.ResourceType === "Custom::StackMetadata") {
-    handleStackMetadata(cfnRequest);
-  }
-  else if (cfnRequest.ResourceType === "Custom::AuthJWTKeys") {
+  switch (cfnRequest.ResourceType) {
+    case "Custom::StackMetadata":
+      await handleStackMetadata(cfnRequest);
+    case "Custom::AuthKeys":
+      break;
   }
 });
 
@@ -42,11 +43,13 @@ async function saveMetadata(bucket, app, stage, stack, metadata) {
   log("saveMetadata()", { bucket, app, stage, stack });
 
   // upload metadata to S3 bucket
-  const resp = await s3.putObject({
-    Bucket: bucket,
-    Key: `stackMetadata/app.${app}/stage.${stage}/stack.${stack}.json`,
-    Body: JSON.stringify(metadata),
-  }).promise();
+  const resp = await s3
+    .putObject({
+      Bucket: bucket,
+      Key: `stackMetadata/app.${app}/stage.${stage}/stack.${stack}.json`,
+      Body: JSON.stringify(metadata),
+    })
+    .promise();
 
   log(`response`, resp);
 }
@@ -55,12 +58,14 @@ async function removeMetadata(bucket, app, stage, stack) {
   log("removeMetadata()", bucket, stack);
 
   try {
-    const resp = await s3.deleteObject({
-      Bucket: bucket,
-      Key: `stackMetadata/app.${app}/stage.${stage}/stack.${stack}.json`,
-    }).promise();
+    const resp = await s3
+      .deleteObject({
+        Bucket: bucket,
+        Key: `stackMetadata/app.${app}/stage.${stage}/stack.${stack}.json`,
+      })
+      .promise();
     log(`response`, resp);
-  } catch(e) {
+  } catch (e) {
     if (e.code === "NoSuchBucket") {
       log(e);
       return;
