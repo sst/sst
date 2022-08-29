@@ -1,28 +1,33 @@
-import { test, expect } from "vitest";
+import { test, expect, describe } from "vitest";
 import { App, Api, Auth, Stack } from "../src";
 import { hasResource } from "./helper";
 
-test("adds route", () => {
+describe("auth", () => {
   const stack = new Stack(new App(), "stack");
-  const api = new Api(stack, "api", {});
-  new Auth(stack, "auth", {
-    api,
-    function: "test/lambda.handler"
+  const auth = new Auth(stack, "auth", {
+    authenticator: "test/lambda.handler",
   });
-  hasResource(stack, "AWS::ApiGatewayV2::Route", {
-    RouteKey: "ANY /auth/{proxy+}"
-  });
-});
 
-test("custom prefix", () => {
-  const stack = new Stack(new App(), "stack");
-  const api = new Api(stack, "api", {});
-  new Auth(stack, "auth", {
-    api,
-    function: "test/lambda.handler",
-    prefix: "/custom"
+  test("adds route", () => {
+    const stack = new Stack(new App(), "stack");
+    const api = new Api(stack, "api", {});
+    auth.attach(stack, {
+      api,
+    });
+    hasResource(stack, "AWS::ApiGatewayV2::Route", {
+      RouteKey: "ANY /auth/{proxy+}",
+    });
   });
-  hasResource(stack, "AWS::ApiGatewayV2::Route", {
-    RouteKey: "ANY /custom/{proxy+}"
+
+  test("custom prefix", () => {
+    const stack = new Stack(new App(), "stack");
+    const api = new Api(stack, "api_custom", {});
+    auth.attach(stack, {
+      api,
+      prefix: "/custom",
+    });
+    hasResource(stack, "AWS::ApiGatewayV2::Route", {
+      RouteKey: "ANY /custom/{proxy+}",
+    });
   });
 });
