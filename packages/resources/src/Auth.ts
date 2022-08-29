@@ -6,6 +6,7 @@ import { FunctionDefinition } from "./Function";
 import { Stack } from "./index.js";
 import { App } from "./App.js";
 import { CustomResource } from "aws-cdk-lib";
+import { FunctionConfig } from "@serverless-stack/core";
 
 export interface AuthProps {
   /**
@@ -53,28 +54,34 @@ export class Auth extends Construct {
   constructor(scope: Construct, id: string, props: AuthProps) {
     super(scope, id);
     Auth.list.add(this);
-    this.SST_AUTH_PUBLIC = new Secret(scope, "SST_AUTH_PUBLIC");
-    this.SST_AUTH_PRIVATE = new Secret(scope, "SST_AUTH_PRIVATE");
-    this.authenticator = props.authenticator;
 
     const app = this.node.root as App;
     const stack = Stack.of(scope) as Stack;
+    this.SST_AUTH_PUBLIC = new Secret(scope, "SST_AUTH_PUBLIC");
+    this.SST_AUTH_PRIVATE = new Secret(scope, "SST_AUTH_PRIVATE");
+    const privatePath = FunctionConfig.buildSsmNameForSecret(
+      app.name,
+      app.stage,
+      this.SST_AUTH_PRIVATE.name
+    );
+    const publicPath = FunctionConfig.buildSsmNameForSecret(
+      app.name,
+      app.stage,
+      this.SST_AUTH_PUBLIC.name
+    );
+    this.authenticator = props.authenticator;
+
     // Create execution policy
     const policyStatement = new PolicyStatement();
-    policyStatement.addResources(
-      `arn:aws:s3:::${app.bootstrapAssets.bucketName}/*`
-    );
-    policyStatement.addActions("s3:PutObject", "s3:DeleteObject");
+    policyStatement.addActions("ssm:PutParameter");
     stack.customResourceHandler.addToRolePolicy(policyStatement);
 
     new CustomResource(this, "StackMetadata", {
       serviceToken: stack.customResourceHandler.functionArn,
       resourceType: "Custom::AuthKeys",
       properties: {
-        App: app.name,
-        Stage: stack.stage,
-        Stack: stack.stackName,
-        BootstrapBucketName: app.bootstrapAssets.bucketName!,
+        publicPath,
+        privatePath,
       },
     });
   }
