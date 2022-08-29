@@ -53,6 +53,19 @@ export class Auth extends Construct {
 
   constructor(scope: Construct, id: string, props: AuthProps) {
     super(scope, id);
+    if (
+      !props.authenticator ||
+      "defaults" in props ||
+      "login" in props ||
+      "triggers" in props ||
+      "identityPoolFederation" in props ||
+      "cdk" in props
+    ) {
+      throw new Error(
+        `It looks like you may be passing in Cognito props to the Auth construct. The Auth construct was renamed to Cognito in version 1.10.0`
+      );
+    }
+
     Auth.list.add(this);
 
     const app = this.node.root as App;
