@@ -3,6 +3,7 @@ import {
   DeleteObjectCommand,
   PutObjectCommand,
 } from "@aws-sdk/client-s3";
+import { AuthKeys } from "./auth-keys.js";
 import { log, wrapper } from "./util.js";
 
 const s3 = new S3Client({});
@@ -14,6 +15,7 @@ export const handler = wrapper(async (cfnRequest: any) => {
     case "Custom::StackMetadata":
       await handleStackMetadata(cfnRequest);
     case "Custom::AuthKeys":
+      await AuthKeys();
       break;
   }
 });

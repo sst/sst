@@ -40,7 +40,10 @@ export class Stack extends cdk.Stack {
    */
   public readonly defaultFunctionProps: FunctionProps[];
 
-  private readonly customResourceHandler: lambda.Function;
+  /**
+   * @internal
+   */
+  public readonly customResourceHandler: lambda.Function;
   private readonly metadata: cdk.CustomResource;
 
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -218,7 +221,7 @@ export class Stack extends cdk.Stack {
   private createCustomResourceHandler() {
     return new lambda.Function(this, "CustomResourceHandler", {
       code: lambda.Code.fromAsset(
-        path.join(__dirname, "../support/custom-resources")
+        path.join(__dirname, "../dist/support/custom-resources")
       ),
       handler: "index.handler",
       runtime: lambda.Runtime.NODEJS_16_X,

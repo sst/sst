@@ -1,7 +1,11 @@
+import { PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { Construct } from "constructs";
 import { Api } from "./Api.js";
 import { Secret } from "./Config.js";
 import { FunctionDefinition } from "./Function";
+import { Stack } from "./index.js";
+import { App } from "./App.js";
+import { CustomResource } from "aws-cdk-lib";
 
 export interface AuthProps {
   /**
@@ -52,6 +56,27 @@ export class Auth extends Construct {
     this.SST_AUTH_PUBLIC = new Secret(scope, "SST_AUTH_PUBLIC");
     this.SST_AUTH_PRIVATE = new Secret(scope, "SST_AUTH_PRIVATE");
     this.authenticator = props.authenticator;
+
+    const app = this.node.root as App;
+    const stack = Stack.of(scope) as Stack;
+    // Create execution policy
+    const policyStatement = new PolicyStatement();
+    policyStatement.addResources(
+      `arn:aws:s3:::${app.bootstrapAssets.bucketName}/*`
+    );
+    policyStatement.addActions("s3:PutObject", "s3:DeleteObject");
+    stack.customResourceHandler.addToRolePolicy(policyStatement);
+
+    new CustomResource(this, "StackMetadata", {
+      serviceToken: stack.customResourceHandler.functionArn,
+      resourceType: "Custom::AuthKeys",
+      properties: {
+        App: app.name,
+        Stage: stack.stage,
+        Stack: stack.stackName,
+        BootstrapBucketName: app.bootstrapAssets.bucketName!,
+      },
+    });
   }
 
   public attach(scope: Construct, props: ApiAttachmentProps) {
