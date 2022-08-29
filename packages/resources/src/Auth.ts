@@ -117,6 +117,7 @@ export class Auth extends Construct {
       },
     });
     props.api.getFunction(path)!.addConfig([this.SST_AUTH_PRIVATE]);
+    props.api.getFunction(path)!.addEnvironment("SST_AUTH_PREFIX", prefix);
   }
 
   /** @internal */
