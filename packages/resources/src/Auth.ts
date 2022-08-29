@@ -1,4 +1,4 @@
-import { PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { Construct } from "constructs";
 import { Api } from "./Api.js";
 import { Secret } from "./Config.js";
@@ -42,8 +42,8 @@ export interface ApiAttachmentProps {
  * })
  */
 export class Auth extends Construct {
-  private readonly SST_AUTH_PUBLIC: Secret;
-  private readonly SST_AUTH_PRIVATE: Secret;
+  public readonly SST_AUTH_PUBLIC: Secret;
+  public readonly SST_AUTH_PRIVATE: Secret;
   private readonly authenticator: FunctionDefinition;
 
   private readonly apis = new Set<Api>();
@@ -72,8 +72,11 @@ export class Auth extends Construct {
     this.authenticator = props.authenticator;
 
     // Create execution policy
-    const policyStatement = new PolicyStatement();
-    policyStatement.addActions("ssm:PutParameter");
+    const policyStatement = new PolicyStatement({
+      actions: ["ssm:PutParameter"],
+      effect: Effect.ALLOW,
+      resources: ["*"],
+    });
     stack.customResourceHandler.addToRolePolicy(policyStatement);
 
     new CustomResource(this, "StackMetadata", {
