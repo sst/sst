@@ -113,10 +113,12 @@ new Auth(stack, "auth", {
 
 You can follow the Config docs to understand how to set values across your various stages.
 
+At this point your frontend can redirect to `/auth/<provider-name>/authorize` to kick off the authentication flow. If everything is configured right your browser will print out the set of claims returned from Google.
+
+You can also visit `/auth/` to see a list of your configured providers and the authorization URL.
 
 ### Create session
 
-At this point your frontend can redirect to `/auth/<provider-name>/authorize` to kick off the authentication flow. If everything is configured right your browser will print out the set of claims returned from Google.
 
 For a real application you'll want to handle User lookup/creation in the `onSuccess` callback. SST Auth very intentionally avoids providing abstractions for user management, these tend to be very specific to what you're building so this should be managed by you.
 
