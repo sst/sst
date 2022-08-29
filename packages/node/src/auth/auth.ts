@@ -1,5 +1,5 @@
 import { Handler } from "../context/handler.js";
-import { usePath } from "../context/http.js";
+import { useDomainName, usePath } from "../context/http.js";
 import { Adapter } from "./adapter/adapter.js";
 
 /**
@@ -25,18 +25,21 @@ export function AuthHandler<Providers extends Record<string, Adapter>>(config: {
 }) {
   return Handler("api", async () => {
     const path = usePath();
-    if (
-      path.join("/") ===
-      process.env.SST_AUTH_PREFIX?.split("/").filter(Boolean).join("/")
-    ) {
+    const prefix = process.env.SST_AUTH_PREFIX?.split("/")
+      .filter(Boolean)
+      .join("/");
+    if (path.join("/") === prefix) {
       return {
         statusCode: 200,
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(
-          Object.keys(config.providers).map(
-            (x) => `${process.env.SST_AUTH_PREFIX}/${x}/authorize`
+          Object.fromEntries(
+            Object.keys(config.providers).map((x) => [
+              x,
+              `https://${useDomainName()}/${prefix}/${x}/authorize`,
+            ])
           ),
           null,
           4

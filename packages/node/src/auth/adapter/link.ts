@@ -33,8 +33,7 @@ export const LinkAdapter = /* @__PURE__ */ createAdapter(
       const [step] = usePath().slice(-1);
       const callback =
         "https://" +
-        useDomainName() +
-        [...usePath().slice(0, -1), "callback"].join("/");
+        [useDomainName(), ...usePath().slice(0, -1), "callback"].join("/");
 
       if (step === "authorize") {
         const url = new URL(callback);

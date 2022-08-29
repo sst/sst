@@ -4,7 +4,7 @@ import {
   useCookie,
   useDomainName,
   usePath,
-  useQueryParams
+  useQueryParams,
 } from "../../context/http.js";
 import { createAdapter } from "./adapter.js";
 
@@ -25,18 +25,17 @@ export interface OauthConfig extends OauthBasicConfig {
 
 export const OauthAdapter = /* @__PURE__ */ createAdapter(
   (config: OauthConfig) => {
-    return async function() {
+    return async function () {
       const [step] = usePath().slice(-1);
       const callback =
         "https://" +
-        useDomainName() +
-        [...usePath().slice(0, -1), "callback"].join("/");
+        [useDomainName(), ...usePath().slice(0, -1), "callback"].join("/");
 
       const client = new config.issuer.Client({
         client_id: config.clientID,
         client_secret: config.clientSecret,
         redirect_uris: [callback],
-        response_types: ["code"]
+        response_types: ["code"],
       });
 
       if (step === "authorize") {
@@ -49,7 +48,7 @@ export const OauthAdapter = /* @__PURE__ */ createAdapter(
           code_challenge: code_challenge,
           code_challenge_method: "S256",
           state,
-          prompt: config.prompt
+          prompt: config.prompt,
         });
 
         const expires = new Date(Date.now() + 1000 * 30).toUTCString();
@@ -57,11 +56,11 @@ export const OauthAdapter = /* @__PURE__ */ createAdapter(
           statusCode: 302,
           cookies: [
             `auth-code-verifier=${code_verifier}; HttpOnly; expires=${expires}`,
-            `auth-state=${state}; HttpOnly; expires=${expires}`
+            `auth-state=${state}; HttpOnly; expires=${expires}`,
           ],
           headers: {
-            location: url
-          }
+            location: url,
+          },
         };
       }
 
@@ -75,7 +74,7 @@ export const OauthAdapter = /* @__PURE__ */ createAdapter(
             : "oauthCallback"
         ](callback, params, {
           code_verifier,
-          state
+          state,
         });
         return config.onSuccess(tokenset, client);
       }

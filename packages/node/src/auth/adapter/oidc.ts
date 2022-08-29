@@ -27,8 +27,7 @@ export const OidcAdapter = /* @__PURE__ */ createAdapter(
       const [step] = usePath().slice(-1);
       const callback =
         "https://" +
-        useDomainName() +
-        [...usePath().slice(0, -1), "callback"].join("/");
+        [useDomainName(), ...usePath().slice(0, -1), "callback"].join("/");
 
       const client = new config.issuer.Client({
         client_id: config.clientID,
