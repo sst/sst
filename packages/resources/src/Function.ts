@@ -292,7 +292,7 @@ export interface FunctionProps
    *   url: true
    * })
    * ```
-   * 
+   *
    * ```js
    * new Function(stack, "Function", {
    *   handler: "src/function.handler",
@@ -325,7 +325,7 @@ export interface FunctionProps
   layers?: (string | lambda.ILayerVersion)[];
   /**
    * The duration function logs are kept in CloudWatch Logs.
-   * 
+   *
    * When updating this property, unsetting it doesn't retain the logs indefinitely. Explicitly set the value to "infinite".
    * @default Logs retained indefinitely
    * @example
@@ -602,7 +602,7 @@ export interface FunctionBundleNodejsProps extends FunctionBundleBase {
    * })
    * ```
    */
-  sourcemap?: boolean
+  sourcemap?: boolean;
 }
 
 /**
@@ -708,9 +708,11 @@ export class Function extends lambda.Function implements SSTConstruct {
       lambda.Tracing[
         (props.tracing || "active").toUpperCase() as keyof typeof lambda.Tracing
       ];
-    const logRetention = props.logRetention && logs.RetentionDays[
-      props.logRetention.toUpperCase() as keyof typeof logs.RetentionDays
-    ];
+    const logRetention =
+      props.logRetention &&
+      logs.RetentionDays[
+        props.logRetention.toUpperCase() as keyof typeof logs.RetentionDays
+      ];
     let bundle = props.bundle;
     const isLiveDevEnabled = props.enableLiveDev === false ? false : true;
 
@@ -953,7 +955,7 @@ export class Function extends lambda.Function implements SSTConstruct {
    * @example
    * ```js
    * const STRIPE_KEY = new Config.Secret(stack, "STRIPE_KEY");
-   * 
+   *
    * fn.addConfig([STRIPE_KEY]);
    * ```
    */
@@ -963,10 +965,15 @@ export class Function extends lambda.Function implements SSTConstruct {
     // Add environment variables
     (config || []).forEach((c) => {
       if (c instanceof Secret) {
-        this.addEnvironment(`${FunctionConfig.SECRET_ENV_PREFIX}${c.name}`, "1");
-      }
-      else if (c instanceof Parameter) {
-        this.addEnvironment(`${FunctionConfig.PARAM_ENV_PREFIX}${c.name}`, c.value);
+        this.addEnvironment(
+          `${FunctionConfig.SECRET_ENV_PREFIX}${c.name}`,
+          "1"
+        );
+      } else if (c instanceof Parameter) {
+        this.addEnvironment(
+          `${FunctionConfig.PARAM_ENV_PREFIX}${c.name}`,
+          c.value
+        );
       }
     });
 
@@ -974,16 +981,31 @@ export class Function extends lambda.Function implements SSTConstruct {
     const iamResources: string[] = [];
     (config || [])
       .filter((c) => c instanceof Secret)
-      .forEach((c) => iamResources.push(
-        `arn:aws:ssm:${app.region}:${app.account}:parameter${FunctionConfig.buildSsmNameForSecret(app.name, app.stage, c.name)}`,
-        `arn:aws:ssm:${app.region}:${app.account}:parameter${FunctionConfig.buildSsmNameForSecretFallback(app.name, c.name)}`,
-      ));
+      .forEach((c) =>
+        iamResources.push(
+          `arn:aws:ssm:${app.region}:${
+            app.account
+          }:parameter${FunctionConfig.buildSsmNameForSecret(
+            app.name,
+            app.stage,
+            c.name
+          )}`,
+          `arn:aws:ssm:${app.region}:${
+            app.account
+          }:parameter${FunctionConfig.buildSsmNameForSecretFallback(
+            app.name,
+            c.name
+          )}`
+        )
+      );
     if (iamResources.length > 0) {
-      this.attachPermissions([new iam.PolicyStatement({
-        actions: ["ssm:GetParameters"],
-        effect: iam.Effect.ALLOW,
-        resources: iamResources,
-      })]);
+      this.attachPermissions([
+        new iam.PolicyStatement({
+          actions: ["ssm:GetParameters"],
+          effect: iam.Effect.ALLOW,
+          resources: iamResources,
+        }),
+      ]);
     }
   }
 
@@ -1013,14 +1035,12 @@ export class Function extends lambda.Function implements SSTConstruct {
     if (url === true) {
       authType = lambda.FunctionUrlAuthType.NONE;
       cors = true;
-    }
-    else {
-      authType = url.authorizer === "iam"
-        ? lambda.FunctionUrlAuthType.AWS_IAM
-        : lambda.FunctionUrlAuthType.NONE;
-      cors = url.cors === undefined
-        ? true
-        : url.cors;
+    } else {
+      authType =
+        url.authorizer === "iam"
+          ? lambda.FunctionUrlAuthType.AWS_IAM
+          : lambda.FunctionUrlAuthType.NONE;
+      cors = url.cors === undefined ? true : url.cors;
     }
     this.functionUrl = this.addFunctionUrl({
       authType,

@@ -1,4 +1,4 @@
-import * as cdk from "aws-cdk-lib";
+import { Duration as CDKDuration } from "aws-cdk-lib";
 export type Duration = `${number} ${
   | "second"
   | "seconds"
@@ -9,19 +9,19 @@ export type Duration = `${number} ${
   | "day"
   | "days"}`;
 
-export function toCdkDuration(duration: Duration): cdk.Duration {
+export function toCdkDuration(duration: Duration): CDKDuration {
   const [count, unit] = duration.split(" ");
   const countNum = parseInt(count);
   const unitLower = unit.toLowerCase();
   if (unitLower.startsWith("second")) {
-    return cdk.Duration.seconds(countNum);
+    return CDKDuration.seconds(countNum);
   } else if (unitLower.startsWith("minute")) {
-    return cdk.Duration.minutes(countNum);
+    return CDKDuration.minutes(countNum);
   } else if (unitLower.startsWith("hour")) {
-    return cdk.Duration.hours(countNum);
+    return CDKDuration.hours(countNum);
   } else if (unitLower.startsWith("day")) {
-    return cdk.Duration.days(countNum);
+    return CDKDuration.days(countNum);
   }
 
-  return cdk.Duration.days(0);
+  return CDKDuration.days(0);
 }

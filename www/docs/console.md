@@ -74,7 +74,7 @@ The GraphQL explorer lets you query GraphQL endpoints created with the [`GraphQL
 
 ![SST Console Cognito tab](/img/console/sst-console-cognito-tab.png)
 
-The Cognito explorer allows you to manage the User Pools created with the [`Auth`](constructs/Auth.md) constructs in your app. It allows you create new users and delete existing users.
+The Cognito explorer allows you to manage the User Pools created with the [`Cognito`](constructs/Cognito.md) constructs in your app. It allows you create new users and delete existing users.
 
 ## Modes
 

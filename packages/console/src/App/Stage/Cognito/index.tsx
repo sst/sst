@@ -81,10 +81,10 @@ export function Explorer() {
   const stacks = useStacks();
   const nav = useNavigate();
   const params = useParams<{ stack: string; addr: string; "*": string }>();
-  const auths = (stacks?.data?.constructs.byType["Auth"] || []).filter(
+  const auths = (stacks?.data?.constructs.byType["Cognito"] || []).filter(
     (item) => item.data.userPoolId
   );
-  const auth = useConstruct("Auth", params.stack!, params.addr!);
+  const auth = useConstruct("Cognito", params.stack!, params.addr!);
   const users = useUsersQuery(auth?.data.userPoolId!);
   const loaderRef = useRef<HTMLDivElement>(null);
   const loaderVisible = useOnScreen(loaderRef);
@@ -124,8 +124,9 @@ export function Explorer() {
                 {stacks.data?.all
                   .filter(
                     (s) =>
-                      s.constructs.byType.Auth?.filter((x) => x.data.userPoolId)
-                        .length || 0 > 0
+                      s.constructs.byType.Cognito?.filter(
+                        (x) => x.data.userPoolId
+                      ).length || 0 > 0
                   )
                   .map((stack) => (
                     <HeaderSwitcherGroup>
@@ -133,7 +134,7 @@ export function Explorer() {
                         {stack.info.StackName}
                       </HeaderSwitcherLabel>
                       {stack.constructs.byType
-                        .Auth!.filter((x) => x.data.userPoolId)
+                        .Cognito!.filter((x) => x.data.userPoolId)
                         .map((auth) => (
                           <HeaderSwitcherItem
                             key={auth.stack + auth.addr}
@@ -286,7 +287,7 @@ interface CreatePanelProps {
 
 function CreatePanel(props: CreatePanelProps) {
   const params = useParams<{ stack: string; addr: string }>();
-  const auth = useConstruct("Auth", params.stack!, params.addr!);
+  const auth = useConstruct("Cognito", params.stack!, params.addr!);
   const form = useForm<Form>();
   const createUser = useCreateUser();
   const navigate = useNavigate();
@@ -365,7 +366,7 @@ type EditPanelProps = {
 
 function EditPanel(props: EditPanelProps) {
   const params = useParams<{ stack: string; addr: string; id: string }>();
-  const auth = useConstruct("Auth", params.stack!, params.addr!);
+  const auth = useConstruct("Cognito", params.stack!, params.addr!);
   const user = useUser(auth.data.userPoolId!, params.id!);
   const deleteUser = useDeleteUser();
   const nav = useNavigate();

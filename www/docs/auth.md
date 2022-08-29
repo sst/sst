@@ -3,185 +3,444 @@ title: Auth
 description: "Learn to manage users and authentication in your SST app."
 ---
 
-You can handle authentication in your SST app using AWS's [Cognito User Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html) or via a third party auth provider like [Auth0](https://auth0.com/).
+SST Auth is a lightweight authentication solution for your applications. With a simple set of configuration you can deploy a function attached to your API that can handle various authentication flows.
 
-Let's look at them both in detail.
+## Overview
 
-## Cognito User Pool
+SST Auth is composed of the following pieces:
 
-SST's [`Auth`](constructs/Auth.md) construct makes it easy to manage your users using [AWS Cognito User Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html). It provides a simple way to handle sign up, login, logout, and to manage users in your web and mobile apps.
+1. A construct that can be attached to your API that provides authentication routes.
+   - Handles secure generation of RSA keypair to sign sessions
+2. `AuthHandler` that can be used to define an authenticator function that handles authentication flows across various providers.
+   - High level adapters for common providers like Google and Twitch
+   - OIDC and OAuth adapters that work with any compatible service
+   - Link adapter to generate login links that can be sent over email or SMS
+   - Can be extended with custom adapters to support more complex workflows, like multi-tenant SSO
+3. `Session` library for issuing and validating authentication sessions.
+   - Implemented with stateless JWT tokens that are signed with public/private keypairs
+   - Various strategies for passing token to frontend (query parameter or cookie)
+   - Fully typesafe to ensure session issuing and validating 
 
-```js
-import { Auth } from "@serverless-stack/resources";
+## Architecture
 
-const auth = new Auth(stack, "Auth");
+Auth is thought to be complex but with modern standards, it is simple to implement. Managed auth services you may have tried before tend to bundle many several seemingly related features together which usually leads to a challenging situations.
+
+SST Auth is designed quite differently from those services. The typical authentication flow can be thought of like this:
+
+1. Perform handshake with authentication strategy. This could be OAuth with a third party provider or something as simple as an email link that needs to be clicked.
+2. The result of this handshake is a set of validated claims about who the user is, like their email. These claims should be looked up in a user database to see if the user exists, creating the user otherwise.
+3. A session token should be generated so that following requests contain information about which user is making them.
+
+The key here is SST Auth has out of the box support for steps 1 and 3. It **intentionally** does not manage user storage. These details tend to be very specific to your application and is best if they live alongside the rest of your data and business logic.
+
+The seperation of responsibilities into things that are undifferentiated (1 + 3) and things that are not (2) is what makes SST Auth powerful and flexible to even the most complex authentication scenarios.
+
+## Setup
+
+### Create AuthHandler
+
+Create a new function in your functions folder that will handle authentication requests. Typically this will be in `services/functions/auth.ts`.
+
+`AuthHandler` returns an authenticator function that do authentication handshakes and issue sessions with simple configuration.
+We'll leave the provider configuration empty for now.
+
+```ts title="services/functions/auth.ts"
+import { AuthHandler } from "@serverless-stack/node/auth"
+export const handler = AuthHandler({
+  providers: {},
+})
 ```
 
-The [SST Console](console.md) also gives you a way to manage your User Pools.
+### Setup construct
 
-![SST Console Cognito tab](/img/console/sst-console-cognito-tab.png)
+SST Auth works by adding additional routes to your API to handle authentication. Import the construct, attach it to your API and point it to your auth function. You can use the same auth construct with multiple APIs.
 
-You can create new users and delete existing users.
+```js title="stacks/api.ts"
+import { Auth } from "@serverless-stack/resources"
 
-### Accessing APIs
+const auth = new Auth(stack, "auth", {
+  authenticator: "functions/auth.handler",
+})
 
-Cognito User Pool supports [JSON web tokens (JWT)](https://en.wikipedia.org/wiki/JSON_Web_Token) that you can use to authorize access to your API.
-
-```js
-new Api(stack, "Api", {
-  authorizers: {
-    pool: {
-      type: "user_pool",
-      userPool: {
-        id: auth.userPoolId,
-      },
-    },
-  },
-  defaults: {
-    authorizer: "pool",
-  },
-  routes: {
-    "GET /": "src/lambda.main",
-  },
-});
+auth.attach(stack, {
+  api: myApi,
+  prefix: "/auth" // optional
+})
 ```
 
-:::tip Example
+### Add a provider
 
-Here's a detailed tutorial on how to add JWT authentication with Cognito to your API.
+The AuthHandler can be configured with a set of providers that your system supports. Here's an example of configuring a provider named "google" that uses the GoogleAdapter in OIDC mode.
 
-[READ TUTORIAL](https://sst.dev/examples/how-to-add-jwt-authorization-with-cognito-user-pool-to-a-serverless-api.html)
+```js {6-15} title="services/functions/auth.ts"
+import { AuthHandler } from "@serverless-stack/node/auth"
+import { Config } from "@serverless-stack/node/config"
 
-:::
-
-### Accessing S3 Buckets
-
-Your users won't have direct access to files in your S3 bucket. You'd need to create an API endpoint that generates presigned URLs for them to upload and download.
-
-Here's how the flow works:
-
-1. A user makes a call to the presigned URL API with the S3 file path they want to upload or download.
-2. The API makes a call to S3 to generate a presigned URL.
-3. The user uploads a file to that URL or downloads from it.
-
-You can read more about [Granting access to S3 with presigned URLs](./storage#granting-access-with-presigned-url)
-
-### Accessing other resources
-
-Normally, you shouldn't need to allow users to directly access other AWS services from the frontend. This includes:
-
-- Fetching data from a database [`Table`](constructs/Table.md)
-- Pulling messages from a [`Queue`](constructs/Queue.md)
-- Sending events to a [`Topic`](constructs/Topic.md)
-
-But if you want your users to be able to do these directly from your web or mobile app, you can use a [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-identity.html) to grant them the necessary permissions.
-
-Cognito Identity Pool is an AWS service that can assign temporary IAM credentials to both authenticated and unauthenticated users in your web or mobile app.
-
-```js
-// Create a Table
-const table = new Table(stack, "Notes", {
-  fields: {
-    userId: "string",
-    noteId: "string"
+export const handler = AuthHandler({
+  providers: {
+    google: new GoogleAdapter({
+      mode: "oidc",
+      clientID: Config.GOOGLE_CLIENT_ID,
+      onSuccess: async (tokenset) => {
+        return {
+          statusCode: 200,
+          body: JSON.stringify(tokenset.claims())
+        }
+      }
+    })
   },
-  primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
-});
-
-// Allow authenticated users to access the table
-auth.attachPermissionsForAuthUsers(stack, [table]);
+})
 ```
 
-Note that, if you are using the Cognito Identity Pool, you have the option to also:
+This will create a route for initializing the auth flow at `/auth/google/authorize` and another for receiving the callback from Google at `/auth/google/callback`. Be sure to add this callback in Google's Oauth configuration.
 
-- [Grant IAM permissions to APIs](./api.md#cognito-identity-pool) instead of using the JWT token
-- [Grant IAM permissions to S3 files](./storage.md#granting-access-with-cognito-identity-pool) without needing to generate a presigned URL
+Note this makes use of [SST Config](/environment-variables) which allows you to easily manage your secret values. You will need to update your stacks code to make sure the secret is available to your function.
 
-### User Pool triggers
+```js {5-10} title="stacks/api.ts"
+import { Auth, Config } from "@serverless-stack/resources"
 
-You can use Lambda functions to add authentication challenges, migrate users, and customize verification messages. These can be triggered during User Pool operations like user sign up, confirmation, and sign in.
+new Auth(stack, "auth", {
+  api: myApi,
+  function: {
+    handler: "functions/auth.handler",
+    config: {
+      new Config.Secret(stack, "GOOGLE_CLIENT_ID")
+    }
+  }
+})
 
-```js
-new Auth(stack, "Auth", {
-  triggers: {
-    preAuthentication: "src/preAuthentication.main",
-    postAuthentication: "src/postAuthentication.main",
-  },
-});
 ```
 
-You can check out [all the supported User Pool triggers](constructs/Auth.md#authuserpooltriggers).
+You can follow the Config docs to understand how to set values across your various stages.
 
-## Third-party auth providers
+At this point your frontend can redirect to `/auth/<provider-name>/authorize` to kick off the authentication flow. If everything is configured right your browser will print out the set of claims returned from Google.
 
-You can also use a third-party auth provider like [Auth0](https://auth0.com).
+You can also visit `/auth/` to see a list of your configured providers and the authorization URL.
 
-:::tip
+### Create session
 
-If you are using a third-party auth provider, you don't need to use the [Auth](constructs/Auth.md) construct. You can directly authorize access to APIs and S3 Buckets.
 
-:::
+For a real application you'll want to handle User lookup/creation in the `onSuccess` callback. SST Auth very intentionally avoids providing abstractions for user management, these tend to be very specific to what you're building so this should be managed by you.
 
-However if you wanted your users to be able to access other AWS resources while using a third party auth provider; you'll need to use a [Cognito Identity Pool](https://en.wikipedia.org/wiki/JSON_Web_Token) via the [`Auth`](constructs/Auth.md) construct. It'll assign temporary IAM credentials to your users. Read more about [how to access other resources](#accessing-other-resources-1) below.
+However, we do provide a way to create a session once you have retreived the User.
 
-### Accessing APIs
+When using Typescript you can define the various session types in your application so that creating them and retreiving them in requests is completely typesafe.
 
-Set the third-party JWT authorizer in the [`Api`](constructs/Api.md) construct to grant access to your APIs.
-
-```js
-new Api(stack, "Api", {
-  authorizers: {
-    auth0: {
-      type: "jwt",
-      jwt: {
-        audience: ["UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif"],
-        issuer: "https://myorg.us.auth0.com",
-      },
-    },
-  },
-  defaults: {
-    authorizer: "auth0",
-  },
-  routes: {
-    "GET /": "src/lambda.main",
-  },
-});
+```js title="services/functions/auth.ts"
+declare module "@serverless-stack/node/auth" {
+  export interface SessionTypes {
+    user: {
+      userID: string
+      tenantID: string // example for a multi tenant app
+    }
+  }
+}
 ```
 
-:::tip Example
+At first you may only have a `user` session that represents a user and contains a `userID` in its properties. In the future you may support other types of sessions like an `apikey` that represents server to server communication.
 
-Here's a detailed tutorial on how to add JWT authentication with Auth0.
+Once the session type is defined, you can update your `onSuccess` callback to do user lookup and creation from the claims. Once you know the userID, you can generate create a new session and redirect them back to your frontend with the token in the query parameter.
 
-[READ TUTORIAL](https://sst.dev/examples/how-to-add-jwt-authorization-with-auth0-to-a-serverless-api.html)
+```js title="services/functions/auth.ts"
+import { AuthHandler, Session } from "@serverless-stack/node/auth"
+import { Config } from "@serverless-stack/node/config"
 
-:::
+export const handler = AuthHandler({
+  providers: {
+    google: new GoogleAdapter({
+      mode: "oidc",
+      clientID: Config.GOOGLE_CLIENT_ID,
+      onSuccess: async (tokenset) => {
+        const claims = tokenset.claims()
+        const user = 
+        /* ------------ To Implement ------------ */
+        /* This is where you will lookup the user */
+        /* in your database by the email in the   */
+        /* claims and create them if they do not  */
+        /* exist.                                 */
+        /* -------------------------------------- */
 
-### Accessing S3 Buckets
-
-You'll need to use presigned URLs to upload files to your S3 bucket. This is similar to the [Cognito User Pool flow](#accessing-s3-buckets) outlined above.
-
-### Accessing other resources
-
-As mentioned above; if you want your users to be able to access other AWS resources, you can use the [`Auth`](constructs/Auth.md) construct to create a [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-identity.html). And use it to assign temporarily IAM credentials for your users to access other AWS services. The setup is similar to the [Cognito User Pool setup](#accessing-other-resources) above.
-
-```js
-const auth = new Auth(stack, "Auth", {
-  identityPoolFederation: {
-    auth0: {
-      domain: "https://myorg.us.auth0.com",
-      clientId: "UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif",
-    },
+        // Will redirect to https://example.com?token=xxx
+        return Session.queryParameter({
+          redirect: "https://example.com",
+          type: "user",
+          properties: {
+            userID: user.userID
+          },
+        })
+      }
+    })
   },
-});
-
-// Allow authenticated users to access the table
-auth.attachPermissionsForAuthUsers(stack, [table]);
+})
 ```
 
-:::tip Example
+### Using the session
 
-Follow this tutorial on how to authenticate a serverless API with Auth0.
+The session token must be passed by your frontend in a header in this format: `authorization: Bearer <token>` for all authenticated requests.
 
-[READ TUTORIAL](https://sst.dev/examples/how-to-add-auth0-authentication-to-a-serverless-api.html)
+This allows you to retreive the session with `useSession()`. Here's an example of a GraphQL query that uses the current user.
 
-:::
+```js title="services/functions/graphql/types/foo.ts"
+builder.mutationFields(t => ({
+  createTask: t.field({
+    type: TaskType,
+    resolve: () => {
+      const session = useSession()
+      if (session.type !== "user") throw new Error("Must be logged in")
+      return Task.create(session.properties.userID)
+    }
+  })
+}))
+```
+
+The `useSession` hook relies on SST's context system to discover the authentication token. If using the `GraphQLHandler` it will transparently initialize this system so everything should work without additional configuration. 
+
+There is also a barebones `Handler` function that can be used to handle other types of requests. Here's how you'd implement a typical API request to a rest route handled by a lambda. Since this is typesafe, `event` will be properly typed as will the expected response type.
+
+```js title="services/functions/rest/foo.ts"
+import { Handler } from "@serverless-stack/node/context"
+
+export const getSessionTypeHandler = Handler("api", async (event) => {
+  const session = useSession()
+
+  return {
+    statusCode: 200,
+    body: session.type
+  }
+})
+```
+
+## Adapters
+
+Adapters provide out of the box functionality for various authentication providers and are used to configure providers. This includes third parties over OAuth and OIDC as well as internal flows like magic link.
+
+### OauthAdapter
+
+A general adapter for any Oauth2 compatible service.
+
+```js
+import { Issuer } from "openid-client";
+
+OauthAdapter({
+  issuer: new Issuer({
+    issuer: "<issuer-namespace>",
+    authorization_endpoint: "<authorization-endpoint>",
+    token_endpoint: "<token-endpoint>"
+  }),
+  clientID: "<client-id>",
+  clientSecret: "<client-secret>",
+  scope: "<space seperated list of scopes>",
+  prompt: "<prompt>", // optional
+  onSuccess: (tokenset) => {}
+})
+```
+
+### OidcAdapter
+
+A general adapter for any OIDC compatible service.
+
+```js
+import { Issuer } from "openid-client";
+
+OidcAdapter({
+  issuer: await Issuer.discover("<oidc root url>");
+  clientID: "<client-id>",
+  scope: "<space seperated list of scopes>",
+  onSuccess: (tokenset) => {}
+})
+```
+
+
+### GoogleAdapter
+
+The google adapter supports both OIDC and Oauth mode. Use OIDC when you only need to authenticate who the user is and retreive their email + name. Use Oauth when you need the user to grant you access to additional scopes like reading their calendar.
+
+#### oidc
+```js
+GoogleAdapter({
+  mode: "oidc",
+  clientID: "<client-id>",
+  onSuccess: async (tokenset) => {}
+}),
+```
+
+#### oauth
+```js
+GoogleAdapter({
+  mode: "oauth",
+  clientID: "<client-id>" 
+  clientSecret: "<client-secret>",
+  scope: "<space seperated list of scopes>",
+  prompt: "consent", // optional
+  onSuccess: async (tokenset) => {},
+}),
+```
+
+### GithubAdapter
+
+The GithubAdapter simply extends the OauthAdapter preconfigured with Github oauth urls.
+
+```js
+GithubAdapter({
+  clientID: "<client-id>" 
+  clientSecret: "<client-secret>",
+  scope: "<space seperated list of scopes>",
+  onSuccess: async (tokenset) => {},
+}),
+```
+
+### TwitchAdapter
+
+The TwitchAdapter simply extends the OidcAdapter preconfigured with Twitch oidc urls.
+
+```js
+TwitchAdapter({
+  clientID: "<client-id>" 
+  onSuccess: async (tokenset) => {},
+}),
+```
+
+### LinkAdapter
+
+The link adapter issues magic links that you can send over email or SMS to verify users without the need of a password.
+
+You will need to implement an `onLink` callback to send the link through your preferred mechanism. Any query parameters included in the redirect from your frontend will be passed through in the `claims` argument. This is useful to include the email or phone number you will be sending the link to.
+
+```js
+// Frontend
+location.href = "https://api.example.com/auth/link/authorize?email=user@example.com"
+
+// Provider configuration
+LinkAdapter({
+  onLink: async (link, claims) => {
+  /* ------------ To Implement ------------ */
+  /* This function receives a link that     */
+  /* you can send over email or sms so      */
+  /* that the user can login.               */
+  /* -------------------------------------- */
+  },
+  onSuccess: async (claims) => {},
+})
+```
+
+### Custom Adapters
+
+You can create your own adapters for handling flows that do not work out of the box. A common example would be to conditionally use different providers based on multi-tenant configuration.
+
+Here is an example:
+```js
+import { createAdapter } from "@serverless-stack/node/auth"
+
+const google = GoogleAdapter({...})
+const link = LinkAdapter({...})
+
+export const MultiTenantAdapter = createAdapter(
+  () => {
+    const tenantID = useQueryParam("tenantID")
+    const tenantInfo = Tenant.fromID(tenantID)
+
+    if (tenantInfo.googleAuth)
+      return google()
+
+    return link()
+  }
+);
+```
+
+## Session
+
+The Session module can be used to generate a response for the `onSuccess` callbacks across the various adapters.
+
+### queryParameter
+
+This issues a new Session and redirects to the specified url with a `token=xxx` query parameter added.
+```js title="services/functions/auth.ts"
+return Session.parameter({
+  redirect: "https://example.com",
+  type: "user",
+  properties: {
+    userID: user.userID
+  },
+})
+```
+
+### cookie
+
+The cookie strategy for Session management requires some additional configuration on your API but is less work on your frontend. The API will issue a cookie that can be automatically included with all future requests so your frontend does not have to think about token storage.
+
+You must allow cookies to be sent cross-origin from your frontend, which is usually running on `localhost` during development and another subdomain in production.
+
+Update your API with the correct `cors` options
+
+```js title="stacks/api.ts"
+new Api(stack, "api", {
+  cors: {
+    allowCredentials: true,
+    allowHeaders: ['content-type'],
+    allowMethods: ['ANY'],
+    allowOrigins: ['http://localhost:3000', 'productionurl'],
+  },
+})
+```
+
+Then when creating the session use the `cookie` function instead of `queryParameter`
+
+```js title="services/functions/auth.ts"
+return Session.cookie({
+  redirect: "https://example.com",
+  type: "user",
+  properties: {
+    userID: user.userID
+  },
+})
+```
+
+In your frontend when making requests to your api, make sure you specify `credentials: include` with the request so that the cookie is included.
+
+#### fetch
+
+```js
+fetch("/path", {
+  credentials: "include"
+})
+```
+
+#### urql
+
+```js
+export const urql = createClient({
+  fetchOptions: () => {
+    return {
+      credentials: include
+    }
+  },
+})
+```
+
+### create
+
+You can also directly generate the token and then handle it however you want. This is most useful in integration tests when creating dummy users to make requests to your API.
+
+```js
+const jwt = Session.create({
+  type: "user",
+  properties: {
+    userID: user.userID
+  },
+})
+```
+
+## FAQ
+
+### Is SST Auth storing any sensitive data?
+
+SST Auth is 100% stateless and all of its mechanisms are implemented through short lived JWT tokens. While there are some tradeoffs with this approach it greatly reduces the complexity of the API and simplifies the implementation.
+
+### What about password based auth?
+
+As of now all of SST Auth's adapters can be implemented in a stateless way and do not require storing anything in a database.
+
+Introducing password auth would require storing and retreiving password data. Additionally it requires more complicated integrations for registering, logging in, reset password flows, which we cannot handle much of automatically since there are heavy UX implications.
+
+We strongly recommend passwordless auth mechanisms to keep things simple for yourself and your users. That said if you are interested in passwords drop us a message in our [Discord](https://discord.gg/sst) and we can chat about your needs.
+
