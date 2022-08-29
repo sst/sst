@@ -4,7 +4,7 @@ import { useEvent } from "./handler.js";
 export const useCookies = /* @__PURE__ */ Context.memo(() => {
   const evt = useEvent("api");
   const cookies = evt.cookies || [];
-  return Object.fromEntries(cookies.map(c => c.split("=")));
+  return Object.fromEntries(cookies.map((c) => c.split("=")));
 });
 
 export function useCookie(name: string) {
@@ -36,7 +36,7 @@ export const useFormData = /* @__PURE__ */ Context.memo(() => {
 
 export const usePath = /* @__PURE__ */ Context.memo(() => {
   const evt = useEvent("api");
-  return evt.rawPath.split("/");
+  return evt.rawPath.split("/").filter(Boolean);
 });
 
 export function useDomainName() {

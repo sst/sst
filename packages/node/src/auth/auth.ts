@@ -25,7 +25,10 @@ export function AuthHandler<Providers extends Record<string, Adapter>>(config: {
 }) {
   return Handler("api", async () => {
     const path = usePath();
-    if (path.join("/") === process.env.SST_AUTH_PREFIX) {
+    if (
+      path.join("/") ===
+      process.env.SST_AUTH_PREFIX?.split("/").filter(Boolean).join("/")
+    ) {
       return {
         statusCode: 200,
         headers: {
