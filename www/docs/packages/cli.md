@@ -228,13 +228,15 @@ npx sst update
 
 ### `load-config`
 
-A convenience command to load Config parameters and secrets, and invoke a script with the config values configured as environment variables.
+A convenience command to load [`Config`](../environment-variables.md) parameters and secrets, and invoke a script with the config values configured as environment variables.
+
+So for example, you can load all the secrets in your app and use those to run your tests.
 
 ```bash
 npx sst load-config -- vitest run
 ```
 
-This command can be useful for running tests. [Read more testing here](../advanced/testing.md).
+You can [read more about how this works for testing](../advanced/testing.md).
 
 ### `secrets [action]`
 
