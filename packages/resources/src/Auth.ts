@@ -86,7 +86,7 @@ export class Auth extends Construct {
 
     // Create execution policy
     const policyStatement = new PolicyStatement({
-      actions: ["ssm:PutParameter"],
+      actions: ["ssm:PutParameter", "ssm:DeleteParameter"],
       effect: Effect.ALLOW,
       resources: ["*"],
     });
