@@ -40,6 +40,7 @@ export class Stack extends cdk.Stack {
    */
   public readonly defaultFunctionProps: FunctionProps[];
 
+  private readonly customResourceHandler: lambda.Function;
   private readonly metadata: cdk.CustomResource;
 
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -70,6 +71,7 @@ export class Stack extends cdk.Stack {
     // resource on app synth, the tests would fail because the resource
     // would already exist.
 
+    this.customResourceHandler = this.createCustomResourceHandler();
     this.metadata = this.createStackMetadataResource();
   }
 
@@ -208,6 +210,16 @@ export class Stack extends cdk.Stack {
     (this.metadata.node.defaultChild as cdk.CfnResource).addPropertyOverride("Metadata", metadata);
   }
 
+  private createCustomResourceHandler() {
+    return new lambda.Function(this, "CustomResourceHandler", {
+      code: lambda.Code.fromAsset(path.join(__dirname, "../assets/Stack/custom-resources")),
+      handler: "index.handler",
+      runtime: lambda.Runtime.NODEJS_16_X,
+      timeout: cdk.Duration.seconds(900),
+      memorySize: 1024,
+    });
+  }
+
   private createStackMetadataResource() {
     const app = this.node.root as App;
 
@@ -218,28 +230,16 @@ export class Stack extends cdk.Stack {
       "s3:PutObject",
       "s3:DeleteObject",
     );
+    this.customResourceHandler.addToRolePolicy(policyStatement);
 
-    // Create Lambda
-    const fn = new lambda.Function(this, "MetadataUploaderFunction", {
-      code: lambda.Code.fromAsset(path.join(__dirname, "../assets/Stack/custom-resources")),
-      handler: "stack-metadata.handler",
-      runtime: lambda.Runtime.NODEJS_16_X,
-      timeout: cdk.Duration.seconds(900),
-      memorySize: 1024,
-      environment: {
-        BUCKET_NAME: app.bootstrapAssets.bucketName!,
-      },
-      initialPolicy: [policyStatement],
-    });
-
-    // Create custom resource
-    return new cdk.CustomResource(this, "MetadataUploader", {
-      serviceToken: fn.functionArn,
+    return new cdk.CustomResource(this, "StackMetadata", {
+      serviceToken: this.customResourceHandler.functionArn,
       resourceType: "Custom::StackMetadata",
       properties: {
         App: app.name,
         Stage: this.stage,
         Stack: this.stackName,
+        BootstrapBucketName: app.bootstrapAssets.bucketName!,
       }
     });
   }
