@@ -14,8 +14,9 @@ export const handler = wrapper(async (cfnRequest: any) => {
   switch (cfnRequest.ResourceType) {
     case "Custom::StackMetadata":
       await handleStackMetadata(cfnRequest);
+      break;
     case "Custom::AuthKeys":
-      await AuthKeys();
+      await AuthKeys(cfnRequest);
       break;
   }
 });
