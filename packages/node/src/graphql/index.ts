@@ -18,6 +18,9 @@ import {
 } from "../context/http";
 
 interface GraphQLHandlerConfig<C> {
+  /**
+   * Intercept the response and make changes
+   */
   formatPayload?: (params: FormatPayloadParams<C, any>) => any;
   /**
    * This function specifies the ctx object passed to the GraphQL resolver. This is usually not needed
@@ -27,7 +30,13 @@ interface GraphQLHandlerConfig<C> {
     context: Context;
     execution: ExecutionContext;
   }) => Promise<C>;
+  /**
+   * The GraphQL schema to be executed
+   */
   schema: GraphQLSchema;
+  /**
+   * Override the GraphQL execute function, sometimes used by plugins
+   */
   execute?: ProcessRequestOptions<any, any>["execute"];
 }
 
