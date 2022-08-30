@@ -116,6 +116,12 @@ export class Auth extends Construct {
         function: this.authenticator,
       },
     });
+    props.api.addRoutes(scope, {
+      [`GET ${prefix}`]: {
+        type: "function",
+        function: this.authenticator,
+      },
+    });
     props.api.getFunction(path)!.addConfig([this.SST_AUTH_PRIVATE]);
     props.api.getFunction(path)!.addEnvironment("SST_AUTH_PREFIX", prefix);
   }
