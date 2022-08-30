@@ -1,5 +1,14 @@
 # @serverless-stack/resources
 
+## 1.10.0
+
+### Patch Changes
+
+- [#1921](https://github.com/serverless-stack/sst/pull/1921) [`c628edfe1`](https://github.com/serverless-stack/sst/commit/c628edfe1034f0a6ee788ec41b052353a73c5438) Thanks [@thdxr](https://github.com/thdxr)! - Stack: use a single function to back all custom sources
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.10.0
+
 ## 1.9.4
 
 ### Patch Changes
