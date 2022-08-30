@@ -9,7 +9,13 @@ import {
 import { createAdapter } from "./adapter.js";
 
 export interface OidcBasicConfig {
+  /**
+   * The clientID provided by the third party oauth service
+   */
   clientID: string;
+  /**
+   * onSuccess callback when the oauth flow is successful. Will provide tokenset
+   */
   onSuccess: (
     claims: TokenSet,
     client: BaseClient

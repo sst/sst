@@ -19,7 +19,6 @@ import { Adapter } from "./adapter/adapter.js";
  * })
  * ```
  */
-
 export function AuthHandler<Providers extends Record<string, Adapter>>(config: {
   providers: Providers;
 }) {
