@@ -1,5 +1,14 @@
 # @serverless-stack/resources
 
+## 1.10.1
+
+### Patch Changes
+
+- [`17983d5ff`](https://github.com/serverless-stack/sst/commit/17983d5ff5b22d8be8fd4749a4140a509f3f0998) Thanks [@thdxr](https://github.com/thdxr)! - Fix auth path
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.10.1
+
 ## 1.10.0
 
 ### Patch Changes
