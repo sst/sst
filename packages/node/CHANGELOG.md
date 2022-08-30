@@ -1,5 +1,16 @@
 # @serverless-stack/node
 
+## 1.10.0
+
+### Minor Changes
+
+- [#1921](https://github.com/serverless-stack/sst/pull/1921) [`c628edfe1`](https://github.com/serverless-stack/sst/commit/c628edfe1034f0a6ee788ec41b052353a73c5438) Thanks [@thdxr](https://github.com/thdxr)! - SST Auth is available! Checkout docs here: https://sst.dev/auth
+
+  Breaking Changes:
+
+  - The old sst.Auth construct has been renamed to sst.Cognito. If you are using it be sure to update all references to sst.Cognito - no other changes should be needed.
+  - The import for `createGQLHandler` has changed to `GraphQLHandler` to match `AuthHandler` and other handlers we will be shipping soon.
+
 ## 1.9.4
 
 ## 1.9.3

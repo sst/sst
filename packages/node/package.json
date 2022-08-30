@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/node",
-  "version": "1.9.4",
+  "version": "1.10.0",
   "type": "module",
   "sideEffects": false,
   "publishConfig": {
@@ -20,7 +20,6 @@
     "graphql-helix": "^1.12.0",
     "aws-sdk": "^2.1061.0",
     "fast-jwt": "^1.6.1",
-    "graphql-helix": "^1.12.0",
     "openid-client": "^5.1.8"
   },
   "devDependencies": {
