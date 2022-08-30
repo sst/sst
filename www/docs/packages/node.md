@@ -47,12 +47,12 @@ Handlers are being actively worked on and are subject to change.
 
 Each handler has a specific purpose but they share a couple of things in common:
 
-1. Provide proper typesafety
+1. Provide proper typesafety.
 2. They also initialize SST's context system to power our [`Hooks`](#hooks).
 
 #### `GraphQLHandler`
 
-The `GraphQLHandler` provides a lambda optimized GraphQL server that minimizes cold starts. It has a similar API to other alternatives like Apollo server so should be simple to switch.
+A Lambda optimized GraphQL server that minimizes cold starts. It has a similar API to other alternatives like Apollo server so should be simple to switch.
 
 ```js
 import { GraphQLHandler } from "@serverless-stack/node/graphql";
@@ -64,7 +64,7 @@ export const handler = GraphQLHandler({
 
 ##### Options
 
-- `formatPayload` - Callback to intercept the the response and make any changes before sending response.
+- `formatPayload` - Callback to intercept the response and make any changes before sending response.
 - `context` - Callback that runs at the beginning of the request to provide the context variable to GraphQL resolvers.
 - `schema` - The GraphQL schema that should be executed.
 
@@ -88,7 +88,9 @@ export const handler = AuthHandler({
 
 #### `Handler`
 
-A generic handler that takes the type of Lambda event and the underlying handler function. This allows it provide proper typesafety for the event object and the return object. It also starts up SST's context system allowing you to use our [`Hooks`](#hooks) in your application code.
+A generic handler that takes the type of Lambda event and the underlying handler function.
+
+This allows it to provide proper typesafety for the event object and the return object. It also starts up SST's context system allowing you to use our [`Hooks`](#hooks) in your application code.
 
 ```js
 import { Handler } from "@serverless-stack/node/context";
@@ -98,21 +100,21 @@ export const getUsers = Handler("api", async (evt) => {});
 
 ##### Supported Events
 
-Currently the generic `Handler` only supports API Lambda events.
+Currently the generic `Handler` only supports API Gateway Lambda events.
 
 - `api` - The ApiGateway v2 request event.
 
 ### Hooks
 
-Hooks are functions that you can call anywhere in your application code and it'll have access to things that are specific to the current request. This avoids having to pass things through multiple functions calls down to our domain code.
+Hooks are functions that you can call anywhere in your application code and it'll have access to things that are specific to the current invocation. This avoids having to pass things through multiple function calls down to our domain code.
 
 :::caution
 Hooks are being actively worked on and are subject to change.
 :::
 
-For example, you can call the `useSession` hook to get access to the current user session in APIs that need authentication.
+For example, you can call the [`useSession`](#usesession) hook to get access to the current user session in APIs that need authentication.
 
-Behind the scenes, Hooks are powered by a SST's context system. Handlers like the [`GraphQLHandler`](#graphqlhandler) and the generic [`Handler`](#handler) create a global variable that keeps tracks of the _"context"_ for the current request. This context object gets reset for every request.
+Behind the scenes, Hooks are powered by a SST's context system. Handlers like the [`GraphQLHandler`](#graphqlhandler) and the generic [`Handler`](#handler) create a global variable that keeps track of the _"context"_ for the current request. This context object gets reset on every invocation.
 
 Hooks are an alternative to middleware solutions like [Middy](https://middy.js.org). They provide better typesafety and will be familiar to developers that've used Hooks in frontend frameworks.
 
