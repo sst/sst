@@ -320,11 +320,11 @@ It also decrypts the token using the public key that it had previously generated
 The `useSession` hook uses `Auth` construct's public key to decrypt the session token.
 :::
 
-If you are using the `GraphQLHandler` that comes with the GraphQL starter in the [`create sst`](packages/create-sst.md) CLI, it'll transparently initialize the context system.
+If you are using the [`GraphQLHandler`](packages/node.md#graphqlhandler) that comes with the GraphQL starter in the [`create sst`](packages/create-sst.md) CLI, it'll transparently initialize the context system.
 
-For any other kind of request you just need to wrap your handler function with our generic `Handler`. It'll initialize the context so you can use the `useSession` hook there as well.
+For any other kind of request you just need to wrap your handler function with our generic [`Handler`](packages/node.md#handler). It'll initialize the context so you can use the `useSession` hook there as well.
 
-Here's an example of how you'd implement handle a typical API request.
+Here's an example of how you'd handle a typical API request.
 
 ```js title="services/functions/rest/foo.ts"
 import { Handler } from "@serverless-stack/node/context";
@@ -339,9 +339,9 @@ export const getSessionTypeHandler = Handler("api", async (event) => {
 });
 ```
 
-Note here that by passing in `api` to the `Handler`, it makes this call typesafe. So the `event` and the response object will be properly typed, without passing in any additional type info.
+Note here, that by passing in `api` to the `Handler`, it makes this call typesafe. So the `event` and the response object will be properly typed, without passing in any additional type info.
 
-And that's it! You can a fully functioning auth setup. It's secure, customizable, doesn't rely on any third party services, and all your user data is stored on your side.
+And that's it! You get a fully functioning auth setup. It's secure, customizable, doesn't rely on any third party services, and all your user data is stored on your side.
 
 ## Adapters
 
@@ -385,7 +385,7 @@ OidcAdapter({
 
 ### `GoogleAdapter`
 
-The Google adapter supports both OIDC and OAuth. Use OIDC when you only need to authenticate who the user is and retreive their email and name. Use OAuth when you need the user to grant you access to additional scopes like reading their Google Calendar, etc.
+The Google adapter supports both [OIDC](https://openid.net/connect/) and [OAuth](https://oauth.net). Use OIDC when you only need to authenticate who the user is and retrieve their email and name. Use OAuth when you need the user to grant you access to additional scopes like reading their Google Calendar, etc.
 
 #### OIDC
 
@@ -412,7 +412,7 @@ GoogleAdapter({
 
 ### `GithubAdapter`
 
-This adapter simply extends the `OauthAdapter` and preconfigures with GitHub OAuth URLs.
+Extends the `OauthAdapter` and pre-configures with GitHub OAuth URLs.
 
 ```js
 GithubAdapter({
@@ -425,7 +425,7 @@ GithubAdapter({
 
 ### `TwitchAdapter`
 
-This simply extends the `OidcAdapter` and is preconfigured with Twitch OIDC urls.
+Extends the `OidcAdapter` and is preconfigured with Twitch OIDC urls.
 
 ```js
 TwitchAdapter({
@@ -436,7 +436,7 @@ TwitchAdapter({
 
 ### `LinkAdapter`
 
-This adapter issues magic links that you can send over email or SMS to verify users without the need of a password.
+Issues magic links that you can send over email or SMS to verify users without the need of a password.
 
 You will need to implement an `onLink` callback to send the link through your preferred mechanism; email or SMS. Any query parameters included in the redirect from your frontend will be passed through in the `claims` argument. This is useful to include the email or phone number you will be sending the link to.
 
@@ -460,9 +460,9 @@ LinkAdapter({
 
 ### Custom Adapters
 
-You can create your own adapters for handling flows that do not work out of the box. A common example would be to conditionally use different providers based on multi-tenant configuration.
+You can create your own adapters with the `createAdapter` function for handling flows that do not work out of the box. A common example would be to conditionally use different providers based on multi-tenant configuration.
 
-Here is an example:
+Here's an example:
 
 ```js
 import { createAdapter } from "@serverless-stack/node/auth"
@@ -489,7 +489,7 @@ The `Session` module can be used to generate a response for the `onSuccess` call
 
 ### `queryParameter`
 
-This issues a new `Session` and redirects to the specified url with a `token=xxx` query parameter added.
+Issues a new `Session` and redirects to the given url with a `token=xxx` query parameter added.
 
 ```js title="services/functions/auth.ts"
 return Session.parameter({
@@ -501,13 +501,13 @@ return Session.parameter({
 });
 ```
 
-### cookie
+### `cookie`
 
-The cookie strategy for Session management requires some additional configuration on your API but is less work on your frontend. The API will issue a cookie that can be automatically included with all future requests so your frontend does not have to think about token storage.
+The cookie strategy for managing sessions requires some additional configuration on your API but is less work on your frontend. The API will issue a cookie that can be automatically included with all future requests so your frontend does not have to think about local storage.
 
 You must allow cookies to be sent cross-origin from your frontend, which is usually running on `localhost` during development and another subdomain in production.
 
-Update your API with the correct `cors` options.
+So update your [`Api`](constructs/Api.md) with the correct `cors` options.
 
 ```js title="stacks/api.ts"
 new Api(stack, "api", {
@@ -520,7 +520,7 @@ new Api(stack, "api", {
 });
 ```
 
-Then when creating the session use the `cookie` function instead of `queryParameter`.
+Then use the `Session.cookie` call to use the cookie strategy.
 
 ```js title="services/functions/auth.ts"
 return Session.cookie({
@@ -533,6 +533,8 @@ return Session.cookie({
 ```
 
 In your frontend, when making requests to your API, make sure you specify `credentials: include` with the request so that the cookie is included.
+
+Here are a couple of examples for how to do this:
 
 #### fetch
 
@@ -556,7 +558,7 @@ export const urql = createClient({
 
 ### `create`
 
-You can also directly generate the token without doing a redirect. This is most useful in integration tests when creating dummy users to make requests to your API.
+You can also directly generate the token without doing a redirect. This is most useful while writing tests to create dummy users to make requests to your API.
 
 ```js
 const jwt = Session.create({
@@ -577,6 +579,6 @@ const jwt = Session.create({
 
 As of now all of the `Auth` adapters can be implemented in a stateless way and do not require storing anything in a database.
 
-Introducing password auth would require storing and retreiving password data. Additionally it requires more complicated integrations for register, login, reset password flows.
+Introducing password auth would require storing and retrieving password data. Additionally it requires more complicated integrations for register, login, reset password flows.
 
 We strongly recommend passwordless flow to keep things simple for yourself and your users. That said if you are interested in passwords, talk to us in Discord.
