@@ -109,7 +109,7 @@ export class Auth extends Construct {
       );
     this.apis.add(props.api);
     const prefix = props.prefix || "/auth";
-    const path = `ANY ${prefix}{proxy+}`;
+    const path = `ANY ${prefix}/{proxy+}`;
     props.api.addRoutes(scope, {
       [path]: {
         type: "function",

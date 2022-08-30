@@ -6118,19 +6118,6 @@
     node-addon-api "3.2.1"
     node-gyp "8.1.0"
 
-"@serverless-stack/node@1.9.1":
-  version "1.9.1"
-  resolved "https://registry.yarnpkg.com/@serverless-stack/node/-/node-1.9.1.tgz#21f76ae824aa3250f7a5e34cd926352fb5a02f4a"
-  integrity sha512-/aoxgs4TSYkytgJkqQQW0T2xuEmyqzgIXSYHd9oczdxi3A3By/4sUiflqJcLthrDPB2K8yCTOl7Vn6ssBlNdGg==
-  dependencies:
-    "@aws-sdk/client-ssm" "3.43.0"
-    "@graphql-tools/schema" "^8.3.11"
-    "@tsconfig/node14" "^1.0.1"
-    aws-jwt-verify "^2.1.3"
-    graphql-helix "^1.12.0"
-  optionalDependencies:
-    graphql "^16.5.0"
-
 "@sideway/address@^4.1.3":
   version "4.1.4"
   resolved "https://registry.npmjs.org/@sideway/address/-/address-4.1.4.tgz"
