@@ -3,42 +3,52 @@ title: Auth
 description: "Learn to handle authentication and manage sessions in your SST apps."
 ---
 
-SST ships with `Auth` — a lightweight authentication solution for your apps. With a simple set of configuration, it'll create a function that'll handle various authentication flows. You can then attach this function to your API and SST will deploy it for you.
+SST ships with `Auth` — a modern lightweight authentication solution for your apps.
+
+With a simple set of configuration, it'll create a function that'll handle various authentication flows. You can then attach this function to your API and SST will help you manage the session tokens.
+
+:::info
+`Auth` is not a managed service. It is completely stateless, and free to use.
+:::
+
+Let's look at how it works.
 
 ## Overview
 
 `Auth` is made up of the following pieces:
 
-1. [`Auth`](constructs/Auth.md) — a construct that can be attached to your API.
+1. [`Auth`](constructs/Auth.md) — a construct that creates the necessary infrastructure.
 
-   - It provides the necessary authentication routes.
-   - Handles secure generation of RSA keypair to sign sessions.
-   - Stores the RSA keypair as secrets to the app [`Config`](environment-variables.md).
+   - The API routes to handle the authentication flows.
+   - Securely generates a RSA pulbic/private keypair to sign sessions.
+   - Stores the RSA keypair as secrets in the app's [`Config`](environment-variables.md).
 
-2. `AuthHandler` — a Lambda handler function that can be used to handle authentication flows across various providers.
+2. [`AuthHandler`](packages/node.md#authhandler) — a Lambda handler function that can handle authentication flows for various providers.
 
-   - High level adapters for common providers, like Google, GitHub, Twitch, etc.
+   - High level [adapters](#adapters) for common providers like Google, GitHub, Twitch, etc.
    - OIDC and OAuth adapters that work with any compatible service.
-   - A `LinkAdapter` to generate login links that can be sent over email or SMS.
-   - Can be extended with custom adapters to support more complex workflows, like multi-tenant SSO.
+   - A [`LinkAdapter`](#linkadapter) to generate login links that can be sent over email or SMS.
+   - Can be extended with [custom adapters](#custom-adapters) to support more complex workflows, like multi-tenant SSO.
 
-3. `Session` — a library for issuing and validating authentication sessions in your Lambda function code.
+3. [`Session`](#session) — a library for issuing and validating authentication sessions in your Lambda function code.
 
-   - Implemented with stateless JWT tokens that are signed with the RSA keypairs (mentioned above).
-   - Support for passing tokens to the frontend via query parameter or cookie.
-   - Full typesafety for issuing and validating sessions.
+   - Implemented with stateless JWT tokens that are signed with the RSA keypairs mentioned above.
+   - Support for passing tokens to the frontend via a cookie or the query string.
+   - Full typesafety for issuing and validating sessions with the [`useSession`](packages/node.md#usesession) hook.
 
 ## Architecture
 
-Authentication in general is thought to be complex. But with modern standards, it can be easy to implement. Let's look at the typical authentication flow:
+Authentication is usually thought to be complex. But with modern standards, it can be easy to implement. Let's look at the typical authentication flow:
 
 1. Perform handshake with authentication strategy.
 
-   This could be OAuth with a third party provider (like a social login). Or something as simple as an email link that needs to be clicked.
+   This could be OAuth with a third party provider (like a social login). Or something as simple as a link that needs to be clicked.
 
 2. Get the claims from the handshake.
 
-   The result of this handshake is a set of validated claims about who the user is. The claims could include things like the user's email. You can then use these claims to create and store the user info in your database. Or check if the user exists by looking them up in a database.
+   The result of this handshake is a set of validated claims about who the user is. The claims could include things like the user's email.
+
+   You can then use these claims to create and store the user's info in your database. Or first check if the user exists by looking them up in your database.
 
 3. Generate a session token.
 
@@ -46,39 +56,37 @@ Authentication in general is thought to be complex. But with modern standards, i
 
 The key here is that SST's `Auth` has out of the box support for steps 1 and 3. It **intentionally** does not manage the user storage part of step 2.
 
-User storage contains details that tend to be very specific to your application. It's also best if these details live alongside the rest of your business logic. And the data is stored on in your database.
+User storage contains details that tend to be very specific to your application. It's also best if these details live alongside the rest of your business logic. And the user data is stored in _your_ database.
 
-The seperation of responsibilities into things that are undifferentiated (1 & 3), and things that are not (2) is what makes SST's `Auth` both powerful and flexible enough for the most complex authentication scenarios.
+The separation of responsibilities into things that are undifferentiated (1 & 3), and things that are not (2), is what makes SST's `Auth` both powerful and flexible for even the most complex authentication scenarios.
 
-### Why not use Cognito
+#### Why not use Cognito
 
 Managed auth services, like Cognito or Auth0, tend to bundle all these concepts together. Unfortunately this usually leads to challenging situations.
 
-For example, let's suppose you wanted to build a role based access system for your app. You'll need to figure out if your auth provider has this feature and if their implementation works for you. If it doesn't you'll likely build this in your application. However, now your user's data is stored on their side, while your the information regarding the roles are on your side.
+For example, let's suppose you wanted to build a role based access system for your app. You'll need to figure out if your auth provider has this feature and if their implementation works for you. If it doesn't you'll likely build this in your application. However, now your user's data is stored on their side, while the information regarding the roles are stored on your side.
 
-This separation means that the dashboard that your auth provider has won't be useful because it'll be missing a lot of relevant info about your users. And building internal tooling on your side is now more complicated because it needs to grab the data from two separate sources and join them.
+As a result, your auth provider's dashboard won't be as helpful because it'll be missing a lot of relevant info about your users. And building internal tooling on your side is now more complicated because it needs to grab the data from two separate sources and join them.
 
-As your applicaiton grows, you'll find that more of the user storage related logic is on your side. While the auth provider isn't doing a whole lot more than just being a key value store for your user data.
+As your application grows, you'll find that more and more of the user storage related logic keeps shifting to your side. While the auth provider's user storage system is reduced to a simple key value store.
 
-All this is espcially true for startups that are making rapid building out their user storage systems and need the flexbility.
+Typically, you don't need to worry about challenges like this early in your company's lifecycle. However, auth providers can be notoriously hard to migrate away from. To carry out a migration, you'll need all your users to explicitly create a new account on your new auth system. You cannot do this process behind the scenes.
 
-Typically, you don't need to worry about challenges like this early in your company's lifecycle. However, auth providers can be notoriously hard to migrate away from. You need all your users to explicitly create a new account on your new auth system. You cannot do this migraton behind the scenes.
+So if your auth provider makes pricing or design changes that are deal-breakers, or if their design is too restrictive; you'll need to go through a very painful migration process.
 
-So if you auth provider makes pricing or design changes that are deal-breakers for you, or if their design is too restrictive, you'll need to go through a very painful migration process. This means that it's important that you make the choice of an auth solution early.
+All this is especially true for startups that are rapidly building out their user storage systems and need the flexibility. For these reasons, we recommend that startups handle the user storage within their apps and avoid relying on managed auth providers.
 
-For these reasons, we recommend startups to handle the user storage within their apps and avoid relying on managed auth providers.
-
-SST's `Auth` is designed to make it easier to roll out your own auth system while giving you the flexility extend it while you grow.
+SST's `Auth` is designed to make it easier to roll out your own auth system while giving you the flexibility to extend it while you grow.
 
 ## Setup
 
-Let's look at an example of how to add auth to your app be allowing your users to _Sign in with Google_.
+Let's look at an example of how to add auth to your app. In this example we'll be allowing your users to _Sign in with Google_.
 
 ### Add a handler
 
 Start by creating a new function in your functions folder that'll handle authentication requests. Typically, you'll place this in `services/functions/auth.ts`.
 
-`AuthHandler` returns an authenticator function that'll do authentication handshakes and issue sessions for different providers.
+[`AuthHandler`](packages/node.md#authhandler) returns an authenticator function that'll do authentication handshakes and issue sessions for different providers.
 
 We'll leave the provider configuration empty to start.
 
@@ -111,13 +119,13 @@ auth.attach(stack, {
 });
 ```
 
-Behind the scenes, this construct also creates a pair of secrets; a public and private keypair to sign the session tokens. It stores this in our app `Config`.
+Behind the scenes, this construct also creates a pair of secrets; a public and private keypair to sign the session tokens. It stores this in our app [`Config`](environment-variables.md).
 
 ### Configure a provider
 
 The `AuthHandler` can be configured with the set of providers that you'd like to support.
 
-Here's an example of configuring a provider named `google` that uses a `GoogleAdapter` in OIDC mode.
+Here's an example of configuring a provider named `google` that uses a [`GoogleAdapter`](#googleadapter) in OIDC mode.
 
 ```js {6-15} title="services/functions/auth.ts"
 import { AuthHandler, GoogleAdapter } from "@serverless-stack/node/auth";
@@ -144,13 +152,13 @@ This allows your handler function to handle a couple of routes:
 1. `/auth/google/authorize` initializes the auth flow and redirects the user to Google.
 2. `/auth/google/callback` handles the callback request after the user has been authenticated by Google. Make sure to add this URL to Google's OAuth configuration.
 
-These routes are specific to the provider that you have configured. The auth index page, `/auth` shows you exactly the routes that are available.
+These routes are specific to the provider that you've configured. The auth index page, `/auth` shows you exactly the routes that are available.
 
 :::tip
 Head over to the `/auth` page to check out all the auth routes that are available in your API.
 :::
 
-Note that this example uses [`Config`](environment-variables.md). It allows you to easily manage the secrets in your app. You'll need to ensure that the secret is made available to your function.
+Here we are using [`Config`](environment-variables.md) to store the `GOOGLE_CLIENT_ID`. We need to ensure that it is made available to our function.
 
 ```js {5-10} title="stacks/api.ts"
 import { Auth, Config } from "@serverless-stack/resources"
@@ -166,45 +174,51 @@ new Auth(stack, "auth", {
 })
 ```
 
-You'll also need to use the CLI to set this secret.
+We'll also need to use the CLI to set this secret.
 
 ```bash
 npx sst secrets set GOOGLE_CLIENT_ID xxxxxxxxxx
 ```
 
-And make sure to [follow the `Config` docs](environment-variables.md) to learn how to set these values across various stages.
+You can [check out the `Config` docs](environment-variables.md) to learn how to set these values across various stages.
 
-At this point, you can add a _"Sign in with Google"_ button in your frontend. It'll redirect to `/auth/google/authorize` and kick off the authentication flow. If everything is configured right, your browser will print out the set of claims after it redirects to the callback from Google.
+At this point, you can add a _"Sign in with Google"_ button in your frontend. It can redirect your users to `/auth/google/authorize` and kick off the authentication flow. If everything is configured right, your browser will print out the set of claims after it redirects to the callback from Google.
 
 ### Create a session
 
-Once the user has been authenticated, you'll need to handle looking up the user, or creating one. You can do this using the `onSuccess` callback in the `AuthHandler`.
+Once the user has been authenticated, you'll need to handle user lookup/creation. You can do this in the `onSuccess` callback in the `AuthHandler`.
 
-As noted in the [Architecture](#architecture) section above, SST very intentionally avoids providing abstractions for user management. Since these tend to be very specific to what you're building. It just makes more sense that these are handled by you.
+As noted in the [Architecture](#architecture) section above, SST very intentionally avoids providing abstractions for user management. Since these tend to be very specific to what you're building.
 
-However, we do provide a way to create a session once you have retreived the user.
+However, we do provide a way to create a session once you have retrieved the user.
 
-In TypeScript you can define the various session types. So that creating a session and retreiving it in requests is completely typesafe.
+You start by defining the various session types. This makes creating a session and retrieving it completely typesafe.
 
-You can add your session types to `SessionTypes` interface.
+You can add your session types to the `SessionTypes` interface, like so.
 
-```js title="services/functions/auth.ts"
+```ts title="services/functions/auth.ts"
 declare module "@serverless-stack/node/auth" {
   export interface SessionTypes {
     user: {
-      userID: string
+      userID: string;
       // For a multi-tenant setup
       // tenantID: string
-    }
+    };
   }
 }
 ```
 
-You might only have a `user` session type to start with. And it might contain a `userID` in its properties. If you have a multi-tenant app, you might want to add the something like the `tenantID` as well.
+You might only have a `user` session type to start with. And it might contain a `userID` in its properties. If you have a multi-tenant app, you might want to add something like the `tenantID` as well.
 
-In the future you may support other types of sessions, like an `apikey` session that represents any server to server requests..
+We allow you to define multiple session types because in the future you may support other types of sessions. Like an `apikey` session that represents any server to server requests.
 
-Once the session type is defined, you can update your `onSuccess` callback to do user lookup (and creation) from the claims. Once you know the user's id, you can generate create a new session object with the above type, set the `userId`, and redirect back to your frontend with the session token, either in the query parameter or as a cookie.
+Once the session type is defined, you can update your `onSuccess` callback to do user lookup (and creation) from the claims. After you get (or create) your user's id, you can create a new session object with the above type and set the `userId` in it. SST will then encrypt the session into a token and redirect to your frontend either in the query parameter or as a cookie.
+
+:::info
+SST uses your previously generated private key to encrypt the session token.
+:::
+
+Your `onSuccess` callback might look something like this.
 
 ```js title="services/functions/auth.ts"
 import { AuthHandler, Session } from "@serverless-stack/node/auth"
@@ -239,36 +253,34 @@ export const handler = AuthHandler({
 })
 ```
 
-Let's look at the `onSuccess` callback here:
+Let's look at this in detail.
 
 - We've intentionally left the user look up and creation part empty. This'll be implemented based on how you are storing your users.
-- The `Session.queryParameter` call does a few things:
+- The [`Session.queryParameter`](#queryparameter) call does a few things:
   - It takes a `type`. This is the type we added to `SessionTypes` above.
   - The `properties` takes what we've defined in the `SessionTypes` and is typesafe.
   - The `user.userId` is expected to come from our internal user lookup implementation.
   - Using this, the `Session` object creates a session token encrypted using the keypairs that the `Auth` construct generates when it's first created..
   - The `redirect` URL is the frontend URL we'll be redirecting to.
-- In this example we are using `queryParameter` strategy, meaning that this request redirects to the `redirect` URL with `?token=xxx` attached to the query string. `Session` also supports the [cookie strategy](#cookie).
+- In this example we are using the `queryParameter` strategy, meaning that this request redirects to the `redirect` URL with `?token=xxx` attached to the query string. We could've also used [`Session.cookie`](#cookie) strategy to use cookies.
 
 ### Frontend requests
 
-Once the auth flow redirects back to the frontend with the `token`, we just need to store it. If we are using the `queryParameter` strategy we might want to save this in local storage. While for the `cookie` strategy it'll be automatically stored in the cookie.
+Once the auth flow redirects back to the frontend with the `token`, we just need to store it. If we are using the `queryParameter` strategy we might want to save this in local storage. The `cookie` strategy on the other hand stores it automatically in the cookie.
 
-Now in our frontend app we can check if the `token` is stored to display that the user has signed in.
-
-And for any subsequent API requests, we'll pass in the `token` in the request header in this format:
+Now in our frontend app we can check if the `token` is stored and use this to display if the user has signed in. And for subsequent API requests, we'll pass in the `token` in the request header in the standard format:
 
 ```
 authorization: Bearer <token>
 ```
 
-And if we want to log the user out, we can just clear out the `token` from local storage or the cookie.
+Finally, to log the user out, we can just clear out the `token` from local storage or the cookie.
 
 ### Using the session
 
-For the API requests that need authentication, we'll first want to check if the `token` is passed in. It can be a hassle to do this in your handler and to pass this around in your application code.
+For API routes that need authentication, you'll want to check if the session `token` is passed in and is valid. It can be a hassle to do this and have to pass it all around in your application code.
 
-To make it easy to do this across your app, SST provides a `useSession` hook.
+To make it easy to do this across your app, SST provides a [`useSession`](packages/node.md#usesession) hook.
 
 :::tip
 The `useSession` hook can be called in any part of your API.
@@ -289,7 +301,7 @@ builder.mutationFields((t) => ({
 }));
 ```
 
-Note that the `session` object here is the same as the one we defined while creating it and the type is based on the one we added to `SessionTypes`.
+Note that the `session` object here is the same as the one we defined previously and the type is based on the one we added to `SessionTypes`.
 
 ```ts
 {
@@ -300,7 +312,13 @@ Note that the `session` object here is the same as the one we defined while crea
 }
 ```
 
-The `useSession` hook relies on SST's internal context system to discover the authentication token. It allows us to access the session outside of our handler code. Behind the scenes it works by setting a context object that your application code can access.
+The `useSession` hook relies on SST's internal context system to discover the authentication token. It allows us to access the session outside of our handler code. Behind the scenes it works by setting a context object global variable that your application code can access.
+
+It also decrypts the token using the public key that it had previously generated.
+
+:::info
+The `useSession` hook uses `Auth` construct's public key to decrypt the session token.
+:::
 
 If you are using the `GraphQLHandler` that comes with the GraphQL starter in the [`create sst`](packages/create-sst.md) CLI, it'll transparently initialize the context system.
 
@@ -344,7 +362,7 @@ OauthAdapter({
   }),
   clientID: "<client-id>",
   clientSecret: "<client-secret>",
-  scope: "<space seperated list of scopes>",
+  scope: "<space separated list of scopes>",
   prompt: "<prompt>", // optional
   onSuccess: (tokenset) => {},
 });
@@ -360,7 +378,7 @@ import { Issuer } from "openid-client";
 OidcAdapter({
   issuer: await Issuer.discover("<oidc root url>");
   clientID: "<client-id>",
-  scope: "<space seperated list of scopes>",
+  scope: "<space separated list of scopes>",
   onSuccess: (tokenset) => {}
 })
 ```
@@ -386,7 +404,7 @@ GoogleAdapter({
   mode: "oauth",
   clientID: "<client-id>"
   clientSecret: "<client-secret>",
-  scope: "<space seperated list of scopes>",
+  scope: "<space separated list of scopes>",
   prompt: "consent", // optional
   onSuccess: async (tokenset) => {},
 }),
@@ -400,7 +418,7 @@ This adapter simply extends the `OauthAdapter` and preconfigures with GitHub OAu
 GithubAdapter({
   clientID: "<client-id>"
   clientSecret: "<client-secret>",
-  scope: "<space seperated list of scopes>",
+  scope: "<space separated list of scopes>",
   onSuccess: async (tokenset) => {},
 }),
 ```
