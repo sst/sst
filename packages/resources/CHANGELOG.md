@@ -1,5 +1,14 @@
 # @serverless-stack/resources
 
+## 1.10.2
+
+### Patch Changes
+
+- [`f700cb61f`](https://github.com/serverless-stack/sst/commit/f700cb61f56d4d463151fd198802d6455a424cd1) Thanks [@thdxr](https://github.com/thdxr)! - Fix issue with accessing root auth prefix
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.10.2
+
 ## 1.10.1
 
 ### Patch Changes
