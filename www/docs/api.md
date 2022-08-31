@@ -111,10 +111,10 @@ APIs in SST support a few different forms of authentication.
 
 ### JWT via Cognito User Pool
 
-You can use the [`Auth`](constructs/Auth.md) construct with [Cognito User Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html) to manager your users. It can issue JSON web tokens (JWT) that you can use to authorize access to the API.
+You can use the [`Cognito`](constructs/Cognito.md) construct with [Cognito User Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html) to manager your users. It can issue JSON web tokens (JWT) that you can use to authorize access to the API.
 
 ```js
-const auth = new Auth(stack, "Auth", { ... });
+const auth = new Cognito(stack, "Auth", { ... });
 
 new Api(stack, "Api", {
   authorizers: {
@@ -176,10 +176,10 @@ Check out this example on adding JWT authentication with Auth0 to your API.
 
 ### Cognito Identity Pool
 
-You can also use Cognito Identity Pool to grant temporary IAM permissions for users in your Cognito User Pool or 3rd party auth provider. Take a look at the [`Auth`](constructs/Auth.md) on how to configure an Identity Pool.
+You can also use Cognito Identity Pool to grant temporary IAM permissions for users in your Cognito User Pool or 3rd party auth provider. Take a look at the [`Cognito`](constructs/Cognito.md) on how to configure an Identity Pool.
 
 ```js
-const auth = new Auth(stack, "Auth", { ... });
+const auth = new Cognito(stack, "Auth", { ... });
 
 new Api(stack, "Api", {
   defaults: {

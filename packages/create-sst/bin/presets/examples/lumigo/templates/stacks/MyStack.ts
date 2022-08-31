@@ -1,5 +1,5 @@
 import { Api, StackContext } from "@serverless-stack/resources";
-import * as cdk from "aws-cdk-lib";
+import { Tags } from "aws-cdk-lib";
 
 export function MyStack({ stack, app }: StackContext) {
   // Create a HTTP API
@@ -11,7 +11,7 @@ export function MyStack({ stack, app }: StackContext) {
 
   // Enable auto trace only in prod
   if (!app.local)
-    cdk.Tags.of(api.getFunction("GET /")).add("lumigo:auto-trace", "true");
+    Tags.of(api.getFunction("GET /")).add("lumigo:auto-trace", "true");
 
   // Show the endpoint in the output
   stack.addOutputs({

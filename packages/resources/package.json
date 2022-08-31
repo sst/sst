@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/resources",
-  "version": "1.9.1",
+  "version": "1.10.4",
   "homepage": "https://sst.dev",
   "description": "Helper AWS CDK constructs for SST apps.",
   "main": "dist/index.js",
@@ -11,12 +11,12 @@
   },
   "scripts": {
     "cdk-version-check": "node ./bin/aws-cdk-version-check.cjs",
-    "build": "tsc --rootDir src --outDir dist && yarn build:stub && yarn build:rds-migrator && yarn build:bridge && yarn build:script && yarn build:next",
+    "build": "tsc --rootDir src --outDir dist && yarn build:stub && yarn build:rds-migrator && yarn build:script && yarn build:next && yarn build:support",
+    "build:support": "node ./support/build.mjs",
     "build:script": "echo '{ \"type\": \"module\"}' > dist/Script/package.json",
     "build:next": "echo '{ \"type\": \"module\"}' > dist/nextjs-site/custom-resource/package.json",
     "build:stub": "cd assets/stub && yarn && cd ../.. && node ./bin/create-stub-zip.cjs",
     "build:rds-migrator": "cd assets/RDS/migrator && cd ../../.. && node ./bin/copy-rds-migrator.cjs",
-    "build:bridge": "node ./bin/build-bridge-client.cjs",
     "clean": "rm -rf dist",
     "test": "vitest run --no-threads"
   },
@@ -38,7 +38,7 @@
     "@aws-cdk/aws-apigatewayv2-authorizers-alpha": "2.32.0-alpha.0",
     "@aws-cdk/aws-apigatewayv2-integrations-alpha": "2.32.0-alpha.0",
     "@aws-cdk/aws-appsync-alpha": "2.32.0-alpha.0",
-    "@serverless-stack/core": "1.9.1",
+    "@serverless-stack/core": "1.10.4",
     "archiver": "^5.3.0",
     "aws-cdk-lib": "2.32.0",
     "chalk": "^4.1.0",

@@ -1,5 +1,71 @@
 # @serverless-stack/resources
 
+## 1.10.4
+
+### Patch Changes
+
+- [`3d19a5107`](https://github.com/serverless-stack/sst/commit/3d19a5107a1c3d62b82415d719f27e3aefda5882) Thanks [@thdxr](https://github.com/thdxr)! - Add static helper functions to config to create many
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.10.4
+
+## 1.10.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.10.3
+
+## 1.10.2
+
+### Patch Changes
+
+- [`f700cb61f`](https://github.com/serverless-stack/sst/commit/f700cb61f56d4d463151fd198802d6455a424cd1) Thanks [@thdxr](https://github.com/thdxr)! - Fix issue with accessing root auth prefix
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.10.2
+
+## 1.10.1
+
+### Patch Changes
+
+- [`17983d5ff`](https://github.com/serverless-stack/sst/commit/17983d5ff5b22d8be8fd4749a4140a509f3f0998) Thanks [@thdxr](https://github.com/thdxr)! - Fix auth path
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.10.1
+
+## 1.10.0
+
+### Patch Changes
+
+- [#1921](https://github.com/serverless-stack/sst/pull/1921) [`c628edfe1`](https://github.com/serverless-stack/sst/commit/c628edfe1034f0a6ee788ec41b052353a73c5438) Thanks [@thdxr](https://github.com/thdxr)! - Stack: use a single function to back all custom sources
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.10.0
+
+## 1.9.4
+
+### Patch Changes
+
+- [#2005](https://github.com/serverless-stack/sst/pull/2005) [`c6232577d`](https://github.com/serverless-stack/sst/commit/c6232577d1b1e2d3aef4202ef5298630a3142927) Thanks [@fwang](https://github.com/fwang)! - Api: fix removing cors options causes error
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.9.4
+
+## 1.9.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.9.3
+
+## 1.9.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.9.2
+
 ## 1.9.1
 
 ### Patch Changes

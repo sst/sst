@@ -1,5 +1,4 @@
-import TabItem from "@theme/TabItem";
-import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
+SST Auth is a lightweight authentication solution for your applications. With a simple set of configuration you can deploy a function attached to your API that can handle various authentication flows. Full documentation [here](/auth)
 
 The `Auth` construct is a higher level CDK construct that makes it easy to configure a [Cognito User Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html) and [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/identity-pools.html). Also, allows setting up Auth0, Facebook, Google, Twitter, Apple, and Amazon as authentication providers.
 
@@ -289,7 +288,7 @@ export function AuthStack({ stack }: StackContext) {
 
 Then import the auth construct into another stack with `use` and attach the permissions.
 
-```js {13} title="stacks/ApiStack.ts"
+```js {12} title="stacks/ApiStack.ts"
 import { Api, StackContext } from "@serverless-stack/resources";
 import { AuthStack } from "./AuthStack"
 

@@ -1,5 +1,33 @@
 # create-sst
 
+## 1.10.4
+
+## 1.10.3
+
+### Patch Changes
+
+- [`0fa55458d`](https://github.com/serverless-stack/sst/commit/0fa55458d2e5d21e51a35e4670e483d6893438fa) Thanks [@thdxr](https://github.com/thdxr)! - Fix missing node-fetch
+
+## 1.10.2
+
+## 1.10.1
+
+## 1.10.0
+
+## 1.9.4
+
+## 1.9.3
+
+### Patch Changes
+
+- [`db955a264`](https://github.com/serverless-stack/sst/commit/db955a2644c436e0ba2600289e7e2a74c4753791) Thanks [@thdxr](https://github.com/thdxr)! - Fix node-fetch import
+
+## 1.9.2
+
+### Patch Changes
+
+- [`ba4044adb`](https://github.com/serverless-stack/sst/commit/ba4044adb25570ab671479901878d9003798cba5) Thanks [@thdxr](https://github.com/thdxr)! - Switch to node-fetch from undici to avoid node 16.5 requirement
+
 ## 1.9.1
 
 ### Patch Changes

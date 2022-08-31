@@ -1,24 +1,11 @@
-import { CognitoJwtVerifier } from "aws-jwt-verify";
+export * from "./auth.js";
+export * from "./session.js";
+export * from "./auth.js";
 
-let verifier: ReturnType<typeof createVerifier> | undefined = undefined;
-
-export function init(userPoolId: string) {
-  verifier = createVerifier(userPoolId);
-}
-
-function createVerifier(userPoolId: string) {
-  return CognitoJwtVerifier.create({
-    userPoolId,
-  });
-}
-
-function verify(token: string) {
-  if (!verifier)
-    throw new Error(`Auth must be initialized with "Auth.init(userPoolId)"`);
-  return verifier.verify(token, { clientId: null, tokenUse: "access" });
-}
-
-export const Auth = {
-  init,
-  verify,
-};
+export * from "./adapter/adapter.js";
+export * from "./adapter/google.js";
+export * from "./adapter/twitch.js";
+export * from "./adapter/github.js";
+export * from "./adapter/oidc.js";
+export * from "./adapter/oauth.js";
+export * from "./adapter/link.js";

@@ -1,5 +1,5 @@
 import fs from "fs/promises";
-import { fetch } from "undici"
+import fetch from "node-fetch";
 import path from "path";
 import { exec, execSync } from "child_process";
 import { applyOperation } from "fast-json-patch/index.mjs";
@@ -164,7 +164,8 @@ export async function execute(opts) {
   if (!opts.extended) {
     // App name will be used in CloudFormation stack names,
     // so we need to make sure it's valid.
-    const app = path.basename(opts.destination)
+    const app = path
+      .basename(opts.destination)
       // replace _ with -
       .replace(/_/g, "-")
       // remove non-alpha numeric dash characters
@@ -204,5 +205,7 @@ async function listFiles(dir) {
  * @param {string} pkg
  */
 async function getLatestPackageVersion(pkg) {
-  return fetch(`https://registry.npmjs.org/${pkg}/latest`).then(res => res.json()).then(res => res.version)
+  return fetch(`https://registry.npmjs.org/${pkg}/latest`)
+    .then((res) => res.json())
+    .then((res) => res.version);
 }

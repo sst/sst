@@ -40,6 +40,10 @@ export class Stack extends cdk.Stack {
    */
   public readonly defaultFunctionProps: FunctionProps[];
 
+  /**
+   * @internal
+   */
+  public readonly customResourceHandler: lambda.Function;
   private readonly metadata: cdk.CustomResource;
 
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -53,12 +57,12 @@ export class Stack extends cdk.Stack {
       ...props,
       env: {
         account: root.account,
-        region: root.region
-      }
+        region: root.region,
+      },
     });
 
     this.stage = root.stage;
-    this.defaultFunctionProps = root.defaultFunctionProps.map(dfp =>
+    this.defaultFunctionProps = root.defaultFunctionProps.map((dfp) =>
       typeof dfp === "function" ? dfp(this) : dfp
     );
 
@@ -70,6 +74,7 @@ export class Stack extends cdk.Stack {
     // resource on app synth, the tests would fail because the resource
     // would already exist.
 
+    this.customResourceHandler = this.createCustomResourceHandler();
     this.metadata = this.createStackMetadataResource();
   }
 
@@ -103,7 +108,7 @@ export class Stack extends cdk.Stack {
    */
   public addDefaultFunctionPermissions(permissions: Permissions) {
     this.defaultFunctionProps.push({
-      permissions
+      permissions,
     });
   }
 
@@ -119,7 +124,7 @@ export class Stack extends cdk.Stack {
    */
   public addDefaultFunctionEnv(environment: Record<string, string>) {
     this.defaultFunctionProps.push({
-      environment
+      environment,
     });
   }
 
@@ -131,7 +136,9 @@ export class Stack extends cdk.Stack {
    * stack.addDefaultFunctionConfig([STRIPE_KEY]);
    * ```
    */
-  public addDefaultFunctionConfig(config: (Config.Secret | Config.Parameter)[]) {
+  public addDefaultFunctionConfig(
+    config: (Config.Secret | Config.Parameter)[]
+  ) {
     this.defaultFunctionProps.push({ config });
   }
 
@@ -145,7 +152,7 @@ export class Stack extends cdk.Stack {
    */
   public addDefaultFunctionLayers(layers: lambda.ILayerVersion[]) {
     this.defaultFunctionProps.push({
-      layers
+      layers,
     });
   }
 
@@ -192,7 +199,7 @@ export class Stack extends cdk.Stack {
   public addOutputs(
     outputs: Record<string, string | cdk.CfnOutputProps>
   ): void {
-    Object.keys(outputs).forEach(key => {
+    Object.keys(outputs).forEach((key) => {
       const value = outputs[key];
       if (value === undefined) {
         throw new Error(`The stack output "${key}" is undefined`);
@@ -205,7 +212,22 @@ export class Stack extends cdk.Stack {
   }
 
   public setStackMetadata(metadata: any) {
-    (this.metadata.node.defaultChild as cdk.CfnResource).addPropertyOverride("Metadata", metadata);
+    (this.metadata.node.defaultChild as cdk.CfnResource).addPropertyOverride(
+      "Metadata",
+      metadata
+    );
+  }
+
+  private createCustomResourceHandler() {
+    return new lambda.Function(this, "CustomResourceHandler", {
+      code: lambda.Code.fromAsset(
+        path.join(__dirname, "../dist/support/custom-resources")
+      ),
+      handler: "index.handler",
+      runtime: lambda.Runtime.NODEJS_16_X,
+      timeout: cdk.Duration.seconds(900),
+      memorySize: 1024,
+    });
   }
 
   private createStackMetadataResource() {
@@ -213,34 +235,21 @@ export class Stack extends cdk.Stack {
 
     // Create execution policy
     const policyStatement = new iam.PolicyStatement();
-    policyStatement.addResources(`arn:aws:s3:::${app.bootstrapAssets.bucketName}/*`);
-    policyStatement.addActions(
-      "s3:PutObject",
-      "s3:DeleteObject",
+    policyStatement.addResources(
+      `arn:aws:s3:::${app.bootstrapAssets.bucketName}/*`
     );
+    policyStatement.addActions("s3:PutObject", "s3:DeleteObject");
+    this.customResourceHandler.addToRolePolicy(policyStatement);
 
-    // Create Lambda
-    const fn = new lambda.Function(this, "MetadataUploaderFunction", {
-      code: lambda.Code.fromAsset(path.join(__dirname, "../assets/Stack/custom-resources")),
-      handler: "stack-metadata.handler",
-      runtime: lambda.Runtime.NODEJS_16_X,
-      timeout: cdk.Duration.seconds(900),
-      memorySize: 1024,
-      environment: {
-        BUCKET_NAME: app.bootstrapAssets.bucketName!,
-      },
-      initialPolicy: [policyStatement],
-    });
-
-    // Create custom resource
-    return new cdk.CustomResource(this, "MetadataUploader", {
-      serviceToken: fn.functionArn,
+    return new cdk.CustomResource(this, "StackMetadata", {
+      serviceToken: this.customResourceHandler.functionArn,
       resourceType: "Custom::StackMetadata",
       properties: {
         App: app.name,
         Stage: this.stage,
         Stack: this.stackName,
-      }
+        BootstrapBucketName: app.bootstrapAssets.bucketName!,
+      },
     });
   }
 

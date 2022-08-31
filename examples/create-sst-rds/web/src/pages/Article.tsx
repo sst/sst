@@ -48,7 +48,7 @@ export function List() {
       <h3>Latest</h3>
       <ol>
         {articles.data?.articles.map(article => (
-          <li>
+          <li key={article.id}>
             <div>
               <div>
                 {article.title} - <a href={article.url}>{article.url}</a>

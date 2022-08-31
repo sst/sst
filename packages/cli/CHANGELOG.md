@@ -1,5 +1,71 @@
 # @serverless-stack/cli
 
+## 1.10.4
+
+### Patch Changes
+
+- Updated dependencies [[`3d19a5107`](https://github.com/serverless-stack/sst/commit/3d19a5107a1c3d62b82415d719f27e3aefda5882)]:
+  - @serverless-stack/resources@1.10.4
+  - @serverless-stack/core@1.10.4
+
+## 1.10.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @serverless-stack/resources@1.10.3
+  - @serverless-stack/core@1.10.3
+
+## 1.10.2
+
+### Patch Changes
+
+- [`7793e5b94`](https://github.com/serverless-stack/sst/commit/7793e5b94b7c3bacbc7d00aa27c6c809eeb85123) Thanks [@fwang](https://github.com/fwang)! - sst start: fix stack outputs not displayed
+
+- Updated dependencies [[`f700cb61f`](https://github.com/serverless-stack/sst/commit/f700cb61f56d4d463151fd198802d6455a424cd1)]:
+  - @serverless-stack/resources@1.10.2
+  - @serverless-stack/core@1.10.2
+
+## 1.10.1
+
+### Patch Changes
+
+- Updated dependencies [[`17983d5ff`](https://github.com/serverless-stack/sst/commit/17983d5ff5b22d8be8fd4749a4140a509f3f0998)]:
+  - @serverless-stack/resources@1.10.1
+  - @serverless-stack/core@1.10.1
+
+## 1.10.0
+
+### Patch Changes
+
+- Updated dependencies [[`c628edfe1`](https://github.com/serverless-stack/sst/commit/c628edfe1034f0a6ee788ec41b052353a73c5438)]:
+  - @serverless-stack/resources@1.10.0
+  - @serverless-stack/core@1.10.0
+
+## 1.9.4
+
+### Patch Changes
+
+- Updated dependencies [[`c6232577d`](https://github.com/serverless-stack/sst/commit/c6232577d1b1e2d3aef4202ef5298630a3142927)]:
+  - @serverless-stack/resources@1.9.4
+  - @serverless-stack/core@1.9.4
+
+## 1.9.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @serverless-stack/resources@1.9.3
+  - @serverless-stack/core@1.9.3
+
+## 1.9.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @serverless-stack/resources@1.9.2
+  - @serverless-stack/core@1.9.2
+
 ## 1.9.1
 
 ### Patch Changes

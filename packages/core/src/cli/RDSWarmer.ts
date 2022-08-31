@@ -28,7 +28,7 @@ export function createRDSWarmer(opts: Opts) {
               database: c.data.defaultDatabaseName,
             })
             .promise();
-        } catch(e) {
+        } catch (e) {
           // Ignore error
           // If the cluster is not warm, this will throw:
           //   BadRequestException: Communication link failure

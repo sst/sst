@@ -34,6 +34,7 @@ Here's a rough list of the types of contructs that SST supports.
 
 ## Auth
 - [`Auth`](./Auth.md)
+- [`Cognito`](./Cognito.md)
 
 ## Async
 - [`Cron`](./Cron.md)

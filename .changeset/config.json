@@ -9,11 +9,11 @@
     [
       "@serverless-stack/resources",
       "@serverless-stack/cli",
+      "@serverless-stack/cli2",
       "@serverless-stack/core",
       "@serverless-stack/console",
       "create-sst",
       "@serverless-stack/node",
-      "@serverless-stack/web",
       "@serverless-stack/static-site-env"
     ]
   ],

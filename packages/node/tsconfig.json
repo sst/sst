@@ -4,7 +4,8 @@
     "declaration": true,
     "module": "esnext",
     "moduleResolution": "node",
-    "outDir": "./"
+    "outDir": ".",
+    "allowSyntheticDefaultImports": true
   },
   "include": ["src"],
   "exclude": []

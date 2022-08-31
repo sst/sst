@@ -111,12 +111,12 @@ fetch(signedUrl, {
 
 ### Granting access with Cognito Identity Pool
 
-Another option is to use Cognito Identity Pool to grant temporary IAM permissions for both the authenticated and unauthenticated users in your web app. If you are using the [`Auth`](constructs/Auth.md) construct to manage your users, you can grant the permissions like so:
+Another option is to use Cognito Identity Pool to grant temporary IAM permissions for both the authenticated and unauthenticated users in your web app. If you are using the [`Cognito`](constructs/Cognito.md) construct to manage your users, you can grant the permissions like so:
 
 ```js
 const bucket = new Bucket(stack, "MyBucket");
 
-const auth = new Auth(stack, "Auth", { ... });
+const auth = new Cognito(stack, "Auth", { ... });
 
 // Granting permissions to authenticated users
 auth.attachPermissionsForAuthUsers(stack, [bucket]);

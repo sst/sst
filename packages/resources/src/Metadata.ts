@@ -13,8 +13,8 @@ export type GraphQLApiMetadata = ExtractMetadata<GraphQLApi>;
 import type { ApiGatewayV1Api } from "./ApiGatewayV1Api.js";
 export type ApiGatewayV1ApiMetadata = ExtractMetadata<ApiGatewayV1Api<any>>;
 
-import type { Auth } from "./Auth.js";
-export type AuthMetadata = ExtractMetadata<Auth>;
+import type { Cognito } from "./Cognito.js";
+export type AuthMetadata = ExtractMetadata<Cognito>;
 
 import type { AppSyncApi } from "./AppSyncApi.js";
 export type AppSyncApiMetadata = ExtractMetadata<AppSyncApi>;
