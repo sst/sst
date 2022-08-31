@@ -160,7 +160,7 @@ Head over to the `/auth` page to check out all the auth routes that are availabl
 
 Here we are using [`Config`](environment-variables.md) to store the `GOOGLE_CLIENT_ID`. We need to ensure that it is made available to our function.
 
-```js {5-10} title="stacks/api.ts"
+```js {4-9} title="stacks/api.ts"
 import { Auth, Config } from "@serverless-stack/resources"
 
 new Auth(stack, "auth", {
