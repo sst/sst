@@ -1,5 +1,7 @@
 # @serverless-stack/static-site-env
 
+## 1.10.4
+
 ## 1.10.3
 
 ## 1.10.2
