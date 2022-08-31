@@ -53,14 +53,8 @@ module.exports = {
           collapsible: true,
           collapsed: true,
           items: [
-<<<<<<< HEAD
             "learn/render-queries",
             "learn/make-updates",
-=======
-            "learn/fetch-data",
-            "learn/render-results"
->>>>>>> master
-
             //Link to Vue example
             //Link to Next.js example
             //"learn/frontend-options",
