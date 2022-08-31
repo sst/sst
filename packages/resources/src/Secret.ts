@@ -51,4 +51,12 @@ export class Secret extends Construct {
       },
     };
   }
+
+  public static create<T extends string[]>(scope: Construct, ...parameters: T) {
+    const result: Record<string, Secret> = {};
+    for (const name of parameters) {
+      result[name] = new Secret(scope, name);
+    }
+    return result as { [key in T[number]]: Secret };
+  }
 }

@@ -47,7 +47,7 @@ export class Parameter extends Construct {
         app.stage,
         id
       ),
-      stringValue: value
+      stringValue: value,
     });
   }
 
@@ -71,8 +71,20 @@ export class Parameter extends Construct {
     return {
       type: "Parameter" as const,
       data: {
-        name: this.name
-      }
+        name: this.name,
+      },
     };
+  }
+
+  public static create<T extends Record<string, any>>(
+    scope: Construct,
+    parameters: T
+  ) {
+    const result: Record<string, Parameter> = {};
+    for (const [name, value] of Object.entries(parameters)) {
+      result[name] = new Parameter(scope, name, { value });
+    }
+
+    return result as { [key in keyof T]: Parameter };
   }
 }
