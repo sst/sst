@@ -167,9 +167,9 @@ new Auth(stack, "auth", {
   api: myApi,
   function: {
     handler: "functions/auth.handler",
-    config: {
+    config: [
       new Config.Secret(stack, "GOOGLE_CLIENT_ID")
-    }
+    ]
   }
 })
 ```
