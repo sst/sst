@@ -30,10 +30,9 @@ module.exports = {
           collapsed: true,
           items: [
             "learn/domain-driven-design",
-            "learn/scaffold-business-logic",
-            "learn/database-options",
+            //"learn/database-options",
             "learn/write-to-postgresql",
-            "learn/write-to-dynamodb"
+            //"learn/write-to-dynamodb"
           ]
         },
         {
