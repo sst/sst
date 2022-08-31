@@ -109,21 +109,16 @@ export class Auth extends Construct {
       );
     this.apis.add(props.api);
     const prefix = props.prefix || "/auth";
-    const path = `ANY ${prefix}/{proxy+}`;
-    props.api.addRoutes(scope, {
-      [path]: {
-        type: "function",
-        function: this.authenticator,
-      },
-    });
-    props.api.addRoutes(scope, {
-      [`GET ${prefix}`]: {
-        type: "function",
-        function: this.authenticator,
-      },
-    });
-    props.api.getFunction(path)!.addConfig([this.SST_AUTH_PRIVATE]);
-    props.api.getFunction(path)!.addEnvironment("SST_AUTH_PREFIX", prefix);
+    for (let path of [`ANY ${prefix}/{proxy+}`, `GET ${prefix}`]) {
+      props.api.addRoutes(scope, {
+        [path]: {
+          type: "function",
+          function: this.authenticator,
+        },
+      });
+      props.api.getFunction(path)!.addConfig([this.SST_AUTH_PRIVATE]);
+      props.api.getFunction(path)!.addEnvironment("SST_AUTH_PREFIX", prefix);
+    }
   }
 
   /** @internal */
