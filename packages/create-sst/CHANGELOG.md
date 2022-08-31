@@ -1,5 +1,11 @@
 # create-sst
 
+## 1.10.3
+
+### Patch Changes
+
+- [`0fa55458d`](https://github.com/serverless-stack/sst/commit/0fa55458d2e5d21e51a35e4670e483d6893438fa) Thanks [@thdxr](https://github.com/thdxr)! - Fix missing node-fetch
+
 ## 1.10.2
 
 ## 1.10.1
