@@ -164,8 +164,7 @@ Here we are using [`Config`](environment-variables.md) to store the `GOOGLE_CLIE
 import { Auth, Config } from "@serverless-stack/resources"
 
 new Auth(stack, "auth", {
-  api: myApi,
-  function: {
+  authenticator: {
     handler: "functions/auth.handler",
     config: [
       new Config.Secret(stack, "GOOGLE_CLIENT_ID")
