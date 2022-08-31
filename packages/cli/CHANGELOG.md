@@ -1,5 +1,15 @@
 # @serverless-stack/cli
 
+## 1.10.2
+
+### Patch Changes
+
+- [`7793e5b94`](https://github.com/serverless-stack/sst/commit/7793e5b94b7c3bacbc7d00aa27c6c809eeb85123) Thanks [@fwang](https://github.com/fwang)! - sst start: fix stack outputs not displayed
+
+- Updated dependencies [[`f700cb61f`](https://github.com/serverless-stack/sst/commit/f700cb61f56d4d463151fd198802d6455a424cd1)]:
+  - @serverless-stack/resources@1.10.2
+  - @serverless-stack/core@1.10.2
+
 ## 1.10.1
 
 ### Patch Changes
