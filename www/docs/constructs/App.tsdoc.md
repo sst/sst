@@ -46,6 +46,22 @@ The stage the app is being deployed to. If this is not specified as the --stage 
 
 ## Methods
 An instance of `App` has the following methods.
+### addDefaultFunctionConfig
+
+```ts
+addDefaultFunctionConfig(config)
+```
+_Parameters_
+- __config__ <span class='mono'>Array&lt;<span class='mono'><span class="mono">[Secret](Secret#secret)</span> | <span class="mono">[Parameter](Parameter#parameter)</span></span>&gt;</span>
+
+
+Adds additional default config to be applied to all Lambda functions in the app.
+
+
+```js
+app.addDefaultFunctionConfig([STRIPE_KEY])
+```
+
 ### addDefaultFunctionEnv
 
 ```ts

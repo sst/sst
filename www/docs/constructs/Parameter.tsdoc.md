@@ -32,3 +32,14 @@ _Type_ : <span class="mono">string</span>
 ### value
 
 _Type_ : <span class="mono">string</span>
+
+## Methods
+An instance of `Parameter` has the following methods.
+### create
+
+```ts
+static create(scope, parameters)
+```
+_Parameters_
+- __scope__ <span class="mono">[Construct](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)</span>
+- __parameters__ <span class="mono">T</span>
