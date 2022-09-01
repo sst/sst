@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 1.6.2
+
+### Patch Changes
+
+- [#2016](https://github.com/serverless-stack/sst/pull/2016) [`190fa9306`](https://github.com/serverless-stack/sst/commit/190fa930610a1ad63684a53ed28bef458c7c923c) Thanks [@fwang](https://github.com/fwang)! - Table: support event filtering for stream consumer
+
 ## 1.6.1
 
 ### Patch Changes
