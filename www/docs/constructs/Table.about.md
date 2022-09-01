@@ -238,6 +238,34 @@ new Table(stack, "Notes", {
 });
 ```
 
+#### Filtering events
+
+```js {10-20}
+new Table(stack, "Notes", {
+  fields: {
+    noteId: "string",
+  },
+  primaryIndex: { partitionKey: "noteId" },
+  stream: true,
+  consumers: {
+    myConsumer: {
+      function: "src/consumer1.main",
+      filters: [
+        {
+          dynamodb: {
+            Keys: {
+              Id: {
+                N: ["101"]
+              }
+            }
+          }
+        }
+      ],
+    }
+  },
+});
+```
+
 #### Configuring a consumer
 
 Configure the internally created CDK Event Source.

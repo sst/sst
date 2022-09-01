@@ -22,6 +22,31 @@ export interface TableConsumerProps {
    * Used to create the consumer function for the table.
    */
   function: FunctionDefinition;
+  /**
+   * Used to filter the records that are passed to the consumer function.
+   * @example
+   * ```js
+   * const table = new Table(stack, "Table", {
+   *   consumers: {
+   *     myConsumer: {
+   *       function: "src/consumer1.main",
+   *       filters: [
+   *         {
+   *           dynamodb: {
+   *             Keys: {
+   *               Id: {
+   *                 N: ["101"]
+   *               }
+   *             }
+   *           }
+   *         }
+   *       ]
+   *     }
+   *   },
+   * });
+   * ```
+   */
+  filters?: any[];
   cdk?: {
     /**
      * Override the settings of the internally created event source
@@ -633,11 +658,12 @@ export class Table extends Construct implements SSTConstruct {
     }
 
     // parse consumer
-    let consumerFunction, eventSourceProps;
+    let consumerFunction, eventSourceProps, filters;
     if ((consumer as TableConsumerProps).function) {
       consumer = consumer as TableConsumerProps;
       consumerFunction = consumer.function;
       eventSourceProps = consumer.cdk?.eventSource;
+      filters = consumer.filters;
     } else {
       consumerFunction = consumer as FunctionInlineDefinition;
     }
@@ -662,6 +688,18 @@ export class Table extends Construct implements SSTConstruct {
       eventSourceProps
     );
     fn.addEventSource(eventSource);
+
+    // set filter pattern
+    if (filters && filters.length > 0) {
+      const cfnEventSource = fn.node.children.find(c =>
+        c instanceof lambda.EventSourceMapping
+      )?.node.defaultChild as lambda.CfnEventSourceMapping;
+      cfnEventSource.addPropertyOverride("FilterCriteria", {
+        Filters: filters.map(filter => ({
+          Pattern: JSON.stringify(filter),
+        }))
+      });
+    }
 
     // attach permissions
     this.permissionsAttachedForAllConsumers.forEach((permissions) => {

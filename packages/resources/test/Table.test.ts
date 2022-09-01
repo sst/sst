@@ -925,7 +925,7 @@ test("consumers: Function construct with defaultFunctionProps", async () => {
   }).toThrow(/The "defaults.function" cannot be applied/);
 });
 
-test("consumers: TableFunctionConsumerProps", async () => {
+test("consumers: TableConsumerProps", async () => {
   const stack = new Stack(new App(), "stack");
   new Table(stack, "Table", {
     ...baseTableProps,
@@ -947,6 +947,34 @@ test("consumers: TableFunctionConsumerProps", async () => {
   countResources(stack, "AWS::Lambda::EventSourceMapping", 1);
   hasResource(stack, "AWS::Lambda::EventSourceMapping", {
     StartingPosition: "TRIM_HORIZON",
+    FilterCriteria: ABSENT
+  });
+});
+
+test("consumers: TableConsumerProps with filters", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Table(stack, "Table", {
+    ...baseTableProps,
+    stream: true,
+    consumers: {
+      Consumer_0: {
+        function: "test/lambda.handler",
+        filters: [
+          {
+            dynamodb: {
+              StreamViewType: ["NEW_AND_OLD_IMAGES"],
+            }
+          }
+        ]
+      },
+    },
+  });
+  hasResource(stack, "AWS::Lambda::EventSourceMapping", {
+    FilterCriteria: {
+      Filters: [{
+        Pattern: "{\"dynamodb\":{\"StreamViewType\":[\"NEW_AND_OLD_IMAGES\"]}}"
+      }]
+    }
   });
 });
 
