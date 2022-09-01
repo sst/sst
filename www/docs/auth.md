@@ -20,7 +20,7 @@ Let's look at how it works.
 1. [`Auth`](constructs/Auth.md) — a construct that creates the necessary infrastructure.
 
    - The API routes to handle the authentication flows.
-   - Securely generates a RSA pulbic/private keypair to sign sessions.
+   - Securely generates a RSA public/private keypair to sign sessions.
    - Stores the RSA keypair as secrets in the app's [`Config`](environment-variables.md).
 
 2. [`AuthHandler`](packages/node.md#authhandler) — a Lambda handler function that can handle authentication flows for various providers.
