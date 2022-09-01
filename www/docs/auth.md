@@ -3,7 +3,7 @@ title: Auth
 description: "Learn to handle authentication and manage sessions in your SST apps."
 ---
 
-SST ships with `Auth` — a modern lightweight authentication solution for your apps.
+SST ships with `Auth` — a modern lightweight authentication library for your apps.
 
 With a simple set of configuration, it'll create a function that'll handle various authentication flows. You can then attach this function to your API and SST will help you manage the session tokens.
 
