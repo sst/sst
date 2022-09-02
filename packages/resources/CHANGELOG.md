@@ -1,5 +1,14 @@
 # @serverless-stack/resources
 
+## 1.10.6
+
+### Patch Changes
+
+- [#2022](https://github.com/serverless-stack/sst/pull/2022) [`b222d491a`](https://github.com/serverless-stack/sst/commit/b222d491a42e5dd657164b20c0450afbfb4e2c7a) Thanks [@fwang](https://github.com/fwang)! - Cognito: fix calling attachPermissions from different stacks override previous permissions
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.10.6
+
 ## 1.10.5
 
 ### Patch Changes
