@@ -12,13 +12,11 @@ export { Opts, Instructions } from "./definition.js";
 
 export async function build(opts: Opts) {
   const ins = instructions(opts);
-  if (!ins.build) return;
   return ins.build();
 }
 
 export async function bundle(opts: Opts) {
   const ins = instructions(opts);
-  if (!ins.bundle) return;
   return ins.bundle();
 }
 

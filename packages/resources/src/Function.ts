@@ -12,7 +12,7 @@ import * as lambdaNode from "aws-cdk-lib/aws-lambda-nodejs";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 
-import { State, Runtime, FunctionConfig } from "@serverless-stack/core";
+import { State, Runtime, FunctionConfig, DeferBuilder } from "@serverless-stack/core";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Secret, Parameter } from "./Config.js";
@@ -48,8 +48,6 @@ const supportedRuntimes = [
   lambda.Runtime.JAVA_11,
   lambda.Runtime.GO_1_X,
 ];
-
-const deferBuiltFunctions: any[] = [];
 
 export interface FunctionUrlCorsProps extends functionUrlCors.CorsProps { }
 export type FunctionInlineDefinition = string | Function;
@@ -848,10 +846,8 @@ export class Function extends lambda.Function implements SSTConstruct {
       super(scope, id, {
         ...props,
         architecture,
-        code: lambda.Code.fromAsset(
-          path.resolve(__dirname, "../assets/Function/placeholder-stub")
-        ),
-        handler: "placeholder",
+        code: lambda.Code.fromInline("export function handler() {}"),
+        handler: "index.handler",
         functionName,
         runtime: lambda.Runtime.NODEJS_16_X,
         memorySize,
@@ -865,37 +861,13 @@ export class Function extends lambda.Function implements SSTConstruct {
     }
     // Handle build
     else {
-      //const bundled = Runtime.Handler.bundle({
-      //  id: localId,
-      //  root: app.appPath,
-      //  handler: handler,
-      //  runtime: runtime.toString(),
-      //  srcPath: srcPath,
-      //  bundle: props.bundle,
-      //})!;
-
-      //// Python builder returns AssetCode instead of directory
-      //const code = (() => {
-      //  if ("directory" in bundled) {
-      //    Function.copyFiles(bundle, srcPath, bundled.directory);
-      //    return lambda.AssetCode.fromAsset(bundled.directory);
-      //  }
-      //  return bundled.asset;
-      //})();
-
       super(scope, id, {
         ...props,
         architecture,
-        //code: code!,
-        //handler: bundled.handler,
         code: lambda.Code.fromInline("export function handler() {}"),
         handler: "index.handler",
-        //code: lambda.Code.fromAsset(
-        //  path.resolve(__dirname, "../assets/Function/placeholder-stub")
-        //),
-        //handler: "placeholder",
         functionName,
-        runtime,
+        runtime: lambda.Runtime.NODEJS_16_X,
         memorySize,
         ephemeralStorageSize: diskSize,
         timeout,
@@ -904,15 +876,38 @@ export class Function extends lambda.Function implements SSTConstruct {
         layers: Function.buildLayers(scope, id, props),
         logRetention,
       });
-      deferBuiltFunctions.push({
-        id: localId,
-        root: app.appPath,
-        handler: handler,
-        runtime: runtime.toString(),
-        srcPath: srcPath,
-        bundle: props.bundle,
-        function: this,
-      });
+      DeferBuilder.addTask(async () => {
+        // Build function
+        const bundled = await Runtime.Handler.bundle({
+          id: localId,
+          root: app.appPath,
+          handler: handler,
+          runtime: runtime.toString(),
+          srcPath: srcPath,
+          bundle: props.bundle,
+        })!;
+
+        // Python builder returns AssetCode instead of directory
+        const code = (() => {
+          if ("directory" in bundled) {
+            Function.copyFiles(bundle, srcPath, bundled.directory);
+            return lambda.AssetCode.fromAsset(bundled.directory);
+          }
+          return bundled.asset;
+        })();
+
+        // Update function's code
+        const codeConfig = code.bind(this);
+        const cfnFunction = this.node.defaultChild as lambda.CfnFunction;
+        cfnFunction.runtime = runtime.toString();
+        cfnFunction.code = {
+          s3Bucket: codeConfig.s3Location?.bucketName,
+          s3Key: codeConfig.s3Location?.objectKey,
+          s3ObjectVersion: codeConfig.s3Location?.objectVersion,
+        };
+        cfnFunction.handler = bundled.handler;
+        code.bindToResource(cfnFunction);
+      })
     }
 
     this.props = props || {};

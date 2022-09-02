@@ -95,5 +95,5 @@ if (!handler.default) {
 }
 handler.default(app);
 
-// Build functions
-await app.buildFunctions();
+// Run defer builds
+await app.runDeferredBuilds();

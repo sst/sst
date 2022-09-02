@@ -74,34 +74,34 @@ export const NodeHandler: Definition<Bundle> = opts => {
       opts.bundle === false
         ? []
         : [
-            ...(bundle.format === "esm" ? [] : ["aws-sdk"]),
-            ...(bundle.externalModules || []),
-            ...(bundle.nodeModules || [])
-          ],
+          ...(bundle.format === "esm" ? [] : ["aws-sdk"]),
+          ...(bundle.externalModules || []),
+          ...(bundle.nodeModules || [])
+        ],
     mainFields:
       bundle.format === "esm" ? ["module", "main"] : ["main", "module"],
     platform: "node",
     ...(bundle.format === "esm"
       ? {
-          target: "esnext",
-          format: "esm",
-          banner: {
-            js: [
-              `import { createRequire as topLevelCreateRequire } from 'module'`,
-              `const require = topLevelCreateRequire(import.meta.url)`,
-              bundle.banner || ""
-            ].join("\n")
-          }
+        target: "esnext",
+        format: "esm",
+        banner: {
+          js: [
+            `import { createRequire as topLevelCreateRequire } from 'module'`,
+            `const require = topLevelCreateRequire(import.meta.url)`,
+            bundle.banner || ""
+          ].join("\n")
         }
+      }
       : {
-          target: "node14",
-          format: "cjs",
-          banner: bundle.banner
-            ? {
-                js: bundle.banner
-              }
-            : undefined
-        }),
+        target: "node14",
+        format: "cjs",
+        banner: bundle.banner
+          ? {
+            js: bundle.banner
+          }
+          : undefined
+      }),
     outfile: target
   };
 
@@ -167,7 +167,6 @@ export const NodeHandler: Definition<Bundle> = opts => {
     },
     bundle: async () => {
       await runBeforeBundling(opts.srcPath, artifact, bundle);
-
       await fs.remove(artifact);
       await fs.mkdirp(artifact);
 
@@ -188,9 +187,7 @@ export const NodeHandler: Definition<Bundle> = opts => {
       });
 
       await runBeforeInstall(opts.srcPath, artifact, bundle);
-
       await installNodeModules(opts.srcPath, artifact, bundle);
-
       await runAfterBundling(opts.srcPath, artifact, bundle);
 
       const handler = path
