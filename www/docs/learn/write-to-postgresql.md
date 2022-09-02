@@ -24,7 +24,7 @@ export async function comments(articleID: string) {
 
 Before we can implement them, we'll need to create a new table to store the comments.
 
-### Create a new migration
+### Create a migration
 
 Let's create a new migration for this.
 
@@ -88,7 +88,7 @@ export async function down(db) {
 
 This migration will create a new table called `comment`. While undoing the migration will drop the table.
 
-### Run migration
+### Run a migration
 
 Let's go ahead and run the migration.
 
@@ -110,7 +110,7 @@ SELECT * FROM comment
 
 You should see **0 rows** being returned.
 
-### Query the table
+### Query a table
 
 We are now ready to implement the `addComment` and `comments` functions.
 
