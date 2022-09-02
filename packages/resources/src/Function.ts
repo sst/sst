@@ -80,15 +80,15 @@ export type Runtime =
 
 export interface FunctionProps
   extends Omit<
-  lambda.FunctionOptions,
-  | "functionName"
-  | "memorySize"
-  | "timeout"
-  | "runtime"
-  | "tracing"
-  | "layers"
-  | "architecture"
-  | "logRetention"
+    lambda.FunctionOptions,
+    | "functionName"
+    | "memorySize"
+    | "timeout"
+    | "runtime"
+    | "tracing"
+    | "layers"
+    | "architecture"
+    | "logRetention"
   > {
   /**
    * The CPU architecture of the lambda function.
@@ -926,11 +926,13 @@ export class Function extends lambda.Function implements SSTConstruct {
     }
 
     // Attach permissions
-    if (permissions) {
-      this.attachPermissions(permissions);
-    }
+    this.attachPermissions(props.permissions || []);
 
-    this.handleConfig();
+    // Add config
+    this.addEnvironment("SST_APP", app.name, { removeInEdge: true });
+    this.addEnvironment("SST_STAGE", app.stage, { removeInEdge: true });
+    this.addConfig(props.config || []);
+
     this.createUrl();
 
     app.registerLambdaHandler({
@@ -1059,36 +1061,6 @@ export class Function extends lambda.Function implements SSTConstruct {
       authType,
       cors: functionUrlCors.buildCorsConfig(cors),
     });
-  }
-
-  private handleConfig() {
-    const app = this.node.root as App;
-    const { config } = this.props;
-
-    // Add environment variables
-    this.addEnvironment("SST_APP", app.name, { removeInEdge: true });
-    this.addEnvironment("SST_STAGE", app.stage, { removeInEdge: true });
-    (config || []).forEach((c) => {
-      if (c instanceof Secret) {
-        this.addEnvironment(`${FunctionConfig.SECRET_ENV_PREFIX}${c.name}`, "1");
-      }
-      else if (c instanceof Parameter) {
-        this.addEnvironment(`${FunctionConfig.PARAM_ENV_PREFIX}${c.name}`, c.value);
-      }
-    });
-
-    // Attach permissions
-    const hasSecrets = (config || []).some((c) => c instanceof Secret);
-    if (hasSecrets) {
-      this.attachPermissions([new iam.PolicyStatement({
-        actions: ["ssm:GetParameters"],
-        effect: iam.Effect.ALLOW,
-        resources: [
-          `arn:aws:ssm:${app.region}:${app.account}:parameter/sst/${app.name}/${app.stage}/*`,
-          `arn:aws:ssm:${app.region}:${app.account}:parameter/sst/${app.name}/${FunctionConfig.FALLBACK_STAGE}/*`,
-        ],
-      })]);
-    }
   }
 
   static buildLayers(scope: Construct, id: string, props: FunctionProps) {
