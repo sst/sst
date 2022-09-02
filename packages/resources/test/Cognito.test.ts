@@ -778,6 +778,7 @@ test("attachPermissionsForAuthUsers: with scope diff stack", async () => {
     }
   });
   hasResource(stack2, "AWS::IAM::Policy", {
+    PolicyName: "AuthAuthdevmyappstack2AuthRole2467F67E",
     PolicyDocument: {
       Statement: [
         {
