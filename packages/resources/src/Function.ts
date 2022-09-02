@@ -49,7 +49,9 @@ const supportedRuntimes = [
   lambda.Runtime.GO_1_X,
 ];
 
-export interface FunctionUrlCorsProps extends functionUrlCors.CorsProps {}
+const deferBuiltFunctions: any[] = [];
+
+export interface FunctionUrlCorsProps extends functionUrlCors.CorsProps { }
 export type FunctionInlineDefinition = string | Function;
 export type FunctionDefinition = string | Function | FunctionProps;
 
@@ -78,15 +80,15 @@ export type Runtime =
 
 export interface FunctionProps
   extends Omit<
-    lambda.FunctionOptions,
-    | "functionName"
-    | "memorySize"
-    | "timeout"
-    | "runtime"
-    | "tracing"
-    | "layers"
-    | "architecture"
-    | "logRetention"
+  lambda.FunctionOptions,
+  | "functionName"
+  | "memorySize"
+  | "timeout"
+  | "runtime"
+  | "tracing"
+  | "layers"
+  | "architecture"
+  | "logRetention"
   > {
   /**
    * The CPU architecture of the lambda function.
@@ -706,12 +708,12 @@ export class Function extends lambda.Function implements SSTConstruct {
     const diskSize = Function.normalizeDiskSize(props.diskSize);
     const tracing =
       lambda.Tracing[
-        (props.tracing || "active").toUpperCase() as keyof typeof lambda.Tracing
+      (props.tracing || "active").toUpperCase() as keyof typeof lambda.Tracing
       ];
     const logRetention =
       props.logRetention &&
       logs.RetentionDays[
-        props.logRetention.toUpperCase() as keyof typeof logs.RetentionDays
+      props.logRetention.toUpperCase() as keyof typeof logs.RetentionDays
       ];
     let bundle = props.bundle;
     const isLiveDevEnabled = props.enableLiveDev === false ? false : true;
@@ -863,29 +865,35 @@ export class Function extends lambda.Function implements SSTConstruct {
     }
     // Handle build
     else {
-      const bundled = Runtime.Handler.bundle({
-        id: localId,
-        root: app.appPath,
-        handler: handler,
-        runtime: runtime.toString(),
-        srcPath: srcPath,
-        bundle: props.bundle,
-      })!;
+      //const bundled = Runtime.Handler.bundle({
+      //  id: localId,
+      //  root: app.appPath,
+      //  handler: handler,
+      //  runtime: runtime.toString(),
+      //  srcPath: srcPath,
+      //  bundle: props.bundle,
+      //})!;
 
-      // Python builder returns AssetCode instead of directory
-      const code = (() => {
-        if ("directory" in bundled) {
-          Function.copyFiles(bundle, srcPath, bundled.directory);
-          return lambda.AssetCode.fromAsset(bundled.directory);
-        }
-        return bundled.asset;
-      })();
+      //// Python builder returns AssetCode instead of directory
+      //const code = (() => {
+      //  if ("directory" in bundled) {
+      //    Function.copyFiles(bundle, srcPath, bundled.directory);
+      //    return lambda.AssetCode.fromAsset(bundled.directory);
+      //  }
+      //  return bundled.asset;
+      //})();
 
       super(scope, id, {
         ...props,
         architecture,
-        code: code!,
-        handler: bundled.handler,
+        //code: code!,
+        //handler: bundled.handler,
+        code: lambda.Code.fromInline("export function handler() {}"),
+        handler: "index.handler",
+        //code: lambda.Code.fromAsset(
+        //  path.resolve(__dirname, "../assets/Function/placeholder-stub")
+        //),
+        //handler: "placeholder",
         functionName,
         runtime,
         memorySize,
@@ -895,6 +903,15 @@ export class Function extends lambda.Function implements SSTConstruct {
         environment: props.environment,
         layers: Function.buildLayers(scope, id, props),
         logRetention,
+      });
+      deferBuiltFunctions.push({
+        id: localId,
+        root: app.appPath,
+        handler: handler,
+        runtime: runtime.toString(),
+        srcPath: srcPath,
+        bundle: props.bundle,
+        function: this,
       });
     }
 
@@ -909,13 +926,11 @@ export class Function extends lambda.Function implements SSTConstruct {
     }
 
     // Attach permissions
-    this.attachPermissions(props.permissions || []);
+    if (permissions) {
+      this.attachPermissions(permissions);
+    }
 
-    // Add config
-    this.addEnvironment("SST_APP", app.name, { removeInEdge: true });
-    this.addEnvironment("SST_STAGE", app.stage, { removeInEdge: true });
-    this.addConfig(props.config || []);
-
+    this.handleConfig();
     this.createUrl();
 
     app.registerLambdaHandler({
@@ -983,15 +998,13 @@ export class Function extends lambda.Function implements SSTConstruct {
       .filter((c) => c instanceof Secret)
       .forEach((c) =>
         iamResources.push(
-          `arn:aws:ssm:${app.region}:${
-            app.account
+          `arn:aws:ssm:${app.region}:${app.account
           }:parameter${FunctionConfig.buildSsmNameForSecret(
             app.name,
             app.stage,
             c.name
           )}`,
-          `arn:aws:ssm:${app.region}:${
-            app.account
+          `arn:aws:ssm:${app.region}:${app.account
           }:parameter${FunctionConfig.buildSsmNameForSecretFallback(
             app.name,
             c.name
@@ -1046,6 +1059,36 @@ export class Function extends lambda.Function implements SSTConstruct {
       authType,
       cors: functionUrlCors.buildCorsConfig(cors),
     });
+  }
+
+  private handleConfig() {
+    const app = this.node.root as App;
+    const { config } = this.props;
+
+    // Add environment variables
+    this.addEnvironment("SST_APP", app.name, { removeInEdge: true });
+    this.addEnvironment("SST_STAGE", app.stage, { removeInEdge: true });
+    (config || []).forEach((c) => {
+      if (c instanceof Secret) {
+        this.addEnvironment(`${FunctionConfig.SECRET_ENV_PREFIX}${c.name}`, "1");
+      }
+      else if (c instanceof Parameter) {
+        this.addEnvironment(`${FunctionConfig.PARAM_ENV_PREFIX}${c.name}`, c.value);
+      }
+    });
+
+    // Attach permissions
+    const hasSecrets = (config || []).some((c) => c instanceof Secret);
+    if (hasSecrets) {
+      this.attachPermissions([new iam.PolicyStatement({
+        actions: ["ssm:GetParameters"],
+        effect: iam.Effect.ALLOW,
+        resources: [
+          `arn:aws:ssm:${app.region}:${app.account}:parameter/sst/${app.name}/${app.stage}/*`,
+          `arn:aws:ssm:${app.region}:${app.account}:parameter/sst/${app.name}/${FunctionConfig.FALLBACK_STAGE}/*`,
+        ],
+      })]);
+    }
   }
 
   static buildLayers(scope: Construct, id: string, props: FunctionProps) {
@@ -1190,7 +1233,7 @@ export class Function extends lambda.Function implements SSTConstruct {
       if (inheritedProps && Object.keys(inheritedProps).length > 0) {
         throw new Error(
           inheritErrorMessage ||
-            `Cannot inherit default props when a Function is provided`
+          `Cannot inherit default props when a Function is provided`
         );
       }
       return definition;

@@ -14,7 +14,7 @@ import {
   isSSTConstruct,
   isStackConstruct,
 } from "./Construct.js";
-import { FunctionProps, FunctionHandlerProps } from "./Function.js";
+import { Function, FunctionProps, FunctionHandlerProps } from "./Function.js";
 import * as Config from "./Config.js";
 import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite.js";
 import { Permissions } from "./util/permission.js";
@@ -341,6 +341,10 @@ export class App extends cdk.App {
     }
 
     return cloudAssembly;
+  }
+
+  public async buildFunctions() {
+    await Function.buildFunctions();
   }
 
   isRunningSSTTest(): boolean {

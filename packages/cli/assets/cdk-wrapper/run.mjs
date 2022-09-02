@@ -94,3 +94,6 @@ if (!handler.default) {
   process.exit(1);
 }
 handler.default(app);
+
+// Build functions
+await app.buildFunctions();

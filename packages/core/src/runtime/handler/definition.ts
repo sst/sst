@@ -22,7 +22,7 @@ export type Instructions = {
   // Pass in file change that is triggering
   shouldBuild?: (files: string[]) => boolean;
   build: () => Promise<Issue[]>;
-  bundle: () => BundleResult;
+  bundle: () => Promise<BundleResult>;
   run: Command;
   watcher: {
     include: string[];

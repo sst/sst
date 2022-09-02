@@ -1,15 +1,17 @@
 import path from "path";
 import chalk from "chalk";
-import { Definition } from "./definition";
 import fs from "fs-extra";
-import { State } from "../../state/index.js";
-import { execSync } from "child_process";
-import spawn from "cross-spawn";
+import { exec } from "child_process";
 import * as esbuild from "esbuild";
 import { ICommandHooks } from "aws-cdk-lib/aws-lambda-nodejs";
 import { createRequire } from "module";
-const require = createRequire(import.meta.url);
+import { promisify } from "util";
 
+import { Definition } from "./definition";
+import { State } from "../../state/index.js";
+
+const require = createRequire(import.meta.url);
+const execAsync = promisify(exec);
 const BUILD_CACHE: Record<string, esbuild.BuildResult> = {};
 
 type Bundle = {
@@ -135,8 +137,8 @@ export const NodeHandler: Definition<Bundle> = opts => {
           BUILD_CACHE[opts.id] = result;
           return [];
         }
-        fs.removeSync(artifact);
-        fs.mkdirpSync(artifact);
+        await fs.remove(artifact);
+        await fs.mkdirp(artifact);
 
         const result = await esbuild.build({
           ...config,
@@ -146,7 +148,7 @@ export const NodeHandler: Definition<Bundle> = opts => {
           minify: false,
           incremental: true
         });
-        fs.writeJSONSync(path.join(artifact, "package.json"), {
+        await fs.writeJSON(path.join(artifact, "package.json"), {
           type: bundle.format === "esm" ? "module" : "commonjs"
         });
         BUILD_CACHE[opts.id] = result;
@@ -163,56 +165,33 @@ export const NodeHandler: Definition<Bundle> = opts => {
         }));
       }
     },
-    bundle: () => {
-      runBeforeBundling(opts.srcPath, artifact, bundle);
+    bundle: async () => {
+      await runBeforeBundling(opts.srcPath, artifact, bundle);
 
-      // We cannot use esbuild.buildSync(config) because it doesn't support plugins;
-      const script = `
-        const esbuild = require("esbuild")
-        async function run() {
-          const config = ${JSON.stringify({
-            ...config,
-            metafile: true,
-            plugins
-          })}
-          try {
-            await esbuild.build({
-              ...config,
-              plugins: config.plugins ? require(config.plugins) : undefined
-            })
-            process.exit(0)
-          } catch {
-            process.exit(1)
-          }
-        }
-        run()
-      `;
-      fs.removeSync(artifact);
-      fs.mkdirpSync(artifact);
-      const builder = path.join(artifact, "builder.cjs");
-      fs.writeFileSync(builder, script);
-      fs.writeJSONSync(path.join(artifact, "package.json"), {
-        type: bundle.format === "esm" ? "module" : "commonjs"
-      });
-      const result = spawn.sync("node", [builder], {
-        stdio: "pipe"
-      });
-      if (result.status !== 0) {
-        const err = (
-          result.stderr.toString() + result.stdout.toString()
-        ).trim();
+      await fs.remove(artifact);
+      await fs.mkdirp(artifact);
+
+      let result;
+      try {
+        await esbuild.build({
+          ...config,
+          plugins: plugins ? require(plugins) : undefined,
+          metafile: true,
+        });
+      } catch (e) {
         throw new Error(
-          "There was a problem transpiling the Lambda handler: " + err
+          "There was a problem transpiling the Lambda handler: " + e
         );
       }
+      await fs.writeJSON(path.join(artifact, "package.json"), {
+        type: bundle.format === "esm" ? "module" : "commonjs"
+      });
 
-      fs.removeSync(builder);
+      await runBeforeInstall(opts.srcPath, artifact, bundle);
 
-      runBeforeInstall(opts.srcPath, artifact, bundle);
+      await installNodeModules(opts.srcPath, artifact, bundle);
 
-      installNodeModules(opts.srcPath, artifact, bundle);
-
-      runAfterBundling(opts.srcPath, artifact, bundle);
+      await runAfterBundling(opts.srcPath, artifact, bundle);
 
       const handler = path
         .join(
@@ -256,7 +235,7 @@ export const NodeHandler: Definition<Bundle> = opts => {
 // Do not re-install nodeModules for the same srcPath and nodeModules settings
 const existingNodeModulesBySrcPathModules: Record<string, string> = {};
 
-function installNodeModules(
+async function installNodeModules(
   srcPath: string,
   targetPath: string,
   bundle: Bundle
@@ -268,7 +247,7 @@ function installNodeModules(
   const srcPathModules = `${srcPath}/${modulesStr}`;
   const existingPath = existingNodeModulesBySrcPathModules[srcPathModules];
   if (existingPath) {
-    fs.copySync(
+    await fs.copy(
       path.join(existingPath, "node_modules"),
       path.join(targetPath, "node_modules")
     );
@@ -277,7 +256,7 @@ function installNodeModules(
 
   // Find 'package.json' at handler's srcPath.
   const pkgPath = path.join(srcPath, "package.json");
-  if (!fs.existsSync(pkgPath)) {
+  if (! await fs.pathExists(pkgPath)) {
     throw new Error(
       `Cannot find a "package.json" in the function's srcPath: ${path.resolve(
         srcPath
@@ -286,31 +265,30 @@ function installNodeModules(
   }
 
   // Determine dependencies versions, lock file and installer
-  const dependencies = extractDependencies(pkgPath, bundle.nodeModules);
+  const dependencies = await extractDependencies(pkgPath, bundle.nodeModules);
   let installer = "npm";
   let lockFile;
-  if (fs.existsSync(path.join(srcPath, "package-lock.json"))) {
+  if (await fs.pathExists(path.join(srcPath, "package-lock.json"))) {
     installer = "npm";
     lockFile = "package-lock.json";
-  } else if (fs.existsSync(path.join(srcPath, "yarn.lock"))) {
+  } else if (await fs.pathExists(path.join(srcPath, "yarn.lock"))) {
     installer = "yarn";
     lockFile = "yarn.lock";
   }
 
   // Create dummy package.json, copy lock file if any and then install
   const outputPath = path.join(targetPath, "package.json");
-  fs.ensureFileSync(outputPath);
-  const existing = fs.readJsonSync(outputPath) || {};
-  fs.writeJsonSync(outputPath, { ...existing, dependencies });
+  await fs.ensureFile(outputPath);
+  const existing = await fs.readJson(outputPath) || {};
+  await fs.writeJson(outputPath, { ...existing, dependencies });
   if (lockFile) {
-    fs.copySync(path.join(srcPath, lockFile), path.join(targetPath, lockFile));
+    await fs.copy(path.join(srcPath, lockFile), path.join(targetPath, lockFile));
   }
 
   // Install dependencies
   try {
-    execSync(`${installer} install`, {
+    await exec(`${installer} install`, {
       cwd: targetPath,
-      stdio: "pipe"
     });
   } catch (e) {
     console.log(chalk.red(`There was a problem installing nodeModules.`));
@@ -318,7 +296,7 @@ function installNodeModules(
   }
 
   // Store the path to the installed "node_modules"
-  if (fs.existsSync(path.join(targetPath, "node_modules"))) {
+  if (await fs.pathExists(path.join(targetPath, "node_modules"))) {
     existingNodeModulesBySrcPathModules[srcPathModules] = path.resolve(
       targetPath
     );
@@ -331,13 +309,13 @@ function installNodeModules(
  * First lookup the version in the package.json and then fallback to requiring
  * the module's package.json. The fallback is needed for transitive dependencies.
  */
-function extractDependencies(
+async function extractDependencies(
   pkgPath: string,
   modules: string[]
-): { [key: string]: string } {
+): Promise<{ [key: string]: string }> {
   const dependencies: { [key: string]: string } = {};
 
-  const pkgJson = fs.readJsonSync(pkgPath);
+  const pkgJson = await fs.readJson(pkgPath);
 
   const pkgDependencies = {
     ...(pkgJson.dependencies ?? {}),
@@ -360,7 +338,7 @@ function extractDependencies(
   return dependencies;
 }
 
-function runBeforeBundling(srcPath: string, buildPath: string, bundle: Bundle) {
+async function runBeforeBundling(srcPath: string, buildPath: string, bundle: Bundle) {
   // Build command
   const cmds = bundle.commandHooks?.beforeBundling(srcPath, buildPath) ?? [];
   if (cmds.length === 0) {
@@ -368,9 +346,8 @@ function runBeforeBundling(srcPath: string, buildPath: string, bundle: Bundle) {
   }
 
   try {
-    execSync(cmds.join(" && "), {
+    await execAsync(cmds.join(" && "), {
       cwd: srcPath,
-      stdio: "pipe"
     });
   } catch (e) {
     console.log(
@@ -380,7 +357,7 @@ function runBeforeBundling(srcPath: string, buildPath: string, bundle: Bundle) {
   }
 }
 
-function runBeforeInstall(srcPath: string, buildPath: string, bundle: Bundle) {
+async function runBeforeInstall(srcPath: string, buildPath: string, bundle: Bundle) {
   // Build command
   const cmds = bundle.commandHooks?.beforeInstall(srcPath, buildPath) ?? [];
   if (cmds.length === 0) {
@@ -388,9 +365,8 @@ function runBeforeInstall(srcPath: string, buildPath: string, bundle: Bundle) {
   }
 
   try {
-    execSync(cmds.join(" && "), {
+    await execAsync(cmds.join(" && "), {
       cwd: srcPath,
-      stdio: "pipe"
     });
   } catch (e) {
     console.log(
@@ -400,7 +376,7 @@ function runBeforeInstall(srcPath: string, buildPath: string, bundle: Bundle) {
   }
 }
 
-function runAfterBundling(srcPath: string, buildPath: string, bundle: Bundle) {
+async function runAfterBundling(srcPath: string, buildPath: string, bundle: Bundle) {
   // Build command
   const cmds = bundle.commandHooks?.afterBundling(srcPath, buildPath) ?? [];
   if (cmds.length === 0) {
@@ -408,9 +384,8 @@ function runAfterBundling(srcPath: string, buildPath: string, bundle: Bundle) {
   }
 
   try {
-    execSync(cmds.join(" && "), {
+    execAsync(cmds.join(" && "), {
       cwd: srcPath,
-      stdio: "pipe"
     });
   } catch (e) {
     console.log(
@@ -418,17 +393,6 @@ function runAfterBundling(srcPath: string, buildPath: string, bundle: Bundle) {
     );
     throw e;
   }
-}
-
-function absolutePathToRelativePath(absolutePath: string): string {
-  if (!path.isAbsolute(absolutePath)) {
-    return absolutePath;
-  }
-
-  // For win32: root for D:\\path\\to\\dir is D:\\
-  // For posix: root for /path/to/dir is /
-  const { root } = path.parse(absolutePath);
-  return absolutePath.substring(root.length);
 }
 
 function getAwsLambdaRicBinPath(): string {
