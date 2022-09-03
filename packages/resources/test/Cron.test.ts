@@ -22,7 +22,7 @@ test("constructor: eventsRule", async () => {
   });
   countResources(stack, "AWS::Lambda::Function", 1);
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
   countResources(stack, "AWS::Events::Rule", 1);
   hasResource(stack, "AWS::Events::Rule", {
@@ -135,7 +135,7 @@ test("job is string", async () => {
   });
   countResources(stack, "AWS::Lambda::Function", 1);
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
 });
 
@@ -148,7 +148,7 @@ test("job is Function", async () => {
   });
   countResources(stack, "AWS::Lambda::Function", 1);
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
 });
 
@@ -167,7 +167,7 @@ test("job is CronJobProps", async () => {
   });
   countResources(stack, "AWS::Lambda::Function", 1);
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
   countResources(stack, "AWS::Events::Rule", 1);
   hasResource(stack, "AWS::Events::Rule", {

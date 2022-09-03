@@ -85,7 +85,7 @@ test("constructor: props with minimum config", async () => {
     handler: "test/lambda.handler"
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 10,
     MemorySize: 1024,
     TracingConfig: { Mode: "Active" }
@@ -101,7 +101,7 @@ test("constructor: props with full config", async () => {
     memorySize: 512
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 20,
     MemorySize: 512
   });
@@ -223,7 +223,7 @@ test("functionName: undefined", async () => {
     handler: "test/lambda.handler"
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     FunctionName: ABSENT
   });
 });
@@ -235,7 +235,7 @@ test("functionName: string", async () => {
     handler: "test/lambda.handler"
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     FunctionName: "my-fn-name"
   });
 });
@@ -248,7 +248,7 @@ test("functionName: callback", async () => {
     handler: "test/lambda.handler"
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     FunctionName: "dev-my-app-stack-lambda"
   });
 });
@@ -630,7 +630,7 @@ test("url.cors: undefined", async () => {
   const stack = new Stack(new App(), "stack");
   const fn = new Function(stack, "Function", {
     handler: "test/lambda.handler",
-    url: { }
+    url: {}
   });
   expect(fn.url).toBeDefined();
   hasResource(stack, "AWS::Lambda::Url", {
@@ -814,7 +814,7 @@ test("layers: imported from ARN", async () => {
 
 test("constructor: debugIncreaseTimeout true", async () => {
   const app = new App({
-    synthCallback: () => {},
+    synthCallback: () => { },
     debugEndpoint: "placeholder",
     debugBucketArn: "placeholder",
     debugBucketName: "placeholder",
@@ -834,7 +834,7 @@ test("constructor: debugIncreaseTimeout true", async () => {
 
 test("constructor: debugIncreaseTimeout false", async () => {
   const app = new App({
-    synthCallback: () => {},
+    synthCallback: () => { },
     debugEndpoint: "placeholder",
     debugBucketArn: "placeholder",
     debugBucketName: "placeholder",
@@ -1643,7 +1643,7 @@ test("Stack.defaultFunctionProps()", async () => {
     handler: "test/lambda.handler"
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 15,
     MemorySize: 1024,
     TracingConfig: { Mode: "Active" }
@@ -1730,7 +1730,7 @@ test("App.defaultFunctionProps()", async () => {
     handler: "test/lambda.handler"
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 15,
     MemorySize: 1024,
     TracingConfig: { Mode: "Active" }
@@ -1754,7 +1754,7 @@ test("App.defaultFunctionProps(): calledTwice", async () => {
     handler: "test/lambda.handler"
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 10,
     MemorySize: 256,
     Environment: {
@@ -1895,7 +1895,7 @@ test("App.defaultFunctionProps(): callback", async () => {
     handler: "test/lambda.handler"
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 15,
     MemorySize: 1024,
     TracingConfig: { Mode: "Active" }
@@ -1919,7 +1919,7 @@ test("App.defaultFunctionProps(): callback-calledTwice", async () => {
     handler: "test/lambda.handler"
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 10,
     MemorySize: 256,
     Environment: {
@@ -1947,7 +1947,7 @@ test("App.defaultFunctionProps(): override", async () => {
     environment: { keyB: "valueB" }
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 10,
     MemorySize: 1024,
     TracingConfig: { Mode: "Active" },
@@ -1969,7 +1969,7 @@ test("fromDefinition-string", async () => {
   const stack = new Stack(new App(), "stack");
   Function.fromDefinition(stack, "Function", "test/lambda.handler");
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 10
   });
 });
@@ -1984,7 +1984,7 @@ test("fromDefinition-string-with-app-defaultFunctionProps", async () => {
   const stack = new Stack(app, "stack");
   Function.fromDefinition(stack, "Function", "test/lambda.handler");
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 15,
     MemorySize: 2048
   });
@@ -1996,7 +1996,7 @@ test("fromDefinition-string-inherit", async () => {
     timeout: 20
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 20
   });
 });
@@ -2013,7 +2013,7 @@ test("fromDefinition-string-inherit-with-app-defaultFunctionProps", async () => 
     timeout: 20
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 20,
     MemorySize: 2048
   });
@@ -2046,7 +2046,7 @@ test("fromDefinition-props-inherit", async () => {
     }
   );
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Runtime: "nodejs10.x",
     MemorySize: 2048,
     Environment: {
@@ -2083,7 +2083,7 @@ test("fromDefinition-props-inherit-with-app-defaultFunctionProps", async () => {
     }
   );
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Runtime: "nodejs10.x",
     Timeout: 15,
     MemorySize: 2048,
@@ -2109,7 +2109,7 @@ test("fromDefinition-sstFunction", async () => {
     })
   );
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 20
   });
 });

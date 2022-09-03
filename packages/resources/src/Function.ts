@@ -846,8 +846,8 @@ export class Function extends lambda.Function implements SSTConstruct {
       super(scope, id, {
         ...props,
         architecture,
-        code: lambda.Code.fromInline("export function handler() {}"),
-        handler: "index.handler",
+        code: lambda.Code.fromInline("export function placeholder() {}"),
+        handler: "index.placeholder",
         functionName,
         runtime: lambda.Runtime.NODEJS_16_X,
         memorySize,
@@ -864,8 +864,8 @@ export class Function extends lambda.Function implements SSTConstruct {
       super(scope, id, {
         ...props,
         architecture,
-        code: lambda.Code.fromInline("export function handler() {}"),
-        handler: "index.handler",
+        code: lambda.Code.fromInline("export function placeholder() {}"),
+        handler: "index.placeholder",
         functionName,
         runtime: lambda.Runtime.NODEJS_16_X,
         memorySize,

@@ -329,7 +329,7 @@ test("triggers is string with defaults.function", async () => {
     }
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 3,
     Environment: {
       Variables: {
@@ -400,7 +400,7 @@ test("triggers is FunctionProps with defaults.function", async () => {
     }
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 3
   });
 });

@@ -114,7 +114,7 @@ test("consumers: 1 function string", async () => {
   });
   countResources(stack, "AWS::Lambda::Function", 1);
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
   countResources(stack, "AWS::Lambda::EventSourceMapping", 1);
   hasResource(stack, "AWS::Lambda::EventSourceMapping", {
@@ -139,7 +139,7 @@ test("consumers: 1 function string with defaultFunctionProps", async () => {
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 3,
   });
 });
@@ -201,7 +201,7 @@ test("consumers: consumer props (override startingPosition)", async () => {
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
   countResources(stack, "AWS::Lambda::EventSourceMapping", 1);
   hasResource(stack, "AWS::Lambda::EventSourceMapping", {

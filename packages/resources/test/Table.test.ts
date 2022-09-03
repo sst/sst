@@ -846,7 +846,7 @@ test("consumers: Function string single", async () => {
   });
   countResources(stack, "AWS::Lambda::Function", 1);
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 10,
   });
   countResources(stack, "AWS::Lambda::EventSourceMapping", 1);
@@ -873,7 +873,7 @@ test("consumers: Function string single with defaultFunctionProps", async () => 
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 3,
   });
 });
@@ -942,7 +942,7 @@ test("consumers: TableConsumerProps", async () => {
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
   countResources(stack, "AWS::Lambda::EventSourceMapping", 1);
   hasResource(stack, "AWS::Lambda::EventSourceMapping", {

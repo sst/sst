@@ -46,7 +46,7 @@ test("server-string", async () => {
   });
   countResources(stack, "AWS::Lambda::Function", 1);
   countResourcesLike(stack, "AWS::Lambda::Function", 1, {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
 });
 
