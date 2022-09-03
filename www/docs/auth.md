@@ -220,7 +220,7 @@ SST uses your previously generated private key to encrypt the session token.
 Your `onSuccess` callback might look something like this.
 
 ```js title="services/functions/auth.ts"
-import { AuthHandler, Session } from "@serverless-stack/node/auth"
+import { AuthHandler, GoogleAdapter, Session } from "@serverless-stack/node/auth"
 import { Config } from "@serverless-stack/node/config"
 
 export const handler = AuthHandler({
