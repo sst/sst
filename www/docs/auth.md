@@ -531,7 +531,7 @@ return Session.cookie({
 });
 ```
 
-In your frontend, when making requests to your API, make sure you specify `credentials: include` with the request so that the cookie is included.
+In your frontend, when making requests to your API, make sure you specify `credentials: "include"` with the request so that the cookie is included.
 
 Here are a couple of examples for how to do this:
 
@@ -549,7 +549,7 @@ fetch("/path", {
 export const urql = createClient({
   fetchOptions: () => {
     return {
-      credentials: include,
+      credentials: "include",
     };
   },
 });
