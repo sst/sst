@@ -12,7 +12,7 @@ import * as lambdaNode from "aws-cdk-lib/aws-lambda-nodejs";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 
-import { State, Runtime, FunctionConfig } from "@serverless-stack/core";
+import { State, Runtime, FunctionConfig, DeferBuilder } from "@serverless-stack/core";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Secret, Parameter } from "./Config.js";
@@ -49,7 +49,7 @@ const supportedRuntimes = [
   lambda.Runtime.GO_1_X,
 ];
 
-export interface FunctionUrlCorsProps extends functionUrlCors.CorsProps {}
+export interface FunctionUrlCorsProps extends functionUrlCors.CorsProps { }
 export type FunctionInlineDefinition = string | Function;
 export type FunctionDefinition = string | Function | FunctionProps;
 
@@ -706,12 +706,12 @@ export class Function extends lambda.Function implements SSTConstruct {
     const diskSize = Function.normalizeDiskSize(props.diskSize);
     const tracing =
       lambda.Tracing[
-        (props.tracing || "active").toUpperCase() as keyof typeof lambda.Tracing
+      (props.tracing || "active").toUpperCase() as keyof typeof lambda.Tracing
       ];
     const logRetention =
       props.logRetention &&
       logs.RetentionDays[
-        props.logRetention.toUpperCase() as keyof typeof logs.RetentionDays
+      props.logRetention.toUpperCase() as keyof typeof logs.RetentionDays
       ];
     let bundle = props.bundle;
     const isLiveDevEnabled = props.enableLiveDev === false ? false : true;
@@ -846,10 +846,8 @@ export class Function extends lambda.Function implements SSTConstruct {
       super(scope, id, {
         ...props,
         architecture,
-        code: lambda.Code.fromAsset(
-          path.resolve(__dirname, "../assets/Function/placeholder-stub")
-        ),
-        handler: "placeholder",
+        code: lambda.Code.fromInline("export function placeholder() {}"),
+        handler: "index.placeholder",
         functionName,
         runtime: lambda.Runtime.NODEJS_16_X,
         memorySize,
@@ -863,31 +861,13 @@ export class Function extends lambda.Function implements SSTConstruct {
     }
     // Handle build
     else {
-      const bundled = Runtime.Handler.bundle({
-        id: localId,
-        root: app.appPath,
-        handler: handler,
-        runtime: runtime.toString(),
-        srcPath: srcPath,
-        bundle: props.bundle,
-      })!;
-
-      // Python builder returns AssetCode instead of directory
-      const code = (() => {
-        if ("directory" in bundled) {
-          Function.copyFiles(bundle, srcPath, bundled.directory);
-          return lambda.AssetCode.fromAsset(bundled.directory);
-        }
-        return bundled.asset;
-      })();
-
       super(scope, id, {
         ...props,
         architecture,
-        code: code!,
-        handler: bundled.handler,
+        code: lambda.Code.fromInline("export function placeholder() {}"),
+        handler: "index.placeholder",
         functionName,
-        runtime,
+        runtime: lambda.Runtime.NODEJS_16_X,
         memorySize,
         ephemeralStorageSize: diskSize,
         timeout,
@@ -896,6 +876,38 @@ export class Function extends lambda.Function implements SSTConstruct {
         layers: Function.buildLayers(scope, id, props),
         logRetention,
       });
+      DeferBuilder.addTask(async () => {
+        // Build function
+        const bundled = await Runtime.Handler.bundle({
+          id: localId,
+          root: app.appPath,
+          handler: handler,
+          runtime: runtime.toString(),
+          srcPath: srcPath,
+          bundle: props.bundle,
+        })!;
+
+        // Python builder returns AssetCode instead of directory
+        const code = (() => {
+          if ("directory" in bundled) {
+            Function.copyFiles(bundle, srcPath, bundled.directory);
+            return lambda.AssetCode.fromAsset(bundled.directory);
+          }
+          return bundled.asset;
+        })();
+
+        // Update function's code
+        const codeConfig = code.bind(this);
+        const cfnFunction = this.node.defaultChild as lambda.CfnFunction;
+        cfnFunction.runtime = runtime.toString();
+        cfnFunction.code = {
+          s3Bucket: codeConfig.s3Location?.bucketName,
+          s3Key: codeConfig.s3Location?.objectKey,
+          s3ObjectVersion: codeConfig.s3Location?.objectVersion,
+        };
+        cfnFunction.handler = bundled.handler;
+        code.bindToResource(cfnFunction);
+      })
     }
 
     this.props = props || {};
@@ -983,15 +995,13 @@ export class Function extends lambda.Function implements SSTConstruct {
       .filter((c) => c instanceof Secret)
       .forEach((c) =>
         iamResources.push(
-          `arn:aws:ssm:${app.region}:${
-            app.account
+          `arn:aws:ssm:${app.region}:${app.account
           }:parameter${FunctionConfig.buildSsmNameForSecret(
             app.name,
             app.stage,
             c.name
           )}`,
-          `arn:aws:ssm:${app.region}:${
-            app.account
+          `arn:aws:ssm:${app.region}:${app.account
           }:parameter${FunctionConfig.buildSsmNameForSecretFallback(
             app.name,
             c.name
@@ -1190,7 +1200,7 @@ export class Function extends lambda.Function implements SSTConstruct {
       if (inheritedProps && Object.keys(inheritedProps).length > 0) {
         throw new Error(
           inheritErrorMessage ||
-            `Cannot inherit default props when a Function is provided`
+          `Cannot inherit default props when a Function is provided`
         );
       }
       return definition;

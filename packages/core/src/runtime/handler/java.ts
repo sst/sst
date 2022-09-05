@@ -5,7 +5,7 @@ import zipLocal from "zip-local";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { State } from "../../state/index.js";
 import { Paths } from "../../util/index.js";
-import { buildAsync, buildSync, Command, Definition } from "./definition.js";
+import { buildAsync, buildAsyncAndThrow, Command, Definition } from "./definition.js";
 
 export const JavaHandler: Definition = (opts: any) => {
   // Check build.gradle exists
@@ -46,21 +46,21 @@ export const JavaHandler: Definition = (opts: any) => {
 
   return {
     build: async () => {
-      fs.mkdirpSync(dir);
+      await fs.mkdirp(dir);
       const issues = await buildAsync(opts, cmd);
       if (issues.length === 0) {
         // Unzip dependencies from .zip
-        const zip = fs.readdirSync(`${target}/distributions`).find((f) => f.endsWith(".zip"));
+        const zip = (await fs.readdir(`${target}/distributions`)).find((f) => f.endsWith(".zip"));
         zipLocal.sync.unzip(`${target}/distributions/${zip}`).save(`${target}/distributions`);
       }
       return issues;
     },
-    bundle: () => {
-      fs.removeSync(dir);
-      fs.mkdirpSync(dir);
-      buildSync(opts, cmd);
+    bundle: async () => {
+      await fs.remove(dir);
+      await fs.mkdirp(dir);
+      await buildAsyncAndThrow(opts, cmd);
       // Find the first zip in the build directory
-      const zip = fs.readdirSync(`${target}/distributions`).find((f) => f.endsWith(".zip"));
+      const zip = (await fs.readdir(`${target}/distributions`)).find((f) => f.endsWith(".zip"));
       return {
         handler: opts.handler,
         asset: lambda.Code.fromAsset(`${target}/distributions/${zip}`),

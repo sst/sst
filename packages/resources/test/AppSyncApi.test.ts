@@ -396,7 +396,7 @@ test("dataSources-FunctionDefinition-string", async () => {
     Type: "AWS_LAMBDA",
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
 });
 
@@ -418,7 +418,7 @@ test("dataSources-FunctionDefinition-with-defaults.function", async () => {
     Type: "AWS_LAMBDA",
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 3,
   });
 });
@@ -455,7 +455,7 @@ test("dataSources-LambdaDataSource-string", async () => {
     Type: "AWS_LAMBDA",
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
 });
 
@@ -477,7 +477,7 @@ test("dataSources-LambdaDataSource-props", async () => {
     Type: "AWS_LAMBDA",
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 3,
   });
 });
@@ -502,7 +502,7 @@ test("dataSources-LambdaDataSource-with-defaults.function", async () => {
     Type: "AWS_LAMBDA",
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 3,
   });
 });
@@ -523,7 +523,7 @@ test("dataSources-LambdaDataSource-with-options", async () => {
     Type: "AWS_LAMBDA",
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
 });
 
@@ -838,7 +838,7 @@ test("resolvers: is FunctionDefinition", async () => {
     },
   });
   countResourcesLike(stack, "AWS::Lambda::Function", 2, {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
   countResources(stack, "AWS::AppSync::DataSource", 2);
   hasResource(stack, "AWS::AppSync::DataSource", {
@@ -878,7 +878,7 @@ test("resolvers: is FunctionDefinition with defaults.function", async () => {
     },
   });
   countResourcesLike(stack, "AWS::Lambda::Function", 2, {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 3,
   });
 });
@@ -902,7 +902,7 @@ test("resolvers: is datasource props: datasource is string", async () => {
     },
   });
   countResourcesLike(stack, "AWS::Lambda::Function", 1, {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
   countResources(stack, "AWS::AppSync::DataSource", 1);
   hasResource(stack, "AWS::AppSync::DataSource", {
@@ -944,7 +944,7 @@ test("resolvers: is datasource props: datasource is string with resolverProps", 
     },
   });
   countResourcesLike(stack, "AWS::Lambda::Function", 1, {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
   countResources(stack, "AWS::AppSync::DataSource", 1);
   hasResource(stack, "AWS::AppSync::DataSource", {
@@ -979,7 +979,7 @@ test("resolvers: is datasource props: datasource is FunctionDefinition", async (
     },
   });
   countResourcesLike(stack, "AWS::Lambda::Function", 1, {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
   countResources(stack, "AWS::AppSync::DataSource", 1);
   hasResource(stack, "AWS::AppSync::DataSource", {

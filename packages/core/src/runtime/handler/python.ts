@@ -32,7 +32,7 @@ export const PythonHandler: Definition = (opts) => {
 
   return {
     build: async () => [],
-    bundle: () => {
+    bundle: async () => {
       //const artifact =
       // State.Function.artifactsPath(opts.root, opts.id) + ".zip";
       const asset = bundlePython({
