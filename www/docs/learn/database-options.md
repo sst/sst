@@ -58,7 +58,7 @@ There are also other non-AWS database options; like [PlanetScale](https://planet
 
 ---
 
-In the next two chapters we'll be walking through how to use [RDS with PostgreSQL](write-to-postgresql.md) and [DynamoDB](write-to-dynamodb.md) to store our new comments feature.
+In the next two chapters we'll be walking through how to use [RDS with PostgreSQL](write-to-the-database.md) and [DynamoDB](write-to-dynamodb.md) to store our new comments feature.
 
 An important consequence of [Domain Driven Design](domain-driven-design.md) is that we can completely separate our database choice from the rest of the app. So you can pick the chapter you want and the rest of the tutorial works in exactly the same way.
 

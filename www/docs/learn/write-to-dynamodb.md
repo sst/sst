@@ -54,24 +54,24 @@ const CommentEntity = new Entity(
       primary: {
         pk: {
           field: "pk",
-          composite: ["commentID"]
+          composite: ["commentID"],
         },
         sk: {
           field: "sk",
           composite: [],
-        }
+        },
       },
       byArticle: {
         index: "gsi1",
         pk: {
           field: "gsi1pk",
-          composite: ["articleID"]
+          composite: ["articleID"],
         },
         sk: {
           field: "gsi1sk",
           composite: ["commentID"],
-        }
-      }
+        },
+      },
     },
   },
   Dynamo.Configuration
@@ -88,7 +88,7 @@ We are doing a couple of things here:
 
 ### Implementation
 
-Now let's implement the `addComment` and `comments` functions that we created back in the [Scaffold Business Logic](scaffold-business-logic.md) chapter.
+Now let's implement the `addComment` and `comments` functions that we created back in the Scaffold Business Logic chapter.
 
 <ChangeText>
 
@@ -106,9 +106,11 @@ export async function addComment(articleID: string, text: string) {
 }
 
 export async function comments(articleID: string) {
-  return CommentEntity.query.byArticle({
-    articleID,
-  }).go();
+  return CommentEntity.query
+    .byArticle({
+      articleID,
+    })
+    .go();
 }
 ```
 

@@ -31,7 +31,7 @@ module.exports = {
           items: [
             "learn/domain-driven-design",
             //"learn/database-options",
-            "learn/write-to-postgresql",
+            "learn/write-to-the-database",
             //"learn/write-to-dynamodb"
           ]
         },

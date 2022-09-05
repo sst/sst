@@ -17,6 +17,20 @@ SST Console: https://console.sst.dev/my-sst-app/Jay/local
 Debug session started. Listening for requests...
 ```
 
+We are now ready to initialize our database. We are using RDS with PostgreSQL in this setup.
+
+### RDS
+
+[RDS](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.html) is a fully-managed database offering from AWS. It supports PostgreSQL and MySQL engines.
+
+SST provisions a serverless flavour of it with the [`RDS`](../constructs/RDS.md) construct. RDS will automatically scale up and down based on the load it's experiencing.
+
+:::note
+Serverless RDS can take a few minutes to autoscale up and down.
+:::
+
+We'll use RDS with PostgreSQL in this tutorial because it is the most familiar option. We'll do a deep dive into a true serverless database like [DynamoDB](https://aws.amazon.com/dynamodb/) at a later date. Since DynamoDB is a NoSQL database that requires you to model your data a little differently.
+
 <ChangeText>
 
 Head over to the [Console](../console.md) link in your browser — `https://console.sst.dev/my-sst-app/Jay/local`

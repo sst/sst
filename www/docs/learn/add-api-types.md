@@ -4,30 +4,34 @@ title: Add API Types
 
 import ChangeText from "@site/src/components/ChangeText";
 
-The GraphQL setup we are using is a _Code-first_ GraphQL setup. This means that we write our schema definitions in TypeScript instead of the [standard GraphQL schema](https://graphql.org/learn/schema/). This allows us to have strong typing along and minimal boilerplate code.
+The GraphQL setup we are using is a _Code-first_ GraphQL setup. This means that we write our schema definitions in TypeScript instead of the [standard GraphQL schema](https://graphql.org/learn/schema/). This allows us to have strong typing along with and minimal boilerplate code.
 
-We use [Pothos](https://pothos-graphql.dev/) to do this.
+We'll be using [Pothos](https://pothos-graphql.dev/) to do this.
 
-:::info Backing Models
+### Backing models
+
 A key concept to understand about Pothos is that there are two different types involved:
 
 1. The underlying types that we get from the database queries we make. More on this later.
 2. And, the GraphQL schema types that we define.
 
 You can read more about this over on the [Pothos docs](https://pothos-graphql.dev/docs/guide/schema-builder#backing-models).
+
+:::info Behind the scenes
+In the last chapter, we looked at how our GraphQL setup is wired up.
+
+If you recall, we build our GraphQL schema in Pothos using a [`SchemaBuilder`](https://pothos-graphql.dev/docs/guide/schema-builder). These GraphQL types are stored in `services/functions/graphql/types/`.
 :::
 
-In the last chapter we looked at how our GraphQL setup is wired up. if you recall, we build our GraphQL schema in Pothos using a [`SchemaBuilder`](https://pothos-graphql.dev/docs/guide/schema-builder). These GraphQL types are stored in `services/functions/graphql/types/`.
+Currently we define the GraphQL schema for our _article_ in `services/functions/graphql/types/article.ts`. We do three things there — define a type, add a query, and define a mutation.
 
-Currently we define the GraphQL schema for our article in `services/functions/graphql/types/article.ts`. It does 3 things — define a type, add a query, and define a mutation.
-
-In this chapter we'll look at how to add the type. We'll look at queries and mutations in the [next chapter](queries-and-mutations.md).
+In this chapter we'll look at how to define the types. While in the [next chapter](queries-and-mutations.md), we'll look at queries and mutations.
 
 Let's start by looking at what we have so far.
 
 ### Defining types
 
-If you open up `services/functions/graphql/types/article.ts`, you'll see that we've define a type for our article.
+If you open up `services/functions/graphql/types/article.ts`, you'll see that we've defined a type for our article.
 
 ```ts title="services/functions/graphql/types/article.ts"
 const ArticleType = builder.objectRef<SQL.Row["article"]>("Article").implement({
@@ -41,11 +45,11 @@ const ArticleType = builder.objectRef<SQL.Row["article"]>("Article").implement({
 
 Let's look at what's going on here:
 
-- The `builder` here is the Pothos [`SchemaBuilder`](https://pothos-graphql.dev/docs/guide/schema-builder).
+- The `builder` is the Pothos [`SchemaBuilder`](https://pothos-graphql.dev/docs/guide/schema-builder).
 - We are using the `ObjectRef` way of defining a new type. You can read more about this over on the [Pothos docs](https://pothos-graphql.dev/docs/guide/objects#using-refs).
 - We are creating a new type called `Article`.
 - This is backed by the `SQL.Row["article"]` database type. More on this below.
-- We explicitly state the fields we want to expose, along with their types.
+- We explicitly state the fields we want to expose and specify their types.
 
 :::info Behind the scenes
 The `SQL.Row["article"]` is the type for our `article` table. This is defined in `services/core/sql.ts`.
@@ -56,12 +60,12 @@ export type Row = {
 };
 ```
 
-Where the `Database[Key]` is coming from `services/core/sql.generated.ts`, where each key is the type for each table.
+Where the `Database[Key]` is coming from `services/core/sql.generated.ts`, and each key is the type for each table.
 
-The types in `services/core/sql.generated.ts` are auto-generated when we run our migrations. We talked about this back in the [Write to PostgreSQL](write-to-postgresql.md) chapter.
+The types in `services/core/sql.generated.ts` are auto-generated when we run our migrations. We talked about this back in the [Write to the Database](write-to-the-database.md) chapter.
 :::
 
-Now lets add the `Comment` type for our new feature.
+Let's add a new `Comment` type for our comments feature.
 
 ### Create a comment type
 
@@ -80,11 +84,17 @@ const CommentType = builder.objectRef<SQL.Row["comment"]>("Comment").implement({
 });
 ```
 
-In this case we are exposing the `commentID` as type `ID` and the comment `text` as a `String`.
+This should be pretty straightforward. We are taking the `comment` type from our SQL query and exposing the `commentID` as type `ID` and the comment `text` as a `String`.
 
 ## Return the comments
 
-We want to return our comments as a part of the article. So lets edit the existing article type.
+Next, we want to return our comments as a part of an article. So let's edit the existing article type to add a resolver function to fetch the comments.
+
+:::info
+In _code-first_ GraphQL with Pothos, we define the resolvers and the schema together.
+:::
+
+A _resolver_ is a function that does an action; it either reads or writes some data. We'll look at this in detail in the next chapter.
 
 <ChangeText>
 
@@ -106,12 +116,10 @@ const ArticleType = builder.objectRef<SQL.Row["article"]>("Article").implement({
 });
 ```
 
-Here we are using the `Comment` type from above and defining a resolver. A resolver is a function that does an action, either read or write some data. We'll look at this in detail in the next chapter.
+Here we are:
 
-:::info
-As opposed to standard GraphQL, in the _code-first_ approach with Pothos, we define the resolvers and the schema together.
-:::
+- Using the `Comment` type from above and defining a resolver.
+- The resolver function takes an `article` object.
+- It grabs the `articleID` from it and calls the `Article.comments()` domain function in `services/core/article.ts`. We implemented this back in the [Write to the Database](write-to-the-database.md) chapter.
 
-So given an `article` object, we get the `articleID` and call `Article.comments()` from `services/core/article.ts`. You'll recall that we implemented this back in the [Write to PostgreSQL](write-to-postgresql.md) chapter.
-
-Now that the types are defined, let's look at the queries and mutations.
+Now that our types are defined, let's write the queries and mutations.

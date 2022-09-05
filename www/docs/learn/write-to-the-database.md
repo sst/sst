@@ -1,5 +1,5 @@
 ---
-title: Write to PostgreSQL
+title: Write to the Database
 ---
 
 import ChangeText from "@site/src/components/ChangeText";
