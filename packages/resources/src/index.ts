@@ -17,6 +17,7 @@ export * from "./AppSyncApi.js";
 export * from "./DebugStack.js";
 export * from "./WebSocketApi.js";
 export * from "./KinesisStream.js";
+export * from "./LongRunningJob.js";
 export * from "./ApiGatewayV1Api.js";
 
 export * from "./NextjsSite.js";
