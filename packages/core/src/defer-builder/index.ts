@@ -12,7 +12,7 @@ export function run() {
   const concurrency = cpus().length - 1;
   let remaining = tasks.length;
 
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
 
     const runTask = () => {
       // Get task
@@ -29,6 +29,8 @@ export function run() {
       task().then(() => {
         remaining--;
         runTask();
+      }).catch((e) => {
+        reject(e);
       });
     };
 

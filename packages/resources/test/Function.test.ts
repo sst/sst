@@ -48,35 +48,76 @@ beforeEach(async () => {
 /////////////////////////////
 
 test("handlerPath: entry + no src", async () => {
-  const stack = new Stack(new App(), "stack");
+  const app = new App();
+  const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
     handler: "test/lambda.handler"
   });
+  await app.runDeferredBuilds();
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "test/lambda.handler"
   });
 });
 
 test("handlerPath: no entry + src", async () => {
-  const stack = new Stack(new App(), "stack");
+  const app = new App();
+  const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
     handler: "lambda.handler",
     srcPath: "test/nested"
   });
+  await app.runDeferredBuilds();
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "test/nested/lambda.handler"
   });
 });
 
 test("handlerPath: entry + src", async () => {
-  const stack = new Stack(new App(), "stack");
+  const app = new App();
+  const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
     handler: "nested/lambda.handler",
     srcPath: "test"
   });
+  await app.runDeferredBuilds();
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "test/nested/lambda.handler"
   });
+});
+
+test("constructor: node: srcPath absolute path", async () => {
+  const app = new App();
+  const stack = new Stack(app, "stack");
+  const srcPath = path.resolve(".");
+  new Function(stack, "Function", {
+    srcPath,
+    handler: "test/lambda.handler"
+  });
+  await app.runDeferredBuilds();
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: `test/lambda.handler`
+  });
+});
+
+test("constructor: python: srcPath not set", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Function(stack, "Function", {
+      handler: "test/lambda.handler",
+      runtime: "python3.8"
+    });
+  }).toThrow(/Cannot set the "srcPath" to the project root/);
+});
+
+test("constructor: python: srcPath is project root", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Function(stack, "Function", {
+      srcPath: ".",
+      handler: "test/lambda.handler",
+      runtime: "python3.8"
+    });
+  }).toThrow(/Cannot set the "srcPath" to the project root/);
 });
 
 test("constructor: props with minimum config", async () => {
@@ -176,45 +217,14 @@ test("constructor: handler is jsx", async () => {
 });
 
 test("constructor: handler not exist", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Function(stack, "Function", {
-      handler: "test/random.handler"
-    });
-  }).toThrow(/Cannot find a handler file for "test\/random.handler"/);
-});
-
-test("constructor: node: srcPath absolute path", async () => {
-  const stack = new Stack(new App(), "stack");
-  const srcPath = path.resolve(".");
+  const app = new App();
+  const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
-    srcPath,
-    handler: "test/lambda.handler"
+    handler: "test/random.handler"
   });
-  hasResource(stack, "AWS::Lambda::Function", {
-    Handler: `test/lambda.handler`
-  });
-});
-
-test("constructor: python: srcPath not set", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Function(stack, "Function", {
-      handler: "test/lambda.handler",
-      runtime: "python3.8"
-    });
-  }).toThrow(/Cannot set the "srcPath" to the project root/);
-});
-
-test("constructor: python: srcPath is project root", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Function(stack, "Function", {
-      srcPath: ".",
-      handler: "test/lambda.handler",
-      runtime: "python3.8"
-    });
-  }).toThrow(/Cannot set the "srcPath" to the project root/);
+  await expect(async () => {
+    await app.runDeferredBuilds();
+  }).rejects.toThrow(/Cannot find a handler file for "test\/random.handler"/);
 });
 
 test("functionName: undefined", async () => {
@@ -274,35 +284,41 @@ test("copyFiles infer to", async () => {
 });
 
 test("copyFiles absolute to", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Function(stack, "Function", {
-      handler: "test/lambda.handler",
-      bundle: {
-        copyFiles: [{ from: "test/lambda.js", to: "/test/fail.js" }]
-      }
-    });
-  }).toThrow(/Copy destination path/);
+  const app = new App();
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    bundle: {
+      copyFiles: [{ from: "test/lambda.js", to: "/test/fail.js" }]
+    }
+  });
+  await expect(async () => {
+    await app.runDeferredBuilds();
+  }).rejects.toThrow(/Copy destination path/);
 });
 
 test("copyFiles nonexistent", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Function(stack, "Function", {
-      handler: "test/lambda.handler",
-      bundle: {
-        copyFiles: [{ from: "test/fail.js", to: "test/fail.js" }]
-      }
-    });
-  }).toThrow(/Tried to copy nonexistent file/);
+  const app = new App();
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    bundle: {
+      copyFiles: [{ from: "test/fail.js", to: "test/fail.js" }]
+    }
+  });
+  await expect(async () => {
+    await app.runDeferredBuilds();
+  }).rejects.toThrow(/Tried to copy nonexistent file/);
 });
 
 test("runtime-string", async () => {
-  const stack = new Stack(new App(), "stack");
+  const app = new App();
+  const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
     runtime: "nodejs10.x"
   });
+  await app.runDeferredBuilds();
   hasResource(stack, "AWS::Lambda::Function", {
     Runtime: "nodejs10.x"
   });
@@ -503,18 +519,20 @@ test("bundle.esbuildConfig is object", async () => {
 });
 
 test("bundle.esbuildConfig is object: error invalid plugin", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Function(stack, "Function", {
-      handler: "test/lambda.handler",
-      bundle: {
-        esbuildConfig: {
-          plugins: "test/function/esbuild-config-invalid.js",
-          keepNames: true
-        }
+  const app = new App();
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    bundle: {
+      esbuildConfig: {
+        plugins: "test/function/esbuild-config-invalid.js",
+        keepNames: true
       }
-    });
-  }).toThrow(/There was a problem transpiling the Lambda handler./);
+    }
+  });
+  await expect(async () => {
+    await app.runDeferredBuilds();
+  }).rejects.toThrow(/There was a problem transpiling the Lambda handler./);
 });
 
 test("bundle: commandHooks-beforeBundling success", async () => {
@@ -539,25 +557,27 @@ test("bundle: commandHooks-beforeBundling success", async () => {
 });
 
 test("bundle: commandHooks-beforeBundling failed", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Function(stack, "Function", {
-      handler: "test/lambda.handler",
-      bundle: {
-        commandHooks: {
-          beforeBundling: (): string[] => {
-            return ["non-exist-command"];
-          },
-          beforeInstall: (): string[] => {
-            return [];
-          },
-          afterBundling: (): string[] => {
-            return [];
-          }
+  const app = new App();
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    bundle: {
+      commandHooks: {
+        beforeBundling: (): string[] => {
+          return ["non-exist-command"];
+        },
+        beforeInstall: (): string[] => {
+          return [];
+        },
+        afterBundling: (): string[] => {
+          return [];
         }
       }
-    });
-  }).toThrow();
+    }
+  });
+  await expect(async () => {
+    await app.runDeferredBuilds();
+  }).rejects.toThrow();
 });
 
 test("url: undefined", async () => {
@@ -865,11 +885,7 @@ test("constructor: skipBuild", async () => {
     handler: "test/lambda.handler"
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "placeholder",
-    Code: {
-      S3Bucket: ANY,
-      S3Key: ANY
-    }
+    Handler: "index.placeholder",
   });
 });
 
@@ -2025,7 +2041,7 @@ test("fromDefinition-props", async () => {
     handler: "test/lambda.handler"
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler"
+    Handler: "index.placeholder"
   });
 });
 
@@ -2040,14 +2056,14 @@ test("fromDefinition-props-inherit", async () => {
       environment: { KEY_A: "a" }
     },
     {
-      runtime: "nodejs10.x",
+      runtime: "nodejs16.x",
       memorySize: 512,
       environment: { KEY_B: "b" }
     }
   );
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "index.placeholder",
-    Runtime: "nodejs10.x",
+    Runtime: "nodejs16.x",
     MemorySize: 2048,
     Environment: {
       Variables: {
@@ -2077,14 +2093,14 @@ test("fromDefinition-props-inherit-with-app-defaultFunctionProps", async () => {
       environment: { KEY_B: "b" }
     },
     {
-      runtime: "nodejs10.x",
+      runtime: "nodejs16.x",
       memorySize: 512,
       environment: { KEY_C: "c" }
     }
   );
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "index.placeholder",
-    Runtime: "nodejs10.x",
+    Runtime: "nodejs16.x",
     Timeout: 15,
     MemorySize: 2048,
     Environment: {
