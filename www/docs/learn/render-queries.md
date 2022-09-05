@@ -42,7 +42,7 @@ You'll notice that our code editor can autocomplete all the fields in this query
 :::info Behind the scenes
 Let's look at how our typesafe frontend GraphQL client works behind the scenes.
 
-SST uses [urql](https://formidable.com/open-source/urql/), one of the most popular GraphQL clients. The `useTypedQuery` hook wraps around urql's [`useQuery`](https://formidable.com/open-source/urql/docs/api/urql/) hook while using the types that [Genql](https://genql.vercel.app) generates based on our GraphQL schema.
+SST uses [Urql](https://formidable.com/open-source/urql/), one of the most popular GraphQL clients. The `useTypedQuery` hook wraps around Urql's [`useQuery`](https://formidable.com/open-source/urql/docs/api/urql/) hook while using the types that [Genql](https://genql.vercel.app) generates based on our GraphQL schema.
 
 The types are code-genned automatically. We looked at this process back in the [GraphQL API](graphql-api.md) chapter.
 
@@ -62,7 +62,7 @@ const urql = createClient({
 
 Where `VITE_GRAPHQL_URL` is an environment variable that's passed in through our stacks. We looked at this back in the [Project Structure](project-structure.md) chapter.
 
-To ensure that the `useTypedQuery` hook is able to access our urql client across our app, we wrap it around our app using the [React Context](https://reactjs.org/docs/context.html).
+To ensure that the `useTypedQuery` hook is able to access our Urql client across our app, we wrap it around our app using the [React Context](https://reactjs.org/docs/context.html).
 
 ```tsx title="web/src/main.tsx"
 <React.StrictMode>

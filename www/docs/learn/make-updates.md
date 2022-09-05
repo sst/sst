@@ -4,9 +4,9 @@ title: Make Updates
 
 import ChangeText from "@site/src/components/ChangeText";
 
-Now that the homepage of our app is displaying the number of comments, we'd like our users to be able to navigate to the article page to view and post new comments.
+We'd like our users to be able to navigate to the article page, view the comments and post them.
 
-Let's start by updating the query in the article page.
+To do that, let's update the query in the article page.
 
 <ChangeText>
 
@@ -37,35 +37,32 @@ const [article] = useTypedQuery({
 });
 ```
 
-Just as the previous chapter, we are asking the query to return the comments as well.
+Like the previous chapter, we are making the query to return the comments as well.
 
 We are doing one extra thing here, we are telling our GraphQL client the type we are expecting in return. This is to fix a quirk of Urql's [Document Cache](https://formidable.com/open-source/urql/docs/basics/document-caching/#document-cache-gotchas).
 
-We need a little bit of background to understand what's going on.
-
-### GraphQL client caching
+:::info Behind the scenes
 
 As we looked at in the [last chapter](render-queries.md#typesafe-graphql-client), we are using Urql as our GraphQL client. One notable feature of Urql is the way it caches our requests.
 
-It avoids sending the same requests to a GraphQL API repeatedly by caching the result of each query. It works like the cache in a browser. So if you go to your app homepage, navigate to an article, and navigate back; the homepage will load instantly. Urql automatically tracks what's been fetched and refetches queries when the data is mutated.
+It avoids sending the same request to a GraphQL API repeatedly by caching the result of each query. It works like the cache in a browser. So if you go to your app homepage, navigate to an article, and navigate back; the homepage will load instantly. Urql automatically tracks what's been fetched and refetches queries when the data has been mutated.
 
-By default, this is an in-memory cache, but you can configure Urql to store this in local storage as well. Urql's powerful caching mechanism is partly why we recommend it in our starter.
+By default, this is an in-memory cache, but you can configure Urql to store this in the browser's local storage. Urql's powerful caching mechanism is partly why we recommend it in our starter.
 
-:::info Behind the scenes
-Behind the scenes, Urql creates a key for each request that is sent based on a query and its variables.
+Behind the scenes, Urql creates a key for each request that's sent based on a query and its variables. It also requests additional type information from the GraphQL API. This adds an additional `__typename` field to a query's results. This field specifies the type being returned, and Urql keeps track of this.
 
-It also requests additional type information from the GraphQL API. This adds an additional `__typename` field to a query's results. This field returns the name of the type, and Urql keeps track of this.
+So when we send a mutation and Urql notices that it has a type that was previously requested in a cached query, it'll invalidate that query's cache automatically!
 
-So in the future when we send a mutation and Urql notices that it has a type that was requested in a cached query, it'll invalidate the cache automatically!
-
-This works great except for the case where a query returns an empty set of results and no `__typename` field. Without this info Urql wouldn't know that it needs to invalidate the cache.
+This works great except for the case where a query returns an empty set of results and there is no `__typename` field. Without this info, Urql wouldn't know that it needs to invalidate the cache.
 :::
 
-Next, we need to add the mutation to post comments.
+Next, we need to add the mutation to post a comment.
+
+### Typed mutations
 
 <ChangeText>
 
-Add this below the query that we just edited above.
+Add this below the `useTypedQuery`.
 
 </ChangeText>
 
@@ -83,9 +80,9 @@ const [result, addComment] = useTypedMutation((opts: CommentForm) => ({
 }));
 ```
 
-The `useTypedMutation` hook is similar to the `useTypedQuery` hook that we covered in the last chapter. It allows us to send mutations that are defined in TypeScript. We are calling the `addComment` mutation that we added back in the [Queries and Mutations](queries-and-mutations.md#create-a-new-mutation) chapter.
+The `useTypedMutation` hook is similar to the `useTypedQuery` hook that we covered in the [last chapter](render-queries.md#typesafe-graphql-client). It allows us to send mutations that are defined using TypeScript. Here we are calling the `addComment` mutation that we added back in the [Queries and Mutations](queries-and-mutations.md#create-a-new-mutation) chapter.
 
-This query takes two arguments; `text` and `articleID`. This will be sent it when the user submits the comments form. So let's define a type called `CommentForm` for it.
+This query takes two arguments; `text` and `articleID`. This will be sent when the user submits the comments form. So let's define a type called `CommentForm` for it.
 
 <ChangeText>
 
@@ -104,7 +101,7 @@ Now let's render the comments.
 
 <ChangeText>
 
-Add this below the `<p>` tag in the `return` statement.
+Add this below the HTML `<p>...</p>` component in the `return` statement.
 
 </ChangeText>
 
@@ -124,7 +121,7 @@ Next, let's render the comment form.
 
 <ChangeText>
 
-Add this below the `<ol>` list that we just added.
+Add this below the `<ol>...</ol>` component that we just added.
 
 </ChangeText>
 
@@ -160,7 +157,7 @@ Add this below the `<ol>` list that we just added.
 
 There are a couple of things of note here.
 
-- We are rendering a textarea where the user can type in a comment. When they submit the form, we grab it from the `FormData` and call our mutation hook, `addComment`.
+- We are rendering a textarea where the user can type in a comment. When they submit the form, we grab the comment text from the `FormData` and call our mutation hook, `addComment`.
 - The button to submit the form is a custom component that comes with this starter, called `Button`. Aside from being styled, it allows us to display a little spinner when the request is being made. We set this using the `loading` prop.
 
 Let's import this `Button` component and a couple of other things.
@@ -224,29 +221,40 @@ Add this to the imports of `web/src/pages/Article.css.ts`.
 import { vars } from "../vars.css";
 ```
 
-Now if you refresh the app, and head over to an article page, you'll see the comments form.
+Now if you refresh the app, and head over to an article page, you'll see the comment form.
 
-Try adding your first comment. You'll notice it gets rendered right away. And the button has a little loading spinner while the request was being made.
+Try adding your first comment. You'll notice it gets rendered right away. And the button shows a little loading spinner while the request is being made.
 
-INSERT SCREENSHOT
-
-<!--
 ![New comment added in the article page](/img/make-updates/new-comment-added-in-the-articles-page.png)
--->
 
-If you've been following along closely, you might've noticed something interesting.
-
-We aren't doing anything special to render the newly added comment!
+If you've been following along closely, you might've noticed something interesting. We aren't doing anything special to render the newly added comment!
 
 ### Auto refetching queries
 
-We briefly touched on this in the above caching section but let's look at what's happening.
+The `addComment` mutation returns the type `Comment`. Recall that we told Urql that this `Comment` type has been cached as a part of the `article` query.
 
-The `addComment` mutation returns a `Comment` that Urql recognizes is cached as a part of the `article` query that returns the comments.
+```ts
+const context = useMemo(() => ({ additionalTypenames: ["Comment"] }), []);
+const [article] = useTypedQuery({
+  ...
+```
 
-It'll then refetch this query in the background and the `useTypedQuery` hook will re-render the component once complete.
+So it'll refetch this query in the background and the `useTypedQuery` hook will re-render the component.
 
-It also sets the `article.stale` flag to true while refetching. We use this to display the loading spinner on our button.
+Urql also sets the `article.stale` flag to `true` while refetching. We use this flag to display the loading spinner on our button.
+
+```tsx {5}
+<Button
+  type="submit"
+  variant="secondary"
+  className={styles.button}
+  loading={result.fetching || article.stale}
+>
+  Add Comment
+</Button>
+```
+
+This allows us to show the loading spinner while the comment is being posted, and while the comments are refetched.
 
 :::info Behind the scenes
 The `addComment` mutation returns an object with `__typename`, `Comment`. If you inspect the network requests, it'll look something like this.
@@ -262,23 +270,16 @@ The `addComment` mutation returns an object with `__typename`, `Comment`. If you
 }
 ```
 
-We tell Urql that our `article` query contains the type `Comments` by passing in the `additionalTypenames` as a context.
+We als tell Urql that our `article` query contains the type `Comments` by passing in the `additionalTypenames` as a context.
 
 ```ts
 const context = useMemo(() => ({ additionalTypenames: ["Comment"] }), []);
 ```
 
-So when it sees a mutation that affects the `Comment` type, it'll look for all the queries on the page that contain that type and refetches them in the background.
+Recall that we need to do this because initially the `article` query might not have any comments. So it won't be able to rely on the `__typename` that's returned.
 
-Recall that we need to explicitly tell Urql about the `Comment` type because initially the `article` query might not have any comments. So it won't be able to rely on the `__typename` that's returned.
+Now when Urql sees a mutation that affects the `Comment` type, it'll look for all the queries on the page that contain that type and refetch them in the background.
 
-To show the loading spinner while all this is happening, we set the `loading` prop on our button to:
-
-```tsx
-loading={result.fetching || article.stale}
-```
-
-This means that the loading spinner is shown while, `result.fetching` or `article.stale` is true. In other words, while the mutation or refetch is happening.
 :::
 
-Our app is now ready to be shipped! So let's deploy it next.
+Our app is now ready to be shipped! So let's deploy it to production!
