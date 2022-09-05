@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/node",
-  "version": "1.10.6",
+  "version": "1.11.0",
   "type": "module",
   "sideEffects": false,
   "publishConfig": {
