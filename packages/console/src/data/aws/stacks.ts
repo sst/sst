@@ -117,7 +117,7 @@ export function useStacks() {
                 await new Promise((resolve) => setTimeout(resolve, 1000));
               }
             }
-          })
+          }) || []
         );
         // Filter stacks that are not found in CloudFormation.
         stacks = stacks.filter((x) => x !== null);
