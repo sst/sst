@@ -1,5 +1,18 @@
 # @serverless-stack/resources
 
+## 1.11.0
+
+### Minor Changes
+
+- [#2024](https://github.com/serverless-stack/sst/pull/2024) [`2b816c08a`](https://github.com/serverless-stack/sst/commit/2b816c08a4ebe814a9ab18b517030e5455c7e9b8) Thanks [@fwang](https://github.com/fwang)! - Function: utilize multi-core to build functions in parallel
+
+### Patch Changes
+
+- [`6a17fef98`](https://github.com/serverless-stack/sst/commit/6a17fef98bd05f36b861475963e6d8717d64a5d7) Thanks [@thdxr](https://github.com/thdxr)! - Do not create hard dependency on kysely for migrator
+
+- Updated dependencies [[`2b816c08a`](https://github.com/serverless-stack/sst/commit/2b816c08a4ebe814a9ab18b517030e5455c7e9b8)]:
+  - @serverless-stack/core@1.11.0
+
 ## 1.10.6
 
 ### Patch Changes
