@@ -309,7 +309,7 @@ test("triggers is string", async () => {
   });
   countResources(stack, "AWS::Lambda::Function", 1);
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler"
+    Handler: "index.placeholder",
   });
 });
 
@@ -329,7 +329,7 @@ test("triggers is string with defaults.function", async () => {
     }
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 3,
     Environment: {
       Variables: {
@@ -350,7 +350,7 @@ test("triggers is Function", async () => {
   });
   countResources(stack, "AWS::Lambda::Function", 1);
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler"
+    Handler: "index.placeholder",
   });
 });
 
@@ -381,7 +381,7 @@ test("triggers is FunctionProps", async () => {
     }
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler"
+    Handler: "index.placeholder",
   });
 });
 
@@ -400,7 +400,7 @@ test("triggers is FunctionProps with defaults.function", async () => {
     }
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 3
   });
 });

@@ -768,7 +768,7 @@ test("routes: route is string", async () => {
   });
   countResources(stack, "AWS::ApiGatewayV2::Route", 4);
   countResourcesLike(stack, "AWS::Lambda::Function", 4, {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
 });
 
@@ -788,7 +788,7 @@ test("routes: route is string-with-defaultFunctionProps", async () => {
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 3,
     Environment: {
       Variables: {
@@ -809,7 +809,7 @@ test("routes: route is Function", async () => {
   });
   countResources(stack, "AWS::Lambda::Function", 1);
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
 });
 
@@ -842,7 +842,7 @@ test("routes: route is prop", async () => {
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
 });
 
@@ -863,7 +863,7 @@ test("routes: route is prop-with-defaultFunctionProps", async () => {
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 3,
   });
 });
@@ -892,7 +892,7 @@ test("routes: route is prop-with-defaultFunctionProps-override", async () => {
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 5,
     Environment: {
       Variables: {
@@ -934,8 +934,7 @@ test("routes: route is prop-with-defaultFunctionProps-override-with-app-defaultF
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
-
+    Handler: "index.placeholder",
     Timeout: 5,
     Environment: {
       Variables: {

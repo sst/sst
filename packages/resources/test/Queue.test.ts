@@ -51,7 +51,7 @@ test("cdk.queue: is sqs.Queue construct", async () => {
   });
   countResources(stack, "AWS::Lambda::Function", 1);
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
   countResources(stack, "AWS::SQS::Queue", 0);
   countResources(stack, "AWS::Lambda::EventSourceMapping", 1);
@@ -73,7 +73,7 @@ test("cdk.queue: is QueueProps", async () => {
   });
   countResources(stack, "AWS::Lambda::Function", 1);
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
   countResources(stack, "AWS::SQS::Queue", 1);
   hasResource(stack, "AWS::SQS::Queue", {
@@ -119,7 +119,7 @@ test("consumer: is string", async () => {
   });
   countResources(stack, "AWS::Lambda::Function", 1);
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
   countResources(stack, "AWS::SQS::Queue", 1);
   hasResource(stack, "AWS::SQS::Queue", {
@@ -134,7 +134,7 @@ test("consumer: is Function", async () => {
     consumer: f,
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
   hasResource(stack, "AWS::SQS::Queue", {
     QueueName: "dev-my-app-Queue",
@@ -154,7 +154,7 @@ test("consumer: is props", async () => {
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
   hasResource(stack, "AWS::SQS::Queue", {
     QueueName: "dev-my-app-Queue",

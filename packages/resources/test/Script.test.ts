@@ -48,7 +48,7 @@ test("onCreate: onUpdate and onDelete not set", async () => {
   });
   countResources(stack, "AWS::Lambda::Function", 2);
   countResourcesLike(stack, "AWS::Lambda::Function", 1, {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 900,
   });
   hasResource(stack, "AWS::Lambda::Function", {
@@ -80,7 +80,7 @@ test("onCreate: is string", async () => {
   });
   countResources(stack, "AWS::Lambda::Function", 4);
   countResourcesLike(stack, "AWS::Lambda::Function", 3, {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 900,
   });
   hasResource(stack, "AWS::Lambda::Function", {
@@ -121,11 +121,11 @@ test("onCreate: is Function: liveDebug disabled", async () => {
   countResources(stack, "Custom::SSTScript", 1);
   countResources(stack, "AWS::Lambda::Function", 4);
   countResourcesLike(stack, "AWS::Lambda::Function", 1, {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 20,
   });
   countResourcesLike(stack, "AWS::Lambda::Function", 2, {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 900,
   });
   hasResource(stack, "AWS::Lambda::Function", {
@@ -171,11 +171,11 @@ test("onCreate: is FunctionProps", async () => {
   countResources(stack, "Custom::SSTScript", 1);
   countResources(stack, "AWS::Lambda::Function", 4);
   countResourcesLike(stack, "AWS::Lambda::Function", 1, {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 20,
   });
   countResourcesLike(stack, "AWS::Lambda::Function", 2, {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 900,
   });
   hasResource(stack, "AWS::Lambda::Function", {
@@ -206,11 +206,11 @@ test("onCreate: with defaults.function", async () => {
   countResources(stack, "Custom::SSTScript", 1);
   countResources(stack, "AWS::Lambda::Function", 4);
   countResourcesLike(stack, "AWS::Lambda::Function", 1, {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 20,
   });
   countResourcesLike(stack, "AWS::Lambda::Function", 2, {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 3,
   });
   hasResource(stack, "AWS::Lambda::Function", {

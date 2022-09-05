@@ -249,6 +249,7 @@ export class Stack extends cdk.Stack {
         Stage: this.stage,
         Stack: this.stackName,
         BootstrapBucketName: app.bootstrapAssets.bucketName!,
+        ForceUpdate: process.env.SST_FORCE_UPDATE_METADATA ? Date.now().toString() : undefined,
       },
     });
   }

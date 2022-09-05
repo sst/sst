@@ -6,7 +6,7 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 import * as iam from "aws-cdk-lib/aws-iam";
 import { ILayerVersion } from "aws-cdk-lib/aws-lambda";
 import * as cxapi from "aws-cdk-lib/cx-api";
-import { Bootstrap, State } from "@serverless-stack/core";
+import { Bootstrap, DeferBuilder, State } from "@serverless-stack/core";
 import { Stack } from "./Stack.js";
 import {
   SSTConstruct,
@@ -343,6 +343,10 @@ export class App extends cdk.App {
     return cloudAssembly;
   }
 
+  public async runDeferredBuilds() {
+    await DeferBuilder.run();
+  }
+
   isRunningSSTTest(): boolean {
     // Check the env var set inside test/setup-tests.js
     return process.env.SST_RESOURCES_TESTS === "enabled";
@@ -420,7 +424,7 @@ export class App extends cdk.App {
     if (current instanceof cdk.CfnResource) {
       current.applyRemovalPolicy(
         cdk.RemovalPolicy[
-          policy.toUpperCase() as keyof typeof cdk.RemovalPolicy
+        policy.toUpperCase() as keyof typeof cdk.RemovalPolicy
         ]
       );
     }

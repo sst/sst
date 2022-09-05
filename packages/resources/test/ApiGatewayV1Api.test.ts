@@ -1073,7 +1073,7 @@ test("route-string", async () => {
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
 });
 
@@ -1094,7 +1094,7 @@ test("route-string-with-defaults.function", async () => {
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 3,
     Environment: {
       Variables: {
@@ -1116,7 +1116,7 @@ test("route-Function", async () => {
   });
   countResources(stack, "AWS::Lambda::Function", 1);
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
 });
 
@@ -1163,7 +1163,7 @@ test("route-ApiRouteProps-function-string", async () => {
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
 });
 
@@ -1183,7 +1183,7 @@ test("route-ApiRouteProps-function-string-with-defaults.function", async () => {
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 3,
   });
 });
@@ -1199,7 +1199,7 @@ test("route-ApiRouteProps-function-Function", async () => {
   });
   countResources(stack, "AWS::Lambda::Function", 1);
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
 });
 
@@ -1234,7 +1234,7 @@ test("route-ApiRouteProps-function-FunctionProps", async () => {
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
 });
 
@@ -1256,7 +1256,7 @@ test("route-ApiRouteProps-function-FunctionProps-with-defaults.function", async 
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 3,
   });
 });
@@ -1280,7 +1280,7 @@ test("route-ApiRouteProps-function-FunctionProps-with-defaults.function-override
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 5,
   });
 });
