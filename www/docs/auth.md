@@ -288,6 +288,8 @@ The `useSession` hook can be called in any part of your API.
 Here's an example of a GraphQL query that gets the current user from the session.
 
 ```js title="services/functions/graphql/types/foo.ts"
+import { useSession } from "@serverless-stack/node/auth";
+
 builder.mutationFields((t) => ({
   createTask: t.field({
     type: TaskType,
