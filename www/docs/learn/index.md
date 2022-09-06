@@ -23,7 +23,7 @@ The starter we'll be using creates a very simple Reddit clone called _"Links"_. 
 We'll then walk through the process of adding a new feature. We'll allow our users to add comments for these links!
 
 :::info
-This tutorial should take less than an hour. We recommend going through it once.
+The source for the app we are builing is on GitHub for reference — [github.com/serverless-stack/tutorial-links-app](https://github.com/serverless-stack/tutorial-links-app)
 :::
 
 Let's look at what we'll be covering.
@@ -32,8 +32,8 @@ Let's look at what we'll be covering.
 
 We've structured this tutorial in a way that shows you what the development workflow looks like while working with SST. We start with setting up your local development environment and go all the way to _"git push to deploy"_ in production.
 
-:::tip
-If you want to get started right away, you can jump ahead to the next chapter — [**Create a new SST project**](create-a-new-project.md)
+:::info
+This tutorial should take less than an hour. We recommend going through it once.
 :::
 
 Here's roughly what we'll be covering in the next few chapters:
