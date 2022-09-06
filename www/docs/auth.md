@@ -327,6 +327,7 @@ Here's an example of how you'd handle a typical API request.
 
 ```js title="services/functions/rest/foo.ts"
 import { Handler } from "@serverless-stack/node/context";
+import { useSession } from "@serverless-stack/node/auth";
 
 export const getSessionTypeHandler = Handler("api", async (event) => {
   const session = useSession();
