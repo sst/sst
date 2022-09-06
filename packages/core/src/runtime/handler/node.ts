@@ -284,7 +284,7 @@ async function installNodeModules(
 
   // Install dependencies
   try {
-    await exec(`${installer} install`, {
+    await execAsync(`${installer} install`, {
       cwd: targetPath,
     });
   } catch (e) {
