@@ -1,5 +1,11 @@
 # @serverless-stack/core
 
+## 1.11.1
+
+### Patch Changes
+
+- [#2035](https://github.com/serverless-stack/sst/pull/2035) [`fc4e0ea6c`](https://github.com/serverless-stack/sst/commit/fc4e0ea6c9d8c7dd6194467581a53f8cd8c4f7dc) Thanks [@fwang](https://github.com/fwang)! - Function: fix nodeModules not bundled
+
 ## 1.11.0
 
 ### Minor Changes
