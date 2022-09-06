@@ -48,8 +48,10 @@ There, should see a `POST /graphql` request that was made. And the response body
 
 ![Console load articles log](/img/start-frontend/console-load-articles-log.png)
 
-:::info Behind the scenes
-This seemingly simple workflow deserves a quick "behind the scenes" look. Here's what's happening:
+<details>
+<summary>Behind the scenes</summary>
+
+This seemingly simple workflow deserves a quick _behind the scenes_ look. Here's what's happening:
 
 1. Your frontend is running locally.
 2. It makes a request to a GraphQL endpoint that's running in AWS.
@@ -62,7 +64,8 @@ This seemingly simple workflow deserves a quick "behind the scenes" look. Here's
 9. Your frontend then renders those results.
 
 Note that everything here happens in real-time. There's no polling or syncing!
-:::
+
+</details>
 
 Let's try posting an article.
 

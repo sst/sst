@@ -90,7 +90,9 @@ Similar to the `createArticle` mutation, it takes the `articleID` and `text` as 
 
 Our API is now complete! It supports our new comments feature!
 
-:::info Behind the scenes
+<details>
+<summary>Behind the scenes</summary>
+
 We have some tips on how to design GraphQL APIs before we move on.
 
 GraphQL API design is a little different from REST API design.
@@ -112,6 +114,6 @@ So we get the best of both worlds!
 
 If you want to learn more about GraphQL schema design, make sure to [check out this fantastic video](https://youtu.be/pJamhW2xPYw).
 
-:::
+</details>
 
 Let's connect these to our frontend React app.

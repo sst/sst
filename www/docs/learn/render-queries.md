@@ -39,7 +39,9 @@ It's making the `articles` query that we looked at in the [last chapter](queries
 
 You'll notice that our code editor can autocomplete all the fields in this query and the new `comments` field is automatically available. Our code editor can also point out if we make a mistake in our query!
 
-:::info Behind the scenes
+<details>
+<summary>Behind the scenes</summary>
+
 Let's look at how our typesafe frontend GraphQL client works behind the scenes.
 
 SST uses [Urql](https://formidable.com/open-source/urql/), one of the most popular GraphQL clients. The `useTypedQuery` hook wraps around Urql's [`useQuery`](https://formidable.com/open-source/urql/docs/api/urql/) hook while using the types that [Genql](https://genql.vercel.app) generates based on our GraphQL schema.
@@ -72,7 +74,7 @@ To ensure that the `useTypedQuery` hook is able to access our Urql client across
 </React.StrictMode>
 ```
 
-:::
+</details>
 
 Now we need to render the results. The `Home` component renders each article on the homepage as a `<li>`.
 
@@ -107,7 +109,9 @@ Here we are rendering the count of the comments and linking to the article page.
 
 The article page is available at `/articles/:id`. Since our app is a frontend [SPA](https://en.wikipedia.org/wiki/Single-page_application) (single-page application) we use a client-side router, called [React Router](https://reactrouter.com) to handle these routes.
 
-:::info Behind the scenes
+<details>
+<summary>Behind the scenes</summary>
+
 Let's look at how our router is configured.
 
 We currently have two pages in our application:
@@ -144,7 +148,7 @@ export default function Article() {
   // ...
 ```
 
-:::
+</details>
 
 We also need to add a couple of styles to render the comments count in our homepage.
 
@@ -190,7 +194,9 @@ Using _CSS-in-TS_ has a couple of advantages:
 2. Full typesafety and autocomplete support. This prevents mistakes in the style definitions.
 3. Vanilla Extract also generates static CSS at build time. So it performs just like handwritten CSS.
 
-:::info Behind the scenes
+<details>
+<summary>Behind the scenes</summary>
+
 Let's look at how our styles are configured behind the scenes.
 
 Our React app is built using [Vite](https://vitejs.dev). Vanilla Extract has a Vite plugin to process our `*.css.ts` styles.
@@ -279,7 +285,7 @@ To this:
 <div class="Home__1fe9q1b4">...</div>
 ```
 
-:::
+</details>
 
 Now if you refresh the app, you should see the comment count being displayed under each article.
 

@@ -41,7 +41,8 @@ Like the previous chapter, we are making the query to return the comments as wel
 
 We are doing one extra thing here, we are telling our GraphQL client the type we are expecting in return. This is to fix a quirk of Urql's [Document Cache](https://formidable.com/open-source/urql/docs/basics/document-caching/#document-cache-gotchas).
 
-:::info Behind the scenes
+<details>
+<summary>Behind the scenes</summary>
 
 As we looked at in the [last chapter](render-queries.md#typesafe-graphql-client), we are using Urql as our GraphQL client. One notable feature of Urql is the way it caches our requests.
 
@@ -54,7 +55,8 @@ Behind the scenes, Urql creates a key for each request that's sent based on a qu
 So when we send a mutation and Urql notices that it has a type that was previously requested in a cached query, it'll invalidate that query's cache automatically!
 
 This works great except for the case where a query returns an empty set of results and there is no `__typename` field. Without this info, Urql wouldn't know that it needs to invalidate the cache.
-:::
+
+</details>
 
 Next, we need to add the mutation to post a comment.
 
@@ -256,7 +258,9 @@ Urql also sets the `article.stale` flag to `true` while refetching. We use this 
 
 This allows us to show the loading spinner while the comment is being posted, and while the comments are refetched.
 
-:::info Behind the scenes
+<details>
+<summary>Behind the scenes</summary>
+
 The `addComment` mutation returns an object with `__typename`, `Comment`. If you inspect the network requests, it'll look something like this.
 
 ```json
@@ -280,6 +284,6 @@ Recall that we need to do this because initially the `article` query might not h
 
 Now when Urql sees a mutation that affects the `Comment` type, it'll look for all the queries on the page that contain that type and refetch them in the background.
 
-:::
+</details>
 
 Our app is now ready to be shipped! So let's deploy it to production!

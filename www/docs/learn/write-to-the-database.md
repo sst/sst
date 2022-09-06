@@ -142,7 +142,9 @@ export async function comments(articleID: string) {
 
 We are using [Kysely](https://koskimas.github.io/kysely/) to run typesafe queries against our database.
 
-:::info Behind the scenes
+<details>
+<summary>Behind the scenes</summary>
+
 There are a couple of interesting details here, let's dig in:
 
 1. `SQL.DB` is the Kysely instance imported from `services/core/sql.ts`.
@@ -222,6 +224,6 @@ There are a couple of interesting details here, let's dig in:
 
    Even though this file is auto-generated, you should check it into Git. We'll be relying on it later on in this tutorial.
 
-:::
+</details>
 
 Now with our business logic and database queries implemented, we are ready to hook up our API.

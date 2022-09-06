@@ -463,6 +463,21 @@ html[data-theme="dark"] .navbar__link__github:before {
   background-color: var(--custom-code-block-selection-color);
 }
 
+/* Styles for detail tag */
+details[class^="details_"] {
+  border: none;
+  box-shadow: none;
+}
+details[class^="details_"] > div > div > *:last-child {
+  /* Fix bottom margin for content */
+  margin-bottom: 0;
+}
+details[class^="details_"] > summary {
+  text-transform: uppercase;
+  font-size: var(--ifm-h5-font-size);
+  font-weight: var(--ifm-heading-font-weight);
+}
+
 /* mobile */
 @media screen and (max-width: 996px) {
   :root {

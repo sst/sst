@@ -17,11 +17,14 @@ A key concept to understand about Pothos is that there are two different types i
 
 You can read more about this over on the [Pothos docs](https://pothos-graphql.dev/docs/guide/schema-builder#backing-models).
 
-:::info Behind the scenes
+<details>
+<summary>Behind the scenes</summary>
+
 In the last chapter, we looked at how our GraphQL setup is wired up.
 
 If you recall, we build our GraphQL schema in Pothos using a [`SchemaBuilder`](https://pothos-graphql.dev/docs/guide/schema-builder). These GraphQL types are stored in `services/functions/graphql/types/`.
-:::
+
+</details>
 
 Currently we define the GraphQL schema for our _article_ in `services/functions/graphql/types/article.ts`. We do three things there — define a type, add a query, and define a mutation.
 
@@ -51,7 +54,9 @@ Let's look at what's going on here:
 - This is backed by the `SQL.Row["article"]` database type. More on this below.
 - We explicitly state the fields we want to expose and specify their types.
 
-:::info Behind the scenes
+<details>
+<summary>Behind the scenes</summary>
+
 The `SQL.Row["article"]` is the type for our `article` table. This is defined in `services/core/sql.ts`.
 
 ```ts title="services/core/sql.ts"
@@ -63,7 +68,8 @@ export type Row = {
 Where the `Database[Key]` is coming from `services/core/sql.generated.ts`, and each key is the type for each table.
 
 The types in `services/core/sql.generated.ts` are auto-generated when we run our migrations. We talked about this back in the [Write to the Database](write-to-the-database.md) chapter.
-:::
+
+</details>
 
 Let's add a new `Comment` type for our comments feature.
 

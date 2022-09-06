@@ -132,8 +132,10 @@ SELECT * FROM article
 
 You should see the query returns **0 rows**.
 
-:::info Behind the scenes
-Let's quickly recap what we've done so far.
+<details>
+<summary>Behind the scenes</summary>
+
+Let's quickly recap what we've done so far:
 
 1. We ran `sst start` to start the [Live Lambda Dev](../live-lambda-development.md) environment and the [SST Console](../console.md).
 2. Deployed the infrastructure for our app to AWS:
@@ -142,6 +144,7 @@ Let's quickly recap what we've done so far.
 4. It created an `article` table that we'll use to store the links our users will submit.
 
 Finally, to test that everything is working, we queried our database.
-:::
+
+</details>
 
 Next, let's look at the frontend.

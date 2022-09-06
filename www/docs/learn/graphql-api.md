@@ -56,7 +56,9 @@ In the next chapter we'll look at an example of this and add our new feature to 
 
 The GraphQL setup in our starter ships with a Lambda optimized GraphQL server. We've taken care to make sure it's as small as possible to minimize cold starts; while still including what you'll need to ship complete GraphQL APIs.
 
-:::info Behind the scenes
+<details>
+<summary>Behind the scenes</summary>
+
 Let's take a look at how this is all wired up.
 
 1. First, as we talked about in [Project Structure](project-structure.md#stacks) chapter, our GraphQL API is defined in `stacks/Api.ts`.
@@ -142,6 +144,6 @@ Let's take a look at how this is all wired up.
    2. Generate a standard GraphQL schema.
    3. Generate our typed frontend GraphQL client from the schema.
 
-:::
+</details>
 
 Now let's expose the comments feature with our GraphQL API.
