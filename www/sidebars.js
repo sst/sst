@@ -64,7 +64,10 @@ module.exports = {
           label: "5 - Deployment",
           collapsible: true,
           collapsed: true,
-          items: ["learn/deploy-from-cli", "learn/git-push-to-deploy"]
+          items: [
+            "learn/deploy-to-prod",
+            //"learn/git-push-to-deploy"
+          ]
         }
       ]
     },

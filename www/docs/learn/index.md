@@ -18,7 +18,7 @@ Before you start, join our community on <a href={ config.discord }><b>Discord</b
 
 The starter we'll be using creates a very simple Reddit clone called _"Links"_. You can submit an article to it and it'll display all the articles that've been submitted.
 
-INSERT SCREENSHOT OF FINISHED APP
+![Completed SST app](/img/learn/completed-sst-app.png)
 
 We'll then walk through the process of adding a new feature. We'll allow our users to add comments for these links!
 
