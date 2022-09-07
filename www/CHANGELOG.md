@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 1.7.0
+
+### Minor Changes
+
+- [`c8b6b68f4`](https://github.com/serverless-stack/sst/commit/c8b6b68f49012f9e0e8949b0c2146d9f78aa7f05) Thanks [@jayair](https://github.com/jayair)! - Updating `create sst` GraphQL template with new tutorial app.
+
 ## 1.6.2
 
 ### Patch Changes
