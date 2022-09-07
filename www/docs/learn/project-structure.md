@@ -10,6 +10,10 @@ This chapter goes into a lot of detail to help you get familiar with this setup.
 If you are just trying to get an overview of SST, feel free to skim this chapter and skip ahead.
 :::
 
+---
+
+## Monorepo
+
 Your project will look something like this.
 
 ```
@@ -34,6 +38,8 @@ The `create sst` setup generates a [monorepo](https://en.wikipedia.org/wiki/Mono
 :::
 
 We'll look at how our monorepo is split up with [Workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces) below. But first, let's start by looking at what these directories do.
+
+---
 
 ## `stacks/`
 
@@ -123,6 +129,8 @@ We typically group related resources together into stacks. In the `stacks/` dire
   }
   ```
 
+---
+
 ## `services/`
 
 The `services/` directory houses everything that powers our backend. This includes our GraphQL API, but also all your business logic, and whatever else you need.
@@ -139,17 +147,25 @@ The `services/` directory houses everything that powers our backend. This includ
 Our starter is structured to encourage [Domain Driven Design](domain-driven-design.md).
 :::
 
+---
+
 ## `graphql/`
 
 The `graphql/` directory will contain the outputs of GraphQL related code generation. Typically you won't be touching this. It contains code shared between the frontend and backend.
+
+---
 
 ## `web/`
 
 The `web/` directory contains a React application created with [Vite](https://vitejs.dev/). It's already wired up to be able to talk to the GraphQL API. If you are using a different frontend, for example NextJS, you can delete this folder and provision it yourself.
 
+---
+
 ## `package.json`
 
 The `package.json` for our app is relatively simple. But there are a couple of things of note.
+
+---
 
 ### Workspaces
 
@@ -179,6 +195,8 @@ $ npm uninstall <package> -W <workspace>
 Or you can do the regular `npm install` in the workspace's directory.
 
 For Yarn, you'll need to run `yarn add` in the workspace directory. And at the root you'll need to run `yarn add` with [the `-W` flag](https://classic.yarnpkg.com/lang/en/docs/cli/add/).
+
+---
 
 ### Scripts
 
@@ -213,6 +231,8 @@ The _default_ stage that we are referring to above, is the one that you selected
 :::
 
 This might seem like a lot of scripts but we don't need to worry about them now. We'll look at them in detail when necessary.
+
+---
 
 ## `sst.json`
 

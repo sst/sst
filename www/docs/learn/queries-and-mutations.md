@@ -8,7 +8,9 @@ In GraphQL APIs, the actions you can take are broken down into _Queries_ and _Mu
 
 Let's look at how these work in our app.
 
-### Define Queries
+---
+
+## Define queries
 
 To start with we have two queries. One to fetch a single article, called `article`. And another to fetch all the articles, called `articles`.
 
@@ -42,7 +44,9 @@ The `article` query above returns a single article given an article id.
 
 On the other hand, the `articles` query returns a list of articles of type `ArticleType` with a resolver that calls the `Article.list()` domain function.
 
-### Define Mutations
+---
+
+## Define mutations
 
 Mutations are similar to queries but are meant for writing data or for triggering actions. For our app, we need a mutation that can create an article.
 
@@ -65,7 +69,9 @@ The `createArticle` mutation, we take two arguments, `title` and `url`. It then 
 
 That at a very high level is how GraphQL works. You define the type for an object, add a query for how to fetch it, and a mutation for how to create or update it.
 
-### Create a new Mutation
+---
+
+## Create a new mutation
 
 Let's add a mutation to create a comment.
 
@@ -87,8 +93,6 @@ addComment: t.field({
 ```
 
 Similar to the `createArticle` mutation, it takes the `articleID` and `text` as `args`. And calls `Article.addComment()` domain function to create a new comment. It returns the new comment of type `CommentType`. Recall that we added the new `CommentType` in the [last chapter](add-api-types.md#create-a-comment-type).
-
-Our API is now complete! It supports our new comments feature!
 
 <details>
 <summary>Behind the scenes</summary>
@@ -115,5 +119,9 @@ So we get the best of both worlds!
 If you want to learn more about GraphQL schema design, make sure to [check out this fantastic video](https://youtu.be/pJamhW2xPYw).
 
 </details>
+
+Our API is now complete! It supports our new comments feature!
+
+---
 
 Let's connect these to our frontend React app.

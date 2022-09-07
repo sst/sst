@@ -19,7 +19,9 @@ Debug session started. Listening for requests...
 
 We are now ready to initialize our database. We are using RDS with PostgreSQL in this setup.
 
-### RDS
+---
+
+## RDS
 
 [RDS](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.html) is a fully-managed database offering from AWS. It supports PostgreSQL and MySQL engines.
 
@@ -30,6 +32,10 @@ Serverless RDS can take a few minutes to autoscale up and down.
 :::
 
 We'll use RDS with PostgreSQL in this tutorial because it is the most familiar option. We'll do a deep dive into a true serverless database like [DynamoDB](https://aws.amazon.com/dynamodb/) at a later date. Since DynamoDB is a NoSQL database that requires you to model your data a little differently.
+
+---
+
+## Open the Console
 
 <ChangeText>
 
@@ -55,7 +61,9 @@ The Console needs a self-signed certificate to work with Safari or Brave. [Follo
 
 At this point we don't have any tables in our database. To add them in, we are going to run a migration.
 
-### Migrations
+---
+
+## What is a migration
 
 Migrations are a set of files that contain the queries necessary to make updates to our database schema. They have an `up` function, that's run while applying the migration. And a `down` function, that's run while rolling back the migration.
 
@@ -106,7 +114,9 @@ You can create a new migration by running `npm run gen migration new`. This comm
 
 We'll do this later in the tutorial. For now, let's apply our first migration.
 
-### Run a migration
+---
+
+## Run a migration
 
 <ChangeText>
 
@@ -120,7 +130,9 @@ This'll create a table named `article`.
 
 In the **Migrations** tab you'll see all the migrations in our app, and their status.
 
-### Run a query
+---
+
+## Run a query
 
 To verify that the table has been created successfully; enter the following query into the query editor, and hit **Execute**.
 
@@ -146,5 +158,13 @@ Let's quickly recap what we've done so far:
 Finally, to test that everything is working, we queried our database.
 
 </details>
+
+:::tip
+We'll be sprinkling in _**Behind the scenes**_ sections like the one above throughout this tutorial.
+
+They are meant to be optional reading but can be really useful if you are trying to understand how things work behind the scenes.
+:::
+
+---
 
 Next, let's look at the frontend.

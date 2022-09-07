@@ -8,7 +8,9 @@ The GraphQL setup we are using is a _Code-first_ GraphQL setup. This means that 
 
 We'll be using [Pothos](https://pothos-graphql.dev/) to do this.
 
-### Backing models
+---
+
+## Backing models
 
 A key concept to understand about Pothos is that there are two different types involved:
 
@@ -32,7 +34,9 @@ In this chapter we'll look at how to define the types. While in the [next chapte
 
 Let's start by looking at what we have so far.
 
-### Defining types
+---
+
+## Defining types
 
 If you open up `services/functions/graphql/types/article.ts`, you'll see that we've defined a type for our article.
 
@@ -73,7 +77,9 @@ The types in `services/core/sql.generated.ts` are auto-generated when we run our
 
 Let's add a new `Comment` type for our comments feature.
 
-### Create a comment type
+---
+
+## Create a comment type
 
 <ChangeText>
 
@@ -91,6 +97,8 @@ const CommentType = builder.objectRef<SQL.Row["comment"]>("Comment").implement({
 ```
 
 This should be pretty straightforward. We are taking the `comment` type from our SQL query and exposing the `commentID` as type `ID` and the comment `text` as a `String`.
+
+---
 
 ## Return the comments
 
@@ -127,5 +135,7 @@ Here we are:
 - Using the `Comment` type from above and defining a resolver.
 - The resolver function takes an `article` object.
 - It grabs the `articleID` from it and calls the `Article.comments()` domain function in `services/core/article.ts`. We implemented this back in the [Write to the Database](write-to-the-database.md) chapter.
+
+---
 
 Now that our types are defined, let's write the queries and mutations.

@@ -6,6 +6,10 @@ import ChangeText from "@site/src/components/ChangeText";
 
 We'd like our users to be able to navigate to the article page, view the comments and post them.
 
+---
+
+## Update query
+
 To do that, let's update the query in the article page.
 
 <ChangeText>
@@ -60,7 +64,9 @@ This works great except for the case where a query returns an empty set of resul
 
 Next, we need to add the mutation to post a comment.
 
-### Typed mutations
+---
+
+## Add mutation
 
 <ChangeText>
 
@@ -101,6 +107,10 @@ interface CommentForm {
 
 Now let's render the comments.
 
+---
+
+## Render comments
+
 <ChangeText>
 
 Add this below the HTML `<p>...</p>` component in the `return` statement.
@@ -120,6 +130,10 @@ Add this below the HTML `<p>...</p>` component in the `return` statement.
 This is grabbing the comments from the query results and rendering each comment.
 
 Next, let's render the comment form.
+
+---
+
+## Add comment form
 
 <ChangeText>
 
@@ -178,6 +192,10 @@ import Button from "../components/Button";
 
 Our components also need some styles, let's add that next.
 
+---
+
+## Style comments
+
 <ChangeText>
 
 Add the following at the end of `web/pages/Article.css.ts`.
@@ -225,13 +243,21 @@ import { vars } from "../vars.css";
 
 Now if you refresh the app, and head over to an article page, you'll see the comment form.
 
-Try adding your first comment. You'll notice it gets rendered right away. And the button shows a little loading spinner while the request is being made.
+---
+
+## Test adding comments
+
+Try adding your first comment.
 
 ![New comment added in the article page](/img/make-updates/new-comment-added-in-the-articles-page.png)
 
-If you've been following along closely, you might've noticed something interesting. We aren't doing anything special to render the newly added comment!
+You'll notice it gets rendered right away. And the button shows a little loading spinner while the request is being made.
 
-### Auto refetching queries
+---
+
+## Auto refetching queries
+
+If you've been following along closely, you might've noticed something interesting. We aren't doing anything special to render the newly added comment!
 
 The `addComment` mutation returns the type `Comment`. Recall that we told Urql that this `Comment` type has been cached as a part of the `article` query.
 
@@ -285,5 +311,7 @@ Recall that we need to do this because initially the `article` query might not h
 Now when Urql sees a mutation that affects the `Comment` type, it'll look for all the queries on the page that contain that type and refetch them in the background.
 
 </details>
+
+---
 
 Our app is now ready to be shipped! So let's deploy it to production!

@@ -8,15 +8,23 @@ We are now ready to expose the new comments functionality in our core package th
 We use GraphQL for our API in the `create sst` starter.
 :::
 
-You don't need to know a lot about GraphQL upfront, this tutorial can help with that. To start, let's get a quick overview of GraphQL and how we use it in our `create sst` setup.
+You don't need to know a lot about GraphQL upfront, this tutorial can help with that.
 
-### What is GraphQL
+---
+
+## What is GraphQL
+
+To start, let's get a quick overview of GraphQL and how we use it in our `create sst` setup.
 
 [GraphQL](https://graphql.org) is a query language for your API that provides more structure than open ended REST APIs.
 
 :::tip Learn GraphQL
 If you're interested in learning GraphQL, we recommend [the tutorial in their docs](https://graphql.org/learn/).
 :::
+
+---
+
+## Why GraphQL
 
 One of the biggest benefits of using GraphQL is that it can effectively separate your frontend and backend. In the REST API world, if you needed to make a change to the frontend and display some data differently. Or display different data, you needed to think about making a change to the APIs as well.
 
@@ -26,7 +34,9 @@ These benefits become all the more valuable when you have multiple clients. For 
 
 GraphQL also has a huge community that has built really great tooling around it for things like code-generation, authorization, logging, and much more.
 
-### Code-first GraphQL
+---
+
+## Code-first GraphQL
 
 In the `create sst` setup we do what's called _Code-first GraphQL_. This means that you write all of your GraphQL API definitions in TypeScript, instead of splitting them across GraphQL files and TS files.
 
@@ -52,7 +62,9 @@ We use a library called [Pothos](https://pothos-graphql.dev/) to do this. And wh
 
 In the next chapter we'll look at an example of this and add our new feature to the GraphQL schema, _in code_.
 
-### Lambda optimized GraphQL
+---
+
+## Lambda optimized GraphQL
 
 The GraphQL setup in our starter ships with a Lambda optimized GraphQL server. We've taken care to make sure it's as small as possible to minimize cold starts; while still including what you'll need to ship complete GraphQL APIs.
 
@@ -145,5 +157,7 @@ Let's take a look at how this is all wired up.
    3. Generate our typed frontend GraphQL client from the schema.
 
 </details>
+
+---
 
 Now let's expose the comments feature with our GraphQL API.

@@ -8,6 +8,10 @@ We are now ready to move on to the frontend.
 
 You can start your frontend app locally, like you normally would. And it can connect to the API that's running using SST's [Live Lambda Dev](../live-lambda-development.md). That way you can make changes live in your API and it'll reflect right away in the frontend.
 
+---
+
+## Start frontend
+
 So let's go ahead and start our frontend.
 
 <ChangeText>
@@ -36,7 +40,9 @@ ready in 346ms.
 
 Open that link in your browser, `http://localhost:3000/`. You should see the homepage of our app.
 
-### Load the homepage
+---
+
+## Load the homepage
 
 It displays a list of articles. We currently don't have any links in the system, so this list should be empty.
 
@@ -69,7 +75,9 @@ Note that everything here happens in real-time. There's no polling or syncing!
 
 Let's try posting an article.
 
-### Post an article
+---
+
+## Post an article
 
 Type in `Learning SST` as the title, and `https://sst.dev` for the URL. Click **Submit**.
 
@@ -80,5 +88,7 @@ You should see a page with the new article.
 Again if we head back to the Console, you should see a new `POST /graphql` request. This time, creating creating the new article.
 
 ![Console create article log](/img/start-frontend/console-create-article-log.png)
+
+---
 
 Next, let's quickly test our local dev environment by setting a breakpoint.

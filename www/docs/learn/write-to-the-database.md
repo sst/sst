@@ -4,7 +4,13 @@ title: Write to the Database
 
 import ChangeText from "@site/src/components/ChangeText";
 
-We are ready to add our new comments feature. We'll start by scaffolding the domain code first. As mentioned in the [last chapter](domain-driven-design.md), we'll add this to our `core` package.
+We are ready to add our new comments feature.
+
+---
+
+## Scaffold business logic
+
+We'll start by scaffolding the domain code first. As mentioned in the [last chapter](domain-driven-design.md), we'll add this to our `core` package.
 
 <ChangeText>
 
@@ -24,7 +30,9 @@ export async function comments(articleID: string) {
 
 Before we can implement them, we'll need to create a new table to store the comments.
 
-### Create a migration
+---
+
+## Create a migration
 
 Let's create a new migration for this.
 
@@ -88,7 +96,9 @@ export async function down(db) {
 
 This migration will create a new table called `comment`. While undoing the migration will drop the table.
 
-### Run a migration
+---
+
+## Run a migration
 
 Let's go ahead and run the migration.
 
@@ -110,7 +120,9 @@ SELECT * FROM comment
 
 You should see **0 rows** being returned.
 
-### Query a table
+---
+
+## Query the table
 
 We are now ready to implement the `addComment` and `comments` functions.
 
@@ -225,5 +237,7 @@ There are a couple of interesting details here, let's dig in:
    Even though this file is auto-generated, you should check it into Git. We'll be relying on it later on in this tutorial.
 
 </details>
+
+---
 
 Now with our business logic and database queries implemented, we are ready to hook up our API.

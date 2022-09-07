@@ -6,6 +6,10 @@ import ChangeText from "@site/src/components/ChangeText";
 
 Let's now add the comments feature to our frontend React app.
 
+---
+
+## Update GraphQL query
+
 We'll start by updating our homepage to show the number of comments in each article. To do this, we need to update the GraphQL query the homepage is making.
 
 <ChangeText>
@@ -31,7 +35,9 @@ const [articles] = useTypedQuery({
 
 You'll notice we aren't writing a typical GraphQL query. We are writing the query as an object. It's using a typesafe GraphQL client.
 
-### Typesafe GraphQL client
+---
+
+## Typesafe GraphQL client
 
 To make a GraphQL query, we are using a [React Hook](https://reactjs.org/docs/hooks-overview.html) called `useTypedQuery`.
 
@@ -76,6 +82,10 @@ To ensure that the `useTypedQuery` hook is able to access our Urql client across
 
 </details>
 
+---
+
+## Render comment count
+
 Now we need to render the results. The `Home` component renders each article on the homepage as a `<li>`.
 
 <ChangeText>
@@ -105,7 +115,9 @@ Replace the `<li>` tag in the `return` statement of the `Home` component with.
 
 Here we are rendering the count of the comments and linking to the article page.
 
-### Client-side routing
+---
+
+## Client-side routing
 
 The article page is available at `/articles/:id`. Since our app is a frontend [SPA](https://en.wikipedia.org/wiki/Single-page_application) (single-page application) we use a client-side router, called [React Router](https://reactrouter.com) to handle these routes.
 
@@ -152,6 +164,10 @@ export default function Article() {
 
 We also need to add a couple of styles to render the comments count in our homepage.
 
+---
+
+## Styling components
+
 <ChangeText>
 
 Add this to the bottom of our stylesheet in `web/src/pages/Home.css.ts`.
@@ -170,7 +186,9 @@ export const footerSeparator = style({
 
 We are writing our styles in TypeScript as well.
 
-### CSS-in-TS
+---
+
+## CSS-in-TS
 
 To do this we use [Vanilla Extract](https://vanilla-extract.style). We define the styles for a component in a `.css.ts`. And we import it in our `Home` component.
 
@@ -290,5 +308,7 @@ To this:
 Now if you refresh the app, you should see the comment count being displayed under each article.
 
 ![Comment count for articles in homepage](/img/render-queries/comment-count-for-articles-in-homepage.png)
+
+---
 
 Next, let's allow our users to view the comments and post them!

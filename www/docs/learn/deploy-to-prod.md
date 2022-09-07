@@ -6,6 +6,8 @@ import ChangeText from "@site/src/components/ChangeText";
 
 Let's deploy our app to production. So we can share it with the world!
 
+---
+
 ## Deploy with the CLI
 
 The easiest way to go to production is by deploying using the CLI.
@@ -28,6 +30,8 @@ Running `sst deploy` with `--stage prod` is creating a new instance of your appl
 
 ![App deployed to prod](/img/deploy-to-prod/app-deployed-to-prod.png)
 
+---
+
 ## Manage in prod
 
 After your app is deployed to prod, you can use the [SST Console](../console.md) to manage it as well.
@@ -42,6 +46,8 @@ This will start up the SST Console and connect it to the given `stage`.
 
 The Console won't have the **Local** tab as the functions are not running locally anymore. Instead you can view the CloudWatch logs for your functions.
 
+---
+
 ## Git push to deploy
 
 You can also set it up so that your app deploys to production when you `git push`.
@@ -51,6 +57,8 @@ To do this, you'll first want to push your code to a Git provider. You can use s
 There are a bunch of general purpose CI/CD services out there. These are designed to work with different kinds of applications and workflows. But they need to be configured so that they work with SST.
 
 On the other hand, there's [Seed](https://seed.run).
+
+---
 
 ### Seed
 
@@ -74,6 +82,8 @@ There are a couple of other reasons why Seed is a good fit for SST.
 
 Once your app is in a repo with GitHub, follow these steps in the Seed docs to [add your SST app](https://seed.run/docs/adding-a-cdk-app).
 
+---
+
 ### Other providers
 
 Other general purpose CI/CD providers include:
@@ -87,6 +97,8 @@ You'll need to add a build script to set things up.
 - Deploy to prod using `sst deploy --stage prod` when you push to `master`.
 - Deploy a new preview environment when a PR is created `sst deploy --stage <pr>`.
 - Remove the preview environment when the PR is closed `sst remove --stage <pr>`.
+
+---
 
 ## Next steps
 

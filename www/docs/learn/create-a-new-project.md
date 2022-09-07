@@ -4,19 +4,23 @@ title: Create a New Project
 
 import ChangeText from "@site/src/components/ChangeText";
 
-Let's create our first SST app.
+Let's create our first SST app!
 
-### Prerequisites
+## Prerequisites
 
-SST is built with Node, so make sure your local machine has it installed; [Node.js 14](https://nodejs.org/) and [npm 7](https://www.npmjs.com/). And we'll need a code editor. We use [VS Code](https://code.visualstudio.com/) in this tutorial.
+- SST is built with Node, so make sure your local machine has it installed; [Node.js 14](https://nodejs.org/) and [npm 7](https://www.npmjs.com/).
+- And we'll need a code editor. We use [VS Code](https://code.visualstudio.com/) in this tutorial.
+- Some basic TypeScript, AWS, or React knowledge would help, but it's not necessary.
 
-Some basic TypeScript, AWS, or React knowledge would help, but it's not necessary.
+---
 
-### Configure AWS credentials
+## Configure AWS credentials
 
-You also need to have an AWS account and AWS credentials configured locally. If you haven't already, [follow these steps](../advanced/iam-credentials.md#loading-from-a-file) to set them up.
+You also need to have an AWS account and AWS credentials configured locally. If you haven't already, [**follow these steps**](../advanced/iam-credentials.md#loading-from-a-file).
 
-### Create a new app
+---
+
+## Create a new app
 
 <ChangeText>
 
@@ -28,10 +32,8 @@ Let's create our starter. We'll be using the [`create sst`](../packages/create-s
 npx create-sst@latest
 ```
 
-:::info
-In this tutorial, we'll be using the keyboard <img width="18" style={{ "margin": "0 4px", "vertical-align": "text-bottom" }} src="/img/components/keyboard.svg" /> icon for code snippets where we want you to make a change.
-
-So keep an eye out for them!
+:::tip
+In this tutorial, we'll be using the **keyboard icon** <img width="18" style={{ "margin": "0 4px", "vertical-align": "text-bottom" }} src="/img/components/keyboard.svg" /> for code snippets where we want you to **make a change**.
 :::
 
 This will prompt you to select a database; either [RDS](https://aws.amazon.com/rds/) or [DynamoDB](https://aws.amazon.com/dynamodb/).
@@ -57,7 +59,9 @@ npm install
 
 The `create sst` CLI by default bootstraps a full-stack starter that we'll be using in this tutorial. It can also create a more minimal setup, if you pass in `--minimal`. We recommend going that route if you want to piece your stack together.
 
-### Start Live Lambda Dev
+---
+
+## Start Live Lambda Dev
 
 <ChangeText>
 
@@ -87,6 +91,10 @@ Make sure to use a unique stage name when working on an SST app locally.
 
 Or if you are picking your own, make sure to use a stage name that is specific to you.
 
+---
+
+### About `sst start`
+
 The `sst start` command, as you might've guessed, deploys to your AWS account. It does a couple of interesting things:
 
 1. Bootstraps your AWS account for SST.
@@ -94,12 +102,16 @@ The `sst start` command, as you might've guessed, deploys to your AWS account. I
 1. Deploys your app to AWS.
 1. Runs a local server to:
    1. Proxy Lambda requests to your local machine.
-   2. Power the [SST Console](../console.md).
+   2. Power the [SST Console](../console.md). More on this later.
 
 :::info
 The `sst start` command starts up the [Live Lambda Dev](../live-lambda-development.md) environment.
 :::
 
-The first time you run `sst start` it can take around 5 minutes to set everything up. While we wait, let's take a look at the [project structure](project-structure.md) of an SST app and get our editor set up.
+The first time you run `sst start` it can take around 5 minutes to set everything up.
 
-And don't worry, we'll look at how the local dev environment and Console works in the coming chapters.
+---
+
+While we wait, let's take a look at the [project structure](project-structure.md) of an SST app and get our editor set up.
+
+And don't worry, we'll look at how the local dev environment works in the coming chapters.

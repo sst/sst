@@ -11,7 +11,9 @@ We strongly encourage following the [Domain Driven Design](https://en.wikipedia.
 
 In this chapter we'll look at this pattern at a very high level.
 
-### Overview
+---
+
+## What is DDD
 
 The basic idea behind DDD is to keep a separate layer that purely implements your business logic. This is agnostic to any API specifics. In practice, this looks like creating a collection of modules and functions in the `services/core` directory that implements all the capabilities of your system.
 
@@ -23,7 +25,9 @@ In the starter we provide a `core/article.ts` module which contains actions you 
 
 The API and Lambda function code are unaware of these details and simply call into these modules to compose the logic together.
 
-### Why Domain Driven Design
+---
+
+## Why use DDD
 
 At first this pattern may feel a bit extraneous. But it's key to creating a maintainable codebase that stays fun to work in for years to come. Here are some of the benefits.
 
@@ -50,5 +54,7 @@ We took a deeper look at Domain Driven Design over our <a href={ config.youtube 
   <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/MC_dS5G1jqw" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 :::
+
+---
 
 With DDD in mind, let's add to the core of our app and build the new comments feature.
