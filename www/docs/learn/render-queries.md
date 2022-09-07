@@ -163,11 +163,11 @@ export default function Article() {
 
 </details>
 
-We also need to add a couple of styles to render the comments count in our homepage.
-
 ---
 
 ## Styling components
+
+We also need to add a couple of styles to render the comments count in our homepage.
 
 <ChangeText>
 
