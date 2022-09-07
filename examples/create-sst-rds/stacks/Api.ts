@@ -1,8 +1,8 @@
 import {
-  StackContext,
   use,
-  Api as ApiGateway,
   Config,
+  StackContext,
+  Api as ApiGateway,
 } from "@serverless-stack/resources";
 import { Database } from "./Database";
 
@@ -36,7 +36,7 @@ export function Api({ stack }: StackContext) {
   });
 
   stack.addOutputs({
-    API_URL_OUTPUT: api.url,
+    API: api.url,
   });
 
   return api;

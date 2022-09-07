@@ -4,10 +4,10 @@
   "type": "module",
   "scripts": {},
   "dependencies": {
-    "aws-sdk": "^2.1200.0",
-    "apollo-server-lambda": "^3.10.1"
+    "aws-sdk": "^2.1211.0",
+    "apollo-server-lambda": "^3.10.2"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.102"
+    "@types/aws-lambda": "^8.10.103"
   }
 }

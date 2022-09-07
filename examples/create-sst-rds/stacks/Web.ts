@@ -1,4 +1,4 @@
-import { StackContext, use, ViteStaticSite } from "@serverless-stack/resources";
+import { use, StackContext, ViteStaticSite } from "@serverless-stack/resources";
 import { Api } from "./Api";
 
 export function Web({ stack }: StackContext) {
@@ -13,7 +13,7 @@ export function Web({ stack }: StackContext) {
   });
 
   stack.addOutputs({
-    SITE_URL: site.url,
+    SITE: site.url,
   });
 
   return api;
