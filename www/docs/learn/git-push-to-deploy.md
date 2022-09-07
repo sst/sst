@@ -2,11 +2,63 @@
 title: Git Push to Deploy
 ---
 
-It's a good idea to create a CI/CD pipeline to deploy your SST apps to production. It allows you to work together with your team. There are a couple of ways to do so. 
+Now that our app is in production, we want to set it up so that when you `git push` your changes, they are deployed automatically via a CI/CD pipeline.
 
-## Seed (Recommended)
+There are a couple of reasons to do this.
 
-The easiest way to deploy SST to production is to use [Seed](https://seed.run). Seed is a fully-managed CI/CD pipeline for serverless apps on AWS. It's built by the creators of SST.
+## Working with a team
+
+While you are working on an app together with a team, you want all your changes to be merged and deployed together. If the entire team uses the CLI to deploy, you could have a scenario where:
+
+1. Bob adds a new feature locally and runs `sst deploy --stage prod`.
+2. The new feature is in production.
+3. Alice working on a new feature separately also runs `sst deploy --stage prod`.
+4. Alice's version of the app is now in production and has overwritten Bob's version.
+
+To fix this, teams do a couple of things.
+
+1. Commit their code to Git.
+2. Work in separate branches:
+   - So Bob has a branch called `featureA`
+   - And Alice has one called `featureB`
+3. Merge their changes to `master` when they are ready to push to production.
+4. Have a separate CI/CD service that deploy the `master` branch to production. So any changes pushed to `master` are auto-deployed.
+
+This is typically called `git push` to deploy.
+
+## Pull Request workflow
+
+Many teams like to take the `git push` to deploy workflow further. They prefer being able to preview their changes before pushing it to production.
+
+To do this:
+
+1. Bob first creates a PR with the `featureA` branch.
+2. This is deployed to a separate stage by running `--stage featureA`. These PR stages are also called preview environments or stages.
+3. Bob's manager is able to test the feature in the new preview stage.
+4. The PR is then merged to `master`. This deploys the changes to production.
+5. While, the PR stage is automatically removes when the PR is closed.
+
+:::info
+The pay-per-use and scale to 0 model of serverless makes it easy and cost-effective for teams to embrace a git workflow complete with feature branches and preview environments.
+:::
+
+These preview stages are great for collaboration and having a consistent workflow for pushing to production.
+
+## CI/CD
+
+To get started with a Git workflow, you want to first push your code to a Git provider. You can use something like [GitHub](https://github.com) for this. Then connect it to a CI/CD service that deploys your app for you.
+
+There are a bunch of general purpose CI/CD services out there. We'll look at them below. These are desgined to work with different kinds of applications and workflows. This means that you need to specify how your application is deployed and the kind workflow you want.
+
+On the other hand, there's [Seed](https://seed.run).
+
+### Seed
+
+[Seed](https://seed.run) is built by the team behind SST and is designed specifically for serverless apps. So there's nothing to configure.
+
+:::tip
+We recommend using [Seed](https://seed.run) to `git push` to deploy your SST apps.
+:::
 
 There are a couple of other reasons why Seed is a good fit for SST apps.
 
@@ -18,36 +70,26 @@ There are a couple of other reasons why Seed is a good fit for SST apps.
 
    Seed also directly plugs into the SST deployment process. So when an SST app is waiting for CloudFormation to update your stacks, Seed pauses the build process and does this asynchronously. This allows Seed to make SST deployments very efficient and offer it to you for free!
 
-### Getting started
+Once your app is in a repo with GitHub, or similar; follow these steps in the Seed docs to [add your SST app](https://seed.run/docs/adding-a-cdk-app).
 
-If you haven’t already done so, push your SST app to a Git provider of your choice: [GitHub](https://github.com/), [GitLab](https://about.gitlab.com/), or [BitBucket](https://bitbucket.org/). Your repository can be private or public.
+### Other providers
 
-Then, follow these steps in the Seed docs to [add your SST app](https://seed.run/docs/adding-a-cdk-app#advantages-of-cdk-and-sst-on-seed).
+Other general purpose CI/CD providers include:
 
-### Pull Request workflow
+- [Github Actions](https://github.com/features/actions)
+- [Travis CI](https://www.travis-ci.com)
+- [CircleCI](https://circleci.com)
 
-By enabling the [Pull Request workflow](https://seed.run/docs/working-with-pull-requests), when a PR is opened, Seed will build, test, and deploy the pull request commits automatically to a new stage. The new pull request stage will be an independent clone of your production environment.
+You'll need to add a build script to set things up.
 
-Using the PR workflow allows you to share deployment previews with your team. This, in addition to doing code reviews allows you to have a consistent process around how changes get pushed to production.
+- Deploy to prod using `sst deploy --stage prod` when you push to `master`.
+- Deploy a new preview environment when a PR is created `sst deploy --stage <pr>`.
+- Remove the preview environment when the PR is closed `sst remove --stage <pr>`.
 
-## Other providers
+## Next steps
 
-In addition to Seed, there are other general purpose CI providers that you can use to deploy your SST apps:
+And that's it! You now know the basics of SST and have a solid background on the setup that we recommend.
 
-1. [Github Actions](https://github.com/features/actions)
-2. [Travis CI](https://www.travis-ci.com)
-3. [CircleCI](https://circleci.com)
+Your fully functioning app is also deployed and ready to be shared. You can manage it with the [SST Console](../console.md) and Git push to deploy it with [Seed](https://seed.run)!
 
-Here's what you'll need to add to your CI build scripts. Assuming your production stage is called `prod`.
-
-```bash
-$ npm install
-$ npx sst deploy --stage prod
-
-# With Yarn
-
-$ yarn
-$ yarn sst deploy --stage prod
-```
-
-And that's it! You have a fully functioning app deployed and ready to be used. You can manage it with the [SST Console](../console.md) and Git push to deploy it with [Seed](https://seed.run).
+If you are looking to extend this setup, check out the [sidebar of the docs](/). We have detailed chapters on specific aspects of building a full-stack app.

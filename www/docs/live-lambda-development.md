@@ -13,7 +13,7 @@ SST provides a cloud native local development environment that gives you instant
 Live Lambda Development is an SST feature that allows you to **debug and test your Lambda functions locally**, while being **invoked remotely by resources in AWS**. It works by proxying requests from your AWS account to your local machine.
 
 <div class={styles.videoWrapper}>
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/hnTSTm5n11g" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+  <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/hnTSTm5n11g" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
 ### Starting the local environment
@@ -134,7 +134,7 @@ If you are running this in a CI, set the [`--stage`](packages/cli.md#--stage) op
 The Live Lambda Development environment runs a Node.js process locally. This allows you to use [Visual Studio Code](https://code.visualstudio.com) to debug your serverless apps live.
 
 <div class={styles.videoWrapper}>
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/2w4A06IsBlU" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+  <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/2w4A06IsBlU" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
 Let's look at how to set this up.
@@ -189,7 +189,7 @@ We have <a href={ `${config.github}/tree/master/examples/vscode` }>an example pr
 You can also set breakpoints and debug your Lambda functions locally with [WebStorm](http://www.jetbrains.com/webstorm/) and SST. [Check out this tutorial for more details](https://sst.dev/examples/how-to-debug-lambda-functions-with-webstorm.html).
 
 <div class={styles.videoWrapper}>
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/_cLM_0On_Cc" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+  <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/_cLM_0On_Cc" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
 ## Debugging with IntelliJ IDEA
@@ -197,7 +197,7 @@ You can also set breakpoints and debug your Lambda functions locally with [WebSt
 If you are using [IntelliJ IDEA](https://www.jetbrains.com/idea/), [follow this tutorial to set breakpoints in your Lambda functions](https://sst.dev/examples/how-to-debug-lambda-functions-with-intellij-idea.html).
 
 <div class={styles.videoWrapper}>
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/iABx-4bjWJ0" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+  <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/iABx-4bjWJ0" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
 ## Watching infrastructure changes
@@ -207,7 +207,7 @@ The above steps apply to the Lambda functions in your app. For the CDK code in y
 Instead, it'll first compare the generated CloudFormation template to the previously built one. If there are new infrastructure changes, it'll prompt you to _press ENTER_ to deploy them. And once you do, it'll deploy your new infrastructure.
 
 <div class={styles.videoWrapper}>
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/44SXlXGUpC0" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+  <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/44SXlXGUpC0" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
 ## Working with a VPC

@@ -1,0 +1,15 @@
+.text :global p {
+  position: relative;
+  padding-left: 24px;
+}
+.text :global p::before {
+  left: 0;
+  top: 6px;
+  content: '';
+  width: 18px;
+  height: 18px;
+  position: absolute;
+  background-size: 18px 18px;
+  background-repeat: no-repeat;
+  background-image: url('/img/components/keyboard.svg');
+}
