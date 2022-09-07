@@ -1,5 +1,54 @@
 # @serverless-stack/resources
 
+## 1.11.2
+
+### Patch Changes
+
+- [`f19f407c3`](https://github.com/serverless-stack/sst/commit/f19f407c35cf3df52347559d3e5e44a1e7a245cd) Thanks [@thdxr](https://github.com/thdxr)! - Update kysely versions for migrator
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.11.2
+
+## 1.11.1
+
+### Patch Changes
+
+- [#2033](https://github.com/serverless-stack/sst/pull/2033) [`1fb3276f7`](https://github.com/serverless-stack/sst/commit/1fb3276f7ea6127c9730cb2bfd744ba29a796134) Thanks [@fwang](https://github.com/fwang)! - Fix missing stack metadata
+
+- Updated dependencies [[`fc4e0ea6c`](https://github.com/serverless-stack/sst/commit/fc4e0ea6c9d8c7dd6194467581a53f8cd8c4f7dc)]:
+  - @serverless-stack/core@1.11.1
+
+## 1.11.0
+
+### Minor Changes
+
+- [#2024](https://github.com/serverless-stack/sst/pull/2024) [`2b816c08a`](https://github.com/serverless-stack/sst/commit/2b816c08a4ebe814a9ab18b517030e5455c7e9b8) Thanks [@fwang](https://github.com/fwang)! - Function: utilize multi-core to build functions in parallel
+
+### Patch Changes
+
+- [`6a17fef98`](https://github.com/serverless-stack/sst/commit/6a17fef98bd05f36b861475963e6d8717d64a5d7) Thanks [@thdxr](https://github.com/thdxr)! - Do not create hard dependency on kysely for migrator
+
+- Updated dependencies [[`2b816c08a`](https://github.com/serverless-stack/sst/commit/2b816c08a4ebe814a9ab18b517030e5455c7e9b8)]:
+  - @serverless-stack/core@1.11.0
+
+## 1.10.6
+
+### Patch Changes
+
+- [#2022](https://github.com/serverless-stack/sst/pull/2022) [`b222d491a`](https://github.com/serverless-stack/sst/commit/b222d491a42e5dd657164b20c0450afbfb4e2c7a) Thanks [@fwang](https://github.com/fwang)! - Cognito: fix calling attachPermissions from different stacks override previous permissions
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.10.6
+
+## 1.10.5
+
+### Patch Changes
+
+- [#2016](https://github.com/serverless-stack/sst/pull/2016) [`190fa9306`](https://github.com/serverless-stack/sst/commit/190fa930610a1ad63684a53ed28bef458c7c923c) Thanks [@fwang](https://github.com/fwang)! - Table: support event filtering for stream consumer
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.10.5
+
 ## 1.10.4
 
 ### Patch Changes

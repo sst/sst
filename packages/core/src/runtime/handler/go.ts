@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs-extra";
 import { State } from "../../state/index.js";
-import { Definition, buildSync, buildAsync } from "./definition.js";
+import { Definition, buildAsync, buildAsyncAndThrow } from "./definition.js";
 
 export const GoHandler: Definition = opts => {
   const artifact = State.Function.artifactsPath(opts.root, opts.id);
@@ -15,10 +15,10 @@ export const GoHandler: Definition = opts => {
     process.platform === "win32" ? `${target}.exe` : target;
 
   return {
-    build: () => {
-      fs.removeSync(artifact);
-      fs.mkdirpSync(artifact);
-      return buildAsync(opts, {
+    build: async () => {
+      await fs.remove(artifact);
+      await fs.mkdirp(artifact);
+      return await buildAsync(opts, {
         command: "go",
         args: [
           "build",
@@ -31,10 +31,10 @@ export const GoHandler: Definition = opts => {
         env: {}
       });
     },
-    bundle: () => {
-      fs.removeSync(artifact);
-      fs.mkdirpSync(artifact);
-      buildSync(opts, {
+    bundle: async () => {
+      await fs.remove(artifact);
+      await fs.mkdirp(artifact);
+      await buildAsyncAndThrow(opts, {
         command: "go",
         args: ["build", "-ldflags", "-s -w", "-o", target, "./" + opts.handler],
         env: {

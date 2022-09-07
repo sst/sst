@@ -1,5 +1,23 @@
 # @serverless-stack/core
 
+## 1.11.2
+
+## 1.11.1
+
+### Patch Changes
+
+- [#2035](https://github.com/serverless-stack/sst/pull/2035) [`fc4e0ea6c`](https://github.com/serverless-stack/sst/commit/fc4e0ea6c9d8c7dd6194467581a53f8cd8c4f7dc) Thanks [@fwang](https://github.com/fwang)! - Function: fix nodeModules not bundled
+
+## 1.11.0
+
+### Minor Changes
+
+- [#2024](https://github.com/serverless-stack/sst/pull/2024) [`2b816c08a`](https://github.com/serverless-stack/sst/commit/2b816c08a4ebe814a9ab18b517030e5455c7e9b8) Thanks [@fwang](https://github.com/fwang)! - Function: utilize multi-core to build functions in parallel
+
+## 1.10.6
+
+## 1.10.5
+
 ## 1.10.4
 
 ## 1.10.3

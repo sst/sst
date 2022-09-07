@@ -174,6 +174,7 @@ export async function execute(opts) {
 
     for (const file of await listFiles(opts.destination)) {
       const contents = await fs.readFile(file, "utf8");
+      if (file.endsWith(".png") || file.endsWith(".ico")) continue;
       await fs.writeFile(
         file,
         contents

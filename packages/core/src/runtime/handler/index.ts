@@ -11,14 +11,12 @@ import { JavaHandler } from "./java.js";
 export { Opts, Instructions } from "./definition.js";
 
 export async function build(opts: Opts) {
-  const instructions = resolve(opts.runtime)(opts);
-  if (!instructions.build) return;
-  return instructions.build();
+  const ins = instructions(opts);
+  return ins.build();
 }
 
-export function bundle(opts: Opts) {
+export async function bundle(opts: Opts) {
   const ins = instructions(opts);
-  if (!ins.bundle) return;
   return ins.bundle();
 }
 

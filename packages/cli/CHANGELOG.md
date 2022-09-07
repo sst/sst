@@ -1,5 +1,49 @@
 # @serverless-stack/cli
 
+## 1.11.2
+
+### Patch Changes
+
+- Updated dependencies [[`f19f407c3`](https://github.com/serverless-stack/sst/commit/f19f407c35cf3df52347559d3e5e44a1e7a245cd)]:
+  - @serverless-stack/resources@1.11.2
+  - @serverless-stack/core@1.11.2
+
+## 1.11.1
+
+### Patch Changes
+
+- Updated dependencies [[`fc4e0ea6c`](https://github.com/serverless-stack/sst/commit/fc4e0ea6c9d8c7dd6194467581a53f8cd8c4f7dc), [`1fb3276f7`](https://github.com/serverless-stack/sst/commit/1fb3276f7ea6127c9730cb2bfd744ba29a796134)]:
+  - @serverless-stack/core@1.11.1
+  - @serverless-stack/resources@1.11.1
+
+## 1.11.0
+
+### Minor Changes
+
+- [#2024](https://github.com/serverless-stack/sst/pull/2024) [`2b816c08a`](https://github.com/serverless-stack/sst/commit/2b816c08a4ebe814a9ab18b517030e5455c7e9b8) Thanks [@fwang](https://github.com/fwang)! - Function: utilize multi-core to build functions in parallel
+
+### Patch Changes
+
+- Updated dependencies [[`2b816c08a`](https://github.com/serverless-stack/sst/commit/2b816c08a4ebe814a9ab18b517030e5455c7e9b8), [`6a17fef98`](https://github.com/serverless-stack/sst/commit/6a17fef98bd05f36b861475963e6d8717d64a5d7)]:
+  - @serverless-stack/core@1.11.0
+  - @serverless-stack/resources@1.11.0
+
+## 1.10.6
+
+### Patch Changes
+
+- Updated dependencies [[`b222d491a`](https://github.com/serverless-stack/sst/commit/b222d491a42e5dd657164b20c0450afbfb4e2c7a)]:
+  - @serverless-stack/resources@1.10.6
+  - @serverless-stack/core@1.10.6
+
+## 1.10.5
+
+### Patch Changes
+
+- Updated dependencies [[`190fa9306`](https://github.com/serverless-stack/sst/commit/190fa930610a1ad63684a53ed28bef458c7c923c)]:
+  - @serverless-stack/resources@1.10.5
+  - @serverless-stack/core@1.10.5
+
 ## 1.10.4
 
 ### Patch Changes

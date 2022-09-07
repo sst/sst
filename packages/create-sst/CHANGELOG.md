@@ -1,5 +1,19 @@
 # create-sst
 
+## 1.11.2
+
+## 1.11.1
+
+## 1.11.0
+
+## 1.10.6
+
+### Patch Changes
+
+- [`069835495`](https://github.com/serverless-stack/sst/commit/06983549580b0b3578e9c665975f6dbbcc048194) Thanks [@thdxr](https://github.com/thdxr)! - Skip preset file replacement for image files
+
+## 1.10.5
+
 ## 1.10.4
 
 ## 1.10.3

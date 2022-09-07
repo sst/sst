@@ -3,7 +3,7 @@ title: Auth
 description: "Learn to handle authentication and manage sessions in your SST apps."
 ---
 
-SST ships with `Auth` — a modern lightweight authentication solution for your apps.
+SST ships with `Auth` — a modern lightweight authentication library for your apps.
 
 With a simple set of configuration, it'll create a function that'll handle various authentication flows. You can then attach this function to your API and SST will help you manage the session tokens.
 
@@ -20,7 +20,7 @@ Let's look at how it works.
 1. [`Auth`](constructs/Auth.md) — a construct that creates the necessary infrastructure.
 
    - The API routes to handle the authentication flows.
-   - Securely generates a RSA pulbic/private keypair to sign sessions.
+   - Securely generates a RSA public/private keypair to sign sessions.
    - Stores the RSA keypair as secrets in the app's [`Config`](environment-variables.md).
 
 2. [`AuthHandler`](packages/node.md#authhandler) — a Lambda handler function that can handle authentication flows for various providers.
@@ -133,7 +133,7 @@ import { Config } from "@serverless-stack/node/config";
 
 export const handler = AuthHandler({
   providers: {
-    google: new GoogleAdapter({
+    google: GoogleAdapter({
       mode: "oidc",
       clientID: Config.GOOGLE_CLIENT_ID,
       onSuccess: async (tokenset) => {
@@ -220,12 +220,12 @@ SST uses your previously generated private key to encrypt the session token.
 Your `onSuccess` callback might look something like this.
 
 ```js title="services/functions/auth.ts"
-import { AuthHandler, Session } from "@serverless-stack/node/auth"
+import { AuthHandler, GoogleAdapter, Session } from "@serverless-stack/node/auth"
 import { Config } from "@serverless-stack/node/config"
 
 export const handler = AuthHandler({
   providers: {
-    google: new GoogleAdapter({
+    google: GoogleAdapter({
       mode: "oidc",
       clientID: Config.GOOGLE_CLIENT_ID,
       onSuccess: async (tokenset) => {
@@ -288,6 +288,8 @@ The `useSession` hook can be called in any part of your API.
 Here's an example of a GraphQL query that gets the current user from the session.
 
 ```js title="services/functions/graphql/types/foo.ts"
+import { useSession } from "@serverless-stack/node/auth";
+
 builder.mutationFields((t) => ({
   createTask: t.field({
     type: TaskType,
@@ -327,6 +329,7 @@ Here's an example of how you'd handle a typical API request.
 
 ```js title="services/functions/rest/foo.ts"
 import { Handler } from "@serverless-stack/node/context";
+import { useSession } from "@serverless-stack/node/auth";
 
 export const getSessionTypeHandler = Handler("api", async (event) => {
   const session = useSession();
@@ -531,7 +534,7 @@ return Session.cookie({
 });
 ```
 
-In your frontend, when making requests to your API, make sure you specify `credentials: include` with the request so that the cookie is included.
+In your frontend, when making requests to your API, make sure you specify `credentials: "include"` with the request so that the cookie is included.
 
 Here are a couple of examples for how to do this:
 
@@ -549,7 +552,7 @@ fetch("/path", {
 export const urql = createClient({
   fetchOptions: () => {
     return {
-      credentials: include,
+      credentials: "include",
     };
   },
 });

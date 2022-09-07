@@ -31,7 +31,7 @@ test("cdk.topic is imported", async () => {
   expect(topic.topicName).toBeDefined();
   countResources(stack, "AWS::Lambda::Function", 1);
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
   countResources(stack, "AWS::SNS::Topic", 0);
 });
@@ -92,7 +92,7 @@ test("subscribers: Function string single", async () => {
   });
   countResources(stack, "AWS::Lambda::Function", 1);
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
   countResources(stack, "AWS::SNS::Topic", 1);
   hasResource(stack, "AWS::SNS::Topic", {
@@ -110,7 +110,7 @@ test("subscribers: Function strings multi", async () => {
   });
   countResources(stack, "AWS::Lambda::Function", 2);
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
   countResources(stack, "AWS::SNS::Topic", 1);
   hasResource(stack, "AWS::SNS::Topic", {
@@ -127,7 +127,7 @@ test("subscribers: Function construct", async () => {
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
   hasResource(stack, "AWS::SNS::Topic", {
     TopicName: "dev-my-app-Topic",
@@ -153,7 +153,7 @@ test("subscribers: TopicFunctionSubscriberProps", async () => {
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
   hasResource(stack, "AWS::SNS::Topic", {
     TopicName: "dev-my-app-Topic",

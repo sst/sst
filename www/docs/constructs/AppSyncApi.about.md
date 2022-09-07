@@ -587,6 +587,33 @@ new AppSyncApi(stack, "GraphqlApi", {
 });
 ```
 
+#### Using Lambda
+
+```js {12-19}
+import * as appsync from "@aws-cdk/aws-appsync-alpha";
+import { Function, AppSyncApi } from "@serverless-stack/resources";
+
+const authorizer = new Function(this, "AuthorizerFn", {
+  handler: "src/authorizer.main",
+});
+
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  cdk: {
+    graphqlApi: {
+      authorizationConfig: {
+        defaultAuthorization: {
+          authorizationType: appsync.AuthorizationType.LAMBDA,
+          lambdaAuthorizerConfig: {
+            handler: authorizer,
+          },
+        },
+      },
+    },
+  },
+});
+```
+
 #### Using multiple authorization methods
 
 ```js {8-20}

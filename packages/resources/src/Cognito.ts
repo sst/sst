@@ -346,8 +346,8 @@ export class Cognito extends Construct implements SSTConstruct {
     else {
       const policyId =
         role === this.cdk.authRole
-          ? `Auth-${this.node.id}-AuthRole`
-          : `Auth-${this.node.id}-UnauthRole`;
+          ? `Auth-${this.node.id}-${scope.node.id}-AuthRole`
+          : `Auth-${this.node.id}-${scope.node.id}-UnauthRole`;
       let policy = scope.node.tryFindChild(policyId) as iam.Policy;
       if (!policy) {
         policy = new iam.Policy(scope, policyId);

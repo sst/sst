@@ -111,9 +111,9 @@ export interface RDSProps {
      *   },
      * });
      * ```
-     * 
+     *
      * Alternatively, you can import an existing RDS Serverless v1 Cluster in your AWS account.
-     * 
+     *
      * @example
      * ```js
      * new RDS(stack, "Database", {
@@ -193,8 +193,7 @@ export class RDS extends Construct implements SSTConstruct {
       this.validateCDKPropWhenIsConstruct();
       this.cdk.cluster = this.importCluster();
       this.secret = cdk.secret!;
-    }
-    else {
+    } else {
       this.validateCDKPropWhenIsClusterProps();
       this.cdk.cluster = this.createCluster();
       this.secret = this.cdk.cluster.secret!;

@@ -343,6 +343,34 @@ table.getFunction("consumer1");
 ## TableConsumerProps
 
 
+### filters?
+
+_Type_ : <span class='mono'>Array&lt;<span class="mono">any</span>&gt;</span>
+
+Used to filter the records that are passed to the consumer function.
+
+
+```js
+const table = new Table(stack, "Table", {
+  consumers: {
+    myConsumer: {
+      function: "src/consumer1.main",
+      filters: [
+        {
+          dynamodb: {
+            Keys: {
+              Id: {
+                N: ["101"]
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+});
+```
+
 ### function
 
 _Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span> | <span class="mono">[FunctionProps](Function#functionprops)</span></span>

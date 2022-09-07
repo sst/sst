@@ -159,7 +159,7 @@ test("notifications: function is string", async () => {
   });
   countResources(stack, "AWS::Lambda::Function", 2);
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 10,
   });
   hasResource(stack, "AWS::Lambda::Function", {
@@ -195,7 +195,7 @@ test("notifications: function is string with defaults.function", async () => {
   });
   countResources(stack, "AWS::Lambda::Function", 2);
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 3,
   });
 });
@@ -210,7 +210,7 @@ test("notifications: function is multi string", async () => {
   });
   countResources(stack, "AWS::Lambda::Function", 3);
   countResourcesLike(stack, "AWS::Lambda::Function", 2, {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
   countResources(stack, "AWS::S3::Bucket", 1);
   countResources(stack, "Custom::S3BucketNotifications", 1);

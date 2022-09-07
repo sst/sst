@@ -238,8 +238,8 @@ async function run(json) {
         for (const signature of method.signatures) {
           lines.push(
             ...signatureIsDeprecated(signature)
-              ? renderSignatureForDeprecated(file, json.children, signature)
-              : renderSignature(file, json.children, signature)
+              ? renderSignatureForDeprecated(method, signature)
+              : renderSignature(file, json.children, method, signature)
           );
         }
       }
@@ -296,7 +296,9 @@ function renderType(file, files, prefix, parameter) {
       renderType(file, files, prefix, parameter.elementType) +
       "&gt;</span>"
     );
-  if (parameter.type === "intrinsic")
+  // Note: intrinsic parameters can have type "reference",for now
+  // manually exclude the names commonly used for intrinsic parameters
+  if (parameter.type === "intrinsic" || parameter.name === "T")
     return `<span class="mono">${parameter.name}</span>`;
   if (parameter.type === "literal")
     return `<span class="mono">"${parameter.value}"</span>`;
@@ -470,15 +472,16 @@ function renderProperties(file, files, properties, prefix, onlyPublic) {
 /**
  * @param file {JSONOutput.DeclarationReflection}
  * @param children {JSONOutput.DeclarationReflection[]}
+ * @param method {JSONOutput.DeclarationReflection}
  * @param signature {JSONOutput.DeclarationReflection}
  *
  * @returns {string}
  */
-function renderSignature(file, children, signature) {
+function renderSignature(file, children, method, signature) {
   const lines = [];
   lines.push("```ts");
   lines.push(
-    `${signature.name}(${
+    `${method.flags.isStatic ? "static " : ""}${signature.name}(${
       signature.parameters?.map((p) => `${p.name}`).join(", ") || ""
     })`
   );
@@ -520,14 +523,14 @@ function renderSignature(file, children, signature) {
  *
  * @returns {string}
  */
-function renderSignatureForDeprecated(file, children, signature) {
+function renderSignatureForDeprecated(method, signature) {
   const lines = [];
   lines.push(":::caution");
   lines.push("This function signature has been deprecated.");
 
   lines.push("```ts");
   lines.push(
-    `${signature.name}(${
+    `${method.flags.isStatic ? "static " : ""}${signature.name}(${
       signature.parameters?.map((p) => `${p.name}`).join(", ") || ""
     })`
   );

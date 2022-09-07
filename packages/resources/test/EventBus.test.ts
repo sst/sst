@@ -40,7 +40,7 @@ test("cdk.eventBus: is created construct", async () => {
   expect(bus.eventBusName).toBeDefined();
   countResources(stack, "AWS::Lambda::Function", 1);
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
   countResources(stack, "AWS::Events::EventBus", 1);
   hasResource(stack, "AWS::Events::EventBus", {
@@ -295,7 +295,7 @@ test("targets: Function string single", async () => {
   });
   countResources(stack, "AWS::Lambda::Function", 1);
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
   countResources(stack, "AWS::Events::EventBus", 1);
   countResources(stack, "AWS::Events::Rule", 1);
@@ -319,7 +319,7 @@ test("targets: Function strings multi", async () => {
   });
   countResources(stack, "AWS::Lambda::Function", 2);
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
   countResources(stack, "AWS::Events::EventBus", 1);
   countResources(stack, "AWS::Events::Rule", 1);
@@ -371,7 +371,7 @@ test("targets: Function with target props", async () => {
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
   countResources(stack, "AWS::Events::EventBus", 1);
   countResources(stack, "AWS::Events::Rule", 1);
