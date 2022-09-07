@@ -1,5 +1,14 @@
 # @serverless-stack/resources
 
+## 1.11.2
+
+### Patch Changes
+
+- [`f19f407c3`](https://github.com/serverless-stack/sst/commit/f19f407c35cf3df52347559d3e5e44a1e7a245cd) Thanks [@thdxr](https://github.com/thdxr)! - Update kysely versions for migrator
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.11.2
+
 ## 1.11.1
 
 ### Patch Changes
