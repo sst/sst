@@ -1,5 +1,15 @@
 # @serverless-stack/cli
 
+## 1.12.1
+
+### Patch Changes
+
+- [`42762cf7f`](https://github.com/serverless-stack/sst/commit/42762cf7fa3b3646b1ae49bb7359663997c78d90) Thanks [@fwang](https://github.com/fwang)! - Run parallel build after the app finishes synth
+
+- Updated dependencies []:
+  - @serverless-stack/resources@1.12.1
+  - @serverless-stack/core@1.12.1
+
 ## 1.12.0
 
 ### Patch Changes
