@@ -129,15 +129,15 @@ Let's take a look at how this is all wired up.
 
    3. Finally, get the GraphQL schema from Pothos by running `builder.toSchema()`.
 
-3. We then pass the GraphQL schema into the Lambda optimized GraphQL handler, `createGQLHandler`, that we talked about above.
+3. We then pass the GraphQL schema into the Lambda optimized GraphQL handler, `GraphQLHandler`, that we talked about above.
 
    It's defined in `services/functions/graphql/graphql.ts`.
 
    ```ts title="services/functions/graphql/graphql.ts"
    import { schema } from "./schema";
-   import { createGQLHandler } from "@serverless-stack/node/graphql";
+   import { GraphQLHandler } from "@serverless-stack/node/graphql";
 
-   export const handler = createGQLHandler({
+   export const handler = GraphQLHandler({
      schema,
    });
    ```
