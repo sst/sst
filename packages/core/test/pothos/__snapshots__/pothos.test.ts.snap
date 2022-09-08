@@ -1,0 +1,39 @@
+// Vitest Snapshot v1
+
+exports[`extracts schema 1`] = `
+"// schema.ts
+import SchemaBuilder from \\"@pothos/core\\";
+var builder = new SchemaBuilder({});
+const _DUMMY_RESOLVER = {
+  serialize: x => x,
+  parseValue: x => x
+};
+builder.scalarType(\\"AddScalarType\\", _DUMMY_RESOLVER);
+builder.scalarType(\\"ScalarType\\", _DUMMY_RESOLVER);
+builder.objectType(class AlphaClass {}, {
+  name: \\"AlphaClass\\",
+  fields: t => ({
+    test: t.exposeID(\\"id\\")
+  })
+});
+builder.objectType(class BetaClass {}, {
+  name: \\"BetaClass\\",
+  fields: t => ({
+    test: t.exposeID(\\"id\\")
+  })
+});
+
+var MyEnum = /* @__PURE__ */(MyEnum2 => {
+  MyEnum2[MyEnum2[\\"FOO\\"] = 0] = \\"FOO\\";
+  MyEnum2[MyEnum2[\\"BAR\\"] = 1] = \\"BAR\\";
+  return MyEnum2;
+})(MyEnum || {});
+
+builder.enumType(MyEnum, {
+  name: \\"MyEnum\\"
+});
+builder.queryType({});
+builder.mutationType({});
+var schema = builder.toSchema({});
+"
+`;

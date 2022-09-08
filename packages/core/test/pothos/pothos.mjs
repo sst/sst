@@ -1,6 +1,7 @@
-import { Pothos } from "../../dist/index.js";
+import { Pothos } from '../../dist/pothos/index.js';
 
-const schema = await Pothos.generate({
-  schema: "./schema.ts",
+const schema = await Pothos.extractSchema({
+  schema: './schema.ts',
 });
+
 console.log(schema);

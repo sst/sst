@@ -1,185 +1,193 @@
-import * as esbuild from "esbuild";
-import { weakImport } from "../util/index.js";
-import escodegen from "escodegen";
-import { parse } from "acorn";
-import { ancestor, fullAncestor, findNodeAt } from "acorn-walk";
-const { printSchema, lexicographicSortSchema } = await weakImport("graphql");
-import url from "url";
-import fs from "fs/promises";
-import path from "path";
+import babel, { NodePath, type types as t } from '@babel/core';
+import generator from '@babel/generator';
+import esbuild from 'esbuild';
+import fs from 'fs/promises';
+import path from 'path';
+import url from 'url';
+import { weakImport } from '../util/index.js';
+const { printSchema, lexicographicSortSchema } = await weakImport('graphql');
+
+const { types, template } = babel;
+
+const dummyResolver = template(
+  'const %%dummy_resolver%% = { serialize: x => x, parseValue: x => x  };'
+);
 
 interface GenerateOpts {
   schema: string;
 }
 
-// This function has a ton of `any` because acorn unfortunately has really poor typing
-// We have to any escape hatch to avoid it, hopefully it improves one day
 export async function generate(opts: GenerateOpts) {
+  const contents = await extractSchema(opts);
+  const out = path.join(path.dirname(opts.schema), 'out.mjs');
+
+  await fs.writeFile(out, contents, 'utf8');
+  const { schema } = await import(
+    url.pathToFileURL(out).href + '?bust=' + Date.now()
+  );
+  await fs.rm(out);
+  const schemaAsString = printSchema(lexicographicSortSchema(schema));
+  return schemaAsString;
+}
+
+export async function extractSchema(opts: { schema: string }) {
   const result = await esbuild.build({
-    platform: "node",
+    platform: 'node',
     bundle: true,
-    format: "esm",
+    format: 'esm',
     entryPoints: [opts.schema],
-    external: ["@pothos/*"],
+    external: ['@pothos/*'],
     keepNames: true,
     write: false,
     plugins: [
       {
-        name: "externalize",
+        name: 'externalize',
         setup(build) {
           const filter = /^[^.\/]|^\.[^.\/]|^\.\.[^\/]/; // Must not start with "/" or "./" or "../"
           build.onResolve({ filter }, args => {
             return {
               path: args.path,
-              external: true
+              external: true,
             };
           });
-        }
-      }
-    ]
-  });
-
-  const ast = parse(result.outputFiles[0].text, {
-    sourceType: "module",
-    ecmaVersion: 2022
-  });
-
-  const schemaBuilderImport: any = findNodeAt(
-    ast,
-    undefined,
-    undefined,
-    (type, node: any) => {
-      if (
-        type === "ImportDeclaration" &&
-        node.source.value === "@pothos/core"
-      ) {
-        const def = node.specifiers.find(
-          (s: any) => s.type === "ImportDefaultSpecifier"
-        );
-        if (!def) return false;
-        return true;
-      }
-      return false;
-    }
-  );
-  if (!schemaBuilderImport)
-    throw new Error("Could not find schema builder import from @pothos/core");
-  const schemaBuilder = schemaBuilderImport.node.specifiers.find(
-    (s: any) => s.type === "ImportDefaultSpecifier"
-  ).local.name;
-  const builder = findNodeAt(ast, undefined, undefined, (type, node: any) => {
-    return (
-      type === "VariableDeclarator" &&
-      node.init &&
-      node.init.type === "NewExpression" &&
-      node.init.callee.name === schemaBuilder
-    );
-  });
-  if (!builder) throw new Error("Could not find new SchemaBuilder(...)");
-
-  const hoisted: any[] = [];
-  const references = new Set<any>();
-  const variables = new Set();
-  variables.add((builder.node as any).id.name);
-
-  fullAncestor(ast, (node: any, ancestors: any[]) => {
-    // Rewrite addScalarType to dummy
-    if (
-      node.type === "CallExpression" &&
-      (node.callee.property?.name === "addScalarType" ||
-        node.callee.property?.name === "scalarType")
-    ) {
-      node.callee.property.name = "scalarType";
-      node.arguments = [
-        node.arguments[0],
-        { type: "Identifier", name: "DUMMY_RESOLVER" }
-      ];
-    }
-
-    // Preserve enums
-    if (
-      node.type == "CallExpression" &&
-      node.callee.property?.name === "enumType" &&
-      node.arguments[0].type === "Identifier"
-    ) {
-      const e = findNodeAt(ast, undefined, undefined, (type, child: any) => {
-        return (
-          type === "VariableDeclarator" &&
-          child.id.name === node.arguments[0].name
-        );
-      });
-      if (e)
-        hoisted.push({
-          type: "VariableDeclaration",
-          declarations: [e.node],
-          kind: "var"
-        });
-    }
-
-    // Rewrite objectType to dummy
-    if (
-      node.type === "CallExpression" &&
-      node.callee.property?.name === "objectType"
-    ) {
-      node.arguments[0] = {
-        type: "ClassExpression",
-        id: {
-          type: "Identifier",
-          name: node.arguments[0].name
         },
-        body: {
-          type: "ClassBody",
-          body: []
-        }
-      };
-    }
-
-    // Include nodes that are pothos related
-    const related =
-      // Preserve any referenced variables
-      (node.type === "Identifier" && variables.has(node.name)) ||
-      // Preserve imports from pothos
-      (node.type === "ImportDeclaration" &&
-        node.source.value.includes("@pothos")) ||
-      // Preserve any exported variables
-      (node.type === "ExportNamedDeclaration" &&
-        node.specifiers.some((x: any) => variables.has(x.local.name)));
-    node.type === "ExportNamedDeclaration" &&
-      node.specifiers.some((x: any) => variables.has(x.local.name));
-
-    if (!related) return;
-    references.add(ancestors[1]);
-    // Keep track of variables related to pothos
-    const variable = ancestors.find(x => x.type === "VariableDeclarator");
-    if (!variable) return;
-    if (!variable.id.name) return;
-    variables.add(variable.id.name);
+      },
+    ],
   });
 
-  // Scrub pothos nodes of resolvers
-  for (const node of references) {
-    ancestor(node, {
-      Property(node: any, ancestors: any[]) {
-        if (!["resolve", "validate"].includes(node.key.name)) return;
-        const parent = ancestors[ancestors.length - 2];
-        parent.properties = parent.properties.filter((p: any) => p !== node);
+  const globalPaths = new Set<t.Node>();
+
+  const transformed = babel.transformSync(result.outputFiles[0].text, {
+    sourceType: 'module',
+    plugins: [
+      {
+        name: 'custom-sst',
+        visitor: {
+          Program(path) {
+            const dummyResolverId =
+              path.scope.generateUidIdentifier('DUMMY_RESOLVER');
+            const resolverNode = dummyResolver({
+              dummy_resolver: dummyResolverId,
+            });
+            path.unshiftContainer('body', resolverNode);
+            path.scope.crawl();
+
+            let schemaBuilder: NodePath<t.VariableDeclarator> = null!;
+
+            path.traverse({
+              VariableDeclarator(declarator) {
+                if (schemaBuilder) return;
+
+                const init = declarator.get('init');
+                if (
+                  init.isNewExpression() &&
+                  init.get('callee').referencesImport('@pothos/core', 'default')
+                ) {
+                  schemaBuilder = declarator;
+                }
+              },
+              CallExpression(callPath) {
+                if (
+                  !types.isMemberExpression(callPath.node.callee) ||
+                  !types.isIdentifier(callPath.node.callee.object) ||
+                  callPath.node.callee.object.name !==
+                    (schemaBuilder.node.id as any).name ||
+                  !types.isIdentifier(callPath.node.callee.property)
+                )
+                  return;
+
+                if (
+                  callPath.node.callee.property.name === 'addScalarType' ||
+                  callPath.node.callee.property.name === 'scalarType'
+                ) {
+                  callPath.node.callee.property =
+                    types.identifier('scalarType');
+                  callPath.node.arguments = [
+                    callPath.node.arguments[0],
+                    dummyResolverId,
+                  ];
+                }
+
+                if (
+                  callPath.node.callee.property.name === 'objectType' &&
+                  types.isIdentifier(callPath.node.arguments[0])
+                ) {
+                  callPath.node.arguments[0] = types.classExpression(
+                    callPath.node.arguments[0],
+                    null,
+                    types.classBody([])
+                  );
+                }
+
+                const bindings = getBindings(callPath, globalPaths);
+                for (const binding of bindings) {
+                  globalPaths.add(findRootBinding(binding).node);
+                }
+
+                globalPaths.add(findRootBinding(callPath).node);
+              },
+            });
+          },
+        },
+      },
+    ],
+  });
+
+  if (!transformed) throw new Error('Could not transform file');
+
+  const contents = (generator as any).default(
+    types.program([...globalPaths] as any[])
+  );
+
+  return contents.code;
+}
+
+function getBindings(path: NodePath<t.Node>, globalPaths: Set<any>) {
+  const bindings: Array<NodePath<t.Node>> = [];
+
+  path.traverse({
+    Expression(expressionPath) {
+      if (!expressionPath.isIdentifier()) return;
+
+      const binding = path.scope.getBinding(expressionPath as any);
+
+      if (
+        !binding ||
+        globalPaths.has(binding.path) ||
+        bindings.includes(binding.path)
+      )
+        return;
+
+      const rootBinding = findRootBinding(binding.path);
+
+      // prevents infinite loop in a few cases like having arguments in a function declaration
+      // if the path being checked is the same as the latest path, then the bindings will be same
+      if (path === rootBinding) {
+        bindings.push(binding.path);
+        return;
       }
-    });
+
+      const bindingOfBindings = getBindings(rootBinding, globalPaths);
+
+      bindings.push(...bindingOfBindings, binding.path);
+    },
+  });
+
+  for (const binding of bindings) {
+    globalPaths.add(findRootBinding(binding).node);
   }
 
-  (ast as any).body = [...hoisted, ...references];
-  const contents = [
-    `const DUMMY_RESOLVER = { serialize: x => x, parseValue: x => x }; `,
-    escodegen.generate(ast)
-  ].join("\n");
+  return bindings;
+}
 
-  const out = path.join(path.dirname(opts.schema), "out.mjs");
+function findRootBinding(path: NodePath<t.Node>) {
+  let rootPath = path;
+  while (
+    rootPath.parentPath?.node !== undefined &&
+    !rootPath.parentPath?.isProgram()
+  ) {
+    rootPath = rootPath.parentPath!;
+  }
 
-  await fs.writeFile(out, contents, "utf8");
-  const { schema } = await import(
-    url.pathToFileURL(out).href + "?bust=" + Date.now()
-  );
-  await fs.rm(out);
-  const schemaAsString = printSchema(lexicographicSortSchema(schema));
-  return schemaAsString;
+  return rootPath;
 }
