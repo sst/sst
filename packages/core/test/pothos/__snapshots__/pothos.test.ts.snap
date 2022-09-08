@@ -10,16 +10,19 @@ const _DUMMY_RESOLVER = {
 };
 builder.scalarType(\\"AddScalarType\\", _DUMMY_RESOLVER);
 builder.scalarType(\\"ScalarType\\", _DUMMY_RESOLVER);
-builder.objectType(class AlphaClass {}, {
+var AlphaClass = class {};
+builder.objectType(AlphaClass, {
   name: \\"AlphaClass\\",
   fields: t => ({
     test: t.exposeID(\\"id\\")
   })
 });
-builder.objectType(class BetaClass {}, {
+var BetaClass = class {};
+builder.objectType(BetaClass, {
   name: \\"BetaClass\\",
   fields: t => ({
-    test: t.exposeID(\\"id\\")
+    test: t.exposeID(\\"id\\"),
+    test2: t.string({})
   })
 });
 

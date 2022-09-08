@@ -61,7 +61,7 @@ export async function extractSchema(opts: { schema: string }) {
     sourceType: 'module',
     plugins: [
       {
-        name: 'custom-sst',
+        name: 'pothos-extractor',
         visitor: {
           Program(path) {
             const dummyResolverId =
@@ -96,6 +96,19 @@ export async function extractSchema(opts: { schema: string }) {
                 )
                   return;
 
+                callPath.traverse({
+                  Property(propertyPath) {
+                    if (
+                      types.isIdentifier(propertyPath.node.key) &&
+                      ['resolve', 'validate'].includes(
+                        propertyPath.node.key.name
+                      )
+                    ) {
+                      propertyPath.remove();
+                    }
+                  },
+                });
+
                 if (
                   callPath.node.callee.property.name === 'addScalarType' ||
                   callPath.node.callee.property.name === 'scalarType'
@@ -106,17 +119,6 @@ export async function extractSchema(opts: { schema: string }) {
                     callPath.node.arguments[0],
                     dummyResolverId,
                   ];
-                }
-
-                if (
-                  callPath.node.callee.property.name === 'objectType' &&
-                  types.isIdentifier(callPath.node.arguments[0])
-                ) {
-                  callPath.node.arguments[0] = types.classExpression(
-                    callPath.node.arguments[0],
-                    null,
-                    types.classBody([])
-                  );
                 }
 
                 const bindings = getBindings(callPath, globalPaths);

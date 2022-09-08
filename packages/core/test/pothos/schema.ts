@@ -1,11 +1,11 @@
-import SchemaBuilder from "@pothos/core";
+import SchemaBuilder from '@pothos/core';
 
 const builder = new SchemaBuilder({} as any);
 
-builder.addScalarType("AddScalarType" as any, {} as any, {});
-builder.scalarType("ScalarType" as any, {
+builder.addScalarType('AddScalarType' as any, {} as any, {});
+builder.scalarType('ScalarType' as any, {
   serialize: x => x,
-  parseValue: () => 5
+  parseValue: () => 5,
 });
 
 class AlphaClass {
@@ -17,26 +17,29 @@ class BetaClass {
 }
 
 builder.objectType(AlphaClass, {
-  name: "AlphaClass",
+  name: 'AlphaClass',
   fields: t => ({
-    test: t.exposeID("id")
-  })
+    test: t.exposeID('id'),
+  }),
 });
 
 builder.objectType(BetaClass, {
-  name: "BetaClass",
+  name: 'BetaClass',
   fields: t => ({
-    test: t.exposeID("id")
-  })
+    test: t.exposeID('id'),
+    test2: t.string({
+      resolve: (parent, args) => '',
+    }),
+  }),
 });
 
 enum MyEnum {
   FOO,
-  BAR
+  BAR,
 }
 
 builder.enumType(MyEnum, {
-  name: "MyEnum"
+  name: 'MyEnum',
 });
 
 builder.queryType({});
