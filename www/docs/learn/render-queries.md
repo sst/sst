@@ -42,7 +42,7 @@ const [articles] = useTypedQuery({
 
 Here we are adding `comments` to our query. You'll notice we aren't writing a typical GraphQL query. We are writing the query as an object. It's using a typesafe GraphQL client.
 
-We are also making a change to `additionalTypenames`, we'll look at that in the next chapter.
+We are also making a change to `additionalTypenames`. This is to fix a quirk of Urql's [Document Cache](https://formidable.com/open-source/urql/docs/basics/document-caching/#document-cache-gotchas), we'll look at this in the next chapter.
 
 ---
 
