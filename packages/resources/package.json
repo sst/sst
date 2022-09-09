@@ -51,7 +51,6 @@
   },
   "devDependencies": {
     "@graphql-tools/merge": "^8.2.12",
-    "@sls-next/lambda-at-edge": "^3.7.0-alpha.7",
     "@types/cross-spawn": "^6.0.2",
     "@types/fs-extra": "^9.0.6",
     "@types/glob": "^7.2.0",
