@@ -1,5 +1,14 @@
 # @serverless-stack/resources
 
+## 1.12.2
+
+### Patch Changes
+
+- [`24f7602a5`](https://github.com/serverless-stack/sst/commit/24f7602a5c92502de0620625108e4dcdc5b219a7) Thanks [@fwang](https://github.com/fwang)! - RemixSite: fix malformed cookie in request header when using regional server
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.12.2
+
 ## 1.12.1
 
 ### Patch Changes
