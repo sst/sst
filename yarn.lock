@@ -144,25 +144,25 @@
   dependencies:
     "@jridgewell/trace-mapping" "^0.3.0"
 
-"@aws-cdk/aws-apigatewayv2-alpha@2.32.0-alpha.0":
-  version "2.32.0-alpha.0"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-apigatewayv2-alpha/-/aws-apigatewayv2-alpha-2.32.0-alpha.0.tgz#03e6b830b1a67e35d21393e7a1d9544e8aa4adce"
-  integrity sha512-mZQX+L8USSwvN6Z3rbLzXZwiUPYUalLlIywxSPE/IcwmnarZiT40/4hHuUYggGgWmMkD2YUQ+acc23fC8ifjJQ==
+"@aws-cdk/aws-apigatewayv2-alpha@2.39.1-alpha.0":
+  version "2.39.1-alpha.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-apigatewayv2-alpha/-/aws-apigatewayv2-alpha-2.39.1-alpha.0.tgz#003a4c9254289dbcf3243b5dc0e9d051014bdf4d"
+  integrity sha512-R5Kv7wfwEigDSpS6UzULtm3Ml7mrA6NXyThOj1wzlfTUwanarFF4iEPClWxgfkZTYVYZ3y0+xSmws5B0hJ/DWw==
 
-"@aws-cdk/aws-apigatewayv2-authorizers-alpha@2.32.0-alpha.0":
-  version "2.32.0-alpha.0"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-apigatewayv2-authorizers-alpha/-/aws-apigatewayv2-authorizers-alpha-2.32.0-alpha.0.tgz#b820cbf3a499e98bdd204193426951581790795d"
-  integrity sha512-tNlMiGQICZ8V8GaKLiwJuzNr3eqAh8hgOTezd0dkpdvszJIXkRusYIbMfiNnNfctbiSqobgN2rXkGsuESHuMIg==
+"@aws-cdk/aws-apigatewayv2-authorizers-alpha@2.39.1-alpha.0":
+  version "2.39.1-alpha.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-apigatewayv2-authorizers-alpha/-/aws-apigatewayv2-authorizers-alpha-2.39.1-alpha.0.tgz#9a119dbfc742f42d824928a9b48cee21f5fc656e"
+  integrity sha512-h/vsMSqTHDJOLE7JHPgxk9+PlvdTxrmRuV0+kJBYVy+dGvqCijnh+5sDYJsyH8Gbvtgdsbjkl67eK8yF01+30Q==
 
-"@aws-cdk/aws-apigatewayv2-integrations-alpha@2.32.0-alpha.0":
-  version "2.32.0-alpha.0"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-apigatewayv2-integrations-alpha/-/aws-apigatewayv2-integrations-alpha-2.32.0-alpha.0.tgz#098a6be36365071c584eddd7f444ff94c304b44a"
-  integrity sha512-xVzW3PRVvvyqPA3aiPqTY082l67sNxWEa/lsTBqso8RkAbU+Cfbg1DNaI0cFV3Rd1IRnDQMr6xJxOCnopv7Cqg==
+"@aws-cdk/aws-apigatewayv2-integrations-alpha@2.39.1-alpha.0":
+  version "2.39.1-alpha.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-apigatewayv2-integrations-alpha/-/aws-apigatewayv2-integrations-alpha-2.39.1-alpha.0.tgz#dc8d5fb0e5638d815db61b7e2da236b85f4006cf"
+  integrity sha512-xWtGsjdIwG9W8lQRsBqSQhlG+4vLJ/rJ+EwtEgfy4OSjdZR2/eRkPcN8rT4/KwXq/tnqUBuOAvyq229+aLpFhw==
 
-"@aws-cdk/aws-appsync-alpha@2.32.0-alpha.0":
-  version "2.32.0-alpha.0"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-appsync-alpha/-/aws-appsync-alpha-2.32.0-alpha.0.tgz#7c3a5a8d5073d5ee3c84074e47e91180de81cd84"
-  integrity sha512-ued6lAwL0zF4tqLeMJ1UPbRPDHdZbB+nPHF79bXiaJnYnW5x/bw/MBMySZrIljNidFWn8I+WSgEL717+fPsRbQ==
+"@aws-cdk/aws-appsync-alpha@2.39.1-alpha.0":
+  version "2.39.1-alpha.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-appsync-alpha/-/aws-appsync-alpha-2.39.1-alpha.0.tgz#fcf0aeea5aea1bd6ddf67afb1a40ac6ff0607725"
+  integrity sha512-rSP35aEgLzE1K2t293FnmJNjFpLHyE93FZby8I3xdikM+iIim+vDUdOsr3Wbwza+T/bcjD3mgFcMX5sgW2Nv0g==
 
 "@aws-cdk/cfnspec@2.32.0":
   version "2.32.0"
@@ -7538,10 +7538,32 @@ aws-cdk-lib@2.32.0:
     semver "^7.3.7"
     yaml "1.10.2"
 
+aws-cdk-lib@2.39.1:
+  version "2.39.1"
+  resolved "https://registry.yarnpkg.com/aws-cdk-lib/-/aws-cdk-lib-2.39.1.tgz#dff53ee86ddc926de55b78cea97d54e0db0aacc7"
+  integrity sha512-+KZBLBoCqq/TnC7LH8JMlQ+5IvKQtu7KHnVDiRmngtibLIXqLMVH4neKimNlSSIKhvSeOmqY2ZCaSp8v5szzrg==
+  dependencies:
+    "@balena/dockerignore" "^1.0.2"
+    case "1.6.3"
+    fs-extra "^9.1.0"
+    ignore "^5.2.0"
+    jsonschema "^1.4.1"
+    minimatch "^3.1.2"
+    punycode "^2.1.1"
+    semver "^7.3.7"
+    yaml "1.10.2"
+
 aws-cdk@2.32.0:
   version "2.32.0"
   resolved "https://registry.yarnpkg.com/aws-cdk/-/aws-cdk-2.32.0.tgz#be1a714d61e8d347799365fc396977e6e5e30bbc"
   integrity sha512-+kXT92TI5dTZA65URHPgX6iqY+msS+srs89XkTzGhPT83GXNU1Tkr0rhVCbGHejT7x0UmwITukY+wBhueNaMUg==
+  optionalDependencies:
+    fsevents "2.3.2"
+
+aws-cdk@2.39.1:
+  version "2.39.1"
+  resolved "https://registry.yarnpkg.com/aws-cdk/-/aws-cdk-2.39.1.tgz#028eccbbe0f18a2e7c5ad9780c5b512da17645e2"
+  integrity sha512-HWruCkbsKJcFOKlVbcIQk/704PdPLHCkSpXNZK6BTpHB46bM49jLyQisgnbcPUc7Imk2k7kW6pe5Zvx1hFleMA==
   optionalDependencies:
     fsevents "2.3.2"
 

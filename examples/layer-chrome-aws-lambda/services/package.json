@@ -4,12 +4,12 @@
   "type": "module",
   "scripts": {},
   "dependencies": {
-    "aws-sdk": "^2.1200.0",
+    "aws-sdk": "^2.1211.0",
     "chrome-aws-lambda": "^10.1.0",
-    "puppeteer": "^16.2.0",
-    "puppeteer-core": "^16.2.0"
+    "puppeteer": "^17.1.2",
+    "puppeteer-core": "^17.1.2"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.102"
+    "@types/aws-lambda": "^8.10.103"
   }
 }

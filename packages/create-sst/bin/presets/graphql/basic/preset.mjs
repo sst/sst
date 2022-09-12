@@ -13,7 +13,9 @@ export default [
       { op: "add", path: "/overrides/graphql", value: "16.5.0" },
     ],
   }),
-  cmd({ cmd: "npx create-vite@latest web --template=react-ts" }),
+  // Vanilla Extract doesn't support Vite 3 yet
+  // https://github.com/seek-oss/vanilla-extract/issues/760
+  cmd({ cmd: "npx create-vite@2.9.5 web --template=react-ts" }),
   extract(),
   install({
     packages: ["@pothos/core", "@serverless-stack/node", "graphql", "ulid"],

@@ -36,7 +36,7 @@ export function Api({ stack }: StackContext) {
   });
 
   stack.addOutputs({
-    API_URL_OUTPUT: api.url,
+    API: api.url,
   });
 
   return api;

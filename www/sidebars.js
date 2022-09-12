@@ -17,7 +17,7 @@ module.exports = {
           items: [
             "learn/create-a-new-project",
             "learn/project-structure",
-            "learn/editor-setup",
+            "learn/editor-integration",
             "learn/initialize-the-database",
             "learn/start-the-frontend",
             "learn/breakpoint-debugging"
@@ -30,10 +30,9 @@ module.exports = {
           collapsed: true,
           items: [
             "learn/domain-driven-design",
-            "learn/scaffold-business-logic",
-            "learn/database-options",
-            "learn/write-to-postgresql",
-            "learn/write-to-dynamodb"
+            //"learn/database-options",
+            "learn/write-to-the-database",
+            //"learn/write-to-dynamodb"
           ]
         },
         {
@@ -49,13 +48,12 @@ module.exports = {
         },
         {
           type: "category",
-          label: "4 - Render Frontend",
+          label: "4 - Update the Frontend",
           collapsible: true,
           collapsed: true,
           items: [
-            "learn/fetch-data",
-            "learn/render-results"
-
+            "learn/render-queries",
+            "learn/make-updates",
             //Link to Vue example
             //Link to Next.js example
             //"learn/frontend-options",
@@ -66,7 +64,10 @@ module.exports = {
           label: "5 - Deployment",
           collapsible: true,
           collapsed: true,
-          items: ["learn/deploy-from-cli", "learn/git-push-to-deploy"]
+          items: [
+            "learn/deploy-to-prod",
+            //"learn/git-push-to-deploy"
+          ]
         }
       ]
     },

@@ -74,7 +74,7 @@ npx sst deploy --stage prod
 ## Join our community
 
 <div className={styles.communityPanels}>
-  <a className={styles.communityPanel} href={ config.discord_invite }>
+  <a className={styles.communityPanel} href={ config.discord }>
     <div className={styles.communityPanelIconDiscord}>
       <i className="fab fa-discord"></i>
     </div>

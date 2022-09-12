@@ -4,10 +4,10 @@
   "type": "module",
   "scripts": {},
   "dependencies": {
-    "aws-sdk": "^2.1200.0",
+    "aws-sdk": "^2.1211.0",
     "planetscale-node": "^0.3.0"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.102"
+    "@types/aws-lambda": "^8.10.103"
   }
 }

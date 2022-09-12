@@ -32,7 +32,7 @@ yarn sst <command>
 
 ### Examples
 
-#### The basic commands
+#### The basic comma
 
 ```bash
 # Start the Live Lambda Development environment

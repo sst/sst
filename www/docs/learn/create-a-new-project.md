@@ -2,37 +2,116 @@
 title: Create a New Project
 ---
 
-### Setup AWS credentials
+import ChangeText from "@site/src/components/ChangeText";
 
-If you haven't already, [follow these steps](../advanced/iam-credentials.md#loading-from-a-file) to configure your AWS credentials locally.
+Let's create our first SST app!
 
-### Create a new app
+## Prerequisites
 
-Create a new app using our [`create sst`](../packages/create-sst.md) starter. 
+- SST is built with Node, so make sure your local machine has it installed; [Node.js 14](https://nodejs.org/) and [npm 7](https://www.npmjs.com/).
+- And we'll need a code editor. We use [VS Code](https://code.visualstudio.com/) in this tutorial.
+- Some basic TypeScript, AWS, or React knowledge would help, but it's not necessary.
+
+---
+
+## Configure AWS credentials
+
+You also need to have an AWS account and AWS credentials configured locally. If you haven't already, [**follow these steps**](../advanced/iam-credentials.md#loading-from-a-file).
+
+---
+
+## Create a new app
+
+<ChangeText>
+
+Let's create our starter. We'll be using the [`create sst`](../packages/create-sst.md) CLI.
+
+</ChangeText>
 
 ```bash
-npx create-sst@latest my-sst-app
+npx create-sst@latest
 ```
 
-This will prompt you to select a database. You can change this later (or use both) and if you want to learn more about the two options check out the [Database Options](database-options.md) chapter.
+:::tip
+In this tutorial, we'll be using the **keyboard icon** <img width="18" style={{ "margin": "0 4px", "vertical-align": "text-bottom" }} src="/img/components/keyboard.svg" /> for code snippets where we want you to **make a change**.
+:::
 
-This tutorial is built around a full-stack starter with a GraphQL API. If you'd like to use a more minimal setup you can pass in `--minimal` to the `create-sst` command.
+This will prompt you to select a database; either [RDS](https://aws.amazon.com/rds/) or [DynamoDB](https://aws.amazon.com/dynamodb/).
 
-Install the dependencies.
+```bash
+? Select a database (you can change this later or use both) (Use arrow keys)
+❯ RDS (Postgres or MySQL)
+  DynamoDB
+```
+
+You can always change this later, or even use both. Let's pick RDS. We'll be using PostgreSQL in this tutorial.
+
+<ChangeText>
+
+Next, install the dependencies.
+
+</ChangeText>
 
 ```bash
 cd my-sst-app
-npm i
+npm install
 ```
 
-Start the local environment.
+The `create sst` CLI by default bootstraps a full-stack starter that we'll be using in this tutorial. It can also create a more minimal setup, if you pass in `--minimal`. We recommend going that route if you want to piece your stack together.
+
+---
+
+## Start Live Lambda Dev
+
+<ChangeText>
+
+Let's start our local development environment. Or what SST calls [Live Lambda Dev](../live-lambda-development.md).
+
+</ChangeText>
 
 ```bash
 npx sst start
 ```
 
-The first time the SST command is run, you'll be prompted to enter a default stage name to use. The stage name will be stored locally in a `.sst/` directory. This directory is automatically ignored from Git.
+The first time the SST command is run, you'll be prompted to enter a default stage name to use. The stage name will be stored locally in a `.sst/` directory; it's automatically ignored from Git.
 
-Make sure to use a stage name that is specific to you. If you are sharing an AWS account with another team member, using the same stage name can cause issues locally. You can read more about stage names and the best practices when working with your team [here](../working-with-your-team.md).
+```
+Look like you’re running sst for the first time in this directory. Please enter
+a stage name you’d like to use locally. Or hit enter to use the one based on
+your AWS credentials (Jay):
+```
 
-The initial deploy can take around 5-10 minutes. It'll create all the infrastructure we'll need for our simple Reddit clone. While we wait, let's take a look at the [project structure](project-structure.md) of an SST app and get our editor set up.
+SST uses the stage names to namespace your resources. So if you and your teammate are working on the same app in the same AWS account, the infrastructure will be kept separate.
+
+SST will automatically suggest a stage name based on the AWS credentials you are using. Hit **_Enter_** to use the suggested one.
+
+:::tip
+Make sure to use a unique stage name when working on an SST app locally.
+:::
+
+Or if you are picking your own, make sure to use a stage name that is specific to you.
+
+---
+
+### About `sst start`
+
+The `sst start` command, as you might've guessed, deploys to your AWS account. It does a couple of interesting things:
+
+1. Bootstraps your AWS account for SST.
+1. Deploys the infrastructure to run the Live Lambda Dev environment.
+1. Deploys your app to AWS.
+1. Runs a local server to:
+   1. Proxy Lambda requests to your local machine.
+   2. Power the [SST Console](../console.md). More on this later.
+
+:::info
+The `sst start` command starts up the [Live Lambda Dev](../live-lambda-development.md) environment.
+:::
+
+The first time you run `sst start` it can take around 5 minutes to set everything up.
+
+---
+
+While we wait, let's take a look at the [project structure](project-structure.md) of an SST app and get our editor set up.
+
+And don't worry, we'll look at how the local dev environment works in the coming chapters.
