@@ -893,7 +893,7 @@ test("resolvers: is datasource props: datasource is string", async () => {
       "Query notes": {
         dataSource: "lambdaDS",
         requestMapping: {
-          inline: '{"version" : "2017-02-28", "operation" : "Scan"}',
+          inline: '{"version" : "2017-02-28", "operation" : "Scan", \"consistentRead\": false}',
         },
         responseMapping: {
           inline: "$util.toJson($ctx.result.items)",
@@ -919,7 +919,7 @@ test("resolvers: is datasource props: datasource is string", async () => {
     TypeName: "Query",
     DataSourceName: "lambdaDS",
     Kind: "UNIT",
-    RequestMappingTemplate: '{"version" : "2017-02-28", "operation" : "Scan"}',
+    RequestMappingTemplate: '{"version" : "2017-02-28", "operation" : "Scan", \"consistentRead\": false}',
     ResponseMappingTemplate: "$util.toJson($ctx.result.items)",
   });
 });
