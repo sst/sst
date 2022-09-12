@@ -5,7 +5,6 @@ import {
   hasResource,
   objectLike,
   stringLike,
-  printResource,
 } from "./helper";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as appsync from "@aws-cdk/aws-appsync-alpha";
@@ -910,10 +909,6 @@ test("resolvers: is datasource props: datasource is string", async () => {
     Type: "AWS_LAMBDA",
   });
   countResources(stack, "AWS::AppSync::Resolver", 1);
-
-  // TODO
-  printResource(stack, "AWS::AppSync::Resolver");
-
   hasResource(stack, "AWS::AppSync::Resolver", {
     FieldName: "notes",
     TypeName: "Query",
@@ -957,7 +952,7 @@ test("resolvers: is datasource props: datasource is string with resolverProps", 
     TypeName: "Query",
     DataSourceName: "lambdaDS",
     Kind: "UNIT",
-    RequestMappingTemplate: '{"version" : "2017-02-28", "operation" : "Scan"}',
+    RequestMappingTemplate: '{"version" : "2017-02-28", "operation" : "Scan", "consistentRead": false}',
     ResponseMappingTemplate: "$util.toJson($ctx.result.items)",
   });
 });
@@ -992,7 +987,7 @@ test("resolvers: is datasource props: datasource is FunctionDefinition", async (
     TypeName: "Query",
     DataSourceName: "LambdaDS_Query_notes",
     Kind: "UNIT",
-    RequestMappingTemplate: '{"version" : "2017-02-28", "operation" : "Scan"}',
+    RequestMappingTemplate: '{"version" : "2017-02-28", "operation" : "Scan", "consistentRead": false}',
     ResponseMappingTemplate: "$util.toJson($ctx.result.items)",
   });
 });
