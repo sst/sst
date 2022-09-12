@@ -1,5 +1,13 @@
 # @serverless-stack/core
 
+## 1.12.3
+
+### Patch Changes
+
+- [`7bf15be60`](https://github.com/serverless-stack/sst/commit/7bf15be60088fa9def2f99e188bff4ff8c0dafd3) Thanks [@thdxr](https://github.com/thdxr)! - Disable function draining on env change
+
+* [`cacb73493`](https://github.com/serverless-stack/sst/commit/cacb73493295619538375ff9feb6ee559be1dfa3) Thanks [@thdxr](https://github.com/thdxr)! - Fix issue with sst start functions failing under parallel invocation
+
 ## 1.12.2
 
 ## 1.12.1
