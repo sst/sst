@@ -1,5 +1,11 @@
 # @serverless-stack/core
 
+## 1.12.4
+
+### Patch Changes
+
+- [#2056](https://github.com/serverless-stack/sst/pull/2056) [`6049c341d`](https://github.com/serverless-stack/sst/commit/6049c341d8938911bb910e38f49ae90b1af02a25) Thanks [@fwang](https://github.com/fwang)! - Fix parallel build fails in CI environment
+
 ## 1.12.3
 
 ### Patch Changes

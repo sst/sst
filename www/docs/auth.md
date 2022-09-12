@@ -36,6 +36,10 @@ Let's look at how it works.
    - Support for passing tokens to the frontend via a cookie or the query string.
    - Full typesafety for issuing and validating sessions with the [`useSession`](packages/node.md#usesession) hook.
 
+:::tip
+Want to learn more about `Auth`? Check out the [launch livestream on YouTube](https://youtu.be/cO9Chk6sUW4).
+:::
+
 ## Architecture
 
 Authentication is usually thought to be complex. But with modern standards, it can be easy to implement. Let's look at the typical authentication flow:
@@ -161,16 +165,14 @@ Head over to the `/auth` page to check out all the auth routes that are availabl
 Here we are using [`Config`](environment-variables.md) to store the `GOOGLE_CLIENT_ID`. We need to ensure that it is made available to our function.
 
 ```js {4-9} title="stacks/api.ts"
-import { Auth, Config } from "@serverless-stack/resources"
+import { Auth, Config } from "@serverless-stack/resources";
 
 new Auth(stack, "auth", {
   authenticator: {
     handler: "functions/auth.handler",
-    config: [
-      new Config.Secret(stack, "GOOGLE_CLIENT_ID")
-    ]
-  }
-})
+    config: [new Config.Secret(stack, "GOOGLE_CLIENT_ID")],
+  },
+});
 ```
 
 We'll also need to use the CLI to set this secret.
