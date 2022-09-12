@@ -1,4 +1,6 @@
 import { cpus } from "os";
+import { getChildLogger } from "../logger.js";
+const logger = getChildLogger("defer-builder");
 
 type Task = () => Promise<void>;
 
@@ -9,7 +11,11 @@ export async function addTask(task: Task) {
 }
 
 export function run() {
-  const concurrency = cpus().length - 1;
+  const coreNum = cpus().length;
+  logger.debug("CPU cores", coreNum);
+  const concurrency = Math.max(1, process.env.SST_BUILD_CONCURRENCY
+    ? parseInt(process.env.SST_BUILD_CONCURRENCY, 10)
+    : coreNum - 1);
   let remaining = tasks.length;
 
   return new Promise((resolve, reject) => {
@@ -38,12 +44,6 @@ export function run() {
     for (let i = 0; i < concurrency; i++) {
       runTask();
     }
-  });
-}
-
-function runTask() {
-
-  return new Promise((resolve) => {
   });
 }
 
