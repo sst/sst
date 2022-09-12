@@ -1,6 +1,7 @@
 export * from "./App.js";
 export * from "./Auth.js";
 export * from "./Api.js";
+export * from "./Job.js";
 export * from "./RDS.js";
 export * from "./Cognito.js";
 export * from "./Cron.js";
@@ -17,7 +18,6 @@ export * from "./AppSyncApi.js";
 export * from "./DebugStack.js";
 export * from "./WebSocketApi.js";
 export * from "./KinesisStream.js";
-export * from "./LongRunningJob.js";
 export * from "./ApiGatewayV1Api.js";
 
 export * from "./NextjsSite.js";

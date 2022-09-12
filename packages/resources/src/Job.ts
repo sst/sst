@@ -1,9 +1,12 @@
+// import path from "path";
+import url from "url";
 import path from "path";
+import fs from "fs-extra";
 import { Construct } from "constructs";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as codebuild from "aws-cdk-lib/aws-codebuild";
-import { State, Runtime, FunctionConfig } from "@serverless-stack/core";
+import { State, Runtime, FunctionConfig, DeferBuilder } from "@serverless-stack/core";
 
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
@@ -14,7 +17,9 @@ import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import { Size, toCdkSize } from "./util/size.js";
 
-export interface LongRunningJobProps {
+const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
+
+export interface JobProps {
   /**
    * Path to the entry point and handler function. Of the format:
    * `/path/to/file.function`.
@@ -113,20 +118,6 @@ export interface LongRunningJobProps {
    */
   environment?: Record<string, string>;
   /**
-   * Configure or disable bundling options
-   *
-   * @example
-   * ```js
-   * new Function(stack, "Function", {
-   *   handler: "src/function.handler",
-   *   bundle: {
-   *     copyFiles: [{ from: "src/index.js" }]
-   *   }
-   * })
-   *```
-   */
-  bundle?: FunctionBundleNodejsProps;
-  /**
    * Attaches the given list of permissions to the function. Configuring this property is equivalent to calling `attachPermissions()` after the function is created.
    *
    * @example
@@ -159,13 +150,13 @@ export interface LongRunningJobProps {
    *
    * @example
    * ```js
-   * new LongRunning(stack, "Cron", {
+   * new Job(stack, "Cron", {
    *   job: "src/lambda.main",
    *   schedule: "rate(5 minutes)",
    * });
    * ```
    * ```js
-   * new LongRunning(stack, "Cron", {
+   * new Job(stack, "Cron", {
    *   job: "src/lambda.main",
    *   schedule: "cron(15 10 * * ? *)",
    * });
@@ -192,12 +183,13 @@ export interface LongRunningJobProps {
  * });
  * ```
  */
-export class LongRunningJob extends Construct implements SSTConstruct {
+export class Job extends Construct implements SSTConstruct {
   private readonly localId: string;
-  private readonly props: LongRunningJobProps;
+  private readonly props: JobProps;
   private readonly job: codebuild.Project;
+  private readonly jobInvoker: Function;
 
-  constructor(scope: Construct, id: string, props: LongRunningJobProps) {
+  constructor(scope: Construct, id: string, props: JobProps) {
     super(scope, id);
 
     this.props = props;
@@ -208,76 +200,108 @@ export class LongRunningJob extends Construct implements SSTConstruct {
       .replace(/\//g, "-")
       .replace(/\./g, "-");
 
-    const code = this.buildCode();
-    this.job = this.createCodeBuildProject(code);
+    this.job = this.createCodeBuildProject();
+    this.jobInvoker = this.createJobInvoker();
+    this.buildCode();
     this.attachPermissions(props.permissions || []);
     this.addConfig(props.config || []);
   }
 
-  private buildCode(): lambda.Code {
-    const handler = this.props.handler;
-    const srcPath = Function.normalizeSrcPath(this.props.srcPath || ".");
-    const enableLiveDev = this.props.enableLiveDev === false ? false : true;
-
-    let bundle;
-    if (!this.props.bundle) {
-      bundle = { format: "esm" };
-    }
-    else {
-      bundle = {
-        format: "esm",
-        ...this.props.bundle,
-      }
-    }
-
-    const app = this.node.root as App;
-
-    //// Handle local development (ie. sst start)
-    //if (enableLiveDev && app.local) {
-    //}
-    //// Handle remove (ie. sst remove)
-    //else if (app.skipBuild) {
-    //}
-    //// Handle build
-    //else {
-    const bundled = Runtime.Handler.bundle({
-      id: this.localId,
-      root: app.appPath,
-      handler,
-      runtime: "nodejs16.x",
-      srcPath,
-      bundle,
-    })!;
-
-    // Python builder returns AssetCode instead of directory
-    const code = (() => {
-      if ("directory" in bundled) {
-        Function.copyFiles(bundle, srcPath, bundled.directory);
-        return lambda.AssetCode.fromAsset(bundled.directory);
-      }
-      return bundled.asset;
-    })();
-    //}
-
-    return code;
+  /**
+   * The job id.
+   */
+  public get jobID(): string {
+    return this.job.projectArn;
   }
 
-  private createCodeBuildProject(code: lambda.Code): codebuild.Project {
+  private buildCode() {
+    const {
+      handler,
+      srcPath: srcPathRaw,
+      enableLiveDev: enableLiveDevRaw,
+    } = this.props;
+    const srcPath = Function.normalizeSrcPath(srcPathRaw || ".");
+    const enableLiveDev = enableLiveDevRaw === false ? false : true;
+    const bundle = { format: "esm" } as FunctionBundleNodejsProps;
+
     const app = this.node.root as App;
-    const { handler } = this.props;
 
-    const codeConfig = code.bind(this);
+    // Handle local development (ie. sst start)
+    if (enableLiveDev && app.local) {
+      this.addEnvironment("SST_FUNCTION_ID", this.localId);
+      this.addEnvironment("SST_DEBUG_SRC_PATH", srcPath);
+      this.addEnvironment("SST_DEBUG_SRC_HANDLER", handler);
+      this.addEnvironment("SST_DEBUG_ENDPOINT", app.debugEndpoint!);
+      this.addEnvironment("SST_DEBUG_BUCKET_NAME", app.debugBucketName!);
+      this.attachPermissions([
+        new iam.PolicyStatement({
+          actions: ["s3:*"],
+          effect: iam.Effect.ALLOW,
+          resources: [`${app.debugBucketArn}/*`],
+        }),
+      ]);
 
-    const job = new codebuild.Project(this, "LongRunningProject", {
+      const code = lambda.AssetCode.fromAsset(path.resolve(__dirname, "../assets/Job/stub"));
+      this.updateCodeBuildProjectCode(code, "index.js");
+
+      State.Function.append(app.appPath, {
+        id: this.localId,
+        handler,
+        runtime: "nodejs16.x",
+        srcPath,
+        bundle,
+      });
+    }
+    // Handle remove (ie. sst remove)
+    else if (app.skipBuild) {
+      // do nothing
+    }
+    // Handle build
+    else {
+      DeferBuilder.addTask(async () => {
+        // Build function
+        const bundled = await Runtime.Handler.bundle({
+          id: this.localId,
+          root: app.appPath,
+          handler,
+          runtime: "nodejs16.x",
+          srcPath,
+          bundle,
+        })!;
+
+        // This should always be true b/c runtime is always Node.js
+        if ("directory" in bundled) {
+          // handle copy files
+          Function.copyFiles(bundle, srcPath, bundled.directory);
+
+          // create wrapper that calls the handler
+          const [file, module] = bundled.handler.split(".");
+          await fs.writeFile(path.join(bundled.directory, "handler-wrapper.js"), [
+            `import { ${module} } from "./${file}.js";`,
+            `const result = await ${module}();`,
+            `console.log(result);`,
+          ].join("\n"));
+
+          const code = lambda.AssetCode.fromAsset(bundled.directory);
+          this.updateCodeBuildProjectCode(code, "handler-wrapper.js");
+        }
+      });
+    }
+  }
+
+  private createCodeBuildProject(): codebuild.Project {
+    const app = this.node.root as App;
+
+    return new codebuild.Project(this, "JobProject", {
       projectName: app.logicalPrefixedName(this.node.id),
       environment: {
         // CodeBuild offers different build images. The newer ones have much quicker
         // boot time. The latest build image is STANDARD_6_0, which support Node.js 16.
         // But while testing, I found STANDARD_6_0 took 100s to boot. So for the
         // purpose of this demo, I use STANDARD_5_0. It takes 30s to boot.
-        buildImage: codebuild.LinuxBuildImage.STANDARD_6_0,
+        //buildImage: codebuild.LinuxBuildImage.STANDARD_6_0,
         //buildImage: codebuild.LinuxBuildImage.STANDARD_5_0,
-        //buildImage: codebuild.LinuxBuildImage.fromDockerRegistry("amazon/aws-lambda-nodejs:16"),
+        buildImage: codebuild.LinuxBuildImage.fromDockerRegistry("amazon/aws-lambda-nodejs:16"),
         // CodeBuild offers a few differnt Memory/CPU options. SMALL comes with
         // 3GB memory and 2 vCPUs.
         computeType: codebuild.ComputeType.SMALL,
@@ -291,30 +315,42 @@ export class LongRunningJob extends Construct implements SSTConstruct {
         phases: {
           build: {
             commands: [
-              `echo $SST_APP`,
-              // Download the Lambda's code from S3
-              `aws s3 cp s3://${codeConfig.s3Location?.bucketName}/${codeConfig.s3Location?.objectKey} source.zip`,
-              // Unzip the code
-              `unzip source.zip -d source`,
-              // See what's in the code
-              `ls -lsa source`,
-              // Run the code
-              `node source/${handler.replace(/\.[^.]+$/, ".js")}`,
+              // commands will be set after the code is built
             ],
           },
         },
       })
     });
+  }
 
-    attachPermissionsToRole(job.role as iam.Role, [
+  private async updateCodeBuildProjectCode(code: lambda.Code, script: string) {
+    // Update job's commands
+    const codeConfig = code.bind(this);
+    const project = this.job.node.defaultChild as codebuild.CfnProject;
+    project.source = {
+      type: "S3",
+      location: `${codeConfig.s3Location?.bucketName}/${codeConfig.s3Location?.objectKey}`,
+      buildSpec: [
+        "version: 0.2",
+        "phases:",
+        "  build:",
+        "    commands:",
+        `      - node ${script}`,
+      ].join("\n"),
+    };
+
+    this.attachPermissions([
       new iam.PolicyStatement({
-        actions: ["s3:GetObject"],
+        actions: ["s3:*"],
         effect: iam.Effect.ALLOW,
         resources: [`arn:aws:s3:::${codeConfig.s3Location?.bucketName}/${codeConfig.s3Location?.objectKey}`],
       }),
     ]);
+  }
 
-    return job;
+  private createJobInvoker(): Function {
+    new Function(this, "JobProjectInvoker", {
+    })
   }
 
   /**
@@ -404,7 +440,7 @@ export class LongRunningJob extends Construct implements SSTConstruct {
 
   public getConstructMetadata() {
     return {
-      type: "LongRunningJob" as const,
+      type: "Job" as const,
       data: {
         //schedule: cfnRule.scheduleExpression,
         //ruleName: this.cdk.rule.ruleName,
