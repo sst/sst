@@ -11,15 +11,15 @@ export async function create(title: string, url: string) {
   return result;
 }
 
-export async function get(articleID: string) {
-  return (await SQL.DB.selectFrom("article")
+export function get(articleID: string) {
+  return SQL.DB.selectFrom("article")
     .selectAll()
     .where("articleID", "=", articleID)
-    .executeTakeFirst()) as SQL.Row["article"];
+    .executeTakeFirst();
 }
 
-export async function list() {
-  return await SQL.DB.selectFrom("article")
+export function list() {
+  return SQL.DB.selectFrom("article")
     .selectAll()
     .orderBy("created", "desc")
     .execute();
