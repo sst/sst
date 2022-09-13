@@ -123,6 +123,8 @@ async function setSecretDo(app: string, stage: string, region: string, name: str
     Type: "SecureString",
     Overwrite: true,
   }).promise();
+
+  await restartFunctionsUsingSecret(app, stage, region, name);
 }
 
 async function removeSecretDo(app: string, stage: string, region: string, name: string) {
