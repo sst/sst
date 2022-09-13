@@ -4,11 +4,11 @@
   "type": "module",
   "scripts": {},
   "dependencies": {
-    "aws-sdk": "^2.1211.0",
+    "aws-sdk": "^2.1215.0",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.103",
+    "@types/aws-lambda": "^8.10.104",
     "@types/uuid": "^8.3.4"
   }
 }

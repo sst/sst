@@ -4,15 +4,15 @@
   "type": "module",
   "scripts": {},
   "dependencies": {
-    "aws-sdk": "^2.1211.0",
-    "@pothos/core": "^3.20.0",
-    "@serverless-stack/node": "^1.11.2",
+    "aws-sdk": "^2.1215.0",
+    "@pothos/core": "^3.21.0",
+    "@serverless-stack/node": "^1.14.1",
     "graphql": "^16.6.0",
     "ulid": "^2.3.0",
     "kysely": "^0.21.6",
     "kysely-data-api": "^0.1.2"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.103"
+    "@types/aws-lambda": "^8.10.104"
   }
 }
