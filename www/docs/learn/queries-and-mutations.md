@@ -14,14 +14,16 @@ Let's look at how these work in our app.
 
 To start with we have two queries. One to fetch a single article, called `article`. And another to fetch all the articles, called `articles`.
 
-```ts title="services/functions/graphql/types/article.ts" {2,9}
+```ts title="services/functions/graphql/types/article.ts" {2,11}
 builder.queryFields((t) => ({
   article: t.field({
     type: ArticleType,
     args: {
       articleID: t.arg.string({ required: true }),
     },
-    resolve: (_, args) => Article.get(args.articleID),
+    resolve: async (_, args) => {
+      // ...
+    },
   }),
   articles: t.field({
     type: [ArticleType],

@@ -13,12 +13,19 @@ const ArticleType = builder
 
 builder.queryFields((t) => ({
   article: t.field({
-    nullable: true,
     type: ArticleType,
     args: {
       articleID: t.arg.string({ required: true }),
     },
-    resolve: (_, args) => Article.get(args.articleID),
+    resolve: async (_, args) => {
+      const result = await Article.get(args.articleID);
+
+      if (!result) {
+        throw new Error("Article not found");
+      }
+
+      return result;
+    },
   }),
   articles: t.field({
     type: [ArticleType],
