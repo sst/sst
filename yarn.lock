@@ -8747,6 +8747,11 @@ colorette@^1.2.2:
   resolved "https://registry.npmjs.org/colorette/-/colorette-1.4.0.tgz"
   integrity sha512-Y2oEozpomLn7Q3HFP7dpww7AtMJplbM9lGZP6RDfHqmbeRjiwRg4n6VM6j4KLmRke85uWEI7JqF17f3pqdRA0g==
 
+colorette@^2.0.10:
+  version "2.0.19"
+  resolved "https://registry.yarnpkg.com/colorette/-/colorette-2.0.19.tgz#cdf044f47ad41a0f4b56b3a0d5b4e6e1a2d5a798"
+  integrity sha512-3tlv/dIP7FWvj3BsbHrGLJ6l/oKh1O3TcgBqMn+yyCagOxc23fyzDS6HypQbgxWbkpDnf52p1LuR4eWDQ/K9WQ==
+
 colornames@^1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/colornames/-/colornames-1.1.1.tgz#f8889030685c7c4ff9e2a559f5077eb76a816f96"
@@ -9387,13 +9392,6 @@ debug@4, debug@^4.1.0, debug@^4.1.1, debug@^4.3.3:
   dependencies:
     ms "2.1.2"
 
-debug@4.3.4, debug@^4.0.1, debug@^4.3.1, debug@^4.3.4:
-  version "4.3.4"
-  resolved "https://registry.npmjs.org/debug/-/debug-4.3.4.tgz"
-  integrity sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==
-  dependencies:
-    ms "2.1.2"
-
 debug@^3.1.1, debug@^3.2.6:
   version "3.2.7"
   resolved "https://registry.npmjs.org/debug/-/debug-3.2.7.tgz"
@@ -9401,7 +9399,7 @@ debug@^3.1.1, debug@^3.2.6:
   dependencies:
     ms "^2.1.1"
 
-debug@^4.3.4:
+debug@^4.0.1, debug@^4.3.1, debug@^4.3.4:
   version "4.3.4"
   resolved "https://registry.npmjs.org/debug/-/debug-4.3.4.tgz"
   integrity sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==
@@ -11599,14 +11597,6 @@ he@1.2.0, he@^1.2.0:
   resolved "https://registry.npmjs.org/he/-/he-1.2.0.tgz"
   integrity sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==
 
-header-case@^2.0.4:
-  version "2.0.4"
-  resolved "https://registry.npmjs.org/header-case/-/header-case-2.0.4.tgz"
-  integrity sha512-H/vuk5TEEVZwrR0lp2zed9OCo1uAILMlx0JEMgC26rzyJJ3N1v6XkwHHXJQdR2doSjcGPM6OKPYoJgf0plJ11Q==
-  dependencies:
-    capital-case "^1.0.4"
-    tslib "^2.0.3"
-
 help-me@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/help-me/-/help-me-3.0.0.tgz#9803c81b5f346ad2bce2c6a0ba01b82257d319e8"
@@ -12840,10 +12830,17 @@ klona@^2.0.5:
   resolved "https://registry.npmjs.org/klona/-/klona-2.0.5.tgz"
   integrity sha512-pJiBpiXMbt7dkzXe8Ghj/u4FfXOOa98fPW+bihOJ4SjnoijweJrNThJfd3ifXpXhREjpoF2mZVH1GfS9LV3kHQ==
 
-kysely-codegen@^0.5.0:
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/kysely-codegen/-/kysely-codegen-0.5.0.tgz#ae004af396443da1dc97641d813521d3f2872502"
-  integrity sha512-H7oRq8RK+m6n3wAzgARY4uPVnJXPGmTjcDdyvfLr37OdJGo7gd7UrC0oDLjeORrqtV3IwH0NA9MV2AxmwbCxHA==
+kuler@1.0.x:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/kuler/-/kuler-1.0.1.tgz#ef7c784f36c9fb6e16dd3150d152677b2b0228a6"
+  integrity sha512-J9nVUucG1p/skKul6DU3PUZrhs0LPulNaeUOox0IyXDi8S4CztTHs1gQphhuZmzXG7VOQSf6NJfKuzteQLv9gQ==
+  dependencies:
+    colornames "^1.1.1"
+
+kysely-codegen@^0.6.0:
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/kysely-codegen/-/kysely-codegen-0.6.0.tgz#362750e9c4fb14567e015b520ffb27daef07e53b"
+  integrity sha512-j8G3UV435qwdAUyseXJVownnD7zMkqJG2w/2AI/tBE7s+lsUk7lne9dc1n3Kd4qQxn14Be7bx3fBBct0OU0Scw==
   dependencies:
     chalk "^4.1.2"
     dotenv "^16.0.1"
@@ -12858,13 +12855,6 @@ kysely@^0.21.3:
   version "0.21.3"
   resolved "https://registry.yarnpkg.com/kysely/-/kysely-0.21.3.tgz#f2d6ecaed2cb4c099d34a4ebdf3d6d6604986133"
   integrity sha512-frAPICQjRn8Q9k8NpkuOXpwcSNhheHY7YWU28LMiNPugI4mKEc60fobnVk3OMXsgr4ZXOwCNYz616PUYMgYFog==
-
-kuler@1.0.x:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/kuler/-/kuler-1.0.1.tgz#ef7c784f36c9fb6e16dd3150d152677b2b0228a6"
-  integrity sha512-J9nVUucG1p/skKul6DU3PUZrhs0LPulNaeUOox0IyXDi8S4CztTHs1gQphhuZmzXG7VOQSf6NJfKuzteQLv9gQ==
-  dependencies:
-    colornames "^1.1.1"
 
 latest-version@^5.1.0:
   version "5.1.0"
@@ -13594,7 +13584,7 @@ minimist-options@^4.0.2:
     is-plain-obj "^1.1.0"
     kind-of "^6.0.3"
 
-minimist@1.2.6, minimist@^1.1.0, minimist@^1.1.1:
+minimist@1.2.6, minimist@^1.1.0, minimist@^1.1.1, minimist@^1.2.6:
   version "1.2.6"
   resolved "https://registry.npmjs.org/minimist/-/minimist-1.2.6.tgz"
   integrity sha512-Jsjnk4bw3YJqYzbdyBiNsPWHPfO++UGG749Cxs6peCu5Xg4nrena6OVxOYxrQTqww0Jmwt+Ref8rggumkTLz9Q==
@@ -17886,11 +17876,6 @@ ufo@^0.8.5:
   version "0.8.5"
   resolved "https://registry.yarnpkg.com/ufo/-/ufo-0.8.5.tgz#e367b4205ece9d9723f2fa54f887d43ed1bce5d0"
   integrity sha512-e4+UtA5IRO+ha6hYklwj6r7BjiGMxS0O+UaSg9HbaTefg4kMkzj4tXzEBajRR+wkxf+golgAWKzLbytCUDMJAA==
-
-uglify-js@^3.1.4:
-  version "3.15.5"
-  resolved "https://registry.npmjs.org/uglify-js/-/uglify-js-3.15.5.tgz"
-  integrity sha512-hNM5q5GbBRB5xB+PMqVRcgYe4c8jbyZ1pzZhS6jbq54/4F2gFK869ZheiE5A8/t+W5jtTNpWef/5Q9zk639FNQ==
 
 ultron@~1.1.0:
   version "1.1.1"
