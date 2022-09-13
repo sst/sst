@@ -4,27 +4,35 @@ import { builder } from "../builder";
 const ArticleType = builder
   .objectRef<Article.ArticleEntityType>("Article")
   .implement({
-    fields: t => ({
+    fields: (t) => ({
       id: t.exposeID("articleID"),
+      url: t.exposeString("url"),
       title: t.exposeString("title"),
-      url: t.exposeString("url")
-    })
+    }),
   });
 
-builder.queryFields(t => ({
+builder.queryFields((t) => ({
+  article: t.field({
+    nullable: true,
+    type: ArticleType,
+    args: {
+      articleID: t.arg.string({ required: true }),
+    },
+    resolve: (_, args) => Article.get(args.articleID),
+  }),
   articles: t.field({
     type: [ArticleType],
-    resolve: () => Article.list()
-  })
+    resolve: () => Article.list(),
+  }),
 }));
 
-builder.mutationFields(t => ({
+builder.mutationFields((t) => ({
   createArticle: t.field({
     type: ArticleType,
     args: {
       title: t.arg.string({ required: true }),
-      url: t.arg.string({ required: true })
+      url: t.arg.string({ required: true }),
     },
-    resolve: async (_, args) => Article.create(args.title, args.url)
-  })
+    resolve: async (_, args) => Article.create(args.title, args.url),
+  }),
 }));

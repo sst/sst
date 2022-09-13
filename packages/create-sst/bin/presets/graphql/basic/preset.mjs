@@ -34,9 +34,6 @@ export default [
     file: "web/package.json",
     operations: [{ op: "add", path: "/scripts/dev", value: "sst-env -- vite" }],
   }),
-  remove("web/src/App.tsx"),
-  remove("web/src/App.css"),
-  remove("web/src/logo.svg"),
   patch({
     file: "package.json",
     operations: [
@@ -51,4 +48,15 @@ export default [
   cmd({
     cmd: "npx @genql/cli --output ./graphql/genql --schema ./graphql/schema.graphql --esm",
   }),
+  install({
+    packages: ["@vanilla-extract/css", "@vanilla-extract/vite-plugin", "react-icons"],
+    path: "web"
+  }),
+  remove("web/src/App.tsx"),
+  remove("web/src/App.css"),
+  remove("web/src/logo.svg"),
+  remove("web/src/index.css"),
+  remove("web/src/favicon.svg"),
+  remove("web/public/vite.svg"),
+  remove("web/src/assets/react.svg"),
 ];
