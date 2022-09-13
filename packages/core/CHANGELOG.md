@@ -1,5 +1,17 @@
 # @serverless-stack/core
 
+## 1.14.0
+
+### Minor Changes
+
+- [#1886](https://github.com/serverless-stack/sst/pull/1886) [`372b389d8`](https://github.com/serverless-stack/sst/commit/372b389d868cdf9ffed12b905e67b06ee30e9e71) Thanks [@thdxr](https://github.com/thdxr)! - Switch to kysely-codegen instead of sql-ts
+
+## 1.13.0
+
+### Minor Changes
+
+- [#2057](https://github.com/serverless-stack/sst/pull/2057) [`6958f9f74`](https://github.com/serverless-stack/sst/commit/6958f9f742e3aea4a9a175bb4da4512e6e22b1b3) Thanks [@fwang](https://github.com/fwang)! - Update CDK to v2.39.1
+
 ## 1.12.4
 
 ### Patch Changes

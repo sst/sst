@@ -1,5 +1,25 @@
 # @serverless-stack/cli
 
+## 1.14.0
+
+### Patch Changes
+
+- Updated dependencies [[`372b389d8`](https://github.com/serverless-stack/sst/commit/372b389d868cdf9ffed12b905e67b06ee30e9e71)]:
+  - @serverless-stack/core@1.14.0
+  - @serverless-stack/resources@1.14.0
+
+## 1.13.0
+
+### Minor Changes
+
+- [#2057](https://github.com/serverless-stack/sst/pull/2057) [`6958f9f74`](https://github.com/serverless-stack/sst/commit/6958f9f742e3aea4a9a175bb4da4512e6e22b1b3) Thanks [@fwang](https://github.com/fwang)! - Update CDK to v2.39.1
+
+### Patch Changes
+
+- Updated dependencies [[`6958f9f74`](https://github.com/serverless-stack/sst/commit/6958f9f742e3aea4a9a175bb4da4512e6e22b1b3)]:
+  - @serverless-stack/core@1.13.0
+  - @serverless-stack/resources@1.13.0
+
 ## 1.12.4
 
 ### Patch Changes
