@@ -1,5 +1,12 @@
 # @serverless-stack/resources
 
+## 1.14.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.14.1
+
 ## 1.14.0
 
 ### Patch Changes
