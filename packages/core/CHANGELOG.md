@@ -1,5 +1,11 @@
 # @serverless-stack/core
 
+## 1.14.0
+
+### Minor Changes
+
+- [#1886](https://github.com/serverless-stack/sst/pull/1886) [`372b389d8`](https://github.com/serverless-stack/sst/commit/372b389d868cdf9ffed12b905e67b06ee30e9e71) Thanks [@thdxr](https://github.com/thdxr)! - Switch to kysely-codegen instead of sql-ts
+
 ## 1.13.0
 
 ### Minor Changes
