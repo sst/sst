@@ -1,5 +1,111 @@
 # @serverless-stack/core
 
+## 1.13.0
+
+### Minor Changes
+
+- [#2057](https://github.com/serverless-stack/sst/pull/2057) [`6958f9f74`](https://github.com/serverless-stack/sst/commit/6958f9f742e3aea4a9a175bb4da4512e6e22b1b3) Thanks [@fwang](https://github.com/fwang)! - Update CDK to v2.39.1
+
+## 1.12.4
+
+### Patch Changes
+
+- [#2056](https://github.com/serverless-stack/sst/pull/2056) [`6049c341d`](https://github.com/serverless-stack/sst/commit/6049c341d8938911bb910e38f49ae90b1af02a25) Thanks [@fwang](https://github.com/fwang)! - Fix parallel build fails in CI environment
+
+## 1.12.3
+
+### Patch Changes
+
+- [`7bf15be60`](https://github.com/serverless-stack/sst/commit/7bf15be60088fa9def2f99e188bff4ff8c0dafd3) Thanks [@thdxr](https://github.com/thdxr)! - Disable function draining on env change
+
+* [`cacb73493`](https://github.com/serverless-stack/sst/commit/cacb73493295619538375ff9feb6ee559be1dfa3) Thanks [@thdxr](https://github.com/thdxr)! - Fix issue with sst start functions failing under parallel invocation
+
+## 1.12.2
+
+## 1.12.1
+
+## 1.12.0
+
+## 1.11.2
+
+## 1.11.1
+
+### Patch Changes
+
+- [#2035](https://github.com/serverless-stack/sst/pull/2035) [`fc4e0ea6c`](https://github.com/serverless-stack/sst/commit/fc4e0ea6c9d8c7dd6194467581a53f8cd8c4f7dc) Thanks [@fwang](https://github.com/fwang)! - Function: fix nodeModules not bundled
+
+## 1.11.0
+
+### Minor Changes
+
+- [#2024](https://github.com/serverless-stack/sst/pull/2024) [`2b816c08a`](https://github.com/serverless-stack/sst/commit/2b816c08a4ebe814a9ab18b517030e5455c7e9b8) Thanks [@fwang](https://github.com/fwang)! - Function: utilize multi-core to build functions in parallel
+
+## 1.10.6
+
+## 1.10.5
+
+## 1.10.4
+
+## 1.10.3
+
+## 1.10.2
+
+## 1.10.1
+
+## 1.10.0
+
+## 1.9.4
+
+## 1.9.3
+
+## 1.9.2
+
+## 1.9.1
+
+## 1.9.0
+
+### Minor Changes
+
+- [#1981](https://github.com/serverless-stack/sst/pull/1981) [`39a67838d`](https://github.com/serverless-stack/sst/commit/39a67838dc0aea9e80d5e24f2fbdf567a4ee199c) Thanks [@fwang](https://github.com/fwang)! - Add `load-config` cli command to help loading config for running tests
+
+## 1.8.4
+
+## 1.8.3
+
+### Patch Changes
+
+- [#1977](https://github.com/serverless-stack/sst/pull/1977) [`af06c6dd9`](https://github.com/serverless-stack/sst/commit/af06c6dd91400b7f55b3824efcb450dae114020c) Thanks [@fwang](https://github.com/fwang)! - Bootstrap: encode tags in base64 to pass to bootstrap stack
+
+## 1.8.2
+
+### Patch Changes
+
+- [#1971](https://github.com/serverless-stack/sst/pull/1971) [`d7ac80470`](https://github.com/serverless-stack/sst/commit/d7ac8047062f859d4a8e8c10900e7388ba7b4b1a) Thanks [@fwang](https://github.com/fwang)! - Cli: add bootstrap command with the ability to tag
+
+* [#1972](https://github.com/serverless-stack/sst/pull/1972) [`76a5e0ad6`](https://github.com/serverless-stack/sst/commit/76a5e0ad6396e418c0cf50427b1b2ddb502afd96) Thanks [@fwang](https://github.com/fwang)! - sst start: restart functions on secret value change
+
+## 1.8.1
+
+### Patch Changes
+
+- [`1b7675d4d`](https://github.com/serverless-stack/sst/commit/1b7675d4d93764e5f4527f8e9196add63a2b9882) Thanks [@thdxr](https://github.com/thdxr)! - Fix for Go functions on windows requiring .exe
+
+* [#1962](https://github.com/serverless-stack/sst/pull/1962) [`1a1d405ca`](https://github.com/serverless-stack/sst/commit/1a1d405cac6463e3105c5212c6c50b1fb5a63191) Thanks [@fwang](https://github.com/fwang)! - Cli: run bootstrap prior to build
+
+- [#1963](https://github.com/serverless-stack/sst/pull/1963) [`308a53f66`](https://github.com/serverless-stack/sst/commit/308a53f66412dc7ec47a2131e8b551eb8b44ff68) Thanks [@fwang](https://github.com/fwang)! - Config: grant strict IAM permissions to specific SSM parameters
+
+## 1.8.0
+
+### Minor Changes
+
+- [#1957](https://github.com/serverless-stack/sst/pull/1957) [`989a4f516`](https://github.com/serverless-stack/sst/commit/989a4f516175c2e51a649acad4478d3eec5319f1) Thanks [@fwang](https://github.com/fwang)! - Release Config
+
+### Patch Changes
+
+- [#1952](https://github.com/serverless-stack/sst/pull/1952) [`4b9d6bf6f`](https://github.com/serverless-stack/sst/commit/4b9d6bf6fe550727af1f04e6655f45ae8fe900cb) Thanks [@fwang](https://github.com/fwang)! - sst start: suppress errors from RDS warmer
+
+* [`fc7abc430`](https://github.com/serverless-stack/sst/commit/fc7abc43094b8eb9d3bb77902dfec5883fa1bac7) Thanks [@thdxr](https://github.com/thdxr)! - Fix issue with running go functions locally on Windows machiness
+
 ## 1.7.0
 
 ### Minor Changes

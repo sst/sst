@@ -527,7 +527,7 @@ import * as appsync from "@aws-cdk/aws-appsync-alpha";
 import { Auth, AppSyncApi } from "@serverless-stack/resources";
 
 // Create a User Pool using the Auth construct
-const auth = new Auth(this, "Auth");
+const auth = new Cognito(this, "Auth");
 
 new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
@@ -579,6 +579,33 @@ new AppSyncApi(stack, "GraphqlApi", {
           authorizationType: appsync.AuthorizationType.OIDC,
           openIdConnectConfig: {
             oidcProvider: "https://myorg.us.auth0.com",
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+#### Using Lambda
+
+```js {12-19}
+import * as appsync from "@aws-cdk/aws-appsync-alpha";
+import { Function, AppSyncApi } from "@serverless-stack/resources";
+
+const authorizer = new Function(this, "AuthorizerFn", {
+  handler: "src/authorizer.main",
+});
+
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  cdk: {
+    graphqlApi: {
+      authorizationConfig: {
+        defaultAuthorization: {
+          authorizationType: appsync.AuthorizationType.LAMBDA,
+          lambdaAuthorizerConfig: {
+            handler: authorizer,
           },
         },
       },

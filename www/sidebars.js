@@ -1,10 +1,10 @@
 module.exports = {
   docs: [
     {
-      " ": ["about", "quick-start"],
+      " ": ["about", "quick-start"]
     },
     {
-      Overview: ["architecture", "live-lambda-development", "console"],
+      Overview: ["architecture", "live-lambda-development", "console"]
     },
     {
       Learn: [
@@ -17,11 +17,11 @@ module.exports = {
           items: [
             "learn/create-a-new-project",
             "learn/project-structure",
-            "learn/editor-setup",
+            "learn/editor-integration",
             "learn/initialize-the-database",
             "learn/start-the-frontend",
-            "learn/breakpoint-debugging",
-          ],
+            "learn/breakpoint-debugging"
+          ]
         },
         {
           type: "category",
@@ -30,11 +30,10 @@ module.exports = {
           collapsed: true,
           items: [
             "learn/domain-driven-design",
-            "learn/scaffold-business-logic",
-            "learn/database-options",
-            "learn/write-to-postgresql",
-            "learn/write-to-dynamodb",
-          ],
+            //"learn/database-options",
+            "learn/write-to-the-database",
+            //"learn/write-to-dynamodb"
+          ]
         },
         {
           type: "category",
@@ -44,31 +43,33 @@ module.exports = {
           items: [
             "learn/graphql-api",
             "learn/add-api-types",
-            "learn/queries-and-mutations",
-          ],
+            "learn/queries-and-mutations"
+          ]
         },
         {
           type: "category",
-          label: "4 - Render Frontend",
+          label: "4 - Update the Frontend",
           collapsible: true,
           collapsed: true,
           items: [
-            "learn/fetch-data",
-            "learn/render-results",
-
+            "learn/render-queries",
+            "learn/make-updates",
             //Link to Vue example
             //Link to Next.js example
             //"learn/frontend-options",
-          ],
+          ]
         },
         {
           type: "category",
           label: "5 - Deployment",
           collapsible: true,
           collapsed: true,
-          items: ["learn/deploy-from-cli", "learn/git-push-to-deploy"],
-        },
-      ],
+          items: [
+            "learn/deploy-to-prod",
+            //"learn/git-push-to-deploy"
+          ]
+        }
+      ]
     },
     {
       "Learn More": [
@@ -100,13 +101,13 @@ module.exports = {
         //{ type: "doc", id: "api", label: "RESTful routes" },
 
         //"api",
-        //"auth",
         //"storage",
         //"database",
         //"frontend",
         //"cron-jobs",
         //"asynchronous-tasks",
 
+        "auth",
         "advanced/testing",
         "going-to-production",
         "environment-variables",
@@ -129,31 +130,32 @@ module.exports = {
             "advanced/cross-stack-references",
             "advanced/linting-and-type-checking",
             //"advanced/monorepo-project-structure",
-            "advanced/environment-specific-resources",
+            "advanced/environment-specific-resources"
             //{ type: "doc", id: "api", label: "WebSocket" },
             //{ type: "doc", id: "api", label: "AppSync" },
-          ],
-        },
-      ],
+          ]
+        }
+      ]
     },
     {
-      "Migrating From": ["migrating/cdk", "migrating/serverless-framework"],
+      "Migrating From": ["migrating/cdk", "migrating/serverless-framework"]
     },
     {
-      More: ["known-issues", "design-principles", "anonymous-telemetry", "faq"],
+      More: ["known-issues", "design-principles", "anonymous-telemetry", "faq"]
     },
     {
       Packages: [
         "packages/create-sst",
         "packages/cli",
+        "packages/node",
         "packages/resources",
-        "packages/static-site-env",
-      ],
-    },
+        "packages/static-site-env"
+      ]
+    }
   ],
   constructsv0: [
     {
-      " ": ["constructs/v0/index", "constructs/v0/migration"],
+      " ": ["constructs/v0/index", "constructs/v0/migration"]
     },
     {
       Constructs: [
@@ -178,15 +180,15 @@ module.exports = {
         "constructs/v0/KinesisStream", // shorter in length viewed in browser
         "constructs/v0/WebSocketApi",
         "constructs/v0/ReactStaticSite",
-        "constructs/v0/ApiGatewayV1Api",
-      ],
+        "constructs/v0/ApiGatewayV1Api"
+      ]
     },
     {
-      Util: ["constructs/v0/Permissions"],
+      Util: ["constructs/v0/Permissions"]
     },
     {
-      Internals: ["constructs/v0/DebugApp", "constructs/v0/DebugStack"],
-    },
+      Internals: ["constructs/v0/DebugApp", "constructs/v0/DebugStack"]
+    }
   ],
   constructs: [
     {
@@ -195,29 +197,43 @@ module.exports = {
         {
           type: "link",
           label: "v0 Constructs",
-          href: "/constructs/v0",
+          href: "/constructs/v0"
         },
         {
           type: "link",
           label: "Migrate to v1.0",
-          href: "/constructs/v0/migration",
-        },
-      ],
+          href: "/constructs/v0/migration"
+        }
+      ]
     },
     {
-      Core: ["constructs/App", "constructs/Stack", "constructs/Function"],
+      Core: [
+        "constructs/App",
+        "constructs/Stack",
+        "constructs/Function",
+        {
+          type: "category",
+          label: "Config",
+          collapsible: true,
+          collapsed: true,
+          items: [
+            "constructs/Secret",
+            "constructs/Parameter",
+          ],
+        }
+      ],
       Api: [
         "constructs/Api",
         "constructs/GraphQLApi",
         "constructs/AppSyncApi",
-        "constructs/WebSocketApi",
+        "constructs/WebSocketApi"
       ],
       Frontend: [
         "constructs/StaticSite",
         "constructs/NextjsSite",
         "constructs/RemixSite",
         "constructs/ViteStaticSite",
-        "constructs/ReactStaticSite",
+        "constructs/ReactStaticSite"
       ],
       Database: ["constructs/RDS", "constructs/Table"],
       Async: [
@@ -225,21 +241,21 @@ module.exports = {
         "constructs/Topic",
         "constructs/Queue",
         "constructs/EventBus",
-        "constructs/KinesisStream",
+        "constructs/KinesisStream"
       ],
       Storage: ["constructs/Bucket"],
-      Auth: ["constructs/Auth"],
+      Auth: ["constructs/Auth", "constructs/Cognito"],
       Types: [
         "constructs/Size",
         "constructs/Duration",
-        "constructs/Permissions",
+        "constructs/Permissions"
       ],
       Other: [
         "constructs/Script",
         "constructs/DebugApp",
         "constructs/DebugStack",
-        "constructs/ApiGatewayV1Api",
-      ],
-    },
-  ],
+        "constructs/ApiGatewayV1Api"
+      ]
+    }
+  ]
 };

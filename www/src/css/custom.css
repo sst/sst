@@ -20,11 +20,13 @@
   --ifm-font-size-base: 0.975rem;
 
   --custom-color-black: #383736;
-  --custom-border-color: rgba(0, 0, 0, 0.1);
+  --custom-border-color: #F2F2F2;
   --custom-code-block-selection-color: #e2e8f0;
 
   --ifm-font-color-base: var(--custom-color-black);
   --ifm-heading-color: var(--custom-color-black);
+
+  --ifm-hr-border-color: var(--custom-border-color);
 
   --ifm-color-primary: #e27152;
   --ifm-color-primary-dark: #de5b38;
@@ -459,6 +461,21 @@ html[data-theme="dark"] .navbar__link__github:before {
 
 .docusaurus-highlight-code-line {
   background-color: var(--custom-code-block-selection-color);
+}
+
+/* Styles for detail tag */
+details[class^="details_"] {
+  border: none;
+  box-shadow: none;
+}
+details[class^="details_"] > div > div > *:last-child {
+  /* Fix bottom margin for content */
+  margin-bottom: 0;
+}
+details[class^="details_"] > summary {
+  text-transform: uppercase;
+  font-size: var(--ifm-h5-font-size);
+  font-weight: var(--ifm-heading-font-weight);
 }
 
 /* mobile */

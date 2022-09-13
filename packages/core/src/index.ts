@@ -345,8 +345,7 @@ async function deployPoll(cdkOptions, stackStates) {
               skipPendingStacks();
               logger.info(
                 chalk.red(
-                  `\n ❌  ${chalk.bold(stackState.name)} failed: ${
-                    stackState.errorMessage
+                  `\n ❌  ${chalk.bold(stackState.name)} failed: ${stackState.errorMessage
                   }\n`
                 )
               );
@@ -385,8 +384,7 @@ async function deployPoll(cdkOptions, stackStates) {
               skipPendingStacks();
               logger.info(
                 chalk.red(
-                  `\n ❌  ${chalk.bold(stackState.name)} failed: ${
-                    stackState.errorMessage
+                  `\n ❌  ${chalk.bold(stackState.name)} failed: ${stackState.errorMessage
                   }\n`
                 )
               );
@@ -471,8 +469,7 @@ async function deployPoll(cdkOptions, stackStates) {
               skipPendingStacks();
               logger.info(
                 chalk.red(
-                  `\n ❌  ${chalk.bold(stackState.name)} failed: ${
-                    stackState.errorMessage
+                  `\n ❌  ${chalk.bold(stackState.name)} failed: ${stackState.errorMessage
                   }\n`
                 )
               );
@@ -1299,8 +1296,7 @@ async function destroyPoll(cdkOptions, stackStates) {
               skipPendingStacks();
               logger.info(
                 chalk.red(
-                  `\n ❌  ${chalk.bold(stackState.name)} failed: ${
-                    stackState.errorMessage
+                  `\n ❌  ${chalk.bold(stackState.name)} failed: ${stackState.errorMessage
                   }\n`
                 )
               );
@@ -1380,8 +1376,7 @@ async function destroyPoll(cdkOptions, stackStates) {
               skipPendingStacks();
               logger.info(
                 chalk.red(
-                  `\n ❌  ${chalk.bold(stackState.name)} failed: ${
-                    stackState.errorMessage
+                  `\n ❌  ${chalk.bold(stackState.name)} failed: ${stackState.errorMessage
                   }\n`
                 )
               );
@@ -1913,12 +1908,12 @@ function printStackEvent(stackName, event) {
   const statusColor = colorFromStackEventStatus(event.ResourceStatus);
   logger.info(
     `${stackName}` +
-      ` | ${statusColor(event.ResourceStatus || "")}` +
-      ` | ${event.ResourceType}` +
-      ` | ${statusColor(chalk.bold(event.LogicalResourceId || ""))}` +
-      (event.ResourceStatusReason
-        ? ` | ${statusColor(event.ResourceStatusReason || "")}`
-        : "")
+    ` | ${statusColor(event.ResourceStatus || "")}` +
+    ` | ${event.ResourceType}` +
+    ` | ${statusColor(chalk.bold(event.LogicalResourceId || ""))}` +
+    (event.ResourceStatusReason
+      ? ` | ${statusColor(event.ResourceStatusReason || "")}`
+      : "")
   );
 }
 
@@ -1952,6 +1947,17 @@ function getErrorMessageFromEvents(events) {
   return errorMessage;
 }
 
+async function callAwsWithRetry<T>(fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (e) {
+    if (isRetryableException(e)) {
+      return await callAwsWithRetry(fn);
+    }
+    throw e;
+  }
+}
+
 function isRetryableException(e) {
   return (
     (e.code === "ThrottlingException" && e.message === "Rate exceeded") ||
@@ -1982,6 +1988,7 @@ export { Runtime } from "./runtime/index.js";
 export { Stacks } from "./stacks/index.js";
 export * from "./cli/index.js";
 export * from "./local/index.js";
+export { DeferBuilder } from "./defer-builder/index.js";
 export { FunctionConfig } from "./function-config/index.js";
 export { Bootstrap } from "./bootstrap/index.js";
 export { Telemetry } from "./telemetry/index.js";
@@ -2000,6 +2007,7 @@ export {
   getCdkVersion,
   getSstVersion,
   getChildLogger,
+  callAwsWithRetry,
   initializeLogger,
   isRetryableException,
   STACK_DEPLOY_STATUS,

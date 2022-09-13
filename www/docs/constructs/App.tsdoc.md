@@ -46,6 +46,22 @@ The stage the app is being deployed to. If this is not specified as the --stage 
 
 ## Methods
 An instance of `App` has the following methods.
+### addDefaultFunctionConfig
+
+```ts
+addDefaultFunctionConfig(config)
+```
+_Parameters_
+- __config__ <span class='mono'>Array&lt;<span class='mono'><span class="mono">[Secret](Secret#secret)</span> | <span class="mono">[Parameter](Parameter#parameter)</span></span>&gt;</span>
+
+
+Adds additional default config to be applied to all Lambda functions in the app.
+
+
+```js
+app.addDefaultFunctionConfig([STRIPE_KEY])
+```
+
 ### addDefaultFunctionEnv
 
 ```ts
@@ -147,66 +163,3 @@ Make sure to not set the default removal policy to `DESTROY` for production envi
 ```js
 app.setDefaultRemovalPolicy(app.local ? "destroy" : "retain")
 ```
-
-## AppDeployProps
-
-
-### buildDir?
-
-_Type_ : <span class="mono">string</span>
-
-### debugBridge?
-
-_Type_ : <span class="mono">string</span>
-
-### debugBucketArn?
-
-_Type_ : <span class="mono">string</span>
-
-### debugBucketName?
-
-_Type_ : <span class="mono">string</span>
-
-### debugEndpoint?
-
-_Type_ : <span class="mono">string</span>
-
-### debugIncreaseTimeout?
-
-_Type_ : <span class="mono">boolean</span>
-
-### debugStartedAt?
-
-_Type_ : <span class="mono">number</span>
-
-### esbuildConfig?
-
-_Type_ : <span class="mono">string</span>
-
-### name?
-
-_Type_ : <span class="mono">string</span>
-
-_Default_ : <span class="mono">- Defaults to empty string</span>
-
-The app name, used to prefix stacks.
-
-### region?
-
-_Type_ : <span class="mono">string</span>
-
-_Default_ : <span class="mono">- Defaults to us-east-1</span>
-
-The region to deploy this app to.
-
-### skipBuild?
-
-_Type_ : <span class="mono">boolean</span>
-
-### stage?
-
-_Type_ : <span class="mono">string</span>
-
-_Default_ : <span class="mono">- Defaults to dev</span>
-
-The stage to deploy this app to.

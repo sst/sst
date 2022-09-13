@@ -6,4 +6,13 @@ export default defineConfig({
   test: {
     testTimeout: 30000,
   },
+  logLevel: "info",
+  esbuild: {
+    sourcemap: "both",
+  },
+  resolve: {
+    alias: {
+      "@api-auth-lambda-authorizer-iam-response/core": "./services/core",
+    },
+  },
 });

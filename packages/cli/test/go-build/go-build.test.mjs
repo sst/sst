@@ -36,11 +36,7 @@ test("go-build", async () => {
   );
   const cfnResources = JSON.parse(cf).Resources;
   const cfnLambdas = Object.values(cfnResources).filter(
-    (r) => r.Type === "AWS::Lambda::Function"
+    (r) => r.Type === "AWS::Lambda::Function" && r.Properties.Handler === "handler"
   );
-  expect(cfnLambdas[0].Properties.Handler).toEqual("handler");
-  expect(cfnLambdas[1].Properties.Handler).toEqual("handler");
-  expect(cfnLambdas[2].Properties.Handler).toEqual("handler");
-  expect(cfnLambdas[3].Properties.Handler).toEqual("handler");
-  expect(cfnLambdas[4].Properties.Handler).toEqual("handler");
+  expect(cfnLambdas.length).toEqual(5);
 });

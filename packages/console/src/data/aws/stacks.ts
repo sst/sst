@@ -21,7 +21,11 @@ import {
 import { useParams } from "react-router-dom";
 import type { Metadata } from "../../../../resources/src/Metadata";
 import { useClient } from "./client";
-import { GetObjectCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
+import {
+  GetObjectCommand,
+  ListObjectsV2Command,
+  S3Client,
+} from "@aws-sdk/client-s3";
 
 export type StackInfo = {
   info: Stack;
@@ -55,49 +59,78 @@ export function useStacks() {
   return useQuery(
     ["stacks", params.app!, params.stage!],
     async () => {
-      
-      let stacks: StackInfo[] = []
+      let stacks: StackInfo[] = [];
 
       try {
-        const value = await ssm.send(new GetParameterCommand({
-          Name: `/sst/bootstrap/bucket-name`,
-        }))
-        const bucketName = value.Parameter.Value
-        const list = await s3.send(new ListObjectsV2Command({
-          Bucket: bucketName,
-          Prefix: `stackMetadata/app.${params.app}/stage.${params.stage}/`,
-        }))
-        stacks = await Promise.all(list.Contents.map(async item => {
-          while (true) {
-            try {
-              const result = await s3.send(new GetObjectCommand({
-                Bucket: bucketName,
-                Key: item.Key
-              }))
-              const stackName = item.Key.split(".").at(-2)
-              const resp = new Response(result.Body as ReadableStream)
-              const constructs = await resp.json() as Metadata[]
-              const describe = await cf.send(new DescribeStacksCommand({
-                StackName: stackName,
-              }))
-              const info: StackInfo = {
-                info: describe.Stacks[0],
-                constructs: {
-                  all: constructs,
-                  byAddr: fromPairs(constructs.map((x) => [x.addr, x])),
-                  byType: groupBy(constructs, (x) => x.type),
+        const value = await ssm.send(
+          new GetParameterCommand({
+            Name: `/sst/bootstrap/bucket-name`,
+          })
+        ).filter(
+          (x) =>
+            x.constructs.version.startsWith("0.0.0") ||
+            x.constructs.version >= "0.56.0"
+        );
+        const bucketName = value.Parameter.Value;
+        const list = await s3.send(
+          new ListObjectsV2Command({
+            Bucket: bucketName,
+            Prefix: `stackMetadata/app.${params.app}/stage.${params.stage}/`,
+          })
+        );
+        stacks = await Promise.all(
+          list.Contents?.map(async (item) => {
+            while (true) {
+              try {
+                const result = await s3.send(
+                  new GetObjectCommand({
+                    Bucket: bucketName,
+                    Key: item.Key,
+                  })
+                );
+                const stackName = item.Key.split(".").at(-2);
+                const resp = new Response(result.Body as ReadableStream);
+                const constructs = ((await resp.json()) || []) as Metadata[];
+                // Get the stack info. Note that if stack is not found in CloudFormation,
+                // supress the error.
+                let describe;
+                try {
+                  describe = await cf.send(
+                    new DescribeStacksCommand({
+                      StackName: stackName,
+                    })
+                  );
+                } catch (e: any) {
+                  if (
+                    e.name === "ValidationError" &&
+                    e.message.includes("does not exist")
+                  ) {
+                    return null;
+                  }
                 }
-              };
-              return info
-            } catch {
-              await new Promise((resolve) => setTimeout(resolve, 1000))
+                const info: StackInfo = {
+                  info: describe.Stacks[0],
+                  constructs: {
+                    all: constructs,
+                    byAddr: fromPairs(constructs.map((x) => [x.addr, x])),
+                    byType: groupBy(constructs, (x) => x.type),
+                  },
+                };
+                return info;
+              } catch {
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+              }
             }
-          }
-        }))
-
+          }) || []
+        );
+        // Filter stacks that are not found in CloudFormation.
+        stacks = stacks.filter((x) => x !== null);
       } catch (ex) {
-        console.error(ex)
-        console.warn("Failed to get metadata from S3. Falling back to old method, please update SST", ex)
+        console.error(ex);
+        console.warn(
+          "Failed to get metadata from S3. Falling back to old method, please update SST",
+          ex
+        );
         const tagFilter = [
           {
             Key: "sst:app",
@@ -161,7 +194,6 @@ export function useStacks() {
             x.constructs.version >= "0.56.0"
         );
       }
-
 
       const result: Result = {
         app: params.app!,
@@ -257,7 +289,8 @@ export function useStackFromName(name: string) {
 
 export function useConstructsByType<T extends Metadata["type"]>(type: T) {
   const stacks = useStacks();
-  return stacks.data?.constructs.byType[type]
+  const result = stacks.data?.constructs.byType[type];
+  return result || ([] as typeof result);
 }
 
 export function useConstruct<T extends Metadata["type"]>(

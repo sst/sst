@@ -6,4 +6,13 @@ export default defineConfig({
   test: {
     testTimeout: 30000,
   },
+  logLevel: "info",
+  esbuild: {
+    sourcemap: "both",
+  },
+  resolve: {
+    alias: {
+      "@@@app/core": "./services/core",
+    },
+  },
 });

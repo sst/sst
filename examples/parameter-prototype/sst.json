@@ -1,5 +1,0 @@
-{
-  "name": "parameter-prototype",
-  "region": "us-east-1",
-  "main": "stacks/index.ts"
-}

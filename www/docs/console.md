@@ -6,14 +6,14 @@ description: "The SST Console is a web based dashboard to manage your SST apps."
 import config from "../config";
 
 export const ConsoleUrl = ({url}) =>
-  <a href={url}>{url.replace("https://","").replace(/\/$/, "")}</a>;
+<a href={url}>{url.replace("https://","").replace(/\/$/, "")}</a>;
 
 The SST Console is a web based dashboard to manage your SST apps — **<ConsoleUrl url={config.console} />**
 
 ![SST Console homescreen](/img/console/sst-console-homescreen.png)
 
 :::note
-Safari and Brave are now supported. Learn more about [Working with Safari or Brave.](#working-with-safari-or-brave)
+The SST Console now supports Safari and Brave. [Learn more below](#working-with-safari-or-brave).
 :::
 
 ## Features
@@ -74,7 +74,7 @@ The GraphQL explorer lets you query GraphQL endpoints created with the [`GraphQL
 
 ![SST Console Cognito tab](/img/console/sst-console-cognito-tab.png)
 
-The Cognito explorer allows you to manage the User Pools created with the [`Auth`](constructs/Auth.md) constructs in your app. It allows you create new users and delete existing users.
+The Cognito explorer allows you to manage the User Pools created with the [`Cognito`](constructs/Cognito.md) constructs in your app. It allows you create new users and delete existing users.
 
 ## Modes
 
@@ -115,9 +115,9 @@ The companion app runs locally and create a tunneled connection to your Gitpod w
 
 To get started:
 
-1. [Install Gitpod Local Companion app](https://www.gitpod.io/blog/local-app#installation)
-2. [Run the Companion app](https://www.gitpod.io/blog/local-app#running)
-3. Naviate to <ConsoleUrl url={config.console} /> in the browser
+1. [Install Gitpod Local Companion app](https://www.gitpod.io/blog/local-app#installation).
+2. [Run the Companion app](https://www.gitpod.io/blog/local-app#running).
+3. Navigate to <ConsoleUrl url={config.console} /> in the browser.
 
 ## Working with Safari or Brave
 

@@ -2,7 +2,7 @@ import path from "path";
 import { State } from "../../state/index.js";
 import { Paths } from "../../util/index.js";
 import fs from "fs-extra";
-import { buildAsync, buildSync, Command, Definition } from "./definition.js";
+import { buildAsync, buildAsyncAndThrow, Command, Definition } from "./definition.js";
 
 const FRAMEWORK_MAP: Record<string, string> = {
   "dotnetcore1.0": "netcoreapp3.1",
@@ -57,13 +57,13 @@ export const DotnetHandler: Definition = (opts: any) => {
   };
   return {
     build: async () => {
-      fs.mkdirpSync(dir);
-      return buildAsync(opts, cmd);
+      await fs.mkdirp(dir);
+      return await buildAsync(opts, cmd);
     },
-    bundle: () => {
-      fs.removeSync(dir);
-      fs.mkdirpSync(dir);
-      buildSync(opts, cmd);
+    bundle: async () => {
+      await fs.remove(dir);
+      await fs.mkdirp(dir);
+      await buildAsyncAndThrow(opts, cmd);
       return {
         handler: opts.handler,
         directory: dir,

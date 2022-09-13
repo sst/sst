@@ -1,5 +1,233 @@
 # @serverless-stack/resources
 
+## 1.13.0
+
+### Minor Changes
+
+- [#2057](https://github.com/serverless-stack/sst/pull/2057) [`6958f9f74`](https://github.com/serverless-stack/sst/commit/6958f9f742e3aea4a9a175bb4da4512e6e22b1b3) Thanks [@fwang](https://github.com/fwang)! - Update CDK to v2.39.1
+
+### Patch Changes
+
+- Updated dependencies [[`6958f9f74`](https://github.com/serverless-stack/sst/commit/6958f9f742e3aea4a9a175bb4da4512e6e22b1b3)]:
+  - @serverless-stack/core@1.13.0
+
+## 1.12.4
+
+### Patch Changes
+
+- Updated dependencies [[`6049c341d`](https://github.com/serverless-stack/sst/commit/6049c341d8938911bb910e38f49ae90b1af02a25)]:
+  - @serverless-stack/core@1.12.4
+
+## 1.12.3
+
+### Patch Changes
+
+- Updated dependencies [[`7bf15be60`](https://github.com/serverless-stack/sst/commit/7bf15be60088fa9def2f99e188bff4ff8c0dafd3), [`cacb73493`](https://github.com/serverless-stack/sst/commit/cacb73493295619538375ff9feb6ee559be1dfa3)]:
+  - @serverless-stack/core@1.12.3
+
+## 1.12.2
+
+### Patch Changes
+
+- [`24f7602a5`](https://github.com/serverless-stack/sst/commit/24f7602a5c92502de0620625108e4dcdc5b219a7) Thanks [@fwang](https://github.com/fwang)! - RemixSite: fix malformed cookie in request header when using regional server
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.12.2
+
+## 1.12.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.12.1
+
+## 1.12.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.12.0
+
+## 1.11.2
+
+### Patch Changes
+
+- [`f19f407c3`](https://github.com/serverless-stack/sst/commit/f19f407c35cf3df52347559d3e5e44a1e7a245cd) Thanks [@thdxr](https://github.com/thdxr)! - Update kysely versions for migrator
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.11.2
+
+## 1.11.1
+
+### Patch Changes
+
+- [#2033](https://github.com/serverless-stack/sst/pull/2033) [`1fb3276f7`](https://github.com/serverless-stack/sst/commit/1fb3276f7ea6127c9730cb2bfd744ba29a796134) Thanks [@fwang](https://github.com/fwang)! - Fix missing stack metadata
+
+- Updated dependencies [[`fc4e0ea6c`](https://github.com/serverless-stack/sst/commit/fc4e0ea6c9d8c7dd6194467581a53f8cd8c4f7dc)]:
+  - @serverless-stack/core@1.11.1
+
+## 1.11.0
+
+### Minor Changes
+
+- [#2024](https://github.com/serverless-stack/sst/pull/2024) [`2b816c08a`](https://github.com/serverless-stack/sst/commit/2b816c08a4ebe814a9ab18b517030e5455c7e9b8) Thanks [@fwang](https://github.com/fwang)! - Function: utilize multi-core to build functions in parallel
+
+### Patch Changes
+
+- [`6a17fef98`](https://github.com/serverless-stack/sst/commit/6a17fef98bd05f36b861475963e6d8717d64a5d7) Thanks [@thdxr](https://github.com/thdxr)! - Do not create hard dependency on kysely for migrator
+
+- Updated dependencies [[`2b816c08a`](https://github.com/serverless-stack/sst/commit/2b816c08a4ebe814a9ab18b517030e5455c7e9b8)]:
+  - @serverless-stack/core@1.11.0
+
+## 1.10.6
+
+### Patch Changes
+
+- [#2022](https://github.com/serverless-stack/sst/pull/2022) [`b222d491a`](https://github.com/serverless-stack/sst/commit/b222d491a42e5dd657164b20c0450afbfb4e2c7a) Thanks [@fwang](https://github.com/fwang)! - Cognito: fix calling attachPermissions from different stacks override previous permissions
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.10.6
+
+## 1.10.5
+
+### Patch Changes
+
+- [#2016](https://github.com/serverless-stack/sst/pull/2016) [`190fa9306`](https://github.com/serverless-stack/sst/commit/190fa930610a1ad63684a53ed28bef458c7c923c) Thanks [@fwang](https://github.com/fwang)! - Table: support event filtering for stream consumer
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.10.5
+
+## 1.10.4
+
+### Patch Changes
+
+- [`3d19a5107`](https://github.com/serverless-stack/sst/commit/3d19a5107a1c3d62b82415d719f27e3aefda5882) Thanks [@thdxr](https://github.com/thdxr)! - Add static helper functions to config to create many
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.10.4
+
+## 1.10.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.10.3
+
+## 1.10.2
+
+### Patch Changes
+
+- [`f700cb61f`](https://github.com/serverless-stack/sst/commit/f700cb61f56d4d463151fd198802d6455a424cd1) Thanks [@thdxr](https://github.com/thdxr)! - Fix issue with accessing root auth prefix
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.10.2
+
+## 1.10.1
+
+### Patch Changes
+
+- [`17983d5ff`](https://github.com/serverless-stack/sst/commit/17983d5ff5b22d8be8fd4749a4140a509f3f0998) Thanks [@thdxr](https://github.com/thdxr)! - Fix auth path
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.10.1
+
+## 1.10.0
+
+### Patch Changes
+
+- [#1921](https://github.com/serverless-stack/sst/pull/1921) [`c628edfe1`](https://github.com/serverless-stack/sst/commit/c628edfe1034f0a6ee788ec41b052353a73c5438) Thanks [@thdxr](https://github.com/thdxr)! - Stack: use a single function to back all custom sources
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.10.0
+
+## 1.9.4
+
+### Patch Changes
+
+- [#2005](https://github.com/serverless-stack/sst/pull/2005) [`c6232577d`](https://github.com/serverless-stack/sst/commit/c6232577d1b1e2d3aef4202ef5298630a3142927) Thanks [@fwang](https://github.com/fwang)! - Api: fix removing cors options causes error
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.9.4
+
+## 1.9.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.9.3
+
+## 1.9.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.9.2
+
+## 1.9.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.9.1
+
+## 1.9.0
+
+### Patch Changes
+
+- Updated dependencies [[`39a67838d`](https://github.com/serverless-stack/sst/commit/39a67838dc0aea9e80d5e24f2fbdf567a4ee199c)]:
+  - @serverless-stack/core@1.9.0
+
+## 1.8.4
+
+### Patch Changes
+
+- [#1979](https://github.com/serverless-stack/sst/pull/1979) [`e21d87a92`](https://github.com/serverless-stack/sst/commit/e21d87a925ab476a308cf7bae76b0ecea590cd27) Thanks [@fwang](https://github.com/fwang)! - Function: merge config with default function props
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.8.4
+
+## 1.8.3
+
+### Patch Changes
+
+- Updated dependencies [[`af06c6dd9`](https://github.com/serverless-stack/sst/commit/af06c6dd91400b7f55b3824efcb450dae114020c)]:
+  - @serverless-stack/core@1.8.3
+
+## 1.8.2
+
+### Patch Changes
+
+- [#1968](https://github.com/serverless-stack/sst/pull/1968) [`90071d0e2`](https://github.com/serverless-stack/sst/commit/90071d0e290a99ca944a620159d0aef37f584635) Thanks [@fwang](https://github.com/fwang)! - Function: lazy add config `Function.addConfig`
+
+- Updated dependencies [[`d7ac80470`](https://github.com/serverless-stack/sst/commit/d7ac8047062f859d4a8e8c10900e7388ba7b4b1a), [`76a5e0ad6`](https://github.com/serverless-stack/sst/commit/76a5e0ad6396e418c0cf50427b1b2ddb502afd96)]:
+  - @serverless-stack/core@1.8.2
+
+## 1.8.1
+
+### Patch Changes
+
+- [`3b1de149f`](https://github.com/serverless-stack/sst/commit/3b1de149f31f7cc26a745a462b24a4ed2974c149) Thanks [@fwang](https://github.com/fwang)! - Config: codegen interface ends with ; not ,
+
+* [`1006a8471`](https://github.com/serverless-stack/sst/commit/1006a8471ac41394f8bdcf3059df3fc0a5705ee5) Thanks [@thdxr](https://github.com/thdxr)! - Fix issue running migration locally in cjs projects
+
+- [#1962](https://github.com/serverless-stack/sst/pull/1962) [`1a1d405ca`](https://github.com/serverless-stack/sst/commit/1a1d405cac6463e3105c5212c6c50b1fb5a63191) Thanks [@fwang](https://github.com/fwang)! - Cli: run bootstrap prior to build
+
+* [#1963](https://github.com/serverless-stack/sst/pull/1963) [`308a53f66`](https://github.com/serverless-stack/sst/commit/308a53f66412dc7ec47a2131e8b551eb8b44ff68) Thanks [@fwang](https://github.com/fwang)! - Config: grant strict IAM permissions to specific SSM parameters
+
+* Updated dependencies [[`1b7675d4d`](https://github.com/serverless-stack/sst/commit/1b7675d4d93764e5f4527f8e9196add63a2b9882), [`1a1d405ca`](https://github.com/serverless-stack/sst/commit/1a1d405cac6463e3105c5212c6c50b1fb5a63191), [`308a53f66`](https://github.com/serverless-stack/sst/commit/308a53f66412dc7ec47a2131e8b551eb8b44ff68)]:
+  - @serverless-stack/core@1.8.1
+
+## 1.8.0
+
+### Minor Changes
+
+- [#1957](https://github.com/serverless-stack/sst/pull/1957) [`989a4f516`](https://github.com/serverless-stack/sst/commit/989a4f516175c2e51a649acad4478d3eec5319f1) Thanks [@fwang](https://github.com/fwang)! - Release Config
+
+### Patch Changes
+
+- Updated dependencies [[`4b9d6bf6f`](https://github.com/serverless-stack/sst/commit/4b9d6bf6fe550727af1f04e6655f45ae8fe900cb), [`989a4f516`](https://github.com/serverless-stack/sst/commit/989a4f516175c2e51a649acad4478d3eec5319f1), [`fc7abc430`](https://github.com/serverless-stack/sst/commit/fc7abc43094b8eb9d3bb77902dfec5883fa1bac7)]:
+  - @serverless-stack/core@1.8.0
+
 ## 1.7.0
 
 ### Minor Changes

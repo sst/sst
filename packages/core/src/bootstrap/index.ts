@@ -1,13 +1,11 @@
 import url from "url";
 import chalk from "chalk";
 import path from "path";
-import semver from "semver";
 import SSM from "aws-sdk/clients/ssm.js";
 import { getChildLogger } from "../logger.js";
 import {
   synth,
   deploy,
-  getSstVersion,
   isRetryableException,
   STACK_DEPLOY_STATUS
 } from "../index.js";
@@ -15,51 +13,63 @@ import {
 const logger = getChildLogger("bootstrap");
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
+export const LATEST_VERSION = "3";
 export const SSM_NAME_VERSION = `/sst/bootstrap/version`;
 export const SSM_NAME_STACK_NAME = `/sst/bootstrap/stack-name`;
 export const SSM_NAME_BUCKET_NAME = `/sst/bootstrap/bucket-name`;
-export const SSM_NAME_STACK_METADATA_FUNCTION_ARN = `/sst/bootstrap/stack-metadata-function-arn`;
 
 export interface Assets {
   version?: string;
   stackName?: string;
   bucketName?: string;
-  stackMetadataFunctionArn?: string;
+}
+
+interface BootstrapOptions {
+  tags?: Record<string, string>;
+  force?: boolean;
 }
 
 export const assets: Assets = {};
 
-export async function bootstrap(config: any, cliInfo: any) {
-  // Check bootstrap version
+export async function bootstrap(config: any, cliInfo: any, options?: BootstrapOptions) {
   const { region } = config;
-  await init(region);
-  const bootstrapVersion = assets.version;
-  const sstVersion = await getSstVersion();
-  if (isVersionUpToDate(sstVersion, bootstrapVersion)) {
-    return;
+  const { tags, force } = options || {};
+
+  // Check bootstrap version
+  if (!force) {
+    await init(region);
+    const bootstrapVersion = assets.version;
+    if (isVersionUpToDate(bootstrapVersion)) {
+      return;
+    }
   }
 
-  await deployStack(config, cliInfo);
+  await deployStack(config, cliInfo, tags || {});
   
   // Check bootstrap version again
   await init(region);
   const bootstrapVersionNew = assets.version;
-  if (!isVersionUpToDate(sstVersion, bootstrapVersionNew)) {
+  if (!isVersionUpToDate(bootstrapVersionNew)) {
     throw new Error(`Failed to update the bootstrap version.`);
   }
 }
 
-function isVersionUpToDate(sstVersion: string, bootstrapVersion?: string) {
-  try {
-    return bootstrapVersion && semver.lte(sstVersion, bootstrapVersion);
-  } catch(e) {
-    // handle invalid semver version
-    return false;
-  }
+function isVersionUpToDate(bootstrapVersion?: string) {
+  return parseInt(bootstrapVersion || "0") === parseInt(LATEST_VERSION);
 }
 
 export async function init(region: string) {
   const ssm = new SSM({ region });
+
+  // Note: When running tests in CI, there is no AWS credentials
+  //       and the SSM parameters are not available. Need to fake
+  //       the Bootstrap values.
+  if (process.env.__TEST__) {
+    assets.version = LATEST_VERSION;
+    assets.stackName = "sst-bootstrap";
+    assets.bucketName = "sst-bootstrap";
+    return;
+  }
 
   try {
     const ret = await ssm.getParameters({
@@ -67,7 +77,6 @@ export async function init(region: string) {
         SSM_NAME_VERSION,
         SSM_NAME_STACK_NAME,
         SSM_NAME_BUCKET_NAME,
-        SSM_NAME_STACK_METADATA_FUNCTION_ARN,
       ],
     }).promise();
     (ret.Parameters || []).forEach(p => {
@@ -77,8 +86,6 @@ export async function init(region: string) {
         assets.stackName = p.Value;
       } else if (p.Name === SSM_NAME_BUCKET_NAME) {
         assets.bucketName = p.Value;
-      } else if (p.Name === SSM_NAME_STACK_METADATA_FUNCTION_ARN) {
-        assets.stackMetadataFunctionArn = p.Value;
       }
     });
   } catch(e: any) {
@@ -89,7 +96,7 @@ export async function init(region: string) {
   }
 }
 
-async function deployStack(config: any, cliInfo: any) {
+async function deployStack(config: any, cliInfo: any, tags: Record<string, string>) {
   const { region } = config;
   logger.info(chalk.grey(`Bootstrapping SST in the "${region}" region`));
 
@@ -99,6 +106,7 @@ async function deployStack(config: any, cliInfo: any) {
       "node",
       "bin/index.mjs",
       region,
+      `${Buffer.from(JSON.stringify(tags)).toString("base64")}`,
     ].join(" "),
     output: "cdk.out",
   };

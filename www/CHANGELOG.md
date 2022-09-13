@@ -1,5 +1,29 @@
 # @serverless-stack/docs
 
+## 1.7.0
+
+### Minor Changes
+
+- [`c8b6b68f4`](https://github.com/serverless-stack/sst/commit/c8b6b68f49012f9e0e8949b0c2146d9f78aa7f05) Thanks [@jayair](https://github.com/jayair)! - Updating `create sst` GraphQL template with new tutorial app.
+
+## 1.6.2
+
+### Patch Changes
+
+- [#2016](https://github.com/serverless-stack/sst/pull/2016) [`190fa9306`](https://github.com/serverless-stack/sst/commit/190fa930610a1ad63684a53ed28bef458c7c923c) Thanks [@fwang](https://github.com/fwang)! - Table: support event filtering for stream consumer
+
+## 1.6.1
+
+### Patch Changes
+
+- [#1971](https://github.com/serverless-stack/sst/pull/1971) [`d7ac80470`](https://github.com/serverless-stack/sst/commit/d7ac8047062f859d4a8e8c10900e7388ba7b4b1a) Thanks [@fwang](https://github.com/fwang)! - Cli: add bootstrap command with the ability to tag
+
+## 1.6.0
+
+### Minor Changes
+
+- [#1957](https://github.com/serverless-stack/sst/pull/1957) [`989a4f516`](https://github.com/serverless-stack/sst/commit/989a4f516175c2e51a649acad4478d3eec5319f1) Thanks [@fwang](https://github.com/fwang)! - Release Config
+
 ## 1.5.0
 
 ### Minor Changes

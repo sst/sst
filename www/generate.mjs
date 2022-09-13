@@ -96,6 +96,7 @@ app.bootstrap({
     "../packages/resources/src/ApiGatewayV1Api.ts",
     "../packages/resources/src/App.ts",
     "../packages/resources/src/Auth.ts",
+    "../packages/resources/src/Cognito.ts",
     "../packages/resources/src/Bucket.ts",
     "../packages/resources/src/Cron.ts",
     "../packages/resources/src/Config.ts",
@@ -175,9 +176,16 @@ async function run(json) {
     if (!isInternal) {
       lines.push("\n## Constructor");
       for (const signature of constructor.signatures) {
+        let constructorName = signature.name;
+        if (constructorName === "new Secret") {
+          constructorName = "new Config.Secret";
+        }
+        else if (constructorName === "new Parameter") {
+          constructorName = "new Config.Parameter";
+        }
         lines.push("```ts");
         lines.push(
-          `${signature.name}(${signature.parameters
+          `${constructorName}(${signature.parameters
             .map((p) => `${p.name}`)
             .join(", ")})`
         );
@@ -212,13 +220,14 @@ async function run(json) {
 
     // Methods
     const methods =
-      construct.children?.filter(
-        (c) =>
-          c.kindString === "Method" &&
-          c.flags.isPublic &&
-          !c.flags.isExternal &&
-          !c.implementationOf
-      ) || [];
+      (construct.children || [])
+      .filter((c) => c.kindString === "Method")
+      .filter((c) =>
+        c.flags.isPublic &&
+        !c.flags.isExternal &&
+        !c.implementationOf
+      )
+      .filter((c) => !c.signatures[0].comment?.tags?.find((x) => x.tag === "internal"));
     if (methods.length) {
       lines.push("## Methods");
       lines.push(
@@ -229,29 +238,30 @@ async function run(json) {
         for (const signature of method.signatures) {
           lines.push(
             ...signatureIsDeprecated(signature)
-              ? renderSignatureForDeprecated(file, json.children, signature)
-              : renderSignature(file, json.children, signature)
+              ? renderSignatureForDeprecated(method, signature)
+              : renderSignature(file, json.children, method, signature)
           );
         }
       }
     }
 
-    for (const child of (file.children || []).sort(
-      (a, b) => a.name.length - b.name.length
-    )) {
-      if (child.kindString === "Interface") {
-        const hoisted = child.name === `${file.name}Props` ? props : lines;
-        hoisted.push(`## ${child.name}`);
-        hoisted.push(child.comment?.shortText);
-        hoisted.push(child.comment?.text);
+    // Interfaces
+    (file.children || [])
+      .sort((a, b) => a.name.length - b.name.length)
+      .filter((c) => c.kindString === "Interface")
+      .filter((c) => !c.comment?.tags?.find((x) => x.tag === "internal"))
+      .forEach((c) => {
+        const hoisted = c.name === `${file.name}Props` ? props : lines;
+        hoisted.push(`## ${c.name}`);
+        hoisted.push(c.comment?.shortText);
+        hoisted.push(c.comment?.text);
         const examples =
-          child.comment?.tags?.filter((x) => x.tag === "example") || [];
+          c.comment?.tags?.filter((x) => x.tag === "example") || [];
         if (examples.length) {
           hoisted.push(...examples.map(renderTag));
         }
-        hoisted.push(...renderProperties(file, json.children, child.children));
-      }
-    }
+        hoisted.push(...renderProperties(file, json.children, c.children));
+      });
 
     const output = lines.flat(100).join("\n");
     const path = `docs/constructs/${file.name}.tsdoc.md`;
@@ -286,7 +296,9 @@ function renderType(file, files, prefix, parameter) {
       renderType(file, files, prefix, parameter.elementType) +
       "&gt;</span>"
     );
-  if (parameter.type === "intrinsic")
+  // Note: intrinsic parameters can have type "reference",for now
+  // manually exclude the names commonly used for intrinsic parameters
+  if (parameter.type === "intrinsic" || parameter.name === "T")
     return `<span class="mono">${parameter.name}</span>`;
   if (parameter.type === "literal")
     return `<span class="mono">"${parameter.value}"</span>`;
@@ -460,15 +472,16 @@ function renderProperties(file, files, properties, prefix, onlyPublic) {
 /**
  * @param file {JSONOutput.DeclarationReflection}
  * @param children {JSONOutput.DeclarationReflection[]}
+ * @param method {JSONOutput.DeclarationReflection}
  * @param signature {JSONOutput.DeclarationReflection}
  *
  * @returns {string}
  */
-function renderSignature(file, children, signature) {
+function renderSignature(file, children, method, signature) {
   const lines = [];
   lines.push("```ts");
   lines.push(
-    `${signature.name}(${
+    `${method.flags.isStatic ? "static " : ""}${signature.name}(${
       signature.parameters?.map((p) => `${p.name}`).join(", ") || ""
     })`
   );
@@ -510,14 +523,14 @@ function renderSignature(file, children, signature) {
  *
  * @returns {string}
  */
-function renderSignatureForDeprecated(file, children, signature) {
+function renderSignatureForDeprecated(method, signature) {
   const lines = [];
   lines.push(":::caution");
   lines.push("This function signature has been deprecated.");
 
   lines.push("```ts");
   lines.push(
-    `${signature.name}(${
+    `${method.flags.isStatic ? "static " : ""}${signature.name}(${
       signature.parameters?.map((p) => `${p.name}`).join(", ") || ""
     })`
   );

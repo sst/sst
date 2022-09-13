@@ -42,23 +42,31 @@ export class Parameter extends Construct {
 
     // Create SSM parameter
     new ssm.StringParameter(this, "Parameter", {
-      parameterName: FunctionConfig.buildSsmNameForParameter(app.name, app.stage, id),
+      parameterName: FunctionConfig.buildSsmNameForParameter(
+        app.name,
+        app.stage,
+        id
+      ),
       stringValue: value,
     });
   }
 
+  /** @internal */
   public static getAllNames() {
     return Array.from(Parameter.all);
   }
 
+  /** @internal */
   public static hasName(name: string) {
     return Parameter.all.has(name);
   }
 
+  /** @internal */
   public static clear() {
-    return Parameter.all = new Set<string>();
+    Parameter.all.clear();
   }
 
+  /** @internal */
   public getConstructMetadata() {
     return {
       type: "Parameter" as const,
@@ -66,5 +74,17 @@ export class Parameter extends Construct {
         name: this.name,
       },
     };
+  }
+
+  public static create<T extends Record<string, any>>(
+    scope: Construct,
+    parameters: T
+  ) {
+    const result: Record<string, Parameter> = {};
+    for (const [name, value] of Object.entries(parameters)) {
+      result[name] = new Parameter(scope, name, { value });
+    }
+
+    return result as { [key in keyof T]: Parameter };
   }
 }

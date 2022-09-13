@@ -6,7 +6,7 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 import * as iam from "aws-cdk-lib/aws-iam";
 import { ILayerVersion } from "aws-cdk-lib/aws-lambda";
 import * as cxapi from "aws-cdk-lib/cx-api";
-import { Bootstrap, State } from "@serverless-stack/core";
+import { Bootstrap, DeferBuilder, State } from "@serverless-stack/core";
 import { Stack } from "./Stack.js";
 import {
   SSTConstruct,
@@ -21,6 +21,7 @@ import { Permissions } from "./util/permission.js";
 import { StackProps } from "./Stack.js";
 import { FunctionalStack, stack } from "./FunctionalStack.js";
 import { createRequire } from "module";
+import { Auth } from "./Auth.js";
 const require = createRequire(import.meta.url);
 
 function exitWithMessage(message: string) {
@@ -178,7 +179,6 @@ export class App extends cdk.App {
       deployProps.region || process.env.CDK_DEFAULT_REGION || "us-east-1";
     this.account = process.env.CDK_DEFAULT_ACCOUNT || "my-account";
     this.esbuildConfig = deployProps.esbuildConfig;
-    console.log(deployProps.bootstrapAssets);
     this.bootstrapAssets = deployProps.bootstrapAssets || {};
     this.buildDir = deployProps.buildDir || ".build";
     this.skipBuild = deployProps.skipBuild || false;
@@ -281,6 +281,20 @@ export class App extends cdk.App {
   }
 
   /**
+   * Adds additional default config to be applied to all Lambda functions in the app.
+   *
+   * @example
+   * ```js
+   * app.addDefaultFunctionConfig([STRIPE_KEY])
+   * ```
+   */
+  public addDefaultFunctionConfig(
+    config: (Config.Secret | Config.Parameter)[]
+  ) {
+    this.defaultFunctionProps.push({ config });
+  }
+
+  /**
    * Adds additional default layers to be applied to all Lambda functions in the stack.
    */
   public addDefaultFunctionLayers(layers: ILayerVersion[]) {
@@ -290,8 +304,11 @@ export class App extends cdk.App {
   }
 
   synth(options: cdk.StageSynthesisOptions = {}): cxapi.CloudAssembly {
-    Config.codegen();
+    this.createTypesFile();
+    Config.codegenTypes();
     this.buildConstructsMetadata();
+
+    Auth.injectConfig();
 
     for (const child of this.node.children) {
       if (isStackConstruct(child)) {
@@ -324,6 +341,10 @@ export class App extends cdk.App {
     }
 
     return cloudAssembly;
+  }
+
+  public async runDeferredBuilds() {
+    await DeferBuilder.run();
   }
 
   isRunningSSTTest(): boolean {
@@ -382,7 +403,7 @@ export class App extends cdk.App {
     for (const child of this.node.children) {
       if (child instanceof Stack) {
         const stackName = (child as Stack).node.id;
-        (child as Stack).createStackMetadataResource(byStack[stackName] || []);
+        (child as Stack).setStackMetadata(byStack[stackName] || []);
       }
     }
     fs.writeJSONSync(State.resolve(this.appPath, "constructs.json"), local);
@@ -403,7 +424,7 @@ export class App extends cdk.App {
     if (current instanceof cdk.CfnResource) {
       current.applyRemovalPolicy(
         cdk.RemovalPolicy[
-          policy.toUpperCase() as keyof typeof cdk.RemovalPolicy
+        policy.toUpperCase() as keyof typeof cdk.RemovalPolicy
         ]
       );
     }
@@ -465,6 +486,17 @@ export class App extends cdk.App {
     }
     current.node.children.forEach(resource =>
       this.applyRemovalPolicy(resource, policy)
+    );
+  }
+
+  private createTypesFile() {
+    fs.removeSync("node_modules/@types/serverless-stack__node");
+    fs.mkdirSync("node_modules/@types/serverless-stack__node", {
+      recursive: true,
+    });
+    fs.writeFileSync(
+      "node_modules/@types/serverless-stack__node/index.d.ts",
+      ""
     );
   }
 

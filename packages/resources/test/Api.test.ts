@@ -127,6 +127,7 @@ test("cors-props", async () => {
   });
   hasResource(stack, "AWS::ApiGatewayV2::Api", {
     CorsConfiguration: {
+      AllowCredentials: false,
       AllowHeaders: ["*"],
       AllowMethods: ["GET"],
       AllowOrigins: ["*"],
@@ -1187,7 +1188,7 @@ test("routes: route key: $default", async () => {
     AuthorizationType: "NONE",
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
 });
 
@@ -1200,7 +1201,7 @@ test("routes: string", async () => {
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
 });
 
@@ -1221,7 +1222,7 @@ test("routes: string-with-defaults.function", async () => {
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 3,
     Environment: {
       Variables: {
@@ -1243,7 +1244,7 @@ test("routes: Function", async () => {
   });
   countResources(stack, "AWS::Lambda::Function", 1);
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
 });
 
@@ -1290,7 +1291,7 @@ test("routes: ApiFunctionRouteProps-function-string", async () => {
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
 });
 
@@ -1310,7 +1311,7 @@ test("routes: ApiFunctionRouteProps-function-string-with-defaults.function", asy
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 3,
   });
 });
@@ -1326,7 +1327,7 @@ test("routes: ApiFunctionRouteProps-function-Function", async () => {
   });
   countResources(stack, "AWS::Lambda::Function", 1);
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
 });
 
@@ -1361,7 +1362,7 @@ test("routes: ApiFunctionRouteProps-function-FunctionProps", async () => {
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
   });
 });
 
@@ -1383,7 +1384,7 @@ test("routes: ApiFunctionRouteProps-function-FunctionProps-with-defaults.functio
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 3,
   });
 });
@@ -1407,7 +1408,7 @@ test("routes: ApiFunctionRouteProps-function-FunctionProps-with-defaults.functio
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "index.placeholder",
     Timeout: 5,
   });
 });

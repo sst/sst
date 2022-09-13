@@ -218,7 +218,6 @@ _Parameters_
 Attaches the given list of permissions to all function datasources
 
 
-
 ```js
 api.attachPermissions(["s3"]);
 ```
@@ -236,7 +235,8 @@ _Parameters_
 Attaches the given list of permissions to a specific function datasource. This allows that function to access other AWS resources.
 
 
-api.attachPermissionsToRoute("Mutation charge", ["s3"]);
+```js
+api.attachPermissionsToDataSource("Mutation charge", ["s3"]);
 ```
 
 ### getDataSource

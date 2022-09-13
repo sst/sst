@@ -1,4 +1,4 @@
-import { StackContext, Table } from "@serverless-stack/resources";
+import { Config, StackContext, Table } from "@serverless-stack/resources";
 
 export function Database({ stack }: StackContext) {
   const table = new Table(stack, "table", {
@@ -20,5 +20,10 @@ export function Database({ stack }: StackContext) {
     },
   });
 
-  return table;
+  return {
+    table,
+    TABLE_NAME: new Config.Parameter(stack, "TABLE_NAME", {
+      value: table.tableName,
+    }),
+  };
 }

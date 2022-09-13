@@ -1,5 +1,85 @@
 # create-sst
 
+## 1.13.0
+
+## 1.12.4
+
+## 1.12.3
+
+## 1.12.2
+
+## 1.12.1
+
+## 1.12.0
+
+### Minor Changes
+
+- [`c8b6b68f4`](https://github.com/serverless-stack/sst/commit/c8b6b68f49012f9e0e8949b0c2146d9f78aa7f05) Thanks [@jayair](https://github.com/jayair)! - Updating `create sst` GraphQL template with new tutorial app.
+
+## 1.11.2
+
+## 1.11.1
+
+## 1.11.0
+
+## 1.10.6
+
+### Patch Changes
+
+- [`069835495`](https://github.com/serverless-stack/sst/commit/06983549580b0b3578e9c665975f6dbbcc048194) Thanks [@thdxr](https://github.com/thdxr)! - Skip preset file replacement for image files
+
+## 1.10.5
+
+## 1.10.4
+
+## 1.10.3
+
+### Patch Changes
+
+- [`0fa55458d`](https://github.com/serverless-stack/sst/commit/0fa55458d2e5d21e51a35e4670e483d6893438fa) Thanks [@thdxr](https://github.com/thdxr)! - Fix missing node-fetch
+
+## 1.10.2
+
+## 1.10.1
+
+## 1.10.0
+
+## 1.9.4
+
+## 1.9.3
+
+### Patch Changes
+
+- [`db955a264`](https://github.com/serverless-stack/sst/commit/db955a2644c436e0ba2600289e7e2a74c4753791) Thanks [@thdxr](https://github.com/thdxr)! - Fix node-fetch import
+
+## 1.9.2
+
+### Patch Changes
+
+- [`ba4044adb`](https://github.com/serverless-stack/sst/commit/ba4044adb25570ab671479901878d9003798cba5) Thanks [@thdxr](https://github.com/thdxr)! - Switch to node-fetch from undici to avoid node 16.5 requirement
+
+## 1.9.1
+
+### Patch Changes
+
+- [`c24c50513`](https://github.com/serverless-stack/sst/commit/c24c50513a2da1b553d800a2a8ebe329d802d062) Thanks [@thdxr](https://github.com/thdxr)! - Updated create-sst to use new Config module and provided example of a sample integration test
+
+## 1.9.0
+
+## 1.8.4
+
+## 1.8.3
+
+## 1.8.2
+
+## 1.8.1
+
+## 1.8.0
+
+### Minor Changes
+
+- [#1957](https://github.com/serverless-stack/sst/pull/1957) [`989a4f516`](https://github.com/serverless-stack/sst/commit/989a4f516175c2e51a649acad4478d3eec5319f1) Thanks [@fwang](https://github.com/fwang)! - Release Config
+
 ## 1.7.0
 
 ### Patch Changes

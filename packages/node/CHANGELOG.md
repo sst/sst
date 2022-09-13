@@ -1,5 +1,78 @@
 # @serverless-stack/node
 
+## 1.13.0
+
+## 1.12.4
+
+## 1.12.3
+
+### Patch Changes
+
+- [`cacb73493`](https://github.com/serverless-stack/sst/commit/cacb73493295619538375ff9feb6ee559be1dfa3) Thanks [@thdxr](https://github.com/thdxr)! - Auto reset contexts when new lambda invocation detected
+
+## 1.12.2
+
+## 1.12.1
+
+## 1.12.0
+
+## 1.11.2
+
+## 1.11.1
+
+## 1.11.0
+
+## 1.10.6
+
+## 1.10.5
+
+## 1.10.4
+
+## 1.10.3
+
+## 1.10.2
+
+## 1.10.1
+
+## 1.10.0
+
+### Minor Changes
+
+- [#1921](https://github.com/serverless-stack/sst/pull/1921) [`c628edfe1`](https://github.com/serverless-stack/sst/commit/c628edfe1034f0a6ee788ec41b052353a73c5438) Thanks [@thdxr](https://github.com/thdxr)! - SST Auth is available! Checkout docs here: https://sst.dev/auth
+
+  Breaking Changes:
+
+  - The old sst.Auth construct has been renamed to sst.Cognito. If you are using it be sure to update all references to sst.Cognito - no other changes should be needed.
+  - The import for `createGQLHandler` has changed to `GraphQLHandler` to match `AuthHandler` and other handlers we will be shipping soon.
+
+## 1.9.4
+
+## 1.9.3
+
+## 1.9.2
+
+## 1.9.1
+
+## 1.9.0
+
+### Patch Changes
+
+- [#1987](https://github.com/serverless-stack/sst/pull/1987) [`82cf416fb`](https://github.com/serverless-stack/sst/commit/82cf416fb3259501fbe8440c5a4c3c9cefa13e1a) Thanks [@fwang](https://github.com/fwang)! - Config: use aws sdk v3 in client library
+
+## 1.8.4
+
+## 1.8.3
+
+## 1.8.2
+
+## 1.8.1
+
+## 1.8.0
+
+### Minor Changes
+
+- [#1957](https://github.com/serverless-stack/sst/pull/1957) [`989a4f516`](https://github.com/serverless-stack/sst/commit/989a4f516175c2e51a649acad4478d3eec5319f1) Thanks [@fwang](https://github.com/fwang)! - Release Config
+
 ## 1.7.0
 
 ## 1.6.10

@@ -6,4 +6,13 @@ export default defineConfig({
   test: {
     testTimeout: 30000,
   },
+  logLevel: "info",
+  esbuild: {
+    sourcemap: "both",
+  },
+  resolve: {
+    alias: {
+      "@rest-api-csharp/core": "./services/core",
+    },
+  },
 });

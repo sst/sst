@@ -8,7 +8,7 @@
 
 ## Constructor
 ```ts
-new Secret(scope, id)
+new Config.Secret(scope, id)
 ```
 _Parameters_
 - __scope__ <span class="mono">[Construct](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)</span>
@@ -21,25 +21,11 @@ _Type_ : <span class="mono">string</span>
 
 ## Methods
 An instance of `Secret` has the following methods.
-### getConstructMetadata
+### create
 
 ```ts
-getConstructMetadata()
-```
-### clear
-
-```ts
-clear()
-```
-### getAllNames
-
-```ts
-getAllNames()
-```
-### hasName
-
-```ts
-hasName(name)
+static create(scope, parameters)
 ```
 _Parameters_
-- __name__ <span class="mono">string</span>
+- __scope__ <span class="mono">[Construct](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)</span>
+- __parameters__ <span class="mono">T</span>

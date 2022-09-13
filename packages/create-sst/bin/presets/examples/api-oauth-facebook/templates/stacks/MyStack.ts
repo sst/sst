@@ -1,33 +1,29 @@
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import {
   Api,
-  Auth,
+  Cognito,
   StackContext,
-  ViteStaticSite,
+  ViteStaticSite
 } from "@serverless-stack/resources";
 
 export function MyStack({ stack, app }: StackContext) {
   // Create auth
-  const auth = new Auth(stack, "Auth", {
+  const auth = new Cognito(stack, "Auth", {
     cdk: {
       userPoolClient: {
         supportedIdentityProviders: [
-          cognito.UserPoolClientIdentityProvider.FACEBOOK,
+          cognito.UserPoolClientIdentityProvider.FACEBOOK
         ],
         oAuth: {
           callbackUrls: [
-            app.stage === "prod"
-              ? "prodDomainNameUrl"
-              : "http://localhost:3000",
+            app.stage === "prod" ? "prodDomainNameUrl" : "http://localhost:3000"
           ],
           logoutUrls: [
-            app.stage === "prod"
-              ? "prodDomainNameUrl"
-              : "http://localhost:3000",
-          ],
-        },
-      },
-    },
+            app.stage === "prod" ? "prodDomainNameUrl" : "http://localhost:3000"
+          ]
+        }
+      }
+    }
   });
 
   // Throw error if App ID & secret are not provided
@@ -44,8 +40,8 @@ export function MyStack({ stack, app }: StackContext) {
       userPool: auth.cdk.userPool,
       attributeMapping: {
         email: cognito.ProviderAttribute.FACEBOOK_EMAIL,
-        givenName: cognito.ProviderAttribute.FACEBOOK_NAME,
-      },
+        givenName: cognito.ProviderAttribute.FACEBOOK_NAME
+      }
     }
   );
 
@@ -55,8 +51,8 @@ export function MyStack({ stack, app }: StackContext) {
   // Create a cognito userpool domain
   const domain = auth.cdk.userPool.addDomain("AuthDomain", {
     cognitoDomain: {
-      domainPrefix: `${app.stage}-fb-demo-auth-domain`,
-    },
+      domainPrefix: `${app.stage}-fb-demo-auth-domain`
+    }
   });
 
   // Create a HTTP API
@@ -66,20 +62,20 @@ export function MyStack({ stack, app }: StackContext) {
         type: "user_pool",
         userPool: {
           id: auth.userPoolId,
-          clientIds: [auth.userPoolClientId],
-        },
-      },
+          clientIds: [auth.userPoolClientId]
+        }
+      }
     },
     defaults: {
-      authorizer: "userPool",
+      authorizer: "userPool"
     },
     routes: {
       "GET /private": "functions/private.handler",
       "GET /public": {
         function: "functions/public.handler",
-        authorizer: "none",
-      },
-    },
+        authorizer: "none"
+      }
+    }
   });
 
   // Allow authenticated users invoke API
@@ -94,8 +90,8 @@ export function MyStack({ stack, app }: StackContext) {
       VITE_APP_REGION: app.region,
       VITE_APP_USER_POOL_ID: auth.userPoolId,
       VITE_APP_IDENTITY_POOL_ID: auth.cognitoIdentityPoolId!,
-      VITE_APP_USER_POOL_CLIENT_ID: auth.userPoolClientId,
-    },
+      VITE_APP_USER_POOL_CLIENT_ID: auth.userPoolClientId
+    }
   });
 
   // Show the endpoint in the output
@@ -103,6 +99,6 @@ export function MyStack({ stack, app }: StackContext) {
     api_url: api.url,
     auth_client_id: auth.userPoolClientId,
     auth_domain: `https://${domain.domainName}.auth.${app.region}.amazoncognito.com`,
-    site_url: site.url,
+    site_url: site.url
   });
 }

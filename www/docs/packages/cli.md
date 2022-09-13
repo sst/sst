@@ -32,7 +32,7 @@ yarn sst <command>
 
 ### Examples
 
-#### The basic commands
+#### The basic comma
 
 ```bash
 # Start the Live Lambda Development environment
@@ -210,7 +210,7 @@ In addition to the [global options](#global-options) below, the `remove` command
 
 Compares the current version of the stacks in your app with the ones that've been deployed to AWS. This can be helpful in doing a quick check before deploying your changes to prod. You can also optionally compare a list of stacks.
 
-``` bash
+```bash
 # Compare all stacks
 npx sst diff
 
@@ -224,6 +224,74 @@ A convenience command to update SST to the latest version. It also updates any C
 
 ```bash
 npx sst update
+```
+
+### `load-config`
+
+A convenience command to load [`Config`](../environment-variables.md) parameters and secrets, and invoke a script with the config values configured as environment variables.
+
+So for example, you can load all the secrets in your app and use those to run your tests.
+
+```bash
+npx sst load-config -- vitest run
+```
+
+You can [read more about how this works for testing](../advanced/testing.md).
+
+### `secrets [action]`
+
+Manage secret values in your app.
+
+```bash
+# Check the values of all the secrets
+npx sst secrets list
+
+# Check the value of a secret
+npx sst secrets get STRIPE_KEY
+
+# Set the value of a secret
+npx sst secrets set STRIPE_KEY sk_test_abc123
+
+# Unset the value of a secret
+npx sst secrets remove STRIPE_KEY
+
+# Set the fallback value of a secret
+npx sst secrets set-fallback STRIPE_KEY sk_test_abc123
+
+# Unset the fallback value of a secret
+npx sst secrets remove-fallback STRIPE_KEY
+```
+
+:::note
+The fallback value can only be inherited by stages deployed in the same AWS account and region.
+:::
+
+#### Options
+
+- `--format`
+
+Format the secret names and values in the specified format. Only apply to the 'list' action. Currently only supports the dotenv format 'env'.
+
+```bash
+npx sst secrets list --format=env
+```
+
+### `bootstrap`
+
+Deploys the SST Bootstrap stack into your AWS environment.
+
+```bash
+npx sst bootstrap
+```
+
+#### Options
+
+- `--tags`
+
+Tags to add for the Bootstrap stack.
+
+```bash
+npx sst bootstrap --tags key1=value1 key2=value2
 ```
 
 ### `add-cdk [packages..]`

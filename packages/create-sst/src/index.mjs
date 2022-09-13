@@ -1,4 +1,5 @@
 import fs from "fs/promises";
+import fetch from "node-fetch";
 import path from "path";
 import { exec, execSync } from "child_process";
 import { applyOperation } from "fast-json-patch/index.mjs";
@@ -163,7 +164,8 @@ export async function execute(opts) {
   if (!opts.extended) {
     // App name will be used in CloudFormation stack names,
     // so we need to make sure it's valid.
-    const app = path.basename(opts.destination)
+    const app = path
+      .basename(opts.destination)
       // replace _ with -
       .replace(/_/g, "-")
       // remove non-alpha numeric dash characters
@@ -172,6 +174,7 @@ export async function execute(opts) {
 
     for (const file of await listFiles(opts.destination)) {
       const contents = await fs.readFile(file, "utf8");
+      if (file.endsWith(".png") || file.endsWith(".ico")) continue;
       await fs.writeFile(
         file,
         contents
@@ -202,15 +205,8 @@ async function listFiles(dir) {
 /**
  * @param {string} pkg
  */
-function getLatestPackageVersion(pkg) {
-  return new Promise((resolve) => {
-    let data = "";
-    const proc = exec(`npm show ${pkg} dist-tags.latest`, {
-      stdio: "pipe",
-    });
-    proc.stdout.on("data", (chunk) => (data += chunk));
-    proc.on("exit", () => {
-      resolve(data.trim());
-    });
-  });
+async function getLatestPackageVersion(pkg) {
+  return fetch(`https://registry.npmjs.org/${pkg}/latest`)
+    .then((res) => res.json())
+    .then((res) => res.version);
 }

@@ -1,6 +1,6 @@
 import { schema } from "./schema";
-import { createGQLHandler } from "@serverless-stack/node/graphql";
+import { GraphQLHandler } from "@serverless-stack/node/graphql";
 
-export const handler = createGQLHandler({
-  schema
+export const handler = GraphQLHandler({
+  schema,
 });
