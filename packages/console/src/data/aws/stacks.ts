@@ -66,11 +66,7 @@ export function useStacks() {
           new GetParameterCommand({
             Name: `/sst/bootstrap/bucket-name`,
           })
-        ).filter(
-          (x) =>
-            x.constructs.version.startsWith("0.0.0") ||
-            x.constructs.version >= "0.56.0"
-        );
+        )
         const bucketName = value.Parameter.Value;
         const list = await s3.send(
           new ListObjectsV2Command({
