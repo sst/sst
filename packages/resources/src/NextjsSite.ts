@@ -994,7 +994,6 @@ export class NextjsSite extends Construct implements SSTConstruct {
 
     // Build behavior
     const origin = new origins.S3Origin(this.cdk.bucket);
-    this.origin = origin
     const viewerProtocolPolicy =
       cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS;
 
