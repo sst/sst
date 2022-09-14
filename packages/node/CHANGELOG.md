@@ -1,5 +1,23 @@
 # @serverless-stack/node
 
+## 1.14.1
+
+## 1.14.0
+
+## 1.13.0
+
+## 1.12.4
+
+## 1.12.3
+
+### Patch Changes
+
+- [`cacb73493`](https://github.com/serverless-stack/sst/commit/cacb73493295619538375ff9feb6ee559be1dfa3) Thanks [@thdxr](https://github.com/thdxr)! - Auto reset contexts when new lambda invocation detected
+
+## 1.12.2
+
+## 1.12.1
+
 ## 1.12.0
 
 ## 1.11.2

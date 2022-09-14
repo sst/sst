@@ -66,7 +66,7 @@ export function useStacks() {
           new GetParameterCommand({
             Name: `/sst/bootstrap/bucket-name`,
           })
-        );
+        )
         const bucketName = value.Parameter.Value;
         const list = await s3.send(
           new ListObjectsV2Command({

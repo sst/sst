@@ -20,6 +20,10 @@ The `Config` libraries include:
 
 Behind the scenes, Secrets and Parameters are stored as [AWS SSM](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) Parameters in your AWS account.
 
+:::tip
+Want to learn more about `Config`? Check out the [launch livestream on YouTube](https://youtu.be/6sMTfoeshLo).
+:::
+
 ### Cost
 
 Secrets and Parameters are stored in AWS SSM with the _Standard Parameter type_ and _Standard Throughput_. This makes Config [free to use](https://aws.amazon.com/systems-manager/pricing/) in your SST apps.

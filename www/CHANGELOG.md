@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 1.7.1
+
+### Patch Changes
+
+- [#2063](https://github.com/serverless-stack/sst/pull/2063) [`873ecf3b6`](https://github.com/serverless-stack/sst/commit/873ecf3b622cfe8843f2eb40c5069a97966e7936) Thanks [@jayair](https://github.com/jayair)! - Updating to RDS and DynamoDB starter to Kysely codegen
+
 ## 1.7.0
 
 ### Minor Changes

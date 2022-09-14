@@ -93,7 +93,7 @@ function createRemixRequest(event) {
 
   return new NodeRequest(url.href, {
     method: event.requestContext.http.method,
-    headers: createRemixHeaders(event.headers, event.cookies),
+    headers: createRemixHeaders(event.headers),
     body:
       event.body && event.isBase64Encoded
         ? isFormData
@@ -103,17 +103,13 @@ function createRemixRequest(event) {
   });
 }
 
-function createRemixHeaders(requestHeaders, requestCookies) {
+function createRemixHeaders(requestHeaders) {
   let headers = new NodeHeaders();
 
   for (let [header, value] of Object.entries(requestHeaders)) {
     if (value) {
       headers.append(header, value);
     }
-  }
-
-  if (requestCookies) {
-    headers.append("Cookie", requestCookies.join("; "));
   }
 
   return headers;

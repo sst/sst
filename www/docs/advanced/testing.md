@@ -13,9 +13,13 @@ To start, there are 3 types of tests you can write for your SST apps:
 2. Tests for your APIs, the endpoints handling requests.
 3. Tests for your stacks, the code that creates your infrastructure.
 
+:::tip
+Want to learn more about testing in SST? Check out the [livestream we did on YouTube](https://youtu.be/YtaxDURRjHA).
+:::
+
 We'll create a new app using the GraphQL starter. And we'll look at how to write each type of tests.
 
-:::tip
+:::info
 To follow along, you can create the GraphQL starter by running `npx create-sst@latest`, select `graphql` project, and then select `DynamoDB` database.
 
 Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/create-sst-dynamo) based on the same template.
@@ -25,17 +29,17 @@ Alternatively, you can refer to [this example repo](https://github.com/serverles
 
 If you created your app with `create-sst` a [vitest](https://vitest.dev/config/) config is added for you, with a test script in your `package.json`:
 
-  ```json {8}
-  "scripts": {
-    "start": "sst start",
-    "build": "sst build",
-    "deploy": "sst deploy",
-    "remove": "sst remove",
-    "console": "sst console",
-    "typecheck": "tsc --noEmit",
-    "test": "sst load-config -- vitest run"
-  }, 
-  ```
+```json {8}
+"scripts": {
+  "start": "sst start",
+  "build": "sst build",
+  "deploy": "sst deploy",
+  "remove": "sst remove",
+  "console": "sst console",
+  "typecheck": "tsc --noEmit",
+  "test": "sst load-config -- vitest run"
+},
+```
 
 :::note
 If you created your app using `create-sst` prior to v1.9.0, make sure to prepend `sst load-config --` to your test script.
@@ -74,9 +78,7 @@ it("create an article", async () => {
   const list = await Article.list();
 
   // Check the newly created article exists
-  expect(
-    list.find((a) => a.articleID === article.articleID)
-  ).not.toBeNull();
+  expect(list.find((a) => a.articleID === article.articleID)).not.toBeNull();
 });
 ```
 
@@ -139,7 +141,6 @@ Note that this test is very similar to the request frontend makes when a user tr
 Testing APIs are often more useful than testing Domain code because they test the app from the perspective of a user. Ignoring most of the implementation details.
 :::
 
-
 ## Testing stacks
 
 Both domain function tests and API tests are for testing your business logic code. Stack tests on the other hand allows you to test your infrastructure settings. You can test for things like:
@@ -185,8 +186,7 @@ Here are a couple of reference docs from AWS that should help you write stack te
 
 - [CDK assertions](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.assertions-readme.html)
 - [CloudFormation resource definitions](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html))
-:::
-
+  :::
 
 ## Tips
 
@@ -230,6 +230,7 @@ The `sst load-config` CLI sets the following environment variables:
 - For Secrets, it fetches and decrypts all SSM Parameters prefixed with `/sst/{appName}/{stageName}/secrets/*` and `/sst/{appName}/.fallback/secrets/*`, and sets the corresponding environment variables prefixed with `SST_PARAM_*`.
 
   ie. `SST_PARAM_STRIPE_KEY` is created with value from `/sst/{appName}/{stageName}/secrets/STRIPE_KEY`
+
 - For Parameters, it fetches all SSM Parameters prefixed with `/sst/{appName}/{stageName}/parameters/*`, and sets the environment variables prefixed with `SST_PARAM_*`.
 
   ie. `SST_PARAM_USER_UPDATED_TOPIC` is created with value from `/sst/{appName}/{stageName}/parameters/USER_UPDATED_TOPIC`

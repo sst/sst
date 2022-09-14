@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/cli",
-  "version": "1.12.0",
+  "version": "1.14.1",
   "description": "A CLI to help deploy SST apps.",
   "scripts": {
     "cdk-version-check": "node ./bin/sync-cdk-version.js",
@@ -24,11 +24,11 @@
   },
   "homepage": "https://sst.dev",
   "dependencies": {
-    "@aws-cdk/aws-apigatewayv2-alpha": "2.32.0-alpha.0",
-    "@serverless-stack/core": "1.12.0",
-    "@serverless-stack/resources": "1.12.0",
-    "aws-cdk": "2.32.0",
-    "aws-cdk-lib": "2.32.0",
+    "@aws-cdk/aws-apigatewayv2-alpha": "2.39.1-alpha.0",
+    "@serverless-stack/core": "1.14.1",
+    "@serverless-stack/resources": "1.14.1",
+    "aws-cdk": "2.39.1",
+    "aws-cdk-lib": "2.39.1",
     "aws-sdk": "^2.1110.0",
     "body-parser": "^1.19.0",
     "chalk": "^4.1.0",

@@ -5,6 +5,7 @@ description: "Learn how to build your first full-stack application with SST."
 ---
 
 import config from "../../config";
+import styles from "../video.module.css";
 
 We created this tutorial to help you build your first app with SST.
 
@@ -48,6 +49,16 @@ Here's roughly what we'll be covering in the next few chapters:
 4. Connecting it to your API
 5. Rendering it in the frontend
 6. Deploying to production
+
+---
+
+## Watch this as a video
+
+If you'd like, you can follow this tutorial as a video. We did a livestream where we worked through all the steps and talked about it in detail.
+
+<div class={styles.videoWrapper}>
+  <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/i7xEKHWTKNk" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 ---
 

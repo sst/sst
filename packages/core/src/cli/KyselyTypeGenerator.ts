@@ -1,10 +1,15 @@
 import { Bus } from "./Bus.js";
 import { Config } from "../config/index.js";
-import { toTypeScript, toObject } from "@rmp135/sql-ts";
-import fs from "fs/promises";
-import knex from "knex";
-/* @ts-ignore */
-import knexDataApiClient from "knex-aurora-data-api-client";
+import { Kysely } from "kysely";
+import { DataApiDialect } from "kysely-data-api";
+import RDSDataService from "aws-sdk/clients/rdsdataservice.js";
+import * as fs from "fs/promises";
+import {
+  ExportStatementNode,
+  PostgresDialect,
+  Serializer,
+  Transformer,
+} from "kysely-codegen";
 
 interface Opts {
   bus: Bus;
@@ -19,8 +24,42 @@ interface Database {
   clusterArn: string;
   types?: string;
 }
+
 export function createKyselyTypeGenerator(opts: Opts) {
   let databases: Database[] = [];
+
+  async function generate(db: Database) {
+    if (!db.types) return;
+
+    const k = new Kysely<Database>({
+      dialect: new DataApiDialect({
+        mode: db.engine.includes("postgres") ? "postgres" : "mysql",
+        driver: {
+          secretArn: db.secretArn,
+          resourceArn: db.clusterArn,
+          database: db.defaultDatabaseName,
+          client: new RDSDataService({
+            region: opts.config.region,
+          }),
+        },
+      }),
+    });
+    const tables = await k.introspection.getTables();
+    const transformer = new Transformer(new PostgresDialect(), false);
+    const nodes = transformer.transform(tables);
+    const lastIndex = nodes.length - 1;
+    const last = nodes[lastIndex] as ExportStatementNode;
+    nodes[lastIndex] = {
+      ...last,
+      argument: {
+        ...last.argument,
+        name: "Database",
+      },
+    };
+    const serializer = new Serializer();
+    const data = serializer.serialize(nodes);
+    await fs.writeFile(db.types!, data);
+  }
 
   opts.bus.subscribe("stacks.deployed", (evt) => {
     databases = evt.properties.metadata
@@ -37,37 +76,13 @@ export function createKyselyTypeGenerator(opts: Opts) {
         defaultDatabaseName: c.data.defaultDatabaseName,
         secretArn: c.data.secretArn,
       }));
+    databases.map((db) => generate(db));
   });
 
   opts.bus.subscribe("function.responded", async (evt) => {
+    if (evt.properties.request.event.type !== "to") return;
     const db = databases.find((db) => db.migratorID === evt.properties.localID);
     if (!db) return;
-    if (!db.types) return;
-    if (evt.properties.request.event.type !== "to") return;
-
-    const k = knex({
-      client: db.engine.includes("mysql")
-        ? knexDataApiClient.mysql
-        : knexDataApiClient.postgres,
-      connection: {
-        secretArn: db.secretArn,
-        resourceArn: db.clusterArn,
-        database: db.defaultDatabaseName,
-        region: opts.config.region,
-      } as any,
-    });
-
-    const result = await toTypeScript(
-      {
-        interfaceNameFormat: "${table}",
-      },
-      k as any
-    );
-    const lines = [result, "export interface Database {"];
-    for (const match of result.matchAll(/export interface ([^\s]+)\s/g)) {
-      lines.push(`  "${match[1]}": ${match[1]}`);
-    }
-    lines.push("}");
-    fs.writeFile(db.types, lines.join("\n"));
+    generate(db);
   });
 }

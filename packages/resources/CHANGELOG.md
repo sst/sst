@@ -1,5 +1,60 @@
 # @serverless-stack/resources
 
+## 1.14.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.14.1
+
+## 1.14.0
+
+### Patch Changes
+
+- Updated dependencies [[`372b389d8`](https://github.com/serverless-stack/sst/commit/372b389d868cdf9ffed12b905e67b06ee30e9e71)]:
+  - @serverless-stack/core@1.14.0
+
+## 1.13.0
+
+### Minor Changes
+
+- [#2057](https://github.com/serverless-stack/sst/pull/2057) [`6958f9f74`](https://github.com/serverless-stack/sst/commit/6958f9f742e3aea4a9a175bb4da4512e6e22b1b3) Thanks [@fwang](https://github.com/fwang)! - Update CDK to v2.39.1
+
+### Patch Changes
+
+- Updated dependencies [[`6958f9f74`](https://github.com/serverless-stack/sst/commit/6958f9f742e3aea4a9a175bb4da4512e6e22b1b3)]:
+  - @serverless-stack/core@1.13.0
+
+## 1.12.4
+
+### Patch Changes
+
+- Updated dependencies [[`6049c341d`](https://github.com/serverless-stack/sst/commit/6049c341d8938911bb910e38f49ae90b1af02a25)]:
+  - @serverless-stack/core@1.12.4
+
+## 1.12.3
+
+### Patch Changes
+
+- Updated dependencies [[`7bf15be60`](https://github.com/serverless-stack/sst/commit/7bf15be60088fa9def2f99e188bff4ff8c0dafd3), [`cacb73493`](https://github.com/serverless-stack/sst/commit/cacb73493295619538375ff9feb6ee559be1dfa3)]:
+  - @serverless-stack/core@1.12.3
+
+## 1.12.2
+
+### Patch Changes
+
+- [`24f7602a5`](https://github.com/serverless-stack/sst/commit/24f7602a5c92502de0620625108e4dcdc5b219a7) Thanks [@fwang](https://github.com/fwang)! - RemixSite: fix malformed cookie in request header when using regional server
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.12.2
+
+## 1.12.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.12.1
+
 ## 1.12.0
 
 ### Patch Changes

@@ -5,7 +5,7 @@ export const Context = {
 };
 
 const state = {
-  // requestID: "",
+  requestID: "",
   contexts: new Map<any, ContextInfo>(),
   tracking: [] as any[],
 };
@@ -39,7 +39,6 @@ function create<C>(cb?: () => C) {
     },
     provide(value: C) {
       // If a new request has started, automatically clear all contexts
-      /*
       const requestID = (global as any)[
         Symbol.for("aws.lambda.runtime.requestId")
       ];
@@ -47,7 +46,6 @@ function create<C>(cb?: () => C) {
         state.requestID = requestID;
         reset();
       }
-      */
 
       // If the context is already set, we need to reset its dependants
       resetDependencies(id);

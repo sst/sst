@@ -14,11 +14,4 @@ export default [
     packages: ["kysely", "kysely-data-api"],
     path: "services"
   }),
-  install({
-    packages: ["@vanilla-extract/css", "@vanilla-extract/vite-plugin", "react-icons"],
-    path: "web"
-  }),
-  remove("web/src/index.css"),
-  remove("web/public/vite.svg"),
-  remove("web/src/assets/react.svg"),
 ];

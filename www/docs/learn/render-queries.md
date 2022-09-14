@@ -14,11 +14,17 @@ We'll start by updating our homepage to show the number of comments in each arti
 
 <ChangeText>
 
-In `web/src/pages/Home.tsx`, add `comments` in the articles query.
+In `web/src/pages/Home.tsx`, replace the `useTypedQuery` with:
 
 </ChangeText>
 
-```ts {7-10} title="web/src/pages/Home.tsx"
+```ts {13-15} title="web/src/pages/Home.tsx"
+// Handle empty document cache
+// https://formidable.com/open-source/urql/docs/basics/document-caching/#adding-typenames
+const context = useMemo(
+  () => ({ additionalTypenames: ["Article", "Comments"] }),
+  []
+);
 const [articles] = useTypedQuery({
   query: {
     articles: {
@@ -30,10 +36,13 @@ const [articles] = useTypedQuery({
       },
     },
   },
+  context,
 });
 ```
 
-You'll notice we aren't writing a typical GraphQL query. We are writing the query as an object. It's using a typesafe GraphQL client.
+Here we are adding `comments` to our query. You'll notice we aren't writing a typical GraphQL query. We are writing the query as an object. It's using a typesafe GraphQL client.
+
+We are also making a change to `additionalTypenames`. This is to fix a quirk of Urql's [Document Cache](https://formidable.com/open-source/urql/docs/basics/document-caching/#document-cache-gotchas), we'll look at this in the next chapter.
 
 ---
 
@@ -162,11 +171,11 @@ export default function Article() {
 
 </details>
 
-We also need to add a couple of styles to render the comments count in our homepage.
-
 ---
 
 ## Styling components
+
+We also need to add a couple of styles to render the comments count in our homepage.
 
 <ChangeText>
 

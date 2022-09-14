@@ -1,62 +1,43 @@
-import { useTypedMutation, useTypedQuery } from "../urql";
+import { useParams } from "react-router-dom";
+import { useTypedQuery } from "@create-sst-dynamo/graphql/urql";
+import Empty from "../components/Empty";
+import Navbar from "../components/Navbar";
+import Loading from "../components/Loading";
+import * as styles from "./Article.css";
 
-interface ArticleForm {
-  title: string;
-  url: string;
-}
+export default function Article() {
+  const { id = "" } = useParams();
 
-export function List() {
-  const [articles] = useTypedQuery({
+  const [article] = useTypedQuery({
     query: {
-      articles: {
-        id: true,
-        title: true,
-        url: true
-      }
-    }
+      article: [
+        { articleID: id },
+        {
+          id: true,
+          url: true,
+          title: true,
+        },
+      ],
+    },
   });
 
-  const [, createArticle] = useTypedMutation((opts: ArticleForm) => ({
-    createArticle: [
-      opts,
-      {
-        id: true,
-        url: true
-      }
-    ]
-  }));
-
   return (
-    <div style={{ padding: "1rem" }}>
-      <h2>Articles</h2>
-      <h3>Submit</h3>
-      <form
-        onSubmit={e => {
-          e.preventDefault();
-          const fd = new FormData(e.currentTarget);
-          createArticle({
-            url: fd.get("url")!.toString(),
-            title: fd.get("title")!.toString()
-          });
-          e.currentTarget.reset();
-        }}
-      >
-        <input name="title" placeholder="title" />
-        <input name="url" placeholder="url" />
-        <button type="submit">Submit</button>
-      </form>
-      <h3>Latest</h3>
-      <ol>
-        {articles.data?.articles.map(article => (
-          <li key={article.id}>
-            <div>
-              <div>
-                {article.title} - <a href={article.url}>{article.url}</a>
-              </div>
-            </div>
-          </li>
-        ))}
-      </ol>
+    <div>
+      <Navbar />
+      {article.fetching ? (
+        <Loading />
+      ) : article.data?.article ? (
+        <div className={styles.article}>
+          <h1>{article.data.article.title}</h1>
+          <p>
+            <a target="_blank" href={article.data.article.url}>
+              {article.data.article.url}
+            </a>
+          </p>
+        </div>
+      ) : (
+        <Empty>Not Found</Empty>
+      )}
     </div>
   );
 }

@@ -1,5 +1,37 @@
 # @serverless-stack/core
 
+## 1.14.1
+
+## 1.14.0
+
+### Minor Changes
+
+- [#1886](https://github.com/serverless-stack/sst/pull/1886) [`372b389d8`](https://github.com/serverless-stack/sst/commit/372b389d868cdf9ffed12b905e67b06ee30e9e71) Thanks [@thdxr](https://github.com/thdxr)! - Switch to kysely-codegen instead of sql-ts
+
+## 1.13.0
+
+### Minor Changes
+
+- [#2057](https://github.com/serverless-stack/sst/pull/2057) [`6958f9f74`](https://github.com/serverless-stack/sst/commit/6958f9f742e3aea4a9a175bb4da4512e6e22b1b3) Thanks [@fwang](https://github.com/fwang)! - Update CDK to v2.39.1
+
+## 1.12.4
+
+### Patch Changes
+
+- [#2056](https://github.com/serverless-stack/sst/pull/2056) [`6049c341d`](https://github.com/serverless-stack/sst/commit/6049c341d8938911bb910e38f49ae90b1af02a25) Thanks [@fwang](https://github.com/fwang)! - Fix parallel build fails in CI environment
+
+## 1.12.3
+
+### Patch Changes
+
+- [`7bf15be60`](https://github.com/serverless-stack/sst/commit/7bf15be60088fa9def2f99e188bff4ff8c0dafd3) Thanks [@thdxr](https://github.com/thdxr)! - Disable function draining on env change
+
+* [`cacb73493`](https://github.com/serverless-stack/sst/commit/cacb73493295619538375ff9feb6ee559be1dfa3) Thanks [@thdxr](https://github.com/thdxr)! - Fix issue with sst start functions failing under parallel invocation
+
+## 1.12.2
+
+## 1.12.1
+
 ## 1.12.0
 
 ## 1.11.2
