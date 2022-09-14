@@ -42,8 +42,8 @@ export async function metadata(root: string, config: Config) {
         })
         .promise();
       // Parse the file
-      const json = JSON.parse(ret.Body!.toString());
-      return json;
+      const body = ret.Body!.toString();
+      return body;
     })
   );
   return result.flat();
