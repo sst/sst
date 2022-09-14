@@ -12,7 +12,7 @@ await esbuild.build({
     js: [
       `import { createRequire as topLevelCreateRequire } from 'module'`,
       `const require = topLevelCreateRequire(import.meta.url)`,
-    ].join("\n"),
+    ].join(";"),
   },
   outfile: "./dist/support/custom-resources/index.mjs",
 });
