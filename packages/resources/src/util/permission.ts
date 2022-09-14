@@ -5,6 +5,7 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import { getChildLogger } from "@serverless-stack/core";
 import {
   Api,
+  Job,
   RDS,
   Table,
   Topic,
@@ -200,6 +201,8 @@ function permissionsToStatementsAndGrants(permissions: Permissions): StatementsA
       }
     } else if (permission instanceof Function) {
       statements.push(buildPolicyStatement("lambda:*", [permission.functionArn]));
+    } else if (permission instanceof Job) {
+      statements.push(buildPolicyStatement("lambda:*", [permission._jobInvoker.functionArn]));
     }
     ////////////////////////////////////
     // Case: CDK constructs
@@ -274,7 +277,7 @@ function permissionsToStatementsAndGrants(permissions: Permissions): StatementsA
           `The specified grant method is incorrect.
           Check the available methods that prefixed with grants on the Construct`
         );
-        grants.push(permission);
+      grants.push(permission);
     } else {
       logger.debug("permission object", permission);
       throw new Error(`The specified permissions are not supported.`);
