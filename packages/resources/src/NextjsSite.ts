@@ -290,7 +290,6 @@ export class NextjsSite extends Construct implements SSTConstruct {
   private apiFunctionVersion: lambda.IVersion;
   private imageFunctionVersion: lambda.IVersion;
   private regenerationFunction: lambda.Function;
-  public origin: IOrigin;
 
   constructor(scope: Construct, id: string, props: NextjsSiteProps) {
     super(scope, id);
