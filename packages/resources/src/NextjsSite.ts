@@ -43,6 +43,7 @@ import {
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import { getHandlerHash } from "./util/builder.js";
 import * as crossRegionHelper from "./nextjs-site/cross-region-helper.js";
+import { IOrigin } from "aws-cdk-lib/aws-cloudfront";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -83,7 +84,7 @@ export interface NextjsSiteProps {
   /**
    * Path to the next executable, typically in node_modules.
    * This should be used if next is installed in a non-standard location.
-   * 
+   *
    * @default "./node_modules/.bin/next"
    */
   nextBinPath?: string;
@@ -266,6 +267,10 @@ export class NextjsSite extends Construct implements SSTConstruct {
      */
     distribution: cloudfront.Distribution;
     /**
+     * The internally created Edge Lambdas for handling dynamic requests.
+     */
+    mainEdgeLambdas?: cloudfront.EdgeLambda[];
+    /**
      * The Route 53 hosted zone for the custom domain.
      */
     hostedZone?: route53.IHostedZone;
@@ -285,6 +290,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
   private apiFunctionVersion: lambda.IVersion;
   private imageFunctionVersion: lambda.IVersion;
   private regenerationFunction: lambda.Function;
+  public origin: IOrigin;
 
   constructor(scope: Construct, id: string, props: NextjsSiteProps) {
     super(scope, id);
@@ -353,6 +359,8 @@ export class NextjsSite extends Construct implements SSTConstruct {
 
     // Connect Custom Domain to CloudFront Distribution
     this.createRoute53Records();
+
+
   }
 
   /**
@@ -987,6 +995,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
 
     // Build behavior
     const origin = new origins.S3Origin(this.cdk.bucket);
+    this.origin = origin
     const viewerProtocolPolicy =
       cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS;
 
@@ -1015,6 +1024,11 @@ export class NextjsSite extends Construct implements SSTConstruct {
         functionVersion: this.mainFunctionVersion,
       },
     ];
+    // concatenate edgeLambdas
+    this.cdk.mainEdgeLambdas = [
+      ...edgeLambdas,
+      ...(cfDistributionProps.defaultBehavior?.edgeLambdas || []),
+    ]
 
     // Build cache policies
     const staticCachePolicy =
@@ -1049,11 +1063,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
         compress: true,
         cachePolicy: lambdaCachePolicy,
         ...(cfDistributionProps.defaultBehavior || {}),
-        // concatenate edgeLambdas
-        edgeLambdas: [
-          ...edgeLambdas,
-          ...(cfDistributionProps.defaultBehavior?.edgeLambdas || []),
-        ],
+        edgeLambdas: this.cdk.mainEdgeLambdas
       },
       additionalBehaviors: {
         [this.pathPattern("_next/image*")]: {
