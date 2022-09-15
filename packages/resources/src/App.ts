@@ -16,6 +16,7 @@ import {
 } from "./Construct.js";
 import { FunctionProps, FunctionHandlerProps } from "./Function.js";
 import * as Config from "./Config.js";
+import { Job } from "./Job.js";
 import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite.js";
 import { Permissions } from "./util/permission.js";
 import { StackProps } from "./Stack.js";
@@ -306,6 +307,7 @@ export class App extends cdk.App {
   synth(options: cdk.StageSynthesisOptions = {}): cxapi.CloudAssembly {
     this.createTypesFile();
     Config.codegenTypes();
+    Job.codegenTypes();
     this.buildConstructsMetadata();
 
     Auth.injectConfig();

@@ -3,6 +3,7 @@ import url from "url";
 import path from "path";
 import fs from "fs-extra";
 import { Construct } from "constructs";
+import * as cdk from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as codebuild from "aws-cdk-lib/aws-codebuild";
@@ -15,9 +16,10 @@ import { getFunctionRef, SSTConstruct } from "./Construct.js";
 import { Function, FunctionBundleNodejsProps } from "./Function.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
-import { Size, toCdkSize } from "./util/size.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
+
+export type JobMemorySize = "3 GB" | "7 GB" | "15 GB" | "145 GB";
 
 export interface JobProps {
   /**
@@ -49,21 +51,21 @@ export interface JobProps {
   /**
    * The amount of memory in MB allocated.
    *
-   * @default "1 GB"
+   * @default "3 GB"
    *
    * @example
    * ```js
    * new Function(stack, "Function", {
    *   handler: "src/function.handler",
-   *   memorySize: "2 GB",
+   *   memorySize: "3 GB",
    * })
    *```
    */
-  memorySize?: number | Size;
+  memorySize?: JobMemorySize;
   /**
    * The execution timeout in seconds.
    *
-   * @default "10 seconds"
+   * @default "8 hours"
    *
    * @example
    * ```js
@@ -73,7 +75,7 @@ export interface JobProps {
    * })
    *```
    */
-  timeout?: number | Duration;
+  timeout?: Duration;
   /**
    * Can be used to disable Live Lambda Development when using `sst start`. Useful for things like Custom Resources that need to execute during deployment.
    *
@@ -155,6 +157,7 @@ export class Job extends Construct implements SSTConstruct {
   private readonly job: codebuild.Project;
   private readonly isLiveDevEnabled: boolean;
   private static all = new Set<string>();
+  public readonly _jobParameter: Parameter;
   public readonly _jobInvoker: Function;
 
   constructor(scope: Construct, id: string, props: JobProps) {
@@ -182,15 +185,9 @@ export class Job extends Construct implements SSTConstruct {
       this._jobInvoker = this.createCodeBuildInvoker();
       this.buildCodeBuildProjectCode();
     }
+    this._jobParameter = this.createConfigParameter();
     this.attachPermissions(props.permissions || []);
     this.addConfig(props.config || []);
-  }
-
-  /**
-   * The job name.
-   */
-  public get jobName(): string {
-    return this._jobInvoker.functionName;
   }
 
   private createCodeBuildProject(): codebuild.Project {
@@ -206,14 +203,13 @@ export class Job extends Construct implements SSTConstruct {
         //buildImage: codebuild.LinuxBuildImage.STANDARD_6_0,
         //buildImage: codebuild.LinuxBuildImage.STANDARD_5_0,
         buildImage: codebuild.LinuxBuildImage.fromDockerRegistry("amazon/aws-lambda-nodejs:16"),
-        // CodeBuild offers a few differnt Memory/CPU options. SMALL comes with
-        // 3GB memory and 2 vCPUs.
-        computeType: codebuild.ComputeType.SMALL,
+        computeType: this.normalizeMemorySize(this.props.memorySize || "3 GB"),
       },
       environmentVariables: {
         SST_APP: { value: app.name },
         SST_STAGE: { value: app.stage },
       },
+      timeout: this.normalizeTimeout(this.props.timeout || "8 hours"),
       buildSpec: codebuild.BuildSpec.fromObject({
         version: "0.2",
         phases: {
@@ -302,7 +298,7 @@ export class Job extends Construct implements SSTConstruct {
   }
 
   private createLocalInvoker(): Function {
-    const { srcPath, handler, memorySize, timeout, config, environment, permissions } = this.props;
+    const { srcPath, handler, config, environment, permissions } = this.props;
 
     // Note: make the invoker function the same ID as the Job
     //       construct so users can identify the invoker function
@@ -312,8 +308,8 @@ export class Job extends Construct implements SSTConstruct {
       handler,
       bundle: { format: "esm" },
       runtime: "nodejs16.x",
-      memorySize,
-      timeout,
+      timeout: 20,
+      memorySize: 1024,
       config,
       environment,
       permissions,
@@ -342,6 +338,12 @@ export class Job extends Construct implements SSTConstruct {
       bundle: {
         format: "esm",
       },
+    });
+  }
+
+  private createConfigParameter(): Parameter {
+    return new Parameter(this, `SST_JOB_${this.node.id}`, {
+      value: this._jobInvoker.functionName,
     });
   }
 
@@ -454,6 +456,52 @@ export class Job extends Construct implements SSTConstruct {
         //job: getFunctionRef(this.jobFunction),
       },
     };
+  }
+
+  public static codegenTypes() {
+    fs.appendFileSync(
+      "node_modules/@types/serverless-stack__node/index.d.ts",
+      `export * from "./job";`
+    );
+    fs.writeFileSync(
+      "node_modules/@types/serverless-stack__node/job.d.ts",
+      `
+      import "@serverless-stack/node/job";
+      declare module "@serverless-stack/node/job" {
+        export interface JobNames {
+          ${Array.from(Job.all).map((p) => `${p}: string;`).join("\n")}
+        }
+      }`
+    );
+  }
+
+  private normalizeMemorySize(memorySize: JobMemorySize): codebuild.ComputeType {
+    if (memorySize === "3 GB") {
+      return codebuild.ComputeType.SMALL;
+    }
+    else if (memorySize === "7 GB") {
+      return codebuild.ComputeType.MEDIUM;
+    }
+    else if (memorySize === "15 GB") {
+      return codebuild.ComputeType.LARGE;
+    }
+    else if (memorySize === "145 GB") {
+      return codebuild.ComputeType.X2_LARGE;
+    }
+
+    throw new Error(
+      `Invalid memory size value for the ${this.node.id} Job.`
+    );
+  }
+
+  private normalizeTimeout(timeout: Duration): cdk.Duration {
+    const value = toCdkDuration(timeout);
+    if (value.toMinutes() < 5 || value.toMinutes() > 480) {
+      throw new Error(
+        `Invalid timeout value for the ${this.node.id} Job.`
+      );
+    }
+    return value;
   }
 
   private static assertIdNotInUse(id: string) {

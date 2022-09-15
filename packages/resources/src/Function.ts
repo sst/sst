@@ -15,6 +15,7 @@ import * as ssm from "aws-cdk-lib/aws-ssm";
 import { State, Runtime, FunctionConfig, DeferBuilder } from "@serverless-stack/core";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
+import { Job } from "./Job.js";
 import { Secret, Parameter } from "./Config.js";
 import { SSTConstruct } from "./Construct.js";
 import { Size, toCdkSize } from "./util/size.js";
@@ -956,8 +957,16 @@ export class Function extends lambda.Function implements SSTConstruct {
    * ```
    */
   public attachPermissions(permissions: Permissions): void {
+    // Grant IAM permissions
     if (this.role) {
       attachPermissionsToRole(this.role as iam.Role, permissions);
+    }
+
+    // Add config
+    if (permissions !== "*") {
+      permissions
+        .filter((p) => p instanceof Job)
+        .forEach((p) => this.addConfig([(p as Job)._jobParameter]));
     }
   }
 
