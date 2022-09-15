@@ -30,7 +30,6 @@ import {
   Function,
   FunctionProps
 } from "../src";
-import G from "glob";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
@@ -869,6 +868,23 @@ test("constructor: debugIncreaseTimeout false", async () => {
   });
   hasResource(stack, "AWS::Lambda::EventInvokeConfig", {
     MaximumRetryAttempts: 0
+  });
+});
+
+test("constructor: debug: layers removed", async () => {
+  const app = new App({
+    synthCallback: () => { },
+    debugEndpoint: "placeholder",
+    debugBucketArn: "placeholder",
+    debugBucketName: "placeholder",
+  });
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    layers: [lambda.LayerVersion.fromLayerVersionArn(stack, "layer", "arn")],
+  });
+  hasResource(stack, "AWS::Lambda::Function", {
+    Layers: ABSENT,
   });
 });
 
