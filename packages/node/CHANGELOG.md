@@ -1,5 +1,7 @@
 # @serverless-stack/node
 
+## 1.14.3
+
 ## 1.14.2
 
 ## 1.14.1
