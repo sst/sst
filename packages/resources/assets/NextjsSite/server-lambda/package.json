@@ -5,11 +5,11 @@
     "@sls-next/next-aws-cloudfront": "3.7.0"
   },
   "peerDependencies": {
-    "next": "~12.3.0"
+    "next": "^12.3.0"
   },
   "devDependencies": {
     "@types/aws-lambda": "8.10.101",
     "aws-lambda": "1.0.7",
-    "next": "~12.3.0"
+    "next": "12.3.0"
   }
 }

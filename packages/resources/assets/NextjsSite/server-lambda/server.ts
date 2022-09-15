@@ -23,7 +23,7 @@ export const handler: CloudFrontRequestHandler = async (event) => {
             conf: { ...RequiredServerFiles.config, compress: false },
             customServer: false,
             dev: false,
-            dir: path.join(__dirname),
+            dir: path.join(__dirname, 'web'),
             minimalMode: true,
         }).getRequestHandler()
     }

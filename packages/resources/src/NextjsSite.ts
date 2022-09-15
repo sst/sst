@@ -17,6 +17,8 @@ import {
   CfnOutput,
   RemovalPolicy,
   CustomResource,
+  SymlinkFollowMode,
+  BundlingOutput,
 } from "aws-cdk-lib";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as iam from "aws-cdk-lib/aws-iam";
@@ -44,6 +46,9 @@ import {
 } from "./BaseSite.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import { NodejsFunction, OutputFormat } from "aws-cdk-lib/aws-lambda-nodejs";
+import { Function } from "./index.js";
+import { handler } from "./Script/index.js";
+import { CfnFunction } from "aws-cdk-lib/aws-lambda";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -556,7 +561,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
   private createStaticsS3AssetsWithStub(): s3Assets.Asset[] {
     return [
       new s3Assets.Asset(this, "Asset", {
-        path: path.resolve(__dirname, "../assets/NextjsSite/site-sub"),
+        path: path.resolve(__dirname, "../assets/NextjsSite/site-stub"),
       }),
     ];
   }
@@ -667,41 +672,108 @@ export class NextjsSite extends Construct implements SSTConstruct {
   /////////////////////
 
   private createServerFunctionForRegional(): NodejsFunction {
+    const app = App.of(this) as App
     const { defaults, environment,path : nextjsPath } = this.props;
 
+    // server handler
     const entry = this.isPlaceholder?path.resolve(__dirname, "../assets/NextjsSite/server-lambda-stub/server.js")
     : path.resolve(__dirname, "../assets/NextjsSite/server-lambda/server.ts");
+
 
     logger.debug(`Building nextjs serverless function with entry: ${entry}`);
     console.log(`Building nextjs serverless function with entry: ${entry}`);
 
     const standaloneDir = path.join(nextjsPath, NEXTJS_BUILD_DIR, NEXTJS_BUILD_STANDALONE_DIR)
 
-    const fn = new NodejsFunction(this, `ServerFunction`, {
-      description: "Server handler for Nextjs",
-      handler: 'handler',
-      entry,
-      currentVersionOptions: {
-        removalPolicy: RemovalPolicy.DESTROY,
-      },
-      logRetention: logs.RetentionDays.THREE_DAYS,
+    const fn = new lambda.Function(this, 'MainFn', {
       runtime: lambda.Runtime.NODEJS_16_X,
-      memorySize: defaults?.function?.memorySize || 512,
-      timeout: Duration.seconds(defaults?.function?.timeout || 10),
-      environment,
-      bundling: {
-        commandHooks: {
-            afterBundling: () => [],
-            beforeBundling: (inputDir: string, outputDir: string) => [
-                `cp -r ${path.join(inputDir,standaloneDir)}/ ${outputDir}`,
-            ],
-            beforeInstall: () => [],
-        },
-        externalModules: ['next'],
-        format: OutputFormat.CJS,
-        target: 'node16',
-    },
-    });
+      handler: path.join(nextjsPath,'server.handler'),
+      code: lambda.Code.fromAsset(path.join(standaloneDir),{
+        // followSymlinks: SymlinkFollowMode.
+        bundling:{
+          image:lambda.Runtime.NODEJS_16_X.bundlingImage,
+          outputType: BundlingOutput.NOT_ARCHIVED,
+          command: [
+            'bash','-c',
+            // bundle zip doesn't preserve symlinks which breaks everything
+            `cd /asset-input; zip -ryq /tmp/next-lambda.zip * && mv /tmp/next-lambda.zip /asset-output/next-lambda.zip`,
+          ]}
+        }),
+      });
+
+    // const fn = new NodejsFunction(this, `ServerFunction`, {
+    //   description: "Server handler for Nextjs",
+    //   handler: 'handler',
+    //   entry,
+    //   currentVersionOptions: {
+    //     removalPolicy: RemovalPolicy.DESTROY,
+    //   },
+    //   logRetention: logs.RetentionDays.THREE_DAYS,
+    //   runtime: lambda.Runtime.NODEJS_16_X,
+    //   memorySize: defaults?.function?.memorySize || 512,
+    //   timeout: Duration.seconds(defaults?.function?.timeout || 10),
+    //   environment,
+    //   bundling: {
+
+    //     commandHooks: {
+    //         afterBundling: (inputDir: string, outputDir: string) => [
+    //           // `echo "Copying ${standaloneDir} to ${outputDir}"`,
+    //           // copy the standalone dir to the bundle
+    //             `cp -PR ${path.join(inputDir,standaloneDir)}/ ${outputDir}`,
+
+    //             // run our server script from the appropriate directory
+    //           `mv ${path.join(outputDir, "index.js")} ${path.join(outputDir, nextjsPath, "server.cjs")}`,
+    //         ],
+    //         beforeBundling: (inputDir: string, outputDir: string) => [
+    //         ],
+    //         beforeInstall: () => [],
+    //     },
+    //     externalModules: ['next',],
+    //     format: OutputFormat.CJS,
+    //     target: 'node16',
+    // },
+    // });
+    // const cfnFn = fn.node.defaultChild as CfnFunction;
+    // cfnFn.handler = `${nextjsPath}/server.cjs`;
+
+    // const handler = this.isPlaceholder? "server-lambda-stub/server.handler"
+    // : "server-lambda/server.handler";
+    // const fn = new Function(this, `ServerFunction`, {
+    //   description: "Server handler for Nextjs",
+    //   enableLiveDev:false,
+    //   // srcPath:path.resolve(__dirname, "../assets/NextjsSite"),
+    //   // handler,
+    //   srcPath: app.appPath,
+    //   handler: path.join(standaloneDir, nextjsPath, "server.handler"),
+
+    //   currentVersionOptions: {
+    //     removalPolicy: RemovalPolicy.DESTROY,
+    //   },
+    //   // logRetention: logs.RetentionDays.THREE_DAYS,
+    //   // runtime: lambda.Runtime.NODEJS_16_X,
+    //   // memorySize: defaults?.function?.memorySize || 512,
+    //   // timeout: Duration.seconds(defaults?.function?.timeout || 10),
+    //   environment,
+    //   bundle: {
+
+    //     commandHooks: {
+    //         afterBundling: (inputDir: string, outputDir: string) => [
+    //           // `mv ${path.join(outputDir, "index.mjs")} ${path.join(outputDir, path, "server.mjs")}`,
+    //           `echo "input=${inputDir} Copying ${standaloneDir} to ${outputDir}"`,
+    //             `cp -r ${path.join(inputDir,standaloneDir)}/ ${outputDir}`,
+    //         ],
+    //         beforeBundling: (inputDir: string, outputDir: string) => [
+    //         ],
+    //         beforeInstall: () => [],
+    //     },
+    //     copyFiles: [{from: standaloneDir}],
+    //     externalModules: ['next'],
+    //     format: OutputFormat.CJS,
+    //     // target: 'node16',
+    //   },
+
+    //   // environment: {"NODE_PATH": 'web/node_modules'},
+    // });
 
     // Attach permission
     this.cdk.bucket.grantReadWrite(fn.role!);
