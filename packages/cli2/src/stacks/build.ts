@@ -35,9 +35,9 @@ export async function build() {
     outfile,
     banner: {
       js: [
-        `import { createRequire as topLevelCreateRequire } from 'module'`,
-        `const require = topLevelCreateRequire(import.meta.url)`,
-      ].join("\n"),
+        `import { createRequire as topLevelCreateRequire } from 'module';`,
+        `const require = topLevelCreateRequire(import.meta.url);`,
+      ].join(""),
     },
     // The entry can have any file name (ie. "stacks/anything.ts"). We want the
     // build output to be always named "lib/index.js". This allow us to always

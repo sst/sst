@@ -36,9 +36,9 @@ export async function build(root: string, config: Config) {
     ],
     banner: {
       js: [
-        `import { createRequire as topLevelCreateRequire } from 'module'`,
-        `const require = topLevelCreateRequire(import.meta.url)`,
-      ].join("\n"),
+        `import { createRequire as topLevelCreateRequire } from 'module';`,
+        `const require = topLevelCreateRequire(import.meta.url);`,
+      ].join(""),
     },
     // The entry can have any file name (ie. "stacks/anything.ts"). We want the
     // build output to be always named "lib/index.js". This allow us to always
@@ -84,8 +84,7 @@ export function formatDiagnostics(list: Diagnostic[]) {
       );
       const message = bottom(diagnostic.messageText);
       return [
-        `${diagnostic.file.fileName} (${line + 1},${
-          character + 1
+        `${diagnostic.file.fileName} (${line + 1},${character + 1
         }): ${message}`,
         `${line - 1}. ${diagnostic.file.text.split("\n")[line - 1]}`,
         chalk.yellow(`${line}. ${diagnostic.file.text.split("\n")[line]}`),

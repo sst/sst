@@ -10,9 +10,9 @@ await esbuild.build({
   entryPoints: ["./support/custom-resources/index.ts"],
   banner: {
     js: [
-      `import { createRequire as topLevelCreateRequire } from 'module'`,
-      `const require = topLevelCreateRequire(import.meta.url)`,
-    ].join(";"),
+      `import { createRequire as topLevelCreateRequire } from 'module';`,
+      `const require = topLevelCreateRequire(import.meta.url);`,
+    ].join(""),
   },
   outfile: "./dist/support/custom-resources/index.mjs",
 });
