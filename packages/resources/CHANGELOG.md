@@ -1,5 +1,16 @@
 # @serverless-stack/resources
 
+## 1.14.3
+
+### Patch Changes
+
+- [#2075](https://github.com/serverless-stack/sst/pull/2075) [`1e701d1b9`](https://github.com/serverless-stack/sst/commit/1e701d1b99a762f4b23a58e48835bbc7b240a7ca) Thanks [@fwang](https://github.com/fwang)! - Function: do not use layers when live debugging
+
+* [#2070](https://github.com/serverless-stack/sst/pull/2070) [`8ceb4ab7c`](https://github.com/serverless-stack/sst/commit/8ceb4ab7c92f92fac4d4177d498e4e365630d5b8) Thanks [@estebanprimost](https://github.com/estebanprimost)! - Fix "Could not unzip uploaded file" deployment error
+
+* Updated dependencies [[`8ceb4ab7c`](https://github.com/serverless-stack/sst/commit/8ceb4ab7c92f92fac4d4177d498e4e365630d5b8)]:
+  - @serverless-stack/core@1.14.3
+
 ## 1.14.2
 
 ### Patch Changes
