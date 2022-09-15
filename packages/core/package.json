@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/core",
-  "version": "1.14.1",
+  "version": "1.14.2",
   "homepage": "https://sst.dev",
   "description": "Core of SST.",
   "main": "dist/index.js",

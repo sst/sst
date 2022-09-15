@@ -1,5 +1,11 @@
 # @serverless-stack/core
 
+## 1.14.2
+
+### Patch Changes
+
+- [#2072](https://github.com/serverless-stack/sst/pull/2072) [`799b1c3ab`](https://github.com/serverless-stack/sst/commit/799b1c3ab0ad0fe1587b60716b80a2ee815de8ee) Thanks [@fwang](https://github.com/fwang)! - Cli: fix functions restarted twice on secrets set
+
 ## 1.14.1
 
 ## 1.14.0
