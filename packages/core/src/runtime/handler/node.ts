@@ -87,10 +87,10 @@ export const NodeHandler: Definition<Bundle> = opts => {
         format: "esm",
         banner: {
           js: [
-            `import { createRequire as topLevelCreateRequire } from 'module'`,
-            `const require = topLevelCreateRequire(import.meta.url)`,
+            `import { createRequire as topLevelCreateRequire } from 'module';`,
+            `const require = topLevelCreateRequire(import.meta.url);`,
             bundle.banner || ""
-          ].join("\n")
+          ].join("")
         }
       }
       : {
