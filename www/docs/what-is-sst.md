@@ -9,7 +9,9 @@ SST is an application framework that helps you build and deploy full-stack serve
 
 ## Infrastructure
 
-SST differs from other frameworks in that it helps you with both the infrastructure for your app and your application code. You can describe the infrastructure for your app in **TypeScript or JavaScript** using [Constructs](constructs/index.md).
+SST differs from other frameworks in that it helps you with **both** the **infrastructure** for your app and your **application code**.
+
+You can describe the infrastructure of your app in **TypeScript** or **JavaScript** using [Constructs](constructs/index.md).
 
 ---
 
@@ -26,7 +28,7 @@ new Api(this, "API", {
 });
 ```
 
-Behind the scenes this creates an instance of an [Amazon API Gateway](https://docs.aws.amazon.com/apigateway/latest/developerguide/welcome.html) with a couple of routes. Each route here points to a [_Function_](#functions). We'll look at these below.
+Behind the scenes this creates an instance of an [Amazon API Gateway](https://docs.aws.amazon.com/apigateway/latest/developerguide/welcome.html) with a couple of routes. Each route here points to a [_Function_](#functions). We'll look at them below.
 
 ---
 
@@ -42,7 +44,7 @@ new RDS(this, "rds", {
 });
 ```
 
-You also supports write typesafe migrations.
+You can also write typesafe migrations.
 
 ```ts
 export async function up(db) {
@@ -128,15 +130,15 @@ As a result, you can use any AWS service in your SST app.
 
 ## Functions
 
-At the heart of SST applications are Functions, powered by [AWS Lambda](https://aws.amazon.com/lambda/). These represent your application code and they get invoked by the infrastructure in your application.
+At the heart of SST applications are Functions; powered by [AWS Lambda](https://aws.amazon.com/lambda/). These represent your application code. They are invoked by the infrastructure in your application.
 
-From the API example above, when a user hits the `/notes` route in your API, the `main` function in the `functions/list.ts` file gets executed.
+From the API example above.
 
 ```ts
 "GET /notes": "functions/list.main"
 ```
 
-And it'll respond with what the function returns.
+When a user hits the `/notes` route in your API, the `main` function in the `functions/list.ts` file gets executed. And it'll respond with what the function returns.
 
 ```ts
 export async function main() {
@@ -155,7 +157,7 @@ Your functions can be in **TypeScript**, **JavaScript**, **Python**, **Golang**,
 
 ## Frontend
 
-For the frontend of your application SST, lets you deploy [React](constructs/ReactStaticSite.md), [Next.js](constructs/NextjsSite.md), or [Remix](constructs/RemixSite.md) apps. Or any [static website](constructs/StaticSite.md). Here for example, we are defining a [Vite](https://vitejs.dev) static site using the [`ViteStaticSite`](constructs/ViteStaticSite.md) construct.
+For the frontend of your application SST, lets you deploy [**React**](constructs/ReactStaticSite.md), [**Next.js**](constructs/NextjsSite.md), or [**Remix**](constructs/RemixSite.md) apps. Or any [static website](constructs/StaticSite.md). Here for example, we are defining a [Vite](https://vitejs.dev) static site using the [`ViteStaticSite`](constructs/ViteStaticSite.md) construct.
 
 ```ts
 new ViteStaticSite(this, "site", {
@@ -226,7 +228,7 @@ When put together, SST applications are **monorepos** that contain your infrastr
 
 ## SST CLI
 
-To deploy and manage your applications, you can use the [`sst`](packages/cli.md) CLI.
+Aside from the constructs, SST comes with a [CLI](packages/cli.md) to deploy and manage your applications.
 
 ---
 
@@ -284,7 +286,7 @@ The `sst start` CLI also powers a **web based dashboard** called the [SST Consol
 
 ![SST Console homescreen](/img/console/sst-console-homescreen.png)
 
-The Console allows you to view and interact with your application logs in real-time. You can manually invoke functions, replay invocations, and do things like **querying your database and running migrations**.
+With the Console you can view and interact with your application logs in real-time. You can manually invoke functions, replay invocations, and do things like **querying your database** and **running migrations**.
 
 ---
 
@@ -296,7 +298,7 @@ To get started, you can create a new SST application using one of our starters w
 npm init sst
 ```
 
-By default, this will set you up with a full-stack app with all the best practices. It has a GraphQL API, PostgreSQL RDS database, and a Vite React app. This is the **recommended** way to start with SST.
+This will set you up with a full-stack TypeScript app with all the best practices. It has a GraphQL API, PostgreSQL RDS database, and a Vite React app. This is the **recommended way** to start with SST.
 
 ```bash
 ? What kind of project do you want to create? (Use arrow keys)
@@ -306,3 +308,7 @@ By default, this will set you up with a full-stack app with all the best practic
 ```
 
 However, if you are a more advanced user, you can pick one of our minimal templates and use the constructs to build the type of app you need.
+
+---
+
+If you are ready to get started with SST, [**check out our tutorial**](learn/index.md). It uses the GraphQL starter to build a simple Reddit clone.
