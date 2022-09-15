@@ -1,5 +1,4 @@
 ---
-id: about
 title: Get Started With SST
 sidebar_label: Introduction
 hide_title: true
