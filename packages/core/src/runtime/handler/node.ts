@@ -301,19 +301,17 @@ async function installNodeModules(
   // Create dummy package.json, copy lock file and then install
   const outputPath = path.join(targetPath, "package.json");
   await fs.ensureFile(outputPath);
-  const existing = (await fs.readJson(outputPath)) || {};
+  const existing = await fs.readJson(outputPath) || {};
   await fs.writeJson(outputPath, { ...existing, dependencies });
-  if (lockFile) {
-    await fs.copy(
-      path.join(lockFileDir, lockFile),
-      path.join(targetPath, lockFile)
-    );
-  }
+  await fs.copy(
+    path.join(lockFileDir, lockFile), 
+    path.join(targetPath, lockFile)
+  );
 
   // Install dependencies
   try {
     await execAsync(`${installer} install`, {
-      cwd: targetPath
+      cwd: targetPath,
     });
   } catch (e) {
     console.log(chalk.red(`There was a problem installing nodeModules.`));
