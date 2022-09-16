@@ -1,5 +1,14 @@
 # @serverless-stack/resources
 
+## 1.14.4
+
+### Patch Changes
+
+- [#2076](https://github.com/serverless-stack/sst/pull/2076) [`a7e201566`](https://github.com/serverless-stack/sst/commit/a7e201566779dcc3d1fcf1f52389ba73708f9367) Thanks [@fwang](https://github.com/fwang)! - Bucket: support notifications on imported S3 Buckets
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.14.4
+
 ## 1.14.3
 
 ### Patch Changes
