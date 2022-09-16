@@ -763,7 +763,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     const serverHandler = this.isPlaceholder ? path.resolve(__dirname, "../assets/NextjsSite/server-lambda-stub/server.js")
       : path.resolve(__dirname, "../assets/NextjsSite/server-lambda/server.ts");
     // server should live in the same dir as the nextjs app to access deps properly
-    const serverPath = path.join(nextjsPath, "server.mjs")
+    const serverPath = path.join(nextjsPath, "server.cjs")
     const esbuildResult = esbuild.buildSync({
       entryPoints: [serverHandler],
       bundle: true,
@@ -771,7 +771,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
       target: "node16",
       platform: "node",
       external: ["sharp", "next"],
-      format: "esm",
+      format: "cjs",
       outfile: path.join(standaloneDirAbsolute, serverPath)
     })
     if (esbuildResult.errors.length > 0) {
