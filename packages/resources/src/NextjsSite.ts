@@ -1,9 +1,7 @@
 import chalk from "chalk";
 import spawn from "cross-spawn";
-import crypto from "crypto";
 import * as esbuild from "esbuild";
 import fs from "fs-extra";
-import glob from "glob";
 import indent from "indent-string";
 import path from "path";
 import url from "url";
@@ -21,13 +19,13 @@ import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Patterns from "aws-cdk-lib/aws-route53-patterns";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import * as s3 from "aws-cdk-lib/aws-s3";
-import * as s3Assets from "aws-cdk-lib/aws-s3-assets";
 import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
 import { Construct } from "constructs";
 const logger = getChildLogger("NextjsSite");
 
-import { IFunction, LayerVersion } from "aws-cdk-lib/aws-lambda";
+import { LayerVersion } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
+import { BucketDeployment, Source } from "aws-cdk-lib/aws-s3-deployment";
 import { App } from "./App.js";
 import {
   BaseSiteCdkDistributionProps, BaseSiteDomainProps, BaseSiteEnvironmentOutputsInfo,
@@ -40,6 +38,8 @@ import { attachPermissionsToRole, Permissions } from "./util/permission.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 const NEXTJS_BUILD_DIR = '.next';
+const NEXTJS_STATIC_DIR = 'static'
+const NEXTJS_PUBLIC_DIR = 'public'
 const NEXTJS_BUILD_STANDALONE_DIR = 'standalone';
 const NEXTJS_BUILD_STANDALONE_ENV = 'NEXT_PRIVATE_STANDALONE'
 
@@ -295,19 +295,16 @@ export class NextjsSite extends Construct implements SSTConstruct {
       this.cdk.certificate = this.createCertificate();
 
       // Create S3 Deployment
-      const assets = this.isPlaceholder
-        ? this.createStaticsS3AssetsWithStub()
-        : this.createStaticsS3Assets();
-      const s3deployCR = this.createS3Deployment(assets);
+      const s3Deployments = this.uploadS3Assets()
 
       // Create CloudFront
       this.validateCloudFrontDistributionSettings();
       this.cdk.distribution = this.isPlaceholder
         ? this.createCloudFrontDistributionForStub()
         : this.createCloudFrontDistribution();
-      this.cdk.distribution.node.addDependency(s3deployCR);
+      s3Deployments.forEach(s3Deployment => this.cdk.distribution.node.addDependency(s3Deployment))
 
-      // Invalidate CloudFront
+      // Invalidate CloudFront (might already be handled by S3 deployment?)
       const invalidationCR = this.createCloudFrontInvalidation();
       invalidationCR.node.addDependency(this.cdk.distribution);
 
@@ -564,60 +561,38 @@ export class NextjsSite extends Construct implements SSTConstruct {
   // Bundle S3 Assets
   /////////////////////
 
-  private createStaticsS3Assets(): s3Assets.Asset[] {
-    const app = this.node.root as App;
-    const fileSizeLimit = app.isRunningSSTTest()
-      ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
-      this.props.sstTestFileSizeLimitOverride || 200
-      : 200;
+  private uploadS3Assets() {
+    const deployments: BucketDeployment[] = [];
 
-    // First we need to create zip files containing the statics
-    const script = path.resolve(__dirname, "../assets/BaseSite/archiver.cjs");
-    const zipOutDir = path.resolve(
-      path.join(this.sstBuildDir, `NextjsSite-${this.node.id}-${this.node.addr}`)
-    );
-    // Remove zip dir to ensure no partX.zip remain from previous build
-    fs.removeSync(zipOutDir);
+    // path to public folder; root static assets
+    let publicDir = this.getNextPublicDir()
+    const staticDir = this.getNextStaticDir()
 
-    const result = spawn.sync(
-      "node",
-      [
-        script,
-        path.join(this.getNextBuildDir(), "server"),
-        zipOutDir,
-        `${fileSizeLimit}`,
-      ],
-      {
-        stdio: "inherit",
-      }
-    );
-    if (result.status !== 0) {
-      throw new Error(`There was a problem generating the assets package.`);
+    if (this.isPlaceholder) {
+      publicDir = path.resolve(__dirname, "../assets/NextjsSite/site-stub")
+    } else if (fs.existsSync(staticDir)) {
+      // upload static assets
+      deployments.push(new BucketDeployment(this, 'StaticAssetsDeployment', {
+        destinationBucket: this.cdk.bucket,
+        destinationKeyPrefix: '_next/static',
+        sources: [Source.asset(staticDir)],
+        distribution: this.cdk.distribution,
+        prune: false,
+      }))
     }
 
-    // Create S3 Assets for each zip file
-    const assets = [];
-    for (let partId = 0; ; partId++) {
-      const zipFilePath = path.join(zipOutDir, `part${partId}.zip`);
-      if (!fs.existsSync(zipFilePath)) {
-        break;
-      }
-      assets.push(
-        new s3Assets.Asset(this, `Asset${partId}`, {
-          path: zipFilePath,
-        })
-      );
+    if (fs.existsSync(publicDir)) {
+      // public folder
+      deployments.push(new BucketDeployment(this, 'PublicFilesDeployment', {
+        destinationBucket: this.cdk.bucket,
+        destinationKeyPrefix: '/',
+        sources: [Source.asset(path.join(__dirname, '../../public'))],
+        distribution: this.cdk.distribution /** Invalidate Cloudfront distribution caches */,
+        prune: false /** Do not delete stale files */,
+      })
+      )
     }
-    return assets;
-  }
-
-  private createStaticsS3AssetsWithStub(): s3Assets.Asset[] {
-    return [
-      new s3Assets.Asset(this, "Asset", {
-        path: path.resolve(__dirname, "../assets/NextjsSite/site-stub"),
-      }),
-    ];
+    return deployments;
   }
 
   private createS3Bucket(): s3.Bucket {
@@ -639,112 +614,10 @@ export class NextjsSite extends Construct implements SSTConstruct {
     }
   }
 
-  private createS3Deployment(assets: s3Assets.Asset[]): CustomResource {
-    // Create a Lambda function that will be doing the uploading
-    const uploader = new lambda.Function(this, "S3Uploader", {
-      code: lambda.Code.fromAsset(
-        path.join(__dirname, "../assets/BaseSite/custom-resource")
-      ),
-      layers: [this.awsCliLayer],
-      runtime: lambda.Runtime.PYTHON_3_7,
-      handler: "s3-upload.handler",
-      timeout: Duration.minutes(15),
-      memorySize: 1024,
-    });
-    this.cdk.bucket.grantReadWrite(uploader);
-    assets.forEach((asset) =>
-      asset.grantRead(uploader)
-    );
-
-    // Create the custom resource function
-    const handler = new lambda.Function(this, "S3Handler", {
-      code: lambda.Code.fromAsset(
-        path.join(__dirname, "../assets/BaseSite/custom-resource")
-      ),
-      layers: [this.awsCliLayer],
-      runtime: lambda.Runtime.PYTHON_3_7,
-      handler: "s3-handler.handler",
-      timeout: Duration.minutes(15),
-      memorySize: 1024,
-      environment: {
-        UPLOADER_FUNCTION_NAME: uploader.functionName,
-      },
-    });
-    this.cdk.bucket.grantReadWrite(handler);
-    uploader.grantInvoke(handler);
-
-    // Build file options
-    const fileOptions = [];
-    // path to static assets: standalone/$path/.next/server
-    const publicPath = path.join(this.getNextBuildDir(), "server");
-    console.log("publicPath", publicPath);
-    for (const item of fs.readdirSync(publicPath)) {
-      console.log("S3:", item)
-      if (item === "build") {
-        fileOptions.push({
-          exclude: "*",
-          include: "build/*",
-          cacheControl: "public,max-age=31536000,immutable",
-        });
-      } else {
-        const itemPath = path.join(publicPath, item);
-        fileOptions.push({
-          exclude: "*",
-          include: fs.statSync(itemPath).isDirectory()
-            ? `${item}/*`
-            : `${item}`,
-          cacheControl: "public,max-age=3600,must-revalidate",
-        });
-      }
-    }
-
-    // Create custom resource
-    return new CustomResource(this, "S3Deployment", {
-      serviceToken: handler.functionArn,
-      resourceType: "Custom::SSTBucketDeployment",
-      properties: {
-        Sources: assets.map((asset) => ({
-          BucketName: asset.s3BucketName,
-          ObjectKey: asset.s3ObjectKey,
-        })),
-        DestinationBucketName: this.cdk.bucket.bucketName,
-        FileOptions: (fileOptions || []).map(
-          ({ exclude, include, cacheControl }) => {
-            return [
-              "--exclude",
-              exclude,
-              "--include",
-              include,
-              "--cache-control",
-              cacheControl,
-            ];
-          }
-        ),
-      },
-    });
-  }
-
   /////////////////////
   // Bundle Lambda Server
   /////////////////////
 
-  // output of nextjs standalone build
-  private getNextStandaloneDir() {
-    const app = App.of(this) as App
-    const { path: nextjsPath } = this.props;
-    const standaloneDir = path.join(nextjsPath, NEXTJS_BUILD_DIR, NEXTJS_BUILD_STANDALONE_DIR)
-    const standaloneDirAbsolute = path.join(app.appPath, standaloneDir)
-    if (!fs.existsSync(standaloneDirAbsolute)) {
-      throw new Error(`Could not find ${standaloneDir} directory. Please run "npm run build" before deploying.`);
-    }
-    return standaloneDirAbsolute
-  }
-
-  // nextjs project inside of standalone build
-  // contains manifests, static files
-  private getNextBuildDir() {
-    return path.join(this.getNextStandaloneDir(), this.props.path, NEXTJS_BUILD_DIR);
-  }
 
   private createServerFunction(): NodejsFunction {
     const app = App.of(this) as App
@@ -926,6 +799,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
       cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
       cachePolicy: staticCachePolicy,
+
     };
     return new cloudfront.Distribution(this, "Distribution", {
       // these values can be overwritten by cfDistributionProps
@@ -1255,7 +1129,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
 
   getNextBuildId() {
     return fs.readFileSync(
-      path.join(this.getNextBuildDir(), 'BUILD_ID'), 'utf-8')
+      path.join(this.getNextStandaloneBuildDir(), 'BUILD_ID'), 'utf-8')
   }
 
   private listDirectory(dir: string) {
@@ -1275,7 +1149,43 @@ export class NextjsSite extends Construct implements SSTConstruct {
   }
 
   getPublicFileList() {
-    const publicDir = path.resolve(this.getNextBuildDir(), 'server')
+    const publicDir = this.getNextStaticDir()
     return this.listDirectory(publicDir).map((file) => path.join('/', path.relative(publicDir, file)))
+  }
+
+
+  private getNextDir() {
+    const app = App.of(this) as App
+    const { path: nextjsPath } = this.props;  // path to nextjs dir inside project
+    const absolutePath = path.join(app.appPath, nextjsPath, NEXTJS_BUILD_DIR) // e.g. /home/me/myapp/web/.next
+    if (!fs.existsSync(absolutePath)) {
+      throw new Error(`Could not find ${absolutePath} directory.`);
+    }
+    return absolutePath;
+  }
+
+  // output of nextjs standalone build
+  private getNextStandaloneDir() {
+    const nextDir = this.getNextDir()
+    const standaloneDir = path.join(nextDir, NEXTJS_BUILD_STANDALONE_DIR)
+
+    if (!fs.existsSync(standaloneDir)) {
+      throw new Error(`Could not find ${standaloneDir} directory.`);
+    }
+    return standaloneDir
+  }
+
+  // nextjs project inside of standalone build
+  // contains manifests
+  private getNextStandaloneBuildDir() {
+    return path.join(this.getNextStandaloneDir(), this.props.path, NEXTJS_BUILD_DIR);
+  }
+
+  // contains static files
+  private getNextStaticDir() {
+    return path.join(this.getNextDir(), NEXTJS_STATIC_DIR);
+  }
+  private getNextPublicDir() {
+    return path.join(this.getNextDir(), NEXTJS_PUBLIC_DIR);
   }
 }
