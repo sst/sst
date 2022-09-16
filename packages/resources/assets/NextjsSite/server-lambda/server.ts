@@ -1,3 +1,5 @@
+// source: https://github.com/iiroj/iiro.fi/commit/bd43222032d0dbb765e1111825f64dbb5db851d9
+
 import lambdaAtEdgeCompat from '@sls-next/next-aws-cloudfront'
 import type { CloudFrontRequestHandler } from 'aws-lambda'
 import type { NextConfig } from 'next'
