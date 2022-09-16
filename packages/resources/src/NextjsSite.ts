@@ -1,51 +1,54 @@
 import chalk from "chalk";
-import spawn from "cross-spawn";
-import * as esbuild from "esbuild";
-import fs from "fs-extra";
-import indent from "indent-string";
 import path from "path";
 import url from "url";
+import fs from "fs-extra";
+import spawn from "cross-spawn";
+import { execSync } from "child_process";
 
-import { getChildLogger } from "@serverless-stack/core";
+import { Construct } from "constructs";
 import {
-  CfnOutput, CustomResource, Duration, Fn, RemovalPolicy
+  Token,
+  Duration,
+  CfnOutput,
+  RemovalPolicy,
+  CustomResource,
 } from "aws-cdk-lib";
-import * as acm from "aws-cdk-lib/aws-certificatemanager";
-import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
-import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
+import * as s3 from "aws-cdk-lib/aws-s3";
 import * as iam from "aws-cdk-lib/aws-iam";
+import * as sqs from "aws-cdk-lib/aws-sqs";
+import * as logs from "aws-cdk-lib/aws-logs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as route53 from "aws-cdk-lib/aws-route53";
-import * as route53Patterns from "aws-cdk-lib/aws-route53-patterns";
-import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
-import * as s3 from "aws-cdk-lib/aws-s3";
+import * as s3Assets from "aws-cdk-lib/aws-s3-assets";
+import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
+import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
-import { Construct } from "constructs";
-const logger = getChildLogger("NextjsSite");
+import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
+import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
+import * as route53Patterns from "aws-cdk-lib/aws-route53-patterns";
+import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
+// import type { RoutesManifest } from "@sls-next/lambda-at-edge";
 
-import { LayerVersion } from "aws-cdk-lib/aws-lambda";
-import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
-import { BucketDeployment, Source } from "aws-cdk-lib/aws-s3-deployment";
 import { App } from "./App.js";
-import {
-  BaseSiteCdkDistributionProps, BaseSiteDomainProps, BaseSiteEnvironmentOutputsInfo,
-  buildErrorResponsesForRedirectToIndex
-} from "./BaseSite.js";
-import { isCDKConstruct, SSTConstruct } from "./Construct.js";
 import { Stack } from "./Stack.js";
-import { attachPermissionsToRole, Permissions } from "./util/permission.js";
+import { SSTConstruct, isCDKConstruct } from "./Construct.js";
+import {
+  BaseSiteDomainProps,
+  BaseSiteReplaceProps,
+  BaseSiteCdkDistributionProps,
+  BaseSiteEnvironmentOutputsInfo,
+  getBuildCmdEnvironment,
+  buildErrorResponsesForRedirectToIndex,
+} from "./BaseSite.js";
+import { Permissions, attachPermissionsToRole } from "./util/permission.js";
+import { getHandlerHash } from "./util/builder.js";
+import * as crossRegionHelper from "./nextjs-site/cross-region-helper.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
-const NEXTJS_BUILD_DIR = '.next';
-const NEXTJS_STATIC_DIR = 'static'
-const NEXTJS_PUBLIC_DIR = 'public'
-const NEXTJS_BUILD_STANDALONE_DIR = 'standalone';
-const NEXTJS_BUILD_STANDALONE_ENV = 'NEXT_PRIVATE_STANDALONE'
-
-export interface NextjsDomainProps extends BaseSiteDomainProps { }
+export interface NextjsDomainProps extends BaseSiteDomainProps {}
 export interface NextjsCdkDistributionProps
-  extends BaseSiteCdkDistributionProps { }
+  extends BaseSiteCdkDistributionProps {}
 export interface NextjsSiteProps {
   cdk?: {
     /**
@@ -53,13 +56,12 @@ export interface NextjsSiteProps {
      */
     bucket?: s3.BucketProps | s3.IBucket;
     /**
-     * Pass in a value to override the default settings this construct uses to
-     * create the CDK `Distribution` internally.
+     * Pass in a value to override the default settings this construct uses to create the CDK `Distribution` internally.
      */
     distribution?: NextjsCdkDistributionProps;
     /**
-    * Override the default CloudFront cache policies created internally.
-    */
+     * Override the default CloudFront cache policies created internally.
+     */
     cachePolicies?: {
       staticCachePolicy?: cloudfront.ICachePolicy;
       imageCachePolicy?: cloudfront.ICachePolicy;
@@ -67,21 +69,28 @@ export interface NextjsSiteProps {
     };
     /**
      * Override the default CloudFront image origin request policy created internally
-    */
+     */
     imageOriginRequestPolicy?: cloudfront.IOriginRequestPolicy;
+    /**
+     * Override the default settings this construct uses to create the CDK `Queue` internally.
+     */
+    regenerationQueue?: sqs.QueueProps;
   };
-
   /**
    * Path to the directory where the website source is located.
    */
   path: string;
-
   /**
-   * The customDomain for this website. SST supports domains that are hosted
-   * either on [Route 53](https://aws.amazon.com/route53/) or externally.
+   * Path to the next executable, typically in node_modules.
+   * This should be used if next is installed in a non-standard location.
    *
-   * Note that you can also migrate externally hosted domains to Route 53 by
-   * [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+   * @default "./node_modules/.bin/next"
+   */
+  nextBinPath?: string;
+  /**
+   * The customDomain for this website. SST supports domains that are hosted either on [Route 53](https://aws.amazon.com/route53/) or externally.
+   *
+   * Note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
    *
    * @example
    * ```js {3}
@@ -103,13 +112,12 @@ export interface NextjsSiteProps {
    * ```
    */
   customDomain?: string | NextjsDomainProps;
-
   /**
    * An object with the key being the environment variable name.
    *
    * @example
    * ```js {3-6}
-   * new NextjsSite(stack, "Site", {
+   * new NextjsSite(stack, "NextSite", {
    *   path: "path/to/site",
    *   environment: {
    *     API_URL: api.url,
@@ -118,47 +126,74 @@ export interface NextjsSiteProps {
    * });
    * ```
    */
-  environment?: Record<string, string>;
-
+  environment?: { [key: string]: string };
+  defaults?: {
+    function?: {
+      timeout?: number;
+      memorySize?: number;
+      permissions?: Permissions;
+      /**
+       * The runtime environment.
+       * @default "nodejs16.x"
+       * @example
+       * ```js
+       * new Function(stack, "Function", {
+       *   path: "path/to/site",
+       *   runtime: "nodejs16.x",
+       * })
+       *```
+      */
+      runtime?: "nodejs12.x" | "nodejs14.x" | "nodejs16.x";
+    };
+  };
   /**
-   * When running `sst start`, a placeholder site is deployed. This is to ensure
-   * that the site content remains unchanged, and subsequent `sst start` can
-   * start up quickly.
+   * When running `sst start`, a placeholder site is deployed. This is to ensure that the site content remains unchanged, and subsequent `sst start` can start up quickly.
    *
    * @example
    * ```js {3}
-   * new NextjsSite(stack, "NextjsSite", {
+   * new NextjsSite(stack, "NextSite", {
    *   path: "path/to/site",
    *   disablePlaceholder: true,
    * });
    * ```
    */
   disablePlaceholder?: boolean;
-
-  defaults?: {
-    function?: {
-      timeout?: number;
-      memorySize?: number;
-      permissions?: Permissions;
-    };
-  };
-
   /**
    * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
    */
   waitForInvalidation?: boolean;
+  commandHooks?: {
+    /**
+     * Commands to run after building the Next.js app. Commands are chained with `&&`, and they are run inside the Next.js app folder.
+     *
+     * @example
+     * ```js
+     * new NextjsSite(stack, "NextSite", {
+     *   path: "path/to/site",
+     *   commandHooks: {
+     *     afterBuild: ["npx next-sitemap"],
+     *   }
+     * });
+     * ```
+     */
+    afterBuild?: string[];
+  };
 }
 
+/////////////////////
+// Construct
+/////////////////////
+
 /**
- * The `NextjsSite` construct is a higher level CDK construct that makes it easy to create a Nextjs app.
+ * The `NextjsSite` construct is a higher level CDK construct that makes it easy to create a Next.js app.
  *
  * @example
  *
- * Deploys a Nextjs app in the `my-nextjs-app` directory.
+ * Deploys a Next.js app in the `path/to/site` directory.
  *
  * ```js
- * new NextjsSite(stack, "web", {
- *   path: "my-nextjs-app/",
+ * new NextjsSite(stack, "NextSite", {
+ *   path: "path/to/site",
  * });
  * ```
  */
@@ -194,7 +229,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
   };
 
   /**
-   * The default CloudFront cache policy properties for the Lambda server handler.
+   * The default CloudFront cache policy properties for Lambda@Edge.
    */
   public static lambdaCachePolicyProps: cloudfront.CachePolicyProps = {
     queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
@@ -209,27 +244,23 @@ export class NextjsSite extends Construct implements SSTConstruct {
   };
 
   /**
-   * The default CloudFront image origin request policy properties for Next images.
-  */
+   * The default CloudFront image origin request policy properties for Lambda@Edge.
+   */
   public static imageOriginRequestPolicyProps: cloudfront.OriginRequestPolicyProps =
     {
       queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.all(),
       comment: "SST NextjsSite Lambda Default Origin Request Policy",
     };
 
-
-  /**
-   * Exposes CDK instances created within the construct.
-   */
   public readonly cdk: {
-    /**
-     * The internally created CDK `Function` instance.
-     */
-    function?: lambda.Function;
     /**
      * The internally created CDK `Bucket` instance.
      */
     bucket: s3.Bucket;
+    /**
+     * The internally created CDK `Queue` instance.
+     */
+    regenerationQueue: sqs.Queue;
     /**
      * The internally created CDK `Distribution` instance.
      */
@@ -244,100 +275,85 @@ export class NextjsSite extends Construct implements SSTConstruct {
     certificate?: acm.ICertificate;
   };
   private props: NextjsSiteProps;
-  /**
-   * Determines if a placeholder site should be deployed instead. We will set
-   * this to `true` by default when performing local development, although the
-   * user can choose to override this value.
-   */
   private isPlaceholder: boolean;
-  /**
-   * The root SST directory used for builds.
-   */
-  private sstBuildDir: string;
-  private serverLambda?: lambda.Function;
+  private buildOutDir: string | null;
+  private assets: s3Assets.Asset[];
   private awsCliLayer: AwsCliLayer;
-  public originAccessIdentity: cloudfront.IOriginAccessIdentity
+  // private routesManifest: RoutesManifest | null;
+  private edgeLambdaRole: iam.Role;
+  private mainFunctionVersion: lambda.IVersion;
+  private apiFunctionVersion: lambda.IVersion;
+  private imageFunctionVersion: lambda.IVersion;
+  private regenerationFunction: lambda.Function;
 
   constructor(scope: Construct, id: string, props: NextjsSiteProps) {
     super(scope, id);
 
     const app = scope.node.root as App;
-    try {
-      this.isPlaceholder =
-        (app.local || app.skipBuild) && !props.disablePlaceholder;
-      this.sstBuildDir = app.buildDir;
-      this.props = props;
-      this.cdk = {} as any;
-      this.awsCliLayer = new AwsCliLayer(this, "AwsCliLayer");
-      this.registerSiteEnvironment();
+    // Local development or skip build => stub asset
+    this.isPlaceholder =
+      (app.local || app.skipBuild) && !props.disablePlaceholder;
+    const buildDir = app.buildDir;
+    const fileSizeLimit = app.isRunningSSTTest()
+      ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
+        props.sstTestFileSizeLimitOverride || 200
+      : 200;
 
-      // Prepare app
-      if (this.isPlaceholder) {
-      } else {
-        this.buildApp();
-      }
+    this.props = props;
+    this.cdk = {} as any;
+    this.awsCliLayer = new AwsCliLayer(this, "AwsCliLayer");
+    this.registerSiteEnvironment();
 
-      this.originAccessIdentity = new cloudfront.OriginAccessIdentity(this, 'OAI(', {
-        comment: 'Allows CloudFront to access S3 bucket with assets',
-      })
-
-      // Create Bucket which will be utilised to contain the statics
-      this.cdk.bucket = this.createS3Bucket();
-      this.cdk.bucket.grantRead(this.originAccessIdentity);
-
-      // Create Server function
-      this.serverLambda = this.createServerFunction();
-      this.cdk.function = this.serverLambda;
-
-      // Create Custom Domain
-      this.validateCustomDomainSettings();
-      this.cdk.hostedZone = this.lookupHostedZone();
-      this.cdk.certificate = this.createCertificate();
-
-      // Create S3 Deployment
-      const s3Deployments = this.uploadS3Assets()
-
-      // Create CloudFront
-      this.validateCloudFrontDistributionSettings();
-      this.cdk.distribution = this.isPlaceholder
-        ? this.createCloudFrontDistributionForStub()
-        : this.createCloudFrontDistribution();
-      s3Deployments.forEach(s3Deployment => this.cdk.distribution.node.addDependency(s3Deployment))
-
-      // Invalidate CloudFront (might already be handled by S3 deployment?)
-      const invalidationCR = this.createCloudFrontInvalidation();
-      invalidationCR.node.addDependency(this.cdk.distribution);
-
-      // Connect Custom Domain to CloudFront Distribution
-      this.createRoute53Records();
-    } catch (error) {
-      // If running an SST test then re-throw the error so that it can be
-      // tested
-      if (app.isRunningSSTTest()) {
-        throw error;
-      }
-
-      console.error(
-        chalk.red(
-          `\nError: There was a problem synthesizing the NextjsSite at "${props.path}".`
-        )
-      );
-      if (error instanceof Error) {
-        if (error.stack) {
-          console.error(chalk.red(indent(`\n${error.stack}`, 2)));
-        } else if (error.message) {
-          console.error(chalk.bold.red(indent(`\n${error.message}`, 2)));
-        } else {
-          console.error(chalk.bold.red(indent("\nAn unknown error occurred")));
-        }
-      }
-      process.exit(1);
+    // Build app
+    if (this.isPlaceholder) {
+      this.buildOutDir = null;
+      this.assets = this.zipAppStubAssets();
+      // this.routesManifest = null;
+    } else {
+      this.buildOutDir = this.buildApp();
+      this.assets = this.zipAppAssets(fileSizeLimit, buildDir);
+      // this.routesManifest = this.readRoutesManifest();
     }
-  }
 
-  /////////////////////
-  // Public Properties
-  /////////////////////
+    // Create Bucket
+    this.cdk.bucket = this.createS3Bucket();
+
+    // Handle Incremental Static Regeneration
+    this.cdk.regenerationQueue = this.createRegenerationQueue();
+    this.regenerationFunction = this.createRegenerationFunction();
+
+    // Create Lambda@Edge functions (always created in us-east-1)
+    this.edgeLambdaRole = this.createEdgeFunctionRole();
+    this.mainFunctionVersion = this.createEdgeFunction(
+      "Main",
+      "default-lambda"
+    );
+    this.apiFunctionVersion = this.createEdgeFunction("Api", "api-lambda");
+    this.imageFunctionVersion = this.createEdgeFunction(
+      "Image",
+      "image-lambda"
+    );
+
+    // Create Custom Domain
+    this.validateCustomDomainSettings();
+    this.cdk.hostedZone = this.lookupHostedZone();
+    this.cdk.certificate = this.createCertificate();
+
+    // Create S3 Deployment
+    const s3deployCR = this.createS3Deployment();
+
+    // Create CloudFront
+    this.cdk.distribution = this.createCloudFrontDistribution();
+    this.cdk.distribution.node.addDependency(s3deployCR);
+
+    // Invalidate CloudFront
+    const invalidationCR = this.createCloudFrontInvalidation();
+    invalidationCR.node.addDependency(this.cdk.distribution);
+
+    // Connect Custom Domain to CloudFront Distribution
+    this.createRoute53Records();
+  }
 
   /**
    * The CloudFront URL of the website.
@@ -347,8 +363,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
   }
 
   /**
-   * If the custom domain is enabled, this is the URL of the website with the
-   * custom domain.
+   * If the custom domain is enabled, this is the URL of the website with the custom domain.
    */
   public get customDomainUrl(): string | undefined {
     const { customDomain } = this.props;
@@ -391,15 +406,11 @@ export class NextjsSite extends Construct implements SSTConstruct {
     return this.cdk.distribution.distributionDomainName;
   }
 
-  /////////////////////
-  // Public Methods
-  /////////////////////
-
   /**
-   * Attaches the given list of permissions to allow the Nextjs server side
-   * rendering to access other AWS resources.
-   *
+   * Attaches the given list of permissions to allow the Next.js API routes and Server Side rendering `getServerSideProps` to access other AWS resources.
    * @example
+   * ### Attaching permissions
+   *
    * ```js {5}
    * const site = new NextjsSite(stack, "Site", {
    *   path: "path/to/site",
@@ -409,14 +420,12 @@ export class NextjsSite extends Construct implements SSTConstruct {
    * ```
    */
   public attachPermissions(permissions: Permissions): void {
-    if (this.serverLambda) {
-      attachPermissionsToRole(this.serverLambda.role as iam.Role, permissions);
-    }
+    attachPermissionsToRole(this.edgeLambdaRole, permissions);
   }
 
   public getConstructMetadata() {
     return {
-      type: "NextjsSite" as const,
+      type: "NextSite" as const,
       data: {
         distributionId: this.cdk.distribution.distributionId,
         customDomainUrl: this.customDomainUrl,
@@ -424,175 +433,325 @@ export class NextjsSite extends Construct implements SSTConstruct {
     };
   }
 
-  /////////////////////
-  // Build App
-  /////////////////////
-
-  private buildApp() {
-
-    // Build
-    const app = this.node.root as App;
-    if (!app.isRunningSSTTest()) {
-      this.runNpmBuild();
+  private zipAppAssets(
+    fileSizeLimit: number,
+    buildDir: string
+  ): s3Assets.Asset[] {
+    // validate buildOutput exists
+    const siteOutputPath = path.resolve(path.join(this.buildOutDir!, "assets"));
+    if (!fs.existsSync(siteOutputPath)) {
+      throw new Error(
+        `No build output found at "${siteOutputPath}" for the "${this.node.id}" NextjsSite.`
+      );
     }
 
-    // Validate build output exists
-    const baseOutputDir = path.resolve(this.props.path)
-    const serverBuildDir = path.join(
-      baseOutputDir, NEXTJS_BUILD_DIR
+    // create zip files
+    const script = path.join(__dirname, "../assets/BaseSite/archiver.cjs");
+    const zipPath = path.resolve(
+      path.join(buildDir, `NextjsSite-${this.node.id}-${this.node.addr}`)
+    );
+    // clear zip path to ensure no partX.zip remain from previous build
+    fs.removeSync(zipPath);
+
+    const result = spawn.sync(
+      "node",
+      [script, siteOutputPath, zipPath, `${fileSizeLimit}`],
+      {
+        stdio: "inherit",
+      }
+    );
+    if (result.status !== 0) {
+      console.error(
+        `There was a problem generating the "${this.node.id}" NextjsSite package.`
+      );
+      process.exit(1);
+    }
+
+    // create assets
+    const assets = [];
+    for (let partId = 0; ; partId++) {
+      const zipFilePath = path.join(zipPath, `part${partId}.zip`);
+      if (!fs.existsSync(zipFilePath)) {
+        break;
+      }
+
+      assets.push(
+        new s3Assets.Asset(this, `Asset${partId}`, {
+          path: zipFilePath,
+        })
+      );
+    }
+    return assets;
+  }
+
+  private zipAppStubAssets(): s3Assets.Asset[] {
+    return [
+      new s3Assets.Asset(this, "Asset", {
+        path: path.resolve(__dirname, "../assets/NextjsSite/site-stub"),
+      }),
+    ];
+  }
+
+  private createEdgeFunction(
+    name: string,
+    handlerPath: string
+  ): lambda.IVersion {
+    // Use real code if:
+    // - Next.js app was build; AND
+    // - the Lambda code directory is not empty
+    const hasRealCode =
+      typeof this.buildOutDir === "string" &&
+      fs.pathExistsSync(path.join(this.buildOutDir, handlerPath, "index.js"));
+
+    // Create function asset
+    const assetPath =
+      hasRealCode && this.buildOutDir
+        ? path.join(this.buildOutDir, handlerPath)
+        : path.join(__dirname, "../assets/NextjsSite/edge-lambda-stub");
+    const asset = new s3Assets.Asset(this, `${name}FunctionAsset`, {
+      path: assetPath,
+    });
+
+    // Create function based on region
+    const app = this.node.root as App;
+    return app.region === "us-east-1"
+      ? this.createEdgeFunctionInUE1(name, assetPath, asset, hasRealCode)
+      : this.createEdgeFunctionInNonUE1(name, assetPath, asset, hasRealCode);
+  }
+
+  private createEdgeFunctionInUE1(
+    name: string,
+    assetPath: string,
+    asset: s3Assets.Asset,
+    hasRealCode: boolean
+  ): lambda.IVersion {
+    const { defaults } = this.props;
+
+    // Create function
+    const fn = new lambda.Function(this, `${name}Function`, {
+      description: `${name} handler for Next.js`,
+      handler: "index-wrapper.handler",
+      currentVersionOptions: {
+        removalPolicy: RemovalPolicy.DESTROY,
+      },
+      logRetention: logs.RetentionDays.THREE_DAYS,
+      code: lambda.Code.fromAsset(assetPath),
+      runtime: this.normalizeRuntime(defaults?.function?.runtime),
+      memorySize: defaults?.function?.memorySize || 512,
+      timeout: Duration.seconds(defaults?.function?.timeout || 10),
+      role: this.edgeLambdaRole,
+    });
+
+    // Create alias
+    fn.currentVersion.addAlias("live");
+
+    // Deploy after the code is updated
+    if (hasRealCode) {
+      const updaterCR = this.createLambdaCodeReplacer(name, asset);
+      fn.node.addDependency(updaterCR);
+    }
+
+    return fn.currentVersion;
+  }
+
+  private createEdgeFunctionInNonUE1(
+    name: string,
+    assetPath: string,
+    asset: s3Assets.Asset,
+    hasRealCode: boolean
+  ): lambda.IVersion {
+    const { defaults } = this.props;
+
+    // If app region is NOT us-east-1, create a Function in us-east-1
+    // using a Custom Resource
+
+    // Create a S3 bucket in us-east-1 to store Lambda code. Create
+    // 1 bucket for all Edge functions.
+    const bucketCR = crossRegionHelper.getOrCreateBucket(this);
+    const bucketName = bucketCR.getAttString("BucketName");
+
+    // Create a Lambda function in us-east-1
+    const functionCR = crossRegionHelper.createFunction(
+      this,
+      name,
+      this.edgeLambdaRole,
+      bucketName,
+      {
+        Description: `handler for Next.js`,
+        Handler: "index-wrapper.handler",
+        Code: {
+          S3Bucket: asset.s3BucketName,
+          S3Key: asset.s3ObjectKey,
+        },
+        Runtime: this.normalizeRuntime(defaults?.function?.runtime).name,
+        MemorySize: defaults?.function?.memorySize || 512,
+        Timeout: Duration.seconds(
+          defaults?.function?.timeout || 10
+        ).toSeconds(),
+        Role: this.edgeLambdaRole.roleArn,
+      }
+    );
+    const functionArn = functionCR.getAttString("FunctionArn");
+
+    // Create a Lambda function version in us-east-1
+    const versionCR = crossRegionHelper.createVersion(this, name, functionArn);
+    const versionId = versionCR.getAttString("Version");
+    crossRegionHelper.updateVersionLogicalId(functionCR, versionCR);
+
+    // Deploy after the code is updated
+    if (hasRealCode) {
+      const updaterCR = this.createLambdaCodeReplacer(name, asset);
+      functionCR.node.addDependency(updaterCR);
+    }
+
+    return lambda.Version.fromVersionArn(
+      this,
+      `${name}FunctionVersion`,
+      `${functionArn}:${versionId}`
+    );
+  }
+
+  private createEdgeFunctionRole(): iam.Role {
+    const { defaults } = this.props;
+
+    // Create function role
+    const role = new iam.Role(this, `EdgeLambdaRole`, {
+      assumedBy: new iam.CompositePrincipal(
+        new iam.ServicePrincipal("lambda.amazonaws.com"),
+        new iam.ServicePrincipal("edgelambda.amazonaws.com")
+      ),
+      managedPolicies: [
+        iam.ManagedPolicy.fromManagedPolicyArn(
+          this,
+          "EdgeLambdaPolicy",
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+        ),
+      ],
+    });
+
+    // Attach permission
+    this.cdk.bucket.grantReadWrite(role);
+    this.cdk.regenerationQueue.grantSendMessages(role);
+    this.regenerationFunction.grantInvoke(role);
+    if (defaults?.function?.permissions) {
+      attachPermissionsToRole(role, defaults.function.permissions);
+    }
+
+    return role;
+  }
+
+  private createRegenerationQueue(): sqs.Queue {
+    const { cdk } = this.props;
+
+    return new sqs.Queue(this, "RegenerationQueue", {
+      ...cdk?.regenerationQueue,
+      // We call the queue the same name as the bucket so that we can easily
+      // reference it from within the lambda@edge, given we can't use env vars
+      // in a lambda@edge
+      queueName: `${this.cdk.bucket.bucketName}.fifo`,
+      fifo: true,
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
+  }
+
+  private createRegenerationFunction(): lambda.Function {
+    // Use real code if:
+    // - Next.js app was build; AND
+    // - the Lambda code directory is not empty
+    let code;
+    let updaterCR;
+    if (
+      this.buildOutDir &&
+      fs.pathExistsSync(
+        path.join(this.buildOutDir, "regeneration-lambda", "index.js")
+      )
+    ) {
+      const asset = new s3Assets.Asset(this, `RegenerationFunctionAsset`, {
+        path: path.join(this.buildOutDir, "regeneration-lambda"),
+      });
+      code = lambda.Code.fromAsset(
+        path.join(this.buildOutDir, "regeneration-lambda")
+      );
+      updaterCR = this.createLambdaCodeReplacer("Regeneration", asset);
+    } else {
+      code = lambda.Code.fromInline("  ");
+    }
+
+    // Create function
+    const { defaults } = this.props;
+    const fn = new lambda.Function(this, "RegenerationFunction", {
+      handler: "index-wrapper.handler",
+      runtime: this.normalizeRuntime(defaults?.function?.runtime),
+      memorySize: defaults?.function?.memorySize || 1024,
+      timeout: Duration.seconds(defaults?.function?.timeout || 30),
+      code,
+    });
+
+    fn.addEventSource(
+      new lambdaEventSources.SqsEventSource(this.cdk.regenerationQueue)
     );
 
-    if (!fs.existsSync(serverBuildDir)) {
-      throw new Error(
-        `No server build output found at "${serverBuildDir}"`
-      );
+    // Grant permissions
+    this.cdk.bucket.grantReadWrite(fn);
+
+    // Deploy after the code is updated
+    if (updaterCR) {
+      fn.node.addDependency(updaterCR);
     }
+
+    return fn;
   }
 
-  private runNpmBuild() {
-    const { path: sitePath } = this.props;
+  private createLambdaCodeReplacer(
+    name: string,
+    asset: s3Assets.Asset
+  ): CustomResource {
+    // Note: Source code for the Lambda functions have "{{ ENV_KEY }}" in them.
+    //       They need to be replaced with real values before the Lambda
+    //       functions get deployed.
 
-    // validate site path exists
-    if (!fs.existsSync(sitePath)) {
-      throw new Error(`No path found at "${path.resolve(sitePath)}"`);
+    const providerId = "LambdaCodeReplacerProvider";
+    const resId = `${name}LambdaCodeReplacer`;
+    const stack = Stack.of(this);
+    let provider = stack.node.tryFindChild(providerId) as lambda.Function;
+
+    // Create provider if not already created
+    if (!provider) {
+      provider = new lambda.Function(stack, providerId, {
+        code: lambda.Code.fromAsset(
+          path.join(__dirname, "../assets/NextjsSite/custom-resource")
+        ),
+        layers: [this.awsCliLayer],
+        runtime: lambda.Runtime.PYTHON_3_7,
+        handler: "lambda-code-updater.handler",
+        timeout: Duration.minutes(15),
+        memorySize: 1024,
+      });
     }
 
-    // Ensure that the site has a build script defined
-    if (!fs.existsSync(path.join(sitePath, "package.json"))) {
-      throw new Error(`No package.json found at "${sitePath}".`);
-    }
-    const packageJson = fs.readJsonSync(path.join(sitePath, "package.json"));
-    if (!packageJson.scripts || !packageJson.scripts.build) {
-      throw new Error(
-        `No "build" script found within package.json in "${sitePath}".`
-      );
-    }
+    // Allow provider to perform search/replace on the asset
+    provider.role?.addToPrincipalPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ["s3:*"],
+        resources: [`arn:aws:s3:::${asset.s3BucketName}/${asset.s3ObjectKey}`],
+      })
+    );
 
-    // Run build
-    logger.debug(`Running "npm build" script`);
-    const buildResult = spawn.sync("npm", ["run", "build"], {
-      cwd: sitePath,
-      stdio: "inherit",
-      env: {
-        ...process.env,
-        [NEXTJS_BUILD_STANDALONE_ENV]: 'true'
+    // Create custom resource
+    const resource = new CustomResource(this, resId, {
+      serviceToken: provider.functionArn,
+      resourceType: "Custom::SSTLambdaCodeUpdater",
+      properties: {
+        Source: {
+          BucketName: asset.s3BucketName,
+          ObjectKey: asset.s3ObjectKey,
+        },
+        ReplaceValues: this.getLambdaContentReplaceValues(),
       },
     });
-    if (buildResult.status !== 0) {
-      throw new Error('The app "build" script failed.');
-    }
-  }
 
-  private buildLayer(): LayerVersion {
-    const layerDir = path.resolve(__dirname, "../assets/NextjsSite/layer");
-    const sharpLayer = new LayerVersion(this, "SharpLayer", {
-      code: new lambda.AssetCode(path.join(layerDir, "sharp-0.30.0.zip")),
-      compatibleRuntimes: [lambda.Runtime.NODEJS_16_X],
-      description: "Sharp for NextjsSite",
-    });
-    return sharpLayer;
-
-    ///////  other ways to build this layer:
-    // const buildDir = path.resolve(
-    //   path.join(this.sstBuildDir, `NextjsLayer-${this.node.id}-${this.node.addr}`)
-    // );
-    // fs.removeSync(buildDir);
-    // fs.mkdirSync(buildDir, { recursive: true });
-    // const zipFile ="nextjs-layer.zip"
-    // const zipFilePath = path.join(buildDir, zipFile);
-    // const LAMBDA_FOLDER = 'nodejs'
-    // const createBundleCmdArgs = [
-    //   '-xc',
-    //   [
-    //     `mkdir -p ${LAMBDA_FOLDER}`,
-    //     `cd ${LAMBDA_FOLDER}`,
-    //     `npm install \
-    //     --arch=x64 \
-    //     --platform=linux \
-    //     --target=16.15 \
-    //     --libc=glibc \
-    //     next sharp`,
-    //     'cd ..',
-    //     `zip -qr ${zipFile} ${LAMBDA_FOLDER}`
-    //   ].join(' && '),
-    // ];
-    // console.log(createBundleCmdArgs)
-
-    // const buildResult = spawn.sync('bash', createBundleCmdArgs, {
-    //   cwd: buildDir,
-    //   stdio: "inherit",
-    // });
-    // if (buildResult.status !== 0 || !fs.existsSync(zipFilePath)) {
-    //   throw new Error(`Failed to create nextjs layer in ${buildDir}`);
-    // }
-
-    // // hash our parameters so we know when we need t rebuild
-    // const bundleCommandHash = crypto.createHash('sha256');
-    // bundleCommandHash.update(JSON.stringify(createBundleCmdArgs));
-
-    // // bundle
-    // const code = Code.fromAsset(zipFilePath);
-
-    // // const code = Code.fromAsset(__dirname, {
-    // //   // don't send all our files to docker (slow)
-    // //   ignoreMode: IgnoreMode.GLOB,
-    // //   exclude: ['*'],
-
-    // //   // if our bundle commands (basically our "dockerfile") changes then rebuild the image
-    // //   assetHashType: AssetHashType.CUSTOM,
-    // //   assetHash: bundleCommandHash.digest('hex'),
-
-    // //   bundling: {
-    // //     image: lambda.Runtime.NODEJS_16_X.bundlingImage,
-    // //     command: createBundleCommand,
-    // //   },
-    // // });
-
-    // // Build Next.js layer
-    // const nextjsLayer = new lambda.LayerVersion(this, "NextjsLayer", {
-    //   code,
-    //   compatibleRuntimes: [lambda.Runtime.NODEJS_16_X],
-    //   description: "Next.js",
-    // });
-    // return nextjsLayer;
-  }
-
-  /////////////////////
-  // Bundle S3 Assets
-  /////////////////////
-
-  private uploadS3Assets() {
-    const deployments: BucketDeployment[] = [];
-
-    // path to public folder; root static assets
-    let publicDir = this.getNextPublicDir()
-    const staticDir = this.getNextStaticDir()
-
-    if (this.isPlaceholder) {
-      publicDir = path.resolve(__dirname, "../assets/NextjsSite/site-stub")
-    } else if (fs.existsSync(staticDir)) {
-      // upload static assets
-      deployments.push(new BucketDeployment(this, 'StaticAssetsDeployment', {
-        destinationBucket: this.cdk.bucket,
-        destinationKeyPrefix: '_next/static',
-        sources: [Source.asset(staticDir)],
-        distribution: this.cdk.distribution,
-        prune: false,
-      }))
-    }
-
-    if (fs.existsSync(publicDir)) {
-      // public folder
-      deployments.push(new BucketDeployment(this, 'PublicFilesDeployment', {
-        destinationBucket: this.cdk.bucket,
-        destinationKeyPrefix: '/',
-        sources: [Source.asset(path.join(__dirname, '../../public'))],
-        distribution: this.cdk.distribution /** Invalidate Cloudfront distribution caches */,
-        prune: false /** Do not delete stale files */,
-      })
-      )
-    }
-    return deployments;
+    return resource;
   }
 
   private createS3Bucket(): s3.Bucket {
@@ -614,124 +773,191 @@ export class NextjsSite extends Construct implements SSTConstruct {
     }
   }
 
-  /////////////////////
-  // Bundle Lambda Server
-  /////////////////////
-
-
-  private createServerFunction(): NodejsFunction {
-    const app = App.of(this) as App
-    const { defaults, environment, path: nextjsPath } = this.props;
-
-    // build native deps layer
-    const nextLayer = this.buildLayer()
-
-    // bundle the standalone output dir
-    const standaloneDirAbsolute = this.getNextStandaloneDir()
-
-    const zipFilePath = this.createServerZip()
-
-    // build the lambda function
-    const fn = new lambda.Function(this, 'MainFn', {
-      memorySize: defaults?.function?.memorySize || 1024,
-      timeout: defaults?.function?.timeout ? Duration.seconds(defaults.function.timeout) : Duration.seconds(10),
-      runtime: lambda.Runtime.NODEJS_16_X,
-      handler: path.join(nextjsPath, 'server.handler'),
-      layers: [nextLayer],
-      code: lambda.Code.fromAsset(zipFilePath),
-      environment,
+  private createS3Deployment(): CustomResource {
+    // Create a Lambda function that will be doing the uploading
+    const uploader = new lambda.Function(this, "S3Uploader", {
+      code: lambda.Code.fromAsset(
+        path.join(__dirname, "../assets/BaseSite/custom-resource")
+      ),
+      layers: [this.awsCliLayer],
+      runtime: lambda.Runtime.PYTHON_3_7,
+      handler: "s3-upload.handler",
+      timeout: Duration.minutes(15),
+      memorySize: 1024,
     });
+    this.cdk.bucket.grantReadWrite(uploader);
+    this.assets.forEach((asset) => asset.grantRead(uploader));
 
-    // attach permissions
-    this.cdk.bucket.grantReadWrite(fn.role!);
-    if (defaults?.function?.permissions) {
-      attachPermissionsToRole(fn.role as iam.Role, defaults.function.permissions);
-    }
+    // Create the custom resource function
+    const handler = new lambda.Function(this, "S3Handler", {
+      code: lambda.Code.fromAsset(
+        path.join(__dirname, "../assets/BaseSite/custom-resource")
+      ),
+      layers: [this.awsCliLayer],
+      runtime: lambda.Runtime.PYTHON_3_7,
+      handler: "s3-handler.handler",
+      timeout: Duration.minutes(15),
+      memorySize: 1024,
+      environment: {
+        UPLOADER_FUNCTION_NAME: uploader.functionName,
+      },
+    });
+    this.cdk.bucket.grantReadWrite(handler);
+    uploader.grantInvoke(handler);
 
-    return fn;
+    // Create custom resource
+    const fileOptions = [
+      {
+        exclude: "*",
+        include: "public/*",
+        cacheControl: "public,max-age=31536000,must-revalidate",
+      },
+      {
+        exclude: "*",
+        include: "static/*",
+        cacheControl: "public,max-age=31536000,must-revalidate",
+      },
+      {
+        exclude: "*",
+        include: "static-pages/*",
+        cacheControl: "public,max-age=0,s-maxage=2678400,must-revalidate",
+      },
+      {
+        exclude: "*",
+        include: "_next/data/*",
+        cacheControl: "public,max-age=0,s-maxage=2678400,must-revalidate",
+      },
+      {
+        exclude: "*",
+        include: "_next/static/*",
+        cacheControl: "public,max-age=31536000,immutable",
+      },
+    ];
+    return new CustomResource(this, "S3Deployment", {
+      serviceToken: handler.functionArn,
+      resourceType: "Custom::SSTBucketDeployment",
+      properties: {
+        Sources: this.assets.map((asset) => ({
+          BucketName: asset.s3BucketName,
+          ObjectKey: asset.s3ObjectKey,
+        })),
+        DestinationBucketName: this.cdk.bucket.bucketName,
+        FileOptions: (fileOptions || []).map(
+          ({ exclude, include, cacheControl }) => {
+            return [
+              "--exclude",
+              exclude,
+              "--include",
+              include,
+              "--cache-control",
+              cacheControl,
+            ];
+          }
+        ),
+        ReplaceValues: this.getS3ContentReplaceValues(),
+      },
+    });
   }
 
-  private bundleServerHandler(nextjsPath: string, standaloneDirAbsolute: string) {
-    // delete default nextjs handler if it exists
-    const defaultServerPath = path.join(standaloneDirAbsolute, nextjsPath, 'server.js')
-    if (fs.existsSync(defaultServerPath))
-      fs.unlinkSync(defaultServerPath)
+  /////////////////////
+  // Build App
+  /////////////////////
 
-    // build our server handler
-    const serverHandler = this.isPlaceholder ? path.resolve(__dirname, "../assets/NextjsSite/server-lambda-stub/server.js")
-      : path.resolve(__dirname, "../assets/NextjsSite/server-lambda/server.ts");
-    // server should live in the same dir as the nextjs app to access deps properly
-    const serverPath = path.join(nextjsPath, "server.cjs")
-    const esbuildResult = esbuild.buildSync({
-      entryPoints: [serverHandler],
-      bundle: true,
-      minify: false,
-      sourcemap: true,
-      target: "node16",
-      platform: "node",
-      external: ["sharp", "next"],
-      format: "cjs",
-      outfile: path.join(standaloneDirAbsolute, serverPath)
-    })
-    if (esbuildResult.errors.length > 0) {
-      esbuildResult.errors.forEach((error) => console.error(error));
-      throw new Error(`There was a problem bundling the server.`);
-    }
+  private buildApp(): string {
+    const app = this.node.root as App;
+    const buildOutput = app.isRunningSSTTest()
+      ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+        props.sstTestBuildOutputPath || this.runBuild()
+      : this.runBuild();
+
+    this.runAfterBuild();
+
+    return buildOutput;
   }
 
-  private createServerZip(): string {
-    const standaloneDirAbsolute = this.getNextStandaloneDir()
+  private runBuild(): string {
+    const { path: sitePath } = this.props;
 
-    // build our handler
-    this.bundleServerHandler(this.props.path, standaloneDirAbsolute)
+    // validate site path exists
+    if (!fs.existsSync(sitePath)) {
+      throw new Error(
+        `No path found at "${path.resolve(sitePath)}" for the "${
+          this.node.id
+        }" NextjsSite.`
+      );
+    }
 
-    // get output path
-    const zipOutDir = path.resolve(
-      path.join(this.sstBuildDir, `NextjsSite-standalone-${this.node.id}-${this.node.addr}`)
+    // Build command
+    // Note: probably could pass JSON string also, but this felt safer.
+    const app = this.node.root as App;
+    const pathHash = getHandlerHash(sitePath);
+    const buildOutput = path.join(app.buildDir, pathHash);
+    const configBuffer = Buffer.from(
+      JSON.stringify({
+        cwd: path.resolve(sitePath),
+        args: ["build"],
+        cmd: this.props.nextBinPath ?? "./node_modules/.bin/next"
+      })
     );
-    fs.removeSync(zipOutDir);
-    fs.mkdirpSync(zipOutDir);
-    const zipFilePath = path.join(zipOutDir, "standalone.zip");
 
-
-    // run script to create zipfile, preserving symlinks for node_modules (e.g. pnpm structure)
+    // Run build
+    console.log(chalk.grey(`Building Next.js site ${sitePath}`));
     const result = spawn.sync(
-      "bash", // getting ENOENT when specifying 'node' here for some reason
+      "node",
       [
-        '-xc',
-        [`cd '${standaloneDirAbsolute}'`, `zip -ryq '${zipFilePath}' *`].join('&&')
+        path.join(__dirname, "../assets/NextjsSite/build/build.cjs"),
+        "--path",
+        path.resolve(sitePath),
+        "--output",
+        path.resolve(buildOutput),
+        "--config",
+        configBuffer.toString("base64"),
       ],
-      { stdio: "inherit", }
+      {
+        cwd: sitePath,
+        stdio: "inherit",
+        env: {
+          ...process.env,
+          ...getBuildCmdEnvironment(this.props.environment),
+        },
+      }
     );
     if (result.status !== 0) {
-      throw new Error(`There was a problem generating the lambda package: ${result.error}`);
-    }
-    // check output
-    if (!fs.existsSync(zipFilePath)) {
-      throw new Error(`There was a problem generating the lambda package; archive missing in ${zipFilePath}.`)
+      console.error(
+        `There was a problem building the "${this.node.id}" NextjsSite.`
+      );
+      process.exit(1);
     }
 
-    return zipFilePath
+    return buildOutput;
+  }
+
+  private runAfterBuild() {
+    const { path, commandHooks } = this.props;
+
+    // Build command
+    const cmds = commandHooks?.afterBuild ?? [];
+    if (cmds.length === 0) {
+      return;
+    }
+
+    try {
+      execSync(cmds.join(" && "), {
+        cwd: path,
+        stdio: "inherit"
+      });
+    } catch (e) {
+      console.log(
+        chalk.red(`There was a problem running "afterBuild" command.`)
+      );
+      throw e;
+    }
   }
 
   /////////////////////
   // CloudFront Distribution
   /////////////////////
-
-  private validateCloudFrontDistributionSettings() {
-    const { cdk } = this.props;
-    const cfDistributionProps = cdk?.distribution || {};
-    if (cfDistributionProps.certificate) {
-      throw new Error(
-        `Do not configure the "cfDistribution.certificate". Use the "customDomain" to configure the NextjsSite domain certificate.`
-      );
-    }
-    if (cfDistributionProps.domainNames) {
-      throw new Error(
-        `Do not configure the "cfDistribution.domainNames". Use the "customDomain" to configure the NextjsSite domain.`
-      );
-    }
-  }
 
   private createCloudFrontDistribution(): cloudfront.Distribution {
     const { cdk, customDomain } = this.props;
@@ -759,10 +985,8 @@ export class NextjsSite extends Construct implements SSTConstruct {
       domainNames.push(customDomain.domainName);
     }
 
-    // S3 origin
-    const origin = new origins.S3Origin(this.cdk.bucket, { originAccessIdentity: this.originAccessIdentity });
-
     // Build behavior
+    const origin = new origins.S3Origin(this.cdk.bucket);
     const viewerProtocolPolicy =
       cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS;
 
@@ -779,6 +1003,19 @@ export class NextjsSite extends Construct implements SSTConstruct {
       });
     }
 
+    // Build Edge functions
+    const edgeLambdas: cloudfront.EdgeLambda[] = [
+      {
+        includeBody: true,
+        eventType: cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST,
+        functionVersion: this.mainFunctionVersion,
+      },
+      {
+        eventType: cloudfront.LambdaEdgeEventType.ORIGIN_RESPONSE,
+        functionVersion: this.mainFunctionVersion,
+      },
+    ];
+
     // Build cache policies
     const staticCachePolicy =
       cdk?.cachePolicies?.staticCachePolicy ??
@@ -786,80 +1023,97 @@ export class NextjsSite extends Construct implements SSTConstruct {
     const imageCachePolicy =
       cdk?.cachePolicies?.imageCachePolicy ??
       this.createCloudFrontImageCachePolicy();
+    const lambdaCachePolicy =
+      cdk?.cachePolicies?.lambdaCachePolicy ??
+      this.createCloudFrontLambdaCachePolicy();
 
     // Build origin request policy
     const imageOriginRequestPolicy =
       cdk?.imageOriginRequestPolicy ??
       this.createCloudFrontImageOriginRequestPolicy();
 
-    const staticBehavior = {
-      viewerProtocolPolicy,
-      origin,
-      allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
-      cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
-      compress: true,
-      cachePolicy: staticCachePolicy,
-
-    };
+    // Create Distribution
     return new cloudfront.Distribution(this, "Distribution", {
       // these values can be overwritten by cfDistributionProps
       defaultRootObject: "",
-
       // Override props.
       ...cfDistributionProps,
       // these values can NOT be overwritten by cfDistributionProps
       domainNames,
       certificate: this.cdk.certificate,
-      defaultBehavior: this.buildDistributionDefaultBehavior(),
+      defaultBehavior: {
+        viewerProtocolPolicy,
+        origin,
+        allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+        cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
+        compress: true,
+        cachePolicy: lambdaCachePolicy,
+        ...(cfDistributionProps.defaultBehavior || {}),
+        // concatenate edgeLambdas
+        edgeLambdas: [
+          ...edgeLambdas,
+          ...(cfDistributionProps.defaultBehavior?.edgeLambdas || []),
+        ],
+      },
       additionalBehaviors: {
-        // "_next/image*": {
-        //   viewerProtocolPolicy,
-        //   origin,
-        //   allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-        //   cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
-        //   compress: true,
-        //   cachePolicy: imageCachePolicy,
-        //   originRequestPolicy: imageOriginRequestPolicy,
-        // },
-
-        "public/*": staticBehavior,
-        "_next/*": staticBehavior,
-        // "api/*": {
-        //   viewerProtocolPolicy,
-        //   origin,
-        //   allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-        //   cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
-        //   compress: true,
-        //   cachePolicy: lambdaCachePolicy,
-        // },
+        [this.pathPattern("_next/image*")]: {
+          viewerProtocolPolicy,
+          origin,
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+          cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
+          compress: true,
+          cachePolicy: imageCachePolicy,
+          originRequestPolicy: imageOriginRequestPolicy,
+          edgeLambdas: [
+            {
+              eventType: cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST,
+              functionVersion: this.imageFunctionVersion,
+            },
+          ],
+        },
+        [this.pathPattern("_next/data/*")]: {
+          viewerProtocolPolicy,
+          origin,
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+          cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
+          compress: true,
+          cachePolicy: lambdaCachePolicy,
+          edgeLambdas,
+        },
+        [this.pathPattern("_next/*")]: {
+          viewerProtocolPolicy,
+          origin,
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+          cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
+          compress: true,
+          cachePolicy: staticCachePolicy,
+        },
+        [this.pathPattern("static/*")]: {
+          viewerProtocolPolicy,
+          origin,
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+          cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
+          compress: true,
+          cachePolicy: staticCachePolicy,
+        },
+        [this.pathPattern("api/*")]: {
+          viewerProtocolPolicy,
+          origin,
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+          cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
+          compress: true,
+          cachePolicy: lambdaCachePolicy,
+          edgeLambdas: [
+            {
+              includeBody: true,
+              eventType: cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST,
+              functionVersion: this.apiFunctionVersion,
+            },
+          ],
+        },
         ...(cfDistributionProps.additionalBehaviors || {}),
-
-        // add public paths
       },
     });
-  }
-
-  private buildDistributionDefaultBehavior(): cloudfront.BehaviorOptions {
-    const { cdk } = this.props;
-    const cfDistributionProps = cdk?.distribution || {};
-
-    const fnUrl = this.serverLambda!.addFunctionUrl({
-      authType: lambda.FunctionUrlAuthType.NONE,
-    });
-
-    const serverCachePolicy =
-      cdk?.cachePolicies?.lambdaCachePolicy ??
-      this.createCloudFrontLambdaCachePolicy();
-
-    return {
-      viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      origin: new origins.HttpOrigin(Fn.parseDomainName(fnUrl.url)),
-      allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-      cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
-      compress: true,
-      cachePolicy: serverCachePolicy,
-      ...(cfDistributionProps.defaultBehavior || {}),
-    };
   }
 
   private createCloudFrontStaticCachePolicy(): cloudfront.CachePolicy {
@@ -894,33 +1148,6 @@ export class NextjsSite extends Construct implements SSTConstruct {
     );
   }
 
-  private createCloudFrontDistributionForStub(): cloudfront.Distribution {
-    return new cloudfront.Distribution(this, "Distribution", {
-      defaultRootObject: "index.html",
-      errorResponses: buildErrorResponsesForRedirectToIndex("index.html"),
-      domainNames: this.buildDistributionDomainNames(),
-      certificate: this.cdk.certificate,
-      defaultBehavior: {
-        origin: new origins.S3Origin(this.cdk.bucket, { originAccessIdentity: this.originAccessIdentity }),
-        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      },
-    });
-  }
-
-  private buildDistributionDomainNames(): string[] {
-    const { customDomain } = this.props;
-    const domainNames = [];
-    if (!customDomain) {
-      // no domain
-    } else if (typeof customDomain === "string") {
-      domainNames.push(customDomain);
-    } else {
-      domainNames.push(customDomain.domainName);
-    }
-    return domainNames;
-  }
-
-
   private createCloudFrontInvalidation(): CustomResource {
     // Create a Lambda function that will be doing the invalidation
     const invalidator = new lambda.Function(this, "CloudFrontInvalidator", {
@@ -946,16 +1173,24 @@ export class NextjsSite extends Construct implements SSTConstruct {
       })
     );
 
+    // need the BuildId field so this CR gets updated on each deploy
+    let buildId: string;
+    if (this.isPlaceholder) {
+      buildId = "live";
+    } else {
+      const buildIdFile = path.resolve(this.buildOutDir!, "assets", "BUILD_ID");
+      buildId = fs.readFileSync(buildIdFile).toString();
+    }
+
+    // Create custom resource
     const waitForInvalidation =
       this.props.waitForInvalidation === false ? false : true;
-
     return new CustomResource(this, "CloudFrontInvalidation", {
       serviceToken: invalidator.functionArn,
       resourceType: "Custom::SSTCloudFrontInvalidation",
       properties: {
-        BuildId: this.isPlaceholder ? "live" : this.getNextBuildId(),
+        BuildId: buildId,
         DistributionId: this.cdk.distribution.distributionId,
-        // TODO: Ignore the browser build path as it may speed up invalidation
         DistributionPaths: ["/*"],
         WaitForInvalidation: waitForInvalidation,
       },
@@ -1110,6 +1345,92 @@ export class NextjsSite extends Construct implements SSTConstruct {
   // Helper Functions
   /////////////////////
 
+  private pathPattern(pattern: string): string {
+    // const { basePath } = this.routesManifest || {};
+    // return basePath && basePath.length > 0
+    //   ? `${basePath.slice(1)}/${pattern}`
+    //   : pattern;
+    return pattern
+  }
+
+  // private readRoutesManifest(): RoutesManifest {
+  //   return fs.readJSONSync(
+  //     path.join(this.buildOutDir!, "default-lambda/routes-manifest.json")
+  //   );
+  // }
+
+  private getS3ContentReplaceValues(): BaseSiteReplaceProps[] {
+    const replaceValues: BaseSiteReplaceProps[] = [];
+
+    Object.entries(this.props.environment || {})
+      .filter(([, value]) => Token.isUnresolved(value))
+      .forEach(([key, value]) => {
+        const token = `{{ ${key} }}`;
+        replaceValues.push(
+          {
+            files: "**/*.html",
+            search: token,
+            replace: value,
+          },
+          {
+            files: "**/*.js",
+            search: token,
+            replace: value,
+          },
+          {
+            files: "**/*.json",
+            search: token,
+            replace: value,
+          }
+        );
+      });
+    return replaceValues;
+  }
+
+  private getLambdaContentReplaceValues(): BaseSiteReplaceProps[] {
+    const replaceValues: BaseSiteReplaceProps[] = [];
+
+    // The Next.js app can have environment variables like
+    // `process.env.API_URL` in the JS code. `process.env.API_URL` might or
+    // might not get resolved on `next build` if it is used in
+    // server-side functions, ie. getServerSideProps().
+    // Because Lambda@Edge does not support environment variables, we will
+    // use the trick of replacing "{{ _SST_NEXTJS_SITE_ENVIRONMENT_ }}" with
+    // a JSON encoded string of all environment key-value pairs. This string
+    // will then get decoded at run time.
+    const lambdaEnvs: { [key: string]: string } = {};
+
+    Object.entries(this.props.environment || {}).forEach(([key, value]) => {
+      const token = `{{ ${key} }}`;
+      replaceValues.push(
+        {
+          files: "**/*.html",
+          search: token,
+          replace: value,
+        },
+        {
+          files: "**/*.js",
+          search: token,
+          replace: value,
+        },
+        {
+          files: "**/*.json",
+          search: token,
+          replace: value,
+        }
+      );
+      lambdaEnvs[key] = value;
+    });
+
+    replaceValues.push({
+      files: "**/*.js",
+      search: '"{{ _SST_NEXTJS_SITE_ENVIRONMENT_ }}"',
+      replace: JSON.stringify(lambdaEnvs),
+    });
+
+    return replaceValues;
+  }
+
   private registerSiteEnvironment() {
     const environmentOutputs: Record<string, string> = {};
     for (const [key, value] of Object.entries(this.props.environment || {})) {
@@ -1118,8 +1439,8 @@ export class NextjsSite extends Construct implements SSTConstruct {
       environmentOutputs[key] = Stack.of(this).getLogicalId(output);
     }
 
-    const root = this.node.root as App;
-    root.registerSiteEnvironment({
+    const app = this.node.root as App;
+    app.registerSiteEnvironment({
       id: this.node.id,
       path: this.props.path,
       stack: Stack.of(this).node.id,
@@ -1127,65 +1448,13 @@ export class NextjsSite extends Construct implements SSTConstruct {
     } as BaseSiteEnvironmentOutputsInfo);
   }
 
-  getNextBuildId() {
-    return fs.readFileSync(
-      path.join(this.getNextStandaloneBuildDir(), 'BUILD_ID'), 'utf-8')
-  }
-
-  private listDirectory(dir: string) {
-    const fileList: string[] = []
-    const publicFiles = fs.readdirSync(dir)
-    for (const filename of publicFiles) {
-      const filepath = path.join(dir, filename)
-      const stat = fs.statSync(filepath)
-      if (stat.isDirectory()) {
-        fileList.push(...this.listDirectory(filepath))
-      } else {
-        fileList.push(filepath)
-      }
+  private normalizeRuntime(runtime?: string): lambda.Runtime {
+    if (runtime === "nodejs12.x") {
+      return lambda.Runtime.NODEJS_12_X;
     }
-
-    return fileList
-  }
-
-  getPublicFileList() {
-    const publicDir = this.getNextStaticDir()
-    return this.listDirectory(publicDir).map((file) => path.join('/', path.relative(publicDir, file)))
-  }
-
-
-  private getNextDir() {
-    const app = App.of(this) as App
-    const { path: nextjsPath } = this.props;  // path to nextjs dir inside project
-    const absolutePath = path.join(app.appPath, nextjsPath, NEXTJS_BUILD_DIR) // e.g. /home/me/myapp/web/.next
-    if (!fs.existsSync(absolutePath)) {
-      throw new Error(`Could not find ${absolutePath} directory.`);
+    else if (runtime === "nodejs14.x") {
+      return lambda.Runtime.NODEJS_14_X;
     }
-    return absolutePath;
-  }
-
-  // output of nextjs standalone build
-  private getNextStandaloneDir() {
-    const nextDir = this.getNextDir()
-    const standaloneDir = path.join(nextDir, NEXTJS_BUILD_STANDALONE_DIR)
-
-    if (!fs.existsSync(standaloneDir)) {
-      throw new Error(`Could not find ${standaloneDir} directory.`);
-    }
-    return standaloneDir
-  }
-
-  // nextjs project inside of standalone build
-  // contains manifests
-  private getNextStandaloneBuildDir() {
-    return path.join(this.getNextStandaloneDir(), this.props.path, NEXTJS_BUILD_DIR);
-  }
-
-  // contains static files
-  private getNextStaticDir() {
-    return path.join(this.getNextDir(), NEXTJS_STATIC_DIR);
-  }
-  private getNextPublicDir() {
-    return path.join(this.getNextDir(), NEXTJS_PUBLIC_DIR);
+    return lambda.Runtime.NODEJS_16_X;
   }
 }
