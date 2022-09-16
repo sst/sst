@@ -755,9 +755,9 @@ export class NextjsSite extends Construct implements SSTConstruct {
 
   private bundleServerHandler(nextjsPath: string, standaloneDirAbsolute: string) {
     // delete default nextjs handler if it exists
-    const handlerPath = path.join(nextjsPath, 'server.js')
-    if (fs.existsSync(handlerPath))
-      fs.unlinkSync(handlerPath)
+    const defaultServerPath = path.join(standaloneDirAbsolute, nextjsPath, 'server.js')
+    if (fs.existsSync(defaultServerPath))
+      fs.unlinkSync(defaultServerPath)
 
     // build our server handler
     const serverHandler = this.isPlaceholder ? path.resolve(__dirname, "../assets/NextjsSite/server-lambda-stub/server.js")
