@@ -85,14 +85,14 @@ export interface NextjsSiteProps {
    *
    * @example
    * ```js {3}
-   * new NextjsSite(stack, "NextjsSite", {
+   * new NextjsSite(stack, "Site", {
    *   path: "path/to/site",
    *   customDomain: "domain.com",
    * });
    * ```
    *
    * ```js {3-6}
-   * new NextjsSite(stack, "NextjsSite", {
+   * new NextjsSite(stack, "Site", {
    *   path: "path/to/site",
    *   customDomain: {
    *     domainName: "domain.com",
@@ -109,7 +109,7 @@ export interface NextjsSiteProps {
    *
    * @example
    * ```js {3-6}
-   * new NextjsSite(stack, "NextjsSite", {
+   * new NextjsSite(stack, "Site", {
    *   path: "path/to/site",
    *   environment: {
    *     API_URL: api.url,
@@ -209,7 +209,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
   };
 
   /**
-   * The default CloudFront image origin request policy properties for Next image.
+   * The default CloudFront image origin request policy properties for Next images.
   */
   public static imageOriginRequestPolicyProps: cloudfront.OriginRequestPolicyProps =
     {
@@ -489,6 +489,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     });
     return sharpLayer;
 
+    ///////  other ways to build this layer:
     // const buildDir = path.resolve(
     //   path.join(this.sstBuildDir, `NextjsLayer-${this.node.id}-${this.node.addr}`)
     // );
@@ -753,6 +754,11 @@ export class NextjsSite extends Construct implements SSTConstruct {
   }
 
   private bundleServerHandler(nextjsPath: string, standaloneDirAbsolute: string) {
+    // delete default nextjs handler if it exists
+    const handlerPath = path.join(nextjsPath, 'server.js')
+    if (fs.existsSync(handlerPath))
+      fs.unlinkSync(handlerPath)
+
     // build our server handler
     const serverHandler = this.isPlaceholder ? path.resolve(__dirname, "../assets/NextjsSite/server-lambda-stub/server.js")
       : path.resolve(__dirname, "../assets/NextjsSite/server-lambda/server.ts");
@@ -900,7 +906,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
       // these values can NOT be overwritten by cfDistributionProps
       domainNames,
       certificate: this.cdk.certificate,
-      defaultBehavior: this.buildDistributionDefaultBehaviorForRegional(),
+      defaultBehavior: this.buildDistributionDefaultBehavior(),
       additionalBehaviors: {
         // [("_next/image*")]: {
         //   viewerProtocolPolicy,
@@ -910,37 +916,24 @@ export class NextjsSite extends Construct implements SSTConstruct {
         //   compress: true,
         //   cachePolicy: imageCachePolicy,
         //   originRequestPolicy: imageOriginRequestPolicy,
-        //   edgeLambdas: [
-        //     {
-        //       eventType: cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST,
-        //       functionVersion: this.imageFunctionVersion,
-        //     },
-        //   ],
         // },
 
         "public/*": staticBehavior,
         "static/*": staticBehavior,
-        // [("api/*")]: {
+        // "api/*": {
         //   viewerProtocolPolicy,
         //   origin,
         //   allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
         //   cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
         //   compress: true,
         //   cachePolicy: lambdaCachePolicy,
-        //   edgeLambdas: this.serverLambda ? [
-        //     {
-        //       includeBody: true,
-        //       eventType: cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST,
-        //       functionVersion: this.serverLambda?.currentVersion,
-        //     },
-        //   ] : [],
         // },
         ...(cfDistributionProps.additionalBehaviors || {}),
       },
     });
   }
 
-  private buildDistributionDefaultBehaviorForRegional(): cloudfront.BehaviorOptions {
+  private buildDistributionDefaultBehavior(): cloudfront.BehaviorOptions {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
 
