@@ -5211,16 +5211,6 @@
     eval "^0.1.8"
     webpack-sources "^1.4.3"
 
-"@sls-next/next-aws-cloudfront@^3.7.0":
-  version "3.7.0"
-  resolved "https://registry.yarnpkg.com/@sls-next/next-aws-cloudfront/-/next-aws-cloudfront-3.7.0.tgz#3d68b2a6728a6d96640aae4e9d6b86f47cbadc2d"
-  integrity sha512-Arj+vLPSIqU/AKHi4078O3V4Hzwp8ukEzNH+qdUKkzvdpYzRXhdV7j2i5So4emL4F+lJwNIi7H2I5T+w3yxbfg==
-
-"@sls-next/next-aws-lambda@^3.5.0":
-  version "3.5.0"
-  resolved "https://registry.yarnpkg.com/@sls-next/next-aws-lambda/-/next-aws-lambda-3.5.0.tgz#498c36758b0315f4871a266f79b5d52bcda223c7"
-  integrity sha512-NftgxbZpOrBvSMUpkjqBQpylO+BtAd7znW0TF36nClXTAWgLQICUUJZ+oVQi5klWbgTIO9gaxYJ4JO2guj5t1Q==
-
 "@stitches/react@^1.2.6":
   version "1.2.6"
   resolved "https://registry.npmjs.org/@stitches/react/-/react-1.2.6.tgz"
