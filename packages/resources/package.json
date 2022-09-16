@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/resources",
-  "version": "1.14.1",
+  "version": "1.14.4",
   "homepage": "https://sst.dev",
   "description": "Helper AWS CDK constructs for SST apps.",
   "main": "dist/index.js",
@@ -38,7 +38,7 @@
     "@aws-cdk/aws-apigatewayv2-authorizers-alpha": "2.39.1-alpha.0",
     "@aws-cdk/aws-apigatewayv2-integrations-alpha": "2.39.1-alpha.0",
     "@aws-cdk/aws-appsync-alpha": "2.39.1-alpha.0",
-    "@serverless-stack/core": "1.14.1",
+    "@serverless-stack/core": "1.14.4",
     "archiver": "^5.3.0",
     "aws-cdk-lib": "2.39.1",
     "chalk": "^4.1.0",
@@ -51,11 +51,11 @@
   },
   "devDependencies": {
     "@graphql-tools/merge": "^8.2.12",
+    "@sls-next/lambda-at-edge": "^3.7.0-alpha.7",
     "@types/cross-spawn": "^6.0.2",
     "@types/fs-extra": "^9.0.6",
     "@types/glob": "^7.2.0",
     "@types/node": "^14.0.27",
-    "aws-lambda": "^1.0.7",
     "esbuild-jest": "^0.5.0",
     "typedoc": "^0.22.13",
     "vitest": "^0.15.1"
