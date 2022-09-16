@@ -1,9 +1,9 @@
 ---
 title: What is SST
-description: "SST is an application framework that helps you build and deploy full-stack serverless applications."
+description: "A high-level overview of SST in plain english."
 ---
 
-SST is an application framework that helps you build and deploy full-stack serverless applications. With SST you can create APIs, databases, frontends; connect them all together and deploy to AWS.
+SST is a framework that helps you build and deploy full-stack serverless applications. With SST you can create APIs, databases, frontends; connect them all together, and deploy them to AWS.
 
 ---
 
@@ -17,7 +17,7 @@ You can describe the infrastructure of your app in **TypeScript** or **JavaScrip
 
 ### APIs
 
-For example, you can use the [`Api`](constructs/Api.md) construct to create an API in a few lines.
+For example, you can use the [`Api`](constructs/Api.md) construct to define an API in a few lines.
 
 ```js
 new Api(this, "API", {
@@ -34,7 +34,7 @@ Behind the scenes this creates an instance of an [Amazon API Gateway](https://do
 
 ### Databases
 
-To power your applications, SST lets you create serverless databases. Here the [`RDS`](constructs/RDS.md) construct creates a new [Amazon RDS](https://aws.amazon.com/rds/) serverless PostgreSQL cluster.
+To power your applications, SST lets you create serverless databases. Here the [`RDS`](constructs/RDS.md) construct configures a new [Amazon RDS](https://aws.amazon.com/rds/) serverless PostgreSQL cluster.
 
 ```ts
 new RDS(this, "rds", {
@@ -73,26 +73,13 @@ new Cron(this, "cron", {
 
 You can also add [**Auth**](constructs/Auth.md), [**Queues**](constructs/Queue.md), [**Pub/Sub**](constructs/Topic.md), [**Data Streams**](constructs/KinesisStream.md), and more.
 
-<!--
-
----
-
-### Queues
-
-Or **queues**.
-
-```ts
-new Queue(this, "queue", {
-  consumer: "functions/consumer.main",
-});
-```
--->
-
 ---
 
 ### All AWS services
 
-Behind the scenes, SST's constructs extend [AWS CDK](https://aws.amazon.com/cdk/) to compile your infrastructure into [CloudFormation](https://aws.amazon.com/cloudformation/). So you can use [CDK constructs](https://constructs.dev) in your SST apps.
+Aside from the use cases that SST's constructs support, you can **deploy any AWS service** in SST. This is because you can also use any of AWS' constructs in your SST apps.
+
+Here we are defining an [Amazon ECS](https://aws.amazon.com/ecs/) cluster with an [AWS construct](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_ecs_patterns-readme.html).
 
 ```ts
 import * as ecs from "aws-cdk-lib/aws-ecs";
@@ -102,35 +89,13 @@ const cluster = new ecs.Cluster(this, "Cluster", {
 });
 ```
 
-This means that with SST you can **deploy any AWS service**.
-
-<!--
-
-#### All AWS services
-
-Behind the scenes, SST's constructs extend [AWS CDK](https://aws.amazon.com/cdk/) to compile your infrastructure into a [CloudFormation template](https://aws.amazon.com/cloudformation/resources/templates/). This means that you to use CDK constructs in your SST apps.
-
-For example, you can use a [CDK construct](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_ecs-readme.html) to create an [Amazon ECS Cluster](https://aws.amazon.com/ecs/).
-
-```ts
-const cluster = new ecs.Cluster(this, "Cluster", {
-  vpc,
-});
-
-cluster.addCapacity("DefaultAutoScalingGroupCapacity", {
-  instanceType: new ec2.InstanceType("t2.xlarge"),
-  desiredCapacity: 3,
-});
-```
-
-As a result, you can use any AWS service in your SST app.
--->
+This makes it easy to extend SST to fit any use case.
 
 ---
 
 ## Functions
 
-At the heart of SST applications are Functions; powered by [AWS Lambda](https://aws.amazon.com/lambda/). These represent your application code. They are invoked by the infrastructure in your application.
+At the heart of SST applications are Functions — powered by [AWS Lambda](https://aws.amazon.com/lambda/). These represent your application code. They are invoked by the infrastructure in your application.
 
 From the API example above.
 
@@ -138,7 +103,7 @@ From the API example above.
 "GET /notes": "functions/list.main"
 ```
 
-When a user hits the `/notes` route in your API, the `main` function in the `functions/list.ts` file gets executed. And it'll respond with what the function returns.
+When a user hits the `/notes` route in your API, the `main` function in the `functions/list.ts` file gets executed. The API then responds with what the function returns.
 
 ```ts
 export async function main() {
@@ -157,7 +122,9 @@ Your functions can be in **TypeScript**, **JavaScript**, **Python**, **Golang**,
 
 ## Frontend
 
-For the frontend of your application SST, lets you deploy [**React**](constructs/ReactStaticSite.md), [**Next.js**](constructs/NextjsSite.md), or [**Remix**](constructs/RemixSite.md) apps. Or any [static website](constructs/StaticSite.md). Here for example, we are defining a [Vite](https://vitejs.dev) static site using the [`ViteStaticSite`](constructs/ViteStaticSite.md) construct.
+For the frontend of your application, SST lets you deploy [**React**](constructs/ReactStaticSite.md), [**Next.js**](constructs/NextjsSite.md), or [**Remix**](constructs/RemixSite.md) apps. Or any [static website](constructs/StaticSite.md).
+
+Here for example, we are defining a [Vite](https://vitejs.dev) static site using the [`ViteStaticSite`](constructs/ViteStaticSite.md) construct.
 
 ```ts
 new ViteStaticSite(this, "site", {
@@ -173,114 +140,42 @@ Behind the scenes, this creates a static website powered by [Amazon S3](https://
 
 ---
 
-### Sharing config
+### Connect to the API
 
-We are also able to pass our API URL to the frontend as an environment variable.
+SST makes it easy to connect your frontend to your API by letting you share config between constructs.
 
-```ts
-environment: {
-  VITE_API_URL: api.url,
-},
-```
+For example, you can grab the API endpoint from the API construct and pass it to our frontend as an environment variable.
 
-So **we don't have to hardcode our backend config** in the frontend.
+```ts {1,6}
+const api = new Api(/* ... */);
 
----
-
-<!--
-
-## Stacks
-
-Stacks are a way to organize your constructs in SST.
-
-```ts
-export function ApiStack({ stack }: StackContext) {
-  const api = new Api(stack, "API", {
-    routes: {
-      "GET  /notes": "functions/list.main",
-      "POST /notes": "functions/create.main",
-    },
-  });
-
-  return { api };
+new ViteStaticSite(this, "site", {
+  // ...
+  environment: {
+    VITE_API_URL: api.url,
+  },
 });
 ```
 
-It makes sense to split your constructs into stacks because CloudFormation has a limit on the total number of resources per stack. Also, it makes your applications faster to deploy, as SST deploys your stacks concurrently.
+With SST, we **don't need to hardcode our backend config** in the frontend.
 
 ---
-
-## Apps
-
-Finally, an SST app is made up of one or more stacks.
-
-```js
-export default function main(app) {
-  app.stack(DatabaseStack).stack(ApiStack).stack(WebStack);
-}
-```
-
-When put together, SST applications are **monorepos** that contain your infrastructure definitions along with your backend and frontend code.
-
----
-
--->
 
 ## SST CLI
 
-Aside from the constructs, SST comes with a [CLI](packages/cli.md) to deploy and manage your applications.
+SST comes with a [CLI](packages/cli.md) that can deploy your applications and help you work on them locally.
 
 ---
 
-### Deployment
+### Local dev
 
-By running the following command, the SST CLI will convert your constructs to CloudFormation, package your functions and frontend assets, upload it to AWS, and create the infrastructure for it.
-
-```bash
-sst deploy
-```
-
-The CLI uses your local [IAM credentials](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html) to **deploy to your AWS account**.
-
----
-
-### Environments
-
-You can also deploy your app to a specific _stage_ or environment.
-
-```bash
-sst deploy --stage prod
-```
-
-A stage is a string that SST uses to namespace the resources in your application. This allows SST to **deploy your app to multiple environments** in the same AWS account.
-
----
-
-### Local development
-
-The ability to deploy to environments also allows SST to support a completely separate local development environment.
+The [`sst start`](live-lambda-development.md) command starts a local development environment that lets you [**set breakpoints and test your functions locally**](live-lambda-development.md#debugging-with-visual-studio-code). You don't need to mock any resources or wait for the changes to redeploy.
 
 ```bash
 sst start
 ```
 
-The [`sst start`](live-lambda-development.md) command starts a local server and proxies requests from the Lambda functions to your machine. This allows you to [**set breakpoints and test your functions locally**](live-lambda-development.md#debugging-with-visual-studio-code).
-
-<!--
-
-```
-Please enter a stage name you’d like to use locally.
-Or hit enter to use the one based on your AWS credentials (Bob):
-```
-
-The `sst start` command also uses a stage based on the username from your AWS credentials. This allows your teammates to work on the same application at the same time.
-
----
--->
-
-<!--
-### SST Console
--->
+It does this by starting up a local server and proxying requests from the Lambda functions in AWS to your machine.
 
 The `sst start` CLI also powers a **web based dashboard** called the [SST Console](console.md).
 
@@ -290,12 +185,38 @@ With the Console you can view and interact with your application logs in real-ti
 
 ---
 
-## Starters
+### Deployment
 
-To get started, you can create a new SST application using one of our starters with the [`create-sst`](packages/create-sst.md) CLI.
+To deploy your application you use the [`sst deploy`](packages/cli.md#deploy-stack) command.
 
 ```bash
-npm init sst
+npx sst deploy
+```
+
+This will convert your constructs to [CloudFormation](https://aws.amazon.com/cloudformation/), package your functions and frontend assets, upload it to AWS, and create the infrastructure for it.
+
+The SST CLI uses your local [IAM credentials](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html) to **deploy to your AWS account**.
+
+---
+
+### Environments
+
+You can also deploy your app to a specific _stage_ or environment. This lets you create **separate development and production** environments.
+
+```bash
+npx sst deploy --stage prod
+```
+
+Behind the scenes, SST uses the stage to namespace all the resources in your application.
+
+---
+
+## Starters
+
+You can create a new SST application with one of our starters and the [`create-sst`](packages/create-sst.md) CLI.
+
+```bash
+npx create-sst
 ```
 
 This will set you up with a full-stack TypeScript app with all the best practices. It has a GraphQL API, PostgreSQL RDS database, and a Vite React app. This is the **recommended way** to start with SST.
