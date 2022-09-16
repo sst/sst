@@ -1,31 +1,41 @@
 // source: https://github.com/iiroj/iiro.fi/commit/bd43222032d0dbb765e1111825f64dbb5db851d9
 
-import lambdaAtEdgeCompat from '@sls-next/next-aws-cloudfront'
-import type { CloudFrontRequestHandler } from 'aws-lambda'
+import { reqResMapper } from './lambdaNextCompat'
+import type { APIGatewayProxyHandlerV2 } from 'aws-lambda'
 import type { NextConfig } from 'next'
 import { NodeNextRequest, NodeNextResponse } from 'next/dist/server/base-http/node'
-import type { NodeRequestHandler } from 'next/dist/server/next-server'
-import NextNodeServer from 'next/dist/server/next-server'
+import type { NodeRequestHandler, } from 'next/dist/server/next-server'
+import * as nss from 'next/dist/server/next-server'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 
+// memoize
 let requestHandler: NodeRequestHandler
 
-export const handler: CloudFrontRequestHandler = async (event) => {
-    const { req, res, responsePromise } = lambdaAtEdgeCompat(event.Records[0].cf, { enableHTTPCompression: false })
+// invoked by Lambda URL; the format is the same as API Gateway v2
+// https://docs.aws.amazon.com/lambda/latest/dg/urls-invocation.html#urls-payloads
+type LambdaUrlFunctionHandler = APIGatewayProxyHandlerV2
+
+// somehow the default export gets buried inside itself...
+const NextNodeServer: typeof nss.default = (nss.default as any)?.default ?? nss.default
+
+export const handler: LambdaUrlFunctionHandler = async (event, context, callback) => {
+    const { req, res, responsePromise } = reqResMapper(event, callback)
 
     if (!requestHandler) {
-        const json = await fs.readFile('./.next/required-server-files.json', 'utf-8')
-        const RequiredServerFiles = JSON.parse(json) as { version: number; config: NextConfig }
+        const nextDir = path.join(__dirname, '.next')
+        const requiredServerFilesPath = path.join(nextDir, "required-server-files.json")
+        const json = await fs.readFile(requiredServerFilesPath, 'utf-8')
+        const requiredServerFiles = JSON.parse(json) as { version: number; config: NextConfig }
 
         requestHandler = new NextNodeServer({
             // Next.js compression should be disabled because of a bug
             // in the bundled `compression` package. See:
             // https://github.com/vercel/next.js/issues/11669
-            conf: { ...RequiredServerFiles.config, compress: false },
+            conf: { ...requiredServerFiles.config, compress: false },
             customServer: false,
             dev: false,
-            dir: path.join(__dirname, 'web'),
+            dir: __dirname,
             minimalMode: true,
         }).getRequestHandler()
     }

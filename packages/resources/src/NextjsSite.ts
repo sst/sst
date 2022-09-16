@@ -256,6 +256,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
   private sstBuildDir: string;
   private serverLambda?: lambda.Function;
   private awsCliLayer: AwsCliLayer;
+  public originAccessIdentity: cloudfront.IOriginAccessIdentity
 
   constructor(scope: Construct, id: string, props: NextjsSiteProps) {
     super(scope, id);
@@ -276,8 +277,13 @@ export class NextjsSite extends Construct implements SSTConstruct {
         this.buildApp();
       }
 
+      this.originAccessIdentity = new cloudfront.OriginAccessIdentity(this, 'OAI(', {
+        comment: 'Allows CloudFront to access S3 bucket with assets',
+      })
+
       // Create Bucket which will be utilised to contain the statics
       this.cdk.bucket = this.createS3Bucket();
+      this.cdk.bucket.grantRead(this.originAccessIdentity);
 
       // Create Server function
       this.serverLambda = this.createServerFunction();
@@ -578,7 +584,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
       "node",
       [
         script,
-        path.join(this.props.path, "public"),
+        path.join(this.getNextBuildDir(), "server"),
         zipOutDir,
         `${fileSizeLimit}`,
       ],
@@ -669,8 +675,11 @@ export class NextjsSite extends Construct implements SSTConstruct {
 
     // Build file options
     const fileOptions = [];
-    const publicPath = path.join(this.props.path, "public");
+    // path to static assets: standalone/$path/.next/server
+    const publicPath = path.join(this.getNextBuildDir(), "server");
+    console.log("publicPath", publicPath);
     for (const item of fs.readdirSync(publicPath)) {
+      console.log("S3:", item)
       if (item === "build") {
         fileOptions.push({
           exclude: "*",
@@ -719,6 +728,24 @@ export class NextjsSite extends Construct implements SSTConstruct {
   // Bundle Lambda Server
   /////////////////////
 
+  // output of nextjs standalone build
+  private getNextStandaloneDir() {
+    const app = App.of(this) as App
+    const { path: nextjsPath } = this.props;
+    const standaloneDir = path.join(nextjsPath, NEXTJS_BUILD_DIR, NEXTJS_BUILD_STANDALONE_DIR)
+    const standaloneDirAbsolute = path.join(app.appPath, standaloneDir)
+    if (!fs.existsSync(standaloneDirAbsolute)) {
+      throw new Error(`Could not find ${standaloneDir} directory. Please run "npm run build" before deploying.`);
+    }
+    return standaloneDirAbsolute
+  }
+
+  // nextjs project inside of standalone build
+  // contains manifests, static files
+  private getNextBuildDir() {
+    return path.join(this.getNextStandaloneDir(), this.props.path, NEXTJS_BUILD_DIR);
+  }
+
   private createServerFunction(): NodejsFunction {
     const app = App.of(this) as App
     const { defaults, environment, path: nextjsPath } = this.props;
@@ -727,16 +754,14 @@ export class NextjsSite extends Construct implements SSTConstruct {
     const nextLayer = this.buildLayer()
 
     // bundle the standalone output dir
-    const standaloneDir = path.join(nextjsPath, NEXTJS_BUILD_DIR, NEXTJS_BUILD_STANDALONE_DIR)
-    const standaloneDirAbsolute = path.join(app.appPath, standaloneDir)
-    if (!fs.existsSync(standaloneDirAbsolute)) {
-      throw new Error(`Could not find ${standaloneDir} directory. Please run "npm run build" before deploying.`);
-    }
+    const standaloneDirAbsolute = this.getNextStandaloneDir()
 
-    const zipFilePath = this.createServerZip(standaloneDirAbsolute)
+    const zipFilePath = this.createServerZip()
 
     // build the lambda function
     const fn = new lambda.Function(this, 'MainFn', {
+      memorySize: defaults?.function?.memorySize || 1024,
+      timeout: defaults?.function?.timeout ? Duration.seconds(defaults.function.timeout) : Duration.seconds(10),
       runtime: lambda.Runtime.NODEJS_16_X,
       handler: path.join(nextjsPath, 'server.handler'),
       layers: [nextLayer],
@@ -767,7 +792,8 @@ export class NextjsSite extends Construct implements SSTConstruct {
     const esbuildResult = esbuild.buildSync({
       entryPoints: [serverHandler],
       bundle: true,
-      minify: true,
+      minify: false,
+      sourcemap: true,
       target: "node16",
       platform: "node",
       external: ["sharp", "next"],
@@ -780,7 +806,9 @@ export class NextjsSite extends Construct implements SSTConstruct {
     }
   }
 
-  private createServerZip(standaloneDirAbsolute: string): string {
+  private createServerZip(): string {
+    const standaloneDirAbsolute = this.getNextStandaloneDir()
+
     // build our handler
     this.bundleServerHandler(this.props.path, standaloneDirAbsolute)
 
@@ -858,8 +886,10 @@ export class NextjsSite extends Construct implements SSTConstruct {
       domainNames.push(customDomain.domainName);
     }
 
+    // S3 origin
+    const origin = new origins.S3Origin(this.cdk.bucket, { originAccessIdentity: this.originAccessIdentity });
+
     // Build behavior
-    const origin = new origins.S3Origin(this.cdk.bucket);
     const viewerProtocolPolicy =
       cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS;
 
@@ -908,7 +938,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
       certificate: this.cdk.certificate,
       defaultBehavior: this.buildDistributionDefaultBehavior(),
       additionalBehaviors: {
-        // [("_next/image*")]: {
+        // "_next/image*": {
         //   viewerProtocolPolicy,
         //   origin,
         //   allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
@@ -919,7 +949,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
         // },
 
         "public/*": staticBehavior,
-        "static/*": staticBehavior,
+        "_next/*": staticBehavior,
         // "api/*": {
         //   viewerProtocolPolicy,
         //   origin,
@@ -929,6 +959,8 @@ export class NextjsSite extends Construct implements SSTConstruct {
         //   cachePolicy: lambdaCachePolicy,
         // },
         ...(cfDistributionProps.additionalBehaviors || {}),
+
+        // add public paths
       },
     });
   }
@@ -995,7 +1027,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
       domainNames: this.buildDistributionDomainNames(),
       certificate: this.cdk.certificate,
       defaultBehavior: {
-        origin: new origins.S3Origin(this.cdk.bucket),
+        origin: new origins.S3Origin(this.cdk.bucket, { originAccessIdentity: this.originAccessIdentity }),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       },
     });
@@ -1047,7 +1079,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
       serviceToken: invalidator.functionArn,
       resourceType: "Custom::SSTCloudFrontInvalidation",
       properties: {
-        BuildId: this.isPlaceholder ? "live" : this.generateBuildId(),
+        BuildId: this.isPlaceholder ? "live" : this.getNextBuildId(),
         DistributionId: this.cdk.distribution.distributionId,
         // TODO: Ignore the browser build path as it may speed up invalidation
         DistributionPaths: ["/*"],
@@ -1221,32 +1253,29 @@ export class NextjsSite extends Construct implements SSTConstruct {
     } as BaseSiteEnvironmentOutputsInfo);
   }
 
-  private generateBuildId(): string {
-    // We will generate a hash based on the contents of the "public" folder
-    // which will be used to indicate if we need to invalidate our CloudFront
-    // cache. As the browser build files are always uniquely hash in their
-    // filenames according to their content we can ignore the browser build
-    // files.
+  getNextBuildId() {
+    return fs.readFileSync(
+      path.join(this.getNextBuildDir(), 'BUILD_ID'), 'utf-8')
+  }
 
-    // The below options are needed to support following symlinks when building zip files:
-    // - nodir: This will prevent symlinks themselves from being copied into the zip.
-    // - follow: This will follow symlinks and copy the files within.
-    const globOptions = {
-      dot: true,
-      nodir: true,
-      follow: true,
-      ignore: ["build/**"],
-      cwd: path.resolve(this.props.path, "public"),
-    };
-    const files = glob.sync("**", globOptions);
-    const hash = crypto.createHash("sha1");
-    for (const file of files) {
-      hash.update(file);
+  private listDirectory(dir: string) {
+    const fileList: string[] = []
+    const publicFiles = fs.readdirSync(dir)
+    for (const filename of publicFiles) {
+      const filepath = path.join(dir, filename)
+      const stat = fs.statSync(filepath)
+      if (stat.isDirectory()) {
+        fileList.push(...this.listDirectory(filepath))
+      } else {
+        fileList.push(filepath)
+      }
     }
-    const buildId = hash.digest("hex");
 
-    logger.debug(`Generated build ID ${buildId}`);
+    return fileList
+  }
 
-    return buildId;
+  getPublicFileList() {
+    const publicDir = path.resolve(this.getNextBuildDir(), 'server')
+    return this.listDirectory(publicDir).map((file) => path.join('/', path.relative(publicDir, file)))
   }
 }

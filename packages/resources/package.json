@@ -39,7 +39,6 @@
     "@aws-cdk/aws-apigatewayv2-integrations-alpha": "2.39.1-alpha.0",
     "@aws-cdk/aws-appsync-alpha": "2.39.1-alpha.0",
     "@serverless-stack/core": "1.14.1",
-    "@sls-next/next-aws-cloudfront": "^3.7.0",
     "archiver": "^5.3.0",
     "aws-cdk-lib": "2.39.1",
     "chalk": "^4.1.0",
@@ -56,6 +55,7 @@
     "@types/fs-extra": "^9.0.6",
     "@types/glob": "^7.2.0",
     "@types/node": "^14.0.27",
+    "aws-lambda": "^1.0.7",
     "esbuild-jest": "^0.5.0",
     "typedoc": "^0.22.13",
     "vitest": "^0.15.1"
