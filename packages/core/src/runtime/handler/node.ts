@@ -6,6 +6,7 @@ import * as esbuild from "esbuild";
 import { ICommandHooks } from "aws-cdk-lib/aws-lambda-nodejs";
 import { createRequire } from "module";
 import { promisify } from "util";
+import { findUp } from "find-up";
 
 import { Definition } from "./definition";
 import { State } from "../../state/index.js";
@@ -29,6 +30,38 @@ type Bundle = {
   sourcemap?: boolean;
   format?: "esm" | "cjs";
 };
+
+type ModuleManager = {
+  installer: "npm" | "yarn";
+  lockFile: "package-lock.json" | "yarn.lock";
+  lockFileDir: string;
+};
+
+async function getModuleManager(srcPath: string): Promise<ModuleManager> {
+  const lockFile = await findUp(["package-lock.json", "yarn.lock"], {
+    cwd: srcPath
+  });
+
+  if (!lockFile) {
+    throw new Error("Cannot find a lock file");
+  }
+
+  const lockFileName = path.basename(lockFile);
+
+  if (lockFileName === "yarn.lock") {
+    return {
+      installer: "yarn",
+      lockFile: "yarn.lock",
+      lockFileDir: path.dirname(lockFile)
+    };
+  }
+
+  return {
+    installer: "npm",
+    lockFile: "package-lock.json",
+    lockFileDir: path.dirname(lockFile)
+  };
+}
 
 export const NodeHandler: Definition<Bundle> = opts => {
   const dir = path.dirname(opts.handler);
@@ -175,7 +208,7 @@ export const NodeHandler: Definition<Bundle> = opts => {
         await esbuild.build({
           ...config,
           plugins: plugins ? require(plugins) : undefined,
-          metafile: true,
+          metafile: true
         });
       } catch (e) {
         throw new Error(
@@ -240,6 +273,7 @@ async function installNodeModules(
   if (!bundle.nodeModules) return;
   // If nodeModules have been installed for the same srcPath, copy the
   // "node_modules" folder over. Do not re-install.
+
   const modulesStr = JSON.stringify(bundle.nodeModules.slice().sort());
   const srcPathModules = `${srcPath}/${modulesStr}`;
   const existingPath = existingNodeModulesBySrcPathModules[srcPathModules];
@@ -253,7 +287,7 @@ async function installNodeModules(
 
   // Find 'package.json' at handler's srcPath.
   const pkgPath = path.join(srcPath, "package.json");
-  if (! await fs.pathExists(pkgPath)) {
+  if (!(await fs.pathExists(pkgPath))) {
     throw new Error(
       `Cannot find a "package.json" in the function's srcPath: ${path.resolve(
         srcPath
@@ -263,29 +297,24 @@ async function installNodeModules(
 
   // Determine dependencies versions, lock file and installer
   const dependencies = await extractDependencies(pkgPath, bundle.nodeModules);
-  let installer = "npm";
-  let lockFile;
-  if (await fs.pathExists(path.join(srcPath, "package-lock.json"))) {
-    installer = "npm";
-    lockFile = "package-lock.json";
-  } else if (await fs.pathExists(path.join(srcPath, "yarn.lock"))) {
-    installer = "yarn";
-    lockFile = "yarn.lock";
-  }
-
-  // Create dummy package.json, copy lock file if any and then install
+  const { installer, lockFile, lockFileDir } = await getModuleManager(srcPath);
+  //
+  // Create dummy package.json, copy lock file and then install
   const outputPath = path.join(targetPath, "package.json");
   await fs.ensureFile(outputPath);
-  const existing = await fs.readJson(outputPath) || {};
+  const existing = (await fs.readJson(outputPath)) || {};
   await fs.writeJson(outputPath, { ...existing, dependencies });
   if (lockFile) {
-    await fs.copy(path.join(srcPath, lockFile), path.join(targetPath, lockFile));
+    await fs.copy(
+      path.join(lockFileDir, lockFile),
+      path.join(targetPath, lockFile)
+    );
   }
 
   // Install dependencies
   try {
     await execAsync(`${installer} install`, {
-      cwd: targetPath,
+      cwd: targetPath
     });
   } catch (e) {
     console.log(chalk.red(`There was a problem installing nodeModules.`));
@@ -335,7 +364,11 @@ async function extractDependencies(
   return dependencies;
 }
 
-async function runBeforeBundling(srcPath: string, buildPath: string, bundle: Bundle) {
+async function runBeforeBundling(
+  srcPath: string,
+  buildPath: string,
+  bundle: Bundle
+) {
   // Build command
   const cmds = bundle.commandHooks?.beforeBundling(srcPath, buildPath) ?? [];
   if (cmds.length === 0) {
@@ -344,7 +377,7 @@ async function runBeforeBundling(srcPath: string, buildPath: string, bundle: Bun
 
   try {
     await execAsync(cmds.join(" && "), {
-      cwd: srcPath,
+      cwd: srcPath
     });
   } catch (e) {
     console.log(
@@ -354,7 +387,11 @@ async function runBeforeBundling(srcPath: string, buildPath: string, bundle: Bun
   }
 }
 
-async function runBeforeInstall(srcPath: string, buildPath: string, bundle: Bundle) {
+async function runBeforeInstall(
+  srcPath: string,
+  buildPath: string,
+  bundle: Bundle
+) {
   // Build command
   const cmds = bundle.commandHooks?.beforeInstall(srcPath, buildPath) ?? [];
   if (cmds.length === 0) {
@@ -363,7 +400,7 @@ async function runBeforeInstall(srcPath: string, buildPath: string, bundle: Bund
 
   try {
     await execAsync(cmds.join(" && "), {
-      cwd: srcPath,
+      cwd: srcPath
     });
   } catch (e) {
     console.log(
@@ -373,7 +410,11 @@ async function runBeforeInstall(srcPath: string, buildPath: string, bundle: Bund
   }
 }
 
-async function runAfterBundling(srcPath: string, buildPath: string, bundle: Bundle) {
+async function runAfterBundling(
+  srcPath: string,
+  buildPath: string,
+  bundle: Bundle
+) {
   // Build command
   const cmds = bundle.commandHooks?.afterBundling(srcPath, buildPath) ?? [];
   if (cmds.length === 0) {
@@ -382,7 +423,7 @@ async function runAfterBundling(srcPath: string, buildPath: string, bundle: Bund
 
   try {
     execAsync(cmds.join(" && "), {
-      cwd: srcPath,
+      cwd: srcPath
     });
   } catch (e) {
     console.log(
