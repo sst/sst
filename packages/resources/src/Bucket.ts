@@ -242,7 +242,7 @@ export interface BucketProps {
      * });
      * ```
      */
-    bucket?: s3.Bucket | s3.BucketProps;
+    bucket?: s3.IBucket | s3.BucketProps;
   };
 }
 
@@ -266,7 +266,7 @@ export class Bucket extends Construct implements SSTConstruct {
     /**
      * The internally created CDK `Bucket` instance.
      */
-    bucket: s3.Bucket;
+    bucket: s3.IBucket;
   };
   readonly notifications: Record<string, Fn | Queue | Topic>;
   readonly permissionsAttachedForAllNotifications: Permissions[];
