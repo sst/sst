@@ -172,7 +172,7 @@ SST comes with a [CLI](packages/cli.md) that can deploy your applications and he
 The [`sst start`](live-lambda-development.md) command starts a local development environment that lets you [**set breakpoints and test your functions locally**](live-lambda-development.md#debugging-with-visual-studio-code). You don't need to mock any resources or wait for the changes to redeploy.
 
 ```bash
-sst start
+npx sst start
 ```
 
 It does this by starting up a local server and proxying requests from the Lambda functions in AWS to your machine.
