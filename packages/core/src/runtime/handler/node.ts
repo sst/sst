@@ -208,7 +208,7 @@ export const NodeHandler: Definition<Bundle> = opts => {
         await esbuild.build({
           ...config,
           plugins: plugins ? require(plugins) : undefined,
-          metafile: true
+          metafile: true,
         });
       } catch (e) {
         throw new Error(
@@ -273,7 +273,6 @@ async function installNodeModules(
   if (!bundle.nodeModules) return;
   // If nodeModules have been installed for the same srcPath, copy the
   // "node_modules" folder over. Do not re-install.
-
   const modulesStr = JSON.stringify(bundle.nodeModules.slice().sort());
   const srcPathModules = `${srcPath}/${modulesStr}`;
   const existingPath = existingNodeModulesBySrcPathModules[srcPathModules];
@@ -287,7 +286,7 @@ async function installNodeModules(
 
   // Find 'package.json' at handler's srcPath.
   const pkgPath = path.join(srcPath, "package.json");
-  if (!(await fs.pathExists(pkgPath))) {
+  if (! await fs.pathExists(pkgPath)) {
     throw new Error(
       `Cannot find a "package.json" in the function's srcPath: ${path.resolve(
         srcPath
@@ -298,7 +297,7 @@ async function installNodeModules(
   // Determine dependencies versions, lock file and installer
   const dependencies = await extractDependencies(pkgPath, bundle.nodeModules);
   const { installer, lockFile, lockFileDir } = await getModuleManager(srcPath);
-  //
+
   // Create dummy package.json, copy lock file and then install
   const outputPath = path.join(targetPath, "package.json");
   await fs.ensureFile(outputPath);
@@ -364,11 +363,7 @@ async function extractDependencies(
   return dependencies;
 }
 
-async function runBeforeBundling(
-  srcPath: string,
-  buildPath: string,
-  bundle: Bundle
-) {
+async function runBeforeBundling(srcPath: string, buildPath: string, bundle: Bundle) {
   // Build command
   const cmds = bundle.commandHooks?.beforeBundling(srcPath, buildPath) ?? [];
   if (cmds.length === 0) {
@@ -377,7 +372,7 @@ async function runBeforeBundling(
 
   try {
     await execAsync(cmds.join(" && "), {
-      cwd: srcPath
+      cwd: srcPath,
     });
   } catch (e) {
     console.log(
@@ -387,11 +382,7 @@ async function runBeforeBundling(
   }
 }
 
-async function runBeforeInstall(
-  srcPath: string,
-  buildPath: string,
-  bundle: Bundle
-) {
+async function runBeforeInstall(srcPath: string, buildPath: string, bundle: Bundle) {
   // Build command
   const cmds = bundle.commandHooks?.beforeInstall(srcPath, buildPath) ?? [];
   if (cmds.length === 0) {
@@ -400,7 +391,7 @@ async function runBeforeInstall(
 
   try {
     await execAsync(cmds.join(" && "), {
-      cwd: srcPath
+      cwd: srcPath,
     });
   } catch (e) {
     console.log(
@@ -410,11 +401,7 @@ async function runBeforeInstall(
   }
 }
 
-async function runAfterBundling(
-  srcPath: string,
-  buildPath: string,
-  bundle: Bundle
-) {
+async function runAfterBundling(srcPath: string, buildPath: string, bundle: Bundle) {
   // Build command
   const cmds = bundle.commandHooks?.afterBundling(srcPath, buildPath) ?? [];
   if (cmds.length === 0) {
@@ -423,7 +410,7 @@ async function runAfterBundling(
 
   try {
     execAsync(cmds.join(" && "), {
-      cwd: srcPath
+      cwd: srcPath,
     });
   } catch (e) {
     console.log(
