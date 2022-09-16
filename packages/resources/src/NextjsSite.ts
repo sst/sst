@@ -27,11 +27,11 @@ import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import * as route53Patterns from "aws-cdk-lib/aws-route53-patterns";
 import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
-// import type { RoutesManifest } from "@sls-next/lambda-at-edge";
+import type { RoutesManifest } from "@sls-next/lambda-at-edge";
 
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
-import { SSTConstruct, isCDKConstruct } from "./Construct.js";
+import { SSTConstruct } from "./Construct.js";
 import {
   BaseSiteDomainProps,
   BaseSiteReplaceProps,
@@ -52,9 +52,9 @@ export interface NextjsCdkDistributionProps
 export interface NextjsSiteProps {
   cdk?: {
     /**
-     * Allows you to override default settings this construct uses internally to ceate the bucket
+     * Pass in bucket information to override the default settings this construct uses to create the CDK Bucket internally.
      */
-    bucket?: s3.BucketProps | s3.IBucket;
+    bucket?: s3.BucketProps;
     /**
      * Pass in a value to override the default settings this construct uses to create the CDK `Distribution` internally.
      */
@@ -83,7 +83,7 @@ export interface NextjsSiteProps {
   /**
    * Path to the next executable, typically in node_modules.
    * This should be used if next is installed in a non-standard location.
-   *
+   * 
    * @default "./node_modules/.bin/next"
    */
   nextBinPath?: string;
@@ -188,6 +188,7 @@ export interface NextjsSiteProps {
  * The `NextjsSite` construct is a higher level CDK construct that makes it easy to create a Next.js app.
  *
  * @example
+ * ### Creating a Next.js app
  *
  * Deploys a Next.js app in the `path/to/site` directory.
  *
@@ -279,7 +280,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
   private buildOutDir: string | null;
   private assets: s3Assets.Asset[];
   private awsCliLayer: AwsCliLayer;
-  // private routesManifest: RoutesManifest | null;
+  private routesManifest: RoutesManifest | null;
   private edgeLambdaRole: iam.Role;
   private mainFunctionVersion: lambda.IVersion;
   private apiFunctionVersion: lambda.IVersion;
@@ -309,11 +310,11 @@ export class NextjsSite extends Construct implements SSTConstruct {
     if (this.isPlaceholder) {
       this.buildOutDir = null;
       this.assets = this.zipAppStubAssets();
-      // this.routesManifest = null;
+      this.routesManifest = null;
     } else {
       this.buildOutDir = this.buildApp();
       this.assets = this.zipAppAssets(fileSizeLimit, buildDir);
-      // this.routesManifest = this.readRoutesManifest();
+      this.routesManifest = this.readRoutesManifest();
     }
 
     // Create Bucket
@@ -757,20 +758,12 @@ export class NextjsSite extends Construct implements SSTConstruct {
   private createS3Bucket(): s3.Bucket {
     const { cdk } = this.props;
 
-    // cdk.bucket is an imported construct
-    if (cdk?.bucket && isCDKConstruct(cdk?.bucket)) {
-      return cdk.bucket as s3.Bucket;
-    }
-    // cdk.bucket is a prop
-    else {
-      const bucketProps = cdk?.bucket as s3.BucketProps;
-      return new s3.Bucket(this, "S3Bucket", {
-        publicReadAccess: true,
-        autoDeleteObjects: true,
-        removalPolicy: RemovalPolicy.DESTROY,
-        ...bucketProps,
-      });
-    }
+    return new s3.Bucket(this, "S3Bucket", {
+      publicReadAccess: true,
+      autoDeleteObjects: true,
+      removalPolicy: RemovalPolicy.DESTROY,
+      ...cdk?.bucket,
+    });
   }
 
   private createS3Deployment(): CustomResource {
@@ -1346,18 +1339,17 @@ export class NextjsSite extends Construct implements SSTConstruct {
   /////////////////////
 
   private pathPattern(pattern: string): string {
-    // const { basePath } = this.routesManifest || {};
-    // return basePath && basePath.length > 0
-    //   ? `${basePath.slice(1)}/${pattern}`
-    //   : pattern;
-    return pattern
+    const { basePath } = this.routesManifest || {};
+    return basePath && basePath.length > 0
+      ? `${basePath.slice(1)}/${pattern}`
+      : pattern;
   }
 
-  // private readRoutesManifest(): RoutesManifest {
-  //   return fs.readJSONSync(
-  //     path.join(this.buildOutDir!, "default-lambda/routes-manifest.json")
-  //   );
-  // }
+  private readRoutesManifest(): RoutesManifest {
+    return fs.readJSONSync(
+      path.join(this.buildOutDir!, "default-lambda/routes-manifest.json")
+    );
+  }
 
   private getS3ContentReplaceValues(): BaseSiteReplaceProps[] {
     const replaceValues: BaseSiteReplaceProps[] = [];
