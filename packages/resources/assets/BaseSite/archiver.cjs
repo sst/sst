@@ -16,24 +16,35 @@ const glob = require("glob");
 
 // Parse arguments
 const argv = process.argv.slice(2);
-const SITE_PATH = argv[0];
+const DIR_PATH = argv[0];
 const ZIP_PATH = argv[1];
 const FILE_SIZE_LIMIT_IN_MB = argv[2];
 const FILE_SIZE_LIMIT_IN_BYTES = FILE_SIZE_LIMIT_IN_MB * 1024 * 1024;
 
-// Get files
 // The below options are needed to support following symlinks when building zip files:
 // - nodir: This will prevent symlinks themselves from being copied into the zip.
 // - follow: This will follow symlinks and copy the files within.
+let nodir, follow
+if (process.env.PRESERVE_SYMLINKS === "true") {
+  // we should preserve symlinks when bundling node_modules in the standalone output
+  nodir = false
+  follow = false
+} else {
+  nodir = true
+  follow = true
+}
+
+// Get files
 const globOptions = {
   dot: true,
-  nodir: true,
-  follow: true,
-  cwd: SITE_PATH,
+  nodir,
+  follow,
+  cwd: DIR_PATH,
 };
 const files = glob.sync("**", globOptions); // The output here is already sorted
 
-generateZips().catch(() => {
+generateZips().catch((err) => {
+  console.error(err)
   process.exit(1);
 });
 
@@ -77,7 +88,7 @@ function generateZips() {
 
     // Append files serially to ensure file order
     for (const file of files) {
-      const fullPath = path.join(SITE_PATH, file);
+      const fullPath = path.join(DIR_PATH, file);
       const [data, stat] = await Promise.all([
         fs.promises.readFile(fullPath),
         fs.promises.stat(fullPath),
