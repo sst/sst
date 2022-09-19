@@ -186,7 +186,7 @@ Here are a couple of reference docs from AWS that should help you write stack te
 
 - [CDK assertions](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.assertions-readme.html)
 - [CloudFormation resource definitions](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html))
-  :::
+:::
 
 ## Tips
 
