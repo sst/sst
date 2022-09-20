@@ -21,7 +21,7 @@ import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
 import { Construct } from "constructs";
-const logger = getChildLogger("NextjsSite");
+const logger = getChildLogger("NextjsSsr");
 
 import { LayerVersion } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
@@ -46,7 +46,7 @@ const NEXTJS_BUILD_STANDALONE_ENV = 'NEXT_PRIVATE_STANDALONE'
 export interface NextjsDomainProps extends BaseSiteDomainProps { }
 export interface NextjsCdkDistributionProps
   extends BaseSiteCdkDistributionProps { }
-export interface NextjsSiteProps {
+export interface NextjsSsrProps {
   cdk?: {
     /**
      * Allows you to override default settings this construct uses internally to ceate the bucket
@@ -85,14 +85,14 @@ export interface NextjsSiteProps {
    *
    * @example
    * ```js {3}
-   * new NextjsSite(stack, "Site", {
+   * new NextjsSsr(stack, "Site", {
    *   path: "path/to/site",
    *   customDomain: "domain.com",
    * });
    * ```
    *
    * ```js {3-6}
-   * new NextjsSite(stack, "Site", {
+   * new NextjsSsr(stack, "Site", {
    *   path: "path/to/site",
    *   customDomain: {
    *     domainName: "domain.com",
@@ -109,7 +109,7 @@ export interface NextjsSiteProps {
    *
    * @example
    * ```js {3-6}
-   * new NextjsSite(stack, "Site", {
+   * new NextjsSsr(stack, "Site", {
    *   path: "path/to/site",
    *   environment: {
    *     API_URL: api.url,
@@ -127,7 +127,7 @@ export interface NextjsSiteProps {
    *
    * @example
    * ```js {3}
-   * new NextjsSite(stack, "NextjsSite", {
+   * new NextjsSsr(stack, "NextjsSsr", {
    *   path: "path/to/site",
    *   disablePlaceholder: true,
    * });
@@ -150,19 +150,21 @@ export interface NextjsSiteProps {
 }
 
 /**
- * The `NextjsSite` construct is a higher level CDK construct that makes it easy to create a Nextjs app.
+ * The `NextjsSsr` construct is a higher level CDK construct that makes it easy to create a Nextjs app.
+ *
+ * Your standalone application will be bundled using output tracing and will be deployed to a Lambda function.
  *
  * @example
  *
  * Deploys a Nextjs app in the `my-nextjs-app` directory.
  *
  * ```js
- * new NextjsSite(stack, "web", {
+ * new NextjsSsr(stack, "web", {
  *   path: "my-nextjs-app/",
  * });
  * ```
  */
-export class NextjsSite extends Construct implements SSTConstruct {
+export class NextjsSsr extends Construct implements SSTConstruct {
   /**
    * The default CloudFront cache policy properties for static pages.
    */
@@ -175,7 +177,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     minTtl: Duration.days(30),
     enableAcceptEncodingBrotli: true,
     enableAcceptEncodingGzip: true,
-    comment: "SST NextjsSite Static Default Cache Policy",
+    comment: "SST Nextjs Static Default Cache Policy",
   };
 
   /**
@@ -190,7 +192,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     minTtl: Duration.days(0),
     enableAcceptEncodingBrotli: true,
     enableAcceptEncodingGzip: true,
-    comment: "SST NextjsSite Image Default Cache Policy",
+    comment: "SST Nextjs Image Default Cache Policy",
   };
 
   /**
@@ -205,7 +207,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     minTtl: Duration.seconds(0),
     enableAcceptEncodingBrotli: true,
     enableAcceptEncodingGzip: true,
-    comment: "SST NextjsSite Lambda Default Cache Policy",
+    comment: "SST Nextjs Lambda Default Cache Policy",
   };
 
   /**
@@ -214,7 +216,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
   public static imageOriginRequestPolicyProps: cloudfront.OriginRequestPolicyProps =
     {
       queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.all(),
-      comment: "SST NextjsSite Lambda Default Origin Request Policy",
+      comment: "SST Nextjs Lambda Default Origin Request Policy",
     };
 
 
@@ -223,9 +225,9 @@ export class NextjsSite extends Construct implements SSTConstruct {
    */
   public readonly cdk: {
     /**
-     * The internally created CDK `Function` instance.
+     * The main Nextjs server function.
      */
-    function?: lambda.Function;
+    serverFunction?: lambda.Function;
     /**
      * The internally created CDK `Bucket` instance.
      */
@@ -243,7 +245,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
      */
     certificate?: acm.ICertificate;
   };
-  private props: NextjsSiteProps;
+  private props: NextjsSsrProps;
   /**
    * Determines if a placeholder site should be deployed instead. We will set
    * this to `true` by default when performing local development, although the
@@ -258,7 +260,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
   private awsCliLayer: AwsCliLayer;
   public originAccessIdentity: cloudfront.IOriginAccessIdentity
 
-  constructor(scope: Construct, id: string, props: NextjsSiteProps) {
+  constructor(scope: Construct, id: string, props: NextjsSsrProps) {
     super(scope, id);
 
     const app = scope.node.root as App;
@@ -286,8 +288,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
       this.cdk.bucket.grantRead(this.originAccessIdentity);
 
       // Create Server function
-      this.serverLambda = this.createServerFunction();
-      this.cdk.function = this.serverLambda;
+      this.cdk.serverFunction = this.createServerFunction();;
 
       // Create Custom Domain
       this.validateCustomDomainSettings();
@@ -319,7 +320,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
 
       console.error(
         chalk.red(
-          `\nError: There was a problem synthesizing the NextjsSite at "${props.path}".`
+          `\nError: There was a problem synthesizing the NextjsSsr at "${props.path}".`
         )
       );
       if (error instanceof Error) {
@@ -401,7 +402,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
    *
    * @example
    * ```js {5}
-   * const site = new NextjsSite(stack, "Site", {
+   * const site = new NextjsSsr(stack, "Site", {
    *   path: "path/to/site",
    * });
    *
@@ -416,7 +417,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
 
   public getConstructMetadata() {
     return {
-      type: "NextjsSite" as const,
+      type: "NextjsSsr" as const,
       data: {
         distributionId: this.cdk.distribution.distributionId,
         customDomainUrl: this.customDomainUrl,
@@ -488,7 +489,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     const sharpLayer = new LayerVersion(this, "SharpLayer", {
       code: new lambda.AssetCode(path.join(layerDir, "sharp-0.30.0.zip")),
       compatibleRuntimes: [lambda.Runtime.NODEJS_16_X],
-      description: "Sharp for NextjsSite",
+      description: "Sharp for NextJS",
     });
     return sharpLayer;
 
@@ -641,6 +642,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
       code: lambda.Code.fromAsset(zipFilePath),
       environment,
     });
+    this.cdk.serverFunction = fn;
 
     // attach permissions
     this.cdk.bucket.grantReadWrite(fn.role!);
@@ -687,7 +689,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
 
     // get output path
     const zipOutDir = path.resolve(
-      path.join(this.sstBuildDir, `NextjsSite-standalone-${this.node.id}-${this.node.addr}`)
+      path.join(this.sstBuildDir, `NextjsSsr-standalone-${this.node.id}-${this.node.addr}`)
     );
     fs.removeSync(zipOutDir);
     fs.mkdirpSync(zipOutDir);
@@ -723,12 +725,12 @@ export class NextjsSite extends Construct implements SSTConstruct {
     const cfDistributionProps = cdk?.distribution || {};
     if (cfDistributionProps.certificate) {
       throw new Error(
-        `Do not configure the "cfDistribution.certificate". Use the "customDomain" to configure the NextjsSite domain certificate.`
+        `Do not configure the "cfDistribution.certificate". Use the "customDomain" to configure the NextjsSsr domain certificate.`
       );
     }
     if (cfDistributionProps.domainNames) {
       throw new Error(
-        `Do not configure the "cfDistribution.domainNames". Use the "customDomain" to configure the NextjsSite domain.`
+        `Do not configure the "cfDistribution.domainNames". Use the "customDomain" to configure the NextjsSsr domain.`
       );
     }
   }
@@ -740,12 +742,12 @@ export class NextjsSite extends Construct implements SSTConstruct {
     // Validate input
     if (cfDistributionProps.certificate) {
       throw new Error(
-        `Do not configure the "cfDistribution.certificate". Use the "customDomain" to configure the NextjsSite domain certificate.`
+        `Do not configure the "cfDistribution.certificate". Use the "customDomain" to configure the NextjsSsr domain certificate.`
       );
     }
     if (cfDistributionProps.domainNames) {
       throw new Error(
-        `Do not configure the "cfDistribution.domainNames". Use the "customDomain" to configure the NextjsSite domain.`
+        `Do not configure the "cfDistribution.domainNames". Use the "customDomain" to configure the NextjsSsr domain.`
       );
     }
 
@@ -866,7 +868,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     return new cloudfront.CachePolicy(
       this,
       "StaticsCache",
-      NextjsSite.staticCachePolicyProps
+      NextjsSsr.staticCachePolicyProps
     );
   }
 
@@ -874,7 +876,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     return new cloudfront.CachePolicy(
       this,
       "ImageCache",
-      NextjsSite.imageCachePolicyProps
+      NextjsSsr.imageCachePolicyProps
     );
   }
 
@@ -882,7 +884,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     return new cloudfront.CachePolicy(
       this,
       "LambdaCache",
-      NextjsSite.lambdaCachePolicyProps
+      NextjsSsr.lambdaCachePolicyProps
     );
   }
 
@@ -890,7 +892,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     return new cloudfront.OriginRequestPolicy(
       this,
       "ImageOriginRequest",
-      NextjsSite.imageOriginRequestPolicyProps
+      NextjsSsr.imageOriginRequestPolicyProps
     );
   }
 
