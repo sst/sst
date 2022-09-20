@@ -1,7 +1,5 @@
 ---
-title: Get Started With SST
-sidebar_label: Introduction
-hide_title: true
+title: Introduction
 hide_table_of_contents: true
 description: SST Docs
 slug: /
@@ -11,18 +9,64 @@ import config from "../config";
 import styles from "./about.module.css";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 
-<h1 className={styles.title}>Introduction</h1>
+SST makes it easy to build full-stack serverless applications. You can create APIs, databases, frontends; connect them all together, and deploy them to AWS.
+Here's how SST helps:
 
-<div className={styles.desc}>
-SST is a framework that makes it easy to build full-stack serverless apps. It features:
+<!-- - Define infrastructure, simpler than AWS-->
 
+- [High-level components](what-is-sst.md#infrastructure) that simplify building APIs, databases, frontends on AWS. For example, create an API in a few lines.
+
+  <!-- prettier-ignore -->
+  ```ts
+  new Api(this, "API", {
+    routes: {
+      "POST /notes": "functions/create.main"
+    }
+  })
+  ```
+
+<!-- - Local development environment, set breakpoints in Lambda functions-->
+
+- [Debug Lambda functions](what-is-sst.md#local-dev) locally with breakpoints and live reload
+  <!--
+      - Live reload and be able to set breakpoints to test Lambda functions locally.
+      - Live reload Lambda functions and set breakpoints to test locally.
+      - [Set breakpoints](what-is-sst.md#local-dev) and live reload Lambda functions.
+      - [Set breakpoints in Lambda functions](what-is-sst.md#local-dev) without mocking or waiting to redeploy.
+      -->
+  <!--
+      - Connect backend to frontend, no hard coding config
+      - [Connect to your frontend](what-is-sst.md#connect-to-the-api) so you don't have to hardcode API endpoints.
+      -->
+- [Admin dashboard](what-is-sst.md#local-dev) to manage your apps without using the AWS console
+  <!--
+  - [Web based admin dashboard](what-is-sst.md#local-dev) to invoke functions, query databases, run migrations, without using the AWS Console.
+  -->
+  <!-- - Supports all AWS services, no lock in -->
+- [Full-stack monorepo starters](what-is-sst.md#starters) designed to manage growing serverless projects
+  <!--
+  - [Full-stack monorepo starters](what-is-sst.md#starters) designed for growing teams and projects
+  - Full-stack monorepo starters that help projects as they grow
+  - Full-stack monorepo starters designed for growing projects
+  - Full-stack monorepo starters designed to manage projects as they grow
+  - Full-stack apps in a monorepo structure to manage the complexity
+  - Full-stack apps with a monorepo structure to keep things organized
+  -->
+  <!--
+  - [Easily extend SST](what-is-sst.md#all-aws-services) to fit your use case by deploying any AWS service
+  - [Easily extend SST](what-is-sst.md#all-aws-services) by deploying any AWS service to fit your use case
+  - [Deploy any AWS service](what-is-sst.md#all-aws-services) and extend SST to fit your use case.
+  -->
+
+<!--
 - A [Live Lambda Development](live-lambda-development.md) environment
 - A [web based dashboard](console.md) to manage your apps
 - Support for [setting breakpoints and debugging in VS Code](live-lambda-development.md#debugging-with-visual-studio-code)
 - Higher-level constructs designed specifically for serverless apps
 - Zero-config support for JS and TS (using [esbuild](https://esbuild.github.io)), Go, Python, C#, and F#
+-->
 
-</div>
+[**Learn more about SST**](what-is-sst.md).
 
 ```bash
 # Create a new SST app
