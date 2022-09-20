@@ -21,13 +21,9 @@ Tasks related to video processing, ETL, and ML can take long. These exceed Lambd
 
 ## Quick Start
 
-We'll create a new app using the Minimal TypeScript starter and add a `Job` to your app.
-
-:::info
 To follow along, you can create the Minimal TypeScript starter by running `npx create-sst@latest` > `minimal` > `minimal/typescript-starter`.
 
 Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/create-sst-minimal-typescript-starter) that's based on the same template.
-:::
 
 ---
 
