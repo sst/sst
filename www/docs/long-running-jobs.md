@@ -25,103 +25,95 @@ To follow along, you can create the Minimal TypeScript starter by running `npx c
 
 Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/create-sst-minimal-typescript-starter) that's based on the same template.
 
----
+1. **Create the infrastructure**
 
-### Create infrastructure
+   To create a new job, import [`Job`](constructs/Job.md) at the top of `stacks/MyStack.ts`.
 
-To create a new job, import [`Job`](constructs/Job.md) at the top of `stacks/MyStack.ts`.
+   ```ts title="stacks/MyStack.ts"
+   import { Job } from "@serverless-stack/resources";
+   ```
 
-```ts title="stacks/MyStack.ts"
-import { Job } from "@serverless-stack/resources";
-```
+   And add a `Job` construct below the API.
 
-And add a `Job` construct below the API.
+   ```ts
+   const job = new Job(stack, "MyJob", {
+     srcPath: "services",
+     handler: "functions/myJob.handler",
+   });
+   ```
 
-```ts
-const job = new Job(stack, "MyJob", {
-  srcPath: "services",
-  handler: "functions/myJob.handler",
-});
-```
+2. **Grant permissions**
 
----
+   Give `api` the permissions to run the job.
 
-### Grant permissions
+   ```ts title="stacks/MyStack.ts"
+   api.attachPermissions([job]);
+   ```
 
-Give `api` the permissions to run the job.
+3. **Define the handler function**
 
-```ts title="stacks/MyStack.ts"
-api.attachPermissions([job]);
-```
+   Create the function with the code that needs to run for long. Here for example, we are creating a function to calculate the factorial of a given number.
 
----
+   Define the shape of the function payload.
 
-### Define handler function
+   ```ts title="services/functions/myJob.ts"
+   import { JobHandler } from "@serverless-stack/node/job";
 
-Create the function with the code that needs to run for long. Here for example, we are creating a function to calculate the factorial of a given number.
+   declare module "@serverless-stack/node/job" {
+     export interface JobTypes {
+       MyJob: {
+         num: number;
+       };
+     }
+   }
+   ```
 
-Define the shape of the function payload.
+   Note that we are defining the job payload to contain a `num` property with type `number`. This'll ensure that we'll get a type error in our editor when we try to pass in a string. We talk more about [typesafety below](#typesafe-payload).
 
-```ts title="services/functions/myJob.ts"
-import { JobHandler } from "@serverless-stack/node/job";
+   Then create the handler function using the [`JobHandler`](packages/node.md#jobhandler) helper. Append this to `myJob.ts`.
 
-declare module "@serverless-stack/node/job" {
-  export interface JobTypes {
-    MyJob: {
-      num: number;
-    };
-  }
-}
-```
+   ```ts
+   export const main = JobHandler("MyJob", async (payload) => {
+     // Calculate factorial
+     let result = 1;
+     for (let i = 2; i <= payload.num; i++) {
+       result = result * i;
+     }
 
-Note that we are defining the job payload to contain a `num` property with type `number`. This'll ensure that we'll get a type error in our editor when we try to pass in a string. We talk more about [typesafety below](#typesafe-payload).
+     console.log(`Factorial of ${payload.num} is ${result}`);
+   });
+   ```
 
-Then create the handler function using the [`JobHandler`](packages/node.md#jobhandler) helper. Append this to `myJob.ts`.
+4. **Run the job**
 
-```ts
-export const main = JobHandler("MyJob", async (payload) => {
-  // Calculate factorial
-  let result = 1;
-  for (let i = 2; i <= payload.num; i++) {
-    result = result * i;
-  }
+   And finally we can run this job in our API using the [`Job.run`](packages/node.md#jobrun) helper. Change `services/functions/lambda.ts` to:
 
-  console.log(`Factorial of ${payload.num} is ${result}`);
-});
-```
+   ```ts title="services/functions/lambda.ts"
+   import { Job } from "@serverless-stack/node/job";
+   import { APIGatewayProxyHandlerV2 } from "aws-lambda";
 
----
+   export const handler: APIGatewayProxyHandlerV2 = async (event) => {
+     await Job.run("MyJob", {
+       payload: {
+         num: 100,
+       },
+     });
 
-### Run the job
+     return {
+       statusCode: 200,
+       headers: { "Content-Type": "text/plain" },
+       body: `Job started at ${event.requestContext.time}.`,
+     };
+   };
+   ```
 
-And finally we can run this job in our API using the [`Job.run`](packages/node.md#jobrun) helper. Change `services/functions/lambda.ts` to:
-
-```ts title="services/functions/lambda.ts"
-import { Job } from "@serverless-stack/node/job";
-import { APIGatewayProxyHandlerV2 } from "aws-lambda";
-
-export const handler: APIGatewayProxyHandlerV2 = async (event) => {
-  await Job.run("MyJob", {
-    payload: {
-      num: 100,
-    },
-  });
-
-  return {
-    statusCode: 200,
-    headers: { "Content-Type": "text/plain" },
-    body: `Job started at ${event.requestContext.time}.`,
-  };
-};
-```
-
-You'll notice that your editor will autocomplete the `payload` for you.
+   You'll notice that your editor will autocomplete the `payload` for you.
 
 :::info
 `Job.run` returns right after it starts the long running job.
 :::
 
-And that's it. You can invoke run long running jobs asynchronously in your app.
+And that's it. You can now add long running jobs to your apps!
 
 ---
 
