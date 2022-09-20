@@ -43,8 +43,8 @@ const NEXTJS_PUBLIC_DIR = 'public'
 const NEXTJS_BUILD_STANDALONE_DIR = 'standalone';
 const NEXTJS_BUILD_STANDALONE_ENV = 'NEXT_PRIVATE_STANDALONE'
 
-export interface NextjsDomainProps extends BaseSiteDomainProps { }
-export interface NextjsCdkDistributionProps
+export interface NextjsSsrDomainProps extends BaseSiteDomainProps { }
+export interface NextjsSsrCdkDistributionProps
   extends BaseSiteCdkDistributionProps { }
 export interface NextjsSsrProps {
   cdk?: {
@@ -56,7 +56,7 @@ export interface NextjsSsrProps {
      * Pass in a value to override the default settings this construct uses to
      * create the CDK `Distribution` internally.
      */
-    distribution?: NextjsCdkDistributionProps;
+    distribution?: NextjsSsrCdkDistributionProps;
     /**
     * Override the default CloudFront cache policies created internally.
     */
@@ -102,7 +102,7 @@ export interface NextjsSsrProps {
    * });
    * ```
    */
-  customDomain?: string | NextjsDomainProps;
+  customDomain?: string | NextjsSsrDomainProps;
 
   /**
    * An object with the key being the environment variable name.
