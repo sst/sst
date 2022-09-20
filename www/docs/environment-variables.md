@@ -3,7 +3,7 @@ title: Environment Variables
 description: "Working with environment variables and secrets in SST."
 ---
 
-SST has built-in support for securely managing environment variables and secrets using a set of libraries collectively called **`Config`**.
+SST has built-in support for securely managing environment variables and secrets using a set of libraries collectively called `Config`.
 
 ## Overview
 
