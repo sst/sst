@@ -170,6 +170,7 @@ fun.attachPermissions([sns, table]);
 Currently the following SST and CDK constructs are supported.
 
 - [Api](Api.md)
+- [Job](Job.md)
 - [Topic](Topic.md)
 - [Table](Table.md)
 - [Queue](Queue.md)

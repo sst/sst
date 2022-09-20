@@ -125,6 +125,11 @@ console.log(app.logicalPrefixedName("myTopic"));
 // dev-my-app-myTopic
 ```
 
+### runDeferredBuilds
+
+```ts
+runDeferredBuilds()
+```
 ### setDefaultFunctionProps
 
 ```ts

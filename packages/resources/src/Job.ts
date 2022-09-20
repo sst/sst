@@ -7,12 +7,11 @@ import * as cdk from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as codebuild from "aws-cdk-lib/aws-codebuild";
-import { State, Runtime, FunctionConfig, DeferBuilder } from "@serverless-stack/core";
+import { Runtime, FunctionConfig, DeferBuilder } from "@serverless-stack/core";
 
 import { App } from "./App.js";
-import { Stack } from "./Stack.js";
 import { Secret, Parameter } from "./Config.js";
-import { getFunctionRef, SSTConstruct } from "./Construct.js";
+import { SSTConstruct } from "./Construct.js";
 import { Function, FunctionBundleNodejsProps } from "./Function.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
@@ -28,8 +27,8 @@ export interface JobProps {
    *
    * @example
    * ```js
-   * new Function(stack, "Function", {
-   *   handler: "src/function.handler",
+   * new Job(stack, "MyJob", {
+   *   handler: "src/job.handler",
    * })
    *```
    */
@@ -41,9 +40,9 @@ export interface JobProps {
    *
    * @example
    * ```js
-   * new Function(stack, "Function", {
-   *   srcPath: "packages/backend",
-   *   handler: "function.handler",
+   * new Job(stack, "MyJob", {
+   *   srcPath: "services",
+   *   handler: "job.handler",
    * })
    *```
    */
@@ -55,23 +54,23 @@ export interface JobProps {
    *
    * @example
    * ```js
-   * new Function(stack, "Function", {
-   *   handler: "src/function.handler",
+   * new Job(stack, "MyJob", {
+   *   handler: "src/job.handler",
    *   memorySize: "3 GB",
    * })
    *```
    */
   memorySize?: JobMemorySize;
   /**
-   * The execution timeout in seconds.
+   * The execution timeout. Minimum 5 minutes. Maximum 8 hours.
    *
    * @default "8 hours"
    *
    * @example
    * ```js
-   * new Function(stack, "Function", {
-   *   handler: "src/function.handler",
-   *   timeout: "30 seconds",
+   * new Job(stack, "MyJob", {
+   *   handler: "src/job.handler",
+   *   timeout: "30 minutes",
    * })
    *```
    */
@@ -83,49 +82,46 @@ export interface JobProps {
    *
    * @example
    * ```js
-   * new Function(stack, "Function", {
-   *   handler: "src/function.handler",
+   * new Job(stack, "MyJob", {
+   *   handler: "src/job.handler",
    *   enableLiveDev: false
    * })
    *```
    */
   enableLiveDev?: boolean;
   /**
-   * Configure environment variables for the function
+   * Configure environment variables for the job
    *
    * @example
    * ```js
-   * new Function(stack, "Function", {
-   *   handler: "src/function.handler",
-   *   config: [
-   *     STRIPE_KEY,
-   *     API_URL,
-   *   ]
+   * new Job(stack, "MyJob", {
+   *   handler: "src/job.handler",
+   *   config: [STRIPE_KEY, API_URL]
    * })
    * ```
    */
   config?: (Secret | Parameter)[];
   /**
-   * Configure environment variables for the function
+   * Configure environment variables for the job
    *
    * @example
    * ```js
-   * new Function(stack, "Function", {
-   *   handler: "src/function.handler",
+   * new Job(stack, "MyJob", {
+   *   handler: "src/job.handler",
    *   environment: {
-   *     TABLE_NAME: table.tableName,
+   *     DEBUG: "*",
    *   }
    * })
    * ```
    */
   environment?: Record<string, string>;
   /**
-   * Attaches the given list of permissions to the function. Configuring this property is equivalent to calling `attachPermissions()` after the function is created.
+   * Attaches the given list of permissions to the job. Configuring this property is equivalent to calling `attachPermissions()` after the job is created.
    *
    * @example
    * ```js
-   * new Function(stack, "Function", {
-   *   handler: "src/function.handler",
+   * new Job(stack, "MyJob", {
+   *   handler: "src/job.handler",
    *   permissions: ["ses", bucket]
    * })
    * ```
@@ -188,6 +184,74 @@ export class Job extends Construct implements SSTConstruct {
     this._jobParameter = this.createConfigParameter();
     this.attachPermissions(props.permissions || []);
     this.addConfig(props.config || []);
+  }
+
+  public getConstructMetadata() {
+    return {
+      type: "Job" as const,
+      data: {},
+    };
+  }
+
+  /**
+   * Attaches additional configs to job
+   *
+   * @example
+   * ```js
+   * const STRIPE_KEY = new Config.Secret(stack, "STRIPE_KEY");
+   *
+   * job.addConfig([STRIPE_KEY]);
+   * ```
+   */
+  public addConfig(config: (Secret | Parameter)[]): void {
+    this._jobInvoker.addConfig(config);
+    this.addConfigForCodeBuild(config);
+  }
+
+  /**
+   * Attaches the given list of [permissions](Permissions.md) to the job. This allows the job to access other AWS resources.
+   *
+   * @example
+   * ```js
+   * job.attachPermissions(["ses", bucket]);
+   * ```
+   */
+  public attachPermissions(permissions: Permissions): void {
+    this._jobInvoker.attachPermissions(permissions);
+    this.attachPermissionsForCodeBuild(permissions);
+  }
+
+  /**
+   * Attaches additional environment variable to the job
+   *
+   * @example
+   * ```js
+   * fn.addEnvironment({
+   *   DEBUG: "*"
+   * });
+   * ```
+   */
+  public addEnvironment(name: string, value: string): void {
+    this._jobInvoker.addEnvironment(name, value);
+    this.addEnvironmentForCodeBuild(name, value);
+  }
+
+  /** @internal */
+  public static codegenTypes() {
+    fs.appendFileSync(
+      "node_modules/@types/serverless-stack__node/index.d.ts",
+      `export * from "./job";`
+    );
+    fs.writeFileSync(
+      "node_modules/@types/serverless-stack__node/job.d.ts",
+      `
+      import "@serverless-stack/node/job";
+      declare module "@serverless-stack/node/job" {
+        export interface JobNames {
+          ${Array.from(Job.all).map((p) => `${p}: string;`).join("\n")}
+        }
+      }`
+    );
   }
 
   private createCodeBuildProject(): codebuild.Project {
@@ -347,21 +411,6 @@ export class Job extends Construct implements SSTConstruct {
     });
   }
 
-  /**
-   * Attaches additional configs to function
-   *
-   * @example
-   * ```js
-   * const STRIPE_KEY = new Config.Secret(stack, "STRIPE_KEY");
-   *
-   * fn.addConfig([STRIPE_KEY]);
-   * ```
-   */
-  public addConfig(config: (Secret | Parameter)[]): void {
-    this._jobInvoker.addConfig(config);
-    this.addConfigForCodeBuild(config);
-  }
-
   private addConfigForCodeBuild(config: (Secret | Parameter)[]): void {
     const app = this.node.root as App;
 
@@ -410,34 +459,8 @@ export class Job extends Construct implements SSTConstruct {
     }
   }
 
-  /**
-   * Attaches the given list of [permissions](Permissions.md) to the `jobFunction`. This allows the function to access other AWS resources.
-   *
-   * Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
-   *
-   */
-  public attachPermissions(permissions: Permissions): void {
-    this._jobInvoker.attachPermissions(permissions);
-    this.attachPermissionsForCodeBuild(permissions);
-  }
-
   private attachPermissionsForCodeBuild(permissions: Permissions): void {
     attachPermissionsToRole(this.job.role as iam.Role, permissions);
-  }
-
-  /**
-   * Attaches additional environment variable to function
-   *
-   * @example
-   * ```js
-   * const STRIPE_KEY = new Config.Secret(stack, "STRIPE_KEY");
-   *
-   * fn.addConfig([STRIPE_KEY]);
-   * ```
-   */
-  public addEnvironment(name: string, value: string): void {
-    this._jobInvoker.addEnvironment(name, value);
-    this.addEnvironmentForCodeBuild(name, value);
   }
 
   private addEnvironmentForCodeBuild(name: string, value: string): void {
@@ -445,34 +468,6 @@ export class Job extends Construct implements SSTConstruct {
     const env = project.environment as codebuild.CfnProject.EnvironmentProperty;
     const envVars = env.environmentVariables as codebuild.CfnProject.EnvironmentVariableProperty[];
     envVars.push({ name, value });
-  }
-
-  public getConstructMetadata() {
-    return {
-      type: "Job" as const,
-      data: {
-        //schedule: cfnRule.scheduleExpression,
-        //ruleName: this.cdk.rule.ruleName,
-        //job: getFunctionRef(this.jobFunction),
-      },
-    };
-  }
-
-  public static codegenTypes() {
-    fs.appendFileSync(
-      "node_modules/@types/serverless-stack__node/index.d.ts",
-      `export * from "./job";`
-    );
-    fs.writeFileSync(
-      "node_modules/@types/serverless-stack__node/job.d.ts",
-      `
-      import "@serverless-stack/node/job";
-      declare module "@serverless-stack/node/job" {
-        export interface JobNames {
-          ${Array.from(Job.all).map((p) => `${p}: string;`).join("\n")}
-        }
-      }`
-    );
   }
 
   private normalizeMemorySize(memorySize: JobMemorySize): codebuild.ComputeType {

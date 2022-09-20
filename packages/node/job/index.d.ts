@@ -2,13 +2,10 @@ export interface JobNames {
 }
 export interface JobTypes {
 }
-export declare type JobProps = {
-    [type in Extract<keyof JobTypes, keyof JobNames>]: {
-        jobName: type;
-        payload?: JobTypes[type];
-    };
-}[Extract<keyof JobTypes, keyof JobNames>];
-declare function run({ jobName, payload }: JobProps): Promise<void>;
+export declare type JobProps<C extends Extract<keyof JobTypes, keyof JobNames>> = {
+    payload?: JobTypes[C];
+};
+declare function run<C extends keyof JobNames>(name: C, props?: JobProps<C>): Promise<void>;
 /**
  * Create a new job handler.
  *
@@ -27,9 +24,8 @@ declare function run({ jobName, payload }: JobProps): Promise<void>;
  * })
  * ```
  */
-export declare function JobHandler<C>(name: keyof JobNames, cb: (payload: JobTypes[keyof JobNames]) => C): (event: any) => C;
+export declare function JobHandler<C extends keyof JobNames>(name: C, cb: (payload: JobTypes[C]) => void): (event: any) => void;
 export declare const Job: {
     run: typeof run;
-    JobHandler: typeof JobHandler;
 };
 export {};

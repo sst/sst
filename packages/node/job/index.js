@@ -3,19 +3,19 @@ import { InvokeCommand, LambdaClient } from "@aws-sdk/client-lambda";
 const lambda = new LambdaClient({});
 const JOB_PREFIX = "SST_JOB_";
 ;
-async function run({ jobName, payload }) {
+async function run(name, props) {
     // Handle job permission not granted
     let functionName;
     try {
-        functionName = Config[`SST_JOB_${jobName}`];
+        functionName = Config[`SST_JOB_${name}`];
     }
     catch (e) {
-        throw new Error(`Cannot invoke the ${jobName} Job. Please make sure this function has permissions to invoke it.`);
+        throw new Error(`Cannot invoke the ${name} Job. Please make sure this function has permissions to invoke it.`);
     }
     // Invoke the Lambda function
     await lambda.send(new InvokeCommand({
         FunctionName: functionName,
-        Payload: Buffer.from(JSON.stringify(payload)),
+        Payload: Buffer.from(JSON.stringify(props?.payload)),
     }));
 }
 /**
@@ -43,5 +43,4 @@ export function JobHandler(name, cb) {
 }
 export const Job = {
     run,
-    JobHandler,
 };

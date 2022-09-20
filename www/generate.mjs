@@ -100,6 +100,7 @@ app.bootstrap({
     "../packages/resources/src/Bucket.ts",
     "../packages/resources/src/Cron.ts",
     "../packages/resources/src/Config.ts",
+    "../packages/resources/src/Job.ts",
     "../packages/resources/src/RDS.ts",
     "../packages/resources/src/Table.ts",
     "../packages/resources/src/Topic.ts",
@@ -210,13 +211,14 @@ async function run(json) {
     lines.push(props);
 
     // Properties
-    lines.push("## Properties");
-    lines.push(
-      `An instance of \`${construct.name}\` has the following properties.`
-    );
-    lines.push(
-      ...renderProperties(file, json.children, construct.children, "", true)
-    );
+    const classProperties = renderProperties(file, json.children, construct.children, "", true)
+    if (classProperties.length > 0) {
+      lines.push(
+        "## Properties",
+        `An instance of \`${construct.name}\` has the following properties.`,
+        ...classProperties,
+      );
+    }
 
     // Methods
     const methods =
