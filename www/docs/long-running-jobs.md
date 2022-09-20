@@ -23,7 +23,7 @@ Tasks related to video processing, ETL, and ML can take long. These exceed Lambd
 
 To follow along, you can create the Minimal TypeScript starter by running `npx create-sst@latest` > `minimal` > `minimal/typescript-starter`.
 
-Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/create-sst-minimal-typescript-starter) that's based on the same template.
+Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/minimal-typescript) that's based on the same template.
 
 1. **Create the infrastructure**
 
@@ -353,7 +353,7 @@ Here are some frequently asked questions about `Job`.
 - ETL jobs
 - Video processing
 
-Note that, `Jobs` have a much **longer cold start** time. When a job starts up, CodeBuild has to download the docker image before starting the job. This process can take around 30 seconds. `Job` is not a good choice if you are looking to run something right away.
+Note that, `Jobs` have a much **longer cold start** time. When a job starts up, CodeBuild has to download the docker image before running the code. This process can take around 30 seconds. `Job` is not a good choice if you are looking to run something right away.
 
 ---
 
