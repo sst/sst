@@ -1,13 +1,13 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import "./index.css";
+import { Provider as UrqlProvider, createClient } from "urql";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { Provider as UrqlProvider, createClient, defaultExchanges } from "urql";
-import { List } from "./pages/Article";
+import Home from "./pages/Home";
+import Article from "./pages/Article";
+import "./index.css";
 
 const urql = createClient({
   url: import.meta.env.VITE_GRAPHQL_URL,
-  exchanges: defaultExchanges
 });
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
@@ -22,8 +22,9 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/articles" />} />
-        <Route path="articles" element={<List />} />
+        <Route path="/" element={<Home />} />
+        <Route path="article/:id" element={<Article />} />
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
   );

@@ -50,5 +50,4 @@ new Topic(this, "Topic", {
 
 In general, most SST constructs support using existing AWS resources. You can find examples in the doc for the construct. However, the following AWS limitations should be noted:
 
-- [`Bucket`](../constructs/Bucket.md) does not support adding notifications to existing S3 Buckets.
 - [`Cognito`](../constructs/Cognito.md) does not support configuring triggers to existing Cognito User Pools.

@@ -12,7 +12,7 @@ import {
   SSTConstruct,
   SSTConstructMetadata,
   isSSTConstruct,
-  isStackConstruct,
+  isStackConstruct
 } from "./Construct.js";
 import { FunctionProps, FunctionHandlerProps } from "./Function.js";
 import * as Config from "./Config.js";
@@ -261,7 +261,7 @@ export class App extends cdk.App {
    */
   public addDefaultFunctionPermissions(permissions: Permissions) {
     this.defaultFunctionProps.push({
-      permissions,
+      permissions
     });
   }
 
@@ -277,7 +277,7 @@ export class App extends cdk.App {
    */
   public addDefaultFunctionEnv(environment: Record<string, string>) {
     this.defaultFunctionProps.push({
-      environment,
+      environment
     });
   }
 
@@ -300,7 +300,7 @@ export class App extends cdk.App {
    */
   public addDefaultFunctionLayers(layers: ILayerVersion[]) {
     this.defaultFunctionProps.push({
-      layers,
+      layers
     });
   }
 
@@ -371,7 +371,7 @@ export class App extends cdk.App {
       exitWithMessage("There was a problem reading the esbuild metafile.");
     }
 
-    return Object.keys(metaJson.inputs).map((input) => path.resolve(input));
+    return Object.keys(metaJson.inputs).map(input => path.resolve(input));
   }
 
   private buildConstructsMetadata(): void {
@@ -391,12 +391,12 @@ export class App extends cdk.App {
         id: c.node.id,
         addr: c.node.addr,
         stack: Stack.of(c).stackName,
-        ...metadata,
+        ...metadata
       };
       local.push(item);
       list.push({
         ...item,
-        local: undefined,
+        local: undefined
       });
       byStack[stack.node.id] = list;
     }
@@ -416,9 +416,9 @@ export class App extends cdk.App {
   ): (SSTConstruct & IConstruct)[] {
     return [
       isSSTConstruct(construct) ? construct : undefined,
-      ...construct.node.children.flatMap((c) =>
+      ...construct.node.children.flatMap(c =>
         this.buildConstructsMetadata_collectConstructs(c)
-      ),
+      )
     ].filter((c): c is SSTConstruct & IConstruct => Boolean(c));
   }
 
@@ -447,7 +447,7 @@ export class App extends cdk.App {
             "../lib/auto-delete-objects-handler"
           ),
           runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
-          description: `Lambda function for auto-deleting objects in ${current.bucketName} S3 bucket.`,
+          description: `Lambda function for auto-deleting objects in ${current.bucketName} S3 bucket.`
         }
       );
 
@@ -460,10 +460,10 @@ export class App extends cdk.App {
             "s3:GetBucket*",
             "s3:List*",
             // and then delete them
-            "s3:DeleteObject*",
+            "s3:DeleteObject*"
           ],
           resources: [current.bucketArn, current.arnForObjects("*")],
-          principals: [new iam.ArnPrincipal(provider.roleArn)],
+          principals: [new iam.ArnPrincipal(provider.roleArn)]
         })
       );
 
@@ -474,8 +474,8 @@ export class App extends cdk.App {
           resourceType: AUTO_DELETE_OBJECTS_RESOURCE_TYPE,
           serviceToken: provider.serviceToken,
           properties: {
-            BucketName: current.bucketName,
-          },
+            BucketName: current.bucketName
+          }
         }
       );
 
@@ -486,7 +486,7 @@ export class App extends cdk.App {
         customResource.node.addDependency(current.policy);
       }
     }
-    current.node.children.forEach((resource) =>
+    current.node.children.forEach(resource =>
       this.applyRemovalPolicy(resource, policy)
     );
   }

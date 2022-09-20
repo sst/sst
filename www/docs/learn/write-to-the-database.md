@@ -19,11 +19,11 @@ Open up `services/core/article.ts` and add the following two functions to the bo
 </ChangeText>
 
 ```js
-export async function addComment(articleID: string, text: string) {
+export function addComment(articleID: string, text: string) {
   // code for adding a comment to an article
 }
 
-export async function comments(articleID: string) {
+export function comments(articleID: string) {
   // code for getting a list of comments of an article
 }
 ```
@@ -133,8 +133,8 @@ Replace the two placeholder functions in `services/core/article.ts` with:
 </ChangeText>
 
 ```ts {2-9,13-16} title="services/core/article.ts"
-export async function addComment(articleID: string, text: string) {
-  return await SQL.DB.insertInto("comment")
+export function addComment(articleID: string, text: string) {
+  return SQL.DB.insertInto("comment")
     .values({
       commentID: ulid(),
       articleID,
@@ -144,8 +144,8 @@ export async function addComment(articleID: string, text: string) {
     .executeTakeFirstOrThrow();
 }
 
-export async function comments(articleID: string) {
-  return await SQL.DB.selectFrom("comment")
+export function comments(articleID: string) {
+  return SQL.DB.selectFrom("comment")
     .selectAll()
     .where("articleID", "=", articleID)
     .execute();
@@ -204,17 +204,15 @@ There are a couple of interesting details here, let's dig in:
 
    ```ts title="services/core/sql.generated.ts"
    export interface Database {
-     article: article;
-     comment: comment;
-     kysely_migration: kysely_migration;
-     kysely_migration_lock: kysely_migration_lock;
+     article: Article;
+     comment: Comment;
    }
    ```
 
-   The keys of this interface are the table names in our database. And they in turn point to other interfaces that list the column types of the respective tables. For example, here's the new `comment` table we just created:
+   The keys of this interface are the table names in our database. And they in turn point to other interfaces that list the column types of the respective tables. For example, here's the new `Comment` table we just created:
 
    ```ts
-   export interface comment {
+   export interface Comment {
      articleID: string;
      commentID: string;
      text: string;

@@ -151,7 +151,7 @@ Our starter is structured to encourage [Domain Driven Design](domain-driven-desi
 
 ## `graphql/`
 
-The `graphql/` directory will contain the outputs of GraphQL related code generation. Typically you won't be touching this. It contains code shared between the frontend and backend.
+The `graphql/` directory will contain the outputs of GraphQL related code generation. Typically you won't be touching this but it needs to be committed to Git. It contains code shared between the frontend and backend.
 
 ---
 

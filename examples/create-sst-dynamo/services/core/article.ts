@@ -1,7 +1,8 @@
-export * as Article from "./article";
-import { Dynamo } from "./dynamo";
-import { Entity, EntityItem } from "electrodb";
 import { ulid } from "ulid";
+import { Entity, EntityItem } from "electrodb";
+import { Dynamo } from "./dynamo";
+
+export * as Article from "./article";
 
 export const ArticleEntity = new Entity(
   {
@@ -51,7 +52,10 @@ export function create(title: string, url: string) {
   }).go();
 }
 
+export function get(articleID: string) {
+  return ArticleEntity.get({ articleID }).go();
+}
+
 export async function list() {
   return ArticleEntity.query.primary({}).go();
 }
-

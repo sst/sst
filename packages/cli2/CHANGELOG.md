@@ -1,5 +1,42 @@
 # @serverless-stack/cli2
 
+## 1.14.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @serverless-stack/node@1.14.4
+
+## 1.14.3
+
+### Patch Changes
+
+- [#2070](https://github.com/serverless-stack/sst/pull/2070) [`8ceb4ab7c`](https://github.com/serverless-stack/sst/commit/8ceb4ab7c92f92fac4d4177d498e4e365630d5b8) Thanks [@estebanprimost](https://github.com/estebanprimost)! - Fix "Could not unzip uploaded file" deployment error
+
+- Updated dependencies []:
+  - @serverless-stack/node@1.14.3
+
+## 1.14.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @serverless-stack/node@1.14.2
+
+## 1.14.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @serverless-stack/node@1.14.1
+
+## 1.14.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @serverless-stack/node@1.14.0
+
 ## 1.13.0
 
 ### Patch Changes

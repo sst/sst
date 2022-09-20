@@ -131,7 +131,7 @@ async function removeSecretDo(app: string, stage: string, region: string, name: 
     await ssm.deleteParameter({
       Name: buildSsmNameForSecret(app, stage, name),
     }).promise();
-  } catch(e: any) {
+  } catch (e: any) {
     if (e.code === "ParameterNotFound") {
       return;
     }

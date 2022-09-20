@@ -1,10 +1,10 @@
 module.exports = {
   docs: [
     {
-      " ": ["about", "quick-start"]
+      " ": ["introduction", "quick-start"]
     },
     {
-      Overview: ["architecture", "live-lambda-development", "console"]
+      Overview: ["what-is-sst", "live-lambda-development", "console"]
     },
     {
       Learn: [

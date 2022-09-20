@@ -793,7 +793,7 @@ export class Function extends lambda.Function implements SSTConstruct {
             SST_DEBUG_SRC_HANDLER: handler,
             SST_DEBUG_ENDPOINT: app.debugEndpoint,
           },
-          layers: Function.buildLayers(scope, id, props),
+          layers: [],
           logRetention,
           ...(debugOverrideProps || {}),
         });
@@ -818,7 +818,7 @@ export class Function extends lambda.Function implements SSTConstruct {
             SST_DEBUG_ENDPOINT: app.debugEndpoint,
             SST_DEBUG_BUCKET_NAME: app.debugBucketName,
           },
-          layers: Function.buildLayers(scope, id, props),
+          layers: [],
           logRetention,
           retryAttempts: 0,
           ...(debugOverrideProps || {}),

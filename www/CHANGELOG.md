@@ -1,5 +1,17 @@
 # @serverless-stack/docs
 
+## 1.7.2
+
+### Patch Changes
+
+- [#2076](https://github.com/serverless-stack/sst/pull/2076) [`a7e201566`](https://github.com/serverless-stack/sst/commit/a7e201566779dcc3d1fcf1f52389ba73708f9367) Thanks [@fwang](https://github.com/fwang)! - Bucket: support notifications on imported S3 Buckets
+
+## 1.7.1
+
+### Patch Changes
+
+- [#2063](https://github.com/serverless-stack/sst/pull/2063) [`873ecf3b6`](https://github.com/serverless-stack/sst/commit/873ecf3b622cfe8843f2eb40c5069a97966e7936) Thanks [@jayair](https://github.com/jayair)! - Updating to RDS and DynamoDB starter to Kysely codegen
+
 ## 1.7.0
 
 ### Minor Changes
