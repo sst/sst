@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {},
   "dependencies": {
-    "aws-sdk": "^2.1215.0",
+    "aws-sdk": "^2.1220.0",
     "prisma": "^4.3.1",
     "fs-extra": "^10.1.0",
     "@prisma/client": "^4.3.1"

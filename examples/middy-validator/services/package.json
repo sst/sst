@@ -4,11 +4,11 @@
   "type": "module",
   "scripts": {},
   "dependencies": {
-    "aws-sdk": "^2.1215.0",
-    "@middy/core": "^3.3.1",
-    "@middy/http-error-handler": "^3.3.1",
-    "@middy/http-json-body-parser": "^3.3.1",
-    "@middy/validator": "^3.3.1"
+    "aws-sdk": "^2.1220.0",
+    "@middy/core": "^3.3.4",
+    "@middy/http-error-handler": "^3.3.4",
+    "@middy/http-json-body-parser": "^3.3.4",
+    "@middy/validator": "^3.3.4"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.104"
