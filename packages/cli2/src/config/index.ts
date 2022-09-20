@@ -1,8 +1,10 @@
 import { Context } from "@serverless-stack/node/context/index.js";
 import fs from "fs/promises";
+import fsSync from "fs";
 import path from "path";
 import { GlobalCLIOptionsContext } from "../cli.js";
 import { VisibleError } from "../error/index.js";
+import { Logger } from "../logger/index.js";
 import { PersonalStageContext } from "../state/index.js";
 
 export interface Config {
@@ -15,19 +17,39 @@ export interface Config {
 
 const DEFAULTS = {
   main: "stacks/index.ts",
-  stage: undefined,
+  stage: undefined
 } as const;
+
+const CONFIG_EXTENSIONS = [".config.cjs", ".config.mjs", ".config.js", ".json"];
 
 type ConfigWithDefaults = Config &
   Required<{ [key in keyof typeof DEFAULTS]: Exclude<Config[key], undefined> }>;
 
-export const ProjectRoot = Context.create(() => process.cwd());
+export const ProjectRoot = Context.create(async () => {
+  Logger.debug("Searching for project root...");
+  async function find(dir: string): Promise<string> {
+    if (dir === "/")
+      throw new VisibleError(
+        "Could not found a configuration file",
+        "Make sure one of the following exists",
+        ...CONFIG_EXTENSIONS.map(ext => `  - sst${ext}`)
+      );
+    for (const ext of CONFIG_EXTENSIONS) {
+      const configPath = path.join(dir, `sst${ext}`);
+      Logger.debug("Searching", configPath);
+      if (fsSync.existsSync(configPath)) return dir;
+    }
+    return await find(path.join(dir, ".."));
+  }
+  const result = await find(process.cwd());
+  Logger.debug("Found project root", result);
+  return result;
+});
 
 export const useConfig = Context.memo(async () => {
-  const root = ProjectRoot.use();
-  const extensions = [".config.cjs", ".config.mjs", ".config.js", ".json"];
+  const root = await ProjectRoot.use();
   const globals = GlobalCLIOptionsContext.use();
-  for (const ext of extensions) {
+  for (const ext of CONFIG_EXTENSIONS) {
     const file = path.join(root, "sst" + ext);
     if (file.endsWith("js")) {
       try {
@@ -39,7 +61,7 @@ export const useConfig = Context.memo(async () => {
             config.default.stage ||
             globals.stage ||
             (await PersonalStageContext.use()),
-          profile: config.default.profile || globals.profile,
+          profile: config.default.profile || globals.profile
         } as ConfigWithDefaults;
       } catch (ex) {
         continue;

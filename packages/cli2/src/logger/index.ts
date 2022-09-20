@@ -6,11 +6,15 @@ type Colors = {
     : never;
 }[keyof typeof chalk];
 
+let previous = new Date();
 export const Logger = {
   ui<T extends Colors>(color: T, ...lines: string[]) {
     console.log(chalk[color](lines.join("\n")));
   },
   debug(...parts: any[]) {
-    console.log(...parts);
-  },
+    const now = new Date();
+    const diff = now.getTime() - previous.getTime();
+    previous = now;
+    console.log(new Date().toISOString(), `+${diff}ms`, "[debug]", ...parts);
+  }
 };

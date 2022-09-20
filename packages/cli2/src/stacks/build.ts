@@ -8,11 +8,11 @@ import { useState } from "../state/index.js";
 export async function build() {
   Logger.debug("Building stacks");
   import("aws-cdk-lib");
-  const root = ProjectRoot.use();
+  const root = await ProjectRoot.use();
   const state = await useState();
   const config = await useConfig();
   const pkg = JSON.parse(
-    await fs.readFile(path.join(root, "package.json")).then((x) => x.toString())
+    await fs.readFile(path.join(root, "package.json")).then(x => x.toString())
   );
   const outfile = path.join(state, `stacks.${Math.random()}.mjs`);
 
@@ -29,26 +29,27 @@ export async function build() {
       ...Object.keys({
         ...pkg.devDependencies,
         ...pkg.dependencies,
-        ...pkg.peerDependencies,
-      }),
+        ...pkg.peerDependencies
+      })
     ],
+    absWorkingDir: root,
     outfile,
     banner: {
       js: [
         `import { createRequire as topLevelCreateRequire } from 'module';`,
-        `const require = topLevelCreateRequire(import.meta.url);`,
-      ].join(""),
+        `const require = topLevelCreateRequire(import.meta.url);`
+      ].join("")
     },
     // The entry can have any file name (ie. "stacks/anything.ts"). We want the
     // build output to be always named "lib/index.js". This allow us to always
     // import from "buildDir" without needing to pass "anything" around.
-    entryPoints: [config.main],
+    entryPoints: [config.main]
   });
   Logger.debug("Stack built");
 
   const mod = await import(outfile);
   await fs.rm(outfile, {
-    force: true,
+    force: true
   });
   return mod.default;
 }

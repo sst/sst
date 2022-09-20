@@ -3,14 +3,10 @@ import path from "path";
 import fs from "fs/promises";
 import { ProjectRoot } from "../config/index.js";
 
-export const StateRoot = Context.create(() =>
-  path.join(ProjectRoot.use(), ".sst")
-);
-
 export const useState = Context.memo(async () => {
-  const root = StateRoot.use();
+  const root = path.join(await ProjectRoot.use(), ".sst");
   await fs.mkdir(root, {
-    recursive: true,
+    recursive: true
   });
 
   return root;

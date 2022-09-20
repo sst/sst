@@ -1,27 +1,26 @@
 import { Stacks } from "../stacks/index.js";
 import { useConfig } from "../config/index.js";
+import { Logger } from "../logger/index.js";
 
 export async function Build() {
-  console.time("build");
+  Logger.debug("Building stacks...");
   const fn = await Stacks.build();
+  Logger.debug("Finished building");
   const cfg = await useConfig();
-  console.timeEnd("build");
 
-  console.time("synth");
+  Logger.debug("Synthesizing stacks...");
   const { App } = await import("@serverless-stack/resources");
   const app = new App({
     stage: cfg.stage,
     name: cfg.name,
     region: cfg.region,
     buildDir: ".sst/stacks/",
-    skipBuild: true,
+    skipBuild: true
   });
   try {
     await fn(app);
-    console.log(app.synth());
+    Logger.debug("Finished synthesizing");
   } catch (err) {
-    console.log(err);
     throw err;
   }
-  console.timeEnd("synth");
 }
