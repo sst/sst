@@ -196,6 +196,10 @@ In this chapter we'll look at how `Job` works behind the scene.
 
 On `sst start`, the invoker function is replaced with a stub function. The stub function sends the request to local, and the local version of the job function is executed. This is similar to how [Live Lambda Development](./live-lambda-development.md) works for `Functions`.
 
+:::info
+Your locally invoked job has the **same IAM permissions** as the deployed CodeBuild job.
+:::
+
 ## Type-safe payload
 
 In our example, we defined the Job type in `services/functions/myJob.ts`.
@@ -232,6 +236,10 @@ This is being used in two places to ensure typesafety.
   });
   ```
 
+## Cost
+
+CodeBuild has a free tier of 100 build minutes. After that, you are charged per build minute. You can find the full pricing here — https://aws.amazon.com/codebuild/pricing/. The `general1` instance types are used.
+
 ## FAQ
 
 ### When should I use Job vs Function?
@@ -243,31 +251,9 @@ Job is a good fit for tasks such as:
 
 ### Why CodeBuild instead of Fargate?
 
-## Tips
+We evaluated both CodeBuild and ECS Fargate as the backing service for Job. Both services are similar in the way that they can run code inside a docker container environment. We decided to go with CodeBuild because:
+- It can be deployed without a VPC;
+- If offers a free tier of 100 build minutes;
+- A CodeBuild project is a single AWS resource, and is much faster to deploy;
 
-Now that you know how to test various parts of your app. Here are a couple of tips on writing effective tests.
-
-### Don't test implementation details
-
-In this chapter, we used DynamoDB as our database choice. We could've selected PostgreSQL and our tests would've remained the same.
-
-Your tests should be unaware of things like what table data is being written, and instead just call domain functions to verify their input and output. This will minimize how often you need to rewrite your tests as the implementation details change.
-
-### Isolate tests to run them in parallel
-
-Tests need to be structured in a way that they can be run reliably in parallel. In our domain function and API tests above, we checked to see if the created article exists:
-
-```ts
-// Check the newly created article exists
-expect(
-  list.find((a) => a.articleID === article.createArticle.id)
-).not.toBeNull();
-```
-
-Instead, if we had checked for the total article count, the test might fail if other tests were also creating articles.
-
-```ts
-expect(list.length).toBe(1);
-```
-
-The best way to isolate tests is to create separate scopes for each test. In our example, the articles are stored globally. If the articles were stored within a user's scope, you can create a new user per test. This way, tests can run in parallel without affecting each other.
+As we collect more feedback on the usage, we are open to switching to using Fargate. When we do, it will be a seamless switch as the implementation details are not exposed.
