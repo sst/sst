@@ -23,9 +23,10 @@
   "dependencies": {
     "@aws-cdk/cloudformation-diff": "2.32.0",
     "@aws-cdk/cx-api": "2.32.0",
-    "@aws-sdk/client-iot": "^3.145.0",
-    "@aws-sdk/client-ssm": "^3.145.0",
-    "@aws-sdk/client-sts": "^3.145.0",
+    "@aws-sdk/client-cloudformation": "3.145.0",
+    "@aws-sdk/client-iot": "3.145.0",
+    "@aws-sdk/client-ssm": "3.145.0",
+    "@aws-sdk/client-sts": "3.145.0",
     "@aws-sdk/credential-providers": "^3.145.0",
     "@caporal/core": "^2.0.2",
     "@serverless-stack/node": "1.15.3",
