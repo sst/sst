@@ -15,6 +15,11 @@ export const Logger = {
     const now = new Date();
     const diff = now.getTime() - previous.getTime();
     previous = now;
-    console.log(new Date().toISOString(), `+${diff}ms`, "[debug]", ...parts);
+    console.log(
+      new Date().toISOString(),
+      `+${diff}ms`.padStart(8),
+      "[debug]",
+      ...parts
+    );
   }
 };

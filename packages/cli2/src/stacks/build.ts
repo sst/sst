@@ -2,11 +2,9 @@ import { ProjectRoot, useConfig } from "../config/index.js";
 import esbuild from "esbuild";
 import fs from "fs/promises";
 import path from "path";
-import { Logger } from "../logger/index.js";
 import { useState } from "../state/index.js";
 
 export async function build() {
-  Logger.debug("Building stacks");
   import("aws-cdk-lib");
   const root = await ProjectRoot.use();
   const state = await useState();
@@ -45,7 +43,6 @@ export async function build() {
     // import from "buildDir" without needing to pass "anything" around.
     entryPoints: [config.main]
   });
-  Logger.debug("Stack built");
 
   const mod = await import(outfile);
   await fs.rm(outfile, {

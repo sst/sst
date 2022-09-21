@@ -37,7 +37,10 @@ export const ProjectRoot = Context.create(async () => {
     for (const ext of CONFIG_EXTENSIONS) {
       const configPath = path.join(dir, `sst${ext}`);
       Logger.debug("Searching", configPath);
-      if (fsSync.existsSync(configPath)) return dir;
+      if (fsSync.existsSync(configPath)) {
+        Logger.debug("Found", configPath);
+        return dir;
+      }
     }
     return await find(path.join(dir, ".."));
   }
