@@ -7,7 +7,7 @@ module.exports = {
   console: "https://console.sst.dev/",
   youtube: "https://www.youtube.com/c/sst-dev",
   newsletter: "https://sst.dev/newsletter.html",
-  twitter: "https://twitter.com/sst_dev",
+  twitter: "https://twitter.com/SST_dev",
   examples: "https://sst.dev/examples/index.html",
   github: "https://github.com/serverless-stack/sst",
   roadmap: "https://github.com/serverless-stack/sst/projects/1",

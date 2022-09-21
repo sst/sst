@@ -12,25 +12,29 @@
 
 ---
 
-SST is a framework that makes it easy to build serverless apps. It's an extension of [AWS CDK](https://aws.amazon.com/cdk/) and it features:
+SST makes it easy to build full-stack serverless applications on AWS.
 
-- A [Live Lambda Development][live] environment
-- A [web based dashboard][console_doc] to manage your apps
-- Support for [setting breakpoints and debugging in VS Code](https://docs.sst.dev/live-lambda-development#debugging-with-visual-studio-code)
-- [Higher-level constructs][resources] designed specifically for serverless apps
-- Zero-config support for JS and TS (using [esbuild](https://esbuild.github.io)), Go, Python, C#, and F#
+- [**High-level components**](https://docs.sst.dev/what-is-sst#infrastructure) to simplify building APIs, databases, and frontends on AWS.
+  - Avoid having to configure ten different AWS resources just to create a simple API.
+- [**Set breakpoints in VS Code**](https://docs.sst.dev/what-is-sst#local-dev) and debug Lambda functions locally in real-time.
+  - You won't need to create mock request objects or deploy every time you make a change.
+- [**Admin dashboard**](https://docs.sst.dev/what-is-sst#local-dev) to view logs, run queries, browse uploads, apply migrations, and more.
+  - Way better than clicking through a dozen different services in the AWS console.
+- [**Full-stack starters**](https://docs.sst.dev/what-is-sst#starters) with all the best practices, designed like monoliths.
+  - Don't spend days organizing your functions or getting secrets, testing, etc., to work.
 
-## Quick Start
+Learn more: [What is SST](https://docs.sst.dev/what-is-sst) | [Live Lambda][live] | [SST Console][console_doc] | [FAQ](https://docs.sst.dev/faq)
 
-Create your first SST app.
+## Try it out
 
 ```bash
 # Create a new SST app
-npm init sst
+npx create-sst@latest my-sst-app
 cd my-sst-app
+npm i
 
 # Start Live Lambda Dev
-npm start
+npx sst start
 
 # Open the SST Console
 open console.sst.dev
@@ -39,87 +43,95 @@ open console.sst.dev
 npx sst deploy --stage prod
 ```
 
-## Documentation
+## Get started
 
-- [SST docs](https://docs.sst.dev)
-- [SST examples](https://sst.dev/examples/index.html)
-- [Public roadmap][roadmap]
-- [Feature requests][requests]
-- [Contributing to SST](CONTRIBUTING.md)
+- [Quick start](https://docs.sst.dev/quick-start): Take a quick tour of SST and deploy your first full-stack app. _Takes minutes_.
 
-[Follow us on Twitter](https://twitter.com/ServerlessStack) and [subscribe to our newsletter](https://sst.dev/newsletter.html) for updates.
+- [Tutorial](https://docs.sst.dev/quick-start): A tutorial on how to add a new feature to your SST app. _Takes an hour_.
 
-## About SST
+- [Guide](https://sst.dev): Learn to build a full-stack serverless app from scratch with SST. _Takes a day_.
 
-We think SST can make it dramatically easier to build serverless apps.
+## Why SST
 
-### Live Lambda Development
+Here's how SST makes it easy to build full-stack serverless apps.
 
-The `sst start` command starts up a local development environment that opens a WebSocket connection to your deployed app and proxies any Lambda requests to your local machine.
+### AWS without all the complexity
+
+SST provides simple abstractions called [Constructs][resources] for common use cases like APIs, databases, static sites, etc. So you don't have to configure each of the underlying AWS services by hand.
+
+For example, the following is an API with a custom domain that has permissions to upload files to S3.
+
+```ts
+const api = new Api(this, "Api", {
+  customDomain: "api.domain.com",
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+
+api.attachPermissions(["s3"]);
+```
+
+Internally, SST uses [AWS CDK](https://aws.amazon.com/cdk/) to compile this code, configure nearly a dozen AWS services, and create the necessary security policies.
+
+And don't worry, SST has an easy way to [extend constructs, and even has an escape hatch](https://docs.sst.dev/design-principles#progressive-disclosure) for when you need something custom.
+
+### Local development with live reload
+
+The [`sst start`][live] command starts a local development environment that lets you set breakpoints and test your functions locally. You don't need to mock any resources or wait for the changes to redeploy.
 
 [![sst start](https://d1ne2nltv07ycv.cloudfront.net/SST/sst-start-demo/sst-start-demo-2.gif)](https://www.youtube.com/watch?v=hnTSTm5n11g&feature=youtu.be)
 
-This allows you to:
-
-- Work on your Lambda functions locally
+- Supports real Lambda environment variables and Lambda IAM permissions.
 - Supports all Lambda triggers, so there's no need to mock API Gateway, SQS, SNS, etc.
-- Supports real Lambda environment variables and Lambda IAM permissions
-- And it's fast. There's nothing to deploy when you make a change!
+- Is 50-100x faster than the alternatives and changes are reloaded in a few ms.
 
-[Read more about Live Lambda Development][live].
+The instant feedback means that working on a serverless application is no different from working on a traditional application.
 
-### SST Console
+### Admin dashboard
 
-The [SST Console][console_doc] is a web based dashboard to manage your SST apps.
+The [SST Console][console_doc] is a web based dashboard to manage your SST apps. So you don't have to click through a dozen different services in the AWS console.
 
-[![sst start](www/static/img/console/sst-console-homescreen.png)][console_doc]
+[![sst console](www/static/img/console/sst-console-homescreen.png)][console_doc]
 
-It allows you to:
+Here's just a couple of things you can do with the Console:
 
 - Invoke functions and replay them
-- Make HTTP requests and test your APIs
-- Scan, query, and edit items in DynamoDB
-- Query the GraphQL endpoints in your app
+- Query your databases and run migrations
 - Upload and delete files from your buckets
-- Create and delete users in your User Pools
-- Query your RDS databases and run migrations
 
-[Read more about the SST Console][console_doc].
+The SST Console automatically connects to your local environment when you run `sst start`.
 
-### Composable serverless constructs
+### Organized like monoliths
 
-SST also comes with [a set of serverless specific higher-level CDK constructs][resources]. This includes:
+The full-stack starters that come with SST are organized like singular monolith apps in a monorepo. They are designed to manage growing serverless projects.
 
-- [Api](https://docs.sst.dev/constructs/Api) for building APIs
-- [Cron](https://docs.sst.dev/constructs/Cron) for building cron jobs
-- [Queue](https://docs.sst.dev/constructs/Queue) for creating queues
-- [Bucket](https://docs.sst.dev/constructs/Bucket) for adding S3 buckets
-- [Cognito](https://docs.sst.dev/constructs/Cognito) for configuring cognito
-- [Table](https://docs.sst.dev/constructs/Table) for adding DynamoDB tables
-- [Topic](https://docs.sst.dev/constructs/Topic) for creating pub/sub systems
-- [RemixSite](https://docs.sst.dev/constructs/RemixSite) for creating Next.js websites
-- [StaticSite](https://docs.sst.dev/constructs/StaticSite) for creating static websites
-- [NextjsSite](https://docs.sst.dev/constructs/NextjsSite) for creating Next.js websites
-- [Script](https://docs.sst.dev/constructs/Script) for running scripts while deploying
-- [ViteStaticSite](https://docs.sst.dev/constructs/ViteStaticSite) for static sites built with Vite
-- [KinesisStream](https://docs.sst.dev/constructs/KinesisStream) for real-time data streaming
-- [RDS](https://docs.sst.dev/constructs/RDS) for creating an RDS Serverless Cluster
-- [WebSocketApi](https://docs.sst.dev/constructs/WebSocketApi) for creating WebSocket APIs
-- [GraphQLApi](https://docs.sst.dev/constructs/GraphQLApi) for using GraphQL with Lambda
-- [EventBus](https://docs.sst.dev/constructs/EventBus) for creating EventBridge Event buses
-- [AppSyncApi](https://docs.sst.dev/constructs/AppSyncApi) for creating AppSync GraphQL APIs
-- [ApiGatewayV1Api](https://docs.sst.dev/constructs/ApiGatewayV1Api) for using AWS API Gateway v1
-- [ReactStaticSite](https://docs.sst.dev/constructs/ReactStaticSite) for static sites built with Create React App
+```
+my-sst-app
+├─ sst.json
+├─ services
+│  ├─ core
+│  ├─ functions
+│  │  └─ graphql
+│  └─ migrations
+├─ graphql
+├─ stacks
+└─ web
+```
+
+The backend, frontend, and infrastructure code are kept together as packages in the monorepo. Types, environment variables, secrets, and config are also shared across the application.
 
 ### And more
 
-SST also supports deploying your CloudFormation stacks asynchronously. [Seed](https://seed.run) natively supports concurrent asynchronous deployments for your SST apps. And SST deployments on Seed are free!
+You can also use [Seed](https://seed.run) to `git push` to deploy your SST apps. It natively supports concurrent asynchronous deployments for your SST apps. And SST deployments on Seed are free!
 
-Internally, SST uses the CDK CLI to invoke the various CDK commands.
+Seed is built by the team behind SST.
+
+---
+
+**Join our community** [Discord][discord] | [Twitter](https://www.youtube.com/c/sst-dev) | [YouTube](https://twitter.com/SST_dev) | [Contribute](CONTRIBUTING.md)
 
 [discord]: https://sst.dev/discord
 [console_doc]: https://docs.sst.dev/console
-[resources]: https://docs.sst.dev/packages/resources
+[resources]: https://docs.sst.dev/constructs
 [live]: https://docs.sst.dev/live-lambda-development
-[roadmap]: https://github.com/serverless-stack/sst/projects/2
-[requests]: https://github.com/serverless-stack/sst/discussions/categories/ideas?discussions_q=category%3AIdeas+sort%3Atop+is%3Aunanswered

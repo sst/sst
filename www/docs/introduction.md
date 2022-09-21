@@ -22,7 +22,7 @@ SST makes it easy to build full-stack serverless applications on AWS.
 - [**Admin dashboard**](what-is-sst.md#local-dev) to view logs, run queries, browse uploads, apply migrations, and more.
   - Way better than clicking through a dozen different services in the AWS console.
 - [**Full-stack starters**](what-is-sst.md#starters) with all the best practices, designed like monoliths.
-  - Don't spend days organizing your functions or getting secrets, testing, etc. to work.
+  - Don't spend days organizing your functions or getting secrets, testing, etc., to work.
 
 </div>
 
@@ -31,6 +31,8 @@ SST makes it easy to build full-stack serverless applications on AWS.
 Learn more: [What is SST](what-is-sst.md) | [Live Lambda](live-lambda-development.md) | [SST Console](console.md) | [FAQ](faq.md)
 
 </div>
+
+---
 
 ## Try it out
 
@@ -44,7 +46,7 @@ npm i
 npx sst start
 
 # Open the SST Console
-open console.serverless-stack.com
+open console.sst.dev
 
 # Deploy to prod
 npx sst deploy --stage prod
