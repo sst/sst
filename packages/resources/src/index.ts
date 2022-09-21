@@ -20,6 +20,7 @@ export * from "./KinesisStream.js";
 export * from "./ApiGatewayV1Api.js";
 
 export * from "./NextjsSite.js";
+export * from "./NextjsSsr.js";
 export * from "./RemixSite.js";
 export * from "./StaticSite.js";
 export * from "./ViteStaticSite.js";

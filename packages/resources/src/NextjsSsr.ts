@@ -666,7 +666,8 @@ export class NextjsSsr extends Construct implements SSTConstruct {
       sourcemap: true,
       target: "node16",
       platform: "node",
-      external: ["sharp", "next"],
+      external: ["sharp"],
+      // external: ["sharp", "next"],
       format: "cjs",
       outfile: path.join(standaloneDirAbsolute, serverPath)
     })
