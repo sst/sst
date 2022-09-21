@@ -1,5 +1,11 @@
 # @serverless-stack/node
 
+## 1.15.0
+
+### Minor Changes
+
+- [#2028](https://github.com/serverless-stack/sst/pull/2028) [`86137b645`](https://github.com/serverless-stack/sst/commit/86137b645311473b8d51ec8ee3bdfb70656f3c58) Thanks [@fwang](https://github.com/fwang)! - Job: construct for long running jobs
+
 ## 1.14.4
 
 ## 1.14.3
