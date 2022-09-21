@@ -30,26 +30,26 @@ type RequestHandler = (
 
 type Message =
   | {
-      action: "server.clientRegistered";
-      clientConnectionId: string;
-    }
+    action: "server.clientRegistered";
+    clientConnectionId: string;
+  }
   | {
-      action: "server.clientDisconnectedDueToNewClient";
-    }
+    action: "server.clientDisconnectedDueToNewClient";
+  }
   | {
-      action: "server.failedToSendResponseDueToStubDisconnected";
-    }
+    action: "server.failedToSendResponseDueToStubDisconnected";
+  }
   | {
-      action: "server.failedToSendResponseDueToUnknown";
-    }
+    action: "server.failedToSendResponseDueToUnknown";
+  }
   | {
-      action: "register";
-      body: string;
-    }
+    action: "register";
+    body: string;
+  }
   | {
-      action: "stub.lambdaRequest";
-      [key: string]: any;
-    };
+    action: "stub.lambdaRequest";
+    [key: string]: any;
+  };
 
 export class WS {
   private s3?: S3;
@@ -139,28 +139,37 @@ export class WS {
       const buffer = payload
         ? Buffer.from(payload, "base64")
         : ((
-            await this.s3!.getObject({
-              Bucket: this.debugBucketName!,
-              Key: payloadS3Key,
-            }).promise()
-          ).Body! as Buffer);
+          await this.s3!.getObject({
+            Bucket: this.debugBucketName!,
+            Key: payloadS3Key,
+          }).promise()
+        ).Body! as Buffer);
 
       const req = JSON.parse(zlib.unzipSync(buffer).toString());
+
+      // Handle job. Mock CodeBuild behavior to send a response back right away
+      // to indicate the job started.
+      const isJob = req.env.SST_DEBUG_TYPE === "job";
+      if (isJob) {
+        this.send({
+          action: "client.lambdaResponse",
+          debugRequestId,
+          stubConnectionId,
+          payload: this.zipResponse({
+            type: "success",
+            body: {},
+          }),
+        });
+      }
+
       const resp = await this.handleRequest(req);
 
-      // Zipping payload
-      const zipped = zlib.gzipSync(
-        JSON.stringify(
-          resp.type === "success"
-            ? {
-                responseData: resp.body,
-              }
-            : {
-                responseError: resp.body,
-              }
-        )
-      );
+      if (isJob) {
+        return;
+      }
 
+      // Zipping payload
+      const zipped = this.zipResponse(resp);
       if (zipped.length < 32000) {
         this.send({
           action: "client.lambdaResponse",
@@ -195,5 +204,19 @@ export class WS {
 
   private send(input: any) {
     this.socket?.send(JSON.stringify(input));
+  }
+
+  private zipResponse(resp: SuccessMessage | FailureMessage): Buffer {
+    return zlib.gzipSync(
+      JSON.stringify(
+        resp.type === "success"
+          ? {
+            responseData: resp.body,
+          }
+          : {
+            responseError: resp.body,
+          }
+      )
+    );
   }
 }

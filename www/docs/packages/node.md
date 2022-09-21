@@ -37,6 +37,50 @@ When you import `@serverless-stack/node/config`, it does two things:
 
 Read more about how Config works in the chapter on [Environment variables](../environment-variables.md).
 
+### Job
+
+The `Job` module helps with creating and running [job](../constructs/Job.md) handler functions. You can [read more about it over on the job docs](../long-running-jobs.md).
+
+#### `JobTypes`
+A type interface you can extend to define the job payload types.
+
+```ts
+declare module "@serverless-stack/node/job" {
+  export interface JobTypes {
+    MyJob: {
+      num: number;
+    };
+  }
+}
+```
+
+#### `JobHandler`
+
+The `JobHandler` provides a function that can be used to implement the job handler function.
+
+```js
+import { JobHandler } from "@serverless-stack/node/job";
+
+export const handler = JobHandler("MyJob", async (payload) => {
+});
+```
+
+#### `Job.run`
+
+`Job.run` provides a function that can be used to invoke the job handler function.
+
+```ts
+await Job.run("MyJob", {
+  payload: {
+    num: 100
+  }
+});
+```
+
+##### Options
+
+- `payload` - Payload object to invoke the job with.
+
 ### Handlers
 
 Handlers are a collection of functions that wrap around Lambda function handlers.

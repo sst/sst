@@ -109,6 +109,7 @@ module.exports = {
 
         "auth",
         "advanced/testing",
+        "long-running-jobs",
         "going-to-production",
         "environment-variables",
         "working-with-your-team",
@@ -251,6 +252,7 @@ module.exports = {
         "constructs/Permissions"
       ],
       Other: [
+        "constructs/Job",
         "constructs/Script",
         "constructs/DebugApp",
         "constructs/DebugStack",

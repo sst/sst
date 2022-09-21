@@ -13,6 +13,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@aws-sdk/client-lambda": "3.43.0",
     "@aws-sdk/client-ssm": "3.43.0",
     "@graphql-tools/schema": "^8.3.11",
     "@tsconfig/node14": "^1.0.1",
@@ -32,6 +33,7 @@
     "graphql": "^16.5.0"
   },
   "files": [
+    "job",
     "auth",
     "context",
     "config",
