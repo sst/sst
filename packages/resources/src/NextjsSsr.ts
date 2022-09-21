@@ -152,7 +152,7 @@ export interface NextjsSsrProps {
 /**
  * The `NextjsSsr` construct is a higher level CDK construct that makes it easy to create a Nextjs app.
  *
- * Your standalone application will be bundled using output tracing and will be deployed to a Lambda function.
+ * Your standalone application will be bundled using output tracing and will be deployed to a Lambda function. You must use Next.js 10.3.0 or newer.
  *
  * @example
  *
@@ -624,9 +624,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
     // build native deps layer
     const nextLayer = this.buildLayer()
 
-    // bundle the standalone output dir
-    const standaloneDirAbsolute = this.getNextStandaloneDir()
-
+    // build and bundle the handler
     const zipFilePath = this.createServerZip()
 
     // build the lambda function
