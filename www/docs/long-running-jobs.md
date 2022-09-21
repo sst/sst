@@ -239,9 +239,11 @@ Your locally invoked job has the **same IAM permissions** as the deployed CodeBu
 
 ### SST Console
 
-The job can be found in the console under the Functions tab. And you can manually run the job.
+The job can be found in the console under the **Functions** tab. And you can manually invoke the job.
 
 ![SST Console Functions tab](/img/long-running-jobs/sst-console-job.png)
+
+Here we are passing in `{"num":5}` as the payload for the job.
 
 ---
 

@@ -323,10 +323,23 @@ export class Job extends Construct implements SSTConstruct {
           // create wrapper that calls the handler
           const [file, module] = bundled.handler.split(".");
           await fs.writeFile(path.join(bundled.directory, "handler-wrapper.js"), [
+            `console.log("")`,
+            `console.log("//////////////////////")`,
+            `console.log("// Start of the job //")`,
+            `console.log("//////////////////////")`,
+            `console.log("")`,
             `import { ${module} } from "./${file}.js";`,
             `const event = JSON.parse(process.env.SST_PAYLOAD);`,
             `const result = await ${module}(event);`,
+            `console.log("")`,
+            `console.log("----------------------")`,
+            `console.log("")`,
             `console.log("Result:", result);`,
+            `console.log("")`,
+            `console.log("//////////////////////")`,
+            `console.log("//  End of the job  //")`,
+            `console.log("//////////////////////")`,
+            `console.log("")`,
           ].join("\n"));
 
           const code = lambda.AssetCode.fromAsset(bundled.directory);
