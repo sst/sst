@@ -7,7 +7,6 @@ import {
   countResourcesLike,
   hasResource,
   stringLike,
-  ANY,
   ABSENT
 } from "./helper";
 import * as s3 from "aws-cdk-lib/aws-s3";
@@ -21,6 +20,7 @@ import {
   WebSocketApi,
   ApiGatewayV1Api,
   App,
+  Job,
   RDS,
   Stack,
   Table,
@@ -1192,6 +1192,41 @@ test("attachPermissions: array: sst EventBus", async () => {
         }
       ],
       Version: "2012-10-17"
+    }
+  });
+});
+
+test("attachPermissions: array: sst Job", async () => {
+  const stack = new Stack(new App(), "stack");
+  const job = new Job(stack, "job", {
+    handler: "test/lambda.handler"
+  });
+  const f = new Function(stack, "function", {
+    handler: "test/lambda.handler"
+  });
+  f.attachPermissions([job]);
+
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: "lambda:*",
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["job867F7ADB", "Arn"] }
+        }
+      ],
+      Version: "2012-10-17"
+    }
+  });
+  hasResource(stack, "AWS::Lambda::Function", {
+    Environment: {
+      Variables: {
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+        SST_APP: "my-app",
+        SST_STAGE: "dev",
+        SST_PARAM_SST_JOB_job: { Ref: "job867F7ADB" },
+      }
     }
   });
 });

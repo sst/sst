@@ -13,10 +13,15 @@ async function run(name, props) {
         throw new Error(`Cannot invoke the ${name} Job. Please make sure this function has permissions to invoke it.`);
     }
     // Invoke the Lambda function
-    await lambda.send(new InvokeCommand({
+    const ret = await lambda.send(new InvokeCommand({
         FunctionName: functionName,
-        Payload: Buffer.from(JSON.stringify(props?.payload)),
+        Payload: props?.payload === undefined
+            ? undefined
+            : Buffer.from(JSON.stringify(props?.payload)),
     }));
+    if (ret.FunctionError) {
+        throw new Error(`Failed to invoke the ${name} Job. Error: ${ret.FunctionError}`);
+    }
 }
 /**
  * Create a new job handler.

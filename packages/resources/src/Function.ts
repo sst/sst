@@ -12,11 +12,11 @@ import * as lambdaNode from "aws-cdk-lib/aws-lambda-nodejs";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 
-import { State, Runtime, FunctionConfig, DeferBuilder } from "@serverless-stack/core";
+import { State, Runtime, DeferBuilder } from "@serverless-stack/core";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Job } from "./Job.js";
-import { Secret, Parameter } from "./Config.js";
+import { Secret, Parameter, configToEnvironmentVariables, configToPolicyStatement } from "./Config.js";
 import { SSTConstruct } from "./Construct.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
@@ -984,47 +984,15 @@ export class Function extends lambda.Function implements SSTConstruct {
     const app = this.node.root as App;
 
     // Add environment variables
-    (config || []).forEach((c) => {
-      if (c instanceof Secret) {
-        this.addEnvironment(
-          `${FunctionConfig.SECRET_ENV_PREFIX}${c.name}`,
-          "1"
-        );
-      } else if (c instanceof Parameter) {
-        this.addEnvironment(
-          `${FunctionConfig.PARAM_ENV_PREFIX}${c.name}`,
-          c.value
-        );
-      }
-    });
+    const env = configToEnvironmentVariables(config);
+    Object.entries(env).forEach(([key, value]) =>
+      this.addEnvironment(key, value)
+    );
 
     // Attach permissions
-    const iamResources: string[] = [];
-    (config || [])
-      .filter((c) => c instanceof Secret)
-      .forEach((c) =>
-        iamResources.push(
-          `arn:aws:ssm:${app.region}:${app.account
-          }:parameter${FunctionConfig.buildSsmNameForSecret(
-            app.name,
-            app.stage,
-            c.name
-          )}`,
-          `arn:aws:ssm:${app.region}:${app.account
-          }:parameter${FunctionConfig.buildSsmNameForSecretFallback(
-            app.name,
-            c.name
-          )}`
-        )
-      );
-    if (iamResources.length > 0) {
-      this.attachPermissions([
-        new iam.PolicyStatement({
-          actions: ["ssm:GetParameters"],
-          effect: iam.Effect.ALLOW,
-          resources: iamResources,
-        }),
-      ]);
+    const policyStatement = configToPolicyStatement(app, config);
+    if (policyStatement) {
+      this.attachPermissions([policyStatement]);
     }
   }
 

@@ -7,10 +7,10 @@ import * as cdk from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as codebuild from "aws-cdk-lib/aws-codebuild";
-import { Runtime, FunctionConfig, DeferBuilder } from "@serverless-stack/core";
+import { Runtime, DeferBuilder } from "@serverless-stack/core";
 
 import { App } from "./App.js";
-import { Secret, Parameter } from "./Config.js";
+import { Secret, Parameter, configToEnvironmentVariables, configToPolicyStatement } from "./Config.js";
 import { SSTConstruct } from "./Construct.js";
 import { Function, FunctionBundleNodejsProps } from "./Function.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
@@ -372,10 +372,12 @@ export class Job extends Construct implements SSTConstruct {
       handler,
       bundle: { format: "esm" },
       runtime: "nodejs16.x",
-      timeout: 20,
+      timeout: 10,
       memorySize: 1024,
       config,
-      environment,
+      environment: {
+        SST_DEBUG_TYPE: "job",
+      },
       permissions,
     });
   }
@@ -383,11 +385,11 @@ export class Job extends Construct implements SSTConstruct {
   private createCodeBuildInvoker(): Function {
     return new Function(this, this.node.id, {
       // TODO remove
-      srcPath: path.resolve(path.join("/Users/frank/Sites/sst-playground/node_modules/@serverless-stack/resources/dist/", "../dist/support/job-invoker")),
-      //srcPath: path.resolve(path.join(__dirname, "../dist/support/job-invoker")),
+      //srcPath: path.resolve(path.join("/Users/frank/Sites/sst-playground/node_modules/@serverless-stack/resources/dist/", "../dist/support/job-invoker")),
+      srcPath: path.resolve(path.join(__dirname, "../dist/support/job-invoker")),
       handler: "index.main",
       runtime: "nodejs16.x",
-      timeout: 20,
+      timeout: 10,
       memorySize: 1024,
       environment: {
         PROJECT_NAME: this.job.projectName,
@@ -415,47 +417,15 @@ export class Job extends Construct implements SSTConstruct {
     const app = this.node.root as App;
 
     // Add environment variables
-    (config || []).forEach((c) => {
-      if (c instanceof Secret) {
-        this.addEnvironmentForCodeBuild(
-          `${FunctionConfig.SECRET_ENV_PREFIX}${c.name}`,
-          "1"
-        );
-      } else if (c instanceof Parameter) {
-        this.addEnvironmentForCodeBuild(
-          `${FunctionConfig.PARAM_ENV_PREFIX}${c.name}`,
-          c.value
-        );
-      }
-    });
+    const env = configToEnvironmentVariables(config);
+    Object.entries(env).forEach(([key, value]) =>
+      this.addEnvironmentForCodeBuild(key, value)
+    );
 
     // Attach permissions
-    const iamResources: string[] = [];
-    (config || [])
-      .filter((c) => c instanceof Secret)
-      .forEach((c) =>
-        iamResources.push(
-          `arn:aws:ssm:${app.region}:${app.account
-          }:parameter${FunctionConfig.buildSsmNameForSecret(
-            app.name,
-            app.stage,
-            c.name
-          )}`,
-          `arn:aws:ssm:${app.region}:${app.account
-          }:parameter${FunctionConfig.buildSsmNameForSecretFallback(
-            app.name,
-            c.name
-          )}`
-        )
-      );
-    if (iamResources.length > 0) {
-      this.attachPermissionsForCodeBuild([
-        new iam.PolicyStatement({
-          actions: ["ssm:GetParameters"],
-          effect: iam.Effect.ALLOW,
-          resources: iamResources,
-        }),
-      ]);
+    const policyStatement = configToPolicyStatement(app, config);
+    if (policyStatement) {
+      this.attachPermissionsForCodeBuild([policyStatement]);
     }
   }
 

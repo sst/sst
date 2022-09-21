@@ -21,10 +21,15 @@ async function run<C extends keyof JobNames>(name: C, props?: JobProps<C>) {
   }
 
   // Invoke the Lambda function
-  await lambda.send(new InvokeCommand({
+  const ret = await lambda.send(new InvokeCommand({
     FunctionName: functionName,
-    Payload: Buffer.from(JSON.stringify(props?.payload)),
+    Payload: props?.payload === undefined
+      ? undefined
+      : Buffer.from(JSON.stringify(props?.payload)),
   }));
+  if (ret.FunctionError) {
+    throw new Error(`Failed to invoke the ${name} Job. Error: ${ret.FunctionError}`);
+  }
 }
 
 /**

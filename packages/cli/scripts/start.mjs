@@ -408,6 +408,7 @@ export default async function (argv, config, cliInfo) {
       );
       return {
         type: "success",
+        skipResponse: req.env.SST_DEBUG_TYPE === "job",
         body: result.data,
       };
     }
@@ -422,6 +423,7 @@ export default async function (argv, config, cliInfo) {
       );
       return {
         type: "failure",
+        skipResponse: req.env.SST_DEBUG_TYPE === "job",
         body: {
           errorMessage: result.error.errorMessage,
           errorType: result.error.errorType,

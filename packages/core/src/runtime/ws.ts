@@ -12,11 +12,13 @@ const WEBSOCKET_CLOSE_CODE = {
 
 type SuccessMessage = {
   type: "success";
+  skipResponse: boolean;
   body: any;
 };
 
 type FailureMessage = {
   type: "failure";
+  skipResponse: boolean;
   body: {
     errorMessage: string;
     errorType: string;
@@ -30,26 +32,26 @@ type RequestHandler = (
 
 type Message =
   | {
-      action: "server.clientRegistered";
-      clientConnectionId: string;
-    }
+    action: "server.clientRegistered";
+    clientConnectionId: string;
+  }
   | {
-      action: "server.clientDisconnectedDueToNewClient";
-    }
+    action: "server.clientDisconnectedDueToNewClient";
+  }
   | {
-      action: "server.failedToSendResponseDueToStubDisconnected";
-    }
+    action: "server.failedToSendResponseDueToStubDisconnected";
+  }
   | {
-      action: "server.failedToSendResponseDueToUnknown";
-    }
+    action: "server.failedToSendResponseDueToUnknown";
+  }
   | {
-      action: "register";
-      body: string;
-    }
+    action: "register";
+    body: string;
+  }
   | {
-      action: "stub.lambdaRequest";
-      [key: string]: any;
-    };
+    action: "stub.lambdaRequest";
+    [key: string]: any;
+  };
 
 export class WS {
   private s3?: S3;
@@ -139,25 +141,30 @@ export class WS {
       const buffer = payload
         ? Buffer.from(payload, "base64")
         : ((
-            await this.s3!.getObject({
-              Bucket: this.debugBucketName!,
-              Key: payloadS3Key,
-            }).promise()
-          ).Body! as Buffer);
+          await this.s3!.getObject({
+            Bucket: this.debugBucketName!,
+            Key: payloadS3Key,
+          }).promise()
+        ).Body! as Buffer);
 
       const req = JSON.parse(zlib.unzipSync(buffer).toString());
       const resp = await this.handleRequest(req);
+
+      // Skip sending response if debugging Jobs
+      if (resp.skipResponse) {
+        return;
+      }
 
       // Zipping payload
       const zipped = zlib.gzipSync(
         JSON.stringify(
           resp.type === "success"
             ? {
-                responseData: resp.body,
-              }
+              responseData: resp.body,
+            }
             : {
-                responseError: resp.body,
-              }
+              responseError: resp.body,
+            }
         )
       );
 
