@@ -23,7 +23,7 @@ import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
 import { Construct } from "constructs";
 const logger = getChildLogger("NextjsSsr");
 
-import { LayerVersion } from "aws-cdk-lib/aws-lambda";
+import { Code, LayerVersion } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { BucketDeployment, Source } from "aws-cdk-lib/aws-s3-deployment";
 import { App } from "./App.js";
@@ -584,7 +584,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
       deployments.push(new BucketDeployment(this, 'PublicFilesDeployment', {
         destinationBucket: this.cdk.bucket,
         destinationKeyPrefix: '/',
-        sources: [Source.asset(path.join(__dirname, '../../public'))],
+        sources: [Source.asset(publicDir)],
         distribution: this.cdk.distribution /** Invalidate Cloudfront distribution caches */,
         prune: false /** Do not delete stale files */,
       })
@@ -625,7 +625,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
     const nextLayer = this.buildLayer()
 
     // build and bundle the handler
-    const zipFilePath = this.createServerZip()
+    const code = this.createServerCode()
 
     // build the lambda function
     const fn = new lambda.Function(this, 'MainFn', {
@@ -634,7 +634,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
       runtime: lambda.Runtime.NODEJS_16_X,
       handler: path.join(nextjsPath, 'server.handler'),
       layers: [nextLayer],
-      code: lambda.Code.fromAsset(zipFilePath),
+      code,
       environment,
     });
     this.cdk.serverFunction = fn;
@@ -655,8 +655,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
       fs.unlinkSync(defaultServerPath)
 
     // build our server handler
-    const serverHandler = this.isPlaceholder ? path.resolve(__dirname, "../assets/NextjsSite/server-lambda-stub/server.js")
-      : path.resolve(__dirname, "../assets/NextjsSite/server-lambda/server.ts");
+    const serverHandler = path.resolve(__dirname, "../assets/NextjsSite/server-lambda/server.ts");
     // server should live in the same dir as the nextjs app to access deps properly
     const serverPath = path.join(nextjsPath, "server.cjs")
     const esbuildResult = esbuild.buildSync({
@@ -677,7 +676,11 @@ export class NextjsSsr extends Construct implements SSTConstruct {
     }
   }
 
-  private createServerZip(): string {
+  private createServerCode(): lambda.Code {
+    if (this.isPlaceholder) {
+      return lambda.Code.fromInline("module.exports.handler = async () => { return { statusCode: 200, body: 'SST placeholder site' } }")
+    }
+
     const standaloneDirAbsolute = this.getNextStandaloneDir()
 
     // build our handler
@@ -709,7 +712,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
       throw new Error(`There was a problem generating the lambda package; archive missing in ${zipFilePath}.`)
     }
 
-    return zipFilePath
+    return lambda.Code.fromAsset(zipFilePath)
   }
 
   /////////////////////
