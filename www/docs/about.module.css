@@ -1,3 +1,22 @@
+.desc {
+  margin-bottom: 1rem;
+}
+.features ul li p {
+  margin: 0 0 var(--ifm-list-item-margin);
+}
+.features ul li li {
+  color: var(--custom-font-color-secondary);
+}
+.features :global(.theme-code-block) {
+  margin: 0 0 var(--ifm-list-item-margin);
+}
+.learnMore p {
+  color: var(--custom-font-color-secondary);
+}
+.learnMore a {
+  padding: 0 0.2rem;
+}
+
 /**
  * Start Options
  */
