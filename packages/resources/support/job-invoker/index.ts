@@ -20,5 +20,5 @@ export async function main(event: any) {
 
   const [projectName, buildId] = resp.build?.id?.split(":") || [];
   console.log("Starting job...");
-  console.log(`View log: https://${process.env.AWS_REGION}.console.aws.amazon.com/cloudwatch/home?region=${process.env.AWS_REGION}#logsV2:log-groups/log-group/$252Faws$252Fcodebuild$252F${projectName}/log-events/${buildId}`);
+  console.log(`View job: https://${process.env.AWS_REGION}.console.aws.amazon.com/codesuite/codebuild/projects/${projectName}/build/${projectName}%3A${buildId}/?region=${process.env.AWS_REGION}`);
 }

@@ -335,7 +335,6 @@ export default async function (argv, config, cliInfo) {
     const eventSource = parseEventSource(req.event);
     const eventSourceDesc =
       eventSource === null ? " invoked" : ` invoked by ${eventSource}`;
-    const isJob = req.env.SST_DEBUG_TYPE === "job";
     clientLogger.traceWithMetadata(
       chalk.grey(
         `${req.context.awsRequestId} REQUEST ${req.env.AWS_LAMBDA_FUNCTION_NAME} [${func.handler}]${eventSourceDesc}`
@@ -409,7 +408,6 @@ export default async function (argv, config, cliInfo) {
       );
       return {
         type: "success",
-        ignoreStubErrors: isJob,
         body: result.data,
       };
     }
@@ -424,7 +422,6 @@ export default async function (argv, config, cliInfo) {
       );
       return {
         type: "failure",
-        ignoreStubErrors: isJob,
         body: {
           errorMessage: result.error.errorMessage,
           errorType: result.error.errorType,

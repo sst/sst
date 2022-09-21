@@ -237,6 +237,14 @@ Your locally invoked job has the **same IAM permissions** as the deployed CodeBu
 
 ---
 
+### SST Console
+
+The job can be found in the console under the Functions tab. And you can manually run the job.
+
+![SST Console Functions tab](/img/long-running-jobs/sst-console-job.png)
+
+---
+
 ## Typesafe payload
 
 In our example, we defined the job type in `services/functions/myJob.ts`.

@@ -12,13 +12,11 @@ const WEBSOCKET_CLOSE_CODE = {
 
 type SuccessMessage = {
   type: "success";
-  ignoreStubErrors: boolean;
   body: any;
 };
 
 type FailureMessage = {
   type: "failure";
-  ignoreStubErrors: boolean;
   body: {
     errorMessage: string;
     errorType: string;
@@ -148,28 +146,36 @@ export class WS {
         ).Body! as Buffer);
 
       const req = JSON.parse(zlib.unzipSync(buffer).toString());
+
+      // Handle job. Mock CodeBuild behavior to send a response back right away
+      // to indicate the job started.
+      const isJob = req.env.SST_DEBUG_TYPE === "job";
+      if (isJob) {
+        this.send({
+          action: "client.lambdaResponse",
+          debugRequestId,
+          stubConnectionId,
+          payload: this.zipResponse({
+            type: "success",
+            body: {},
+          }),
+        });
+      }
+
       const resp = await this.handleRequest(req);
 
-      // Zipping payload
-      const zipped = zlib.gzipSync(
-        JSON.stringify(
-          resp.type === "success"
-            ? {
-              responseData: resp.body,
-            }
-            : {
-              responseError: resp.body,
-            }
-        )
-      );
+      if (isJob) {
+        return;
+      }
 
+      // Zipping payload
+      const zipped = this.zipResponse(resp);
       if (zipped.length < 32000) {
         this.send({
           action: "client.lambdaResponse",
           debugRequestId,
           stubConnectionId,
           payload: zipped.toString("base64"),
-          ignoreStubErrors: resp.ignoreStubErrors,
         });
         return;
       }
@@ -184,7 +190,6 @@ export class WS {
         debugRequestId,
         stubConnectionId,
         payloadS3Key: uploaded.Key,
-        ignoreStubErrors: resp.ignoreStubErrors,
       });
     }
   }
@@ -199,5 +204,19 @@ export class WS {
 
   private send(input: any) {
     this.socket?.send(JSON.stringify(input));
+  }
+
+  private zipResponse(resp: SuccessMessage | FailureMessage): Buffer {
+    return zlib.gzipSync(
+      JSON.stringify(
+        resp.type === "success"
+          ? {
+            responseData: resp.body,
+          }
+          : {
+            responseError: resp.body,
+          }
+      )
+    );
   }
 }
