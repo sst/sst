@@ -47,9 +47,9 @@ npx sst deploy --stage prod
 
 - [Quick start](https://docs.sst.dev/quick-start): Take a quick tour of SST and deploy your first full-stack app. _Takes minutes_.
 
-- [Tutorial](https://docs.sst.dev/quick-start): A tutorial on how to add a new feature to your SST app. _Takes an hour_.
+- [Tutorial](https://docs.sst.dev/learn/): A tutorial on how to add a new feature to your SST app. _Takes an hour_.
 
-- [Guide](https://sst.dev): Learn to build a full-stack serverless app from scratch with SST. _Takes a day_.
+- [Guide](https://sst.dev/guide.html): Learn to build a full-stack serverless app from scratch with SST. _Takes a day_.
 
 ## Why SST
 
@@ -104,7 +104,7 @@ The SST Console automatically connects to your local environment when you run `s
 
 ### Organized like monoliths
 
-The full-stack starters that come with SST are organized like singular monolith apps in a monorepo. They are designed to manage growing serverless projects.
+The [full-stack starters](https://docs.sst.dev/packages/create-sst) that come with SST are organized like singular monolith apps in a monorepo. They are designed to manage growing serverless projects.
 
 ```
 my-sst-app
@@ -129,7 +129,7 @@ Seed is built by the team behind SST.
 
 ---
 
-**Join our community** [Discord][discord] | [Twitter](https://www.youtube.com/c/sst-dev) | [YouTube](https://twitter.com/SST_dev) | [Contribute](CONTRIBUTING.md)
+**Join our community** [Discord][discord] | [YouTube](https://www.youtube.com/c/sst-dev) | [Twitter](https://twitter.com/SST_dev) | [Contribute](CONTRIBUTING.md)
 
 [discord]: https://sst.dev/discord
 [console_doc]: https://docs.sst.dev/console
