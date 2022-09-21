@@ -15,7 +15,7 @@ const lambdaDefaultPolicy = {
   Resource: "*",
 };
 
-test("constructor: cdk.bucket is undefined", async () => {
+test("cdk.bucket is undefined", async () => {
   const stack = new Stack(new App(), "stack");
   const bucket = new Bucket(stack, "Bucket");
   expect(bucket.bucketArn).toBeDefined();
@@ -25,7 +25,7 @@ test("constructor: cdk.bucket is undefined", async () => {
   countResources(stack, "Custom::S3BucketNotifications", 0);
 });
 
-test("constructor: cdk.bucket is imported construct", async () => {
+test("cdk.bucket is imported construct", async () => {
   const stack = new Stack(new App(), "stack");
   const bucket = new Bucket(stack, "Bucket", {
     cdk: {
@@ -39,7 +39,7 @@ test("constructor: cdk.bucket is imported construct", async () => {
   countResources(stack, "Custom::S3BucketNotifications", 0);
 });
 
-test("constructor: cdk.bucket is created construct", async () => {
+test("cdk.bucket is created construct", async () => {
   const stack = new Stack(new App(), "stack");
   const bucket = new Bucket(stack, "Bucket", {
     cdk: {
@@ -53,7 +53,7 @@ test("constructor: cdk.bucket is created construct", async () => {
   countResources(stack, "Custom::S3BucketNotifications", 0);
 });
 
-test("constructor: cdk.bucket is props", async () => {
+test("cdk.bucket is props", async () => {
   const stack = new Stack(new App(), "stack");
   const bucket = new Bucket(stack, "Bucket", {
     cdk: {

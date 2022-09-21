@@ -8,8 +8,6 @@ import detect from "detect-port-alt";
 import array from "../lib/array.mjs";
 
 import {
-  synth,
-  deploy,
   logger,
   getChildLogger,
   STACK_DEPLOY_STATUS,
@@ -28,6 +26,8 @@ import {
 
 import paths from "./util/paths.mjs";
 import {
+  synth,
+  deploy,
   prepareCdk,
   writeConfig,
   checkFileExists,

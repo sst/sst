@@ -1,5 +1,19 @@
 # @serverless-stack/core
 
+## 1.14.4
+
+## 1.14.3
+
+### Patch Changes
+
+- [#2070](https://github.com/serverless-stack/sst/pull/2070) [`8ceb4ab7c`](https://github.com/serverless-stack/sst/commit/8ceb4ab7c92f92fac4d4177d498e4e365630d5b8) Thanks [@estebanprimost](https://github.com/estebanprimost)! - Fix "Could not unzip uploaded file" deployment error
+
+## 1.14.2
+
+### Patch Changes
+
+- [#2072](https://github.com/serverless-stack/sst/pull/2072) [`799b1c3ab`](https://github.com/serverless-stack/sst/commit/799b1c3ab0ad0fe1587b60716b80a2ee815de8ee) Thanks [@fwang](https://github.com/fwang)! - Cli: fix functions restarted twice on secrets set
+
 ## 1.14.1
 
 ## 1.14.0
