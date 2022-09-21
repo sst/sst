@@ -326,7 +326,7 @@ export class Job extends Construct implements SSTConstruct {
             `import { ${module} } from "./${file}.js";`,
             `const event = JSON.parse(process.env.SST_PAYLOAD);`,
             `const result = await ${module}(event);`,
-            `console.log(result);`,
+            `console.log("Result:", result);`,
           ].join("\n"));
 
           const code = lambda.AssetCode.fromAsset(bundled.directory);
@@ -384,8 +384,6 @@ export class Job extends Construct implements SSTConstruct {
 
   private createCodeBuildInvoker(): Function {
     return new Function(this, this.node.id, {
-      // TODO remove
-      //srcPath: path.resolve(path.join("/Users/frank/Sites/sst-playground/node_modules/@serverless-stack/resources/dist/", "../dist/support/job-invoker")),
       srcPath: path.resolve(path.join(__dirname, "../dist/support/job-invoker")),
       handler: "index.main",
       runtime: "nodejs16.x",

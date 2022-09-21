@@ -72,6 +72,11 @@ async function onClientLambdaResponse(event, eventBody) {
   } catch (e) {
     console.error(e);
 
+    // Ignore stub errors
+    if (eventBody.ignoreStubErrors) {
+      return;
+    }
+
     console.log("Notifying client response failed to send to stub.");
     const clientConnectionId = event.requestContext.connectionId;
     const action =

@@ -33,6 +33,7 @@
     "graphql": "^16.5.0"
   },
   "files": [
+    "job",
     "auth",
     "context",
     "config",

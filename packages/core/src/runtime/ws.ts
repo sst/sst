@@ -12,13 +12,13 @@ const WEBSOCKET_CLOSE_CODE = {
 
 type SuccessMessage = {
   type: "success";
-  skipResponse: boolean;
+  ignoreStubErrors: boolean;
   body: any;
 };
 
 type FailureMessage = {
   type: "failure";
-  skipResponse: boolean;
+  ignoreStubErrors: boolean;
   body: {
     errorMessage: string;
     errorType: string;
@@ -150,11 +150,6 @@ export class WS {
       const req = JSON.parse(zlib.unzipSync(buffer).toString());
       const resp = await this.handleRequest(req);
 
-      // Skip sending response if debugging Jobs
-      if (resp.skipResponse) {
-        return;
-      }
-
       // Zipping payload
       const zipped = zlib.gzipSync(
         JSON.stringify(
@@ -174,6 +169,7 @@ export class WS {
           debugRequestId,
           stubConnectionId,
           payload: zipped.toString("base64"),
+          ignoreStubErrors: resp.ignoreStubErrors,
         });
         return;
       }
@@ -188,6 +184,7 @@ export class WS {
         debugRequestId,
         stubConnectionId,
         payloadS3Key: uploaded.Key,
+        ignoreStubErrors: resp.ignoreStubErrors,
       });
     }
   }

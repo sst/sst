@@ -50,6 +50,14 @@ Alternatively, you can refer to [this example repo](https://github.com/serverles
    api.attachPermissions([job]);
    ```
 
+3. **Install dependency**
+
+   Go into `services/` and run
+
+   ```bash
+   npm install --save @serverless-stack/node
+   ```
+
 3. **Define the handler function**
 
    Create the function with the code that needs to run for long. Here for example, we are creating a function to calculate the factorial of a given number.
@@ -73,7 +81,7 @@ Alternatively, you can refer to [this example repo](https://github.com/serverles
    Then create the handler function using the [`JobHandler`](packages/node.md#jobhandler) helper. Append this to `myJob.ts`.
 
    ```ts
-   export const main = JobHandler("MyJob", async (payload) => {
+   export const handler = JobHandler("MyJob", async (payload) => {
      // Calculate factorial
      let result = 1;
      for (let i = 2; i <= payload.num; i++) {
@@ -172,7 +180,7 @@ Now you can access the table at runtime.
 import { Config } from "@serverless-stack/node/config";
 import { JobHandler } from "@serverless-stack/node/job";
 
-export const main = JobHandler("MyJob", async (payload) => {
+export const handler = JobHandler("MyJob", async (payload) => {
   console.log(Config.MY_TABLE_NAME);
 });
 ```
@@ -256,7 +264,7 @@ This is being used in two places to ensure typesafety.
 2. And, when defining the `JobHandler`, the `payload` argument is automatically typed. Your editor can also autocomplete `payload.num` for you, and reports a type error if an undefined field is accessed by mistake.
 
    ```ts
-   export const main = JobHandler("MyJob", async (payload) => {
+   export const handler = JobHandler("MyJob", async (payload) => {
      // Editor can autocomplete "num"
      console.log(payload.num);
 
