@@ -2,7 +2,7 @@
 set -e
 
 yarn build
-sed -i '' -e '3,6d' .changeset/config.json
+sed -i.'' -e '3,6d' .changeset/config.json
 yarn changeset version --snapshot 
 yarn changeset publish --no-git-tag --tag=snapshot 
 git checkout '**/package.json' '**/CHANGELOG.md' '.changeset'
