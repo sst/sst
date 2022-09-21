@@ -225,9 +225,9 @@ export class NextjsSsr extends Construct implements SSTConstruct {
    */
   public readonly cdk: {
     /**
-     * The main Nextjs server function.
+     * The main Nextjs server handler lambda function.
      */
-    serverFunction?: lambda.Function;
+    serverFunction: lambda.Function;
     /**
      * The internally created CDK `Bucket` instance.
      */
@@ -256,7 +256,6 @@ export class NextjsSsr extends Construct implements SSTConstruct {
    * The root SST directory used for builds.
    */
   private sstBuildDir: string;
-  private serverLambda?: lambda.Function;
   private awsCliLayer: AwsCliLayer;
   public originAccessIdentity: cloudfront.IOriginAccessIdentity
 
@@ -410,9 +409,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
    * ```
    */
   public attachPermissions(permissions: Permissions): void {
-    if (this.serverLambda) {
-      attachPermissionsToRole(this.serverLambda.role as iam.Role, permissions);
-    }
+    attachPermissionsToRole(this.cdk.serverFunction.role as iam.Role, permissions);
   }
 
   public getConstructMetadata() {
@@ -845,7 +842,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
 
-    const fnUrl = this.serverLambda!.addFunctionUrl({
+    const fnUrl = this.cdk.serverFunction.addFunctionUrl({
       authType: lambda.FunctionUrlAuthType.NONE,
     });
 
