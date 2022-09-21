@@ -3,7 +3,7 @@ title: What is SST
 description: "A high-level overview of SST in plain english."
 ---
 
-SST is a framework that helps you build and deploy full-stack serverless applications. With SST you can create APIs, databases, frontends; connect them all together, and deploy them to AWS.
+SST is a framework that makes it easy to build and deploy full-stack serverless applications. With SST you can create APIs, databases, frontends; connect them all together, and deploy them to AWS.
 
 ---
 

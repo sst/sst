@@ -1,13 +1,20 @@
-h1.title {
-  margin-top: 0;
-  margin-bottom: 3px;
+.desc {
+  margin-bottom: 1rem;
 }
-div.desc {
-  font-size: 1.05rem;
+.features ul li p {
+  margin: 0 0 var(--ifm-list-item-margin);
+}
+.features ul li li {
   color: var(--custom-font-color-secondary);
 }
-div.desc > ul {
-  margin-top: 1rem;
+.features :global(.theme-code-block) {
+  margin: 0 0 var(--ifm-list-item-margin);
+}
+.learnMore p {
+  color: var(--custom-font-color-secondary);
+}
+.learnMore a {
+  padding: 0 0.2rem;
 }
 
 /**
