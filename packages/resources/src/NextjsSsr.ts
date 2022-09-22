@@ -5,11 +5,13 @@ import fs from "fs-extra";
 import indent from "indent-string";
 import path from "path";
 import url from "url";
+import micromatch from "micromatch"
 
 import { getChildLogger } from "@serverless-stack/core";
 import {
-  CfnOutput, CustomResource, Duration, Fn, RemovalPolicy
+  CfnOutput, CustomResource, Duration, Fn, RemovalPolicy, Token
 } from "aws-cdk-lib";
+import * as s3Assets from "aws-cdk-lib/aws-s3-assets";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
@@ -29,7 +31,9 @@ import { BucketDeployment, Source } from "aws-cdk-lib/aws-s3-deployment";
 import { App } from "./App.js";
 import {
   BaseSiteCdkDistributionProps, BaseSiteDomainProps, BaseSiteEnvironmentOutputsInfo,
-  buildErrorResponsesForRedirectToIndex
+  BaseSiteReplaceProps,
+  buildErrorResponsesForRedirectToIndex,
+  getBuildCmdEnvironment
 } from "./BaseSite.js";
 import { isCDKConstruct, SSTConstruct } from "./Construct.js";
 import { Stack } from "./Stack.js";
@@ -478,15 +482,18 @@ export class NextjsSsr extends Construct implements SSTConstruct {
 
     // Run build
     logger.debug(`Running "npm build" script`);
+    const buildEnv = {
+      ...process.env,
+      ...this.props.environment,
+      [NEXTJS_BUILD_STANDALONE_ENV]: 'true',
+      ...(this.props.nodeEnv ? { NODE_ENV: this.props.nodeEnv } : {}),
+      // ...getBuildCmdEnvironment(this.props.environment)
+    }
+    console.log(buildEnv)
     const buildResult = spawn.sync("npm", ["run", "build"], {
       cwd: sitePath,
       stdio: "inherit",
-      env: {
-        ...process.env,
-        ...this.props.environment,
-        [NEXTJS_BUILD_STANDALONE_ENV]: 'true',
-        ...(this.props.nodeEnv ? { NODE_ENV: this.props.nodeEnv } : {}),
-      },
+      env: buildEnv,
     });
     if (buildResult.status !== 0) {
       throw new Error('The app "build" script failed.');
@@ -575,12 +582,34 @@ export class NextjsSsr extends Construct implements SSTConstruct {
 
     // path to public folder; root static assets
     const staticDir = this.getNextStaticDir()
-    let publicDir = this.getNextPublicDir()
+    let publicDir = this.isPlaceholder ? path.resolve(__dirname, "../assets/NextjsSite/site-stub") : this.getNextPublicDir()
+
+
+    // do rewrites
+    const searchDirs = [staticDir, publicDir]
+    // search and replace env var placeholders
+    const replaceValues = this.getS3ContentReplaceValues()
+    const globs = [... new Set(replaceValues.flatMap((replaceValue) => replaceValue.files))]
+    console.log('globs', globs)
+    searchDirs.forEach(searchDir => {
+      if (!fs.existsSync(searchDir)) return
+      this.listDirectory(searchDir).forEach(file => {
+        // search all matching files
+        if (!micromatch.isMatch(file, globs, { dot: true })) return
+
+        // matches file search pattern
+        // do replacements
+        let fileContent = fs.readFileSync(file, 'utf8')
+        replaceValues.forEach(replaceConfig => {
+          console.log(`Replacing ${replaceConfig.search} with ${replaceConfig.replace} in ${file}`)
+          fileContent = fileContent.replace(replaceConfig.search, replaceConfig.replace)
+        })
+        fs.writeFileSync(file, fileContent)
+      })
+    })
 
     // static dir
-    if (this.isPlaceholder) {
-      publicDir = path.resolve(__dirname, "../assets/NextjsSite/site-stub")
-    } else if (fs.existsSync(staticDir)) {
+    if (!this.isPlaceholder && fs.existsSync(staticDir)) {
       // upload static assets
       deployments.push(new BucketDeployment(this, 'StaticAssetsDeployment', {
         destinationBucket: this.cdk.bucket,
@@ -594,7 +623,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
     // public dir
     if (fs.existsSync(publicDir)) {
       // zip up assets
-      const zipFilePath = this.createArchive(publicDir, 'public.zip')
+      const zipFilePath = this.createArchive(publicDir, 'public.zip', '*')
 
       // upload public files to root of S3 bucket
       deployments.push(new BucketDeployment(this, 'PublicFilesDeployment', {
@@ -606,8 +635,10 @@ export class NextjsSsr extends Construct implements SSTConstruct {
       })
       )
     }
+
     return deployments;
   }
+
 
   private createS3Bucket(): s3.Bucket {
     const { cdk } = this.props;
@@ -629,7 +660,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
   }
 
   // zip up a directory and return path to zip file
-  private createArchive(directory: string, zipFileName: string): string {
+  private createArchive(directory: string, zipFileName: string, fileGlob: string = '*', prefix?: string): string {
     // get output path
     const zipOutDir = path.resolve(
       path.join(this.sstBuildDir, `NextjsSsr-standalone-${this.node.id}-${this.node.addr}`)
@@ -638,13 +669,12 @@ export class NextjsSsr extends Construct implements SSTConstruct {
     fs.mkdirpSync(zipOutDir);
     const zipFilePath = path.join(zipOutDir, zipFileName);
 
-
     // run script to create zipfile, preserving symlinks for node_modules (e.g. pnpm structure)
     const result = spawn.sync(
       "bash", // getting ENOENT when specifying 'node' here for some reason
       [
         '-xc',
-        [`cd '${directory}'`, `zip -ryq2 '${zipFilePath}' *`].join('&&')
+        [`cd '${directory}'`, `zip -ryq2 '${zipFilePath}' ${fileGlob}`].join('&&')
       ],
       { stdio: "inherit", }
     );
@@ -675,6 +705,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
     const code = this.createServerCode()
 
     // build the lambda function
+
     const fn = new lambda.Function(this, 'MainFn', {
       memorySize: defaults?.function?.memorySize || 1024,
       timeout: defaults?.function?.timeout ? Duration.seconds(defaults.function.timeout) : Duration.seconds(10),
@@ -718,7 +749,6 @@ export class NextjsSsr extends Construct implements SSTConstruct {
       external: ["sharp", "next"],
       format: "cjs",
       outfile: path.join(standaloneDirAbsolute, serverPath)
-      ,
     })
     if (esbuildResult.errors.length > 0) {
       esbuildResult.errors.forEach((error) => console.error(error));
@@ -1190,6 +1220,34 @@ export class NextjsSsr extends Construct implements SSTConstruct {
       stack: Stack.of(this).node.id,
       environmentOutputs,
     } as BaseSiteEnvironmentOutputsInfo);
+  }
+
+  private getS3ContentReplaceValues(): BaseSiteReplaceProps[] {
+    const replaceValues: BaseSiteReplaceProps[] = [];
+
+    Object.entries(this.props.environment || {})
+      .filter(([, value]) => Token.isUnresolved(value))
+      .forEach(([key, value]) => {
+        const token = `{{ ${key} }}`;
+        replaceValues.push(
+          {
+            files: "**/*.html",
+            search: token,
+            replace: value,
+          },
+          {
+            files: "**/*.js",
+            search: token,
+            replace: value,
+          },
+          {
+            files: "**/*.json",
+            search: token,
+            replace: value,
+          }
+        );
+      });
+    return replaceValues;
   }
 
   getNextBuildId() {
