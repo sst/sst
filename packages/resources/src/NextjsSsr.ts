@@ -121,6 +121,11 @@ export interface NextjsSsrProps {
   environment?: Record<string, string>;
 
   /**
+   * Optional value for NODE_ENV during build and runtime.
+   */
+  nodeEnv?: string;
+
+  /**
    * When running `sst start`, a placeholder site is deployed. This is to ensure
    * that the site content remains unchanged, and subsequent `sst start` can
    * start up quickly.
@@ -284,7 +289,12 @@ export class NextjsSsr extends Construct implements SSTConstruct {
 
       // Create Bucket which will be utilised to contain the statics
       this.cdk.bucket = this.createS3Bucket();
-      this.cdk.bucket.grantRead(this.originAccessIdentity);
+      this.cdk.bucket.addToResourcePolicy(new iam.PolicyStatement({
+        // only allow getting of files - not listing
+        actions: ['s3:GetObject'],
+        resources: [`${this.cdk.bucket.bucketArn}/*`],
+        principals: [this.originAccessIdentity.grantPrincipal],
+      }))
 
       // Create Server function
       this.cdk.serverFunction = this.createServerFunction();;
@@ -473,7 +483,8 @@ export class NextjsSsr extends Construct implements SSTConstruct {
       stdio: "inherit",
       env: {
         ...process.env,
-        [NEXTJS_BUILD_STANDALONE_ENV]: 'true'
+        [NEXTJS_BUILD_STANDALONE_ENV]: 'true',
+        ...(this.props.nodeEnv ? { NODE_ENV: this.props.nodeEnv } : {}),
       },
     });
     if (buildResult.status !== 0) {
@@ -670,7 +681,10 @@ export class NextjsSsr extends Construct implements SSTConstruct {
       handler: path.join(nextjsPath, 'server.handler'),
       layers: [nextLayer],
       code,
-      environment,
+      environment: {
+        ...environment,
+        ...(this.props.nodeEnv ? { NODE_ENV: this.props.nodeEnv } : {}),
+      },
     });
     this.cdk.serverFunction = fn;
 
@@ -797,11 +811,12 @@ export class NextjsSsr extends Construct implements SSTConstruct {
 
     // default handler for requests that don't match any other path:
     //   - try S3 first
-    //   - if 404 not found, fall back to lambda handler
+    //   - if 403, fall back to lambda handler (mostly for /)
+    //   - if 404, fall back to lambda handler
     const fallbackOriginGroup = new origins.OriginGroup({
       primaryOrigin: s3Origin,
       fallbackOrigin: serverFunctionOrigin,
-      fallbackStatusCodes: [404],
+      fallbackStatusCodes: [403, 404],
     })
 
     // TODO: how to apply to fallbackOrigin?
@@ -830,7 +845,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
     }
 
     return new cloudfront.Distribution(this, "Distribution", {
-      defaultRootObject: "",
+      defaultRootObject: "index.html",
 
       // Override props.
       ...cfDistributionProps,
