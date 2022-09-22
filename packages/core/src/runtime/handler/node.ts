@@ -381,7 +381,7 @@ async function runAfterBundling(srcPath: string, buildPath: string, bundle: Bund
   }
 
   try {
-    execAsync(cmds.join(" && "), {
+    await execAsync(cmds.join(" && "), {
       cwd: srcPath,
     });
   } catch (e) {
