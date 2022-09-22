@@ -584,29 +584,8 @@ export class NextjsSsr extends Construct implements SSTConstruct {
     const staticDir = this.getNextStaticDir()
     let publicDir = this.isPlaceholder ? path.resolve(__dirname, "../assets/NextjsSite/site-stub") : this.getNextPublicDir()
 
-
-    // do rewrites
-    const searchDirs = [staticDir, publicDir]
-    // search and replace env var placeholders
-    const replaceValues = this.getS3ContentReplaceValues()
-    const globs = [... new Set(replaceValues.flatMap((replaceValue) => replaceValue.files))]
-    console.log('globs', globs)
-    searchDirs.forEach(searchDir => {
-      if (!fs.existsSync(searchDir)) return
-      this.listDirectory(searchDir).forEach(file => {
-        // search all matching files
-        if (!micromatch.isMatch(file, globs, { dot: true })) return
-
-        // matches file search pattern
-        // do replacements
-        let fileContent = fs.readFileSync(file, 'utf8')
-        replaceValues.forEach(replaceConfig => {
-          console.log(`Replacing ${replaceConfig.search} with ${replaceConfig.replace} in ${file}`)
-          fileContent = fileContent.replace(replaceConfig.search, replaceConfig.replace)
-        })
-        fs.writeFileSync(file, fileContent)
-      })
-    })
+    // do rewrites of unresolved CDK tokens in static files
+    this.rewriteStaticFileTokens(staticDir, publicDir);
 
     // static dir
     if (!this.isPlaceholder && fs.existsSync(staticDir)) {
@@ -639,6 +618,32 @@ export class NextjsSsr extends Construct implements SSTConstruct {
     return deployments;
   }
 
+  // search/replace CDK tokens in static files
+  private rewriteStaticFileTokens(staticDir: string, publicDir: string) {
+    const searchDirs = [staticDir, publicDir];
+    // search and replace env var placeholders
+    const replaceValues = this.getS3ContentReplaceValues();
+    const globs = [...new Set(replaceValues.flatMap((replaceValue) => replaceValue.files))];
+    // traverse static dirs
+    searchDirs.forEach(searchDir => {
+      if (!fs.existsSync(searchDir))
+        return;
+      this.listDirectory(searchDir).forEach(file => {
+        // is this file a glob match?
+        if (!micromatch.isMatch(file, globs, { dot: true }))
+          return;
+
+        // matches file search pattern
+        // do replacements
+        let fileContent = fs.readFileSync(file, 'utf8');
+        replaceValues.forEach(replaceConfig => {
+          console.log(`Replacing ${replaceConfig.search} with ${replaceConfig.replace} in ${file}`);
+          fileContent = fileContent.replace(replaceConfig.search, replaceConfig.replace);
+        });
+        fs.writeFileSync(file, fileContent);
+      });
+    });
+  }
 
   private createS3Bucket(): s3.Bucket {
     const { cdk } = this.props;
