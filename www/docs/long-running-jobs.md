@@ -58,7 +58,7 @@ Alternatively, you can refer to [this example repo](https://github.com/serverles
    npm install --save @serverless-stack/node
    ```
 
-3. **Define the handler function**
+4. **Define the handler function**
 
    Create the function with the code that needs to run for long. Here for example, we are creating a function to calculate the factorial of a given number.
 
@@ -92,7 +92,7 @@ Alternatively, you can refer to [this example repo](https://github.com/serverles
    });
    ```
 
-4. **Run the job**
+5. **Run the job**
 
    And finally we can run this job in our API using the [`Job.run`](packages/node.md#jobrun) helper. Change `services/functions/lambda.ts` to:
 

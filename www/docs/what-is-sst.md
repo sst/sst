@@ -77,9 +77,9 @@ You can also add [**Auth**](constructs/Auth.md), [**Queues**](constructs/Queue.m
 
 ### All AWS services
 
-Aside from the use cases that SST's constructs support, you can **deploy any AWS service** in SST. This is because you can also use any of AWS' constructs in your SST apps.
+Aside from the use cases that SST's constructs support, you can **deploy any AWS service** in SST. This is because SST is built on top of [AWS CDK](https://aws.amazon.com/cdk/) and you can use any CDK construct in SST.
 
-Here we are defining an [Amazon ECS](https://aws.amazon.com/ecs/) cluster with an [AWS construct](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_ecs_patterns-readme.html).
+Here we are defining an [Amazon ECS](https://aws.amazon.com/ecs/) cluster with an [AWS CDK construct](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_ecs_patterns-readme.html).
 
 ```ts
 import * as ecs from "aws-cdk-lib/aws-ecs";
@@ -169,7 +169,7 @@ SST comes with a [CLI](packages/cli.md) that can deploy your applications and he
 
 ### Local dev
 
-The [`sst start`](live-lambda-development.md) command starts a local development environment that lets you [**set breakpoints and test your functions locally**](live-lambda-development.md#debugging-with-visual-studio-code). You don't need to mock any resources or wait for the changes to redeploy.
+The [`sst start`](live-lambda-development.md) command starts a local development environment that lets you [**set breakpoints and test your functions locally**](live-lambda-development.md#debugging-with-vs-code). You don't need to mock any resources or wait for the changes to redeploy.
 
 ```bash
 npx sst start

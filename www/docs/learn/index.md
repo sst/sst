@@ -52,7 +52,7 @@ Here's roughly what we'll be covering in the next few chapters:
 
 ---
 
-## Watch this as a video
+### Watch this as a video
 
 If you'd like, you can follow this tutorial as a video. We did a livestream where we worked through all the steps and talked about it in detail.
 
