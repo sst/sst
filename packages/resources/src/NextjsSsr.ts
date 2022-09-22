@@ -483,6 +483,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
       stdio: "inherit",
       env: {
         ...process.env,
+        ...this.props.environment,
         [NEXTJS_BUILD_STANDALONE_ENV]: 'true',
         ...(this.props.nodeEnv ? { NODE_ENV: this.props.nodeEnv } : {}),
       },
@@ -643,7 +644,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
       "bash", // getting ENOENT when specifying 'node' here for some reason
       [
         '-xc',
-        [`cd '${directory}'`, `zip -ryq '${zipFilePath}' *`].join('&&')
+        [`cd '${directory}'`, `zip -ryq2 '${zipFilePath}' *`].join('&&')
       ],
       { stdio: "inherit", }
     );
@@ -717,6 +718,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
       external: ["sharp", "next"],
       format: "cjs",
       outfile: path.join(standaloneDirAbsolute, serverPath)
+      ,
     })
     if (esbuildResult.errors.length > 0) {
       esbuildResult.errors.forEach((error) => console.error(error));
