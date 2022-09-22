@@ -173,7 +173,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
     headerBehavior: cloudfront.CacheHeaderBehavior.none(),
     cookieBehavior: cloudfront.CacheCookieBehavior.none(),
     defaultTtl: Duration.days(30),
-    maxTtl: Duration.days(30),
+    maxTtl: Duration.days(60),
     minTtl: Duration.days(30),
     enableAcceptEncodingBrotli: true,
     enableAcceptEncodingGzip: true,
@@ -562,9 +562,10 @@ export class NextjsSsr extends Construct implements SSTConstruct {
     const deployments: BucketDeployment[] = [];
 
     // path to public folder; root static assets
-    let publicDir = this.getNextPublicDir()
     const staticDir = this.getNextStaticDir()
+    let publicDir = this.getNextPublicDir()
 
+    // static dir
     if (this.isPlaceholder) {
       publicDir = path.resolve(__dirname, "../assets/NextjsSite/site-stub")
     } else if (fs.existsSync(staticDir)) {
@@ -578,6 +579,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
       }))
     }
 
+    // public dir
     if (fs.existsSync(publicDir)) {
       // zip up assets
       const zipFilePath = this.createArchive(publicDir, 'public.zip')
@@ -745,20 +747,9 @@ export class NextjsSsr extends Construct implements SSTConstruct {
   private createCloudFrontDistribution(): cloudfront.Distribution {
     const { cdk, customDomain } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
+    this.validateCloudFrontDistributionSettings()
 
-    // Validate input
-    if (cfDistributionProps.certificate) {
-      throw new Error(
-        `Do not configure the "cfDistribution.certificate". Use the "customDomain" to configure the NextjsSsr domain certificate.`
-      );
-    }
-    if (cfDistributionProps.domainNames) {
-      throw new Error(
-        `Do not configure the "cfDistribution.domainNames". Use the "customDomain" to configure the NextjsSsr domain.`
-      );
-    }
-
-    // Build domainNames
+    // build domainNames
     const domainNames = [];
     if (!customDomain) {
       // no domain
@@ -769,11 +760,12 @@ export class NextjsSsr extends Construct implements SSTConstruct {
     }
 
     // S3 origin
-    const origin = new origins.S3Origin(this.cdk.bucket, { originAccessIdentity: this.originAccessIdentity });
+    const s3Origin = new origins.S3Origin(this.cdk.bucket, { originAccessIdentity: this.originAccessIdentity });
 
     const viewerProtocolPolicy =
       cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS;
 
+    // handle placeholder
     if (this.isPlaceholder) {
       return new cloudfront.Distribution(this, "Distribution", {
         defaultRootObject: "index.html",
@@ -781,47 +773,92 @@ export class NextjsSsr extends Construct implements SSTConstruct {
         domainNames,
         certificate: this.cdk.certificate,
         defaultBehavior: {
-          origin,
+          origin: s3Origin,
           viewerProtocolPolicy,
         },
       });
     }
 
-    // Build cache policies
     const staticCachePolicy =
       cdk?.cachePolicies?.staticCachePolicy ??
       this.createCloudFrontStaticCachePolicy();
     const imageCachePolicy =
       cdk?.cachePolicies?.imageCachePolicy ??
       this.createCloudFrontImageCachePolicy();
-
-    // Build origin request policy
     const imageOriginRequestPolicy =
       cdk?.imageOriginRequestPolicy ??
       this.createCloudFrontImageOriginRequestPolicy();
 
+    // main server function origin (lambda URL HTTP origin)
+    const fnUrl = this.cdk.serverFunction.addFunctionUrl({
+      authType: lambda.FunctionUrlAuthType.NONE,
+    });
+    const serverFunctionOrigin = new origins.HttpOrigin(Fn.parseDomainName(fnUrl.url))
+
+    // default handler for requests that don't match any other path:
+    //   - try S3 first
+    //   - if 404 not found, fall back to lambda handler
+    const fallbackOriginGroup = new origins.OriginGroup({
+      primaryOrigin: s3Origin,
+      fallbackOrigin: serverFunctionOrigin,
+      fallbackStatusCodes: [404],
+    })
+
+    // TODO: how to apply to fallbackOrigin?
+    const lambdaCachePolicy =
+      cdk?.cachePolicies?.lambdaCachePolicy ??
+      this.createCloudFrontLambdaCachePolicy();
+
+    // requests for static objects
     const staticBehavior: cloudfront.BehaviorOptions = {
       viewerProtocolPolicy,
-      origin,
+      origin: s3Origin,
       allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
       cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
       cachePolicy: staticCachePolicy,
     };
 
+    // requests going to lambda
+    const lambdaBehavior: cloudfront.BehaviorOptions = {
+      viewerProtocolPolicy,
+      origin: serverFunctionOrigin,
+      allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+      cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
+      compress: true,
+      cachePolicy: lambdaCachePolicy,
+    }
+
     return new cloudfront.Distribution(this, "Distribution", {
-      // these values can be overwritten by cfDistributionProps
       defaultRootObject: "",
 
       // Override props.
       ...cfDistributionProps,
+
       // these values can NOT be overwritten by cfDistributionProps
       domainNames,
       certificate: this.cdk.certificate,
-      defaultBehavior: this.buildDistributionDefaultBehavior(),
-      additionalBehaviors: {
-        ...this.buildDistributionStaticBehavior(staticBehavior),
+      defaultBehavior: {
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        origin: fallbackOriginGroup,  // try S3 first, then lambda
+        // allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+        // cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
+        compress: true,
+        cachePolicy: lambdaCachePolicy, // what goes here? static or lambda/
+      },
 
+      additionalBehaviors: {
+        // known dynamic routes
+        "api/*": lambdaBehavior,
+        '_next/data/*': lambdaBehavior,
+
+        // known static routes
+        // it would be nice to create routes for all the static files we know of
+        // but we run into the limit of CacheBehaviors per distribution
+        '_next/*': staticBehavior,
+
+        // TODO
+        "_next/image*": lambdaBehavior,
         // "_next/image*": {
         //   viewerProtocolPolicy,
         //   origin,
@@ -832,21 +869,18 @@ export class NextjsSsr extends Construct implements SSTConstruct {
         //   originRequestPolicy: imageOriginRequestPolicy,
         // },
 
-        // "api/*": {
-        //   viewerProtocolPolicy,
-        //   origin,
-        //   allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-        //   cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
-        //   compress: true,
-        //   cachePolicy: lambdaCachePolicy,
-        // },
-
         ...(cfDistributionProps.additionalBehaviors || {}),
       },
     });
   }
 
+  // delete me
   private buildDistributionStaticBehavior(staticBehavior: cloudfront.BehaviorOptions): Record<string, cloudfront.BehaviorOptions> {
+    // it would be nice to create routes for all the static files we know of
+    // but we run into the limit of CacheBehaviors per distribution
+    return { '_next/*': staticBehavior }
+
+    /*
     const validRoute = /^[a-zA-Z0-9_\-\.\*\$\/\~"'&@:\?\+]+$/ // valid characters for a route
     const files = this.getPublicFileList();
     const routes = files.map(file => {
@@ -865,30 +899,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
     staticRoutes['_next/*'] = staticBehavior
 
     return staticRoutes
-  }
-
-
-  private buildDistributionDefaultBehavior(): cloudfront.BehaviorOptions {
-    const { cdk } = this.props;
-    const cfDistributionProps = cdk?.distribution || {};
-
-    const fnUrl = this.cdk.serverFunction.addFunctionUrl({
-      authType: lambda.FunctionUrlAuthType.NONE,
-    });
-
-    const serverCachePolicy =
-      cdk?.cachePolicies?.lambdaCachePolicy ??
-      this.createCloudFrontLambdaCachePolicy();
-
-    return {
-      viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      origin: new origins.HttpOrigin(Fn.parseDomainName(fnUrl.url)),
-      allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-      cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
-      compress: true,
-      cachePolicy: serverCachePolicy,
-      ...(cfDistributionProps.defaultBehavior || {}),
-    };
+    */
   }
 
   private createCloudFrontStaticCachePolicy(): cloudfront.CachePolicy {
