@@ -525,9 +525,8 @@ Used to define a none data source
 ```js
 new AppSyncApi(stack, "AppSync", {
   dataSources: {
-    http: {
-      type: "http",
-      endpoint: "https://example.com"
+    none: {
+      type: "none",
     },
   },
 });

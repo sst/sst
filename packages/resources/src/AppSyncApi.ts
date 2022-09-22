@@ -31,7 +31,7 @@ import { Permissions } from "./util/permission.js";
 /////////////////////
 
 export interface AppSyncApiDomainProps
-  extends appSyncApiDomain.CustomDomainProps {}
+  extends appSyncApiDomain.CustomDomainProps { }
 
 interface AppSyncApiBaseDataSourceProps {
   /**
@@ -181,9 +181,8 @@ export interface AppSyncApiHttpDataSourceProps
  * ```js
  * new AppSyncApi(stack, "AppSync", {
  *   dataSources: {
- *     http: {
- *       type: "http",
- *       endpoint: "https://example.com"
+ *     none: {
+ *       type: "none",
  *     },
  *   },
  * });
@@ -505,12 +504,12 @@ export class AppSyncApi extends Construct implements SSTConstruct {
     scope: Construct,
     dataSources: {
       [key: string]:
-        | FunctionInlineDefinition
-        | AppSyncApiLambdaDataSourceProps
-        | AppSyncApiDynamoDbDataSourceProps
-        | AppSyncApiRdsDataSourceProps
-        | AppSyncApiHttpDataSourceProps
-        | AppSyncApiNoneDataSourceProps;
+      | FunctionInlineDefinition
+      | AppSyncApiLambdaDataSourceProps
+      | AppSyncApiDynamoDbDataSourceProps
+      | AppSyncApiRdsDataSourceProps
+      | AppSyncApiHttpDataSourceProps
+      | AppSyncApiNoneDataSourceProps;
     }
   ): void {
     Object.keys(dataSources).forEach((key: string) => {
