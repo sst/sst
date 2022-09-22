@@ -514,7 +514,6 @@ export class NextjsSsr extends Construct implements SSTConstruct {
     //     `zip -qr ${zipFile} ${LAMBDA_FOLDER}`
     //   ].join(' && '),
     // ];
-    // console.log(createBundleCmdArgs)
 
     // const buildResult = spawn.sync('bash', createBundleCmdArgs, {
     //   cwd: buildDir,
@@ -574,19 +573,22 @@ export class NextjsSsr extends Construct implements SSTConstruct {
         destinationBucket: this.cdk.bucket,
         destinationKeyPrefix: '_next/static',
         sources: [Source.asset(staticDir)],
-        distribution: this.cdk.distribution,
-        prune: false,
+        distribution: this.cdk.distribution, // invalidate Cloudfront distribution caches
+        prune: false, // do not delete stale files
       }))
     }
 
     if (fs.existsSync(publicDir)) {
-      // public folder
+      // zip up assets
+      const zipFilePath = this.createArchive(publicDir, 'public.zip')
+
+      // upload public files to root of S3 bucket
       deployments.push(new BucketDeployment(this, 'PublicFilesDeployment', {
         destinationBucket: this.cdk.bucket,
         destinationKeyPrefix: '/',
-        sources: [Source.asset(publicDir)],
-        distribution: this.cdk.distribution /** Invalidate Cloudfront distribution caches */,
-        prune: false /** Do not delete stale files */,
+        sources: [Source.asset(zipFilePath)],
+        distribution: this.cdk.distribution,
+        prune: false
       })
       )
     }
@@ -610,6 +612,37 @@ export class NextjsSsr extends Construct implements SSTConstruct {
         ...bucketProps,
       });
     }
+  }
+
+  // zip up a directory and return path to zip file
+  private createArchive(directory: string, zipFileName: string): string {
+    // get output path
+    const zipOutDir = path.resolve(
+      path.join(this.sstBuildDir, `NextjsSsr-standalone-${this.node.id}-${this.node.addr}`)
+    );
+    fs.removeSync(zipOutDir);
+    fs.mkdirpSync(zipOutDir);
+    const zipFilePath = path.join(zipOutDir, zipFileName);
+
+
+    // run script to create zipfile, preserving symlinks for node_modules (e.g. pnpm structure)
+    const result = spawn.sync(
+      "bash", // getting ENOENT when specifying 'node' here for some reason
+      [
+        '-xc',
+        [`cd '${directory}'`, `zip -ryq '${zipFilePath}' *`].join('&&')
+      ],
+      { stdio: "inherit", }
+    );
+    if (result.status !== 0) {
+      throw new Error(`There was a problem generating the package for ${zipFileName} with ${directory}: ${result.error}`);
+    }
+    // check output
+    if (!fs.existsSync(zipFilePath)) {
+      throw new Error(`There was a problem generating the archive for ${directory}; the archive is missing in ${zipFilePath}.`)
+    }
+
+    return zipFilePath
   }
 
   /////////////////////
@@ -665,8 +698,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
       sourcemap: true,
       target: "node16",
       platform: "node",
-      external: ["sharp"],
-      // external: ["sharp", "next"],
+      external: ["sharp", "next"],
       format: "cjs",
       outfile: path.join(standaloneDirAbsolute, serverPath)
     })
@@ -686,32 +718,8 @@ export class NextjsSsr extends Construct implements SSTConstruct {
     // build our handler
     this.bundleServerHandler(this.props.path, standaloneDirAbsolute)
 
-    // get output path
-    const zipOutDir = path.resolve(
-      path.join(this.sstBuildDir, `NextjsSsr-standalone-${this.node.id}-${this.node.addr}`)
-    );
-    fs.removeSync(zipOutDir);
-    fs.mkdirpSync(zipOutDir);
-    const zipFilePath = path.join(zipOutDir, "standalone.zip");
-
-
-    // run script to create zipfile, preserving symlinks for node_modules (e.g. pnpm structure)
-    const result = spawn.sync(
-      "bash", // getting ENOENT when specifying 'node' here for some reason
-      [
-        '-xc',
-        [`cd '${standaloneDirAbsolute}'`, `zip -ryq '${zipFilePath}' *`].join('&&')
-      ],
-      { stdio: "inherit", }
-    );
-    if (result.status !== 0) {
-      throw new Error(`There was a problem generating the lambda package: ${result.error}`);
-    }
-    // check output
-    if (!fs.existsSync(zipFilePath)) {
-      throw new Error(`There was a problem generating the lambda package; archive missing in ${zipFilePath}.`)
-    }
-
+    // zip up the directory
+    const zipFilePath = this.createArchive(standaloneDirAbsolute, 'standalone.zip')
     return lambda.Code.fromAsset(zipFilePath)
   }
 
@@ -763,7 +771,6 @@ export class NextjsSsr extends Construct implements SSTConstruct {
     // S3 origin
     const origin = new origins.S3Origin(this.cdk.bucket, { originAccessIdentity: this.originAccessIdentity });
 
-    // Build behavior
     const viewerProtocolPolicy =
       cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS;
 
@@ -793,15 +800,15 @@ export class NextjsSsr extends Construct implements SSTConstruct {
       cdk?.imageOriginRequestPolicy ??
       this.createCloudFrontImageOriginRequestPolicy();
 
-    const staticBehavior = {
+    const staticBehavior: cloudfront.BehaviorOptions = {
       viewerProtocolPolicy,
       origin,
       allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
       cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
       cachePolicy: staticCachePolicy,
-
     };
+
     return new cloudfront.Distribution(this, "Distribution", {
       // these values can be overwritten by cfDistributionProps
       defaultRootObject: "",
@@ -813,6 +820,8 @@ export class NextjsSsr extends Construct implements SSTConstruct {
       certificate: this.cdk.certificate,
       defaultBehavior: this.buildDistributionDefaultBehavior(),
       additionalBehaviors: {
+        ...this.buildDistributionStaticBehavior(staticBehavior),
+
         // "_next/image*": {
         //   viewerProtocolPolicy,
         //   origin,
@@ -823,8 +832,6 @@ export class NextjsSsr extends Construct implements SSTConstruct {
         //   originRequestPolicy: imageOriginRequestPolicy,
         // },
 
-        "public/*": staticBehavior,
-        "_next/*": staticBehavior,
         // "api/*": {
         //   viewerProtocolPolicy,
         //   origin,
@@ -833,12 +840,33 @@ export class NextjsSsr extends Construct implements SSTConstruct {
         //   compress: true,
         //   cachePolicy: lambdaCachePolicy,
         // },
-        ...(cfDistributionProps.additionalBehaviors || {}),
 
-        // add public paths
+        ...(cfDistributionProps.additionalBehaviors || {}),
       },
     });
   }
+
+  private buildDistributionStaticBehavior(staticBehavior: cloudfront.BehaviorOptions): Record<string, cloudfront.BehaviorOptions> {
+    const validRoute = /^[a-zA-Z0-9_\-\.\*\$\/\~"'&@:\?\+]+$/ // valid characters for a route
+    const files = this.getPublicFileList();
+    const routes = files.map(file => {
+      if (file.endsWith('/.DS_Store')) return
+      if (!validRoute.test(file)) {
+        console.warn(`Not creating CloudFront behavior for static path due to weird filename: ${file}`)
+        return
+      }
+      return file
+    }).filter(Boolean) as string[]
+
+    // map /foo.jpg -> S3 static origin behavior
+    const staticRoutes = Object.fromEntries(routes.map(route => [route, staticBehavior]))
+
+    // _next/* too
+    staticRoutes['_next/*'] = staticBehavior
+
+    return staticRoutes
+  }
+
 
   private buildDistributionDefaultBehavior(): cloudfront.BehaviorOptions {
     const { cdk } = this.props;
@@ -1150,24 +1178,32 @@ export class NextjsSsr extends Construct implements SSTConstruct {
   }
 
   getPublicFileList() {
-    const publicDir = this.getNextStaticDir()
+    const publicDir = this.getNextPublicDir()
     return this.listDirectory(publicDir).map((file) => path.join('/', path.relative(publicDir, file)))
   }
 
 
+  // get the path to the directory containing the nextjs project
+  // it may be the project root or a subdirectory in a monorepo setup
   private getNextDir() {
     const app = App.of(this) as App
     const { path: nextjsPath } = this.props;  // path to nextjs dir inside project
-    const absolutePath = path.join(app.appPath, nextjsPath, NEXTJS_BUILD_DIR) // e.g. /home/me/myapp/web/.next
+    const absolutePath = path.join(app.appPath, nextjsPath) // e.g. /home/me/myapp/web
     if (!fs.existsSync(absolutePath)) {
       throw new Error(`Could not find ${absolutePath} directory.`);
     }
     return absolutePath;
   }
 
+  // .next
+  private getNextBuildDir() {
+    return path.join(this.getNextDir(), NEXTJS_BUILD_DIR)
+  }
+
+
   // output of nextjs standalone build
   private getNextStandaloneDir() {
-    const nextDir = this.getNextDir()
+    const nextDir = this.getNextBuildDir()
     const standaloneDir = path.join(nextDir, NEXTJS_BUILD_STANDALONE_DIR)
 
     if (!fs.existsSync(standaloneDir)) {
@@ -1184,7 +1220,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
 
   // contains static files
   private getNextStaticDir() {
-    return path.join(this.getNextDir(), NEXTJS_STATIC_DIR);
+    return path.join(this.getNextBuildDir(), NEXTJS_STATIC_DIR);
   }
   private getNextPublicDir() {
     return path.join(this.getNextDir(), NEXTJS_PUBLIC_DIR);
