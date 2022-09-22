@@ -598,7 +598,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
       // upload public files to root of S3 bucket
       deployments.push(new BucketDeployment(this, 'PublicFilesDeployment', {
         destinationBucket: this.cdk.bucket,
-        destinationKeyPrefix: '/',
+        destinationKeyPrefix: this.isPlaceholder ? '/placeholder' : '/',
         sources: [Source.asset(zipFilePath)],
         distribution: this.cdk.distribution,
         prune: false
@@ -774,7 +774,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
     }
 
     // S3 origin
-    const s3Origin = new origins.S3Origin(this.cdk.bucket, { originAccessIdentity: this.originAccessIdentity });
+    const s3Origin = new origins.S3Origin(this.cdk.bucket, { originAccessIdentity: this.originAccessIdentity, });
 
     const viewerProtocolPolicy =
       cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS;
@@ -782,8 +782,8 @@ export class NextjsSsr extends Construct implements SSTConstruct {
     // handle placeholder
     if (this.isPlaceholder) {
       return new cloudfront.Distribution(this, "Distribution", {
-        defaultRootObject: "index.html",
-        errorResponses: buildErrorResponsesForRedirectToIndex("index.html"),
+        defaultRootObject: "placeholder/index.html",
+        errorResponses: buildErrorResponsesForRedirectToIndex("placeholder/index.html"),
         domainNames,
         certificate: this.cdk.certificate,
         defaultBehavior: {
@@ -844,8 +844,13 @@ export class NextjsSsr extends Construct implements SSTConstruct {
       cachePolicy: lambdaCachePolicy,
     }
 
+    // if we don't have a static file called index.html then we should
+    // redirect to the lambda handler
+    const hasIndexHtml = this.getPublicFileList().includes("index.html");
+
     return new cloudfront.Distribution(this, "Distribution", {
-      defaultRootObject: "index.html",
+      // defaultRootObject: "index.html",
+      defaultRootObject: "",
 
       // Override props.
       ...cfDistributionProps,
@@ -863,6 +868,9 @@ export class NextjsSsr extends Construct implements SSTConstruct {
       },
 
       additionalBehaviors: {
+        // is index.html static or dynamic?
+        ...(hasIndexHtml ? {} : { "/": lambdaBehavior }),
+
         // known dynamic routes
         "api/*": lambdaBehavior,
         '_next/data/*': lambdaBehavior,
