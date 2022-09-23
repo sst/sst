@@ -199,7 +199,7 @@ const bucket = new Bucket(stack, "Bucket", {
   }
 });
 
-bucket.attachPermissions("myNotification", ["s3"]);
+bucket.attachPermissionsToNotification("myNotification", ["s3"]);
 ```
 
 ## BucketFilter
