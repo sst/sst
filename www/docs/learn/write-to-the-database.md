@@ -225,7 +225,7 @@ There are a couple of interesting details here, let's dig in:
 
    ```ts title="stacks/Database.ts" {4}
    const rds = new RDS(stack, "rds", {
-     engine: "postgresql10.14",
+     engine: "postgresql11.13",
      migrations: "services/migrations",
      types: "services/core/sql.generated.ts",
      defaultDatabaseName: "main",

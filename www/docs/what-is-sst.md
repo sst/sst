@@ -38,7 +38,7 @@ To power your applications, SST lets you create serverless databases. Here the [
 
 ```ts
 new RDS(this, "rds", {
-  engine: "postgresql10.14",
+  engine: "postgresql11.13",
   defaultDatabaseName: "main",
   migrations: "services/migrations",
 });

@@ -237,7 +237,7 @@ The internally created CDK `ServerlessCluster` instance.
 
 _Type_ : `string`
 
-Supported engine are `mysql5.6`, `mysql5.7`, and `postgresql10.14`.
+Supported engine are `mysql5.6`, `mysql5.7`, and `postgresql10.14` and `postgresql11.13`.
 
 ### defaultDatabaseName
 

@@ -5,7 +5,7 @@ export function MyStack({ stack }: StackContext) {
 
   // Create the Aurora DB cluster
   const cluster = new RDS(stack, "Cluster", {
-    engine: "postgresql10.14",
+    engine: "postgresql11.13",
     defaultDatabaseName: DATABASE,
     migrations: "services/migrations",
   });

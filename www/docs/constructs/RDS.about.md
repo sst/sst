@@ -11,7 +11,7 @@ The `RDS` construct uses [Kysely](https://koskimas.github.io/kysely/) to run and
 
 ```js
 new RDS(stack, "Database", {
-  engine: "postgresql10.14",
+  engine: "postgresql11.13",
   defaultDatabaseName: "acme",
   migrations: "path/to/migration/scripts",
 });
@@ -102,7 +102,7 @@ const devConfig = {
 };
 
 new RDS(stack, "Database", {
-  engine: "postgresql10.14",
+  engine: "postgresql11.13",
   defaultDatabaseName: "acme",
   scaling: app.stage === "prod" ? prodConfig : devConfig,
 });
@@ -118,7 +118,7 @@ new RDS(stack, "Database", {
 import { RDS } from "@serverless-stack/resources";
 
 new RDS(stack, "Database", {
-  engine: "postgresql10.14",
+  engine: "postgresql11.13",
   defaultDatabaseName: "my_database",
 });
 ```
@@ -131,7 +131,7 @@ You can configure the internally created CDK `ServerlessCluster` instance.
 import * as cdk from "aws-cdk-lib";
 
 new RDS(stack, "Database", {
-  engine: "postgresql10.14",
+  engine: "postgresql11.13",
   defaultDatabaseName: "acme",
   cdk: {
     cluster: {
@@ -150,7 +150,7 @@ import * as rds from "aws-cdk-lib/aws-rds";
 import * as secretsManager from "aws-cdk-lib/aws-secretsmanager";
 
 new RDS(stack, "Database", {
-  engine: "postgresql10.14",
+  engine: "postgresql11.13",
   defaultDatabaseName: "acme",
   cdk: {
     cluster: rds.ServerlessCluster.fromServerlessClusterAttributes(stack, "ICluster", {
@@ -179,7 +179,7 @@ Yo can override the internally created `VPC` instance.
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 
 new RDS(stack, "Database", {
-  engine: "postgresql10.14",
+  engine: "postgresql11.13",
   defaultDatabaseName: "acme",
   cdk: {
     cluster: {  
