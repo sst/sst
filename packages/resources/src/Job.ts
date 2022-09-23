@@ -15,6 +15,7 @@ import { SSTConstruct } from "./Construct.js";
 import { Function, FunctionBundleNodejsProps } from "./Function.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
+import { isPropertySignature } from "typescript";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -184,6 +185,9 @@ export class Job extends Construct implements SSTConstruct {
     this._jobParameter = this.createConfigParameter();
     this.attachPermissions(props.permissions || []);
     this.addConfig(props.config || []);
+    Object.entries(props.environment || {}).forEach(([key, value]) => {
+      this.addEnvironment(key, value);
+    });
   }
 
   public getConstructMetadata() {
@@ -252,6 +256,11 @@ export class Job extends Construct implements SSTConstruct {
         }
       }`
     );
+  }
+
+  /** @internal */
+  public static clear() {
+    Job.all.clear();
   }
 
   private createCodeBuildProject(): codebuild.Project {
@@ -472,7 +481,7 @@ export class Job extends Construct implements SSTConstruct {
 
   private normalizeTimeout(timeout: Duration): cdk.Duration {
     const value = toCdkDuration(timeout);
-    if (value.toMinutes() < 5 || value.toMinutes() > 480) {
+    if (value.toSeconds() < 5 * 60 || value.toSeconds() > 480 * 60) {
       throw new Error(
         `Invalid timeout value for the ${this.node.id} Job.`
       );
