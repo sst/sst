@@ -787,6 +787,8 @@ export class NextjsSsr extends Construct implements SSTConstruct {
     }
   }
 
+  // this can hold our resolved environment vars for the server
+  // won't work until this is fixed: https://github.com/aws/aws-cdk/issues/19257
   private createConfigBucket() {
     const bucket = new s3.Bucket(this, "ConfigBucket", { removalPolicy: RemovalPolicy.DESTROY, });
     // upload environment config to s3
