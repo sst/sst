@@ -1,5 +1,16 @@
 # @serverless-stack/resources
 
+## 1.15.1
+
+### Patch Changes
+
+- [`d25d5887d`](https://github.com/serverless-stack/sst/commit/d25d5887d241d03405784b224678e3f5395d53a7) Thanks [@thdxr](https://github.com/thdxr)! - Support postgres11.13
+
+  If you have an existing postgres10.14 cluster, you should be able to upgrade simplying by updating your stacks code to `engine: postgres11.13`
+
+- Updated dependencies [[`bf7a8a07f`](https://github.com/serverless-stack/sst/commit/bf7a8a07f458b6729f473e911e0be3caac235ea5)]:
+  - @serverless-stack/core@1.15.1
+
 ## 1.15.0
 
 ### Minor Changes
