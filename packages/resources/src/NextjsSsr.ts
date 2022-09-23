@@ -271,7 +271,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
   private sstBuildDir: string;
   private awsCliLayer: AwsCliLayer;
   public originAccessIdentity: cloudfront.IOriginAccessIdentity
-  configBucket: s3.Bucket;
+  configBucket?: s3.Bucket;
 
   constructor(scope: Construct, id: string, props: NextjsSsrProps) {
     super(scope, id);
@@ -788,15 +788,16 @@ export class NextjsSsr extends Construct implements SSTConstruct {
   }
 
   // this can hold our resolved environment vars for the server
-  // won't work until this is fixed: https://github.com/aws/aws-cdk/issues/19257
   private createConfigBucket() {
-    const bucket = new s3.Bucket(this, "ConfigBucket", { removalPolicy: RemovalPolicy.DESTROY, });
+    // won't work until this is fixed: https://github.com/aws/aws-cdk/issues/19257
+    return undefined
+    // const bucket = new s3.Bucket(this, "ConfigBucket", { removalPolicy: RemovalPolicy.DESTROY, });
     // upload environment config to s3
     // new BucketDeployment(this, 'EnvJsonDeployment', {
     //   sources: [Source.jsonData(CONFIG_ENV_JSON_PATH, this.props.environment)],
     //   destinationBucket: bucket,
     // })
-    return bucket
+    // return bucket
   }
 
   // zip up a directory and return path to zip file
@@ -857,10 +858,12 @@ export class NextjsSsr extends Construct implements SSTConstruct {
       layers: [nextLayer],
       code,
       environment: {
-        NEXTJS_SITE_CONFIG_BUCKET_NAME: this.configBucket.bucketName,
-        NEXTJS_SITE_CONFIG_ENV_JSON_PATH: CONFIG_ENV_JSON_PATH,
         ...environment,
         ...(this.props.nodeEnv ? { NODE_ENV: this.props.nodeEnv } : {}),
+        ...(this.configBucket ? {
+          NEXTJS_SITE_CONFIG_BUCKET_NAME: this.configBucket.bucketName,
+          NEXTJS_SITE_CONFIG_ENV_JSON_PATH: CONFIG_ENV_JSON_PATH,
+        } : {}),
       },
     });
     this.cdk.serverFunction = fn;
