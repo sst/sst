@@ -129,7 +129,7 @@ Here for example, we are defining a [Vite](https://vitejs.dev) static site using
 ```ts
 new ViteStaticSite(this, "site", {
   path: "web",
-  buildCommand: "npm run build",
+  customDomain: "my-sst-app.com",
   environment: {
     VITE_API_URL: api.url,
   },
