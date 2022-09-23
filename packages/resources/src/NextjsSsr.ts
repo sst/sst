@@ -870,7 +870,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
 
     // attach permissions
     this.cdk.bucket.grantReadWrite(fn.role!);
-    this.configBucket.grantRead(fn.role!);
+    this.configBucket?.grantRead(fn.role!);
     if (defaults?.function?.permissions) {
       attachPermissionsToRole(fn.role as iam.Role, defaults.function.permissions);
     }
