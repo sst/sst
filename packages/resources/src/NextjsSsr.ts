@@ -1421,7 +1421,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
     return Object.fromEntries(
       Object.entries(this.props.environment || {})
         .filter(([key]) => key.startsWith('NEXT_PUBLIC_'))
-        .map(([key, value]) => [`{{ ${key} }}`, `process.env.${key}`])
+        .map(([key, value]) => [`"{{ ${key} }}"`, `process.env.${key}`])
     )
   }
 
