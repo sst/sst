@@ -21,6 +21,7 @@ import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Patterns from "aws-cdk-lib/aws-route53-patterns";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import * as s3 from "aws-cdk-lib/aws-s3";
+import * as cr from "aws-cdk-lib/custom-resources";
 import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
 import { Construct } from "constructs";
 const logger = getChildLogger("NextjsSsr");
@@ -46,6 +47,9 @@ const NEXTJS_STATIC_DIR = 'static'
 const NEXTJS_PUBLIC_DIR = 'public'
 const NEXTJS_BUILD_STANDALONE_DIR = 'standalone';
 const NEXTJS_BUILD_STANDALONE_ENV = 'NEXT_PRIVATE_STANDALONE'
+
+// contains server-side resolved environment vars in config bucket
+const CONFIG_ENV_JSON_PATH = 'next-env.json'
 
 export interface NextjsSsrDomainProps extends BaseSiteDomainProps { }
 export interface NextjsSsrCdkDistributionProps
@@ -267,6 +271,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
   private sstBuildDir: string;
   private awsCliLayer: AwsCliLayer;
   public originAccessIdentity: cloudfront.IOriginAccessIdentity
+  configBucket: s3.Bucket;
 
   constructor(scope: Construct, id: string, props: NextjsSsrProps) {
     super(scope, id);
@@ -280,6 +285,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
       this.cdk = {} as any;
       this.awsCliLayer = new AwsCliLayer(this, "AwsCliLayer");
       this.registerSiteEnvironment();
+      this.configBucket = this.createConfigBucket();
 
       // Prepare app
       if (this.isPlaceholder) {
@@ -292,7 +298,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
       })
 
       // Create Bucket which will be utilised to contain the statics
-      this.cdk.bucket = this.createS3Bucket();
+      this.cdk.bucket = this.createAssetBucket();
       this.cdk.bucket.addToResourcePolicy(new iam.PolicyStatement({
         // only allow getting of files - not listing
         actions: ['s3:GetObject'],
@@ -301,7 +307,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
       }))
 
       // Create Server function
-      this.cdk.serverFunction = this.createServerFunction();;
+      this.cdk.serverFunction = this.createServerFunction();
 
       // Create Custom Domain
       this.validateCustomDomainSettings();
@@ -484,12 +490,10 @@ export class NextjsSsr extends Construct implements SSTConstruct {
     logger.debug(`Running "npm build" script`);
     const buildEnv = {
       ...process.env,
-      ...this.props.environment,
       [NEXTJS_BUILD_STANDALONE_ENV]: 'true',
       ...(this.props.nodeEnv ? { NODE_ENV: this.props.nodeEnv } : {}),
-      // ...getBuildCmdEnvironment(this.props.environment)
+      ...getBuildCmdEnvironment(this.props.environment)
     }
-    console.log(buildEnv)
     const buildResult = spawn.sync("npm", ["run", "build"], {
       cwd: sitePath,
       stdio: "inherit",
@@ -584,9 +588,6 @@ export class NextjsSsr extends Construct implements SSTConstruct {
     const staticDir = this.getNextStaticDir()
     let publicDir = this.isPlaceholder ? path.resolve(__dirname, "../assets/NextjsSite/site-stub") : this.getNextPublicDir()
 
-    // do rewrites of unresolved CDK tokens in static files
-    this.rewriteStaticFileTokens(staticDir, publicDir);
-
     // static dir
     if (!this.isPlaceholder && fs.existsSync(staticDir)) {
       // upload static assets
@@ -615,37 +616,159 @@ export class NextjsSsr extends Construct implements SSTConstruct {
       )
     }
 
+
+
+    // do rewrites of unresolved CDK tokens in static files
+    const rewriter = this.createRewriteResource()
+    rewriter?.node.addDependency(...deployments)
+
     return deployments;
   }
 
-  // search/replace CDK tokens in static files
-  private rewriteStaticFileTokens(staticDir: string, publicDir: string) {
-    const searchDirs = [staticDir, publicDir];
-    // search and replace env var placeholders
-    const replaceValues = this.getS3ContentReplaceValues();
-    const globs = [...new Set(replaceValues.flatMap((replaceValue) => replaceValue.files))];
-    // traverse static dirs
-    searchDirs.forEach(searchDir => {
-      if (!fs.existsSync(searchDir))
-        return;
-      this.listDirectory(searchDir).forEach(file => {
-        // is this file a glob match?
-        if (!micromatch.isMatch(file, globs, { dot: true }))
-          return;
+  private createRewriteResource() {
+    const s3keys = this.getStaticFilesForRewrite()
+    if (s3keys.length === 0) return
 
-        // matches file search pattern
-        // do replacements
-        let fileContent = fs.readFileSync(file, 'utf8');
-        replaceValues.forEach(replaceConfig => {
-          console.log(`Replacing ${replaceConfig.search} with ${replaceConfig.replace} in ${file}`);
-          fileContent = fileContent.replace(replaceConfig.search, replaceConfig.replace);
-        });
-        fs.writeFileSync(file, fileContent);
-      });
+    // create a custom resource to find and replace tokenized strings in static files
+    // must happen after deployment when tokens can be resolved
+    const rewriteFn = new lambda.Function(this, 'OnEventHandler', {
+      runtime: lambda.Runtime.NODEJS_16_X,
+      memorySize: 1024,
+      handler: 'index.handler',
+      code: lambda.Code.fromInline(`
+      const AWS = require('aws-sdk');
+
+      // search and replace tokenized values of designated objects in s3
+      exports.handler = async (event) => {
+        const requestType = event.RequestType;
+        if (requestType === 'Create' || requestType === 'Update') {
+          // rewrite static files
+          const s3 = new AWS.S3();
+          const {s3keys, bucket, replacements} = event.ResourceProperties;
+          if (!s3keys || !bucket || !replacements) {
+            console.error("Missing required properties")
+            return
+          }
+          const promises = s3keys.map(async (key) => {
+            const params = {Bucket: bucket, Key: key};
+            const data = await s3.getObject(params).promise();
+            let body = data.Body.toString('utf-8');
+
+            // do replacements of tokens
+            replacements.forEach((replacement) => {
+              body = body.replace(replacement.search, replacement.replace);
+            });
+            const putParams = {
+              ...params,
+              Body: body,
+              ContentType: data.ContentType,
+              ContentEncoding: data.ContentEncoding,
+              CacheControl: data.CacheControl,
+            }
+            await s3.putObject(putParams).promise();
+          });
+          await Promise.all(promises);
+        }
+
+        return event;
+      };
+      `),
+      initialPolicy: [
+        new iam.PolicyStatement({ actions: ['s3:GetObject', 's3:PutObject'], resources: [this.cdk.bucket.arnForObjects('*')] }),
+      ],
+    });
+
+    // custom resource to run the rewriter after files are copied and we can resolve token values
+    const provider = new cr.Provider(this, 'RewriteStaticProvider', {
+      onEventHandler: rewriteFn,
+    });
+    return new CustomResource(this, 'RewriteStatic', {
+      serviceToken: provider.serviceToken, properties: {
+        bucket: this.cdk.bucket.bucketName,
+        s3keys,
+        replacements: this.getS3ContentReplaceValues()
+      }
     });
   }
 
-  private createS3Bucket(): s3.Bucket {
+  private getStaticFilesForRewrite() {
+    const s3keys: string[] = [];
+    const replaceValues = this.getS3ContentReplaceValues();
+    if (!replaceValues) return s3keys;
+
+    // where to find static files
+    const globs = [...new Set(replaceValues.flatMap((replaceValue) => replaceValue.files))];
+    const searchDirs = [{ dir: this.getNextStaticDir(), prefix: '_next/static' }, { dir: this.getNextPublicDir(), prefix: '' }];
+
+    // traverse static dirs
+    searchDirs.forEach(({ dir, prefix }) => {
+      if (!fs.existsSync(dir))
+        return;
+      this.listDirectory(dir).forEach(file => {
+        const relativePath = path.relative(dir, file);
+
+        // is this file a glob match?
+        if (!micromatch.isMatch(relativePath, globs, { dot: true }))
+          return;
+        s3keys.push(`${prefix}/${relativePath}`);
+      })
+    })
+    return s3keys;
+  }
+
+  private createLambdaCodeReplacer(
+    name: string,
+    asset: s3Assets.Asset
+  ): CustomResource {
+    // Note: Source code for the Lambda functions have "{{ ENV_KEY }}" in them.
+    //       They need to be replaced with real values before the Lambda
+    //       functions get deployed.
+
+    const providerId = "LambdaCodeReplacerProvider";
+    const resId = `${name}LambdaCodeReplacer`;
+    const stack = Stack.of(this);
+    let provider = stack.node.tryFindChild(providerId) as lambda.Function;
+
+    // Create provider if not already created
+    if (!provider) {
+      provider = new lambda.Function(stack, providerId, {
+        code: lambda.Code.fromAsset(
+          path.join(__dirname, "../assets/NextjsSite/custom-resource")
+        ),
+        layers: [this.awsCliLayer],
+        runtime: lambda.Runtime.PYTHON_3_7,
+        handler: "lambda-code-updater.handler",
+        timeout: Duration.minutes(15),
+        memorySize: 1024,
+      });
+    }
+
+    // Allow provider to perform search/replace on the asset
+    provider.role?.addToPrincipalPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ["s3:*"],
+        resources: [`arn:aws:s3:::${asset.s3BucketName}/${asset.s3ObjectKey}`],
+      })
+    );
+
+    // Create custom resource
+    const resource = new CustomResource(this, resId, {
+      serviceToken: provider.functionArn,
+      resourceType: "Custom::SSTLambdaCodeUpdater",
+      properties: {
+        Source: {
+          BucketName: asset.s3BucketName,
+          ObjectKey: asset.s3ObjectKey,
+        },
+        ReplaceValues: this.getLambdaContentReplaceValues(),
+      },
+    });
+
+    return resource;
+  }
+
+  private createAssetBucket(): s3.Bucket {
     const { cdk } = this.props;
 
     // cdk.bucket is an imported construct
@@ -662,6 +785,16 @@ export class NextjsSsr extends Construct implements SSTConstruct {
         ...bucketProps,
       });
     }
+  }
+
+  private createConfigBucket() {
+    const bucket = new s3.Bucket(this, "ConfigBucket", { removalPolicy: RemovalPolicy.DESTROY, });
+    // upload environment config to s3
+    // new BucketDeployment(this, 'EnvJsonDeployment', {
+    //   sources: [Source.jsonData(CONFIG_ENV_JSON_PATH, this.props.environment)],
+    //   destinationBucket: bucket,
+    // })
+    return bucket
   }
 
   // zip up a directory and return path to zip file
@@ -707,10 +840,13 @@ export class NextjsSsr extends Construct implements SSTConstruct {
     const nextLayer = this.buildLayer()
 
     // build and bundle the handler
-    const code = this.createServerCode()
+    const assetPath = this.createServerAsset()
+    const s3asset = new s3Assets.Asset(this, `MainFnAsset`, { path: assetPath, });
+    const code = (this.isPlaceholder) ?
+      lambda.Code.fromInline("module.exports.handler = async () => { return { statusCode: 200, body: 'SST placeholder site' } }")
+      : lambda.Code.fromBucket(s3asset.bucket, s3asset.s3ObjectKey);
 
     // build the lambda function
-
     const fn = new lambda.Function(this, 'MainFn', {
       memorySize: defaults?.function?.memorySize || 1024,
       timeout: defaults?.function?.timeout ? Duration.seconds(defaults.function.timeout) : Duration.seconds(10),
@@ -719,6 +855,8 @@ export class NextjsSsr extends Construct implements SSTConstruct {
       layers: [nextLayer],
       code,
       environment: {
+        NEXTJS_SITE_CONFIG_BUCKET_NAME: this.configBucket.bucketName,
+        NEXTJS_SITE_CONFIG_ENV_JSON_PATH: CONFIG_ENV_JSON_PATH,
         ...environment,
         ...(this.props.nodeEnv ? { NODE_ENV: this.props.nodeEnv } : {}),
       },
@@ -727,8 +865,15 @@ export class NextjsSsr extends Construct implements SSTConstruct {
 
     // attach permissions
     this.cdk.bucket.grantReadWrite(fn.role!);
+    this.configBucket.grantRead(fn.role!);
     if (defaults?.function?.permissions) {
       attachPermissionsToRole(fn.role as iam.Role, defaults.function.permissions);
+    }
+
+    // resolve lambda env vars after deployment
+    if (!this.isPlaceholder && assetPath) {
+      // const updaterCR = this.createLambdaCodeReplacer('MainFn', s3asset);
+      // fn.node.addDependency(updaterCR);
     }
 
     return fn;
@@ -739,6 +884,9 @@ export class NextjsSsr extends Construct implements SSTConstruct {
     const defaultServerPath = path.join(standaloneDirAbsolute, nextjsPath, 'server.js')
     if (fs.existsSync(defaultServerPath))
       fs.unlinkSync(defaultServerPath)
+
+    // rewrite env var placeholders
+    this.rewriteEnvVars()
 
     // build our server handler
     const serverHandler = path.resolve(__dirname, "../assets/NextjsSite/server-lambda/server.ts");
@@ -761,11 +909,36 @@ export class NextjsSsr extends Construct implements SSTConstruct {
     }
   }
 
-  private createServerCode(): lambda.Code {
-    if (this.isPlaceholder) {
-      return lambda.Code.fromInline("module.exports.handler = async () => { return { statusCode: 200, body: 'SST placeholder site' } }")
-    }
+  rewriteEnvVars() {
+    // undo inlining of NEXT_PUBLIC_ env vars for server code
+    // https://github.com/vercel/next.js/issues/40827
+    const replaceValues = this.getServerContentReplaceValues();
+    const globs = this.replaceTokenGlobs
 
+    // traverse server dirs
+    const searchDir = this.getNextStandaloneBuildDir()
+    if (!fs.existsSync(searchDir)) return
+
+    this.listDirectory(searchDir).forEach(file => {
+      const relativePath = path.relative(searchDir, file);
+      if (!micromatch.isMatch(relativePath, globs, { dot: true }))
+        return
+
+      // matches file search pattern
+      // do replacements
+      let fileContent = fs.readFileSync(file, 'utf8');
+      Object.entries(replaceValues).forEach(([key, value]) => {
+        console.log(`Replacing ${key} with ${value} in ${file}`);
+        fileContent = fileContent.replace(key, value);
+      });
+      fs.writeFileSync(file, fileContent);
+    })
+  }
+
+
+  // create the lambda code and zip it
+  // returns path to zip file
+  private createServerAsset(): string {
     const standaloneDirAbsolute = this.getNextStandaloneDir()
 
     // build our handler
@@ -773,7 +946,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
 
     // zip up the directory
     const zipFilePath = this.createArchive(standaloneDirAbsolute, 'standalone.zip')
-    return lambda.Code.fromAsset(zipFilePath)
+    return zipFilePath
   }
 
   /////////////////////
@@ -1227,6 +1400,8 @@ export class NextjsSsr extends Construct implements SSTConstruct {
     } as BaseSiteEnvironmentOutputsInfo);
   }
 
+  private replaceTokenGlobs = ["**/*.html", "**/*.js", "**/*.cjs", "**/*.mjs", "**/*.json"];
+
   private getS3ContentReplaceValues(): BaseSiteReplaceProps[] {
     const replaceValues: BaseSiteReplaceProps[] = [];
 
@@ -1235,23 +1410,56 @@ export class NextjsSsr extends Construct implements SSTConstruct {
       .forEach(([key, value]) => {
         const token = `{{ ${key} }}`;
         replaceValues.push(
-          {
-            files: "**/*.html",
-            search: token,
-            replace: value,
-          },
-          {
-            files: "**/*.js",
-            search: token,
-            replace: value,
-          },
-          {
-            files: "**/*.json",
-            search: token,
-            replace: value,
-          }
-        );
+          ...this.replaceTokenGlobs.map((glob) =>
+            ({ files: glob, search: token, replace: value })));
       });
+    return replaceValues;
+  }
+
+  // replace inlined public env vars with calls to process.env
+  private getServerContentReplaceValues(): Record<string, string> {
+    return Object.fromEntries(
+      Object.entries(this.props.environment || {})
+        .filter(([key]) => key.startsWith('NEXT_PUBLIC_'))
+        .map(([key, value]) => [`{{ ${key} }}`, `process.env.${key}`])
+    )
+  }
+
+  private getLambdaContentReplaceValues(): BaseSiteReplaceProps[] {
+    const replaceValues: BaseSiteReplaceProps[] = [];
+
+    // The Next.js app can have environment variables like
+    // `process.env.API_URL` in the JS code. `process.env.API_URL` might or
+    // might not get resolved on `next build` if it is used in
+    // server-side functions, ie. getServerSideProps().
+    // Because Lambda@Edge does not support environment variables, we will
+    // use the trick of replacing "{{ _SST_NEXTJS_SITE_ENVIRONMENT_ }}" with
+    // a JSON encoded string of all environment key-value pairs. This string
+    // will then get decoded at run time.
+    const lambdaEnvs: { [key: string]: string } = {};
+
+    Object.entries(this.props.environment || {}).forEach(([key, value]) => {
+      const token = `{{ ${key} }}`;
+      replaceValues.push(
+        ...this.replaceTokenGlobs.map((glob) =>
+          ({ files: glob, search: token, replace: value })));
+      lambdaEnvs[key] = value;
+    });
+
+    replaceValues.push({
+      files: "**/*.mjs",
+      search: '"{{ _SST_NEXTJS_SITE_ENVIRONMENT_ }}"',
+      replace: JSON.stringify(lambdaEnvs),
+    }, {
+      files: "**/*.cjs",
+      search: '"{{ _SST_NEXTJS_SITE_ENVIRONMENT_ }}"',
+      replace: JSON.stringify(lambdaEnvs),
+    }, {
+      files: "**/*.js",
+      search: '"{{ _SST_NEXTJS_SITE_ENVIRONMENT_ }}"',
+      replace: JSON.stringify(lambdaEnvs),
+    });
+
     return replaceValues;
   }
 
@@ -1312,7 +1520,7 @@ export class NextjsSsr extends Construct implements SSTConstruct {
   }
 
   // nextjs project inside of standalone build
-  // contains manifests
+  // contains manifests and server code
   private getNextStandaloneBuildDir() {
     return path.join(this.getNextStandaloneDir(), this.props.path, NEXTJS_BUILD_DIR);
   }
