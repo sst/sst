@@ -36,6 +36,15 @@ npx create-sst@latest
 In this tutorial, we'll be using the **keyboard icon** <img width="18" style={{ "margin": "0 4px", "vertical-align": "text-bottom" }} src="/img/components/keyboard.svg" /> for code snippets where we want you to **make a change**.
 :::
 
+Select `graphql` here, as we'll be using the GraphQL starter in this tutorial.
+
+```bash
+? What kind of project do you want to create? (Use arrow keys)
+❯ graphql 
+  minimal 
+  examples
+```
+
 This will prompt you to select a database; either [RDS](https://aws.amazon.com/rds/) or [DynamoDB](https://aws.amazon.com/dynamodb/).
 
 ```bash
