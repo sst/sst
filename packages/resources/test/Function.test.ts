@@ -7,7 +7,7 @@ import {
   countResourcesLike,
   hasResource,
   stringLike,
-  ABSENT
+  ABSENT,
 } from "./helper";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as iam from "aws-cdk-lib/aws-iam";
@@ -28,13 +28,13 @@ import {
   Config,
   EventBus,
   Function,
-  FunctionProps
+  FunctionProps,
 } from "../src";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
   Effect: "Allow",
-  Resource: "*"
+  Resource: "*",
 };
 
 beforeEach(async () => {
@@ -50,11 +50,11 @@ test("handlerPath: entry + no src", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   await app.runDeferredBuilds();
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler"
+    Handler: "test/lambda.handler",
   });
 });
 
@@ -63,11 +63,11 @@ test("handlerPath: no entry + src", async () => {
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
     handler: "lambda.handler",
-    srcPath: "test/nested"
+    srcPath: "test/nested",
   });
   await app.runDeferredBuilds();
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/nested/lambda.handler"
+    Handler: "test/nested/lambda.handler",
   });
 });
 
@@ -76,11 +76,11 @@ test("handlerPath: entry + src", async () => {
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
     handler: "nested/lambda.handler",
-    srcPath: "test"
+    srcPath: "test",
   });
   await app.runDeferredBuilds();
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/nested/lambda.handler"
+    Handler: "test/nested/lambda.handler",
   });
 });
 
@@ -90,11 +90,11 @@ test("constructor: node: srcPath absolute path", async () => {
   const srcPath = path.resolve(".");
   new Function(stack, "Function", {
     srcPath,
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   await app.runDeferredBuilds();
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: `test/lambda.handler`
+    Handler: `test/lambda.handler`,
   });
 });
 
@@ -103,7 +103,7 @@ test("constructor: python: srcPath not set", async () => {
   expect(() => {
     new Function(stack, "Function", {
       handler: "test/lambda.handler",
-      runtime: "python3.8"
+      runtime: "python3.8",
     });
   }).toThrow(/Cannot set the "srcPath" to the project root/);
 });
@@ -114,7 +114,7 @@ test("constructor: python: srcPath is project root", async () => {
     new Function(stack, "Function", {
       srcPath: ".",
       handler: "test/lambda.handler",
-      runtime: "python3.8"
+      runtime: "python3.8",
     });
   }).toThrow(/Cannot set the "srcPath" to the project root/);
 });
@@ -122,13 +122,13 @@ test("constructor: python: srcPath is project root", async () => {
 test("constructor: props with minimum config", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "index.placeholder",
     Timeout: 10,
     MemorySize: 1024,
-    TracingConfig: { Mode: "Active" }
+    TracingConfig: { Mode: "Active" },
   });
   countResources(stack, "AWS::Lambda::EventInvokeConfig", 0);
 });
@@ -138,12 +138,12 @@ test("constructor: props with full config", async () => {
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
     timeout: 20,
-    memorySize: 512
+    memorySize: 512,
   });
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "index.placeholder",
     Timeout: 20,
-    MemorySize: 512
+    MemorySize: 512,
   });
 });
 
@@ -159,13 +159,13 @@ test("constructor: props disabling live development ", async () => {
     new App({
       debugEndpoint: "placeholder",
       debugBucketArn: "placeholder",
-      debugBucketName: "placeholder"
+      debugBucketName: "placeholder",
     }),
     "stack"
   );
   new Function(stack, "Function", {
     enableLiveDev: false,
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   countResourcesLike(stack, "AWS::Lambda::Function", 0, {
     Environment: {
@@ -175,9 +175,9 @@ test("constructor: props disabling live development ", async () => {
         SST_DEBUG_ENDPOINT: "placeholder",
         SST_DEBUG_BUCKET_NAME: "placeholder",
         SST_FUNCTION_ID: "02056f69",
-        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
-      }
-    }
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+      },
+    },
   });
 });
 
@@ -186,12 +186,12 @@ test("constructor: liveDev prop defaults to true", async () => {
     new App({
       debugEndpoint: "placeholder",
       debugBucketArn: "placeholder",
-      debugBucketName: "placeholder"
+      debugBucketName: "placeholder",
     }),
     "stack"
   );
   new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   hasResource(stack, "AWS::Lambda::Function", {
     Environment: {
@@ -201,16 +201,16 @@ test("constructor: liveDev prop defaults to true", async () => {
         SST_DEBUG_ENDPOINT: "placeholder",
         SST_DEBUG_BUCKET_NAME: "placeholder",
         SST_FUNCTION_ID: "dev-my-app-stack-Function",
-        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
-      }
-    }
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+      },
+    },
   });
 });
 
 test("constructor: handler is jsx", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
-    handler: "test/lambda-jsx.handler"
+    handler: "test/lambda-jsx.handler",
   });
   countResources(stack, "AWS::Lambda::Function", 1);
 });
@@ -219,7 +219,7 @@ test("constructor: handler not exist", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
-    handler: "test/random.handler"
+    handler: "test/random.handler",
   });
   await expect(async () => {
     await app.runDeferredBuilds();
@@ -229,11 +229,11 @@ test("constructor: handler not exist", async () => {
 test("functionName: undefined", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "index.placeholder",
-    FunctionName: ABSENT
+    FunctionName: ABSENT,
   });
 });
 
@@ -241,11 +241,11 @@ test("functionName: string", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
     functionName: "my-fn-name",
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "index.placeholder",
-    FunctionName: "my-fn-name"
+    FunctionName: "my-fn-name",
   });
 });
 
@@ -254,11 +254,11 @@ test("functionName: callback", async () => {
   new Function(stack, "Function", {
     functionName: ({ functionProps, stack }) =>
       `${stack.stackName}-${path.parse(functionProps.handler!).name}`,
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "index.placeholder",
-    FunctionName: "dev-my-app-stack-lambda"
+    FunctionName: "dev-my-app-stack-lambda",
   });
 });
 
@@ -267,8 +267,8 @@ test("copyFiles", async () => {
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
     bundle: {
-      copyFiles: [{ from: "test/lambda.js", to: "test/lambda.js" }]
-    }
+      copyFiles: [{ from: "test/lambda.js", to: "test/lambda.js" }],
+    },
   });
 });
 
@@ -277,8 +277,8 @@ test("copyFiles infer to", async () => {
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
     bundle: {
-      copyFiles: [{ from: "test/lambda.js" }]
-    }
+      copyFiles: [{ from: "test/lambda.js" }],
+    },
   });
 });
 
@@ -288,8 +288,8 @@ test("copyFiles absolute to", async () => {
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
     bundle: {
-      copyFiles: [{ from: "test/lambda.js", to: "/test/fail.js" }]
-    }
+      copyFiles: [{ from: "test/lambda.js", to: "/test/fail.js" }],
+    },
   });
   await expect(async () => {
     await app.runDeferredBuilds();
@@ -302,8 +302,8 @@ test("copyFiles nonexistent", async () => {
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
     bundle: {
-      copyFiles: [{ from: "test/fail.js", to: "test/fail.js" }]
-    }
+      copyFiles: [{ from: "test/fail.js", to: "test/fail.js" }],
+    },
   });
   await expect(async () => {
     await app.runDeferredBuilds();
@@ -315,11 +315,11 @@ test("runtime-string", async () => {
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
-    runtime: "nodejs10.x"
+    runtime: "nodejs10.x",
   });
   await app.runDeferredBuilds();
   hasResource(stack, "AWS::Lambda::Function", {
-    Runtime: "nodejs10.x"
+    Runtime: "nodejs10.x",
   });
 });
 
@@ -328,7 +328,7 @@ test("runtime-string-invalid", async () => {
   expect(() => {
     new Function(stack, "Function", {
       handler: "test/lambda.handler",
-      runtime: "ruby" as any
+      runtime: "ruby" as any,
     });
   }).toThrow(/The specified runtime is not supported/);
 });
@@ -337,10 +337,10 @@ test("timeout-number", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
-    timeout: 15
+    timeout: 15,
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Timeout: 15
+    Timeout: 15,
   });
 });
 
@@ -348,10 +348,10 @@ test("timeout-Duration", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
-    timeout: "15 seconds"
+    timeout: "15 seconds",
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Timeout: 15
+    Timeout: 15,
   });
 });
 
@@ -359,10 +359,10 @@ test("memorySize-number", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
-    memorySize: 2048
+    memorySize: 2048,
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    MemorySize: 2048
+    MemorySize: 2048,
   });
 });
 
@@ -370,10 +370,10 @@ test("memorySize-Size", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
-    memorySize: "2 GB"
+    memorySize: "2 GB",
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    MemorySize: 2048
+    MemorySize: 2048,
   });
 });
 
@@ -381,12 +381,12 @@ test("diskSize-number", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
-    diskSize: 2048
+    diskSize: 2048,
   });
   hasResource(stack, "AWS::Lambda::Function", {
     EphemeralStorage: {
-      Size: 2048
-    }
+      Size: 2048,
+    },
   });
 });
 
@@ -394,12 +394,12 @@ test("diskSize-Size", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
-    diskSize: "2 GB"
+    diskSize: "2 GB",
   });
   hasResource(stack, "AWS::Lambda::Function", {
     EphemeralStorage: {
-      Size: 2048
-    }
+      Size: 2048,
+    },
   });
 });
 
@@ -437,10 +437,10 @@ test("xray-disabled", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
-    tracing: "disabled"
+    tracing: "disabled",
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    TracingConfig: ABSENT
+    TracingConfig: ABSENT,
   });
 });
 
@@ -449,11 +449,11 @@ test("config", async () => {
   const s = new Config.Secret(stack, "MY_SECRET");
   const s2 = new Config.Secret(stack, "MY_SECRET2");
   const p = new Config.Parameter(stack, "MY_PARAM", {
-    value: "value"
+    value: "value",
   });
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
-    config: [s, s2, p]
+    config: [s, s2, p],
   });
   hasResource(stack, "AWS::Lambda::Function", {
     Environment: {
@@ -461,9 +461,9 @@ test("config", async () => {
         SST_SECRET_MY_SECRET: "1",
         SST_SECRET_MY_SECRET2: "1",
         SST_PARAM_MY_PARAM: "value",
-        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
-      }
-    }
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+      },
+    },
   });
   hasResource(stack, "AWS::IAM::Policy", {
     PolicyDocument: {
@@ -480,8 +480,8 @@ test("config", async () => {
           ],
         },
       ],
-      Version: "2012-10-17"
-    }
+      Version: "2012-10-17",
+    },
   });
 });
 
@@ -489,17 +489,17 @@ test("permissions", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
-    permissions: ["s3", "dynamodb:Get"]
+    permissions: ["s3", "dynamodb:Get"],
   });
   hasResource(stack, "AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
         { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        { Action: "dynamodb:Get", Effect: "Allow", Resource: "*" }
+        { Action: "dynamodb:Get", Effect: "Allow", Resource: "*" },
       ],
-      Version: "2012-10-17"
-    }
+      Version: "2012-10-17",
+    },
   });
 });
 
@@ -510,9 +510,9 @@ test("bundle.esbuildConfig is object", async () => {
     bundle: {
       esbuildConfig: {
         plugins: "test/function/esbuild-config.cjs",
-        keepNames: true
-      }
-    }
+        keepNames: true,
+      },
+    },
   });
   countResources(stack, "AWS::Lambda::Function", 1);
 });
@@ -525,9 +525,9 @@ test("bundle.esbuildConfig is object: error invalid plugin", async () => {
     bundle: {
       esbuildConfig: {
         plugins: "test/function/esbuild-config-invalid.js",
-        keepNames: true
-      }
-    }
+        keepNames: true,
+      },
+    },
   });
   await expect(async () => {
     await app.runDeferredBuilds();
@@ -548,9 +548,9 @@ test("bundle: commandHooks-beforeBundling success", async () => {
         },
         afterBundling: (): string[] => {
           return [];
-        }
-      }
-    }
+        },
+      },
+    },
   });
   countResources(stack, "AWS::Lambda::Function", 1);
 });
@@ -570,9 +570,9 @@ test("bundle: commandHooks-beforeBundling failed", async () => {
         },
         afterBundling: (): string[] => {
           return [];
-        }
-      }
-    }
+        },
+      },
+    },
   });
   await expect(async () => {
     await app.runDeferredBuilds();
@@ -592,7 +592,7 @@ test("url: true", async () => {
   const stack = new Stack(new App(), "stack");
   const fn = new Function(stack, "Function", {
     handler: "test/lambda.handler",
-    url: true
+    url: true,
   });
   expect(fn.url).toBeDefined();
   hasResource(stack, "AWS::Lambda::Url", {
@@ -609,7 +609,7 @@ test("url.authorizer: undefined", async () => {
   const stack = new Stack(new App(), "stack");
   const fn = new Function(stack, "Function", {
     handler: "test/lambda.handler",
-    url: {}
+    url: {},
   });
   expect(fn.url).toBeDefined();
   hasResource(stack, "AWS::Lambda::Url", {
@@ -622,8 +622,8 @@ test("url.authorizer: none", async () => {
   const fn = new Function(stack, "Function", {
     handler: "test/lambda.handler",
     url: {
-      authorizer: "none"
-    }
+      authorizer: "none",
+    },
   });
   expect(fn.url).toBeDefined();
   hasResource(stack, "AWS::Lambda::Url", {
@@ -636,8 +636,8 @@ test("url.authorizer: iam", async () => {
   const fn = new Function(stack, "Function", {
     handler: "test/lambda.handler",
     url: {
-      authorizer: "iam"
-    }
+      authorizer: "iam",
+    },
   });
   expect(fn.url).toBeDefined();
   hasResource(stack, "AWS::Lambda::Url", {
@@ -649,7 +649,7 @@ test("url.cors: undefined", async () => {
   const stack = new Stack(new App(), "stack");
   const fn = new Function(stack, "Function", {
     handler: "test/lambda.handler",
-    url: {}
+    url: {},
   });
   expect(fn.url).toBeDefined();
   hasResource(stack, "AWS::Lambda::Url", {
@@ -667,7 +667,7 @@ test("url.cors: true", async () => {
     handler: "test/lambda.handler",
     url: {
       cors: true,
-    }
+    },
   });
   expect(fn.url).toBeDefined();
   hasResource(stack, "AWS::Lambda::Url", {
@@ -685,7 +685,7 @@ test("url.cors: false", async () => {
     handler: "test/lambda.handler",
     url: {
       cors: false,
-    }
+    },
   });
   expect(fn.url).toBeDefined();
   hasResource(stack, "AWS::Lambda::Url", {
@@ -701,8 +701,8 @@ test("url.cors: props", async () => {
       cors: {
         allowMethods: ["GET"],
         allowOrigins: ["https://example.com"],
-      }
-    }
+      },
+    },
   });
   expect(fn.url).toBeDefined();
   hasResource(stack, "AWS::Lambda::Url", {
@@ -721,8 +721,8 @@ test("url.cors: allowMethods *", async () => {
     url: {
       cors: {
         allowMethods: ["*"],
-      }
-    }
+      },
+    },
   });
   expect(fn.url).toBeDefined();
   hasResource(stack, "AWS::Lambda::Url", {
@@ -737,31 +737,31 @@ test("layers: imported from another stack", async () => {
   const stack1 = new Stack(app, "stack1");
   const stack2 = new Stack(app, "stack2");
   const layer = new lambda.LayerVersion(stack1, "MyLayer", {
-    code: lambda.Code.fromAsset("test")
+    code: lambda.Code.fromAsset("test"),
   });
   new Function(stack1, "Function", {
     handler: "test/lambda.handler",
-    layers: [layer]
+    layers: [layer],
   });
   new Function(stack2, "Function", {
     handler: "test/lambda.handler",
-    layers: [layer]
+    layers: [layer],
   });
   expect(stack2.dependencies).toEqual([stack1]);
 
   countResources(stack1, "AWS::SSM::Parameter", 1);
   hasResource(stack1, "AWS::SSM::Parameter", {
-    Value: { Ref: stringLike(/MyLayer.*/) }
+    Value: { Ref: stringLike(/MyLayer.*/) },
   });
   countResources(stack1, "AWS::Lambda::LayerVersion", 1);
   hasResource(stack1, "AWS::Lambda::Function", {
-    Layers: [{ Ref: stringLike(/MyLayer.*/) }]
+    Layers: [{ Ref: stringLike(/MyLayer.*/) }],
   });
 
   countResources(stack2, "AWS::SSM::Parameter", 0);
   countResources(stack2, "AWS::Lambda::LayerVersion", 0);
   hasResource(stack2, "AWS::Lambda::Function", {
-    Layers: [{ Ref: stringLike(/SsmParameterValue.*/) }]
+    Layers: [{ Ref: stringLike(/SsmParameterValue.*/) }],
   });
 });
 
@@ -770,30 +770,30 @@ test("layers: imported from another stack multiple times", async () => {
   const stack1 = new Stack(app, "stack1");
   const stack2 = new Stack(app, "stack2");
   const layer = new lambda.LayerVersion(stack1, "MyLayer", {
-    code: lambda.Code.fromAsset("test")
+    code: lambda.Code.fromAsset("test"),
   });
   new Function(stack1, "Function", {
     handler: "test/lambda.handler",
-    layers: [layer]
+    layers: [layer],
   });
   new Function(stack2, "FunctionA", {
     handler: "test/lambda.handler",
-    layers: [layer]
+    layers: [layer],
   });
   new Function(stack2, "FunctionB", {
     handler: "test/lambda.handler",
-    layers: [layer]
+    layers: [layer],
   });
   countResources(stack1, "AWS::SSM::Parameter", 1);
   countResources(stack1, "AWS::Lambda::LayerVersion", 1);
   hasResource(stack1, "AWS::Lambda::Function", {
-    Layers: [{ Ref: stringLike(/MyLayer.*/) }]
+    Layers: [{ Ref: stringLike(/MyLayer.*/) }],
   });
 
   countResources(stack2, "AWS::SSM::Parameter", 0);
   countResources(stack2, "AWS::Lambda::LayerVersion", 0);
   countResourcesLike(stack2, "AWS::Lambda::Function", 2, {
-    Layers: [{ Ref: stringLike(/SsmParameterValue.*/) }]
+    Layers: [{ Ref: stringLike(/SsmParameterValue.*/) }],
   });
 });
 
@@ -808,22 +808,22 @@ test("layers: imported from ARN", async () => {
   );
   new Function(stack1, "Function", {
     handler: "test/lambda.handler",
-    layers: [layer]
+    layers: [layer],
   });
   new Function(stack2, "Function", {
     handler: "test/lambda.handler",
-    layers: [layer]
+    layers: [layer],
   });
   countResources(stack1, "AWS::SSM::Parameter", 0);
   countResources(stack1, "AWS::Lambda::LayerVersion", 0);
   hasResource(stack1, "AWS::Lambda::Function", {
-    Layers: ["arn"]
+    Layers: ["arn"],
   });
 
   countResources(stack2, "AWS::SSM::Parameter", 0);
   countResources(stack2, "AWS::Lambda::LayerVersion", 0);
   hasResource(stack2, "AWS::Lambda::Function", {
-    Layers: ["arn"]
+    Layers: ["arn"],
   });
 });
 
@@ -833,47 +833,47 @@ test("layers: imported from ARN", async () => {
 
 test("constructor: debugIncreaseTimeout true", async () => {
   const app = new App({
-    synthCallback: () => { },
+    synthCallback: () => {},
     debugEndpoint: "placeholder",
     debugBucketArn: "placeholder",
     debugBucketName: "placeholder",
-    debugIncreaseTimeout: true
+    debugIncreaseTimeout: true,
   });
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Timeout: 900
+    Timeout: 900,
   });
   hasResource(stack, "AWS::Lambda::EventInvokeConfig", {
-    MaximumRetryAttempts: 0
+    MaximumRetryAttempts: 0,
   });
 });
 
 test("constructor: debugIncreaseTimeout false", async () => {
   const app = new App({
-    synthCallback: () => { },
+    synthCallback: () => {},
     debugEndpoint: "placeholder",
     debugBucketArn: "placeholder",
     debugBucketName: "placeholder",
-    debugIncreaseTimeout: false
+    debugIncreaseTimeout: false,
   });
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Timeout: 10
+    Timeout: 10,
   });
   hasResource(stack, "AWS::Lambda::EventInvokeConfig", {
-    MaximumRetryAttempts: 0
+    MaximumRetryAttempts: 0,
   });
 });
 
 test("constructor: debug: layers removed", async () => {
   const app = new App({
-    synthCallback: () => { },
+    synthCallback: () => {},
     debugEndpoint: "placeholder",
     debugBucketArn: "placeholder",
     debugBucketName: "placeholder",
@@ -894,11 +894,11 @@ test("constructor: debug: layers removed", async () => {
 
 test("constructor: skipBuild", async () => {
   const app = new App({
-    skipBuild: true
+    skipBuild: true,
   });
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "index.placeholder",
@@ -912,24 +912,24 @@ test("constructor: skipBuild", async () => {
 test("attachPermissions: string: all", async () => {
   const stack = new Stack(new App(), "stack");
   const f = new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   f.attachPermissions("*");
   hasResource(stack, "AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
-        { Action: "*", Effect: "Allow", Resource: "*" }
+        { Action: "*", Effect: "Allow", Resource: "*" },
       ],
-      Version: "2012-10-17"
-    }
+      Version: "2012-10-17",
+    },
   });
 });
 
 test("attachPermissions: string: invalid", async () => {
   const stack = new Stack(new App(), "stack");
   const f = new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   expect(() => {
     // @ts-ignore Allow type casting
@@ -940,21 +940,21 @@ test("attachPermissions: string: invalid", async () => {
 test("attachPermissions: array: empty", async () => {
   const stack = new Stack(new App(), "stack");
   const f = new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   f.attachPermissions([]);
   hasResource(stack, "AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [lambdaDefaultPolicy],
-      Version: "2012-10-17"
-    }
+      Version: "2012-10-17",
+    },
   });
 });
 
 test("attachPermissions: array: string", async () => {
   const stack = new Stack(new App(), "stack");
   const f = new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   f.attachPermissions(["s3", "dynamodb:Get"]);
   hasResource(stack, "AWS::IAM::Policy", {
@@ -962,20 +962,20 @@ test("attachPermissions: array: string", async () => {
       Statement: [
         lambdaDefaultPolicy,
         { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        { Action: "dynamodb:Get", Effect: "Allow", Resource: "*" }
+        { Action: "dynamodb:Get", Effect: "Allow", Resource: "*" },
       ],
-      Version: "2012-10-17"
-    }
+      Version: "2012-10-17",
+    },
   });
 });
 
 test("attachPermissions: array: sst Api", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new Api(stack, "Api", {
-    routes: { "GET /": "test/lambda.handler" }
+    routes: { "GET /": "test/lambda.handler" },
   });
   const f = new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   f.attachPermissions([api]);
   hasResource(stack, "AWS::IAM::Policy", {
@@ -991,24 +991,24 @@ test("attachPermissions: array: sst Api", async () => {
               [
                 "arn:aws:execute-api:us-east-1:my-account:",
                 { Ref: "ApiCD79AAA0" },
-                "/*"
-              ]
-            ]
-          }
-        }
+                "/*",
+              ],
+            ],
+          },
+        },
       ],
-      Version: "2012-10-17"
-    }
+      Version: "2012-10-17",
+    },
   });
 });
 
 test("attachPermissions: array: sst ApiGatewayV1Api", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new ApiGatewayV1Api(stack, "Api", {
-    routes: { "GET /": "test/lambda.handler" }
+    routes: { "GET /": "test/lambda.handler" },
   });
   const f = new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   f.attachPermissions([api]);
   hasResource(stack, "AWS::IAM::Policy", {
@@ -1024,24 +1024,24 @@ test("attachPermissions: array: sst ApiGatewayV1Api", async () => {
               [
                 "arn:aws:execute-api:us-east-1:my-account:",
                 { Ref: "ApiCD79AAA0" },
-                "/*"
-              ]
-            ]
-          }
-        }
+                "/*",
+              ],
+            ],
+          },
+        },
       ],
-      Version: "2012-10-17"
-    }
+      Version: "2012-10-17",
+    },
   });
 });
 
 test("attachPermissions: array: sst AppSyncApi", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new AppSyncApi(stack, "Api", {
-    resolvers: { "Query notes": "test/lambda.handler" }
+    resolvers: { "Query notes": "test/lambda.handler" },
   });
   const f = new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   f.attachPermissions([api]);
   hasResource(stack, "AWS::IAM::Policy", {
@@ -1057,24 +1057,24 @@ test("attachPermissions: array: sst AppSyncApi", async () => {
               [
                 "arn:aws:appsync:us-east-1:my-account:apis/",
                 { "Fn::GetAtt": ["ApiCD79AAA0", "ApiId"] },
-                "/*"
-              ]
-            ]
-          }
-        }
+                "/*",
+              ],
+            ],
+          },
+        },
       ],
-      Version: "2012-10-17"
-    }
+      Version: "2012-10-17",
+    },
   });
 });
 
 test("attachPermissions: array: sst WebSocketApi", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new WebSocketApi(stack, "Api", {
-    routes: { $connect: "test/lambda.handler" }
+    routes: { $connect: "test/lambda.handler" },
   });
   const f = new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   f.attachPermissions([api]);
   hasResource(stack, "AWS::IAM::Policy", {
@@ -1090,10 +1090,10 @@ test("attachPermissions: array: sst WebSocketApi", async () => {
               [
                 "arn:aws:execute-api:us-east-1:my-account:",
                 { Ref: "ApiCD79AAA0" },
-                "/*"
-              ]
-            ]
-          }
+                "/*",
+              ],
+            ],
+          },
         },
         {
           Action: "execute-api:ManageConnections",
@@ -1106,24 +1106,24 @@ test("attachPermissions: array: sst WebSocketApi", async () => {
                 { Ref: "AWS::Partition" },
                 ":execute-api:us-east-1:my-account:",
                 { Ref: "ApiCD79AAA0" },
-                "/dev/POST/*"
-              ]
-            ]
-          }
-        }
+                "/dev/POST/*",
+              ],
+            ],
+          },
+        },
       ],
-      Version: "2012-10-17"
-    }
+      Version: "2012-10-17",
+    },
   });
 });
 
 test("attachPermissions: array: sst Function", async () => {
   const stack = new Stack(new App(), "stack");
   const f = new Function(stack, "functionA", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   const f2 = new Function(stack, "functionB", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   f.attachPermissions([f2]);
 
@@ -1134,11 +1134,11 @@ test("attachPermissions: array: sst Function", async () => {
         {
           Action: "lambda:*",
           Effect: "Allow",
-          Resource: { "Fn::GetAtt": ["functionB93D70A66", "Arn"] }
-        }
+          Resource: { "Fn::GetAtt": ["functionB93D70A66", "Arn"] },
+        },
       ],
-      Version: "2012-10-17"
-    }
+      Version: "2012-10-17",
+    },
   });
 });
 
@@ -1146,7 +1146,7 @@ test("attachPermissions: array: sst Bucket", async () => {
   const stack = new Stack(new App(), "stack");
   const bucket = new Bucket(stack, "bucket");
   const f = new Function(stack, "function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   f.attachPermissions([bucket]);
 
@@ -1162,14 +1162,14 @@ test("attachPermissions: array: sst Bucket", async () => {
             {
               "Fn::Join": [
                 "",
-                [{ "Fn::GetAtt": ["bucketBucketF19722A9", "Arn"] }, "/*"]
-              ]
-            }
-          ]
-        }
+                [{ "Fn::GetAtt": ["bucketBucketF19722A9", "Arn"] }, "/*"],
+              ],
+            },
+          ],
+        },
       ],
-      Version: "2012-10-17"
-    }
+      Version: "2012-10-17",
+    },
   });
 });
 
@@ -1177,7 +1177,7 @@ test("attachPermissions: array: sst EventBus", async () => {
   const stack = new Stack(new App(), "stack");
   const bus = new EventBus(stack, "bus");
   const f = new Function(stack, "function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   f.attachPermissions([bus]);
 
@@ -1188,21 +1188,21 @@ test("attachPermissions: array: sst EventBus", async () => {
         {
           Action: "events:*",
           Effect: "Allow",
-          Resource: { "Fn::GetAtt": ["busEventBus27CE599B", "Arn"] }
-        }
+          Resource: { "Fn::GetAtt": ["busEventBus27CE599B", "Arn"] },
+        },
       ],
-      Version: "2012-10-17"
-    }
+      Version: "2012-10-17",
+    },
   });
 });
 
 test("attachPermissions: array: sst Job", async () => {
   const stack = new Stack(new App(), "stack");
   const job = new Job(stack, "job", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   const f = new Function(stack, "function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   f.attachPermissions([job]);
 
@@ -1213,11 +1213,11 @@ test("attachPermissions: array: sst Job", async () => {
         {
           Action: "lambda:*",
           Effect: "Allow",
-          Resource: { "Fn::GetAtt": ["job867F7ADB", "Arn"] }
-        }
+          Resource: { "Fn::GetAtt": ["job867F7ADB", "Arn"] },
+        },
       ],
-      Version: "2012-10-17"
-    }
+      Version: "2012-10-17",
+    },
   });
   hasResource(stack, "AWS::Lambda::Function", {
     Environment: {
@@ -1226,19 +1226,19 @@ test("attachPermissions: array: sst Job", async () => {
         SST_APP: "my-app",
         SST_STAGE: "dev",
         SST_PARAM_SST_JOB_job: { Ref: "job867F7ADB" },
-      }
-    }
+      },
+    },
   });
 });
 
 test("attachPermissions: array: sst RDS", async () => {
   const stack = new Stack(new App(), "stack");
   const cluster = new RDS(stack, "cluster", {
-    engine: "postgresql10.14",
-    defaultDatabaseName: "acme"
+    engine: "postgresql11.13",
+    defaultDatabaseName: "acme",
   });
   const f = new Function(stack, "function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   f.attachPermissions([cluster]);
 
@@ -1255,29 +1255,29 @@ test("attachPermissions: array: sst RDS", async () => {
               [
                 "arn:",
                 {
-                  Ref: "AWS::Partition"
+                  Ref: "AWS::Partition",
                 },
                 ":rds:us-east-1:my-account:cluster:",
                 {
-                  Ref: "clusterCluster4486A143"
-                }
-              ]
-            ]
-          }
+                  Ref: "clusterCluster4486A143",
+                },
+              ],
+            ],
+          },
         },
         {
           Action: [
             "secretsmanager:GetSecretValue",
-            "secretsmanager:DescribeSecret"
+            "secretsmanager:DescribeSecret",
           ],
           Effect: "Allow",
           Resource: {
-            Ref: "clusterClusterSecretAttachment92A36E7C"
-          }
-        }
+            Ref: "clusterClusterSecretAttachment92A36E7C",
+          },
+        },
       ],
-      Version: "2012-10-17"
-    }
+      Version: "2012-10-17",
+    },
   });
 });
 
@@ -1285,7 +1285,7 @@ test("attachPermissions: array: sns topic", async () => {
   const stack = new Stack(new App(), "stack");
   const topic = new sns.Topic(stack, "Topic");
   const f = new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   f.attachPermissions([topic]);
   hasResource(stack, "AWS::IAM::Policy", {
@@ -1295,11 +1295,11 @@ test("attachPermissions: array: sns topic", async () => {
         {
           Action: "sns:*",
           Effect: "Allow",
-          Resource: { Ref: "TopicBFC7AF6E" }
-        }
+          Resource: { Ref: "TopicBFC7AF6E" },
+        },
       ],
-      Version: "2012-10-17"
-    }
+      Version: "2012-10-17",
+    },
   });
 });
 
@@ -1308,7 +1308,7 @@ test("attachPermissions: array: sns topic imported", async () => {
   const topicArn = "arn:aws:sns:us-east-1:123:topic";
   const topic = sns.Topic.fromTopicArn(stack, "Topic", topicArn);
   const f = new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   f.attachPermissions([topic]);
   hasResource(stack, "AWS::IAM::Policy", {
@@ -1318,11 +1318,11 @@ test("attachPermissions: array: sns topic imported", async () => {
         {
           Action: "sns:*",
           Effect: "Allow",
-          Resource: topicArn
-        }
+          Resource: topicArn,
+        },
       ],
-      Version: "2012-10-17"
-    }
+      Version: "2012-10-17",
+    },
   });
 });
 
@@ -1330,7 +1330,7 @@ test("attachPermissions: array: s3 bucket", async () => {
   const stack = new Stack(new App(), "stack");
   const bucket = new s3.Bucket(stack, "Bucket");
   const f = new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   f.attachPermissions([bucket]);
   hasResource(stack, "AWS::IAM::Policy", {
@@ -1345,14 +1345,14 @@ test("attachPermissions: array: s3 bucket", async () => {
             {
               "Fn::Join": [
                 "",
-                [{ "Fn::GetAtt": ["Bucket83908E77", "Arn"] }, "/*"]
-              ]
-            }
-          ]
-        }
+                [{ "Fn::GetAtt": ["Bucket83908E77", "Arn"] }, "/*"],
+              ],
+            },
+          ],
+        },
       ],
-      Version: "2012-10-17"
-    }
+      Version: "2012-10-17",
+    },
   });
 });
 
@@ -1360,7 +1360,7 @@ test("attachPermissions: array: s3 bucket imported", async () => {
   const stack = new Stack(new App(), "stack");
   const bucket = s3.Bucket.fromBucketName(stack, "Bucket", "my-bucket");
   const f = new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   f.attachPermissions([bucket]);
   hasResource(stack, "AWS::IAM::Policy", {
@@ -1377,11 +1377,11 @@ test("attachPermissions: array: s3 bucket imported", async () => {
                 [
                   "arn:",
                   {
-                    Ref: "AWS::Partition"
+                    Ref: "AWS::Partition",
                   },
-                  ":s3:::my-bucket"
-                ]
-              ]
+                  ":s3:::my-bucket",
+                ],
+              ],
             },
             {
               "Fn::Join": [
@@ -1389,17 +1389,17 @@ test("attachPermissions: array: s3 bucket imported", async () => {
                 [
                   "arn:",
                   {
-                    Ref: "AWS::Partition"
+                    Ref: "AWS::Partition",
                   },
-                  ":s3:::my-bucket/*"
-                ]
-              ]
-            }
-          ]
-        }
+                  ":s3:::my-bucket/*",
+                ],
+              ],
+            },
+          ],
+        },
       ],
-      Version: "2012-10-17"
-    }
+      Version: "2012-10-17",
+    },
   });
 });
 
@@ -1407,12 +1407,12 @@ test("attachPermissions: array: dynamodb table", async () => {
   const stack = new Stack(new App(), "stack");
   const table = new Table(stack, "Table", {
     fields: {
-      id: "string"
+      id: "string",
     },
-    primaryIndex: { partitionKey: "id" }
+    primaryIndex: { partitionKey: "id" },
   });
   const f = new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   f.attachPermissions([table]);
   hasResource(stack, "AWS::IAM::Policy", {
@@ -1427,14 +1427,14 @@ test("attachPermissions: array: dynamodb table", async () => {
             {
               "Fn::Join": [
                 "",
-                [{ "Fn::GetAtt": ["Table710B521B", "Arn"] }, "/*"]
-              ]
-            }
-          ]
-        }
+                [{ "Fn::GetAtt": ["Table710B521B", "Arn"] }, "/*"],
+              ],
+            },
+          ],
+        },
       ],
-      Version: "2012-10-17"
-    }
+      Version: "2012-10-17",
+    },
   });
 });
 
@@ -1442,7 +1442,7 @@ test("attachPermissions: array: cfn construct not supported", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new apig.HttpApi(stack, "Api");
   const f = new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   expect(() => {
     f.attachPermissions([api]);
@@ -1453,7 +1453,7 @@ test("attachPermissions: array: cfn construct grant", async () => {
   const stack = new Stack(new App(), "stack");
   const topic = new sns.Topic(stack, "Topic");
   const f = new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   f.attachPermissions([[topic, "grantPublish"]]);
   hasResource(stack, "AWS::IAM::Policy", {
@@ -1463,34 +1463,34 @@ test("attachPermissions: array: cfn construct grant", async () => {
         {
           Action: "sns:Publish",
           Effect: "Allow",
-          Resource: { Ref: "TopicBFC7AF6E" }
-        }
+          Resource: { Ref: "TopicBFC7AF6E" },
+        },
       ],
-      Version: "2012-10-17"
-    }
+      Version: "2012-10-17",
+    },
   });
 });
 
 test("attachPermissions: policy statement", async () => {
   const stack = new Stack(new App(), "stack");
   const f = new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   f.attachPermissions([
     new iam.PolicyStatement({
       actions: ["s3:*"],
       resources: ["*"],
-      effect: iam.Effect.ALLOW
-    })
+      effect: iam.Effect.ALLOW,
+    }),
   ]);
   hasResource(stack, "AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
-        { Action: "s3:*", Effect: "Allow", Resource: "*" }
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
       ],
-      Version: "2012-10-17"
-    }
+      Version: "2012-10-17",
+    },
   });
 });
 
@@ -1499,7 +1499,7 @@ test("addConfig", async () => {
   const s = new Config.Secret(stack, "MY_SECRET");
   const s2 = new Config.Secret(stack, "MY_SECRET2");
   const p = new Config.Parameter(stack, "MY_PARAM", {
-    value: "value"
+    value: "value",
   });
   const f = new Function(stack, "Function", {
     handler: "test/lambda.handler",
@@ -1512,9 +1512,9 @@ test("addConfig", async () => {
         SST_SECRET_MY_SECRET: "1",
         SST_SECRET_MY_SECRET2: "1",
         SST_PARAM_MY_PARAM: "value",
-        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
-      }
-    }
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+      },
+    },
   });
   hasResource(stack, "AWS::IAM::Policy", {
     PolicyDocument: {
@@ -1537,8 +1537,8 @@ test("addConfig", async () => {
           ],
         },
       ],
-      Version: "2012-10-17"
-    }
+      Version: "2012-10-17",
+    },
   });
 });
 
@@ -1549,15 +1549,15 @@ test("addConfig", async () => {
 test("mergeProps", async () => {
   const baseProps = {
     timeout: 5,
-    srcPath: "path"
+    srcPath: "path",
   };
   const props = {
-    timeout: 10
+    timeout: 10,
   };
   const newProps = Function.mergeProps(baseProps, props);
   expect(newProps).toEqual({
     timeout: 10,
-    srcPath: "path"
+    srcPath: "path",
   });
 });
 
@@ -1565,22 +1565,22 @@ test("mergeProps-environment", async () => {
   const baseProps = {
     environment: {
       keyA: "valueA",
-      keyB: "valueB"
-    }
+      keyB: "valueB",
+    },
   };
   const props = {
     environment: {
       keyB: "valueB2",
-      keyC: "valueC"
-    }
+      keyC: "valueC",
+    },
   };
   const newProps = Function.mergeProps(baseProps, props);
   expect(newProps).toEqual({
     environment: {
       keyA: "valueA",
       keyB: "valueB2",
-      keyC: "valueC"
-    }
+      keyC: "valueC",
+    },
   });
 });
 
@@ -1630,18 +1630,18 @@ test("mergeProps-bundle", async () => {
   expect(Function.mergeProps({}, { bundle: false })).toEqual({ bundle: false });
 
   expect(Function.mergeProps({}, { bundle: { nodeModules: [] } })).toEqual({
-    bundle: { nodeModules: [] }
+    bundle: { nodeModules: [] },
   });
 
   // base props { bundle: true }
   expect(Function.mergeProps({ bundle: true }, {})).toEqual({ bundle: true });
 
   expect(Function.mergeProps({ bundle: true }, { bundle: true })).toEqual({
-    bundle: true
+    bundle: true,
   });
 
   expect(Function.mergeProps({ bundle: true }, { bundle: false })).toEqual({
-    bundle: false
+    bundle: false,
   });
 
   expect(
@@ -1652,11 +1652,11 @@ test("mergeProps-bundle", async () => {
   expect(Function.mergeProps({ bundle: false }, {})).toEqual({ bundle: false });
 
   expect(Function.mergeProps({ bundle: false }, { bundle: true })).toEqual({
-    bundle: true
+    bundle: true,
   });
 
   expect(Function.mergeProps({ bundle: false }, { bundle: false })).toEqual({
-    bundle: false
+    bundle: false,
   });
 
   expect(
@@ -1665,7 +1665,7 @@ test("mergeProps-bundle", async () => {
 
   // base props { bundle: false }
   expect(Function.mergeProps({ bundle: { externalModules: [] } }, {})).toEqual({
-    bundle: { externalModules: [] }
+    bundle: { externalModules: [] },
   });
 
   expect(
@@ -1704,16 +1704,16 @@ test("Stack.defaultFunctionProps()", async () => {
 
   const stack = new Stack(app, "stack");
   stack.setDefaultFunctionProps({
-    timeout: 15
+    timeout: 15,
   });
   new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "index.placeholder",
     Timeout: 15,
     MemorySize: 1024,
-    TracingConfig: { Mode: "Active" }
+    TracingConfig: { Mode: "Active" },
   });
 });
 
@@ -1721,11 +1721,11 @@ test("Stack.defaultFunctionProps(): after Function resource", async () => {
   const app = new App();
   const stack = new Stack(app, "Stack");
   new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   expect(() => {
     stack.setDefaultFunctionProps({
-      timeout: 10
+      timeout: 10,
     });
   }).toThrowError();
 });
@@ -1735,13 +1735,13 @@ test("Stack.defaultFunctionProps(): after non-Function resource", async () => {
   const stack = new Stack(app, "Stack");
   new Bucket(stack, "Bucket");
   stack.setDefaultFunctionProps({
-    timeout: 15
+    timeout: 15,
   });
   new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Timeout: 15
+    Timeout: 15,
   });
 });
 
@@ -1752,16 +1752,16 @@ test("Stack.defaultFunctionProps(): env", async () => {
   stack.addDefaultFunctionEnv({ keyA: "valueA" });
   stack.addDefaultFunctionEnv({ keyB: "valueB" });
   new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   hasResource(stack, "AWS::Lambda::Function", {
     Environment: {
       Variables: {
         keyA: "valueA",
         keyB: "valueB",
-        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
-      }
-    }
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+      },
+    },
   });
 });
 
@@ -1772,35 +1772,35 @@ test("Stack.defaultFunctionProps(): permissions", async () => {
   stack.addDefaultFunctionPermissions(["s3"]);
   stack.addDefaultFunctionPermissions(["dynamodb"]);
   new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   hasResource(stack, "AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
         { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        { Action: "dynamodb:*", Effect: "Allow", Resource: "*" }
+        { Action: "dynamodb:*", Effect: "Allow", Resource: "*" },
       ],
-      Version: "2012-10-17"
-    }
+      Version: "2012-10-17",
+    },
   });
 });
 
 test("App.defaultFunctionProps()", async () => {
   const app = new App();
   app.setDefaultFunctionProps({
-    timeout: 15
+    timeout: 15,
   });
 
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "index.placeholder",
     Timeout: 15,
     MemorySize: 1024,
-    TracingConfig: { Mode: "Active" }
+    TracingConfig: { Mode: "Active" },
   });
 });
 
@@ -1809,16 +1809,16 @@ test("App.defaultFunctionProps(): calledTwice", async () => {
   app.setDefaultFunctionProps({
     timeout: 15,
     memorySize: 256,
-    environment: { keyA: "valueA" }
+    environment: { keyA: "valueA" },
   });
   app.setDefaultFunctionProps({
     timeout: 10,
-    environment: { keyB: "valueB" }
+    environment: { keyB: "valueB" },
   });
 
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "index.placeholder",
@@ -1828,10 +1828,10 @@ test("App.defaultFunctionProps(): calledTwice", async () => {
       Variables: {
         keyA: "valueA",
         keyB: "valueB",
-        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
-      }
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+      },
     },
-    TracingConfig: { Mode: "Active" }
+    TracingConfig: { Mode: "Active" },
   });
 });
 
@@ -1839,11 +1839,11 @@ test("App.defaultFunctionProps(): after Stack with Function resource", async () 
   const app = new App();
   const stack = new Stack(app, "Stack");
   new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   expect(() => {
     app.setDefaultFunctionProps({
-      timeout: 10
+      timeout: 10,
     });
   }).toThrowError();
 });
@@ -1853,7 +1853,7 @@ test("App.defaultFunctionProps(): after Stack without Function resource", async 
   new Stack(app, "Stack");
   expect(() => {
     app.setDefaultFunctionProps({
-      timeout: 10
+      timeout: 10,
     });
   }).not.toThrowError();
 });
@@ -1861,45 +1861,45 @@ test("App.defaultFunctionProps(): after Stack without Function resource", async 
 test("App.defaultFunctionProps(): env", async () => {
   const app = new App();
   app.setDefaultFunctionProps({
-    environment: { keyA: "valueA" }
+    environment: { keyA: "valueA" },
   });
   app.addDefaultFunctionEnv({ keyB: "valueB" });
 
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   hasResource(stack, "AWS::Lambda::Function", {
     Environment: {
       Variables: {
         keyA: "valueA",
         keyB: "valueB",
-        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
-      }
-    }
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+      },
+    },
   });
 });
 
 test("App.defaultFunctionProps(): permissions", async () => {
   const app = new App();
   app.setDefaultFunctionProps({
-    permissions: ["s3"]
+    permissions: ["s3"],
   });
   app.addDefaultFunctionPermissions(["dynamodb"]);
 
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   hasResource(stack, "AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
         { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        { Action: "dynamodb:*", Effect: "Allow", Resource: "*" }
+        { Action: "dynamodb:*", Effect: "Allow", Resource: "*" },
       ],
-      Version: "2012-10-17"
-    }
+      Version: "2012-10-17",
+    },
   });
 });
 
@@ -1909,7 +1909,7 @@ test("App.defaultFunctionProps(): config", async () => {
   const stackA = new Stack(app, "stackA");
   const SECRET_A = new Config.Secret(stackA, "SECRET_A");
   app.setDefaultFunctionProps({
-    config: [SECRET_A]
+    config: [SECRET_A],
   });
 
   // Create another stack with 1 secret
@@ -1946,26 +1946,26 @@ test("App.defaultFunctionProps(): config", async () => {
           ],
         },
       ],
-      Version: "2012-10-17"
-    }
+      Version: "2012-10-17",
+    },
   });
 });
 
 test("App.defaultFunctionProps(): callback", async () => {
   const app = new App();
   app.setDefaultFunctionProps(() => ({
-    timeout: 15
+    timeout: 15,
   }));
 
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "index.placeholder",
     Timeout: 15,
     MemorySize: 1024,
-    TracingConfig: { Mode: "Active" }
+    TracingConfig: { Mode: "Active" },
   });
 });
 
@@ -1974,16 +1974,16 @@ test("App.defaultFunctionProps(): callback-calledTwice", async () => {
   app.setDefaultFunctionProps(() => ({
     timeout: 15,
     memorySize: 256,
-    environment: { keyA: "valueA" }
+    environment: { keyA: "valueA" },
   }));
   app.setDefaultFunctionProps(() => ({
     timeout: 10,
-    environment: { keyB: "valueB" }
+    environment: { keyB: "valueB" },
   }));
 
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "index.placeholder",
@@ -1993,10 +1993,10 @@ test("App.defaultFunctionProps(): callback-calledTwice", async () => {
       Variables: {
         keyA: "valueA",
         keyB: "valueB",
-        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
-      }
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+      },
     },
-    TracingConfig: { Mode: "Active" }
+    TracingConfig: { Mode: "Active" },
   });
 });
 
@@ -2004,14 +2004,14 @@ test("App.defaultFunctionProps(): override", async () => {
   const app = new App();
   app.setDefaultFunctionProps({
     timeout: 15,
-    environment: { keyA: "valueA" }
+    environment: { keyA: "valueA" },
   });
 
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
     timeout: 10,
-    environment: { keyB: "valueB" }
+    environment: { keyB: "valueB" },
   });
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "index.placeholder",
@@ -2022,9 +2022,9 @@ test("App.defaultFunctionProps(): override", async () => {
       Variables: {
         keyA: "valueA",
         keyB: "valueB",
-        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
-      }
-    }
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+      },
+    },
   });
 });
 
@@ -2037,7 +2037,7 @@ test("fromDefinition-string", async () => {
   Function.fromDefinition(stack, "Function", "test/lambda.handler");
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "index.placeholder",
-    Timeout: 10
+    Timeout: 10,
   });
 });
 
@@ -2045,7 +2045,7 @@ test("fromDefinition-string-with-app-defaultFunctionProps", async () => {
   const app = new App();
   app.setDefaultFunctionProps({
     timeout: 15,
-    memorySize: 2048
+    memorySize: 2048,
   });
 
   const stack = new Stack(app, "stack");
@@ -2053,18 +2053,18 @@ test("fromDefinition-string-with-app-defaultFunctionProps", async () => {
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "index.placeholder",
     Timeout: 15,
-    MemorySize: 2048
+    MemorySize: 2048,
   });
 });
 
 test("fromDefinition-string-inherit", async () => {
   const stack = new Stack(new App(), "stack");
   Function.fromDefinition(stack, "Function", "test/lambda.handler", {
-    timeout: 20
+    timeout: 20,
   });
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "index.placeholder",
-    Timeout: 20
+    Timeout: 20,
   });
 });
 
@@ -2072,27 +2072,27 @@ test("fromDefinition-string-inherit-with-app-defaultFunctionProps", async () => 
   const app = new App();
   app.setDefaultFunctionProps({
     timeout: 15,
-    memorySize: 2048
+    memorySize: 2048,
   });
 
   const stack = new Stack(app, "stack");
   Function.fromDefinition(stack, "Function", "test/lambda.handler", {
-    timeout: 20
+    timeout: 20,
   });
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "index.placeholder",
     Timeout: 20,
-    MemorySize: 2048
+    MemorySize: 2048,
   });
 });
 
 test("fromDefinition-props", async () => {
   const stack = new Stack(new App(), "stack");
   Function.fromDefinition(stack, "Function", {
-    handler: "test/lambda.handler"
+    handler: "test/lambda.handler",
   });
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "index.placeholder"
+    Handler: "index.placeholder",
   });
 });
 
@@ -2104,12 +2104,12 @@ test("fromDefinition-props-inherit", async () => {
     {
       handler: "test/lambda.handler",
       memorySize: 2048,
-      environment: { KEY_A: "a" }
+      environment: { KEY_A: "a" },
     },
     {
       runtime: "nodejs16.x",
       memorySize: 512,
-      environment: { KEY_B: "b" }
+      environment: { KEY_B: "b" },
     }
   );
   hasResource(stack, "AWS::Lambda::Function", {
@@ -2120,9 +2120,9 @@ test("fromDefinition-props-inherit", async () => {
       Variables: {
         KEY_A: "a",
         KEY_B: "b",
-        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
-      }
-    }
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+      },
+    },
   });
 });
 
@@ -2131,7 +2131,7 @@ test("fromDefinition-props-inherit-with-app-defaultFunctionProps", async () => {
   app.setDefaultFunctionProps({
     timeout: 15,
     memorySize: 1024,
-    environment: { KEY_A: "a" }
+    environment: { KEY_A: "a" },
   });
 
   const stack = new Stack(app, "stack");
@@ -2141,12 +2141,12 @@ test("fromDefinition-props-inherit-with-app-defaultFunctionProps", async () => {
     {
       handler: "test/lambda.handler",
       memorySize: 2048,
-      environment: { KEY_B: "b" }
+      environment: { KEY_B: "b" },
     },
     {
       runtime: "nodejs16.x",
       memorySize: 512,
-      environment: { KEY_C: "c" }
+      environment: { KEY_C: "c" },
     }
   );
   hasResource(stack, "AWS::Lambda::Function", {
@@ -2159,9 +2159,9 @@ test("fromDefinition-props-inherit-with-app-defaultFunctionProps", async () => {
         KEY_A: "a",
         KEY_B: "b",
         KEY_C: "c",
-        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
-      }
-    }
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+      },
+    },
   });
 });
 
@@ -2172,12 +2172,12 @@ test("fromDefinition-sstFunction", async () => {
     "Function",
     new Function(stack, "Function", {
       handler: "test/lambda.handler",
-      timeout: 20
+      timeout: 20,
     })
   );
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "index.placeholder",
-    Timeout: 20
+    Timeout: 20,
   });
 });
 
@@ -2189,7 +2189,7 @@ test("fromDefinition-sstFunction-inherit", async () => {
       "Function",
       new Function(stack, "Function", {
         handler: "test/lambda.handler",
-        timeout: 20
+        timeout: 20,
       }),
       { timeout: 10 },
       "Cannot inherit"
@@ -2206,7 +2206,7 @@ test("fromDefinition-lambdaFunction", async () => {
       new lambda.Function(stack, "Function", {
         runtime: lambda.Runtime.NODEJS_10_X,
         handler: "test/lambda.handler",
-        code: lambda.Code.fromAsset("test")
+        code: lambda.Code.fromAsset("test"),
       }) as Function
     );
   }).toThrow(

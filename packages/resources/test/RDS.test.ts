@@ -15,7 +15,7 @@ import { App, Stack, RDS, RDSProps } from "../src";
 test("cdk.cluster is props", async () => {
   const stack = new Stack(new App(), "stack");
   const cluster = new RDS(stack, "Cluster", {
-    engine: "postgresql10.14",
+    engine: "postgresql11.13",
     defaultDatabaseName: "acme",
     cdk: {
       cluster: {
@@ -34,7 +34,7 @@ test("cdk.cluster is props", async () => {
     DBClusterIdentifier: "dev-my-app-cluster",
     EnableHttpEndpoint: true,
     EngineMode: "serverless",
-    EngineVersion: "10.14",
+    EngineVersion: "11.13",
     BackupRetentionPeriod: 7,
   });
 });
@@ -45,7 +45,7 @@ test("cdk.cluster contains engine error", async () => {
     () =>
       // @ts-ignore Allow type casting
       new RDS(stack, "Cluster", {
-        engine: "postgresql10.14",
+        engine: "postgresql11.13",
         defaultDatabaseName: "acme",
         cdk: {
           cluster: {
@@ -62,7 +62,7 @@ test("cdk.cluster contains defaultDatabaseName error", async () => {
     () =>
       // @ts-ignore Allow type casting
       new RDS(stack, "Cluster", {
-        engine: "postgresql10.14",
+        engine: "postgresql11.13",
         defaultDatabaseName: "acme",
         cdk: {
           cluster: {
@@ -81,7 +81,7 @@ test("cdk.cluster contains scaling error", async () => {
     () =>
       // @ts-ignore Allow type casting
       new RDS(stack, "Cluster", {
-        engine: "postgresql10.14",
+        engine: "postgresql11.13",
         defaultDatabaseName: "acme",
         cdk: {
           cluster: {
@@ -100,7 +100,7 @@ test("cdk.cluster contains enableDataApi error", async () => {
     () =>
       // @ts-ignore Allow type casting
       new RDS(stack, "Cluster", {
-        engine: "postgresql10.14",
+        engine: "postgresql11.13",
         defaultDatabaseName: "acme",
         cdk: {
           cluster: {
@@ -114,20 +114,27 @@ test("cdk.cluster contains enableDataApi error", async () => {
 test("cdk.cluster is construct", async () => {
   const stack = new Stack(new App(), "stack");
   const cluster = new RDS(stack, "Cluster", {
-    engine: "postgresql10.14",
+    engine: "postgresql11.13",
     defaultDatabaseName: "acme",
     cdk: {
-      cluster: rds.ServerlessCluster.fromServerlessClusterAttributes(stack, "ICluster", {
-        clusterIdentifier: "my-cluster",
-      }),
+      cluster: rds.ServerlessCluster.fromServerlessClusterAttributes(
+        stack,
+        "ICluster",
+        {
+          clusterIdentifier: "my-cluster",
+        }
+      ),
       secret: secretsManager.Secret.fromSecretAttributes(stack, "ISecret", {
-        secretPartialArn: "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret",
+        secretPartialArn:
+          "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret",
       }),
     },
   });
   countResources(stack, "AWS::RDS::DBCluster", 0);
   expect(cluster.defaultDatabaseName).toBe("acme");
-  expect(cluster.secretArn).toBe("arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret");
+  expect(cluster.secretArn).toBe(
+    "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret"
+  );
 });
 
 test("cdk.cluster is construct: no secret error", async () => {
@@ -135,7 +142,7 @@ test("cdk.cluster is construct: no secret error", async () => {
   expect(
     () =>
       new RDS(stack, "Cluster", {
-        engine: "postgresql10.14",
+        engine: "postgresql11.13",
         defaultDatabaseName: "acme",
         cdk: {
           cluster: new rds.ServerlessCluster(stack, "MyCluster", {
@@ -153,7 +160,7 @@ test("defaultDatabaseName missing", async () => {
     () =>
       // @ts-ignore Allow type casting
       new RDS(stack, "Cluster", {
-        engine: "postgresql10.14",
+        engine: "postgresql11.13",
       } as RDSProps)
   ).toThrow(/defaultDatabaseName/);
 });
@@ -181,16 +188,16 @@ test("engine invalid", async () => {
   ).toThrow(/engine/);
 });
 
-test("engine postgresql10.14", async () => {
+test("engine postgresql11.13", async () => {
   const stack = new Stack(new App(), "stack");
   new RDS(stack, "Cluster", {
-    engine: "postgresql10.14",
+    engine: "postgresql11.13",
     defaultDatabaseName: "acme",
   });
   hasResource(stack, "AWS::RDS::DBCluster", {
     Engine: "aurora-postgresql",
     EngineMode: "serverless",
-    EngineVersion: "10.14",
+    EngineVersion: "11.13",
   });
 });
 
@@ -223,7 +230,7 @@ test("engine mysql5.7", async () => {
 test("scaling default", async () => {
   const stack = new Stack(new App(), "stack");
   new RDS(stack, "Cluster", {
-    engine: "postgresql10.14",
+    engine: "postgresql11.13",
     defaultDatabaseName: "acme",
   });
   hasResource(stack, "AWS::RDS::DBCluster", {
@@ -239,7 +246,7 @@ test("scaling default", async () => {
 test("scaling autopause configured", async () => {
   const stack = new Stack(new App(), "stack");
   new RDS(stack, "Cluster", {
-    engine: "postgresql10.14",
+    engine: "postgresql11.13",
     defaultDatabaseName: "acme",
     scaling: {
       autoPause: 10,
@@ -260,7 +267,7 @@ test("scaling autopause configured", async () => {
 test("scaling autopause enabled", async () => {
   const stack = new Stack(new App(), "stack");
   new RDS(stack, "Cluster", {
-    engine: "postgresql10.14",
+    engine: "postgresql11.13",
     defaultDatabaseName: "acme",
     scaling: {
       autoPause: true,
@@ -279,7 +286,7 @@ test("scaling autopause enabled", async () => {
 test("scaling autopause disabled", async () => {
   const stack = new Stack(new App(), "stack");
   new RDS(stack, "Cluster", {
-    engine: "postgresql10.14",
+    engine: "postgresql11.13",
     defaultDatabaseName: "acme",
     scaling: {
       autoPause: false,
@@ -297,7 +304,7 @@ test("scaling autopause disabled", async () => {
 test("migrations", async () => {
   const stack = new Stack(new App(), "stack");
   new RDS(stack, "Cluster", {
-    engine: "postgresql10.14",
+    engine: "postgresql11.13",
     defaultDatabaseName: "acme",
     migrations: "test/rds/migrations",
   });
@@ -308,7 +315,7 @@ test("migrations not found", async () => {
   expect(
     () =>
       new RDS(stack, "Cluster", {
-        engine: "postgresql10.14",
+        engine: "postgresql11.13",
         defaultDatabaseName: "acme",
         migrations: "test/rds/does/not/exist",
       })
@@ -318,7 +325,7 @@ test("migrations not found", async () => {
 test("cdk.cluster.vpc not provided", async () => {
   const stack = new Stack(new App(), "stack");
   new RDS(stack, "Cluster", {
-    engine: "postgresql10.14",
+    engine: "postgresql11.13",
     defaultDatabaseName: "acme",
   });
   countResources(stack, "AWS::EC2::VPC", 1);
@@ -327,7 +334,7 @@ test("cdk.cluster.vpc not provided", async () => {
 test("cdk.cluster.vpc provided", async () => {
   const stack = new Stack(new App(), "stack");
   new RDS(stack, "Cluster", {
-    engine: "postgresql10.14",
+    engine: "postgresql11.13",
     defaultDatabaseName: "acme",
     cdk: {
       cluster: {
@@ -349,7 +356,7 @@ test("cdk.cluster.credentials SSM error", async () => {
   expect(
     () =>
       new RDS(stack, "Cluster", {
-        engine: "postgresql10.14",
+        engine: "postgresql11.13",
         defaultDatabaseName: "acme",
         cdk: {
           cluster: {

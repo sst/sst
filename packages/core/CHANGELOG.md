@@ -1,5 +1,13 @@
 # @serverless-stack/core
 
+## 1.15.2
+
+## 1.15.1
+
+### Patch Changes
+
+- [`bf7a8a07f`](https://github.com/serverless-stack/sst/commit/bf7a8a07f458b6729f473e911e0be3caac235ea5) Thanks [@fwang](https://github.com/fwang)! - Function: fix afterBundle script not awaited
+
 ## 1.15.0
 
 ### Minor Changes

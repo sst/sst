@@ -599,7 +599,7 @@ test("dataSources-DynamoDbDataSource-with-options", async () => {
 test("dataSources-RdsDataSource-sstRds", async () => {
   const stack = new Stack(new App(), "stack");
   const rds = new RDS(stack, "Database", {
-    engine: "postgresql10.14",
+    engine: "postgresql11.13",
     defaultDatabaseName: "acme",
   });
   new AppSyncApi(stack, "Api", {
@@ -656,7 +656,7 @@ test("dataSources-RdsDataSource-rdsServerlessCluster", async () => {
 test("dataSources-RdsDataSource-with-options", async () => {
   const stack = new Stack(new App(), "stack");
   const rds = new RDS(stack, "Database", {
-    engine: "postgresql10.14",
+    engine: "postgresql11.13",
     defaultDatabaseName: "acme",
   });
   new AppSyncApi(stack, "Api", {
@@ -952,7 +952,8 @@ test("resolvers: is datasource props: datasource is string with resolverProps", 
     TypeName: "Query",
     DataSourceName: "lambdaDS",
     Kind: "UNIT",
-    RequestMappingTemplate: '{"version" : "2017-02-28", "operation" : "Scan", "consistentRead": false}',
+    RequestMappingTemplate:
+      '{"version" : "2017-02-28", "operation" : "Scan", "consistentRead": false}',
     ResponseMappingTemplate: "$util.toJson($ctx.result.items)",
   });
 });
@@ -987,7 +988,8 @@ test("resolvers: is datasource props: datasource is FunctionDefinition", async (
     TypeName: "Query",
     DataSourceName: "LambdaDS_Query_notes",
     Kind: "UNIT",
-    RequestMappingTemplate: '{"version" : "2017-02-28", "operation" : "Scan", "consistentRead": false}',
+    RequestMappingTemplate:
+      '{"version" : "2017-02-28", "operation" : "Scan", "consistentRead": false}',
     ResponseMappingTemplate: "$util.toJson($ctx.result.items)",
   });
 });

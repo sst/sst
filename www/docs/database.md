@@ -20,7 +20,7 @@ const DATABASE = "MyDatabase";
 
 // Create the Aurora DB cluster
 const cluster = new RDS(stack, "Cluster", {
-  engine: "postgresql10.14",
+  engine: "postgresql11.13",
   defaultDatabaseName: DATABASE,
 });
 
@@ -86,7 +86,7 @@ On `sst start`, migrations are not automatically run. You can use the [SST Conso
 
 ```js
 const cluster = new RDS(stack, "Cluster", {
-  engine: "postgresql10.14",
+  engine: "postgresql11.13",
   defaultDatabaseName: DATABASE,
   migrations: "path/to/migrations",
 });
