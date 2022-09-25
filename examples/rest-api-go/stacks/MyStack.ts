@@ -4,9 +4,9 @@ export function MyStack({ stack }: StackContext) {
   // Create the HTTP API
   const api = new Api(stack, "Api", {
     routes: {
-      "GET /notes": "functions/list.go",
-      "GET /notes/{id}": "functions/get.go",
-      "PUT /notes/{id}": "functions/update.go",
+      "GET /notes": "services/functions/list.go",
+      "GET /notes/{id}": "services/functions/get.go",
+      "PUT /notes/{id}": "services/functions/update.go",
     },
   });
 
