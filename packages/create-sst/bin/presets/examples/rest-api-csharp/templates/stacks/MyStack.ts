@@ -5,7 +5,7 @@ export function MyStack({ stack }: StackContext) {
   const api = new Api(stack, "Api", {
     defaults: {
       function: {
-        srcPath: "api/Api",
+        srcPath: "services/Api",
       },
     },
     routes: {
