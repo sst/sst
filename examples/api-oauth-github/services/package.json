@@ -4,11 +4,11 @@
   "type": "module",
   "scripts": {},
   "dependencies": {
-    "aws-sdk": "^2.1220.0",
+    "aws-sdk": "^2.1223.0",
     "node-fetch": "^3.2.10",
     "lambda-multipart-parser": "^1.0.1"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.104"
+    "@types/aws-lambda": "^8.10.106"
   }
 }

@@ -4,10 +4,10 @@
   "type": "module",
   "scripts": {},
   "dependencies": {
-    "aws-sdk": "^2.1220.0",
-    "@types/node": "^18.7.18"
+    "aws-sdk": "^2.1223.0",
+    "@types/node": "^18.7.21"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.104"
+    "@types/aws-lambda": "^8.10.106"
   }
 }
