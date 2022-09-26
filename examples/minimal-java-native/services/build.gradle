@@ -4,7 +4,7 @@ plugins {
 }
 
 version = "0.1"
-group = "minimal.java.native"
+group = "minimal.javaNative"
 
 repositories {
     mavenCentral()
@@ -27,7 +27,7 @@ dependencies {
 
 
 application {
-    mainClass.set("minimal.java.native.FunctionLambdaRuntime")
+    mainClass.set("minimal.javaNative.FunctionLambdaRuntime")
 }
 java {
     sourceCompatibility = JavaVersion.toVersion("11")
@@ -39,7 +39,7 @@ micronaut {
     testRuntime("junit5")
     processing {
         incremental(true)
-        annotations("minimal.java.native.*")
+        annotations("minimal.javaNative.*")
     }
 }
 

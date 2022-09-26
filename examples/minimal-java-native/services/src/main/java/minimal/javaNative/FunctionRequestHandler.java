@@ -1,4 +1,4 @@
-package minimal.java.native;
+package minimal.javaNative;
 import io.micronaut.function.aws.MicronautRequestHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

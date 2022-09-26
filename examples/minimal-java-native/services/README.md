@@ -10,7 +10,7 @@
 
 [AWS Lambda Handler](https://docs.aws.amazon.com/lambda/latest/dg/java-handler.html)
 
-Handler: minimal.java.native.FunctionRequestHandler
+Handler: minimal.javaNative.FunctionRequestHandler
 
 
 - [Shadow Gradle Plugin](https://plugins.gradle.org/plugin/com.github.johnrengelman.shadow)
@@ -21,13 +21,13 @@ Handler: minimal.java.native.FunctionRequestHandler
 - [https://docs.aws.amazon.com/lambda/latest/dg/runtimes-custom.html](https://docs.aws.amazon.com/lambda/latest/dg/runtimes-custom.html)
 
 
-## Feature http-client documentation
-
-- [Micronaut HTTP Client documentation](https://docs.micronaut.io/latest/guide/index.html#httpClient)
-
-
 ## Feature aws-lambda documentation
 
 - [Micronaut AWS Lambda Function documentation](https://micronaut-projects.github.io/micronaut-aws/latest/guide/index.html#lambda)
+
+
+## Feature http-client documentation
+
+- [Micronaut HTTP Client documentation](https://docs.micronaut.io/latest/guide/index.html#httpClient)
 
 

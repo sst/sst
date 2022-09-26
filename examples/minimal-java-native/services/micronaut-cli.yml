@@ -1,5 +1,5 @@
 applicationType: function
-defaultPackage: minimal.java.native
+defaultPackage: minimal.javaNative
 testFramework: junit
 sourceLanguage: java
 buildTool: gradle
