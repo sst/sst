@@ -33,6 +33,7 @@
     "@serverless-stack/resources": "1.15.3",
     "aws-cdk": "2.32.0",
     "aws-cdk-lib": "2.32.0",
+    "cdk-assets": "2.32.0",
     "aws-iot-device-sdk": "^2.2.12",
     "chalk": "^5.0.1",
     "patch-package": "^6.4.7",
