@@ -5,10 +5,10 @@
   "scripts": {},
   "dependencies": {
     "aws-sdk": "^2.1223.0",
-    "@middy/core": "^3.3.4",
-    "@middy/http-error-handler": "^3.3.4",
-    "@middy/http-json-body-parser": "^3.3.4",
-    "@middy/validator": "^3.3.4"
+    "@middy/core": "^3.4.0",
+    "@middy/http-error-handler": "^3.4.0",
+    "@middy/http-json-body-parser": "^3.4.0",
+    "@middy/validator": "^3.4.0"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.106"
