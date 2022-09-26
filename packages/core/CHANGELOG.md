@@ -1,5 +1,11 @@
 # @serverless-stack/core
 
+## 1.15.3
+
+### Patch Changes
+
+- [#1959](https://github.com/serverless-stack/sst/pull/1959) [`4138b6147`](https://github.com/serverless-stack/sst/commit/4138b6147f5416eb8d3938c7efd44ee45d21eba1) Thanks [@kevinrackspace](https://github.com/kevinrackspace)! - Function: fix bundling python functions using Pipfile
+
 ## 1.15.2
 
 ## 1.15.1
