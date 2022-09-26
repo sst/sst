@@ -1,19 +1,19 @@
 import { Context } from "@serverless-stack/node/context/index.js";
 import path from "path";
 import fs from "fs/promises";
-import { ProjectRoot } from "../config/index.js";
+import { useProjectRoot } from "../config/index.js";
 
-export const useState = Context.memo(async () => {
-  const root = path.join(await ProjectRoot.use(), ".sst");
+export const useStateDirectory = Context.memo(async () => {
+  const root = path.join(await useProjectRoot(), ".sst");
   await fs.mkdir(root, {
-    recursive: true
+    recursive: true,
   });
 
   return root;
 });
 
-export const PersonalStageContext = Context.create(async () => {
-  const state = await useState();
+export const usePersonalStage = Context.memo(async () => {
+  const state = await useStateDirectory();
   try {
     const result = await fs.readFile(path.join(state, "stage"));
     return result.toString("utf8");

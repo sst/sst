@@ -5,7 +5,7 @@ import path from "path";
 import { GlobalCLIOptionsContext } from "../cli.js";
 import { VisibleError } from "../error/index.js";
 import { Logger } from "../logger/index.js";
-import { PersonalStageContext } from "../state/index.js";
+import { usePersonalStage } from "../state/index.js";
 
 export interface Config {
   name: string;
@@ -17,7 +17,7 @@ export interface Config {
 
 const DEFAULTS = {
   main: "stacks/index.ts",
-  stage: undefined
+  stage: undefined,
 } as const;
 
 const CONFIG_EXTENSIONS = [".config.cjs", ".config.mjs", ".config.js", ".json"];
@@ -25,14 +25,14 @@ const CONFIG_EXTENSIONS = [".config.cjs", ".config.mjs", ".config.js", ".json"];
 type ConfigWithDefaults = Config &
   Required<{ [key in keyof typeof DEFAULTS]: Exclude<Config[key], undefined> }>;
 
-export const ProjectRoot = Context.create(async () => {
+export const useProjectRoot = Context.memo(async () => {
   Logger.debug("Searching for project root...");
   async function find(dir: string): Promise<string> {
     if (dir === "/")
       throw new VisibleError(
         "Could not found a configuration file",
         "Make sure one of the following exists",
-        ...CONFIG_EXTENSIONS.map(ext => `  - sst${ext}`)
+        ...CONFIG_EXTENSIONS.map((ext) => `  - sst${ext}`)
       );
     for (const ext of CONFIG_EXTENSIONS) {
       const configPath = path.join(dir, `sst${ext}`);
@@ -50,7 +50,7 @@ export const ProjectRoot = Context.create(async () => {
 });
 
 export const useConfig = Context.memo(async () => {
-  const root = await ProjectRoot.use();
+  const root = await useProjectRoot();
   const globals = GlobalCLIOptionsContext.use();
   for (const ext of CONFIG_EXTENSIONS) {
     const file = path.join(root, "sst" + ext);
@@ -61,10 +61,8 @@ export const useConfig = Context.memo(async () => {
           ...DEFAULTS,
           ...config.default,
           stage:
-            config.default.stage ||
-            globals.stage ||
-            (await PersonalStageContext.use()),
-          profile: config.default.profile || globals.profile
+            config.default.stage || globals.stage || (await usePersonalStage()),
+          profile: config.default.profile || globals.profile,
         } as ConfigWithDefaults;
       } catch (ex) {
         continue;

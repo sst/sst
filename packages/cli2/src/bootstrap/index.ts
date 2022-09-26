@@ -1,13 +1,13 @@
 import { GetParametersCommand, SSMClient } from "@aws-sdk/client-ssm";
-import { Context } from "@serverless-stack/node/context";
-import { useAWSClient } from "../credentials";
-import { Logger } from "../logger";
+import { Context } from "@serverless-stack/node/context/index.js";
+import { useAWSClient } from "../credentials/index.js";
+import { Logger } from "../logger/index.js";
 
 const SSM_NAME_VERSION = `/sst/bootstrap/version`;
 const SSM_NAME_STACK_NAME = `/sst/bootstrap/stack-name`;
 const SSM_NAME_BUCKET_NAME = `/sst/bootstrap/bucket-name`;
 
-const BootstrapContext = Context.memo(async () => {
+export const useBootstrap = Context.memo(async () => {
   Logger.debug("Initializing bootstrap context");
   const ssm = await useAWSClient(SSMClient);
   const result = await ssm.send(
@@ -26,7 +26,3 @@ const BootstrapContext = Context.memo(async () => {
   Logger.debug("Loaded bootstrap info: ", JSON.stringify(ret));
   return ret;
 });
-
-export function useBootstrap() {
-  return BootstrapContext();
-}

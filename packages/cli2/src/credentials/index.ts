@@ -7,6 +7,7 @@ import { AwsAuthInputConfig } from "@aws-sdk/middleware-signing";
 import { useConfig } from "../config/index.js";
 import { GetCallerIdentityCommand, STSClient } from "@aws-sdk/client-sts";
 import { Logger } from "../logger/index.js";
+import { SdkProvider } from "aws-cdk/lib/api/aws-auth/sdk-provider.js";
 
 type Config = RegionInputConfig & RetryInputConfig & AwsAuthInputConfig;
 
@@ -56,3 +57,36 @@ export async function useAWSClient<C extends Client<any, any, any, any>>(
   cache.set(client.name, result);
   return result;
 }
+
+import aws from "aws-sdk";
+const CredentialProviderChain = aws.CredentialProviderChain;
+
+/**
+ * Do not use this. It is only used for AWS CDK compatibility.
+ */
+export const useAWSProvider = async () => {
+  const config = await useConfig();
+  const creds = await useAWSCredentials();
+  const chain = new CredentialProviderChain([
+    () => ({
+      ...creds,
+      get() {},
+      async getPromise() {},
+      needsRefresh() {
+        return false;
+      },
+      refresh() {},
+      async refreshPromise() {},
+      expired: false,
+      expireTime: creds.expiration!,
+      accessKeyId: creds.accessKeyId!,
+      sessionToken: creds.sessionToken!,
+      secretAccessKey: creds.secretAccessKey!,
+    }),
+  ]);
+  const provider = new SdkProvider(chain, config.region!, {
+    region: config.region,
+  });
+
+  return provider;
+};

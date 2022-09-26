@@ -1,14 +1,13 @@
-import { ProjectRoot, useConfig } from "../config/index.js";
+import { useProjectRoot, useConfig } from "../config/index.js";
 import esbuild from "esbuild";
 import fs from "fs/promises";
 import path from "path";
-import { useState } from "../state/index.js";
+import { useStateDirectory } from "../state/index.js";
 import { Logger } from "../logger/index.js";
 
 export async function build() {
-  import("aws-cdk-lib");
-  const root = await ProjectRoot.use();
-  const state = await useState();
+  const root = await useProjectRoot();
+  const state = await useStateDirectory();
   const config = await useConfig();
   const pkg = JSON.parse(
     await fs.readFile(path.join(root, "package.json")).then((x) => x.toString())
