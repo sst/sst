@@ -4,7 +4,8 @@ import * as cdk from "aws-cdk-lib";
 import { IConstruct } from "constructs";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as iam from "aws-cdk-lib/aws-iam";
-import { ILayerVersion } from "aws-cdk-lib/aws-lambda";
+import * as logs from "aws-cdk-lib/aws-logs";
+import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as cxapi from "aws-cdk-lib/cx-api";
 import { Bootstrap, DeferBuilder, State } from "@serverless-stack/core";
 import { Stack } from "./Stack.js";
@@ -298,7 +299,7 @@ export class App extends cdk.App {
   /**
    * Adds additional default layers to be applied to all Lambda functions in the stack.
    */
-  public addDefaultFunctionLayers(layers: ILayerVersion[]) {
+  public addDefaultFunctionLayers(layers: lambda.ILayerVersion[]) {
     this.defaultFunctionProps.push({
       layers
     });
@@ -311,6 +312,8 @@ export class App extends cdk.App {
     this.buildConstructsMetadata();
 
     Auth.injectConfig();
+
+    this.removeGovCloudUnsupportedResourceProperties();
 
     for (const child of this.node.children) {
       if (isStackConstruct(child)) {
@@ -489,6 +492,25 @@ export class App extends cdk.App {
     current.node.children.forEach(resource =>
       this.applyRemovalPolicy(resource, policy)
     );
+  }
+
+  private removeGovCloudUnsupportedResourceProperties() {
+    if (!this.region.startsWith("us-gov-")) {
+      return;
+    }
+
+    class RemoveGovCloudUnsupportedResourceProperties implements cdk.IAspect {
+      public visit(node: IConstruct): void {
+        if (node instanceof lambda.CfnFunction) {
+          node.addPropertyDeletionOverride("EphemeralStorage");
+        }
+        else if (node instanceof logs.CfnLogGroup) {
+          node.addPropertyDeletionOverride("Tags");
+        }
+      }
+    }
+
+    cdk.Aspects.of(this).add(new RemoveGovCloudUnsupportedResourceProperties());
   }
 
   private createTypesFile() {

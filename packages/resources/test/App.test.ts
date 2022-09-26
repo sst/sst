@@ -1,5 +1,5 @@
 import { test, expect } from "vitest";
-import { hasResource, hasResourceTemplate } from "./helper";
+import { ANY, ABSENT, hasResource, hasResourceTemplate } from "./helper";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import * as logs from "aws-cdk-lib/aws-logs";
 
@@ -7,7 +7,7 @@ export type AccessLogRetentionConfig =
   | keyof typeof logs.RetentionDays
   | logs.RetentionDays;
 
-import { App, AppDeployProps, Auth, Cognito, Stack } from "../src";
+import { Api, App, AppDeployProps, Cognito, Stack } from "../src";
 
 test("non-namespaced-props", async () => {
   const deployProps = {} as AppDeployProps;
@@ -76,5 +76,38 @@ test("stack tags", () => {
   expect(stack.tags.tagValues()).toEqual({
     "sst:app": "my-app",
     "sst:stage": "dev"
+  });
+});
+
+test("removeGovCloudUnsupportedResourceProperties us-east-1", () => {
+  const stack = new Stack(new App(), "stack");
+  new Api(stack, "Api", {
+    routes: {
+      "GET /": "test/lambda.handler",
+    }
+  });
+  hasResource(stack, "AWS::Lambda::Function", {
+    EphemeralStorage: ANY,
+  });
+  hasResource(stack, "AWS::Logs::LogGroup", {
+    Tags: ANY,
+  });
+});
+
+test("removeGovCloudUnsupportedResourceProperties us-gov-east-1", () => {
+  const app = new App({
+    region: "us-gov-east-1",
+  });
+  const stack = new Stack(app, "stack");
+  new Api(stack, "Api", {
+    routes: {
+      "GET /": "test/lambda.handler",
+    }
+  });
+  hasResource(stack, "AWS::Lambda::Function", {
+    EphemeralStorage: ABSENT,
+  });
+  hasResource(stack, "AWS::Logs::LogGroup", {
+    Tags: ABSENT,
   });
 });
