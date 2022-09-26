@@ -366,7 +366,7 @@ export class Bucket extends Construct implements SSTConstruct {
    *   }
    * });
    *
-   * bucket.attachPermissions("myNotification", ["s3"]);
+   * bucket.attachPermissionsToNotification("myNotification", ["s3"]);
    * ```
    */
   public attachPermissionsToNotification(
