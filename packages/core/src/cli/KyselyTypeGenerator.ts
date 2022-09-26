@@ -22,7 +22,10 @@ interface Database {
   engine: string;
   secretArn: string;
   clusterArn: string;
-  types?: string;
+  types?: {
+    path: string;
+    camelCase?: boolean;
+  };
 }
 
 export function createKyselyTypeGenerator(opts: Opts) {
@@ -45,7 +48,10 @@ export function createKyselyTypeGenerator(opts: Opts) {
       }),
     });
     const tables = await k.introspection.getTables();
-    const transformer = new Transformer(new PostgresDialect(), false);
+    const transformer = new Transformer(
+      new PostgresDialect(),
+      db.types.camelCase === true
+    );
     const nodes = transformer.transform(tables);
     const lastIndex = nodes.length - 1;
     const last = nodes[lastIndex] as ExportStatementNode;
@@ -58,7 +64,7 @@ export function createKyselyTypeGenerator(opts: Opts) {
     };
     const serializer = new Serializer();
     const data = serializer.serialize(nodes);
-    await fs.writeFile(db.types!, data);
+    await fs.writeFile(db.types.path, data);
   }
 
   opts.bus.subscribe("stacks.deployed", (evt) => {

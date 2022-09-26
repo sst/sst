@@ -18,6 +18,11 @@ const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 // Interfaces
 /////////////////////
 
+export interface RDSTypes {
+  path: string;
+  camelCase?: boolean;
+}
+
 export interface RDSProps {
   /**
    * Database engine of the cluster. Cannot be changed once set.
@@ -94,8 +99,20 @@ export interface RDSProps {
    *   types: "backend/core/sql/types.ts",
    * });
    * ```
+   * @example
+   * ```js
+   * new RDS(stack, "Database", {
+   *   engine: "postgresql11.13",
+   *   defaultDatabaseName: "acme",
+   *   migrations: "path/to/migration/scripts",
+   *   types: {
+   *     path: "backend/core/sql/types.ts",
+   *     camelCase: true
+   *   }
+   * });
+   * ```
    */
-  types?: string;
+  types?: string | RDSTypes;
 
   cdk?: {
     /**
@@ -249,7 +266,12 @@ export class RDS extends Construct implements SSTConstruct {
       data: {
         engine,
         secretArn: this.secretArn,
-        types,
+        types:
+          typeof types === "string"
+            ? {
+                path: types,
+              }
+            : types,
         clusterArn: this.clusterArn,
         clusterIdentifier: this.clusterIdentifier,
         defaultDatabaseName,
