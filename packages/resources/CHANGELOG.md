@@ -1,5 +1,16 @@
 # @serverless-stack/resources
 
+## 1.15.3
+
+### Patch Changes
+
+- [#1959](https://github.com/serverless-stack/sst/pull/1959) [`4138b6147`](https://github.com/serverless-stack/sst/commit/4138b6147f5416eb8d3938c7efd44ee45d21eba1) Thanks [@kevinrackspace](https://github.com/kevinrackspace)! - Function: fix bundling python functions using Pipfile
+
+* [#2046](https://github.com/serverless-stack/sst/pull/2046) [`b51cd3ac6`](https://github.com/serverless-stack/sst/commit/b51cd3ac640eddb73fb391e57a0e313f44747826) Thanks [@fwang](https://github.com/fwang)! - Remove resource properties not supported in GovCloud
+
+* Updated dependencies [[`4138b6147`](https://github.com/serverless-stack/sst/commit/4138b6147f5416eb8d3938c7efd44ee45d21eba1)]:
+  - @serverless-stack/core@1.15.3
+
 ## 1.15.2
 
 ### Patch Changes
