@@ -17,9 +17,9 @@ WORKDIR /var/dependencies
 COPY Pipfile* pyproject* poetry* requirements.tx[t] ./
 
 # Run these command separately
-# Note: "pipenv lock -r > requirements.txt" command can fail if the pipenv is using a Python version (ie. Python3.9)
+# Note: "pipenv requirements > requirements.txt" command can fail if the pipenv is using a Python version (ie. Python3.9)
 #       that's not the same as the Lambda Python version (ie. Python3.8)
-RUN if [ -f 'Pipfile' ]; then pipenv lock -r > requirements.txt; else echo "Pipfile not found"; fi
+RUN if [ -f 'Pipfile' ]; then pipenv requirements > requirements.txt; else echo "Pipfile not found"; fi
 RUN if [ -f 'poetry.lock' ]; then poetry export --with-credentials --format requirements.txt --output requirements.txt; else echo "poetry.lock not found"; fi
 RUN if [ -f 'requirements.txt' ]; then pip install -r requirements.txt -t .; else echo "requirements.txt not found"; fi
 
