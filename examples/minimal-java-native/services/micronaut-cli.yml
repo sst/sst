@@ -1,0 +1,6 @@
+applicationType: function
+defaultPackage: minimal.java.native
+testFramework: junit
+sourceLanguage: java
+buildTool: gradle
+features: [annotation-api, app-name, aws-lambda, aws-lambda-custom-runtime, gradle, http-client, jackson-databind, java, junit, logback, micronaut-build, readme, shade, yaml]
