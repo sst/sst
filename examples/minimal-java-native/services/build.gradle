@@ -17,6 +17,8 @@ dependencies {
     implementation("io.micronaut:micronaut-jackson-databind")
     implementation("jakarta.annotation:jakarta.annotation-api")
     runtimeOnly("ch.qos.logback:logback-classic")
+    compileOnly("org.graalvm.nativeimage:svm")
+
     implementation("io.micronaut:micronaut-validation")
 
     implementation("io.micronaut.aws:micronaut-function-aws")
@@ -35,12 +37,21 @@ java {
 }
 
 micronaut {
-    runtime("lambda_java")
+    runtime("lambda_provided")
     testRuntime("junit5")
     processing {
         incremental(true)
         annotations("minimal.javaNative.*")
     }
+}
+
+
+tasks.named("dockerfileNative") {
+    args(
+        "-XX:MaximumHeapSizePercent=80",
+        "-Dio.netty.allocator.numDirectArenas=0",
+        "-Dio.netty.noPreferDirect=true"
+    )
 }
 
 

@@ -12,3 +12,4 @@ node_modules
 .env*.local
 .gradle
 services/bin
+services/build
