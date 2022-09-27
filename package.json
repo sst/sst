@@ -12,6 +12,7 @@
     ]
   },
   "scripts": {
+    "postinstall": "patch-package",
     "watch": "tsc -b -w",
     "build": "turbo run build --filter=!@serverless-stack/docs --filter=!@serverless-stack/console --filter=!@serverless-stack/cli-*",
     "release": "yarn build && yarn changeset publish",
@@ -25,6 +26,7 @@
   "devDependencies": {
     "@changesets/changelog-github": "^0.4.4",
     "@changesets/cli": "^2.22.0",
+    "patch-package": "6.4.7",
     "prettier": "^2.2.1",
     "turbo": "^1.2.8",
     "typescript": "^4.6.2",

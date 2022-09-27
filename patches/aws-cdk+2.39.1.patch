@@ -1,0 +1,58 @@
+diff --git a/node_modules/aws-cdk/lib/api/cloudformation-deployments.js b/node_modules/aws-cdk/lib/api/cloudformation-deployments.js
+index 4197257..e9c98a3 100644
+--- a/node_modules/aws-cdk/lib/api/cloudformation-deployments.js
++++ b/node_modules/aws-cdk/lib/api/cloudformation-deployments.js
+@@ -110,6 +110,7 @@ class CloudFormationDeployments {
+         if (options.resourcesToImport === undefined) {
+             await this.publishStackAssets(options.stack, toolkitInfo, {
+                 buildAssets: options.buildAssets ?? true,
++                quiet: options.quiet
+             });
+         }
+         // Do a verification of the bootstrap stack version
+@@ -226,6 +227,7 @@ class CloudFormationDeployments {
+             const manifest = cdk_assets_1.AssetManifest.fromFile(assetArtifact.file);
+             await asset_publishing_1.publishAssets(manifest, this.sdkProvider, stackEnv, {
+                 buildAssets: options.buildAssets ?? true,
++                quiet: options.quiet
+             });
+         }
+     }
+diff --git a/node_modules/aws-cdk/lib/api/deploy-stack.js b/node_modules/aws-cdk/lib/api/deploy-stack.js
+index 4629814..1dcf744 100644
+--- a/node_modules/aws-cdk/lib/api/deploy-stack.js
++++ b/node_modules/aws-cdk/lib/api/deploy-stack.js
+@@ -101,8 +101,32 @@ async function prepareAndExecuteChangeSet(options, cloudFormationStack, stackArt
+         await cfn.deleteChangeSet({ StackName: deployName, ChangeSetName: changeSetName }).promise();
+     }
+     const update = cloudFormationStack.exists && cloudFormationStack.stackStatus.name !== 'REVIEW_IN_PROGRESS';
++    if (update) {
++      await cfn.updateStack({
++          StackName: deployName,
++          TemplateBody: bodyParameter.TemplateBody,
++          TemplateURL: bodyParameter.TemplateURL,
++          Parameters: stackParams.apiParameters,
++          RoleARN: options.roleArn,
++          NotificationARNs: options.notificationArns,
++          Capabilities: ['CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM', 'CAPABILITY_AUTO_EXPAND'],
++          Tags: options.tags,
++      }).promise();
++      return
++    }
++    await cfn.createStack({
++        StackName: deployName,
++        TemplateBody: bodyParameter.TemplateBody,
++        TemplateURL: bodyParameter.TemplateURL,
++        Parameters: stackParams.apiParameters,
++        RoleARN: options.roleArn,
++        NotificationARNs: options.notificationArns,
++        Capabilities: ['CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM', 'CAPABILITY_AUTO_EXPAND'],
++        Tags: options.tags,
++    }).promise();
++    return
+     logging_1.debug(`Attempting to create ChangeSet with name ${changeSetName} to ${update ? 'update' : 'create'} stack ${deployName}`);
+-    logging_1.print('%s: creating CloudFormation changeset...', chalk.bold(deployName));
++    // logging_1.print('%s: creating CloudFormation changeset...', chalk.bold(deployName));
+     const executionId = uuid.v4();
+     const changeSet = await cfn.createChangeSet({
+         StackName: deployName,

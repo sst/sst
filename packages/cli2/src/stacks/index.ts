@@ -18,12 +18,12 @@ async function synth(opts: SynthOptions) {
   Logger.debug("Synthesizing stacks...");
   opts = {
     buildDir: ".sst/out",
-    ...opts,
+    ...opts
   };
   const [identity, config, bootstrap] = await Promise.all([
     useSTSIdentity(),
     useConfig(),
-    useBootstrap(),
+    useBootstrap()
   ]);
 
   const app = new App(
@@ -36,11 +36,11 @@ async function synth(opts: SynthOptions) {
       bootstrapAssets: {
         bucketName: bootstrap.bucket,
         version: bootstrap.version,
-        stackName: bootstrap.stack,
-      },
+        stackName: bootstrap.stack
+      }
     },
     {
-      outdir: opts.buildDir || path.join(await useStateDirectory(), "out"),
+      outdir: opts.buildDir || path.join(await useStateDirectory(), "out")
     }
   );
 
@@ -53,5 +53,5 @@ async function synth(opts: SynthOptions) {
 export const Stacks = {
   build,
   deploy,
-  synth,
+  synth
 };

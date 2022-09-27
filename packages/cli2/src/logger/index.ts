@@ -19,7 +19,10 @@ export const Logger = {
       new Date().toISOString(),
       `+${diff}ms`.padStart(8),
       "[debug]",
-      ...parts
+      ...parts.map(x => {
+        if (typeof x === "string") return x;
+        return JSON.stringify(x);
+      })
     );
   }
 };
