@@ -5,9 +5,8 @@ export default function MultiPackagerCode(props) {
   return (
     <Tabs
       groupId="code-snippets"
-      defaultValue="npx"
+      defaultValue="npm"
       values={[
-        { label: "npx", value: "npx" },
         { label: "npm", value: "npm" },
         { label: "yarn", value: "yarn" },
       ]}

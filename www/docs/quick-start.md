@@ -6,33 +6,88 @@ description: "Create a new SST app"
 
 import config from "../config";
 import TabItem from "@theme/TabItem";
+import HeadlineText from "@site/src/components/HeadlineText";
 import MultiPackagerCode from "@site/src/components/MultiPackagerCode";
 
-SST is a collection of <a href={ `${ config.github }/tree/master/packages` }>npm packages</a> that allow you to create a serverless app. You can define your apps with a combination of Infrastructure as Code (using [CDK](https://aws.amazon.com/cdk/)) and Lambda functions.
+export const ConsoleUrl = ({url}) =>
+<a href={url}>{url.replace("https://","").replace(/\/$/, "")}</a>;
 
-To use SST you'll need:
+<HeadlineText>
 
-- [Node.js](https://nodejs.org/en/download/) >= 10.15.1
-- An [AWS account](https://serverless-stack.com/chapters/create-an-aws-account.html) with the [AWS CLI configured locally](https://serverless-stack.com/chapters/configure-the-aws-cli.html)
+SST is a collection of <a href={ `${ config.github }/tree/master/packages` }>npm packages</a> that allow you to define your infrastructure, write functions, connect and deploy your frontend.
 
-## Getting started
+</HeadlineText>
 
-Create a new project using.
+---
+
+## 0. Prerequisites
+
+SST is built with Node, so make sure your local machine has it installed; [Node.js 14](https://nodejs.org/) and [npm 7](https://www.npmjs.com/).
+
+---
+
+### AWS credentials
+
+You also need to have an AWS account and AWS credentials configured locally. If you haven't already, [**follow these steps**](advanced/iam-credentials.md#loading-from-a-file).
+
+---
+
+## 1. Create a new app
+
+Create a new SST app using the [`create-sst`](packages/create-sst.md) CLI.
 
 <MultiPackagerCode>
 <TabItem value="npm">
 
 ```bash
-npm init sst@latest my-sst-app
-cd my-sst-app
-npm install
+npx create-sst@latest my-sst-app
 ```
 
 </TabItem>
-<TabItem value="npx">
+<TabItem value="yarn">
 
 ```bash
-npx create-sst@latest my-sst-app
+yarn create sst my-sst-app
+```
+
+</TabItem>
+</MultiPackagerCode>
+
+---
+
+### Pick a starter
+
+This'll prompt you to select a starter.
+
+```bash
+? What kind of project do you want to create? (Use arrow keys)
+❯ graphql
+  minimal
+  examples
+```
+
+The `graphql` starter is a full-stack TypeScript app organized as a monorepo. It comes with a GraphQL API, a frontend React app, and all of our best practices. Let's pick that.
+
+This'll prompt you to select a database; either [RDS](https://aws.amazon.com/rds/) (PostgreSQL or MySQL) or [DynamoDB](https://aws.amazon.com/dynamodb/).
+
+```bash
+? Select a database (you can change this later or use both) (Use arrow keys)
+  RDS (Postgres or MySQL)
+❯ DynamoDB
+```
+
+Let's use DynamoDB for now. If you want to use PostgreSQL, [check out our tutorial](learn/index.md), we cover it in detail.
+
+---
+
+### Install dependencies
+
+Next install the dependencies.
+
+<MultiPackagerCode>
+<TabItem value="npm">
+
+```bash
 cd my-sst-app
 npm install
 ```
@@ -41,7 +96,6 @@ npm install
 <TabItem value="yarn">
 
 ```bash
-yarn create sst my-sst-app
 cd my-sst-app
 yarn
 ```
@@ -49,21 +103,14 @@ yarn
 </TabItem>
 </MultiPackagerCode>
 
-## Starting local environment
+---
 
-The first time the SST command is run, you'll be prompted to enter a default stage name to use. The stage name will be stored locally in a .sst/ directory. This directory is automatically ignore from Git.
+## 2. Start local environment
 
-The initial deploy can around 5-10 minutes. It will deploy your app to AWS, and also setup [Live Lambda dev](live-lambda-development.md) environment.
+Let's start the [Live Lambda](live-lambda-development.md) local development environment.
 
 <MultiPackagerCode>
 <TabItem value="npm">
-
-```bash
-npm run start
-```
-
-</TabItem>
-<TabItem value="npx">
 
 ```bash
 npx sst start
@@ -79,49 +126,84 @@ yarn run start
 </TabItem>
 </MultiPackagerCode>
 
-This command uses your **default AWS Profile** and the **region** specified in your `sst.json`. If you want to use a different AWS account or region, you can do:
+The first time the SST command is run, you'll be prompted to enter a default stage name to use.
+
+---
+
+### Pick a stage name
+
+SST uses the stage names to namespace your resources. Just hit **Enter** to select the default one.
+
+```
+Look like you’re running sst for the first time in this directory. Please enter
+a stage name you’d like to use locally. Or hit enter to use the one based on
+your AWS credentials (Jay):
+```
+
+The namespaced resources lets SST deploy multiple environments of the same app to the same AWS account. So you and your teammates can work together.
+
+:::info
+The stage name will be stored locally in a `.sst/` directory. It's automatically ignored from Git.
+:::
+
+The initial deploy can take a few minutes. It will deploy your app to AWS, and also setup the infrastructure to support your local development environment.
+
+Once complete, you'll see something like this.
+
+```bash
+==========================
+ Starting Live Lambda Dev
+==========================
+
+SST Console: https://console.sst.dev/my-sst-app/Jay/local
+Done building pothos schema
+Debug session started. Listening for requests...
+```
+
+Now our app has been deployed to AWS and it's connect to our local machine so we can make our changes live.
+
+---
+
+### Start the frontend
+
+The frontend in our starter is a React app created with [Vite](https://vitejs.dev). Let's start it locally from the `web/` directory.
 
 <MultiPackagerCode>
 <TabItem value="npm">
 
 ```bash
-# requires an extra `--` for the options
-AWS_PROFILE=my-profile npm run start -- --region eu-west-1
-```
-
-</TabItem>
-<TabItem value="npx">
-
-```bash
-AWS_PROFILE=my-profile npx sst start --region eu-west-1
+cd web
+npm run dev
 ```
 
 </TabItem>
 <TabItem value="yarn">
 
 ```bash
-AWS_PROFILE=my-profile yarn run start --region eu-west-1
+cd web
+yarn run dev
 ```
 
 </TabItem>
 </MultiPackagerCode>
 
-### Using SST Console
+Once complete, you can naviate to the URL in your output — `http://localhost:3000/`
 
-The SST Console is a web based dashboard to manage your SST apps. Once `sst start` is up and running, you should see the following printed out in the terminal.
+![SST starter homepage](/img/quick-start/sst-starter-homepage.png)
 
-```bash
-==========================
-Starting Live Lambda Dev
-==========================
+You should see the homepage of our starter! It's a simple Reddit clone where you can post links.
 
-SST Console: https://console.serverless-stack.com/my-sst-app/frank/local
-Debug session started. Listening for requests...
-```
+---
 
-Open the [SST Console](console.md) in the browser.
+### Open the console
+
+This also starts the [SST Console](console.md), a web based dashboard to manage your apps.
+
+Head over to the URL above or simply — **<ConsoleUrl url={config.console} />**
 
 ![SST Console homescreen](/img/console/sst-console-homescreen.png)
+
+---
 
 ## Deploying an app
 
@@ -129,14 +211,6 @@ Once your app has been built and tested successfully, you are ready to deploy it
 
 <MultiPackagerCode>
 <TabItem value="npm">
-
-```bash
-# requires an extra `--` for the options
-npm run deploy -- --stage prod
-```
-
-</TabItem>
-<TabItem value="npx">
 
 ```bash
 npx sst deploy --stage prod
@@ -156,14 +230,6 @@ Similarly, to deploy to a different AWS account or region, you can do:
 
 <MultiPackagerCode>
 <TabItem value="npm">
-
-```bash
-# requires an extra `--` for the options
-AWS_PROFILE=my-profile npm run deploy -- --stage prod --region eu-west-1
-```
-
-</TabItem>
-<TabItem value="npx">
 
 ```bash
 AWS_PROFILE=my-profile npx sst deploy --stage prod --region eu-west-1
@@ -187,14 +253,6 @@ This allows you look at logs in production and manage resources in production as
 <TabItem value="npm">
 
 ```bash
-# requires an extra `--` for the options
-npm run console -- --stage prod
-```
-
-</TabItem>
-<TabItem value="npx">
-
-```bash
 npx sst console --stage prod
 ```
 
@@ -216,13 +274,6 @@ Finally, you can remove all your stacks and their resources from AWS using.
 <TabItem value="npm">
 
 ```bash
-npm run remove
-```
-
-</TabItem>
-<TabItem value="npx">
-
-```bash
 npx sst remove
 ```
 
@@ -240,14 +291,6 @@ Or if you've deployed to a different stage.
 
 <MultiPackagerCode>
 <TabItem value="npm">
-
-```bash
-# requires an extra `--` for the options
-npm run remove -- --stage prod
-```
-
-</TabItem>
-<TabItem value="npx">
 
 ```bash
 npx sst remove --stage prod
