@@ -33,7 +33,7 @@ To use the SST Console in local development:
 
 2. You'll see something like this once your local environment is ready.
 
-   ```bash
+   ```
    ==========================
    Starting Live Lambda Dev
    ==========================
