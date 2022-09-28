@@ -959,7 +959,7 @@ export class Function extends lambda.Function implements SSTConstruct {
         // Update function's code
         const codeConfig = code.bind(this);
         const cfnFunction = this.node.defaultChild as lambda.CfnFunction;
-        cfnFunction.runtime = runtime.toString();
+        cfnFunction.runtime = bundledRuntime.toString();
         cfnFunction.code = {
           s3Bucket: codeConfig.s3Location?.bucketName,
           s3Key: codeConfig.s3Location?.objectKey,
