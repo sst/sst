@@ -39,6 +39,7 @@
     "esbuild-runner": "^2.2.1",
     "express": "^4.17.1",
     "fs-extra": "^9.0.1",
+    "global-agent": "^3.0.0",
     "remeda": "^0.0.32",
     "source-map-support": "^0.5.19",
     "ws": "^8.6.0",

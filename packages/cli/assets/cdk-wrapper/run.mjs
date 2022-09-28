@@ -17,6 +17,9 @@ import chalk from "chalk";
 import * as sst from "@serverless-stack/resources";
 import { initializeLogger, Bootstrap, Util } from "@serverless-stack/core";
 
+import { proxy_bootstrap } from '../../lib/proxy.mjs';
+proxy_bootstrap();
+
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 const config = fs.readJsonSync(path.join(__dirname, "./sst-merged.json"));
 const appPath = process.cwd();

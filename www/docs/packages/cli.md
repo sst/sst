@@ -426,3 +426,20 @@ For example, to set the stage and region:
 ```bash
 npx sst deploy --stage prod --region eu-west-1
 ```
+
+### HTTP Proxy Support
+
+The cli will automatically pick up the proxy server to use via the environment variables (case sensitive, in priority order):
+* GLOBAL_AGENT_HTTPS_PROXY
+* https_proxy
+* HTTP_PROXY
+* GLOBAL_AGENT_HTTP_PROXY
+* http_proxy
+* HTTP_PROXY
+
+It will also respect "no proxy" set via:
+* GLOBAL_AGENT_NO_PROXY
+* no_proxy
+* NO_PROXY
+
+For more fine-grained control of the proxy settings, see [global-agent](https://www.npmjs.com/package/global-agent) 

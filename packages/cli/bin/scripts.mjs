@@ -18,6 +18,9 @@ import chalk from "chalk";
 import readline from "readline";
 import spawn from "cross-spawn";
 
+import { proxy_bootstrap } from '../lib/proxy.mjs';
+proxy_bootstrap();
+
 import { createRequire } from "module";
 
 const require = createRequire(import.meta.url);
