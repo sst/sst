@@ -1,12 +1,14 @@
 import path from "path";
 import { build } from "./build.js";
-import { deploy } from "./deploy.js";
+import { deploy, deployMany } from "./deploy.js";
 import { App } from "@serverless-stack/resources";
-import { useSTSIdentity } from "../credentials/index.js";
+import { useAWSProvider, useSTSIdentity } from "../credentials/index.js";
 import { useProjectRoot, useConfig } from "../config/index.js";
 import { useBootstrap } from "../bootstrap/index.js";
 import { Logger } from "../logger/index.js";
 import { useStateDirectory } from "../state/index.js";
+import { CloudExecutable } from "aws-cdk/lib/api/cxapp/cloud-executable.js";
+import { Configuration } from "aws-cdk/lib/settings.js";
 
 interface SynthOptions {
   buildDir?: string;
@@ -14,6 +16,7 @@ interface SynthOptions {
   skipBuild?: boolean;
   fn: (app: App) => Promise<void> | void;
 }
+
 async function synth(opts: SynthOptions) {
   Logger.debug("Synthesizing stacks...");
   opts = {
@@ -26,6 +29,8 @@ async function synth(opts: SynthOptions) {
     useBootstrap()
   ]);
 
+  const cfg = new Configuration();
+  await cfg.load();
   const app = new App(
     {
       account: identity.Account!,
@@ -40,18 +45,32 @@ async function synth(opts: SynthOptions) {
       }
     },
     {
-      outdir: opts.buildDir || path.join(await useStateDirectory(), "out")
+      outdir: opts.buildDir || path.join(await useStateDirectory(), "out"),
+      context: cfg.context.all
     }
   );
 
   await opts.fn(app);
-  const asm = app.synth();
+  await app.runDeferredBuilds();
+  /*
+  console.log(JSON.stringify(cfg.context));
+  const executable = new CloudExecutable({
+    sdkProvider: await useAWSProvider(),
+    configuration: cfg,
+    synthesizer: async () => app.synth() as any
+  });
+  const { assembly } = await executable.synthesize(true);
+  */
+  const assembly = app.synth();
+  await cfg.saveContext();
+  console.log(assembly.manifest.missing);
   Logger.debug("Finished synthesizing");
-  return asm;
+  return assembly;
 }
 
 export const Stacks = {
   build,
   deploy,
+  deployMany,
   synth
 };

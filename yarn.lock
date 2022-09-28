@@ -201,6 +201,11 @@
     "@aws-cdk/cloud-assembly-schema" "2.39.1"
     semver "^7.3.7"
 
+"@aws-cdk/region-info@2.39.1":
+  version "2.39.1"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/region-info/-/region-info-2.39.1.tgz#85aa51728befd9ec45e65927c779ca9eaa34ee8c"
+  integrity sha512-WViPdQpPeczz1m7IfUwWMaI/C8XtoxhQxbcv3bPLiA+1vqKdG9POE5qydbRA0BjZvJEmst4kQjlCMaT34AiAaQ==
+
 "@aws-crypto/crc32@2.0.0":
   version "2.0.0"
   resolved "https://registry.npmjs.org/@aws-crypto/crc32/-/crc32-2.0.0.tgz"

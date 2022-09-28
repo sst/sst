@@ -19,9 +19,5 @@ export async function Deploy(opts: DeployOpts) {
     });
   })();
 
-  for (const stack of assembly.stacks) {
-    try {
-      await Stacks.deploy(stack);
-    } catch (ex) {}
-  }
+  await Stacks.deployMany(assembly.stacks);
 }
