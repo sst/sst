@@ -360,5 +360,3 @@ Instead, it'll first compare the generated CloudFormation template to the previo
 </div>
 
 The [SST Console](console.md) will also show you if there are any infrastructure changes that need to be deployed.
-.text {
-}
