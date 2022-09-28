@@ -404,6 +404,7 @@ export interface FunctionUrlProps {
 export type FunctionBundleProp =
   | FunctionBundleNodejsProps
   | FunctionBundlePythonProps
+  | FunctionBundleJavaProps
   | boolean;
 
 interface FunctionBundleBase {
@@ -609,9 +610,9 @@ export interface FunctionBundleNodejsProps extends FunctionBundleBase {
 /**
  * Used to configure Python bundling options
  */
-export interface FunctionBundlePythonProps extends FunctionBundleBase {
+ export interface FunctionBundlePythonProps extends FunctionBundleBase {
   /**
-   * A list of commands to override the [default installing behavior](Function#bundle) for Python dependencies.
+   * Gradle build command to generate .zip file
    *
    * Each string in the array is a command that'll be run. For example:
    *
@@ -630,6 +631,62 @@ export interface FunctionBundlePythonProps extends FunctionBundleBase {
    * ```
    */
   installCommands?: string[];
+}
+
+/**
+ * Used to configure Java package build options
+ */
+ export interface FunctionBundleJavaProps extends FunctionBundleBase {
+  /**
+   * A list of commands to override the [default installing behavior](Function#bundle) for Python dependencies.
+   *
+   * Each string in the array is a command that'll be run. For example:
+   *
+   * @default "build"
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   bundle: {
+   *     buildCommand: "buildNativeLambda"
+   *   }
+   * })
+   * ```
+   */
+  buildCommand?: string;
+
+  /**
+   * Whether to use a custom runtime (https://docs.aws.amazon.com/lambda/latest/dg/runtimes-custom.html) for a native build
+   *
+   * @default false
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   bundle: {
+   *     buildCommand: "buildNativeLambda"
+   *   }
+   * })
+   * ```
+   */
+   customRuntime?: boolean;
+
+
+  /**
+   * The output folder that the .zip file will be created within
+   *
+   * @default "distributions"
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   bundle: {
+   *     buildOutputFolder: "libs"
+   *   }
+   * })
+   * ```
+   */
+   buildOutputFolder?: string;
 }
 
 /**
@@ -896,6 +953,8 @@ export class Function extends lambda.Function implements SSTConstruct {
           }
           return bundled.asset;
         })();
+
+        const bundledRuntime = bundled.overrideRuntime ?? runtime;
 
         // Update function's code
         const codeConfig = code.bind(this);

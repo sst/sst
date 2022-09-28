@@ -5,14 +5,30 @@ import zipLocal from "zip-local";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { State } from "../../state/index.js";
 import { Paths } from "../../util/index.js";
-import { buildAsync, buildAsyncAndThrow, Command, Definition } from "./definition.js";
+import { buildAsync, buildAsyncAndThrow, Command, Definition, Opts } from "./definition.js";
+import { Lambda } from "aws-sdk";
 
-export const JavaHandler: Definition = (opts: any) => {
+// Keep in sync manually with packages/resources/src/Function.ts:FunctionBundleJavaProps
+type Bundle = {
+  customRuntime?: boolean;
+  buildCommand?: string;
+  buildOutputFolder?: string;
+};
+
+export const JavaHandler: Definition = (opts: Opts<Bundle>) => {
   // Check build.gradle exists
   const buildGradle = path.join(opts.srcPath, "build.gradle");
   if (!fs.existsSync(buildGradle)) {
     throw new Error("Cannot find build.gradle at " + buildGradle);
   }
+
+  // Use a gradle wrapper if provided in the folder, otherwise fall back to system "gradle"
+  const gradleWrapperPath = path.resolve(path.join(opts.srcPath, "gradlew"));
+  const gradleBinary = fs.existsSync(gradleWrapperPath) ? gradleWrapperPath : "gradle"
+
+  const bundle = opts.bundle || {
+  };
+  const buildOutputFolder = bundle.buildOutputFolder ?? "distributions";
 
   const dir = State.Function.artifactsPath(
     opts.root,
@@ -23,9 +39,9 @@ export const JavaHandler: Definition = (opts: any) => {
     path.basename(opts.handler).replace(/::/g, "-"),
   );
   const cmd: Command = {
-    command: "gradle",
+    command: gradleBinary,
     args: [
-      "build",
+      bundle.buildCommand ?? "build",
       `-Dorg.gradle.project.buildDir=${target}`,
       `-Dorg.gradle.logging.level=${process.env.DEBUG ? "debug" : "lifecycle"}`,
     ],
@@ -50,8 +66,8 @@ export const JavaHandler: Definition = (opts: any) => {
       const issues = await buildAsync(opts, cmd);
       if (issues.length === 0) {
         // Unzip dependencies from .zip
-        const zip = (await fs.readdir(`${target}/distributions`)).find((f) => f.endsWith(".zip"));
-        zipLocal.sync.unzip(`${target}/distributions/${zip}`).save(`${target}/distributions`);
+        const zip = (await fs.readdir(`${target}/${buildOutputFolder}`)).find((f) => f.endsWith(".zip"));
+        zipLocal.sync.unzip(`${target}/${buildOutputFolder}/${zip}`).save(`${target}/${buildOutputFolder}`);
       }
       return issues;
     },
@@ -60,10 +76,11 @@ export const JavaHandler: Definition = (opts: any) => {
       await fs.mkdirp(dir);
       await buildAsyncAndThrow(opts, cmd);
       // Find the first zip in the build directory
-      const zip = (await fs.readdir(`${target}/distributions`)).find((f) => f.endsWith(".zip"));
+      const zip = (await fs.readdir(`${target}/${buildOutputFolder}`)).find((f) => f.endsWith(".zip"));
       return {
         handler: opts.handler,
-        asset: lambda.Code.fromAsset(`${target}/distributions/${zip}`),
+        asset: lambda.Code.fromAsset(`${target}/${buildOutputFolder}/${zip}`),
+        overrideRuntime: bundle.customRuntime ? lambda.Runtime.PROVIDED_AL2 : undefined
       };
     },
     run: {
@@ -87,7 +104,7 @@ export const JavaHandler: Definition = (opts: any) => {
           ),
           path.join(
             target,
-            "distributions",
+            `${buildOutputFolder}`,
             "lib",
             "*"
           ),

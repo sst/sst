@@ -8,6 +8,11 @@ export default function (app) {
   app.setDefaultFunctionProps({
     runtime: "java11",
     srcPath: "services",
+    bundle: {
+      buildCommand: "buildNativeLambda",
+      buildOutputFolder: "libs",
+      customRuntime: true      
+    }
   });
   app.stack(MyStack);
 }

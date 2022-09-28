@@ -317,7 +317,7 @@ The handler would be: `MyApp::Example.Hello::MyHandler`.
 
 ### bundle?
 
-_Type_ : `boolean | FunctionBundleNodejsProps | FunctionBundlePythonProps`, _defaults to_ `true`
+_Type_ : `boolean | FunctionBundleNodejsProps | FunctionBundlePythonProps | FunctionBundleNodejsProps`, _defaults to_ `true`
 
 #### Node.js runtime
 
