@@ -404,13 +404,6 @@ If you used the `create-sst` CLI to create your app, the above commands (`start`
 <TabItem value="npm">
 
 ```bash
-npm run <command>
-```
-
-</TabItem>
-<TabItem value="npx">
-
-```bash
 npx sst <command>
 ```
 

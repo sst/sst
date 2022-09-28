@@ -56,7 +56,7 @@ Then navigate to the **RDS** tab.
 ![Console RDS tab](/img/initialize-database/console-rds-tab.png)
 
 :::tip
-The Console needs a self-signed certificate to work with Safari or Brave. [Follow these steps to set it up.](../console.md#working-with-safari-or-brave).
+The Console needs a self-signed certificate to work with Safari or Brave. [Follow these steps to set it up.](../console.md#safari-and-brave).
 :::
 
 At this point we don't have any tables in our database. To add them in, we are going to run a migration.
