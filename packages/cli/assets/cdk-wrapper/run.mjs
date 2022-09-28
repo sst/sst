@@ -17,7 +17,7 @@ import chalk from "chalk";
 import * as sst from "@serverless-stack/resources";
 import { initializeLogger, Bootstrap, Util } from "@serverless-stack/core";
 
-import { proxy_bootstrap } from '../../lib/proxy.mjs';
+import { proxy_bootstrap } from '@serverless-stack/cli/lib/proxy.mjs';
 proxy_bootstrap();
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
