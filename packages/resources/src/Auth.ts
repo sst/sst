@@ -63,7 +63,13 @@ export interface ApiAttachmentProps {
  * })
  */
 export class Auth extends Construct {
+  /**
+   * Secret that contains the public JWT signing key
+   */
   public readonly SST_AUTH_PUBLIC: Secret;
+  /**
+   * Secret that contains the private JWT signing key
+   */
   public readonly SST_AUTH_PRIVATE: Secret;
   private readonly authenticator: FunctionDefinition;
 
