@@ -117,3 +117,21 @@ new Queue(stack, "Queue", {
   },
 });
 ```
+
+#### Using existing Lambda functions as consumer
+
+```js {7-10}
+import * as iam from "aws-cdk-lib/aws-iam";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+
+new Queue(stack, "Queue", {
+  consumer: {
+    cdk: {
+      function: lambda.Function.fromFunctionAttributes(stack, "IFunction", {
+        functionArn: "arn:aws:lambda:us-east-1:123456789:function:my-function",
+        role: iam.Role.fromRoleArn(stack, "IRole", "arn:aws:iam::123456789:role/my-role"),
+      }),
+    },
+  },
+});
+```

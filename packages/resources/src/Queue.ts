@@ -41,7 +41,10 @@ export interface QueueConsumerProps {
      * new Queue(stack, "Queue", {
      *   consumer: {
      *     cdk: {
-     *       function: lambda.Function.fromFunctionName(stack, "ImportedFn", "my-function-name"),
+     *       function: lambda.Function.fromFunctionAttributes(stack, "ImportedFn", {
+     *         functionArn: "arn:aws:lambda:us-east-1:123456789:function:my-function",
+     *         role: iam.Role.fromRoleArn(stack, "IRole", "arn:aws:iam::123456789:role/my-role"),
+     *       }),
      *     },
      *   },
      * });
