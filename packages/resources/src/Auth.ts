@@ -18,6 +18,17 @@ export interface AuthProps {
 export interface ApiAttachmentProps {
   /**
    * The API to attach auth routes to
+   *
+   * @example
+   * ```js
+   * const api = new Api(stack, "Api", {});
+   * const auth = new Auth(stack, "Auth", {
+   *   authenticator: "functions/authenticator.handler"
+   * })
+   * auth.attach({
+   *   api
+   * })
+   * ```
    */
   api: Api;
 
@@ -25,6 +36,18 @@ export interface ApiAttachmentProps {
    * Optionally specify the prefix to mount authentication routes
    *
    * @default "/auth"
+   *
+   * @example
+   * ```js
+   * const api = new Api(stack, "Api", {});
+   * const auth = new Auth(stack, "Auth", {
+   *   authenticator: "functions/authenticator.handler"
+   * })
+   * auth.attach({
+   *   api,
+   *   prefix: "/custom/prefix"
+   * })
+   * ```
    */
   prefix?: string;
 }
@@ -32,17 +55,21 @@ export interface ApiAttachmentProps {
 /**
  * SST Auth is a lightweight authentication solution for your applications. With a simple set of configuration you can deploy a function attached to your API that can handle various authentication flows.  *
  * @example
- * ```ts
+ * ```
  * import { Auth } from "@serverless-stack/resources"
  *
  * new Auth(stack, "auth", {
- *   api: myApi,
- *   function: "functions/auth.handler",
- *   prefix: "/auth" // optional
+ *   authenticator: "functions/authenticator.handler"
  * })
  */
 export class Auth extends Construct {
+  /**
+   * Secret that contains the public JWT signing key
+   */
   public readonly SST_AUTH_PUBLIC: Secret;
+  /**
+   * Secret that contains the private JWT signing key
+   */
   public readonly SST_AUTH_PRIVATE: Secret;
   private readonly authenticator: FunctionDefinition;
 
@@ -88,7 +115,7 @@ export class Auth extends Construct {
     const policyStatement = new PolicyStatement({
       actions: ["ssm:PutParameter", "ssm:DeleteParameter"],
       effect: Effect.ALLOW,
-      resources: ["*"],
+      resources: ["*"]
     });
     stack.customResourceHandler.addToRolePolicy(policyStatement);
 
@@ -97,11 +124,25 @@ export class Auth extends Construct {
       resourceType: "Custom::AuthKeys",
       properties: {
         publicPath,
-        privatePath,
-      },
+        privatePath
+      }
     });
   }
 
+  /**
+   * Attaches auth construct to an API
+   *
+   * @example
+   * ```js
+   * const api = new Api(stack, "Api", {});
+   * const auth = new Auth(stack, "Auth", {
+   *   authenticator: "functions/authenticator.handler"
+   * })
+   * auth.attach({
+   *   api
+   * })
+   * ```
+   */
   public attach(scope: Construct, props: ApiAttachmentProps) {
     if (this.apis.has(props.api))
       throw new Error(
@@ -113,15 +154,17 @@ export class Auth extends Construct {
       props.api.addRoutes(scope, {
         [path]: {
           type: "function",
-          function: this.authenticator,
-        },
+          function: this.authenticator
+        }
       });
       props.api.getFunction(path)!.addConfig([this.SST_AUTH_PRIVATE]);
       props.api.getFunction(path)!.addEnvironment("SST_AUTH_PREFIX", prefix);
     }
   }
 
-  /** @internal */
+  /**
+   * @internal
+   */
   public injectConfig() {
     for (const api of this.apis) {
       for (const route of api.routes) {
@@ -131,6 +174,9 @@ export class Auth extends Construct {
       }
     }
   }
+  /**
+   * @internal
+   */
   public static injectConfig() {
     for (const auth of Auth.list) {
       auth.injectConfig();
