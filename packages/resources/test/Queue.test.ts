@@ -1,7 +1,9 @@
 import { test, expect } from "vitest";
-import { ABSENT, countResources, hasResource } from "./helper";
+import { ABSENT, ANY, countResources, hasResource } from "./helper";
 import * as cdk from "aws-cdk-lib";
+import * as iam from "aws-cdk-lib/aws-iam";
 import * as sqs from "aws-cdk-lib/aws-sqs";
+import * as lambda from "aws-cdk-lib/aws-lambda";
 import { App, Stack, Queue, Function } from "../src";
 
 const lambdaDefaultPolicy = {
@@ -161,6 +163,25 @@ test("consumer: is props", async () => {
   });
   hasResource(stack, "AWS::Lambda::EventSourceMapping", {
     BatchSize: 5,
+  });
+});
+
+test("consumer: is cdk.Function", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Queue(stack, "Queue", {
+    consumer: {
+      cdk: {
+        function: lambda.Function.fromFunctionAttributes(stack, "IFunction", {
+          functionArn: "arn:aws:lambda:us-east-1:123456789:function:test",
+          role: iam.Role.fromRoleArn(stack, "IRole", "arn:aws:iam::123456789:role/test"),
+        }),
+      }
+    },
+  });
+  countResources(stack, "AWS::Lambda::Function", 0);
+  hasResource(stack, "AWS::Lambda::EventSourceMapping", {
+    FunctionName: "test",
+    EventSourceArn: ANY,
   });
 });
 

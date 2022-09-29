@@ -1,5 +1,6 @@
 import { Construct } from "constructs";
 import * as sqs from "aws-cdk-lib/aws-sqs";
+import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
 import { App } from "./App";
 import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct.js";
@@ -30,8 +31,23 @@ export interface QueueConsumerProps {
    * });
    * ```
    */
-  function: FunctionDefinition;
+  function?: FunctionDefinition;
   cdk?: {
+    /**
+     * This allows you to use an existing or imported Lambda function.
+     *
+     * @example
+     * ```js
+     * new Queue(stack, "Queue", {
+     *   consumer: {
+     *     cdk: {
+     *       function: lambda.Function.fromFunctionName(stack, "ImportedFn", "my-function-name"),
+     *     },
+     *   },
+     * });
+     * ```
+     */
+    function?: lambda.IFunction;
     /**
      * This allows you to override the default settings this construct uses internally to create the consumer.
      *
@@ -112,7 +128,7 @@ export class Queue extends Construct implements SSTConstruct {
   /**
    * The internally created consumer `Function` instance.
    */
-  public consumerFunction?: Fn;
+  public consumerFunction?: Fn | lambda.IFunction;
   private permissionsAttachedForAllConsumers: Permissions[];
   private props: QueueProps;
 
@@ -168,34 +184,64 @@ export class Queue extends Construct implements SSTConstruct {
       throw new Error("Cannot configure more than 1 consumer for a Queue");
     }
 
+    if ((consumer as QueueConsumerProps).cdk?.function) {
+      consumer = consumer as QueueConsumerProps;
+      this.addCdkFunctionConsumer(scope, consumer);
+    } else {
+      consumer = consumer as FunctionInlineDefinition | QueueConsumerProps;
+      this.addFunctionConsumer(scope, consumer);
+    }
+  }
+
+  private addCdkFunctionConsumer(
+    scope: Construct,
+    consumer: QueueConsumerProps
+  ): void {
+    // Parse target props
+    const eventSourceProps = consumer.cdk?.eventSource;
+    const fn = consumer.cdk!.function!;
+
+    // Create target
+    fn.addEventSource(
+      new lambdaEventSources.SqsEventSource(this.cdk.queue, eventSourceProps)
+    );
+
+    this.consumerFunction = fn;
+  }
+
+  private addFunctionConsumer(
+    scope: Construct,
+    consumer: FunctionInlineDefinition | QueueConsumerProps
+  ): void {
+
     // Parse consumer props
     let eventSourceProps;
     let functionDefinition;
     if ((consumer as QueueConsumerProps).function) {
       consumer = consumer as QueueConsumerProps;
       eventSourceProps = consumer.cdk?.eventSource;
-      functionDefinition = consumer.function;
+      functionDefinition = consumer.function!;
     } else {
       consumer = consumer as FunctionInlineDefinition;
       functionDefinition = consumer;
     }
 
     // Create function
-    this.consumerFunction = Fn.fromDefinition(
+    const fn = Fn.fromDefinition(
       scope,
       `Consumer_${this.node.id}`,
       functionDefinition
     );
-    this.consumerFunction.addEventSource(
+    fn.addEventSource(
       new lambdaEventSources.SqsEventSource(this.cdk.queue, eventSourceProps)
     );
 
     // Attach permissions
     this.permissionsAttachedForAllConsumers.forEach((permissions) => {
-      if (this.consumerFunction) {
-        this.consumerFunction.attachPermissions(permissions);
-      }
+      fn.attachPermissions(permissions);
     });
+
+    this.consumerFunction = fn;
   }
 
   /**
@@ -210,7 +256,7 @@ export class Queue extends Construct implements SSTConstruct {
    * ```
    */
   public attachPermissions(permissions: Permissions): void {
-    if (this.consumerFunction) {
+    if (this.consumerFunction instanceof Fn) {
       this.consumerFunction.attachPermissions(permissions);
     }
 
