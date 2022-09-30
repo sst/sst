@@ -250,4 +250,6 @@ Finally, the `sst.json` contains the project config.
 }
 ```
 
-Your `sst start` process in the CLI should've completed by now. But before we start working on our application, let's make sure our code editor is set up correctly.
+---
+
+By now your `sst start` process should be complete. So let's run our first migration and initialize our database!

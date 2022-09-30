@@ -40,8 +40,8 @@ Select `graphql` here, as we'll be using the GraphQL starter in this tutorial.
 
 ```bash
 ? What kind of project do you want to create? (Use arrow keys)
-❯ graphql 
-  minimal 
+❯ graphql
+  minimal
   examples
 ```
 
@@ -121,6 +121,19 @@ The first time you run `sst start` it can take around 5 minutes to set everythin
 
 ---
 
-While we wait, let's take a look at the [project structure](project-structure.md) of an SST app and get our editor set up.
+## Editor integration
 
-And don't worry, we'll look at how the local dev environment works in the coming chapters.
+While `sst start` is starting up, let's open your project in your code editor. We are using VS Code in our case.
+
+SST is designed to integrate really well with your code editor. It features automatic support for:
+
+1. Breakpoint debugging
+2. Type checking
+3. Autocomplete
+4. Inline docs
+
+You can read more about this over on our doc on [Editor Integration](../editor-integration.md).
+
+---
+
+Next, let's take a look at the [project structure](project-structure.md) of an SST app.

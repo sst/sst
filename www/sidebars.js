@@ -4,7 +4,12 @@ module.exports = {
       " ": ["introduction", "quick-start"]
     },
     {
-      Overview: ["what-is-sst", "live-lambda-development", "console"]
+      Overview: [
+        "what-is-sst",
+        "live-lambda-development",
+        "console",
+        "editor-integration",
+      ]
     },
     {
       Learn: [
@@ -17,7 +22,6 @@ module.exports = {
           items: [
             "learn/create-a-new-project",
             "learn/project-structure",
-            "learn/editor-integration",
             "learn/initialize-the-database",
             "learn/start-the-frontend",
             "learn/breakpoint-debugging"
