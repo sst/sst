@@ -59,7 +59,7 @@ yarn create sst my-sst-app
 
 This will prompt you to select a starter.
 
-```bash
+```
 ? What kind of project do you want to create? (Use arrow keys)
 ❯ graphql
   minimal
@@ -70,7 +70,7 @@ The `graphql` starter is a full-stack TypeScript app organized as a monorepo. It
 
 Next, it will prompt you to select a database; either [RDS](https://aws.amazon.com/rds/) (PostgreSQL or MySQL) or [DynamoDB](https://aws.amazon.com/dynamodb/).
 
-```bash
+```
 ? Select a database (you can change this later or use both) (Use arrow keys)
   RDS (Postgres or MySQL)
 ❯ DynamoDB
@@ -130,7 +130,7 @@ The first time you run this command in a project, you'll be prompted to enter a 
 
 ---
 
-### Pick a stage name
+### Pick a stage
 
 SST uses the stage names to namespace your resources.
 
@@ -193,6 +193,10 @@ yarn run dev
 
 Once complete, you can navigate to the URL in your output — `http://localhost:3000/`. You should see the homepage of our starter! It's a simple Reddit clone where you can post links.
 
+:::info
+Your frontend is automatically connected to your API on AWS.
+:::
+
 Try posting a link.
 
 ![SST starter homepage](/img/quick-start/sst-starter-homepage.png)
@@ -213,7 +217,7 @@ You should see a row for the newly posted link. Note that, just like the GraphQL
 
 ---
 
-## 3. Make changes
+## 3. Make a change
 
 Let's make a change to our API and see what the workflow is like. Replace the following in `services/functions/graphql/types/article.ts`.
 
