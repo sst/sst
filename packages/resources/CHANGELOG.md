@@ -1,5 +1,14 @@
 # @serverless-stack/resources
 
+## 1.15.6
+
+### Patch Changes
+
+- [#2111](https://github.com/serverless-stack/sst/pull/2111) [`cc0db1b53`](https://github.com/serverless-stack/sst/commit/cc0db1b535b65324cee8ae9fd1ce6da319021948) Thanks [@fwang](https://github.com/fwang)! - Queue: support imported consumer function
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.15.6
+
 ## 1.15.5
 
 ### Patch Changes
