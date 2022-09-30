@@ -21,7 +21,7 @@ import { Function, FunctionBundleNodejsProps } from "./Function.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import { isPropertySignature } from "typescript";
-import { IVpc } from "aws-cdk-lib/aws-ec2";
+import { IVpc, Vpc } from "aws-cdk-lib/aws-ec2";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -135,6 +135,10 @@ export interface JobProps {
    */
   permissions?: Permissions;
 
+  cdk?: JobCDKProps;
+}
+
+export interface JobCDKProps {
   /**
    * Runs codebuild job in the specified VPC. Note this will only work once deployed.
    *
@@ -142,7 +146,11 @@ export interface JobProps {
    * ```js
    * new Job(stack, "MyJob", {
    *   handler: "src/job.handler",
-   *   vpc: myvpc,
+   *   cdk: {
+   *     vpc: Vpc.fromLookup(this, "VPC", {
+   *       vpcId: "vpc-xxxxxxxxxx",
+   *     }),
+   *   }
    * })
    * ```
    */
@@ -288,7 +296,7 @@ export class Job extends Construct implements SSTConstruct {
     const app = this.node.root as App;
 
     return new codebuild.Project(this, "JobProject", {
-      vpc: this.props.vpc,
+      vpc: this.props.cdk?.vpc,
       projectName: app.logicalPrefixedName(this.node.id),
       environment: {
         // CodeBuild offers different build images. The newer ones have much quicker
