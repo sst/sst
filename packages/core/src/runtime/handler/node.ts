@@ -6,7 +6,6 @@ import * as esbuild from "esbuild";
 import { ICommandHooks } from "aws-cdk-lib/aws-lambda-nodejs";
 import { createRequire } from "module";
 import { promisify } from "util";
-import { findUp } from "find-up";
 
 import { Definition } from "./definition";
 import { State } from "../../state/index.js";
@@ -37,30 +36,48 @@ type ModuleManager = {
   lockFileDir: string;
 };
 
-async function getModuleManager(srcPath: string): Promise<ModuleManager> {
-  const lockFile = await findUp(["package-lock.json", "yarn.lock"], {
-    cwd: srcPath
-  });
+type findUpOptions = {
+  cwd: string;
+}
 
-  if (!lockFile) {
-    throw new Error("Cannot find a lock file");
+function findUp(fileName: string, { cwd }: findUpOptions) {
+  const rootPath = path.parse(process.cwd()).root
+
+  let directory = cwd;
+  while (true) {
+    if (directory === rootPath) {
+      return;
+    }
+
+    const checkPath = path.resolve(directory, fileName);
+
+    if (fs.existsSync(checkPath)) {
+      return checkPath;
+    }
+
+    directory = path.dirname(directory);
   }
+}
 
-  const lockFileName = path.basename(lockFile);
-
-  if (lockFileName === "yarn.lock") {
+function getModuleManager(srcPath: string): ModuleManager {
+  let foundPath;
+  if (foundPath = findUp("package-lock.json", { cwd: srcPath })) {
     return {
-      installer: "yarn",
-      lockFile: "yarn.lock",
-      lockFileDir: path.dirname(lockFile)
+      installer: "npm",
+      lockFile: "package-lock.json",
+      lockFileDir: path.dirname(foundPath)
     };
   }
 
-  return {
-    installer: "npm",
-    lockFile: "package-lock.json",
-    lockFileDir: path.dirname(lockFile)
-  };
+  if (foundPath = findUp("yarn.lock", { cwd: srcPath })) {
+    return {
+      installer: "yarn",
+      lockFile: "yarn.lock",
+      lockFileDir: path.dirname(foundPath)
+    };
+  }
+
+  throw new Error("Cannot find a lock file");
 }
 
 export const NodeHandler: Definition<Bundle> = opts => {
@@ -296,7 +313,7 @@ async function installNodeModules(
 
   // Determine dependencies versions, lock file and installer
   const dependencies = await extractDependencies(pkgPath, bundle.nodeModules);
-  const { installer, lockFile, lockFileDir } = await getModuleManager(srcPath);
+  const { installer, lockFile, lockFileDir } = getModuleManager(srcPath);
 
   // Create dummy package.json, copy lock file and then install
   const outputPath = path.join(targetPath, "package.json");
