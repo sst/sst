@@ -1,5 +1,14 @@
 # @serverless-stack/resources
 
+## 1.15.8
+
+### Patch Changes
+
+- [`dae3ab3f4`](https://github.com/serverless-stack/sst/commit/dae3ab3f47ee2814460dd2b5a1163fd454a8a220) Thanks [@thdxr](https://github.com/thdxr)! - Job: Move vpc prop into nested cdk field
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.15.8
+
 ## 1.15.7
 
 ### Patch Changes
