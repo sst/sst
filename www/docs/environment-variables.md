@@ -4,6 +4,7 @@ description: "Working with environment variables and secrets in SST."
 ---
 
 import HeadlineText from "@site/src/components/HeadlineText";
+import MultiPackagerCode from "@site/src/components/MultiPackagerCode";
 
 <HeadlineText>
 
@@ -95,6 +96,25 @@ Secrets and Parameters are stored in AWS SSM with the _Standard Parameter type_ 
      // ...
    };
    ```
+
+   You'll also need to install the library in your functions directory; `services/` in the case of our starters.
+
+   <MultiPackagerCode>
+   <TabItem value="npm">
+
+   ```bash
+   npm install @serverless-stack/node
+   ```
+
+   </TabItem>
+   <TabItem value="yarn">
+
+   ```bash
+   yarn add @serverless-stack/node
+   ```
+
+   </TabItem>
+   </MultiPackagerCode>
 
 ---
 
