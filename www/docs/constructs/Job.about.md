@@ -24,3 +24,19 @@ new Job(stack, "MyJob", {
   permissions: ["ses", bucket],
 });
 ```
+
+### Create a job in a VPC
+
+```js
+import { Job } from "@serverless-stack/resources";
+import { Vpc } from "aws-cdk-lib/aws-ec2";
+
+new Job(stack, "MyJob", {
+  handler: "src/job.main",
+  cdk: {
+    vpc: Vpc.fromLookup(this, "VPC", {
+      vpcId: "vpc-xxxxxxxxxx",
+    })
+  }
+});
+```
