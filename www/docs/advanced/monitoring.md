@@ -4,8 +4,18 @@ description: "Learn how to use services like Datadog, Sentry, Epsagon, and Lumig
 ---
 
 import config from "../../config";
+import HeadlineText from "@site/src/components/HeadlineText";
+import MultiPackagerCode from "@site/src/components/MultiPackagerCode";
 
-Once your app has been [deployed to production](../going-to-production.md), it's useful to be able to monitor your Lambda functions. There are a few different services that you can use for this. We'll look at them below.
+<HeadlineText>
+
+SST integrates with all the major observability providers to help you monitor your apps in production.
+
+</HeadlineText>
+
+Once your app has been [deployed to production](../going-to-production.md), there are a few different options on how to monitor your Lambda functions. Let's look at them here.
+
+---
 
 ## Datadog
 
@@ -13,17 +23,26 @@ Once your app has been [deployed to production](../going-to-production.md), it's
 
 Start by adding it to your project.
 
-```bash
-# npm
-npm install --save-dev datadog-cdk-constructs
+<MultiPackagerCode>
+<TabItem value="npm">
 
-# Yarn
+```bash
+npm install --save-dev datadog-cdk-constructs
+```
+
+</TabItem>
+<TabItem value="yarn">
+
+```bash
 yarn add --dev datadog-cdk-constructs
 ```
 
+</TabItem>
+</MultiPackagerCode>
+
 Next, you'll need to import it into a stack. Add pass in the functions you want monitored.
 
-```js
+```ts title="stacks/Foo.js"
 import { Datadog } from "datadog-cdk-constructs";
 
 const datadog = new Datadog(stack, "Datadog", {
@@ -35,13 +54,15 @@ const datadog = new Datadog(stack, "Datadog", {
 datadog.addLambdaFunctions([myfunc]);
 ```
 
-To monitor all the functions in a stack, you can use the Stack construct's [`getAllFunctions`](constructs/Stack.md#getallfunctions) method and do the following at the bottom of your stack definition.
+To monitor all the functions in a stack, you can use the `Stack` construct's [`getAllFunctions`](constructs/Stack.md#getallfunctions) method and do the following at the bottom of your stack definition.
 
-```js
+```ts
 datadog.addLambdaFunctions(stack.getAllFunctions());
 ```
 
 For more details, [check out the Datadog docs](https://docs.datadoghq.com/serverless/installation/nodejs/?tab=awscdk).
+
+---
 
 ## Sentry
 
@@ -51,7 +72,7 @@ Head over to the [Layer that Sentry provides](https://docs.sentry.io/platforms/n
 
 Then add the Layer to your stack.
 
-```js
+```ts title="stacks/Foo.js"
 import { LayerVersion } from "aws-cdk-lib/aws-lambda";
 
 const sentry = LayerVersion.fromLayerVersionArn(
@@ -63,12 +84,12 @@ const sentry = LayerVersion.fromLayerVersionArn(
 
 You can then set it for all the functions in your stack using the [`addDefaultFunctionLayers`](constructs/Stack.md#adddefaultfunctionlayers) and [`addDefaultFunctionEnv`](constructs/Stack.md#adddefaultfunctionenv). Note we only want to enable this when the function is deployed, not when using [Live Lambda Dev](live-lambda-development.md).
 
-```js
+```ts title="stacks/Foo.js"
 if (!scope.local) {
   stack.addDefaultFunctionLayers([layer]);
   stack.addDefaultFunctionEnv({
     SENTRY_DSN: "<SENTRY_DSN>",
-    NODE_OPTIONS: "-r @sentry/serverless/dist/awslambda-auto"
+    NODE_OPTIONS: "-r @sentry/serverless/dist/awslambda-auto",
   });
 }
 ```
@@ -79,7 +100,7 @@ Sentry also offers performance monitoring for serverless. To enable, add the `SE
 stack.addDefaultFunctionEnv({
   SENTRY_DSN: "<SENTRY_DSN>",
   SENTRY_TRACES_SAMPLE_RATE: "1.0",
-  NODE_OPTIONS: "-r @sentry/serverless/dist/awslambda-auto"
+  NODE_OPTIONS: "-r @sentry/serverless/dist/awslambda-auto",
 });
 ```
 
@@ -87,15 +108,17 @@ This can be tuned between the values of 0 and 1. Where 0 means that no performan
 
 You also need to wrap your function handlers.
 
-```js
+```js title="services/functions/foo.js"
 import * as Sentry from "@sentry/serverless";
 
 export const handler = Sentry.AWSLambda.wrapHandler(async (event) => {
-  ...
+  // ...
 });
 ```
 
 For more details, [check out the Sentry docs](https://docs.sentry.io/platforms/node/guides/aws-lambda/).
+
+---
 
 ## Lumigo
 
@@ -105,7 +128,7 @@ To get started, [sign up for an account](https://platform.lumigo.io/signup). The
 
 Then to enable Lambda monitoring for a function, add a `lumigo:auto-trace` tag and set it to `true`.
 
-```js
+```js title="stacks/Foo.js"
 import * as cdk from "aws-cdk-lib";
 
 cdk.Tags.of(myfunc).add("lumigo:auto-trace", "true");
@@ -113,15 +136,17 @@ cdk.Tags.of(myfunc).add("lumigo:auto-trace", "true");
 
 To monitor all the functions in a stack, you can use the [Stack](constructs/Stack.md) construct's [`getAllFunctions`](constructs/Stack.md#getallfunctions) method and do the following at the bottom of your stack definition.
 
-```js
+```js title="stacks/Foo.js"
 import * as cdk from "aws-cdk-lib";
 
-stack.getAllFunctions().forEach(fn =>
-  cdk.Tags.of(fn).add("lumigo:auto-trace", "true")
-);
+stack
+  .getAllFunctions()
+  .forEach((fn) => cdk.Tags.of(fn).add("lumigo:auto-trace", "true"));
 ```
 
 For more details, [check out the Lumigo docs on auto-tracing](https://docs.lumigo.io/docs/auto-instrumentation#auto-tracing-with-aws-tags).
+
+---
 
 ## Thundra
 
@@ -129,33 +154,33 @@ For more details, [check out the Lumigo docs on auto-tracing](https://docs.lumig
 
 To get started, [sign up for an account](https://console.thundra.io/landing/). Then [follow the steps in the quick start guide](https://apm.docs.thundra.io/getting-started/quick-start-guide/connect-thundra) to deploy their stack into the AWS account you wish to monitor.
 
-:::info
-Need help setting up? <a href={ config.discord_invite }>Join us on Discord</a> and head over to the #thundra channel. The Thundra team is ready to help.
-:::
-
 To enable Lambda monitoring, you'll need to add a layer to the functions you want to monitor. To figure out the layer ARN for the latest version, [check the badge here](https://apm.docs.thundra.io/node.js/nodejs-integration-options).
 
 With the layer ARN, you can use the layer construct in your CDK code.
 
-```ts
+```ts title="stacks/Foo.js"
 import { LayerVersion } from "aws-cdk-lib/aws-lambda";
 
-const thundraLayer = LayerVersion.fromLayerVersionArn(stack, "ThundraLayer", "<ARN>");
+const thundraLayer = LayerVersion.fromLayerVersionArn(
+  stack,
+  "ThundraLayer",
+  "<ARN>"
+);
 ```
 
 You can then set it for all the functions in your stack using the [`addDefaultFunctionLayers`](constructs/Stack.md#adddefaultfunctionlayers) and [`addDefaultFunctionEnv`](constructs/Stack.md#adddefaultfunctionenv). Note we only want to enable this when the function is deployed, not in [Live Lambda Dev](live-lambda-development.md) as the layer will prevent the debugger from connecting.
 
-```js
+```ts title="stacks/Foo.js"
 if (!scope.local) {
   const thundraAWSAccountNo = 269863060030;
   const thundraNodeLayerVersion = 94; // Latest version at time of writing
   const thundraLayer = LayerVersion.fromLayerVersionArn(
     stack,
     "ThundraLayer",
-    `arn:aws:lambda:${scope.region}:${thundraAWSAccountNo}:layer:thundra-lambda-node-layer:${thundraNodeLayerVersion}`,
+    `arn:aws:lambda:${scope.region}:${thundraAWSAccountNo}:layer:thundra-lambda-node-layer:${thundraNodeLayerVersion}`
   );
   stack.addDefaultFunctionLayers([thundraLayer]);
-  
+
   stack.addDefaultFunctionEnv({
     THUNDRA_APIKEY: process.env.THUNDRA_API_KEY,
     NODE_OPTIONS: "-r @thundra/core/dist/bootstrap/lambda",
@@ -165,11 +190,15 @@ if (!scope.local) {
 
 For more details, [check out the Thundra docs](https://apm.docs.thundra.io/node.js/nodejs-integration-options).
 
+---
+
 #### Time Travel Debugging
 
 Thudra also offers a feature called [Time Travel Debugging (TTD)](https://apm.docs.thundra.io/debugging/offline-debugging) that makes it possible to travel back in time to previous states of your application by getting a snapshot of when each line is executed. You can step over each line of the code and track the values of the variables captured during execution.
 
 To enable TTD in your SST app, you'll need to modify the esbuild config. [Check out the Thundra docs on this](https://apm.docs.thundra.io/node.js/ttd-time-travel-debugging-for-nodejs#using-with-sst).
+
+---
 
 ## New Relic
 
@@ -181,24 +210,30 @@ To enable Lambda monitoring, you'll need to add a layer to the functions you wan
 
 With the layer ARN, you can use the layer construct in your CDK code. To ensure the Lambda function is instrumented correctly, the function handler must be set to the handler provided by the New Relic layer. Note we only want to enable this when the function is deployed, not in [Live Lambda Dev](live-lambda-development.md) as the layer will prevent the debugger from connecting.
 
-```ts
+```ts title="stacks/Foo.js"
 import { CfnFunction, LayerVersion } from "aws-cdk-lib/aws-lambda";
 
-const newRelicLayer = LayerVersion.fromLayerVersionArn(stack, "NewRelicLayer", "<ARN>>");
+const newRelicLayer = LayerVersion.fromLayerVersionArn(
+  stack,
+  "NewRelicLayer",
+  "<ARN>>"
+);
 
 // Configure New Relic handler wrapper if not in local mode
 if (!scope.local) {
   this.getAllFunctions().map((fn) => {
     const cfnFunction = fn.node.defaultChild as CfnFunction;
-    
+
     if (cfnFunction.handler) {
-      fn.addEnvironment('NEW_RELIC_LAMBDA_HANDLER', cfnFunction.handler);
+      fn.addEnvironment("NEW_RELIC_LAMBDA_HANDLER", cfnFunction.handler);
     }
 
-    cfnFunction.handler = 'newrelic-lambda-wrapper.handler';
+    cfnFunction.handler = "newrelic-lambda-wrapper.handler";
   });
 }
 ```
+
+---
 
 ## Epsagon
 
@@ -212,14 +247,27 @@ Epsagon is undergoing some changes after the acquisition by Cisco. We recommend 
 
 The Epsagon docs on [using a Lambda Layer](https://docs.epsagon.com/docs/getting-started/monitoring-applications/aws-lambda-layer) are incorrect. You'll need to install the Epsagon agent for your Lambda functions.
 
-``` bash
-npm install epsagon
+<MultiPackagerCode>
+<TabItem value="npm">
+
+```bash
+npm install --save-dev epsagon
 ```
+
+</TabItem>
+<TabItem value="yarn">
+
+```bash
+yarn add --dev epsagon
+```
+
+</TabItem>
+</MultiPackagerCode>
 
 And wrap your Lambda functions with their tracing wrapper.
 
-``` js
-const handler = epsagon.lambdaWrapper(function(event, context) {
+```js title="services/functions/foo.js"
+const handler = epsagon.lambdaWrapper(function (event, context) {
   // Lambda code
 });
 
