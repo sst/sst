@@ -15,15 +15,15 @@ import url from "url";
 import fs from "fs-extra";
 import chalk from "chalk";
 import * as sst from "@serverless-stack/resources";
-import { initializeLogger, Bootstrap, Util } from "@serverless-stack/core";
-
-import { proxy_bootstrap } from '@serverless-stack/cli/lib/proxy.mjs';
-proxy_bootstrap();
+import { initializeLogger, Bootstrap, Proxy, Util } from "@serverless-stack/core";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 const config = fs.readJsonSync(path.join(__dirname, "./sst-merged.json"));
 const appPath = process.cwd();
 const buildDir = ".build";
+
+// Setup proxy
+Proxy.bootstrap();
 
 // Initialize logger
 initializeLogger(path.join(appPath, buildDir));
