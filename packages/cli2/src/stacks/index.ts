@@ -1,14 +1,12 @@
 import path from "path";
 import { build } from "./build.js";
 import { deploy, deployMany } from "./deploy.js";
-import { App } from "@serverless-stack/resources";
-import { useAWSProvider, useSTSIdentity } from "../credentials/index.js";
-import { useProjectRoot, useConfig } from "../config/index.js";
+import { useSTSIdentity } from "../credentials/index.js";
+import { useConfig } from "../config/index.js";
 import { useBootstrap } from "../bootstrap/index.js";
 import { Logger } from "../logger/index.js";
 import { useStateDirectory } from "../state/index.js";
-import { CloudExecutable } from "aws-cdk/lib/api/cxapp/cloud-executable.js";
-import { Configuration } from "aws-cdk/lib/settings.js";
+import type { App } from "@serverless-stack/resources";
 
 interface SynthOptions {
   buildDir?: string;
@@ -19,14 +17,16 @@ interface SynthOptions {
 
 async function synth(opts: SynthOptions) {
   Logger.debug("Synthesizing stacks...");
+  const { App } = await import("@serverless-stack/resources");
+  const { Configuration } = await import("aws-cdk/lib/settings.js");
   opts = {
     buildDir: ".sst/out",
-    ...opts
+    ...opts,
   };
   const [identity, config, bootstrap] = await Promise.all([
     useSTSIdentity(),
     useConfig(),
-    useBootstrap()
+    useBootstrap(),
   ]);
 
   const cfg = new Configuration();
@@ -41,12 +41,12 @@ async function synth(opts: SynthOptions) {
       bootstrapAssets: {
         bucketName: bootstrap.bucket,
         version: bootstrap.version,
-        stackName: bootstrap.stack
-      }
+        stackName: bootstrap.stack,
+      },
     },
     {
       outdir: opts.buildDir || path.join(await useStateDirectory(), "out"),
-      context: cfg.context.all
+      context: cfg.context.all,
     }
   );
 
@@ -72,5 +72,5 @@ export const Stacks = {
   build,
   deploy,
   deployMany,
-  synth
+  synth,
 };
