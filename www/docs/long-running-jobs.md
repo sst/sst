@@ -3,7 +3,13 @@ title: Long Running Jobs
 description: "Learn how to run long running jobs in your SST apps."
 ---
 
+import HeadlineText from "@site/src/components/HeadlineText";
+
+<HeadlineText>
+
 SST ships with `Job` — a simple way to run functions that can take up to 8 hours.
+
+</HeadlineText>
 
 Tasks related to video processing, ETL, and ML can take long. These exceed Lambda's 15 minute timeout limit. `Job` provides a convenient way to run these tasks.
 
@@ -19,7 +25,7 @@ Tasks related to video processing, ETL, and ML can take long. These exceed Lambd
 
 ---
 
-## Quick Start
+## Quick start
 
 To follow along, you can create the Minimal TypeScript starter by running `npx create-sst@latest` > `minimal` > `minimal/typescript-starter`.
 

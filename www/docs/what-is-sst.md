@@ -4,12 +4,19 @@ description: "A high-level overview of SST in plain english."
 ---
 
 import styles from "./video.module.css";
+import HeadlineText from "@site/src/components/HeadlineText";
 
-SST is a framework that makes it easy to build and deploy full-stack serverless applications. With SST you can create APIs, databases, frontends; connect them all together, and deploy them to AWS.
+<HeadlineText>
+
+SST is a framework that makes it easy to build and deploy full-stack serverless applications.
+
+</HeadlineText>
 
 <div class={styles.videoWrapper}>
   <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/YFFMb8JfICM" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
+
+With SST you can create APIs, databases, frontends; connect them all together, and deploy them to AWS.
 
 ---
 

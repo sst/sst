@@ -349,7 +349,7 @@ div[class^="codeBlockContainer_"] {
 
 /** Markdown styles **/
 .markdown h1:first-child {
-  --ifm-h1-font-size: 2.4rem;
+  --ifm-h1-font-size: 2.6rem;
   font-weight: 600;
   letter-spacing: -1px;
 }

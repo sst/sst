@@ -2,6 +2,7 @@
 title: create-sst
 description: "Docs for the create-sst package"
 ---
+
 import MultiPackagerCode from "@site/src/components/MultiPackagerCode";
 import TabItem from "@theme/TabItem";
 
@@ -12,18 +13,10 @@ A simple CLI [`create-sst`](https://www.npmjs.com/package/create-sst) that sets 
 There's no need to install this CLI. Just use it directly to create your projects.
 
 <MultiPackagerCode>
-<TabItem value="npx">
-
-```bash
-npx create-sst@latest
-```
-
-</TabItem>
-
 <TabItem value="npm">
 
 ```bash
-npm init sst
+npx create-sst@latest
 ```
 
 </TabItem>

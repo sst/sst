@@ -7,18 +7,25 @@ description: Live Lambda Development allows you to debug and test your Lambda fu
 import config from "../config";
 import styles from "./video.module.css";
 import useBaseUrl from "@docusaurus/useBaseUrl";
+import HeadlineText from "@site/src/components/HeadlineText";
 
-SST provides a cloud native local development environment that gives you instantaneous feedback on edits made to your Lambda function code. Changes are automatically detected, built, and **live reloaded** in under 10 milliseconds. You can also use **breakpoints to debug** your functions in your favorite IDE.
+<HeadlineText>
+
+SST features a cloud native local development environment that gives you instantaneous feedback on changes made to your Lambda functions.
+
+</HeadlineText>
+
+<div class={styles.videoWrapper}>
+  <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/hnTSTm5n11g" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+Changes are automatically detected, built, and **live reloaded** in under 10 milliseconds. You can also use **breakpoints to debug** your functions in your favorite IDE.
 
 ---
 
 ## Overview
 
 Live Lambda Development is an SST feature that allows you to **debug and test your Lambda functions locally**, while being **invoked remotely by resources in AWS**. It works by proxying requests from your AWS account to your local machine.
-
-<div class={styles.videoWrapper}>
-  <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/hnTSTm5n11g" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-</div>
 
 ---
 
@@ -29,10 +36,7 @@ To give it a try, create a new SST app with our Minimal JavaScript starter by ru
 To start the Live Lambda Development environment run:
 
 ```bash
-# With npm
 npx sst start
-# Or with Yarn
-yarn sst start
 ```
 
 The first time you run this, it'll deploy your app and a stack that supports the debugger called the _Debug Stack_. This can take a couple of minutes.

@@ -10,12 +10,18 @@ import * as codebuild from "aws-cdk-lib/aws-codebuild";
 import { Runtime, DeferBuilder } from "@serverless-stack/core";
 
 import { App } from "./App.js";
-import { Secret, Parameter, configToEnvironmentVariables, configToPolicyStatement } from "./Config.js";
+import {
+  Secret,
+  Parameter,
+  configToEnvironmentVariables,
+  configToPolicyStatement,
+} from "./Config.js";
 import { SSTConstruct } from "./Construct.js";
 import { Function, FunctionBundleNodejsProps } from "./Function.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import { isPropertySignature } from "typescript";
+import { IVpc, Vpc } from "aws-cdk-lib/aws-ec2";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -128,6 +134,27 @@ export interface JobProps {
    * ```
    */
   permissions?: Permissions;
+
+  cdk?: JobCDKProps;
+}
+
+export interface JobCDKProps {
+  /**
+   * Runs codebuild job in the specified VPC. Note this will only work once deployed.
+   *
+   * @example
+   * ```js
+   * new Job(stack, "MyJob", {
+   *   handler: "src/job.handler",
+   *   cdk: {
+   *     vpc: Vpc.fromLookup(this, "VPC", {
+   *       vpcId: "vpc-xxxxxxxxxx",
+   *     }),
+   *   }
+   * })
+   * ```
+   */
+  vpc?: IVpc;
 }
 
 /////////////////////
@@ -252,7 +279,9 @@ export class Job extends Construct implements SSTConstruct {
       import "@serverless-stack/node/job";
       declare module "@serverless-stack/node/job" {
         export interface JobNames {
-          ${Array.from(Job.all).map((p) => `${p}: string;`).join("\n")}
+          ${Array.from(Job.all)
+            .map((p) => `${p}: string;`)
+            .join("\n")}
         }
       }`
     );
@@ -267,6 +296,7 @@ export class Job extends Construct implements SSTConstruct {
     const app = this.node.root as App;
 
     return new codebuild.Project(this, "JobProject", {
+      vpc: this.props.cdk?.vpc,
       projectName: app.logicalPrefixedName(this.node.id),
       environment: {
         // CodeBuild offers different build images. The newer ones have much quicker
@@ -275,7 +305,9 @@ export class Job extends Construct implements SSTConstruct {
         // purpose of this demo, I use STANDARD_5_0. It takes 30s to boot.
         //buildImage: codebuild.LinuxBuildImage.STANDARD_6_0,
         //buildImage: codebuild.LinuxBuildImage.STANDARD_5_0,
-        buildImage: codebuild.LinuxBuildImage.fromDockerRegistry("amazon/aws-lambda-nodejs:16"),
+        buildImage: codebuild.LinuxBuildImage.fromDockerRegistry(
+          "amazon/aws-lambda-nodejs:16"
+        ),
         computeType: this.normalizeMemorySize(this.props.memorySize || "3 GB"),
       },
       environmentVariables: {
@@ -292,7 +324,7 @@ export class Job extends Construct implements SSTConstruct {
             ],
           },
         },
-      })
+      }),
     });
   }
 
@@ -331,25 +363,28 @@ export class Job extends Construct implements SSTConstruct {
 
           // create wrapper that calls the handler
           const [file, module] = bundled.handler.split(".");
-          await fs.writeFile(path.join(bundled.directory, "handler-wrapper.js"), [
-            `console.log("")`,
-            `console.log("//////////////////////")`,
-            `console.log("// Start of the job //")`,
-            `console.log("//////////////////////")`,
-            `console.log("")`,
-            `import { ${module} } from "./${file}.js";`,
-            `const event = JSON.parse(process.env.SST_PAYLOAD);`,
-            `const result = await ${module}(event);`,
-            `console.log("")`,
-            `console.log("----------------------")`,
-            `console.log("")`,
-            `console.log("Result:", result);`,
-            `console.log("")`,
-            `console.log("//////////////////////")`,
-            `console.log("//  End of the job  //")`,
-            `console.log("//////////////////////")`,
-            `console.log("")`,
-          ].join("\n"));
+          await fs.writeFile(
+            path.join(bundled.directory, "handler-wrapper.js"),
+            [
+              `console.log("")`,
+              `console.log("//////////////////////")`,
+              `console.log("// Start of the job //")`,
+              `console.log("//////////////////////")`,
+              `console.log("")`,
+              `import { ${module} } from "./${file}.js";`,
+              `const event = JSON.parse(process.env.SST_PAYLOAD);`,
+              `const result = await ${module}(event);`,
+              `console.log("")`,
+              `console.log("----------------------")`,
+              `console.log("")`,
+              `console.log("Result:", result);`,
+              `console.log("")`,
+              `console.log("//////////////////////")`,
+              `console.log("//  End of the job  //")`,
+              `console.log("//////////////////////")`,
+              `console.log("")`,
+            ].join("\n")
+          );
 
           const code = lambda.AssetCode.fromAsset(bundled.directory);
           this.updateCodeBuildProjectCode(code, "handler-wrapper.js");
@@ -378,7 +413,9 @@ export class Job extends Construct implements SSTConstruct {
       new iam.PolicyStatement({
         actions: ["s3:*"],
         effect: iam.Effect.ALLOW,
-        resources: [`arn:aws:s3:::${codeConfig.s3Location?.bucketName}/${codeConfig.s3Location?.objectKey}`],
+        resources: [
+          `arn:aws:s3:::${codeConfig.s3Location?.bucketName}/${codeConfig.s3Location?.objectKey}`,
+        ],
       }),
     ]);
   }
@@ -406,7 +443,9 @@ export class Job extends Construct implements SSTConstruct {
 
   private createCodeBuildInvoker(): Function {
     return new Function(this, this.node.id, {
-      srcPath: path.resolve(path.join(__dirname, "../dist/support/job-invoker")),
+      srcPath: path.resolve(
+        path.join(__dirname, "../dist/support/job-invoker")
+      ),
       handler: "index.main",
       runtime: "nodejs16.x",
       timeout: 10,
@@ -419,7 +458,7 @@ export class Job extends Construct implements SSTConstruct {
           effect: iam.Effect.ALLOW,
           actions: ["codebuild:StartBuild"],
           resources: [this.job.projectArn],
-        })
+        }),
       ],
       bundle: {
         format: "esm",
@@ -456,35 +495,31 @@ export class Job extends Construct implements SSTConstruct {
   private addEnvironmentForCodeBuild(name: string, value: string): void {
     const project = this.job.node.defaultChild as codebuild.CfnProject;
     const env = project.environment as codebuild.CfnProject.EnvironmentProperty;
-    const envVars = env.environmentVariables as codebuild.CfnProject.EnvironmentVariableProperty[];
+    const envVars =
+      env.environmentVariables as codebuild.CfnProject.EnvironmentVariableProperty[];
     envVars.push({ name, value });
   }
 
-  private normalizeMemorySize(memorySize: JobMemorySize): codebuild.ComputeType {
+  private normalizeMemorySize(
+    memorySize: JobMemorySize
+  ): codebuild.ComputeType {
     if (memorySize === "3 GB") {
       return codebuild.ComputeType.SMALL;
-    }
-    else if (memorySize === "7 GB") {
+    } else if (memorySize === "7 GB") {
       return codebuild.ComputeType.MEDIUM;
-    }
-    else if (memorySize === "15 GB") {
+    } else if (memorySize === "15 GB") {
       return codebuild.ComputeType.LARGE;
-    }
-    else if (memorySize === "145 GB") {
+    } else if (memorySize === "145 GB") {
       return codebuild.ComputeType.X2_LARGE;
     }
 
-    throw new Error(
-      `Invalid memory size value for the ${this.node.id} Job.`
-    );
+    throw new Error(`Invalid memory size value for the ${this.node.id} Job.`);
   }
 
   private normalizeTimeout(timeout: Duration): cdk.Duration {
     const value = toCdkDuration(timeout);
     if (value.toSeconds() < 5 * 60 || value.toSeconds() > 480 * 60) {
-      throw new Error(
-        `Invalid timeout value for the ${this.node.id} Job.`
-      );
+      throw new Error(`Invalid timeout value for the ${this.node.id} Job.`);
     }
     return value;
   }

@@ -1,7 +1,7 @@
 type Article {
   id: ID!
-  title: ID!
-  url: ID!
+  title: String!
+  url: String!
 }
 
 type Mutation {
@@ -9,5 +9,6 @@ type Mutation {
 }
 
 type Query {
+  article(articleID: String!): Article!
   articles: [Article!]!
 }

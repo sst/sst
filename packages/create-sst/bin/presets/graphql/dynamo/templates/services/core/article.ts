@@ -44,18 +44,24 @@ export const ArticleEntity = new Entity(
 
 export type ArticleEntityType = EntityItem<typeof ArticleEntity>;
 
-export function create(title: string, url: string) {
-  return ArticleEntity.create({
+export async function create(title: string, url: string) {
+  const result = await ArticleEntity.create({
     articleID: ulid(),
     title,
     url,
   }).go();
+
+  return result.data;
 }
 
-export function get(articleID: string) {
-  return ArticleEntity.get({ articleID }).go();
+export async function get(articleID: string) {
+  const result = await ArticleEntity.get({ articleID }).go();
+
+  return result.data;
 }
 
 export async function list() {
-  return ArticleEntity.query.primary({}).go();
+  const result = await ArticleEntity.query.primary({}).go();
+
+  return result.data;
 }

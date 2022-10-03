@@ -1,5 +1,43 @@
 # @serverless-stack/resources
 
+## 1.15.7
+
+### Patch Changes
+
+- [`5a1780a56`](https://github.com/serverless-stack/sst/commit/5a1780a56c4c46d0fb2b0c8e323b2223d93f4d00) Thanks [@thdxr](https://github.com/thdxr)! - Job: Add support for VPC
+
+* [#2111](https://github.com/serverless-stack/sst/pull/2111) [`3a9cd6184`](https://github.com/serverless-stack/sst/commit/3a9cd61845f7d7caabe4bdfb7d46a4fa8f1e92c3) Thanks [@fwang](https://github.com/fwang)! - Queue: support imported consumer function
+
+* Updated dependencies []:
+  - @serverless-stack/core@1.15.7
+
+## 1.15.6
+
+### Patch Changes
+
+- [#2111](https://github.com/serverless-stack/sst/pull/2111) [`cc0db1b53`](https://github.com/serverless-stack/sst/commit/cc0db1b535b65324cee8ae9fd1ce6da319021948) Thanks [@fwang](https://github.com/fwang)! - Queue: support imported consumer function
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.15.6
+
+## 1.15.5
+
+### Patch Changes
+
+- [#2109](https://github.com/serverless-stack/sst/pull/2109) [`542b37d10`](https://github.com/serverless-stack/sst/commit/542b37d10ae5ee9574ddfc051bf71b9659f27104) Thanks [@fwang](https://github.com/fwang)! - StaticSite: handle Gatsby build's 404.html folder
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.15.5
+
+## 1.15.4
+
+### Patch Changes
+
+- [`3f241696a`](https://github.com/serverless-stack/sst/commit/3f241696a0b0d24d8a582fb037267e82ca0d809b) Thanks [@thdxr](https://github.com/thdxr)! - Support camelcase for kysely type generation
+
+- Updated dependencies [[`3f241696a`](https://github.com/serverless-stack/sst/commit/3f241696a0b0d24d8a582fb037267e82ca0d809b)]:
+  - @serverless-stack/core@1.15.4
+
 ## 1.15.3
 
 ### Patch Changes

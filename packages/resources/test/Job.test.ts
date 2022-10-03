@@ -1,14 +1,22 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/ban-types, @typescript-eslint/no-empty-function */
 import { test, expect, beforeEach } from "vitest";
-import { ANY, countResources, hasResource, objectLike, arrayWith, countResourcesLike } from "./helper";
+import {
+  ANY,
+  countResources,
+  hasResource,
+  objectLike,
+  arrayWith,
+  countResourcesLike,
+} from "./helper";
 import { App, Stack, Job, Config, Topic } from "../src";
+import { Vpc } from "aws-cdk-lib/aws-ec2";
+import { Template } from "aws-cdk-lib/assertions";
 
 beforeEach(async () => {
   Job.clear();
   Config.Parameter.clear();
   Config.Secret.clear();
 });
-
 
 test("constructor: default", async () => {
   const stack = new Stack(new App(), "stack");
@@ -34,8 +42,8 @@ test("constructor: default", async () => {
     Environment: {
       Variables: {
         PROJECT_NAME: { Ref: "JobJobProject946AC8CC" },
-      }
-    }
+      },
+    },
   });
 });
 
@@ -69,7 +77,7 @@ test("constructor: memorySize", async () => {
   hasResource(stack, "AWS::CodeBuild::Project", {
     Environment: {
       ComputeType: "BUILD_GENERAL1_LARGE",
-    }
+    },
   });
 });
 
@@ -99,7 +107,7 @@ test("constructor: config", async () => {
       EnvironmentVariables: arrayWith([
         objectLike({ Name: "SST_PARAM_MY_TOPIC_ARN", Value: ANY }),
       ]),
-    }
+    },
   });
 });
 
@@ -112,10 +120,8 @@ test("constructor: permissions", async () => {
   });
   hasResource(stack, "AWS::IAM::Policy", {
     PolicyDocument: objectLike({
-      Statement: arrayWith([
-        objectLike({ Action: "sns:*" }),
-      ])
-    })
+      Statement: arrayWith([objectLike({ Action: "sns:*" })]),
+    }),
   });
 });
 
@@ -124,7 +130,7 @@ test("constructor: environment", async () => {
   new Job(stack, "Job", {
     handler: "test/lambda.handler",
     environment: {
-      DEBUG: "*"
+      DEBUG: "*",
     },
   });
   hasResource(stack, "AWS::CodeBuild::Project", {
@@ -132,7 +138,7 @@ test("constructor: environment", async () => {
       EnvironmentVariables: arrayWith([
         objectLike({ Name: "DEBUG", Value: "*" }),
       ]),
-    }
+    },
   });
 });
 
@@ -145,10 +151,8 @@ test("sst deploy", async () => {
   // Invoker needs to call CodeBuild on `sst start`
   countResourcesLike(stack, "AWS::IAM::Policy", 1, {
     PolicyDocument: objectLike({
-      Statement: arrayWith([
-        objectLike({ Action: "codebuild:StartBuild" }),
-      ])
-    })
+      Statement: arrayWith([objectLike({ Action: "codebuild:StartBuild" })]),
+    }),
   });
 });
 
@@ -156,7 +160,7 @@ test("sst start", async () => {
   const app = new App({
     debugEndpoint: "placeholder",
     debugBucketArn: "placeholder",
-    debugBucketName: "placeholder"
+    debugBucketName: "placeholder",
   });
   const stack = new Stack(app, "stack");
   new Job(stack, "Job", {
@@ -165,10 +169,8 @@ test("sst start", async () => {
   // Invoker not calling CodeBuild on `sst start`
   countResourcesLike(stack, "AWS::IAM::Policy", 0, {
     PolicyDocument: objectLike({
-      Statement: arrayWith([
-        objectLike({ Action: "codebuild:StartBuild" }),
-      ])
-    })
+      Statement: arrayWith([objectLike({ Action: "codebuild:StartBuild" })]),
+    }),
   });
 });
 
@@ -176,7 +178,7 @@ test("sst start: enableLiveDev false", async () => {
   const app = new App({
     debugEndpoint: "placeholder",
     debugBucketArn: "placeholder",
-    debugBucketName: "placeholder"
+    debugBucketName: "placeholder",
   });
   const stack = new Stack(app, "stack");
   new Job(stack, "Job", {
@@ -186,10 +188,8 @@ test("sst start: enableLiveDev false", async () => {
   // Invoker not calling CodeBuild on `sst start`
   countResourcesLike(stack, "AWS::IAM::Policy", 1, {
     PolicyDocument: objectLike({
-      Statement: arrayWith([
-        objectLike({ Action: "codebuild:StartBuild" }),
-      ])
-    })
+      Statement: arrayWith([objectLike({ Action: "codebuild:StartBuild" })]),
+    }),
   });
 });
 
@@ -208,7 +208,7 @@ test("addConfig", async () => {
       EnvironmentVariables: arrayWith([
         objectLike({ Name: "SST_PARAM_MY_TOPIC_ARN", Value: ANY }),
       ]),
-    }
+    },
   });
 });
 
@@ -221,10 +221,8 @@ test("attachPermissions", async () => {
   job.attachPermissions([topic]);
   hasResource(stack, "AWS::IAM::Policy", {
     PolicyDocument: objectLike({
-      Statement: arrayWith([
-        objectLike({ Action: "sns:*" }),
-      ])
-    })
+      Statement: arrayWith([objectLike({ Action: "sns:*" })]),
+    }),
   });
 });
 
@@ -239,6 +237,18 @@ test("addEnvironment", async () => {
       EnvironmentVariables: arrayWith([
         objectLike({ Name: "DEBUG", Value: "*" }),
       ]),
-    }
+    },
   });
+});
+
+test("vpc", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Job(stack, "Job", {
+    handler: "test/lambda.handler",
+    timeout: "1 hour",
+    cdk: {
+      vpc: new Vpc(stack, "VPC"),
+    },
+  });
+  hasResource(stack, "AWS::EC2::VPC", {});
 });

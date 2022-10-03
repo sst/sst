@@ -1,5 +1,17 @@
 # create-sst
 
+## 1.15.7
+
+## 1.15.6
+
+## 1.15.5
+
+## 1.15.4
+
+### Patch Changes
+
+- [`f336f05f6`](https://github.com/serverless-stack/sst/commit/f336f05f688e27c1417be360b6a266afb0aa65af) Thanks [@jayair](https://github.com/jayair)! - Updating DynamoDB starter to ElectroDB 2.0
+
 ## 1.15.3
 
 ## 1.15.2
