@@ -1,4 +1,4 @@
-A construct for a Lambda Function that allows you to [develop your it locally](live-lambda-development.md). Supports JS, TypeScript, Python, Golang, and C#. It also applies a couple of defaults:
+A construct for a Lambda Function that allows you to [develop it locally](live-lambda-development.md). Supports JS, TypeScript, Python, Golang, and C#. It also applies a couple of defaults:
 
 - Sets the default memory setting to 1024MB.
 - Sets the default Lambda function timeout to 10 seconds.
