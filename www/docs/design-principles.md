@@ -1,18 +1,28 @@
 ---
-id: design-principles
 title: Design Principles
-description: "SST is designed around a few core principles."
+description: "SST is built around a few core design principles."
 ---
 
 import config from "../config";
+import HeadlineText from "@site/src/components/HeadlineText";
 
-SST is designed around a few core principles.
+<HeadlineText>
+
+SST is built around a few core design principles.
+
+</HeadlineText>
+
+---
 
 ## Progressive disclosure
 
 The [constructs that SST provides](packages/resources.md) for building serverless apps is based on the idea of [_progressive disclosure_](https://en.wikipedia.org/wiki/Progressive_disclosure). This means that the basic configuration for these constructs are simple, easy to understand, and readable. But they still allow you to progressively customize them for more complex use cases.
 
+This has a big impact when you are building on something as complicated as AWS. It can be really intimidating to learn AWS but SST's design makes this a lot easier.
+
 Let's look at the two areas where we apply this idea.
+
+---
 
 ### Configuring constructs
 
@@ -31,9 +41,11 @@ This format makes it easy to understand what is being defined. But if you wanted
 
 ```js {2-5}
 new Api(this, "Api", {
-  defaultFunctionProps: {
-    srcPath: "src/",
-    environment: { tableName: table.tableName },
+  defaults: {
+    function: {
+      timeout: 20,
+      permissions: [table],
+    },
   },
   routes: {
     "GET  /notes": "list.main",
@@ -46,15 +58,17 @@ We could go even further and specifically customize one of the routes.
 
 ```js {7-12}
 new Api(this, "Api", {
-  defaultFunctionProps: {
-    srcPath: "src/",
-    environment: { tableName: table.tableName },
+  defaults: {
+    function: {
+      timeout: 20,
+      permissions: [table],
+    },
   },
   routes: {
     "GET /notes": {
       function: {
-        handler: "list.main",
-        srcPath: "services/functions/",
+        handler: "src/list.main",
+        environment: { tableName: table.tableName },
       },
     },
     "POST /notes": "create.main",
@@ -62,11 +76,30 @@ new Api(this, "Api", {
 });
 ```
 
+Finally, you can configure the props of the underlying CDK construct that the `Api` construct is built on.
+
+```ts {4-11}
+import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
+
+new Api(stack, "Api", {
+  cdk: {
+    httpStages: [
+      {
+        stageName: "dev",
+        autoDeploy: false,
+      },
+    ],
+  },
+});
+```
+
+---
+
 ### Attaching permissions
 
 A similar idea can be seen in the pattern SST uses for attaching permissions to functions.
 
-Let's look at a [cronjob](constructs/Cron.md) as an example.
+Let's look at the [`Cron`](constructs/Cron.md) construct as an example.
 
 ```js
 const cron = new Cron(this, "Cron", {
@@ -109,7 +142,7 @@ cron.attachPermissions([
 
 Or attach a list of granular IAM policy statements.
 
-```js {4-10}
+```js {4-8}
 import { PolicyStatement, Effect } from "aws-cdk-lib/aws-iam";
 
 cron.attachPermissions([
@@ -121,14 +154,22 @@ cron.attachPermissions([
 ]);
 ```
 
-### Having an escape hatch
+---
 
-We are continually working to improve the design of the SST constructs. Feel free to send us your feedback <a href={ config.discord }>via Discord</a> or <a href={ `mailto:${config.email}` }>email</a>.
+## Having an escape hatch
 
-That said, you might run into cases where you are trying to do something that these constructs do not support. In these cases, you can fallback to using the native CDK constructs instead. This _escape hatch_ ensures that you won't be locked in to using SST's constructs.
+With the design of SST's constructs you might run into cases where you are trying to do something that is not supported. In these cases, you can fallback to using the native CDK constructs instead.
+
+This _escape hatch_ ensures that you are not locked into using SST's constructs.
+
+That said, if you have a use case that we should address, jump on our <a href={ config.discord }>Discord</a> and let us know.
+
+---
 
 ## Zero-config
 
-One of the big reasons we built SST was because the development environment for serverless always felt lacking. It lacked a tight feedback loop, something the [Live Lambda Development](live-lambda-development.md) tries to address. But you also needed to configure multiple plugins, Webpack, Babel, TypeScript, testing frameworks, linters etc. These setups were often brittle and relied on separate project maintainers to keep up to date. This might've been fine if you are an individual developer who has a ton of experience with serverless. But if you are a part of a larger team or are just getting started with serverless, it can be very challenging just to get your dev environment up and running.
+One of the big reasons we built SST was because the development environment for serverless always felt lacking. It lacked a tight feedback loop, something the [Live Lambda Development](live-lambda-development.md) addresses. But you also needed to configure multiple plugins, Webpack, Babel, TypeScript, testing frameworks, linters etc. These setups were often brittle and relied on separate project maintainers to keep up to date. This might've been fine if you are an individual developer who has a ton of experience with serverless. But if you are a part of a larger team or are just getting started with serverless, it can be very challenging just to get your dev environment up and running.
 
 Hence, one of the design principles of SST is to make sure that the development environment works out of the box. It comes _batteries included_. And needs little to no configuration.
+
+You can learn more about this if you [check out our tutorial](learn/index.md).
