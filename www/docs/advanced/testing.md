@@ -30,16 +30,6 @@ SST uses [Vitest](https://vitest.dev) to help you write these tests. And it uses
 
 ---
 
-## Get started
-
-In this chapter we'll look at the different types of tests and share some tips on how to write them.
-
-To follow along, you can create the GraphQL starter by running `npx create-sst@latest` > `graphql` > `DynamoDB`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/create-sst-dynamo) based on the same template.
-
-If you are new to the GraphQL starter, it creates a very simple Reddit clone. You can submit links and it'll display all the links that have been submitted. You can check out the [Quick start](../quick-start.md) to see how it works.
-
----
-
 ### Test script
 
 If you created your app with `create-sst` a [Vitest](https://vitest.dev/config/) config is added for you, with a test script in your `package.json`:
@@ -83,6 +73,16 @@ yarn test
 
 ---
 
+## Quick start
+
+In this chapter we'll look at the different types of tests and share some tips on how to write them.
+
+To follow along, you can create the GraphQL starter by running `npx create-sst@latest` > `graphql` > `DynamoDB`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/create-sst-dynamo) based on the same template.
+
+If you are new to the GraphQL starter, it creates a very simple Reddit clone. You can submit links and it'll display all the links that have been submitted. You can check out the [Quick start](../quick-start.md) to see how it works.
+
+---
+
 ### Testing domain code
 
 Open up `services/core/article.ts`, it contains a `create()` function to create an article, and a `list()` function to list all submitted articles. This code is responsible for the _article domain_.
@@ -116,7 +116,7 @@ The above test only works if we run `sst load-config -- vitest run`. The `sst lo
 
 ---
 
-### Testing APIs
+### Testing API endpoints
 
 We can rewrite the above test so that instead of calling `Article.create()`, you make a request to the GraphQL API to create the article. In fact, the GraphQL stack template already includes this test.
 
@@ -171,7 +171,7 @@ Note that this test is very similar to the request frontend makes when a user tr
 
 ---
 
-### Testing stacks
+### Testing infrastructure
 
 Both domain function tests and API tests are for testing your business logic code. Stack tests on the other hand allows you to test your infrastructure settings.
 

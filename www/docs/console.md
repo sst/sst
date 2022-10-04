@@ -21,7 +21,7 @@ With the Console you can view real-time logs, invoke functions, replay invocatio
 
 ---
 
-## How to use
+## Quick start
 
 To use the SST Console in local development:
 

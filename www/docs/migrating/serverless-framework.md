@@ -20,7 +20,7 @@ To make it an easier transition, we'll start by merging your existing Serverless
 
 Your existing app can either have one service or be a monorepo with multiple services.
 
-1. In a temporary location, run `npm init sst` 
+1. In a temporary location, run `npm init sst`
 2. Copy the `sst.json` file and the `src/` and `stacks/` directories.
 3. Copy the `scripts`, `dependencies`, and `devDependencies` from the `package.json` file in the new SST project root.
 4. Copy the `.gitignore` file and append it to your existing `.gitignore` file.
@@ -66,7 +66,7 @@ new sst.Function(stack, "MySnsLambda", {
 
 ### Monorepo with multiple Serverless Framework services
 
-If you have multiple Serverless Framework services in the same repo, you can still follow the steps above to create a single SST app. This is because you can define multiple stacks in the same SST app. Whereas each Serverless Framework service can only contain a single stack. 
+If you have multiple Serverless Framework services in the same repo, you can still follow the steps above to create a single SST app. This is because you can define multiple stacks in the same SST app. Whereas each Serverless Framework service can only contain a single stack.
 
 After the SST app is created, your directory structure should look something like this.
 
@@ -144,8 +144,8 @@ stack.addOutputs({
   TableName: {
     value: bucket.bucketArn,
     exportName: "MyBucketArn",
-  }
-})
+  },
+});
 ```
 
 ```js title="Serverless Framework"
@@ -169,11 +169,11 @@ export function StackA({ stack }: StackContext) {
 
 ```js title="StackB.js"
 import { StackContext, use } from "@serverless-stack/resources";
-import { StackA } from "./StackA"
+import { StackA } from "./StackA";
 
 export function StackA({ stack }: StackContext) {
   // stackA's return value is passed to stackB
-  const { bucket } = use(StackA)
+  const { bucket } = use(StackA);
 
   // SST will implicitly set the exports in stackA
   // and imports in stackB
@@ -202,7 +202,7 @@ new sst.Topic(stack, "MyTopic", {
   snsTopic,
   subscribers: {
     subscriber1: "src/subscriber1.main",
-    subscriber2: "src/subscriber2.main"
+    subscriber2: "src/subscriber2.main",
   },
 });
 ```
@@ -331,7 +331,7 @@ SST also supports the `IS_LOCAL` environment variable that gets set in your Lamb
 
 ### Invoking locally
 
-With the Serverless Framework you need to run the following command `serverless invoke local -f function_name` to invoke a function locally. 
+With the Serverless Framework you need to run the following command `serverless invoke local -f function_name` to invoke a function locally.
 
 With SST this can be done via PostMan, Hopscotch, curl or any other API client. However, with this event you are actually sending a request to API Gateway which then invokes your Lambda.
 
@@ -597,7 +597,7 @@ functions:
 new Topic(stack, "Dispatch", {
   subscribers: {
     subscriber1: "subscriber.main",
-    subscriber2: "subscriber2.main"
+    subscriber2: "subscriber2.main",
   },
 });
 ```
@@ -967,8 +967,6 @@ States:
 ```
 
 ```js title="SST"
-import * as cdk from "aws-cdk-lib";
-
 // Define each state
 const sWait = new sfn.Wait(stack, "Wait", {
   time: sfn.WaitTime.duration(cdk.Duration.seconds(300)),

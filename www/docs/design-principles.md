@@ -116,16 +116,14 @@ cron.attachPermissions([
   new PolicyStatement({
     actions: ["execute-api:Invoke"],
     effect: Effect.ALLOW,
-    resources: [
-      `arn:aws:execute-api:${region}:${account}:${api.httpApiId}/*`,
-    ],
+    resources: [`arn:aws:execute-api:${region}:${account}:${api.httpApiId}/*`],
   }),
 ]);
 ```
 
 ### Having an escape hatch
 
-We are continually working to improve the design of the SST constructs. Feel free to send us your feedback <a href={ config.discord_invite }>via Discord</a> or <a href={ `mailto:${config.email}` }>email</a>.
+We are continually working to improve the design of the SST constructs. Feel free to send us your feedback <a href={ config.discord }>via Discord</a> or <a href={ `mailto:${config.email}` }>email</a>.
 
 That said, you might run into cases where you are trying to do something that these constructs do not support. In these cases, you can fallback to using the native CDK constructs instead. This _escape hatch_ ensures that you won't be locked in to using SST's constructs.
 
