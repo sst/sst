@@ -783,6 +783,14 @@ export class RemixSite extends Construct implements SSTConstruct {
       )
     );
 
+    // Copy the Remix polyfil to the server build directory
+    const polyfillSource = path.resolve(
+      __dirname,
+      "../assets/RemixSite/server-lambda/polyfill.js"
+    );
+    const polyfillDest = path.join(this.props.path, "build/polyfill.js");
+    fs.copyFileSync(polyfillSource, polyfillDest);
+
     const result = esbuild.buildSync({
       entryPoints: [serverPath],
       bundle: true,
@@ -795,12 +803,7 @@ export class RemixSite extends Construct implements SSTConstruct {
       // doesn't appear to guarantee this, we therefore leverage ESBUild's
       // `inject` option to ensure that the polyfills are injected at the top of
       // the bundle.
-      inject: [
-        path.resolve(
-          __dirname,
-          "../assets/RemixSite/server-lambda/polyfill.js"
-        ),
-      ],
+      inject: [polyfillDest],
     });
 
     if (result.errors.length > 0) {
