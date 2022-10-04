@@ -82,15 +82,3 @@ There are a couple of other reasons why Seed is a good fit for SST.
    Seed also directly plugs into the SST deployment process. So when an SST app is waiting for CloudFormation to update your stacks, Seed pauses the build process and does this asynchronously. This allows Seed to make SST deployments very efficient and offer it to you for free!
 
 Once your app is in a Git repo, follow these steps in the Seed docs to [add your SST app](https://seed.run/docs/adding-a-cdk-app).
-
----
-
-## Production checklist
-
-When you are ready to deploy your SST app to production and go live with real users, you should double check a couple of things.
-
-- Make sure the [default removal policy](./constructs/App.md#setting-a-default-removal-policy) is **NOT set to `DESTROY`** for production environments.
-- Make sure the **secrets are not stored in the code** and committed to Git. Store the secrets using [`Config`](environment-variables.md).
-- Review the log retention setting for Lambda function logs and API access logs. Ensure that the number of days the logs are kept in [CloudWatch Logs](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/WhatIsCloudWatchLogs.html) fits your budget.
-- It's recommended that you and your team **do NOT have permission** to deploy to production environments **from your local machines**. Deployments to production environments should be done from a consistent and secure environment like a CI server.
-- Finally, if you'd like visibility on your Lambda functions in production, consider using a [monitoring service](./advanced/monitoring.md).
