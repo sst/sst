@@ -10,17 +10,28 @@ const require = createRequire(import.meta.url);
 // https://curl.se/docs/manpage.html
 
 export function bootstrap() {
-  process.env.GLOBAL_AGENT_HTTP_PROXY = process.env.GLOBAL_AGENT_HTTP_PROXY
+  const GLOBAL_AGENT_HTTP_PROXY = process.env.GLOBAL_AGENT_HTTP_PROXY
     ?? process.env.http_proxy
     ?? process.env.HTTP_PROXY;
-  process.env.GLOBAL_AGENT_HTTPS_PROXY = process.env.GLOBAL_AGENT_HTTPS_PROXY
+  if (GLOBAL_AGENT_HTTP_PROXY !== undefined) {
+    process.env.GLOBAL_AGENT_HTTP_PROXY = GLOBAL_AGENT_HTTP_PROXY;
+  }
+
+  const GLOBAL_AGENT_HTTPS_PROXY = process.env.GLOBAL_AGENT_HTTPS_PROXY
     ?? process.env.https_proxy
     ?? process.env.HTTPS_PROXY;
-  process.env.GLOBAL_AGENT_NO_PROXY = process.env.GLOBAL_AGENT_NO_PROXY
+  if (GLOBAL_AGENT_HTTPS_PROXY !== undefined) {
+    process.env.GLOBAL_AGENT_HTTPS_PROXY = GLOBAL_AGENT_HTTPS_PROXY;
+  }
+
+  const GLOBAL_AGENT_NO_PROXY = process.env.GLOBAL_AGENT_NO_PROXY
     ?? process.env.no_proxy
     ?? process.env.NO_PROXY;
-  if (process.env.GLOBAL_AGENT_HTTPS_PROXY
-    || process.env.GLOBAL_AGENT_HTTP_PROXY) {
+  if (GLOBAL_AGENT_NO_PROXY !== undefined) {
+    process.env.GLOBAL_AGENT_NO_PROXY = GLOBAL_AGENT_NO_PROXY;
+  }
+
+  if (process.env.GLOBAL_AGENT_HTTPS_PROXY || process.env.GLOBAL_AGENT_HTTP_PROXY) {
     console.log(`Using proxy ${process.env.GLOBAL_AGENT_HTTPS_PROXY ?? process.env.GLOBAL_AGENT_HTTP_PROXY}`)
 
     // Throw error if user app does not have "global-agent"

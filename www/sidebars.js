@@ -127,13 +127,12 @@ module.exports = {
             "advanced/iam-credentials",
             "advanced/tagging-resources",
             "advanced/importing-resources",
+            "advanced/connecting-via-proxy",
             "advanced/permission-boundary",
             "advanced/cross-stack-references",
             "advanced/linting-and-type-checking",
             //"advanced/monorepo-project-structure",
             "advanced/environment-specific-resources"
-            //{ type: "doc", id: "api", label: "WebSocket" },
-            //{ type: "doc", id: "api", label: "AppSync" },
           ]
         }
       ]
