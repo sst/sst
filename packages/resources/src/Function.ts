@@ -26,56 +26,34 @@ import * as functionUrlCors from "./util/functionUrlCors.js";
 import url from "url";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
-const supportedRuntimes = [
-  lambda.Runtime.NODEJS,
-  lambda.Runtime.NODEJS_4_3,
-  lambda.Runtime.NODEJS_6_10,
-  lambda.Runtime.NODEJS_8_10,
-  lambda.Runtime.NODEJS_10_X,
-  lambda.Runtime.NODEJS_12_X,
-  lambda.Runtime.NODEJS_14_X,
-  lambda.Runtime.NODEJS_16_X,
-  lambda.Runtime.PYTHON_2_7,
-  lambda.Runtime.PYTHON_3_6,
-  lambda.Runtime.PYTHON_3_7,
-  lambda.Runtime.PYTHON_3_8,
-  lambda.Runtime.PYTHON_3_9,
-  lambda.Runtime.DOTNET_CORE_1,
-  lambda.Runtime.DOTNET_CORE_2,
-  lambda.Runtime.DOTNET_CORE_2_1,
-  lambda.Runtime.DOTNET_CORE_3_1,
-  lambda.Runtime.DOTNET_6,
-  lambda.Runtime.JAVA_8,
-  lambda.Runtime.JAVA_11,
-  lambda.Runtime.GO_1_X,
-];
+const supportedRuntimes = {
+  "nodejs": lambda.Runtime.NODEJS,
+  "nodejs4.3": lambda.Runtime.NODEJS_4_3,
+  "nodejs6.10": lambda.Runtime.NODEJS_6_10,
+  "nodejs8.10": lambda.Runtime.NODEJS_8_10,
+  "nodejs10.x": lambda.Runtime.NODEJS_10_X,
+  "nodejs12.x": lambda.Runtime.NODEJS_12_X,
+  "nodejs14.x": lambda.Runtime.NODEJS_14_X,
+  "nodejs16.x": lambda.Runtime.NODEJS_16_X,
+  "python2.7": lambda.Runtime.PYTHON_2_7,
+  "python3.6": lambda.Runtime.PYTHON_3_6,
+  "python3.7": lambda.Runtime.PYTHON_3_7,
+  "python3.8": lambda.Runtime.PYTHON_3_8,
+  "python3.9": lambda.Runtime.PYTHON_3_9,
+  "dotnetcore1.0": lambda.Runtime.DOTNET_CORE_1,
+  "dotnetcore2.0": lambda.Runtime.DOTNET_CORE_2,
+  "dotnetcore2.1": lambda.Runtime.DOTNET_CORE_2_1,
+  "dotnetcore3.1": lambda.Runtime.DOTNET_CORE_3_1,
+  "dotnet6": lambda.Runtime.DOTNET_6,
+  "java8": lambda.Runtime.JAVA_8,
+  "java11": lambda.Runtime.JAVA_11,
+  "go1.x": lambda.Runtime.GO_1_X,
+};
 
-export interface FunctionUrlCorsProps extends functionUrlCors.CorsProps { }
+export type Runtime = keyof typeof supportedRuntimes;
 export type FunctionInlineDefinition = string | Function;
 export type FunctionDefinition = string | Function | FunctionProps;
-
-export type Runtime =
-  | "nodejs"
-  | "nodejs4.3"
-  | "nodejs6.10"
-  | "nodejs8.10"
-  | "nodejs10.x"
-  | "nodejs12.x"
-  | "nodejs14.x"
-  | "nodejs16.x"
-  | "python2.7"
-  | "python3.6"
-  | "python3.7"
-  | "python3.8"
-  | "python3.9"
-  | "dotnetcore1.0"
-  | "dotnetcore2.0"
-  | "dotnetcore2.1"
-  | "dotnetcore3.1"
-  | "dotnet6"
-  | "java8"
-  | "java11"
-  | "go1.x";
+export interface FunctionUrlCorsProps extends functionUrlCors.CorsProps { }
 
 export interface FunctionProps
   extends Omit<
@@ -610,9 +588,9 @@ export interface FunctionBundleNodejsProps extends FunctionBundleBase {
 /**
  * Used to configure Python bundling options
  */
- export interface FunctionBundlePythonProps extends FunctionBundleBase {
+export interface FunctionBundlePythonProps extends FunctionBundleBase {
   /**
-   * Gradle build command to generate .zip file
+   * A list of commands to override the [default installing behavior](Function#bundle) for Python dependencies.
    *
    * Each string in the array is a command that'll be run. For example:
    *
@@ -636,44 +614,24 @@ export interface FunctionBundleNodejsProps extends FunctionBundleBase {
 /**
  * Used to configure Java package build options
  */
- export interface FunctionBundleJavaProps extends FunctionBundleBase {
+export interface FunctionBundleJavaProps extends FunctionBundleBase {
   /**
-   * A list of commands to override the [default installing behavior](Function#bundle) for Python dependencies.
-   *
-   * Each string in the array is a command that'll be run. For example:
-   *
+   * Gradle build command to generate the bundled .zip file.
+   * 
    * @default "build"
    *
    * @example
    * ```js
    * new Function(stack, "Function", {
    *   bundle: {
-   *     buildCommand: "buildNativeLambda"
+   *     buildTask: "bundle"
    *   }
    * })
    * ```
    */
-  buildCommand?: string;
-
+  buildTask?: string;
   /**
-   * Whether to use a custom runtime (https://docs.aws.amazon.com/lambda/latest/dg/runtimes-custom.html) for a native build
-   *
-   * @default false
-   *
-   * @example
-   * ```js
-   * new Function(stack, "Function", {
-   *   bundle: {
-   *     buildCommand: "buildNativeLambda"
-   *   }
-   * })
-   * ```
-   */
-   customRuntime?: boolean;
-
-
-  /**
-   * The output folder that the .zip file will be created within
+   * The output folder that the bundled .zip file will be created within.
    *
    * @default "distributions"
    *
@@ -681,12 +639,27 @@ export interface FunctionBundleNodejsProps extends FunctionBundleBase {
    * ```js
    * new Function(stack, "Function", {
    *   bundle: {
-   *     buildOutputFolder: "libs"
+   *     buildOutputDir: "output"
    *   }
    * })
    * ```
    */
-   buildOutputFolder?: string;
+  buildOutputDir?: string;
+  /**
+   * Use custom Amazon Linux runtime instead of Java runtime.
+   *
+   * @default Not using provided runtime
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   bundle: {
+   *     experimentalUseProvidedRuntime: "provided.al2"
+   *   }
+   * })
+   * ```
+   */
+  experimentalUseProvidedRuntime?: "provided" | "provided.al2";
 }
 
 /**
@@ -780,8 +753,9 @@ export class Function extends lambda.Function implements SSTConstruct {
     }
 
     // Validate input
-    const isNodeRuntime = runtime.toString().startsWith("nodejs");
-    const isPythonRuntime = runtime.toString().startsWith("python");
+    const isNodeRuntime = runtime.startsWith("nodejs");
+    const isPythonRuntime = runtime.startsWith("python");
+    const isJavaRuntime = runtime.startsWith("java");
     if (isNodeRuntime) {
       bundle = bundle === undefined ? true : props.bundle;
       if (!bundle && srcPath === ".") {
@@ -863,7 +837,7 @@ export class Function extends lambda.Function implements SSTConstruct {
           ),
           handler: "index.main",
           functionName,
-          runtime: isNodeRuntime ? runtime : lambda.Runtime.NODEJS_16_X,
+          runtime: lambda.Runtime.NODEJS_16_X,
           memorySize,
           ephemeralStorageSize: diskSize,
           timeout,
@@ -883,9 +857,9 @@ export class Function extends lambda.Function implements SSTConstruct {
       }
       State.Function.append(app.appPath, {
         id: localId,
-        handler: handler,
-        runtime: runtime.toString(),
-        srcPath: srcPath,
+        handler,
+        runtime,
+        srcPath,
         bundle: props.bundle,
       });
       this.addEnvironment("SST_FUNCTION_ID", localId);
@@ -939,9 +913,9 @@ export class Function extends lambda.Function implements SSTConstruct {
         const bundled = await Runtime.Handler.bundle({
           id: localId,
           root: app.appPath,
-          handler: handler,
-          runtime: runtime.toString(),
-          srcPath: srcPath,
+          handler,
+          runtime,
+          srcPath,
           bundle: props.bundle,
         })!;
 
@@ -954,12 +928,16 @@ export class Function extends lambda.Function implements SSTConstruct {
           return bundled.asset;
         })();
 
-        const bundledRuntime = bundled.overrideRuntime ?? runtime;
-
         // Update function's code
         const codeConfig = code.bind(this);
         const cfnFunction = this.node.defaultChild as lambda.CfnFunction;
-        cfnFunction.runtime = bundledRuntime.toString();
+        cfnFunction.runtime = supportedRuntimes[runtime].toString();
+        if (isJavaRuntime && bundle) {
+          const providedRuntime = (bundle as FunctionBundleJavaProps).experimentalUseProvidedRuntime;
+          if (providedRuntime) {
+            cfnFunction.runtime = providedRuntime;
+          }
+        }
         cfnFunction.code = {
           s3Bucket: codeConfig.s3Location?.bucketName,
           s3Key: codeConfig.s3Location?.objectKey,
@@ -992,8 +970,8 @@ export class Function extends lambda.Function implements SSTConstruct {
 
     app.registerLambdaHandler({
       bundle: props.bundle!,
-      handler: handler,
-      runtime: runtime.toString(),
+      handler,
+      runtime,
       srcPath,
     });
     this._isLiveDevEnabled = isLiveDevEnabled;
@@ -1128,17 +1106,14 @@ export class Function extends lambda.Function implements SSTConstruct {
     return cdk.Duration.seconds(timeout || 10);
   }
 
-  static normalizeRuntime(runtime?: string): lambda.Runtime {
+  static normalizeRuntime(runtime?: Runtime): Runtime {
     runtime = runtime || "nodejs14.x";
-    const runtimeClass = supportedRuntimes.find(
-      (per) => per.toString() === runtime
-    );
-    if (!runtimeClass) {
+    if (!supportedRuntimes[runtime]) {
       throw new Error(
         `The specified runtime is not supported for sst.Function. Only NodeJS, Python, Go, and .NET runtimes are currently supported.`
       );
     }
-    return runtimeClass;
+    return runtime;
   }
 
   static normalizeSrcPath(srcPath: string): string {

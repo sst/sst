@@ -1,8 +1,7 @@
 import spawn from "cross-spawn";
-import { AssetCode, Runtime } from "aws-cdk-lib/aws-lambda";
-import { Writable } from "node:stream";
-import { logger } from "../../logger.js";
-
+import { AssetCode } from "aws-cdk-lib/aws-lambda";
+import { getChildLogger } from "../../logger.js";
+const logger = getChildLogger("runtime");
 
 export type Command = {
   command: string;
@@ -12,7 +11,6 @@ export type Command = {
 
 type BundleResult = {
   handler: string;
-  overrideRuntime?: Runtime; // Enables bundler to override function runtime, e.g. to swap to a custom runtime
 } & (
     | {
       asset: AssetCode; // Current python builder docker approach requires this
@@ -57,7 +55,7 @@ export type Opts<T = any> = {
 export type Definition<T = any> = (opts: Opts<T>) => Instructions;
 
 export function buildAsync(opts: Opts, cmd: Command) {
-  logger.debug(`buildAsync launching: ${cmd.command} ${cmd.args.join(' ')}`)
+  logger.debug(`buildAsync spawning: ${cmd.command} ${cmd.args.join(' ')}`)
   const proc = spawn(cmd.command, cmd.args, {
     env: {
       ...cmd.env,
@@ -67,18 +65,16 @@ export function buildAsync(opts: Opts, cmd: Command) {
   });
   return new Promise<Issue[]>((resolve) => {
     let buffer = "";
-
-    let writeToConsole = logger.isDebugEnabled() || (!!process.env.SST_BUILD_OUTPUT);
-    let collect = writeToConsole ? 
-      (data: string, stream: Writable) => { stream.write(data); buffer += data } :
-      (data: string, stream: Writable) => (buffer += data) 
-    
-    proc.stdout?.on("data", (data) => collect(data, process.stdout));
-    proc.stderr?.on("data", (data) => collect(data, process.stderr));
-    proc.on("exit", () => {      
-      if (proc.exitCode === 0) {
-        resolve([]);
-      }
+    proc.stdout?.on("data", (data) => {
+      buffer += data;
+      logger.debug(data);
+    });
+    proc.stderr?.on("data", (data) => {
+      buffer += data;
+      logger.debug(data);
+    });
+    proc.on("exit", () => {
+      if (proc.exitCode === 0) resolve([]);
       if (proc.exitCode !== 0) {
         resolve([
           {
