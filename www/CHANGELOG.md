@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 1.8.3
+
+### Patch Changes
+
+- [#2105](https://github.com/serverless-stack/sst/pull/2105) [`139b79a28`](https://github.com/serverless-stack/sst/commit/139b79a28d7ae06edd7d421b965332c412ddd076) Thanks [@mgranell](https://github.com/mgranell)! - Cli: support http proxy via global-agent
+
 ## 1.8.2
 
 ### Patch Changes
