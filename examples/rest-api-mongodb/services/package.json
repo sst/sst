@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {},
   "dependencies": {
-    "aws-sdk": "^2.1223.0",
+    "aws-sdk": "^2.1230.0",
     "mongodb": "^4.10.0"
   },
   "devDependencies": {

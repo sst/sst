@@ -4,7 +4,7 @@ An example full-stack serverless Gatsby.js app created with SST.
 
 ## Getting Started
 
-[**Read the tutorial**](https://sst.dev/examples/how-to-create-a-gatsby-app-with-serverless.html)
+[**Read the tutorial**](https://sst.dev/examples/how-to-create-a-gatsbyjs-app-with-serverless.html)
 
 Install the example.
 
