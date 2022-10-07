@@ -1,4 +1,0 @@
-
-// root project name cannot contain capitals, otherwise dockerBuildNative fails
-rootProject.name="minimal-javanative"
-
