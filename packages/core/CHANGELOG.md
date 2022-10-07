@@ -1,5 +1,13 @@
 # @serverless-stack/core
 
+## 1.15.11
+
+### Patch Changes
+
+- [`931b7e5ef`](https://github.com/serverless-stack/sst/commit/931b7e5efba0fbc6ea824666a0c25ebd9ad69dcf) Thanks [@thdxr](https://github.com/thdxr)! - Fix camelcase option on type generation
+
+* [#2078](https://github.com/serverless-stack/sst/pull/2078) [`2658bdc89`](https://github.com/serverless-stack/sst/commit/2658bdc8992c585738ce3402c241e6bee1c65d15) Thanks [@kuba-gaj](https://github.com/kuba-gaj)! - Fix lockfile not found in some monorepos
+
 ## 1.15.10
 
 ### Patch Changes
