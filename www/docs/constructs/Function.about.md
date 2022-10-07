@@ -362,7 +362,6 @@ new Function(stack, "MyLambda", {
   bundle: {
     buildTask: "bundle",
     buildOutputDir: "output",
-    experimentalUseProvidedRuntime: "provided.al2",
   },
   srcPath: "src",
   handler: "example.Handler::handleRequest",
