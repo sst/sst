@@ -68,7 +68,7 @@ What this means in practise is that SST gives you the following:
 
 SST features the [Live Lambda Dev](live-lambda-development.md) environment that gives you a **first-class local development** environment for building your applications.
 
-CDK does have something called [CDK Watch](live-lambda-development.md#cdk-watch) but it's too slow. It takes a few seconds to redeploy your functions when you make a change. And you can't set breakpoints locally.
+CDK does have the [CDK Watch](live-lambda-development.md#cdk-watch) command but it's too slow. It takes a few seconds to redeploy your functions when you make a change. And you can't set breakpoints locally.
 
 #### TypeScript-first design
 
