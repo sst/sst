@@ -1,5 +1,17 @@
 # @serverless-stack/docs
 
+## 1.8.4
+
+### Patch Changes
+
+- [#2101](https://github.com/serverless-stack/sst/pull/2101) [`efa4b7b39`](https://github.com/serverless-stack/sst/commit/efa4b7b39747a6529e72b73df5c1ab73e6a19302) Thanks [@mgranell](https://github.com/mgranell)! - Java: support gradle wrapper
+
+## 1.8.3
+
+### Patch Changes
+
+- [#2105](https://github.com/serverless-stack/sst/pull/2105) [`139b79a28`](https://github.com/serverless-stack/sst/commit/139b79a28d7ae06edd7d421b965332c412ddd076) Thanks [@mgranell](https://github.com/mgranell)! - Cli: support http proxy via global-agent
+
 ## 1.8.2
 
 ### Patch Changes

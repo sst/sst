@@ -355,7 +355,19 @@ The directory where `build.gradle` is found.
 
 #### bundle
 
-Only supported for the **Node.js** and **Python** runtimes.
+If you want to configure the bundling process, you can pass in the [FunctionBundleJavaProps](#functionbundlejavaprops).
+
+```ts
+new Function(stack, "MyLambda", {
+  bundle: {
+    buildTask: "bundle",
+    buildOutputDir: "output",
+  },
+  srcPath: "src",
+  handler: "example.Handler::handleRequest",
+  runtime: "java11",
+});
+```
 
 ### Function URLs
 

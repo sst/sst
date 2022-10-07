@@ -7,12 +7,21 @@ import { State } from "../../state/index.js";
 import { Paths } from "../../util/index.js";
 import { buildAsync, buildAsyncAndThrow, Command, Definition } from "./definition.js";
 
-export const JavaHandler: Definition = (opts: any) => {
+type Bundle = {
+  buildTask?: string;
+  buildOutputDir?: string;
+};
+
+export const JavaHandler: Definition<Bundle> = opts => {
   // Check build.gradle exists
   const buildGradle = path.join(opts.srcPath, "build.gradle");
   if (!fs.existsSync(buildGradle)) {
     throw new Error("Cannot find build.gradle at " + buildGradle);
   }
+
+  const buildBinary = getGradleBinary(opts.srcPath);
+  const buildTask = getGradleBuildTask(opts.bundle || {});
+  const outputDir = getGradleBuildOutputDir(opts.bundle || {});
 
   const dir = State.Function.artifactsPath(
     opts.root,
@@ -23,9 +32,9 @@ export const JavaHandler: Definition = (opts: any) => {
     path.basename(opts.handler).replace(/::/g, "-"),
   );
   const cmd: Command = {
-    command: "gradle",
+    command: buildBinary,
     args: [
-      "build",
+      buildTask,
       `-Dorg.gradle.project.buildDir=${target}`,
       `-Dorg.gradle.logging.level=${process.env.DEBUG ? "debug" : "lifecycle"}`,
     ],
@@ -50,8 +59,8 @@ export const JavaHandler: Definition = (opts: any) => {
       const issues = await buildAsync(opts, cmd);
       if (issues.length === 0) {
         // Unzip dependencies from .zip
-        const zip = (await fs.readdir(`${target}/distributions`)).find((f) => f.endsWith(".zip"));
-        zipLocal.sync.unzip(`${target}/distributions/${zip}`).save(`${target}/distributions`);
+        const zip = (await fs.readdir(`${target}/${outputDir}`)).find((f) => f.endsWith(".zip"));
+        zipLocal.sync.unzip(`${target}/${outputDir}/${zip}`).save(`${target}/${outputDir}`);
       }
       return issues;
     },
@@ -60,10 +69,10 @@ export const JavaHandler: Definition = (opts: any) => {
       await fs.mkdirp(dir);
       await buildAsyncAndThrow(opts, cmd);
       // Find the first zip in the build directory
-      const zip = (await fs.readdir(`${target}/distributions`)).find((f) => f.endsWith(".zip"));
+      const zip = (await fs.readdir(`${target}/${outputDir}`)).find((f) => f.endsWith(".zip"));
       return {
         handler: opts.handler,
-        asset: lambda.Code.fromAsset(`${target}/distributions/${zip}`),
+        asset: lambda.Code.fromAsset(`${target}/${outputDir}/${zip}`),
       };
     },
     run: {
@@ -87,7 +96,7 @@ export const JavaHandler: Definition = (opts: any) => {
           ),
           path.join(
             target,
-            "distributions",
+            outputDir,
             "lib",
             "*"
           ),
@@ -106,3 +115,18 @@ export const JavaHandler: Definition = (opts: any) => {
     },
   };
 };
+
+function getGradleBinary(srcPath: string): string {
+  // Use a gradle wrapper if provided in the folder, otherwise fall back
+  // to system "gradle"
+  const gradleWrapperPath = path.resolve(path.join(srcPath, "gradlew"));
+  return fs.existsSync(gradleWrapperPath) ? gradleWrapperPath : "gradle";
+}
+
+function getGradleBuildTask(bundle: Bundle): string {
+  return (bundle && bundle.buildTask) || "build";
+}
+
+function getGradleBuildOutputDir(bundle: Bundle): string {
+  return (bundle && bundle.buildOutputDir) || "distributions";
+}

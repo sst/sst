@@ -25,7 +25,7 @@ Name of a database which is automatically created inside the cluster.
 
 ### engine
 
-_Type_ : <span class='mono'><span class="mono">"mysql5.6"</span> | <span class="mono">"mysql5.7"</span> | <span class="mono">"postgresql10.14"</span></span>
+_Type_ : <span class='mono'><span class="mono">"mysql5.6"</span> | <span class="mono">"mysql5.7"</span> | <span class="mono">"postgresql10.14"</span> | <span class="mono">"postgresql11.13"</span></span>
 
 Database engine of the cluster. Cannot be changed once set.
 
@@ -39,7 +39,7 @@ Path to the directory that contains the migration scripts. The `RDS` construct u
 
 ```js
 new RDS(stack, "Database", {
-  engine: "postgresql10.14",
+  engine: "postgresql11.13",
   defaultDatabaseName: "acme",
   migrations: "path/to/migration/scripts",
 });
@@ -86,7 +86,7 @@ The minimum capacity for the cluster.
 
 ### types?
 
-_Type_ : <span class="mono">string</span>
+_Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[RDSTypes](#rdstypes)</span></span>
 
 Path to place generated typescript types after running migrations
 
@@ -94,10 +94,22 @@ Path to place generated typescript types after running migrations
 
 ```js
 new RDS(stack, "Database", {
-  engine: "postgresql10.14",
+  engine: "postgresql11.13",
   defaultDatabaseName: "acme",
   migrations: "path/to/migration/scripts",
   types: "backend/core/sql/types.ts",
+});
+```
+
+```js
+new RDS(stack, "Database", {
+  engine: "postgresql11.13",
+  defaultDatabaseName: "acme",
+  migrations: "path/to/migration/scripts",
+  types: {
+    path: "backend/core/sql/types.ts",
+    camelCase: true
+  }
 });
 ```
 
@@ -187,6 +199,17 @@ _Type_ : <span class="mono">[ServerlessCluster](https://docs.aws.amazon.com/cdk/
 
 The ARN of the internally created CDK ServerlessCluster instance.
 
+
+## RDSTypes
+
+
+### camelCase?
+
+_Type_ : <span class="mono">boolean</span>
+
+### path
+
+_Type_ : <span class="mono">string</span>
 
 ## RDSCdkServerlessClusterProps
 
