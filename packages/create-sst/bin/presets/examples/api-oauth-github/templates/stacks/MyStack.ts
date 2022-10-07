@@ -24,7 +24,7 @@ export function MyStack({ stack, app }: StackContext) {
           logoutUrls: [
             app.stage === "prod"
               ? "https://my-app.com"
-              : "https://localhost:3000"
+              : "http://localhost:3000"
           ]
         }
       }
