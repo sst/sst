@@ -63,19 +63,36 @@ export function buildAsync(opts: Opts, cmd: Command) {
     },
     cwd: opts.srcPath,
   });
+  // Print out stdout and stderr in real time if DEBUG is set,
+  // otherwise, just print out if build fails.
+  const isDebug = process.env.DEBUG;
   return new Promise<Issue[]>((resolve) => {
     let buffer = "";
     proc.stdout?.on("data", (data) => {
       buffer += data;
-      logger.debug(data);
+      isDebug && logger.debug(data);
     });
     proc.stderr?.on("data", (data) => {
       buffer += data;
-      logger.debug(data);
+      isDebug && logger.debug(data);
+    });
+    // Note: in the case of Java runtime, if gradle is not found,
+    // "on error" will get called. "on exit" will not get called.
+    proc.on("error", (e) => {
+      logger.error(e.message);
+      resolve([
+        {
+          location: {
+            file: [opts.srcPath, opts.handler].join("/"),
+          },
+          message: e.message,
+        },
+      ]);
     });
     proc.on("exit", () => {
       if (proc.exitCode === 0) resolve([]);
       if (proc.exitCode !== 0) {
+        !isDebug && logger.error(buffer);
         resolve([
           {
             location: {
