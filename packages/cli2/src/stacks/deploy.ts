@@ -1,5 +1,7 @@
 import {
   CloudFormationClient,
+  DescribeStackResourcesCommand,
+  DescribeStackResourcesOutput,
   DescribeStacksCommand,
 } from "@aws-sdk/client-cloudformation";
 import { useBus } from "../bus/index.js";
@@ -7,14 +9,55 @@ import { useAWSClient, useAWSProvider } from "../credentials/index.js";
 import { Logger } from "../logger/index.js";
 import type { CloudFormationStackArtifact } from "aws-cdk-lib/cx-api";
 
+const STATUSES = [
+  "CREATE_COMPLETE",
+  "CREATE_IN_PROGRESS",
+  "CREATE_FAILED",
+  "DELETE_COMPLETE",
+  "DELETE_FAILED",
+  "DELETE_IN_PROGRESS",
+  "REVIEW_IN_PROGRESS",
+  "ROLLBACK_COMPLETE",
+  "ROLLBACK_FAILED",
+  "ROLLBACK_IN_PROGRESS",
+  "UPDATE_COMPLETE",
+  "UPDATE_COMPLETE_CLEANUP_IN_PROGRESS",
+  "UPDATE_IN_PROGRESS",
+  "UPDATE_ROLLBACK_COMPLETE",
+  "UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS",
+  "UPDATE_ROLLBACK_FAILED",
+  "UPDATE_ROLLBACK_IN_PROGRESS",
+  "SKIPPED",
+] as const;
+
+const STATUSES_FINAL = [
+  "CREATE_FAILED",
+  "DELETE_COMPLETE",
+  "DELETE_FAILED",
+  "ROLLBACK_COMPLETE",
+  "ROLLBACK_FAILED",
+  "UPDATE_COMPLETE",
+  "UPDATE_ROLLBACK_COMPLETE",
+  "UPDATE_ROLLBACK_FAILED",
+  "SKIPPED",
+] as const;
+
+export function isFinal(input: string) {
+  return STATUSES_FINAL.includes(input as any);
+}
+
 declare module "../bus" {
   export interface Events {
-    "stacks.updated": {
+    "stack.updated": {
       stackID: string;
     };
-    "stacks.finished": {
+    "stack.status": {
       stackID: string;
-      status: string;
+      status: typeof STATUSES[number];
+    };
+    "stack.resources": {
+      stackID: string;
+      resources: DescribeStackResourcesOutput["StackResources"];
     };
   }
 }
@@ -23,16 +66,18 @@ export async function deployMany(stacks: CloudFormationStackArtifact[]) {
   const { CloudFormationStackArtifact } = await import("aws-cdk-lib/cx-api");
   const bus = useBus();
   const complete = new Set<string>();
-  const started = new Set<string>();
+  const todo = new Set(stacks.map((s) => s.id));
+  const pending = new Set<string>();
   const cfn = await useAWSClient(CloudFormationClient);
 
-  const update = bus.subscribe("stacks.updated", (evt) => {
-    started.add(evt.properties.stackID);
+  bus.subscribe("stack.updated", (evt) => {
+    pending.add(evt.properties.stackID);
   });
 
   async function trigger() {
     for (const stack of stacks) {
-      if (started.has(stack.id)) continue;
+      if (!todo.has(stack.id)) continue;
+      Logger.debug("Checking if", stack.id, "is ready to deploy");
 
       if (
         stack.dependencies.some(
@@ -42,39 +87,59 @@ export async function deployMany(stacks: CloudFormationStackArtifact[]) {
       )
         continue;
 
-      await deploy(stack);
+      deploy(stack);
+      todo.delete(stack.id);
     }
   }
 
+  const lastStatus: Record<string, string> = {};
   async function monitor() {
-    if (complete.size === stacks.length) return;
-    for (const stack of started) {
-      if (complete.has(stack)) continue;
-      const result = await cfn.send(
-        new DescribeStacksCommand({
-          StackName: stack,
-        })
-      );
+    if (complete.size === pending.size && todo.size === 0) return;
+    try {
+      for (const stack of pending) {
+        Logger.debug("Checking status of", stack);
+        if (complete.has(stack)) continue;
+        const [describe, resources] = await Promise.all([
+          cfn.send(
+            new DescribeStacksCommand({
+              StackName: stack,
+            })
+          ),
+          cfn.send(
+            new DescribeStackResourcesCommand({
+              StackName: stack,
+            })
+          ),
+        ]);
 
-      const [first] = result.Stacks || [];
-      if (first) {
-        if (first.StackStatus === "UPDATE_COMPLETE")
-          bus.publish("stacks.finished", {
-            stackID: stack,
-            status: first.StackStatus,
-          });
+        bus.publish("stack.resources", {
+          stackID: stack,
+          resources: resources.StackResources,
+        });
+
+        const [first] = describe.Stacks || [];
+        if (first) {
+          const previous = lastStatus[stack];
+          if (previous !== first.StackStatus && first.StackStatus) {
+            lastStatus[stack] = first.StackStatus;
+            bus.publish("stack.status", {
+              stackID: stack,
+              status: first.StackStatus as any,
+            });
+          }
+        }
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    }
+    } catch {}
 
     setTimeout(monitor, 1000);
   }
 
   return new Promise<void>(async (resolve) => {
-    const finished = bus.subscribe("stacks.finished", (evt) => {
+    const finished = bus.subscribe("stack.status", (evt) => {
+      if (!STATUSES_FINAL.includes(evt.properties.status as any)) return;
       complete.add(evt.properties.stackID);
-      if (complete.size === stacks.length) {
-        bus.unsubscribe(update);
+      if (complete.size === pending.size && todo.size === 0) {
         bus.unsubscribe(finished);
         resolve();
       }
@@ -96,24 +161,15 @@ export async function deploy(stack: CloudFormationStackArtifact) {
   const deployment = new CloudFormationDeployments({
     sdkProvider: provider,
   });
-  bus.publish("stacks.updated", {
-    stackID: stack.stackName,
-  });
   try {
     const result = await deployment.deployStack({
       stack: stack as any,
       quiet: true,
     });
-    if (result?.noOp) {
-      bus.publish("stacks.finished", {
-        stackID: stack.stackName,
-        status: "no-op",
-      });
-    }
   } catch (ex) {
-    bus.publish("stacks.finished", {
-      stackID: stack.stackName,
-      status: "no-op",
-    });
+    // console.error(ex);
   }
+  bus.publish("stack.updated", {
+    stackID: stack.stackName,
+  });
 }

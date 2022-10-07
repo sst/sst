@@ -31,7 +31,7 @@ export const useBus = Context.memo(() => {
     publish<Type extends EventTypes>(type: Type, properties: Events[Type]) {
       const payload: EventPayload<Type> = {
         type,
-        properties
+        properties,
       };
 
       Logger.debug(`Publishing event ${JSON.stringify(payload)}`);
@@ -52,10 +52,10 @@ export const useBus = Context.memo(() => {
     ) {
       const sub: Subscription = {
         type,
-        cb
+        cb,
       };
       subscribers(type).push(sub);
       return sub;
-    }
+    },
   };
 });

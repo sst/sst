@@ -1,6 +1,6 @@
 import path from "path";
 import { build } from "./build.js";
-import { deploy, deployMany } from "./deploy.js";
+import { deploy, deployMany, isFinal } from "./deploy.js";
 import { useSTSIdentity } from "../credentials/index.js";
 import { useConfig } from "../config/index.js";
 import { useBootstrap } from "../bootstrap/index.js";
@@ -71,6 +71,7 @@ async function synth(opts: SynthOptions) {
 export const Stacks = {
   build,
   deploy,
+  isFinal,
   deployMany,
   synth,
 };

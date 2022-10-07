@@ -8,7 +8,12 @@ await esbuild.build({
   bundle: true,
   outdir: "dist",
   external: [...Object.keys(pkg.dependencies)],
+  jsx: "automatic",
   platform: "node",
+  loader: {
+    ".js": "tsx",
+    ".ts": "tsx",
+  },
   target: "esnext",
   format: "esm",
   watch: {

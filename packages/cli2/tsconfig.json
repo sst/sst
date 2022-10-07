@@ -6,8 +6,7 @@
     "moduleResolution": "node",
     "outDir": "./dist",
     "allowSyntheticDefaultImports": true,
-    "jsx": "preserve",
-    "jsxImportSource": "solid-js"
+    "jsx": "react",
   },
   "include": ["src"],
   "exclude": []
