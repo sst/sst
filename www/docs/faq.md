@@ -47,24 +47,32 @@ Yes. The only caveats are:
 
 ---
 
-## I like CDK, do I have to use the SST's constructs?
+## Why not just use CDK directly?
 
-No, you don't have to use them.
+If you happen to be familiar with [AWS CDK](https://sst.dev/chapters/what-is-aws-cdk.html), you might be wondering why not just use CDK directly? There are a couple of reasons but it all revolves around the fact that:
 
-But they can be really handy when building out your serverless app. For example, the [`sst.Api`](constructs/Api.md) construct gives you a really nice interface for defining your routes and giving them permissions.
+- CDK is a framework for **defining the infrastructure** of your application.
+- While SST is a **full-stack application framework**, similar to Rails or Django, that happens to use CDK to define your infrastructure.
 
-```js
-const api = new Api(this, "Api", {
-  routes: {
-    "GET  /notes": "src/list.main",
-    "POST /notes": "src/create.main",
-  },
-});
+#### SST, an application framework
 
-api.attachPermissions(["s3", "dynamodb"]);
-```
+What this means in practise is that SST gives you the following:
 
-In addition to the nicer design, constructs like the [`Job`](long-running-jobs.md) construct come with [typesafe Lambda helpers](packages/node.md#job).
+1. Types, secrets, and environment variables are [shared across your application](what-is-sst.md#connect-to-the-api).
+2. Built-in support for writing [database migrations](what-is-sst.md#databases), [unit tests, and integration tests](advanced/testing.md) for your application code.
+3. Support for [deploying to separate environments](what-is-sst.md#environments), allowing for a PR workflow.
+4. Higher-level constructs for common use cases like [APIs](constructs/Api.md), [databases](constructs/RDS.md), [cron jobs](constructs/Cron.md), etc.
+5. [Type-safe libraries](packages/node.md) for your Lambda functions.
+
+#### First-class local development environment
+
+SST features the [Live Lambda Dev](live-lambda-development.md) environment that gives you a **first-class local development** environment for building your applications.
+
+CDK does have something called [CDK Watch](live-lambda-development.md#cdk-watch) but it's too slow. It takes a few seconds to redeploy your functions when you make a change. And you can't set breakpoints locally.
+
+#### TypeScript-first design
+
+CDK is designed to support multiple programming languages. While, SST is designed from the group up for TypeScript. This means that SST code is more readable, less verbose, and far more pleasant to work with. [Read more about the design of SST's constructs](constructs/v0/migration.md#goals).
 
 ---
 
