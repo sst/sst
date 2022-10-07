@@ -8,7 +8,7 @@ import {
   ExportStatementNode,
   PostgresDialect,
   Serializer,
-  Transformer,
+  Transformer
 } from "kysely-codegen";
 
 interface Opts {
@@ -42,15 +42,16 @@ export function createKyselyTypeGenerator(opts: Opts) {
           resourceArn: db.clusterArn,
           database: db.defaultDatabaseName,
           client: new RDSDataService({
-            region: opts.config.region,
-          }),
-        },
-      }),
+            region: opts.config.region
+          })
+        }
+      })
     });
     const tables = await k.introspection.getTables();
     const transformer = new Transformer(
       new PostgresDialect(),
-      db.types.camelCase === true
+      // @ts-expect-error Issue with metadata turning everything into strings
+      db.types.camelCase === "true"
     );
     const nodes = transformer.transform(tables);
     const lastIndex = nodes.length - 1;
@@ -59,35 +60,35 @@ export function createKyselyTypeGenerator(opts: Opts) {
       ...last,
       argument: {
         ...last.argument,
-        name: "Database",
-      },
+        name: "Database"
+      }
     };
     const serializer = new Serializer();
     const data = serializer.serialize(nodes);
     await fs.writeFile(db.types.path, data);
   }
 
-  opts.bus.subscribe("stacks.deployed", (evt) => {
+  opts.bus.subscribe("stacks.deployed", evt => {
     databases = evt.properties.metadata
-      .filter((c) => c.type === "RDS")
-      .filter((c) => c.data.migrator)
-      .filter((c) => c.data.types)
-      .map((c) => ({
+      .filter(c => c.type === "RDS")
+      .filter(c => c.data.migrator)
+      .filter(c => c.data.types)
+      .map(c => ({
         migratorID: evt.properties.metadata.find(
-          (fn) => fn.addr == c.data.migrator?.node
+          fn => fn.addr == c.data.migrator?.node
         ).data.localId,
         clusterArn: c.data.clusterArn,
         types: c.data.types,
         engine: c.data.engine,
         defaultDatabaseName: c.data.defaultDatabaseName,
-        secretArn: c.data.secretArn,
+        secretArn: c.data.secretArn
       }));
-    databases.map((db) => generate(db));
+    databases.map(db => generate(db));
   });
 
-  opts.bus.subscribe("function.responded", async (evt) => {
+  opts.bus.subscribe("function.responded", async evt => {
     if (evt.properties.request.event.type !== "to") return;
-    const db = databases.find((db) => db.migratorID === evt.properties.localID);
+    const db = databases.find(db => db.migratorID === evt.properties.localID);
     if (!db) return;
     generate(db);
   });
