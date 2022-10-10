@@ -1,4 +1,4 @@
-A construct for a Lambda Function that allows you to [develop your it locally](live-lambda-development.md). Supports JS, TypeScript, Python, Golang, and C#. It also applies a couple of defaults:
+A construct for a Lambda Function that allows you to [develop it locally](live-lambda-development.md). Supports JS, TypeScript, Python, Golang, and C#. It also applies a couple of defaults:
 
 - Sets the default memory setting to 1024MB.
 - Sets the default Lambda function timeout to 10 seconds.
@@ -355,7 +355,19 @@ The directory where `build.gradle` is found.
 
 #### bundle
 
-Only supported for the **Node.js** and **Python** runtimes.
+If you want to configure the bundling process, you can pass in the [FunctionBundleJavaProps](#functionbundlejavaprops).
+
+```ts
+new Function(stack, "MyLambda", {
+  bundle: {
+    buildTask: "bundle",
+    buildOutputDir: "output",
+  },
+  srcPath: "src",
+  handler: "example.Handler::handleRequest",
+  runtime: "java11",
+});
+```
 
 ### Function URLs
 

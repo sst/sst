@@ -19,17 +19,17 @@ SST features a cloud native local development environment that gives you instant
   <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/hnTSTm5n11g" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
-Changes are automatically detected, built, and **live reloaded** in under 10 milliseconds. You can also use **breakpoints to debug** your functions in your favorite IDE.
-
 ---
 
 ## Overview
 
-Live Lambda Development is an SST feature that allows you to **debug and test your Lambda functions locally**, while being **invoked remotely by resources in AWS**. It works by proxying requests from your AWS account to your local machine.
+Live Lambda Development is feature of SST that allows you to **debug and test your Lambda functions locally**, while being **invoked remotely by resources in AWS**. It works by proxying requests from your AWS account to your local machine.
+
+Changes are automatically detected, built, and **live reloaded** in under 10 milliseconds. You can also use **breakpoints to debug** your functions in your favorite IDE.
 
 ---
 
-### `sst start`
+## Quick start
 
 To give it a try, create a new SST app with our Minimal JavaScript starter by running `npx create-sst@latest` > `minimal` > `minimal/javascript-starter`. Once the app is created, install the dependencies.
 
@@ -68,19 +68,6 @@ Outputs:
 If you head over to the endpoint, it'll invoke the Lambda function in `services/functions/lambda.js`.
 
 You can try changing this file and hitting the endpoint again. You should **see your changes reflected right away**!
-
----
-
-### Language support
-
-The Live Lambda Development environment supports the following languages:
-
-- JavaScript
-- TypeScript
-- Python
-- Golang
-- C#
-- F#
 
 ---
 
@@ -163,6 +150,19 @@ As a result this approach works great even when [there are multiple developers o
 All the data stays between your local machine and your AWS account. There are **no 3rd party services** that are used.
 
 Live Lambda Dev also supports connecting to AWS resources inside a VPC. We'll [look at this below](#working-with-a-vpc).
+
+---
+
+### Languages
+
+The Live Lambda Development environment supports the following languages:
+
+- JavaScript
+- TypeScript
+- Python
+- Golang
+- C#
+- F#
 
 ---
 

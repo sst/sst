@@ -8,8 +8,8 @@ export type Scalars = {
 
 export interface Article {
     id: Scalars['ID']
-    title: Scalars['ID']
-    url: Scalars['ID']
+    title: Scalars['String']
+    url: Scalars['String']
     __typename: 'Article'
 }
 
@@ -19,6 +19,7 @@ export interface Mutation {
 }
 
 export interface Query {
+    article: Article
     articles: Article[]
     __typename: 'Query'
 }
@@ -38,6 +39,7 @@ export interface MutationRequest{
 }
 
 export interface QueryRequest{
+    article?: [{articleID: Scalars['String']},ArticleRequest]
     articles?: ArticleRequest
     __typename?: boolean | number
     __scalar?: boolean | number
@@ -69,14 +71,14 @@ export const isQuery = (obj?: { __typename?: any } | null): obj is Query => {
 
 export interface ArticlePromiseChain{
     id: ({get: (request?: boolean|number, defaultValue?: Scalars['ID']) => Promise<Scalars['ID']>}),
-    title: ({get: (request?: boolean|number, defaultValue?: Scalars['ID']) => Promise<Scalars['ID']>}),
-    url: ({get: (request?: boolean|number, defaultValue?: Scalars['ID']) => Promise<Scalars['ID']>})
+    title: ({get: (request?: boolean|number, defaultValue?: Scalars['String']) => Promise<Scalars['String']>}),
+    url: ({get: (request?: boolean|number, defaultValue?: Scalars['String']) => Promise<Scalars['String']>})
 }
 
 export interface ArticleObservableChain{
     id: ({get: (request?: boolean|number, defaultValue?: Scalars['ID']) => Observable<Scalars['ID']>}),
-    title: ({get: (request?: boolean|number, defaultValue?: Scalars['ID']) => Observable<Scalars['ID']>}),
-    url: ({get: (request?: boolean|number, defaultValue?: Scalars['ID']) => Observable<Scalars['ID']>})
+    title: ({get: (request?: boolean|number, defaultValue?: Scalars['String']) => Observable<Scalars['String']>}),
+    url: ({get: (request?: boolean|number, defaultValue?: Scalars['String']) => Observable<Scalars['String']>})
 }
 
 export interface MutationPromiseChain{
@@ -88,9 +90,11 @@ export interface MutationObservableChain{
 }
 
 export interface QueryPromiseChain{
+    article: ((args: {articleID: Scalars['String']}) => ArticlePromiseChain & {get: <R extends ArticleRequest>(request: R, defaultValue?: FieldsSelection<Article, R>) => Promise<FieldsSelection<Article, R>>}),
     articles: ({get: <R extends ArticleRequest>(request: R, defaultValue?: FieldsSelection<Article, R>[]) => Promise<FieldsSelection<Article, R>[]>})
 }
 
 export interface QueryObservableChain{
+    article: ((args: {articleID: Scalars['String']}) => ArticleObservableChain & {get: <R extends ArticleRequest>(request: R, defaultValue?: FieldsSelection<Article, R>) => Observable<FieldsSelection<Article, R>>}),
     articles: ({get: <R extends ArticleRequest>(request: R, defaultValue?: FieldsSelection<Article, R>[]) => Observable<FieldsSelection<Article, R>[]>})
 }

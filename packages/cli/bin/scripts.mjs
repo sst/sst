@@ -17,7 +17,6 @@ import yargs from "yargs";
 import chalk from "chalk";
 import readline from "readline";
 import spawn from "cross-spawn";
-
 import { createRequire } from "module";
 
 const require = createRequire(import.meta.url);
@@ -26,6 +25,7 @@ import {
   logger,
   initializeLogger,
   Packager,
+  Proxy,
   Update,
   State,
   Telemetry,
@@ -37,6 +37,9 @@ import {
 import paths from "../scripts/util/paths.mjs";
 import * as cdkOptions from "../scripts/util/cdkOptions.mjs";
 import { prepareCdk } from "../scripts/util/cdkHelpers.mjs";
+
+// Setup proxy
+Proxy.bootstrap();
 
 const sstVersion = getSstVersion();
 const cdkVersion = getCdkVersion();

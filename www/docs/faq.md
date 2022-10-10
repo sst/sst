@@ -1,22 +1,43 @@
 ---
 title: Frequently Asked Questions
-description: "Frequently asked questions about SST"
+description: "Frequently asked questions about SST."
 ---
 
 import config from "../config";
+import HeadlineText from "@site/src/components/HeadlineText";
 
-### Do we need another framework for serverless?
+<HeadlineText>
 
-While [Serverless Framework](https://github.com/serverless/serverless) and [SAM](https://github.com/aws/serverless-application-model) have been around for a while and are quite popular, the local development experience for them isn't great. And they require you to define your resources using the really verbose [CloudFormation YAML](https://sst.dev/chapters/what-is-infrastructure-as-code.html#aws-cloudformation) (or JSON).
+Some common questions we get about SST.
+
+</HeadlineText>
+
+If there's something that we are not addressing here, feel free to hop on to our <a href={ config.discord }>Discord</a> and let us know.
+
+---
+
+## Would SST work for my use case?
+
+A key aspect of SST is that you are not locked into using our constructs. You can always drop down to CDK and deploy any AWS service with it.
+
+That said, if you hit a limitation, feel free to hop on our <a href={ config.discord }>Discord</a> and tell us about it.
+
+---
+
+## Do we need another framework for serverless?
+
+While [Serverless Framework](https://github.com/serverless/serverless) and [SAM](https://github.com/aws/serverless-application-model) have been around for a while, the local development experience for them isn't great. And they require you to define your resources using the really verbose [CloudFormation YAML](https://sst.dev/chapters/what-is-infrastructure-as-code.html#aws-cloudformation) (or JSON).
 
 In comparison, SST features:
 
 - A [Live Lambda Development](live-lambda-development.md) environment, that introduces a completely new local development experience for serverless.
 - And it uses [AWS CDK](https://sst.dev/chapters/what-is-aws-cdk.html), allowing you to define your resources using regular programming languages.
 
-We think these two details, drastically sets SST apart from the rest of the options out there.
+We think this makes SST the best way to build serverless applications.
 
-### Can I use all the CDK constructs in SST?
+---
+
+## Can I use all the CDK constructs in SST?
 
 Yes. The only caveats are:
 
@@ -24,46 +45,46 @@ Yes. The only caveats are:
 - [`sst.Stack`](constructs/Stack.md) is necessary for SST to be able to [deploy to multiple stages](quick-start.md#deploying-an-app) and is used in place of `cdk.Stack`.
 - [`sst.Function`](constructs/Function.md) is necessary for the [Live Lambda Development](live-lambda-development.md) environment. But if you don't need that you can use the CDK function constructs.
 
-### Do I have to use the SST higher-level constructs?
+---
 
-No, you don't have to use them. But they can be really handy when building out your serverless app. For example, the [`sst.Api`](constructs/Api.md) construct gives you a really nice interface for defining your routes and giving them permissions.
+## Why not just use CDK directly?
 
-```js
-const api = new Api(this, "Api", {
-  routes: {
-    "GET  /notes": "src/list.main",
-    "POST /notes": "src/create.main",
-  },
-});
+If you happen to be familiar with [AWS CDK](https://sst.dev/chapters/what-is-aws-cdk.html), you might be wondering why not just use CDK directly? There are a couple of reasons but it all revolves around the fact that:
 
-api.attachPermissions(["s3", "dynamodb"]);
-```
+- CDK is a framework for **defining the infrastructure** of your application.
+- While SST is a **full-stack application framework**, similar to Rails or Django, that happens to use CDK to define your infrastructure.
 
-### Is SST ready to be used in production?
+#### SST, an application framework
 
-SST is still under active development. And we are constantly fixing bugs and supporting new use cases and setups.
+What this means in practise is that SST gives you the following:
 
-That said, we see SST being used in production by quite a few of our users over on [Seed](https://seed.run).
+1. Types, secrets, and environment variables are [shared across your application](what-is-sst.md#connect-to-the-api).
+2. Built-in support for writing [database migrations](what-is-sst.md#databases), [unit tests, and integration tests](advanced/testing.md) for your application code.
+3. Support for [deploying to separate environments](what-is-sst.md#environments), allowing for a PR workflow.
+4. Higher-level constructs for common use cases like [APIs](constructs/Api.md), [databases](constructs/RDS.md), [cron jobs](constructs/Cron.md), etc.
+5. [Type-safe libraries](packages/node.md) for your Lambda functions.
 
-So feel free to give it a try and let us know if you run into any issues.
+#### First-class local development environment
 
-### Can I trust a new framework like SST for my projects at work?
+SST features the [Live Lambda Dev](live-lambda-development.md) environment that gives you a **first-class local development** environment for building your applications.
 
-SST is relatively new but [the team behind it](https://anoma.ly) has been working on serverless related projects for the past few years. The <a href={ config.guide } target="\_blank">SST Guide</a> has been around since 2017. [Seed](https://seed.run) has been generating revenue since 2018. We are also backed by some of the [most prominent investors in Silicon Valley](https://anoma.ly).
+CDK does have the [CDK Watch](live-lambda-development.md#cdk-watch) command but it's too slow. It takes a few seconds to redeploy your functions when you make a change. And you can't set breakpoints locally.
 
-So checkout <a href={ config.roadmap } target="\_blank">our public roadmap</a> to see where SST is headed.
+#### TypeScript-first design
 
-### Is SST flexible enough to support my setup?
+CDK is designed to support multiple programming languages. While, SST is designed from the group up for TypeScript. This means that SST code is more readable, less verbose, and far more pleasant to work with. [Read more about the design of SST's constructs](constructs/v0/migration.md#goals).
 
-SST has a couple of defaults, like a built-in linter, type checker, and bundler. It also has a list of higher-level constructs.
+---
 
-You can disable the linter, provide your own TypeScript config, and disable bundling. You also don't have to use the higher-level constructs that SST has and just use the native CDK ones.
+## How often is SST's version of CDK updated?
 
-If you hit a limitation, feel free to hop into our <a href={ config.discord_invite } target="\_blank">Discord community</a> and let us know about it.
+SST internally includes CDK, so you don't have to. We update this version fairly frequently. But if you need the latest version right away, open an issue and we'll push out an update.
 
-### Why does SST not use CDK's built-in way to build Node.js functions?
+---
 
-CDK has a construct for building Lambda functions, [aws-cdk-lib/aws-lambda-nodejs](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda_nodejs-readme.html). But SST does not use it. Here's why.
+## Why doesn't SST use CDK's built-in way to build Node.js functions?
+
+CDK has a construct for building Lambda functions, [aws-cdk-lib/aws-lambda-nodejs](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda_nodejs-readme.html). But SST does not use it, here's why:
 
 SST's [Live Lambda Development environment](live-lambda-development.md) allows you to test your Lambda functions live. To do this, it watches your file changes and transpiles your functions. While they are being transpiled, it blocks any requests that are made to them. To ensure a great experience, it needs to do this process as fast as possible. So we decided to use esbuild, since [it's the fastest option](https://esbuild.github.io/faq/#why-is-esbuild-fast). We also maintain an esbuild service internally and call it programmatically to make rebuilds as fast as possible.
 
@@ -71,12 +92,8 @@ It also makes sense to build the Lambda functions in a similar way while running
 
 In addition, we also decided to use esbuild to transpile your CDK code, so you can use the same flavor of JS as your Lambda functions.
 
-### How often is SST's version of CDK updated?
+---
 
-SST internally includes CDK, so you don't have to. We update this version fairly frequently. But if you need the latest version right away, open an issue and we'll push out an update.
+## How does SST make money?
 
-### What's the connection to Serverless Framework?
-
-Originally when SST was released, it was meant to be a way to [use CDK alongside your Serverless Framework apps](https://sst.dev/chapters/using-aws-cdk-with-serverless-framework.html). While you can still do that. SST's [Live Lambda Development](live-lambda-development.md) makes it a first-class dev environment for serverless apps.
-
-So you don't have to use Serverless Framework together with SST.
+While SST is open source and free to use, we also run a service that helps you deploy your serverless applications, called [Seed](https://seed.run). It is a SaaS service and many of the teams using SST use Seed as well.

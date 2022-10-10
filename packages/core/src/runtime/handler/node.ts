@@ -30,6 +30,56 @@ type Bundle = {
   format?: "esm" | "cjs";
 };
 
+type ModuleManager = {
+  installer: "npm" | "yarn";
+  lockFile: "package-lock.json" | "yarn.lock";
+  lockFileDir: string;
+};
+
+type findUpOptions = {
+  cwd: string;
+}
+
+function findUp(fileName: string, { cwd }: findUpOptions) {
+  const rootPath = path.parse(process.cwd()).root
+
+  let directory = cwd;
+  while (true) {
+    if (directory === rootPath) {
+      return;
+    }
+
+    const checkPath = path.resolve(directory, fileName);
+
+    if (fs.existsSync(checkPath)) {
+      return checkPath;
+    }
+
+    directory = path.dirname(directory);
+  }
+}
+
+function getModuleManager(srcPath: string): ModuleManager {
+  let foundPath;
+  if (foundPath = findUp("package-lock.json", { cwd: srcPath })) {
+    return {
+      installer: "npm",
+      lockFile: "package-lock.json",
+      lockFileDir: path.dirname(foundPath)
+    };
+  }
+
+  if (foundPath = findUp("yarn.lock", { cwd: srcPath })) {
+    return {
+      installer: "yarn",
+      lockFile: "yarn.lock",
+      lockFileDir: path.dirname(foundPath)
+    };
+  }
+
+  throw new Error("Cannot find a lock file");
+}
+
 export const NodeHandler: Definition<Bundle> = opts => {
   const dir = path.dirname(opts.handler);
   const ext = path.extname(opts.handler);
@@ -263,24 +313,17 @@ async function installNodeModules(
 
   // Determine dependencies versions, lock file and installer
   const dependencies = await extractDependencies(pkgPath, bundle.nodeModules);
-  let installer = "npm";
-  let lockFile;
-  if (await fs.pathExists(path.join(srcPath, "package-lock.json"))) {
-    installer = "npm";
-    lockFile = "package-lock.json";
-  } else if (await fs.pathExists(path.join(srcPath, "yarn.lock"))) {
-    installer = "yarn";
-    lockFile = "yarn.lock";
-  }
+  const { installer, lockFile, lockFileDir } = getModuleManager(srcPath);
 
-  // Create dummy package.json, copy lock file if any and then install
+  // Create dummy package.json, copy lock file and then install
   const outputPath = path.join(targetPath, "package.json");
   await fs.ensureFile(outputPath);
   const existing = await fs.readJson(outputPath) || {};
   await fs.writeJson(outputPath, { ...existing, dependencies });
-  if (lockFile) {
-    await fs.copy(path.join(srcPath, lockFile), path.join(targetPath, lockFile));
-  }
+  await fs.copy(
+    path.join(lockFileDir, lockFile), 
+    path.join(targetPath, lockFile)
+  );
 
   // Install dependencies
   try {

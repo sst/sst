@@ -40,6 +40,6 @@ builder.mutationFields((t) => ({
       title: t.arg.string({ required: true }),
       url: t.arg.string({ required: true }),
     },
-    resolve: async (_, args) => Article.create(args.title, args.url),
+    resolve: (_, args) => Article.create(args.title, args.url),
   }),
 }));
