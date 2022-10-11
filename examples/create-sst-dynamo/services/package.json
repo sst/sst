@@ -4,12 +4,12 @@
   "type": "module",
   "scripts": {},
   "dependencies": {
-    "aws-sdk": "^2.1230.0",
+    "aws-sdk": "^2.1231.0",
     "@pothos/core": "^3.22.5",
-    "@serverless-stack/node": "^1.15.10",
+    "@serverless-stack/node": "^1.15.11",
     "graphql": "^16.6.0",
     "ulid": "^2.3.0",
-    "electrodb": "^2.1.0",
+    "electrodb": "^2.1.1",
     "@aws-sdk/client-dynamodb": "^3.186.0"
   },
   "devDependencies": {
