@@ -46,6 +46,6 @@ export function MyStack({ stack, app }: StackContext) {
   // Show the endpoint in the output
   stack.addOutputs({
     SiteUrl: site.url,
-    ApiEndpoint: api.url
+    ApiEndpoint: api.url,
   });
 }
