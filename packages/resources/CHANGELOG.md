@@ -1,5 +1,14 @@
 # @serverless-stack/resources
 
+## 1.15.12
+
+### Patch Changes
+
+- [#2134](https://github.com/serverless-stack/sst/pull/2134) [`1b67fa6e9`](https://github.com/serverless-stack/sst/commit/1b67fa6e9e152eb60c4503650f5e0c994276d715) Thanks [@fwang](https://github.com/fwang)! - sst/node: codegen types inside sst/node node_modules folder
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.15.12
+
 ## 1.15.11
 
 ### Patch Changes
