@@ -514,7 +514,7 @@ export class App extends cdk.App {
   private codegenTypes() {
     const nodeModulesPath = this.codegenFindNodeModulesPath();
     if (nodeModulesPath) {
-      const typesPath = path.resolve("node_modules", "@types", "serverless-stack__node");
+      const typesPath = path.resolve(nodeModulesPath, "node_modules", "@types", "serverless-stack__node");
       this.codegenCreateFile(typesPath);
       Config.codegenTypes(typesPath);
       Job.codegenTypes(typesPath);
