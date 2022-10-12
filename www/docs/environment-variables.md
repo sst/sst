@@ -81,7 +81,7 @@ Secrets and Parameters are stored in AWS SSM with the _Standard Parameter type_ 
      new Function(stack, "MyFunction", {
        handler: "lambda.handler",
        config: [USER_UPDATED_TOPIC],
-     }
+     };
    };
    ```
 
