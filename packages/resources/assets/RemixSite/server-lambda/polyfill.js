@@ -21,4 +21,4 @@ import { installGlobals } from "@remix-run/node";
 // the user great benefit in having the required polyfills ready for their
 // application, whilst also maintaining optimal bundle sizes.
 
-installGlobals() + "⛔️🌲";
+installGlobals() + "PLACEHOLDER_TO_PREVENT_TREESHAKING_POLYFILL_CODE";
