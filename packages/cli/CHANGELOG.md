@@ -1,5 +1,15 @@
 # @serverless-stack/cli
 
+## 1.15.12
+
+### Patch Changes
+
+- [#2132](https://github.com/serverless-stack/sst/pull/2132) [`c74fbfea2`](https://github.com/serverless-stack/sst/commit/c74fbfea24ddde9b793dd5c219e4405394214b0d) Thanks [@fwang](https://github.com/fwang)! - Cli: hide site environment from deploy output
+
+- Updated dependencies [[`1b67fa6e9`](https://github.com/serverless-stack/sst/commit/1b67fa6e9e152eb60c4503650f5e0c994276d715)]:
+  - @serverless-stack/resources@1.15.12
+  - @serverless-stack/core@1.15.12
+
 ## 1.15.11
 
 ### Patch Changes
