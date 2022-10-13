@@ -268,23 +268,18 @@ export class Job extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public static codegenTypes() {
-    fs.appendFileSync(
-      "node_modules/@types/serverless-stack__node/index.d.ts",
-      `export * from "./job";`
-    );
-    fs.writeFileSync(
-      "node_modules/@types/serverless-stack__node/job.d.ts",
-      `
+  public static codegenTypes(typesPath: string) {
+    fs.appendFileSync(`${typesPath}/index.d.ts`, `export * from "./job";`);
+    fs.writeFileSync(`${typesPath}/job.d.ts`, `
       import "@serverless-stack/node/job";
       declare module "@serverless-stack/node/job" {
         export interface JobNames {
           ${Array.from(Job.all)
-            .map((p) => `${p}: string;`)
-            .join("\n")}
+        .map((p) => `${p}: string;`)
+        .join("\n")}
         }
-      }`
-    );
+      }
+    `);
   }
 
   /** @internal */
