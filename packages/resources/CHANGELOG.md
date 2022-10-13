@@ -1,5 +1,14 @@
 # @serverless-stack/resources
 
+## 1.15.13
+
+### Patch Changes
+
+- [#2117](https://github.com/serverless-stack/sst/pull/2117) [`94e5e7bdf`](https://github.com/serverless-stack/sst/commit/94e5e7bdf11c0abde22e5b63934a4ce23462f4d3) Thanks [@ctrlplusb](https://github.com/ctrlplusb)! - RemixSite: fix polyfilling with treeshaking enabled
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.15.13
+
 ## 1.15.12
 
 ### Patch Changes
