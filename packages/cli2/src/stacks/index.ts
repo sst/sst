@@ -12,6 +12,7 @@ interface SynthOptions {
   buildDir?: string;
   outDir?: string;
   skipBuild?: boolean;
+  mode: App["mode"];
   fn: (app: App) => Promise<void> | void;
 }
 
@@ -37,7 +38,8 @@ async function synth(opts: SynthOptions) {
       stage: config.stage,
       name: config.name,
       region: config.region,
-      skipBuild: opts.skipBuild || false,
+      mode: opts.mode,
+      skipBuild: opts.mode !== "deploy",
       bootstrapAssets: {
         bucketName: bootstrap.bucket,
         version: bootstrap.version,

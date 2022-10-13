@@ -3,7 +3,7 @@ import { VisibleError } from "./error/index.js";
 import { GlobalCLIOptionsContext } from "./cli.js";
 
 console.time("cli");
-process.on("uncaughtException", err => {
+process.on("uncaughtException", (err) => {
   console.log(chalk.red(err.message));
   console.log(
     chalk.blue(
@@ -15,7 +15,7 @@ process.on("uncaughtException", err => {
   }
 });
 
-process.on("beforeExit", code => {
+process.on("beforeExit", (code) => {
   console.timeEnd("cli");
 });
 
@@ -26,6 +26,7 @@ import { Build } from "./commands/build.js";
 import { Secrets } from "./commands/secrets.js";
 import { analyze } from "./commands/analyze.js";
 import { Deploy } from "./commands/deploy.js";
+import { start } from "./commands/start.js";
 const { program } = caporal;
 
 program
@@ -37,18 +38,18 @@ program
 program
   .command("update", "Update SST and CDK packages to another version")
   .argument("[version]", "Optional version to update to")
-  .action(req => {
+  .action((req) => {
     Update({
-      version: req.args.version?.toString()
+      version: req.args.version?.toString(),
     });
   });
 
 program
   .command("analyze", "Analyze function")
   .argument("[target]", "Function to analyze")
-  .action(req => {
+  .action((req) => {
     analyze({
-      target: req.args.target!.toString()
+      target: req.args.target!.toString(),
     });
   });
 
@@ -56,7 +57,7 @@ program
   .command("scrap", "Used to test arbitrary code")
   .option("--profile <profile>", "AWS profile to use")
   .option("--stage <stage>", "Stage to use")
-  .action(req => {
+  .action((req) => {
     GlobalCLIOptionsContext.provide(req.options);
     Scrap();
   });
@@ -65,7 +66,7 @@ program
   .command("build", "Build stacks code")
   .option("--profile <profile>", "AWS profile to use")
   .option("--stage <stage>", "Stage to use")
-  .action(req => {
+  .action((req) => {
     GlobalCLIOptionsContext.provide(req.options);
     Build();
   });
@@ -75,18 +76,28 @@ program
   .option("--profile <profile>", "AWS profile to use")
   .option("--stage <stage>", "Stage to use")
   .option("--from <from>", "Use prebuilt cloud assembly")
-  .action(req => {
+  .action(async (req) => {
     GlobalCLIOptionsContext.provide(req.options);
-    Deploy({
-      from: req.options.from?.toString()
+    await Deploy({
+      from: req.options.from?.toString(),
     });
+  });
+
+program
+  .command("start", "Work on your SST app locally")
+  .option("--profile <profile>", "AWS profile to use")
+  .option("--stage <stage>", "Stage to use")
+  .option("--from <from>", "Use prebuilt cloud assembly")
+  .action(async (req) => {
+    GlobalCLIOptionsContext.provide(req.options);
+    await start();
   });
 
 program
   .command("secrets", "")
   .option("--profile <profile>", "AWS profile to use")
   .option("--stage <stage>", "Stage to use")
-  .action(req => {
+  .action((req) => {
     GlobalCLIOptionsContext.provide(req.options);
     Secrets();
   });

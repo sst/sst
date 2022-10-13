@@ -19,6 +19,7 @@ export const useIOTEndpoint = Context.memo(async () => {
 
 import iot from "aws-iot-device-sdk";
 import { EventPayload, Events, EventTypes, useBus } from "../bus/index.js";
+import { useConfig } from "../config/index.js";
 
 interface Fragment {
   id: string;
@@ -32,6 +33,7 @@ export const useIOT = Context.memo(async () => {
 
   const endpoint = await useIOTEndpoint();
   const creds = await useAWSCredentials();
+  const config = await useConfig();
   const device = new iot.device({
     protocol: "wss",
     host: endpoint,
@@ -39,7 +41,8 @@ export const useIOT = Context.memo(async () => {
     secretKey: creds.secretAccessKey,
     sessionToken: creds.sessionToken,
   });
-  device.subscribe("/sst/#");
+  const PREFIX = `/sst/${config.name}/${config.stage}`;
+  device.subscribe(`${PREFIX}/events`);
 
   const fragments = new Map<string, Map<number, Fragment>>();
 
@@ -57,13 +60,14 @@ export const useIOT = Context.memo(async () => {
         .sort((a, b) => a.index - b.index)
         .map((item) => item.data)
         .join("");
-
+      fragments.delete(fragment.id);
       const evt = JSON.parse(data) as EventPayload;
       bus.publish(evt.type, evt.properties);
     }
   });
 
   return {
+    prefix: PREFIX,
     publish<Type extends EventTypes>(
       topic: string,
       type: Type,

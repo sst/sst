@@ -1,10 +1,10 @@
 import { CloudAssembly } from "aws-cdk-lib/cx-api";
 import { useBus } from "../bus/index.js";
-import { Logger } from "../logger/index.js";
 import { Stacks } from "../stacks/index.js";
 import React, { useState, useEffect } from "react";
 import { render, Text } from "ink";
 import inkSpinner from "ink-spinner";
+// @ts-ignore
 const { default: Spinner } = inkSpinner;
 
 const Counter = () => {
@@ -63,6 +63,7 @@ export async function Deploy(opts: DeployOpts) {
     const fn = await Stacks.build();
     return await Stacks.synth({
       fn,
+      mode: "deploy",
     });
   })();
 

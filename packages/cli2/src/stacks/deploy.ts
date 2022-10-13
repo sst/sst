@@ -62,6 +62,23 @@ declare module "../bus" {
   }
 }
 
+async function retry<T extends any>(fn: () => Promise<T>) {
+  let tries = 0;
+  const MAX = 10_000;
+  while (true) {
+    try {
+      const result = await fn();
+      return result;
+    } catch (ex) {
+      console.log(ex);
+      tries++;
+      await new Promise((resolve) =>
+        setTimeout(resolve, Math.min(2 ** tries * 100, MAX))
+      );
+    }
+  }
+}
+
 export async function deployMany(stacks: CloudFormationStackArtifact[]) {
   const { CloudFormationStackArtifact } = await import("aws-cdk-lib/cx-api");
   const bus = useBus();
@@ -100,22 +117,28 @@ export async function deployMany(stacks: CloudFormationStackArtifact[]) {
         Logger.debug("Checking status of", stack);
         if (complete.has(stack)) continue;
         const [describe, resources] = await Promise.all([
-          cfn.send(
-            new DescribeStacksCommand({
-              StackName: stack,
-            })
+          retry(() =>
+            cfn.send(
+              new DescribeStacksCommand({
+                StackName: stack,
+              })
+            )
           ),
-          cfn.send(
-            new DescribeStackResourcesCommand({
-              StackName: stack,
-            })
+          retry(() =>
+            cfn.send(
+              new DescribeStackResourcesCommand({
+                StackName: stack,
+              })
+            )
           ),
         ]);
 
+        /*
         bus.publish("stack.resources", {
           stackID: stack,
           resources: resources.StackResources,
         });
+        */
 
         const [first] = describe.Stacks || [];
         if (first) {
@@ -128,11 +151,12 @@ export async function deployMany(stacks: CloudFormationStackArtifact[]) {
             });
           }
         }
-        await new Promise((resolve) => setTimeout(resolve, 100));
       }
-    } catch {}
+    } catch (ex) {
+      console.error(ex);
+    }
 
-    setTimeout(monitor, 1000);
+    setTimeout(monitor, 3000);
   }
 
   return new Promise<void>(async (resolve) => {

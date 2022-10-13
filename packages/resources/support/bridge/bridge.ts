@@ -1,7 +1,15 @@
 import iot from "aws-iot-device-sdk";
+import crypto from "crypto";
+import { IoTClient, DescribeEndpointCommand } from "@aws-sdk/client-iot";
 
-const FUNCTION_ID = "test";
-const PREFIX = `/sst/${process.env.SST_APP}/${process.env.SST_STAGE}/${FUNCTION_ID}`;
+const client = new IoTClient({});
+const response = await client.send(
+  new DescribeEndpointCommand({ endpointType: "iot:Data-ATS" })
+);
+const endpoint = response.endpointAddress;
+
+const workerID = crypto.randomBytes(16).toString("hex");
+const PREFIX = `/sst/${process.env.SST_APP}/${process.env.SST_STAGE}`;
 
 const ENVIRONMENT_IGNORE: Record<string, true> = {
   SST_DEBUG_ENDPOINT: true,
@@ -42,14 +50,13 @@ const ENVIRONMENT = Object.fromEntries(
   )
 );
 
-const endpoint = "a38npzxl5ie9zp-ats.iot.us-east-1.amazonaws.com";
 const device = new iot.device({
   protocol: "wss",
   host: endpoint,
 });
 device.on("error", console.log);
 device.on("connect", console.log);
-device.subscribe(`${PREFIX}/response`);
+device.subscribe(`${PREFIX}/${workerID}`);
 
 interface Fragment {
   id: string;
@@ -84,15 +91,16 @@ device.on("message", (_topic, buffer: Buffer) => {
 
 export async function handler(event: any, context: any) {
   for (const fragment of encode({
-    type: "function.invocation",
+    type: "function.invoked",
     properties: {
-      functionID: FUNCTION_ID,
+      workerID: workerID,
+      functionID: process.env.SST_FUNCTION_ID,
       event,
       context,
       env: ENVIRONMENT,
     },
   })) {
-    device.publish(`${PREFIX}/invocation`, JSON.stringify(fragment));
+    device.publish(`${PREFIX}/events`, JSON.stringify(fragment));
   }
   const result = await new Promise<any>((r) => {
     onMessage = (evt) => {

@@ -16,7 +16,12 @@ import { State, Runtime, DeferBuilder } from "@serverless-stack/core";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Job } from "./Job.js";
-import { Secret, Parameter, configToEnvironmentVariables, configToPolicyStatement } from "./Config.js";
+import {
+  Secret,
+  Parameter,
+  configToEnvironmentVariables,
+  configToPolicyStatement,
+} from "./Config.js";
 import { SSTConstruct } from "./Construct.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
@@ -27,7 +32,7 @@ import url from "url";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 const supportedRuntimes = {
-  "nodejs": lambda.Runtime.NODEJS,
+  nodejs: lambda.Runtime.NODEJS,
   "nodejs4.3": lambda.Runtime.NODEJS_4_3,
   "nodejs6.10": lambda.Runtime.NODEJS_6_10,
   "nodejs8.10": lambda.Runtime.NODEJS_8_10,
@@ -44,16 +49,16 @@ const supportedRuntimes = {
   "dotnetcore2.0": lambda.Runtime.DOTNET_CORE_2,
   "dotnetcore2.1": lambda.Runtime.DOTNET_CORE_2_1,
   "dotnetcore3.1": lambda.Runtime.DOTNET_CORE_3_1,
-  "dotnet6": lambda.Runtime.DOTNET_6,
-  "java8": lambda.Runtime.JAVA_8,
-  "java11": lambda.Runtime.JAVA_11,
+  dotnet6: lambda.Runtime.DOTNET_6,
+  java8: lambda.Runtime.JAVA_8,
+  java11: lambda.Runtime.JAVA_11,
   "go1.x": lambda.Runtime.GO_1_X,
 };
 
 export type Runtime = keyof typeof supportedRuntimes;
 export type FunctionInlineDefinition = string | Function;
 export type FunctionDefinition = string | Function | FunctionProps;
-export interface FunctionUrlCorsProps extends functionUrlCors.CorsProps { }
+export interface FunctionUrlCorsProps extends functionUrlCors.CorsProps {}
 
 export interface FunctionProps
   extends Omit<
@@ -617,7 +622,7 @@ export interface FunctionBundlePythonProps extends FunctionBundleBase {
 export interface FunctionBundleJavaProps extends FunctionBundleBase {
   /**
    * Gradle build command to generate the bundled .zip file.
-   * 
+   *
    * @default "build"
    *
    * @example
@@ -737,12 +742,12 @@ export class Function extends lambda.Function implements SSTConstruct {
     const diskSize = Function.normalizeDiskSize(props.diskSize);
     const tracing =
       lambda.Tracing[
-      (props.tracing || "active").toUpperCase() as keyof typeof lambda.Tracing
+        (props.tracing || "active").toUpperCase() as keyof typeof lambda.Tracing
       ];
     const logRetention =
       props.logRetention &&
       logs.RetentionDays[
-      props.logRetention.toUpperCase() as keyof typeof logs.RetentionDays
+        props.logRetention.toUpperCase() as keyof typeof logs.RetentionDays
       ];
     let bundle = props.bundle;
     const isLiveDevEnabled = props.enableLiveDev === false ? false : true;
@@ -784,13 +789,7 @@ export class Function extends lambda.Function implements SSTConstruct {
     //   will still try to periodically invoke the Lambda, and the requests would
     //   fail and retry. So when launching `sst start`, a couple of retry requests
     //   from recent failed request will be received. And this behavior is confusing.
-    if (
-      isLiveDevEnabled &&
-      app.local &&
-      app.debugEndpoint &&
-      app.debugBucketName &&
-      app.debugBucketArn
-    ) {
+    if (isLiveDevEnabled && app.mode === "start") {
       // If debugIncreaseTimeout is enabled:
       //   set timeout to 900s. This will give people more time to debug the function
       //   without timing out the request. Note API Gateway requests have a maximum
@@ -803,71 +802,35 @@ export class Function extends lambda.Function implements SSTConstruct {
         };
       }
 
-      if (app.debugBridge) {
-        super(scope, id, {
-          ...props,
-          architecture,
-          code: lambda.Code.fromAsset(
-            path.resolve(__dirname, "../dist/bridge_client/")
-          ),
-          handler: "handler",
-          functionName,
-          runtime: lambda.Runtime.GO_1_X,
-          memorySize,
-          ephemeralStorageSize: diskSize,
-          timeout,
-          tracing,
-          environment: {
-            ...(props.environment || {}),
-            SST_DEBUG_BRIDGE: app.debugBridge,
-            SST_DEBUG_SRC_PATH: srcPath,
-            SST_DEBUG_SRC_HANDLER: handler,
-            SST_DEBUG_ENDPOINT: app.debugEndpoint,
-          },
-          layers: [],
-          logRetention,
-          ...(debugOverrideProps || {}),
-        });
-      } else {
-        super(scope, id, {
-          ...props,
-          architecture,
-          code: lambda.Code.fromAsset(
-            path.resolve(__dirname, "../dist/stub.zip")
-          ),
-          handler: "index.main",
-          functionName,
-          runtime: lambda.Runtime.NODEJS_16_X,
-          memorySize,
-          ephemeralStorageSize: diskSize,
-          timeout,
-          tracing,
-          environment: {
-            ...(props.environment || {}),
-            SST_DEBUG_SRC_PATH: srcPath,
-            SST_DEBUG_SRC_HANDLER: handler,
-            SST_DEBUG_ENDPOINT: app.debugEndpoint,
-            SST_DEBUG_BUCKET_NAME: app.debugBucketName,
-          },
-          layers: [],
-          logRetention,
-          retryAttempts: 0,
-          ...(debugOverrideProps || {}),
-        });
-      }
-      State.Function.append(app.appPath, {
-        id: localId,
-        handler,
-        runtime,
-        srcPath,
-        bundle: props.bundle,
+      super(scope, id, {
+        ...props,
+        architecture,
+        code: lambda.Code.fromAsset(
+          path.resolve(__dirname, "../dist/support/bridge")
+        ),
+        handler: "bridge.handler",
+        functionName,
+        runtime: lambda.Runtime.NODEJS_16_X,
+        memorySize,
+        ephemeralStorageSize: diskSize,
+        timeout,
+        tracing,
+        environment: {
+          ...(props.environment || {}),
+          SST_DEBUG_SRC_PATH: srcPath,
+          SST_DEBUG_SRC_HANDLER: handler,
+          SST_FUNCTION_ID: localId,
+        },
+        layers: [],
+        logRetention,
+        retryAttempts: 0,
+        ...(debugOverrideProps || {}),
       });
-      this.addEnvironment("SST_FUNCTION_ID", localId);
       this.attachPermissions([
         new iam.PolicyStatement({
-          actions: ["s3:*"],
+          actions: ["iot:*"],
           effect: iam.Effect.ALLOW,
-          resources: [app.debugBucketArn, `${app.debugBucketArn}/*`],
+          resources: ["*"],
         }),
       ]);
     }
@@ -933,7 +896,8 @@ export class Function extends lambda.Function implements SSTConstruct {
         const cfnFunction = this.node.defaultChild as lambda.CfnFunction;
         cfnFunction.runtime = supportedRuntimes[runtime].toString();
         if (isJavaRuntime && bundle) {
-          const providedRuntime = (bundle as FunctionBundleJavaProps).experimentalUseProvidedRuntime;
+          const providedRuntime = (bundle as FunctionBundleJavaProps)
+            .experimentalUseProvidedRuntime;
           if (providedRuntime) {
             cfnFunction.runtime = providedRuntime;
           }
@@ -945,7 +909,7 @@ export class Function extends lambda.Function implements SSTConstruct {
         };
         cfnFunction.handler = bundled.handler;
         code.bindToResource(cfnFunction);
-      })
+      });
     }
 
     this.props = props || {};
@@ -1211,7 +1175,7 @@ export class Function extends lambda.Function implements SSTConstruct {
       if (inheritedProps && Object.keys(inheritedProps).length > 0) {
         throw new Error(
           inheritErrorMessage ||
-          `Cannot inherit default props when a Function is provided`
+            `Cannot inherit default props when a Function is provided`
         );
       }
       return definition;

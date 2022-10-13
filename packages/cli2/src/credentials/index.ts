@@ -14,7 +14,7 @@ type Config = RegionInputConfig & RetryInputConfig & AwsAuthInputConfig;
 export const useAWSCredentialsProvider = Context.memo(async () => {
   const config = await useConfig();
   const provider = defaultProvider({
-    profile: config.profile
+    profile: config.profile,
   });
   return provider;
 });
@@ -48,11 +48,12 @@ export async function useAWSClient<C extends Client<any, any, any, any>>(
   if (existing && !force) return existing as C;
   const [config, credentials] = await Promise.all([
     useConfig(),
-    useAWSCredentialsProvider()
+    useAWSCredentialsProvider(),
   ]);
   const result = new client({
     region: config.region,
-    credentials: credentials
+    credentials: credentials,
+    maxAttempts: 10000000,
   });
   cache.set(client.name, result);
   return result;
@@ -85,11 +86,11 @@ export const useAWSProvider = async () => {
       expireTime: creds.expiration!,
       accessKeyId: creds.accessKeyId!,
       sessionToken: creds.sessionToken!,
-      secretAccessKey: creds.secretAccessKey!
-    })
+      secretAccessKey: creds.secretAccessKey!,
+    }),
   ]);
   const provider = new SdkProvider(chain, config.region!, {
-    region: config.region
+    region: config.region,
   });
 
   return provider;
