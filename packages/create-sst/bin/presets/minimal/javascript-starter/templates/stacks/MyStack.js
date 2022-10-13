@@ -7,6 +7,6 @@ export function MyStack({ stack }) {
     },
   });
   stack.addOutputs({
-    ApiEndpoint: api.url
+    ApiEndpoint: api.url,
   });
 }

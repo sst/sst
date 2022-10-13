@@ -388,21 +388,6 @@ async function printDeployResults(stackStates) {
           .forEach((name) => logger.info(`    ${name}: ${outputs[name]}`));
       }
 
-      // Print StaticSite environment outputs
-      environmentData
-        .filter(({ stack }) => stack === name)
-        .filter(
-          ({ environmentOutputs }) => Object.keys(environmentOutputs).length > 0
-        )
-        .forEach(({ id, environmentOutputs }) => {
-          logger.info(`  ${id}:`);
-          Object.keys(environmentOutputs)
-            .sort(array.getCaseInsensitiveStringSorter())
-            .forEach((name) =>
-              logger.info(`    ${name}: ${outputs[environmentOutputs[name]]}`)
-            );
-        });
-
       // Print stack exports
       const filteredExportNames = Object.keys(exports || {}).filter(
         (exportName) => {

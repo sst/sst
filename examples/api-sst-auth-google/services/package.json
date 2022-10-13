@@ -1,0 +1,15 @@
+{
+  "name": "@api-sst-auth-google/services",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {},
+  "dependencies": {
+    "aws-sdk": "^2.1231.0",
+    "@aws-sdk/client-dynamodb": "^3.186.0",
+    "@aws-sdk/util-dynamodb": "^3.186.0",
+    "@serverless-stack/node": "^1.15.11"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.106"
+  }
+}

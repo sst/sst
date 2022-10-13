@@ -55,9 +55,9 @@ type RemixConfig = {
   server?: string;
 };
 
-export interface RemixDomainProps extends BaseSiteDomainProps {}
+export interface RemixDomainProps extends BaseSiteDomainProps { }
 export interface RemixCdkDistributionProps
-  extends BaseSiteCdkDistributionProps {}
+  extends BaseSiteCdkDistributionProps { }
 export interface RemixSiteProps {
   cdk?: {
     /**
@@ -88,7 +88,7 @@ export interface RemixSiteProps {
       /**
        * Override the CloudFront cache policy properties for responses from the
        * server rendering Lambda.
-       * 
+       *
        * @note The default cache policy that is used in the abscene of this property
        * is one that performs no caching of the server response.
        */
@@ -101,7 +101,7 @@ export interface RemixSiteProps {
    *
    * @default false
    */
-   edge?: boolean;
+  edge?: boolean;
 
   /**
    * Path to the directory where the website source is located.
@@ -235,7 +235,7 @@ export class RemixSite extends Construct implements SSTConstruct {
   /**
    * The default CloudFront cache policy properties for responses from the
    * server rendering Lambda.
-   * 
+   *
    * @note By default no caching is performed on the server rendering Lambda response.
    */
   public static serverCachePolicyProps: cloudfront.CachePolicyProps = {
@@ -326,12 +326,12 @@ export class RemixSite extends Construct implements SSTConstruct {
           ? this.createServerLambdaBundleWithStub()
           : this.createServerLambdaBundleForEdge();
         this.serverLambdaForEdge = this.createServerFunctionForEdge(bundlePath);
-      }
-      else {
+      } else {
         const bundlePath = this.isPlaceholder
           ? this.createServerLambdaBundleWithStub()
           : this.createServerLambdaBundleForRegional();
-        this.serverLambdaForRegional = this.createServerFunctionForRegional(bundlePath);
+        this.serverLambdaForRegional =
+          this.createServerFunctionForRegional(bundlePath);
         this.cdk.function = this.serverLambdaForRegional;
       }
 
@@ -352,8 +352,7 @@ export class RemixSite extends Construct implements SSTConstruct {
         this.cdk.distribution = this.isPlaceholder
           ? this.createCloudFrontDistributionForStub()
           : this.createCloudFrontDistributionForEdge();
-      }
-      else {
+      } else {
         this.cdk.distribution = this.isPlaceholder
           ? this.createCloudFrontDistributionForStub()
           : this.createCloudFrontDistributionForRegional();
@@ -466,7 +465,10 @@ export class RemixSite extends Construct implements SSTConstruct {
    */
   public attachPermissions(permissions: Permissions): void {
     if (this.serverLambdaForRegional) {
-      attachPermissionsToRole(this.serverLambdaForRegional.role as iam.Role, permissions);
+      attachPermissionsToRole(
+        this.serverLambdaForRegional.role as iam.Role,
+        permissions
+      );
     }
 
     this.serverLambdaForEdge?.attachPermissions(permissions);
@@ -500,9 +502,7 @@ export class RemixSite extends Construct implements SSTConstruct {
     );
 
     if (!fs.existsSync(serverBuildFile)) {
-      throw new Error(
-        `No server build output found at "${serverBuildFile}"`
-      );
+      throw new Error(`No server build output found at "${serverBuildFile}"`);
     }
   }
 
@@ -551,8 +551,8 @@ export class RemixSite extends Construct implements SSTConstruct {
     const app = this.node.root as App;
     const fileSizeLimit = app.isRunningSSTTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
-        this.props.sstTestFileSizeLimitOverride || 200
+      // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
+      this.props.sstTestFileSizeLimitOverride || 200
       : 200;
 
     // First we need to create zip files containing the statics
@@ -636,9 +636,7 @@ export class RemixSite extends Construct implements SSTConstruct {
       memorySize: 1024,
     });
     this.cdk.bucket.grantReadWrite(uploader);
-    assets.forEach((asset) =>
-      asset.grantRead(uploader)
-    );
+    assets.forEach((asset) => asset.grantRead(uploader));
 
     // Create the custom resource function
     const handler = new lambda.Function(this, "S3Handler", {
@@ -777,10 +775,21 @@ export class RemixSite extends Construct implements SSTConstruct {
     logger.debug(`Bundling server`);
 
     // Create a directory that we will use to create the bundled version
-    // of the "core server build" along with our custom Lamba@Edge handler.
+    // of the "core server build" along with our custom Lamba server handler.
     const outputPath = path.resolve(
-      path.join(this.sstBuildDir, `RemixSiteLambdaServer-${this.node.id}-${this.node.addr}`)
+      path.join(
+        this.sstBuildDir,
+        `RemixSiteLambdaServer-${this.node.id}-${this.node.addr}`
+      )
     );
+
+    // Copy the Remix polyfil to the server build directory
+    const polyfillSource = path.resolve(
+      __dirname,
+      "../assets/RemixSite/server-lambda/polyfill.js"
+    );
+    const polyfillDest = path.join(this.props.path, "build/polyfill.js");
+    fs.copyFileSync(polyfillSource, polyfillDest);
 
     const result = esbuild.buildSync({
       entryPoints: [serverPath],
@@ -789,9 +798,13 @@ export class RemixSite extends Construct implements SSTConstruct {
       platform: "node",
       external: ["aws-sdk"],
       outfile: path.join(outputPath, "server.js"),
-      // Need to add the --ignore-annotations flag to ESBuild. It appears Remix templates by default include the "sideEffects": false, flag in their package.json. This causes ESBuild to remove the required polyfill module. I had removed the flag so it was working fine for me, but likely we will want to avoid having everyone update their Remix app like this. Remix includes polyfills so it is always going to be by nature with side effects. I've asked on their GH the reasoning for the flag being there in the first place. There is also an active PR to remove the need for this flag in their package.json, although the PR doesn't provide the original motivation for the flag being there. I will do more research and get back to ya'll. For sure we will want to address this. https://esbuild.github.io/api/#ignore-annotations
-      ignoreAnnotations: true,
-    })
+      // We need to ensure that the polyfills are injected above other code that
+      // will depend on them. Importing them within the top of the lambda code
+      // doesn't appear to guarantee this, we therefore leverage ESBUild's
+      // `inject` option to ensure that the polyfills are injected at the top of
+      // the bundle.
+      inject: [polyfillDest],
+    });
 
     if (result.errors.length > 0) {
       result.errors.forEach((error) => console.error(error));
@@ -826,7 +839,10 @@ export class RemixSite extends Construct implements SSTConstruct {
     // Attach permission
     this.cdk.bucket.grantReadWrite(fn.role!);
     if (defaults?.function?.permissions) {
-      attachPermissionsToRole(fn.role as iam.Role, defaults.function.permissions);
+      attachPermissionsToRole(
+        fn.role as iam.Role,
+        defaults.function.permissions
+      );
     }
 
     return fn;
@@ -961,7 +977,9 @@ export class RemixSite extends Construct implements SSTConstruct {
     };
   }
 
-  private buildDistributionDefaultBehaviorForEdge(origin: origins.S3Origin): cloudfront.BehaviorOptions {
+  private buildDistributionDefaultBehaviorForEdge(
+    origin: origins.S3Origin
+  ): cloudfront.BehaviorOptions {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
 
@@ -989,7 +1007,9 @@ export class RemixSite extends Construct implements SSTConstruct {
     };
   }
 
-  private buildDistributionStaticBehaviors(origin: origins.S3Origin): Record<string, cloudfront.BehaviorOptions> {
+  private buildDistributionStaticBehaviors(
+    origin: origins.S3Origin
+  ): Record<string, cloudfront.BehaviorOptions> {
     const { cdk } = this.props;
 
     // Build cache policies
@@ -1297,9 +1317,11 @@ export class RemixSite extends Construct implements SSTConstruct {
       .forEach((key) => {
         const k = key as keyof RemixConfig;
         if (config[k] !== configDefaults[k]) {
-          throw new Error(`RemixSite: remix.config.js "${key}" must be "${configDefaults[k]}".`);
+          throw new Error(
+            `RemixSite: remix.config.js "${key}" must be "${configDefaults[k]}".`
+          );
         }
-    });
+      });
 
     return config;
   }

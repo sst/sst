@@ -155,14 +155,19 @@ Live Lambda Dev also supports connecting to AWS resources inside a VPC. We'll [l
 
 ### Languages
 
-The Live Lambda Development environment supports the following languages:
+Live Lambda Dev and setting breakpoints are supported in the following languages.
 
-- JavaScript
-- TypeScript
-- Python
-- Golang
-- C#
-- F#
+| Language   | Live Lambda | Breakpoints |
+| ---------- | ----------- | ----------- |
+| JavaScript | ✅          | ✅          |
+| TypeScript | ✅          | ✅          |
+| Python     | ✅          | 💪          |
+| Golang     | ✅          | ❌          |
+| Java       | ✅          | ❌          |
+| C#         | ✅          | ❌          |
+| F#         | ✅          | ❌          |
+
+✅ Officially supported 💪 [Community support](https://www.linen.dev/s/serverless-stack/t/445893/Hey-U01J5Q8HV5Z-U01JVDKASAC-I-ve-successfully-followed-the-G) ❌ Not supported
 
 ---
 

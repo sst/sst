@@ -322,9 +322,7 @@ export class App extends cdk.App {
   }
 
   synth(options: cdk.StageSynthesisOptions = {}): cxapi.CloudAssembly {
-    this.createTypesFile();
-    Config.codegenTypes();
-    Job.codegenTypes();
+    this.codegenTypes();
     this.buildConstructsMetadata();
 
     Auth.injectConfig();
@@ -528,15 +526,36 @@ export class App extends cdk.App {
     cdk.Aspects.of(this).add(new RemoveGovCloudUnsupportedResourceProperties());
   }
 
-  private createTypesFile() {
-    fs.removeSync("node_modules/@types/serverless-stack__node");
-    fs.mkdirSync("node_modules/@types/serverless-stack__node", {
+  private codegenTypes() {
+    const nodeModulesPath = this.codegenFindNodeModulesPath();
+    if (nodeModulesPath) {
+      const typesPath = path.resolve(nodeModulesPath, "node_modules", "@types", "serverless-stack__node");
+      this.codegenCreateFile(typesPath);
+      Config.codegenTypes(typesPath);
+      Job.codegenTypes(typesPath);
+    }
+  }
+
+  private codegenFindNodeModulesPath() {
+    const rootPath = path.parse(process.cwd()).root
+
+    let directory = this.appPath;
+    while (directory !== rootPath) {
+      const checkPath = path.resolve(directory, "node_modules", "@serverless-stack", "node");
+      if (fs.existsSync(checkPath)) {
+        return directory;
+      }
+
+      directory = path.dirname(directory);
+    }
+  }
+
+  private codegenCreateFile(typesPath: string) {
+    fs.removeSync(typesPath);
+    fs.mkdirSync(typesPath, {
       recursive: true,
     });
-    fs.writeFileSync(
-      "node_modules/@types/serverless-stack__node/index.d.ts",
-      ""
-    );
+    fs.writeFileSync(`${typesPath}/index.d.ts`, "");
   }
 
   // Functional Stack

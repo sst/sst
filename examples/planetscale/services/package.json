@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {},
   "dependencies": {
-    "aws-sdk": "^2.1230.0",
+    "aws-sdk": "^2.1231.0",
     "planetscale-node": "^0.3.0"
   },
   "devDependencies": {
