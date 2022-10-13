@@ -55,9 +55,9 @@ type RemixConfig = {
   server?: string;
 };
 
-export interface RemixDomainProps extends BaseSiteDomainProps {}
+export interface RemixDomainProps extends BaseSiteDomainProps { }
 export interface RemixCdkDistributionProps
-  extends BaseSiteCdkDistributionProps {}
+  extends BaseSiteCdkDistributionProps { }
 export interface RemixSiteProps {
   cdk?: {
     /**
@@ -551,8 +551,8 @@ export class RemixSite extends Construct implements SSTConstruct {
     const app = this.node.root as App;
     const fileSizeLimit = app.isRunningSSTTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
-        this.props.sstTestFileSizeLimitOverride || 200
+      // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
+      this.props.sstTestFileSizeLimitOverride || 200
       : 200;
 
     // First we need to create zip files containing the statics
