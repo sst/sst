@@ -35,12 +35,37 @@ export async function createRuntimeServer() {
   const app = express();
   const workers = await useWorkers();
 
-  const waiting = new Map<string, (evt: Events["function.invoked"]) => void>();
+  const workersWaiting = new Map<
+    string,
+    (evt: Events["function.invoked"]) => void
+  >();
+  const invocationsQueued = new Map<string, Events["function.invoked"][]>();
+
   function next(workerID: string) {
+    const queue = invocationsQueued.get(workerID);
+    const value = queue?.shift();
+    if (value) return value;
+
     return new Promise<Events["function.invoked"]>((resolve, reject) => {
-      waiting.set(workerID, resolve);
+      workersWaiting.set(workerID, resolve);
     });
   }
+
+  bus.subscribe("function.invoked", async (evt) => {
+    const worker = workersWaiting.get(evt.properties.workerID);
+    if (worker) {
+      workersWaiting.delete(evt.properties.workerID);
+      worker(evt.properties);
+      return;
+    }
+
+    let arr = invocationsQueued.get(evt.properties.workerID);
+    if (!arr) {
+      arr = [];
+      invocationsQueued.set(evt.properties.workerID, arr);
+    }
+    arr.push(evt.properties);
+  });
 
   app.post<{ functionID: string; workerID: string }>(
     `/:workerID/${API_VERSION}/runtime/init/error`,

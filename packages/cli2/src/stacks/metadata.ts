@@ -45,7 +45,7 @@ export async function metadata(stackID: string) {
   }
 }
 
-export const useMetadata = Context.memo(async () => {
+export const MetadataContext = Context.create(async () => {
   const bus = useBus();
   const cache = useCache();
   const data: Record<string, any[]> = await cache
@@ -58,6 +58,7 @@ export const useMetadata = Context.memo(async () => {
     data[evt.properties.stackID] = meta;
     await cache.write(`metadata.json`, JSON.stringify(data));
     bus.publish("stacks.metadata", data);
+    MetadataContext.provide(Promise.resolve(data));
   });
 
   return data;

@@ -65,7 +65,6 @@ async function synth(opts: SynthOptions) {
   */
   const assembly = app.synth();
   await cfg.saveContext();
-  console.log(assembly.manifest.missing);
   Logger.debug("Finished synthesizing");
   return assembly;
 }

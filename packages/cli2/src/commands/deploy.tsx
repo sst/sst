@@ -2,13 +2,45 @@ import { CloudAssembly } from "aws-cdk-lib/cx-api";
 import { useBus } from "../bus/index.js";
 import { Stacks } from "../stacks/index.js";
 import React, { useState, useEffect } from "react";
-import { render, Text } from "ink";
+import { Box, render, Text } from "ink";
 import inkSpinner from "ink-spinner";
 // @ts-ignore
 const { default: Spinner } = inkSpinner;
 
-const Counter = () => {
-  const [stacks, setStacks] = useState<Record<string, string>>({});
+const FullScreen: React.FC = (props) => {
+  const [size, setSize] = useState({
+    columns: process.stdout.columns,
+    rows: process.stdout.rows,
+  });
+
+  useEffect(() => {
+    function onResize() {
+      setSize({
+        columns: process.stdout.columns,
+        rows: process.stdout.rows,
+      });
+    }
+
+    process.stdout.on("resize", onResize);
+    return () => {
+      process.stdout.off("resize", onResize);
+    };
+  }, []);
+
+  return (
+    <Box width={size.columns} height={size.rows} flexDirection="column">
+      {props.children}
+    </Box>
+  );
+};
+
+interface Props {
+  stacks: string[];
+}
+export const DeploymentUI = (props: Props) => {
+  const [stacks, setStacks] = useState<Record<string, string>>(
+    Object.fromEntries(props.stacks.map((s) => [s, ""]))
+  );
   const [resources, setResources] = useState<Record<string, any>>({});
 
   useEffect(() => {
@@ -35,9 +67,11 @@ const Counter = () => {
   }, []);
 
   return (
-    <>
+    <FullScreen>
+      <Text>Deploying {props.stacks.length} stacks</Text>
       {Object.entries(stacks).map(([stackID, status]) => (
         <Text key={stackID}>
+          <Text> </Text>
           {!Stacks.isFinal(status) ? <Spinner /> : <Text color="green">✔</Text>}
           <Text>{" " + stackID}</Text>
           <Text color={Stacks.isFinal(status) ? "green" : "yellow"}>
@@ -45,7 +79,7 @@ const Counter = () => {
           </Text>
         </Text>
       ))}
-    </>
+    </FullScreen>
   );
 };
 
@@ -67,7 +101,7 @@ export async function Deploy(opts: DeployOpts) {
     });
   })();
 
-  const component = render(<Counter />);
+  const component = render(<DeploymentUI />);
   await Stacks.deployMany(assembly.stacks);
   component.unmount();
 }

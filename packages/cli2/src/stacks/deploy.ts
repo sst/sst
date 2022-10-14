@@ -85,7 +85,6 @@ export async function deployMany(stacks: CloudFormationStackArtifact[]) {
   const complete = new Set<string>();
   const todo = new Set(stacks.map((s) => s.id));
   const pending = new Set<string>();
-  const cfn = await useAWSClient(CloudFormationClient);
 
   bus.subscribe("stack.updated", (evt) => {
     pending.add(evt.properties.stackID);
@@ -104,66 +103,16 @@ export async function deployMany(stacks: CloudFormationStackArtifact[]) {
       )
         continue;
 
-      deploy(stack);
+      deploy(stack).then(() => waitFor(stack.stackName));
       todo.delete(stack.id);
     }
-  }
-
-  const lastStatus: Record<string, string> = {};
-  async function monitor() {
-    if (complete.size === pending.size && todo.size === 0) return;
-    try {
-      for (const stack of pending) {
-        Logger.debug("Checking status of", stack);
-        if (complete.has(stack)) continue;
-        const [describe, resources] = await Promise.all([
-          retry(() =>
-            cfn.send(
-              new DescribeStacksCommand({
-                StackName: stack,
-              })
-            )
-          ),
-          retry(() =>
-            cfn.send(
-              new DescribeStackResourcesCommand({
-                StackName: stack,
-              })
-            )
-          ),
-        ]);
-
-        /*
-        bus.publish("stack.resources", {
-          stackID: stack,
-          resources: resources.StackResources,
-        });
-        */
-
-        const [first] = describe.Stacks || [];
-        if (first) {
-          const previous = lastStatus[stack];
-          if (previous !== first.StackStatus && first.StackStatus) {
-            lastStatus[stack] = first.StackStatus;
-            bus.publish("stack.status", {
-              stackID: stack,
-              status: first.StackStatus as any,
-            });
-          }
-        }
-      }
-    } catch (ex) {
-      console.error(ex);
-    }
-
-    setTimeout(monitor, 3000);
   }
 
   return new Promise<void>(async (resolve) => {
     const finished = bus.subscribe("stack.status", (evt) => {
       if (!STATUSES_FINAL.includes(evt.properties.status as any)) return;
       complete.add(evt.properties.stackID);
-      if (complete.size === pending.size && todo.size === 0) {
+      if (complete.size === stacks.length) {
         bus.unsubscribe(finished);
         resolve();
       }
@@ -171,8 +120,51 @@ export async function deployMany(stacks: CloudFormationStackArtifact[]) {
     });
 
     await trigger();
-    monitor();
   });
+}
+
+export async function waitFor(stack: string) {
+  const [cfn, bus] = await Promise.all([
+    useAWSClient(CloudFormationClient),
+    useBus(),
+  ]);
+
+  let lastStatus: string | undefined;
+  while (true) {
+    const [describe, resources] = await Promise.all([
+      cfn.send(
+        new DescribeStacksCommand({
+          StackName: stack,
+        })
+      ),
+      cfn.send(
+        new DescribeStackResourcesCommand({
+          StackName: stack,
+        })
+      ),
+    ]);
+
+    /*
+        bus.publish("stack.resources", {
+          stackID: stack,
+          resources: resources.StackResources,
+        });
+        */
+
+    const [first] = describe.Stacks || [];
+    if (first) {
+      if (lastStatus !== first.StackStatus && first.StackStatus) {
+        lastStatus = first.StackStatus;
+        bus.publish("stack.status", {
+          stackID: stack,
+          status: first.StackStatus as any,
+        });
+        if (isFinal(first.StackStatus)) {
+          break;
+        }
+      }
+    }
+  }
 }
 
 export async function deploy(stack: CloudFormationStackArtifact) {
@@ -190,10 +182,16 @@ export async function deploy(stack: CloudFormationStackArtifact) {
       stack: stack as any,
       quiet: true,
     });
-  } catch (ex) {
-    // console.error(ex);
+    bus.publish("stack.updated", {
+      stackID: stack.stackName,
+    });
+  } catch (err) {
+    bus.publish("stack.updated", {
+      stackID: stack.stackName,
+    });
+    bus.publish("stack.status", {
+      status: "UPDATE_COMPLETE",
+      stackID: stack.stackName,
+    });
   }
-  bus.publish("stack.updated", {
-    stackID: stack.stackName,
-  });
 }

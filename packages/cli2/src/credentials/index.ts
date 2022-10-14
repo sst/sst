@@ -8,6 +8,7 @@ import { useConfig } from "../config/index.js";
 import { GetCallerIdentityCommand, STSClient } from "@aws-sdk/client-sts";
 import { Logger } from "../logger/index.js";
 import { SdkProvider } from "aws-cdk/lib/api/aws-auth/sdk-provider.js";
+import { StandardRetryStrategy } from "@aws-sdk/middleware-retry";
 
 type Config = RegionInputConfig & RetryInputConfig & AwsAuthInputConfig;
 
@@ -53,7 +54,11 @@ export async function useAWSClient<C extends Client<any, any, any, any>>(
   const result = new client({
     region: config.region,
     credentials: credentials,
-    maxAttempts: 10000000,
+    retryStrategy: new StandardRetryStrategy(async () => 10000, {
+      delayDecider: (_, attempts) => {
+        return 2 ** attempts * 100;
+      },
+    }),
   });
   cache.set(client.name, result);
   return result;
