@@ -1,5 +1,14 @@
 # @serverless-stack/resources
 
+## 1.15.14
+
+### Patch Changes
+
+- [`3b1357da8`](https://github.com/serverless-stack/sst/commit/3b1357da888fd596d913d1bb7aff4d21119b251c) Thanks [@fwang](https://github.com/fwang)! - ApiGatewayV1Api: support function version and docker image
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.15.14
+
 ## 1.15.13
 
 ### Patch Changes
