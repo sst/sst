@@ -45,7 +45,7 @@ export async function metadata(stackID: string) {
   }
 }
 
-export const MetadataContext = Context.create(async () => {
+const MetadataContext = Context.create(async () => {
   const bus = useBus();
   const cache = useCache();
   const data: Record<string, any[]> = await cache
@@ -63,3 +63,5 @@ export const MetadataContext = Context.create(async () => {
 
   return data;
 });
+
+export const useMetadata = MetadataContext.use;

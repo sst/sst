@@ -20,6 +20,7 @@ export const useIOTEndpoint = Context.memo(async () => {
 import iot from "aws-iot-device-sdk";
 import { EventPayload, Events, EventTypes, useBus } from "../bus/index.js";
 import { useConfig } from "../config/index.js";
+import { Logger } from "../logger/index.js";
 
 interface Fragment {
   id: string;
@@ -62,6 +63,8 @@ export const useIOT = Context.memo(async () => {
         .join("");
       fragments.delete(fragment.id);
       const evt = JSON.parse(data) as EventPayload;
+      Logger.debug("Got from IOT", evt);
+      if (evt.sourceID === bus.sourceID) return;
       bus.publish(evt.type, evt.properties);
     }
   });
@@ -76,6 +79,7 @@ export const useIOT = Context.memo(async () => {
       const payload: EventPayload = {
         type,
         properties,
+        sourceID: bus.sourceID,
       };
       for (const fragment of encode(payload)) {
         device.publish(topic, JSON.stringify(fragment), {

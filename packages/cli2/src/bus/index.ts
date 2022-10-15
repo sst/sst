@@ -1,5 +1,6 @@
 import { Context } from "@serverless-stack/node/context/index.js";
 import { Logger } from "../logger/index.js";
+import crypto from "crypto";
 
 export interface Events {}
 
@@ -7,6 +8,7 @@ export type EventTypes = keyof Events;
 
 export type EventPayload<Type extends EventTypes = EventTypes> = {
   type: Type;
+  sourceID: string;
   properties: Events[Type];
 };
 
@@ -27,11 +29,15 @@ export const useBus = Context.memo(() => {
     return arr;
   }
 
+  const sourceID = crypto.randomBytes(16).toString("hex");
+
   return {
+    sourceID,
     publish<Type extends EventTypes>(type: Type, properties: Events[Type]) {
       const payload: EventPayload<Type> = {
         type,
         properties,
+        sourceID,
       };
 
       Logger.debug(`Publishing event ${JSON.stringify(payload)}`);

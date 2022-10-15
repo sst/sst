@@ -1,47 +1,28 @@
-import { Context } from "@serverless-stack/node/context/index.js";
-import { useBus } from "../bus";
-import { MetadataContext } from "../stacks/metadata.js";
-import { fetch } from "undici";
+import { Context } from "@serverless-stack/node/context/context.js";
+import { useBus } from "../bus/index.js";
+import { useFunctionBuilder, useRuntimeHandlers } from "./handlers.js";
 
-declare module "../bus/index.js" {
-  export interface Events {
-    "worker.needed": {
-      workerID: string;
-      functionID: string;
-      runtime: string;
-    };
-  }
-}
-
-export interface Worker {
+interface Worker {
   workerID: string;
   functionID: string;
 }
 
-const useFunctions = Context.memo(async () => {
-  const metadata = await MetadataContext.use();
-  const result = [];
-  for (const [stackID, meta] of Object.entries(metadata)) {
-    for (const item of meta) {
-      if (item.type === "Function") {
-        result.push(item);
-      }
-    }
-  }
-  return result;
-});
-
-export const useWorkers = Context.memo(async () => {
+export const useRuntimeWorkers = Context.memo(async () => {
   const workers = new Map<string, Worker>();
   const bus = useBus();
+  const handlers = await useRuntimeHandlers();
+  const builder = await useFunctionBuilder();
 
   bus.subscribe("function.invoked", async (evt) => {
     let worker = workers.get(evt.properties.workerID);
     if (worker) return;
-    bus.publish("worker.needed", {
+    const handler = handlers.for("test");
+    if (!handler) return;
+    await builder.ensureBuilt(evt.properties.functionID);
+    await handler.startWorker(evt.properties.workerID);
+    workers.set(evt.properties.workerID, {
       workerID: evt.properties.workerID,
       functionID: evt.properties.functionID,
-      runtime: "nodejs14.x",
     });
   });
 
@@ -49,36 +30,5 @@ export const useWorkers = Context.memo(async () => {
     fromID(workerID: string) {
       return workers.get(workerID)!;
     },
-    register(workerID: string, functionID: string) {
-      workers.set(workerID, { workerID, functionID });
-    },
-    unregister(workerID: string) {
-      workers.delete(workerID);
-    },
   };
 });
-
-export const createNodeWorker = async () => {
-  const bus = useBus();
-  const workers = await useWorkers();
-
-  bus.subscribe("worker.needed", async (evt) => {
-    workers.register(evt.properties.workerID, evt.properties.functionID);
-
-    while (true) {
-      const result = await fetch(
-        `https://localhost:12557/${evt.properties.workerID}/runtime/invocation/next`
-      ).then((x) => x.json());
-
-      console.log(result);
-
-      await fetch(
-        `https://localhost:12557/${evt.properties.workerID}/runtime/invocation/response`,
-        {
-          method: "POST",
-          body: JSON.stringify("Hello"),
-        }
-      );
-    }
-  });
-};

@@ -1,20 +1,18 @@
 import { render } from "ink";
 import React from "react";
-import { useBus } from "../bus/index.js";
-import { useIOT } from "../iot/index.js";
 import { Logger } from "../logger/index.js";
-import { createRuntimeServer } from "../runtime/runtime.js";
-import { createNodeWorker } from "../runtime/workers.js";
+import { useIOTBridge } from "../runtime/iot.js";
+import { useNodeHandler } from "../runtime/node.js";
+import { useRuntimeServer } from "../runtime/server.js";
 import { Stacks } from "../stacks/index.js";
 
 import { DeploymentUI } from "./deploy.js";
 
 export async function start() {
-  await useIOT();
-  await createNodeWorker();
-  await createRuntimeServer();
+  await Promise.all([useIOTBridge(), useRuntimeServer(), useNodeHandler()]);
   Logger.ui("green", "Listening for function invocations...");
 
+  /*
   const fn = await Stacks.build();
   const assembly = await Stacks.synth({
     fn,
@@ -28,4 +26,5 @@ export async function start() {
   component.unmount();
   process.stdout.write("\x1b[?1049l");
   Logger.ui("green", "Stacks updated");
+  */
 }

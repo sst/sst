@@ -1004,6 +1004,8 @@ export class Function extends lambda.Function implements SSTConstruct {
       type: "Function" as const,
       data: {
         localId: this.localId,
+        srcPath: this.props.srcPath,
+        handler: this.props.handler,
         arn: this.functionArn,
         secrets: (config || [])
           .filter((c) => c instanceof Secret)

@@ -56,7 +56,7 @@ export async function useAWSClient<C extends Client<any, any, any, any>>(
     credentials: credentials,
     retryStrategy: new StandardRetryStrategy(async () => 10000, {
       delayDecider: (_, attempts) => {
-        return 2 ** attempts * 100;
+        return Math.min(1.5 ** attempts * 100, 5000);
       },
     }),
   });

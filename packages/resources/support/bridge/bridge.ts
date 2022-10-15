@@ -56,7 +56,7 @@ const device = new iot.device({
 });
 device.on("error", console.log);
 device.on("connect", console.log);
-device.subscribe(`${PREFIX}/${workerID}`);
+device.subscribe(`${PREFIX}/events`);
 
 interface Fragment {
   id: string;
@@ -104,16 +104,19 @@ export async function handler(event: any, context: any) {
   }
   const result = await new Promise<any>((r) => {
     onMessage = (evt) => {
-      if ((evt.type = "function.responded")) r(evt.properties);
+      if (["function.success", "function.error"].includes(evt.type)) {
+        if (evt.properties.workerID === workerID) r(evt);
+      }
     };
   });
+  console.log("Got result", result);
 
-  if (result.type === "success") {
-    return result.body;
+  if (result.type === "function.success") {
+    return result.properties.body;
   }
 
-  if (result.type === "failure") {
-    throw result.body;
+  if (result.type === "function.error") {
+    throw result.properties.body;
   }
 }
 
