@@ -46,9 +46,9 @@ import * as crossRegionHelper from "./nextjs-site/cross-region-helper.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
-export interface NextjsDomainProps extends BaseSiteDomainProps {}
+export interface NextjsDomainProps extends BaseSiteDomainProps { }
 export interface NextjsCdkDistributionProps
-  extends BaseSiteCdkDistributionProps {}
+  extends BaseSiteCdkDistributionProps { }
 export interface NextjsSiteProps {
   cdk?: {
     /**
@@ -296,8 +296,8 @@ export class NextjsSite extends Construct implements SSTConstruct {
     const buildDir = app.buildDir;
     const fileSizeLimit = app.isRunningSSTTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
-        props.sstTestFileSizeLimitOverride || 200
+      // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
+      props.sstTestFileSizeLimitOverride || 200
       : 200;
 
     this.props = props;
@@ -867,8 +867,8 @@ export class NextjsSite extends Construct implements SSTConstruct {
     const app = this.node.root as App;
     const buildOutput = app.isRunningSSTTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
-        props.sstTestBuildOutputPath || this.runBuild()
+      // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+      props.sstTestBuildOutputPath || this.runBuild()
       : this.runBuild();
 
     this.runAfterBuild();
@@ -882,8 +882,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     // validate site path exists
     if (!fs.existsSync(sitePath)) {
       throw new Error(
-        `No path found at "${path.resolve(sitePath)}" for the "${
-          this.node.id
+        `No path found at "${path.resolve(sitePath)}" for the "${this.node.id
         }" NextjsSite.`
       );
     }
@@ -1183,8 +1182,9 @@ export class NextjsSite extends Construct implements SSTConstruct {
     }
 
     // Create custom resource
-    const waitForInvalidation =
-      this.props.waitForInvalidation === false ? false : true;
+    const waitForInvalidation = this.isPlaceholder
+      ? false
+      : (this.props.waitForInvalidation === false ? false : true);
     return new CustomResource(this, "CloudFrontInvalidation", {
       serviceToken: invalidator.functionArn,
       resourceType: "Custom::SSTCloudFrontInvalidation",
