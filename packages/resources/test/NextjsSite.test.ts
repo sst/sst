@@ -1230,6 +1230,7 @@ test("constructor: local debug", async () => {
   countResources(stack, "Custom::SSTCloudFrontInvalidation", 1);
   hasResource(stack, "Custom::SSTCloudFrontInvalidation", {
     DistributionPaths: ["/*"],
+    WaitForInvalidation: false,
   });
   hasResource(stack, "AWS::CloudFront::Distribution", {
     DistributionConfig: objectLike({
@@ -1274,6 +1275,10 @@ test("constructor: local debug with disablePlaceholder true", async () => {
     DistributionConfig: objectLike({
       CustomErrorResponses: ABSENT,
     }),
+  });
+  hasResource(stack, "Custom::SSTCloudFrontInvalidation", {
+    DistributionPaths: ["/*"],
+    WaitForInvalidation: true,
   });
 });
 
