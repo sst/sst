@@ -543,7 +543,10 @@ export class NextjsSite extends Construct implements SSTConstruct {
     });
 
     // Create alias
-    fn.currentVersion.addAlias("live");
+    new lambda.Alias(fn, "Alias", {
+      aliasName: "live",
+      version: fn.currentVersion,
+    });
 
     // Deploy after the code is updated
     if (hasRealCode) {

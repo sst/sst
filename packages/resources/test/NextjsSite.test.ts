@@ -1167,6 +1167,23 @@ test("constructor: us-east-1", async () => {
   expect(site.cdk.certificate).toBeUndefined();
   countResources(stack, "AWS::S3::Bucket", 1);
   countResources(stack, "AWS::Lambda::Function", 10);
+  countResources(stack, "AWS::Lambda::Version", 3);
+  countResources(stack, "AWS::Lambda::Alias", 3);
+  hasResource(stack, "AWS::Lambda::Alias", {
+    FunctionName: { Ref: "SiteMainFunction17342A54" },
+    FunctionVersion: ANY,
+    Name: "live",
+  });
+  hasResource(stack, "AWS::Lambda::Alias", {
+    FunctionName: { Ref: "SiteApiFunction5F34A346" },
+    FunctionVersion: ANY,
+    Name: "live",
+  });
+  hasResource(stack, "AWS::Lambda::Alias", {
+    FunctionName: { Ref: "SiteImageFunction6C3177FC" },
+    FunctionVersion: ANY,
+    Name: "live",
+  });
   countResources(stack, "AWS::CloudFront::Distribution", 1);
   countResources(stack, "Custom::SSTEdgeLambdaBucket", 0);
   countResources(stack, "Custom::SSTEdgeLambda", 0);
