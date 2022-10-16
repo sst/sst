@@ -16,20 +16,15 @@ export const useNodeHandler = Context.memo(async () => {
   const cache: Record<string, esbuild.BuildResult> = {};
 
   handlers.register({
-    startWorker: async (workerID) => {
+    startWorker: async (input) => {
       new Promise(async () => {
         while (true) {
-          Logger.debug(
-            "node:",
-            "fetching from",
-            `${server.url}/localhost:12557/${workerID}/${API_VERSION}/runtime/invocation/next`
-          );
           const result = await fetch(
-            `${server.url}/${workerID}/${API_VERSION}/runtime/invocation/next`
+            `${server.url}/${input.workerID}/${API_VERSION}/runtime/invocation/next`
           ).then((x) => x.json());
 
           await fetch(
-            `${server.url}/${workerID}/${API_VERSION}/runtime/invocation/whatever/response`,
+            `${server.url}/${input.workerID}/${API_VERSION}/runtime/invocation/whatever/response`,
             {
               method: "POST",
               headers: {

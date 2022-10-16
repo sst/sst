@@ -12,8 +12,13 @@ interface BuildInput {
   out: string;
 }
 
+interface StartWorkerInput {
+  workerID: string;
+  environment: Record<string, string>;
+}
+
 interface RuntimeHandler {
-  startWorker: (workerID: string) => Promise<void>;
+  startWorker: (worker: StartWorkerInput) => Promise<void>;
   stopWorker: (workerID: string) => void;
   canHandle: (runtime: string) => boolean;
   build: (input: BuildInput) => Promise<void>;

@@ -19,7 +19,10 @@ export const useRuntimeWorkers = Context.memo(async () => {
     const handler = handlers.for("test");
     if (!handler) return;
     await builder.ensureBuilt(evt.properties.functionID);
-    await handler.startWorker(evt.properties.workerID);
+    await handler.startWorker({
+      workerID: evt.properties.workerID,
+      environment: evt.properties.env,
+    });
     workers.set(evt.properties.workerID, {
       workerID: evt.properties.workerID,
       functionID: evt.properties.functionID,
