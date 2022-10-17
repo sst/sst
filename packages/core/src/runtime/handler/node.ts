@@ -41,20 +41,14 @@ type findUpOptions = {
 }
 
 function findUp(fileName: string, { cwd }: findUpOptions) {
-  const rootPath = path.parse(process.cwd()).root
+  const rootPath = path.parse(process.cwd()).root;
 
-  let directory = cwd;
-  while (true) {
-    if (directory === rootPath) {
-      return;
+  let directory = path.resolve(cwd);
+  while (directory !== rootPath) {
+    const filePath = path.resolve(directory, fileName);
+    if (fs.existsSync(filePath)) {
+      return filePath;
     }
-
-    const checkPath = path.resolve(directory, fileName);
-
-    if (fs.existsSync(checkPath)) {
-      return checkPath;
-    }
-
     directory = path.dirname(directory);
   }
 }
@@ -321,7 +315,7 @@ async function installNodeModules(
   const existing = await fs.readJson(outputPath) || {};
   await fs.writeJson(outputPath, { ...existing, dependencies });
   await fs.copy(
-    path.join(lockFileDir, lockFile), 
+    path.join(lockFileDir, lockFile),
     path.join(targetPath, lockFile)
   );
 
