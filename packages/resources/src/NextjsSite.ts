@@ -543,7 +543,16 @@ export class NextjsSite extends Construct implements SSTConstruct {
     });
 
     // Create alias
-    fn.currentVersion.addAlias("live");
+    // note: Alias used to be created using on the Version using
+    //       "fn.currentVersion.addAlias()". It was deprecated.
+    //       To preserve the logical id, we are going to manually create
+    //       the Alias on the version, and use "Aliaslive" as id to preserve
+    //       the logical id.
+    const version = fn.currentVersion;
+    new lambda.Alias(version, "Aliaslive", {
+      aliasName: "live",
+      version,
+    });
 
     // Deploy after the code is updated
     if (hasRealCode) {
