@@ -1,5 +1,11 @@
 # @serverless-stack/core
 
+## 1.15.16
+
+### Patch Changes
+
+- [#2146](https://github.com/serverless-stack/sst/pull/2146) [`6054fd0cd`](https://github.com/serverless-stack/sst/commit/6054fd0cdd5779fdc632c3a06ddc954d0de8f830) Thanks [@fwang](https://github.com/fwang)! - Function: fix building node functions hangs
+
 ## 1.15.15
 
 ## 1.15.14

@@ -1,5 +1,12 @@
 # @serverless-stack/resources
 
+## 1.15.16
+
+### Patch Changes
+
+- Updated dependencies [[`6054fd0cd`](https://github.com/serverless-stack/sst/commit/6054fd0cdd5779fdc632c3a06ddc954d0de8f830)]:
+  - @serverless-stack/core@1.15.16
+
 ## 1.15.15
 
 ### Patch Changes
