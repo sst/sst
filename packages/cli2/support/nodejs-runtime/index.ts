@@ -30,22 +30,23 @@ while (true) {
   timeout = setTimeout(() => {
     process.exit(0);
   }, 1000 * 60 * 15);
+  let request: any;
+  let response: any;
+  let requestID: string;
+
   try {
     const result = await fetch(`${input.url}/runtime/invocation/next`);
-    const body = await result.json();
+    requestID = result.headers.get("lambda-runtime-aws-request-id")!;
+    request = await result.json();
+  } catch {
+    continue;
+  }
 
-    const response = await mod[ext.substring(1)](body);
-
-    await fetch(`${input.url}/runtime/invocation/whatever/response`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(response),
-    });
+  try {
+    response = await mod[ext.substring(1)](request);
   } catch (ex: any) {
     console.log(ex);
-    await fetch(`${input.url}/runtime/invocation/whatever/error`, {
+    await fetch(`${input.url}/runtime/invocation/${requestID}/error`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -57,4 +58,12 @@ while (true) {
       }),
     });
   }
+
+  await fetch(`${input.url}/runtime/invocation/${requestID}/response`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(response),
+  });
 }
