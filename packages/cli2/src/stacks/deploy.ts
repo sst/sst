@@ -27,11 +27,11 @@ const STATUSES = [
   "UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS",
   "UPDATE_ROLLBACK_FAILED",
   "UPDATE_ROLLBACK_IN_PROGRESS",
-  "SKIPPED",
 ] as const;
 
 const STATUSES_FINAL = [
   "CREATE_FAILED",
+  "CREATE_COMPLETE",
   "DELETE_COMPLETE",
   "DELETE_FAILED",
   "ROLLBACK_COMPLETE",
@@ -39,11 +39,23 @@ const STATUSES_FINAL = [
   "UPDATE_COMPLETE",
   "UPDATE_ROLLBACK_COMPLETE",
   "UPDATE_ROLLBACK_FAILED",
-  "SKIPPED",
 ] as const;
+
+const STATUSES_FAILED = [
+  "CREATE_FAILED",
+  "DELETE_FAILED",
+  "ROLLBACK_FAILED",
+  "ROLLBACK_COMPLETE",
+  "UPDATE_ROLLBACK_COMPLETE",
+  "UPDATE_ROLLBACK_FAILED",
+];
 
 export function isFinal(input: string) {
   return STATUSES_FINAL.includes(input as any);
+}
+
+export function isFailed(input: string) {
+  return STATUSES_FAILED.includes(input as any);
 }
 
 declare module "../bus" {
@@ -110,8 +122,12 @@ export async function deployMany(stacks: CloudFormationStackArtifact[]) {
 
   return new Promise<void>(async (resolve) => {
     const finished = bus.subscribe("stack.status", (evt) => {
-      if (!STATUSES_FINAL.includes(evt.properties.status as any)) return;
+      if (!isFinal(evt.properties.status as any)) return;
       complete.add(evt.properties.stackID);
+
+      if (isFailed(evt.properties.status as any))
+        stacks.forEach((s) => todo.delete(s.stackName));
+
       if (complete.size === stacks.length) {
         bus.unsubscribe(finished);
         resolve();

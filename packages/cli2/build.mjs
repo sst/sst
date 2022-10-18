@@ -3,6 +3,23 @@ import fs from "fs/promises";
 
 const pkg = await fs.readFile("package.json").then(JSON.parse);
 
+await esbuild.build({
+  entryPoints: ["support/nodejs-runtime/index.ts"],
+  bundle: true,
+  outdir: "dist/support/nodejs-runtime",
+  metafile: true,
+  platform: "node",
+  target: "esnext",
+  external: [...Object.keys(pkg.dependencies)],
+  format: "esm",
+  outExtension: {
+    ".js": ".mjs",
+  },
+  watch: {
+    onRebuild: console.log,
+  },
+});
+
 const result = await esbuild.build({
   entryPoints: ["src/sst.ts"],
   bundle: true,

@@ -116,7 +116,9 @@ export async function handler(event: any, context: any) {
   }
 
   if (result.type === "function.error") {
-    throw result.properties.body;
+    const error = new Error(result.properties.errorMessage);
+    error.stack = result.properties.errorStack.join("\n");
+    throw error;
   }
 }
 

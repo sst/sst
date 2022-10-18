@@ -55,6 +55,7 @@ const MetadataContext = Context.create(async () => {
   bus.subscribe("stack.status", async (evt) => {
     if (!Stacks.isFinal(evt.properties.status)) return;
     const meta = await metadata(evt.properties.stackID);
+    Logger.debug("Got metadata", meta);
     data[evt.properties.stackID] = meta;
     await cache.write(`metadata.json`, JSON.stringify(data));
     bus.publish("stacks.metadata", data);

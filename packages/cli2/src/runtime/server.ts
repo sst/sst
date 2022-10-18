@@ -34,6 +34,12 @@ export const useRuntimeServer = Context.memo(async () => {
     });
   }
 
+  workers.subscribe("worker.exited", async (evt) => {
+    const waiting = workersWaiting.get(evt.properties.workerID);
+    if (!waiting) return;
+    workersWaiting.delete(evt.properties.workerID);
+  });
+
   bus.subscribe("function.invoked", async (evt) => {
     const worker = workersWaiting.get(evt.properties.workerID);
     if (worker) {

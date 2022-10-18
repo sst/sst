@@ -5,11 +5,13 @@ import { VisibleError } from "../error/index.js";
 
 export const useIOTEndpoint = Context.memo(async () => {
   const iot = await useAWSClient(IoTClient);
+  Logger.debug("Getting IoT endpoint");
   const response = await iot.send(
     new DescribeEndpointCommand({
       endpointType: "iot:Data-ATS",
     })
   );
+  Logger.debug("Using IoT endpoint:", response.endpointAddress);
 
   if (!response.endpointAddress)
     throw new VisibleError("IoT Endpoint address not found");
@@ -21,6 +23,7 @@ import iot from "aws-iot-device-sdk";
 import { EventPayload, Events, EventTypes, useBus } from "../bus/index.js";
 import { useConfig } from "../config/index.js";
 import { Logger } from "../logger/index.js";
+import { logger } from "logger/index";
 
 interface Fragment {
   id: string;

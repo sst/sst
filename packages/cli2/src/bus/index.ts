@@ -31,7 +31,7 @@ export const useBus = Context.memo(() => {
 
   const sourceID = crypto.randomBytes(16).toString("hex");
 
-  return {
+  const result = {
     sourceID,
     publish<Type extends EventTypes>(type: Type, properties: Events[Type]) {
       const payload: EventPayload<Type> = {
@@ -63,5 +63,15 @@ export const useBus = Context.memo(() => {
       subscribers(type).push(sub);
       return sub;
     },
+    forward<T extends EventTypes[]>(..._types: T) {
+      return <Type extends T[number]>(
+        type: Type,
+        cb: (payload: EventPayload<Type>) => void
+      ) => {
+        return this.subscribe(type, cb);
+      };
+    },
   };
+
+  return result;
 });

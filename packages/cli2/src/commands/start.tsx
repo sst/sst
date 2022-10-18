@@ -5,14 +5,19 @@ import { useIOTBridge } from "../runtime/iot.js";
 import { useNodeHandler } from "../runtime/node.js";
 import { useRuntimeServer } from "../runtime/server.js";
 import { Stacks } from "../stacks/index.js";
+import { useMetadata } from "../stacks/metadata.js";
 
 import { DeploymentUI } from "./deploy.js";
 
 export async function start() {
-  await Promise.all([useIOTBridge(), useRuntimeServer(), useNodeHandler()]);
+  await Promise.all([
+    useIOTBridge(),
+    useRuntimeServer(),
+    useNodeHandler(),
+    useMetadata(),
+  ]);
   Logger.ui("green", "Listening for function invocations...");
 
-  /*
   const fn = await Stacks.build();
   const assembly = await Stacks.synth({
     fn,
@@ -26,5 +31,4 @@ export async function start() {
   component.unmount();
   process.stdout.write("\x1b[?1049l");
   Logger.ui("green", "Stacks updated");
-  */
 }

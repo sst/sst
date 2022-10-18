@@ -13,6 +13,7 @@ process.on("uncaughtException", (err) => {
   if (!(err instanceof VisibleError)) {
     console.log(chalk.yellow(err.stack));
   }
+  process.exit(1);
 });
 
 process.on("beforeExit", (code) => {

@@ -6,8 +6,8 @@
     "moduleResolution": "node",
     "outDir": "./dist",
     "allowSyntheticDefaultImports": true,
-    "jsx": "react",
+    "jsx": "react"
   },
-  "include": ["src"],
+  "include": ["src", "support"],
   "exclude": []
 }

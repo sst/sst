@@ -1,5 +1,5 @@
 import { Context } from "@serverless-stack/node/context/index.js";
-import { defaultProvider } from "@aws-sdk/credential-provider-node";
+import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import { Client } from "@aws-sdk/smithy-client";
 import { RegionInputConfig } from "@aws-sdk/config-resolver";
 import { RetryInputConfig } from "@aws-sdk/middleware-retry";
@@ -14,7 +14,8 @@ type Config = RegionInputConfig & RetryInputConfig & AwsAuthInputConfig;
 
 export const useAWSCredentialsProvider = Context.memo(async () => {
   const config = await useConfig();
-  const provider = defaultProvider({
+  Logger.debug("Using AWS profile", config.profile);
+  const provider = fromNodeProviderChain({
     profile: config.profile,
   });
   return provider;
@@ -61,6 +62,7 @@ export async function useAWSClient<C extends Client<any, any, any, any>>(
     }),
   });
   cache.set(client.name, result);
+  Logger.debug("Created AWS client", client.name);
   return result;
 }
 
@@ -71,6 +73,7 @@ const CredentialProviderChain = aws.CredentialProviderChain;
  * Do not use this. It is only used for AWS CDK compatibility.
  */
 export const useAWSProvider = async () => {
+  Logger.debug("Loading v2 AWS SDK");
   const config = await useConfig();
   const creds = await useAWSCredentials();
   const chain = new CredentialProviderChain([
