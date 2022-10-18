@@ -184,9 +184,9 @@ export interface ApiLambdaAuthorizer extends ApiBaseAuthorizer {
   };
 }
 
-export interface ApiCorsProps extends apigV2Cors.CorsProps {}
-export interface ApiDomainProps extends apigV2Domain.CustomDomainProps {}
-export interface ApiAccessLogProps extends apigV2AccessLog.AccessLogProps {}
+export interface ApiCorsProps extends apigV2Cors.CorsProps { }
+export interface ApiDomainProps extends apigV2Domain.CustomDomainProps { }
+export interface ApiAccessLogProps extends apigV2AccessLog.AccessLogProps { }
 
 export interface ApiProps<
   Authorizers extends Record<string, ApiAuthorizer> = Record<
@@ -195,6 +195,10 @@ export interface ApiProps<
   >,
   AuthorizerKeys = keyof Authorizers
 > {
+  /**
+   * Used to override the default id for the construct.
+   */
+  logicalId?: string;
   /**
    * Define the routes for the API. Can be a function, proxy to another API, or point to an ALB
    *
@@ -338,11 +342,11 @@ export interface ApiProps<
      * ```
      */
     authorizer?:
-      | "none"
-      | "iam"
-      | (string extends AuthorizerKeys
-          ? Omit<AuthorizerKeys, "none" | "iam">
-          : AuthorizerKeys);
+    | "none"
+    | "iam"
+    | (string extends AuthorizerKeys
+      ? Omit<AuthorizerKeys, "none" | "iam">
+      : AuthorizerKeys);
     /**
      * An array of scopes to include in the authorization when using `user_pool` or `jwt` authorizers. These will be merged with the scopes from the attached authorizer.
      * @default []
@@ -436,11 +440,11 @@ export type ApiRouteProps<AuthorizerKeys> =
 
 interface ApiBaseRouteProps<AuthorizerKeys = string> {
   authorizer?:
-    | "none"
-    | "iam"
-    | (string extends AuthorizerKeys
-        ? Omit<AuthorizerKeys, "none" | "iam">
-        : AuthorizerKeys);
+  | "none"
+  | "iam"
+  | (string extends AuthorizerKeys
+    ? Omit<AuthorizerKeys, "none" | "iam">
+    : AuthorizerKeys);
   authorizationScopes?: string[];
 }
 
@@ -607,6 +611,7 @@ export class Api<
     ApiAuthorizer
   >
 > extends Construct implements SSTConstruct {
+  public readonly id: string;
   public readonly cdk: {
     /**
      * The internally created CDK HttpApi instance.
@@ -629,21 +634,22 @@ export class Api<
   private _customDomainUrl?: string;
   private routesData: {
     [key: string]:
-      | { type: "function"; function: Fn }
-      | { type: "lambda_function"; function: lambda.IFunction }
-      | ({ type: "pothos"; function: Fn } & Pick<
-          ApiPothosRouteProps<any>,
-          "schema" | "output" | "commands"
-        >)
-      | { type: "url"; url: string }
-      | { type: "alb"; alb: elb.IApplicationListener };
+    | { type: "function"; function: Fn }
+    | { type: "lambda_function"; function: lambda.IFunction }
+    | ({ type: "pothos"; function: Fn } & Pick<
+      ApiPothosRouteProps<any>,
+      "schema" | "output" | "commands"
+    >)
+    | { type: "url"; url: string }
+    | { type: "alb"; alb: elb.IApplicationListener };
   };
   private authorizersData: Record<string, apig.IHttpRouteAuthorizer>;
   private permissionsAttachedForAllRoutes: Permissions[];
 
   constructor(scope: Construct, id: string, props?: ApiProps<Authorizers>) {
-    super(scope, id);
+    super(scope, props?.logicalId || id);
 
+    this.id = id;
     this.props = props || {};
     this.cdk = {} as any;
     this.routesData = {};
@@ -814,6 +820,20 @@ export class Api<
           return { type: data.type, route: key };
         })
       }
+    };
+  }
+
+  /** @internal */
+  public getFunctionBinding() {
+    return {
+      clientPackage: "api",
+      variables: {
+        url: {
+          environment: this.customDomainUrl || this.url,
+          parameter: this.customDomainUrl || this.url,
+        },
+      },
+      permissions: {},
     };
   }
 
@@ -988,7 +1008,7 @@ export class Api<
                 value.responseTypes.map(
                   type =>
                     apigAuthorizers.HttpLambdaResponseType[
-                      type.toUpperCase() as keyof typeof apigAuthorizers.HttpLambdaResponseType
+                    type.toUpperCase() as keyof typeof apigAuthorizers.HttpLambdaResponseType
                     ]
                 ),
               resultsCacheTtl: value.resultsCacheTtl
@@ -1352,7 +1372,7 @@ export class Api<
       !this.props.authorizers ||
       !this.props.authorizers[authorizerKey as string]
     ) {
-      throw new Error(`Cannot find authorizer "${authorizerKey}"`);
+      throw new Error(`Cannot find authorizer "${authorizerKey.toString()}"`);
     }
 
     const authorizer = this.authorizersData[authorizerKey as string];
@@ -1361,7 +1381,7 @@ export class Api<
     const authorizationScopes =
       authorizationType === "jwt" || authorizationType === "user_pool"
         ? routeProps?.authorizationScopes ||
-          this.props.defaults?.authorizationScopes
+        this.props.defaults?.authorizationScopes
         : undefined;
 
     return { authorizationType, authorizer, authorizationScopes };

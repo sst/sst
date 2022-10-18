@@ -1,6 +1,7 @@
 import {
   SSMClient,
   DeleteParameterCommand,
+  GetParameterCommand,
   PutParameterCommand,
 } from "@aws-sdk/client-ssm";
 import crypto from "crypto";
@@ -9,6 +10,10 @@ import { promisify } from "util";
 const generateKeyPair = promisify(crypto.generateKeyPair);
 export async function AuthKeys(cfnRequest: any) {
   const { privatePath, publicPath } = cfnRequest.ResourceProperties;
+  const {
+    privatePath: oldPrivatePath,
+    publicPath: oldPublicPath,
+  } = cfnRequest.OldResourceProperties;
   const client = new SSMClient({});
 
   switch (cfnRequest.RequestType) {
@@ -43,6 +48,38 @@ export async function AuthKeys(cfnRequest: any) {
       ]);
       break;
     case "Update":
+      const [oldPrivateKey, oldPublicKey] = await Promise.all([
+        client.send(
+          new GetParameterCommand({
+            Name: privatePath,
+            WithDecryption: true,
+          })
+        ),
+
+        client.send(
+          new GetParameterCommand({
+            Name: publicPath,
+            WithDecryption: true,
+          })
+        ),
+      ]);
+      await Promise.all([
+        client.send(
+          new PutParameterCommand({
+            Name: privatePath,
+            Value: oldPrivateKey.Parameter?.Value,
+            Type: "SecureString",
+          })
+        ),
+
+        client.send(
+          new PutParameterCommand({
+            Name: publicPath,
+            Value: oldPublicKey.Parameter?.Value,
+            Type: "SecureString",
+          })
+        ),
+      ]);
       break;
     case "Delete":
       await Promise.all([

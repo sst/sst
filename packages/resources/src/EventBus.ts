@@ -180,6 +180,10 @@ export interface EventBusRuleProps {
 }
 
 export interface EventBusProps {
+  /**
+   * Used to override the default id for the construct.
+   */
+  logicalId?: string;
   defaults?: {
     /**
      * The default function props to be applied to all the Lambda functions in the EventBus. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
@@ -259,6 +263,7 @@ export interface EventBusProps {
  * ```
  */
 export class EventBus extends Construct implements SSTConstruct {
+  public readonly id: string;
   public readonly cdk: {
     /**
      * The internally created CDK `EventBus` instance.
@@ -271,8 +276,9 @@ export class EventBus extends Construct implements SSTConstruct {
   private readonly props: EventBusProps;
 
   constructor(scope: Construct, id: string, props?: EventBusProps) {
-    super(scope, id);
+    super(scope, props?.logicalId || id);
 
+    this.id = id;
     this.props = props || {};
     this.cdk = {} as any;
     this.rulesData = {};
@@ -403,6 +409,22 @@ export class EventBus extends Construct implements SSTConstruct {
           targets: Object.values(rule).map(getFunctionRef),
           targetNames: Object.keys(rule),
         })),
+      },
+    };
+  }
+
+  /** @internal */
+  public getFunctionBinding() {
+    return {
+      clientPackage: "event-bus",
+      variables: {
+        name: {
+          environment: this.eventBusName,
+          parameter: this.eventBusName,
+        },
+      },
+      permissions: {
+        "events:*": [this.eventBusArn],
       },
     };
   }

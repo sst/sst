@@ -73,6 +73,21 @@ export interface QueueConsumerProps {
 }
 
 export interface QueueProps {
+  /**
+   * Used to override the default id for the construct.
+   */
+  logicalId?: string;
+  /**
+   * Used to create the consumer for the queue.
+   *
+   * @example
+   * ```js
+   * new Queue(stack, "Queue", {
+   *   consumer: "src/function.handler",
+   * })
+   * ```
+   */
+  consumer?: FunctionInlineDefinition | QueueConsumerProps;
   cdk?: {
     /**
      * Override the default settings this construct uses internally to create the queue.
@@ -91,17 +106,6 @@ export interface QueueProps {
      */
     queue?: sqs.IQueue | sqs.QueueProps;
   };
-  /**
-   * Used to create the consumer for the queue.
-   *
-   * @example
-   * ```js
-   * new Queue(stack, "Queue", {
-   *   consumer: "src/function.handler",
-   * })
-   * ```
-   */
-  consumer?: FunctionInlineDefinition | QueueConsumerProps;
 }
 
 /////////////////////
@@ -122,6 +126,7 @@ export interface QueueProps {
  * ```
  */
 export class Queue extends Construct implements SSTConstruct {
+  public readonly id: string;
   public readonly cdk: {
     /**
      * The internally created CDK `Queue` instance.
@@ -136,8 +141,9 @@ export class Queue extends Construct implements SSTConstruct {
   private props: QueueProps;
 
   constructor(scope: Construct, id: string, props?: QueueProps) {
-    super(scope, id);
+    super(scope, props?.logicalId || id);
 
+    this.id = id;
     this.props = props || {};
     this.cdk = {} as any;
     this.permissionsAttachedForAllConsumers = [];
@@ -273,6 +279,22 @@ export class Queue extends Construct implements SSTConstruct {
         name: this.cdk.queue.queueName,
         url: this.cdk.queue.queueUrl,
         consumer: getFunctionRef(this.consumerFunction),
+      },
+    };
+  }
+
+  /** @internal */
+  public getFunctionBinding() {
+    return {
+      clientPackage: "queue",
+      variables: {
+        name: {
+          environment: this.queueUrl,
+          parameter: this.queueUrl,
+        },
+      },
+      permissions: {
+        "sqs:*": [this.queueArn],
       },
     };
   }

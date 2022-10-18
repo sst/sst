@@ -1,35 +1,58 @@
-import { Config } from "../config";
 import { InvokeCommand, LambdaClient } from "@aws-sdk/client-lambda";
 const lambda = new LambdaClient({});
-const JOB_PREFIX = "SST_JOB_";
+const ENV_PREFIX = "SST_Job_name_";
 
-export interface JobNames { };
+export interface JobResources { };
 
 export interface JobTypes { }
 
-export type JobProps<C extends Extract<keyof JobTypes, keyof JobNames>> = {
-  payload?: JobTypes[C];
+export type JobProps<C> = {
+  payload?: JobTypes[C extends Extract<keyof JobTypes, keyof JobResources> ? JobTypes[C] : any];
 };
 
-async function run<C extends keyof JobNames>(name: C, props?: JobProps<C>) {
-  // Handle job permission not granted
-  let functionName;
-  try {
-    functionName = Config[`SST_JOB_${name}`];
-  } catch (e) {
-    throw new Error(`Cannot invoke the ${name} Job. Please make sure this function has permissions to invoke it.`);
+export const Job = new Proxy<{ [K in keyof JobResources]: ReturnType<typeof JobControl<K>> }>({} as any, {
+  get(target, prop, receiver) {
+    if (!(prop in target)) {
+      throw new Error(`Cannot use Job.${String(prop)}. Please make sure it is bound to this function.`);
+    }
+    return Reflect.get(target, prop, receiver);
   }
+});
 
-  // Invoke the Lambda function
-  const ret = await lambda.send(new InvokeCommand({
-    FunctionName: functionName,
-    Payload: props?.payload === undefined
-      ? undefined
-      : Buffer.from(JSON.stringify(props?.payload)),
-  }));
-  if (ret.FunctionError) {
-    throw new Error(`Failed to invoke the ${name} Job. Error: ${ret.FunctionError}`);
+function JobControl<Name extends keyof JobResources>(name: Name) {
+  return {
+    async run(props: JobProps<Name>) {
+      // Handle job permission not granted
+      const functionName = process.env[`${ENV_PREFIX}${name}`];
+
+      // Invoke the Lambda function
+      const ret = await lambda.send(new InvokeCommand({
+        FunctionName: functionName,
+        Payload: props?.payload === undefined
+          ? undefined
+          : Buffer.from(JSON.stringify(props?.payload)),
+      }));
+      if (ret.FunctionError) {
+        throw new Error(`Failed to invoke the ${name} Job. Error: ${ret.FunctionError}`);
+      }
+    },
   }
+}
+
+parseEnvironment();
+
+function parseEnvironment() {
+  Object.keys(process.env)
+    .filter((key) => key.startsWith(ENV_PREFIX))
+    .forEach((key) => {
+      const name = envNameToTypeName(key);
+      // @ts-ignore
+      Api[name] = JobControl(name);
+    });
+}
+
+function envNameToTypeName(envName: string) {
+  return envName.replace(new RegExp(`^${ENV_PREFIX}`), "");
 }
 
 /**
@@ -50,12 +73,8 @@ async function run<C extends keyof JobNames>(name: C, props?: JobProps<C>) {
  * })
  * ```
  */
-export function JobHandler<C extends keyof JobNames>(name: C, cb: (payload: JobTypes[C]) => void) {
+export function JobHandler<C extends keyof JobResources>(name: C, cb: (payload: JobTypes[C]) => void) {
   return function handler(event: any) {
-    return cb(event as JobTypes[keyof JobNames]);
+    return cb(event as JobTypes[keyof JobResources]);
   };
 }
-
-export const Job = {
-  run,
-};

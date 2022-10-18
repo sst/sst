@@ -85,6 +85,10 @@ export interface TopicFunctionSubscriberProps {
 }
 
 export interface TopicProps {
+  /**
+   * Used to override the default id for the construct.
+   */
+  logicalId?: string;
   defaults?: {
     /**
      * The default function props to be applied to all the consumers in the Topic. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
@@ -152,6 +156,7 @@ export interface TopicProps {
  * ```
  */
 export class Topic extends Construct implements SSTConstruct {
+  public readonly id: string;
   public readonly cdk: {
     /**
      * The internally created CDK `Topic` instance.
@@ -163,8 +168,9 @@ export class Topic extends Construct implements SSTConstruct {
   private props: TopicProps;
 
   constructor(scope: Construct, id: string, props?: TopicProps) {
-    super(scope, id);
+    super(scope, props?.logicalId || id);
 
+    this.id = id;
     this.props = props || {};
     this.cdk = {} as any;
     this.subscribers = {};
@@ -242,10 +248,10 @@ export class Topic extends Construct implements SSTConstruct {
     scope: Construct,
     subscribers: {
       [subscriberName: string]:
-        | FunctionInlineDefinition
-        | TopicFunctionSubscriberProps
-        | Queue
-        | TopicQueueSubscriberProps;
+      | FunctionInlineDefinition
+      | TopicFunctionSubscriberProps
+      | Queue
+      | TopicQueueSubscriberProps;
     }
   ): void {
     Object.entries(subscribers).forEach(([subscriberName, subscriber]) => {
@@ -310,6 +316,22 @@ export class Topic extends Construct implements SSTConstruct {
         // TODO: Deprecate eventually and mirror KinesisStream
         subscribers: Object.values(this.subscribers).map(getFunctionRef),
         subscriberNames: Object.keys(this.subscribers),
+      },
+    };
+  }
+
+  /** @internal */
+  public getFunctionBinding() {
+    return {
+      clientPackage: "topic",
+      variables: {
+        "arn": {
+          environment: this.topicArn,
+          parameter: this.topicArn,
+        },
+      },
+      permissions: {
+        "sns:*": [this.topicArn],
       },
     };
   }

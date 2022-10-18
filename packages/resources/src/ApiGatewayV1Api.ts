@@ -38,7 +38,7 @@ const allowedMethods = [
 /////////////////////
 
 export interface ApiGatewayV1ApiAccessLogProps
-  extends apigV1AccessLog.AccessLogProps {}
+  extends apigV1AccessLog.AccessLogProps { }
 
 export interface ApiGatewayV1ApiProps<
   Authorizers extends Record<string, ApiGatewayV1ApiAuthorizer> = Record<
@@ -47,51 +47,10 @@ export interface ApiGatewayV1ApiProps<
   >,
   AuthorizerKeys = keyof Authorizers
 > {
-  cdk?: {
-    /**
-     * Override the internally created rest api
-     *
-     * @example
-     * ```js
-     *
-     * new ApiGatewayV1Api(stack, "Api", {
-     *   cdk: {
-     *     restApi: {
-     *       description: "My api"
-     *     }
-     *   }
-     * });
-     * ```
-     */
-    restApi?: apig.IRestApi | apig.RestApiProps;
-    /**
-     * If you are importing an existing API Gateway REST API project, you can import existing route paths by providing a list of paths with their corresponding resource ids.
-     *
-     * @example
-     * ```js
-     * import { RestApi } from "aws-cdk-lib/aws-apigateway";
-     *
-     * new ApiGatewayV1Api(stack, "Api", {
-     *   cdk: {
-     *     restApi: RestApi.fromRestApiAttributes(stack, "ImportedApi", {
-     *       restApiId,
-     *       rootResourceId,
-     *     }),
-     *     importedPaths: {
-     *       "/notes": "slx2bn",
-     *       "/users": "uu8xs3",
-     *     },
-     *   }
-     * });
-     * ```
-     *
-     * API Gateway REST API is structured in a tree structure:
-     * - Each path part is a separate API Gateway resource object.
-     * - And a path part is a child resource of the preceding part.
-     * So the part path /notes, is a child resource of the root resource /. And /notes/{noteId} is a child resource of /notes. If /notes has been created in the imported API, you have to import it before creating the /notes/{noteId} child route.
-     */
-    importedPaths?: { [path: string]: string };
-  };
+  /**
+   * Used to override the default id for the construct.
+   */
+  logicalId?: string;
   /**
    * Define the routes for the API. Can be a function, proxy to another API, or point to an ALB
    *
@@ -223,14 +182,59 @@ export interface ApiGatewayV1ApiProps<
      * ```
      */
     authorizer?:
-      | "none"
-      | "iam"
-      | (string extends AuthorizerKeys ? never : AuthorizerKeys);
+    | "none"
+    | "iam"
+    | (string extends AuthorizerKeys ? never : AuthorizerKeys);
     /**
      * An array of scopes to include in the authorization when using `user_pool` or `jwt` authorizers. These will be merged with the scopes from the attached authorizer.
      * @default []
      */
     authorizationScopes?: string[];
+  };
+  cdk?: {
+    /**
+     * Override the internally created rest api
+     *
+     * @example
+     * ```js
+     *
+     * new ApiGatewayV1Api(stack, "Api", {
+     *   cdk: {
+     *     restApi: {
+     *       description: "My api"
+     *     }
+     *   }
+     * });
+     * ```
+     */
+    restApi?: apig.IRestApi | apig.RestApiProps;
+    /**
+     * If you are importing an existing API Gateway REST API project, you can import existing route paths by providing a list of paths with their corresponding resource ids.
+     *
+     * @example
+     * ```js
+     * import { RestApi } from "aws-cdk-lib/aws-apigateway";
+     *
+     * new ApiGatewayV1Api(stack, "Api", {
+     *   cdk: {
+     *     restApi: RestApi.fromRestApiAttributes(stack, "ImportedApi", {
+     *       restApiId,
+     *       rootResourceId,
+     *     }),
+     *     importedPaths: {
+     *       "/notes": "slx2bn",
+     *       "/users": "uu8xs3",
+     *     },
+     *   }
+     * });
+     * ```
+     *
+     * API Gateway REST API is structured in a tree structure:
+     * - Each path part is a separate API Gateway resource object.
+     * - And a path part is a child resource of the preceding part.
+     * So the part path /notes, is a child resource of the root resource /. And /notes/{noteId} is a child resource of /notes. If /notes has been created in the imported API, you have to import it before creating the /notes/{noteId} child route.
+     */
+    importedPaths?: { [path: string]: string };
   };
 }
 
@@ -254,9 +258,9 @@ export type ApiGatewayV1ApiRouteProps<AuthorizerKeys> =
 export interface ApiGatewayV1ApiFunctionRouteProps<AuthorizerKeys = never> {
   function: FunctionDefinition;
   authorizer?:
-    | "none"
-    | "iam"
-    | (string extends AuthorizerKeys ? never : AuthorizerKeys);
+  | "none"
+  | "iam"
+  | (string extends AuthorizerKeys ? never : AuthorizerKeys);
   authorizationScopes?: string[];
   cdk?: {
     method?: Omit<
@@ -527,14 +531,14 @@ export interface ApiGatewayV1ApiCustomDomainProps {
  * ```
  */
 export class ApiGatewayV1Api<
-    Authorizers extends Record<string, ApiGatewayV1ApiAuthorizer> = Record<
-      string,
-      never
-    >
+  Authorizers extends Record<string, ApiGatewayV1ApiAuthorizer> = Record<
+    string,
+    never
   >
+>
   extends Construct
-  implements SSTConstruct
-{
+  implements SSTConstruct {
+  public readonly id: string;
   public readonly cdk: {
     /**
      * The internally created rest API
@@ -566,8 +570,9 @@ export class ApiGatewayV1Api<
     id: string,
     props?: ApiGatewayV1ApiProps<Authorizers>
   ) {
-    super(scope, id);
+    super(scope, props?.logicalId || id);
 
+    this.id = id;
     this.props = props || {};
     this.cdk = {} as any;
     this.functions = {};
@@ -724,6 +729,20 @@ export class ApiGatewayV1Api<
           };
         }),
       },
+    };
+  }
+
+  /** @internal */
+  public getFunctionBinding() {
+    return {
+      clientPackage: "api",
+      variables: {
+        url: {
+          environment: this.customDomainUrl || this.url,
+          parameter: this.customDomainUrl || this.url,
+        },
+      },
+      permissions: {},
     };
   }
 
@@ -1043,7 +1062,7 @@ export class ApiGatewayV1Api<
         endpointType:
           endpointType &&
           apig.EndpointType[
-            endpointType.toLocaleUpperCase() as keyof typeof apig.EndpointType
+          endpointType.toLocaleUpperCase() as keyof typeof apig.EndpointType
           ],
         mtls: mtls && {
           ...mtls,
@@ -1053,8 +1072,8 @@ export class ApiGatewayV1Api<
           securityPolicy === "TLS 1.0"
             ? apig.SecurityPolicy.TLS_1_0
             : securityPolicy === "TLS 1.2"
-            ? apig.SecurityPolicy.TLS_1_2
-            : undefined,
+              ? apig.SecurityPolicy.TLS_1_2
+              : undefined,
       });
       this.cdk.domainName = apigDomainName;
 
@@ -1275,8 +1294,8 @@ export class ApiGatewayV1Api<
     ///////////////////
     const routeProps = Fn.isInlineDefinition(routeValue)
       ? ({ function: routeValue } as ApiGatewayV1ApiFunctionRouteProps<
-          keyof Authorizers
-        >)
+        keyof Authorizers
+      >)
       : (routeValue as ApiGatewayV1ApiFunctionRouteProps<keyof Authorizers>);
     const lambda = Fn.fromDefinition(
       scope,
@@ -1336,7 +1355,7 @@ export class ApiGatewayV1Api<
     }
 
     if (!this.props.authorizers || !this.props.authorizers[authorizerKey]) {
-      throw new Error(`Cannot find authorizer "${authorizerKey}"`);
+      throw new Error(`Cannot find authorizer "${authorizerKey.toString()}"`);
     }
 
     const authorizer = this.authorizersData[authorizerKey as string];

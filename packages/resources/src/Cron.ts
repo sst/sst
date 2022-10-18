@@ -34,6 +34,10 @@ export interface CronJobProps {
 
 export interface CronProps {
   /**
+   * Used to override the default id for the construct.
+   */
+  logicalId?: string;
+  /**
    * The definition of the function to be executed.
    *
    * @example
@@ -119,6 +123,7 @@ export interface CronProps {
  * ```
  */
 export class Cron extends Construct implements SSTConstruct {
+  public readonly id: string;
   public readonly cdk: {
     /**
      * The internally created CDK EventBridge Rule instance.
@@ -132,8 +137,9 @@ export class Cron extends Construct implements SSTConstruct {
   private props: CronProps;
 
   constructor(scope: Construct, id: string, props: CronProps) {
-    super(scope, id);
+    super(scope, props.logicalId || id);
 
+    this.id = id;
     this.props = props;
     this.cdk = {} as any;
 
@@ -161,6 +167,11 @@ export class Cron extends Construct implements SSTConstruct {
         job: getFunctionRef(this.jobFunction),
       },
     };
+  }
+
+  /** @internal */
+  public getFunctionBinding() {
+    return undefined;
   }
 
   private createEventsRule() {

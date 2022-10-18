@@ -36,6 +36,7 @@ import {
   buildErrorResponsesForRedirectToIndex,
 } from "./BaseSite.js";
 import { SSTConstruct, isCDKConstruct } from "./Construct.js";
+import { FunctionBindingProps, getParameterPath } from "./util/functionBinding.js";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -46,40 +47,10 @@ export interface StaticSiteFileOptions {
 }
 
 export interface StaticSiteProps {
-  cdk?: {
-    /**
-     * Allows you to override default settings this construct uses internally to ceate the bucket
-     *
-     * @example
-     * ```js
-     * new StaticSite(stack, "Site", {
-     *   path: "path/to/src",
-     *   cdk: {
-     *     bucket: {
-     *       bucketName: "mybucket",
-     *     },
-     *   }
-     * });
-     * ```
-     */
-    bucket?: s3.BucketProps | s3.IBucket;
-    /**
-     * Configure the internally created CDK `Distribution` instance.
-     *
-     * @example
-     * ```js
-     * new StaticSite(stack, "Site", {
-     *   path: "path/to/src",
-     *   cdk: {
-     *     distribution: {
-     *       comment: "Distribution for my React website",
-     *     },
-     *   }
-     * });
-     * ```
-     */
-    distribution?: StaticSiteCdkDistributionProps;
-  };
+  /**
+   * Used to override the default id for the construct.
+   */
+  logicalId?: string;
   /**
    * Path to the directory where the website source is located.
    *
@@ -261,12 +232,46 @@ export interface StaticSiteProps {
    * ```
    */
   waitForInvalidation?: boolean;
+  cdk?: {
+    /**
+     * Allows you to override default settings this construct uses internally to ceate the bucket
+     *
+     * @example
+     * ```js
+     * new StaticSite(stack, "Site", {
+     *   path: "path/to/src",
+     *   cdk: {
+     *     bucket: {
+     *       bucketName: "mybucket",
+     *     },
+     *   }
+     * });
+     * ```
+     */
+    bucket?: s3.BucketProps | s3.IBucket;
+    /**
+     * Configure the internally created CDK `Distribution` instance.
+     *
+     * @example
+     * ```js
+     * new StaticSite(stack, "Site", {
+     *   path: "path/to/src",
+     *   cdk: {
+     *     distribution: {
+     *       comment: "Distribution for my React website",
+     *     },
+     *   }
+     * });
+     * ```
+     */
+    distribution?: StaticSiteCdkDistributionProps;
+  };
 }
 
-export interface StaticSiteDomainProps extends BaseSiteDomainProps {}
-export interface StaticSiteReplaceProps extends BaseSiteReplaceProps {}
+export interface StaticSiteDomainProps extends BaseSiteDomainProps { }
+export interface StaticSiteReplaceProps extends BaseSiteReplaceProps { }
 export interface StaticSiteCdkDistributionProps
-  extends BaseSiteCdkDistributionProps {}
+  extends BaseSiteCdkDistributionProps { }
 
 /////////////////////
 // Construct
@@ -288,6 +293,7 @@ export interface StaticSiteCdkDistributionProps
  * ```
  */
 export class StaticSite extends Construct implements SSTConstruct {
+  public readonly id: string;
   public readonly cdk: {
     /**
      * The internally created CDK `Bucket` instance.
@@ -313,8 +319,9 @@ export class StaticSite extends Construct implements SSTConstruct {
   private awsCliLayer: AwsCliLayer;
 
   constructor(scope: Construct, id: string, props: StaticSiteProps) {
-    super(scope, id);
+    super(scope, props.logicalId || id);
 
+    this.id = id;
     const root = scope.node.root as App;
     // Local development or skip build => stub asset
     this.isPlaceholder =
@@ -322,8 +329,8 @@ export class StaticSite extends Construct implements SSTConstruct {
     const buildDir = root.buildDir;
     const fileSizeLimit = root.isRunningSSTTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
-        props.sstTestFileSizeLimitOverride || 200
+      // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
+      props.sstTestFileSizeLimitOverride || 200
       : 200;
 
     this.props = props;
@@ -422,6 +429,29 @@ export class StaticSite extends Construct implements SSTConstruct {
     };
   }
 
+  /** @internal */
+  public getFunctionBinding(): FunctionBindingProps {
+    const app = this.node.root as App;
+    return {
+      clientPackage: "site",
+      variables: {
+        url: {
+          // Do not set real value b/c we don't want to make the Lambda function
+          // depend on the Site. B/c often the site depends on the Api, causing
+          // a CloudFormation circular dependency if the Api and the Site belong
+          // to different stacks.
+          environment: "1",
+          parameter: this.customDomainUrl || this.url,
+        },
+      },
+      permissions: {
+        "ssm:GetParameters": [
+          `arn:aws:ssm:${app.region}:${app.account}:parameter${getParameterPath(this)}/url`,
+        ],
+      },
+    };
+  }
+
   private buildApp() {
     if (this.isPlaceholder) {
       return;
@@ -432,8 +462,7 @@ export class StaticSite extends Construct implements SSTConstruct {
     // validate site path exists
     if (!fs.existsSync(sitePath)) {
       throw new Error(
-        `No path found at "${path.resolve(sitePath)}" for the "${
-          this.node.id
+        `No path found at "${path.resolve(sitePath)}" for the "${this.node.id
         }" StaticSite.`
       );
     }

@@ -154,6 +154,10 @@ export interface BucketTopicNotificationProps
 
 export interface BucketProps {
   /**
+   * Used to override the default id for the construct.
+   */
+  logicalId?: string;
+  /**
    * The name of the bucket.
    *
    * Note that it's not recommended to hard code a name for the bucket, because they must be globally unique.
@@ -262,6 +266,7 @@ export interface BucketProps {
  * ```
  */
 export class Bucket extends Construct implements SSTConstruct {
+  public readonly id: string;
   public readonly cdk: {
     /**
      * The internally created CDK `Bucket` instance.
@@ -273,8 +278,9 @@ export class Bucket extends Construct implements SSTConstruct {
   readonly props: BucketProps;
 
   constructor(scope: Construct, id: string, props?: BucketProps) {
-    super(scope, id);
+    super(scope, props?.logicalId || id);
 
+    this.id = id;
     this.props = props || {};
     this.cdk = {} as any;
     this.notifications = {};
@@ -389,6 +395,22 @@ export class Bucket extends Construct implements SSTConstruct {
         name: this.cdk.bucket.bucketName,
         notifications: Object.values(this.notifications).map(getFunctionRef),
         notificationNames: Object.keys(this.notifications),
+      },
+    };
+  }
+
+  /** @internal */
+  public getFunctionBinding() {
+    return {
+      clientPackage: "bucket",
+      variables: {
+        name: {
+          environment: this.bucketName,
+          parameter: this.bucketName,
+        },
+      },
+      permissions: {
+        "s3:*": [this.bucketArn, `${this.bucketArn}/*`],
       },
     };
   }

@@ -272,6 +272,10 @@ export interface AppSyncApiResolverProps {
 
 export interface AppSyncApiProps {
   /**
+   * Used to override the default id for the construct.
+   */
+  logicalId?: string;
+  /**
    * The GraphQL schema definition.
    *
    * @example
@@ -406,6 +410,7 @@ export interface AppSyncApiCdkGraphqlProps
  * ```
  */
 export class AppSyncApi extends Construct implements SSTConstruct {
+  public readonly id: string;
   public readonly cdk: {
     /**
      * The internally created appsync api
@@ -428,8 +433,9 @@ export class AppSyncApi extends Construct implements SSTConstruct {
   readonly permissionsAttachedForAllFunctions: Permissions[];
 
   constructor(scope: Construct, id: string, props?: AppSyncApiProps) {
-    super(scope, id);
+    super(scope, props?.logicalId || id);
 
+    this.id = id;
     this.props = props || {};
     this.cdk = {} as any;
     this.functionsByDsKey = {};
@@ -654,6 +660,20 @@ export class AppSyncApi extends Construct implements SSTConstruct {
           fn: getFunctionRef(this.functionsByDsKey[key]),
         })),
       },
+    };
+  }
+
+  /** @internal */
+  public getFunctionBinding() {
+    return {
+      clientPackage: "api",
+      variables: {
+        url: {
+          environment: this.customDomainUrl || this.url,
+          parameter: this.customDomainUrl || this.url,
+        },
+      },
+      permissions: {},
     };
   }
 

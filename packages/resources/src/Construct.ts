@@ -1,7 +1,10 @@
 import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
+import * as iam from "aws-cdk-lib/aws-iam";
+import * as ssm from "aws-cdk-lib/aws-ssm";
 import { Function as Fn } from "aws-cdk-lib/aws-lambda";
 import { Stack } from "./Stack.js";
+import { FunctionBindingProps } from "./util/functionBinding.js";
 
 const JSII_RTTI_SYMBOL_1 = Symbol.for("jsii.rtti");
 
@@ -15,8 +18,10 @@ export interface SSTConstructMetadata<
   local?: L;
 }
 
-export interface SSTConstruct {
+export interface SSTConstruct extends Construct {
+  id: string;
   getConstructMetadata(): SSTConstructMetadata;
+  getFunctionBinding(): FunctionBindingProps | undefined;
 }
 
 export function getFunctionRef(fn?: any) {
@@ -36,7 +41,7 @@ export function isStackConstruct(construct: any): construct is cdk.Stack {
 }
 
 export function isSSTConstruct(construct: any): construct is SSTConstruct {
-  return "getConstructMetadata" in construct;
+  return typeof construct === "object" && "getConstructMetadata" in construct;
 }
 
 export function isSSTDebugStack(construct: any): construct is cdk.Stack {

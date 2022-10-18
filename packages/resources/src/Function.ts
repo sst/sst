@@ -16,10 +16,11 @@ import { State, Runtime, DeferBuilder } from "@serverless-stack/core";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Job } from "./Job.js";
-import { Secret, Parameter, configToEnvironmentVariables, configToPolicyStatement } from "./Config.js";
-import { SSTConstruct } from "./Construct.js";
+import { Secret, Parameter } from "./Config.js";
+import { isSSTConstruct, SSTConstruct } from "./Construct.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
+import { bindEnvironment, bindParameters, bindPermissions } from "./util/functionBinding.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import * as functionUrlCors from "./util/functionUrlCors.js";
 
@@ -67,6 +68,10 @@ export interface FunctionProps
     | "architecture"
     | "logRetention"
   > {
+  /**
+   * Used to override the default id for the construct.
+   */
+  logicalId?: string;
   /**
    * The CPU architecture of the lambda function.
    *
@@ -213,21 +218,6 @@ export interface FunctionProps
    * ```js
    * new Function(stack, "Function", {
    *   handler: "src/function.handler",
-   *   config: [
-   *     STRIPE_KEY,
-   *     API_URL,
-   *   ]
-   * })
-   * ```
-   */
-  config?: (Secret | Parameter)[];
-  /**
-   * Configure environment variables for the function
-   *
-   * @example
-   * ```js
-   * new Function(stack, "Function", {
-   *   handler: "src/function.handler",
    *   environment: {
    *     TABLE_NAME: table.tableName,
    *   }
@@ -249,6 +239,35 @@ export interface FunctionProps
    *```
    */
   bundle?: FunctionBundleProp;
+  /**
+   * Configure environment variables for the function
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
+   *   use: [STRIPE_KEY, bucket],
+   * })
+   * ```
+   */
+  use?: SSTConstruct[];
+  /**
+   * Configure environment variables for the function
+   *
+   * @deprecated Use `use` instead
+   * 
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
+   *   config: [
+   *     STRIPE_KEY,
+   *     API_URL,
+   *   ]
+   * })
+   * ```
+   */
+  config?: (Secret | Parameter)[];
   /**
    * Attaches the given list of permissions to the function. Configuring this property is equivalent to calling `attachPermissions()` after the function is created.
    *
@@ -700,7 +719,10 @@ export interface FunctionBundleCopyFilesProps {
  * ```
  */
 export class Function extends lambda.Function implements SSTConstruct {
+  public readonly id: string;
   public readonly _isLiveDevEnabled: boolean;
+  /** @internal */
+  public _isCreatedImplicitly?: boolean;
   private readonly localId: string;
   private functionUrl?: lambda.FunctionUrl;
   private props: FunctionProps;
@@ -804,7 +826,7 @@ export class Function extends lambda.Function implements SSTConstruct {
       }
 
       if (app.debugBridge) {
-        super(scope, id, {
+        super(scope, props?.logicalId || id, {
           ...props,
           architecture,
           code: lambda.Code.fromAsset(
@@ -829,7 +851,7 @@ export class Function extends lambda.Function implements SSTConstruct {
           ...(debugOverrideProps || {}),
         });
       } else {
-        super(scope, id, {
+        super(scope, props?.logicalId || id, {
           ...props,
           architecture,
           code: lambda.Code.fromAsset(
@@ -875,7 +897,7 @@ export class Function extends lambda.Function implements SSTConstruct {
     else if (app.skipBuild) {
       // Note: need to override runtime as CDK does not support inline code
       //       for some runtimes.
-      super(scope, id, {
+      super(scope, props?.logicalId || id, {
         ...props,
         architecture,
         code: lambda.Code.fromInline("export function placeholder() {}"),
@@ -893,7 +915,7 @@ export class Function extends lambda.Function implements SSTConstruct {
     }
     // Handle build
     else {
-      super(scope, id, {
+      super(scope, props?.logicalId || id, {
         ...props,
         architecture,
         code: lambda.Code.fromInline("export function placeholder() {}"),
@@ -948,6 +970,7 @@ export class Function extends lambda.Function implements SSTConstruct {
       })
     }
 
+    this.id = id;
     this.props = props || {};
 
     if (isNodeRuntime) {
@@ -965,6 +988,7 @@ export class Function extends lambda.Function implements SSTConstruct {
     this.addEnvironment("SST_APP", app.name, { removeInEdge: true });
     this.addEnvironment("SST_STAGE", app.stage, { removeInEdge: true });
     this.addConfig(props.config || []);
+    this.use(props.use || []);
 
     this.createUrl();
 
@@ -986,6 +1010,57 @@ export class Function extends lambda.Function implements SSTConstruct {
   }
 
   /**
+   * Use additional constructs
+   *
+   * @example
+   * ```js
+   * const STRIPE_KEY = new Config.Secret(stack, "STRIPE_KEY");
+   *
+   * fn.use([STRIPE_KEY]);
+   * ```
+   */
+  public use(constructs: SSTConstruct[]): void {
+    const app = this.node.root as App;
+
+    constructs.forEach(c => {
+      // Bind environment
+      const env = bindEnvironment(c);
+      Object.entries(env).forEach(([key, value]) =>
+        this.addEnvironment(key, value)
+      );
+
+      // Bind parameters
+      bindParameters(c);
+
+      // Bind permissions
+      const permissions = bindPermissions(c);
+      Object.entries(permissions).forEach(([action, resources]) =>
+        this.attachPermissions([new iam.PolicyStatement({
+          actions: [action],
+          effect: iam.Effect.ALLOW,
+          resources,
+        })])
+      )
+    });
+  }
+
+  /**
+   * Attaches additional configs to function
+   * @deprecated Use `use` instead
+   * @example
+   * ```js
+   * const STRIPE_KEY = new Config.Secret(stack, "STRIPE_KEY");
+   *
+   * fn.addConfig([STRIPE_KEY]);
+   * ```
+   */
+  public addConfig(config: (Secret | Parameter)[]): void {
+    const app = this.node.root as App;
+    this.use(config);
+    app.reportWarning("usingConfig");
+  }
+
+  /**
    * Attaches additional permissions to function
    *
    * @example
@@ -1003,47 +1078,44 @@ export class Function extends lambda.Function implements SSTConstruct {
     if (permissions !== "*") {
       permissions
         .filter((p) => p instanceof Job)
-        .forEach((p) => this.addConfig([(p as Job)._jobParameter]));
+        .forEach((p) => this.use([p as Job]));
+    }
+
+    // Warn user if SST constructs are passed into permissions
+    if (permissions !== "*" && permissions.some((p) => isSSTConstruct(p))) {
+      const app = this.node.root as App;
+      app.reportWarning("usingPermissionsWithSSTConstruct");
     }
   }
 
-  /**
-   * Attaches additional configs to function
-   *
-   * @example
-   * ```js
-   * const STRIPE_KEY = new Config.Secret(stack, "STRIPE_KEY");
-   *
-   * fn.addConfig([STRIPE_KEY]);
-   * ```
-   */
-  public addConfig(config: (Secret | Parameter)[]): void {
-    const app = this.node.root as App;
-
-    // Add environment variables
-    const env = configToEnvironmentVariables(config);
-    Object.entries(env).forEach(([key, value]) =>
-      this.addEnvironment(key, value)
-    );
-
-    // Attach permissions
-    const policyStatement = configToPolicyStatement(app, config);
-    if (policyStatement) {
-      this.attachPermissions([policyStatement]);
-    }
-  }
-
+  /** @internal */
   public getConstructMetadata() {
-    const { config } = this.props;
+    const { config, use } = this.props;
 
     return {
       type: "Function" as const,
       data: {
         localId: this.localId,
         arn: this.functionArn,
-        secrets: (config || [])
+        secrets: ([...(config || []), ...(use || [])])
           .filter((c) => c instanceof Secret)
-          .map((c) => c.name),
+          .map((c) => (c as Secret).name),
+      },
+    };
+  }
+
+  /** @internal */
+  public getFunctionBinding() {
+    return {
+      clientPackage: "function",
+      variables: {
+        "name": {
+          environment: this.functionName,
+          parameter: this.functionName,
+        },
+      },
+      permissions: {
+        "lambda:*": [this.functionArn],
       },
     };
   }
@@ -1203,10 +1275,12 @@ export class Function extends lambda.Function implements SSTConstruct {
     inheritErrorMessage?: string
   ): Function {
     if (typeof definition === "string") {
-      return new Function(scope, id, {
+      const fn = new Function(scope, id, {
         ...(inheritedProps || {}),
         handler: definition,
       });
+      fn._isCreatedImplicitly = true;
+      return fn;
     } else if (definition instanceof Function) {
       if (inheritedProps && Object.keys(inheritedProps).length > 0) {
         throw new Error(
@@ -1220,11 +1294,13 @@ export class Function extends lambda.Function implements SSTConstruct {
         `Please use sst.Function instead of lambda.Function for the "${id}" Function.`
       );
     } else if ((definition as FunctionProps).handler !== undefined) {
-      return new Function(
+      const fn = new Function(
         scope,
         id,
         Function.mergeProps(inheritedProps, definition)
       );
+      fn._isCreatedImplicitly = true;
+      return fn;
     }
     throw new Error(`Invalid function definition for the "${id}" Function`);
   }
@@ -1249,6 +1325,10 @@ export class Function extends lambda.Function implements SSTConstruct {
     const config = [...(baseProps?.config || []), ...(props?.config || [])];
     const configProp = config.length === 0 ? {} : { config };
 
+    // Merge config
+    const use = [...(baseProps?.use || []), ...(props?.use || [])];
+    const useProp = use.length === 0 ? {} : { use };
+
     // Merge permissions
     let permissionsProp;
     if (baseProps?.permissions === "*") {
@@ -1265,6 +1345,7 @@ export class Function extends lambda.Function implements SSTConstruct {
     return {
       ...(baseProps || {}),
       ...(props || {}),
+      ...useProp,
       ...configProp,
       ...layersProp,
       ...environmentProp,

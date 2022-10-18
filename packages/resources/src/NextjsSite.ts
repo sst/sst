@@ -42,40 +42,19 @@ import {
 } from "./BaseSite.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import { getHandlerHash } from "./util/builder.js";
+import { FunctionBindingProps, getParameterPath } from "./util/functionBinding.js";
 import * as crossRegionHelper from "./nextjs-site/cross-region-helper.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
-export interface NextjsDomainProps extends BaseSiteDomainProps {}
+export interface NextjsDomainProps extends BaseSiteDomainProps { }
 export interface NextjsCdkDistributionProps
-  extends BaseSiteCdkDistributionProps {}
+  extends BaseSiteCdkDistributionProps { }
 export interface NextjsSiteProps {
-  cdk?: {
-    /**
-     * Allows you to override default settings this construct uses internally to ceate the bucket
-     */
-    bucket?: s3.BucketProps | s3.IBucket;
-    /**
-     * Pass in a value to override the default settings this construct uses to create the CDK `Distribution` internally.
-     */
-    distribution?: NextjsCdkDistributionProps;
-    /**
-     * Override the default CloudFront cache policies created internally.
-     */
-    cachePolicies?: {
-      staticCachePolicy?: cloudfront.ICachePolicy;
-      imageCachePolicy?: cloudfront.ICachePolicy;
-      lambdaCachePolicy?: cloudfront.ICachePolicy;
-    };
-    /**
-     * Override the default CloudFront image origin request policy created internally
-     */
-    imageOriginRequestPolicy?: cloudfront.IOriginRequestPolicy;
-    /**
-     * Override the default settings this construct uses to create the CDK `Queue` internally.
-     */
-    regenerationQueue?: sqs.QueueProps;
-  };
+  /**
+   * Used to override the default id for the construct.
+   */
+  logicalId?: string;
   /**
    * Path to the directory where the website source is located.
    */
@@ -178,6 +157,32 @@ export interface NextjsSiteProps {
      */
     afterBuild?: string[];
   };
+  cdk?: {
+    /**
+     * Allows you to override default settings this construct uses internally to ceate the bucket
+     */
+    bucket?: s3.BucketProps | s3.IBucket;
+    /**
+     * Pass in a value to override the default settings this construct uses to create the CDK `Distribution` internally.
+     */
+    distribution?: NextjsCdkDistributionProps;
+    /**
+     * Override the default CloudFront cache policies created internally.
+     */
+    cachePolicies?: {
+      staticCachePolicy?: cloudfront.ICachePolicy;
+      imageCachePolicy?: cloudfront.ICachePolicy;
+      lambdaCachePolicy?: cloudfront.ICachePolicy;
+    };
+    /**
+     * Override the default CloudFront image origin request policy created internally
+     */
+    imageOriginRequestPolicy?: cloudfront.IOriginRequestPolicy;
+    /**
+     * Override the default settings this construct uses to create the CDK `Queue` internally.
+     */
+    regenerationQueue?: sqs.QueueProps;
+  };
 }
 
 /////////////////////
@@ -198,6 +203,7 @@ export interface NextjsSiteProps {
  * ```
  */
 export class NextjsSite extends Construct implements SSTConstruct {
+  public readonly id: string;
   /**
    * The default CloudFront cache policy properties for static pages.
    */
@@ -287,8 +293,9 @@ export class NextjsSite extends Construct implements SSTConstruct {
   private regenerationFunction: lambda.Function;
 
   constructor(scope: Construct, id: string, props: NextjsSiteProps) {
-    super(scope, id);
+    super(scope, props.logicalId || id);
 
+    this.id = id;
     const app = scope.node.root as App;
     // Local development or skip build => stub asset
     this.isPlaceholder =
@@ -296,8 +303,8 @@ export class NextjsSite extends Construct implements SSTConstruct {
     const buildDir = app.buildDir;
     const fileSizeLimit = app.isRunningSSTTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
-        props.sstTestFileSizeLimitOverride || 200
+      // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
+      props.sstTestFileSizeLimitOverride || 200
       : 200;
 
     this.props = props;
@@ -429,6 +436,29 @@ export class NextjsSite extends Construct implements SSTConstruct {
       data: {
         distributionId: this.cdk.distribution.distributionId,
         customDomainUrl: this.customDomainUrl,
+      },
+    };
+  }
+
+  /** @internal */
+  public getFunctionBinding(): FunctionBindingProps {
+    const app = this.node.root as App;
+    return {
+      clientPackage: "site",
+      variables: {
+        url: {
+          // Do not set real value b/c we don't want to make the Lambda function
+          // depend on the Site. B/c often the site depends on the Api, causing
+          // a CloudFormation circular dependency if the Api and the Site belong
+          // to different stacks.
+          environment: "1",
+          parameter: this.customDomainUrl || this.url,
+        },
+      },
+      permissions: {
+        "ssm:GetParameters": [
+          `arn:aws:ssm:${app.region}:${app.account}:parameter${getParameterPath(this)}/url`,
+        ],
       },
     };
   }
@@ -867,8 +897,8 @@ export class NextjsSite extends Construct implements SSTConstruct {
     const app = this.node.root as App;
     const buildOutput = app.isRunningSSTTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
-        props.sstTestBuildOutputPath || this.runBuild()
+      // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+      props.sstTestBuildOutputPath || this.runBuild()
       : this.runBuild();
 
     this.runAfterBuild();
@@ -882,8 +912,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     // validate site path exists
     if (!fs.existsSync(sitePath)) {
       throw new Error(
-        `No path found at "${path.resolve(sitePath)}" for the "${
-          this.node.id
+        `No path found at "${path.resolve(sitePath)}" for the "${this.node.id
         }" NextjsSite.`
       );
     }

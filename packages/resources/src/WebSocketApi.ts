@@ -25,43 +25,15 @@ import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog.js";
 /////////////////////
 
 export interface WebSocketApiDomainProps
-  extends apigV2Domain.CustomDomainProps {}
+  extends apigV2Domain.CustomDomainProps { }
 export interface WebSocketApiAccessLogProps
-  extends apigV2AccessLog.AccessLogProps {}
+  extends apigV2AccessLog.AccessLogProps { }
 
 export interface WebSocketApiProps {
-  cdk?: {
-    /**
-     * Override the internally created WebSocket API
-     *
-     * @example
-     * ```js
-     * new WebSocketApi(stack, "WebSocketApi", {
-     *   cdk: {
-     *     webSocketApi: {
-     *       apiName: "my-websocket-api"
-     *     }
-     *   }
-     * })
-     * ```
-     */
-    webSocketApi?: apig.IWebSocketApi | apig.WebSocketApiProps;
-    /**
-     * Override the internally created WebSocket Stage
-     *
-     * @example
-     * ```js
-     * new WebSocketApi(stack, "WebSocketApi", {
-     *   cdk: {
-     *     webSocketStage: {
-     *       autoDeploy: false
-     *     }
-     *   }
-     * })
-     * ```
-     */
-    webSocketStage?: apig.IWebSocketStage | WebSocketApiCdkStageProps;
-  };
+  /**
+   * Used to override the default id for the construct.
+   */
+  logicalId?: string;
   /**
    * The routes for the Websocket API
    *
@@ -167,6 +139,38 @@ export interface WebSocketApiProps {
      */
     function?: FunctionProps;
   };
+  cdk?: {
+    /**
+     * Override the internally created WebSocket API
+     *
+     * @example
+     * ```js
+     * new WebSocketApi(stack, "WebSocketApi", {
+     *   cdk: {
+     *     webSocketApi: {
+     *       apiName: "my-websocket-api"
+     *     }
+     *   }
+     * })
+     * ```
+     */
+    webSocketApi?: apig.IWebSocketApi | apig.WebSocketApiProps;
+    /**
+     * Override the internally created WebSocket Stage
+     *
+     * @example
+     * ```js
+     * new WebSocketApi(stack, "WebSocketApi", {
+     *   cdk: {
+     *     webSocketStage: {
+     *       autoDeploy: false
+     *     }
+     *   }
+     * })
+     * ```
+     */
+    webSocketStage?: apig.IWebSocketStage | WebSocketApiCdkStageProps;
+  };
 }
 
 /**
@@ -241,6 +245,7 @@ export interface WebSocketApiCdkStageProps
  * ```
  */
 export class WebSocketApi extends Construct implements SSTConstruct {
+  public readonly id: string;
   public readonly cdk: {
     /**
      * The internally created websocket api
@@ -274,8 +279,9 @@ export class WebSocketApi extends Construct implements SSTConstruct {
   private props: WebSocketApiProps;
 
   constructor(scope: Construct, id: string, props?: WebSocketApiProps) {
-    super(scope, id);
+    super(scope, props?.logicalId || id);
 
+    this.id = id;
     this.props = props || {};
     this.cdk = {} as any;
     this.functions = {};
@@ -428,6 +434,20 @@ export class WebSocketApi extends Construct implements SSTConstruct {
           fn: getFunctionRef(fn),
         })),
       },
+    };
+  }
+
+  /** @internal */
+  public getFunctionBinding() {
+    return {
+      clientPackage: "api",
+      variables: {
+        url: {
+          environment: this.customDomainUrl || this.url,
+          parameter: this.customDomainUrl || this.url,
+        },
+      },
+      permissions: {},
     };
   }
 

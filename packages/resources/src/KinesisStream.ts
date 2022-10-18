@@ -62,6 +62,10 @@ export interface KinesisStreamConsumerProps {
 }
 
 export interface KinesisStreamProps {
+  /**
+   * Used to override the default id for the construct.
+   */
+  logicalId?: string;
   defaults?: {
     /**
      * The default function props to be applied to all the Lambda functions in the API. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
@@ -140,6 +144,7 @@ export interface KinesisStreamProps {
  * ```
  */
 export class KinesisStream extends Construct implements SSTConstruct {
+  public readonly id: string;
   public readonly cdk: {
     /**
      * Return internally created Kinesis Stream
@@ -151,8 +156,9 @@ export class KinesisStream extends Construct implements SSTConstruct {
   private readonly props: KinesisStreamProps;
 
   constructor(scope: Construct, id: string, props?: KinesisStreamProps) {
-    super(scope, id);
+    super(scope, props?.logicalId || id);
 
+    this.id = id;
     this.props = props || {};
     this.cdk = {} as any;
     this.functions = {};
@@ -196,8 +202,8 @@ export class KinesisStream extends Construct implements SSTConstruct {
     scope: Construct,
     consumers: {
       [consumerName: string]:
-        | FunctionInlineDefinition
-        | KinesisStreamConsumerProps;
+      | FunctionInlineDefinition
+      | KinesisStreamConsumerProps;
     }
   ): void {
     Object.keys(consumers).forEach((consumerName: string) => {
@@ -263,6 +269,22 @@ export class KinesisStream extends Construct implements SSTConstruct {
           name,
           fn: getFunctionRef(fn),
         })),
+      },
+    };
+  }
+
+  /** @internal */
+  public getFunctionBinding() {
+    return {
+      clientPackage: "kinesis-stream",
+      variables: {
+        name: {
+          environment: this.streamName,
+          parameter: this.streamName,
+        },
+      },
+      permissions: {
+        "kinesis:*": [this.streamArn],
       },
     };
   }

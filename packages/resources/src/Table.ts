@@ -65,8 +65,8 @@ export interface TableLocalIndexProps {
    * @default "all"
    */
   projection?:
-    | Lowercase<keyof Pick<typeof dynamodb.ProjectionType, "ALL" | "KEYS_ONLY">>
-    | string[];
+  | Lowercase<keyof Pick<typeof dynamodb.ProjectionType, "ALL" | "KEYS_ONLY">>
+  | string[];
   cdk?: {
     /**
      * Override the settings of the internally created local secondary indexes
@@ -89,8 +89,8 @@ export interface TableGlobalIndexProps {
    * @default "all"
    */
   projection?:
-    | Lowercase<keyof Pick<typeof dynamodb.ProjectionType, "ALL" | "KEYS_ONLY">>
-    | string[];
+  | Lowercase<keyof Pick<typeof dynamodb.ProjectionType, "ALL" | "KEYS_ONLY">>
+  | string[];
   cdk?: {
     /**
      * Override the settings of the internally created global secondary index
@@ -105,6 +105,10 @@ export interface TableGlobalIndexProps {
 type TableFieldType = Lowercase<keyof typeof dynamodb.AttributeType>;
 
 export interface TableProps {
+  /**
+   * Used to override the default id for the construct.
+   */
+  logicalId?: string;
   /**
    * An object defining the fields of the table. Key is the name of the field and the value is the type.
    *
@@ -267,8 +271,8 @@ export interface TableProps {
      * Override the settings of the internally created cdk table
      */
     table?:
-      | dynamodb.ITable
-      | Omit<dynamodb.TableProps, "partitionKey" | "sortKey">;
+    | dynamodb.ITable
+    | Omit<dynamodb.TableProps, "partitionKey" | "sortKey">;
   };
 }
 
@@ -296,6 +300,7 @@ export interface TableProps {
  * ```
  */
 export class Table extends Construct implements SSTConstruct {
+  public readonly id: string;
   public readonly cdk: {
     /**
      * The internally created CDK `Table` instance.
@@ -310,8 +315,9 @@ export class Table extends Construct implements SSTConstruct {
   private fields?: Record<string, TableFieldType>;
 
   constructor(scope: Construct, id: string, props: TableProps) {
-    super(scope, id);
+    super(scope, props.logicalId || id);
 
+    this.id = id;
     this.props = props;
     const { fields, globalIndexes, localIndexes, kinesisStream } = this.props;
     this.cdk = {} as any;
@@ -413,7 +419,7 @@ export class Table extends Construct implements SSTConstruct {
           return {
             projectionType:
               dynamodb.ProjectionType[
-                projection.toUpperCase() as keyof typeof dynamodb.ProjectionType
+              projection.toUpperCase() as keyof typeof dynamodb.ProjectionType
               ],
           };
         })(),
@@ -471,7 +477,7 @@ export class Table extends Construct implements SSTConstruct {
           return {
             projectionType:
               dynamodb.ProjectionType[
-                projection.toUpperCase() as keyof typeof dynamodb.ProjectionType
+              projection.toUpperCase() as keyof typeof dynamodb.ProjectionType
               ],
           };
         })(),
@@ -554,6 +560,7 @@ export class Table extends Construct implements SSTConstruct {
     return this.functions[consumerName];
   }
 
+  /** @internal */
   public getConstructMetadata() {
     return {
       type: "Table" as const,
@@ -563,6 +570,22 @@ export class Table extends Construct implements SSTConstruct {
           name,
           fn: getFunctionRef(fun),
         })),
+      },
+    };
+  }
+
+  /** @internal */
+  public getFunctionBinding() {
+    return {
+      clientPackage: "table",
+      variables: {
+        "name": {
+          environment: this.tableName,
+          parameter: this.tableName,
+        },
+      },
+      permissions: {
+        "dynamodb:*": [this.tableArn, `${this.tableArn}/*`],
       },
     };
   }

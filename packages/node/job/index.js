@@ -1,27 +1,46 @@
-import { Config } from "../config";
 import { InvokeCommand, LambdaClient } from "@aws-sdk/client-lambda";
 const lambda = new LambdaClient({});
-const JOB_PREFIX = "SST_JOB_";
+const ENV_PREFIX = "SST_Job_name_";
 ;
-async function run(name, props) {
-    // Handle job permission not granted
-    let functionName;
-    try {
-        functionName = Config[`SST_JOB_${name}`];
+export const Job = new Proxy;
+ > ({}, {
+    get(target, prop, receiver) {
+        if (!(prop in target)) {
+            throw new Error(`Cannot use Job.${String(prop)}. Please make sure it is bound to this function.`);
+        }
+        return Reflect.get(target, prop, receiver);
     }
-    catch (e) {
-        throw new Error(`Cannot invoke the ${name} Job. Please make sure this function has permissions to invoke it.`);
-    }
-    // Invoke the Lambda function
-    const ret = await lambda.send(new InvokeCommand({
-        FunctionName: functionName,
-        Payload: props?.payload === undefined
-            ? undefined
-            : Buffer.from(JSON.stringify(props?.payload)),
-    }));
-    if (ret.FunctionError) {
-        throw new Error(`Failed to invoke the ${name} Job. Error: ${ret.FunctionError}`);
-    }
+});
+function JobControl(name) {
+    return {
+        async run(props) {
+            // Handle job permission not granted
+            const functionName = process.env[`${ENV_PREFIX}${name}`];
+            // Invoke the Lambda function
+            const ret = await lambda.send(new InvokeCommand({
+                FunctionName: functionName,
+                Payload: props?.payload === undefined
+                    ? undefined
+                    : Buffer.from(JSON.stringify(props?.payload)),
+            }));
+            if (ret.FunctionError) {
+                throw new Error(`Failed to invoke the ${name} Job. Error: ${ret.FunctionError}`);
+            }
+        },
+    };
+}
+parseEnvironment();
+function parseEnvironment() {
+    Object.keys(process.env)
+        .filter((key) => key.startsWith(ENV_PREFIX))
+        .forEach((key) => {
+        const name = envNameToTypeName(key);
+        // @ts-ignore
+        Api[name] = JobControl(name);
+    });
+}
+function envNameToTypeName(envName) {
+    return envName.replace(new RegExp(`^${ENV_PREFIX}`), "");
 }
 /**
  * Create a new job handler.
@@ -46,6 +65,3 @@ export function JobHandler(name, cb) {
         return cb(event);
     };
 }
-export const Job = {
-    run,
-};

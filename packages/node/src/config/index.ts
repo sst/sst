@@ -1,16 +1,18 @@
 import { GetParametersCommand, SSMClient, Parameter } from "@aws-sdk/client-ssm";
 const ssm = new SSMClient({});
 
-const SECRET_ENV_PREFIX = "SST_SECRET_";
-const PARAM_ENV_PREFIX = "SST_PARAM_";
+const SECRET_ENV_PREFIX = "SST_Secret_";
+const PARAM_ENV_PREFIX = "SST_Parameter_";
 const SECRET_SSM_PREFIX = `/sst/${process.env.SST_APP}/${process.env.SST_STAGE}/secrets/`;
 const SECRET_FALLBACK_SSM_PREFIX = `/sst/${process.env.SST_APP}/.fallback/secrets/`;
 
-export interface ConfigType {};
-export const Config = new Proxy<ConfigType>({} as any, {
+export interface ConfigTypes { };
+export interface ParameterResources { };
+export interface SecretResources { };
+export const Config = new Proxy<ConfigTypes & ParameterResources & SecretResources>({} as any, {
   get(target, prop, receiver) {
     if (!(prop in target)) {
-      throw new Error(`Config.${String(prop)} has not been set for this function.`);
+      throw new Error(`Config.${String(prop)} has not been bound for this function.`);
     }
     return Reflect.get(target, prop, receiver);
   }
