@@ -70,6 +70,7 @@ On `sst deploy`, the environment variables will first be replaced by placeholder
 Since the actual values are determined at deploy time, you should not rely on the values at build time. For example, you cannot fetch from `process.env.API_URL` inside `getStaticProps()` at build time.
 
 There are a couple of work arounds:
+- [Prefix the environment variable with `NEXT_PUBLIC_`](https://nextjs.org/docs/basic-features/environment-variables#exposing-environment-variables-to-the-browser) so it becomes available in the browser.
 - Hardcode the API URL
 - Read the API URL dynamically at build time (ie. from an SSM value)
 - Use [fallback pages](https://nextjs.org/docs/basic-features/data-fetching#fallback-pages) to generate the page on the fly
