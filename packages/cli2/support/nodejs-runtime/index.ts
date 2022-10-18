@@ -6,10 +6,10 @@ const input = workerData;
 const ext = path.extname(input.handler);
 const file = path.join(input.out, input.handler.replace(ext, ".mjs"));
 
-let fn: any;
+let mod: any;
 
 try {
-  fn = await import(file);
+  mod = await import(file);
 } catch (ex: any) {
   await fetch(`${input.url}/runtime/init/error`, {
     method: "POST",
@@ -19,7 +19,7 @@ try {
     body: JSON.stringify({
       errorType: "Error",
       errorMessage: ex.message,
-      stackTrace: ex.trace?.split("\n"),
+      trace: ex.stack?.split("\n"),
     }),
   });
 }
@@ -34,7 +34,7 @@ while (true) {
     const result = await fetch(`${input.url}/runtime/invocation/next`);
     const body = await result.json();
 
-    const response = await fn[ext.substring(1)](body);
+    const response = await mod[ext.substring(1)](body);
 
     await fetch(`${input.url}/runtime/invocation/whatever/response`, {
       method: "POST",
@@ -44,6 +44,7 @@ while (true) {
       body: JSON.stringify(response),
     });
   } catch (ex: any) {
+    console.log(ex);
     await fetch(`${input.url}/runtime/invocation/whatever/error`, {
       method: "POST",
       headers: {
@@ -52,7 +53,7 @@ while (true) {
       body: JSON.stringify({
         errorType: "Error",
         errorMessage: ex.message,
-        stackTrace: ex.trace?.split("\n"),
+        trace: ex.stack?.split("\n"),
       }),
     });
   }

@@ -24,7 +24,6 @@ export const useNodeHandler = Context.memo(async () => {
     },
     startWorker: async (input) => {
       new Promise(async () => {
-        process.chdir(input.out);
         const worker = new Worker(
           url.fileURLToPath(
             new URL("./support/nodejs-runtime/index.mjs", import.meta.url)
@@ -88,6 +87,8 @@ export const useNodeHandler = Context.memo(async () => {
         platform: "node",
         format: "esm",
         target: "esnext",
+        mainFields: ["module", "main"],
+        external: ["mjml"],
         bundle: true,
         metafile: true,
         banner: {

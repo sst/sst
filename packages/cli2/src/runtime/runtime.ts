@@ -21,7 +21,7 @@ declare module "../bus/index.js" {
       functionID: string;
       errorType: string;
       errorMessage: string;
-      stackTrace: string[];
+      trace: string[];
     };
   }
 }

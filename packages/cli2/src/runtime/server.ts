@@ -139,7 +139,7 @@ export const useRuntimeServer = Context.memo(async () => {
         functionID: worker.functionID,
         errorType: req.body.errorType,
         errorMessage: req.body.errorMessage,
-        stackTrace: req.body.trace,
+        trace: req.body.trace,
       });
       res.status(202).send();
     }
