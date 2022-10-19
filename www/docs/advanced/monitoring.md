@@ -40,24 +40,33 @@ yarn add --dev datadog-cdk-constructs
 </TabItem>
 </MultiPackagerCode>
 
-Next, you'll need to import it into a stack. Add pass in the functions you want monitored.
+Next, to monitor all the functions in an app, add the following at the bootom of the `main()` function in your `stacks/index.ts` file.
 
-```ts title="stacks/Foo.js"
+```ts title="stacks/index.ts"
 import { Datadog } from "datadog-cdk-constructs";
+import { CfnFunction } from "aws-cdk-lib/aws-lambda";
 
-const datadog = new Datadog(stack, "Datadog", {
-  nodeLayerVersion: 65,
-  extensionLayerVersion: 13,
-  apiKey: "<DATADOG_API_KEY>",
-});
+if (!app.local) {
+  const runDeferredBuildsBk = app.runDeferredBuilds;
+  app.runDeferredBuilds = async () => {
+    await runDeferredBuildsBk();
 
-datadog.addLambdaFunctions([myfunc]);
-```
+    // Loop through each stack in the app
+    app.node.children.forEach((stack) => {
+      if (stack instanceof sst.Stack) {
 
-To monitor all the functions in a stack, you can use the `Stack` construct's [`getAllFunctions`](constructs/Stack.md#getallfunctions) method and do the following at the bottom of your stack definition.
+        const datadog = new Datadog(stack, "Datadog", {
+          nodeLayerVersion: 65,
+          extensionLayerVersion: 13,
+          apiKey: "<DATADOG_API_KEY>",
+        });
 
-```ts
-datadog.addLambdaFunctions(stack.getAllFunctions());
+        // Monitor all the functions in the stack
+        datadog.addLambdaFunctions(stack.getAllFunctions());
+      }
+    });
+  }
+}
 ```
 
 For more details, [check out the Datadog docs](https://docs.datadoghq.com/serverless/installation/nodejs/?tab=awscdk).
@@ -210,26 +219,37 @@ To enable Lambda monitoring, you'll need to add a layer to the functions you wan
 
 With the layer ARN, you can use the layer construct in your CDK code. To ensure the Lambda function is instrumented correctly, the function handler must be set to the handler provided by the New Relic layer. Note we only want to enable this when the function is deployed, not in [Live Lambda Dev](live-lambda-development.md) as the layer will prevent the debugger from connecting.
 
-```ts title="stacks/Foo.js"
+Add the following at the bootom of the `main()` function in your `stacks/index.ts` file.
+
+```ts title="stacks/index.ts"
 import { CfnFunction, LayerVersion } from "aws-cdk-lib/aws-lambda";
 
-const newRelicLayer = LayerVersion.fromLayerVersionArn(
-  stack,
-  "NewRelicLayer",
-  "<ARN>>"
-);
+if (!app.local) {
+  const runDeferredBuildsBk = app.runDeferredBuilds;
+  app.runDeferredBuilds = async () => {
+    await runDeferredBuildsBk();
 
-// Configure New Relic handler wrapper if not in local mode
-if (!scope.local) {
-  this.getAllFunctions().map((fn) => {
-    const cfnFunction = fn.node.defaultChild as CfnFunction;
+    // Loop through each stack in the app
+    app.node.children.forEach((stack) => {
+      if (stack instanceof sst.Stack) {
 
-    if (cfnFunction.handler) {
-      fn.addEnvironment("NEW_RELIC_LAMBDA_HANDLER", cfnFunction.handler);
-    }
+        const newRelicLayer = LayerVersion.fromLayerVersionArn(
+          stack,
+          "NewRelicLayer",
+          "<ARN>>"
+        );
 
-    cfnFunction.handler = "newrelic-lambda-wrapper.handler";
-  });
+        child.getAllFunctions().forEach((fn) => {
+          const cfnFunction = fn.node.defaultChild as CfnFunction;
+          if (cfnFunction.handler) {
+            fn.addEnvironment("NEW_RELIC_LAMBDA_HANDLER", cfnFunction.handler);
+          }
+
+          cfnFunction.handler = "newrelic-lambda-wrapper.handler";
+        });
+      }
+    });
+  }
 }
 ```
 
