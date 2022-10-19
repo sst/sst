@@ -1,6 +1,6 @@
-import { createProxy, parseEnvironment } from "../util";
 import { GetParametersCommand, SSMClient, Parameter } from "@aws-sdk/client-ssm";
 const ssm = new SSMClient({});
+import { createProxy, parseEnvironment } from "../util";
 
 const SECRET_SSM_PREFIX = `/sst/${process.env.SST_APP}/${process.env.SST_STAGE}/secrets/`;
 const SECRET_FALLBACK_SSM_PREFIX = `/sst/${process.env.SST_APP}/.fallback/secrets/`;
@@ -49,19 +49,19 @@ async function replaceSecretsWithRealValues() {
   ssmParams.push(...results.validParams);
   if (results.invalidParams.length > 0) {
     // Fetch fallback
-    const missingNames = results.invalidParams.map(ssmNameToConfigName);
+    const missingNames = results.invalidParams.map(ssmNameToConstructId);
     const missingResults = await loadSecrets(SECRET_FALLBACK_SSM_PREFIX, missingNames);
     ssmParams.push(...missingResults.validParams);
     if (missingResults.invalidParams.length > 0) {
       throw new Error(
-        `The following secrets were not found: ${names.join(", ")}`
+        `The following secrets were not found: ${missingNames.join(", ")}`
       );
     }
   }
 
   // Store all secrets in a map
   for (const item of ssmParams) {
-    const name = ssmNameToConfigName(item.Name!);
+    const name = ssmNameToConstructId(item.Name!);
     // @ts-ignore
     secrets[name] = item.Value!;
   }
@@ -91,6 +91,6 @@ async function loadSecrets(prefix: string, keys: string[]) {
   return { validParams, invalidParams };
 }
 
-function ssmNameToConfigName(ssmName: string) {
+function ssmNameToConstructId(ssmName: string) {
   return ssmName.split("/").pop()!;
 }

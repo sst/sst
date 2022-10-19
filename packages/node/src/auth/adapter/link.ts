@@ -6,7 +6,7 @@ import {
   usePath,
   useQueryParam,
   useQueryParams,
-} from "../../context/http.js";
+} from "../../api/index.js";
 import { createAdapter } from "./adapter.js";
 
 interface LinkConfig {

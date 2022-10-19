@@ -1,5 +1,5 @@
 import { Handler } from "../context/handler.js";
-import { useDomainName, usePath } from "../context/http.js";
+import { useDomainName, usePath } from "../api/index.js";
 import { Adapter } from "./adapter/adapter.js";
 
 /**

@@ -13,12 +13,12 @@ export function parseEnvironment(constructName, props) {
     Object.keys(process.env)
         .filter((env) => env.startsWith(buildEnvPrefix(constructName, props[0])))
         .forEach((env) => {
+        const name = env.replace(new RegExp(`^${buildEnvPrefix(constructName, props[0])}`), "");
+        // @ts-ignore
+        acc[name] = {};
         props.forEach((prop) => {
-            const name = env.replace(new RegExp(`^${buildEnvPrefix(constructName, prop)}`), "");
             // @ts-ignore
-            acc[name] = acc[name] || {};
-            // @ts-ignore
-            acc[name][prop] = process.env[env];
+            acc[name][prop] = process.env[`${buildEnvPrefix(constructName, prop)}${name}`];
         });
     });
     return acc;

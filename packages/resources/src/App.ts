@@ -528,7 +528,15 @@ export class App extends cdk.App {
         const className = c.constructor.name;
         const id = c.id;
         const existingIds = ids[className] || new Set();
-        if (["Permission", "Secret"].includes(className)
+        if (!id.match(/^[a-zA-Z]([a-zA-Z0-9_])+$/)) {
+          exitWithMessage([
+            ``,
+            `ERROR: Invalid id "${id}" for ${className} construct.`,
+            ``,
+            `Starting v1.16.0, constructs ids may only contain alphabetic characters and underscores ("_"), and must start with an alphabetic character. If you are migrating from version 1.15.16 or earlier, please see the migration guide — https://docs.serverless-stack.com/migration-guides/v1.15.16`,
+          ].join("\n"));
+        }
+        else if (["Permission", "Secret"].includes(className)
           && (ids.Secret?.has(id) || ids.Permission?.has(id))) {
           throw new Error(`Config ${id} already exists.`);
         }

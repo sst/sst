@@ -4,9 +4,9 @@ export interface ReactStaticSiteResources {
 }
 export interface ViteStaticSiteResources {
 }
-export interface RemixSiteResources {
-}
 export interface NextjsSiteResources {
+}
+export interface RemixSiteResources {
 }
 export declare const StaticSite: StaticSiteResources;
 export declare const ReactStaticSite: ReactStaticSiteResources;
