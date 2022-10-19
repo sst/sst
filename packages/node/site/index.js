@@ -1,0 +1,11 @@
+import { createProxy, parseEnvironment } from "../util";
+export const StaticSite = createProxy("StaticSite");
+export const ReactStaticSite = createProxy("ReactStaticSite");
+export const ViteStaticSite = createProxy("ViteStaticSite");
+export const RemixSite = createProxy("RemixSite");
+export const NextjsSite = createProxy("NextjsSite");
+Object.assign(StaticSite, parseEnvironment("StaticSite", ["url"]));
+Object.assign(ReactStaticSite, parseEnvironment("ReactStaticSite", ["url"]));
+Object.assign(ViteStaticSite, parseEnvironment("ViteStaticSite", ["url"]));
+Object.assign(RemixSite, parseEnvironment("RemixSite", ["url"]));
+Object.assign(NextjsSite, parseEnvironment("NextjsSite", ["url"]));

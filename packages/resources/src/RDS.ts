@@ -300,7 +300,7 @@ export class RDS extends Construct implements SSTConstruct {
           environment: this.secretArn,
           parameter: this.secretArn
         },
-        database: {
+        defaultDatabase: {
           environment: this.defaultDatabaseName,
           parameter: this.defaultDatabaseName
         }

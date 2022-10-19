@@ -325,7 +325,7 @@ export class Topic extends Construct implements SSTConstruct {
     return {
       clientPackage: "topic",
       variables: {
-        "arn": {
+        "topicArn": {
           environment: this.topicArn,
           parameter: this.topicArn,
         },

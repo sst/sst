@@ -1,21 +1,18 @@
+import { createProxy, parseEnvironment } from "../util";
 import { InvokeCommand, LambdaClient } from "@aws-sdk/client-lambda";
 const lambda = new LambdaClient({});
-const ENV_PREFIX = "SST_Job_name_";
-;
-export const Job = new Proxy;
- > ({}, {
-    get(target, prop, receiver) {
-        if (!(prop in target)) {
-            throw new Error(`Cannot use Job.${String(prop)}. Please make sure it is bound to this function.`);
-        }
-        return Reflect.get(target, prop, receiver);
-    }
+export const Job = createProxy("Job");
+const jobData = parseEnvironment("Job", ["functionName"]);
+Object.keys(jobData).forEach((name) => {
+    // @ts-ignore
+    Job[name] = JobControl(name);
 });
 function JobControl(name) {
     return {
         async run(props) {
             // Handle job permission not granted
-            const functionName = process.env[`${ENV_PREFIX}${name}`];
+            // @ts-ignore
+            const functionName = jobData[name].functionName;
             // Invoke the Lambda function
             const ret = await lambda.send(new InvokeCommand({
                 FunctionName: functionName,
@@ -28,19 +25,6 @@ function JobControl(name) {
             }
         },
     };
-}
-parseEnvironment();
-function parseEnvironment() {
-    Object.keys(process.env)
-        .filter((key) => key.startsWith(ENV_PREFIX))
-        .forEach((key) => {
-        const name = envNameToTypeName(key);
-        // @ts-ignore
-        Api[name] = JobControl(name);
-    });
-}
-function envNameToTypeName(envName) {
-    return envName.replace(new RegExp(`^${ENV_PREFIX}`), "");
 }
 /**
  * Create a new job handler.

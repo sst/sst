@@ -579,7 +579,7 @@ export class Table extends Construct implements SSTConstruct {
     return {
       clientPackage: "table",
       variables: {
-        "name": {
+        "tableName": {
           environment: this.tableName,
           parameter: this.tableName,
         },

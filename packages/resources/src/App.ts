@@ -522,9 +522,8 @@ export class App extends cdk.App {
 
     class EnsureUniqueConstructIds implements cdk.IAspect {
       public visit(c: IConstruct): void {
-        if (!isSSTConstruct(c)) {
-          return;
-        }
+        if (!isSSTConstruct(c)) { return; }
+        if (c instanceof Function && c._disableBind) { return; }
 
         const className = c.constructor.name;
         const id = c.id;
@@ -622,7 +621,7 @@ declare module "@serverless-stack/node/config" {
     class CodegenTypes implements cdk.IAspect {
       public visit(c: IConstruct): void {
         if (!isSSTConstruct(c)) { return; }
-        if (c instanceof Function && c._isCreatedImplicitly) { return; }
+        if (c instanceof Function && c._disableBind) { return; }
 
         const binding = bindType(c);
         if (!binding) { return; }

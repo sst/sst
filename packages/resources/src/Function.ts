@@ -722,7 +722,7 @@ export class Function extends lambda.Function implements SSTConstruct {
   public readonly id: string;
   public readonly _isLiveDevEnabled: boolean;
   /** @internal */
-  public _isCreatedImplicitly?: boolean;
+  public _disableBind?: boolean;
   private readonly localId: string;
   private functionUrl?: lambda.FunctionUrl;
   private props: FunctionProps;
@@ -1057,7 +1057,10 @@ export class Function extends lambda.Function implements SSTConstruct {
   public addConfig(config: (Secret | Parameter)[]): void {
     const app = this.node.root as App;
     this.use(config);
-    app.reportWarning("usingConfig");
+
+    if (config.length > 0) {
+      app.reportWarning("usingConfig");
+    }
   }
 
   /**
@@ -1109,7 +1112,7 @@ export class Function extends lambda.Function implements SSTConstruct {
     return {
       clientPackage: "function",
       variables: {
-        "name": {
+        functionName: {
           environment: this.functionName,
           parameter: this.functionName,
         },
@@ -1279,7 +1282,7 @@ export class Function extends lambda.Function implements SSTConstruct {
         ...(inheritedProps || {}),
         handler: definition,
       });
-      fn._isCreatedImplicitly = true;
+      fn._disableBind = true;
       return fn;
     } else if (definition instanceof Function) {
       if (inheritedProps && Object.keys(inheritedProps).length > 0) {
@@ -1299,7 +1302,7 @@ export class Function extends lambda.Function implements SSTConstruct {
         id,
         Function.mergeProps(inheritedProps, definition)
       );
-      fn._isCreatedImplicitly = true;
+      fn._disableBind = true;
       return fn;
     }
     throw new Error(`Invalid function definition for the "${id}" Function`);

@@ -288,7 +288,7 @@ export class Queue extends Construct implements SSTConstruct {
     return {
       clientPackage: "queue",
       variables: {
-        name: {
+        queueUrl: {
           environment: this.queueUrl,
           parameter: this.queueUrl,
         },

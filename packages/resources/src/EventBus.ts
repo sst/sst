@@ -418,7 +418,7 @@ export class EventBus extends Construct implements SSTConstruct {
     return {
       clientPackage: "event-bus",
       variables: {
-        name: {
+        eventBusName: {
           environment: this.eventBusName,
           parameter: this.eventBusName,
         },

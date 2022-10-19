@@ -278,7 +278,7 @@ export class KinesisStream extends Construct implements SSTConstruct {
     return {
       clientPackage: "kinesis-stream",
       variables: {
-        name: {
+        streamName: {
           environment: this.streamName,
           parameter: this.streamName,
         },

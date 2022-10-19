@@ -404,7 +404,7 @@ export class Bucket extends Construct implements SSTConstruct {
     return {
       clientPackage: "bucket",
       variables: {
-        name: {
+        bucketName: {
           environment: this.bucketName,
           parameter: this.bucketName,
         },

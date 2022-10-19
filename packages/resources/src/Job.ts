@@ -234,7 +234,7 @@ export class Job extends Construct implements SSTConstruct {
     return {
       clientPackage: "job",
       variables: {
-        name: {
+        functionName: {
           environment: this._jobInvoker.functionName,
           parameter: this._jobInvoker.functionName,
         },
@@ -273,7 +273,10 @@ export class Job extends Construct implements SSTConstruct {
   public addConfig(config: (Secret | Parameter)[]): void {
     const app = this.node.root as App;
     this.use(config);
-    app.reportWarning("usingConfig");
+
+    if (config.length > 0) {
+      app.reportWarning("usingConfig");
+    }
   }
 
   /**
@@ -451,7 +454,7 @@ export class Job extends Construct implements SSTConstruct {
       },
       permissions,
     });
-    fn._isCreatedImplicitly = true;
+    fn._disableBind = true;
     return fn;
   }
 
