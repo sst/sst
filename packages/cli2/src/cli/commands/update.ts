@@ -1,8 +1,8 @@
-import { useProjectRoot } from "../config/index.js";
+import { useProjectRoot } from "../../config/index.js";
 import fs from "fs/promises";
 import path from "path";
 import { fetch } from "undici";
-import { Logger } from "../logger/index.js";
+import { Logger } from "../../logger/index.js";
 
 interface Opts {
   version?: string;

@@ -6,6 +6,8 @@ export interface Events {}
 
 export type EventTypes = keyof Events;
 
+const DO_NOT_LOG = new Set<keyof Events>(["stacks.metadata"]);
+
 export type EventPayload<Type extends EventTypes = EventTypes> = {
   type: Type;
   sourceID: string;
@@ -40,7 +42,9 @@ export const useBus = Context.memo(() => {
         sourceID,
       };
 
-      Logger.debug(`Publishing event ${JSON.stringify(payload)}`);
+      if (!DO_NOT_LOG.has(type)) {
+        Logger.debug(`Publishing event ${JSON.stringify(payload)}`);
+      }
 
       for (const sub of subscribers(type)) sub.cb(payload);
     },

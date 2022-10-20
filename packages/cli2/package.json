@@ -29,12 +29,15 @@
     "@aws-sdk/client-sts": "3.145.0",
     "@aws-sdk/credential-providers": "^3.145.0",
     "@caporal/core": "^2.0.2",
-    "aws-cdk-lib": "2.39.1",
-    "@serverless-stack/resources": "1.15.13",
     "@serverless-stack/node": "1.15.13",
+    "@serverless-stack/resources": "1.15.13",
+    "aws-cdk-lib": "2.39.1",
     "aws-iot-device-sdk": "^2.2.12",
     "aws-sdk": "2.1224.0",
+    "colorette": "^2.0.19",
     "esbuild": "0.15.9",
+    "ink": "^3.2.0",
+    "ink-spinner": "^4.0.3",
     "promptly": "^3.2.0",
     "react": "^18.2.0",
     "solid-ink": "^0.0.6",
@@ -42,9 +45,7 @@
     "undici": "^5.8.2",
     "vite": "^3.0.5",
     "vite-node": "^0.21.1",
-    "vite-plugin-solid": "^2.3.0",
-    "ink": "^3.2.0",
-    "ink-spinner": "^4.0.3"
+    "vite-plugin-solid": "^2.3.0"
   },
   "devDependencies": {
     "@tsconfig/node16": "^1.0.3",

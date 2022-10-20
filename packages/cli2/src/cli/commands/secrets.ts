@@ -1,6 +1,6 @@
 import { GetParametersByPathCommand, SSMClient } from "@aws-sdk/client-ssm";
-import { useConfig } from "../config/index.js";
-import { useAWSClient } from "../credentials/index.js";
+import { useConfig } from "../../config/index.js";
+import { useAWSClient } from "../../credentials/index.js";
 
 export async function Secrets() {
   const ssm = await useAWSClient(SSMClient);

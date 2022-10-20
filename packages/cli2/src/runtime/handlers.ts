@@ -44,7 +44,7 @@ interface RuntimeHandler {
   build: (input: BuildInput) => Promise<string>;
 }
 
-const useFunctions = Context.memo(async () => {
+export const useFunctions = Context.memo(async () => {
   const metadata = await useMetadata();
   const result: Record<string, any> = {};
   for (const [_, meta] of Object.entries(metadata)) {

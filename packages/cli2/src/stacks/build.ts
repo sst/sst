@@ -4,23 +4,34 @@ import fs from "fs/promises";
 import path from "path";
 import { useStateDirectory } from "../state/index.js";
 import { Logger } from "../logger/index.js";
+import { useBus } from "../bus/index.js";
+
+declare module "../bus" {
+  export interface Events {
+    "stack.built": {
+      metafile: esbuild.Metafile;
+    };
+  }
+}
 
 export async function build() {
   const root = await useProjectRoot();
   const state = await useStateDirectory();
   const config = await useConfig();
+  const bus = useBus();
   const pkg = JSON.parse(
     await fs.readFile(path.join(root, "package.json")).then((x) => x.toString())
   );
   const outfile = path.join(state, `stacks.${Math.random()}.mjs`);
 
   Logger.debug("Running esbuild on", config.main, "to", outfile);
-  await esbuild.build({
+  const result = await esbuild.build({
     keepNames: true,
     bundle: true,
     sourcemap: "inline",
     platform: "node",
     target: "esnext",
+    metafile: true,
     format: "esm",
     external: [
       "aws-cdk-lib",
@@ -51,6 +62,9 @@ export async function build() {
   Logger.debug("Finished sourcing stacks");
   await fs.rm(outfile, {
     force: true,
+  });
+  bus.publish("stack.built", {
+    metafile: result.metafile,
   });
   return mod.default;
 }

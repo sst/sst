@@ -1,22 +1,27 @@
-import chalk from "chalk";
-import { VisibleError } from "./error/index.js";
-import { GlobalCLIOptionsContext } from "./cli.js";
+import { Context } from "@serverless-stack/node/context/index.js";
+
+interface GlobalCLIOptionsContext {
+  profile?: string;
+  stage?: string;
+}
+export const GlobalCLIOptionsContext =
+  Context.create<GlobalCLIOptionsContext>();
 
 console.time("cli");
 process.on("uncaughtException", (err) => {
-  console.log(chalk.red(err.message));
+  console.log(red(err.message));
   console.log(
-    chalk.blue(
+    blue(
       "Need help with this error? Join our discord https://discord.gg/sst and talk to the team"
     )
   );
   if (!(err instanceof VisibleError)) {
-    console.log(chalk.yellow(err.stack));
+    console.log(yellow(err.stack || ""));
   }
   process.exit(1);
 });
 
-process.on("beforeExit", (code) => {
+process.on("beforeExit", () => {
   console.timeEnd("cli");
 });
 
@@ -28,6 +33,8 @@ import { Secrets } from "./commands/secrets.js";
 import { analyze } from "./commands/analyze.js";
 import { Deploy } from "./commands/deploy.js";
 import { start } from "./commands/start.js";
+import { blue, red, yellow } from "colorette";
+import { VisibleError } from "../error/index.js";
 const { program } = caporal;
 
 program

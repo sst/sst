@@ -1,4 +1,4 @@
-import { Stacks } from "../stacks/index.js";
+import { Stacks } from "../../stacks/index.js";
 
 export async function Build() {
   const fn = await Stacks.build();

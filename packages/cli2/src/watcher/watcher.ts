@@ -2,12 +2,13 @@ import { Context } from "@serverless-stack/node/context/context.js";
 import { useProjectRoot } from "../config";
 import chokidar from "chokidar";
 import { useBus } from "../bus";
-import { Logger } from "../logger/index.js";
+import path from "path";
 
 declare module "../bus/index.js" {
   export interface Events {
     "file.changed": {
       file: string;
+      relative: string;
     };
   }
 }
@@ -33,7 +34,7 @@ export const useWatcher = Context.memo(async () => {
   });
 
   watcher.on("change", (file) => {
-    bus.publish("file.changed", { file });
+    bus.publish("file.changed", { file, relative: path.relative(root, file) });
   });
 
   return {

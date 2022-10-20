@@ -31,8 +31,13 @@ export const useNodeHandler = Context.memo(async () => {
           {
             env: input.environment,
             workerData: input,
+            stdout: true,
+            stderr: true,
           }
         );
+        worker.stdout.on("data", (data: Buffer) => {
+          workers.stdout(input.workerID, data.toString());
+        });
         worker.on("exit", () => workers.exited(input.workerID));
         threads.set(input.workerID, worker);
       });

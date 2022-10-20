@@ -17,6 +17,11 @@ declare module "../bus/index.js" {
       workerID: string;
       functionID: string;
     };
+    "worker.stdout": {
+      workerID: string;
+      functionID: string;
+      message: string;
+    };
   }
 }
 
@@ -68,12 +73,24 @@ export const useRuntimeWorkers = Context.memo(async () => {
     fromID(workerID: string) {
       return workers.get(workerID)!;
     },
+    stdout(workerID: string, message: string) {
+      const worker = workers.get(workerID)!;
+      bus.publish("worker.stdout", {
+        ...worker,
+        message: message.trim(),
+      });
+    },
     exited(workerID: string) {
       const existing = workers.get(workerID);
       if (!existing) return;
       workers.delete(workerID);
       bus.publish("worker.exited", existing);
     },
-    subscribe: bus.forward("worker.started", "worker.stopped", "worker.exited"),
+    subscribe: bus.forward(
+      "worker.started",
+      "worker.stopped",
+      "worker.exited",
+      "worker.stdout"
+    ),
   };
 });

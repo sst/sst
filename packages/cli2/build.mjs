@@ -21,7 +21,7 @@ await esbuild.build({
 });
 
 const result = await esbuild.build({
-  entryPoints: ["src/sst.ts"],
+  entryPoints: ["src/cli/sst.ts"],
   bundle: true,
   outdir: "dist",
   metafile: true,

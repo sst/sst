@@ -2,7 +2,7 @@ import { Context } from "@serverless-stack/node/context/index.js";
 import fs from "fs/promises";
 import fsSync from "fs";
 import path from "path";
-import { GlobalCLIOptionsContext } from "../cli.js";
+import { GlobalCLIOptionsContext } from "../cli/sst.js";
 import { VisibleError } from "../error/index.js";
 import { Logger } from "../logger/index.js";
 import { usePersonalStage } from "../state/index.js";
