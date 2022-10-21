@@ -1,18 +1,26 @@
 import { GetParametersCommand, SSMClient, Parameter } from "@aws-sdk/client-ssm";
 const ssm = new SSMClient({});
-import { createProxy, parseEnvironment } from "../util";
+import { createProxy, parseEnvironment } from "../util/index.js";
 
 const SECRET_SSM_PREFIX = `/sst/${process.env.SST_APP}/${process.env.SST_STAGE}/secrets/`;
 const SECRET_FALLBACK_SSM_PREFIX = `/sst/${process.env.SST_APP}/.fallback/secrets/`;
 
-export interface ConfigTypes { };
 export interface ParameterResources { };
 export interface SecretResources { };
 
-export const Config = createProxy<ConfigTypes & ParameterResources & SecretResources>("Config");
+export interface ConfigTypes { };
+export type ParameterTypes = {
+  [T in keyof ParameterResources]: string;
+};
+export type SecretTypes = {
+  [T in keyof SecretResources]: string;
+};
+
+export const Config = createProxy<ConfigTypes & ParameterTypes & SecretTypes>("Config");
 const metadata = parseMetadataEnvironment();
-const parameters = parseEnvironment("Parameter", ["."]);
-const secrets = parseEnvironment("Secret", ["."]);
+const parameters = parseEnvironment("Parameter", ["value"]);
+const secrets = parseEnvironment("Secret", ["value"]);
+flattenParameterValues();
 await replaceSecretsWithRealValues();
 Object.assign(Config, metadata, parameters, secrets);
 
@@ -36,9 +44,18 @@ function parseMetadataEnvironment() {
   };
 }
 
+function flattenParameterValues() {
+  Object.keys(parameters).forEach((name) => {
+    // @ts-ignore
+    parameters[name] = parameters[name].value;
+  });
+}
+
 async function replaceSecretsWithRealValues() {
   // Find all the secrets and params that match the prefix
-  const names = Object.keys(secrets);
+  const names = Object
+    .keys(secrets)
+    .filter((name) => secrets[name].value === "__FETCH_FROM_SSM__");
   if (names.length === 0) {
     return;
   }

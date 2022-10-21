@@ -1990,7 +1990,7 @@ export { Stacks } from "./stacks/index.js";
 export * from "./cli/index.js";
 export * from "./local/index.js";
 export { DeferBuilder } from "./defer-builder/index.js";
-export { FunctionConfig } from "./function-config/index.js";
+export { FunctionBinding } from "./function-binding/index.js";
 export { Bootstrap } from "./bootstrap/index.js";
 export { Telemetry } from "./telemetry/index.js";
 export * from "./aws-sdk/index.js";

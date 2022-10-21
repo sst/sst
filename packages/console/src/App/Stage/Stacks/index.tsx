@@ -102,7 +102,7 @@ export function Stacks() {
                       /*
                         const _link = (() => {
                           switch (c.type) {
-                            case "Auth":
+                            case "Cognito":
                               return `../cognito/${c.data.userPoolId}`;
                             case "Function":
                               return `../functions/${c.stack}/${c.addr}`;

@@ -10,7 +10,7 @@ export function createProxy<T extends object>(constructName: string) {
 }
 
 export function parseEnvironment(constructName: string, props: string[]) {
-  const acc = {};
+  const acc: Record<string, Record<string, string>> = {};
   Object.keys(process.env)
     .filter((env) => env.startsWith(buildEnvPrefix(constructName, props[0])))
     .forEach((env) => {
@@ -26,7 +26,5 @@ export function parseEnvironment(constructName: string, props: string[]) {
 }
 
 function buildEnvPrefix(constructName: string, prop: string) {
-  return prop === "."
-    ? `SST_${constructName}_`
-    : `SST_${constructName}_${prop}_`;
+  return `SST_${constructName}_${prop}_`;
 }

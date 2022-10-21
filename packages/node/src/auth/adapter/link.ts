@@ -1,5 +1,4 @@
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
-import { Config } from "../../config/index.js";
 import { createSigner, createVerifier } from "fast-jwt";
 import {
   useDomainName,
@@ -8,6 +7,7 @@ import {
   useQueryParams,
 } from "../../api/index.js";
 import { createAdapter } from "./adapter.js";
+import { getPrivateKey, getPublicKey } from "../auth.js";
 
 interface LinkConfig {
   onLink: (
@@ -24,8 +24,7 @@ export const LinkAdapter = /* @__PURE__ */ createAdapter(
   (config: LinkConfig) => {
     const signer = createSigner({
       expiresIn: 1000 * 60 * 10,
-      /* @ts-expect-error */
-      key: Config.SST_AUTH_PRIVATE,
+      key: getPrivateKey(),
       algorithm: "RS512",
     });
 
@@ -48,8 +47,7 @@ export const LinkAdapter = /* @__PURE__ */ createAdapter(
         try {
           const verifier = createVerifier({
             algorithms: ["RS512"],
-            /* @ts-expect-error */
-            key: Config.SST_AUTH_PUBLIC,
+            key: getPublicKey(),
           });
           const jwt = verifier(token);
           return config.onSuccess(jwt);

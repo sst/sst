@@ -1,4 +1,4 @@
-import { createProxy, parseEnvironment } from "../util";
+import { createProxy, parseEnvironment } from "../util/index.js";
 import { Context } from "../context/context.js";
 import { useEvent, Handler } from "../context/handler.js";
 

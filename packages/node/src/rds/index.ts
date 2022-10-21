@@ -1,4 +1,4 @@
-import { createProxy, parseEnvironment } from "../util";
+import { createProxy, parseEnvironment } from "../util/index.js";
 
 export interface RDSResources { }
 

@@ -217,7 +217,7 @@ export function useStacks() {
                   return construct.data.dataSources
                     .filter((r) => r.fn)
                     .map((r) => [r.fn!.node, construct]);
-                case "Auth":
+                case "Cognito":
                   return construct.data.triggers
                     .filter((r) => r.fn)
                     .map((r) => [r.fn!.node, construct]);

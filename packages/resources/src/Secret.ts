@@ -1,7 +1,7 @@
 import { Construct } from "constructs";
 import { App } from "./App.js";
 import { SSTConstruct } from "./Construct.js";
-import { getParameterPath, getParameterFallbackPath, FunctionBindingProps } from "./util/functionBinding.js";
+import { ENVIRONMENT_PLACEHOLDER, getParameterPath, getParameterFallbackPath, FunctionBindingProps } from "./util/functionBinding.js";
 
 /**
  * The `Secret` construct is a higher level CDK construct that makes it easy to manage app secrets.
@@ -41,16 +41,16 @@ export class Secret extends Construct implements SSTConstruct {
     return {
       clientPackage: "config",
       variables: {
-        ".": {
-          environment: "1",
+        value: {
+          environment: ENVIRONMENT_PLACEHOLDER,
           // SSM parameters will be created manually via CLI
           parameter: undefined,
         },
       },
       permissions: {
         "ssm:GetParameters": [
-          `arn:aws:ssm:${app.region}:${app.account}:parameter${getParameterPath(this)}`,
-          `arn:aws:ssm:${app.region}:${app.account}:parameter${getParameterFallbackPath(this)}`
+          `arn:aws:ssm:${app.region}:${app.account}:parameter${getParameterPath(this, "value")}`,
+          `arn:aws:ssm:${app.region}:${app.account}:parameter${getParameterFallbackPath(this, "value")}`
         ],
       },
     };

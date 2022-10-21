@@ -36,7 +36,7 @@ import {
   buildErrorResponsesForRedirectToIndex,
 } from "./BaseSite.js";
 import { SSTConstruct, isCDKConstruct } from "./Construct.js";
-import { FunctionBindingProps, getParameterPath } from "./util/functionBinding.js";
+import { ENVIRONMENT_PLACEHOLDER, FunctionBindingProps, getParameterPath } from "./util/functionBinding.js";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -440,13 +440,13 @@ export class StaticSite extends Construct implements SSTConstruct {
           // depend on the Site. B/c often the site depends on the Api, causing
           // a CloudFormation circular dependency if the Api and the Site belong
           // to different stacks.
-          environment: "1",
+          environment: ENVIRONMENT_PLACEHOLDER,
           parameter: this.customDomainUrl || this.url,
         },
       },
       permissions: {
         "ssm:GetParameters": [
-          `arn:aws:ssm:${app.region}:${app.account}:parameter${getParameterPath(this)}/url`,
+          `arn:aws:ssm:${app.region}:${app.account}:parameter${getParameterPath(this, "url")}`,
         ],
       },
     };

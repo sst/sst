@@ -1,6 +1,5 @@
 export * from "./auth.js";
 export * from "./session.js";
-export * from "./auth.js";
 
 export * from "./adapter/adapter.js";
 export * from "./adapter/google.js";

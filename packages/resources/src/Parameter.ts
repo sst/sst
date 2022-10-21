@@ -49,7 +49,7 @@ export class Parameter extends Construct implements SSTConstruct {
     return {
       clientPackage: "config",
       variables: {
-        ".": {
+        value: {
           environment: this.value,
           parameter: this.value,
         },

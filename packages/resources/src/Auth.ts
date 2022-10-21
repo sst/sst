@@ -1,3 +1,4 @@
+import * as ssm from "aws-cdk-lib/aws-ssm";
 import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { Construct } from "constructs";
 import { Api } from "./Api.js";
@@ -5,8 +6,17 @@ import { FunctionDefinition } from "./Function";
 import { SSTConstruct } from "./Construct.js";
 import { Stack } from "./index.js";
 import { App } from "./App.js";
-import { FunctionBindingProps, getParameterPath } from "./util/functionBinding.js";
+import {
+  ENVIRONMENT_PLACEHOLDER,
+  FunctionBindingProps,
+  getEnvironmentKey,
+  getParameterPath,
+} from "./util/functionBinding.js";
 import { CustomResource } from "aws-cdk-lib";
+
+const PUBLIC_KEY_PROP = "publicKey";
+const PRIVATE_KEY_PROP = "privateKey";
+const PREFIX_PROP = "prefix";
 
 export interface AuthProps {
   /**
@@ -92,10 +102,7 @@ export class Auth extends Construct implements SSTConstruct {
     Auth.list.add(this);
 
     this.id = id;
-    const app = this.node.root as App;
     const stack = Stack.of(scope) as Stack;
-    const privatePath = `${getParameterPath(this)}/privateKey`;
-    const publicPath = `${getParameterPath(this)}/publicKey`;
     this.authenticator = props.authenticator;
 
     // Create execution policy
@@ -114,8 +121,8 @@ export class Auth extends Construct implements SSTConstruct {
       serviceToken: stack.customResourceHandler.functionArn,
       resourceType: "Custom::AuthKeys",
       properties: {
-        publicPath,
-        privatePath
+        publicPath: getParameterPath(this, PUBLIC_KEY_PROP),
+        privatePath: getParameterPath(this, PRIVATE_KEY_PROP),
       }
     });
   }
@@ -135,14 +142,14 @@ export class Auth extends Construct implements SSTConstruct {
       clientPackage: "auth",
       variables: {
         publicKey: {
-          environment: "1",
+          environment: ENVIRONMENT_PLACEHOLDER,
           // SSM parameters will be created by the custom resource
           parameter: undefined,
         },
       },
       permissions: {
         "ssm:GetParameters": [
-          `arn:aws:ssm:${app.region}:${app.account}:parameter${getParameterPath(this)}/publicKey`
+          `arn:aws:ssm:${app.region}:${app.account}:parameter${getParameterPath(this, PUBLIC_KEY_PROP)}`,
         ],
       },
     };
@@ -165,12 +172,22 @@ export class Auth extends Construct implements SSTConstruct {
   public attach(scope: Construct, props: ApiAttachmentProps) {
     const app = this.node.root as App;
 
-    if (this.apis.has(props.api))
+    // Validate: one Auth can only be attached to one Api
+    if (this.apis.has(props.api)) {
       throw new Error(
-        "This auth construct has already been attached to this API"
+        "This Auth construct has already been attached to this Api construct."
       );
-    this.apis.add(props.api);
+    }
+
+    // Validate: one Api can only have one Auth attached to it
+    if (Array.from(Auth.list).some((auth) => auth.apis.has(props.api))) {
+      throw new Error(
+        "This Api construct already has an Auth construct attached."
+      );
+    }
+
     const prefix = props.prefix || "/auth";
+
     for (let path of [`ANY ${prefix}/{proxy+}`, `GET ${prefix}`]) {
       props.api.addRoutes(scope, {
         [path]: {
@@ -184,16 +201,29 @@ export class Auth extends Construct implements SSTConstruct {
       //     ie. calling `use.([auth])` will grant functions access to the public key
       // - Auth authenticator: binds manually. Need to grant access to the prefix and private key
       const fn = props.api.getFunction(path)!;
-      fn.addEnvironment(`SST_AUTH_${this.node.id}_PREFIX`, prefix);
+      fn.addEnvironment(getEnvironmentKey(this, PREFIX_PROP), prefix);
+      fn.addEnvironment(getEnvironmentKey(this, PUBLIC_KEY_PROP), ENVIRONMENT_PLACEHOLDER);
+      fn.addEnvironment(getEnvironmentKey(this, PRIVATE_KEY_PROP), ENVIRONMENT_PLACEHOLDER);
       fn.attachPermissions([new PolicyStatement({
         actions: ["ssm:GetParameters"],
         effect: Effect.ALLOW,
         resources: [
-          `arn:aws:ssm:${app.region}:${app.account}:parameter${getParameterPath(this)}/publicKey`,
-          `arn:aws:ssm:${app.region}:${app.account}:parameter${getParameterPath(this)}/privateKey`,
+          `arn:aws:ssm:${app.region}:${app.account}:parameter${getParameterPath(this, "*")}`,
         ]
       })]);
     }
+
+    // Create a parameter for prefix
+    // note: currently if an Auth construct is attached to multiple Apis,
+    //       the prefix has to be the same for this to work.
+    if (this.apis.size === 0) {
+      new ssm.StringParameter(this, "prefix", {
+        parameterName: getParameterPath(this, PREFIX_PROP),
+        stringValue: prefix,
+      });
+    }
+
+    this.apis.add(props.api);
   }
 
   /**

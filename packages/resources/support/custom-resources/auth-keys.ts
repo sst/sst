@@ -48,38 +48,46 @@ export async function AuthKeys(cfnRequest: any) {
       ]);
       break;
     case "Update":
-      const [oldPrivateKey, oldPublicKey] = await Promise.all([
-        client.send(
+      if (oldPrivatePath !== privatePath) {
+        const oldPrivateKey = await client.send(
           new GetParameterCommand({
-            Name: privatePath,
+            Name: oldPrivatePath,
             WithDecryption: true,
           })
-        ),
-
-        client.send(
-          new GetParameterCommand({
-            Name: publicPath,
-            WithDecryption: true,
-          })
-        ),
-      ]);
-      await Promise.all([
-        client.send(
+        );
+        await client.send(
           new PutParameterCommand({
             Name: privatePath,
             Value: oldPrivateKey.Parameter?.Value,
             Type: "SecureString",
           })
-        ),
-
-        client.send(
+        );
+        await client.send(
+          new DeleteParameterCommand({
+            Name: oldPrivatePath,
+          })
+        );
+      }
+      if (oldPublicPath !== publicPath) {
+        const oldPublicKey = await client.send(
+          new GetParameterCommand({
+            Name: oldPublicPath,
+            WithDecryption: true,
+          })
+        );
+        await client.send(
           new PutParameterCommand({
             Name: publicPath,
             Value: oldPublicKey.Parameter?.Value,
             Type: "SecureString",
           })
-        ),
-      ]);
+        );
+        await client.send(
+          new DeleteParameterCommand({
+            Name: oldPublicPath,
+          })
+        );
+      }
       break;
     case "Delete":
       await Promise.all([

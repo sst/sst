@@ -1,6 +1,6 @@
 import { GetParametersCommand, SSMClient, Parameter } from "@aws-sdk/client-ssm";
 const ssm = new SSMClient({});
-import { createProxy, parseEnvironment } from "../util";
+import { createProxy, parseEnvironment } from "../util/index.js";
 
 export interface StaticSiteResources { }
 export interface ReactStaticSiteResources { }
@@ -18,13 +18,11 @@ const reactSiteData = parseEnvironment("ReactStaticSite", ["url"]);
 const viteSiteData = parseEnvironment("ViteStaticSite", ["url"]);
 const nextjsSiteData = parseEnvironment("NextjsSite", ["url"]);
 const remixSiteData = parseEnvironment("RemixSite", ["url"]);
-console.log(reactSiteData);
 await replaceWithSsmValues("StaticSite", staticSiteData);
 await replaceWithSsmValues("ReactStaticSite", reactSiteData);
 await replaceWithSsmValues("ViteStaticSite", viteSiteData);
 await replaceWithSsmValues("NextjsSite", nextjsSiteData);
 await replaceWithSsmValues("RemixSite", remixSiteData);
-console.log(reactSiteData);
 
 Object.assign(StaticSite, staticSiteData);
 Object.assign(ReactStaticSite, reactSiteData);
@@ -36,7 +34,9 @@ async function replaceWithSsmValues(className: string, siteData: Record<string, 
   const SSM_PREFIX = `/sst/${process.env.SST_APP}/${process.env.SST_STAGE}/${className}/`;
 
   // Find all the site data that match the prefix
-  const names = Object.keys(siteData);
+  const names = Object
+    .keys(siteData)
+    .filter((name) => siteData[name].url === "__FETCH_FROM_SSM__");
   if (names.length === 0) {
     return;
   }

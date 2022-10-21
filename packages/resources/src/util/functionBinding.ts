@@ -2,13 +2,15 @@ import * as ssm from "aws-cdk-lib/aws-ssm";
 import { SSTConstruct } from "../Construct.js";
 import { App } from "../App.js";
 
+export const ENVIRONMENT_PLACEHOLDER = "__FETCH_FROM_SSM__";
+
 export interface FunctionBindingProps {
   clientPackage: string;
   permissions: Record<string, string[]>;
   variables: Record<string, {
     // environments are used for 2 purposes:
     //  - pass binding values to the function (ie. bucket name)
-    //  - pass placeholder value "1" to the custom resource (ie. secret)
+    //  - pass placeholder value to the function (ie. secret)
     environment: string;
     parameter?: string;
   }>;
@@ -20,9 +22,7 @@ export function bindEnvironment(c: SSTConstruct) {
   const environment: Record<string, string> = {};
   if (binding) {
     Object.entries(binding.variables).forEach(([prop, variable]) => {
-      const envName = prop === "."
-        ? `SST_${c.constructor.name}_${c.id}`
-        : `SST_${c.constructor.name}_${prop}_${c.id}`;
+      const envName = getEnvironmentKey(c, prop);
       environment[envName] = variable.environment;
     });
   }
@@ -40,12 +40,9 @@ export function bindParameters(c: SSTConstruct) {
     .forEach(([prop, variable]) => {
       const resId = `Parameter_${prop}`;
       if (!c.node.tryFindChild(resId)) {
-        const prefix = getParameterPathPrefix(c);
         new ssm.StringParameter(c, resId, {
           // Parameters, Secrets, and Jobs do not have a name
-          parameterName: prop === "."
-            ? `/sst/${app.name}/${app.stage}/${prefix}/${c.id}`
-            : `/sst/${app.name}/${app.stage}/${prefix}/${c.id}/${prop}`,
+          parameterName: getParameterPath(c, prop),
           stringValue: variable.parameter!,
         });
       }
@@ -66,19 +63,22 @@ export function bindType(c: SSTConstruct) {
   };
 }
 
-export function getParameterPath(c: SSTConstruct): string {
-  const app = c.node.root as App;
-  const prefix = getParameterPathPrefix(c);
-  return `/sst/${app.name}/${app.stage}/${prefix}/${c.id}`;
+export function getEnvironmentKey(c: SSTConstruct, prop: string): string {
+  return `SST_${c.constructor.name}_${prop}_${c.id}`;
 }
 
-export function getParameterFallbackPath(c: SSTConstruct): string {
+export function getParameterPath(c: SSTConstruct, prop: string): string {
   const app = c.node.root as App;
-  const prefix = getParameterPathPrefix(c);
-  return `/sst/${app.name}/.fallback/${prefix}/${c.id}`;
+  const construct = c.constructor.name;
+  return construct === "Secret"
+    ? `/sst/${app.name}/${app.stage}/secrets/${c.id}`
+    : `/sst/${app.name}/${app.stage}/${construct}/${c.id}/${prop}`;
 }
 
-function getParameterPathPrefix(c: SSTConstruct): string {
-  let prefix = c.constructor.name;
-  return prefix === "Secret" ? "secrets" : prefix;
+export function getParameterFallbackPath(c: SSTConstruct, prop: string): string {
+  const app = c.node.root as App;
+  const construct = c.constructor.name;
+  return construct === "Secret"
+    ? `/sst/${app.name}/.fallback/secrets/${c.id}`
+    : `/sst/${app.name}/.fallback/${construct}/${c.id}/${prop}`;
 }

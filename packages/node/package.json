@@ -35,10 +35,18 @@
   "files": [
     "api",
     "auth",
-    "context",
+    "bucket",
     "config",
+    "context",
+    "event-bus",
+    "function",
     "graphql",
     "job",
-    "table"
+    "kinesis-stream",
+    "queue",
+    "rds",
+    "site",
+    "table",
+    "topic"
   ]
 }
