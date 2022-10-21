@@ -10,10 +10,6 @@ import { promisify } from "util";
 const generateKeyPair = promisify(crypto.generateKeyPair);
 export async function AuthKeys(cfnRequest: any) {
   const { privatePath, publicPath } = cfnRequest.ResourceProperties;
-  const {
-    privatePath: oldPrivatePath,
-    publicPath: oldPublicPath,
-  } = cfnRequest.OldResourceProperties;
   const client = new SSMClient({});
 
   switch (cfnRequest.RequestType) {
@@ -48,6 +44,10 @@ export async function AuthKeys(cfnRequest: any) {
       ]);
       break;
     case "Update":
+      const {
+        privatePath: oldPrivatePath,
+        publicPath: oldPublicPath,
+      } = cfnRequest.OldResourceProperties;
       if (oldPrivatePath !== privatePath) {
         const oldPrivateKey = await client.send(
           new GetParameterCommand({
