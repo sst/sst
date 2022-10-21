@@ -20,13 +20,15 @@ const PREFIX_PROP = "prefix";
 
 export interface AuthProps {
   /**
-   * Used to override the default id for the construct.
-   */
-  logicalId?: string;
-  /**
    * The function that will handle authentication
    */
   authenticator: FunctionDefinition;
+  cdk?: {
+    /**
+     * Allows you to override default id for this construct.
+     */
+    id?: string;
+  };
 }
 
 export interface ApiAttachmentProps {
@@ -85,7 +87,7 @@ export class Auth extends Construct implements SSTConstruct {
   public static list = new Set<Auth>();
 
   constructor(scope: Construct, id: string, props: AuthProps) {
-    super(scope, props.logicalId || id);
+    super(scope, props.cdk?.id || id);
     if (
       !props.authenticator ||
       "defaults" in props ||

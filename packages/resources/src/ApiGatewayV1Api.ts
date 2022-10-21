@@ -48,10 +48,6 @@ export interface ApiGatewayV1ApiProps<
   AuthorizerKeys = keyof Authorizers
 > {
   /**
-   * Used to override the default id for the construct.
-   */
-  logicalId?: string;
-  /**
    * Define the routes for the API. Can be a function, proxy to another API, or point to an ALB
    *
    * @example
@@ -192,6 +188,10 @@ export interface ApiGatewayV1ApiProps<
     authorizationScopes?: string[];
   };
   cdk?: {
+    /**
+     * Allows you to override default id for this construct.
+     */
+    id?: string;
     /**
      * Override the internally created rest api
      *
@@ -570,7 +570,7 @@ export class ApiGatewayV1Api<
     id: string,
     props?: ApiGatewayV1ApiProps<Authorizers>
   ) {
-    super(scope, props?.logicalId || id);
+    super(scope, props?.cdk?.id || id);
 
     this.id = id;
     this.props = props || {};

@@ -4,6 +4,7 @@ import {
   countResources,
   countResourcesLike,
   hasResource,
+  templateMatches,
   objectLike,
 } from "./helper";
 import * as s3 from "aws-cdk-lib/aws-s3";
@@ -14,6 +15,34 @@ const lambdaDefaultPolicy = {
   Effect: "Allow",
   Resource: "*",
 };
+
+test("cdk.id: undefined", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "Bucket");
+  templateMatches(stack, {
+    Resources: {
+      BucketD7FEB781: objectLike({
+        Type: "AWS::S3::Bucket",
+      })
+    }
+  });
+});
+
+test("cdk.id: defined", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "Bucket", {
+    cdk: {
+      id: "MyBucket",
+    }
+  });
+  templateMatches(stack, {
+    Resources: {
+      MyBucketCB5E0479: objectLike({
+        Type: "AWS::S3::Bucket",
+      })
+    }
+  });
+});
 
 test("cdk.bucket is undefined", async () => {
   const stack = new Stack(new App(), "stack");

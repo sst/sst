@@ -25,10 +25,6 @@ export interface RDSTypes {
 
 export interface RDSProps {
   /**
-   * Used to override the default id for the construct.
-   */
-  logicalId?: string;
-  /**
    * Database engine of the cluster. Cannot be changed once set.
    */
   engine: "mysql5.6" | "mysql5.7" | "postgresql10.14" | "postgresql11.13";
@@ -120,6 +116,10 @@ export interface RDSProps {
 
   cdk?: {
     /**
+     * Allows you to override default id for this construct.
+     */
+    id?: string;
+    /**
      * Configure the internallly created RDS cluster.
      *
      * @example
@@ -201,7 +201,7 @@ export class RDS extends Construct implements SSTConstruct {
   private secret: secretsManager.ISecret;
 
   constructor(scope: Construct, id: string, props: RDSProps) {
-    super(scope, props.logicalId || id);
+    super(scope, props.cdk?.id || id);
 
     this.validateRequiredProps(props);
 

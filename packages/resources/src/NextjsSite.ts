@@ -52,10 +52,6 @@ export interface NextjsCdkDistributionProps
   extends BaseSiteCdkDistributionProps { }
 export interface NextjsSiteProps {
   /**
-   * Used to override the default id for the construct.
-   */
-  logicalId?: string;
-  /**
    * Path to the directory where the website source is located.
    */
   path: string;
@@ -158,6 +154,10 @@ export interface NextjsSiteProps {
     afterBuild?: string[];
   };
   cdk?: {
+    /**
+     * Allows you to override default id for this construct.
+     */
+    id?: string;
     /**
      * Allows you to override default settings this construct uses internally to ceate the bucket
      */
@@ -293,7 +293,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
   private regenerationFunction: lambda.Function;
 
   constructor(scope: Construct, id: string, props: NextjsSiteProps) {
-    super(scope, props.logicalId || id);
+    super(scope, props.cdk?.id || id);
 
     this.id = id;
     const app = scope.node.root as App;

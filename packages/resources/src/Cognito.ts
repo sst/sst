@@ -96,10 +96,6 @@ export interface CognitoIdentityPoolFederationProps {
 }
 
 export interface CognitoProps {
-  /**
-   * Used to override the default id for the construct.
-   */
-  logicalId?: string;
   defaults?: {
     /**
      * The default function props to be applied to all the triggers in the UserPool. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
@@ -153,6 +149,10 @@ export interface CognitoProps {
   identityPoolFederation?: boolean | CognitoIdentityPoolFederationProps;
   cdk?: {
     /**
+     * Allows you to override default id for this construct.
+     */
+    id?: string;
+    /**
      * This allows you to override the default settings this construct uses internally to create the User Pool.
      */
     userPool?: cognito.UserPoolProps | cognito.IUserPool;
@@ -192,7 +192,7 @@ export class Cognito extends Construct implements SSTConstruct {
   private props: CognitoProps;
 
   constructor(scope: Construct, id: string, props?: CognitoProps) {
-    super(scope, props?.logicalId || id);
+    super(scope, props?.cdk?.id || id);
 
     this.id = id;
     this.props = props || {};

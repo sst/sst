@@ -48,10 +48,6 @@ export interface StaticSiteFileOptions {
 
 export interface StaticSiteProps {
   /**
-   * Used to override the default id for the construct.
-   */
-  logicalId?: string;
-  /**
    * Path to the directory where the website source is located.
    *
    * @example
@@ -234,6 +230,10 @@ export interface StaticSiteProps {
   waitForInvalidation?: boolean;
   cdk?: {
     /**
+     * Allows you to override default id for this construct.
+     */
+    id?: string;
+    /**
      * Allows you to override default settings this construct uses internally to ceate the bucket
      *
      * @example
@@ -319,7 +319,7 @@ export class StaticSite extends Construct implements SSTConstruct {
   private awsCliLayer: AwsCliLayer;
 
   constructor(scope: Construct, id: string, props: StaticSiteProps) {
-    super(scope, props.logicalId || id);
+    super(scope, props.cdk?.id || id);
 
     this.id = id;
     const root = scope.node.root as App;

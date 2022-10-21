@@ -34,10 +34,6 @@ export interface CronJobProps {
 
 export interface CronProps {
   /**
-   * Used to override the default id for the construct.
-   */
-  logicalId?: string;
-  /**
    * The definition of the function to be executed.
    *
    * @example
@@ -98,6 +94,10 @@ export interface CronProps {
   enabled?: boolean;
   cdk?: {
     /**
+     * Allows you to override default id for this construct.
+     */
+    id?: string;
+    /**
      * Override the default settings this construct uses internally to create the events rule.
      */
     rule?: events.RuleProps;
@@ -137,7 +137,7 @@ export class Cron extends Construct implements SSTConstruct {
   private props: CronProps;
 
   constructor(scope: Construct, id: string, props: CronProps) {
-    super(scope, props.logicalId || id);
+    super(scope, props.cdk?.id || id);
 
     this.id = id;
     this.props = props;

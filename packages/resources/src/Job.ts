@@ -25,10 +25,6 @@ export type JobMemorySize = "3 GB" | "7 GB" | "15 GB" | "145 GB";
 
 export interface JobProps {
   /**
-   * Used to override the default id for the construct.
-   */
-  logicalId?: string;
-  /**
    * Path to the entry point and handler function. Of the format:
    * `/path/to/file.function`.
    *
@@ -151,6 +147,10 @@ export interface JobProps {
 
 export interface JobCDKProps {
   /**
+   * Allows you to override default id for this construct.
+   */
+  id?: string;
+  /**
    * Runs codebuild job in the specified VPC. Note this will only work once deployed.
    *
    * @example
@@ -195,7 +195,7 @@ export class Job extends Construct implements SSTConstruct {
   public readonly _jobInvoker: Function;
 
   constructor(scope: Construct, id: string, props: JobProps) {
-    super(scope, props.logicalId || id);
+    super(scope, props.cdk?.id || id);
 
     const app = this.node.root as App;
     this.id = id;

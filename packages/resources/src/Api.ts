@@ -196,10 +196,6 @@ export interface ApiProps<
   AuthorizerKeys = keyof Authorizers
 > {
   /**
-   * Used to override the default id for the construct.
-   */
-  logicalId?: string;
-  /**
    * Define the routes for the API. Can be a function, proxy to another API, or point to an ALB
    *
    * @example
@@ -391,6 +387,10 @@ export interface ApiProps<
     };
   };
   cdk?: {
+    /**
+     * Allows you to override default id for this construct.
+     */
+    id?: string;
     /**
      * Import the underlying HTTP API or override the default configuration
      *
@@ -647,7 +647,7 @@ export class Api<
   private permissionsAttachedForAllRoutes: Permissions[];
 
   constructor(scope: Construct, id: string, props?: ApiProps<Authorizers>) {
-    super(scope, props?.logicalId || id);
+    super(scope, props?.cdk?.id || id);
 
     this.id = id;
     this.props = props || {};

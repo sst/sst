@@ -69,10 +69,6 @@ export interface FunctionProps
     | "logRetention"
   > {
   /**
-   * Used to override the default id for the construct.
-   */
-  logicalId?: string;
-  /**
    * The CPU architecture of the lambda function.
    *
    * @default "x86_64"
@@ -826,7 +822,7 @@ export class Function extends lambda.Function implements SSTConstruct {
       }
 
       if (app.debugBridge) {
-        super(scope, props?.logicalId || id, {
+        super(scope, id, {
           ...props,
           architecture,
           code: lambda.Code.fromAsset(
@@ -851,7 +847,7 @@ export class Function extends lambda.Function implements SSTConstruct {
           ...(debugOverrideProps || {}),
         });
       } else {
-        super(scope, props?.logicalId || id, {
+        super(scope, id, {
           ...props,
           architecture,
           code: lambda.Code.fromAsset(
@@ -897,7 +893,7 @@ export class Function extends lambda.Function implements SSTConstruct {
     else if (app.skipBuild) {
       // Note: need to override runtime as CDK does not support inline code
       //       for some runtimes.
-      super(scope, props?.logicalId || id, {
+      super(scope, id, {
         ...props,
         architecture,
         code: lambda.Code.fromInline("export function placeholder() {}"),
@@ -915,7 +911,7 @@ export class Function extends lambda.Function implements SSTConstruct {
     }
     // Handle build
     else {
-      super(scope, props?.logicalId || id, {
+      super(scope, id, {
         ...props,
         architecture,
         code: lambda.Code.fromInline("export function placeholder() {}"),

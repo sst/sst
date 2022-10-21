@@ -528,24 +528,28 @@ export class App extends cdk.App {
         const className = c.constructor.name;
         const id = c.id;
         const existingIds = ids[className] || new Set();
+
         if (!id.match(/^[a-zA-Z]([a-zA-Z0-9_])+$/)) {
           exitWithMessage([
             ``,
             `ERROR: Invalid id "${id}" for ${className} construct.`,
             ``,
-            `Starting v1.16.0, constructs ids may only contain alphabetic characters and underscores ("_"), and must start with an alphabetic character. If you are migrating from version 1.15.16 or earlier, please see the migration guide — https://docs.serverless-stack.com/migration-guides/v1.15.16`,
+            `Starting v1.16, constructs ids may only contain alphabetic characters and underscores ("_"), and must start with an alphabetic character. If you are migrating from version 1.15 or earlier, please see the migration guide — https://docs.serverless-stack.com/migration-guides/v1.15.16`,
           ].join("\n"));
         }
-        else if (["Permission", "Secret"].includes(className)
-          && (ids.Secret?.has(id) || ids.Permission?.has(id))) {
-          throw new Error(`Config ${id} already exists.`);
+        else if (["Parameter", "Secret"].includes(className)
+          && (ids.Secret?.has(id) || ids.Parameter?.has(id))) {
+          exitWithMessage([
+            ``,
+            `ERROR: Config with id "${id}" already exists.`,
+          ].join("\n"));
         }
         else if (existingIds.has(id)) {
           exitWithMessage([
             ``,
             `ERROR: ${className} construct with id "${id}" already exists.`,
             ``,
-            `Starting v1.16.0, constructs must have unique ids for a given construct type. If you are migrating from version 1.15.16 or earlier, set a "logicalId" in the construct with the existing id, and pick a unique id for the construct. Please see the migration guide — https://docs.serverless-stack.com/migration-guides/v1.15.16`,
+            `Starting v1.16, constructs must have unique ids for a given construct type. If you are migrating from version 1.15 or earlier, set "cdk.id" in the construct with the existing id, and pick a unique id for the construct. Please see the migration guide — https://docs.serverless-stack.com/migration-guides/v1.15.16`,
             ``,
             `    For example, if you have two Bucket constructs with the same id:`,
             `      new Bucket(this, "Files");`,
@@ -554,7 +558,9 @@ export class App extends cdk.App {
             `    Change to:`,
             `      new Bucket(this, "Files"});`,
             `      new Bucket(this, "OtherFiles", {`,
-            `        logicalId: "Files"`,
+            `        cdk: {`,
+            `          id: "Files"`,
+            `        }`,
             `      });`,
           ].join("\n"));
         }

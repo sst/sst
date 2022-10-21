@@ -72,6 +72,11 @@ export function countResourcesLike(
   }
 }
 
+export function templateMatches(stack: Stack, props: any): void {
+  const template = Template.fromStack(stack);
+  template.templateMatches(props);
+}
+
 export function hasResource(stack: Stack, type: string, props: any): void {
   const template = Template.fromStack(stack);
   template.hasResourceProperties(type, props);

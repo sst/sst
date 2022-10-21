@@ -154,10 +154,6 @@ export interface BucketTopicNotificationProps
 
 export interface BucketProps {
   /**
-   * Used to override the default id for the construct.
-   */
-  logicalId?: string;
-  /**
    * The name of the bucket.
    *
    * Note that it's not recommended to hard code a name for the bucket, because they must be globally unique.
@@ -233,7 +229,11 @@ export interface BucketProps {
   >;
   cdk?: {
     /**
-     * Allows you to override default settings this construct uses internally to create the bucket
+     * Allows you to override default id for this construct.
+     */
+    id?: string;
+    /**
+     * Allows you to override default settings this construct uses internally to create the bucket.
      *
      * @example
      * ```js
@@ -278,7 +278,7 @@ export class Bucket extends Construct implements SSTConstruct {
   readonly props: BucketProps;
 
   constructor(scope: Construct, id: string, props?: BucketProps) {
-    super(scope, props?.logicalId || id);
+    super(scope, props?.cdk?.id || id);
 
     this.id = id;
     this.props = props || {};

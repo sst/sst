@@ -31,10 +31,6 @@ export interface WebSocketApiAccessLogProps
 
 export interface WebSocketApiProps {
   /**
-   * Used to override the default id for the construct.
-   */
-  logicalId?: string;
-  /**
    * The routes for the Websocket API
    *
    * @example
@@ -140,6 +136,10 @@ export interface WebSocketApiProps {
     function?: FunctionProps;
   };
   cdk?: {
+    /**
+     * Allows you to override default id for this construct.
+     */
+    id?: string;
     /**
      * Override the internally created WebSocket API
      *
@@ -279,7 +279,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
   private props: WebSocketApiProps;
 
   constructor(scope: Construct, id: string, props?: WebSocketApiProps) {
-    super(scope, props?.logicalId || id);
+    super(scope, props?.cdk?.id || id);
 
     this.id = id;
     this.props = props || {};

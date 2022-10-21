@@ -61,11 +61,6 @@ export interface RemixCdkDistributionProps
   extends BaseSiteCdkDistributionProps { }
 export interface RemixSiteProps {
   /**
-   * Used to override the default id for the construct.
-   */
-  logicalId?: string;
-
-  /**
    * The Remix app server is deployed to a Lambda function in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
    *
    * @default false
@@ -150,6 +145,10 @@ export interface RemixSiteProps {
   waitForInvalidation?: boolean;
 
   cdk?: {
+    /**
+     * Allows you to override default id for this construct.
+     */
+    id?: string;
     /**
      * Allows you to override default settings this construct uses internally to ceate the bucket
      */
@@ -303,7 +302,7 @@ export class RemixSite extends Construct implements SSTConstruct {
   private awsCliLayer: AwsCliLayer;
 
   constructor(scope: Construct, id: string, props: RemixSiteProps) {
-    super(scope, props.logicalId || id);
+    super(scope, props.cdk?.id || id);
 
     this.id = id;
     const app = scope.node.root as App;

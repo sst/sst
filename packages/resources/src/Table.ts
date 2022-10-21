@@ -106,10 +106,6 @@ type TableFieldType = Lowercase<keyof typeof dynamodb.AttributeType>;
 
 export interface TableProps {
   /**
-   * Used to override the default id for the construct.
-   */
-  logicalId?: string;
-  /**
    * An object defining the fields of the table. Key is the name of the field and the value is the type.
    *
    * @example
@@ -268,6 +264,10 @@ export interface TableProps {
   consumers?: Record<string, FunctionInlineDefinition | TableConsumerProps>;
   cdk?: {
     /**
+     * Allows you to override default id for this construct.
+     */
+    id?: string;
+    /**
      * Override the settings of the internally created cdk table
      */
     table?:
@@ -315,7 +315,7 @@ export class Table extends Construct implements SSTConstruct {
   private fields?: Record<string, TableFieldType>;
 
   constructor(scope: Construct, id: string, props: TableProps) {
-    super(scope, props.logicalId || id);
+    super(scope, props.cdk?.id || id);
 
     this.id = id;
     this.props = props;

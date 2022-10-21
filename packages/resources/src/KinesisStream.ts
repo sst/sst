@@ -62,10 +62,6 @@ export interface KinesisStreamConsumerProps {
 }
 
 export interface KinesisStreamProps {
-  /**
-   * Used to override the default id for the construct.
-   */
-  logicalId?: string;
   defaults?: {
     /**
      * The default function props to be applied to all the Lambda functions in the API. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
@@ -106,6 +102,10 @@ export interface KinesisStreamProps {
     FunctionInlineDefinition | KinesisStreamConsumerProps
   >;
   cdk?: {
+    /**
+     * Allows you to override default id for this construct.
+     */
+    id?: string;
     /**
      * Override the internally created Kinesis Stream
      *
@@ -156,7 +156,7 @@ export class KinesisStream extends Construct implements SSTConstruct {
   private readonly props: KinesisStreamProps;
 
   constructor(scope: Construct, id: string, props?: KinesisStreamProps) {
-    super(scope, props?.logicalId || id);
+    super(scope, props?.cdk?.id || id);
 
     this.id = id;
     this.props = props || {};

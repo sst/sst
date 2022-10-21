@@ -85,10 +85,6 @@ export interface TopicFunctionSubscriberProps {
 }
 
 export interface TopicProps {
-  /**
-   * Used to override the default id for the construct.
-   */
-  logicalId?: string;
   defaults?: {
     /**
      * The default function props to be applied to all the consumers in the Topic. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
@@ -129,6 +125,10 @@ export interface TopicProps {
   >;
   cdk?: {
     /**
+     * Allows you to override default id for this construct.
+     */
+    id?: string;
+    /**
      * Override the default settings this construct uses internally to create the topic.
      */
     topic?: sns.ITopic | sns.TopicProps;
@@ -168,7 +168,7 @@ export class Topic extends Construct implements SSTConstruct {
   private props: TopicProps;
 
   constructor(scope: Construct, id: string, props?: TopicProps) {
-    super(scope, props?.logicalId || id);
+    super(scope, props?.cdk?.id || id);
 
     this.id = id;
     this.props = props || {};

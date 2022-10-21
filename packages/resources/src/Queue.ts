@@ -74,10 +74,6 @@ export interface QueueConsumerProps {
 
 export interface QueueProps {
   /**
-   * Used to override the default id for the construct.
-   */
-  logicalId?: string;
-  /**
    * Used to create the consumer for the queue.
    *
    * @example
@@ -89,6 +85,10 @@ export interface QueueProps {
    */
   consumer?: FunctionInlineDefinition | QueueConsumerProps;
   cdk?: {
+    /**
+     * Allows you to override default id for this construct.
+     */
+    id?: string;
     /**
      * Override the default settings this construct uses internally to create the queue.
      *
@@ -141,7 +141,7 @@ export class Queue extends Construct implements SSTConstruct {
   private props: QueueProps;
 
   constructor(scope: Construct, id: string, props?: QueueProps) {
-    super(scope, props?.logicalId || id);
+    super(scope, props?.cdk?.id || id);
 
     this.id = id;
     this.props = props || {};
