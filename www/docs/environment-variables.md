@@ -211,10 +211,16 @@ The `Config` object in your Lambda function code is typesafe.
    export default function MyStack({ stack }: StackContext) {
      const { STRIPE_KEY, GITHUB_TOKEN } = use(SecretsStack);
 
-     new Function(stack, "MyFunction", {
+     const myFunction = new Function(stack, "MyFunction", {
        handler: "lambda.handler",
        config: [STRIPE_KEY, GITHUB_TOKEN],
-     }
+     });
+
+     const api = new Api(stack, "api", {
+      routes: {
+        "GET /notes": myFunction,
+      },
+     });
    };
    ```
 
