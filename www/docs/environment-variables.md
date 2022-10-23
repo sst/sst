@@ -78,10 +78,16 @@ Secrets and Parameters are stored in AWS SSM with the _Standard Parameter type_ 
    export default function MyStack({ stack }: StackContext) {
      const { USER_UPDATED_TOPIC } = use(TopicsStack);
 
-     new Function(stack, "MyFunction", {
+     const myFunction = new Function(stack, "MyFunction", {
        handler: "lambda.handler",
        config: [USER_UPDATED_TOPIC],
-     };
+     });
+
+     const api = new Api(stack, "api", {
+      routes: {
+        "GET /notes": myFunction,
+      },
+     });
    };
    ```
 
