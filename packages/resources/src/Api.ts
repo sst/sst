@@ -644,7 +644,8 @@ export class Api<
     | { type: "alb"; alb: elb.IApplicationListener };
   };
   private authorizersData: Record<string, apig.IHttpRouteAuthorizer>;
-  private permissionsAttachedForAllRoutes: Permissions[];
+  private bindingForAllRoutes: SSTConstruct[] = [];
+  private permissionsAttachedForAllRoutes: Permissions[] = [];
 
   constructor(scope: Construct, id: string, props?: ApiProps<Authorizers>) {
     super(scope, props?.cdk?.id || id);
@@ -654,7 +655,6 @@ export class Api<
     this.cdk = {} as any;
     this.routesData = {};
     this.authorizersData = {};
-    this.permissionsAttachedForAllRoutes = [];
 
     this.createHttpApi();
     this.addAuthorizers(this.props.authorizers || ({} as Authorizers));
@@ -665,7 +665,10 @@ export class Api<
    * The AWS generated URL of the Api.
    */
   public get url(): string {
-    return this.cdk.httpApi.apiEndpoint;
+    const app = this.node.root as App;
+    return this.cdk.httpApi instanceof apig.HttpApi
+      ? this.cdk.httpApi.apiEndpoint
+      : `https://${(this.cdk.httpApi as apig.IHttpApi).apiId}.execute-api.${app.region}.amazonaws.com`;
   }
 
   /**
@@ -742,6 +745,53 @@ export class Api<
     if (route.type === "function" || route.type === "pothos") {
       return route.function;
     }
+  }
+
+  /**
+   * Binds the given list of resources to all the routes.
+   *
+   * @example
+   *
+   * ```js
+   * api.bind([STRIPE_KEY, bucket]);
+   * ```
+   */
+  public bind(constructs: SSTConstruct[]) {
+    for (const route of Object.values(this.routesData)) {
+      if (route.type === "function" || route.type === "pothos") {
+        route.function.bind(constructs);
+      }
+    }
+    this.bindingForAllRoutes.push(...constructs);
+  }
+
+  /**
+   * Binds the given list of resources to a specific route.
+   *
+   * @example
+   * ```js
+   * const api = new Api(stack, "Api", {
+   *   routes: {
+   *     "GET /notes": "src/list.main",
+   *   },
+   * });
+   *
+   * api.bindToRoute("GET /notes", [STRIPE_KEY, bucket]);
+   * ```
+   *
+   */
+  public bindToRoute(
+    routeKey: string,
+    constructs: SSTConstruct[]
+  ): void {
+    const fn = this.getFunction(routeKey);
+    if (!fn) {
+      throw new Error(
+        `Failed to bind resources. Route "${routeKey}" does not exist.`
+      );
+    }
+
+    fn.bind(constructs);
   }
 
   /**
@@ -1349,6 +1399,7 @@ export class Api<
     this.permissionsAttachedForAllRoutes.forEach(permissions =>
       lambda.attachPermissions(permissions)
     );
+    lambda.bind(this.bindingForAllRoutes);
 
     return integration;
   }

@@ -1,8 +1,8 @@
 import { test, expect } from "vitest";
 /* eslint-disable @typescript-eslint/ban-ts-comment*/
 
-import { countResources, countResourcesLike, hasResource, ANY } from "./helper";
-import { App, Stack, Script, ScriptProps, Function } from "../src";
+import { ANY, countResources, countResourcesLike, hasResource } from "./helper";
+import { App, Stack, Script, ScriptProps, Function, Bucket } from "../src";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
@@ -295,6 +295,46 @@ test("attachPermissions: onUpdate and onDelete not set", async () => {
       Statement: [
         lambdaDefaultPolicy,
         { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: ANY,
+  });
+});
+
+test("bind", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "bucket");
+  const script = new Script(stack, "Script", {
+    onCreate: "test/lambda.handler",
+    onUpdate: "test/lambda.handler",
+    onDelete: "test/lambda.handler",
+  });
+  script.bind([bucket]);
+  countResourcesLike(stack, "AWS::IAM::Policy", 3, {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: ANY,
+  });
+});
+
+test("bind: onUpdate and onDelete not set", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "bucket");
+  const script = new Script(stack, "Script", {
+    onCreate: "test/lambda.handler",
+  });
+  script.bind([bucket]);
+  countResourcesLike(stack, "AWS::IAM::Policy", 1, {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
       ],
       Version: "2012-10-17",
     },

@@ -290,16 +290,34 @@ export class App extends cdk.App {
 
   /**
    * Adds additional default config to be applied to all Lambda functions in the app.
+   * 
+   * @deprecated The "addDefaultFunctionConfig" method will be removed in SST v2. Pass Parameters and Secrets in through the "addDefaultFunctionBinding" function. Read more about how to upgrade here — https://docs.serverless-stack.com/upgrade-guide#upgrade-to-v116
    *
    * @example
    * ```js
-   * app.addDefaultFunctionConfig([STRIPE_KEY])
+   * // Change
+   * app.addDefaultFunctionConfig([STRIPE_KEY]);
+   * 
+   * // To
+   * app.addDefaultFunctionBinding([STRIPE_KEY]);
    * ```
    */
   public addDefaultFunctionConfig(
     config: (Config.Secret | Config.Parameter)[]
   ) {
     this.defaultFunctionProps.push({ config });
+  }
+
+  /**
+   * Binds additional default resources to be applied to all Lambda functions in the app.
+   *
+   * @example
+   * ```js
+   * app.addDefaultFunctionBinding([STRIPE_KEY, bucket]);
+   * ```
+   */
+  public addDefaultFunctionBinding(bind: SSTConstruct[]) {
+    this.defaultFunctionProps.push({ bind });
   }
 
   /**
@@ -529,37 +547,36 @@ export class App extends cdk.App {
         const id = c.id;
         const existingIds = ids[className] || new Set();
 
-        if (!id.match(/^[a-zA-Z]([a-zA-Z0-9_])+$/)) {
-          exitWithMessage([
+        if (!id.match(/^[a-zA-Z]([a-zA-Z0-9_])*$/)) {
+          throw new Error([
+            `Invalid id "${id}" for ${className} construct.`,
             ``,
-            `ERROR: Invalid id "${id}" for ${className} construct.`,
-            ``,
-            `Starting v1.16, constructs ids may only contain alphabetic characters and underscores ("_"), and must start with an alphabetic character. If you are migrating from version 1.15 or earlier, please see the migration guide — https://docs.serverless-stack.com/migration-guides/v1.15.16`,
+            `Starting v1.16, construct ids can only contain alphabetic characters and underscores ("_"), and must start with an alphabetic character. If you are migrating from version 1.15 or earlier, please see the upgrade guide — https://docs.serverless-stack.com/upgrade-guide#upgrade-to-v116`,
           ].join("\n"));
         }
         else if (["Parameter", "Secret"].includes(className)
           && (ids.Secret?.has(id) || ids.Parameter?.has(id))) {
-          exitWithMessage([
-            ``,
-            `ERROR: Config with id "${id}" already exists.`,
-          ].join("\n"));
+          throw new Error(`ERROR: Config with id "${id}" already exists.`);
         }
         else if (existingIds.has(id)) {
-          exitWithMessage([
+          throw new Error([
+            `${className} construct with id "${id}" already exists.`,
             ``,
-            `ERROR: ${className} construct with id "${id}" already exists.`,
-            ``,
-            `Starting v1.16, constructs must have unique ids for a given construct type. If you are migrating from version 1.15 or earlier, set "cdk.id" in the construct with the existing id, and pick a unique id for the construct. Please see the migration guide — https://docs.serverless-stack.com/migration-guides/v1.15.16`,
+            `Starting v1.16, constructs must have unique ids for a given construct type. If you are migrating from version 1.15 or earlier, set the "cdk.id" in the construct with the existing id, and pick a unique id for the construct. Please see the upgrade guide — https://docs.serverless-stack.com/upgrade-guide#upgrade-to-v116`,
             ``,
             `    For example, if you have two Bucket constructs with the same id:`,
-            `      new Bucket(this, "Files");`,
-            `      new Bucket(this, "Files");`,
+            `      new Bucket(this, "bucket");`,
+            `      new Bucket(this, "bucket");`,
             ``,
-            `    Change to:`,
-            `      new Bucket(this, "Files"});`,
-            `      new Bucket(this, "OtherFiles", {`,
+            `    Change it to:`,
+            `      new Bucket(this, "usersBucket", {`,
             `        cdk: {`,
-            `          id: "Files"`,
+            `          id: "bucket"`,
+            `        }`,
+            `      });`,
+            `      new Bucket(this, "adminBucket", {`,
+            `        cdk: {`,
+            `          id: "bucket"`,
             `        }`,
             `      });`,
           ].join("\n"));
@@ -676,11 +693,11 @@ declare module "@serverless-stack/node/${binding.clientPackage}" {
 
   public printWarnings() {
     if (this.warnings.usingConfig) {
-      logger.warn(`\nWARNING: Using "config" is deprecated, and will be removed in SST v2. Pass Parameters and Secrets into "use". Read more about how to upgrade here — https://docs.serverless-stack.com/constructs/function`);
+      logger.warn(`\nWARNING: The "config" prop is deprecated, and will be removed in SST v2. Pass Parameters and Secrets in through the "bind" prop. Read more about how to upgrade here — https://docs.serverless-stack.com/upgrade-guide#upgrade-to-v116`);
     }
 
     if (this.warnings.usingPermissionsWithSSTConstruct) {
-      logger.warn(`\nWARNING: Passing SST constructs into "permissions" is deprecated, and will be removed in SST v2. Pass them into "use". Read more about how to upgrade here — https://docs.serverless-stack.com/constructs/function`);
+      logger.warn(`\nWARNING: Passing SST constructs into "permissions" is deprecated, and will be removed in SST v2. Pass them into the "bind" prop. Read more about how to upgrade here — https://docs.serverless-stack.com/upgrade-guide#upgrade-to-v116`);
     }
   }
 

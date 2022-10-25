@@ -137,7 +137,8 @@ export class Queue extends Construct implements SSTConstruct {
    * The internally created consumer `Function` instance.
    */
   public consumerFunction?: Fn | lambda.IFunction;
-  private permissionsAttachedForAllConsumers: Permissions[];
+  private bindingForAllConsumers: SSTConstruct[] = [];
+  private permissionsAttachedForAllConsumers: Permissions[] = [];
   private props: QueueProps;
 
   constructor(scope: Construct, id: string, props?: QueueProps) {
@@ -146,7 +147,6 @@ export class Queue extends Construct implements SSTConstruct {
     this.id = id;
     this.props = props || {};
     this.cdk = {} as any;
-    this.permissionsAttachedForAllConsumers = [];
 
     this.createQueue();
 
@@ -249,8 +249,28 @@ export class Queue extends Construct implements SSTConstruct {
     this.permissionsAttachedForAllConsumers.forEach((permissions) => {
       fn.attachPermissions(permissions);
     });
+    fn.bind(this.bindingForAllConsumers);
 
     this.consumerFunction = fn;
+  }
+
+  /**
+   * Binds the given list of resources to the consumer function
+   *
+   * @example
+   * ```js
+   * const queue = new Queue(stack, "Queue", {
+   *   consumer: "src/function.handler",
+   * });
+   * queue.bind([STRIPE_KEY, bucket]);
+   * ```
+   */
+  public bind(constructs: SSTConstruct[]): void {
+    if (this.consumerFunction instanceof Fn) {
+      this.consumerFunction.bind(constructs);
+    }
+
+    this.bindingForAllConsumers.push(...constructs);
   }
 
   /**

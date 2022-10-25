@@ -163,8 +163,9 @@ export class Topic extends Construct implements SSTConstruct {
      */
     topic: sns.ITopic;
   };
-  private subscribers: Record<string, Fn | Queue>;
-  private permissionsAttachedForAllSubscribers: Permissions[];
+  private subscribers: Record<string, Fn | Queue> = {};
+  private bindingForAllSubscribers: SSTConstruct[] = [];
+  private permissionsAttachedForAllSubscribers: Permissions[] = [];
   private props: TopicProps;
 
   constructor(scope: Construct, id: string, props?: TopicProps) {
@@ -173,8 +174,6 @@ export class Topic extends Construct implements SSTConstruct {
     this.id = id;
     this.props = props || {};
     this.cdk = {} as any;
-    this.subscribers = {};
-    this.permissionsAttachedForAllSubscribers = [];
 
     this.createTopic();
     this.addSubscribers(this, props?.subscribers || {});
@@ -260,6 +259,55 @@ export class Topic extends Construct implements SSTConstruct {
   }
 
   /**
+   * Binds the given list of resources to all the subscriber functions.
+   *
+   * @example
+   *
+   * ```js
+   * const topic = new Topic(stack, "Topic", {
+   *   subscribers: {
+   *     subscriber1: "src/function1.handler",
+   *     subscriber2: "src/function2.handler"
+   *   },
+   * });
+   * topic.bind([STRIPE_KEY, bucket]);
+   * ```
+   */
+  public bind(constructs: SSTConstruct[]) {
+    Object.values(this.subscribers)
+      .filter((subscriber) => subscriber instanceof Fn)
+      .forEach((subscriber) => subscriber.bind(constructs));
+    this.bindingForAllSubscribers.push(...constructs);
+  }
+
+  /**
+   * Binds the given list of resources to a specific subscriber.
+   * @example
+   * ```js {5}
+   * const topic = new Topic(stack, "Topic", {
+   *   subscribers: {
+   *     subscriber1: "src/function1.handler",
+   *     subscriber2: "src/function2.handler"
+   *   },
+   * });
+   *
+   * topic.bindToSubscriber("subscriber1", [STRIPE_KEY, bucket]);
+   * ```
+   */
+  public bindToSubscriber(
+    subscriberName: string,
+    constructs: SSTConstruct[]
+  ): void {
+    const subscriber = this.subscribers[subscriberName];
+    if (!(subscriber instanceof Fn)) {
+      throw new Error(
+        `Cannot bind to the "${this.node.id}" Topic subscriber because it's not a Lambda function`
+      );
+    }
+    subscriber.bind(constructs);
+  }
+
+  /**
    * Attaches the given list of permissions to all the subscriber functions. This allows the subscribers to access other AWS resources.
    *
    * @example
@@ -274,7 +322,7 @@ export class Topic extends Construct implements SSTConstruct {
    * topic.attachPermissions(["s3"]);
    * ```
    */
-  public attachPermissions(permissions: Permissions): void {
+  public attachPermissions(permissions: Permissions) {
     Object.values(this.subscribers)
       .filter((subscriber) => subscriber instanceof Fn)
       .forEach((subscriber) => subscriber.attachPermissions(permissions));
@@ -282,7 +330,7 @@ export class Topic extends Construct implements SSTConstruct {
   }
 
   /**
-   * Attaches the list of permissions to a given subscriber by index
+   * Attaches the list of permissions to a specific subscriber.
    * @example
    * ```js {5}
    * const topic = new Topic(stack, "Topic", {
@@ -433,5 +481,6 @@ export class Topic extends Construct implements SSTConstruct {
     this.permissionsAttachedForAllSubscribers.forEach((permissions) =>
       fn.attachPermissions(permissions)
     );
+    fn.bind(this.bindingForAllSubscribers);
   }
 }

@@ -269,9 +269,10 @@ export class WebSocketApi extends Construct implements SSTConstruct {
     certificate?: acm.Certificate;
   };
   private _customDomainUrl?: string;
-  private functions: { [key: string]: Fn };
-  private apigRoutes: { [key: string]: apig.WebSocketRoute };
-  private permissionsAttachedForAllRoutes: Permissions[];
+  private functions: { [key: string]: Fn } = {};
+  private apigRoutes: { [key: string]: apig.WebSocketRoute } = {};
+  private bindingForAllRoutes: SSTConstruct[] = [];
+  private permissionsAttachedForAllRoutes: Permissions[] = [];
   private authorizer?:
     | "none"
     | "iam"
@@ -284,9 +285,6 @@ export class WebSocketApi extends Construct implements SSTConstruct {
     this.id = id;
     this.props = props || {};
     this.cdk = {} as any;
-    this.functions = {};
-    this.apigRoutes = {};
-    this.permissionsAttachedForAllRoutes = [];
 
     this.createWebSocketApi();
     this.createWebSocketStage();
@@ -350,13 +348,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
     >
   ): void {
     Object.keys(routes).forEach((routeKey: string) => {
-      // add route
-      const fn = this.addRoute(scope, routeKey, routes[routeKey]);
-
-      // attached existing permissions
-      this.permissionsAttachedForAllRoutes.forEach((permissions) =>
-        fn.attachPermissions(permissions)
-      );
+      this.addRoute(scope, routeKey, routes[routeKey]);
     });
   }
 
@@ -385,6 +377,45 @@ export class WebSocketApi extends Construct implements SSTConstruct {
   }
 
   /**
+   * Binds the given list of resources to all the routes.
+   *
+   * @example
+   *
+   * ```js
+   * api.bind([STRIPE_KEY, bucket]);
+   * ```
+   */
+  public bind(constructs: SSTConstruct[]) {
+    Object.values(this.functions).forEach((fn) =>
+      fn.bind(constructs)
+    );
+    this.bindingForAllRoutes.push(...constructs);
+  }
+
+  /**
+   * Binds the given list of resources to a specific route.
+   *
+   * @example
+   * ```js
+   * api.bindToRoute("$connect", [STRIPE_KEY, bucket]);
+   * ```
+   *
+   */
+  public bindToRoute(
+    routeKey: string,
+    constructs: SSTConstruct[]
+  ): void {
+    const fn = this.getFunction(routeKey);
+    if (!fn) {
+      throw new Error(
+        `Failed to bind resources. Route "${routeKey}" does not exist.`
+      );
+    }
+
+    fn.bind(constructs);
+  }
+
+  /**
    * Attaches the given list of permissions to all the routes. This allows the functions to access other AWS resources.
    *
    * @example
@@ -393,7 +424,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
    * api.attachPermissions(["s3"]);
    * ```
    */
-  public attachPermissions(permissions: Permissions): void {
+  public attachPermissions(permissions: Permissions) {
     Object.values(this.functions).forEach((fn) =>
       fn.attachPermissions(permissions)
     );
@@ -570,7 +601,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
     scope: Construct,
     routeKey: string,
     routeValue: FunctionInlineDefinition | WebSocketApiFunctionRouteProps
-  ): Fn {
+  ) {
     ///////////////////
     // Normalize routeKey
     ///////////////////
@@ -630,7 +661,11 @@ export class WebSocketApi extends Construct implements SSTConstruct {
     this.apigRoutes[routeKey] = route;
     this.functions[routeKey] = lambda;
 
-    return lambda;
+    // attached existing permissions
+    this.permissionsAttachedForAllRoutes.forEach((permissions) =>
+      lambda.attachPermissions(permissions)
+    );
+    lambda.bind(this.bindingForAllRoutes);
   }
 
   private buildRouteAuth() {

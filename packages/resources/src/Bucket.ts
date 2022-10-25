@@ -273,8 +273,9 @@ export class Bucket extends Construct implements SSTConstruct {
      */
     bucket: s3.IBucket;
   };
-  readonly notifications: Record<string, Fn | Queue | Topic>;
-  readonly permissionsAttachedForAllNotifications: Permissions[];
+  readonly notifications: Record<string, Fn | Queue | Topic> = {};
+  readonly bindingForAllNotifications: SSTConstruct[] = [];
+  readonly permissionsAttachedForAllNotifications: Permissions[] = [];
   readonly props: BucketProps;
 
   constructor(scope: Construct, id: string, props?: BucketProps) {
@@ -283,8 +284,6 @@ export class Bucket extends Construct implements SSTConstruct {
     this.id = id;
     this.props = props || {};
     this.cdk = {} as any;
-    this.notifications = {};
-    this.permissionsAttachedForAllNotifications = [];
 
     this.createBucket();
     this.addNotifications(this, props?.notifications || {});
@@ -339,6 +338,53 @@ export class Bucket extends Construct implements SSTConstruct {
         this.addNotification(scope, notificationName, notification);
       }
     );
+  }
+
+  /**
+   * Binds the given list of resources to all bucket notifications
+   * @example
+   * ```js {20}
+   * const bucket = new Bucket(stack, "Bucket", {
+   *   notifications: {
+   *     myNotification: "src/function.handler",
+   *   }
+   * });
+   *
+   * bucket.bind([STRIPE_KEY, bucket]);
+   * ```
+   */
+  public bind(constructs: SSTConstruct[]) {
+    this.notificationFunctions.forEach((notification) =>
+      notification.bind(constructs)
+    );
+    this.bindingForAllNotifications.push(...constructs);
+  }
+
+  /**
+   * Binds the given list of resources to a specific bucket notification
+   *
+   * @example
+   * ```js {20}
+   * const bucket = new Bucket(stack, "Bucket", {
+   *   notifications: {
+   *     myNotification: "src/function.handler",
+   *   }
+   * });
+   *
+   * bucket.bindToNotification("myNotification", ["s3"]);
+   * ```
+   */
+  public bindToNotification(
+    notificationName: string,
+    constructs: SSTConstruct[]
+  ): void {
+    const notification = this.notifications[notificationName];
+    if (!(notification instanceof Fn)) {
+      throw new Error(
+        `Cannot bind to the "${this.node.id}" Bucket notification because it's not a Lambda function`
+      );
+    }
+    notification.bind(constructs);
   }
 
   /**
@@ -583,6 +629,7 @@ export class Bucket extends Construct implements SSTConstruct {
     this.permissionsAttachedForAllNotifications.forEach((permissions) =>
       fn.attachPermissions(permissions)
     );
+    fn.bind(this.bindingForAllNotifications);
   }
 
   private buildCorsConfig(

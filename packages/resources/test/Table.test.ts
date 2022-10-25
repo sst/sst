@@ -2,6 +2,7 @@ import { test, expect } from "vitest";
 /* eslint-disable @typescript-eslint/ban-ts-comment*/
 
 import {
+  ANY,
   ABSENT,
   countResources,
   hasResource,
@@ -10,7 +11,7 @@ import {
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
-import { App, Stack, Function, Table, TableProps, KinesisStream } from "../src";
+import { App, Stack, Function, Table, TableProps, KinesisStream, Bucket } from "../src";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
@@ -1344,6 +1345,192 @@ test("attachPermissions-after-addConsumers", async () => {
           },
         },
         { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "ConsumerTableConsumer1ServiceRoleDefaultPolicyE0062C01",
+  });
+});
+
+test("bind", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "bucket");
+  const table = new Table(stack, "Table", {
+    ...baseTableProps,
+    stream: true,
+    consumers: {
+      Consumer_0: "test/lambda.handler",
+      Consumer_1: "test/lambda.handler",
+    },
+  });
+  table.bind([bucket]);
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "dynamodb:ListStreams", Effect: "Allow", Resource: "*" },
+        {
+          Action: [
+            "dynamodb:DescribeStream",
+            "dynamodb:GetRecords",
+            "dynamodb:GetShardIterator",
+          ],
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["Table710B521B", "StreamArn"] },
+        },
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "TableConsumerTableConsumer0ServiceRoleDefaultPolicy4FCBE589",
+  });
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "dynamodb:ListStreams", Effect: "Allow", Resource: "*" },
+        {
+          Action: [
+            "dynamodb:DescribeStream",
+            "dynamodb:GetRecords",
+            "dynamodb:GetShardIterator",
+          ],
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["Table710B521B", "StreamArn"] },
+        },
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "TableConsumerTableConsumer1ServiceRoleDefaultPolicyFB4719B0",
+  });
+});
+
+test("bindToConsumer", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "bucket");
+  const table = new Table(stack, "Table", {
+    ...baseTableProps,
+    stream: true,
+    consumers: {
+      Consumer_0: "test/lambda.handler",
+      Consumer_1: "test/lambda.handler",
+    },
+  });
+  table.bindToConsumer("Consumer_0", [bucket]);
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "dynamodb:ListStreams", Effect: "Allow", Resource: "*" },
+        {
+          Action: [
+            "dynamodb:DescribeStream",
+            "dynamodb:GetRecords",
+            "dynamodb:GetShardIterator",
+          ],
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["Table710B521B", "StreamArn"] },
+        },
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "TableConsumerTableConsumer0ServiceRoleDefaultPolicy4FCBE589",
+  });
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "dynamodb:ListStreams", Effect: "Allow", Resource: "*" },
+        {
+          Action: [
+            "dynamodb:DescribeStream",
+            "dynamodb:GetRecords",
+            "dynamodb:GetShardIterator",
+          ],
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["Table710B521B", "StreamArn"] },
+        },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "TableConsumerTableConsumer1ServiceRoleDefaultPolicyFB4719B0",
+  });
+});
+
+test("bindToConsumer: consumer not found", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "bucket");
+  const table = new Table(stack, "Table", {
+    ...baseTableProps,
+    stream: true,
+    consumers: {
+      Consumer_0: "test/lambda.handler",
+      Consumer_1: "test/lambda.handler",
+    },
+  });
+  expect(() => {
+    table.bindToConsumer("Consumer_2", [bucket]);
+  }).toThrow(/The "Consumer_2" consumer was not found in the "Table" Table/);
+});
+
+test("bind-after-addConsumers", async () => {
+  const app = new App();
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  const bucket = new Bucket(stackA, "bucket");
+  const table = new Table(stackA, "Table", {
+    ...baseTableProps,
+    stream: true,
+    consumers: {
+      Consumer_0: "test/lambda.handler",
+    },
+  });
+  table.bind([bucket]);
+  table.addConsumers(stackB, {
+    Consumer_1: "test/lambda.handler",
+  });
+  countResources(stackA, "AWS::Lambda::EventSourceMapping", 1);
+  hasResource(stackA, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "dynamodb:ListStreams", Effect: "Allow", Resource: "*" },
+        {
+          Action: [
+            "dynamodb:DescribeStream",
+            "dynamodb:GetRecords",
+            "dynamodb:GetShardIterator",
+          ],
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["Table710B521B", "StreamArn"] },
+        },
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "TableConsumerTableConsumer0ServiceRoleDefaultPolicy4FCBE589",
+  });
+  countResources(stackB, "AWS::Lambda::EventSourceMapping", 1);
+  hasResource(stackB, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "dynamodb:ListStreams", Effect: "Allow", Resource: "*" },
+        {
+          Action: [
+            "dynamodb:DescribeStream",
+            "dynamodb:GetRecords",
+            "dynamodb:GetShardIterator",
+          ],
+          Effect: "Allow",
+          Resource: {
+            "Fn::ImportValue":
+              "dev-my-app-stackA:ExportsOutputFnGetAttTable710B521BStreamArn08276382",
+          },
+        },
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
       ],
       Version: "2012-10-17",
     },

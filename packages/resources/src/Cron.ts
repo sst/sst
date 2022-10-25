@@ -148,12 +148,30 @@ export class Cron extends Construct implements SSTConstruct {
   }
 
   /**
-   * Attaches the given list of [permissions](Permissions.md) to the `jobFunction`. This allows the function to access other AWS resources.
+   * Binds the given list of resources to the cron job.
    *
-   * Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
+   * @example
+   *
+   * ```js
+   * cron.bind([STRIPE_KEY, bucket]);
+   * ```
    *
    */
-  public attachPermissions(permissions: Permissions): void {
+  public bind(constructs: SSTConstruct[]) {
+    this.jobFunction.bind(constructs);
+  }
+
+  /**
+   * Attaches the given list of permissions to the cron job. This allows the function to access other AWS resources.
+   *
+   * @example
+   *
+   * ```js
+   * cron.attachPermissions(["s3"]);
+   * ```
+   *
+   */
+  public attachPermissions(permissions: Permissions) {
     this.jobFunction.attachPermissions(permissions);
   }
 

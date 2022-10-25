@@ -559,11 +559,12 @@ export class ApiGatewayV1Api<
   };
   private _deployment?: apig.Deployment;
   private _customDomainUrl?: string;
-  private importedResources: { [path: string]: apig.IResource };
+  private importedResources: { [path: string]: apig.IResource } = {};
   private props: ApiGatewayV1ApiProps<Authorizers>;
-  private functions: { [key: string]: Fn };
-  private authorizersData: Record<string, apig.IAuthorizer>;
-  private permissionsAttachedForAllRoutes: Permissions[];
+  private functions: { [key: string]: Fn } = {};
+  private authorizersData: Record<string, apig.IAuthorizer> = {};
+  private bindingForAllRoutes: SSTConstruct[] = [];
+  private permissionsAttachedForAllRoutes: Permissions[] = [];
 
   constructor(
     scope: Construct,
@@ -575,10 +576,6 @@ export class ApiGatewayV1Api<
     this.id = id;
     this.props = props || {};
     this.cdk = {} as any;
-    this.functions = {};
-    this.authorizersData = {};
-    this.importedResources = {};
-    this.permissionsAttachedForAllRoutes = [];
 
     this.createRestApi();
     this.addAuthorizers(this.props.authorizers || ({} as Authorizers));
@@ -642,13 +639,7 @@ export class ApiGatewayV1Api<
     routes: Record<string, ApiGatewayV1ApiRouteProps<keyof Authorizers>>
   ): void {
     Object.keys(routes).forEach((routeKey: string) => {
-      // add route
-      const fn = this.addRoute(scope, routeKey, routes[routeKey]);
-
-      // attached existing permissions
-      this.permissionsAttachedForAllRoutes.forEach((permissions) =>
-        fn.attachPermissions(permissions)
-      );
+      this.addRoute(scope, routeKey, routes[routeKey]);
     });
   }
 
@@ -668,6 +659,51 @@ export class ApiGatewayV1Api<
    */
   public getFunction(routeKey: string): Fn | undefined {
     return this.functions[this.normalizeRouteKey(routeKey)];
+  }
+
+  /**
+   * Binds the given list of resources to all the routes.
+   *
+   * @example
+   *
+   * ```js
+   * api.bind([STRIPE_KEY, bucket]);
+   * ```
+   */
+  public bind(constructs: SSTConstruct[]) {
+    Object.values(this.functions).forEach((fn) =>
+      fn.bind(constructs)
+    );
+    this.bindingForAllRoutes.push(...constructs);
+  }
+
+  /**
+   * Binds the given list of resources to a specific route.
+   *
+   * @example
+   * ```js
+   * const api = new Api(stack, "Api", {
+   *   routes: {
+   *     "GET /notes": "src/list.main",
+   *   },
+   * });
+   *
+   * api.bindToRoute("GET /notes", [STRIPE_KEY, bucket]);
+   * ```
+   *
+   */
+  public bindToRoute(
+    routeKey: string,
+    constructs: SSTConstruct[]
+  ): void {
+    const fn = this.getFunction(routeKey);
+    if (!fn) {
+      throw new Error(
+        `Failed to bind resources. Route "${routeKey}" does not exist.`
+      );
+    }
+
+    fn.bind(constructs);
   }
 
   /**
@@ -1251,7 +1287,7 @@ export class ApiGatewayV1Api<
     scope: Construct,
     routeKey: string,
     routeValue: ApiGatewayV1ApiRouteProps<keyof Authorizers>
-  ): Fn {
+  ) {
     // Normalize routeKey
     ///////////////////
     routeKey = this.normalizeRouteKey(routeKey);
@@ -1334,7 +1370,12 @@ export class ApiGatewayV1Api<
     ///////////////////
     this.functions[routeKey] = lambda;
 
-    return lambda;
+
+    // attached existing permissions
+    this.permissionsAttachedForAllRoutes.forEach((permissions) =>
+      lambda.attachPermissions(permissions)
+    );
+    lambda.bind(this.bindingForAllRoutes);
   }
 
   private buildRouteMethodOptions(

@@ -236,7 +236,7 @@ export class Auth extends Construct implements SSTConstruct {
       for (const route of api.routes) {
         const fn = api.getFunction(route);
         if (!fn) continue;
-        fn.use([this]);
+        fn.bind([this]);
       }
     }
   }

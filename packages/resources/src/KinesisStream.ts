@@ -151,8 +151,9 @@ export class KinesisStream extends Construct implements SSTConstruct {
      */
     stream: kinesis.IStream;
   };
-  private functions: { [consumerName: string]: Fn };
-  private readonly permissionsAttachedForAllConsumers: Permissions[];
+  private functions: { [consumerName: string]: Fn } = {};
+  private readonly bindingForAllConsumers: SSTConstruct[] = [];
+  private readonly permissionsAttachedForAllConsumers: Permissions[] = [];
   private readonly props: KinesisStreamProps;
 
   constructor(scope: Construct, id: string, props?: KinesisStreamProps) {
@@ -161,8 +162,6 @@ export class KinesisStream extends Construct implements SSTConstruct {
     this.id = id;
     this.props = props || {};
     this.cdk = {} as any;
-    this.functions = {};
-    this.permissionsAttachedForAllConsumers = [];
 
     this.createStream();
 
@@ -212,6 +211,43 @@ export class KinesisStream extends Construct implements SSTConstruct {
   }
 
   /**
+   * Binds the given list of resources to all the consumers.
+   *
+   * @example
+   *
+   * ```js
+   * stream.bind([STRIPE_KEY, bucket]]);
+   * ```
+   */
+  public bind(constructs: SSTConstruct[]) {
+    Object.values(this.functions).forEach((fn) =>
+      fn.bind(constructs)
+    );
+    this.bindingForAllConsumers.push(...constructs);
+  }
+
+  /**
+   * Binds the given list of resources to a specific consumer.
+   *
+   * @example
+   * ```js
+   * stream.bindToConsumer("consumer1", [STRIPE_KEY, bucket]);
+   * ```
+   */
+  public bindToConsumer(
+    consumerName: string,
+    constructs: SSTConstruct[]
+  ): void {
+    if (!this.functions[consumerName]) {
+      throw new Error(
+        `The "${consumerName}" consumer was not found in the "${this.node.id}" KinesisStream.`
+      );
+    }
+
+    this.functions[consumerName].bind(constructs);
+  }
+
+  /**
    * Attaches the given list of permissions to all the consumers. This allows the functions to access other AWS resources.
    *
    * @example
@@ -220,7 +256,7 @@ export class KinesisStream extends Construct implements SSTConstruct {
    * stream.attachPermissions(["s3"]);
    * ```
    */
-  public attachPermissions(permissions: Permissions): void {
+  public attachPermissions(permissions: Permissions) {
     Object.values(this.functions).forEach((fn) =>
       fn.attachPermissions(permissions)
     );
@@ -345,6 +381,7 @@ export class KinesisStream extends Construct implements SSTConstruct {
     this.permissionsAttachedForAllConsumers.forEach((permissions) => {
       fn.attachPermissions(permissions);
     });
+    fn.bind(this.bindingForAllConsumers);
 
     return fn;
   }

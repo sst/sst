@@ -6,6 +6,7 @@ import {
   hasResource,
   templateMatches,
   objectLike,
+  ANY,
 } from "./helper";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import { App, Stack, Bucket, Function, Queue, Topic } from "../src";
@@ -533,7 +534,7 @@ test("attachPermissions", async () => {
     },
   });
   bucket.attachPermissions(["s3"]);
-  hasResource(stack, "AWS::IAM::Policy", {
+  countResourcesLike(stack, "AWS::IAM::Policy", 2, {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -541,17 +542,7 @@ test("attachPermissions", async () => {
       ],
       Version: "2012-10-17",
     },
-    PolicyName: "BucketNotificationBucket0ServiceRoleDefaultPolicyA97DEDCD",
-  });
-  hasResource(stack, "AWS::IAM::Policy", {
-    PolicyDocument: {
-      Statement: [
-        lambdaDefaultPolicy,
-        { Action: "s3:*", Effect: "Allow", Resource: "*" },
-      ],
-      Version: "2012-10-17",
-    },
-    PolicyName: "BucketNotificationBucket1ServiceRoleDefaultPolicy28968457",
+    PolicyName: ANY,
   });
 });
 
@@ -615,6 +606,97 @@ test("attachPermissions-after-addNotifications", async () => {
       Statement: [
         lambdaDefaultPolicy,
         { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "NotificationBucket1ServiceRoleDefaultPolicyD9CB4189",
+  });
+});
+
+test("bind", async () => {
+  const stack = new Stack(new App(), "stack");
+  const b = new Bucket(stack, "b");
+  const bucket = new Bucket(stack, "Bucket", {
+    notifications: {
+      "0": "test/lambda.handler",
+      "1": "test/lambda.handler",
+    },
+  });
+  bucket.bind([b]);
+  countResourcesLike(stack, "AWS::IAM::Policy", 2, {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: ANY,
+  });
+});
+
+test("bindToNotification", async () => {
+  const stack = new Stack(new App(), "stack");
+  const b = new Bucket(stack, "b");
+  const bucket = new Bucket(stack, "Bucket", {
+    notifications: {
+      "0": "test/lambda.handler",
+      "1": "test/lambda.handler",
+    },
+  });
+  bucket.bindToNotification("0", [b]);
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "BucketNotificationBucket0ServiceRoleDefaultPolicyA97DEDCD",
+  });
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [lambdaDefaultPolicy],
+      Version: "2012-10-17",
+    },
+    PolicyName: "BucketNotificationBucket1ServiceRoleDefaultPolicy28968457",
+  });
+});
+
+test("bind-after-addNotifications", async () => {
+  const app = new App();
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  const b = new Bucket(stackB, "b");
+  const bucket = new Bucket(stackA, "Bucket", {
+    notifications: {
+      "0": "test/lambda.handler",
+    },
+  });
+  bucket.bind([b]);
+  bucket.addNotifications(stackB, {
+    "1": "test/lambda.handler",
+  });
+  countResources(stackA, "AWS::Lambda::Function", 2);
+  countResources(stackA, "Custom::S3BucketNotifications", 1);
+  hasResource(stackA, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "BucketNotificationBucket0ServiceRoleDefaultPolicyA97DEDCD",
+  });
+  countResources(stackB, "AWS::Lambda::Function", 1);
+  countResources(stackB, "Custom::S3BucketNotifications", 0);
+  hasResource(stackB, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
       ],
       Version: "2012-10-17",
     },

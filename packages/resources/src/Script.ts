@@ -9,6 +9,7 @@ import {
   FunctionProps,
   FunctionDefinition,
 } from "./Function.js";
+import { SSTConstruct } from "./Construct.js";
 import { Permissions } from "./util/permission.js";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -136,6 +137,20 @@ export class Script extends Construct {
     this.deleteFunction = this.createUserFunction("onDelete", props.onDelete);
     const crFunction = this.createCustomResourceFunction();
     this.createCustomResource(root, crFunction);
+  }
+
+  /**
+   * Binds additional resources to the script
+   *
+   * @example
+   * ```js
+   * script.bind([STRIPE_KEY, bucket]);
+   * ```
+   */
+  public bind(constructs: SSTConstruct[]): void {
+    this.createFunction?.bind(constructs);
+    this.updateFunction?.bind(constructs);
+    this.deleteFunction?.bind(constructs);
   }
 
   /**

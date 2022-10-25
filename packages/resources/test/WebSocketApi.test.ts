@@ -1,5 +1,6 @@
 import { test, expect, vi } from "vitest";
 import {
+  ANY,
   ABSENT,
   countResources,
   countResourcesLike,
@@ -10,7 +11,7 @@ import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as logs from "aws-cdk-lib/aws-logs";
-import { App, Stack, WebSocketApi, Function } from "../src";
+import { App, Stack, WebSocketApi, Function, Bucket } from "../src";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
@@ -38,7 +39,7 @@ const manageConnectionsPolicy = {
 function importWebSocketApiFromAnotherStack(stack: Stack) {
   const app = stack.node.root as App;
   const misc = new Stack(app, "misc");
-  return new WebSocketApi(misc, "Api");
+  return new WebSocketApi(misc, "AnotherApi");
 }
 
 ///////////////////
@@ -1043,17 +1044,7 @@ test("attachPermissions", async () => {
     },
   });
   api.attachPermissions(["s3"]);
-  hasResource(stack, "AWS::IAM::Policy", {
-    PolicyDocument: {
-      Statement: [
-        lambdaDefaultPolicy,
-        manageConnectionsPolicy,
-        { Action: "s3:*", Effect: "Allow", Resource: "*" },
-      ],
-      Version: "2012-10-17",
-    },
-  });
-  hasResource(stack, "AWS::IAM::Policy", {
+  countResourcesLike(stack, "AWS::IAM::Policy", 2, {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -1106,7 +1097,7 @@ test("attachPermissions-after-addRoutes", async () => {
   api.addRoutes(stackB, {
     custom: "test/lambda.handler",
   });
-  hasResource(stackA, "AWS::IAM::Policy", {
+  countResourcesLike(stackA, "AWS::IAM::Policy", 2, {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -1116,17 +1107,7 @@ test("attachPermissions-after-addRoutes", async () => {
       Version: "2012-10-17",
     },
   });
-  hasResource(stackA, "AWS::IAM::Policy", {
-    PolicyDocument: {
-      Statement: [
-        lambdaDefaultPolicy,
-        manageConnectionsPolicy,
-        { Action: "s3:*", Effect: "Allow", Resource: "*" },
-      ],
-      Version: "2012-10-17",
-    },
-  });
-  hasResource(stackB, "AWS::IAM::Policy", {
+  countResourcesLike(stackB, "AWS::IAM::Policy", 1, {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -1150,6 +1131,111 @@ test("attachPermissions-after-addRoutes", async () => {
           },
         },
         { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+});
+
+test("bind", async () => {
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
+  const bucket = new Bucket(stack, "bucket");
+  const api = new WebSocketApi(stack, "Api", {
+    routes: {
+      $connect: "test/lambda.handler",
+      $disconnect: "test/lambda.handler",
+    },
+  });
+  api.bind([bucket]);
+  countResourcesLike(stack, "AWS::IAM::Policy", 2, {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        manageConnectionsPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+});
+
+test("bindToRoute", async () => {
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
+  const bucket = new Bucket(stack, "bucket");
+  const api = new WebSocketApi(stack, "Api", {
+    routes: {
+      $connect: "test/lambda.handler",
+      $disconnect: "test/lambda.handler",
+    },
+  });
+  api.bindToRoute("$connect", [bucket]);
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        manageConnectionsPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [lambdaDefaultPolicy, manageConnectionsPolicy],
+      Version: "2012-10-17",
+    },
+  });
+});
+
+test("bind-after-addRoutes", async () => {
+  const app = new App({ name: "websocket" });
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  const bucket = new Bucket(stackA, "bucket");
+  const api = new WebSocketApi(stackA, "Api", {
+    routes: {
+      $connect: "test/lambda.handler",
+      $disconnect: "test/lambda.handler",
+    },
+  });
+  api.bind([bucket]);
+  api.addRoutes(stackB, {
+    custom: "test/lambda.handler",
+  });
+  countResourcesLike(stackA, "AWS::IAM::Policy", 2, {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        manageConnectionsPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+  countResourcesLike(stackB, "AWS::IAM::Policy", 1, {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: "execute-api:ManageConnections",
+          Effect: "Allow",
+          Resource: {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                { Ref: "AWS::Partition" },
+                ":execute-api:us-east-1:my-account:",
+                {
+                  "Fn::ImportValue":
+                    "dev-websocket-stackA:ExportsOutputRefApiCD79AAA0A1504A18",
+                },
+                "/dev/POST/*",
+              ],
+            ],
+          },
+        },
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
       ],
       Version: "2012-10-17",
     },

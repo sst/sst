@@ -187,8 +187,7 @@ export class Cognito extends Construct implements SSTConstruct {
     authRole: iam.Role;
     unauthRole: iam.Role;
   };
-  private functions: { [key: string]: Fn };
-  private permissionsAttachedForAllTriggers: Permissions[];
+  private functions: { [key: string]: Fn } = {};
   private props: CognitoProps;
 
   constructor(scope: Construct, id: string, props?: CognitoProps) {
@@ -197,8 +196,6 @@ export class Cognito extends Construct implements SSTConstruct {
     this.id = id;
     this.props = props || {};
     this.cdk = {} as any;
-    this.functions = {};
-    this.permissionsAttachedForAllTriggers = [];
 
     this.createUserPool();
     this.createUserPoolClient();
@@ -287,11 +284,30 @@ export class Cognito extends Construct implements SSTConstruct {
     return this.attachPermissionsForUsers(this.cdk.unauthRole, arg1, arg2);
   }
 
+  public bindForTriggers(constructs: SSTConstruct[]): void {
+    Object.values(this.functions).forEach(fn =>
+      fn.bind(constructs)
+    );
+  }
+
+  public bindForTrigger(
+    triggerKey: keyof CognitoUserPoolTriggers,
+    constructs: SSTConstruct[]
+  ): void {
+    const fn = this.getFunction(triggerKey);
+    if (!fn) {
+      throw new Error(
+        `Failed to bind resources. Trigger "${triggerKey}" does not exist.`
+      );
+    }
+
+    fn.bind(constructs);
+  }
+
   public attachPermissionsForTriggers(permissions: Permissions): void {
     Object.values(this.functions).forEach(fn =>
       fn.attachPermissions(permissions)
     );
-    this.permissionsAttachedForAllTriggers.push(permissions);
   }
 
   public attachPermissionsForTrigger(

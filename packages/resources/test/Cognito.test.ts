@@ -1,5 +1,5 @@
 import { test, expect } from "vitest";
-import { ANY, ABSENT, hasResource, countResources } from "./helper";
+import { ANY, ABSENT, hasResource, countResources, countResourcesLike } from "./helper";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import {
@@ -12,7 +12,8 @@ import {
   CognitoFacebookProps,
   CognitoGoogleProps,
   CognitoTwitterProps,
-  Function
+  Function,
+  Bucket,
 } from "../src";
 
 const lambdaDefaultPolicy = {
@@ -661,11 +662,32 @@ test("attachPermissionsForTriggers", async () => {
     }
   });
   auth.attachPermissionsForTriggers(["s3"]);
-  hasResource(stack, "AWS::IAM::Policy", {
+  countResourcesLike(stack, "AWS::IAM::Policy", 2, {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
         { Action: "s3:*", Effect: "Allow", Resource: "*" }
+      ],
+      Version: "2012-10-17"
+    },
+  });
+});
+
+test("bindForTrigger", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "bucket");
+  const auth = new Cognito(stack, "Auth", {
+    triggers: {
+      createAuthChallenge: "test/lambda.handler",
+      customMessage: "test/lambda.handler"
+    }
+  });
+  auth.bindForTrigger("createAuthChallenge", [bucket]);
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY }
       ],
       Version: "2012-10-17"
     },
@@ -673,13 +695,31 @@ test("attachPermissionsForTriggers", async () => {
   });
   hasResource(stack, "AWS::IAM::Policy", {
     PolicyDocument: {
-      Statement: [
-        lambdaDefaultPolicy,
-        { Action: "s3:*", Effect: "Allow", Resource: "*" }
-      ],
+      Statement: [lambdaDefaultPolicy],
       Version: "2012-10-17"
     },
     PolicyName: "AuthcustomMessageServiceRoleDefaultPolicyDD31678C"
+  });
+});
+
+test("bindForTriggers", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "bucket");
+  const auth = new Cognito(stack, "Auth", {
+    triggers: {
+      createAuthChallenge: "test/lambda.handler",
+      customMessage: "test/lambda.handler"
+    }
+  });
+  auth.bindForTriggers([bucket]);
+  countResourcesLike(stack, "AWS::IAM::Policy", 2, {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY }
+      ],
+      Version: "2012-10-17"
+    },
   });
 });
 

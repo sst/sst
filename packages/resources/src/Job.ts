@@ -17,7 +17,6 @@ import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import { bindEnvironment, bindParameters, bindPermissions } from "./util/functionBinding.js";
 import { IVpc } from "aws-cdk-lib/aws-ec2";
-import { Fn } from "aws-cdk-lib";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -107,25 +106,34 @@ export interface JobProps {
    */
   environment?: Record<string, string>;
   /**
-   * Configure environment variables for the function
+   * Bind resources for the job
    *
    * @example
    * ```js
    * new Job(stack, "MyJob", {
    *   handler: "src/job.handler",
-   *   use: [STRIPE_KEY, bucket],
+   *   bind: [STRIPE_KEY, bucket],
    * })
    * ```
    */
-  use?: SSTConstruct[];
+  bind?: SSTConstruct[];
   /**
    * Configure environment variables for the job
-   * @deprecated Use `use` instead
+   * 
+   * @deprecated The "config" prop is deprecated, and will be removed in SST v2. Pass Parameters and Secrets in through the "bind" prop. Read more about how to upgrade here — https://docs.serverless-stack.com/constructs/function
+   * 
    * @example
    * ```js
+   * // Change
    * new Job(stack, "MyJob", {
    *   handler: "src/job.handler",
    *   config: [STRIPE_KEY, API_URL]
+   * })
+   * 
+   * // To
+   * new Job(stack, "MyJob", {
+   *   handler: "src/job.handler",
+   *   bind: [STRIPE_KEY, API_URL]
    * })
    * ```
    */
@@ -137,7 +145,7 @@ export interface JobProps {
    * ```js
    * new Job(stack, "MyJob", {
    *   handler: "src/job.handler",
-   *   permissions: ["ses", bucket]
+   *   permissions: ["ses"]
    * })
    * ```
    */
@@ -216,7 +224,7 @@ export class Job extends Construct implements SSTConstruct {
     }
     this.attachPermissions(props.permissions || []);
     this.addConfig(props.config || []);
-    this.use(props.use || []);
+    this.bind(props.bind || []);
     Object.entries(props.environment || {}).forEach(([key, value]) => {
       this.addEnvironment(key, value);
     });
@@ -246,33 +254,37 @@ export class Job extends Construct implements SSTConstruct {
   }
 
   /**
-   * Use additional constructs
+   * Binds additional resources to job.
    *
    * @example
    * ```js
-   * const STRIPE_KEY = new Config.Secret(stack, "STRIPE_KEY");
-   *
-   * job.use([STRIPE_KEY]);
+   * job.bind([STRIPE_KEY, bucket]);
    * ```
    */
-  public use(constructs: SSTConstruct[]): void {
-    this._jobInvoker.use(constructs);
+  public bind(constructs: SSTConstruct[]): void {
+    this._jobInvoker.bind(constructs);
     this.useForCodeBuild(constructs);
   }
 
   /**
-   * Attaches additional configs to job
+   * Attaches additional configs to job.
+   * 
+   * @deprecated The "config" prop is deprecated, and will be removed in SST v2. Pass Parameters and Secrets in through the "bind" prop. Read more about how to upgrade here — https://docs.serverless-stack.com/constructs/function
    *
    * @example
    * ```js
    * const STRIPE_KEY = new Config.Secret(stack, "STRIPE_KEY");
-   *
+   * 
+   * // Change
    * job.addConfig([STRIPE_KEY]);
+   * 
+   * // To
+   * job.bind([STRIPE_KEY]);
    * ```
    */
   public addConfig(config: (Secret | Parameter)[]): void {
     const app = this.node.root as App;
-    this.use(config);
+    this.bind(config);
 
     if (config.length > 0) {
       app.reportWarning("usingConfig");
@@ -284,7 +296,7 @@ export class Job extends Construct implements SSTConstruct {
    *
    * @example
    * ```js
-   * job.attachPermissions(["ses", bucket]);
+   * job.attachPermissions(["ses"]);
    * ```
    */
   public attachPermissions(permissions: Permissions): void {
@@ -293,7 +305,7 @@ export class Job extends Construct implements SSTConstruct {
   }
 
   /**
-   * Attaches additional environment variable to the job
+   * Attaches additional environment variable to the job.
    *
    * @example
    * ```js

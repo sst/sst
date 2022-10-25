@@ -308,8 +308,9 @@ export class Table extends Construct implements SSTConstruct {
     table: dynamodb.ITable;
   };
   private dynamodbTableType?: "CREATED" | "IMPORTED";
-  private functions: { [consumerName: string]: Fn };
-  private permissionsAttachedForAllConsumers: Permissions[];
+  private functions: { [consumerName: string]: Fn } = {};
+  private bindingForAllConsumers: SSTConstruct[] = [];
+  private permissionsAttachedForAllConsumers: Permissions[] = [];
   private props: TableProps;
   private stream?: dynamodb.StreamViewType;
   private fields?: Record<string, TableFieldType>;
@@ -321,9 +322,7 @@ export class Table extends Construct implements SSTConstruct {
     this.props = props;
     const { fields, globalIndexes, localIndexes, kinesisStream } = this.props;
     this.cdk = {} as any;
-    this.functions = {};
     this.fields = fields;
-    this.permissionsAttachedForAllConsumers = [];
 
     // Input Validation
     this.validateFieldsAndIndexes(id, props);
@@ -509,6 +508,42 @@ export class Table extends Construct implements SSTConstruct {
   }
 
   /**
+   * Binds the given list of resources to all consumers of this table.
+   *
+   * @example
+   * ```js
+   * table.bind([STRIPE_KEY, bucket]);
+   * ```
+   */
+  public bind(constructs: SSTConstruct[]) {
+    Object.values(this.functions).forEach((fn) =>
+      fn.bind(constructs)
+    );
+    this.bindingForAllConsumers.push(...constructs);
+  }
+
+  /**
+   * Binds the given list of resources to a specific consumer of this table.
+   *
+   * @example
+   * ```js
+   * table.bindToConsumer("consumer1", [STRIPE_KEY, bucket]);
+   * ```
+   */
+  public bindToConsumer(
+    consumerName: string,
+    constructs: SSTConstruct[]
+  ): void {
+    if (!this.functions[consumerName]) {
+      throw new Error(
+        `The "${consumerName}" consumer was not found in the "${this.node.id}" Table.`
+      );
+    }
+
+    this.functions[consumerName].bind(constructs);
+  }
+
+  /**
    * Grant permissions to all consumers of this table.
    *
    * @example
@@ -516,7 +551,7 @@ export class Table extends Construct implements SSTConstruct {
    * table.attachPermissions(["s3"]);
    * ```
    */
-  public attachPermissions(permissions: Permissions): void {
+  public attachPermissions(permissions: Permissions) {
     Object.values(this.functions).forEach((fn) =>
       fn.attachPermissions(permissions)
     );
@@ -728,6 +763,7 @@ export class Table extends Construct implements SSTConstruct {
     this.permissionsAttachedForAllConsumers.forEach((permissions) => {
       fn.attachPermissions(permissions);
     });
+    fn.bind(this.bindingForAllConsumers);
 
     return fn;
   }
