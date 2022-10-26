@@ -1,6 +1,6 @@
 import { Context } from "@serverless-stack/node/context/context.js";
 import { Logger } from "@core/logger.js";
-import { useMetadata } from "@core/stacks/metadata.js";
+import { useFunctions, useMetadata } from "@core/stacks/metadata.js";
 import path from "path";
 import fs from "fs/promises";
 import { useWatcher } from "@core/watcher.js";
@@ -43,19 +43,6 @@ interface RuntimeHandler {
   canHandle: (runtime: string) => boolean;
   build: (input: BuildInput) => Promise<string>;
 }
-
-export const useFunctions = Context.memo(async () => {
-  const metadata = await useMetadata();
-  const result: Record<string, any> = {};
-  for (const [_, meta] of Object.entries(metadata)) {
-    for (const item of meta) {
-      if (item.type === "Function") {
-        result[item.data.localId] = item;
-      }
-    }
-  }
-  return result;
-});
 
 export const useRuntimeHandlers = Context.memo(() => {
   const handlers: RuntimeHandler[] = [];

@@ -1,8 +1,5 @@
 import chalk from "chalk";
-import {
-  getChildLogger,
-  FunctionConfig,
-} from "@serverless-stack/core";
+import { getChildLogger, FunctionConfig } from "@serverless-stack/core";
 
 const logger = getChildLogger("client");
 
@@ -13,17 +10,17 @@ export default async function (argv, config) {
   logger.info("");
 
   if (action === "list") {
-      await handleList(argv, app, stage, region);
+    await handleList(argv, app, stage, region);
   } else if (action === "get") {
-      await handleGet(argv, app, stage, region);
+    await handleGet(argv, app, stage, region);
   } else if (action === "set") {
-      await handleSet(argv, app, stage, region);
+    await handleSet(argv, app, stage, region);
   } else if (action === "set-fallback") {
-      await handleSetFallback(argv, app, region);
+    await handleSetFallback(argv, app, region);
   } else if (action === "remove") {
-      await handleRemove(argv, app, stage, region);
+    await handleRemove(argv, app, stage, region);
   } else if (action === "remove-fallback") {
-      await handleRemoveFallback(argv, app, region);
+    await handleRemoveFallback(argv, app, region);
   }
 
   logger.info("");
@@ -35,11 +32,9 @@ async function handleList(argv, app, stage, region) {
 
   if (keys.length === 0) {
     logger.info(`No secrets found for the ${stage} stage.`);
-  }
-  else if (argv.format === "env") {
+  } else if (argv.format === "env") {
     printSecretsInEnvFormat(secrets);
-  }
-  else {
+  } else {
     printSecretsInTableFormat(secrets);
   }
 }
@@ -49,11 +44,11 @@ async function handleGet(argv, app, stage, region) {
   const secret = await FunctionConfig.getSecret(app, stage, region, name);
   if (secret.value) {
     logger.info(chalk.bold(secret.value));
-  }
-  else if (secret.fallbackValue) {
-    logger.info(`${chalk.bold(secret.fallbackValue)} ${chalk.gray("(fallback)")}`);
-  }
-  else {
+  } else if (secret.fallbackValue) {
+    logger.info(
+      `${chalk.bold(secret.fallbackValue)} ${chalk.gray("(fallback)")}`
+    );
+  } else {
     logger.info(`${name} is not set. To set it, run`);
     logger.info("");
     logger.info(chalk.bold(`  sst secrets set ${name} <value>`));
@@ -93,26 +88,30 @@ function printSecretsInEnvFormat(secrets) {
 
 function printSecretsInTableFormat(secrets) {
   const keys = Object.keys(secrets);
-  const keyLen = Math.max(
-    "Secrets".length,
-    ...keys.map((key) => key.length),
-  );
+  const keyLen = Math.max("Secrets".length, ...keys.map((key) => key.length));
   const valueLen = Math.max(
     "Values".length,
-    ...keys.map((key) => secrets[key].value
-      ? secrets[key].value.length
-      : `${secrets[key].fallbackValue} (fallback)`.length
-    ),
+    ...keys.map((key) =>
+      secrets[key].value
+        ? secrets[key].value.length
+        : `${secrets[key].fallbackValue} (fallback)`.length
+    )
   );
 
-  logger.info("┌".padEnd(keyLen + 3, "─") + "┬" + "".padEnd(valueLen + 2, "─") + "┐");
+  logger.info(
+    "┌".padEnd(keyLen + 3, "─") + "┬" + "".padEnd(valueLen + 2, "─") + "┐"
+  );
   logger.info(`│ ${"Secrets".padEnd(keyLen)} │ ${"Values".padEnd(valueLen)} │`);
-  logger.info("├".padEnd(keyLen + 3, "─") + "┼" + "".padEnd(valueLen + 2, "─") + "┤");
+  logger.info(
+    "├".padEnd(keyLen + 3, "─") + "┼" + "".padEnd(valueLen + 2, "─") + "┤"
+  );
   keys.sort().forEach((key) => {
     const value = secrets[key].value
       ? secrets[key].value
       : `${secrets[key].fallbackValue} ${chalk.gray("(fallback)")}`;
     logger.info(`│ ${key.padEnd(keyLen)} │ ${value.padEnd(valueLen)} │`);
   });
-  logger.info("└".padEnd(keyLen + 3, "─") + "┴" + "".padEnd(valueLen + 2, "─") + "┘");
+  logger.info(
+    "└".padEnd(keyLen + 3, "─") + "┴" + "".padEnd(valueLen + 2, "─") + "┘"
+  );
 }

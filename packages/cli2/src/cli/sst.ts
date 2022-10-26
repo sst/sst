@@ -20,7 +20,7 @@ import caporal from "@caporal/core";
 import { Update } from "./commands/update.js";
 import { Scrap } from "./commands/scrap.js";
 import { Build } from "./commands/build.js";
-import { Secrets } from "./commands/secrets.js";
+import { Secrets } from "./commands/secrets/index.js";
 import { analyze } from "./commands/analyze.js";
 import { Deploy } from "./commands/deploy.js";
 import { bind } from "./commands/bind.js";
@@ -95,21 +95,44 @@ program
   });
 
 program
-  .command("secrets", "")
+  .command("bind", "")
+  .argument("<command>", "Command to bind to")
   .option("--profile <profile>", "AWS profile to use")
   .option("--stage <stage>", "Stage to use")
   .action(async (req) => {
     await initProject(req.options);
-    Secrets();
+    await bind({
+      command: req.args.command!.toString(),
+    });
   });
 
 program
-  .command("bind", "")
+  .command("secrets list", "Fetch and decrypt all secrets")
+  .argument("[format]", "Either `table` or `env`", {
+    default: "table",
+  })
   .option("--profile <profile>", "AWS profile to use")
   .option("--stage <stage>", "Stage to use")
   .action(async (req) => {
     await initProject(req.options);
-    bind({});
+    await Secrets.list({
+      format: req.args.format.toString() as any,
+    });
+  });
+
+program
+  .command("secrets set", "Set secret value")
+  .argument("<name>", "Name of secret")
+  .argument("<value>", "Value of secret")
+  .option("--profile <profile>", "AWS profile to use")
+  .option("--stage <stage>", "Stage to use")
+  .action(async (req) => {
+    const { set } = await import("./commands/secrets/set.js");
+    await initProject(req.options);
+    await set({
+      key: req.args.name.toString(),
+      value: req.args.value.toString(),
+    });
   });
 
 program.run();

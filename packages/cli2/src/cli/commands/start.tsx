@@ -3,13 +3,12 @@ import { render } from "ink";
 import React from "react";
 import { useBus } from "@core/bus.js";
 import { Logger } from "@core/logger.js";
-import { useFunctions } from "@core/runtime/handlers.js";
 import { useIOTBridge } from "@core/runtime/iot.js";
 import { useNodeHandler } from "@core/runtime/node.js";
 import { useRuntimeServer } from "@core/runtime/server.js";
 import { useRuntimeWorkers } from "@core/runtime/workers.js";
 import { Stacks } from "@core/stacks/index.js";
-import { useMetadata } from "@core/stacks/metadata.js";
+import { useFunctions, useMetadata } from "@core/stacks/metadata.js";
 import { useWatcher } from "@core/watcher.js";
 import { Context } from "@serverless-stack/node/context/index.js";
 
@@ -51,7 +50,7 @@ const useFunctionLogger = Context.memo(async () => {
 });
 
 const useStackBuilder = Context.memo(async () => {
-  const watcher = await useWatcher();
+  const watcher = useWatcher();
   const bus = useBus();
 
   async function build() {
