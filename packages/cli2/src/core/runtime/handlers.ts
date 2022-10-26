@@ -1,13 +1,13 @@
 import { Context } from "@serverless-stack/node/context/context.js";
-import { Logger } from "../logger/index.js";
-import { useMetadata } from "../stacks/metadata.js";
-import { useStateDirectory } from "../state/index.js";
+import { Logger } from "@core/logger.js";
+import { useMetadata } from "@core/stacks/metadata.js";
 import path from "path";
 import fs from "fs/promises";
-import { useWatcher } from "../watcher/watcher.js";
-import { useBus } from "../bus/index.js";
+import { useWatcher } from "@core/watcher.js";
+import { useBus } from "@core/bus.js";
+import { useProject } from "@core/app.js";
 
-declare module "../bus/index.js" {
+declare module "@core/bus.js" {
   export interface Events {
     "function.built": {
       functionID: string;
@@ -57,7 +57,7 @@ export const useFunctions = Context.memo(async () => {
   return result;
 });
 
-export const useRuntimeHandlers = Context.memo(async () => {
+export const useRuntimeHandlers = Context.memo(() => {
   const handlers: RuntimeHandler[] = [];
 
   return {
@@ -75,11 +75,12 @@ interface Artifact {
   handler: string;
 }
 
-export const useFunctionBuilder = Context.memo(async () => {
+export const useFunctionBuilder = Context.memo(() => {
   const artifacts = new Map<string, Artifact>();
-  const handlers = await useRuntimeHandlers();
+  const handlers = useRuntimeHandlers();
   const bus = useBus();
-  const artifactPath = path.join(await useStateDirectory(), "artifacts");
+  const project = useProject();
+  const artifactPath = path.join(project.paths.out, "artifacts");
 
   const result = {
     on: bus.forward("function.built"),
@@ -111,7 +112,7 @@ export const useFunctionBuilder = Context.memo(async () => {
     },
   };
 
-  const watcher = await useWatcher();
+  const watcher = useWatcher();
   watcher.subscribe("file.changed", async (evt) => {
     const functions = await useFunctions();
     for (const [_, func] of Object.entries(functions)) {

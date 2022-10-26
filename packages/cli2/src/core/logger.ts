@@ -1,8 +1,6 @@
-import { Context } from "@serverless-stack/node/context/index.js";
 import chalk, { ChalkInstance } from "chalk";
 import fs from "fs/promises";
 import path from "path";
-import { useStateDirectory } from "../state";
 
 type Colors = {
   [key in keyof typeof chalk]: typeof chalk[key] extends ChalkInstance

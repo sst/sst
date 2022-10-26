@@ -1,33 +1,32 @@
 import { bold, magenta, green, blue } from "colorette";
 import { render } from "ink";
 import React from "react";
-import { useBus } from "../../bus/index.js";
-import { Logger } from "../../logger/index.js";
-import { useFunctions } from "../../runtime/handlers.js";
-import { useIOTBridge } from "../../runtime/iot.js";
-import { useNodeHandler } from "../../runtime/node.js";
-import { useRuntimeServer } from "../../runtime/server.js";
-import { useRuntimeWorkers } from "../../runtime/workers.js";
-import { Stacks } from "../../stacks/index.js";
-import { useMetadata } from "../../stacks/metadata.js";
-import { useWatcher } from "../../watcher/watcher.js";
+import { useBus } from "@core/bus.js";
+import { Logger } from "@core/logger.js";
+import { useFunctions } from "@core/runtime/handlers.js";
+import { useIOTBridge } from "@core/runtime/iot.js";
+import { useNodeHandler } from "@core/runtime/node.js";
+import { useRuntimeServer } from "@core/runtime/server.js";
+import { useRuntimeWorkers } from "@core/runtime/workers.js";
+import { Stacks } from "@core/stacks/index.js";
+import { useMetadata } from "@core/stacks/metadata.js";
+import { useWatcher } from "@core/watcher.js";
 import { Context } from "@serverless-stack/node/context/index.js";
 
 import { DeploymentUI } from "./deploy.js";
 import { Metafile } from "esbuild";
 
 export async function start() {
-  const [workers] = await Promise.all([
+  await Promise.all([
     useRuntimeWorkers(),
     useIOTBridge(),
     useRuntimeServer(),
     useNodeHandler(),
     useMetadata(),
-    useStackBuilder(),
     useFunctionLogger(),
   ]);
-
   Logger.ui("green", "Listening for function invocations...");
+  await useStackBuilder();
 }
 
 const useFunctionLogger = Context.memo(async () => {

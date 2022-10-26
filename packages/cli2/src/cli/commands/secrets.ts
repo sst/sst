@@ -1,11 +1,11 @@
 import { GetParametersByPathCommand, SSMClient } from "@aws-sdk/client-ssm";
-import { useConfig } from "../../config/index.js";
-import { useAWSClient } from "../../credentials/index.js";
+import { useProject } from "@core/app";
+import { useAWSClient } from "@core/credentials.js";
 
 export async function Secrets() {
-  const ssm = await useAWSClient(SSMClient);
-  const config = await useConfig();
-  const path = `/sst/${config.name}/${config.stage}/secrets/`;
+  const ssm = useAWSClient(SSMClient);
+  const project = useProject();
+  const path = `/sst/${project.name}/${project.stage}/secrets/`;
   const result = await ssm.send(
     new GetParametersByPathCommand({
       Path: path,

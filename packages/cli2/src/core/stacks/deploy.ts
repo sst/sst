@@ -4,9 +4,9 @@ import {
   DescribeStackResourcesOutput,
   DescribeStacksCommand,
 } from "@aws-sdk/client-cloudformation";
-import { useBus } from "../bus/index.js";
-import { useAWSClient, useAWSProvider } from "../credentials/index.js";
-import { Logger } from "../logger/index.js";
+import { useBus } from "@core/bus.js";
+import { useAWSClient, useAWSProvider } from "@core/credentials.js";
+import { Logger } from "@core/logger.js";
 import type { CloudFormationStackArtifact } from "aws-cdk-lib/cx-api";
 
 const STATUSES = [

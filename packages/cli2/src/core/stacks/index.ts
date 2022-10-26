@@ -1,12 +1,11 @@
 import path from "path";
 import { build } from "./build.js";
 import { deploy, deployMany, isFinal } from "./deploy.js";
-import { useSTSIdentity } from "../credentials/index.js";
-import { useConfig } from "../config/index.js";
-import { useBootstrap } from "../bootstrap/index.js";
-import { Logger } from "../logger/index.js";
-import { useStateDirectory } from "../state/index.js";
+import { useSTSIdentity } from "@core/credentials.js";
+import { useBootstrap } from "@core/bootstrap.js";
+import { Logger } from "@core/logger.js";
 import type { App } from "@serverless-stack/resources";
+import { useProject } from "@core/app.js";
 
 interface SynthOptions {
   buildDir?: string;
@@ -20,24 +19,24 @@ async function synth(opts: SynthOptions) {
   Logger.debug("Synthesizing stacks...");
   const { App } = await import("@serverless-stack/resources");
   const { Configuration } = await import("aws-cdk/lib/settings.js");
-  opts = {
-    buildDir: ".sst/out",
-    ...opts,
-  };
-  const [identity, config, bootstrap] = await Promise.all([
+  const project = useProject();
+  const [identity, bootstrap] = await Promise.all([
     useSTSIdentity(),
-    useConfig(),
     useBootstrap(),
   ]);
+  opts = {
+    buildDir: path.join(project.paths.out, "cdk.out"),
+    ...opts,
+  };
 
   const cfg = new Configuration();
   await cfg.load();
   const app = new App(
     {
       account: identity.Account!,
-      stage: config.stage,
-      name: config.name,
-      region: config.region,
+      stage: project.stage,
+      name: project.name,
+      region: project.region,
       mode: opts.mode,
       skipBuild: opts.mode !== "deploy",
       bootstrapAssets: {
@@ -47,7 +46,7 @@ async function synth(opts: SynthOptions) {
       },
     },
     {
-      outdir: opts.buildDir || path.join(await useStateDirectory(), "out"),
+      outdir: opts.buildDir || path.join(project.paths.out, "cdk.out"),
       context: cfg.context.all,
     }
   );

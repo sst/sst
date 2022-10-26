@@ -1,7 +1,7 @@
 import { GetParametersCommand, SSMClient } from "@aws-sdk/client-ssm";
 import { Context } from "@serverless-stack/node/context/index.js";
-import { useAWSClient } from "../credentials/index.js";
-import { Logger } from "../logger/index.js";
+import { useAWSClient } from "@core/credentials.js";
+import { Logger } from "@core/logger.js";
 
 const SSM_NAME_VERSION = `/sst/bootstrap/version`;
 const SSM_NAME_STACK_NAME = `/sst/bootstrap/stack-name`;

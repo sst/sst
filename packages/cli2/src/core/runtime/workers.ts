@@ -1,9 +1,9 @@
 import { Context } from "@serverless-stack/node/context/context.js";
-import { useBus } from "../bus/index.js";
+import { useBus } from "@core/bus.js";
 import { useFunctionBuilder, useRuntimeHandlers } from "./handlers.js";
 import { useRuntimeServerConfig } from "./server.js";
 
-declare module "../bus/index.js" {
+declare module "@core/bus.js" {
   export interface Events {
     "worker.started": {
       workerID: string;
@@ -30,11 +30,11 @@ interface Worker {
   functionID: string;
 }
 
-export const useRuntimeWorkers = Context.memo(async () => {
+export const useRuntimeWorkers = Context.memo(() => {
   const workers = new Map<string, Worker>();
   const bus = useBus();
-  const handlers = await useRuntimeHandlers();
-  const builder = await useFunctionBuilder();
+  const handlers = useRuntimeHandlers();
+  const builder = useFunctionBuilder();
   const server = useRuntimeServerConfig();
 
   builder.on("function.built", async (evt) => {

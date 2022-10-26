@@ -1,7 +1,7 @@
-import { useBus } from "../../bus/index.js";
-import { useIOT } from "../../iot/index.js";
+import { useBus } from "@core/bus.js";
+import { useIOT } from "@core/iot.js";
 
-declare module "../../bus/index.js" {
+declare module "@core/bus.js" {
   export interface Events {}
 }
 

@@ -1,8 +1,5 @@
 import spawn from "cross-spawn";
-import {
-  getChildLogger,
-  FunctionConfig,
-} from "@serverless-stack/core";
+import { getChildLogger, FunctionConfig } from "@serverless-stack/core";
 
 const logger = getChildLogger("client");
 
@@ -27,7 +24,8 @@ export default async function (argv, config) {
     configEnv[`${FunctionConfig.PARAM_ENV_PREFIX}${key}`] = parameters[key];
   });
   Object.keys(secrets).forEach((key) => {
-    configEnv[`${FunctionConfig.PARAM_ENV_PREFIX}${key}`] = secrets[key].value || secrets[key].fallbackValue;
+    configEnv[`${FunctionConfig.PARAM_ENV_PREFIX}${key}`] =
+      secrets[key].value || secrets[key].fallbackValue;
   });
 
   // Spawn process

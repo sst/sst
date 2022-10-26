@@ -1,6 +1,6 @@
-import {} from "../bus/index.js";
+import "@core/bus.js";
 
-declare module "../bus/index.js" {
+declare module "@core/bus.js" {
   export interface Events {
     "function.invoked": {
       workerID: string;

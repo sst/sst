@@ -4,30 +4,29 @@ import { Client } from "@aws-sdk/smithy-client";
 import { RegionInputConfig } from "@aws-sdk/config-resolver";
 import { RetryInputConfig } from "@aws-sdk/middleware-retry";
 import { AwsAuthInputConfig } from "@aws-sdk/middleware-signing";
-import { useConfig } from "../config/index.js";
 import { GetCallerIdentityCommand, STSClient } from "@aws-sdk/client-sts";
-import { Logger } from "../logger/index.js";
+import { Logger } from "@core/logger.js";
 import { SdkProvider } from "aws-cdk/lib/api/aws-auth/sdk-provider.js";
 import { StandardRetryStrategy } from "@aws-sdk/middleware-retry";
 
 type Config = RegionInputConfig & RetryInputConfig & AwsAuthInputConfig;
 
-export const useAWSCredentialsProvider = Context.memo(async () => {
-  const config = await useConfig();
-  Logger.debug("Using AWS profile", config.profile);
+export const useAWSCredentialsProvider = Context.memo(() => {
+  const project = useProject();
+  Logger.debug("Using AWS profile", project.profile);
   const provider = fromNodeProviderChain({
-    profile: config.profile,
+    profile: project.profile,
   });
   return provider;
 });
 
-export const useAWSCredentials = async () => {
-  const provider = await useAWSCredentialsProvider();
+export const useAWSCredentials = () => {
+  const provider = useAWSCredentialsProvider();
   return provider();
 };
 
 export const useSTSIdentity = Context.memo(async () => {
-  const sts = await useAWSClient(STSClient);
+  const sts = useAWSClient(STSClient);
   const identity = await sts.send(new GetCallerIdentityCommand({}));
   Logger.debug(
     "Using identity",
@@ -41,19 +40,16 @@ export const useSTSIdentity = Context.memo(async () => {
 
 const useClientCache = Context.memo(() => new Map<string, any>());
 
-export async function useAWSClient<C extends Client<any, any, any, any>>(
+export function useAWSClient<C extends Client<any, any, any, any>>(
   client: new (config: Config) => C,
   force = false
 ) {
   const cache = useClientCache();
   const existing = cache.get(client.name);
   if (existing && !force) return existing as C;
-  const [config, credentials] = await Promise.all([
-    useConfig(),
-    useAWSCredentialsProvider(),
-  ]);
+  const [project, credentials] = [useProject(), useAWSCredentialsProvider()];
   const result = new client({
-    region: config.region,
+    region: project.region,
     credentials: credentials,
     retryStrategy: new StandardRetryStrategy(async () => 10000, {
       delayDecider: (_, attempts) => {
@@ -67,6 +63,7 @@ export async function useAWSClient<C extends Client<any, any, any, any>>(
 }
 
 import aws from "aws-sdk";
+import { useProject } from "./app";
 const CredentialProviderChain = aws.CredentialProviderChain;
 
 /**
@@ -74,7 +71,7 @@ const CredentialProviderChain = aws.CredentialProviderChain;
  */
 export const useAWSProvider = async () => {
   Logger.debug("Loading v2 AWS SDK");
-  const config = await useConfig();
+  const project = useProject();
   const creds = await useAWSCredentials();
   const chain = new CredentialProviderChain([
     () => ({
@@ -97,8 +94,9 @@ export const useAWSProvider = async () => {
       secretAccessKey: creds.secretAccessKey!,
     }),
   ]);
-  const provider = new SdkProvider(chain, config.region!, {
-    region: config.region,
+  const provider = new SdkProvider(chain, project.region!, {
+    maxRetries: 10000,
+    region: project.region,
   });
 
   return provider;

@@ -51,7 +51,7 @@ const api = new ApiGatewayV1Api(stack, "Api", {
   },
 });
 
-api.addRoutes(this, {
+api.addRoutes(stack, {
   "GET    /notes/{id}": "src/get.main",
   "PUT    /notes/{id}": "src/update.main",
   "DELETE /notes/{id}": "src/delete.main",
@@ -234,7 +234,7 @@ new ApiGatewayV1Api(stack, "Api", {
   customDomain: {
     path: "newPath",
     cdk: {
-      domainName: DomainName.fromDomainNameAttributes(this, "MyDomain", {
+      domainName: DomainName.fromDomainNameAttributes(stack, "MyDomain", {
         domainName,
         domainNameAliasHostedZoneId,
         domainNameAliasTarget,
@@ -256,7 +256,7 @@ new ApiGatewayV1Api(stack, "Api", {
   customDomain: {
     domainName: "api.domain.com",
     cdk: {
-      certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+      certificate: Certificate.fromCertificateArn(stack, "MyCert", certArn),
     },
   },
   routes: {
@@ -272,13 +272,13 @@ If you have the domain name stored in AWS SSM Parameter Store, you can reference
 ```js {3,6-9}
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
 
-const rootDomain = StringParameter.valueForStringParameter(this, `/myApp/domain`);
+const rootDomain = StringParameter.valueForStringParameter(stack, `/myApp/domain`);
 
 new ApiGatewayV1Api(stack, "Api", {
   customDomain: {
     domainName: `api.${rootDomain}`,
     cdk: {
-      hostedZone: HostedZone.fromHostedZoneAttributes(this, "MyZone", {
+      hostedZone: HostedZone.fromHostedZoneAttributes(stack, "MyZone", {
         hostedZoneId,
         zoneName,
       }),
@@ -339,7 +339,7 @@ new ApiGatewayV1Api(stack, "Api", {
   authorizers: {
     myAuthorizer: {
       type: "lambda_request",
-      function: new Function(this, "Authorizer", {
+      function: new Function(stack, "Authorizer", {
         handler: "src/authorizer.main",
       }),
       identitySources: [apigateway.IdentitySource.header("Authorization")],
@@ -366,7 +366,7 @@ new ApiGatewayV1Api(stack, "Api", {
   authorizers: {
     myAuthorizer: {
       type: "lambda_request",
-      function: new Function(this, "Authorizer", {
+      function: new Function(stack, "Authorizer", {
         handler: "src/authorizer.main",
       }),
       identitySources: [apigateway.IdentitySource.header("Authorization")],
@@ -454,6 +454,48 @@ new ApiGatewayV1Api(stack, "Api", {
 ```
 
 ### Advanced examples
+
+#### Using Lambda container images
+
+```js
+import * as lambda from "aws-cdk-lib/aws-lambda";
+
+const fn = new lambda.DockerImageFunction(stack, "DockerFunction", {
+  code: lambda.DockerImageCode.fromImageAsset("path/to/Dockerfile/folder"),
+});
+
+new ApiGatewayV1Api(stack, "Api", {
+  routes: {
+    "GET /": {
+      cdk: {
+        function: fn,
+      }
+    },
+  },
+});
+```
+
+#### Using Lambda aliases
+
+```js
+const fn = new Function(stack, "MyFunction", {
+  handler: "handler.main",
+});
+const alias = new lambda.Alias(stack, "MyAlias", {
+  aliasName: "hello",
+  version: fn.currentVersion,
+});
+
+new ApiGatewayV1Api(stack, "Api", {
+  routes: {
+    "GET /": {
+      cdk: {
+        function: alias,
+      }
+    },
+  },
+});
+```
 
 #### Configuring Regional endpoint
 
@@ -545,7 +587,7 @@ import { RestApi } from "aws-cdk-lib/aws-apigateway";
 
 new ApiGatewayV1Api(stack, "Api", {
   cdk: {
-    restApi: RestApi.fromRestApiAttributes(this, "MyRestApi", {
+    restApi: RestApi.fromRestApiAttributes(stack, "MyRestApi", {
       restApiId,
       rootResourceId,
     }),

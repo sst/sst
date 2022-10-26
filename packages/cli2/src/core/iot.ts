@@ -1,10 +1,10 @@
 import { IoTClient, DescribeEndpointCommand } from "@aws-sdk/client-iot";
 import { Context } from "@serverless-stack/node/context/context.js";
-import { useAWSClient, useAWSCredentials } from "../credentials/index.js";
-import { VisibleError } from "../error/index.js";
+import { useAWSClient, useAWSCredentials } from "@core/credentials.js";
+import { VisibleError } from "@core/error.js";
 
 export const useIOTEndpoint = Context.memo(async () => {
-  const iot = await useAWSClient(IoTClient);
+  const iot = useAWSClient(IoTClient);
   Logger.debug("Getting IoT endpoint");
   const response = await iot.send(
     new DescribeEndpointCommand({
@@ -20,9 +20,9 @@ export const useIOTEndpoint = Context.memo(async () => {
 });
 
 import iot from "aws-iot-device-sdk";
-import { EventPayload, Events, EventTypes, useBus } from "../bus/index.js";
-import { useConfig } from "../config/index.js";
-import { Logger } from "../logger/index.js";
+import { EventPayload, Events, EventTypes, useBus } from "@core/bus.js";
+import { useProject } from "@core/app.js";
+import { Logger } from "@core/logger.js";
 
 interface Fragment {
   id: string;
@@ -36,7 +36,7 @@ export const useIOT = Context.memo(async () => {
 
   const endpoint = await useIOTEndpoint();
   const creds = await useAWSCredentials();
-  const config = await useConfig();
+  const project = useProject();
   const device = new iot.device({
     protocol: "wss",
     host: endpoint,
@@ -44,7 +44,7 @@ export const useIOT = Context.memo(async () => {
     secretKey: creds.secretAccessKey,
     sessionToken: creds.sessionToken,
   });
-  const PREFIX = `/sst/${config.name}/${config.stage}`;
+  const PREFIX = `/sst/${project.name}/${project.stage}`;
   device.subscribe(`${PREFIX}/events`);
 
   const fragments = new Map<string, Map<number, Fragment>>();

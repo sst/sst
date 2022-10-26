@@ -1,6 +1,6 @@
 import { CloudAssembly } from "aws-cdk-lib/cx-api";
-import { useBus } from "../../bus/index.js";
-import { Stacks } from "../../stacks/index.js";
+import { useBus } from "@core/bus.js";
+import { Stacks } from "@core/stacks/index.js";
 import React, { useState, useEffect } from "react";
 import { Box, render, Text } from "ink";
 import inkSpinner from "ink-spinner";

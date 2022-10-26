@@ -1104,9 +1104,9 @@ export class RemixSite extends Construct implements SSTConstruct {
       })
     );
 
-    const waitForInvalidation =
-      this.props.waitForInvalidation === false ? false : true;
-
+    const waitForInvalidation = this.isPlaceholder
+      ? false
+      : (this.props.waitForInvalidation === false ? false : true);
     return new CustomResource(this, "CloudFrontInvalidation", {
       serviceToken: invalidator.functionArn,
       resourceType: "Custom::SSTCloudFrontInvalidation",

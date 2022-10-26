@@ -1,32 +1,32 @@
-import { useBootstrap } from "../bootstrap/index.js";
-import { useAWSCredentialsProvider } from "../credentials";
+import { useBootstrap } from "@core/bootstrap.js";
+import { useAWSCredentialsProvider } from "@core/credentials.js";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
-import { useConfig } from "../config/index.js";
 import { json } from "stream/consumers";
-import { useCache } from "../cache/cache.js";
+import { useCache } from "@core/cache.js";
 import { Context } from "@serverless-stack/node/context/index.js";
-import { useBus } from "../bus/index.js";
+import { useBus } from "@core/bus.js";
 import { Stacks } from "./index.js";
-import { Logger } from "../logger/index.js";
+import { Logger } from "@core/logger.js";
+import { useProject } from "@core/app.js";
 
-declare module "../bus/index.js" {
+declare module "@core/bus.js" {
   export interface Events {
     "stacks.metadata": Record<string, any[]>;
   }
 }
 
 export async function metadata(stackID: string) {
-  const [config, credentials, bootstrap] = await Promise.all([
-    useConfig(),
+  const [project, credentials, bootstrap] = await Promise.all([
+    useProject(),
     useAWSCredentialsProvider(),
     useBootstrap(),
   ]);
 
   const s3 = new S3Client({
-    region: config.region,
+    region: project.region,
     credentials: credentials,
   });
-  const key = `stackMetadata/app.${config.name}/stage.${config.stage}/stack.${stackID}.json`;
+  const key = `stackMetadata/app.${project.name}/stage.${project.stage}/stack.${stackID}.json`;
   Logger.debug("Getting metadata", key, "from", bootstrap.bucket);
 
   try {
@@ -47,7 +47,7 @@ export async function metadata(stackID: string) {
 
 const MetadataContext = Context.create(async () => {
   const bus = useBus();
-  const cache = useCache();
+  const cache = await useCache();
   const data: Record<string, any[]> = await cache
     .read("metadata.json")
     .then((x) => (x ? JSON.parse(x) : {}));

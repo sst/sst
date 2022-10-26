@@ -4,6 +4,7 @@ description: "Frequently asked questions about SST."
 ---
 
 import config from "../config";
+import styles from "./video.module.css";
 import HeadlineText from "@site/src/components/HeadlineText";
 
 <HeadlineText>
@@ -53,6 +54,10 @@ If you happen to be familiar with [AWS CDK](https://sst.dev/chapters/what-is-aws
 
 - CDK is a framework for **defining the infrastructure** of your application.
 - While SST is a **full-stack application framework**, similar to Rails or Django, that happens to use CDK to define your infrastructure.
+
+<div class={styles.videoWrapper}>
+  <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/pKF76iW1_Og" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 #### SST, an application framework
 

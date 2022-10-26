@@ -783,7 +783,7 @@ new Api(stack, "Api", {
 });
 ```
 
-#### Creating Lambda container images
+#### Using Lambda container images
 
 ```js
 import * as lambda from "aws-cdk-lib/aws-lambda";
@@ -797,6 +797,28 @@ new Api(stack, "Api", {
     "GET /": {
       cdk: {
         function: fn,
+      }
+    },
+  },
+});
+```
+
+#### Using Lambda aliases
+
+```js
+const fn = new Function(stack, "MyFunction", {
+  handler: "handler.main",
+});
+const alias = new lambda.Alias(stack, "MyAlias", {
+  aliasName: "hello",
+  version: fn.currentVersion,
+});
+
+new Api(stack, "Api", {
+  routes: {
+    "GET /": {
+      cdk: {
+        function: alias,
       }
     },
   },

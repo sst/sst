@@ -1,7 +1,7 @@
 import { Context } from "@serverless-stack/node/context/context.js";
 import express from "express";
-import { Events, useBus } from "../bus/index.js";
-import { Logger } from "../logger/index.js";
+import { Events, useBus } from "@core/bus.js";
+import { Logger } from "@core/logger.js";
 import { useRuntimeWorkers } from "./workers.js";
 
 export const useRuntimeServerConfig = Context.memo(() => {
@@ -15,7 +15,7 @@ export const useRuntimeServerConfig = Context.memo(() => {
 export const useRuntimeServer = Context.memo(async () => {
   const bus = useBus();
   const app = express();
-  const workers = await useRuntimeWorkers();
+  const workers = useRuntimeWorkers();
   const cfg = useRuntimeServerConfig();
 
   const workersWaiting = new Map<

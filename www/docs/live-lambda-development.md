@@ -157,17 +157,19 @@ Live Lambda Dev also supports connecting to AWS resources inside a VPC. We'll [l
 
 Live Lambda Dev and setting breakpoints are supported in the following languages.
 
-| Language   | Live Lambda | Breakpoints |
-| ---------- | ----------- | ----------- |
-| JavaScript | ✅          | ✅          |
-| TypeScript | ✅          | ✅          |
-| Python     | ✅          | 💪          |
-| Golang     | ✅          | ❌          |
-| Java       | ✅          | ❌          |
-| C#         | ✅          | ❌          |
-| F#         | ✅          | ❌          |
+| Language   | Live Lambda                      | Set breakpoints                  |
+| ---------- | -------------------------------- | -------------------------------- |
+| JavaScript | <i className="fas fa-check"></i> | <i className="fas fa-check"></i> |
+| TypeScript | <i className="fas fa-check"></i> | <i className="fas fa-check"></i> |
+| Python     | <i className="fas fa-check"></i> | <i className="fas fa-users"></i> |
+| Golang     | <i className="fas fa-check"></i> | <i className="fas fa-times"></i> |
+| Java       | <i className="fas fa-check"></i> | <i className="fas fa-times"></i> |
+| C#         | <i className="fas fa-check"></i> | <i className="fas fa-times"></i> |
+| F#         | <i className="fas fa-check"></i> | <i className="fas fa-times"></i> |
 
-✅ Officially supported 💪 [Community support](https://www.linen.dev/s/serverless-stack/t/445893/Hey-U01J5Q8HV5Z-U01JVDKASAC-I-ve-successfully-followed-the-G) ❌ Not supported
+<i className="fas fa-check"></i> Officially supported&nbsp;&nbsp;
+<i className="fas fa-users"></i> <a href="https://www.linen.dev/s/serverless-stack/t/445893/Hey-U01J5Q8HV5Z-U01JVDKASAC-I-ve-successfully-followed-the-G">Community support</a>&nbsp;&nbsp;
+<i className="fas fa-times"></i> Not supported&nbsp;&nbsp;
 
 ---
 

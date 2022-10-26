@@ -263,10 +263,10 @@ export interface StaticSiteProps {
   waitForInvalidation?: boolean;
 }
 
-export interface StaticSiteDomainProps extends BaseSiteDomainProps {}
-export interface StaticSiteReplaceProps extends BaseSiteReplaceProps {}
+export interface StaticSiteDomainProps extends BaseSiteDomainProps { }
+export interface StaticSiteReplaceProps extends BaseSiteReplaceProps { }
 export interface StaticSiteCdkDistributionProps
-  extends BaseSiteCdkDistributionProps {}
+  extends BaseSiteCdkDistributionProps { }
 
 /////////////////////
 // Construct
@@ -322,8 +322,8 @@ export class StaticSite extends Construct implements SSTConstruct {
     const buildDir = root.buildDir;
     const fileSizeLimit = root.isRunningSSTTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
-        props.sstTestFileSizeLimitOverride || 200
+      // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
+      props.sstTestFileSizeLimitOverride || 200
       : 200;
 
     this.props = props;
@@ -432,8 +432,7 @@ export class StaticSite extends Construct implements SSTConstruct {
     // validate site path exists
     if (!fs.existsSync(sitePath)) {
       throw new Error(
-        `No path found at "${path.resolve(sitePath)}" for the "${
-          this.node.id
+        `No path found at "${path.resolve(sitePath)}" for the "${this.node.id
         }" StaticSite.`
       );
     }
@@ -750,8 +749,9 @@ export class StaticSite extends Construct implements SSTConstruct {
       .digest("hex");
 
     // Create custom resource
-    const waitForInvalidation =
-      this.props.waitForInvalidation === false ? false : true;
+    const waitForInvalidation = this.isPlaceholder
+      ? false
+      : (this.props.waitForInvalidation === false ? false : true);
     return new CustomResource(this, "CloudFrontInvalidation", {
       serviceToken: invalidator.functionArn,
       resourceType: "Custom::SSTCloudFrontInvalidation",

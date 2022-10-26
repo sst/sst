@@ -5,6 +5,7 @@ import {
   countResources,
   countResourcesLike,
   hasResource,
+  printResource,
   objectLike,
 } from "./helper";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
@@ -12,6 +13,7 @@ import * as apig from "aws-cdk-lib/aws-apigateway";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as ssm from "aws-cdk-lib/aws-ssm";
+import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as logs from "aws-cdk-lib/aws-logs";
 import { App, Stack, ApiGatewayV1Api, Function } from "../src";
 
@@ -1285,7 +1287,7 @@ test("route-ApiRouteProps-function-FunctionProps-with-defaults.function-override
   });
 });
 
-test("routes: authorizer lambda_request override by none", async () => {
+test("routes: ApiRouteProps: authorizer lambda_request override by none", async () => {
   const stack = new Stack(new App({ name: "apiv1" }), "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
   new ApiGatewayV1Api(stack, "Api", {
@@ -1320,7 +1322,7 @@ test("routes: authorizer lambda_request override by none", async () => {
   });
 });
 
-test("routes: authorizer iam override by none", async () => {
+test("routes: ApiRouteProps: authorizer iam override by none", async () => {
   const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
@@ -1341,7 +1343,7 @@ test("routes: authorizer iam override by none", async () => {
   });
 });
 
-test("routes: authorizer none override by iam", async () => {
+test("routes: ApiRouteProps: authorizer none override by iam", async () => {
   const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
@@ -1360,7 +1362,7 @@ test("routes: authorizer none override by iam", async () => {
   });
 });
 
-test("routes: authorizationScopes override", async () => {
+test("routes: ApiRouteProps: authorizationScopes override", async () => {
   const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
@@ -1390,7 +1392,7 @@ test("routes: authorizationScopes override", async () => {
   });
 });
 
-test("route-ApiRouteProps-integrationOptions", async () => {
+test("routes: ApiRouteProps: integrationOptions", async () => {
   const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
@@ -1411,6 +1413,29 @@ test("route-ApiRouteProps-integrationOptions", async () => {
   hasResource(stack, "AWS::ApiGateway::Method", {
     Integration: objectLike({
       RequestParameters: { a: "b" },
+    }),
+  });
+});
+
+test("routes: ApiRouteProps cdk.function", async () => {
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
+  const fn = new Function(stack, "Fn", { handler: "test/lambda.handler" });
+  new ApiGatewayV1Api(stack, "Api", {
+    routes: {
+      "GET /": {
+        cdk: {
+          function: fn.currentVersion,
+        },
+      },
+    },
+  });
+  countResources(stack, "AWS::Lambda::Function", 1);
+  countResources(stack, "AWS::Lambda::Version", 1);
+  hasResource(stack, "AWS::ApiGateway::Method", {
+    HttpMethod: "GET",
+    Integration: objectLike({
+      IntegrationHttpMethod: "POST",
+      Type: "AWS_PROXY",
     }),
   });
 });

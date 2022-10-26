@@ -1,8 +1,8 @@
-import { useProjectRoot } from "../../config/index.js";
 import fs from "fs/promises";
 import path from "path";
 import { fetch } from "undici";
-import { Logger } from "../../logger/index.js";
+import { Logger } from "@core/logger.js";
+import { useProject } from "@core/app";
 
 interface Opts {
   version?: string;
@@ -19,8 +19,8 @@ const SST_PACKAGES = [
 const FIELDS = ["dependencies", "devDependencies"];
 
 export async function Update(opts: Opts) {
-  const root = await useProjectRoot();
-  const files = await find(root);
+  const project = useProject();
+  const files = await find(project.paths.root);
   const version =
     opts.version ||
     (await fetch(`https://registry.npmjs.org/@serverless-stack/core/latest`)
@@ -59,7 +59,7 @@ export async function Update(opts: Opts) {
   }
 
   for (const [file, pkgs] of results.entries()) {
-    Logger.ui("green", `✅ ${path.relative(root, file)}`);
+    Logger.ui("green", `✅ ${path.relative(project.paths.root, file)}`);
     for (const pkg of pkgs) {
       Logger.ui("green", `     ${pkg}@${version}`);
     }

@@ -16937,6 +16937,11 @@ remeda@^0.0.32:
   resolved "https://registry.npmjs.org/remeda/-/remeda-0.0.32.tgz"
   integrity sha512-FEdl8ONpqY7AvvMHG5WYdomc0mGf2khHPUDu6QvNkOq4Wjkw5BvzWM4QyksAQ/US1sFIIRG8TVBn6iJx6HbRrA==
 
+remeda@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/remeda/-/remeda-1.1.0.tgz#7ace312bc69fe9250e3c04c082d1d269109be470"
+  integrity sha512-dtPAM1fP1HEorGDYyJiZUYfgzswyey0S1sD1FpCOhfgmpTJmnLz32q2WeEB1EyNLMENJuXSKWY8Hrm1CKM9lpw==
+
 remove-accents@0.4.2:
   version "0.4.2"
   resolved "https://registry.npmjs.org/remove-accents/-/remove-accents-0.4.2.tgz"

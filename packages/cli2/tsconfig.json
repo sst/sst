@@ -6,7 +6,12 @@
     "moduleResolution": "node",
     "outDir": "./dist",
     "allowSyntheticDefaultImports": true,
-    "jsx": "react"
+    "jsx": "react",
+    "baseUrl": "./src",
+    "paths": {
+      "@core/*": ["core/*"],
+      "@cli/*": ["cli/*"]
+    }
   },
   "include": ["src", "support"],
   "exclude": []

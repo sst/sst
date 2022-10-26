@@ -1,5 +1,5 @@
 import { Context } from "@serverless-stack/node/context/index.js";
-import { Logger } from "../logger/index.js";
+import { Logger } from "@core/logger.js";
 import crypto from "crypto";
 
 export interface Events {}

@@ -1,10 +1,9 @@
-import { useProjectRoot, useConfig } from "../config/index.js";
 import esbuild from "esbuild";
 import fs from "fs/promises";
 import path from "path";
-import { useStateDirectory } from "../state/index.js";
-import { Logger } from "../logger/index.js";
-import { useBus } from "../bus/index.js";
+import { Logger } from "@core/logger.js";
+import { useBus } from "@core/bus.js";
+import { useProject } from "@core/app";
 
 declare module "../bus" {
   export interface Events {
@@ -15,16 +14,16 @@ declare module "../bus" {
 }
 
 export async function build() {
-  const root = await useProjectRoot();
-  const state = await useStateDirectory();
-  const config = await useConfig();
+  const project = useProject();
   const bus = useBus();
   const pkg = JSON.parse(
-    await fs.readFile(path.join(root, "package.json")).then((x) => x.toString())
+    await fs
+      .readFile(path.join(project.paths.root, "package.json"))
+      .then((x) => x.toString())
   );
-  const outfile = path.join(state, `stacks.${Math.random()}.mjs`);
+  const outfile = path.join(project.paths.out, `stacks.${Math.random()}.mjs`);
 
-  Logger.debug("Running esbuild on", config.main, "to", outfile);
+  Logger.debug("Running esbuild on", project.main, "to", outfile);
   const result = await esbuild.build({
     keepNames: true,
     bundle: true,
@@ -42,7 +41,7 @@ export async function build() {
         ...pkg.peerDependencies,
       }),
     ],
-    absWorkingDir: root,
+    absWorkingDir: project.paths.root,
     outfile,
     banner: {
       js: [
@@ -53,7 +52,7 @@ export async function build() {
     // The entry can have any file name (ie. "stacks/anything.ts"). We want the
     // build output to be always named "lib/index.js". This allow us to always
     // import from "buildDir" without needing to pass "anything" around.
-    entryPoints: [config.main],
+    entryPoints: [project.main],
   });
   Logger.debug("Finished esbuild");
 

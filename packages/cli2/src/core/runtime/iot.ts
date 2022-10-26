@@ -1,6 +1,6 @@
 import { Context } from "@serverless-stack/node/context/context.js";
-import { useBus } from "../bus";
-import { useIOT } from "../iot";
+import { useBus } from "@core/bus.js";
+import { useIOT } from "@core/iot.js";
 
 export const useIOTBridge = Context.memo(async () => {
   const bus = useBus();

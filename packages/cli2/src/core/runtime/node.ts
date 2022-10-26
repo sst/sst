@@ -1,25 +1,25 @@
 import { Context } from "@serverless-stack/node/context/context.js";
-import { useRuntimeHandlers } from "./handlers.js";
 import path from "path";
 import fs from "fs";
-import { useProjectRoot } from "../config/index.js";
+import { useProject } from "@core/app.js";
 import esbuild from "esbuild";
 import url from "url";
 import { Worker } from "worker_threads";
+import { useRuntimeHandlers } from "./handlers.js";
 import { useRuntimeWorkers } from "./workers.js";
 
-export const useNodeHandler = Context.memo(async () => {
-  const handlers = await useRuntimeHandlers();
-  const workers = await useRuntimeWorkers();
+export const useNodeHandler = Context.memo(() => {
+  const handlers = useRuntimeHandlers();
+  const workers = useRuntimeWorkers();
   const cache: Record<string, esbuild.BuildResult> = {};
-  const root = await useProjectRoot();
+  const project = useProject();
   const threads = new Map<string, Worker>();
 
   handlers.register({
     shouldBuild: (input) => {
       const result = cache[input.functionID];
       if (!result) return false;
-      const relative = path.relative(root, input.file);
+      const relative = path.relative(project.paths.root, input.file);
       return Boolean(result.metafile?.inputs[relative]);
     },
     startWorker: async (input) => {
@@ -52,7 +52,7 @@ export const useNodeHandler = Context.memo(async () => {
       const dir = path.dirname(input.handler);
       const ext = path.extname(input.handler);
       const base = path.basename(input.handler).split(".")[0];
-      const root = await useProjectRoot();
+      const root = project.paths.root;
       const file = [
         ".ts",
         ".tsx",

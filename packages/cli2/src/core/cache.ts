@@ -1,20 +1,24 @@
-import { useStateDirectory } from "../state";
+import { Logger } from "@core/logger.js";
 import path from "path";
 import fs from "fs/promises";
 import { Context } from "@serverless-stack/node/context/index.js";
-import { Logger } from "../logger";
+import { useProject } from "./app";
 
-export const useCache = Context.memo(() => {
+export const useCache = Context.memo(async () => {
+  const project = useProject();
+  const cache = path.join(project.paths.out, "cache");
+  await fs.mkdir(cache, {
+    recursive: true,
+  });
+
   async function write(key: string, data: string) {
-    const root = await useStateDirectory();
-    const full = path.join(root, "cache", key);
+    const full = path.join(cache, key);
     Logger.debug("Writing cache", full, data.length, "bytes");
     await fs.writeFile(full, data);
   }
 
   async function read(key: string) {
-    const root = await useStateDirectory();
-    const full = path.join(root, "cache", key);
+    const full = path.join(cache, key);
     try {
       const data = await fs.readFile(full);
       return data.toString();
