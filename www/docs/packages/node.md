@@ -35,13 +35,14 @@ When you import `@serverless-stack/node/config`, it does two things:
 - For Secrets, `Config` performs a top-level await to fetch and decrypt the secrets values from SSM ie. `/sst/{appName}/{stageName}/secrets/STRIPE_KEY`. Once fetched, you can reference `Config.STRIPE_KEY` directly in your code.
 - For Parameters, `Config` reads the parameter values from Lambda environment variables, ie. `process.env.SST_PARAM_USER_UPDATED_TOPIC` and assigns to `Config.USER_UPDATED_TOPIC`.
 
-Read more about how Config works in the chapter on [Environment variables](../environment-variables.md).
+Read more about how Config works in the chapter on [Environment variables](../config.md).
 
 ### Job
 
 The `Job` module helps with creating and running [job](../constructs/Job.md) handler functions. You can [read more about it over on the job docs](../long-running-jobs.md).
 
 #### `JobTypes`
+
 A type interface you can extend to define the job payload types.
 
 ```ts
@@ -61,8 +62,7 @@ The `JobHandler` provides a function that can be used to implement the job handl
 ```js
 import { JobHandler } from "@serverless-stack/node/job";
 
-export const handler = JobHandler("MyJob", async (payload) => {
-});
+export const handler = JobHandler("MyJob", async (payload) => {});
 ```
 
 #### `Job.run`
@@ -72,8 +72,8 @@ export const handler = JobHandler("MyJob", async (payload) => {
 ```ts
 await Job.run("MyJob", {
   payload: {
-    num: 100
-  }
+    num: 100,
+  },
 });
 ```
 

@@ -120,7 +120,7 @@ The above test only works if we run `sst load-config -- vitest run`. The `sst lo
 
 We can rewrite the above test so that instead of calling `Article.create()`, you make a request to the GraphQL API to create the article. In fact, the GraphQL stack template already includes this test.
 
-To call the GraphQL API in our test, we need to know the API's URL. We create a [`Parameter`](../environment-variables.md#configparameter) in `stacks/Api.ts`:
+To call the GraphQL API in our test, we need to know the API's URL. We create a [`Parameter`](../config.md#parameters) in `stacks/Api.ts`:
 
 ```ts title="stacks/Api.ts"
 new Config.Parameter(stack, "API_URL", {
@@ -263,7 +263,7 @@ The best way to isolate tests is to create separate scopes for each test. In our
 
 ## How `sst load-config` works
 
-When testing your code, you have to ensure the testing environment has the same environment variable values as the Lambda environment. In the past, people would manually maintain a `.env.test` file with environment values. SST has built-in support for automatically loading the secrets and environment values that are managed by [`Config`](../environment-variables.md).
+When testing your code, you have to ensure the testing environment has the same environment variable values as the Lambda environment. In the past, people would manually maintain a `.env.test` file with environment values. SST has built-in support for automatically loading the secrets and environment values that are managed by [`Config`](../config.md).
 
 The [`sst load-config`](../packages/cli.md#load-config) CLI fetches all the `Config` values, [`Parameter`](constructs/Parameter.md) and [`Secret`](constructs/Secret.md), that are used in your app, and invokes the `vitest run` with the values configured as environment variables.
 

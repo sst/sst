@@ -1,6 +1,6 @@
 ---
 title: Resource Binding
-description: "Accessing SST resources in your functions code."
+description: "Accessing SST resources in your functions."
 ---
 
 import HeadlineText from "@site/src/components/HeadlineText";
@@ -16,20 +16,18 @@ Access the resources in your app in a secure and typesafe way.
 
 ## Overview
 
-`Resource Binding` connects your functions with the rest of your infrastructure. This is made up of two steps:
+**Resource Binding** allows you to connect your functions with your infrastructure. This is done in two steps:
 
-1. In stack code — bind resources to functions.
-2. In function code — use the [`@serverless-stack/node`](packages/node.md) helper to access the bound resources.
+1. Bind a resource to the functions in your infrastructure code through the `bind` prop.
+2. Use the [`@serverless-stack/node`](packages/node.md) package to access the resource in your function.
 
 ---
 
 ## Quick start
 
-To demonstrate how `Resource binding` works, we are going to create an S3 bucket and binds it to a Lambda function.
+To see how Resource Binding works, we are going to create an S3 bucket and bind it to a Lambda function.
 
-To follow along, you can create the Minimal TypeScript starter by running `npx create-sst@latest` > `minimal` > `minimal/typescript-starter`.
-
-Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/minimal-typescript) that's based on the same template.
+Follow along by creating the Minimal TypeScript starter by running `npx create-sst@latest` > `minimal` > `minimal/typescript-starter`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/minimal-typescript) that's based on the same template.
 
 1. To create a new bucket, open up `stacks/MyStack.ts` and add a [`Bucket`](constructs/Bucket.md) construct below the API.
 
@@ -37,7 +35,7 @@ Alternatively, you can refer to [this example repo](https://github.com/serverles
    const bucket = new Bucket(stack, "myFiles");
    ```
 
-   You'll also need to import `Bucket` at the top of the file.
+   You'll also need to import `Bucket` at the top.
 
    ```ts
    import { Bucket } from "@serverless-stack/resources";
@@ -75,7 +73,7 @@ Alternatively, you can refer to [this example repo](https://github.com/serverles
    };
    ```
 
-   You'll also need to install the libraries inside `services/`. Run
+   You'll also need to install a couple of packages inside the `services/` directory.
 
    ```bash
    npm install --save @serverless-stack/node @aws-sdk/client-s3
@@ -85,15 +83,15 @@ Alternatively, you can refer to [this example repo](https://github.com/serverles
 
 ---
 
-## Key features
+## Features
 
-Let's take a look at some of the key features of Resource Binding; and you will see why it makes building apps fun and easy again.
+Let's take a look at some of the key features of Resource Binding; and how it makes building apps fun and easy again.
 
 ---
 
 ### Typesafety
 
-In the above example, the `Bucket` object imported from `@serverless-stack/node/bucket` is typesafe and your editor should be able to autocomplete the bucket name `myFiles`, as well as its property `bucketName`.
+In the above example, the `Bucket` object that's imported from `@serverless-stack/node/bucket` is typesafe. Your editor should also be able to autocomplete the bucket name `myFiles`, as well as its property `bucketName`.
 
 ![resource binding typesafe](/img/resource-binding/typesafe.png)
 
@@ -104,30 +102,30 @@ Let's take a look at how this is all wired up.
 
 1. First, the `@serverless-stack/node/table` package predefines an interface.
 
-  ```ts
-  export interface BucketResources {}
-  ```
+```ts
+export interface BucketResources {}
+```
 
 2. When SST builds the app, it generates a type file and adds the bucket name to the `BucketResources` interface.
 
-  ```ts title="node_modules/@types/serverless-stack__node/Bucket-myFiles.d.ts"
-  import "@serverless-stack/node/bucket";
-  declare module "@serverless-stack/node/bucket" {
-    export interface BucketResources {
-      "myFiles": {
-        bucketName: string;
-      }
-    }
+```ts title="node_modules/@types/serverless-stack__node/Bucket-myFiles.d.ts"
+import "@serverless-stack/node/bucket";
+declare module "@serverless-stack/node/bucket" {
+  export interface BucketResources {
+    myFiles: {
+      bucketName: string;
+    };
   }
-  ```
-  
-  This type file then gets appended to `index.d.ts`.
-  
-  ```ts title="node_modules/@types/@serverless-stack__node/index.d.ts"
-  export * from "./Bucket-myFiles";
-  ```
+}
+```
 
-3. And finally the `Bucket` object imported from `@serverless-stack/node/bucket` has the type `BucketResources`.
+This type file then gets appended to `index.d.ts`.
+
+```ts title="node_modules/@types/@serverless-stack__node/index.d.ts"
+export * from "./Bucket-myFiles";
+```
+
+3. So when the `Bucket` object is imported from `@serverless-stack/node/bucket`, it has the type `BucketResources`.
 
 </details>
 
@@ -135,9 +133,9 @@ Let's take a look at how this is all wired up.
 
 ### Error handling
 
-If you reference a resource that doesn't exist in your SST app, or hasn't been bound to the function, you'll get an error at runtime.
+If you reference a resource that doesn't exist in your SST app, or hasn't been bound to the function, you'll get a runtime error.
 
-For example, if you forgot to bind the `bucket` to the `api`, you'll get the following error when the function is invoked.
+For example, if you forget to bind the `bucket` to the API, you'll get the following error when the function is invoked.
 
 ```
 Cannot use Bucket.myFiles. Please make sure it is bound to this function.
@@ -147,7 +145,7 @@ Cannot use Bucket.myFiles. Please make sure it is bound to this function.
 
 ### Testing
 
-When testing your code, you should use the [`sst bind`](packages/cli.md#load-config) CLI to bind the resources to your test command.
+When testing your code, you can use the [`sst bind`](packages/cli.md#load-config) CLI to bind the resources to your tests.
 
 ```bash
 sst bind -- vitest run
@@ -155,13 +153,13 @@ sst bind -- vitest run
 
 This allows the [`@serverless-stack/node`](packages/node.md) helper library to work as if it was running inside a Lambda function.
 
-Read more about how [How `sst bind` works](./advanced/testing.md#how-sst-load-config-works).
+[Read more about testing](advanced/testing.md) and learn about [the `sst bind` CLI](advanced/testing.md#how-sst-load-config-works).
 
 ---
 
 ### Permissions
 
-When a resource is bound to a Lambda function, permissions to access the resource is automatically granted to the function.
+When a resource is bound to a Lambda function, the permissions to access that resource are automatically granted to the function.
 
 ```ts
 api.bind([bucket]);
@@ -172,44 +170,53 @@ Here, by binding the `bucket` to the `api`, the API routes are able to perform f
 <details>
 <summary>Behind the scenes</summary>
 
-An IAM policy is added to the Lambda function's role granting the function to perform `s3:*` actions on the S3 bucket's ARN.
+An IAM policy is added to the Lambda function's role, allowing it to perform `s3:*` actions on the S3 bucket's ARN.
 
 The IAM policy statement looks like:
+
 ```yml
 {
-    "Action": "s3:*",
-    "Resource": [
-        "arn:aws:s3:::{BUCKET_NAME}",
-        "arn:aws:s3:::{BUCKET_NAME}/*"
-    ],
-    "Effect": "Allow"
+  "Action": "s3:*",
+  "Resource": ["arn:aws:s3:::{BUCKET_NAME}", "arn:aws:s3:::{BUCKET_NAME}/*"],
+  "Effect": "Allow",
 }
 ```
+
 </details>
 
 ---
 
-### Supports all constructs
+### Construct support
 
-Resource Binding works across all SST constructs. Here are a few more examples.
+Resource Binding works across all [SST constructs](constructs/index.md). Here are a few more examples.
 
-```ts
-// Next.js web url
-import { NextjsSite } from "@serverless-stack/node/site";
-NextjsSite.myFrontend.url
+- Getting the Next.js URL
 
-// DynamoDB table name
-import { Table } from "@serverless-stack/node/table";
-Table.myTable.tableName
+  ```ts
+  import { NextjsSite } from "@serverless-stack/node/site";
 
-// RDS cluster data
-import { RDS } from "@serverless-stack/node/rds";
-RDS.myDB.clusterArn
-RDS.myDB.secretArn
-RDS.myDB.defaultDatabaseName
-```
+  NextjsSite.myFrontend.url;
+  ```
 
-See a full list of [support constructs](./packages/node.md).
+- DynamoDB table name
+
+  ```ts
+  import { Table } from "@serverless-stack/node/table";
+
+  Table.myTable.tableName;
+  ```
+
+- RDS cluster data
+
+  ```ts
+  import { RDS } from "@serverless-stack/node/rds";
+
+  RDS.myDB.clusterArn;
+  RDS.myDB.secretArn;
+  RDS.myDB.defaultDatabaseName;
+  ```
+
+See the full list of [supported constructs](./packages/node.md).
 
 ---
 
@@ -241,9 +248,10 @@ npx sst secrets set STRIPE_KEY sk_test_abc123
 ```
 
 Access the value in the function.
+
 ```ts
 import { Config } from "@serverless-stack/node/config";
-Config.STRIPE_KEY
+Config.STRIPE_KEY;
 ```
 
 ---
@@ -257,7 +265,7 @@ Create a `Config.Parameter` construct with the cluster name being the value, and
 ```ts
 const cluster = new ecs.Cluster(stack, "myCluster");
 const MY_CLUSTER_NAME = new Config.Parameter(stack, "MY_CLUSTER_NAME", {
-  value: cluster.clusterName
+  value: cluster.clusterName,
 });
 
 api.bind([MY_CLUSTER_NAME]);
@@ -267,7 +275,7 @@ Access the value in the function.
 
 ```ts
 import { Config } from "@serverless-stack/node/config";
-Config.MY_CLUSTER_NAME
+Config.MY_CLUSTER_NAME;
 ```
 
 ---

@@ -27,7 +27,7 @@ Want to learn more about `Auth`? Check out the [launch livestream on YouTube](ht
 
    - The API routes to handle the authentication flows.
    - Securely generates a RSA public/private key pair to sign sessions.
-   - Stores the RSA key pair as secrets in the app's [`Config`](environment-variables.md).
+   - Stores the RSA key pair as secrets in the app's [`Config`](config.md).
 
 2. [`AuthHandler`](packages/node.md#authhandler) — a Lambda handler function that can handle authentication flows for various providers.
 
@@ -79,13 +79,13 @@ By default all the auth routes are added under `/auth`. But this can be customiz
 <details>
 <summary>Behind the scenes</summary>
 
-Aside from the routes, this construct also creates a pair of secrets; a public and private key pair to sign the session tokens. It stores this in our app [`Config`](environment-variables.md).
+Aside from the routes, this construct also creates a pair of secrets; a public and private key pair to sign the session tokens. It stores this in our app [`Config`](config.md).
 
 Note that, you can use the same auth construct with multiple APIs.
 
 </details>
 
-You'll notice that we are using the [`Config`](environment-variables.md) to store your `GOOGLE_CLIENT_ID`. This is a secret, so let's use the CLI to set it.
+You'll notice that we are using the [`Config`](config.md) to store your `GOOGLE_CLIENT_ID`. This is a secret, so let's use the CLI to set it.
 
 ```bash
 npx sst secrets set GOOGLE_CLIENT_ID xxxxxxxxxx

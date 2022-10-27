@@ -352,7 +352,7 @@ Note that, the AWS Client VPC service is billed on an hourly basis but it's fair
 
 #### Connect to a local DB
 
-Alternatively, you can run the database server locally (ie. MySQL or PostgreSQL). And in your function code, you can connect to a local server if [`IS_LOCAL`](environment-variables.md#is_local) is set:
+Alternatively, you can run the database server locally (ie. MySQL or PostgreSQL). And in your function code, you can connect to a local server if [`IS_LOCAL`](#built-in-environment-variables) is set:
 
 ```js
 const dbHost = process.env.IS_LOCAL
