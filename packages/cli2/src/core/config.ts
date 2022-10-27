@@ -1,4 +1,6 @@
 import {
+  DeleteParameterCommand,
+  GetParameterCommand,
   GetParametersByPathCommand,
   PutParameterCommand,
   SSMClient,
@@ -73,15 +75,47 @@ export namespace Config {
     return env as typeof env & Record<string, string | undefined>;
   }
 
-  export async function setSecret(key: string, value: string) {
+  export async function setSecret(input: {
+    key: string;
+    value: string;
+    fallback?: boolean;
+  }) {
     const ssm = useAWSClient(SSMClient);
-
-    await ssm.send(
+    const result = await ssm.send(
       new PutParameterCommand({
-        Name: `${PREFIXES.SECRETS.VALUES}${key}`,
-        Value: value,
+        Name: `${
+          input.fallback ? PREFIXES.SECRETS.FALLBACK : PREFIXES.SECRETS.VALUES
+        }${input.key}`,
+        Value: input.value,
         Type: "SecureString",
         Overwrite: true,
+      })
+    );
+  }
+
+  export async function getSecret(input: { key: string; fallback?: boolean }) {
+    const ssm = useAWSClient(SSMClient);
+    const result = await ssm.send(
+      new GetParameterCommand({
+        Name: `${
+          input.fallback ? PREFIXES.SECRETS.FALLBACK : PREFIXES.SECRETS.VALUES
+        }${input.key}`,
+        WithDecryption: true,
+      })
+    );
+    return result.Parameter?.Value;
+  }
+
+  export async function removeSecret(input: {
+    key: string;
+    fallback?: boolean;
+  }) {
+    const ssm = useAWSClient(SSMClient);
+    await ssm.send(
+      new DeleteParameterCommand({
+        Name: `${
+          input.fallback ? PREFIXES.SECRETS.FALLBACK : PREFIXES.SECRETS.VALUES
+        }${input.key}`,
       })
     );
   }

@@ -25,9 +25,9 @@
     "@aws-cdk/region-info": "2.39.1",
     "@aws-sdk/client-cloudformation": "3.145.0",
     "@aws-sdk/client-iot": "3.145.0",
+    "@aws-sdk/client-lambda": "3.145.0",
     "@aws-sdk/client-ssm": "3.145.0",
     "@aws-sdk/client-sts": "3.145.0",
-    "@aws-sdk/client-lambda": "3.145.0",
     "@aws-sdk/credential-providers": "^3.145.0",
     "@caporal/core": "^2.0.2",
     "@serverless-stack/node": "1.15.16",
@@ -47,7 +47,8 @@
     "undici": "^5.8.2",
     "vite": "^3.0.5",
     "vite-node": "^0.21.1",
-    "vite-plugin-solid": "^2.3.0"
+    "vite-plugin-solid": "^2.3.0",
+    "yargs": "^17.6.0"
   },
   "devDependencies": {
     "@tsconfig/node16": "^1.0.3",

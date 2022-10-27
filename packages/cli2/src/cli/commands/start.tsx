@@ -14,19 +14,26 @@ import { Context } from "@serverless-stack/node/context/index.js";
 
 import { DeploymentUI } from "./deploy.js";
 import { Metafile } from "esbuild";
+import { Program } from "@cli/program.js";
 
-export async function start() {
-  await Promise.all([
-    useRuntimeWorkers(),
-    useIOTBridge(),
-    useRuntimeServer(),
-    useNodeHandler(),
-    useMetadata(),
-    useFunctionLogger(),
-  ]);
-  Logger.ui("green", "Listening for function invocations...");
-  await useStackBuilder();
-}
+export const start = (program: Program) =>
+  program.command(
+    "start",
+    "Work on your SST app locally",
+    (yargs) => yargs,
+    async () => {
+      await Promise.all([
+        useRuntimeWorkers(),
+        useIOTBridge(),
+        useRuntimeServer(),
+        useNodeHandler(),
+        useMetadata(),
+        useFunctionLogger(),
+      ]);
+      Logger.ui("green", "Listening for function invocations...");
+      await useStackBuilder();
+    }
+  );
 
 const useFunctionLogger = Context.memo(async () => {
   const bus = useBus();
@@ -59,13 +66,13 @@ const useStackBuilder = Context.memo(async () => {
       fn,
       mode: "start",
     });
-    // process.stdout.write("\x1b[?1049h");
+    process.stdout.write("\x1b[?1049h");
     const component = render(
       <DeploymentUI stacks={assembly.stacks.map((s) => s.stackName)} />
     );
     await Stacks.deployMany(assembly.stacks);
     component.unmount();
-    // process.stdout.write("\x1b[?1049l");
+    process.stdout.write("\x1b[?1049l");
     Logger.ui("green", "Stacks updated");
   }
 

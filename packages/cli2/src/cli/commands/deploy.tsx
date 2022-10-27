@@ -86,7 +86,7 @@ interface DeployOpts {
   from?: string;
 }
 
-export async function Deploy(opts: DeployOpts) {
+export async function deploy(opts: DeployOpts) {
   const assembly = await (async function () {
     if (opts.from) {
       const result = new CloudAssembly(opts.from);

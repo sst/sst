@@ -1,7 +1,38 @@
 import esbuild from "esbuild";
 import fs from "fs/promises";
+import path from "path";
 
+const OUT = "./dist";
+await fs.rm(OUT, { recursive: true });
 const pkg = await fs.readFile("package.json").then(JSON.parse);
+
+async function* scan(dir) {
+  for (const file of await fs.readdir(dir)) {
+    const p = path.join(dir, file);
+    const stat = await fs.stat(p);
+    if (stat.isDirectory()) {
+      yield* scan(p);
+      continue;
+    }
+    yield p;
+  }
+}
+
+for await (const file of scan("./src/core")) {
+  const dest = path.join(OUT, path.relative("./src", file));
+  await esbuild.build({
+    entryPoints: [file],
+    outfile: dest,
+    target: "esnext",
+    format: "esm",
+    watch: {
+      onRebuild: console.log,
+    },
+    outExtension: {
+      ".js": ".mjs",
+    },
+  });
+}
 
 await esbuild.build({
   entryPoints: ["support/nodejs-runtime/index.ts"],
@@ -11,12 +42,12 @@ await esbuild.build({
   platform: "node",
   target: "esnext",
   external: [...Object.keys(pkg.dependencies)],
+  watch: {
+    onRebuild: console.log,
+  },
   format: "esm",
   outExtension: {
     ".js": ".mjs",
-  },
-  watch: {
-    onRebuild: console.log,
   },
 });
 
@@ -25,13 +56,7 @@ const result = await esbuild.build({
   bundle: true,
   outdir: "dist",
   metafile: true,
-  external: [
-    ...Object.keys(pkg.dependencies),
-    "pg",
-    "mysql2",
-    "better-sqlite3",
-    "../resources",
-  ],
+  external: [...Object.keys(pkg.dependencies), "../resources"],
   jsx: "automatic",
   platform: "node",
   loader: {
@@ -50,3 +75,5 @@ const result = await esbuild.build({
     ].join("\n"),
   },
 });
+
+console.log("Built and watching");

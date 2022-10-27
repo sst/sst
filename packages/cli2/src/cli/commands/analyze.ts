@@ -1,9 +1,10 @@
-import esbuild from "esbuild";
 export interface Input {
   target: string;
 }
 
 export async function analyze(input: Input) {
+  const esbuild = await import("esbuild");
+
   const result = await esbuild.build({
     target: "esnext",
     platform: "node",

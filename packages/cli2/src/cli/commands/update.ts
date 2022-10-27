@@ -1,12 +1,6 @@
+import { Program } from "@cli/program";
 import fs from "fs/promises";
 import path from "path";
-import { fetch } from "undici";
-import { Logger } from "@core/logger.js";
-import { useProject } from "@core/app";
-
-interface Opts {
-  version?: string;
-}
 
 const SST_PACKAGES = [
   "@serverless-stack/resources",
@@ -18,59 +12,73 @@ const SST_PACKAGES = [
 
 const FIELDS = ["dependencies", "devDependencies"];
 
-export async function Update(opts: Opts) {
-  const project = useProject();
-  const files = await find(project.paths.root);
-  const version =
-    opts.version ||
-    (await fetch(`https://registry.npmjs.org/@serverless-stack/core/latest`)
-      .then((resp) => resp.json())
-      .then((resp: any) => resp.version));
+export const update = (program: Program) =>
+  program.command(
+    "update [ver]",
+    "Update SST and CDK packages to another version",
+    (yargs) =>
+      yargs.positional("ver", {
+        type: "string",
+        describe: "Optional SST version to update to",
+      }),
+    async (args) => {
+      const { fetch } = await import("undici");
+      const { Logger } = await import("@core/logger.js");
+      const { useProject } = await import("@core/app");
 
-  const results = new Map<string, Set<string>>();
-  const tasks = files.map(async (file) => {
-    const data = await fs
-      .readFile(file)
-      .then((x) => x.toString())
-      .then(JSON.parse);
+      const project = useProject();
+      const files = await find(project.paths.root);
+      const version =
+        args.version ||
+        (await fetch(`https://registry.npmjs.org/@serverless-stack/core/latest`)
+          .then((resp) => resp.json())
+          .then((resp: any) => resp.version));
 
-    for (const field of FIELDS) {
-      const deps = data[field];
-      if (!deps) continue;
-      for (const [pkg, existing] of Object.entries(deps)) {
-        if (!SST_PACKAGES.includes(pkg) || existing === version) continue;
-        let arr = results.get(file);
-        if (!arr) {
-          arr = new Set();
-          results.set(file, arr);
+      const results = new Map<string, Set<string>>();
+      const tasks = files.map(async (file) => {
+        const data = await fs
+          .readFile(file)
+          .then((x) => x.toString())
+          .then(JSON.parse);
+
+        for (const field of FIELDS) {
+          const deps = data[field];
+          if (!deps) continue;
+          for (const [pkg, existing] of Object.entries(deps)) {
+            if (!SST_PACKAGES.includes(pkg) || existing === version) continue;
+            let arr = results.get(file);
+            if (!arr) {
+              arr = new Set();
+              results.set(file, arr);
+            }
+            arr.add(pkg);
+            deps[pkg] = version;
+          }
         }
-        arr.add(pkg);
-        deps[pkg] = version;
+
+        await fs.writeFile(file, JSON.stringify(data, null, 2));
+      });
+      await Promise.all(tasks);
+
+      if (results.size === 0) {
+        Logger.ui("green", `All packages already match version ${version}`);
+        return;
       }
+
+      for (const [file, pkgs] of results.entries()) {
+        Logger.ui("green", `✅ ${path.relative(project.paths.root, file)}`);
+        for (const pkg of pkgs) {
+          Logger.ui("green", `     ${pkg}@${version}`);
+        }
+      }
+
+      Logger.ui(
+        "yellow",
+        "",
+        "Don't forget to run your package manager to install the packages"
+      );
     }
-
-    await fs.writeFile(file, JSON.stringify(data, null, 2));
-  });
-  await Promise.all(tasks);
-
-  if (results.size === 0) {
-    Logger.ui("green", `All packages already match version ${version}`);
-    return;
-  }
-
-  for (const [file, pkgs] of results.entries()) {
-    Logger.ui("green", `✅ ${path.relative(project.paths.root, file)}`);
-    for (const pkg of pkgs) {
-      Logger.ui("green", `     ${pkg}@${version}`);
-    }
-  }
-
-  Logger.ui(
-    "yellow",
-    "",
-    "Don't forget to run your package manager to install the packages"
   );
-}
 
 async function find(dir: string): Promise<string[]> {
   const children = await fs.readdir(dir);
