@@ -54,21 +54,23 @@ Alternatively, you can refer to [this example repo](https://github.com/serverles
    ```ts title="services/functions/lambda.ts" {10}
    import { APIGatewayProxyHandlerV2 } from "aws-lambda";
    import { Bucket } from "@serverless-stack/node/bucket";
-   import { S3Client, ListObjectsV2Command } from "@aws-sdk/client-s3";
+   import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+   const s3 = new S3Client({});
 
    export const handler: APIGatewayProxyHandlerV2 = async (event) => {
-     // List files in the bucket
-     const s3 = new S3Client({});
-     const data = await s3.send(
-       new ListObjectsV2Command(
-         Bucket: Bucket.myFiles.bucketName,
-       )
+     // Upload a file to the bucket
+     await s3.send(
+       new PutObjectCommand({
+         Bucket: Bucket.uploads.bucketName,
+         Key: "greeting.txt",
+         Body: "Hello world!",
+       })
      );
 
      return {
        statusCode: 200,
        headers: { "Content-Type": "text/plain" },
-       body: `Bucket name is ${bucketName}.`,
+       body: `File uploaded`,
      };
    };
    ```
