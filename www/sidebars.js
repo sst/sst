@@ -8,6 +8,7 @@ module.exports = {
         "what-is-sst",
         "live-lambda-development",
         "console",
+        "resource-binding",
         "editor-integration",
       ]
     },
@@ -112,10 +113,10 @@ module.exports = {
         //"asynchronous-tasks",
 
         "auth",
+        "config",
         "advanced/testing",
         "long-running-jobs",
         "going-to-production",
-        "environment-variables",
         "working-with-your-team",
         {
           type: "category",
@@ -145,7 +146,13 @@ module.exports = {
       "Migrating From": ["migrating/cdk", "migrating/serverless-framework"]
     },
     {
-      More: ["known-issues", "design-principles", "anonymous-telemetry", "faq"]
+      More: [
+        "known-issues",
+        "upgrade-guide",
+        "design-principles",
+        "anonymous-telemetry",
+        "faq"
+      ]
     },
     {
       Packages: [
