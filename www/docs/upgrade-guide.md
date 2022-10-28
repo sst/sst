@@ -22,43 +22,33 @@ To view the latest release and all historical releases, <a href={`${config.githu
 
 Follow these steps to start using Resource Binding. We will pass the bucket name to the Lamba function as an example.
 
-  1. Bind SST constructs to Functions and Jobs.
-  ```ts
-  // Change
+- Bind SST constructs to Functions and Jobs.
+
+  ```diff
   const bucket = new Bucket(stack, "myFiles");
 
   new Function(stack, "myFunction", {
     handler: "lambda.handler",
-    environment: {
-      BUCKET_NAME: bucket.bucketName,
-    },
-    permissions: [bucket],
-  });
-
-  // To
-  const bucket = new Bucket(stack, "myFiles");
-
-  new Function(stack, "myFunction", {
-    handler: "lambda.handler",
-    bind: [bucket],
+  - environment: {
+  -   BUCKET_NAME: bucket.bucketName,
+  - },
+  - permissions: [bucket],
+  + bind: [bucket],
   });
   ```
 
-  2. Now you can access the bucket's name in your function code.
-  ```ts
-  // Change
-  process.env.BUCKET_NAME
+- Now you can access the bucket's name in your function code.
 
-  // To
-  import { Bucket } from "@serverless-stack/node/bucket";
-  Bucet.myFiles.bucketName
+  ```diff
+  + import { Bucket } from "@serverless-stack/node/bucket";
+
+  - process.env.BUCKET_NAME
+  + Bucet.myFiles.bucketName
   ```
 
-  Read more about [Resource Binding](./resource-binding.md).
+Read more about [Resource Binding](./resource-binding.md).
 
 ---
-
-Full changelog:
 
 #### Constructs
 
@@ -66,114 +56,82 @@ Full changelog:
 
   For example, if you have two buckets with the same id.
 
-  ```ts
-  // Change
-  new Bucket(stack), "bucket");
-  new Bucket(stack), "bucket");
+  ```diff
+  - new Bucket(stack), "bucket");
+  - new Bucket(stack), "bucket");
 
-  // To
-  new Bucket(stack), "usersFiles", {
-    cdk: { id: "bucket" },
-  });
-  new Bucket(stack), "adminFiles", {
-    cdk: { id: "bucket" },
-  });
+  + new Bucket(stack), "usersFiles", {
+  +   cdk: { id: "bucket" },
+  + });
+  + new Bucket(stack), "adminFiles", {
+  +   cdk: { id: "bucket" },
+  + });
   ```
 
 - Function/Job: **Pass Secrets and Parameters into `bind`** instead of `config`. The `config` option will be removed in SST v2.
 
-  ```ts
-  // Change
+  ```diff
   new Function(stack, "myFn", {
-    config: [MY_STRIPE_KEY],
+  - config: [MY_STRIPE_KEY],
+  + bind: [MY_STRIPE_KEY],
   });
 
   new Job(stack, "myJob", {
-    config: [MY_STRIPE_KEY],
-  });
-
-  // To
-  new Function(stack, "myFn", {
-    bind: [MY_STRIPE_KEY],
-  });
-
-  new Job(stack, "myJob", {
-    bind: [MY_STRIPE_KEY],
+  - config: [MY_STRIPE_KEY],
+  + bind: [MY_STRIPE_KEY],
   });
   ```
 
 - Function/Job: **Pass SST Constructs into `bind`** instead of `permissions` to grant permissions. `permissions` will not accept SST Constructs in SST v2.
 
-  ```ts
-  // Change
+  ```diff
   new Function(stack, "myFn", {
-    permissions: [myTopic],
+  - permissions: [myTopic],
+  + bind: [myTopic],
   });
 
   new Job(stack, "myJob", {
-    permissions: [myTopic],
-  });
-
-  // To
-  new Function(stack, "myFn", {
-    bind: [myTopic],
-  });
-
-  new Job(stack, "myJob", {
-    bind: [myTopic],
+  - permissions: [myTopic],
+  + bind: [myTopic],
   });
   ```
 
 - App/Stack: **Pass Secrets and Parameters into `addDefaultFunctionBinding`** instead of `addDefaultFunctionConfig`. `addDefaultFunctionConfig` will be removed in SST v2
 
-  ```ts
-  // Change
-  app.addDefaultFunctionConfig([MY_STRIPE_KEY]);
-  stack.addDefaultFunctionConfig([MY_STRIPE_KEY]);
+  ```diff
+  - app.addDefaultFunctionConfig([MY_STRIPE_KEY]);
+  + app.addDefaultFunctionBinding([MY_STRIPE_KEY]);
 
-  // To
-  app.addDefaultFunctionBinding([MY_STRIPE_KEY]);
-  stack.addDefaultFunctionBinding([MY_STRIPE_KEY]);
+  - stack.addDefaultFunctionConfig([MY_STRIPE_KEY]);
+  + stack.addDefaultFunctionBinding([MY_STRIPE_KEY]);
   ```
 
 - App/Stack: **Pass SST Constructs into `addDefaultFunctionBinding`** instead of `addDefaultFunctionPermissions` to grant permissions. `addDefaultFunctionPermissions` will not accept SST Constructs in SST v2.
 
-  ```ts
-  // Change
-  app.addDefaultFunctionPermissions([myTopic]);
-  stack.addDefaultFunctionPermissions([myTopic]);
+  ```diff
+  - app.addDefaultFunctionPermissions([myTopic]);
+  + app.addDefaultFunctionBinding([myTopic]);
 
-  // To
-  app.addDefaultFunctionBinding([myTopic]);
-  stack.addDefaultFunctionBinding([myTopic]);
+  - stack.addDefaultFunctionPermissions([myTopic]);
+  + stack.addDefaultFunctionBinding([myTopic]);
   ```
 
 #### CLI
 
 - **The `sst load-config` command is being renamed to `sst bind`** and will be removed in SST v2
 
-  ```bash
-  # Change
-  sst load-config -- vitest run
-
-  # To
-  sst bind -- vitest run
+  ```diff
+  - sst load-config -- vitest run
+  + sst bind -- vitest run
   ```
 
 #### Client
 
 - **Change `Job.run("myJob")` to `Job.myJob.run()`** in your functions code.
 
-  ```ts
-  // Change
-  Job.run("myJob", {
-    payload,
-  });
-
-  // To
-  Job.myJob.run({
-    payload,
-  });
+  ```diff
+  - Job.run("myJob", { payload });
+  + Job.myJob.run({ payload });
   ```
 
 ---
@@ -184,16 +142,11 @@ Full changelog:
 
 - The old `Auth` construct has been renamed to `Cognito` construct.
 
-  ```ts
-  // Change
-  new Auth(stack, "auth", {
-    login: ["email"],
-  });
-
-  // To
-  new Cognito(stack, "auth", {
-    login: ["email"],
-  });
+  ```diff
+  - new Auth(stack, "auth", {
+  + new Cognito(stack, "auth", {
+      login: ["email"],
+    });
   ```
 
 ---
@@ -204,20 +157,16 @@ Full changelog:
 
 - Auth: `attachPermissionsForAuthUsers()` and `attachPermissionsForUnauthUsers()` now take a scope as the first argument.
 
-  ```ts
-  // Change
+  ```diff
   const auth = new Auth(stack, "auth", {
     login: ["email"],
   });
-  auth.attachPermissionsForAuthUsers(["s3", "sns"]);
-  auth.attachPermissionsForUnauthUsers(["s3"]);
 
-  // To
-  const auth = new Auth(stack, "auth", {
-    login: ["email"],
-  });
-  auth.attachPermissionsForAuthUsers(auth, ["s3", "sns"]);
-  auth.attachPermissionsForUnauthUsers([auth, "s3"]);
+  - auth.attachPermissionsForAuthUsers(["s3", "sns"]);
+  + auth.attachPermissionsForAuthUsers(auth, ["s3", "sns"]);
+
+  - auth.attachPermissionsForUnauthUsers(["s3"]);
+  + auth.attachPermissionsForUnauthUsers([auth, "s3"]);
   ```
 
 ---
