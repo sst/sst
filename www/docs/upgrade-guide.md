@@ -1,11 +1,25 @@
 ---
 title: Upgrade Guide
-description: "Upgrade guide for SST"
+description: "Upgrade guide for all notable SST releases."
+---
+
+import config from "../config";
+import HeadlineText from "@site/src/components/HeadlineText";
+
+<HeadlineText>
+
+Upgrade guide for all notable SST releases.
+
+</HeadlineText>
+
+To view the latest release and all historical releases, <a href={`${config.github}/releases`}>head over to our GitHub release page</a>.
+
 ---
 
 ## Upgrade to v1.16
 
 #### Constructs
+
 - **Construct IDs need to be unique** and match the pattern `[a-zA-Z]([a-zA-Z0-9_])+`. If you have constructs with clashing IDs, change to a unique ID. And pass the old ID into `cdk.id` to ensure CloudFormation does not recreate the resource.
 
   For example, if you have two buckets with the same id.
@@ -17,14 +31,15 @@ description: "Upgrade guide for SST"
 
   // To
   new Bucket(this, "usersFiles", {
-    cdk: { id: "bucket" }
+    cdk: { id: "bucket" },
   });
   new Bucket(this, "adminFiles", {
-    cdk: { id: "bucket" }
+    cdk: { id: "bucket" },
   });
   ```
 
 - Function/Job: **Pass Secrets and Parameters into `bind`** instead of `config`. The `config` option will be removed in SST v2.
+
   ```ts
   // Change
   new Function(stack, "myFn", {
@@ -46,6 +61,7 @@ description: "Upgrade guide for SST"
   ```
 
 - Function/Job: **Pass SST Constructs into `bind`** instead of `permissions` to grant permissions. `permissions` will not accept SST Constructs in SST v2.
+
   ```ts
   // Change
   new Function(stack, "myFn", {
@@ -67,6 +83,7 @@ description: "Upgrade guide for SST"
   ```
 
 - App/Stack: **Pass Secrets and Parameters into `addDefaultFunctionBinding`** instead of `addDefaultFunctionConfig`. `addDefaultFunctionConfig` will be removed in SST v2
+
   ```ts
   // Change
   app.addDefaultFunctionConfig([MY_STRIPE_KEY]);
@@ -78,6 +95,7 @@ description: "Upgrade guide for SST"
   ```
 
 - App/Stack: **Pass SST Constructs into `addDefaultFunctionBinding`** instead of `addDefaultFunctionPermissions` to grant permissions. `addDefaultFunctionPermissions` will not accept SST Constructs in SST v2.
+
   ```ts
   // Change
   app.addDefaultFunctionPermissions([myTopic]);
@@ -89,7 +107,9 @@ description: "Upgrade guide for SST"
   ```
 
 #### CLI
+
 - **The `sst load-config` command is being renamed to `sst bind`** and will be removed in SST v2
+
   ```bash
   # Change
   sst load-config -- vitest run
@@ -99,17 +119,19 @@ description: "Upgrade guide for SST"
   ```
 
 #### Client
+
 - **Change `Job.run("myJob")` to `Job.myJob.run()`** in your functions code.
+
   ```ts
   // Change
   Job.run("myJob", {
-    payload
-  })
+    payload,
+  });
 
   // To
   Job.myJob.run({
-    payload
-  })
+    payload,
+  });
   ```
 
 ---
@@ -117,16 +139,18 @@ description: "Upgrade guide for SST"
 ## Upgrade to v1.10
 
 #### Constructs
+
 - The old `Auth` construct has been renamed to `Cognito` construct.
+
   ```ts
   // Change
   new Auth(stack, "auth", {
-    login: ["email"]
+    login: ["email"],
   });
 
   // To
   new Cognito(stack, "auth", {
-    login: ["email"]
+    login: ["email"],
   });
   ```
 
@@ -135,18 +159,20 @@ description: "Upgrade guide for SST"
 ## Upgrade to v1.3
 
 #### Constructs
+
 - Auth: `attachPermissionsForAuthUsers()` and `attachPermissionsForUnauthUsers()` now take a scope as the first argument.
+
   ```ts
   // Change
   const auth = new Auth(stack, "auth", {
-    login: ["email"]
+    login: ["email"],
   });
   auth.attachPermissionsForAuthUsers(["s3", "sns"]);
   auth.attachPermissionsForUnauthUsers(["s3"]);
 
   // To
   const auth = new Auth(stack, "auth", {
-    login: ["email"]
+    login: ["email"],
   });
   auth.attachPermissionsForAuthUsers(auth, ["s3", "sns"]);
   auth.attachPermissionsForUnauthUsers([auth, "s3"]);
@@ -155,4 +181,5 @@ description: "Upgrade guide for SST"
 ---
 
 ## Migrate to v1.0
-[View full migration guide](./constructs/v0/migration.md)
+
+[View the full migration guide](./constructs/v0/migration.md).
