@@ -41,63 +41,58 @@ And once you've defined your Secrets and Parameters, you can fetch them in your 
 
 ### Quick Start
 
-1. To create a new secret, add a [`Config.Secret`](constructs/Secret.md) construct to an existing stack in your SST app. You can also create a new stack to define all secrets used in your app.
+To see how Secrets work, we are going to create a Secret with Stripe secret key and bind it to a Lambda function.
 
-   ```ts {3}
-   import { Config } from "@serverless-stack/resources";
+Follow along by creating the Minimal TypeScript starter by running `npx create-sst@latest` > `minimal` > `minimal/typescript-starter`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/minimal-typescript) that's based on the same template.
 
+1. To create a new secret, open up `stacks/MyStack.ts` and add a [`Config.Secret`](constructs/Secret.md) construct below the API. You can also create a new stack to define all secrets used in your app.
+
+   ```ts title="stacks/MyStack.ts"
    const STRIPE_KEY = new Config.Secret(stack, "STRIPE_KEY");
+   ```
+
+   You'll also need to import `Config` at the top.
+
+   ```ts
+   import { Config } from "@serverless-stack/resources";
    ```
 
    Note that you are not setting the values for the secret in your code. You shouldn't have sensitive values committed to Git.
 
-2. Bind the secret to a function.
+2. Bind the `STRIPE_KEY` to the `api`.
 
-   ```ts {5}
-   import { Function } from "@serverless-stack/resources";
-
-   new Function(stack, "MyFunction", {
-     handler: "lambda.handler",
-     bind: [STRIPE_KEY],
-   }
+   ```ts title="stacks/MyStack.ts"
+    api.bind([STRIPE_KEY]);
    ```
 
-3. In your terminal, run the `sst secrets` CLI to set a value for the secret.
+3. Then in your terminal, run the `sst secrets` CLI to set a value for the secret.
 
    ```bash
    npx sst secrets set STRIPE_KEY sk_test_abc123
    ```
 
-4. Finally in your function, use the [`@serverless-stack/node/config`](packages/node.md#config) packages to fetch the secret.
+4. Now you can access the Stripe key in your API using the [`Config`](packages/node.md#config) helper. Change `services/functions/lambda.ts` to:
 
-   ```ts {4}
+   ```ts title="services/functions/lambda.ts" {8}
+   import { APIGatewayProxyHandlerV2 } from "aws-lambda";
    import { Config } from "@serverless-stack/node/config";
 
-   export const handler = async () => {
-     console.log(Config.STRIPE_KEY);
-
-     // ...
+   export const handler: APIGatewayProxyHandlerV2 = async () => {
+     return {
+       statusCode: 200,
+       headers: { "Content-Type": "text/plain" },
+       body: `Here is my Stripe key ${Config.STRIPE_KEY}. Don't share with others!`,
+     };
    };
    ```
 
-   You'll also need to install the package in your functions directory; `services/` in the case of our starters.
-
-   <MultiPackagerCode>
-   <TabItem value="npm">
+   You'll also need to install the node package in the `services/` directory.
 
    ```bash
-   npm install @serverless-stack/node
+   npm install --save @serverless-stack/node
    ```
 
-   </TabItem>
-   <TabItem value="yarn">
-
-   ```bash
-   yarn add @serverless-stack/node
-   ```
-
-   </TabItem>
-   </MultiPackagerCode>
+   That's it!
 
 ---
 
@@ -232,61 +227,52 @@ The following secrets were not found: STRIPE_KEY
 
 ### Quick start
 
-Let's say you create an ECS cluster in your app using the [`ecs.Cluster`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_ecs.Cluster.html) CDK construct. And you need to pass the cluster's name to your functions.
+To see how Parameters work, we are going to create a Parameter with the version of your app and bind it to a Lambda function.
 
-1. Create a new parameter using the [`Config.Parameter`](constructs/Parameter.md) construct and set the cluster name as its value.
+Follow along by creating the Minimal TypeScript starter by running `npx create-sst@latest` > `minimal` > `minimal/typescript-starter`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/minimal-typescript) that's based on the same template.
 
-   ```ts {5-7}
-   import { Config } from "@serverless-stack/resources";
+1. To create a new parameter, open up `stacks/MyStack.ts` and add a [`Config.Parameter`](constructs/Parameter.md) construct below the API.
 
-   const cluster = new ecs.Cluster(stack, "myCluster");
-
-   const MY_CLUSTER_NAME = new Config.Parameter(stack, "MY_CLUSTER_NAME", {
-     value: cluster.clusterName,
+   ```ts title="stacks/MyStack.ts"
+   const APP_VERSION = new Config.Parameter(stack, "APP_VERSION", {
+     value: "1.2.0",
    });
    ```
 
-2. Bind the parameter to a function.
+   You'll also need to import `Config` at the top.
 
-   ```ts {5}
-   import { Function } from "@serverless-stack/resources";
-
-   new Function(stack, "MyFunction", {
-     handler: "lambda.handler",
-     bind: [MY_CLUSTER_NAME],
-   }
+   ```ts
+   import { Config } from "@serverless-stack/resources";
    ```
 
-3. In your function, use the [`@serverless-stack/node/config`](packages/node.md#config) package to fetch the parameter.
+2. Bind the `APP_VERSION` to the `api`.
 
-   ```ts {4}
+   ```ts title="stacks/MyStack.ts"
+   api.bind([APP_VERSION]);
+   ```
+
+3. Now you can access the app verion in your API using the [Config](packages/node.md#config) helper. Change `services/functions/lambda.ts` to:
+
+   ```ts title="services/functions/lambda.ts" {8}
+   import { APIGatewayProxyHandlerV2 } from "aws-lambda";
    import { Config } from "@serverless-stack/node/config";
 
-   export const handler = async () => {
-     console.log(Config.MY_CLUSTER_NAME);
-
-     // ...
+   export const handler: APIGatewayProxyHandlerV2 = async () => {
+     return {
+       statusCode: 200,
+       headers: { "Content-Type": "text/plain" },
+       body: `App version is ${Config.APP_VERSION}.`,
+     };
    };
    ```
 
-   You'll also need to install the package in your functions directory; `services/` in the case of our starters.
-
-   <MultiPackagerCode>
-   <TabItem value="npm">
+   You'll also need to install the node package in the `services/` directory.
 
    ```bash
-   npm install @serverless-stack/node
+   npm install --save @serverless-stack/node
    ```
 
-   </TabItem>
-   <TabItem value="yarn">
-
-   ```bash
-   yarn add @serverless-stack/node
-   ```
-
-   </TabItem>
-   </MultiPackagerCode>
+   That's it!
 
 ---
 
