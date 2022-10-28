@@ -8,7 +8,7 @@ import MultiPackagerCode from "@site/src/components/MultiPackagerCode";
 
 <HeadlineText>
 
-SST has built-in support for securely managing environment variables and secrets using a set of libraries collectively called `Config`.
+Built-in support for securely managing environment variables and secrets.
 
 </HeadlineText>
 
@@ -20,27 +20,28 @@ Want to learn more about `Config`? Check out the [launch livestream on YouTube](
 
 ## Overview
 
-[`Resource Binding`](./resource-binding) lets you bind SST constructs to your functions. For values not related to SST constructs, you can wrap them inside Config, and then bind the Config constructs to your functions.
+`Config` allows you to securely pass the following into your functions.
 
-The `Config` libraries include:
+1. [**Secrets**](#secrets): Sensitive values that cannot be defined in your code. You can use the [`sst secrets`](packages/cli.md#secrets-action) CLI to set them.
+2. [**Parameters**](#parameters): Values from non-SST constructs, ie. CDK constructs or static values.
 
-1. Constructs to define these values
-   1. [`Config.Secret`](constructs/Secret.md) — Sensitive values you can't be defined in your functions
-   2. [`Config.Parameter`](constructs/Parameter.md) — Values not from SST constructs, ie. static values and values from CDK constructs
-2. CLI to set secrets [`sst secrets [action]`](packages/cli.md#secrets-action)
-3. Lambda helpers to fetch them [`@serverless-stack/node/config`](packages/node.md#config)
+:::info
+If you want to pass values from SST constructs to your functions, you should bind them using [Resource Binding](resource-binding.md).
+:::
+
+And once you've defined your Secrets and Parameters, you can fetch them in your Lambda functions with the [`@serverless-stack/node/config`](packages/node.md#config) package.
 
 ---
 
 ## Secrets
 
-[`Secret`](constructs/Secret.md) allows you to define, set, and fetch secrets in your app.
+[`Config.Secret`](constructs/Secret.md) allows you to define, set, and fetch secrets in your app. Let's see how it works.
 
 ---
 
 ### Quick Start
 
-1. To create a new secret, add a `Config.Secret` construct to an existing stack in your SST app. You can also create a new stack to define all secrets used in your app.
+1. To create a new secret, add a [`Config.Secret`](constructs/Secret.md) construct to an existing stack in your SST app. You can also create a new stack to define all secrets used in your app.
 
    ```ts {3}
    import { Config } from "@serverless-stack/resources";
@@ -48,7 +49,7 @@ The `Config` libraries include:
    const STRIPE_KEY = new Config.Secret(stack, "STRIPE_KEY");
    ```
 
-   Note that you are not setting the values for the secret in your code. Since you shouldn't have sensitive values committed to git.
+   Note that you are not setting the values for the secret in your code. You shouldn't have sensitive values committed to Git.
 
 2. Bind the secret to a function.
 
@@ -61,13 +62,13 @@ The `Config` libraries include:
    }
    ```
 
-3. In your terminal, run the `sst secrets` command to set a value for the secret:
+3. In your terminal, run the `sst secrets` CLI to set a value for the secret.
 
    ```bash
    npx sst secrets set STRIPE_KEY sk_test_abc123
    ```
 
-4. Finally in your function code, use the [`@serverless-stack/node/config`](packages/node.md#config) helper library to reference the secret value:
+4. Finally in your function, use the [`@serverless-stack/node/config`](packages/node.md#config) packages to fetch the secret.
 
    ```ts {4}
    import { Config } from "@serverless-stack/node/config";
@@ -79,7 +80,7 @@ The `Config` libraries include:
    };
    ```
 
-   You'll also need to install the library in your functions directory; `services/` in the case of our starters.
+   You'll also need to install the package in your functions directory; `services/` in the case of our starters.
 
    <MultiPackagerCode>
    <TabItem value="npm">
@@ -102,24 +103,19 @@ The `Config` libraries include:
 
 ### `sst secrets`
 
-Here's a full list of `sst secrets` commands to help you manage your secrets.
+We used the [`sst secrets set`](packages/cli.md#secrets-action) CLI in the above example to set a secret. Here are some of the other commands.
 
-```bash
-# Check the value of a secret
-npx sst secrets get STRIPE_KEY
+- `npx sst secrets get STRIPE_KEY` to check the value of a secret
+- `npx sst secrets list` to get the values of all the secrets
+- `npx sst secrets remove STRIPE_KEY` to unset the value of a secret
 
-# Check the values of all the secrets
-npx sst secrets list
-
-# Unset the value of a secret
-npx sst secrets remove STRIPE_KEY
-```
-
-You can pass in a stage name to manage the secrets in the non-default stage:
+You can also pass in a stage name to manage the secrets for a specific stage.
 
 ```bash
 npx sst secrets list --stage prod
 ```
+
+[Read more about the `sst secrets` CLI](packages/cli.md#secrets-action).
 
 ---
 
@@ -152,25 +148,25 @@ It adds a Lambda environment variables named `SST_SECRET_STRIPE_KEY` to the func
 
 #### Top-level await
 
-At runtime, when you import `@serverless-stack/node/config`:
+At runtime when you import the `Config` package in your function.
 
 ```ts
 import { Config } from "@serverless-stack/node/config";
 ```
 
-The module performs a top-level await to fetch and decrypt `STRIPE_KEY` from SSM. Once fetched, you can reference `Config.STRIPE_KEY` directly in your code.
-
-Note that the secret values are fetched once when the Lambda container first boots up, and the values are cached for subsequent invocations.
+It performs a top-level await to fetch and decrypt `STRIPE_KEY` from SSM. Once fetched, you can reference `Config.STRIPE_KEY` directly in your code.
 
 :::note
-Due to the use of top-level await, your functions need to be bundled in the `esm` format. If you created your app using [`create-sst`](packages/create-sst.md), the bundle format is likely already set to `esm`. Read more about [Function bundle format](constructs/Function.md#format).
+Due to the use of top-level await, your functions need to be bundled in the `esm` format. If you created your app using [`create-sst`](packages/create-sst.md), the bundle format is likely already set to `esm`. [Here's how to set the Function bundle format](constructs/Function.md#format).
 :::
+
+Note that the secret values are fetched once when the Lambda container first boots up, and the values are cached for subsequent invocations.
 
 ---
 
 #### Error handling
 
-If you reference a secret that hasn't been set in the `config` prop for the function, you'll get an error. For example, if you reference something like `Config.XYZ` and it hasn't been set; you'll get the following runtime error.
+If you reference a secret that hasn't been set in the `bind` prop for the function, you'll get an error. For example, if you reference something like `Config.XYZ` and it hasn't been set; you'll get the following runtime error.
 
 ```
 Config.XYZ has not been set for this function.
@@ -180,19 +176,15 @@ Config.XYZ has not been set for this function.
 
 #### Typesafety
 
-The `Config` object in your Lambda function code is also typesafe and your editor should be able to autocomplete it.
-
-:::info
-The `Config` object in your Lambda function code is typesafe.
-:::
+The `Config` object in your Lambda function code is also typesafe and your editor should be able to autocomplete the options.
 
 ---
 
 ### Updating secrets
 
-Since secret values are not refetched on subsequent invocations. For a Lambda container instance, when the value changes, the functions still hang on to the old value.
+Secret values are not refetched on subsequent Lambda function invocations. So if the value of a secret changes while the Lambda container is still warm, it'll hang on to the old value.
 
-SST forces the functions to refetch the value when it changes. So when you run:
+To address this, SST forces functions to refetch the secret when its value changes. So when you run:
 
 ```bash
 npx sst secrets set STRIPE_KEY sk_test_abc123
@@ -204,9 +196,15 @@ SST looks up all the functions using `STRIPE_KEY`. And for each function, SST se
 
 ### Fallback values
 
-Sometimes the value of a secret is the same across multiple stages. This is often the case if you have multiple dev stages. In the above example, it's likely all the dev stages share the same secret value. You can set a fallback value, and all the stages in the same AWS account and region will inherit the fallback value if it hasn't been set for the specific stage.
+Sometimes you might be creating ephemeral stages or preview environments from pull requests. It can be annoying to manually set the value of a secret for these stages especially because they might all be using the same value.
 
-To set a fallback value for `STRIPE_KEY`, run:
+To make this easier, you can set a fallback value for a secret. And if its value isn't set for a stage, it'll use the fallback value instead.
+
+:::tip
+Set a fallback value for your secret so you don't have to set them for ephemeral stages.
+:::
+
+In the above example, it's likely all the dev stages share the same `STRIPE_KEY`. So set a fallback value by running:
 
 ```bash
 npx sst secrets set-fallback STRIPE_KEY sk_test_abc123
@@ -214,11 +212,11 @@ npx sst secrets set-fallback STRIPE_KEY sk_test_abc123
 
 Similar to the `set` command, SST creates an AWS SSM Parameter of the type `SecureString`. And the parameter name in this case is `/sst/{appName}/.fallback/secrets/STRIPE_KEY`.
 
-:::note
+:::info
 The fallback value can only be inherited by stages deployed in the same AWS account and region.
 :::
 
-If a function uses the `STRIPE_KEY` secret, but neither the secret value or the fallback value is set, you'll get a runtime error when importing `@serverless-stack/node/config`.
+If a function uses the `STRIPE_KEY` secret, but neither the secret value or the fallback value has been set, you'll get a runtime error when you import `@serverless-stack/node/config`.
 
 ```
 The following secrets were not found: STRIPE_KEY
@@ -228,15 +226,15 @@ The following secrets were not found: STRIPE_KEY
 
 ## Parameters
 
-[`Parameter`](constructs/Parameter.md) is the recommended way to pass data that cannot be passed as Resource Binding to your Lambda functions.
+[`Config.Parameter`](constructs/Parameter.md) allows you to pass values from non-SST constructs, ie. CDK constructs or static values to your Lambda functions. Let's see it in action.
 
 ---
 
 ### Quick start
 
-Assuming you created an ECS cluster in your app and you need to pass the cluster's name to your functions. Create a `Config.Parameter` construct and binds it to the `api` in our example:
+Let's say you create an ECS cluster in your app using the [`ecs.Cluster`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_ecs.Cluster.html) CDK construct. And you need to pass the cluster's name to your functions.
 
-1. To create a new parameter, add a `Config.Parameter` construct.
+1. Create a new parameter using the [`Config.Parameter`](constructs/Parameter.md) construct and set the cluster name as its value.
 
    ```ts {5-7}
    import { Config } from "@serverless-stack/resources";
@@ -244,7 +242,7 @@ Assuming you created an ECS cluster in your app and you need to pass the cluster
    const cluster = new ecs.Cluster(stack, "myCluster");
 
    const MY_CLUSTER_NAME = new Config.Parameter(stack, "MY_CLUSTER_NAME", {
-     value: cluster.clusterName
+     value: cluster.clusterName,
    });
    ```
 
@@ -259,7 +257,7 @@ Assuming you created an ECS cluster in your app and you need to pass the cluster
    }
    ```
 
-3. In your function code, use the [`@serverless-stack/node/config`](packages/node.md#config) helper library to reference the parameter value:
+3. In your function, use the [`@serverless-stack/node/config`](packages/node.md#config) package to fetch the parameter.
 
    ```ts {4}
    import { Config } from "@serverless-stack/node/config";
@@ -271,7 +269,7 @@ Assuming you created an ECS cluster in your app and you need to pass the cluster
    };
    ```
 
-   You'll also need to install the library in your functions directory; `services/` in the case of our starters.
+   You'll also need to install the package in your functions directory; `services/` in the case of our starters.
 
    <MultiPackagerCode>
    <TabItem value="npm">
@@ -309,27 +307,27 @@ A Lambda environment variable is added to the function, named `SST_PARAM_USER_UP
 
 #### Function handler
 
-And at runtime, when you import `@serverless-stack/node/config`:
+At runtime when you import the `Config` package in your function.
 
 ```ts
 import { Config } from "@serverless-stack/node/config";
 ```
 
-The module reads the value from `process.env.SST_PARAM_USER_UPDATED_TOPIC` and assigns it to `Config.USER_UPDATED_TOPIC`. You can then reference `Config.USER_UPDATED_TOPIC` directly in your code.
+It reads the value from `process.env.SST_PARAM_USER_UPDATED_TOPIC` and assigns it to `Config.USER_UPDATED_TOPIC`. You can then reference `Config.USER_UPDATED_TOPIC` directly in your code.
 
 ---
 
-#### Store in SSM
+#### Copy to SSM
 
-SST also stores a copy of the parameter values in [AWS SSM](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html). For each parameter, an SSM parameter of the type `String` is created with the name `/sst/{appName}/{stageName}/parameters/USER_UPDATED_TOPIC`, where `{appName}` is the name of your SST app, and `{stageName}` is the stage. The parameter value in this case is the topic name stored in plain text.
+SST also stores a copy of the parameter value in [AWS SSM](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html). For each parameter, an SSM parameter of the type `String` is created with the name `/sst/{appName}/{stageName}/parameters/USER_UPDATED_TOPIC`, where `{appName}` is the name of your SST app, and `{stageName}` is the stage. The parameter value is the topic name stored in plain text.
 
-Storing the parameter values in SSM might seem redundant. But it provides a convenient way to fetch all the parameters used in your application. This can be extremely useful for testing. This isn't possible when using Lambda environment variables and we are going to see why in the next section.
+Storing the parameter values in SSM might seem redundant. But it provides a convenient way to fetch all the parameters used in your application. This can make it easy to test your functions. [Read more about how SST uses `Config` to make testing easier](advanced/testing.md#how-sst-load-config-works).
 
 ---
 
 #### Error handling
 
-If you reference a parameter that hasn't been set in the `config` prop for the function, you'll get an error. For example, if you reference something like `Config.XYZ` and it hasn't been set; you'll get the following runtime error.
+If you reference a parameter that hasn't been set in the `bind` prop, you'll get an error. For example, if you reference something like `Config.XYZ` and it hasn't been set; you'll get the following runtime error.
 
 ```
 Config.XYZ has not been set for this function.
@@ -339,23 +337,25 @@ Config.XYZ has not been set for this function.
 
 #### Typesafety
 
-The `Config` object in your Lambda function code is also typesafe and your editor should be able to autocomplete it.
+The `Config` object in your Lambda function code is also typesafe and your editor should be able to autocomplete the options.
 
-:::info
-The `Config` object in your Lambda function code is typesafe.
-:::
+---
+
+## Cost
+
+Secrets and Parameters are stored in AWS SSM with the _Standard Parameter type_ and _Standard Throughput_. This makes `Config` [free to use](https://aws.amazon.com/systems-manager/pricing/) in your SST apps.
 
 ---
 
 ## Other languages
 
-SST also has built-in support for loading environment variables from a `.env` file into `process.env` using [dotenv](https://github.com/motdotla/dotenv).
+The `Config` Lambda function package only supports JavaScript and TypeScript. For other languages, SST supports loading environment variables using [dotenv](https://github.com/motdotla/dotenv).
 
-:::caution Not Recommended
-Although `.env` files are supported, it's strongly recommended that you use `Config.Parameter` or `Config.Secret` to manage environment variables and secrets.
+:::caution
+If you are using JavaScript or TypeScript, it's strongly recommended that you use `Config` to manage your secrets and parameters.
 :::
 
-`.env` support in SST is similar to what [Create React App](https://create-react-app.dev/docs/adding-custom-environment-variables/#adding-development-environment-variables-in-env) and [Next.js](https://nextjs.org/docs/basic-features/environment-variables#loading-environment-variables) do for environment variables. For example if you add the following `.env` file to your project root.
+The `.env` support in SST is similar to what [Create React App](https://create-react-app.dev/docs/adding-custom-environment-variables/#adding-development-environment-variables-in-env) and [Next.js](https://nextjs.org/docs/basic-features/environment-variables#loading-environment-variables) do for environment variables. For example if you add the following `.env` file to your project root.
 
 ```bash title=".env"
 TABLE_READ_CAPACITY=5
@@ -370,25 +370,17 @@ SST will load the `process.env.TABLE_READ_CAPACITY` and `process.env.TABLE_WRITE
 
 Aside from the default `.env` file, there are a couple of other types of `.env` files. You can use them to better organize the environment variables in your SST app.
 
----
+- `.env.{stageName}`
 
-##### `.env.{stageName}`
+  You can add a `.env.{stageName}` file to override the default values for a specific stage. For example, this overrides the value for the `prod` stage:
 
-You can add a `.env.{stageName}` file to override the default values for a specific stage. For example, this overrides the value for the `prod` stage:
+  ```bash title=".env.prod"
+  TABLE_READ_CAPACITY=20
+  ```
 
-```bash title=".env.prod"
-TABLE_READ_CAPACITY=20
-```
+- `.env*.local`
 
----
-
-##### `.env*.local`
-
-You can also add `.env.local` and `.env.{stageName}.local` files to set up environment variables that are specific to your local machine.
-
----
-
-##### Priority
+  You can also add `.env.local` and `.env.{stageName}.local` files to set up environment variables that are specific to your local machine.
 
 Here's the priority in which these files are loaded. Starting with the one that has the highest priority.
 
@@ -403,7 +395,7 @@ Assume that the current stage is `dev`.
 
 #### Committing `.env` files
 
-The `.env` and `.env.{stageName}` files can be committed to your Git repository. On the other hand, the `.env.local` and `.env.{stageName}.local` shouldn't.
+The `.env` and `.env.{stageName}` files can be committed to Git. On the other hand, the `.env.local` and `.env.{stageName}.local` shouldn't.
 
 The `.env*.local` files are meant to specify sensitive information specific to your machine. They should be ignored through the `.gitignore` file.
 
@@ -466,7 +458,7 @@ The above idea also applies to environment variables that are set in [Seed](http
 
 #### Environment variables in Lambda functions
 
-The `.env` environment variables are only available in your CDK code.
+The `.env` environment variables are only available in your infrastructure code.
 
 You can also set them as Lambda environment variables by including them in the [Function](constructs/Function.md) `environment` prop:
 
@@ -493,23 +485,17 @@ export default function main(app) {
 
 ---
 
-## Cost
-
-Secrets and Parameters are stored in AWS SSM with the _Standard Parameter type_ and _Standard Throughput_. This makes Config [free to use](https://aws.amazon.com/systems-manager/pricing/) in your SST apps.
-
----
-
 ## FAQ
 
 Here are some frequently asked questions about `Config`.
 
 ---
 
-### `Config` or `.env` for secrets?
+### Should I use `Config.Secret` or `.env` for secrets?
 
-Although SST supports managing secrets using `.env` files, it's **not recommended**.
+Although SST supports managing secrets using `.env` files, it's **not recommended**. Here are a couple of reasons why.
 
-Take the example of a Stripe secret key. Using the `.env` way, you would create a `.env.local` file on your local.
+Let's take the example of a Stripe secret key. Using the `.env` way, you would create a `.env.local` file on your local.
 
 ```
 STRIPE_KEY=sk_test_abc123
@@ -527,6 +513,12 @@ npx sst secrets set STRIPE_KEY sk_live_xyz456 --stage foo
 npx sst secrets set STRIPE_KEY sk_live_xyz789 --stage bar
 ```
 
-And at runtime, the functions are going to pick up the correct value based on the stage, whether they are running locally, inside a test, or in production.
+You can also set a fallback value for ephemeral stages.
 
-Finally, the `Config` object in your Lambda function handles errors and is typesafe. So unlike `process.env`, `Config.STRIPE_KEY` will autocomplete. And `Config.XYZ` will throw a runtime error.
+```bash
+npx sst secrets set-fallback STRIPE_KEY sk_test_abc123
+```
+
+At runtime, the functions are going to pick up the correct value based on the stage, whether they are running locally, inside a test, or in production.
+
+Finally, the `Config` object in your Lambda function handles errors and is typesafe. So unlike `process.env`, `Config.STRIPE_KEY` will autocomplete. And an invalid secret like `Config.XYZ` will throw a runtime error.
