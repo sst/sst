@@ -147,6 +147,12 @@ new RDS(stack, "Database", {
 });
 ```
 
+### cdk.id?
+
+_Type_ : <span class="mono">string</span>
+
+Allows you to override default id for this construct.
+
 ### cdk.secret?
 
 _Type_ : <span class="mono">[ISecret](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_secretsmanager.ISecret.html)</span>
@@ -179,6 +185,10 @@ The ARN of the internally created RDS Serverless Cluster.
 _Type_ : <span class="mono">string</span>
 
 The default database name of the RDS Serverless Cluster.
+
+### id
+
+_Type_ : <span class="mono">string</span>
 
 ### migratorFunction?
 

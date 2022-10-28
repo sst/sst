@@ -107,7 +107,7 @@ An array of scopes to include in the authorization when using `user_pool` or `jw
 
 ### defaults.authorizer?
 
-_Type_ : <span class='mono'><span class="mono">"iam"</span> | <span class="mono">"none"</span> | <span class="mono">string</span></span>
+_Type_ : <span class='mono'><span class="mono">"none"</span> | <span class="mono">"iam"</span> | <span class="mono">string</span></span>
 
 The authorizer for all the routes in the API.
 
@@ -172,6 +172,12 @@ new ApiGatewayV1Api(stack, "Api", {
 ```
 
 
+### cdk.id?
+
+_Type_ : <span class="mono">string</span>
+
+Allows you to override default id for this construct.
+
 
 
 
@@ -229,6 +235,10 @@ If custom domain is enabled, this is the custom domain URL of the Api.
 :::note
 If you are setting the base mapping for the custom domain, you need to include the trailing slash while using the custom domain URL. For example, if the [`domainName`](#domainname) is set to `api.domain.com` and the [`path`](#path) is `v1`, the custom domain URL of the API will be `https://api.domain.com/v1/`.
 :::
+
+### id
+
+_Type_ : <span class="mono">string</span>
 
 ### restApiArn
 
@@ -342,6 +352,47 @@ const api = new ApiGatewayV1Api(stack, "Api", {
 
 api.attachPermissionsToRoute("GET /notes", ["s3"]);
 ```
+
+### bind
+
+```ts
+bind(constructs)
+```
+_Parameters_
+- __constructs__ <span class='mono'>Array&lt;<span class="mono">SSTConstruct</span>&gt;</span>
+
+
+Binds the given list of resources to all the routes.
+
+
+
+```js
+api.bind([STRIPE_KEY, bucket]);
+```
+
+### bindToRoute
+
+```ts
+bindToRoute(routeKey, constructs)
+```
+_Parameters_
+- __routeKey__ <span class="mono">string</span>
+- __constructs__ <span class='mono'>Array&lt;<span class="mono">SSTConstruct</span>&gt;</span>
+
+
+Binds the given list of resources to a specific route.
+
+
+```js
+const api = new Api(stack, "Api", {
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+
+api.bindToRoute("GET /notes", [STRIPE_KEY, bucket]);
+```
+
 
 ### getFunction
 
@@ -504,12 +555,18 @@ _Type_ : <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
 
 ### authorizer?
 
-_Type_ : <span class='mono'><span class="mono">"iam"</span> | <span class="mono">"none"</span> | <span class="mono">string</span></span>
+_Type_ : <span class='mono'><span class="mono">"none"</span> | <span class="mono">"iam"</span> | <span class="mono">string</span></span>
 
-### function
+### function?
 
 _Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span> | <span class="mono">[FunctionProps](Function#functionprops)</span></span>
 
+
+### cdk.function?
+
+_Type_ : <span class="mono">[IFunction](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.IFunction.html)</span>
+
+Use an existing Lambda function.
 
 ### cdk.integration?
 
@@ -517,7 +574,7 @@ _Type_ : <span class="mono">[LambdaIntegrationOptions](https://docs.aws.amazon.c
 
 ### cdk.method?
 
-_Type_ : <span class="mono">Omit&lt;<span class="mono">[MethodOptions](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_apigateway.MethodOptions.html)</span>, <span class='mono'><span class="mono">"authorizationScopes"</span> | <span class="mono">"authorizer"</span> | <span class="mono">"authorizationType"</span></span>&gt;</span>
+_Type_ : <span class="mono">Omit&lt;<span class="mono">[MethodOptions](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_apigateway.MethodOptions.html)</span>, <span class='mono'><span class="mono">"authorizer"</span> | <span class="mono">"authorizationType"</span> | <span class="mono">"authorizationScopes"</span></span>&gt;</span>
 
 
 ## ApiGatewayV1ApiUserPoolsAuthorizer

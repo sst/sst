@@ -25,6 +25,10 @@ Value of the parameter
 
 ## Properties
 An instance of `Parameter` has the following properties.
+### id
+
+_Type_ : <span class="mono">string</span>
+
 ### name
 
 _Type_ : <span class="mono">string</span>

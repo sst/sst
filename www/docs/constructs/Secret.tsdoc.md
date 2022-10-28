@@ -15,6 +15,10 @@ _Parameters_
 - __id__ <span class="mono">string</span>
 ## Properties
 An instance of `Secret` has the following properties.
+### id
+
+_Type_ : <span class="mono">string</span>
+
 ### name
 
 _Type_ : <span class="mono">string</span>

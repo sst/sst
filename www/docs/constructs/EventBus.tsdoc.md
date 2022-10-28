@@ -74,6 +74,12 @@ new EventBus(stack, "Bus", {
 });
 ```
 
+### cdk.id?
+
+_Type_ : <span class="mono">string</span>
+
+Allows you to override default id for this construct.
+
 
 ## Properties
 An instance of `EventBus` has the following properties.
@@ -88,6 +94,10 @@ The ARN of the internally created `EventBus` instance.
 _Type_ : <span class="mono">string</span>
 
 The name of the internally created `EventBus` instance.
+
+### id
+
+_Type_ : <span class="mono">string</span>
 
 
 ### cdk.eventBus
@@ -136,7 +146,7 @@ _Parameters_
 Add permissions to all event targets in this EventBus.
 
 
-```js {10}
+```js
 bus.attachPermissions(["s3"]);
 ```
 
@@ -154,7 +164,7 @@ _Parameters_
 Add permissions to a specific event bus rule target
 
 
-```js {10}
+```js
 const bus = new EventBus(stack, "Bus", {
   rules: {
     myRule: {
@@ -168,6 +178,52 @@ const bus = new EventBus(stack, "Bus", {
 });
 
 bus.attachPermissionsToTarget("myRule", 0, ["s3"]);
+```
+
+### bind
+
+```ts
+bind(constructs)
+```
+_Parameters_
+- __constructs__ <span class='mono'>Array&lt;<span class="mono">SSTConstruct</span>&gt;</span>
+
+
+Binds the given list of resources to all event targets in this EventBus.
+
+
+```js
+bus.bind([STRIPE_KEY, bucket]);
+```
+
+### bindToTarget
+
+```ts
+bindToTarget(ruleKey, targetName, constructs)
+```
+_Parameters_
+- __ruleKey__ <span class="mono">string</span>
+- __targetName__ <span class="mono">string</span>
+- __constructs__ <span class='mono'>Array&lt;<span class="mono">SSTConstruct</span>&gt;</span>
+
+
+Binds the given list of resources to a specific event bus rule target
+
+
+```js
+const bus = new EventBus(stack, "Bus", {
+  rules: {
+    myRule: {
+      pattern: { source: ["myevent"] },
+      targets: {
+        myTarget1: "src/function1.handler"
+        myTarget2: "src/function2.handler"
+      },
+    },
+  },
+});
+
+bus.bindToTarget("myRule", 0, [STRIPE_KEY, bucket]);
 ```
 
 ### getRule

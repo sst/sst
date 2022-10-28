@@ -687,11 +687,12 @@ declare module "@serverless-stack/node/${binding.clientPackage}" {
     cdk.Aspects.of(this).add(new CodegenTypes());
   }
 
+  /** @internal */
   public reportWarning(type: AppWarningType) {
     this.warnings[type] = true;
   }
 
-  public printWarnings() {
+  private printWarnings() {
     if (this.warnings.usingConfig) {
       logger.warn(`\nWARNING: The "config" prop is deprecated, and will be removed in SST v2. Pass Parameters and Secrets in through the "bind" prop. Read more about how to upgrade here — https://docs.serverless-stack.com/upgrade-guide#upgrade-to-v116`);
     }

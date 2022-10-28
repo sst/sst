@@ -78,6 +78,12 @@ new Cognito(stack, "Auth", {
 ```
 
 
+### cdk.id?
+
+_Type_ : <span class="mono">string</span>
+
+Allows you to override default id for this construct.
+
 ### cdk.userPool?
 
 _Type_ : <span class='mono'><span class="mono">[UserPoolProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.UserPoolProps.html)</span> | <span class="mono">[IUserPool](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.IUserPool.html)</span></span>
@@ -98,6 +104,10 @@ An instance of `Cognito` has the following properties.
 _Type_ : <span class='mono'><span class="mono">undefined</span> | <span class="mono">string</span></span>
 
 The id of the internally created `IdentityPool` instance.
+
+### id
+
+_Type_ : <span class="mono">string</span>
 
 ### userPoolArn
 
@@ -227,6 +237,21 @@ auth.attachPermissionsForUnauthUsers(auth, ["s3"]);
 ```
 
 :::
+### bindForTrigger
+
+```ts
+bindForTrigger(triggerKey, constructs)
+```
+_Parameters_
+- __triggerKey__ 
+- __constructs__ <span class='mono'>Array&lt;<span class="mono">SSTConstruct</span>&gt;</span>
+### bindForTriggers
+
+```ts
+bindForTriggers(constructs)
+```
+_Parameters_
+- __constructs__ <span class='mono'>Array&lt;<span class="mono">SSTConstruct</span>&gt;</span>
 ### getFunction
 
 ```ts

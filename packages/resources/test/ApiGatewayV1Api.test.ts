@@ -5,7 +5,6 @@ import {
   countResources,
   countResourcesLike,
   hasResource,
-  printResource,
   objectLike,
 } from "./helper";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
@@ -13,7 +12,6 @@ import * as apig from "aws-cdk-lib/aws-apigateway";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as ssm from "aws-cdk-lib/aws-ssm";
-import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as logs from "aws-cdk-lib/aws-logs";
 import { App, Stack, Bucket, ApiGatewayV1Api, Function } from "../src";
 

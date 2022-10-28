@@ -31,6 +31,12 @@ new Queue(stack, "Queue", {
 ```
 
 
+### cdk.id?
+
+_Type_ : <span class="mono">string</span>
+
+Allows you to override default id for this construct.
+
 ### cdk.queue?
 
 _Type_ : <span class='mono'><span class="mono">[IQueue](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_sqs.IQueue.html)</span> | <span class="mono">[QueueProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_sqs.QueueProps.html)</span></span>
@@ -54,9 +60,13 @@ new Queue(stack, "Queue", {
 An instance of `Queue` has the following properties.
 ### consumerFunction?
 
-_Type_ : <span class="mono">[Function](Function#function)</span>
+_Type_ : <span class='mono'><span class="mono">[Function](Function#function)</span> | <span class="mono">[IFunction](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.IFunction.html)</span></span>
 
 The internally created consumer `Function` instance.
+
+### id
+
+_Type_ : <span class="mono">string</span>
 
 ### queueArn
 
@@ -123,10 +133,29 @@ const queue = new Queue(stack, "Queue", {
 queue.attachPermissions(["s3"]);
 ```
 
+### bind
+
+```ts
+bind(constructs)
+```
+_Parameters_
+- __constructs__ <span class='mono'>Array&lt;<span class="mono">SSTConstruct</span>&gt;</span>
+
+
+Binds the given list of resources to the consumer function
+
+
+```js
+const queue = new Queue(stack, "Queue", {
+  consumer: "src/function.handler",
+});
+queue.bind([STRIPE_KEY, bucket]);
+```
+
 ## QueueConsumerProps
 Used to define the consumer for the queue and invocation details
 
-### function
+### function?
 
 _Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span> | <span class="mono">[FunctionProps](Function#functionprops)</span></span>
 
@@ -160,6 +189,26 @@ new Queue(stack, "Queue", {
       eventSource: {
         batchSize: 5,
       },
+    },
+  },
+});
+```
+
+### cdk.function?
+
+_Type_ : <span class="mono">[IFunction](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.IFunction.html)</span>
+
+This allows you to use an existing or imported Lambda function.
+
+
+```js
+new Queue(stack, "Queue", {
+  consumer: {
+    cdk: {
+      function: lambda.Function.fromFunctionAttributes(stack, "ImportedFn", {
+        functionArn: "arn:aws:lambda:us-east-1:123456789:function:my-function",
+        role: iam.Role.fromRoleArn(stack, "IRole", "arn:aws:iam::123456789:role/my-role"),
+      }),
     },
   },
 });

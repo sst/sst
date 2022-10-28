@@ -117,6 +117,14 @@ new AppSyncApi(stack, "GraphqlApi", {
 
 _Type_ : <span class='mono'><span class="mono">[IGraphqlApi](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-appsync-alpha.IGraphqlApi.html)</span> | <span class="mono">[AppSyncApiCdkGraphqlProps](#appsyncapicdkgraphqlprops)</span></span>
 
+Allows you to override default settings this construct uses internally to create the AppSync API.
+
+### cdk.id?
+
+_Type_ : <span class="mono">string</span>
+
+Allows you to override default id for this construct.
+
 
 ## Properties
 An instance of `AppSyncApi` has the following properties.
@@ -143,6 +151,10 @@ The name of the internally created AppSync GraphQL API.
 _Type_ : <span class='mono'><span class="mono">undefined</span> | <span class="mono">string</span></span>
 
 If custom domain is enabled, this is the custom domain URL of the Api.
+
+### id
+
+_Type_ : <span class="mono">string</span>
 
 ### url
 
@@ -215,7 +227,7 @@ _Parameters_
 - __permissions__ <span class="mono">[Permissions](Permissions)</span>
 
 
-Attaches the given list of permissions to all function datasources
+Attaches the given list of permissions to all function data sources
 
 
 ```js
@@ -238,6 +250,41 @@ Attaches the given list of permissions to a specific function datasource. This a
 ```js
 api.attachPermissionsToDataSource("Mutation charge", ["s3"]);
 ```
+
+### bind
+
+```ts
+bind(constructs)
+```
+_Parameters_
+- __constructs__ <span class='mono'>Array&lt;<span class="mono">SSTConstruct</span>&gt;</span>
+
+
+Binds the given list of resources to all function data sources.
+
+
+
+```js
+api.bind([STRIPE_KEY, bucket]);
+```
+
+### bindToDataSource
+
+```ts
+bindToDataSource(key, constructs)
+```
+_Parameters_
+- __key__ <span class="mono">string</span>
+- __constructs__ <span class='mono'>Array&lt;<span class="mono">SSTConstruct</span>&gt;</span>
+
+
+Binds the given list of resources to a specific function data source.
+
+
+```js
+api.bindToDataSource("Mutation charge", [STRIPE_KEY, bucket]);
+```
+
 
 ### getDataSource
 

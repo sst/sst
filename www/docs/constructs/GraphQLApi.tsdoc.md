@@ -127,7 +127,7 @@ An array of scopes to include in the authorization when using `user_pool` or `jw
 
 ### defaults.authorizer?
 
-_Type_ : <span class='mono'><span class="mono">"iam"</span> | <span class="mono">"none"</span> | <span class="mono">Omit&lt;<span class="mono">string</span>, <span class='mono'><span class="mono">"iam"</span> | <span class="mono">"none"</span></span>&gt;</span></span>
+_Type_ : <span class='mono'><span class="mono">"none"</span> | <span class="mono">"iam"</span> | <span class="mono">Omit&lt;<span class="mono">string</span>, <span class='mono'><span class="mono">"none"</span> | <span class="mono">"iam"</span></span>&gt;</span></span>
 
 The default authorizer for all the routes in the API.
 
@@ -280,6 +280,12 @@ new GraphQLApi(stack, "Api", {
 });
 ```
 
+### cdk.id?
+
+_Type_ : <span class="mono">string</span>
+
+Allows you to override default id for this construct.
+
 
 ## Properties
 An instance of `GraphQLApi` has the following properties.
@@ -303,6 +309,10 @@ The ARN of the internally created API Gateway HTTP API
 _Type_ : <span class="mono">string</span>
 
 The id of the internally created API Gateway HTTP API
+
+### id
+
+_Type_ : <span class="mono">string</span>
 
 ### routes
 
@@ -407,6 +417,47 @@ const api = new Api(stack, "Api", {
 });
 
 api.attachPermissionsToRoute("GET /notes", ["s3"]);
+```
+
+
+### bind
+
+```ts
+bind(constructs)
+```
+_Parameters_
+- __constructs__ <span class='mono'>Array&lt;<span class="mono">SSTConstruct</span>&gt;</span>
+
+
+Binds the given list of resources to all the routes.
+
+
+
+```js
+api.bind([STRIPE_KEY, bucket]);
+```
+
+### bindToRoute
+
+```ts
+bindToRoute(routeKey, constructs)
+```
+_Parameters_
+- __routeKey__ <span class="mono">string</span>
+- __constructs__ <span class='mono'>Array&lt;<span class="mono">SSTConstruct</span>&gt;</span>
+
+
+Binds the given list of resources to a specific route.
+
+
+```js
+const api = new Api(stack, "Api", {
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+
+api.bindToRoute("GET /notes", [STRIPE_KEY, bucket]);
 ```
 
 

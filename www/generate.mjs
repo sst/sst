@@ -398,6 +398,10 @@ function renderType(file, files, prefix, parameter) {
       return renderType(file, files, prefix, ref.type);
 
     const link = (() => {
+      // Do not show link for "SSTConstruct" param type
+      if (parameter.name === "SSTConstruct") {
+        return undefined;
+      }
       if (file.children?.find((c) => c.id === id))
         return `#${parameter.name.toLowerCase()}`;
       const otherFile = files.find((x) => x.children?.find((c) => c.id === id));
