@@ -70,7 +70,7 @@ export const useFunctionBuilder = Context.memo(() => {
   const artifactPath = path.join(project.paths.out, "artifacts");
 
   const result = {
-    on: bus.forward("function.built"),
+    subscribe: bus.forward("function.built"),
     artifact: (functionID: string) => {
       if (artifacts.has(functionID)) return artifacts.get(functionID)!;
       return result.build(functionID);

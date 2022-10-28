@@ -55,17 +55,19 @@ export async function initProject(globals: GlobalOptions) {
     for (const ext of CONFIG_EXTENSIONS) {
       const file = path.join(root, "sst" + ext);
       if (file.endsWith("js")) {
+        let fn;
         try {
-          const config = await import(file);
-          return {
-            ...DEFAULTS,
-            ...config.default,
-            stage: globals.stage || (await usePersonalStage(out)),
-            profile: globals.profile || config.default.profile,
-          } as ProjectWithDefaults;
-        } catch (ex) {
+          fn = await import(file);
+        } catch (err) {
           continue;
         }
+        const config = await fn.default(globals);
+        return {
+          ...DEFAULTS,
+          ...config,
+          stage: globals.stage || (await usePersonalStage(out)),
+          profile: globals.profile || config.profile,
+        } as ProjectWithDefaults;
       }
 
       if (file.endsWith(".json")) {

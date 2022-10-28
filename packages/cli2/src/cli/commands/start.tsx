@@ -15,6 +15,7 @@ import { Context } from "@serverless-stack/node/context/index.js";
 import { DeploymentUI } from "./deploy.js";
 import { Metafile } from "esbuild";
 import { Program } from "@cli/program.js";
+import ora from "ora";
 
 export const start = (program: Program) =>
   program.command(
@@ -22,6 +23,7 @@ export const start = (program: Program) =>
     "Work on your SST app locally",
     (yargs) => yargs,
     async () => {
+      ora("Listening for function invocations").start().succeed();
       await Promise.all([
         useRuntimeWorkers(),
         useIOTBridge(),
@@ -30,7 +32,6 @@ export const start = (program: Program) =>
         useMetadata(),
         useFunctionLogger(),
       ]);
-      Logger.ui("green", "Listening for function invocations...");
       await useStackBuilder();
     }
   );
@@ -73,7 +74,7 @@ const useStackBuilder = Context.memo(async () => {
     await Stacks.deployMany(assembly.stacks);
     component.unmount();
     process.stdout.write("\x1b[?1049l");
-    Logger.ui("green", "Stacks updated");
+    console.log("Stacks updated");
   }
 
   let metafile: Metafile;

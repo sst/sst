@@ -37,7 +37,7 @@ export const useRuntimeWorkers = Context.memo(() => {
   const builder = useFunctionBuilder();
   const server = useRuntimeServerConfig();
 
-  builder.on("function.built", async (evt) => {
+  builder.subscribe("function.built", async (evt) => {
     for (const [_, worker] of workers) {
       if (worker.functionID === evt.properties.functionID) {
         const handler = handlers.for("test");

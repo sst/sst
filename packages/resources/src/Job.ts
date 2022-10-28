@@ -7,7 +7,7 @@ import * as cdk from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as codebuild from "aws-cdk-lib/aws-codebuild";
-import { Runtime, DeferBuilder } from "@serverless-stack/core";
+import { Runtime } from "@serverless-stack/core";
 
 import { App } from "./App.js";
 import {
@@ -22,6 +22,7 @@ import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import { isPropertySignature } from "typescript";
 import { IVpc, Vpc } from "aws-cdk-lib/aws-ec2";
+import { useDeferredTask } from "./deferred_task.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -270,16 +271,19 @@ export class Job extends Construct implements SSTConstruct {
   /** @internal */
   public static codegenTypes(typesPath: string) {
     fs.appendFileSync(`${typesPath}/index.d.ts`, `export * from "./job";`);
-    fs.writeFileSync(`${typesPath}/job.d.ts`, `
+    fs.writeFileSync(
+      `${typesPath}/job.d.ts`,
+      `
       import "@serverless-stack/node/job";
       declare module "@serverless-stack/node/job" {
         export interface JobNames {
           ${Array.from(Job.all)
-        .map((p) => `${p}: string;`)
-        .join("\n")}
+            .map((p) => `${p}: string;`)
+            .join("\n")}
         }
       }
-    `);
+    `
+    );
   }
 
   /** @internal */
@@ -324,11 +328,7 @@ export class Job extends Construct implements SSTConstruct {
   }
 
   private buildCodeBuildProjectCode() {
-    const {
-      handler,
-      srcPath: srcPathRaw,
-      enableLiveDev: enableLiveDevRaw,
-    } = this.props;
+    const { handler, srcPath: srcPathRaw } = this.props;
     const srcPath = Function.normalizeSrcPath(srcPathRaw || ".");
     const bundle = { format: "esm" } as FunctionBundleNodejsProps;
 
@@ -340,7 +340,7 @@ export class Job extends Construct implements SSTConstruct {
     }
     // Handle build
     else {
-      DeferBuilder.addTask(async () => {
+      useDeferredTask().add(async () => {
         // Build function
         const bundled = await Runtime.Handler.bundle({
           id: this.localId,

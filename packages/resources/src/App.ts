@@ -7,12 +7,7 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as cxapi from "aws-cdk-lib/cx-api";
-import {
-  Bootstrap,
-  DeferBuilder,
-  deployPoll,
-  State,
-} from "@serverless-stack/core";
+import { Bootstrap, deployPoll, State } from "@serverless-stack/core";
 import { Stack } from "./Stack.js";
 import {
   SSTConstruct,
@@ -29,6 +24,8 @@ import { StackProps } from "./Stack.js";
 import { FunctionalStack, stack } from "./FunctionalStack.js";
 import { createRequire } from "module";
 import { Auth } from "./Auth.js";
+import { useDeferredTask } from "./deferred_task.js";
+import { AppContext } from "./context.js";
 const require = createRequire(import.meta.url);
 
 function exitWithMessage(message: string) {
@@ -187,6 +184,7 @@ export class App extends cdk.App {
     props: AppProps = {}
   ) {
     super(props);
+    AppContext.provide(this);
     this.appPath = process.cwd();
 
     this.mode = deployProps.mode;
@@ -363,7 +361,7 @@ export class App extends cdk.App {
   }
 
   public async runDeferredBuilds() {
-    await DeferBuilder.run();
+    await useDeferredTask().run();
   }
 
   isRunningSSTTest(): boolean {
@@ -529,7 +527,12 @@ export class App extends cdk.App {
   private codegenTypes() {
     const nodeModulesPath = this.codegenFindNodeModulesPath();
     if (nodeModulesPath) {
-      const typesPath = path.resolve(nodeModulesPath, "node_modules", "@types", "serverless-stack__node");
+      const typesPath = path.resolve(
+        nodeModulesPath,
+        "node_modules",
+        "@types",
+        "serverless-stack__node"
+      );
       this.codegenCreateFile(typesPath);
       Config.codegenTypes(typesPath);
       Job.codegenTypes(typesPath);
@@ -537,11 +540,16 @@ export class App extends cdk.App {
   }
 
   private codegenFindNodeModulesPath() {
-    const rootPath = path.parse(process.cwd()).root
+    const rootPath = path.parse(process.cwd()).root;
 
     let directory = this.appPath;
     while (directory !== rootPath) {
-      const checkPath = path.resolve(directory, "node_modules", "@serverless-stack", "node");
+      const checkPath = path.resolve(
+        directory,
+        "node_modules",
+        "@serverless-stack",
+        "node"
+      );
       if (fs.existsSync(checkPath)) {
         return directory;
       }

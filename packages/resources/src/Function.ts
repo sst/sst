@@ -12,7 +12,7 @@ import * as lambdaNode from "aws-cdk-lib/aws-lambda-nodejs";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 
-import { State, Runtime, DeferBuilder } from "@serverless-stack/core";
+import { Runtime } from "@serverless-stack/core";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Job } from "./Job.js";
@@ -29,6 +29,7 @@ import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import * as functionUrlCors from "./util/functionUrlCors.js";
 
 import url from "url";
+import { useDeferredTask } from "./deferred_task.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 const supportedRuntimes = {
@@ -871,7 +872,7 @@ export class Function extends lambda.Function implements SSTConstruct {
         layers: Function.buildLayers(scope, id, props),
         logRetention,
       });
-      DeferBuilder.addTask(async () => {
+      useDeferredTask().add(async () => {
         // Build function
         const bundled = await Runtime.Handler.bundle({
           id: localId,

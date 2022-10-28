@@ -345,7 +345,8 @@ async function deployPoll(cdkOptions, stackStates) {
               skipPendingStacks();
               logger.info(
                 chalk.red(
-                  `\n ❌  ${chalk.bold(stackState.name)} failed: ${stackState.errorMessage
+                  `\n ❌  ${chalk.bold(stackState.name)} failed: ${
+                    stackState.errorMessage
                   }\n`
                 )
               );
@@ -384,7 +385,8 @@ async function deployPoll(cdkOptions, stackStates) {
               skipPendingStacks();
               logger.info(
                 chalk.red(
-                  `\n ❌  ${chalk.bold(stackState.name)} failed: ${stackState.errorMessage
+                  `\n ❌  ${chalk.bold(stackState.name)} failed: ${
+                    stackState.errorMessage
                   }\n`
                 )
               );
@@ -469,7 +471,8 @@ async function deployPoll(cdkOptions, stackStates) {
               skipPendingStacks();
               logger.info(
                 chalk.red(
-                  `\n ❌  ${chalk.bold(stackState.name)} failed: ${stackState.errorMessage
+                  `\n ❌  ${chalk.bold(stackState.name)} failed: ${
+                    stackState.errorMessage
                   }\n`
                 )
               );
@@ -1296,7 +1299,8 @@ async function destroyPoll(cdkOptions, stackStates) {
               skipPendingStacks();
               logger.info(
                 chalk.red(
-                  `\n ❌  ${chalk.bold(stackState.name)} failed: ${stackState.errorMessage
+                  `\n ❌  ${chalk.bold(stackState.name)} failed: ${
+                    stackState.errorMessage
                   }\n`
                 )
               );
@@ -1376,7 +1380,8 @@ async function destroyPoll(cdkOptions, stackStates) {
               skipPendingStacks();
               logger.info(
                 chalk.red(
-                  `\n ❌  ${chalk.bold(stackState.name)} failed: ${stackState.errorMessage
+                  `\n ❌  ${chalk.bold(stackState.name)} failed: ${
+                    stackState.errorMessage
                   }\n`
                 )
               );
@@ -1908,12 +1913,12 @@ function printStackEvent(stackName, event) {
   const statusColor = colorFromStackEventStatus(event.ResourceStatus);
   logger.info(
     `${stackName}` +
-    ` | ${statusColor(event.ResourceStatus || "")}` +
-    ` | ${event.ResourceType}` +
-    ` | ${statusColor(chalk.bold(event.LogicalResourceId || ""))}` +
-    (event.ResourceStatusReason
-      ? ` | ${statusColor(event.ResourceStatusReason || "")}`
-      : "")
+      ` | ${statusColor(event.ResourceStatus || "")}` +
+      ` | ${event.ResourceType}` +
+      ` | ${statusColor(chalk.bold(event.LogicalResourceId || ""))}` +
+      (event.ResourceStatusReason
+        ? ` | ${statusColor(event.ResourceStatusReason || "")}`
+        : "")
   );
 }
 
@@ -1989,7 +1994,6 @@ export { Runtime } from "./runtime/index.js";
 export { Stacks } from "./stacks/index.js";
 export * from "./cli/index.js";
 export * from "./local/index.js";
-export { DeferBuilder } from "./defer-builder/index.js";
 export { FunctionConfig } from "./function-config/index.js";
 export { Bootstrap } from "./bootstrap/index.js";
 export { Telemetry } from "./telemetry/index.js";

@@ -157,9 +157,7 @@ test("constructor: props without handler", async () => {
 test("constructor: props disabling live development ", async () => {
   const stack = new Stack(
     new App({
-      debugEndpoint: "placeholder",
-      debugBucketArn: "placeholder",
-      debugBucketName: "placeholder",
+      mode: "deploy",
     }),
     "stack"
   );

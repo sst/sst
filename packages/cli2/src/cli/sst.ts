@@ -1,14 +1,16 @@
 process.removeAllListeners("uncaughtException");
 process.on("uncaughtException", (err) => {
-  console.log(red(err.message));
-  console.log(
-    blue(
-      "Need help with this error? Join our discord https://discord.gg/sst and talk to the team"
-    )
-  );
+  console.log(red("Error:"), err.message);
   if (!(err instanceof VisibleError)) {
-    console.log(yellow(err.stack || ""));
+    console.log();
+    console.trace(err.stack);
   }
+  console.log();
+  console.log(
+    `Need help with this error? Join our discord ${blue(
+      `https://discord.gg/sst`
+    )} and talk to the team`
+  );
   process.exit(1);
 });
 
