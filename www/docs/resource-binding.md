@@ -1,6 +1,6 @@
 ---
 title: Resource Binding
-description: "Accessing SST resources in your functions."
+description: "Access the resources in your SST app in a secure and typesafe way."
 ---
 
 import HeadlineText from "@site/src/components/HeadlineText";
@@ -73,25 +73,31 @@ Follow along by creating the Minimal TypeScript starter by running `npx create-s
    };
    ```
 
-   You'll also need to install a couple of packages inside the `services/` directory.
+   You'll also need to install the node package in the `services/` directory.
 
    ```bash
-   npm install --save @serverless-stack/node @aws-sdk/client-s3
+   npm install --save @serverless-stack/node
    ```
 
-   And that's it!
+   And the AWS SDK for this example.
+
+   ```bash
+   npm install --save @aws-sdk/client-s3
+   ```
+
+   That's it!
 
 ---
 
 ## Features
 
-Let's take a look at some of the key features of Resource Binding; and how it makes building apps fun and easy again.
+Let's take a look at some of the key features of Resource Binding, and how it makes building apps fun and easy again.
 
 ---
 
 ### Typesafety
 
-In the above example, the `Bucket` object that's imported from `@serverless-stack/node/bucket` is typesafe. Your editor should also be able to autocomplete the bucket name `myFiles`, as well as its property `bucketName`.
+In the above example, the `Bucket` object that's imported from `@serverless-stack/node/bucket` is typesafe. Your editor should be able to autocomplete the bucket name `myFiles`, as well as its property `bucketName`.
 
 ![resource binding typesafe](/img/resource-binding/typesafe.png)
 
@@ -102,28 +108,28 @@ Let's take a look at how this is all wired up.
 
 1. First, the `@serverless-stack/node/table` package predefines an interface.
 
-```ts
-export interface BucketResources {}
-```
+   ```ts
+   export interface BucketResources {}
+   ```
 
 2. When SST builds the app, it generates a type file and adds the bucket name to the `BucketResources` interface.
 
-```ts title="node_modules/@types/serverless-stack__node/Bucket-myFiles.d.ts"
-import "@serverless-stack/node/bucket";
-declare module "@serverless-stack/node/bucket" {
-  export interface BucketResources {
-    myFiles: {
-      bucketName: string;
-    };
-  }
-}
-```
+   ```ts title="node_modules/@types/serverless-stack__node/Bucket-myFiles.d.ts"
+   import "@serverless-stack/node/bucket";
+   declare module "@serverless-stack/node/bucket" {
+     export interface BucketResources {
+       myFiles: {
+         bucketName: string;
+       };
+     }
+   }
+   ```
 
-This type file then gets appended to `index.d.ts`.
+   This type file then gets appended to `index.d.ts`.
 
-```ts title="node_modules/@types/@serverless-stack__node/index.d.ts"
-export * from "./Bucket-myFiles";
-```
+   ```ts title="node_modules/@types/@serverless-stack__node/index.d.ts"
+   export * from "./Bucket-myFiles";
+   ```
 
 3. So when the `Bucket` object is imported from `@serverless-stack/node/bucket`, it has the type `BucketResources`.
 
@@ -216,65 +222,78 @@ Resource Binding works across all [SST constructs](constructs/index.md). Here ar
   RDS.myDB.defaultDatabaseName;
   ```
 
-See the full list of [supported constructs](./packages/node.md).
+See the [full list of constructs](packages/node.md).
 
 ---
 
 ## Binding other resources
 
-So far Resource Binding allows your functions to access values from the SST constructs defined in your stacks. But there are 2 other types of values you might want to acess in your functions.
+So far we've seen how Resource Binding allows your functions to access values from other SST constructs. But there are 2 other types of values you might want to access in your functions.
 
-- Secrets, because you can't define the value of the secrets in your functions;
-- Values from your stacks that are not coming from SST constructs, ie. static values and values from CDK constructs
+1. Secrets, because you can't define the value of the secrets in your functions.
+2. Values from non-SST constructs, for example static values or values from CDK constructs.
 
-For this, you can use [`Config`](./config). Here are a couple of examples.
+For these you can use [`Config`](config.md). Here are a couple of examples.
 
 ---
 
-#### Binding Secrets
+#### Binding secrets
 
-Create a `Config.Secret` construct, and bind it to the `api` in our example.
+To bind a secret to our function, start by creating a `Config.Secret` construct.
 
 ```ts
 const STRIPE_KEY = new Config.Secret(stack, "STRIPE_KEY");
+```
 
+And continuing with our example, bind it to the `api`.
+
+```ts
 api.bind([STRIPE_KEY]);
 ```
 
-Set the secret value using the CLI.
+Now set the secret value using the SST CLI.
 
 ```bash
 npx sst secrets set STRIPE_KEY sk_test_abc123
 ```
 
-Access the value in the function.
+And access the value in the function.
 
 ```ts
 import { Config } from "@serverless-stack/node/config";
+
 Config.STRIPE_KEY;
 ```
 
+You can [read more about secrets](config.md#secrets).
+
 ---
 
-#### Binding Parameters
+#### Binding CDK resources
 
 Assuming you have an ECS cluster in your app and you need to pass the cluster name to your function.
 
-Create a `Config.Parameter` construct with the cluster name being the value, and bind it to the `api` in our example.
+Since SST doesn't have a construct for ECS, create a `Config.Parameter` construct with the cluster name being the value.
 
 ```ts
 const cluster = new ecs.Cluster(stack, "myCluster");
+
 const MY_CLUSTER_NAME = new Config.Parameter(stack, "MY_CLUSTER_NAME", {
   value: cluster.clusterName,
 });
+```
 
+Then bind it to the `api` from our example.
+
+```ts
 api.bind([MY_CLUSTER_NAME]);
 ```
 
-Access the value in the function.
+And you can access the value in your function.
 
 ```ts
 import { Config } from "@serverless-stack/node/config";
+
 Config.MY_CLUSTER_NAME;
 ```
 
@@ -282,25 +301,25 @@ Config.MY_CLUSTER_NAME;
 
 ## How it works
 
-When a resource is bound to a Lambda function, the resource values are stored as environment variables for the function. In the above example, the bucket name is stored as a Lambda environment variable, named `SST_Bucket_bucketName_myBucket`.
+When a resource is bound to a Lambda function, the resource values are stored as environment variables for the function. In our example, the bucket name is stored as a Lambda environment variable named `SST_Bucket_bucketName_myBucket`.
 
 At runtime, the `@serverless-stack/node/bucket` package reads the value `process.env.SST_Bucket_bucketName_MyBucket` and makes it accessible via `Bucket.myBucket.bucketName`.
 
-SST also stores a copy of the bucket name in [AWS SSM](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html). In this case, an SSM parameter of the type `String` is created with the name `/sst/{appName}/{stageName}/Bucket/MyBucket/bucketName`, where `{appName}` is the name of your SST app, and `{stageName}` is the stage. The parameter value in this case is the bucket name stored in plain text.
+SST also stores a copy of the bucket name in [AWS SSM](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html). In this case, an SSM parameter of the type `String` is created with the name `/sst/{appName}/{stageName}/Bucket/MyBucket/bucketName`, where `{appName}` is the name of your SST app, and `{stageName}` is the stage. The parameter value is the name of the bucket stored in plain text.
 
-Storing the bucket name in SSM might seem redundant. But it provides a convenient way to fetch all the bound resources used in your application. This can be extremely useful for testing. This isn't possible when using Lambda environment variables and we are going to see why in the [next section](#resource-binding-or-lambda-environment-variables).
+Storing the bucket name in SSM might seem redundant. But it provides a convenient way to fetch all the bound resources in your application. This can be extremely useful for testing. This isn't possible when using Lambda environment variables and [we are going to see why](#resource-binding-or-lambda-environment-variables).
 
 ---
 
 #### Binding sensitive values
 
-When binding resources containing sensitive values, placeholder values are stored in the Lambda environment variables. Actual values are only stored inside AWS SSM. At runtime, the values are fetched from SSM once when the Lambda container first boots up. And the values are cached for subsequent invocations. This is the case with [`Config.Secret`](./config#secrets).
+When binding resources that contain sensitive values, placeholders are stored in the Lambda environment variables. The actual values are stored inside SSM. At runtime, the values are fetched from SSM when the Lambda container first boots up. And the values are cached for subsequent invocations. This is similar to how [`Config.Secret`](config.md#secrets) works.
 
 ---
 
 ## Cost
 
-Resource binding values are stored in AWS SSM with the _Standard Parameter type_ and _Standard Throughput_. This makes resource bindings [free to use](https://aws.amazon.com/systems-manager/pricing/) in your SST apps.
+Resource Binding values are stored in AWS SSM with the _Standard Parameter type_ and _Standard Throughput_. This makes it [free to use](https://aws.amazon.com/systems-manager/pricing/) in your SST apps.
 
 ## FAQ
 
@@ -310,9 +329,9 @@ Here are some frequently asked questions about Resource Binding.
 
 ### Resource Binding or Lambda environment variables?
 
-Prior to Resource Binding, people used Lambda environment variables to pass resource information to their functions.
+Prior to Resource Binding, people used Lambda environment variables to pass information to their functions.
 
-Lambda environment variables have a couple of drawbacks. Imagine you have a Lambda function that looks like this.
+Aside from the lack of typesafety and error handling, Lambda environment variables have a few drawbacks. Imagine you have a Lambda function that looks like this.
 
 ```ts title="services/users/updated.ts"
 export const handler = async () => {
@@ -324,9 +343,9 @@ export const handler = async () => {
 };
 ```
 
-Where `TOPIC_NAME` is stored as a Lambda environment variable. There are a couple of cases you need to handle:
+Where `TOPIC_NAME` is stored as a Lambda environment variable. You'll need to handle the following:
 
-1. When testing this function, locally or in your CI pipeline, you need to figure out the value for `TOPIC_NAME` and set it as an environment variable.
+1. When testing this function, locally or in your CI, you need to figure out the value for `TOPIC_NAME` and set it as an environment variable.
 
 2. In addition, imagine you have another function that also has a `TOPIC_NAME` Lambda environment variable, but with a different value.
 
@@ -340,17 +359,17 @@ Where `TOPIC_NAME` is stored as a Lambda environment variable. There are a coupl
    };
    ```
 
-What should the `TOPIC_NAME` be in your tests?
+   What should the `TOPIC_NAME` be in your tests?
 
-With Resource Binding, the value for the topic name is also stored in SSM. When running tests, you can easily look up the values by fetching the value from SSM Parameters.
+With Resource Binding, the value for the topic name is also stored in SSM. When running tests, SST can automatically fetch this from SSM using the `sst bind` CLI.
 
 ---
 
 ### Does this make my Lambda functions slower?
 
-No. The resource values are stored as environment variables for the function. At runtime, reading from environment variables is instantanous.
+No. The resource values are stored as environment variables for the function. At runtime, reading from environment variables is instantaneous.
 
-For sensitive values bound to the functions, the values are stored in AWS SSM. When the Lambda container first boots up, the values are fetched from SSM and are cached for subsequent invocations. This is the case with [`Config.Secret`](./config#secrets).
+For sensitive values, the values are stored in AWS SSM. When the Lambda container first boots up, the values are fetched from SSM and are cached for subsequent invocations.
 
 ---
 
