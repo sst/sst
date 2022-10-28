@@ -5,7 +5,7 @@ description: "Upgrade guide for SST"
 
 ## Upgrade to v1.16
 
-- Stacks: id needs to be unique and match [a-zA-Z]([a-zA-Z0-9_])+, change the id to a unique id, and pass the original id into `cdk.id`. This ensure the original id is still used as the CloudFormation logical ID. And it will not result in the resource being recreated.
+- Stacks: id needs to be unique and match `[a-zA-Z]([a-zA-Z0-9_])+`, change the id to a unique id, and pass the original id into `cdk.id`. This ensure the original id is still used as the CloudFormation logical ID. And it will not result in the resource being recreated.
 
 For example, if you have two buckets with the same id.
 
@@ -48,6 +48,8 @@ new Function(stack, "myFn", {
   bind: [MY_STRIPE_KEY],
 });
 ```
+
+- Use `bind` instead of `load-config` command
 
 ## Upgrade to v1.0
 

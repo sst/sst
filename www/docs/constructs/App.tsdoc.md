@@ -46,22 +46,45 @@ The stage the app is being deployed to. If this is not specified as the --stage 
 
 ## Methods
 An instance of `App` has the following methods.
+### addDefaultFunctionBinding
+
+```ts
+addDefaultFunctionBinding(bind)
+```
+_Parameters_
+- __bind__ <span class='mono'>Array&lt;<span class="mono">SSTConstruct</span>&gt;</span>
+
+
+Binds additional default resources to be applied to all Lambda functions in the app.
+
+
+```js
+app.addDefaultFunctionBinding([STRIPE_KEY, bucket]);
+```
+
 ### addDefaultFunctionConfig
 
+:::caution
+This function signature has been deprecated.
 ```ts
 addDefaultFunctionConfig(config)
 ```
-_Parameters_
-- __config__ <span class='mono'>Array&lt;<span class='mono'><span class="mono">[Secret](Secret#secret)</span> | <span class="mono">[Parameter](Parameter#parameter)</span></span>&gt;</span>
 
 
 Adds additional default config to be applied to all Lambda functions in the app.
 
 
 ```js
-app.addDefaultFunctionConfig([STRIPE_KEY])
+// Change
+app.addDefaultFunctionConfig([STRIPE_KEY]);
+
+// To
+app.addDefaultFunctionBinding([STRIPE_KEY]);
 ```
 
+The "addDefaultFunctionConfig" method will be removed in SST v2. Pass Parameters and Secrets in through the "addDefaultFunctionBinding" function. Read more about how to upgrade here — https://docs.serverless-stack.com/upgrade-guide#upgrade-to-v116
+
+:::
 ### addDefaultFunctionEnv
 
 ```ts

@@ -41,7 +41,7 @@ new WebSocketApi(stack, "Api", {
 
 ### authorizer?
 
-_Type_ : <span class='mono'><span class="mono">"iam"</span> | <span class="mono">"none"</span> | <span class="mono">[WebSocketApiLambdaAuthorizer](#websocketapilambdaauthorizer)</span></span>
+_Type_ : <span class='mono'><span class="mono">"none"</span> | <span class="mono">[WebSocketApiLambdaAuthorizer](#websocketapilambdaauthorizer)</span> | <span class="mono">"iam"</span></span>
 
 The default authorizer for the API.
 
@@ -128,6 +128,12 @@ new WebSocketApi(stack, "Api", {
 ```
 
 
+### cdk.id?
+
+_Type_ : <span class="mono">string</span>
+
+Allows you to override default id for this construct.
+
 ### cdk.webSocketApi?
 
 _Type_ : <span class='mono'><span class="mono">[IWebSocketApi](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.IWebSocketApi.html)</span> | <span class="mono">[WebSocketApiProps](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.WebSocketApiProps.html)</span></span>
@@ -170,6 +176,10 @@ An instance of `WebSocketApi` has the following properties.
 _Type_ : <span class='mono'><span class="mono">undefined</span> | <span class="mono">string</span></span>
 
 Custom domain url if it's configured
+
+### id
+
+_Type_ : <span class="mono">string</span>
 
 ### routes
 
@@ -268,6 +278,41 @@ Attaches the given list of permissions to a specific route. This allows that fun
 
 ```js
 api.attachPermissionsToRoute("$connect", ["s3"]);
+```
+
+
+### bind
+
+```ts
+bind(constructs)
+```
+_Parameters_
+- __constructs__ <span class='mono'>Array&lt;<span class="mono">SSTConstruct</span>&gt;</span>
+
+
+Binds the given list of resources to all the routes.
+
+
+
+```js
+api.bind([STRIPE_KEY, bucket]);
+```
+
+### bindToRoute
+
+```ts
+bindToRoute(routeKey, constructs)
+```
+_Parameters_
+- __routeKey__ <span class="mono">string</span>
+- __constructs__ <span class='mono'>Array&lt;<span class="mono">SSTConstruct</span>&gt;</span>
+
+
+Binds the given list of resources to a specific route.
+
+
+```js
+api.bindToRoute("$connect", [STRIPE_KEY, bucket]);
 ```
 
 

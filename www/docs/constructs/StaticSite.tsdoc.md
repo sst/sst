@@ -256,6 +256,12 @@ new StaticSite(stack, "Site", {
 });
 ```
 
+### cdk.id?
+
+_Type_ : <span class="mono">string</span>
+
+Allows you to override default id for this construct.
+
 
 ## Properties
 An instance of `StaticSite` has the following properties.
@@ -288,6 +294,10 @@ The domain name of the internally created CloudFront Distribution.
 _Type_ : <span class="mono">string</span>
 
 The ID of the internally created CloudFront Distribution.
+
+### id
+
+_Type_ : <span class="mono">string</span>
 
 ### url
 

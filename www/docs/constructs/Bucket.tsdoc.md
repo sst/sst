@@ -77,7 +77,7 @@ new Bucket(stack, "Bucket", {
 
 ### notifications?
 
-_Type_ : <span class="mono">Record&lt;<span class="mono">string</span>, <span class='mono'><span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span></span> | <span class="mono">[BucketFunctionNotificationProps](#bucketfunctionnotificationprops)</span> | <span class="mono">[BucketQueueNotificationProps](#bucketqueuenotificationprops)</span> | <span class="mono">[Queue](Queue#queue)</span> | <span class="mono">[BucketTopicNotificationProps](#buckettopicnotificationprops)</span> | <span class="mono">[Topic](Topic#topic)</span></span>&gt;</span>
+_Type_ : <span class="mono">Record&lt;<span class="mono">string</span>, <span class='mono'><span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span></span> | <span class="mono">[Queue](Queue#queue)</span> | <span class="mono">[Topic](Topic#topic)</span> | <span class="mono">[BucketFunctionNotificationProps](#bucketfunctionnotificationprops)</span> | <span class="mono">[BucketQueueNotificationProps](#bucketqueuenotificationprops)</span> | <span class="mono">[BucketTopicNotificationProps](#buckettopicnotificationprops)</span></span>&gt;</span>
 
 Used to create notifications for various bucket events
 
@@ -95,7 +95,7 @@ new Bucket(stack, "Bucket", {
 
 _Type_ : <span class='mono'><span class="mono">[IBucket](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.IBucket.html)</span> | <span class="mono">[BucketProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.BucketProps.html)</span></span>
 
-Allows you to override default settings this construct uses internally to ceate the bucket
+Allows you to override default settings this construct uses internally to create the bucket.
 
 
 ```js
@@ -107,6 +107,12 @@ new Bucket(stack, "Bucket", {
   }
 });
 ```
+
+### cdk.id?
+
+_Type_ : <span class="mono">string</span>
+
+Allows you to override default id for this construct.
 
 
 ## Properties
@@ -122,6 +128,10 @@ The ARN of the internally created `Bucket` instance.
 _Type_ : <span class="mono">string</span>
 
 The name of the internally created `Bucket` instance.
+
+### id
+
+_Type_ : <span class="mono">string</span>
 
 ### notificationFunctions
 
@@ -146,7 +156,7 @@ addNotifications(scope, notifications)
 ```
 _Parameters_
 - __scope__ <span class="mono">[Construct](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)</span>
-- __notifications__ <span class="mono">Record&lt;<span class="mono">string</span>, <span class='mono'><span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span></span> | <span class="mono">[BucketFunctionNotificationProps](#bucketfunctionnotificationprops)</span> | <span class="mono">[BucketQueueNotificationProps](#bucketqueuenotificationprops)</span> | <span class="mono">[Queue](Queue#queue)</span> | <span class="mono">[BucketTopicNotificationProps](#buckettopicnotificationprops)</span> | <span class="mono">[Topic](Topic#topic)</span></span>&gt;</span>
+- __notifications__ <span class="mono">Record&lt;<span class="mono">string</span>, <span class='mono'><span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span></span> | <span class="mono">[Queue](Queue#queue)</span> | <span class="mono">[Topic](Topic#topic)</span> | <span class="mono">[BucketFunctionNotificationProps](#bucketfunctionnotificationprops)</span> | <span class="mono">[BucketQueueNotificationProps](#bucketqueuenotificationprops)</span> | <span class="mono">[BucketTopicNotificationProps](#buckettopicnotificationprops)</span></span>&gt;</span>
 
 
 Add notification subscriptions after the bucket has been created
@@ -202,6 +212,51 @@ const bucket = new Bucket(stack, "Bucket", {
 bucket.attachPermissionsToNotification("myNotification", ["s3"]);
 ```
 
+### bind
+
+```ts
+bind(constructs)
+```
+_Parameters_
+- __constructs__ <span class='mono'>Array&lt;<span class="mono">SSTConstruct</span>&gt;</span>
+
+
+Binds the given list of resources to all bucket notifications
+
+
+```js {20}
+const bucket = new Bucket(stack, "Bucket", {
+  notifications: {
+    myNotification: "src/function.handler",
+  }
+});
+
+bucket.bind([STRIPE_KEY, bucket]);
+```
+
+### bindToNotification
+
+```ts
+bindToNotification(notificationName, constructs)
+```
+_Parameters_
+- __notificationName__ <span class="mono">string</span>
+- __constructs__ <span class='mono'>Array&lt;<span class="mono">SSTConstruct</span>&gt;</span>
+
+
+Binds the given list of resources to a specific bucket notification
+
+
+```js {20}
+const bucket = new Bucket(stack, "Bucket", {
+  notifications: {
+    myNotification: "src/function.handler",
+  }
+});
+
+bucket.bindToNotification("myNotification", ["s3"]);
+```
+
 ## BucketFilter
 
 
@@ -228,7 +283,7 @@ The collection of allowed headers.
 
 ### allowedMethods
 
-_Type_ : <span class='mono'>Array&lt;<span class='mono'><span class="mono">"DELETE"</span> | <span class="mono">"GET"</span> | <span class="mono">"HEAD"</span> | <span class="mono">"POST"</span> | <span class="mono">"PUT"</span></span>&gt;</span>
+_Type_ : <span class='mono'>Array&lt;<span class='mono'><span class="mono">"GET"</span> | <span class="mono">"PUT"</span> | <span class="mono">"HEAD"</span> | <span class="mono">"POST"</span> | <span class="mono">"DELETE"</span></span>&gt;</span>
 
 The collection of allowed HTTP methods.
 

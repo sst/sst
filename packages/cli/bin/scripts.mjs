@@ -52,6 +52,7 @@ const scriptArgs = args.slice(1);
 const cmd = {
   s: "sst",
   cdk: "cdk",
+  bind: "bind",
   diff: "diff",
   start: "start",
   build: "build",
@@ -201,6 +202,10 @@ const argv = yargs
     }
   )
   .command(
+    `${cmd.bind}`,
+    "Bind resources for app",
+  )
+  .command(
     `${cmd.loadConfig}`,
     "Load config for app",
   )
@@ -348,6 +353,7 @@ async function run() {
   // packages (ie. "../scripts/start") requires "aws-sdk". Need to load AWS
   // credentials first.
   const internals = {
+    [cmd.bind]: await import("../scripts/bind.mjs"),
     [cmd.diff]: await import("../scripts/diff.mjs"),
     [cmd.start]: await import("../scripts/start.mjs"),
     [cmd.build]: await import("../scripts/build.mjs"),
@@ -357,7 +363,7 @@ async function run() {
     [cmd.secrets]: await import("../scripts/secrets.mjs"),
     [cmd.addCdk]: await import("../scripts/add-cdk.mjs"),
     [cmd.bootstrap]: await import("../scripts/bootstrap.mjs"),
-    [cmd.loadConfig]: await import("../scripts/load-config.mjs"),
+    [cmd.loadConfig]: await import("../scripts/bind.mjs"),
   };
 
   switch (script) {
@@ -377,13 +383,15 @@ async function run() {
 
       break;
     }
+    case cmd.bind:
     case cmd.start:
     case cmd.addCdk:
     case cmd.console:
     case cmd.secrets:
     case cmd.bootstrap:
     case cmd.loadConfig: {
-      if (script === cmd.start
+      if (script === cmd.bind
+        || script === cmd.start
         || script === cmd.secrets
         || script === cmd.bootstrap
         || script === cmd.loadConfig) {
@@ -437,6 +445,7 @@ async function run() {
 
 function clearBuildPath() {
   if ([
+    cmd.bind,
     cmd.console,
     cmd.secrets,
     cmd.loadConfig,
@@ -604,6 +613,7 @@ async function loadAwsCredentials(script, argv) {
   if (process.env.__TEST__ === "true") return;
   if (
     ![
+      cmd.bind,
       cmd.diff,
       cmd.build,
       cmd.deploy,

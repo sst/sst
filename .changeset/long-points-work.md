@@ -8,4 +8,4 @@
 "@serverless-stack/docs": minor
 ---
 
-Full-stack binding
+Resource binding

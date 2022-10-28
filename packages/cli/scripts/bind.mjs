@@ -10,6 +10,11 @@ export default async function (argv, config) {
   const { name: app, stage, region } = config;
   logger.info("");
 
+  // Add deprecated warning
+  if (argv._[0] === "load-config") {
+    logger.warn(`\nWARNING: The "load-config" command is being renamed to "bind" and will be deprecated in SST v2. Read more about how to upgrade here — https://docs.serverless-stack.com/upgrade-guide#upgrade-to-v116`);
+  }
+
   // Load default environment variables
   const defaultEnvs = {
     SST_APP: app,
