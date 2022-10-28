@@ -7,9 +7,10 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "yarn run clear-types-generated-from-resources-tests; tsc",
     "prepare": "yarn run build",
-    "test": "vitest run"
+    "test": "vitest run",
+    "clear-types-generated-from-resources-tests": "rm -rf ../../node_modules/@types/serverless-stack__node"
   },
   "license": "MIT",
   "dependencies": {
