@@ -79,6 +79,28 @@ test("stack tags", () => {
   });
 });
 
+test("construct id: not duplicate", () => {
+  const app = new App();
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  new Api(stackA, "A");
+  new Api(stackB, "B");
+  expect(() => {
+    app.synth();
+  }).not.toThrow();
+});
+
+test("construct id: duplicate", () => {
+  const app = new App();
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  new Api(stackA, "A");
+  new Api(stackB, "A");
+  expect(() => {
+    app.synth();
+  }).toThrow(/Api construct with id "A" already exists/);
+});
+
 test("construct id: single char", () => {
   const app = new App();
   const stack = new Stack(app, "stack");

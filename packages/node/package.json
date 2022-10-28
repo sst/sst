@@ -48,6 +48,7 @@
     "rds",
     "site",
     "table",
-    "topic"
+    "topic",
+    "util"
   ]
 }
