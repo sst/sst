@@ -1,5 +1,32 @@
 # @serverless-stack/resources
 
+## 1.15.16
+
+### Patch Changes
+
+- Updated dependencies [[`6054fd0cd`](https://github.com/serverless-stack/sst/commit/6054fd0cdd5779fdc632c3a06ddc954d0de8f830)]:
+  - @serverless-stack/core@1.15.16
+
+## 1.15.15
+
+### Patch Changes
+
+- [#2143](https://github.com/serverless-stack/sst/pull/2143) [`e3070bb6a`](https://github.com/serverless-stack/sst/commit/e3070bb6af054895f8ebba6f558719ac68ea3576) Thanks [@fwang](https://github.com/fwang)! - Site: do not wait for invalidation for placeholder sites
+
+* [#2144](https://github.com/serverless-stack/sst/pull/2144) [`a4c637216`](https://github.com/serverless-stack/sst/commit/a4c637216b9bdff0454451075a33c0b1bcd7e332) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: fix deprecated version addAlias call
+
+* Updated dependencies []:
+  - @serverless-stack/core@1.15.15
+
+## 1.15.14
+
+### Patch Changes
+
+- [`3b1357da8`](https://github.com/serverless-stack/sst/commit/3b1357da888fd596d913d1bb7aff4d21119b251c) Thanks [@fwang](https://github.com/fwang)! - ApiGatewayV1Api: support function version and docker image
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.15.14
+
 ## 1.15.13
 
 ### Patch Changes

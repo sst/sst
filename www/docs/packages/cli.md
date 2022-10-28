@@ -367,7 +367,7 @@ The stage you want to deploy to. If this is not specified, it will default to th
 The region you want to deploy to. Defaults to the one specified in your `sst.json`. Or uses `us-east-1`.
 
 :::note
-The `--stage` and `--region` options apply to the `start`, `build`, `deploy`, and `remove` commands.
+The `--stage` and `--region` options apply to the `start`, `build`, `deploy`, `remove`, and `secrets` commands.
 :::
 
 ### `--profile`

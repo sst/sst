@@ -6,6 +6,7 @@ import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as cognito from "aws-cdk-lib/aws-cognito";
+import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as apig from "aws-cdk-lib/aws-apigateway";
 import * as apigV1AccessLog from "./util/apiGatewayV1AccessLog.js";
 
@@ -256,7 +257,7 @@ export type ApiGatewayV1ApiRouteProps<AuthorizerKeys> =
  * ```
  */
 export interface ApiGatewayV1ApiFunctionRouteProps<AuthorizerKeys = never> {
-  function: FunctionDefinition;
+  function?: FunctionDefinition;
   authorizer?:
   | "none"
   | "iam"
@@ -268,6 +269,10 @@ export interface ApiGatewayV1ApiFunctionRouteProps<AuthorizerKeys = never> {
       "authorizer" | "authorizationType" | "authorizationScopes"
     >;
     integration?: apig.LambdaIntegrationOptions;
+    /**
+     * Use an existing Lambda function.
+     */
+    function?: lambda.IFunction;
   };
 }
 
@@ -561,7 +566,7 @@ export class ApiGatewayV1Api<
   private _customDomainUrl?: string;
   private importedResources: { [path: string]: apig.IResource } = {};
   private props: ApiGatewayV1ApiProps<Authorizers>;
-  private functions: { [key: string]: Fn } = {};
+  private functions: { [key: string]: Fn | lambda.IFunction } = {};
   private authorizersData: Record<string, apig.IAuthorizer> = {};
   private bindingForAllRoutes: SSTConstruct[] = [];
   private permissionsAttachedForAllRoutes: Permissions[] = [];
@@ -638,9 +643,9 @@ export class ApiGatewayV1Api<
     scope: Construct,
     routes: Record<string, ApiGatewayV1ApiRouteProps<keyof Authorizers>>
   ): void {
-    Object.keys(routes).forEach((routeKey: string) => {
-      this.addRoute(scope, routeKey, routes[routeKey]);
-    });
+    Object.keys(routes).forEach((routeKey: string) =>
+      this.addRoute(scope, routeKey, routes[routeKey])
+    );
   }
 
   /**
@@ -658,7 +663,10 @@ export class ApiGatewayV1Api<
    * ```
    */
   public getFunction(routeKey: string): Fn | undefined {
-    return this.functions[this.normalizeRouteKey(routeKey)];
+    const fn = this.functions[this.normalizeRouteKey(routeKey)];
+    if (fn instanceof Fn) {
+      return fn;
+    }
   }
 
   /**
@@ -671,9 +679,11 @@ export class ApiGatewayV1Api<
    * ```
    */
   public bind(constructs: SSTConstruct[]) {
-    Object.values(this.functions).forEach((fn) =>
-      fn.bind(constructs)
-    );
+    Object.values(this.functions).forEach((fn) => {
+      if (fn instanceof Fn) {
+        fn.bind(constructs)
+      }
+    });
     this.bindingForAllRoutes.push(...constructs);
   }
 
@@ -716,9 +726,11 @@ export class ApiGatewayV1Api<
    * ```
    */
   public attachPermissions(permissions: Permissions): void {
-    Object.values(this.functions).forEach((fn) =>
-      fn.attachPermissions(permissions)
-    );
+    Object.values(this.functions).forEach((fn) => {
+      if (fn instanceof Fn) {
+        fn.attachPermissions(permissions);
+      }
+    });
     this.permissionsAttachedForAllRoutes.push(permissions);
   }
 
@@ -1288,6 +1300,7 @@ export class ApiGatewayV1Api<
     routeKey: string,
     routeValue: ApiGatewayV1ApiRouteProps<keyof Authorizers>
   ) {
+    ///////////////////
     // Normalize routeKey
     ///////////////////
     routeKey = this.normalizeRouteKey(routeKey);
@@ -1311,6 +1324,7 @@ export class ApiGatewayV1Api<
     if (path.length === 0) {
       throw new Error(`Invalid path defined for "${routeKey}"`);
     }
+    const postfixName = `${methodStr}_${path}`;
 
     ///////////////////
     // Create Resources
@@ -1328,34 +1342,35 @@ export class ApiGatewayV1Api<
     ///////////////////
     // Create Method
     ///////////////////
-    const routeProps = Fn.isInlineDefinition(routeValue)
-      ? ({ function: routeValue } as ApiGatewayV1ApiFunctionRouteProps<
-        keyof Authorizers
-      >)
-      : (routeValue as ApiGatewayV1ApiFunctionRouteProps<keyof Authorizers>);
-    const lambda = Fn.fromDefinition(
-      scope,
-      `Lambda_${methodStr}_${path}`,
-      routeProps.function,
-      this.props.defaults?.function,
-      `The "defaults.function" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the routes using FunctionProps, so the ApiGatewayV1Api construct can apply the "defaults.function" to them.`
-    );
+    const [routeProps, lambda] = (() => {
+      if (Fn.isInlineDefinition(routeValue)) {
+        const routeProps: ApiGatewayV1ApiFunctionRouteProps<keyof Authorizers> = {
+          function: routeValue
+        };
+        return [
+          routeProps,
+          this.createFunction(scope, routeKey, routeProps, postfixName),
+        ];
+      }
+      else if (routeValue.cdk?.function) {
+        return [
+          routeValue,
+          this.createCdkFunction(scope, routeKey, routeValue, postfixName),
+        ];
+      }
+      else {
+        return [
+          routeValue,
+          this.createFunction(scope, routeKey, routeValue, postfixName),
+        ];
+      }
+    })();
     const integration = new apig.LambdaIntegration(
       lambda,
       routeProps.cdk?.integration
     );
     const methodOptions = this.buildRouteMethodOptions(routeProps);
     const apigMethod = resource.addMethod(method, integration, methodOptions);
-
-    // Add an environment variable to determine if the function is an Api route.
-    // If it is, when "sst start" is not connected, we want to return an 500
-    // status code and a descriptive error message.
-    const root = scope.node.root as App;
-    if (root.local) {
-      lambda.addEnvironment("SST_DEBUG_IS_API_ROUTE", "1", {
-        removeInEdge: true,
-      });
-    }
 
     ///////////////////
     // Handle manually created Deployment resource (ie. imported REST API)
@@ -1364,18 +1379,53 @@ export class ApiGatewayV1Api<
       this._deployment.addToLogicalId({ route: { routeKey, routeValue } });
       this._deployment.node.addDependency(apigMethod);
     }
+  }
 
-    ///////////////////
-    // Store function
-    ///////////////////
+  private createCdkFunction(
+    scope: Construct,
+    routeKey: string,
+    routeProps: ApiGatewayV1ApiFunctionRouteProps<keyof Authorizers>,
+    postfixName: string
+  ): lambda.IFunction {
+    const lambda = routeProps.cdk?.function!;
     this.functions[routeKey] = lambda;
+    return lambda;
+  }
 
+  private createFunction(
+    scope: Construct,
+    routeKey: string,
+    routeProps: ApiGatewayV1ApiFunctionRouteProps<keyof Authorizers>,
+    postfixName: string,
+  ): Fn {
+
+    const lambda = Fn.fromDefinition(
+      scope,
+      `Lambda_${postfixName}`,
+      routeProps.function!,
+      this.props.defaults?.function,
+      `The "defaults.function" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the routes using FunctionProps, so the ApiGatewayV1Api construct can apply the "defaults.function" to them.`
+    );
+
+    // Add an environment variable to determine if the function is an Api route.
+    // If it is, when "sst start" is not connected, we want to return an 500
+    // status code and a descriptive error message.
+    const root = scope.node.root as App;
+    if (root.local) {
+      lambda.addEnvironment("SST_DEBUG_IS_API_ROUTE", "1", {
+        removeInEdge: true
+      });
+    }
+
+    this.functions[routeKey] = lambda;
 
     // attached existing permissions
     this.permissionsAttachedForAllRoutes.forEach((permissions) =>
       lambda.attachPermissions(permissions)
     );
     lambda.bind(this.bindingForAllRoutes);
+
+    return lambda;
   }
 
   private buildRouteMethodOptions(

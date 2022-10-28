@@ -1031,6 +1031,7 @@ test("constructor: local debug", async () => {
   countResources(stack, "Custom::SSTCloudFrontInvalidation", 1);
   hasResource(stack, "Custom::SSTCloudFrontInvalidation", {
     DistributionPaths: ["/*"],
+    WaitForInvalidation: false,
   });
 });
 
@@ -1061,6 +1062,10 @@ test("constructor: local debug with disablePlaceholder true", async () => {
     },
     FileOptions: [],
     ReplaceValues: [],
+  });
+  hasResource(stack, "Custom::SSTCloudFrontInvalidation", {
+    DistributionPaths: ["/*"],
+    WaitForInvalidation: true,
   });
 });
 
