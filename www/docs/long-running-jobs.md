@@ -157,7 +157,7 @@ See a full list of [memory size](constructs/Job.md#memorysize) and [timeout](con
 Similar to Functions, you can use the `config` and `permissions` fields to pass other resources to your job, and reference them at runtime.
 
 :::tip
-Both [`Parameters`](environment-variables.md#configparameter) and [`Secrets`](environment-variables.md#configsecret) work inside a job.
+Both [`Parameters`](config.md#secrets) and [`Secrets`](config.md#secrets) work inside a job.
 :::
 
 For example, to access a [`Table`](constructs/Table.md) inside a job, pass in a Parameter with the table name and grant it permissions:
@@ -199,7 +199,7 @@ Let's look at how `Job` works. It uses a few resources behind the scenes:
 
 1. An [**AWS CodeBuild**](https://aws.amazon.com/codebuild/) project that runs the handler function inside a docker container.
 2. An **invoker Lambda** function that triggers the CodeBuild project.
-3. A [**Config Parameter**](environment-variables.md#configparameter) with the name of the Lambda function. In the above example, the `Parameter` is named `SST_JOB_MyJob`.
+3. A [**Config Parameter**](config.md#parameters) with the name of the Lambda function. In the above example, the `Parameter` is named `SST_JOB_MyJob`.
 
 ---
 

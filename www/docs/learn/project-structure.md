@@ -76,7 +76,7 @@ We typically group related resources together into stacks. In the `stacks/` dire
   };
   ```
 
-  Aside from returning props, we are also setting some `Config` parameters; the database ARN, database name, and ARN of the secret to access the database. An ARN is an AWS identifier. While `Config` is SST's recommended way of managing environment variables and secrets across the app. You can [read more about it here](../environment-variables.md).
+  Aside from returning props, we are also setting some `Config` parameters; the database ARN, database name, and ARN of the secret to access the database. An ARN is an AWS identifier. While `Config` is SST's recommended way of managing environment variables and secrets across the app. You can [read more about it here](../config.md).
 
 - `Api.ts` creates an API with a GraphQL endpoint at `/graphql` using [API Gateway](https://aws.amazon.com/api-gateway/).
 
