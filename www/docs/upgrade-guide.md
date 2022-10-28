@@ -18,6 +18,48 @@ To view the latest release and all historical releases, <a href={`${config.githu
 
 ## Upgrade to v1.16
 
+[Resource Binding](./resource-binding.md) was introduced in this release. This simplies accessing the resources in your app.
+
+Follow these steps to start using Resource Binding. We will pass the bucket name to the Lamba function as an example.
+
+  1. Bind SST constructs to Functions and Jobs.
+  ```ts
+  // Change
+  const bucket = new Bucket(stack, "myFiles");
+
+  new Function(stack, "myFunction", {
+    handler: "lambda.handler",
+    environment: {
+      BUCKET_NAME: bucket.bucketName,
+    },
+    permissions: [bucket],
+  });
+
+  // To
+  const bucket = new Bucket(stack, "myFiles");
+
+  new Function(stack, "myFunction", {
+    handler: "lambda.handler",
+    bind: [bucket],
+  });
+  ```
+
+  2. Now you can access the bucket's name in your function code.
+  ```ts
+  // Change
+  process.env.BUCKET_NAME
+
+  // To
+  import { Bucket } from "@serverless-stack/node/bucket";
+  Bucet.myFiles.bucketName
+  ```
+
+  Read more about [Resource Binding](./resource-binding.md).
+
+---
+
+Full changelog:
+
 #### Constructs
 
 - **Construct IDs need to be unique** and match the pattern `[a-zA-Z]([a-zA-Z0-9_])+`. If you have constructs with clashing IDs, change to a unique ID. And pass the old ID into `cdk.id` to ensure CloudFormation does not recreate the resource.
@@ -26,14 +68,14 @@ To view the latest release and all historical releases, <a href={`${config.githu
 
   ```ts
   // Change
-  new Bucket(this, "bucket");
-  new Bucket(this, "bucket");
+  new Bucket(stack), "bucket");
+  new Bucket(stack), "bucket");
 
   // To
-  new Bucket(this, "usersFiles", {
+  new Bucket(stack), "usersFiles", {
     cdk: { id: "bucket" },
   });
-  new Bucket(this, "adminFiles", {
+  new Bucket(stack), "adminFiles", {
     cdk: { id: "bucket" },
   });
   ```
