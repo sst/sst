@@ -166,39 +166,24 @@ There are a couple of interesting details here, let's dig in:
      dialect: new DataApiDialect({
        mode: "postgres",
        driver: {
-         secretArn: Config.RDS_SECRET_ARN,
-         resourceArn: Config.RDS_ARN,
-         database: Config.RDS_DATABASE,
+         secretArn: RDS.rds.secretArn,
+         resourceArn: RDS.rds.clusterArn,
+         database: RDS.rds.defaultDatabaseName,
          client: new RDSDataService(),
        },
      }),
    });
    ```
 
-2. You might recall us talking about the `Config` values back in the [Project Structure](project-structure.md#stacks) chapter. They are passed in to our API in `stacks/Api.ts`.
+2. You might recall us talking about the `bind` values back in the [Project Structure](project-structure.md#stacks) chapter.
 
-   ```ts title="stacks/Api.ts" {3}
+   ```ts title="stacks/Api.ts" {2}
    function: {
-    permissions: [db.rds],
-    config: [...db.parameters],
+    bind: [rds],
    },
    ```
 
-   And were defined in the `stacks/Database.ts`.
-
-   ```ts title="stacks/Database.ts"
-   parameters: [
-     new Config.Parameter(stack, "RDS_SECRET_ARN", {
-       value: rds.secretArn,
-     }),
-     new Config.Parameter(stack, "RDS_DATABASE", {
-       value: rds.defaultDatabaseName,
-     }),
-     new Config.Parameter(stack, "RDS_ARN", {
-       value: rds.clusterArn,
-     }),
-   ],
-   ```
+   By binding the `rds` cluster to our API in `stacks/Api.ts`, our API can access the database ARN, database name, and ARN of the secret to access the database. An ARN is an AWS identifier.
 
 3. The Kysely instance also needs a `Database` type. This is coming from `services/core/sql.generated.ts`.
 

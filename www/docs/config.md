@@ -137,7 +137,7 @@ new Function(stack, "MyFunction", {
 }
 ```
 
-It adds a Lambda environment variables named `SST_SECRET_STRIPE_KEY` to the function. The environment variable has a placeholder value `__FETCH_FROM_SSM__` to indicate that the value for `STRIPE_KEY` needs to be fetched from SSM at runtime.
+It adds a Lambda environment variables named `SST_Secret_value_STRIPE_KEY` to the function. The environment variable has a placeholder value `__FETCH_FROM_SSM__` to indicate that the value for `STRIPE_KEY` needs to be fetched from SSM at runtime.
 
 ---
 
@@ -287,7 +287,7 @@ new Function(stack, "MyFunction", {
 }
 ```
 
-A Lambda environment variable is added to the function, named `SST_PARAM_USER_UPDATED_TOPIC` with the value of the topic name.
+A Lambda environment variable is added to the function, named `SST_Parameter_value_USER_UPDATED_TOPIC` with the value of the topic name.
 
 ---
 
@@ -299,7 +299,7 @@ At runtime when you import the `Config` package in your function.
 import { Config } from "@serverless-stack/node/config";
 ```
 
-It reads the value from `process.env.SST_PARAM_USER_UPDATED_TOPIC` and assigns it to `Config.USER_UPDATED_TOPIC`. You can then reference `Config.USER_UPDATED_TOPIC` directly in your code.
+It reads the value from `process.env.SST_Parameter_value_USER_UPDATED_TOPIC` and assigns it to `Config.USER_UPDATED_TOPIC`. You can then reference `Config.USER_UPDATED_TOPIC` directly in your code.
 
 ---
 
@@ -307,7 +307,7 @@ It reads the value from `process.env.SST_PARAM_USER_UPDATED_TOPIC` and assigns i
 
 SST also stores a copy of the parameter value in [AWS SSM](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html). For each parameter, an SSM parameter of the type `String` is created with the name `/sst/{appName}/{stageName}/parameters/USER_UPDATED_TOPIC`, where `{appName}` is the name of your SST app, and `{stageName}` is the stage. The parameter value is the topic name stored in plain text.
 
-Storing the parameter values in SSM might seem redundant. But it provides a convenient way to fetch all the parameters used in your application. This can make it easy to test your functions. [Read more about how SST uses `Config` to make testing easier](advanced/testing.md#how-sst-load-config-works).
+Storing the parameter values in SSM might seem redundant. But it provides a convenient way to fetch all the parameters used in your application. This can make it easy to test your functions. [Read more about how SST uses `Config` to make testing easier](advanced/testing.md#how-sst-bind-works).
 
 ---
 

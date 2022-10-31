@@ -151,7 +151,7 @@ Cannot use Bucket.myFiles. Please make sure it is bound to this function.
 
 ### Testing
 
-When testing your code, you can use the [`sst bind`](packages/cli.md#load-config) CLI to bind the resources to your tests.
+When testing your code, you can use the [`sst bind`](packages/cli.md#bind) CLI to bind the resources to your tests.
 
 ```bash
 sst bind -- vitest run
@@ -159,7 +159,7 @@ sst bind -- vitest run
 
 This allows the [`@serverless-stack/node`](packages/node.md) helper library to work as if it was running inside a Lambda function.
 
-[Read more about testing](advanced/testing.md) and learn about [the `sst bind` CLI](advanced/testing.md#how-sst-load-config-works).
+[Read more about testing](advanced/testing.md) and learn about [the `sst bind` CLI](advanced/testing.md#how-sst-bind-works).
 
 ---
 
@@ -377,4 +377,4 @@ For sensitive values, the values are stored in AWS SSM. When the Lambda containe
 
 For non-Node.js runtimes, you can continue to use Lambda environment variables.
 
-If you want to use Resource Binding, you would need to read the bound values from the Lambda environment variable and AWS SSM directly. Refer to the [`@serverless-stack/node/config`](packages/node.md#config) package to see how it is done in Node.js.
+If you want to use Resource Binding, you would need to read the bound values from the Lambda environment variable and AWS SSM directly. Refer to the [`@serverless-stack/node`](packages/node.md) package to see how it is done in Node.js.

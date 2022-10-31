@@ -60,23 +60,8 @@ We typically group related resources together into stacks. In the `stacks/` dire
   Stacks also allow us to return props that we can reference in other stacks.
 
   ```ts
-  return {
-    rds,
-    parameters: [
-      new Config.Parameter(stack, "RDS_SECRET_ARN", {
-        value: rds.secretArn,
-      }),
-      new Config.Parameter(stack, "RDS_DATABASE", {
-        value: rds.defaultDatabaseName,
-      }),
-      new Config.Parameter(stack, "RDS_ARN", {
-        value: rds.clusterArn,
-      }),
-    ],
-  };
+  return rds;
   ```
-
-  Aside from returning props, we are also setting some `Config` parameters; the database ARN, database name, and ARN of the secret to access the database. An ARN is an AWS identifier. While `Config` is SST's recommended way of managing environment variables and secrets across the app. You can [read more about it here](../config.md).
 
 - `Api.ts` creates an API with a GraphQL endpoint at `/graphql` using [API Gateway](https://aws.amazon.com/api-gateway/).
 
@@ -93,12 +78,11 @@ We typically group related resources together into stacks. In the `stacks/` dire
 
   ```ts {2}
   function: {
-    permissions: [db.rds],
-    config: [...db.parameters],
+    bind: [rds],
   },
   ```
 
-  So `rds` and `parameters` are coming from the return statement of our `Database` stack.
+  So `rds` is coming from the return statement of our `Database` stack. Note that `bind` is SST's recommended way of accessing resources across the app. You can [read more about it here](../resource-binding.md).
 
 - `Web.ts` creates a [Vite](https://vitejs.dev) static site hosted on [S3](https://aws.amazon.com/s3/), and serves the contents through a CDN using [CloudFront](https://aws.amazon.com/cloudfront/).
 
@@ -210,7 +194,7 @@ Our starter also comes with a few helpful scripts.
   "remove": "sst remove",
   "console": "sst console",
   "typecheck": "tsc --noEmit",
-  "test": "sst load-config -- vitest run",
+  "test": "sst bind -- vitest run",
   "gen": "hygen"
 },
 ```

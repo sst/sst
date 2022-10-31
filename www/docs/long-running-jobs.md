@@ -287,7 +287,7 @@ This is being used in two places to ensure typesafety.
 
 Let's take a look at how this is all wired up.
 
-1. First, the `@serverless-stack/node/config` package predefines two interfaces.
+1. First, the `@serverless-stack/node/job` package predefines two interfaces.
 
    ```ts
    export interface JobNames {}
