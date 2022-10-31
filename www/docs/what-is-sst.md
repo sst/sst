@@ -50,7 +50,7 @@ Behind the scenes this creates an instance of an [Amazon API Gateway](https://do
 To power your applications, SST lets you create serverless databases. Here the [`RDS`](constructs/RDS.md) construct configures a new [Amazon RDS](https://aws.amazon.com/rds/) serverless PostgreSQL cluster.
 
 ```ts
-new RDS(this, "rds", {
+new RDS(this, "notesDb", {
   engine: "postgresql11.13",
   defaultDatabaseName: "main",
   migrations: "services/migrations",
@@ -108,7 +108,7 @@ This makes it easy to extend SST to fit any use case.
 
 ## Functions
 
-At the heart of SST applications are Functions — powered by [AWS Lambda](https://aws.amazon.com/lambda/). These represent your application code. They are invoked by the infrastructure in your application.
+At the heart of SST applications are functions — powered by [AWS Lambda](https://aws.amazon.com/lambda/). These represent your application code. They are invoked by the infrastructure in your application.
 
 From the API example above.
 
@@ -130,6 +130,41 @@ export async function main() {
 ```
 
 Your functions can be in **TypeScript**, **JavaScript**, **Python**, **Golang**, **Java**, or **C#**.
+
+---
+
+### Access the database
+
+To allow your functions to securely connect to your infrastructure, SST has a concept of [Resource Binding](resource-binding.md).
+
+Following our example, you can _bind_ the PostgreSQL database to the API.
+
+```ts {4}
+const rds = new RDS(this, "notesDb" /* ... */);
+const api = new Api(/* ... */);
+
+api.bind([rds]);
+```
+
+And the functions in your API will be able to access your database.
+
+```ts {7-9}
+import { RDS } from "@serverless-stack/node/rds";
+import { ExecuteStatementCommand } from "@aws-sdk/client-rds-data";
+
+export async function main() {
+  new ExecuteStatementCommand({
+    sql: "select * from notes",
+    secretArn: RDS.notesDb.secretArn,
+    resourceArn: RDS.notesDb.clusterArn,
+    database: RDS.notesDb.defaultDatabaseName,
+  });
+
+  //
+}
+```
+
+Behind the scenes SST adds the required [**IAM permissions**](https://aws.amazon.com/iam/) and gives you access through a **typesafe client**.
 
 ---
 
