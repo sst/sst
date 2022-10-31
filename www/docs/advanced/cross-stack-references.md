@@ -42,9 +42,7 @@ export function StackB({ stack }: StackContext) {
   new Api(stack, "Api", {
     defaults: {
       function: {
-        environment: {
-          TABLE_NAME: table.tableName
-        }
+        bind: [table],
       }
     },
     routes: {

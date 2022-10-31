@@ -59,12 +59,11 @@ You can use the Minimal TypeScript starter by running `npx create-sst@latest` > 
 Import the [`Auth`](constructs/Auth.md) construct, attach it to your API and point it to a handler function.
 
 ```js title="stacks/api.ts"
-import { Auth, Config } from "@serverless-stack/resources";
+import { Auth } from "@serverless-stack/resources";
 
 new Auth(stack, "auth", {
   authenticator: {
     handler: "functions/auth.handler",
-    config: [new Config.Secret(stack, "GOOGLE_CLIENT_ID")],
   },
 });
 
@@ -79,17 +78,11 @@ By default all the auth routes are added under `/auth`. But this can be customiz
 <details>
 <summary>Behind the scenes</summary>
 
-Aside from the routes, this construct also creates a pair of secrets; a public and private key pair to sign the session tokens. It stores this in our app [`Config`](config.md).
+Aside from the routes, this construct also creates a pair of secrets; a public and private key pair to sign the session tokens.
 
 Note that, you can use the same auth construct with multiple APIs.
 
 </details>
-
-You'll notice that we are using the [`Config`](config.md) to store your `GOOGLE_CLIENT_ID`. This is a secret, so let's use the CLI to set it.
-
-```bash
-npx sst secrets set GOOGLE_CLIENT_ID xxxxxxxxxx
-```
 
 Now let's implement the handler.
 
@@ -115,15 +108,14 @@ Let's configure the provider.
 
 To allow our users to _Sign in with Google_, we'll add the [`GoogleAdapter`](#google) as a provider in our `AuthHandler`.
 
-```js title="services/functions/auth.ts" {6-15}
+```js title="services/functions/auth.ts" {5-14}
 import { AuthHandler, GoogleAdapter } from "@serverless-stack/node/auth";
-import { Config } from "@serverless-stack/node/config";
 
 export const handler = AuthHandler({
   providers: {
     google: GoogleAdapter({
       mode: "oidc",
-      clientID: Config.GOOGLE_CLIENT_ID,
+      clientID: "XXXX",
       onSuccess: async (tokenset) => {
         return {
           statusCode: 200,

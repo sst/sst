@@ -44,7 +44,7 @@ new Api(this, "Api", {
   defaults: {
     function: {
       timeout: 20,
-      permissions: [table],
+      bind: [table],
     },
   },
   routes: {
@@ -61,14 +61,14 @@ new Api(this, "Api", {
   defaults: {
     function: {
       timeout: 20,
-      permissions: [table],
+      bind: [table],
     },
   },
   routes: {
     "GET /notes": {
       function: {
         handler: "src/list.main",
-        environment: { tableName: table.tableName },
+        bind: [table],
       },
     },
     "POST /notes": "create.main",
