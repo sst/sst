@@ -20,8 +20,8 @@ Tasks related to video processing, ETL, and ML can take long. These exceed Lambd
 `Job` is made up of the following pieces:
 
 1. [`Job`](constructs/Job.md) — a construct that creates the necessary infrastructure.
-2. [`JobHandler`](packages/node.md#jobhandler) — a handler function that wraps around your function code in a typesafe way.
-3. [`Job.run`](packages/node.md#jobrun) — a helper function to invoke the job.
+2. [`JobHandler`](clients/job.md#jobhandler) — a handler function that wraps around your function code in a typesafe way.
+3. [`Job.run`](clients/job.md) — a helper function to invoke the job.
 
 ---
 
@@ -84,7 +84,7 @@ Alternatively, you can refer to [this example repo](https://github.com/serverles
 
    Note that we are defining the job payload to contain a `num` property with type `number`. This'll ensure that we'll get a type error in our editor when we try to pass in a string. We talk more about [typesafety below](#typesafe-payload).
 
-   Then create the handler function using the [`JobHandler`](packages/node.md#jobhandler) helper. Append this to `myJob.ts`.
+   Then create the handler function using the [`JobHandler`](clients/job.md#jobhandler) helper. Append this to `myJob.ts`.
 
    ```ts
    export const handler = JobHandler("myJob", async (payload) => {
@@ -100,7 +100,7 @@ Alternatively, you can refer to [this example repo](https://github.com/serverles
 
 5. **Run the job**
 
-   And finally we can run this job in our API using the [`Job.myJob.run`](packages/node.md#jobrun) helper. Change `services/functions/lambda.ts` to:
+   And finally we can run this job in our API using the [`Job.myJob.run`](clients/job.md) helper. Change `services/functions/lambda.ts` to:
 
    ```ts title="services/functions/lambda.ts"
    import { Job } from "@serverless-stack/node/job";

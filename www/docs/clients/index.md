@@ -65,8 +65,8 @@ Hooks are functions that you can call anywhere in your application code and it'l
 Hooks are being actively worked on and are subject to change.
 :::
 
-For example, you can call the `useSession` hook to get access to the current user session in APIs that need authentication.
+For example, you can call the [`useSession`](./auth.md#usesession) hook to get access to the current user session in APIs that need authentication.
 
-Behind the scenes, Hooks are powered by a SST's context system. Handlers like the [`GraphQLHandler`](#graphqlhandler) and the generic [`Handler`](#handler) create a global variable that keeps track of the _"context"_ for the current request. This context object gets reset on every invocation.
+Behind the scenes, Hooks are powered by a SST's context system. Handlers like the [`GraphQLHandler`](./graphql.md#graphqlhandler) and the [`AuthHandler`](./auth.md#authhandler) create a global variable that keeps track of the _"context"_ for the current request. This context object gets reset on every invocation.
 
 Hooks are an alternative to middleware solutions like [Middy](https://middy.js.org). They provide better typesafety and will be familiar to developers that've used Hooks in frontend frameworks.

@@ -29,7 +29,7 @@ Want to learn more about `Config`? Check out the [launch livestream on YouTube](
 If you want to pass values from SST constructs to your functions, you should bind them using [Resource Binding](resource-binding.md).
 :::
 
-And once you've defined your Secrets and Parameters, you can fetch them in your Lambda functions with the [`@serverless-stack/node/config`](packages/node.md#config) package.
+And once you've defined your Secrets and Parameters, you can fetch them in your Lambda functions with the [`@serverless-stack/node/config`](clients/config.md) package.
 
 ---
 
@@ -71,7 +71,7 @@ Follow along by creating the Minimal TypeScript starter by running `npx create-s
    npx sst secrets set STRIPE_KEY sk_test_abc123
    ```
 
-4. Now you can access the Stripe key in your API using the [`Config`](packages/node.md#config) helper. Change `services/functions/lambda.ts` to:
+4. Now you can access the Stripe key in your API using the [`Config`](clients/config.md) helper. Change `services/functions/lambda.ts` to:
 
    ```ts title="services/functions/lambda.ts" {8}
    import { APIGatewayProxyHandlerV2 } from "aws-lambda";
@@ -251,7 +251,7 @@ Follow along by creating the Minimal TypeScript starter by running `npx create-s
    api.bind([APP_VERSION]);
    ```
 
-3. Now you can access the app verion in your API using the [Config](packages/node.md#config) helper. Change `services/functions/lambda.ts` to:
+3. Now you can access the app verion in your API using the [Config](clients/config.md) helper. Change `services/functions/lambda.ts` to:
 
    ```ts title="services/functions/lambda.ts" {8}
    import { APIGatewayProxyHandlerV2 } from "aws-lambda";

@@ -16,7 +16,7 @@ SST is built around a few core design principles.
 
 ## Progressive disclosure
 
-The [constructs that SST provides](packages/resources.md) for building serverless apps is based on the idea of [_progressive disclosure_](https://en.wikipedia.org/wiki/Progressive_disclosure). This means that the basic configuration for these constructs are simple, easy to understand, and readable. But they still allow you to progressively customize them for more complex use cases.
+The [constructs that SST provides](constructs/index.md) for building serverless apps is based on the idea of [_progressive disclosure_](https://en.wikipedia.org/wiki/Progressive_disclosure). This means that the basic configuration for these constructs are simple, easy to understand, and readable. But they still allow you to progressively customize them for more complex use cases.
 
 This has a big impact when you are building on something as complicated as AWS. It can be really intimidating to learn AWS but SST's design makes this a lot easier.
 

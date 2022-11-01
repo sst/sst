@@ -228,7 +228,7 @@ npx sst update
 
 ### `bind`
 
-A convenience command to bind the resources to a script. This allows the [`@serverless-stack/node`](./node.md) helper library to work as if it was running inside a Lambda function.
+A convenience command to bind the resources to a script. This allows the [`@serverless-stack/node`](clients/index.md) helper library to work as if it was running inside a Lambda function.
 
 So for example, you can bind all the resources in your app and use those to run your tests.
 

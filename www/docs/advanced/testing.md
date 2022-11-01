@@ -26,7 +26,7 @@ To start, there are 3 types of tests you can write for your SST apps:
 2. Tests for your APIs, the endpoints handling requests.
 3. Tests for your stacks, the code that creates your infrastructure.
 
-SST uses [Vitest](https://vitest.dev) to help you write these tests. And it uses the [`sst bind`](../packages/cli.md#bind) CLI to bind the resources to your tests. This allows the [`@serverless-stack/node`](../packages/node.md) helper library to work as if the tests were running inside a Lambda function.
+SST uses [Vitest](https://vitest.dev) to help you write these tests. And it uses the [`sst bind`](../packages/cli.md#bind) CLI to bind the resources to your tests. This allows the [`@serverless-stack/node`](../clients/index.md) helper library to work as if the tests were running inside a Lambda function.
 
 ---
 
@@ -282,4 +282,4 @@ The `sst bind` CLI sets the following environment variables:
 
 </details>
 
-This allows the [`@serverless-stack/node`](packages/node.md) helper library to work as if it was running inside a Lambda function.
+This allows the [`@serverless-stack/node`](../clients/index.md) helper library to work as if it was running inside a Lambda function.

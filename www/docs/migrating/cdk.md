@@ -62,4 +62,4 @@ SST is an extension of [AWS CDK](https://aws.amazon.com/cdk/). It's fairly simpl
 
 5. Include the right packages
 
-   You don't need the `aws-cdk` package in your `package.json`. Instead you'll need [`@serverless-stack/cli`](packages/cli.md) and [`@serverless-stack/resources`](packages/resources.md).
+   You don't need the `aws-cdk` package in your `package.json`. Instead you'll need [`@serverless-stack/cli`](packages/cli.md) and [`@serverless-stack/resources`](constructs/index.md).

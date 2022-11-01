@@ -19,7 +19,7 @@ Access the resources in your app in a secure and typesafe way.
 **Resource Binding** allows you to connect your functions with your infrastructure. This is done in two steps:
 
 1. Bind a resource to the functions in your infrastructure code through the `bind` prop.
-2. Use the [`@serverless-stack/node`](packages/node.md) package to access the resource in your function.
+2. Use the [`@serverless-stack/node`](clients/index.md) package to access the resource in your function.
 
 ---
 
@@ -47,7 +47,7 @@ Follow along by creating the Minimal TypeScript starter by running `npx create-s
    api.bind([bucket]);
    ```
 
-3. Now we can access the bucket's name in our API using the [`Bucket`](packages/node.md#bucket) helper. Change `services/functions/lambda.ts` to:
+3. Now we can access the bucket's name in our API using the [`Bucket`](clients/bucket.md) helper. Change `services/functions/lambda.ts` to:
 
    ```ts title="services/functions/lambda.ts" {10}
    import { APIGatewayProxyHandlerV2 } from "aws-lambda";
@@ -157,7 +157,7 @@ When testing your code, you can use the [`sst bind`](packages/cli.md#bind) CLI t
 sst bind -- vitest run
 ```
 
-This allows the [`@serverless-stack/node`](packages/node.md) helper library to work as if it was running inside a Lambda function.
+This allows the [`@serverless-stack/node`](clients/index.md) helper library to work as if it was running inside a Lambda function.
 
 [Read more about testing](advanced/testing.md) and learn about [the `sst bind` CLI](advanced/testing.md#how-sst-bind-works).
 
@@ -222,7 +222,7 @@ Resource Binding works across all [SST constructs](constructs/index.md). Here ar
   RDS.myDB.defaultDatabaseName;
   ```
 
-See the [full list of constructs](packages/node.md).
+See the [full list of helpers](clients/index.md).
 
 ---
 
@@ -377,4 +377,4 @@ For sensitive values, the values are stored in AWS SSM. When the Lambda containe
 
 For non-Node.js runtimes, you can continue to use Lambda environment variables.
 
-If you want to use Resource Binding, you would need to read the bound values from the Lambda environment variable and AWS SSM directly. Refer to the [`@serverless-stack/node`](packages/node.md) package to see how it is done in Node.js.
+If you want to use Resource Binding, you would need to read the bound values from the Lambda environment variable and AWS SSM directly. Refer to the [`@serverless-stack/node`](clients/index.md) package to see how it is done in Node.js.
