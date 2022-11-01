@@ -1,0 +1,31 @@
+---
+description: "Overview of the `bucket` module."
+---
+
+Overview of the `bucket` client in the `@serverless-stack/node` package.
+
+```ts
+import { ... } from "@serverless-stack/node/bucket"
+```
+
+The `bucket` client has the following exports. 
+
+---
+
+## Bucket
+
+This module helps with accessing [`Bucket`](../constructs/Bucket.md) constructs.
+
+```ts
+import { Bucket } from "@serverless-stack/node/bucket";
+```
+
+### bucketName
+
+_Type_ : <span class="mono">string</span>
+
+The name of the S3 bucket.
+
+```ts
+console.log(Bucket.myBucket.bucketName);
+```

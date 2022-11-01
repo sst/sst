@@ -47,7 +47,12 @@ module.exports = {
           to: "/",
           label: "Home",
           position: "left",
-          activeBaseRegex: "^/(?!constructs)",
+          activeBaseRegex: "^/(?!(constructs|clients))",
+        },
+        {
+          href: config.examples,
+          label: "Examples",
+          position: "left",
         },
         {
           to: "/constructs",
@@ -56,19 +61,10 @@ module.exports = {
           activeBaseRegex: "^/constructs$|^/constructs/(?!v0)",
         },
         {
-          href: config.guide,
-          label: "Guide",
+          to: "/clients",
+          label: "Clients",
           position: "left",
-        },
-        {
-          href: config.home,
-          label: "About",
-          position: "left",
-        },
-        {
-          href: config.examples,
-          label: "Examples",
-          position: "left",
+          activeBaseRegex: "^/clients",
         },
         {
           href: config.discord,
