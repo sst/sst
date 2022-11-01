@@ -67,7 +67,7 @@ We typically group related resources together into stacks. In the `stacks/` dire
 
   ```ts title="stacks/Api.ts"
   export function Api({ stack }: StackContext) {
-    const db = use(Database);
+    const rds = use(Database);
 
     const api = new ApiGateway(stack, "api", {
 

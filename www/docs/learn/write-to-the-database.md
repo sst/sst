@@ -179,7 +179,7 @@ There are a couple of interesting details here, let's dig in:
 
    ```ts title="stacks/Api.ts" {2}
    function: {
-    bind: [rds],
+     bind: [rds],
    },
    ```
 

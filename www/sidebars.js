@@ -269,5 +269,28 @@ module.exports = {
         "constructs/ApiGatewayV1Api"
       ]
     }
-  ]
+  ],
+  clients: [
+    {
+      " ": [
+        "clients/index",
+      ],
+      Clients: [
+        "clients/api",
+        "clients/auth",
+        "clients/bucket",
+        "clients/config",
+        "clients/event-bus",
+        "clients/function",
+        "clients/graphql",
+        "clients/job",
+        "clients/kinesis-stream",
+        "clients/queue",
+        "clients/rds",
+        "clients/site",
+        "clients/table",
+        "clients/topic",
+      ]
+    },
+  ],
 };

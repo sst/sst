@@ -318,7 +318,9 @@ export class Bucket extends Construct implements SSTConstruct {
    * @example
    * ```js {3}
    * const bucket = new Bucket(stack, "Bucket");
-   * bucket.addNotifications(stack, ["src/notification.main"]);
+   * bucket.addNotifications(stack, {
+   *   myNotification: "src/notification.main"
+   * });
    * ```
    */
   public addNotifications(

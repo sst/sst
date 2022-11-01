@@ -1,0 +1,31 @@
+---
+description: "Overview of the `event-bus` module."
+---
+
+Overview of the `event-bus` client in the `@serverless-stack/node` package.
+
+```ts
+import { ... } from "@serverless-stack/node/event-bus"
+```
+
+The `event-bus` client has the following exports. 
+
+---
+
+## EventBus
+
+This module helps with accessing [`EventBus`](../constructs/EventBus.md) constructs.
+
+```ts
+import { EventBus } from "@serverless-stack/node/event-bus";
+```
+
+### eventBusName
+
+_Type_ : <span class="mono">string</span>
+
+The name of the EventBridge event bus.
+
+```ts
+console.log(EventBus.myBus.eventBusName);
+```
