@@ -51,7 +51,7 @@ We typically group related resources together into stacks. In the `stacks/` dire
 
   ```ts title="stacks/Database.ts"
   export function Database({ stack }: StackContext) {
-    const rds = new RDS(stack, "rds", {
+    const rds = new RDS(stack, "db", {
       engine: "postgresql11.13",
 
     // ...
