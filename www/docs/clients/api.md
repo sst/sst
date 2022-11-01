@@ -2,13 +2,13 @@
 description: "Overview of the `api` module."
 ---
 
-Overview of the `api` client in the `@serverless-stack/node` package.
+Overview of the `api` module in the `@serverless-stack/node` package.
 
 ```ts
 import { ... } from "@serverless-stack/node/api"
 ```
 
-The `api` client has the following exports. 
+The `api` module has the following exports. 
 
 ---
 

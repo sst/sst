@@ -158,8 +158,16 @@ module.exports = {
       Packages: [
         "packages/create-sst",
         "packages/cli",
-        "packages/node",
-        "packages/resources",
+        {
+          type: "link",
+          label: "@serverless-stack/node",
+          href: "/clients",
+        },
+        {
+          type: "link",
+          label: "@serverless-stack/resources",
+          href: "/constructs",
+        },
         "packages/static-site-env"
       ]
     }
@@ -275,21 +283,21 @@ module.exports = {
       " ": [
         "clients/index",
       ],
-      Clients: [
+      Modules: [
         "clients/api",
-        "clients/auth",
-        "clients/bucket",
-        "clients/config",
-        "clients/event-bus",
-        "clients/function",
-        "clients/graphql",
-        "clients/job",
-        "clients/kinesis-stream",
-        "clients/queue",
         "clients/rds",
+        "clients/job",
         "clients/site",
+        "clients/auth",
         "clients/table",
         "clients/topic",
+        "clients/config",
+        "clients/queue",
+        "clients/bucket",
+        "clients/graphql",
+        "clients/function",
+        "clients/event-bus",
+        "clients/kinesis-stream",
       ]
     },
   ],

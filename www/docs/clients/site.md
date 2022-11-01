@@ -2,13 +2,13 @@
 description: "Overview of the `site` module."
 ---
 
-Overview of the `site` client in the `@serverless-stack/node` package.
+Overview of the `site` module in the `@serverless-stack/node` package.
 
 ```ts
 import { ... } from "@serverless-stack/node/site"
 ```
 
-The `site` client has the following exports. 
+The `site` module has the following exports. 
 
 ---
 

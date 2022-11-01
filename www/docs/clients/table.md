@@ -2,13 +2,13 @@
 description: "Overview of the `table` module."
 ---
 
-Overview of the `table` client in the `@serverless-stack/node` package.
+Overview of the `table` module in the `@serverless-stack/node` package.
 
 ```ts
 import { ... } from "@serverless-stack/node/table"
 ```
 
-The `table` client has the following exports. 
+The `table` module has the following exports. 
 
 ---
 

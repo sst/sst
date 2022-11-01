@@ -2,13 +2,13 @@
 description: "Overview of the `queue` module."
 ---
 
-Overview of the `queue` client in the `@serverless-stack/node` package.
+Overview of the `queue` module in the `@serverless-stack/node` package.
 
 ```ts
 import { ... } from "@serverless-stack/node/queue"
 ```
 
-The `queue` client has the following exports. 
+The `queue` module has the following exports. 
 
 ---
 

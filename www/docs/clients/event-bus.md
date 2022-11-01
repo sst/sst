@@ -2,13 +2,13 @@
 description: "Overview of the `event-bus` module."
 ---
 
-Overview of the `event-bus` client in the `@serverless-stack/node` package.
+Overview of the `event-bus` module in the `@serverless-stack/node` package.
 
 ```ts
 import { ... } from "@serverless-stack/node/event-bus"
 ```
 
-The `event-bus` client has the following exports. 
+The `event-bus` module has the following exports. 
 
 ---
 

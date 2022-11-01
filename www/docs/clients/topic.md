@@ -2,13 +2,13 @@
 description: "Overview of the `topic` module."
 ---
 
-Overview of the `topic` client in the `@serverless-stack/node` package.
+Overview of the `topic` module in the `@serverless-stack/node` package.
 
 ```ts
 import { ... } from "@serverless-stack/node/topic"
 ```
 
-The `topic` client has the following exports. 
+The `topic` module has the following exports. 
 
 ---
 

@@ -2,13 +2,13 @@
 description: "Overview of the `job` module."
 ---
 
-Overview of the `job` client in the `@serverless-stack/node` package. This client helps with creating and running [Jobs](../constructs/Job.md) handler functions. You can [read more about it over on the job docs](../long-running-jobs.md).
+Overview of the `job` module in the `@serverless-stack/node` package. This module helps with creating and running [Jobs](../constructs/Job.md) handler functions. You can [read more about it over on the job docs](../long-running-jobs.md).
 
 ```ts
 import { ... } from "@serverless-stack/node/job"
 ```
 
-The `job` client has the following exports. 
+The `job` module has the following exports. 
 
 ---
 

@@ -2,13 +2,13 @@
 description: "Overview of the `graphql` module."
 ---
 
-Overview of the `graphql` client in the `@serverless-stack/node` package.
+Overview of the `graphql` module in the `@serverless-stack/node` package.
 
 ```ts
 import { ... } from "@serverless-stack/node/graphql"
 ```
 
-The `graphql` client has the following exports. 
+The `graphql` module has the following exports. 
 
 ---
 

@@ -2,13 +2,13 @@
 description: "Overview of the `kinesis-stream` module."
 ---
 
-Overview of the `kinesis-stream` client in the `@serverless-stack/node` package.
+Overview of the `kinesis-stream` module in the `@serverless-stack/node` package.
 
 ```ts
 import { ... } from "@serverless-stack/node/kinesis-stream"
 ```
 
-The `kinesis-stream` client has the following exports. 
+The `kinesis-stream` module has the following exports. 
 
 ---
 

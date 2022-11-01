@@ -2,13 +2,13 @@
 description: "Overview of the `bucket` module."
 ---
 
-Overview of the `bucket` client in the `@serverless-stack/node` package.
+Overview of the `bucket` module in the `@serverless-stack/node` package.
 
 ```ts
 import { ... } from "@serverless-stack/node/bucket"
 ```
 
-The `bucket` client has the following exports. 
+The `bucket` module has the following exports. 
 
 ---
 

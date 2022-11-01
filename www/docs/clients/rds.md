@@ -2,13 +2,13 @@
 description: "Overview of the `rds` module."
 ---
 
-Overview of the `rds` client in the `@serverless-stack/node` package.
+Overview of the `rds` module in the `@serverless-stack/node` package.
 
 ```ts
 import { ... } from "@serverless-stack/node/rds"
 ```
 
-The `rds` client has the following exports. 
+The `rds` module has the following exports. 
 
 ---
 

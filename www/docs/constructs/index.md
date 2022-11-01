@@ -24,48 +24,55 @@ However, you can configure these defaults. You can even use CDK constructs in yo
 
 </details>
 
-Here's a rough list of the types of constructs that SST supports.
+The [`@serverless-stack/resources`](https://www.npmjs.com/package/@serverless-stack/resources) package provides a set of additional CDK constructs necessary to build an SST app.
 
----
+## Installation
 
-## APIs
+This package is usually installed together with [`@serverless-stack/cli`](../packages/cli.md).
 
-- [`Api`](./Api.md)
-- [`GraphQLApi`](./GraphQLApi.md)
-- [`AppSyncApi`](./AppSyncApi.md)
-- [`WebSocketApi`](./WebSocketApi.md)
+```bash
+# With npm
+npm install @serverless-stack/cli @serverless-stack/resources --save-exact
+# Or with Yarn
+yarn add @serverless-stack/cli @serverless-stack/resources --exact
+```
 
-## Frontends
+Note that, the version of these packages should be kept in sync.
 
-- [`RemixSite`](./RemixSite.md)
-- [`StaticSite`](./StaticSite.md)
-- [`NextjsSite`](./NextjsSite.md)
-- [`ViteStaticSite`](./ViteStaticSite.md)
-- [`ReactStaticSite`](./ReactStaticSite.md)
+## Importing Constructs
 
-## Databases
+You can either import specific constructs in your app.
 
-- [`RDS`](./RDS.md)
-- [`Table`](./Table.md)
+```js
+import { Api } from "@serverless-stack/resources";
+```
 
-## Storage
+Or import them all.
 
-- [`Bucket`](./Bucket.md)
+```js
+import * as sst from "@serverless-stack/resources";
+```
 
-## Auth
+## SST Constructs
 
-- [`Auth`](./Auth.md)
-- [`Cognito`](./Cognito.md)
+SST comes with a two types of constructs.
 
-## Async
+### Low-Level Constructs
 
-- [`Job`](./Job.md)
-- [`Cron`](./Cron.md)
-- [`Topic`](./Topic.md)
-- [`Queue`](./Queue.md)
-- [`EventBus`](./EventBus.md)
-- [`KinesisStream`](./KinesisStream.md)
+These either extend or replace the native CDK constructs.
 
----
+- [`App`](../constructs/App.md)
+- [`Stack`](../constructs/Stack.md)
+- [`Function`](../constructs/Function.md)
 
-Are there any additional use cases you'd like SST to support natively? Let us know on <a href={ config.discord }>Discord</a>.
+### Higher-Level Constructs
+
+These are higher level abstractions that wrap around multiple constructs to serve specific use cases.
+
+- [`Api`](../constructs/Api.md)
+- [`Auth`](../constructs/Auth.md)
+- [`Cron`](../constructs/Cron.md)
+- [`Table`](../constructs/Table.md)
+- [`Topic`](../constructs/Topic.md)
+- [`Queue`](../constructs/Queue.md)
+- _And many more!_

@@ -2,13 +2,13 @@
 description: "Overview of the `config` module."
 ---
 
-Overview of the `config` client in the `@serverless-stack/node` package.
+Overview of the `config` module in the `@serverless-stack/node` package.
 
 ```ts
 import { ... } from "@serverless-stack/node/config"
 ```
 
-The `config` client has the following exports. 
+The `config` module has the following exports. 
 
 ---
 

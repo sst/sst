@@ -2,13 +2,13 @@
 description: "Overview of the `auth` module."
 ---
 
-Overview of the `auth` client in the `@serverless-stack/node` package.
+Overview of the `auth` module in the `@serverless-stack/node` package.
 
 ```ts
 import { ... } from "@serverless-stack/node/auth"
 ```
 
-The `auth` client has the following exports. 
+The `auth` module has the following exports. 
 
 ---
 

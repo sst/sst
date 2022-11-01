@@ -2,13 +2,13 @@
 description: "Overview of the `function` module."
 ---
 
-Overview of the `function` client in the `@serverless-stack/node` package.
+Overview of the `function` module in the `@serverless-stack/node` package.
 
 ```ts
 import { ... } from "@serverless-stack/node/function"
 ```
 
-The `function` client has the following exports. 
+The `function` module has the following exports. 
 
 ---
 
