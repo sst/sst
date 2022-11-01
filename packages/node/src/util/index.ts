@@ -28,3 +28,11 @@ export function parseEnvironment(constructName: string, props: string[]) {
 function buildEnvPrefix(constructName: string, prop: string) {
   return `SST_${constructName}_${prop}_`;
 }
+
+export function buildSsmPath(constructName: string, id: string, prop: string) {
+  return `/sst/${process.env.SST_APP}/${process.env.SST_STAGE}/${constructName}/${id}/${prop}`;
+}
+
+export function buildSsmFallbackPath(constructName: string, id: string, prop: string) {
+  return `/sst/${process.env.SST_APP}/.fallback/${constructName}/${id}/${prop}`;
+}

@@ -254,12 +254,21 @@ export class Stack extends cdk.Stack {
     const app = this.node.root as App;
 
     // Create execution policy
-    const policyStatement = new iam.PolicyStatement();
-    policyStatement.addResources(
-      `arn:aws:s3:::${app.bootstrapAssets.bucketName}/*`
-    );
-    policyStatement.addActions("s3:PutObject", "s3:DeleteObject");
-    this.customResourceHandler.addToRolePolicy(policyStatement);
+    this.customResourceHandler.addToRolePolicy(new iam.PolicyStatement({
+      actions: ["s3:PutObject", "s3:DeleteObject"],
+      resources: [
+        `arn:aws:s3:::${app.bootstrapAssets.bucketName}/*`
+      ],
+    }));
+
+    // Temporary: Add permissions to migrate SSM paths for secrets (piggybacking on the stack metadata custom resource handler)
+    this.customResourceHandler.addToRolePolicy(new iam.PolicyStatement({
+      actions: ["ssm:GetParametersByPath", "ssm:PutParameter"],
+      resources: [
+        `arn:aws:ssm:${app.region}:${app.account}:parameter/sst/${app.name}/${app.stage}/*`,
+        `arn:aws:ssm:${app.region}:${app.account}:parameter/sst/${app.name}/.fallback/*`,
+      ],
+    }));
 
     return new cdk.CustomResource(this, "StackMetadata", {
       serviceToken: this.customResourceHandler.functionArn,

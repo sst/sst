@@ -1,4 +1,5 @@
 import * as ssm from "aws-cdk-lib/aws-ssm";
+import { FunctionBinding } from "@serverless-stack/core";
 import { SSTConstruct } from "../Construct.js";
 import { App } from "../App.js";
 
@@ -64,21 +65,17 @@ export function bindType(c: SSTConstruct) {
 }
 
 export function getEnvironmentKey(c: SSTConstruct, prop: string): string {
-  return `SST_${c.constructor.name}_${prop}_${c.id}`;
+  return FunctionBinding.buildEnvironmentKey(c.constructor.name, c.id, prop);
 }
 
 export function getParameterPath(c: SSTConstruct, prop: string): string {
   const app = c.node.root as App;
   const construct = c.constructor.name;
-  return construct === "Secret"
-    ? `/sst/${app.name}/${app.stage}/secrets/${c.id}`
-    : `/sst/${app.name}/${app.stage}/${construct}/${c.id}/${prop}`;
+  return FunctionBinding.buildSsmPath(app.name, app.stage, construct, c.id, prop);
 }
 
 export function getParameterFallbackPath(c: SSTConstruct, prop: string): string {
   const app = c.node.root as App;
   const construct = c.constructor.name;
-  return construct === "Secret"
-    ? `/sst/${app.name}/.fallback/secrets/${c.id}`
-    : `/sst/${app.name}/.fallback/${construct}/${c.id}/${prop}`;
+  return FunctionBinding.buildSsmPath(app.name, FunctionBinding.FALLBACK_STAGE, construct, c.id, prop);
 }

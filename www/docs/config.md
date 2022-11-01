@@ -122,7 +122,7 @@ Behind the scenes, secrets are stored as [AWS SSM](https://docs.aws.amazon.com/s
 npx sst secrets set STRIPE_KEY sk_test_abc123
 ```
 
-An SSM parameter of the type `SecureString` is created with the name `/sst/{appName}/{stageName}/secrets/STRIPE_KEY`, where `{appName}` is the name of your SST app, and `{stageName}` is the stage you are configuring for. The parameter value `sk_test_abc123` gets encrypted and stored in AWS SSM.
+An SSM parameter of the type `SecureString` is created with the name `/sst/{appName}/{stageName}/Secret/STRIPE_KEY/value`, where `{appName}` is the name of your SST app, and `{stageName}` is the stage you are configuring for. The parameter value `sk_test_abc123` gets encrypted and stored in AWS SSM.
 
 ---
 
@@ -205,7 +205,7 @@ In the above example, it's likely all the dev stages share the same `STRIPE_KEY`
 npx sst secrets set-fallback STRIPE_KEY sk_test_abc123
 ```
 
-Similar to the `set` command, SST creates an AWS SSM Parameter of the type `SecureString`. And the parameter name in this case is `/sst/{appName}/.fallback/secrets/STRIPE_KEY`.
+Similar to the `set` command, SST creates an AWS SSM Parameter of the type `SecureString`. And the parameter name in this case is `/sst/{appName}/.fallback/Secret/STRIPE_KEY/value`.
 
 :::info
 The fallback value can only be inherited by stages deployed in the same AWS account and region.

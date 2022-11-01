@@ -1,9 +1,6 @@
 import { GetParametersCommand, SSMClient, Parameter } from "@aws-sdk/client-ssm";
 const ssm = new SSMClient({});
-import { createProxy, parseEnvironment } from "../util/index.js";
-
-const SECRET_SSM_PREFIX = `/sst/${process.env.SST_APP}/${process.env.SST_STAGE}/secrets/`;
-const SECRET_FALLBACK_SSM_PREFIX = `/sst/${process.env.SST_APP}/.fallback/secrets/`;
+import { createProxy, parseEnvironment, buildSsmPath, buildSsmFallbackPath } from "../util/index.js";
 
 export interface ParameterResources { };
 export interface SecretResources { };
@@ -62,12 +59,14 @@ async function replaceSecretsWithRealValues() {
 
   // Fetch all secrets
   const ssmParams = [];
-  const results = await loadSecrets(SECRET_SSM_PREFIX, names);
+  const paths = names.map((name) => buildSsmPath("Secret", name, "value"));
+  const results = await loadSecrets(paths);
   ssmParams.push(...results.validParams);
   if (results.invalidParams.length > 0) {
     // Fetch fallback
     const missingNames = results.invalidParams.map(ssmNameToConstructId);
-    const missingResults = await loadSecrets(SECRET_FALLBACK_SSM_PREFIX, missingNames);
+    const missingPaths = missingNames.map((name) => buildSsmFallbackPath("Secret", name, "value"));
+    const missingResults = await loadSecrets(missingPaths);
     ssmParams.push(...missingResults.validParams);
     if (missingResults.invalidParams.length > 0) {
       throw new Error(
@@ -84,11 +83,11 @@ async function replaceSecretsWithRealValues() {
   }
 }
 
-async function loadSecrets(prefix: string, keys: string[]) {
-  // Split keys into chunks of 10
+async function loadSecrets(paths: string[]) {
+  // Split paths into chunks of 10
   const chunks = [];
-  for (let i = 0; i < keys.length; i += 10) {
-    chunks.push(keys.slice(i, i + 10));
+  for (let i = 0; i < paths.length; i += 10) {
+    chunks.push(paths.slice(i, i + 10));
   }
 
   // Fetch secrets
@@ -97,7 +96,7 @@ async function loadSecrets(prefix: string, keys: string[]) {
   await Promise.all(
     chunks.map(async (chunk) => {
       const command = new GetParametersCommand({
-        Names: chunk.map((key) => `${prefix}${key}`),
+        Names: chunk,
         WithDecryption: true,
       });
       const result = await ssm.send(command);
@@ -109,5 +108,5 @@ async function loadSecrets(prefix: string, keys: string[]) {
 }
 
 function ssmNameToConstructId(ssmName: string) {
-  return ssmName.split("/").pop()!;
+  return ssmName.split("/")[5];
 }

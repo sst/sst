@@ -278,7 +278,7 @@ The `sst bind` CLI sets the following environment variables:
 
   ie. In our example above, `SST_Table_tableName_table` is created with value from `/sst/{appName}/{stageName}/Table/table/tableName`
 
-- For [`Secrets`](constructs/Secret.md), fallback values are also fetched from SSM Parameters prefixed with `/sst/{appName}/.fallback/secrets/*`.
+- For [`Secrets`](constructs/Secret.md), fallback values are also fetched from SSM Parameters prefixed with `/sst/{appName}/.fallback/Secret/*`.
 
 </details>
 

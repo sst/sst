@@ -10,7 +10,7 @@ type Secret = {
 }
 
 const SECRET_UPDATED_AT_ENV = "SST_ADMIN_SECRET_UPDATED_AT";
-const FALLBACK_STAGE = ".fallback";
+export const FALLBACK_STAGE = ".fallback";
 
 export async function loadBindingEnvironment(app: string, stage: string, region: string) {
   const envs: Record<string, string> = {};
@@ -57,8 +57,8 @@ export async function getSecret(app: string, stage: string, region: string, name
   const result = await ssm
     .getParameters({
       Names: [
-        buildSsmNameForSecret(app, stage, name),
-        buildSsmNameForSecret(app, FALLBACK_STAGE, name),
+        buildSsmPathForSecretValue(app, stage, name),
+        buildSsmPathForSecretValue(app, FALLBACK_STAGE, name),
       ],
       WithDecryption: true,
     })
@@ -101,7 +101,7 @@ async function setSecretDo(app: string, stage: string, region: string, name: str
   const ssm = new SSM({ region });
 
   await ssm.putParameter({
-    Name: buildSsmNameForSecret(app, stage, name),
+    Name: buildSsmPathForSecretValue(app, stage, name),
     Value: value,
     Type: "SecureString",
     Overwrite: true,
@@ -112,7 +112,7 @@ async function removeSecretDo(app: string, stage: string, region: string, name: 
   const ssm = new SSM({ region });
   try {
     await ssm.deleteParameter({
-      Name: buildSsmNameForSecret(app, stage, name),
+      Name: buildSsmPathForSecretValue(app, stage, name),
     }).promise();
   } catch (e: any) {
     if (e.code === "ParameterNotFound") {
@@ -195,8 +195,12 @@ async function restartFunctionsUsingSecret(app: string, stage: string, region: s
   }));
 }
 
-function buildEnvironmentKey(construct: string, name: string, prop: string): string {
+export function buildEnvironmentKey(construct: string, name: string, prop: string): string {
   return `SST_${construct}_${prop}_${name}`;
+}
+
+export function buildSsmPath(app: string, stage: string, construct: string, name: string, prop: string) {
+  return `/sst/${app}/${stage}/${construct}/${name}/${prop}`;
 }
 
 function buildSsmPrefixForStage(app: string, stage: string) {
@@ -204,21 +208,20 @@ function buildSsmPrefixForStage(app: string, stage: string) {
 }
 
 function buildSsmPrefixForSecret(app: string, stage: string) {
-  return `/sst/${app}/${stage}/secrets/`;
+  return `/sst/${app}/${stage}/Secret/`;
 }
 
-function buildSsmNameForSecret(app: string, stage: string, name: string) {
-  return `${buildSsmPrefixForSecret(app, stage)}${name}`;
+function buildSsmPathForSecretValue(app: string, stage: string, name: string) {
+  return `/sst/${app}/${stage}/Secret/${name}/value`;
 }
 
 function parseSsmPath(ssmName: string) {
   const parts = ssmName.split("/");
-  const construct = parts[4];
   const prop = parts.slice(6).join("/");
   return {
     app: parts[2],
     stage: parts[3],
-    construct: construct === "secrets" ? "Secret" : construct,
+    construct: parts[4],
     name: parts[5],
     prop: prop === "" ? "value" : prop,
   };
