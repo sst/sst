@@ -175,7 +175,13 @@ There are a couple of interesting details here, let's dig in:
    });
    ```
 
-2. You might recall us talking about the `bind` values back in the [Project Structure](project-structure.md#stacks) chapter.
+2. `RDS` is coming from the SST Node client package.
+
+   ```ts title="services/core/sql.ts"
+   import { RDS } from "@serverless-stack/node/rds";
+   ```
+
+   It has access to the config of our database, thanks to [Resource Binding](../resource-binding.md). You might recall us **binding** our database to the functions in our API back in the [Project Structure](project-structure.md#stacks) chapter.
 
    ```ts title="stacks/Api.ts" {2}
    function: {
@@ -183,7 +189,7 @@ There are a couple of interesting details here, let's dig in:
    },
    ```
 
-   By binding the `rds` cluster to our API in `stacks/Api.ts`, our API can access the database ARN, database name, and ARN of the secret to access the database. An ARN is an AWS identifier.
+   By binding the `rds` cluster to our API in `stacks/Api.ts`, our API can access the database ARN (an ARN is an AWS identifier), database name, and ARN of the secret to access the database in our functions.
 
 3. The Kysely instance also needs a `Database` type. This is coming from `services/core/sql.generated.ts`.
 

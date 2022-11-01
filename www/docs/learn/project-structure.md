@@ -43,7 +43,7 @@ We'll look at how our monorepo is split up with [Workspaces](https://docs.npmjs.
 
 ## `stacks/`
 
-The `stacks/` directory contains the app's infrastructure as defined as code. Or what is known as [Infrastructure as Code](https://sst.dev/chapters/what-is-infrastructure-as-code.html) (IaC). SST by default uses TypeScript to define your infrastructure (you can also use JavaScript).
+The `stacks/` directory contains the app's infrastructure as defined as code. Or what is known as [Infrastructure as Code](https://sst.dev/chapters/what-is-infrastructure-as-code.html) (IaC). SST by default uses TypeScript to define your infrastructure. You can also use JavaScript.
 
 We typically group related resources together into stacks. In the `stacks/` directory there are a couple of files:
 
@@ -74,7 +74,9 @@ We typically group related resources together into stacks. In the `stacks/` dire
     // ...
   ```
 
-  The `use(Database)` call gives this stack access to the props that the `Database` stack returns.
+  The `use(Database)` call gives this stack access to the props that the `Database` stack returns. So `rds` is coming from the return statement of our `Database` stack.
+
+  We _bind_ the database to our API so that the functions that power our API have access to it.
 
   ```ts {2}
   function: {
@@ -82,7 +84,7 @@ We typically group related resources together into stacks. In the `stacks/` dire
   },
   ```
 
-  So `rds` is coming from the return statement of our `Database` stack. Note that `bind` is SST's recommended way of accessing resources across the app. You can [read more about it here](../resource-binding.md).
+  The `bind` prop does two things for us. It gives our functions permissions to access the database. Also our functions are loaded with the database details required to query it. You can [read more about Resource Binding](../resource-binding.md).
 
 - `Web.ts` creates a [Vite](https://vitejs.dev) static site hosted on [S3](https://aws.amazon.com/s3/), and serves the contents through a CDN using [CloudFront](https://aws.amazon.com/cloudfront/).
 
