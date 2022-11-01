@@ -8,11 +8,17 @@ Overview of the `event-bus` module in the `@serverless-stack/node` package.
 import { ... } from "@serverless-stack/node/event-bus"
 ```
 
-The `event-bus` module has the following exports. 
+The `event-bus` module has the following exports.
 
 ---
 
-## EventBus
+## Properties
+
+The properties let you access the resources that are bound to the function.
+
+---
+
+### EventBus
 
 This module helps with accessing [`EventBus`](../constructs/EventBus.md) constructs.
 
@@ -20,7 +26,7 @@ This module helps with accessing [`EventBus`](../constructs/EventBus.md) constru
 import { EventBus } from "@serverless-stack/node/event-bus";
 ```
 
-### eventBusName
+#### eventBusName
 
 _Type_ : <span class="mono">string</span>
 

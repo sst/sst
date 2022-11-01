@@ -8,11 +8,17 @@ Overview of the `job` module in the `@serverless-stack/node` package. This modul
 import { ... } from "@serverless-stack/node/job"
 ```
 
-The `job` module has the following exports. 
+The `job` module has the following exports.
 
 ---
 
-## JobTypes
+## Types
+
+Types to help you define the shape of your function arguments.
+
+---
+
+### JobTypes
 
 A type interface you can extend to define the job payload types.
 
@@ -28,15 +34,21 @@ declare module "@serverless-stack/node/job" {
 
 ---
 
-## Job
+## Methods
 
-This module helps with accessing [`Job`](../constructs/Job.md) constructs.
+Methods that you can call in this module.
+
+---
+
+### Job
+
+This export helps with interacting with the [`Job`](../constructs/Job.md) constructs.
 
 ```ts
 import { Job } from "@serverless-stack/node/job";
 ```
 
-### run
+#### run
 
 Provides a function that can be used to invoke the job handler function.
 
@@ -51,7 +63,13 @@ await Job.myJob.run({
 
 ---
 
-## JobHandler
+## Handlers
+
+The handlers can wrap around your Lambda function handler.
+
+---
+
+### JobHandler
 
 The `JobHandler` provides a function that can be used to implement the job handler function.
 

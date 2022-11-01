@@ -8,11 +8,17 @@ Overview of the `config` module in the `@serverless-stack/node` package.
 import { ... } from "@serverless-stack/node/config"
 ```
 
-The `config` module has the following exports. 
+The `config` module has the following exports.
 
 ---
 
-## Config
+## Properties
+
+The properties let you access the resources that are bound to the function.
+
+---
+
+### Config
 
 This module helps with loading [Secrets](../constructs/Secret.md) and [Parameters](../constructs/Parameter.md) created in your SST app.
 

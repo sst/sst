@@ -8,11 +8,17 @@ Overview of the `rds` module in the `@serverless-stack/node` package.
 import { ... } from "@serverless-stack/node/rds"
 ```
 
-The `rds` module has the following exports. 
+The `rds` module has the following exports.
 
 ---
 
-## RDS
+## Properties
+
+The properties let you access the resources that are bound to the function.
+
+---
+
+### RDS
 
 This module helps with accessing [`RDS`](../constructs/RDS.md) constructs.
 
@@ -20,7 +26,7 @@ This module helps with accessing [`RDS`](../constructs/RDS.md) constructs.
 import { RDS } from "@serverless-stack/node/rds";
 ```
 
-### clusterArn
+#### clusterArn
 
 _Type_ : <span class="mono">string</span>
 
@@ -30,7 +36,7 @@ The ARN of the RDS Serverless Cluster.
 console.log(RDS.myDatabase.clusterArn);
 ```
 
-### secretArn
+#### secretArn
 
 _Type_ : <span class="mono">string</span>
 
@@ -40,7 +46,7 @@ The ARN of the Secrets Manager Secret for the RDS Serverless Cluster.
 console.log(RDS.myDatabase.secretArn);
 ```
 
-### defaultDatabaseName
+#### defaultDatabaseName
 
 _Type_ : <span class="mono">string</span>
 

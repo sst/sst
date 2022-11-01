@@ -8,11 +8,17 @@ Overview of the `table` module in the `@serverless-stack/node` package.
 import { ... } from "@serverless-stack/node/table"
 ```
 
-The `table` module has the following exports. 
+The `table` module has the following exports.
 
 ---
 
-## Table
+## Properties
+
+The properties let you access the resources that are bound to the function.
+
+---
+
+### Table
 
 This module helps with accessing [`Table`](../constructs/Table.md) constructs.
 
@@ -20,7 +26,7 @@ This module helps with accessing [`Table`](../constructs/Table.md) constructs.
 import { Table } from "@serverless-stack/node/table";
 ```
 
-### tableName
+#### tableName
 
 _Type_ : <span class="mono">string</span>
 

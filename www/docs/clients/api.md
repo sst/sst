@@ -8,11 +8,17 @@ Overview of the `api` module in the `@serverless-stack/node` package.
 import { ... } from "@serverless-stack/node/api"
 ```
 
-The `api` module has the following exports. 
+The `api` module has the following exports.
 
 ---
 
-## Api
+## Properties
+
+The properties let you access the resources that are bound to the function.
+
+---
+
+### Api
 
 This module helps with accessing [`Api`](../constructs/Api.md) constructs.
 
@@ -20,7 +26,7 @@ This module helps with accessing [`Api`](../constructs/Api.md) constructs.
 import { Api } from "@serverless-stack/node/api";
 ```
 
-### url
+#### url
 
 _Type_ : <span class="mono">string</span>
 
@@ -32,7 +38,7 @@ console.log(Api.myApi.url);
 
 ---
 
-## GraphQLApi
+### GraphQLApi
 
 This module helps with accessing [GraphqlApis](../constructs/GraphQLApi.md).
 
@@ -41,7 +47,7 @@ import { GraphQLApi } from "@serverless-stack/node/api";
 console.log(GraphQLApi.myApi.url);
 ```
 
-### url
+#### url
 
 _Type_ : <span class="mono">string</span>
 
@@ -49,24 +55,7 @@ The URL of the API. If custom domain is enabled, this is the custom domain URL o
 
 ---
 
-## WebSocketApi
-
-This module helps with accessing [WebSocketApis](../constructs/WebSocketApi.md).
-
-```ts
-import { WebSocketApi } from "@serverless-stack/node/api";
-console.log(WebSocketApi.myApi.url);
-```
-
-### url
-
-_Type_ : <span class="mono">string</span>
-
-The URL of the API. If custom domain is enabled, this is the custom domain URL of the API.
-
----
-
-## AppSyncApi
+### AppSyncApi
 
 This module helps with accessing [AppSyncApis](../constructs/AppSyncApi.md).
 
@@ -75,7 +64,7 @@ import { AppSyncApi } from "@serverless-stack/node/api";
 console.log(AppSyncApi.myApi.url);
 ```
 
-### url
+#### url
 
 _Type_ : <span class="mono">string</span>
 
@@ -83,7 +72,24 @@ The URL of the API. If custom domain is enabled, this is the custom domain URL o
 
 ---
 
-## ApiGatewayV1Api
+### WebSocketApi
+
+This module helps with accessing [WebSocketApis](../constructs/WebSocketApi.md).
+
+```ts
+import { WebSocketApi } from "@serverless-stack/node/api";
+console.log(WebSocketApi.myApi.url);
+```
+
+#### url
+
+_Type_ : <span class="mono">string</span>
+
+The URL of the API. If custom domain is enabled, this is the custom domain URL of the API.
+
+---
+
+### ApiGatewayV1Api
 
 This module helps with accessing [ApiGatewayV1Apis](../constructs/ApiGatewayV1Api.md).
 
@@ -92,7 +98,7 @@ import { ApiGatewayV1Api } from "@serverless-stack/node/api";
 console.log(ApiGatewayV1Api.myApi.url);
 ```
 
-### url
+#### url
 
 _Type_ : <span class="mono">string</span>
 
@@ -100,7 +106,35 @@ The URL of the API. If custom domain is enabled, this is the custom domain URL o
 
 ---
 
-## useBody
+## Handlers
+
+The handlers can wrap around your Lambda function handler.
+
+---
+
+### ApiHandler
+
+The `ApiHandler` provides a function that can be used to implement the API handler function.
+
+```js
+import { useBody, ApiHandler } from "@serverless-stack/node/api";
+
+export const handler = ApiHandler((event) => {
+  const body = useBody();
+
+  // ...
+});
+```
+
+---
+
+## Hooks
+
+The hooks are functions that have access to the current invocation.
+
+---
+
+### useBody
 
 This hook returns the request body.
 
@@ -111,7 +145,7 @@ const body = useBody();
 
 ---
 
-## useJsonBody
+### useJsonBody
 
 This hook returns the request body in JSON decoded format.
 
@@ -122,84 +156,7 @@ const json = useJsonBody();
 
 ---
 
-## useFormData
-
-This hook returns the request form data.
-
-```ts
-import { useFormData } from "@serverless-stack/node/api";
-const data = useFormData();
-```
-
----
-
-## useFormValue
-
-This hook returns the request form value.
-
-```ts
-import { useFormValue } from "@serverless-stack/node/api";
-const name = useFormValue("name");
-```
-
----
-
-## useHeaders
-
-This hook returns all request headers.
-
-```ts
-import { useHeaders } from "@serverless-stack/node/api";
-const headers = useHeaders();
-```
-
----
-
-## useHeader
-
-This hook returns a request header.
-
-```ts
-import { useHeader } from "@serverless-stack/node/api";
-const header = useHeader("Authorization");
-```
-
----
-
-## useQueryParams
-
-This hook returns all request query parameters.
-
-```ts
-import { useQueryParams } from "@serverless-stack/node/api";
-const params = useQueryParams();
-```
-
----
-
-## useQueryParam
-
-This hook returns a request query parameter.
-
-```ts
-import { useQueryParam } from "@serverless-stack/node/api";
-const name = useQueryParam("name");
-```
-
----
-
-## useCookies
-
-This hook returns all request cookies.
-
-```ts
-import { useCookies } from "@serverless-stack/node/api";
-const cookies = useCookies();
-```
-
----
-
-## useCookie
+### useCookie
 
 This hook returns a request cookie.
 
@@ -210,16 +167,77 @@ const cookie = useCookie("token");
 
 ---
 
-## ApiHandler
+### useCookies
 
-The `ApiHandler` provides a function that can be used to implement the api handler function.
+This hook returns all request cookies.
 
-```js
-import { useBody, ApiHandler } from "@serverless-stack/node/api";
+```ts
+import { useCookies } from "@serverless-stack/node/api";
+const cookies = useCookies();
+```
 
-export const handler = ApiHandler((event) => {
-  const body = useBody();
+---
 
-  // ...
-});
+### useHeader
+
+This hook returns a request header.
+
+```ts
+import { useHeader } from "@serverless-stack/node/api";
+const header = useHeader("Authorization");
+```
+
+---
+
+### useHeaders
+
+This hook returns all request headers.
+
+```ts
+import { useHeaders } from "@serverless-stack/node/api";
+const headers = useHeaders();
+```
+
+---
+
+### useFormData
+
+This hook returns the request form data.
+
+```ts
+import { useFormData } from "@serverless-stack/node/api";
+const data = useFormData();
+```
+
+---
+
+### useFormValue
+
+This hook returns the request form value.
+
+```ts
+import { useFormValue } from "@serverless-stack/node/api";
+const name = useFormValue("name");
+```
+
+---
+
+### useQueryParam
+
+This hook returns a request query parameter.
+
+```ts
+import { useQueryParam } from "@serverless-stack/node/api";
+const name = useQueryParam("name");
+```
+
+---
+
+### useQueryParams
+
+This hook returns all request query parameters.
+
+```ts
+import { useQueryParams } from "@serverless-stack/node/api";
+const params = useQueryParams();
 ```

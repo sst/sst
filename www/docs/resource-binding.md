@@ -159,7 +159,7 @@ sst bind -- vitest run
 
 This allows the [`@serverless-stack/node`](clients/index.md) helper library to work as if it was running inside a Lambda function.
 
-[Read more about testing](advanced/testing.md) and learn about [the `sst bind` CLI](advanced/testing.md#how-sst-bind-works).
+[Read more about testing](advanced/testing.md) and [learn about the `sst bind` CLI](advanced/testing.md#how-sst-bind-works).
 
 ---
 

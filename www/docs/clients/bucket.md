@@ -8,11 +8,17 @@ Overview of the `bucket` module in the `@serverless-stack/node` package.
 import { ... } from "@serverless-stack/node/bucket"
 ```
 
-The `bucket` module has the following exports. 
+The `bucket` module has the following exports.
 
 ---
 
-## Bucket
+## Properties
+
+The properties let you access the resources that are bound to the function.
+
+---
+
+### Bucket
 
 This module helps with accessing [`Bucket`](../constructs/Bucket.md) constructs.
 
@@ -20,7 +26,7 @@ This module helps with accessing [`Bucket`](../constructs/Bucket.md) constructs.
 import { Bucket } from "@serverless-stack/node/bucket";
 ```
 
-### bucketName
+#### bucketName
 
 _Type_ : <span class="mono">string</span>
 

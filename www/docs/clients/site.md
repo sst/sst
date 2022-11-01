@@ -8,11 +8,17 @@ Overview of the `site` module in the `@serverless-stack/node` package.
 import { ... } from "@serverless-stack/node/site"
 ```
 
-The `site` module has the following exports. 
+The `site` module has the following exports.
 
 ---
 
-## StaticSite
+## Properties
+
+The properties let you access the resources that are bound to the function.
+
+---
+
+### StaticSite
 
 This module helps with accessing [`StaticSite`](../constructs/StaticSite.md) constructs.
 
@@ -20,7 +26,7 @@ This module helps with accessing [`StaticSite`](../constructs/StaticSite.md) con
 import { StaticSite } from "@serverless-stack/node/site";
 ```
 
-### url
+#### url
 
 _Type_ : <span class="mono">string</span>
 
@@ -32,7 +38,7 @@ console.log(StaticSite.myWeb.url);
 
 ---
 
-## ViteStaticSite
+### ViteStaticSite
 
 This module helps with accessing [`ViteStaticSite`](../constructs/ViteStaticSite.md) constructs.
 
@@ -40,7 +46,7 @@ This module helps with accessing [`ViteStaticSite`](../constructs/ViteStaticSite
 import { ViteStaticSite } from "@serverless-stack/node/site";
 ```
 
-### url
+#### url
 
 _Type_ : <span class="mono">string</span>
 
@@ -52,7 +58,7 @@ console.log(ViteStaticSite.myWeb.url);
 
 ---
 
-## ReactStaticSite
+### ReactStaticSite
 
 This module helps with accessing [`ReactStaticSite`](../constructs/ReactStaticSite.md) constructs.
 
@@ -60,7 +66,7 @@ This module helps with accessing [`ReactStaticSite`](../constructs/ReactStaticSi
 import { ReactStaticSite } from "@serverless-stack/node/site";
 ```
 
-### url
+#### url
 
 _Type_ : <span class="mono">string</span>
 
@@ -72,7 +78,7 @@ console.log(ReactStaticSite.myWeb.url);
 
 ---
 
-## NextjsSite
+### NextjsSite
 
 This module helps with accessing [`NextjsSite`](../constructs/NextjsSite.md) constructs.
 
@@ -80,7 +86,7 @@ This module helps with accessing [`NextjsSite`](../constructs/NextjsSite.md) con
 import { NextjsSite } from "@serverless-stack/node/site";
 ```
 
-### url
+#### url
 
 _Type_ : <span class="mono">string</span>
 
@@ -92,7 +98,7 @@ console.log(NextjsSite.myWeb.url);
 
 ---
 
-## RemixSite
+### RemixSite
 
 This module helps with accessing [`RemixSite`](../constructs/RemixSite.md) constructs.
 
@@ -100,7 +106,7 @@ This module helps with accessing [`RemixSite`](../constructs/RemixSite.md) const
 import { RemixSite } from "@serverless-stack/node/site";
 ```
 
-### url
+#### url
 
 _Type_ : <span class="mono">string</span>
 
