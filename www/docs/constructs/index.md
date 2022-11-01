@@ -13,6 +13,8 @@ Constructs are the basic building blocks of SST apps.
 
 </HeadlineText>
 
+---
+
 They allow you to define the infrastructure of your app. Each construct bring together multiple AWS resources to make up a functional unit.
 
 <details>
@@ -25,6 +27,8 @@ However, you can configure these defaults. You can even use CDK constructs in yo
 </details>
 
 The [`@serverless-stack/resources`](https://www.npmjs.com/package/@serverless-stack/resources) package provides a set of additional CDK constructs necessary to build an SST app.
+
+---
 
 ## Installation
 
@@ -39,7 +43,9 @@ yarn add @serverless-stack/cli @serverless-stack/resources --exact
 
 Note that, the version of these packages should be kept in sync.
 
-## Importing Constructs
+---
+
+## Importing constructs
 
 You can either import specific constructs in your app.
 
@@ -53,11 +59,13 @@ Or import them all.
 import * as sst from "@serverless-stack/resources";
 ```
 
-## SST Constructs
+---
+
+## Type of constructs
 
 SST comes with a two types of constructs.
 
-### Low-Level Constructs
+### Low-level
 
 These either extend or replace the native CDK constructs.
 
@@ -65,7 +73,7 @@ These either extend or replace the native CDK constructs.
 - [`Stack`](../constructs/Stack.md)
 - [`Function`](../constructs/Function.md)
 
-### Higher-Level Constructs
+### Higher-level
 
 These are higher level abstractions that wrap around multiple constructs to serve specific use cases.
 
