@@ -13,13 +13,9 @@ npm install @serverless-stack/node
 yarn add @serverless-stack/node
 ```
 
----
-
 ## Exports
 
 The `@serverless-stack/node` package is made up of a collection of modules. Like the `@serverless-stack/node/api`, `@serverless-stack/node/bucket`, etc. Each of these modules has 3 types of exports:
-
----
 
 ### Properties
 
@@ -46,8 +42,6 @@ console.log(Bucket.myFiles.bucketName);
 
 Due to the use of top-level await, your functions need to be bundled in the `esm` format.
 
----
-
 ### Handlers
 
 The handlers in each module is a function that can wrap around Lambda function handlers.
@@ -65,8 +59,6 @@ Each handler has a specific purpose but they share a couple of things in common:
 1. Provide proper typesafety.
 2. They also initialize SST's context system to power our [`Hooks`](#hooks).
 
----
-
 ### Hooks
 
 The hooks in each module are functions that you can call anywhere in your application code. It has access to things that are specific to the current invocation. This avoids having to pass things through multiple function calls down to our domain code.
@@ -83,13 +75,9 @@ if (session.type === "user) {
 
 Behind the scenes, Hooks are powered by a SST's context system.
 
----
-
 ### Others
 
 Some of the modules also export types that can be used to define payloads for function calls. They also optionally export methods.
-
----
 
 ## Usage in tests
 
