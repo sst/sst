@@ -18,121 +18,125 @@ To view the latest release and all historical releases, <a href={`${config.githu
 
 ## Upgrade to v1.16
 
-[Resource Binding](./resource-binding.md) was introduced in this release. This simplies accessing the resources in your app.
+[Resource Binding](./resource-binding.md) was introduced in this release. This simplies accessing the resources in your app. For example, this is how to bind a Bucket to a Function:
 
-Follow these steps to start using Resource Binding. We will pass the bucket name to the Lamba function as an example.
+```diff
+const bucket = new Bucket(stack, "myFiles");
 
-- Bind SST constructs to Functions and Jobs.
+new Function(stack, "myFunction", {
+  handler: "lambda.handler",
+- environment: {
+-   BUCKET_NAME: bucket.bucketName,
+- },
+- permissions: [bucket],
++ bind: [bucket],
+});
+```
 
-  ```diff
-  const bucket = new Bucket(stack, "myFiles");
+And this is how to access the bucket's name in the function code:
 
-  new Function(stack, "myFunction", {
-    handler: "lambda.handler",
-  - environment: {
-  -   BUCKET_NAME: bucket.bucketName,
-  - },
-  - permissions: [bucket],
-  + bind: [bucket],
-  });
-  ```
+```diff
++ import { Bucket } from "@serverless-stack/node/bucket";
 
-- Now you can access the bucket's name in your function code.
-
-  ```diff
-  + import { Bucket } from "@serverless-stack/node/bucket";
-
-  - process.env.BUCKET_NAME
-  + Bucet.myFiles.bucketName
-  ```
-
-Read more about [Resource Binding](./resource-binding.md).
+- process.env.BUCKET_NAME
++ Bucet.myFiles.bucketName
+```
 
 ---
 
-#### Constructs
+Follow these steps to upgrade:
 
-- **Construct IDs need to be unique** and match the pattern `[a-zA-Z]([a-zA-Z0-9_])+`. If you have constructs with clashing IDs, change to a unique ID. And pass the old ID into `cdk.id` to ensure CloudFormation does not recreate the resource.
+1. **Secrets**
 
-  For example, if you have two buckets with the same id.
+    1. Because the paths for the SSM Parameters used to store the secrets have changed, you need to **run `sst deploy` or `sst start`** once after upgradraing. Then the `sst secrets` command will be able to pick up the secrets at the new path.
 
-  ```diff
-  - new Bucket(stack), "bucket");
-  - new Bucket(stack), "bucket");
+1. **Constructs**
 
-  + new Bucket(stack), "usersFiles", {
-  +   cdk: { id: "bucket" },
-  + });
-  + new Bucket(stack), "adminFiles", {
-  +   cdk: { id: "bucket" },
-  + });
-  ```
+    1. **Construct IDs need to be unique** and match the pattern `[a-zA-Z]([a-zA-Z0-9_])+`. If you have constructs with clashing IDs, change to a unique ID. And pass the old ID into `cdk.id` to ensure CloudFormation does not recreate the resource.
 
-- Function/Job: **Pass Secrets and Parameters into `bind`** instead of `config`. The `config` option will be removed in SST v2.
+        For example, if you have two buckets with the same id.
 
-  ```diff
-  new Function(stack, "myFn", {
-  - config: [MY_STRIPE_KEY],
-  + bind: [MY_STRIPE_KEY],
-  });
+        ```diff
+        - new Bucket(stack), "bucket");
+        - new Bucket(stack), "bucket");
 
-  new Job(stack, "myJob", {
-  - config: [MY_STRIPE_KEY],
-  + bind: [MY_STRIPE_KEY],
-  });
-  ```
+        + new Bucket(stack), "usersFiles", {
+        +   cdk: { id: "bucket" },
+        + });
+        + new Bucket(stack), "adminFiles", {
+        +   cdk: { id: "bucket" },
+        + });
+        ```
 
-- Function/Job: **Pass SST Constructs into `bind`** instead of `permissions` to grant permissions. `permissions` will not accept SST Constructs in SST v2.
+    1. Function/Job: **Pass Secrets and Parameters into `bind`** instead of `config`. The `config` option will be removed in SST v2.
 
-  ```diff
-  new Function(stack, "myFn", {
-  - permissions: [myTopic],
-  + bind: [myTopic],
-  });
+        ```diff
+        new Function(stack, "myFn", {
+        - config: [MY_STRIPE_KEY],
+        + bind: [MY_STRIPE_KEY],
+        });
 
-  new Job(stack, "myJob", {
-  - permissions: [myTopic],
-  + bind: [myTopic],
-  });
-  ```
+        new Job(stack, "myJob", {
+        - config: [MY_STRIPE_KEY],
+        + bind: [MY_STRIPE_KEY],
+        });
+        ```
 
-- App/Stack: **Pass Secrets and Parameters into `addDefaultFunctionBinding`** instead of `addDefaultFunctionConfig`. `addDefaultFunctionConfig` will be removed in SST v2
+    1. Function/Job: **Pass SST Constructs into `bind`** instead of `permissions` to grant permissions. `permissions` will not accept SST Constructs in SST v2.
 
-  ```diff
-  - app.addDefaultFunctionConfig([MY_STRIPE_KEY]);
-  + app.addDefaultFunctionBinding([MY_STRIPE_KEY]);
+        ```diff
+        new Function(stack, "myFn", {
+        - permissions: [myTopic, "s3"],
+        + permissions: ["s3"],
+        + bind: [myTopic],
+        });
 
-  - stack.addDefaultFunctionConfig([MY_STRIPE_KEY]);
-  + stack.addDefaultFunctionBinding([MY_STRIPE_KEY]);
-  ```
+        new Job(stack, "myJob", {
+        - permissions: [myTopic, "s3"],
+        + permissions: ["s3"],
+        + bind: [myTopic],
+        });
+        ```
 
-- App/Stack: **Pass SST Constructs into `addDefaultFunctionBinding`** instead of `addDefaultFunctionPermissions` to grant permissions. `addDefaultFunctionPermissions` will not accept SST Constructs in SST v2.
+    1. App/Stack: **Pass Secrets and Parameters into `addDefaultFunctionBinding`** instead of `addDefaultFunctionConfig`. `addDefaultFunctionConfig` will be removed in SST v2
 
-  ```diff
-  - app.addDefaultFunctionPermissions([myTopic]);
-  + app.addDefaultFunctionBinding([myTopic]);
+        ```diff
+        - app.addDefaultFunctionConfig([MY_STRIPE_KEY]);
+        + app.addDefaultFunctionBinding([MY_STRIPE_KEY]);
 
-  - stack.addDefaultFunctionPermissions([myTopic]);
-  + stack.addDefaultFunctionBinding([myTopic]);
-  ```
+        - stack.addDefaultFunctionConfig([MY_STRIPE_KEY]);
+        + stack.addDefaultFunctionBinding([MY_STRIPE_KEY]);
+        ```
 
-#### CLI
+    1. App/Stack: **Pass SST Constructs into `addDefaultFunctionBinding`** instead of `addDefaultFunctionPermissions` to grant permissions. `addDefaultFunctionPermissions` will not accept SST Constructs in SST v2.
 
-- **The `sst load-config` command is being renamed to `sst bind`** and will be removed in SST v2
+        ```diff
+        - app.addDefaultFunctionPermissions([myTopic, "s3"]);
+        + app.addDefaultFunctionPermissions(["s3"]);
+        + app.addDefaultFunctionBinding([myTopic]);
 
-  ```diff
-  - sst load-config -- vitest run
-  + sst bind -- vitest run
-  ```
+        - stack.addDefaultFunctionPermissions([myTopic, "s3"]);
+        + stack.addDefaultFunctionPermissions(["s3"]);
+        + stack.addDefaultFunctionBinding([myTopic]);
+        ```
 
-#### Client
+1. **CLI**
 
-- **Change `Job.run("myJob")` to `Job.myJob.run()`** in your functions code.
+    1. **The `sst load-config` command is being renamed to `sst bind`** and will be removed in SST v2
 
-  ```diff
-  - Job.run("myJob", { payload });
-  + Job.myJob.run({ payload });
-  ```
+        ```diff
+        - sst load-config -- vitest run
+        + sst bind -- vitest run
+        ```
+
+1. **Client**
+
+    1. **Change `Job.run("myJob")` to `Job.myJob.run()`** in your functions code.
+
+        ```diff
+        - Job.run("myJob", { payload });
+        + Job.myJob.run({ payload });
+        ```
 
 ---
 
