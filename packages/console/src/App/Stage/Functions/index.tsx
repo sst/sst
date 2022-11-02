@@ -119,7 +119,7 @@ function StackItem(props: { stack: StackInfo }) {
   const children = stack.constructs.all.flatMap((c) => {
     // TODO: This code is going to scale poorly
     switch (c.type) {
-      case "Auth":
+      case "Cognito":
         if (c.data.triggers.length === 0) return [];
         return c.data.triggers.map((t) => (
           <Function

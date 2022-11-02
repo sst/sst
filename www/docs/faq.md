@@ -67,7 +67,7 @@ What this means in practise is that SST gives you the following:
 2. Built-in support for writing [database migrations](what-is-sst.md#databases), [unit tests, and integration tests](advanced/testing.md) for your application code.
 3. Support for [deploying to separate environments](what-is-sst.md#environments), allowing for a PR workflow.
 4. Higher-level constructs for common use cases like [APIs](constructs/Api.md), [databases](constructs/RDS.md), [cron jobs](constructs/Cron.md), etc.
-5. [Type-safe libraries](packages/node.md) for your Lambda functions.
+5. [Type-safe libraries](clients/index.md) for your Lambda functions.
 
 #### First-class local development environment
 

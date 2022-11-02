@@ -16,10 +16,11 @@ import { State, Runtime, DeferBuilder } from "@serverless-stack/core";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Job } from "./Job.js";
-import { Secret, Parameter, configToEnvironmentVariables, configToPolicyStatement } from "./Config.js";
-import { SSTConstruct } from "./Construct.js";
+import { Secret, Parameter } from "./Config.js";
+import { isSSTConstruct, SSTConstruct } from "./Construct.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
+import { bindEnvironment, bindParameters, bindPermissions } from "./util/functionBinding.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import * as functionUrlCors from "./util/functionUrlCors.js";
 
@@ -213,21 +214,6 @@ export interface FunctionProps
    * ```js
    * new Function(stack, "Function", {
    *   handler: "src/function.handler",
-   *   config: [
-   *     STRIPE_KEY,
-   *     API_URL,
-   *   ]
-   * })
-   * ```
-   */
-  config?: (Secret | Parameter)[];
-  /**
-   * Configure environment variables for the function
-   *
-   * @example
-   * ```js
-   * new Function(stack, "Function", {
-   *   handler: "src/function.handler",
    *   environment: {
    *     TABLE_NAME: table.tableName,
    *   }
@@ -250,13 +236,46 @@ export interface FunctionProps
    */
   bundle?: FunctionBundleProp;
   /**
+   * Bind resources for the function
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
+   *   bind: [STRIPE_KEY, bucket],
+   * })
+   * ```
+   */
+  bind?: SSTConstruct[];
+  /**
+   * Configure environment variables for the function
+   *
+   * @deprecated The "config" prop is deprecated, and will be removed in SST v2. Pass Parameters and Secrets in through the "bind" prop. Read more about how to upgrade here — https://docs.serverless-stack.com/constructs/function
+   * 
+   * @example
+   * ```js
+   * // Change
+   * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
+   *   config: [STRIPE_KEY, API_URL]
+   * })
+   * 
+   * // To
+   * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
+   *   bind: [STRIPE_KEY, API_URL]
+   * })
+   * ```
+   */
+  config?: (Secret | Parameter)[];
+  /**
    * Attaches the given list of permissions to the function. Configuring this property is equivalent to calling `attachPermissions()` after the function is created.
    *
    * @example
    * ```js
    * new Function(stack, "Function", {
    *   handler: "src/function.handler",
-   *   permissions: ["ses", bucket]
+   *   permissions: ["ses"]
    * })
    * ```
    */
@@ -700,7 +719,10 @@ export interface FunctionBundleCopyFilesProps {
  * ```
  */
 export class Function extends lambda.Function implements SSTConstruct {
+  public readonly id: string;
   public readonly _isLiveDevEnabled: boolean;
+  /** @internal */
+  public _disableBind?: boolean;
   private readonly localId: string;
   private functionUrl?: lambda.FunctionUrl;
   private props: FunctionProps;
@@ -948,6 +970,7 @@ export class Function extends lambda.Function implements SSTConstruct {
       })
     }
 
+    this.id = id;
     this.props = props || {};
 
     if (isNodeRuntime) {
@@ -965,6 +988,7 @@ export class Function extends lambda.Function implements SSTConstruct {
     this.addEnvironment("SST_APP", app.name, { removeInEdge: true });
     this.addEnvironment("SST_STAGE", app.stage, { removeInEdge: true });
     this.addConfig(props.config || []);
+    this.bind(props.bind || []);
 
     this.createUrl();
 
@@ -986,7 +1010,65 @@ export class Function extends lambda.Function implements SSTConstruct {
   }
 
   /**
-   * Attaches additional permissions to function
+   * Binds additional resources to function.
+   *
+   * @example
+   * ```js
+   * fn.bind([STRIPE_KEY, bucket]);
+   * ```
+   */
+  public bind(constructs: SSTConstruct[]): void {
+    const app = this.node.root as App;
+
+    constructs.forEach(c => {
+      // Bind environment
+      const env = bindEnvironment(c);
+      Object.entries(env).forEach(([key, value]) =>
+        this.addEnvironment(key, value)
+      );
+
+      // Bind parameters
+      bindParameters(c);
+
+      // Bind permissions
+      const permissions = bindPermissions(c);
+      Object.entries(permissions).forEach(([action, resources]) =>
+        this.attachPermissions([new iam.PolicyStatement({
+          actions: [action],
+          effect: iam.Effect.ALLOW,
+          resources,
+        })])
+      )
+    });
+  }
+
+  /**
+   * Attaches additional configs to function.
+   * 
+   * @deprecated The "config" prop is deprecated, and will be removed in SST v2. Pass Parameters and Secrets in through the "bind" prop. Read more about how to upgrade here — https://docs.serverless-stack.com/constructs/function
+   * 
+   * @example
+   * ```js
+   * const STRIPE_KEY = new Config.Secret(stack, "STRIPE_KEY");
+   *
+   * // Change
+   * job.addConfig([STRIPE_KEY]);
+   * 
+   * // To
+   * job.bind([STRIPE_KEY]);
+   * ```
+   */
+  public addConfig(config: (Secret | Parameter)[]): void {
+    const app = this.node.root as App;
+    this.bind(config);
+
+    if (config.length > 0) {
+      app.reportWarning("usingConfig");
+    }
+  }
+
+  /**
+   * Attaches additional permissions to function.
    *
    * @example
    * ```js {20}
@@ -1003,47 +1085,44 @@ export class Function extends lambda.Function implements SSTConstruct {
     if (permissions !== "*") {
       permissions
         .filter((p) => p instanceof Job)
-        .forEach((p) => this.addConfig([(p as Job)._jobParameter]));
+        .forEach((p) => this.bind([p as Job]));
+    }
+
+    // Warn user if SST constructs are passed into permissions
+    if (permissions !== "*" && permissions.some((p) => isSSTConstruct(p))) {
+      const app = this.node.root as App;
+      app.reportWarning("usingPermissionsWithSSTConstruct");
     }
   }
 
-  /**
-   * Attaches additional configs to function
-   *
-   * @example
-   * ```js
-   * const STRIPE_KEY = new Config.Secret(stack, "STRIPE_KEY");
-   *
-   * fn.addConfig([STRIPE_KEY]);
-   * ```
-   */
-  public addConfig(config: (Secret | Parameter)[]): void {
-    const app = this.node.root as App;
-
-    // Add environment variables
-    const env = configToEnvironmentVariables(config);
-    Object.entries(env).forEach(([key, value]) =>
-      this.addEnvironment(key, value)
-    );
-
-    // Attach permissions
-    const policyStatement = configToPolicyStatement(app, config);
-    if (policyStatement) {
-      this.attachPermissions([policyStatement]);
-    }
-  }
-
+  /** @internal */
   public getConstructMetadata() {
-    const { config } = this.props;
+    const { config, bind } = this.props;
 
     return {
       type: "Function" as const,
       data: {
         localId: this.localId,
         arn: this.functionArn,
-        secrets: (config || [])
+        secrets: ([...(config || []), ...(bind || [])])
           .filter((c) => c instanceof Secret)
-          .map((c) => c.name),
+          .map((c) => (c as Secret).name),
+      },
+    };
+  }
+
+  /** @internal */
+  public getFunctionBinding() {
+    return {
+      clientPackage: "function",
+      variables: {
+        functionName: {
+          environment: this.functionName,
+          parameter: this.functionName,
+        },
+      },
+      permissions: {
+        "lambda:*": [this.functionArn],
       },
     };
   }
@@ -1203,10 +1282,12 @@ export class Function extends lambda.Function implements SSTConstruct {
     inheritErrorMessage?: string
   ): Function {
     if (typeof definition === "string") {
-      return new Function(scope, id, {
+      const fn = new Function(scope, id, {
         ...(inheritedProps || {}),
         handler: definition,
       });
+      fn._disableBind = true;
+      return fn;
     } else if (definition instanceof Function) {
       if (inheritedProps && Object.keys(inheritedProps).length > 0) {
         throw new Error(
@@ -1220,11 +1301,13 @@ export class Function extends lambda.Function implements SSTConstruct {
         `Please use sst.Function instead of lambda.Function for the "${id}" Function.`
       );
     } else if ((definition as FunctionProps).handler !== undefined) {
-      return new Function(
+      const fn = new Function(
         scope,
         id,
         Function.mergeProps(inheritedProps, definition)
       );
+      fn._disableBind = true;
+      return fn;
     }
     throw new Error(`Invalid function definition for the "${id}" Function`);
   }
@@ -1249,6 +1332,10 @@ export class Function extends lambda.Function implements SSTConstruct {
     const config = [...(baseProps?.config || []), ...(props?.config || [])];
     const configProp = config.length === 0 ? {} : { config };
 
+    // Merge bind
+    const bind = [...(baseProps?.bind || []), ...(props?.bind || [])];
+    const bindProp = bind.length === 0 ? {} : { bind };
+
     // Merge permissions
     let permissionsProp;
     if (baseProps?.permissions === "*") {
@@ -1265,6 +1352,7 @@ export class Function extends lambda.Function implements SSTConstruct {
     return {
       ...(baseProps || {}),
       ...(props || {}),
+      ...bindProp,
       ...configProp,
       ...layersProp,
       ...environmentProp,

@@ -44,6 +44,7 @@ import {
   buildErrorResponsesForRedirectToIndex,
 } from "./BaseSite.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
+import { ENVIRONMENT_PLACEHOLDER, FunctionBindingProps, getParameterPath } from "./util/functionBinding.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -59,43 +60,6 @@ export interface RemixDomainProps extends BaseSiteDomainProps { }
 export interface RemixCdkDistributionProps
   extends BaseSiteCdkDistributionProps { }
 export interface RemixSiteProps {
-  cdk?: {
-    /**
-     * Allows you to override default settings this construct uses internally to ceate the bucket
-     */
-    bucket?: s3.BucketProps | s3.IBucket;
-    /**
-     * Pass in a value to override the default settings this construct uses to
-     * create the CDK `Distribution` internally.
-     */
-    distribution?: RemixCdkDistributionProps;
-    /**
-     * Override the default CloudFront cache policies created internally.
-     */
-    cachePolicies?: {
-      /**
-       * Override the CloudFront cache policy properties for browser build files.
-       */
-      buildCachePolicy?: cloudfront.ICachePolicy;
-      /**
-       * Override the CloudFront cache policy properties for "public" folder
-       * static files.
-       *
-       * Note: This will not include the browser build files, which have a seperate
-       * cache policy; @see `buildCachePolicy`.
-       */
-      staticsCachePolicy?: cloudfront.ICachePolicy;
-      /**
-       * Override the CloudFront cache policy properties for responses from the
-       * server rendering Lambda.
-       *
-       * @note The default cache policy that is used in the abscene of this property
-       * is one that performs no caching of the server response.
-       */
-      serverCachePolicy?: cloudfront.ICachePolicy;
-    };
-  };
-
   /**
    * The Remix app server is deployed to a Lambda function in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
    *
@@ -179,6 +143,47 @@ export interface RemixSiteProps {
    * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
    */
   waitForInvalidation?: boolean;
+
+  cdk?: {
+    /**
+     * Allows you to override default id for this construct.
+     */
+    id?: string;
+    /**
+     * Allows you to override default settings this construct uses internally to ceate the bucket
+     */
+    bucket?: s3.BucketProps | s3.IBucket;
+    /**
+     * Pass in a value to override the default settings this construct uses to
+     * create the CDK `Distribution` internally.
+     */
+    distribution?: RemixCdkDistributionProps;
+    /**
+     * Override the default CloudFront cache policies created internally.
+     */
+    cachePolicies?: {
+      /**
+       * Override the CloudFront cache policy properties for browser build files.
+       */
+      buildCachePolicy?: cloudfront.ICachePolicy;
+      /**
+       * Override the CloudFront cache policy properties for "public" folder
+       * static files.
+       *
+       * Note: This will not include the browser build files, which have a seperate
+       * cache policy; @see `buildCachePolicy`.
+       */
+      staticsCachePolicy?: cloudfront.ICachePolicy;
+      /**
+       * Override the CloudFront cache policy properties for responses from the
+       * server rendering Lambda.
+       *
+       * @note The default cache policy that is used in the abscene of this property
+       * is one that performs no caching of the server response.
+       */
+      serverCachePolicy?: cloudfront.ICachePolicy;
+    };
+  };
 }
 
 /**
@@ -195,6 +200,7 @@ export interface RemixSiteProps {
  * ```
  */
 export class RemixSite extends Construct implements SSTConstruct {
+  public readonly id: string;
   /**
    * The default CloudFront cache policy properties for browser build files.
    */
@@ -296,8 +302,9 @@ export class RemixSite extends Construct implements SSTConstruct {
   private awsCliLayer: AwsCliLayer;
 
   constructor(scope: Construct, id: string, props: RemixSiteProps) {
-    super(scope, id);
+    super(scope, props.cdk?.id || id);
 
+    this.id = id;
     const app = scope.node.root as App;
     try {
       this.isPlaceholder =
@@ -480,6 +487,29 @@ export class RemixSite extends Construct implements SSTConstruct {
       data: {
         distributionId: this.cdk.distribution.distributionId,
         customDomainUrl: this.customDomainUrl,
+      },
+    };
+  }
+
+  /** @internal */
+  public getFunctionBinding(): FunctionBindingProps {
+    const app = this.node.root as App;
+    return {
+      clientPackage: "site",
+      variables: {
+        url: {
+          // Do not set real value b/c we don't want to make the Lambda function
+          // depend on the Site. B/c often the site depends on the Api, causing
+          // a CloudFormation circular dependency if the Api and the Site belong
+          // to different stacks.
+          environment: ENVIRONMENT_PLACEHOLDER,
+          parameter: this.customDomainUrl || this.url,
+        },
+      },
+      permissions: {
+        "ssm:GetParameters": [
+          `arn:aws:ssm:${app.region}:${app.account}:parameter${getParameterPath(this, "url")}`,
+        ],
       },
     };
   }

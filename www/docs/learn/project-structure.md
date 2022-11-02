@@ -43,7 +43,7 @@ We'll look at how our monorepo is split up with [Workspaces](https://docs.npmjs.
 
 ## `stacks/`
 
-The `stacks/` directory contains the app's infrastructure as defined as code. Or what is known as [Infrastructure as Code](https://sst.dev/chapters/what-is-infrastructure-as-code.html) (IaC). SST by default uses TypeScript to define your infrastructure (you can also use JavaScript).
+The `stacks/` directory contains the app's infrastructure as defined as code. Or what is known as [Infrastructure as Code](https://sst.dev/chapters/what-is-infrastructure-as-code.html) (IaC). SST by default uses TypeScript to define your infrastructure. You can also use JavaScript.
 
 We typically group related resources together into stacks. In the `stacks/` directory there are a couple of files:
 
@@ -51,7 +51,7 @@ We typically group related resources together into stacks. In the `stacks/` dire
 
   ```ts title="stacks/Database.ts"
   export function Database({ stack }: StackContext) {
-    const rds = new RDS(stack, "rds", {
+    const rds = new RDS(stack, "db", {
       engine: "postgresql11.13",
 
     // ...
@@ -60,45 +60,31 @@ We typically group related resources together into stacks. In the `stacks/` dire
   Stacks also allow us to return props that we can reference in other stacks.
 
   ```ts
-  return {
-    rds,
-    parameters: [
-      new Config.Parameter(stack, "RDS_SECRET_ARN", {
-        value: rds.secretArn,
-      }),
-      new Config.Parameter(stack, "RDS_DATABASE", {
-        value: rds.defaultDatabaseName,
-      }),
-      new Config.Parameter(stack, "RDS_ARN", {
-        value: rds.clusterArn,
-      }),
-    ],
-  };
+  return rds;
   ```
-
-  Aside from returning props, we are also setting some `Config` parameters; the database ARN, database name, and ARN of the secret to access the database. An ARN is an AWS identifier. While `Config` is SST's recommended way of managing environment variables and secrets across the app. You can [read more about it here](../environment-variables.md).
 
 - `Api.ts` creates an API with a GraphQL endpoint at `/graphql` using [API Gateway](https://aws.amazon.com/api-gateway/).
 
   ```ts title="stacks/Api.ts"
   export function Api({ stack }: StackContext) {
-    const db = use(Database);
+    const rds = use(Database);
 
     const api = new ApiGateway(stack, "api", {
 
     // ...
   ```
 
-  The `use(Database)` call gives this stack access to the props that the `Database` stack returns.
+  The `use(Database)` call gives this stack access to the props that the `Database` stack returns. So `rds` is coming from the return statement of our `Database` stack.
+
+  We _bind_ the database to our API so that the functions that power our API have access to it.
 
   ```ts {2}
   function: {
-    permissions: [db.rds],
-    config: [...db.parameters],
+    bind: [rds],
   },
   ```
 
-  So `rds` and `parameters` are coming from the return statement of our `Database` stack.
+  The `bind` prop does two things for us. It gives our functions permissions to access the database. Also our functions are loaded with the database details required to query it. You can [read more about Resource Binding](../resource-binding.md).
 
 - `Web.ts` creates a [Vite](https://vitejs.dev) static site hosted on [S3](https://aws.amazon.com/s3/), and serves the contents through a CDN using [CloudFront](https://aws.amazon.com/cloudfront/).
 
@@ -210,7 +196,7 @@ Our starter also comes with a few helpful scripts.
   "remove": "sst remove",
   "console": "sst console",
   "typecheck": "tsc --noEmit",
-  "test": "sst load-config -- vitest run",
+  "test": "sst bind -- vitest run",
   "gen": "hygen"
 },
 ```

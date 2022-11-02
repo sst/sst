@@ -1,5 +1,6 @@
 import { test, expect, vi } from "vitest";
 import {
+  ANY,
   countResources,
   countResourcesLike,
   hasResource,
@@ -14,7 +15,7 @@ import * as rds from "aws-cdk-lib/aws-rds";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
-import { App, RDS, Stack, Table, AppSyncApi, Function } from "../src";
+import { App, RDS, Bucket, Stack, Table, AppSyncApi, Function } from "../src";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
@@ -1156,6 +1157,116 @@ test("attachPermissions-after-addResolvers", async () => {
       Statement: [
         lambdaDefaultPolicy,
         { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+});
+
+test("bind", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "bucket");
+  const api = new AppSyncApi(stack, "Api", {
+    resolvers: {
+      "Query notes": "test/lambda.handler",
+      "Query notes2": "test/lambda.handler",
+    },
+  });
+  api.bind([bucket]);
+  countResourcesLike(stack, "AWS::IAM::Policy", 2, {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+});
+
+test("bindToDataSource-dataSource-key", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "bucket");
+  const api = new AppSyncApi(stack, "Api", {
+    dataSources: {
+      lambdaDS: "test/lambda.handler",
+      lambdaDS2: "test/lambda.handler",
+    },
+  });
+  api.bindToDataSource("lambdaDS", [bucket]);
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [lambdaDefaultPolicy],
+      Version: "2012-10-17",
+    },
+  });
+});
+
+test("bindToDataSource-resolver-key", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "bucket");
+  const api = new AppSyncApi(stack, "Api", {
+    resolvers: {
+      "Query notes": "test/lambda.handler",
+      "Query notes2": "test/lambda.handler",
+    },
+  });
+  api.bindToDataSource("Query notes", [bucket]);
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [lambdaDefaultPolicy],
+      Version: "2012-10-17",
+    },
+  });
+});
+
+test("bind-after-addResolvers", async () => {
+  const app = new App();
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  const bucket = new Bucket(stackB, "bucket");
+  const api = new AppSyncApi(stackA, "Api", {
+    resolvers: {
+      "Query notes": "test/lambda.handler",
+      "Query notes2": "test/lambda.handler",
+    },
+  });
+  api.bind([bucket]);
+  api.addResolvers(stackB, {
+    "Query notes3": "test/lambda.handler",
+  });
+  countResourcesLike(stackA, "AWS::IAM::Policy", 2, {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+  countResourcesLike(stackB, "AWS::IAM::Policy", 1, {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
       ],
       Version: "2012-10-17",
     },

@@ -84,6 +84,12 @@ new Cron(stack, "Cron", {
 ```
 
 
+### cdk.id?
+
+_Type_ : <span class="mono">string</span>
+
+Allows you to override default id for this construct.
+
 ### cdk.rule?
 
 _Type_ : <span class="mono">[RuleProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events.RuleProps.html)</span>
@@ -93,6 +99,10 @@ Override the default settings this construct uses internally to create the event
 
 ## Properties
 An instance of `Cron` has the following properties.
+### id
+
+_Type_ : <span class="mono">string</span>
+
 ### jobFunction
 
 _Type_ : <span class="mono">[Function](Function#function)</span>
@@ -118,8 +128,31 @@ _Parameters_
 - __permissions__ <span class="mono">[Permissions](Permissions)</span>
 
 
-Attaches the given list of [permissions](Permissions.md) to the `jobFunction`. This allows the function to access other AWS resources.
-Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
+Attaches the given list of permissions to the cron job. This allows the function to access other AWS resources.
+
+
+
+```js
+cron.attachPermissions(["s3"]);
+```
+
+
+### bind
+
+```ts
+bind(constructs)
+```
+_Parameters_
+- __constructs__ <span class='mono'>Array&lt;<span class="mono">SSTConstruct</span>&gt;</span>
+
+
+Binds the given list of resources to the cron job.
+
+
+
+```js
+cron.bind([STRIPE_KEY, bucket]);
+```
 
 
 ## CronJobProps

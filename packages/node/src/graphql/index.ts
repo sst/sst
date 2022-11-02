@@ -9,13 +9,13 @@ import {
   ProcessRequestOptions,
   Request,
 } from "graphql-helix";
-import { Handler, useEvent, useLambdaContext } from "../context/handler";
+import { Handler, useEvent, useLambdaContext } from "../context/handler.js";
 import {
   useHeaders,
   useMethod,
   useJsonBody,
   useQueryParams,
-} from "../context/http";
+} from "../api/index.js";
 
 interface GraphQLHandlerConfig<C> {
   /**

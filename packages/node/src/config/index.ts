@@ -1,30 +1,31 @@
 import { GetParametersCommand, SSMClient, Parameter } from "@aws-sdk/client-ssm";
 const ssm = new SSMClient({});
+import { createProxy, parseEnvironment, buildSsmPath, buildSsmFallbackPath } from "../util/index.js";
 
-const SECRET_ENV_PREFIX = "SST_SECRET_";
-const PARAM_ENV_PREFIX = "SST_PARAM_";
-const SECRET_SSM_PREFIX = `/sst/${process.env.SST_APP}/${process.env.SST_STAGE}/secrets/`;
-const SECRET_FALLBACK_SSM_PREFIX = `/sst/${process.env.SST_APP}/.fallback/secrets/`;
+export interface ParameterResources { };
+export interface SecretResources { };
 
-export interface ConfigType {};
-export const Config = new Proxy<ConfigType>({} as any, {
-  get(target, prop, receiver) {
-    if (!(prop in target)) {
-      throw new Error(`Config.${String(prop)} has not been set for this function.`);
-    }
-    return Reflect.get(target, prop, receiver);
-  }
-});
+export interface ConfigTypes { };
+export type ParameterTypes = {
+  [T in keyof ParameterResources]: string;
+};
+export type SecretTypes = {
+  [T in keyof SecretResources]: string;
+};
 
-storeMetadataInConfig();
-await storeSecretsInConfig();
-storeParametersInConfig();
+export const Config = createProxy<ConfigTypes & ParameterTypes & SecretTypes>("Config");
+const metadata = parseMetadataEnvironment();
+const parameters = parseEnvironment("Parameter", ["value"]);
+const secrets = parseEnvironment("Secret", ["value"]);
+flattenParameterValues();
+await replaceSecretsWithRealValues();
+Object.assign(Config, metadata, parameters, secrets);
 
 ///////////////
 // Functions
 ///////////////
 
-function storeMetadataInConfig() {
+function parseMetadataEnvironment() {
   // If SST_APP and SST_STAGE are not set, it is likely the
   // user is using an older version of SST.
   const errorMsg = "This is usually the case when you are using an older version of SST. Please update SST to the latest version to use the SST Config feature.";
@@ -34,60 +35,59 @@ function storeMetadataInConfig() {
   if (!process.env.SST_STAGE) {
     throw new Error(`Cannot find the SST_STAGE environment variable. ${errorMsg}`);
   }
-  // @ts-ignore
-  Config.APP = process.env.SST_APP;
-  // @ts-ignore
-  Config.STAGE = process.env.SST_STAGE;
+  return {
+    APP: process.env.SST_APP,
+    STAGE: process.env.SST_STAGE,
+  };
 }
 
-async function storeSecretsInConfig() {
+function flattenParameterValues() {
+  Object.keys(parameters).forEach((name) => {
+    // @ts-ignore
+    parameters[name] = parameters[name].value;
+  });
+}
+
+async function replaceSecretsWithRealValues() {
   // Find all the secrets and params that match the prefix
-  const names = Object.keys(process.env)
-    .filter((key) => key.startsWith(SECRET_ENV_PREFIX))
-    .map(envNameToSecretName);
+  const names = Object
+    .keys(secrets)
+    .filter((name) => secrets[name].value === "__FETCH_FROM_SSM__");
   if (names.length === 0) {
     return;
   }
 
   // Fetch all secrets
-  const secrets = [];
-  const results = await loadSecrets(SECRET_SSM_PREFIX, names);
-  secrets.push(...results.validParams);
+  const ssmParams = [];
+  const paths = names.map((name) => buildSsmPath("Secret", name, "value"));
+  const results = await loadSecrets(paths);
+  ssmParams.push(...results.validParams);
   if (results.invalidParams.length > 0) {
     // Fetch fallback
-    const missingNames = results.invalidParams.map(ssmNameToConfigName);
-    const missingResults = await loadSecrets(SECRET_FALLBACK_SSM_PREFIX, missingNames);
-    secrets.push(...missingResults.validParams);
+    const missingNames = results.invalidParams.map(ssmNameToConstructId);
+    const missingPaths = missingNames.map((name) => buildSsmFallbackPath("Secret", name, "value"));
+    const missingResults = await loadSecrets(missingPaths);
+    ssmParams.push(...missingResults.validParams);
     if (missingResults.invalidParams.length > 0) {
       throw new Error(
-        `The following secrets were not found: ${names.join(", ")}`
+        `The following secrets were not found: ${missingNames.join(", ")}`
       );
     }
   }
 
   // Store all secrets in a map
-  for (const item of secrets) {
-    const name = ssmNameToConfigName(item.Name!);
+  for (const item of ssmParams) {
+    const name = ssmNameToConstructId(item.Name!);
     // @ts-ignore
-    Config[name] = item.Value!;
+    secrets[name] = item.Value!;
   }
 }
 
-function storeParametersInConfig() {
-  Object.keys(process.env)
-    .filter((key) => key.startsWith(PARAM_ENV_PREFIX))
-    .forEach((key) => {
-      const name = envNameToParameterName(key);
-      // @ts-ignore
-      Config[name] = process.env[key];
-    });
-}
-
-async function loadSecrets(prefix: string, keys: string[]) {
-  // Split keys into chunks of 10
+async function loadSecrets(paths: string[]) {
+  // Split paths into chunks of 10
   const chunks = [];
-  for (let i = 0; i < keys.length; i += 10) {
-    chunks.push(keys.slice(i, i + 10));
+  for (let i = 0; i < paths.length; i += 10) {
+    chunks.push(paths.slice(i, i + 10));
   }
 
   // Fetch secrets
@@ -96,7 +96,7 @@ async function loadSecrets(prefix: string, keys: string[]) {
   await Promise.all(
     chunks.map(async (chunk) => {
       const command = new GetParametersCommand({
-        Names: chunk.map((key) => `${prefix}${key}`),
+        Names: chunk,
         WithDecryption: true,
       });
       const result = await ssm.send(command);
@@ -107,14 +107,6 @@ async function loadSecrets(prefix: string, keys: string[]) {
   return { validParams, invalidParams };
 }
 
-function ssmNameToConfigName(ssmName: string) {
-  return ssmName.split("/").pop()!;
-}
-
-function envNameToSecretName(ssmName: string) {
-  return ssmName.replace(new RegExp(`^${SECRET_ENV_PREFIX}`), "");
-}
-
-function envNameToParameterName(ssmName: string) {
-  return ssmName.replace(new RegExp(`^${PARAM_ENV_PREFIX}`), "");
+function ssmNameToConstructId(ssmName: string) {
+  return ssmName.split("/")[5];
 }

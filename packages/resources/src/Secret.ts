@@ -1,5 +1,7 @@
 import { Construct } from "constructs";
-import { assertNameNotInUse } from "./Config.js";
+import { App } from "./App.js";
+import { SSTConstruct } from "./Construct.js";
+import { ENVIRONMENT_PLACEHOLDER, getParameterPath, getParameterFallbackPath, FunctionBindingProps } from "./util/functionBinding.js";
 
 /**
  * The `Secret` construct is a higher level CDK construct that makes it easy to manage app secrets.
@@ -13,33 +15,14 @@ import { assertNameNotInUse } from "./Config.js";
  * new Config.Secret(stack, "STRIPE_KEY");
  * ```
  */
-export class Secret extends Construct {
+export class Secret extends Construct implements SSTConstruct {
+  public readonly id: string;
   public readonly name: string;
-  private static all = new Set<string>();
 
   constructor(scope: Construct, id: string) {
     super(scope, id);
-
+    this.id = id;
     this.name = id;
-
-    assertNameNotInUse(id);
-
-    Secret.all.add(id);
-  }
-
-  /** @internal */
-  public static getAllNames(): string[] {
-    return Array.from(Secret.all);
-  }
-
-  /** @internal */
-  public static hasName(name: string) {
-    return Secret.all.has(name);
-  }
-
-  /** @internal */
-  public static clear() {
-    Secret.all.clear();
   }
 
   /** @internal */
@@ -48,6 +31,27 @@ export class Secret extends Construct {
       type: "Secret" as const,
       data: {
         name: this.name,
+      },
+    };
+  }
+
+  /** @internal */
+  public getFunctionBinding(): FunctionBindingProps {
+    const app = this.node.root as App;
+    return {
+      clientPackage: "config",
+      variables: {
+        value: {
+          environment: ENVIRONMENT_PLACEHOLDER,
+          // SSM parameters will be created manually via CLI
+          parameter: undefined,
+        },
+      },
+      permissions: {
+        "ssm:GetParameters": [
+          `arn:aws:ssm:${app.region}:${app.account}:parameter${getParameterPath(this, "value")}`,
+          `arn:aws:ssm:${app.region}:${app.account}:parameter${getParameterFallbackPath(this, "value")}`
+        ],
       },
     };
   }

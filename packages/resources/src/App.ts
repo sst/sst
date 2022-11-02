@@ -7,7 +7,7 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as cxapi from "aws-cdk-lib/cx-api";
-import { Bootstrap, DeferBuilder, State } from "@serverless-stack/core";
+import { logger, Bootstrap, DeferBuilder, State } from "@serverless-stack/core";
 import { Stack } from "./Stack.js";
 import {
   SSTConstruct,
@@ -15,11 +15,11 @@ import {
   isSSTConstruct,
   isStackConstruct
 } from "./Construct.js";
-import { FunctionProps, FunctionHandlerProps } from "./Function.js";
+import { Function, FunctionProps, FunctionHandlerProps } from "./Function.js";
 import * as Config from "./Config.js";
-import { Job } from "./Job.js";
 import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite.js";
 import { Permissions } from "./util/permission.js";
+import { bindType } from "./util/functionBinding.js";
 import { StackProps } from "./Stack.js";
 import { FunctionalStack, stack } from "./FunctionalStack.js";
 import { createRequire } from "module";
@@ -79,6 +79,9 @@ export interface AppDeployProps {
 }
 
 type AppRemovalPolicy = Lowercase<keyof typeof cdk.RemovalPolicy>;
+
+type AppWarningType = "usingConfig"
+  | "usingPermissionsWithSSTConstruct";
 
 export type AppProps = cdk.AppProps;
 
@@ -167,6 +170,9 @@ export class App extends cdk.App {
    * @internal
    */
   public readonly skipBuild: boolean;
+
+  /** @internal */
+  private warnings: { [key in AppWarningType]?: boolean } = {};
 
   /**
    * @internal
@@ -284,16 +290,34 @@ export class App extends cdk.App {
 
   /**
    * Adds additional default config to be applied to all Lambda functions in the app.
+   * 
+   * @deprecated The "addDefaultFunctionConfig" method will be removed in SST v2. Pass Parameters and Secrets in through the "addDefaultFunctionBinding" function. Read more about how to upgrade here — https://docs.serverless-stack.com/upgrade-guide#upgrade-to-v116
    *
    * @example
    * ```js
-   * app.addDefaultFunctionConfig([STRIPE_KEY])
+   * // Change
+   * app.addDefaultFunctionConfig([STRIPE_KEY]);
+   * 
+   * // To
+   * app.addDefaultFunctionBinding([STRIPE_KEY]);
    * ```
    */
   public addDefaultFunctionConfig(
     config: (Config.Secret | Config.Parameter)[]
   ) {
     this.defaultFunctionProps.push({ config });
+  }
+
+  /**
+   * Binds additional default resources to be applied to all Lambda functions in the app.
+   *
+   * @example
+   * ```js
+   * app.addDefaultFunctionBinding([STRIPE_KEY, bucket]);
+   * ```
+   */
+  public addDefaultFunctionBinding(bind: SSTConstruct[]) {
+    this.defaultFunctionProps.push({ bind });
   }
 
   /**
@@ -306,12 +330,12 @@ export class App extends cdk.App {
   }
 
   synth(options: cdk.StageSynthesisOptions = {}): cxapi.CloudAssembly {
+    Auth.injectConfig();
+    this.ensureUniqueConstructIds();
     this.codegenTypes();
     this.buildConstructsMetadata();
-
-    Auth.injectConfig();
-
     this.removeGovCloudUnsupportedResourceProperties();
+    this.printWarnings();
 
     for (const child of this.node.children) {
       if (isStackConstruct(child)) {
@@ -511,14 +535,70 @@ export class App extends cdk.App {
     cdk.Aspects.of(this).add(new RemoveGovCloudUnsupportedResourceProperties());
   }
 
-  private codegenTypes() {
-    const nodeModulesPath = this.codegenFindNodeModulesPath();
-    if (nodeModulesPath) {
-      const typesPath = path.resolve(nodeModulesPath, "node_modules", "@types", "serverless-stack__node");
-      this.codegenCreateFile(typesPath);
-      Config.codegenTypes(typesPath);
-      Job.codegenTypes(typesPath);
+  private ensureUniqueConstructIds() {
+    const ids: Record<string, Set<string>> = {};
+
+    class EnsureUniqueConstructIds implements cdk.IAspect {
+      public visit(c: IConstruct): void {
+        if (!isSSTConstruct(c)) { return; }
+        if (c instanceof Function && c._disableBind) { return; }
+
+        const className = c.constructor.name;
+        const id = c.id;
+        const existingIds = ids[className] || new Set();
+
+        if (!id.match(/^[a-zA-Z]([a-zA-Z0-9_])*$/)) {
+          throw new Error([
+            `Invalid id "${id}" for ${className} construct.`,
+            ``,
+            `Starting v1.16, construct ids can only contain alphabetic characters and underscores ("_"), and must start with an alphabetic character. If you are migrating from version 1.15 or earlier, please see the upgrade guide — https://docs.serverless-stack.com/upgrade-guide#upgrade-to-v116`,
+          ].join("\n"));
+        }
+        else if (["Parameter", "Secret"].includes(className)
+          && (ids.Secret?.has(id) || ids.Parameter?.has(id))) {
+          throw new Error(`ERROR: Config with id "${id}" already exists.`);
+        }
+        else if (existingIds.has(id)) {
+          throw new Error([
+            `${className} construct with id "${id}" already exists.`,
+            ``,
+            `Starting v1.16, constructs must have unique ids for a given construct type. If you are migrating from version 1.15 or earlier, set the "cdk.id" in the construct with the existing id, and pick a unique id for the construct. Please see the upgrade guide — https://docs.serverless-stack.com/upgrade-guide#upgrade-to-v116`,
+            ``,
+            `    For example, if you have two Bucket constructs with the same id:`,
+            `      new Bucket(this, "bucket");`,
+            `      new Bucket(this, "bucket");`,
+            ``,
+            `    Change it to:`,
+            `      new Bucket(this, "usersBucket", {`,
+            `        cdk: {`,
+            `          id: "bucket"`,
+            `        }`,
+            `      });`,
+            `      new Bucket(this, "adminBucket", {`,
+            `        cdk: {`,
+            `          id: "bucket"`,
+            `        }`,
+            `      });`,
+          ].join("\n"));
+        }
+        existingIds.add(id);
+        ids[className] = existingIds;
+      }
     }
+
+    cdk.Aspects.of(this).add(new EnsureUniqueConstructIds());
+  }
+
+  private codegenTypes() {
+    // Find the node_modules folder to create the type files in
+    const nodeModulesPath = this.codegenFindNodeModulesPath();
+    if (!nodeModulesPath) {
+      return;
+    }
+    const typesPath = path.resolve(nodeModulesPath, "node_modules", "@types", "serverless-stack__node");
+
+    this.codegenCreateIndexType(typesPath);
+    this.codegenCreateConstructTypes(typesPath);
   }
 
   private codegenFindNodeModulesPath() {
@@ -535,12 +615,91 @@ export class App extends cdk.App {
     }
   }
 
-  private codegenCreateFile(typesPath: string) {
+  private codegenCreateIndexType(typesPath: string) {
     fs.removeSync(typesPath);
     fs.mkdirSync(typesPath, {
       recursive: true,
     });
-    fs.writeFileSync(`${typesPath}/index.d.ts`, "");
+    fs.writeFileSync(`${typesPath}/index.d.ts`, `
+import "@serverless-stack/node/config";
+declare module "@serverless-stack/node/config" {
+  export interface ConfigTypes {
+    APP: string;
+    STAGE: string;
+  }
+}`
+    );
+  }
+
+  private codegenCreateConstructTypes(typesPath: string) {
+    //export function codegenTypes(typesPath: string) {
+    //  fs.appendFileSync(`${typesPath}/index.d.ts`, `export * from "./config";`);
+    //  fs.writeFileSync(`${typesPath}/config.d.ts`, `
+    //    import "@serverless-stack/node/config";
+    //    declare module "@serverless-stack/node/config" {
+    //      export interface ConfigType {
+    //        ${[
+    //      "APP",
+    //      "STAGE",
+    //      ...Parameter.getAllNames(),
+    //      ...Secret.getAllNames()
+    //    ].map((p) => `${p}: string;`).join("\n")}
+    //      }
+    //    }
+    //  `);
+    //}
+
+    class CodegenTypes implements cdk.IAspect {
+      public visit(c: IConstruct): void {
+        if (!isSSTConstruct(c)) { return; }
+        if (c instanceof Function && c._disableBind) { return; }
+
+        const binding = bindType(c);
+        if (!binding) { return; }
+
+        const className = c.constructor.name;
+        const id = c.id;
+
+        fs.appendFileSync(`${typesPath}/index.d.ts`, `export * from "./${className}-${id}";`);
+
+        // Case 1: variable does not have properties, ie. Secrets and Parameters
+        const typeContent = binding.variables[0] === "."
+          ? `
+import "@serverless-stack/node/${binding.clientPackage}";
+declare module "@serverless-stack/node/${binding.clientPackage}" {
+  export interface ${className}Resources {
+    "${id}": string;
+  }
+}`
+          : `
+import "@serverless-stack/node/${binding.clientPackage}";
+declare module "@serverless-stack/node/${binding.clientPackage}" {
+  export interface ${className}Resources {
+    "${id}": {
+      ${binding.variables.map((p) => `${p}: string;`).join("\n")}
+    }
+  }
+}`;
+        fs.writeFileSync(`${typesPath}/${className}-${id}.d.ts`, typeContent);
+      }
+    }
+
+    cdk.Aspects.of(this).add(new CodegenTypes());
+  }
+
+  /** @internal */
+  public reportWarning(type: AppWarningType) {
+    this.warnings[type] = true;
+  }
+
+  private printWarnings() {
+    if (this.warnings.usingConfig) {
+      logger.warn(`\nWARNING: The "config" prop is deprecated, and will be removed in SST v2. Pass Parameters and Secrets in through the "bind" prop. Read more about how to upgrade here — https://docs.serverless-stack.com/upgrade-guide#upgrade-to-v116`);
+    }
+
+    if (this.warnings.usingPermissionsWithSSTConstruct) {
+      logger.warn(`\nWARNING: Passing SST constructs into "permissions" is deprecated, and will be removed in SST v2. Pass them into the "bind" prop. Read more about how to upgrade here — https://docs.serverless-stack.com/upgrade-guide#upgrade-to-v116`);
+    }
   }
 
   // Functional Stack

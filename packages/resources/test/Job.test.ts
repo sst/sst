@@ -10,13 +10,6 @@ import {
 } from "./helper";
 import { App, Stack, Job, Config, Topic } from "../src";
 import { Vpc } from "aws-cdk-lib/aws-ec2";
-import { Template } from "aws-cdk-lib/assertions";
-
-beforeEach(async () => {
-  Job.clear();
-  Config.Parameter.clear();
-  Config.Secret.clear();
-});
 
 test("constructor: default", async () => {
   const stack = new Stack(new App(), "stack");
@@ -92,6 +85,25 @@ test("constructor: memorySize: invalid", async () => {
   }).toThrow(/Invalid memory size/);
 });
 
+test("constructor: bind", async () => {
+  const stack = new Stack(new App(), "stack");
+  const topic = new Topic(stack, "Topic");
+  const MY_TOPIC_ARN = new Config.Parameter(stack, "MY_TOPIC_ARN", {
+    value: topic.topicArn,
+  });
+  new Job(stack, "Job", {
+    handler: "test/lambda.handler",
+    bind: [MY_TOPIC_ARN],
+  });
+  hasResource(stack, "AWS::CodeBuild::Project", {
+    Environment: {
+      EnvironmentVariables: arrayWith([
+        objectLike({ Name: "SST_Parameter_value_MY_TOPIC_ARN", Value: ANY }),
+      ]),
+    },
+  });
+});
+
 test("constructor: config", async () => {
   const stack = new Stack(new App(), "stack");
   const topic = new Topic(stack, "Topic");
@@ -105,7 +117,7 @@ test("constructor: config", async () => {
   hasResource(stack, "AWS::CodeBuild::Project", {
     Environment: {
       EnvironmentVariables: arrayWith([
-        objectLike({ Name: "SST_PARAM_MY_TOPIC_ARN", Value: ANY }),
+        objectLike({ Name: "SST_Parameter_value_MY_TOPIC_ARN", Value: ANY }),
       ]),
     },
   });
@@ -193,6 +205,25 @@ test("sst start: enableLiveDev false", async () => {
   });
 });
 
+test("bind", async () => {
+  const stack = new Stack(new App(), "stack");
+  const topic = new Topic(stack, "Topic");
+  const MY_TOPIC_ARN = new Config.Parameter(stack, "MY_TOPIC_ARN", {
+    value: topic.topicArn,
+  });
+  const job = new Job(stack, "Job", {
+    handler: "test/lambda.handler",
+  });
+  job.bind([MY_TOPIC_ARN]);
+  hasResource(stack, "AWS::CodeBuild::Project", {
+    Environment: {
+      EnvironmentVariables: arrayWith([
+        objectLike({ Name: "SST_Parameter_value_MY_TOPIC_ARN", Value: ANY }),
+      ]),
+    },
+  });
+});
+
 test("addConfig", async () => {
   const stack = new Stack(new App(), "stack");
   const topic = new Topic(stack, "Topic");
@@ -206,7 +237,7 @@ test("addConfig", async () => {
   hasResource(stack, "AWS::CodeBuild::Project", {
     Environment: {
       EnvironmentVariables: arrayWith([
-        objectLike({ Name: "SST_PARAM_MY_TOPIC_ARN", Value: ANY }),
+        objectLike({ Name: "SST_Parameter_value_MY_TOPIC_ARN", Value: ANY }),
       ]),
     },
   });

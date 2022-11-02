@@ -217,6 +217,10 @@ export interface EventBusProps {
   rules?: Record<string, EventBusRuleProps>;
   cdk?: {
     /**
+     * Allows you to override default id for this construct.
+     */
+    id?: string;
+    /**
      * Override the internally created EventBus
      * @example
      * ```js
@@ -259,25 +263,25 @@ export interface EventBusProps {
  * ```
  */
 export class EventBus extends Construct implements SSTConstruct {
+  public readonly id: string;
   public readonly cdk: {
     /**
      * The internally created CDK `EventBus` instance.
      */
     eventBus: events.IEventBus;
   };
-  private readonly rulesData: Record<string, events.Rule>;
-  private readonly targetsData: Record<string, Record<string, Fn | Queue | lambda.IFunction>>;
-  private readonly permissionsAttachedForAllTargets: Permissions[];
+  private readonly rulesData: Record<string, events.Rule> = {};
+  private readonly targetsData: Record<string, Record<string, Fn | Queue | lambda.IFunction>> = {};
+  private readonly bindingForAllTargets: SSTConstruct[] = [];
+  private readonly permissionsAttachedForAllTargets: Permissions[] = [];
   private readonly props: EventBusProps;
 
   constructor(scope: Construct, id: string, props?: EventBusProps) {
-    super(scope, id);
+    super(scope, props?.cdk?.id || id);
 
+    this.id = id;
     this.props = props || {};
     this.cdk = {} as any;
-    this.rulesData = {};
-    this.targetsData = {};
-    this.permissionsAttachedForAllTargets = [];
 
     this.createEventBus();
     this.addRules(this, props?.rules || {});
@@ -335,14 +339,73 @@ export class EventBus extends Construct implements SSTConstruct {
   }
 
   /**
+   * Binds the given list of resources to all event targets in this EventBus.
+   *
+   * @example
+   * ```js
+   * bus.bind([STRIPE_KEY, bucket]);
+   * ```
+   */
+  public bind(constructs: SSTConstruct[]) {
+    Object.values(this.targetsData).forEach((rule) =>
+      Object.values(rule)
+        .filter((target) => target instanceof Fn)
+        .forEach((target) => (target as Fn).bind(constructs))
+    );
+
+    this.bindingForAllTargets.push(...constructs);
+  }
+
+  /**
+   * Binds the given list of resources to a specific event bus rule target
+   *
+   * @example
+   * ```js
+   * const bus = new EventBus(stack, "Bus", {
+   *   rules: {
+   *     myRule: {
+   *       pattern: { source: ["myevent"] },
+   *       targets: {
+   *         myTarget1: "src/function1.handler"
+   *         myTarget2: "src/function2.handler"
+   *       },
+   *     },
+   *   },
+   * });
+   *
+   * bus.bindToTarget("myRule", 0, [STRIPE_KEY, bucket]);
+   * ```
+   */
+  public bindToTarget(
+    ruleKey: string,
+    targetName: string,
+    constructs: SSTConstruct[]
+  ): void {
+    const rule = this.targetsData[ruleKey];
+    if (!rule) {
+      throw new Error(
+        `Cannot find the rule "${ruleKey}" in the "${this.node.id}" EventBus.`
+      );
+    }
+
+    const target = rule[targetName];
+    if (!(target instanceof Fn)) {
+      throw new Error(
+        `Cannot bind to the "${this.node.id}" EventBus target because it's not a Lambda function`
+      );
+    }
+    target.bind(constructs);
+  }
+
+  /**
    * Add permissions to all event targets in this EventBus.
    *
    * @example
-   * ```js {10}
+   * ```js
    * bus.attachPermissions(["s3"]);
    * ```
    */
-  public attachPermissions(permissions: Permissions): void {
+  public attachPermissions(permissions: Permissions) {
     Object.values(this.targetsData).forEach((rule) =>
       Object.values(rule)
         .filter((target) => target instanceof Fn)
@@ -356,7 +419,7 @@ export class EventBus extends Construct implements SSTConstruct {
    * Add permissions to a specific event bus rule target
    *
    * @example
-   * ```js {10}
+   * ```js
    * const bus = new EventBus(stack, "Bus", {
    *   rules: {
    *     myRule: {
@@ -403,6 +466,22 @@ export class EventBus extends Construct implements SSTConstruct {
           targets: Object.values(rule).map(getFunctionRef),
           targetNames: Object.keys(rule),
         })),
+      },
+    };
+  }
+
+  /** @internal */
+  public getFunctionBinding() {
+    return {
+      clientPackage: "event-bus",
+      variables: {
+        eventBusName: {
+          environment: this.eventBusName,
+          parameter: this.eventBusName,
+        },
+      },
+      permissions: {
+        "events:*": [this.eventBusArn],
       },
     };
   }
@@ -567,5 +646,6 @@ export class EventBus extends Construct implements SSTConstruct {
     this.permissionsAttachedForAllTargets.forEach((permissions) =>
       fn.attachPermissions(permissions)
     );
+    fn.bind(this.bindingForAllTargets);
   }
 }

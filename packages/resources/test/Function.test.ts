@@ -37,11 +37,6 @@ const lambdaDefaultPolicy = {
   Resource: "*",
 };
 
-beforeEach(async () => {
-  Config.Parameter.clear();
-  Config.Secret.clear();
-});
-
 /////////////////////////////
 // Test constructor
 /////////////////////////////
@@ -444,7 +439,44 @@ test("xray-disabled", async () => {
   });
 });
 
-test("config", async () => {
+test("constructor: bind", async () => {
+  const stack = new Stack(new App(), "stack");
+  const s = new Config.Secret(stack, "MY_SECRET");
+  const p = new Config.Parameter(stack, "MY_PARAM", {
+    value: "value",
+  });
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    config: [s, p],
+  });
+  hasResource(stack, "AWS::Lambda::Function", {
+    Environment: {
+      Variables: {
+        SST_Secret_value_MY_SECRET: "__FETCH_FROM_SSM__",
+        SST_Parameter_value_MY_PARAM: "value",
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+      },
+    },
+  });
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: "ssm:GetParameters",
+          Effect: "Allow",
+          Resource: [
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/Secret/MY_SECRET/value",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/Secret/MY_SECRET/value",
+          ],
+        },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+});
+
+test("constructor: config", async () => {
   const stack = new Stack(new App(), "stack");
   const s = new Config.Secret(stack, "MY_SECRET");
   const s2 = new Config.Secret(stack, "MY_SECRET2");
@@ -458,9 +490,9 @@ test("config", async () => {
   hasResource(stack, "AWS::Lambda::Function", {
     Environment: {
       Variables: {
-        SST_SECRET_MY_SECRET: "1",
-        SST_SECRET_MY_SECRET2: "1",
-        SST_PARAM_MY_PARAM: "value",
+        SST_Secret_value_MY_SECRET: "__FETCH_FROM_SSM__",
+        SST_Secret_value_MY_SECRET2: "__FETCH_FROM_SSM__",
+        SST_Parameter_value_MY_PARAM: "value",
         AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
       },
     },
@@ -473,10 +505,16 @@ test("config", async () => {
           Action: "ssm:GetParameters",
           Effect: "Allow",
           Resource: [
-            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/secrets/MY_SECRET",
-            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/secrets/MY_SECRET",
-            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/secrets/MY_SECRET2",
-            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/secrets/MY_SECRET2",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/Secret/MY_SECRET/value",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/Secret/MY_SECRET/value",
+          ],
+        },
+        {
+          Action: "ssm:GetParameters",
+          Effect: "Allow",
+          Resource: [
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/Secret/MY_SECRET2/value",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/Secret/MY_SECRET2/value",
           ],
         },
       ],
@@ -739,11 +777,11 @@ test("layers: imported from another stack", async () => {
   const layer = new lambda.LayerVersion(stack1, "MyLayer", {
     code: lambda.Code.fromAsset("test"),
   });
-  new Function(stack1, "Function", {
+  new Function(stack1, "f1", {
     handler: "test/lambda.handler",
     layers: [layer],
   });
-  new Function(stack2, "Function", {
+  new Function(stack2, "f2", {
     handler: "test/lambda.handler",
     layers: [layer],
   });
@@ -772,15 +810,15 @@ test("layers: imported from another stack multiple times", async () => {
   const layer = new lambda.LayerVersion(stack1, "MyLayer", {
     code: lambda.Code.fromAsset("test"),
   });
-  new Function(stack1, "Function", {
+  new Function(stack1, "f1", {
     handler: "test/lambda.handler",
     layers: [layer],
   });
-  new Function(stack2, "FunctionA", {
+  new Function(stack2, "f2", {
     handler: "test/lambda.handler",
     layers: [layer],
   });
-  new Function(stack2, "FunctionB", {
+  new Function(stack2, "f3", {
     handler: "test/lambda.handler",
     layers: [layer],
   });
@@ -806,11 +844,11 @@ test("layers: imported from ARN", async () => {
     "MyLayer",
     "arn"
   );
-  new Function(stack1, "Function", {
+  new Function(stack1, "f1", {
     handler: "test/lambda.handler",
     layers: [layer],
   });
-  new Function(stack2, "Function", {
+  new Function(stack2, "f2", {
     handler: "test/lambda.handler",
     layers: [layer],
   });
@@ -833,7 +871,7 @@ test("layers: imported from ARN", async () => {
 
 test("constructor: debugIncreaseTimeout true", async () => {
   const app = new App({
-    synthCallback: () => {},
+    synthCallback: () => { },
     debugEndpoint: "placeholder",
     debugBucketArn: "placeholder",
     debugBucketName: "placeholder",
@@ -853,7 +891,7 @@ test("constructor: debugIncreaseTimeout true", async () => {
 
 test("constructor: debugIncreaseTimeout false", async () => {
   const app = new App({
-    synthCallback: () => {},
+    synthCallback: () => { },
     debugEndpoint: "placeholder",
     debugBucketArn: "placeholder",
     debugBucketName: "placeholder",
@@ -873,7 +911,7 @@ test("constructor: debugIncreaseTimeout false", async () => {
 
 test("constructor: debug: layers removed", async () => {
   const app = new App({
-    synthCallback: () => {},
+    synthCallback: () => { },
     debugEndpoint: "placeholder",
     debugBucketArn: "placeholder",
     debugBucketName: "placeholder",
@@ -1225,7 +1263,7 @@ test("attachPermissions: array: sst Job", async () => {
         AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
         SST_APP: "my-app",
         SST_STAGE: "dev",
-        SST_PARAM_SST_JOB_job: { Ref: "job867F7ADB" },
+        SST_Job_functionName_job: { Ref: "job867F7ADB" },
       },
     },
   });
@@ -1509,9 +1547,9 @@ test("addConfig", async () => {
   hasResource(stack, "AWS::Lambda::Function", {
     Environment: {
       Variables: {
-        SST_SECRET_MY_SECRET: "1",
-        SST_SECRET_MY_SECRET2: "1",
-        SST_PARAM_MY_PARAM: "value",
+        SST_Secret_value_MY_SECRET: "__FETCH_FROM_SSM__",
+        SST_Secret_value_MY_SECRET2: "__FETCH_FROM_SSM__",
+        SST_Parameter_value_MY_PARAM: "value",
         AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
       },
     },
@@ -1524,16 +1562,64 @@ test("addConfig", async () => {
           Action: "ssm:GetParameters",
           Effect: "Allow",
           Resource: [
-            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/secrets/MY_SECRET",
-            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/secrets/MY_SECRET",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/Secret/MY_SECRET/value",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/Secret/MY_SECRET/value",
           ],
         },
         {
           Action: "ssm:GetParameters",
           Effect: "Allow",
           Resource: [
-            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/secrets/MY_SECRET2",
-            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/secrets/MY_SECRET2",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/Secret/MY_SECRET2/value",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/Secret/MY_SECRET2/value",
+          ],
+        },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+});
+
+test("bind", async () => {
+  const stack = new Stack(new App(), "stack");
+  const s = new Config.Secret(stack, "MY_SECRET");
+  const s2 = new Config.Secret(stack, "MY_SECRET2");
+  const p = new Config.Parameter(stack, "MY_PARAM", {
+    value: "value",
+  });
+  const f = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    config: [s, p],
+  });
+  f.bind([s2]);
+  hasResource(stack, "AWS::Lambda::Function", {
+    Environment: {
+      Variables: {
+        SST_Secret_value_MY_SECRET: "__FETCH_FROM_SSM__",
+        SST_Secret_value_MY_SECRET2: "__FETCH_FROM_SSM__",
+        SST_Parameter_value_MY_PARAM: "value",
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+      },
+    },
+  });
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: "ssm:GetParameters",
+          Effect: "Allow",
+          Resource: [
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/Secret/MY_SECRET/value",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/Secret/MY_SECRET/value",
+          ],
+        },
+        {
+          Action: "ssm:GetParameters",
+          Effect: "Allow",
+          Resource: [
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/Secret/MY_SECRET2/value",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/Secret/MY_SECRET2/value",
           ],
         },
       ],
@@ -1600,6 +1686,15 @@ test("mergeProps-permissions", async () => {
   expect(
     Function.mergeProps({ permissions: ["s3"] }, { permissions: ["dynamodb"] })
   ).toEqual({ permissions: ["s3", "dynamodb"] });
+});
+
+test("mergeProps-bind", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucketA = new Bucket(stack, "bucketA");
+  const bucketB = new Bucket(stack, "bucketB");
+  expect(
+    Function.mergeProps({ bind: [bucketA] }, { bind: [bucketB] })
+  ).toEqual({ bind: [bucketA, bucketB] });
 });
 
 test("mergeProps-layers", async () => {
@@ -1786,6 +1881,55 @@ test("Stack.defaultFunctionProps(): permissions", async () => {
   });
 });
 
+test("Stack.defaultFunctionProps(): bind", async () => {
+  const app = new App();
+  const stack = new Stack(app, "stack");
+  const SECRET_A = new Config.Secret(stack, "SECRET_A");
+  const SECRET_B = new Config.Secret(stack, "SECRET_B");
+  const SECRET_C = new Config.Secret(stack, "SECRET_C");
+  stack.setDefaultFunctionProps({
+    bind: [SECRET_A],
+  });
+  stack.addDefaultFunctionBinding([SECRET_B]);
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    bind: [SECRET_C],
+  });
+
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: "ssm:GetParameters",
+          Effect: "Allow",
+          Resource: [
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/Secret/SECRET_A/value",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/Secret/SECRET_A/value",
+          ],
+        },
+        {
+          Action: "ssm:GetParameters",
+          Effect: "Allow",
+          Resource: [
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/Secret/SECRET_B/value",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/Secret/SECRET_B/value",
+          ],
+        },
+        {
+          Action: "ssm:GetParameters",
+          Effect: "Allow",
+          Resource: [
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/Secret/SECRET_C/value",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/Secret/SECRET_C/value",
+          ],
+        },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+});
+
 test("App.defaultFunctionProps()", async () => {
   const app = new App();
   app.setDefaultFunctionProps({
@@ -1935,14 +2079,98 @@ test("App.defaultFunctionProps(): config", async () => {
           Action: "ssm:GetParameters",
           Effect: "Allow",
           Resource: [
-            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/secrets/SECRET_A",
-            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/secrets/SECRET_A",
-            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/secrets/SECRET_B",
-            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/secrets/SECRET_B",
-            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/secrets/SECRET_C",
-            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/secrets/SECRET_C",
-            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/secrets/SECRET_D",
-            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/secrets/SECRET_D",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/Secret/SECRET_A/value",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/Secret/SECRET_A/value",
+          ],
+        },
+        {
+          Action: "ssm:GetParameters",
+          Effect: "Allow",
+          Resource: [
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/Secret/SECRET_B/value",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/Secret/SECRET_B/value",
+          ],
+        },
+        {
+          Action: "ssm:GetParameters",
+          Effect: "Allow",
+          Resource: [
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/Secret/SECRET_C/value",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/Secret/SECRET_C/value",
+          ],
+        },
+        {
+          Action: "ssm:GetParameters",
+          Effect: "Allow",
+          Resource: [
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/Secret/SECRET_D/value",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/Secret/SECRET_D/value",
+          ],
+        },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+});
+
+test("App.defaultFunctionProps(): bind", async () => {
+  const app = new App();
+  // Create a stack with 1 secret
+  const stackA = new Stack(app, "stackA");
+  const SECRET_A = new Config.Secret(stackA, "SECRET_A");
+  app.setDefaultFunctionProps({
+    bind: [SECRET_A],
+  });
+
+  // Create another stack with 1 secret
+  const stackB = new Stack(app, "stackB");
+  const SECRET_B = new Config.Secret(stackB, "SECRET_B");
+  app.addDefaultFunctionBinding([SECRET_B]);
+
+  // Test function's bind is merged with default bind
+  const stack = new Stack(app, "stack");
+  const SECRET_C = new Config.Secret(stack, "SECRET_C");
+  stack.addDefaultFunctionBinding([SECRET_C]);
+  const SECRET_D = new Config.Secret(stack, "SECRET_D");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    bind: [SECRET_D],
+  });
+
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: "ssm:GetParameters",
+          Effect: "Allow",
+          Resource: [
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/Secret/SECRET_A/value",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/Secret/SECRET_A/value",
+          ],
+        },
+        {
+          Action: "ssm:GetParameters",
+          Effect: "Allow",
+          Resource: [
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/Secret/SECRET_B/value",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/Secret/SECRET_B/value",
+          ],
+        },
+        {
+          Action: "ssm:GetParameters",
+          Effect: "Allow",
+          Resource: [
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/Secret/SECRET_C/value",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/Secret/SECRET_C/value",
+          ],
+        },
+        {
+          Action: "ssm:GetParameters",
+          Effect: "Allow",
+          Resource: [
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/dev/Secret/SECRET_D/value",
+            "arn:aws:ssm:us-east-1:my-account:parameter/sst/my-app/.fallback/Secret/SECRET_D/value",
           ],
         },
       ],

@@ -4,7 +4,7 @@ import * as cdk from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as sqs from "aws-cdk-lib/aws-sqs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
-import { App, Stack, Queue, Function } from "../src";
+import { App, Stack, Queue, Function, Bucket } from "../src";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
@@ -343,6 +343,45 @@ test("attachPermissions-after-addConsumer", async () => {
         lambdaDefaultPolicy,
         queueDefaultPolicy,
         { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "ConsumerQueueServiceRoleDefaultPolicyDF171F68",
+  });
+});
+
+test("bind", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "bucket");
+  const queue = new Queue(stack, "Queue", {
+    consumer: "test/lambda.handler",
+  });
+  queue.bind([bucket]);
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        queueDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "QueueConsumerQueueServiceRoleDefaultPolicy01B8CD9A",
+  });
+});
+
+test("bind-after-addConsumer", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "bucket");
+  const queue = new Queue(stack, "Queue");
+  queue.bind([bucket]);
+  queue.addConsumer(stack, "test/lambda.handler");
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        queueDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
       ],
       Version: "2012-10-17",
     },

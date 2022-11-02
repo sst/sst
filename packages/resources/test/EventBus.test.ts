@@ -1,14 +1,15 @@
 import { test, expect } from "vitest";
 import {
+  ANY,
+  ABSENT,
   countResources,
   hasResource,
   objectLike,
   stringLike,
-  ABSENT,
 } from "./helper";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as events from "aws-cdk-lib/aws-events";
-import { App, Stack, EventBus, Queue, Function } from "../src";
+import { App, Stack, EventBus, Queue, Function, Bucket } from "../src";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
@@ -815,6 +816,173 @@ test("attachPermissions-after-addRules", async () => {
       Statement: [
         lambdaDefaultPolicy,
         { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "TargetEventBusrule20ServiceRoleDefaultPolicy451500AE",
+  });
+});
+
+test("bind", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "bucket");
+  const bus = new EventBus(stack, "EventBus", {
+    rules: {
+      rule1: {
+        pattern: { source: ["aws.codebuild"] },
+        targets: {
+          "0": "test/lambda.handler",
+          "1": "test/lambda.handler",
+        },
+      },
+    },
+  });
+  bus.bind([bucket]);
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "EventBusTargetEventBusrule10ServiceRoleDefaultPolicy43D252A7",
+  });
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "EventBusTargetEventBusrule11ServiceRoleDefaultPolicy5C865C6D",
+  });
+});
+
+test("bindToTarget", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "bucket");
+  const bus = new EventBus(stack, "EventBus", {
+    rules: {
+      rule1: {
+        pattern: { source: ["aws.codebuild"] },
+        targets: {
+          "0": "test/lambda.handler",
+          "1": "test/lambda.handler",
+        },
+      },
+    },
+  });
+  bus.bindToTarget("rule1", "0", [bucket]);
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "EventBusTargetEventBusrule10ServiceRoleDefaultPolicy43D252A7",
+  });
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [lambdaDefaultPolicy],
+      Version: "2012-10-17",
+    },
+    PolicyName: "EventBusTargetEventBusrule11ServiceRoleDefaultPolicy5C865C6D",
+  });
+});
+
+test("bindToTarget: rule not exist", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "bucket");
+  const bus = new EventBus(stack, "EventBus", {
+    rules: {
+      rule1: {
+        pattern: { source: ["aws.codebuild"] },
+        targets: { "0": "test/lambda.handler" },
+      },
+    },
+  });
+  expect(() => {
+    bus.bindToTarget("unknown-rule", "0", [bucket]);
+  }).toThrow(/Cannot find the rule "unknown-rule" in the "EventBus" EventBus./);
+});
+
+test("bindToTarget: target not exist", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "bucket");
+  const bus = new EventBus(stack, "EventBus", {
+    rules: {
+      rule1: {
+        pattern: { source: ["aws.codebuild"] },
+        targets: { "0": "test/lambda.handler" },
+      },
+    },
+  });
+  expect(() => {
+    bus.bindToTarget("rule1", "100", [bucket]);
+  }).toThrow(/Cannot bind/);
+});
+
+test("bindToTarget: target is Queue", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "bucket");
+  const queue = new Queue(stack, "Queue");
+  const bus = new EventBus(stack, "EventBus", {
+    rules: {
+      rule1: {
+        pattern: { source: ["aws.codebuild"] },
+        targets: {
+          "0": "test/lambda.handler",
+          "1": queue,
+        },
+      },
+    },
+  });
+  expect(() => {
+    bus.bindToTarget("rule1", "1", [bucket]);
+  }).toThrow(/Cannot bind/);
+});
+
+test("bind-after-addRules", async () => {
+  const app = new App();
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  const bucket = new Bucket(stackA, "bucket");
+  const bus = new EventBus(stackA, "EventBus", {
+    rules: {
+      rule1: {
+        pattern: { source: ["aws.codebuild"] },
+        targets: { "0": "test/lambda.handler" },
+      },
+    },
+  });
+  bus.bind([bucket]);
+  bus.addRules(stackB, {
+    rule2: {
+      pattern: { source: ["aws.codebuild"] },
+      targets: { "0": "test/lambda.handler" },
+    },
+  });
+  countResources(stackA, "AWS::Events::Rule", 1);
+  hasResource(stackA, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "EventBusTargetEventBusrule10ServiceRoleDefaultPolicy43D252A7",
+  });
+  countResources(stackB, "AWS::Events::Rule", 1);
+  hasResource(stackB, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
       ],
       Version: "2012-10-17",
     },

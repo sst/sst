@@ -5,7 +5,7 @@ import {
   useDomainName,
   usePath,
   useQueryParams,
-} from "../../context/http.js";
+} from "../../api/index.js";
 import { createAdapter } from "./adapter.js";
 
 export interface OauthBasicConfig {

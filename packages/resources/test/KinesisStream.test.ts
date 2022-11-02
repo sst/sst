@@ -1,8 +1,8 @@
 import { test, expect } from "vitest";
-import { countResources, hasResource } from "./helper";
+import { ANY, countResources, hasResource } from "./helper";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as kinesis from "aws-cdk-lib/aws-kinesis";
-import { App, Stack, Function, KinesisStream } from "../src";
+import { App, Stack, Function, KinesisStream, Bucket } from "../src";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
@@ -457,6 +457,237 @@ test("attachPermissions-after-addConsumers", async () => {
           },
         },
         { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "ConsumerStreamconsumerBServiceRoleDefaultPolicy3AA16A6B",
+  });
+});
+
+test("bind", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "bucket");
+  const stream = new KinesisStream(stack, "Stream", {
+    consumers: {
+      consumerA: "test/lambda.handler",
+      consumerB: "test/lambda.handler",
+    },
+  });
+  stream.bind([bucket]);
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: [
+            "kinesis:DescribeStreamSummary",
+            "kinesis:GetRecords",
+            "kinesis:GetShardIterator",
+            "kinesis:ListShards",
+            "kinesis:SubscribeToShard",
+            "kinesis:DescribeStream",
+            "kinesis:ListStreams",
+          ],
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
+        },
+        {
+          Action: "kinesis:DescribeStream",
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
+        },
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "StreamConsumerStreamconsumerAServiceRoleDefaultPolicyB55D1B9A",
+  });
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: [
+            "kinesis:DescribeStreamSummary",
+            "kinesis:GetRecords",
+            "kinesis:GetShardIterator",
+            "kinesis:ListShards",
+            "kinesis:SubscribeToShard",
+            "kinesis:DescribeStream",
+            "kinesis:ListStreams",
+          ],
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
+        },
+        {
+          Action: "kinesis:DescribeStream",
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
+        },
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "StreamConsumerStreamconsumerBServiceRoleDefaultPolicy1DDF5ED5",
+  });
+});
+
+test("bindToConsumer", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "bucket");
+  const stream = new KinesisStream(stack, "Stream", {
+    consumers: {
+      consumerA: "test/lambda.handler",
+      consumerB: "test/lambda.handler",
+    },
+  });
+  stream.bindToConsumer("consumerA", [bucket]);
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: [
+            "kinesis:DescribeStreamSummary",
+            "kinesis:GetRecords",
+            "kinesis:GetShardIterator",
+            "kinesis:ListShards",
+            "kinesis:SubscribeToShard",
+            "kinesis:DescribeStream",
+            "kinesis:ListStreams",
+          ],
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
+        },
+        {
+          Action: "kinesis:DescribeStream",
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
+        },
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "StreamConsumerStreamconsumerAServiceRoleDefaultPolicyB55D1B9A",
+  });
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: [
+            "kinesis:DescribeStreamSummary",
+            "kinesis:GetRecords",
+            "kinesis:GetShardIterator",
+            "kinesis:ListShards",
+            "kinesis:SubscribeToShard",
+            "kinesis:DescribeStream",
+            "kinesis:ListStreams",
+          ],
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
+        },
+        {
+          Action: "kinesis:DescribeStream",
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
+        },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "StreamConsumerStreamconsumerBServiceRoleDefaultPolicy1DDF5ED5",
+  });
+});
+
+test("bindToConsumer consumer not found", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "bucket");
+  const stream = new KinesisStream(stack, "Stream", {
+    consumers: {
+      consumerA: "test/lambda.handler",
+      consumerB: "test/lambda.handler",
+    },
+  });
+  expect(() => {
+    stream.bindToConsumer("consumerC", [bucket]);
+  }).toThrow(
+    /The "consumerC" consumer was not found in the "Stream" KinesisStream/
+  );
+});
+
+test("bind-after-addConsumers", async () => {
+  const app = new App();
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  const bucket = new Bucket(stackA, "bucket");
+  const stream = new KinesisStream(stackA, "Stream", {
+    consumers: {
+      consumerA: "test/lambda.handler",
+    },
+  });
+  stream.bind([bucket]);
+  stream.addConsumers(stackB, {
+    consumerB: "test/lambda.handler",
+  });
+  countResources(stackA, "AWS::Lambda::EventSourceMapping", 1);
+  hasResource(stackA, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: [
+            "kinesis:DescribeStreamSummary",
+            "kinesis:GetRecords",
+            "kinesis:GetShardIterator",
+            "kinesis:ListShards",
+            "kinesis:SubscribeToShard",
+            "kinesis:DescribeStream",
+            "kinesis:ListStreams",
+          ],
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
+        },
+        {
+          Action: "kinesis:DescribeStream",
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
+        },
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "StreamConsumerStreamconsumerAServiceRoleDefaultPolicyB55D1B9A",
+  });
+  countResources(stackB, "AWS::Lambda::EventSourceMapping", 1);
+  hasResource(stackB, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: [
+            "kinesis:DescribeStreamSummary",
+            "kinesis:GetRecords",
+            "kinesis:GetShardIterator",
+            "kinesis:ListShards",
+            "kinesis:SubscribeToShard",
+            "kinesis:DescribeStream",
+            "kinesis:ListStreams",
+          ],
+          Effect: "Allow",
+          Resource: {
+            "Fn::ImportValue":
+              "dev-my-app-stackA:ExportsOutputFnGetAttStream862536A4Arn22664C11",
+          },
+        },
+        {
+          Action: "kinesis:DescribeStream",
+          Effect: "Allow",
+          Resource: {
+            "Fn::ImportValue":
+              "dev-my-app-stackA:ExportsOutputFnGetAttStream862536A4Arn22664C11",
+          },
+        },
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
       ],
       Version: "2012-10-17",
     },

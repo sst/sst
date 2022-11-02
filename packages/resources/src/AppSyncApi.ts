@@ -368,6 +368,13 @@ export interface AppSyncApiProps {
     function?: FunctionProps;
   };
   cdk?: {
+    /**
+     * Allows you to override default id for this construct.
+     */
+    id?: string;
+    /**
+     * Allows you to override default settings this construct uses internally to create the AppSync API.
+     */
     graphqlApi?: appsync.IGraphqlApi | AppSyncApiCdkGraphqlProps;
   };
 }
@@ -406,6 +413,7 @@ export interface AppSyncApiCdkGraphqlProps
  * ```
  */
 export class AppSyncApi extends Construct implements SSTConstruct {
+  public readonly id: string;
   public readonly cdk: {
     /**
      * The internally created appsync api
@@ -416,27 +424,24 @@ export class AppSyncApi extends Construct implements SSTConstruct {
      */
     certificate?: acm.ICertificate;
   };
-  readonly props: AppSyncApiProps;
+  private readonly props: AppSyncApiProps;
   private _customDomainUrl?: string;
   _cfnDomainName?: cfnAppsync.CfnDomainName;
-  readonly functionsByDsKey: { [key: string]: Fn };
-  readonly dataSourcesByDsKey: {
+  private readonly functionsByDsKey: { [key: string]: Fn } = {};
+  private readonly dataSourcesByDsKey: {
     [key: string]: appsync.BaseDataSource;
-  };
-  readonly dsKeysByResKey: { [key: string]: string };
-  readonly resolversByResKey: { [key: string]: appsync.Resolver };
-  readonly permissionsAttachedForAllFunctions: Permissions[];
+  } = {};
+  private readonly dsKeysByResKey: { [key: string]: string } = {};
+  private readonly resolversByResKey: { [key: string]: appsync.Resolver } = {};
+  private readonly bindingForAllFunctions: SSTConstruct[] = [];
+  private readonly permissionsAttachedForAllFunctions: Permissions[] = [];
 
   constructor(scope: Construct, id: string, props?: AppSyncApiProps) {
-    super(scope, id);
+    super(scope, props?.cdk?.id || id);
 
+    this.id = id;
     this.props = props || {};
     this.cdk = {} as any;
-    this.functionsByDsKey = {};
-    this.dataSourcesByDsKey = {};
-    this.resolversByResKey = {};
-    this.dsKeysByResKey = {};
-    this.permissionsAttachedForAllFunctions = [];
 
     this.createGraphApi();
 
@@ -513,15 +518,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
     }
   ): void {
     Object.keys(dataSources).forEach((key: string) => {
-      // add data source
-      const fn = this.addDataSource(scope, key, dataSources[key]);
-
-      // attached existing permissions
-      if (fn) {
-        this.permissionsAttachedForAllFunctions.forEach((permissions) =>
-          fn.attachPermissions(permissions)
-        );
-      }
+      this.addDataSource(scope, key, dataSources[key]);
     });
   }
 
@@ -542,15 +539,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
     }
   ): void {
     Object.keys(resolvers).forEach((key: string) => {
-      // add resolver
-      const fn = this.addResolver(scope, key, resolvers[key]);
-
-      // attached existing permissions
-      if (fn) {
-        this.permissionsAttachedForAllFunctions.forEach((permissions) =>
-          fn.attachPermissions(permissions)
-        );
-      }
+      this.addResolver(scope, key, resolvers[key]);
     });
   }
 
@@ -605,7 +594,46 @@ export class AppSyncApi extends Construct implements SSTConstruct {
   }
 
   /**
-   * Attaches the given list of permissions to all function datasources
+   * Binds the given list of resources to all function data sources.
+   *
+   * @example
+   *
+   * ```js
+   * api.bind([STRIPE_KEY, bucket]);
+   * ```
+   */
+  public bind(constructs: SSTConstruct[]) {
+    Object.values(this.functionsByDsKey).forEach((fn) =>
+      fn.bind(constructs)
+    );
+    this.bindingForAllFunctions.push(...constructs);
+  }
+
+  /**
+   * Binds the given list of resources to a specific function data source.
+   *
+   * @example
+   * ```js
+   * api.bindToDataSource("Mutation charge", [STRIPE_KEY, bucket]);
+   * ```
+   *
+   */
+  public bindToDataSource(
+    key: string,
+    constructs: SSTConstruct[]
+  ): void {
+    const fn = this.getFunction(key);
+    if (!fn) {
+      throw new Error(
+        `Failed to bind resources. Function does not exist for key "${key}".`
+      );
+    }
+
+    fn.bind(constructs);
+  }
+
+  /**
+   * Attaches the given list of permissions to all function data sources
    *
    * @example
    * ```js
@@ -654,6 +682,20 @@ export class AppSyncApi extends Construct implements SSTConstruct {
           fn: getFunctionRef(this.functionsByDsKey[key]),
         })),
       },
+    };
+  }
+
+  /** @internal */
+  public getFunctionBinding() {
+    return {
+      clientPackage: "api",
+      variables: {
+        url: {
+          environment: this.customDomainUrl || this.url,
+          parameter: this.customDomainUrl || this.url,
+        },
+      },
+      permissions: {},
     };
   }
 
@@ -746,9 +788,9 @@ export class AppSyncApi extends Construct implements SSTConstruct {
       | AppSyncApiRdsDataSourceProps
       | AppSyncApiHttpDataSourceProps
       | AppSyncApiNoneDataSourceProps
-  ): Fn | undefined {
+  ) {
     let dataSource;
-    let lambda;
+    let lambda: Fn | undefined;
 
     // Lambda function
     if (Fn.isInlineDefinition(dsValue)) {
@@ -826,11 +868,16 @@ export class AppSyncApi extends Construct implements SSTConstruct {
       });
     }
     this.dataSourcesByDsKey[dsKey] = dataSource;
+
     if (lambda) {
       this.functionsByDsKey[dsKey] = lambda;
-    }
 
-    return lambda;
+      // attached existing permissions
+      this.permissionsAttachedForAllFunctions.forEach((permissions) =>
+        lambda!.attachPermissions(permissions)
+      );
+      lambda.bind(this.bindingForAllFunctions);
+    }
   }
 
   private addResolver(
@@ -854,7 +901,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
     ///////////////////
     // Create data source if not created before
     ///////////////////
-    let lambda;
+    let lambda: Fn | undefined;
     let dataSource;
     let dataSourceKey;
     let resolverProps;
@@ -934,10 +981,16 @@ export class AppSyncApi extends Construct implements SSTConstruct {
       resolverProps = {};
     }
 
-    // Store new data source created
     if (lambda) {
+      // Store new data source created
       this.dataSourcesByDsKey[dataSourceKey] = dataSource;
       this.functionsByDsKey[dataSourceKey] = lambda;
+
+      // attached existing permissions
+      this.permissionsAttachedForAllFunctions.forEach((permissions) =>
+        lambda!.attachPermissions(permissions)
+      );
+      lambda.bind(this.bindingForAllFunctions);
     }
     this.dsKeysByResKey[resKey] = dataSourceKey;
 

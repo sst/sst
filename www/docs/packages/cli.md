@@ -226,21 +226,21 @@ A convenience command to update SST to the latest version. It also updates any C
 npx sst update
 ```
 
-### `load-config`
+### `bind`
 
-A convenience command to load [`Config`](../environment-variables.md) parameters and secrets, and invoke a script with the config values configured as environment variables.
+A convenience command to bind the resources to a script. This allows the [`@serverless-stack/node`](clients/index.md) helper library to work as if it was running inside a Lambda function.
 
-So for example, you can load all the secrets in your app and use those to run your tests.
+So for example, you can bind all the resources in your app and use those to run your tests.
 
 ```bash
-npx sst load-config -- vitest run
+npx sst bind -- vitest run
 ```
 
 You can [read more about how this works for testing](../advanced/testing.md).
 
 ### `secrets [action]`
 
-Manage secret values in your app.
+Manage secrets in your app.
 
 ```bash
 # Check the values of all the secrets
@@ -263,7 +263,7 @@ npx sst secrets remove-fallback STRIPE_KEY
 ```
 
 :::note
-The fallback value can only be inherited by stages deployed in the same AWS account and region.
+The fallback value can only be inherited by stages deployed in the same AWS account and region. [Read more about fallback values](../config.md#fallback-values).
 :::
 
 #### Options

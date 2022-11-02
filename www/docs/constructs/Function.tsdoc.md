@@ -32,9 +32,23 @@ new Function(stack, "Function", {
 })
 ```
 
+### bind?
+
+_Type_ : <span class='mono'>Array&lt;<span class="mono">SSTConstruct</span>&gt;</span>
+
+Bind resources for the function
+
+
+```js
+new Function(stack, "Function", {
+  handler: "src/function.handler",
+  bind: [STRIPE_KEY, bucket],
+})
+```
+
 ### bundle?
 
-_Type_ : <span class='mono'><span class="mono">[FunctionBundleNodejsProps](#functionbundlenodejsprops)</span> | <span class="mono">[FunctionBundlePythonProps](#functionbundlepythonprops)</span> | <span class="mono">boolean</span></span>
+_Type_ : <span class='mono'><span class="mono">[FunctionBundleNodejsProps](#functionbundlenodejsprops)</span> | <span class="mono">[FunctionBundlePythonProps](#functionbundlepythonprops)</span> | <span class="mono">[FunctionBundleJavaProps](#functionbundlejavaprops)</span> | <span class="mono">boolean</span></span>
 
 Configure or disable bundling options
 
@@ -56,14 +70,20 @@ Configure environment variables for the function
 
 
 ```js
+// Change
 new Function(stack, "Function", {
   handler: "src/function.handler",
-  config: [
-    STRIPE_KEY,
-    API_URL,
-  ]
+  config: [STRIPE_KEY, API_URL]
+})
+
+// To
+new Function(stack, "Function", {
+  handler: "src/function.handler",
+  bind: [STRIPE_KEY, API_URL]
 })
 ```
+
+The "config" prop is deprecated, and will be removed in SST v2. Pass Parameters and Secrets in through the "bind" prop. Read more about how to upgrade here — https://docs.serverless-stack.com/constructs/function
 
 ### diskSize?
 
@@ -203,13 +223,13 @@ Attaches the given list of permissions to the function. Configuring this propert
 ```js
 new Function(stack, "Function", {
   handler: "src/function.handler",
-  permissions: ["ses", bucket]
+  permissions: ["ses"]
 })
 ```
 
 ### runtime?
 
-_Type_ : <span class='mono'><span class="mono">"nodejs"</span> | <span class="mono">"nodejs4.3"</span> | <span class="mono">"nodejs6.10"</span> | <span class="mono">"nodejs8.10"</span> | <span class="mono">"nodejs10.x"</span> | <span class="mono">"nodejs12.x"</span> | <span class="mono">"nodejs14.x"</span> | <span class="mono">"nodejs16.x"</span> | <span class="mono">"python2.7"</span> | <span class="mono">"python3.6"</span> | <span class="mono">"python3.7"</span> | <span class="mono">"python3.8"</span> | <span class="mono">"python3.9"</span> | <span class="mono">"dotnetcore1.0"</span> | <span class="mono">"dotnetcore2.0"</span> | <span class="mono">"dotnetcore2.1"</span> | <span class="mono">"dotnetcore3.1"</span> | <span class="mono">"dotnet6"</span> | <span class="mono">"java8"</span> | <span class="mono">"java11"</span> | <span class="mono">"go1.x"</span></span>
+_Type_ : <span class='mono'><span class="mono">"nodejs16.x"</span> | <span class="mono">"nodejs"</span> | <span class="mono">"nodejs4.3"</span> | <span class="mono">"nodejs6.10"</span> | <span class="mono">"nodejs8.10"</span> | <span class="mono">"nodejs10.x"</span> | <span class="mono">"nodejs12.x"</span> | <span class="mono">"nodejs14.x"</span> | <span class="mono">"python2.7"</span> | <span class="mono">"python3.6"</span> | <span class="mono">"python3.7"</span> | <span class="mono">"python3.8"</span> | <span class="mono">"python3.9"</span> | <span class="mono">"dotnetcore1.0"</span> | <span class="mono">"dotnetcore2.0"</span> | <span class="mono">"dotnetcore2.1"</span> | <span class="mono">"dotnetcore3.1"</span> | <span class="mono">"dotnet6"</span> | <span class="mono">"java8"</span> | <span class="mono">"java11"</span> | <span class="mono">"go1.x"</span></span>
 
 _Default_ : <span class="mono">"nodejs14.x"</span>
 
@@ -301,6 +321,10 @@ new Function(stack, "Function", {
 
 ## Properties
 An instance of `Function` has the following properties.
+### id
+
+_Type_ : <span class="mono">string</span>
+
 ### url
 
 _Type_ : <span class='mono'><span class="mono">undefined</span> | <span class="mono">string</span></span>
@@ -311,22 +335,29 @@ The AWS generated URL of the Function.
 An instance of `Function` has the following methods.
 ### addConfig
 
+:::caution
+This function signature has been deprecated.
 ```ts
 addConfig(config)
 ```
-_Parameters_
-- __config__ <span class='mono'>Array&lt;<span class='mono'><span class="mono">[Secret](Secret#secret)</span> | <span class="mono">[Parameter](Parameter#parameter)</span></span>&gt;</span>
 
 
-Attaches additional configs to function
+Attaches additional configs to function.
 
 
 ```js
 const STRIPE_KEY = new Config.Secret(stack, "STRIPE_KEY");
 
-fn.addConfig([STRIPE_KEY]);
+// Change
+job.addConfig([STRIPE_KEY]);
+
+// To
+job.bind([STRIPE_KEY]);
 ```
 
+The "config" prop is deprecated, and will be removed in SST v2. Pass Parameters and Secrets in through the "bind" prop. Read more about how to upgrade here — https://docs.serverless-stack.com/constructs/function
+
+:::
 ### attachPermissions
 
 ```ts
@@ -336,11 +367,27 @@ _Parameters_
 - __permissions__ <span class="mono">[Permissions](Permissions)</span>
 
 
-Attaches additional permissions to function
+Attaches additional permissions to function.
 
 
 ```js {20}
 fn.attachPermissions(["s3"]);
+```
+
+### bind
+
+```ts
+bind(constructs)
+```
+_Parameters_
+- __constructs__ <span class='mono'>Array&lt;<span class="mono">SSTConstruct</span>&gt;</span>
+
+
+Binds additional resources to function.
+
+
+```js
+fn.bind([STRIPE_KEY, bucket]);
 ```
 
 ## FunctionUrlProps
@@ -348,7 +395,7 @@ fn.attachPermissions(["s3"]);
 
 ### authorizer?
 
-_Type_ : <span class='mono'><span class="mono">"iam"</span> | <span class="mono">"none"</span></span>
+_Type_ : <span class='mono'><span class="mono">"none"</span> | <span class="mono">"iam"</span></span>
 
 _Default_ : <span class="mono">"none"</span>
 
@@ -414,7 +461,7 @@ The stack the function is being created in
 
 ### bundle
 
-_Type_ : <span class='mono'><span class="mono">[FunctionBundleNodejsProps](#functionbundlenodejsprops)</span> | <span class="mono">[FunctionBundlePythonProps](#functionbundlepythonprops)</span> | <span class="mono">boolean</span></span>
+_Type_ : <span class='mono'><span class="mono">[FunctionBundleNodejsProps](#functionbundlenodejsprops)</span> | <span class="mono">[FunctionBundlePythonProps](#functionbundlepythonprops)</span> | <span class="mono">[FunctionBundleJavaProps](#functionbundlejavaprops)</span> | <span class="mono">boolean</span></span>
 
 ### handler
 
@@ -458,7 +505,7 @@ allowHeaders: ["Accept", "Content-Type", "Authorization"]
 
 ### allowMethods?
 
-_Type_ : <span class='mono'>Array&lt;<span class='mono'><span class="mono">"*"</span> | <span class="mono">"DELETE"</span> | <span class="mono">"GET"</span> | <span class="mono">"HEAD"</span> | <span class="mono">"OPTIONS"</span> | <span class="mono">"PATCH"</span> | <span class="mono">"POST"</span> | <span class="mono">"PUT"</span></span>&gt;</span>
+_Type_ : <span class='mono'>Array&lt;<span class='mono'><span class="mono">"*"</span> | <span class="mono">"GET"</span> | <span class="mono">"PUT"</span> | <span class="mono">"HEAD"</span> | <span class="mono">"POST"</span> | <span class="mono">"DELETE"</span> | <span class="mono">"PATCH"</span> | <span class="mono">"OPTIONS"</span></span>&gt;</span>
 
 _Default_ : <span class="mono">Allow all methods.</span>
 
@@ -509,6 +556,75 @@ Specify how long the results of a preflight response can be cached
 
 ```js
 maxAge: "1 day"
+```
+
+## FunctionBundleJavaProps
+Used to configure Java package build options
+
+### buildOutputDir?
+
+_Type_ : <span class="mono">string</span>
+
+_Default_ : <span class="mono">"distributions"</span>
+
+The output folder that the bundled .zip file will be created within.
+
+
+```js
+new Function(stack, "Function", {
+  bundle: {
+    buildOutputDir: "output"
+  }
+})
+```
+
+### buildTask?
+
+_Type_ : <span class="mono">string</span>
+
+_Default_ : <span class="mono">"build"</span>
+
+Gradle build command to generate the bundled .zip file.
+
+
+```js
+new Function(stack, "Function", {
+  bundle: {
+    buildTask: "bundle"
+  }
+})
+```
+
+### copyFiles?
+
+_Type_ : <span class='mono'>Array&lt;<span class="mono">[FunctionBundleCopyFilesProps](#functionbundlecopyfilesprops)</span>&gt;</span>
+
+Used to configure additional files to copy into the function bundle
+
+
+```js
+new Function(stack, "Function", {
+  bundle: {
+    copyFiles: [{ from: "src/index.js" }]
+  }
+})
+```
+
+### experimentalUseProvidedRuntime?
+
+_Type_ : <span class='mono'><span class="mono">"provided"</span> | <span class="mono">"provided.al2"</span></span>
+
+_Default_ : <span class="mono">Not using provided runtime</span>
+
+Use custom Amazon Linux runtime instead of Java runtime.
+
+
+```js
+new Function(stack, "Function", {
+  bundle: {
+    experimentalUseProvidedRuntime: "provided.al2"
+  }
+})
 ```
 
 ## FunctionBundleNodejsProps

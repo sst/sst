@@ -114,7 +114,7 @@ An array of scopes to include in the authorization when using `user_pool` or `jw
 
 ### defaults.authorizer?
 
-_Type_ : <span class='mono'><span class="mono">"iam"</span> | <span class="mono">"none"</span> | <span class="mono">string</span></span>
+_Type_ : <span class='mono'><span class="mono">"none"</span> | <span class="mono">"iam"</span> | <span class="mono">string</span></span>
 
 The default authorizer for all the routes in the API.
 
@@ -268,6 +268,12 @@ new Api(stack, "Api", {
 });
 ```
 
+### cdk.id?
+
+_Type_ : <span class="mono">string</span>
+
+Allows you to override default id for this construct.
+
 
 ## Properties
 An instance of `Api` has the following properties.
@@ -291,6 +297,10 @@ The ARN of the internally created API Gateway HTTP API
 _Type_ : <span class="mono">string</span>
 
 The id of the internally created API Gateway HTTP API
+
+### id
+
+_Type_ : <span class="mono">string</span>
 
 ### routes
 
@@ -394,6 +404,47 @@ api.attachPermissionsToRoute("GET /notes", ["s3"]);
 ```
 
 
+### bind
+
+```ts
+bind(constructs)
+```
+_Parameters_
+- __constructs__ <span class='mono'>Array&lt;<span class="mono">SSTConstruct</span>&gt;</span>
+
+
+Binds the given list of resources to all the routes.
+
+
+
+```js
+api.bind([STRIPE_KEY, bucket]);
+```
+
+### bindToRoute
+
+```ts
+bindToRoute(routeKey, constructs)
+```
+_Parameters_
+- __routeKey__ <span class="mono">string</span>
+- __constructs__ <span class='mono'>Array&lt;<span class="mono">SSTConstruct</span>&gt;</span>
+
+
+Binds the given list of resources to a specific route.
+
+
+```js
+const api = new Api(stack, "Api", {
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+
+api.bindToRoute("GET /notes", [STRIPE_KEY, bucket]);
+```
+
+
 ### getFunction
 
 ```ts
@@ -446,7 +497,7 @@ allowHeaders: ["Accept", "Content-Type", "Authorization"]
 
 ### allowMethods?
 
-_Type_ : <span class='mono'>Array&lt;<span class='mono'><span class="mono">"ANY"</span> | <span class="mono">"DELETE"</span> | <span class="mono">"GET"</span> | <span class="mono">"HEAD"</span> | <span class="mono">"OPTIONS"</span> | <span class="mono">"PATCH"</span> | <span class="mono">"POST"</span> | <span class="mono">"PUT"</span></span>&gt;</span>
+_Type_ : <span class='mono'>Array&lt;<span class='mono'><span class="mono">"GET"</span> | <span class="mono">"PUT"</span> | <span class="mono">"HEAD"</span> | <span class="mono">"POST"</span> | <span class="mono">"DELETE"</span> | <span class="mono">"ANY"</span> | <span class="mono">"PATCH"</span> | <span class="mono">"OPTIONS"</span></span>&gt;</span>
 
 _Default_ : <span class="mono">Allow all methods.</span>
 
@@ -568,7 +619,7 @@ _Type_ : <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
 
 ### authorizer?
 
-_Type_ : <span class='mono'><span class="mono">"iam"</span> | <span class="mono">"none"</span> | <span class="mono">string</span></span>
+_Type_ : <span class='mono'><span class="mono">"none"</span> | <span class="mono">"iam"</span> | <span class="mono">string</span></span>
 
 ### type
 
@@ -680,7 +731,7 @@ _Type_ : <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
 
 ### authorizer?
 
-_Type_ : <span class='mono'><span class="mono">"iam"</span> | <span class="mono">"none"</span> | <span class="mono">string</span></span>
+_Type_ : <span class='mono'><span class="mono">"none"</span> | <span class="mono">"iam"</span> | <span class="mono">string</span></span>
 
 ### type
 
@@ -741,7 +792,7 @@ The name of the authorizer.
 
 ### responseTypes?
 
-_Type_ : <span class='mono'>Array&lt;<span class='mono'><span class="mono">"simple"</span> | <span class="mono">"iam"</span></span>&gt;</span>
+_Type_ : <span class='mono'>Array&lt;<span class='mono'><span class="mono">"iam"</span> | <span class="mono">"simple"</span></span>&gt;</span>
 
 _Default_ : <span class="mono">["iam"]</span>
 
@@ -795,7 +846,7 @@ _Type_ : <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
 
 ### authorizer?
 
-_Type_ : <span class='mono'><span class="mono">"iam"</span> | <span class="mono">"none"</span> | <span class="mono">string</span></span>
+_Type_ : <span class='mono'><span class="mono">"none"</span> | <span class="mono">"iam"</span> | <span class="mono">string</span></span>
 
 ### commands?
 
@@ -845,7 +896,7 @@ _Type_ : <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
 
 ### authorizer?
 
-_Type_ : <span class='mono'><span class="mono">"iam"</span> | <span class="mono">"none"</span> | <span class="mono">string</span></span>
+_Type_ : <span class='mono'><span class="mono">"none"</span> | <span class="mono">"iam"</span> | <span class="mono">string</span></span>
 
 ### function?
 

@@ -116,6 +116,10 @@ export interface RDSProps {
 
   cdk?: {
     /**
+     * Allows you to override default id for this construct.
+     */
+    id?: string;
+    /**
      * Configure the internallly created RDS cluster.
      *
      * @example
@@ -182,6 +186,7 @@ export interface RDSCdkServerlessClusterProps
  * ```
  */
 export class RDS extends Construct implements SSTConstruct {
+  public readonly id: string;
   public readonly cdk: {
     /**
      * The ARN of the internally created CDK ServerlessCluster instance.
@@ -196,10 +201,11 @@ export class RDS extends Construct implements SSTConstruct {
   private secret: secretsManager.ISecret;
 
   constructor(scope: Construct, id: string, props: RDSProps) {
-    super(scope, id);
+    super(scope, props.cdk?.id || id);
 
     this.validateRequiredProps(props);
 
+    this.id = id;
     this.cdk = {} as any;
     this.props = props || {};
 
@@ -269,14 +275,40 @@ export class RDS extends Construct implements SSTConstruct {
         types:
           typeof types === "string"
             ? {
-                path: types,
-              }
+              path: types,
+            }
             : types,
         clusterArn: this.clusterArn,
         clusterIdentifier: this.clusterIdentifier,
         defaultDatabaseName,
         migrator:
           this.migratorFunction && getFunctionRef(this.migratorFunction),
+      },
+    };
+  }
+
+  /** @internal */
+  public getFunctionBinding() {
+    return {
+      clientPackage: "rds",
+      variables: {
+        clusterArn: {
+          environment: this.clusterArn,
+          parameter: this.clusterArn,
+        },
+        secretArn: {
+          environment: this.secretArn,
+          parameter: this.secretArn
+        },
+        defaultDatabaseName: {
+          environment: this.defaultDatabaseName,
+          parameter: this.defaultDatabaseName
+        }
+      },
+      permissions: {
+        "rds-data:*": [this.clusterArn],
+        "secretsmanager:GetSecretValue": [this.secret.secretArn],
+        "secretsmanager:DescribeSecret": [this.secret.secretArn],
       },
     };
   }
@@ -383,8 +415,8 @@ export class RDS extends Construct implements SSTConstruct {
         scaling?.autoPause === false
           ? cdk.Duration.minutes(0)
           : scaling?.autoPause === true || scaling?.autoPause === undefined
-          ? cdk.Duration.minutes(5)
-          : cdk.Duration.minutes(scaling?.autoPause),
+            ? cdk.Duration.minutes(5)
+            : cdk.Duration.minutes(scaling?.autoPause),
       minCapacity: rds.AuroraCapacityUnit[scaling?.minCapacity || "ACU_2"],
       maxCapacity: rds.AuroraCapacityUnit[scaling?.maxCapacity || "ACU_16"],
     };

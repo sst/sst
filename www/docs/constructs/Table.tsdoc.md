@@ -195,6 +195,12 @@ new Table(stack, "Table", {
 ```
 
 
+### cdk.id?
+
+_Type_ : <span class="mono">string</span>
+
+Allows you to override default id for this construct.
+
 ### cdk.table?
 
 _Type_ : <span class='mono'><span class="mono">[ITable](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_dynamodb.ITable.html)</span> | <span class="mono">Omit&lt;<span class="mono">[TableProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_dynamodb.TableProps.html)</span>, <span class='mono'><span class="mono">"sortKey"</span> | <span class="mono">"partitionKey"</span></span>&gt;</span></span>
@@ -204,6 +210,10 @@ Override the settings of the internally created cdk table
 
 ## Properties
 An instance of `Table` has the following properties.
+### id
+
+_Type_ : <span class="mono">string</span>
+
 ### tableArn
 
 _Type_ : <span class="mono">string</span>
@@ -319,6 +329,39 @@ Grant permissions to a specific consumer of this table.
 
 ```js
 table.attachPermissionsToConsumer("consumer1", ["s3"]);
+```
+
+### bind
+
+```ts
+bind(constructs)
+```
+_Parameters_
+- __constructs__ <span class='mono'>Array&lt;<span class="mono">SSTConstruct</span>&gt;</span>
+
+
+Binds the given list of resources to all consumers of this table.
+
+
+```js
+table.bind([STRIPE_KEY, bucket]);
+```
+
+### bindToConsumer
+
+```ts
+bindToConsumer(consumerName, constructs)
+```
+_Parameters_
+- __consumerName__ <span class="mono">string</span>
+- __constructs__ <span class='mono'>Array&lt;<span class="mono">SSTConstruct</span>&gt;</span>
+
+
+Binds the given list of resources to a specific consumer of this table.
+
+
+```js
+table.bindToConsumer("consumer1", [STRIPE_KEY, bucket]);
 ```
 
 ### getFunction

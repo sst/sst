@@ -1,35 +1,53 @@
-import { Config } from "../config";
+import { createProxy, parseEnvironment } from "../util/index.js";
 import { InvokeCommand, LambdaClient } from "@aws-sdk/client-lambda";
 const lambda = new LambdaClient({});
-const JOB_PREFIX = "SST_JOB_";
 
-export interface JobNames { };
+export interface JobResources { }
 
 export interface JobTypes { }
 
-export type JobProps<C extends Extract<keyof JobTypes, keyof JobNames>> = {
-  payload?: JobTypes[C];
+export type JobRunProps<T extends keyof JobResources> = {
+  payload?: JobTypes[T];
 };
 
-async function run<C extends keyof JobNames>(name: C, props?: JobProps<C>) {
-  // Handle job permission not granted
-  let functionName;
-  try {
-    functionName = Config[`SST_JOB_${name}`];
-  } catch (e) {
-    throw new Error(`Cannot invoke the ${name} Job. Please make sure this function has permissions to invoke it.`);
-  }
+// Note: create the JobType separately and passing into `createProxy`
+//       instead of defining the type inline in `createProxy`. In the
+//       latter case, the type is not available in the client.
+export type JobType = {
+  [T in keyof JobResources]: ReturnType<typeof JobControl<T>>;
+};
 
-  // Invoke the Lambda function
-  const ret = await lambda.send(new InvokeCommand({
-    FunctionName: functionName,
-    Payload: props?.payload === undefined
-      ? undefined
-      : Buffer.from(JSON.stringify(props?.payload)),
-  }));
-  if (ret.FunctionError) {
-    throw new Error(`Failed to invoke the ${name} Job. Error: ${ret.FunctionError}`);
-  }
+export const Job = createProxy<JobType>("Job");
+const jobData = parseEnvironment("Job", ["functionName"]);
+Object.keys(jobData).forEach((name) => {
+  // @ts-ignore
+  Job[name] = JobControl(name);
+});
+
+function JobControl<Name extends keyof JobResources>(name: Name) {
+  return {
+    async run(props: JobRunProps<Name>) {
+      // Handle job permission not granted
+      // @ts-ignore
+      const functionName = jobData[name].functionName;
+
+      // Invoke the Lambda function
+      const ret = await lambda.send(
+        new InvokeCommand({
+          FunctionName: functionName,
+          Payload:
+            props?.payload === undefined
+              ? undefined
+              : Buffer.from(JSON.stringify(props?.payload)),
+        })
+      );
+      if (ret.FunctionError) {
+        throw new Error(
+          `Failed to invoke the ${name} Job. Error: ${ret.FunctionError}`
+        );
+      }
+    },
+  };
 }
 
 /**
@@ -44,18 +62,17 @@ async function run<C extends keyof JobNames>(name: C, props?: JobProps<C>) {
  *     };
  *   }
  * }
- * 
+ *
  * export const handler = JobHandler("MyJob", async (payload) => {
  *   console.log(payload.title);
  * })
  * ```
  */
-export function JobHandler<C extends keyof JobNames>(name: C, cb: (payload: JobTypes[C]) => void) {
+export function JobHandler<C extends keyof JobResources>(
+  name: C,
+  cb: (payload: JobTypes[C]) => void
+) {
   return function handler(event: any) {
-    return cb(event as JobTypes[keyof JobNames]);
+    return cb(event as JobTypes[keyof JobResources]);
   };
 }
-
-export const Job = {
-  run,
-};

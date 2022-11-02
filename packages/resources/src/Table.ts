@@ -65,8 +65,8 @@ export interface TableLocalIndexProps {
    * @default "all"
    */
   projection?:
-    | Lowercase<keyof Pick<typeof dynamodb.ProjectionType, "ALL" | "KEYS_ONLY">>
-    | string[];
+  | Lowercase<keyof Pick<typeof dynamodb.ProjectionType, "ALL" | "KEYS_ONLY">>
+  | string[];
   cdk?: {
     /**
      * Override the settings of the internally created local secondary indexes
@@ -89,8 +89,8 @@ export interface TableGlobalIndexProps {
    * @default "all"
    */
   projection?:
-    | Lowercase<keyof Pick<typeof dynamodb.ProjectionType, "ALL" | "KEYS_ONLY">>
-    | string[];
+  | Lowercase<keyof Pick<typeof dynamodb.ProjectionType, "ALL" | "KEYS_ONLY">>
+  | string[];
   cdk?: {
     /**
      * Override the settings of the internally created global secondary index
@@ -264,11 +264,15 @@ export interface TableProps {
   consumers?: Record<string, FunctionInlineDefinition | TableConsumerProps>;
   cdk?: {
     /**
+     * Allows you to override default id for this construct.
+     */
+    id?: string;
+    /**
      * Override the settings of the internally created cdk table
      */
     table?:
-      | dynamodb.ITable
-      | Omit<dynamodb.TableProps, "partitionKey" | "sortKey">;
+    | dynamodb.ITable
+    | Omit<dynamodb.TableProps, "partitionKey" | "sortKey">;
   };
 }
 
@@ -296,6 +300,7 @@ export interface TableProps {
  * ```
  */
 export class Table extends Construct implements SSTConstruct {
+  public readonly id: string;
   public readonly cdk: {
     /**
      * The internally created CDK `Table` instance.
@@ -303,21 +308,21 @@ export class Table extends Construct implements SSTConstruct {
     table: dynamodb.ITable;
   };
   private dynamodbTableType?: "CREATED" | "IMPORTED";
-  private functions: { [consumerName: string]: Fn };
-  private permissionsAttachedForAllConsumers: Permissions[];
+  private functions: { [consumerName: string]: Fn } = {};
+  private bindingForAllConsumers: SSTConstruct[] = [];
+  private permissionsAttachedForAllConsumers: Permissions[] = [];
   private props: TableProps;
   private stream?: dynamodb.StreamViewType;
   private fields?: Record<string, TableFieldType>;
 
   constructor(scope: Construct, id: string, props: TableProps) {
-    super(scope, id);
+    super(scope, props.cdk?.id || id);
 
+    this.id = id;
     this.props = props;
     const { fields, globalIndexes, localIndexes, kinesisStream } = this.props;
     this.cdk = {} as any;
-    this.functions = {};
     this.fields = fields;
-    this.permissionsAttachedForAllConsumers = [];
 
     // Input Validation
     this.validateFieldsAndIndexes(id, props);
@@ -413,7 +418,7 @@ export class Table extends Construct implements SSTConstruct {
           return {
             projectionType:
               dynamodb.ProjectionType[
-                projection.toUpperCase() as keyof typeof dynamodb.ProjectionType
+              projection.toUpperCase() as keyof typeof dynamodb.ProjectionType
               ],
           };
         })(),
@@ -471,7 +476,7 @@ export class Table extends Construct implements SSTConstruct {
           return {
             projectionType:
               dynamodb.ProjectionType[
-                projection.toUpperCase() as keyof typeof dynamodb.ProjectionType
+              projection.toUpperCase() as keyof typeof dynamodb.ProjectionType
               ],
           };
         })(),
@@ -503,6 +508,42 @@ export class Table extends Construct implements SSTConstruct {
   }
 
   /**
+   * Binds the given list of resources to all consumers of this table.
+   *
+   * @example
+   * ```js
+   * table.bind([STRIPE_KEY, bucket]);
+   * ```
+   */
+  public bind(constructs: SSTConstruct[]) {
+    Object.values(this.functions).forEach((fn) =>
+      fn.bind(constructs)
+    );
+    this.bindingForAllConsumers.push(...constructs);
+  }
+
+  /**
+   * Binds the given list of resources to a specific consumer of this table.
+   *
+   * @example
+   * ```js
+   * table.bindToConsumer("consumer1", [STRIPE_KEY, bucket]);
+   * ```
+   */
+  public bindToConsumer(
+    consumerName: string,
+    constructs: SSTConstruct[]
+  ): void {
+    if (!this.functions[consumerName]) {
+      throw new Error(
+        `The "${consumerName}" consumer was not found in the "${this.node.id}" Table.`
+      );
+    }
+
+    this.functions[consumerName].bind(constructs);
+  }
+
+  /**
    * Grant permissions to all consumers of this table.
    *
    * @example
@@ -510,7 +551,7 @@ export class Table extends Construct implements SSTConstruct {
    * table.attachPermissions(["s3"]);
    * ```
    */
-  public attachPermissions(permissions: Permissions): void {
+  public attachPermissions(permissions: Permissions) {
     Object.values(this.functions).forEach((fn) =>
       fn.attachPermissions(permissions)
     );
@@ -554,6 +595,7 @@ export class Table extends Construct implements SSTConstruct {
     return this.functions[consumerName];
   }
 
+  /** @internal */
   public getConstructMetadata() {
     return {
       type: "Table" as const,
@@ -563,6 +605,22 @@ export class Table extends Construct implements SSTConstruct {
           name,
           fn: getFunctionRef(fun),
         })),
+      },
+    };
+  }
+
+  /** @internal */
+  public getFunctionBinding() {
+    return {
+      clientPackage: "table",
+      variables: {
+        "tableName": {
+          environment: this.tableName,
+          parameter: this.tableName,
+        },
+      },
+      permissions: {
+        "dynamodb:*": [this.tableArn, `${this.tableArn}/*`],
       },
     };
   }
@@ -705,6 +763,7 @@ export class Table extends Construct implements SSTConstruct {
     this.permissionsAttachedForAllConsumers.forEach((permissions) => {
       fn.attachPermissions(permissions);
     });
+    fn.bind(this.bindingForAllConsumers);
 
     return fn;
   }

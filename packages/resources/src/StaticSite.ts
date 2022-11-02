@@ -36,6 +36,7 @@ import {
   buildErrorResponsesForRedirectToIndex,
 } from "./BaseSite.js";
 import { SSTConstruct, isCDKConstruct } from "./Construct.js";
+import { ENVIRONMENT_PLACEHOLDER, FunctionBindingProps, getParameterPath } from "./util/functionBinding.js";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -46,40 +47,6 @@ export interface StaticSiteFileOptions {
 }
 
 export interface StaticSiteProps {
-  cdk?: {
-    /**
-     * Allows you to override default settings this construct uses internally to ceate the bucket
-     *
-     * @example
-     * ```js
-     * new StaticSite(stack, "Site", {
-     *   path: "path/to/src",
-     *   cdk: {
-     *     bucket: {
-     *       bucketName: "mybucket",
-     *     },
-     *   }
-     * });
-     * ```
-     */
-    bucket?: s3.BucketProps | s3.IBucket;
-    /**
-     * Configure the internally created CDK `Distribution` instance.
-     *
-     * @example
-     * ```js
-     * new StaticSite(stack, "Site", {
-     *   path: "path/to/src",
-     *   cdk: {
-     *     distribution: {
-     *       comment: "Distribution for my React website",
-     *     },
-     *   }
-     * });
-     * ```
-     */
-    distribution?: StaticSiteCdkDistributionProps;
-  };
   /**
    * Path to the directory where the website source is located.
    *
@@ -261,6 +228,44 @@ export interface StaticSiteProps {
    * ```
    */
   waitForInvalidation?: boolean;
+  cdk?: {
+    /**
+     * Allows you to override default id for this construct.
+     */
+    id?: string;
+    /**
+     * Allows you to override default settings this construct uses internally to ceate the bucket
+     *
+     * @example
+     * ```js
+     * new StaticSite(stack, "Site", {
+     *   path: "path/to/src",
+     *   cdk: {
+     *     bucket: {
+     *       bucketName: "mybucket",
+     *     },
+     *   }
+     * });
+     * ```
+     */
+    bucket?: s3.BucketProps | s3.IBucket;
+    /**
+     * Configure the internally created CDK `Distribution` instance.
+     *
+     * @example
+     * ```js
+     * new StaticSite(stack, "Site", {
+     *   path: "path/to/src",
+     *   cdk: {
+     *     distribution: {
+     *       comment: "Distribution for my React website",
+     *     },
+     *   }
+     * });
+     * ```
+     */
+    distribution?: StaticSiteCdkDistributionProps;
+  };
 }
 
 export interface StaticSiteDomainProps extends BaseSiteDomainProps { }
@@ -288,6 +293,7 @@ export interface StaticSiteCdkDistributionProps
  * ```
  */
 export class StaticSite extends Construct implements SSTConstruct {
+  public readonly id: string;
   public readonly cdk: {
     /**
      * The internally created CDK `Bucket` instance.
@@ -313,8 +319,9 @@ export class StaticSite extends Construct implements SSTConstruct {
   private awsCliLayer: AwsCliLayer;
 
   constructor(scope: Construct, id: string, props: StaticSiteProps) {
-    super(scope, id);
+    super(scope, props.cdk?.id || id);
 
+    this.id = id;
     const root = scope.node.root as App;
     // Local development or skip build => stub asset
     this.isPlaceholder =
@@ -418,6 +425,29 @@ export class StaticSite extends Construct implements SSTConstruct {
       data: {
         distributionId: this.cdk.distribution.distributionId,
         customDomainUrl: this.customDomainUrl,
+      },
+    };
+  }
+
+  /** @internal */
+  public getFunctionBinding(): FunctionBindingProps {
+    const app = this.node.root as App;
+    return {
+      clientPackage: "site",
+      variables: {
+        url: {
+          // Do not set real value b/c we don't want to make the Lambda function
+          // depend on the Site. B/c often the site depends on the Api, causing
+          // a CloudFormation circular dependency if the Api and the Site belong
+          // to different stacks.
+          environment: ENVIRONMENT_PLACEHOLDER,
+          parameter: this.customDomainUrl || this.url,
+        },
+      },
+      permissions: {
+        "ssm:GetParameters": [
+          `arn:aws:ssm:${app.region}:${app.account}:parameter${getParameterPath(this, "url")}`,
+        ],
       },
     };
   }

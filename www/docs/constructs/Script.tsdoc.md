@@ -130,3 +130,19 @@ Grants additional permissions to the script
 ```js
 script.attachPermissions(["s3"]);
 ```
+
+### bind
+
+```ts
+bind(constructs)
+```
+_Parameters_
+- __constructs__ <span class='mono'>Array&lt;<span class="mono">SSTConstruct</span>&gt;</span>
+
+
+Binds additional resources to the script
+
+
+```js
+script.bind([STRIPE_KEY, bucket]);
+```

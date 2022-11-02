@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import {
   getChildLogger,
-  FunctionConfig,
+  FunctionBinding,
 } from "@serverless-stack/core";
 
 const logger = getChildLogger("client");
@@ -30,7 +30,7 @@ export default async function (argv, config) {
 }
 
 async function handleList(argv, app, stage, region) {
-  const secrets = await FunctionConfig.listSecrets(app, stage, region);
+  const secrets = await FunctionBinding.listSecrets(app, stage, region);
   const keys = Object.keys(secrets);
 
   if (keys.length === 0) {
@@ -46,7 +46,7 @@ async function handleList(argv, app, stage, region) {
 
 async function handleGet(argv, app, stage, region) {
   const { name } = argv;
-  const secret = await FunctionConfig.getSecret(app, stage, region, name);
+  const secret = await FunctionBinding.getSecret(app, stage, region, name);
   if (secret.value) {
     logger.info(chalk.bold(secret.value));
   }
@@ -62,25 +62,25 @@ async function handleGet(argv, app, stage, region) {
 
 async function handleSet(argv, app, stage, region) {
   const { name, value } = argv;
-  await FunctionConfig.setSecret(app, stage, region, name, value);
+  await FunctionBinding.setSecret(app, stage, region, name, value);
   logger.info("\n✅ Updated");
 }
 
 async function handleSetFallback(argv, app, region) {
   const { name, value } = argv;
-  await FunctionConfig.setSecretFallback(app, region, name, value);
+  await FunctionBinding.setSecretFallback(app, region, name, value);
   logger.info("✅ Updated");
 }
 
 async function handleRemove(argv, app, stage, region) {
   const { name } = argv;
-  await FunctionConfig.removeSecret(app, stage, region, name);
+  await FunctionBinding.removeSecret(app, stage, region, name);
   logger.info("\n✅ Removed");
 }
 
 async function handleRemoveFallback(argv, app, region) {
   const { name } = argv;
-  await FunctionConfig.removeSecretFallback(app, region, name);
+  await FunctionBinding.removeSecretFallback(app, region, name);
   logger.info("✅ Removed");
 }
 

@@ -20,8 +20,8 @@ Tasks related to video processing, ETL, and ML can take long. These exceed Lambd
 `Job` is made up of the following pieces:
 
 1. [`Job`](constructs/Job.md) — a construct that creates the necessary infrastructure.
-2. [`JobHandler`](packages/node.md#jobhandler) — a handler function that wraps around your function code in a typesafe way.
-3. [`Job.run`](packages/node.md#jobrun) — a helper function to invoke the job.
+2. [`JobHandler`](clients/job.md#jobhandler) — a handler function that wraps around your function code in a typesafe way.
+3. [`Job.run`](clients/job.md) — a helper function to invoke the job.
 
 ---
 
@@ -42,7 +42,7 @@ Alternatively, you can refer to [this example repo](https://github.com/serverles
    And add a `Job` construct below the API.
 
    ```ts
-   const job = new Job(stack, "MyJob", {
+   const job = new Job(stack, "myJob", {
      srcPath: "services",
      handler: "functions/myJob.handler",
    });
@@ -53,7 +53,7 @@ Alternatively, you can refer to [this example repo](https://github.com/serverles
    Give `api` the permissions to run the job.
 
    ```ts title="stacks/MyStack.ts"
-   api.attachPermissions([job]);
+   api.bind([job]);
    ```
 
 3. **Install dependency**
@@ -75,7 +75,7 @@ Alternatively, you can refer to [this example repo](https://github.com/serverles
 
    declare module "@serverless-stack/node/job" {
      export interface JobTypes {
-       MyJob: {
+       myJob: {
          num: number;
        };
      }
@@ -84,10 +84,10 @@ Alternatively, you can refer to [this example repo](https://github.com/serverles
 
    Note that we are defining the job payload to contain a `num` property with type `number`. This'll ensure that we'll get a type error in our editor when we try to pass in a string. We talk more about [typesafety below](#typesafe-payload).
 
-   Then create the handler function using the [`JobHandler`](packages/node.md#jobhandler) helper. Append this to `myJob.ts`.
+   Then create the handler function using the [`JobHandler`](clients/job.md#jobhandler) helper. Append this to `myJob.ts`.
 
    ```ts
-   export const handler = JobHandler("MyJob", async (payload) => {
+   export const handler = JobHandler("myJob", async (payload) => {
      // Calculate factorial
      let result = 1;
      for (let i = 2; i <= payload.num; i++) {
@@ -100,14 +100,14 @@ Alternatively, you can refer to [this example repo](https://github.com/serverles
 
 5. **Run the job**
 
-   And finally we can run this job in our API using the [`Job.run`](packages/node.md#jobrun) helper. Change `services/functions/lambda.ts` to:
+   And finally we can run this job in our API using the [`Job.myJob.run`](clients/job.md) helper. Change `services/functions/lambda.ts` to:
 
    ```ts title="services/functions/lambda.ts"
    import { Job } from "@serverless-stack/node/job";
    import { APIGatewayProxyHandlerV2 } from "aws-lambda";
 
    export const handler: APIGatewayProxyHandlerV2 = async (event) => {
-     await Job.run("MyJob", {
+     await Job.myJob.run({
        payload: {
          num: 100,
        },
@@ -124,7 +124,7 @@ Alternatively, you can refer to [this example repo](https://github.com/serverles
    You'll notice that your editor will autocomplete the `payload` for you.
 
 :::info
-`Job.run` returns right after it starts the long running job.
+`Job.myJob.run` returns right after it starts the long running job.
 :::
 
 And that's it. You can now add long running jobs to your apps!
@@ -140,7 +140,7 @@ Jobs currently only support Node.js runtimes, and they are always bundled by esb
 You can optionally configure the memory size and the timeout for the job.
 
 ```ts
-const job = new Job(stack, "MyJob", {
+const job = new Job(stack, "myJob", {
   srcPath: "services",
   handler: "functions/myJob.handler",
   timeout: "1 hour",
@@ -154,40 +154,34 @@ See a full list of [memory size](constructs/Job.md#memorysize) and [timeout](con
 
 ## Referencing AWS resources
 
-Similar to Functions, you can use the `config` and `permissions` fields to pass other resources to your job, and reference them at runtime.
+Similar to Functions, you can use the `bind` fields to pass other resources to your job, and reference them at runtime.
 
 :::tip
-Both [`Parameters`](environment-variables.md#configparameter) and [`Secrets`](environment-variables.md#configsecret) work inside a job.
+[Resource Binding](./resource-binding.md) works inside a job.
 :::
 
-For example, to access a [`Table`](constructs/Table.md) inside a job, pass in a Parameter with the table name and grant it permissions:
+For example, to access a [`Table`](constructs/Table.md) inside a job:
 
 ```ts
 // Create a DynamoDB table
-const table = new Table(stack, "MyTable", { /* ... */ });
-
-// Create a Parameter with the table name
-const MY_TABLE_NAME = new Config.Parameter(stack, "MY_TABLE_NAME", {
-  value: table.tableName,
-});
+const table = new Table(stack, "myTable", { /* ... */ });
 
 // Create a Job
-new Job (stack, "MyJob, {
+new Job (stack, "myJob, {
   srcPath: "services",
   handler: "functions/myJob.handler",
-  config: [MY_TABLE_NAME], // pass table name to job
-  permissions: [table], // grant job permissions to access the table
+  bind: [table], // bind table to job
 });
 ```
 
 Now you can access the table at runtime.
 
 ```ts
-import { Config } from "@serverless-stack/node/config";
+import { Table } from "@serverless-stack/node/table";
 import { JobHandler } from "@serverless-stack/node/job";
 
-export const handler = JobHandler("MyJob", async (payload) => {
-  console.log(Config.MY_TABLE_NAME);
+export const handler = JobHandler("myJob", async (payload) => {
+  console.log(Table.myTable.tableName);
 });
 ```
 
@@ -199,7 +193,6 @@ Let's look at how `Job` works. It uses a few resources behind the scenes:
 
 1. An [**AWS CodeBuild**](https://aws.amazon.com/codebuild/) project that runs the handler function inside a docker container.
 2. An **invoker Lambda** function that triggers the CodeBuild project.
-3. A [**Config Parameter**](environment-variables.md#configparameter) with the name of the Lambda function. In the above example, the `Parameter` is named `SST_JOB_MyJob`.
 
 ---
 
@@ -207,25 +200,25 @@ Let's look at how `Job` works. It uses a few resources behind the scenes:
 
 1. Calling `new Job()` creates the above resources.
 
-2. When granting an API (or any other function) permissions to run the job:
+2. When binding to an API (or any other function):
 
    ```ts
-   api.attachPermissions([job]);
+   api.bind([job]);
    ```
 
-   The API route is granted the IAM permission to invoke the invoker Lambda function. The Parameter is also passed into the route's `config` prop.
+   The API route is granted the IAM permission to invoke the invoker Lambda function. The invoker Lambda's function name is also passed into the route as Lambda environment variable, `SST_Job_functionName_myJob`.
 
 3. At runtime, when running the job:
 
    ```ts
-   await Job.run("MyJob", {
+   await Job.myJob.run({
      payload: {
        num: 100,
      },
    });
    ```
 
-   `Job.run` gets the name of the invoker function from `Config.SST_JOB_MyJob`, and invokes the function with the payload.
+   `Job.myJob.run` gets the name of the invoker function from `process.env.SST_Job_functionName_myJob`, and invokes the function with the payload.
 
 4. The invoker function then triggers the CodeBuild job. The function payload is JSON stringified and passed to the CodeBuild job as environment variable, `SST_PAYLOAD`.
 
@@ -259,7 +252,7 @@ In our example, we defined the job type in `services/functions/myJob.ts`.
 
 ```ts title="services/functions/myJob.ts"
 export interface JobTypes {
-  MyJob: {
+  myJob: {
     num: number;
   };
 }
@@ -270,7 +263,7 @@ This is being used in two places to ensure typesafety.
 1. When running the job, the payload is validated against the job type.
 
    ```ts {2-4}
-   await Job.run("MyJob", {
+   await Job.myJob.run({
      payload: {
        num: 100,
      },
@@ -280,7 +273,7 @@ This is being used in two places to ensure typesafety.
 2. And, when defining the `JobHandler`, the `payload` argument is automatically typed. Your editor can also autocomplete `payload.num` for you, and reports a type error if an undefined field is accessed by mistake.
 
    ```ts
-   export const handler = JobHandler("MyJob", async (payload) => {
+   export const handler = JobHandler("myJob", async (payload) => {
      // Editor can autocomplete "num"
      console.log(payload.num);
 
@@ -294,7 +287,7 @@ This is being used in two places to ensure typesafety.
 
 Let's take a look at how this is all wired up.
 
-1. First, the `@serverless-stack/node/config` package predefines two interfaces.
+1. First, the `@serverless-stack/node/job` package predefines two interfaces.
 
    ```ts
    export interface JobNames {}
@@ -303,11 +296,11 @@ Let's take a look at how this is all wired up.
 
 2. `JobNames` is managed by SST. When SST builds the app, it generates a type file and adds all job names to the `JobNames` interface.
 
-   ```ts title="node_modules/@types/@serverless-stack__node/job.d.ts"
+   ```ts title="node_modules/@types/@serverless-stack__node/Job-LongJob.d.ts"
    import "@serverless-stack/node/job";
    declare module "@serverless-stack/node/job" {
      export interface JobNames {
-       MyJob: string;
+       myJob: string;
      }
    }
    ```
@@ -315,30 +308,29 @@ Let's take a look at how this is all wired up.
    This type file then gets appended to `index.d.ts`.
 
    ```ts title="node_modules/@types/@serverless-stack__node/index.d.ts"
-   export * from "./job";
+   export * from "./Job-LongJob";
    ```
 
 3. `JobTypes` is managed by you. In our example, you defined the payload types in `services/functions/myJob.ts`.
 
    ```ts title="services/functions/myJob.ts"
    export interface JobTypes {
-     MyJob: {
+     myJob: {
        num: number;
      };
    }
    ```
 
-4. With `JobNames` and `JobTypes` defined, `Job.run` has the type:
+4. With `JobNames` and `JobTypes` defined, `Job.myJob.run` has the type:
 
    ```ts
-   export type JobProps<C extends Extract<keyof JobTypes, keyof JobNames>> = {
-     payload?: JobTypes[C];
+   export type JobRunProps<T extends keyof JobResources> = {
+     payload?: JobTypes[T];
    };
 
-   async function run<C extends keyof JobNames>(name: C, props?: JobProps<C>) {}
+   async function run(props: JobRunProps<Name>) {}
    ```
 
-   - `name` must be one of the job names defined in your stacks
    - `props.payload` must be the corresponding job type for the given job
 
 5. And finally `JobHandler` has the type:

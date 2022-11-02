@@ -79,6 +79,64 @@ test("stack tags", () => {
   });
 });
 
+test("construct id: not duplicate", () => {
+  const app = new App();
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  new Api(stackA, "A");
+  new Api(stackB, "B");
+  expect(() => {
+    app.synth();
+  }).not.toThrow();
+});
+
+test("construct id: duplicate", () => {
+  const app = new App();
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  new Api(stackA, "A");
+  new Api(stackB, "A");
+  expect(() => {
+    app.synth();
+  }).toThrow(/Api construct with id "A" already exists/);
+});
+
+test("construct id: single char", () => {
+  const app = new App();
+  const stack = new Stack(app, "stack");
+  const api = new Api(stack, "A");
+  expect(() => {
+    app.synth();
+  }).not.toThrow();
+});
+
+test("construct id: starting with underscore", () => {
+  const app = new App();
+  const stack = new Stack(app, "stack");
+  const api = new Api(stack, "_A");
+  expect(() => {
+    app.synth();
+  }).toThrow();
+});
+
+test("construct id: contain underscore", () => {
+  const app = new App();
+  const stack = new Stack(app, "stack");
+  const api = new Api(stack, "A_");
+  expect(() => {
+    app.synth();
+  }).not.toThrow();
+});
+
+test("construct id: special char", () => {
+  const app = new App();
+  const stack = new Stack(app, "stack");
+  const api = new Api(stack, "A-B");
+  expect(() => {
+    app.synth();
+  }).toThrow();
+});
+
 test("removeGovCloudUnsupportedResourceProperties us-east-1", () => {
   const stack = new Stack(new App(), "stack");
   new Api(stack, "Api", {
