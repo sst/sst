@@ -19,7 +19,7 @@ import { Function, FunctionProps, FunctionHandlerProps } from "./Function.js";
 import * as Config from "./Config.js";
 import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite.js";
 import { Permissions } from "./util/permission.js";
-import { bindType } from "./util/functionBinding.js";
+import { bindType, bindParameters } from "./util/functionBinding.js";
 import { StackProps } from "./Stack.js";
 import { FunctionalStack, stack } from "./FunctionalStack.js";
 import { createRequire } from "module";
@@ -332,7 +332,8 @@ export class App extends cdk.App {
   synth(options: cdk.StageSynthesisOptions = {}): cxapi.CloudAssembly {
     Auth.injectConfig();
     this.ensureUniqueConstructIds();
-    this.codegenTypes();
+    this.codegenBindingTypes();
+    this.createBindingSsmParameters();
     this.buildConstructsMetadata();
     this.removeGovCloudUnsupportedResourceProperties();
     this.printWarnings();
@@ -604,7 +605,7 @@ export class App extends cdk.App {
     cdk.Aspects.of(this).add(new EnsureUniqueConstructIds());
   }
 
-  private codegenTypes() {
+  private codegenBindingTypes() {
     // Find the node_modules folder to create the type files in
     const nodeModulesPath = this.codegenFindNodeModulesPath();
     if (!nodeModulesPath) {
@@ -647,23 +648,6 @@ declare module "@serverless-stack/node/config" {
   }
 
   private codegenCreateConstructTypes(typesPath: string) {
-    //export function codegenTypes(typesPath: string) {
-    //  fs.appendFileSync(`${typesPath}/index.d.ts`, `export * from "./config";`);
-    //  fs.writeFileSync(`${typesPath}/config.d.ts`, `
-    //    import "@serverless-stack/node/config";
-    //    declare module "@serverless-stack/node/config" {
-    //      export interface ConfigType {
-    //        ${[
-    //      "APP",
-    //      "STAGE",
-    //      ...Parameter.getAllNames(),
-    //      ...Secret.getAllNames()
-    //    ].map((p) => `${p}: string;`).join("\n")}
-    //      }
-    //    }
-    //  `);
-    //}
-
     class CodegenTypes implements cdk.IAspect {
       public visit(c: IConstruct): void {
         if (!isSSTConstruct(c)) { return; }
@@ -700,6 +684,19 @@ declare module "@serverless-stack/node/${binding.clientPackage}" {
     }
 
     cdk.Aspects.of(this).add(new CodegenTypes());
+  }
+
+  private createBindingSsmParameters() {
+    class CreateSsmParameters implements cdk.IAspect {
+      public visit(c: IConstruct): void {
+        if (!isSSTConstruct(c)) { return; }
+        if (c instanceof Function && c._disableBind) { return; }
+
+        bindParameters(c);
+      }
+    }
+
+    cdk.Aspects.of(this).add(new CreateSsmParameters());
   }
 
   /** @internal */

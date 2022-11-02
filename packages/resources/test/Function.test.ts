@@ -787,8 +787,7 @@ test("layers: imported from another stack", async () => {
   });
   expect(stack2.dependencies).toEqual([stack1]);
 
-  countResources(stack1, "AWS::SSM::Parameter", 1);
-  hasResource(stack1, "AWS::SSM::Parameter", {
+  countResourcesLike(stack1, "AWS::SSM::Parameter", 1, {
     Value: { Ref: stringLike(/MyLayer.*/) },
   });
   countResources(stack1, "AWS::Lambda::LayerVersion", 1);
@@ -796,7 +795,6 @@ test("layers: imported from another stack", async () => {
     Layers: [{ Ref: stringLike(/MyLayer.*/) }],
   });
 
-  countResources(stack2, "AWS::SSM::Parameter", 0);
   countResources(stack2, "AWS::Lambda::LayerVersion", 0);
   hasResource(stack2, "AWS::Lambda::Function", {
     Layers: [{ Ref: stringLike(/SsmParameterValue.*/) }],
@@ -822,13 +820,14 @@ test("layers: imported from another stack multiple times", async () => {
     handler: "test/lambda.handler",
     layers: [layer],
   });
-  countResources(stack1, "AWS::SSM::Parameter", 1);
+  countResourcesLike(stack1, "AWS::SSM::Parameter", 1, {
+    Value: { Ref: stringLike(/MyLayer.*/) },
+  });
   countResources(stack1, "AWS::Lambda::LayerVersion", 1);
   hasResource(stack1, "AWS::Lambda::Function", {
     Layers: [{ Ref: stringLike(/MyLayer.*/) }],
   });
 
-  countResources(stack2, "AWS::SSM::Parameter", 0);
   countResources(stack2, "AWS::Lambda::LayerVersion", 0);
   countResourcesLike(stack2, "AWS::Lambda::Function", 2, {
     Layers: [{ Ref: stringLike(/SsmParameterValue.*/) }],
@@ -852,13 +851,17 @@ test("layers: imported from ARN", async () => {
     handler: "test/lambda.handler",
     layers: [layer],
   });
-  countResources(stack1, "AWS::SSM::Parameter", 0);
+  countResourcesLike(stack1, "AWS::SSM::Parameter", 0, {
+    Value: { Ref: stringLike(/MyLayer.*/) },
+  });
   countResources(stack1, "AWS::Lambda::LayerVersion", 0);
   hasResource(stack1, "AWS::Lambda::Function", {
     Layers: ["arn"],
   });
 
-  countResources(stack2, "AWS::SSM::Parameter", 0);
+  countResourcesLike(stack2, "AWS::SSM::Parameter", 0, {
+    Value: { Ref: stringLike(/MyLayer.*/) },
+  });
   countResources(stack2, "AWS::Lambda::LayerVersion", 0);
   hasResource(stack2, "AWS::Lambda::Function", {
     Layers: ["arn"],

@@ -15,7 +15,7 @@ import { SSTConstruct } from "./Construct.js";
 import { Function, FunctionBundleNodejsProps } from "./Function.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
-import { bindEnvironment, bindParameters, bindPermissions } from "./util/functionBinding.js";
+import { bindEnvironment, bindPermissions } from "./util/functionBinding.js";
 import { IVpc } from "aws-cdk-lib/aws-ec2";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
@@ -504,9 +504,6 @@ export class Job extends Construct implements SSTConstruct {
       Object.entries(env).forEach(([key, value]) =>
         this.addEnvironmentForCodeBuild(key, value)
       );
-
-      // Bind parameters
-      bindParameters(c);
 
       // Bind permissions
       const permissions = bindPermissions(c);

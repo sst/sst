@@ -1,5 +1,11 @@
 import { test, expect } from "vitest";
-import { ANY, ABSENT, hasResource, hasResourceTemplate } from "./helper";
+import {
+  ANY,
+  ABSENT,
+  hasResource,
+  hasResourceTemplate,
+  countResourcesLike,
+} from "./helper";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import * as logs from "aws-cdk-lib/aws-logs";
 
@@ -164,6 +170,15 @@ test("construct id: special char", () => {
   expect(() => {
     app.synth();
   }).toThrow();
+});
+
+test("bindParameters", () => {
+  const app = new App();
+  const stack = new Stack(app, "stack");
+  new Api(stack, "my-api");
+  countResourcesLike(stack, "AWS::SSM::Parameter", 1, {
+    Name: "/sst/my-app/dev/Api/my_api/url",
+  });
 });
 
 test("removeGovCloudUnsupportedResourceProperties us-east-1", () => {

@@ -20,7 +20,7 @@ import { Secret, Parameter } from "./Config.js";
 import { isSSTConstruct, SSTConstruct } from "./Construct.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
-import { bindEnvironment, bindParameters, bindPermissions } from "./util/functionBinding.js";
+import { bindEnvironment, bindPermissions } from "./util/functionBinding.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import * as functionUrlCors from "./util/functionUrlCors.js";
 
@@ -1026,9 +1026,6 @@ export class Function extends lambda.Function implements SSTConstruct {
       Object.entries(env).forEach(([key, value]) =>
         this.addEnvironment(key, value)
       );
-
-      // Bind parameters
-      bindParameters(c);
 
       // Bind permissions
       const permissions = bindPermissions(c);
