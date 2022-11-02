@@ -1,7 +1,7 @@
 import SSM, { ParameterList } from "aws-sdk/clients/ssm.js";
 import { log } from "./util.js";
 
-const ssm = new SSM({});
+const ssm = new SSM({ logger: console });
 
 export async function SecretsMigration(cfnRequest: any) {
   log("SecretsMigration()");
@@ -38,7 +38,6 @@ async function migrateSecretsSSMPath(input: {
   // Check if migration is needed
   if (version) {
     const parts = version.split(".");
-    console.log({ parts });
     const majorVersion = parseInt(parts[0]);
     const minorVersion = parseInt(parts[1]);
     const needToMigrate = (majorVersion < 1 || majorVersion === 1 && minorVersion < 16);
@@ -52,6 +51,10 @@ async function migrateSecretsSSMPath(input: {
   // Migrate secrets
   for (const secret of secrets) {
     const name = secret.Name!.split("/")[5];
+    // Do not migrate SST Auth secrets b/c they are no longer secrets in v1.16.
+    if (name === "SST_AUTH_PRIVATE" || name === "SST_AUTH_PUBLIC") {
+      continue;
+    }
     const newKey = `/sst/${app}/${stage}/Secret/${name}/value`;
     await ssm.putParameter({
       Name: newKey,

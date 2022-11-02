@@ -41,7 +41,7 @@ export interface ApiAttachmentProps {
    * const auth = new Auth(stack, "Auth", {
    *   authenticator: "functions/authenticator.handler"
    * })
-   * auth.attach({
+   * auth.attach(stack, {
    *   api
    * })
    * ```
@@ -59,7 +59,7 @@ export interface ApiAttachmentProps {
    * const auth = new Auth(stack, "Auth", {
    *   authenticator: "functions/authenticator.handler"
    * })
-   * auth.attach({
+   * auth.attach(stack, {
    *   api,
    *   prefix: "/custom/prefix"
    * })
@@ -166,7 +166,7 @@ export class Auth extends Construct implements SSTConstruct {
    * const auth = new Auth(stack, "Auth", {
    *   authenticator: "functions/authenticator.handler"
    * })
-   * auth.attach({
+   * auth.attach(stack, {
    *   api
    * })
    * ```

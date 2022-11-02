@@ -10,7 +10,7 @@ import { promisify } from "util";
 const generateKeyPair = promisify(crypto.generateKeyPair);
 export async function AuthKeys(cfnRequest: any) {
   const { privatePath, publicPath } = cfnRequest.ResourceProperties;
-  const client = new SSMClient({});
+  const client = new SSMClient({ logger: console });
 
   switch (cfnRequest.RequestType) {
     case "Create":
@@ -49,44 +49,48 @@ export async function AuthKeys(cfnRequest: any) {
         publicPath: oldPublicPath,
       } = cfnRequest.OldResourceProperties;
       if (oldPrivatePath !== privatePath) {
-        const oldPrivateKey = await client.send(
-          new GetParameterCommand({
-            Name: oldPrivatePath,
-            WithDecryption: true,
-          })
-        );
-        await client.send(
-          new PutParameterCommand({
-            Name: privatePath,
-            Value: oldPrivateKey.Parameter?.Value,
-            Type: "SecureString",
-          })
-        );
-        await client.send(
-          new DeleteParameterCommand({
-            Name: oldPrivatePath,
-          })
-        );
+        try {
+          const oldPrivateKey = await client.send(
+            new GetParameterCommand({
+              Name: oldPrivatePath,
+              WithDecryption: true,
+            })
+          );
+          await client.send(
+            new PutParameterCommand({
+              Name: privatePath,
+              Value: oldPrivateKey.Parameter?.Value,
+              Type: "SecureString",
+              Overwrite: true,
+            })
+          );
+        } catch (e: any) {
+          if (e.name !== "ParameterNotFound") {
+            throw e;
+          }
+        }
       }
       if (oldPublicPath !== publicPath) {
-        const oldPublicKey = await client.send(
-          new GetParameterCommand({
-            Name: oldPublicPath,
-            WithDecryption: true,
-          })
-        );
-        await client.send(
-          new PutParameterCommand({
-            Name: publicPath,
-            Value: oldPublicKey.Parameter?.Value,
-            Type: "SecureString",
-          })
-        );
-        await client.send(
-          new DeleteParameterCommand({
-            Name: oldPublicPath,
-          })
-        );
+        try {
+          const oldPublicKey = await client.send(
+            new GetParameterCommand({
+              Name: oldPublicPath,
+              WithDecryption: true,
+            })
+          );
+          await client.send(
+            new PutParameterCommand({
+              Name: publicPath,
+              Value: oldPublicKey.Parameter?.Value,
+              Type: "SecureString",
+              Overwrite: true,
+            })
+          );
+        } catch (e: any) {
+          if (e.name !== "ParameterNotFound") {
+            throw e;
+          }
+        }
       }
       break;
     case "Delete":

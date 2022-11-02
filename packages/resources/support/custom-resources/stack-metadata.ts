@@ -5,7 +5,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { log } from "./util.js";
 
-const s3 = new S3Client({});
+const s3 = new S3Client({ logger: console });
 
 export async function StackMetadata(cfnRequest: any) {
   const {
