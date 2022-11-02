@@ -1,7 +1,7 @@
 module.exports = {
   docs: [
     {
-      " ": ["introduction", "quick-start"]
+      " ": ["index", "quick-start"]
     },
     {
       Overview: [

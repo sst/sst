@@ -4,6 +4,7 @@ sidebar_label: Overview
 description: "Helper packages for your Node.js Lambda functions."
 ---
 
+import config from "../../config";
 import TabItem from "@theme/TabItem";
 import HeadlineText from "@site/src/components/HeadlineText";
 import MultiPackagerCode from "@site/src/components/MultiPackagerCode";
@@ -133,6 +134,12 @@ Hooks are an alternative to middleware solutions like [Middy](https://middy.js.o
 Some of the modules also export types that can be used to define payloads for function calls. For example, the [`job`](job.md) exports [`JobTypes`](job.md#jobtypes).
 
 The [`job`](job.md) also exports a [method](job.md#run) to run a job.
+
+---
+
+## Language support
+
+Currently the client only supports JavaScript and TypeScript. But if you are looking to add support for other languages, <a href={ config.discord }>message us in Discord</a> and we can help you get started.
 
 ---
 

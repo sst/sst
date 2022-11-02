@@ -2,7 +2,6 @@
 title: Introduction
 hide_table_of_contents: true
 description: SST Docs
-slug: /
 ---
 
 import config from "../config";
