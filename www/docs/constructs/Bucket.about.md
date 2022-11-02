@@ -263,7 +263,7 @@ new Bucket(stack, "Bucket", {
 
 ### Advanced examples
 
-### Configuring the S3 Bucket
+#### Configuring the S3 Bucket
 
 Configure the internally created CDK `Bucket` instance.
 
