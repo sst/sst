@@ -59,7 +59,7 @@ Follow along by creating the Minimal TypeScript starter by running `npx create-s
      // Upload a file to the bucket
      await s3.send(
        new PutObjectCommand({
-         Bucket: Bucket.uploads.bucketName,
+         Bucket: Bucket.myFiles.bucketName,
          Key: "greeting.txt",
          Body: "Hello world!",
        })
