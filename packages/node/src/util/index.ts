@@ -1,8 +1,13 @@
 export function createProxy<T extends object>(constructName: string) {
   return new Proxy<T>({} as any, {
     get(target, prop) {
-      if (!(prop in target)) {
-        throw new Error(`Cannot use ${constructName}.${String(prop)}. Please make sure it is bound to this function.`);
+      if (typeof prop === "string") {
+        // normalize prop to convert kebab cases like `my-table` to `my_table`
+        const normProp = normalizeId(prop);
+        if (!(normProp in target)) {
+          throw new Error(`Cannot use ${constructName}.${String(prop)}. Please make sure it is bound to this function.`);
+        }
+        return Reflect.get(target, normProp);
       }
       return Reflect.get(target, prop);
     }
@@ -35,4 +40,8 @@ export function buildSsmPath(constructName: string, id: string, prop: string) {
 
 export function buildSsmFallbackPath(constructName: string, id: string, prop: string) {
   return `/sst/${process.env.SST_APP}/.fallback/${constructName}/${id}/${prop}`;
+}
+
+function normalizeId(name: string) {
+  return name.replace(/-/g, "_");
 }

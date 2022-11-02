@@ -98,7 +98,18 @@ test("construct id: duplicate", () => {
   new Api(stackB, "A");
   expect(() => {
     app.synth();
-  }).toThrow(/Api construct with id "A" already exists/);
+  }).toThrow(/Api with id "A" already exists/);
+});
+
+test("construct id: duplicate hyphen with underscore", () => {
+  const app = new App();
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  new Api(stackA, "A-");
+  new Api(stackB, "A_");
+  expect(() => {
+    app.synth();
+  }).toThrow(/You cannot have the same Api id with an underscore and hyphen/);
 });
 
 test("construct id: single char", () => {
@@ -119,6 +130,15 @@ test("construct id: starting with underscore", () => {
   }).toThrow();
 });
 
+test("construct id: starting with hyphen", () => {
+  const app = new App();
+  const stack = new Stack(app, "stack");
+  const api = new Api(stack, "-A");
+  expect(() => {
+    app.synth();
+  }).toThrow();
+});
+
 test("construct id: contain underscore", () => {
   const app = new App();
   const stack = new Stack(app, "stack");
@@ -128,10 +148,19 @@ test("construct id: contain underscore", () => {
   }).not.toThrow();
 });
 
+test("construct id: contain hyphen", () => {
+  const app = new App();
+  const stack = new Stack(app, "stack");
+  const api = new Api(stack, "A-");
+  expect(() => {
+    app.synth();
+  }).not.toThrow();
+});
+
 test("construct id: special char", () => {
   const app = new App();
   const stack = new Stack(app, "stack");
-  const api = new Api(stack, "A-B");
+  const api = new Api(stack, "A&B");
   expect(() => {
     app.synth();
   }).toThrow();

@@ -57,7 +57,7 @@ Following are the steps to upgrade.
 
 2. **Constructs**
 
-   1. **Construct IDs need to be unique** and match the pattern `[a-zA-Z]([a-zA-Z0-9_])+`. If you have constructs with clashing IDs, change to a unique ID. And pass the old ID into `cdk.id` to ensure CloudFormation does not recreate the resource.
+   1. **Construct IDs need to be unique** and match the pattern `[a-zA-Z]([a-zA-Z0-9-_])+`. If you have constructs with clashing IDs, change to a unique ID. And pass the old ID into `cdk.id` to ensure CloudFormation does not recreate the resource.
 
       For example, if you have two buckets with the same id.
 

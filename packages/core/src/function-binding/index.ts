@@ -196,11 +196,11 @@ async function restartFunctionsUsingSecret(app: string, stage: string, region: s
 }
 
 export function buildEnvironmentKey(construct: string, name: string, prop: string): string {
-  return `SST_${construct}_${prop}_${name}`;
+  return `SST_${construct}_${prop}_${normalizeId(name)}`;
 }
 
 export function buildSsmPath(app: string, stage: string, construct: string, name: string, prop: string) {
-  return `/sst/${app}/${stage}/${construct}/${name}/${prop}`;
+  return `/sst/${app}/${stage}/${construct}/${normalizeId(name)}/${prop}`;
 }
 
 function buildSsmPrefixForStage(app: string, stage: string) {
@@ -212,7 +212,7 @@ function buildSsmPrefixForSecret(app: string, stage: string) {
 }
 
 function buildSsmPathForSecretValue(app: string, stage: string, name: string) {
-  return `/sst/${app}/${stage}/Secret/${name}/value`;
+  return `/sst/${app}/${stage}/Secret/${normalizeId(name)}/value`;
 }
 
 function parseSsmPath(ssmName: string) {
@@ -225,6 +225,10 @@ function parseSsmPath(ssmName: string) {
     name: parts[5],
     prop: prop === "" ? "value" : prop,
   };
+}
+
+export function normalizeId(name: string) {
+  return name.replace(/-/g, "_");
 }
 
 export * as FunctionBinding from "./index.js";
