@@ -1,4 +1,4 @@
-import { RDS, Config, StackContext } from "@serverless-stack/resources";
+import { RDS, StackContext } from "@serverless-stack/resources";
 
 export function Database({ stack }: StackContext) {
   const rds = new RDS(stack, "db", {

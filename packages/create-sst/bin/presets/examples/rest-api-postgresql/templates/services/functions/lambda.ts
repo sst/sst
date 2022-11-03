@@ -1,6 +1,7 @@
 import { RDSDataService } from "aws-sdk";
 import { Kysely } from "kysely";
 import { DataApiDialect } from "kysely-data-api";
+import { RDS } from "@serverless-stack/node/rds";
 
 interface Database {
   tblcounter: {
@@ -13,9 +14,9 @@ const db = new Kysely<Database>({
   dialect: new DataApiDialect({
     mode: "postgres",
     driver: {
-      database: process.env.DATABASE!,
-      secretArn: process.env.SECRET_ARN!,
-      resourceArn: process.env.CLUSTER_ARN!,
+      database: RDS.Cluster.defaultDatabaseName,
+      secretArn: RDS.Cluster.secretArn,
+      resourceArn: RDS.Cluster.clusterArn,
       client: new RDSDataService(),
     },
   }),
@@ -27,7 +28,7 @@ export async function handler() {
     .select("tally")
     .where("counter", "=", "hits")
     .executeTakeFirstOrThrow();
-  
+
   let count = record.tally;
 
   await db

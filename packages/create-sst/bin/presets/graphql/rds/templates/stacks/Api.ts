@@ -1,6 +1,5 @@
 import {
   use,
-  Config,
   StackContext,
   Api as ApiGateway,
 } from "@serverless-stack/resources";

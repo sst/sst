@@ -1,8 +1,8 @@
-import { StackContext, Api, Auth, ViteStaticSite, Table, Config } from "@serverless-stack/resources";
+import { StackContext, Api, Auth, ViteStaticSite, Table } from "@serverless-stack/resources";
 
 export function MyStack({ stack }: StackContext) {
   // Create a database Table
-  const table = new Table(stack, "Users", {
+  const table = new Table(stack, "users", {
     fields: {
       userId: "string",
     },
@@ -13,10 +13,7 @@ export function MyStack({ stack }: StackContext) {
   const api = new Api(stack, "api", {
     defaults: {
       function: {
-        config: [
-          new Config.Parameter(stack, "TABLE_NAME", { value: table.tableName }),
-        ],
-        permissions: [table],
+        bind: [table],
       },
     },
     routes: {
@@ -26,7 +23,7 @@ export function MyStack({ stack }: StackContext) {
   });
 
   // Create a React site
-  const site = new ViteStaticSite(stack, "Site", {
+  const site = new ViteStaticSite(stack, "site", {
     path: "web",
     environment: {
       VITE_APP_API_URL: api.url,
@@ -37,9 +34,7 @@ export function MyStack({ stack }: StackContext) {
   const auth = new Auth(stack, "auth", {
     authenticator: {
       handler: "functions/auth.handler",
-      config: [
-        new Config.Parameter(stack, "SITE_URL", { value: site.url })
-      ],
+      bind: [site],
     },
   });
   auth.attach(stack, {

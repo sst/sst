@@ -10,7 +10,6 @@ export default [
     packages: [
       "@aws-sdk/client-dynamodb",
       "@aws-sdk/util-dynamodb",
-      "@serverless-stack/node",
     ],
     path: "services",
   }),

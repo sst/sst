@@ -1,4 +1,5 @@
 import AWS from "aws-sdk";
+import { KinesisStream } from "@serverless-stack/node/kinesis-stream";
 
 const stream = new AWS.Kinesis();
 
@@ -9,7 +10,7 @@ export async function handler() {
         message: "Hello from Lambda!",
       }),
       PartitionKey: "key",
-      StreamName: process.env.streamName,
+      StreamName: KinesisStream.Stream.streamName,
     })
     .promise();
 

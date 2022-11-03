@@ -13,19 +13,14 @@ export function MyStack({ stack }: StackContext) {
   const api = new Api(stack, "Api", {
     defaults: {
       function: {
-        // Pass in the topic to our API
-        environment: {
-          topicArn: topic.topicArn,
-        },
+        // Bind the topic to our API
+        bind: [topic],
       },
     },
     routes: {
       "POST /order": "functions/order.main",
     },
   });
-
-  // Allow the API to publish the topic
-  api.attachPermissions([topic]);
 
   // Show the API endpoint in the output
   stack.addOutputs({

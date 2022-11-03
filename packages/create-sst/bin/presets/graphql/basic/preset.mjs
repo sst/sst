@@ -18,7 +18,7 @@ export default [
   cmd({ cmd: "npx create-vite@2.9.5 web --template=react-ts" }),
   extract(),
   install({
-    packages: ["@pothos/core", "@serverless-stack/node", "graphql", "ulid"],
+    packages: ["@pothos/core", "graphql", "ulid"],
     path: "services",
   }),
   install({

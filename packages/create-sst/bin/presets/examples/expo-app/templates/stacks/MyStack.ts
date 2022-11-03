@@ -1,7 +1,7 @@
 import { StackContext, Table, Api } from "@serverless-stack/resources";
 
 export function MyStack({ stack }: StackContext) {
-  const table = new Table(stack, "CounterExpo", {
+  const table = new Table(stack, "Counter", {
     fields: {
       counter: "string",
     },
@@ -12,19 +12,14 @@ export function MyStack({ stack }: StackContext) {
   const api = new Api(stack, "Api", {
     defaults: {
       function: {
-        // Pass in the table name to our API
-        environment: {
-          tableName: table.tableName,
-        },
+        // Bind the table name to our API
+        bind: [table],
       },
     },
     routes: {
       "POST /": "functions/lambda.main",
     },
   });
-
-  // Allow the API to access the table
-  api.attachPermissions([table]);
 
   // Show the URLs in the output
   stack.addOutputs({
