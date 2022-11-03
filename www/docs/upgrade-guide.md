@@ -39,7 +39,7 @@ And here's how we access it in our function.
 + import { Bucket } from "@serverless-stack/node/bucket";
 
 - process.env.BUCKET_NAME
-+ Bucet.myFiles.bucketName
++ Bucket.myFiles.bucketName
 ```
 
 Following are the steps to upgrade.
