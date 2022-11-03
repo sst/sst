@@ -64,6 +64,7 @@ import path from "path";
 import fs from "fs/promises";
 import crypto from "crypto";
 import { CloudAssembly } from "aws-cdk-lib/cx-api";
+import readline from "readline";
 
 const useStackBuilder = Context.memo(async () => {
   const watcher = useWatcher();
@@ -83,12 +84,15 @@ const useStackBuilder = Context.memo(async () => {
     const next = await generateChecksum(assembly.directory);
     Logger.debug("Checksum", "next", next, "old", checksum);
     if (next === checksum) {
-      spinner.succeed("No changes");
+      spinner.succeed("Stacks built! No changes");
       return;
     }
-    checksum = next;
+    spinner.succeed(
+      checksum
+        ? `Stacks built! Press ${blue("enter")} to deploy`
+        : `Stacks built!`
+    );
     pending = assembly;
-    spinner.succeed(`Stacks built! Press ${blue("enter")} to deploy`);
   }
 
   async function deploy() {
@@ -100,6 +104,7 @@ const useStackBuilder = Context.memo(async () => {
     await Stacks.deployMany(pending.stacks);
     component.unmount();
     process.stdout.write("\x1b[?1049l");
+    checksum = await generateChecksum(pending.directory);
     pending = undefined;
   }
 

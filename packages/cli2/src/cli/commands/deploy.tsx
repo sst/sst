@@ -7,17 +7,17 @@ import inkSpinner from "ink-spinner";
 // @ts-ignore
 const { default: Spinner } = inkSpinner;
 
-const FullScreen: React.FC = (props) => {
+const FullScreen: React.FC = props => {
   const [size, setSize] = useState({
     columns: process.stdout.columns,
-    rows: process.stdout.rows,
+    rows: process.stdout.rows
   });
 
   useEffect(() => {
     function onResize() {
       setSize({
         columns: process.stdout.columns,
-        rows: process.stdout.rows,
+        rows: process.stdout.rows
       });
     }
 
@@ -39,23 +39,23 @@ interface Props {
 }
 export const DeploymentUI = (props: Props) => {
   const [stacks, setStacks] = useState<Record<string, string>>(
-    Object.fromEntries(props.stacks.map((s) => [s, ""]))
+    Object.fromEntries(props.stacks.map(s => [s, ""]))
   );
 
   useEffect(() => {
     const bus = useBus();
 
-    const update = bus.subscribe("stack.updated", (payload) => {
-      setStacks((prev) => ({
+    const update = bus.subscribe("stack.updated", payload => {
+      setStacks(prev => ({
         ...prev,
-        [payload.properties.stackID]: "",
+        [payload.properties.stackID]: ""
       }));
     });
 
-    const status = bus.subscribe("stack.status", (payload) => {
-      setStacks((prev) => ({
+    const status = bus.subscribe("stack.status", payload => {
+      setStacks(prev => ({
         ...prev,
-        [payload.properties.stackID]: payload.properties.status,
+        [payload.properties.stackID]: payload.properties.status
       }));
     });
 
@@ -70,7 +70,6 @@ export const DeploymentUI = (props: Props) => {
       <Text>Deploying {props.stacks.length} stacks</Text>
       {Object.entries(stacks).map(([stackID, status]) => (
         <Text key={stackID}>
-          <Text> </Text>
           {!Stacks.isFinal(status) ? <Spinner /> : <Text color="green">✔</Text>}
           <Text>{" " + stackID}</Text>
           <Text color={Stacks.isFinal(status) ? "green" : "yellow"}>
@@ -87,7 +86,7 @@ interface DeployOpts {
 }
 
 export async function deploy(opts: DeployOpts) {
-  const assembly = await (async function () {
+  const assembly = await (async function() {
     if (opts.from) {
       const result = new CloudAssembly(opts.from);
       return result;
@@ -96,7 +95,7 @@ export async function deploy(opts: DeployOpts) {
     const fn = await Stacks.build();
     return await Stacks.synth({
       fn,
-      mode: "deploy",
+      mode: "deploy"
     });
   })();
 
