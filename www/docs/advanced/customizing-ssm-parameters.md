@@ -1,13 +1,13 @@
 ---
 title: Customizing SSM Parameters
-description: "Learn how to customize SSM parameter names for Resource Binding in your SST app."
+description: "Learn how to customize the SSM parameter names used for Resource Binding."
 ---
 
-You can customize the SSM parameter names created by SST behind the scene to power [Resource Binding](../resource-binding.md).
+You can customize the SSM parameter names that SST creates behind the scenes to power [Resource Binding](../resource-binding.md).
 
 ## Setting the SSM name prefix
 
-To provide a name prefix, open up `sst.json` and add a `ssmPrefix` field.
+To provide a prefix, open up the `sst.json` and add a `ssmPrefix` field.
 
 ```diff
 {
@@ -19,12 +19,13 @@ To provide a name prefix, open up `sst.json` and add a `ssmPrefix` field.
 }
 ```
 
-For example, the default SSM parameter name created for a [Bucket](../constructs/Bucket.md) is:
+For example, the default SSM parameter name that's created for a [Bucket](../constructs/Bucket.md) is:
+
 ```
 /sst/my-sst-app/dev/Bucket/myBucket/bucketName
 ```
 
-With `ssmPrefix` specified, the SSM parameter name will be:
+With the `ssmPrefix` specified, the SSM parameter name will be:
 
 ```
 /myOrg/myTeam/sst/my-sst-app/dev/Bucket/myBucket/bucketName
