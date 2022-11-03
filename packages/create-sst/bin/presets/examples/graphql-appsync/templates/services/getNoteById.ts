@@ -1,4 +1,5 @@
 import { DynamoDB } from "aws-sdk";
+import { Table } from "@serverless-stack/node/table";
 import Note from "./Note";
 
 const dynamoDb = new DynamoDB.DocumentClient();
@@ -8,7 +9,7 @@ export default async function getNoteById(
 ): Promise<Note | undefined> {
   const params = {
     Key: { id: noteId },
-    TableName: process.env.NOTES_TABLE as string,
+    TableName: Table.Notes.tableName,
   };
 
   const { Item } = await dynamoDb.get(params).promise();

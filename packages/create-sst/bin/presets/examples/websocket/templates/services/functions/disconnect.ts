@@ -1,4 +1,5 @@
 import { DynamoDB } from "aws-sdk";
+import { Table } from "@serverless-stack/node/table";
 
 const dynamoDb = new DynamoDB.DocumentClient();
 
@@ -6,7 +7,7 @@ import { APIGatewayProxyHandler } from "aws-lambda";
 
 export const main: APIGatewayProxyHandler = async (event) => {
   const params = {
-    TableName: process.env.tableName,
+    TableName: Table.Connections.tableName,
     Key: {
       id: event.requestContext.connectionId,
     },

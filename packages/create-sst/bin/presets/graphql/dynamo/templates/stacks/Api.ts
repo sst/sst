@@ -1,8 +1,7 @@
 import {
-  StackContext,
   use,
+  StackContext,
   Api as ApiGateway,
-  Config,
 } from "@serverless-stack/resources";
 import { Database } from "./Database";
 
