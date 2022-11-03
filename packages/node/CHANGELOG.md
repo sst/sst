@@ -1,5 +1,11 @@
 # @serverless-stack/node
 
+## 1.16.3
+
+### Patch Changes
+
+- [`37aa18ca8`](https://github.com/serverless-stack/sst/commit/37aa18ca8d938574cd4ae70ba299ec37259fcb45) Thanks [@fwang](https://github.com/fwang)! - config client: fix Config values returns objects when running in `sst bind`
+
 ## 1.16.2
 
 ## 1.16.1
