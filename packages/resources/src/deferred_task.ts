@@ -3,7 +3,7 @@ import { createAppContext } from "./context.js";
 
 type Task = () => Promise<void>;
 
-export const useDeferredTask = createAppContext(() => {
+export const useDeferredTasks = createAppContext(() => {
   const tasks: Task[] = [];
 
   return {

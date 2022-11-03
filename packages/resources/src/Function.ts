@@ -29,7 +29,7 @@ import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import * as functionUrlCors from "./util/functionUrlCors.js";
 
 import url from "url";
-import { useDeferredTask } from "./deferred_task.js";
+import { useDeferredTasks } from "./deferred_task.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 const supportedRuntimes = {
@@ -872,7 +872,7 @@ export class Function extends lambda.Function implements SSTConstruct {
         layers: Function.buildLayers(scope, id, props),
         logRetention,
       });
-      useDeferredTask().add(async () => {
+      useDeferredTasks().add(async () => {
         // Build function
         const bundled = await Runtime.Handler.bundle({
           id: localId,

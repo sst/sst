@@ -31,13 +31,14 @@ export const start = (program: Program) =>
         useNodeHandler(),
         useMetadata(),
         useFunctionLogger(),
+        useStackBuilder(),
       ]);
-      await useStackBuilder();
     }
   );
 
 const useFunctionLogger = Context.memo(async () => {
   const bus = useBus();
+
   bus.subscribe("function.invoked", async (evt) => {
     const functions = await useFunctions();
     const func = functions[evt.properties.functionID];

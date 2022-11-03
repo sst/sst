@@ -6,7 +6,7 @@ import { spawnSync } from "child_process";
 export const bind = (program: Program) =>
   program.command(
     "bind <command>",
-    "",
+    "Binds blah",
     (yargs) =>
       yargs.positional("command", {
         type: "string",

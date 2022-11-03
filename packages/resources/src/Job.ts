@@ -22,7 +22,7 @@ import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import { isPropertySignature } from "typescript";
 import { IVpc, Vpc } from "aws-cdk-lib/aws-ec2";
-import { useDeferredTask } from "./deferred_task.js";
+import { useDeferredTasks } from "./deferred_task.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -340,7 +340,7 @@ export class Job extends Construct implements SSTConstruct {
     }
     // Handle build
     else {
-      useDeferredTask().add(async () => {
+      useDeferredTasks().add(async () => {
         // Build function
         const bundled = await Runtime.Handler.bundle({
           id: this.localId,

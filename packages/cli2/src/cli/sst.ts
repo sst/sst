@@ -16,7 +16,7 @@ process.on("uncaughtException", (err) => {
 
 process.on("beforeExit", () => {});
 
-import { blue, red, yellow } from "colorette";
+import { blue, red } from "colorette";
 import { VisibleError } from "@core/error.js";
 
 import { program } from "./program.js";

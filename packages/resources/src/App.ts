@@ -24,7 +24,7 @@ import { StackProps } from "./Stack.js";
 import { FunctionalStack, stack } from "./FunctionalStack.js";
 import { createRequire } from "module";
 import { Auth } from "./Auth.js";
-import { useDeferredTask } from "./deferred_task.js";
+import { useDeferredTasks } from "./deferred_task.js";
 import { AppContext } from "./context.js";
 const require = createRequire(import.meta.url);
 
@@ -361,7 +361,7 @@ export class App extends cdk.App {
   }
 
   public async runDeferredBuilds() {
-    await useDeferredTask().run();
+    await useDeferredTasks().run();
   }
 
   isRunningSSTTest(): boolean {
