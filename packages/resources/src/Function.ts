@@ -12,7 +12,7 @@ import * as lambdaNode from "aws-cdk-lib/aws-lambda-nodejs";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 
-import { State, Runtime, DeferBuilder } from "@serverless-stack/core";
+import { State, Runtime, DeferBuilder, FunctionBinding } from "@serverless-stack/core";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Job } from "./Job.js";
@@ -20,7 +20,7 @@ import { Secret, Parameter } from "./Config.js";
 import { isSSTConstruct, SSTConstruct } from "./Construct.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
-import { bindEnvironment, bindParameters, bindPermissions } from "./util/functionBinding.js";
+import { bindEnvironment, bindPermissions } from "./util/functionBinding.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import * as functionUrlCors from "./util/functionUrlCors.js";
 
@@ -987,6 +987,9 @@ export class Function extends lambda.Function implements SSTConstruct {
     // Add config
     this.addEnvironment("SST_APP", app.name, { removeInEdge: true });
     this.addEnvironment("SST_STAGE", app.stage, { removeInEdge: true });
+    if (FunctionBinding.ssmPrefix !== "") {
+      this.addEnvironment("SST_SSM_PREFIX", FunctionBinding.ssmPrefix, { removeInEdge: true });
+    }
     this.addConfig(props.config || []);
     this.bind(props.bind || []);
 
@@ -1026,9 +1029,6 @@ export class Function extends lambda.Function implements SSTConstruct {
       Object.entries(env).forEach(([key, value]) =>
         this.addEnvironment(key, value)
       );
-
-      // Bind parameters
-      bindParameters(c);
 
       // Bind permissions
       const permissions = bindPermissions(c);

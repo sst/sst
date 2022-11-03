@@ -29,6 +29,7 @@ import {
   Update,
   State,
   Telemetry,
+  FunctionBinding,
   getCdkVersion,
   getSstVersion,
   configureAwsCredentials,
@@ -70,6 +71,7 @@ const cmd = {
 const DEFAULT_STAGE = "dev";
 const DEFAULT_NAME = "my-app";
 const DEFAULT_REGION = undefined;
+const DEFAULT_SSM_PREFIX = "";
 const DEFAULT_LINT = true;
 const DEFAULT_TYPE_CHECK = true;
 const DEFAULT_ESBUILD_CONFIG = undefined;
@@ -349,6 +351,9 @@ async function run() {
   // Track
   Telemetry.trackCli(script);
 
+  // Set 
+  FunctionBinding.setSsmPrefix(config.ssmPrefix);
+
   // Initialize internals after loading AWS credentials b/c some of the required
   // packages (ie. "../scripts/start") requires "aws-sdk". Need to load AWS
   // credentials first.
@@ -602,6 +607,7 @@ async function applyConfig(argv) {
   config.stage = await getStage(argv, config);
   config.lint = config.lint === false ? false : DEFAULT_LINT;
   config.region = argv.region || config.region || DEFAULT_REGION;
+  config.ssmPrefix = config.ssmPrefix || DEFAULT_SSM_PREFIX;
   config.typeCheck = config.typeCheck === false ? false : DEFAULT_TYPE_CHECK;
   config.main = config.main || getDefaultMainPath();
   config.esbuildConfig = config.esbuildConfig || DEFAULT_ESBUILD_CONFIG;

@@ -1,6 +1,6 @@
 import { GetParametersCommand, SSMClient, Parameter } from "@aws-sdk/client-ssm";
 const ssm = new SSMClient({});
-import { createProxy, parseEnvironment } from "../util/index.js";
+import { createProxy, parseEnvironment, buildSsmPath, ssmNameToConstructId } from "../util/index.js";
 
 export interface StaticSiteResources { }
 export interface ReactStaticSiteResources { }
@@ -31,8 +31,6 @@ Object.assign(NextjsSite, nextjsSiteData);
 Object.assign(RemixSite, remixSiteData);
 
 async function replaceWithSsmValues(className: string, siteData: Record<string, any>) {
-  const SSM_PREFIX = `/sst/${process.env.SST_APP}/${process.env.SST_STAGE}/${className}/`;
-
   // Find all the site data that match the prefix
   const names = Object
     .keys(siteData)
@@ -42,7 +40,7 @@ async function replaceWithSsmValues(className: string, siteData: Record<string, 
   }
 
   // Fetch all secrets
-  const results = await loadSsm(SSM_PREFIX, names);
+  const results = await loadSsm(className, names);
   if (results.invalidParams.length > 0) {
     const missingNames = results.invalidParams.map(ssmNameToConstructId);
     throw new Error(
@@ -58,7 +56,7 @@ async function replaceWithSsmValues(className: string, siteData: Record<string, 
   }
 }
 
-async function loadSsm(prefix: string, names: string[]) {
+async function loadSsm(className: string, names: string[]) {
   // Split names into chunks of 10
   const chunks = [];
   for (let i = 0; i < names.length; i += 10) {
@@ -71,7 +69,7 @@ async function loadSsm(prefix: string, names: string[]) {
   await Promise.all(
     chunks.map(async (chunk) => {
       const command = new GetParametersCommand({
-        Names: chunk.map((name) => `${prefix}${name}/url`),
+        Names: chunk.map((name) => buildSsmPath(className, name, "url")),
         WithDecryption: true,
       });
       const result = await ssm.send(command);
@@ -80,9 +78,4 @@ async function loadSsm(prefix: string, names: string[]) {
     })
   );
   return { validParams, invalidParams };
-}
-
-function ssmNameToConstructId(ssmName: string) {
-  const parts = ssmName.split("/");
-  return parts[parts.length - 2];
 }

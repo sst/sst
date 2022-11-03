@@ -9,8 +9,13 @@ type Secret = {
   fallbackValue?: string,
 }
 
+export let ssmPrefix = "";
 const SECRET_UPDATED_AT_ENV = "SST_ADMIN_SECRET_UPDATED_AT";
 export const FALLBACK_STAGE = ".fallback";
+
+export function setSsmPrefix(prefix?: string) {
+  ssmPrefix = prefix || "";
+}
 
 export async function loadBindingEnvironment(app: string, stage: string, region: string) {
   const envs: Record<string, string> = {};
@@ -196,27 +201,27 @@ async function restartFunctionsUsingSecret(app: string, stage: string, region: s
 }
 
 export function buildEnvironmentKey(construct: string, name: string, prop: string): string {
-  return `SST_${construct}_${prop}_${name}`;
+  return `SST_${construct}_${prop}_${normalizeId(name)}`;
 }
 
 export function buildSsmPath(app: string, stage: string, construct: string, name: string, prop: string) {
-  return `/sst/${app}/${stage}/${construct}/${name}/${prop}`;
+  return `${ssmPrefix}/sst/${app}/${stage}/${construct}/${normalizeId(name)}/${prop}`;
 }
 
 function buildSsmPrefixForStage(app: string, stage: string) {
-  return `/sst/${app}/${stage}/`;
+  return `${ssmPrefix}/sst/${app}/${stage}/`;
 }
 
 function buildSsmPrefixForSecret(app: string, stage: string) {
-  return `/sst/${app}/${stage}/Secret/`;
+  return `${ssmPrefix}/sst/${app}/${stage}/Secret/`;
 }
 
 function buildSsmPathForSecretValue(app: string, stage: string, name: string) {
-  return `/sst/${app}/${stage}/Secret/${name}/value`;
+  return `${ssmPrefix}/sst/${app}/${stage}/Secret/${normalizeId(name)}/value`;
 }
 
 function parseSsmPath(ssmName: string) {
-  const parts = ssmName.split("/");
+  const parts = ssmName.substring(ssmPrefix.length).split("/");
   const prop = parts.slice(6).join("/");
   return {
     app: parts[2],
@@ -225,6 +230,10 @@ function parseSsmPath(ssmName: string) {
     name: parts[5],
     prop: prop === "" ? "value" : prop,
   };
+}
+
+export function normalizeId(name: string) {
+  return name.replace(/-/g, "_");
 }
 
 export * as FunctionBinding from "./index.js";

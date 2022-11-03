@@ -239,6 +239,7 @@ export class Stack extends cdk.Stack {
   }
 
   private createCustomResourceHandler() {
+    const app = this.node.root as App;
     return new lambda.Function(this, "CustomResourceHandler", {
       code: lambda.Code.fromAsset(
         path.join(__dirname, "../dist/support/custom-resources")
@@ -247,29 +248,39 @@ export class Stack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_16_X,
       timeout: cdk.Duration.seconds(900),
       memorySize: 1024,
+      initialPolicy: [
+        // Required by stack metadata
+        new iam.PolicyStatement({
+          actions: ["s3:PutObject", "s3:DeleteObject"],
+          resources: [
+            `arn:aws:s3:::${app.bootstrapAssets.bucketName}/*`
+          ],
+        }),
+        // Temporary: Add permissions to migrate SSM paths for secrets (piggybacking on the stack metadata custom resource handler)
+        new iam.PolicyStatement({
+          actions: ["ssm:GetParametersByPath", "ssm:PutParameter"],
+          resources: [
+            `arn:aws:ssm:${app.region}:${app.account}:parameter/sst/${app.name}/${app.stage}/*`,
+            `arn:aws:ssm:${app.region}:${app.account}:parameter/sst/${app.name}/.fallback/*`,
+          ],
+        }),
+        // Required by Auth
+        new iam.PolicyStatement({
+          actions: [
+            "ssm:GetParameter",
+            "ssm:PutParameter",
+            "ssm:DeleteParameter",
+          ],
+          resources: [
+            `arn:aws:ssm:${app.region}:${app.account}:parameter/*`,
+          ]
+        }),
+      ]
     });
   }
 
   private createStackMetadataResource() {
     const app = this.node.root as App;
-
-    // Create execution policy
-    this.customResourceHandler.addToRolePolicy(new iam.PolicyStatement({
-      actions: ["s3:PutObject", "s3:DeleteObject"],
-      resources: [
-        `arn:aws:s3:::${app.bootstrapAssets.bucketName}/*`
-      ],
-    }));
-
-    // Temporary: Add permissions to migrate SSM paths for secrets (piggybacking on the stack metadata custom resource handler)
-    this.customResourceHandler.addToRolePolicy(new iam.PolicyStatement({
-      actions: ["ssm:GetParametersByPath", "ssm:PutParameter"],
-      resources: [
-        `arn:aws:ssm:${app.region}:${app.account}:parameter/sst/${app.name}/${app.stage}/*`,
-        `arn:aws:ssm:${app.region}:${app.account}:parameter/sst/${app.name}/.fallback/*`,
-      ],
-    }));
-
     return new cdk.CustomResource(this, "StackMetadata", {
       serviceToken: this.customResourceHandler.functionArn,
       resourceType: "Custom::StackMetadata",

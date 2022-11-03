@@ -136,6 +136,7 @@ module.exports = {
             "advanced/permission-boundary",
             "advanced/cross-stack-references",
             "advanced/linting-and-type-checking",
+            "advanced/customizing-ssm-parameters",
             //"advanced/monorepo-project-structure",
             "advanced/environment-specific-resources"
           ]

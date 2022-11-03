@@ -7,7 +7,7 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as cxapi from "aws-cdk-lib/cx-api";
-import { logger, Bootstrap, DeferBuilder, State } from "@serverless-stack/core";
+import { logger, Bootstrap, DeferBuilder, FunctionBinding, State } from "@serverless-stack/core";
 import { Stack } from "./Stack.js";
 import {
   SSTConstruct,
@@ -19,7 +19,7 @@ import { Function, FunctionProps, FunctionHandlerProps } from "./Function.js";
 import * as Config from "./Config.js";
 import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite.js";
 import { Permissions } from "./util/permission.js";
-import { bindType } from "./util/functionBinding.js";
+import { bindType, bindParameters } from "./util/functionBinding.js";
 import { StackProps } from "./Stack.js";
 import { FunctionalStack, stack } from "./FunctionalStack.js";
 import { createRequire } from "module";
@@ -58,6 +58,7 @@ export interface AppDeployProps {
 
   readonly buildDir?: string;
   readonly skipBuild?: boolean;
+  readonly ssmPrefix?: string;
   readonly esbuildConfig?: string;
   readonly bootstrapAssets?: Bootstrap.Assets;
   readonly debugEndpoint?: string;
@@ -194,6 +195,7 @@ export class App extends cdk.App {
     this.synthCallback = deployProps.synthCallback;
 
     State.init(this.appPath);
+    FunctionBinding.setSsmPrefix(deployProps.ssmPrefix);
     if (deployProps.debugEndpoint) {
       this.local = true;
       State.Function.reset(this.appPath);
@@ -332,7 +334,8 @@ export class App extends cdk.App {
   synth(options: cdk.StageSynthesisOptions = {}): cxapi.CloudAssembly {
     Auth.injectConfig();
     this.ensureUniqueConstructIds();
-    this.codegenTypes();
+    this.codegenBindingTypes();
+    this.createBindingSsmParameters();
     this.buildConstructsMetadata();
     this.removeGovCloudUnsupportedResourceProperties();
     this.printWarnings();
@@ -536,7 +539,14 @@ export class App extends cdk.App {
   }
 
   private ensureUniqueConstructIds() {
-    const ids: Record<string, Set<string>> = {};
+    // "ids" has the shape of:
+    // {
+    //   Table: {
+    //     "id_with_hyphen": "id-with-hyphen",
+    //     "id_with_underscore": "id_with_underscore",
+    //   }
+    // }
+    const ids: Record<string, Record<string, string>> = {};
 
     class EnsureUniqueConstructIds implements cdk.IAspect {
       public visit(c: IConstruct): void {
@@ -545,22 +555,30 @@ export class App extends cdk.App {
 
         const className = c.constructor.name;
         const id = c.id;
-        const existingIds = ids[className] || new Set();
+        const normId = FunctionBinding.normalizeId(id);
+        const existingIds = ids[className] || {};
 
-        if (!id.match(/^[a-zA-Z]([a-zA-Z0-9_])*$/)) {
+        if (!id.match(/^[a-zA-Z]([a-zA-Z0-9-_])*$/)) {
           throw new Error([
             `Invalid id "${id}" for ${className} construct.`,
             ``,
-            `Starting v1.16, construct ids can only contain alphabetic characters and underscores ("_"), and must start with an alphabetic character. If you are migrating from version 1.15 or earlier, please see the upgrade guide — https://docs.serverless-stack.com/upgrade-guide#upgrade-to-v116`,
+            `Starting v1.16, construct ids can only contain alphabetic characters, hyphens ("-"), and underscores ("_"), and must start with an alphabetic character. If you are migrating from version 1.15 or earlier, please see the upgrade guide — https://docs.serverless-stack.com/upgrade-guide#upgrade-to-v116`,
           ].join("\n"));
         }
-        else if (["Parameter", "Secret"].includes(className)
-          && (ids.Secret?.has(id) || ids.Parameter?.has(id))) {
-          throw new Error(`ERROR: Config with id "${id}" already exists.`);
+        else if (["Parameter", "Secret"].includes(className)) {
+          const existingConfigId = ids.Secret?.[normId] || ids.Parameter?.[normId];
+          if (existingConfigId === id) {
+            throw new Error(`ERROR: Config with id "${id}" already exists.`);
+          }
+          else if (existingConfigId) {
+            throw new Error(`ERROR: You cannot have the same Config id with an underscore and hyphen: "${existingConfigId}" and "${id}".`);
+          }
         }
-        else if (existingIds.has(id)) {
+        else if (existingIds[normId]) {
           throw new Error([
-            `${className} construct with id "${id}" already exists.`,
+            existingIds[normId] === id
+              ? `${className} with id "${id}" already exists.`
+              : `You cannot have the same ${className} id with an underscore and hyphen: "${existingIds[normId]}" and "${id}".`,
             ``,
             `Starting v1.16, constructs must have unique ids for a given construct type. If you are migrating from version 1.15 or earlier, set the "cdk.id" in the construct with the existing id, and pick a unique id for the construct. Please see the upgrade guide — https://docs.serverless-stack.com/upgrade-guide#upgrade-to-v116`,
             ``,
@@ -581,7 +599,7 @@ export class App extends cdk.App {
             `      });`,
           ].join("\n"));
         }
-        existingIds.add(id);
+        existingIds[normId] = id;
         ids[className] = existingIds;
       }
     }
@@ -589,7 +607,7 @@ export class App extends cdk.App {
     cdk.Aspects.of(this).add(new EnsureUniqueConstructIds());
   }
 
-  private codegenTypes() {
+  private codegenBindingTypes() {
     // Find the node_modules folder to create the type files in
     const nodeModulesPath = this.codegenFindNodeModulesPath();
     if (!nodeModulesPath) {
@@ -632,23 +650,6 @@ declare module "@serverless-stack/node/config" {
   }
 
   private codegenCreateConstructTypes(typesPath: string) {
-    //export function codegenTypes(typesPath: string) {
-    //  fs.appendFileSync(`${typesPath}/index.d.ts`, `export * from "./config";`);
-    //  fs.writeFileSync(`${typesPath}/config.d.ts`, `
-    //    import "@serverless-stack/node/config";
-    //    declare module "@serverless-stack/node/config" {
-    //      export interface ConfigType {
-    //        ${[
-    //      "APP",
-    //      "STAGE",
-    //      ...Parameter.getAllNames(),
-    //      ...Secret.getAllNames()
-    //    ].map((p) => `${p}: string;`).join("\n")}
-    //      }
-    //    }
-    //  `);
-    //}
-
     class CodegenTypes implements cdk.IAspect {
       public visit(c: IConstruct): void {
         if (!isSSTConstruct(c)) { return; }
@@ -685,6 +686,19 @@ declare module "@serverless-stack/node/${binding.clientPackage}" {
     }
 
     cdk.Aspects.of(this).add(new CodegenTypes());
+  }
+
+  private createBindingSsmParameters() {
+    class CreateSsmParameters implements cdk.IAspect {
+      public visit(c: IConstruct): void {
+        if (!isSSTConstruct(c)) { return; }
+        if (c instanceof Function && c._disableBind) { return; }
+
+        bindParameters(c);
+      }
+    }
+
+    cdk.Aspects.of(this).add(new CreateSsmParameters());
   }
 
   /** @internal */
