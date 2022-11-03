@@ -1,5 +1,6 @@
 import AWS from "aws-sdk";
 import * as uuid from "uuid";
+import { Table } from "@serverless-stack/node/table";
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
@@ -10,7 +11,7 @@ export const main: APIGatewayProxyHandlerV2 = async (event) => {
 
   const params = {
     // Get the table name from the environment variable
-    TableName: process.env.tableName,
+    TableName: Table.Notes.tableName,
     Item: {
       userId: "123",
       noteId: uuid.v1(), // A unique uuid

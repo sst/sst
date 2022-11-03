@@ -1,11 +1,12 @@
 import AWS from "aws-sdk";
+import { Table } from "@serverless-stack/node/table";
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
 export async function main() {
   const params = {
     // Get the table name from the environment variable
-    TableName: process.env.tableName,
+    TableName: Table.Notes.tableName,
     // Get all the rows where the userId is our hardcoded user id
     KeyConditionExpression: "userId = :userId",
     ExpressionAttributeValues: {

@@ -1,7 +1,7 @@
-import { Config, StackContext, Table } from "@serverless-stack/resources";
+import { StackContext, Table } from "@serverless-stack/resources";
 
 export function Database({ stack }: StackContext) {
-  const table = new Table(stack, "table", {
+  const table = new Table(stack, "db", {
     fields: {
       pk: "string",
       sk: "string",
@@ -20,10 +20,5 @@ export function Database({ stack }: StackContext) {
     },
   });
 
-  return {
-    table,
-    TABLE_NAME: new Config.Parameter(stack, "TABLE_NAME", {
-      value: table.tableName,
-    }),
-  };
+  return table;
 }
