@@ -7,7 +7,7 @@ import * as cdk from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as codebuild from "aws-cdk-lib/aws-codebuild";
-import { Runtime, DeferBuilder } from "@serverless-stack/core";
+import { Runtime, DeferBuilder, FunctionBinding } from "@serverless-stack/core";
 
 import { App } from "./App.js";
 import { Secret, Parameter } from "./Config.js";
@@ -340,6 +340,11 @@ export class Job extends Construct implements SSTConstruct {
       environmentVariables: {
         SST_APP: { value: app.name },
         SST_STAGE: { value: app.stage },
+        ...(
+          FunctionBinding.ssmPrefix !== ""
+            ? { SST_SSM_PREFIX: { value: FunctionBinding.ssmPrefix } }
+            : {}
+        )
       },
       timeout: this.normalizeTimeout(this.props.timeout || "8 hours"),
       buildSpec: codebuild.BuildSpec.fromObject({

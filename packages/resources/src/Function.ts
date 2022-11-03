@@ -12,7 +12,7 @@ import * as lambdaNode from "aws-cdk-lib/aws-lambda-nodejs";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 
-import { State, Runtime, DeferBuilder } from "@serverless-stack/core";
+import { State, Runtime, DeferBuilder, FunctionBinding } from "@serverless-stack/core";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Job } from "./Job.js";
@@ -987,6 +987,9 @@ export class Function extends lambda.Function implements SSTConstruct {
     // Add config
     this.addEnvironment("SST_APP", app.name, { removeInEdge: true });
     this.addEnvironment("SST_STAGE", app.stage, { removeInEdge: true });
+    if (FunctionBinding.ssmPrefix !== "") {
+      this.addEnvironment("SST_SSM_PREFIX", FunctionBinding.ssmPrefix, { removeInEdge: true });
+    }
     this.addConfig(props.config || []);
     this.bind(props.bind || []);
 

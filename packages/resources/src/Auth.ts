@@ -107,18 +107,6 @@ export class Auth extends Construct implements SSTConstruct {
     const stack = Stack.of(scope) as Stack;
     this.authenticator = props.authenticator;
 
-    // Create execution policy
-    const policyStatement = new PolicyStatement({
-      actions: [
-        "ssm:GetParameter",
-        "ssm:PutParameter",
-        "ssm:DeleteParameter",
-      ],
-      effect: Effect.ALLOW,
-      resources: ["*"]
-    });
-    stack.customResourceHandler.addToRolePolicy(policyStatement);
-
     new CustomResource(this, "StackMetadata", {
       serviceToken: stack.customResourceHandler.functionArn,
       resourceType: "Custom::AuthKeys",

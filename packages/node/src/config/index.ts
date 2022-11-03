@@ -1,6 +1,6 @@
 import { GetParametersCommand, SSMClient, Parameter } from "@aws-sdk/client-ssm";
 const ssm = new SSMClient({});
-import { createProxy, parseEnvironment, buildSsmPath, buildSsmFallbackPath } from "../util/index.js";
+import { createProxy, parseEnvironment, buildSsmPath, buildSsmFallbackPath, ssmNameToConstructId } from "../util/index.js";
 
 export interface ParameterResources { };
 export interface SecretResources { };
@@ -105,8 +105,4 @@ async function loadSecrets(paths: string[]) {
     })
   );
   return { validParams, invalidParams };
-}
-
-function ssmNameToConstructId(ssmName: string) {
-  return ssmName.split("/")[5];
 }

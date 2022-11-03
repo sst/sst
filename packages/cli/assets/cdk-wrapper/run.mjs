@@ -78,6 +78,7 @@ const app = new sst.App({
   stage: config.stage,
   region: config.region,
   skipBuild: config.skipBuild,
+  ssmPrefix: config.ssmPrefix,
   esbuildConfig: config.esbuildConfig,
   bootstrapAssets: Bootstrap.assets,
   debugEndpoint: config.debugEndpoint,

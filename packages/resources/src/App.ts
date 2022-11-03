@@ -58,6 +58,7 @@ export interface AppDeployProps {
 
   readonly buildDir?: string;
   readonly skipBuild?: boolean;
+  readonly ssmPrefix?: string;
   readonly esbuildConfig?: string;
   readonly bootstrapAssets?: Bootstrap.Assets;
   readonly debugEndpoint?: string;
@@ -194,6 +195,7 @@ export class App extends cdk.App {
     this.synthCallback = deployProps.synthCallback;
 
     State.init(this.appPath);
+    FunctionBinding.setSsmPrefix(deployProps.ssmPrefix);
     if (deployProps.debugEndpoint) {
       this.local = true;
       State.Function.reset(this.appPath);
