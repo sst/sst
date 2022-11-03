@@ -2,7 +2,7 @@
 
 The `@serverless-stack/resources` package provides a set of additional CDK constructs necessary to build an SST app.
 
-[View the @serverless-stack/resources docs here](https://docs.sst.dev/packages/resources).
+[View the @serverless-stack/resources docs here](https://docs.sst.dev/constructs).
 
 ## Installation
 
@@ -17,7 +17,7 @@ $ yarn add @serverless-stack/cli @serverless-stack/resources --exact
 
 Note that, the version of these packages should be kept in sync.
 
-## Importing Constructs
+## Importing constructs
 
 You can either import specific constructs in your app.
 
@@ -31,11 +31,11 @@ Or import them all.
 import * as sst from "@serverless-stack/resources";
 ```
 
-## SST Constructs
+## Types of constructs
 
 SST comes with a two types of constructs.
 
-### Low-Level Constructs
+### Low-level
 
 These either extend or replace the native CDK constructs.
 
@@ -43,7 +43,7 @@ These either extend or replace the native CDK constructs.
 - [`Stack`](https://docs.sst.dev/constructs/Stack)
 - [`Function`](https://docs.sst.dev/constructs/Function)
 
-### Higher-Level Constructs
+### Higher-level
 
 These are higher level abstractions that wrap around multiple constructs to serve specific use cases.
 

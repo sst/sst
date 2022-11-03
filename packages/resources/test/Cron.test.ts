@@ -1,8 +1,8 @@
 import { test, expect } from "vitest";
-import { countResources, hasResource } from "./helper";
+import { ANY, countResources, hasResource } from "./helper";
 import * as cdk from "aws-cdk-lib";
 import * as events from "aws-cdk-lib/aws-events";
-import { App, Stack, Cron, CronProps, Function } from "../src";
+import { App, Stack, Cron, CronProps, Function, Bucket } from "../src";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
@@ -210,6 +210,26 @@ test("attachPermissions", async () => {
       Statement: [
         lambdaDefaultPolicy,
         { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "CronJobServiceRoleDefaultPolicy283E5BD2",
+  });
+});
+
+test("bind", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "bucket");
+  const cron = new Cron(stack, "Cron", {
+    schedule: "rate(1 minute)",
+    job: "test/lambda.handler",
+  });
+  cron.bind([bucket]);
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
       ],
       Version: "2012-10-17",
     },

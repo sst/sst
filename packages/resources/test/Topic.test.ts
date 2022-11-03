@@ -1,7 +1,7 @@
 import { test, expect } from "vitest";
-import { countResources, hasResource } from "./helper";
+import { ANY, countResources, countResourcesLike, hasResource } from "./helper";
 import * as sns from "aws-cdk-lib/aws-sns";
-import { App, Stack, Topic, Queue, Function } from "../src";
+import { App, Stack, Topic, Queue, Bucket, Function } from "../src";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
@@ -383,7 +383,7 @@ test("attachPermissions", async () => {
     },
   });
   topic.attachPermissions(["s3"]);
-  hasResource(stack, "AWS::IAM::Policy", {
+  countResourcesLike(stack, "AWS::IAM::Policy", 2, {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -391,17 +391,7 @@ test("attachPermissions", async () => {
       ],
       Version: "2012-10-17",
     },
-    PolicyName: "TopicSubscriberTopic0ServiceRoleDefaultPolicy09944443",
-  });
-  hasResource(stack, "AWS::IAM::Policy", {
-    PolicyDocument: {
-      Statement: [
-        lambdaDefaultPolicy,
-        { Action: "s3:*", Effect: "Allow", Resource: "*" },
-      ],
-      Version: "2012-10-17",
-    },
-    PolicyName: "TopicSubscriberTopic1ServiceRoleDefaultPolicyCE1E856B",
+    PolicyName: ANY,
   });
 });
 
@@ -477,6 +467,108 @@ test("attachPermissions-after-addSubscribers", async () => {
       Statement: [
         lambdaDefaultPolicy,
         { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "SubscriberTopic1ServiceRoleDefaultPolicyBFA55355",
+  });
+});
+
+test("bind", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "bucket");
+  const topic = new Topic(stack, "Topic", {
+    subscribers: {
+      "0": "test/lambda.handler",
+      "1": "test/lambda.handler",
+    },
+  });
+  topic.bind([bucket]);
+  countResourcesLike(stack, "AWS::IAM::Policy", 2, {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: ANY,
+  });
+});
+
+test("bindToSubscriber", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "bucket");
+  const topic = new Topic(stack, "Topic", {
+    subscribers: {
+      "0": "test/lambda.handler",
+      "1": "test/lambda.handler",
+    },
+  });
+  topic.bindToSubscriber("0", [bucket]);
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "TopicSubscriberTopic0ServiceRoleDefaultPolicy09944443",
+  });
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [lambdaDefaultPolicy],
+      Version: "2012-10-17",
+    },
+    PolicyName: "TopicSubscriberTopic1ServiceRoleDefaultPolicyCE1E856B",
+  });
+});
+
+test("bindToSubscriber: attach to queue subscriber", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "bucket");
+  const queue = new Queue(stack, "Queue");
+  const topic = new Topic(stack, "Topic", {
+    subscribers: {
+      "0": "test/lambda.handler",
+      "1": queue,
+    },
+  });
+  expect(() => {
+    topic.bindToSubscriber("1", [bucket]);
+  }).toThrow(/Cannot bind/);
+});
+
+test("bind-after-addSubscribers", async () => {
+  const app = new App();
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  const bucket = new Bucket(stackA, "bucket");
+  const topic = new Topic(stackA, "Topic", {
+    subscribers: {
+      "0": "test/lambda.handler",
+    },
+  });
+  topic.bind([bucket]);
+  topic.addSubscribers(stackB, {
+    "1": "test/lambda.handler",
+  });
+  hasResource(stackA, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "TopicSubscriberTopic0ServiceRoleDefaultPolicy09944443",
+  });
+  hasResource(stackB, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
       ],
       Version: "2012-10-17",
     },

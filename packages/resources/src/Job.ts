@@ -10,18 +10,17 @@ import * as codebuild from "aws-cdk-lib/aws-codebuild";
 import { Runtime } from "@serverless-stack/core";
 
 import { App } from "./App.js";
-import {
-  Secret,
-  Parameter,
-  configToEnvironmentVariables,
-  configToPolicyStatement,
-} from "./Config.js";
+import { Secret, Parameter } from "./Config.js";
 import { SSTConstruct } from "./Construct.js";
 import { Function, FunctionBundleNodejsProps } from "./Function.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
-import { isPropertySignature } from "typescript";
-import { IVpc, Vpc } from "aws-cdk-lib/aws-ec2";
+import {
+  bindEnvironment,
+  bindParameters,
+  bindPermissions
+} from "./util/functionBinding.js";
+import { IVpc } from "aws-cdk-lib/aws-ec2";
 import { useDeferredTasks } from "./deferred_task.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
@@ -104,18 +103,6 @@ export interface JobProps {
    * ```js
    * new Job(stack, "MyJob", {
    *   handler: "src/job.handler",
-   *   config: [STRIPE_KEY, API_URL]
-   * })
-   * ```
-   */
-  config?: (Secret | Parameter)[];
-  /**
-   * Configure environment variables for the job
-   *
-   * @example
-   * ```js
-   * new Job(stack, "MyJob", {
-   *   handler: "src/job.handler",
    *   environment: {
    *     DEBUG: "*",
    *   }
@@ -124,22 +111,58 @@ export interface JobProps {
    */
   environment?: Record<string, string>;
   /**
+   * Bind resources for the job
+   *
+   * @example
+   * ```js
+   * new Job(stack, "MyJob", {
+   *   handler: "src/job.handler",
+   *   bind: [STRIPE_KEY, bucket],
+   * })
+   * ```
+   */
+  bind?: SSTConstruct[];
+  /**
+   * Configure environment variables for the job
+   *
+   * @deprecated The "config" prop is deprecated, and will be removed in SST v2. Pass Parameters and Secrets in through the "bind" prop. Read more about how to upgrade here — https://docs.serverless-stack.com/constructs/function
+   *
+   * @example
+   * ```js
+   * // Change
+   * new Job(stack, "MyJob", {
+   *   handler: "src/job.handler",
+   *   config: [STRIPE_KEY, API_URL]
+   * })
+   *
+   * // To
+   * new Job(stack, "MyJob", {
+   *   handler: "src/job.handler",
+   *   bind: [STRIPE_KEY, API_URL]
+   * })
+   * ```
+   */
+  config?: (Secret | Parameter)[];
+  /**
    * Attaches the given list of permissions to the job. Configuring this property is equivalent to calling `attachPermissions()` after the job is created.
    *
    * @example
    * ```js
    * new Job(stack, "MyJob", {
    *   handler: "src/job.handler",
-   *   permissions: ["ses", bucket]
+   *   permissions: ["ses"]
    * })
    * ```
    */
   permissions?: Permissions;
-
   cdk?: JobCDKProps;
 }
 
 export interface JobCDKProps {
+  /**
+   * Allows you to override default id for this construct.
+   */
+  id?: string;
   /**
    * Runs codebuild job in the specified VPC. Note this will only work once deployed.
    *
@@ -177,25 +200,19 @@ export interface JobCDKProps {
  * ```
  */
 export class Job extends Construct implements SSTConstruct {
+  public readonly id: string;
   private readonly localId: string;
   private readonly props: JobProps;
   private readonly job: codebuild.Project;
   private readonly isLiveDevEnabled: boolean;
-  private static all = new Set<string>();
-  public readonly _jobParameter: Parameter;
   public readonly _jobInvoker: Function;
 
   constructor(scope: Construct, id: string, props: JobProps) {
-    super(scope, id);
-
-    // Ensure the id is unique
-    Job.assertIdNotInUse(id);
-    Job.all.add(id);
+    super(scope, props.cdk?.id || id);
 
     const app = this.node.root as App;
-
+    this.id = id;
     this.props = props;
-
     this.localId = path.posix
       .join(scope.node.path, id)
       .replace(/\$/g, "-")
@@ -210,9 +227,9 @@ export class Job extends Construct implements SSTConstruct {
       this._jobInvoker = this.createCodeBuildInvoker();
       this.buildCodeBuildProjectCode();
     }
-    this._jobParameter = this.createConfigParameter();
     this.attachPermissions(props.permissions || []);
     this.addConfig(props.config || []);
+    this.bind(props.bind || []);
     Object.entries(props.environment || {}).forEach(([key, value]) => {
       this.addEnvironment(key, value);
     });
@@ -221,23 +238,62 @@ export class Job extends Construct implements SSTConstruct {
   public getConstructMetadata() {
     return {
       type: "Job" as const,
-      data: {},
+      data: {}
+    };
+  }
+
+  /** @internal */
+  public getFunctionBinding() {
+    return {
+      clientPackage: "job",
+      variables: {
+        functionName: {
+          environment: this._jobInvoker.functionName,
+          parameter: this._jobInvoker.functionName
+        }
+      },
+      permissions: {
+        "lambda:*": [this._jobInvoker.functionArn]
+      }
     };
   }
 
   /**
-   * Attaches additional configs to job
+   * Binds additional resources to job.
+   *
+   * @example
+   * ```js
+   * job.bind([STRIPE_KEY, bucket]);
+   * ```
+   */
+  public bind(constructs: SSTConstruct[]): void {
+    this._jobInvoker.bind(constructs);
+    this.useForCodeBuild(constructs);
+  }
+
+  /**
+   * Attaches additional configs to job.
+   *
+   * @deprecated The "config" prop is deprecated, and will be removed in SST v2. Pass Parameters and Secrets in through the "bind" prop. Read more about how to upgrade here — https://docs.serverless-stack.com/constructs/function
    *
    * @example
    * ```js
    * const STRIPE_KEY = new Config.Secret(stack, "STRIPE_KEY");
    *
+   * // Change
    * job.addConfig([STRIPE_KEY]);
+   *
+   * // To
+   * job.bind([STRIPE_KEY]);
    * ```
    */
   public addConfig(config: (Secret | Parameter)[]): void {
-    this._jobInvoker.addConfig(config);
-    this.addConfigForCodeBuild(config);
+    const app = this.node.root as App;
+    this.bind(config);
+
+    if (config.length > 0) {
+      app.reportWarning("usingConfig");
+    }
   }
 
   /**
@@ -245,7 +301,7 @@ export class Job extends Construct implements SSTConstruct {
    *
    * @example
    * ```js
-   * job.attachPermissions(["ses", bucket]);
+   * job.attachPermissions(["ses"]);
    * ```
    */
   public attachPermissions(permissions: Permissions): void {
@@ -254,7 +310,7 @@ export class Job extends Construct implements SSTConstruct {
   }
 
   /**
-   * Attaches additional environment variable to the job
+   * Attaches additional environment variable to the job.
    *
    * @example
    * ```js
@@ -266,29 +322,6 @@ export class Job extends Construct implements SSTConstruct {
   public addEnvironment(name: string, value: string): void {
     this._jobInvoker.addEnvironment(name, value);
     this.addEnvironmentForCodeBuild(name, value);
-  }
-
-  /** @internal */
-  public static codegenTypes(typesPath: string) {
-    fs.appendFileSync(`${typesPath}/index.d.ts`, `export * from "./job";`);
-    fs.writeFileSync(
-      `${typesPath}/job.d.ts`,
-      `
-      import "@serverless-stack/node/job";
-      declare module "@serverless-stack/node/job" {
-        export interface JobNames {
-          ${Array.from(Job.all)
-            .map((p) => `${p}: string;`)
-            .join("\n")}
-        }
-      }
-    `
-    );
-  }
-
-  /** @internal */
-  public static clear() {
-    Job.all.clear();
   }
 
   private createCodeBuildProject(): codebuild.Project {
@@ -307,11 +340,11 @@ export class Job extends Construct implements SSTConstruct {
         buildImage: codebuild.LinuxBuildImage.fromDockerRegistry(
           "amazon/aws-lambda-nodejs:16"
         ),
-        computeType: this.normalizeMemorySize(this.props.memorySize || "3 GB"),
+        computeType: this.normalizeMemorySize(this.props.memorySize || "3 GB")
       },
       environmentVariables: {
         SST_APP: { value: app.name },
-        SST_STAGE: { value: app.stage },
+        SST_STAGE: { value: app.stage }
       },
       timeout: this.normalizeTimeout(this.props.timeout || "8 hours"),
       buildSpec: codebuild.BuildSpec.fromObject({
@@ -320,10 +353,10 @@ export class Job extends Construct implements SSTConstruct {
           build: {
             commands: [
               // commands will be set after the code is built
-            ],
-          },
-        },
-      }),
+            ]
+          }
+        }
+      })
     });
   }
 
@@ -348,7 +381,7 @@ export class Job extends Construct implements SSTConstruct {
           handler,
           runtime: "nodejs16.x",
           srcPath,
-          bundle,
+          bundle
         })!;
 
         // This should always be true b/c runtime is always Node.js
@@ -377,7 +410,7 @@ export class Job extends Construct implements SSTConstruct {
               `console.log("//////////////////////")`,
               `console.log("//  End of the job  //")`,
               `console.log("//////////////////////")`,
-              `console.log("")`,
+              `console.log("")`
             ].join("\n")
           );
 
@@ -400,8 +433,8 @@ export class Job extends Construct implements SSTConstruct {
         "phases:",
         "  build:",
         "    commands:",
-        `      - node ${script}`,
-      ].join("\n"),
+        `      - node ${script}`
+      ].join("\n")
     };
 
     this.attachPermissions([
@@ -409,9 +442,9 @@ export class Job extends Construct implements SSTConstruct {
         actions: ["s3:*"],
         effect: iam.Effect.ALLOW,
         resources: [
-          `arn:aws:s3:::${codeConfig.s3Location?.bucketName}/${codeConfig.s3Location?.objectKey}`,
-        ],
-      }),
+          `arn:aws:s3:::${codeConfig.s3Location?.bucketName}/${codeConfig.s3Location?.objectKey}`
+        ]
+      })
     ]);
   }
 
@@ -421,7 +454,7 @@ export class Job extends Construct implements SSTConstruct {
     // Note: make the invoker function the same ID as the Job
     //       construct so users can identify the invoker function
     //       in the Console.
-    return new Function(this, this.node.id, {
+    const fn = new Function(this, this.node.id, {
       srcPath,
       handler,
       bundle: { format: "esm" },
@@ -430,10 +463,12 @@ export class Job extends Construct implements SSTConstruct {
       memorySize: 1024,
       config,
       environment: {
-        SST_DEBUG_TYPE: "job",
+        SST_DEBUG_TYPE: "job"
       },
-      permissions,
+      permissions
     });
+    fn._disableBind = true;
+    return fn;
   }
 
   private createCodeBuildInvoker(): Function {
@@ -446,41 +481,46 @@ export class Job extends Construct implements SSTConstruct {
       timeout: 10,
       memorySize: 1024,
       environment: {
-        PROJECT_NAME: this.job.projectName,
+        PROJECT_NAME: this.job.projectName
       },
       permissions: [
         new iam.PolicyStatement({
           effect: iam.Effect.ALLOW,
           actions: ["codebuild:StartBuild"],
-          resources: [this.job.projectArn],
-        }),
+          resources: [this.job.projectArn]
+        })
       ],
       bundle: {
-        format: "esm",
-      },
+        format: "esm"
+      }
     });
   }
 
-  private createConfigParameter(): Parameter {
-    return new Parameter(this, `SST_JOB_${this.node.id}`, {
-      value: this._jobInvoker.functionName,
-    });
-  }
-
-  private addConfigForCodeBuild(config: (Secret | Parameter)[]): void {
+  private useForCodeBuild(constructs: SSTConstruct[]): void {
     const app = this.node.root as App;
 
-    // Add environment variables
-    const env = configToEnvironmentVariables(config);
-    Object.entries(env).forEach(([key, value]) =>
-      this.addEnvironmentForCodeBuild(key, value)
-    );
+    constructs.forEach(c => {
+      // Bind environment
+      const env = bindEnvironment(c);
+      Object.entries(env).forEach(([key, value]) =>
+        this.addEnvironmentForCodeBuild(key, value)
+      );
 
-    // Attach permissions
-    const policyStatement = configToPolicyStatement(app, config);
-    if (policyStatement) {
-      this.attachPermissionsForCodeBuild([policyStatement]);
-    }
+      // Bind parameters
+      bindParameters(c);
+
+      // Bind permissions
+      const permissions = bindPermissions(c);
+      Object.entries(permissions).forEach(([action, resources]) =>
+        this.attachPermissionsForCodeBuild([
+          new iam.PolicyStatement({
+            actions: [action],
+            effect: iam.Effect.ALLOW,
+            resources
+          })
+        ])
+      );
+    });
   }
 
   private attachPermissionsForCodeBuild(permissions: Permissions): void {
@@ -490,8 +530,7 @@ export class Job extends Construct implements SSTConstruct {
   private addEnvironmentForCodeBuild(name: string, value: string): void {
     const project = this.job.node.defaultChild as codebuild.CfnProject;
     const env = project.environment as codebuild.CfnProject.EnvironmentProperty;
-    const envVars =
-      env.environmentVariables as codebuild.CfnProject.EnvironmentVariableProperty[];
+    const envVars = env.environmentVariables as codebuild.CfnProject.EnvironmentVariableProperty[];
     envVars.push({ name, value });
   }
 
@@ -517,11 +556,5 @@ export class Job extends Construct implements SSTConstruct {
       throw new Error(`Invalid timeout value for the ${this.node.id} Job.`);
     }
     return value;
-  }
-
-  private static assertIdNotInUse(id: string) {
-    if (Job.all.has(id)) {
-      throw new Error(`Job ${id} already exists`);
-    }
   }
 }

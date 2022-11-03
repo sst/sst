@@ -244,20 +244,6 @@ new Bucket(stack, "Bucket", {
 });
 ```
 
-### Configuring the S3 Bucket
-
-Configure the internally created CDK `Bucket` instance.
-
-```js {3-5}
-new Bucket(stack, "Bucket", {
-  cdk: {
-    bucket: {
-      bucketName: "my-bucket",
-    },
-  },
-});
-```
-
 ### Removing the S3 Bucket
 
 Only empty S3 buckets can be deleted. However, you can configure the bucket to automatically delete all objects upon removal.
@@ -271,6 +257,36 @@ new Bucket(stack, "Bucket", {
       autoDeleteObjects: true,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     },
+  },
+});
+```
+
+### Advanced examples
+
+#### Configuring the S3 Bucket
+
+Configure the internally created CDK `Bucket` instance.
+
+```js {3-5}
+new Bucket(stack, "Bucket", {
+  cdk: {
+    bucket: {
+      bucketName: "my-bucket",
+    },
+  },
+});
+```
+
+#### Importing an existing bucket
+
+Override the internally created CDK `Bucket` instance.
+
+```js {5}
+import * as s3 from "aws-cdk-lib/aws-s3";
+
+new Bucket(stack, "Bucket", {
+  cdk: {
+    bucket: s3.Bucket.fromBucketArn(this, "IBucket", bucketArn),
   },
 });
 ```

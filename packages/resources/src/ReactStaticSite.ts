@@ -5,6 +5,8 @@ import { Construct } from "constructs";
 import { StaticSite, StaticSiteProps } from "./StaticSite.js";
 import { SSTConstruct } from "./Construct.js";
 
+export type ReactStaticSiteProps = StaticSiteProps;
+
 /////////////////////
 // Construct
 /////////////////////
@@ -62,5 +64,3 @@ export class ReactStaticSite extends StaticSite implements SSTConstruct {
     });
   }
 }
-
-export type ReactStaticSiteProps = StaticSiteProps;

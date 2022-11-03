@@ -1,9 +1,9 @@
 import chalk from "chalk";
-import { getChildLogger, FunctionConfig } from "@serverless-stack/core";
+import { getChildLogger, FunctionBinding } from "@serverless-stack/core";
 
 const logger = getChildLogger("client");
 
-export default async function (argv, config) {
+export default async function(argv, config) {
   const { name: app, stage, region } = config;
   const { action } = argv;
 
@@ -27,7 +27,7 @@ export default async function (argv, config) {
 }
 
 async function handleList(argv, app, stage, region) {
-  const secrets = await FunctionConfig.listSecrets(app, stage, region);
+  const secrets = await FunctionBinding.listSecrets(app, stage, region);
   const keys = Object.keys(secrets);
 
   if (keys.length === 0) {
@@ -41,7 +41,7 @@ async function handleList(argv, app, stage, region) {
 
 async function handleGet(argv, app, stage, region) {
   const { name } = argv;
-  const secret = await FunctionConfig.getSecret(app, stage, region, name);
+  const secret = await FunctionBinding.getSecret(app, stage, region, name);
   if (secret.value) {
     logger.info(chalk.bold(secret.value));
   } else if (secret.fallbackValue) {
@@ -57,41 +57,41 @@ async function handleGet(argv, app, stage, region) {
 
 async function handleSet(argv, app, stage, region) {
   const { name, value } = argv;
-  await FunctionConfig.setSecret(app, stage, region, name, value);
+  await FunctionBinding.setSecret(app, stage, region, name, value);
   logger.info("\n✅ Updated");
 }
 
 async function handleSetFallback(argv, app, region) {
   const { name, value } = argv;
-  await FunctionConfig.setSecretFallback(app, region, name, value);
+  await FunctionBinding.setSecretFallback(app, region, name, value);
   logger.info("✅ Updated");
 }
 
 async function handleRemove(argv, app, stage, region) {
   const { name } = argv;
-  await FunctionConfig.removeSecret(app, stage, region, name);
+  await FunctionBinding.removeSecret(app, stage, region, name);
   logger.info("\n✅ Removed");
 }
 
 async function handleRemoveFallback(argv, app, region) {
   const { name } = argv;
-  await FunctionConfig.removeSecretFallback(app, region, name);
+  await FunctionBinding.removeSecretFallback(app, region, name);
   logger.info("✅ Removed");
 }
 
 function printSecretsInEnvFormat(secrets) {
   const keys = Object.keys(secrets);
-  keys.sort().forEach((key) => {
+  keys.sort().forEach(key => {
     logger.info(`${key}=${secrets[key].value || secrets[key].fallbackValue}`);
   });
 }
 
 function printSecretsInTableFormat(secrets) {
   const keys = Object.keys(secrets);
-  const keyLen = Math.max("Secrets".length, ...keys.map((key) => key.length));
+  const keyLen = Math.max("Secrets".length, ...keys.map(key => key.length));
   const valueLen = Math.max(
     "Values".length,
-    ...keys.map((key) =>
+    ...keys.map(key =>
       secrets[key].value
         ? secrets[key].value.length
         : `${secrets[key].fallbackValue} (fallback)`.length
@@ -105,7 +105,7 @@ function printSecretsInTableFormat(secrets) {
   logger.info(
     "├".padEnd(keyLen + 3, "─") + "┼" + "".padEnd(valueLen + 2, "─") + "┤"
   );
-  keys.sort().forEach((key) => {
+  keys.sort().forEach(key => {
     const value = secrets[key].value
       ? secrets[key].value
       : `${secrets[key].fallbackValue} ${chalk.gray("(fallback)")}`;

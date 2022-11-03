@@ -24,39 +24,37 @@ It allows you upload, delete, and download files. You can also create and delete
 ```js
 import { Bucket } from "@serverless-stack/resources";
 
-new Bucket(stack, "Bucket");
+new Bucket(stack, "myFiles");
 ```
 
 ## Accessing files in Lambda Functions
 
-To access your files inside a Lambda Function, you need to pass the Bucket name to the Function as an environment variable, and also grant the Function permission to access the Bucket.
+To access your files inside a Lambda Function, you need to bind the bucket to the function.
 
 ```js {10,12}
 import { Bucket, Function } from "@serverless-stack/resources";
 
 // Create a Bucket
-const bucket = new Bucket(stack, "Bucket");
+const bucket = new Bucket(stack, "myFiles");
 
 // Create a Function that will access the Bucket
 new Function(stack, "Function", {
   handler: "src/lambda.main",
-  environment: {
-    BUCKET_NAME: bucket.bucketName,
-  },
-  permissions: [bucket],
+  bind: [bucket],
 });
 ```
 
 You can then use the AWS S3 SDK to access files in the Bucket.
 
 ```js title="src/lambda.js"
+import { Bucket } from "@serverless-stack/node/bucket";
 import AWS from "aws-sdk";
 const S3 = new AWS.S3();
 
 export async function main(event) {
   // Download file
   const file = S3.getObject({
-    Bucket: process.env.BUCKET_NAME,
+    Bucket: Bucket.myFiles.bucketName,
     Key: "path/to/file.png",
   });
 
@@ -71,13 +69,10 @@ export async function main(event) {
 Your users won't have direct access to files in your Bucket. You need to create an API endpoint that generates presigned URLs for the file they want to upload.
 
 ```js
-const bucket = new Bucket(stack, "Bucket");
+const bucket = new Bucket(stack, "myFiles");
 
 new Api(stack, "Api", {
-  environment: {
-    BUCKET_NAME: bucket.bucketName,
-  },
-  permissions: [bucket],
+  bind: [bucket],
   routes: {
     "POST /presigned-url": "src/generatePresignedUrl.main",
   },
@@ -87,10 +82,11 @@ new Api(stack, "Api", {
 And the Lambda function requests a URL from S3.
 
 ```js
+import { Bucket } from "@serverless-stack/node/bucket";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const signedUrl = s3.getSignedUrl("putObject", {
-  Bucket: process.env.BUCKET_NAME,
+  Bucket: Bucket.myFiles.bucketName,
   Key: "path/to/folder",
 });
 ```
@@ -114,7 +110,7 @@ fetch(signedUrl, {
 Another option is to use Cognito Identity Pool to grant temporary IAM permissions for both the authenticated and unauthenticated users in your web app. If you are using the [`Cognito`](constructs/Cognito.md) construct to manage your users, you can grant the permissions like so:
 
 ```js
-const bucket = new Bucket(stack, "MyBucket");
+const bucket = new Bucket(stack, "myFiles");
 
 const auth = new Cognito(stack, "Auth", { ... });
 
@@ -152,7 +148,7 @@ await Storage.vault.put(filename, file, {
 You can receive notifications when certain events happen in the Bucket. These can be used to trigger a Lambda function.
 
 ```js
-new Bucket(stack, "MyBucket", {
+new Bucket(stack, "myFiles", {
   notifications: ["src/s3Notification.main"],
 });
 ```

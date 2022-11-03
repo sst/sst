@@ -46,7 +46,6 @@ export function countResources(
   if (type === "AWS::Lambda::Function" || type === "AWS::IAM::Role") {
     count = count + 1;
   }
-
   const template = Template.fromStack(stack);
   template.resourceCountIs(type, count);
 }

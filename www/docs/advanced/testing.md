@@ -26,7 +26,7 @@ To start, there are 3 types of tests you can write for your SST apps:
 2. Tests for your APIs, the endpoints handling requests.
 3. Tests for your stacks, the code that creates your infrastructure.
 
-SST uses [Vitest](https://vitest.dev) to help you write these tests. And it uses the [`sst load-config`](../packages/cli.md#load-config) CLI to load your app's environment variables and secrets.
+SST uses [Vitest](https://vitest.dev) to help you write these tests. And it uses the [`sst bind`](../packages/cli.md#bind) CLI to bind the resources to your tests. This allows the [`@serverless-stack/node`](../clients/index.md) helper library to work as if the tests were running inside a Lambda function.
 
 ---
 
@@ -42,14 +42,14 @@ If you created your app with `create-sst` a [Vitest](https://vitest.dev/config/)
   "remove": "sst remove",
   "console": "sst console",
   "typecheck": "tsc --noEmit",
-  "test": "sst load-config -- vitest run"
+  "test": "sst bind -- vitest run"
 },
 ```
 
-We'll look at how the `sst load-config` CLI works a little in the chapter.
+We'll look at how the `sst bind` CLI works a little in the chapter.
 
 :::note
-If you created your app using `create-sst` prior to v1.9.0, make sure to prepend `sst load-config --` to your test script.
+If you created your app using `create-sst` prior to v1.9.0, make sure to prepend `sst bind --` to your test script.
 :::
 
 You can now run your tests using.
@@ -105,12 +105,12 @@ it("create an article", async () => {
 });
 ```
 
-Both the `create()` and `list()` functions call `services/core/dynamo.ts` to talk to the database. And `services/core/dynamo.ts` references `Config.TABLE_NAME`.
+Both the `create()` and `list()` functions call `services/core/dynamo.ts` to talk to the database. And `services/core/dynamo.ts` references `Table.table.tableName`.
 
 <details>
 <summary>Behind the scenes</summary>
 
-The above test only works if we run `sst load-config -- vitest run`. The `sst load-config` CLI fetches the value for the `TABLE_NAME` and passes it to the test. If we run `vitest run` directly, we'll get an error complaining that `Config.TABLE_NAME` cannot be resolved.
+The above test only works if we run `sst bind -- vitest run`. The `sst bind` CLI fetches the value for the `Table.table.tableName` and passes it to the test. If we run `vitest run` directly, we'll get an error complaining that `Table.table.tableName` cannot be resolved.
 
 </details>
 
@@ -120,7 +120,7 @@ The above test only works if we run `sst load-config -- vitest run`. The `sst lo
 
 We can rewrite the above test so that instead of calling `Article.create()`, you make a request to the GraphQL API to create the article. In fact, the GraphQL stack template already includes this test.
 
-To call the GraphQL API in our test, we need to know the API's URL. We create a [`Parameter`](../environment-variables.md#configparameter) in `stacks/Api.ts`:
+To call the GraphQL API in our test, we need to know the API's URL. We create a [`Parameter`](../config.md#parameters) in `stacks/Api.ts`:
 
 ```ts title="stacks/Api.ts"
 new Config.Parameter(stack, "API_URL", {
@@ -161,7 +161,7 @@ it("create an article", async () => {
 });
 ```
 
-Again, just like the domain test above, this only works if we run [`sst load-config -- vitest run`](#how-sst-load-config-works).
+Again, just like the domain test above, this only works if we run [`sst bind -- vitest run`](#how-sst-bind-works).
 
 :::tip
 Testing APIs are often more useful than testing Domain code because they test the app from the perspective of a user. Ignoring most of the implementation details.
@@ -261,29 +261,25 @@ The best way to isolate tests is to create separate scopes for each test. In our
 
 ---
 
-## How `sst load-config` works
+## How `sst bind` works
 
-When testing your code, you have to ensure the testing environment has the same environment variable values as the Lambda environment. In the past, people would manually maintain a `.env.test` file with environment values. SST has built-in support for automatically loading the secrets and environment values that are managed by [`Config`](../environment-variables.md).
+When testing your code, you have to ensure the testing environment has the same environment variable values as the Lambda environment. In the past, people would manually maintain a `.env.test` file with environment values. SST has built-in support for automatically loading the secrets and environment values that are managed by [`Resource Binding`](../resource-binding.md).
 
-The [`sst load-config`](../packages/cli.md#load-config) CLI fetches all the `Config` values, [`Parameter`](constructs/Parameter.md) and [`Secret`](constructs/Secret.md), that are used in your app, and invokes the `vitest run` with the values configured as environment variables.
+The [`sst bind`](../packages/cli.md#bind) CLI fetches all the resource values, and invokes the `vitest run` with the values configured as environment variables.
 
 <details>
 <summary>Behind the scenes</summary>
 
-The `sst load-config` CLI sets the following environment variables:
+The `sst bind` CLI sets the following environment variables:
 
 - `SST_APP` with the name of your SST app
 - `SST_STAGE` with the stage
-- For Secrets, it fetches and decrypts all SSM Parameters prefixed with `/sst/{appName}/{stageName}/secrets/*` and `/sst/{appName}/.fallback/secrets/*`, and sets the corresponding environment variables prefixed with `SST_PARAM_*`.
+- It fetches all SSM Parameters prefixed with `/sst/{appName}/{stageName}/*`, and sets the environment variables prefixed with `SST_*`.
 
-  ie. `SST_PARAM_STRIPE_KEY` is created with value from `/sst/{appName}/{stageName}/secrets/STRIPE_KEY`
+  ie. In our example above, `SST_Table_tableName_table` is created with value from `/sst/{appName}/{stageName}/Table/table/tableName`
 
-- For Parameters, it fetches all SSM Parameters prefixed with `/sst/{appName}/{stageName}/parameters/*`, and sets the environment variables prefixed with `SST_PARAM_*`.
-
-  ie. `SST_PARAM_USER_UPDATED_TOPIC` is created with value from `/sst/{appName}/{stageName}/parameters/USER_UPDATED_TOPIC`
-
-Secret values, `/sst/{appName}/{stageName}/secrets/STRIPE_KEY` are stored as Parameter environment variables `SST_PARAM_STRIPE_KEY`. This is intentional so that the [`@serverless-stack/node/config`](packages/node.md#config) helper doesn't need to re-fetch the secret values at runtime.
+- For [`Secrets`](constructs/Secret.md), fallback values are also fetched from SSM Parameters prefixed with `/sst/{appName}/.fallback/Secret/*`.
 
 </details>
 
-This allows the [`@serverless-stack/node/config`](packages/node.md#config) helper library to work as if it was running inside a Lambda function.
+This allows the [`@serverless-stack/node`](../clients/index.md) helper library to work as if it was running inside a Lambda function.

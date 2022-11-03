@@ -46,6 +46,10 @@ _Type_ : <span class="mono">string</span>
 
 The ID of the internally created CloudFront Distribution.
 
+### id
+
+_Type_ : <span class="mono">string</span>
+
 ### url
 
 _Type_ : <span class="mono">string</span>

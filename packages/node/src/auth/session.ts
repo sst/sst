@@ -1,8 +1,8 @@
-import { Context } from "../context/context.js";
-import { useCookie, useHeader } from "../context/http.js";
 import { createSigner, createVerifier, SignerOptions } from "fast-jwt";
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
-import { Config } from "../config/index.js";
+import { Context } from "../context/context.js";
+import { useCookie, useHeader } from "../api/index.js";
+import { getPrivateKey, getPublicKey } from "./auth.js";
 
 export interface SessionTypes {
   public: {};
@@ -27,8 +27,7 @@ const SessionMemo = /* @__PURE__ */ Context.memo(() => {
   if (token) {
     const jwt = createVerifier({
       algorithms: ["RS512"],
-      /* @ts-expect-error */
-      key: Config.SST_AUTH_PUBLIC,
+      key: getPublicKey(),
     })(token);
     return jwt;
   }
@@ -65,8 +64,7 @@ function create<T extends keyof SessionTypes>(input: {
 }) {
   const signer = createSigner({
     ...input.options,
-    /* @ts-expect-error */
-    key: Config.SST_AUTH_PRIVATE,
+    key: getPrivateKey(),
     algorithm: "RS512",
   });
   const token = signer({

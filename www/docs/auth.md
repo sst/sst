@@ -27,9 +27,9 @@ Want to learn more about `Auth`? Check out the [launch livestream on YouTube](ht
 
    - The API routes to handle the authentication flows.
    - Securely generates a RSA public/private key pair to sign sessions.
-   - Stores the RSA key pair as secrets in the app's [`Config`](environment-variables.md).
+   - Stores the RSA key pair as secrets in the app's [`Config`](config.md).
 
-2. [`AuthHandler`](packages/node.md#authhandler) — a Lambda handler function that can handle authentication flows for various providers.
+2. [`AuthHandler`](clients/auth.md#authhandler) — a Lambda handler function that can handle authentication flows for various providers.
 
    - High level [adapters](#adapters) for common providers like Google, GitHub, Twitch, etc.
    - OIDC and OAuth adapters that work with any compatible service.
@@ -40,7 +40,7 @@ Want to learn more about `Auth`? Check out the [launch livestream on YouTube](ht
 
    - Implemented with stateless JWT tokens that are signed with the RSA key pairs mentioned above.
    - Support for passing tokens to the frontend via a cookie or the query string.
-   - Full typesafety for issuing and validating sessions with the [`useSession`](packages/node.md#usesession) hook.
+   - Full typesafety for issuing and validating sessions with the [`useSession`](clients/auth.md#usesession) hook.
 
 ---
 
@@ -59,12 +59,11 @@ You can use the Minimal TypeScript starter by running `npx create-sst@latest` > 
 Import the [`Auth`](constructs/Auth.md) construct, attach it to your API and point it to a handler function.
 
 ```js title="stacks/api.ts"
-import { Auth, Config } from "@serverless-stack/resources";
+import { Auth } from "@serverless-stack/resources";
 
 new Auth(stack, "auth", {
   authenticator: {
     handler: "functions/auth.handler",
-    config: [new Config.Secret(stack, "GOOGLE_CLIENT_ID")],
   },
 });
 
@@ -79,17 +78,11 @@ By default all the auth routes are added under `/auth`. But this can be customiz
 <details>
 <summary>Behind the scenes</summary>
 
-Aside from the routes, this construct also creates a pair of secrets; a public and private key pair to sign the session tokens. It stores this in our app [`Config`](environment-variables.md).
+Aside from the routes, this construct also creates a pair of secrets; a public and private key pair to sign the session tokens.
 
 Note that, you can use the same auth construct with multiple APIs.
 
 </details>
-
-You'll notice that we are using the [`Config`](environment-variables.md) to store your `GOOGLE_CLIENT_ID`. This is a secret, so let's use the CLI to set it.
-
-```bash
-npx sst secrets set GOOGLE_CLIENT_ID xxxxxxxxxx
-```
 
 Now let's implement the handler.
 
@@ -115,15 +108,14 @@ Let's configure the provider.
 
 To allow our users to _Sign in with Google_, we'll add the [`GoogleAdapter`](#google) as a provider in our `AuthHandler`.
 
-```js title="services/functions/auth.ts" {6-15}
+```js title="services/functions/auth.ts" {5-14}
 import { AuthHandler, GoogleAdapter } from "@serverless-stack/node/auth";
-import { Config } from "@serverless-stack/node/config";
 
 export const handler = AuthHandler({
   providers: {
     google: GoogleAdapter({
       mode: "oidc",
-      clientID: Config.GOOGLE_CLIENT_ID,
+      clientID: "XXXX",
       onSuccess: async (tokenset) => {
         return {
           statusCode: 200,
@@ -140,7 +132,7 @@ This will handle the `/auth/google/authorize` and `/auth/google/callback` routes
 <details>
 <summary>Behind the scenes</summary>
 
-[`AuthHandler`](packages/node.md#authhandler) returns an authenticator function that'll do authentication handshakes and issue sessions for different providers.
+[`AuthHandler`](clients/auth.md#authhandler) returns an authenticator function that'll do authentication handshakes and issue sessions for different providers.
 
 We are using the `GoogleAdapter` in OIDC mode. This allows your handler function to handle a couple of routes:
 
@@ -256,13 +248,13 @@ Now the frontend can use the stored `token` to make calls to API routes that nee
 
 In your API you'll need to check if the token is passed in and is valid. But it can be a hassle to have to pass the token all around in your application code.
 
-To make it easy to check and validate the session across your app, SST has the [`useSession`](packages/node.md#usesession) hook.
+To make it easy to check and validate the session across your app, SST has the [`useSession`](clients/auth.md#usesession) hook.
 
 ```js title="services/functions/rest/foo.ts"
-import { Handler } from "@serverless-stack/node/context";
+import { ApiHandler } from "@serverless-stack/node/api";
 import { useSession } from "@serverless-stack/node/auth";
 
-export const needsAuthHandler = Handler("api", async (event) => {
+export const needsAuthHandler = ApiHandler(async (event) => {
   const session = useSession();
 
   return {
@@ -278,7 +270,7 @@ The `useSession` hook decrypts the session token with your public key and return
 The `useSession` hook can be called in any part of your API.
 :::
 
-Note that, to use the `useSession` hook you'll need to wrap your Lambda handler with the SST `Handler` function.
+Note that, to use the `useSession` hook you'll need to wrap your Lambda handler with the SST `ApiHandler` function.
 
 <details>
 <summary>Behind the scenes</summary>
@@ -289,7 +281,7 @@ Behind the scenes it works by setting a context object global variable that your
 
 The `useSession` hook then decrypts the token using the public key that the `Auth` construct had previously generated.
 
-To call the `useSession` hook, you'll need to wrap your Lambda handler function with one of SST's handlers. So for an API request, use the [`Handler`](packages/node.md#handler) function with `api` as the first argument.
+To call the `useSession` hook, you'll need to wrap your Lambda handler function with one of SST's handlers. So for an API request, use the [`ApiHandler`](clients/api.md#apihandler) function with `api` as the first argument.
 
 This will initialize the context and allow you to call the `useSession` hook any where in your application code.
 
@@ -319,7 +311,7 @@ Note that the `session` object here is the same as the one we defined previously
 }
 ```
 
-If you are using the [`GraphQLHandler`](packages/node.md#graphqlhandler) that comes with the GraphQL starter in the [`create sst`](packages/create-sst.md) CLI, it'll transparently initialize the context system.
+If you are using the [`GraphQLHandler`](clients/graphql.md#graphqlhandler) that comes with the GraphQL starter in the [`create sst`](packages/create-sst.md) CLI, it'll transparently initialize the context system.
 
 Here's an example of a GraphQL query that gets the current user from the session.
 

@@ -258,12 +258,11 @@ Here's how this all works behind the scenes. All our infrastructure is defined i
    });
    ```
 
-   We pass our database details to the API so our functions can make queries to it.
+   We bind our database details to the API so our functions can make queries to it.
 
    ```ts
    function: {
-     permissions: [db.table],
-     config: [db.TABLE_NAME],
+     bind: [db.table],
    },
    ```
 

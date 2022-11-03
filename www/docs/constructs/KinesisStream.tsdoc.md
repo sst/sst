@@ -58,6 +58,12 @@ new KinesisStream(stack, "Stream", {
 
 
 
+### cdk.id?
+
+_Type_ : <span class="mono">string</span>
+
+Allows you to override default id for this construct.
+
 ### cdk.stream?
 
 _Type_ : <span class='mono'><span class="mono">[IStream](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_kinesis.IStream.html)</span> | <span class="mono">[StreamProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_kinesis.StreamProps.html)</span></span>
@@ -78,6 +84,10 @@ new KinesisStream(stack, "Stream", {
 
 ## Properties
 An instance of `KinesisStream` has the following properties.
+### id
+
+_Type_ : <span class="mono">string</span>
+
 ### streamArn
 
 _Type_ : <span class="mono">string</span>
@@ -152,6 +162,40 @@ Attaches the given list of permissions to a specific consumer. This allows that 
 
 ```js
 stream.attachPermissionsToConsumer("consumer1", ["s3"]);
+```
+
+### bind
+
+```ts
+bind(constructs)
+```
+_Parameters_
+- __constructs__ <span class='mono'>Array&lt;<span class="mono">SSTConstruct</span>&gt;</span>
+
+
+Binds the given list of resources to all the consumers.
+
+
+
+```js
+stream.bind([STRIPE_KEY, bucket]]);
+```
+
+### bindToConsumer
+
+```ts
+bindToConsumer(consumerName, constructs)
+```
+_Parameters_
+- __consumerName__ <span class="mono">string</span>
+- __constructs__ <span class='mono'>Array&lt;<span class="mono">SSTConstruct</span>&gt;</span>
+
+
+Binds the given list of resources to a specific consumer.
+
+
+```js
+stream.bindToConsumer("consumer1", [STRIPE_KEY, bucket]);
 ```
 
 ### getFunction

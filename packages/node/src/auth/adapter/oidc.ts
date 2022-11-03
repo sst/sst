@@ -5,7 +5,7 @@ import {
   useDomainName,
   useFormData,
   usePath,
-} from "../../context/http.js";
+} from "../../api/index.js";
 import { createAdapter } from "./adapter.js";
 
 export interface OidcBasicConfig {

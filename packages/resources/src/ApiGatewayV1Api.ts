@@ -48,51 +48,6 @@ export interface ApiGatewayV1ApiProps<
   >,
   AuthorizerKeys = keyof Authorizers
 > {
-  cdk?: {
-    /**
-     * Override the internally created rest api
-     *
-     * @example
-     * ```js
-     *
-     * new ApiGatewayV1Api(stack, "Api", {
-     *   cdk: {
-     *     restApi: {
-     *       description: "My api"
-     *     }
-     *   }
-     * });
-     * ```
-     */
-    restApi?: apig.IRestApi | apig.RestApiProps;
-    /**
-     * If you are importing an existing API Gateway REST API project, you can import existing route paths by providing a list of paths with their corresponding resource ids.
-     *
-     * @example
-     * ```js
-     * import { RestApi } from "aws-cdk-lib/aws-apigateway";
-     *
-     * new ApiGatewayV1Api(stack, "Api", {
-     *   cdk: {
-     *     restApi: RestApi.fromRestApiAttributes(stack, "ImportedApi", {
-     *       restApiId,
-     *       rootResourceId,
-     *     }),
-     *     importedPaths: {
-     *       "/notes": "slx2bn",
-     *       "/users": "uu8xs3",
-     *     },
-     *   }
-     * });
-     * ```
-     *
-     * API Gateway REST API is structured in a tree structure:
-     * - Each path part is a separate API Gateway resource object.
-     * - And a path part is a child resource of the preceding part.
-     * So the part path /notes, is a child resource of the root resource /. And /notes/{noteId} is a child resource of /notes. If /notes has been created in the imported API, you have to import it before creating the /notes/{noteId} child route.
-     */
-    importedPaths?: { [path: string]: string };
-  };
   /**
    * Define the routes for the API. Can be a function, proxy to another API, or point to an ALB
    *
@@ -232,6 +187,55 @@ export interface ApiGatewayV1ApiProps<
      * @default []
      */
     authorizationScopes?: string[];
+  };
+  cdk?: {
+    /**
+     * Allows you to override default id for this construct.
+     */
+    id?: string;
+    /**
+     * Override the internally created rest api
+     *
+     * @example
+     * ```js
+     *
+     * new ApiGatewayV1Api(stack, "Api", {
+     *   cdk: {
+     *     restApi: {
+     *       description: "My api"
+     *     }
+     *   }
+     * });
+     * ```
+     */
+    restApi?: apig.IRestApi | apig.RestApiProps;
+    /**
+     * If you are importing an existing API Gateway REST API project, you can import existing route paths by providing a list of paths with their corresponding resource ids.
+     *
+     * @example
+     * ```js
+     * import { RestApi } from "aws-cdk-lib/aws-apigateway";
+     *
+     * new ApiGatewayV1Api(stack, "Api", {
+     *   cdk: {
+     *     restApi: RestApi.fromRestApiAttributes(stack, "ImportedApi", {
+     *       restApiId,
+     *       rootResourceId,
+     *     }),
+     *     importedPaths: {
+     *       "/notes": "slx2bn",
+     *       "/users": "uu8xs3",
+     *     },
+     *   }
+     * });
+     * ```
+     *
+     * API Gateway REST API is structured in a tree structure:
+     * - Each path part is a separate API Gateway resource object.
+     * - And a path part is a child resource of the preceding part.
+     * So the part path /notes, is a child resource of the root resource /. And /notes/{noteId} is a child resource of /notes. If /notes has been created in the imported API, you have to import it before creating the /notes/{noteId} child route.
+     */
+    importedPaths?: { [path: string]: string };
   };
 }
 
@@ -539,6 +543,7 @@ export class ApiGatewayV1Api<
 >
   extends Construct
   implements SSTConstruct {
+  public readonly id: string;
   public readonly cdk: {
     /**
      * The internally created rest API
@@ -559,25 +564,23 @@ export class ApiGatewayV1Api<
   };
   private _deployment?: apig.Deployment;
   private _customDomainUrl?: string;
-  private importedResources: { [path: string]: apig.IResource };
+  private importedResources: { [path: string]: apig.IResource } = {};
   private props: ApiGatewayV1ApiProps<Authorizers>;
-  private functions: { [key: string]: Fn | lambda.IFunction };
-  private authorizersData: Record<string, apig.IAuthorizer>;
-  private permissionsAttachedForAllRoutes: Permissions[];
+  private functions: { [key: string]: Fn | lambda.IFunction } = {};
+  private authorizersData: Record<string, apig.IAuthorizer> = {};
+  private bindingForAllRoutes: SSTConstruct[] = [];
+  private permissionsAttachedForAllRoutes: Permissions[] = [];
 
   constructor(
     scope: Construct,
     id: string,
     props?: ApiGatewayV1ApiProps<Authorizers>
   ) {
-    super(scope, id);
+    super(scope, props?.cdk?.id || id);
 
+    this.id = id;
     this.props = props || {};
     this.cdk = {} as any;
-    this.functions = {};
-    this.authorizersData = {};
-    this.importedResources = {};
-    this.permissionsAttachedForAllRoutes = [];
 
     this.createRestApi();
     this.addAuthorizers(this.props.authorizers || ({} as Authorizers));
@@ -667,6 +670,53 @@ export class ApiGatewayV1Api<
   }
 
   /**
+   * Binds the given list of resources to all the routes.
+   *
+   * @example
+   *
+   * ```js
+   * api.bind([STRIPE_KEY, bucket]);
+   * ```
+   */
+  public bind(constructs: SSTConstruct[]) {
+    Object.values(this.functions).forEach((fn) => {
+      if (fn instanceof Fn) {
+        fn.bind(constructs)
+      }
+    });
+    this.bindingForAllRoutes.push(...constructs);
+  }
+
+  /**
+   * Binds the given list of resources to a specific route.
+   *
+   * @example
+   * ```js
+   * const api = new Api(stack, "Api", {
+   *   routes: {
+   *     "GET /notes": "src/list.main",
+   *   },
+   * });
+   *
+   * api.bindToRoute("GET /notes", [STRIPE_KEY, bucket]);
+   * ```
+   *
+   */
+  public bindToRoute(
+    routeKey: string,
+    constructs: SSTConstruct[]
+  ): void {
+    const fn = this.getFunction(routeKey);
+    if (!fn) {
+      throw new Error(
+        `Failed to bind resources. Route "${routeKey}" does not exist.`
+      );
+    }
+
+    fn.bind(constructs);
+  }
+
+  /**
    * Attaches the given list of permissions to all the routes. This allows the functions to access other AWS resources.
    *
    * @example
@@ -727,6 +777,20 @@ export class ApiGatewayV1Api<
           };
         }),
       },
+    };
+  }
+
+  /** @internal */
+  public getFunctionBinding() {
+    return {
+      clientPackage: "api",
+      variables: {
+        url: {
+          environment: this.customDomainUrl || this.url,
+          parameter: this.customDomainUrl || this.url,
+        },
+      },
+      permissions: {},
     };
   }
 
@@ -1324,9 +1388,7 @@ export class ApiGatewayV1Api<
     postfixName: string
   ): lambda.IFunction {
     const lambda = routeProps.cdk?.function!;
-
     this.functions[routeKey] = lambda;
-
     return lambda;
   }
 
@@ -1361,6 +1423,7 @@ export class ApiGatewayV1Api<
     this.permissionsAttachedForAllRoutes.forEach((permissions) =>
       lambda.attachPermissions(permissions)
     );
+    lambda.bind(this.bindingForAllRoutes);
 
     return lambda;
   }

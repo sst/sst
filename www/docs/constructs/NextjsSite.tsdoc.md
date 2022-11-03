@@ -73,7 +73,7 @@ _Type_ : <span class="mono">[Permissions](Permissions)</span>
 
 ### defaults.function.runtime?
 
-_Type_ : <span class='mono'><span class="mono">"nodejs12.x"</span> | <span class="mono">"nodejs14.x"</span> | <span class="mono">"nodejs16.x"</span></span>
+_Type_ : <span class='mono'><span class="mono">"nodejs16.x"</span> | <span class="mono">"nodejs12.x"</span> | <span class="mono">"nodejs14.x"</span></span>
 
 _Default_ : <span class="mono">"nodejs16.x"</span>
 
@@ -173,6 +173,12 @@ _Type_ : <span class="mono">[NextjsCdkDistributionProps](#nextjscdkdistributionp
 
 Pass in a value to override the default settings this construct uses to create the CDK `Distribution` internally.
 
+### cdk.id?
+
+_Type_ : <span class="mono">string</span>
+
+Allows you to override default id for this construct.
+
 ### cdk.imageOriginRequestPolicy?
 
 _Type_ : <span class="mono">[IOriginRequestPolicy](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.IOriginRequestPolicy.html)</span>
@@ -217,6 +223,10 @@ The domain name of the internally created CloudFront Distribution.
 _Type_ : <span class="mono">string</span>
 
 The ID of the internally created CloudFront Distribution.
+
+### id
+
+_Type_ : <span class="mono">string</span>
 
 ### imageCachePolicyProps
 

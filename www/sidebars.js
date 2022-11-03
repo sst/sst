@@ -1,13 +1,14 @@
 module.exports = {
   docs: [
     {
-      " ": ["introduction", "quick-start"]
+      " ": ["index", "quick-start"]
     },
     {
       Overview: [
         "what-is-sst",
         "live-lambda-development",
         "console",
+        "resource-binding",
         "editor-integration",
       ]
     },
@@ -112,10 +113,10 @@ module.exports = {
         //"asynchronous-tasks",
 
         "auth",
+        "config",
         "advanced/testing",
         "long-running-jobs",
         "going-to-production",
-        "environment-variables",
         "working-with-your-team",
         {
           type: "category",
@@ -145,14 +146,28 @@ module.exports = {
       "Migrating From": ["migrating/cdk", "migrating/serverless-framework"]
     },
     {
-      More: ["known-issues", "design-principles", "anonymous-telemetry", "faq"]
+      More: [
+        "known-issues",
+        "upgrade-guide",
+        "design-principles",
+        "anonymous-telemetry",
+        "faq"
+      ]
     },
     {
       Packages: [
         "packages/create-sst",
         "packages/cli",
-        "packages/node",
-        "packages/resources",
+        {
+          type: "link",
+          label: "@serverless-stack/node",
+          href: "/clients",
+        },
+        {
+          type: "link",
+          label: "@serverless-stack/resources",
+          href: "/constructs",
+        },
         "packages/static-site-env"
       ]
     }
@@ -262,5 +277,28 @@ module.exports = {
         "constructs/ApiGatewayV1Api"
       ]
     }
-  ]
+  ],
+  clients: [
+    {
+      " ": [
+        "clients/index",
+      ],
+      Modules: [
+        "clients/api",
+        "clients/rds",
+        "clients/job",
+        "clients/site",
+        "clients/auth",
+        "clients/table",
+        "clients/topic",
+        "clients/config",
+        "clients/queue",
+        "clients/bucket",
+        "clients/graphql",
+        "clients/function",
+        "clients/event-bus",
+        "clients/kinesis-stream",
+      ]
+    },
+  ],
 };

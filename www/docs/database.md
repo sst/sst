@@ -19,20 +19,15 @@ import { RDS, Function } from "@serverless-stack/resources";
 const DATABASE = "MyDatabase";
 
 // Create the Aurora DB cluster
-const cluster = new RDS(stack, "Cluster", {
+const cluster = new RDS(stack, "myDB", {
   engine: "postgresql11.13",
   defaultDatabaseName: DATABASE,
 });
 
 // Create a Function that will access the DB
-new Function(stack, "Function", {
+new Function(stack, "myFunction", {
   handler: "src/lambda.main",
-  environment: {
-    DATABASE,
-    CLUSTER_ARN: cluster.clusterArn,
-    SECRET_ARN: cluster.secretArn,
-  },
-  permissions: [cluster],
+  bind: [cluster],
 });
 ```
 
@@ -52,11 +47,12 @@ Then use the [`data-api-client`](https://www.npmjs.com/package/data-api-client) 
 
 ```js title="src/lambda.js"
 import client from "data-api-client";
+import { RDS } from "@serverless-stack/node/rds";
 
 const db = client({
-  database: process.env.DATABASE,
-  secretArn: process.env.SECRET_ARN,
-  resourceArn: process.env.CLUSTER_ARN,
+  database: RDS.myDB.defaultDatabaseName,
+  secretArn: RDS.myDB.secretArn,
+  resourceArn: RDS.myDB.clusterArn,
 });
 
 export async function handler() {
@@ -85,7 +81,7 @@ On `sst deploy`, all migrations that have not yet been run will be run as a part
 On `sst start`, migrations are not automatically run. You can use the [SST Console](console.md) to view all of your migrations and apply them.
 
 ```js
-const cluster = new RDS(stack, "Cluster", {
+const cluster = new RDS(stack, "myDB", {
   engine: "postgresql11.13",
   defaultDatabaseName: DATABASE,
   migrations: "path/to/migrations",
@@ -122,7 +118,7 @@ To add a DynamoDB table to your app:
 import { Table } from "@serverless-stack/resources";
 
 // Create a Table
-const table = new Table(stack, "Notes", {
+const table = new Table(stack, "notes", {
   fields: {
     userId: "string",
     noteId: "string",
@@ -131,12 +127,9 @@ const table = new Table(stack, "Notes", {
 });
 
 // Create a Function that will access the Table
-new Function(stack, "Function", {
+new Function(stack, "myFunction", {
   handler: "src/lambda.main",
-  environment: {
-    TABLE_NAME: table.tableName,
-  },
-  permissions: [table],
+  bind: [table],
 });
 ```
 
@@ -147,13 +140,14 @@ You can use the [SST Console](console.md) to query the DynamoDB in your app.
 And use AWS DynamoDB SDK to access the Table in your functions.
 
 ```js title="src/lambda.js"
+import { Table } from "@serverless-stack/node/table";
 import AWS from "aws-sdk";
 const DynamoDb = new AWS.DynamoDB.DocumentClient();
 
 export async function main(event) {
   // Fetch the data
   const results = await DynamoDb.get({
-    TableName: process.env.TABLE_NAME,
+    TableName: Table.notes.tableName,
     Key: {
       userId: "user-id-123",
       noteId: "note-id-456",
@@ -177,7 +171,7 @@ Here's a complete tutorial on how to add a DynamoDB table to your serverless app
 DynamoDB Streams allows you to subscribe to changes in your tables in real time. You can subscribe with a Lambda function and take action based on the changes.
 
 ```js {8-10}
-new Table(stack, "Notes", {
+new Table(stack, "notes", {
   fields: {
     userId: "string",
     noteId: "string",
@@ -227,8 +221,7 @@ SST offers a simple way to seed data into your database using the [`Script`](con
 new Script(stack, "Script", {
   defaults: {
     function: {
-      environment: { tableName: table.tableName },
-      permissions: [table],
+      bind: [table],
     }
   },
   onCreate: "src/seedDatabase.main",

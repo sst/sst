@@ -1,15 +1,16 @@
 {
   "name": "@serverless-stack/node",
-  "version": "1.15.16",
+  "version": "1.16.0",
   "type": "module",
   "sideEffects": false,
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "yarn run clear-types-generated-from-resources-tests; tsc",
     "prepare": "yarn run build",
-    "test": "vitest run"
+    "test": "vitest run",
+    "clear-types-generated-from-resources-tests": "rm -rf ../../node_modules/@types/serverless-stack__node"
   },
   "license": "MIT",
   "dependencies": {
@@ -33,10 +34,21 @@
     "graphql": "^16.5.0"
   },
   "files": [
-    "job",
+    "api",
     "auth",
-    "context",
+    "bucket",
     "config",
-    "graphql"
+    "context",
+    "event-bus",
+    "function",
+    "graphql",
+    "job",
+    "kinesis-stream",
+    "queue",
+    "rds",
+    "site",
+    "table",
+    "topic",
+    "util"
   ]
 }

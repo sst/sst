@@ -38,7 +38,7 @@ export const useDeferredTasks = createAppContext(() => {
               remaining--;
               runTask();
             })
-            .catch((e) => {
+            .catch(e => {
               reject(e);
             });
         };
@@ -48,6 +48,6 @@ export const useDeferredTasks = createAppContext(() => {
           runTask();
         }
       });
-    },
+    }
   };
 });

@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/cli2",
-  "version": "1.15.16",
+  "version": "1.16.0",
   "bin": {
     "sst2": "./bin/sst.mjs"
   },
@@ -30,8 +30,8 @@
     "@aws-sdk/client-sts": "3.145.0",
     "@aws-sdk/credential-providers": "^3.145.0",
     "@caporal/core": "^2.0.2",
-    "@serverless-stack/node": "1.15.16",
-    "@serverless-stack/resources": "1.15.16",
+    "@serverless-stack/node": "1.16.0",
+    "@serverless-stack/resources": "1.16.0",
     "aws-cdk-lib": "2.39.1",
     "aws-iot-device-sdk": "^2.2.12",
     "aws-sdk": "2.1224.0",

@@ -229,7 +229,11 @@ export interface BucketProps {
   >;
   cdk?: {
     /**
-     * Allows you to override default settings this construct uses internally to create the bucket
+     * Allows you to override default id for this construct.
+     */
+    id?: string;
+    /**
+     * Allows you to override default settings this construct uses internally to create the bucket.
      *
      * @example
      * ```js
@@ -262,23 +266,24 @@ export interface BucketProps {
  * ```
  */
 export class Bucket extends Construct implements SSTConstruct {
+  public readonly id: string;
   public readonly cdk: {
     /**
      * The internally created CDK `Bucket` instance.
      */
     bucket: s3.IBucket;
   };
-  readonly notifications: Record<string, Fn | Queue | Topic>;
-  readonly permissionsAttachedForAllNotifications: Permissions[];
+  readonly notifications: Record<string, Fn | Queue | Topic> = {};
+  readonly bindingForAllNotifications: SSTConstruct[] = [];
+  readonly permissionsAttachedForAllNotifications: Permissions[] = [];
   readonly props: BucketProps;
 
   constructor(scope: Construct, id: string, props?: BucketProps) {
-    super(scope, id);
+    super(scope, props?.cdk?.id || id);
 
+    this.id = id;
     this.props = props || {};
     this.cdk = {} as any;
-    this.notifications = {};
-    this.permissionsAttachedForAllNotifications = [];
 
     this.createBucket();
     this.addNotifications(this, props?.notifications || {});
@@ -313,7 +318,9 @@ export class Bucket extends Construct implements SSTConstruct {
    * @example
    * ```js {3}
    * const bucket = new Bucket(stack, "Bucket");
-   * bucket.addNotifications(stack, ["src/notification.main"]);
+   * bucket.addNotifications(stack, {
+   *   myNotification: "src/notification.main"
+   * });
    * ```
    */
   public addNotifications(
@@ -333,6 +340,53 @@ export class Bucket extends Construct implements SSTConstruct {
         this.addNotification(scope, notificationName, notification);
       }
     );
+  }
+
+  /**
+   * Binds the given list of resources to all bucket notifications
+   * @example
+   * ```js {20}
+   * const bucket = new Bucket(stack, "Bucket", {
+   *   notifications: {
+   *     myNotification: "src/function.handler",
+   *   }
+   * });
+   *
+   * bucket.bind([STRIPE_KEY, bucket]);
+   * ```
+   */
+  public bind(constructs: SSTConstruct[]) {
+    this.notificationFunctions.forEach((notification) =>
+      notification.bind(constructs)
+    );
+    this.bindingForAllNotifications.push(...constructs);
+  }
+
+  /**
+   * Binds the given list of resources to a specific bucket notification
+   *
+   * @example
+   * ```js {20}
+   * const bucket = new Bucket(stack, "Bucket", {
+   *   notifications: {
+   *     myNotification: "src/function.handler",
+   *   }
+   * });
+   *
+   * bucket.bindToNotification("myNotification", ["s3"]);
+   * ```
+   */
+  public bindToNotification(
+    notificationName: string,
+    constructs: SSTConstruct[]
+  ): void {
+    const notification = this.notifications[notificationName];
+    if (!(notification instanceof Fn)) {
+      throw new Error(
+        `Cannot bind to the "${this.node.id}" Bucket notification because it's not a Lambda function`
+      );
+    }
+    notification.bind(constructs);
   }
 
   /**
@@ -389,6 +443,22 @@ export class Bucket extends Construct implements SSTConstruct {
         name: this.cdk.bucket.bucketName,
         notifications: Object.values(this.notifications).map(getFunctionRef),
         notificationNames: Object.keys(this.notifications),
+      },
+    };
+  }
+
+  /** @internal */
+  public getFunctionBinding() {
+    return {
+      clientPackage: "bucket",
+      variables: {
+        bucketName: {
+          environment: this.bucketName,
+          parameter: this.bucketName,
+        },
+      },
+      permissions: {
+        "s3:*": [this.bucketArn, `${this.bucketArn}/*`],
       },
     };
   }
@@ -561,6 +631,7 @@ export class Bucket extends Construct implements SSTConstruct {
     this.permissionsAttachedForAllNotifications.forEach((permissions) =>
       fn.attachPermissions(permissions)
     );
+    fn.bind(this.bindingForAllNotifications);
   }
 
   private buildCorsConfig(

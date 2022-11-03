@@ -5,7 +5,6 @@ import {
   countResources,
   countResourcesLike,
   hasResource,
-  printResource,
   objectLike,
 } from "./helper";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
@@ -13,9 +12,8 @@ import * as apig from "aws-cdk-lib/aws-apigateway";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as ssm from "aws-cdk-lib/aws-ssm";
-import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as logs from "aws-cdk-lib/aws-logs";
-import { App, Stack, ApiGatewayV1Api, Function } from "../src";
+import { App, Stack, Bucket, ApiGatewayV1Api, Function } from "../src";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
@@ -1523,7 +1521,7 @@ test("attachPermissions", async () => {
     },
   });
   api.attachPermissions(["s3"]);
-  hasResource(stack, "AWS::IAM::Policy", {
+  countResourcesLike(stack, "AWS::IAM::Policy", 2, {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -1531,17 +1529,7 @@ test("attachPermissions", async () => {
       ],
       Version: "2012-10-17",
     },
-    PolicyName: "ApiLambdaGETServiceRoleDefaultPolicy013A8DEA",
-  });
-  hasResource(stack, "AWS::IAM::Policy", {
-    PolicyDocument: {
-      Statement: [
-        lambdaDefaultPolicy,
-        { Action: "s3:*", Effect: "Allow", Resource: "*" },
-      ],
-      Version: "2012-10-17",
-    },
-    PolicyName: "ApiLambdaGET2ServiceRoleDefaultPolicy934FD89B",
+    PolicyName: ANY,
   });
 });
 
@@ -1562,14 +1550,14 @@ test("attachPermissionsToRoute", async () => {
       ],
       Version: "2012-10-17",
     },
-    PolicyName: "ApiLambdaGETServiceRoleDefaultPolicy013A8DEA",
+    PolicyName: ANY,
   });
   hasResource(stack, "AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [lambdaDefaultPolicy],
       Version: "2012-10-17",
     },
-    PolicyName: "ApiLambdaGET2ServiceRoleDefaultPolicy934FD89B",
+    PolicyName: ANY,
   });
 });
 
@@ -1597,7 +1585,7 @@ test("attachPermissions-after-addRoutes", async () => {
     },
     PolicyName: "ApiLambdaGETServiceRoleDefaultPolicy013A8DEA",
   });
-  hasResource(stackA, "AWS::IAM::Policy", {
+  countResourcesLike(stackA, "AWS::IAM::Policy", 2, {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -1605,9 +1593,9 @@ test("attachPermissions-after-addRoutes", async () => {
       ],
       Version: "2012-10-17",
     },
-    PolicyName: "ApiLambdaGET2ServiceRoleDefaultPolicy934FD89B",
+    PolicyName: ANY,
   });
-  hasResource(stackB, "AWS::IAM::Policy", {
+  countResourcesLike(stackB, "AWS::IAM::Policy", 1, {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -1615,6 +1603,87 @@ test("attachPermissions-after-addRoutes", async () => {
       ],
       Version: "2012-10-17",
     },
-    PolicyName: "LambdaGET3ServiceRoleDefaultPolicy21DC01C7",
+    PolicyName: ANY,
+  });
+});
+
+test("bind", async () => {
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
+  const bucket = new Bucket(stack, "bucket");
+  const api = new ApiGatewayV1Api(stack, "Api", {
+    routes: {
+      "GET /": "test/lambda.handler",
+      "GET /2": "test/lambda.handler",
+    },
+  });
+  api.bind([bucket]);
+  countResourcesLike(stack, "AWS::IAM::Policy", 2, {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: ANY,
+  });
+});
+
+test("bindToRoute", async () => {
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
+  const bucket = new Bucket(stack, "bucket");
+  const api = new ApiGatewayV1Api(stack, "Api", {
+    routes: {
+      "GET /": "test/lambda.handler",
+      "GET /2": "test/lambda.handler",
+    },
+  });
+  api.bindToRoute("GET /", [bucket]);
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: ANY,
+  });
+});
+
+test("bindToRoute-after-addRoutes", async () => {
+  const app = new App({ name: "apiv1" });
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  const bucket = new Bucket(stackB, "bucket");
+  const api = new ApiGatewayV1Api(stackA, "Api", {
+    routes: {
+      "GET /": "test/lambda.handler",
+      "GET /2": "test/lambda.handler",
+    },
+  });
+  api.bind([bucket]);
+  api.addRoutes(stackB, {
+    "GET /3": "test/lambda.handler",
+  });
+  countResourcesLike(stackA, "AWS::IAM::Policy", 2, {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: ANY,
+  });
+  countResourcesLike(stackB, "AWS::IAM::Policy", 1, {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: ANY },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: ANY,
   });
 });

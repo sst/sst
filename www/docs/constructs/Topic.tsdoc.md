@@ -54,6 +54,12 @@ new Topic(stack, "Topic", {
 ```
 
 
+### cdk.id?
+
+_Type_ : <span class="mono">string</span>
+
+Allows you to override default id for this construct.
+
 ### cdk.topic?
 
 _Type_ : <span class='mono'><span class="mono">[ITopic](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_sns.ITopic.html)</span> | <span class="mono">[TopicProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_sns.TopicProps.html)</span></span>
@@ -63,6 +69,10 @@ Override the default settings this construct uses internally to create the topic
 
 ## Properties
 An instance of `Topic` has the following properties.
+### id
+
+_Type_ : <span class="mono">string</span>
+
 ### subscriberFunctions
 
 _Type_ : <span class='mono'>Array&lt;<span class="mono">[Function](Function#function)</span>&gt;</span>
@@ -156,7 +166,7 @@ _Parameters_
 - __permissions__ <span class="mono">[Permissions](Permissions)</span>
 
 
-Attaches the list of permissions to a given subscriber by index
+Attaches the list of permissions to a specific subscriber.
 
 
 ```js {5}
@@ -168,6 +178,53 @@ const topic = new Topic(stack, "Topic", {
 });
 
 topic.attachPermissionsToSubscriber("subscriber1", ["s3"]);
+```
+
+### bind
+
+```ts
+bind(constructs)
+```
+_Parameters_
+- __constructs__ <span class='mono'>Array&lt;<span class="mono">SSTConstruct</span>&gt;</span>
+
+
+Binds the given list of resources to all the subscriber functions.
+
+
+
+```js
+const topic = new Topic(stack, "Topic", {
+  subscribers: {
+    subscriber1: "src/function1.handler",
+    subscriber2: "src/function2.handler"
+  },
+});
+topic.bind([STRIPE_KEY, bucket]);
+```
+
+### bindToSubscriber
+
+```ts
+bindToSubscriber(subscriberName, constructs)
+```
+_Parameters_
+- __subscriberName__ <span class="mono">string</span>
+- __constructs__ <span class='mono'>Array&lt;<span class="mono">SSTConstruct</span>&gt;</span>
+
+
+Binds the given list of resources to a specific subscriber.
+
+
+```js {5}
+const topic = new Topic(stack, "Topic", {
+  subscribers: {
+    subscriber1: "src/function1.handler",
+    subscriber2: "src/function2.handler"
+  },
+});
+
+topic.bindToSubscriber("subscriber1", [STRIPE_KEY, bucket]);
 ```
 
 ## TopicQueueSubscriberProps
