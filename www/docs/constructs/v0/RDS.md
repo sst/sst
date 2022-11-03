@@ -172,7 +172,7 @@ The `RDS` construct automatically creates a VPC to deploy the cluster. This VPC 
 Since we are using the Data API, you don't need to deploy your Lambda functions into the RDS's VPC.
 :::
 
-Yo can override the internally created `VPC` instance.
+You can override the internally created `VPC` instance.
 
 ```js {7-12}
 import * as ec2 from "aws-cdk-lib/aws-ec2";
