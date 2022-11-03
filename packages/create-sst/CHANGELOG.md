@@ -1,5 +1,7 @@
 # create-sst
 
+## 1.16.1
+
 ## 1.16.0
 
 ### Minor Changes

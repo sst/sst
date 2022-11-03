@@ -1,5 +1,15 @@
 # @serverless-stack/cli
 
+## 1.16.1
+
+### Patch Changes
+
+- [#2172](https://github.com/serverless-stack/sst/pull/2172) [`aa1122646`](https://github.com/serverless-stack/sst/commit/aa1122646fa0e808a91d585513cb5cd6759ed2c1) Thanks [@fwang](https://github.com/fwang)! - Resource Binding: support custom SSM prefix
+
+- Updated dependencies [[`aa1122646`](https://github.com/serverless-stack/sst/commit/aa1122646fa0e808a91d585513cb5cd6759ed2c1), [`aa1122646`](https://github.com/serverless-stack/sst/commit/aa1122646fa0e808a91d585513cb5cd6759ed2c1), [`aa1122646`](https://github.com/serverless-stack/sst/commit/aa1122646fa0e808a91d585513cb5cd6759ed2c1)]:
+  - @serverless-stack/core@1.16.1
+  - @serverless-stack/resources@1.16.1
+
 ## 1.16.0
 
 ### Minor Changes

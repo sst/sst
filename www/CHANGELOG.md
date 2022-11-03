@@ -1,5 +1,15 @@
 # @serverless-stack/docs
 
+## 1.9.1
+
+### Patch Changes
+
+- [#2172](https://github.com/serverless-stack/sst/pull/2172) [`aa1122646`](https://github.com/serverless-stack/sst/commit/aa1122646fa0e808a91d585513cb5cd6759ed2c1) Thanks [@fwang](https://github.com/fwang)! - Resource Binding: allow `sst bind` to bind resources that are not bound to functions
+
+* [#2172](https://github.com/serverless-stack/sst/pull/2172) [`aa1122646`](https://github.com/serverless-stack/sst/commit/aa1122646fa0e808a91d585513cb5cd6759ed2c1) Thanks [@fwang](https://github.com/fwang)! - Resource Binding: support construct id in kebab case
+
+- [#2172](https://github.com/serverless-stack/sst/pull/2172) [`aa1122646`](https://github.com/serverless-stack/sst/commit/aa1122646fa0e808a91d585513cb5cd6759ed2c1) Thanks [@fwang](https://github.com/fwang)! - Resource Binding: support custom SSM prefix
+
 ## 1.9.0
 
 ### Minor Changes

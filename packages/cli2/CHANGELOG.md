@@ -1,5 +1,12 @@
 # @serverless-stack/cli2
 
+## 1.16.1
+
+### Patch Changes
+
+- Updated dependencies [[`aa1122646`](https://github.com/serverless-stack/sst/commit/aa1122646fa0e808a91d585513cb5cd6759ed2c1), [`aa1122646`](https://github.com/serverless-stack/sst/commit/aa1122646fa0e808a91d585513cb5cd6759ed2c1), [`aa1122646`](https://github.com/serverless-stack/sst/commit/aa1122646fa0e808a91d585513cb5cd6759ed2c1)]:
+  - @serverless-stack/node@1.16.1
+
 ## 1.16.0
 
 ### Patch Changes
