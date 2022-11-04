@@ -1,15 +1,10 @@
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 import { BaseClient, generators, Issuer, TokenSet } from "openid-client";
 import {
-  useEvent,
-} from "../../context/index.js";
-import {
   useCookie,
   useDomainName,
   useFormData,
-  useMethod,
   usePath,
-  useQueryParams,
 } from "../../api/index.js";
 import { createAdapter } from "./adapter.js";
 
@@ -70,63 +65,9 @@ export const OidcAdapter = /* @__PURE__ */ createAdapter(
       }
 
       if (step === "callback") {
-        console.log(useEvent("api"));
-        let params;
-        const method = useMethod();
-        if (method === "GET") {
-          params = useQueryParams();
-          if (Object.keys(params).length === 0) {
-            return {
-              statusCode: 200,
-              cookies: [
-                `auth-nonce=${useCookie("auth-nonce")}`,
-                `auth-state=${useCookie("auth-state")}`,
-              ],
-              headers: {
-                "content-type": "text/html",
-              },
-              body: `
-              <html>
-                <body>
-                </body>
-                <script>
-                  console.log(window.location.hash);
-
-                  // Parse token from hash
-                  const hash = window.location.hash.substring(1);
-                  const params = hash.split("&").reduce((acc, param) => {
-                    const [key, value] = param.split("=");
-                    return { ...acc, [key]: value };
-                  }, {});
-                  console.log({params});
-
-                  // Create Form
-                  const form = document.createElement('form');
-                  form.method = "POST";
-                  form.action = window.location.origin + window.location.pathname;; 
-                  
-                  for (const key in params) {
-                    if (params.hasOwnProperty(key)) {
-                      const hiddenField = document.createElement('input');
-                      hiddenField.type = 'hidden';
-                      hiddenField.name = key;
-                      hiddenField.value = params[key];
-                      form.appendChild(hiddenField);
-                    }
-                  }
-                  
-                  document.body.appendChild(form);
-                  form.submit();
-                </script>
-              </html>`,
-            };
-          }
-        }
-        else {
-          const form = useFormData();
-          if (!form) throw new Error("Missing body");
-          params = Object.fromEntries(form.entries());
-        }
+        const form = useFormData();
+        if (!form) throw new Error("Missing body");
+        const params = Object.fromEntries(form.entries());
         const nonce = useCookie("auth-nonce");
         const state = useCookie("auth-state");
         const tokenset = await client.callback(callback, params, {
