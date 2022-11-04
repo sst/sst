@@ -1,5 +1,11 @@
 # @serverless-stack/core
 
+## 1.17.0
+
+### Minor Changes
+
+- [#2181](https://github.com/serverless-stack/sst/pull/2181) [`0157bc368`](https://github.com/serverless-stack/sst/commit/0157bc368355e5f4541b591c5f51920dec4b8411) Thanks [@fwang](https://github.com/fwang)! - Update CDK to 2.50.0
+
 ## 1.16.3
 
 ## 1.16.2
