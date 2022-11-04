@@ -22,7 +22,7 @@ export interface OauthBasicConfig {
    */
   scope: string;
   prompt?: string;
-  offline_access?: 'true' | 'false';
+  access_type?: 'online' | 'offline';
   /**
    * onSuccess callback when the oauth flow is successful. Will provide tokenset
    */
@@ -62,7 +62,7 @@ export const OauthAdapter = /* @__PURE__ */ createAdapter(
           code_challenge_method: "S256",
           state,
           prompt: config.prompt,
-          offline_access: config.offline_access
+          access_type: config.access_type
         });
 
         const expires = new Date(Date.now() + 1000 * 30).toUTCString();
