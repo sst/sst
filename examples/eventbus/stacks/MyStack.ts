@@ -20,17 +20,13 @@ export function MyStack({ stack }: StackContext) {
   const api = new Api(stack, "Api", {
     defaults: {
       function: {
-        environment: {
-          busName: bus.eventBusName,
-        },
+        bind: [bus],
       },
     },
     routes: {
       "POST /order": "functions/order.handler",
     },
   });
-
-  api.attachPermissions([bus]);
 
   // Show the endpoint in the output
   stack.addOutputs({

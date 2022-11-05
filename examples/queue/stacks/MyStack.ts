@@ -10,19 +10,14 @@ export function MyStack({ stack }: StackContext) {
   const api = new Api(stack, "Api", {
     defaults: {
       function: {
-        // Pass in the queue to our API
-        environment: {
-          queueUrl: queue.queueUrl,
-        },
+        // Bind the queue to our API
+        bind: [queue],
       },
     },
     routes: {
       "POST /": "functions/lambda.main",
     },
   });
-
-  // Allow the API to publish the queue
-  api.attachPermissions([queue]);
 
   // Show the API endpoint in the output
   stack.addOutputs({

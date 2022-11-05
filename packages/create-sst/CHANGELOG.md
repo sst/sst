@@ -1,5 +1,17 @@
 # create-sst
 
+## 1.17.0
+
+## 1.16.3
+
+## 1.16.2
+
+### Patch Changes
+
+- [`29dd1c571`](https://github.com/serverless-stack/sst/commit/29dd1c57109e63125fa5485d3787452fa9eb36a3) Thanks [@fwang](https://github.com/fwang)! - Update templates to use Resource Binding
+
+## 1.16.1
+
 ## 1.16.0
 
 ### Minor Changes

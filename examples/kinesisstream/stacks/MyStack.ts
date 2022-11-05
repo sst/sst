@@ -13,17 +13,13 @@ export function MyStack({ stack }: StackContext) {
   const api = new Api(stack, "Api", {
     defaults: {
       function: {
-        environment: {
-          streamName: stream.streamName,
-        },
+        bind: [stream],
       },
     },
     routes: {
       "POST /": "functions/lambda.handler",
     },
   });
-
-  api.attachPermissions([stream]);
 
   // Show the endpoint in the output
   stack.addOutputs({

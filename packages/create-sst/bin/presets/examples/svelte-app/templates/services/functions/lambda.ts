@@ -1,11 +1,12 @@
 import { DynamoDB } from "aws-sdk";
+import { Table } from "@serverless-stack/node/table";
 
 const dynamoDb = new DynamoDB.DocumentClient();
 
 export async function main() {
   const getParams = {
     // Get the table name from the environment variable
-    TableName: process.env.tableName,
+    TableName: Table.Counter.tableName,
     // Get the row where the counter is called "clicks"
     Key: {
       counter: "clicks",
@@ -18,7 +19,7 @@ export async function main() {
   let count = results.Item ? results.Item.tally : 0;
 
   const putParams = {
-    TableName: process.env.tableName,
+    TableName: Table.Counter.tableName,
     Key: {
       counter: "clicks",
     },

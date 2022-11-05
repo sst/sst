@@ -18,7 +18,7 @@ To view the latest release and all historical releases, <a href={`${config.githu
 
 ## Upgrade to v1.16
 
-[Resource Binding](resource-binding.md) was introduced in this release. It simplies accessing the resources in your app. For exmaple, here's how we bind the bucket to the function:
+[Resource Binding](resource-binding.md) was introduced in this release. It simplies accessing the resources in your app. For example, here's how we bind the bucket to the function:
 
 ```diff
 const bucket = new Bucket(stack, "myFiles");
@@ -39,7 +39,7 @@ And here's how we access it in our function.
 + import { Bucket } from "@serverless-stack/node/bucket";
 
 - process.env.BUCKET_NAME
-+ Bucet.myFiles.bucketName
++ Bucket.myFiles.bucketName
 ```
 
 Following are the steps to upgrade.
@@ -57,7 +57,7 @@ Following are the steps to upgrade.
 
 2. **Constructs**
 
-   1. **Construct IDs need to be unique** and match the pattern `[a-zA-Z]([a-zA-Z0-9_])+`. If you have constructs with clashing IDs, change to a unique ID. And pass the old ID into `cdk.id` to ensure CloudFormation does not recreate the resource.
+   1. **Construct IDs need to be unique** and match the pattern `[a-zA-Z]([a-zA-Z0-9-_])+`. If you have constructs with clashing IDs, change to a unique ID. And pass the old ID into `cdk.id` to ensure CloudFormation does not recreate the resource.
 
       For example, if you have two buckets with the same id.
 

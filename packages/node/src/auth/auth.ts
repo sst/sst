@@ -1,6 +1,6 @@
 import { GetParametersCommand, SSMClient, Parameter } from "@aws-sdk/client-ssm";
 const ssm = new SSMClient({});
-import { parseEnvironment } from "../util/index.js";
+import { parseEnvironment, buildSsmPath, ssmNameToPropName } from "../util/index.js";
 import { Handler } from "../context/handler.js";
 import { useDomainName, usePath } from "../api/index.js";
 import { Adapter } from "./adapter/adapter.js";
@@ -26,12 +26,10 @@ if (authNames.length !== 0) {
 }
 
 async function replaceWithSsmValues(name: string) {
-  const SSM_PREFIX = `/sst/${process.env.SST_APP}/${process.env.SST_STAGE}/${className}/${name}`;
-
   // Fetch all secrets
   const props = ["privateKey", "publicKey"]
     .filter((prop) => authData[name][prop] === "__FETCH_FROM_SSM__");
-  const results = await loadSsm(SSM_PREFIX, props);
+  const results = await loadSsm(name, props);
 
   if (results.invalidParams.length > 0) {
     const missingProps = results.invalidParams.map(ssmNameToPropName);
@@ -48,12 +46,13 @@ async function replaceWithSsmValues(name: string) {
   }
 }
 
-async function loadSsm(prefix: string, props: string[]) {
+async function loadSsm(name: string, props: string[]) {
+  const SSM_PREFIX = `/sst/${process.env.SST_APP}/${process.env.SST_STAGE}/${className}/${name}`;
   // Fetch secrets
   const validParams: Parameter[] = [];
   const invalidParams: string[] = [];
   const command = new GetParametersCommand({
-    Names: props.map((prop) => `${prefix}/${prop}`),
+    Names: props.map((prop) => buildSsmPath(className, name, prop)),
     WithDecryption: true,
   });
   const result = await ssm.send(command);
@@ -61,10 +60,6 @@ async function loadSsm(prefix: string, props: string[]) {
     validParams: result.Parameters || [],
     invalidParams: result.InvalidParameters || [],
   };
-}
-
-function ssmNameToPropName(ssmName: string) {
-  return ssmName.split("/").pop();
 }
 
 export function getPublicKey() {

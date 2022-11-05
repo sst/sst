@@ -12,7 +12,7 @@ import {
   SSTConstruct,
   SSTConstructMetadata,
   isSSTConstruct,
-  isStackConstruct,
+  isStackConstruct
 } from "./Construct.js";
 import { Function, FunctionProps, FunctionHandlerProps } from "./Function.js";
 import * as Config from "./Config.js";
@@ -180,7 +180,7 @@ export class App extends cdk.App {
    */
   constructor(
     deployProps: AppDeployProps = {
-      mode: "deploy",
+      mode: "deploy"
     },
     props: AppProps = {}
   ) {
@@ -274,7 +274,7 @@ export class App extends cdk.App {
    */
   public addDefaultFunctionPermissions(permissions: Permissions) {
     this.defaultFunctionProps.push({
-      permissions,
+      permissions
     });
   }
 
@@ -290,7 +290,7 @@ export class App extends cdk.App {
    */
   public addDefaultFunctionEnv(environment: Record<string, string>) {
     this.defaultFunctionProps.push({
-      environment,
+      environment
     });
   }
 
@@ -331,7 +331,7 @@ export class App extends cdk.App {
    */
   public addDefaultFunctionLayers(layers: lambda.ILayerVersion[]) {
     this.defaultFunctionProps.push({
-      layers,
+      layers
     });
   }
 
@@ -402,7 +402,7 @@ export class App extends cdk.App {
       exitWithMessage("There was a problem reading the esbuild metafile.");
     }
 
-    return Object.keys(metaJson.inputs).map((input) => path.resolve(input));
+    return Object.keys(metaJson.inputs).map(input => path.resolve(input));
   }
 
   private buildConstructsMetadata(): void {
@@ -422,12 +422,12 @@ export class App extends cdk.App {
         id: c.node.id,
         addr: c.node.addr,
         stack: Stack.of(c).stackName,
-        ...metadata,
+        ...metadata
       };
       local.push(item);
       list.push({
         ...item,
-        local: undefined,
+        local: undefined
       });
       byStack[stack.node.id] = list;
     }
@@ -446,9 +446,9 @@ export class App extends cdk.App {
   ): (SSTConstruct & IConstruct)[] {
     return [
       isSSTConstruct(construct) ? construct : undefined,
-      ...construct.node.children.flatMap((c) =>
+      ...construct.node.children.flatMap(c =>
         this.buildConstructsMetadata_collectConstructs(c)
-      ),
+      )
     ].filter((c): c is SSTConstruct & IConstruct => Boolean(c));
   }
 
@@ -477,7 +477,7 @@ export class App extends cdk.App {
             "../lib/auto-delete-objects-handler"
           ),
           runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
-          description: `Lambda function for auto-deleting objects in ${current.bucketName} S3 bucket.`,
+          description: `Lambda function for auto-deleting objects in ${current.bucketName} S3 bucket.`
         }
       );
 
@@ -490,10 +490,10 @@ export class App extends cdk.App {
             "s3:GetBucket*",
             "s3:List*",
             // and then delete them
-            "s3:DeleteObject*",
+            "s3:DeleteObject*"
           ],
           resources: [current.bucketArn, current.arnForObjects("*")],
-          principals: [new iam.ArnPrincipal(provider.roleArn)],
+          principals: [new iam.ArnPrincipal(provider.roleArn)]
         })
       );
 
@@ -504,8 +504,8 @@ export class App extends cdk.App {
           resourceType: AUTO_DELETE_OBJECTS_RESOURCE_TYPE,
           serviceToken: provider.serviceToken,
           properties: {
-            BucketName: current.bucketName,
-          },
+            BucketName: current.bucketName
+          }
         }
       );
 
@@ -516,7 +516,7 @@ export class App extends cdk.App {
         customResource.node.addDependency(current.policy);
       }
     }
-    current.node.children.forEach((resource) =>
+    current.node.children.forEach(resource =>
       this.applyRemovalPolicy(resource, policy)
     );
   }
@@ -540,7 +540,14 @@ export class App extends cdk.App {
   }
 
   private ensureUniqueConstructIds() {
-    const ids: Record<string, Set<string>> = {};
+    // "ids" has the shape of:
+    // {
+    //   Table: {
+    //     "id_with_hyphen": "id-with-hyphen",
+    //     "id_with_underscore": "id_with_underscore",
+    //   }
+    // }
+    const ids: Record<string, Record<string, string>> = {};
 
     class EnsureUniqueConstructIds implements cdk.IAspect {
       public visit(c: IConstruct): void {
@@ -553,25 +560,33 @@ export class App extends cdk.App {
 
         const className = c.constructor.name;
         const id = c.id;
-        const existingIds = ids[className] || new Set();
+        const normId = FunctionBinding.normalizeId(id);
+        const existingIds = ids[className] || {};
 
-        if (!id.match(/^[a-zA-Z]([a-zA-Z0-9_])*$/)) {
+        if (!id.match(/^[a-zA-Z]([a-zA-Z0-9-_])*$/)) {
           throw new Error(
             [
               `Invalid id "${id}" for ${className} construct.`,
               ``,
-              `Starting v1.16, construct ids can only contain alphabetic characters and underscores ("_"), and must start with an alphabetic character. If you are migrating from version 1.15 or earlier, please see the upgrade guide — https://docs.serverless-stack.com/upgrade-guide#upgrade-to-v116`,
+              `Starting v1.16, construct ids can only contain alphabetic characters, hyphens ("-"), and underscores ("_"), and must start with an alphabetic character. If you are migrating from version 1.15 or earlier, please see the upgrade guide — https://docs.serverless-stack.com/upgrade-guide#upgrade-to-v116`
             ].join("\n")
           );
-        } else if (
-          ["Parameter", "Secret"].includes(className) &&
-          (ids.Secret?.has(id) || ids.Parameter?.has(id))
-        ) {
-          throw new Error(`ERROR: Config with id "${id}" already exists.`);
-        } else if (existingIds.has(id)) {
+        } else if (["Parameter", "Secret"].includes(className)) {
+          const existingConfigId =
+            ids.Secret?.[normId] || ids.Parameter?.[normId];
+          if (existingConfigId === id) {
+            throw new Error(`ERROR: Config with id "${id}" already exists.`);
+          } else if (existingConfigId) {
+            throw new Error(
+              `ERROR: You cannot have the same Config id with an underscore and hyphen: "${existingConfigId}" and "${id}".`
+            );
+          }
+        } else if (existingIds[normId]) {
           throw new Error(
             [
-              `${className} construct with id "${id}" already exists.`,
+              existingIds[normId] === id
+                ? `${className} with id "${id}" already exists.`
+                : `You cannot have the same ${className} id with an underscore and hyphen: "${existingIds[normId]}" and "${id}".`,
               ``,
               `Starting v1.16, constructs must have unique ids for a given construct type. If you are migrating from version 1.15 or earlier, set the "cdk.id" in the construct with the existing id, and pick a unique id for the construct. Please see the upgrade guide — https://docs.serverless-stack.com/upgrade-guide#upgrade-to-v116`,
               ``,
@@ -589,11 +604,11 @@ export class App extends cdk.App {
               `        cdk: {`,
               `          id: "bucket"`,
               `        }`,
-              `      });`,
+              `      });`
             ].join("\n")
           );
         }
-        existingIds.add(id);
+        existingIds[normId] = id;
         ids[className] = existingIds;
       }
     }
@@ -640,7 +655,7 @@ export class App extends cdk.App {
   private codegenCreateIndexType(typesPath: string) {
     fs.removeSync(typesPath);
     fs.mkdirSync(typesPath, {
-      recursive: true,
+      recursive: true
     });
     fs.writeFileSync(
       `${typesPath}/index.d.ts`,
@@ -710,7 +725,7 @@ import "@serverless-stack/node/${binding.clientPackage}";
 declare module "@serverless-stack/node/${binding.clientPackage}" {
   export interface ${className}Resources {
     "${id}": {
-      ${binding.variables.map((p) => `${p}: string;`).join("\n")}
+      ${binding.variables.map(p => `${p}: string;`).join("\n")}
     }
   }
 }`;

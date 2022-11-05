@@ -1,5 +1,6 @@
 import { Session, AuthHandler, GoogleAdapter } from "@serverless-stack/node/auth";
-import { Config } from "@serverless-stack/node/config";
+import { Table } from "@serverless-stack/node/table";
+import { ViteStaticSite } from "@serverless-stack/node/site";
 import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { marshall } from "@aws-sdk/util-dynamodb";
 
@@ -24,7 +25,7 @@ export const handler = AuthHandler({
 
         const ddb = new DynamoDBClient({});
         await ddb.send(new PutItemCommand({
-          TableName: Config.TABLE_NAME,
+          TableName: Table.users.tableName,
           Item: marshall({
             userId: claims.sub,
             email: claims.email,
@@ -34,7 +35,7 @@ export const handler = AuthHandler({
         }));
 
         return Session.parameter({
-          redirect: process.env.IS_LOCAL ? "http://127.0.0.1:5173" : Config.SITE_URL,
+          redirect: process.env.IS_LOCAL ? "http://127.0.0.1:5173" : ViteStaticSite.site.url,
           type: "user",
           properties: {
             userID: claims.sub,

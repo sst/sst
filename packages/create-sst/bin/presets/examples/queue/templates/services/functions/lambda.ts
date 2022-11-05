@@ -1,4 +1,5 @@
 import AWS from "aws-sdk";
+import { Queue } from "@serverless-stack/node/queue";
 
 const sqs = new AWS.SQS();
 
@@ -7,7 +8,7 @@ export async function main() {
   await sqs
     .sendMessage({
       // Get the queue url from the environment variable
-      QueueUrl: process.env.queueUrl,
+      QueueUrl: Queue.Queue.queueUrl,
       MessageBody: JSON.stringify({ ordered: true }),
     })
     .promise();

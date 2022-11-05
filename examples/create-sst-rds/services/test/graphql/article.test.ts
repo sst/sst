@@ -1,11 +1,11 @@
-import { Config } from "@serverless-stack/node/config";
+import { Api } from "@serverless-stack/node/api";
 import { expect, it } from "vitest";
 import { createClient } from "@create-sst-rds/graphql/genql";
 import { Article } from "@create-sst-rds/core/article";
 
 it("create an article", async () => {
   const client = createClient({
-    url: Config.API_URL + "/graphql",
+    url: Api.api.url + "/graphql",
   });
 
   const article = await client.mutation({

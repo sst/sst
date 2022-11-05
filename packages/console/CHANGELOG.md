@@ -1,5 +1,13 @@
 # @serverless-stack/console
 
+## 1.17.0
+
+## 1.16.3
+
+## 1.16.2
+
+## 1.16.1
+
 ## 1.16.0
 
 ### Minor Changes

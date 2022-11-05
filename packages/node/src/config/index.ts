@@ -1,6 +1,6 @@
 import { GetParametersCommand, SSMClient, Parameter } from "@aws-sdk/client-ssm";
 const ssm = new SSMClient({});
-import { createProxy, parseEnvironment, buildSsmPath, buildSsmFallbackPath } from "../util/index.js";
+import { createProxy, parseEnvironment, buildSsmPath, buildSsmFallbackPath, ssmNameToConstructId } from "../util/index.js";
 
 export interface ParameterResources { };
 export interface SecretResources { };
@@ -15,9 +15,10 @@ export type SecretTypes = {
 
 export const Config = createProxy<ConfigTypes & ParameterTypes & SecretTypes>("Config");
 const metadata = parseMetadataEnvironment();
-const parameters = parseEnvironment("Parameter", ["value"]);
-const secrets = parseEnvironment("Secret", ["value"]);
-flattenParameterValues();
+const parametersRaw = parseEnvironment("Parameter", ["value"]);
+const secretsRaw = parseEnvironment("Secret", ["value"]);
+const parameters = flattenConfigValues(parametersRaw);
+const secrets = flattenConfigValues(secretsRaw);
 await replaceSecretsWithRealValues();
 Object.assign(Config, metadata, parameters, secrets);
 
@@ -41,18 +42,19 @@ function parseMetadataEnvironment() {
   };
 }
 
-function flattenParameterValues() {
-  Object.keys(parameters).forEach((name) => {
-    // @ts-ignore
-    parameters[name] = parameters[name].value;
+function flattenConfigValues(configValues: ReturnType<typeof parseEnvironment>) {
+  const acc: Record<string, string> = {};
+  Object.keys(configValues).forEach((name) => {
+    acc[name] = configValues[name].value;
   });
+  return acc;
 }
 
 async function replaceSecretsWithRealValues() {
   // Find all the secrets and params that match the prefix
   const names = Object
     .keys(secrets)
-    .filter((name) => secrets[name].value === "__FETCH_FROM_SSM__");
+    .filter((name) => secrets[name] === "__FETCH_FROM_SSM__");
   if (names.length === 0) {
     return;
   }
@@ -105,8 +107,4 @@ async function loadSecrets(paths: string[]) {
     })
   );
   return { validParams, invalidParams };
-}
-
-function ssmNameToConstructId(ssmName: string) {
-  return ssmName.split("/")[5];
 }

@@ -17,19 +17,14 @@ export function MyStack({ stack }: StackContext) {
   const api = new Api(stack, "Api", {
     defaults: {
       function: {
-        // Pass in the table name to our API
-        environment: {
-          tableName: table.tableName,
-        },
+        // Bind the table name to our API
+        bind: [table],
       },
     },
     routes: {
       "POST /": "functions/lambda.main",
     },
   });
-
-  // Allow the API to access the table
-  api.attachPermissions([table]);
 
   const site = new StaticSite(stack, "GatsbySite", {
     path: "frontend",

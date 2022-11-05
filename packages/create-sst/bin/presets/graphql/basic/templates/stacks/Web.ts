@@ -15,6 +15,4 @@ export function Web({ stack }: StackContext) {
   stack.addOutputs({
     SITE: site.url,
   });
-
-  return api;
 }

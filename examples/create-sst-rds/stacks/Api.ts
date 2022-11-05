@@ -1,19 +1,17 @@
 import {
   use,
-  Config,
   StackContext,
   Api as ApiGateway,
 } from "@serverless-stack/resources";
 import { Database } from "./Database";
 
 export function Api({ stack }: StackContext) {
-  const db = use(Database);
+  const rds = use(Database);
 
   const api = new ApiGateway(stack, "api", {
     defaults: {
       function: {
-        permissions: [db.rds],
-        config: [...db.parameters],
+        bind: [rds],
       },
     },
     routes: {
@@ -29,10 +27,6 @@ export function Api({ stack }: StackContext) {
         ],
       },
     },
-  });
-
-  new Config.Parameter(stack, "API_URL", {
-    value: api.url,
   });
 
   stack.addOutputs({

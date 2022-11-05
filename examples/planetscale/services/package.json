@@ -4,10 +4,11 @@
   "type": "module",
   "scripts": {},
   "dependencies": {
-    "aws-sdk": "^2.1231.0",
+    "aws-sdk": "^2.1246.0",
+    "@serverless-stack/node": "^1.16.1",
     "planetscale-node": "^0.3.0"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.106"
+    "@types/aws-lambda": "^8.10.108"
   }
 }

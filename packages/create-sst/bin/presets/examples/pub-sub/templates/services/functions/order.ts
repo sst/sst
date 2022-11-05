@@ -1,4 +1,5 @@
 import AWS from "aws-sdk";
+import { Topic } from "@serverless-stack/node/topic";
 
 const sns = new AWS.SNS();
 
@@ -7,7 +8,7 @@ export async function main() {
   await sns
     .publish({
       // Get the topic from the environment variable
-      TopicArn: process.env.topicArn,
+      TopicArn: Topic.Ordered.topicArn,
       Message: JSON.stringify({ ordered: true }),
       MessageStructure: "string",
     })

@@ -13,9 +13,7 @@ export function MyStack({ stack }: StackContext) {
   const api = new WebSocketApi(stack, "Api", {
     defaults: {
       function: {
-        environment: {
-          tableName: table.tableName,
-        },
+        bind: [table],
       },
     },
     routes: {
@@ -24,9 +22,6 @@ export function MyStack({ stack }: StackContext) {
       sendmessage: "functions/sendMessage.main",
     },
   });
-
-  // Allow the API to access the table
-  api.attachPermissions([table]);
 
   // Show the API endpoint in the output
   stack.addOutputs({

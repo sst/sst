@@ -1,4 +1,5 @@
 import AWS from "aws-sdk";
+import { EventBus } from "@serverless-stack/node/event-bus";
 
 const client = new AWS.EventBridge();
 
@@ -7,7 +8,7 @@ export async function handler() {
     .putEvents({
       Entries: [
         {
-          EventBusName: process.env.busName,
+          EventBusName: EventBus.Ordered.eventBusName,
           Source: "myevent",
           DetailType: "Order",
           Detail: JSON.stringify({

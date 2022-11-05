@@ -14,10 +14,8 @@ export function MyStack({ stack }: StackContext) {
     schema: "api/graphql/schema.graphql",
     defaults: {
       function: {
-        // Pass the table name to the function
-        environment: {
-          NOTES_TABLE: notesTable.tableName,
-        },
+        // Bind the table name to the function
+        bind: [notesTable],
       },
     },
     dataSources: {
@@ -31,9 +29,6 @@ export function MyStack({ stack }: StackContext) {
       "Mutation deleteNote": "notes",
     },
   });
-
-  // Enable the AppSync API to access the DynamoDB table
-  api.attachPermissions([notesTable]);
 
   // Show the AppSync API Id in the output
   this.addOutputs({
