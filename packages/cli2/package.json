@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/cli2",
-  "version": "1.17.0",
+  "version": "1.17.1",
   "bin": {
     "sst": "./bin/sst2.mjs"
   },
@@ -27,7 +27,7 @@
     "@aws-sdk/client-sts": "^3.145.0",
     "@aws-sdk/credential-providers": "^3.145.0",
     "@caporal/core": "^2.0.2",
-    "@serverless-stack/node": "1.17.0",
+    "@serverless-stack/node": "1.17.1",
     "aws-cdk": "2.32.0",
     "aws-cdk-lib": "2.32.0",
     "aws-iot-device-sdk": "^2.2.12",
