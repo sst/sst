@@ -1,0 +1,13 @@
+{
+  "extends": "@tsconfig/node16/tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "outDir": "./dist",
+    "allowSyntheticDefaultImports": true,
+    "jsx": "react"
+  },
+  "include": ["src"],
+  "exclude": []
+}

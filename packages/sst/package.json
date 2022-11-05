@@ -1,0 +1,68 @@
+{
+  "name": "sst",
+  "version": "1.16.0",
+  "bin": {
+    "sst2": "./bin/sst.mjs"
+  },
+  "description": "A CLI to help deploy SST apps.",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/serverless-stack/sst.git",
+    "directory": "packages/cli"
+  },
+  "exports": {
+    "./constructs": "./dist/constructs/index.js"
+  },
+  "homepage": "https://sst.dev",
+  "dependencies": {
+    "aws-cdk": "2.39.1",
+    "@aws-cdk/cloudformation-diff": "2.39.1",
+    "@aws-cdk/cx-api": "2.39.1",
+    "@aws-cdk/region-info": "2.39.1",
+    "@aws-sdk/client-cloudformation": "3.145.0",
+    "@aws-sdk/client-iot": "3.145.0",
+    "@aws-sdk/client-lambda": "3.145.0",
+    "@aws-sdk/client-ssm": "3.145.0",
+    "@aws-sdk/client-sts": "3.145.0",
+    "@aws-sdk/credential-providers": "^3.145.0",
+    "@caporal/core": "^2.0.2",
+    "@serverless-stack/node": "1.16.0",
+    "@serverless-stack/resources": "1.16.0",
+    "aws-iot-device-sdk": "^2.2.12",
+    "aws-sdk": "2.1224.0",
+    "colorette": "^2.0.19",
+    "constructs": "10.0.29",
+    "esbuild": "0.15.9",
+    "ink": "^3.2.0",
+    "ink-spinner": "^4.0.3",
+    "ora": "^6.1.2",
+    "promptly": "^3.2.0",
+    "react": "^18.2.0",
+    "remeda": "^1.1.0",
+    "solid-ink": "^0.0.6",
+    "solid-js": "^1.4.8",
+    "undici": "^5.8.2",
+    "vite": "^3.0.5",
+    "vite-node": "^0.21.1",
+    "vite-plugin-solid": "^2.3.0",
+    "yargs": "^17.6.0"
+  },
+  "devDependencies": {
+    "@tsconfig/node16": "^1.0.3",
+    "@types/aws-iot-device-sdk": "^2.2.4",
+    "aws-cdk-lib": "2.39.1",
+    "cdk-assets": "2.39.1",
+    "chalk": "5.0.1",
+    "proxy-agent": "5.0.0",
+    "tsx": "^3.8.1"
+  },
+  "gitHead": "8ac2d0abc11d5de721c87658bb445e3d6c211dcf"
+}
