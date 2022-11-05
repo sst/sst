@@ -10,6 +10,6 @@
     "console": "sst console"
   },
   "devDependencies": {
-    "aws-cdk-lib": "2.39.1"
+    "aws-cdk-lib": "2.50.0"
   }
 }
