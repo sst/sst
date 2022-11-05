@@ -21,15 +21,10 @@ const issuer = new Issuer({
   userinfo_endpoint: "https://graph.facebook.com/oauth/access_token",
 });
 
-interface FacebookConfig extends Omit<OauthBasicConfig, "scope"> {
-  scope?: string;
-}
-
 export const FacebookAdapter = /* @__PURE__ */ createAdapter(
-  (config: FacebookConfig) => {
+  (config: OauthBasicConfig) => {
     return OauthAdapter({
       issuer,
-      scope: "",
       ...config
     });
   }
