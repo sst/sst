@@ -1,5 +1,5 @@
 import { Construct } from "constructs";
-import * as cdk from "aws-cdk-lib";
+import * as cdkLib from "aws-cdk-lib";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as cfnApig from "aws-cdk-lib/aws-apigatewayv2";
@@ -795,6 +795,54 @@ export class Api<
   }
 
   /**
+   * Binds the given list of resources to a specific route.
+   *
+   * @example
+   * ```js
+   * const api = new Api(stack, "Api");
+   *
+   * api.setCors({
+   *   allowMethods: ["GET"],
+   * });
+   * ```
+   *
+   */
+  public setCors(cors?: boolean | ApiCorsProps) {
+    const { cdk } = this.props;
+
+    if (isCDKConstruct(cdk?.httpApi)) {
+      // Cannot set CORS if cdk.httpApi is a construct.
+      if (cors !== undefined) {
+        throw new Error(
+          `Cannot configure the "cors" when "cdk.httpApi" is a construct`
+        );
+      }
+    }
+    else {
+      // Cannot set CORS via cdk.httpApi. Always use Api.cors.
+      const httpApiProps = (cdk?.httpApi || {}) as apig.HttpApiProps;
+      if (httpApiProps.corsPreflight !== undefined) {
+        throw new Error(
+          `Cannot configure the "httpApi.corsPreflight" in the Api`
+        );
+      }
+
+      const corsConfig = apigV2Cors.buildCorsConfig(cors);
+      if (corsConfig) {
+        const cfnApi = this.cdk.httpApi.node.defaultChild as cfnApig.CfnApi;
+        cfnApi.corsConfiguration = {
+          allowCredentials: corsConfig?.allowCredentials,
+          allowHeaders: corsConfig?.allowHeaders,
+          allowMethods: corsConfig?.allowMethods,
+          allowOrigins: corsConfig?.allowOrigins,
+          exposeHeaders: corsConfig?.exposeHeaders,
+          maxAge: corsConfig?.maxAge?.toSeconds(),
+        };
+      }
+    }
+  }
+
+  /**
    * Attaches the given list of permissions to all the routes. This allows the functions to access other AWS resources.
    *
    * @example
@@ -888,16 +936,11 @@ export class Api<
   }
 
   private createHttpApi() {
-    const { cdk, cors, defaults, accessLog, customDomain } = this.props;
+    const { cdk, defaults, cors, accessLog, customDomain } = this.props;
     const id = this.node.id;
     const app = this.node.root as App;
 
     if (isCDKConstruct(cdk?.httpApi)) {
-      if (cors !== undefined) {
-        throw new Error(
-          `Cannot configure the "cors" when "cdk.httpApi" is a construct`
-        );
-      }
       if (accessLog !== undefined) {
         throw new Error(
           `Cannot configure the "accessLog" when "cdk.httpApi" is a construct`
@@ -918,11 +961,6 @@ export class Api<
       const httpApiProps = (cdk?.httpApi || {}) as apig.HttpApiProps;
 
       // Validate input
-      if (httpApiProps.corsPreflight !== undefined) {
-        throw new Error(
-          `Cannot configure the "httpApi.corsPreflight" in the Api`
-        );
-      }
       if (httpApiProps.defaultDomainMapping !== undefined) {
         throw new Error(
           `Cannot configure the "httpApi.defaultDomainMapping" in the Api`
@@ -951,7 +989,6 @@ export class Api<
 
       this.cdk.httpApi = new apig.HttpApi(this, "Api", {
         apiName: app.logicalPrefixedName(id),
-        corsPreflight: apigV2Cors.buildCorsConfig(cors),
         defaultDomainMapping,
         ...httpApiProps
       });
@@ -985,6 +1022,8 @@ export class Api<
           true
         );
     }
+
+    this.setCors(cors);
   }
 
   private addAuthorizers(authorizers: Authorizers) {
@@ -1063,7 +1102,7 @@ export class Api<
                 ),
               resultsCacheTtl: value.resultsCacheTtl
                 ? toCdkDuration(value.resultsCacheTtl)
-                : cdk.Duration.seconds(0)
+                : cdkLib.Duration.seconds(0)
             }
           );
         }

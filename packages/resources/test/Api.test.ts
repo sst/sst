@@ -83,7 +83,7 @@ test("constructor: httpApi is import", async () => {
   countResources(stack, "AWS::ApiGatewayV2::Api", 0);
 });
 
-test("cors-undefined", async () => {
+test("cors: undefined", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
   new Api(stack, "Api", {
     cors: true,
@@ -97,7 +97,7 @@ test("cors-undefined", async () => {
   });
 });
 
-test("cors-true", async () => {
+test("cors: true", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
   new Api(stack, "Api", {
     cors: true,
@@ -111,7 +111,7 @@ test("cors-true", async () => {
   });
 });
 
-test("cors-false", async () => {
+test("cors: false", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
   new Api(stack, "Api", {
     cors: false,
@@ -121,7 +121,7 @@ test("cors-false", async () => {
   });
 });
 
-test("cors-props", async () => {
+test("cors: props", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
   new Api(stack, "Api", {
     cors: {
@@ -138,16 +138,18 @@ test("cors-props", async () => {
   });
 });
 
-test("cors-redefined", async () => {
+test("cors: httpApi is import", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
   expect(() => {
     new Api(stack, "Api", {
       cors: true,
       cdk: {
-        httpApi: new apig.HttpApi(stack, "HttpApi"),
+        httpApi: apig.HttpApi.fromHttpApiAttributes(stack, "IApi", {
+          httpApiId: "abc",
+        }),
       },
     });
-  }).toThrow(/Cannot configure the "cors" when "cdk.httpApi" is a construct/);
+  }).toThrow(/Cannot configure the "cors"/);
 });
 
 test("accessLog-undefined", async () => {
@@ -1855,6 +1857,36 @@ test("addRoutes-existing-route", async () => {
       "GET /": "test/lambda.handler",
     });
   }).toThrow(/A route already exists for "GET \/"/);
+});
+
+test("setCors: props", async () => {
+  const stack = new Stack(new App({ name: "api" }), "stack");
+  const api = new Api(stack, "Api");
+  api.setCors({
+    allowMethods: ["GET"],
+  });
+  hasResource(stack, "AWS::ApiGatewayV2::Api", {
+    CorsConfiguration: {
+      AllowCredentials: false,
+      AllowHeaders: ["*"],
+      AllowMethods: ["GET"],
+      AllowOrigins: ["*"],
+    },
+  });
+});
+
+test("setCors: httpApi is import", async () => {
+  const stack = new Stack(new App({ name: "api" }), "stack");
+  const api = new Api(stack, "Api", {
+    cdk: {
+      httpApi: apig.HttpApi.fromHttpApiAttributes(stack, "IApi", {
+        httpApiId: "abc",
+      }),
+    },
+  });
+  expect(() => {
+    api.setCors(true);
+  }).toThrow(/Cannot configure the "cors"/);
 });
 
 test("attachPermissions", async () => {
