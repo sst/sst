@@ -26,6 +26,8 @@ import * as functionUrlCors from "./util/functionUrlCors.js";
 
 import url from "url";
 import { useDeferredTasks } from "./deferred_task.js";
+import { useWarning } from "./util/warning.js";
+import { useProject } from "../app.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 const supportedRuntimes = {
@@ -824,7 +826,7 @@ export class Function extends lambda.Function implements SSTConstruct {
         ...props,
         architecture,
         code: lambda.Code.fromAsset(
-          path.resolve(__dirname, "../dist/support/bridge")
+          path.resolve(__dirname, "../support/bridge")
         ),
         handler: "bridge.handler",
         functionName,
@@ -947,9 +949,7 @@ export class Function extends lambda.Function implements SSTConstruct {
     // Add config
     this.addEnvironment("SST_APP", app.name, { removeInEdge: true });
     this.addEnvironment("SST_STAGE", app.stage, { removeInEdge: true });
-    if (FunctionBinding.ssmPrefix !== "") {
-      this.addEnvironment("SST_SSM_PREFIX", FunctionBinding.ssmPrefix, { removeInEdge: true });
-    }
+    this.addEnvironment("SST_SSM_PREFIX", useProject().ssmPrefix, { removeInEdge: true })
     this.addConfig(props.config || []);
     this.bind(props.bind || []);
 
@@ -1019,12 +1019,9 @@ export class Function extends lambda.Function implements SSTConstruct {
    * ```
    */
   public addConfig(config: (Secret | Parameter)[]): void {
-    const app = this.node.root as App;
     this.bind(config);
-
-    if (config.length > 0) {
-      app.reportWarning("usingConfig");
-    }
+    if (config.length > 0)
+      useWarning().add("config.deprecated")
   }
 
   /**
@@ -1050,8 +1047,7 @@ export class Function extends lambda.Function implements SSTConstruct {
 
     // Warn user if SST constructs are passed into permissions
     if (permissions !== "*" && permissions.some((p) => isSSTConstruct(p))) {
-      const app = this.node.root as App;
-      app.reportWarning("usingPermissionsWithSSTConstruct");
+      useWarning().add("permissions.noConstructs")
     }
   }
 

@@ -23,10 +23,10 @@
   },
   "homepage": "https://sst.dev",
   "dependencies": {
-    "aws-cdk": "2.39.1",
-    "@aws-cdk/cloudformation-diff": "2.39.1",
-    "@aws-cdk/cx-api": "2.39.1",
-    "@aws-cdk/region-info": "2.39.1",
+    "aws-cdk": "2.50.0",
+    "@aws-cdk/cloudformation-diff": "2.50.0",
+    "@aws-cdk/cx-api": "2.50.0",
+    "@aws-cdk/region-info": "2.50.0",
     "@aws-sdk/client-cloudformation": "3.145.0",
     "@aws-sdk/client-iot": "3.145.0",
     "@aws-sdk/client-lambda": "3.145.0",
@@ -58,8 +58,8 @@
   "devDependencies": {
     "@tsconfig/node16": "^1.0.3",
     "@types/aws-iot-device-sdk": "^2.2.4",
-    "aws-cdk-lib": "2.39.1",
-    "cdk-assets": "2.39.1",
+    "aws-cdk-lib": "2.50.0",
+    "cdk-assets": "2.50.0",
     "chalk": "5.0.1",
     "proxy-agent": "5.0.0",
     "tsx": "^3.8.1"

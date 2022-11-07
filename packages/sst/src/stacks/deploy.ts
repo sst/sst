@@ -197,6 +197,9 @@ export async function deploy(stack: CloudFormationStackArtifact) {
     const result = await deployment.deployStack({
       stack: stack as any,
       quiet: true,
+      deploymentMethod: {
+        method: "direct",
+      }
     });
     bus.publish("stack.updated", {
       stackID: stack.stackName,

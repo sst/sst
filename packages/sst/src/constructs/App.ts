@@ -25,6 +25,7 @@ import { createRequire } from "module";
 import { Auth } from "./Auth.js";
 import { useDeferredTasks } from "./deferred_task.js";
 import { AppContext } from "./context.js";
+import { useBootstrap } from "../bootstrap.js";
 const require = createRequire(import.meta.url);
 
 function exitWithMessage(message: string) {
@@ -67,6 +68,7 @@ export interface AppDeployProps {
   readonly debugBridge?: string;
   readonly debugIncreaseTimeout?: boolean;
   readonly mode: "deploy" | "start" | "remove";
+  readonly bootstrap: Awaited<ReturnType<typeof useBootstrap>>;
 
   /**
    * The callback after synth completes, used by `sst start`.
@@ -80,8 +82,6 @@ export interface AppDeployProps {
 }
 
 type AppRemovalPolicy = Lowercase<keyof typeof cdk.RemovalPolicy>;
-
-type AppWarningType = "usingConfig" | "usingPermissionsWithSSTConstruct";
 
 export type AppProps = cdk.AppProps;
 
@@ -171,9 +171,6 @@ export class App extends cdk.App {
    * @internal
    */
   public readonly skipBuild: boolean;
-
-  /** @internal */
-  private warnings: { [key in AppWarningType]?: boolean } = {};
 
   /**
    * @internal
@@ -560,7 +557,7 @@ export class App extends cdk.App {
 
         const className = c.constructor.name;
         const id = c.id;
-        const normId = FunctionBinding.normalizeId(id);
+        const normId = id.replace(/-/g, "_");
         const existingIds = ids[className] || {};
 
         if (!id.match(/^[a-zA-Z]([a-zA-Z0-9-_])*$/)) {
@@ -734,25 +731,6 @@ declare module "@serverless-stack/node/${binding.clientPackage}" {
     }
 
     cdk.Aspects.of(this).add(new CodegenTypes());
-  }
-
-  /** @internal */
-  public reportWarning(type: AppWarningType) {
-    this.warnings[type] = true;
-  }
-
-  private printWarnings() {
-    if (this.warnings.usingConfig) {
-      logger.warn(
-        `\nWARNING: The "config" prop is deprecated, and will be removed in SST v2. Pass Parameters and Secrets in through the "bind" prop. Read more about how to upgrade here — https://docs.serverless-stack.com/upgrade-guide#upgrade-to-v116`
-      );
-    }
-
-    if (this.warnings.usingPermissionsWithSSTConstruct) {
-      logger.warn(
-        `\nWARNING: Passing SST constructs into "permissions" is deprecated, and will be removed in SST v2. Pass them into the "bind" prop. Read more about how to upgrade here — https://docs.serverless-stack.com/upgrade-guide#upgrade-to-v116`
-      );
-    }
   }
 
   // Functional Stack

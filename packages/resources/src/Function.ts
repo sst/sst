@@ -2,6 +2,7 @@
 // Note: disabling ban-type rule so we don't get an error referencing the class Function
 
 import path from "path";
+import {} from "./util/warning.js"
 import type { Loader } from "esbuild";
 import fs from "fs-extra";
 import { Construct } from "constructs";
@@ -1023,6 +1024,7 @@ export class Function extends lambda.Function implements SSTConstruct {
     this.bind(config);
 
     if (config.length > 0) {
+      useWarning()
       app.reportWarning("usingConfig");
     }
   }

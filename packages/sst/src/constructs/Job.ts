@@ -340,16 +340,10 @@ export class Job extends Construct implements SSTConstruct {
       },
       environmentVariables: {
         SST_APP: { value: app.name },
-<<<<<<< HEAD
-        SST_STAGE: { value: app.stage }
-=======
         SST_STAGE: { value: app.stage },
-        ...(
-          FunctionBinding.ssmPrefix !== ""
-            ? { SST_SSM_PREFIX: { value: FunctionBinding.ssmPrefix } }
-            : {}
-        )
->>>>>>> origin/master
+        ...(FunctionBinding.ssmPrefix !== ""
+          ? { SST_SSM_PREFIX: { value: FunctionBinding.ssmPrefix } }
+          : {})
       },
       timeout: this.normalizeTimeout(this.props.timeout || "8 hours"),
       buildSpec: codebuild.BuildSpec.fromObject({

@@ -1,9 +1,6 @@
 import esbuild from "esbuild";
 import fs from "fs/promises";
-import { execSync } from "child_process";
 
-const OUT = "./dist";
-await fs.rm(OUT, { recursive: true });
 const pkg = await fs.readFile("package.json").then(JSON.parse);
 const watch = false;
 
@@ -52,7 +49,7 @@ await esbuild.build({
   outExtension: {
     ".js": ".mjs"
   },
-  outfile: "./dist/support/custom-resources.mjs"
+  outdir: "./dist/support/nodejs-runtime/"
 });
 
 // support/custom-resources
@@ -69,8 +66,51 @@ await esbuild.build({
       `const require = topLevelCreateRequire(import.meta.url);`
     ].join("")
   },
-  outfile: "./dist/support/custom-resources.mjs"
+  outExtension: {
+    ".js": ".mjs"
+  },
+  outdir: "./dist/support/custom-resources/"
 });
+
+// support/bridge
+await esbuild.build({
+  keepNames: true,
+  bundle: true,
+  minify: true,
+  platform: "node",
+  target: "esnext",
+  format: "esm",
+  entryPoints: ["./support/bridge/bridge.ts"],
+  banner: {
+    js: [
+      `import { createRequire as topLevelCreateRequire } from 'module';`,
+      `const require = topLevelCreateRequire(import.meta.url);`
+    ].join("")
+  },
+  outfile: "./dist/support/bridge/bridge.mjs"
+});
+
+// support/static-site-stub
+await fs.cp("support/static-site-stub", "dist/support/static-site-stub", {
+  recursive: true
+});
+
+// support/base-site-custom-resource
+await fs.cp(
+  "support/base-site-custom-resource",
+  "dist/support/base-site-custom-resource",
+  {
+    recursive: true
+  }
+);
+
+await fs.cp(
+  "support/base-site-archiver.cjs",
+  "dist/support/base-site-archiver.cjs",
+  {
+    recursive: true
+  }
+);
 
 console.log("Built");
 if (watch) console.log("Watching");

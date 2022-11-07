@@ -11,17 +11,21 @@ export interface Project {
   profile?: string;
   region?: string;
   main?: string;
+  ssmPrefix?: string;
 }
 
 const DEFAULTS = {
   main: "stacks/index.ts",
   stage: undefined,
+  ssmPrefix: undefined
 } as const;
 
 type ProjectWithDefaults = Project &
-  Required<{
-    [key in keyof typeof DEFAULTS]: Exclude<Project[key], undefined>;
-  }> & {
+  Required<
+    {
+      [key in keyof typeof DEFAULTS]: Exclude<Project[key], undefined>;
+    }
+  > & {
     paths: {
       root: string;
       out: string;
@@ -47,7 +51,7 @@ export async function initProject(globals: GlobalOptions) {
   Logger.debug("Using project root", root);
   const out = path.join(root, ".sst");
   await fs.mkdir(out, {
-    recursive: true,
+    recursive: true
   });
   Logger.debug("Using project out", out);
 
@@ -66,7 +70,7 @@ export async function initProject(globals: GlobalOptions) {
           ...DEFAULTS,
           ...config,
           stage: globals.stage || (await usePersonalStage(out)),
-          profile: globals.profile || config.profile,
+          profile: globals.profile || config.profile
         } as ProjectWithDefaults;
       }
 
@@ -92,9 +96,11 @@ export async function initProject(globals: GlobalOptions) {
     );
   }
   const project = await load();
+  project.ssmPrefix =
+    project.ssmPrefix || `/sst/${project.name}/${project.stage}/`;
   project.paths = {
     root,
-    out,
+    out
   };
   Logger.debug("Config loaded", project);
 
@@ -117,7 +123,7 @@ async function findRoot() {
       throw new VisibleError(
         "Could not found a configuration file",
         "Make sure one of the following exists",
-        ...CONFIG_EXTENSIONS.map((ext) => `  - sst${ext}`)
+        ...CONFIG_EXTENSIONS.map(ext => `  - sst${ext}`)
       );
     for (const ext of CONFIG_EXTENSIONS) {
       const configPath = path.join(dir, `sst${ext}`);

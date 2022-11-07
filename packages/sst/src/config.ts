@@ -24,7 +24,7 @@ export namespace Config {
   export async function parameters() {
     const result: (ReturnType<typeof parse> & { value: string })[] = [];
 
-    for await (const p of scan(PREFIXES.PARAMETERS.VALUES)) {
+    for await (const p of scan(PREFIX.STAGE)) {
       const parsed = parse(p.Name!);
       if (parsed.type === "secrets") continue;
       result.push({
@@ -36,20 +36,31 @@ export namespace Config {
     return result;
   }
 
-  export function pathFor(input: { type: string; id: string; name: string }) {
-    return `${input.type}/${input.id}/${input.name}`;
+  export function pathFor(input: {
+    type: string;
+    id: string;
+    prop: string;
+    fallback?: boolean;
+  }) {
+    return `${input.fallback ? PREFIX.FALLBACK : PREFIX.STAGE}${
+      input.type
+    }/${normalizeID(input.id)}/${input.prop}`;
+  }
+
+  export function normalizeID(input: string) {
+    return input.replace(/-/g, "_");
   }
 
   export async function secrets() {
     const result: Record<string, Secret> = {};
 
-    for await (const p of scan(PREFIXES.PARAMETERS.VALUES + "Secret")) {
+    for await (const p of scan(PREFIX.STAGE + "Secret")) {
       const parsed = parse(p.Name!);
       if (!result[parsed.id]) result[parsed.id] = {};
       result[parsed.id].value = p.Value;
     }
 
-    for await (const p of scan(PREFIXES.PARAMETERS.FALLBACK + "Secret")) {
+    for await (const p of scan(PREFIX.FALLBACK + "Secret")) {
       const parsed = parse(p.Name!);
       if (!result[parsed.id]) result[parsed.id] = {};
       result[parsed.id].fallback = p.Value;
@@ -68,7 +79,7 @@ export namespace Config {
       SST_STAGE: project.stage,
       ...pipe(
         parameters,
-        map(p => [`SST_${p.type}_${p.name}_${p.id}`, p.value]),
+        map(p => [`SST_${p.type}_${p.prop}_${p.id}`, p.value]),
         Object.fromEntries
       )
     };
@@ -84,15 +95,12 @@ export namespace Config {
     const ssm = useAWSClient(SSMClient);
     const result = await ssm.send(
       new PutParameterCommand({
-        Name: `${
-          input.fallback
-            ? PREFIXES.PARAMETERS.FALLBACK
-            : PREFIXES.PARAMETERS.VALUES
-        }${pathFor({
+        Name: pathFor({
           id: input.key,
           type: "Secret",
-          name: "value"
-        })}`,
+          prop: "value",
+          fallback: true
+        }),
         Value: input.value,
         Type: "SecureString",
         Overwrite: true
@@ -104,15 +112,12 @@ export namespace Config {
     const ssm = useAWSClient(SSMClient);
     const result = await ssm.send(
       new GetParameterCommand({
-        Name: `${
-          input.fallback
-            ? PREFIXES.PARAMETERS.FALLBACK
-            : PREFIXES.PARAMETERS.VALUES
-        }${pathFor({
+        Name: pathFor({
           id: input.key,
-          name: "value",
-          type: "Secret"
-        })}`,
+          prop: "value",
+          type: "Secret",
+          fallback: input.fallback
+        }),
         WithDecryption: true
       })
     );
@@ -126,15 +131,12 @@ export namespace Config {
     const ssm = useAWSClient(SSMClient);
     await ssm.send(
       new DeleteParameterCommand({
-        Name: `${
-          input.fallback
-            ? PREFIXES.PARAMETERS.FALLBACK
-            : PREFIXES.PARAMETERS.VALUES
-        }${pathFor({
+        Name: pathFor({
           id: input.key,
           type: "Secret",
-          name: "value"
-        })}`
+          prop: "value",
+          fallback: input.fallback
+        })
       })
     );
   }
@@ -169,18 +171,6 @@ export namespace Config {
     );
     return filtered.length;
   }
-  export const PREFIXES = {
-    PARAMETERS: {
-      get VALUES() {
-        const project = useProject();
-        return `/sst/${project.name}/${project.stage}/`;
-      },
-      get FALLBACK() {
-        const project = useProject();
-        return `/sst/${project.name}/${FALLBACK_STAGE}/`;
-      }
-    }
-  };
 }
 
 async function* scan(prefix: string) {
@@ -206,11 +196,22 @@ async function* scan(prefix: string) {
 const FALLBACK_STAGE = ".fallback";
 const SECRET_UPDATED_AT_ENV = "SST_ADMIN_SECRET_UPDATED_AT";
 
+const PREFIX = {
+  get STAGE() {
+    const project = useProject();
+    return `/sst/${project.name}/${project.stage}/`;
+  },
+  get FALLBACK() {
+    const project = useProject();
+    return `/sst/${project.name}/${FALLBACK_STAGE}/`;
+  }
+};
+
 function parse(ssmName: string) {
   const parts = ssmName.split("/");
   return {
     type: parts[4],
     id: parts[5],
-    name: parts.slice(6)
+    prop: parts.slice(6)
   };
 }

@@ -476,7 +476,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     }
 
     // create zip files
-    const script = path.join(__dirname, "../assets/BaseSite/archiver.cjs");
+    const script = path.join(__dirname, "../support/base-site-archiver.cjs");
     const zipPath = path.resolve(
       path.join(buildDir, `NextjsSite-${this.node.id}-${this.node.addr}`)
     );
@@ -816,7 +816,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     // Create a Lambda function that will be doing the uploading
     const uploader = new lambda.Function(this, "S3Uploader", {
       code: lambda.Code.fromAsset(
-        path.join(__dirname, "../assets/BaseSite/custom-resource")
+        path.join(__dirname, "../dist/base-site-custom-resource")
       ),
       layers: [this.awsCliLayer],
       runtime: lambda.Runtime.PYTHON_3_7,
@@ -830,7 +830,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     // Create the custom resource function
     const handler = new lambda.Function(this, "S3Handler", {
       code: lambda.Code.fromAsset(
-        path.join(__dirname, "../assets/BaseSite/custom-resource")
+        path.join(__dirname, "../support/base-site-custom-resource")
       ),
       layers: [this.awsCliLayer],
       runtime: lambda.Runtime.PYTHON_3_7,
@@ -1190,7 +1190,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     // Create a Lambda function that will be doing the invalidation
     const invalidator = new lambda.Function(this, "CloudFrontInvalidator", {
       code: lambda.Code.fromAsset(
-        path.join(__dirname, "../assets/BaseSite/custom-resource")
+        path.join(__dirname, "../support/base-site-custom-resource")
       ),
       layers: [this.awsCliLayer],
       runtime: lambda.Runtime.PYTHON_3_7,

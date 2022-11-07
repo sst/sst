@@ -49,7 +49,7 @@ export function bindParameters(c: SSTConstruct) {
         new ssm.StringParameter(c, resId, {
           // Parameters, Secrets, and Jobs do not have a name
           parameterName: getParameterPath(c, prop),
-          stringValue: variable.parameter!,
+          stringValue: variable.parameter!
         });
       }
     });
@@ -67,7 +67,7 @@ export function bindType(c: SSTConstruct) {
 
   return {
     clientPackage: binding.clientPackage,
-    variables: Object.keys(binding.variables),
+    variables: Object.keys(binding.variables)
   };
 }
 
@@ -75,17 +75,17 @@ export function getEnvironmentKey(c: SSTConstruct, prop: string): string {
   return Config.pathFor({
     type: c.constructor.name,
     id: c.id,
-    name: prop,
+    prop: prop
   });
 }
 
 export function getParameterPath(c: SSTConstruct, prop: string): string {
   const construct = c.constructor.name;
-  return `${Config.PREFIXES.PARAMETERS.VALUES}${Config.pathFor({
+  return Config.pathFor({
     id: c.id,
     type: construct,
-    name: prop,
-  })}`;
+    prop: prop
+  });
 }
 
 export function getParameterFallbackPath(
@@ -93,9 +93,10 @@ export function getParameterFallbackPath(
   prop: string
 ): string {
   const construct = c.constructor.name;
-  return `${Config.PREFIXES.PARAMETERS.FALLBACK}${Config.pathFor({
+  return Config.pathFor({
     id: c.id,
     type: construct,
-    name: prop,
-  })}`;
+    prop: prop,
+    fallback: true
+  });
 }
