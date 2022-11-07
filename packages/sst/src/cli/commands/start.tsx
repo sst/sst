@@ -62,6 +62,7 @@ import { useBus } from "../../bus.js";
 import { useWatcher } from "../../watcher.js";
 import { Stacks } from "../../stacks/index.js";
 import { Logger } from "../../logger.js";
+import { createSpinner } from "../spinner.js";
 
 const useStackBuilder = Context.memo(async () => {
   const watcher = useWatcher();
@@ -71,7 +72,7 @@ const useStackBuilder = Context.memo(async () => {
   let pending: CloudAssembly | undefined;
 
   async function build() {
-    const spinner = ora("Building stacks").start();
+    const spinner = createSpinner("Building stacks").start();
     const fn = await Stacks.build();
     const assembly = await Stacks.synth({
       fn,

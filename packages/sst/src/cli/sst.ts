@@ -1,5 +1,9 @@
 process.removeAllListeners("uncaughtException");
 process.on("uncaughtException", (err) => {
+  const spinners = useSpinners();
+  for (const spinner of spinners) {
+    if (spinner.isSpinning) spinner.fail(spinner.text);
+  }
   console.log(red("Error:"), err.message);
   if (!(err instanceof VisibleError)) {
     console.log();
@@ -25,6 +29,7 @@ import { start } from "./commands/start.js";
 import { bind } from "./commands/bind.js";
 import { build } from "./commands/build.js";
 import { VisibleError } from "../error.js";
+import { useSpinners } from "./spinner.js";
 
 secrets(program);
 update(program);
