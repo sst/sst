@@ -1,5 +1,11 @@
 # @serverless-stack/node
 
+## 1.17.1
+
+### Patch Changes
+
+- [#2180](https://github.com/serverless-stack/sst/pull/2180) [`f3689cad0`](https://github.com/serverless-stack/sst/commit/f3689cad04d4c98bd78fd935d6bf641070c2deb7) Thanks [@fwang](https://github.com/fwang)! - Auth: support Facebook adapter
+
 ## 1.17.0
 
 ## 1.16.3

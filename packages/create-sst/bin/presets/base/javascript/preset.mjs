@@ -5,5 +5,8 @@ export default [
   install({
     packages: ["@serverless-stack/cli", "@serverless-stack/resources"],
     dev: true
-  })
+  }),
+  install({
+    packages: ["@serverless-stack/node"]
+  }),
 ];

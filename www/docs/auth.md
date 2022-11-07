@@ -475,6 +475,21 @@ TwitchAdapter({
 
 ---
 
+### Facebook
+
+Extends the `OauthAdapter` and pre-configures with Facebook OAuth URLs.
+
+```js
+FacebookAdapter({
+  clientID: "<client-id>"
+  clientSecret: "<client-secret>",
+  scope: "<space separated list of scopes>",
+  onSuccess: async (tokenset) => {},
+})
+```
+
+---
+
 ### Magic Links
 
 Issues magic links that you can send over email or SMS to verify users without the need of a password.

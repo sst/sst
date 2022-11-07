@@ -18,10 +18,6 @@ export default [
     path: "services",
   }),
   install({
-    packages: ["@serverless-stack/node"],
-    path: "services",
-  }),
-  install({
     packages: ["@types/aws-lambda"],
     path: "services",
     dev: true,
