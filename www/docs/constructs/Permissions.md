@@ -18,7 +18,7 @@ Let's look at the various ways to attach permissions. Starting with the most per
 Take a simple function.
 
 ```js
-const fun = new Function(this, "Function", { handler: "src/lambda.main" });
+const fun = new Function(stack, "Function", { handler: "src/lambda.main" });
 ```
 
 ### Giving full permissions
@@ -45,26 +45,41 @@ fun.attachPermissions(["s3:PutObject", "dynamodb:PutItem"]);
 
 Specify a list of AWS IAM actions that this function has complete access to. Takes a list of strings.
 
-### Access to a list of constructs
+### Access to a list of SST constructs
+
+```js
+import { Topic, Table } from "@serverless-stack/resources";
+
+const topic = new topic(stack, "Topic");
+const table = new Table(stack, "Table");
+
+fun.bind([topic, table]);
+```
+
+To give access to SST constructs, bind them to the function. [Read more about Resource Binding](../resource-binding.md).
+
+### Access to a list of CDK constructs
 
 ```js
 import * as sns from "aws-cdk-lib/aws-sns";
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 
-const topic = new sns.Topic(this, "Topic");
-const table = new Table(this, "Table");
+const topic = new sns.Topic(stack, "Topic");
+const table = new dynamodb.Table(stack, "Table");
 
 fun.attachPermissions([topic, table]);
 ```
 
-Specify which SST or CDK constructs you want to give complete access to. [Check out the list of supported constructs](#supported-constructs).
+Specify which CDK constructs you want to give complete access to. [Check out the list of supported constructs](#supported-constructs).
 
 ### Access to a list of specific permissions in a construct
 
 ```js
+import * as sns from "aws-cdk-lib/aws-sns";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 
-const topic = new sns.Topic(this, "Topic");
-const table = new dynamodb.Table(this, "Table");
+const topic = new sns.Topic(stack, "Topic");
+const table = new dynamodb.Table(stack, "Table");
 
 fun.attachPermissions([
  [topic, "grantPublish"],
@@ -129,19 +144,19 @@ The name of the AWS resource as referenced in an IAM policy.
 ...
 ```
 
-A CDK or SST construct. [Check out the list of supported constructs](#supported-constructs).
+A CDK construct. [Check out the list of supported constructs](#supported-constructs).
 
 ```
-new cdk.aws-sns.Topic(this, "Topic")
-new sst.Table(this, "Table")
+new cdk.aws-sns.Topic(stack, "Topic")
+new cdk.aws-dynamodb.Table(stack, "Table")
 ...
 ```
 
 A CDK construct with their specific grant permission method. Many CDK constructs have a method of the format _grantX_ that allows you to grant specific permissions. Pass in the consutrct and grant method as a tuple.
 
 ```
-// const topic = new cdk.aws-sns.Topic(this, "Topic");
-// const table = new sst.Table(this, "Table");
+// const topic = new cdk.aws-sns.Topic(stack, "Topic");
+// const table = new sst.Table(stack, "Table");
 
 [topic, "grantPublish"]
 [table, "grantReadData"]
@@ -161,27 +176,14 @@ new cdk.aws-iam.PolicyStatement({
 
 #### Supported Constructs
 
-You can grant access to an SST or CDK construct.
+You can grant access to an CDK construct.
 
 ``` js
-fun.attachPermissions([sns, table]);
+fun.attachPermissions([topic, table]);
 ```
 
-Currently the following SST and CDK constructs are supported.
+Currently the following CDK constructs are supported.
 
-- [Api](Api.md)
-- [Job](Job.md)
-- [Topic](Topic.md)
-- [Table](Table.md)
-- [Queue](Queue.md)
-- [Bucket](Bucket.md)
-- [Function](Function.md)
-- [EventBus](EventBus.md)
-- [GraphQLApi](GraphQLApi.md)
-- [AppSyncApi](AppSyncApi.md)
-- [KinesisStream](KinesisStream.md)
-- [WebSocketApi](WebSocketApi.md)
-- [ApiGatewayV1Api](ApiGatewayV1Api.md)
 - [cdk.aws-sns.Topic](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_sns.Topic.html)
 - [cdk.aws-s3.Bucket](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.Bucket.html)
 - [cdk.aws-sqs.Queue](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_sqs.Queue.html)
