@@ -77,7 +77,7 @@ function getModuleManager(srcPath: string): ModuleManager {
 export const NodeHandler: Definition<Bundle> = opts => {
   const dir = path.dirname(opts.handler);
   const ext = path.extname(opts.handler);
-  const base = path.basename(opts.handler).split(".")[0];
+  const base = path.basename(opts.handler).split('.').slice(0, -1).join('.');
   const file = [".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"]
     .map(ext => path.join(dir, base + ext))
     .find(file => {
