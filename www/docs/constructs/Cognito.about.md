@@ -272,6 +272,21 @@ new Cognito(stack, "Auth", {
 });
 ```
 
+#### Adding additional clients
+
+You can create additional clients for the Cognito user pool.
+
+```js {5-6}
+const cognito = new Cognito(stack, "Auth");
+
+cognito.cdk.userPool.addClient("anotherClient", {
+  authFlows: {
+    userPassword: true,
+    userSrp: true,
+  },
+});
+```
+
 #### Sharing Auth across stacks
 
 You can create the Auth construct in one stack, and attach permissions in other stacks. To do this, return the Auth construct from your stack function.
