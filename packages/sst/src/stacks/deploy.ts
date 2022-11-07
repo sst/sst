@@ -115,7 +115,7 @@ export async function deployMany(stacks: CloudFormationStackArtifact[]) {
       )
         continue;
 
-      deploy(stack).then(() => waitFor(stack.stackName));
+      deploy(stack).then(() => monitor(stack.stackName));
       todo.delete(stack.id);
     }
   }
@@ -126,7 +126,10 @@ export async function deployMany(stacks: CloudFormationStackArtifact[]) {
       complete.add(evt.properties.stackID);
 
       if (isFailed(evt.properties.status as any))
-        stacks.forEach((s) => todo.delete(s.stackName));
+        stacks.forEach((s) => {
+          todo.delete(s.stackName);
+          complete.add(s.stackName);
+        });
 
       if (complete.size === stacks.length) {
         bus.unsubscribe(finished);
@@ -139,7 +142,7 @@ export async function deployMany(stacks: CloudFormationStackArtifact[]) {
   });
 }
 
-export async function waitFor(stack: string) {
+export async function monitor(stack: string) {
   const [cfn, bus] = await Promise.all([
     useAWSClient(CloudFormationClient),
     useBus(),
@@ -188,7 +191,7 @@ export async function deploy(stack: CloudFormationStackArtifact) {
   Logger.debug("Deploying stack", stack.id);
   const provider = await useAWSProvider();
   const { CloudFormationDeployments } = await import(
-    "aws-cdk/lib/api/cloudformation-deployments.js"
+    "../cdk/cloudformation-deployments.js"
   );
   const deployment = new CloudFormationDeployments({
     sdkProvider: provider,
@@ -199,7 +202,7 @@ export async function deploy(stack: CloudFormationStackArtifact) {
       quiet: true,
       deploymentMethod: {
         method: "direct",
-      }
+      },
     });
     bus.publish("stack.updated", {
       stackID: stack.stackName,

@@ -12,7 +12,12 @@ import * as lambdaNode from "aws-cdk-lib/aws-lambda-nodejs";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 
-import { State, Runtime, DeferBuilder, FunctionBinding } from "@serverless-stack/core";
+import {
+  State,
+  Runtime,
+  DeferBuilder,
+  FunctionBinding,
+} from "@serverless-stack/core";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Job } from "./Job.js";
@@ -254,7 +259,7 @@ export interface FunctionProps
    * Configure environment variables for the function
    *
    * @deprecated The "config" prop is deprecated, and will be removed in SST v2. Pass Parameters and Secrets in through the "bind" prop. Read more about how to upgrade here — https://docs.serverless-stack.com/constructs/function
-   * 
+   *
    * @example
    * ```js
    * // Change
@@ -262,7 +267,7 @@ export interface FunctionProps
    *   handler: "src/function.handler",
    *   config: [STRIPE_KEY, API_URL]
    * })
-   * 
+   *
    * // To
    * new Function(stack, "Function", {
    *   handler: "src/function.handler",
@@ -928,7 +933,8 @@ export class Function extends lambda.Function implements SSTConstruct {
           s3ObjectVersion: codeConfig.s3Location?.objectVersion,
         };
         cfnFunction.handler = bundled.handler;
-        code.bindToResource(cfnFunction);
+        // TODO: Uncommnet this
+        // code.bindToResource(cfnFunction);
       });
     }
 
@@ -949,7 +955,9 @@ export class Function extends lambda.Function implements SSTConstruct {
     // Add config
     this.addEnvironment("SST_APP", app.name, { removeInEdge: true });
     this.addEnvironment("SST_STAGE", app.stage, { removeInEdge: true });
-    this.addEnvironment("SST_SSM_PREFIX", useProject().ssmPrefix, { removeInEdge: true })
+    this.addEnvironment("SST_SSM_PREFIX", useProject().ssmPrefix, {
+      removeInEdge: true,
+    });
     this.addConfig(props.config || []);
     this.bind(props.bind || []);
 
@@ -983,7 +991,7 @@ export class Function extends lambda.Function implements SSTConstruct {
   public bind(constructs: SSTConstruct[]): void {
     const app = this.node.root as App;
 
-    constructs.forEach(c => {
+    constructs.forEach((c) => {
       // Bind environment
       const env = bindEnvironment(c);
       Object.entries(env).forEach(([key, value]) =>
@@ -993,35 +1001,36 @@ export class Function extends lambda.Function implements SSTConstruct {
       // Bind permissions
       const permissions = bindPermissions(c);
       Object.entries(permissions).forEach(([action, resources]) =>
-        this.attachPermissions([new iam.PolicyStatement({
-          actions: [action],
-          effect: iam.Effect.ALLOW,
-          resources,
-        })])
-      )
+        this.attachPermissions([
+          new iam.PolicyStatement({
+            actions: [action],
+            effect: iam.Effect.ALLOW,
+            resources,
+          }),
+        ])
+      );
     });
   }
 
   /**
    * Attaches additional configs to function.
-   * 
+   *
    * @deprecated The "config" prop is deprecated, and will be removed in SST v2. Pass Parameters and Secrets in through the "bind" prop. Read more about how to upgrade here — https://docs.serverless-stack.com/constructs/function
-   * 
+   *
    * @example
    * ```js
    * const STRIPE_KEY = new Config.Secret(stack, "STRIPE_KEY");
    *
    * // Change
    * job.addConfig([STRIPE_KEY]);
-   * 
+   *
    * // To
    * job.bind([STRIPE_KEY]);
    * ```
    */
   public addConfig(config: (Secret | Parameter)[]): void {
     this.bind(config);
-    if (config.length > 0)
-      useWarning().add("config.deprecated")
+    if (config.length > 0) useWarning().add("config.deprecated");
   }
 
   /**
@@ -1047,7 +1056,7 @@ export class Function extends lambda.Function implements SSTConstruct {
 
     // Warn user if SST constructs are passed into permissions
     if (permissions !== "*" && permissions.some((p) => isSSTConstruct(p))) {
-      useWarning().add("permissions.noConstructs")
+      useWarning().add("permissions.noConstructs");
     }
   }
 
@@ -1062,7 +1071,7 @@ export class Function extends lambda.Function implements SSTConstruct {
         srcPath: this.props.srcPath,
         handler: this.props.handler,
         arn: this.functionArn,
-        secrets: ([...(config || []), ...(bind || [])])
+        secrets: [...(config || []), ...(bind || [])]
           .filter((c) => c instanceof Secret)
           .map((c) => (c as Secret).name),
       },

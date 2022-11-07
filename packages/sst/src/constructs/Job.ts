@@ -18,6 +18,8 @@ import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import { bindEnvironment, bindPermissions } from "./util/functionBinding.js";
 import { IVpc } from "aws-cdk-lib/aws-ec2";
 import { useDeferredTasks } from "./deferred_task.js";
+import { useWarning } from "./util/warning.js";
+import { useProject } from "../app.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -234,7 +236,7 @@ export class Job extends Construct implements SSTConstruct {
   public getConstructMetadata() {
     return {
       type: "Job" as const,
-      data: {}
+      data: {},
     };
   }
 
@@ -245,12 +247,12 @@ export class Job extends Construct implements SSTConstruct {
       variables: {
         functionName: {
           environment: this._jobInvoker.functionName,
-          parameter: this._jobInvoker.functionName
-        }
+          parameter: this._jobInvoker.functionName,
+        },
       },
       permissions: {
-        "lambda:*": [this._jobInvoker.functionArn]
-      }
+        "lambda:*": [this._jobInvoker.functionArn],
+      },
     };
   }
 
@@ -288,7 +290,7 @@ export class Job extends Construct implements SSTConstruct {
     this.bind(config);
 
     if (config.length > 0) {
-      app.reportWarning("usingConfig");
+      useWarning().add("config.deprecated");
     }
   }
 
@@ -336,14 +338,12 @@ export class Job extends Construct implements SSTConstruct {
         buildImage: codebuild.LinuxBuildImage.fromDockerRegistry(
           "amazon/aws-lambda-nodejs:16"
         ),
-        computeType: this.normalizeMemorySize(this.props.memorySize || "3 GB")
+        computeType: this.normalizeMemorySize(this.props.memorySize || "3 GB"),
       },
       environmentVariables: {
         SST_APP: { value: app.name },
         SST_STAGE: { value: app.stage },
-        ...(FunctionBinding.ssmPrefix !== ""
-          ? { SST_SSM_PREFIX: { value: FunctionBinding.ssmPrefix } }
-          : {})
+        SST_SSM_PREFIX: { value: useProject().ssmPrefix },
       },
       timeout: this.normalizeTimeout(this.props.timeout || "8 hours"),
       buildSpec: codebuild.BuildSpec.fromObject({
@@ -352,10 +352,10 @@ export class Job extends Construct implements SSTConstruct {
           build: {
             commands: [
               // commands will be set after the code is built
-            ]
-          }
-        }
-      })
+            ],
+          },
+        },
+      }),
     });
   }
 
@@ -380,7 +380,7 @@ export class Job extends Construct implements SSTConstruct {
           handler,
           runtime: "nodejs16.x",
           srcPath,
-          bundle
+          bundle,
         })!;
 
         // This should always be true b/c runtime is always Node.js
@@ -409,7 +409,7 @@ export class Job extends Construct implements SSTConstruct {
               `console.log("//////////////////////")`,
               `console.log("//  End of the job  //")`,
               `console.log("//////////////////////")`,
-              `console.log("")`
+              `console.log("")`,
             ].join("\n")
           );
 
@@ -432,8 +432,8 @@ export class Job extends Construct implements SSTConstruct {
         "phases:",
         "  build:",
         "    commands:",
-        `      - node ${script}`
-      ].join("\n")
+        `      - node ${script}`,
+      ].join("\n"),
     };
 
     this.attachPermissions([
@@ -441,9 +441,9 @@ export class Job extends Construct implements SSTConstruct {
         actions: ["s3:*"],
         effect: iam.Effect.ALLOW,
         resources: [
-          `arn:aws:s3:::${codeConfig.s3Location?.bucketName}/${codeConfig.s3Location?.objectKey}`
-        ]
-      })
+          `arn:aws:s3:::${codeConfig.s3Location?.bucketName}/${codeConfig.s3Location?.objectKey}`,
+        ],
+      }),
     ]);
   }
 
@@ -462,9 +462,9 @@ export class Job extends Construct implements SSTConstruct {
       memorySize: 1024,
       config,
       environment: {
-        SST_DEBUG_TYPE: "job"
+        SST_DEBUG_TYPE: "job",
       },
-      permissions
+      permissions,
     });
     fn._disableBind = true;
     return fn;
@@ -480,25 +480,25 @@ export class Job extends Construct implements SSTConstruct {
       timeout: 10,
       memorySize: 1024,
       environment: {
-        PROJECT_NAME: this.job.projectName
+        PROJECT_NAME: this.job.projectName,
       },
       permissions: [
         new iam.PolicyStatement({
           effect: iam.Effect.ALLOW,
           actions: ["codebuild:StartBuild"],
-          resources: [this.job.projectArn]
-        })
+          resources: [this.job.projectArn],
+        }),
       ],
       bundle: {
-        format: "esm"
-      }
+        format: "esm",
+      },
     });
   }
 
   private useForCodeBuild(constructs: SSTConstruct[]): void {
     const app = this.node.root as App;
 
-    constructs.forEach(c => {
+    constructs.forEach((c) => {
       // Bind environment
       const env = bindEnvironment(c);
       Object.entries(env).forEach(([key, value]) =>
@@ -512,8 +512,8 @@ export class Job extends Construct implements SSTConstruct {
           new iam.PolicyStatement({
             actions: [action],
             effect: iam.Effect.ALLOW,
-            resources
-          })
+            resources,
+          }),
         ])
       );
     });
@@ -526,7 +526,8 @@ export class Job extends Construct implements SSTConstruct {
   private addEnvironmentForCodeBuild(name: string, value: string): void {
     const project = this.job.node.defaultChild as codebuild.CfnProject;
     const env = project.environment as codebuild.CfnProject.EnvironmentProperty;
-    const envVars = env.environmentVariables as codebuild.CfnProject.EnvironmentVariableProperty[];
+    const envVars =
+      env.environmentVariables as codebuild.CfnProject.EnvironmentVariableProperty[];
     envVars.push({ name, value });
   }
 

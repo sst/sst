@@ -28,6 +28,7 @@ async function synth(opts: SynthOptions) {
 
   const cfg = new Configuration();
   await cfg.load();
+  const bootstrap = await useBootstrap();
   const app = new App(
     {
       account: identity.Account!,
@@ -36,6 +37,7 @@ async function synth(opts: SynthOptions) {
       region: project.region,
       mode: opts.mode,
       skipBuild: opts.mode !== "deploy",
+      bootstrap,
     },
     {
       outdir: opts.buildDir || path.join(project.paths.out, "cdk.out"),

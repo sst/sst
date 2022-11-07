@@ -13,7 +13,6 @@ import { isConstruct, SSTConstruct } from "./Construct.js";
 import { Permissions } from "./util/permission.js";
 
 import { createRequire } from "module";
-import { useBootstrap } from "../bootstrap.js";
 import { createAppContext, useApp } from "./context.js";
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
@@ -61,12 +60,12 @@ export class Stack extends cdk.Stack {
       ...props,
       env: {
         account: root.account,
-        region: root.region
-      }
+        region: root.region,
+      },
     });
 
     this.stage = root.stage;
-    this.defaultFunctionProps = root.defaultFunctionProps.map(dfp =>
+    this.defaultFunctionProps = root.defaultFunctionProps.map((dfp) =>
       typeof dfp === "function" ? dfp(this) : dfp
     );
 
@@ -112,7 +111,7 @@ export class Stack extends cdk.Stack {
    */
   public addDefaultFunctionPermissions(permissions: Permissions) {
     this.defaultFunctionProps.push({
-      permissions
+      permissions,
     });
   }
 
@@ -128,7 +127,7 @@ export class Stack extends cdk.Stack {
    */
   public addDefaultFunctionEnv(environment: Record<string, string>) {
     this.defaultFunctionProps.push({
-      environment
+      environment,
     });
   }
 
@@ -174,7 +173,7 @@ export class Stack extends cdk.Stack {
    */
   public addDefaultFunctionLayers(layers: lambda.ILayerVersion[]) {
     this.defaultFunctionProps.push({
-      layers
+      layers,
     });
   }
 
@@ -221,7 +220,7 @@ export class Stack extends cdk.Stack {
   public addOutputs(
     outputs: Record<string, string | cdk.CfnOutputProps>
   ): void {
-    Object.keys(outputs).forEach(key => {
+    Object.keys(outputs).forEach((key) => {
       const value = outputs[key];
       if (value === undefined) {
         throw new Error(`The stack output "${key}" is undefined`);
@@ -248,7 +247,7 @@ export class Stack extends cdk.Stack {
       handler: "index.handler",
       runtime: lambda.Runtime.NODEJS_16_X,
       timeout: cdk.Duration.seconds(900),
-      memorySize: 1024
+      memorySize: 1024,
     });
   }
 
@@ -259,7 +258,7 @@ export class Stack extends cdk.Stack {
     this.customResourceHandler.addToRolePolicy(
       new iam.PolicyStatement({
         actions: ["s3:PutObject", "s3:DeleteObject"],
-        resources: [`arn:aws:s3:::${bootstrap.bucket}/*`]
+        resources: [`arn:aws:s3:::${app.bootstrap.bucket}/*`],
       })
     );
 
@@ -269,8 +268,8 @@ export class Stack extends cdk.Stack {
         actions: ["ssm:GetParametersByPath", "ssm:PutParameter"],
         resources: [
           `arn:aws:ssm:${app.region}:${app.account}:parameter/sst/${app.name}/${app.stage}/*`,
-          `arn:aws:ssm:${app.region}:${app.account}:parameter/sst/${app.name}/.fallback/*`
-        ]
+          `arn:aws:ssm:${app.region}:${app.account}:parameter/sst/${app.name}/.fallback/*`,
+        ],
       })
     );
 
@@ -282,11 +281,11 @@ export class Stack extends cdk.Stack {
         Stage: this.stage,
         Stack: this.stackName,
         SSTVersion: getSstVersion(),
-        BootstrapBucketName: bootstrap.bucket!,
+        BootstrapBucketName: app.bootstrap.bucket!,
         ForceUpdate: process.env.SST_FORCE_UPDATE_METADATA
           ? Date.now().toString()
-          : undefined
-      }
+          : undefined,
+      },
     });
   }
 

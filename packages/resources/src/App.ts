@@ -360,7 +360,6 @@ export class App extends cdk.App {
     this.createBindingSsmParameters();
     this.buildConstructsMetadata();
     this.removeGovCloudUnsupportedResourceProperties();
-    this.printWarnings();
 
     for (const child of this.node.children) {
       if (isStackConstruct(child)) {
