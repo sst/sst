@@ -284,7 +284,7 @@ new Bucket(stack, "Bucket", {
 
 _Type_ : <span class='mono'>Array&lt;<span class='mono'><span class="mono">"object_created"</span> | <span class="mono">"object_created_put"</span> | <span class="mono">"object_created_post"</span> | <span class="mono">"object_created_copy"</span> | <span class="mono">"object_created_complete_multipart_upload"</span> | <span class="mono">"object_removed"</span> | <span class="mono">"object_removed_delete"</span> | <span class="mono">"object_removed_delete_marker_created"</span> | <span class="mono">"object_restore_post"</span> | <span class="mono">"object_restore_completed"</span> | <span class="mono">"object_restore_delete"</span> | <span class="mono">"reduced_redundancy_lost_object"</span> | <span class="mono">"replication_operation_failed_replication"</span> | <span class="mono">"replication_operation_missed_threshold"</span> | <span class="mono">"replication_operation_replicated_after_threshold"</span> | <span class="mono">"replication_operation_not_tracked"</span> | <span class="mono">"lifecycle_expiration"</span> | <span class="mono">"lifecycle_expiration_delete"</span> | <span class="mono">"lifecycle_expiration_delete_marker_created"</span> | <span class="mono">"lifecycle_transition"</span> | <span class="mono">"intelligent_tiering"</span> | <span class="mono">"object_tagging"</span> | <span class="mono">"object_tagging_put"</span> | <span class="mono">"object_tagging_delete"</span> | <span class="mono">"object_acl_put"</span></span>&gt;</span>
 
-The S3 event types that will trigger the notification. Defaults to events set to ["object_created", "object_removed"]
+The S3 event types that will trigger the notification.
 
 ### filters?
 
@@ -323,7 +323,7 @@ new Bucket(stack, "Bucket", {
 
 _Type_ : <span class='mono'>Array&lt;<span class='mono'><span class="mono">"object_created"</span> | <span class="mono">"object_created_put"</span> | <span class="mono">"object_created_post"</span> | <span class="mono">"object_created_copy"</span> | <span class="mono">"object_created_complete_multipart_upload"</span> | <span class="mono">"object_removed"</span> | <span class="mono">"object_removed_delete"</span> | <span class="mono">"object_removed_delete_marker_created"</span> | <span class="mono">"object_restore_post"</span> | <span class="mono">"object_restore_completed"</span> | <span class="mono">"object_restore_delete"</span> | <span class="mono">"reduced_redundancy_lost_object"</span> | <span class="mono">"replication_operation_failed_replication"</span> | <span class="mono">"replication_operation_missed_threshold"</span> | <span class="mono">"replication_operation_replicated_after_threshold"</span> | <span class="mono">"replication_operation_not_tracked"</span> | <span class="mono">"lifecycle_expiration"</span> | <span class="mono">"lifecycle_expiration_delete"</span> | <span class="mono">"lifecycle_expiration_delete_marker_created"</span> | <span class="mono">"lifecycle_transition"</span> | <span class="mono">"intelligent_tiering"</span> | <span class="mono">"object_tagging"</span> | <span class="mono">"object_tagging_put"</span> | <span class="mono">"object_tagging_delete"</span> | <span class="mono">"object_acl_put"</span></span>&gt;</span>
 
-The S3 event types that will trigger the notification. Defaults to events set to ["object_created", "object_removed"]
+The S3 event types that will trigger the notification.
 
 ### filters?
 
@@ -359,7 +359,7 @@ new Bucket(stack, "Bucket", {
 
 _Type_ : <span class='mono'>Array&lt;<span class='mono'><span class="mono">"object_created"</span> | <span class="mono">"object_created_put"</span> | <span class="mono">"object_created_post"</span> | <span class="mono">"object_created_copy"</span> | <span class="mono">"object_created_complete_multipart_upload"</span> | <span class="mono">"object_removed"</span> | <span class="mono">"object_removed_delete"</span> | <span class="mono">"object_removed_delete_marker_created"</span> | <span class="mono">"object_restore_post"</span> | <span class="mono">"object_restore_completed"</span> | <span class="mono">"object_restore_delete"</span> | <span class="mono">"reduced_redundancy_lost_object"</span> | <span class="mono">"replication_operation_failed_replication"</span> | <span class="mono">"replication_operation_missed_threshold"</span> | <span class="mono">"replication_operation_replicated_after_threshold"</span> | <span class="mono">"replication_operation_not_tracked"</span> | <span class="mono">"lifecycle_expiration"</span> | <span class="mono">"lifecycle_expiration_delete"</span> | <span class="mono">"lifecycle_expiration_delete_marker_created"</span> | <span class="mono">"lifecycle_transition"</span> | <span class="mono">"intelligent_tiering"</span> | <span class="mono">"object_tagging"</span> | <span class="mono">"object_tagging_put"</span> | <span class="mono">"object_tagging_delete"</span> | <span class="mono">"object_acl_put"</span></span>&gt;</span>
 
-The S3 event types that will trigger the notification. Defaults to events set to ["object_created", "object_removed"]
+The S3 event types that will trigger the notification.
 
 ### filters?
 

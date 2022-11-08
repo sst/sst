@@ -55,7 +55,7 @@ export interface BucketCorsRule {
 
 interface BucketBaseNotificationProps {
   /**
-   * The S3 event types that will trigger the notification.
+   * The S3 event types that will trigger the notification. Defaults to events set to ["object_created", "object_removed"].
    */
   events?: Lowercase<keyof typeof s3.EventType>[];
   /**
