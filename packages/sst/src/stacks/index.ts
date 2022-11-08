@@ -1,6 +1,6 @@
 import path from "path";
 import { build } from "./build.js";
-import { deploy, deployMany, isFinal } from "./deploy.js";
+import { deploy, deployMany, isFailed, isFinal, isSuccess } from "./deploy.js";
 import { useSTSIdentity } from "../credentials.js";
 import { useBootstrap } from "../bootstrap.js";
 import { Logger } from "../logger.js";
@@ -66,6 +66,8 @@ export const Stacks = {
   build,
   deploy,
   isFinal,
+  isSuccess,
+  isFailed,
   deployMany,
   synth,
 };

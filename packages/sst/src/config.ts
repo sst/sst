@@ -3,12 +3,12 @@ import {
   GetParameterCommand,
   GetParametersByPathCommand,
   PutParameterCommand,
-  SSMClient
+  SSMClient,
 } from "@aws-sdk/client-ssm";
 import {
   GetFunctionConfigurationCommand,
   LambdaClient,
-  UpdateFunctionConfigurationCommand
+  UpdateFunctionConfigurationCommand,
 } from "@aws-sdk/client-lambda";
 import { pipe, map } from "remeda";
 import { useProject } from "./app.js";
@@ -29,11 +29,20 @@ export namespace Config {
       if (parsed.type === "secrets") continue;
       result.push({
         ...parsed,
-        value: p.Value!
+        value: p.Value!,
       });
     }
 
     return result;
+  }
+
+  export function envFor(input: {
+    type: string;
+    id: string;
+    prop: string;
+    fallback?: boolean;
+  }) {
+    return `SST_${input.type}_${input.prop}_${input.id}`;
   }
 
   export function pathFor(input: {
@@ -79,9 +88,9 @@ export namespace Config {
       SST_STAGE: project.stage,
       ...pipe(
         parameters,
-        map(p => [`SST_${p.type}_${p.prop}_${p.id}`, p.value]),
+        map((p) => [`SST_${p.type}_${p.prop}_${p.id}`, p.value]),
         Object.fromEntries
-      )
+      ),
     };
 
     return env as typeof env & Record<string, string | undefined>;
@@ -99,11 +108,11 @@ export namespace Config {
           id: input.key,
           type: "Secret",
           prop: "value",
-          fallback: true
+          fallback: true,
         }),
         Value: input.value,
         Type: "SecureString",
-        Overwrite: true
+        Overwrite: true,
       })
     );
   }
@@ -116,9 +125,9 @@ export namespace Config {
           id: input.key,
           prop: "value",
           type: "Secret",
-          fallback: input.fallback
+          fallback: input.fallback,
         }),
-        WithDecryption: true
+        WithDecryption: true,
       })
     );
     return result.Parameter?.Value;
@@ -135,8 +144,8 @@ export namespace Config {
           id: input.key,
           type: "Secret",
           prop: "value",
-          fallback: input.fallback
-        })
+          fallback: input.fallback,
+        }),
       })
     );
   }
@@ -144,15 +153,15 @@ export namespace Config {
   export async function restart(key: string) {
     const lambda = useAWSClient(LambdaClient);
     const functions = await useFunctions();
-    const filtered = Object.values(functions).filter(f =>
+    const filtered = Object.values(functions).filter((f) =>
       f.data.secrets.includes(key)
     );
 
     await Promise.all(
-      filtered.map(async f => {
+      filtered.map(async (f) => {
         const config = await lambda.send(
           new GetFunctionConfigurationCommand({
-            FunctionName: f.data.arn
+            FunctionName: f.data.arn,
           })
         );
 
@@ -162,9 +171,9 @@ export namespace Config {
             Environment: {
               Variables: {
                 ...(config.Environment?.Variables || {}),
-                [SECRET_UPDATED_AT_ENV]: Date.now().toString()
-              }
-            }
+                [SECRET_UPDATED_AT_ENV]: Date.now().toString(),
+              },
+            },
           })
         );
       })
@@ -183,7 +192,7 @@ async function* scan(prefix: string) {
         Path: prefix,
         WithDecryption: true,
         Recursive: true,
-        NextToken: token
+        NextToken: token,
       })
     );
     yield* results.Parameters || [];
@@ -204,7 +213,7 @@ const PREFIX = {
   get FALLBACK() {
     const project = useProject();
     return `/sst/${project.name}/${FALLBACK_STAGE}/`;
-  }
+  },
 };
 
 function parse(ssmName: string) {
@@ -212,6 +221,6 @@ function parse(ssmName: string) {
   return {
     type: parts[4],
     id: parts[5],
-    prop: parts.slice(6)
+    prop: parts.slice(6),
   };
 }

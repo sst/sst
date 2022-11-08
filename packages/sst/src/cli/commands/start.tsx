@@ -1,4 +1,4 @@
-import { bold, magenta, green, blue } from "colorette";
+import { bold, magenta, green, blue, red, yellow } from "colorette";
 import { render } from "ink";
 import React from "react";
 import { Context } from "@serverless-stack/node/context/index.js";
@@ -91,6 +91,7 @@ const useStackBuilder = Context.memo(async () => {
         : `Stacks built!`
     );
     pending = assembly;
+    if (checksum) deploy();
   }
 
   async function deploy() {
@@ -99,11 +100,23 @@ const useStackBuilder = Context.memo(async () => {
     const component = render(
       <DeploymentUI stacks={pending.stacks.map((s) => s.stackName)} />
     );
-    await Stacks.deployMany(pending.stacks);
+    const results = await Stacks.deployMany(pending.stacks);
     component.unmount();
     process.stdout.write("\x1b[?1049l");
     checksum = await generateChecksum(pending.directory);
     pending = undefined;
+    console.log();
+    console.log("Stack deployment results:");
+    for (const [stack, result] of Object.entries(results)) {
+      const icon = (() => {
+        if (Stacks.isSuccess(result.status)) return green("✔");
+        if (Stacks.isFailed(result.status)) return red("✖");
+      })();
+      console.log(`${icon} ${stack}`);
+      for (const [id, error] of Object.entries(result.errors)) {
+        console.log(bold(`  ${id}: ${error}`));
+      }
+    }
   }
 
   async function generateChecksum(cdkOutPath: string) {

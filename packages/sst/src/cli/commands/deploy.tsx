@@ -4,6 +4,8 @@ import { Stacks } from "../../stacks/index.js";
 import React, { useState, useEffect } from "react";
 import { Box, render, Text } from "ink";
 import inkSpinner from "ink-spinner";
+import { StackResource } from "@aws-sdk/client-cloudformation";
+import { Logger } from "../../logger.js";
 // @ts-ignore
 const { default: Spinner } = inkSpinner;
 
@@ -42,6 +44,10 @@ export const DeploymentUI = (props: Props) => {
     Object.fromEntries(props.stacks.map((s) => [s, ""]))
   );
 
+  const [resources, setResources] = useState<Record<string, StackResource[]>>(
+    {}
+  );
+
   useEffect(() => {
     const bus = useBus();
 
@@ -59,24 +65,72 @@ export const DeploymentUI = (props: Props) => {
       }));
     });
 
+    const resourcesSub = bus.subscribe("stack.resources", (payload) => {
+      setResources((previous) => {
+        const existing = previous[payload.properties.stackID] || [];
+        const filtered = (payload.properties.resources || []).filter((r) => {
+          if (existing.some((p) => p.LogicalResourceId === r.LogicalResourceId))
+            return true;
+          if (!Stacks.isFinal(r.ResourceStatus as any)) return true;
+          return false;
+        });
+        return {
+          ...previous,
+          [payload.properties.stackID]: filtered,
+        };
+      });
+    });
+
     return () => {
+      bus.unsubscribe(resourcesSub);
       bus.unsubscribe(update);
       bus.unsubscribe(status);
     };
   }, []);
 
+  function color(status: string) {
+    if (Stacks.isFailed(status)) return "red";
+    if (Stacks.isSuccess(status)) return "green";
+    return "yellow";
+  }
+
   return (
     <FullScreen>
       <Text>Deploying {props.stacks.length} stacks</Text>
-      {Object.entries(stacks).map(([stackID, status]) => (
-        <Text key={stackID}>
-          {!Stacks.isFinal(status) ? <Spinner /> : <Text color="green">✔</Text>}
-          <Text>{" " + stackID}</Text>
-          <Text color={Stacks.isFinal(status) ? "green" : "yellow"}>
-            {" " + status}
-          </Text>
-        </Text>
-      ))}
+      {Object.entries(stacks).map(([stackID, status]) => {
+        return (
+          <>
+            <Text key={stackID}>
+              {!Stacks.isFinal(status) && <Spinner />}
+              {Stacks.isSuccess(status) && <Text color={color(status)}>✔</Text>}
+              {Stacks.isFailed(status) && <Text color={color(status)}>✖</Text>}
+              <Text>{" " + stackID}</Text>
+              {status && <Text color={color(status)}> {status}</Text>}
+            </Text>
+            {resources[stackID]?.map((resource) => (
+              <Box>
+                <Text>
+                  {"  "}
+                  {!Stacks.isFinal(resource.ResourceStatus || "") && (
+                    <Spinner />
+                  )}
+                  {Stacks.isSuccess(resource.ResourceStatus || "") && (
+                    <Text color="green">✔</Text>
+                  )}
+                  {Stacks.isFailed(resource.ResourceStatus || "") && (
+                    <Text color="red">✖</Text>
+                  )}{" "}
+                  {resource.ResourceType} {resource.LogicalResourceId}{" "}
+                  {resource.ResourceStatusReason}
+                </Text>
+                <Text color={color(resource.ResourceStatus || "")}>
+                  {resource.ResourceStatus}
+                </Text>
+              </Box>
+            ))}
+          </>
+        );
+      })}
     </FullScreen>
   );
 };
