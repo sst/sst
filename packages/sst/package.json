@@ -1,6 +1,6 @@
 {
   "name": "sst",
-  "version": "1.16.0",
+  "version": "1.17.1",
   "bin": {
     "sst2": "./dist/cli/sst.js"
   },
@@ -49,6 +49,7 @@
     "remeda": "^1.1.0",
     "solid-ink": "^0.0.6",
     "solid-js": "^1.4.8",
+    "@serverless-stack/core": "1.17.1",
     "undici": "^5.8.2",
     "vite": "^3.0.5",
     "vite-node": "^0.21.1",
