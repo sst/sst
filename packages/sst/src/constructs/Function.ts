@@ -12,12 +12,7 @@ import * as lambdaNode from "aws-cdk-lib/aws-lambda-nodejs";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 
-import {
-  State,
-  Runtime,
-  DeferBuilder,
-  FunctionBinding,
-} from "@serverless-stack/core";
+import { Runtime } from "@serverless-stack/core";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Job } from "./Job.js";

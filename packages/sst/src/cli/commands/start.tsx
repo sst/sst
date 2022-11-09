@@ -13,7 +13,9 @@ export const start = (program: Program) =>
     "Work on your SST app locally",
     (yargs) => yargs,
     async () => {
-      ora("Listening for function invocations").start().succeed();
+      const functionSpinner = createSpinner(
+        "Getting read for function invocations"
+      ).start();
       await Promise.all([
         useRuntimeWorkers(),
         useIOTBridge(),
@@ -21,8 +23,9 @@ export const start = (program: Program) =>
         useNodeHandler(),
         useMetadata(),
         useFunctionLogger(),
-        useStackBuilder(),
       ]);
+      functionSpinner.succeed("Ready for function invocations");
+      await useStackBuilder();
     }
   );
 
@@ -77,7 +80,7 @@ const useStackBuilder = Context.memo(async () => {
     const fn = await Stacks.build();
     const assembly = await Stacks.synth({
       fn,
-      outDir: `.sst/${Math.random()}`,
+      outDir: `.sst/cdk.out`,
       mode: "start",
     });
     Logger.debug("Directory", assembly.directory);

@@ -1,8 +1,11 @@
+import React from "react";
 import { CloudAssembly } from "aws-cdk-lib/cx-api";
 import { blue, bold } from "colorette";
 import { useProject } from "../../app.js";
 import { Stacks } from "../../stacks/index.js";
 import { Program } from "../program.js";
+import { render } from "ink";
+import { DeploymentUI } from "../ui/deploy.js";
 
 export const deploy = (program: Program) =>
   program.command(
@@ -29,6 +32,11 @@ export const deploy = (program: Program) =>
           project.stage
         )}...`
       );
-      await Stacks.deployMany(assembly.stacks);
+      process.stdout.write("\x1b[?1049h");
+      const component = render(
+        <DeploymentUI stacks={assembly.stacks.map((s) => s.stackName)} />
+      );
+      const results = await Stacks.deployMany(assembly.stacks);
+      component.unmount();
     }
   );

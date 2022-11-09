@@ -7,7 +7,7 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import { getSstVersion } from "@serverless-stack/core";
 
 import { FunctionProps, Function as Fn } from "./Function.js";
-import { App } from "./App.js";
+import type { App } from "./App.js";
 import * as Config from "./Config.js";
 import { isConstruct, SSTConstruct } from "./Construct.js";
 import { Permissions } from "./util/permission.js";

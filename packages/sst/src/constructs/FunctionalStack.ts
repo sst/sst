@@ -15,6 +15,11 @@ export function stack(
       `StackDuplicates: Attempting to initialize stack ${id} several times`
     );
 
+  class EmptyStack extends Stack {
+    constructor(scope: App, id: string, props?: StackProps) {
+      super(scope, id, props);
+    }
+  }
   const stack = new EmptyStack(app, id, props);
   getStacks(app).set(fn, stack);
   const ctx: StackContext = {
@@ -82,9 +87,3 @@ export type FunctionalStack<T> = (
   this: Stack,
   ctx: StackContext
 ) => T | Promise<T>;
-
-class EmptyStack extends Stack {
-  constructor(scope: App, id: string, props?: StackProps) {
-    super(scope, id, props);
-  }
-}

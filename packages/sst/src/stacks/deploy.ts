@@ -80,6 +80,7 @@ declare module "../bus" {
 
 export async function deployMany(stacks: CloudFormationStackArtifact[]) {
   const { CloudFormationStackArtifact } = await import("aws-cdk-lib/cx-api");
+  await useAWSProvider();
   const bus = useBus();
   const complete = new Set<string>();
   const todo = new Set(stacks.map((s) => s.id));
@@ -208,17 +209,29 @@ export async function deploy(
   const deployment = new CloudFormationDeployments({
     sdkProvider: provider,
   });
-  const result = await deployment.deployStack({
-    stack: stack as any,
-    quiet: true,
-    deploymentMethod: {
-      method: "direct",
-    },
-  });
-  bus.publish("stack.updated", {
-    stackID: stack.stackName,
-  });
-  if (result?.noOp) {
+  try {
+    const result = await deployment.deployStack({
+      stack: stack as any,
+      quiet: true,
+      deploymentMethod: {
+        method: "direct",
+      },
+    });
+    if (result?.noOp) {
+      bus.publish("stack.status", {
+        stackID: stack.stackName,
+        status: "SKIPPED",
+      });
+      return {
+        errors: {},
+        status: "SKIPPED",
+      };
+    }
+    bus.publish("stack.updated", {
+      stackID: stack.stackName,
+    });
+    return monitor(stack.stackName);
+  } catch {
     bus.publish("stack.status", {
       stackID: stack.stackName,
       status: "SKIPPED",
@@ -228,5 +241,4 @@ export async function deploy(
       status: "SKIPPED",
     };
   }
-  return monitor(stack.stackName);
 }
