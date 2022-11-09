@@ -2,7 +2,7 @@
   "name": "sst",
   "version": "1.16.0",
   "bin": {
-    "sst2": "./bin/sst.mjs"
+    "sst2": "./dist/cli/sst.js"
   },
   "description": "A CLI to help deploy SST apps.",
   "type": "module",
