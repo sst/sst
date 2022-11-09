@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 process.removeAllListeners("uncaughtException");
 process.on("uncaughtException", (err) => {
   const spinners = useSpinners();

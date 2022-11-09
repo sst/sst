@@ -35,7 +35,9 @@
     "@aws-sdk/credential-providers": "^3.145.0",
     "@caporal/core": "^2.0.2",
     "aws-iot-device-sdk": "^2.2.12",
+    "aws-cdk-lib": "2.50.0",
     "aws-sdk": "2.1224.0",
+    "cdk-assets": "2.50.0",
     "colorette": "^2.0.19",
     "constructs": "10.0.29",
     "esbuild": "0.15.9",
@@ -56,10 +58,6 @@
   "devDependencies": {
     "@tsconfig/node16": "^1.0.3",
     "@types/aws-iot-device-sdk": "^2.2.4",
-    "aws-cdk-lib": "2.50.0",
-    "cdk-assets": "2.50.0",
-    "chalk": "5.0.1",
-    "proxy-agent": "5.0.0",
     "tsx": "^3.8.1"
   },
   "gitHead": "8ac2d0abc11d5de721c87658bb445e3d6c211dcf"
