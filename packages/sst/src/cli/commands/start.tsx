@@ -3,7 +3,7 @@ import { render } from "ink";
 import React from "react";
 import { Context } from "@serverless-stack/node/context/index.js";
 
-import { DeploymentUI } from "./deploy.js";
+import { DeploymentUI } from "../ui/deploy.js";
 import { Metafile } from "esbuild";
 import ora from "ora";
 
@@ -68,45 +68,48 @@ const useStackBuilder = Context.memo(async () => {
   const watcher = useWatcher();
   const bus = useBus();
 
-  let checksum: string;
+  let lastDeployed: string;
   let pending: CloudAssembly | undefined;
+  let isDeploying = false;
 
   async function build() {
     const spinner = createSpinner("Building stacks").start();
     const fn = await Stacks.build();
     const assembly = await Stacks.synth({
       fn,
+      outDir: `.sst/${Math.random()}`,
       mode: "start",
     });
     Logger.debug("Directory", assembly.directory);
     const next = await generateChecksum(assembly.directory);
-    Logger.debug("Checksum", "next", next, "old", checksum);
-    if (next === checksum) {
+    Logger.debug("Checksum", "next", next, "old", lastDeployed);
+    if (next === lastDeployed) {
       spinner.succeed("Stacks built! No changes");
       return;
     }
-    spinner.succeed(
-      checksum
-        ? `Stacks built! Press ${blue("enter")} to deploy`
-        : `Stacks built!`
-    );
+    spinner.succeed(lastDeployed ? `Stacks built!` : `Stacks built!`);
     pending = assembly;
-    if (checksum) deploy();
+    if (lastDeployed) deploy();
   }
 
   async function deploy() {
     if (!pending) return;
+    if (isDeploying) return;
+    isDeploying = true;
+    const assembly = pending;
+    const nextChecksum = await generateChecksum(assembly.directory);
+    pending = undefined;
     process.stdout.write("\x1b[?1049h");
     const component = render(
-      <DeploymentUI stacks={pending.stacks.map((s) => s.stackName)} />
+      <DeploymentUI stacks={assembly.stacks.map((s) => s.stackName)} />
     );
-    const results = await Stacks.deployMany(pending.stacks);
+    const results = await Stacks.deployMany(assembly.stacks);
     component.unmount();
     process.stdout.write("\x1b[?1049l");
-    checksum = await generateChecksum(pending.directory);
-    pending = undefined;
-    console.log();
-    console.log("Stack deployment results:");
+    lastDeployed = nextChecksum;
+    console.log(`----------------------------`);
+    console.log(`| Stack deployment results |`);
+    console.log(`----------------------------`);
     for (const [stack, result] of Object.entries(results)) {
       const icon = (() => {
         if (Stacks.isSuccess(result.status)) return green("✔");
@@ -117,6 +120,8 @@ const useStackBuilder = Context.memo(async () => {
         console.log(bold(`  ${id}: ${error}`));
       }
     }
+    isDeploying = false;
+    deploy();
   }
 
   async function generateChecksum(cdkOutPath: string) {

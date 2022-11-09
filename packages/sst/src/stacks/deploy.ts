@@ -9,42 +9,21 @@ import { useAWSClient, useAWSProvider } from "../credentials.js";
 import { Logger } from "../logger.js";
 import type { CloudFormationStackArtifact } from "aws-cdk-lib/cx-api";
 
-const STATUSES = [
-  "CREATE_COMPLETE",
+const STATUSES_PENDING = [
   "CREATE_IN_PROGRESS",
-  "CREATE_FAILED",
-  "DELETE_COMPLETE",
-  "DELETE_FAILED",
   "DELETE_IN_PROGRESS",
   "REVIEW_IN_PROGRESS",
-  "ROLLBACK_COMPLETE",
-  "ROLLBACK_FAILED",
   "ROLLBACK_IN_PROGRESS",
-  "UPDATE_COMPLETE",
   "UPDATE_COMPLETE_CLEANUP_IN_PROGRESS",
   "UPDATE_IN_PROGRESS",
-  "UPDATE_FAILED",
-  "UPDATE_ROLLBACK_COMPLETE",
   "UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS",
-  "UPDATE_ROLLBACK_FAILED",
   "UPDATE_ROLLBACK_IN_PROGRESS",
-  "SKIPPED",
-  "DEPENDENCY_FAILED",
 ] as const;
 
-const STATUSES_FINAL = [
-  "CREATE_FAILED",
+const STATUSES_SUCCESS = [
   "CREATE_COMPLETE",
-  "DELETE_COMPLETE",
-  "DELETE_FAILED",
-  "ROLLBACK_COMPLETE",
-  "ROLLBACK_FAILED",
   "UPDATE_COMPLETE",
-  "UPDATE_FAILED",
-  "UPDATE_ROLLBACK_COMPLETE",
-  "UPDATE_ROLLBACK_FAILED",
   "SKIPPED",
-  "DEPENDENCY_FAILED",
 ] as const;
 
 const STATUSES_FAILED = [
@@ -56,10 +35,19 @@ const STATUSES_FAILED = [
   "UPDATE_ROLLBACK_COMPLETE",
   "UPDATE_ROLLBACK_FAILED",
   "DEPENDENCY_FAILED",
-];
+] as const;
+
+const STATUSES = [
+  ...STATUSES_PENDING,
+  ...STATUSES_SUCCESS,
+  ...STATUSES_FAILED,
+] as const;
 
 export function isFinal(input: string) {
-  return STATUSES_FINAL.includes(input as any);
+  return (
+    STATUSES_SUCCESS.includes(input as any) ||
+    STATUSES_FAILED.includes(input as any)
+  );
 }
 
 export function isFailed(input: string) {
@@ -67,10 +55,11 @@ export function isFailed(input: string) {
 }
 
 export function isSuccess(input: string) {
-  return (
-    STATUSES_FINAL.includes(input as any) &&
-    !STATUSES_FAILED.includes(input as any)
-  );
+  return STATUSES_SUCCESS.includes(input as any);
+}
+
+export function isPending(input: string) {
+  return STATUSES_PENDING.includes(input as any);
 }
 
 declare module "../bus" {
@@ -219,30 +208,25 @@ export async function deploy(
   const deployment = new CloudFormationDeployments({
     sdkProvider: provider,
   });
-  try {
-    const result = await deployment.deployStack({
-      stack: stack as any,
-      quiet: true,
-      deploymentMethod: {
-        method: "direct",
-      },
-    });
-    bus.publish("stack.updated", {
-      stackID: stack.stackName,
-    });
-    return monitor(stack.stackName);
-  } catch (err) {
-    bus.publish("stack.updated", {
-      stackID: stack.stackName,
-    });
-    Logger.debug("Failed to deploy stack", stack.id, err);
-    return monitor(stack.stackName);
-    /*
+  const result = await deployment.deployStack({
+    stack: stack as any,
+    quiet: true,
+    deploymentMethod: {
+      method: "direct",
+    },
+  });
+  bus.publish("stack.updated", {
+    stackID: stack.stackName,
+  });
+  if (result?.noOp) {
     bus.publish("stack.status", {
-      status: "SKIPPED",
       stackID: stack.stackName,
+      status: "SKIPPED",
     });
-    return "SKIPPED";
-    */
+    return {
+      errors: {},
+      status: "SKIPPED",
+    };
   }
+  return monitor(stack.stackName);
 }

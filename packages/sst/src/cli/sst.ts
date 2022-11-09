@@ -30,12 +30,14 @@ import { bind } from "./commands/bind.js";
 import { build } from "./commands/build.js";
 import { VisibleError } from "../error.js";
 import { useSpinners } from "./spinner.js";
+import { deploy } from "./commands/deploy.js";
 
 secrets(program);
 update(program);
 start(program);
 bind(program);
 build(program);
+deploy(program);
 
 program
   .fail((msg, error) => {

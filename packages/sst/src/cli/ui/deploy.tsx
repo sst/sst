@@ -1,11 +1,11 @@
-import { CloudAssembly } from "aws-cdk-lib/cx-api";
+import React, { useState, useEffect, useLayoutEffect } from "react";
+import type { StackResource } from "@aws-sdk/client-cloudformation";
+import { Box, Text } from "ink";
 import { useBus } from "../../bus.js";
 import { Stacks } from "../../stacks/index.js";
-import React, { useState, useEffect } from "react";
-import { Box, render, Text } from "ink";
 import inkSpinner from "ink-spinner";
-import { StackResource } from "@aws-sdk/client-cloudformation";
-import { Logger } from "../../logger.js";
+import { useProject } from "../../app.js";
+
 // @ts-ignore
 const { default: Spinner } = inkSpinner;
 
@@ -96,11 +96,14 @@ export const DeploymentUI = (props: Props) => {
 
   return (
     <FullScreen>
-      <Text>Deploying {props.stacks.length} stacks</Text>
+      <Text>
+        Deploying <Text color="bold">{props.stacks.length}</Text> stacks for
+        stage <Text color="blue">{useProject().stage}</Text>
+      </Text>
       {Object.entries(stacks).map(([stackID, status]) => {
         return (
-          <>
-            <Text key={stackID}>
+          <React.Fragment key={stackID}>
+            <Text>
               {!Stacks.isFinal(status) && <Spinner />}
               {Stacks.isSuccess(status) && <Text color={color(status)}>✔</Text>}
               {Stacks.isFailed(status) && <Text color={color(status)}>✖</Text>}
@@ -108,7 +111,7 @@ export const DeploymentUI = (props: Props) => {
               {status && <Text color={color(status)}> {status}</Text>}
             </Text>
             {resources[stackID]?.map((resource) => (
-              <Box>
+              <Box key={resource.LogicalResourceId}>
                 <Text>
                   {"  "}
                   {!Stacks.isFinal(resource.ResourceStatus || "") && (
@@ -128,32 +131,9 @@ export const DeploymentUI = (props: Props) => {
                 </Text>
               </Box>
             ))}
-          </>
+          </React.Fragment>
         );
       })}
     </FullScreen>
   );
 };
-
-interface DeployOpts {
-  from?: string;
-}
-
-export async function deploy(opts: DeployOpts) {
-  const assembly = await (async function () {
-    if (opts.from) {
-      const result = new CloudAssembly(opts.from);
-      return result;
-    }
-
-    const fn = await Stacks.build();
-    return await Stacks.synth({
-      fn,
-      mode: "deploy",
-    });
-  })();
-
-  const component = render(<DeploymentUI stacks={[]} />);
-  await Stacks.deployMany(assembly.stacks);
-  component.unmount();
-}

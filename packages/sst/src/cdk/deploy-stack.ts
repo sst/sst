@@ -595,12 +595,6 @@ class FullCloudFormationDeployment {
   }
 
   private async directDeployment(): Promise<DeployStackResult | undefined> {
-    print(
-      "%s: %s stack...",
-      chalk.bold(this.stackName),
-      this.update ? "updating" : "creating"
-    );
-
     const startTime = new Date();
 
     if (this.update) {
