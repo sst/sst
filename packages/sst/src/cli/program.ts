@@ -1,5 +1,4 @@
 import yargs from "yargs";
-/* @ts-expect-error */
 import { hideBin } from "yargs/helpers";
 import { initProject } from "../app.js";
 

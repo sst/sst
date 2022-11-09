@@ -61,18 +61,18 @@ export const update = (program: Program) =>
       await Promise.all(tasks);
 
       if (results.size === 0) {
-        Logger.ui("green", `All packages already match version ${version}`);
+        console.log("green", `All packages already match version ${version}`);
         return;
       }
 
       for (const [file, pkgs] of results.entries()) {
-        Logger.ui("green", `✅ ${path.relative(project.paths.root, file)}`);
+        console.log("green", `✅ ${path.relative(project.paths.root, file)}`);
         for (const pkg of pkgs) {
-          Logger.ui("green", `     ${pkg}@${version}`);
+          console.log("green", `     ${pkg}@${version}`);
         }
       }
 
-      Logger.ui(
+      console.log(
         "yellow",
         "",
         "Don't forget to run your package manager to install the packages"
