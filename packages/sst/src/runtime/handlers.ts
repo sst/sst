@@ -1,11 +1,12 @@
-import { Context } from "@serverless-stack/node/context/context.js";
+import { Context } from "../context/context.js";
 import { Logger } from "../logger.js";
-import { useFunctions, useMetadata } from "../stacks/metadata.js";
 import path from "path";
 import fs from "fs/promises";
 import { useWatcher } from "../watcher.js";
 import { useBus } from "../bus.js";
 import { useProject } from "../app.js";
+import { FunctionProps, useFunctions } from "../constructs/Function.js";
+import { useNodeHandler } from "./node.js";
 
 declare module "../bus.js" {
   export interface Events {
@@ -18,9 +19,8 @@ declare module "../bus.js" {
 interface BuildInput {
   functionID: string;
   mode: "deploy" | "start";
-  srcPath: string;
-  handler: string;
   out: string;
+  props: FunctionProps;
 }
 
 interface StartWorkerInput {
@@ -36,12 +36,14 @@ interface ShouldBuildInput {
   functionID: string;
 }
 
-interface RuntimeHandler {
+export interface RuntimeHandler {
   startWorker: (worker: StartWorkerInput) => Promise<void>;
   stopWorker: (workerID: string) => Promise<void>;
   shouldBuild: (input: ShouldBuildInput) => boolean;
   canHandle: (runtime: string) => boolean;
-  build: (input: BuildInput) => Promise<string>;
+  build: (input: BuildInput) => Promise<{
+    handler: string;
+  }>;
 }
 
 export const useRuntimeHandlers = Context.memo(() => {
@@ -78,21 +80,19 @@ export const useFunctionBuilder = Context.memo(() => {
     build: async (functionID: string) => {
       Logger.debug("Building function", functionID);
       const handler = handlers.for("node");
-      const functions = await useFunctions();
-      const func = functions[functionID];
+      const func = useFunctions().fromID(functionID);
       const out = path.join(artifactPath, functionID);
-      await fs.rm(out, { recursive: true });
+      await fs.rm(out, { recursive: true, force: true });
       await fs.mkdir(out, { recursive: true });
       const result = await handler!.build({
         functionID,
         out,
         mode: "start",
-        handler: func.data.handler,
-        srcPath: func.data.srcPath,
+        props: func,
       });
       artifacts.set(functionID, {
         out,
-        handler: result,
+        handler: result.handler,
       });
       bus.publish("function.built", { functionID });
       return artifacts.get(functionID)!;
@@ -101,9 +101,8 @@ export const useFunctionBuilder = Context.memo(() => {
 
   const watcher = useWatcher();
   watcher.subscribe("file.changed", async (evt) => {
-    const functions = await useFunctions();
-    for (const [_, func] of Object.entries(functions)) {
-      const functionID = func.data.localId;
+    const functions = useFunctions();
+    for (const [functionID, props] of Object.entries(functions.all)) {
       const handler = handlers.for("node");
       if (
         !handler?.shouldBuild({

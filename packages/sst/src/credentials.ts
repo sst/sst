@@ -1,4 +1,4 @@
-import { Context } from "@serverless-stack/node/context/index.js";
+import { Context } from "./context/context.js";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import { Client } from "@aws-sdk/smithy-client";
 import { RegionInputConfig } from "@aws-sdk/config-resolver";

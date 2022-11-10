@@ -1,4 +1,5 @@
-import fs from "fs-extra";
+import path from "path";
+import fs from "fs";
 
 export async function weakImport(pkg: string) {
   try {
@@ -30,8 +31,8 @@ import {
   FunctionInlineDefinition,
   FunctionDefinition,
 } from "./Function.js";
-import { State } from "@serverless-stack/core";
 import { Permissions } from "./util/permission.js";
+import { useProject } from "../app.js";
 
 /////////////////////
 // Interfaces
@@ -729,8 +730,8 @@ export class AppSyncApi extends Construct implements SSTConstruct {
               .map((file) => fs.readFileSync(file).toString())
               .map(buildSchema)
           );
-          const filePath = State.resolve(
-            app.appPath,
+          const filePath = path.join(
+            useProject().paths.out,
             `appsyncapi-${id}-${this.node.addr}.graphql`
           );
           fs.writeFileSync(filePath, print(mergedSchema));

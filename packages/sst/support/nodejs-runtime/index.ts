@@ -1,10 +1,15 @@
 import { workerData } from "node:worker_threads";
 import path from "path";
 import { fetch } from "undici";
+import fs from "fs";
 
 const input = workerData;
-const ext = path.extname(input.handler);
-const file = path.join(input.out, input.handler.replace(ext, ".mjs"));
+const parsed = path.parse(input.handler);
+const file = [".js", ".jsx", ".mjs", ".cjs"]
+  .map((ext) => path.join(parsed.dir, parsed.name + ext))
+  .find((file) => {
+    return fs.existsSync(file);
+  })!;
 
 let mod: any;
 
@@ -43,7 +48,7 @@ while (true) {
   }
 
   try {
-    response = await mod[ext.substring(1)](request);
+    response = await mod[parsed.ext](request);
   } catch (ex: any) {
     console.log(ex);
     await fetch(`${input.url}/runtime/invocation/${requestID}/error`, {

@@ -10,7 +10,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { json } from "stream/consumers";
 import { useCache } from "../cache.js";
-import { Context } from "@serverless-stack/node/context/index.js";
+import { Context } from "../context/context.js";
 import { useBus } from "../bus.js";
 import { Stacks } from "./index.js";
 import { Logger } from "../logger.js";
@@ -110,16 +110,3 @@ const MetadataContext = Context.create(async () => {
 });
 
 export const useMetadata = MetadataContext.use;
-
-export const useFunctions = Context.memo(async () => {
-  const metadata = await useMetadata();
-  const result: Record<string, any> = {};
-  for (const [_, meta] of Object.entries(metadata)) {
-    for (const item of meta) {
-      if (item.type === "Function") {
-        result[item.data.localId] = item;
-      }
-    }
-  }
-  return result;
-});

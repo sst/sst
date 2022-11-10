@@ -6,6 +6,7 @@ import { useBootstrap } from "../bootstrap.js";
 import { Logger } from "../logger.js";
 import type { App } from "../constructs/App.js";
 import { useProject } from "../app.js";
+import { useNodeHandler } from "../runtime/node.js";
 
 interface SynthOptions {
   buildDir?: string;
@@ -20,6 +21,7 @@ async function synth(opts: SynthOptions) {
   const { App } = await import("../constructs/App.js");
   const { Configuration } = await import("aws-cdk/lib/settings.js");
   const project = useProject();
+  useNodeHandler();
   const [identity] = await Promise.all([useSTSIdentity(), useBootstrap()]);
   opts = {
     buildDir: path.join(project.paths.out, "cdk.out"),
@@ -46,7 +48,7 @@ async function synth(opts: SynthOptions) {
   );
 
   await opts.fn(app);
-  await app.runDeferredBuilds();
+  await app.finish();
   /*
   console.log(JSON.stringify(cfg.context));
   const executable = new CloudExecutable({

@@ -1,11 +1,24 @@
-import { bold, magenta, green, blue, red, yellow } from "colorette";
+import path from "path";
+import fs from "fs/promises";
+import crypto from "crypto";
+import { CloudAssembly } from "aws-cdk-lib/cx-api";
+import { Program } from "../program.js";
+import { useRuntimeWorkers } from "../../runtime/workers.js";
+import { useIOTBridge } from "../../runtime/iot.js";
+import { useRuntimeServer } from "../../runtime/server.js";
+import { useMetadata } from "../../stacks/metadata.js";
+import { useBus } from "../../bus.js";
+import { useWatcher } from "../../watcher.js";
+import { Stacks } from "../../stacks/index.js";
+import { Logger } from "../../logger.js";
+import { createSpinner } from "../spinner.js";
+import { bold, magenta, green, blue, red } from "colorette";
 import { render } from "ink";
 import React from "react";
-import { Context } from "@serverless-stack/node/context/index.js";
-
+import { Context } from "../../context/context.js";
 import { DeploymentUI } from "../ui/deploy.js";
 import { Metafile } from "esbuild";
-import ora from "ora";
+import { useFunctions } from "../../constructs/Function.js";
 
 export const start = (program: Program) =>
   program.command(
@@ -20,7 +33,6 @@ export const start = (program: Program) =>
         useRuntimeWorkers(),
         useIOTBridge(),
         useRuntimeServer(),
-        useNodeHandler(),
         useMetadata(),
         useFunctionLogger(),
       ]);
@@ -33,39 +45,21 @@ const useFunctionLogger = Context.memo(async () => {
   const bus = useBus();
 
   bus.subscribe("function.invoked", async (evt) => {
-    const functions = await useFunctions();
-    const func = functions[evt.properties.functionID];
-    console.log(bold(magenta(`Invoked `)), bold(func.id));
+    console.log(bold(magenta(`Invoked `)), bold(evt.properties.functionID));
   });
 
   bus.subscribe("worker.stdout", async (evt) => {
-    const functions = await useFunctions();
-    const func = functions[evt.properties.functionID];
-    console.log(bold(blue(`Log     `)), bold(func.id), evt.properties.message);
+    console.log(
+      bold(blue(`Log     `)),
+      bold(evt.properties.functionID),
+      evt.properties.message
+    );
   });
 
   bus.subscribe("function.success", async (evt) => {
-    const functions = await useFunctions();
-    const func = functions[evt.properties.functionID];
-    console.log(bold(green(`Success `)), bold(func.id));
+    console.log(bold(green(`Success `)), bold(evt.properties.functionID));
   });
 });
-
-import path from "path";
-import fs from "fs/promises";
-import crypto from "crypto";
-import { CloudAssembly } from "aws-cdk-lib/cx-api";
-import { Program } from "../program.js";
-import { useRuntimeWorkers } from "../../runtime/workers.js";
-import { useIOTBridge } from "../../runtime/iot.js";
-import { useRuntimeServer } from "../../runtime/server.js";
-import { useNodeHandler } from "../../runtime/node.js";
-import { useFunctions, useMetadata } from "../../stacks/metadata.js";
-import { useBus } from "../../bus.js";
-import { useWatcher } from "../../watcher.js";
-import { Stacks } from "../../stacks/index.js";
-import { Logger } from "../../logger.js";
-import { createSpinner } from "../spinner.js";
 
 const useStackBuilder = Context.memo(async () => {
   const watcher = useWatcher();
@@ -84,7 +78,7 @@ const useStackBuilder = Context.memo(async () => {
       mode: "start",
     });
     Logger.debug("Directory", assembly.directory);
-    const next = await generateChecksum(assembly.directory);
+    const next = await checksum(assembly.directory);
     Logger.debug("Checksum", "next", next, "old", lastDeployed);
     if (next === lastDeployed) {
       spinner.succeed("Stacks built! No changes");
@@ -100,7 +94,7 @@ const useStackBuilder = Context.memo(async () => {
     if (isDeploying) return;
     isDeploying = true;
     const assembly = pending;
-    const nextChecksum = await generateChecksum(assembly.directory);
+    const nextChecksum = await checksum(assembly.directory);
     pending = undefined;
     process.stdout.write("\x1b[?1049h");
     const component = render(
@@ -127,7 +121,7 @@ const useStackBuilder = Context.memo(async () => {
     deploy();
   }
 
-  async function generateChecksum(cdkOutPath: string) {
+  async function checksum(cdkOutPath: string) {
     const manifestPath = path.join(cdkOutPath, "manifest.json");
     const cdkManifest = JSON.parse(
       await fs.readFile(manifestPath).then((x) => x.toString())

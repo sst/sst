@@ -1,4 +1,4 @@
-import { Context } from "@serverless-stack/node/context/context.js";
+import { Context } from "./context/context.js";
 import chokidar from "chokidar";
 import { useBus } from "./bus.js";
 import path from "path";

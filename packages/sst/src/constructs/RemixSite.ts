@@ -16,7 +16,7 @@ import {
   Duration,
   CfnOutput,
   RemovalPolicy,
-  CustomResource
+  CustomResource,
 } from "aws-cdk-lib";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as iam from "aws-cdk-lib/aws-iam";
@@ -30,8 +30,6 @@ import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import * as route53Patterns from "aws-cdk-lib/aws-route53-patterns";
-import { getChildLogger } from "@serverless-stack/core";
-const logger = getChildLogger("RemixSite");
 
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
@@ -41,14 +39,15 @@ import {
   BaseSiteDomainProps,
   BaseSiteCdkDistributionProps,
   BaseSiteEnvironmentOutputsInfo,
-  buildErrorResponsesForRedirectToIndex
+  buildErrorResponsesForRedirectToIndex,
 } from "./BaseSite.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import {
   ENVIRONMENT_PLACEHOLDER,
   FunctionBindingProps,
-  getParameterPath
+  getParameterPath,
 } from "./util/functionBinding.js";
+import { Logger } from "../logger.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -220,7 +219,7 @@ export class RemixSite extends Construct implements SSTConstruct {
     minTtl: Duration.days(365),
     enableAcceptEncodingBrotli: true,
     enableAcceptEncodingGzip: true,
-    comment: "SST RemixSite Browser Build Default Cache Policy"
+    comment: "SST RemixSite Browser Build Default Cache Policy",
   };
 
   /**
@@ -239,7 +238,7 @@ export class RemixSite extends Construct implements SSTConstruct {
     minTtl: Duration.hours(1),
     enableAcceptEncodingBrotli: true,
     enableAcceptEncodingGzip: true,
-    comment: "SST RemixSite Public Folder Default Cache Policy"
+    comment: "SST RemixSite Public Folder Default Cache Policy",
   };
 
   /**
@@ -257,7 +256,7 @@ export class RemixSite extends Construct implements SSTConstruct {
     minTtl: Duration.seconds(0),
     enableAcceptEncodingBrotli: true,
     enableAcceptEncodingGzip: true,
-    comment: "SST RemixSite Server Response Default Cache Policy"
+    comment: "SST RemixSite Server Response Default Cache Policy",
   };
 
   /**
@@ -341,9 +340,8 @@ export class RemixSite extends Construct implements SSTConstruct {
         const bundlePath = this.isPlaceholder
           ? this.createServerLambdaBundleWithStub()
           : this.createServerLambdaBundleForRegional();
-        this.serverLambdaForRegional = this.createServerFunctionForRegional(
-          bundlePath
-        );
+        this.serverLambdaForRegional =
+          this.createServerFunctionForRegional(bundlePath);
         this.cdk.function = this.serverLambdaForRegional;
       }
 
@@ -491,8 +489,8 @@ export class RemixSite extends Construct implements SSTConstruct {
       type: "RemixSite" as const,
       data: {
         distributionId: this.cdk.distribution.distributionId,
-        customDomainUrl: this.customDomainUrl
-      }
+        customDomainUrl: this.customDomainUrl,
+      },
     };
   }
 
@@ -508,17 +506,17 @@ export class RemixSite extends Construct implements SSTConstruct {
           // a CloudFormation circular dependency if the Api and the Site belong
           // to different stacks.
           environment: ENVIRONMENT_PLACEHOLDER,
-          parameter: this.customDomainUrl || this.url
-        }
+          parameter: this.customDomainUrl || this.url,
+        },
       },
       permissions: {
         "ssm:GetParameters": [
           `arn:aws:ssm:${app.region}:${app.account}:parameter${getParameterPath(
             this,
             "url"
-          )}`
-        ]
-      }
+          )}`,
+        ],
+      },
     };
   }
 
@@ -568,13 +566,13 @@ export class RemixSite extends Construct implements SSTConstruct {
     }
 
     // Run build
-    logger.debug(`Running "npm build" script`);
+    Logger.debug(`Running "npm build" script`);
     const buildResult = spawn.sync("npm", ["run", "build"], {
       cwd: sitePath,
       stdio: "inherit",
       env: {
-        ...process.env
-      }
+        ...process.env,
+      },
     });
     if (buildResult.status !== 0) {
       throw new Error('The app "build" script failed.');
@@ -608,10 +606,10 @@ export class RemixSite extends Construct implements SSTConstruct {
         script,
         path.join(this.props.path, "public"),
         zipOutDir,
-        `${fileSizeLimit}`
+        `${fileSizeLimit}`,
       ],
       {
-        stdio: "inherit"
+        stdio: "inherit",
       }
     );
     if (result.status !== 0) {
@@ -627,7 +625,7 @@ export class RemixSite extends Construct implements SSTConstruct {
       }
       assets.push(
         new s3Assets.Asset(this, `Asset${partId}`, {
-          path: zipFilePath
+          path: zipFilePath,
         })
       );
     }
@@ -637,8 +635,8 @@ export class RemixSite extends Construct implements SSTConstruct {
   private createStaticsS3AssetsWithStub(): s3Assets.Asset[] {
     return [
       new s3Assets.Asset(this, "Asset", {
-        path: path.resolve(__dirname, "../assets/RemixSite/site-sub")
-      })
+        path: path.resolve(__dirname, "../assets/RemixSite/site-sub"),
+      }),
     ];
   }
 
@@ -656,7 +654,7 @@ export class RemixSite extends Construct implements SSTConstruct {
         publicReadAccess: true,
         autoDeleteObjects: true,
         removalPolicy: RemovalPolicy.DESTROY,
-        ...bucketProps
+        ...bucketProps,
       });
     }
   }
@@ -671,10 +669,10 @@ export class RemixSite extends Construct implements SSTConstruct {
       runtime: lambda.Runtime.PYTHON_3_7,
       handler: "s3-upload.handler",
       timeout: Duration.minutes(15),
-      memorySize: 1024
+      memorySize: 1024,
     });
     this.cdk.bucket.grantReadWrite(uploader);
-    assets.forEach(asset => asset.grantRead(uploader));
+    assets.forEach((asset) => asset.grantRead(uploader));
 
     // Create the custom resource function
     const handler = new lambda.Function(this, "S3Handler", {
@@ -687,8 +685,8 @@ export class RemixSite extends Construct implements SSTConstruct {
       timeout: Duration.minutes(15),
       memorySize: 1024,
       environment: {
-        UPLOADER_FUNCTION_NAME: uploader.functionName
-      }
+        UPLOADER_FUNCTION_NAME: uploader.functionName,
+      },
     });
     this.cdk.bucket.grantReadWrite(handler);
     uploader.grantInvoke(handler);
@@ -701,7 +699,7 @@ export class RemixSite extends Construct implements SSTConstruct {
         fileOptions.push({
           exclude: "*",
           include: "build/*",
-          cacheControl: "public,max-age=31536000,immutable"
+          cacheControl: "public,max-age=31536000,immutable",
         });
       } else {
         const itemPath = path.join(publicPath, item);
@@ -710,7 +708,7 @@ export class RemixSite extends Construct implements SSTConstruct {
           include: fs.statSync(itemPath).isDirectory()
             ? `${item}/*`
             : `${item}`,
-          cacheControl: "public,max-age=3600,must-revalidate"
+          cacheControl: "public,max-age=3600,must-revalidate",
         });
       }
     }
@@ -720,9 +718,9 @@ export class RemixSite extends Construct implements SSTConstruct {
       serviceToken: handler.functionArn,
       resourceType: "Custom::SSTBucketDeployment",
       properties: {
-        Sources: assets.map(asset => ({
+        Sources: assets.map((asset) => ({
           BucketName: asset.s3BucketName,
-          ObjectKey: asset.s3ObjectKey
+          ObjectKey: asset.s3ObjectKey,
         })),
         DestinationBucketName: this.cdk.bucket.bucketName,
         FileOptions: (fileOptions || []).map(
@@ -733,11 +731,11 @@ export class RemixSite extends Construct implements SSTConstruct {
               "--include",
               include,
               "--cache-control",
-              cacheControl
+              cacheControl,
             ];
           }
-        )
-      }
+        ),
+      },
     });
   }
 
@@ -801,7 +799,7 @@ export class RemixSite extends Construct implements SSTConstruct {
       // template to create this wrapper within the "core server build" output
       // directory.
 
-      logger.debug(`Creating Lambda@Edge handler for server`);
+      Logger.debug(`Creating Lambda@Edge handler for server`);
 
       // Resolve the path to create the server lambda handler at.
       serverPath = path.join(this.props.path, "build/server.js");
@@ -810,7 +808,7 @@ export class RemixSite extends Construct implements SSTConstruct {
       fs.copyFileSync(templatePath, serverPath);
     }
 
-    logger.debug(`Bundling server`);
+    Logger.debug(`Bundling server`);
 
     // Create a directory that we will use to create the bundled version
     // of the "core server build" along with our custom Lamba server handler.
@@ -841,11 +839,11 @@ export class RemixSite extends Construct implements SSTConstruct {
       // doesn't appear to guarantee this, we therefore leverage ESBUild's
       // `inject` option to ensure that the polyfills are injected at the top of
       // the bundle.
-      inject: [polyfillDest]
+      inject: [polyfillDest],
     });
 
     if (result.errors.length > 0) {
-      result.errors.forEach(error => console.error(error));
+      result.errors.forEach((error) => console.error(error));
       throw new Error(`There was a problem bundling the server.`);
     }
 
@@ -864,14 +862,14 @@ export class RemixSite extends Construct implements SSTConstruct {
       description: "Server handler for Remix",
       handler: "server.handler",
       currentVersionOptions: {
-        removalPolicy: RemovalPolicy.DESTROY
+        removalPolicy: RemovalPolicy.DESTROY,
       },
       logRetention: logs.RetentionDays.THREE_DAYS,
       code: lambda.Code.fromAsset(bundlePath),
       runtime: lambda.Runtime.NODEJS_16_X,
       memorySize: defaults?.function?.memorySize || 512,
       timeout: Duration.seconds(defaults?.function?.timeout || 10),
-      environment
+      environment,
     });
 
     // Attach permission
@@ -896,7 +894,7 @@ export class RemixSite extends Construct implements SSTConstruct {
       timeout: defaults?.function?.timeout,
       memory: defaults?.function?.memorySize,
       permissions: defaults?.function?.permissions,
-      environment
+      environment,
     });
 
     // Attach permission
@@ -940,8 +938,8 @@ export class RemixSite extends Construct implements SSTConstruct {
       defaultBehavior: this.buildDistributionDefaultBehaviorForRegional(),
       additionalBehaviors: {
         ...this.buildDistributionStaticBehaviors(s3Origin),
-        ...(cfDistributionProps.additionalBehaviors || {})
-      }
+        ...(cfDistributionProps.additionalBehaviors || {}),
+      },
     });
   }
 
@@ -961,8 +959,8 @@ export class RemixSite extends Construct implements SSTConstruct {
       defaultBehavior: this.buildDistributionDefaultBehaviorForEdge(s3Origin),
       additionalBehaviors: {
         ...this.buildDistributionStaticBehaviors(s3Origin),
-        ...(cfDistributionProps.additionalBehaviors || {})
-      }
+        ...(cfDistributionProps.additionalBehaviors || {}),
+      },
     });
   }
 
@@ -974,8 +972,8 @@ export class RemixSite extends Construct implements SSTConstruct {
       certificate: this.cdk.certificate,
       defaultBehavior: {
         origin: new origins.S3Origin(this.cdk.bucket),
-        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS
-      }
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      },
     });
   }
 
@@ -997,7 +995,7 @@ export class RemixSite extends Construct implements SSTConstruct {
     const cfDistributionProps = cdk?.distribution || {};
 
     const fnUrl = this.serverLambdaForRegional!.addFunctionUrl({
-      authType: lambda.FunctionUrlAuthType.NONE
+      authType: lambda.FunctionUrlAuthType.NONE,
     });
 
     const serverCachePolicy =
@@ -1011,7 +1009,7 @@ export class RemixSite extends Construct implements SSTConstruct {
       cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
       cachePolicy: serverCachePolicy,
-      ...(cfDistributionProps.defaultBehavior || {})
+      ...(cfDistributionProps.defaultBehavior || {}),
     };
   }
 
@@ -1038,10 +1036,10 @@ export class RemixSite extends Construct implements SSTConstruct {
         {
           includeBody: true,
           eventType: cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST,
-          functionVersion: this.serverLambdaForEdge!.currentVersion
+          functionVersion: this.serverLambdaForEdge!.currentVersion,
         },
-        ...(cfDistributionProps.defaultBehavior?.edgeLambdas || [])
-      ]
+        ...(cfDistributionProps.defaultBehavior?.edgeLambdas || []),
+      ],
     };
   }
 
@@ -1067,13 +1065,13 @@ export class RemixSite extends Construct implements SSTConstruct {
       allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
       cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
-      cachePolicy: staticsCachePolicy
+      cachePolicy: staticsCachePolicy,
     };
 
     // Add behaviour for browser build
     staticsBehaviours["build/*"] = {
       ...staticBehaviourOptions,
-      cachePolicy: buildCachePolicy
+      cachePolicy: buildCachePolicy,
     };
 
     // Add behaviour for public folder statics (excluding build)
@@ -1127,7 +1125,7 @@ export class RemixSite extends Construct implements SSTConstruct {
       runtime: lambda.Runtime.PYTHON_3_7,
       handler: "cf-invalidate.handler",
       timeout: Duration.minutes(15),
-      memorySize: 1024
+      memorySize: 1024,
     });
 
     // Grant permissions to invalidate CF Distribution
@@ -1136,9 +1134,9 @@ export class RemixSite extends Construct implements SSTConstruct {
         effect: iam.Effect.ALLOW,
         actions: [
           "cloudfront:GetInvalidation",
-          "cloudfront:CreateInvalidation"
+          "cloudfront:CreateInvalidation",
         ],
-        resources: ["*"]
+        resources: ["*"],
       })
     );
 
@@ -1155,8 +1153,8 @@ export class RemixSite extends Construct implements SSTConstruct {
         DistributionId: this.cdk.distribution.distributionId,
         // TODO: Ignore the browser build path as it may speed up invalidation
         DistributionPaths: ["/*"],
-        WaitForInvalidation: waitForInvalidation
-      }
+        WaitForInvalidation: waitForInvalidation,
+      },
     });
   }
 
@@ -1206,13 +1204,13 @@ export class RemixSite extends Construct implements SSTConstruct {
 
     if (typeof customDomain === "string") {
       hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
-        domainName: customDomain
+        domainName: customDomain,
       });
     } else if (customDomain.cdk?.hostedZone) {
       hostedZone = customDomain.cdk.hostedZone;
     } else if (typeof customDomain.hostedZone === "string") {
       hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
-        domainName: customDomain.hostedZone
+        domainName: customDomain.hostedZone,
       });
     } else if (typeof customDomain.domainName === "string") {
       // Skip if domain is not a Route53 domain
@@ -1221,7 +1219,7 @@ export class RemixSite extends Construct implements SSTConstruct {
       }
 
       hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
-        domainName: customDomain.domainName
+        domainName: customDomain.domainName,
       });
     } else {
       hostedZone = customDomain.hostedZone;
@@ -1245,7 +1243,7 @@ export class RemixSite extends Construct implements SSTConstruct {
         acmCertificate = new acm.DnsValidatedCertificate(this, "Certificate", {
           domainName: customDomain,
           hostedZone: this.cdk.hostedZone,
-          region: "us-east-1"
+          region: "us-east-1",
         });
       } else if (customDomain.cdk?.certificate) {
         acmCertificate = customDomain.cdk.certificate;
@@ -1253,7 +1251,7 @@ export class RemixSite extends Construct implements SSTConstruct {
         acmCertificate = new acm.DnsValidatedCertificate(this, "Certificate", {
           domainName: customDomain.domainName,
           hostedZone: this.cdk.hostedZone,
-          region: "us-east-1"
+          region: "us-east-1",
         });
       }
     }
@@ -1289,7 +1287,7 @@ export class RemixSite extends Construct implements SSTConstruct {
       zone: this.cdk.hostedZone,
       target: route53.RecordTarget.fromAlias(
         new route53Targets.CloudFrontTarget(this.cdk.distribution)
-      )
+      ),
     };
     new route53.ARecord(this, "AliasRecord", recordProps);
     new route53.AaaaRecord(this, "AliasRecordAAAA", recordProps);
@@ -1299,7 +1297,7 @@ export class RemixSite extends Construct implements SSTConstruct {
       new route53Patterns.HttpsRedirect(this, "Redirect", {
         zone: this.cdk.hostedZone,
         recordNames: [domainAlias],
-        targetDomain: recordName
+        targetDomain: recordName,
       });
     }
   }
@@ -1321,7 +1319,7 @@ export class RemixSite extends Construct implements SSTConstruct {
       id: this.node.id,
       path: this.props.path,
       stack: Stack.of(this).node.id,
-      environmentOutputs
+      environmentOutputs,
     } as BaseSiteEnvironmentOutputsInfo);
   }
 
@@ -1333,7 +1331,7 @@ export class RemixSite extends Construct implements SSTConstruct {
       publicPath: "/build/",
       serverBuildPath: "build/index.js",
       serverBuildTarget: "node-cjs",
-      server: undefined
+      server: undefined,
     };
 
     // Validate config path
@@ -1348,13 +1346,13 @@ export class RemixSite extends Construct implements SSTConstruct {
     const userConfig = require(configPath);
     const config: RemixConfig = {
       ...configDefaults,
-      ...userConfig
+      ...userConfig,
     };
 
     // Validate config
     Object.keys(configDefaults)
-      .filter(key => key !== "server")
-      .forEach(key => {
+      .filter((key) => key !== "server")
+      .forEach((key) => {
         const k = key as keyof RemixConfig;
         if (config[k] !== configDefaults[k]) {
           throw new Error(
@@ -1381,7 +1379,7 @@ export class RemixSite extends Construct implements SSTConstruct {
       nodir: true,
       follow: true,
       ignore: ["build/**"],
-      cwd: path.resolve(this.props.path, "public")
+      cwd: path.resolve(this.props.path, "public"),
     };
     const files = glob.sync("**", globOptions);
     const hash = crypto.createHash("sha1");
@@ -1390,7 +1388,7 @@ export class RemixSite extends Construct implements SSTConstruct {
     }
     const buildId = hash.digest("hex");
 
-    logger.debug(`Generated build ID ${buildId}`);
+    Logger.debug(`Generated build ID ${buildId}`);
 
     return buildId;
   }

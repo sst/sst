@@ -14,7 +14,7 @@ import {
   isSSTConstruct,
   isStackConstruct,
 } from "./Construct.js";
-import { Function, FunctionProps, FunctionHandlerProps } from "./Function.js";
+import { Function, FunctionProps } from "./Function.js";
 import * as Config from "./Config.js";
 import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite.js";
 import { Permissions } from "./util/permission.js";
@@ -69,16 +69,6 @@ export interface AppDeployProps {
   readonly debugIncreaseTimeout?: boolean;
   readonly mode: "deploy" | "start" | "remove";
   readonly bootstrap: Awaited<ReturnType<typeof useBootstrap>>;
-
-  /**
-   * The callback after synth completes, used by `sst start`.
-   *
-   * @default - Defaults to undefined
-   */
-  readonly synthCallback?: (
-    lambdaHandlers: FunctionHandlerProps[],
-    siteEnvironments: BaseSiteEnvironmentOutputsInfo[]
-  ) => void;
 }
 
 type AppRemovalPolicy = Lowercase<keyof typeof cdk.RemovalPolicy>;
@@ -147,18 +137,6 @@ export class App extends cdk.App {
     return this._defaultRemovalPolicy;
   }
 
-  /**
-   * The callback after synth completes.
-   */
-  private readonly synthCallback?: (
-    lambdaHandlers: FunctionHandlerProps[],
-    siteEnvironments: BaseSiteEnvironmentOutputsInfo[]
-  ) => void;
-
-  /**
-   * A list of Lambda functions in the app
-   */
-  private readonly lambdaHandlers: FunctionHandlerProps[] = [];
   private readonly siteEnvironments: BaseSiteEnvironmentOutputsInfo[] = [];
 
   /**
@@ -195,7 +173,6 @@ export class App extends cdk.App {
     this.buildDir = deployProps.buildDir || ".build";
     this.skipBuild = deployProps.skipBuild || false;
     this.defaultFunctionProps = [];
-    this.synthCallback = deployProps.synthCallback;
 
     if (deployProps.debugEndpoint) {
       this.local = true;
@@ -253,10 +230,6 @@ export class App extends cdk.App {
   public setDefaultFunctionProps(
     props: FunctionProps | ((stack: cdk.Stack) => FunctionProps)
   ): void {
-    if (this.lambdaHandlers.length > 0)
-      throw new Error(
-        "Cannot call 'setDefaultFunctionProps' after a stack with functions has been created. Please use 'addDefaultFunctionEnv' or 'addDefaultFunctionPermissions' to add more default properties. Read more about this change here: https://docs.sst.dev/constructs/App#upgrading-to-v0420"
-      );
     this.defaultFunctionProps.push(props);
   }
 
@@ -363,25 +336,16 @@ export class App extends cdk.App {
 
     const cloudAssembly = super.synth(options);
 
-    // Run callback after synth has finished
-    if (this.synthCallback) {
-      this.synthCallback(this.lambdaHandlers, this.siteEnvironments);
-    }
-
     return cloudAssembly;
   }
 
-  public async runDeferredBuilds() {
+  public async finish() {
     await useDeferredTasks().run();
   }
 
   isRunningSSTTest(): boolean {
     // Check the env var set inside test/setup-tests.js
     return process.env.SST_RESOURCES_TESTS === "enabled";
-  }
-
-  registerLambdaHandler(handler: FunctionHandlerProps): void {
-    this.lambdaHandlers.push(handler);
   }
 
   registerSiteEnvironment(environment: BaseSiteEnvironmentOutputsInfo): void {

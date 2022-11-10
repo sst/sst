@@ -2,7 +2,6 @@
 
 import { Construct, IConstruct } from "constructs";
 import * as iam from "aws-cdk-lib/aws-iam";
-import { getChildLogger } from "@serverless-stack/core";
 import {
   Api,
   Job,
@@ -20,8 +19,7 @@ import {
   Stack,
 } from "../index.js";
 import { isCDKConstruct, isCDKConstructOf } from "../Construct.js";
-
-const logger = getChildLogger("resources");
+import { Logger } from "../../logger.js";
 
 export type Permissions = "*" | Permission[];
 type SupportedPermissions =
@@ -46,7 +44,7 @@ type Permission =
 type StatementsAndGrants = {
   statements: iam.PolicyStatement[];
   grants: [IConstruct, string][];
-}
+};
 
 export function attachPermissionsToRole(
   role: iam.Role,
@@ -54,7 +52,7 @@ export function attachPermissionsToRole(
 ): void {
   const { statements, grants } = permissionsToStatementsAndGrants(permissions);
   statements.forEach((statement) => role.addToPolicy(statement));
-  grants.forEach(grant => {
+  grants.forEach((grant) => {
     const construct = grant[0] as Construct;
     const methodName = grant[1] as keyof Construct;
     (construct[methodName] as { (construct: Construct): void })(role);
@@ -67,12 +65,16 @@ export function attachPermissionsToPolicy(
 ): void {
   const { statements, grants } = permissionsToStatementsAndGrants(permissions);
   statements.forEach((statement) => policy.addStatements(statement));
-  grants.forEach(grant => {
-    throw new Error(`Cannot attach the "${grant[1]}" permission to an IAM policy.`);
+  grants.forEach((grant) => {
+    throw new Error(
+      `Cannot attach the "${grant[1]}" permission to an IAM policy.`
+    );
   });
 }
 
-function permissionsToStatementsAndGrants(permissions: Permissions): StatementsAndGrants {
+function permissionsToStatementsAndGrants(
+  permissions: Permissions
+): StatementsAndGrants {
   // Four patterns
   //
   // attachPermissions("*");
@@ -173,11 +175,17 @@ function permissionsToStatementsAndGrants(permissions: Permissions): StatementsA
       );
     } else if (permission instanceof Table) {
       const tableArn = permission.cdk.table.tableArn;
-      statements.push(buildPolicyStatement("dynamodb:*", [tableArn, `${tableArn}/*`]));
+      statements.push(
+        buildPolicyStatement("dynamodb:*", [tableArn, `${tableArn}/*`])
+      );
     } else if (permission instanceof Topic) {
-      statements.push(buildPolicyStatement("sns:*", [permission.cdk.topic.topicArn]));
+      statements.push(
+        buildPolicyStatement("sns:*", [permission.cdk.topic.topicArn])
+      );
     } else if (permission instanceof Queue) {
-      statements.push(buildPolicyStatement("sqs:*", [permission.cdk.queue.queueArn]));
+      statements.push(
+        buildPolicyStatement("sqs:*", [permission.cdk.queue.queueArn])
+      );
     } else if (permission instanceof EventBus) {
       statements.push(
         buildPolicyStatement("events:*", [permission.cdk.eventBus.eventBusArn])
@@ -188,9 +196,13 @@ function permissionsToStatementsAndGrants(permissions: Permissions): StatementsA
       );
     } else if (permission instanceof Bucket) {
       const bucketArn = permission.cdk.bucket.bucketArn;
-      statements.push(buildPolicyStatement("s3:*", [bucketArn, `${bucketArn}/*`]));
+      statements.push(
+        buildPolicyStatement("s3:*", [bucketArn, `${bucketArn}/*`])
+      );
     } else if (permission instanceof RDS) {
-      statements.push(buildPolicyStatement("rds-data:*", [permission.clusterArn]));
+      statements.push(
+        buildPolicyStatement("rds-data:*", [permission.clusterArn])
+      );
       if (permission.cdk.cluster.secret) {
         statements.push(
           buildPolicyStatement(
@@ -200,9 +212,13 @@ function permissionsToStatementsAndGrants(permissions: Permissions): StatementsA
         );
       }
     } else if (permission instanceof Function) {
-      statements.push(buildPolicyStatement("lambda:*", [permission.functionArn]));
+      statements.push(
+        buildPolicyStatement("lambda:*", [permission.functionArn])
+      );
     } else if (permission instanceof Job) {
-      statements.push(buildPolicyStatement("lambda:*", [permission._jobInvoker.functionArn]));
+      statements.push(
+        buildPolicyStatement("lambda:*", [permission._jobInvoker.functionArn])
+      );
     }
     ////////////////////////////////////
     // Case: CDK constructs
@@ -210,7 +226,9 @@ function permissionsToStatementsAndGrants(permissions: Permissions): StatementsA
     else if ((permission as any).tableArn && (permission as any).tableName) {
       // @ts-expect-error We do not want to import the cdk modules, just cast to any
       const tableArn = permission.tableArn;
-      statements.push(buildPolicyStatement("dynamodb:*", [tableArn, `${tableArn}/*`]));
+      statements.push(
+        buildPolicyStatement("dynamodb:*", [tableArn, `${tableArn}/*`])
+      );
     } else if ((permission as any).topicArn && (permission as any).topicName) {
       // @ts-expect-error We do not want to import the cdk modules, just cast to any
       statements.push(buildPolicyStatement("sns:*", [permission.topicArn]));
@@ -221,20 +239,26 @@ function permissionsToStatementsAndGrants(permissions: Permissions): StatementsA
       (permission as any).eventBusArn &&
       (permission as any).eventBusName
     ) {
-      // @ts-expect-error We do not want to import the cdk modules, just cast to any
-      statements.push(buildPolicyStatement("events:*", [permission.eventBusArn]));
+      statements.push(
+        // @ts-expect-error We do not want to import the cdk modules, just cast to any
+        buildPolicyStatement("events:*", [permission.eventBusArn])
+      );
     } else if (
       (permission as any).streamArn &&
       (permission as any).streamName
     ) {
-      // @ts-expect-error We do not want to import the cdk modules, just cast to any
-      statements.push(buildPolicyStatement("kinesis:*", [permission.streamArn]));
+      statements.push(
+        // @ts-expect-error We do not want to import the cdk modules, just cast to any
+        buildPolicyStatement("kinesis:*", [permission.streamArn])
+      );
     } else if (
       (permission as any).deliveryStreamArn &&
       (permission as any).deliveryStreamName
     ) {
       statements.push(
-        buildPolicyStatement("firehose:*", [(permission as any).deliveryStreamArn])
+        buildPolicyStatement("firehose:*", [
+          (permission as any).deliveryStreamArn,
+        ])
       );
     } else if (
       (permission as any).bucketArn &&
@@ -242,7 +266,9 @@ function permissionsToStatementsAndGrants(permissions: Permissions): StatementsA
     ) {
       // @ts-expect-error We do not want to import the cdk modules, just cast to any
       const bucketArn = permission.bucketArn;
-      statements.push(buildPolicyStatement("s3:*", [bucketArn, `${bucketArn}/*`]));
+      statements.push(
+        buildPolicyStatement("s3:*", [bucketArn, `${bucketArn}/*`])
+      );
     } else if ((permission as any).clusterArn) {
       // For ServerlessCluster, we need to grant:
       // - permisssions to access the Data API;
@@ -279,12 +305,12 @@ function permissionsToStatementsAndGrants(permissions: Permissions): StatementsA
         );
       grants.push(permission);
     } else {
-      logger.debug("permission object", permission);
+      Logger.debug("permission object", permission);
       throw new Error(`The specified permissions are not supported.`);
     }
   });
 
-  return { statements, grants }
+  return { statements, grants };
 }
 
 function buildPolicyStatement(

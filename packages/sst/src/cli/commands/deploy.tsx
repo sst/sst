@@ -22,7 +22,7 @@ export const deploy = (program: Program) =>
         const fn = await Stacks.build();
         return await Stacks.synth({
           fn,
-          mode: "start",
+          mode: "deploy",
         });
       })();
 
@@ -38,5 +38,8 @@ export const deploy = (program: Program) =>
       );
       const results = await Stacks.deployMany(assembly.stacks);
       component.unmount();
+      process.stdout.write("\x1b[?1049l");
+
+      process.exit(0);
     }
   );

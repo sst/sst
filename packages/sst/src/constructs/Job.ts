@@ -472,10 +472,7 @@ export class Job extends Construct implements SSTConstruct {
 
   private createCodeBuildInvoker(): Function {
     return new Function(this, this.node.id, {
-      srcPath: path.resolve(
-        path.join(__dirname, "../dist/support/job-invoker")
-      ),
-      handler: "index.main",
+      handler: path.join(__dirname, "../dist/support/job-invoke/index.main"),
       runtime: "nodejs16.x",
       timeout: 10,
       memorySize: 1024,
@@ -489,7 +486,7 @@ export class Job extends Construct implements SSTConstruct {
           resources: [this.job.projectArn],
         }),
       ],
-      bundle: {
+      nodejs: {
         format: "esm",
       },
     });

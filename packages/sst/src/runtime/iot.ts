@@ -1,4 +1,4 @@
-import { Context } from "@serverless-stack/node/context/context.js";
+import { Context } from "../context/context.js";
 import { useBus } from "../bus.js";
 import { useIOT } from "../iot.js";
 

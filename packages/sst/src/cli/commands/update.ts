@@ -1,14 +1,9 @@
+import { green, yellow } from "colorette";
 import fs from "fs/promises";
 import path from "path";
 import { Program } from "../program.js";
 
-const SST_PACKAGES = [
-  "@serverless-stack/resources",
-  "@serverless-stack/cli",
-  "@serverless-stack/cli2",
-  "@serverless-stack/node",
-  "@serverless-stack/static-site-env",
-];
+const SST_PACKAGES = ["sst"];
 
 const FIELDS = ["dependencies", "devDependencies"];
 
@@ -23,14 +18,13 @@ export const update = (program: Program) =>
       }),
     async (args) => {
       const { fetch } = await import("undici");
-      const { Logger } = await import("../../logger.js");
-      const { useProject } = await import("../../app");
+      const { useProject } = await import("../../app.js");
 
       const project = useProject();
       const files = await find(project.paths.root);
       const version =
         args.version ||
-        (await fetch(`https://registry.npmjs.org/@serverless-stack/core/latest`)
+        (await fetch(`https://registry.npmjs.org/sst/latest`)
           .then((resp) => resp.json())
           .then((resp: any) => resp.version));
 
@@ -61,21 +55,21 @@ export const update = (program: Program) =>
       await Promise.all(tasks);
 
       if (results.size === 0) {
-        console.log("green", `All packages already match version ${version}`);
+        console.log(green(`All packages already match version ${version}`));
         return;
       }
 
       for (const [file, pkgs] of results.entries()) {
-        console.log("green", `✅ ${path.relative(project.paths.root, file)}`);
+        console.log(green(`✅ ${path.relative(project.paths.root, file)}`));
         for (const pkg of pkgs) {
-          console.log("green", `     ${pkg}@${version}`);
+          console.log(green(`     ${pkg}@${version}`));
         }
       }
 
       console.log(
-        "yellow",
-        "",
-        "Don't forget to run your package manager to install the packages"
+        yellow(
+          "Don't forget to run your package manager to install the packages"
+        )
       );
     }
   );

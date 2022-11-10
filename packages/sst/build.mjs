@@ -13,29 +13,29 @@ const result = await esbuild.build({
     ...Object.keys(pkg.dependencies),
     "kysely",
     "kysely-codegen",
-    "./src/constructs/*"
+    "./src/constructs/*",
   ],
   jsx: "automatic",
   platform: "node",
   target: "esnext",
   format: "esm",
   watch: watch && {
-    onRebuild: console.log
+    onRebuild: console.log,
   },
   banner: {
     js: [
       `import { createRequire as topLevelCreateRequire } from 'module';`,
-      `global.require = topLevelCreateRequire(import.meta.url);`
-    ].join("\n")
+      `global.require = topLevelCreateRequire(import.meta.url);`,
+    ].join("\n"),
   },
   outExtension: {
-    ".js": ".mjs"
-  }
+    ".js": ".mjs",
+  },
 });
 await fs.writeFile(
   "analyze",
   esbuild.analyzeMetafileSync(result.metafile, {
-    verbose: true
+    verbose: true,
   })
 );
 
@@ -47,9 +47,15 @@ await esbuild.build({
   target: "esnext",
   format: "esm",
   outExtension: {
-    ".js": ".mjs"
+    ".js": ".mjs",
   },
-  outdir: "./dist/support/nodejs-runtime/"
+  banner: {
+    js: [
+      `import { createRequire as topLevelCreateRequire } from 'module';`,
+      `const require = topLevelCreateRequire(import.meta.url);`,
+    ].join(""),
+  },
+  outdir: "./dist/support/nodejs-runtime/",
 });
 
 // support/custom-resources
@@ -63,13 +69,13 @@ await esbuild.build({
   banner: {
     js: [
       `import { createRequire as topLevelCreateRequire } from 'module';`,
-      `const require = topLevelCreateRequire(import.meta.url);`
-    ].join("")
+      `const require = topLevelCreateRequire(import.meta.url);`,
+    ].join(""),
   },
   outExtension: {
-    ".js": ".mjs"
+    ".js": ".mjs",
   },
-  outdir: "./dist/support/custom-resources/"
+  outdir: "./dist/support/custom-resources/",
 });
 
 // support/bridge
@@ -84,15 +90,33 @@ await esbuild.build({
   banner: {
     js: [
       `import { createRequire as topLevelCreateRequire } from 'module';`,
-      `const require = topLevelCreateRequire(import.meta.url);`
-    ].join("")
+      `const require = topLevelCreateRequire(import.meta.url);`,
+    ].join(""),
   },
-  outfile: "./dist/support/bridge/bridge.mjs"
+  outfile: "./dist/support/bridge/bridge.mjs",
+});
+
+// support/rds-migrator
+await esbuild.build({
+  keepNames: true,
+  bundle: true,
+  minify: true,
+  platform: "node",
+  target: "esnext",
+  format: "esm",
+  entryPoints: ["./support/rds-migrator/index.mjs"],
+  banner: {
+    js: [
+      `import { createRequire as topLevelCreateRequire } from 'module';`,
+      `const require = topLevelCreateRequire(import.meta.url);`,
+    ].join(""),
+  },
+  outfile: "./dist/support/rds-migrator/index.mjs",
 });
 
 // support/static-site-stub
 await fs.cp("support/static-site-stub", "dist/support/static-site-stub", {
-  recursive: true
+  recursive: true,
 });
 
 // support/base-site-custom-resource
@@ -100,7 +124,7 @@ await fs.cp(
   "support/base-site-custom-resource",
   "dist/support/base-site-custom-resource",
   {
-    recursive: true
+    recursive: true,
   }
 );
 
@@ -108,7 +132,7 @@ await fs.cp(
   "support/base-site-archiver.cjs",
   "dist/support/base-site-archiver.cjs",
   {
-    recursive: true
+    recursive: true,
   }
 );
 

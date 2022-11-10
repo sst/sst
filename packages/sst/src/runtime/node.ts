@@ -1,4 +1,3 @@
-import { Context } from "@serverless-stack/node/context/context.js";
 import path from "path";
 import fs from "fs";
 import { useProject } from "../app.js";
@@ -7,10 +6,11 @@ import url from "url";
 import { Worker } from "worker_threads";
 import { useRuntimeHandlers } from "./handlers.js";
 import { useRuntimeWorkers } from "./workers.js";
+import { Context } from "../context/context.js";
 
 export const useNodeHandler = Context.memo(() => {
-  const handlers = useRuntimeHandlers();
   const workers = useRuntimeWorkers();
+  const handlers = useRuntimeHandlers();
   const cache: Record<string, esbuild.BuildResult> = {};
   const project = useProject();
   const threads = new Map<string, Worker>();
@@ -26,7 +26,7 @@ export const useNodeHandler = Context.memo(() => {
       new Promise(async () => {
         const worker = new Worker(
           url.fileURLToPath(
-            new URL("./support/nodejs-runtime/index.mjs", import.meta.url)
+            new URL("../support/nodejs-runtime/index.mjs", import.meta.url)
           ),
           {
             env: input.environment,
@@ -49,10 +49,7 @@ export const useNodeHandler = Context.memo(() => {
     },
     build: async (input) => {
       const exists = cache[input.functionID];
-      const dir = path.dirname(input.handler);
-      const ext = path.extname(input.handler);
-      const base = path.basename(input.handler).split(".")[0];
-      const root = project.paths.root;
+      const parsed = path.parse(input.props.handler!);
       const file = [
         ".ts",
         ".tsx",
@@ -63,49 +60,89 @@ export const useNodeHandler = Context.memo(() => {
         ".mjs",
         ".cjs",
       ]
-        .map((ext) => path.join(dir, base + ext))
+        .map((ext) => path.join(parsed.dir, parsed.name + ext))
         .find((file) => {
-          const p = path.join(input.srcPath, file);
-          return fs.existsSync(p);
+          return fs.existsSync(file);
         })!;
+      if (!file)
+        throw new Error(
+          `Cannot find a handler file for "${input.props.handler}"`
+        );
+
+      const nodejs = input.props.nodejs || {};
+      const isESM = (nodejs?.format || "esm") === "esm";
+
+      const relative = path.relative(
+        project.paths.root,
+        path.resolve(parsed.dir)
+      );
+
       const target = path.join(
         input.out,
-        path
-          .relative(root, path.resolve(input.srcPath))
-          .split(path.sep)
-          .filter((x) => x !== "node_modules")
-          .join(path.sep),
-        path.dirname(file),
-        base + ".mjs"
+        !relative.startsWith("..") && !path.isAbsolute(relative)
+          ? relative
+          : "",
+        parsed.name + (isESM ? ".mjs" : ".js")
       );
-      const handler = path.relative(input.out, target.replace(".mjs", ext));
+      const handler = path.relative(
+        input.out,
+        target.replace(".js", parsed.ext).replace(".mjs", parsed.ext)
+      );
       if (exists?.rebuild) {
         const result = await exists.rebuild();
         cache[input.functionID] = result;
-        return handler;
+        return {
+          handler,
+        };
       }
-      if (!file)
-        throw new Error(`Cannot find a handler file for "${input.handler}"`);
+
+      const { external, ...override } = nodejs?.esbuild || {};
 
       const result = await esbuild.build({
-        entryPoints: [path.join(input.srcPath, file)],
+        entryPoints: [file],
         platform: "node",
-        format: "esm",
-        target: "esnext",
-        mainFields: ["module", "main"],
-        external: ["mjml"],
+        external: [
+          ...(nodejs?.externalModules || []),
+          ...(nodejs?.nodeModules || []),
+          ...(external || []),
+        ],
         bundle: true,
         metafile: true,
-        banner: {
-          js: [
-            `import { createRequire as topLevelCreateRequire } from 'module';`,
-            `const require = topLevelCreateRequire(import.meta.url);`,
-          ].join("\n"),
-        },
+        ...(isESM
+          ? {
+              format: "esm",
+              target: "esnext",
+              mainFields: isESM ? ["module", "main"] : undefined,
+              banner: {
+                js: [
+                  `import { createRequire as topLevelCreateRequire } from 'module';`,
+                  `const require = topLevelCreateRequire(import.meta.url);`,
+                  nodejs.banner || "",
+                ].join("\n"),
+              },
+              outExtension: {
+                ".js": ".mjs",
+              },
+            }
+          : {
+              format: "cjs",
+              target: "node14",
+              banner: nodejs.banner
+                ? {
+                    js: nodejs.banner,
+                  }
+                : undefined,
+            }),
         outfile: target,
+        sourcemap: nodejs.sourcemap,
+        minify: nodejs.minify,
+        ...override,
       });
+
       cache[input.functionID] = result;
-      return handler;
+      return {
+        handler,
+      };
     },
   });
 });

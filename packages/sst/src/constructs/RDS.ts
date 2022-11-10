@@ -275,8 +275,8 @@ export class RDS extends Construct implements SSTConstruct {
         types:
           typeof types === "string"
             ? {
-              path: types,
-            }
+                path: types,
+              }
             : types,
         clusterArn: this.clusterArn,
         clusterIdentifier: this.clusterIdentifier,
@@ -298,12 +298,12 @@ export class RDS extends Construct implements SSTConstruct {
         },
         secretArn: {
           environment: this.secretArn,
-          parameter: this.secretArn
+          parameter: this.secretArn,
         },
         defaultDatabaseName: {
           environment: this.defaultDatabaseName,
-          parameter: this.defaultDatabaseName
-        }
+          parameter: this.defaultDatabaseName,
+        },
       },
       permissions: {
         "rds-data:*": [this.clusterArn],
@@ -415,8 +415,8 @@ export class RDS extends Construct implements SSTConstruct {
         scaling?.autoPause === false
           ? cdk.Duration.minutes(0)
           : scaling?.autoPause === true || scaling?.autoPause === undefined
-            ? cdk.Duration.minutes(5)
-            : cdk.Duration.minutes(scaling?.autoPause),
+          ? cdk.Duration.minutes(5)
+          : cdk.Duration.minutes(scaling?.autoPause),
       minCapacity: rds.AuroraCapacityUnit[scaling?.minCapacity || "ACU_2"],
       maxCapacity: rds.AuroraCapacityUnit[scaling?.maxCapacity || "ACU_16"],
     };
@@ -478,11 +478,11 @@ export class RDS extends Construct implements SSTConstruct {
     // - when invoked from `sst build`, __dirname is `resources/dist`
     // - when running resources tests, __dirname is `resources/src`
     // For now we will do `__dirname/../dist` to make both cases work.
-    const srcPath = path.resolve(path.join(__dirname, "../dist/RDS_migrator"));
 
     const fn = new Fn(this, "MigrationFunction", {
-      srcPath,
-      handler: "index.handler",
+      handler: path.resolve(
+        path.join(__dirname, "../support/rds-migrator/index.handler")
+      ),
       runtime: "nodejs16.x",
       timeout: 900,
       memorySize: 1024,
@@ -495,21 +495,18 @@ export class RDS extends Construct implements SSTConstruct {
         // can locate the migration files
         RDS_MIGRATIONS_PATH: app.local ? migrations : migrationsDestination,
       },
-      bundle: {
+      // Note that we need to generate a relative path of the migrations off the
+      // srcPath because sst.Function internally builds the copy "from" path by
+      // joining the srcPath and the from path.
+      copyFiles: [
+        {
+          from: path.resolve(migrations),
+          to: migrationsDestination,
+        },
+      ],
+      nodejs: {
         nodeModules: ["kysely", "kysely-data-api"],
         format: "esm",
-        // Note that we need to generate a relative path of the migrations off the
-        // srcPath because sst.Function internally builds the copy "from" path by
-        // joining the srcPath and the from path.
-        copyFiles: [
-          {
-            from: path.relative(
-              path.resolve(srcPath),
-              path.resolve(migrations)
-            ),
-            to: migrationsDestination,
-          },
-        ],
       },
     });
 

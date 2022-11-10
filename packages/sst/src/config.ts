@@ -13,7 +13,6 @@ import {
 import { pipe, map } from "remeda";
 import { useProject } from "./app.js";
 import { useAWSClient } from "./credentials.js";
-import { useFunctions } from "./stacks/metadata.js";
 
 interface Secret {
   value?: string;
@@ -151,6 +150,9 @@ export namespace Config {
   }
 
   export async function restart(key: string) {
+    throw new Error("Not implemented");
+    return 0;
+    /*
     const lambda = useAWSClient(LambdaClient);
     const functions = await useFunctions();
     const filtered = Object.values(functions).filter((f) =>
@@ -179,6 +181,7 @@ export namespace Config {
       })
     );
     return filtered.length;
+    */
   }
 }
 

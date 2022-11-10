@@ -4,7 +4,6 @@ import { Construct, IConstruct } from "constructs";
 import * as cdk from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
-import { getSstVersion } from "@serverless-stack/core";
 
 import { FunctionProps, Function as Fn } from "./Function.js";
 import type { App } from "./App.js";
@@ -14,6 +13,7 @@ import { Permissions } from "./util/permission.js";
 
 import { createRequire } from "module";
 import { createAppContext, useApp } from "./context.js";
+import { useProject } from "../app.js";
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -280,7 +280,7 @@ export class Stack extends cdk.Stack {
         App: app.name,
         Stage: this.stage,
         Stack: this.stackName,
-        SSTVersion: getSstVersion(),
+        SSTVersion: useProject().version,
         BootstrapBucketName: app.bootstrap.bucket!,
         ForceUpdate: process.env.SST_FORCE_UPDATE_METADATA
           ? Date.now().toString()
