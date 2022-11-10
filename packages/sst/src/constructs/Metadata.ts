@@ -1,4 +1,4 @@
-import { SSTConstruct } from "./Construct";
+import { SSTConstruct } from "./Construct.js";
 
 type ExtractMetadata<T extends SSTConstruct> = ReturnType<
   T["getConstructMetadata"]

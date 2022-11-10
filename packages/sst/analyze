@@ -929,6 +929,10 @@
    │              └ src/runtime/server.ts
    │                 └ src/cli/commands/start.tsx
    │                    └ src/cli/sst.ts
+   ├ src/runtime/node.ts ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── 3.8kb ─── 0.1%
+   │  └ src/stacks/index.ts
+   │     └ src/cli/commands/deploy.tsx
+   │        └ src/cli/sst.ts
    ├ src/runtime/server.ts ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── 3.8kb ─── 0.1%
    │  └ src/cli/commands/start.tsx
    │     └ src/cli/sst.ts
@@ -954,10 +958,6 @@
    │        └ src/runtime/server.ts
    │           └ src/cli/commands/start.tsx
    │              └ src/cli/sst.ts
-   ├ src/runtime/node.ts ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── 3.7kb ─── 0.1%
-   │  └ src/stacks/index.ts
-   │     └ src/cli/commands/deploy.tsx
-   │        └ src/cli/sst.ts
    ├ ../../node_modules/binary-extensions/binary-extensions.json ───────────────────────────────────────────────────────────────────────────────────── 3.5kb ─── 0.1%
    │  └ ../../node_modules/binary-extensions/index.js
    │     └ ../../node_modules/is-binary-path/index.js
@@ -1667,6 +1667,10 @@
    │        └ src/stacks/metadata.ts
    │           └ src/cli/commands/start.tsx
    │              └ src/cli/sst.ts
+   ├ src/runtime/handlers.ts ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── 2.2kb ─── 0.1%
+   │  └ src/runtime/workers.ts
+   │     └ src/cli/commands/start.tsx
+   │        └ src/cli/sst.ts
    ├ ../../node_modules/@aws-sdk/client-s3/dist-cjs/commands/PutBucketEncryptionCommand.js ─────────────────────────────────────────────────────────── 2.2kb ─── 0.1%
    │  └ ../../node_modules/@aws-sdk/client-s3/dist-cjs/commands/index.js
    │     └ ../../node_modules/@aws-sdk/client-s3/dist-cjs/index.js
@@ -2124,10 +2128,6 @@
    │        └ src/stacks/metadata.ts
    │           └ src/cli/commands/start.tsx
    │              └ src/cli/sst.ts
-   ├ src/runtime/handlers.ts ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── 2.0kb ─── 0.1%
-   │  └ src/runtime/workers.ts
-   │     └ src/cli/commands/start.tsx
-   │        └ src/cli/sst.ts
    ├ ../../node_modules/@aws-sdk/client-s3/dist-cjs/commands/GetBucketPolicyStatusCommand.js ───────────────────────────────────────────────────────── 2.0kb ─── 0.1%
    │  └ ../../node_modules/@aws-sdk/client-s3/dist-cjs/commands/index.js
    │     └ ../../node_modules/@aws-sdk/client-s3/dist-cjs/index.js
@@ -2789,7 +2789,7 @@
    │           └ src/credentials.ts
    │              └ src/cli/commands/bind.ts
    │                 └ src/cli/sst.ts
-   ├ ../../node_modules/@aws-sdk/client-s3/node_modules/@aws-sdk/client-sso/dist-cjs/pagination/ListAccountRolesPaginator.js ───────────────────────── 1.6kb ─── 0.1%
+   ├ ../../node_modules/@aws-sdk/client-s3/node_modules/@aws-sdk/client-sso/dist-cjs/pagination/ListAccountRolesPaginator.js ───────────────────────── 1.6kb ─── 0.0%
    │  └ ../../node_modules/@aws-sdk/client-s3/node_modules/@aws-sdk/client-sso/dist-cjs/pagination/index.js
    │     └ ../../node_modules/@aws-sdk/client-s3/node_modules/@aws-sdk/client-sso/dist-cjs/index.js
    │        └ ../../node_modules/@aws-sdk/client-s3/node_modules/@aws-sdk/credential-provider-sso/dist-cjs/resolveSSOCredentials.js
@@ -2803,7 +2803,7 @@
    │                                └ src/stacks/metadata.ts
    │                                   └ src/cli/commands/start.tsx
    │                                      └ src/cli/sst.ts
-   ├ ../../node_modules/@aws-sdk/client-s3/node_modules/@aws-sdk/middleware-host-header/dist-cjs/index.js ──────────────────────────────────────────── 1.6kb ─── 0.1%
+   ├ ../../node_modules/@aws-sdk/client-s3/node_modules/@aws-sdk/middleware-host-header/dist-cjs/index.js ──────────────────────────────────────────── 1.6kb ─── 0.0%
    │  └ ../../node_modules/@aws-sdk/client-s3/dist-cjs/S3Client.js
    │     └ ../../node_modules/@aws-sdk/client-s3/dist-cjs/index.js
    │        └ src/stacks/metadata.ts

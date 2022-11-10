@@ -13,6 +13,8 @@ import {
 import { pipe, map } from "remeda";
 import { useProject } from "./app.js";
 import { useAWSClient } from "./credentials.js";
+import { Stacks } from "./stacks/index.js";
+import { FunctionMetadata } from "./constructs/Metadata.js";
 
 interface Secret {
   value?: string;
@@ -107,7 +109,7 @@ export namespace Config {
           id: input.key,
           type: "Secret",
           prop: "value",
-          fallback: true,
+          fallback: input.fallback,
         }),
         Value: input.value,
         Type: "SecureString",
@@ -150,14 +152,12 @@ export namespace Config {
   }
 
   export async function restart(key: string) {
-    throw new Error("Not implemented");
-    return 0;
-    /*
     const lambda = useAWSClient(LambdaClient);
-    const functions = await useFunctions();
-    const filtered = Object.values(functions).filter((f) =>
-      f.data.secrets.includes(key)
-    );
+    const metadata = await Stacks.metadata();
+    const filtered = Object.values(metadata)
+      .flat()
+      .filter((f): f is FunctionMetadata => f.type === "Function")
+      .filter((f) => f.data.secrets.includes(key));
 
     await Promise.all(
       filtered.map(async (f) => {
@@ -181,7 +181,6 @@ export namespace Config {
       })
     );
     return filtered.length;
-    */
   }
 }
 

@@ -4,7 +4,7 @@ import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 const AWS = require("aws-sdk");
 import type { StepFunctions, Lambda } from "aws-sdk";
-import type { ConfigurationOptions } from "aws-sdk/lib/config-base";
+import type { ConfigurationOptions } from "aws-sdk/lib/config-base.js";
 
 const FRAMEWORK_HANDLER_TIMEOUT = 900000; // 15 minutes
 

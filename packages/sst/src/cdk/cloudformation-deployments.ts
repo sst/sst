@@ -31,7 +31,7 @@ import {
   ResourcesToImport,
   ResourceIdentifierSummaries,
 } from "aws-cdk/lib/api/util/cloudformation.js";
-import { StackActivityProgress } from "aws-cdk/lib/api/util/cloudformation/stack-activity-monitor";
+import { StackActivityProgress } from "aws-cdk/lib/api/util/cloudformation/stack-activity-monitor.js";
 import { replaceEnvPlaceholders } from "aws-cdk/lib/api/util/placeholders.js";
 
 /**

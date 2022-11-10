@@ -2,7 +2,7 @@ import { Token, Lazy } from "aws-cdk-lib";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as appsync from "@aws-cdk/aws-appsync-alpha";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
-import { AppSyncApi } from "../AppSyncApi";
+import { AppSyncApi } from "../AppSyncApi.js";
 
 export interface CustomDomainProps {
   /**
@@ -67,14 +67,17 @@ function buildDataForStringInput(
   assertDomainNameIsLowerCase(customDomain);
 
   const domainName = customDomain;
-  const hostedZoneDomain = domainName.split(".").slice(1).join(".");
+  const hostedZoneDomain = domainName
+    .split(".")
+    .slice(1)
+    .join(".");
   const hostedZone = lookupHostedZone(scope, hostedZoneDomain);
   const certificate = createCertificate(scope, domainName, hostedZone);
   createRecord(scope, hostedZone, domainName);
 
   return {
     certificate,
-    domainName,
+    domainName
   };
 }
 
@@ -107,7 +110,10 @@ function buildDataForInternalDomainInput(
   } else if (customDomain.cdk?.hostedZone) {
     hostedZone = customDomain.cdk.hostedZone;
   } else {
-    const hostedZoneDomain = domainName.split(".").slice(1).join(".");
+    const hostedZoneDomain = domainName
+      .split(".")
+      .slice(1)
+      .join(".");
     hostedZone = lookupHostedZone(scope, hostedZoneDomain);
   }
 
@@ -122,7 +128,7 @@ function buildDataForInternalDomainInput(
 
   return {
     certificate,
-    domainName,
+    domainName
   };
 }
 
@@ -149,13 +155,13 @@ function buildDataForExternalDomainInput(
 
   return {
     certificate,
-    domainName,
+    domainName
   };
 }
 
 function lookupHostedZone(scope: AppSyncApi, hostedZoneDomain: string) {
   return route53.HostedZone.fromLookup(scope, "HostedZone", {
-    domainName: hostedZoneDomain,
+    domainName: hostedZoneDomain
   });
 }
 
@@ -166,7 +172,7 @@ function createCertificate(
 ) {
   return new acm.Certificate(scope, "Certificate", {
     domainName,
-    validation: acm.CertificateValidation.fromDns(hostedZone),
+    validation: acm.CertificateValidation.fromDns(hostedZone)
   });
 }
 
@@ -182,8 +188,8 @@ function createRecord(
     domainName: Lazy.string({
       produce() {
         return scope._cfnDomainName!.attrAppSyncDomainName;
-      },
-    }),
+      }
+    })
   });
 
   // note: If domainName is a TOKEN string ie. ${TOKEN..}, the route53.ARecord

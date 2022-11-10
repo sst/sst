@@ -18,13 +18,15 @@ export interface Project {
 const DEFAULTS = {
   main: "stacks/index.ts",
   stage: undefined,
-  ssmPrefix: undefined,
+  ssmPrefix: undefined
 } as const;
 
 type ProjectWithDefaults = Project &
-  Required<{
-    [key in keyof typeof DEFAULTS]: Exclude<Project[key], undefined>;
-  }> & {
+  Required<
+    {
+      [key in keyof typeof DEFAULTS]: Exclude<Project[key], undefined>;
+    }
+  > & {
     version: string;
     paths: {
       root: string;
@@ -51,7 +53,7 @@ export async function initProject(globals: GlobalOptions) {
   Logger.debug("Using project root", root);
   const out = path.join(root, ".sst");
   await fs.mkdir(out, {
-    recursive: true,
+    recursive: true
   });
   Logger.debug("Using project out", out);
 
@@ -70,7 +72,7 @@ export async function initProject(globals: GlobalOptions) {
           ...DEFAULTS,
           ...config,
           stage: globals.stage || (await usePersonalStage(out)),
-          profile: globals.profile || config.profile,
+          profile: globals.profile || config.profile
         } as ProjectWithDefaults;
       }
 
@@ -100,12 +102,12 @@ export async function initProject(globals: GlobalOptions) {
     project.ssmPrefix || `/sst/${project.name}/${project.stage}/`;
   project.paths = {
     root,
-    out,
+    out
   };
   const packageJson = JSON.parse(
     await fs
       .readFile(url.fileURLToPath(new URL("../package.json", import.meta.url)))
-      .then((x) => x.toString())
+      .then(x => x.toString())
   );
   project.version = packageJson.version;
   Logger.debug("Config loaded", project);
@@ -129,7 +131,7 @@ async function findRoot() {
       throw new VisibleError(
         "Could not found a configuration file",
         "Make sure one of the following exists",
-        ...CONFIG_EXTENSIONS.map((ext) => `  - sst${ext}`)
+        ...CONFIG_EXTENSIONS.map(ext => `  - sst${ext}`)
       );
     for (const ext of CONFIG_EXTENSIONS) {
       const configPath = path.join(dir, `sst${ext}`);

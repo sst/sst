@@ -11,12 +11,12 @@ export const update = (program: Program) =>
   program.command(
     "update [ver]",
     "Update SST and CDK packages to another version",
-    (yargs) =>
+    yargs =>
       yargs.positional("ver", {
         type: "string",
-        describe: "Optional SST version to update to",
+        describe: "Optional SST version to update to"
       }),
-    async (args) => {
+    async args => {
       const { fetch } = await import("undici");
       const { useProject } = await import("../../app.js");
 
@@ -25,14 +25,14 @@ export const update = (program: Program) =>
       const version =
         args.version ||
         (await fetch(`https://registry.npmjs.org/sst/latest`)
-          .then((resp) => resp.json())
+          .then(resp => resp.json())
           .then((resp: any) => resp.version));
 
       const results = new Map<string, Set<string>>();
-      const tasks = files.map(async (file) => {
+      const tasks = files.map(async file => {
         const data = await fs
           .readFile(file)
-          .then((x) => x.toString())
+          .then(x => x.toString())
           .then(JSON.parse);
 
         for (const field of FIELDS) {
@@ -77,7 +77,7 @@ export const update = (program: Program) =>
 async function find(dir: string): Promise<string[]> {
   const children = await fs.readdir(dir);
 
-  const tasks = children.map(async (item) => {
+  const tasks = children.map(async item => {
     if (item === "node_modules") return [];
     // Ignore hidden paths
     if (/(^|\/)\.[^\/\.]/g.test(item)) return [];

@@ -2,9 +2,9 @@ import * as ssm from "aws-cdk-lib/aws-ssm";
 import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { Construct } from "constructs";
 import { Api } from "./Api.js";
-import { FunctionDefinition } from "./Function";
+import { FunctionDefinition } from "./Function.js";
 import { SSTConstruct } from "./Construct.js";
-import { Stack } from "./index.js";
+import { Stack } from "./Stack.js";
 import { App } from "./App.js";
 import {
   ENVIRONMENT_PLACEHOLDER,

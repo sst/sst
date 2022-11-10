@@ -1,7 +1,4 @@
-import { Program } from "../program.js";
-import { Config } from "../../config.js";
-import { spawnSync } from "child_process";
-import { useAWSCredentials } from "../../credentials.js";
+import type { Program } from "../program.js";
 
 export const bind = (program: Program) =>
   program.command(
@@ -14,6 +11,10 @@ export const bind = (program: Program) =>
         demandOption: true,
       }),
     async (args) => {
+      const { Config } = await import("../../config.js");
+      const { spawnSync } = await import("child_process");
+      const { useAWSCredentials } = await import("../../credentials.js");
+
       const env = await Config.env();
       const credentials = await useAWSCredentials();
       const result = spawnSync(args.command, {

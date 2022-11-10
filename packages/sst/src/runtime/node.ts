@@ -1,5 +1,7 @@
 import path from "path";
-import fs from "fs";
+import fs from "fs/promises";
+import { exec } from "child_process";
+import fsSync from "fs";
 import { useProject } from "../app.js";
 import esbuild from "esbuild";
 import url from "url";
@@ -7,6 +9,7 @@ import { Worker } from "worker_threads";
 import { useRuntimeHandlers } from "./handlers.js";
 import { useRuntimeWorkers } from "./workers.js";
 import { Context } from "../context/context.js";
+import { VisibleError } from "../error.js";
 
 export const useNodeHandler = Context.memo(() => {
   const workers = useRuntimeWorkers();
@@ -16,13 +19,13 @@ export const useNodeHandler = Context.memo(() => {
   const threads = new Map<string, Worker>();
 
   handlers.register({
-    shouldBuild: (input) => {
+    shouldBuild: input => {
       const result = cache[input.functionID];
       if (!result) return false;
       const relative = path.relative(project.paths.root, input.file);
       return Boolean(result.metafile?.inputs[relative]);
     },
-    startWorker: async (input) => {
+    startWorker: async input => {
       new Promise(async () => {
         const worker = new Worker(
           url.fileURLToPath(
@@ -31,8 +34,9 @@ export const useNodeHandler = Context.memo(() => {
           {
             env: input.environment,
             workerData: input,
-            stdout: true,
             stderr: true,
+            stdin: true,
+            stdout: true
           }
         );
         worker.stdout.on("data", (data: Buffer) => {
@@ -43,11 +47,11 @@ export const useNodeHandler = Context.memo(() => {
       });
     },
     canHandle: () => true,
-    stopWorker: async (workerID) => {
+    stopWorker: async workerID => {
       const worker = threads.get(workerID);
       await worker?.terminate();
     },
-    build: async (input) => {
+    build: async input => {
       const exists = cache[input.functionID];
       const parsed = path.parse(input.props.handler!);
       const file = [
@@ -58,11 +62,11 @@ export const useNodeHandler = Context.memo(() => {
         ".js",
         ".jsx",
         ".mjs",
-        ".cjs",
+        ".cjs"
       ]
-        .map((ext) => path.join(parsed.dir, parsed.name + ext))
-        .find((file) => {
-          return fs.existsSync(file);
+        .map(ext => path.join(parsed.dir, parsed.name + ext))
+        .find(file => {
+          return fsSync.existsSync(file);
         })!;
       if (!file)
         throw new Error(
@@ -77,22 +81,23 @@ export const useNodeHandler = Context.memo(() => {
         path.resolve(parsed.dir)
       );
 
+      const extension = isESM ? ".mjs" : ".cjs";
       const target = path.join(
         input.out,
         !relative.startsWith("..") && !path.isAbsolute(relative)
           ? relative
           : "",
-        parsed.name + (isESM ? ".mjs" : ".js")
+        parsed.name + extension
       );
       const handler = path.relative(
         input.out,
-        target.replace(".js", parsed.ext).replace(".mjs", parsed.ext)
+        target.replace(extension, parsed.ext)
       );
       if (exists?.rebuild) {
         const result = await exists.rebuild();
         cache[input.functionID] = result;
         return {
-          handler,
+          handler
         };
       }
 
@@ -102,9 +107,9 @@ export const useNodeHandler = Context.memo(() => {
         entryPoints: [file],
         platform: "node",
         external: [
-          ...(nodejs?.externalModules || []),
-          ...(nodejs?.nodeModules || []),
-          ...(external || []),
+          ...(nodejs?.install || []),
+          ...(nodejs?.install || []),
+          ...(external || [])
         ],
         bundle: true,
         metafile: true,
@@ -117,32 +122,65 @@ export const useNodeHandler = Context.memo(() => {
                 js: [
                   `import { createRequire as topLevelCreateRequire } from 'module';`,
                   `const require = topLevelCreateRequire(import.meta.url);`,
-                  nodejs.banner || "",
-                ].join("\n"),
-              },
-              outExtension: {
-                ".js": ".mjs",
-              },
+                  nodejs.banner || ""
+                ].join("\n")
+              }
             }
           : {
               format: "cjs",
               target: "node14",
               banner: nodejs.banner
                 ? {
-                    js: nodejs.banner,
+                    js: nodejs.banner
                   }
-                : undefined,
+                : undefined
             }),
         outfile: target,
         sourcemap: nodejs.sourcemap,
         minify: nodejs.minify,
-        ...override,
+        ...override
       });
+
+      // Install node_modules
+      if (input.mode === "deploy" && nodejs.install?.length) {
+        async function find(dir: string): Promise<string> {
+          if (dir === "/")
+            throw new VisibleError("Could not found a package.json file");
+          if (
+            await fs
+              .access(path.join(dir, "package.json"))
+              .then(() => true)
+              .catch(() => false)
+          )
+            return dir;
+          return find(path.join(dir, ".."));
+        }
+        const src = await find(parsed.dir);
+        const json = JSON.parse(
+          await fs
+            .readFile(path.join(src, "package.json"))
+            .then(x => x.toString())
+        );
+        fs.writeFile(
+          path.join(input.out, "package.json"),
+          JSON.stringify({
+            dependencies: Object.fromEntries(
+              nodejs.install?.map(x => [x, json.dependencies?.[x] || "*"])
+            )
+          })
+        );
+        await new Promise<void>(resolve => {
+          const process = exec("npm install", {
+            cwd: input.out
+          });
+          process.on("exit", () => resolve());
+        });
+      }
 
       cache[input.functionID] = result;
       return {
-        handler,
+        handler
       };
-    },
+    }
   });
 });

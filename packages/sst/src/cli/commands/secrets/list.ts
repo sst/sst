@@ -1,14 +1,13 @@
 import { Program } from "../../program.js";
 import { Config } from "../../../config.js";
+import { gray } from "colorette";
 
 export const list = (program: Program) =>
   program.command(
     "list [format]",
     "Fetch and decrypt all secrets",
-    (yargs) => yargs.positional("format", { type: "string", default: "table" }),
-    async (args) => {
-      const { gray } = await import("colorette");
-
+    yargs => yargs.positional("format", { type: "string", default: "table" }),
+    async args => {
       const secrets = await Config.secrets();
       switch (args.format) {
         case "env":
@@ -20,11 +19,11 @@ export const list = (program: Program) =>
           const keys = Object.keys(secrets);
           const keyLen = Math.max(
             "Secrets".length,
-            ...keys.map((key) => key.length)
+            ...keys.map(key => key.length)
           );
           const valueLen = Math.max(
             "Values".length,
-            ...keys.map((key) =>
+            ...keys.map(key =>
               secrets[key].value
                 ? secrets[key].value!.length
                 : `${secrets[key].fallback} (fallback)`.length
@@ -46,7 +45,7 @@ export const list = (program: Program) =>
               "".padEnd(valueLen + 2, "─") +
               "┤"
           );
-          keys.sort().forEach((key) => {
+          keys.sort().forEach(key => {
             const value = secrets[key].value
               ? secrets[key].value!
               : `${secrets[key].fallback} ${gray("(fallback)")}`;

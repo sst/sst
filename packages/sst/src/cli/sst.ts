@@ -1,7 +1,26 @@
 #!/usr/bin/env node
 
+import { blue, red } from "colorette";
+
+import { program } from "./program.js";
+import { secrets } from "./commands/secrets/secrets.js";
+import { update } from "./commands/update.js";
+import { start } from "./commands/start.js";
+import { bind } from "./commands/bind.js";
+import { build } from "./commands/build.js";
+import { VisibleError } from "../error.js";
+import { useSpinners } from "./spinner.js";
+import { deploy } from "./commands/deploy.js";
+
+secrets(program);
+update(program);
+start(program);
+bind(program);
+build(program);
+deploy(program);
+
 process.removeAllListeners("uncaughtException");
-process.on("uncaughtException", (err) => {
+process.on("uncaughtException", err => {
   const spinners = useSpinners();
   for (const spinner of spinners) {
     if (spinner.isSpinning) spinner.fail(spinner.text);
@@ -21,25 +40,6 @@ process.on("uncaughtException", (err) => {
 });
 
 process.on("beforeExit", () => {});
-
-import { blue, red } from "colorette";
-
-import { program } from "./program.js";
-import { secrets } from "./commands/secrets/secrets.js";
-import { update } from "./commands/update.js";
-import { start } from "./commands/start.js";
-import { bind } from "./commands/bind.js";
-import { build } from "./commands/build.js";
-import { VisibleError } from "../error.js";
-import { useSpinners } from "./spinner.js";
-import { deploy } from "./commands/deploy.js";
-
-secrets(program);
-update(program);
-start(program);
-bind(program);
-build(program);
-deploy(program);
 
 program
   .fail((msg, error) => {

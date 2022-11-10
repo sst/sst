@@ -2,7 +2,7 @@ import { Construct } from "constructs";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as cfnApig from "aws-cdk-lib/aws-apigatewayv2";
 import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
-import { App } from "../App";
+import { App } from "../App.js";
 
 export interface AccessLogProps {
   format?: string;
@@ -27,7 +27,7 @@ const defaultHttpFields = [
   // caller info
   `"ip":"$context.identity.sourceIp"`,
   `"userAgent":"$context.identity.userAgent"`,
-  `"cognitoIdentityId":"$context.identity.cognitoIdentityId"`,
+  `"cognitoIdentityId":"$context.identity.cognitoIdentityId"`
 ];
 
 const defaultWebSocketFields = [
@@ -47,7 +47,7 @@ const defaultWebSocketFields = [
   `"userAgent":"$context.identity.userAgent"`,
   `"cognitoIdentityId":"$context.identity.cognitoIdentityId"`,
   `"connectedAt":"$context.connectedAt"`,
-  `"connectionId":"$context.connectionId"`,
+  `"connectionId":"$context.connectionId"`
 ];
 
 export function buildAccessLogData(
@@ -81,9 +81,9 @@ export function buildAccessLogData(
       logGroupName: [
         `/aws/vendedlogs/apis`,
         `/${cleanupLogGroupName(apiName)}-${apiStage.api.apiId}`,
-        `/${cleanupLogGroupName(apiStage.stageName)}`,
+        `/${cleanupLogGroupName(apiStage.stageName)}`
       ].join(""),
-      retention: buildLogGroupRetention(accessLog),
+      retention: buildLogGroupRetention(accessLog)
     });
     destinationArn = logGroup.logGroupArn;
   }

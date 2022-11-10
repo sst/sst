@@ -7,7 +7,6 @@ import * as cdk from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as codebuild from "aws-cdk-lib/aws-codebuild";
-import { Runtime } from "@serverless-stack/core";
 
 import { App } from "./App.js";
 import { Secret, Parameter } from "./Config.js";
@@ -20,6 +19,7 @@ import { IVpc } from "aws-cdk-lib/aws-ec2";
 import { useDeferredTasks } from "./deferred_task.js";
 import { useWarning } from "./util/warning.js";
 import { useProject } from "../app.js";
+import { useRuntimeHandlers } from "../runtime/handlers.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -38,20 +38,6 @@ export interface JobProps {
    *```
    */
   handler: string;
-  /**
-   * Root directory of the project, typically where package.json is located. Set if using a monorepo with multiple subpackages
-   *
-   * @default Defaults to the same directory as sst.json
-   *
-   * @example
-   * ```js
-   * new Job(stack, "MyJob", {
-   *   srcPath: "services",
-   *   handler: "job.handler",
-   * })
-   *```
-   */
-  srcPath?: string;
   /**
    * The amount of memory in MB allocated.
    *
@@ -236,7 +222,7 @@ export class Job extends Construct implements SSTConstruct {
   public getConstructMetadata() {
     return {
       type: "Job" as const,
-      data: {},
+      data: {}
     };
   }
 
@@ -247,12 +233,12 @@ export class Job extends Construct implements SSTConstruct {
       variables: {
         functionName: {
           environment: this._jobInvoker.functionName,
-          parameter: this._jobInvoker.functionName,
-        },
+          parameter: this._jobInvoker.functionName
+        }
       },
       permissions: {
-        "lambda:*": [this._jobInvoker.functionArn],
-      },
+        "lambda:*": [this._jobInvoker.functionArn]
+      }
     };
   }
 
@@ -338,12 +324,12 @@ export class Job extends Construct implements SSTConstruct {
         buildImage: codebuild.LinuxBuildImage.fromDockerRegistry(
           "amazon/aws-lambda-nodejs:16"
         ),
-        computeType: this.normalizeMemorySize(this.props.memorySize || "3 GB"),
+        computeType: this.normalizeMemorySize(this.props.memorySize || "3 GB")
       },
       environmentVariables: {
         SST_APP: { value: app.name },
         SST_STAGE: { value: app.stage },
-        SST_SSM_PREFIX: { value: useProject().ssmPrefix },
+        SST_SSM_PREFIX: { value: useProject().ssmPrefix }
       },
       timeout: this.normalizeTimeout(this.props.timeout || "8 hours"),
       buildSpec: codebuild.BuildSpec.fromObject({
@@ -352,70 +338,73 @@ export class Job extends Construct implements SSTConstruct {
           build: {
             commands: [
               // commands will be set after the code is built
-            ],
-          },
-        },
-      }),
+            ]
+          }
+        }
+      })
     });
   }
 
   private buildCodeBuildProjectCode() {
-    const { handler, srcPath: srcPathRaw } = this.props;
-    const srcPath = Function.normalizeSrcPath(srcPathRaw || ".");
-    const bundle = { format: "esm" } as FunctionBundleNodejsProps;
-
     const app = this.node.root as App;
 
     // Handle remove (ie. sst remove)
-    if (app.skipBuild) {
+    if (app.mode !== "deploy") {
       // do nothing
     }
     // Handle build
     else {
       useDeferredTasks().add(async () => {
         // Build function
+        /*
         const bundled = await Runtime.Handler.bundle({
           id: this.localId,
           root: app.appPath,
           handler,
           runtime: "nodejs16.x",
           srcPath,
-          bundle,
+          bundle
         })!;
+        */
+        // TODO: Fix
+        const bundle = await useRuntimeHandlers().build(
+          this.node.addr,
+          "deploy"
+        );
 
+        // handle copy files
+
+        // create wrapper that calls the handler
+        const parsed = path.parse(bundle.handler);
+        await fs.writeFile(
+          path.join(bundle.out, "handler-wrapper.js"),
+          [
+            `console.log("")`,
+            `console.log("//////////////////////")`,
+            `console.log("// Start of the job //")`,
+            `console.log("//////////////////////")`,
+            `console.log("")`,
+            `import { ${parsed.ext.substring(1)} } from "./${path.join(
+              parsed.dir,
+              parsed.name
+            )}.mjs";`,
+            `const event = JSON.parse(process.env.SST_PAYLOAD);`,
+            `const result = await ${parsed.name}(event);`,
+            `console.log("")`,
+            `console.log("----------------------")`,
+            `console.log("")`,
+            `console.log("Result:", result);`,
+            `console.log("")`,
+            `console.log("//////////////////////")`,
+            `console.log("//  End of the job  //")`,
+            `console.log("//////////////////////")`,
+            `console.log("")`
+          ].join("\n")
+        );
+
+        const code = lambda.AssetCode.fromAsset(bundle.out);
+        this.updateCodeBuildProjectCode(code, "handler-wrapper.js");
         // This should always be true b/c runtime is always Node.js
-        if ("directory" in bundled) {
-          // handle copy files
-          Function.copyFiles(bundle, srcPath, bundled.directory);
-
-          // create wrapper that calls the handler
-          const [file, module] = bundled.handler.split(".");
-          await fs.writeFile(
-            path.join(bundled.directory, "handler-wrapper.js"),
-            [
-              `console.log("")`,
-              `console.log("//////////////////////")`,
-              `console.log("// Start of the job //")`,
-              `console.log("//////////////////////")`,
-              `console.log("")`,
-              `import { ${module} } from "./${file}.js";`,
-              `const event = JSON.parse(process.env.SST_PAYLOAD);`,
-              `const result = await ${module}(event);`,
-              `console.log("")`,
-              `console.log("----------------------")`,
-              `console.log("")`,
-              `console.log("Result:", result);`,
-              `console.log("")`,
-              `console.log("//////////////////////")`,
-              `console.log("//  End of the job  //")`,
-              `console.log("//////////////////////")`,
-              `console.log("")`,
-            ].join("\n")
-          );
-
-          const code = lambda.AssetCode.fromAsset(bundled.directory);
-          this.updateCodeBuildProjectCode(code, "handler-wrapper.js");
-        }
       });
     }
   }
@@ -432,8 +421,8 @@ export class Job extends Construct implements SSTConstruct {
         "phases:",
         "  build:",
         "    commands:",
-        `      - node ${script}`,
-      ].join("\n"),
+        `      - node ${script}`
+      ].join("\n")
     };
 
     this.attachPermissions([
@@ -441,30 +430,29 @@ export class Job extends Construct implements SSTConstruct {
         actions: ["s3:*"],
         effect: iam.Effect.ALLOW,
         resources: [
-          `arn:aws:s3:::${codeConfig.s3Location?.bucketName}/${codeConfig.s3Location?.objectKey}`,
-        ],
-      }),
+          `arn:aws:s3:::${codeConfig.s3Location?.bucketName}/${codeConfig.s3Location?.objectKey}`
+        ]
+      })
     ]);
   }
 
   private createLocalInvoker(): Function {
-    const { srcPath, handler, config, environment, permissions } = this.props;
+    const { handler, config, environment, permissions } = this.props;
 
     // Note: make the invoker function the same ID as the Job
     //       construct so users can identify the invoker function
     //       in the Console.
     const fn = new Function(this, this.node.id, {
-      srcPath,
       handler,
-      bundle: { format: "esm" },
+      nodejs: { format: "esm" },
       runtime: "nodejs16.x",
       timeout: 10,
       memorySize: 1024,
       config,
       environment: {
-        SST_DEBUG_TYPE: "job",
+        SST_DEBUG_TYPE: "job"
       },
-      permissions,
+      permissions
     });
     fn._disableBind = true;
     return fn;
@@ -477,25 +465,25 @@ export class Job extends Construct implements SSTConstruct {
       timeout: 10,
       memorySize: 1024,
       environment: {
-        PROJECT_NAME: this.job.projectName,
+        PROJECT_NAME: this.job.projectName
       },
       permissions: [
         new iam.PolicyStatement({
           effect: iam.Effect.ALLOW,
           actions: ["codebuild:StartBuild"],
-          resources: [this.job.projectArn],
-        }),
+          resources: [this.job.projectArn]
+        })
       ],
       nodejs: {
-        format: "esm",
-      },
+        format: "esm"
+      }
     });
   }
 
   private useForCodeBuild(constructs: SSTConstruct[]): void {
     const app = this.node.root as App;
 
-    constructs.forEach((c) => {
+    constructs.forEach(c => {
       // Bind environment
       const env = bindEnvironment(c);
       Object.entries(env).forEach(([key, value]) =>
@@ -509,8 +497,8 @@ export class Job extends Construct implements SSTConstruct {
           new iam.PolicyStatement({
             actions: [action],
             effect: iam.Effect.ALLOW,
-            resources,
-          }),
+            resources
+          })
         ])
       );
     });
@@ -523,8 +511,7 @@ export class Job extends Construct implements SSTConstruct {
   private addEnvironmentForCodeBuild(name: string, value: string): void {
     const project = this.job.node.defaultChild as codebuild.CfnProject;
     const env = project.environment as codebuild.CfnProject.EnvironmentProperty;
-    const envVars =
-      env.environmentVariables as codebuild.CfnProject.EnvironmentVariableProperty[];
+    const envVars = env.environmentVariables as codebuild.CfnProject.EnvironmentVariableProperty[];
     envVars.push({ name, value });
   }
 

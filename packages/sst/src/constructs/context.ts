@@ -1,5 +1,5 @@
 import { Context } from "../context/context.js";
-import { App } from "./App";
+import { App } from "./App.js";
 
 export const AppContext = Context.create<App>();
 export const useApp = AppContext.use;

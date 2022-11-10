@@ -2,12 +2,14 @@ import { workerData } from "node:worker_threads";
 import path from "path";
 import { fetch } from "undici";
 import fs from "fs";
+// import { createRequire } from "module";
+// global.require = createRequire(import.meta.url);
 
 const input = workerData;
 const parsed = path.parse(input.handler);
 const file = [".js", ".jsx", ".mjs", ".cjs"]
-  .map((ext) => path.join(parsed.dir, parsed.name + ext))
-  .find((file) => {
+  .map(ext => path.join(input.out, parsed.dir, parsed.name + ext))
+  .find(file => {
     return fs.existsSync(file);
   })!;
 
@@ -15,17 +17,18 @@ let mod: any;
 
 try {
   mod = await import(file);
-} catch (ex: any) {
+  // if (!mod) mod = require(file);
+} catch (ex) {
   await fetch(`${input.url}/runtime/init/error`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
+      "Content-Type": "application/json"
     },
     body: JSON.stringify({
       errorType: "Error",
       errorMessage: ex.message,
-      trace: ex.stack?.split("\n"),
-    }),
+      trace: ex.stack?.split("\n")
+    })
   });
 }
 
@@ -48,27 +51,26 @@ while (true) {
   }
 
   try {
-    response = await mod[parsed.ext](request);
-  } catch (ex: any) {
-    console.log(ex);
+    response = await mod[parsed.ext.substring(1)](request);
+  } catch (ex) {
     await fetch(`${input.url}/runtime/invocation/${requestID}/error`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
         errorType: "Error",
         errorMessage: ex.message,
-        trace: ex.stack?.split("\n"),
-      }),
+        trace: ex.stack?.split("\n")
+      })
     });
   }
 
   await fetch(`${input.url}/runtime/invocation/${requestID}/response`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
+      "Content-Type": "application/json"
     },
-    body: JSON.stringify(response),
+    body: JSON.stringify(response)
   });
 }

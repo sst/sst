@@ -37,7 +37,7 @@ export const useRuntimeWorkers = Context.memo(() => {
   const builder = useFunctionBuilder();
   const server = useRuntimeServerConfig();
 
-  builder.subscribe("function.built", async (evt) => {
+  handlers.subscribe("function.built", async evt => {
     for (const [_, worker] of workers) {
       if (worker.functionID === evt.properties.functionID) {
         const handler = handlers.for("test");
@@ -47,7 +47,7 @@ export const useRuntimeWorkers = Context.memo(() => {
     }
   });
 
-  bus.subscribe("function.invoked", async (evt) => {
+  bus.subscribe("function.invoked", async evt => {
     let worker = workers.get(evt.properties.workerID);
     if (worker) return;
     const handler = handlers.for("test");
@@ -57,15 +57,15 @@ export const useRuntimeWorkers = Context.memo(() => {
       ...build,
       workerID: evt.properties.workerID,
       environment: evt.properties.env,
-      url: `${server.url}/${evt.properties.workerID}/${server.API_VERSION}`,
+      url: `${server.url}/${evt.properties.workerID}/${server.API_VERSION}`
     });
     workers.set(evt.properties.workerID, {
       workerID: evt.properties.workerID,
-      functionID: evt.properties.functionID,
+      functionID: evt.properties.functionID
     });
     bus.publish("worker.started", {
       workerID: evt.properties.workerID,
-      functionID: evt.properties.functionID,
+      functionID: evt.properties.functionID
     });
   });
 
@@ -77,7 +77,7 @@ export const useRuntimeWorkers = Context.memo(() => {
       const worker = workers.get(workerID)!;
       bus.publish("worker.stdout", {
         ...worker,
-        message: message.trim(),
+        message: message.trim()
       });
     },
     exited(workerID: string) {
@@ -91,6 +91,6 @@ export const useRuntimeWorkers = Context.memo(() => {
       "worker.stopped",
       "worker.exited",
       "worker.stdout"
-    ),
+    )
   };
 });

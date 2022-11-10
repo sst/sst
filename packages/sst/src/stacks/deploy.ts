@@ -62,7 +62,7 @@ export function isPending(input: string) {
   return STATUSES_PENDING.includes(input as any);
 }
 
-declare module "../bus" {
+declare module "../bus.js" {
   export interface Events {
     "stack.updated": {
       stackID: string;

@@ -7,8 +7,6 @@
   "commit": false,
   "fixed": [
     [
-      "@serverless-stack/cli",
-      "@serverless-stack/core",
       "@serverless-stack/console",
       "create-sst",
       "sst",

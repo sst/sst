@@ -1,12 +1,12 @@
 import { useBootstrap } from "../bootstrap.js";
 import {
   useAWSCredentials,
-  useAWSCredentialsProvider,
+  useAWSCredentialsProvider
 } from "../credentials.js";
 import {
   S3Client,
   GetObjectCommand,
-  ListObjectsV2Command,
+  ListObjectsV2Command
 } from "@aws-sdk/client-s3";
 import { json } from "stream/consumers";
 import { useCache } from "../cache.js";
@@ -15,6 +15,7 @@ import { useBus } from "../bus.js";
 import { Stacks } from "./index.js";
 import { Logger } from "../logger.js";
 import { useProject } from "../app.js";
+import type { Metadata } from "../constructs/Metadata.js";
 
 declare module "../bus.js" {
   export interface Events {
@@ -27,50 +28,50 @@ export async function metadata() {
   const project = useProject();
   const [credentials, bootstrap] = await Promise.all([
     useAWSCredentials(),
-    useBootstrap(),
+    useBootstrap()
   ]);
   const s3 = new S3Client({
     region: project.region,
-    credentials: credentials,
+    credentials: credentials
   });
 
   const key = `stackMetadata/app.${project.name}/stage.${project.stage}/`;
   const list = await s3.send(
     new ListObjectsV2Command({
       Prefix: key,
-      Bucket: bootstrap.bucket,
+      Bucket: bootstrap.bucket
     })
   );
   const result = Object.fromEntries(
     await Promise.all(
-      list.Contents?.map(async (obj) => {
+      list.Contents?.map(async obj => {
         const stackID = obj.Key?.split("/").pop();
         const result = await s3
           .send(
             new GetObjectCommand({
               Key: obj.Key!,
-              Bucket: bootstrap.bucket,
+              Bucket: bootstrap.bucket
             })
           )
-          .then((result) => json(result.Body as any));
+          .then(result => json(result.Body as any));
         return [stackID, result];
       }) || []
     )
   );
   Logger.debug("Fetched metadata from", list.KeyCount, "stacks");
-  return result;
+  return result as Record<string, Metadata[]>;
 }
 
 export async function metadataForStack(stackID: string) {
   const [project, credentials, bootstrap] = await Promise.all([
     useProject(),
     useAWSCredentialsProvider(),
-    useBootstrap(),
+    useBootstrap()
   ]);
 
   const s3 = new S3Client({
     region: project.region,
-    credentials: credentials,
+    credentials: credentials
   });
   const key = `stackMetadata/app.${project.name}/stage.${project.stage}/stack.${stackID}.json`;
   Logger.debug("Getting metadata", key, "from", bootstrap.bucket);
@@ -80,10 +81,10 @@ export async function metadataForStack(stackID: string) {
       .send(
         new GetObjectCommand({
           Key: key,
-          Bucket: bootstrap.bucket,
+          Bucket: bootstrap.bucket
         })
       )
-      .then((result) => json(result.Body as any));
+      .then(result => json(result.Body as any));
     return result as any[];
   } catch (ex) {
     console.error(ex);
@@ -96,7 +97,7 @@ const MetadataContext = Context.create(async () => {
   const cache = await useCache();
   const data: Record<string, any[]> = await metadata();
 
-  bus.subscribe("stack.status", async (evt) => {
+  bus.subscribe("stack.status", async evt => {
     if (!Stacks.isFinal(evt.properties.status)) return;
     const meta = await metadataForStack(evt.properties.stackID);
     Logger.debug("Got metadata", meta);

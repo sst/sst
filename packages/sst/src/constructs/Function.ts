@@ -12,7 +12,6 @@ import * as lambdaNode from "aws-cdk-lib/aws-lambda-nodejs";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 
-import { Runtime } from "@serverless-stack/core";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Job } from "./Job.js";
@@ -73,7 +72,20 @@ export interface FunctionProps
     | "architecture"
     | "logRetention"
   > {
+  /**
+   * Used to configure additional files to copy into the function bundle
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   copyFiles: [{ from: "src/index.js" }]
+   * })
+   *```
+   */
+  copyFiles?: FunctionBundleCopyFilesProps[];
+
   nodejs?: NodeJSProps;
+
   /**
    * The CPU architecture of the lambda function.
    *
@@ -385,19 +397,6 @@ export interface NodeJSProps {
    * ```
    */
   loader?: Record<string, Loader>;
-  /**
-   * Packages that will not be included in the bundle. Usually used to exclude dependencies that are provided in layers
-   *
-   * @example
-   * ```js
-   * new Function(stack, "Function", {
-   *   bundle: {
-   *     externalModules: ["prisma"]
-   *   }
-   * })
-   * ```
-   */
-  externalModules?: string[];
 
   /**
    * Packages that will be excluded from the bundle and installed into node_modules instead. Useful for dependencies that cannot be bundled, like those with binary dependencies.
@@ -411,7 +410,7 @@ export interface NodeJSProps {
    * })
    * ```
    */
-  nodeModules?: string[];
+  install?: string[];
 
   /**
    * Use this to insert an arbitrary string at the beginning of generated JavaScript and CSS files.
@@ -486,19 +485,6 @@ export type FunctionBundleProp =
   | boolean;
 
 interface FunctionBundleBase {
-  /**
-   * Used to configure additional files to copy into the function bundle
-   *
-   * @example
-   * ```js
-   * new Function(stack, "Function", {
-   *   bundle: {
-   *     copyFiles: [{ from: "src/index.js" }]
-   *   }
-   * })
-   *```
-   */
-  copyFiles?: FunctionBundleCopyFilesProps[];
 }
 
 /**
@@ -943,22 +929,8 @@ export class Function extends lambda.Function implements SSTConstruct {
       });
       useDeferredTasks().add(async () => {
         // Build function
-        const handler = useRuntimeHandlers().for(runtime);
-        if (!handler)
-          throw new Error("No handler found for runtime: " + runtime);
-
-        const out = path.join(
-          useProject().paths.out,
-          "artifacts",
-          this.node.addr
-        );
-        const result = await handler?.build({
-          props: props,
-          functionID: this.node.addr,
-          mode: "deploy",
-          out,
-        });
-        const code = lambda.AssetCode.fromAsset(out);
+        const result = await useRuntimeHandlers().build(this.node.addr, "deploy")
+        const code = lambda.AssetCode.fromAsset(result.out);
 
         // Update function's code
         const codeConfig = code.bind(this);
@@ -1198,31 +1170,6 @@ export class Function extends lambda.Function implements SSTConstruct {
 
   static normalizeSrcPath(srcPath: string): string {
     return srcPath.replace(/\/+$/, "");
-  }
-
-  static copyFiles(
-    bundle: FunctionBundleProp | undefined,
-    srcPath: string,
-    buildPath: string
-  ) {
-    if (!bundle) return;
-    if (typeof bundle === "boolean") return;
-    if (!bundle.copyFiles) return;
-
-    bundle.copyFiles.forEach((entry) => {
-      const fromPath = path.join(srcPath, entry.from);
-      if (!fs.existsSync(fromPath))
-        throw new Error(
-          `Tried to copy nonexistent file from "${path.resolve(
-            fromPath
-          )}" - check copyFiles entry "${entry.from}"`
-        );
-      const to = entry.to || entry.from;
-      if (path.isAbsolute(to))
-        throw new Error(`Copy destination path "${to}" must be relative`);
-      const toPath = path.join(buildPath, to);
-      fs.copySync(fromPath, toPath);
-    });
   }
 
   static handleImportedLayer(

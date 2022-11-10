@@ -2,12 +2,12 @@ import { Construct } from "constructs";
 import * as sqs from "aws-cdk-lib/aws-sqs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
-import { App } from "./App";
+import { App } from "./App.js";
 import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct.js";
 import {
   Function as Fn,
   FunctionInlineDefinition,
-  FunctionDefinition,
+  FunctionDefinition
 } from "./Function.js";
 import { toCdkDuration } from "./util/duration.js";
 import { Permissions } from "./util/permission.js";
@@ -222,7 +222,6 @@ export class Queue extends Construct implements SSTConstruct {
     scope: Construct,
     consumer: FunctionInlineDefinition | QueueConsumerProps
   ): void {
-
     // Parse consumer props
     let eventSourceProps;
     let functionDefinition;
@@ -246,7 +245,7 @@ export class Queue extends Construct implements SSTConstruct {
     );
 
     // Attach permissions
-    this.permissionsAttachedForAllConsumers.forEach((permissions) => {
+    this.permissionsAttachedForAllConsumers.forEach(permissions => {
       fn.attachPermissions(permissions);
     });
     fn.bind(this.bindingForAllConsumers);
@@ -298,8 +297,8 @@ export class Queue extends Construct implements SSTConstruct {
       data: {
         name: this.cdk.queue.queueName,
         url: this.cdk.queue.queueUrl,
-        consumer: getFunctionRef(this.consumerFunction),
-      },
+        consumer: getFunctionRef(this.consumerFunction)
+      }
     };
   }
 
@@ -310,12 +309,12 @@ export class Queue extends Construct implements SSTConstruct {
       variables: {
         queueUrl: {
           environment: this.queueUrl,
-          parameter: this.queueUrl,
-        },
+          parameter: this.queueUrl
+        }
       },
       permissions: {
-        "sqs:*": [this.queueArn],
-      },
+        "sqs:*": [this.queueArn]
+      }
     };
   }
 
@@ -343,7 +342,7 @@ export class Queue extends Construct implements SSTConstruct {
           // TODO
           console.log(toCdkDuration("900 seconds"));
           debugOverrideProps = {
-            visibilityTimeout: toCdkDuration("900 seconds"),
+            visibilityTimeout: toCdkDuration("900 seconds")
           };
         }
       }
@@ -353,7 +352,7 @@ export class Queue extends Construct implements SSTConstruct {
       this.cdk.queue = new sqs.Queue(this, "Queue", {
         queueName: name,
         ...sqsQueueProps,
-        ...debugOverrideProps,
+        ...debugOverrideProps
       });
     }
   }

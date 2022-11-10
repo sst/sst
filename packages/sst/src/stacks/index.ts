@@ -6,7 +6,7 @@ import { useBootstrap } from "../bootstrap.js";
 import { Logger } from "../logger.js";
 import type { App } from "../constructs/App.js";
 import { useProject } from "../app.js";
-import { useNodeHandler } from "../runtime/node.js";
+import { metadata } from "./metadata.js";
 
 interface SynthOptions {
   buildDir?: string;
@@ -19,13 +19,14 @@ interface SynthOptions {
 async function synth(opts: SynthOptions) {
   Logger.debug("Synthesizing stacks...");
   const { App } = await import("../constructs/App.js");
+  const { useNodeHandler } = await import("../runtime/node.js")
+  useNodeHandler()
   const { Configuration } = await import("aws-cdk/lib/settings.js");
   const project = useProject();
-  useNodeHandler();
   const [identity] = await Promise.all([useSTSIdentity(), useBootstrap()]);
   opts = {
     buildDir: path.join(project.paths.out, "cdk.out"),
-    ...opts,
+    ...opts
   };
 
   const cfg = new Configuration();
@@ -39,11 +40,11 @@ async function synth(opts: SynthOptions) {
       region: project.region,
       mode: opts.mode,
       skipBuild: opts.mode !== "deploy",
-      bootstrap,
+      bootstrap
     },
     {
       outdir: opts.buildDir || path.join(project.paths.out, "cdk.out"),
-      context: cfg.context.all,
+      context: cfg.context.all
     }
   );
 
@@ -72,4 +73,5 @@ export const Stacks = {
   isFailed,
   deployMany,
   synth,
+  metadata
 };

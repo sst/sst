@@ -2,24 +2,22 @@
 
 import { Construct, IConstruct } from "constructs";
 import * as iam from "aws-cdk-lib/aws-iam";
-import {
-  Api,
-  Job,
-  RDS,
-  Table,
-  Topic,
-  Queue,
-  Bucket,
-  EventBus,
-  Function,
-  AppSyncApi,
-  WebSocketApi,
-  KinesisStream,
-  ApiGatewayV1Api,
-  Stack,
-} from "../index.js";
 import { isCDKConstruct, isCDKConstructOf } from "../Construct.js";
 import { Logger } from "../../logger.js";
+import { Api } from "../Api.js";
+import { ApiGatewayV1Api } from "../ApiGatewayV1Api.js";
+import { Stack } from "../Stack.js";
+import { WebSocketApi } from "../WebSocketApi.js";
+import { AppSyncApi } from "../AppSyncApi.js";
+import { Table } from "../Table.js";
+import { Topic } from "../Topic.js";
+import { Queue } from "../Queue.js";
+import { EventBus } from "../EventBus.js";
+import { KinesisStream } from "../KinesisStream.js";
+import { Bucket } from "../Bucket.js";
+import { Function } from "../Function.js";
+import { RDS } from "../RDS.js";
+import { Job } from "../Job.js";
 
 export type Permissions = "*" | Permission[];
 type SupportedPermissions =
@@ -51,8 +49,8 @@ export function attachPermissionsToRole(
   permissions: Permissions
 ): void {
   const { statements, grants } = permissionsToStatementsAndGrants(permissions);
-  statements.forEach((statement) => role.addToPolicy(statement));
-  grants.forEach((grant) => {
+  statements.forEach(statement => role.addToPolicy(statement));
+  grants.forEach(grant => {
     const construct = grant[0] as Construct;
     const methodName = grant[1] as keyof Construct;
     (construct[methodName] as { (construct: Construct): void })(role);
@@ -64,8 +62,8 @@ export function attachPermissionsToPolicy(
   permissions: Permissions
 ): void {
   const { statements, grants } = permissionsToStatementsAndGrants(permissions);
-  statements.forEach((statement) => policy.addStatements(statement));
-  grants.forEach((grant) => {
+  statements.forEach(statement => policy.addStatements(statement));
+  grants.forEach(grant => {
     throw new Error(
       `Cannot attach the "${grant[1]}" permission to an IAM policy.`
     );
@@ -100,7 +98,7 @@ function permissionsToStatementsAndGrants(
   if (permissions === "*") {
     return {
       statements: [buildPolicyStatement(permissions, ["*"])],
-      grants: [],
+      grants: []
     };
   }
 
@@ -141,7 +139,7 @@ function permissionsToStatementsAndGrants(
       const { account, region } = Stack.of(httpApi);
       statements.push(
         buildPolicyStatement("execute-api:Invoke", [
-          `arn:aws:execute-api:${region}:${account}:${httpApi.httpApiId}/*`,
+          `arn:aws:execute-api:${region}:${account}:${httpApi.httpApiId}/*`
         ])
       );
     } else if (permission instanceof ApiGatewayV1Api) {
@@ -149,7 +147,7 @@ function permissionsToStatementsAndGrants(
       const { account, region } = Stack.of(restApi);
       statements.push(
         buildPolicyStatement("execute-api:Invoke", [
-          `arn:aws:execute-api:${region}:${account}:${restApi.restApiId}/*`,
+          `arn:aws:execute-api:${region}:${account}:${restApi.restApiId}/*`
         ])
       );
     } else if (permission instanceof WebSocketApi) {
@@ -157,12 +155,12 @@ function permissionsToStatementsAndGrants(
       const { account, region } = Stack.of(webSocketApi);
       statements.push(
         buildPolicyStatement("execute-api:Invoke", [
-          `arn:aws:execute-api:${region}:${account}:${webSocketApi.apiId}/*`,
+          `arn:aws:execute-api:${region}:${account}:${webSocketApi.apiId}/*`
         ])
       );
       statements.push(
         buildPolicyStatement("execute-api:ManageConnections", [
-          permission._connectionsArn,
+          permission._connectionsArn
         ])
       );
     } else if (permission instanceof AppSyncApi) {
@@ -170,7 +168,7 @@ function permissionsToStatementsAndGrants(
       const { account, region } = Stack.of(graphqlApi);
       statements.push(
         buildPolicyStatement("appsync:GraphQL", [
-          `arn:aws:appsync:${region}:${account}:apis/${graphqlApi.apiId}/*`,
+          `arn:aws:appsync:${region}:${account}:apis/${graphqlApi.apiId}/*`
         ])
       );
     } else if (permission instanceof Table) {
@@ -257,7 +255,7 @@ function permissionsToStatementsAndGrants(
     ) {
       statements.push(
         buildPolicyStatement("firehose:*", [
-          (permission as any).deliveryStreamArn,
+          (permission as any).deliveryStreamArn
         ])
       );
     } else if (
@@ -320,6 +318,6 @@ function buildPolicyStatement(
   return new iam.PolicyStatement({
     effect: iam.Effect.ALLOW,
     actions: typeof actions === "string" ? [actions] : actions,
-    resources,
+    resources
   });
 }
