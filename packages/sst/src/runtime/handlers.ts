@@ -41,9 +41,7 @@ export interface RuntimeHandler {
   stopWorker: (workerID: string) => Promise<void>;
   shouldBuild: (input: ShouldBuildInput) => boolean;
   canHandle: (runtime: string) => boolean;
-  build: (
-    input: BuildInput
-  ) => Promise<{
+  build: (input: BuildInput) => Promise<{
     handler: string;
   }>;
 }
@@ -60,7 +58,7 @@ export const useRuntimeHandlers = Context.memo(() => {
       handlers.push(handler);
     },
     for: (runtime: string) => {
-      const result = handlers.find(x => x.canHandle(runtime));
+      const result = handlers.find((x) => x.canHandle(runtime));
       if (!result) throw new Error(`No handler found for runtime ${runtime}`);
       return result;
     },
@@ -76,18 +74,18 @@ export const useRuntimeHandlers = Context.memo(() => {
         functionID,
         out,
         mode,
-        props: func
+        props: func,
       });
 
       if (mode === "deploy" && func.copyFiles) {
-        func.copyFiles.forEach(entry => {
+        func.copyFiles.forEach((entry) => {
           const fromPath = path.join(project.paths.root, entry.from);
           const to = entry.to || entry.from;
           if (path.isAbsolute(to))
             throw new Error(`Copy destination path "${to}" must be relative`);
           const toPath = path.join(out, to);
           fs.cp(fromPath, toPath, {
-            recursive: true
+            recursive: true,
           });
         });
       }
@@ -95,9 +93,9 @@ export const useRuntimeHandlers = Context.memo(() => {
       bus.publish("function.built", { functionID });
       return {
         ...built,
-        out
+        out,
       };
-    }
+    },
   };
 
   return result;
@@ -121,18 +119,18 @@ export const useFunctionBuilder = Context.memo(() => {
       const result = await handlers.build(functionID, "start");
       artifacts.set(functionID, result);
       return artifacts.get(functionID)!;
-    }
+    },
   };
 
   const watcher = useWatcher();
-  watcher.subscribe("file.changed", async evt => {
+  watcher.subscribe("file.changed", async (evt) => {
     const functions = useFunctions();
     for (const [functionID, props] of Object.entries(functions.all)) {
       const handler = handlers.for("node");
       if (
         !handler?.shouldBuild({
           functionID,
-          file: evt.properties.file
+          file: evt.properties.file,
         })
       )
         continue;

@@ -1,4 +1,3 @@
-import chalk from "chalk";
 import path from "path";
 import url from "url";
 import fs from "fs-extra";
@@ -6,7 +5,6 @@ import glob from "glob";
 import crypto from "crypto";
 import spawn from "cross-spawn";
 import * as esbuild from "esbuild";
-import indent from "indent-string";
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 
@@ -48,6 +46,7 @@ import {
   getParameterPath,
 } from "./util/functionBinding.js";
 import { Logger } from "../logger.js";
+import { bold, red } from "colorette";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -376,27 +375,7 @@ export class RemixSite extends Construct implements SSTConstruct {
       // Connect Custom Domain to CloudFront Distribution
       this.createRoute53Records();
     } catch (error) {
-      // If running an SST test then re-throw the error so that it can be
-      // tested
-      if (app.isRunningSSTTest()) {
-        throw error;
-      }
-
-      console.error(
-        chalk.red(
-          `\nError: There was a problem synthesizing the RemixSite at "${props.path}".`
-        )
-      );
-      if (error instanceof Error) {
-        if (error.stack) {
-          console.error(chalk.red(indent(`\n${error.stack}`, 2)));
-        } else if (error.message) {
-          console.error(chalk.bold.red(indent(`\n${error.message}`, 2)));
-        } else {
-          console.error(chalk.bold.red(indent("\nAn unknown error occurred")));
-        }
-      }
-      process.exit(1);
+      throw error;
     }
   }
 
