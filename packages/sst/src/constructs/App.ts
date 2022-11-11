@@ -18,7 +18,7 @@ import { Function, FunctionProps } from "./Function.js";
 import * as Config from "./Config.js";
 import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite.js";
 import { Permissions } from "./util/permission.js";
-import { bindType } from "./util/functionBinding.js";
+import { bindParameters, bindType } from "./util/functionBinding.js";
 import { StackProps } from "./Stack.js";
 import { FunctionalStack, stack } from "./FunctionalStack.js";
 import { createRequire } from "module";
@@ -309,6 +309,7 @@ export class App extends cdk.App {
     this.ensureUniqueConstructIds();
     this.codegenTypes();
     this.buildConstructsMetadata();
+    this.createBindingSsmParameters();
     this.removeGovCloudUnsupportedResourceProperties();
 
     for (const child of this.node.children) {
@@ -362,6 +363,23 @@ export class App extends cdk.App {
     }
 
     return Object.keys(metaJson.inputs).map((input) => path.resolve(input));
+  }
+
+  private createBindingSsmParameters() {
+    class CreateSsmParameters implements cdk.IAspect {
+      public visit(c: IConstruct): void {
+        if (!isSSTConstruct(c)) {
+          return;
+        }
+        if (c instanceof Function && c._disableBind) {
+          return;
+        }
+
+        bindParameters(c);
+      }
+    }
+
+    cdk.Aspects.of(this).add(new CreateSsmParameters());
   }
 
   private buildConstructsMetadata(): void {

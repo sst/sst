@@ -25,6 +25,15 @@ export namespace Config {
   export async function parameters() {
     const result: (ReturnType<typeof parse> & { value: string })[] = [];
 
+    for await (const p of scan(PREFIX.FALLBACK)) {
+      const parsed = parse(p.Name!);
+      if (parsed.type === "secrets") continue;
+      result.push({
+        ...parsed,
+        value: p.Value!,
+      });
+    }
+
     for await (const p of scan(PREFIX.STAGE)) {
       const parsed = parse(p.Name!);
       if (parsed.type === "secrets") continue;
