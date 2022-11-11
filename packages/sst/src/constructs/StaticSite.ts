@@ -1,7 +1,6 @@
-import chalk from "chalk";
 import path from "path";
 import url from "url";
-import fs from "fs-extra";
+import fs from "fs";
 import crypto from "crypto";
 import { execSync } from "child_process";
 import { Construct } from "constructs";
@@ -10,7 +9,7 @@ import {
   Duration,
   CfnOutput,
   RemovalPolicy,
-  CustomResource
+  CustomResource,
 } from "aws-cdk-lib";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as s3Assets from "aws-cdk-lib/aws-s3-assets";
@@ -33,14 +32,16 @@ import {
   BaseSiteEnvironmentOutputsInfo,
   getBuildCmdEnvironment,
   buildErrorResponsesFor404ErrorPage,
-  buildErrorResponsesForRedirectToIndex
+  buildErrorResponsesForRedirectToIndex,
 } from "./BaseSite.js";
 import { SSTConstruct, isCDKConstruct } from "./Construct.js";
 import {
   ENVIRONMENT_PLACEHOLDER,
   FunctionBindingProps,
-  getParameterPath
+  getParameterPath,
 } from "./util/functionBinding.js";
+import { gray } from "colorette";
+import { useProject } from "../app.js";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -330,7 +331,6 @@ export class StaticSite extends Construct implements SSTConstruct {
     // Local development or skip build => stub asset
     this.isPlaceholder =
       (root.local || root.skipBuild) && !props.disablePlaceholder;
-    const buildDir = root.buildDir;
     const fileSizeLimit = root.isRunningSSTTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
@@ -347,8 +347,8 @@ export class StaticSite extends Construct implements SSTConstruct {
 
     // Build app
     this.buildApp();
-    this.assets = this.bundleAssets(fileSizeLimit, buildDir);
-    this.filenamesAsset = this.bundleFilenamesAsset(buildDir);
+    this.assets = this.bundleAssets(fileSizeLimit);
+    this.filenamesAsset = this.bundleFilenamesAsset();
 
     // Create Bucket
     this.cdk.bucket = this.createS3Bucket();
@@ -428,8 +428,8 @@ export class StaticSite extends Construct implements SSTConstruct {
       type: "StaticSite" as const,
       data: {
         distributionId: this.cdk.distribution.distributionId,
-        customDomainUrl: this.customDomainUrl
-      }
+        customDomainUrl: this.customDomainUrl,
+      },
     };
   }
 
@@ -445,17 +445,17 @@ export class StaticSite extends Construct implements SSTConstruct {
           // a CloudFormation circular dependency if the Api and the Site belong
           // to different stacks.
           environment: ENVIRONMENT_PLACEHOLDER,
-          parameter: this.customDomainUrl || this.url
-        }
+          parameter: this.customDomainUrl || this.url,
+        },
       },
       permissions: {
         "ssm:GetParameters": [
           `arn:aws:ssm:${app.region}:${app.account}:parameter${getParameterPath(
             this,
             "url"
-          )}`
-        ]
-      }
+          )}`,
+        ],
+      },
     };
   }
 
@@ -478,14 +478,14 @@ export class StaticSite extends Construct implements SSTConstruct {
     // build
     if (buildCommand) {
       try {
-        console.log(chalk.grey(`Building static site ${sitePath}`));
+        console.log(gray(`Building static site ${sitePath}`));
         execSync(buildCommand, {
           cwd: sitePath,
           stdio: "inherit",
           env: {
             ...process.env,
-            ...getBuildCmdEnvironment(this.props.environment)
-          }
+            ...getBuildCmdEnvironment(this.props.environment),
+          },
         });
       } catch (e) {
         throw new Error(
@@ -495,15 +495,12 @@ export class StaticSite extends Construct implements SSTConstruct {
     }
   }
 
-  private bundleAssets(
-    fileSizeLimit: number,
-    buildDir: string
-  ): s3Assets.Asset[] {
+  private bundleAssets(fileSizeLimit: number): s3Assets.Asset[] {
     if (this.isPlaceholder) {
       return [
         new s3Assets.Asset(this, "Asset", {
-          path: path.resolve(__dirname, "../support/static-site-stub")
-        })
+          path: path.resolve(__dirname, "../support/static-site-stub"),
+        }),
       ];
     }
 
@@ -521,10 +518,17 @@ export class StaticSite extends Construct implements SSTConstruct {
     // create zip files
     const script = path.join(__dirname, "../support/base-site-archiver.cjs");
     const zipPath = path.resolve(
-      path.join(buildDir, `StaticSite-${this.node.id}-${this.node.addr}`)
+      path.join(
+        useProject().paths.out,
+        "artifacts",
+        `StaticSite-${this.node.id}-${this.node.addr}`
+      )
     );
     // clear zip path to ensure no partX.zip remain from previous build
-    fs.removeSync(zipPath);
+    fs.rmSync(zipPath, {
+      force: true,
+      recursive: true,
+    });
     const cmd = ["node", script, siteOutputPath, zipPath, fileSizeLimit].join(
       " "
     );
@@ -532,7 +536,7 @@ export class StaticSite extends Construct implements SSTConstruct {
     try {
       execSync(cmd, {
         cwd: sitePath,
-        stdio: "inherit"
+        stdio: "inherit",
       });
     } catch (e) {
       throw new Error(
@@ -550,14 +554,14 @@ export class StaticSite extends Construct implements SSTConstruct {
 
       assets.push(
         new s3Assets.Asset(this, `Asset${partId}`, {
-          path: zipFilePath
+          path: zipFilePath,
         })
       );
     }
     return assets;
   }
 
-  private bundleFilenamesAsset(buildDir: string): s3Assets.Asset | undefined {
+  private bundleFilenamesAsset(): s3Assets.Asset | undefined {
     if (this.isPlaceholder) {
       return;
     }
@@ -566,7 +570,11 @@ export class StaticSite extends Construct implements SSTConstruct {
     }
 
     const zipPath = path.resolve(
-      path.join(buildDir, `StaticSite-${this.node.id}-${this.node.addr}`)
+      path.join(
+        useProject().paths.out,
+        "artifacts",
+        `StaticSite-${this.node.id}-${this.node.addr}`
+      )
     );
 
     // create assets
@@ -578,7 +586,7 @@ export class StaticSite extends Construct implements SSTConstruct {
     }
 
     return new s3Assets.Asset(this, `AssetFilenames`, {
-      path: filenamesPath
+      path: filenamesPath,
     });
   }
 
@@ -608,7 +616,7 @@ export class StaticSite extends Construct implements SSTConstruct {
       return new s3.Bucket(this, "S3Bucket", {
         autoDeleteObjects: true,
         removalPolicy: RemovalPolicy.DESTROY,
-        ...bucketProps
+        ...bucketProps,
       });
     }
   }
@@ -625,10 +633,10 @@ export class StaticSite extends Construct implements SSTConstruct {
       runtime: lambda.Runtime.PYTHON_3_7,
       handler: "s3-upload.handler",
       timeout: Duration.minutes(15),
-      memorySize: 1024
+      memorySize: 1024,
     });
     this.cdk.bucket.grantReadWrite(uploader);
-    this.assets.forEach(asset => asset.grantRead(uploader));
+    this.assets.forEach((asset) => asset.grantRead(uploader));
 
     // Create the custom resource function
     const handler = new lambda.Function(this, "S3Handler", {
@@ -641,8 +649,8 @@ export class StaticSite extends Construct implements SSTConstruct {
       timeout: Duration.minutes(15),
       memorySize: 1024,
       environment: {
-        UPLOADER_FUNCTION_NAME: uploader.functionName
-      }
+        UPLOADER_FUNCTION_NAME: uploader.functionName,
+      },
     });
     this.cdk.bucket.grantReadWrite(handler);
     this.filenamesAsset?.grantRead(handler);
@@ -653,14 +661,14 @@ export class StaticSite extends Construct implements SSTConstruct {
       serviceToken: handler.functionArn,
       resourceType: "Custom::SSTBucketDeployment",
       properties: {
-        Sources: this.assets.map(asset => ({
+        Sources: this.assets.map((asset) => ({
           BucketName: asset.s3BucketName,
-          ObjectKey: asset.s3ObjectKey
+          ObjectKey: asset.s3ObjectKey,
         })),
         DestinationBucketName: this.cdk.bucket.bucketName,
         Filenames: this.filenamesAsset && {
           BucketName: this.filenamesAsset.s3BucketName,
-          ObjectKey: this.filenamesAsset.s3ObjectKey
+          ObjectKey: this.filenamesAsset.s3ObjectKey,
         },
         FileOptions: (fileOptions || []).map(
           ({ exclude, include, cacheControl }) => {
@@ -671,14 +679,14 @@ export class StaticSite extends Construct implements SSTConstruct {
               include = [include];
             }
             const options = [];
-            exclude.forEach(per => options.push("--exclude", per));
-            include.forEach(per => options.push("--include", per));
+            exclude.forEach((per) => options.push("--exclude", per));
+            include.forEach((per) => options.push("--include", per));
             options.push("--cache-control", cacheControl);
             return options;
           }
         ),
-        ReplaceValues: this.getS3ContentReplaceValues()
-      }
+        ReplaceValues: this.getS3ContentReplaceValues(),
+      },
     });
   }
 
@@ -750,8 +758,8 @@ export class StaticSite extends Construct implements SSTConstruct {
       defaultBehavior: {
         origin: new cfOrigins.S3Origin(this.cdk.bucket),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        ...cdk?.distribution?.defaultBehavior
-      }
+        ...cdk?.distribution?.defaultBehavior,
+      },
     });
   }
 
@@ -765,7 +773,7 @@ export class StaticSite extends Construct implements SSTConstruct {
       runtime: lambda.Runtime.PYTHON_3_7,
       handler: "cf-invalidate.handler",
       timeout: Duration.minutes(15),
-      memorySize: 1024
+      memorySize: 1024,
     });
 
     // Grant permissions to invalidate CF Distribution
@@ -774,9 +782,9 @@ export class StaticSite extends Construct implements SSTConstruct {
         effect: iam.Effect.ALLOW,
         actions: [
           "cloudfront:GetInvalidation",
-          "cloudfront:CreateInvalidation"
+          "cloudfront:CreateInvalidation",
         ],
-        resources: ["*"]
+        resources: ["*"],
       })
     );
 
@@ -799,8 +807,8 @@ export class StaticSite extends Construct implements SSTConstruct {
         AssetsHash: assetsHash,
         DistributionId: this.cdk.distribution.distributionId,
         DistributionPaths: ["/*"],
-        WaitForInvalidation: waitForInvalidation
-      }
+        WaitForInvalidation: waitForInvalidation,
+      },
     });
   }
 
@@ -850,13 +858,13 @@ export class StaticSite extends Construct implements SSTConstruct {
 
     if (typeof customDomain === "string") {
       hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
-        domainName: customDomain
+        domainName: customDomain,
       });
     } else if (customDomain.cdk?.hostedZone) {
       hostedZone = customDomain.cdk.hostedZone;
     } else if (typeof customDomain.hostedZone === "string") {
       hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
-        domainName: customDomain.hostedZone
+        domainName: customDomain.hostedZone,
       });
     } else if (typeof customDomain.domainName === "string") {
       // Skip if domain is not a Route53 domain
@@ -865,7 +873,7 @@ export class StaticSite extends Construct implements SSTConstruct {
       }
 
       hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
-        domainName: customDomain.domainName
+        domainName: customDomain.domainName,
       });
     } else {
       hostedZone = customDomain.hostedZone;
@@ -889,7 +897,7 @@ export class StaticSite extends Construct implements SSTConstruct {
         acmCertificate = new acm.DnsValidatedCertificate(this, "Certificate", {
           domainName: customDomain,
           hostedZone: this.cdk.hostedZone,
-          region: "us-east-1"
+          region: "us-east-1",
         });
       } else if (customDomain.cdk?.certificate) {
         acmCertificate = customDomain.cdk.certificate;
@@ -897,7 +905,7 @@ export class StaticSite extends Construct implements SSTConstruct {
         acmCertificate = new acm.DnsValidatedCertificate(this, "Certificate", {
           domainName: customDomain.domainName,
           hostedZone: this.cdk.hostedZone,
-          region: "us-east-1"
+          region: "us-east-1",
         });
       }
     }
@@ -933,7 +941,7 @@ export class StaticSite extends Construct implements SSTConstruct {
       zone: this.cdk.hostedZone,
       target: route53.RecordTarget.fromAlias(
         new route53Targets.CloudFrontTarget(this.cdk.distribution)
-      )
+      ),
     };
     new route53.ARecord(this, "AliasRecord", recordProps);
     new route53.AaaaRecord(this, "AliasRecordAAAA", recordProps);
@@ -943,7 +951,7 @@ export class StaticSite extends Construct implements SSTConstruct {
       new route53Patterns.HttpsRedirect(this, "Redirect", {
         zone: this.cdk.hostedZone,
         recordNames: [domainAlias],
-        targetDomain: recordName
+        targetDomain: recordName,
       });
     }
   }
@@ -964,12 +972,12 @@ export class StaticSite extends Construct implements SSTConstruct {
           {
             files: "**/*.html",
             search: token,
-            replace: value
+            replace: value,
           },
           {
             files: "**/*.js",
             search: token,
-            replace: value
+            replace: value,
           }
         );
       });
@@ -989,7 +997,7 @@ export class StaticSite extends Construct implements SSTConstruct {
       id: this.node.id,
       path: this.props.path,
       stack: Stack.of(this).node.id,
-      environmentOutputs
+      environmentOutputs,
     } as BaseSiteEnvironmentOutputsInfo);
   }
 }

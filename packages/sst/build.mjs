@@ -135,6 +135,22 @@ await fs.cp(
     recursive: true,
   }
 );
+await esbuild.build({
+  keepNames: true,
+  bundle: true,
+  minify: true,
+  platform: "node",
+  target: "esnext",
+  format: "esm",
+  entryPoints: ["./support/base-site-archiver.cjs"],
+  banner: {
+    js: [
+      `import { createRequire as topLevelCreateRequire } from 'module';`,
+      `const require = topLevelCreateRequire(import.meta.url);`,
+    ].join(""),
+  },
+  outfile: "./dist/support/base-site-archiver.mjs",
+});
 
 console.log("Built");
 if (watch) console.log("Watching");

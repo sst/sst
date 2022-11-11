@@ -3,7 +3,7 @@
 
 import path from "path";
 import type { Loader, BuildOptions } from "esbuild";
-import fs from "fs-extra";
+import fs from "fs";
 import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
@@ -484,8 +484,7 @@ export type FunctionBundleProp =
   | FunctionBundleJavaProps
   | boolean;
 
-interface FunctionBundleBase {
-}
+interface FunctionBundleBase {}
 
 /**
  * Used to configure NodeJS bundling options
@@ -929,7 +928,10 @@ export class Function extends lambda.Function implements SSTConstruct {
       });
       useDeferredTasks().add(async () => {
         // Build function
-        const result = await useRuntimeHandlers().build(this.node.addr, "deploy")
+        const result = await useRuntimeHandlers().build(
+          this.node.addr,
+          "deploy"
+        );
         const code = lambda.AssetCode.fromAsset(result.out);
 
         // Update function's code

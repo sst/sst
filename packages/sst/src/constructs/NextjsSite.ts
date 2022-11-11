@@ -1,7 +1,6 @@
-import chalk from "chalk";
 import path from "path";
 import url from "url";
-import fs from "fs-extra";
+import fs from "fs";
 import spawn from "cross-spawn";
 import { execSync } from "child_process";
 
@@ -42,14 +41,19 @@ import {
 } from "./BaseSite.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import { getHandlerHash } from "./util/builder.js";
-import { ENVIRONMENT_PLACEHOLDER, FunctionBindingProps, getParameterPath } from "./util/functionBinding.js";
+import {
+  ENVIRONMENT_PLACEHOLDER,
+  FunctionBindingProps,
+  getParameterPath,
+} from "./util/functionBinding.js";
 import * as crossRegionHelper from "./nextjs-site/cross-region-helper.js";
+import { gray, red } from "colorette";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
-export interface NextjsDomainProps extends BaseSiteDomainProps { }
+export interface NextjsDomainProps extends BaseSiteDomainProps {}
 export interface NextjsCdkDistributionProps
-  extends BaseSiteCdkDistributionProps { }
+  extends BaseSiteCdkDistributionProps {}
 export interface NextjsSiteProps {
   /**
    * Path to the directory where the website source is located.
@@ -58,7 +62,7 @@ export interface NextjsSiteProps {
   /**
    * Path to the next executable, typically in node_modules.
    * This should be used if next is installed in a non-standard location.
-   * 
+   *
    * @default "./node_modules/.bin/next"
    */
   nextBinPath?: string;
@@ -117,7 +121,7 @@ export interface NextjsSiteProps {
        *   runtime: "nodejs16.x",
        * })
        *```
-      */
+       */
       runtime?: "nodejs12.x" | "nodejs14.x" | "nodejs16.x";
     };
   };
@@ -303,8 +307,8 @@ export class NextjsSite extends Construct implements SSTConstruct {
     const buildDir = app.buildDir;
     const fileSizeLimit = app.isRunningSSTTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
-      props.sstTestFileSizeLimitOverride || 200
+        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
+        props.sstTestFileSizeLimitOverride || 200
       : 200;
 
     this.props = props;
@@ -457,7 +461,10 @@ export class NextjsSite extends Construct implements SSTConstruct {
       },
       permissions: {
         "ssm:GetParameters": [
-          `arn:aws:ssm:${app.region}:${app.account}:parameter${getParameterPath(this, "url")}`,
+          `arn:aws:ssm:${app.region}:${app.account}:parameter${getParameterPath(
+            this,
+            "url"
+          )}`,
         ],
       },
     };
@@ -481,7 +488,10 @@ export class NextjsSite extends Construct implements SSTConstruct {
       path.join(buildDir, `NextjsSite-${this.node.id}-${this.node.addr}`)
     );
     // clear zip path to ensure no partX.zip remain from previous build
-    fs.removeSync(zipPath);
+    fs.rmSync(zipPath, {
+      force: true,
+      recursive: true,
+    });
 
     const result = spawn.sync(
       "node",
@@ -531,7 +541,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     // - the Lambda code directory is not empty
     const hasRealCode =
       typeof this.buildOutDir === "string" &&
-      fs.pathExistsSync(path.join(this.buildOutDir, handlerPath, "index.js"));
+      fs.existsSync(path.join(this.buildOutDir, handlerPath, "index.js"));
 
     // Create function asset
     const assetPath =
@@ -701,7 +711,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     let updaterCR;
     if (
       this.buildOutDir &&
-      fs.pathExistsSync(
+      fs.existsSync(
         path.join(this.buildOutDir, "regeneration-lambda", "index.js")
       )
     ) {
@@ -906,8 +916,8 @@ export class NextjsSite extends Construct implements SSTConstruct {
     const app = this.node.root as App;
     const buildOutput = app.isRunningSSTTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
-      props.sstTestBuildOutputPath || this.runBuild()
+        // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+        props.sstTestBuildOutputPath || this.runBuild()
       : this.runBuild();
 
     this.runAfterBuild();
@@ -921,7 +931,8 @@ export class NextjsSite extends Construct implements SSTConstruct {
     // validate site path exists
     if (!fs.existsSync(sitePath)) {
       throw new Error(
-        `No path found at "${path.resolve(sitePath)}" for the "${this.node.id
+        `No path found at "${path.resolve(sitePath)}" for the "${
+          this.node.id
         }" NextjsSite.`
       );
     }
@@ -935,12 +946,12 @@ export class NextjsSite extends Construct implements SSTConstruct {
       JSON.stringify({
         cwd: path.resolve(sitePath),
         args: ["build"],
-        cmd: this.props.nextBinPath ?? "./node_modules/.bin/next"
+        cmd: this.props.nextBinPath ?? "./node_modules/.bin/next",
       })
     );
 
     // Run build
-    console.log(chalk.grey(`Building Next.js site ${sitePath}`));
+    console.log(gray(`Building Next.js site ${sitePath}`));
     const result = spawn.sync(
       "node",
       [
@@ -983,12 +994,10 @@ export class NextjsSite extends Construct implements SSTConstruct {
     try {
       execSync(cmds.join(" && "), {
         cwd: path,
-        stdio: "inherit"
+        stdio: "inherit",
       });
     } catch (e) {
-      console.log(
-        chalk.red(`There was a problem running "afterBuild" command.`)
-      );
+      console.log(red(`There was a problem running "afterBuild" command.`));
       throw e;
     }
   }
@@ -1223,7 +1232,9 @@ export class NextjsSite extends Construct implements SSTConstruct {
     // Create custom resource
     const waitForInvalidation = this.isPlaceholder
       ? false
-      : (this.props.waitForInvalidation === false ? false : true);
+      : this.props.waitForInvalidation === false
+      ? false
+      : true;
     return new CustomResource(this, "CloudFrontInvalidation", {
       serviceToken: invalidator.functionArn,
       resourceType: "Custom::SSTCloudFrontInvalidation",
@@ -1392,8 +1403,12 @@ export class NextjsSite extends Construct implements SSTConstruct {
   }
 
   private readRoutesManifest(): RoutesManifest {
-    return fs.readJSONSync(
-      path.join(this.buildOutDir!, "default-lambda/routes-manifest.json")
+    return JSON.parse(
+      fs
+        .readFileSync(
+          path.join(this.buildOutDir!, "default-lambda/routes-manifest.json")
+        )
+        .toString()
     );
   }
 
@@ -1489,8 +1504,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
   private normalizeRuntime(runtime?: string): lambda.Runtime {
     if (runtime === "nodejs12.x") {
       return lambda.Runtime.NODEJS_12_X;
-    }
-    else if (runtime === "nodejs14.x") {
+    } else if (runtime === "nodejs14.x") {
       return lambda.Runtime.NODEJS_14_X;
     }
     return lambda.Runtime.NODEJS_16_X;

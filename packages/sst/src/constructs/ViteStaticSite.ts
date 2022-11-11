@@ -1,5 +1,5 @@
 import path from "path";
-import fs from "fs-extra";
+import fs from "fs";
 import { Construct } from "constructs";
 
 import { StaticSite, StaticSiteProps } from "./StaticSite.js";
@@ -94,6 +94,6 @@ interface ImportMeta {
   readonly env: ImportMetaEnv
 }`;
 
-  fs.ensureDirSync(path.dirname(typesFullPath));
+  fs.existsSync(path.dirname(typesFullPath));
   fs.writeFileSync(typesFullPath, content);
 }

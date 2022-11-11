@@ -1,7 +1,6 @@
 import * as cxapi from "@aws-cdk/cx-api";
 import type { CloudFormation } from "aws-sdk";
-import chalk from "chalk";
-import * as fs from "fs-extra";
+import fs from "fs/promises";
 import * as uuid from "uuid";
 import { addMetadataAssetsToManifest } from "aws-cdk/lib/assets.js";
 import { Tag } from "aws-cdk/lib/cdk-toolkit.js";
@@ -30,6 +29,7 @@ import {
   StackActivityMonitor,
   StackActivityProgress,
 } from "aws-cdk/lib/api/util/cloudformation/stack-activity-monitor.js";
+import { blue } from "colorette";
 
 type TemplateBodyParameter = {
   TemplateBody?: string;
@@ -312,12 +312,6 @@ export async function deployStack(
     // if we can skip deployment and we are performing a hotswap, let the user know
     // that no hotswap deployment happened
     if (options.hotswap) {
-      print(
-        `\n ${ICON} %s\n`,
-        chalk.bold(
-          "hotswap deployment skipped - no changes were detected (use --force to override)"
-        )
-      );
     }
     return {
       noOp: true,
@@ -490,10 +484,6 @@ class FullCloudFormationDeployment {
 
     debug(
       `Attempting to create ChangeSet with name ${changeSetName} to ${this.verb} stack ${this.stackName}`
-    );
-    print(
-      "%s: creating CloudFormation changeset...",
-      chalk.bold(this.stackName)
     );
     const changeSet = await this.cfn
       .createChangeSet({
@@ -760,7 +750,7 @@ async function makeBodyParameter(
       )}KiB. ` +
         `Templates larger than ${LARGE_TEMPLATE_SIZE_KB}KiB must be uploaded to S3.\n` +
         "Run the following command in order to setup an S3 bucket in this environment, and then re-deploy:\n\n",
-      chalk.blue(`\t$ cdk bootstrap ${resolvedEnvironment.name}\n`)
+      blue(`\t$ cdk bootstrap ${resolvedEnvironment.name}\n`)
     );
 
     throw new Error(

@@ -1,6 +1,6 @@
 import path from "path";
 import url from "url";
-import fs from "fs-extra";
+import fs from "fs";
 import glob from "glob";
 import crypto from "crypto";
 import spawn from "cross-spawn";
@@ -537,7 +537,9 @@ export class RemixSite extends Construct implements SSTConstruct {
     if (!fs.existsSync(path.join(sitePath, "package.json"))) {
       throw new Error(`No package.json found at "${sitePath}".`);
     }
-    const packageJson = fs.readJsonSync(path.join(sitePath, "package.json"));
+    const packageJson = JSON.parse(
+      fs.readFileSync(path.join(sitePath, "package.json")).toString()
+    );
     if (!packageJson.scripts || !packageJson.scripts.build) {
       throw new Error(
         `No "build" script found within package.json in "${sitePath}".`
@@ -577,7 +579,7 @@ export class RemixSite extends Construct implements SSTConstruct {
       path.join(this.sstBuildDir, `RemixSite-${this.node.id}-${this.node.addr}`)
     );
     // Remove zip dir to ensure no partX.zip remain from previous build
-    fs.removeSync(zipOutDir);
+    fs.rmSync(zipOutDir, { recursive: true, force: true });
 
     const result = spawn.sync(
       "node",

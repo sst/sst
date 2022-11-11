@@ -1,6 +1,6 @@
 import url from "url";
 import path from "path";
-import fs from "fs-extra";
+import fs from "fs";
 import crypto from "crypto";
 import { Construct, IConstruct } from "constructs";
 import * as iam from "aws-cdk-lib/aws-iam";

@@ -1,5 +1,5 @@
 import path from "path";
-import fs from "fs-extra";
+import fs from "fs";
 import * as cdk from "aws-cdk-lib";
 import { IConstruct } from "constructs";
 import * as s3 from "aws-cdk-lib/aws-s3";
@@ -357,7 +357,7 @@ export class App extends cdk.App {
     let metaJson;
 
     try {
-      metaJson = fs.readJsonSync(file);
+      metaJson = JSON.parse(fs.readFileSync(file).toString());
     } catch (e) {
       exitWithMessage("There was a problem reading the esbuild metafile.");
     }
@@ -630,7 +630,10 @@ export class App extends cdk.App {
   }
 
   private codegenCreateIndexType(typesPath: string) {
-    fs.removeSync(typesPath);
+    fs.rmSync(typesPath, {
+      recursive: true,
+      force: true,
+    });
     fs.mkdirSync(typesPath, {
       recursive: true,
     });

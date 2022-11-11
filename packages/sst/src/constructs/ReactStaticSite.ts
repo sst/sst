@@ -1,5 +1,5 @@
 import * as path from "path";
-import fs from "fs-extra";
+import fs from "fs";
 import { Construct } from "constructs";
 
 import { StaticSite, StaticSiteProps } from "./StaticSite.js";
@@ -13,7 +13,7 @@ export type ReactStaticSiteProps = StaticSiteProps;
 
 /**
  * The `ReactStaticSite` construct is a higher level CDK construct that makes it easy to create a React single page app.
- * 
+ *
  * @example
  *
  * Deploys a Create React App in the `path/to/src` directory.

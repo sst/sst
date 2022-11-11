@@ -180,8 +180,7 @@ async function run(json) {
         let constructorName = signature.name;
         if (constructorName === "new Secret") {
           constructorName = "new Config.Secret";
-        }
-        else if (constructorName === "new Parameter") {
+        } else if (constructorName === "new Parameter") {
           constructorName = "new Config.Parameter";
         }
         lines.push("```ts");
@@ -211,25 +210,30 @@ async function run(json) {
     lines.push(props);
 
     // Properties
-    const classProperties = renderProperties(file, json.children, construct.children, "", true)
+    const classProperties = renderProperties(
+      file,
+      json.children,
+      construct.children,
+      "",
+      true
+    );
     if (classProperties.length > 0) {
       lines.push(
         "## Properties",
         `An instance of \`${construct.name}\` has the following properties.`,
-        ...classProperties,
+        ...classProperties
       );
     }
 
     // Methods
-    const methods =
-      (construct.children || [])
+    const methods = (construct.children || [])
       .filter((c) => c.kindString === "Method")
-      .filter((c) =>
-        c.flags.isPublic &&
-        !c.flags.isExternal &&
-        !c.implementationOf
+      .filter(
+        (c) => c.flags.isPublic && !c.flags.isExternal && !c.implementationOf
       )
-      .filter((c) => !c.signatures[0].comment?.tags?.find((x) => x.tag === "internal"));
+      .filter(
+        (c) => !c.signatures[0].comment?.tags?.find((x) => x.tag === "internal")
+      );
     if (methods.length) {
       lines.push("## Methods");
       lines.push(
@@ -239,9 +243,9 @@ async function run(json) {
         lines.push(`### ${method.name}\n`);
         for (const signature of method.signatures) {
           lines.push(
-            ...signatureIsDeprecated(signature)
+            ...(signatureIsDeprecated(signature)
               ? renderSignatureForDeprecated(method, signature)
-              : renderSignature(file, json.children, method, signature)
+              : renderSignature(file, json.children, method, signature))
           );
         }
       }
@@ -515,9 +519,7 @@ function renderSignature(file, children, method, signature) {
     if (examples.length) {
       lines.push(...examples.map(renderTag));
     }
-    lines.push(
-      ...tags.filter((x) => x.tag !== "example").map(renderTag)
-    );
+    lines.push(...tags.filter((x) => x.tag !== "example").map(renderTag));
   }
   return lines;
 }
@@ -551,9 +553,7 @@ function renderSignatureForDeprecated(method, signature) {
     if (examples.length) {
       lines.push(...examples.map(renderTag));
     }
-    lines.push(
-      ...tags.filter((x) => x.tag !== "example").map(renderTag)
-    );
+    lines.push(...tags.filter((x) => x.tag !== "example").map(renderTag));
   }
 
   lines.push(":::");

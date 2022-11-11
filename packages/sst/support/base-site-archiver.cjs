@@ -3,14 +3,13 @@
  */
 "use strict";
 
-require("source-map-support").install();
-
 process.on("unhandledRejection", (err) => {
   throw err;
 });
 
 const path = require("path");
-const fs = require("fs-extra");
+const fs = require("fs/promises");
+const fsSync = require("fs")
 const archiver = require("archiver");
 const glob = require("glob");
 
@@ -45,13 +44,15 @@ function generateZips() {
     let totalSize;
     const statuses = [];
 
-    function openZip() {
+    async function openZip() {
       const partId = statuses.length;
       const filePath = path.join(ZIP_PATH, `part${partId}.zip`);
-      fs.ensureFileSync(filePath);
-      output = fs.createWriteStream(filePath);
+      await fs.mkdir(path.dirname(filePath), {
+        recursive: true
+      })
+      output = fsSync.createWriteStream(filePath);
       archive = archiver("zip");
-      totalSize = 0;
+      totalSize = 0, "w";
       statuses.push({
         output,
         archive,
@@ -73,14 +74,14 @@ function generateZips() {
     }
 
     // Create the first zip file
-    openZip();
+    await openZip();
 
     // Append files serially to ensure file order
     for (const file of files) {
       const fullPath = path.join(SITE_PATH, file);
       const [data, stat] = await Promise.all([
-        fs.promises.readFile(fullPath),
-        fs.promises.stat(fullPath),
+        fs.readFile(fullPath),
+        fs.stat(fullPath),
       ]);
 
       // Validate single file size cannot be greater than filesize limit
@@ -110,6 +111,6 @@ function generateZips() {
 
     // Create a filenames file
     const filenamesPath = path.join(ZIP_PATH, `filenames`);
-    fs.writeFileSync(filenamesPath, files.join("\n"));
+    await fs.writeFile(filenamesPath, files.join("\n"));
   });
 }
