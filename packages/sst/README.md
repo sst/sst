@@ -6,7 +6,7 @@ This is a preview of the upcoming SST 2.0. It is incomplete so if you run into a
 
 ## Migration Guide
 
-- SST is now a monopackage. Remove all packages referencing `@serverless-stack/*`.
+- SST is now a monopackage. Remove all packages referencing `@serverless-stack/resources` and `@serverless-stack/cli`.
 - Install the `sst@snapshot` package - hell yeah we got this name
 - You can now specify `sst.json` as `sst.config.mjs` file. Here's an example:
 
