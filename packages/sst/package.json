@@ -50,7 +50,7 @@
     "ink-spinner": "^4.0.3",
     "ora": "^6.1.2",
     "promptly": "^3.2.0",
-    "react": "^18.2.0",
+    "react": "17.0.2",
     "remeda": "^1.2.0",
     "solid-ink": "^0.0.6",
     "solid-js": "^1.4.8",
