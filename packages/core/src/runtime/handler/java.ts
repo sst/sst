@@ -110,6 +110,7 @@ export const JavaHandler: Definition<Bundle> = opts => {
     watcher: {
       include: [
         path.join(opts.srcPath, "**/*.java"),
+        path.join(opts.srcPath, "**/*.kt"),
         path.join(opts.srcPath, "**/*.gradle"),
       ],
       ignore: [],
