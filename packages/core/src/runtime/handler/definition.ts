@@ -70,11 +70,11 @@ export function buildAsync(opts: Opts, cmd: Command) {
     let buffer = "";
     proc.stdout?.on("data", (data) => {
       buffer += data;
-      isDebug && logger.debug(data);
+      isDebug && process.stdout.write(data);
     });
     proc.stderr?.on("data", (data) => {
       buffer += data;
-      isDebug && logger.debug(data);
+      isDebug && process.stderr.write(data);
     });
     // Note: in the case of Java runtime, if gradle is not found,
     // "on error" will get called. "on exit" will not get called.
