@@ -710,19 +710,19 @@ declare module "@serverless-stack/node/${binding.clientPackage}" {
 
   private printWarnings() {
     if (this.warnings.usingConfig) {
-      logger.warn(`\nWARNING: The "config" prop is deprecated, and will be removed in SST v2. Pass Parameters and Secrets in through the "bind" prop. Read more about how to upgrade here — https://docs.sst.dev/upgrade-guide#upgrade-to-v116`);
+      logger.warn(`\nWARNING: The "config" prop is deprecated, and will be removed in SST v2. Pass Parameters and Secrets in through the "bind" prop. Read about how to upgrade here — https://docs.sst.dev/upgrade-guide#upgrade-to-v116`);
     }
 
     if (this.warnings.usingPermissionsWithSSTConstruct) {
-      logger.warn(`\nWARNING: Passing SST constructs into "permissions" is deprecated, and will be removed in SST v2. Pass them into the "bind" prop. Read more about how to upgrade here — https://docs.sst.dev/upgrade-guide#upgrade-to-v116`);
+      logger.warn(`\nWARNING: Passing SST constructs into "permissions" is deprecated, and will be removed in SST v2. Pass them into the "bind" prop. Read about how to upgrade here — https://docs.sst.dev/upgrade-guide#upgrade-to-v116`);
     }
 
     if (this.warnings.usingApiPothosRoute) {
-      logger.warn(`\nWARNING: The "pothos" route type is renamed to "graphql" for the Api construct, and will be removed in SST v2. Read more about how to upgrade here — https://docs.sst.dev/upgrade-guide#upgrade-to-v118`);
+      logger.warn(`\nWARNING: The "pothos" route type is renamed to "graphql" for the Api construct, and will be removed in SST v2. Read about how to upgrade here — https://docs.sst.dev/upgrade-guide#upgrade-to-v118`);
     }
 
     if (this.warnings.usingGraphQLApi) {
-      logger.warn(`\nWARNING: The "GraphQLApi" construct is deprecated, and will be removed in SST v2. Use the "Api" construct with a "graphql" route instead. Read more about how to upgrade here — https://docs.sst.dev/upgrade-guide#upgrade-to-v118`);
+      logger.warn(`\nWARNING: The "GraphQLApi" construct is deprecated, and will be removed in SST v2. Use the "Api" construct with a "graphql" route instead. Read about how to upgrade here — https://docs.sst.dev/upgrade-guide#upgrade-to-v118`);
     }
   }
 

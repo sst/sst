@@ -51,7 +51,6 @@ To view the latest release and all historical releases, <a href={`${config.githu
   ```diff
   - new GraphQLApi(stack, "api", {
   -   server: "src/graphql.handler",
-  -   codegen: "./graphql/codegen.yml"
   - });
 
   + new Api(stack, "api", {
@@ -59,7 +58,6 @@ To view the latest release and all historical releases, <a href={`${config.githu
   +     "POST /": {
   +       type: "graphql",
   +       function: "src/graphql.handler",
-  +       codegen: "./graphql/codegen.yml"
   +     }
   +   }
   + });

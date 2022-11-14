@@ -670,7 +670,7 @@ new Api(stack, "Api", {
 
 ### GraphQL
 
-Add a GraphQL route with [`graphql-codegen`](https://github.com/dotansimha/graphql-code-generator) configuration file.
+Add a GraphQL route using a _Code-first_ GraphQL setup, configured using [Pothos](https://pothos-graphql.dev/).
 
 ```js
 new Api(stack, "Api", {
@@ -678,7 +678,13 @@ new Api(stack, "Api", {
     "POST /graphql": {
       type: "graphql",
       function: "src/graphql.main",
-      codegen: "./graphql/codegen.yml"
+      pothos: {
+        schema: "backend/functions/graphql/schema.ts",
+        output: "graphql/schema.graphql",
+        commands: [
+          "./genql graphql/graphql.schema graphql/
+        ]
+      }
     },
   },
 });

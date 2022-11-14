@@ -645,22 +645,6 @@ export interface ApiGraphQLRouteProps<AuthorizerKeys>
      */
     commands?: string[];
   };
-  /**
-   * Path to graphql-codegen configuration file
-   *
-   * @example
-   * ```js
-   * new Api(stack, "api", {
-   *  routes: {
-   *    "POST /graphql": {
-   *      type: "graphql",
-   *      codegen: "./graphql/codegen.yml"
-   *    }
-   *  }
-   * });
-   * ```
-   */
-  codegen?: string;
 }
 
 /////////////////////
@@ -721,7 +705,7 @@ export class Api<
       ApiPothosRouteProps<any>,
       "schema" | "output" | "commands"
     >)
-    | ({ type: "graphql"; function: Fn } & ApiGraphQLRouteProps<any>["pothos"] & { codegen?: ApiGraphQLRouteProps<any>["codegen"] })
+    | ({ type: "graphql"; function: Fn } & ApiGraphQLRouteProps<any>["pothos"])
     | { type: "url"; url: string }
     | { type: "alb"; alb: elb.IApplicationListener };
   };
@@ -1005,7 +989,6 @@ export class Api<
               schema: data.schema,
               output: data.output,
               commands: data.commands,
-              codegen: data.codegen,
             };
 
           return { type: data.type, route: key };
@@ -1453,23 +1436,7 @@ export class Api<
         output: routeProps.pothos?.output,
         schema: routeProps.pothos?.schema,
         commands: routeProps.pothos?.commands,
-        codegen: routeProps.codegen,
       };
-    }
-
-    // Run codegen
-    const app = App.of(scope) as App;
-    if (routeProps.codegen && !app.local) {
-      const result = spawn.sync(
-        "npx",
-        ["graphql-codegen", "-c", routeProps.codegen],
-        {
-          stdio: "inherit",
-        }
-      );
-      if (result.status !== 0) {
-        throw new Error(`Failed to generate the schema for "${routeKey}"`);
-      }
     }
 
     return result;
