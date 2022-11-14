@@ -11,9 +11,9 @@ import { blue } from "colorette";
 
 export interface Project {
   name: string;
+  region: string;
   stage?: string;
   profile?: string;
-  region?: string;
   main?: string;
   ssmPrefix?: string;
 }
