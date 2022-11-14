@@ -50,6 +50,10 @@ export class GraphQLApi extends Api {
   private rootPath?: string;
 
   constructor(scope: Construct, id: string, props: GraphQLApiProps) {
+    // Show warning
+    const app = scope.node.root as App;
+    app.reportWarning("usingGraphQLApi");
+
     if ("routes" in props || !props.server) {
       throw new Error(
         `Please use the "server" option instead of the "routes" to configure the handler for the "${id}" GraphQLApi`

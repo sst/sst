@@ -1611,6 +1611,22 @@ test("routes: ApiFunctionRouteProps cdk.function", async () => {
   });
 });
 
+test("routes: ApiGraphQLRouteProps-function-string", async () => {
+  const app = new App({ name: "api" });
+  const stack = new Stack(app, "stack");
+  new Api(stack, "Api", {
+    routes: {
+      "GET /": {
+        type: "graphql",
+        function: "test/lambda.handler",
+      },
+    },
+  });
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "index.placeholder",
+  });
+});
+
 test("routes: ApiAlbRouteProps method is undefined", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
 
