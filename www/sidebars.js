@@ -244,7 +244,6 @@ module.exports = {
       ],
       Api: [
         "constructs/Api",
-        "constructs/GraphQLApi",
         "constructs/AppSyncApi",
         "constructs/WebSocketApi"
       ],
@@ -275,6 +274,7 @@ module.exports = {
         "constructs/Script",
         "constructs/DebugApp",
         "constructs/DebugStack",
+        "constructs/GraphQLApi",
         "constructs/ApiGatewayV1Api"
       ]
     }

@@ -16,6 +16,57 @@ To view the latest release and all historical releases, <a href={`${config.githu
 
 ---
 
+## Upgrade to v1.18
+
+#### Constructs
+
+- Api: The `pothos` route type is renamed to `graphql`, and will be removed in SST v2.
+
+  ```diff
+  new Api(stack, "api", {
+    routes: {
+      "POST /graphql": {
+  -     type: "pothos",
+  +     type: "graphql",
+        function: handler: "functions/graphql/graphql.ts",
+  -     schema: "backend/functions/graphql/schema.ts",
+  -     output: "graphql/schema.graphql",
+  -     commands: [
+  -       "./genql graphql/graphql.schema graphql/
+  -     ]
+  +     pothos: {
+  +       schema: "backend/functions/graphql/schema.ts",
+  +       output: "graphql/schema.graphql",
+  +       commands: [
+  +         "./genql graphql/graphql.schema graphql/
+  +       ]
+  +     }
+      }
+    }
+  });
+  ```
+
+- GraphQLApi: The `GraphQLApi` construct is deprecated, and will be removed in SST v2. Use the `Api` construct with a `graphql` route instead.
+
+  ```diff
+  - new GraphQLApi(stack, "api", {
+  -   server: "src/graphql.handler",
+  -   codegen: "./graphql/codegen.yml"
+  - });
+
+  + new Api(stack, "api", {
+  +   routes: {
+  +     "POST /": {
+  +       type: "graphql",
+  +       function: "src/graphql.handler",
+  +       codegen: "./graphql/codegen.yml"
+  +     }
+  +   }
+  + });
+  ```
+
+---
+
 ## Upgrade to v1.16
 
 [Resource Binding](resource-binding.md) was introduced in this release. It simplies accessing the resources in your app. For example, here's how we bind the bucket to the function:

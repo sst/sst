@@ -668,7 +668,25 @@ new Api(stack, "Api", {
 });
 ```
 
-### Throttling
+### GraphQL
+
+Add a GraphQL route with [`graphql-codegen`](https://github.com/dotansimha/graphql-code-generator) configuration file.
+
+```js
+new Api(stack, "Api", {
+  routes: {
+    "POST /graphql": {
+      type: "graphql",
+      function: "src/graphql.main",
+      codegen: "./graphql/codegen.yml"
+    },
+  },
+});
+```
+
+### Advanced examples
+
+#### Throttling
 
 ```js {2-7}
 new Api(stack, "Api", {
@@ -684,8 +702,6 @@ new Api(stack, "Api", {
   },
 });
 ```
-
-### Advanced examples
 
 #### Configuring the Http Api
 

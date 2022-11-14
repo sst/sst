@@ -718,7 +718,7 @@ declare module "@serverless-stack/node/${binding.clientPackage}" {
     }
 
     if (this.warnings.usingApiPothosRoute) {
-      logger.warn(`\nWARNING: "pothos" routes are deprecated for the Api construct, and will be removed in SST v2. Use "graphql" routes instead. Read more about how to upgrade here — https://docs.sst.dev/upgrade-guide#upgrade-to-v118`);
+      logger.warn(`\nWARNING: The "pothos" route type is renamed to "graphql" for the Api construct, and will be removed in SST v2. Read more about how to upgrade here — https://docs.sst.dev/upgrade-guide#upgrade-to-v118`);
     }
 
     if (this.warnings.usingGraphQLApi) {
