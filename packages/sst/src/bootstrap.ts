@@ -10,6 +10,7 @@ import { useProject } from "./app.js";
 import { createSpinner } from "./cli/spinner.js";
 import { Context } from "./context/context.js";
 import { useAWSClient } from "./credentials.js";
+import { VisibleError } from "./error.js";
 import { Logger } from "./logger.js";
 import { Stacks } from "./stacks/index.js";
 
@@ -69,7 +70,16 @@ export const useBootstrap = Context.memo(async () => {
       tier: ParameterTier.STANDARD,
     });
     const asm = app.synth();
-    await Stacks.deployMany(asm.stacks);
+    const result = await Stacks.deploy(asm.stacks[0]);
+    if (Object.values(result.errors).length > 0) {
+      throw new VisibleError(
+        `Failed to deploy bootstrap stack:\n${JSON.stringify(
+          result.errors,
+          null,
+          4
+        )}`
+      );
+    }
     spinner.succeed();
     return ssm();
   }
