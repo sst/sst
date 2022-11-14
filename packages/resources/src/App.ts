@@ -82,7 +82,9 @@ export interface AppDeployProps {
 type AppRemovalPolicy = Lowercase<keyof typeof cdk.RemovalPolicy>;
 
 type AppWarningType = "usingConfig"
-  | "usingPermissionsWithSSTConstruct";
+  | "usingPermissionsWithSSTConstruct"
+  | "usingApiPothosRoute"
+  | "usingGraphQLApi";
 
 export type AppProps = cdk.AppProps;
 
@@ -293,7 +295,7 @@ export class App extends cdk.App {
   /**
    * Adds additional default config to be applied to all Lambda functions in the app.
    * 
-   * @deprecated The "addDefaultFunctionConfig" method will be removed in SST v2. Pass Parameters and Secrets in through the "addDefaultFunctionBinding" function. Read more about how to upgrade here — https://docs.serverless-stack.com/upgrade-guide#upgrade-to-v116
+   * @deprecated The "addDefaultFunctionConfig" method will be removed in SST v2. Pass Parameters and Secrets in through the "addDefaultFunctionBinding" function. Read more about how to upgrade here — https://docs.sst.dev/upgrade-guide#upgrade-to-v116
    *
    * @example
    * ```js
@@ -562,7 +564,7 @@ export class App extends cdk.App {
           throw new Error([
             `Invalid id "${id}" for ${className} construct.`,
             ``,
-            `Starting v1.16, construct ids can only contain alphabetic characters, hyphens ("-"), and underscores ("_"), and must start with an alphabetic character. If you are migrating from version 1.15 or earlier, please see the upgrade guide — https://docs.serverless-stack.com/upgrade-guide#upgrade-to-v116`,
+            `Starting v1.16, construct ids can only contain alphabetic characters, hyphens ("-"), and underscores ("_"), and must start with an alphabetic character. If you are migrating from version 1.15 or earlier, please see the upgrade guide — https://docs.sst.dev/upgrade-guide#upgrade-to-v116`,
           ].join("\n"));
         }
         else if (["Parameter", "Secret"].includes(className)) {
@@ -580,7 +582,7 @@ export class App extends cdk.App {
               ? `${className} with id "${id}" already exists.`
               : `You cannot have the same ${className} id with an underscore and hyphen: "${existingIds[normId]}" and "${id}".`,
             ``,
-            `Starting v1.16, constructs must have unique ids for a given construct type. If you are migrating from version 1.15 or earlier, set the "cdk.id" in the construct with the existing id, and pick a unique id for the construct. Please see the upgrade guide — https://docs.serverless-stack.com/upgrade-guide#upgrade-to-v116`,
+            `Starting v1.16, constructs must have unique ids for a given construct type. If you are migrating from version 1.15 or earlier, set the "cdk.id" in the construct with the existing id, and pick a unique id for the construct. Please see the upgrade guide — https://docs.sst.dev/upgrade-guide#upgrade-to-v116`,
             ``,
             `    For example, if you have two Bucket constructs with the same id:`,
             `      new Bucket(this, "bucket");`,
@@ -708,11 +710,19 @@ declare module "@serverless-stack/node/${binding.clientPackage}" {
 
   private printWarnings() {
     if (this.warnings.usingConfig) {
-      logger.warn(`\nWARNING: The "config" prop is deprecated, and will be removed in SST v2. Pass Parameters and Secrets in through the "bind" prop. Read more about how to upgrade here — https://docs.serverless-stack.com/upgrade-guide#upgrade-to-v116`);
+      logger.warn(`\nWARNING: The "config" prop is deprecated, and will be removed in SST v2. Pass Parameters and Secrets in through the "bind" prop. Read about how to upgrade here — https://docs.sst.dev/upgrade-guide#upgrade-to-v116`);
     }
 
     if (this.warnings.usingPermissionsWithSSTConstruct) {
-      logger.warn(`\nWARNING: Passing SST constructs into "permissions" is deprecated, and will be removed in SST v2. Pass them into the "bind" prop. Read more about how to upgrade here — https://docs.serverless-stack.com/upgrade-guide#upgrade-to-v116`);
+      logger.warn(`\nWARNING: Passing SST constructs into "permissions" is deprecated, and will be removed in SST v2. Pass them into the "bind" prop. Read about how to upgrade here — https://docs.sst.dev/upgrade-guide#upgrade-to-v116`);
+    }
+
+    if (this.warnings.usingApiPothosRoute) {
+      logger.warn(`\nWARNING: The "pothos" route type is renamed to "graphql" for the Api construct, and will be removed in SST v2. Read about how to upgrade here — https://docs.sst.dev/upgrade-guide#upgrade-to-v118`);
+    }
+
+    if (this.warnings.usingGraphQLApi) {
+      logger.warn(`\nWARNING: The "GraphQLApi" construct is deprecated, and will be removed in SST v2. Use the "Api" construct with a "graphql" route instead. Read about how to upgrade here — https://docs.sst.dev/upgrade-guide#upgrade-to-v118`);
     }
   }
 

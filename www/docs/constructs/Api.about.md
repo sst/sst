@@ -668,7 +668,31 @@ new Api(stack, "Api", {
 });
 ```
 
-### Throttling
+### GraphQL
+
+Add a GraphQL route using a _Code-first_ GraphQL setup, configured using [Pothos](https://pothos-graphql.dev/).
+
+```js
+new Api(stack, "Api", {
+  routes: {
+    "POST /graphql": {
+      type: "graphql",
+      function: "src/graphql.main",
+      pothos: {
+        schema: "backend/functions/graphql/schema.ts",
+        output: "graphql/schema.graphql",
+        commands: [
+          "./genql graphql/graphql.schema graphql/
+        ]
+      }
+    },
+  },
+});
+```
+
+### Advanced examples
+
+#### Throttling
 
 ```js {2-7}
 new Api(stack, "Api", {
@@ -684,8 +708,6 @@ new Api(stack, "Api", {
   },
 });
 ```
-
-### Advanced examples
 
 #### Configuring the Http Api
 

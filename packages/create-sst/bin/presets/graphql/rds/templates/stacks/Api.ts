@@ -16,15 +16,17 @@ export function Api({ stack }: StackContext) {
     },
     routes: {
       "POST /graphql": {
-        type: "pothos",
+        type: "graphql",
         function: {
           handler: "functions/graphql/graphql.handler",
         },
-        schema: "services/functions/graphql/schema.ts",
-        output: "graphql/schema.graphql",
-        commands: [
-          "npx genql --output ./graphql/genql --schema ./graphql/schema.graphql --esm",
-        ],
+        pothos: {
+          schema: "services/functions/graphql/schema.ts",
+          output: "graphql/schema.graphql",
+          commands: [
+            "npx genql --output ./graphql/genql --schema ./graphql/schema.graphql --esm",
+          ],
+        },
       },
     },
   });
