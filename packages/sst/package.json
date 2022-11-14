@@ -51,7 +51,7 @@
     "cdk-assets": "2.50.0",
     "chokidar": "^3.5.3",
     "colorette": "^2.0.19",
-    "constructs": "10.0.29",
+    "constructs": "10.1.156",
     "cross-spawn": "^7.0.3",
     "esbuild": "0.15.13",
     "express": "^4.18.2",

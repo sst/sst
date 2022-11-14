@@ -18,15 +18,13 @@ export interface Project {
 const DEFAULTS = {
   main: "stacks/index.ts",
   stage: undefined,
-  ssmPrefix: undefined
+  ssmPrefix: undefined,
 } as const;
 
 type ProjectWithDefaults = Project &
-  Required<
-    {
-      [key in keyof typeof DEFAULTS]: Exclude<Project[key], undefined>;
-    }
-  > & {
+  Required<{
+    [key in keyof typeof DEFAULTS]: Exclude<Project[key], undefined>;
+  }> & {
     version: string;
     paths: {
       root: string;
@@ -53,61 +51,63 @@ export async function initProject(globals: GlobalOptions) {
   Logger.debug("Using project root", root);
   const out = path.join(root, ".sst");
   await fs.mkdir(out, {
-    recursive: true
+    recursive: true,
   });
   Logger.debug("Using project out", out);
 
   async function load() {
-    for (const ext of CONFIG_EXTENSIONS) {
-      const file = path.join(root, "sst" + ext);
-      if (file.endsWith("js")) {
-        let fn;
-        try {
-          fn = await import(file);
-        } catch (err) {
-          continue;
+    const base = await (async function () {
+      for (const ext of CONFIG_EXTENSIONS) {
+        const file = path.join(root, "sst" + ext);
+        if (file.endsWith("js")) {
+          let fn;
+          try {
+            fn = await import(file);
+          } catch (err) {
+            continue;
+          }
+          return await fn.default(globals);
         }
-        const config = await fn.default(globals);
-        return {
-          ...DEFAULTS,
-          ...config,
-          stage: globals.stage || (await usePersonalStage(out)),
-          profile: globals.profile || config.profile
-        } as ProjectWithDefaults;
+
+        if (file.endsWith(".json")) {
+          try {
+            const data = await fs.readFile(file);
+            return Object.assign(
+              DEFAULTS,
+              JSON.parse(data.toString("utf8"))
+            ) as ProjectWithDefaults;
+          } catch {}
+        }
       }
 
-      if (file.endsWith(".json")) {
-        try {
-          const data = await fs.readFile(file);
-          return Object.assign(
-            DEFAULTS,
-            JSON.parse(data.toString("utf8"))
-          ) as ProjectWithDefaults;
-        } catch {
-          continue;
-        }
-      }
-    }
-    throw new VisibleError(
-      "Could not found a configuration file",
-      "Make sure one of the following exists",
-      "  - sst.config.cjs",
-      "  - sst.config.mjs",
-      "  - sst.config.js",
-      "  - sst.json"
-    );
+      throw new VisibleError(
+        "Could not found a configuration file",
+        "Make sure one of the following exists",
+        "  - sst.config.cjs",
+        "  - sst.config.mjs",
+        "  - sst.config.js",
+        "  - sst.json"
+      );
+    })();
+
+    return {
+      ...DEFAULTS,
+      ...base,
+      stage: globals.stage || (await usePersonalStage(out)),
+      profile: globals.profile || base.profile,
+    } as ProjectWithDefaults;
   }
   const project = await load();
   project.ssmPrefix =
     project.ssmPrefix || `/sst/${project.name}/${project.stage}/`;
   project.paths = {
     root,
-    out
+    out,
   };
   const packageJson = JSON.parse(
     await fs
       .readFile(url.fileURLToPath(new URL("../package.json", import.meta.url)))
-      .then(x => x.toString())
+      .then((x) => x.toString())
   );
   project.version = packageJson.version;
   Logger.debug("Config loaded", project);
@@ -131,7 +131,7 @@ async function findRoot() {
       throw new VisibleError(
         "Could not found a configuration file",
         "Make sure one of the following exists",
-        ...CONFIG_EXTENSIONS.map(ext => `  - sst${ext}`)
+        ...CONFIG_EXTENSIONS.map((ext) => `  - sst${ext}`)
       );
     for (const ext of CONFIG_EXTENSIONS) {
       const configPath = path.join(dir, `sst${ext}`);
