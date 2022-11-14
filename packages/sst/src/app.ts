@@ -2,9 +2,12 @@ import fs from "fs/promises";
 import fsSync from "fs";
 import path from "path";
 import url from "url";
+import readline from "readline";
+import os from "os";
 import { Logger } from "./logger.js";
 import { Context } from "./context/context.js";
 import { VisibleError } from "./error.js";
+import { blue } from "colorette";
 
 export interface Project {
   name: string;
@@ -93,7 +96,10 @@ export async function initProject(globals: GlobalOptions) {
     return {
       ...DEFAULTS,
       ...base,
-      stage: globals.stage || (await usePersonalStage(out)),
+      stage:
+        globals.stage ||
+        (await usePersonalStage(out)) ||
+        (await promptPersonalStage(out)),
       profile: globals.profile || base.profile,
     } as ProjectWithDefaults;
   }
@@ -122,6 +128,27 @@ async function usePersonalStage(out: string) {
   } catch {
     return;
   }
+}
+
+async function promptPersonalStage(out: string) {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  return new Promise((resolve) => {
+    const suggested = os.userInfo().username;
+    rl.question(
+      `Please enter a name you’d like to use for your personal stage. Or hit enter to use ${blue(
+        suggested
+      )}: `,
+      async (input) => {
+        rl.close();
+        const result = input || suggested;
+        await fs.writeFile(path.join(out, "stage"), result);
+        resolve(result);
+      }
+    );
+  });
 }
 
 async function findRoot() {
