@@ -1,5 +1,11 @@
 # @serverless-stack/node
 
+## 1.18.0
+
+### Patch Changes
+
+- [#2187](https://github.com/serverless-stack/sst/pull/2187) [`8cbb8b72f`](https://github.com/serverless-stack/sst/commit/8cbb8b72fabc496bf7975c611b3d64223d67bd41) Thanks [@fwang](https://github.com/fwang)! - Api: add setCors function to configure CORS lazily
+
 ## 1.17.1
 
 ### Patch Changes
