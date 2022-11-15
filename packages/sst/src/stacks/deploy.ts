@@ -231,15 +231,16 @@ export async function deploy(
       stackID: stack.stackName,
     });
     return monitor(stack.stackName);
-  } catch (ex) {
-    console.error(ex);
+  } catch (ex: any) {
     bus.publish("stack.status", {
       stackID: stack.stackName,
-      status: "SKIPPED",
+      status: "UPDATE_FAILED",
     });
     return {
-      errors: {},
-      status: "SKIPPED",
+      errors: {
+        stack: ex.message,
+      },
+      status: "UPDATE_FAILED",
     };
   }
 }

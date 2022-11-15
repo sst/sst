@@ -4,12 +4,13 @@ import crypto from "crypto";
 import type { Program } from "../program.js";
 import type { CloudAssembly } from "aws-cdk-lib/cx-api";
 import type { Metafile } from "esbuild";
+import { printDeploymentResults } from "../ui/deploy.js";
 
 export const start = (program: Program) =>
   program.command(
     "start",
     "Work on your SST app locally",
-    yargs => yargs,
+    (yargs) => yargs,
     async () => {
       const { useRuntimeWorkers } = await import("../../runtime/workers.js");
       const { useIOTBridge } = await import("../../runtime/iot.js");
@@ -28,39 +29,42 @@ export const start = (program: Program) =>
 
       const useFunctionLogger = Context.memo(async () => {
         const bus = useBus();
-      
-        bus.subscribe("function.invoked", async evt => {
-          console.log(bold(magenta(`Invoked `)), bold(evt.properties.functionID));
+
+        bus.subscribe("function.invoked", async (evt) => {
+          console.log(
+            bold(magenta(`Invoked `)),
+            bold(evt.properties.functionID)
+          );
         });
-      
-        bus.subscribe("worker.stdout", async evt => {
+
+        bus.subscribe("worker.stdout", async (evt) => {
           console.log(
             bold(blue(`Log     `)),
             bold(evt.properties.functionID),
             evt.properties.message
           );
         });
-      
-        bus.subscribe("function.success", async evt => {
+
+        bus.subscribe("function.success", async (evt) => {
           console.log(bold(green(`Success `)), bold(evt.properties.functionID));
         });
       });
-      
+
       const useStackBuilder = Context.memo(async () => {
         const watcher = useWatcher();
         const bus = useBus();
-      
+
         let lastDeployed: string;
         let pending: CloudAssembly | undefined;
         let isDeploying = false;
-      
+
         async function build() {
           const spinner = createSpinner("Building stacks").start();
           const fn = await Stacks.build();
           const assembly = await Stacks.synth({
             fn,
             outDir: `.sst/cdk.out`,
-            mode: "start"
+            mode: "start",
           });
           Logger.debug("Directory", assembly.directory);
           const next = await checksum(assembly.directory);
@@ -73,7 +77,7 @@ export const start = (program: Program) =>
           pending = assembly;
           if (lastDeployed) deploy();
         }
-      
+
         async function deploy() {
           if (!pending) return;
           if (isDeploying) return;
@@ -83,33 +87,21 @@ export const start = (program: Program) =>
           pending = undefined;
           process.stdout.write("\x1b[?1049h");
           const component = render(
-            <DeploymentUI stacks={assembly.stacks.map(s => s.stackName)} />
+            <DeploymentUI stacks={assembly.stacks.map((s) => s.stackName)} />
           );
           const results = await Stacks.deployMany(assembly.stacks);
           component.unmount();
           process.stdout.write("\x1b[?1049l");
           lastDeployed = nextChecksum;
-          console.log(`----------------------------`);
-          console.log(`| Stack deployment results |`);
-          console.log(`----------------------------`);
-          for (const [stack, result] of Object.entries(results)) {
-            const icon = (() => {
-              if (Stacks.isSuccess(result.status)) return green("✔");
-              if (Stacks.isFailed(result.status)) return red("✖");
-            })();
-            console.log(`${icon} ${stack}`);
-            for (const [id, error] of Object.entries(result.errors)) {
-              console.log(bold(`  ${id}: ${error}`));
-            }
-          }
+          printDeploymentResults(results);
           isDeploying = false;
           deploy();
         }
-      
+
         async function checksum(cdkOutPath: string) {
           const manifestPath = path.join(cdkOutPath, "manifest.json");
           const cdkManifest = JSON.parse(
-            await fs.readFile(manifestPath).then(x => x.toString())
+            await fs.readFile(manifestPath).then((x) => x.toString())
           );
           const checksumData = await Promise.all(
             Object.keys(cdkManifest.artifacts)
@@ -123,40 +115,37 @@ export const start = (program: Program) =>
                 const templateContent = await fs.readFile(templatePath);
                 return templateContent;
               })
-          ).then(x => x.join("\n"));
+          ).then((x) => x.join("\n"));
           const hash = crypto
             .createHash("sha256")
             .update(checksumData)
             .digest("hex");
           return hash;
         }
-      
+
         let metafile: Metafile;
-        bus.subscribe("stack.built", async evt => {
+        bus.subscribe("stack.built", async (evt) => {
           metafile = evt.properties.metafile;
         });
-      
-        watcher.subscribe("file.changed", async evt => {
+
+        watcher.subscribe("file.changed", async (evt) => {
           if (!metafile) return;
           if (!metafile.inputs[evt.properties.relative]) return;
           build();
         });
-      
+
         await build();
         await deploy();
       });
 
-      createSpinner("")
-        .start()
-        .succeed("Ready for function invocations");
+      createSpinner("").start().succeed("Ready for function invocations");
       await Promise.all([
         useRuntimeWorkers(),
         useIOTBridge(),
         useRuntimeServer(),
         useMetadata(),
-        useFunctionLogger()
+        useFunctionLogger(),
       ]);
       await useStackBuilder();
     }
   );
-

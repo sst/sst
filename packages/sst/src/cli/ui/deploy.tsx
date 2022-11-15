@@ -5,6 +5,7 @@ import { useBus } from "../../bus.js";
 import { Stacks } from "../../stacks/index.js";
 import inkSpinner from "ink-spinner";
 import { useProject } from "../../app.js";
+import { bold, green, red } from "colorette";
 
 // @ts-ignore
 const { default: Spinner } = inkSpinner;
@@ -137,3 +138,24 @@ export const DeploymentUI = (props: Props) => {
     </FullScreen>
   );
 };
+
+export function printDeploymentResults(
+  results: Awaited<ReturnType<typeof Stacks.deployMany>>
+) {
+  console.log(`----------------------------`);
+  console.log(`| Stack deployment results |`);
+  console.log(`----------------------------`);
+  for (const [stack, result] of Object.entries(results)) {
+    const icon = (() => {
+      if (Stacks.isSuccess(result.status)) return green("✔");
+      if (Stacks.isFailed(result.status)) return red("✖");
+    })();
+    console.log(`${icon} ${stack}`);
+    if (Object.entries(result.errors).length > 0) {
+      console.log(`  ${red("Errors:")}`);
+    }
+    for (const [id, error] of Object.entries(result.errors)) {
+      console.log(bold(`    ${id}: ${error}`));
+    }
+  }
+}
