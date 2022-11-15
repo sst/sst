@@ -1,6 +1,6 @@
 import {
   Api,
-  ReactStaticSite,
+  StaticSite,
   StackContext,
   Table,
 } from "@serverless-stack/resources";
@@ -28,8 +28,10 @@ export function MyStack({ stack }: StackContext) {
   });
 
   // Deploy our React app
-  const site = new ReactStaticSite(stack, "ReactSite", {
+  const site = new StaticSite(stack, "ReactSite", {
     path: "frontend",
+    buildCommand: "npm run build",
+    buildOutput: "build",
     environment: {
       REACT_APP_API_URL: api.url,
     },

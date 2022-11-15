@@ -266,10 +266,10 @@ Here's how this all works behind the scenes. All our infrastructure is defined i
    },
    ```
 
-3. Next we define our frontend in `stacks/Web.ts` using the [`ViteStaticSite`](constructs/ViteStaticSite.md) construct.
+3. Next we define our frontend in `stacks/Web.ts` using the [`StaticSite`](constructs/StaticSite.md) construct.
 
    ```ts
-   const site = new ViteStaticSite(stack, "site", {
+   const site = new StaticSite(stack, "site", {
      /** **/
    });
    ```
@@ -342,7 +342,7 @@ Stack Jay-my-sst-app-Web
 
 Our site is now live at `SITE` and it's talking to our GraphQL API at `VITE_API_URL`. You'll notice this is a completely new API endpoint.
 
-You can also add [**custom domains**](constructs/ViteStaticSite.md#custom-domains) to your app and [API](constructs/Api.md#custom-domains), but we'll cover that in a separate tutorial.
+You can also add [**custom domains**](constructs/StaticSite.md#custom-domains) to your app and [API](constructs/Api.md#custom-domains), but we'll cover that in a separate tutorial.
 
 ---
 

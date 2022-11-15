@@ -1,7 +1,7 @@
 import { Session, AuthHandler, FacebookAdapter } from "@serverless-stack/node/auth";
 import { Table } from "@serverless-stack/node/table";
 import { Config } from "@serverless-stack/node/config";
-import { ViteStaticSite } from "@serverless-stack/node/site";
+import { StaticSite } from "@serverless-stack/node/site";
 import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { marshall } from "@aws-sdk/util-dynamodb";
 
@@ -34,7 +34,7 @@ export const handler = AuthHandler({
         }));
 
         return Session.parameter({
-          redirect: process.env.IS_LOCAL ? "http://127.0.0.1:5173" : ViteStaticSite.site.url,
+          redirect: process.env.IS_LOCAL ? "http://127.0.0.1:5173" : StaticSite.site.url,
           type: "user",
           properties: {
             userID: claims.sub,

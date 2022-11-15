@@ -1,7 +1,7 @@
 import {
   Api,
   Cognito,
-  ReactStaticSite,
+  StaticSite,
   StackContext
 } from "@serverless-stack/resources";
 
@@ -31,8 +31,10 @@ export function MyStack({ stack, app }: StackContext) {
   auth.attachPermissionsForAuthUsers(stack, [api]);
 
   // Deploy our React app
-  const site = new ReactStaticSite(stack, "ReactSite", {
+  const site = new StaticSite(stack, "ReactSite", {
     path: "frontend",
+    buildCommand: "npm run build",
+    buildOutput: "build",
     // Pass in our environment variables
     environment: {
       REACT_APP_API_URL: api.url,

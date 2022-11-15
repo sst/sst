@@ -20,48 +20,82 @@ To view the latest release and all historical releases, <a href={`${config.githu
 
 #### Constructs
 
-- Api: The `pothos` route type is renamed to `graphql`, and will be removed in SST v2.
+1. Api: The **`pothos` route type is renamed to `graphql`**, and will be removed in SST v2.
 
-  ```diff
-  new Api(stack, "api", {
-    routes: {
-      "POST /graphql": {
-  -     type: "pothos",
-  +     type: "graphql",
-        function: handler: "functions/graphql/graphql.ts",
-  -     schema: "backend/functions/graphql/schema.ts",
-  -     output: "graphql/schema.graphql",
-  -     commands: [
-  -       "./genql graphql/graphql.schema graphql/
-  -     ]
-  +     pothos: {
-  +       schema: "backend/functions/graphql/schema.ts",
-  +       output: "graphql/schema.graphql",
-  +       commands: [
-  +         "./genql graphql/graphql.schema graphql/
-  +       ]
-  +     }
+    ```diff
+    new Api(stack, "api", {
+      routes: {
+        "POST /graphql": {
+    -     type: "pothos",
+    +     type: "graphql",
+          function: handler: "functions/graphql/graphql.ts",
+    -     schema: "backend/functions/graphql/schema.ts",
+    -     output: "graphql/schema.graphql",
+    -     commands: [
+    -       "./genql graphql/graphql.schema graphql/
+    -     ]
+    +     pothos: {
+    +       schema: "backend/functions/graphql/schema.ts",
+    +       output: "graphql/schema.graphql",
+    +       commands: [
+    +         "./genql graphql/graphql.schema graphql/
+    +       ]
+    +     }
+        }
       }
-    }
-  });
-  ```
+    });
+    ```
 
-- GraphQLApi: The `GraphQLApi` construct is deprecated, and will be removed in SST v2. Use the `Api` construct with a `graphql` route instead.
+2. GraphQLApi: The `GraphQLApi` construct is deprecated, and will be removed in SST v2. **Use the `Api` construct with a `graphql` route instead**.
 
-  ```diff
-  - new GraphQLApi(stack, "api", {
-  -   server: "src/graphql.handler",
-  - });
+    ```diff
+    - new GraphQLApi(stack, "api", {
+    -   server: "src/graphql.handler",
+    - });
 
-  + new Api(stack, "api", {
-  +   routes: {
-  +     "POST /": {
-  +       type: "graphql",
-  +       function: "src/graphql.handler",
-  +     }
-  +   }
-  + });
-  ```
+    + new Api(stack, "api", {
+    +   routes: {
+    +     "POST /": {
+    +       type: "graphql",
+    +       function: "src/graphql.handler",
+    +     }
+    +   }
+    + });
+    ```
+
+3. ViteStaticSite: The `ViteStaticSite` construct is deprecated, and will be removed in SST v2. **Use the `StaticSite` construct instead. Specify `buildCommand`, `buildOutput`, and rename `typesPath` to `vite.types`**.
+
+    ```diff
+    - new ViteStaticSite(stack, "frontend", {
+    + new StaticSite(stack, "frontend", {
+        path: "path/to/src",
+    +   buildCommand: "npm run build", // or "yarn build"
+    +   buildOutput: "dist",
+        customDomain: "mydomain.com",
+        environment: {
+          VITE_API_URL: api.url,
+        },
+    -   typesPath: "types/my-env.d.ts",
+    +   vite: {
+    +     types: "types/my-env.d.ts",
+    +   }
+      });
+    ```
+
+4. ReactStaticSite: The `ReactStaticSite` construct is deprecated, and will be removed in SST v2. **Use the `StaticSite` construct instead. Specify `buildCommand` and `buildOutput`**.
+
+    ```diff
+    - new ReactStaticSite(stack, "frontend", {
+    + new StaticSite(stack, "frontend", {
+        path: "path/to/src",
+    +   buildCommand: "npm run build", // or "yarn build"
+    +   buildOutput: "build",
+        customDomain: "mydomain.com",
+        environment: {
+          REACT_APP_API_URL: api.url,
+        },
+      });
+    ```
 
 ---
 
