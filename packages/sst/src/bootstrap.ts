@@ -71,7 +71,7 @@ export const useBootstrap = Context.memo(async () => {
     });
     const asm = app.synth();
     const result = await Stacks.deploy(asm.stacks[0]);
-    if (Object.values(result.errors).length > 0) {
+    if (Stacks.isFailed(result.status)) {
       throw new VisibleError(
         `Failed to deploy bootstrap stack:\n${JSON.stringify(
           result.errors,

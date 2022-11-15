@@ -185,7 +185,7 @@ export async function monitor(stack: string) {
         if (isFinal(first.StackStatus)) {
           return {
             status: first.StackStatus as typeof STATUSES[number],
-            errors,
+            errors: isFailed(first.StackStatus) ? errors : {},
           };
         }
       }
@@ -231,7 +231,8 @@ export async function deploy(
       stackID: stack.stackName,
     });
     return monitor(stack.stackName);
-  } catch {
+  } catch (ex) {
+    console.error(ex);
     bus.publish("stack.status", {
       stackID: stack.stackName,
       status: "SKIPPED",
