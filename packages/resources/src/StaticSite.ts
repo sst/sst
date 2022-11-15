@@ -484,7 +484,7 @@ export class StaticSite extends Construct implements SSTConstruct {
     // Build the path
     let typesPath = this.props.vite?.types;
     if (!typesPath) {
-      if (fs.existsSync(path.join(sitePath, "vite.config.js"))) {
+      if (fs.existsSync(path.join(sitePath, "vite.config.js")) || fs.existsSync(path.join(sitePath, "vite.config.ts"))) {
         typesPath = "src/sst-env.d.ts";
       }
     }
