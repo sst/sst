@@ -1,5 +1,11 @@
 # @serverless-stack/console
 
+## 1.18.0
+
+### Minor Changes
+
+- [#2194](https://github.com/serverless-stack/sst/pull/2194) [`dcb36ad54`](https://github.com/serverless-stack/sst/commit/dcb36ad546464434916b372fd7a33f51ee4612b2) Thanks [@fwang](https://github.com/fwang)! - Merge GraphQLApi into Api
+
 ## 1.17.1
 
 ## 1.17.0

@@ -1,5 +1,20 @@
 # @serverless-stack/resources
 
+## 1.18.0
+
+### Minor Changes
+
+- [#2194](https://github.com/serverless-stack/sst/pull/2194) [`dcb36ad54`](https://github.com/serverless-stack/sst/commit/dcb36ad546464434916b372fd7a33f51ee4612b2) Thanks [@fwang](https://github.com/fwang)! - Merge GraphQLApi into Api
+
+* [#2195](https://github.com/serverless-stack/sst/pull/2195) [`22243a157`](https://github.com/serverless-stack/sst/commit/22243a157a940a64e000885770fab03101428db1) Thanks [@fwang](https://github.com/fwang)! - Merge ViteStaticSite and ReactStaticSite into StaticSite
+
+### Patch Changes
+
+- [#2187](https://github.com/serverless-stack/sst/pull/2187) [`8cbb8b72f`](https://github.com/serverless-stack/sst/commit/8cbb8b72fabc496bf7975c611b3d64223d67bd41) Thanks [@fwang](https://github.com/fwang)! - Api: add setCors function to configure CORS lazily
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.18.0
+
 ## 1.17.1
 
 ### Patch Changes
