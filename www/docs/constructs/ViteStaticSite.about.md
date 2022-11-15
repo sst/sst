@@ -10,6 +10,10 @@ The `ViteStaticSite` construct internally extends the [`StaticSite`](StaticSite.
 - [`buildOutput`](StaticSite.md#buildoutput) is the `dist` folder in your Vite app.
 - [`fileOptions`](StaticSite.md#fileoptions) sets the cache control to `max-age=0,no-cache,no-store,must-revalidate` for HTML files; and `max-age=31536000,public,immutable` for JS/CSS files.
 
+:::warning
+The `ViteStaticSite` construct is deprecated, and will be removed in SST v2. Use the [`StaticSite`](StaticSite.md) construct instead. [Read more about how to upgrade.](../upgrade-guide.md#upgrade-to-v118)
+:::
+
 ## Examples
 
 ### Minimal Config
@@ -27,7 +31,6 @@ new ViteStaticSite(stack, "Site", {
 The `ViteStaticSite` construct allows you to set the environment variables in your Vite app based on outputs from other constructs in your SST app. So you don't have to hard code the config from your backend. Let's look at how.
 
 Vite supports [setting build time environment variables](https://vitejs.dev/guide/env-and-mode.html). In your JS files this looks like:
-
 
 ```js title="src/App.js"
 console.log(import.meta.env.VITE_API_URL);

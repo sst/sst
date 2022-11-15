@@ -2,7 +2,7 @@ import {
   Api,
   StackContext,
   Table,
-  ViteStaticSite,
+  StaticSite,
 } from "@serverless-stack/resources";
 
 export function MyStack({ stack }: StackContext) {
@@ -28,8 +28,10 @@ export function MyStack({ stack }: StackContext) {
   });
 
   // Deploy our Svelte app
-  const site = new ViteStaticSite(stack, "SvelteJSSite", {
+  const site = new StaticSite(stack, "SvelteJSSite", {
     path: "frontend",
+    buildCommand: "npm run build",
+    buildOutput: "dist",
     environment: {
       // Pass in the API endpoint to our app
       VITE_APP_API_URL: api.url,

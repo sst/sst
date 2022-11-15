@@ -1,4 +1,5 @@
-import { test, expect, vi } from "vitest";
+import fs from "fs-extra";
+import { test, expect, vi, beforeEach, afterAll } from "vitest";
 import { countResources, hasResource, objectLike, ANY, ABSENT } from "./helper";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
@@ -7,6 +8,20 @@ import * as cf from "aws-cdk-lib/aws-cloudfront";
 import { App, Api, Stack, StaticSite } from "../src";
 
 process.env.SST_RESOURCES_TESTS = "enabled";
+
+beforeEach(async () => {
+  await clearBuildOutput();
+});
+
+afterAll(async () => {
+  await clearBuildOutput();
+});
+
+async function clearBuildOutput() {
+  fs.removeSync("test/vite-static-site/dist");
+  fs.removeSync("test/vite-static-site/src/sst-env.d.ts");
+  fs.removeSync("test/vite-static-site/src/my-env.d.ts");
+}
 
 /////////////////////////////
 // Test Constructor
@@ -29,7 +44,18 @@ test("constructor: no domain", async () => {
   hasResource(stack, "AWS::CloudFront::Distribution", {
     DistributionConfig: {
       Aliases: [],
-      CustomErrorResponses: ABSENT,
+      CustomErrorResponses: [
+        {
+          ErrorCode: 403,
+          ResponseCode: 200,
+          ResponsePagePath: "/index.html",
+        },
+        {
+          ErrorCode: 404,
+          ResponseCode: 200,
+          ResponsePagePath: "/index.html",
+        },
+      ],
       DefaultCacheBehavior: {
         CachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
         Compress: true,
@@ -76,7 +102,26 @@ test("constructor: no domain", async () => {
     DestinationBucketName: {
       Ref: "SiteS3Bucket43E5BB2F",
     },
-    FileOptions: [],
+    FileOptions: [
+      [
+        "--exclude",
+        "*",
+        "--include",
+        "*.html",
+        "--cache-control",
+        "max-age=0,no-cache,no-store,must-revalidate"
+      ],
+      [
+        "--exclude",
+        "*",
+        "--include",
+        "*.js",
+        "--include",
+        "*.css",
+        "--cache-control",
+        "max-age=31536000,public,immutable"
+      ],
+    ],
     ReplaceValues: [],
   });
   countResources(stack, "Custom::SSTCloudFrontInvalidation", 1);
@@ -537,6 +582,21 @@ test("constructor: errorPage is enum", async () => {
   });
 });
 
+test("constructor: buildCommand defined", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new Api(stack, "Api");
+  new StaticSite(stack, "Site", {
+    path: "test/vite-static-site",
+    buildCommand: "npm run build",
+    environment: {
+      VITE_CONSTANT_ENV: "my-url",
+      VITE_REFERENCE_ENV: api.url,
+    },
+  });
+  const indexHtml = fs.readFileSync("test/vite-static-site/dist/index.html");
+  expect(indexHtml.toString().trim()).toBe("my-url {{ VITE_REFERENCE_ENV }}");
+});
+
 test("constructor: buildCommand error", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
@@ -694,7 +754,6 @@ test("constructor: replaceValues", async () => {
     DestinationBucketName: {
       Ref: "SiteS3Bucket43E5BB2F",
     },
-    FileOptions: [],
     ReplaceValues: [
       {
         files: "*.js",
@@ -708,6 +767,34 @@ test("constructor: replaceValues", async () => {
       },
     ],
   });
+});
+
+test("vite.types: undefined: is vite site", async () => {
+  const stack = new Stack(new App(), "stack");
+  new StaticSite(stack, "Site", {
+    path: "test/vite-static-site",
+  });
+  expect(fs.existsSync("test/vite-static-site/src/sst-env.d.ts")).toBeTruthy();
+});
+
+test("vite.types: undefined: not vite site", async () => {
+  const stack = new Stack(new App(), "stack");
+  new StaticSite(stack, "Site", {
+    path: "test/site",
+  });
+  expect(fs.existsSync("test/vite-static-site/src/sst-env.d.ts")).toBeFalsy();
+});
+
+test("vite.types: defined", async () => {
+  const stack = new Stack(new App(), "stack");
+  new StaticSite(stack, "Site", {
+    path: "test/vite-static-site",
+    vite: {
+      types: "src/my-env.d.ts",
+    }
+  });
+  expect(fs.existsSync("test/vite-static-site/src/sst-env.d.ts")).toBeFalsy();
+  expect(fs.existsSync("test/vite-static-site/src/my-env.d.ts")).toBeTruthy();
 });
 
 test("cdk.bucket is props", async () => {
@@ -1025,7 +1112,6 @@ test("constructor: local debug", async () => {
     DestinationBucketName: {
       Ref: "SiteS3Bucket43E5BB2F",
     },
-    FileOptions: [],
     ReplaceValues: [],
   });
   countResources(stack, "Custom::SSTCloudFrontInvalidation", 1);
@@ -1046,7 +1132,18 @@ test("constructor: local debug with disablePlaceholder true", async () => {
   });
   hasResource(stack, "AWS::CloudFront::Distribution", {
     DistributionConfig: objectLike({
-      CustomErrorResponses: ABSENT,
+      CustomErrorResponses: [
+        {
+          "ErrorCode": 403,
+          "ResponseCode": 200,
+          "ResponsePagePath": "/index.html"
+        },
+        {
+          "ErrorCode": 404,
+          "ResponseCode": 200,
+          "ResponsePagePath": "/index.html"
+        }
+      ],
     }),
   });
   countResources(stack, "Custom::SSTBucketDeployment", 1);
@@ -1060,7 +1157,6 @@ test("constructor: local debug with disablePlaceholder true", async () => {
     DestinationBucketName: {
       Ref: "SiteS3Bucket43E5BB2F",
     },
-    FileOptions: [],
     ReplaceValues: [],
   });
   hasResource(stack, "Custom::SSTCloudFrontInvalidation", {

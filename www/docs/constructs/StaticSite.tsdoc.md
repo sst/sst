@@ -21,6 +21,8 @@ _Parameters_
 
 _Type_ : <span class="mono">string</span>
 
+_Default_ : <span class="mono">no build command</span>
+
 The command for building the website
 
 
@@ -34,12 +36,14 @@ new StaticSite(stack, "Site", {
 
 _Type_ : <span class="mono">string</span>
 
+_Default_ : <span class="mono">entire "path" directory</span>
+
 The directory with the content that will be uploaded to the S3 bucket. If a `buildCommand` is provided, this is usually where the build output is generated. The path is relative to the [`path`](#path) where the website source is located.
 
 
 ```js
 new StaticSite(stack, "Site", {
-  buildOutput: "dist",
+  buildOutput: "build",
 });
 ```
 
@@ -80,8 +84,8 @@ When running `sst start`, a placeholder site is deployed. This is to ensure that
 
 
 ```js
-new StaticSite(stack, "ReactSite", {
- disablePlaceholder: true
+new StaticSite(stack, "frontend", {
+  disablePlaceholder: true
 });
 ```
 
@@ -93,7 +97,7 @@ An object with the key being the environment variable name. Note, this requires 
 
 
 ```js
-new StaticSite(stack, "ReactSite", {
+new StaticSite(stack, "frontend", {
   environment: {
     REACT_APP_API_URL: api.url,
     REACT_APP_USER_POOL_CLIENT: auth.cognitoUserPoolClient.userPoolClientId,
@@ -105,13 +109,10 @@ new StaticSite(stack, "ReactSite", {
 
 _Type_ : <span class='mono'><span class="mono">"redirect_to_index_page"</span> | <span class="mono">Omit&lt;<span class="mono">string</span>, <span class="mono">"redirect_to_index_page"</span>&gt;</span></span>
 
-The error page behavior for this website. Takes either an HTML page.
-```
-404.html
-```
-Or the constant `"redirect_to_index_page"` to redirect to the index page.
-Note that, if the error pages are redirected to the index page, the HTTP status code is set to 200. This is necessary for single page apps, that handle 404 pages on the client side.
+_Default_ : <span class="mono">redirect_to_index_page</span>
 
+The error page behavior for this website. Takes either an HTML page (ie. `"404.html"`) or the `"redirect_to_index_page"` to redirect to the index page.
+Note that, if the error pages are redirected to the index page, the HTTP status code is set to 200. This is necessary for single page apps, that handle 404 pages on the client side.
 
 ```js
 new StaticSite(stack, "Site", {
@@ -124,16 +125,30 @@ new StaticSite(stack, "Site", {
 _Type_ : <span class='mono'>Array&lt;<span class="mono">[StaticSiteFileOptions](#staticsitefileoptions)</span>&gt;</span>
 
 Pass in a list of file options to configure cache control for different files. Behind the scenes, the `StaticSite` construct uses a combination of the `s3 cp` and `s3 sync` commands to upload the website content to the S3 bucket. An `s3 cp` command is run for each file option block, and the options are passed in as the command options.
-
+Defaults to no cache control for HTML files, and a 1 year cache control for JS/CSS files.
+```js
+[
+  {
+    exclude: "*",
+    include: "*.html",
+    cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
+  },
+  {
+    exclude: "*",
+    include: ["*.js", "*.css"],
+    cacheControl: "max-age=31536000,public,immutable",
+  },
+]
+```
 
 ```js
 new StaticSite(stack, "Site", {
   buildOutput: "dist",
-  fileOptions: {
+  fileOptions: [{
     exclude: "*",
     include: "*.js",
     cacheControl: "max-age=31536000,public,immutable",
-  }
+  }]
 });
 ```
 
@@ -141,7 +156,7 @@ new StaticSite(stack, "Site", {
 
 _Type_ : <span class="mono">string</span>
 
-_Default_ : <span class="mono">"index.html"</span>
+_Default_ : <span class="mono">index.html</span>
 
 The name of the index page (e.g. "index.html") of the website.
 
@@ -175,8 +190,8 @@ While deploying, SST removes old files that no longer exist. Pass in `false` to 
 
 
 ```js
-new StaticSite(stack, "ReactSite", {
- purge: false
+new StaticSite(stack, "frontend", {
+  purgeFiles: false
 });
 ```
 
@@ -188,7 +203,7 @@ Pass in a list of placeholder values to be replaced in the website content. For 
 
 
 ```js
-new StaticSite(stack, "ReactSite", {
+new StaticSite(stack, "frontend", {
   replaceValues: [
     {
       files: "*.js",
@@ -204,6 +219,25 @@ new StaticSite(stack, "ReactSite", {
 });
 ```
 
+
+### vite.types?
+
+_Type_ : <span class="mono">string</span>
+
+_Default_ : <span class="mono">"src/sst-env.d.ts"</span>
+
+The path where code-gen should place the type definition for environment variables
+
+
+```js
+new StaticSite(stack, "frontend", {
+  vite: {
+    types: "./other/path/sst-env.d.ts",
+  }
+});
+```
+
+
 ### waitForInvalidation?
 
 _Type_ : <span class="mono">boolean</span>
@@ -214,8 +248,8 @@ While deploying, SST waits for the CloudFront cache invalidation process to fini
 
 
 ```js
-new StaticSite(stack, "ReactSite", {
- waitForInvalidation: false
+new StaticSite(stack, "frontend", {
+  waitForInvalidation: false
 });
 ```
 

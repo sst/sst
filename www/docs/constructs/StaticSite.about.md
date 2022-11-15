@@ -7,47 +7,59 @@ The `StaticSite` construct is a higher level CDK construct that makes it easy to
 
 The `StaticSite` construct is designed to make it easy to get started with, while allowing for a way to fully configure it as well. Let's look at how, through a couple of examples.
 
-### Creating a plain HTML site
-
-Deploys a plain HTML website in the `path/to/src` directory.
-
-```js
-import { StaticSite } from "@serverless-stack/resources";
-
-new StaticSite(stack, "Site", {
-  path: "path/to/src",
-});
-```
-
 ### Creating a React site
 
+Deploys a React site created using [Vite](https://vitejs.dev).
+
 ```js
-new StaticSite(stack, "ReactSite", {
-  path: "path/to/src",
-  buildOutput: "build",
+new StaticSite(stack, "react", {
+  path: "path/to/site",
+  buildOutput: "dist",
   buildCommand: "npm run build",
-  errorPage: "redirect_to_index_page",
+  environment: {
+    // Pass in the API endpoint to our app
+    VITE_API_URL: api.url,
+  }, 
 });
 ```
-
-If you are using [Create React App](https://create-react-app.dev), we created the [`ReactStaticSite`](ReactStaticSite.md) construct to make it even easier to deploy React apps.
 
 ### Creating a Vue.js site
 
+Deploys a Vue site created using [Vite](https://vitejs.dev).
+
 ```js
-new StaticSite(stack, "VueJSSite", {
-  path: "path/to/src",
+new StaticSite(stack, "vue", {
+  path: "path/to/site",
   buildOutput: "dist",
   buildCommand: "npm run build",
-  errorPage: "redirect_to_index_page",
+  environment: {
+    // Pass in the API endpoint to our app
+    VITE_API_URL: api.url,
+  }, 
+});
+```
+
+### Creating a Svelte site
+
+Deploys a Svelte site created using [Vite](https://vitejs.dev).
+
+```js
+new StaticSite(stack, "svelte", {
+  path: "path/to/site",
+  buildOutput: "dist",
+  buildCommand: "npm run build",
+  environment: {
+    // Pass in the API endpoint to our app
+    VITE_API_URL: api.url,
+  }, 
 });
 ```
 
 ### Creating a Gatsby site
 
 ```js
-new StaticSite(stack, "GatsbySite", {
-  path: "path/to/src",
+new StaticSite(stack, "gatsby", {
+  path: "path/to/site",
   errorPage: "404.html",
   buildOutput: "public",
   buildCommand: "npm run build",
@@ -57,8 +69,8 @@ new StaticSite(stack, "GatsbySite", {
 ### Creating a Jekyll site
 
 ```js
-new StaticSite(stack, "JekyllSite", {
-  path: "path/to/src",
+new StaticSite(stack, "jekyll", {
+  path: "path/to/site",
   errorPage: "404.html",
   buildOutput: "_site",
   buildCommand: "bundle exec jekyll build",
@@ -68,26 +80,38 @@ new StaticSite(stack, "JekyllSite", {
 ### Creating an Angular site
 
 ```js
-new StaticSite(stack, "AngularSite", {
-  path: "path/to/src",
+new StaticSite(stack, "angular", {
+  path: "path/to/site",
   buildOutput: "dist",
   buildCommand: "ng build --output-path dist",
-  errorPage: "redirect_to_index_page",
 });
 ```
 
-### Creating a Svelte site
+### Creating a CRA site
+
+Deploys a React site created using [Create React App](https://create-react-app.dev).
 
 ```js
-new StaticSite(stack, "SvelteSite", {
-  path: "path/to/src",
-  buildOutput: "dist",
+new StaticSite(stack, "react", {
+  path: "path/to/site",
+  buildOutput: "build",
   buildCommand: "npm run build",
-  errorPage: "redirect_to_index_page",
   environment: {
     // Pass in the API endpoint to our app
-    VITE_APP_API_URL: api.url,
+    REACT_APP_API_URL: api.url,
   }, 
+});
+```
+
+### Creating a plain HTML site
+
+Deploys a plain HTML website in the `path/to/site` directory.
+
+```js
+import { StaticSite } from "@serverless-stack/resources";
+
+new StaticSite(stack, "frontend", {
+  path: "path/to/site",
 });
 ```
 
@@ -95,68 +119,95 @@ new StaticSite(stack, "SvelteSite", {
 
 The `StaticSite` construct allows you to set the environment variables that are passed through your build system based on outputs from other constructs in your SST app. So you don't have to hard code the config from your backend.
 
-You need to be using a build tool that supports setting build time environment variables (most do). For example, Create React App [supports this through webpack](https://create-react-app.dev/docs/adding-custom-environment-variables/). We'll use it as an example.
-
-In your JS files this looks like:
+You need to be using a build tool that supports setting build time environment variables (most do). For example, Vite supports [setting build time environment variables](https://vitejs.dev/guide/env-and-mode.html). In your JS files this looks like:
 
 ```js title="src/App.js"
-console.log(process.env.REACT_APP_API_URL);
-console.log(process.env.REACT_APP_USER_POOL_CLIENT);
-```
-
-And in your HTML files:
-
-```html title="public/index.html"
-<p>Api endpoint is: %REACT_APP_API_URL%</p>
+console.log(import.meta.env.VITE_API_URL);
+console.log(import.meta.env.VITE_USER_POOL_CLIENT);
 ```
 
 You can pass these in directly from the construct.
 
 ```js {3-6}
-new StaticSite(stack, "ReactSite", {
-  path: "path/to/src",
+new StaticSite(stack, "frontend", {
+  path: "path/to/site",
   environment: {
-    REACT_APP_API_URL: api.url,
-    REACT_APP_USER_POOL_CLIENT: auth.cognitoUserPoolClient.userPoolClientId,
+    VITE_API_URL: api.url,
+    VITE_USER_POOL_CLIENT: auth.cognitoUserPoolClient.userPoolClientId,
   },
 });
 ```
 
 Where `api.url` or `auth.cognitoUserPoolClient.userPoolClientId` are coming from other constructs in your SST app.
 
+#### Type definitions
+
+If a `vite.config.js` file is detected in the `path` folder, SST also creates a type definition file for the environment variables in `src/sst-env.d.ts`.
+
+```ts
+/// <reference types="vite/client" />
+
+interface ImportMetaEnv {
+  readonly VITE_API_URL: string
+  readonly VITE_USER_POOL_CLIENT: string
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv
+}
+```
+
+This tells your editor the environment variables that are available and autocompletes them for you. 
+
+![Vite environment variables autocomplete](/img/screens/vite-environment-variables-autocomplete.png)
+
+You can also override the path for the generated type definitions file.
+
+```js {8}
+new StaticSite(stack, "frontend", {
+  path: "path/to/site",
+  environment: {
+    VITE_API_URL: api.url,
+    VITE_USER_POOL_CLIENT: auth.cognitoUserPoolClient.userPoolClientId,
+  },
+  vite: {
+    types: "types/my-env.d.ts",
+  }
+});
+```
+
 #### While deploying
 
-On `sst deploy`, the environment variables will first be replaced by placeholder values, `{{ REACT_APP_API_URL }}` and `{{ REACT_APP_USER_POOL_CLIENT }}`, when building the app. And after the referenced resources have been created, the Api and User Pool in this case, the placeholders in the HTML and JS files will then be replaced with the actual values.
+On `sst deploy`, the environment variables will first be replaced by placeholder values, `{{ VITE_API_URL }}` and `{{ VITE_USER_POOL_CLIENT }}`, when building the Vite app. And after the referenced resources have been created, the Api and User Pool in this case, the placeholders in the HTML and JS files will then be replaced with the actual values.
 
 #### While developing
 
 To use these values while developing, run `sst start` to start the [Live Lambda Development](/live-lambda-development.md) environment.
 
-```bash
+``` bash
 npx sst start
 ```
 
-Then in your app to reference these variables, add the [`sst-env`](/packages/static-site-env.md) package.
+Then in your Vite app to reference these variables, add the [`sst-env`](/packages/static-site-env.md) package.
 
 ```bash
 npm install --save-dev @serverless-stack/static-site-env
 ```
 
-And tweak the `start` script to:
+And tweak the Vite `dev` script to:
 
 ```json title="package.json" {2}
 "scripts": {
-  "start": "sst-env -- react-scripts start",
-  "build": "react-scripts build",
-  "test": "react-scripts test",
-  "eject": "react-scripts eject"
+  "dev": "sst-env -- vite",
+  "build": "vite build",
+  "preview": "vite preview"
 },
 ```
 
-Now you can start your app as usual and it'll have the environment variables from your SST app.
+Now you can start your Vite app as usualy and it'll have the environment variables from your SST app.
 
-```bash
-npm run start
+``` bash
+npm run dev
 ```
 
 There are a couple of things happening behind the scenes here:
@@ -167,14 +218,13 @@ There are a couple of things happening behind the scenes here:
 4. It'll load these as environment variables before running the start command.
 
 :::note
-`sst-env` only works if the app is located inside the SST app or inside one of its subdirectories. For example:
+`sst-env` only works if the Vite app is located inside the SST app or inside one of its subdirectories. For example:
 
 ```
 /
   sst.json
-  react-app/
+  vite-app/
 ```
-
 :::
 
 ### Custom domains
@@ -184,8 +234,8 @@ You can configure the website with a custom domain hosted either on [Route 53](h
 #### Using the basic config (Route 53 domains)
 
 ```js {3}
-new StaticSite(stack, "Site", {
-  path: "path/to/src",
+new StaticSite(stack, "frontend", {
+  path: "path/to/site",
   customDomain: "domain.com",
 });
 ```
@@ -193,8 +243,8 @@ new StaticSite(stack, "Site", {
 #### Redirect www to non-www (Route 53 domains)
 
 ```js {3-6}
-new StaticSite(stack, "Site", {
-  path: "path/to/src",
+new StaticSite(stack, "frontend", {
+  path: "path/to/site",
   customDomain: {
     domainName: "domain.com",
     domainAlias: "www.domain.com",
@@ -205,8 +255,8 @@ new StaticSite(stack, "Site", {
 #### Configuring domains across stages (Route 53 domains)
 
 ```js {3-7}
-new StaticSite(stack, "Site", {
-  path: "path/to/src",
+new StaticSite(stack, "frontend", {
+  path: "path/to/site",
   customDomain: {
     domainName:
       scope.stage === "prod" ? "domain.com" : `${scope.stage}.domain.com`,
@@ -238,8 +288,8 @@ const certificate = new acm.DnsValidatedCertificate(stack, "Certificate", {
 });
 
 // Create site
-const site = new StaticSite(stack, "Site", {
-  path: "path/to/src",
+const site = new StaticSite(stack, "frontend", {
+  path: "path/to/site",
   customDomain: {
     domainName: "foo.domain.com",
     alternateNames: ["bar.domain.com"],
@@ -267,8 +317,8 @@ new route53.AaaaRecord(stack, "AlternateAAAARecord", recordProps);
 ```js {8}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
-new StaticSite(stack, "Site", {
-  path: "path/to/src",
+new StaticSite(stack, "frontend", {
+  path: "path/to/site",
   customDomain: {
     domainName: "domain.com",
     cdk: {
@@ -287,8 +337,8 @@ If you have multiple hosted zones for a given domain, you can choose the one you
 ```js {8-11}
 import { HostedZone } from "aws-cdk-lib/aws-route53";
 
-new StaticSite(stack, "Site", {
-  path: "path/to/src",
+new StaticSite(stack, "frontend", {
+  path: "path/to/site",
   customDomain: {
     domainName: "domain.com",
     cdk: {
@@ -306,8 +356,8 @@ new StaticSite(stack, "Site", {
 ```js {5-11}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
-new StaticSite(stack, "Site", {
-  path: "path/to/src",
+new StaticSite(stack, "frontend", {
+  path: "path/to/site",
   customDomain: {
     isExternalDomain: true,
     domainName: "domain.com",
@@ -327,8 +377,8 @@ Also note that you can also migrate externally hosted domains to Route 53 by [fo
 Configure the Cache Control settings based on different file types.
 
 ```js {6-17}
-new StaticSite(stack, "Site", {
-  path: "path/to/src",
+new StaticSite(stack, "frontend", {
+  path: "path/to/site",
   buildOutput: "build",
   buildCommand: "npm run build",
   errorPage: "redirect_to_index_page",
@@ -360,8 +410,8 @@ Configure the internally created CDK `Bucket` instance.
 ```js {6-8}
 import { RemovalPolicy } from "aws-cdk-lib";
 
-new StaticSite(stack, "Site", {
-  path: "path/to/src",
+new StaticSite(stack, "frontend", {
+  path: "path/to/site",
   cdk: {
     bucket: {
       removalPolicy: RemovalPolicy.DESTROY,
@@ -375,8 +425,8 @@ new StaticSite(stack, "Site", {
 ```js {5-7}
 import * as s3 from "aws-cdk-lib/aws-s3";
 
-new StaticSite(stack, "Site", {
-  path: "path/to/src",
+new StaticSite(stack, "frontend", {
+  path: "path/to/site",
   cdk: {
     bucket: s3.Bucket.fromBucketName(stack, "Bucket", "my-bucket"),
   },
@@ -388,8 +438,8 @@ new StaticSite(stack, "Site", {
 Configure the internally created CDK `Distribution` instance.
 
 ```js {4-6}
-new StaticSite(stack, "Site", {
-  path: "path/to/src",
+new StaticSite(stack, "frontend", {
+  path: "path/to/site",
   cdk: {
     distribution: {
       comment: "Distribution for my React website",
@@ -405,8 +455,8 @@ The default behavior of the CloudFront distribution uses the internally created 
 ```js {6-11}
 import { ViewerProtocolPolicy, AllowedMethods } from "aws-cdk-lib/aws-cloudfront";
 
-new StaticSite(stack, "Site", {
-  path: "path/to/src",
+new StaticSite(stack, "frontend", {
+  path: "path/to/site",
   cdk: {
     distribution: {
       defaultBehavior: {
@@ -431,8 +481,8 @@ const edgeFunc = new experimental.EdgeFunction(stack, "MyFunction", {
   stackId: `${scope.logicalPrefixedName("edge-lambda")}`,
 });
 
-new StaticSite(stack, "Site", {
-  path: "path/to/src",
+new StaticSite(stack, "frontend", {
+  path: "path/to/site",
   cdk: {
     distribution: {
       defaultBehavior: {

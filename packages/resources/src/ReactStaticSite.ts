@@ -2,8 +2,9 @@ import * as path from "path";
 import fs from "fs-extra";
 import { Construct } from "constructs";
 
-import { StaticSite, StaticSiteProps } from "./StaticSite.js";
+import { App } from "./App.js";
 import { SSTConstruct } from "./Construct.js";
+import { StaticSite, StaticSiteProps } from "./StaticSite.js";
 
 export type ReactStaticSiteProps = StaticSiteProps;
 
@@ -27,6 +28,10 @@ export type ReactStaticSiteProps = StaticSiteProps;
 export class ReactStaticSite extends StaticSite implements SSTConstruct {
   constructor(scope: Construct, id: string, props: ReactStaticSiteProps) {
     const { path: sitePath, environment } = props || {};
+
+    // Show warning
+    const app = scope.node.root as App;
+    app.reportWarning("usingReactStaticSite");
 
     // Validate environment
     Object.keys(environment || {}).forEach((key) => {

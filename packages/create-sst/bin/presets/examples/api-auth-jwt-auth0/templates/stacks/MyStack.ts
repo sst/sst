@@ -1,4 +1,4 @@
-import { StackContext, Api, ViteStaticSite } from "@serverless-stack/resources";
+import { StackContext, Api, StaticSite } from "@serverless-stack/resources";
 
 export function MyStack({ stack, app }: StackContext) {
   // Create Api
@@ -24,8 +24,10 @@ export function MyStack({ stack, app }: StackContext) {
     },
   });
 
-  const site = new ViteStaticSite(stack, "Site", {
+  const site = new StaticSite(stack, "Site", {
     path: "frontend",
+    buildCommand: "npm run build",
+    buildOutput: "dist",
     environment: {
       VITE_APP_AUTH0_DOMAIN: process.env.AUTH0_DOMAIN!,
       VITE_APP_AUTH0_CLIENT_ID: process.env.AUTH0_CLIENT_ID!,

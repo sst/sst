@@ -57,7 +57,7 @@ const api = new Api(stack, "Api", {});
 const auth = new Auth(stack, "Auth", {
   authenticator: "functions/authenticator.handler"
 })
-auth.attach({
+auth.attach(stack, {
   api
 })
 ```
@@ -77,7 +77,7 @@ const api = new Auth(stack, "Api", {});
 const auth = new Auth(stack, "Auth", {
   authenticator: "functions/authenticator.handler"
 })
-auth.attach({
+auth.attach(stack, {
   api
 })
 ```
@@ -96,7 +96,7 @@ const api = new Auth(stack, "Api", {});
 const auth = new Auth(stack, "Auth", {
   authenticator: "functions/authenticator.handler"
 })
-auth.attach({
+auth.attach(stack, {
   api,
   prefix: "/custom/prefix"
 })

@@ -251,8 +251,6 @@ module.exports = {
         "constructs/StaticSite",
         "constructs/NextjsSite",
         "constructs/RemixSite",
-        "constructs/ViteStaticSite",
-        "constructs/ReactStaticSite"
       ],
       Database: ["constructs/RDS", "constructs/Table"],
       Async: [
@@ -275,6 +273,8 @@ module.exports = {
         "constructs/DebugApp",
         "constructs/DebugStack",
         "constructs/GraphQLApi",
+        "constructs/ViteStaticSite",
+        "constructs/ReactStaticSite",
         "constructs/ApiGatewayV1Api"
       ]
     }

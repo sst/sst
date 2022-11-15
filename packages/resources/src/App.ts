@@ -84,7 +84,9 @@ type AppRemovalPolicy = Lowercase<keyof typeof cdk.RemovalPolicy>;
 type AppWarningType = "usingConfig"
   | "usingPermissionsWithSSTConstruct"
   | "usingApiPothosRoute"
-  | "usingGraphQLApi";
+  | "usingGraphQLApi"
+  | "usingReactStaticSite"
+  | "usingViteStaticSite";
 
 export type AppProps = cdk.AppProps;
 
@@ -723,6 +725,14 @@ declare module "@serverless-stack/node/${binding.clientPackage}" {
 
     if (this.warnings.usingGraphQLApi) {
       logger.warn(`\nWARNING: The "GraphQLApi" construct is deprecated, and will be removed in SST v2. Use the "Api" construct with a "graphql" route instead. Read about how to upgrade here — https://docs.sst.dev/upgrade-guide#upgrade-to-v118`);
+    }
+
+    if (this.warnings.usingViteStaticSite) {
+      logger.warn(`\nWARNING: The "ViteStaticSite" construct is deprecated, and will be removed in SST v2. Use the "StaticSite" construct instead. Read about how to upgrade here — https://docs.sst.dev/upgrade-guide#upgrade-to-v118`);
+    }
+
+    if (this.warnings.usingReactStaticSite) {
+      logger.warn(`\nWARNING: The "ReactStaticSite" construct is deprecated, and will be removed in SST v2. Use the "StaticSite" construct instead. Read about how to upgrade here — https://docs.sst.dev/upgrade-guide#upgrade-to-v118`);
     }
   }
 

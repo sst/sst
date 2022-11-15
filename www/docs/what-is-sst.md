@@ -170,13 +170,15 @@ Behind the scenes SST adds the required [**IAM permissions**](https://aws.amazon
 
 ## Frontend
 
-For the frontend of your application, SST lets you deploy [**React**](constructs/ReactStaticSite.md), [**Next.js**](constructs/NextjsSite.md), or [**Remix**](constructs/RemixSite.md) apps. Or any [static website](constructs/StaticSite.md).
+For the frontend of your application, SST lets you deploy [**Next.js**](constructs/NextjsSite.md) and [**Remix**](constructs/RemixSite.md) apps. Or any [static website](constructs/StaticSite.md).
 
-Here for example, we are defining a [Vite](https://vitejs.dev) static site using the [`ViteStaticSite`](constructs/ViteStaticSite.md) construct.
+Here for example, we are defining a [Vite](https://vitejs.dev) static site using the [`StaticSite`](constructs/StaticSite.md) construct.
 
 ```ts
-new ViteStaticSite(this, "site", {
+new StaticSite(this, "site", {
   path: "web",
+  buildCommand: "npm run build",
+  buildOutput: "dist",
   customDomain: "my-sst-app.com",
   environment: {
     VITE_API_URL: api.url,
@@ -197,7 +199,7 @@ For example, you can grab the API endpoint from the API construct and pass it to
 ```ts {1,6}
 const api = new Api(/* ... */);
 
-new ViteStaticSite(this, "site", {
+new StaticSite(this, "site", {
   // ...
   environment: {
     VITE_API_URL: api.url,

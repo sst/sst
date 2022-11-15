@@ -2,6 +2,7 @@ import path from "path";
 import fs from "fs-extra";
 import { Construct } from "constructs";
 
+import { App } from "./App.js";
 import { StaticSite, StaticSiteProps } from "./StaticSite.js";
 
 /////////////////////
@@ -44,17 +45,15 @@ export class ViteStaticSite extends StaticSite {
   constructor(scope: Construct, id: string, props: ViteStaticSiteProps) {
     const { path: sitePath, environment, typesPath } = props || {};
 
+    // Show warning
+    const app = scope.node.root as App;
+    app.reportWarning("usingViteStaticSite");
+
     // generate buildCommand
     let defaultBuildCommand = "npm run build";
     if (fs.existsSync(path.join(sitePath, "yarn.lock"))) {
       defaultBuildCommand = "yarn build";
     }
-
-    // create types file
-    const filePath = path.resolve(
-      path.join(sitePath, typesPath || "src/sst-env.d.ts")
-    );
-    generateTypesFile(filePath, environment);
 
     super(scope, id, {
       indexPage: "index.html",
@@ -73,27 +72,10 @@ export class ViteStaticSite extends StaticSite {
           cacheControl: "max-age=31536000,public,immutable",
         },
       ],
+      vite: {
+        types: typesPath,
+      },
       ...props,
     });
   }
-}
-
-function generateTypesFile(
-  typesFullPath: string,
-  environment?: { [key: string]: string }
-) {
-  const content = `/// <reference types="vite/client" />
-
-interface ImportMetaEnv {
-${Object.keys(environment || {})
-  .map((key) => `  readonly ${key}: string`)
-  .join("\n")}
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv
-}`;
-
-  fs.ensureDirSync(path.dirname(typesFullPath));
-  fs.writeFileSync(typesFullPath, content);
 }
