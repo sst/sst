@@ -13405,13 +13405,14 @@ kuler@1.0.x:
   dependencies:
     colornames "^1.1.1"
 
-kysely-codegen@^0.6.0:
-  version "0.6.0"
-  resolved "https://registry.yarnpkg.com/kysely-codegen/-/kysely-codegen-0.6.0.tgz#362750e9c4fb14567e015b520ffb27daef07e53b"
-  integrity sha512-j8G3UV435qwdAUyseXJVownnD7zMkqJG2w/2AI/tBE7s+lsUk7lne9dc1n3Kd4qQxn14Be7bx3fBBct0OU0Scw==
+kysely-codegen@^0.6.1:
+  version "0.6.2"
+  resolved "https://registry.yarnpkg.com/kysely-codegen/-/kysely-codegen-0.6.2.tgz#87640b39337e2aa849c99b36cadf8e0955f69bbb"
+  integrity sha512-AWiaSQ0CBuiHsB3ubBFCf8838BaG8sypdjWi7tCJoNcAvJo1Ls8WO+1YWOi6IAjU4fBO4kG/t1rj4EnSVQwm9A==
   dependencies:
     chalk "^4.1.2"
     dotenv "^16.0.1"
+    micromatch "^4.0.5"
     minimist "^1.2.6"
 
 kysely-data-api@^0.1.2:

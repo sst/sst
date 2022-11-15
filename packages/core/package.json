@@ -51,7 +51,7 @@
     "immer": "^9.0.7",
     "js-yaml": "^4.1.0",
     "kysely": "^0.21.3",
-    "kysely-codegen": "^0.6.0",
+    "kysely-codegen": "^0.6.1",
     "kysely-data-api": "^0.1.2",
     "log4js": "^6.3.0",
     "picomatch": "^2.3.0",
