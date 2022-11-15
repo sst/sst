@@ -82,7 +82,7 @@ app.addDefaultFunctionConfig([STRIPE_KEY]);
 app.addDefaultFunctionBinding([STRIPE_KEY]);
 ```
 
-The "addDefaultFunctionConfig" method will be removed in SST v2. Pass Parameters and Secrets in through the "addDefaultFunctionBinding" function. Read more about how to upgrade here — https://docs.serverless-stack.com/upgrade-guide#upgrade-to-v116
+The "addDefaultFunctionConfig" method will be removed in SST v2. Pass Parameters and Secrets in through the "addDefaultFunctionBinding" function. Read more about how to upgrade here — https://docs.sst.dev/upgrade-guide#upgrade-to-v116
 
 :::
 ### addDefaultFunctionEnv

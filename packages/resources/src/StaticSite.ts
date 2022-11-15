@@ -106,7 +106,8 @@ export interface StaticSiteProps {
   buildOutput?: string;
   /**
    * Pass in a list of file options to configure cache control for different files. Behind the scenes, the `StaticSite` construct uses a combination of the `s3 cp` and `s3 sync` commands to upload the website content to the S3 bucket. An `s3 cp` command is run for each file option block, and the options are passed in as the command options.
-   * @default
+   * 
+   * Defaults to no cache control for HTML files, and a 1 year cache control for JS/CSS files.
    * ```js
    * [
    *   {
@@ -125,11 +126,11 @@ export interface StaticSiteProps {
    * ```js
    * new StaticSite(stack, "Site", {
    *   buildOutput: "dist",
-   *   fileOptions: {
+   *   fileOptions: [{
    *     exclude: "*",
    *     include: "*.js",
    *     cacheControl: "max-age=31536000,public,immutable",
-   *   }
+   *   }]
    * });
    * ```
    */

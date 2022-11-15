@@ -164,7 +164,9 @@ Add notification subscriptions after the bucket has been created
 
 ```js {3}
 const bucket = new Bucket(stack, "Bucket");
-bucket.addNotifications(stack, ["src/notification.main"]);
+bucket.addNotifications(stack, {
+  myNotification: "src/notification.main"
+});
 ```
 
 ### attachPermissions

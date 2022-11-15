@@ -211,7 +211,7 @@ new Api(stack, "Api", {
 
 ### routes?
 
-_Type_ : <span class="mono">Record&lt;<span class="mono">string</span>, <span class='mono'><span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span></span> | <span class="mono">[ApiFunctionRouteProps](#apifunctionrouteprops)</span> | <span class="mono">[ApiHttpRouteProps](#apihttprouteprops)</span> | <span class="mono">[ApiAlbRouteProps](#apialbrouteprops)</span> | <span class="mono">[ApiPothosRouteProps](#apipothosrouteprops)</span></span>&gt;</span>
+_Type_ : <span class="mono">Record&lt;<span class="mono">string</span>, <span class='mono'><span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span></span> | <span class="mono">[ApiFunctionRouteProps](#apifunctionrouteprops)</span> | <span class="mono">[ApiHttpRouteProps](#apihttprouteprops)</span> | <span class="mono">[ApiAlbRouteProps](#apialbrouteprops)</span> | <span class="mono">[ApiGraphQLRouteProps](#apigraphqlrouteprops)</span> | <span class="mono">[ApiPothosRouteProps](#apipothosrouteprops)</span></span>&gt;</span>
 
 Define the routes for the API. Can be a function, proxy to another API, or point to an ALB
 
@@ -349,7 +349,7 @@ addRoutes(scope, routes)
 ```
 _Parameters_
 - __scope__ <span class="mono">[Construct](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)</span>
-- __routes__ <span class="mono">Record&lt;<span class="mono">string</span>, <span class='mono'><span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span></span> | <span class="mono">[ApiFunctionRouteProps](#apifunctionrouteprops)</span> | <span class="mono">[ApiHttpRouteProps](#apihttprouteprops)</span> | <span class="mono">[ApiAlbRouteProps](#apialbrouteprops)</span> | <span class="mono">[ApiPothosRouteProps](#apipothosrouteprops)</span></span>&gt;</span>
+- __routes__ <span class="mono">Record&lt;<span class="mono">string</span>, <span class='mono'><span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span></span> | <span class="mono">[ApiFunctionRouteProps](#apifunctionrouteprops)</span> | <span class="mono">[ApiHttpRouteProps](#apihttprouteprops)</span> | <span class="mono">[ApiAlbRouteProps](#apialbrouteprops)</span> | <span class="mono">[ApiGraphQLRouteProps](#apigraphqlrouteprops)</span> | <span class="mono">[ApiPothosRouteProps](#apipothosrouteprops)</span></span>&gt;</span>
 
 
 Adds routes to the Api after it has been created.
@@ -466,6 +466,27 @@ const api = new Api(stack, "Api", {
 
 const listFunction = api.getFunction("GET /notes");
 ```
+
+### setCors
+
+```ts
+setCors(cors)
+```
+_Parameters_
+- __cors__ <span class='mono'><span class="mono">boolean</span> | <span class="mono">[ApiCorsProps](#apicorsprops)</span></span>
+
+
+Binds the given list of resources to a specific route.
+
+
+```js
+const api = new Api(stack, "Api");
+
+api.setCors({
+  allowMethods: ["GET"],
+});
+```
+
 
 ## ApiCorsProps
 
@@ -825,17 +846,35 @@ Specify a route handler that handles GraphQL queries using Pothos
 
 
 ```js
+// Change
 api.addRoutes(stack, {
   "POST /graphql": {
-     type: "pothos",
-     schema: "backend/functions/graphql/schema.ts",
-     output: "graphql/schema.graphql",
-     function: {
-       handler: "functions/graphql/graphql.ts",
-     },
-     commands: [
-       "./genql graphql/graphql.schema graphql/
-     ]
+    type: "pothos",
+    function: {
+      handler: "functions/graphql/graphql.ts",
+    },
+    schema: "backend/functions/graphql/schema.ts",
+    output: "graphql/schema.graphql",
+    commands: [
+      "./genql graphql/graphql.schema graphql/
+    ]
+  }
+})
+
+// To
+api.addRoutes(stack, {
+  "POST /graphql": {
+    type: "graphql",
+    function: {
+      handler: "functions/graphql/graphql.ts",
+    },
+    pothos: {
+      schema: "backend/functions/graphql/schema.ts",
+      output: "graphql/schema.graphql",
+      commands: [
+        "./genql graphql/graphql.schema graphql/
+      ]
+    }
   }
 })
 ```
@@ -875,6 +914,66 @@ Path to pothos schema
 ### type
 
 _Type_ : <span class="mono">"pothos"</span>
+
+## ApiGraphQLRouteProps
+Specify a route handler that handles GraphQL queries using Pothos
+
+
+```js
+api.addRoutes(stack, {
+  "POST /graphql": {
+     type: "graphql",
+     function: {
+       handler: "functions/graphql/graphql.ts",
+     },
+     pothos: {
+       schema: "backend/functions/graphql/schema.ts",
+       output: "graphql/schema.graphql",
+       commands: [
+         "./genql graphql/graphql.schema graphql/
+       ]
+     }
+  }
+})
+```
+
+### authorizationScopes?
+
+_Type_ : <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
+
+### authorizer?
+
+_Type_ : <span class='mono'><span class="mono">"none"</span> | <span class="mono">"iam"</span> | <span class="mono">string</span></span>
+
+### function
+
+_Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span> | <span class="mono">[FunctionProps](Function#functionprops)</span></span>
+
+The function definition used to create the function for this route. Must be a graphql handler
+
+
+### pothos.commands?
+
+_Type_ : <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
+
+Commands to run after generating schema. Useful for code generation steps
+
+### pothos.output?
+
+_Type_ : <span class="mono">string</span>
+
+File to write graphql schema to
+
+### pothos.schema?
+
+_Type_ : <span class="mono">string</span>
+
+Path to pothos schema
+
+
+### type
+
+_Type_ : <span class="mono">"graphql"</span>
 
 ## ApiFunctionRouteProps
 Specify a function route handler and configure additional options
