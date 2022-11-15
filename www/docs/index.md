@@ -2,16 +2,96 @@
 title: Introduction
 hide_table_of_contents: true
 description: SST Docs
+pagination_prev: null
+pagination_next: null
 ---
 
 import config from "../config";
 import styles from "./about.module.css";
 import useBaseUrl from "@docusaurus/useBaseUrl";
+import HeadlineText from "@site/src/components/HeadlineText";
 
-<div className={styles.desc}>
+<HeadlineText>
+
 SST makes it easy to build full-stack serverless applications on AWS.
+
+</HeadlineText>
+
+<div className={styles.summary}>
+
+- **AWS without the complexity**
+
+  Use TypeScript to create APIs, databases, queues, etc. without learning AWS. SST supports all AWS services.
+
+- **Skip the AWS Console**
+
+  Use the SST Console to manage your app, instead of clicking through the services in the AWS Console
+
+- **10x faster hot reload**
+
+  Debug your functions in real-time using a 10x faster local dev environment than Serverless Framework or SAM.
+
 </div>
 
+:::tip Learn more
+Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
+:::
+
+## Everything you need
+
+<ul className={styles.features}>
+  <li>
+    <a href="/">
+      <h3>APIs</h3>
+      <p>Test and debug your Lambda functions in real-time.</p>
+    </a>
+  </li>
+  <li>
+    <a href="/">
+      <h3>Databases</h3>
+      <p>Test and debug your Lambda functions in real-time.</p>
+    </a>
+  </li>
+  <li>
+    <a href="/">
+      <h3>Auth</h3>
+      <p>Test and debug your Lambda functions in real-time.</p>
+    </a>
+  </li>
+  <li>
+    <a href="/">
+      <h3>Frontends</h3>
+      <p>Test and debug your Lambda functions in real-time.</p>
+    </a>
+  </li>
+  <li>
+    <a href="/">
+      <h3>File uploads</h3>
+      <p>Test and debug your Lambda functions in real-time.</p>
+    </a>
+  </li>
+  <li>
+    <a href="/">
+      <h3>Cron jobs</h3>
+      <p>Test and debug your Lambda functions in real-time.</p>
+    </a>
+  </li>
+</ul>
+
+## Get started
+
+<a className={styles.start} href={useBaseUrl("/quick-start")}>
+<span>
+<i className="fas fa-stream"></i>
+</span>
+
+  <div>
+  <h4>Quick Start</h4>
+  <p>Take a quick 10 minute tour of SST.</p>
+  </div>
+</a>
+
+<!--
 <div className={styles.features}>
 
 - [**High-level components**](what-is-sst.md#infrastructure) to simplify building APIs, databases, and frontends on AWS.
@@ -123,3 +203,4 @@ npx sst deploy --stage prod
     </div>
   </a>
 </div>
+-->
