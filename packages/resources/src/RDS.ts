@@ -512,6 +512,7 @@ export class RDS extends Construct implements SSTConstruct {
         ],
       },
     });
+    fn._disableBind = true;
 
     fn.attachPermissions([this.cdk.cluster]);
 
