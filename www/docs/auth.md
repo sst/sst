@@ -61,7 +61,7 @@ Import the [`Auth`](constructs/Auth.md) construct, attach it to your API and poi
 ```js title="stacks/api.ts"
 import { Auth } from "@serverless-stack/resources";
 
-new Auth(stack, "auth", {
+const auth = new Auth(stack, "auth", {
   authenticator: {
     handler: "functions/auth.handler",
   },
