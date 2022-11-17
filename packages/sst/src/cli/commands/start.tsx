@@ -5,6 +5,8 @@ import type { Program } from "../program.js";
 import type { CloudAssembly } from "aws-cdk-lib/cx-api";
 import type { Metafile } from "esbuild";
 import { printDeploymentResults } from "../ui/deploy.js";
+import { useFunctions } from "../../constructs/Function.js";
+import { dim, gray } from "colorette";
 
 export const start = (program: Program) =>
   program.command(
@@ -33,20 +35,36 @@ export const start = (program: Program) =>
         bus.subscribe("function.invoked", async (evt) => {
           console.log(
             bold(magenta(`Invoked `)),
-            bold(evt.properties.functionID)
+            bold(useFunctions().fromID(evt.properties.functionID).handler!)
+          );
+        });
+
+        bus.subscribe("function.built", async (evt) => {
+          console.log(
+            bold(gray(`Built   `)),
+            bold(useFunctions().fromID(evt.properties.functionID).handler!)
           );
         });
 
         bus.subscribe("worker.stdout", async (evt) => {
+          const { message } = evt.properties;
+          const lines = message.split("\n");
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            lines[i] = "         " + line;
+          }
           console.log(
             bold(blue(`Log     `)),
-            bold(evt.properties.functionID),
-            evt.properties.message
+            bold(useFunctions().fromID(evt.properties.functionID).handler!)
           );
+          console.log(dim(lines.join("\n")));
         });
 
         bus.subscribe("function.success", async (evt) => {
-          console.log(bold(green(`Success `)), bold(evt.properties.functionID));
+          console.log(
+            bold(green(`Success `)),
+            bold(useFunctions().fromID(evt.properties.functionID).handler!)
+          );
         });
       });
 

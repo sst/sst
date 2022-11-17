@@ -19,13 +19,13 @@ export const useNodeHandler = Context.memo(() => {
   const threads = new Map<string, Worker>();
 
   handlers.register({
-    shouldBuild: input => {
+    shouldBuild: (input) => {
       const result = cache[input.functionID];
       if (!result) return false;
       const relative = path.relative(project.paths.root, input.file);
       return Boolean(result.metafile?.inputs[relative]);
     },
-    startWorker: async input => {
+    startWorker: async (input) => {
       new Promise(async () => {
         const worker = new Worker(
           url.fileURLToPath(
@@ -36,7 +36,7 @@ export const useNodeHandler = Context.memo(() => {
             workerData: input,
             stderr: true,
             stdin: true,
-            stdout: true
+            stdout: true,
           }
         );
         worker.stdout.on("data", (data: Buffer) => {
@@ -47,11 +47,11 @@ export const useNodeHandler = Context.memo(() => {
       });
     },
     canHandle: () => true,
-    stopWorker: async workerID => {
+    stopWorker: async (workerID) => {
       const worker = threads.get(workerID);
       await worker?.terminate();
     },
-    build: async input => {
+    build: async (input) => {
       const exists = cache[input.functionID];
       const parsed = path.parse(input.props.handler!);
       const file = [
@@ -62,10 +62,10 @@ export const useNodeHandler = Context.memo(() => {
         ".js",
         ".jsx",
         ".mjs",
-        ".cjs"
+        ".cjs",
       ]
-        .map(ext => path.join(parsed.dir, parsed.name + ext))
-        .find(file => {
+        .map((ext) => path.join(parsed.dir, parsed.name + ext))
+        .find((file) => {
           return fsSync.existsSync(file);
         })!;
       if (!file)
@@ -97,7 +97,7 @@ export const useNodeHandler = Context.memo(() => {
         const result = await exists.rebuild();
         cache[input.functionID] = result;
         return {
-          handler
+          handler,
         };
       }
 
@@ -109,7 +109,7 @@ export const useNodeHandler = Context.memo(() => {
         external: [
           ...(nodejs?.install || []),
           ...(nodejs?.install || []),
-          ...(external || [])
+          ...(external || []),
         ],
         bundle: true,
         metafile: true,
@@ -122,23 +122,23 @@ export const useNodeHandler = Context.memo(() => {
                 js: [
                   `import { createRequire as topLevelCreateRequire } from 'module';`,
                   `const require = topLevelCreateRequire(import.meta.url);`,
-                  nodejs.banner || ""
-                ].join("\n")
-              }
+                  nodejs.banner || "",
+                ].join("\n"),
+              },
             }
           : {
               format: "cjs",
               target: "node14",
               banner: nodejs.banner
                 ? {
-                    js: nodejs.banner
+                    js: nodejs.banner,
                   }
-                : undefined
+                : undefined,
             }),
         outfile: target,
         sourcemap: nodejs.sourcemap,
         minify: nodejs.minify,
-        ...override
+        ...override,
       });
 
       // Install node_modules
@@ -159,19 +159,19 @@ export const useNodeHandler = Context.memo(() => {
         const json = JSON.parse(
           await fs
             .readFile(path.join(src, "package.json"))
-            .then(x => x.toString())
+            .then((x) => x.toString())
         );
         fs.writeFile(
           path.join(input.out, "package.json"),
           JSON.stringify({
             dependencies: Object.fromEntries(
-              nodejs.install?.map(x => [x, json.dependencies?.[x] || "*"])
-            )
+              nodejs.install?.map((x) => [x, json.dependencies?.[x] || "*"])
+            ),
           })
         );
-        await new Promise<void>(resolve => {
+        await new Promise<void>((resolve) => {
           const process = exec("npm install", {
-            cwd: input.out
+            cwd: input.out,
           });
           process.on("exit", () => resolve());
         });
@@ -179,8 +179,8 @@ export const useNodeHandler = Context.memo(() => {
 
       cache[input.functionID] = result;
       return {
-        handler
+        handler,
       };
-    }
+    },
   });
 });

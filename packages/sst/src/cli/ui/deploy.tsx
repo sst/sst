@@ -125,7 +125,7 @@ export const DeploymentUI = (props: Props) => {
                     <Text color="red">✖</Text>
                   )}{" "}
                   {resource.ResourceType} {resource.LogicalResourceId}{" "}
-                  {resource.ResourceStatusReason}
+                  {resource.ResourceStatusReason}{" "}
                 </Text>
                 <Text color={color(resource.ResourceStatus || "")}>
                   {resource.ResourceStatus}

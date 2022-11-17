@@ -926,6 +926,7 @@ export class Function extends lambda.Function implements SSTConstruct {
         layers: Function.buildLayers(scope, id, props),
         logRetention,
       });
+
       useDeferredTasks().add(async () => {
         // Build function
         const result = await useRuntimeHandlers().build(

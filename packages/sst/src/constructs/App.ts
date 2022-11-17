@@ -26,6 +26,8 @@ import { Auth } from "./Auth.js";
 import { useDeferredTasks } from "./deferred_task.js";
 import { AppContext } from "./context.js";
 import { useBootstrap } from "../bootstrap.js";
+import { useProject } from "../app.js";
+import { Logger } from "../logger.js";
 const require = createRequire(import.meta.url);
 
 function exitWithMessage(message: string) {
@@ -594,39 +596,13 @@ export class App extends cdk.App {
   }
 
   private codegenTypes() {
-    // Find the node_modules folder to create the type files in
-    const nodeModulesPath = this.codegenFindNodeModulesPath();
-    if (!nodeModulesPath) {
-      return;
-    }
-    const typesPath = path.resolve(
-      nodeModulesPath,
-      "node_modules",
-      "@types",
-      "serverless-stack__node"
-    );
+    const project = useProject();
+
+    const typesPath = path.resolve(project.paths.out, "types");
+    Logger.debug(`Generating types in ${typesPath}`);
 
     this.codegenCreateIndexType(typesPath);
     this.codegenCreateConstructTypes(typesPath);
-  }
-
-  private codegenFindNodeModulesPath() {
-    const rootPath = path.parse(process.cwd()).root;
-
-    let directory = this.appPath;
-    while (directory !== rootPath) {
-      const checkPath = path.resolve(
-        directory,
-        "node_modules",
-        "@serverless-stack",
-        "node"
-      );
-      if (fs.existsSync(checkPath)) {
-        return directory;
-      }
-
-      directory = path.dirname(directory);
-    }
   }
 
   private codegenCreateIndexType(typesPath: string) {
