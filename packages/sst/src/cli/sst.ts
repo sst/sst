@@ -11,6 +11,9 @@ import { build } from "./commands/build.js";
 import { VisibleError } from "../error.js";
 import { useSpinners } from "./spinner.js";
 import { deploy } from "./commands/deploy.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 secrets(program);
 update(program);
@@ -20,7 +23,7 @@ build(program);
 deploy(program);
 
 process.removeAllListeners("uncaughtException");
-process.on("uncaughtException", err => {
+process.on("uncaughtException", (err) => {
   const spinners = useSpinners();
   for (const spinner of spinners) {
     if (spinner.isSpinning) spinner.fail(spinner.text);

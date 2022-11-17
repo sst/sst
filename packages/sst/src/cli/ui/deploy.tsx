@@ -5,7 +5,7 @@ import { useBus } from "../../bus.js";
 import { Stacks } from "../../stacks/index.js";
 import inkSpinner from "ink-spinner";
 import { useProject } from "../../app.js";
-import { bold, green, red } from "colorette";
+import { blue, bold, green, red } from "colorette";
 
 // @ts-ignore
 const { default: Spinner } = inkSpinner;
@@ -151,11 +151,19 @@ export function printDeploymentResults(
       if (Stacks.isFailed(result.status)) return red("✖");
     })();
     console.log(`${icon} ${stack}`);
+
+    if (Object.entries(result.outputs).length > 0) {
+      console.log(`  ${blue("Outputs:")}`);
+      for (const [key, value] of Object.entries(result.outputs)) {
+        console.log(bold(`    ${key}: ${value}`));
+      }
+    }
+
     if (Object.entries(result.errors).length > 0) {
       console.log(`  ${red("Errors:")}`);
-    }
-    for (const [id, error] of Object.entries(result.errors)) {
-      console.log(bold(`    ${id}: ${error}`));
+      for (const [id, error] of Object.entries(result.errors)) {
+        console.log(bold(`    ${id}: ${error}`));
+      }
     }
   }
 }
