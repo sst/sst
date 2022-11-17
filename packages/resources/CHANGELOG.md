@@ -1,5 +1,14 @@
 # @serverless-stack/resources
 
+## 1.18.2
+
+### Patch Changes
+
+- [`eee554b1c`](https://github.com/serverless-stack/sst/commit/eee554b1c8824178bbb2fd61eaf42347a4e4165c) Thanks [@fwang](https://github.com/fwang)! - RDS: fix build error with multiple RDS clusters defined
+
+- Updated dependencies []:
+  - @serverless-stack/core@1.18.2
+
 ## 1.18.1
 
 ### Patch Changes
