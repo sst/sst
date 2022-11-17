@@ -2,13 +2,25 @@
  * Summary
  */
 .summary {
-  margin-bottom: calc(var(--ifm-list-margin) * 1.5);
+  margin-bottom: calc(var(--ifm-list-margin) * 1.8);
+}
+.summary ul li + li {
+  margin-top: calc(var(--ifm-list-item-margin) * 2);
 }
 .summary ul li p {
-  margin: 0 0 var(--ifm-list-item-margin);
+  margin: 0 0 calc(var(--ifm-list-item-margin) * 0.5);
 }
 .summary ul li p:last-child {
+  margin-bottom: 0;
   color: var(--custom-font-color-secondary);
+}
+
+.heading h3 {
+  margin-top: calc(var(--ifm-h3-vertical-rhythm-top) * var(--ifm-leading));
+  margin-bottom: calc(var(--ifm-heading-margin-bottom) * 0.75);
+}
+.heading p {
+  margin-bottom: calc(var(--ifm-paragraph-margin-bottom) * 0.85);
 }
 
 /**
@@ -27,28 +39,18 @@
   border-radius: 5px;
   background-color: var(--ifm-code-background);
   padding: calc(var(--ifm-global-spacing) * 0.75) var(--ifm-global-spacing);
-  transition: box-shadow ease-in-out 0.15s, transform ease-in-out 0.15s;
+  border: 1px solid var(--ifm-code-background);
+  transition: border-color ease-in-out 0.2s;
 }
 .features li + li {
   margin-top: 0;
 }
-.features li:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 1px 1px rgba(0,0,0,0.02), 
-              0 1px 2px rgba(0,0,0,0.02), 
-              0 2px 3px rgba(0,0,0,0.02), 
-              0 3px 4px rgba(0,0,0,0.02),
-              0 4px 5px rgba(0,0,0,0.02), 
-              0 5px 6px rgba(0,0,0,0.02);
-}
-.features li:active {
-  transform: translateY(1px);
-  box-shadow: 0 1px 1px rgba(0,0,0,0.03), 
-              0 2px 2px rgba(0,0,0,0.04);
-}
 .features li h3 {
   margin-bottom: 0.4rem;
   font-size: 1.1rem;
+}
+.features li:hover {
+  border-color: var(--ifm-link-color);
 }
 .features li p {
   margin: 0;
@@ -57,16 +59,31 @@
   color: var(--custom-font-color-secondary);
 }
 
+@media only screen and (max-width: 480px) {
+  .features {
+    display: block;
+  }
+  .features li + li {
+    margin-top: 1rem;
+  }
+}
+
+/**
+ * Get started
+ */
 .start {
-  padding: 15px;
-  height: 130px;
+  padding: 1rem;
   border-radius: 8px;
   position: relative;
   display: flex;
-  align-items: center;
   overflow: hidden;
-  background-color: var(--ifm-color-info-contrast-background);
-  transition: box-shadow ease-in-out 0.15s, transform ease-in-out 0.15s;
+  align-items: center;
+  justify-content: space-between;
+  background-image: linear-gradient(
+    to right,
+    rgb(251, 146, 60, 0.8),
+    rgb(251, 113, 133, 0.8)
+  );
 }
 .start > span {
   position: absolute;
@@ -77,7 +94,7 @@
   margin-top: -36px;
   border-radius: 50%;
   text-align: center;
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: rgba(255, 255, 255, 0.4);
 }
 .start > span > i {
   color: white;
@@ -85,20 +102,78 @@
   font-size: 32px;
   line-height: 72px;
 }
-.start > div {
-  margin-left: 55px;
+.startContent {
+  margin-left: 54px;
+  flex: 1 0 auto;
+  color: white;
 }
-.start > div > h4 {
-  margin-bottom: 4px;
-  font-size: 1.125rem;
+.startContent > h4 {
+  margin-bottom: 7px;
+  font-size: 1.5rem;
+  line-height: 1.1;
   font-weight: 700;
-  /* text-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06); */
+  color: white;
 }
-.start > div > p {
+.startContent > p {
   margin-bottom: 0;
   line-height: 1.4;
   font-size: 0.875rem;
-  /* text-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06); */
+}
+.start > div:last-child {
+  margin: 0 0 0 1rem;
+}
+.startCode code {
+  padding: 0.75rem 1rem;
+  background-color: rgba(0, 0, 0, 0.15);
+  display: block;
+  color: white;
+  font-size: 0.875rem;
+}
+.startCta {
+  margin-top: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5625rem 1rem;
+  border-radius: 5px;
+  font-weight: bold;
+  font-size: 0.9375rem;
+  background-color: white;
+}
+.startCta:hover {
+  color: var(--ifm-link-color);
+}
+.startCta > i {
+  margin-left: 5px;
+  font-size: 0.75rem;
+  transition: transform 0.2s ease-in-out;
+}
+.startCta:hover > i {
+  transform: translateX(2px);
+}
+
+@media only screen and (max-width: 480px) {
+  .start {
+    display: block;
+    padding: 0.75rem 1rem;
+    height: auto;
+  }
+  .start > span {
+    display: none;
+  }
+  .startContent {
+    margin-left: 0;
+  }
+  .start > div:last-child {
+    margin: 14px 0 0;
+  }
+  .startCode code {
+    font-size: 0.875rem;
+    padding: 0.65rem 0.8125rem;
+  }
+  .startCta {
+    padding: 0.5rem 0.8125rem;
+  }
 }
 
 /**

@@ -13,23 +13,23 @@ import HeadlineText from "@site/src/components/HeadlineText";
 
 <HeadlineText>
 
-SST makes it easy to build full-stack serverless applications on AWS.
+SST makes it easy to build modern full-stack applications on AWS.
 
 </HeadlineText>
 
 <div className={styles.summary}>
 
-- **AWS without the complexity**
+- **Your favorite frontends**
 
-  Use TypeScript to create APIs, databases, queues, etc. without learning AWS. SST supports all AWS services.
+  Deploy Next.js, Remix, Astro, and Solid apps to your AWS account.
 
-- **Skip the AWS Console**
+- **Truly full-stack**
 
-  Use the SST Console to manage your app, instead of clicking through the services in the AWS Console
+  Add any backend feature you need — APIs, databases, auth, cron jobs, and more.
 
-- **10x faster hot reload**
+- **Designed for your team**
 
-  Debug your functions in real-time using a 10x faster local dev environment than Serverless Framework or SAM.
+  Create preview environments or feature environments. Or one for everybody on your team.
 
 </div>
 
@@ -37,59 +37,69 @@ SST makes it easy to build full-stack serverless applications on AWS.
 Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
 :::
 
-## Everything you need
+<div className={styles.heading}>
+  <h3>Everything you need</h3>
+  <p>SST gives you the full power of AWS. Making it easy to add any feature to your product.</p>
+</div>
 
 <ul className={styles.features}>
   <li>
     <a href="/">
       <h3>APIs</h3>
-      <p>Test and debug your Lambda functions in real-time.</p>
+      <p>Add a GraphQL or a simple REST API to your app.</p>
     </a>
   </li>
   <li>
     <a href="/">
       <h3>Databases</h3>
-      <p>Test and debug your Lambda functions in real-time.</p>
+      <p>Use a serverless SQL or NoSQL databases to power your app.</p>
     </a>
   </li>
   <li>
     <a href="/">
       <h3>Auth</h3>
-      <p>Test and debug your Lambda functions in real-time.</p>
-    </a>
-  </li>
-  <li>
-    <a href="/">
-      <h3>Frontends</h3>
-      <p>Test and debug your Lambda functions in real-time.</p>
+      <p>Authenticate your users through any auth provider.</p>
     </a>
   </li>
   <li>
     <a href="/">
       <h3>File uploads</h3>
-      <p>Test and debug your Lambda functions in real-time.</p>
+      <p>Upload files to S3 and manage them through the SST console.</p>
     </a>
   </li>
   <li>
     <a href="/">
       <h3>Cron jobs</h3>
-      <p>Test and debug your Lambda functions in real-time.</p>
+      <p>Run cron jobs powered by serverless functions.</p>
+    </a>
+  </li>
+  <li>
+    <a href="/">
+      <h3>Queues</h3>
+      <p>Work with serverless queues without any infrastructure.</p>
     </a>
   </li>
 </ul>
 
-## Get started
+<div className={styles.start}>
 
-<a className={styles.start} href={useBaseUrl("/quick-start")}>
-<span>
-<i className="fas fa-stream"></i>
-</span>
+<span><i className="fas fa-stream"></i></span>
 
-  <div>
-  <h4>Quick Start</h4>
-  <p>Take a quick 10 minute tour of SST.</p>
+  <div className={styles.startContent}>
+    <h4>Quick start</h4>
+    <p>Take a quick 10 minute tour of SST to get started.</p>
   </div>
-</a>
+  <div>
+    <div className={styles.startCode}>
+      <code>> npm create sst@latest</code>
+    </div>
+    <a className={styles.startCta} href={useBaseUrl("/quick-start")}>
+      Get started
+      <i class="fas fa-arrow-right"></i>
+    </a>
+  </div>
+
+</div>
 
 <!--
 <div className={styles.features}>
