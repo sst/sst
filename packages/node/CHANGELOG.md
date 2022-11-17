@@ -1,5 +1,13 @@
 # @serverless-stack/node
 
+## 1.18.2
+
+## 1.18.1
+
+### Patch Changes
+
+- [`c61e96db7`](https://github.com/serverless-stack/sst/commit/c61e96db7cf898b53cd733f1834e1e2e3f2b6809) Thanks [@fwang](https://github.com/fwang)! - Auth client: fix initializing error when used in sst bind
+
 ## 1.18.0
 
 ### Patch Changes

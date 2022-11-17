@@ -29,6 +29,9 @@ async function replaceWithSsmValues(name: string) {
   // Fetch all secrets
   const props = ["privateKey", "publicKey"]
     .filter((prop) => authData[name][prop] === "__FETCH_FROM_SSM__");
+  if (props.length === 0) {
+    return;
+  }
   const results = await loadSsm(name, props);
 
   if (results.invalidParams.length > 0) {
