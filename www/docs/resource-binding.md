@@ -303,9 +303,9 @@ Config.MY_CLUSTER_NAME;
 
 When a resource is bound to a Lambda function, the resource values are stored as environment variables for the function. In our example, the bucket name is stored as a Lambda environment variable named `SST_Bucket_bucketName_myBucket`.
 
-At runtime, the `@serverless-stack/node/bucket` package reads the value `process.env.SST_Bucket_bucketName_MyBucket` and makes it accessible via `Bucket.myBucket.bucketName`.
+At runtime, the `@serverless-stack/node/bucket` package reads the value `process.env.SST_Bucket_bucketName_myBucket` and makes it accessible via `Bucket.myBucket.bucketName`.
 
-SST also stores a copy of the bucket name in [AWS SSM](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html). In this case, an SSM parameter of the type `String` is created with the name `/sst/{appName}/{stageName}/Bucket/MyBucket/bucketName`, where `{appName}` is the name of your SST app, and `{stageName}` is the stage. The parameter value is the name of the bucket stored in plain text.
+SST also stores a copy of the bucket name in [AWS SSM](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html). In this case, an SSM parameter of the type `String` is created with the name `/sst/{appName}/{stageName}/Bucket/myBucket/bucketName`, where `{appName}` is the name of your SST app, and `{stageName}` is the stage. The parameter value is the name of the bucket stored in plain text.
 
 Storing the bucket name in SSM might seem redundant. But it provides a convenient way to fetch all the bound resources in your application. This can be extremely useful for testing. This isn't possible when using Lambda environment variables and [we are going to see why](#resource-binding-or-lambda-environment-variables).
 
