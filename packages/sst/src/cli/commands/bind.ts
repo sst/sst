@@ -12,7 +12,7 @@ export const bind = (program: Program) =>
       }),
     async (args) => {
       const { Config } = await import("../../config.js");
-      const { spawnSync } = await import("child_process");
+      const { spawnSync, spawn } = await import("child_process");
       const { useAWSCredentials } = await import("../../credentials.js");
 
       const env = await Config.env();
@@ -25,7 +25,7 @@ export const bind = (program: Program) =>
           AWS_SESSION_TOKEN: credentials.sessionToken,
         },
         stdio: "inherit",
-        shell: true,
+        shell: process.env.SHELL || true,
       });
       process.exitCode = result.status || undefined;
     }
