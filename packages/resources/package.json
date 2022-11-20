@@ -41,7 +41,7 @@
     "@aws-sdk/client-codebuild": "^3.169.0",
     "@serverless-stack/core": "1.18.2",
     "archiver": "^5.3.0",
-    "aws-cdk-lib": "2.50.0",
+    "aws-cdk-lib": "2.51.1",
     "chalk": "^4.1.0",
     "constructs": "^10.0.29",
     "cross-spawn": "^7.0.3",

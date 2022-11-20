@@ -36,6 +36,7 @@ const supportedRuntimes = {
   "nodejs12.x": lambda.Runtime.NODEJS_12_X,
   "nodejs14.x": lambda.Runtime.NODEJS_14_X,
   "nodejs16.x": lambda.Runtime.NODEJS_16_X,
+  "nodejs18.x": lambda.Runtime.NODEJS_18_X,
   "python2.7": lambda.Runtime.PYTHON_2_7,
   "python3.6": lambda.Runtime.PYTHON_3_6,
   "python3.7": lambda.Runtime.PYTHON_3_7,
