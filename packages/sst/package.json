@@ -6,7 +6,7 @@
   "name": "sst",
   "version": "0.0.0-20221121213401",
   "bin": {
-    "sst": "./dist/cli/sst.js"
+    "sst": "./cli/sst.js"
   },
   "description": "A CLI to help deploy SST apps.",
   "type": "module",
@@ -20,10 +20,10 @@
     "directory": "packages/cli"
   },
   "exports": {
-    "./constructs": "./dist/constructs/index.js",
-    "./context": "./dist/context/index.js",
-    "./node/*": "./dist/node/*/index.js",
-    "./*": "./dist/*"
+    "./constructs": "./constructs/index.js",
+    "./context": "./context/index.js",
+    "./node/*": "./node/*/index.js",
+    "./*": "./*"
   },
   "homepage": "https://sst.dev",
   "dependencies": {
