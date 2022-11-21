@@ -31,4 +31,4 @@ export * as Config from "./Config.js";
 export * as Metadata from "./Metadata.js";
 export * from "./DebugApp.js";
 export * from "./DebugStack.js";
-export { use, dependsOn, getStack } from "./FunctionalStack.js";
+export { use, dependsOn, getStack, StackContext } from "./FunctionalStack.js";
