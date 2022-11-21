@@ -36,9 +36,26 @@ export default function (input) {
 A side effect of this is all imports in your stack code will need to end with `.js` - this is the future of nodejs so it is worth doing now.
 - In your stacks code replace all imports from `@serverless-stack/resources` to `sst/constructs`
 - We've made changes to the `FunctionProps` API so you should be seeing type errors around the `bundle` property. Most of the options there have been moved to a `nodejs` property instead
-- The new CLI is temporarily named `sst2`
+- We've removed the need for `srcPath` in function definitions but all your handler paths need to be specified relative to the root of the project.
+Before
+```
+new Function(stack, "fn", {
+  srcPath: "services",
+  handler: "path/to/func.handler"
+})
+```
+After
+```
+new Function(stack, "fn", {
+  handler: "services/path/to/func.handler"
+})
+```
+- If you're using function binding need to make sure `../.sst/types` is listed in the `include` array in `services/tsconfig.json`
 - Enjoy maybe?
 
+## New Projects
+
+There is also a preview of `create-sst` You can use it by running `npx create-sst@snapshot`
 
 ## Not yet supported
 

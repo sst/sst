@@ -2,13 +2,13 @@
   "name": "sst",
   "version": "1.17.1",
   "bin": {
-    "sst2": "./dist/cli/sst.js"
+    "sst": "./cli/sst.js"
   },
   "description": "A CLI to help deploy SST apps.",
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc && cp package.json ./dist"
   },
   "publishConfig": {
     "access": "public"
@@ -19,7 +19,7 @@
     "directory": "packages/cli"
   },
   "exports": {
-    "./constructs": "./dist/constructs/index.js"
+    "./constructs": "./constructs/index.js"
   },
   "homepage": "https://sst.dev",
   "dependencies": {
@@ -43,6 +43,7 @@
     "@aws-sdk/middleware-signing": "^3.208.0",
     "@aws-sdk/signature-v4-crt": "^3.31.0",
     "@aws-sdk/smithy-client": "^3.208.0",
+    "@trpc/server": "9.16.0",
     "aws-cdk": "2.50.0",
     "aws-cdk-lib": "2.50.0",
     "aws-iot-device-sdk": "^2.2.12",
@@ -53,20 +54,23 @@
     "colorette": "^2.0.19",
     "constructs": "10.1.156",
     "cross-spawn": "^7.0.3",
+    "dendriform-immer-patch-optimiser": "^2.1.0",
     "dotenv": "^16.0.3",
     "esbuild": "0.15.13",
     "express": "^4.18.2",
     "glob": "^8.0.3",
+    "immer": "9",
     "ink": "^3.2.0",
     "ink-spinner": "^4.0.3",
     "ora": "^6.1.2",
     "promptly": "^3.2.0",
     "react": "17.0.2",
-    "remeda": "^1.2.0",
+    "remeda": "^1.3.0",
     "undici": "^5.12.0",
     "uuid": "^9.0.0",
-    "vite": "^3.2.3",
-    "vite-node": "^0.25.1",
+    "vite": "^3.2.4",
+    "vite-node": "^0.25.2",
+    "ws": "^8.11.0",
     "yargs": "^17.6.2"
   },
   "devDependencies": {
@@ -80,15 +84,19 @@
     "@types/node": "^18.11.9",
     "@types/react": "^17.0.33",
     "@types/uuid": "^8.3.4",
+    "@types/ws": "^8.5.3",
     "@types/yargs": "^17.0.13",
     "archiver": "^5.3.1",
     "kysely": "^0.22.0",
     "kysely-data-api": "^0.1.4",
-    "tsx": "^3.8.1"
+    "tsx": "^3.12.1"
   },
   "optionalDependencies": {
     "@babel/core": "^7.0.0-0",
     "@sls-next/lambda-at-edge": "^3.7.0"
   },
-  "gitHead": "8ac2d0abc11d5de721c87658bb445e3d6c211dcf"
+  "gitHead": "8ac2d0abc11d5de721c87658bb445e3d6c211dcf",
+  "publishConfig": {
+    "directory": "dist"
+  }
 }

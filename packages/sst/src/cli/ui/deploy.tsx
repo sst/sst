@@ -154,7 +154,9 @@ export function printDeploymentResults(
 
     if (Object.entries(result.outputs).length > 0) {
       console.log(`  ${blue("Outputs:")}`);
-      for (const [key, value] of Object.entries(result.outputs)) {
+      for (const key of Object.keys(result.outputs).sort()) {
+        if (key.startsWith("Export")) continue;
+        const value = result.outputs[key];
         console.log(bold(`    ${key}: ${value}`));
       }
     }

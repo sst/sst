@@ -28,6 +28,7 @@ export const start = (program: Program) =>
       const React = await import("react");
       const { Context } = await import("../../context/context.js");
       const { DeploymentUI } = await import("../ui/deploy.js");
+      const { useLocalServer } = await import("../local/server.js");
 
       const useFunctionLogger = Context.memo(async () => {
         const bus = useBus();
@@ -63,6 +64,13 @@ export const start = (program: Program) =>
         bus.subscribe("function.success", async (evt) => {
           console.log(
             bold(green(`Success `)),
+            bold(useFunctions().fromID(evt.properties.functionID).handler!)
+          );
+        });
+
+        bus.subscribe("function.error", async (evt) => {
+          console.log(
+            bold(red(`Error `)),
             bold(useFunctions().fromID(evt.properties.functionID).handler!)
           );
         });
@@ -157,6 +165,12 @@ export const start = (program: Program) =>
       });
 
       createSpinner("").start().succeed("Ready for function invocations");
+      const local = await useLocalServer({
+        key: "",
+        cert: "",
+        live: true,
+        port: 13557,
+      });
       await Promise.all([
         useRuntimeWorkers(),
         useIOTBridge(),

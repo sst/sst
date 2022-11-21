@@ -1,5 +1,5 @@
-import { use, StackContext, ViteStaticSite } from "@serverless-stack/resources";
-import { Api } from "./Api";
+import { use, StackContext, ViteStaticSite } from "sst/constructs";
+import { Api } from "./Api.js";
 
 export function Web({ stack }: StackContext) {
   const api = use(Api);

@@ -14,6 +14,7 @@ declare module "../bus.js" {
     "function.success": {
       workerID: string;
       functionID: string;
+      requestID: string;
       body: any;
     };
     "function.error": {
@@ -21,6 +22,7 @@ declare module "../bus.js" {
       functionID: string;
       errorType: string;
       errorMessage: string;
+      requestID: string;
       trace: string[];
     };
   }

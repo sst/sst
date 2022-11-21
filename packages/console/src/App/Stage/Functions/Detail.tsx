@@ -57,6 +57,10 @@ export function Detail() {
     [params.function]
   );
 
+  useRealtimeState((s) =>
+    console.log(s.functions, functionMetadata.data.localId)
+  );
+
   return (
     <Root key={params.function}>
       <Header>
