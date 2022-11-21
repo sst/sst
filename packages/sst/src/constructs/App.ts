@@ -614,7 +614,7 @@ export class App extends cdk.App {
       recursive: true,
     });
     fs.writeFileSync(
-      `${typesPath}/index.d.ts`,
+      `${typesPath}/index.ts`,
       `
 import "@serverless-stack/node/config";
 declare module "@serverless-stack/node/config" {
@@ -662,7 +662,7 @@ declare module "@serverless-stack/node/config" {
         const id = c.id;
 
         fs.appendFileSync(
-          `${typesPath}/index.d.ts`,
+          `${typesPath}/index.ts`,
           `export * from "./${className}-${id}";`
         );
 
@@ -685,7 +685,7 @@ declare module "@serverless-stack/node/${binding.clientPackage}" {
     }
   }
 }`;
-        fs.writeFileSync(`${typesPath}/${className}-${id}.d.ts`, typeContent);
+        fs.writeFileSync(`${typesPath}/${className}-${id}.ts`, typeContent);
       }
     }
 
