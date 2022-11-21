@@ -96,5 +96,8 @@
     "@babel/core": "^7.0.0-0",
     "@sls-next/lambda-at-edge": "^3.7.0"
   },
-  "gitHead": "8ac2d0abc11d5de721c87658bb445e3d6c211dcf"
+  "gitHead": "8ac2d0abc11d5de721c87658bb445e3d6c211dcf",
+  "publishConfig": {
+    "directory": "./dist"
+  }
 }
