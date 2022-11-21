@@ -51,9 +51,9 @@ import { gray, red } from "colorette";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
-export interface NextjsDomainProps extends BaseSiteDomainProps {}
+export interface NextjsDomainProps extends BaseSiteDomainProps { }
 export interface NextjsCdkDistributionProps
-  extends BaseSiteCdkDistributionProps {}
+  extends BaseSiteCdkDistributionProps { }
 export interface NextjsSiteProps {
   /**
    * Path to the directory where the website source is located.
@@ -307,8 +307,8 @@ export class NextjsSite extends Construct implements SSTConstruct {
     const buildDir = app.buildDir;
     const fileSizeLimit = app.isRunningSSTTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
-        props.sstTestFileSizeLimitOverride || 200
+      // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
+      props.sstTestFileSizeLimitOverride || 200
       : 200;
 
     this.props = props;
@@ -527,7 +527,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
   private zipAppStubAssets(): s3Assets.Asset[] {
     return [
       new s3Assets.Asset(this, "Asset", {
-        path: path.resolve(__dirname, "../assets/NextjsSite/site-stub"),
+        path: path.resolve(__dirname, "../support/sls-nextjs-site-stub"),
       }),
     ];
   }
@@ -547,7 +547,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     const assetPath =
       hasRealCode && this.buildOutDir
         ? path.join(this.buildOutDir, handlerPath)
-        : path.join(__dirname, "../assets/NextjsSite/edge-lambda-stub");
+        : path.join(__dirname, "../support/ssr-site-function-stub");
     const asset = new s3Assets.Asset(this, `${name}FunctionAsset`, {
       path: assetPath,
     });
@@ -768,7 +768,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     if (!provider) {
       provider = new lambda.Function(stack, providerId, {
         code: lambda.Code.fromAsset(
-          path.join(__dirname, "../assets/NextjsSite/custom-resource")
+          path.join(__dirname, "../support/edge-function-code-replacer")
         ),
         layers: [this.awsCliLayer],
         runtime: lambda.Runtime.PYTHON_3_7,
@@ -826,7 +826,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     // Create a Lambda function that will be doing the uploading
     const uploader = new lambda.Function(this, "S3Uploader", {
       code: lambda.Code.fromAsset(
-        path.join(__dirname, "../dist/base-site-custom-resource")
+        path.join(__dirname, "../support/base-site-custom-resource")
       ),
       layers: [this.awsCliLayer],
       runtime: lambda.Runtime.PYTHON_3_7,
@@ -916,8 +916,8 @@ export class NextjsSite extends Construct implements SSTConstruct {
     const app = this.node.root as App;
     const buildOutput = app.isRunningSSTTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
-        props.sstTestBuildOutputPath || this.runBuild()
+      // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+      props.sstTestBuildOutputPath || this.runBuild()
       : this.runBuild();
 
     this.runAfterBuild();
@@ -931,8 +931,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     // validate site path exists
     if (!fs.existsSync(sitePath)) {
       throw new Error(
-        `No path found at "${path.resolve(sitePath)}" for the "${
-          this.node.id
+        `No path found at "${path.resolve(sitePath)}" for the "${this.node.id
         }" NextjsSite.`
       );
     }
@@ -955,7 +954,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     const result = spawn.sync(
       "node",
       [
-        path.join(__dirname, "../assets/NextjsSite/build/build.cjs"),
+        path.join(__dirname, "../support/sls-nextjs-site-build-helper/build.cjs"),
         "--path",
         path.resolve(sitePath),
         "--output",
@@ -1233,8 +1232,8 @@ export class NextjsSite extends Construct implements SSTConstruct {
     const waitForInvalidation = this.isPlaceholder
       ? false
       : this.props.waitForInvalidation === false
-      ? false
-      : true;
+        ? false
+        : true;
     return new CustomResource(this, "CloudFrontInvalidation", {
       serviceToken: invalidator.functionArn,
       resourceType: "Custom::SSTCloudFrontInvalidation",

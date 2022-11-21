@@ -1,4 +1,5 @@
 export * from "./App.js";
+export * from "./AstroSite.js";
 export * from "./Auth.js";
 export * from "./Api.js";
 export * from "./Job.js";

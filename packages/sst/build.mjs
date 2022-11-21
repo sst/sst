@@ -114,19 +114,48 @@ await esbuild.build({
   outfile: "./dist/support/rds-migrator/index.mjs",
 });
 
-// support/static-site-stub
-await fs.cp("support/static-site-stub", "dist/support/static-site-stub", {
-  recursive: true,
+// support/edge-function
+await esbuild.build({
+  keepNames: true,
+  bundle: true,
+  minify: true,
+  platform: "node",
+  target: "esnext",
+  format: "esm",
+  entryPoints: [
+    "./support/edge-function/edge-lambda.ts",
+    "./support/edge-function/edge-lambda-version.ts",
+    "./support/edge-function/s3-bucket.ts",
+  ],
+  banner: {
+    js: [
+      `import { createRequire as topLevelCreateRequire } from 'module';`,
+      `const require = topLevelCreateRequire(import.meta.url);`,
+    ].join(""),
+  },
+  outExtension: {
+    ".js": ".mjs",
+  },
+  outdir: "./dist/support/edge-function/",
 });
 
-// support/base-site-custom-resource
-await fs.cp(
-  "support/base-site-custom-resource",
-  "dist/support/base-site-custom-resource",
-  {
+// Move support packages that don't need to be transpiled
+const moveToDist = [
+  "astro-site-html-stub",
+  "edge-function-code-replacer",
+  "remix-site-function",
+  "remix-site-html-stub",
+  "sls-nextjs-site-stub",
+  "sls-nextjs-site-build-helper",
+  "ssr-site-function-stub",
+  "static-site-stub",
+  "base-site-custom-resource",
+];
+await Promise.all(moveToDist.map(dir =>
+  fs.cp(`support/${dir}`, `dist/support/${dir}`, {
     recursive: true,
-  }
-);
+  })
+));
 
 await fs.cp(
   "support/base-site-archiver.cjs",

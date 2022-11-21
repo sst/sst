@@ -1,6 +1,6 @@
+import fs from "fs";
 import url from "url";
 import path from "path";
-import fs from "fs";
 import crypto from "crypto";
 import { Construct, IConstruct } from "constructs";
 import * as iam from "aws-cdk-lib/aws-iam";
@@ -24,6 +24,7 @@ export interface EdgeFunctionProps {
   timeout?: number;
   memory?: number;
   permissions?: Permissions;
+  format?: "cjs" | "esm";
   environment?: Record<string, string>;
   /**
    * This is intended to be used internally by SST to make constructs
@@ -88,11 +89,14 @@ export class EdgeFunction extends Construct {
     const handlerImportPath = parts.slice(0, -1).join(".");
     const handlerMethod = parts.slice(-1)[0];
 
-    const content = `
-"use strict";
+    const imports = this.props.format === "esm"
+      ? `import * as index from "./${handlerImportPath}.mjs";`
+      : `"use strict"; const index = require("./${handlerImportPath}");`;
+    const exports = this.props.format === "esm"
+      ? `export { handler };`
+      : `exports.handler = handler;`;
 
-const index = require("./${handlerImportPath}");
-
+    const content = `${imports}
 const handler = async (event) => {
   try {
     // We expose an environment variable token which is used by the code
@@ -117,8 +121,8 @@ const handler = async (event) => {
   return await index.${handlerMethod}(event);
 };
 
-exports.handler = handler;
-  `;
+${exports}
+`;
 
     const { bundlePath } = this.props;
 
@@ -233,10 +237,7 @@ exports.handler = handler;
     if (!provider) {
       provider = new lambda.Function(stack, providerId, {
         code: lambda.Code.fromAsset(
-          // TODO: Move this file into a shared folder
-          // This references a Nextjs directory, but the underlying
-          // code appears to be generic enough to utilise in this case.
-          path.join(__dirname, "../assets/NextjsSite/custom-resource")
+          path.join(__dirname, "../support/edge-function-code-replacer")
         ),
         layers: [this.createSingletonAwsCliLayer()],
         runtime: lambda.Runtime.PYTHON_3_7,
@@ -287,7 +288,9 @@ exports.handler = handler;
 
     // Create provider
     const provider = new lambda.Function(stack, providerId, {
-      code: lambda.Code.fromAsset(path.join(__dirname, "nextjs-site", "custom-resource")),
+      code: lambda.Code.fromAsset(
+        path.join(__dirname, "../support/edge-function")
+      ),
       handler: "s3-bucket.handler",
       runtime: lambda.Runtime.NODEJS_16_X,
       timeout: Duration.minutes(15),
@@ -328,7 +331,9 @@ exports.handler = handler;
     // Create provider if not already created
     if (!provider) {
       provider = new lambda.Function(stack, providerId, {
-        code: lambda.Code.fromAsset(path.join(__dirname, "nextjs-site", "custom-resource")),
+        code: lambda.Code.fromAsset(
+          path.join(__dirname, "../support/edge-function")
+        ),
         handler: "edge-lambda.handler",
         runtime: lambda.Runtime.NODEJS_16_X,
         timeout: Duration.minutes(15),
@@ -373,7 +378,9 @@ exports.handler = handler;
     // Create provider if not already created
     if (!provider) {
       provider = new lambda.Function(stack, providerId, {
-        code: lambda.Code.fromAsset(path.join(__dirname, "nextjs-site", "custom-resource")),
+        code: lambda.Code.fromAsset(
+          path.join(__dirname, "../support/edge-function")
+        ),
         handler: "edge-lambda-version.handler",
         runtime: lambda.Runtime.NODEJS_16_X,
         timeout: Duration.minutes(15),
