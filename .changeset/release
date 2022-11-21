@@ -1,0 +1,8 @@
+#!/bin/bash
+set -e
+
+pnpm build
+pnpm changeset version
+cp packages/sst/package.json packages/sst/dist/package.json
+pnpm changeset publish
+
