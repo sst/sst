@@ -50,6 +50,7 @@ new Function(stack, "fn", {
   handler: "services/path/to/func.handler"
 })
 ```
+- If you're using function binding need to make sure `../.sst/types` is listed in the `include` array in `services/tsconfig.json`
 - Enjoy maybe?
 
 ## New Projects
