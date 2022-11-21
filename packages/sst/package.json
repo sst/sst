@@ -1,4 +1,7 @@
 {
+  "publishConfig": {
+    "directory": "dist"
+  },
   "name": "sst",
   "version": "1.17.1",
   "bin": {
@@ -99,8 +102,5 @@
     "@sls-next/lambda-at-edge": "^3.7.0",
     "graphql": "^16.5.0"
   },
-  "gitHead": "8ac2d0abc11d5de721c87658bb445e3d6c211dcf",
-  "publishConfig": {
-    "directory": "dist"
-  }
+  "gitHead": "8ac2d0abc11d5de721c87658bb445e3d6c211dcf"
 }
