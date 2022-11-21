@@ -94,7 +94,7 @@ Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
       <code>> npm create sst@latest</code>
     </div>
     <a className={styles.startCta} href={useBaseUrl("/quick-start")}>
-      Get started
+      Get Started
       <i class="fas fa-arrow-right"></i>
     </a>
   </div>
