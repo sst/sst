@@ -1,9 +1,10 @@
 {
   "publishConfig": {
-    "directory": "dist"
+    "directory": "dist",
+    "access": "public"
   },
   "name": "sst",
-  "version": "1.17.1",
+  "version": "0.0.0-20221121213401",
   "bin": {
     "sst": "./dist/cli/sst.js"
   },
