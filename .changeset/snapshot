@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-# yarn build
+yarn build
 sed -i.bak -e '3,6d' .changeset/config.json
 pnpm changeset version --snapshot 
 cp packages/sst/package.json packages/sst/dist/package.json

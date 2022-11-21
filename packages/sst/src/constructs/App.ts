@@ -616,8 +616,8 @@ export class App extends cdk.App {
     fs.writeFileSync(
       `${typesPath}/index.ts`,
       `
-import "@serverless-stack/node/config";
-declare module "@serverless-stack/node/config" {
+import "sst/node/config";
+declare module "sst/node/config" {
   export interface ConfigTypes {
     APP: string;
     STAGE: string;
@@ -670,15 +670,15 @@ declare module "@serverless-stack/node/config" {
         const typeContent =
           binding.variables[0] === "."
             ? `
-import "@serverless-stack/node/${binding.clientPackage}";
-declare module "@serverless-stack/node/${binding.clientPackage}" {
+import "sst/node/${binding.clientPackage}";
+declare module "sst/node/${binding.clientPackage}" {
   export interface ${className}Resources {
     "${id}": string;
   }
 }`
             : `
-import "@serverless-stack/node/${binding.clientPackage}";
-declare module "@serverless-stack/node/${binding.clientPackage}" {
+import "sst/node/${binding.clientPackage}";
+declare module "sst/node/${binding.clientPackage}" {
   export interface ${className}Resources {
     "${id}": {
       ${binding.variables.map((p) => `${p}: string;`).join("\n")}

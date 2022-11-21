@@ -21,7 +21,6 @@
   },
   "exports": {
     "./constructs": "./constructs/index.js",
-    "./context": "./context/index.js",
     "./node/*": "./node/*/index.js",
     "./*": "./*"
   },
