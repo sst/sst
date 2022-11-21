@@ -7,6 +7,9 @@
   "bin": {
     "create-sst": "./bin/create-sst.mjs"
   },
+  "exports": {
+    "import": "./src/index.mjs"
+  },
   "author": {
     "name": "Serverless Stack",
     "url": "https://serverless-stack.com"

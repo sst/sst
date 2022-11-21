@@ -1,10 +1,9 @@
-import { App } from "sst";
 import { MyStack } from "./MyStack.js";
+import { App } from "sst/constructs";
 
-export default function main(app: App) {
+export default function (app: App) {
   app.setDefaultFunctionProps({
     runtime: "nodejs16.x",
-    srcPath: "services",
   });
   app.stack(MyStack);
 }
