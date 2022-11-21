@@ -87,7 +87,7 @@ const QueryToolbar = styled("div", {
   display: "flex",
   color: "$gray10",
   fontSize: "$sm",
-  alignItems: "start",console/inde
+  alignItems: "start",
   minHeight: 36,
   justifyContent: "space-between",
 });

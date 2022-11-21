@@ -3,6 +3,7 @@ import express from "express";
 import { Events, useBus } from "../bus.js";
 import { Logger } from "../logger.js";
 import { useRuntimeWorkers } from "./workers.js";
+import https from "https";
 
 export const useRuntimeServerConfig = Context.memo(() => {
   return {
@@ -116,9 +117,62 @@ export const useRuntimeServer = Context.memo(async () => {
       bus.publish("function.success", {
         workerID: worker.workerID,
         functionID: worker.functionID,
+        requestID: req.params.awsRequestId,
         body: req.body,
       });
       res.status(202).send();
+    }
+  );
+
+  app.all<{
+    href: string;
+  }>(
+    `/proxy*`,
+    express.raw({
+      type: "*/*",
+      limit: "1024mb",
+    }),
+    (req, res) => {
+      res.header("Access-Control-Allow-Origin", "*");
+      res.header(
+        "Access-Control-Allow-Methods",
+        "GET, PUT, PATCH, POST, DELETE"
+      );
+      res.header(
+        "Access-Control-Allow-Headers",
+        req.header("access-control-request-headers")
+      );
+
+      if (req.method === "OPTIONS") return res.send();
+      const u = new URL(req.url.substring(7));
+      const forward = https.request(
+        u,
+        {
+          headers: {
+            ...req.headers,
+            host: u.hostname,
+          },
+          method: req.method,
+        },
+        (proxied) => {
+          res.status(proxied.statusCode!);
+          for (const [key, value] of Object.entries(proxied.headers)) {
+            res.header(key, value);
+          }
+          proxied.pipe(res);
+        }
+      );
+      if (
+        req.method !== "GET" &&
+        req.method !== "DELETE" &&
+        req.method !== "HEAD" &&
+        req.body
+      )
+        forward.write(req.body);
+      forward.end();
+      forward.on("error", (e) => {
+        console.log(e.message);
+      });
     }
   );
 
@@ -139,6 +193,7 @@ export const useRuntimeServer = Context.memo(async () => {
         functionID: worker.functionID,
         errorType: req.body.errorType,
         errorMessage: req.body.errorMessage,
+        requestID: req.params.awsRequestId,
         trace: req.body.trace,
       });
       res.status(202).send();

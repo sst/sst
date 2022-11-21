@@ -20,6 +20,7 @@ declare module "../bus.js" {
     "worker.stdout": {
       workerID: string;
       functionID: string;
+      requestID: string;
       message: string;
     };
   }
@@ -37,7 +38,7 @@ export const useRuntimeWorkers = Context.memo(() => {
   const builder = useFunctionBuilder();
   const server = useRuntimeServerConfig();
 
-  handlers.subscribe("function.built", async evt => {
+  handlers.subscribe("function.built", async (evt) => {
     for (const [_, worker] of workers) {
       if (worker.functionID === evt.properties.functionID) {
         const handler = handlers.for("test");
@@ -47,8 +48,13 @@ export const useRuntimeWorkers = Context.memo(() => {
     }
   });
 
-  bus.subscribe("function.invoked", async evt => {
+  const lastRequestId = new Map<string, string>();
+  bus.subscribe("function.invoked", async (evt) => {
     let worker = workers.get(evt.properties.workerID);
+    lastRequestId.set(
+      evt.properties.workerID,
+      evt.properties.context.awsRequestId
+    );
     if (worker) return;
     const handler = handlers.for("test");
     if (!handler) return;
@@ -57,15 +63,15 @@ export const useRuntimeWorkers = Context.memo(() => {
       ...build,
       workerID: evt.properties.workerID,
       environment: evt.properties.env,
-      url: `${server.url}/${evt.properties.workerID}/${server.API_VERSION}`
+      url: `${server.url}/${evt.properties.workerID}/${server.API_VERSION}`,
     });
     workers.set(evt.properties.workerID, {
       workerID: evt.properties.workerID,
-      functionID: evt.properties.functionID
+      functionID: evt.properties.functionID,
     });
     bus.publish("worker.started", {
       workerID: evt.properties.workerID,
-      functionID: evt.properties.functionID
+      functionID: evt.properties.functionID,
     });
   });
 
@@ -77,7 +83,8 @@ export const useRuntimeWorkers = Context.memo(() => {
       const worker = workers.get(workerID)!;
       bus.publish("worker.stdout", {
         ...worker,
-        message: message.trim()
+        message: message.trim(),
+        requestID: lastRequestId.get(workerID)!,
       });
     },
     exited(workerID: string) {
@@ -91,6 +98,6 @@ export const useRuntimeWorkers = Context.memo(() => {
       "worker.stopped",
       "worker.exited",
       "worker.stdout"
-    )
+    ),
   };
 });

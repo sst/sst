@@ -19,7 +19,8 @@
     "directory": "packages/cli"
   },
   "exports": {
-    "./constructs": "./dist/constructs/index.js"
+    "./constructs": "./dist/constructs/index.js",
+    "./*": "./dist/*"
   },
   "homepage": "https://sst.dev",
   "dependencies": {
@@ -43,6 +44,7 @@
     "@aws-sdk/middleware-signing": "^3.208.0",
     "@aws-sdk/signature-v4-crt": "^3.31.0",
     "@aws-sdk/smithy-client": "^3.208.0",
+    "@trpc/server": "9.16.0",
     "aws-cdk": "2.50.0",
     "aws-cdk-lib": "2.50.0",
     "aws-iot-device-sdk": "^2.2.12",
@@ -53,10 +55,12 @@
     "colorette": "^2.0.19",
     "constructs": "10.1.156",
     "cross-spawn": "^7.0.3",
+    "dendriform-immer-patch-optimiser": "^2.1.0",
     "dotenv": "^16.0.3",
     "esbuild": "0.15.13",
     "express": "^4.18.2",
     "glob": "^8.0.3",
+    "immer": "9",
     "ink": "^3.2.0",
     "ink-spinner": "^4.0.3",
     "ora": "^6.1.2",
@@ -67,6 +71,7 @@
     "uuid": "^9.0.0",
     "vite": "^3.2.4",
     "vite-node": "^0.25.2",
+    "ws": "^8.11.0",
     "yargs": "^17.6.2"
   },
   "devDependencies": {
@@ -80,6 +85,7 @@
     "@types/node": "^18.11.9",
     "@types/react": "^17.0.33",
     "@types/uuid": "^8.3.4",
+    "@types/ws": "^8.5.3",
     "@types/yargs": "^17.0.13",
     "archiver": "^5.3.1",
     "kysely": "^0.22.0",

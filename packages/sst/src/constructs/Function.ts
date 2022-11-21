@@ -1080,6 +1080,7 @@ export class Function extends lambda.Function implements SSTConstruct {
       type: "Function" as const,
       data: {
         arn: this.functionArn,
+        localId: this.node.addr,
         secrets: [...(config || []), ...(bind || [])]
           .filter((c) => c instanceof Secret)
           .map((c) => (c as Secret).name),
