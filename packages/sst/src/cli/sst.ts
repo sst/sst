@@ -11,6 +11,7 @@ import { build } from "./commands/build.js";
 import { VisibleError } from "../error.js";
 import { useSpinners } from "./spinner.js";
 import { deploy } from "./commands/deploy.js";
+import { remove } from "./commands/remove.js";
 import dotenv from "dotenv";
 import { env } from "./commands/env.js";
 
@@ -22,6 +23,7 @@ start(program);
 bind(program);
 build(program);
 deploy(program);
+remove(program);
 env(program);
 
 process.removeAllListeners("uncaughtException");

@@ -86,51 +86,53 @@ export async function monitor(stack: string) {
   let lastStatus: string | undefined;
   const errors: Record<string, string> = {};
   while (true) {
-    const [describe, resources] = await Promise.all([
-      cfn.send(
-        new DescribeStacksCommand({
-          StackName: stack,
-        })
-      ),
-      cfn.send(
-        new DescribeStackResourcesCommand({
-          StackName: stack,
-        })
-      ),
-    ]);
+    try {
+      const [describe, resources] = await Promise.all([
+        cfn.send(
+          new DescribeStacksCommand({
+            StackName: stack,
+          })
+        ),
+        cfn.send(
+          new DescribeStackResourcesCommand({
+            StackName: stack,
+          })
+        ),
+      ]);
 
-    bus.publish("stack.resources", {
-      stackID: stack,
-      resources: resources.StackResources,
-    });
+      bus.publish("stack.resources", {
+        stackID: stack,
+        resources: resources.StackResources,
+      });
 
-    for (const resource of resources.StackResources || []) {
-      if (resource.ResourceStatusReason)
-        errors[resource.LogicalResourceId!] = resource.ResourceStatusReason;
-    }
+      for (const resource of resources.StackResources || []) {
+        if (resource.ResourceStatusReason)
+          errors[resource.LogicalResourceId!] = resource.ResourceStatusReason;
+      }
 
-    const [first] = describe.Stacks || [];
-    if (first) {
-      if (lastStatus !== first.StackStatus && first.StackStatus) {
-        lastStatus = first.StackStatus;
-        bus.publish("stack.status", {
-          stackID: stack,
-          status: first.StackStatus as any,
-        });
-        Logger.debug(first);
-        if (isFinal(first.StackStatus)) {
-          return {
-            status: first.StackStatus as typeof STATUSES[number],
-            outputs: Object.fromEntries(
-              first.Outputs?.map((o) => [o.OutputKey!, o.OutputValue!]) || []
-            ),
-            errors: isFailed(first.StackStatus) ? errors : {},
-          };
+      const [first] = describe.Stacks || [];
+      if (first) {
+        if (lastStatus !== first.StackStatus && first.StackStatus) {
+          lastStatus = first.StackStatus;
+          bus.publish("stack.status", {
+            stackID: stack,
+            status: first.StackStatus as any,
+          });
+          Logger.debug(first);
+          if (isFinal(first.StackStatus)) {
+            return {
+              status: first.StackStatus as typeof STATUSES[number],
+              outputs: Object.fromEntries(
+                first.Outputs?.map((o) => [o.OutputKey!, o.OutputValue!]) || []
+              ),
+              errors: isFailed(first.StackStatus) ? errors : {},
+            };
+          }
         }
       }
-    }
 
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    } catch (ex) {}
   }
 }
 
