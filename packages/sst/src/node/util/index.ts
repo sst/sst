@@ -43,9 +43,7 @@ function buildEnvPrefix(constructName: string, prop: string) {
 }
 
 export function buildSsmPath(constructName: string, id: string, prop: string) {
-  return `${ssmPrefix()}/sst/${process.env.SST_APP}/${
-    process.env.SST_STAGE
-  }/${constructName}/${id}/${prop}`;
+  return `${ssmPrefix()}${constructName}/${id}/${prop}`;
 }
 
 export function buildSsmFallbackPath(
@@ -53,14 +51,12 @@ export function buildSsmFallbackPath(
   id: string,
   prop: string
 ) {
-  return `${ssmPrefix()}/sst/${
-    process.env.SST_APP
-  }/.fallback/${constructName}/${id}/${prop}`;
+  return `/sst/${process.env.SST_APP}/.fallback/${constructName}/${id}/${prop}`;
 }
 
 export function ssmNameToConstructId(ssmName: string) {
   const prefix = ssmPrefix();
-  return ssmName.substring(prefix.length).split("/")[5];
+  return ssmName.substring(prefix.length).split("/")[1];
 }
 
 export function ssmNameToPropName(ssmName: string) {
