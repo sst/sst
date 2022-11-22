@@ -32,7 +32,11 @@ export const useNodeHandler = Context.memo(() => {
             new URL("../support/nodejs-runtime/index.mjs", import.meta.url)
           ),
           {
-            env: input.environment,
+            env: {
+              ...process.env,
+              ...input.environment,
+            },
+            execArgv: ["--enable-source-maps"],
             workerData: input,
             stderr: true,
             stdin: true,
@@ -136,7 +140,7 @@ export const useNodeHandler = Context.memo(() => {
                 : undefined,
             }),
         outfile: target,
-        sourcemap: nodejs.sourcemap,
+        sourcemap: input.mode === "start" ? "linked" : nodejs.sourcemap,
         minify: nodejs.minify,
         ...override,
       });

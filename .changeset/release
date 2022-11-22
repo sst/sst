@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-# pnpm build
+pnpm build
 cp packages/sst/package.json packages/sst/dist/package.json
 sed -i.bak -e '2,5d' packages/sst/dist/package.json
 pnpm changeset publish

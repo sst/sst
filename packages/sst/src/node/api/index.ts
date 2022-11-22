@@ -1,16 +1,17 @@
 import { createProxy, parseEnvironment } from "../util/index.js";
-import { Context } from "../context/context.js";
-import { useEvent, Handler } from "../context/handler.js";
+import { Context } from "../../context/context.js";
+import { useEvent, Handler } from "../../context/handler.js";
 
-export interface ApiResources { }
-export interface AppSyncApiResources { }
-export interface ApiGatewayV1ApiResources { }
-export interface WebSocketApiResources { }
-export interface GraphQLApiResources { }
+export interface ApiResources {}
+export interface AppSyncApiResources {}
+export interface ApiGatewayV1ApiResources {}
+export interface WebSocketApiResources {}
+export interface GraphQLApiResources {}
 
 export const Api = createProxy<ApiResources>("Api");
 export const AppSyncApi = createProxy<AppSyncApiResources>("AppSyncApi");
-export const ApiGatewayV1Api = createProxy<ApiGatewayV1ApiResources>("ApiGatewayV1Api");
+export const ApiGatewayV1Api =
+  createProxy<ApiGatewayV1ApiResources>("ApiGatewayV1Api");
 export const WebSocketApi = createProxy<WebSocketApiResources>("WebSocketApi");
 export const GraphQLApi = createProxy<GraphQLApiResources>("GraphQLApi");
 Object.assign(Api, parseEnvironment("Api", ["url"]));

@@ -70,9 +70,13 @@ export const start = (program: Program) =>
 
         bus.subscribe("function.error", async (evt) => {
           console.log(
-            bold(red(`Error `)),
-            bold(useFunctions().fromID(evt.properties.functionID).handler!)
+            bold(red(`Error   `)),
+            bold(useFunctions().fromID(evt.properties.functionID).handler!),
+            evt.properties.errorMessage
           );
+          for (const line of evt.properties.trace) {
+            console.log(`         ${dim(line)}`);
+          }
         });
       });
 

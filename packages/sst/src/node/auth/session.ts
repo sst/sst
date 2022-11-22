@@ -1,6 +1,6 @@
 import { createSigner, createVerifier, SignerOptions } from "fast-jwt";
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
-import { Context } from "../context/context.js";
+import { Context } from "../../context/context.js";
 import { useCookie, useHeader } from "../api/index.js";
 import { getPrivateKey, getPublicKey } from "./auth.js";
 
