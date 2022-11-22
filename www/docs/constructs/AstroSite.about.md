@@ -31,10 +31,9 @@ The `AstroSite` construct is a higher level CDK construct that makes it easy to 
      └─ astro.config.mjs
   ```
 
-  You can now jump to step 3 to complete the rest of the step.
+  Continue to step 3.
 
-  :::info
-  If you have an existing Astro app, move the app to the root of your SST app. Your SST app structure should look like:
+2. Alternatively, if you have an existing Astro app, move the app to the root of your SST app. Your SST app structure should look like:
 
   ```bash
   my-sst-app
@@ -46,9 +45,8 @@ The `AstroSite` construct is a higher level CDK construct that makes it easy to 
      ├─ public
      └─ astro.config.mjs
   ```
-  :::
 
-2. Let's set up the AWS adapter for your Astro app, since we will be deploying the app to AWS. To do that, make sure your `astro.config.mjs` looks like the following.
+3. Let's set up the AWS adapter for your Astro app, since we will be deploying the app to AWS. To do that, make sure your `astro.config.mjs` looks like the following.
 
   ```ts
   import { defineConfig } from "astro/config";
@@ -74,7 +72,7 @@ The `AstroSite` construct is a higher level CDK construct that makes it easy to 
   ```
   :::
 
-3. Also add the `static-site-env` dependency to your Astro app's `package.json`. `static-site-env` enables you to [automatically set the environment variables](#environment-variables) for your Astro app directly from the outputs in your SST app.
+4. Also add the `static-site-env` dependency to your Astro app's `package.json`. `static-site-env` enables you to [automatically set the environment variables](#environment-variables) for your Astro app directly from the outputs in your SST app.
 
   ```bash
   npm install --save-dev @serverless-stack/static-site-env
@@ -93,7 +91,7 @@ The `AstroSite` construct is a higher level CDK construct that makes it easy to 
      },
    ```
 
-4. Add the `AstroSite` construct to an existing stack in your SST app. You can also create a new stack for the app.
+5. Add the `AstroSite` construct to an existing stack in your SST app. You can also create a new stack for the app.
 
   ```ts
   import { AstroSite, StackContext } as sst from "@serverless-stack/resources";
@@ -484,9 +482,9 @@ CloudFront has a limit of 20 cache policies per AWS account. This is a hard limi
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 
 const cachePolicies = {
-  buildCachePolicy: new cloudfront.CachePolicy(stack, "BuildCache", SsrSite.buildCachePolicyProps),
-  staticsCachePolicy: new cloudfront.CachePolicy(stack, "StaticsCache", SsrSite.staticsCachePolicyProps),
-  serverCachePolicy: new cloudfront.CachePolicy(stack, "ServerCache", SsrSite.serverCachePolicyProps),
+  buildCachePolicy: new cloudfront.CachePolicy(stack, "BuildCache", AstroSite.buildCachePolicyProps),
+  staticsCachePolicy: new cloudfront.CachePolicy(stack, "StaticsCache", AstroSite.staticsCachePolicyProps),
+  serverCachePolicy: new cloudfront.CachePolicy(stack, "ServerCache", AstroSite.serverCachePolicyProps),
 };
 
 new AstroSite(stack, "Site1", {

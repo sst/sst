@@ -33,7 +33,6 @@ import { EdgeFunction } from "./EdgeFunction.js";
 import {
   BaseSiteDomainProps,
   BaseSiteCdkDistributionProps,
-  BaseSiteEnvironmentOutputsInfo,
   buildErrorResponsesForRedirectToIndex,
 } from "./BaseSite.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
@@ -53,8 +52,8 @@ export type SsrBuildConfig = {
   siteStub: string;
 };
 
-export interface SsrDomainProps extends BaseSiteDomainProps {}
-export interface SsrCdkDistributionProps extends BaseSiteCdkDistributionProps {}
+export interface SsrDomainProps extends BaseSiteDomainProps { }
+export interface SsrCdkDistributionProps extends BaseSiteCdkDistributionProps { }
 export interface SsrSiteProps {
   /**
    * The SSR function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
@@ -75,22 +74,16 @@ export interface SsrSiteProps {
    * [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
    *
    * @example
-   * ```js {3}
-   * new SsrSite(stack, "site", {
-   *   path: "path/to/site",
-   *   customDomain: "domain.com",
-   * });
+   * ```js
+   * customDomain: "domain.com",
    * ```
    *
-   * ```js {3-6}
-   * new SsrSite(stack, "site", {
-   *   path: "path/to/site",
-   *   customDomain: {
-   *     domainName: "domain.com",
-   *     domainAlias: "www.domain.com",
-   *     hostedZone: "domain.com"
-   *   },
-   * });
+   * ```js
+   * customDomain: {
+   *   domainName: "domain.com",
+   *   domainAlias: "www.domain.com",
+   *   hostedZone: "domain.com"
+   * },
    * ```
    */
   customDomain?: string | SsrDomainProps;
@@ -99,14 +92,11 @@ export interface SsrSiteProps {
    * An object with the key being the environment variable name.
    *
    * @example
-   * ```js {3-6}
-   * new SsrSite(stack, "site", {
-   *   path: "path/to/site",
-   *   environment: {
-   *     API_URL: api.url,
-   *     USER_POOL_CLIENT: auth.cognitoUserPoolClient.userPoolClientId,
-   *   },
-   * });
+   * ```js
+   * environment: {
+   *   API_URL: api.url,
+   *   USER_POOL_CLIENT: auth.cognitoUserPoolClient.userPoolClientId,
+   * },
    * ```
    */
   environment?: Record<string, string>;
@@ -117,11 +107,8 @@ export interface SsrSiteProps {
    * start up quickly.
    *
    * @example
-   * ```js {3}
-   * new SsrSite(stack, "site", {
-   *   path: "path/to/site",
-   *   disablePlaceholder: true,
-   * });
+   * ```js
+   * disablePlaceholder: true,
    * ```
    */
   disablePlaceholder?: boolean;
@@ -422,11 +409,7 @@ export class SsrSite extends Construct implements SSTConstruct {
    * rendering to access other AWS resources.
    *
    * @example
-   * ```js {5}
-   * const site = new SsrSite(stack, "site", {
-   *   path: "path/to/site",
-   * });
-   *
+   * ```js
    * site.attachPermissions(["sns"]);
    * ```
    */
@@ -555,8 +538,8 @@ export class SsrSite extends Construct implements SSTConstruct {
     const app = this.node.root as App;
     const fileSizeLimit = app.isRunningSSTTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
-        this.props.sstTestFileSizeLimitOverride || 200
+      // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
+      this.props.sstTestFileSizeLimitOverride || 200
       : 200;
 
     // First we need to create zip files containing the statics
@@ -980,8 +963,8 @@ export class SsrSite extends Construct implements SSTConstruct {
     const waitForInvalidation = this.isPlaceholder
       ? false
       : this.props.waitForInvalidation === false
-      ? false
-      : true;
+        ? false
+        : true;
     return new CustomResource(this, "CloudFrontInvalidation", {
       serviceToken: invalidator.functionArn,
       resourceType: "Custom::SSTCloudFrontInvalidation",

@@ -251,6 +251,7 @@ module.exports = {
       Frontend: [
         "constructs/StaticSite",
         "constructs/NextjsSite",
+        "constructs/AstroSite",
         "constructs/RemixSite",
         "constructs/ViteStaticSite",
         "constructs/ReactStaticSite"
