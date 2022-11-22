@@ -184,9 +184,9 @@ export interface ApiLambdaAuthorizer extends ApiBaseAuthorizer {
   };
 }
 
-export interface ApiCorsProps extends apigV2Cors.CorsProps {}
-export interface ApiDomainProps extends apigV2Domain.CustomDomainProps {}
-export interface ApiAccessLogProps extends apigV2AccessLog.AccessLogProps {}
+export interface ApiCorsProps extends apigV2Cors.CorsProps { }
+export interface ApiDomainProps extends apigV2Domain.CustomDomainProps { }
+export interface ApiAccessLogProps extends apigV2AccessLog.AccessLogProps { }
 
 export interface ApiProps<
   Authorizers extends Record<string, ApiAuthorizer> = Record<
@@ -338,11 +338,11 @@ export interface ApiProps<
      * ```
      */
     authorizer?:
-      | "none"
-      | "iam"
-      | (string extends AuthorizerKeys
-          ? Omit<AuthorizerKeys, "none" | "iam">
-          : AuthorizerKeys);
+    | "none"
+    | "iam"
+    | (string extends AuthorizerKeys
+      ? Omit<AuthorizerKeys, "none" | "iam">
+      : AuthorizerKeys);
     /**
      * An array of scopes to include in the authorization when using `user_pool` or `jwt` authorizers. These will be merged with the scopes from the attached authorizer.
      * @default []
@@ -440,11 +440,11 @@ export type ApiRouteProps<AuthorizerKeys> =
 
 interface ApiBaseRouteProps<AuthorizerKeys = string> {
   authorizer?:
-    | "none"
-    | "iam"
-    | (string extends AuthorizerKeys
-        ? Omit<AuthorizerKeys, "none" | "iam">
-        : AuthorizerKeys);
+  | "none"
+  | "iam"
+  | (string extends AuthorizerKeys
+    ? Omit<AuthorizerKeys, "none" | "iam">
+    : AuthorizerKeys);
   authorizationScopes?: string[];
 }
 
@@ -606,14 +606,13 @@ export interface ApiPothosRouteProps<AuthorizerKeys>
  * ```
  */
 export class Api<
-    Authorizers extends Record<string, ApiAuthorizer> = Record<
-      string,
-      ApiAuthorizer
-    >
+  Authorizers extends Record<string, ApiAuthorizer> = Record<
+    string,
+    ApiAuthorizer
   >
+>
   extends Construct
-  implements SSTConstruct
-{
+  implements SSTConstruct {
   public readonly id: string;
   public readonly cdk: {
     /**
@@ -637,14 +636,14 @@ export class Api<
   private _customDomainUrl?: string;
   private routesData: {
     [key: string]:
-      | { type: "function"; function: Fn }
-      | { type: "lambda_function"; function: lambda.IFunction }
-      | ({ type: "pothos"; function: Fn } & Pick<
-          ApiPothosRouteProps<any>,
-          "schema" | "output" | "commands"
-        >)
-      | { type: "url"; url: string }
-      | { type: "alb"; alb: elb.IApplicationListener };
+    | { type: "function"; function: Fn }
+    | { type: "lambda_function"; function: lambda.IFunction }
+    | ({ type: "pothos"; function: Fn } & Pick<
+      ApiPothosRouteProps<any>,
+      "schema" | "output" | "commands"
+    >)
+    | { type: "url"; url: string }
+    | { type: "alb"; alb: elb.IApplicationListener };
   };
   private authorizersData: Record<string, apig.IHttpRouteAuthorizer>;
   private bindingForAllRoutes: SSTConstruct[] = [];
@@ -671,9 +670,8 @@ export class Api<
     const app = this.node.root as App;
     return this.cdk.httpApi instanceof apig.HttpApi
       ? this.cdk.httpApi.apiEndpoint
-      : `https://${(this.cdk.httpApi as apig.IHttpApi).apiId}.execute-api.${
-          app.region
-        }.amazonaws.com`;
+      : `https://${(this.cdk.httpApi as apig.IHttpApi).apiId}.execute-api.${app.region
+      }.amazonaws.com`;
   }
 
   /**
@@ -1060,7 +1058,7 @@ export class Api<
                 value.responseTypes.map(
                   (type) =>
                     apigAuthorizers.HttpLambdaResponseType[
-                      type.toUpperCase() as keyof typeof apigAuthorizers.HttpLambdaResponseType
+                    type.toUpperCase() as keyof typeof apigAuthorizers.HttpLambdaResponseType
                     ]
                 ),
               resultsCacheTtl: value.resultsCacheTtl
@@ -1436,7 +1434,7 @@ export class Api<
     const authorizationScopes =
       authorizationType === "jwt" || authorizationType === "user_pool"
         ? routeProps?.authorizationScopes ||
-          this.props.defaults?.authorizationScopes
+        this.props.defaults?.authorizationScopes
         : undefined;
 
     return { authorizationType, authorizer, authorizationScopes };

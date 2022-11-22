@@ -72,14 +72,14 @@ export interface SsrSiteProps {
    *
    * @example
    * ```js {3}
-   * new AstroSite(stack, "AstroSite", {
+   * new SsrSite(stack, "site", {
    *   path: "path/to/site",
    *   customDomain: "domain.com",
    * });
    * ```
    *
    * ```js {3-6}
-   * new AstroSite(stack, "AstroSite", {
+   * new SsrSite(stack, "site", {
    *   path: "path/to/site",
    *   customDomain: {
    *     domainName: "domain.com",
@@ -96,7 +96,7 @@ export interface SsrSiteProps {
    *
    * @example
    * ```js {3-6}
-   * new AstroSite(stack, "AstroSite", {
+   * new SsrSite(stack, "site", {
    *   path: "path/to/site",
    *   environment: {
    *     API_URL: api.url,
@@ -114,7 +114,7 @@ export interface SsrSiteProps {
    *
    * @example
    * ```js {3}
-   * new AstroSite(stack, "AstroSite", {
+   * new SsrSite(stack, "site", {
    *   path: "path/to/site",
    *   disablePlaceholder: true,
    * });
@@ -183,7 +183,7 @@ export interface SsrSiteProps {
  * Deploys an Astro app in the `web` directory.
  *
  * ```js
- * new AstroSite(stack, "web", {
+ * new SsrSite(stack, "site", {
  *   path: "web",
  * });
  * ```
@@ -419,7 +419,7 @@ export class SsrSite extends Construct implements SSTConstruct {
    *
    * @example
    * ```js {5}
-   * const site = new AstroSite(stack, "Site", {
+   * const site = new SsrSite(stack, "site", {
    *   path: "path/to/site",
    * });
    *
@@ -437,6 +437,7 @@ export class SsrSite extends Construct implements SSTConstruct {
     this.serverLambdaForEdge?.attachPermissions(permissions);
   }
 
+  /** @internal */
   public getConstructMetadata() {
     return {
       type: "SsrSite" as const,
