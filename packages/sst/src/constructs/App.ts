@@ -28,6 +28,7 @@ import { AppContext } from "./context.js";
 import { useBootstrap } from "../bootstrap.js";
 import { useProject } from "../app.js";
 import { Logger } from "../logger.js";
+import { SiteEnv } from "../site-env.js";
 const require = createRequire(import.meta.url);
 
 function exitWithMessage(message: string) {
@@ -139,8 +140,6 @@ export class App extends cdk.App {
     return this._defaultRemovalPolicy;
   }
 
-  private readonly siteEnvironments: BaseSiteEnvironmentOutputsInfo[] = [];
-
   /**
    * Skip building Function code
    * Note that on `sst remove`, we do not want to bundle the Lambda functions.
@@ -161,6 +160,7 @@ export class App extends cdk.App {
   constructor(deployProps: AppDeployProps, props: AppProps = {}) {
     super(props);
     AppContext.provide(this);
+    SiteEnv.reset();
     this.bootstrap = deployProps.bootstrap;
     this.appPath = process.cwd();
 
@@ -349,10 +349,6 @@ export class App extends cdk.App {
   isRunningSSTTest(): boolean {
     // Check the env var set inside test/setup-tests.js
     return process.env.SST_RESOURCES_TESTS === "enabled";
-  }
-
-  registerSiteEnvironment(environment: BaseSiteEnvironmentOutputsInfo): void {
-    this.siteEnvironments.push(environment);
   }
 
   getInputFilesFromEsbuildMetafile(file: string): Array<string> {

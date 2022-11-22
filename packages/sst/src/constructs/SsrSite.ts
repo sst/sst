@@ -37,7 +37,12 @@ import {
   buildErrorResponsesForRedirectToIndex,
 } from "./BaseSite.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
-import { ENVIRONMENT_PLACEHOLDER, FunctionBindingProps, getParameterPath } from "./util/functionBinding.js";
+import {
+  ENVIRONMENT_PLACEHOLDER,
+  FunctionBindingProps,
+  getParameterPath,
+} from "./util/functionBinding.js";
+import { SiteEnv } from "../site-env.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -48,9 +53,8 @@ export type SsrBuildConfig = {
   siteStub: string;
 };
 
-export interface SsrDomainProps extends BaseSiteDomainProps { }
-export interface SsrCdkDistributionProps
-  extends BaseSiteCdkDistributionProps { }
+export interface SsrDomainProps extends BaseSiteDomainProps {}
+export interface SsrCdkDistributionProps extends BaseSiteCdkDistributionProps {}
 export interface SsrSiteProps {
   /**
    * The SSR function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
@@ -464,7 +468,10 @@ export class SsrSite extends Construct implements SSTConstruct {
       },
       permissions: {
         "ssm:GetParameters": [
-          `arn:aws:ssm:${app.region}:${app.account}:parameter${getParameterPath(this, "url")}`,
+          `arn:aws:ssm:${app.region}:${app.account}:parameter${getParameterPath(
+            this,
+            "url"
+          )}`,
         ],
       },
     };
@@ -547,8 +554,8 @@ export class SsrSite extends Construct implements SSTConstruct {
     const app = this.node.root as App;
     const fileSizeLimit = app.isRunningSSTTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
-      this.props.sstTestFileSizeLimitOverride || 200
+        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
+        this.props.sstTestFileSizeLimitOverride || 200
       : 200;
 
     // First we need to create zip files containing the statics
@@ -653,7 +660,10 @@ export class SsrSite extends Construct implements SSTConstruct {
 
     // Build file options
     const fileOptions = [];
-    const clientPath = path.join(this.props.path, this.buildConfig.clientBuildOutputDir);
+    const clientPath = path.join(
+      this.props.path,
+      this.buildConfig.clientBuildOutputDir
+    );
     for (const item of fs.readdirSync(clientPath)) {
       if (item === this.buildConfig.clientBuildVersionedSubDir) {
         fileOptions.push({
@@ -898,7 +908,10 @@ export class SsrSite extends Construct implements SSTConstruct {
     };
 
     // Add behaviour for public folder statics (excluding build)
-    const publicDir = path.join(this.props.path, this.buildConfig.clientBuildOutputDir);
+    const publicDir = path.join(
+      this.props.path,
+      this.buildConfig.clientBuildOutputDir
+    );
     for (const item of fs.readdirSync(publicDir)) {
       if (item === this.buildConfig.clientBuildVersionedSubDir) {
         continue;
@@ -965,7 +978,9 @@ export class SsrSite extends Construct implements SSTConstruct {
 
     const waitForInvalidation = this.isPlaceholder
       ? false
-      : (this.props.waitForInvalidation === false ? false : true);
+      : this.props.waitForInvalidation === false
+      ? false
+      : true;
     return new CustomResource(this, "CloudFrontInvalidation", {
       serviceToken: invalidator.functionArn,
       resourceType: "Custom::SSTCloudFrontInvalidation",
@@ -1128,20 +1143,16 @@ export class SsrSite extends Construct implements SSTConstruct {
   /////////////////////
 
   private registerSiteEnvironment() {
-    const environmentOutputs: Record<string, string> = {};
     for (const [key, value] of Object.entries(this.props.environment || {})) {
       const outputId = `SstSiteEnv_${key}`;
       const output = new CfnOutput(this, outputId, { value });
-      environmentOutputs[key] = Stack.of(this).getLogicalId(output);
+      SiteEnv.append({
+        path: this.props.path,
+        output: Stack.of(this).getLogicalId(output),
+        environment: key,
+        stack: Stack.of(this).stackName,
+      });
     }
-
-    const root = this.node.root as App;
-    root.registerSiteEnvironment({
-      id: this.node.id,
-      path: this.props.path,
-      stack: Stack.of(this).node.id,
-      environmentOutputs,
-    } as BaseSiteEnvironmentOutputsInfo);
   }
 
   private generateBuildId(): string {

@@ -10,7 +10,6 @@
       "@serverless-stack/console",
       "create-sst",
       "sst",
-      "@serverless-stack/node",
       "@serverless-stack/static-site-env"
     ]
   ],

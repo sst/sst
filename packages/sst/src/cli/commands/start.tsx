@@ -7,6 +7,8 @@ import type { Metafile } from "esbuild";
 import { printDeploymentResults } from "../ui/deploy.js";
 import { useFunctions } from "../../constructs/Function.js";
 import { dim, gray } from "colorette";
+import { useProject } from "../../app.js";
+import { SiteEnv } from "../../site-env.js";
 
 export const start = (program: Program) =>
   program.command(
@@ -83,6 +85,7 @@ export const start = (program: Program) =>
       const useStackBuilder = Context.memo(async () => {
         const watcher = useWatcher();
         const bus = useBus();
+        const project = useProject();
 
         let lastDeployed: string;
         let pending: CloudAssembly | undefined;
@@ -124,6 +127,23 @@ export const start = (program: Program) =>
           process.stdout.write("\x1b[?1049l");
           lastDeployed = nextChecksum;
           printDeploymentResults(results);
+
+          const keys = await SiteEnv.keys();
+          if (keys.length) {
+            const result: Record<string, Record<string, string>> = {};
+            for (const key of keys) {
+              const stack = results[key.stack];
+              const value = stack.outputs[key.output];
+              let existing = result[key.path];
+              if (!existing) {
+                result[key.path] = existing;
+                existing = result[key.path] = {};
+              }
+              existing[key.environment] = value;
+            }
+            await SiteEnv.writeValues(result);
+          }
+
           isDeploying = false;
           deploy();
         }
