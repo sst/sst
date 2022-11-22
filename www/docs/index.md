@@ -52,7 +52,7 @@ Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
   <li>
     <a href={useBaseUrl("/constructs/RDS")}>
       <h3>Databases</h3>
-      <p>Use a serverless SQL or NoSQL databases to power your app.</p>
+      <p>Use a serverless SQL or NoSQL database to power your app.</p>
     </a>
   </li>
   <li>
