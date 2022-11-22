@@ -19,19 +19,27 @@ interface Key {
 }
 
 export async function keys() {
-  const file = keysFile();
-  const data = await fs.promises
-    .readFile(file)
-    .then((x) => x.toString().split("\n"));
-  return data.filter(Boolean).map((x) => JSON.parse(x) as Key);
+  try {
+    const file = keysFile();
+    const data = await fs.promises
+      .readFile(file)
+      .then((x) => x.toString().split("\n"));
+    return data.filter(Boolean).map((x) => JSON.parse(x) as Key);
+  } catch {
+    return [];
+  }
 }
 
 export async function values() {
-  const file = valuesFile();
-  const data = await fs.promises
-    .readFile(file)
-    .then((x) => JSON.parse(x.toString()));
-  return data as Record<string, Record<string, string>>;
+  try {
+    const file = valuesFile();
+    const data = await fs.promises
+      .readFile(file)
+      .then((x) => JSON.parse(x.toString()));
+    return data as Record<string, Record<string, string>>;
+  } catch {
+    return {};
+  }
 }
 
 export async function writeValues(
