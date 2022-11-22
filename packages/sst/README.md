@@ -6,7 +6,7 @@ This is a preview of the upcoming SST 2.0. It is incomplete so if you run into a
 
 ## Migration Guide
 
-- SST is now a monopackage. Remove all packages referencing `@serverless-stack/resources` `@serverless-stack/cli` and `@serverless-stack/node`.
+- SST is now a monopackage. Remove all packages referencing `@serverless-stack/resources` `@serverless-stack/cli` `@serverless-stack/node` and `@serverless-stack/static-site-env`.
 - Install the `sst@snapshot` package - hell yeah we got this name
 - You can now specify `sst.json` as `sst.config.mjs` file. Here's an example:
 
@@ -45,6 +45,7 @@ new Function(stack, "fn", {
 })
 ```
 - If you're using function binding need to make sure `../.sst/types` is listed in the `include` array in `services/tsconfig.json`
+- If you were using `@serverless-stack/static-site-env` for your frontend, it can be replaced with the `sst env <command>` command
 - Enjoy maybe?
 
 ## New Projects
