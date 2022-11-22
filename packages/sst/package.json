@@ -63,7 +63,7 @@
     "express": "^4.18.2",
     "fast-jwt": "^1.6.1",
     "glob": "^8.0.3",
-    "graphql-helix": "^1.13.0",
+    "graphql-helix": "^1.12.0",
     "immer": "9",
     "ink": "^3.2.0",
     "ink-spinner": "^4.0.3",
@@ -97,7 +97,7 @@
     "kysely-data-api": "^0.1.4",
     "tsx": "^3.12.1"
   },
-  "peerDependencies": {
+  "optionalDependencies": {
     "@babel/core": "^7.0.0-0",
     "@sls-next/lambda-at-edge": "^3.7.0",
     "graphql": "^16.5.0"
