@@ -1,5 +1,11 @@
 # @serverless-stack/core
 
+## 1.18.3
+
+### Patch Changes
+
+- [#2204](https://github.com/serverless-stack/sst/pull/2204) [`0fff6140c`](https://github.com/serverless-stack/sst/commit/0fff6140c56f5005cd0bfb9085b6550e75e55d64) Thanks [@estyrke](https://github.com/estyrke)! - Api: fix pothos schema not built for "graphql" route type
+
 ## 1.18.2
 
 ## 1.18.1
