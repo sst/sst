@@ -97,7 +97,7 @@
     "kysely-data-api": "^0.1.4",
     "tsx": "^3.12.1"
   },
-  "optionalDependencies": {
+  "peerDependencies": {
     "@babel/core": "^7.0.0-0",
     "@sls-next/lambda-at-edge": "^3.7.0",
     "graphql": "^16.5.0"
