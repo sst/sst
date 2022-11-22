@@ -1,16 +1,20 @@
 import { patch, extend, extract, install } from "create-sst";
 export default [
   extend("presets/base/typescript"),
+  patch({
+    file: "package.json",
+    operations: [{ op: "add", path: "/workspaces/-", value: "services" }],
+  }),
+  extract(),
   install({
-    packages: ["vitest"],
+    packages: ["vitest", "@types/aws-lambda"],
     path: "services",
     dev: true,
   }),
   patch({
-    file: "package.json",
+    file: "services/package.json",
     operations: [
-      { op: "add", path: "/scripts/test", value: 'sst bind "vitest"' },
+      { op: "add", path: "/scripts/typecheck", value: "tsc --noEmit" },
     ],
   }),
-  extract(),
 ];

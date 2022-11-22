@@ -1,5 +1,5 @@
 import { Context } from "aws-lambda";
-import { APIGatewayProxyEventV2 } from "aws-lambda/trigger/api-gateway-proxy";
+import { APIGatewayProxyEventV2 } from "aws-lambda";
 import { GraphQLSchema } from "graphql";
 import {
   ExecutionContext,
@@ -8,8 +8,9 @@ import {
   processRequest,
   ProcessRequestOptions,
   Request,
+  // @ts-expect-error
 } from "graphql-helix";
-import { Handler, useEvent, useLambdaContext } from "../context/handler.js";
+import { Handler, useEvent, useLambdaContext } from "../../context/handler.js";
 import {
   useHeaders,
   useMethod,
@@ -59,6 +60,7 @@ export function GraphQLHandler<C>(config: GraphQLHandlerConfig<C>) {
       execute: config.execute,
       schema: config.schema,
       formatPayload: config.formatPayload as any,
+      // @ts-expect-error
       contextFactory: async (execution) => {
         if (config.context) {
           return config.context({
@@ -76,6 +78,7 @@ export function GraphQLHandler<C>(config: GraphQLHandlerConfig<C>) {
         statusCode: result.status,
         body: JSON.stringify(result.payload),
         headers: Object.fromEntries(
+          // @ts-expect-error
           result.headers.map((h) => [h.name, h.value])
         ),
       };

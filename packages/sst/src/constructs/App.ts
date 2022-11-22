@@ -28,6 +28,7 @@ import { AppContext } from "./context.js";
 import { useBootstrap } from "../bootstrap.js";
 import { useProject } from "../app.js";
 import { Logger } from "../logger.js";
+import { SiteEnv } from "../site-env.js";
 const require = createRequire(import.meta.url);
 
 function exitWithMessage(message: string) {
@@ -139,8 +140,6 @@ export class App extends cdk.App {
     return this._defaultRemovalPolicy;
   }
 
-  private readonly siteEnvironments: BaseSiteEnvironmentOutputsInfo[] = [];
-
   /**
    * Skip building Function code
    * Note that on `sst remove`, we do not want to bundle the Lambda functions.
@@ -161,6 +160,7 @@ export class App extends cdk.App {
   constructor(deployProps: AppDeployProps, props: AppProps = {}) {
     super(props);
     AppContext.provide(this);
+    SiteEnv.reset();
     this.bootstrap = deployProps.bootstrap;
     this.appPath = process.cwd();
 
@@ -349,10 +349,6 @@ export class App extends cdk.App {
   isRunningSSTTest(): boolean {
     // Check the env var set inside test/setup-tests.js
     return process.env.SST_RESOURCES_TESTS === "enabled";
-  }
-
-  registerSiteEnvironment(environment: BaseSiteEnvironmentOutputsInfo): void {
-    this.siteEnvironments.push(environment);
   }
 
   getInputFilesFromEsbuildMetafile(file: string): Array<string> {
@@ -616,8 +612,8 @@ export class App extends cdk.App {
     fs.writeFileSync(
       `${typesPath}/index.ts`,
       `
-import "@serverless-stack/node/config";
-declare module "@serverless-stack/node/config" {
+import "sst/node/config";
+declare module "sst/node/config" {
   export interface ConfigTypes {
     APP: string;
     STAGE: string;
@@ -670,15 +666,15 @@ declare module "@serverless-stack/node/config" {
         const typeContent =
           binding.variables[0] === "."
             ? `
-import "@serverless-stack/node/${binding.clientPackage}";
-declare module "@serverless-stack/node/${binding.clientPackage}" {
+import "sst/node/${binding.clientPackage}";
+declare module "sst/node/${binding.clientPackage}" {
   export interface ${className}Resources {
     "${id}": string;
   }
 }`
             : `
-import "@serverless-stack/node/${binding.clientPackage}";
-declare module "@serverless-stack/node/${binding.clientPackage}" {
+import "sst/node/${binding.clientPackage}";
+declare module "sst/node/${binding.clientPackage}" {
   export interface ${className}Resources {
     "${id}": {
       ${binding.variables.map((p) => `${p}: string;`).join("\n")}

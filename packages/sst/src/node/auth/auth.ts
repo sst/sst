@@ -1,12 +1,24 @@
-import { GetParametersCommand, SSMClient, Parameter } from "@aws-sdk/client-ssm";
+import {
+  GetParametersCommand,
+  SSMClient,
+  Parameter,
+} from "@aws-sdk/client-ssm";
 const ssm = new SSMClient({});
-import { parseEnvironment, buildSsmPath, ssmNameToPropName } from "../util/index.js";
-import { Handler } from "../context/handler.js";
+import {
+  parseEnvironment,
+  buildSsmPath,
+  ssmNameToPropName,
+} from "../util/index.js";
+import { Handler } from "../../context/handler.js";
 import { useDomainName, usePath } from "../api/index.js";
 import { Adapter } from "./adapter/adapter.js";
 
 const className = "Auth";
-const authData = parseEnvironment(className, ["publicKey", "privateKey", "prefix"]);
+const authData = parseEnvironment(className, [
+  "publicKey",
+  "privateKey",
+  "prefix",
+]);
 let prefix: string;
 let publicKey: string;
 let privateKey: string;
@@ -27,8 +39,9 @@ if (authNames.length !== 0) {
 
 async function replaceWithSsmValues(name: string) {
   // Fetch all secrets
-  const props = ["privateKey", "publicKey"]
-    .filter((prop) => authData[name][prop] === "__FETCH_FROM_SSM__");
+  const props = ["privateKey", "publicKey"].filter(
+    (prop) => authData[name][prop] === "__FETCH_FROM_SSM__"
+  );
   const results = await loadSsm(name, props);
 
   if (results.invalidParams.length > 0) {
@@ -64,21 +77,27 @@ async function loadSsm(name: string, props: string[]) {
 
 export function getPublicKey() {
   if (!publicKey) {
-    throw new Error(`Cannot use ${className}.publicKey. Please make sure it is bound to this function.`);
+    throw new Error(
+      `Cannot use ${className}.publicKey. Please make sure it is bound to this function.`
+    );
   }
   return publicKey;
 }
 
 export function getPrivateKey() {
   if (!privateKey) {
-    throw new Error(`Cannot use ${className}.privateKey. Please make sure it is bound to this function.`);
+    throw new Error(
+      `Cannot use ${className}.privateKey. Please make sure it is bound to this function.`
+    );
   }
   return privateKey;
 }
 
 export function getPrefix() {
   if (!prefix) {
-    throw new Error(`Cannot use ${className}.prefix. Please make sure it is bound to this function.`);
+    throw new Error(
+      `Cannot use ${className}.prefix. Please make sure it is bound to this function.`
+    );
   }
   return prefix;
 }
@@ -105,9 +124,7 @@ export function AuthHandler<Providers extends Record<string, Adapter>>(config: {
 }) {
   return Handler("api", async () => {
     const path = usePath();
-    const prefix = getPrefix().split("/")
-      .filter(Boolean)
-      .join("/");
+    const prefix = getPrefix().split("/").filter(Boolean).join("/");
     if (path.join("/") === prefix) {
       return {
         statusCode: 200,

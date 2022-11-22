@@ -3,9 +3,10 @@ set -e
 
 yarn build
 sed -i.bak -e '3,6d' .changeset/config.json
-yarn changeset version --snapshot 
+pnpm changeset version --snapshot 
 cp packages/sst/package.json packages/sst/dist/package.json
-yarn changeset publish --no-git-tag --tag=snapshot 
+sed -i.bak -e '2,5d' packages/sst/dist/package.json
+pnpm changeset publish --no-git-tag --tag=snapshot 
 cp .changeset/config.json.bak .changeset/config.json
 git checkout '**/package.json' '**/CHANGELOG.md' '.changeset'
 

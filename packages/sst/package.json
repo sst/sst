@@ -1,6 +1,10 @@
 {
+  "publishConfig": {
+    "directory": "dist",
+    "access": "public"
+  },
   "name": "sst",
-  "version": "1.17.1",
+  "version": "0.0.0-20221121213401",
   "bin": {
     "sst": "./cli/sst.js"
   },
@@ -8,10 +12,7 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "build": "tsc && cp package.json ./dist"
-  },
-  "publishConfig": {
-    "access": "public"
+    "build": "tsc"
   },
   "repository": {
     "type": "git",
@@ -19,7 +20,9 @@
     "directory": "packages/cli"
   },
   "exports": {
-    "./constructs": "./constructs/index.js"
+    "./constructs": "./constructs/index.js",
+    "./node/*": "./node/*/index.js",
+    "./*": "./*"
   },
   "homepage": "https://sst.dev",
   "dependencies": {
@@ -58,10 +61,13 @@
     "dotenv": "^16.0.3",
     "esbuild": "0.15.13",
     "express": "^4.18.2",
+    "fast-jwt": "^1.6.1",
     "glob": "^8.0.3",
+    "graphql-helix": "^1.12.0",
     "immer": "9",
     "ink": "^3.2.0",
     "ink-spinner": "^4.0.3",
+    "openid-client": "^5.1.8",
     "ora": "^6.1.2",
     "promptly": "^3.2.0",
     "react": "17.0.2",
@@ -93,10 +99,8 @@
   },
   "optionalDependencies": {
     "@babel/core": "^7.0.0-0",
-    "@sls-next/lambda-at-edge": "^3.7.0"
+    "@sls-next/lambda-at-edge": "^3.7.0",
+    "graphql": "^16.5.0"
   },
-  "gitHead": "8ac2d0abc11d5de721c87658bb445e3d6c211dcf",
-  "publishConfig": {
-    "directory": "dist"
-  }
+  "gitHead": "8ac2d0abc11d5de721c87658bb445e3d6c211dcf"
 }

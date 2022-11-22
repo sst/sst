@@ -11,7 +11,5 @@
     "console": "sst console"
   },
   "devDependencies": {},
-  "workspaces": [
-    "services"
-  ]
+  "workspaces": []
 }

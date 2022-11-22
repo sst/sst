@@ -112,7 +112,7 @@ export async function initProject(globals: GlobalOptions) {
   };
   const packageJson = JSON.parse(
     await fs
-      .readFile(url.fileURLToPath(new URL("../package.json", import.meta.url)))
+      .readFile(url.fileURLToPath(new URL("./package.json", import.meta.url)))
       .then((x) => x.toString())
   );
   project.version = packageJson.version;

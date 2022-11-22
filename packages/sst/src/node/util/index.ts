@@ -5,12 +5,16 @@ export function createProxy<T extends object>(constructName: string) {
         // normalize prop to convert kebab cases like `my-table` to `my_table`
         const normProp = normalizeId(prop);
         if (!(normProp in target)) {
-          throw new Error(`Cannot use ${constructName}.${String(prop)}. Please make sure it is bound to this function.`);
+          throw new Error(
+            `Cannot use ${constructName}.${String(
+              prop
+            )}. Please make sure it is bound to this function.`
+          );
         }
         return Reflect.get(target, normProp);
       }
       return Reflect.get(target, prop);
-    }
+    },
   });
 }
 
@@ -19,12 +23,16 @@ export function parseEnvironment(constructName: string, props: string[]) {
   Object.keys(process.env)
     .filter((env) => env.startsWith(buildEnvPrefix(constructName, props[0])))
     .forEach((env) => {
-      const name = env.replace(new RegExp(`^${buildEnvPrefix(constructName, props[0])}`), "");
+      const name = env.replace(
+        new RegExp(`^${buildEnvPrefix(constructName, props[0])}`),
+        ""
+      );
       // @ts-ignore
       acc[name] = {};
       props.forEach((prop) => {
         // @ts-ignore
-        acc[name][prop] = process.env[`${buildEnvPrefix(constructName, prop)}${name}`];
+        acc[name][prop] =
+          process.env[`${buildEnvPrefix(constructName, prop)}${name}`];
       });
     });
   return acc;
@@ -35,16 +43,20 @@ function buildEnvPrefix(constructName: string, prop: string) {
 }
 
 export function buildSsmPath(constructName: string, id: string, prop: string) {
-  return `${ssmPrefix()}/sst/${process.env.SST_APP}/${process.env.SST_STAGE}/${constructName}/${id}/${prop}`;
+  return `${ssmPrefix()}${constructName}/${id}/${prop}`;
 }
 
-export function buildSsmFallbackPath(constructName: string, id: string, prop: string) {
-  return `${ssmPrefix()}/sst/${process.env.SST_APP}/.fallback/${constructName}/${id}/${prop}`;
+export function buildSsmFallbackPath(
+  constructName: string,
+  id: string,
+  prop: string
+) {
+  return `/sst/${process.env.SST_APP}/.fallback/${constructName}/${id}/${prop}`;
 }
 
 export function ssmNameToConstructId(ssmName: string) {
   const prefix = ssmPrefix();
-  return ssmName.substring(prefix.length).split("/")[5];
+  return ssmName.substring(prefix.length).split("/")[1];
 }
 
 export function ssmNameToPropName(ssmName: string) {

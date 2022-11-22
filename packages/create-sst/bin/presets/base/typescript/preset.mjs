@@ -13,15 +13,4 @@ export default [
       { op: "add", path: "/scripts/typecheck", value: "tsc --noEmit" },
     ],
   }),
-  patch({
-    file: "services/package.json",
-    operations: [
-      { op: "add", path: "/scripts/typecheck", value: "tsc --noEmit" },
-    ],
-  }),
-  install({
-    packages: ["@types/aws-lambda"],
-    path: "services",
-    dev: true,
-  }),
 ];

@@ -42,6 +42,7 @@ import {
 } from "./util/functionBinding.js";
 import { gray } from "colorette";
 import { useProject } from "../app.js";
+import { SiteEnv } from "../site-env.js";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -985,19 +986,15 @@ export class StaticSite extends Construct implements SSTConstruct {
   }
 
   private registerSiteEnvironment() {
-    const environmentOutputs: Record<string, string> = {};
     for (const [key, value] of Object.entries(this.props.environment || {})) {
       const outputId = `SstSiteEnv_${key}`;
       const output = new CfnOutput(this, outputId, { value });
-      environmentOutputs[key] = Stack.of(this).getLogicalId(output);
+      SiteEnv.append({
+        path: this.props.path,
+        output: Stack.of(this).getLogicalId(output),
+        environment: key,
+        stack: Stack.of(this).stackName,
+      });
     }
-
-    const root = this.node.root as App;
-    root.registerSiteEnvironment({
-      id: this.node.id,
-      path: this.props.path,
-      stack: Stack.of(this).node.id,
-      environmentOutputs,
-    } as BaseSiteEnvironmentOutputsInfo);
   }
 }

@@ -12,6 +12,7 @@ import { VisibleError } from "../error.js";
 import { useSpinners } from "./spinner.js";
 import { deploy } from "./commands/deploy.js";
 import dotenv from "dotenv";
+import { env } from "./commands/env.js";
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ start(program);
 bind(program);
 build(program);
 deploy(program);
+env(program);
 
 process.removeAllListeners("uncaughtException");
 process.on("uncaughtException", (err) => {

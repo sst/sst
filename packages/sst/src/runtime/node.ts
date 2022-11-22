@@ -32,7 +32,11 @@ export const useNodeHandler = Context.memo(() => {
             new URL("../support/nodejs-runtime/index.mjs", import.meta.url)
           ),
           {
-            env: input.environment,
+            env: {
+              ...process.env,
+              ...input.environment,
+            },
+            execArgv: ["--enable-source-maps"],
             workerData: input,
             stderr: true,
             stdin: true,
@@ -136,45 +140,60 @@ export const useNodeHandler = Context.memo(() => {
                 : undefined,
             }),
         outfile: target,
-        sourcemap: nodejs.sourcemap,
+        sourcemap: input.mode === "start" ? "linked" : nodejs.sourcemap,
         minify: nodejs.minify,
         ...override,
       });
 
       // Install node_modules
-      if (input.mode === "deploy" && nodejs.install?.length) {
-        async function find(dir: string): Promise<string> {
+      if (nodejs.install?.length) {
+        async function find(dir: string, target: string): Promise<string> {
           if (dir === "/")
             throw new VisibleError("Could not found a package.json file");
           if (
             await fs
-              .access(path.join(dir, "package.json"))
+              .access(path.join(dir, target))
               .then(() => true)
               .catch(() => false)
           )
             return dir;
-          return find(path.join(dir, ".."));
+          return find(path.join(dir, ".."), target);
         }
-        const src = await find(parsed.dir);
-        const json = JSON.parse(
-          await fs
-            .readFile(path.join(src, "package.json"))
-            .then((x) => x.toString())
-        );
-        fs.writeFile(
-          path.join(input.out, "package.json"),
-          JSON.stringify({
-            dependencies: Object.fromEntries(
-              nodejs.install?.map((x) => [x, json.dependencies?.[x] || "*"])
-            ),
-          })
-        );
-        await new Promise<void>((resolve) => {
-          const process = exec("npm install", {
-            cwd: input.out,
+
+        if (input.mode === "deploy") {
+          const src = await find(parsed.dir, "package.json");
+          const json = JSON.parse(
+            await fs
+              .readFile(path.join(src, "package.json"))
+              .then((x) => x.toString())
+          );
+          fs.writeFile(
+            path.join(input.out, "package.json"),
+            JSON.stringify({
+              dependencies: Object.fromEntries(
+                nodejs.install?.map((x) => [x, json.dependencies?.[x] || "*"])
+              ),
+            })
+          );
+          await new Promise<void>((resolve) => {
+            const process = exec("npm install", {
+              cwd: input.out,
+            });
+            process.on("exit", () => resolve());
           });
-          process.on("exit", () => resolve());
-        });
+        }
+
+        if (input.mode === "start") {
+          const dir = path.join(
+            await find(parsed.dir, "package.json"),
+            "node_modules"
+          );
+          await fs.symlink(
+            path.resolve(dir),
+            path.resolve(path.join(input.out, "node_modules")),
+            "dir"
+          );
+        }
       }
 
       cache[input.functionID] = result;

@@ -2,5 +2,7 @@
   "name": "@@@app/services",
   "version": "0.0.0",
   "type": "module",
-  "scripts": {}
+  "scripts": {
+    "test": "sst bind 'vitest'"
+  }
 }
