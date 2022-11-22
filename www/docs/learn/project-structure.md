@@ -92,7 +92,7 @@ We typically group related resources together into stacks. In the `stacks/` dire
   export function Web({ stack }: StackContext) {
     const api = use(Api);
 
-    const site = new ViteStaticSite(stack, "site", {
+    const site = new StaticSite(stack, "site", {
 
     // ...
   ```

@@ -1,8 +1,8 @@
 import {
   Api,
   Cognito,
+  StaticSite,
   StackContext,
-  ViteStaticSite
 } from "@serverless-stack/resources";
 
 export function MyStack({ stack, app }: StackContext) {
@@ -37,8 +37,10 @@ export function MyStack({ stack, app }: StackContext) {
   // attach permissions for authenticated users to the api
   auth.attachPermissionsForAuthUsers(stack, [api]);
 
-  const site = new ViteStaticSite(stack, "Site", {
+  const site = new StaticSite(stack, "Site", {
     path: "frontend",
+    buildCommand: "npm run build",
+    buildOutput: "dist",
     environment: {
       VITE_APP_API_URL: api.url,
       VITE_APP_REGION: app.region,

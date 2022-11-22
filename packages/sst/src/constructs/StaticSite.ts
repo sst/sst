@@ -66,9 +66,7 @@ export interface StaticSiteProps {
   path: string;
   /**
    * The name of the index page (e.g. "index.html") of the website.
-   *
    * @default "index.html"
-   *
    * @example
    * ```js
    * new StaticSite(stack, "Site", {
@@ -85,7 +83,7 @@ export interface StaticSiteProps {
    * Or the constant `"redirect_to_index_page"` to redirect to the index page.
    *
    * Note that, if the error pages are redirected to the index page, the HTTP status code is set to 200. This is necessary for single page apps, that handle 404 pages on the client side.
-   *
+   * @default redirect_to_index_page
    * @example
    * ```js
    * new StaticSite(stack, "Site", {
@@ -96,7 +94,7 @@ export interface StaticSiteProps {
   errorPage?: "redirect_to_index_page" | Omit<string, "redirect_to_index_page">;
   /**
    * The command for building the website
-   *
+   * @default no build command
    * @example
    * ```js
    * new StaticSite(stack, "Site", {
@@ -107,11 +105,11 @@ export interface StaticSiteProps {
   buildCommand?: string;
   /**
    * The directory with the content that will be uploaded to the S3 bucket. If a `buildCommand` is provided, this is usually where the build output is generated. The path is relative to the [`path`](#path) where the website source is located.
-   *
+   * @default entire "path" directory
    * @example
    * ```js
    * new StaticSite(stack, "Site", {
-   *   buildOutput: "dist",
+   *   buildOutput: "build",
    * });
    * ```
    */
@@ -119,15 +117,30 @@ export interface StaticSiteProps {
   /**
    * Pass in a list of file options to configure cache control for different files. Behind the scenes, the `StaticSite` construct uses a combination of the `s3 cp` and `s3 sync` commands to upload the website content to the S3 bucket. An `s3 cp` command is run for each file option block, and the options are passed in as the command options.
    *
+   * Defaults to no cache control for HTML files, and a 1 year cache control for JS/CSS files.
+   * ```js
+   * [
+   *   {
+   *     exclude: "*",
+   *     include: "*.html",
+   *     cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
+   *   },
+   *   {
+   *     exclude: "*",
+   *     include: ["*.js", "*.css"],
+   *     cacheControl: "max-age=31536000,public,immutable",
+   *   },
+   * ]
+   * ```
    * @example
    * ```js
    * new StaticSite(stack, "Site", {
    *   buildOutput: "dist",
-   *   fileOptions: {
+   *   fileOptions: [{
    *     exclude: "*",
    *     include: "*.js",
    *     cacheControl: "max-age=31536000,public,immutable",
-   *   }
+   *   }]
    * });
    * ```
    */
@@ -137,7 +150,7 @@ export interface StaticSiteProps {
    *
    * @example
    * ```js
-   * new StaticSite(stack, "ReactSite", {
+   * new StaticSite(stack, "frontend", {
    *   replaceValues: [
    *     {
    *       files: "*.js",
@@ -161,7 +174,7 @@ export interface StaticSiteProps {
    *
    * @example
    * ```js
-   * new StaticSite(stack, "Site", {
+   * new StaticSite(stack, "frontend", {
    *   path: "path/to/src",
    *   customDomain: "domain.com",
    * });
@@ -169,7 +182,7 @@ export interface StaticSiteProps {
    *
    * @example
    * ```js
-   * new StaticSite(stack, "Site", {
+   * new StaticSite(stack, "frontend", {
    *   path: "path/to/src",
    *   customDomain: {
    *     domainName: "domain.com",
@@ -185,7 +198,7 @@ export interface StaticSiteProps {
    *
    * @example
    * ```js
-   * new StaticSite(stack, "ReactSite", {
+   * new StaticSite(stack, "frontend", {
    *   environment: {
    *     REACT_APP_API_URL: api.url,
    *     REACT_APP_USER_POOL_CLIENT: auth.cognitoUserPoolClient.userPoolClientId,
@@ -201,7 +214,7 @@ export interface StaticSiteProps {
    *
    * @example
    * ```js
-   * new StaticSite(stack, "ReactSite", {
+   * new StaticSite(stack, "frontend", {
    *  purge: false
    * });
    * ```
@@ -214,21 +227,33 @@ export interface StaticSiteProps {
    *
    * @example
    * ```js
-   * new StaticSite(stack, "ReactSite", {
+   * new StaticSite(stack, "frontend", {
    *  disablePlaceholder: true
    * });
    * ```
    */
   disablePlaceholder?: boolean;
-
+  vite?: {
+    /**
+     * The path where code-gen should place the type definition for environment variables
+     * @default "src/sst-env.d.ts"
+     * @example
+     * ```js
+     * new StaticSite(stack, "frontend", {
+     *   vite: {
+     *     types: "./other/path/sst-env.d.ts",
+     *   }
+     * });
+     * ```
+     */
+    types?: string;
+  };
   /**
    * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
-   *
    * @default true
-   *
    * @example
    * ```js
-   * new StaticSite(stack, "ReactSite", {
+   * new StaticSite(stack, "frontend", {
    *  waitForInvalidation: false
    * });
    * ```
@@ -274,10 +299,10 @@ export interface StaticSiteProps {
   };
 }
 
-export interface StaticSiteDomainProps extends BaseSiteDomainProps {}
-export interface StaticSiteReplaceProps extends BaseSiteReplaceProps {}
+export interface StaticSiteDomainProps extends BaseSiteDomainProps { }
+export interface StaticSiteReplaceProps extends BaseSiteReplaceProps { }
 export interface StaticSiteCdkDistributionProps
-  extends BaseSiteCdkDistributionProps {}
+  extends BaseSiteCdkDistributionProps { }
 
 /////////////////////
 // Construct
@@ -334,8 +359,8 @@ export class StaticSite extends Construct implements SSTConstruct {
       (root.local || root.skipBuild) && !props.disablePlaceholder;
     const fileSizeLimit = root.isRunningSSTTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
-        props.sstTestFileSizeLimitOverride || 200
+      // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
+      props.sstTestFileSizeLimitOverride || 200
       : 200;
 
     this.props = props;
@@ -345,6 +370,9 @@ export class StaticSite extends Construct implements SSTConstruct {
 
     // Validate input
     this.validateCustomDomainSettings();
+
+    // Generate Vite types
+    this.generateViteTypes();
 
     // Build app
     this.buildApp();
@@ -460,6 +488,38 @@ export class StaticSite extends Construct implements SSTConstruct {
     };
   }
 
+  private generateViteTypes() {
+    const { path: sitePath, environment } = this.props;
+
+    // Build the path
+    let typesPath = this.props.vite?.types;
+    if (!typesPath) {
+      if (fs.existsSync(path.join(sitePath, "vite.config.js")) || fs.existsSync(path.join(sitePath, "vite.config.ts"))) {
+        typesPath = "src/sst-env.d.ts";
+      }
+    }
+    if (!typesPath) {
+      return;
+    }
+
+    // Create type file
+    const filePath = path.resolve(path.join(sitePath, typesPath));
+    const content = `/// <reference types="vite/client" />
+interface ImportMetaEnv {
+${Object.keys(environment || {})
+        .map((key) => `  readonly ${key}: string`)
+        .join("\n")}
+}
+interface ImportMeta {
+  readonly env: ImportMetaEnv
+}`;
+
+    const fileDir = path.dirname(filePath);
+    fs.rmSync(fileDir, { recursive: true, force: true });
+    fs.mkdirSync(fileDir, { recursive: true });
+    fs.writeFileSync(filePath, content);
+  }
+
   private buildApp() {
     if (this.isPlaceholder) {
       return;
@@ -470,8 +530,7 @@ export class StaticSite extends Construct implements SSTConstruct {
     // validate site path exists
     if (!fs.existsSync(sitePath)) {
       throw new Error(
-        `No path found at "${path.resolve(sitePath)}" for the "${
-          this.node.id
+        `No path found at "${path.resolve(sitePath)}" for the "${this.node.id
         }" StaticSite.`
       );
     }
@@ -623,7 +682,18 @@ export class StaticSite extends Construct implements SSTConstruct {
   }
 
   private createS3Deployment(): CustomResource {
-    const { fileOptions } = this.props;
+    const fileOptions = this.props.fileOptions || [
+      {
+        exclude: "*",
+        include: "*.html",
+        cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
+      },
+      {
+        exclude: "*",
+        include: ["*.js", "*.css"],
+        cacheControl: "max-age=31536000,public,immutable",
+      },
+    ];
 
     // Create a Lambda function that will be doing the uploading
     const uploader = new lambda.Function(this, "S3Uploader", {
@@ -711,6 +781,11 @@ export class StaticSite extends Construct implements SSTConstruct {
         `Do not configure the "cfDistribution.domainNames". Use the "customDomain" to configure the StaticSite domain.`
       );
     }
+    if (errorPage && cdk?.distribution?.errorResponses) {
+      throw new Error(
+        `Cannot configure the "cfDistribution.errorResponses" when "errorPage" is passed in. Use one or the other to configure the behavior for error pages.`
+      );
+    }
 
     // Build domainNames
     const domainNames = [];
@@ -734,15 +809,9 @@ export class StaticSite extends Construct implements SSTConstruct {
     // case: sst start => showing stub site, and redirect all routes to the index page
     if (this.isPlaceholder) {
       errorResponses = buildErrorResponsesForRedirectToIndex(indexPage);
-    } else if (errorPage) {
-      if (cdk?.distribution?.errorResponses) {
-        throw new Error(
-          `Cannot configure the "cfDistribution.errorResponses" when "errorPage" is passed in. Use one or the other to configure the behavior for error pages.`
-        );
-      }
-
+    } else {
       errorResponses =
-        errorPage === "redirect_to_index_page"
+        errorPage === "redirect_to_index_page" || errorPage === undefined
           ? buildErrorResponsesForRedirectToIndex(indexPage)
           : buildErrorResponsesFor404ErrorPage(errorPage as string);
     }
@@ -799,8 +868,8 @@ export class StaticSite extends Construct implements SSTConstruct {
     const waitForInvalidation = this.isPlaceholder
       ? false
       : this.props.waitForInvalidation === false
-      ? false
-      : true;
+        ? false
+        : true;
     return new CustomResource(this, "CloudFrontInvalidation", {
       serviceToken: invalidator.functionArn,
       resourceType: "Custom::SSTCloudFrontInvalidation",

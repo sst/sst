@@ -2,8 +2,8 @@ import * as cognito from "aws-cdk-lib/aws-cognito";
 import {
   Api,
   Cognito,
+  StaticSite,
   StackContext,
-  ViteStaticSite
 } from "@serverless-stack/resources";
 
 export function MyStack({ stack, app }: StackContext) {
@@ -81,8 +81,10 @@ export function MyStack({ stack, app }: StackContext) {
   auth.attachPermissionsForAuthUsers(stack, [api]);
 
   // Create a React Static Site
-  const site = new ViteStaticSite(stack, "Site", {
+  const site = new StaticSite(stack, "Site", {
     path: "frontend",
+    buildCommand: "npm run build",
+    buildOutput: "dist",
     environment: {
       VITE_APP_COGNITO_DOMAIN: domain.domainName,
       VITE_APP_API_URL: api.url,

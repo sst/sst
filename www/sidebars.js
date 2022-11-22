@@ -244,17 +244,14 @@ module.exports = {
       ],
       Api: [
         "constructs/Api",
-        "constructs/GraphQLApi",
         "constructs/AppSyncApi",
         "constructs/WebSocketApi"
       ],
       Frontend: [
         "constructs/StaticSite",
         "constructs/NextjsSite",
-        "constructs/AstroSite",
         "constructs/RemixSite",
-        "constructs/ViteStaticSite",
-        "constructs/ReactStaticSite"
+        "constructs/AstroSite",
       ],
       Database: ["constructs/RDS", "constructs/Table"],
       Async: [
@@ -276,6 +273,9 @@ module.exports = {
         "constructs/Script",
         "constructs/DebugApp",
         "constructs/DebugStack",
+        "constructs/GraphQLApi",
+        "constructs/ViteStaticSite",
+        "constructs/ReactStaticSite",
         "constructs/ApiGatewayV1Api"
       ]
     }

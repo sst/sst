@@ -275,8 +275,8 @@ export class RDS extends Construct implements SSTConstruct {
         types:
           typeof types === "string"
             ? {
-                path: types,
-              }
+              path: types,
+            }
             : types,
         clusterArn: this.clusterArn,
         clusterIdentifier: this.clusterIdentifier,
@@ -415,8 +415,8 @@ export class RDS extends Construct implements SSTConstruct {
         scaling?.autoPause === false
           ? cdk.Duration.minutes(0)
           : scaling?.autoPause === true || scaling?.autoPause === undefined
-          ? cdk.Duration.minutes(5)
-          : cdk.Duration.minutes(scaling?.autoPause),
+            ? cdk.Duration.minutes(5)
+            : cdk.Duration.minutes(scaling?.autoPause),
       minCapacity: rds.AuroraCapacityUnit[scaling?.minCapacity || "ACU_2"],
       maxCapacity: rds.AuroraCapacityUnit[scaling?.maxCapacity || "ACU_16"],
     };
@@ -509,6 +509,7 @@ export class RDS extends Construct implements SSTConstruct {
         format: "esm",
       },
     });
+    fn._disableBind = true;
 
     fn.attachPermissions([this.cdk.cluster]);
 

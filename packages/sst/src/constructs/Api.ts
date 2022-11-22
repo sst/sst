@@ -1,5 +1,5 @@
 import { Construct } from "constructs";
-import * as cdk from "aws-cdk-lib";
+import * as cdkLib from "aws-cdk-lib";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as cfnApig from "aws-cdk-lib/aws-apigatewayv2";
@@ -9,6 +9,7 @@ import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations-alpha"
 import * as elb from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as logs from "aws-cdk-lib/aws-logs";
+import spawn from "cross-spawn";
 
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
@@ -436,6 +437,7 @@ export type ApiRouteProps<AuthorizerKeys> =
   | ApiFunctionRouteProps<AuthorizerKeys>
   | ApiHttpRouteProps<AuthorizerKeys>
   | ApiAlbRouteProps<AuthorizerKeys>
+  | ApiGraphQLRouteProps<AuthorizerKeys>
   | ApiPothosRouteProps<AuthorizerKeys>;
 
 interface ApiBaseRouteProps<AuthorizerKeys = string> {
@@ -543,20 +545,38 @@ export interface ApiAlbRouteProps<AuthorizersKeys>
 
 /**
  * Specify a route handler that handles GraphQL queries using Pothos
- *
+ * @deprecated "pothos" routes are deprecated for the Api construct, and will be removed in SST v2. Use "graphql" routes instead. Read more about how to upgrade here — https://docs.sst.dev/upgrade-guide#upgrade-to-v118
  * @example
  * ```js
+ * // Change
  * api.addRoutes(stack, {
  *   "POST /graphql": {
- *      type: "pothos",
- *      schema: "backend/functions/graphql/schema.ts",
- *      output: "graphql/schema.graphql",
- *      function: {
- *        handler: "functions/graphql/graphql.ts",
- *      },
- *      commands: [
- *        "./genql graphql/graphql.schema graphql/
- *      ]
+ *     type: "pothos",
+ *     function: {
+ *       handler: "functions/graphql/graphql.ts",
+ *     },
+ *     schema: "backend/functions/graphql/schema.ts",
+ *     output: "graphql/schema.graphql",
+ *     commands: [
+ *       "./genql graphql/graphql.schema graphql/
+ *     ]
+ *   }
+ * })
+ * 
+ * // To
+ * api.addRoutes(stack, {
+ *   "POST /graphql": {
+ *     type: "graphql",
+ *     function: {
+ *       handler: "functions/graphql/graphql.ts",
+ *     },
+ *     pothos: {
+ *       schema: "backend/functions/graphql/schema.ts",
+ *       output: "graphql/schema.graphql",
+ *       commands: [
+ *         "./genql graphql/graphql.schema graphql/
+ *       ]
+ *     }
  *   }
  * })
  * ```
@@ -580,6 +600,51 @@ export interface ApiPothosRouteProps<AuthorizerKeys>
    * Commands to run after generating schema. Useful for code generation steps
    */
   commands?: string[];
+}
+
+/**
+  * Specify a route handler that handles GraphQL queries using Pothos
+  *
+  * @example
+  * ```js
+  * api.addRoutes(stack, {
+  *   "POST /graphql": {
+  *      type: "graphql",
+  *      function: {
+  *        handler: "functions/graphql/graphql.ts",
+  *      },
+  *      pothos: {
+  *        schema: "backend/functions/graphql/schema.ts",
+  *        output: "graphql/schema.graphql",
+  *        commands: [
+  *          "./genql graphql/graphql.schema graphql/
+  *        ]
+  *      }
+  *   }
+  * })
+  * ```
+  */
+export interface ApiGraphQLRouteProps<AuthorizerKeys>
+  extends ApiBaseRouteProps<AuthorizerKeys> {
+  type: "graphql";
+  /**
+   * The function definition used to create the function for this route. Must be a graphql handler
+   */
+  function: FunctionDefinition;
+  pothos?: {
+    /**
+     * Path to pothos schema
+     */
+    schema?: string;
+    /**
+     * File to write graphql schema to
+     */
+    output?: string;
+    /**
+     * Commands to run after generating schema. Useful for code generation steps
+     */
+    commands?: string[];
+  };
 }
 
 /////////////////////
@@ -642,6 +707,7 @@ export class Api<
       ApiPothosRouteProps<any>,
       "schema" | "output" | "commands"
     >)
+    | ({ type: "graphql"; function: Fn } & ApiGraphQLRouteProps<any>["pothos"])
     | { type: "url"; url: string }
     | { type: "alb"; alb: elb.IApplicationListener };
   };
@@ -745,7 +811,7 @@ export class Api<
   public getFunction(routeKey: string): Fn | undefined {
     const route = this.routesData[this.normalizeRouteKey(routeKey)];
     if (!route) return;
-    if (route.type === "function" || route.type === "pothos") {
+    if (route.type === "function" || route.type === "pothos" || route.type === "graphql") {
       return route.function;
     }
   }
@@ -761,7 +827,7 @@ export class Api<
    */
   public bind(constructs: SSTConstruct[]) {
     for (const route of Object.values(this.routesData)) {
-      if (route.type === "function" || route.type === "pothos") {
+      if (route.type === "function" || route.type === "pothos" || route.type === "graphql") {
         route.function.bind(constructs);
       }
     }
@@ -805,7 +871,7 @@ export class Api<
    */
   public attachPermissions(permissions: Permissions): void {
     for (const route of Object.values(this.routesData)) {
-      if (route.type === "function" || route.type === "pothos") {
+      if (route.type === "function" || route.type === "pothos" || route.type === "graphql") {
         route.function.attachPermissions(permissions);
       }
     }
@@ -860,6 +926,16 @@ export class Api<
           if (data.type === "pothos")
             return {
               type: "pothos" as const,
+              route: key,
+              fn: getFunctionRef(data.function),
+              schema: data.schema,
+              output: data.output,
+              commands: data.commands,
+            };
+
+          if (data.type === "graphql")
+            return {
+              type: "graphql" as const,
               route: key,
               fn: getFunctionRef(data.function),
               schema: data.schema,
@@ -1063,7 +1139,7 @@ export class Api<
                 ),
               resultsCacheTtl: value.resultsCacheTtl
                 ? toCdkDuration(value.resultsCacheTtl)
-                : cdk.Duration.seconds(0),
+                : cdkLib.Duration.seconds(0),
             }
           );
         }
@@ -1153,6 +1229,12 @@ export class Api<
             routeValue,
             postfixName
           ),
+        ];
+      }
+      if (routeValue.type === "graphql") {
+        return [
+          routeValue,
+          this.createGraphQLIntegration(scope, routeKey, routeValue, postfixName)
         ];
       }
       if (routeValue.cdk?.function) {
@@ -1286,6 +1368,35 @@ export class Api<
         commands: routeProps.commands,
       };
     }
+    return result;
+  }
+  protected createGraphQLIntegration(
+    scope: Construct,
+    routeKey: string,
+    routeProps: ApiGraphQLRouteProps<keyof Authorizers>,
+    postfixName: string
+  ): apig.HttpRouteIntegration {
+    const result = this.createFunctionIntegration(
+      scope,
+      routeKey,
+      {
+        ...routeProps,
+        type: "function",
+        payloadFormatVersion: "2.0"
+      },
+      postfixName
+    );
+    const data = this.routesData[routeKey];
+    if (data.type === "function") {
+      this.routesData[routeKey] = {
+        ...data,
+        type: "graphql",
+        output: routeProps.pothos?.output,
+        schema: routeProps.pothos?.schema,
+        commands: routeProps.pothos?.commands,
+      };
+    }
+
     return result;
   }
 
