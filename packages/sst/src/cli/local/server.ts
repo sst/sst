@@ -199,7 +199,6 @@ export async function useLocalServer(opts: Opts) {
 
   bus.subscribe("function.invoked", (evt) => {
     updateFunction(evt.properties.functionID, (draft) => {
-      console.log(evt.properties.context.awsRequestId);
       if (draft.invocations.length >= 25) draft.invocations.pop();
       draft.invocations.unshift({
         id: evt.properties.context.awsRequestId,

@@ -12,7 +12,7 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "build": "tsc && cp package.json ./dist"
+    "build": "tsc"
   },
   "repository": {
     "type": "git",
