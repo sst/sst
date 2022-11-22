@@ -9,7 +9,6 @@ import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations-alpha"
 import * as elb from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as logs from "aws-cdk-lib/aws-logs";
-import spawn from "cross-spawn";
 
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
