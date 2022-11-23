@@ -1,14 +1,20 @@
 import chalk from "colorette";
 import fs from "fs/promises";
 import path from "path";
+import { useProject } from "./app.js";
+import { Context } from "./context/context.js";
 
 let previous = new Date();
 
-const filePath = path.join("debug.log");
-const file = await fs.open(filePath, "w");
+const useFile = Context.memo(async () => {
+  const project = useProject();
+  const filePath = path.join(project.paths.out, "debug.log");
+  const file = await fs.open(filePath, "w");
+  return file;
+});
 
 export const Logger = {
-  async debug(...parts: any[]) {
+  debug(...parts: any[]) {
     const now = new Date();
     const diff = now.getTime() - previous.getTime();
     previous = now;
@@ -21,6 +27,8 @@ export const Logger = {
         return JSON.stringify(x);
       }),
     ];
-    file.write(line.join(" ") + "\n");
+    useFile().then((file) => {
+      file.write(line.join(" ") + "\n");
+    });
   },
 };

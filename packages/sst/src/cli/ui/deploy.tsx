@@ -142,6 +142,7 @@ export const DeploymentUI = (props: Props) => {
 export function printDeploymentResults(
   results: Awaited<ReturnType<typeof Stacks.deployMany>>
 ) {
+  console.log();
   console.log(`----------------------------`);
   console.log(`| Stack deployment results |`);
   console.log(`----------------------------`);
@@ -168,4 +169,5 @@ export function printDeploymentResults(
       }
     }
   }
+  console.log();
 }

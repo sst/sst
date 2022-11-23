@@ -35,7 +35,7 @@ type ProjectWithDefaults = Project &
     };
   };
 
-const ProjectContext = Context.create<ProjectWithDefaults>();
+export const ProjectContext = Context.create<ProjectWithDefaults>();
 
 export function useProject() {
   return ProjectContext.use();
@@ -51,12 +51,10 @@ interface GlobalOptions {
 
 export async function initProject(globals: GlobalOptions) {
   const root = globals.root || (await findRoot());
-  Logger.debug("Using project root", root);
   const out = path.join(root, ".sst");
   await fs.mkdir(out, {
     recursive: true,
   });
-  Logger.debug("Using project out", out);
 
   async function load() {
     const base = await (async function () {
@@ -110,15 +108,19 @@ export async function initProject(globals: GlobalOptions) {
     root,
     out,
   };
-  const packageJson = JSON.parse(
-    await fs
-      .readFile(url.fileURLToPath(new URL("./package.json", import.meta.url)))
-      .then((x) => x.toString())
-  );
-  project.version = packageJson.version;
-  Logger.debug("Config loaded", project);
+  try {
+    const packageJson = JSON.parse(
+      await fs
+        .readFile(url.fileURLToPath(new URL("./package.json", import.meta.url)))
+        .then((x) => x.toString())
+    );
+    project.version = packageJson.version;
+  } catch {
+    project.version = "unknown";
+  }
 
   ProjectContext.provide(project);
+  Logger.debug("Config loaded", project);
 }
 
 async function usePersonalStage(out: string) {
@@ -152,7 +154,6 @@ async function promptPersonalStage(out: string) {
 }
 
 async function findRoot() {
-  Logger.debug("Searching for project root...");
   async function find(dir: string): Promise<string> {
     if (dir === "/")
       throw new VisibleError(
@@ -162,9 +163,7 @@ async function findRoot() {
       );
     for (const ext of CONFIG_EXTENSIONS) {
       const configPath = path.join(dir, `sst${ext}`);
-      Logger.debug("Searching", configPath);
       if (fsSync.existsSync(configPath)) {
-        Logger.debug("Found config", configPath);
         return dir;
       }
     }
