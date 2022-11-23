@@ -1,7 +1,6 @@
 export default function () {
   return {
-    name: "test",
+    name: "app",
     region: "us-east-1",
-    main: "stacks/index.ts",
   };
 }

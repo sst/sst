@@ -1,7 +1,8 @@
 import { Match, Matcher, MatchResult, Template } from "aws-cdk-lib/assertions";
 import { Stack } from "aws-cdk-lib";
-import { App } from "../../src/constructs";
-import { initProject, ProjectContext } from "../../src/app";
+import { App } from "../../dist/constructs";
+import { initProject, ProjectContext, useProject } from "../../dist/app";
+import { resolve } from "path";
 
 ///////////////////////
 // Matcher functions //
@@ -16,10 +17,14 @@ export const objectLike = Match.objectLike;
 export async function app() {
   await initProject({
     stage: "test",
+    root: resolve("test/constructs/"),
   });
+  const project = useProject();
 
   return new App({
     mode: "deploy",
+    name: project.name,
+    stage: project.stage,
     bootstrap: {
       bucket: undefined,
       stack: undefined,
