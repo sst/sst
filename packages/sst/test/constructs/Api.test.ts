@@ -1944,8 +1944,9 @@ test("attachPermissionsToRoute", async () => {
 });
 
 test("attachPermissions-after-addRoutes", async () => {
-  const stackA = new Stack(await app(), "stackA");
-  const stackB = new Stack(await app(), "stackB");
+  const a = await app();
+  const stackA = new Stack(a, "stackA");
+  const stackB = new Stack(a, "stackB");
   const api = new Api(stackA, "Api", {
     routes: {
       "GET /": "test/lambda.handler",

@@ -49,6 +49,9 @@ export const useIOT = Context.memo(async () => {
 
   const fragments = new Map<string, Map<number, Fragment>>();
 
+  device.on("error", (err) => {
+    Logger.debug("IoT error", err);
+  });
   device.on("message", (_topic, buffer: Buffer) => {
     const fragment = JSON.parse(buffer.toString()) as Fragment;
     let pending = fragments.get(fragment.id);
