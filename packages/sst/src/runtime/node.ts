@@ -35,6 +35,7 @@ export const useNodeHandler = Context.memo(() => {
             env: {
               ...process.env,
               ...input.environment,
+              IS_LOCAL: "true",
             },
             execArgv: ["--enable-source-maps"],
             workerData: input,
