@@ -4,8 +4,8 @@ export function MyStack({ stack }: StackContext) {
   // create a kinesis stream
   const stream = new KinesisStream(stack, "Stream", {
     consumers: {
-      consumer1: "consumer1.handler",
-      consumer2: "consumer2.handler",
+      consumer1: "functions/consumer1.handler",
+      consumer2: "functions/consumer2.handler",
     },
   });
 
