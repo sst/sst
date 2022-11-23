@@ -52,7 +52,7 @@ Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
   <li>
     <a href={useBaseUrl("/constructs/RDS")}>
       <h3>Databases</h3>
-      <p>Use a serverless SQL or NoSQL databases to power your app.</p>
+      <p>Use a serverless SQL or NoSQL database to power your app.</p>
     </a>
   </li>
   <li>
@@ -94,7 +94,7 @@ Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
       <code>> npm create sst@latest</code>
     </div>
     <a className={styles.startCta} href={useBaseUrl("/quick-start")}>
-      Get started
+      Get Started
       <i class="fas fa-arrow-right"></i>
     </a>
   </div>
