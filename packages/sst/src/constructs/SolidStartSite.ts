@@ -11,35 +11,25 @@ import { EdgeFunction } from "./EdgeFunction.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 /**
- * The `AstroSite` construct is a higher level CDK construct that makes it easy to create a Astro app.
+ * The `SolidStartSite` construct is a higher level CDK construct that makes it easy to create a SolidStart app.
  * @example
- * Deploys a Astro app in the `my-astro-app` directory.
+ * Deploys a SolidStart app in the `my-solid-start-app` directory.
  *
  * ```js
- * new AstroSite(stack, "web", {
- *   path: "my-astro-app/",
+ * new SolidStartSite(stack, "web", {
+ *   path: "my-solid-start-app/",
  * });
  * ```
  */
-export class AstroSite extends SsrSite {
+export class SolidStartSite extends SsrSite {
 
   protected initBuildConfig() {
     return {
-      serverBuildOutputFile: "dist/server/entry.mjs",
+      serverBuildOutputFile: "dist/server/index.mjs",
       clientBuildOutputDir: "dist/client",
       clientBuildVersionedSubDir: "assets",
-      siteStub: path.resolve(__dirname, "../support/astro-site-html-stub"),
+      siteStub: path.resolve(__dirname, "../support/solid-start-site-html-stub"),
     };
-  }
-
-  protected validateBuildOutput() {
-    const serverDir = path.join(this.props.path, "dist/server");
-    const clientDir = path.join(this.props.path, "dist/client");
-    if (!fs.existsSync(serverDir) || !fs.existsSync(clientDir)) {
-      throw new Error(`Build output inside "dist/" does not contain the "server" and "client" folders. Make sure Server-side Rendering (SSR) is enabled in your Astro app. If you are looking to deploy the Astro app as a static site, please use the StaticSite construct — https://docs.sst.dev/constructs/StaticSite`);
-    }
-
-    super.validateBuildOutput();
   }
 
   protected createFunctionForRegional(): lambda.Function {
@@ -48,7 +38,7 @@ export class AstroSite extends SsrSite {
     // Bundle code
     const handler = this.isPlaceholder
       ? path.resolve(__dirname, "../support/ssr-site-function-stub/index.handler")
-      : path.join(this.props.path, "dist", "server", "entry.handler");
+      : path.join(this.props.path, "dist", "server", "index.handler");
 
     // Create function
     const fn = new Function(this, `ServerFunction`, {
@@ -85,7 +75,7 @@ export class AstroSite extends SsrSite {
       const outputPath = path.resolve(
         path.join(
           this.sstBuildDir,
-          `AstroSiteFunction-${this.node.id}-${this.node.addr}`
+          `SolidStartSiteFunction-${this.node.id}-${this.node.addr}`
         )
       );
 
@@ -98,7 +88,7 @@ export class AstroSite extends SsrSite {
         bundle: true,
         write: true,
         allowOverwrite: true,
-        outfile: path.join(outputPath, "entry.mjs"),
+        outfile: path.join(outputPath, "server.mjs"),
         banner: {
           js: [
             `import { createRequire as topLevelCreateRequire } from 'module';`,
@@ -109,14 +99,14 @@ export class AstroSite extends SsrSite {
 
       if (result.errors.length > 0) {
         result.errors.forEach((error) => console.error(error));
-        throw new Error(`There was a problem bundling the function code for the ${this.id} AstroSite.`);
+        throw new Error(`There was a problem bundling the function code for the ${this.id} SolidStartSite.`);
       }
 
       // Create package.json
       fs.writeFileSync(path.join(outputPath, "package.json"), `{"type":"module"}`);
 
       bundlePath = outputPath;
-      handler = "entry.handler";
+      handler = "server.handler";
     }
 
     // Create function

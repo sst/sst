@@ -22,6 +22,7 @@ export * from "./KinesisStream.js";
 export * from "./ApiGatewayV1Api.js";
 export * from "./NextjsSite.js";
 export * from "./RemixSite.js";
+export * from "./SolidStartSite.js";
 export * from "./StaticSite.js";
 export * from "./ViteStaticSite.js";
 export * from "./ReactStaticSite.js";
