@@ -1,5 +1,12 @@
 # @serverless-stack/cli2
 
+## 1.18.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @serverless-stack/node@1.18.4
+
 ## 1.18.3
 
 ### Patch Changes

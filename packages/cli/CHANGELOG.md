@@ -1,5 +1,13 @@
 # @serverless-stack/cli
 
+## 1.18.4
+
+### Patch Changes
+
+- Updated dependencies [[`8e4ffda9d`](https://github.com/serverless-stack/sst/commit/8e4ffda9dd7f97df470a614c9e2c5882a50c78ae)]:
+  - @serverless-stack/resources@1.18.4
+  - @serverless-stack/core@1.18.4
+
 ## 1.18.3
 
 ### Patch Changes
