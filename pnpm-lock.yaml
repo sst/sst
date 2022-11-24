@@ -239,6 +239,7 @@ importers:
       uuid: ^9.0.0
       vite: ^3.2.4
       vite-node: ^0.25.2
+      vitest: ^0.15.1
       ws: ^8.11.0
       yargs: ^17.6.2
     dependencies:
@@ -315,6 +316,7 @@ importers:
       kysely: 0.22.0
       kysely-data-api: 0.1.4_lzx2qmq5u4h6m7swq2y7defldy
       tsx: 3.12.1
+      vitest: 0.15.2
     publishDirectory: dist
 
   packages/static-site-env:

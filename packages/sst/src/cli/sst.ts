@@ -14,6 +14,7 @@ import { deploy } from "./commands/deploy.js";
 import { remove } from "./commands/remove.js";
 import dotenv from "dotenv";
 import { env } from "./commands/env.js";
+import { Logger } from "../logger.js";
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ env(program);
 
 process.removeAllListeners("uncaughtException");
 process.on("uncaughtException", (err) => {
+  Logger.debug(err);
   const spinners = useSpinners();
   for (const spinner of spinners) {
     if (spinner.isSpinning) spinner.fail(spinner.text);

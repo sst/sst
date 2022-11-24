@@ -1,0 +1,12 @@
+{
+  "name": "site",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "rm -rf build && mkdir build && node -e \"console.log(process.env.REACT_APP_CONSTANT_ENV, process.env.REACT_APP_REFERENCE_ENV);\" > build/index.html"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

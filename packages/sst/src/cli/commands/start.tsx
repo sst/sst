@@ -9,13 +9,19 @@ import { useFunctions } from "../../constructs/Function.js";
 import { dim, gray } from "colorette";
 import { useProject } from "../../app.js";
 import { SiteEnv } from "../../site-env.js";
+import { Instance } from "ink/build/render.js";
 
 export const start = (program: Program) =>
   program.command(
     "start",
     "Work on your SST app locally",
-    (yargs) => yargs,
-    async () => {
+    (yargs) =>
+      yargs.option("fullscreen", {
+        type: "boolean",
+        describe: "Disable full screen UI",
+        default: true,
+      }),
+    async (args) => {
       const { useRuntimeWorkers } = await import("../../runtime/workers.js");
       const { useIOTBridge } = await import("../../runtime/iot.js");
       const { useRuntimeServer } = await import("../../runtime/server.js");
@@ -118,12 +124,15 @@ export const start = (program: Program) =>
           const assembly = pending;
           const nextChecksum = await checksum(assembly.directory);
           pending = undefined;
-          process.stdout.write("\x1b[?1049h");
-          const component = render(
-            <DeploymentUI stacks={assembly.stacks.map((s) => s.stackName)} />
-          );
+          let component: Instance | undefined = undefined;
+          if (args.fullscreen) {
+            process.stdout.write("\x1b[?1049h");
+            component = render(
+              <DeploymentUI stacks={assembly.stacks.map((s) => s.stackName)} />
+            );
+          }
           const results = await Stacks.deployMany(assembly.stacks);
-          component.unmount();
+          if (component) component.unmount();
           process.stdout.write("\x1b[?1049l");
           lastDeployed = nextChecksum;
           printDeploymentResults(results);
