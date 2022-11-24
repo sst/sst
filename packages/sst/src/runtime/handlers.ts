@@ -70,31 +70,33 @@ export const useRuntimeHandlers = Context.memo(() => {
       await fs.rm(out, { recursive: true, force: true });
       await fs.mkdir(out, { recursive: true });
 
-      const built = await handler!.build({
-        functionID,
-        out,
-        mode,
-        props: func,
-      });
-
-      if (mode === "deploy" && func.copyFiles) {
-        func.copyFiles.forEach((entry) => {
-          const fromPath = path.join(project.paths.root, entry.from);
-          const to = entry.to || entry.from;
-          if (path.isAbsolute(to))
-            throw new Error(`Copy destination path "${to}" must be relative`);
-          const toPath = path.join(out, to);
-          fs.cp(fromPath, toPath, {
-            recursive: true,
-          });
+      try {
+        const built = await handler!.build({
+          functionID,
+          out,
+          mode,
+          props: func,
         });
-      }
 
-      bus.publish("function.built", { functionID });
-      return {
-        ...built,
-        out,
-      };
+        if (mode === "deploy" && func.copyFiles) {
+          func.copyFiles.forEach((entry) => {
+            const fromPath = path.join(project.paths.root, entry.from);
+            const to = entry.to || entry.from;
+            if (path.isAbsolute(to))
+              throw new Error(`Copy destination path "${to}" must be relative`);
+            const toPath = path.join(out, to);
+            fs.cp(fromPath, toPath, {
+              recursive: true,
+            });
+          });
+        }
+
+        bus.publish("function.built", { functionID });
+        return {
+          ...built,
+          out,
+        };
+      } catch {}
     },
   };
 
@@ -117,6 +119,7 @@ export const useFunctionBuilder = Context.memo(() => {
     },
     build: async (functionID: string) => {
       const result = await handlers.build(functionID, "start");
+      if (!result) return;
       artifacts.set(functionID, result);
       return artifacts.get(functionID)!;
     },

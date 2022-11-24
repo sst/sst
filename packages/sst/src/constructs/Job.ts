@@ -375,6 +375,8 @@ export class Job extends Construct implements SSTConstruct {
         // handle copy files
 
         // create wrapper that calls the handler
+        if (!bundle)
+          throw new Error(`Failed to build job "${this.props.handler}"`);
         const parsed = path.parse(bundle.handler);
         await fs.writeFile(
           path.join(bundle.out, "handler-wrapper.js"),

@@ -2,6 +2,7 @@ import { Context } from "../context/context.js";
 import { useBus } from "../bus.js";
 import { useFunctionBuilder, useRuntimeHandlers } from "./handlers.js";
 import { useRuntimeServerConfig } from "./server.js";
+import { Logger } from "../logger.js";
 
 declare module "../bus.js" {
   export interface Events {
@@ -59,6 +60,7 @@ export const useRuntimeWorkers = Context.memo(() => {
     const handler = handlers.for("test");
     if (!handler) return;
     const build = await builder.artifact(evt.properties.functionID);
+    if (!build) return;
     await handler.startWorker({
       ...build,
       workerID: evt.properties.workerID,
