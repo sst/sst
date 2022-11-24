@@ -597,11 +597,6 @@ export class App extends cdk.App {
     const typesPath = path.resolve(project.paths.out, "types");
     Logger.debug(`Generating types in ${typesPath}`);
 
-    this.codegenCreateIndexType(typesPath);
-    this.codegenCreateConstructTypes(typesPath);
-  }
-
-  private codegenCreateIndexType(typesPath: string) {
     fs.rmSync(typesPath, {
       recursive: true,
       force: true,
@@ -611,34 +606,16 @@ export class App extends cdk.App {
     });
     fs.writeFileSync(
       `${typesPath}/index.ts`,
-      `
-import "sst/node/config";
-declare module "sst/node/config" {
-  export interface ConfigTypes {
-    APP: string;
-    STAGE: string;
-  }
-}`
+      [
+        `import "sst/node/config";`,
+        `declare module "sst/node/config" {`,
+        `  export interface ConfigTypes {`,
+        `    APP: string;`,
+        `    STAGE: string;`,
+        `  }`,
+        `}`,
+      ].join("\n")
     );
-  }
-
-  private codegenCreateConstructTypes(typesPath: string) {
-    //export function codegenTypes(typesPath: string) {
-    //  fs.appendFileSync(`${typesPath}/index.d.ts`, `export * from "./config";`);
-    //  fs.writeFileSync(`${typesPath}/config.d.ts`, `
-    //    import "@serverless-stack/node/config";
-    //    declare module "@serverless-stack/node/config" {
-    //      export interface ConfigType {
-    //        ${[
-    //      "APP",
-    //      "STAGE",
-    //      ...Parameter.getAllNames(),
-    //      ...Secret.getAllNames()
-    //    ].map((p) => `${p}: string;`).join("\n")}
-    //      }
-    //    }
-    //  `);
-    //}
 
     class CodegenTypes implements cdk.IAspect {
       public visit(c: IConstruct): void {
@@ -657,31 +634,31 @@ declare module "sst/node/config" {
         const className = c.constructor.name;
         const id = c.id;
 
-        fs.appendFileSync(
-          `${typesPath}/index.ts`,
-          `export * from "./${className}-${id}";`
-        );
-
         // Case 1: variable does not have properties, ie. Secrets and Parameters
-        const typeContent =
-          binding.variables[0] === "."
-            ? `
-import "sst/node/${binding.clientPackage}";
-declare module "sst/node/${binding.clientPackage}" {
-  export interface ${className}Resources {
-    "${id}": string;
-  }
-}`
-            : `
-import "sst/node/${binding.clientPackage}";
-declare module "sst/node/${binding.clientPackage}" {
-  export interface ${className}Resources {
-    "${id}": {
-      ${binding.variables.map((p) => `${p}: string;`).join("\n")}
-    }
-  }
-}`;
-        fs.writeFileSync(`${typesPath}/${className}-${id}.ts`, typeContent);
+
+        fs.writeFileSync(
+          `${typesPath}/${className}-${id}.ts`,
+          (binding.variables[0] === "."
+            ? [
+                `import "sst/node/${binding.clientPackage}";`,
+                `declare module "sst/node/${binding.clientPackage}" {`,
+                `  export interface ${className}Resources {`,
+                `    "${id}": string;`,
+                `  }`,
+                `}`,
+              ]
+            : [
+                `import "sst/node/${binding.clientPackage}";`,
+                `declare module "sst/node/${binding.clientPackage}" {`,
+                `  export interface ${className}Resources {`,
+                `    "${id}": {`,
+                ...binding.variables.map((p) => `      ${p}: string;`),
+                `    }`,
+                `  }`,
+                `}`,
+              ]
+          ).join("\n")
+        );
       }
     }
 
