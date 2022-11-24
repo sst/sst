@@ -4,13 +4,13 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import { Api, StackContext } from "@serverless-stack/resources";
 
 export function MyStack({ stack, app }: StackContext) {
+  const layerPath = ".sst/layers/prisma";
+  // Clear out the layer path
+  fs.removeSync(layerPath, { force: true, recursive: true });
+
   if (!app.local) {
     // Create a layer for production
     // This saves shipping Prisma binaries once per function
-    const layerPath = ".sst/layers/prisma";
-
-    // Clear out the layer path
-    fs.removeSync(layerPath, { force: true, recursive: true });
     fs.mkdirSync(layerPath, { recursive: true });
 
     // Copy files to the layer
