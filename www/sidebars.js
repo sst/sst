@@ -252,6 +252,7 @@ module.exports = {
         "constructs/NextjsSite",
         "constructs/RemixSite",
         "constructs/AstroSite",
+        "constructs/SolidStartSite",
       ],
       Database: ["constructs/RDS", "constructs/Table"],
       Async: [

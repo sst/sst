@@ -515,7 +515,6 @@ interface ImportMeta {
 }`;
 
     const fileDir = path.dirname(filePath);
-    fs.rmSync(fileDir, { recursive: true, force: true });
     fs.mkdirSync(fileDir, { recursive: true });
     fs.writeFileSync(filePath, content);
   }

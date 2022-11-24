@@ -1,108 +1,108 @@
-The `AstroSite` construct is a higher level CDK construct that makes it easy to create an Astro app. It provides a simple way to build and deploy the app to AWS:
+The `SolidStartSite` construct is a higher level CDK construct that makes it easy to create an SolidStart app. It provides a simple way to build and deploy the app to AWS:
 
   - The client assets are deployed to an S3 Bucket, and served out from a CloudFront CDN for fast content delivery.
   - The app server is deployed to Lambda. You can deploy to Lambda@Edge instead if the `edge` flag is enabled. Read more about [Single region vs Edge](#single-region-vs-edge).
   - It enables you to [configure custom domains](#custom-domains) for the website URL.
-  - It also enable you to [automatically set the environment variables](#environment-variables) for your Astro app directly from the outputs in your SST app.
+  - It also enable you to [automatically set the environment variables](#environment-variables) for your SolidStart app directly from the outputs in your SST app.
   - It provides a simple interface to [grant permissions](#using-aws-services) for your app to access AWS resources.
 
 ## Quick Start
 
-1. If you are creating a new Astro app, run `create-astro` from the root of your SST app.
+1. If you are creating a new SolidStart app, create a `my-solid-start-app` folder at the root of your SST app.
+
+  Then run `create-solid` from the `my-solid-start-app` folder.
 
   ```bash
-  npx create-astro@latest
+  npx create-solid@latest
   ```
   
-  And select `Astro App Server` as the deployment target.
+  And make sure to enable `Server Side Rendering`.
   
-  ![Select Astro App template](/img/astro/bootstrap-astro.png)
+  ![Select SolidStart App template](/img/solid-start/bootstrap-solid-start.png)
 
-  After the Astro app is created, your SST app structure should look like:
+  After the SolidStart app is created, your SST app structure should look like:
 
   ```bash
   my-sst-app
   ├─ sst.json
   ├─ services
   ├─ stacks
-  └─ my-astro-app     <-- new Astro app
+  └─ my-solid-start-app     <-- new SolidStart app
      ├─ src
      ├─ public
-     └─ astro.config.mjs
+     └─ vite.config.ts
   ```
 
   Continue to step 3.
 
-2. Alternatively, if you have an existing Astro app, move the app to the root of your SST app. Your SST app structure should look like:
+2. Alternatively, if you have an existing SolidStart app, move the app to the root of your SST app. Your SST app structure should look like:
 
   ```bash
   my-sst-app
   ├─ sst.json
   ├─ services
   ├─ stacks
-  └─ my-astro-app     <-- your Astro app
+  └─ my-solid-start-app     <-- your SolidStart app
      ├─ src
      ├─ public
-     └─ astro.config.mjs
+     └─ vite.config.ts
   ```
 
-3. Let's set up the AWS adapter for your Astro app, since we will be deploying the app to AWS. To do that, make sure your `astro.config.mjs` looks like the following.
+3. Let's set up the AWS adapter for your SolidStart app, since we will be deploying the app to AWS. To do that, make sure your `vite.config.ts` looks like the following.
 
   ```ts
-  import { defineConfig } from "astro/config";
-  import aws from "@astrojs/aws/lambda";
-
+  import solid from "solid-start/vite";
+  import aws from "solid-start-aws";
+  import { defineConfig } from "vite";
+  
   export default defineConfig({
-    output: "server",
-    adapter: aws(),
+    plugins: [solid({ adapter: aws() })],
   });
   ```
 
-  And add the `@astrojs/aws` dependency to your Astro app's `package.json`.
+  And add the `solid-start-aws` dependency to your SolidStart app's `package.json`.
 
   ```bash
-  npm install --save-dev @astrojs/aws
+  npm install --save-dev solid-start-aws
   ```
 
   :::info
-  If you are deploying the `AstroSite` in the `edge` mode, use the edge adapter instead.
+  If you are deploying the `SolidStartSite` in the `edge` mode, use the edge adapter instead.
   ```diff
-  - import aws from "@astrojs/aws/lambda";
-  + import aws from "@astrojs/aws/edge";
+  - plugins: [solid({ adapter: aws() })],
+  + plugins: [solid({ adapter: aws({ edge: true }) })],
   ```
   :::
 
-4. Also add the `static-site-env` dependency to your Astro app's `package.json`. `static-site-env` enables you to [automatically set the environment variables](#environment-variables) for your Astro app directly from the outputs in your SST app.
+4. Also add the `static-site-env` dependency to your SolidStart app's `package.json`. `static-site-env` enables you to [automatically set the environment variables](#environment-variables) for your SolidStart app directly from the outputs in your SST app.
 
   ```bash
   npm install --save-dev @serverless-stack/static-site-env
   ```
 
-  Update the package.json scripts for your Astro application.
+  Update the package.json scripts for your SolidStart application.
 
    ```diff
      "scripts": {
-   -   "dev": "astro dev",
-   +   "dev": "sst-env -- astro dev",
-       "start": "astro dev",
-       "build": "astro build",
-       "preview": "astro preview",
-       "astro": "astro"
+   -   "dev": "solid-start dev",
+   +   "dev": "sst-env -- solid-start dev",
+       "build": "solid-start build",
+       "start": "solid-start start"
      },
    ```
 
-5. Add the `AstroSite` construct to an existing stack in your SST app. You can also create a new stack for the app.
+5. Add the `SolidStartSite` construct to an existing stack in your SST app. You can also create a new stack for the app.
 
   ```ts
-  import { AstroSite, StackContext } as sst from "@serverless-stack/resources";
+  import { SolidStartSite, StackContext } as sst from "@serverless-stack/resources";
 
   export default function MyStack({ stack }: StackContext) {
 
     // ... existing constructs
 
-    // Create the Astro site
-    const site = new AstroSite(stack, "Site", {
-      path: "my-astro-app/",
+    // Create the SolidStart site
+    const site = new SolidStartSite(stack, "Site", {
+      path: "my-solid-start-app/",
     });
 
     // Add the site's URL to stack output
@@ -112,20 +112,20 @@ The `AstroSite` construct is a higher level CDK construct that makes it easy to 
   }
   ```
 
-  When you are building your SST app, `AstroSite` will invoke `npm build` inside the Astro app directory. Make sure `path` is pointing to the your Astro app.
+  When you are building your SST app, `SolidStartSite` will invoke `npm build` inside the SolidStart app directory. Make sure `path` is pointing to the your SolidStart app.
 
   Note that we also added the site's URL to the stack output. After deploy succeeds, the URL will be printed out in the terminal.
 
 ## Single region vs edge
-There are two ways you can deploy the Astro app to your AWS account.
+There are two ways you can deploy the SolidStart app to your AWS account.
 
-By default, the Astro app server is deployed to a single region defined in your `sst.json` or passed in via the `--region` flag. Alternatively, you can choose to deploy to the edge. When deployed to the edge, loaders/actions are running on edge location that is physically closer to the end user. In this case, the app server is deployed to AWS Lambda@Edge.
+By default, the SolidStart app server is deployed to a single region defined in your `sst.json` or passed in via the `--region` flag. Alternatively, you can choose to deploy to the edge. When deployed to the edge, loaders/actions are running on edge location that is physically closer to the end user. In this case, the app server is deployed to AWS Lambda@Edge.
 
 You can enable edge like this:
 
 ```ts
-const site = new AstroSite(stack, "Site", {
-  path: "my-astro-app/",
+const site = new SolidStartSite(stack, "Site", {
+  path: "my-solid-start-app/",
   edge: true,
 });
 ```
@@ -141,8 +141,8 @@ We recommend you to deploy to a single region when unsure.
 You can configure the website with a custom domain hosted either on [Route 53](https://aws.amazon.com/route53/) or [externally](#configuring-externally-hosted-domain).
 
 ```js {5}
-const site = new AstroSite(stack, "Site", {
-  path: "my-astro-app/",
+const site = new SolidStartSite(stack, "Site", {
+  path: "my-solid-start-app/",
   customDomain: "my-app.com",
 });
 ```
@@ -152,8 +152,8 @@ Note that visitors to the `http://` URL will be redirected to the `https://` URL
 You can also configure an alias domain to point to the main domain. For example, to setup `www.my-app.com` redirecting to `my-app.com`:
 
 ```js {5}
-const site = new AstroSite(stack, "Site", {
-  path: "my-astro-app/",
+const site = new SolidStartSite(stack, "Site", {
+  path: "my-solid-start-app/",
   customDomain: {
     domainName: "my-app.com",
     domainAlias: "www.my-app.com",
@@ -163,18 +163,18 @@ const site = new AstroSite(stack, "Site", {
 
 ## Environment variables
 
-The `AstroSite` construct allows you to set the environment variables in your Astro app based on outputs from other constructs in your SST app. So you don't have to hard code the config from your backend. Let's look at how.
+The `SolidStartSite` construct allows you to set the environment variables in your SolidStart app based on outputs from other constructs in your SST app. So you don't have to hard code the config from your backend. Let's look at how.
 
-To expose environment variables to your Astro application you should utilise the `AstroSite` construct `environment` configuration property rather than an `.env` file within your Astro application root.
+To expose environment variables to your SolidStart application you should utilise the `SolidStartSite` construct `environment` configuration property rather than an `.env` file within your SolidStart application root.
 
-Imagine you have an API created using the [`Api`](../constructs/Api.md) construct, and you want to fetch data from the API. You'd pass the API's endpoint to your Astro app.
+Imagine you have an API created using the [`Api`](../constructs/Api.md) construct, and you want to fetch data from the API. You'd pass the API's endpoint to your SolidStart app.
 
 ```ts {7-9}
 const api = new Api(stack, "Api", {
   // ...
 });
 
-new AstroSite(stack, "Site", {
+new SolidStartSite(stack, "Site", {
   path: "path/to/site",
   environment: {
     API_URL: api.url,
@@ -188,15 +188,15 @@ Then you can access the API's URL in your server code:
 const data = await db(import.meta.env.API_URL);
 ```
 
-Note that, in Astro, only environment variables prefixed with `PUBLIC_` are available in your browser code. [Read more about using environment variables](https://docs.astro.build/en/guides/environment-variables/).
+Note that, in SolidStart, only environment variables prefixed with `VITE_` are available in your browser code. [Read more about using environment variables](https://vitejs.dev/guide/env-and-mode.html).
 
-For example, if you want to access the API's URL in your frontend js code, you'd name it `PUBLIC_API_URL`:
+For example, if you want to access the API's URL in your frontend js code, you'd name it `VITE_API_URL`:
 
 ```js
-new AstroSite(stack, "Site", {
+new SolidStartSite(stack, "Site", {
   path: "path/to/site",
   environment: {
-    PUBLIC_API_URL: api.url,
+    VITE_API_URL: api.url,
   },
 });
 ```
@@ -205,9 +205,9 @@ Let's take look at what is happening behind the scene.
 
 #### While deploying
 
-On `sst deploy`, the Astro app server is deployed to a Lambda function, and the AstroSite's `environment` values are set as Lambda function environment variables. In this case, `process.env.API_URL` will be available at runtime.
+On `sst deploy`, the SolidStart app server is deployed to a Lambda function, and the SolidStartSite's `environment` values are set as Lambda function environment variables. In this case, `process.env.API_URL` will be available at runtime.
 
-If you enabled the `edge` option, the Astro app server will instead get deployed to a Lambda@Edge function. We have an issue here, AWS Lambda@Edge does not support runtime environment variables. To get around this limitation, we insert a snippet to the top of your app server:
+If you enabled the `edge` option, the SolidStart app server will instead get deployed to a Lambda@Edge function. We have an issue here, AWS Lambda@Edge does not support runtime environment variables. To get around this limitation, we insert a snippet to the top of your app server:
 
 ```ts
 const environment = "{{ _SST_EDGE_SITE_ENVIRONMENT_ }}";
@@ -231,25 +231,23 @@ To use these values while developing, run `sst start` to start the [Live Lambda 
 npx sst start
 ```
 
-Then in your Astro app to reference these variables, add the [`static-site-env`](/packages/static-site-env.md) package.
+Then in your SolidStart app to reference these variables, add the [`static-site-env`](/packages/static-site-env.md) package.
 
 ```bash
 npm install --save-dev @serverless-stack/static-site-env
 ```
 
-And tweak the Astro `dev` script to:
+And tweak the SolidStart `dev` script to:
 
 ```json title="package.json" {2}
 "scripts": {
-  "dev": "sst-env -- astro dev",
-  "start": "astro dev",
-  "build": "astro build",
-  "preview": "astro preview",
-  "astro": "astro"
+  "dev": "sst-env -- solid-start dev",
+  "build": "solid-start build",
+  "start": "solid-start start"
 },
 ```
 
-Now you can start your Astro app as usual and it'll have the environment variables from your SST app.
+Now you can start your SolidStart app as usual and it'll have the environment variables from your SST app.
 
 ``` bash
 npm run dev
@@ -257,24 +255,24 @@ npm run dev
 
 There are a couple of things happening behind the scenes here:
 
-1. The `sst start` command generates a file with the values specified by the `AstroSite` construct's `environment` prop.
+1. The `sst start` command generates a file with the values specified by the `SolidStartSite` construct's `environment` prop.
 2. The `sst-env` CLI will traverse up the directories to look for the root of your SST app.
 3. It'll then find the file that's generated in step 1.
 4. It'll load these as environment variables before running the start command.
 
 :::note
-`sst-env` only works if the Astro app is located inside the SST app or inside one of its subdirectories. For example:
+`sst-env` only works if the SolidStart app is located inside the SST app or inside one of its subdirectories. For example:
 
 ```
 /
   sst.json
-  my-astro-app/
+  my-solid-start-app/
 ```
 :::
 
 ## Using AWS services
 
-Since the `AstroSite` construct deploys your Astro app to your AWS account, it's very convenient to access other resources in your AWS account. `AstroSite` provides a simple way to grant [permissions](Permissions.md) to access specific AWS resources.
+Since the `SolidStartSite` construct deploys your SolidStart app to your AWS account, it's very convenient to access other resources in your AWS account. `SolidStartSite` provides a simple way to grant [permissions](Permissions.md) to access specific AWS resources.
 
 Imagine you have a DynamoDB table created using the [`Table`](../constructs/Table.md) construct, and you want to fetch data from the Table.
 
@@ -283,8 +281,8 @@ const table = new Table(stack, "Table", {
   // ...
 });
 
-const site = new AstroSite(stack, "Site", {
-  path: "my-astro-app/",
+const site = new SolidStartSite(stack, "Site", {
+  path: "my-solid-start-app/",
   environment: {
     TABLE_NAME: table.tableName,
   },
@@ -293,7 +291,7 @@ const site = new AstroSite(stack, "Site", {
 site.attachPermissions([table]);
 ```
 
-Note that we are also passing the table name into the environment, so the Astro server code can fetch the value `process.env.TABLE_NAME` when calling the DynamoDB API to query the table.
+Note that we are also passing the table name into the environment, so the SolidStart server code can fetch the value `process.env.TABLE_NAME` when calling the DynamoDB API to query the table.
 
 ## Examples
 
@@ -304,8 +302,8 @@ You can configure the website with a custom domain hosted either on [Route 53](h
 #### Using the basic config (Route 53 domains)
 
 ```js {3}
-new AstroSite(stack, "Site", {
-  path: "my-astro-app/",
+new SolidStartSite(stack, "Site", {
+  path: "my-solid-start-app/",
   customDomain: "my-app.com",
 });
 ```
@@ -313,8 +311,8 @@ new AstroSite(stack, "Site", {
 #### Redirect www to non-www (Route 53 domains)
 
 ```js {3-6}
-new AstroSite(stack, "Site", {
-  path: "my-astro-app/",
+new SolidStartSite(stack, "Site", {
+  path: "my-solid-start-app/",
   customDomain: {
     domainName: "my-app.com",
     domainAlias: "www.my-app.com",
@@ -325,8 +323,8 @@ new AstroSite(stack, "Site", {
 #### Configuring domains across stages (Route 53 domains)
 
 ```js {3-7}
-new AstroSite(stack, "Site", {
-  path: "my-astro-app/",
+new SolidStartSite(stack, "Site", {
+  path: "my-solid-start-app/",
   customDomain: {
     domainName:
       scope.stage === "prod" ? "my-app.com" : `${scope.stage}.my-app.com`,
@@ -358,8 +356,8 @@ const certificate = new acm.DnsValidatedCertificate(stack, "Certificate", {
 });
 
 // Create site
-const site = new AstroSite(stack, "Site", {
-  path: "my-astro-app/",
+const site = new SolidStartSite(stack, "Site", {
+  path: "my-solid-start-app/",
   customDomain: {
     domainName: "foo.domain.com",
     alternateNames: ["bar.domain.com"],
@@ -387,8 +385,8 @@ new route53.AaaaRecord(stack, "AlternateAAAARecord", recordProps);
 ```js {8}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
-new AstroSite(stack, "Site", {
-  path: "my-astro-app/",
+new SolidStartSite(stack, "Site", {
+  path: "my-solid-start-app/",
   customDomain: {
     domainName: "my-app.com",
     cdk: {
@@ -407,8 +405,8 @@ If you have multiple hosted zones for a given domain, you can choose the one you
 ```js {8-11}
 import { HostedZone } from "aws-cdk-lib/aws-route53";
 
-new AstroSite(stack, "Site", {
-  path: "my-astro-app/",
+new SolidStartSite(stack, "Site", {
+  path: "my-solid-start-app/",
   customDomain: {
     domainName: "my-app.com",
     cdk: {
@@ -426,8 +424,8 @@ new AstroSite(stack, "Site", {
 ```js {5-11}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
-new AstroSite(stack, "Site", {
-  path: "my-astro-app/",
+new SolidStartSite(stack, "Site", {
+  path: "my-solid-start-app/",
   cutomDomain: {
     isExternalDomain: true,
     domainName: "my-app.com",
@@ -447,8 +445,8 @@ Also note that you can also migrate externally hosted domains to Route 53 by [fo
 Configure the internally created CDK [`Lambda Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html) instance.
 
 ```js {4-8}
-new AstroSite(stack, "Site", {
-  path: "my-astro-app/",
+new SolidStartSite(stack, "Site", {
+  path: "my-solid-start-app/",
   defaults: {
     function: {
       timeout: 20,
@@ -466,8 +464,8 @@ new AstroSite(stack, "Site", {
 ```js {5-7}
 import * as s3 from "aws-cdk-lib/aws-s3";
 
-new AstroSite(stack, "Site", {
-  path: "my-astro-app/",
+new SolidStartSite(stack, "Site", {
+  path: "my-solid-start-app/",
   cdk: {
     bucket: s3.Bucket.fromBucketName(stack, "Bucket", "my-bucket"),
   },
@@ -476,26 +474,26 @@ new AstroSite(stack, "Site", {
 
 #### Reusing CloudFront cache policies
 
-CloudFront has a limit of 20 cache policies per AWS account. This is a hard limit, and cannot be increased. Each `AstroSite` creates 3 cache policies. If you plan to deploy multiple Astro sites, you can have the constructs share the same cache policies by reusing them across sites.
+CloudFront has a limit of 20 cache policies per AWS account. This is a hard limit, and cannot be increased. Each `SolidStartSite` creates 3 cache policies. If you plan to deploy multiple SolidStart sites, you can have the constructs share the same cache policies by reusing them across sites.
 
 ```js
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 
 const cachePolicies = {
-  buildCachePolicy: new cloudfront.CachePolicy(stack, "BuildCache", AstroSite.buildCachePolicyProps),
-  staticsCachePolicy: new cloudfront.CachePolicy(stack, "StaticsCache", AstroSite.staticsCachePolicyProps),
-  serverCachePolicy: new cloudfront.CachePolicy(stack, "ServerCache", AstroSite.serverCachePolicyProps),
+  buildCachePolicy: new cloudfront.CachePolicy(stack, "BuildCache", SolidStartSite.buildCachePolicyProps),
+  staticsCachePolicy: new cloudfront.CachePolicy(stack, "StaticsCache", SolidStartSite.staticsCachePolicyProps),
+  serverCachePolicy: new cloudfront.CachePolicy(stack, "ServerCache", SolidStartSite.serverCachePolicyProps),
 };
 
-new AstroSite(stack, "Site1", {
-  path: "my-astro-app/",
+new SolidStartSite(stack, "Site1", {
+  path: "my-solid-start-app/",
   cdk: {
     cachePolicies,
   }
 });
 
-new AstroSite(stack, "Site2", {
-  path: "another-astro-app/",
+new SolidStartSite(stack, "Site2", {
+  path: "another-solid-start-app/",
   cdk: {
     cachePolicies,
   }
@@ -512,8 +510,8 @@ import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 
 const api = new Api(stack, "Api");
 
-const site = new AstroSite(stack, "Site", {
-  path: "my-astro-app/",
+const site = new SolidStartSite(stack, "Site", {
+  path: "my-solid-start-app/",
   cdk: {
     distribution: {
       defaultBehavior: {
