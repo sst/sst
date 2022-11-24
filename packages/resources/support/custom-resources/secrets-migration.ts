@@ -1,7 +1,13 @@
 import SSM, { ParameterList } from "aws-sdk/clients/ssm.js";
 import { log } from "./util.js";
 
-const ssm = new SSM({ logger: console });
+const ssm = new SSM({
+  logger: console,
+  maxRetries: 1000,
+  retryDelayOptions: {
+    customBackoff: () => 3000,
+  },
+});
 
 export async function SecretsMigration(cfnRequest: any) {
   log("SecretsMigration()");
