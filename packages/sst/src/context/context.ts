@@ -15,14 +15,15 @@ interface ContextInfo {
   dependants: Set<any>;
 }
 
-function create<C>(cb?: () => C) {
-  const id = Symbol();
+function create<C>(cb?: (() => C) | string) {
+  const id = Symbol(cb?.toString());
   return {
     use() {
       let result = state.contexts.get(id);
 
       if (!result) {
-        if (!cb) throw new Error(`"${String(id)}" context must be provided.`);
+        if (!cb || typeof cb === "string")
+          throw new Error(`"${String(id)}" context was not provided.`);
         state.tracking.push(id);
         const value = cb();
         state.tracking.pop();

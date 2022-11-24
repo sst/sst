@@ -3,7 +3,7 @@ import {
   APIGatewayProxyStructuredResultV2,
   Context as LambdaContext,
   SQSBatchResponse,
-  SQSEvent
+  SQSEvent,
 } from "aws-lambda";
 import { Context } from "./context.js";
 
@@ -28,7 +28,7 @@ type Requests = {
   };
 }[HandlerTypes];
 
-const RequestContext = Context.create<Requests>();
+const RequestContext = Context.create<Requests>("RequestContext");
 
 export function useEvent<Type extends HandlerTypes>(type: Type) {
   const ctx = RequestContext.use();

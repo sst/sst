@@ -105,6 +105,9 @@ export async function deploy(
     return monitor(stack.stackName);
   } catch (ex: any) {
     Logger.debug("Failed to deploy stack", stack.id, ex);
+    if (ex.message === "No updates are to be performed.") {
+      return monitor(stack.stackName);
+    }
     bus.publish("stack.status", {
       stackID: stack.stackName,
       status: "UPDATE_FAILED",

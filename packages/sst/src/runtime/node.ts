@@ -47,6 +47,9 @@ export const useNodeHandler = Context.memo(() => {
         worker.stdout.on("data", (data: Buffer) => {
           workers.stdout(input.workerID, data.toString());
         });
+        worker.stderr.on("data", (data: Buffer) => {
+          workers.stdout(input.workerID, data.toString());
+        });
         worker.on("exit", () => workers.exited(input.workerID));
         threads.set(input.workerID, worker);
       });
@@ -116,6 +119,7 @@ export const useNodeHandler = Context.memo(() => {
           ...(nodejs?.install || []),
           ...(external || []),
         ],
+        keepNames: true,
         bundle: true,
         metafile: true,
         ...(isESM
