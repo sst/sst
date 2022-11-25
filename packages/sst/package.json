@@ -22,6 +22,7 @@
   },
   "exports": {
     "./constructs": "./constructs/index.js",
+    "./context": "./context/index.js",
     "./node/*": "./node/*/index.js",
     "./*": "./*"
   },
@@ -98,7 +99,9 @@
     "kysely-data-api": "^0.1.4",
     "tsx": "^3.12.1",
     "vitest": "^0.15.1",
-    "graphql": "^16.5.0"
+    "graphql": "^16.5.0",
+    "@sls-next/lambda-at-edge": "^3.7.0",
+    "@babel/core": "^7.0.0-0"
   },
   "peerDependencies": {
     "@babel/core": "^7.0.0-0",
