@@ -76,5 +76,3 @@ export function memo<C>(cb: () => C) {
   const ctx = create(cb);
   return ctx.use;
 }
-
-5;

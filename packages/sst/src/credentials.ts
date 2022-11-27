@@ -73,7 +73,7 @@ const CredentialProviderChain = aws.CredentialProviderChain;
 /**
  * Do not use this. It is only used for AWS CDK compatibility.
  */
-export const useAWSProvider = async () => {
+export const useAWSProvider = Context.memo(async () => {
   Logger.debug("Loading v2 AWS SDK");
   const project = useProject();
   const creds = await useAWSCredentials();
@@ -104,4 +104,4 @@ export const useAWSProvider = async () => {
   });
 
   return provider;
-};
+});
