@@ -25,7 +25,7 @@ export async function generate(opts: GenerateOpts) {
   const { schema } = await import(
     url.pathToFileURL(out).href + "?bust=" + Date.now()
   );
-  // await fs.rm(out);
+  await fs.rm(out);
   const schemaAsString = printSchema(lexicographicSortSchema(schema));
   return schemaAsString;
 }
