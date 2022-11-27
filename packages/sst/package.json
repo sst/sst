@@ -12,7 +12,7 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "build": "tsc",
+    "build": "node build.mjs && tsc",
     "watch": "tsc -w"
   },
   "repository": {
