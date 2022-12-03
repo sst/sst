@@ -13,8 +13,8 @@ export function MyStack({ stack, app }: StackContext) {
   if (!app.local) {
     // Configure Datadog
     const datadog = new Datadog(stack, "Datadog", {
-      nodeLayerVersion: 65,
-      extensionLayerVersion: 13,
+      nodeLayerVersion: 85,
+      extensionLayerVersion: 35,
       apiKey: process.env.DATADOG_API_KEY,
     });
 
