@@ -141,6 +141,7 @@ const moveToDist = [
   "remix-site-html-stub",
   "sls-nextjs-site-stub",
   "sls-nextjs-site-build-helper",
+  "solid-start-site-html-stub",
   "ssr-site-function-stub",
   "static-site-stub",
   "base-site-custom-resource",

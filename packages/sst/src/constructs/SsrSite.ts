@@ -290,11 +290,8 @@ export class SsrSite extends Construct implements SSTConstruct {
     this.registerSiteEnvironment();
 
     // Prepare app
-    if (this.isPlaceholder) {
-      // Minimal configuration for the placeholder site
-      this.buildConfig = {} as any;
-    } else {
-      this.buildConfig = this.initBuildConfig();
+    this.buildConfig = this.initBuildConfig();
+    if (!this.isPlaceholder) {
       this.buildApp();
       this.validateBuildOutput();
     }
