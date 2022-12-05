@@ -3,6 +3,7 @@
   "compilerOptions": {
     "declaration": true,
     "module": "esnext",
+    "target": "esnext",
     "moduleResolution": "nodenext",
     "outDir": "./dist",
     "allowSyntheticDefaultImports": true,

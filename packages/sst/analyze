@@ -1,0 +1,256 @@
+
+  dist/sst.mjs ─────────────────────────────────────────────────────────────────────────────────────────── 154.8kb ─ 100.0%
+   ├ src/cdk/deploy-stack.ts ────────────────────────────────────────────────────────────────────────────── 18.8kb ── 12.1%
+   │  └ src/cdk/cloudformation-deployments.ts
+   │     └ src/stacks/deploy.ts
+   │        └ src/stacks/index.ts
+   │           └ src/cli/commands/remove.tsx
+   │              └ src/cli/sst.ts
+   ├ ../../node_modules/.pnpm/tslib@2.4.1/node_modules/tslib/tslib.js ───────────────────────────────────── 16.1kb ── 10.4%
+   │  └ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/index.js
+   │     └ src/credentials.ts
+   │        └ src/cli/commands/bind.ts
+   │           └ src/cli/sst.ts
+   ├ src/cdk/cloudformation-deployments.ts ──────────────────────────────────────────────────────────────── 11.5kb ─── 7.4%
+   │  └ src/stacks/deploy.ts
+   │     └ src/stacks/index.ts
+   │        └ src/cli/commands/remove.tsx
+   │           └ src/cli/sst.ts
+   ├ src/cli/commands/start.tsx ──────────────────────────────────────────────────────────────────────────── 7.4kb ─── 4.8%
+   │  └ src/cli/sst.ts
+   ├ src/runtime/node.ts ─────────────────────────────────────────────────────────────────────────────────── 6.5kb ─── 4.2%
+   │  └ src/stacks/synth.ts
+   │     └ src/stacks/index.ts
+   │        └ src/cli/commands/remove.tsx
+   │           └ src/cli/sst.ts
+   ├ src/cli/local/server.ts ─────────────────────────────────────────────────────────────────────────────── 6.0kb ─── 3.9%
+   │  └ src/cli/commands/start.tsx
+   │     └ src/cli/sst.ts
+   ├ src/runtime/server.ts ───────────────────────────────────────────────────────────────────────────────── 5.9kb ─── 3.8%
+   │  └ src/cli/commands/start.tsx
+   │     └ src/cli/sst.ts
+   ├ src/config.ts ───────────────────────────────────────────────────────────────────────────────────────── 5.9kb ─── 3.8%
+   │  └ src/cli/commands/bind.ts
+   │     └ src/cli/sst.ts
+   ├ src/cli/ui/deploy.tsx ───────────────────────────────────────────────────────────────────────────────── 5.8kb ─── 3.7%
+   │  └ src/cli/commands/remove.tsx
+   │     └ src/cli/sst.ts
+   ├ src/app.ts ──────────────────────────────────────────────────────────────────────────────────────────── 3.8kb ─── 2.5%
+   │  └ src/logger.ts
+   │     └ src/cli/sst.ts
+   ├ src/runtime/handlers.ts ─────────────────────────────────────────────────────────────────────────────── 3.3kb ─── 2.1%
+   │  └ src/runtime/workers.ts
+   │     └ src/cli/commands/start.tsx
+   │        └ src/cli/sst.ts
+   ├ src/credentials.ts ──────────────────────────────────────────────────────────────────────────────────── 3.3kb ─── 2.1%
+   │  └ src/cli/commands/bind.ts
+   │     └ src/cli/sst.ts
+   ├ src/bootstrap.ts ────────────────────────────────────────────────────────────────────────────────────── 3.2kb ─── 2.1%
+   │  └ src/stacks/metadata.ts
+   │     └ src/cli/commands/start.tsx
+   │        └ src/cli/sst.ts
+   ├ src/stacks/deploy.ts ────────────────────────────────────────────────────────────────────────────────── 3.0kb ─── 1.9%
+   │  └ src/stacks/index.ts
+   │     └ src/cli/commands/remove.tsx
+   │        └ src/cli/sst.ts
+   ├ src/stacks/monitor.ts ───────────────────────────────────────────────────────────────────────────────── 2.9kb ─── 1.9%
+   │  └ src/stacks/index.ts
+   │     └ src/cli/commands/remove.tsx
+   │        └ src/cli/sst.ts
+   ├ src/stacks/metadata.ts ──────────────────────────────────────────────────────────────────────────────── 2.9kb ─── 1.8%
+   │  └ src/cli/commands/start.tsx
+   │     └ src/cli/sst.ts
+   ├ src/iot.ts ──────────────────────────────────────────────────────────────────────────────────────────── 2.8kb ─── 1.8%
+   │  └ src/runtime/iot.ts
+   │     └ src/cli/commands/start.tsx
+   │        └ src/cli/sst.ts
+   ├ src/runtime/workers.ts ──────────────────────────────────────────────────────────────────────────────── 2.7kb ─── 1.7%
+   │  └ src/cli/commands/start.tsx
+   │     └ src/cli/sst.ts
+   ├ src/stacks/remove.ts ────────────────────────────────────────────────────────────────────────────────── 2.5kb ─── 1.6%
+   │  └ src/stacks/index.ts
+   │     └ src/cli/commands/remove.tsx
+   │        └ src/cli/sst.ts
+   ├ src/cli/commands/update.ts ──────────────────────────────────────────────────────────────────────────── 2.5kb ─── 1.6%
+   │  └ src/cli/sst.ts
+   ├ src/stacks/synth.ts ─────────────────────────────────────────────────────────────────────────────────── 2.1kb ─── 1.4%
+   │  └ src/stacks/index.ts
+   │     └ src/cli/commands/remove.tsx
+   │        └ src/cli/sst.ts
+   ├ src/cli/commands/secrets/list.ts ────────────────────────────────────────────────────────────────────── 1.7kb ─── 1.1%
+   │  └ src/cli/commands/secrets/secrets.ts
+   │     └ src/cli/sst.ts
+   ├ src/context/context.ts ──────────────────────────────────────────────────────────────────────────────── 1.7kb ─── 1.1%
+   │  └ src/logger.ts
+   │     └ src/cli/sst.ts
+   ├ src/cli/commands/remove.tsx ─────────────────────────────────────────────────────────────────────────── 1.5kb ─── 1.0%
+   │  └ src/cli/sst.ts
+   ├ src/cli/commands/deploy.tsx ─────────────────────────────────────────────────────────────────────────── 1.5kb ─── 1.0%
+   │  └ src/cli/sst.ts
+   ├ src/bus.ts ──────────────────────────────────────────────────────────────────────────────────────────── 1.5kb ─── 1.0%
+   │  └ src/cli/commands/start.tsx
+   │     └ src/cli/sst.ts
+   ├ src/stacks/build.ts ─────────────────────────────────────────────────────────────────────────────────── 1.5kb ─── 1.0%
+   │  └ src/stacks/index.ts
+   │     └ src/cli/commands/remove.tsx
+   │        └ src/cli/sst.ts
+   ├ src/cli/commands/secrets/set.ts ─────────────────────────────────────────────────────────────────────── 1.5kb ─── 1.0%
+   │  └ src/cli/commands/secrets/secrets.ts
+   │     └ src/cli/sst.ts
+   ├ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/index.js ───────── 1.4kb ─── 0.9%
+   │  └ src/credentials.ts
+   │     └ src/cli/commands/bind.ts
+   │        └ src/cli/sst.ts
+   ├ src/site-env.ts ─────────────────────────────────────────────────────────────────────────────────────── 1.2kb ─── 0.8%
+   │  └ src/cli/commands/env.ts
+   │     └ src/cli/sst.ts
+   ├ src/cli/commands/env.ts ─────────────────────────────────────────────────────────────────────────────── 1.2kb ─── 0.8%
+   │  └ src/cli/sst.ts
+   ├ src/cli/commands/secrets/get.ts ─────────────────────────────────────────────────────────────────────── 1.2kb ─── 0.8%
+   │  └ src/cli/commands/secrets/secrets.ts
+   │     └ src/cli/sst.ts
+   ├ src/cli/local/router.ts ─────────────────────────────────────────────────────────────────────────────── 1.1kb ─── 0.7%
+   │  └ src/cli/local/server.ts
+   │     └ src/cli/commands/start.tsx
+   │        └ src/cli/sst.ts
+   ├ src/watcher.ts ──────────────────────────────────────────────────────────────────────────────────────── 1.0kb ─── 0.7%
+   │  └ src/cli/commands/start.tsx
+   │     └ src/cli/sst.ts
+   ├ src/logger.ts ───────────────────────────────────────────────────────────────────────────────────────── 1.0kb ─── 0.7%
+   │  └ src/cli/sst.ts
+   ├ src/cli/commands/bind.ts ───────────────────────────────────────────────────────────────────────────── 1004b ──── 0.6%
+   │  └ src/cli/sst.ts
+   ├ src/cli/sst.ts ──────────────────────────────────────────────────────────────────────────────────────── 996b ──── 0.6%
+   ├ src/cache.ts ────────────────────────────────────────────────────────────────────────────────────────── 896b ──── 0.6%
+   │  └ src/stacks/metadata.ts
+   │     └ src/cli/commands/start.tsx
+   │        └ src/cli/sst.ts
+   ├ src/stacks/index.ts ─────────────────────────────────────────────────────────────────────────────────── 731b ──── 0.5%
+   │  └ src/cli/commands/remove.tsx
+   │     └ src/cli/sst.ts
+   ├ src/runtime/iot.ts ──────────────────────────────────────────────────────────────────────────────────── 654b ──── 0.4%
+   │  └ src/cli/commands/start.tsx
+   │     └ src/cli/sst.ts
+   ├ src/cli/commands/secrets/remove.ts ──────────────────────────────────────────────────────────────────── 618b ──── 0.4%
+   │  └ src/cli/commands/secrets/secrets.ts
+   │     └ src/cli/sst.ts
+   ├ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/endpoint.js ────── 523b ──── 0.3%
+   │  └ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/index.js
+   │     └ src/credentials.ts
+   │        └ src/cli/commands/bind.ts
+   │           └ src/cli/sst.ts
+   ├ src/cli/spinner.ts ──────────────────────────────────────────────────────────────────────────────────── 503b ──── 0.3%
+   │  └ src/cli/sst.ts
+   ├ src/cli/commands/build.ts ───────────────────────────────────────────────────────────────────────────── 474b ──── 0.3%
+   │  └ src/cli/sst.ts
+   ├ src/cli/program.ts ──────────────────────────────────────────────────────────────────────────────────── 403b ──── 0.3%
+   │  └ src/cli/sst.ts
+   ├ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/credentials.js ─── 247b ──── 0.2%
+   │  └ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/index.js
+   │     └ src/credentials.ts
+   │        └ src/cli/commands/bind.ts
+   │           └ src/cli/sst.ts
+   ├ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/eventStream.js ─── 247b ──── 0.2%
+   │  └ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/index.js
+   │     └ src/credentials.ts
+   │        └ src/cli/commands/bind.ts
+   │           └ src/cli/sst.ts
+   ├ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/middleware.js ──── 245b ──── 0.2%
+   │  └ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/index.js
+   │     └ src/credentials.ts
+   │        └ src/cli/commands/bind.ts
+   │           └ src/cli/sst.ts
+   ├ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/pagination.js ──── 245b ──── 0.2%
+   │  └ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/index.js
+   │     └ src/credentials.ts
+   │        └ src/cli/commands/bind.ts
+   │           └ src/cli/sst.ts
+   ├ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/signature.js ───── 243b ──── 0.2%
+   │  └ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/index.js
+   │     └ src/credentials.ts
+   │        └ src/cli/commands/bind.ts
+   │           └ src/cli/sst.ts
+   ├ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/response.js ────── 241b ──── 0.2%
+   │  └ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/index.js
+   │     └ src/credentials.ts
+   │        └ src/cli/commands/bind.ts
+   │           └ src/cli/sst.ts
+   ├ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/transfer.js ────── 241b ──── 0.2%
+   │  └ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/index.js
+   │     └ src/credentials.ts
+   │        └ src/cli/commands/bind.ts
+   │           └ src/cli/sst.ts
+   ├ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/command.js ─────── 239b ──── 0.2%
+   │  └ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/index.js
+   │     └ src/credentials.ts
+   │        └ src/cli/commands/bind.ts
+   │           └ src/cli/sst.ts
+   ├ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/profile.js ─────── 239b ──── 0.2%
+   │  └ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/index.js
+   │     └ src/credentials.ts
+   │        └ src/cli/commands/bind.ts
+   │           └ src/cli/sst.ts
+   ├ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/client.js ──────── 237b ──── 0.1%
+   │  └ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/index.js
+   │     └ src/credentials.ts
+   │        └ src/cli/commands/bind.ts
+   │           └ src/cli/sst.ts
+   ├ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/crypto.js ──────── 237b ──── 0.1%
+   │  └ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/index.js
+   │     └ src/credentials.ts
+   │        └ src/cli/commands/bind.ts
+   │           └ src/cli/sst.ts
+   ├ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/logger.js ──────── 237b ──── 0.1%
+   │  └ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/index.js
+   │     └ src/credentials.ts
+   │        └ src/cli/commands/bind.ts
+   │           └ src/cli/sst.ts
+   ├ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/shapes.js ──────── 237b ──── 0.1%
+   │  └ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/index.js
+   │     └ src/credentials.ts
+   │        └ src/cli/commands/bind.ts
+   │           └ src/cli/sst.ts
+   ├ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/stream.js ──────── 237b ──── 0.1%
+   │  └ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/index.js
+   │     └ src/credentials.ts
+   │        └ src/cli/commands/bind.ts
+   │           └ src/cli/sst.ts
+   ├ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/waiter.js ──────── 237b ──── 0.1%
+   │  └ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/index.js
+   │     └ src/credentials.ts
+   │        └ src/cli/commands/bind.ts
+   │           └ src/cli/sst.ts
+   ├ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/abort.js ───────── 235b ──── 0.1%
+   │  └ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/index.js
+   │     └ src/credentials.ts
+   │        └ src/cli/commands/bind.ts
+   │           └ src/cli/sst.ts
+   ├ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/serde.js ───────── 235b ──── 0.1%
+   │  └ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/index.js
+   │     └ src/credentials.ts
+   │        └ src/cli/commands/bind.ts
+   │           └ src/cli/sst.ts
+   ├ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/token.js ───────── 235b ──── 0.1%
+   │  └ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/index.js
+   │     └ src/credentials.ts
+   │        └ src/cli/commands/bind.ts
+   │           └ src/cli/sst.ts
+   ├ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/auth.js ────────── 233b ──── 0.1%
+   │  └ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/index.js
+   │     └ src/credentials.ts
+   │        └ src/cli/commands/bind.ts
+   │           └ src/cli/sst.ts
+   ├ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/http.js ────────── 233b ──── 0.1%
+   │  └ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/index.js
+   │     └ src/credentials.ts
+   │        └ src/cli/commands/bind.ts
+   │           └ src/cli/sst.ts
+   ├ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/util.js ────────── 233b ──── 0.1%
+   │  └ ../../node_modules/.pnpm/@aws-sdk+types@3.208.0/node_modules/@aws-sdk/types/dist-cjs/index.js
+   │     └ src/credentials.ts
+   │        └ src/cli/commands/bind.ts
+   │           └ src/cli/sst.ts
+   ├ src/cli/commands/secrets/secrets.ts ─────────────────────────────────────────────────────────────────── 220b ──── 0.1%
+   │  └ src/cli/sst.ts
+   └ src/error.ts ────────────────────────────────────────────────────────────────────────────────────────── 213b ──── 0.1%
+      └ src/cli/sst.ts

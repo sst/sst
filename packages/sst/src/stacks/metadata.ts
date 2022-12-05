@@ -19,7 +19,7 @@ import type { Metadata } from "../constructs/Metadata.js";
 
 declare module "../bus.js" {
   export interface Events {
-    "stacks.metadata": Record<string, any[]>;
+    "stacks.metadata": Awaited<ReturnType<typeof metadata>>;
   }
 }
 
@@ -95,7 +95,7 @@ export async function metadataForStack(stackID: string) {
 const MetadataContext = Context.create(async () => {
   const bus = useBus();
   const cache = await useCache();
-  const data: Record<string, any[]> = await metadata();
+  const data = await metadata();
 
   bus.subscribe("stack.status", async (evt) => {
     if (!Stacks.isSuccess(evt.properties.status)) return;

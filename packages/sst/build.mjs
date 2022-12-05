@@ -32,12 +32,6 @@ const result = await esbuild.build({
     ".js": ".mjs",
   },
 });
-await fs.writeFile(
-  "analyze",
-  esbuild.analyzeMetafileSync(result.metafile, {
-    verbose: true,
-  })
-);
 
 // support/nodejs-runtime
 await esbuild.build({
@@ -151,11 +145,13 @@ const moveToDist = [
   "static-site-stub",
   "base-site-custom-resource",
 ];
-await Promise.all(moveToDist.map(dir =>
-  fs.cp(`support/${dir}`, `dist/support/${dir}`, {
-    recursive: true,
-  })
-));
+await Promise.all(
+  moveToDist.map((dir) =>
+    fs.cp(`support/${dir}`, `dist/support/${dir}`, {
+      recursive: true,
+    })
+  )
+);
 
 await fs.cp(
   "support/base-site-archiver.cjs",
