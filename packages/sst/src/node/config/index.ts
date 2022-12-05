@@ -1,6 +1,6 @@
 import { GetParametersCommand, SSMClient, Parameter } from "@aws-sdk/client-ssm";
 const ssm = new SSMClient({});
-import { createProxy, parseEnvironment, buildSsmPath, buildSsmFallbackPath, ssmNameToConstructId } from "../util/index.js";
+import { createProxy, parseEnvironment, buildSsmPath, buildSsmFallbackPath, ssmNameToConstructId, ssmFallbackNameToConstructId } from "../util/index.js";
 
 export interface ParameterResources { };
 export interface SecretResources { };
@@ -60,28 +60,27 @@ async function replaceSecretsWithRealValues() {
   }
 
   // Fetch all secrets
-  const ssmParams = [];
   const paths = names.map((name) => buildSsmPath("Secret", name, "value"));
   const results = await loadSecrets(paths);
-  ssmParams.push(...results.validParams);
+  results.validParams.forEach((item) => {
+    const name = ssmNameToConstructId(item.Name!);
+    secrets[name] = item.Value!;
+  });
+
   if (results.invalidParams.length > 0) {
     // Fetch fallback
     const missingNames = results.invalidParams.map(ssmNameToConstructId);
     const missingPaths = missingNames.map((name) => buildSsmFallbackPath("Secret", name, "value"));
     const missingResults = await loadSecrets(missingPaths);
-    ssmParams.push(...missingResults.validParams);
+    missingResults.validParams.forEach((item) => {
+      const name = ssmFallbackNameToConstructId(item.Name!);
+      secrets[name] = item.Value!;
+    });
     if (missingResults.invalidParams.length > 0) {
       throw new Error(
         `The following secrets were not found: ${missingNames.join(", ")}`
       );
     }
-  }
-
-  // Store all secrets in a map
-  for (const item of ssmParams) {
-    const name = ssmNameToConstructId(item.Name!);
-    // @ts-ignore
-    secrets[name] = item.Value!;
   }
 }
 

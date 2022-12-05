@@ -59,6 +59,10 @@ export function ssmNameToConstructId(ssmName: string) {
   return ssmName.substring(prefix.length).split("/")[1];
 }
 
+export function ssmFallbackNameToConstructId(ssmName: string) {
+  return ssmName.split("/")[4];
+}
+
 export function ssmNameToPropName(ssmName: string) {
   const prefix = ssmPrefix();
   return ssmName.substring(prefix.length).split("/").pop();
