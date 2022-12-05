@@ -67,8 +67,8 @@ async function replaceSecretsWithRealValues() {
     secrets[name] = item.Value!;
   });
 
+  // Fetch fallback secrets
   if (results.invalidParams.length > 0) {
-    // Fetch fallback
     const missingNames = results.invalidParams.map(ssmNameToConstructId);
     const missingPaths = missingNames.map((name) => buildSsmFallbackPath("Secret", name, "value"));
     const missingResults = await loadSecrets(missingPaths);

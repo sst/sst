@@ -6,7 +6,7 @@
   "name": "sst",
   "version": "0.0.0-20221121213401",
   "bin": {
-    "sst": "./cli/sst.js"
+    "sst": "cli/sst.js"
   },
   "description": "A CLI to help deploy SST apps.",
   "type": "module",
@@ -17,7 +17,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/serverless-stack/sst.git",
+    "url": "git+https://github.com/serverless-stack/sst.git",
     "directory": "packages/cli"
   },
   "exports": {
@@ -48,6 +48,7 @@
     "@aws-sdk/middleware-signing": "^3.208.0",
     "@aws-sdk/signature-v4-crt": "^3.31.0",
     "@aws-sdk/smithy-client": "^3.208.0",
+    "@babel/generator": "^7.20.5",
     "@trpc/server": "9.16.0",
     "aws-cdk": "2.50.0",
     "aws-cdk-lib": "2.50.0",
@@ -83,9 +84,13 @@
   },
   "devDependencies": {
     "@aws-sdk/types": "^3.208.0",
+    "@babel/core": "^7.0.0-0",
+    "@sls-next/lambda-at-edge": "^3.7.0",
     "@tsconfig/node16": "^1.0.3",
     "@types/aws-iot-device-sdk": "^2.2.4",
     "@types/aws-lambda": "^8.10.108",
+    "@types/babel__core": "^7.1.20",
+    "@types/babel__generator": "^7.6.4",
     "@types/cross-spawn": "^6.0.2",
     "@types/express": "^4.17.14",
     "@types/glob": "^8.0.0",
@@ -95,13 +100,11 @@
     "@types/ws": "^8.5.3",
     "@types/yargs": "^17.0.13",
     "archiver": "^5.3.1",
+    "graphql": "^16.5.0",
     "kysely": "^0.22.0",
     "kysely-data-api": "^0.1.4",
     "tsx": "^3.12.1",
-    "vitest": "^0.15.1",
-    "graphql": "^16.5.0",
-    "@sls-next/lambda-at-edge": "^3.7.0",
-    "@babel/core": "^7.0.0-0"
+    "vitest": "^0.15.1"
   },
   "peerDependencies": {
     "@babel/core": "^7.0.0-0",
@@ -119,5 +122,13 @@
       "optional": true
     }
   },
-  "gitHead": "8ac2d0abc11d5de721c87658bb445e3d6c211dcf"
+  "bugs": {
+    "url": "https://github.com/serverless-stack/sst/issues"
+  },
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "keywords": [],
+  "author": ""
 }
