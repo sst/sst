@@ -109,7 +109,8 @@ For example, to create a CRUD API endpoint that uses DynamoDB, the following per
         "logs:*",
         "lambda:*",
         "dynamodb:*",
-        "apigateway:*"
+        "apigateway:*",
+        "ssm:*"
       ],
       "Resource": "*"
     }
