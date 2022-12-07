@@ -848,7 +848,7 @@ export class Function extends lambda.Function implements SSTConstruct {
     //   will still try to periodically invoke the Lambda, and the requests would
     //   fail and retry. So when launching `sst start`, a couple of retry requests
     //   from recent failed request will be received. And this behavior is confusing.
-    if (isLiveDevEnabled && app.mode === "start") {
+    if (isLiveDevEnabled && app.mode === "dev") {
       // If debugIncreaseTimeout is enabled:
       //   set timeout to 900s. This will give people more time to debug the function
       //   without timing out the request. Note API Gateway requests have a maximum

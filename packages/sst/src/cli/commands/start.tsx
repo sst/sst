@@ -118,7 +118,7 @@ export const start = (program: Program) =>
           const assembly = await Stacks.synth({
             fn,
             outDir: `.sst/cdk.out`,
-            mode: "start",
+            mode: "dev",
           });
           Logger.debug("Directory", assembly.directory);
           const next = await checksum(assembly.directory);
