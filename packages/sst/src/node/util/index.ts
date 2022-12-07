@@ -60,7 +60,7 @@ export function ssmNameToConstructId(ssmName: string) {
 }
 
 export function ssmFallbackNameToConstructId(ssmName: string) {
-  return ssmName.split("/")[4];
+  return ssmName.split("/")[5];
 }
 
 export function ssmNameToPropName(ssmName: string) {
