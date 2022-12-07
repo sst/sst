@@ -157,7 +157,7 @@ export function printDeploymentResults(
       console.log(`  ${blue("Outputs:")}`);
       for (const key of Object.keys(result.outputs).sort()) {
         if (key.startsWith("Export")) continue;
-        if (key.startsWith("SstSiteEnv")) continue;
+        if (key.includes("SstSiteEnv")) continue;
         const value = result.outputs[key];
         console.log(bold(`    ${key}: ${value}`));
       }
