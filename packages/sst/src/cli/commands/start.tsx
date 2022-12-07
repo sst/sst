@@ -114,22 +114,27 @@ export const start = (program: Program) =>
 
         async function build() {
           const spinner = createSpinner("Building stacks").start();
-          const fn = await Stacks.build();
-          const assembly = await Stacks.synth({
-            fn,
-            outDir: `.sst/cdk.out`,
-            mode: "dev",
-          });
-          Logger.debug("Directory", assembly.directory);
-          const next = await checksum(assembly.directory);
-          Logger.debug("Checksum", "next", next, "old", lastDeployed);
-          if (next === lastDeployed) {
-            spinner.succeed("Stacks built! No changes");
-            return;
+          try {
+            const fn = await Stacks.build();
+            const assembly = await Stacks.synth({
+              fn,
+              outDir: `.sst/cdk.out`,
+              mode: "dev",
+            });
+            Logger.debug("Directory", assembly.directory);
+            const next = await checksum(assembly.directory);
+            Logger.debug("Checksum", "next", next, "old", lastDeployed);
+            if (next === lastDeployed) {
+              spinner.succeed("Stacks built! No changes");
+              return;
+            }
+            spinner.succeed(lastDeployed ? `Stacks built!` : `Stacks built!`);
+            pending = assembly;
+            if (lastDeployed) deploy();
+          } catch (ex) {
+            spinner.fail();
+            console.error(ex);
           }
-          spinner.succeed(lastDeployed ? `Stacks built!` : `Stacks built!`);
-          pending = assembly;
-          if (lastDeployed) deploy();
         }
 
         async function deploy() {
@@ -252,6 +257,7 @@ export const start = (program: Program) =>
           }
         });
 
+        let first = false;
         bus.subscribe("stacks.metadata", async (evt) => {
           routes = Object.values(evt.properties)
             .flat()
@@ -259,8 +265,10 @@ export const start = (program: Program) =>
             .flatMap((c) => c.data.routes)
             .filter((r) => ["pothos", "graphql"].includes(r.type))
             .filter((r) => r.schema) as typeof routes;
+          if (first) return;
           for (const route of routes) {
             build(route);
+            first = true;
           }
         });
       });
