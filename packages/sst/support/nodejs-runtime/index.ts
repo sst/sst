@@ -52,7 +52,7 @@ while (true) {
   (global as any)[Symbol.for("aws.lambda.runtime.requestId")] = requestID;
 
   try {
-    response = await mod[parsed.ext.substring(1)](request);
+    response = await mod[parsed.ext.substring(1)](request, {});
   } catch (ex: any) {
     await fetch(`${input.url}/runtime/invocation/${requestID}/error`, {
       method: "POST",

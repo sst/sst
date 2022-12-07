@@ -2,7 +2,6 @@ import fs from "fs/promises";
 import fsSync from "fs";
 import path from "path";
 import url from "url";
-import readline from "readline";
 import os from "os";
 import { Logger } from "./logger.js";
 import { Context } from "./context/context.js";
@@ -133,6 +132,7 @@ async function usePersonalStage(out: string) {
 }
 
 async function promptPersonalStage(out: string) {
+  const readline = await import("readline");
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
