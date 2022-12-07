@@ -6,7 +6,7 @@ import type { CloudAssembly } from "aws-cdk-lib/cx-api";
 import type { Metafile } from "esbuild";
 import { printDeploymentResults } from "../ui/deploy.js";
 import { useFunctions } from "../../constructs/Function.js";
-import { dim, gray } from "colorette";
+import { dim, gray, yellow } from "colorette";
 import { useProject } from "../../app.js";
 import { SiteEnv } from "../../site-env.js";
 import { Instance } from "ink/build/render.js";
@@ -18,7 +18,7 @@ const execAsync = util.promisify(exec);
 
 export const start = (program: Program) =>
   program.command(
-    "start",
+    ["start", "dev"],
     "Work on your SST app locally",
     (yargs) =>
       yargs.option("fullscreen", {
@@ -42,6 +42,16 @@ export const start = (program: Program) =>
       const { Context } = await import("../../context/context.js");
       const { DeploymentUI } = await import("../ui/deploy.js");
       const { useLocalServer } = await import("../local/server.js");
+
+      if (args._[0] === "start") {
+        console.log(
+          yellow(
+            `Warning: ${bold(`sst start`)} has been renamed to ${bold(
+              `sst dev`
+            )}`
+          )
+        );
+      }
 
       const useFunctionLogger = Context.memo(async () => {
         const bus = useBus();
