@@ -23,6 +23,7 @@ export const bind = (program: Program) =>
           AWS_ACCESS_KEY_ID: credentials.accessKeyId,
           AWS_SECRET_ACCESS_KEY: credentials.secretAccessKey,
           AWS_SESSION_TOKEN: credentials.sessionToken,
+          PATH: process.env.PATH,
         },
         stdio: "inherit",
         shell: process.env.SHELL || true,

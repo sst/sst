@@ -6,7 +6,7 @@ import type { CloudAssembly } from "aws-cdk-lib/cx-api";
 import type { Metafile } from "esbuild";
 import { printDeploymentResults } from "../ui/deploy.js";
 import { useFunctions } from "../../constructs/Function.js";
-import { dim, gray } from "colorette";
+import { dim, gray, yellow } from "colorette";
 import { useProject } from "../../app.js";
 import { SiteEnv } from "../../site-env.js";
 import { Instance } from "ink/build/render.js";
@@ -18,7 +18,7 @@ const execAsync = util.promisify(exec);
 
 export const start = (program: Program) =>
   program.command(
-    "start",
+    ["start", "dev"],
     "Work on your SST app locally",
     (yargs) =>
       yargs.option("fullscreen", {
@@ -42,6 +42,16 @@ export const start = (program: Program) =>
       const { Context } = await import("../../context/context.js");
       const { DeploymentUI } = await import("../ui/deploy.js");
       const { useLocalServer } = await import("../local/server.js");
+
+      if (args._[0] === "start") {
+        console.log(
+          yellow(
+            `Warning: ${bold(`sst start`)} has been renamed to ${bold(
+              `sst dev`
+            )}`
+          )
+        );
+      }
 
       const useFunctionLogger = Context.memo(async () => {
         const bus = useBus();
@@ -104,22 +114,27 @@ export const start = (program: Program) =>
 
         async function build() {
           const spinner = createSpinner("Building stacks").start();
-          const fn = await Stacks.build();
-          const assembly = await Stacks.synth({
-            fn,
-            outDir: `.sst/cdk.out`,
-            mode: "start",
-          });
-          Logger.debug("Directory", assembly.directory);
-          const next = await checksum(assembly.directory);
-          Logger.debug("Checksum", "next", next, "old", lastDeployed);
-          if (next === lastDeployed) {
-            spinner.succeed("Stacks built! No changes");
-            return;
+          try {
+            const fn = await Stacks.build();
+            const assembly = await Stacks.synth({
+              fn,
+              outDir: `.sst/cdk.out`,
+              mode: "dev",
+            });
+            Logger.debug("Directory", assembly.directory);
+            const next = await checksum(assembly.directory);
+            Logger.debug("Checksum", "next", next, "old", lastDeployed);
+            if (next === lastDeployed) {
+              spinner.succeed("Stacks built! No changes");
+              return;
+            }
+            spinner.succeed(lastDeployed ? `Stacks built!` : `Stacks built!`);
+            pending = assembly;
+            if (lastDeployed) deploy();
+          } catch (ex) {
+            spinner.fail();
+            console.error(ex);
           }
-          spinner.succeed(lastDeployed ? `Stacks built!` : `Stacks built!`);
-          pending = assembly;
-          if (lastDeployed) deploy();
         }
 
         async function deploy() {
@@ -242,6 +257,7 @@ export const start = (program: Program) =>
           }
         });
 
+        let first = false;
         bus.subscribe("stacks.metadata", async (evt) => {
           routes = Object.values(evt.properties)
             .flat()
@@ -249,8 +265,10 @@ export const start = (program: Program) =>
             .flatMap((c) => c.data.routes)
             .filter((r) => ["pothos", "graphql"].includes(r.type))
             .filter((r) => r.schema) as typeof routes;
+          if (first) return;
           for (const route of routes) {
             build(route);
+            first = true;
           }
         });
       });

@@ -70,7 +70,7 @@ export interface AppDeployProps {
   readonly debugStartedAt?: number;
   readonly debugBridge?: string;
   readonly debugIncreaseTimeout?: boolean;
-  readonly mode: "deploy" | "start" | "remove";
+  readonly mode: "deploy" | "dev" | "remove";
   readonly bootstrap: Awaited<ReturnType<typeof useBootstrap>>;
 }
 
@@ -165,7 +165,7 @@ export class App extends cdk.App {
     this.appPath = process.cwd();
 
     this.mode = deployProps.mode;
-    this.local = this.mode === "start";
+    this.local = this.mode === "dev";
     this.stage = deployProps.stage || "dev";
     this.name = deployProps.name || "my-app";
     this.region =

@@ -153,10 +153,14 @@ export function printDeploymentResults(
     })();
     console.log(`${icon} ${stack}`);
 
-    if (Object.entries(result.outputs).length > 0) {
+    const outputs = Object.entries(result.outputs).filter(([key, _]) => {
+      if (key.startsWith("Export")) return false;
+      if (key.includes("SstSiteEnv")) return false;
+      return true;
+    });
+    if (outputs.length > 0) {
       console.log(`  ${blue("Outputs:")}`);
-      for (const key of Object.keys(result.outputs).sort()) {
-        if (key.startsWith("Export")) continue;
+      for (const key of Object.keys(Object.fromEntries(outputs)).sort()) {
         const value = result.outputs[key];
         console.log(bold(`    ${key}: ${value}`));
       }

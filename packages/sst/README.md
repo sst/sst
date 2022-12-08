@@ -46,6 +46,8 @@ new Function(stack, "fn", {
 ```
 - If you're using function binding need to make sure `../.sst/types` is listed in the `include` array in `services/tsconfig.json`
 - If you were using `@serverless-stack/static-site-env` for your frontend, it can be replaced with the `sst env <command>` command
+- sst start has been renamed to sst dev (although both will work)
+- If using sst context directly the import is at `sst/context`
 - Enjoy maybe?
 
 ## New Projects
