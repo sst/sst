@@ -1,12 +1,8 @@
-import SSM, { ParameterList } from "aws-sdk/clients/ssm.js";
+import SSM, { ParameterList, PutParameterRequest, PutParameterResult, GetParametersByPathRequest, GetParametersByPathResult } from "aws-sdk/clients/ssm.js";
 import { log } from "./util.js";
 
 const ssm = new SSM({
   logger: console,
-  maxRetries: 1000,
-  retryDelayOptions: {
-    customBackoff: () => 3000,
-  },
 });
 
 export async function SecretsMigration(cfnRequest: any) {
@@ -46,13 +42,22 @@ async function migrateSecretsSSMPath(input: {
     const parts = version.split(".");
     const majorVersion = parseInt(parts[0]);
     const minorVersion = parseInt(parts[1]);
-    const needToMigrate = (majorVersion < 1 || majorVersion === 1 && minorVersion < 16);
+
+    // do not migrate if was using snapshot releases
+    if (majorVersion === 0 && minorVersion === 0) { return; }
+
+    const needToMigrate = (
+      // migrating from v0
+      majorVersion < 1 ||
+      // migrating from v1 (prior to v1.16)
+      majorVersion === 1 && minorVersion < 16
+    );
     if (!needToMigrate) { return; }
   }
 
   // Load secrets
   const prefix = `/sst/${app}/${stage}/secrets/`;
-  const secrets = await ssmGetPrametersByPath(prefix);
+  const secrets = await ssmGetAllPrametersByPath(prefix);
 
   // Migrate secrets
   for (const secret of secrets) {
@@ -62,27 +67,60 @@ async function migrateSecretsSSMPath(input: {
       continue;
     }
     const newKey = `/sst/${app}/${stage}/Secret/${name}/value`;
-    await ssm.putParameter({
+    await ssmPutParameter({
       Name: newKey,
       Value: secret.Value!,
       Type: secret.Type!,
       Overwrite: true,
-    }).promise();
+    });
   }
 }
 
-async function ssmGetPrametersByPath(prefix: string, token?: string): Promise<ParameterList> {
+async function ssmGetAllPrametersByPath(prefix: string, token?: string): Promise<ParameterList> {
   // Create a function that load all pages of secrets
-  const result = await ssm
-    .getParametersByPath({
-      WithDecryption: true,
-      Recursive: true,
-      Path: prefix,
-      NextToken: token,
-    })
-    .promise();
+  const result = await ssmGetParametersByPath({
+    WithDecryption: true,
+    Recursive: true,
+    Path: prefix,
+    NextToken: token,
+  });
   return [
     ...(result.Parameters || []),
-    ...(result.NextToken ? await ssmGetPrametersByPath(prefix, result.NextToken) : []),
+    ...(result.NextToken ? await ssmGetAllPrametersByPath(prefix, result.NextToken) : []),
   ];
+}
+
+async function ssmGetParametersByPath(params: GetParametersByPathRequest): Promise<GetParametersByPathResult> {
+  try {
+    return await ssm.getParametersByPath(params).promise();
+  } catch (e) {
+    if (isRetryableException(e)) {
+      return await ssmGetParametersByPath(params);
+    }
+    throw e;
+  }
+}
+
+async function ssmPutParameter(params: PutParameterRequest): Promise<PutParameterResult> {
+  try {
+    return await ssm.putParameter(params).promise();
+  } catch (e) {
+    if (isRetryableException(e)) {
+      return await ssmPutParameter(params);
+    }
+    throw e;
+  }
+}
+
+function isRetryableException(e: any) {
+  return (
+    (e.code === "ThrottlingException" && e.message === "Rate exceeded") ||
+    (e.code === "Throttling" && e.message === "Rate exceeded") ||
+    (e.code === "TooManyRequestsException" &&
+      e.message === "Too Many Requests") ||
+    e.code === "TooManyUpdates" ||
+    e.code === "OperationAbortedException" ||
+    e.code === "TimeoutError" ||
+    e.code === "NetworkingError"
+  );
 }
