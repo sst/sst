@@ -50,7 +50,7 @@ export async function synth(opts: SynthOptions) {
         name: project.name,
         region: project.region,
         mode: opts.mode,
-        skipBuild: opts.mode !== "deploy",
+        skipBuild: opts.mode === "remove",
         bootstrap,
       },
       {

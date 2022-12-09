@@ -40,39 +40,54 @@ while (true) {
   }, 1000 * 60 * 15);
   let request: any;
   let response: any;
-  let requestID: string;
+  let context: {
+    awsRequestId: string;
+    invokedFunctionArn: string;
+  } = {} as any;
 
   try {
     const result = await fetch(`${input.url}/runtime/invocation/next`);
-    requestID = result.headers.get("lambda-runtime-aws-request-id")!;
+    context = {
+      awsRequestId: result.headers.get("lambda-runtime-aws-request-id")!,
+      invokedFunctionArn: result.headers.get(
+        "lambda-runtime-invoked-function-arn"
+      )!,
+    };
     request = await result.json();
   } catch {
     continue;
   }
-  (global as any)[Symbol.for("aws.lambda.runtime.requestId")] = requestID;
+  (global as any)[Symbol.for("aws.lambda.runtime.requestId")] =
+    context.awsRequestId;
 
   try {
-    response = await mod[parsed.ext.substring(1)](request, {});
+    response = await mod[parsed.ext.substring(1)](request, context);
   } catch (ex: any) {
-    await fetch(`${input.url}/runtime/invocation/${requestID}/error`, {
+    await fetch(
+      `${input.url}/runtime/invocation/${context.awsRequestId}/error`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          errorType: "Error",
+          errorMessage: ex.message,
+          trace: ex.stack?.split("\n"),
+        }),
+      }
+    );
+    continue;
+  }
+
+  await fetch(
+    `${input.url}/runtime/invocation/${context.awsRequestId}/response`,
+    {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        errorType: "Error",
-        errorMessage: ex.message,
-        trace: ex.stack?.split("\n"),
-      }),
-    });
-    continue;
-  }
-
-  await fetch(`${input.url}/runtime/invocation/${requestID}/response`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(response),
-  });
+      body: JSON.stringify(response),
+    }
+  );
 }

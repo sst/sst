@@ -1,4 +1,5 @@
 import { cpus } from "os";
+import { Logger } from "../logger.js";
 import { createAppContext } from "./context.js";
 
 type Task = () => Promise<void>;
@@ -17,6 +18,9 @@ export const useDeferredTasks = createAppContext(() => {
         process.env.SST_BUILD_CONCURRENCY
           ? parseInt(process.env.SST_BUILD_CONCURRENCY, 10)
           : coreNum - 1
+      );
+      Logger.debug(
+        `Running ${tasks.length} deferred tasks with concurrency: ${concurrency}`
       );
       let remaining = tasks.length;
 
