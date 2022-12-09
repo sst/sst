@@ -5,7 +5,7 @@ import { blue, red } from "colorette";
 import { program } from "./program.js";
 import { secrets } from "./commands/secrets/secrets.js";
 import { update } from "./commands/update.js";
-import { start } from "./commands/start.js";
+import { dev } from "./commands/dev.js";
 import { bind } from "./commands/bind.js";
 import { build } from "./commands/build.js";
 import { VisibleError } from "../error.js";
@@ -15,17 +15,19 @@ import { remove } from "./commands/remove.js";
 import dotenv from "dotenv";
 import { env } from "./commands/env.js";
 import { Logger } from "../logger.js";
+import { consoleCommand } from "./commands/console.js";
 
 dotenv.config();
 
 secrets(program);
 update(program);
-start(program);
+dev(program);
 bind(program);
 build(program);
 deploy(program);
 remove(program);
 env(program);
+consoleCommand(program);
 
 process.removeAllListeners("uncaughtException");
 process.on("uncaughtException", (err) => {

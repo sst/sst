@@ -95,7 +95,7 @@ program
       console.log(`Next steps:`);
       console.log(`  1: cd ${name}`);
       console.log(`  2: npm install (or pnpm install, or yarn)`);
-      console.log(`  3: npm start`);
+      console.log(`  3: npm run dev`);
     } catch (e) {
       spinner.fail("Failed");
       console.error(e);

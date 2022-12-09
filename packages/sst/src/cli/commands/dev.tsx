@@ -16,7 +16,7 @@ import { exec } from "child_process";
 import util from "util";
 const execAsync = util.promisify(exec);
 
-export const start = (program: Program) =>
+export const dev = (program: Program) =>
   program.command(
     ["start", "dev"],
     "Work on your SST app locally",
