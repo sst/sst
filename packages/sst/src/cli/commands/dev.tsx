@@ -218,6 +218,9 @@ export const dev = (program: Program) =>
       });
 
       createSpinner("").start().succeed("Ready for function invocations");
+      createSpinner("")
+        .start()
+        .succeed(`Console ready at https://console.sst.dev`);
 
       const usePothosBuilder = Context.memo(() => {
         let routes: Extract<
