@@ -4,6 +4,7 @@ import {
   DescribeStackResourcesOutput,
   DescribeStacksCommand,
 } from "@aws-sdk/client-cloudformation";
+import { SdkError } from "@aws-sdk/types";
 import { useBus } from "../bus.js";
 import { useAWSClient } from "../credentials.js";
 import { Logger } from "../logger.js";
@@ -38,6 +39,7 @@ const STATUSES_PENDING = [
 const STATUSES_SUCCESS = [
   "CREATE_COMPLETE",
   "UPDATE_COMPLETE",
+  "DELETE_COMPLETE",
   "SKIPPED",
 ] as const;
 
@@ -100,6 +102,8 @@ export async function monitor(stack: string) {
         ),
       ]);
 
+      Logger.debug("Stack description", describe);
+
       bus.publish("stack.resources", {
         stackID: stack,
         resources: resources.StackResources,
@@ -130,9 +134,16 @@ export async function monitor(stack: string) {
           }
         }
       }
-
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    } catch (ex) {}
+    } catch (ex: any) {
+      if (ex.message.includes("does not exist")) {
+        return {
+          status: "DELETE_COMPLETE",
+          outputs: {} as Record<string, string>,
+          errors: {} as Record<string, string>,
+        };
+      }
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 }
 
