@@ -53,8 +53,12 @@ export function useAWSClient<C extends Client<any, any, any, any>>(
     region: project.region,
     credentials: credentials,
     retryStrategy: new StandardRetryStrategy(async () => 10000, {
-      retryDecider: (options) => {
-        return options.$fault !== "client";
+      retryDecider: (err) => {
+        if (err.$fault === "client") return false;
+        if (err.message === "Could not load credentials from any providers")
+          return false;
+
+        return true;
       },
       delayDecider: (_, attempts) => {
         return Math.min(1.5 ** attempts * 100, 5000);

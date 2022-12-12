@@ -7,6 +7,7 @@ import { Logger } from "./logger.js";
 import { Context } from "./context/context.js";
 import { VisibleError } from "./error.js";
 import { blue } from "colorette";
+import { useSTSIdentity } from "./credentials.js";
 
 export interface Project {
   name: string;
