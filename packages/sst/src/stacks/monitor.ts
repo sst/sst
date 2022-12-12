@@ -136,6 +136,10 @@ export async function monitor(stack: string) {
       }
     } catch (ex: any) {
       if (ex.message.includes("does not exist")) {
+        bus.publish("stack.status", {
+          stackID: stack,
+          status: "DELETE_COMPLETE",
+        });
         return {
           status: "DELETE_COMPLETE",
           outputs: {} as Record<string, string>,

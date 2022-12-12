@@ -3,9 +3,12 @@ import { printDeploymentResults } from "../ui/deploy.js";
 
 export const remove = (program: Program) =>
   program.command(
-    "remove",
+    "remove [filter]",
     "Remove all stacks for this app",
-    (yargs) => yargs.option("from", { type: "string" }),
+    (yargs) =>
+      yargs
+        .option("from", { type: "string" })
+        .positional("filter", { type: "string" }),
     async (args) => {
       const React = await import("react");
       const { CloudAssembly } = await import("aws-cdk-lib/cx-api");
@@ -29,16 +32,26 @@ export const remove = (program: Program) =>
       })();
 
       const project = useProject();
+      const target = assembly.stacks.filter(
+        (s) =>
+          !args.filter ||
+          s.stackName.toLowerCase().includes(args.filter.toLowerCase())
+      );
+      if (!target.length) {
+        console.log(`No stacks found matching ${blue(args.filter!)}`);
+        process.exit(1);
+        return;
+      }
       console.log(
-        `Removing ${bold(assembly.stacks.length + " stacks")} for stage ${blue(
+        `Removing ${bold(target.length + " stacks")} for stage ${blue(
           project.stage
         )}...`
       );
       process.stdout.write("\x1b[?1049h");
       const component = render(
-        <DeploymentUI stacks={assembly.stacks.map((s) => s.stackName)} />
+        <DeploymentUI stacks={target.map((s) => s.stackName)} />
       );
-      const results = await Stacks.removeMany(assembly.stacks);
+      const results = await Stacks.removeMany(target);
       component.unmount();
       process.stdout.write("\x1b[?1049l");
       printDeploymentResults(results);

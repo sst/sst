@@ -27,13 +27,18 @@ export async function removeMany(stacks: CloudFormationStackArtifact[]) {
         if (!todo.has(stack.id)) continue;
         Logger.debug("Checking if", stack.id, "can be removed");
 
-        if (
-          stacks.some((dependant) => {
-            if (complete.has(stack.id)) return false;
-            return dependant.dependencies?.map((d) => d.id).includes(stack.id);
-          })
-        )
+        const waiting = stacks.filter((dependant) => {
+          if (dependant.id === stack.id) return false;
+          if (complete.has(dependant.id)) return false;
+          return dependant.dependencies?.some((d) => d.id === stack.id);
+        });
+        if (waiting.length) {
+          Logger.debug(
+            "Waiting on",
+            waiting.map((s) => s.id)
+          );
           continue;
+        }
 
         remove(stack).then((result) => {
           results[stack.id] = result;

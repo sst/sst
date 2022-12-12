@@ -5,6 +5,10 @@ import type { CloudFormationStackArtifact } from "aws-cdk-lib/cx-api";
 import { isFailed, monitor, StackDeploymentResult } from "./monitor.js";
 
 export async function deployMany(stacks: CloudFormationStackArtifact[]) {
+  Logger.debug(
+    "Deploying stacks",
+    stacks.map((s) => s.stackName)
+  );
   const { CloudFormationStackArtifact } = await import("aws-cdk-lib/cx-api");
   await useAWSProvider();
   const bus = useBus();
@@ -28,7 +32,8 @@ export async function deployMany(stacks: CloudFormationStackArtifact[]) {
           stack.dependencies.some(
             (dep) =>
               dep instanceof CloudFormationStackArtifact &&
-              !complete.has(dep.id)
+              !complete.has(dep.id) &&
+              stacks.some((s) => s.id === dep.id)
           )
         )
           continue;
