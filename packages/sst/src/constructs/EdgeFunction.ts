@@ -51,10 +51,10 @@ export class EdgeFunction extends Construct {
     super(scope, id);
 
     this.props = props;
-    const { handler } = props;
+    const { format, scopeOverride } = props;
 
     // Correct scope
-    this.scope = this.props.scopeOverride || this;
+    this.scope = scopeOverride || this;
 
     // Wrap function code
     this.wrapFunctionCode();
@@ -84,13 +84,18 @@ export class EdgeFunction extends Construct {
   }
 
   private wrapFunctionCode() {
+    const { bundlePath, format } = this.props;
+
     // Parse handler
     const parts = this.props.handler.split(".");
     const handlerImportPath = parts.slice(0, -1).join(".");
     const handlerMethod = parts.slice(-1)[0];
+    const handlerExt = [".js", ".jsx", ".mjs", ".cjs"].find((ext) =>
+      fs.existsSync(path.join(bundlePath, handlerImportPath + ext))
+    )!;
 
     const imports = this.props.format === "esm"
-      ? `import * as index from "./${handlerImportPath}.mjs";`
+      ? `import * as index from "./${handlerImportPath}${handlerExt}";`
       : `"use strict"; const index = require("./${handlerImportPath}");`;
     const exports = this.props.format === "esm"
       ? `export { handler };`
@@ -123,11 +128,8 @@ const handler = async (event) => {
 
 ${exports}
 `;
-
-    const { bundlePath } = this.props;
-
     fs.writeFileSync(
-      path.join(bundlePath, "index-wrapper.js"),
+      path.join(bundlePath, `index-wrapper.${format === "esm" ? "mjs" : "cjs"}`),
       content
     );
   }
@@ -228,6 +230,7 @@ ${exports}
     //       They need to be replaced with real values before the Lambda
     //       functions get deployed.
 
+    const { format } = this.props;
     const providerId = "LambdaCodeReplacerProvider";
     const resId = `${name}LambdaCodeReplacer`;
     const stack = Stack.of(this);
@@ -266,7 +269,7 @@ ${exports}
           ObjectKey: asset.s3ObjectKey,
         },
         ReplaceValues: [{
-          files: "index-wrapper.js",
+          files: `index-wrapper.${format === "esm" ? "mjs" : "cjs"}`,
           search: '"{{ _SST_EDGE_FUNCTION_ENVIRONMENT_ }}"',
           replace: JSON.stringify(this.props.environment || {}),
         }],

@@ -4,6 +4,7 @@ import fs from "fs";
 import glob from "glob";
 import crypto from "crypto";
 import spawn from "cross-spawn";
+import { execSync } from "child_process";
 
 import { Construct } from "constructs";
 import {
@@ -32,6 +33,7 @@ import { SSTConstruct, isCDKConstruct } from "./Construct.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 import {
   BaseSiteDomainProps,
+  getBuildCmdEnvironment,
   BaseSiteCdkDistributionProps,
   buildErrorResponsesForRedirectToIndex,
 } from "./BaseSite.js";
@@ -46,6 +48,7 @@ import { SiteEnv } from "../site-env.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 export type SsrBuildConfig = {
+  buildCommand?: string;
   serverBuildOutputFile: string;
   clientBuildOutputDir: string;
   clientBuildVersionedSubDir: string;
@@ -209,9 +212,9 @@ export class SsrSite extends Construct implements SSTConstruct {
     queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
     headerBehavior: cloudfront.CacheHeaderBehavior.none(),
     cookieBehavior: cloudfront.CacheCookieBehavior.none(),
-    defaultTtl: Duration.hours(1),
-    maxTtl: Duration.hours(1),
-    minTtl: Duration.hours(1),
+    defaultTtl: Duration.days(0),
+    maxTtl: Duration.days(365),
+    minTtl: Duration.days(0),
     enableAcceptEncodingBrotli: true,
     enableAcceptEncodingGzip: true,
     comment: "SST static files cache policy",
@@ -227,9 +230,9 @@ export class SsrSite extends Construct implements SSTConstruct {
     queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
     headerBehavior: cloudfront.CacheHeaderBehavior.none(),
     cookieBehavior: cloudfront.CacheCookieBehavior.all(),
-    defaultTtl: Duration.seconds(0),
+    defaultTtl: Duration.days(0),
     maxTtl: Duration.days(365),
-    minTtl: Duration.seconds(0),
+    minTtl: Duration.days(0),
     enableAcceptEncodingBrotli: true,
     enableAcceptEncodingGzip: true,
     comment: "SST server response cache policy",
@@ -273,7 +276,7 @@ export class SsrSite extends Construct implements SSTConstruct {
   protected sstBuildDir: string;
   protected buildConfig: SsrBuildConfig;
   private serverLambdaForEdge?: EdgeFunction;
-  private serverLambdaForRegional?: lambda.Function;
+  protected serverLambdaForRegional?: lambda.Function;
   private awsCliLayer: AwsCliLayer;
 
   constructor(scope: Construct, id: string, props: SsrSiteProps) {
@@ -287,13 +290,13 @@ export class SsrSite extends Construct implements SSTConstruct {
     this.props = props;
     this.cdk = {} as any;
     this.awsCliLayer = new AwsCliLayer(this, "AwsCliLayer");
+    this.validateSiteExists();
     this.registerSiteEnvironment();
+    this.buildConfig = this.initBuildConfig();
 
     // Prepare app
-    this.buildConfig = this.initBuildConfig();
     if (!this.isPlaceholder) {
       this.buildApp();
-      this.validateBuildOutput();
     }
 
     // Create Bucket which will be utilised to contain the statics
@@ -474,8 +477,9 @@ export class SsrSite extends Construct implements SSTConstruct {
   private buildApp() {
     const app = this.node.root as App;
     if (!app.isRunningSSTTest()) {
-      this.runNpmBuild();
+      this.runBuild();
     }
+    this.validateBuildOutput();
   }
 
   protected validateBuildOutput() {
@@ -488,42 +492,41 @@ export class SsrSite extends Construct implements SSTConstruct {
     }
   }
 
-  private runNpmBuild() {
-    // Given that web apps tend to involve concatenation of other commands
-    // such as Tailwind compilation, we feel that it is safest to target the
-    // "build" script for the app in order to ensure all outputs are generated.
+  private runBuild() {
+    const defaultCommand = "npm run build";
+    const buildCommand = this.buildConfig.buildCommand || defaultCommand;
+    const { path: sitePath, environment } = this.props;
 
-    const { path: sitePath } = this.props;
-
-    // validate site path exists
-    if (!fs.existsSync(sitePath)) {
-      throw new Error(`No path found at "${path.resolve(sitePath)}"`);
-    }
-
-    // Ensure that the site has a build script defined
-    if (!fs.existsSync(path.join(sitePath, "package.json"))) {
-      throw new Error(`No package.json found at "${sitePath}".`);
-    }
-    const packageJson = JSON.parse(
-      fs.readFileSync(path.join(sitePath, "package.json")).toString()
-    );
-    if (!packageJson.scripts || !packageJson.scripts.build) {
-      throw new Error(
-        `No "build" script found within package.json in "${sitePath}".`
+    if (buildCommand === defaultCommand) {
+      // Ensure that the site has a build script defined
+      if (!fs.existsSync(path.join(sitePath, "package.json"))) {
+        throw new Error(`No package.json found at "${sitePath}".`);
+      }
+      const packageJson = JSON.parse(
+        fs.readFileSync(path.join(sitePath, "package.json")).toString()
       );
+      if (!packageJson.scripts || !packageJson.scripts.build) {
+        throw new Error(
+          `No "build" script found within package.json in "${sitePath}".`
+        );
+      }
     }
 
     // Run build
-    Logger.debug(`Running "npm build" script`);
-    const buildResult = spawn.sync("npm", ["run", "build"], {
-      cwd: sitePath,
-      stdio: "inherit",
-      env: {
-        ...process.env,
-      },
-    });
-    if (buildResult.status !== 0) {
-      throw new Error('The app "build" script failed.');
+    Logger.debug(`Running "${buildCommand}" script`);
+    try {
+      execSync(buildCommand, {
+        cwd: sitePath,
+        stdio: "inherit",
+        env: {
+          ...process.env,
+          ...getBuildCmdEnvironment(environment),
+        },
+      });
+    } catch (e) {
+      throw new Error(
+        `There was a problem building the "${this.node.id}" StaticSite.`
+      );
     }
   }
 
@@ -540,7 +543,6 @@ export class SsrSite extends Construct implements SSTConstruct {
       : 200;
 
     // First we need to create zip files containing the statics
-
     const script = path.resolve(__dirname, "../support/base-site-archiver.cjs");
     const zipOutDir = path.resolve(
       path.join(this.sstBuildDir, `Site-${this.node.id}-${this.node.addr}`)
@@ -659,7 +661,7 @@ export class SsrSite extends Construct implements SSTConstruct {
           include: fs.statSync(itemPath).isDirectory()
             ? `${item}/*`
             : `${item}`,
-          cacheControl: "public,max-age=3600,must-revalidate",
+          cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
         });
       }
     }
@@ -737,7 +739,7 @@ export class SsrSite extends Construct implements SSTConstruct {
     }
   }
 
-  private createCloudFrontDistributionForRegional(): cloudfront.Distribution {
+  protected createCloudFrontDistributionForRegional(): cloudfront.Distribution {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
     const s3Origin = new origins.S3Origin(this.cdk.bucket);
@@ -792,7 +794,7 @@ export class SsrSite extends Construct implements SSTConstruct {
     });
   }
 
-  private buildDistributionDomainNames(): string[] {
+  protected buildDistributionDomainNames(): string[] {
     const { customDomain } = this.props;
     const domainNames = [];
     if (!customDomain) {
@@ -858,7 +860,7 @@ export class SsrSite extends Construct implements SSTConstruct {
     };
   }
 
-  private buildDistributionStaticBehaviors(
+  protected buildDistributionStaticBehaviors(
     origin: origins.S3Origin
   ): Record<string, cloudfront.BehaviorOptions> {
     const { cdk } = this.props;
@@ -908,7 +910,7 @@ export class SsrSite extends Construct implements SSTConstruct {
     return staticsBehaviours;
   }
 
-  private createCloudFrontBuildAssetsCachePolicy(): cloudfront.CachePolicy {
+  protected createCloudFrontBuildAssetsCachePolicy(): cloudfront.CachePolicy {
     return new cloudfront.CachePolicy(
       this,
       "BuildCache",
@@ -916,7 +918,7 @@ export class SsrSite extends Construct implements SSTConstruct {
     );
   }
 
-  private createCloudFrontStaticsCachePolicy(): cloudfront.CachePolicy {
+  protected createCloudFrontStaticsCachePolicy(): cloudfront.CachePolicy {
     return new cloudfront.CachePolicy(
       this,
       "StaticsCache",
@@ -924,7 +926,7 @@ export class SsrSite extends Construct implements SSTConstruct {
     );
   }
 
-  private createCloudFrontServerCachePolicy(): cloudfront.CachePolicy {
+  protected createCloudFrontServerCachePolicy(): cloudfront.CachePolicy {
     return new cloudfront.CachePolicy(
       this,
       "ServerCache",
@@ -1123,6 +1125,13 @@ export class SsrSite extends Construct implements SSTConstruct {
   // Helper Functions
   /////////////////////
 
+  private validateSiteExists() {
+    const { path: sitePath } = this.props;
+    if (!fs.existsSync(sitePath)) {
+      throw new Error(`No site found at "${path.resolve(sitePath)}"`);
+    }
+  }
+
   private registerSiteEnvironment() {
     for (const [key, value] of Object.entries(this.props.environment || {})) {
       const outputId = `SstSiteEnv_${key}`;
@@ -1136,7 +1145,7 @@ export class SsrSite extends Construct implements SSTConstruct {
     }
   }
 
-  private generateBuildId(): string {
+  protected generateBuildId(): string {
     // We will generate a hash based on the contents of the "public" folder
     // which will be used to indicate if we need to invalidate our CloudFront
     // cache. As the browser build files are always uniquely hash in their

@@ -137,6 +137,7 @@ await esbuild.build({
 const moveToDist = [
   "astro-site-html-stub",
   "edge-function-code-replacer",
+  "nextjs-site-html-stub",
   "remix-site-function",
   "remix-site-html-stub",
   "sls-nextjs-site-stub",
