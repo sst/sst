@@ -39,7 +39,7 @@ import { useProject } from "../app.js";
 /////////////////////
 
 export interface AppSyncApiDomainProps
-  extends appSyncApiDomain.CustomDomainProps {}
+  extends appSyncApiDomain.CustomDomainProps { }
 
 interface AppSyncApiBaseDataSourceProps {
   /**
@@ -290,7 +290,7 @@ export interface AppSyncApiProps {
    * });
    * ```
    */
-  schema?: string | string[];
+  schema: string | string[];
   /**
    * Specify a custom domain to use in addition to the automatically generated one. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/)
    *
@@ -388,7 +388,7 @@ export interface AppSyncApiProps {
 }
 
 export interface AppSyncApiCdkGraphqlProps
-  extends Omit<appsync.GraphqlApiProps, "name"> {
+  extends Omit<appsync.GraphqlApiProps, "name" | "schema"> {
   name?: string;
 }
 
@@ -444,11 +444,11 @@ export class AppSyncApi extends Construct implements SSTConstruct {
   private readonly bindingForAllFunctions: SSTConstruct[] = [];
   private readonly permissionsAttachedForAllFunctions: Permissions[] = [];
 
-  constructor(scope: Construct, id: string, props?: AppSyncApiProps) {
+  constructor(scope: Construct, id: string, props: AppSyncApiProps) {
     super(scope, props?.cdk?.id || id);
 
     this.id = id;
-    this.props = props || {};
+    this.props = props;
     this.cdk = {} as any;
 
     this.createGraphApi();
@@ -517,12 +517,12 @@ export class AppSyncApi extends Construct implements SSTConstruct {
     scope: Construct,
     dataSources: {
       [key: string]:
-        | FunctionInlineDefinition
-        | AppSyncApiLambdaDataSourceProps
-        | AppSyncApiDynamoDbDataSourceProps
-        | AppSyncApiRdsDataSourceProps
-        | AppSyncApiHttpDataSourceProps
-        | AppSyncApiNoneDataSourceProps;
+      | FunctionInlineDefinition
+      | AppSyncApiLambdaDataSourceProps
+      | AppSyncApiDynamoDbDataSourceProps
+      | AppSyncApiRdsDataSourceProps
+      | AppSyncApiHttpDataSourceProps
+      | AppSyncApiNoneDataSourceProps;
     }
   ): void {
     Object.keys(dataSources).forEach((key: string) => {
@@ -719,24 +719,25 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         {}) as AppSyncApiCdkGraphqlProps;
 
       // build schema
-      let mainSchema: appsync.Schema | undefined;
+      let mainSchema: appsync.SchemaFile;
       if (typeof schema === "string") {
-        mainSchema = appsync.Schema.fromAsset(schema);
-      } else if (Array.isArray(schema)) {
-        if (schema.length > 0) {
-          // merge schema files
-          const mergedSchema = mergeTypeDefs(
-            schema
-              .map((file) => fs.readFileSync(file).toString())
-              .map(buildSchema)
-          );
-          const filePath = path.join(
-            useProject().paths.out,
-            `appsyncapi-${id}-${this.node.addr}.graphql`
-          );
-          fs.writeFileSync(filePath, print(mergedSchema));
-          mainSchema = appsync.Schema.fromAsset(filePath);
+        mainSchema = appsync.SchemaFile.fromAsset(schema);
+      } else {
+        if (schema.length === 0) {
+          throw new Error("Invalid schema. At least one schema file must be provided");
         }
+        // merge schema files
+        const mergedSchema = mergeTypeDefs(
+          schema
+            .map((file) => fs.readFileSync(file).toString())
+            .map(buildSchema)
+        );
+        const filePath = path.join(
+          useProject().paths.out,
+          `appsyncapi-${id}-${this.node.addr}.graphql`
+        );
+        fs.writeFileSync(filePath, print(mergedSchema));
+        mainSchema = appsync.SchemaFile.fromAsset(filePath);
       }
 
       // build domain
@@ -1000,7 +1001,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
     ///////////////////
     // Create resolver
     ///////////////////
-    const resolver = this.cdk.graphqlApi.createResolver({
+    const resolver = this.cdk.graphqlApi.createResolver(`${typeName}${fieldName}Resolver`, {
       dataSource,
       typeName,
       fieldName,
