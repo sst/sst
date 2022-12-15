@@ -242,7 +242,10 @@ export class Stack extends cdk.Stack {
   private createCustomResourceHandler() {
     return new lambda.Function(this, "CustomResourceHandler", {
       code: lambda.Code.fromAsset(
-        path.join(__dirname, "../support/custom-resources/")
+        path.join(__dirname, "../support/custom-resources/"),
+        {
+          assetHash: this.stackName + "-custom-resources-v1",
+        }
       ),
       handler: "index.handler",
       runtime: lambda.Runtime.NODEJS_16_X,

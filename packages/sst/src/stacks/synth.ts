@@ -42,6 +42,7 @@ export async function synth(opts: SynthOptions) {
   */
   const cfg = new Configuration();
   await cfg.load();
+  let previous = new Set<string>();
   while (true) {
     const app = new App(
       {
@@ -66,12 +67,11 @@ export async function synth(opts: SynthOptions) {
     const { missing } = assembly.manifest;
     const provider = await useAWSProvider();
 
-    let previous = new Set<string>();
     if (missing && missing.length) {
-      Logger.debug("Looking up context for", missing);
       const next = missing.map((x) => x.key);
       if (next.length === previous.size && next.every((x) => previous.has(x)))
         throw new VisibleError(`Could not resolve context values for ${next}`);
+      Logger.debug("Looking up context for:", next, "Previous:", previous);
       previous = new Set(next);
       await contextproviders.provideContextValues(
         missing,
