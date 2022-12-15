@@ -40,6 +40,7 @@ const supportedRuntimes = {
   "nodejs12.x": lambda.Runtime.NODEJS_12_X,
   "nodejs14.x": lambda.Runtime.NODEJS_14_X,
   "nodejs16.x": lambda.Runtime.NODEJS_16_X,
+  "nodejs18.x": lambda.Runtime.NODEJS_18_X,
   "python2.7": lambda.Runtime.PYTHON_2_7,
   "python3.6": lambda.Runtime.PYTHON_3_6,
   "python3.7": lambda.Runtime.PYTHON_3_7,
@@ -58,7 +59,7 @@ const supportedRuntimes = {
 export type Runtime = keyof typeof supportedRuntimes;
 export type FunctionInlineDefinition = string | Function;
 export type FunctionDefinition = string | Function | FunctionProps;
-export interface FunctionUrlCorsProps extends functionUrlCors.CorsProps {}
+export interface FunctionUrlCorsProps extends functionUrlCors.CorsProps { }
 
 export interface FunctionProps
   extends Omit<
@@ -484,7 +485,7 @@ export type FunctionBundleProp =
   | FunctionBundleJavaProps
   | boolean;
 
-interface FunctionBundleBase {}
+interface FunctionBundleBase { }
 
 /**
  * Used to configure NodeJS bundling options
@@ -823,12 +824,12 @@ export class Function extends lambda.Function implements SSTConstruct {
     const diskSize = Function.normalizeDiskSize(props.diskSize);
     const tracing =
       lambda.Tracing[
-        (props.tracing || "active").toUpperCase() as keyof typeof lambda.Tracing
+      (props.tracing || "active").toUpperCase() as keyof typeof lambda.Tracing
       ];
     const logRetention =
       props.logRetention &&
       logs.RetentionDays[
-        props.logRetention.toUpperCase() as keyof typeof logs.RetentionDays
+      props.logRetention.toUpperCase() as keyof typeof logs.RetentionDays
       ];
     const isLiveDevEnabled = props.enableLiveDev === false ? false : true;
 
@@ -1165,7 +1166,7 @@ export class Function extends lambda.Function implements SSTConstruct {
   }
 
   static normalizeRuntime(runtime?: Runtime): Runtime {
-    runtime = runtime || "nodejs14.x";
+    runtime = runtime || "nodejs18.x";
     if (!supportedRuntimes[runtime]) {
       throw new Error(
         `The specified runtime is not supported for sst.Function. Only NodeJS, Python, Go, and .NET runtimes are currently supported.`
@@ -1246,7 +1247,7 @@ export class Function extends lambda.Function implements SSTConstruct {
       if (inheritedProps && Object.keys(inheritedProps).length > 0) {
         throw new Error(
           inheritErrorMessage ||
-            `Cannot inherit default props when a Function is provided`
+          `Cannot inherit default props when a Function is provided`
         );
       }
       return definition;

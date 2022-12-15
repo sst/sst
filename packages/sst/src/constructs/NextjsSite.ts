@@ -114,16 +114,16 @@ export interface NextjsSiteProps {
       permissions?: Permissions;
       /**
        * The runtime environment.
-       * @default "nodejs16.x"
+       * @default "nodejs18.x"
        * @example
        * ```js
        * new Function(stack, "Function", {
        *   path: "path/to/site",
-       *   runtime: "nodejs16.x",
+       *   runtime: "nodejs18.x",
        * })
        *```
        */
-      runtime?: "nodejs12.x" | "nodejs14.x" | "nodejs16.x";
+      runtime?: "nodejs12.x" | "nodejs14.x" | "nodejs16.x" | "nodejs18.x";
     };
   };
   /**

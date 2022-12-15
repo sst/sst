@@ -82,7 +82,7 @@ export const useNodeHandler = Context.memo(() => {
         );
 
       const nodejs = input.props.nodejs || {};
-      const isESM = (nodejs?.format || "esm") === "esm";
+      const isESM = (nodejs.format || "esm") === "esm";
 
       const relative = path.relative(
         project.paths.root,
@@ -109,14 +109,14 @@ export const useNodeHandler = Context.memo(() => {
         };
       }
 
-      const { external, ...override } = nodejs?.esbuild || {};
+      const { external, ...override } = nodejs.esbuild || {};
 
       const result = await esbuild.build({
         entryPoints: [file],
         platform: "node",
         external: [
-          ...(nodejs?.install || []),
-          ...(nodejs?.install || []),
+          ...(nodejs.format === "esm" || input.props.runtime === "nodejs18.x" ? [] : ["aws-sdk"]),
+          ...(nodejs.install || []),
           ...(external || []),
         ],
         keepNames: true,
@@ -124,26 +124,26 @@ export const useNodeHandler = Context.memo(() => {
         metafile: true,
         ...(isESM
           ? {
-              format: "esm",
-              target: "esnext",
-              mainFields: isESM ? ["module", "main"] : undefined,
-              banner: {
-                js: [
-                  `import { createRequire as topLevelCreateRequire } from 'module';`,
-                  `const require = topLevelCreateRequire(import.meta.url);`,
-                  nodejs.banner || "",
-                ].join("\n"),
-              },
-            }
+            format: "esm",
+            target: "esnext",
+            mainFields: isESM ? ["module", "main"] : undefined,
+            banner: {
+              js: [
+                `import { createRequire as topLevelCreateRequire } from 'module';`,
+                `const require = topLevelCreateRequire(import.meta.url);`,
+                nodejs.banner || "",
+              ].join("\n"),
+            },
+          }
           : {
-              format: "cjs",
-              target: "node14",
-              banner: nodejs.banner
-                ? {
-                    js: nodejs.banner,
-                  }
-                : undefined,
-            }),
+            format: "cjs",
+            target: "node14",
+            banner: nodejs.banner
+              ? {
+                js: nodejs.banner,
+              }
+              : undefined,
+          }),
         outfile: target,
         sourcemap: input.mode === "start" ? "linked" : nodejs.sourcemap,
         minify: nodejs.minify,
