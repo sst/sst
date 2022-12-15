@@ -3,7 +3,7 @@ import fs from "fs/promises";
 import path from "path";
 import { Program } from "../program.js";
 
-const SST_PACKAGES = ["sst"];
+const PACKAGE_MATCH = ["sst", "aws-cdk", "@aws-cdk"];
 
 const FIELDS = ["dependencies", "devDependencies"];
 
@@ -22,13 +22,11 @@ export const update = (program: Program) =>
 
       const project = useProject();
       const files = await find(project.paths.root);
-      const version =
-        args.ver ||
-        (await fetch(`https://registry.npmjs.org/sst/latest`)
-          .then((resp) => resp.json())
-          .then((resp: any) => resp.version));
+      const metadata: any = await fetch(
+        `https://registry.npmjs.org/sst/${args.ver || "latest"}`
+      ).then((resp) => resp.json());
 
-      const results = new Map<string, Set<string>>();
+      const results = new Map<string, Set<[string, string]>>();
       const tasks = files.map(async (file) => {
         const data = await fs
           .readFile(file)
@@ -39,14 +37,19 @@ export const update = (program: Program) =>
           const deps = data[field];
           if (!deps) continue;
           for (const [pkg, existing] of Object.entries(deps)) {
-            if (!SST_PACKAGES.includes(pkg) || existing === version) continue;
+            if (!PACKAGE_MATCH.some((x) => pkg.startsWith(x))) continue;
+            const desired =
+              pkg === "sst"
+                ? metadata.version
+                : metadata.dependencies["aws-cdk-lib"];
+            if (existing === desired) continue;
             let arr = results.get(file);
             if (!arr) {
               arr = new Set();
               results.set(file, arr);
             }
-            arr.add(pkg);
-            deps[pkg] = version;
+            arr.add([pkg, desired]);
+            deps[pkg] = desired;
           }
         }
 
@@ -55,13 +58,15 @@ export const update = (program: Program) =>
       await Promise.all(tasks);
 
       if (results.size === 0) {
-        console.log(green(`All packages already match version ${version}`));
+        console.log(
+          green(`All packages already match version ${metadata.version}`)
+        );
         return;
       }
 
       for (const [file, pkgs] of results.entries()) {
         console.log(green(`✅ ${path.relative(project.paths.root, file)}`));
-        for (const pkg of pkgs) {
+        for (const [pkg, version] of pkgs) {
           console.log(green(`     ${pkg}@${version}`));
         }
       }
