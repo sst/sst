@@ -1,6 +1,7 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { initProject } from "../app.js";
+import { trackCli } from "./telemetry/telemetry.js";
 
 export const program = yargs(hideBin(process.argv))
   .scriptName("sst")
@@ -14,6 +15,7 @@ export const program = yargs(hideBin(process.argv))
   })
   .middleware(async (argv) => {
     await initProject(argv);
+    trackCli(argv._[0] as string);
   })
   .strict()
   .demandCommand(1);
