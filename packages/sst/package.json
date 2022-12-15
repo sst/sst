@@ -49,6 +49,7 @@
     "@aws-sdk/signature-v4-crt": "^3.31.0",
     "@aws-sdk/smithy-client": "^3.208.0",
     "@babel/generator": "^7.20.5",
+    "@babel/core": "^7.0.0-0",
     "@trpc/server": "9.16.0",
     "aws-cdk": "2.50.0",
     "aws-cdk-lib": "2.50.0",
@@ -84,7 +85,6 @@
   },
   "devDependencies": {
     "@aws-sdk/types": "^3.208.0",
-    "@babel/core": "^7.0.0-0",
     "@sls-next/lambda-at-edge": "^3.7.0",
     "@tsconfig/node16": "^1.0.3",
     "@types/aws-iot-device-sdk": "^2.2.4",
@@ -107,14 +107,10 @@
     "vitest": "^0.15.1"
   },
   "peerDependencies": {
-    "@babel/core": "^7.0.0-0",
     "@sls-next/lambda-at-edge": "^3.7.0",
     "graphql": "^16.5.0"
   },
   "peerDependenciesMeta": {
-    "@babel/core": {
-      "optional": true
-    },
     "@sls-next/lambda-at-edge": {
       "optional": true
     },

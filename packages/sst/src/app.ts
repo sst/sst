@@ -7,7 +7,6 @@ import { Logger } from "./logger.js";
 import { Context } from "./context/context.js";
 import { VisibleError } from "./error.js";
 import { blue } from "colorette";
-import { useSTSIdentity } from "./credentials.js";
 
 export interface Project {
   name: string;
@@ -60,24 +59,22 @@ export async function initProject(globals: GlobalOptions) {
     const base = await (async function () {
       for (const ext of CONFIG_EXTENSIONS) {
         const file = path.join(root, "sst" + ext);
+        try {
+          await fs.access(file);
+        } catch {
+          continue;
+        }
         if (file.endsWith("js")) {
-          let fn;
-          try {
-            fn = await import(file);
-          } catch (err) {
-            continue;
-          }
+          const fn = await import(file);
           return await fn.default(globals);
         }
 
         if (file.endsWith(".json")) {
-          try {
-            const data = await fs.readFile(file);
-            return Object.assign(
-              DEFAULTS,
-              JSON.parse(data.toString("utf8"))
-            ) as ProjectWithDefaults;
-          } catch {}
+          const data = await fs.readFile(file);
+          return Object.assign(
+            DEFAULTS,
+            JSON.parse(data.toString("utf8"))
+          ) as ProjectWithDefaults;
         }
       }
 
