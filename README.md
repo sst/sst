@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://sst.dev/discord"><img alt="Discord" src="https://img.shields.io/discord/983865673656705025?style=flat-square" /></a>
   <a href="https://www.npmjs.com/package/@serverless-stack/resources"><img alt="npm" src="https://img.shields.io/npm/v/@serverless-stack/resources.svg?style=flat-square" /></a>
-  <a href="https://github.com/serverless-stack/sst/actions/workflows/ci.yml"><img alt="Build status" src="https://img.shields.io/github/workflow/status/serverless-stack/sst/CI?style=flat-square" /></a>
+  <a href="https://github.com/serverless-stack/sst/actions/workflows/ci.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/serverless-stack/sst/ci.yml?style=flat-square&branch=master" /></a>
 </p>
 
 ---
