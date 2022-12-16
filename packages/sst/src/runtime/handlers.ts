@@ -71,6 +71,7 @@ export const useRuntimeHandlers = Context.memo(() => {
       await fs.mkdir(out, { recursive: true });
 
       try {
+        if (func.hooks?.beforeBuild) await func.hooks.beforeBuild(func, out);
         const built = await handler!.build({
           functionID,
           out,
@@ -78,18 +79,28 @@ export const useRuntimeHandlers = Context.memo(() => {
           props: func,
         });
 
-        if (mode === "deploy" && func.copyFiles) {
-          func.copyFiles.forEach((entry) => {
-            const fromPath = path.join(project.paths.root, entry.from);
-            const to = entry.to || entry.from;
-            if (path.isAbsolute(to))
-              throw new Error(`Copy destination path "${to}" must be relative`);
-            const toPath = path.join(out, to);
-            fs.cp(fromPath, toPath, {
-              recursive: true,
-            });
-          });
+        if (func.copyFiles) {
+          await Promise.all(
+            func.copyFiles.map(async (entry) => {
+              const fromPath = path.join(project.paths.root, entry.from);
+              const to = entry.to || entry.from;
+              if (path.isAbsolute(to))
+                throw new Error(
+                  `Copy destination path "${to}" must be relative`
+                );
+              const toPath = path.join(out, to);
+              if (mode === "deploy")
+                await fs.cp(fromPath, toPath, {
+                  recursive: true,
+                });
+              if (mode === "start") {
+                await fs.symlink(fromPath, toPath);
+              }
+            })
+          );
         }
+
+        if (func.hooks?.afterBuild) await func.hooks.afterBuild(func, out);
 
         bus.publish("function.built", { functionID });
         return {

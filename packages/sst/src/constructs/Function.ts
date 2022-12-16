@@ -61,6 +61,18 @@ export type FunctionInlineDefinition = string | Function;
 export type FunctionDefinition = string | Function | FunctionProps;
 export interface FunctionUrlCorsProps extends functionUrlCors.CorsProps { }
 
+export interface FunctionHooks {
+  /**
+   * Hook to run before build
+   */
+  beforeBuild?: (props: FunctionProps, out: string) => Promise<void>;
+
+  /**
+   * Hook to run after build
+   */
+  afterBuild?: (props: FunctionProps, out: string) => Promise<void>;
+}
+
 export interface FunctionProps
   extends Omit<
     lambda.FunctionOptions,
@@ -84,8 +96,12 @@ export interface FunctionProps
    *```
    */
   copyFiles?: FunctionBundleCopyFilesProps[];
-
   nodejs?: NodeJSProps;
+
+  /**
+   * Hooks to run before and after function builds
+   */
+  hooks?: FunctionHooks;
 
   /**
    * The CPU architecture of the lambda function.
