@@ -9,4 +9,4 @@ sed -i.bak -e '2,5d' packages/sst/dist/package.json
 pnpm changeset publish --no-git-tag --tag=latest
 cp .changeset/config.json.bak .changeset/config.json
 git checkout '**/package.json' '**/CHANGELOG.md' '.changeset'
-
+npm dist-tag add create-sst@1.18.4 latest
