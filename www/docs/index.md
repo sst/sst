@@ -29,7 +29,7 @@ SST makes it easy to build modern full-stack applications on AWS.
 
 - **Designed for your team**
 
-  Create preview environments or feature environments. Or one for everybody on your team.
+  Create preview environments or feature environments. Or one for everyone on your team.
 
 </div>
 
