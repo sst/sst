@@ -49,12 +49,13 @@ import {
 import * as crossRegionHelper from "./nextjs-site/cross-region-helper.js";
 import { gray, red } from "colorette";
 import { SiteEnv } from "../site-env.js";
+import { useProject } from "../app.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
-export interface NextjsDomainProps extends BaseSiteDomainProps { }
+export interface NextjsDomainProps extends BaseSiteDomainProps {}
 export interface NextjsCdkDistributionProps
-  extends BaseSiteCdkDistributionProps { }
+  extends BaseSiteCdkDistributionProps {}
 export interface NextjsSiteProps {
   /**
    * Path to the directory where the website source is located.
@@ -305,11 +306,11 @@ export class NextjsSite extends Construct implements SSTConstruct {
     // Local development or skip build => stub asset
     this.isPlaceholder =
       (app.local || app.skipBuild) && !props.disablePlaceholder;
-    const buildDir = app.buildDir;
+    const buildDir = useProject().paths.artifacts;
     const fileSizeLimit = app.isRunningSSTTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
-      props.sstTestFileSizeLimitOverride || 200
+        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
+        props.sstTestFileSizeLimitOverride || 200
       : 200;
 
     this.props = props;
@@ -917,8 +918,8 @@ export class NextjsSite extends Construct implements SSTConstruct {
     const app = this.node.root as App;
     const buildOutput = app.isRunningSSTTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
-      props.sstTestBuildOutputPath || this.runBuild()
+        // @ts-ignore: "sstTestBuildOutputPath" not exposed in props
+        props.sstTestBuildOutputPath || this.runBuild()
       : this.runBuild();
 
     this.runAfterBuild();
@@ -932,16 +933,16 @@ export class NextjsSite extends Construct implements SSTConstruct {
     // validate site path exists
     if (!fs.existsSync(sitePath)) {
       throw new Error(
-        `No path found at "${path.resolve(sitePath)}" for the "${this.node.id
+        `No path found at "${path.resolve(sitePath)}" for the "${
+          this.node.id
         }" NextjsSite.`
       );
     }
 
     // Build command
     // Note: probably could pass JSON string also, but this felt safer.
-    const app = this.node.root as App;
     const pathHash = getHandlerHash(sitePath);
-    const buildOutput = path.join(app.buildDir, pathHash);
+    const buildOutput = path.join(useProject().paths.artifacts, pathHash);
     const configBuffer = Buffer.from(
       JSON.stringify({
         cwd: path.resolve(sitePath),
@@ -1236,8 +1237,8 @@ export class NextjsSite extends Construct implements SSTConstruct {
     const waitForInvalidation = this.isPlaceholder
       ? false
       : this.props.waitForInvalidation === false
-        ? false
-        : true;
+      ? false
+      : true;
     return new CustomResource(this, "CloudFrontInvalidation", {
       serviceToken: invalidator.functionArn,
       resourceType: "Custom::SSTCloudFrontInvalidation",

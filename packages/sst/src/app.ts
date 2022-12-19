@@ -31,6 +31,7 @@ type ProjectWithDefaults = Project &
     paths: {
       root: string;
       out: string;
+      artifacts: string;
     };
   };
 
@@ -46,6 +47,7 @@ interface GlobalOptions {
   profile?: string;
   stage?: string;
   root?: string;
+  region?: string;
 }
 
 export async function initProject(globals: GlobalOptions) {
@@ -95,7 +97,8 @@ export async function initProject(globals: GlobalOptions) {
         globals.stage ||
         (await usePersonalStage(out)) ||
         (await promptPersonalStage(out)),
-      profile: globals.profile || base.profile,
+      profile: base.profile || globals.profile,
+      region: base.region || globals.region,
     } as ProjectWithDefaults;
   }
   const project = await load();
@@ -104,6 +107,7 @@ export async function initProject(globals: GlobalOptions) {
   project.paths = {
     root,
     out,
+    artifacts: path.join(out, "artifacts"),
   };
   try {
     const packageJson = JSON.parse(

@@ -49,7 +49,6 @@ export interface RuntimeHandler {
 export const useRuntimeHandlers = Context.memo(() => {
   const handlers: RuntimeHandler[] = [];
   const project = useProject();
-  const artifactPath = path.join(project.paths.out, "artifacts");
   const bus = useBus();
 
   const result = {
@@ -66,7 +65,7 @@ export const useRuntimeHandlers = Context.memo(() => {
       Logger.debug("Building function", functionID);
       const func = useFunctions().fromID(functionID);
       const handler = result.for(func.runtime!);
-      const out = path.join(artifactPath, functionID);
+      const out = path.join(project.paths.artifacts, functionID);
       await fs.rm(out, { recursive: true, force: true });
       await fs.mkdir(out, { recursive: true });
 

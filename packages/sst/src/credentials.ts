@@ -10,7 +10,10 @@ import { Logger } from "./logger.js";
 import { SdkProvider } from "aws-cdk/lib/api/aws-auth/sdk-provider.js";
 import { StandardRetryStrategy } from "@aws-sdk/middleware-retry";
 
-type Config = RegionInputConfig & RetryInputConfig & AwsAuthInputConfig;
+type Config = RegionInputConfig &
+  RetryInputConfig &
+  AwsAuthInputConfig &
+  HostHeaderConditionConfig;
 
 export const useAWSCredentialsProvider = Context.memo(() => {
   const project = useProject();
@@ -72,6 +75,7 @@ export function useAWSClient<C extends Client<any, any, any, any>>(
 
 import aws from "aws-sdk";
 import { useProject } from "./app.js";
+import { HostHeaderConditionConfig } from "aws-sdk/clients/elbv2.js";
 const CredentialProviderChain = aws.CredentialProviderChain;
 
 /**

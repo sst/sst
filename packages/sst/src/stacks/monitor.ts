@@ -110,6 +110,10 @@ export async function monitor(stack: string) {
       });
 
       for (const resource of resources.StackResources || []) {
+        if (
+          resource.ResourceStatusReason?.includes("Resource creation cancelled")
+        )
+          continue;
         if (resource.ResourceStatusReason)
           errors[resource.LogicalResourceId!] = resource.ResourceStatusReason;
       }

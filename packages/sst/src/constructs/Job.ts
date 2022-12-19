@@ -11,7 +11,7 @@ import * as codebuild from "aws-cdk-lib/aws-codebuild";
 import { App } from "./App.js";
 import { Secret, Parameter } from "./Config.js";
 import { SSTConstruct } from "./Construct.js";
-import { Function, FunctionBundleNodejsProps } from "./Function.js";
+import { Function } from "./Function.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import { bindEnvironment, bindPermissions } from "./util/functionBinding.js";

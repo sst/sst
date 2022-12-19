@@ -109,8 +109,6 @@ export class App extends cdk.App {
    */
   public readonly account: string;
   /** @internal */
-  public readonly buildDir: string;
-  /** @internal */
   public readonly debugBridge?: string;
   /** @internal */
   public readonly debugEndpoint?: string;
@@ -172,7 +170,6 @@ export class App extends cdk.App {
       deployProps.region || process.env.CDK_DEFAULT_REGION || "us-east-1";
     this.account =
       deployProps.account || process.env.CDK_DEFAULT_ACCOUNT || "my-account";
-    this.buildDir = deployProps.buildDir || ".build";
     this.skipBuild = deployProps.skipBuild || false;
     this.defaultFunctionProps = [];
 

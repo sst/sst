@@ -582,8 +582,7 @@ interface ImportMeta {
     const script = path.join(__dirname, "../support/base-site-archiver.cjs");
     const zipPath = path.resolve(
       path.join(
-        useProject().paths.out,
-        "artifacts",
+        useProject().paths.artifacts,
         `StaticSite-${this.node.id}-${this.node.addr}`
       )
     );
@@ -634,8 +633,7 @@ interface ImportMeta {
 
     const zipPath = path.resolve(
       path.join(
-        useProject().paths.out,
-        "artifacts",
+        useProject().paths.artifacts,
         `StaticSite-${this.node.id}-${this.node.addr}`
       )
     );

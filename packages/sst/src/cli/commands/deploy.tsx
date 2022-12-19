@@ -1,6 +1,7 @@
 import { Logger } from "../../logger.js";
 import type { Program } from "../program.js";
 import { printDeploymentResults } from "../ui/deploy.js";
+import { Instance } from "ink/build/render.js";
 
 export const deploy = (program: Program) =>
   program.command(
@@ -9,6 +10,11 @@ export const deploy = (program: Program) =>
     (yargs) =>
       yargs
         .option("from", { type: "string" })
+        .option("fullscreen", {
+          type: "boolean",
+          describe: "Disable full screen UI",
+          default: true,
+        })
         .positional("filter", { type: "string" }),
     async (args) => {
       const React = await import("react");
@@ -47,12 +53,15 @@ export const deploy = (program: Program) =>
           project.stage
         )}...`
       );
-      process.stdout.write("\x1b[?1049h");
-      const component = render(
-        <DeploymentUI stacks={target.map((s) => s.stackName)} />
-      );
+      let component: Instance | undefined = undefined;
+      if (args.fullscreen) {
+        process.stdout.write("\x1b[?1049h");
+        component = render(
+          <DeploymentUI stacks={assembly.stacks.map((s) => s.stackName)} />
+        );
+      }
       const results = await Stacks.deployMany(target);
-      component.unmount();
+      if (component) component.unmount();
       process.stdout.write("\x1b[?1049l");
       printDeploymentResults(results);
       process.exit(0);

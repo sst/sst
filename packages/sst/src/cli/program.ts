@@ -13,6 +13,10 @@ export const program = yargs(hideBin(process.argv))
     type: "string",
     describe: "The AWS profile to use",
   })
+  .option("region", {
+    type: "string",
+    describe: "The AWS region to use",
+  })
   .middleware(async (argv) => {
     await initProject(argv);
     trackCli(argv._[0] as string);

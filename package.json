@@ -12,7 +12,6 @@
     ]
   },
   "scripts": {
-    "watch": "tsc -b -w",
     "build": "turbo run build --filter=!@serverless-stack/docs --filter=!@serverless-stack/console --filter=!@serverless-stack/cli-*",
     "release": "./.changeset/release",
     "release-snapshot": "./.changeset/snapshot",

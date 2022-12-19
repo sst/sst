@@ -57,13 +57,20 @@ export async function build() {
   Logger.debug("Finished esbuild");
 
   Logger.debug("Sourcing stacks");
-  const mod = await import(outfile);
-  Logger.debug("Finished sourcing stacks");
-  await fs.rm(outfile, {
-    force: true,
-  });
-  bus.publish("stack.built", {
-    metafile: result.metafile,
-  });
-  return mod.default;
+  try {
+    const mod = await import(outfile);
+    Logger.debug("Finished sourcing stacks");
+    await fs.rm(outfile, {
+      force: true,
+    });
+    bus.publish("stack.built", {
+      metafile: result.metafile,
+    });
+    return mod.default;
+  } catch (e) {
+    await fs.rm(outfile, {
+      force: true,
+    });
+    throw e;
+  }
 }

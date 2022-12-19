@@ -44,6 +44,7 @@ import {
   getParameterPath,
 } from "./util/functionBinding.js";
 import { SiteEnv } from "../site-env.js";
+import { useProject } from "../app.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -55,8 +56,8 @@ export type SsrBuildConfig = {
   siteStub: string;
 };
 
-export interface SsrDomainProps extends BaseSiteDomainProps { }
-export interface SsrCdkDistributionProps extends BaseSiteCdkDistributionProps { }
+export interface SsrDomainProps extends BaseSiteDomainProps {}
+export interface SsrCdkDistributionProps extends BaseSiteCdkDistributionProps {}
 export interface SsrSiteProps {
   /**
    * The SSR function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
@@ -286,7 +287,7 @@ export class SsrSite extends Construct implements SSTConstruct {
     const app = scope.node.root as App;
     this.isPlaceholder =
       (app.local || app.skipBuild) && !props.disablePlaceholder;
-    this.sstBuildDir = app.buildDir;
+    this.sstBuildDir = useProject().paths.artifacts;
     this.props = props;
     this.cdk = {} as any;
     this.awsCliLayer = new AwsCliLayer(this, "AwsCliLayer");
@@ -538,8 +539,8 @@ export class SsrSite extends Construct implements SSTConstruct {
     const app = this.node.root as App;
     const fileSizeLimit = app.isRunningSSTTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
-      this.props.sstTestFileSizeLimitOverride || 200
+        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
+        this.props.sstTestFileSizeLimitOverride || 200
       : 200;
 
     // First we need to create zip files containing the statics
@@ -962,8 +963,8 @@ export class SsrSite extends Construct implements SSTConstruct {
     const waitForInvalidation = this.isPlaceholder
       ? false
       : this.props.waitForInvalidation === false
-        ? false
-        : true;
+      ? false
+      : true;
     return new CustomResource(this, "CloudFrontInvalidation", {
       serviceToken: invalidator.functionArn,
       resourceType: "Custom::SSTCloudFrontInvalidation",

@@ -10,11 +10,9 @@ import { dim, gray, yellow } from "colorette";
 import { useProject } from "../../app.js";
 import { SiteEnv } from "../../site-env.js";
 import { Instance } from "ink/build/render.js";
-import { ApiMetadata } from "../../constructs/Metadata.js";
-import { Pothos } from "../../pothos.js";
-import { exec } from "child_process";
-import util from "util";
-const execAsync = util.promisify(exec);
+import { usePothosBuilder } from "./plugins/pothos.js";
+import { useKyselyTypeGenerator } from "./plugins/kysely.js";
+import { useRDSWarmer } from "./plugins/warmer.js";
 
 export const dev = (program: Program) =>
   program.command(
@@ -222,60 +220,6 @@ export const dev = (program: Program) =>
         .start()
         .succeed(`Console ready at https://console.sst.dev`);
 
-      const usePothosBuilder = Context.memo(() => {
-        let routes: Extract<
-          ApiMetadata["data"]["routes"][number],
-          { type: "graphql" | "pothos" }
-        >[] = [];
-        const bus = useBus();
-
-        async function build(route: any) {
-          try {
-            const schema = await Pothos.generate({
-              schema: route.schema,
-            });
-            await fs.writeFile(route.output, schema);
-            // bus.publish("pothos.extracted", { file: route.output });
-            await Promise.all(
-              route.commands.map((cmd: string) => execAsync(cmd))
-            );
-            console.log("Done building pothos schema");
-          } catch (ex) {
-            console.error("Failed to extract schema from pothos");
-            console.error(ex);
-          }
-        }
-
-        bus.subscribe("file.changed", async (evt) => {
-          if (evt.properties.file.endsWith("out.mjs")) return;
-          for (const route of routes) {
-            const dir = path.dirname(route.schema!);
-            const relative = path.relative(dir, evt.properties.file);
-            if (
-              relative &&
-              !relative.startsWith("..") &&
-              !path.isAbsolute(relative)
-            )
-              build(route);
-          }
-        });
-
-        let first = false;
-        bus.subscribe("stacks.metadata", async (evt) => {
-          routes = Object.values(evt.properties)
-            .flat()
-            .filter((c): c is ApiMetadata => c.type == "Api")
-            .flatMap((c) => c.data.routes)
-            .filter((r) => ["pothos", "graphql"].includes(r.type))
-            .filter((r) => r.schema) as typeof routes;
-          if (first) return;
-          for (const route of routes) {
-            build(route);
-            first = true;
-          }
-        });
-      });
-
       await Promise.all([
         useLocalServer({
           key: "",
@@ -288,6 +232,8 @@ export const dev = (program: Program) =>
         useRuntimeServer(),
         useMetadata(),
         usePothosBuilder(),
+        useKyselyTypeGenerator(),
+        useRDSWarmer(),
         useFunctionLogger(),
         useStackBuilder(),
       ]);
