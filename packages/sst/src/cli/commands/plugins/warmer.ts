@@ -10,7 +10,6 @@ import { useAWSClient } from "../../../credentials.js";
 export const useRDSWarmer = Context.memo(async () => {
   let interval: NodeJS.Timer;
   const bus = useBus();
-  // @ts-expect-error
   const client = useAWSClient(RDSDataClient);
   bus.subscribe("stacks.metadata", (evt) => {
     if (interval) clearInterval(interval);
@@ -22,7 +21,6 @@ export const useRDSWarmer = Context.memo(async () => {
         .map((c) => {
           try {
             client.send(
-              // @ts-expect-error
               new ExecuteStatementCommand({
                 sql: "SELECT 1",
                 secretArn: c.data.secretArn,
