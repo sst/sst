@@ -3,7 +3,7 @@ import fs from "fs/promises";
 import { exec } from "child_process";
 import fsSync from "fs";
 import { useProject } from "../app.js";
-import esbuild from "esbuild";
+import esbuild, { BuildOptions } from "esbuild";
 import url from "url";
 import { Worker } from "worker_threads";
 import { useRuntimeHandlers } from "./handlers.js";
@@ -110,12 +110,13 @@ export const useNodeHandler = Context.memo(() => {
       }
 
       const { external, ...override } = nodejs.esbuild || {};
-
-      const result = await esbuild.build({
+      const options: BuildOptions = {
         entryPoints: [file],
         platform: "node",
         external: [
-          ...(nodejs.format === "esm" || input.props.runtime === "nodejs18.x" ? [] : ["aws-sdk"]),
+          ...(nodejs.format === "esm" || input.props.runtime === "nodejs18.x"
+            ? []
+            : ["aws-sdk"]),
           ...(nodejs.install || []),
           ...(external || []),
         ],
@@ -124,37 +125,39 @@ export const useNodeHandler = Context.memo(() => {
         metafile: true,
         ...(isESM
           ? {
-            format: "esm",
-            target: "esnext",
-            mainFields: isESM ? ["module", "main"] : undefined,
-            banner: {
-              js: [
-                `import { createRequire as topLevelCreateRequire } from 'module';`,
-                `const require = topLevelCreateRequire(import.meta.url);`,
-                nodejs.banner || "",
-              ].join("\n"),
-            },
-          }
+              format: "esm",
+              target: "esnext",
+              mainFields: isESM ? ["module", "main"] : undefined,
+              banner: {
+                js: [
+                  `import { createRequire as topLevelCreateRequire } from 'module';`,
+                  `const require = topLevelCreateRequire(import.meta.url);`,
+                  nodejs.banner || "",
+                ].join("\n"),
+              },
+            }
           : {
-            format: "cjs",
-            target: "node14",
-            banner: nodejs.banner
-              ? {
-                js: nodejs.banner,
-              }
-              : undefined,
-          }),
+              format: "cjs",
+              target: "node14",
+              banner: nodejs.banner
+                ? {
+                    js: nodejs.banner,
+                  }
+                : undefined,
+            }),
         outfile: target,
         sourcemap: input.mode === "start" ? "linked" : nodejs.sourcemap,
         minify: nodejs.minify,
         ...override,
-      });
+      };
+
+      const result = await esbuild.build(options);
 
       // Install node_modules
-      if (nodejs.install?.length) {
+      if (options.external?.length) {
         async function find(dir: string, target: string): Promise<string> {
           if (dir === "/")
-            throw new VisibleError("Could not found a package.json file");
+            throw new VisibleError("Could not find a package.json file");
           if (
             await fs
               .access(path.join(dir, target))
@@ -165,7 +168,7 @@ export const useNodeHandler = Context.memo(() => {
           return find(path.join(dir, ".."), target);
         }
 
-        if (input.mode === "deploy") {
+        if (input.mode === "deploy" && nodejs.install) {
           const src = await find(parsed.dir, "package.json");
           const json = JSON.parse(
             await fs
