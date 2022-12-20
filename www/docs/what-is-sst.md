@@ -28,12 +28,11 @@ You start by defining the features of your application, _**in code**_. Like the 
 
 #### Constructs
 
-You do this using something called [**Constructs**](constructs/index.md). A construct is a **TypeScript** or **JavaScript** class, where each class corresponds to a feature and can be configured using its props.
+You do this using something called [**Constructs**](constructs/index.md). A construct is a **TypeScript** or **JavaScript** class, where each class corresponds to a feature of your app and can be configured using its props.
 
 ```ts
 const site = new NextjsSite(stack, "site", {
-  path: "web",
-  customDomain: "my-next-app.com",
+  /** props **/
 });
 ```
 
@@ -43,13 +42,11 @@ We'll look at these in detail below.
 
 #### Stacks
 
-Constructs are grouped into stacks. Stacks allow you to organize your infrastructure.
+Constructs are grouped into stacks. They allow you to organize your infrastructure.
 
 ```ts title="stacks/Web.ts"
 export function Web({ stack }: StackContext) {
-  const site = new NextjsSite(stack, "site", {
-    /** props **/
-  });
+  const site = new NextjsSite(stack, "site");
 }
 ```
 
@@ -67,7 +64,7 @@ export default function main(app: App) {
 }
 ```
 
-SST internally calls this `main` function to create the infrastructure for your app.
+SST calls this `main` function to create the infrastructure for your app.
 
 Now let's look at how to build your app with these constructs.
 
@@ -90,7 +87,7 @@ new NextjsSite(stack, "site", {
 });
 ```
 
-Behind the scenes, SST will create the infrastructure to host your serverless Next.js app on AWS. Including [Lambda functions](https://aws.amazon.com/lambda/) for SSR, [edge functions](https://aws.amazon.com/lambda/edge/) for the Middleware, a [CDN](https://aws.amazon.com/cloudfront/), and an [S3 bucket](https://aws.amazon.com/s3/) for static assets.
+Behind the scenes, SST will create the infrastructure to host your serverless Next.js app on AWS. Including [Lambda functions](https://aws.amazon.com/lambda/) for SSR, [edge functions](https://aws.amazon.com/lambda/edge/) for Middleware, a [CDN](https://aws.amazon.com/cloudfront/), and an [S3 bucket](https://aws.amazon.com/s3/) for static assets.
 
 ---
 
@@ -135,7 +132,7 @@ new SolidSite(stack, "site", {
 
 ### Static sites
 
-There's also a [`StaticSite`](constructs/StaticSite.md) construct that supports any static site builder. Just specify how to build it and where the build output is generated.
+There's also a [`StaticSite`](constructs/StaticSite.md) construct that supports any static site builder. Just specify the build command and where the output is generated.
 
 ```ts
 new StaticSite(stack, "site", {
@@ -167,7 +164,7 @@ new Api(stack, "API", {
 });
 ```
 
-Behind the scenes this creates a serverless API using [Amazon API Gateway](https://docs.aws.amazon.com/apigateway/latest/developerguide/welcome.html), where each route points to a function powered by [AWS Lambda](https://aws.amazon.com/lambda/).
+Behind the scenes, this creates a serverless API using [Amazon API Gateway](https://docs.aws.amazon.com/apigateway/latest/developerguide/welcome.html), where each route points to a function powered by [AWS Lambda](https://aws.amazon.com/lambda/).
 
 ---
 
@@ -214,7 +211,7 @@ In addition to SQL databases, SST also supports [Amazon DynamoDB](constructs/Tab
 
 ### Cron jobs
 
-You can also add cron jobs to your application with a few lines. Here a function gets executed every minute.
+You can add cron jobs to your application with a few lines. Here a function gets executed every minute.
 
 ```ts
 new Cron(stack, "cron", {
@@ -247,7 +244,7 @@ This ensures that as your app grows, you'll be able to add any feature you need.
 
 ## Connecting everything
 
-Once you've added all the features you need, SST can help you connect them all together. This ensures that you won't have to harcode anything in your app.
+Once you've added all the features you need, SST can help you connect them all together. This ensures that you won't have to hardcode anything in your app.
 
 ---
 
@@ -307,9 +304,28 @@ Behind the scenes SST adds the required [permissions](https://aws.amazon.com/iam
 
 ---
 
+## Project structure
+
+So far we've looked at a couple of different types of files. Let's take a step back and see what an SST app looks like in practice.
+
+SST applications are monorepo by default.
+
+```
+my-sst-app
+├─ sst.config.mjs
+├─ package.json
+├─ services
+├─ stacks
+└─ web
+```
+
+Where the `web/` directory is your frontend, `services/` directory is the backend, and `stacks/` directory has your infrastructure definitions.
+
+---
+
 ## SST CLI
 
-SST comes with a [CLI](packages/cli.md) that can deploy your applications and help you work on them locally.
+To help with building and deploying your app, SST comes with a [CLI](packages/cli.md).
 
 ---
 
@@ -321,11 +337,24 @@ The [`sst dev`](live-lambda-development.md) command starts a local development e
 npx sst dev
 ```
 
+Then you can start your frontend and connect it to your backend with the [`sst-env`](packages/static-site-env.md) CLI.
+
+```bash
+cd web
+sst-env -- next dev
+```
+
+Now you can make changes to your backend and see them directly in your frontend.
+
+---
+
+### SST Console
+
 The `sst dev` CLI also powers a **web based dashboard** called the [SST Console](console.md).
 
 ![SST Console homescreen](/img/console/sst-console-homescreen.png)
 
-With the Console you can view and interact with your application in real-time. You can manually invoke functions, view logs, replay invocations, and do things like **querying your database** and **running migrations**.
+With the Console you can view and interact with your application in real-time. You can manually invoke functions, view logs, replay invocations, and do things like **query your database** and **run migrations**.
 
 ---
 
@@ -337,9 +366,17 @@ To deploy your application to AWS, you use the [`sst deploy`](packages/cli.md#de
 npx sst deploy
 ```
 
-Since everything in your app is connected, this single command is all you need to get your entire app up and running.
+Since everything in your app is connected, this single command is all you need. Once complete, it'll spit out the URL where your app is hosted.
 
-Behind the scenes, it compiles your constructs to [CloudFormation](https://aws.amazon.com/cloudformation/), packages your frontend assets and functions, upload it to AWS, and creates your app's infrastructure.
+```bash {5}
+Stack prod-next-app-my-stack
+  Status: deployed
+  Outputs:
+    ApiEndpoint: https://ck198mfop1.execute-api.us-east-1.amazonaws.com
+    SiteUrl: https://my-next-app.com
+```
+
+Behind the scenes, it compiles your constructs to [CloudFormation](https://aws.amazon.com/cloudformation/), packages your frontend assets and functions, uploads it to AWS, and creates your app's infrastructure.
 
 ---
 
@@ -348,26 +385,14 @@ Behind the scenes, it compiles your constructs to [CloudFormation](https://aws.a
 The `sst deploy` command can also deploy your app to a specific _stage_ or environment. This lets you create separate environments for development, production, for pull-requests, or branches.
 
 ```bash
+# Deploy to dev
+npx sst deploy --stage dev
+
+# Deploy to production
 npx sst deploy --stage prod
 ```
 
-You can use this in your GitHub Actions workflow. Alternatively you can get automatic preview environments with [**_SEED_**](https://seed.run), a service built by the SST team.
-
----
-
-## Project structure
-
-SST applications are monorepo by default. A standard SST app will look something like this.
-
-```
-my-sst-app
-├─ sst.config.mjs
-├─ services
-├─ stacks
-└─ web
-```
-
-Where the `web/` directory is your frontend, `services/` directory is the backend, and `stacks/` directory has your infrastructure definitions.
+You can use this in your GitHub Actions workflow to generate new pull-request based environments. Alternatively you can get automatic preview environments with [**_SEED_**](https://seed.run), a service built by the SST team.
 
 ---
 
@@ -379,7 +404,7 @@ To create your first SST app you can use one of our starters with the [`create-s
 npm create sst@latest
 ```
 
-This will set you up with a full-stack TypeScript app with all the best practices.
+This will set you up with a full-stack TypeScript app with a React frontend, GraphQL API, and PostgreSQL database.
 
 However, if you are a more advanced user, you can pick one of our minimal templates and use our constructs to build the type of app you need.
 
