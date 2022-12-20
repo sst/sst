@@ -3,6 +3,7 @@ import { useBus } from "../bus.js";
 import { useFunctionBuilder, useRuntimeHandlers } from "./handlers.js";
 import { useRuntimeServerConfig } from "./server.js";
 import { Logger } from "../logger.js";
+import { useFunctions } from "../constructs/Function.js";
 
 declare module "../bus.js" {
   export interface Events {
@@ -42,7 +43,8 @@ export const useRuntimeWorkers = Context.memo(() => {
   handlers.subscribe("function.built", async (evt) => {
     for (const [_, worker] of workers) {
       if (worker.functionID === evt.properties.functionID) {
-        const handler = handlers.for("test");
+        const props = useFunctions().fromID(worker.functionID);
+        const handler = handlers.for(props.runtime!);
         await handler?.stopWorker(worker.workerID);
         bus.publish("worker.stopped", worker);
       }
@@ -57,7 +59,8 @@ export const useRuntimeWorkers = Context.memo(() => {
       evt.properties.context.awsRequestId
     );
     if (worker) return;
-    const handler = handlers.for("test");
+    const props = useFunctions().fromID(evt.properties.functionID);
+    const handler = handlers.for(props.runtime!);
     if (!handler) return;
     const build = await builder.artifact(evt.properties.functionID);
     if (!build) return;

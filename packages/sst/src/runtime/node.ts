@@ -22,9 +22,13 @@ export const useNodeHandler = Context.memo(() => {
     shouldBuild: (input) => {
       const result = cache[input.functionID];
       if (!result) return false;
-      const relative = path.relative(project.paths.root, input.file);
+      const relative = path.relative(
+        project.paths.root,
+        input.file.split(path.sep).join(path.posix.sep)
+      );
       return Boolean(result.metafile?.inputs[relative]);
     },
+    canHandle: (input) => input.startsWith("nodejs"),
     startWorker: async (input) => {
       new Promise(async () => {
         const worker = new Worker(
@@ -54,7 +58,6 @@ export const useNodeHandler = Context.memo(() => {
         threads.set(input.workerID, worker);
       });
     },
-    canHandle: () => true,
     stopWorker: async (workerID) => {
       const worker = threads.get(workerID);
       await worker?.terminate();

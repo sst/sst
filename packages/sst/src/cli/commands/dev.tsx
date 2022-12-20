@@ -95,7 +95,7 @@ export const dev = (program: Program) =>
             bold(useFunctions().fromID(evt.properties.functionID).handler!),
             evt.properties.errorMessage
           );
-          for (const line of evt.properties.trace) {
+          for (const line of evt.properties.trace || []) {
             console.log(`         ${dim(line)}`);
           }
         });

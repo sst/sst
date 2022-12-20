@@ -248,7 +248,7 @@ export async function useLocalServer(opts: Opts) {
         type: "failure",
         error: {
           errorMessage: evt.properties.errorMessage,
-          stackTrace: evt.properties.trace,
+          stackTrace: evt.properties.trace || [],
         },
       };
       invocation.times.end = Date.now();
