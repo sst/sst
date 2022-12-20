@@ -25,6 +25,7 @@ export const useNodeHandler = Context.memo(() => {
       const relative = path.relative(project.paths.root, input.file);
       return Boolean(result.metafile?.inputs[relative]);
     },
+    canHandle: (input) => input.startsWith("nodejs"),
     startWorker: async (input) => {
       new Promise(async () => {
         const worker = new Worker(
@@ -54,7 +55,6 @@ export const useNodeHandler = Context.memo(() => {
         threads.set(input.workerID, worker);
       });
     },
-    canHandle: () => true,
     stopWorker: async (workerID) => {
       const worker = threads.get(workerID);
       await worker?.terminate();

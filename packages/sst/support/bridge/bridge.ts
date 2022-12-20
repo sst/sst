@@ -95,6 +95,7 @@ export async function handler(event: any, context: any) {
     properties: {
       workerID: workerID,
       functionID: process.env.SST_FUNCTION_ID,
+      deadline: context.getRemainingTimeInMillis(),
       event,
       context,
       env: ENVIRONMENT,

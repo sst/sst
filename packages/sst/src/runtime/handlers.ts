@@ -139,7 +139,7 @@ export const useFunctionBuilder = Context.memo(() => {
   watcher.subscribe("file.changed", async (evt) => {
     const functions = useFunctions();
     for (const [functionID, props] of Object.entries(functions.all)) {
-      const handler = handlers.for("node");
+      const handler = handlers.for(props.runtime!);
       if (
         !handler?.shouldBuild({
           functionID,
