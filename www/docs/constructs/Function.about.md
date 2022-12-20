@@ -153,7 +153,9 @@ To use an [esbuild plugin](https://esbuild.github.io/plugins/), install the plug
 const { esbuildDecorators } = require("@anatine/esbuild-decorators");
 
 module.exports = [
-  esbuildDecorators(),
+  esbuildDecorators({
+    tsconfig: './services/tsconfig.json'
+  }),
 ];
 ```
 
