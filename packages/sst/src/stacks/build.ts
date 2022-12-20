@@ -4,6 +4,7 @@ import path from "path";
 import { Logger } from "../logger.js";
 import { useBus } from "../bus.js";
 import { useProject } from "../app.js";
+import { dynamicImport } from "../util/module.js";
 
 declare module "../bus.js" {
   export interface Events {
@@ -58,7 +59,7 @@ export async function build() {
 
   Logger.debug("Sourcing stacks");
   try {
-    const mod = await import(outfile);
+    const mod = await dynamicImport(outfile);
     Logger.debug("Finished sourcing stacks");
     await fs.rm(outfile, {
       force: true,

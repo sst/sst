@@ -7,6 +7,7 @@ import { Logger } from "./logger.js";
 import { Context } from "./context/context.js";
 import { VisibleError } from "./error.js";
 import { blue } from "colorette";
+import { dynamicImport } from "./util/module.js";
 
 export interface Project {
   name: string;
@@ -67,7 +68,7 @@ export async function initProject(globals: GlobalOptions) {
           continue;
         }
         if (file.endsWith("js")) {
-          const fn = await import(file);
+          const fn = await dynamicImport(file);
           return await fn.default(globals);
         }
 
