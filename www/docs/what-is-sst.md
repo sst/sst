@@ -410,4 +410,4 @@ However, if you are a more advanced user, you can pick one of our minimal templa
 
 ---
 
-If you are ready to get started with SST, [**check out our tutorial**](learn/index.md).
+To get started with SST, [**check out our tutorial**](learn/index.md).
