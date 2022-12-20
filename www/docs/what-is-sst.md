@@ -8,7 +8,7 @@ import HeadlineText from "@site/src/components/HeadlineText";
 
 <HeadlineText>
 
-SST is a framework that makes it easy to build and deploy full-stack serverless applications.
+SST is a framework that makes it easy to build modern full-stack applications on AWS.
 
 </HeadlineText>
 
@@ -16,109 +16,172 @@ SST is a framework that makes it easy to build and deploy full-stack serverless 
   <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/YFFMb8JfICM" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
-With SST you can create APIs, databases, frontends; connect them all together, and deploy them to AWS.
+With SST you can deploy a serverless Next.js, Remix, Astro, or Solid site to AWS. And add any backend feature to it.
 
 ---
 
 ## Infrastructure
 
-SST differs from other frameworks in that it helps you with **both** the **infrastructure** for your app and your **application code**.
+You start by defining the features of your application, _**in code**_. Like the frontend you are using. Or any backend feature, like an API, or database.
 
-You can describe the infrastructure of your app in **TypeScript** or **JavaScript** using [Constructs](constructs/index.md).
+---
+
+#### Constructs
+
+You do this using something called [**Constructs**](constructs/index.md). A construct is a **TypeScript** or **JavaScript** class, where each class corresponds to a feature and can be configured using its props.
+
+```ts
+const site = new NextjsSite(stack, "site", {
+  path: "web",
+  customDomain: "my-next-app.com",
+});
+```
+
+We'll look at these in detail below.
+
+---
+
+#### Stacks
+
+Constructs are grouped into stacks. Stacks allow you to organize your infrastructure.
+
+```ts title="stacks/Web.ts"
+export function Web({ stack }: StackContext) {
+  const site = new NextjsSite(stack, "site", {
+    /** props **/
+  });
+}
+```
+
+Each stack is just a function that creates a set of constructs.
+
+---
+
+#### App
+
+Finally, you add all your stacks to your app.
+
+```ts title="stacks/index.ts"
+export default function main(app: App) {
+  app.stack(Database).stack(Api).stack(Web);
+}
+```
+
+SST internally calls this `main` function to create the infrastructure for your app.
+
+Now let's look at how to build your app with these constructs.
+
+---
+
+## Frontend
+
+To start with, you might be using Next.js, Remix, Astro, Solid, or just a plain static site for your frontend. You can define this in code using one of our frontend constructs.
+
+---
+
+### Next.js
+
+For example, we can define a Next.js site using the [`NextjsSite`](constructs/NextjsSite.md) construct.
+
+```ts
+new NextjsSite(stack, "site", {
+  path: "web",
+  customDomain: "my-next-app.com",
+});
+```
+
+Behind the scenes, SST will create the infrastructure to host your serverless Next.js app on AWS. Including [Lambda functions](https://aws.amazon.com/lambda/) for SSR, [edge functions](https://aws.amazon.com/lambda/edge/) for the Middleware, a [CDN](https://aws.amazon.com/cloudfront/), and an [S3 bucket](https://aws.amazon.com/s3/) for static assets.
+
+---
+
+### Remix
+
+Similarly there's the [`RemixSite`](constructs/RemixSite.md) construct for [Remix](https://remix.run).
+
+```ts
+new RemixSite(stack, "site", {
+  path: "web",
+  customDomain: "my-remix-app.com",
+});
+```
+
+---
+
+### Astro
+
+Or the [`AstroSite`](constructs/AstroSite.md) construct for [Astro](https://astro.build).
+
+```ts
+new AstroSite(stack, "site", {
+  path: "web",
+  customDomain: "my-astro-app.com",
+});
+```
+
+---
+
+### Solid
+
+And the [`SolidStartSite`](constructs/SolidStartSite.md) for [Solid](https://www.solidjs.com).
+
+```ts
+new SolidSite(stack, "site", {
+  path: "web",
+  customDomain: "my-solid-app.com",
+});
+```
+
+---
+
+### Static sites
+
+There's also a [`StaticSite`](constructs/StaticSite.md) construct that supports any static site builder. Just specify how to build it and where the build output is generated.
+
+```ts
+new StaticSite(stack, "site", {
+  path: "web",
+  buildOutput: "dist",
+  buildCommand: "npm run build",
+  customDomain: "my-static-site.com",
+});
+```
+
+---
+
+## Backend
+
+Next, you'd want to add some backend features to your app. SST has constructs for most backend features. And you can even use any AWS service in your app.
 
 ---
 
 ### APIs
 
-For example, you can use the [`Api`](constructs/Api.md) construct to define an API in a few lines.
+For example, with the [`Api`](constructs/Api.md) construct you can define an API in a few lines.
 
 ```js
-new Api(this, "API", {
+new Api(stack, "API", {
   routes: {
-    "GET  /notes": "functions/list.main",
-    "POST /notes": "functions/create.main",
+    "GET  /notes": "services/list.main",
+    "POST /notes": "services/create.main",
   },
 });
 ```
 
-Behind the scenes this creates an instance of an [Amazon API Gateway](https://docs.aws.amazon.com/apigateway/latest/developerguide/welcome.html) with a couple of routes. Each route here points to a [_Function_](#functions). We'll look at them below.
+Behind the scenes this creates a serverless API using [Amazon API Gateway](https://docs.aws.amazon.com/apigateway/latest/developerguide/welcome.html), where each route points to a function powered by [AWS Lambda](https://aws.amazon.com/lambda/).
 
 ---
 
-### Databases
+### Functions
 
-To power your applications, SST lets you create serverless databases. Here the [`RDS`](constructs/RDS.md) construct configures a new [Amazon RDS](https://aws.amazon.com/rds/) serverless PostgreSQL cluster.
+So when a user hits the `/notes` route in your API.
 
 ```ts
-new RDS(this, "notesDb", {
-  engine: "postgresql11.13",
-  defaultDatabaseName: "main",
-  migrations: "services/migrations",
-});
+"GET /notes": "services/list.main"
 ```
 
-You can also write typesafe migrations.
+The `main` function in the `services/list.ts` file gets executed. The API then responds with what's returned.
 
-```ts
-export async function up(db) {
-  await db.schema.createTable("comment").execute();
-}
-
-export async function down(db) {
-  await db.schema.dropTable("comment").execute();
-}
-```
-
-In addition to SQL databases, SST also supports NoSQL serverless databases like [Amazon DynamoDB](constructs/Table.md).
-
----
-
-### Cron jobs
-
-SST has constructs for most common backend use cases. For example, we can add cron jobs to our application.
-
-```ts
-new Cron(this, "cron", {
-  schedule: "rate(1 minute)",
-  job: "functions/cronjob.main",
-});
-```
-
-You can also add [**Auth**](constructs/Auth.md), [**Queues**](constructs/Queue.md), [**Pub/Sub**](constructs/Topic.md), [**Data Streams**](constructs/KinesisStream.md), and more.
-
----
-
-### All AWS services
-
-Aside from the use cases that SST's constructs support, you can **deploy any AWS service** in SST. This is because SST is built on top of [AWS CDK](https://aws.amazon.com/cdk/) and you can use any CDK construct in SST.
-
-Here we are defining an [Amazon ECS](https://aws.amazon.com/ecs/) cluster with an [AWS CDK construct](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_ecs_patterns-readme.html).
-
-```ts
-import * as ecs from "aws-cdk-lib/aws-ecs";
-
-const cluster = new ecs.Cluster(this, "Cluster", {
-  vpc,
-});
-```
-
-This makes it easy to extend SST to fit any use case.
-
----
-
-## Functions
-
-At the heart of SST applications are functions — powered by [AWS Lambda](https://aws.amazon.com/lambda/). These represent your application code. They are invoked by the infrastructure in your application.
-
-From the API example above.
-
-```ts
-"GET /notes": "functions/list.main"
-```
-
-When a user hits the `/notes` route in your API, the `main` function in the `functions/list.ts` file gets executed. The API then responds with what the function returns.
-
-```ts
+```ts title="services/list.ts"
 export async function main() {
   return {
     statusCode: 200,
@@ -133,24 +196,102 @@ Your functions can be in **TypeScript**, **JavaScript**, **Python**, **Golang**,
 
 ---
 
-### Access the database
+### Databases
 
-To allow your functions to securely connect to your infrastructure, SST has a concept of [Resource Binding](resource-binding.md).
+You can add a serverless database to your app. Here the [`RDS`](constructs/RDS.md) construct configures a new [Amazon RDS](https://aws.amazon.com/rds/) serverless PostgreSQL cluster.
 
-Following our example, you can _bind_ the PostgreSQL database to the API.
+```ts
+new RDS(stack, "notesDb", {
+  engine: "postgresql11.13",
+  defaultDatabaseName: "main",
+  migrations: "services/migrations",
+});
+```
+
+In addition to SQL databases, SST also supports [Amazon DynamoDB](constructs/Table.md), a NoSQL serverless database.
+
+---
+
+### Cron jobs
+
+You can also add cron jobs to your application with a few lines. Here a function gets executed every minute.
+
+```ts
+new Cron(stack, "cron", {
+  schedule: "rate(1 minute)",
+  job: "services/cronjob.main",
+});
+```
+
+You can also add [**Auth**](constructs/Auth.md), [**Queues**](constructs/Queue.md), [**Pub/Sub**](constructs/Topic.md), [**Data Streams**](constructs/KinesisStream.md), and more.
+
+---
+
+### All AWS services
+
+Aside from the features that SST's constructs support, you can **add any AWS service** to your app. This is because SST is built on top of [AWS CDK](https://aws.amazon.com/cdk/) and you can use any CDK construct in SST.
+
+Here we are defining an [Amazon ECS](https://aws.amazon.com/ecs/) cluster with an [AWS CDK construct](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_ecs_patterns-readme.html).
+
+```ts
+import * as ecs from "aws-cdk-lib/aws-ecs";
+
+const cluster = new ecs.Cluster(stack, "Cluster", {
+  vpc,
+});
+```
+
+This ensures that as your app grows, you'll be able to add any feature you need.
+
+---
+
+## Connecting everything
+
+Once you've added all the features you need, SST can help you connect them all together. This ensures that you won't have to harcode anything in your app.
+
+---
+
+#### In the frontend
+
+For example, you can grab the endpoint of your API, from the API construct and pass it to Next.js as an environment variable.
+
+```ts {1,6}
+const api = new Api(/* ... */);
+
+new NextjsSite(stack, "site", {
+  // ...
+  environment: {
+    API_URL: api.url,
+  },
+});
+```
+
+Now in your Next.js app you can connect to your API without harcoding the URL.
+
+```ts {2} title="web/pages/index.tsx"
+export async function getStaticProps() {
+  const notes = await fetch(process.env.API_URL);
+  // ...
+}
+```
+
+---
+
+#### In the backend
+
+Similarly, you can allow your backend functions to securely connect to your infrastructure, through a concept we call [Resource Binding](resource-binding.md). For example, you can _bind_ the PostgreSQL database to the API.
 
 ```ts {4}
-const rds = new RDS(this, "notesDb" /* ... */);
+const rds = new RDS(stack, "notesDb" /* ... */);
 const api = new Api(/* ... */);
 
 api.bind([rds]);
 ```
 
-And the functions in your API will be able to access your database.
+Now the functions in your API will be able to access your database.
 
-```ts {7-9}
+```ts {6-8} title="services/list.ts"
 import { RDS } from "@serverless-stack/node/rds";
-import { ExecuteStatementCommand } from "@aws-sdk/client-rds-data";
 
 export async function main() {
   new ExecuteStatementCommand({
@@ -159,55 +300,10 @@ export async function main() {
     resourceArn: RDS.notesDb.clusterArn,
     database: RDS.notesDb.defaultDatabaseName,
   });
-
-  //
 }
 ```
 
-Behind the scenes SST adds the required [**IAM permissions**](https://aws.amazon.com/iam/) and gives you access through a **typesafe client**.
-
----
-
-## Frontend
-
-For the frontend of your application, SST lets you deploy [**Next.js**](constructs/NextjsSite.md), [**Remix**](constructs/RemixSite.md), or [**Astro**](constructs/AstroSite.md) apps. Or any [static website](constructs/StaticSite.md).
-
-Here for example, we are defining a [Vite](https://vitejs.dev) static site using the [`StaticSite`](constructs/StaticSite.md) construct.
-
-```ts
-new StaticSite(this, "site", {
-  path: "web",
-  buildCommand: "npm run build",
-  buildOutput: "dist",
-  customDomain: "my-sst-app.com",
-  environment: {
-    VITE_API_URL: api.url,
-  },
-});
-```
-
-Behind the scenes, this creates a static website powered by [Amazon S3](https://aws.amazon.com/s3/) and serves it through [Amazon CloudFront](https://aws.amazon.com/cloudfront/), a CDN.
-
----
-
-### Connect to the API
-
-SST makes it easy to connect your frontend to your API by letting you share config between constructs.
-
-For example, you can grab the API endpoint from the API construct and pass it to our frontend as an environment variable.
-
-```ts {1,6}
-const api = new Api(/* ... */);
-
-new StaticSite(this, "site", {
-  // ...
-  environment: {
-    VITE_API_URL: api.url,
-  },
-});
-```
-
-With SST, we **don't need to hardcode our backend config** in the frontend.
+Behind the scenes SST adds the required [permissions](https://aws.amazon.com/iam/), so only your API has access to the database.
 
 ---
 
@@ -219,67 +315,74 @@ SST comes with a [CLI](packages/cli.md) that can deploy your applications and he
 
 ### Local dev
 
-The [`sst start`](live-lambda-development.md) command starts a local development environment that lets you [**set breakpoints and test your functions locally**](live-lambda-development.md#debugging-with-vs-code). You don't need to mock any resources or wait for the changes to redeploy.
+The [`sst dev`](live-lambda-development.md) command starts a local development environment that connects directly to AWS. This lets you [**set breakpoints and test your functions locally**](live-lambda-development.md#debugging-with-vs-code).
 
 ```bash
-npx sst start
+npx sst dev
 ```
 
-It does this by starting up a local server and proxying requests from the Lambda functions in AWS to your machine.
-
-The `sst start` CLI also powers a **web based dashboard** called the [SST Console](console.md).
+The `sst dev` CLI also powers a **web based dashboard** called the [SST Console](console.md).
 
 ![SST Console homescreen](/img/console/sst-console-homescreen.png)
 
-With the Console you can view and interact with your application logs in real-time. You can manually invoke functions, replay invocations, and do things like **querying your database** and **running migrations**.
+With the Console you can view and interact with your application in real-time. You can manually invoke functions, view logs, replay invocations, and do things like **querying your database** and **running migrations**.
 
 ---
 
 ### Deployment
 
-To deploy your application you use the [`sst deploy`](packages/cli.md#deploy-stack) command.
+To deploy your application to AWS, you use the [`sst deploy`](packages/cli.md#deploy-stack) command. It uses your local [IAM credentials](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html) and **deploys to your AWS account**.
 
 ```bash
 npx sst deploy
 ```
 
-This will convert your constructs to [CloudFormation](https://aws.amazon.com/cloudformation/), package your functions and frontend assets, upload it to AWS, and create the infrastructure for it.
+Since everything in your app is connected, this single command is all you need to get your entire app up and running.
 
-The SST CLI uses your local [IAM credentials](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html) to **deploy to your AWS account**.
+Behind the scenes, it compiles your constructs to [CloudFormation](https://aws.amazon.com/cloudformation/), packages your frontend assets and functions, upload it to AWS, and creates your app's infrastructure.
 
 ---
 
 ### Environments
 
-You can also deploy your app to a specific _stage_ or environment. This lets you create **separate development and production** environments.
+The `sst deploy` command can also deploy your app to a specific _stage_ or environment. This lets you create separate environments for development, production, for pull-requests, or branches.
 
 ```bash
 npx sst deploy --stage prod
 ```
 
-Behind the scenes, SST uses the stage to namespace all the resources in your application.
+You can use this in your GitHub Actions workflow. Alternatively you can get automatic preview environments with [**_SEED_**](https://seed.run), a service built by the SST team.
+
+---
+
+## Project structure
+
+SST applications are monorepo by default. A standard SST app will look something like this.
+
+```
+my-sst-app
+├─ sst.config.mjs
+├─ services
+├─ stacks
+└─ web
+```
+
+Where the `web/` directory is your frontend, `services/` directory is the backend, and `stacks/` directory has your infrastructure definitions.
 
 ---
 
 ## Starters
 
-You can create a new SST application with one of our starters and the [`create-sst`](packages/create-sst.md) CLI.
+To create your first SST app you can use one of our starters with the [`create-sst`](packages/create-sst.md) CLI.
 
 ```bash
-npx create-sst
+npm create sst@latest
 ```
 
-This will set you up with a full-stack TypeScript app with all the best practices. It has a GraphQL API, PostgreSQL RDS database, and a Vite React app. This is the **recommended way** to start with SST.
+This will set you up with a full-stack TypeScript app with all the best practices.
 
-```bash
-? What kind of project do you want to create? (Use arrow keys)
-❯ graphql
-  minimal
-  examples
-```
-
-However, if you are a more advanced user, you can pick one of our minimal templates and use the constructs to build the type of app you need.
+However, if you are a more advanced user, you can pick one of our minimal templates and use our constructs to build the type of app you need.
 
 ---
 
-If you are ready to get started with SST, [**check out our tutorial**](learn/index.md). It uses the GraphQL starter to build a simple Reddit clone.
+If you are ready to get started with SST, [**check out our tutorial**](learn/index.md).
