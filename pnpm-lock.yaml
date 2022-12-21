@@ -414,6 +414,7 @@ importers:
       vite-node: ^0.25.2
       vitest: ^0.15.1
       ws: ^8.11.0
+      yaml: 1.10.2
       yargs: ^17.6.2
     dependencies:
       '@aws-cdk/aws-apigatewayv2-alpha': 2.55.0-alpha.0_kbwai4h65vjfmyd7cro2ejwdne
@@ -475,6 +476,7 @@ importers:
       vite: 3.2.4_@types+node@18.11.9
       vite-node: 0.25.2_@types+node@18.11.9
       ws: 8.11.0
+      yaml: 1.10.2
       yargs: 17.6.2
     devDependencies:
       '@aws-sdk/types': 3.212.0
