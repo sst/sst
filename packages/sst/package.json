@@ -75,6 +75,8 @@
     "ink": "^3.2.0",
     "ink-spinner": "^4.0.3",
     "kysely-codegen": "^0.8.0",
+    "kysely": "^0.22.0",
+    "kysely-data-api": "^0.1.4",
     "openid-client": "^5.1.8",
     "ora": "^6.1.2",
     "promptly": "^3.2.0",
@@ -85,6 +87,7 @@
     "vite": "^3.2.4",
     "vite-node": "^0.25.2",
     "ws": "^8.11.0",
+    "yaml": "1.10.2",
     "yargs": "^17.6.2"
   },
   "devDependencies": {
@@ -105,8 +108,6 @@
     "@types/yargs": "^17.0.13",
     "archiver": "^5.3.1",
     "graphql": "^16.5.0",
-    "kysely": "^0.22.0",
-    "kysely-data-api": "^0.1.4",
     "tsx": "^3.12.1",
     "vitest": "^0.15.1"
   },

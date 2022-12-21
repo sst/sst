@@ -68,7 +68,7 @@ export const useGoHandler = Context.memo(() => {
               },
             }
           );
-        } catch {
+        } catch (ex) {
           throw new VisibleError("Failed to build");
         }
       }

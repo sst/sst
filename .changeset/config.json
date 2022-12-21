@@ -5,14 +5,7 @@
     { "repo": "serverless-stack/sst" }
   ],
   "commit": false,
-  "fixed": [
-    [
-      "@serverless-stack/console",
-      "create-sst",
-      "sst",
-      "@serverless-stack/static-site-env"
-    ]
-  ],
+  "fixed": [["@serverless-stack/console", "create-sst", "sst"]],
   "linked": [],
   "access": "restricted",
   "baseBranch": "master",

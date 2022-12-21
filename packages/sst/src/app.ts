@@ -95,6 +95,7 @@ export async function initProject(globals: GlobalOptions) {
       ...DEFAULTS,
       ...base,
       stage:
+        base.stage ||
         globals.stage ||
         (await usePersonalStage(out)) ||
         (await promptPersonalStage(out)),
