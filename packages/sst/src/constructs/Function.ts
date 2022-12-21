@@ -765,7 +765,7 @@ export class Function extends lambda.Function implements SSTConstruct {
           this.node.addr,
           "deploy"
         );
-        if (!result)
+        if (result.type === "error")
           throw new Error(`Failed to build function "${props.handler}"`);
         const code = lambda.AssetCode.fromAsset(result.out);
 

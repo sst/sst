@@ -8,15 +8,25 @@ import { ChildProcessWithoutNullStreams, exec, spawn } from "child_process";
 import { promisify } from "util";
 import { useRuntimeServerConfig } from "./server.js";
 import { isChild } from "../util/fs.js";
+import { Runtime } from "aws-cdk-lib/aws-lambda";
 const execAsync = promisify(exec);
+import os from "os";
+import url from "url";
 
-export const useGoHandler = Context.memo(() => {
+const RUNTIME_MAP: Record<string, Runtime> = {
+  "python2.7": Runtime.PYTHON_2_7,
+  "python3.6": Runtime.PYTHON_3_6,
+  "python3.7": Runtime.PYTHON_3_7,
+  "python3.8": Runtime.PYTHON_3_8,
+  "python3.9": Runtime.PYTHON_3_9,
+};
+
+export const usePythonHandler = Context.memo(() => {
   const workers = useRuntimeWorkers();
   const handlers = useRuntimeHandlers();
   const server = useRuntimeServerConfig();
   const processes = new Map<string, ChildProcessWithoutNullStreams>();
   const sources = new Map<string, string>();
-  const handlerName = process.platform === "win32" ? `handler.exe` : `handler`;
 
   handlers.register({
     shouldBuild: (input) => {
@@ -24,17 +34,34 @@ export const useGoHandler = Context.memo(() => {
       if (!parent) return false;
       return isChild(parent, input.file);
     },
-    canHandle: (input) => input.startsWith("go"),
+    canHandle: (input) => input.startsWith("python"),
     startWorker: async (input) => {
-      const proc = spawn(path.join(input.out, handlerName), {
-        env: {
-          ...process.env,
-          ...input.environment,
-          IS_LOCAL: "true",
-          AWS_LAMBDA_RUNTIME_API: `localhost:${server.port}/${input.workerID}`,
-        },
-        cwd: input.out,
-      });
+      const src = "services";
+      const parsed = path.parse(path.relative(src, input.handler));
+      const target = [...parsed.dir.split(path.sep), parsed.name].join(".");
+      const proc = spawn(
+        os.platform() === "win32" ? "python.exe" : "python3.6".split(".")[0],
+        [
+          "-u",
+          url.fileURLToPath(
+            new URL("../support/python-runtime/runtime.py", import.meta.url)
+          ),
+          target,
+          src,
+          parsed.ext.substring(1),
+        ],
+        {
+          env: {
+            ...process.env,
+            ...input.environment,
+            IS_LOCAL: "true",
+            AWS_LAMBDA_FUNCTION_MEMORY_SIZE: "1024",
+            AWS_LAMBDA_RUNTIME_API: `localhost:${server.port}/${input.workerID}`,
+          },
+          shell: true,
+          cwd: path.join(process.cwd(), src),
+        }
+      );
       proc.on("exit", () => workers.exited(input.workerID));
       proc.stdout.on("data", (data: Buffer) => {
         workers.stdout(input.workerID, data.toString());
@@ -52,51 +79,9 @@ export const useGoHandler = Context.memo(() => {
       }
     },
     build: async (input) => {
-      const parsed = path.parse(input.props.handler!);
-      const project = await find(parsed.dir, "go.mod");
-      sources.set(input.functionID, project);
-      const src = path.relative(project, input.props.handler!);
-
-      if (input.mode === "start") {
-        try {
-          const target = path.join(input.out, handlerName);
-          const result = await execAsync(
-            `go build -ldflags '-s -w' -o ${target} ./${src}`,
-            {
-              cwd: project,
-              env: {
-                ...process.env,
-              },
-            }
-          );
-        } catch (ex) {
-          throw new VisibleError("Failed to build");
-        }
-      }
-
-      if (input.mode === "deploy") {
-        try {
-          const target = path.join(input.out, "handler");
-          const result = await execAsync(
-            `go build -ldflags '-s -w' -o ${target} ./${src}`,
-            {
-              cwd: project,
-              env: {
-                ...process.env,
-                CGO_ENABLED: "0",
-                GOARCH: "amd64",
-                GOOS: "linux",
-              },
-            }
-          );
-        } catch {
-          throw new VisibleError("Failed to build");
-        }
-      }
-
       return {
         type: "success",
-        handler: "handler",
+        handler: input.props.handler!,
       };
     },
   });

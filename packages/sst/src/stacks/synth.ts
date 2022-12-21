@@ -7,6 +7,7 @@ import * as contextproviders from "aws-cdk/lib/context-providers/index.js";
 import path from "path";
 import { VisibleError } from "../error.js";
 import { useGoHandler } from "../runtime/go.js";
+import { usePythonHandler } from "../runtime/python.js";
 
 interface SynthOptions {
   buildDir?: string;
@@ -22,6 +23,7 @@ export async function synth(opts: SynthOptions) {
   const { useNodeHandler } = await import("../runtime/node.js");
   useNodeHandler();
   useGoHandler();
+  usePythonHandler();
   const { Configuration } = await import("aws-cdk/lib/settings.js");
   const project = useProject();
   const [identity, bootstrap] = await Promise.all([

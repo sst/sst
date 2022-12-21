@@ -61,11 +61,18 @@ export const dev = (program: Program) =>
           );
         });
 
-        bus.subscribe("function.built", async (evt) => {
+        bus.subscribe("function.build.success", async (evt) => {
           console.log(
             bold(gray(`Built   `)),
             bold(useFunctions().fromID(evt.properties.functionID).handler!)
           );
+        });
+        bus.subscribe("function.build.failed", async (evt) => {
+          console.log(
+            bold(red(`Build failed `)),
+            bold(useFunctions().fromID(evt.properties.functionID).handler!)
+          );
+          console.log(dim(evt.properties.errors.join("\n")));
         });
 
         bus.subscribe("worker.stdout", async (evt) => {

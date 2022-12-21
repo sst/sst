@@ -108,6 +108,7 @@ export const useNodeHandler = Context.memo(() => {
         const result = await exists.rebuild();
         cache[input.functionID] = result;
         return {
+          type: "success",
           handler,
         };
       }
@@ -209,6 +210,7 @@ export const useNodeHandler = Context.memo(() => {
 
       cache[input.functionID] = result;
       return {
+        type: "success",
         handler,
       };
     },
