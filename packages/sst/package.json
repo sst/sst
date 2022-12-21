@@ -87,6 +87,7 @@
     "vite": "^3.2.4",
     "vite-node": "^0.25.2",
     "ws": "^8.11.0",
+    "yaml": "1.10.2",
     "yargs": "^17.6.2"
   },
   "devDependencies": {
