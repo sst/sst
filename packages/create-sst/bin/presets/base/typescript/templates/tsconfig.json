@@ -1,7 +1,4 @@
 {
   "extends": "@tsconfig/node16/tsconfig.json",
-  "include": ["stacks"],
-  "compilerOptions": {
-    "moduleResolution": "nodenext"
-  }
+  "include": ["stacks"]
 }
