@@ -1,5 +1,5 @@
 ---
-title: Frontend
+title: Frontends
 description: "Learn to deploy your frontend web app with SST."
 ---
 

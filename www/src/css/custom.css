@@ -238,17 +238,22 @@ nav.menu > ul > li:not(:last-child) {
 }
 
 .menu__link:hover,
-.menu__link--active:not(.menu__link--sublist) {
+.menu__link--active:not(.menu__link--sublist-caret) {
   color: var(--ifm-color-primary-lighter);
   background: none;
   border-left: 2px solid var(--ifm-color-primary-lightest);
   border-radius: 0;
 }
 
-.menu__link--active:not(.menu__link--sublist) {
-  font-weight: 600;
+.menu__caret:hover,
+.menu__list-item-collapsible--active {
+  background: none;
 }
 
+.menu__link--active:not(.menu__link--sublist) {
+}
+
+.menu__caret::before,
 .menu__link--sublist-caret:after {
   width: 1rem;
   height: 1rem;

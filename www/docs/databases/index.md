@@ -1,6 +1,5 @@
 ---
-title: Database
-description: "Learn how to add a serverless database like DynamoDB or RDS to your SST app."
+title: Databases
 ---
 
 Let's look at how to work with databases in your SST app.
@@ -222,7 +221,7 @@ new Script(stack, "Script", {
   defaults: {
     function: {
       bind: [table],
-    }
+    },
   },
   onCreate: "src/seedDatabase.main",
 });

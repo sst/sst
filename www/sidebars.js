@@ -1,31 +1,50 @@
 module.exports = {
   docs: [
     {
-      " ": ["index", "what-is-sst", "quick-start"]
+      " ": [
+        "index",
+        "what-is-sst",
+        "quick-start",
+        {
+          type: "category",
+          label: "Frontends",
+          collapsible: true,
+          collapsed: true,
+          link: {type: "doc", id: "frontends/index"},
+          items: [
+            "frontends/nextjs",
+            "frontends/remix",
+            "frontends/astro",
+            "frontends/solid",
+            "frontends/static-sites",
+          ]
+        },
+      ]
     },
     {
       Features: [
-        "frontend",
-        "api",
         {
           type: "category",
-          label: "Database",
+          label: "Databases",
           collapsible: true,
           collapsed: true,
+          link: {type: "doc", id: "databases/index"},
           items: [
-            "postgresql",
-            "dynamodb",
+            "databases/postgresql",
+            "databases/dynamodb",
           ]
         },
+        "apis",
         "auth",
         {
           type: "category",
           label: "Jobs",
           collapsible: true,
           collapsed: true,
+          link: {type: "doc", id: "jobs/index"},
           items: [
-            "cron-jobs",
-            "long-running-jobs",
+            "jobs/cron-jobs",
+            "jobs/long-running-jobs",
           ]
         },
         "config",
