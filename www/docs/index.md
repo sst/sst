@@ -128,17 +128,11 @@ Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
 ---
 
 <div className={styles.heading}>
-  <h3>Reference</h3>
-  <p>Links to reference docs for the various packages in SST.</p>
+  <h3>Reference Docs</h3>
+  <p>Links to reference docs for the SST's constructs and clients.</p>
 </div>
 
 <ul className={styles.features}>
-  <li>
-    <a href={useBaseUrl("/packages/sst")}>
-      <h3>CLI</h3>
-      <p>Use the CLI to build, deploy, and test your SST apps.</p>
-    </a>
-  </li>
   <li>
     <a href={useBaseUrl("/constructs")}>
       <h3>Constructs</h3>
@@ -149,6 +143,20 @@ Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
     <a href={useBaseUrl("/clients")}>
       <h3>Clients</h3>
       <p>Reference docs for the Node Lambda function clients.</p>
+    </a>
+  </li>
+</ul>
+
+<div className={styles.heading}>
+  <h3>CLI Docs</h3>
+  <p>Links to reference docs for the CLIs used in SST.</p>
+</div>
+
+<ul className={styles.features}>
+  <li>
+    <a href={useBaseUrl("/packages/sst")}>
+      <h3>sst</h3>
+      <p>Use the SST CLI to build, deploy, and test your apps.</p>
     </a>
   </li>
   <li>

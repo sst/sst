@@ -9,7 +9,7 @@ module.exports = {
           type: "category",
           label: "Frontends",
           collapsible: true,
-          collapsed: true,
+          collapsed: false,
           link: {type: "doc", id: "frontends/index"},
           items: [
             "frontends/nextjs",
@@ -107,7 +107,21 @@ module.exports = {
       "Migrating From": ["migrating/cdk", "migrating/serverless-framework"]
     },
     {
-      CLIs: [
+      Reference: [
+        {
+          type: "link",
+          label: "Constructs",
+          href: "/constructs"
+        },
+        {
+          type: "link",
+          label: "Clients",
+          href: "/clients"
+        },
+      ]
+    },
+    {
+      CLI: [
         "packages/sst",
         "packages/sst-env",
         "packages/create-sst",
