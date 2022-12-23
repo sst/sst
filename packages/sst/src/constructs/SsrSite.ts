@@ -49,15 +49,14 @@ import { useProject } from "../app.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 export type SsrBuildConfig = {
-  buildCommand?: string;
   serverBuildOutputFile: string;
   clientBuildOutputDir: string;
   clientBuildVersionedSubDir: string;
   siteStub: string;
 };
 
-export interface SsrDomainProps extends BaseSiteDomainProps {}
-export interface SsrCdkDistributionProps extends BaseSiteCdkDistributionProps {}
+export interface SsrDomainProps extends BaseSiteDomainProps { }
+export interface SsrCdkDistributionProps extends BaseSiteCdkDistributionProps { }
 export interface SsrSiteProps {
   /**
    * The SSR function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
@@ -69,6 +68,16 @@ export interface SsrSiteProps {
    * Path to the directory where the app is located.
    */
   path: string;
+
+  /**
+   * The command for building the website
+   * @default `npm run build`
+   * @example
+   * ```js
+   * buildCommand: "yarn build",
+   * ```
+   */
+  buildCommand?: string;
 
   /**
    * The customDomain for this website. SST supports domains that are hosted
@@ -149,25 +158,13 @@ export interface SsrSiteProps {
      */
     cachePolicies?: {
       /**
-       * Override the CloudFront cache policy properties for browser build files.
-       */
-      buildCachePolicy?: cloudfront.ICachePolicy;
-      /**
-       * Override the CloudFront cache policy properties for "public" folder
-       * static files.
-       *
-       * Note: This will not include the browser build files, which have a seperate
-       * cache policy; @see `buildCachePolicy`.
-       */
-      staticsCachePolicy?: cloudfront.ICachePolicy;
-      /**
        * Override the CloudFront cache policy properties for responses from the
        * server rendering Lambda.
        *
        * @note The default cache policy that is used in the abscene of this property
        * is one that performs no caching of the server response.
        */
-      serverCachePolicy?: cloudfront.ICachePolicy;
+      serverRequests?: cloudfront.ICachePolicy;
     };
   };
 }
@@ -185,60 +182,6 @@ export interface SsrSiteProps {
  */
 export class SsrSite extends Construct implements SSTConstruct {
   public readonly id: string;
-  /**
-   * The default CloudFront cache policy properties for browser build files.
-   */
-  public static buildCachePolicyProps: cloudfront.CachePolicyProps = {
-    queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
-    headerBehavior: cloudfront.CacheHeaderBehavior.none(),
-    cookieBehavior: cloudfront.CacheCookieBehavior.none(),
-    // The browser build file names all contain unique hashes based on their
-    // content, we can therefore aggressively cache them as we shouldn't hit
-    // unexpected collisions.
-    defaultTtl: Duration.days(365),
-    maxTtl: Duration.days(365),
-    minTtl: Duration.days(365),
-    enableAcceptEncodingBrotli: true,
-    enableAcceptEncodingGzip: true,
-    comment: "SST browser build files cache policy",
-  };
-
-  /**
-   * The default CloudFront cache policy properties for static files.
-   *
-   * @note This policy is not applied to the browser build files; they have a seperate
-   * cache policy; @see `buildCachePolicyProps`.
-   */
-  public static staticsCachePolicyProps: cloudfront.CachePolicyProps = {
-    queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
-    headerBehavior: cloudfront.CacheHeaderBehavior.none(),
-    cookieBehavior: cloudfront.CacheCookieBehavior.none(),
-    defaultTtl: Duration.days(0),
-    maxTtl: Duration.days(365),
-    minTtl: Duration.days(0),
-    enableAcceptEncodingBrotli: true,
-    enableAcceptEncodingGzip: true,
-    comment: "SST static files cache policy",
-  };
-
-  /**
-   * The default CloudFront cache policy properties for responses from the
-   * server rendering Lambda.
-   *
-   * @note By default no caching is performed on the server rendering Lambda response.
-   */
-  public static serverCachePolicyProps: cloudfront.CachePolicyProps = {
-    queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
-    headerBehavior: cloudfront.CacheHeaderBehavior.none(),
-    cookieBehavior: cloudfront.CacheCookieBehavior.all(),
-    defaultTtl: Duration.days(0),
-    maxTtl: Duration.days(365),
-    minTtl: Duration.days(0),
-    enableAcceptEncodingBrotli: true,
-    enableAcceptEncodingGzip: true,
-    comment: "SST server response cache policy",
-  };
-
   /**
    * Exposes CDK instances created within the construct.
    */
@@ -494,9 +437,13 @@ export class SsrSite extends Construct implements SSTConstruct {
   }
 
   private runBuild() {
+    const {
+      path: sitePath,
+      buildCommand: rawBuildCommand,
+      environment,
+    } = this.props;
     const defaultCommand = "npm run build";
-    const buildCommand = this.buildConfig.buildCommand || defaultCommand;
-    const { path: sitePath, environment } = this.props;
+    const buildCommand = rawBuildCommand || defaultCommand;
 
     if (buildCommand === defaultCommand) {
       // Ensure that the site has a build script defined
@@ -536,21 +483,20 @@ export class SsrSite extends Construct implements SSTConstruct {
   /////////////////////
 
   private createStaticsS3Assets(): s3Assets.Asset[] {
-    const app = this.node.root as App;
-    const fileSizeLimit = app.isRunningSSTTest()
-      ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
-        this.props.sstTestFileSizeLimitOverride || 200
-      : 200;
-
-    // First we need to create zip files containing the statics
-    const script = path.resolve(__dirname, "../support/base-site-archiver.cjs");
+    // Create temp folder, clean up if exists
     const zipOutDir = path.resolve(
       path.join(this.sstBuildDir, `Site-${this.node.id}-${this.node.addr}`)
     );
-    // Remove zip dir to ensure no partX.zip remain from previous build
     fs.rmSync(zipOutDir, { recursive: true, force: true });
 
+    // Create zip files
+    const app = this.node.root as App;
+    const script = path.resolve(__dirname, "../support/base-site-archiver.cjs");
+    const fileSizeLimit = app.isRunningSSTTest()
+      ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
+      this.props.sstTestFileSizeLimitOverride || 200
+      : 200;
     const result = spawn.sync(
       "node",
       [
@@ -649,13 +595,18 @@ export class SsrSite extends Construct implements SSTConstruct {
       this.buildConfig.clientBuildOutputDir
     );
     for (const item of fs.readdirSync(clientPath)) {
+      // Versioned files will be cached for 1 year (immutable) both at
+      // CDN and browser level.
       if (item === this.buildConfig.clientBuildVersionedSubDir) {
         fileOptions.push({
           exclude: "*",
           include: `${this.buildConfig.clientBuildVersionedSubDir}/*`,
           cacheControl: "public,max-age=31536000,immutable",
         });
-      } else {
+      }
+      // Un-versioned files will be cached for 1 year at the CDN level.
+      // But not at the browser level. CDN cache will be invalidated on deploy.
+      else {
         const itemPath = path.join(clientPath, item);
         fileOptions.push({
           exclude: "*",
@@ -755,7 +706,7 @@ export class SsrSite extends Construct implements SSTConstruct {
       certificate: this.cdk.certificate,
       defaultBehavior: this.buildDistributionDefaultBehaviorForRegional(),
       additionalBehaviors: {
-        ...this.buildDistributionStaticBehaviors(s3Origin),
+        ...this.buildDistributionStaticFileBehaviors(s3Origin),
         ...(cfDistributionProps.additionalBehaviors || {}),
       },
     });
@@ -776,13 +727,13 @@ export class SsrSite extends Construct implements SSTConstruct {
       certificate: this.cdk.certificate,
       defaultBehavior: this.buildDistributionDefaultBehaviorForEdge(s3Origin),
       additionalBehaviors: {
-        ...this.buildDistributionStaticBehaviors(s3Origin),
+        ...this.buildDistributionStaticFileBehaviors(s3Origin),
         ...(cfDistributionProps.additionalBehaviors || {}),
       },
     });
   }
 
-  private createCloudFrontDistributionForStub(): cloudfront.Distribution {
+  protected createCloudFrontDistributionForStub(): cloudfront.Distribution {
     return new cloudfront.Distribution(this, "Distribution", {
       defaultRootObject: "index.html",
       errorResponses: buildErrorResponsesForRedirectToIndex("index.html"),
@@ -816,17 +767,14 @@ export class SsrSite extends Construct implements SSTConstruct {
       authType: lambda.FunctionUrlAuthType.NONE,
     });
 
-    const serverCachePolicy =
-      cdk?.cachePolicies?.serverCachePolicy ??
-      this.createCloudFrontServerCachePolicy();
-
     return {
       viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       origin: new origins.HttpOrigin(Fn.parseDomainName(fnUrl.url)),
       allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
       cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
-      cachePolicy: serverCachePolicy,
+      cachePolicy: cdk?.cachePolicies?.serverRequests ??
+        this.createCloudFrontServerCachePolicy(),
       ...(cfDistributionProps.defaultBehavior || {}),
     };
   }
@@ -837,17 +785,14 @@ export class SsrSite extends Construct implements SSTConstruct {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
 
-    const serverCachePolicy =
-      cdk?.cachePolicies?.serverCachePolicy ??
-      this.createCloudFrontServerCachePolicy();
-
     return {
       viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       origin,
       allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
       cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
-      cachePolicy: serverCachePolicy,
+      cachePolicy: cdk?.cachePolicies?.serverRequests ??
+        this.createCloudFrontServerCachePolicy(),
       ...(cfDistributionProps.defaultBehavior || {}),
       // concatenate edgeLambdas
       edgeLambdas: [
@@ -861,47 +806,29 @@ export class SsrSite extends Construct implements SSTConstruct {
     };
   }
 
-  protected buildDistributionStaticBehaviors(
+  protected buildDistributionStaticFileBehaviors(
     origin: origins.S3Origin
   ): Record<string, cloudfront.BehaviorOptions> {
     const { cdk } = this.props;
 
-    // Build cache policies
-    const buildCachePolicy =
-      cdk?.cachePolicies?.buildCachePolicy ??
-      this.createCloudFrontBuildAssetsCachePolicy();
-    const staticsCachePolicy =
-      cdk?.cachePolicies?.staticsCachePolicy ??
-      this.createCloudFrontStaticsCachePolicy();
-
     // Create additional behaviours for statics
-    const staticsBehaviours: Record<string, cloudfront.BehaviorOptions> = {};
     const staticBehaviourOptions: cloudfront.BehaviorOptions = {
       viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       origin,
       allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
       cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
-      cachePolicy: staticsCachePolicy,
-    };
-
-    // Add behaviour for browser build
-    staticsBehaviours[`${this.buildConfig.clientBuildVersionedSubDir}/*`] = {
-      ...staticBehaviourOptions,
-      cachePolicy: buildCachePolicy,
+      cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
     };
 
     // Add behaviour for public folder statics (excluding build)
+    const staticsBehaviours: Record<string, cloudfront.BehaviorOptions> = {};
     const publicDir = path.join(
       this.props.path,
       this.buildConfig.clientBuildOutputDir
     );
     for (const item of fs.readdirSync(publicDir)) {
-      if (item === this.buildConfig.clientBuildVersionedSubDir) {
-        continue;
-      }
-      const itemPath = path.join(publicDir, item);
-      if (fs.statSync(itemPath).isDirectory()) {
+      if (fs.statSync(path.join(publicDir, item)).isDirectory()) {
         staticsBehaviours[`${item}/*`] = staticBehaviourOptions;
       } else {
         staticsBehaviours[item] = staticBehaviourOptions;
@@ -911,28 +838,18 @@ export class SsrSite extends Construct implements SSTConstruct {
     return staticsBehaviours;
   }
 
-  protected createCloudFrontBuildAssetsCachePolicy(): cloudfront.CachePolicy {
-    return new cloudfront.CachePolicy(
-      this,
-      "BuildCache",
-      SsrSite.buildCachePolicyProps
-    );
-  }
-
-  protected createCloudFrontStaticsCachePolicy(): cloudfront.CachePolicy {
-    return new cloudfront.CachePolicy(
-      this,
-      "StaticsCache",
-      SsrSite.staticsCachePolicyProps
-    );
-  }
-
   protected createCloudFrontServerCachePolicy(): cloudfront.CachePolicy {
-    return new cloudfront.CachePolicy(
-      this,
-      "ServerCache",
-      SsrSite.serverCachePolicyProps
-    );
+    return new cloudfront.CachePolicy(this, "ServerCache", {
+      queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
+      headerBehavior: cloudfront.CacheHeaderBehavior.none(),
+      cookieBehavior: cloudfront.CacheCookieBehavior.all(),
+      defaultTtl: Duration.days(0),
+      maxTtl: Duration.days(365),
+      minTtl: Duration.days(0),
+      enableAcceptEncodingBrotli: true,
+      enableAcceptEncodingGzip: true,
+      comment: "SST server response cache policy",
+    });
   }
 
   private createCloudFrontInvalidation(): CustomResource {
@@ -963,8 +880,8 @@ export class SsrSite extends Construct implements SSTConstruct {
     const waitForInvalidation = this.isPlaceholder
       ? false
       : this.props.waitForInvalidation === false
-      ? false
-      : true;
+        ? false
+        : true;
     return new CustomResource(this, "CloudFrontInvalidation", {
       serviceToken: invalidator.functionArn,
       resourceType: "Custom::SSTCloudFrontInvalidation",

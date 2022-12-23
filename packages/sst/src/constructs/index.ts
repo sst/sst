@@ -21,7 +21,6 @@ export * from "./WebSocketApi.js";
 export * from "./KinesisStream.js";
 export * from "./ApiGatewayV1Api.js";
 export * from "./NextjsSite.js";
-export * from "./Nextjs13Site.js";
 export * from "./RemixSite.js";
 export * from "./SolidStartSite.js";
 export * from "./StaticSite.js";
