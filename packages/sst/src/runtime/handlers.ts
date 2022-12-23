@@ -6,12 +6,15 @@ import { useWatcher } from "../watcher.js";
 import { useBus } from "../bus.js";
 import { useProject } from "../app.js";
 import { FunctionProps, useFunctions } from "../constructs/Function.js";
-import { useNodeHandler } from "./node.js";
 
 declare module "../bus.js" {
   export interface Events {
-    "function.built": {
+    "function.build.success": {
       functionID: string;
+    };
+    "function.build.failed": {
+      functionID: string;
+      errors: string[];
     };
   }
 }
@@ -41,9 +44,16 @@ export interface RuntimeHandler {
   stopWorker: (workerID: string) => Promise<void>;
   shouldBuild: (input: ShouldBuildInput) => boolean;
   canHandle: (runtime: string) => boolean;
-  build: (input: BuildInput) => Promise<{
-    handler: string;
-  }>;
+  build: (input: BuildInput) => Promise<
+    | {
+        type: "success";
+        handler: string;
+      }
+    | {
+        type: "error";
+        errors: string[];
+      }
+  >;
 }
 
 export const useRuntimeHandlers = Context.memo(() => {
@@ -52,7 +62,7 @@ export const useRuntimeHandlers = Context.memo(() => {
   const bus = useBus();
 
   const result = {
-    subscribe: bus.forward("function.built"),
+    subscribe: bus.forward("function.build.success", "function.build.failed"),
     register: (handler: RuntimeHandler) => {
       handlers.push(handler);
     },
@@ -69,44 +79,46 @@ export const useRuntimeHandlers = Context.memo(() => {
       await fs.rm(out, { recursive: true, force: true });
       await fs.mkdir(out, { recursive: true });
 
-      try {
-        if (func.hooks?.beforeBuild) await func.hooks.beforeBuild(func, out);
-        const built = await handler!.build({
+      if (func.hooks?.beforeBuild) await func.hooks.beforeBuild(func, out);
+      const built = await handler!.build({
+        functionID,
+        out,
+        mode,
+        props: func,
+      });
+      if (built.type === "error") {
+        bus.publish("function.build.failed", {
           functionID,
-          out,
-          mode,
-          props: func,
+          errors: built.errors,
         });
+        return built;
+      }
+      if (func.copyFiles) {
+        await Promise.all(
+          func.copyFiles.map(async (entry) => {
+            const fromPath = path.join(project.paths.root, entry.from);
+            const to = entry.to || entry.from;
+            if (path.isAbsolute(to))
+              throw new Error(`Copy destination path "${to}" must be relative`);
+            const toPath = path.join(out, to);
+            if (mode === "deploy")
+              await fs.cp(fromPath, toPath, {
+                recursive: true,
+              });
+            if (mode === "start") {
+              await fs.symlink(fromPath, toPath);
+            }
+          })
+        );
+      }
 
-        if (func.copyFiles) {
-          await Promise.all(
-            func.copyFiles.map(async (entry) => {
-              const fromPath = path.join(project.paths.root, entry.from);
-              const to = entry.to || entry.from;
-              if (path.isAbsolute(to))
-                throw new Error(
-                  `Copy destination path "${to}" must be relative`
-                );
-              const toPath = path.join(out, to);
-              if (mode === "deploy")
-                await fs.cp(fromPath, toPath, {
-                  recursive: true,
-                });
-              if (mode === "start") {
-                await fs.symlink(fromPath, toPath);
-              }
-            })
-          );
-        }
+      if (func.hooks?.afterBuild) await func.hooks.afterBuild(func, out);
 
-        if (func.hooks?.afterBuild) await func.hooks.afterBuild(func, out);
-
-        bus.publish("function.built", { functionID });
-        return {
-          ...built,
-          out,
-        };
-      } catch {}
+      bus.publish("function.build.success", { functionID });
+      return {
+        ...built,
+        out,
+      };
     },
   };
 
@@ -129,7 +141,7 @@ export const useFunctionBuilder = Context.memo(() => {
     },
     build: async (functionID: string) => {
       const result = await handlers.build(functionID, "start");
-      if (!result) return;
+      if (result.type === "error") return;
       artifacts.set(functionID, result);
       return artifacts.get(functionID)!;
     },
