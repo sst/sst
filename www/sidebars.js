@@ -1,121 +1,53 @@
 module.exports = {
   docs: [
     {
-      " ": ["index", "quick-start"]
+      " ": ["index", "what-is-sst", "quick-start"]
     },
     {
-      Overview: [
-        "what-is-sst",
-        "live-lambda-development",
-        "console",
-        "resource-binding",
-        "editor-integration",
-      ]
-    },
-    {
-      Learn: [
-        "learn/index",
+      Features: [
+        "frontend",
+        "api",
         {
           type: "category",
-          label: "1 - Installation",
+          label: "Database",
           collapsible: true,
           collapsed: true,
           items: [
-            "learn/create-a-new-project",
-            "learn/project-structure",
-            "learn/initialize-the-database",
-            "learn/start-the-frontend",
-            "learn/breakpoint-debugging"
+            "postgresql",
+            "dynamodb",
           ]
         },
-        {
-          type: "category",
-          label: "2 - Add a New Feature",
-          collapsible: true,
-          collapsed: true,
-          items: [
-            "learn/domain-driven-design",
-            //"learn/database-options",
-            "learn/write-to-the-database",
-            //"learn/write-to-dynamodb"
-          ]
-        },
-        {
-          type: "category",
-          label: "3 - Add to the API",
-          collapsible: true,
-          collapsed: true,
-          items: [
-            "learn/graphql-api",
-            "learn/add-api-types",
-            "learn/queries-and-mutations"
-          ]
-        },
-        {
-          type: "category",
-          label: "4 - Update the Frontend",
-          collapsible: true,
-          collapsed: true,
-          items: [
-            "learn/render-queries",
-            "learn/make-updates",
-            //Link to Vue example
-            //Link to Next.js example
-            //"learn/frontend-options",
-          ]
-        },
-        {
-          type: "category",
-          label: "5 - Deployment",
-          collapsible: true,
-          collapsed: true,
-          items: [
-            "learn/deploy-to-prod",
-            //"learn/git-push-to-deploy"
-          ]
-        }
-      ]
-    },
-    {
-      "Learn More": [
-        // Add Cognito Auth construct
-        // Implement backend
-        // Implement signup/login on Frontend
-        // Create a user in Console
-        // Test out the auth flow
-        // Link to examples for Facebook, Google, GitHub examples
-        //{ type: "doc", id: "api", label: "Auth" },
-
-        // Create a Bucket construct
-        // Add an API Mutation for generating prefixed url
-        // Implementing file upload in the frontend
-        // View the uploaded file in Console
-        //{ type: "doc", id: "api", label: "File Upload" },
-
-        // Create a Cron construct
-        //{ type: "doc", id: "api", label: "Cron Jobs" },
-
-        // Create comments created and comments removed SNS topics
-        // Fire events
-        // View comment count updated in SST Console
-        // Link to examples for Queues, EventBuses, and KinesisStreams
-        //{ type: "doc", id: "api", label: "Events" },
-
-        // Add a RESTful route
-        // Invoke the endpoint in Console
-        //{ type: "doc", id: "api", label: "RESTful routes" },
-
-        //"api",
-        //"storage",
-        //"database",
-        //"frontend",
-        //"cron-jobs",
-        //"asynchronous-tasks",
-
         "auth",
+        {
+          type: "category",
+          label: "Jobs",
+          collapsible: true,
+          collapsed: true,
+          items: [
+            "cron-jobs",
+            "long-running-jobs",
+          ]
+        },
         "config",
-        "advanced/testing",
-        "long-running-jobs",
+        "queues",
+        "file-uploads",
+      ]
+    },
+    {
+      "How-Tos": [
+        {
+          type: "category",
+          label: "Local Dev",
+          collapsible: true,
+          collapsed: true,
+          items: [
+            "live-lambda-development",
+            "console",
+            "editor-integration",
+          ]
+        },
+        "testing",
+        "resource-binding",
         "going-to-production",
         "working-with-your-team",
         {
@@ -140,14 +72,11 @@ module.exports = {
             //"advanced/monorepo-project-structure",
             "advanced/environment-specific-resources"
           ]
-        }
+        },
       ]
     },
     {
-      "Migrating From": ["migrating/cdk", "migrating/serverless-framework"]
-    },
-    {
-      More: [
+      Info: [
         "known-issues",
         "upgrade-guide",
         "design-principles",
@@ -156,20 +85,59 @@ module.exports = {
       ]
     },
     {
-      Packages: [
+      "Migrating From": ["migrating/cdk", "migrating/serverless-framework"]
+    },
+    {
+      CLIs: [
+        "packages/sst",
+        "packages/sst-env",
         "packages/create-sst",
-        "packages/cli",
-        {
-          type: "link",
-          label: "@serverless-stack/node",
-          href: "/clients",
-        },
-        {
-          type: "link",
-          label: "@serverless-stack/resources",
-          href: "/constructs",
-        },
-        "packages/static-site-env"
+      ]
+    }
+  ],
+  learn: [
+    "learn/index",
+    {
+      type: "category",
+      label: "1 - Installation",
+      items: [
+        "learn/create-a-new-project",
+        "learn/project-structure",
+        "learn/initialize-the-database",
+        "learn/start-the-frontend",
+        "learn/breakpoint-debugging"
+      ]
+    },
+    {
+      type: "category",
+      label: "2 - Add a New Feature",
+      items: [
+        "learn/domain-driven-design",
+        "learn/write-to-the-database",
+      ]
+    },
+    {
+      type: "category",
+      label: "3 - Add to the API",
+      items: [
+        "learn/graphql-api",
+        "learn/add-api-types",
+        "learn/queries-and-mutations"
+      ]
+    },
+    {
+      type: "category",
+      label: "4 - Update the Frontend",
+      items: [
+        "learn/render-queries",
+        "learn/make-updates",
+      ]
+    },
+    {
+      type: "category",
+      label: "5 - Deployment",
+      items: [
+        "learn/deploy-to-prod",
       ]
     }
   ],

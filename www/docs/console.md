@@ -138,7 +138,7 @@ You can scan the table, query specific keys, create and edit items.
 
 ## Deployed environments
 
-By default the Console connects to the app you are running locally with `sst start`. To use the Console with a deployed environment you'll first need to run the [`sst console`](packages/cli.md#console) command.
+By default the Console connects to the app you are running locally with `sst start`. To use the Console with a deployed environment you'll first need to run the [`sst console`](packages/sst.md#console) command.
 
 ```bash
 $ npx sst console
@@ -189,7 +189,7 @@ The companion app runs locally and creates a tunnelled connection to your Gitpod
 
 The <a href={ config.console }>SST Console</a> is a static single-page app hosted at <ConsoleUrl url={config.console} />.
 
-It uses the local credentials from the SST CLI ([`sst start`](packages/cli.md#start) or [`sst console`](packages/cli.md#console)) to make calls to your AWS account.
+It uses the local credentials from the SST CLI ([`sst start`](packages/sst.md#start) or [`sst console`](packages/sst.md#console)) to make calls to your AWS account.
 
 When the Console starts up, it gets the credentials from a local server that is run as a part of the SST CLI. It also gets some metadata from the app that's running locally. The local server only allows access from `localhost` and `console.sst.dev`.
 

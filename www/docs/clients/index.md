@@ -145,7 +145,7 @@ Currently the client only supports JavaScript and TypeScript. But if you are loo
 
 ## Usage in tests
 
-To access the [properties](#properties) in your tests, you'll need to wrap your tests with the [`sst bind`](packages/cli.md#bind) CLI.
+To access the [properties](#properties) in your tests, you'll need to wrap your tests with the [`sst bind`](packages/sst.md#bind) CLI.
 
 ```bash
 sst bind -- vitest run
@@ -153,4 +153,4 @@ sst bind -- vitest run
 
 This allows the `@serverless-stack/node` package to work as if it was running inside a Lambda function.
 
-[Read more about testing](advanced/testing.md) and [learn about the `sst bind` CLI](advanced/testing.md#how-sst-bind-works).
+[Read more about testing](../testing.md) and [learn about the `sst bind` CLI](../testing.md#how-sst-bind-works).

@@ -1,6 +1,6 @@
 ---
-title: "@serverless-stack/cli"
-description: "Docs for the @serverless-stack/cli package"
+title: sst
+description: "Reference docs for the SST CLI."
 ---
 
 import config from "../../config";
@@ -236,7 +236,7 @@ So for example, you can bind all the resources in your app and use those to run 
 npx sst bind -- vitest run
 ```
 
-You can [read more about how this works for testing](../advanced/testing.md).
+You can [read more about how this works for testing](../testing.md).
 
 ### `secrets [action]`
 

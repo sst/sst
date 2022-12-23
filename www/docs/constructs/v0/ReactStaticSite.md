@@ -50,14 +50,12 @@ The `ReactStaticSite` construct allows you to set the environment variables in y
 
 Create React App supports [setting build time environment variables](https://create-react-app.dev/docs/adding-custom-environment-variables/). In your JS files this looks like:
 
-
 ```js title="src/App.js"
 console.log(process.env.REACT_APP_API_URL);
 console.log(process.env.REACT_APP_USER_POOL_CLIENT);
 ```
 
 And in your HTML files:
-
 
 ```html title="public/index.html"
 <p>Api endpoint is: %REACT_APP_API_URL%</p>
@@ -85,11 +83,11 @@ On `sst deploy`, the environment variables will first be replaced by placeholder
 
 To use these values while developing, run `sst start` to start the [Live Lambda Development](../../live-lambda-development.md) environment.
 
-``` bash
+```bash
 npx sst start
 ```
 
-Then in your React app to reference these variables, add the [`sst-env`](../../packages/static-site-env.md) package.
+Then in your React app to reference these variables, add the [`sst-env`](../../packages/sst-env.md) package.
 
 ```bash
 npm install --save-dev @serverless-stack/static-site-env
@@ -108,7 +106,7 @@ And tweak the React `start` script to:
 
 Now you can start your React app as usualy and it'll have the environment variables from your SST app.
 
-``` bash
+```bash
 npm run start
 ```
 
@@ -127,6 +125,7 @@ There are a couple of things happening behind the scenes here:
   sst.json
   react-app/
 ```
+
 :::
 
 ### Configuring custom domains

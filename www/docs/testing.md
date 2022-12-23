@@ -22,11 +22,11 @@ Want to learn more about testing in SST? Check out the [livestream we did on You
 
 To start, there are 3 types of tests you can write for your SST apps:
 
-1. Tests for your domain code. We recommend [Domain Driven Design](../learn/domain-driven-design.md).
+1. Tests for your domain code. We recommend [Domain Driven Design](learn/domain-driven-design.md).
 2. Tests for your APIs, the endpoints handling requests.
 3. Tests for your stacks, the code that creates your infrastructure.
 
-SST uses [Vitest](https://vitest.dev) to help you write these tests. And it uses the [`sst bind`](../packages/cli.md#bind) CLI to bind the resources to your tests. This allows the [`@serverless-stack/node`](../clients/index.md) helper library to work as if the tests were running inside a Lambda function.
+SST uses [Vitest](https://vitest.dev) to help you write these tests. And it uses the [`sst bind`](packages/sst.md#bind) CLI to bind the resources to your tests. This allows the [`@serverless-stack/node`](clients/index.md) helper library to work as if the tests were running inside a Lambda function.
 
 ---
 
@@ -79,7 +79,7 @@ In this chapter we'll look at the different types of tests and share some tips o
 
 To follow along, you can create the GraphQL starter by running `npx create-sst@latest` > `graphql` > `DynamoDB`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/create-sst-dynamo) based on the same template.
 
-If you are new to the GraphQL starter, it creates a very simple Reddit clone. You can submit links and it'll display all the links that have been submitted. You can check out the [Quick start](../quick-start.md) to see how it works.
+If you are new to the GraphQL starter, it creates a very simple Reddit clone. You can submit links and it'll display all the links that have been submitted. You can check out the [Quick start](quick-start.md) to see how it works.
 
 ---
 
@@ -120,7 +120,7 @@ The above test only works if we run `sst bind -- vitest run`. The `sst bind` CLI
 
 We can rewrite the above test so that instead of calling `Article.create()`, you make a request to the GraphQL API to create the article. In fact, the GraphQL stack template already includes this test.
 
-To call the GraphQL API in our test, we need to know the API's URL. We create a [`Parameter`](../config.md#parameters) in `stacks/Api.ts`:
+To call the GraphQL API in our test, we need to know the API's URL. We create a [`Parameter`](config.md#parameters) in `stacks/Api.ts`:
 
 ```ts title="stacks/Api.ts"
 new Config.Parameter(stack, "API_URL", {
@@ -263,9 +263,9 @@ The best way to isolate tests is to create separate scopes for each test. In our
 
 ## How `sst bind` works
 
-When testing your code, you have to ensure the testing environment has the same environment variable values as the Lambda environment. In the past, people would manually maintain a `.env.test` file with environment values. SST has built-in support for automatically loading the secrets and environment values that are managed by [`Resource Binding`](../resource-binding.md).
+When testing your code, you have to ensure the testing environment has the same environment variable values as the Lambda environment. In the past, people would manually maintain a `.env.test` file with environment values. SST has built-in support for automatically loading the secrets and environment values that are managed by [`Resource Binding`](resource-binding.md).
 
-The [`sst bind`](../packages/cli.md#bind) CLI fetches all the resource values, and invokes the `vitest run` with the values configured as environment variables.
+The [`sst bind`](packages/sst.md#bind) CLI fetches all the resource values, and invokes the `vitest run` with the values configured as environment variables.
 
 <details>
 <summary>Behind the scenes</summary>
@@ -282,4 +282,4 @@ The `sst bind` CLI sets the following environment variables:
 
 </details>
 
-This allows the [`@serverless-stack/node`](../clients/index.md) helper library to work as if it was running inside a Lambda function.
+This allows the [`@serverless-stack/node`](clients/index.md) helper library to work as if it was running inside a Lambda function.

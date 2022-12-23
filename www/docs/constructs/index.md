@@ -32,7 +32,7 @@ The [`@serverless-stack/resources`](https://www.npmjs.com/package/@serverless-st
 
 ## Installation
 
-This package is usually installed together with [`@serverless-stack/cli`](../packages/cli.md).
+This package is usually installed together with [`@serverless-stack/cli`](../packages/sst.md).
 
 ```bash
 # With npm

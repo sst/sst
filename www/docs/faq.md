@@ -64,7 +64,7 @@ If you happen to be familiar with [AWS CDK](https://sst.dev/chapters/what-is-aws
 What this means in practise is that SST gives you the following:
 
 1. Types, secrets, and environment variables are [shared across your application](what-is-sst.md#connect-to-the-api).
-2. Built-in support for writing [database migrations](what-is-sst.md#databases), [unit tests, and integration tests](advanced/testing.md) for your application code.
+2. Built-in support for writing [database migrations](what-is-sst.md#databases), [unit tests, and integration tests](testing.md) for your application code.
 3. Support for [deploying to separate environments](what-is-sst.md#environments), allowing for a PR workflow.
 4. Higher-level constructs for common use cases like [APIs](constructs/Api.md), [databases](constructs/RDS.md), [cron jobs](constructs/Cron.md), etc.
 5. [Type-safe libraries](clients/index.md) for your Lambda functions.

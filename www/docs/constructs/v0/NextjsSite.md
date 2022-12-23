@@ -20,6 +20,7 @@ To use the `NextjsSite` construct, you have to install `@sls-next/lambda-at-edge
 ```bash
 npm install --save @sls-next/lambda-at-edge
 ```
+
 :::
 
 Most of the Next.js 11 features are supported, including:
@@ -64,7 +65,6 @@ The `NextjsSite` construct allows you to set the environment variables in your N
 
 Next.js supports [setting build time environment variables](https://nextjs.org/docs/basic-features/environment-variables). In your JS files this looks like:
 
-
 ```js title="pages/index.js"
 console.log(process.env.API_URL);
 console.log(process.env.USER_POOL_CLIENT);
@@ -92,20 +92,21 @@ On `sst deploy`, the environment variables will first be replaced by placeholder
 Since the actual values are determined at deploy time, you should not rely on the values at build time. For example, you cannot fetch from `process.env.API_URL` inside `getStaticProps()` at build time.
 
 There are a couple of work arounds:
+
 - Hardcode the API URL
 - Read the API URL dynamically at build time (ie. from an SSM value)
 - Use [fallback pages](https://nextjs.org/docs/basic-features/data-fetching#fallback-pages) to generate the page on the fly
-:::
+  :::
 
 #### While developing
 
 To use these values while developing, run `sst start` to start the [Live Lambda Development](../../live-lambda-development.md) environment.
 
-``` bash
+```bash
 npx sst start
 ```
 
-Then in your Next.js app to reference these variables, add the [`sst-env`](../../packages/static-site-env.md) package.
+Then in your Next.js app to reference these variables, add the [`sst-env`](../../packages/sst-env.md) package.
 
 ```bash
 npm install --save-dev @serverless-stack/static-site-env
@@ -123,7 +124,7 @@ And tweak the Next.js `dev` script to:
 
 Now you can start your Next.js app as usual and it'll have the environment variables from your SST app.
 
-``` bash
+```bash
 npm run dev
 ```
 
@@ -142,6 +143,7 @@ There are a couple of things happening behind the scenes here:
   sst.json
   nextjs-app/
 ```
+
 :::
 
 ### Configuring custom domains
@@ -290,9 +292,21 @@ CloudFront has a limit of 20 cache policies per AWS account. This is a hard limi
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 
 const cachePolicies = {
-  staticCachePolicy: new cloudfront.CachePolicy(this, "StaticCache", NextjsSite.staticCachePolicyProps),
-  imageCachePolicy: new cloudfront.CachePolicy(this, "ImageCache", NextjsSite.imageCachePolicyProps),
-  lambdaCachePolicy: new cloudfront.CachePolicy(this, "LambdaCache", NextjsSite.lambdaCachePolicyProps),
+  staticCachePolicy: new cloudfront.CachePolicy(
+    this,
+    "StaticCache",
+    NextjsSite.staticCachePolicyProps
+  ),
+  imageCachePolicy: new cloudfront.CachePolicy(
+    this,
+    "ImageCache",
+    NextjsSite.imageCachePolicyProps
+  ),
+  lambdaCachePolicy: new cloudfront.CachePolicy(
+    this,
+    "LambdaCache",
+    NextjsSite.lambdaCachePolicyProps
+  ),
 };
 
 new NextjsSite(this, "Site1", {
@@ -450,7 +464,7 @@ An associative array with the key being the environment variable name.
 
 ```js
 {
-  API_URL: api.url
+  API_URL: api.url;
 }
 ```
 

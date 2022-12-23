@@ -22,7 +22,7 @@ Want to learn more about `Config`? Check out the [launch livestream on YouTube](
 
 `Config` allows you to securely pass the following into your functions.
 
-1. [**Secrets**](#secrets): Sensitive values that cannot be defined in your code. You can use the [`sst secrets`](packages/cli.md#secrets-action) CLI to set them.
+1. [**Secrets**](#secrets): Sensitive values that cannot be defined in your code. You can use the [`sst secrets`](packages/sst.md#secrets-action) CLI to set them.
 2. [**Parameters**](#parameters): Values from non-SST constructs, ie. CDK constructs or static values.
 
 :::info
@@ -62,7 +62,7 @@ Follow along by creating the Minimal TypeScript starter by running `npx create-s
 2. Bind the `STRIPE_KEY` to the `api`.
 
    ```ts title="stacks/MyStack.ts"
-    api.bind([STRIPE_KEY]);
+   api.bind([STRIPE_KEY]);
    ```
 
 3. Then in your terminal, run the `sst secrets` CLI to set a value for the secret.
@@ -98,7 +98,7 @@ Follow along by creating the Minimal TypeScript starter by running `npx create-s
 
 ### `sst secrets`
 
-We used the [`sst secrets set`](packages/cli.md#secrets-action) CLI in the above example to set a secret. Here are some of the other commands.
+We used the [`sst secrets set`](packages/sst.md#secrets-action) CLI in the above example to set a secret. Here are some of the other commands.
 
 - `npx sst secrets get STRIPE_KEY` to check the value of a secret
 - `npx sst secrets list` to get the values of all the secrets
@@ -110,7 +110,7 @@ You can also pass in a stage name to manage the secrets for a specific stage.
 npx sst secrets list --stage prod
 ```
 
-[Read more about the `sst secrets` CLI](packages/cli.md#secrets-action).
+[Read more about the `sst secrets` CLI](packages/sst.md#secrets-action).
 
 ---
 
@@ -307,7 +307,7 @@ It reads the value from `process.env.SST_Parameter_value_USER_UPDATED_TOPIC` and
 
 SST also stores a copy of the parameter value in [AWS SSM](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html). For each parameter, an SSM parameter of the type `String` is created with the name `/sst/{appName}/{stageName}/parameters/USER_UPDATED_TOPIC`, where `{appName}` is the name of your SST app, and `{stageName}` is the stage. The parameter value is the topic name stored in plain text.
 
-Storing the parameter values in SSM might seem redundant. But it provides a convenient way to fetch all the parameters used in your application. This can make it easy to test your functions. [Read more about how SST uses `Config` to make testing easier](advanced/testing.md#how-sst-bind-works).
+Storing the parameter values in SSM might seem redundant. But it provides a convenient way to fetch all the parameters used in your application. This can make it easy to test your functions. [Read more about how SST uses `Config` to make testing easier](testing.md#how-sst-bind-works).
 
 ---
 

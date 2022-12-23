@@ -18,7 +18,7 @@ Deploy a serverless Next.js, Remix, Astro, or Solid site to your AWS account and
 
 ## Frontend
 
-Start by defining, **_in code_**, the frontend you are using. SST supports the following:
+Start by defining, **_in code_**, the frontend you are using. SST supports the following.
 
 ---
 
@@ -93,7 +93,7 @@ Just specify the build command and point to where the output is generated.
 
 ## Infrastructure
 
-The above snippets are a way of defining the features of your application, in code. You can define any feature of your application, not just the frontend.
+The above snippets are a way of defining the features of your application in code. You can define any feature of your application, not just the frontend.
 
 You can add backend features like APIs, databases, cron jobs, and more. All **without ever using the AWS Console**.
 
@@ -244,7 +244,7 @@ This ensures that as your app grows, you'll be able to add any feature you need.
 
 ## Connecting everything
 
-Once you've added a couple of features, SST can help you connect them together. This is great because you **won't have to hardcode** anything in your app.
+Once you've added a couple of features, SST can help you connect them together. This is great because you **won't need to hardcode** anything in your app.
 
 ---
 
@@ -325,26 +325,26 @@ Where the `web/` directory is your frontend, `services/` is the backend, and `st
 
 ## SST CLI
 
-To help with building and deploying your app, SST comes with a [CLI](packages/cli.md).
+To help with building and deploying your app, SST comes with a [CLI](packages/sst.md).
 
 ---
 
 ### Local dev
 
-The [`sst dev`](live-lambda-development.md) command starts a local development environment that connects directly to AWS. This lets you [**set breakpoints and test your functions locally**](live-lambda-development.md#debugging-with-vs-code).
+The [`sst dev`](live-lambda-development.md) command starts a local development environment called [Live Lambda](live-lambda-development.md), that connects directly to AWS. Letting you [set breakpoints and test your functions locally](live-lambda-development.md#debugging-with-vs-code).
 
 ```bash
 npx sst dev
 ```
 
-Then you can start your frontend with the [`sst-env`](packages/static-site-env.md) command. This will connect your frontend to the backend by loading all the environment variables.
+Now you can start your frontend with the [`sst-env`](packages/sst-env.md) command. It'll connect your frontend to the backend by loading all the environment variables.
 
 ```bash
 cd web
 sst-env -- next dev
 ```
 
-Now you can make changes to your backend and see them directly in your frontend.
+With this you can **make changes to your backend on AWS**, and see them **directly in your frontend**!
 
 ---
 
@@ -360,13 +360,13 @@ With the Console you can view and interact with your application in real-time. Y
 
 ### Deployment
 
-To deploy your application to AWS, you use the [`sst deploy`](packages/cli.md#deploy-stack) command. It uses your local [IAM credentials](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html) and **deploys to your AWS account**.
+To deploy your application to AWS, you use the [`sst deploy`](packages/sst.md#deploy-stack) command. It uses your local [IAM credentials](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html) and **deploys to your AWS account**.
 
 ```bash
 npx sst deploy
 ```
 
-Since everything in your app is connected, this single command is all you need. Once complete, it'll spit out your app's URL!
+Since everything in your app is connected, this single command is all you need. Once complete, it'll print out your app's URL!
 
 ```bash {5}
 Stack prod-next-app-my-stack
@@ -394,7 +394,7 @@ npx sst deploy --stage prod
 
 You can use this in your GitHub Actions workflow to generate pull-request based environments.
 
-Or, you can get automatic preview environments with [**_SEED_**](https://seed.run), a service built by the SST team.
+Or, you can get **automatic preview environments** with [**_SEED_**](https://seed.run), a service built by the SST team.
 
 ---
 

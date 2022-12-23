@@ -271,7 +271,7 @@ Now you can set a breakpoint and start your app by pressing `F5` or by clicking 
 
 #### Increasing timeouts
 
-By default the timeout for a Lambda function might not be long enough for you to view the breakpoint info. So we need to increase this. We use the [`--increase-timeout`](packages/cli.md#options) option for the `sst start` command in our `launch.json`.
+By default the timeout for a Lambda function might not be long enough for you to view the breakpoint info. So we need to increase this. We use the [`--increase-timeout`](packages/sst.md#options) option for the `sst start` command in our `launch.json`.
 
 ```js title="launch.json
 "runtimeArgs": ["start", "--increase-timeout"],

@@ -19,7 +19,7 @@ new StaticSite(stack, "react", {
   environment: {
     // Pass in the API endpoint to our app
     VITE_API_URL: api.url,
-  }, 
+  },
 });
 ```
 
@@ -35,7 +35,7 @@ new StaticSite(stack, "vue", {
   environment: {
     // Pass in the API endpoint to our app
     VITE_API_URL: api.url,
-  }, 
+  },
 });
 ```
 
@@ -51,7 +51,7 @@ new StaticSite(stack, "svelte", {
   environment: {
     // Pass in the API endpoint to our app
     VITE_API_URL: api.url,
-  }, 
+  },
 });
 ```
 
@@ -99,7 +99,7 @@ new StaticSite(stack, "react", {
   environment: {
     // Pass in the API endpoint to our app
     REACT_APP_API_URL: api.url,
-  }, 
+  },
 });
 ```
 
@@ -148,16 +148,16 @@ If a `vite.config.js` file is detected in the `path` folder, SST also creates a 
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly VITE_API_URL: string
-  readonly VITE_USER_POOL_CLIENT: string
+  readonly VITE_API_URL: string;
+  readonly VITE_USER_POOL_CLIENT: string;
 }
 
 interface ImportMeta {
-  readonly env: ImportMetaEnv
+  readonly env: ImportMetaEnv;
 }
 ```
 
-This tells your editor the environment variables that are available and autocompletes them for you. 
+This tells your editor the environment variables that are available and autocompletes them for you.
 
 ![Vite environment variables autocomplete](/img/screens/vite-environment-variables-autocomplete.png)
 
@@ -172,7 +172,7 @@ new StaticSite(stack, "frontend", {
   },
   vite: {
     types: "types/my-env.d.ts",
-  }
+  },
 });
 ```
 
@@ -184,11 +184,11 @@ On `sst deploy`, the environment variables will first be replaced by placeholder
 
 To use these values while developing, run `sst start` to start the [Live Lambda Development](/live-lambda-development.md) environment.
 
-``` bash
+```bash
 npx sst start
 ```
 
-Then in your Vite app to reference these variables, add the [`sst-env`](/packages/static-site-env.md) package.
+Then in your Vite app to reference these variables, add the [`sst-env`](/packages/sst-env.md) package.
 
 ```bash
 npm install --save-dev @serverless-stack/static-site-env
@@ -206,7 +206,7 @@ And tweak the Vite `dev` script to:
 
 Now you can start your Vite app as usualy and it'll have the environment variables from your SST app.
 
-``` bash
+```bash
 npm run dev
 ```
 
@@ -225,6 +225,7 @@ There are a couple of things happening behind the scenes here:
   sst.json
   vite-app/
 ```
+
 :::
 
 ### Custom domains
@@ -453,7 +454,10 @@ new StaticSite(stack, "frontend", {
 The default behavior of the CloudFront distribution uses the internally created S3 bucket as the origin. You can configure this behavior.
 
 ```js {6-11}
-import { ViewerProtocolPolicy, AllowedMethods } from "aws-cdk-lib/aws-cloudfront";
+import {
+  ViewerProtocolPolicy,
+  AllowedMethods,
+} from "aws-cdk-lib/aws-cloudfront";
 
 new StaticSite(stack, "frontend", {
   path: "path/to/site",

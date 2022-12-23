@@ -1,122 +1,125 @@
 The `SolidStartSite` construct is a higher level CDK construct that makes it easy to create an SolidStart app. It provides a simple way to build and deploy the app to AWS:
 
-  - The client assets are deployed to an S3 Bucket, and served out from a CloudFront CDN for fast content delivery.
-  - The app server is deployed to Lambda. You can deploy to Lambda@Edge instead if the `edge` flag is enabled. Read more about [Single region vs Edge](#single-region-vs-edge).
-  - It enables you to [configure custom domains](#custom-domains) for the website URL.
-  - It also enable you to [automatically set the environment variables](#environment-variables) for your SolidStart app directly from the outputs in your SST app.
-  - It provides a simple interface to [grant permissions](#using-aws-services) for your app to access AWS resources.
+- The client assets are deployed to an S3 Bucket, and served out from a CloudFront CDN for fast content delivery.
+- The app server is deployed to Lambda. You can deploy to Lambda@Edge instead if the `edge` flag is enabled. Read more about [Single region vs Edge](#single-region-vs-edge).
+- It enables you to [configure custom domains](#custom-domains) for the website URL.
+- It also enable you to [automatically set the environment variables](#environment-variables) for your SolidStart app directly from the outputs in your SST app.
+- It provides a simple interface to [grant permissions](#using-aws-services) for your app to access AWS resources.
 
 ## Quick Start
 
 1. If you are creating a new SolidStart app, create a `my-solid-start-app` folder at the root of your SST app.
 
-  Then run `create-solid` from the `my-solid-start-app` folder.
+Then run `create-solid` from the `my-solid-start-app` folder.
 
-  ```bash
-  npx create-solid@latest
-  ```
-  
-  And make sure to enable `Server Side Rendering`.
-  
-  ![Select SolidStart App template](/img/solid-start/bootstrap-solid-start.png)
+```bash
+npx create-solid@latest
+```
 
-  After the SolidStart app is created, your SST app structure should look like:
+And make sure to enable `Server Side Rendering`.
 
-  ```bash
-  my-sst-app
-  ├─ sst.json
-  ├─ services
-  ├─ stacks
-  └─ my-solid-start-app     <-- new SolidStart app
-     ├─ src
-     ├─ public
-     └─ vite.config.ts
-  ```
+![Select SolidStart App template](/img/solid-start/bootstrap-solid-start.png)
 
-  Continue to step 3.
+After the SolidStart app is created, your SST app structure should look like:
+
+```bash
+my-sst-app
+├─ sst.json
+├─ services
+├─ stacks
+└─ my-solid-start-app     <-- new SolidStart app
+   ├─ src
+   ├─ public
+   └─ vite.config.ts
+```
+
+Continue to step 3.
 
 2. Alternatively, if you have an existing SolidStart app, move the app to the root of your SST app. Your SST app structure should look like:
 
-  ```bash
-  my-sst-app
-  ├─ sst.json
-  ├─ services
-  ├─ stacks
-  └─ my-solid-start-app     <-- your SolidStart app
-     ├─ src
-     ├─ public
-     └─ vite.config.ts
-  ```
+```bash
+my-sst-app
+├─ sst.json
+├─ services
+├─ stacks
+└─ my-solid-start-app     <-- your SolidStart app
+   ├─ src
+   ├─ public
+   └─ vite.config.ts
+```
 
 3. Let's set up the AWS adapter for your SolidStart app, since we will be deploying the app to AWS. To do that, make sure your `vite.config.ts` looks like the following.
 
-  ```ts
-  import solid from "solid-start/vite";
-  import aws from "solid-start-aws";
-  import { defineConfig } from "vite";
-  
-  export default defineConfig({
-    plugins: [solid({ adapter: aws() })],
-  });
-  ```
+```ts
+import solid from "solid-start/vite";
+import aws from "solid-start-aws";
+import { defineConfig } from "vite";
 
-  And add the `solid-start-aws` dependency to your SolidStart app's `package.json`.
+export default defineConfig({
+  plugins: [solid({ adapter: aws() })],
+});
+```
 
-  ```bash
-  npm install --save-dev solid-start-aws
-  ```
+And add the `solid-start-aws` dependency to your SolidStart app's `package.json`.
 
-  :::info
-  If you are deploying the `SolidStartSite` in the `edge` mode, use the edge adapter instead.
-  ```diff
-  - plugins: [solid({ adapter: aws() })],
-  + plugins: [solid({ adapter: aws({ edge: true }) })],
-  ```
-  :::
+```bash
+npm install --save-dev solid-start-aws
+```
+
+:::info
+If you are deploying the `SolidStartSite` in the `edge` mode, use the edge adapter instead.
+
+```diff
+- plugins: [solid({ adapter: aws() })],
++ plugins: [solid({ adapter: aws({ edge: true }) })],
+```
+
+:::
 
 4. Also add the `static-site-env` dependency to your SolidStart app's `package.json`. `static-site-env` enables you to [automatically set the environment variables](#environment-variables) for your SolidStart app directly from the outputs in your SST app.
 
-  ```bash
-  npm install --save-dev @serverless-stack/static-site-env
-  ```
+```bash
+npm install --save-dev @serverless-stack/static-site-env
+```
 
-  Update the package.json scripts for your SolidStart application.
+Update the package.json scripts for your SolidStart application.
 
-   ```diff
-     "scripts": {
-   -   "dev": "solid-start dev",
-   +   "dev": "sst-env -- solid-start dev",
-       "build": "solid-start build",
-       "start": "solid-start start"
-     },
-   ```
+```diff
+  "scripts": {
+-   "dev": "solid-start dev",
++   "dev": "sst-env -- solid-start dev",
+    "build": "solid-start build",
+    "start": "solid-start start"
+  },
+```
 
 5. Add the `SolidStartSite` construct to an existing stack in your SST app. You can also create a new stack for the app.
 
-  ```ts
-  import { SolidStartSite, StackContext } as sst from "@serverless-stack/resources";
+```ts
+import { SolidStartSite, StackContext } as sst from "@serverless-stack/resources";
 
-  export default function MyStack({ stack }: StackContext) {
+export default function MyStack({ stack }: StackContext) {
 
-    // ... existing constructs
+  // ... existing constructs
 
-    // Create the SolidStart site
-    const site = new SolidStartSite(stack, "Site", {
-      path: "my-solid-start-app/",
-    });
+  // Create the SolidStart site
+  const site = new SolidStartSite(stack, "Site", {
+    path: "my-solid-start-app/",
+  });
 
-    // Add the site's URL to stack output
-    stack.addOutputs({
-      URL: site.url,
-    });
-  }
-  ```
+  // Add the site's URL to stack output
+  stack.addOutputs({
+    URL: site.url,
+  });
+}
+```
 
-  When you are building your SST app, `SolidStartSite` will invoke `npm build` inside the SolidStart app directory. Make sure `path` is pointing to the your SolidStart app.
+When you are building your SST app, `SolidStartSite` will invoke `npm build` inside the SolidStart app directory. Make sure `path` is pointing to the your SolidStart app.
 
-  Note that we also added the site's URL to the stack output. After deploy succeeds, the URL will be printed out in the terminal.
+Note that we also added the site's URL to the stack output. After deploy succeeds, the URL will be printed out in the terminal.
 
 ## Single region vs edge
+
 There are two ways you can deploy the SolidStart app to your AWS account.
 
 By default, the SolidStart app server is deployed to a single region defined in your `sst.json` or passed in via the `--region` flag. Alternatively, you can choose to deploy to the edge. When deployed to the edge, loaders/actions are running on edge location that is physically closer to the end user. In this case, the app server is deployed to AWS Lambda@Edge.
@@ -217,7 +220,9 @@ process.env = { ...process.env, ...environment };
 And at deploy time, after the referenced resources have been created, the API in this case, a CloudFormation custom resource will update the app server's code and replace the placeholder `{{ _SST_EDGE_SITE_ENVIRONMENT_ }}` with the actual value:
 
 ```ts
-const environment = { API_URL: "https://ioe7hbv67f.execute-api.us-east-1.amazonaws.com" };
+const environment = {
+  API_URL: "https://ioe7hbv67f.execute-api.us-east-1.amazonaws.com",
+};
 process.env = { ...process.env, ...environment };
 ```
 
@@ -227,11 +232,11 @@ This will make `process.env.API_URL` available at runtime.
 
 To use these values while developing, run `sst start` to start the [Live Lambda Development](/live-lambda-development.md) environment.
 
-``` bash
+```bash
 npx sst start
 ```
 
-Then in your SolidStart app to reference these variables, add the [`static-site-env`](/packages/static-site-env.md) package.
+Then in your SolidStart app to reference these variables, add the [`static-site-env`](/packages/sst-env.md) package.
 
 ```bash
 npm install --save-dev @serverless-stack/static-site-env
@@ -249,7 +254,7 @@ And tweak the SolidStart `dev` script to:
 
 Now you can start your SolidStart app as usual and it'll have the environment variables from your SST app.
 
-``` bash
+```bash
 npm run dev
 ```
 
@@ -268,6 +273,7 @@ There are a couple of things happening behind the scenes here:
   sst.json
   my-solid-start-app/
 ```
+
 :::
 
 ## Using AWS services
@@ -452,7 +458,7 @@ new SolidStartSite(stack, "Site", {
       timeout: 20,
       memorySize: 2048,
       permissions: ["sns"],
-    }
+    },
   },
 });
 ```
@@ -480,23 +486,35 @@ CloudFront has a limit of 20 cache policies per AWS account. This is a hard limi
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 
 const cachePolicies = {
-  buildCachePolicy: new cloudfront.CachePolicy(stack, "BuildCache", SolidStartSite.buildCachePolicyProps),
-  staticsCachePolicy: new cloudfront.CachePolicy(stack, "StaticsCache", SolidStartSite.staticsCachePolicyProps),
-  serverCachePolicy: new cloudfront.CachePolicy(stack, "ServerCache", SolidStartSite.serverCachePolicyProps),
+  buildCachePolicy: new cloudfront.CachePolicy(
+    stack,
+    "BuildCache",
+    SolidStartSite.buildCachePolicyProps
+  ),
+  staticsCachePolicy: new cloudfront.CachePolicy(
+    stack,
+    "StaticsCache",
+    SolidStartSite.staticsCachePolicyProps
+  ),
+  serverCachePolicy: new cloudfront.CachePolicy(
+    stack,
+    "ServerCache",
+    SolidStartSite.serverCachePolicyProps
+  ),
 };
 
 new SolidStartSite(stack, "Site1", {
   path: "my-solid-start-app/",
   cdk: {
     cachePolicies,
-  }
+  },
 });
 
 new SolidStartSite(stack, "Site2", {
   path: "another-solid-start-app/",
   cdk: {
     cachePolicies,
-  }
+  },
 });
 ```
 
@@ -516,16 +534,16 @@ const site = new SolidStartSite(stack, "Site", {
     distribution: {
       defaultBehavior: {
         origin: new origins.HttpOrigin(Fn.parseDomainName(api.url)),
-      }
-    }
-  }
+      },
+    },
+  },
 });
 
 api.addRoutes(stack, {
   "ANY /{proxy+}": {
     type: "function",
     cdk: {
-      function: site.cdk.function
+      function: site.cdk.function,
     },
   },
 });

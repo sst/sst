@@ -1,6 +1,6 @@
 ---
 title: create-sst
-description: "Docs for the create-sst package"
+description: "Reference docs for the create-sst CLI."
 ---
 
 import MultiPackagerCode from "@site/src/components/MultiPackagerCode";

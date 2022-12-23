@@ -28,7 +28,6 @@ The `ViteStaticSite` construct allows you to set the environment variables in yo
 
 Vite supports [setting build time environment variables](https://vitejs.dev/guide/env-and-mode.html). In your JS files this looks like:
 
-
 ```js title="src/App.js"
 console.log(import.meta.env.VITE_API_URL);
 console.log(import.meta.env.VITE_USER_POOL_CLIENT);
@@ -60,16 +59,16 @@ SST also creates a type definition file for the environment variables in `src/ss
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly VITE_API_URL: string
-  readonly VITE_USER_POOL_CLIENT: string
+  readonly VITE_API_URL: string;
+  readonly VITE_USER_POOL_CLIENT: string;
 }
 
 interface ImportMeta {
-  readonly env: ImportMetaEnv
+  readonly env: ImportMetaEnv;
 }
 ```
 
-This tells your editor the environment variables that are available and autocompletes them for you. 
+This tells your editor the environment variables that are available and autocompletes them for you.
 
 ![Vite environment variables autocomplete](/img/screens/vite-environment-variables-autocomplete.png)
 
@@ -94,11 +93,11 @@ On `sst deploy`, the environment variables will first be replaced by placeholder
 
 To use these values while developing, run `sst start` to start the [Live Lambda Development](/live-lambda-development.md) environment.
 
-``` bash
+```bash
 npx sst start
 ```
 
-Then in your Vite app to reference these variables, add the [`sst-env`](/packages/static-site-env.md) package.
+Then in your Vite app to reference these variables, add the [`sst-env`](/packages/sst-env.md) package.
 
 ```bash
 npm install --save-dev @serverless-stack/static-site-env
@@ -116,7 +115,7 @@ And tweak the Vite `dev` script to:
 
 Now you can start your Vite app as usualy and it'll have the environment variables from your SST app.
 
-``` bash
+```bash
 npm run dev
 ```
 
@@ -135,6 +134,7 @@ There are a couple of things happening behind the scenes here:
   sst.json
   vite-app/
 ```
+
 :::
 
 ### Custom domains

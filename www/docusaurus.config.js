@@ -47,7 +47,13 @@ module.exports = {
           to: "/",
           label: "Home",
           position: "left",
-          activeBaseRegex: "^/(?!(constructs|clients))",
+          activeBaseRegex: "^/(?!(constructs|clients|learn))",
+        },
+        {
+          to: "/learn",
+          label: "Learn",
+          position: "left",
+          activeBaseRegex: "^/learn",
         },
         {
           href: config.examples,

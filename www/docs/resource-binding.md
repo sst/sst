@@ -151,7 +151,7 @@ Cannot use Bucket.myFiles. Please make sure it is bound to this function.
 
 ### Testing
 
-When testing your code, you can use the [`sst bind`](packages/cli.md#bind) CLI to bind the resources to your tests.
+When testing your code, you can use the [`sst bind`](packages/sst.md#bind) CLI to bind the resources to your tests.
 
 ```bash
 sst bind -- vitest run
@@ -159,7 +159,7 @@ sst bind -- vitest run
 
 This allows the [`@serverless-stack/node`](clients/index.md) helper library to work as if it was running inside a Lambda function.
 
-[Read more about testing](advanced/testing.md) and [learn about the `sst bind` CLI](advanced/testing.md#how-sst-bind-works).
+[Read more about testing](testing.md) and [learn about the `sst bind` CLI](testing.md#how-sst-bind-works).
 
 ---
 

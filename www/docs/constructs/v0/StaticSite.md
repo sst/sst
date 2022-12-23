@@ -111,7 +111,7 @@ new StaticSite(this, "SvelteSite", {
   environment: {
     // Pass in the API endpoint to our app
     VITE_APP_API_URL: api.url,
-  }, 
+  },
 });
 ```
 
@@ -160,7 +160,7 @@ To use these values while developing, run `sst start` to start the [Live Lambda 
 npx sst start
 ```
 
-Then in your app to reference these variables, add the [`sst-env`](../../packages/static-site-env.md) package.
+Then in your app to reference these variables, add the [`sst-env`](../../packages/sst-env.md) package.
 
 ```bash
 npm install --save-dev @serverless-stack/static-site-env
@@ -401,7 +401,10 @@ new StaticSite(this, "Site", {
 The default behavior of the CloudFront distribution uses the internally created S3 bucket as the origin. You can configure this behavior.
 
 ```js {6-9}
-import { ViewerProtocolPolicy, AllowedMethods } from "aws-cdk-lib/aws-cloudfront";
+import {
+  ViewerProtocolPolicy,
+  AllowedMethods,
+} from "aws-cdk-lib/aws-cloudfront";
 
 new StaticSite(this, "Site", {
   path: "path/to/src",
@@ -700,7 +703,6 @@ Set this option if you have an existing certificate in the `us-east-1` region in
 _Type_ : `string[]`, _defaults to `[]`_
 
 Specify additional names that should route to the Cloudfront Distribution. Note, certificates for these names will not be automatically generated so the `certificate` option must be specified.
-
 
 ### isExternalDomain?
 

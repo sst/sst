@@ -29,11 +29,11 @@ export class DebugApp extends App {
    */
   public readonly name: string;
   /**
-   * The stage the app is being deployed to. If this is not specified as the [`--stage`](/packages/cli.md#--stage) option, it'll default to the stage configured during the initial run of the SST CLI.
+   * The stage the app is being deployed to. If this is not specified as the [`--stage`](/packages/sst.md#--stage) option, it'll default to the stage configured during the initial run of the SST CLI.
    */
   public readonly stage: string;
   /**
-   * The region the app is being deployed to. If this is not specified as the [`--region`](/packages/cli.md#--region) option in the SST CLI, it'll default to the `region` in your `sst.json`.
+   * The region the app is being deployed to. If this is not specified as the [`--region`](/packages/sst.md#--region) option in the SST CLI, it'll default to the `region` in your `sst.json`.
    */
   public readonly region: string;
   /**

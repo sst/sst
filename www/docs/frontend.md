@@ -392,7 +392,7 @@ And tweak the `start` script in your `package.json` to.
 
 Now you can start your app as usual and it'll have the environment variables from your SST app.
 
-Note that, the `sst-env` CLI will traverse up the directories to look for the root of your SST app. If the static site or Next.js app is located outside the SST app folder, pass in [`--path`](packages/static-site-env.md#--path) to specify the relative path of the SST app.
+Note that, the `sst-env` CLI will traverse up the directories to look for the root of your SST app. If the static site or Next.js app is located outside the SST app folder, pass in [`--path`](packages/sst-env.md#--path) to specify the relative path of the SST app.
 
 ```json title="package.json" {2}
 "scripts": {
