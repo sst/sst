@@ -525,3 +525,20 @@ api.addRoutes(stack, {
   },
 });
 ```
+
+#### Block public access to the S3 bucket
+
+By default SST creates the S3 bucket with public read access. You can specify more limited bucket permissions if needed. 
+```js
+import * as s3 from "aws-cdk-lib/aws-s3";
+
+new RemixSite(stack, "Site", {
+  path: "my-remix-app/",
+  cdk: {
+    bucket: {
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      publicReadAccess: false,
+    },
+  },
+});
+```
