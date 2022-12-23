@@ -8,8 +8,8 @@ process.on("unhandledRejection", (err) => {
 });
 
 const path = require("path");
-const fs = require("fs-extra");
-const chalk = require("chalk");
+const fs = require("fs");
+const { red } = require("colorette");
 
 // Throw error if user app does not have "@sls-next/lambda-at-edge"
 let Builder;
@@ -18,7 +18,7 @@ try {
 } catch (e) {
   if (e.code === "MODULE_NOT_FOUND") {
     console.log(
-      chalk.red(
+      red(
         `\nError: You need to add @sls-next/lambda-at-edge as a dependency in your package.json. Read more about it here - https://docs.sst.dev/constructs/NextjsSite#nextjs-features\n`
       )
     );
