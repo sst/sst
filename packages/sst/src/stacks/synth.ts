@@ -6,8 +6,6 @@ import { useBootstrap } from "../bootstrap.js";
 import * as contextproviders from "aws-cdk/lib/context-providers/index.js";
 import path from "path";
 import { VisibleError } from "../error.js";
-import { useGoHandler } from "../runtime/go.js";
-import { usePythonHandler } from "../runtime/python.js";
 
 interface SynthOptions {
   buildDir?: string;
@@ -20,10 +18,14 @@ interface SynthOptions {
 export async function synth(opts: SynthOptions) {
   Logger.debug("Synthesizing stacks...");
   const { App } = await import("../constructs/App.js");
-  const { useNodeHandler } = await import("../runtime/node.js");
+  const { useNodeHandler } = await import("../runtime/handlers/node.js");
+  const { useGoHandler } = await import("../runtime/handlers/go.js");
+  const { usePythonHandler } = await import("../runtime/handlers/python.js");
+  const { useJavaHandler } = await import("../runtime/handlers/java.js");
   useNodeHandler();
   useGoHandler();
   usePythonHandler();
+  useJavaHandler();
   const { Configuration } = await import("aws-cdk/lib/settings.js");
   const project = useProject();
   const [identity, bootstrap] = await Promise.all([

@@ -96,7 +96,16 @@ export interface FunctionProps
    *```
    */
   copyFiles?: FunctionBundleCopyFilesProps[];
+
+  /**
+   * Used to configure nodejs function properties
+   */
   nodejs?: NodeJSProps;
+
+  /**
+   * Used to configure java function properties
+   */
+  java?: JavaProps;
 
   /**
    * Hooks to run before and after function builds
@@ -495,43 +504,10 @@ export interface NodeJSProps {
   sourcemap?: boolean;
 }
 
-export type FunctionBundleProp =
-  | FunctionBundlePythonProps
-  | FunctionBundleJavaProps
-  | boolean;
-
-interface FunctionBundleBase {}
-
-/**
- * Used to configure Python bundling options
- */
-export interface FunctionBundlePythonProps extends FunctionBundleBase {
-  /**
-   * A list of commands to override the [default installing behavior](Function#bundle) for Python dependencies.
-   *
-   * Each string in the array is a command that'll be run. For example:
-   *
-   * @default "[]"
-   *
-   * @example
-   * ```js
-   * new Function(stack, "Function", {
-   *   bundle: {
-   *     installCommands: [
-   *       'export VARNAME="my value"',
-   *       'pip install --index-url https://domain.com/pypi/myprivatemodule/simple/ --extra-index-url https://pypi.org/simple -r requirements.txt .',
-   *     ]
-   *   }
-   * })
-   * ```
-   */
-  installCommands?: string[];
-}
-
 /**
  * Used to configure Java package build options
  */
-export interface FunctionBundleJavaProps extends FunctionBundleBase {
+export interface JavaProps {
   /**
    * Gradle build command to generate the bundled .zip file.
    *
@@ -577,6 +553,36 @@ export interface FunctionBundleJavaProps extends FunctionBundleBase {
    * ```
    */
   experimentalUseProvidedRuntime?: "provided" | "provided.al2";
+}
+
+export type FunctionBundleProp = FunctionBundlePythonProps | boolean;
+
+interface FunctionBundleBase {}
+
+/**
+ * Used to configure Python bundling options
+ */
+export interface FunctionBundlePythonProps extends FunctionBundleBase {
+  /**
+   * A list of commands to override the [default installing behavior](Function#bundle) for Python dependencies.
+   *
+   * Each string in the array is a command that'll be run. For example:
+   *
+   * @default "[]"
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   bundle: {
+   *     installCommands: [
+   *       'export VARNAME="my value"',
+   *       'pip install --index-url https://domain.com/pypi/myprivatemodule/simple/ --extra-index-url https://pypi.org/simple -r requirements.txt .',
+   *     ]
+   *   }
+   * })
+   * ```
+   */
+  installCommands?: string[];
 }
 
 /**

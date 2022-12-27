@@ -1,13 +1,13 @@
 import path from "path";
 import fs from "fs/promises";
-import { useRuntimeHandlers } from "./handlers.js";
-import { useRuntimeWorkers } from "./workers.js";
-import { Context } from "../context/context.js";
-import { VisibleError } from "../error.js";
+import { useRuntimeHandlers } from "../handlers.js";
+import { useRuntimeWorkers } from "../workers.js";
+import { Context } from "../../context/context.js";
+import { VisibleError } from "../../error.js";
 import { ChildProcessWithoutNullStreams, exec, spawn } from "child_process";
 import { promisify } from "util";
-import { useRuntimeServerConfig } from "./server.js";
-import { isChild } from "../util/fs.js";
+import { useRuntimeServerConfig } from "../server.js";
+import { isChild } from "../../util/fs.js";
 const execAsync = promisify(exec);
 
 export const useGoHandler = Context.memo(() => {

@@ -1,13 +1,11 @@
 import path from "path";
-import fs from "fs/promises";
-import { useRuntimeHandlers } from "./handlers.js";
-import { useRuntimeWorkers } from "./workers.js";
-import { Context } from "../context/context.js";
-import { VisibleError } from "../error.js";
+import { useRuntimeHandlers } from "../handlers.js";
+import { useRuntimeWorkers } from "../workers.js";
+import { Context } from "../../context/context.js";
 import { ChildProcessWithoutNullStreams, exec, spawn } from "child_process";
 import { promisify } from "util";
-import { useRuntimeServerConfig } from "./server.js";
-import { isChild } from "../util/fs.js";
+import { useRuntimeServerConfig } from "../server.js";
+import { isChild } from "../../util/fs.js";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
 const execAsync = promisify(exec);
 import os from "os";
@@ -44,7 +42,7 @@ export const usePythonHandler = Context.memo(() => {
         [
           "-u",
           url.fileURLToPath(
-            new URL("../support/python-runtime/runtime.py", import.meta.url)
+            new URL("../../support/python-runtime/runtime.py", import.meta.url)
           ),
           target,
           src,
@@ -86,15 +84,3 @@ export const usePythonHandler = Context.memo(() => {
     },
   });
 });
-
-async function find(dir: string, target: string): Promise<string> {
-  if (dir === "/") throw new VisibleError(`Could not find a ${target} file`);
-  if (
-    await fs
-      .access(path.join(dir, target))
-      .then(() => true)
-      .catch(() => false)
-  )
-    return dir;
-  return find(path.join(dir, ".."), target);
-}

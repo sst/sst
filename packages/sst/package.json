@@ -110,7 +110,8 @@
     "archiver": "^5.3.1",
     "graphql": "^16.5.0",
     "tsx": "^3.12.1",
-    "vitest": "^0.15.1"
+    "vitest": "^0.15.1",
+    "zip-local": "^0.3.5"
   },
   "peerDependencies": {
     "@sls-next/lambda-at-edge": "^3.7.0",

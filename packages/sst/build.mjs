@@ -147,6 +147,7 @@ const moveToDist = [
   "static-site-stub",
   "base-site-custom-resource",
   "python-runtime",
+  "java-runtime",
 ];
 await Promise.all(
   moveToDist.map((dir) =>
