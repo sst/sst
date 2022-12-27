@@ -2,8 +2,6 @@
 
 This is a preview of the upcoming SST 2.0. It is incomplete so if you run into any issues please report to us in the #cli channel in discord ASAP so we can get it fixed. We're in the final phases now and are trying to prioritize fixing blocking issues.
 
-!!! DO NOT USE FOR PRODUCTION !!!
-
 ## Migration Guide
 
 - SST is now a monopackage. Remove all packages referencing `@serverless-stack/resources` `@serverless-stack/cli` `@serverless-stack/node` and `@serverless-stack/static-site-env`.
@@ -56,7 +54,6 @@ There is also a preview of `create-sst` You can use it by running `npx create-ss
 
 ## Not yet supported
 
-- Any runtime other than nodejs
-- SST Console
+- Dotnet and Python runtime
 
 Tell us about anything else that's missing outside of this!
