@@ -6,6 +6,7 @@ import { useBootstrap } from "../bootstrap.js";
 import * as contextproviders from "aws-cdk/lib/context-providers/index.js";
 import path from "path";
 import { VisibleError } from "../error.js";
+import { useDotnetHandler } from "../runtime/handlers/dotnet.js";
 
 interface SynthOptions {
   buildDir?: string;
@@ -26,6 +27,7 @@ export async function synth(opts: SynthOptions) {
   useGoHandler();
   usePythonHandler();
   useJavaHandler();
+  useDotnetHandler();
   const { Configuration } = await import("aws-cdk/lib/settings.js");
   const project = useProject();
   const [identity, bootstrap] = await Promise.all([
