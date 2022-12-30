@@ -5,7 +5,7 @@ import path from "path";
 export async function findAbove(dir: string, target: string): Promise<string> {
   if (dir === "/") throw new VisibleError(`Could not find a ${target} file`);
   if (await existsAsync(path.join(dir, target))) return dir;
-  return findAbove(path.join(dir, ".."), target);
+  return findAbove(path.resolve(path.join(dir, "..")), target);
 }
 
 export async function findBelow(dir: string, target: string) {
