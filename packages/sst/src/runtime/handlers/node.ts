@@ -2,14 +2,14 @@ import path from "path";
 import fs from "fs/promises";
 import { exec } from "child_process";
 import fsSync from "fs";
-import { useProject } from "../app.js";
+import { useProject } from "../../app.js";
 import esbuild, { BuildOptions } from "esbuild";
 import url from "url";
 import { Worker } from "worker_threads";
-import { useRuntimeHandlers } from "./handlers.js";
-import { useRuntimeWorkers } from "./workers.js";
-import { Context } from "../context/context.js";
-import { VisibleError } from "../error.js";
+import { useRuntimeHandlers } from "../handlers.js";
+import { useRuntimeWorkers } from "../workers.js";
+import { Context } from "../../context/context.js";
+import { VisibleError } from "../../error.js";
 
 export const useNodeHandler = Context.memo(() => {
   const workers = useRuntimeWorkers();
@@ -33,7 +33,7 @@ export const useNodeHandler = Context.memo(() => {
       new Promise(async () => {
         const worker = new Worker(
           url.fileURLToPath(
-            new URL("../support/nodejs-runtime/index.mjs", import.meta.url)
+            new URL("../../support/nodejs-runtime/index.mjs", import.meta.url)
           ),
           {
             env: {

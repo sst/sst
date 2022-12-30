@@ -147,6 +147,9 @@ const moveToDist = [
   "static-site-stub",
   "base-site-custom-resource",
   "python-runtime",
+  "java-runtime",
+  "dotnet31-bootstrap",
+  "dotnet6-bootstrap",
 ];
 await Promise.all(
   moveToDist.map((dir) =>

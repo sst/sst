@@ -89,7 +89,8 @@
     "vite-node": "^0.25.2",
     "ws": "^8.11.0",
     "yaml": "1.10.2",
-    "yargs": "^17.6.2"
+    "yargs": "^17.6.2",
+    "zip-local": "^0.3.5"
   },
   "devDependencies": {
     "@aws-sdk/types": "^3.208.0",

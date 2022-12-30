@@ -210,7 +210,6 @@ export class NextjsSite extends SsrSite {
         "_next/data/*": serverBehavior,
         "_next/image*": imageBehavior,
         "_next/*": staticFileBehaviour,
-        "assets/*": staticFileBehaviour,
         ...(cfDistributionProps.additionalBehaviors || {}),
       },
     });

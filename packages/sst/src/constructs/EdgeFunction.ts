@@ -189,7 +189,7 @@ ${exports}
           S3Bucket: asset.s3BucketName,
           S3Key: asset.s3ObjectKey,
         },
-        Runtime: lambda.Runtime.NODEJS_16_X.name,
+        Runtime: lambda.Runtime.NODEJS_18_X.name,
         MemorySize: memory || 512,
         Timeout: Duration.seconds(timeout || 10).toSeconds(),
         Role: this.role.roleArn,
