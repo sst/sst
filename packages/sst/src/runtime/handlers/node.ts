@@ -33,7 +33,7 @@ export const useNodeHandler = Context.memo(() => {
       new Promise(async () => {
         const worker = new Worker(
           url.fileURLToPath(
-            new URL("../support/nodejs-runtime/index.mjs", import.meta.url)
+            new URL("../../support/nodejs-runtime/index.mjs", import.meta.url)
           ),
           {
             env: {
