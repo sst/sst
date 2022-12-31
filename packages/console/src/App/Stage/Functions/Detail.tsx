@@ -145,7 +145,14 @@ const Invoke = memo((props: { metadata: FunctionMetadata }) => {
 
   return (
     <InvokeRoot>
-      <form onSubmit={onSubmit}>
+      <form
+        onSubmit={onSubmit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && e.metaKey) {
+            onSubmit();
+          }
+        }}
+      >
         <InvokeTextarea
           maxRows={20}
           minRows={5}
