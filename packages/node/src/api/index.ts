@@ -104,3 +104,13 @@ export function useQueryParams() {
 export function useQueryParam(name: string) {
   return useQueryParams()[name];
 }
+
+export function usePathParams() {
+  const evt = useEvent("api");
+  const path = evt.pathParameters || {};
+  return path;
+}
+
+export function usePathParam(name: string) {
+  return usePathParams()[name];
+}
