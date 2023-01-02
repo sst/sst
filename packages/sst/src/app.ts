@@ -124,10 +124,10 @@ export async function initProject(globals: GlobalOptions) {
   }
 
   ProjectContext.provide(project);
-  Logger.debug("Config loaded", project);
   dotenv.config({
     path: path.join(project.paths.root, `.env.${project.stage}`),
   });
+  Logger.debug("Config loaded", project);
 }
 
 async function usePersonalStage(out: string) {

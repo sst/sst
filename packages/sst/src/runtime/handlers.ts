@@ -61,6 +61,8 @@ export const useRuntimeHandlers = Context.memo(() => {
   const project = useProject();
   const bus = useBus();
 
+  const pendingBuilds = new Map<string, any>();
+
   const result = {
     subscribe: bus.forward("function.build.success", "function.build.failed"),
     register: (handler: RuntimeHandler) => {
@@ -72,53 +74,67 @@ export const useRuntimeHandlers = Context.memo(() => {
       return result;
     },
     async build(functionID: string, mode: BuildInput["mode"]) {
-      Logger.debug("Building function", functionID);
-      const func = useFunctions().fromID(functionID);
-      const handler = result.for(func.runtime!);
-      const out = path.join(project.paths.artifacts, functionID);
-      await fs.rm(out, { recursive: true, force: true });
-      await fs.mkdir(out, { recursive: true });
+      async function task() {
+        const func = useFunctions().fromID(functionID);
+        const handler = result.for(func.runtime!);
+        const out = path.join(project.paths.artifacts, functionID);
+        await fs.rm(out, { recursive: true, force: true });
+        await fs.mkdir(out, { recursive: true });
 
-      if (func.hooks?.beforeBuild) await func.hooks.beforeBuild(func, out);
-      const built = await handler!.build({
-        functionID,
-        out,
-        mode,
-        props: func,
-      });
-      if (built.type === "error") {
-        bus.publish("function.build.failed", {
+        if (func.hooks?.beforeBuild) await func.hooks.beforeBuild(func, out);
+        const built = await handler!.build({
           functionID,
-          errors: built.errors,
+          out,
+          mode,
+          props: func,
         });
-        return built;
-      }
-      if (func.copyFiles) {
-        await Promise.all(
-          func.copyFiles.map(async (entry) => {
-            const fromPath = path.join(project.paths.root, entry.from);
-            const to = entry.to || entry.from;
-            if (path.isAbsolute(to))
-              throw new Error(`Copy destination path "${to}" must be relative`);
-            const toPath = path.join(out, to);
-            if (mode === "deploy")
-              await fs.cp(fromPath, toPath, {
-                recursive: true,
-              });
-            if (mode === "start") {
-              await fs.symlink(fromPath, toPath);
-            }
-          })
-        );
+        if (built.type === "error") {
+          bus.publish("function.build.failed", {
+            functionID,
+            errors: built.errors,
+          });
+          return built;
+        }
+        if (func.copyFiles) {
+          await Promise.all(
+            func.copyFiles.map(async (entry) => {
+              const fromPath = path.join(project.paths.root, entry.from);
+              const to = entry.to || entry.from;
+              if (path.isAbsolute(to))
+                throw new Error(
+                  `Copy destination path "${to}" must be relative`
+                );
+              const toPath = path.join(out, to);
+              if (mode === "deploy")
+                await fs.cp(fromPath, toPath, {
+                  recursive: true,
+                });
+              if (mode === "start") {
+                await fs.symlink(fromPath, toPath);
+              }
+            })
+          );
+        }
+
+        if (func.hooks?.afterBuild) await func.hooks.afterBuild(func, out);
+
+        bus.publish("function.build.success", { functionID });
+        return {
+          ...built,
+          out,
+        };
       }
 
-      if (func.hooks?.afterBuild) await func.hooks.afterBuild(func, out);
-
-      bus.publish("function.build.success", { functionID });
-      return {
-        ...built,
-        out,
-      };
+      if (pendingBuilds.has(functionID)) {
+        Logger.debug("Waiting on pending build", functionID);
+        return pendingBuilds.get(functionID)! as ReturnType<typeof task>;
+      }
+      const promise = task();
+      pendingBuilds.set(functionID, promise);
+      Logger.debug("Building function", functionID);
+      const r = await promise;
+      pendingBuilds.delete(functionID);
+      return r;
     },
   };
 
