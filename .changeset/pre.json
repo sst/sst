@@ -1,0 +1,13 @@
+{
+  "mode": "pre",
+  "tag": "rc",
+  "initialVersions": {
+    "@serverless-stack/console": "1.17.1",
+    "create-sst": "1.17.1",
+    "sst": "0.0.0-20221121213401",
+    "@serverless-stack/docs": "1.9.1"
+  },
+  "changesets": [
+    "silent-paws-exist"
+  ]
+}

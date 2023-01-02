@@ -1,5 +1,11 @@
 # @serverless-stack/console
 
+## 2.0.0-rc.0
+
+### Major Changes
+
+- [`db5aadfbc`](https://github.com/serverless-stack/sst/commit/db5aadfbca8628eb23eee486c07e5819bb6cf750) Thanks [@thdxr](https://github.com/thdxr)! - 2.0
+
 ## 1.17.1
 
 ## 1.17.0
