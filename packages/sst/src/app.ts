@@ -8,6 +8,7 @@ import { Context } from "./context/context.js";
 import { VisibleError } from "./error.js";
 import { blue } from "colorette";
 import { dynamicImport } from "./util/module.js";
+import dotenv from "dotenv";
 
 export interface Project {
   name: string;
@@ -124,6 +125,9 @@ export async function initProject(globals: GlobalOptions) {
 
   ProjectContext.provide(project);
   Logger.debug("Config loaded", project);
+  dotenv.config({
+    path: path.join(project.paths.root, `.env.${project.stage}`),
+  });
 }
 
 async function usePersonalStage(out: string) {
