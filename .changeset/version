@@ -1,5 +1,4 @@
 #!/bin/bash
 set -e
 
-pnpm changeset pre enter rc
 pnpm changeset version
