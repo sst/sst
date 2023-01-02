@@ -28,7 +28,6 @@ export const dev = (program: Program) =>
       const { useRuntimeWorkers } = await import("../../runtime/workers.js");
       const { useIOTBridge } = await import("../../runtime/iot.js");
       const { useRuntimeServer } = await import("../../runtime/server.js");
-      const { useMetadata } = await import("../../stacks/metadata.js");
       const { useBus } = await import("../../bus.js");
       const { useWatcher } = await import("../../watcher.js");
       const { Stacks } = await import("../../stacks/index.js");
@@ -237,7 +236,6 @@ export const dev = (program: Program) =>
         useRuntimeWorkers(),
         useIOTBridge(),
         useRuntimeServer(),
-        useMetadata(),
         usePothosBuilder(),
         useKyselyTypeGenerator(),
         useRDSWarmer(),
