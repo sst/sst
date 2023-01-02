@@ -23,7 +23,7 @@ export const update = (program: Program) =>
       const project = useProject();
       const files = await find(project.paths.root);
       const metadata: any = await fetch(
-        `https://registry.npmjs.org/sst/${args.ver || "latest"}`
+        `https://registry.npmjs.org/sst/${args.ver || "rc"}`
       ).then((resp) => resp.json());
 
       const results = new Map<string, Set<[string, string]>>();
