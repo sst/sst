@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - sst
+      - sst2
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
