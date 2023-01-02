@@ -1,6 +1,6 @@
-# SST 2.0 Preview
+# SST 2.0 RC
 
-This is a preview of the upcoming SST 2.0. It is incomplete so if you run into any issues please report to us in the #cli channel in discord ASAP so we can get it fixed. We're in the final phases now and are trying to prioritize fixing blocking issues.
+This is a release candidate of the upcoming SST 2.0. Please report to us in the #cli channel in discord ASAP so we can get it fixed. We're in the final phases now and are trying to prioritize fixing blocking issues.
 
 ## Migration Guide
 
@@ -50,7 +50,7 @@ new Function(stack, "fn", {
 
 ## New Projects
 
-There is also a preview of `create-sst` You can use it by running `npx create-sst@snapshot`
+There is also a preview of `create-sst` You can use it by running `npx create-sst@rc`
 
 ## Not yet supported
 
