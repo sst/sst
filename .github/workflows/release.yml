@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - sst
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
@@ -22,15 +23,27 @@ jobs:
         with:
           node-version: 16.x
 
-      - uses: actions/cache@v2
-        id: yarn-cache
+      - uses: pnpm/action-setup@v2
         with:
-          path: '**/node_modules'
-          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+          version: 7
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v3
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        if: steps.yarn-cache.outputs.cache-hit != 'true'
-        run: yarn --frozen-lockfile --ignore-scripts
+        run: pnpm install
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets
@@ -38,6 +51,7 @@ jobs:
         uses: changesets/action@v1
         with:
           createGithubReleases: false
+          version: yarn 
           publish: yarn release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
