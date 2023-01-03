@@ -1,0 +1,12 @@
+{
+  "name": "@@@app/functions",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "sst bind 'vitest'",
+    "typecheck": "tsc -noEmit"
+  },
+  "devDependencies": {
+    "@@@app/core": "0.0.0"
+  }
+}
