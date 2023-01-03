@@ -8,6 +8,7 @@
     "@serverless-stack/docs": "1.9.1"
   },
   "changesets": [
+    "grumpy-crabs-smash",
     "metal-scissors-judge",
     "poor-poems-invent",
     "silent-paws-exist",
