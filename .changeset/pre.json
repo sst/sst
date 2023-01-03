@@ -8,6 +8,7 @@
     "@serverless-stack/docs": "1.9.1"
   },
   "changesets": [
+    "metal-scissors-judge",
     "silent-paws-exist",
     "stupid-donuts-wonder",
     "three-dots-provide",
