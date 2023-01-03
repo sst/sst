@@ -35,7 +35,7 @@ export async function build() {
     format: "esm",
     external: [
       "aws-cdk-lib",
-      "@serverless-stack/*",
+      "sst",
       ...Object.keys({
         ...pkg.devDependencies,
         ...pkg.dependencies,
