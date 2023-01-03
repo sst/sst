@@ -26,7 +26,7 @@ import {
   ResourcesToImport,
 } from "aws-cdk/lib/api/util/cloudformation.js";
 import {
-  StackActivityMonitor,
+  // StackActivityMonitor,
   StackActivityProgress,
 } from "aws-cdk/lib/api/util/cloudformation/stack-activity-monitor.js";
 import { blue } from "colorette";
@@ -627,19 +627,19 @@ class FullCloudFormationDeployment {
     startTime: Date,
     expectedChanges: number | undefined
   ): Promise<DeployStackResult> {
-    const monitor = this.options.quiet
-      ? undefined
-      : StackActivityMonitor.withDefaultPrinter(
-          this.cfn,
-          this.stackName,
-          this.stackArtifact,
-          {
-            resourcesTotal: expectedChanges,
-            progress: this.options.progress,
-            changeSetCreationTime: startTime,
-            ci: this.options.ci,
-          }
-        ).start();
+    // const monitor = this.options.quiet
+    //   ? undefined
+    //   : StackActivityMonitor.withDefaultPrinter(
+    //       this.cfn,
+    //       this.stackName,
+    //       this.stackArtifact,
+    //       {
+    //         resourcesTotal: expectedChanges,
+    //         progress: this.options.progress,
+    //         changeSetCreationTime: startTime,
+    //         ci: this.options.ci,
+    //       }
+    //     ).start();
 
     let finalState = this.cloudFormationStack;
     try {
@@ -653,9 +653,9 @@ class FullCloudFormationDeployment {
       }
       finalState = successStack;
     } catch (e: any) {
-      throw new Error(suffixWithErrors(e.message, monitor?.errors));
+      throw new Error(suffixWithErrors(e.message /*, monitor?.errors*/));
     } finally {
-      await monitor?.stop();
+      // await monitor?.stop();
     }
     debug("Stack %s has completed updating", this.stackName);
     return {
@@ -841,11 +841,13 @@ export async function destroyStack(options: DestroyStackOptions) {
   if (!currentStack.exists) {
     return;
   }
+  /*
   const monitor = options.quiet
     ? undefined
     : StackActivityMonitor.withDefaultPrinter(cfn, deployName, options.stack, {
         ci: options.ci,
       }).start();
+  */
 
   try {
     await cfn
@@ -861,11 +863,13 @@ export async function destroyStack(options: DestroyStackOptions) {
       );
     }
   } catch (e: any) {
-    throw new Error(suffixWithErrors(e.message, monitor?.errors));
+    throw new Error(suffixWithErrors(e.message /* , monitor?.errors */));
   } finally {
+    /*
     if (monitor) {
       await monitor.stop();
     }
+    */
   }
 }
 
