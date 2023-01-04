@@ -68,7 +68,7 @@
     "cross-spawn": "^7.0.3",
     "dendriform-immer-patch-optimiser": "^2.1.0",
     "dotenv": "^16.0.3",
-    "esbuild": "0.16.9",
+    "esbuild": "0.16.13",
     "express": "^4.18.2",
     "fast-jwt": "^1.6.1",
     "glob": "^8.0.3",
