@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.0.0-rc.8
+
+### Patch Changes
+
+- [`b36b0fca1`](https://github.com/serverless-stack/sst/commit/b36b0fca19df7e0c65707d0e4fa110ecf24dc142) Thanks [@thdxr](https://github.com/thdxr)! - Update esbuild
+
+- [`68f7cd155`](https://github.com/serverless-stack/sst/commit/68f7cd155b0f98592bb15ea7b78a915ac538f008) Thanks [@thdxr](https://github.com/thdxr)! - Remove unnecessary deps
+
 ## 2.0.0-rc.7
 
 ### Patch Changes
