@@ -64,6 +64,8 @@ export const deploy = (program: Program) =>
       if (component) component.unmount();
       process.stdout.write("\x1b[?1049l");
       printDeploymentResults(results);
+      if (Object.values(results).some((stack) => Stacks.isFailed(stack.status)))
+        process.exit(1);
       process.exit(0);
     }
   );
