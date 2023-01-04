@@ -521,7 +521,7 @@ export class RDS extends Construct implements SSTConstruct {
 
     // Create custom resource handler
     const handler = new lambda.Function(this, "MigrationHandler", {
-      code: lambda.Code.fromAsset(path.join(__dirname, "Script")),
+      code: lambda.Code.fromAsset(path.join(__dirname, "../support/script-function")),
       runtime: lambda.Runtime.NODEJS_16_X,
       handler: "index.handler",
       timeout: cdk.Duration.minutes(15),
