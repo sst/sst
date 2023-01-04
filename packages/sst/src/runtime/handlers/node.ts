@@ -118,9 +118,7 @@ export const useNodeHandler = Context.memo(() => {
         entryPoints: [file],
         platform: "node",
         external: [
-          ...(nodejs.format === "esm" || input.props.runtime === "nodejs18.x"
-            ? []
-            : ["aws-sdk"]),
+          ...(isESM || input.props.runtime === "nodejs18.x" ? [] : ["aws-sdk"]),
           ...(nodejs.install || []),
           ...(external || []),
         ],
