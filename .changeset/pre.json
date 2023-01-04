@@ -8,6 +8,7 @@
     "@serverless-stack/docs": "1.9.1"
   },
   "changesets": [
+    "fresh-maps-applaud",
     "grumpy-crabs-smash",
     "metal-scissors-judge",
     "poor-poems-invent",
