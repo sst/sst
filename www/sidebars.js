@@ -243,11 +243,6 @@ module.exports = {
           ],
         }
       ],
-      Api: [
-        "constructs/Api",
-        "constructs/AppSyncApi",
-        "constructs/WebSocketApi"
-      ],
       Frontend: [
         "constructs/StaticSite",
         "constructs/NextjsSite",
@@ -256,7 +251,13 @@ module.exports = {
         "constructs/SolidStartSite",
       ],
       Database: ["constructs/RDS", "constructs/Table"],
+      Api: [
+        "constructs/Api",
+        "constructs/AppSyncApi",
+        "constructs/WebSocketApi"
+      ],
       Async: [
+        "constructs/Job",
         "constructs/Cron",
         "constructs/Topic",
         "constructs/Queue",
@@ -271,7 +272,6 @@ module.exports = {
         "constructs/Permissions"
       ],
       Other: [
-        "constructs/Job",
         "constructs/Script",
         "constructs/DebugApp",
         "constructs/DebugStack",
