@@ -93,20 +93,20 @@ module.exports = {
           title: "Docs",
           items: [
             {
-              label: "Learn SST",
-              to: "learn",
-            },
-            {
               label: "Quick Start",
               to: "quick-start",
             },
             {
-              label: "@serverless-stack/cli",
-              to: "packages/cli",
+              label: "What is SST",
+              to: "what-is-sst",
             },
             {
-              label: "Live Lambda Development",
+              label: "Live Lambda Dev",
               to: "live-lambda-development",
+            },
+            {
+              label: "Frequently Asked Questions",
+              to: "faq",
             },
           ],
         },
