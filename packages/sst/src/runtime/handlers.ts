@@ -165,19 +165,21 @@ export const useFunctionBuilder = Context.memo(() => {
 
   const watcher = useWatcher();
   watcher.subscribe("file.changed", async (evt) => {
-    const functions = useFunctions();
-    for (const [functionID, props] of Object.entries(functions.all)) {
-      const handler = handlers.for(props.runtime!);
-      if (
-        !handler?.shouldBuild({
-          functionID,
-          file: evt.properties.file,
-        })
-      )
-        continue;
-      await result.build(functionID);
-      Logger.debug("Rebuilt function", functionID);
-    }
+    try {
+      const functions = useFunctions();
+      for (const [functionID, props] of Object.entries(functions.all)) {
+        const handler = handlers.for(props.runtime!);
+        if (
+          !handler?.shouldBuild({
+            functionID,
+            file: evt.properties.file,
+          })
+        )
+          continue;
+        await result.build(functionID);
+        Logger.debug("Rebuilt function", functionID);
+      }
+    } catch {}
   });
 
   return result;
