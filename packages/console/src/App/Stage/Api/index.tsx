@@ -345,7 +345,14 @@ export function Explorer() {
             {form.watch("route") && (
               <Request>
                 <FormProvider {...form}>
-                  <form onSubmit={onSubmit}>
+                  <form
+                    onSubmit={onSubmit}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && e.metaKey) {
+                        onSubmit();
+                      }
+                    }}
+                  >
                     <RequestTabs>
                       {form.watch("path").length > 0 && (
                         <RequestTabsItem replace to="url">
