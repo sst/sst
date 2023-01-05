@@ -5,18 +5,7 @@
     { "repo": "serverless-stack/sst" }
   ],
   "commit": false,
-  "fixed": [
-    [
-      "@serverless-stack/resources",
-      "@serverless-stack/cli",
-      "@serverless-stack/cli2",
-      "@serverless-stack/core",
-      "@serverless-stack/console",
-      "create-sst",
-      "@serverless-stack/node",
-      "@serverless-stack/static-site-env"
-    ]
-  ],
+  "fixed": [["@serverless-stack/console", "create-sst", "sst"]],
   "linked": [],
   "access": "restricted",
   "baseBranch": "master",

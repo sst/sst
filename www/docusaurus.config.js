@@ -47,7 +47,13 @@ module.exports = {
           to: "/",
           label: "Home",
           position: "left",
-          activeBaseRegex: "^/(?!(constructs|clients))",
+          activeBaseRegex: "^/(?!(constructs|clients|learn))",
+        },
+        {
+          to: "/learn",
+          label: "Learn",
+          position: "left",
+          activeBaseRegex: "^/learn",
         },
         {
           href: config.examples,
@@ -87,20 +93,20 @@ module.exports = {
           title: "Docs",
           items: [
             {
-              label: "Learn SST",
-              to: "learn",
-            },
-            {
               label: "Quick Start",
               to: "quick-start",
             },
             {
-              label: "@serverless-stack/cli",
-              to: "packages/cli",
+              label: "What is SST",
+              to: "what-is-sst",
             },
             {
-              label: "Live Lambda Development",
+              label: "Live Lambda Dev",
               to: "live-lambda-development",
+            },
+            {
+              label: "Frequently Asked Questions",
+              to: "faq",
             },
           ],
         },

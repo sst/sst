@@ -1,0 +1,8 @@
+#!/bin/bash
+set -e
+
+pnpm build
+cp packages/sst/package.json packages/sst/dist/package.json
+sed -i.bak -e '2,5d' packages/sst/dist/package.json
+pnpm changeset publish
+npm dist-tag add sst@$(npm dist-tag sst | grep rc: | awk '{print $2}') latest

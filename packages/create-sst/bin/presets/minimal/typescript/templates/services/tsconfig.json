@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.json",
+  "include": ["functions", "core", "test", "../.sst/types"],
+  "compilerOptions": {
+    "module": "esnext",
+    "target": "es2017",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@@@app/core/*": ["./core/*"]
+    }
+  }
+}

@@ -1,18 +1,32 @@
 # @serverless-stack/console
 
-## 1.18.4
+## 2.0.0-rc.11
 
-## 1.18.3
+## 2.0.0-rc.10
 
-## 1.18.2
+## 2.0.0-rc.9
 
-## 1.18.1
+## 2.0.0-rc.8
 
-## 1.18.0
+## 2.0.0-rc.7
 
-### Minor Changes
+## 2.0.0-rc.6
 
-- [#2194](https://github.com/serverless-stack/sst/pull/2194) [`dcb36ad54`](https://github.com/serverless-stack/sst/commit/dcb36ad546464434916b372fd7a33f51ee4612b2) Thanks [@fwang](https://github.com/fwang)! - Merge GraphQLApi into Api
+## 2.0.0-rc.5
+
+## 2.0.0-rc.4
+
+## 2.0.0-rc.3
+
+## 2.0.0-rc.2
+
+## 2.0.0-rc.1
+
+## 2.0.0-rc.0
+
+### Major Changes
+
+- [`db5aadfbc`](https://github.com/serverless-stack/sst/commit/db5aadfbca8628eb23eee486c07e5819bb6cf750) Thanks [@thdxr](https://github.com/thdxr)! - 2.0
 
 ## 1.17.1
 

@@ -3,10 +3,7 @@ import { extract, patch, install } from "create-sst";
 export default [
   extract(),
   install({
-    packages: ["@serverless-stack/cli", "@serverless-stack/resources"],
-    dev: true
-  }),
-  install({
-    packages: ["@serverless-stack/node"]
+    packages: ["sst@rc", "aws-cdk-lib@2.55.0", "constructs@10.1.156"],
+    dev: true,
   }),
 ];

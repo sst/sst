@@ -13,13 +13,13 @@ program
   .description("CLI to create SST projects")
   .option("--template <template>", "Use a specific template")
   .argument("[name]", "The name of your project")
-  .action(async name => {
+  .action(async (name) => {
     const opts = program.opts();
     const cwd = process.cwd();
     const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
     process.chdir(__dirname);
 
-    const preset = await (async function() {
+    const preset = await (async function () {
       if (opts.template) return path.join("presets", opts.template);
 
       const { category } = await inquirer.prompt([
@@ -27,22 +27,22 @@ program
           name: "category",
           type: "list",
           choices: ["graphql", "minimal", "examples"],
-          message: "What kind of project do you want to create?"
-        }
+          message: "What kind of project do you want to create?",
+        },
       ]);
 
       if (["minimal", "examples"].includes(category)) {
         const folders = await fs.readdir(
           path.join(__dirname, "presets", category)
         );
-        const presets = folders.map(folder => path.join(category, folder));
+        const presets = folders.map((folder) => path.join(category, folder));
         const answers = await inquirer.prompt([
           {
             name: "preset",
             type: "list",
             choices: presets.flat(),
-            message: "Select a template"
-          }
+            message: "Select a template",
+          },
         ]);
         return path.join("presets", answers.preset);
       }
@@ -54,10 +54,11 @@ program
             type: "list",
             choices: [
               { name: "RDS (Postgres or MySQL)", value: "rds" },
-              { name: "DynamoDB", value: "dynamo" }
+              { name: "DynamoDB", value: "dynamo" },
             ],
-            message: "Select a database (you can change this later or use both)"
-          }
+            message:
+              "Select a database (you can change this later or use both)",
+          },
         ]);
         return path.join("presets", "graphql", result.database);
       }
@@ -69,8 +70,8 @@ program
           name: "name",
           type: "input",
           default: "my-sst-app",
-          message: "Project name"
-        }
+          message: "Project name",
+        },
       ]);
       name = answers.name;
     }
@@ -87,14 +88,14 @@ program
     try {
       await execute({
         source: preset,
-        destination: path.resolve(path.join(cwd, name))
+        destination: path.resolve(path.join(cwd, name)),
       });
       spinner.succeed("Copied template files");
       console.log();
       console.log(`Next steps:`);
       console.log(`  1: cd ${name}`);
       console.log(`  2: npm install (or pnpm install, or yarn)`);
-      console.log(`  3: npm start`);
+      console.log(`  3: npm run dev`);
     } catch (e) {
       spinner.fail("Failed");
       console.error(e);

@@ -1,8 +1,8 @@
 import {
   Api,
+  Table,
   StaticSite,
   StackContext,
-  Table,
 } from "@serverless-stack/resources";
 
 export function MyStack({ stack }: StackContext) {

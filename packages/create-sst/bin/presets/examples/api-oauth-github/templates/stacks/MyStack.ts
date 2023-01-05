@@ -1,8 +1,8 @@
 import {
-  StackContext,
   Api,
   Cognito,
-  StaticSite
+  StaticSite,
+  StackContext,
 } from "@serverless-stack/resources";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 
@@ -12,23 +12,23 @@ export function MyStack({ stack, app }: StackContext) {
       userPoolClient: {
         supportedIdentityProviders: [
           {
-            name: "GitHub"
-          }
+            name: "GitHub",
+          },
         ],
         oAuth: {
           callbackUrls: [
             app.stage === "prod"
               ? "https://my-app.com"
-              : "http://localhost:3000"
+              : "http://localhost:3000",
           ],
           logoutUrls: [
             app.stage === "prod"
               ? "https://my-app.com"
-              : "http://localhost:3000"
-          ]
-        }
-      }
-    }
+              : "http://localhost:3000",
+          ],
+        },
+      },
+    },
   });
 
   const api = new Api(stack, "api", {
@@ -37,12 +37,12 @@ export function MyStack({ stack, app }: StackContext) {
         type: "user_pool",
         userPool: {
           id: auth.userPoolId,
-          clientIds: [auth.userPoolClientId]
-        }
-      }
+          clientIds: [auth.userPoolClientId],
+        },
+      },
     },
     defaults: {
-      authorizer: "none"
+      authorizer: "none",
     },
     routes: {
       "GET /public": "functions/public.handler",
@@ -50,9 +50,9 @@ export function MyStack({ stack, app }: StackContext) {
       "POST /token": "functions/token.handler",
       "GET /private": {
         function: "functions/private.handler",
-        authorizer: "userPool"
-      }
-    }
+        authorizer: "userPool",
+      },
+    },
   });
 
   // Allow authenticated users invoke API
@@ -79,13 +79,13 @@ export function MyStack({ stack, app }: StackContext) {
         authorize_url: "https://github.com/login/oauth/authorize",
         token_url: api.url + "/token",
         attributes_url: api.url + "/user",
-        jwks_uri: api.url + "/token"
+        jwks_uri: api.url + "/token",
       },
       attributeMapping: {
         email: "email",
         name: "name",
-        picture: "avatar_url"
-      }
+        picture: "avatar_url",
+      },
     }
   );
 
@@ -95,8 +95,8 @@ export function MyStack({ stack, app }: StackContext) {
   // Create a cognito userpool domain
   const domain = auth.cdk.userPool.addDomain("AuthDomain", {
     cognitoDomain: {
-      domainPrefix: `${app.stage}-github-demo-oauth`
-    }
+      domainPrefix: `${app.stage}-github-demo-oauth`,
+    },
   });
 
   // Create a React Static Site
@@ -111,8 +111,8 @@ export function MyStack({ stack, app }: StackContext) {
       VITE_APP_REGION: app.region,
       VITE_APP_USER_POOL_ID: auth.userPoolId,
       VITE_APP_IDENTITY_POOL_ID: auth.cognitoIdentityPoolId,
-      VITE_APP_USER_POOL_CLIENT_ID: auth.userPoolClientId
-    }
+      VITE_APP_USER_POOL_CLIENT_ID: auth.userPoolClientId,
+    },
   });
 
   // Show the endpoint in the output
@@ -120,6 +120,6 @@ export function MyStack({ stack, app }: StackContext) {
     api_endpoint: api.url,
     auth_client_id: auth.userPoolClientId,
     domain: domain.domainName,
-    site_url: site.url
+    site_url: site.url,
   });
 }

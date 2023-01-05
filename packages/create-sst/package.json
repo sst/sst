@@ -1,11 +1,14 @@
 {
   "name": "create-sst",
-  "version": "1.18.4",
+  "version": "2.0.0-rc.11",
   "homepage": "https://serverless-stack.com",
   "description": "Create Serverless Stack apps.",
   "main": "src/index.mjs",
   "bin": {
     "create-sst": "./bin/create-sst.mjs"
+  },
+  "exports": {
+    "import": "./src/index.mjs"
   },
   "author": {
     "name": "Serverless Stack",

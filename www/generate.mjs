@@ -7,6 +7,7 @@ import {
   ReflectionKind,
 } from "typedoc";
 import path from "path";
+import { exit } from "process";
 
 const cmd = process.argv[2];
 
@@ -91,38 +92,40 @@ const app = new Application();
 app.options.addReader(new TSConfigReader());
 app.bootstrap({
   entryPoints: [
-    "../packages/resources/src/Stack.ts",
-    "../packages/resources/src/Api.ts",
-    "../packages/resources/src/ApiGatewayV1Api.ts",
-    "../packages/resources/src/App.ts",
-    "../packages/resources/src/Auth.ts",
-    "../packages/resources/src/Cognito.ts",
-    "../packages/resources/src/Bucket.ts",
-    "../packages/resources/src/Cron.ts",
-    "../packages/resources/src/Config.ts",
-    "../packages/resources/src/Job.ts",
-    "../packages/resources/src/RDS.ts",
-    "../packages/resources/src/Table.ts",
-    "../packages/resources/src/Topic.ts",
-    "../packages/resources/src/Parameter.ts",
-    "../packages/resources/src/Script.ts",
-    "../packages/resources/src/Secret.ts",
-    "../packages/resources/src/Queue.ts",
-    "../packages/resources/src/Function.ts",
-    "../packages/resources/src/EventBus.ts",
-    "../packages/resources/src/StaticSite.ts",
-    "../packages/resources/src/NextjsSite.ts",
-    "../packages/resources/src/RemixSite.ts",
-    "../packages/resources/src/AppSyncApi.ts",
-    "../packages/resources/src/GraphQLApi.ts",
-    "../packages/resources/src/ViteStaticSite.ts",
-    "../packages/resources/src/KinesisStream.ts",
-    "../packages/resources/src/WebSocketApi.ts",
-    "../packages/resources/src/ReactStaticSite.ts",
-    "../packages/resources/src/DebugApp.ts",
-    "../packages/resources/src/DebugStack.ts",
+    "../packages/sst/src/constructs/Stack.ts",
+    "../packages/sst/src/constructs/Api.ts",
+    "../packages/sst/src/constructs/ApiGatewayV1Api.ts",
+    "../packages/sst/src/constructs/App.ts",
+    "../packages/sst/src/constructs/Auth.ts",
+    "../packages/sst/src/constructs/Cognito.ts",
+    "../packages/sst/src/constructs/Bucket.ts",
+    "../packages/sst/src/constructs/Cron.ts",
+    "../packages/sst/src/constructs/Config.ts",
+    "../packages/sst/src/constructs/Job.ts",
+    "../packages/sst/src/constructs/RDS.ts",
+    "../packages/sst/src/constructs/Table.ts",
+    "../packages/sst/src/constructs/Topic.ts",
+    "../packages/sst/src/constructs/Parameter.ts",
+    "../packages/sst/src/constructs/Script.ts",
+    "../packages/sst/src/constructs/Secret.ts",
+    "../packages/sst/src/constructs/Queue.ts",
+    "../packages/sst/src/constructs/Function.ts",
+    "../packages/sst/src/constructs/EventBus.ts",
+    "../packages/sst/src/constructs/StaticSite.ts",
+    "../packages/sst/src/constructs/NextjsSite.ts",
+    "../packages/sst/src/constructs/AppSyncApi.ts",
+    "../packages/sst/src/constructs/GraphQLApi.ts",
+    "../packages/sst/src/constructs/ViteStaticSite.ts",
+    "../packages/sst/src/constructs/KinesisStream.ts",
+    "../packages/sst/src/constructs/WebSocketApi.ts",
+    "../packages/sst/src/constructs/ReactStaticSite.ts",
+    "../packages/sst/src/constructs/DebugApp.ts",
+    "../packages/sst/src/constructs/DebugStack.ts",
+    "../packages/sst/src/constructs/AstroSite.tsdoc.ts",
+    "../packages/sst/src/constructs/SolidStartSite.tsdoc.ts",
+    "../packages/sst/src/constructs/RemixSite.tsdoc.ts",
   ],
-  tsconfig: path.resolve("../packages/resources/tsconfig.json"),
+  tsconfig: path.resolve("../packages/sst/tsconfig.json"),
   preserveWatchOutput: true,
 });
 
@@ -148,8 +151,18 @@ if (cmd === "build") {
 /** @param json {JSONOutput.ModelToObject<ProjectReflection>} */
 async function run(json) {
   for (const file of json.children) {
+    // Class
     /** @type {(string | string[] | undefined)[]} */
     const lines = [];
+
+    // Handle classes that extend other class, ie. RemixSite extends SsrSite.
+    // We need to create a new file ie. RemixSite.tsdoc.ts, export * from
+    // both files, and generate docs for the new file.
+    if (file.name.endsWith(".tsdoc")) {
+      file.name = file.name.replace(".tsdoc", "");
+    }
+
+    // get the construct class object in file
     const construct = file.children?.find((c) => c.kindString === "Class");
     if (!construct) {
       console.log("Skipping", file.name);
@@ -171,17 +184,14 @@ async function run(json) {
     );
     if (!constructor)
       throw new Error(`Could not find Constructor in ${file.name}`);
-    const isInternal = constructor.signatures[0].comment?.tags?.find(
-      (t) => t.tag === "internal"
-    );
+    const isInternal = constructor.signatures[0].comment?.modifierTags?.includes("@internal");
     if (!isInternal) {
       lines.push("\n## Constructor");
       for (const signature of constructor.signatures) {
         let constructorName = signature.name;
         if (constructorName === "new Secret") {
           constructorName = "new Config.Secret";
-        }
-        else if (constructorName === "new Parameter") {
+        } else if (constructorName === "new Parameter") {
           constructorName = "new Config.Parameter";
         }
         lines.push("```ts");
@@ -211,25 +221,30 @@ async function run(json) {
     lines.push(props);
 
     // Properties
-    const classProperties = renderProperties(file, json.children, construct.children, "", true)
+    const classProperties = renderProperties(
+      file,
+      json.children,
+      construct.children,
+      "",
+      true
+    );
     if (classProperties.length > 0) {
       lines.push(
         "## Properties",
         `An instance of \`${construct.name}\` has the following properties.`,
-        ...classProperties,
+        ...classProperties
       );
     }
 
     // Methods
-    const methods =
-      (construct.children || [])
+    const methods = (construct.children || [])
       .filter((c) => c.kindString === "Method")
-      .filter((c) =>
-        c.flags.isPublic &&
-        !c.flags.isExternal &&
-        !c.implementationOf
+      .filter(
+        (c) => c.flags.isPublic && !c.flags.isExternal && !c.implementationOf
       )
-      .filter((c) => !c.signatures[0].comment?.tags?.find((x) => x.tag === "internal"));
+      .filter(
+        (c) => !c.signatures[0].comment?.modifierTags?.includes("@internal")
+      );
     if (methods.length) {
       lines.push("## Methods");
       lines.push(
@@ -239,9 +254,9 @@ async function run(json) {
         lines.push(`### ${method.name}\n`);
         for (const signature of method.signatures) {
           lines.push(
-            ...signatureIsDeprecated(signature)
-              ? renderSignatureForDeprecated(method, signature)
-              : renderSignature(file, json.children, method, signature)
+            ...(signatureIsDeprecated(signature)
+              ? renderSignatureForDeprecated(file, method, signature)
+              : renderSignature(file, json.children, method, signature))
           );
         }
       }
@@ -251,17 +266,12 @@ async function run(json) {
     (file.children || [])
       .sort((a, b) => a.name.length - b.name.length)
       .filter((c) => c.kindString === "Interface")
-      .filter((c) => !c.comment?.tags?.find((x) => x.tag === "internal"))
+      .filter((c) => !c.comment?.modifierTags?.includes("@internal"))
       .forEach((c) => {
         const hoisted = c.name === `${file.name}Props` ? props : lines;
         hoisted.push(`## ${c.name}`);
-        hoisted.push(c.comment?.shortText);
-        hoisted.push(c.comment?.text);
-        const examples =
-          c.comment?.tags?.filter((x) => x.tag === "example") || [];
-        if (examples.length) {
-          hoisted.push(...examples.map(renderTag));
-        }
+        hoisted.push(...(c.comment?.summary || []).map(e => e.text));
+        hoisted.push(...(c.comment?.blockTags || []).map(renderTag));
         hoisted.push(...renderProperties(file, json.children, c.children));
       });
 
@@ -276,7 +286,7 @@ async function run(json) {
  * @param tag {JSONOutput.CommentTag}
  */
 function renderTag(tag) {
-  return tag.text;
+  return (tag.content || []).map(e => e.text).join("\n");
 }
 
 /**
@@ -288,7 +298,14 @@ function renderTag(tag) {
  * @returns {string}
  */
 function renderType(file, files, prefix, parameter) {
-  if (!parameter) throw new Error("No parameter");
+  if (!parameter) {
+  // TODO
+  console.log("= = File", JSON.stringify({ prefix, file}, null, 2));
+  console.log("= = = Parameter", JSON.stringify({ parameter}, null, 2));
+    console.trace();
+    throw new Error("No parameter");
+    //return "";
+  }
   if (!parameter.type) throw new Error(`No type for ${parameter}`);
   if (parameter.type === "conditional")
     return renderType(file, files, prefix, parameter.checkType);
@@ -369,6 +386,8 @@ function renderType(file, files, prefix, parameter) {
         return `<span class="mono">[${
           parameter.name
         }](https://esbuild.github.io/api/#${parameter.name.toLowerCase()})</span>`;
+      if (parameter.package === ".pnpm")
+        return "<span>.pnpm</span>";
 
       throw "Did not implement handler for package " + parameter.package;
     }
@@ -431,7 +450,7 @@ function renderProperties(file, files, properties, prefix, onlyPublic) {
         (c.kindString === "Property" || c.kindString === "Accessor") &&
         !c.flags.isExternal &&
         (!onlyPublic || c.flags.isPublic) &&
-        !c.comment?.tags?.find((x) => x.tag === "internal")
+        !c.comment?.modifierTags?.includes("@internal")
     ) || [];
   const lines = [];
   for (const property of filtered.sort((a, b) => {
@@ -439,7 +458,7 @@ function renderProperties(file, files, properties, prefix, onlyPublic) {
     if (b.name.startsWith("cdk")) return -1;
     return a.name.localeCompare(b.name);
   })) {
-    const signature = property.getSignature?.[0] || property;
+    const signature = property.getSignature || property;
     const nextPrefix = [prefix, property.name].filter((x) => x).join(".");
     if (signature.type?.type !== "reflection")
       lines.push(`### ${nextPrefix}${signature.flags.isOptional ? "?" : ""}\n`);
@@ -449,15 +468,14 @@ function renderProperties(file, files, properties, prefix, onlyPublic) {
         "\n"
     );
     if (signature.comment) {
-      const def = signature.comment.tags?.find((x) => x.tag === "default");
+      const def = signature.comment.modifierTags?.find((x) => x.tag === "@default");
       if (def)
         lines.push(
-          `_Default_ : <span class="mono">${def.text.trim()}</span>\n`
+          `_Default_ : <span class="mono">${def.content[0].text.trim()}</span>\n`
         );
-      lines.push(signature.comment.shortText);
-      lines.push(signature.comment.text);
-      const tags = signature.comment.tags || [];
-      const examples = tags.filter((x) => x.tag === "example");
+      lines.push(...(signature.comment.summary || []).map(e => e.text));
+      const tags = signature.comment.blockTags || [];
+      const examples = tags.filter((x) => x.tag === "@example");
       if (examples.length) {
         lines.push(
           ...examples
@@ -467,7 +485,7 @@ function renderProperties(file, files, properties, prefix, onlyPublic) {
       }
       lines.push(
         ...tags
-          .filter((x) => x.tag !== "example" && x.tag !== "default")
+          .filter((x) => x.tag !== "@example" && x.tag !== "@default")
           .map(renderTag)
       );
     }
@@ -508,16 +526,17 @@ function renderSignature(file, children, method, signature) {
   }
   if (signature.comment) {
     lines.push("\n");
-    lines.push(signature.comment.shortText);
-    lines.push(signature.comment.text);
-    const tags = signature.comment.tags || [];
-    const examples = tags.filter((x) => x.tag === "example");
+    lines.push(...(signature.comment.summary || []).map(e => e.text));
+    const tags = signature.comment.blockTags || [];
+    const examples = tags.filter((x) => x.tag === "@example");
     if (examples.length) {
-      lines.push(...examples.map(renderTag));
+      lines.push(
+        ...examples
+          .map(renderTag)
+          .map((x) => x.replace(/new .+\(/g, `new ${file.name}(`))
+      );
     }
-    lines.push(
-      ...tags.filter((x) => x.tag !== "example").map(renderTag)
-    );
+    lines.push(...tags.filter((x) => x.tag !== "@example").map(renderTag));
   }
   return lines;
 }
@@ -529,7 +548,7 @@ function renderSignature(file, children, method, signature) {
  *
  * @returns {string}
  */
-function renderSignatureForDeprecated(method, signature) {
+function renderSignatureForDeprecated(file, method, signature) {
   const lines = [];
   lines.push(":::caution");
   lines.push("This function signature has been deprecated.");
@@ -544,16 +563,17 @@ function renderSignatureForDeprecated(method, signature) {
 
   if (signature.comment) {
     lines.push("\n");
-    lines.push(signature.comment.shortText);
-    lines.push(signature.comment.text);
-    const tags = signature.comment.tags || [];
-    const examples = tags.filter((x) => x.tag === "example");
+    lines.push(...(signature.comment.summary || []).map(e => e.text));
+    const tags = signature.comment.blockTags || [];
+    const examples = tags.filter((x) => x.tag === "@example");
     if (examples.length) {
-      lines.push(...examples.map(renderTag));
+      lines.push(
+        ...examples
+          .map(renderTag)
+          .map((x) => x.replace(/new .+\(/g, `new ${file.name}(`))
+      );
     }
-    lines.push(
-      ...tags.filter((x) => x.tag !== "example").map(renderTag)
-    );
+    lines.push(...tags.filter((x) => x.tag !== "@example").map(renderTag));
   }
 
   lines.push(":::");
@@ -567,5 +587,5 @@ function renderSignatureForDeprecated(method, signature) {
  * @returns {boolean}
  */
 function signatureIsDeprecated(signature) {
-  return signature.comment?.tags?.some((y) => y.tag === "deprecated");
+  return signature.comment?.modifierTags?.includes("@deprecated");
 }

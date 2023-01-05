@@ -1,5 +1,5 @@
 import path from "path";
-import fs from "fs-extra";
+import fs from "fs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { Api, StackContext } from "@serverless-stack/resources";
 

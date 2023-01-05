@@ -1,112 +1,113 @@
 The `RemixSite` construct is a higher level CDK construct that makes it easy to create a Remix app. It provides a simple way to build and deploy the app to AWS:
 
-  - The browser build and public static assets are deployed to an S3 Bucket, and served out from a CloudFront CDN for fast content delivery.
-  - The app server is deployed to Lambda. You can deploy to Lambda@Edge instead if the `edge` flag is enabled. Read more about [Single region vs Edge](#single-region-vs-edge).
-  - It enables you to [configure custom domains](#custom-domains) for the website URL.
-  - It also enable you to [automatically set the environment variables](#environment-variables) for your Remix app directly from the outputs in your SST app.
-  - It provides a simple interface to [grant permissions](#using-aws-services) for your app to access AWS resources.
+- The browser build and public static assets are deployed to an S3 Bucket, and served out from a CloudFront CDN for fast content delivery.
+- The app server is deployed to Lambda. You can deploy to Lambda@Edge instead if the `edge` flag is enabled. Read more about [Single region vs Edge](#single-region-vs-edge).
+- It enables you to [configure custom domains](#custom-domains) for the website URL.
+- It also enable you to [automatically set the environment variables](#environment-variables) for your Remix app directly from the outputs in your SST app.
+- It provides a simple interface to [grant permissions](#using-aws-services) for your app to access AWS resources.
 
 ## Quick Start
 
 1. If you are creating a new Remix app, run `create-remix` from the root of your SST app.
 
-  ```bash
-  npx create-remix@latest
-  ```
-  
-  And select `Remix App Server` as the deployment target.
-  
-  ![Selecte Remix App Server deployment target](/img/remix/bootstrap-remix.png)
+```bash
+npx create-remix@latest
+```
 
-  After the Remix app is created, your SST app structure should look like:
+And select `Remix App Server` as the deployment target.
 
-  ```bash
-  my-sst-app
-  ├─ sst.json
-  ├─ services
-  ├─ stacks
-  └─ my-remix-app     <-- new Remix app
-     ├─ app
-     ├─ public
-     └─ remix.config.js
-  ```
+![Selecte Remix App Server deployment target](/img/remix/bootstrap-remix.png)
 
-  You can now jump to step 3 to complete the rest of the step.
+After the Remix app is created, your SST app structure should look like:
+
+```bash
+my-sst-app
+├─ sst.json
+├─ services
+├─ stacks
+└─ my-remix-app     <-- new Remix app
+   ├─ app
+   ├─ public
+   └─ remix.config.js
+```
+
+You can now jump to step 3 to complete the rest of the step.
 
 2. If you have an existing Remix app, move the app to the root of your SST app. Your SST app structure should look like:
 
-  ```bash
-  my-sst-app
-  ├─ sst.json
-  ├─ services
-  ├─ stacks
-  └─ my-remix-app     <-- your Remix app
-     ├─ app
-     ├─ public
-     └─ remix.config.js
-  ```
+```bash
+my-sst-app
+├─ sst.json
+├─ services
+├─ stacks
+└─ my-remix-app     <-- your Remix app
+   ├─ app
+   ├─ public
+   └─ remix.config.js
+```
 
-  When you created your Remix app, you might've picked a different deployment target. We need to set the deploymen target to `Remix App Server`. To do that, make sure your `remix.config.js` contain the follow values.
+When you created your Remix app, you might've picked a different deployment target. We need to set the deploymen target to `Remix App Server`. To do that, make sure your `remix.config.js` contain the follow values.
 
-  ```js
-  module.exports = {
-    // ...
-    assetsBuildDirectory: "public/build",
-    publicPath: "/build/",
-    serverBuildPath: "build/index.js",
-    serverBuildTarget: "node-cjs",
-    server: undefined,
-    // ...
-  };
-  ```
+```js
+module.exports = {
+  // ...
+  assetsBuildDirectory: "public/build",
+  publicPath: "/build/",
+  serverBuildPath: "build/index.js",
+  serverBuildTarget: "node-cjs",
+  server: undefined,
+  // ...
+};
+```
 
-  :::info
-  If you followed the `Developer Blog` or `Jokes App` tutorials on Remix's doc, it's likely you are using SQLite for database. SQLite databases cannot be deployed to a serverless environment. It is often used for local storage, and not recommended for modern web apps. It is recommended to use [PostgreSQL](../constructs/RDS.md), [DynamoDB](../constructs/Table.md), or one of third party services like MongoDB for your database.
-  :::
+:::info
+If you followed the `Developer Blog` or `Jokes App` tutorials on Remix's doc, it's likely you are using SQLite for database. SQLite databases cannot be deployed to a serverless environment. It is often used for local storage, and not recommended for modern web apps. It is recommended to use [PostgreSQL](../constructs/RDS.md), [DynamoDB](../constructs/Table.md), or one of third party services like MongoDB for your database.
+:::
 
 3. Go into your Remix app, and add the `static-site-env` dependency to your Remix application's `package.json`. `static-site-env` enables you to [automatically set the environment variables](#environment-variables) for your Remix app directly from the outputs in your SST app.
 
-  ```bash
-  npm install --save-dev @serverless-stack/static-site-env
-  ```
+```bash
+npm install --save-dev @serverless-stack/static-site-env
+```
 
-  Update the package.json scripts for your Remix application.
+Update the package.json scripts for your Remix application.
 
-   ```diff
-     "scripts": {
-       "build": "remix build",
-   -   "dev": "remix dev",
-   +   "dev": "sst-env -- remix dev",
-       "start": "remix-serve build"
-     },
-   ```
+```diff
+  "scripts": {
+    "build": "remix build",
+-   "dev": "remix dev",
++   "dev": "sst-env -- remix dev",
+    "start": "remix-serve build"
+  },
+```
 
 4. Add the `RemixSite` construct to an existing stack in your SST app. You can also create a new stack for the app.
 
-  ```ts
-  import { RemixSite, StackContext } as sst from "@serverless-stack/resources";
+```ts
+import { RemixSite, StackContext } as sst from "@serverless-stack/resources";
 
-  export default function MyStack({ stack }: StackContext) {
+export default function MyStack({ stack }: StackContext) {
 
-    // ... existing constructs
+  // ... existing constructs
 
-    // Create the Remix site
-    const site = new RemixSite(stack, "Site", {
-      path: "my-remix-app/",
-    });
+  // Create the Remix site
+  const site = new RemixSite(stack, "Site", {
+    path: "my-remix-app/",
+  });
 
-    // Add the site's URL to stack output
-    stack.addOutputs({
-      URL: site.url,
-    });
-  }
-  ```
+  // Add the site's URL to stack output
+  stack.addOutputs({
+    URL: site.url,
+  });
+}
+```
 
-  When you are building your SST app, `RemixSite` will invoke `npm build` inside the Remix app directory. Make sure `path` is pointing to the your Remix app.
+When you are building your SST app, `RemixSite` will invoke `npm build` inside the Remix app directory. Make sure `path` is pointing to the your Remix app.
 
-  Note that we also added the site's URL to the stack output. After deploy succeeds, the URL will be printed out in the terminal.
+Note that we also added the site's URL to the stack output. After deploy succeeds, the URL will be printed out in the terminal.
 
 ## Single region vs edge
+
 There are two ways you can deploy the Remix app to your AWS account.
 
 By default, the Remix app server is deployed to a single region defined in your `sst.json` or passed in via the `--region` flag. Alternatively, you can choose to deploy to the edge. When deployed to the edge, loaders/actions are running on edge location that is physically closer to the end user. In this case, the app server is deployed to AWS Lambda@Edge.
@@ -190,10 +191,11 @@ export async function loader() {
   return json({
     ENV: {
       API_URL: process.env.API_URL,
-    }
+    },
   });
 }
 ```
+
 :::
 
 Let's take look at what is happening behind the scene.
@@ -205,14 +207,16 @@ On `sst deploy`, the Remix app server is deployed to a Lambda function, and the 
 If you enabled the `edge` option, the Remix app server will instead get deployed to a Lambda@Edge function. We have an issue here, AWS Lambda@Edge does not support runtime environment variables. To get around this limitation, we insert a snippet to the top of your app server:
 
 ```ts
-const environment = "{{ _SST_REMIX_SITE_ENVIRONMENT_ }}";
+const environment = "{{ _SST_EDGE_SITE_ENVIRONMENT_ }}";
 process.env = { ...process.env, ...environment };
 ```
 
-And at deploy time, after the referenced resources have been created, the API in this case, a CloudFormation custom resource will update the app server's code and replace the placeholder `{{ _SST_REMIX_SITE_ENVIRONMENT_ }}` with the actual value:
+And at deploy time, after the referenced resources have been created, the API in this case, a CloudFormation custom resource will update the app server's code and replace the placeholder `{{ _SST_EDGE_SITE_ENVIRONMENT_ }}` with the actual value:
 
 ```ts
-const environment = { API_URL: "https://ioe7hbv67f.execute-api.us-east-1.amazonaws.com" };
+const environment = {
+  API_URL: "https://ioe7hbv67f.execute-api.us-east-1.amazonaws.com",
+};
 process.env = { ...process.env, ...environment };
 ```
 
@@ -222,11 +226,11 @@ This will make `process.env.API_URL` available at runtime.
 
 To use these values while developing, run `sst start` to start the [Live Lambda Development](/live-lambda-development.md) environment.
 
-``` bash
+```bash
 npx sst start
 ```
 
-Then in your Remix app to reference these variables, add the [`static-site-env`](/packages/static-site-env.md) package.
+Then in your Remix app to reference these variables, add the [`static-site-env`](/packages/sst-env.md) package.
 
 ```bash
 npm install --save-dev @serverless-stack/static-site-env
@@ -244,7 +248,7 @@ And tweak the Remix `dev` script to:
 
 Now you can start your Remix app as usual and it'll have the environment variables from your SST app.
 
-``` bash
+```bash
 npm run dev
 ```
 
@@ -263,6 +267,7 @@ There are a couple of things happening behind the scenes here:
   sst.json
   my-remix-app/
 ```
+
 :::
 
 ## Using AWS services
@@ -447,7 +452,7 @@ new RemixSite(stack, "Site", {
       timeout: 20,
       memorySize: 2048,
       permissions: ["sns"],
-    }
+    },
   },
 });
 ```
@@ -475,23 +480,35 @@ CloudFront has a limit of 20 cache policies per AWS account. This is a hard limi
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 
 const cachePolicies = {
-  browserBuildCachePolicy: new cloudfront.CachePolicy(stack, "BrowserBuildStaticsCache", RemixSite.browserBuildCachePolicyProps),
-  publicCachePolicy: new cloudfront.CachePolicy(stack, "PublicStaticsCache", RemixSite.publicCachePolicyProps),
-  serverResponseCachePolicy: new cloudfront.CachePolicy(stack, "ServerResponseCache", RemixSite.serverResponseCachePolicyProps),
+  browserBuildCachePolicy: new cloudfront.CachePolicy(
+    stack,
+    "BrowserBuildStaticsCache",
+    RemixSite.browserBuildCachePolicyProps
+  ),
+  publicCachePolicy: new cloudfront.CachePolicy(
+    stack,
+    "PublicStaticsCache",
+    RemixSite.publicCachePolicyProps
+  ),
+  serverResponseCachePolicy: new cloudfront.CachePolicy(
+    stack,
+    "ServerResponseCache",
+    RemixSite.serverResponseCachePolicyProps
+  ),
 };
 
 new RemixSite(stack, "Site1", {
   path: "my-remix-app/",
   cdk: {
     cachePolicies,
-  }
+  },
 });
 
 new RemixSite(stack, "Site2", {
   path: "another-remix-app/",
   cdk: {
     cachePolicies,
-  }
+  },
 });
 ```
 
@@ -511,16 +528,16 @@ const site = new RemixSite(stack, "Site", {
     distribution: {
       defaultBehavior: {
         origin: new origins.HttpOrigin(Fn.parseDomainName(api.url)),
-      }
-    }
-  }
+      },
+    },
+  },
 });
 
 api.addRoutes(stack, {
   "ANY /{proxy+}": {
     type: "function",
     cdk: {
-      function: site.cdk.function
+      function: site.cdk.function,
     },
   },
 });

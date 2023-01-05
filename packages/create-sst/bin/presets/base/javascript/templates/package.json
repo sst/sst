@@ -2,14 +2,14 @@
   "name": "@@app",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "start": "sst start",
+    "dev": "sst dev",
     "build": "sst build",
     "deploy": "sst deploy",
     "remove": "sst remove",
     "console": "sst console"
   },
-  "devDependencies": {
-    "aws-cdk-lib": "2.50.0"
-  }
+  "devDependencies": {},
+  "workspaces": []
 }

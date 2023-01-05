@@ -1,9 +1,5 @@
-import {
-  use,
-  StackContext,
-  Api as ApiGateway,
-} from "@serverless-stack/resources";
-import { Database } from "./Database";
+import { use, StackContext, Api as ApiGateway } from "sst/constructs";
+import { Database } from "./Database.js";
 
 export function Api({ stack }: StackContext) {
   const table = use(Database);
@@ -18,7 +14,7 @@ export function Api({ stack }: StackContext) {
       "POST /graphql": {
         type: "graphql",
         function: {
-          handler: "functions/graphql/graphql.handler",
+          handler: "services/functions/graphql/graphql.handler",
         },
         pothos: {
           schema: "services/functions/graphql/schema.ts",

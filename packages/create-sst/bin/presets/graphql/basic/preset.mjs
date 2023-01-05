@@ -1,11 +1,7 @@
 import { remove, cmd, patch, extend, extract, install } from "create-sst";
 export default [
-  extend("presets/base/starter"),
-  extend("presets/base/monorepo"),
-  patch({
-    file: "sst.json",
-    operations: [{ op: "add", path: "/main", value: "stacks/index.ts" }],
-  }),
+  extend("presets/minimal/typescript"),
+  remove("stacks/MyStack.ts"),
   patch({
     file: "package.json",
     operations: [
@@ -26,13 +22,13 @@ export default [
     path: "web",
   }),
   install({
-    packages: ["@serverless-stack/static-site-env"],
+    packages: ["sst"],
     path: "web",
     dev: true,
   }),
   patch({
     file: "web/package.json",
-    operations: [{ op: "add", path: "/scripts/dev", value: "sst-env -- vite" }],
+    operations: [{ op: "add", path: "/scripts/dev", value: "sst env vite" }],
   }),
   patch({
     file: "package.json",
@@ -49,8 +45,12 @@ export default [
     cmd: "npx @genql/cli --output ./graphql/genql --schema ./graphql/schema.graphql --esm",
   }),
   install({
-    packages: ["@vanilla-extract/css", "@vanilla-extract/vite-plugin", "react-icons"],
-    path: "web"
+    packages: [
+      "@vanilla-extract/css",
+      "@vanilla-extract/vite-plugin",
+      "react-icons",
+    ],
+    path: "web",
   }),
   remove("web/src/App.tsx"),
   remove("web/src/App.css"),

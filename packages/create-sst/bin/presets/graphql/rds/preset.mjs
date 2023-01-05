@@ -4,14 +4,14 @@ export default [
   extract(),
   install({
     packages: ["hygen"],
-    dev: true
+    dev: true,
   }),
   patch({
     file: "package.json",
-    operations: [{ op: "add", path: "/scripts/gen", value: "hygen" }]
+    operations: [{ op: "add", path: "/scripts/gen", value: "hygen" }],
   }),
   install({
     packages: ["kysely", "kysely-data-api"],
-    path: "services"
+    path: "services",
   }),
 ];

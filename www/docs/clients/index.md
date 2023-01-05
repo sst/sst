@@ -1,7 +1,7 @@
 ---
 title: "Clients"
 sidebar_label: Overview
-description: "Helper packages for your Node.js Lambda functions."
+description: "A typesafe Node.js SST client for Lambda functions."
 ---
 
 import config from "../../config";
@@ -11,41 +11,80 @@ import MultiPackagerCode from "@site/src/components/MultiPackagerCode";
 
 <HeadlineText>
 
-Helper packages for your Node.js Lambda functions.
+A typesafe Node.js SST client for Lambda functions.
 
 </HeadlineText>
 
 ---
 
+## About
+
+The SST Node.js client gives your Lambda functions typesafe access to the infrastructure in your app.
+
+So for example, you can create an S3 bucket and [bind](../resource-binding.md) it to your API.
+
+```ts title="stacks/MyStack.ts"
+const bucket = new Bucket(stack, "myFiles");
+
+api.bind([bucket]);
+```
+
+And in your Lambda function you can access that bucket through the SST Node client.
+
+```ts {1,5} title="packages/functions/lambda.ts"
+import { Bucket } from "sst/node/bucket";
+
+await s3.send(
+  new PutObjectCommand({
+    Bucket: Bucket.myFiles.bucketName,
+    Key: "greeting.txt",
+    Body: "Hello world!",
+  })
+);
+```
+
+The Node client also gives you [handlers](#handlers) that wrap around your Lambda function with proper typesafety.
+
+---
+
 ## Installation
 
-Install the [`@serverless-stack/node`](https://www.npmjs.com/package/@serverless-stack/node) package in your `services/` directory.
+The SST Node client is available through the [`sst`](../packages/sst.md) npm package.
 
 <MultiPackagerCode>
 <TabItem value="npm">
 
 ```bash
-npm install @serverless-stack/node
+npm install sst --save-exact
 ```
 
 </TabItem>
-
 <TabItem value="yarn">
 
 ```bash
-yarn add @serverless-stack/node
+yarn add sst --exact
 ```
 
 </TabItem>
 </MultiPackagerCode>
 
-Or the directory where your functions are placed.
+If you are using our starters, the `sst` package should already be installed.
+
+---
+
+## Usage
+
+You can then import a specific module from the client through `sst/node/*`.
+
+```ts
+import { Bucket } from "sst/node/bucket";
+```
 
 ---
 
 ## Exports
 
-The `@serverless-stack/node` package is made up of a collection of modules. Like the `@serverless-stack/node/api`, `@serverless-stack/node/bucket`, etc. Each of these modules has 3 types of exports:
+The `sst/node` package is made up of a collection of modules. Like the `sst/node/api`, `sst/node/bucket`, etc. These modules have the following types of exports.
 
 ---
 
@@ -53,23 +92,10 @@ The `@serverless-stack/node` package is made up of a collection of modules. Like
 
 The properties in each module helps you access the resources that are bound to the function.
 
-For example, if you [bind](../resource-binding.md) a [`Bucket`](../constructs/Bucket.md) to the function:
-
-```ts {7}
-// Create an S3 bucket
-const bucket = new Bucket(stack, "myFiles");
-
-new Function(stack, "myFunction", {
-  handler: "lambda.handler",
-  // Bind to function
-  bind: [bucket],
-});
-```
-
-You can access the bucket name in your function by importing `Bucket` from the `@serverless-stack/node/bucket` module:
+For exmaple, you can access the bucket name in your function by importing `Bucket` from the `sst/node/bucket` module:
 
 ```ts
-import { Bucket } from "@serverless-stack/node/bucket";
+import { Bucket } from "sst/node/bucket";
 
 console.log(Bucket.myFiles.bucketName);
 ```
@@ -85,7 +111,7 @@ Due to the use of top-level await, your functions need to be bundled in the `esm
 The handlers in each module is a function that can wrap around Lambda function handlers. Here's an example of the [API handler](api.md#apihandler).
 
 ```js
-import { ApiHandler } from "@serverless-stack/node/api";
+import { ApiHandler } from "sst/node/api";
 
 export const handler = ApiHandler((event) => {
   // ...
@@ -114,7 +140,7 @@ Hooks are being actively worked on and are subject to change.
 For example, you can call the [`useSession`](auth.md#usesession) hook to get access to the current user session in APIs that need authentication.
 
 ```ts
-import { useSession } from "@serverless-stack/node/auth";
+import { useSession } from "sst/node/auth";
 
 const session = useSession();
 
@@ -145,12 +171,12 @@ Currently the client only supports JavaScript and TypeScript. But if you are loo
 
 ## Usage in tests
 
-To access the [properties](#properties) in your tests, you'll need to wrap your tests with the [`sst bind`](packages/cli.md#bind) CLI.
+To access the [properties](#properties) in your tests, you'll need to wrap your tests with the [`sst bind`](packages/sst.md#bind) command.
 
 ```bash
 sst bind -- vitest run
 ```
 
-This allows the `@serverless-stack/node` package to work as if it was running inside a Lambda function.
+This allows the `sst/node` package to work as if it was running inside a Lambda function.
 
-[Read more about testing](advanced/testing.md) and [learn about the `sst bind` CLI](advanced/testing.md#how-sst-bind-works).
+[Read more about testing](../testing.md) and [learn about the `sst bind` CLI](../testing.md#how-sst-bind-works).

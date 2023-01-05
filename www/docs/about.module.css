@@ -1,7 +1,7 @@
 /**
  * Summary
  */
-.summary {
+ .summary {
   margin-bottom: calc(var(--ifm-list-margin) * 1.8);
 }
 .summary ul li + li {
