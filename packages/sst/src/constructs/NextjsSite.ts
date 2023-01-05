@@ -2,12 +2,14 @@ import fs from "fs";
 import url from "url";
 import path from "path";
 import esbuild from "esbuild";
+import spawn from "cross-spawn";
 import { Construct } from "constructs";
 import { buildErrorResponsesForRedirectToIndex } from "./BaseSite.js";
 import {
   Fn,
   Duration,
   RemovalPolicy,
+  SymlinkFollowMode,
 } from "aws-cdk-lib";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
@@ -58,7 +60,31 @@ export class NextjsSite extends SsrSite {
       handler = "server.handler";
     }
     else {
-      bundlePath = path.join(this.props.path, path.dirname(this.buildConfig.serverBuildOutputFile));
+      // Note: cannot point the bundlePath to the `.open-next/server-function`
+      //       b/c the folder contains node_modules. And pnpm node_modules
+      //       contains symlinks. CDK cannot zip symlinks correctly.
+      //       https://github.com/aws/aws-cdk/issues/9251
+      //       We will zip the folder ourselves.
+      const zipOutDir = path.resolve(
+        path.join(this.sstBuildDir, `Site-${this.node.id}-${this.node.addr}`)
+      );
+      const script = path.resolve(__dirname, "../support/ssr-site-function-archiver.cjs");
+      const result = spawn.sync(
+        "node",
+        [
+          script,
+          path.join(this.props.path, ".open-next", "server-function"),
+          path.join(zipOutDir, "server-function.zip"),
+        ],
+        {
+          stdio: "inherit",
+        }
+      );
+
+      if (result.status !== 0) {
+        throw new Error(`There was a problem generating the assets package.`);
+      }
+      bundlePath = path.join(zipOutDir, "server-function.zip");
       handler = "index.handler";
     }
 
@@ -130,9 +156,8 @@ export class NextjsSite extends SsrSite {
 
     // Create default behavior
     // default handler for requests that don't match any other path:
-    //   - try S3 first
-    //   - if 403, fall back to lambda handler (mostly for /)
-    //   - if 404, fall back to lambda handler
+    //   - try lambda handler first first
+    //   - if failed, fall back to S3
     const fallbackOriginGroup = new origins.OriginGroup({
       primaryOrigin: serverBehavior.origin,
       fallbackOrigin: s3Origin,

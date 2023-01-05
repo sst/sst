@@ -52,26 +52,6 @@ await esbuild.build({
   outdir: "./dist/support/nodejs-runtime/",
 });
 
-// support/custom-resources
-await esbuild.build({
-  keepNames: true,
-  bundle: true,
-  platform: "node",
-  target: "esnext",
-  format: "esm",
-  entryPoints: ["./support/custom-resources/index.ts"],
-  banner: {
-    js: [
-      `import { createRequire as topLevelCreateRequire } from 'module';`,
-      `const require = topLevelCreateRequire(import.meta.url);`,
-    ].join(""),
-  },
-  outExtension: {
-    ".js": ".mjs",
-  },
-  outdir: "./dist/support/custom-resources/",
-});
-
 // support/bridge
 await esbuild.build({
   keepNames: true,
@@ -91,6 +71,8 @@ await esbuild.build({
 });
 
 // support/rds-migrator
+// note: do not add topLevelCreateRequire banner b/c the 
+//       migrator function will get built again in RDS.
 await esbuild.build({
   keepNames: true,
   bundle: true,
@@ -99,12 +81,6 @@ await esbuild.build({
   target: "esnext",
   format: "esm",
   entryPoints: ["./support/rds-migrator/index.mjs"],
-  banner: {
-    js: [
-      `import { createRequire as topLevelCreateRequire } from 'module';`,
-      `const require = topLevelCreateRequire(import.meta.url);`,
-    ].join(""),
-  },
   outfile: "./dist/support/rds-migrator/index.mjs",
 });
 
@@ -133,8 +109,57 @@ await esbuild.build({
   outdir: "./dist/support/edge-function/",
 });
 
+// Move support packages that need to be transpiled
+await Promise.all([
+  "custom-resources",
+  "script-function",
+].map((dir) =>
+  esbuild.build({
+    keepNames: true,
+    bundle: true,
+    platform: "node",
+    target: "esnext",
+    format: "esm",
+    entryPoints: [`./support/${dir}/index.ts`],
+    banner: {
+      js: [
+        `import { createRequire as topLevelCreateRequire } from 'module';`,
+        `const require = topLevelCreateRequire(import.meta.url);`,
+      ].join(""),
+    },
+    outExtension: {
+      ".js": ".mjs",
+    },
+    outdir: `./dist/support/${dir}/`,
+  })
+));
+
+
+// Move support scripts that need to be transpiled
+await Promise.all([
+  "base-site-archiver",
+  "ssr-site-function-archiver",
+].map((file) =>
+  esbuild.build({
+    keepNames: true,
+    bundle: true,
+    minify: true,
+    platform: "node",
+    target: "esnext",
+    format: "esm",
+    entryPoints: [`./support/${file}.cjs`],
+    banner: {
+      js: [
+        `import { createRequire as topLevelCreateRequire } from 'module';`,
+        `const require = topLevelCreateRequire(import.meta.url);`,
+      ].join(""),
+    },
+    outfile: `./dist/support/${file}.mjs`,
+  })
+));
+
 // Move support packages that don't need to be transpiled
-const moveToDist = [
+await Promise.all([
   "astro-site-html-stub",
   "edge-function-code-replacer",
   "nextjs-site-html-stub",
@@ -150,38 +175,12 @@ const moveToDist = [
   "java-runtime",
   "dotnet31-bootstrap",
   "dotnet6-bootstrap",
-];
-await Promise.all(
-  moveToDist.map((dir) =>
+].map((dir) =>
     fs.cp(`support/${dir}`, `dist/support/${dir}`, {
       recursive: true,
     })
   )
 );
-
-await fs.cp(
-  "support/base-site-archiver.cjs",
-  "dist/support/base-site-archiver.cjs",
-  {
-    recursive: true,
-  }
-);
-await esbuild.build({
-  keepNames: true,
-  bundle: true,
-  minify: true,
-  platform: "node",
-  target: "esnext",
-  format: "esm",
-  entryPoints: ["./support/base-site-archiver.cjs"],
-  banner: {
-    js: [
-      `import { createRequire as topLevelCreateRequire } from 'module';`,
-      `const require = topLevelCreateRequire(import.meta.url);`,
-    ].join(""),
-  },
-  outfile: "./dist/support/base-site-archiver.mjs",
-});
 
 console.log("Built");
 if (watch) console.log("Watching");
