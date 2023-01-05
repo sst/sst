@@ -53,6 +53,10 @@ export const useRuntimeWorkers = Context.memo(() => {
 
   const lastRequestId = new Map<string, string>();
   bus.subscribe("function.invoked", async (evt) => {
+    bus.publish("function.ack", {
+      functionID: evt.properties.functionID,
+      workerID: evt.properties.workerID,
+    });
     let worker = workers.get(evt.properties.workerID);
     lastRequestId.set(
       evt.properties.workerID,

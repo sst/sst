@@ -2,6 +2,10 @@ import "../bus.js";
 
 declare module "../bus.js" {
   export interface Events {
+    "function.ack": {
+      workerID: string;
+      functionID: string;
+    };
     "function.invoked": {
       workerID: string;
       functionID: string;

@@ -103,14 +103,27 @@ export async function handler(event: any, context: any) {
   })) {
     device.publish(`${PREFIX}/events`, JSON.stringify(fragment));
   }
+
   const result = await new Promise<any>((r) => {
+    const timeout = setTimeout(() => {
+      r({
+        type: "function.timeout",
+      });
+    }, 5 * 1000);
     onMessage = (evt) => {
+      if (evt.type === "function.ack") {
+        if (evt.properties.workerID === workerID) return;
+        clearTimeout(timeout);
+      }
       if (["function.success", "function.error"].includes(evt.type)) {
         if (evt.properties.workerID === workerID) r(evt);
       }
     };
   });
   console.log("Got result", result);
+
+  if (result.type === "function.timeout")
+    return "This function is in live debug mode but there is no `sst dev` session running";
 
   if (result.type === "function.success") {
     return result.properties.body;
