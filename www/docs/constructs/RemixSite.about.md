@@ -421,7 +421,7 @@ import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new RemixSite(stack, "Site", {
   path: "my-remix-app/",
-  cutomDomain: {
+  customDomain: {
     isExternalDomain: true,
     domainName: "my-app.com",
     cdk: {
