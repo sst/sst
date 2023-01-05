@@ -3,7 +3,7 @@ import fs from "fs/promises";
 import path from "path";
 import { Program } from "../program.js";
 
-const PACKAGE_MATCH = ["sst", "aws-cdk", "@aws-cdk"];
+const PACKAGE_MATCH = ["sst", "aws-cdk", "@aws-cdk", "constructs"];
 
 const FIELDS = ["dependencies", "devDependencies"];
 
@@ -40,6 +40,7 @@ export const update = (program: Program) =>
             if (!PACKAGE_MATCH.some((x) => pkg.startsWith(x))) continue;
             const desired = (() => {
               if (pkg === "sst") return metadata.version;
+              if (pkg === "constructs") return metadata.dependencies.constructs;
               if (pkg.endsWith("alpha"))
                 return metadata.dependencies["@aws-cdk/aws-apigatewayv2-alpha"];
               return metadata.dependencies["aws-cdk-lib"];

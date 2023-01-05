@@ -6,6 +6,7 @@ This is a release candidate of the upcoming SST 2.0. Please report to us in the 
 
 - SST is now a monopackage. Remove all packages referencing `@serverless-stack/resources` `@serverless-stack/cli` `@serverless-stack/node` and `@serverless-stack/static-site-env`.
 - Install the `sst@rc` package - hell yeah we got this name
+- If you don't already have it, add the `constructs@10.1.156` package
 - You can now specify `sst.json` as `sst.config.mjs` file. Here's an example:
 
 ```js
