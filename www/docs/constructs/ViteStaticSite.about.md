@@ -10,6 +10,10 @@ The `ViteStaticSite` construct internally extends the [`StaticSite`](StaticSite.
 - [`buildOutput`](StaticSite.md#buildoutput) is the `dist` folder in your Vite app.
 - [`fileOptions`](StaticSite.md#fileoptions) sets the cache control to `max-age=0,no-cache,no-store,must-revalidate` for HTML files; and `max-age=31536000,public,immutable` for JS/CSS files.
 
+:::warning
+The `ViteStaticSite` construct is deprecated, and will be removed in SST v2. Use the [`StaticSite`](StaticSite.md) construct instead. [Read more about how to upgrade.](../upgrade-guide.md#upgrade-to-v118)
+:::
+
 ## Examples
 
 ### Minimal Config

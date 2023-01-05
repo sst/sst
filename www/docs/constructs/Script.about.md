@@ -129,7 +129,7 @@ Create a stack for the construct. Let's call it `BeforeDeployStack` and add it t
 ```ts
 import { dependsOn, StackContext, Script } from "@serverless-stack/resources"
 
-function BeforeDeployStack(ctx: StackContext) {
+function BeforeDeployStack({stack}: StackContext) {
   new Script(stack, "BeforeDeploy", {
     onCreate: "src/script.create",
   });
@@ -161,7 +161,7 @@ Create a `AfterDeployStack` in `stacks/index.js`.
 ```ts
 import { dependsOn, StackContext, Script } from "@serverless-stack/resources"
 
-function AfterDeployStack(ctx: StackContext) {
+function AfterDeployStack({stack}: StackContext) {
   dependsOn(ApiStack)
   dependsOn(DBStack)
   new Script(stack, "AfterDeploy", {

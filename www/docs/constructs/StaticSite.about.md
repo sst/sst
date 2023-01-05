@@ -184,7 +184,7 @@ On `sst deploy`, the environment variables will first be replaced by placeholder
 
 To use these values while developing, run `sst start` to start the [Live Lambda Development](/live-lambda-development.md) environment.
 
-```bash
+``` bash
 npx sst start
 ```
 
@@ -225,7 +225,6 @@ There are a couple of things happening behind the scenes here:
   sst.json
   vite-app/
 ```
-
 :::
 
 ### Custom domains

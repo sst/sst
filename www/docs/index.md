@@ -125,7 +125,7 @@ Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
 
 </div>
 
----
+  Deploy Next.js, Remix, Astro, and Solid apps to your AWS account.
 
 <div className={styles.heading}>
   <h3>Reference Docs</h3>

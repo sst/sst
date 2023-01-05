@@ -76,11 +76,7 @@ export interface StaticSiteProps {
    */
   indexPage?: string;
   /**
-   * The error page behavior for this website. Takes either an HTML page.
-   * ```
-   * 404.html
-   * ```
-   * Or the constant `"redirect_to_index_page"` to redirect to the index page.
+   * The error page behavior for this website. Takes either an HTML page (ie. `"404.html"`) or the `"redirect_to_index_page"` to redirect to the index page.
    *
    * Note that, if the error pages are redirected to the index page, the HTTP status code is set to 200. This is necessary for single page apps, that handle 404 pages on the client side.
    * @default redirect_to_index_page
@@ -527,7 +523,7 @@ interface ImportMeta {
       return;
     }
 
-    const { path: sitePath, buildCommand } = this.props;
+    let { path: sitePath, buildCommand } = this.props;
 
     // validate site path exists
     if (!fs.existsSync(sitePath)) {

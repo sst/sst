@@ -101,7 +101,7 @@ To view the latest release and all historical releases, <a href={`${config.githu
 
 ## Upgrade to v1.16
 
-[Resource Binding](resource-binding.md) was introduced in this release. It simplies accessing the resources in your app. For example, here's how we bind the bucket to the function:
+[Resource Binding](resource-binding.md) was introduced in this release. It simplifies accessing the resources in your app. For example, here's how we bind the bucket to the function:
 
 ```diff
 const bucket = new Bucket(stack, "myFiles");

@@ -35,7 +35,7 @@ Instead you should set it up so that your changes are deployed when you push you
 
 ### PR workflow
 
-Additionally, since your are using serverless, it makes sense to have separate environments per feature or pull request.
+Additionally, since you are using serverless, it makes sense to have separate environments per feature or pull request.
 
 :::info
 Serverless and SST makes it easy and cost-effective for teams to embrace a Git workflow complete with feature branches and preview environments.

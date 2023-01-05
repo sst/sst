@@ -873,6 +873,53 @@ export class Api<
   }
 
   /**
+   * Binds the given list of resources to a specific route.
+   *
+   * @example
+   * ```js
+   * const api = new Api(stack, "Api");
+   *
+   * api.setCors({
+   *   allowMethods: ["GET"],
+   * });
+   * ```
+   *
+   */
+  public setCors(cors?: boolean | ApiCorsProps) {
+    const { cdk } = this.props;
+
+    if (isCDKConstruct(cdk?.httpApi)) {
+      // Cannot set CORS if cdk.httpApi is a construct.
+      if (cors !== undefined) {
+        throw new Error(
+          `Cannot configure the "cors" when "cdk.httpApi" is a construct`
+        );
+      }
+    } else {
+      // Cannot set CORS via cdk.httpApi. Always use Api.cors.
+      const httpApiProps = (cdk?.httpApi || {}) as apig.HttpApiProps;
+      if (httpApiProps.corsPreflight !== undefined) {
+        throw new Error(
+          `Cannot configure the "httpApi.corsPreflight" in the Api`
+        );
+      }
+
+      const corsConfig = apigV2Cors.buildCorsConfig(cors);
+      if (corsConfig) {
+        const cfnApi = this.cdk.httpApi.node.defaultChild as cfnApig.CfnApi;
+        cfnApi.corsConfiguration = {
+          allowCredentials: corsConfig?.allowCredentials,
+          allowHeaders: corsConfig?.allowHeaders,
+          allowMethods: corsConfig?.allowMethods,
+          allowOrigins: corsConfig?.allowOrigins,
+          exposeHeaders: corsConfig?.exposeHeaders,
+          maxAge: corsConfig?.maxAge?.toSeconds(),
+        };
+      }
+    }
+  }
+
+  /**
    * Attaches the given list of permissions to all the routes. This allows the functions to access other AWS resources.
    *
    * @example
@@ -959,6 +1006,16 @@ export class Api<
               commands: data.commands,
             };
 
+          if (data.type === "graphql")
+            return {
+              type: "graphql" as const,
+              route: key,
+              fn: getFunctionRef(data.function),
+              schema: data.schema,
+              output: data.output,
+              commands: data.commands,
+            };
+
           return { type: data.type, route: key };
         }),
       },
@@ -980,16 +1037,11 @@ export class Api<
   }
 
   private createHttpApi() {
-    const { cdk, cors, defaults, accessLog, customDomain } = this.props;
+    const { cdk, defaults, cors, accessLog, customDomain } = this.props;
     const id = this.node.id;
     const app = this.node.root as App;
 
     if (isCDKConstruct(cdk?.httpApi)) {
-      if (cors !== undefined) {
-        throw new Error(
-          `Cannot configure the "cors" when "cdk.httpApi" is a construct`
-        );
-      }
       if (accessLog !== undefined) {
         throw new Error(
           `Cannot configure the "accessLog" when "cdk.httpApi" is a construct`
@@ -1010,11 +1062,6 @@ export class Api<
       const httpApiProps = (cdk?.httpApi || {}) as apig.HttpApiProps;
 
       // Validate input
-      if (httpApiProps.corsPreflight !== undefined) {
-        throw new Error(
-          `Cannot configure the "httpApi.corsPreflight" in the Api`
-        );
-      }
       if (httpApiProps.defaultDomainMapping !== undefined) {
         throw new Error(
           `Cannot configure the "httpApi.defaultDomainMapping" in the Api`
@@ -1044,7 +1091,6 @@ export class Api<
 
       this.cdk.httpApi = new apig.HttpApi(this, "Api", {
         apiName: app.logicalPrefixedName(id),
-        corsPreflight: apigV2Cors.buildCorsConfig(cors),
         defaultDomainMapping,
         ...httpApiProps,
       });
@@ -1078,6 +1124,8 @@ export class Api<
           true
         );
     }
+
+    this.setCors(cors);
   }
 
   private addAuthorizers(authorizers: Authorizers) {
@@ -1258,6 +1306,17 @@ export class Api<
           ),
         ];
       }
+      if (routeValue.type === "graphql") {
+        return [
+          routeValue,
+          this.createGraphQLIntegration(
+            scope,
+            routeKey,
+            routeValue,
+            postfixName
+          ),
+        ];
+      }
       if (routeValue.cdk?.function) {
         return [
           routeValue,
@@ -1369,6 +1428,10 @@ export class Api<
     routeProps: ApiPothosRouteProps<keyof Authorizers>,
     postfixName: string
   ): apig.HttpRouteIntegration {
+    // Show warning
+    const app = this.node.root as App;
+    app.reportWarning("usingApiPothosRoute");
+
     const result = this.createFunctionIntegration(
       scope,
       routeKey,
@@ -1391,6 +1454,36 @@ export class Api<
     }
     return result;
   }
+  protected createGraphQLIntegration(
+    scope: Construct,
+    routeKey: string,
+    routeProps: ApiGraphQLRouteProps<keyof Authorizers>,
+    postfixName: string
+  ): apig.HttpRouteIntegration {
+    const result = this.createFunctionIntegration(
+      scope,
+      routeKey,
+      {
+        ...routeProps,
+        type: "function",
+        payloadFormatVersion: "2.0",
+      },
+      postfixName
+    );
+    const data = this.routesData[routeKey];
+    if (data.type === "function") {
+      this.routesData[routeKey] = {
+        ...data,
+        type: "graphql",
+        output: routeProps.pothos?.output,
+        schema: routeProps.pothos?.schema,
+        commands: routeProps.pothos?.commands,
+      };
+    }
+
+    return result;
+  }
+
   protected createGraphQLIntegration(
     scope: Construct,
     routeKey: string,
