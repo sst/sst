@@ -38,10 +38,12 @@ export const update = (program: Program) =>
           if (!deps) continue;
           for (const [pkg, existing] of Object.entries(deps)) {
             if (!PACKAGE_MATCH.some((x) => pkg.startsWith(x))) continue;
-            const desired =
-              pkg === "sst"
-                ? metadata.version
-                : metadata.dependencies["aws-cdk-lib"];
+            const desired = (() => {
+              if (pkg === "sst") return metadata.version;
+              if (pkg.endsWith("alpha"))
+                return metadata.dependencies["@aws-cdk/aws-apigatewayv2-alpha"];
+              return metadata.dependencies["aws-cdk-lib"];
+            })();
             if (existing === desired) continue;
             let arr = results.get(file);
             if (!arr) {
