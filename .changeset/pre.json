@@ -8,7 +8,9 @@
     "@serverless-stack/docs": "1.9.1"
   },
   "changesets": [
+    "breezy-ants-attend",
     "calm-cheetahs-agree",
+    "fast-pumas-matter",
     "fresh-maps-applaud",
     "great-spoons-repeat",
     "grumpy-crabs-smash",
