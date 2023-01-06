@@ -4,7 +4,7 @@ import { Context } from "../../context/context.js";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { useRuntimeServerConfig } from "../server.js";
 import { findBelow, isChild } from "../../util/fs.js";
-import { useProject } from "../../app.js";
+import { useProject } from "../../project.js";
 import { execAsync } from "../../util/process.js";
 import url from "url";
 

@@ -6,7 +6,7 @@ import {
   BucketEncryption,
 } from "aws-cdk-lib/aws-s3";
 import { ParameterTier, StringParameter } from "aws-cdk-lib/aws-ssm";
-import { useProject } from "./app.js";
+import { useProject } from "./project.js";
 import { createSpinner } from "./cli/spinner.js";
 import { Context } from "./context/context.js";
 import { useAWSClient } from "./credentials.js";
@@ -36,7 +36,7 @@ export const useBootstrap = Context.memo(async () => {
     const app = new App();
     const stack = new Stack(app, "SSTBootstrap", {
       env: {
-        region: project.region,
+        region: project.config.region,
       },
     });
 
@@ -45,7 +45,7 @@ export const useBootstrap = Context.memo(async () => {
       Tags.of(app).add(key, value);
     }
 
-    const bucket = new Bucket(stack, project.region, {
+    const bucket = new Bucket(stack, project.config.region!, {
       encryption: BucketEncryption.S3_MANAGED,
       removalPolicy: RemovalPolicy.DESTROY,
       autoDeleteObjects: true,

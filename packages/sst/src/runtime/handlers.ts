@@ -4,7 +4,7 @@ import path from "path";
 import fs from "fs/promises";
 import { useWatcher } from "../watcher.js";
 import { useBus } from "../bus.js";
-import { useProject } from "../app.js";
+import { useProject } from "../project.js";
 import { FunctionProps, useFunctions } from "../constructs/Function.js";
 
 declare module "../bus.js" {

@@ -1,6 +1,6 @@
 import path from "path";
 import fs from "fs/promises";
-import { useProject } from "./app.js";
+import { useProject } from "./project.js";
 import { Logger } from "./logger.js";
 import { Context } from "./context/context.js";
 

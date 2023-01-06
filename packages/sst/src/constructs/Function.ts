@@ -3,12 +3,10 @@
 
 import path from "path";
 import type { Loader, BuildOptions } from "esbuild";
-import fs from "fs";
 import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as lambdaNode from "aws-cdk-lib/aws-lambda-nodejs";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 
@@ -26,7 +24,7 @@ import * as functionUrlCors from "./util/functionUrlCors.js";
 import url from "url";
 import { useDeferredTasks } from "./deferred_task.js";
 import { useWarning } from "./util/warning.js";
-import { useProject } from "../app.js";
+import { useProject } from "../project.js";
 import { useRuntimeHandlers } from "../runtime/handlers.js";
 import { createAppContext } from "./context.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
@@ -815,7 +813,7 @@ export class Function extends lambda.Function implements SSTConstruct {
     // Add config
     this.addEnvironment("SST_APP", app.name, { removeInEdge: true });
     this.addEnvironment("SST_STAGE", app.stage, { removeInEdge: true });
-    this.addEnvironment("SST_SSM_PREFIX", useProject().ssmPrefix, {
+    this.addEnvironment("SST_SSM_PREFIX", useProject().config.ssmPrefix, {
       removeInEdge: true,
     });
     this.addConfig(props.config || []);

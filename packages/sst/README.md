@@ -7,23 +7,37 @@ This is a release candidate of the upcoming SST 2.0. Please report to us in the 
 - SST is now a monopackage. Remove all packages referencing `@serverless-stack/resources` `@serverless-stack/cli` `@serverless-stack/node` and `@serverless-stack/static-site-env`.
 - Install the `sst@rc` package - hell yeah we got this name
 - If you don't already have it, add the `constructs@10.1.156` package
-- You can now specify `sst.json` as `sst.config.mjs` file. Here's an example:
+- `sst.json` is now specified as a `sst.config.ts` file. And since it's a typescript file, you do not need an additional `main` field pointing to one. Here's an example that takes advantage of the new structure.
 
 ```js
-const PROFILE = {
-  staging: "bumi-staging",
-  production: "bumi-production",
-  default: "bumi-dev",
-}
+import { SSTConfig } from "sst"
+import { Api } from "./stacks/Api.js"
+import { Dynamo } from "./stacks/Dynamo.js"
 
-export default function (input) {
-  return {
-    name: "bumi",
-    region: "us-east-1",
-    main: "stacks/index.ts",
-    profile: PROFILE[input.stage] || PROFILE.default,
-  }
-}
+export default {
+  config(input) {
+    const PROFILE: Record<string, string> = {
+      staging: "myco-staging",
+      production: "myco-production",
+      default: "myco-dev",
+    }
+    return {
+      name: "myapp",
+      region: "us-east-1",
+      profile: PROFILE[input.stage || "default"],
+    }
+  },
+  stacks(app) {
+    app.setDefaultFunctionProps({
+      runtime: "nodejs16.x",
+      architecture: "arm_64",
+    })
+
+    app
+      .stack(Api)
+      .stack(Dynamo)
+  },
+} satisfies SSTConfig
 ```
 
 - In your stacks code replace all imports from `@serverless-stack/resources` to `sst/constructs`

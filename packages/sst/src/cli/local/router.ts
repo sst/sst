@@ -1,8 +1,6 @@
 import * as trpc from "@trpc/server";
-import type { Credentials } from "aws-sdk";
-import AWS from "aws-sdk";
 import { DendriformPatch } from "dendriform-immer-patch-optimiser";
-import { useProject } from "../../app.js";
+import { useProject } from "../../project.js";
 import { useBus } from "../../bus.js";
 import { useAWSCredentials } from "../../credentials.js";
 
@@ -48,7 +46,7 @@ export const router = trpc
       const project = useProject();
       const credentials = await useAWSCredentials();
       return {
-        region: project.region,
+        region: project.config.region,
         credentials: {
           accessKeyId: credentials.accessKeyId,
           secretAccessKey: credentials.secretAccessKey,
@@ -63,7 +61,7 @@ export const router = trpc
     },
   })
   .mutation("deploy", {
-    async resolve({ ctx }) {
+    async resolve() {
       return;
     },
   })

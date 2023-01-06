@@ -1,10 +1,12 @@
 import esbuild from "esbuild";
 import fs from "fs/promises";
+import os from "os";
 import path from "path";
 import { Logger } from "../logger.js";
 import { useBus } from "../bus.js";
-import { useProject } from "../app.js";
+import { useProject } from "../project.js";
 import { dynamicImport } from "../util/module.js";
+import { findAbove } from "../util/fs.js";
 
 declare module "../bus.js" {
   export interface Events {
@@ -14,17 +16,13 @@ declare module "../bus.js" {
   }
 }
 
-export async function build() {
-  const project = useProject();
-  const bus = useBus();
+export async function load(input: string) {
+  const parsed = path.parse(input);
+  const root = await findAbove(input, "package.json");
+  const outfile = path.join(parsed.dir, `${parsed.name}.${Date.now()}.mjs`);
   const pkg = JSON.parse(
-    await fs
-      .readFile(path.join(project.paths.root, "package.json"))
-      .then((x) => x.toString())
+    await fs.readFile(path.join(root, "package.json")).then((x) => x.toString())
   );
-  const outfile = path.join(project.paths.out, `stacks.${Math.random()}.mjs`);
-
-  Logger.debug("Running esbuild on", project.main, "to", outfile);
   const result = await esbuild.build({
     keepNames: true,
     bundle: true,
@@ -42,7 +40,7 @@ export async function build() {
         ...pkg.peerDependencies,
       }),
     ],
-    absWorkingDir: project.paths.root,
+    absWorkingDir: root,
     outfile,
     banner: {
       js: [
@@ -53,21 +51,14 @@ export async function build() {
     // The entry can have any file name (ie. "stacks/anything.ts"). We want the
     // build output to be always named "lib/index.js". This allow us to always
     // import from "buildDir" without needing to pass "anything" around.
-    entryPoints: [project.main],
+    entryPoints: [input],
   });
-  Logger.debug("Finished esbuild");
-
-  Logger.debug("Sourcing stacks");
   try {
     const mod = await dynamicImport(outfile);
-    Logger.debug("Finished sourcing stacks");
     await fs.rm(outfile, {
       force: true,
     });
-    bus.publish("stack.built", {
-      metafile: result.metafile,
-    });
-    return mod.default;
+    return [result.metafile, mod.default] as const;
   } catch (e) {
     await fs.rm(outfile, {
       force: true,

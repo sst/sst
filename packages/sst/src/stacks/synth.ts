@@ -1,6 +1,6 @@
 import { Logger } from "../logger.js";
 import type { App } from "../constructs/App.js";
-import { useProject } from "../app.js";
+import { useProject } from "../project.js";
 import { useAWSProvider, useSTSIdentity } from "../credentials.js";
 import { useBootstrap } from "../bootstrap.js";
 import * as contextproviders from "aws-cdk/lib/context-providers/index.js";
@@ -55,9 +55,9 @@ export async function synth(opts: SynthOptions) {
     const app = new App(
       {
         account: identity.Account!,
-        stage: project.stage,
-        name: project.name,
-        region: project.region,
+        stage: project.config.stage,
+        name: project.config.name,
+        region: project.config.region,
         mode: opts.mode,
         skipBuild: opts.mode === "remove",
         bootstrap,

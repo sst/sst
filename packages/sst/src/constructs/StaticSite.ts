@@ -29,7 +29,6 @@ import {
   BaseSiteDomainProps,
   BaseSiteReplaceProps,
   BaseSiteCdkDistributionProps,
-  BaseSiteEnvironmentOutputsInfo,
   getBuildCmdEnvironment,
   buildErrorResponsesFor404ErrorPage,
   buildErrorResponsesForRedirectToIndex,
@@ -41,7 +40,7 @@ import {
   getParameterPath,
 } from "./util/functionBinding.js";
 import { gray } from "colorette";
-import { useProject } from "../app.js";
+import { useProject } from "../project.js";
 import { SiteEnv } from "../site-env.js";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));

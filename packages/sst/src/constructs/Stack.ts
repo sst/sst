@@ -12,8 +12,8 @@ import { isConstruct, SSTConstruct } from "./Construct.js";
 import { Permissions } from "./util/permission.js";
 
 import { createRequire } from "module";
-import { createAppContext, useApp } from "./context.js";
-import { useProject } from "../app.js";
+import { useApp } from "./context.js";
+import { useProject } from "../project.js";
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 

@@ -18,7 +18,7 @@ export const update = (program: Program) =>
       }),
     async (args) => {
       const { fetch } = await import("undici");
-      const { useProject } = await import("../../app.js");
+      const { useProject } = await import("../../project.js");
 
       const project = useProject();
       const files = await find(project.paths.root);

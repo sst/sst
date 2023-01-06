@@ -1,4 +1,4 @@
-import { useProject } from "../../app.js";
+import { useProject } from "../../project.js";
 import { Program } from "../program.js";
 import { createSpinner } from "../spinner.js";
 import fs from "fs/promises";
@@ -19,17 +19,18 @@ export const env = (program: Program) =>
     async (args) => {
       const project = useProject();
 
-      const spinner = createSpinner("Waiting for SST to start").start();
+      let spinner: ReturnType<typeof createSpinner> | undefined;
       while (true) {
         const exists = await fs
           .access(SiteEnv.valuesFile())
           .then(() => true)
           .catch(() => false);
         if (!exists) {
+          spinner = createSpinner("Waiting for SST to start").start();
           await new Promise((resolve) => setTimeout(resolve, 1000));
           continue;
         }
-        spinner.succeed();
+        spinner?.succeed();
 
         const sites = await SiteEnv.values();
         const current = path.relative(project.paths.root, process.cwd());

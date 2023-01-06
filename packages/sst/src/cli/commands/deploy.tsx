@@ -1,4 +1,3 @@
-import { Logger } from "../../logger.js";
 import type { Program } from "../program.js";
 import { printDeploymentResults } from "../ui/deploy.js";
 import { Instance } from "ink/build/render.js";
@@ -20,24 +19,23 @@ export const deploy = (program: Program) =>
       const React = await import("react");
       const { CloudAssembly } = await import("aws-cdk-lib/cx-api");
       const { blue, bold } = await import("colorette");
-      const { useProject } = await import("../../app.js");
+      const { useProject } = await import("../../project.js");
       const { Stacks } = await import("../../stacks/index.js");
       const { render } = await import("ink");
       const { DeploymentUI } = await import("../ui/deploy.js");
+      const project = useProject();
       const assembly = await (async function () {
         if (args.from) {
           const result = new CloudAssembly(args.from);
           return result;
         }
 
-        const fn = await Stacks.build();
         return await Stacks.synth({
-          fn,
+          fn: project.stacks,
           mode: "deploy",
         });
       })();
 
-      const project = useProject();
       const target = assembly.stacks.filter(
         (s) =>
           !args.filter ||
@@ -50,7 +48,7 @@ export const deploy = (program: Program) =>
       }
       console.log(
         `Deploying ${bold(target.length + " stacks")} for stage ${blue(
-          project.stage
+          project.config.stage
         )}...`
       );
       let component: Instance | undefined = undefined;

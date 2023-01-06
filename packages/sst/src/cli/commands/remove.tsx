@@ -13,7 +13,7 @@ export const remove = (program: Program) =>
       const React = await import("react");
       const { CloudAssembly } = await import("aws-cdk-lib/cx-api");
       const { blue, bold } = await import("colorette");
-      const { useProject } = await import("../../app.js");
+      const { useProject } = await import("../../project.js");
       const { Stacks } = await import("../../stacks/index.js");
       const { render } = await import("ink");
       const { DeploymentUI } = await import("../ui/deploy.js");
@@ -24,9 +24,9 @@ export const remove = (program: Program) =>
           return result;
         }
 
-        const fn = await Stacks.build();
+        const project = useProject();
         return await Stacks.synth({
-          fn,
+          fn: project.stacks,
           mode: "remove",
         });
       })();
@@ -40,11 +40,10 @@ export const remove = (program: Program) =>
       if (!target.length) {
         console.log(`No stacks found matching ${blue(args.filter!)}`);
         process.exit(1);
-        return;
       }
       console.log(
         `Removing ${bold(target.length + " stacks")} for stage ${blue(
-          project.stage
+          project.config.stage
         )}...`
       );
       process.stdout.write("\x1b[?1049h");

@@ -21,7 +21,7 @@ export const useIOTEndpoint = Context.memo(async () => {
 
 import iot from "aws-iot-device-sdk";
 import { EventPayload, Events, EventTypes, useBus } from "./bus.js";
-import { useProject } from "./app.js";
+import { useProject } from "./project.js";
 import { Logger } from "./logger.js";
 
 interface Fragment {
@@ -44,7 +44,7 @@ export const useIOT = Context.memo(async () => {
     secretKey: creds.secretAccessKey,
     sessionToken: creds.sessionToken,
   });
-  const PREFIX = `/sst/${project.name}/${project.stage}`;
+  const PREFIX = `/sst/${project.config.name}/${project.config.stage}`;
   device.subscribe(`${PREFIX}/events`);
 
   const fragments = new Map<string, Map<number, Fragment>>();

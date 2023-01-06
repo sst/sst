@@ -11,7 +11,7 @@ import { FunctionState, router, State } from "./router.js";
 import { WritableDraft } from "immer/dist/internal.js";
 import { DendriformPatch, optimise } from "dendriform-immer-patch-optimiser";
 import { sync } from "cross-spawn";
-import { useProject } from "../../app.js";
+import { useProject } from "../../project.js";
 import { useBus } from "../../bus.js";
 
 type Opts = {
@@ -30,8 +30,8 @@ declare module "../../bus.js" {
 export async function useLocalServer(opts: Opts) {
   const project = useProject();
   let state: State = {
-    app: project.name,
-    stage: project.stage,
+    app: project.config.name,
+    stage: project.config.stage,
     live: opts.live,
     stacks: {
       status: "idle",

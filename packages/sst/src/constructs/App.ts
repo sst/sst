@@ -16,7 +16,6 @@ import {
 } from "./Construct.js";
 import { Function, FunctionProps } from "./Function.js";
 import * as Config from "./Config.js";
-import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite.js";
 import { Permissions } from "./util/permission.js";
 import { bindParameters, bindType } from "./util/functionBinding.js";
 import { StackProps } from "./Stack.js";
@@ -26,7 +25,7 @@ import { Auth } from "./Auth.js";
 import { useDeferredTasks } from "./deferred_task.js";
 import { AppContext } from "./context.js";
 import { useBootstrap } from "../bootstrap.js";
-import { useProject } from "../app.js";
+import { useProject } from "../project.js";
 import { Logger } from "../logger.js";
 import { SiteEnv } from "../site-env.js";
 const require = createRequire(import.meta.url);

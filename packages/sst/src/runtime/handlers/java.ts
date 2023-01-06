@@ -4,12 +4,11 @@ import os from "os";
 import { useRuntimeHandlers } from "../handlers.js";
 import { useRuntimeWorkers } from "../workers.js";
 import { Context } from "../../context/context.js";
-import { VisibleError } from "../../error.js";
 import zipLocal from "zip-local";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { useRuntimeServerConfig } from "../server.js";
-import { existsAsync, findAbove, findBelow, isChild } from "../../util/fs.js";
-import { useProject } from "../../app.js";
+import { existsAsync, findBelow, isChild } from "../../util/fs.js";
+import { useProject } from "../../project.js";
 import { execAsync } from "../../util/process.js";
 import url from "url";
 

@@ -32,14 +32,14 @@ import {
   FunctionDefinition,
 } from "./Function.js";
 import { Permissions } from "./util/permission.js";
-import { useProject } from "../app.js";
+import { useProject } from "../project.js";
 
 /////////////////////
 // Interfaces
 /////////////////////
 
 export interface AppSyncApiDomainProps
-  extends appSyncApiDomain.CustomDomainProps { }
+  extends appSyncApiDomain.CustomDomainProps {}
 
 interface AppSyncApiBaseDataSourceProps {
   /**
@@ -517,12 +517,12 @@ export class AppSyncApi extends Construct implements SSTConstruct {
     scope: Construct,
     dataSources: {
       [key: string]:
-      | FunctionInlineDefinition
-      | AppSyncApiLambdaDataSourceProps
-      | AppSyncApiDynamoDbDataSourceProps
-      | AppSyncApiRdsDataSourceProps
-      | AppSyncApiHttpDataSourceProps
-      | AppSyncApiNoneDataSourceProps;
+        | FunctionInlineDefinition
+        | AppSyncApiLambdaDataSourceProps
+        | AppSyncApiDynamoDbDataSourceProps
+        | AppSyncApiRdsDataSourceProps
+        | AppSyncApiHttpDataSourceProps
+        | AppSyncApiNoneDataSourceProps;
     }
   ): void {
     Object.keys(dataSources).forEach((key: string) => {
@@ -724,7 +724,9 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         mainSchema = appsync.SchemaFile.fromAsset(schema);
       } else {
         if (schema.length === 0) {
-          throw new Error("Invalid schema. At least one schema file must be provided");
+          throw new Error(
+            "Invalid schema. At least one schema file must be provided"
+          );
         }
         // merge schema files
         const mergedSchema = mergeTypeDefs(
@@ -1001,12 +1003,15 @@ export class AppSyncApi extends Construct implements SSTConstruct {
     ///////////////////
     // Create resolver
     ///////////////////
-    const resolver = this.cdk.graphqlApi.createResolver(`${typeName}${fieldName}Resolver`, {
-      dataSource,
-      typeName,
-      fieldName,
-      ...resolverProps,
-    });
+    const resolver = this.cdk.graphqlApi.createResolver(
+      `${typeName}${fieldName}Resolver`,
+      {
+        dataSource,
+        typeName,
+        fieldName,
+        ...resolverProps,
+      }
+    );
     this.resolversByResKey[resKey] = resolver;
 
     return lambda;

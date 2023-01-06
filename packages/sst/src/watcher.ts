@@ -2,7 +2,7 @@ import { Context } from "./context/context.js";
 import chokidar from "chokidar";
 import { useBus } from "./bus.js";
 import path from "path";
-import { useProject } from "./app.js";
+import { useProject } from "./project.js";
 
 declare module "./bus.js" {
   export interface Events {

@@ -11,7 +11,7 @@ import {
   UpdateFunctionConfigurationCommand,
 } from "@aws-sdk/client-lambda";
 import { pipe, map } from "remeda";
-import { useProject } from "./app.js";
+import { useProject } from "./project.js";
 import { useAWSClient } from "./credentials.js";
 import { Stacks } from "./stacks/index.js";
 import { FunctionMetadata } from "./constructs/Metadata.js";
@@ -94,8 +94,8 @@ export namespace Config {
     const parameters = await Config.parameters();
 
     const env = {
-      SST_APP: project.name,
-      SST_STAGE: project.stage,
+      SST_APP: project.config.name,
+      SST_STAGE: project.config.stage,
       ...pipe(
         parameters,
         map((p) => [`SST_${p.type}_${p.prop}_${p.id}`, p.value]),
@@ -219,11 +219,11 @@ const SECRET_UPDATED_AT_ENV = "SST_ADMIN_SECRET_UPDATED_AT";
 const PREFIX = {
   get STAGE() {
     const project = useProject();
-    return `/sst/${project.name}/${project.stage}/`;
+    return `/sst/${project.config.name}/${project.config.stage}/`;
   },
   get FALLBACK() {
     const project = useProject();
-    return `/sst/${project.name}/${FALLBACK_STAGE}/`;
+    return `/sst/${project.config.name}/${FALLBACK_STAGE}/`;
   },
 };
 
