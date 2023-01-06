@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.0.0-rc.2
+
+### Patch Changes
+
+- [`8371c7bb9`](https://github.com/serverless-stack/sst/commit/8371c7bb935f9ae9c02e2790bb4735a94a022146) Thanks [@fwang](https://github.com/fwang)! - StaticSite: fix script path
+
 ## 2.0.0-rc.1
 
 ### Patch Changes
