@@ -51,7 +51,7 @@ The Node client also gives you [handlers](#handlers) that wrap around your Lambd
 
 ## Installation
 
-The SST Node client is available through the [`sst`](../packages/sst.md) npm package.
+The SST Node client is available through the [`sst`](https://www.npmjs.com/package/sst) npm package.
 
 <MultiPackagerCode>
 <TabItem value="npm">

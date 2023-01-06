@@ -31,7 +31,7 @@ However, you can configure these defaults. You can even use CDK constructs in yo
 
 ## Installation
 
-The constructs are available through the [`sst`](../packages/sst.md) npm package.
+The constructs are available through the [`sst`](https://www.npmjs.com/package/sst) npm package.
 
 <MultiPackagerCode>
 <TabItem value="npm">
