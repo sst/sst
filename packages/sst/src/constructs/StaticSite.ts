@@ -298,10 +298,10 @@ export interface StaticSiteProps {
   };
 }
 
-export interface StaticSiteDomainProps extends BaseSiteDomainProps {}
-export interface StaticSiteReplaceProps extends BaseSiteReplaceProps {}
+export interface StaticSiteDomainProps extends BaseSiteDomainProps { }
+export interface StaticSiteReplaceProps extends BaseSiteReplaceProps { }
 export interface StaticSiteCdkDistributionProps
-  extends BaseSiteCdkDistributionProps {}
+  extends BaseSiteCdkDistributionProps { }
 
 /////////////////////
 // Construct
@@ -358,8 +358,8 @@ export class StaticSite extends Construct implements SSTConstruct {
       (root.local || root.skipBuild) && !props.disablePlaceholder;
     const fileSizeLimit = root.isRunningSSTTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
-        props.sstTestFileSizeLimitOverride || 200
+      // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
+      props.sstTestFileSizeLimitOverride || 200
       : 200;
 
     this.props = props;
@@ -509,8 +509,8 @@ export class StaticSite extends Construct implements SSTConstruct {
     const content = `/// <reference types="vite/client" />
 interface ImportMetaEnv {
 ${Object.keys(environment || {})
-  .map((key) => `  readonly ${key}: string`)
-  .join("\n")}
+        .map((key) => `  readonly ${key}: string`)
+        .join("\n")}
 }
 interface ImportMeta {
   readonly env: ImportMetaEnv
@@ -531,8 +531,7 @@ interface ImportMeta {
     // validate site path exists
     if (!fs.existsSync(sitePath)) {
       throw new Error(
-        `No path found at "${path.resolve(sitePath)}" for the "${
-          this.node.id
+        `No path found at "${path.resolve(sitePath)}" for the "${this.node.id
         }" StaticSite.`
       );
     }
@@ -578,7 +577,7 @@ interface ImportMeta {
     }
 
     // create zip files
-    const script = path.join(__dirname, "../support/base-site-archiver.cjs");
+    const script = path.join(__dirname, "../support/base-site-archiver.mjs");
     const zipPath = path.resolve(
       path.join(
         useProject().paths.artifacts,
@@ -868,8 +867,8 @@ interface ImportMeta {
     const waitForInvalidation = this.isPlaceholder
       ? false
       : this.props.waitForInvalidation === false
-      ? false
-      : true;
+        ? false
+        : true;
     return new CustomResource(this, "CloudFrontInvalidation", {
       serviceToken: invalidator.functionArn,
       resourceType: "Custom::SSTCloudFrontInvalidation",
