@@ -2,7 +2,7 @@ import path from "path";
 import fs from "fs/promises";
 import { exec } from "child_process";
 import fsSync from "fs";
-import { useProject } from "../../app.js";
+import { useProject } from "../../project.js";
 import esbuild, { BuildOptions } from "esbuild";
 import url from "url";
 import { Worker } from "worker_threads";

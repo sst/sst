@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useLayoutEffect } from "react";
+import React, { useState, useEffect } from "react";
 import type { StackResource } from "@aws-sdk/client-cloudformation";
 import { Box, Text } from "ink";
 import { useBus } from "../../bus.js";
 import { Stacks } from "../../stacks/index.js";
 import inkSpinner from "ink-spinner";
-import { useProject } from "../../app.js";
+import { useProject } from "../../project.js";
 import { blue, bold, green, red } from "colorette";
 
 // @ts-ignore
@@ -99,7 +99,7 @@ export const DeploymentUI = (props: Props) => {
     <FullScreen>
       <Text>
         Deploying <Text color="bold">{props.stacks.length}</Text> stacks for
-        stage <Text color="blue">{useProject().stage}</Text>
+        stage <Text color="blue">{useProject().config.stage}</Text>
       </Text>
       {Object.entries(stacks).map(([stackID, status]) => {
         return (

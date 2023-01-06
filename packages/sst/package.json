@@ -4,7 +4,7 @@
     "access": "public"
   },
   "name": "sst",
-  "version": "2.0.0-rc.10",
+  "version": "2.0.0-rc.16",
   "bin": {
     "sst": "cli/sst.js"
   },
@@ -25,6 +25,7 @@
     "./constructs": "./constructs/index.js",
     "./context": "./context/index.js",
     "./node/*": "./node/*/index.js",
+    ".": "./index.js",
     "./*": "./*"
   },
   "homepage": "https://sst.dev",
@@ -76,8 +77,8 @@
     "immer": "9",
     "ink": "^3.2.0",
     "ink-spinner": "^4.0.3",
-    "kysely": "^0.22.0",
-    "kysely-codegen": "^0.8.0",
+    "kysely": "^0.23.3",
+    "kysely-codegen": "^0.9.0",
     "kysely-data-api": "^0.1.4",
     "openid-client": "^5.1.8",
     "ora": "^6.1.2",

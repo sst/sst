@@ -18,7 +18,7 @@ import { bindEnvironment, bindPermissions } from "./util/functionBinding.js";
 import { IVpc } from "aws-cdk-lib/aws-ec2";
 import { useDeferredTasks } from "./deferred_task.js";
 import { useWarning } from "./util/warning.js";
-import { useProject } from "../app.js";
+import { useProject } from "../project.js";
 import { useRuntimeHandlers } from "../runtime/handlers.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
@@ -329,7 +329,7 @@ export class Job extends Construct implements SSTConstruct {
       environmentVariables: {
         SST_APP: { value: app.name },
         SST_STAGE: { value: app.stage },
-        SST_SSM_PREFIX: { value: useProject().ssmPrefix },
+        SST_SSM_PREFIX: { value: useProject().config.ssmPrefix },
       },
       timeout: this.normalizeTimeout(this.props.timeout || "8 hours"),
       buildSpec: codebuild.BuildSpec.fromObject({

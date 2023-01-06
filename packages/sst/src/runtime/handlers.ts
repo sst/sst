@@ -4,7 +4,7 @@ import path from "path";
 import fs from "fs/promises";
 import { useWatcher } from "../watcher.js";
 import { useBus } from "../bus.js";
-import { useProject } from "../app.js";
+import { useProject } from "../project.js";
 import { FunctionProps, useFunctions } from "../constructs/Function.js";
 
 declare module "../bus.js" {
@@ -165,19 +165,21 @@ export const useFunctionBuilder = Context.memo(() => {
 
   const watcher = useWatcher();
   watcher.subscribe("file.changed", async (evt) => {
-    const functions = useFunctions();
-    for (const [functionID, props] of Object.entries(functions.all)) {
-      const handler = handlers.for(props.runtime!);
-      if (
-        !handler?.shouldBuild({
-          functionID,
-          file: evt.properties.file,
-        })
-      )
-        continue;
-      await result.build(functionID);
-      Logger.debug("Rebuilt function", functionID);
-    }
+    try {
+      const functions = useFunctions();
+      for (const [functionID, props] of Object.entries(functions.all)) {
+        const handler = handlers.for(props.runtime!);
+        if (
+          !handler?.shouldBuild({
+            functionID,
+            file: evt.properties.file,
+          })
+        )
+          continue;
+        await result.build(functionID);
+        Logger.debug("Rebuilt function", functionID);
+      }
+    } catch {}
   });
 
   return result;

@@ -8,18 +8,26 @@
     "@serverless-stack/docs": "1.9.1"
   },
   "changesets": [
+    "breezy-ants-attend",
     "calm-cheetahs-agree",
+    "fast-pumas-matter",
+    "fluffy-guests-agree",
     "fresh-maps-applaud",
     "great-spoons-repeat",
     "grumpy-crabs-smash",
+    "healthy-geese-smell",
+    "large-keys-dress",
+    "lazy-pets-change",
     "metal-scissors-judge",
     "poor-poems-invent",
     "silent-paws-exist",
     "small-dryers-destroy",
     "strange-emus-fly",
     "stupid-donuts-wonder",
+    "thin-roses-love",
     "three-dots-provide",
     "tiny-dodos-prove",
-    "violet-weeks-tease"
+    "violet-weeks-tease",
+    "young-carpets-search"
   ]
 }

@@ -1,6 +1,6 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { initProject } from "../app.js";
+import { initProject } from "../project.js";
 import { trackCli } from "./telemetry/telemetry.js";
 
 export const program = yargs(hideBin(process.argv))

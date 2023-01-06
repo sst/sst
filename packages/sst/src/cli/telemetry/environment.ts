@@ -1,6 +1,6 @@
 import os from "os";
 import ciInfo from "ci-info";
-import { useProject } from "../../app.js";
+import { useProject } from "../../project.js";
 
 type EnvironmentData = {
   systemPlatform: NodeJS.Platform;

@@ -1,7 +1,6 @@
-import chalk from "colorette";
 import fs from "fs/promises";
 import path from "path";
-import { useProject } from "./app.js";
+import { useProject } from "./project.js";
 import { Context } from "./context/context.js";
 
 let previous = new Date();

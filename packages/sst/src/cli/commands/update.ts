@@ -3,7 +3,7 @@ import fs from "fs/promises";
 import path from "path";
 import { Program } from "../program.js";
 
-const PACKAGE_MATCH = ["sst", "aws-cdk", "@aws-cdk"];
+const PACKAGE_MATCH = ["sst", "aws-cdk", "@aws-cdk", "constructs"];
 
 const FIELDS = ["dependencies", "devDependencies"];
 
@@ -18,7 +18,7 @@ export const update = (program: Program) =>
       }),
     async (args) => {
       const { fetch } = await import("undici");
-      const { useProject } = await import("../../app.js");
+      const { useProject } = await import("../../project.js");
 
       const project = useProject();
       const files = await find(project.paths.root);
@@ -38,10 +38,13 @@ export const update = (program: Program) =>
           if (!deps) continue;
           for (const [pkg, existing] of Object.entries(deps)) {
             if (!PACKAGE_MATCH.some((x) => pkg.startsWith(x))) continue;
-            const desired =
-              pkg === "sst"
-                ? metadata.version
-                : metadata.dependencies["aws-cdk-lib"];
+            const desired = (() => {
+              if (pkg === "sst") return metadata.version;
+              if (pkg === "constructs") return metadata.dependencies.constructs;
+              if (pkg.endsWith("alpha"))
+                return metadata.dependencies["@aws-cdk/aws-apigatewayv2-alpha"];
+              return metadata.dependencies["aws-cdk-lib"];
+            })();
             if (existing === desired) continue;
             let arr = results.get(file);
             if (!arr) {

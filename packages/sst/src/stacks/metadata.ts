@@ -14,7 +14,7 @@ import { Context } from "../context/context.js";
 import { useBus } from "../bus.js";
 import { Stacks } from "./index.js";
 import { Logger } from "../logger.js";
-import { useProject } from "../app.js";
+import { useProject } from "../project.js";
 import type { Metadata } from "../constructs/Metadata.js";
 
 declare module "../bus.js" {
@@ -31,11 +31,11 @@ export async function metadata() {
     useBootstrap(),
   ]);
   const s3 = new S3Client({
-    region: project.region,
+    region: project.config.region,
     credentials: credentials,
   });
 
-  const key = `stackMetadata/app.${project.name}/stage.${project.stage}/`;
+  const key = `stackMetadata/app.${project.config.name}/stage.${project.config.stage}/`;
   const list = await s3.send(
     new ListObjectsV2Command({
       Prefix: key,
@@ -70,10 +70,10 @@ export async function metadataForStack(stackID: string) {
   ]);
 
   const s3 = new S3Client({
-    region: project.region,
+    region: project.config.region,
     credentials: credentials,
   });
-  const key = `stackMetadata/app.${project.name}/stage.${project.stage}/stack.${stackID}.json`;
+  const key = `stackMetadata/app.${project.config.name}/stage.${project.config.stage}/stack.${stackID}.json`;
   Logger.debug("Getting metadata", key, "from", bootstrap.bucket);
 
   try {

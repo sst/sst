@@ -13,9 +13,8 @@ import {
 } from "kysely-codegen";
 import { Context } from "../../../context/context.js";
 import { useBus } from "../../../bus.js";
-import { useProject } from "../../../app.js";
+import { useProject } from "../../../project.js";
 import { FunctionMetadata, RDSMetadata } from "../../../constructs/Metadata.js";
-import { PostgresIntrospector } from "kysely-codegen/dist/dialects/postgres/postgres-introspector.js";
 
 interface Database {
   migratorID: string;
@@ -45,7 +44,7 @@ export const useKyselyTypeGenerator = Context.memo(async () => {
           resourceArn: db.clusterArn,
           database: db.defaultDatabaseName,
           client: new RDSDataService({
-            region: project.region,
+            region: project.config.region,
           }),
         },
       }),

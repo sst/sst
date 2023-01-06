@@ -17,9 +17,9 @@ type Config = RegionInputConfig &
 
 export const useAWSCredentialsProvider = Context.memo(() => {
   const project = useProject();
-  Logger.debug("Using AWS profile", project.profile);
+  Logger.debug("Using AWS profile", project.config.profile);
   const provider = fromNodeProviderChain({
-    profile: project.profile,
+    profile: project.config.profile,
   });
   return provider;
 });
@@ -53,7 +53,7 @@ export function useAWSClient<C extends Client<any, any, any, any>>(
   if (existing && !force) return existing as C;
   const [project, credentials] = [useProject(), useAWSCredentialsProvider()];
   const result = new client({
-    region: project.region,
+    region: project.config.region,
     credentials: credentials,
     retryStrategy: new StandardRetryStrategy(async () => 10000, {
       retryDecider: (err) => {
@@ -74,7 +74,7 @@ export function useAWSClient<C extends Client<any, any, any, any>>(
 }
 
 import aws from "aws-sdk";
-import { useProject } from "./app.js";
+import { useProject } from "./project.js";
 import { HostHeaderConditionConfig } from "aws-sdk/clients/elbv2.js";
 const CredentialProviderChain = aws.CredentialProviderChain;
 
@@ -106,9 +106,9 @@ export const useAWSProvider = Context.memo(async () => {
       secretAccessKey: creds.secretAccessKey!,
     }),
   ]);
-  const provider = new SdkProvider(chain, project.region!, {
+  const provider = new SdkProvider(chain, project.config.region!, {
     maxRetries: 10000,
-    region: project.region,
+    region: project.config.region,
   });
 
   return provider;

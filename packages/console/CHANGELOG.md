@@ -1,5 +1,25 @@
 # @serverless-stack/console
 
+## 2.0.0-rc.16
+
+### Patch Changes
+
+- [`8371c7bb9`](https://github.com/serverless-stack/sst/commit/8371c7bb935f9ae9c02e2790bb4735a94a022146) Thanks [@fwang](https://github.com/fwang)! - StaticSite: fix script path
+
+## 2.0.0-rc.15
+
+### Patch Changes
+
+- [`591b21b83`](https://github.com/serverless-stack/sst/commit/591b21b83c94ba87b4079f33d783fd4b672db603) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: fix script path
+
+## 2.0.0-rc.14
+
+## 2.0.0-rc.13
+
+## 2.0.0-rc.12
+
+## 2.0.0-rc.11
+
 ## 2.0.0-rc.10
 
 ## 2.0.0-rc.9

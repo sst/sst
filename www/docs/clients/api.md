@@ -241,3 +241,25 @@ This hook returns all request query parameters.
 import { useQueryParams } from "@serverless-stack/node/api";
 const params = useQueryParams();
 ```
+
+---
+
+### usePathParam
+
+This hook returns a request path parameter.
+
+```ts
+import { usePathParam } from "@serverless-stack/node/api";
+const id = usePathParam("id");
+```
+
+---
+
+### usePathParams
+
+This hook returns all request query parameters.
+
+```ts
+import { usePathParams } from "@serverless-stack/node/api";
+const params = usePathParams();
+```

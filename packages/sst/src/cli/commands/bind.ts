@@ -1,4 +1,4 @@
-import { useProject } from "../../app.js";
+import { useProject } from "../../project.js";
 import type { Program } from "../program.js";
 
 export const bind = (program: Program) =>
@@ -25,7 +25,7 @@ export const bind = (program: Program) =>
           AWS_ACCESS_KEY_ID: credentials.accessKeyId,
           AWS_SECRET_ACCESS_KEY: credentials.secretAccessKey,
           AWS_SESSION_TOKEN: credentials.sessionToken,
-          AWS_REGION: project.region,
+          AWS_REGION: project.config.region,
           PATH: process.env.PATH,
         },
         stdio: "inherit",

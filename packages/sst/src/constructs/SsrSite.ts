@@ -44,7 +44,7 @@ import {
   getParameterPath,
 } from "./util/functionBinding.js";
 import { SiteEnv } from "../site-env.js";
-import { useProject } from "../app.js";
+import { useProject } from "../project.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -491,11 +491,11 @@ export class SsrSite extends Construct implements SSTConstruct {
 
     // Create zip files
     const app = this.node.root as App;
-    const script = path.resolve(__dirname, "../support/base-site-archiver.cjs");
+    const script = path.resolve(__dirname, "../support/base-site-archiver.mjs");
     const fileSizeLimit = app.isRunningSSTTest()
-      ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
-      this.props.sstTestFileSizeLimitOverride || 200
+      ? this.props.sstTestFileSizeLimitOverride || 200
       : 200;
     const result = spawn.sync(
       "node",
@@ -773,7 +773,8 @@ export class SsrSite extends Construct implements SSTConstruct {
       allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
       cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
-      cachePolicy: cdk?.cachePolicies?.serverRequests ??
+      cachePolicy:
+        cdk?.cachePolicies?.serverRequests ??
         this.createCloudFrontServerCachePolicy(),
       ...(cfDistributionProps.defaultBehavior || {}),
     };
@@ -791,7 +792,8 @@ export class SsrSite extends Construct implements SSTConstruct {
       allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
       cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
-      cachePolicy: cdk?.cachePolicies?.serverRequests ??
+      cachePolicy:
+        cdk?.cachePolicies?.serverRequests ??
         this.createCloudFrontServerCachePolicy(),
       ...(cfDistributionProps.defaultBehavior || {}),
       // concatenate edgeLambdas

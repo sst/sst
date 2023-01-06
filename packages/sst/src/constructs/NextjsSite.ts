@@ -68,7 +68,7 @@ export class NextjsSite extends SsrSite {
       const zipOutDir = path.resolve(
         path.join(this.sstBuildDir, `Site-${this.node.id}-${this.node.addr}`)
       );
-      const script = path.resolve(__dirname, "../support/ssr-site-function-archiver.cjs");
+      const script = path.resolve(__dirname, "../support/ssr-site-function-archiver.mjs");
       const result = spawn.sync(
         "node",
         [

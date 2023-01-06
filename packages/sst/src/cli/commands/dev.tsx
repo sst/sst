@@ -7,12 +7,12 @@ import type { Metafile } from "esbuild";
 import { printDeploymentResults } from "../ui/deploy.js";
 import { useFunctions } from "../../constructs/Function.js";
 import { dim, gray, yellow } from "colorette";
-import { useProject } from "../../app.js";
 import { SiteEnv } from "../../site-env.js";
 import { Instance } from "ink/build/render.js";
 import { usePothosBuilder } from "./plugins/pothos.js";
 import { useKyselyTypeGenerator } from "./plugins/kysely.js";
 import { useRDSWarmer } from "./plugins/warmer.js";
+import { useProject } from "../../project.js";
 
 export const dev = (program: Program) =>
   program.command(
@@ -56,20 +56,20 @@ export const dev = (program: Program) =>
         bus.subscribe("function.invoked", async (evt) => {
           console.log(
             bold(magenta(`Invoked `)),
-            bold(useFunctions().fromID(evt.properties.functionID).handler!)
+            useFunctions().fromID(evt.properties.functionID).handler!
           );
         });
 
         bus.subscribe("function.build.success", async (evt) => {
           console.log(
             bold(gray(`Built   `)),
-            bold(useFunctions().fromID(evt.properties.functionID).handler!)
+            useFunctions().fromID(evt.properties.functionID).handler!
           );
         });
         bus.subscribe("function.build.failed", async (evt) => {
           console.log(
             bold(red(`Build failed `)),
-            bold(useFunctions().fromID(evt.properties.functionID).handler!)
+            useFunctions().fromID(evt.properties.functionID).handler!
           );
           console.log(dim(evt.properties.errors.join("\n")));
         });
@@ -83,7 +83,7 @@ export const dev = (program: Program) =>
           }
           console.log(
             bold(blue(`Log     `)),
-            bold(useFunctions().fromID(evt.properties.functionID).handler!)
+            useFunctions().fromID(evt.properties.functionID).handler!
           );
           console.log(dim(lines.join("\n")));
         });
@@ -91,14 +91,14 @@ export const dev = (program: Program) =>
         bus.subscribe("function.success", async (evt) => {
           console.log(
             bold(green(`Success `)),
-            bold(useFunctions().fromID(evt.properties.functionID).handler!)
+            useFunctions().fromID(evt.properties.functionID).handler!
           );
         });
 
         bus.subscribe("function.error", async (evt) => {
           console.log(
             bold(red(`Error   `)),
-            bold(useFunctions().fromID(evt.properties.functionID).handler!),
+            useFunctions().fromID(evt.properties.functionID).handler!,
             evt.properties.errorMessage
           );
           for (const line of evt.properties.trace || []) {
@@ -109,8 +109,8 @@ export const dev = (program: Program) =>
 
       const useStackBuilder = Context.memo(async () => {
         const watcher = useWatcher();
-        const bus = useBus();
         const project = useProject();
+        const bus = useBus();
 
         let lastDeployed: string;
         let pending: CloudAssembly | undefined;
@@ -119,9 +119,13 @@ export const dev = (program: Program) =>
         async function build() {
           const spinner = createSpinner("Building stacks").start();
           try {
-            const fn = await Stacks.build();
+            const [metafile, sstConfig] = await Stacks.load(
+              project.paths.config
+            );
+            project.metafile = metafile;
+            project.stacks = sstConfig.stacks;
             const assembly = await Stacks.synth({
-              fn,
+              fn: project.stacks,
               outDir: `.sst/cdk.out`,
               mode: "dev",
             });
@@ -206,14 +210,9 @@ export const dev = (program: Program) =>
           return hash;
         }
 
-        let metafile: Metafile;
-        bus.subscribe("stack.built", async (evt) => {
-          metafile = evt.properties.metafile;
-        });
-
         watcher.subscribe("file.changed", async (evt) => {
-          if (!metafile) return;
-          if (!metafile.inputs[evt.properties.relative]) return;
+          if (!project.metafile) return;
+          if (!project.metafile.inputs[evt.properties.relative]) return;
           build();
         });
 

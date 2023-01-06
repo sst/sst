@@ -1,7 +1,7 @@
 export * as SiteEnv from "./site-env.js";
 import fs from "fs";
 import path from "path";
-import { useProject } from "./app.js";
+import { useProject } from "./project.js";
 
 function keysFile() {
   return path.join(useProject().paths.out, "site-environment-keys.jsonl");

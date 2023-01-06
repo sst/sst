@@ -233,8 +233,8 @@ importers:
       immer: '9'
       ink: ^3.2.0
       ink-spinner: ^4.0.3
-      kysely: ^0.22.0
-      kysely-codegen: ^0.8.0
+      kysely: ^0.23.3
+      kysely-codegen: ^0.9.0
       kysely-data-api: ^0.1.4
       openid-client: ^5.1.8
       ora: ^6.1.2
@@ -297,9 +297,9 @@ importers:
       immer: 9.0.16
       ink: 3.2.0_q5o373oqrklnndq2vhekyuzhxi
       ink-spinner: 4.0.3_ink@3.2.0+react@17.0.2
-      kysely: 0.22.0
-      kysely-codegen: 0.8.0_kysely@0.22.0
-      kysely-data-api: 0.1.4_lzx2qmq5u4h6m7swq2y7defldy
+      kysely: 0.23.3
+      kysely-codegen: 0.9.0_kysely@0.23.3
+      kysely-data-api: 0.1.4_bp73zwilqmmmk7vfdpszxoyhye
       openid-client: 5.3.0
       ora: 6.1.2
       promptly: 3.2.0
@@ -13216,6 +13216,39 @@ packages:
       minimist: 1.2.7
     dev: false
 
+  /kysely-codegen/0.9.0_kysely@0.23.3:
+    resolution: {integrity: sha512-VCkrEY0WPwObvT4LGJkwLn29DXmvwG2oAv94qa+yAXDPAWtYTfO8NQSqyeEiNHEWmuKI+Sl+ANSn63by2Xn1tw==}
+    hasBin: true
+    peerDependencies:
+      better-sqlite3: '>=7.6.2'
+      kysely: '>=0.19.12'
+      mysql2: ^2.3.3
+      pg: ^8.8.0
+    peerDependenciesMeta:
+      better-sqlite3:
+        optional: true
+      mysql2:
+        optional: true
+      pg:
+        optional: true
+    dependencies:
+      chalk: 4.1.2
+      dotenv: 16.0.3
+      kysely: 0.23.3
+      micromatch: 4.0.5
+      minimist: 1.2.7
+    dev: false
+
+  /kysely-data-api/0.1.4_bp73zwilqmmmk7vfdpszxoyhye:
+    resolution: {integrity: sha512-7xgXbNuhsBAOi3PWAc5vETt0kMPCMH9qeOSsmkoVVqhvswa9v3lWUxGOQGhg9ABQqFyTbJe+JdLgd/wChIMiFw==}
+    peerDependencies:
+      aws-sdk: 2.x
+      kysely: 0.x
+    dependencies:
+      aws-sdk: 2.1252.0
+      kysely: 0.23.3
+    dev: false
+
   /kysely-data-api/0.1.4_lzx2qmq5u4h6m7swq2y7defldy:
     resolution: {integrity: sha512-7xgXbNuhsBAOi3PWAc5vETt0kMPCMH9qeOSsmkoVVqhvswa9v3lWUxGOQGhg9ABQqFyTbJe+JdLgd/wChIMiFw==}
     peerDependencies:
@@ -13228,6 +13261,11 @@ packages:
 
   /kysely/0.22.0:
     resolution: {integrity: sha512-ZE3qWtnqLOalodzfK5QUEcm7AEulhxsPNuKaGFsC3XiqO92vMLm+mAHk/NnbSIOtC4RmGm0nsv700i8KDp1gfQ==}
+    engines: {node: '>=14.0.0'}
+    dev: false
+
+  /kysely/0.23.3:
+    resolution: {integrity: sha512-spRhosWRLkI0Ox8PRBdstskdRfvoLPsJ5GEpDA/PPrX6NwuiygdsFxHBrMkdU3CX+VxLhj4Wn5P7rFAwaf7JuA==}
     engines: {node: '>=14.0.0'}
     dev: false
 
