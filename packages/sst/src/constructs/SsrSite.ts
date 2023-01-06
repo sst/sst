@@ -55,8 +55,8 @@ export type SsrBuildConfig = {
   siteStub: string;
 };
 
-export interface SsrDomainProps extends BaseSiteDomainProps {}
-export interface SsrCdkDistributionProps extends BaseSiteCdkDistributionProps {}
+export interface SsrDomainProps extends BaseSiteDomainProps { }
+export interface SsrCdkDistributionProps extends BaseSiteCdkDistributionProps { }
 export interface SsrSiteProps {
   /**
    * The SSR function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
@@ -491,11 +491,11 @@ export class SsrSite extends Construct implements SSTConstruct {
 
     // Create zip files
     const app = this.node.root as App;
-    const script = path.resolve(__dirname, "../support/base-site-archiver.cjs");
+    const script = path.resolve(__dirname, "../support/base-site-archiver.mjs");
     const fileSizeLimit = app.isRunningSSTTest()
-      ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
-        this.props.sstTestFileSizeLimitOverride || 200
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
+      ? this.props.sstTestFileSizeLimitOverride || 200
       : 200;
     const result = spawn.sync(
       "node",
@@ -882,8 +882,8 @@ export class SsrSite extends Construct implements SSTConstruct {
     const waitForInvalidation = this.isPlaceholder
       ? false
       : this.props.waitForInvalidation === false
-      ? false
-      : true;
+        ? false
+        : true;
     return new CustomResource(this, "CloudFrontInvalidation", {
       serviceToken: invalidator.functionArn,
       resourceType: "Custom::SSTCloudFrontInvalidation",
