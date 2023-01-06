@@ -85,17 +85,11 @@ To use these values while developing, run `sst start` to start the [Live Lambda 
 npx sst start
 ```
 
-Then in your Next.js app to reference these variables, add the [`sst-env`](/packages/sst-env.md) package.
-
-```bash
-npm install --save-dev @serverless-stack/static-site-env
-```
-
-And tweak the Next.js `dev` script to:
+Then in your Next.js app to reference these variables, add the [`sst env`](../packages/sst.md#sst-env) command.
 
 ```json title="package.json" {2}
 "scripts": {
-  "dev": "sst-env -- next dev",
+  "dev": "sst env \"next dev\"",
   "build": "next build",
   "start": "next start"
 },
@@ -110,12 +104,12 @@ npm run dev
 There are a couple of things happening behind the scenes here:
 
 1. The `sst start` command generates a file with the values specified by the `NextjsSite` construct's `environment` prop.
-2. The `sst-env` CLI will traverse up the directories to look for the root of your SST app.
+2. The `sst env` CLI will traverse up the directories to look for the root of your SST app.
 3. It'll then find the file that's generated in step 1.
 4. It'll load these as environment variables before running the start command.
 
 :::note
-`sst-env` only works if the Next.js app is located inside the SST app or inside one of its subdirectories. For example:
+`sst env` only works if the Astro app is located inside the SST app or inside one of its subdirectories. For example:
 
 ```
 /

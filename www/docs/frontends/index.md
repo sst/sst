@@ -331,22 +331,14 @@ To use the above environment variables while developing, first run `sst start` t
 npx sst start
 ```
 
-Then in your frontend app add the [sst-env](https://www.npmjs.com/package/@serverless-stack/static-site-env) npm package to reference these variables.
-
-```bash
-npm install --save-dev @serverless-stack/static-site-env
-# or
-yarn add --dev @serverless-stack/static-site-env
-```
-
-And tweak the `start` script in your `package.json` to.
+Then in your frontend app add the [`sst env`](../packages/sst.md#sst-env) command to reference these variables.
 
 <MultiSiteCode>
 <TabItem value="next">
 
 ```json title="package.json" {2}
 "scripts": {
-  "dev": "sst-env -- next dev",
+  "dev": "sst env \"next dev\"",
   "build": "next build",
   "start": "next start",
   "lint": "next lint"
@@ -358,7 +350,7 @@ And tweak the `start` script in your `package.json` to.
 
 ```json title="package.json" {2}
 "scripts": {
-  "start": "sst-env -- react-scripts start",
+  "start": "sst env \"react-scripts start\"",
   "build": "react-scripts build",
   "test": "react-scripts test",
   "eject": "react-scripts eject"
@@ -370,7 +362,7 @@ And tweak the `start` script in your `package.json` to.
 
 ```json title="package.json" {2}
 "scripts": {
-  "dev": "sst-env -- vite",
+  "dev": "sst env vite",
   "build": "tsc && vite build",
   "preview": "vite preview"
 },
@@ -381,7 +373,7 @@ And tweak the `start` script in your `package.json` to.
 
 ```json title="package.json" {2}
 "scripts": {
-  "serve": "sst-env -- vue-cli-service serve",
+  "serve": "sst env \"vue-cli-service serve\"",
   "build": "vue-cli-service build",
   "lint": "vue-cli-service lint"
 },
@@ -392,11 +384,11 @@ And tweak the `start` script in your `package.json` to.
 
 Now you can start your app as usual and it'll have the environment variables from your SST app.
 
-Note that, the `sst-env` CLI will traverse up the directories to look for the root of your SST app. If the static site or Next.js app is located outside the SST app folder, pass in [`--path`](packages/sst-env.md#--path) to specify the relative path of the SST app.
+Note that, the `sst env` CLI will traverse up the directories to look for the root of your SST app. If the static site or Next.js app is located outside the SST app folder, pass in [`--path`](../packages/sst.md#sst-env) to specify the relative path of the SST app.
 
 ```json title="package.json" {2}
 "scripts": {
-  "start": "sst-env --path ../backend -- react-scripts start",
+  "start": "sst env --path ../backend \"react-scripts start\"",
 },
 ```
 

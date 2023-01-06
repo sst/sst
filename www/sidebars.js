@@ -123,7 +123,6 @@ module.exports = {
     {
       CLI: [
         "packages/sst",
-        "packages/sst-env",
         "packages/create-sst",
       ]
     }

@@ -97,17 +97,11 @@ To use these values while developing, run `sst start` to start the [Live Lambda 
 npx sst start
 ```
 
-Then in your Vite app to reference these variables, add the [`sst-env`](/packages/sst-env.md) package.
-
-```bash
-npm install --save-dev @serverless-stack/static-site-env
-```
-
-And tweak the Vite `dev` script to:
+Then in your Vite app to reference these variables, add the [`sst env`](../packages/sst.md#sst-env) command.
 
 ```json title="package.json" {2}
 "scripts": {
-  "dev": "sst-env -- vite",
+  "dev": "sst env vite",
   "build": "vite build",
   "preview": "vite preview"
 },
@@ -122,12 +116,12 @@ npm run dev
 There are a couple of things happening behind the scenes here:
 
 1. The `sst start` command generates a file with the values specified by `ViteStaticSite`'s `environment` prop.
-2. The `sst-env` CLI will traverse up the directories to look for the root of your SST app.
+2. The `sst env` CLI will traverse up the directories to look for the root of your SST app.
 3. It'll then find the file that's generated in step 1.
 4. It'll load these as environment variables before running the start command.
 
 :::note
-`sst-env` only works if the Vite app is located inside the SST app or inside one of its subdirectories. For example:
+`sst env` only works if the Vite app is located inside the SST app or inside one of its subdirectories. For example:
 
 ```
 /

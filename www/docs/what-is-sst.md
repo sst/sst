@@ -337,11 +337,11 @@ The [`sst dev`](live-lambda-development.md) command starts a local development e
 npx sst dev
 ```
 
-Now you can start your frontend with the [`sst-env`](packages/sst-env.md) command. It'll connect your frontend to the backend by loading all the environment variables.
+Now you can start your frontend with the [`sst env`](packages/sst.md#sst-env) command. It'll connect your frontend to the backend by loading all the environment variables.
 
 ```bash
 cd web
-sst-env -- next dev
+sst env "next dev"
 ```
 
 With this you can **make changes to your backend on AWS**, and see them **directly in your frontend**!

@@ -160,7 +160,7 @@ To use these values while developing, run `sst start` to start the [Live Lambda 
 npx sst start
 ```
 
-Then in your app to reference these variables, add the [`sst-env`](../../packages/sst-env.md) package.
+Then in your app to reference these variables, add the `sst-env`.
 
 ```bash
 npm install --save-dev @serverless-stack/static-site-env
