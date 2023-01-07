@@ -67,7 +67,7 @@ This will run the commands using the locally installed version of SST.
 
 ---
 
-### AWS Profile
+### AWS profile
 
 Specify the AWS account you want to deploy to by using the `--profile` option. If not specified, uses the default AWS profile. [Read more about AWS profiles here](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html). For example:
 
