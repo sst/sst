@@ -41,8 +41,9 @@ export interface ViteStaticSiteProps extends StaticSiteProps {
  * ```
  */
 export class ViteStaticSite extends StaticSite {
-  constructor(scope: Construct, id: string, props: ViteStaticSiteProps) {
-    const { path: sitePath, environment, typesPath } = props || {};
+  constructor(scope: Construct, id: string, props?: ViteStaticSiteProps) {
+    const { path: pathRaw, environment, typesPath } = props || {};
+    const sitePath = pathRaw || ".";
 
     // generate buildCommand
     let defaultBuildCommand = "npm run build";
@@ -86,8 +87,8 @@ function generateTypesFile(
 
 interface ImportMetaEnv {
 ${Object.keys(environment || {})
-  .map((key) => `  readonly ${key}: string`)
-  .join("\n")}
+      .map((key) => `  readonly ${key}: string`)
+      .join("\n")}
 }
 
 interface ImportMeta {

@@ -25,8 +25,9 @@ export type ReactStaticSiteProps = StaticSiteProps;
  * ```
  */
 export class ReactStaticSite extends StaticSite implements SSTConstruct {
-  constructor(scope: Construct, id: string, props: ReactStaticSiteProps) {
-    const { path: sitePath, environment } = props || {};
+  constructor(scope: Construct, id: string, props?: ReactStaticSiteProps) {
+    const { path: pathRaw, environment } = props || {};
+    const sitePath = pathRaw || ".";
 
     // Validate environment
     Object.keys(environment || {}).forEach((key) => {

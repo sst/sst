@@ -67,7 +67,7 @@ export interface SsrSiteProps {
   /**
    * Path to the directory where the app is located.
    */
-  path: string;
+  path?: string;
 
   /**
    * The command for building the website
@@ -207,7 +207,7 @@ export class SsrSite extends Construct implements SSTConstruct {
      */
     certificate?: acm.ICertificate;
   };
-  protected props: SsrSiteProps;
+  protected props: Omit<SsrSiteProps, "path"> & { path: string; };
   /**
    * Determines if a placeholder site should be deployed instead. We will set
    * this to `true` by default when performing local development, although the
@@ -223,15 +223,15 @@ export class SsrSite extends Construct implements SSTConstruct {
   protected serverLambdaForRegional?: lambda.Function;
   private awsCliLayer: AwsCliLayer;
 
-  constructor(scope: Construct, id: string, props: SsrSiteProps) {
-    super(scope, props.cdk?.id || id);
+  constructor(scope: Construct, id: string, props?: SsrSiteProps) {
+    super(scope, props?.cdk?.id || id);
 
-    this.id = id;
     const app = scope.node.root as App;
+    this.id = id;
+    this.props = { path: ".", ...props };
     this.isPlaceholder =
-      (app.local || app.skipBuild) && !props.disablePlaceholder;
+      (app.local || app.skipBuild) && !this.props.disablePlaceholder;
     this.sstBuildDir = useProject().paths.artifacts;
-    this.props = props;
     this.cdk = {} as any;
     this.awsCliLayer = new AwsCliLayer(this, "AwsCliLayer");
     this.validateSiteExists();
@@ -247,7 +247,7 @@ export class SsrSite extends Construct implements SSTConstruct {
     this.cdk.bucket = this.createS3Bucket();
 
     // Create Server functions
-    if (props.edge) {
+    if (this.props.edge) {
       this.serverLambdaForEdge = this.createFunctionForEdge();
       this.createFunctionPermissionsForEdge();
     } else {
@@ -269,7 +269,7 @@ export class SsrSite extends Construct implements SSTConstruct {
 
     // Create CloudFront
     this.validateCloudFrontDistributionSettings();
-    if (props.edge) {
+    if (this.props.edge) {
       this.cdk.distribution = this.isPlaceholder
         ? this.createCloudFrontDistributionForStub()
         : this.createCloudFrontDistributionForEdge();

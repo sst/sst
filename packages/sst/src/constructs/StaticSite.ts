@@ -62,7 +62,7 @@ export interface StaticSiteProps {
    * });
    * ```
    */
-  path: string;
+  path?: string;
   /**
    * The name of the index page (e.g. "index.html") of the website.
    * @default "index.html"
@@ -342,28 +342,29 @@ export class StaticSite extends Construct implements SSTConstruct {
      */
     certificate?: acm.ICertificate;
   };
-  private props: StaticSiteProps;
+  private props: Omit<StaticSiteProps, "path"> & { path: string; };
   private isPlaceholder: boolean;
   private assets: s3Assets.Asset[];
   private filenamesAsset?: s3Assets.Asset;
   private awsCliLayer: AwsCliLayer;
 
-  constructor(scope: Construct, id: string, props: StaticSiteProps) {
-    super(scope, props.cdk?.id || id);
+  constructor(scope: Construct, id: string, props?: StaticSiteProps) {
+    super(scope, props?.cdk?.id || id);
 
+    const app = scope.node.root as App;
     this.id = id;
-    const root = scope.node.root as App;
+    this.props = { path: ".", ...props };
+    this.cdk = {} as any;
+
     // Local development or skip build => stub asset
     this.isPlaceholder =
-      (root.local || root.skipBuild) && !props.disablePlaceholder;
-    const fileSizeLimit = root.isRunningSSTTest()
+      (app.local || app.skipBuild) && !this.props.disablePlaceholder;
+    const fileSizeLimit = app.isRunningSSTTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
-      props.sstTestFileSizeLimitOverride || 200
+      this.props.sstTestFileSizeLimitOverride || 200
       : 200;
 
-    this.props = props;
-    this.cdk = {} as any;
     this.awsCliLayer = new AwsCliLayer(this, "AwsCliLayer");
     this.registerSiteEnvironment();
 

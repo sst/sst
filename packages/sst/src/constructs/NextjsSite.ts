@@ -35,7 +35,7 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "edge"> { }
  * ```
  */
 export class NextjsSite extends SsrSite {
-  constructor(scope: Construct, id: string, props: NextjsSiteProps) {
+  constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
     super(scope, id, {
       buildCommand: "npm_config_yes=true npx open-next@latest build",
       ...props,
