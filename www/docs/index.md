@@ -160,12 +160,6 @@ Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/packages/sst-env")}>
-      <h3>sst-env</h3>
-      <p>A CLI to load the environment variables from your backend.</p>
-    </a>
-  </li>
-  <li>
     <a href={useBaseUrl("/packages/create-sst")}>
       <h3>create-sst</h3>
       <p>CLI to create a new SST project from a template or an example.</p>

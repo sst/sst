@@ -1,7 +1,7 @@
 ---
 title: Constructs
 sidebar_label: Overview
-description: "Constructs are the basic building blocks of SST apps."
+description: "Import from sst/constructs to add a construct to your app."
 ---
 
 import config from "../../config";
@@ -11,11 +11,11 @@ import MultiPackagerCode from "@site/src/components/MultiPackagerCode";
 
 <HeadlineText>
 
-Constructs are the basic building blocks of SST apps.
+Import from `sst/constructs` to add a construct to your app.
 
 </HeadlineText>
 
-With a few lines of code you can add any feature to your app. Like a frontend, database, API, cron job, etc.
+Use the constructs to can add any feature to your app. Like a frontend, database, API, cron job, etc.
 
 ---
 
@@ -31,7 +31,7 @@ However, you can configure these defaults. You can even use CDK constructs in yo
 
 ## Installation
 
-The constructs are available through the [`sst`](../packages/sst.md) npm package.
+The constructs are available through the [`sst`](https://www.npmjs.com/package/sst) npm package.
 
 <MultiPackagerCode>
 <TabItem value="npm">

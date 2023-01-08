@@ -41,7 +41,6 @@ export async function useLocalServer(opts: Opts) {
 
   const rest = express();
 
-  /*
   rest.all(`/ping`, (req, res) => {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Methods", "GET, PUT, PATCH, POST, DELETE");
@@ -51,8 +50,7 @@ export async function useLocalServer(opts: Opts) {
     );
     res.sendStatus(200);
   });
-  */
-
+  
   rest.all<{
     href: string;
   }>(

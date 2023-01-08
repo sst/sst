@@ -74,18 +74,12 @@ If you are deploying the `AstroSite` in the `edge` mode, use the edge adapter in
 
 :::
 
-4. Also add the `static-site-env` dependency to your Astro app's `package.json`. `static-site-env` enables you to [automatically set the environment variables](#environment-variables) for your Astro app directly from the outputs in your SST app.
-
-```bash
-npm install --save-dev @serverless-stack/static-site-env
-```
-
-Update the package.json scripts for your Astro application.
+4. Also add the `sst env` command to your Astro app's `package.json`. `sst env` enables you to [automatically set the environment variables](#environment-variables) for your Astro app directly from the outputs in your SST app.
 
 ```diff
   "scripts": {
 -   "dev": "astro dev",
-+   "dev": "sst-env -- astro dev",
++   "dev": "sst env \"astro dev\"",
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
@@ -236,17 +230,11 @@ To use these values while developing, run `sst start` to start the [Live Lambda 
 npx sst start
 ```
 
-Then in your Astro app to reference these variables, add the [`static-site-env`](/packages/sst-env.md) package.
-
-```bash
-npm install --save-dev @serverless-stack/static-site-env
-```
-
-And tweak the Astro `dev` script to:
+Then in your Astro app to reference these variables, add the [`sst env`](../packages/sst.md#sst-env) command.
 
 ```json title="package.json" {2}
 "scripts": {
-  "dev": "sst-env -- astro dev",
+  "dev": "sst env \"astro dev\"",
   "start": "astro dev",
   "build": "astro build",
   "preview": "astro preview",
@@ -263,12 +251,12 @@ npm run dev
 There are a couple of things happening behind the scenes here:
 
 1. The `sst start` command generates a file with the values specified by the `AstroSite` construct's `environment` prop.
-2. The `sst-env` CLI will traverse up the directories to look for the root of your SST app.
+2. The `sst env` CLI will traverse up the directories to look for the root of your SST app.
 3. It'll then find the file that's generated in step 1.
 4. It'll load these as environment variables before running the start command.
 
 :::note
-`sst-env` only works if the Astro app is located inside the SST app or inside one of its subdirectories. For example:
+`sst env` only works if the Astro app is located inside the SST app or inside one of its subdirectories. For example:
 
 ```
 /

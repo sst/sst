@@ -64,11 +64,7 @@ module.exports = {
 If you followed the `Developer Blog` or `Jokes App` tutorials on Remix's doc, it's likely you are using SQLite for database. SQLite databases cannot be deployed to a serverless environment. It is often used for local storage, and not recommended for modern web apps. It is recommended to use [PostgreSQL](../constructs/RDS.md), [DynamoDB](../constructs/Table.md), or one of third party services like MongoDB for your database.
 :::
 
-3. Go into your Remix app, and add the `static-site-env` dependency to your Remix application's `package.json`. `static-site-env` enables you to [automatically set the environment variables](#environment-variables) for your Remix app directly from the outputs in your SST app.
-
-```bash
-npm install --save-dev @serverless-stack/static-site-env
-```
+3. Go into your Remix app, and add the `sst env` command to your Remix application's `package.json`. `sst env` enables you to [automatically set the environment variables](#environment-variables) for your Remix app directly from the outputs in your SST app.
 
 Update the package.json scripts for your Remix application.
 
@@ -76,7 +72,7 @@ Update the package.json scripts for your Remix application.
   "scripts": {
     "build": "remix build",
 -   "dev": "remix dev",
-+   "dev": "sst-env -- remix dev",
++   "dev": "sst env \"remix dev\"",
     "start": "remix-serve build"
   },
 ```
@@ -230,18 +226,12 @@ To use these values while developing, run `sst start` to start the [Live Lambda 
 npx sst start
 ```
 
-Then in your Remix app to reference these variables, add the [`static-site-env`](/packages/sst-env.md) package.
-
-```bash
-npm install --save-dev @serverless-stack/static-site-env
-```
-
-And tweak the Remix `dev` script to:
+Then in your Remix app to reference these variables, add the [`sst env`](../packages/sst.md#sst-env) command.
 
 ```json title="package.json" {2}
 "scripts": {
   "build": "remix build",
-  "dev": "sst-env -- remix dev",
+  "dev": "sst env \"remix dev\"",
   "start": "remix-serve build"
 },
 ```
@@ -255,12 +245,12 @@ npm run dev
 There are a couple of things happening behind the scenes here:
 
 1. The `sst start` command generates a file with the values specified by the `RemixSite` construct's `environment` prop.
-2. The `sst-env` CLI will traverse up the directories to look for the root of your SST app.
+2. The `sst env` CLI will traverse up the directories to look for the root of your SST app.
 3. It'll then find the file that's generated in step 1.
 4. It'll load these as environment variables before running the start command.
 
 :::note
-`sst-env` only works if the Remix app is located inside the SST app or inside one of its subdirectories. For example:
+`sst env` only works if the Remix app is located inside the SST app or inside one of its subdirectories. For example:
 
 ```
 /

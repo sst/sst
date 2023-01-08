@@ -1,7 +1,7 @@
 ---
 title: "Clients"
 sidebar_label: Overview
-description: "A typesafe Node.js SST client for Lambda functions."
+description: "Import from sst/node in your Lambda functions."
 ---
 
 import config from "../../config";
@@ -11,9 +11,11 @@ import MultiPackagerCode from "@site/src/components/MultiPackagerCode";
 
 <HeadlineText>
 
-A typesafe Node.js SST client for Lambda functions.
+Import from `sst/node` in your Lambda functions.
 
 </HeadlineText>
+
+Use the typesafe Node.js client in your functions to connect to your infrastructure.
 
 ---
 
@@ -49,7 +51,7 @@ The Node client also gives you [handlers](#handlers) that wrap around your Lambd
 
 ## Installation
 
-The SST Node client is available through the [`sst`](../packages/sst.md) npm package.
+The SST Node client is available through the [`sst`](https://www.npmjs.com/package/sst) npm package.
 
 <MultiPackagerCode>
 <TabItem value="npm">
@@ -174,7 +176,7 @@ Currently the client only supports JavaScript and TypeScript. But if you are loo
 To access the [properties](#properties) in your tests, you'll need to wrap your tests with the [`sst bind`](packages/sst.md#bind) command.
 
 ```bash
-sst bind -- vitest run
+sst bind "vitest run"
 ```
 
 This allows the `sst/node` package to work as if it was running inside a Lambda function.
