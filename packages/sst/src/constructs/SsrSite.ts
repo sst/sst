@@ -264,9 +264,12 @@ export class SsrSite extends Construct implements SSTConstruct {
 
     // Create S3 Deployment
     const assets = this.isPlaceholder
-      ? this.createStaticsS3AssetsWithStub()
-      : this.createStaticsS3Assets();
-    const s3deployCR = this.createS3Deployment(assets);
+      ? this.createS3AssetsForStub()
+      : this.createS3Assets();
+    const assetFileOptions = this.isPlaceholder
+      ? this.createS3AssetFileOptionsForStub()
+      : this.createS3AssetFileOptions();
+    const s3deployCR = this.createS3Deployment(assets, assetFileOptions);
 
     // Create CloudFront
     this.validateCloudFrontDistributionSettings();
@@ -483,7 +486,7 @@ export class SsrSite extends Construct implements SSTConstruct {
   // Bundle S3 Assets
   /////////////////////
 
-  private createStaticsS3Assets(): s3Assets.Asset[] {
+  private createS3Assets(): s3Assets.Asset[] {
     // Create temp folder, clean up if exists
     const zipOutDir = path.resolve(
       path.join(this.sstBuildDir, `Site-${this.node.id}-${this.node.addr}`)
@@ -530,12 +533,53 @@ export class SsrSite extends Construct implements SSTConstruct {
     return assets;
   }
 
-  private createStaticsS3AssetsWithStub(): s3Assets.Asset[] {
+  private createS3AssetFileOptions() {
+    // Build file options
+    const fileOptions = [];
+    const clientPath = path.join(
+      this.props.path,
+      this.buildConfig.clientBuildOutputDir
+    );
+    for (const item of fs.readdirSync(clientPath)) {
+      // Versioned files will be cached for 1 year (immutable) both at
+      // CDN and browser level.
+      if (item === this.buildConfig.clientBuildVersionedSubDir) {
+        fileOptions.push({
+          exclude: "*",
+          include: `${this.buildConfig.clientBuildVersionedSubDir}/*`,
+          cacheControl: "public,max-age=31536000,immutable",
+        });
+      }
+      // Un-versioned files will be cached for 1 year at the CDN level.
+      // But not at the browser level. CDN cache will be invalidated on deploy.
+      else {
+        const itemPath = path.join(clientPath, item);
+        fileOptions.push({
+          exclude: "*",
+          include: fs.statSync(itemPath).isDirectory()
+            ? `${item}/*`
+            : `${item}`,
+          cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
+        });
+      }
+    }
+    return fileOptions;
+  }
+
+  private createS3AssetsForStub(): s3Assets.Asset[] {
     return [
       new s3Assets.Asset(this, "Asset", {
         path: this.buildConfig.siteStub,
       }),
     ];
+  }
+
+  private createS3AssetFileOptionsForStub() {
+    return [{
+      exclude: "*",
+      include: "*",
+      cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
+    }];
   }
 
   private createS3Bucket(): s3.Bucket {
@@ -557,7 +601,7 @@ export class SsrSite extends Construct implements SSTConstruct {
     }
   }
 
-  private createS3Deployment(assets: s3Assets.Asset[]): CustomResource {
+  private createS3Deployment(assets: s3Assets.Asset[], fileOptions: { exclude: string, include: string, cacheControl: string }[]): CustomResource {
     // Create a Lambda function that will be doing the uploading
     const uploader = new lambda.Function(this, "S3Uploader", {
       code: lambda.Code.fromAsset(
@@ -588,36 +632,6 @@ export class SsrSite extends Construct implements SSTConstruct {
     });
     this.cdk.bucket.grantReadWrite(handler);
     uploader.grantInvoke(handler);
-
-    // Build file options
-    const fileOptions = [];
-    const clientPath = path.join(
-      this.props.path,
-      this.buildConfig.clientBuildOutputDir
-    );
-    for (const item of fs.readdirSync(clientPath)) {
-      // Versioned files will be cached for 1 year (immutable) both at
-      // CDN and browser level.
-      if (item === this.buildConfig.clientBuildVersionedSubDir) {
-        fileOptions.push({
-          exclude: "*",
-          include: `${this.buildConfig.clientBuildVersionedSubDir}/*`,
-          cacheControl: "public,max-age=31536000,immutable",
-        });
-      }
-      // Un-versioned files will be cached for 1 year at the CDN level.
-      // But not at the browser level. CDN cache will be invalidated on deploy.
-      else {
-        const itemPath = path.join(clientPath, item);
-        fileOptions.push({
-          exclude: "*",
-          include: fs.statSync(itemPath).isDirectory()
-            ? `${item}/*`
-            : `${item}`,
-          cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
-        });
-      }
-    }
 
     // Create custom resource
     return new CustomResource(this, "S3Deployment", {
