@@ -1,9 +1,9 @@
 import { StackContext, Api } from "sst/constructs";
 
-export function Api({ stack }: StackContext) {
+export function API({ stack }: StackContext) {
   const api = new Api(stack, "api", {
     routes: {
-      "GET /": "packages/functions/lambda.handler",
+      "GET /": "packages/functions/src/lambda.handler",
     },
   });
   stack.addOutputs({

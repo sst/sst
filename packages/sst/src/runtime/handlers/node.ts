@@ -198,11 +198,13 @@ export const useNodeHandler = Context.memo(() => {
             await find(parsed.dir, "package.json"),
             "node_modules"
           );
-          await fs.symlink(
-            path.resolve(dir),
-            path.resolve(path.join(input.out, "node_modules")),
-            "dir"
-          );
+          try {
+            await fs.symlink(
+              path.resolve(dir),
+              path.resolve(path.join(input.out, "node_modules")),
+              "dir"
+            );
+          } catch {}
         }
       }
 

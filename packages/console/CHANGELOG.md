@@ -1,5 +1,11 @@
 # @serverless-stack/console
 
+## 2.0.0-rc.19
+
+## 2.0.0-rc.18
+
+## 2.0.0-rc.17
+
 ## 2.0.0-rc.16
 
 ### Patch Changes

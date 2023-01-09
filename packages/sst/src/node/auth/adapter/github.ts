@@ -6,20 +6,20 @@ import { OidcAdapter } from "./oidc.js";
 const issuer = new Issuer({
   issuer: "https://github.com",
   authorization_endpoint: "https://github.com/login/oauth/authorize",
-  token_endpoint: "https://github.com/login/oauth/access_token"
+  token_endpoint: "https://github.com/login/oauth/access_token",
 });
 
 export const GithubAdapter = /* @__PURE__ */ createAdapter(
   (config: OauthBasicConfig) => {
-    if ("clientSecret" in config) {
+    if (config.clientSecret) {
       return OauthAdapter({
         issuer,
-        ...config
+        ...config,
       });
     }
     return OidcAdapter({
       issuer,
-      ...config
+      ...config,
     });
   }
 );

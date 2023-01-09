@@ -4,7 +4,7 @@
     "access": "public"
   },
   "name": "sst",
-  "version": "2.0.0-rc.16",
+  "version": "2.0.0-rc.19",
   "bin": {
     "sst": "cli/sst.js"
   },
@@ -73,6 +73,7 @@
     "express": "^4.18.2",
     "fast-jwt": "^1.6.1",
     "glob": "^8.0.3",
+    "graphql": "*",
     "graphql-helix": "^1.12.0",
     "immer": "9",
     "ink": "^3.2.0",
@@ -108,19 +109,14 @@
     "@types/uuid": "^8.3.4",
     "@types/ws": "^8.5.3",
     "@types/yargs": "^17.0.13",
-    "graphql": "^16.5.0",
     "tsx": "^3.12.1",
     "vitest": "^0.15.1"
   },
   "peerDependencies": {
-    "@sls-next/lambda-at-edge": "^3.7.0",
-    "graphql": "^16.5.0"
+    "@sls-next/lambda-at-edge": "^3.7.0"
   },
   "peerDependenciesMeta": {
     "@sls-next/lambda-at-edge": {
-      "optional": true
-    },
-    "graphql": {
       "optional": true
     }
   },

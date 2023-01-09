@@ -2,6 +2,7 @@ import { workerData } from "node:worker_threads";
 import path from "path";
 import { fetch } from "undici";
 import fs from "fs";
+import url from "url";
 // import { createRequire } from "module";
 // global.require = createRequire(import.meta.url);
 
@@ -16,7 +17,8 @@ const file = [".js", ".jsx", ".mjs", ".cjs"]
 let mod: any;
 
 try {
-  mod = await import(file);
+  const { href } = url.pathToFileURL(file);
+  mod = await import(href);
   // if (!mod) mod = require(file);
 } catch (ex: any) {
   await fetch(`${input.url}/runtime/init/error`, {

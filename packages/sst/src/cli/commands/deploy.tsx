@@ -1,6 +1,7 @@
 import type { Program } from "../program.js";
 import { printDeploymentResults } from "../ui/deploy.js";
 import { Instance } from "ink/build/render.js";
+import { createSpinner, useSpinners } from "../spinner.js";
 
 export const deploy = (program: Program) =>
   program.command(
@@ -30,10 +31,13 @@ export const deploy = (program: Program) =>
           return result;
         }
 
-        return await Stacks.synth({
+        const spinner = createSpinner("Building stacks");
+        const result = await Stacks.synth({
           fn: project.stacks,
           mode: "deploy",
         });
+        spinner.succeed();
+        return result;
       })();
 
       const target = assembly.stacks.filter(

@@ -1,0 +1,8 @@
+@@ -25,16 +25,55 @@
+ m %22sst%22;
++%0Aimport %7B API %7D from %22./stacks/MyStack%22
+ %0A%0Aexport
+@@ -289,16 +289,35 @@
+ %0A    %7D)%0A
++    app.stack(API)%0A
+   %7D%0A%7D sa
