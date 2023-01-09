@@ -115,27 +115,41 @@ async function createFunction(functionName: string, params: any) {
 async function updateFunctionConfiguration(functionName: string, params: any) {
   log(`updateFunctionConfiguration() called with params`, params);
 
-  const resp = await lambda
-    .updateFunctionConfiguration({
+  try {
+    const resp = await lambda.updateFunctionConfiguration({
       FunctionName: functionName,
       ...params,
       Code: undefined,
-    })
-    .promise();
-  log(`response`, resp);
+    }).promise();
+    log(`response`, resp);
+    return;
+  } catch (e) {
+    if (isRetryableException(e)) {
+      await updateFunctionConfiguration(functionName, params);
+      return;
+    }
+    throw e;
+  }
 }
 
 async function updateFunctionCode(functionName: string, params: any) {
   log(`updateFunctionCode() called with params`, params);
 
-  const resp = await lambda
-    .updateFunctionCode({
+  try {
+    const resp = await lambda.updateFunctionCode({
       FunctionName: functionName,
       Publish: false,
       ...params.Code,
-    })
-    .promise();
-  log(`response`, resp);
+    }).promise();
+    log(`response`, resp);
+    return;
+  } catch (e) {
+    if (isRetryableException(e)) {
+      await updateFunctionCode(functionName, params);
+      return;
+    }
+    throw e;
+  }
 }
 
 async function deleteFunction(functionName: string) {
@@ -163,5 +177,19 @@ function isCodeChanged(params: any, oldParams: any) {
   return (
     params.Code.S3Bucket !== oldParams.Code.S3Bucket ||
     params.Code.S3Key !== oldParams.Code.S3Key
+  );
+}
+
+function isRetryableException(e: any) {
+  return (
+    (e.code === "ThrottlingException" && e.message === "Rate exceeded") ||
+    (e.code === "Throttling" && e.message === "Rate exceeded") ||
+    (e.code === "TooManyRequestsException" &&
+      e.message === "Too Many Requests") ||
+    e.code === "TooManyUpdates" ||
+    e.code === "OperationAbortedException" ||
+    e.code === "TimeoutError" ||
+    e.code === "NetworkingError" ||
+    e.code === "ResourceConflictException"
   );
 }

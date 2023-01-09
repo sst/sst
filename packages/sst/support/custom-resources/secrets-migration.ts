@@ -121,6 +121,7 @@ function isRetryableException(e: any) {
     e.code === "TooManyUpdates" ||
     e.code === "OperationAbortedException" ||
     e.code === "TimeoutError" ||
-    e.code === "NetworkingError"
+    e.code === "NetworkingError" ||
+    e.code === "ResourceConflictException"
   );
 }
