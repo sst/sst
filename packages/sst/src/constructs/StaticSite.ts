@@ -54,7 +54,7 @@ export interface StaticSiteFileOptions {
 export interface StaticSiteProps {
   /**
    * Path to the directory where the website source is located.
-   *
+   * @default "."
    * @example
    * ```js
    * new StaticSite(stack, "Site", {

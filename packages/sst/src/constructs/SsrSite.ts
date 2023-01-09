@@ -66,6 +66,7 @@ export interface SsrSiteProps {
 
   /**
    * Path to the directory where the app is located.
+   * @default "."
    */
   path?: string;
 
