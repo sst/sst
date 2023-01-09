@@ -4,6 +4,9 @@ import path from "path";
 import { exec, execSync } from "child_process";
 import { applyOperation } from "fast-json-patch/index.mjs";
 import { pathToFileURL } from "url";
+import { diff_match_patch } from "diff-match-patch";
+
+const DMP = new diff_match_patch();
 
 export function extract() {
   return /** @type {const} */ ({
@@ -96,10 +99,26 @@ export async function execute(opts) {
         const templates = path.join(source, "templates");
         const files = await listFiles(templates);
         for (const file of files) {
+          const parsed = path.parse(file);
           const relative = path.relative(
             templates,
             file.replace("gitignore", ".gitignore")
           );
+          if (parsed.ext === ".patch") {
+            const data = await fs.readFile(file).then((buf) => buf.toString());
+            const patches = DMP.patch_fromText(data);
+            const destination = path.join(
+              opts.destination,
+              relative.replace(".patch", "")
+            );
+            const original = await fs
+              .readFile(destination)
+              .then((buf) => buf.toString());
+            const [applied] = DMP.patch_apply(patches, original);
+            await fs.mkdir(path.dirname(destination), { recursive: true });
+            await fs.writeFile(destination, applied);
+            continue;
+          }
           const destination = path.join(opts.destination, relative);
           await fs.mkdir(path.dirname(destination), { recursive: true });
           await fs.copyFile(file, destination);
@@ -173,14 +192,18 @@ export async function execute(opts) {
     const appAlpha = app.replace(/[^a-zA-Z0-9]/g, "");
 
     for (const file of await listFiles(opts.destination)) {
-      const contents = await fs.readFile(file, "utf8");
-      if (file.endsWith(".png") || file.endsWith(".ico")) continue;
-      await fs.writeFile(
-        file,
-        contents
-          .replace(/\@\@app/g, app)
-          .replace(/\@\@normalizedapp/g, appAlpha)
-      );
+      try {
+        const contents = await fs.readFile(file, "utf8");
+        if (file.endsWith(".png") || file.endsWith(".ico")) continue;
+        await fs.writeFile(
+          file,
+          contents
+            .replace(/\@\@app/g, app)
+            .replace(/\@\@normalizedapp/g, appAlpha)
+        );
+      } catch {
+        continue;
+      }
     }
   }
 }
@@ -189,6 +212,7 @@ export async function execute(opts) {
  * @param {string} dir
  */
 async function listFiles(dir) {
+  if (dir.includes("node_modules")) return [];
   const results = [];
   for (const file of await fs.readdir(dir)) {
     const p = path.join(dir, file);

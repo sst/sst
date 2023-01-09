@@ -3,6 +3,9 @@
   "include": ["**/*.ts", "../../.sst/types"],
   "compilerOptions": {
     "module": "esnext",
-    "moduleResolution": "nodenext"
+    "baseUrl": ".",
+    "paths": {
+      "@@@app/core/*": ["../core/src/*"]
+    }
   }
 }
