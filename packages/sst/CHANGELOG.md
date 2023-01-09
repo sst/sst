@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.0.0-rc.17
+
+### Patch Changes
+
+- [`acce2b49f`](https://github.com/serverless-stack/sst/commit/acce2b49fc68656a4d2d9bb707d3575f8725c1a1) Thanks [@thdxr](https://github.com/thdxr)! - Fix missing ping endpoint
+
+- [#2307](https://github.com/serverless-stack/sst/pull/2307) [`1eb6e7729`](https://github.com/serverless-stack/sst/commit/1eb6e7729916fcaa5089799a0a4649a4b97ae1fa) Thanks [@github-actions](https://github.com/apps/github-actions)! - Sites: default path to current directory "."
+
 ## 2.0.0-rc.16
 
 ### Patch Changes
