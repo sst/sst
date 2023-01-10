@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.0.0-rc.23
+
+### Patch Changes
+
+- [`a10b167fd`](https://github.com/serverless-stack/sst/commit/a10b167fd98f8c0057631996e3c9f0615bb9fc41) Thanks [@thdxr](https://github.com/thdxr)! - Fix kysely type generator
+
 ## 2.0.0-rc.22
 
 ### Patch Changes
