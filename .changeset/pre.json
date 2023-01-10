@@ -7,7 +7,8 @@
     "sst": "0.0.0-20221121213401",
     "@serverless-stack/docs": "1.9.1",
     "astro-aws": "2.0.0-rc.16",
-    "solid-start-sst": "2.0.0-rc.16"
+    "solid-start-sst": "2.0.0-rc.16",
+    "astro-sst": "2.0.0-rc.17"
   },
   "changesets": [
     "big-pants-repair",
@@ -27,6 +28,7 @@
     "lovely-frogs-refuse",
     "lovely-moons-move",
     "metal-scissors-judge",
+    "old-moles-notice",
     "poor-poems-invent",
     "shy-countries-push",
     "silent-paws-exist",
