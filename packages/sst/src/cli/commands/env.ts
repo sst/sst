@@ -33,10 +33,8 @@ export const env = (program: Program) =>
         spinner?.succeed();
 
         const sites = await SiteEnv.values();
-        const current = path.relative(project.paths.root, process.cwd());
-        const env = sites[current] || {};
+        const env = sites[process.cwd()] || {};
 
-        console.log(args.command);
         const result = spawnSync(args.command, {
           env: {
             ...process.env,

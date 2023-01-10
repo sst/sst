@@ -48,49 +48,6 @@ program
         answers.name,
         path.join(cwd, answers.name),
       ];
-
-      if (opts.template) return path.join("presets", opts.template);
-
-      const { category } = await inquirer.prompt([
-        {
-          name: "category",
-          type: "list",
-          choices: ["graphql", "minimal", "examples"],
-          message: "What kind of project do you want to create?",
-        },
-      ]);
-
-      if (["minimal", "examples"].includes(category)) {
-        const folders = await fs.readdir(
-          path.join(__dirname, "presets", category)
-        );
-        const presets = folders.map((folder) => path.join(category, folder));
-        const answers = await inquirer.prompt([
-          {
-            name: "preset",
-            type: "list",
-            choices: presets.flat(),
-            message: "Select a template",
-          },
-        ]);
-        return [path.join("presets", answers.preset)];
-      }
-
-      if (category === "graphql") {
-        const result = await inquirer.prompt([
-          {
-            name: "database",
-            type: "list",
-            choices: [
-              { name: "RDS (Postgres or MySQL)", value: "rds" },
-              { name: "DynamoDB", value: "dynamo" },
-            ],
-            message:
-              "Select a database (you can change this later or use both)",
-          },
-        ]);
-        return path.join("presets", "graphql", result.database);
-      }
     })();
 
     const spinner = ora();
