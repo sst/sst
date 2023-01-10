@@ -50,7 +50,7 @@ export async function writeValues(
 }
 
 export function append(input: Key) {
-  input.path = path.join(useProject().paths.root, input.path);
+  input.path = path.resolve(useProject().paths.root, input.path);
   fs.appendFileSync(keysFile(), JSON.stringify(input) + "\n");
 }
 
