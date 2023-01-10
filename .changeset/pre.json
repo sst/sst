@@ -5,9 +5,12 @@
     "@serverless-stack/console": "1.17.1",
     "create-sst": "1.17.1",
     "sst": "0.0.0-20221121213401",
-    "@serverless-stack/docs": "1.9.1"
+    "@serverless-stack/docs": "1.9.1",
+    "astro-aws": "2.0.0-rc.16",
+    "solid-start-sst": "2.0.0-rc.16"
   },
   "changesets": [
+    "big-pants-repair",
     "breezy-ants-attend",
     "calm-cheetahs-agree",
     "curly-nails-doubt",
@@ -25,6 +28,7 @@
     "lovely-moons-move",
     "metal-scissors-judge",
     "poor-poems-invent",
+    "shy-countries-push",
     "silent-paws-exist",
     "small-dryers-destroy",
     "spotty-steaks-reflect",
@@ -32,6 +36,7 @@
     "stupid-donuts-wonder",
     "thin-roses-love",
     "three-dots-provide",
+    "three-lobsters-explain",
     "tiny-dodos-prove",
     "tricky-countries-cry",
     "violet-weeks-tease",
