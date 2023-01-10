@@ -60,7 +60,6 @@ const CONFIG_EXTENSIONS = [
   ".config.cjs",
   ".config.mjs",
   ".config.js",
-  ".json",
 ];
 
 interface GlobalOptions {
@@ -86,20 +85,14 @@ export async function initProject(globals: GlobalOptions) {
       } catch {
         continue;
       }
-      if (file.endsWith("js") || file.endsWith("ts")) {
-        const [metafile, config] = await Stacks.load(file);
-        return [metafile, config as SSTConfig];
-      }
+      const [metafile, config] = await Stacks.load(file);
+      return [metafile, config as SSTConfig];
     }
 
     throw new VisibleError(
       "Could not found a configuration file",
       "Make sure one of the following exists",
-      "  - sst.config.cjs",
-      "  - sst.config.mjs",
-      "  - sst.config.js",
-      "  - sst.config.ts",
-      "  - sst.json"
+      ...CONFIG_EXTENSIONS.map((x) => `  - sst${x}`)
     );
   })();
 

@@ -7,6 +7,7 @@ import { useBus } from "../bus.js";
 import { useProject } from "../project.js";
 import { dynamicImport } from "../util/module.js";
 import { findAbove } from "../util/fs.js";
+import { VisibleError } from "../error.js";
 
 declare module "../bus.js" {
   export interface Events {
@@ -58,6 +59,21 @@ export async function load(input: string) {
     await fs.rm(outfile, {
       force: true,
     });
+    if (!mod.default?.config)
+      throw new VisibleError(
+        `The config file is improperly formatted.`,
+        `Example:`,
+        `export default {`,
+        `  config() {`,
+        `    return {`,
+        `      name: "my-app",`,
+        `      region: "us-east-1"`,
+        `    }`,
+        `  },`,
+        `  stacks(app) {`,
+        `  }`,
+        `}`
+      );
     return [result.metafile, mod.default] as const;
   } catch (e) {
     await fs.rm(outfile, {
