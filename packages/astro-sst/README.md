@@ -1,4 +1,4 @@
-# astro-aws
+# astro-sst
 
 This adapter allows Astro to deploy your SSR site to [AWS](https://aws.amazon.com/).
 
@@ -8,11 +8,11 @@ Add the AWS adapter to enable SSR in your Astro project with the following `astr
 
 ```sh
 # Using NPM
-npx astro add astro-aws
+npx astro add astro-sst
 # Using Yarn
-yarn astro add astro-aws
+yarn astro add astro-sst
 # Using PNPM
-pnpm astro add astro-aws
+pnpm astro add astro-sst
 ```
 
 If you prefer to install the adapter manually instead, complete the following two steps:
@@ -20,14 +20,14 @@ If you prefer to install the adapter manually instead, complete the following tw
 1. Install the AWS adapter to your project’s dependencies using your preferred package manager. If you’re using npm or aren’t sure, run this in the terminal:
 
    ```bash
-     npm install astro-aws
+     npm install astro-sst
    ```
 
 1. Add two new lines to your `astro.config.mjs` project configuration file.
 
    ```js title="astro.config.mjs" ins={2, 5-6}
    import { defineConfig } from "astro/config";
-   import aws from "astro-aws/lambda";
+   import aws from "astro-sst/lambda";
 
    export default defineConfig({
      output: "server",
@@ -45,6 +45,6 @@ You can deploy to different targets:
 You can change where to target by changing the import:
 
 ```js
-import aws from "astro-aws/lambda";
-import aws from "astro-aws/edge";
+import aws from "astro-sst/lambda";
+import aws from "astro-sst/edge";
 ```

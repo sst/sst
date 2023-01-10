@@ -1,6 +1,6 @@
 import type { AstroAdapter, AstroIntegration } from "astro"
 
-const PACKAGE_NAME = "astro-aws/lambda"
+const PACKAGE_NAME = "astro-sst/edge"
 
 function getAdapter(): AstroAdapter {
   return {

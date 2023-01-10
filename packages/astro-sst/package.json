@@ -1,5 +1,5 @@
 {
-  "name": "astro-aws",
+  "name": "astro-sst",
   "description": "Adapter for Astro apps to work on AWS Lambda and AWS Lambda@Edge.",
   "version": "2.0.0-rc.17",
   "type": "module",
@@ -11,7 +11,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/serverless-stack/sst.git",
-    "directory": "packages/astro-aws"
+    "directory": "packages/astro-sst"
   },
   "keywords": [
     "withastro",

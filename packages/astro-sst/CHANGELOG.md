@@ -1,4 +1,4 @@
-# astro-aws
+# astro-sst
 
 ## 2.0.0-rc.17
 
