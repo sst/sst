@@ -13,6 +13,7 @@ import { usePothosBuilder } from "./plugins/pothos.js";
 import { useKyselyTypeGenerator } from "./plugins/kysely.js";
 import { useRDSWarmer } from "./plugins/warmer.js";
 import { useProject } from "../../project.js";
+import { useMetadata } from "../../stacks/metadata.js";
 
 export const dev = (program: Program) =>
   program.command(
@@ -236,6 +237,7 @@ export const dev = (program: Program) =>
         useIOTBridge(),
         useRuntimeServer(),
         usePothosBuilder(),
+        useMetadata(),
         useKyselyTypeGenerator(),
         useRDSWarmer(),
         useFunctionLogger(),

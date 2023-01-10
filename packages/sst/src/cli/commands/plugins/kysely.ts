@@ -15,6 +15,11 @@ import { Context } from "../../../context/context.js";
 import { useBus } from "../../../bus.js";
 import { useProject } from "../../../project.js";
 import { FunctionMetadata, RDSMetadata } from "../../../constructs/Metadata.js";
+import { Logger } from "../../../logger.js";
+import {
+  useAWSCredentials,
+  useAWSCredentialsProvider,
+} from "../../../credentials.js";
 
 interface Database {
   migratorID: string;
@@ -35,6 +40,8 @@ export const useKyselyTypeGenerator = Context.memo(async () => {
 
   async function generate(db: Database) {
     if (!db.types) return;
+    Logger.debug("Generating types for", db.migratorID);
+    const credentials = await useAWSCredentials();
 
     const k = new Kysely<Database>({
       dialect: new DataApiDialect({
@@ -45,6 +52,7 @@ export const useKyselyTypeGenerator = Context.memo(async () => {
           database: db.defaultDatabaseName,
           client: new RDSDataService({
             region: project.config.region,
+            credentials,
           }),
         },
       }),
@@ -92,13 +100,14 @@ export const useKyselyTypeGenerator = Context.memo(async () => {
   }
 
   bus.subscribe("stacks.metadata", (evt) => {
-    databases = Object.values(evt.properties)
-      .flat()
+    const constructs = Object.values(evt.properties).flat();
+
+    databases = constructs
       .filter((c): c is RDSMetadata => c.type === "RDS")
       .filter((c) => c.data.migrator)
       .filter((c) => c.data.types)
       .map((c) => ({
-        migratorID: evt.properties.metadata.find(
+        migratorID: constructs.find(
           (fn): fn is FunctionMetadata => fn.addr == c.data.migrator?.node
         )!.addr,
         clusterArn: c.data.clusterArn,
@@ -111,10 +120,12 @@ export const useKyselyTypeGenerator = Context.memo(async () => {
   });
 
   bus.subscribe("function.success", async (evt) => {
+    if (!evt.properties.body?.results) return;
     const db = databases.find(
       (db) => db.migratorID === evt.properties.functionID
     );
     if (!db) return;
     generate(db);
   });
+  Logger.debug("Loaded kyseley type generator");
 });
