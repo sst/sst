@@ -7,7 +7,7 @@
   "commit": false,
   "fixed": [["@serverless-stack/console", "create-sst", "sst"]],
   "linked": [],
-  "access": "restricted",
+  "access": "public",
   "baseBranch": "master",
   "updateInternalDependencies": "patch",
   "ignore": []
