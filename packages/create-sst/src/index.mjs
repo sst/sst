@@ -212,7 +212,7 @@ export async function execute(opts) {
  * @param {string} dir
  */
 async function listFiles(dir) {
-  if (dir.includes("node_modules")) return [];
+  if (dir.endsWith("node_modules")) return [];
   const results = [];
   for (const file of await fs.readdir(dir)) {
     const p = path.join(dir, file);
