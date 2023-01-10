@@ -16,6 +16,7 @@ import dotenv from "dotenv";
 import { env } from "./commands/env.js";
 import { Logger } from "../logger.js";
 import { consoleCommand } from "./commands/console.js";
+import { diff } from "./commands/diff.js";
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ deploy(program);
 remove(program);
 env(program);
 consoleCommand(program);
+diff(program);
 
 process.removeAllListeners("uncaughtException");
 process.on("uncaughtException", (err) => {
