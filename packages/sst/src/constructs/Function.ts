@@ -640,6 +640,7 @@ export class Function extends lambda.Function implements SSTConstruct {
       .forEach((per) => {
         props = Function.mergeProps(per, props);
       });
+    props.runtime = props.runtime || "nodejs16.x";
 
     // Set defaults
     const functionName =
@@ -649,7 +650,6 @@ export class Function extends lambda.Function implements SSTConstruct {
         : props.functionName({ stack, functionProps: props }));
     const handler = props.handler;
     const timeout = Function.normalizeTimeout(props.timeout);
-    const runtime = Function.normalizeRuntime(props.runtime);
     const architecture = (() => {
       if (props.architecture === "arm_64") return lambda.Architecture.ARM_64;
       if (props.architecture === "x86_64") return lambda.Architecture.X86_64;
@@ -674,9 +674,7 @@ export class Function extends lambda.Function implements SSTConstruct {
     }
 
     // Validate input
-    const isNodeRuntime = runtime.startsWith("nodejs");
-    const isPythonRuntime = runtime.startsWith("python");
-    const isJavaRuntime = runtime.startsWith("java");
+    const isNodeRuntime = props.runtime.startsWith("nodejs");
 
     // Handle local development (ie. sst start)
     // - set runtime to nodejs12.x for non-Node runtimes (b/c the stub is in Node)
@@ -776,7 +774,10 @@ export class Function extends lambda.Function implements SSTConstruct {
         // Update function's code
         const codeConfig = code.bind(this);
         const cfnFunction = this.node.defaultChild as lambda.CfnFunction;
-        cfnFunction.runtime = supportedRuntimes[runtime].toString();
+        cfnFunction.runtime =
+          supportedRuntimes[
+            props.runtime as keyof typeof supportedRuntimes
+          ].toString();
         /*
         if (isJavaRuntime) {
           const providedRuntime = (bundle as FunctionBundleJavaProps)
@@ -998,16 +999,6 @@ export class Function extends lambda.Function implements SSTConstruct {
       return toCdkDuration(timeout);
     }
     return cdk.Duration.seconds(timeout || 10);
-  }
-
-  static normalizeRuntime(runtime?: Runtime): Runtime {
-    runtime = runtime || "nodejs18.x";
-    if (!supportedRuntimes[runtime]) {
-      throw new Error(
-        `The specified runtime is not supported for sst.Function. Only NodeJS, Python, Go, and .NET runtimes are currently supported.`
-      );
-    }
-    return runtime;
   }
 
   static normalizeSrcPath(srcPath: string): string {

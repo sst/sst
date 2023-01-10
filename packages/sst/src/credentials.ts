@@ -58,6 +58,7 @@ export function useAWSClient<C extends Client<any, any, any, any>>(
     retryStrategy: new StandardRetryStrategy(async () => 10000, {
       retryDecider: (err) => {
         if (err.$fault === "client") return false;
+        if (err.name === "CredentialsProviderError") return false;
         if (err.message === "Could not load credentials from any providers")
           return false;
 
