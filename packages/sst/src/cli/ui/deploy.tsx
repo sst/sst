@@ -156,6 +156,7 @@ export function printDeploymentResults(
     const outputs = Object.entries(result.outputs).filter(([key, _]) => {
       if (key.startsWith("Export")) return false;
       if (key.includes("SstSiteEnv")) return false;
+      if (key === "SstMetadata") return false;
       return true;
     });
     if (outputs.length > 0) {

@@ -111,6 +111,7 @@ await esbuild.build({
 
 // Move support packages that need to be transpiled
 await Promise.all([
+  "bootstrap-metadata-function",
   "custom-resources",
   "script-function",
 ].map((dir) =>

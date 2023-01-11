@@ -11,10 +11,8 @@ import * as Config from "./Config.js";
 import { isConstruct, SSTConstruct } from "./Construct.js";
 import { Permissions } from "./util/permission.js";
 
-import { createRequire } from "module";
 import { useApp } from "./context.js";
 import { useProject } from "../project.js";
-const require = createRequire(import.meta.url);
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 export type StackProps = cdk.StackProps;
@@ -47,7 +45,6 @@ export class Stack extends cdk.Stack {
    * @internal
    */
   public readonly customResourceHandler: lambda.Function;
-  private readonly metadata: cdk.CustomResource;
 
   constructor(scope: Construct, id: string, props?: StackProps) {
     const root = scope.node.root as App;
@@ -69,16 +66,11 @@ export class Stack extends cdk.Stack {
       typeof dfp === "function" ? dfp(this) : dfp
     );
 
-    // We created the Metadata resource first with empty metadata, and on
-    // app synthesis we'll update it with the actual metadata.
-    // We do this two step process because we call the "Template.fromStack"
-    // method in the tests. And the call triggers an app synethsis. And we
-    // end up synthesize an app multiple times. If we created the Metadata
-    // resource on app synth, the tests would fail because the resource
-    // would already exist.
-
+    // Create a custom resource handler per stack. This handler will
+    // be used by all the custom resources in the stack.
     this.customResourceHandler = this.createCustomResourceHandler();
-    this.metadata = this.createStackMetadataResource();
+
+    this.createSecretsMigrationResource();
   }
 
   /**
@@ -232,13 +224,6 @@ export class Stack extends cdk.Stack {
     });
   }
 
-  public setStackMetadata(metadata: any) {
-    (this.metadata.node.defaultChild as cdk.CfnResource).addPropertyOverride(
-      "Metadata",
-      metadata
-    );
-  }
-
   private createCustomResourceHandler() {
     return new lambda.Function(this, "CustomResourceHandler", {
       code: lambda.Code.fromAsset(
@@ -254,18 +239,10 @@ export class Stack extends cdk.Stack {
     });
   }
 
-  private createStackMetadataResource() {
+  private createSecretsMigrationResource() {
     const app = useApp();
 
-    // Create execution policy
-    this.customResourceHandler.addToRolePolicy(
-      new iam.PolicyStatement({
-        actions: ["s3:PutObject", "s3:DeleteObject"],
-        resources: [`arn:aws:s3:::${app.bootstrap.bucket}/*`],
-      })
-    );
-
-    // Temporary: Add permissions to migrate SSM paths for secrets (piggybacking on the stack metadata custom resource handler)
+    // Add permissions to migrate SSM paths for secrets
     this.customResourceHandler.addToRolePolicy(
       new iam.PolicyStatement({
         actions: ["ssm:GetParametersByPath", "ssm:PutParameter"],
@@ -276,18 +253,13 @@ export class Stack extends cdk.Stack {
       })
     );
 
-    return new cdk.CustomResource(this, "StackMetadata", {
+    new cdk.CustomResource(this, "SecretsMigration", {
       serviceToken: this.customResourceHandler.functionArn,
-      resourceType: "Custom::StackMetadata",
+      resourceType: "Custom::SecretsMigration",
       properties: {
         App: app.name,
         Stage: this.stage,
-        Stack: this.stackName,
         SSTVersion: useProject().version,
-        BootstrapBucketName: app.bootstrap.bucket!,
-        ForceUpdate: process.env.SST_FORCE_UPDATE_METADATA
-          ? Date.now().toString()
-          : undefined,
       },
     });
   }
