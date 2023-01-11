@@ -55,16 +55,23 @@ export const deploy = (program: Program) =>
           project.config.stage
         )}...`
       );
-      let component: Instance | undefined = undefined;
-      if (args.fullscreen) {
-        process.stdout.write("\x1b[?1049h");
-        component = render(
-          <DeploymentUI stacks={assembly.stacks.map((s) => s.stackName)} />
-        );
-      }
+      const cleanup = (() => {
+        if (args.fullscreen) {
+          process.stdout.write("\x1b[?1049h");
+          const component = render(
+            <DeploymentUI stacks={assembly.stacks.map((s) => s.stackName)} />
+          );
+          return () => {
+            component.unmount();
+            process.stdout.write("\x1b[?1049l");
+          };
+        }
+
+        const spinner = createSpinner("Deploying stacks");
+        return () => spinner.succeed();
+      })();
       const results = await Stacks.deployMany(target);
-      if (component) component.unmount();
-      process.stdout.write("\x1b[?1049l");
+      cleanup();
       printDeploymentResults(results);
       if (Object.values(results).some((stack) => Stacks.isFailed(stack.status)))
         process.exit(1);

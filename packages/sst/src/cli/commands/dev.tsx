@@ -153,16 +153,27 @@ export const dev = (program: Program) =>
           const assembly = pending;
           const nextChecksum = await checksum(assembly.directory);
           pending = undefined;
-          let component: Instance | undefined = undefined;
-          if (args.fullscreen) {
-            process.stdout.write("\x1b[?1049h");
-            component = render(
-              <DeploymentUI stacks={assembly.stacks.map((s) => s.stackName)} />
-            );
-          }
+
+          const cleanup = (() => {
+            if (args.fullscreen) {
+              process.stdout.write("\x1b[?1049h");
+              const component = render(
+                <DeploymentUI
+                  stacks={assembly.stacks.map((s) => s.stackName)}
+                />
+              );
+              return () => {
+                component.unmount();
+                process.stdout.write("\x1b[?1049l");
+              };
+            }
+
+            const spinner = createSpinner("Deploying stacks");
+            return () => spinner.succeed();
+          })();
           const results = await Stacks.deployMany(assembly.stacks);
-          if (component) component.unmount();
-          process.stdout.write("\x1b[?1049l");
+          cleanup();
+
           lastDeployed = nextChecksum;
           printDeploymentResults(results);
 

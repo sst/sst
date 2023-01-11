@@ -111,7 +111,10 @@ export async function monitor(stack: string) {
 
       for (const resource of resources.StackResources || []) {
         if (
-          resource.ResourceStatusReason?.includes("Resource creation cancelled")
+          resource.ResourceStatusReason?.includes(
+            "Resource creation cancelled"
+          ) ||
+          resource.ResourceStatusReason?.includes("Resource updated cancelled")
         )
           continue;
         if (resource.ResourceStatusReason)
