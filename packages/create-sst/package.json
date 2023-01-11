@@ -1,6 +1,6 @@
 {
   "name": "create-sst",
-  "version": "2.0.0-rc.24",
+  "version": "2.0.0-rc.25",
   "homepage": "https://serverless-stack.com",
   "description": "Create Serverless Stack apps.",
   "main": "src/index.mjs",
