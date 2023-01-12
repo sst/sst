@@ -1,7 +1,4 @@
-import { green, yellow } from "colorette";
-import fs from "fs/promises";
-import path from "path";
-import { Program } from "../program.js";
+import type { Program } from "../program.js";
 
 const PACKAGE_MATCH = ["sst", "aws-cdk", "@aws-cdk", "constructs"];
 
@@ -17,8 +14,30 @@ export const update = (program: Program) =>
         describe: "Optionally specify a version to update to",
       }),
     async (args) => {
+      const { green, yellow } = await import("colorette");
+      const fs = await import("fs/promises");
+      const path = await import("path");
       const { fetch } = await import("undici");
       const { useProject } = await import("../../project.js");
+
+      async function find(dir: string): Promise<string[]> {
+        const children = await fs.readdir(dir);
+
+        const tasks = children.map(async (item) => {
+          if (item === "node_modules") return [];
+          // Ignore hidden paths
+          if (/(^|\/)\.[^\/\.]/g.test(item)) return [];
+
+          const full = path.join(dir, item);
+          if (item === "package.json") return [full];
+
+          const stat = await fs.stat(full);
+          if (stat.isDirectory()) return find(full);
+          return [];
+        });
+
+        return (await Promise.all(tasks)).flat();
+      }
 
       const project = useProject();
       const files = await find(project.paths.root);
@@ -81,22 +100,3 @@ export const update = (program: Program) =>
       );
     }
   );
-
-async function find(dir: string): Promise<string[]> {
-  const children = await fs.readdir(dir);
-
-  const tasks = children.map(async (item) => {
-    if (item === "node_modules") return [];
-    // Ignore hidden paths
-    if (/(^|\/)\.[^\/\.]/g.test(item)) return [];
-
-    const full = path.join(dir, item);
-    if (item === "package.json") return [full];
-
-    const stat = await fs.stat(full);
-    if (stat.isDirectory()) return find(full);
-    return [];
-  });
-
-  return (await Promise.all(tasks)).flat();
-}

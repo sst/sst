@@ -1,7 +1,4 @@
-import { Instance } from "ink";
 import type { Program } from "../program.js";
-import { createSpinner } from "../spinner.js";
-import { printDeploymentResults } from "../ui/deploy.js";
 
 export const remove = (program: Program) =>
   program.command(
@@ -27,6 +24,8 @@ export const remove = (program: Program) =>
       const { Stacks } = await import("../../stacks/index.js");
       const { render } = await import("ink");
       const { DeploymentUI } = await import("../ui/deploy.js");
+      const { printDeploymentResults } = await import("../ui/deploy.js");
+      const { createSpinner } = await import("../spinner.js");
 
       const assembly = await (async function () {
         if (args.from) {

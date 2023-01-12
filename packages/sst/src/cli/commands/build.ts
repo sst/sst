@@ -1,6 +1,4 @@
-import { useProject } from "../../project.js";
-import { Program } from "../program.js";
-import { createSpinner } from "../spinner.js";
+import type { Program } from "../program.js";
 
 export const build = (program: Program) =>
   program.command(
@@ -12,6 +10,8 @@ export const build = (program: Program) =>
         describe: "Output directory, defaults to .sst/dist",
       }),
     async (args) => {
+      const { useProject } = await import("../../project.js");
+      const { createSpinner } = await import("../spinner.js");
       const { Stacks } = await import("../../stacks/index.js");
       const spinner = createSpinner("Building stacks").start();
       await Stacks.synth({

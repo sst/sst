@@ -1,7 +1,4 @@
 import type { Program } from "../program.js";
-import { printDeploymentResults } from "../ui/deploy.js";
-import { Instance } from "ink/build/render.js";
-import { createSpinner, useSpinners } from "../spinner.js";
 
 export const deploy = (program: Program) =>
   program.command(
@@ -24,6 +21,8 @@ export const deploy = (program: Program) =>
         }),
     async (args) => {
       const React = await import("react");
+      const { printDeploymentResults } = await import("../ui/deploy.js");
+      const { createSpinner } = await import("../spinner.js");
       const { CloudAssembly } = await import("aws-cdk-lib/cx-api");
       const { blue, bold } = await import("colorette");
       const { useProject } = await import("../../project.js");
@@ -54,7 +53,6 @@ export const deploy = (program: Program) =>
       if (!target.length) {
         console.log(`No stacks found matching ${blue(args.filter!)}`);
         process.exit(1);
-        return;
       }
       console.log(
         `Deploying ${bold(target.length + " stacks")} for stage ${blue(

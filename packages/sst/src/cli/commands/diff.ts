@@ -1,13 +1,4 @@
-import { useProject } from "../../project.js";
-import { Stacks } from "../../stacks/index.js";
 import type { Program } from "../program.js";
-import { printStackDiff } from "aws-cdk/lib/diff.js";
-import { useAWSClient } from "../../credentials.js";
-import {
-  CloudFormationClient,
-  GetTemplateCommand,
-} from "@aws-sdk/client-cloudformation";
-import { createSpinner } from "../spinner.js";
 
 export const diff = (program: Program) =>
   program.command(
@@ -19,6 +10,15 @@ export const diff = (program: Program) =>
         describe: "Compare in dev mode",
       }),
     async (args) => {
+      const { printStackDiff } = await import("aws-cdk/lib/diff.js");
+      const { useProject } = await import("../../project.js");
+      const { Stacks } = await import("../../stacks/index.js");
+      const { useAWSClient } = await import("../../credentials.js");
+      const { CloudFormationClient, GetTemplateCommand } = await import(
+        "@aws-sdk/client-cloudformation"
+      );
+      const { createSpinner } = await import("../spinner.js");
+
       const spinner = createSpinner("Building stacks");
       const project = useProject();
       const assembly = await Stacks.synth({

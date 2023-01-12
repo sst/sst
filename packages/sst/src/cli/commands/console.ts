@@ -1,7 +1,4 @@
-import { blue } from "colorette";
-import { useRuntimeServer } from "../../runtime/server.js";
-import { useLocalServer } from "../local/server.js";
-import { Program } from "../program.js";
+import type { Program } from "../program.js";
 
 export const consoleCommand = async (program: Program) =>
   program.command(
@@ -9,6 +6,9 @@ export const consoleCommand = async (program: Program) =>
     "Start the SST Console",
     (yargs) => yargs,
     async () => {
+      const { blue } = await import("colorette");
+      const { useRuntimeServer } = await import("../../runtime/server.js");
+      const { useLocalServer } = await import("../local/server.js");
       await Promise.all([
         useRuntimeServer(),
         useLocalServer({

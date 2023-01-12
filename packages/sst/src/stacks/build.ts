@@ -1,10 +1,6 @@
 import esbuild from "esbuild";
 import fs from "fs/promises";
-import os from "os";
 import path from "path";
-import { Logger } from "../logger.js";
-import { useBus } from "../bus.js";
-import { useProject } from "../project.js";
 import { dynamicImport } from "../util/module.js";
 import { findAbove } from "../util/fs.js";
 import { VisibleError } from "../error.js";

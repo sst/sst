@@ -1,6 +1,4 @@
-import { Program } from "../../program.js";
-import { Config } from "../../../config.js";
-import { gray } from "colorette";
+import type { Program } from "../../program.js";
 
 export const list = (program: Program) =>
   program.command(
@@ -12,6 +10,8 @@ export const list = (program: Program) =>
         choices: ["table", "env"],
       }),
     async (args) => {
+      const { Config } = await import("../../../config.js");
+      const { gray } = await import("colorette");
       const secrets = await Config.secrets();
       switch (args.format || "table") {
         case "env":

@@ -1,8 +1,5 @@
-import { blue } from "colorette";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { initProject } from "../project.js";
-import { trackCli } from "./telemetry/telemetry.js";
 
 export const program = yargs(hideBin(process.argv))
   .scriptName("sst")
@@ -18,13 +15,26 @@ export const program = yargs(hideBin(process.argv))
     type: "string",
     describe: "The AWS region to use",
   })
+  .group(["stage", "profile", "region", "help"], "Global:")
   .middleware(async (argv) => {
-    await initProject(argv);
-    trackCli(argv._[0] as string);
+    if (argv._.length > 0) {
+      const { initProject } = await import("../project.js");
+      await initProject(argv);
+      const { trackCli } = await import("./telemetry/telemetry.js");
+      trackCli(argv._[0] as string);
+    }
   })
   .version(false)
   .epilogue(`Join the SST community on Discord https://sst.dev/discord`)
+  .recommendCommands()
+  .demandCommand()
   .strict()
-  .demandCommand(1);
+  .fail((_, error, yargs) => {
+    if (!error) {
+      yargs.showHelp();
+      return;
+    }
+    throw error;
+  });
 
 export type Program = typeof program;

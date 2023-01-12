@@ -8,10 +8,9 @@ import { Logger } from "./logger.js";
 import { Context } from "./context/context.js";
 import { VisibleError } from "./error.js";
 import { blue } from "colorette";
-import { dynamicImport } from "./util/module.js";
 import dotenv from "dotenv";
-import { App } from "./constructs/App.js";
-import { Stacks } from "./stacks/index.js";
+import type { App } from "./constructs/App.js";
+import { load } from "./stacks/build.js";
 
 export interface SSTConfig {
   config: (globals: GlobalOptions) => Promise<ConfigOptions> | ConfigOptions;
@@ -80,12 +79,8 @@ export async function initProject(globals: GlobalOptions) {
   const [metafile, sstConfig] = await (async function () {
     for (const ext of CONFIG_EXTENSIONS) {
       file = path.join(root, "sst" + ext);
-      try {
-        await fs.access(file);
-      } catch {
-        continue;
-      }
-      const [metafile, config] = await Stacks.load(file);
+      if (!fsSync.existsSync(file)) continue;
+      const [metafile, config] = await load(file);
       return [metafile, config as SSTConfig];
     }
 

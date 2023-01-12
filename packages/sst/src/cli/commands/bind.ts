@@ -1,4 +1,3 @@
-import { useProject } from "../../project.js";
 import type { Program } from "../program.js";
 
 export const bind = (program: Program) =>
@@ -19,8 +18,9 @@ export const bind = (program: Program) =>
         ),
     async (args) => {
       const { Config } = await import("../../config.js");
-      const { spawnSync, spawn } = await import("child_process");
+      const { spawnSync } = await import("child_process");
       const { useAWSCredentials } = await import("../../credentials.js");
+      const { useProject } = await import("../../project.js");
 
       const env = await Config.env();
       const project = useProject();

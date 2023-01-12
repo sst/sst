@@ -1,5 +1,4 @@
 import { Program } from "../../program.js";
-import { red } from "colorette";
 
 export const get = (program: Program) =>
   program.command(
@@ -17,6 +16,7 @@ export const get = (program: Program) =>
           describe: "Get the fallback value",
         }),
     async (args) => {
+      const { red } = await import("colorette");
       const { Config } = await import("../../../config.js");
       const { bold } = await import("colorette");
       try {

@@ -1,7 +1,4 @@
-import { Program } from "../../program.js";
-import { Config } from "../../../config.js";
-import { blue } from "colorette";
-import { createSpinner } from "../../spinner.js";
+import type { Program } from "../../program.js";
 
 export const set = (program: Program) =>
   program.command(
@@ -24,6 +21,9 @@ export const set = (program: Program) =>
           describe: "Set the fallback value",
         }),
     async (args) => {
+      const { Config } = await import("../../../config.js");
+      const { blue } = await import("colorette");
+      const { createSpinner } = await import("../../spinner.js");
       const setting = createSpinner(
         `Setting secret ${blue(args.name)}`
       ).start();

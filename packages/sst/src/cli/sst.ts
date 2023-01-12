@@ -3,21 +3,21 @@
 import { blue, red } from "colorette";
 
 import { program } from "./program.js";
-import { secrets } from "./commands/secrets/secrets.js";
-import { update } from "./commands/update.js";
+import { VisibleError } from "../error.js";
+import { useSpinners } from "./spinner.js";
+import dotenv from "dotenv";
+import { Logger } from "../logger.js";
+
+import { env } from "./commands/env.js";
 import { dev } from "./commands/dev.js";
 import { bind } from "./commands/bind.js";
 import { build } from "./commands/build.js";
-import { VisibleError } from "../error.js";
-import { useSpinners } from "./spinner.js";
 import { deploy } from "./commands/deploy.js";
 import { remove } from "./commands/remove.js";
-import dotenv from "dotenv";
-import { env } from "./commands/env.js";
-import { Logger } from "../logger.js";
 import { consoleCommand } from "./commands/console.js";
+import { secrets } from "./commands/secrets/secrets.js";
+import { update } from "./commands/update.js";
 import { diff } from "./commands/diff.js";
-
 dotenv.config();
 
 dev(program);
@@ -54,12 +54,4 @@ process.on("uncaughtException", (err) => {
 
 process.on("beforeExit", () => {});
 
-program
-  .fail((msg, error) => {
-    if (!error) {
-      console.log(msg);
-      return;
-    }
-    throw error;
-  })
-  .parse();
+program.parse();

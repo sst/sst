@@ -1,5 +1,4 @@
-import { Program } from "../../program.js";
-import { Config } from "../../../config.js";
+import type { Program } from "../../program.js";
 
 export const remove = (program: Program) =>
   program.command(
@@ -17,6 +16,7 @@ export const remove = (program: Program) =>
           describe: "Remove the fallback value",
         }),
     async (args) => {
+      const { Config } = await import("../../../config.js");
       await Config.removeSecret({
         key: args.name,
         fallback: args.fallback === true,

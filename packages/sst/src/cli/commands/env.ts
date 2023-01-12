@@ -1,10 +1,4 @@
-import { useProject } from "../../project.js";
-import { Program } from "../program.js";
-import { createSpinner } from "../spinner.js";
-import fs from "fs/promises";
-import path from "path";
-import { SiteEnv } from "../../site-env.js";
-import { spawnSync } from "child_process";
+import type { Program } from "../program.js";
 
 export const env = (program: Program) =>
   program.command(
@@ -26,8 +20,10 @@ export const env = (program: Program) =>
           "Start Vite with your environment variables"
         ),
     async (args) => {
-      const project = useProject();
-
+      const { createSpinner } = await import("../spinner.js");
+      const fs = await import("fs/promises");
+      const { SiteEnv } = await import("../../site-env.js");
+      const { spawnSync } = await import("child_process");
       let spinner: ReturnType<typeof createSpinner> | undefined;
       while (true) {
         const exists = await fs

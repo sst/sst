@@ -1,19 +1,5 @@
-import path from "path";
-import fs from "fs/promises";
-import crypto from "crypto";
 import type { Program } from "../program.js";
 import type { CloudAssembly } from "aws-cdk-lib/cx-api";
-import type { Metafile } from "esbuild";
-import { printDeploymentResults } from "../ui/deploy.js";
-import { useFunctions } from "../../constructs/Function.js";
-import { dim, gray, yellow } from "colorette";
-import { SiteEnv } from "../../site-env.js";
-import { Instance } from "ink/build/render.js";
-import { usePothosBuilder } from "./plugins/pothos.js";
-import { useKyselyTypeGenerator } from "./plugins/kysely.js";
-import { useRDSWarmer } from "./plugins/warmer.js";
-import { useProject } from "../../project.js";
-import { useMetadata } from "../../stacks/metadata.js";
 
 export const dev = (program: Program) =>
   program.command(
@@ -40,6 +26,18 @@ export const dev = (program: Program) =>
       const { Context } = await import("../../context/context.js");
       const { DeploymentUI } = await import("../ui/deploy.js");
       const { useLocalServer } = await import("../local/server.js");
+      const path = await import("path");
+      const fs = await import("fs/promises");
+      const crypto = await import("crypto");
+      const { printDeploymentResults } = await import("../ui/deploy.js");
+      const { useFunctions } = await import("../../constructs/Function.js");
+      const { dim, gray, yellow } = await import("colorette");
+      const { SiteEnv } = await import("../../site-env.js");
+      const { usePothosBuilder } = await import("./plugins/pothos.js");
+      const { useKyselyTypeGenerator } = await import("./plugins/kysely.js");
+      const { useRDSWarmer } = await import("./plugins/warmer.js");
+      const { useProject } = await import("../../project.js");
+      const { useMetadata } = await import("../../stacks/metadata.js");
 
       if (args._[0] === "start") {
         console.log(
