@@ -100,10 +100,11 @@ export const useNodeHandler = Context.memo(() => {
           : "",
         parsed.name + extension
       );
-      const handler = path.relative(
-        input.out,
-        target.replace(extension, parsed.ext)
-      );
+      const handler = path
+        .relative(input.out, target.replace(extension, parsed.ext))
+        .split(path.sep)
+        .join(path.posix.sep);
+
       if (exists?.rebuild) {
         const result = await exists.rebuild();
         cache[input.functionID] = result;
