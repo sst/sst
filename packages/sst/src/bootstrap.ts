@@ -32,12 +32,8 @@ const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 export const useBootstrap = Context.memo(async () => {
   Logger.debug("Initializing bootstrap context");
-  const ret = await loadBootstrapStatus();
-  if (
-    !ret.version ||
-    !ret.bucket ||
-    ret.version !== LATEST_VERSION
-  ) {
+  let status = await loadBootstrapStatus();
+  if (!status || status.version !== LATEST_VERSION) {
     const project = useProject();
     const spinner = createSpinner(
       "Deploying bootstrap stack, this only needs to happen once"
@@ -108,6 +104,7 @@ export const useBootstrap = Context.memo(async () => {
     new CfnOutput(stack, OUTPUT_VERSION, { value: LATEST_VERSION });
     new CfnOutput(stack, OUTPUT_BUCKET, { value: bucket.bucketName });
 
+    // Deploy bootstrap stack
     const asm = app.synth();
     const result = await Stacks.deploy(asm.stacks[0]);
     if (Stacks.isFailed(result.status)) {
@@ -120,20 +117,36 @@ export const useBootstrap = Context.memo(async () => {
       );
     }
     spinner.succeed();
-    return loadBootstrapStatus();
+
+    // Fetch bootstrap status
+    status = await loadBootstrapStatus();
+    if (!status) {
+      throw new VisibleError("Failed to deploy bootstrap stack");
+    }
   }
-  Logger.debug("Loaded bootstrap info: ", JSON.stringify(ret));
-  return ret;
+  Logger.debug("Loaded bootstrap info: ", JSON.stringify(status));
+  return status;
 });
 
 async function loadBootstrapStatus() {
+  // Get bootstrap CloudFormation stack
   const cf = useAWSClient(CloudFormationClient);
-  const result = await cf.send(
-    new DescribeStacksCommand({
-      StackName: STACK_NAME,
-    })
-  );
+  let result;
+  try {
+    result = await cf.send(
+      new DescribeStacksCommand({
+        StackName: STACK_NAME,
+      })
+    );
+  } catch (e: any) {
+    if (e.Code === "ValidationError"
+      && e.message === `Stack with id ${STACK_NAME} does not exist`) {
+      return null;
+    }
+    throw e;
+  }
 
+  // Parse stack outputs
   let version, bucket;
   (result.Stacks![0].Outputs || []).forEach((o) => {
     if (o.OutputKey === OUTPUT_VERSION) {
@@ -142,6 +155,9 @@ async function loadBootstrapStatus() {
       bucket = o.OutputValue;
     }
   });
+  if (!version || !bucket) {
+    return null;
+  }
 
   return { version, bucket };
 }
