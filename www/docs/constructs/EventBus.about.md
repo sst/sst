@@ -46,7 +46,7 @@ const bus = new EventBus(stack, "Bus", {
   },
 });
 
-bus.addRules(this, {
+bus.addRules(stack, {
   myRule2: {
     pattern: { source: ["myevent"] },
     targets: {
@@ -253,7 +253,7 @@ Here we are referring to the rule using the rule key, `myRule`.
 You can directly pass in a [`Queue`](Queue.md).
 
 ```js {8}
-const myQueue = new Queue(this, "MyQueue");
+const myQueue = new Queue(stack, "MyQueue");
 
 new EventBus(stack, "Bus", {
   rules: {
@@ -301,7 +301,7 @@ import * as events from "aws-cdk-lib/aws-events";
 new EventBus(stack, "Bus", {
   cdk: {
     eventBus: events.EventBus.fromEventBusName(
-      this, "ImportedBus", "default"
+      stack, "ImportedBus", "default"
     ),
   },
   rules: {
@@ -351,7 +351,7 @@ import * as events from "aws-cdk-lib/aws-events";
 new EventBus(stack, "Bus", {
   cdk: {
     eventBus: events.EventBus.fromEventBusName(
-      this, "ImportedBus", eventBusArn
+      stack, "ImportedBus", eventBusArn
     ),
   },
   rules: {

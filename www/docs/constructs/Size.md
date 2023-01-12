@@ -11,7 +11,7 @@ _Type_ : <span class="mono">${number} MB</span> | <span class="mono">${number} G
 ### Function memory size
 
 ```js {3}
-new Function(this, "MyFunction", {
+new Function(stack, "MyFunction", {
   handler: "src/lambda.main",
   memorySize: "512 MB",
 });
@@ -20,7 +20,7 @@ new Function(this, "MyFunction", {
 ### Function disk size
 
 ```js {3}
-new Function(this, "MyFunction", {
+new Function(stack, "MyFunction", {
   handler: "src/lambda.main",
   diskSize: "5 GB",
 });

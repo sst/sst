@@ -449,7 +449,7 @@ The `.env` environment variables are only available in your infrastructure code.
 You can also set them as Lambda environment variables by including them in the [Function](constructs/Function.md) `environment` prop:
 
 ```js
-new Function(this, "MyFunction", {
+new Function(stack, "MyFunction", {
   handler: "src/api.main",
   environment: {
     MY_ENV_VAR: process.env.MY_ENV_VAR,

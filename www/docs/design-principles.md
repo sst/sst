@@ -45,7 +45,7 @@ Let's look at two areas where we apply this idea.
 The [`Api`](constructs/Api.md) construct for example, in its simplest form only needs the routes and the function handlers as strings.
 
 ```js
-new Api(this, "Api", {
+new Api(stack, "Api", {
   routes: {
     "GET  /notes": "src/list.main",
     "POST /notes": "src/create.main",
@@ -56,7 +56,7 @@ new Api(this, "Api", {
 This format makes it easy to understand what is being defined. But if you wanted to customize the function properties, you could:
 
 ```js {2-7}
-new Api(this, "Api", {
+new Api(stack, "Api", {
   defaults: {
     function: {
       timeout: 20,
@@ -73,7 +73,7 @@ new Api(this, "Api", {
 We could go even further and specifically customize one of the routes.
 
 ```js {9-14}
-new Api(this, "Api", {
+new Api(stack, "Api", {
   defaults: {
     function: {
       timeout: 20,
@@ -118,7 +118,7 @@ A similar idea can be seen in the pattern SST uses for attaching permissions to 
 Let's look at the [`Cron`](constructs/Cron.md) construct as an example.
 
 ```js
-const cron = new Cron(this, "Cron", {
+const cron = new Cron(stack, "Cron", {
   schedule: "rate(1 minute)",
   job: "src/lambda.main",
 });
@@ -139,7 +139,7 @@ cron.attachPermissions(["s3"]);
 Or to a specific construct that we created.
 
 ```js {3}
-const table = new Table(this, "Table");
+const table = new Table(stack, "Table");
 
 cron.attachPermissions(["s3", table]);
 ```
@@ -147,8 +147,8 @@ cron.attachPermissions(["s3", table]);
 Or grant a specific permission for a construct.
 
 ```js {4-7}
-const topic = new sns.Topic(this, "Topic");
-const table = new Table(this, "Table");
+const topic = new sns.Topic(stack, "Topic");
+const table = new Table(stack, "Table");
 
 cron.attachPermissions([
   [topic, "grantPublish"],

@@ -29,7 +29,7 @@ The `params` will be passed in as the `event` object to the function.
 ```js {12-15}
 import { Table, Script } from "@serverless-stack/resources";
 
-const table = new Table(this, "Table", {
+const table = new Table(stack, "Table", {
   fields: {
     userId: "string",
   },

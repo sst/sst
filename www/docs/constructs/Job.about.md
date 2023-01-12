@@ -34,7 +34,7 @@ import { Vpc } from "aws-cdk-lib/aws-ec2";
 new Job(stack, "MyJob", {
   handler: "src/job.main",
   cdk: {
-    vpc: Vpc.fromLookup(this, "VPC", {
+    vpc: Vpc.fromLookup(stack, "VPC", {
       vpcId: "vpc-xxxxxxxxxx",
     })
   }

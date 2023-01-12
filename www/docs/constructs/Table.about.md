@@ -105,7 +105,7 @@ const table = new Table(stack, "Notes", {
   stream: true,
 });
 
-table.addConsumers(this, {
+table.addConsumers(stack, {
   consumer1: "src/consumer1.main",
   consumer2: "src/consumer2.main",
 });
@@ -297,7 +297,7 @@ new Table(stack, "Notes", {
 ```js {10}
 import { KinesisStream } from "@serverless-stack/resources";
 
-const stream = new KinesisStream(this, "Stream");
+const stream = new KinesisStream(stack, "Stream");
 
 new Table(stack, "Notes", {
   fields: {
@@ -344,7 +344,7 @@ import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 
 new Table(stack, "Table", {
   cdk: {
-    table: dynamodb.Table.fromTableArn(this, "ImportedTable", tableArn),
+    table: dynamodb.Table.fromTableArn(stack, "ImportedTable", tableArn),
   },
 });
 ```

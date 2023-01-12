@@ -57,7 +57,7 @@ stack.setDefaultFunctionProps({
 ```js
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
 
-const apiKey = StringParameter.valueFromLookup(this, "my_api_key");
+const apiKey = StringParameter.valueFromLookup(stack, "my_api_key");
 
 new Function(stack, "MyFunction", {
   handler: "src/lambda.main",
@@ -421,7 +421,7 @@ new Function(stack, "MyFunction", {
 #### Configuring a Dead Letter Queue
 
 ```js {5}
-const queue = new Queue(this, "MyDLQ");
+const queue = new Queue(stack, "MyDLQ");
 
 new Function(stack, "MyFunction", {
   handler: "src/lambda.main",
@@ -450,7 +450,7 @@ Note that Provisioned Concurrency needs to be configured on a specific Function 
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 
 // Create a VPC
-const vpc = new ec2.Vpc(this, 'MyVPC');
+const vpc = new ec2.Vpc(stack, 'MyVPC');
 
 // Alternatively use an existing VPC
 const vpc = ec2.Vpc.fromLookup(stack, 'VPC', { ... });

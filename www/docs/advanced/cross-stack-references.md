@@ -69,7 +69,7 @@ By doing this, it will add a dependency between the stacks. And the stack export
 Now suppose in the example above, `StackB` no longer needs the table name as a Lambda environment variable. So we remove the `environment` option and change the `Api` to:
 
 ```ts
-new Api(this, "Api", {
+new Api(stack, "Api", {
   routes: {
     "GET /": "src/lambda.main",
   },

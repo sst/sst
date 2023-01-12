@@ -33,7 +33,7 @@ const topic = new Topic(stack, "Topic", {
   },
 });
 
-topic.addSubscribers(this, {
+topic.addSubscribers(stack, {
   subscriber3: "src/subscriber3.main",
 });
 ```
@@ -168,7 +168,7 @@ new Topic(stack, "Topic", {
 You can directly pass in an instance of the Queue construct.
 
 ```js {5}
-const myQueue = new Queue(this, "MyQueue");
+const myQueue = new Queue(stack, "MyQueue");
 
 new Topic(stack, "Topic", {
   subscribers: {
@@ -184,7 +184,7 @@ Configure the internally created CDK `Subscription`.
 ```js {10-16}
 import { SubscriptionFilter } from "aws-cdk-lib/aws-sns";
 
-const myQueue = new Queue(this, "MyQueue");
+const myQueue = new Queue(stack, "MyQueue");
 
 new Topic(stack, "Topic", {
   subscribers: {
@@ -251,7 +251,7 @@ new Topic(stack, "Topic", {
     subscriber2: "src/subscriber2.main",
   },
   cdk: {
-    topic: sns.Topic.fromTopicArn(this, "MySnsTopic", topicArn),
+    topic: sns.Topic.fromTopicArn(stack, "MySnsTopic", topicArn),
   },
 });
 ```

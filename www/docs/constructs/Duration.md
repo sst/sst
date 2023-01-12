@@ -11,7 +11,7 @@ _Type_ : <span class='mono'><span class="mono">number</span> | <span class="mono
 ### Function timeout
 
 ```js {3}
-new Function(this, "MyFunction", {
+new Function(stack, "MyFunction", {
   handler: "src/lambda.main",
   timeout: "20 seconds",
 });
@@ -20,7 +20,7 @@ new Function(this, "MyFunction", {
 ### Api CORS max age
 
 ```js {5}
-new Api(this, "MyApi", {
+new Api(stack, "MyApi", {
   cors: {
     allowMethods: ["GET"],
     allowOrigins: ["https://domain.com"],

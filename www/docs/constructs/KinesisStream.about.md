@@ -30,7 +30,7 @@ const stream = new KinesisStream(stack, "Stream", {
   }
 });
 
-stream.addConsumers(this, {
+stream.addConsumers(stack, {
   consumer3: "src/consumer3.main",
 });
 ```
@@ -181,7 +181,7 @@ import { Stream } from "aws-cdk-lib/aws-kinesis";
 
 new KinesisStream(stack, "Stream", {
   cdk: {
-    stream: Stream.fromStreamArn(this, "ImportedStream", streamArn),
+    stream: Stream.fromStreamArn(stack, "ImportedStream", streamArn),
   },
 });
 ```

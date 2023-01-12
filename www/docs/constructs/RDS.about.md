@@ -183,7 +183,7 @@ new RDS(stack, "Database", {
   defaultDatabaseName: "acme",
   cdk: {
     cluster: {  
-      vpc: ec2.Vpc.fromLookup(this, "VPC", {
+      vpc: ec2.Vpc.fromLookup(stack, "VPC", {
         vpcId: "vpc-xxxxxxxxxx",
       }),
       vpcSubnets: {

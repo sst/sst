@@ -192,7 +192,7 @@ import { Topic } from "aws-cdk-lib/aws-sns";
 
 // Lookup the existing SNS topic
 const snsTopic = Topic.fromTopicArn(
-  this,
+  stack,
   "ImportTopic",
   "arn:aws:sns:us-east-2:444455556666:MyTopic"
 );
@@ -300,7 +300,7 @@ Now in SST, you can import the table and create an SST function to subscribe to 
 ```js
 // Import table
 const table = dynamodb.fromTableName(
-  this,
+  stack,
   "MyTable",
   `${this.node.root.stage}-MyTable`
 );

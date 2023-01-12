@@ -46,7 +46,7 @@ Create an _empty_ bucket and lazily add the notifications.
 ```js {3}
 const bucket = new Bucket(stack, "Bucket");
 
-bucket.addNotifications(this, {
+bucket.addNotifications(stack, {
   myNotification: "src/notification.main",
 });
 ```
@@ -185,7 +185,7 @@ You can directly pass in an instance of the [Queue](Queue.md) construct.
 ```js {6}
 import { Queue } from "@serverless-stack/resources";
 
-const myQueue = new Queue(this, "MyQueue");
+const myQueue = new Queue(stack, "MyQueue");
 
 new Bucket(stack, "Bucket", {
   notifications: {
@@ -197,7 +197,7 @@ new Bucket(stack, "Bucket", {
 #### Configuring the notification
 
 ```js {5-9}
-const myQueue = new Queue(this, "MyQueue");
+const myQueue = new Queue(stack, "MyQueue");
 
 new Bucket(stack, "Bucket", {
   notifications: {
@@ -219,7 +219,7 @@ You can directly pass in an instance of the [Topic](Topic.md) construct.
 ```js {6}
 import { Topic } from "@serverless-stack/resources";
 
-const myTopic = new Topic(this, "MyTopic");
+const myTopic = new Topic(stack, "MyTopic");
 
 new Bucket(stack, "Bucket", {
   notifications: {
@@ -231,7 +231,7 @@ new Bucket(stack, "Bucket", {
 #### Configuring the notification
 
 ```js {5-9}
-const myTopic = new Topic(this, "MyTopic");
+const myTopic = new Topic(stack, "MyTopic");
 
 new Bucket(stack, "Bucket", {
   notifications: {
@@ -286,7 +286,7 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 
 new Bucket(stack, "Bucket", {
   cdk: {
-    bucket: s3.Bucket.fromBucketArn(this, "IBucket", bucketArn),
+    bucket: s3.Bucket.fromBucketArn(stack, "IBucket", bucketArn),
   },
 });
 ```

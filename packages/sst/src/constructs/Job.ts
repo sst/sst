@@ -155,7 +155,7 @@ export interface JobCDKProps {
    * new Job(stack, "MyJob", {
    *   handler: "src/job.handler",
    *   cdk: {
-   *     vpc: Vpc.fromLookup(this, "VPC", {
+   *     vpc: Vpc.fromLookup(stack, "VPC", {
    *       vpcId: "vpc-xxxxxxxxxx",
    *     }),
    *   }

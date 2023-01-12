@@ -40,7 +40,7 @@ function Stack({ stack }: StackContext) {
 SST's built-in constructs are high level constructs, that are made up of multiple CDK constructs. As an example, take the [`Api`](../constructs/Api.md) construct configured with a custom domain.
 
 ```js
-new Api(this, "Api", {
+new Api(stack, "Api", {
   customDomain: "api.domain.com",
   routes: {
     "GET /notes": "src/list.main",
@@ -71,5 +71,5 @@ Here is an example of creating an S3 bucket using the [`CfnBucket`](https://docs
 ```js
 import { CfnBucket } from "@aws-cdk/aws-s3";
 
-const cfnBucket = new CfnBucket(this, "Bucket");
+const cfnBucket = new CfnBucket(stack, "Bucket");
 ```

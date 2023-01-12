@@ -10,9 +10,9 @@ You might have some existing resources in your AWS account that you'd like to us
 ```js {3,6}
 import * as ec2 from "@aws-cdk/aws-ec2";
 
-const vpc = ec2.Vpc.fromLookup(this, 'ExistingVPC', { isDefault: true });
+const vpc = ec2.Vpc.fromLookup(stack, 'ExistingVPC', { isDefault: true });
 
-new Api(this, "Api", {
+new Api(stack, "Api", {
   defaultFunctionProps: { vpc },
   routes: {
     "GET /": "src/lambda.main",
@@ -25,8 +25,8 @@ new Api(this, "Api", {
 ```js {4-6}
 import { HttpApi } from "@aws-cdk/aws-apigatewayv2";
 
-new Api(this, "Api", {
-  httpApi: HttpApi.fromHttpApiAttributes(this, "ExistingApi", {
+new Api(stack, "Api", {
+  httpApi: HttpApi.fromHttpApiAttributes(stack, "ExistingApi", {
     httpApiId,
   }),
   routes: {
@@ -40,8 +40,8 @@ new Api(this, "Api", {
 ```js {4}
 import * as sns from "@aws-cdk/aws-sns";
 
-new Topic(this, "Topic", {
-  snsTopic: sns.Topic.fromTopicArn(this, "ExistingTopic", topicArn),
+new Topic(stack, "Topic", {
+  snsTopic: sns.Topic.fromTopicArn(stack, "ExistingTopic", topicArn),
   subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
 });
 ```
