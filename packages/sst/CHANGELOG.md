@@ -1,5 +1,17 @@
 # @serverless-stack/cli2
 
+## 2.0.0-rc.27
+
+### Patch Changes
+
+- [`0944cd2fe`](https://github.com/serverless-stack/sst/commit/0944cd2fe1b7818d6c58b6a240120417e78d2ef4) Thanks [@thdxr](https://github.com/thdxr)! - Minor bug fixes
+
+## 2.0.0-rc.26
+
+### Patch Changes
+
+- [`16ea533bd`](https://github.com/serverless-stack/sst/commit/16ea533bd322bb55bad8a3ec088a4a680b69316b) Thanks [@fwang](https://github.com/fwang)! - Subscribe to CloudFormation events and store metadata asyncly
+
 ## 2.0.0-rc.25
 
 ### Patch Changes

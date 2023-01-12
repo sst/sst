@@ -1,4 +1,6 @@
+import { Instance } from "ink";
 import type { Program } from "../program.js";
+import { createSpinner } from "../spinner.js";
 import { printDeploymentResults } from "../ui/deploy.js";
 
 export const remove = (program: Program) =>
@@ -8,6 +10,11 @@ export const remove = (program: Program) =>
     (yargs) =>
       yargs
         .option("from", { type: "string" })
+        .option("fullscreen", {
+          type: "boolean",
+          describe: "Disable full screen UI",
+          default: true,
+        })
         .positional("filter", { type: "string" }),
     async (args) => {
       const React = await import("react");
@@ -46,14 +53,26 @@ export const remove = (program: Program) =>
           project.config.stage
         )}...`
       );
-      process.stdout.write("\x1b[?1049h");
-      const component = render(
-        <DeploymentUI stacks={target.map((s) => s.stackName)} />
-      );
+      const cleanup = (() => {
+        if (args.fullscreen) {
+          process.stdout.write("\x1b[?1049h");
+          const component = render(
+            <DeploymentUI stacks={assembly.stacks.map((s) => s.stackName)} />
+          );
+          return () => {
+            component.unmount();
+            process.stdout.write("\x1b[?1049l");
+          };
+        }
+
+        const spinner = createSpinner("Removing stacks");
+        return () => spinner.succeed();
+      })();
       const results = await Stacks.removeMany(target);
-      component.unmount();
-      process.stdout.write("\x1b[?1049l");
+      cleanup();
       printDeploymentResults(results);
+      if (Object.values(results).some((stack) => Stacks.isFailed(stack.status)))
+        process.exit(1);
       process.exit(0);
     }
   );

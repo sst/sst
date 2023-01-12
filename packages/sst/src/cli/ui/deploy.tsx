@@ -98,8 +98,9 @@ export const DeploymentUI = (props: Props) => {
   return (
     <FullScreen>
       <Text>
-        Deploying <Text color="bold">{props.stacks.length}</Text> stacks for
-        stage <Text color="blue">{useProject().config.stage}</Text>
+        Deploying <Text color="bold">{props.stacks.length}</Text> stack
+        {props.stacks.length > 1 && "s"} for stage{" "}
+        <Text color="blue">{useProject().config.stage}</Text>
       </Text>
       {Object.entries(stacks).map(([stackID, status]) => {
         return (
@@ -143,9 +144,9 @@ export function printDeploymentResults(
   results: Awaited<ReturnType<typeof Stacks.deployMany>>
 ) {
   console.log();
-  console.log(`----------------------------`);
-  console.log(`| Stack deployment results |`);
-  console.log(`----------------------------`);
+  console.log(`-----------`);
+  console.log(`| Summary |`);
+  console.log(`-----------`);
   for (const [stack, result] of Object.entries(results)) {
     const icon = (() => {
       if (Stacks.isSuccess(result.status)) return green("✔");
