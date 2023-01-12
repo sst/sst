@@ -6,7 +6,7 @@ import { printDeploymentResults } from "../ui/deploy.js";
 export const remove = (program: Program) =>
   program.command(
     "remove [filter]",
-    "Remove all stacks for this app",
+    "Remove your app from AWS",
     (yargs) =>
       yargs
         .option("from", { type: "string" })
@@ -15,7 +15,10 @@ export const remove = (program: Program) =>
           describe: "Disable full screen UI",
           default: true,
         })
-        .positional("filter", { type: "string" }),
+        .positional("filter", {
+          type: "string",
+          describe: "Optionally filter stacks to remove",
+        }),
     async (args) => {
       const React = await import("react");
       const { CloudAssembly } = await import("aws-cdk-lib/cx-api");

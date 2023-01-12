@@ -6,7 +6,7 @@ import { Program } from "../program.js";
 export const consoleCommand = async (program: Program) =>
   program.command(
     "console",
-    "Start the sst console",
+    "Start the SST Console",
     (yargs) => yargs,
     async () => {
       await Promise.all([

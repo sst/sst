@@ -5,13 +5,18 @@ import { createSpinner } from "../spinner.js";
 export const build = (program: Program) =>
   program.command(
     "build",
-    "Build stacks code",
-    (yargs) => yargs.option("from", { type: "string" }),
-    async () => {
+    "Build your app",
+    (yargs) =>
+      yargs.option("to", {
+        type: "string",
+        describe: "Output directory, defaults to .sst/dist",
+      }),
+    async (args) => {
       const { Stacks } = await import("../../stacks/index.js");
       const spinner = createSpinner("Building stacks").start();
       await Stacks.synth({
         fn: useProject().stacks,
+        buildDir: args.to,
         mode: "deploy",
       });
       spinner.succeed();

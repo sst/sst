@@ -1,3 +1,4 @@
+import { blue } from "colorette";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { initProject } from "../project.js";
@@ -21,6 +22,8 @@ export const program = yargs(hideBin(process.argv))
     await initProject(argv);
     trackCli(argv._[0] as string);
   })
+  .version(false)
+  .epilogue(`Join the SST community on Discord https://sst.dev/discord`)
   .strict()
   .demandCommand(1);
 

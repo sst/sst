@@ -5,11 +5,15 @@ import { gray } from "colorette";
 export const list = (program: Program) =>
   program.command(
     "list [format]",
-    "Fetch and decrypt all secrets",
-    yargs => yargs.positional("format", { type: "string", default: "table" }),
-    async args => {
+    "Fetch all the secrets",
+    (yargs) =>
+      yargs.positional("format", {
+        type: "string",
+        choices: ["table", "env"],
+      }),
+    async (args) => {
       const secrets = await Config.secrets();
-      switch (args.format) {
+      switch (args.format || "table") {
         case "env":
           for (const [key, value] of Object.entries(secrets)) {
             console.log(`${key}=${value.value || value.fallback}`);
@@ -19,11 +23,11 @@ export const list = (program: Program) =>
           const keys = Object.keys(secrets);
           const keyLen = Math.max(
             "Secrets".length,
-            ...keys.map(key => key.length)
+            ...keys.map((key) => key.length)
           );
           const valueLen = Math.max(
             "Values".length,
-            ...keys.map(key =>
+            ...keys.map((key) =>
               secrets[key].value
                 ? secrets[key].value!.length
                 : `${secrets[key].fallback} (fallback)`.length
@@ -45,7 +49,7 @@ export const list = (program: Program) =>
               "".padEnd(valueLen + 2, "─") +
               "┤"
           );
-          keys.sort().forEach(key => {
+          keys.sort().forEach((key) => {
             const value = secrets[key].value
               ? secrets[key].value!
               : `${secrets[key].fallback} ${gray("(fallback)")}`;

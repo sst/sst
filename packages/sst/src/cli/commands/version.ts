@@ -9,22 +9,13 @@ import { spawnSync } from "child_process";
 export const env = (program: Program) =>
   program.command(
     "env <command>",
-    "Load environment variables and start your frontend",
+    "description",
     (yargs) =>
-      yargs
-        .positional("command", {
-          type: "string",
-          describe: "The command to start your frontend",
-          demandOption: true,
-        })
-        .example(
-          `sst env "next dev"`,
-          "Start Next.js with your environment variables"
-        )
-        .example(
-          `sst env "vite dev"`,
-          "Start Vite with your environment variables"
-        ),
+      yargs.positional("command", {
+        type: "string",
+        describe: "Command to run with environment variabels loaded",
+        demandOption: true,
+      }),
     async (args) => {
       const project = useProject();
 

@@ -9,12 +9,12 @@ const FIELDS = ["dependencies", "devDependencies"];
 
 export const update = (program: Program) =>
   program.command(
-    "update [ver]",
-    "Update SST and CDK packages to another version",
+    "update [version]",
+    "Update your SST and CDK packages",
     (yargs) =>
-      yargs.positional("ver", {
+      yargs.positional("version", {
         type: "string",
-        describe: "Optional SST version to update to",
+        describe: "Optionally specify a version to update to",
       }),
     async (args) => {
       const { fetch } = await import("undici");
@@ -23,7 +23,7 @@ export const update = (program: Program) =>
       const project = useProject();
       const files = await find(project.paths.root);
       const metadata: any = await fetch(
-        `https://registry.npmjs.org/sst/${args.ver || "latest"}`
+        `https://registry.npmjs.org/sst/${args.version || "latest"}`
       ).then((resp) => resp.json());
 
       const results = new Map<string, Set<[string, string]>>();

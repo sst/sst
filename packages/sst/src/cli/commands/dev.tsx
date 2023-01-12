@@ -17,8 +17,8 @@ import { useMetadata } from "../../stacks/metadata.js";
 
 export const dev = (program: Program) =>
   program.command(
-    ["start", "dev"],
-    "Work on your SST app locally",
+    ["dev", "start"],
+    "Work on your app locally",
     (yargs) =>
       yargs.option("fullscreen", {
         type: "boolean",

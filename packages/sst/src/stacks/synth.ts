@@ -35,7 +35,7 @@ export async function synth(opts: SynthOptions) {
     useBootstrap(),
   ]);
   opts = {
-    buildDir: path.join(project.paths.out, "cdk.out"),
+    buildDir: path.join(project.paths.out, "dist"),
     ...opts,
   };
 
@@ -63,7 +63,7 @@ export async function synth(opts: SynthOptions) {
         bootstrap,
       },
       {
-        outdir: opts.buildDir || path.join(project.paths.out, "cdk.out"),
+        outdir: opts.buildDir,
         context: cfg.context.all,
       }
     );

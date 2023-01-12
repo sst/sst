@@ -20,14 +20,14 @@ import { diff } from "./commands/diff.js";
 
 dotenv.config();
 
-secrets(program);
-update(program);
 dev(program);
-bind(program);
-build(program);
 deploy(program);
-remove(program);
+build(program);
+bind(program);
 env(program);
+secrets(program);
+remove(program);
+update(program);
 consoleCommand(program);
 diff(program);
 
@@ -45,9 +45,9 @@ process.on("uncaughtException", (err) => {
   }
   console.log();
   console.log(
-    `Need help with this error? Join our discord ${blue(
-      `https://discord.gg/sst`
-    )} and talk to the team`
+    `Need help with this error? Join the SST community on Discord ${blue(
+      `https://sst.dev/discord`
+    )}`
   );
   process.exit(1);
 });

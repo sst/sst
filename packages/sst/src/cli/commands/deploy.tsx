@@ -6,16 +6,22 @@ import { createSpinner, useSpinners } from "../spinner.js";
 export const deploy = (program: Program) =>
   program.command(
     "deploy [filter]",
-    "Work on your SST app locally",
+    "Deploy your app to AWS",
     (yargs) =>
       yargs
-        .option("from", { type: "string" })
+        .option("from", {
+          type: "string",
+          describe: "Deploy using previously built output",
+        })
         .option("fullscreen", {
           type: "boolean",
           describe: "Disable full screen UI",
           default: true,
         })
-        .positional("filter", { type: "string" }),
+        .positional("filter", {
+          type: "string",
+          describe: "Optionally filter stacks to deploy",
+        }),
     async (args) => {
       const React = await import("react");
       const { CloudAssembly } = await import("aws-cdk-lib/cx-api");

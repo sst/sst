@@ -5,12 +5,12 @@ import { remove } from "./remove.js";
 import { set } from "./set.js";
 
 export function secrets(program: Program) {
-  program.command("secrets", "Manage secrets", (yargs) => {
+  program.command("secrets", "Manage the secrets in your app", (yargs) => {
     yargs.demandCommand(1);
-    remove(yargs);
     get(yargs);
-    list(yargs);
     set(yargs);
+    list(yargs);
+    remove(yargs);
 
     return yargs;
   });

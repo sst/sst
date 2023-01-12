@@ -4,13 +4,19 @@ import type { Program } from "../program.js";
 export const bind = (program: Program) =>
   program.command(
     "bind <command>",
-    "Binds blah",
+    "Bind your app's resources to a command",
     (yargs) =>
-      yargs.positional("command", {
-        type: "string",
-        describe: "Command to bind to",
-        demandOption: true,
-      }),
+      yargs
+        .positional("command", {
+          type: "string",
+          describe: "The command to bind to",
+          demandOption: true,
+        })
+        .example(`sst bind "vitest run"`, "Bind your resources to your tests")
+        .example(
+          `sst bind "tsx scripts/myscript.ts"`,
+          "Bind your resources to a script"
+        ),
     async (args) => {
       const { Config } = await import("../../config.js");
       const { spawnSync, spawn } = await import("child_process");

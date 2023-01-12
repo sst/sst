@@ -12,19 +12,18 @@ import { createSpinner } from "../spinner.js";
 export const diff = (program: Program) =>
   program.command(
     "diff",
-    "",
+    "Compare your app with what is deployed on AWS",
     (yargs) =>
-      yargs.option("mode", {
-        type: "string",
-        describe: "deploy or dev",
-        default: "deploy",
+      yargs.option("dev", {
+        type: "boolean",
+        describe: "Compare in dev mode",
       }),
     async (args) => {
       const spinner = createSpinner("Building stacks");
       const project = useProject();
       const assembly = await Stacks.synth({
         fn: project.stacks,
-        mode: args.mode as any,
+        mode: args.dev ? "dev" : "deploy",
       });
       spinner.succeed();
       const cfn = useAWSClient(CloudFormationClient);
