@@ -6,6 +6,7 @@ import RDSDataService from "aws-sdk/clients/rdsdataservice.js";
 import * as fs from "fs/promises";
 import {
   ExportStatementNode,
+  MysqlDialect,
   PostgresDialect,
   Serializer,
   Transformer
@@ -48,8 +49,9 @@ export function createKyselyTypeGenerator(opts: Opts) {
       })
     });
     const tables = await k.introspection.getTables();
+    const Dialect = db.engine.includes("postgres") ? new PostgresDialect() : new MysqlDialect()
     const transformer = new Transformer(
-      new PostgresDialect(),
+      Dialect,
       // @ts-expect-error Issue with metadata turning everything into strings
       db.types.camelCase === "true"
     );
