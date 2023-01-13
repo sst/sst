@@ -27,12 +27,12 @@ export const bind = (program: Program) =>
       const credentials = await useAWSCredentials();
       const result = spawnSync(args.command, {
         env: {
+          ...process.env,
           ...env,
           AWS_ACCESS_KEY_ID: credentials.accessKeyId,
           AWS_SECRET_ACCESS_KEY: credentials.secretAccessKey,
           AWS_SESSION_TOKEN: credentials.sessionToken,
           AWS_REGION: project.config.region,
-          PATH: process.env.PATH,
         },
         stdio: "inherit",
         shell: process.env.SHELL || true,
