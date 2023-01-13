@@ -9,6 +9,7 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as codebuild from "aws-cdk-lib/aws-codebuild";
 
 import { App } from "./App.js";
+import { Stack } from "./Stack.js";
 import { Secret, Parameter } from "./Config.js";
 import { SSTConstruct } from "./Construct.js";
 import { Function } from "./Function.js";
@@ -432,7 +433,7 @@ export class Job extends Construct implements SSTConstruct {
         actions: ["s3:*"],
         effect: iam.Effect.ALLOW,
         resources: [
-          `arn:aws:s3:::${codeConfig.s3Location?.bucketName}/${codeConfig.s3Location?.objectKey}`,
+          `arn:${Stack.of(this).partition}:s3:::${codeConfig.s3Location?.bucketName}/${codeConfig.s3Location?.objectKey}`,
         ],
       }),
     ]);

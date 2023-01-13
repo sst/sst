@@ -245,10 +245,10 @@ export class Stack extends cdk.Stack {
     // Add permissions to migrate SSM paths for secrets
     this.customResourceHandler.addToRolePolicy(
       new iam.PolicyStatement({
-        actions: ["ssm:GetParametersByPath", "ssm:PutParameter"],
+        actions: ["ssm:GetParametersByPath", "ssm:PutParameter", "sns:Publish"],
         resources: [
-          `arn:aws:ssm:${app.region}:${app.account}:parameter/sst/${app.name}/${app.stage}/*`,
-          `arn:aws:ssm:${app.region}:${app.account}:parameter/sst/${app.name}/.fallback/*`,
+          `arn:${this.partition}1:ssm:${app.region}:${app.account}:parameter/sst/${app.name}/${app.stage}/*`,
+          `arn:${this.partition}2:ssm:${app.region}:${app.account}:parameter/sst/${app.name}/.fallback/*`,
         ],
       })
     );

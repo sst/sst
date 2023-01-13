@@ -155,7 +155,7 @@ ${exports}
         iam.ManagedPolicy.fromManagedPolicyArn(
           this,
           "EdgeLambdaPolicy",
-          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+          `arn:${Stack.of(this).partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole`
         ),
       ],
     });
@@ -255,7 +255,7 @@ ${exports}
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
         actions: ["s3:*"],
-        resources: [`arn:aws:s3:::${asset.s3BucketName}/${asset.s3ObjectKey}`],
+        resources: [`arn:${stack.partition}:s3:::${asset.s3BucketName}/${asset.s3ObjectKey}`],
       })
     );
 

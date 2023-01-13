@@ -139,7 +139,7 @@ export class Auth extends Construct implements SSTConstruct {
       },
       permissions: {
         "ssm:GetParameters": [
-          `arn:aws:ssm:${app.region}:${app.account}:parameter${getParameterPath(
+          `arn:${Stack.of(this).partition}:ssm:${app.region}:${app.account}:parameter${getParameterPath(
             this,
             PUBLIC_KEY_PROP
           )}`
@@ -208,8 +208,7 @@ export class Auth extends Construct implements SSTConstruct {
           actions: ["ssm:GetParameters"],
           effect: Effect.ALLOW,
           resources: [
-            `arn:aws:ssm:${app.region}:${
-              app.account
+            `arn:${Stack.of(this).partition}:ssm:${app.region}:${app.account
             }:parameter${getParameterPath(this, "*")}`
           ]
         })

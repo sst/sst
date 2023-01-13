@@ -479,7 +479,7 @@ export class StaticSite extends Construct implements SSTConstruct {
       },
       permissions: {
         "ssm:GetParameters": [
-          `arn:aws:ssm:${app.region}:${app.account}:parameter${getParameterPath(
+          `arn:${Stack.of(this).partition}:ssm:${app.region}:${app.account}:parameter${getParameterPath(
             this,
             "url"
           )}`,

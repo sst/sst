@@ -1,5 +1,6 @@
 import { Construct } from "constructs";
 import { App } from "./App.js";
+import { Stack } from "./Stack.js";
 import { SSTConstruct } from "./Construct.js";
 import { ENVIRONMENT_PLACEHOLDER, getParameterPath, getParameterFallbackPath, FunctionBindingProps } from "./util/functionBinding.js";
 
@@ -38,6 +39,7 @@ export class Secret extends Construct implements SSTConstruct {
   /** @internal */
   public getFunctionBinding(): FunctionBindingProps {
     const app = this.node.root as App;
+    const partition = Stack.of(this).partition;
     return {
       clientPackage: "config",
       variables: {
@@ -49,8 +51,8 @@ export class Secret extends Construct implements SSTConstruct {
       },
       permissions: {
         "ssm:GetParameters": [
-          `arn:aws:ssm:${app.region}:${app.account}:parameter${getParameterPath(this, "value")}`,
-          `arn:aws:ssm:${app.region}:${app.account}:parameter${getParameterFallbackPath(this, "value")}`
+          `arn:${partition}:ssm:${app.region}:${app.account}:parameter${getParameterPath(this, "value")}`,
+          `arn:${partition}:ssm:${app.region}:${app.account}:parameter${getParameterFallbackPath(this, "value")}`
         ],
       },
     };

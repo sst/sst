@@ -136,26 +136,26 @@ function permissionsToStatementsAndGrants(
     ////////////////////////////////////
     else if (permission instanceof Api) {
       const httpApi = permission.cdk.httpApi;
-      const { account, region } = Stack.of(httpApi);
+      const { account, region, partition } = Stack.of(httpApi);
       statements.push(
         buildPolicyStatement("execute-api:Invoke", [
-          `arn:aws:execute-api:${region}:${account}:${httpApi.httpApiId}/*`
+          `arn:${partition}:execute-api:${region}:${account}:${httpApi.httpApiId}/*`
         ])
       );
     } else if (permission instanceof ApiGatewayV1Api) {
       const restApi = permission.cdk.restApi;
-      const { account, region } = Stack.of(restApi);
+      const { account, region, partition } = Stack.of(restApi);
       statements.push(
         buildPolicyStatement("execute-api:Invoke", [
-          `arn:aws:execute-api:${region}:${account}:${restApi.restApiId}/*`
+          `arn:${partition}:execute-api:${region}:${account}:${restApi.restApiId}/*`
         ])
       );
     } else if (permission instanceof WebSocketApi) {
       const webSocketApi = permission.cdk.webSocketApi;
-      const { account, region } = Stack.of(webSocketApi);
+      const { account, region, partition } = Stack.of(webSocketApi);
       statements.push(
         buildPolicyStatement("execute-api:Invoke", [
-          `arn:aws:execute-api:${region}:${account}:${webSocketApi.apiId}/*`
+          `arn:${partition}:execute-api:${region}:${account}:${webSocketApi.apiId}/*`
         ])
       );
       statements.push(
@@ -165,10 +165,10 @@ function permissionsToStatementsAndGrants(
       );
     } else if (permission instanceof AppSyncApi) {
       const graphqlApi = permission.cdk.graphqlApi;
-      const { account, region } = Stack.of(graphqlApi);
+      const { account, region, partition } = Stack.of(graphqlApi);
       statements.push(
         buildPolicyStatement("appsync:GraphQL", [
-          `arn:aws:appsync:${region}:${account}:apis/${graphqlApi.apiId}/*`
+          `arn:${partition}:appsync:${region}:${account}:apis/${graphqlApi.apiId}/*`
         ])
       );
     } else if (permission instanceof Table) {
