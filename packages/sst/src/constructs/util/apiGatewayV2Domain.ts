@@ -89,7 +89,7 @@ function buildDataForStringInput(
   assertDomainNameIsLowerCase(customDomain);
 
   const domainName = customDomain;
-  const hostedZoneDomain = domainName.split(".").slice(1).join(".");
+  const hostedZoneDomain = parseRoute53Domain(domainName);
   const hostedZone = lookupHostedZone(scope, hostedZoneDomain);
   const certificate = createCertificate(scope, domainName, hostedZone);
   const apigDomain = createApigDomain(scope, domainName, certificate);
@@ -134,7 +134,7 @@ function buildDataForInternalDomainInput(
   } else if (customDomain.cdk?.hostedZone) {
     hostedZone = customDomain.cdk.hostedZone;
   } else {
-    const hostedZoneDomain = domainName.split(".").slice(1).join(".");
+    const hostedZoneDomain = parseRoute53Domain(domainName);
     hostedZone = lookupHostedZone(scope, hostedZoneDomain);
   }
 
@@ -309,4 +309,14 @@ function assertDomainNameIsLowerCase(domainName: string): void {
   if (domainName !== domainName.toLowerCase()) {
     throw new Error(`The domain name needs to be in lowercase`);
   }
+}
+
+function parseRoute53Domain(domainName: string) {
+  const parts = domainName.split(".");
+  // If the domain contains subdomain, ie. api.example.com,
+  // strip the subdomain and use the root domain, ie. example.com.
+  // Otherwise, use the domain as is.
+  return parts.length <= 2
+    ? domainName
+    : parts.slice(1).join(".");
 }
