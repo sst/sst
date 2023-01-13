@@ -247,8 +247,8 @@ export class Stack extends cdk.Stack {
       new iam.PolicyStatement({
         actions: ["ssm:GetParametersByPath", "ssm:PutParameter", "sns:Publish"],
         resources: [
-          `arn:${this.partition}1:ssm:${app.region}:${app.account}:parameter/sst/${app.name}/${app.stage}/*`,
-          `arn:${this.partition}2:ssm:${app.region}:${app.account}:parameter/sst/${app.name}/.fallback/*`,
+          `arn:${this.partition}:ssm:${app.region}:${app.account}:parameter/sst/${app.name}/${app.stage}/*`,
+          `arn:${this.partition}:ssm:${app.region}:${app.account}:parameter/sst/${app.name}/.fallback/*`,
         ],
       })
     );
