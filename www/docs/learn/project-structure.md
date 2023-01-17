@@ -190,7 +190,7 @@ Our starter also comes with a few helpful scripts.
 
 ```json title="package.json"
 "scripts": {
-  "start": "sst start",
+  "dev": "sst dev",
   "build": "sst build",
   "deploy": "sst deploy",
   "remove": "sst remove",
@@ -238,4 +238,4 @@ Finally, the `sst.json` contains the project config.
 
 ---
 
-By now your `sst start` process should be complete. So let's run our first migration and initialize our database!
+By now your `sst dev` process should be complete. So let's run our first migration and initialize our database!

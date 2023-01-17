@@ -173,7 +173,7 @@ Currently the client only supports JavaScript and TypeScript. But if you are loo
 
 ## Usage in tests
 
-To access the [properties](#properties) in your tests, you'll need to wrap your tests with the [`sst bind`](packages/sst.md#bind) command.
+To access the [properties](#properties) in your tests, you'll need to wrap your tests with the [`sst bind`](../packages/sst.md#sst-bind) command.
 
 ```bash
 sst bind "vitest run"

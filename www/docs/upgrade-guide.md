@@ -129,7 +129,7 @@ Following are the steps to upgrade.
 
 1. **CLI**
 
-   1. The path for the SSM parameters that stores the secrets has changed. So you'll **need to run `sst deploy` or `sst start`** before using the [`sst secrets`](packages/sst.md#secrets-action) CLI.
+   1. The path for the SSM parameters that stores the secrets has changed. So you'll **need to run `sst deploy` or `sst dev`** before using the [`sst secrets`](packages/sst.md#sst-secrets) CLI.
 
    2. **The `sst load-config` command is being renamed to `sst bind`** and will be removed in SST v2
 

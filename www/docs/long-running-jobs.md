@@ -226,9 +226,9 @@ Let's look at how `Job` works. It uses a few resources behind the scenes:
 
 ---
 
-### `sst start`
+### `sst dev`
 
-On `sst start`, the invoker function is replaced with a stub function. The stub function sends the request to your local machine, and the local version of the job function is executed. This is similar to how [Live Lambda Development](live-lambda-development.md) works for a [`Function`](constructs/Function.md).
+On `sst dev`, the invoker function is replaced with a stub function. The stub function sends the request to your local machine, and the local version of the job function is executed. This is similar to how [Live Lambda Development](live-lambda-development.md) works for a [`Function`](constructs/Function.md).
 
 :::info
 Your locally invoked job has the **same IAM permissions** as the deployed CodeBuild job.

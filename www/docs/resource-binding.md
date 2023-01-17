@@ -151,7 +151,7 @@ Cannot use Bucket.myFiles. Please make sure it is bound to this function.
 
 ### Testing
 
-When testing your code, you can use the [`sst bind`](packages/sst.md#bind) CLI to bind the resources to your tests.
+When testing your code, you can use the [`sst bind`](packages/sst.md#sst-bind) CLI to bind the resources to your tests.
 
 ```bash
 sst bind -- vitest run

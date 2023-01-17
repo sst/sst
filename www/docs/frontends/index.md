@@ -325,10 +325,10 @@ Since dynamic environment values are not known at build time, they cannot be use
 
 ### Local development
 
-To use the above environment variables while developing, first run `sst start` to start the local environment.
+To use the above environment variables while developing, first run `sst dev` to start the local environment.
 
 ```bash
-npx sst start
+npx sst dev
 ```
 
 Then in your frontend app add the [`sst env`](../packages/sst.md#sst-env) command to reference these variables.
@@ -394,8 +394,8 @@ Note that, the `sst env` CLI will traverse up the directories to look for the ro
 
 There are a couple of things happening behind the scenes here:
 
-1. The `sst start` command generates a file with the values specified by `StaticSite`, `ReactStaticSite`, `ViteStaticSite`, or `NextjsSite` construct's `environment` prop.
-2. The `sst-env` CLI will traverse up the directories to look for the root of your SST app. If the static site or Next.js app is located outside the SST app folder, pass in [`--path`](#--path) to specify the relative path of the SST app.
+1. The `sst dev` command generates a file with the values specified by `StaticSite`, `ReactStaticSite`, `ViteStaticSite`, or `NextjsSite` construct's `environment` prop.
+2. The `sst env` CLI will traverse up the directories to look for the root of your SST app. If the static site or Next.js app is located outside the SST app folder, pass in [`--path`](#--path) to specify the relative path of the SST app.
 3. It'll then find the file that's generated in step 1.
 4. It'll load these as environment variables before running the start command.
 

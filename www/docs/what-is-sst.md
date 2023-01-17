@@ -131,15 +131,23 @@ Each stack is just a function that creates a set of constructs.
 
 #### App
 
-Finally, you add all your stacks to your app.
+Finally, you add all your stacks to your app in the `sst.config.ts`.
 
-```ts title="stacks/index.ts"
-export default function main(app: App) {
-  app.stack(Database).stack(Api).stack(Web);
-}
+```ts title="sst.config.ts" {9}
+export default {
+  config(input) {
+    return {
+      name: "my-sst-app",
+      region: "us-east-1",
+    }
+  },
+  stacks(app) {
+    app.stack(Database).stack(Api).stack(Web);
+  },
+} satisfies SSTConfig;
 ```
 
-SST will call this `main` function and create all the infrastructure.
+Here we are also specifying a name for our app and the AWS region it'll be deployed to.
 
 Now let's look at how you can add the backend for your app with these constructs.
 
@@ -312,7 +320,7 @@ SST applications are monorepo by default.
 
 ```
 my-sst-app
-├─ sst.config.mjs
+├─ sst.config.ts
 ├─ package.json
 ├─ services
 ├─ stacks
@@ -360,7 +368,7 @@ With the Console you can view and interact with your application in real-time. Y
 
 ### Deployment
 
-To deploy your application to AWS, you use the [`sst deploy`](packages/sst.md#deploy-stack) command. It uses your local [IAM credentials](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html) and **deploys to your AWS account**.
+To deploy your application to AWS, you use the [`sst deploy`](packages/sst.md#sst-deploy) command. It uses your local [IAM credentials](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html) and **deploys to your AWS account**.
 
 ```bash
 npx sst deploy
@@ -368,12 +376,10 @@ npx sst deploy
 
 Since everything in your app is connected, this single command is all you need. Once complete, it'll print out your app's URL!
 
-```bash {5}
-Stack prod-next-app-my-stack
-  Status: deployed
-  Outputs:
-    ApiEndpoint: https://ck198mfop1.execute-api.us-east-1.amazonaws.com
-    SiteUrl: https://my-next-app.com
+```bash {3}
+Outputs:
+  ApiEndpoint: https://ck198mfop1.execute-api.us-east-1.amazonaws.com
+  SiteUrl: https://my-next-app.com
 ```
 
 Behind the scenes, it compiles the constructs to [AWS CloudFormation](https://aws.amazon.com/cloudformation/), packages your frontend assets and functions, uploads it to AWS, and creates your app's infrastructure.

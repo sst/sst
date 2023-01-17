@@ -4,7 +4,7 @@ title: Initialize the Database
 
 import ChangeText from "@site/src/components/ChangeText";
 
-Now let's check back in on the `sst start` command that we started in the [Create a New Project](create-a-new-project.md) chapter.
+Now let's check back in on the `sst dev` command that we started in the [Create a New Project](create-a-new-project.md) chapter.
 
 Once your local development environment is up and running, you should see the following printed out in the terminal.
 
@@ -149,7 +149,7 @@ You should see the query returns **0 rows**.
 
 Let's quickly recap what we've done so far:
 
-1. We ran `sst start` to start the [Live Lambda Dev](../live-lambda-development.md) environment and the [SST Console](../console.md).
+1. We ran `sst dev` to start the [Live Lambda Dev](../live-lambda-development.md) environment and the [SST Console](../console.md).
 2. Deployed the infrastructure for our app to AWS:
    - Including a RDS PostgreSQL database based on `stacks/Database.ts`.
 3. We then opened up the Console and ran a migration in `services/migrations/`.

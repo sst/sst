@@ -322,7 +322,7 @@ A lot of the commands that you are used to using in Serverless Framework transla
 
 | Serverless Framework      | SST          |
 | ------------------------- | ------------ |
-| `serverless invoke local` | `sst start`  |
+| `serverless invoke local` | `sst dev`    |
 | `serverless package`      | `sst build`  |
 | `serverless deploy`       | `sst deploy` |
 | `serverless remove`       | `sst remove` |
@@ -394,19 +394,19 @@ Serverless Framework supports a long list of popular plugins. In this section we
 
 To start with, let's look at the very popular [serverless-offline](https://github.com/dherault/serverless-offline) plugin. It's used to emulate a Lambda function locally but it's fairly limited in the workflows it supports. There are also a number of other plugins that work with serverless-offline to support various other Lambda triggers.
 
-Thanks to `sst start`, you don't need to worry about using them anymore.
+Thanks to `sst dev`, you don't need to worry about using them anymore.
 
 | Plugin                                                                                                                    | Alternative |
 | ------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| [serverless-offline](https://github.com/dherault/serverless-offline)                                                      | `sst start` |
-| [serverless-offline-sns](https://github.com/mj1618/serverless-offline-sns)                                                | `sst start` |
-| [serverless-offline-ssm](https://github.com/janders223/serverless-offline-ssm)                                            | `sst start` |
-| [serverless-dynamodb-local](https://github.com/99x/serverless-dynamodb-local)                                             | `sst start` |
-| [serverless-offline-scheduler](https://github.com/ajmath/serverless-offline-scheduler)                                    | `sst start` |
-| [serverless-step-functions-offline](https://github.com/vkkis93/serverless-step-functions-offline)                         | `sst start` |
-| [serverless-offline-direct-lambda](https://github.com/civicteam/serverless-offline-direct-lambda)                         | `sst start` |
-| [CoorpAcademy/serverless-plugins](https://github.com/CoorpAcademy/serverless-plugins)                                     | `sst start` |
-| [serverless-plugin-offline-dynamodb-stream](https://github.com/orchestrated-io/serverless-plugin-offline-dynamodb-stream) | `sst start` |
+| [serverless-offline](https://github.com/dherault/serverless-offline)                                                      | `sst dev`   |
+| [serverless-offline-sns](https://github.com/mj1618/serverless-offline-sns)                                                | `sst dev`   |
+| [serverless-offline-ssm](https://github.com/janders223/serverless-offline-ssm)                                            | `sst dev`   |
+| [serverless-dynamodb-local](https://github.com/99x/serverless-dynamodb-local)                                             | `sst dev`   |
+| [serverless-offline-scheduler](https://github.com/ajmath/serverless-offline-scheduler)                                    | `sst dev`   |
+| [serverless-step-functions-offline](https://github.com/vkkis93/serverless-step-functions-offline)                         | `sst dev`   |
+| [serverless-offline-direct-lambda](https://github.com/civicteam/serverless-offline-direct-lambda)                         | `sst dev`   |
+| [CoorpAcademy/serverless-plugins](https://github.com/CoorpAcademy/serverless-plugins)                                     | `sst dev`   |
+| [serverless-plugin-offline-dynamodb-stream](https://github.com/orchestrated-io/serverless-plugin-offline-dynamodb-stream) | `sst dev`   |
 
 Let's look at the other popular Serverless Framework plugins and how to set them up in SST.
 

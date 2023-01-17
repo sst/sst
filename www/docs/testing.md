@@ -26,7 +26,7 @@ To start, there are 3 types of tests you can write for your SST apps:
 2. Tests for your APIs, the endpoints handling requests.
 3. Tests for your stacks, the code that creates your infrastructure.
 
-SST uses [Vitest](https://vitest.dev) to help you write these tests. And it uses the [`sst bind`](packages/sst.md#bind) CLI to bind the resources to your tests. This allows the [`@serverless-stack/node`](clients/index.md) helper library to work as if the tests were running inside a Lambda function.
+SST uses [Vitest](https://vitest.dev) to help you write these tests. And it uses the [`sst bind`](packages/sst.md#sst-bind) CLI to bind the resources to your tests. This allows the [`@serverless-stack/node`](clients/index.md) helper library to work as if the tests were running inside a Lambda function.
 
 ---
 
@@ -36,7 +36,7 @@ If you created your app with `create-sst` a [Vitest](https://vitest.dev/config/)
 
 ```json {8} title="package.json"
 "scripts": {
-  "start": "sst start",
+  "dev": "sst dev",
   "build": "sst build",
   "deploy": "sst deploy",
   "remove": "sst remove",
@@ -265,7 +265,7 @@ The best way to isolate tests is to create separate scopes for each test. In our
 
 When testing your code, you have to ensure the testing environment has the same environment variable values as the Lambda environment. In the past, people would manually maintain a `.env.test` file with environment values. SST has built-in support for automatically loading the secrets and environment values that are managed by [`Resource Binding`](resource-binding.md).
 
-The [`sst bind`](packages/sst.md#bind) CLI fetches all the resource values, and invokes the `vitest run` with the values configured as environment variables.
+The [`sst bind`](packages/sst.md#sst-bind) CLI fetches all the resource values, and invokes the `vitest run` with the values configured as environment variables.
 
 <details>
 <summary>Behind the scenes</summary>

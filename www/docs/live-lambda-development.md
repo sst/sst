@@ -36,7 +36,7 @@ To give it a try, create a new SST app with our Minimal JavaScript starter by ru
 To start the Live Lambda Development environment run:
 
 ```bash
-npx sst start
+npx sst dev
 ```
 
 The first time you run this, it'll deploy your app and a stack that supports the debugger called the _Debug Stack_. This can take a couple of minutes.
@@ -108,7 +108,7 @@ The DynamoDB table keeps track of the connections. While the S3 bucket is used a
 
 To understand the flow better, let's look at a non-trivial example.
 
-![sst start demo architecture](/img/sst-start-demo-architecture.png)
+![sst dev demo architecture](/img/sst-start-demo-architecture.png)
 
 In this sample app we have:
 
@@ -237,11 +237,11 @@ Add the following to `.vscode/launch.json`.
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug SST Start",
+      "name": "Debug SST Dev",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/sst",
-      "runtimeArgs": ["start", "--increase-timeout"],
+      "runtimeArgs": ["dev", "--increase-timeout"],
       "console": "integratedTerminal",
       "skipFiles": ["<node_internals>/**"]
     }
@@ -249,7 +249,7 @@ Add the following to `.vscode/launch.json`.
 }
 ```
 
-This contains the launch configuration to run the `sst start` command in debug mode. Allowing you to set breakpoints to your Lambda functions. We also have <a href={ `${config.github}/tree/master/examples/vscode` }>an example project</a> with a VS Code setup that you can use as a reference.
+This contains the launch configuration to run the `sst dev` command in debug mode. Allowing you to set breakpoints to your Lambda functions. We also have <a href={ `${config.github}/tree/master/examples/vscode` }>an example project</a> with a VS Code setup that you can use as a reference.
 
 :::tip
 If you are using one of our starters, you should already have a `.vscode` directory in your project root.
@@ -261,9 +261,9 @@ It also uses the `integratedTerminal` mode to allow you to [_press ENTER_](#watc
 
 #### Debug Lambda functions
 
-Next, head over to the **Run And Debug** tab and for the debug configuration select **Debug SST Start**.
+Next, head over to the **Run And Debug** tab and for the debug configuration select **Debug SST Dev**.
 
-<img alt="VS Code debug SST start" src={useBaseUrl("img/screens/vs-code-debug-sst-start.png")} />
+<img alt="VS Code debug SST Dev" src={useBaseUrl("img/screens/vs-code-debug-sst-start.png")} />
 
 Now you can set a breakpoint and start your app by pressing `F5` or by clicking **Run** > **Start Debugging**. Then triggering your Lambda function will cause VS Code to stop at your breakpoint.
 
@@ -271,10 +271,10 @@ Now you can set a breakpoint and start your app by pressing `F5` or by clicking 
 
 #### Increasing timeouts
 
-By default the timeout for a Lambda function might not be long enough for you to view the breakpoint info. So we need to increase this. We use the [`--increase-timeout`](packages/sst.md#options) option for the `sst start` command in our `launch.json`.
+By default the timeout for a Lambda function might not be long enough for you to view the breakpoint info. So we need to increase this. We use the [`--increase-timeout`](packages/sst.md#sst-dev) option for the `sst dev` command in our `launch.json`.
 
 ```js title="launch.json
-"runtimeArgs": ["start", "--increase-timeout"],
+"runtimeArgs": ["dev", "--increase-timeout"],
 ```
 
 This increases our Lambda function timeouts to their maximum value of 15 minutes. For APIs the timeout cannot be increased more than 30 seconds. But you can continue debugging the Lambda function, even after the API request times out.
@@ -303,7 +303,7 @@ If you are using [IntelliJ IDEA](https://www.jetbrains.com/idea/), [follow this 
 
 ## Built-in environment variables
 
-SST sets the `IS_LOCAL` environment variable to `true` by default when running inside `sst start`.
+SST sets the `IS_LOCAL` environment variable to `true` by default when running inside `sst dev`.
 
 The `process.env.IS_LOCAL` is set in both the stack and function code.
 

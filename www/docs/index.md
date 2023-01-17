@@ -26,31 +26,31 @@ SST makes it easy to build modern full-stack applications on AWS.
 
 <ul className={styles.features}>
   <li>
-    <a href={useBaseUrl("/frontends/nextjs")}>
+    <a href={useBaseUrl("/constructs/NextjsSite")}>
       <h3>Next.js</h3>
       <p>Deploy a serverless Next.js app to your AWS account.</p>
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/frontends/remix")}>
+    <a href={useBaseUrl("/constructs/RemixSite")}>
       <h3>Remix</h3>
       <p>Deploy a Remix SSR app to your AWS account.</p>
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/frontends/astro")}>
+    <a href={useBaseUrl("/constructs/AstroSite")}>
       <h3>Astro</h3>
       <p>Deploy an Astro SSR app to your AWS account.</p>
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/frontends/solid")}>
+    <a href={useBaseUrl("/constructs/SolidStartSite")}>
       <h3>Solid</h3>
       <p>Deploy a SolidStart app to your AWS account.</p>
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/frontends/static-sites")}>
+    <a href={useBaseUrl("/constructs/StaticSite")}>
       <h3>Static sites</h3>
       <p>Deploy any static site to your AWS account.</p>
     </a>
@@ -68,37 +68,37 @@ Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
 
 <ul className={styles.features}>
   <li>
-    <a href={useBaseUrl("/databases")}>
+    <a href={useBaseUrl("/constructs/RDS")}>
       <h3>Databases</h3>
       <p>Use a serverless SQL or NoSQL database to power your app.</p>
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/apis")}>
+    <a href={useBaseUrl("/constructs/Api")}>
       <h3>APIs</h3>
       <p>Add a GraphQL or a simple REST API to your app.</p>
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/auth")}>
+    <a href={useBaseUrl("/constructs/Auth")}>
       <h3>Auth</h3>
       <p>Authenticate your users through any auth provider.</p>
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/file-uploads")}>
+    <a href={useBaseUrl("/constructs/Bucket")}>
       <h3>File uploads</h3>
       <p>Upload files to S3 and manage them through the SST console.</p>
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/jobs")}>
+    <a href={useBaseUrl("/constructs/Cron")}>
       <h3>Jobs</h3>
       <p>Run cron jobs or long running jobs powered by serverless functions.</p>
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/queues")}>
+    <a href={useBaseUrl("/constructs/Queue")}>
       <h3>Queues</h3>
       <p>Work with serverless queues without any infrastructure.</p>
     </a>
@@ -128,26 +128,6 @@ Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
 ---
 
 <div className={styles.heading}>
-  <h3>Reference Docs</h3>
-  <p>Links to reference docs for the SST's constructs and clients.</p>
-</div>
-
-<ul className={styles.features}>
-  <li>
-    <a href={useBaseUrl("/constructs")}>
-      <h3>Constructs</h3>
-      <p>Reference docs for all of SST's constructs.</p>
-    </a>
-  </li>
-  <li>
-    <a href={useBaseUrl("/clients")}>
-      <h3>Clients</h3>
-      <p>Reference docs for the Node Lambda function clients.</p>
-    </a>
-  </li>
-</ul>
-
-<div className={styles.heading}>
   <h3>CLI Docs</h3>
   <p>Links to reference docs for the CLIs used in SST.</p>
 </div>
@@ -163,6 +143,26 @@ Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
     <a href={useBaseUrl("/packages/create-sst")}>
       <h3>create-sst</h3>
       <p>CLI to create a new SST project from a template or an example.</p>
+    </a>
+  </li>
+</ul>
+
+<div className={styles.heading}>
+  <h3>Reference Docs</h3>
+  <p>Links to reference docs for the SST's constructs and clients.</p>
+</div>
+
+<ul className={styles.features}>
+  <li>
+    <a href={useBaseUrl("/constructs")}>
+      <h3>Constructs</h3>
+      <p>Reference docs for all of SST's constructs.</p>
+    </a>
+  </li>
+  <li>
+    <a href={useBaseUrl("/clients")}>
+      <h3>Clients</h3>
+      <p>Reference docs for the Node Lambda function clients.</p>
     </a>
   </li>
 </ul>

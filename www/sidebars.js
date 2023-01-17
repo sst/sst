@@ -5,68 +5,67 @@ module.exports = {
         "index",
         "what-is-sst",
         "quick-start",
-        {
-          type: "category",
-          label: "Frontends",
-          collapsible: true,
-          collapsed: false,
-          link: {type: "doc", id: "frontends/index"},
-          items: [
-            "frontends/nextjs",
-            "frontends/remix",
-            "frontends/astro",
-            "frontends/solid",
-            "frontends/static-sites",
-          ]
-        },
+//        {
+//          type: "category",
+//          label: "Frontends",
+//          collapsible: true,
+//          collapsed: false,
+//          link: {type: "doc", id: "frontends/index"},
+//          items: [
+//            "frontends/nextjs",
+//            "frontends/remix",
+//            "frontends/astro",
+//            "frontends/solid",
+//            "frontends/static-sites",
+//          ]
+//        },
       ]
     },
     {
-      Features: [
-        {
-          type: "category",
-          label: "Databases",
-          collapsible: true,
-          collapsed: true,
-          link: {type: "doc", id: "databases/index"},
-          items: [
-            "databases/postgresql",
-            "databases/dynamodb",
-          ]
-        },
-        "apis",
-        "auth",
-        {
-          type: "category",
-          label: "Jobs",
-          collapsible: true,
-          collapsed: true,
-          link: {type: "doc", id: "jobs/index"},
-          items: [
-            "jobs/cron-jobs",
-            "jobs/long-running-jobs",
-          ]
-        },
-        "config",
-        "queues",
-        "file-uploads",
+      "Local Dev": [
+        "live-lambda-development",
+        "console",
+        "editor-integration",
       ]
     },
+//    {
+//      Features: [
+//        {
+//          type: "category",
+//          label: "Databases",
+//          collapsible: true,
+//          collapsed: true,
+//          link: {type: "doc", id: "databases/index"},
+//          items: [
+//            "databases/postgresql",
+//            "databases/dynamodb",
+//          ]
+//        },
+//        "apis",
+//        "auth",
+//        {
+//          type: "category",
+//          label: "Jobs",
+//          collapsible: true,
+//          collapsed: true,
+//          link: {type: "doc", id: "jobs/index"},
+//          items: [
+//            "jobs/cron-jobs",
+//            "jobs/long-running-jobs",
+//          ]
+//        },
+//        "config",
+//        "queues",
+//        "file-uploads",
+//      ]
+//    },
     {
       "How-Tos": [
-        {
-          type: "category",
-          label: "Local Dev",
-          collapsible: true,
-          collapsed: true,
-          items: [
-            "live-lambda-development",
-            "console",
-            "editor-integration",
-          ]
-        },
+        "auth",
+        "config",
         "testing",
         "resource-binding",
+        "long-running-jobs",
         "going-to-production",
         "working-with-your-team",
         {
@@ -107,25 +106,25 @@ module.exports = {
       "Migrating From": ["migrating/cdk", "migrating/serverless-framework"]
     },
     {
+      CLI: [
+        "packages/sst",
+        "packages/create-sst",
+      ]
+    },
+    {
       Reference: [
-        {
-          type: "link",
-          label: "Constructs",
-          href: "/constructs"
-        },
         {
           type: "link",
           label: "Clients",
           href: "/clients"
         },
+        {
+          type: "link",
+          label: "Constructs",
+          href: "/constructs"
+        },
       ]
     },
-    {
-      CLI: [
-        "packages/sst",
-        "packages/create-sst",
-      ]
-    }
   ],
   learn: [
     "learn/index",
