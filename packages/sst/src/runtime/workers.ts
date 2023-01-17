@@ -58,7 +58,6 @@ export const useRuntimeWorkers = Context.memo(() => {
       workerID: evt.properties.workerID,
     });
     let worker = workers.get(evt.properties.workerID);
-    lastRequestId.set(evt.properties.workerID, evt.properties.requestID);
     if (worker) return;
     const props = useFunctions().fromID(evt.properties.functionID);
     const handler = handlers.for(props.runtime!);
@@ -84,6 +83,9 @@ export const useRuntimeWorkers = Context.memo(() => {
   return {
     fromID(workerID: string) {
       return workers.get(workerID)!;
+    },
+    setCurrentRequestID(workerID: string, requestID: string) {
+      lastRequestId.set(workerID, requestID);
     },
     stdout(workerID: string, message: string) {
       const worker = workers.get(workerID)!;

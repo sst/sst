@@ -84,6 +84,10 @@ export const useRuntimeServer = Context.memo(async () => {
         "is waiting for next invocation"
       );
       const payload = await next(req.params.workerID);
+      workers.setCurrentRequestID(
+        req.params.workerID,
+        payload.context.awsRequestId
+      );
       Logger.debug("Worker", req.params.workerID, "sending next payload");
       res.set({
         "Lambda-Runtime-Aws-Request-Id": payload.context.awsRequestId,

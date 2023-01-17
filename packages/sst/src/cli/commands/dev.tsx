@@ -1,5 +1,5 @@
 import type { Program } from "../program.js";
-import type { CloudAssembly } from "aws-cdk-lib/cx-api";
+import { CloudAssembly, CloudAssemblyBuilder } from "aws-cdk-lib/cx-api";
 import type { StackResource } from "@aws-sdk/client-cloudformation";
 import chalk from "chalk";
 import { cyan } from "colorette";
@@ -191,62 +191,8 @@ export const dev = (program: Program) =>
           component.clear();
           component.unmount();
           render(<Functions />);
-
-          console.log();
-
           lastDeployed = nextChecksum;
-          // printDeploymentResults(results);
-          console.log(`  ${green(`✔`)}  ${bold(dim(`Deployed:`))}`);
-          for (const [stack, result] of Object.entries(results)) {
-            const outputs = Object.entries(result.outputs).filter(
-              ([key, _]) => {
-                if (key.startsWith("Export")) return false;
-                if (key.includes("SstSiteEnv")) return false;
-                if (key === "SstMetadata") return false;
-                return true;
-              }
-            );
-            console.log(`     ${dim(stack)}`);
-            if (outputs.length > 0) {
-              for (const key of Object.keys(
-                Object.fromEntries(outputs)
-              ).sort()) {
-                const value = result.outputs[key];
-                console.log(`     ${bold(dim(key))}: ${value}`);
-              }
-            }
-          }
-          console.log();
-
-          if (
-            Object.values(results).flatMap((s) => Object.keys(s.errors)).length
-          ) {
-            console.log(`  ${red(`✖`)}  ${bold(dim(`Errors:`))}`);
-            for (const [stack, result] of Object.entries(results)) {
-              const hasErrors = Object.entries(result.errors).length > 0;
-              if (!hasErrors) continue;
-              console.log(`     ${dim(stack)}`);
-              for (const [id, error] of Object.entries(result.errors)) {
-                const found =
-                  Object.entries(
-                    assembly.manifest.artifacts?.[stack].metadata || {}
-                  ).find(
-                    ([_key, value]) =>
-                      value[0]?.type === "aws:cdk:logicalId" &&
-                      value[0]?.data === id
-                  )?.[0] || "";
-
-                const readable = found
-                  .split("/")
-                  .filter(Boolean)
-                  .slice(1, -1)
-                  .join("/");
-
-                console.log(`     ${bold(red(readable))}: ${error}`);
-              }
-              console.log();
-            }
-          }
+          printDeploymentResults(assembly, results);
 
           const keys = await SiteEnv.keys();
           if (keys.length) {

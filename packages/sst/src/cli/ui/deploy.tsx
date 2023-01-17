@@ -7,6 +7,7 @@ import inkSpinner from "ink-spinner";
 import { useProject } from "../../project.js";
 import { blue, bold, dim, green, red } from "colorette";
 import { Colors } from "../colors.js";
+import { CloudAssembly } from "aws-cdk-lib/cx-api";
 
 // @ts-ignore
 const { default: Spinner } = inkSpinner;
@@ -87,9 +88,10 @@ export const DeploymentUI = (props: Props) => {
         return (
           <Box key={evt.LogicalResourceId}>
             <Text>
-              {"     "}
-              <Spinner /> {evt.StackName} {evt.ResourceType}{" "}
-              {evt.LogicalResourceId}{" "}
+              {"  "}
+              <Spinner />
+              {"  "}
+              {evt.StackName} {evt.ResourceType} {evt.LogicalResourceId}{" "}
             </Text>
             <Text color={color(evt.ResourceStatus || "")}>
               {evt.ResourceStatus}
@@ -112,39 +114,53 @@ export const DeploymentUI = (props: Props) => {
 };
 
 export function printDeploymentResults(
+  assembly: CloudAssembly,
   results: Awaited<ReturnType<typeof Stacks.deployMany>>
 ) {
   console.log();
-  console.log(`-----------`);
-  console.log(`| Summary |`);
-  console.log(`-----------`);
-  for (const [stack, result] of Object.entries(results)) {
-    const icon = (() => {
-      if (Stacks.isSuccess(result.status)) return green("✔");
-      if (Stacks.isFailed(result.status)) return red("✖");
-    })();
-    console.log(`${icon} ${stack}`);
 
+  console.log(`  ${green(`✔`)}  ${bold(dim(`Deployed:`))}`);
+  for (const [stack, result] of Object.entries(results)) {
     const outputs = Object.entries(result.outputs).filter(([key, _]) => {
       if (key.startsWith("Export")) return false;
       if (key.includes("SstSiteEnv")) return false;
       if (key === "SstMetadata") return false;
       return true;
     });
+    console.log(`     ${dim(stack)}`);
     if (outputs.length > 0) {
-      console.log(`  ${blue("Outputs:")}`);
       for (const key of Object.keys(Object.fromEntries(outputs)).sort()) {
         const value = result.outputs[key];
-        console.log(bold(`    ${key}: ${value}`));
-      }
-    }
-
-    if (Object.entries(result.errors).length > 0) {
-      console.log(`  ${red("Errors:")}`);
-      for (const [id, error] of Object.entries(result.errors)) {
-        console.log(bold(`    ${id}: ${error}`));
+        console.log(`     ${bold(dim(key))}: ${value}`);
       }
     }
   }
   console.log();
+
+  if (Object.values(results).flatMap((s) => Object.keys(s.errors)).length) {
+    console.log(`  ${red(`✖`)}  ${bold(dim(`Errors:`))}`);
+    for (const [stack, result] of Object.entries(results)) {
+      const hasErrors = Object.entries(result.errors).length > 0;
+      if (!hasErrors) continue;
+      console.log(`     ${dim(stack)}`);
+      for (const [id, error] of Object.entries(result.errors)) {
+        const found =
+          Object.entries(
+            assembly.manifest.artifacts?.[stack].metadata || {}
+          ).find(
+            ([_key, value]) =>
+              value[0]?.type === "aws:cdk:logicalId" && value[0]?.data === id
+          )?.[0] || "";
+
+        const readable = found
+          .split("/")
+          .filter(Boolean)
+          .slice(1, -1)
+          .join("/");
+
+        console.log(`     ${bold(red(readable))}: ${error}`);
+      }
+      console.log();
+    }
+  }
 }
