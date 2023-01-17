@@ -58,10 +58,7 @@ export const useRuntimeWorkers = Context.memo(() => {
       workerID: evt.properties.workerID,
     });
     let worker = workers.get(evt.properties.workerID);
-    lastRequestId.set(
-      evt.properties.workerID,
-      evt.properties.context.awsRequestId
-    );
+    lastRequestId.set(evt.properties.workerID, evt.properties.requestID);
     if (worker) return;
     const props = useFunctions().fromID(evt.properties.functionID);
     const handler = handlers.for(props.runtime!);

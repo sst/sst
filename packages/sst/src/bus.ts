@@ -52,7 +52,7 @@ export const useBus = Context.memo(() => {
     unsubscribe(sub: Subscription) {
       const arr = subscribers(sub.type);
       const index = arr.indexOf(sub);
-      if (!index) return;
+      if (index < 0) return;
       arr.splice(index, 1);
     },
 

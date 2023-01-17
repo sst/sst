@@ -3,6 +3,9 @@ import {
   DescribeStackResourcesCommand,
   DescribeStackResourcesOutput,
   DescribeStacksCommand,
+  DescribeStackEventsCommand,
+  DescribeStackEventsOutput,
+  StackEvent,
 } from "@aws-sdk/client-cloudformation";
 import { SdkError } from "@aws-sdk/types";
 import { useBus } from "../bus.js";
@@ -16,11 +19,15 @@ declare module "../bus.js" {
     };
     "stack.status": {
       stackID: string;
-      status: typeof STATUSES[number];
+      status: (typeof STATUSES)[number];
     };
     "stack.resources": {
       stackID: string;
       resources: DescribeStackResourcesOutput["StackResources"];
+    };
+    "stack.event": {
+      stackID: string;
+      event: StackEvent;
     };
   }
 }
@@ -87,9 +94,10 @@ export async function monitor(stack: string) {
 
   let lastStatus: string | undefined;
   const errors: Record<string, string> = {};
+  let lastEvent: Date | undefined;
   while (true) {
     try {
-      const [describe, resources] = await Promise.all([
+      const [describe, resources, events] = await Promise.all([
         cfn.send(
           new DescribeStacksCommand({
             StackName: stack,
@@ -100,9 +108,28 @@ export async function monitor(stack: string) {
             StackName: stack,
           })
         ),
+        cfn.send(
+          new DescribeStackEventsCommand({
+            StackName: stack,
+          })
+        ),
       ]);
 
       Logger.debug("Stack description", describe);
+
+      if (lastEvent) {
+        for (const event of events.StackEvents ?? []) {
+          if (!event.Timestamp) continue;
+          if (event.Timestamp.getTime() > lastEvent.getTime()) {
+            bus.publish("stack.event", {
+              event: event,
+              stackID: stack,
+            });
+          }
+        }
+        Logger.debug("Last event set to", lastEvent);
+      }
+      lastEvent = events.StackEvents?.at(0)?.Timestamp;
 
       bus.publish("stack.resources", {
         stackID: stack,
@@ -114,7 +141,10 @@ export async function monitor(stack: string) {
           resource.ResourceStatusReason?.includes(
             "Resource creation cancelled"
           ) ||
-          resource.ResourceStatusReason?.includes("Resource updated cancelled")
+          resource.ResourceStatusReason?.includes(
+            "Resource updated cancelled"
+          ) ||
+          resource.ResourceStatusReason?.includes("Resource creation Initiated")
         )
           continue;
         if (resource.ResourceStatusReason)
@@ -132,7 +162,7 @@ export async function monitor(stack: string) {
           Logger.debug(first);
           if (isFinal(first.StackStatus)) {
             return {
-              status: first.StackStatus as typeof STATUSES[number],
+              status: first.StackStatus as (typeof STATUSES)[number],
               outputs: Object.fromEntries(
                 first.Outputs?.map((o) => [o.OutputKey!, o.OutputValue!]) || []
               ),

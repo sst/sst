@@ -94,6 +94,7 @@ export async function handler(event: any, context: any) {
     type: "function.invoked",
     properties: {
       workerID: workerID,
+      requestID: context.awsRequestId,
       functionID: process.env.SST_FUNCTION_ID,
       deadline: context.getRemainingTimeInMillis(),
       event,
