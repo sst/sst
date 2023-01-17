@@ -52,7 +52,7 @@ export namespace Config {
     prop: string;
     fallback?: boolean;
   }) {
-    return `SST_${input.type}_${input.prop}_${input.id}`;
+    return `SST_${input.type}_${input.prop}_${normalizeID(input.id)}`;
   }
 
   export function pathFor(input: {
@@ -61,9 +61,8 @@ export namespace Config {
     prop: string;
     fallback?: boolean;
   }) {
-    return `${input.fallback ? PREFIX.FALLBACK : PREFIX.STAGE}${
-      input.type
-    }/${normalizeID(input.id)}/${input.prop}`;
+    return `${input.fallback ? PREFIX.FALLBACK : PREFIX.STAGE}${input.type
+      }/${normalizeID(input.id)}/${input.prop}`;
   }
 
   export function normalizeID(input: string) {
@@ -98,7 +97,7 @@ export namespace Config {
       SST_STAGE: project.config.stage,
       ...pipe(
         parameters,
-        map((p) => [`SST_${p.type}_${p.prop}_${p.id}`, p.value]),
+        map((p) => [envFor(p), p.value]),
         Object.fromEntries
       ),
     };
@@ -232,6 +231,6 @@ function parse(ssmName: string) {
   return {
     type: parts[4],
     id: parts[5],
-    prop: parts.slice(6),
+    prop: parts.slice(6).join("/"),
   };
 }
