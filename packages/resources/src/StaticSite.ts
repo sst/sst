@@ -273,7 +273,7 @@ export interface StaticSiteProps {
      */
     bucket?: s3.BucketProps | s3.IBucket;
     /**
-     * Configure the internally created CDK `Distribution` instance.
+     * Configure the internally created CDK `Distribution` instance or provide an existing distribution
      *
      * @example
      * ```js
@@ -287,7 +287,7 @@ export interface StaticSiteProps {
      * });
      * ```
      */
-    distribution?: StaticSiteCdkDistributionProps;
+    distribution?: cloudfront.IDistribution | StaticSiteCdkDistributionProps;
   };
 }
 
@@ -751,6 +751,17 @@ interface ImportMeta {
     const { cdk, customDomain } = this.props;
     const indexPage = this.props.indexPage || "index.html";
     const errorPage = this.props.errorPage;
+
+    const isImportedCloudFrontDistribution = (
+      distribution?: cloudfront.IDistribution | StaticSiteCdkDistributionProps
+    ): distribution is cloudfront.IDistribution => {
+      return distribution !== undefined && isCDKConstruct(distribution);
+    };
+
+    // cdk.distribution is an imported construct
+    if (isImportedCloudFrontDistribution(cdk?.distribution)) {
+      return cdk?.distribution as cloudfront.Distribution;
+    }
 
     // Validate input
     if (cdk?.distribution?.certificate) {

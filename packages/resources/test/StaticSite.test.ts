@@ -3,6 +3,7 @@ import { test, expect, vi, beforeEach, afterAll } from "vitest";
 import { countResources, hasResource, objectLike, ANY, ABSENT } from "./helper";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
+import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as cf from "aws-cdk-lib/aws-cloudfront";
 import { App, Api, Stack, StaticSite } from "../src";
@@ -891,6 +892,27 @@ test("constructor: cfDistribution props", async () => {
     DistributionConfig: objectLike({
       Comment: "My Comment",
     }),
+  });
+});
+
+test("constructor: cfDistribution is construct", async () => {
+  const stack = new Stack(new App(), "stack");
+  new StaticSite(stack, "Site", {
+    path: "test/site",
+    cdk: {
+      distribution: cloudfront.Distribution.fromDistributionAttributes(stack, "Distribution", {
+        distributionId: 'frontend-distribution-id',
+        domainName: "domain.com"
+      }),
+    },
+  });
+  countResources(stack, "AWS::CloudFront::Distribution", 0);
+
+  countResources(stack, "Custom::SSTCloudFrontInvalidation", 1);
+  hasResource(stack, "Custom::SSTCloudFrontInvalidation", {
+    DistributionId: "frontend-distribution-id",
+    DistributionPaths: ["/*"],
+    WaitForInvalidation: true,
   });
 });
 
