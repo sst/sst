@@ -898,12 +898,6 @@ test("constructor: cfDistribution props", async () => {
 test("constructor: cfDistribution is construct", async () => {
   const stack = new Stack(new App(), "stack");
 
-  route53.HostedZone.fromLookup = vi
-    .fn()
-    .mockImplementation((scope, id, { domainName }) => {
-      return new route53.HostedZone(scope, id, { zoneName: domainName });
-    });
-
   new StaticSite(stack, "Site", {
     path: "test/site",
     customDomain: "domain.com",
