@@ -220,10 +220,10 @@ This will make `process.env.API_URL` available at runtime.
 
 #### While developing
 
-To use these values while developing, run `sst start` to start the [Live Lambda Development](/live-lambda-development.md) environment.
+To use these values while developing, run `sst dev` to start the [Live Lambda Development](/live-lambda-development.md) environment.
 
 ```bash
-npx sst start
+npx sst dev
 ```
 
 Then in your Remix app to reference these variables, add the [`sst env`](../packages/sst.md#sst-env) command.
@@ -244,7 +244,7 @@ npm run dev
 
 There are a couple of things happening behind the scenes here:
 
-1. The `sst start` command generates a file with the values specified by the `RemixSite` construct's `environment` prop.
+1. The `sst dev` command generates a file with the values specified by the `RemixSite` construct's `environment` prop.
 2. The `sst env` CLI will traverse up the directories to look for the root of your SST app.
 3. It'll then find the file that's generated in step 1.
 4. It'll load these as environment variables before running the start command.

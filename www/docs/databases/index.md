@@ -77,7 +77,7 @@ The `RDS` construct uses [Kysely](https://koskimas.github.io/kysely/) to run and
 
 On `sst deploy`, all migrations that have not yet been run will be run as a part of the deploy process. The migrations are executed in alphabetical order by their name.
 
-On `sst start`, migrations are not automatically run. You can use the [SST Console](console.md) to view all of your migrations and apply them.
+On `sst dev`, migrations are not automatically run. You can use the [SST Console](console.md) to view all of your migrations and apply them.
 
 ```js
 const cluster = new RDS(stack, "myDB", {

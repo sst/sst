@@ -79,7 +79,7 @@ Let's start our local development environment. Or what SST calls [Live Lambda De
 </ChangeText>
 
 ```bash
-npx sst start
+npx sst dev
 ```
 
 The first time the SST command is run, you'll be prompted to enter a default stage name to use. The stage name will be stored locally in a `.sst/` directory; it's automatically ignored from Git.
@@ -102,9 +102,9 @@ Or if you are picking your own, make sure to use a stage name that is specific t
 
 ---
 
-### About `sst start`
+### About `sst dev`
 
-The `sst start` command, as you might've guessed, deploys to your AWS account. It does a couple of interesting things:
+The `sst dev` command, as you might've guessed, deploys to your AWS account. It does a couple of interesting things:
 
 1. Bootstraps your AWS account for SST.
 1. Deploys the infrastructure to run the Live Lambda Dev environment.
@@ -114,16 +114,16 @@ The `sst start` command, as you might've guessed, deploys to your AWS account. I
    2. Power the [SST Console](../console.md). More on this later.
 
 :::info
-The `sst start` command starts up the [Live Lambda Dev](../live-lambda-development.md) environment.
+The `sst dev` command starts up the [Live Lambda Dev](../live-lambda-development.md) environment.
 :::
 
-The first time you run `sst start` it can take around 5 minutes to set everything up.
+The first time you run `sst dev` it can take around 5 minutes to set everything up.
 
 ---
 
 ## Editor integration
 
-While `sst start` is starting up, let's open your project in your code editor. We are using VS Code in our case.
+While `sst dev` is starting up, let's open your project in your code editor. We are using VS Code in our case.
 
 SST is designed to integrate really well with your code editor. It features automatic support for:
 

@@ -22,7 +22,7 @@ Want to learn more about `Config`? Check out the [launch livestream on YouTube](
 
 `Config` allows you to securely pass the following into your functions.
 
-1. [**Secrets**](#secrets): Sensitive values that cannot be defined in your code. You can use the [`sst secrets`](packages/sst.md#secrets-action) CLI to set them.
+1. [**Secrets**](#secrets): Sensitive values that cannot be defined in your code. You can use the [`sst secrets`](packages/sst.md#sst-secrets) CLI to set them.
 2. [**Parameters**](#parameters): Values from non-SST constructs, ie. CDK constructs or static values.
 
 :::info
@@ -98,7 +98,7 @@ Follow along by creating the Minimal TypeScript starter by running `npx create-s
 
 ### `sst secrets`
 
-We used the [`sst secrets set`](packages/sst.md#secrets-action) CLI in the above example to set a secret. Here are some of the other commands.
+We used the [`sst secrets set`](packages/sst.md#sst-secrets-set) CLI in the above example to set a secret. Here are some of the other commands.
 
 - `npx sst secrets get STRIPE_KEY` to check the value of a secret
 - `npx sst secrets list` to get the values of all the secrets
@@ -110,7 +110,7 @@ You can also pass in a stage name to manage the secrets for a specific stage.
 npx sst secrets list --stage prod
 ```
 
-[Read more about the `sst secrets` CLI](packages/sst.md#secrets-action).
+[Read more about the `sst secrets` CLI](packages/sst.md#sst-secrets).
 
 ---
 

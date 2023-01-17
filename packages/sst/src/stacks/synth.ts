@@ -35,8 +35,8 @@ export async function synth(opts: SynthOptions) {
     useBootstrap(),
   ]);
   opts = {
-    buildDir: path.join(project.paths.out, "dist"),
     ...opts,
+    buildDir: opts.buildDir || path.join(project.paths.out, "dist"),
   };
 
   /*

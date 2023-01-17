@@ -28,18 +28,14 @@ To use the SST Console in local development:
 1. In your project root, start the [Live Lambda Dev](live-lambda-development.md) environment.
 
    ```bash
-   npx sst start
+   npx sst dev
    ```
 
 2. You'll see something like this once your local environment is ready.
 
    ```
-   ==========================
-   Starting Live Lambda Dev
-   ==========================
-
-   SST Console: https://console.sst.dev/acme/Jay
-   Debug session started. Listening for requests...
+   ➜ Stage:   Jay
+   ➜ Console: https://console.sst.dev/acme/Jay
    ```
 
 3. Head over to the printed URL or — **<ConsoleUrl url={config.console} />**
@@ -138,12 +134,10 @@ You can scan the table, query specific keys, create and edit items.
 
 ## Deployed environments
 
-By default the Console connects to the app you are running locally with `sst start`. To use the Console with a deployed environment you'll first need to run the [`sst console`](packages/sst.md#console) command.
+By default the Console connects to the app you are running locally with `sst dev`. To use the Console with a deployed environment you'll first need to run the [`sst console`](packages/sst.md#sst-console) command.
 
 ```bash
-$ npx sst console
-
-SST Console: https://console.sst.dev/acme/prod
+npx sst console
 ```
 
 This will start a server locally and use your local AWS credentials to power the Console.
@@ -160,20 +154,20 @@ The SST Console works in all browsers and environments. But for certain browsers
 
 ### Safari and Brave
 
-Certain browsers like Safari and Brave require the local connection between the browser and the `sst start` CLI to be running on HTTPS.
+Certain browsers like Safari and Brave require the local connection between the browser and the `sst dev` CLI to be running on HTTPS.
 
 SST integrates with [mkcert](https://github.com/FiloSottile/mkcert) to automatically generate a self-signed certificate. To set this up:
 
 1. Follow the mkcert [installation steps](https://github.com/FiloSottile/mkcert#installation).
 2. Run `mkcert -install` in your terminal.
 3. Restart your browser.
-4. Restart `sst start` and navigate to <ConsoleUrl url={config.console} /> in the browser.
+4. Restart `sst dev` and navigate to <ConsoleUrl url={config.console} /> in the browser.
 
 ---
 
 ### Gitpod
 
-If you are using [Gitpod](https://www.gitpod.io/), you can use the Gitpod Local Companion app to connect to the `sst start` or `sst console` process running inside your Gitpod workspace.
+If you are using [Gitpod](https://www.gitpod.io/), you can use the Gitpod Local Companion app to connect to the `sst dev` or `sst console` process running inside your Gitpod workspace.
 
 To get started:
 
@@ -189,16 +183,16 @@ The companion app runs locally and creates a tunnelled connection to your Gitpod
 
 The <a href={ config.console }>SST Console</a> is a static single-page app hosted at <ConsoleUrl url={config.console} />.
 
-It uses the local credentials from the SST CLI ([`sst start`](packages/sst.md#start) or [`sst console`](packages/sst.md#console)) to make calls to your AWS account.
+It uses the local credentials from the SST CLI ([`sst dev`](packages/sst.md#sst-dev) or [`sst console`](packages/sst.md#sst-console)) to make calls to your AWS account.
 
 When the Console starts up, it gets the credentials from a local server that is run as a part of the SST CLI. It also gets some metadata from the app that's running locally. The local server only allows access from `localhost` and `console.sst.dev`.
 
 The Console then uses these credentials to make calls to AWS using the AWS SDK. For some resources (like S3), the Console will proxy calls through your local CLI to get around the CORS restrictions in the browser.
 
 :::info
-The SST Console requires the SST CLI to be running (either `sst start` or `sst console`) to work.
+The SST Console requires the SST CLI to be running (either `sst dev` or `sst console`) to work.
 :::
 
-When connected to `sst start`, the Console will display real-time logs from the local invocations of your functions. Whereas, when connected to `sst console`, it'll show you the [CloudWatch](https://aws.amazon.com/cloudwatch/) logs for them instead.
+When connected to `sst dev`, the Console will display real-time logs from the local invocations of your functions. Whereas, when connected to `sst console`, it'll show you the [CloudWatch](https://aws.amazon.com/cloudwatch/) logs for them instead.
 
 The source for the Console can be viewed in the <a href={`${config.github}/tree/master/packages/console`}>SST GitHub repo</a>.

@@ -13,4 +13,7 @@ export const useIOTBridge = Context.memo(async () => {
   bus.subscribe("function.error", async (evt) => {
     iot.publish(topic, "function.error", evt.properties);
   });
+  bus.subscribe("function.ack", async (evt) => {
+    iot.publish(topic, "function.ack", evt.properties);
+  });
 });

@@ -26,6 +26,7 @@ export const Logger = {
         return JSON.stringify(x);
       }),
     ];
+    if (process.env.SST_VERBOSE) console.log(...line);
     useFile().then((file) => {
       file.write(line.join(" ") + "\n");
     });

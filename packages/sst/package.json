@@ -4,7 +4,7 @@
     "access": "public"
   },
   "name": "sst",
-  "version": "2.0.0-rc.32",
+  "version": "2.0.0-rc.35",
   "bin": {
     "sst": "cli/sst.js"
   },
@@ -61,6 +61,7 @@
     "aws-sdk": "2.1252.0",
     "builtin-modules": "3.2.0",
     "cdk-assets": "2.55.0",
+    "chalk": "^4.1.2",
     "chokidar": "^3.5.3",
     "ci-info": "^3.7.0",
     "colorette": "^2.0.19",

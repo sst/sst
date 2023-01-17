@@ -1,16 +1,16 @@
 import type { Program } from "../program.js";
-import type { CloudAssembly } from "aws-cdk-lib/cx-api";
+import { CloudAssembly, CloudAssemblyBuilder } from "aws-cdk-lib/cx-api";
+import type { StackResource } from "@aws-sdk/client-cloudformation";
+import chalk from "chalk";
+import { cyan } from "colorette";
+import { Colors } from "../colors.js";
+import { Functions } from "../ui/functions.js";
 
 export const dev = (program: Program) =>
   program.command(
     ["dev", "start"],
     "Work on your app locally",
-    (yargs) =>
-      yargs.option("fullscreen", {
-        type: "boolean",
-        describe: "Disable full screen UI",
-        default: true,
-      }),
+    (yargs) => yargs,
     async (args) => {
       const { useRuntimeWorkers } = await import("../../runtime/workers.js");
       const { useIOTBridge } = await import("../../runtime/iot.js");
@@ -50,11 +50,13 @@ export const dev = (program: Program) =>
       }
 
       const useFunctionLogger = Context.memo(async () => {
+        const component = render(<Functions />);
         const bus = useBus();
 
+        /*
         bus.subscribe("function.invoked", async (evt) => {
           console.log(
-            bold(magenta(`Invoked `)),
+            bold(magenta(`  ➜ `)),
             useFunctions().fromID(evt.properties.functionID).handler!
           );
         });
@@ -78,32 +80,38 @@ export const dev = (program: Program) =>
           const lines = message.split("\n");
           for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
-            lines[i] = "         " + line;
+            lines[i] = "     " + line;
           }
           console.log(
-            bold(blue(`Log     `)),
+            bold(blue(`  ➜ `)),
             useFunctions().fromID(evt.properties.functionID).handler!
           );
           console.log(dim(lines.join("\n")));
         });
+        */
 
+        /*
         bus.subscribe("function.success", async (evt) => {
           console.log(
-            bold(green(`Success `)),
+            bold(green(`  ✔ `)),
             useFunctions().fromID(evt.properties.functionID).handler!
           );
+          console.log();
         });
+        */
 
+        /*
         bus.subscribe("function.error", async (evt) => {
           console.log(
-            bold(red(`Error   `)),
-            useFunctions().fromID(evt.properties.functionID).handler!,
-            evt.properties.errorMessage
+            bold(red(`  ✖ `)),
+            useFunctions().fromID(evt.properties.functionID).handler!
           );
+          console.log(`     ${Colors.danger(evt.properties.errorMessage)}`);
           for (const line of evt.properties.trace || []) {
-            console.log(`         ${dim(line)}`);
+            console.log(`     ${dim(line)}`);
           }
         });
+        */
       });
 
       const useStackBuilder = Context.memo(async () => {
@@ -116,7 +124,13 @@ export const dev = (program: Program) =>
         let isDeploying = false;
 
         async function build() {
-          const spinner = createSpinner("Building stacks").start();
+          const spinner = createSpinner({
+            indent: 2,
+            color: "gray",
+            text: lastDeployed
+              ? ` Building stacks`
+              : dim(` Checking for changes`),
+          }).start();
           try {
             const [metafile, sstConfig] = await Stacks.load(
               project.paths.config
@@ -128,19 +142,31 @@ export const dev = (program: Program) =>
               outDir: `.sst/cdk.out`,
               mode: "dev",
             });
+
             Logger.debug("Directory", assembly.directory);
             const next = await checksum(assembly.directory);
             Logger.debug("Checksum", "next", next, "old", lastDeployed);
             if (next === lastDeployed) {
-              spinner.succeed("Stacks built! No changes");
+              spinner.succeed(" No changes");
+              console.log();
               return;
             }
-            spinner.succeed(lastDeployed ? `Stacks built!` : `Stacks built!`);
+            if (!lastDeployed) {
+              spinner.stop();
+              spinner.clear();
+            } else {
+              spinner.succeed(` Stacks built!`);
+            }
             pending = assembly;
-            if (lastDeployed) deploy();
-          } catch (ex) {
+            if (lastDeployed) setTimeout(() => deploy(), 100);
+          } catch (ex: any) {
             spinner.fail();
-            console.error(ex);
+            console.log(
+              ex.stack
+                .split("\n")
+                .map((line: any) => "     " + line)
+                .join("\n")
+            );
           }
         }
 
@@ -151,29 +177,17 @@ export const dev = (program: Program) =>
           const assembly = pending;
           const nextChecksum = await checksum(assembly.directory);
           pending = undefined;
+          console.log();
 
-          const cleanup = (() => {
-            if (args.fullscreen) {
-              process.stdout.write("\x1b[?1049h");
-              const component = render(
-                <DeploymentUI
-                  stacks={assembly.stacks.map((s) => s.stackName)}
-                />
-              );
-              return () => {
-                component.unmount();
-                process.stdout.write("\x1b[?1049l");
-              };
-            }
-
-            const spinner = createSpinner("Deploying stacks");
-            return () => spinner.succeed();
-          })();
+          const component = render(
+            <DeploymentUI stacks={assembly.stacks.map((s) => s.stackName)} />
+          );
           const results = await Stacks.deployMany(assembly.stacks);
-          cleanup();
-
+          component.clear();
+          component.unmount();
+          render(<Functions />);
           lastDeployed = nextChecksum;
-          printDeploymentResults(results);
+          printDeploymentResults(assembly, results);
 
           const keys = await SiteEnv.keys();
           if (keys.length) {
@@ -230,10 +244,38 @@ export const dev = (program: Program) =>
         await deploy();
       });
 
-      createSpinner("").start().succeed("Ready for function invocations");
-      createSpinner("")
-        .start()
-        .succeed(`Console ready at https://console.sst.dev`);
+      const project = useProject();
+
+      const primary = chalk.hex("#E27152");
+      const link = chalk.cyan;
+
+      console.clear();
+      console.log();
+      console.log(
+        `  ${Colors.primary(`${bold(`SST`)} v${project.version}`)}  ${dim(
+          `ready!`
+        )}`
+      );
+      console.log();
+      console.log(
+        `  ${primary(`➜`)}  ${bold(`Stage:`)}   ${dim(project.config.stage)}`
+      );
+      console.log(
+        `  ${primary(`➜`)}  ${bold(`Console:`)} ${link(
+          `https://console.sst.dev/${project.config.name}/${project.config.stage}`
+        )}`
+      );
+      /*
+      console.log(`  ${primary(`➜`)}  ${bold(dim(`Outputs:`))}`);
+      for (let i = 0; i < 3; i++) {
+        console.log(`       ${dim(`thdxr-scratch-MyStack`)}`);
+        console.log(
+          `       ${bold(
+            dim(`ApiEndpoint`)
+          )}: https://hdq3z0es2d.execute-api.us-east-1.amazonaws.com`
+        );
+      }
+      */
 
       await Promise.all([
         useLocalServer({

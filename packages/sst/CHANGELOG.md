@@ -1,5 +1,23 @@
 # @serverless-stack/cli2
 
+## 2.0.0-rc.35
+
+### Patch Changes
+
+- [`ff77d673c`](https://github.com/serverless-stack/sst/commit/ff77d673cfc4c9a5b401c850a4d172aaf275f34b) Thanks [@thdxr](https://github.com/thdxr)! - Fix ack messages not being forwarded to IoT
+
+## 2.0.0-rc.34
+
+### Patch Changes
+
+- [`3b8ef8fab`](https://github.com/serverless-stack/sst/commit/3b8ef8fab8ee061dd49a3a237c8ae5dcc967e4c0) Thanks [@thdxr](https://github.com/thdxr)! - Fix function acknowledgement
+
+## 2.0.0-rc.33
+
+### Patch Changes
+
+- [`d03790277`](https://github.com/serverless-stack/sst/commit/d03790277268bbf0aae6e4211a0ff3d44e17fff3) Thanks [@thdxr](https://github.com/thdxr)! - New UI
+
 ## 2.0.0-rc.32
 
 ### Patch Changes

@@ -137,7 +137,7 @@ For example, you might have full `AdministratorAccess` permission, but you can l
 
 Alternatively, you might not want everyone on the team to have the permissions to create Lambda functions directly in the AWS console or via AWS CLI, but they can trigger a deployment, and let CloudFormation create Lambda functions as part of the SST app.
 
-Use the [`--role-arn`](packages/sst.md#--role-arn) option to configure the CloudFormation service role that SST will use. [Read more about this option here](packages/sst.md#--role-arn).
+Use the [`--role-arn`](../packages/sst.md#global-options) option to configure the CloudFormation service role that SST will use. [Read more about this option here](../packages/sst.md#global-options).
 
 ## Additional permissions
 
@@ -154,7 +154,7 @@ The CDK Bootstrap stack needs to be deployed once per AWS account, per region. I
 
 You can [read more about CDK Bootstrap here](https://docs.aws.amazon.com/cdk/latest/guide/bootstrapping.html). And you can [find the latest stack template here](https://github.com/aws/aws-cdk/blob/master/packages/aws-cdk/lib/api/bootstrap/bootstrap-template.yaml).
 
-The SST Debug stack is deployed along your SST app when you run `sst start`. The stack contains the following AWS resources:
+The SST Debug stack is deployed along your SST app when you run `sst dev`. The stack contains the following AWS resources:
 
 - AWS::IAM::Role
 - AWS::IAM::Policy

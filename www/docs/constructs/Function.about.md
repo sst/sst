@@ -4,7 +4,7 @@ A construct for a Lambda Function that allows you to [develop it locally](live-l
 - Sets the default Lambda function timeout to 10 seconds.
 - [Enables AWS X-Ray](https://docs.aws.amazon.com/lambda/latest/dg/nodejs-tracing.html) by default so you can trace your serverless applications.
 - `AWS_NODEJS_CONNECTION_REUSE_ENABLED` is turned on. Meaning that the Lambda function will automatically reuse TCP connections when working with the AWS SDK. [Read more about this here](https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/node-reusing-connections.html).
-- Sets the `IS_LOCAL` environment variable for the Lambda function when it is invoked locally through the `sst start` command.
+- Sets the `IS_LOCAL` environment variable for the Lambda function when it is invoked locally through the `sst dev` command.
 
 ## Examples
 
@@ -131,13 +131,13 @@ new Function(stack, "MyLambda", {
     copyFiles: [{ from: "public", to: "." }],
     commandHooks: {
       beforeBundling: (inputDir, outputDir) => {
-        return [ "echo beforeBundling" ];
+        return ["echo beforeBundling"];
       },
       beforeInstall: (inputDir, outputDir) => {
-        return [ "echo beforeInstall" ];
+        return ["echo beforeInstall"];
       },
       afterBundling: (inputDir, outputDir) => {
-        return [ "echo afterBundling" ];
+        return ["echo afterBundling"];
       },
     },
   },
@@ -152,9 +152,7 @@ To use an [esbuild plugin](https://esbuild.github.io/plugins/), install the plug
 ```js title="config/esbuild.js"
 const { esbuildDecorators } = require("@anatine/esbuild-decorators");
 
-module.exports = [
-  esbuildDecorators(),
-];
+module.exports = [esbuildDecorators()];
 ```
 
 You can now reference the config file in your functions.
@@ -186,7 +184,7 @@ For Python functions, `srcPath` is required. This is the directory where the `re
 new Function(stack, "MyLambda", {
   bundle: {
     installCommands: [
-      "pip install --index-url https://domain.com/pypi/myprivatemodule/simple/ --extra-index-url https://pypi.org/simple -r requirements.txt ."
+      "pip install --index-url https://domain.com/pypi/myprivatemodule/simple/ --extra-index-url https://pypi.org/simple -r requirements.txt .",
     ],
   },
   srcPath: "src",
@@ -197,13 +195,13 @@ new Function(stack, "MyLambda", {
 
 #### bundle
 
-For Python functions, a dependency manager is used to install the packages. The dependency manager is selected based on which of the following files are found in the `srcPath`: 
+For Python functions, a dependency manager is used to install the packages. The dependency manager is selected based on which of the following files are found in the `srcPath`:
 
-| File | Steps |
-|------|-------|
-| `requirements.txt` | [pip](https://packaging.python.org/key_projects/#pip) is used to run `pip install` |
-| `Pipfile` | [Pipenv](https://packaging.python.org/key_projects/#pipenv) is used to generate a `requirements.txt` and then `pip install` is run |
-| `poetry.lock` | [poetry](https://packaging.python.org/key_projects/#poetry) is used to generate a `requirements.txt` and then `pip install` is run |
+| File               | Steps                                                                                                                              |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `requirements.txt` | [pip](https://packaging.python.org/key_projects/#pip) is used to run `pip install`                                                 |
+| `Pipfile`          | [Pipenv](https://packaging.python.org/key_projects/#pipenv) is used to generate a `requirements.txt` and then `pip install` is run |
+| `poetry.lock`      | [poetry](https://packaging.python.org/key_projects/#poetry) is used to generate a `requirements.txt` and then `pip install` is run |
 
 You can override this behavior by passing in the `installCommands` through the [FunctionBundlePythonProps](#functionbundlepythonprops).
 
@@ -239,7 +237,7 @@ Consider a project with `MyApp.csproj` and the following handler function:
 
 ```csharp
 namespace Example
-{            
+{
   public class Hello
   {
     public Stream MyHandler(Stream stream)
@@ -271,6 +269,7 @@ The handler function. Uses the format, `ASSEMBLY::TYPE::METHOD`.
 - `METHOD` is the name of the function handler.
 
 Consider a project with `MyApp.fsproj` and the following handler function:
+
 ```csharp
 namespace Example
 
@@ -279,6 +278,7 @@ module Hello =
   let Handler(request:APIGatewayHttpApiV2ProxyRequest) =
      //function logic
 ```
+
 The handler would be: `MyApp::Example.Hello::MyHandler`.
 
 #### srcPath
@@ -308,6 +308,7 @@ task buildZip(type: Zip) {
 This build configuration produces a deployment package in the `build/distributions` directory. The `compileJava` task compiles your function's classes. The `processResources` task copies the Java project resources into their target directory, potentially processing then. The statement `into('lib')` then copies dependency libraries from the build's classpath into a folder named `lib`.
 
 On `sst deploy`, SST runs `gradle build` to build the function. The build output has the follow content:
+
 ```
 build
 ├─ classes
@@ -320,9 +321,10 @@ build
 ├─ scripts
 └─ tmp
 ```
+
 And SST uploads the `distributions/java-hello-world.zip` as the Lambda function's code.
 
-On `sst start`, SST runs `gradle build` first. And then it unzips `distributions/java-hello-world.zip` to `distributions`. Now the `distributions/lib` folder contains all the dependency libraries. Both `distributions/lib/*` and `libs/*` are included as class paths when invoking the function under [Live Lambda Dev](../live-lambda-development.md).
+On `sst dev`, SST runs `gradle build` first. And then it unzips `distributions/java-hello-world.zip` to `distributions`. Now the `distributions/lib` folder contains all the dependency libraries. Both `distributions/lib/*` and `libs/*` are included as class paths when invoking the function under [Live Lambda Dev](../live-lambda-development.md).
 
 :::note
 Currenly, we only support Java projects built with **Gradle**. If you need to support other build systems, please join our [Discord community](http://discord.gg/sst) and message us in the #help channel.
@@ -337,6 +339,7 @@ The handler function. Uses the format, `package.Class::method`.
 - `method` is the name of the function handler.
 
 Consider a project with the following handler function:
+
 ```java
 package example
 
@@ -347,6 +350,7 @@ public class Handler implements RequestHandler<Map<String,String>, String>{
   }
 }
 ```
+
 The handler would be: `example.Handler::handleRequest`.
 
 #### srcPath
@@ -386,7 +390,7 @@ new Function(stack, "MyFunction", {
 new Function(stack, "MyFunction", {
   handler: "src/lambda.main",
   url: {
-    authorizer: "iam"
+    authorizer: "iam",
   },
 });
 ```
@@ -411,7 +415,7 @@ new Function(stack, "MyFunction", {
     cors: {
       allowMethods: ["GET", "POST"],
       allowOrigins: ["https://domain.com"],
-    }
+    },
   },
 });
 ```
@@ -442,7 +446,7 @@ const fn = new Function(stack, "MyFunction", {
 const version = fn.currentVersion;
 ```
 
-Note that Provisioned Concurrency needs to be configured on a specific Function version. By default, versioning is not enabled, and setting `currentVersionOptions` has no effect. By accessing the `currentVersion` property, a version is automatically created with the provided options. 
+Note that Provisioned Concurrency needs to be configured on a specific Function version. By default, versioning is not enabled, and setting `currentVersionOptions` has no effect. By accessing the `currentVersion` property, a version is automatically created with the provided options.
 
 #### Configuring VPC
 

@@ -15,8 +15,15 @@ export const program = yargs(hideBin(process.argv))
     type: "string",
     describe: "The AWS region to use",
   })
+  .option("verbose", {
+    type: "boolean",
+    describe: "Print verbose logs",
+  })
   .group(["stage", "profile", "region", "help"], "Global:")
   .middleware(async (argv) => {
+    if (argv.verbose) {
+      process.env.SST_VERBOSE = "1";
+    }
     if (argv._.length > 0) {
       const { initProject } = await import("../project.js");
       await initProject(argv);

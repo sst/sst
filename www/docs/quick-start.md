@@ -113,7 +113,7 @@ Then start the [Live Lambda](live-lambda-development.md) local development envir
 <TabItem value="npm">
 
 ```bash
-npx sst start
+npx sst dev
 ```
 
 </TabItem>
@@ -207,7 +207,7 @@ If you check the developer console in your browser, you'll notice that it's maki
 
 ### Open the console
 
-The `sst start` command also powers a web based dashboard, called the [SST Console](console.md). Head over to the URL above or simply — **<ConsoleUrl url={config.console} />**
+The `sst dev` command also powers a web based dashboard, called the [SST Console](console.md). Head over to the URL above or simply — **<ConsoleUrl url={config.console} />**
 
 Click on the **DynamoDB** tab on the left.
 

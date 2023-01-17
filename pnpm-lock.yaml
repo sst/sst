@@ -252,6 +252,7 @@ importers:
       aws-sdk: 2.1252.0
       builtin-modules: 3.2.0
       cdk-assets: 2.55.0
+      chalk: ^4.1.2
       chokidar: ^3.5.3
       ci-info: ^3.7.0
       colorette: ^2.0.19
@@ -317,6 +318,7 @@ importers:
       aws-sdk: 2.1252.0
       builtin-modules: 3.2.0
       cdk-assets: 2.55.0
+      chalk: 4.1.2
       chokidar: 3.5.3
       ci-info: 3.7.0
       colorette: 2.0.19
@@ -10275,8 +10277,8 @@ packages:
       ansi-styles: 4.3.0
       supports-color: 7.2.0
 
-  /chalk/5.1.2:
-    resolution: {integrity: sha512-E5CkT4jWURs1Vy5qGJye+XwCkNj7Od3Af7CP6SujMetSMkLs8Do2RWJK5yx1wamHV/op8Rz+9rltjaTQWDnEFQ==}
+  /chalk/5.2.0:
+    resolution: {integrity: sha512-ree3Gqw/nazQAPuJJEy+avdl7QfZMcUvmHIKgEZkGL+xOBzRvup5Hxo6LHuMceSxOabuJLJm5Yp/92R9eMmMvA==}
     engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
 
   /character-entities-html4/2.1.0:
@@ -14874,7 +14876,7 @@ packages:
     resolution: {integrity: sha512-l0x2DvrW294C9uDCoQe1VSU4gf529FkSZ6leBl4TiqZH/e+0R7hSfHQBNut2mNygDgHwvYHfFLn6Oxb3VWj2rA==}
     engines: {node: '>=12'}
     dependencies:
-      chalk: 5.1.2
+      chalk: 5.2.0
       is-unicode-supported: 1.3.0
 
   /longest-streak/3.1.0:
@@ -16428,7 +16430,7 @@ packages:
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     dependencies:
       bl: 5.1.0
-      chalk: 5.1.2
+      chalk: 5.2.0
       cli-cursor: 4.0.0
       cli-spinners: 2.7.0
       is-interactive: 2.0.0
