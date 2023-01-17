@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.0.0-rc.34
+
+### Patch Changes
+
+- [`3b8ef8fab`](https://github.com/serverless-stack/sst/commit/3b8ef8fab8ee061dd49a3a237c8ae5dcc967e4c0) Thanks [@thdxr](https://github.com/thdxr)! - Fix function acknowledgement
+
 ## 2.0.0-rc.33
 
 ### Patch Changes
