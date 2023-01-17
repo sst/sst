@@ -10,12 +10,7 @@ export const dev = (program: Program) =>
   program.command(
     ["dev", "start"],
     "Work on your app locally",
-    (yargs) =>
-      yargs.option("fullscreen", {
-        type: "boolean",
-        describe: "Disable full screen UI",
-        default: true,
-      }),
+    (yargs) => yargs,
     async (args) => {
       const { useRuntimeWorkers } = await import("../../runtime/workers.js");
       const { useIOTBridge } = await import("../../runtime/iot.js");

@@ -10,11 +10,6 @@ export const deploy = (program: Program) =>
           type: "string",
           describe: "Deploy using previously built output",
         })
-        .option("fullscreen", {
-          type: "boolean",
-          describe: "Disable full screen UI",
-          default: true,
-        })
         .positional("filter", {
           type: "string",
           describe: "Optionally filter stacks to deploy",
