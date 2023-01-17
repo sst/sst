@@ -18,10 +18,9 @@ export const remove = (program: Program) =>
         }),
     async (args) => {
       const React = await import("react");
-      const { CloudAssembly } = await import("aws-cdk-lib/cx-api");
       const { blue, bold } = await import("colorette");
       const { useProject } = await import("../../project.js");
-      const { Stacks } = await import("../../stacks/index.js");
+      const { loadAssembly, Stacks } = await import("../../stacks/index.js");
       const { render } = await import("ink");
       const { DeploymentUI } = await import("../ui/deploy.js");
       const { printDeploymentResults } = await import("../ui/deploy.js");
@@ -29,7 +28,7 @@ export const remove = (program: Program) =>
 
       const assembly = await (async function () {
         if (args.from) {
-          const result = new CloudAssembly(args.from);
+          const result = await loadAssembly(args.from);
           return result;
         }
 

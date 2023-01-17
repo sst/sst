@@ -4,6 +4,34 @@ import { Logger } from "../logger.js";
 import type { CloudFormationStackArtifact } from "aws-cdk-lib/cx-api";
 import { isFailed, monitor, StackDeploymentResult } from "./monitor.js";
 
+export async function publishAssets(stacks: CloudFormationStackArtifact[]) {
+  // TODO: use memo in cloudformation-deployments.ts
+  Logger.debug("Publishing assets");
+  const provider = await useAWSProvider();
+  const { CloudFormationDeployments } = await import(
+    "../cdk/cloudformation-deployments.js"
+  );
+  const { publishAssets } = await import(
+    "../cdk/cloudformation-deployments-wrapper.js"
+  );
+  const deployment = new CloudFormationDeployments({
+    sdkProvider: provider,
+  });
+
+  for (const stack of stacks) {
+    await publishAssets(
+      deployment,
+      {
+        stack: stack as any,
+        quiet: true,
+        deploymentMethod: {
+          method: "direct",
+        },
+      }
+    );
+  }
+}
+
 export async function deployMany(stacks: CloudFormationStackArtifact[]) {
   Logger.debug(
     "Deploying stacks",
@@ -14,13 +42,8 @@ export async function deployMany(stacks: CloudFormationStackArtifact[]) {
   const bus = useBus();
   const complete = new Set<string>();
   const todo = new Set(stacks.map((s) => s.id));
-  const pending = new Set<string>();
 
   const results: Record<string, StackDeploymentResult> = {};
-
-  bus.subscribe("stack.updated", (evt) => {
-    pending.add(evt.properties.stackID);
-  });
 
   return new Promise<typeof results>((resolve) => {
     async function trigger() {

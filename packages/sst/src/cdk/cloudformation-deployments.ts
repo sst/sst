@@ -578,7 +578,7 @@ export class CloudFormationDeployments {
           stackSdk: result.sdk,
         };
       }
-    } catch {}
+    } catch { }
     // fall back to the deploy role
     return this.prepareSdkFor(stackArtifact, undefined, Mode.ForReading);
   }
@@ -592,7 +592,7 @@ export class CloudFormationDeployments {
    * - SDK loaded with the right credentials for calling `CreateChangeSet`.
    * - The Execution Role that should be passed to CloudFormation.
    */
-  private async prepareSdkFor(
+  public async prepareSdkFor(
     stack: cxapi.CloudFormationStackArtifact,
     roleArn?: string,
     mode = Mode.ForWriting
@@ -677,7 +677,7 @@ export class CloudFormationDeployments {
   /**
    * Publish all asset manifests that are referenced by the given stack
    */
-  private async publishStackAssets(
+  public async publishStackAssets(
     stack: cxapi.CloudFormationStackArtifact,
     toolkitInfo: ToolkitInfo,
     options: PublishStackAssetsOptions = {}

@@ -13,13 +13,8 @@ export async function removeMany(stacks: CloudFormationStackArtifact[]) {
   const bus = useBus();
   const complete = new Set<string>();
   const todo = new Set(stacks.map((s) => s.id));
-  const pending = new Set<string>();
 
   const results: Record<string, StackDeploymentResult> = {};
-
-  bus.subscribe("stack.updated", (evt) => {
-    pending.add(evt.properties.stackID);
-  });
 
   return new Promise<typeof results>((resolve) => {
     async function trigger() {

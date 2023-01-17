@@ -23,16 +23,19 @@ export const deploy = (program: Program) =>
       const React = await import("react");
       const { printDeploymentResults } = await import("../ui/deploy.js");
       const { createSpinner } = await import("../spinner.js");
-      const { CloudAssembly } = await import("aws-cdk-lib/cx-api");
       const { blue, bold } = await import("colorette");
       const { useProject } = await import("../../project.js");
-      const { Stacks } = await import("../../stacks/index.js");
+      const { loadAssembly, Stacks } = await import("../../stacks/index.js");
       const { render } = await import("ink");
       const { DeploymentUI } = await import("../ui/deploy.js");
       const project = useProject();
+
+      // Generate cloud assembly
+      // - if --from is specified, we will use the existing cloud assembly
+      // - if --from is not specified, we will call synth to generate
       const assembly = await (async function () {
         if (args.from) {
-          const result = new CloudAssembly(args.from);
+          const result = await loadAssembly(args.from);
           return result;
         }
 
