@@ -113,11 +113,15 @@ export async function handler(event: any, context: any) {
     }, 5 * 1000);
     onMessage = (evt) => {
       if (evt.type === "function.ack") {
-        if (evt.properties.workerID === workerID) return;
-        clearTimeout(timeout);
+        if (evt.properties.workerID === workerID) {
+          clearTimeout(timeout);
+        }
       }
       if (["function.success", "function.error"].includes(evt.type)) {
-        if (evt.properties.workerID === workerID) r(evt);
+        if (evt.properties.workerID === workerID) {
+          clearTimeout(timeout);
+          r(evt);
+        }
       }
     };
   });
