@@ -27,7 +27,7 @@ import { Stacks } from "./stacks/index.js";
 const STACK_NAME = "SSTBootstrap";
 const OUTPUT_VERSION = "Version";
 const OUTPUT_BUCKET = "BucketName";
-const LATEST_VERSION = "4";
+const LATEST_VERSION = "5";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 export const useBootstrap = Context.memo(async () => {
@@ -65,7 +65,7 @@ export const useBootstrap = Context.memo(async () => {
     const fn = new Function(stack, "MetadataHandler", {
       code: Code.fromAsset(path.resolve(__dirname, "support/bootstrap-metadata-function")),
       handler: "index.handler",
-      runtime: Runtime.NODEJS_16_X,
+      runtime: Runtime.NODEJS_18_X,
       initialPolicy: [
         new PolicyStatement({
           actions: ["cloudformation:DescribeStacks"],
@@ -74,6 +74,10 @@ export const useBootstrap = Context.memo(async () => {
         new PolicyStatement({
           actions: ["s3:PutObject", "s3:DeleteObject"],
           resources: [bucket.bucketArn + "/*"],
+        }),
+        new PolicyStatement({
+          actions: ["iot:Publish"],
+          resources: [`arn:${stack.partition}:iot:${stack.region}:${stack.account}:topic//sst/*`],
         }),
       ],
     });

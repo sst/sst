@@ -20,6 +20,8 @@ import type { Metadata } from "../constructs/Metadata.js";
 declare module "../bus.js" {
   export interface Events {
     "stacks.metadata": Awaited<ReturnType<typeof metadata>>;
+    "stacks.metadata.updated": {};
+    "stacks.metadata.deleted": {};
   }
 }
 
