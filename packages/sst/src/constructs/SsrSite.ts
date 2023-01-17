@@ -13,6 +13,7 @@ import {
   CfnOutput,
   RemovalPolicy,
   CustomResource,
+  Token,
 } from "aws-cdk-lib";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as iam from "aws-cdk-lib/aws-iam";
@@ -36,6 +37,7 @@ import {
   getBuildCmdEnvironment,
   BaseSiteCdkDistributionProps,
   buildErrorResponsesForRedirectToIndex,
+  BaseSiteReplaceProps,
 } from "./BaseSite.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import {
@@ -55,8 +57,9 @@ export type SsrBuildConfig = {
   siteStub: string;
 };
 
-export interface SsrDomainProps extends BaseSiteDomainProps { }
-export interface SsrCdkDistributionProps extends BaseSiteCdkDistributionProps { }
+export interface SsrDomainProps extends BaseSiteDomainProps {}
+export interface SsrSiteReplaceProps extends BaseSiteReplaceProps {}
+export interface SsrCdkDistributionProps extends BaseSiteCdkDistributionProps {}
 export interface SsrSiteProps {
   /**
    * The SSR function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
@@ -140,6 +143,8 @@ export interface SsrSiteProps {
    */
   waitForInvalidation?: boolean;
 
+  replaceValues?: SsrSiteReplaceProps[];
+
   cdk?: {
     /**
      * Allows you to override default id for this construct.
@@ -208,7 +213,7 @@ export class SsrSite extends Construct implements SSTConstruct {
      */
     certificate?: acm.ICertificate;
   };
-  protected props: Omit<SsrSiteProps, "path"> & { path: string; };
+  protected props: Omit<SsrSiteProps, "path"> & { path: string };
   /**
    * Determines if a placeholder site should be deployed instead. We will set
    * this to `true` by default when performing local development, although the
@@ -400,10 +405,9 @@ export class SsrSite extends Construct implements SSTConstruct {
       },
       permissions: {
         "ssm:GetParameters": [
-          `arn:${Stack.of(this).partition}:ssm:${app.region}:${app.account}:parameter${getParameterPath(
-            this,
-            "url"
-          )}`,
+          `arn:${Stack.of(this).partition}:ssm:${app.region}:${
+            app.account
+          }:parameter${getParameterPath(this, "url")}`,
         ],
       },
     };
@@ -497,9 +501,9 @@ export class SsrSite extends Construct implements SSTConstruct {
     const app = this.node.root as App;
     const script = path.resolve(__dirname, "../support/base-site-archiver.mjs");
     const fileSizeLimit = app.isRunningSSTTest()
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
-      ? this.props.sstTestFileSizeLimitOverride || 200
+      ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
+        this.props.sstTestFileSizeLimitOverride || 200
       : 200;
     const result = spawn.sync(
       "node",
@@ -575,11 +579,13 @@ export class SsrSite extends Construct implements SSTConstruct {
   }
 
   private createS3AssetFileOptionsForStub() {
-    return [{
-      exclude: "*",
-      include: "*",
-      cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
-    }];
+    return [
+      {
+        exclude: "*",
+        include: "*",
+        cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
+      },
+    ];
   }
 
   private createS3Bucket(): s3.Bucket {
@@ -601,7 +607,10 @@ export class SsrSite extends Construct implements SSTConstruct {
     }
   }
 
-  private createS3Deployment(assets: s3Assets.Asset[], fileOptions: { exclude: string, include: string, cacheControl: string }[]): CustomResource {
+  private createS3Deployment(
+    assets: s3Assets.Asset[],
+    fileOptions: { exclude: string; include: string; cacheControl: string }[]
+  ): CustomResource {
     // Create a Lambda function that will be doing the uploading
     const uploader = new lambda.Function(this, "S3Uploader", {
       code: lambda.Code.fromAsset(
@@ -655,6 +664,7 @@ export class SsrSite extends Construct implements SSTConstruct {
             ];
           }
         ),
+        ReplaceValues: this.getS3ContentReplaceValues(),
       },
     });
   }
@@ -897,8 +907,8 @@ export class SsrSite extends Construct implements SSTConstruct {
     const waitForInvalidation = this.isPlaceholder
       ? false
       : this.props.waitForInvalidation === false
-        ? false
-        : true;
+      ? false
+      : true;
     return new CustomResource(this, "CloudFrontInvalidation", {
       serviceToken: invalidator.functionArn,
       resourceType: "Custom::SSTCloudFrontInvalidation",
@@ -1065,6 +1075,11 @@ export class SsrSite extends Construct implements SSTConstruct {
     if (!fs.existsSync(sitePath)) {
       throw new Error(`No site found at "${path.resolve(sitePath)}"`);
     }
+  }
+
+  protected getS3ContentReplaceValues(): SsrSiteReplaceProps[] {
+    const replaceValues: SsrSiteReplaceProps[] = this.props.replaceValues || [];
+    return replaceValues;
   }
 
   private registerSiteEnvironment() {

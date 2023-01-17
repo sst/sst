@@ -1,7 +1,6 @@
 import fs from "fs";
 import url from "url";
 import path from "path";
-import esbuild from "esbuild";
 import spawn from "cross-spawn";
 import { Construct } from "constructs";
 import { buildErrorResponsesForRedirectToIndex } from "./BaseSite.js";
@@ -10,18 +9,20 @@ import {
   Duration,
   RemovalPolicy,
   SymlinkFollowMode,
+  CustomResource,
+  Token,
 } from "aws-cdk-lib";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 
-import { SsrSite, SsrSiteProps } from "./SsrSite.js";
+import { SsrSite, SsrSiteProps, SsrSiteReplaceProps } from "./SsrSite.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
-export interface NextjsSiteProps extends Omit<SsrSiteProps, "edge"> { }
+export interface NextjsSiteProps extends Omit<SsrSiteProps, "edge"> {}
 
 /**
  * The `NextjsSite` construct is a higher level CDK construct that makes it easy to create a Next.js app.
@@ -58,8 +59,7 @@ export class NextjsSite extends SsrSite {
     if (this.isPlaceholder) {
       bundlePath = path.resolve(__dirname, "../support/ssr-site-function-stub");
       handler = "server.handler";
-    }
-    else {
+    } else {
       // Note: cannot point the bundlePath to the `.open-next/server-function`
       //       b/c the folder contains node_modules. And pnpm node_modules
       //       contains symlinks. CDK cannot zip symlinks correctly.
@@ -68,7 +68,10 @@ export class NextjsSite extends SsrSite {
       const zipOutDir = path.resolve(
         path.join(this.sstBuildDir, `Site-${this.node.id}-${this.node.addr}`)
       );
-      const script = path.resolve(__dirname, "../support/ssr-site-function-archiver.mjs");
+      const script = path.resolve(
+        __dirname,
+        "../support/ssr-site-function-archiver.mjs"
+      );
       const result = spawn.sync(
         "node",
         [
@@ -109,7 +112,8 @@ export class NextjsSite extends SsrSite {
     const s3Origin = new origins.S3Origin(this.cdk.bucket);
 
     // Create server behavior
-    const { fn: middlewareFn, isMiddlewareEnabled } = this.createMiddlewareEdgeFunctionForRegional();
+    const { fn: middlewareFn, isMiddlewareEnabled } =
+      this.createMiddlewareEdgeFunctionForRegional();
     const fnUrl = this.serverLambdaForRegional!.addFunctionUrl({
       authType: lambda.FunctionUrlAuthType.NONE,
     });
@@ -122,12 +126,15 @@ export class NextjsSite extends SsrSite {
       cachePolicy:
         cdk?.cachePolicies?.serverRequests ??
         this.createCloudFrontServerCachePolicy(),
-      edgeLambdas: isMiddlewareEnabled && !this.isPlaceholder
-        ? [{
-          eventType: cloudfront.LambdaEdgeEventType.VIEWER_REQUEST,
-          functionVersion: middlewareFn.currentVersion,
-        }]
-        : undefined,
+      edgeLambdas:
+        isMiddlewareEnabled && !this.isPlaceholder
+          ? [
+              {
+                eventType: cloudfront.LambdaEdgeEventType.VIEWER_REQUEST,
+                functionVersion: middlewareFn.currentVersion,
+              },
+            ]
+          : undefined,
     };
 
     // Create image optimization behavior
@@ -173,7 +180,7 @@ export class NextjsSite extends SsrSite {
 
     /**
      * Next.js requests
-     * 
+     *
      * - Public asset
      *  Use case: When you request an asset in /public
      *  Request: /myImage.png
@@ -181,7 +188,7 @@ export class NextjsSite extends SsrSite {
      *  - Cache-Control: public, max-age=0, must-revalidate
      *  - x-vercel-cache: MISS (1st request)
      *  - x-vercel-cache: HIT (2nd request)
-     * 
+     *
      * - SSG page
      *  Use case: When you request an SSG page directly
      *  Request: /myPage
@@ -189,14 +196,14 @@ export class NextjsSite extends SsrSite {
      *  - Cache-Control: public, max-age=0, must-revalidate
      *  - Content-Encoding: br
      *  - x-vercel-cache: HIT (2nd request, not set for 1st request)
-     * 
+     *
      * - SSR page (directly)
      *  Use case: When you request an SSR page directly
      *  Request: /myPage
      *  Response cache:
      *  - Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate
      *  - x-vercel-cache: MISS
-     * 
+     *
      * - SSR pages (user transition)
      *  Use case: When the page uses getServerSideProps(), and you request this page on
      *            client-side page trasitions. Next.js sends an API request to the server,
@@ -205,14 +212,14 @@ export class NextjsSite extends SsrSite {
      *  Response cache:
      *  - Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate
      *  - x-vercel-cache: MISS
-     * 
+     *
      * - Image optimization
      *  Use case: when you request an image
      *  Request: /_next/image?url=%2F_next%2Fstatic%2Fmedia%2F4600x4600.ce39e3d6.jpg&w=256&q=75
      *  Response cache:
      *    - Cache-Control: public, max-age=31536000, immutable
      *    - x-vercel-cache: HIT
-     * 
+     *
      * - API
      *  Use case: when you request an API endpoint
      *  Request: /api/hello
@@ -259,29 +266,25 @@ export class NextjsSite extends SsrSite {
   }
 
   protected createCloudFrontServerCachePolicy(): cloudfront.CachePolicy {
-    return new cloudfront.CachePolicy(
-      this,
-      "ServerCache",
-      {
-        queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
-        headerBehavior: cloudfront.CacheHeaderBehavior.allowList(
-          // required by image optimization request
-          "accept",
-          // required by server request
-          "x-op-middleware-request-headers",
-          "x-op-middleware-response-headers",
-          "x-nextjs-data",
-          "x-middleware-prefetch",
-        ),
-        cookieBehavior: cloudfront.CacheCookieBehavior.all(),
-        defaultTtl: Duration.days(0),
-        maxTtl: Duration.days(365),
-        minTtl: Duration.days(0),
-        enableAcceptEncodingBrotli: true,
-        enableAcceptEncodingGzip: true,
-        comment: "SST server response cache policy",
-      }
-    );
+    return new cloudfront.CachePolicy(this, "ServerCache", {
+      queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
+      headerBehavior: cloudfront.CacheHeaderBehavior.allowList(
+        // required by image optimization request
+        "accept",
+        // required by server request
+        "x-op-middleware-request-headers",
+        "x-op-middleware-response-headers",
+        "x-nextjs-data",
+        "x-middleware-prefetch"
+      ),
+      cookieBehavior: cloudfront.CacheCookieBehavior.all(),
+      defaultTtl: Duration.days(0),
+      maxTtl: Duration.days(365),
+      minTtl: Duration.days(0),
+      enableAcceptEncodingBrotli: true,
+      enableAcceptEncodingGzip: true,
+      comment: "SST server response cache policy",
+    });
   }
 
   protected generateBuildId(): string {
@@ -300,9 +303,11 @@ export class NextjsSite extends SsrSite {
     if (this.isPlaceholder) {
       bundlePath = path.resolve(__dirname, "../support/ssr-site-function-stub");
       handler = "server.handler";
-    }
-    else {
-      bundlePath = path.join(sitePath, ".open-next/image-optimization-function");
+    } else {
+      bundlePath = path.join(
+        sitePath,
+        ".open-next/image-optimization-function"
+      );
       handler = "index.handler";
     }
 
@@ -319,21 +324,23 @@ export class NextjsSite extends SsrSite {
       timeout: Duration.seconds(defaults?.function?.timeout || 10),
       environment: {
         BUCKET_NAME: this.cdk.bucket.bucketName,
-      }
+      },
     });
   }
 
   private createMiddlewareEdgeFunctionForRegional() {
     const { defaults, environment, path: sitePath } = this.props;
-    const middlewarePath = path.resolve(sitePath, ".open-next/middleware-function");
+    const middlewarePath = path.resolve(
+      sitePath,
+      ".open-next/middleware-function"
+    );
     const isMiddlewareEnabled = fs.existsSync(middlewarePath);
 
     let bundlePath, handler;
     if (this.isPlaceholder || !isMiddlewareEnabled) {
       bundlePath = path.resolve(__dirname, "../support/ssr-site-function-stub");
       handler = "server.handler";
-    }
-    else {
+    } else {
       bundlePath = middlewarePath;
       handler = "index.handler";
     }
@@ -351,4 +358,33 @@ export class NextjsSite extends SsrSite {
     return { fn, isMiddlewareEnabled };
   }
 
+  /////////////////////
+  // Helper Functions
+  /////////////////////
+
+  /**
+   * We don't know all of the env vars at build time, so we need to replace the env vars while deploying.
+   */
+  protected getS3ContentReplaceValues(): SsrSiteReplaceProps[] {
+    const replaceValues = super.getS3ContentReplaceValues();
+
+    Object.entries(this.props.environment || {})
+      .filter(([, value]) => Token.isUnresolved(value))
+      .forEach(([key, value]) => {
+        const token = `{{ ${key} }}`;
+        replaceValues.push(
+          {
+            files: "**/*.html",
+            search: token,
+            replace: value,
+          },
+          {
+            files: "**/*.js",
+            search: token,
+            replace: value,
+          }
+        );
+      });
+    return replaceValues;
+  }
 }
