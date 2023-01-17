@@ -897,8 +897,16 @@ test("constructor: cfDistribution props", async () => {
 
 test("constructor: cfDistribution is construct", async () => {
   const stack = new Stack(new App(), "stack");
+
+  route53.HostedZone.fromLookup = vi
+    .fn()
+    .mockImplementation((scope, id, { domainName }) => {
+      return new route53.HostedZone(scope, id, { zoneName: domainName });
+    });
+
   new StaticSite(stack, "Site", {
     path: "test/site",
+    customDomain: "domain.com",
     cdk: {
       distribution: cloudfront.Distribution.fromDistributionAttributes(stack, "Distribution", {
         distributionId: 'frontend-distribution-id',
@@ -913,6 +921,11 @@ test("constructor: cfDistribution is construct", async () => {
     DistributionId: "frontend-distribution-id",
     DistributionPaths: ["/*"],
     WaitForInvalidation: true,
+  });
+
+  countResources(stack, "AWS::Route53::HostedZone", 1);
+  hasResource(stack, "AWS::Route53::HostedZone", {
+    Name: "domain.com.",
   });
 });
 
