@@ -403,7 +403,7 @@ export class App extends cdk.App {
       if (child instanceof Stack) {
         const stackName = (child as Stack).node.id;
         (child as Stack).addOutputs({
-          SstMetadata: JSON.stringify({
+          SSTMetadata: JSON.stringify({
             app: this.name,
             stage: this.stage,
             version: useProject().version,
@@ -430,7 +430,7 @@ export class App extends cdk.App {
     if (current instanceof cdk.CfnResource) {
       current.applyRemovalPolicy(
         cdk.RemovalPolicy[
-          policy.toUpperCase() as keyof typeof cdk.RemovalPolicy
+        policy.toUpperCase() as keyof typeof cdk.RemovalPolicy
         ]
       );
     }
@@ -639,23 +639,23 @@ export class App extends cdk.App {
           `${typesPath}/${className}-${id}.ts`,
           (binding.variables[0] === "."
             ? [
-                `import "sst/node/${binding.clientPackage}";`,
-                `declare module "sst/node/${binding.clientPackage}" {`,
-                `  export interface ${className}Resources {`,
-                `    "${id}": string;`,
-                `  }`,
-                `}`,
-              ]
+              `import "sst/node/${binding.clientPackage}";`,
+              `declare module "sst/node/${binding.clientPackage}" {`,
+              `  export interface ${className}Resources {`,
+              `    "${id}": string;`,
+              `  }`,
+              `}`,
+            ]
             : [
-                `import "sst/node/${binding.clientPackage}";`,
-                `declare module "sst/node/${binding.clientPackage}" {`,
-                `  export interface ${className}Resources {`,
-                `    "${id}": {`,
-                ...binding.variables.map((p) => `      ${p}: string;`),
-                `    }`,
-                `  }`,
-                `}`,
-              ]
+              `import "sst/node/${binding.clientPackage}";`,
+              `declare module "sst/node/${binding.clientPackage}" {`,
+              `  export interface ${className}Resources {`,
+              `    "${id}": {`,
+              ...binding.variables.map((p) => `      ${p}: string;`),
+              `    }`,
+              `  }`,
+              `}`,
+            ]
           ).join("\n")
         );
       }

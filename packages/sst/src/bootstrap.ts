@@ -32,7 +32,7 @@ import { spawnSync } from "child_process";
 const STACK_NAME = "SSTBootstrap";
 const OUTPUT_VERSION = "Version";
 const OUTPUT_BUCKET = "BucketName";
-const LATEST_VERSION = "5";
+const LATEST_VERSION = "6";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 const BootstrapContext = Context.create<{
