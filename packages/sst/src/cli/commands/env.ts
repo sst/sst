@@ -31,7 +31,7 @@ export const env = (program: Program) =>
           .then(() => true)
           .catch(() => false);
         if (!exists) {
-          spinner = createSpinner("Waiting for SST to start").start();
+          spinner = createSpinner("Cannot find SST environment variables. Waiting for SST to start...").start();
           await new Promise((resolve) => setTimeout(resolve, 1000));
           continue;
         }
