@@ -99,11 +99,15 @@ const MetadataContext = Context.create(async () => {
   const cache = await useCache();
   const data = await metadata();
 
-  bus.subscribe("stack.status", async (evt) => {
-    if (!Stacks.isSuccess(evt.properties.status)) return;
-    const meta = await metadataForStack(evt.properties.stackID);
-    Logger.debug("Got metadata", meta);
-    data[evt.properties.stackID] = meta;
+  bus.subscribe("stacks.metadata.updated", async () => {
+    const data = await metadata();
+    await cache.write(`metadata.json`, JSON.stringify(data));
+    bus.publish("stacks.metadata", data);
+    MetadataContext.provide(Promise.resolve(data));
+  });
+
+  bus.subscribe("stacks.metadata.deleted", async () => {
+    const data = await metadata();
     await cache.write(`metadata.json`, JSON.stringify(data));
     bus.publish("stacks.metadata", data);
     MetadataContext.provide(Promise.resolve(data));

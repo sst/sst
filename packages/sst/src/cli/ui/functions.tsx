@@ -1,9 +1,8 @@
 import { dim } from "colorette";
-import { existsSync } from "fs";
 import { Box, Newline, Text } from "ink";
 import inkSpinner from "ink-spinner";
 import React, { useEffect, useState } from "react";
-import { useBus, Events } from "../../bus.js";
+import { useBus } from "../../bus.js";
 import { useFunctions } from "../../constructs/Function.js";
 import { Colors } from "../colors.js";
 // @ts-ignore
@@ -77,6 +76,7 @@ export function Functions() {
 
       setFunctions((functions) => {
         const { [evt.properties.requestID]: existing, ...next } = functions;
+        if (!existing) return functions;
         const diff = Date.now() - existing.started;
         if (diff > 500 && diff < 1500) {
           setTimeout(() => {
@@ -117,6 +117,7 @@ export function Functions() {
 
       setFunctions((functions) => {
         const { [evt.properties.requestID]: existing, ...next } = functions;
+        if (!existing) return functions;
         const diff = Date.now() - existing.started;
         if (diff > 500 && diff < 1500) {
           setTimeout(() => {

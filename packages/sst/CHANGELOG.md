@@ -1,5 +1,17 @@
 # @serverless-stack/cli2
 
+## 2.0.0-rc.38
+
+### Patch Changes
+
+- [`cd2576384`](https://github.com/serverless-stack/sst/commit/cd25763845e96d55fc2aa86c35c15a4ca942a924) Thanks [@thdxr](https://github.com/thdxr)! - Enable secrets commands
+
+## 2.0.0-rc.37
+
+### Patch Changes
+
+- [`a0d3fca48`](https://github.com/serverless-stack/sst/commit/a0d3fca4860364bafc7183aa4e34d4be34aeb9c2) Thanks [@thdxr](https://github.com/thdxr)! - Support specifying role to assume
+
 ## 2.0.0-rc.36
 
 ### Patch Changes

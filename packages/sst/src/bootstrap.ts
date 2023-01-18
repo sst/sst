@@ -19,10 +19,15 @@ import {
 import { useProject } from "./project.js";
 import { createSpinner } from "./cli/spinner.js";
 import { Context } from "./context/context.js";
-import { useAWSClient } from "./credentials.js";
+import {
+  useAWSClient,
+  useAWSCredentials,
+  useSTSIdentity,
+} from "./credentials.js";
 import { VisibleError } from "./error.js";
 import { Logger } from "./logger.js";
 import { Stacks } from "./stacks/index.js";
+import { spawnSync } from "child_process";
 
 const STACK_NAME = "SSTBootstrap";
 const OUTPUT_VERSION = "Version";
@@ -30,10 +35,20 @@ const OUTPUT_BUCKET = "BucketName";
 const LATEST_VERSION = "5";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
-export const useBootstrap = Context.memo(async () => {
+const BootstrapContext = Context.create<{
+  version: string;
+  bucket: string;
+}>();
+
+export const useBootstrap = BootstrapContext.use;
+
+export async function initBootstrap() {
   Logger.debug("Initializing bootstrap context");
-  let status = await loadBootstrapStatus();
-  if (!status || status.version !== LATEST_VERSION) {
+  await assertCDKToolkit();
+  const status = await (async () => {
+    const status = await load();
+    if (status && status.version === LATEST_VERSION) return status;
+
     const project = useProject();
     const spinner = createSpinner(
       "Deploying bootstrap stack, this only needs to happen once"
@@ -63,7 +78,9 @@ export const useBootstrap = Context.memo(async () => {
 
     // Create Function and subscribe to CloudFormation events
     const fn = new Function(stack, "MetadataHandler", {
-      code: Code.fromAsset(path.resolve(__dirname, "support/bootstrap-metadata-function")),
+      code: Code.fromAsset(
+        path.resolve(__dirname, "support/bootstrap-metadata-function")
+      ),
       handler: "index.handler",
       runtime: Runtime.NODEJS_18_X,
       initialPolicy: [
@@ -77,7 +94,9 @@ export const useBootstrap = Context.memo(async () => {
         }),
         new PolicyStatement({
           actions: ["iot:Publish"],
-          resources: [`arn:${stack.partition}:iot:${stack.region}:${stack.account}:topic//sst/*`],
+          resources: [
+            `arn:${stack.partition}:iot:${stack.region}:${stack.account}:topic//sst/*`,
+          ],
         }),
       ],
     });
@@ -96,13 +115,15 @@ export const useBootstrap = Context.memo(async () => {
               "ROLLBACK_COMPLETE",
               "DELETE_COMPLETE",
             ],
-          }
-        }
-      }
+          },
+        },
+      },
     });
-    rule.addTarget(new SqsQueue(queue, {
-      retryAttempts: 10,
-    }));
+    rule.addTarget(
+      new SqsQueue(queue, {
+        retryAttempts: 10,
+      })
+    );
 
     // Create stack outputs to store bootstrap stack info
     new CfnOutput(stack, OUTPUT_VERSION, { value: LATEST_VERSION });
@@ -123,16 +144,50 @@ export const useBootstrap = Context.memo(async () => {
     spinner.succeed();
 
     // Fetch bootstrap status
-    status = await loadBootstrapStatus();
-    if (!status) {
-      throw new VisibleError("Failed to deploy bootstrap stack");
-    }
-  }
-  Logger.debug("Loaded bootstrap info: ", JSON.stringify(status));
-  return status;
-});
+    const ret = await load();
+    if (!ret) throw new VisibleError("Failed to load bootstrap stack status");
+    return ret;
+  })();
+  BootstrapContext.provide(status);
+  Logger.debug("Bootstrap context initialized", status);
+}
 
-async function loadBootstrapStatus() {
+async function assertCDKToolkit() {
+  const client = useAWSClient(CloudFormationClient);
+  const { Stacks: stacks } = await client.send(
+    new DescribeStacksCommand({
+      StackName: "CDKToolkit",
+    })
+  );
+
+  if (!stacks || stacks.length === 0) {
+    const identity = await useSTSIdentity();
+    const credentials = await useAWSCredentials();
+    const project = useProject();
+    spawnSync(
+      [
+        "npx",
+        "cdk",
+        "bootstrap",
+        `aws://${identity.Account!}/${useProject().config.region}`,
+      ].join(" "),
+      {
+        env: {
+          ...process.env,
+          AWS_ACCESS_KEY_ID: credentials.accessKeyId,
+          AWS_SECRET_ACCESS_KEY: credentials.secretAccessKey,
+          AWS_SESSION_TOKEN: credentials.sessionToken,
+          AWS_REGION: project.config.region,
+          AWS_PROFILE: project.config.profile,
+        },
+        stdio: "inherit",
+        shell: process.env.SHELL || true,
+      }
+    );
+  }
+}
+
+async function load() {
   // Get bootstrap CloudFormation stack
   const cf = useAWSClient(CloudFormationClient);
   let result;
@@ -143,8 +198,10 @@ async function loadBootstrapStatus() {
       })
     );
   } catch (e: any) {
-    if (e.Code === "ValidationError"
-      && e.message === `Stack with id ${STACK_NAME} does not exist`) {
+    if (
+      e.Code === "ValidationError" &&
+      e.message === `Stack with id ${STACK_NAME} does not exist`
+    ) {
       return null;
     }
     throw e;

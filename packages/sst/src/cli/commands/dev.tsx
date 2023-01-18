@@ -1,10 +1,7 @@
 import type { Program } from "../program.js";
-import { CloudAssembly, CloudAssemblyBuilder } from "aws-cdk-lib/cx-api";
-import type { StackResource } from "@aws-sdk/client-cloudformation";
+import type { CloudAssembly } from "aws-cdk-lib/cx-api";
 import chalk from "chalk";
-import { cyan } from "colorette";
 import { Colors } from "../colors.js";
-import { Functions } from "../ui/functions.js";
 
 export const dev = (program: Program) =>
   program.command(
@@ -38,6 +35,7 @@ export const dev = (program: Program) =>
       const { useRDSWarmer } = await import("./plugins/warmer.js");
       const { useProject } = await import("../../project.js");
       const { useMetadata } = await import("../../stacks/metadata.js");
+      const { Functions } = await import("../ui/functions.js");
 
       if (args._[0] === "start") {
         console.log(

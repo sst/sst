@@ -20,6 +20,7 @@ export const useAWSCredentialsProvider = Context.memo(() => {
   Logger.debug("Using AWS profile", project.config.profile);
   const provider = fromNodeProviderChain({
     profile: project.config.profile,
+    roleArn: project.config.role,
   });
   return provider;
 });

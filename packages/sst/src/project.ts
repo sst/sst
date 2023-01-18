@@ -22,6 +22,7 @@ export interface ConfigOptions {
   region?: string;
   stage?: string;
   profile?: string;
+  role?: string;
   ssmPrefix?: string;
 }
 
@@ -63,6 +64,7 @@ const CONFIG_EXTENSIONS = [
 
 interface GlobalOptions {
   profile?: string;
+  role?: string;
   stage?: string;
   root?: string;
   region?: string;
@@ -118,6 +120,7 @@ export async function initProject(globals: GlobalOptions) {
       stage,
       profile: config.profile || globals.profile,
       region: config.region || globals.region,
+      role: config.role || globals.role,
       ssmPrefix: config.ssmPrefix || `/sst/${config.name}/${stage}/`,
     },
     stacks: sstConfig.stacks,
@@ -131,9 +134,12 @@ export async function initProject(globals: GlobalOptions) {
   };
 
   ProjectContext.provide(project);
+  const { initBootstrap } = await import("./bootstrap.js");
+  await initBootstrap();
   dotenv.config({
     path: path.join(project.paths.root, `.env.${project.config.stage}`),
   });
+
   Logger.debug("Config loaded", project);
 }
 
