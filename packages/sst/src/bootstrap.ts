@@ -94,7 +94,9 @@ export async function initBootstrap() {
         }),
         new PolicyStatement({
           actions: ["iot:Publish"],
-          resources: [`arn:${stack.partition}:iot:${stack.region}:${stack.account}:topic//sst/*`],
+          resources: [
+            `arn:${stack.partition}:iot:${stack.region}:${stack.account}:topic//sst/*`,
+          ],
         }),
       ],
     });
