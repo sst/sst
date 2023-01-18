@@ -20,10 +20,10 @@ const RUNTIME_MAP: Record<string, Runtime> = {
   "python3.9": Runtime.PYTHON_3_9,
 };
 
-export const usePythonHandler = Context.memo(() => {
-  const workers = useRuntimeWorkers();
+export const usePythonHandler = Context.memo(async () => {
+  const workers = await useRuntimeWorkers();
+  const server = await useRuntimeServerConfig();
   const handlers = useRuntimeHandlers();
-  const server = useRuntimeServerConfig();
   const processes = new Map<string, ChildProcessWithoutNullStreams>();
   const sources = new Map<string, string>();
 

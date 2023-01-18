@@ -10,10 +10,10 @@ import { useRuntimeServerConfig } from "../server.js";
 import { isChild } from "../../util/fs.js";
 const execAsync = promisify(exec);
 
-export const useGoHandler = Context.memo(() => {
-  const workers = useRuntimeWorkers();
+export const useGoHandler = Context.memo(async () => {
+  const workers = await useRuntimeWorkers();
+  const server = await useRuntimeServerConfig();
   const handlers = useRuntimeHandlers();
-  const server = useRuntimeServerConfig();
   const processes = new Map<string, ChildProcessWithoutNullStreams>();
   const sources = new Map<string, string>();
   const handlerName = process.platform === "win32" ? `handler.exe` : `handler`;

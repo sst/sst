@@ -33,12 +33,12 @@ interface Worker {
   functionID: string;
 }
 
-export const useRuntimeWorkers = Context.memo(() => {
+export const useRuntimeWorkers = Context.memo(async () => {
   const workers = new Map<string, Worker>();
   const bus = useBus();
   const handlers = useRuntimeHandlers();
   const builder = useFunctionBuilder();
-  const server = useRuntimeServerConfig();
+  const server = await useRuntimeServerConfig();
 
   handlers.subscribe("function.build.success", async (evt) => {
     for (const [_, worker] of workers) {
