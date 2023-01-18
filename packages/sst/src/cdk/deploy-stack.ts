@@ -296,9 +296,9 @@ export async function deployStack(
   );
   const stackParams = options.usePreviousParameters
     ? templateParams.updateExisting(
-        finalParameterValues,
-        cloudFormationStack.parameters
-      )
+      finalParameterValues,
+      cloudFormationStack.parameters
+    )
     : templateParams.supplyAll(finalParameterValues);
 
   if (
@@ -492,8 +492,8 @@ class FullCloudFormationDeployment {
         ChangeSetType: this.options.resourcesToImport
           ? "IMPORT"
           : this.update
-          ? "UPDATE"
-          : "CREATE",
+            ? "UPDATE"
+            : "CREATE",
         ResourcesToImport: this.options.resourcesToImport,
         Description: `CDK Changeset for execution ${this.uuid}`,
         ClientToken: `create${this.uuid}`,
@@ -717,7 +717,7 @@ class FullCloudFormationDeployment {
  * @param stack     the synthesized stack that provides the CloudFormation template
  * @param toolkitInfo information about the toolkit stack
  */
-async function makeBodyParameter(
+export async function makeBodyParameter(
   stack: cxapi.CloudFormationStackArtifact,
   resolvedEnvironment: cxapi.Environment,
   assetManifest: AssetManifestBuilder,
@@ -748,8 +748,8 @@ async function makeBodyParameter(
       `The template for stack "${stack.displayName}" is ${Math.round(
         templateJson.length / 1024
       )}KiB. ` +
-        `Templates larger than ${LARGE_TEMPLATE_SIZE_KB}KiB must be uploaded to S3.\n` +
-        "Run the following command in order to setup an S3 bucket in this environment, and then re-deploy:\n\n",
+      `Templates larger than ${LARGE_TEMPLATE_SIZE_KB}KiB must be uploaded to S3.\n` +
+      "Run the following command in order to setup an S3 bucket in this environment, and then re-deploy:\n\n",
       blue(`\t$ cdk bootstrap ${resolvedEnvironment.name}\n`)
     );
 

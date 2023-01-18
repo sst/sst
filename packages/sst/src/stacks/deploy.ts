@@ -5,31 +5,27 @@ import type { CloudFormationStackArtifact } from "aws-cdk-lib/cx-api";
 import { isFailed, monitor, StackDeploymentResult } from "./monitor.js";
 
 export async function publishAssets(stacks: CloudFormationStackArtifact[]) {
-  // TODO: use memo in cloudformation-deployments.ts
   Logger.debug("Publishing assets");
   const provider = await useAWSProvider();
-  const { CloudFormationDeployments } = await import(
-    "../cdk/cloudformation-deployments.js"
-  );
-  const { publishAssets } = await import(
+  const { publishDeployAssets } = await import(
     "../cdk/cloudformation-deployments-wrapper.js"
   );
-  const deployment = new CloudFormationDeployments({
-    sdkProvider: provider,
-  });
 
+  const results: Record<string, any> = {};
   for (const stack of stacks) {
-    await publishAssets(
-      deployment,
+    const result = await publishDeployAssets(
+      provider,
       {
         stack: stack as any,
-        quiet: true,
+        quiet: false,
         deploymentMethod: {
           method: "direct",
         },
       }
     );
+    results[stack.stackName] = result;
   }
+  return results;
 }
 
 export async function deployMany(stacks: CloudFormationStackArtifact[]) {
