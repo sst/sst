@@ -70,7 +70,6 @@ export interface AppDeployProps {
   readonly debugBridge?: string;
   readonly debugIncreaseTimeout?: boolean;
   readonly mode: "deploy" | "dev" | "remove";
-  readonly bootstrap: Awaited<ReturnType<typeof useBootstrap>>;
 }
 
 type AppRemovalPolicy = Lowercase<keyof typeof cdk.RemovalPolicy>;
@@ -123,9 +122,6 @@ export class App extends cdk.App {
   public readonly appPath: string;
 
   /** @internal */
-  public readonly bootstrap: AppDeployProps["bootstrap"];
-
-  /** @internal */
   public defaultFunctionProps: (
     | FunctionProps
     | ((stack: cdk.Stack) => FunctionProps)
@@ -158,7 +154,6 @@ export class App extends cdk.App {
     super(props);
     AppContext.provide(this);
     SiteEnv.reset();
-    this.bootstrap = deployProps.bootstrap;
     this.appPath = process.cwd();
 
     this.mode = deployProps.mode;
@@ -412,7 +407,7 @@ export class App extends cdk.App {
             app: this.name,
             stage: this.stage,
             version: useProject().version,
-            bootstrapBucket: this.bootstrap.bucket!,
+            bootstrapBucket: useBootstrap().bucket,
             metadata: byStack[stackName] || [],
           }),
         });
@@ -435,7 +430,7 @@ export class App extends cdk.App {
     if (current instanceof cdk.CfnResource) {
       current.applyRemovalPolicy(
         cdk.RemovalPolicy[
-        policy.toUpperCase() as keyof typeof cdk.RemovalPolicy
+          policy.toUpperCase() as keyof typeof cdk.RemovalPolicy
         ]
       );
     }
@@ -644,23 +639,23 @@ export class App extends cdk.App {
           `${typesPath}/${className}-${id}.ts`,
           (binding.variables[0] === "."
             ? [
-              `import "sst/node/${binding.clientPackage}";`,
-              `declare module "sst/node/${binding.clientPackage}" {`,
-              `  export interface ${className}Resources {`,
-              `    "${id}": string;`,
-              `  }`,
-              `}`,
-            ]
+                `import "sst/node/${binding.clientPackage}";`,
+                `declare module "sst/node/${binding.clientPackage}" {`,
+                `  export interface ${className}Resources {`,
+                `    "${id}": string;`,
+                `  }`,
+                `}`,
+              ]
             : [
-              `import "sst/node/${binding.clientPackage}";`,
-              `declare module "sst/node/${binding.clientPackage}" {`,
-              `  export interface ${className}Resources {`,
-              `    "${id}": {`,
-              ...binding.variables.map((p) => `      ${p}: string;`),
-              `    }`,
-              `  }`,
-              `}`,
-            ]
+                `import "sst/node/${binding.clientPackage}";`,
+                `declare module "sst/node/${binding.clientPackage}" {`,
+                `  export interface ${className}Resources {`,
+                `    "${id}": {`,
+                ...binding.variables.map((p) => `      ${p}: string;`),
+                `    }`,
+                `  }`,
+                `}`,
+              ]
           ).join("\n")
         );
       }

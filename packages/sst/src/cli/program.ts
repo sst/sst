@@ -19,6 +19,10 @@ export const program = yargs(hideBin(process.argv))
     type: "boolean",
     describe: "Print verbose logs",
   })
+  .option("role", {
+    type: "string",
+    describe: "ARN of the IAM role to use when invoking AWS",
+  })
   .group(["stage", "profile", "region", "help"], "Global:")
   .middleware(async (argv) => {
     if (argv.verbose) {
