@@ -9,15 +9,14 @@ export const consoleCommand = async (program: Program) =>
       const { blue } = await import("colorette");
       const { useRuntimeServer } = await import("../../runtime/server.js");
       const { useLocalServer } = await import("../local/server.js");
-      await Promise.all([
+      const [_, local] = await Promise.all([
         useRuntimeServer(),
         useLocalServer({
           key: "",
           cert: "",
           live: false,
-          port: 13557,
         }),
       ]);
-      console.log(`Console started: ${blue(`https://console.sst.dev`)}`);
+      console.log(`Console started: ${blue(local.url)}`);
     }
   );

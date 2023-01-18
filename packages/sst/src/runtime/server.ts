@@ -4,20 +4,24 @@ import { Events, useBus } from "../bus.js";
 import { Logger } from "../logger.js";
 import { useRuntimeWorkers } from "./workers.js";
 import https from "https";
+import getPort from "get-port";
 
-export const useRuntimeServerConfig = Context.memo(() => {
+export const useRuntimeServerConfig = Context.memo(async () => {
+  const port = await getPort({
+    port: 12557,
+  });
   return {
     API_VERSION: "2018-06-01",
-    url: "http://localhost:12557",
-    port: 12557,
+    port,
+    url: `http://localhost:${port}`,
   };
 });
 
 export const useRuntimeServer = Context.memo(async () => {
   const bus = useBus();
   const app = express();
-  const workers = useRuntimeWorkers();
-  const cfg = useRuntimeServerConfig();
+  const workers = await useRuntimeWorkers();
+  const cfg = await useRuntimeServerConfig();
 
   const workersWaiting = new Map<
     string,

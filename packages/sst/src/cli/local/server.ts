@@ -13,9 +13,10 @@ import { DendriformPatch, optimise } from "dendriform-immer-patch-optimiser";
 import { sync } from "cross-spawn";
 import { useProject } from "../../project.js";
 import { useBus } from "../../bus.js";
+import { useRuntimeServerConfig } from "../../runtime/server.js";
+import getPort from "get-port";
 
 type Opts = {
-  port: number;
   key: any;
   cert: any;
   live: boolean;
@@ -29,6 +30,9 @@ declare module "../../bus.js" {
 
 export async function useLocalServer(opts: Opts) {
   const project = useProject();
+  const port = await getPort({
+    port: 13557,
+  });
   let state: State = {
     app: project.config.name,
     stage: project.config.stage,
@@ -50,7 +54,7 @@ export async function useLocalServer(opts: Opts) {
     );
     res.sendStatus(200);
   });
-  
+
   rest.all<{
     href: string;
   }>(
@@ -144,7 +148,7 @@ export async function useLocalServer(opts: Opts) {
     socket.terminate();
   });
 
-  server.listen(opts.port);
+  server.listen(port);
   const handler = applyWSSHandler({
     wss,
     router,
@@ -254,7 +258,10 @@ export async function useLocalServer(opts: Opts) {
   });
 
   const result = {
-    port: opts.port,
+    port,
+    url: `https://console.sst.dev/${project.config.name}/${
+      project.config.stage
+    }${port !== 13557 ? `?port=${port}` : ""}`,
     updateState,
     updateFunction,
   };

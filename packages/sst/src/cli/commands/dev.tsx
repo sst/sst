@@ -246,6 +246,11 @@ export const dev = (program: Program) =>
 
       const primary = chalk.hex("#E27152");
       const link = chalk.cyan;
+      const local = await useLocalServer({
+        key: "",
+        cert: "",
+        live: true,
+      });
 
       console.clear();
       console.log();
@@ -258,11 +263,7 @@ export const dev = (program: Program) =>
       console.log(
         `  ${primary(`➜`)}  ${bold(`Stage:`)}   ${dim(project.config.stage)}`
       );
-      console.log(
-        `  ${primary(`➜`)}  ${bold(`Console:`)} ${link(
-          `https://console.sst.dev/${project.config.name}/${project.config.stage}`
-        )}`
-      );
+      console.log(`  ${primary(`➜`)}  ${bold(`Console:`)} ${link(local.url)}`);
       /*
       console.log(`  ${primary(`➜`)}  ${bold(dim(`Outputs:`))}`);
       for (let i = 0; i < 3; i++) {
@@ -276,12 +277,6 @@ export const dev = (program: Program) =>
       */
 
       await Promise.all([
-        useLocalServer({
-          key: "",
-          cert: "",
-          live: true,
-          port: 13557,
-        }),
         useRuntimeWorkers(),
         useIOTBridge(),
         useRuntimeServer(),
