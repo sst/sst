@@ -23,7 +23,7 @@ export const program = yargs(hideBin(process.argv))
     type: "string",
     describe: "ARN of the IAM role to use when invoking AWS",
   })
-  .group(["stage", "profile", "region", "help"], "Global:")
+  .group(["stage", "profile", "region", "help", "verbose", "role"], "Global:")
   .middleware(async (argv) => {
     if (argv.verbose) {
       process.env.SST_VERBOSE = "1";
