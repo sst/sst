@@ -11,8 +11,8 @@ import { useRuntimeWorkers } from "../workers.js";
 import { Context } from "../../context/context.js";
 import { VisibleError } from "../../error.js";
 
-export const useNodeHandler = Context.memo(() => {
-  const workers = useRuntimeWorkers();
+export const useNodeHandler = Context.memo(async () => {
+  const workers = await useRuntimeWorkers();
   const handlers = useRuntimeHandlers();
   const cache: Record<string, esbuild.BuildResult> = {};
   const project = useProject();

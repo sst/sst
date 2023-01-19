@@ -708,7 +708,7 @@ export class CloudFormationDeployments {
   /**
    * Validate that the bootstrap stack has the right version for this stack
    */
-  private async validateBootstrapStackVersion(
+  public async validateBootstrapStackVersion(
     stackName: string,
     requiresBootstrapStackVersion: number | undefined,
     bootstrapStackVersionSsmParameter: string | undefined,

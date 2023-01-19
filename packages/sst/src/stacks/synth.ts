@@ -2,7 +2,6 @@ import { Logger } from "../logger.js";
 import type { App } from "../constructs/App.js";
 import { useProject } from "../project.js";
 import { useAWSProvider, useSTSIdentity } from "../credentials.js";
-import { useBootstrap } from "../bootstrap.js";
 import * as contextproviders from "aws-cdk/lib/context-providers/index.js";
 import path from "path";
 import { VisibleError } from "../error.js";
@@ -30,10 +29,7 @@ export async function synth(opts: SynthOptions) {
   useDotnetHandler();
   const { Configuration } = await import("aws-cdk/lib/settings.js");
   const project = useProject();
-  const [identity, bootstrap] = await Promise.all([
-    useSTSIdentity(),
-    useBootstrap(),
-  ]);
+  const identity = await useSTSIdentity();
   opts = {
     ...opts,
     buildDir: opts.buildDir || path.join(project.paths.out, "dist"),
@@ -60,7 +56,6 @@ export async function synth(opts: SynthOptions) {
         region: project.config.region,
         mode: opts.mode,
         skipBuild: opts.mode === "remove",
-        bootstrap,
       },
       {
         outdir: opts.buildDir,

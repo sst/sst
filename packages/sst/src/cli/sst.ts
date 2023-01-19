@@ -5,8 +5,10 @@ import { blue, red } from "colorette";
 import { program } from "./program.js";
 import { VisibleError } from "../error.js";
 import { useSpinners } from "./spinner.js";
-import dotenv from "dotenv";
 import { Logger } from "../logger.js";
+
+import dotenv from "dotenv";
+dotenv.config();
 
 import { env } from "./commands/env.js";
 import { dev } from "./commands/dev.js";
@@ -18,7 +20,6 @@ import { consoleCommand } from "./commands/console.js";
 import { secrets } from "./commands/secrets/secrets.js";
 import { update } from "./commands/update.js";
 import { diff } from "./commands/diff.js";
-dotenv.config();
 
 dev(program);
 deploy(program);

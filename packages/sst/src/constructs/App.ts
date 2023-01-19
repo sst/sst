@@ -70,7 +70,6 @@ export interface AppDeployProps {
   readonly debugBridge?: string;
   readonly debugIncreaseTimeout?: boolean;
   readonly mode: "deploy" | "dev" | "remove";
-  readonly bootstrap: Awaited<ReturnType<typeof useBootstrap>>;
 }
 
 type AppRemovalPolicy = Lowercase<keyof typeof cdk.RemovalPolicy>;
@@ -123,9 +122,6 @@ export class App extends cdk.App {
   public readonly appPath: string;
 
   /** @internal */
-  public readonly bootstrap: AppDeployProps["bootstrap"];
-
-  /** @internal */
   public defaultFunctionProps: (
     | FunctionProps
     | ((stack: cdk.Stack) => FunctionProps)
@@ -158,7 +154,6 @@ export class App extends cdk.App {
     super(props);
     AppContext.provide(this);
     SiteEnv.reset();
-    this.bootstrap = deployProps.bootstrap;
     this.appPath = process.cwd();
 
     this.mode = deployProps.mode;
@@ -408,11 +403,11 @@ export class App extends cdk.App {
       if (child instanceof Stack) {
         const stackName = (child as Stack).node.id;
         (child as Stack).addOutputs({
-          SstMetadata: JSON.stringify({
+          SSTMetadata: JSON.stringify({
             app: this.name,
             stage: this.stage,
             version: useProject().version,
-            bootstrapBucket: this.bootstrap.bucket!,
+            bootstrapBucket: useBootstrap().bucket,
             metadata: byStack[stackName] || [],
           }),
         });

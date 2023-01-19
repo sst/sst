@@ -94,7 +94,7 @@ async function getMetadata(stackName: string) {
     })
   ));
   const metadataOutput = ret.Stacks?.at(0)?.Outputs?.find((o: any) =>
-    o.OutputKey === "SstMetadata"
+    o.OutputKey === "SSTMetadata"
   )?.OutputValue;
 
   if (!metadataOutput) {
