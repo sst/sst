@@ -56,15 +56,7 @@ Alternatively, you can refer to [this example repo](https://github.com/serverles
    api.bind([job]);
    ```
 
-3. **Install dependency**
-
-   Go into `services/` and run
-
-   ```bash
-   npm install --save sst/node
-   ```
-
-4. **Define the handler function**
+3. **Define the handler function**
 
    Create the function with the code that needs to run for long. Here for example, we are creating a function to calculate the factorial of a given number.
 
@@ -98,7 +90,7 @@ Alternatively, you can refer to [this example repo](https://github.com/serverles
    });
    ```
 
-5. **Run the job**
+4. **Run the job**
 
    And finally we can run this job in our API using the [`Job.myJob.run`](clients/job.md) helper. Change `services/functions/lambda.ts` to:
 

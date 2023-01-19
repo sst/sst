@@ -73,13 +73,7 @@ Follow along by creating the Minimal TypeScript starter by running `npx create-s
    };
    ```
 
-   You'll also need to install the node package in the `services/` directory.
-
-   ```bash
-   npm install --save sst/node
-   ```
-
-   And the AWS SDK for this example.
+   And install the AWS SDK for this example.
 
    ```bash
    npm install --save @aws-sdk/client-s3
@@ -98,8 +92,6 @@ Let's take a look at some of the key features of Resource Binding, and how it ma
 ### Typesafety
 
 In the above example, the `Bucket` object that's imported from `sst/node/bucket` is typesafe. Your editor should be able to autocomplete the bucket name `myFiles`, as well as its property `bucketName`.
-
-![resource binding typesafe](/img/resource-binding/typesafe.png)
 
 <details>
 <summary>Behind the scenes</summary>
@@ -154,7 +146,7 @@ Cannot use Bucket.myFiles. Please make sure it is bound to this function.
 When testing your code, you can use the [`sst bind`](packages/sst.md#sst-bind) CLI to bind the resources to your tests.
 
 ```bash
-sst bind -- vitest run
+sst bind "vitest run"
 ```
 
 This allows the [`sst/node`](clients/index.md) helper library to work as if it was running inside a Lambda function.

@@ -86,12 +86,6 @@ Follow along by creating the Minimal TypeScript starter by running `npx create-s
    };
    ```
 
-   You'll also need to install the node package in the `services/` directory.
-
-   ```bash
-   npm install --save sst/node
-   ```
-
    That's it!
 
 ---
@@ -202,7 +196,7 @@ Set a fallback value for your secret so you don't have to set them for ephemeral
 In the above example, it's likely all the dev stages share the same `STRIPE_KEY`. So set a fallback value by running:
 
 ```bash
-npx sst secrets set-fallback STRIPE_KEY sk_test_abc123
+npx sst secrets set --fallback STRIPE_KEY sk_test_abc123
 ```
 
 Similar to the `set` command, SST creates an AWS SSM Parameter of the type `SecureString`. And the parameter name in this case is `/sst/{appName}/.fallback/Secret/STRIPE_KEY/value`.
@@ -264,12 +258,6 @@ Follow along by creating the Minimal TypeScript starter by running `npx create-s
        body: `App version is ${Config.APP_VERSION}.`,
      };
    };
-   ```
-
-   You'll also need to install the node package in the `services/` directory.
-
-   ```bash
-   npm install --save sst/node
    ```
 
    That's it!
@@ -502,7 +490,7 @@ npx sst secrets set STRIPE_KEY sk_live_xyz789 --stage bar
 You can also set a fallback value for ephemeral stages.
 
 ```bash
-npx sst secrets set-fallback STRIPE_KEY sk_test_abc123
+npx sst secrets set --fallback STRIPE_KEY sk_test_abc123
 ```
 
 At runtime, the functions are going to pick up the correct value based on the stage, whether they are running locally, inside a test, or in production.

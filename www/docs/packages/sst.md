@@ -328,7 +328,21 @@ Manage secrets in your app.
 npx sst secrets <command> [options]
 ```
 
-This takes the following commands.
+#### Options
+
+- **`--fallback`**
+
+  _Default_: false
+
+  Set this option if you want to `get`, `set`, or `remove` the fallback version of a secret. For example, to get the fallback of a secret.
+
+  ```bash
+  npx sst secrets get --fallback STRIPE_KEY
+  ```
+
+  Note that, the fallback value can only be inherited by stages deployed in the same AWS account and region. [Read more about fallback values](../config.md#fallback-values).
+
+`sst secrets` takes the following commands.
 
 ---
 
@@ -368,40 +382,6 @@ Removes the secret with the given `name`.
 
 ```bash
 npx sst secrets remove <name> [options]
-```
-
----
-
-#### `sst secrets get-fallback`
-
-Decrypts and prints the fallback value of the secret with the given `name`.
-
-```bash
-npx sst secrets get-fallback <name> [options]
-```
-
-:::note
-The fallback value can only be inherited by stages deployed in the same AWS account and region. [Read more about fallback values](../config.md#fallback-values).
-:::
-
----
-
-#### `sst secrets set-fallback`
-
-Sets the fallback `value` of a secret with the given `name`.
-
-```bash
-npx sst secrets set-fallback <name> <value> [options]
-```
-
----
-
-#### `sst secrets remove-fallback`
-
-Removes the fallback for a secret with the given `name`.
-
-```bash
-npx sst secrets remove-fallback <name> [options]
 ```
 
 ---

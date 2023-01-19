@@ -42,7 +42,7 @@ If you created your app with `create-sst` a [Vitest](https://vitest.dev/config/)
   "remove": "sst remove",
   "console": "sst console",
   "typecheck": "tsc --noEmit",
-  "test": "sst bind -- vitest run"
+  "test": "sst bind \"vitest run\""
 },
 ```
 
