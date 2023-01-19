@@ -2,10 +2,10 @@
 description: "Overview of the `api` module."
 ---
 
-Overview of the `api` module in the `@serverless-stack/node` package.
+Overview of the `api` module in the `sst/node` package.
 
 ```ts
-import { ... } from "@serverless-stack/node/api"
+import { ... } from "sst/node/api"
 ```
 
 The `api` module has the following exports.
@@ -23,7 +23,7 @@ The properties let you access the resources that are bound to the function.
 This module helps with accessing [`Api`](../constructs/Api.md) constructs.
 
 ```ts
-import { Api } from "@serverless-stack/node/api";
+import { Api } from "sst/node/api";
 ```
 
 #### url
@@ -43,7 +43,7 @@ console.log(Api.myApi.url);
 This module helps with accessing [GraphqlApis](../constructs/GraphQLApi.md).
 
 ```ts
-import { GraphQLApi } from "@serverless-stack/node/api";
+import { GraphQLApi } from "sst/node/api";
 console.log(GraphQLApi.myApi.url);
 ```
 
@@ -60,7 +60,7 @@ The URL of the API. If custom domain is enabled, this is the custom domain URL o
 This module helps with accessing [AppSyncApis](../constructs/AppSyncApi.md).
 
 ```ts
-import { AppSyncApi } from "@serverless-stack/node/api";
+import { AppSyncApi } from "sst/node/api";
 console.log(AppSyncApi.myApi.url);
 ```
 
@@ -77,7 +77,7 @@ The URL of the API. If custom domain is enabled, this is the custom domain URL o
 This module helps with accessing [WebSocketApis](../constructs/WebSocketApi.md).
 
 ```ts
-import { WebSocketApi } from "@serverless-stack/node/api";
+import { WebSocketApi } from "sst/node/api";
 console.log(WebSocketApi.myApi.url);
 ```
 
@@ -94,7 +94,7 @@ The URL of the API. If custom domain is enabled, this is the custom domain URL o
 This module helps with accessing [ApiGatewayV1Apis](../constructs/ApiGatewayV1Api.md).
 
 ```ts
-import { ApiGatewayV1Api } from "@serverless-stack/node/api";
+import { ApiGatewayV1Api } from "sst/node/api";
 console.log(ApiGatewayV1Api.myApi.url);
 ```
 
@@ -117,7 +117,7 @@ The handlers can wrap around your Lambda function handler.
 The `ApiHandler` provides a function that can be used to implement the API handler function.
 
 ```js
-import { useBody, ApiHandler } from "@serverless-stack/node/api";
+import { useBody, ApiHandler } from "sst/node/api";
 
 export const handler = ApiHandler((event) => {
   const body = useBody();
@@ -139,7 +139,7 @@ The hooks are functions that have access to the current invocation.
 This hook returns the request body.
 
 ```ts
-import { useBody } from "@serverless-stack/node/api";
+import { useBody } from "sst/node/api";
 const body = useBody();
 ```
 
@@ -150,7 +150,7 @@ const body = useBody();
 This hook returns the request body in JSON decoded format.
 
 ```ts
-import { useJsonBody } from "@serverless-stack/node/api";
+import { useJsonBody } from "sst/node/api";
 const json = useJsonBody();
 ```
 
@@ -161,7 +161,7 @@ const json = useJsonBody();
 This hook returns a request cookie.
 
 ```ts
-import { useCookie } from "@serverless-stack/node/api";
+import { useCookie } from "sst/node/api";
 const cookie = useCookie("token");
 ```
 
@@ -172,7 +172,7 @@ const cookie = useCookie("token");
 This hook returns all request cookies.
 
 ```ts
-import { useCookies } from "@serverless-stack/node/api";
+import { useCookies } from "sst/node/api";
 const cookies = useCookies();
 ```
 
@@ -183,7 +183,7 @@ const cookies = useCookies();
 This hook returns a request header.
 
 ```ts
-import { useHeader } from "@serverless-stack/node/api";
+import { useHeader } from "sst/node/api";
 const header = useHeader("Authorization");
 ```
 
@@ -194,7 +194,7 @@ const header = useHeader("Authorization");
 This hook returns all request headers.
 
 ```ts
-import { useHeaders } from "@serverless-stack/node/api";
+import { useHeaders } from "sst/node/api";
 const headers = useHeaders();
 ```
 
@@ -205,7 +205,7 @@ const headers = useHeaders();
 This hook returns the request form data.
 
 ```ts
-import { useFormData } from "@serverless-stack/node/api";
+import { useFormData } from "sst/node/api";
 const data = useFormData();
 ```
 
@@ -216,7 +216,7 @@ const data = useFormData();
 This hook returns the request form value.
 
 ```ts
-import { useFormValue } from "@serverless-stack/node/api";
+import { useFormValue } from "sst/node/api";
 const name = useFormValue("name");
 ```
 
@@ -227,7 +227,7 @@ const name = useFormValue("name");
 This hook returns a request query parameter.
 
 ```ts
-import { useQueryParam } from "@serverless-stack/node/api";
+import { useQueryParam } from "sst/node/api";
 const name = useQueryParam("name");
 ```
 
@@ -238,7 +238,7 @@ const name = useQueryParam("name");
 This hook returns all request query parameters.
 
 ```ts
-import { useQueryParams } from "@serverless-stack/node/api";
+import { useQueryParams } from "sst/node/api";
 const params = useQueryParams();
 ```
 
@@ -249,7 +249,7 @@ const params = useQueryParams();
 This hook returns a request path parameter.
 
 ```ts
-import { usePathParam } from "@serverless-stack/node/api";
+import { usePathParam } from "sst/node/api";
 const id = usePathParam("id");
 ```
 
@@ -260,6 +260,6 @@ const id = usePathParam("id");
 This hook returns all request query parameters.
 
 ```ts
-import { usePathParams } from "@serverless-stack/node/api";
+import { usePathParams } from "sst/node/api";
 const params = usePathParams();
 ```

@@ -7,7 +7,7 @@ Using this construct requires two additional dependencies. Make sure you install
 ### Using the minimal config
 
 ```js
-import { AppSyncApi } from "@serverless-stack/resources";
+import { AppSyncApi } from "sst/constructs";
 
 new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
@@ -222,7 +222,7 @@ import { MappingTemplate } from "@aws-cdk/aws-appsync-alpha";
 
 const notesTable = new Table(stack, "Notes", {
   fields: {
-    id: "string"
+    id: "string",
   },
   primaryIndex: { partitionKey: "id" },
 });
@@ -232,7 +232,7 @@ new AppSyncApi(stack, "GraphqlApi", {
   dataSources: {
     tableDS: {
       type: "dynamodb",
-      table: notesTable
+      table: notesTable,
     },
   },
   resolvers: {
@@ -458,7 +458,10 @@ If you have the domain name stored in AWS SSM Parameter Store, you can reference
 ```js {3,8-9}
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
 
-const rootDomain = StringParameter.valueForStringParameter(stack, `/myApp/domain`);
+const rootDomain = StringParameter.valueForStringParameter(
+  stack,
+  `/myApp/domain`
+);
 
 new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
@@ -524,7 +527,7 @@ new AppSyncApi(stack, "GraphqlApi", {
 
 ```js {11-18}
 import * as appsync from "@aws-cdk/aws-appsync-alpha";
-import { Auth, AppSyncApi } from "@serverless-stack/resources";
+import { Auth, AppSyncApi } from "sst/constructs";
 
 // Create a User Pool using the Auth construct
 const auth = new Cognito(stack, "Auth");
@@ -591,7 +594,7 @@ new AppSyncApi(stack, "GraphqlApi", {
 
 ```js {12-19}
 import * as appsync from "@aws-cdk/aws-appsync-alpha";
-import { Function, AppSyncApi } from "@serverless-stack/resources";
+import { Function, AppSyncApi } from "sst/constructs";
 
 const authorizer = new Function(stack, "AuthorizerFn", {
   handler: "src/authorizer.main",
@@ -634,7 +637,7 @@ new AppSyncApi(stack, "GraphqlApi", {
         additionalAuthorizationModes: [
           {
             authorizationType: appsync.AuthorizationType.IAM,
-          }
+          },
         ],
       },
     },

@@ -41,7 +41,7 @@ SST is an extension of [AWS CDK](https://aws.amazon.com/cdk/). It's fairly simpl
    Your classes are written as functions instead of `cdk.Stack`. Here is what the JavaScript version looks like.
 
    ```js
-   import * as sst from "@serverless-stack/resources";
+   import * as sst from "sst/constructs";
 
    export function MyStack(ctx) {}
    ```
@@ -49,7 +49,7 @@ SST is an extension of [AWS CDK](https://aws.amazon.com/cdk/). It's fairly simpl
    And in TypeScript.
 
    ```ts
-   import * as sst from "@serverless-stack/resources";
+   import * as sst from "sst/constructs";
 
    export function MyStack(ctx: sst.StackContext) {}
    ```

@@ -158,7 +158,7 @@ stack.addOutputs({
 And finally, to reference stack outputs across stacks in your SST app.
 
 ```js title="StackA.js"
-import { StackContext, Bucket } from "@serverless-stack/resources";
+import { StackContext, Bucket } from "sst/constructs";
 
 export function StackA({ stack }: StackContext) {
   const bucket = new s3.Bucket(stack, "MyBucket");
@@ -168,7 +168,7 @@ export function StackA({ stack }: StackContext) {
 ```
 
 ```js title="StackB.js"
-import { StackContext, use } from "@serverless-stack/resources";
+import { StackContext, use } from "sst/constructs";
 import { StackA } from "./StackA";
 
 export function StackA({ stack }: StackContext) {

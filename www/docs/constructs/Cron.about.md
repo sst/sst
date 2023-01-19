@@ -5,7 +5,7 @@ The `Cron` construct is a higher level CDK construct that makes it easy to creat
 ### Rate schedule
 
 ```js
-import { Cron } from "@serverless-stack/resources";
+import { Cron } from "sst/constructs";
 
 new Cron(stack, "Cron", {
   schedule: "rate(1 minute)",
@@ -61,8 +61,8 @@ new Cron(stack, "Cron", {
   cdk: {
     rule: {
       schedule: Schedule.cron({ minute: "0", hour: "4" }),
-    }
-  }
+    },
+  },
 });
 ```
 
@@ -80,7 +80,7 @@ new Cron(stack, "Cron", {
     cdk: {
       target: {
         event: RuleTargetInput.fromObject({
-          key: "value"
+          key: "value",
         }),
       },
     },

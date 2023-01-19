@@ -13,7 +13,7 @@ SST allows you to add different kinds of serverless databases to your app. Let's
 [Amazon Aurora RDS](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/CHAP_AuroraOverview.html) is a relational database service offered by AWS. With traditional relational databases, you normally need to keep persistent connections to the database, and you have to ensure the number of open connections is within the limit the database can handle. Aurora offers a [Data API](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html). The Data API doesn't require a persistent connection. Instead, you can run SQL statements over HTTP API calls.
 
 ```js
-import { RDS, Function } from "@serverless-stack/resources";
+import { RDS, Function } from "sst/constructs";
 
 const DATABASE = "MyDatabase";
 
@@ -46,7 +46,7 @@ Then use the [`data-api-client`](https://www.npmjs.com/package/data-api-client) 
 
 ```js title="src/lambda.js"
 import client from "data-api-client";
-import { RDS } from "@serverless-stack/node/rds";
+import { RDS } from "sst/node/rds";
 
 const db = client({
   database: RDS.myDB.defaultDatabaseName,
@@ -114,7 +114,7 @@ The [`Table`](constructs/Table.md) construct allows you to use [DynamoDB](https:
 To add a DynamoDB table to your app:
 
 ```js
-import { Table } from "@serverless-stack/resources";
+import { Table } from "sst/constructs";
 
 // Create a Table
 const table = new Table(stack, "notes", {
@@ -139,7 +139,7 @@ You can use the [SST Console](console.md) to query the DynamoDB in your app.
 And use AWS DynamoDB SDK to access the Table in your functions.
 
 ```js title="src/lambda.js"
-import { Table } from "@serverless-stack/node/table";
+import { Table } from "sst/node/table";
 import AWS from "aws-sdk";
 const DynamoDb = new AWS.DynamoDB.DocumentClient();
 

@@ -2,10 +2,10 @@
 description: "Overview of the `job` module."
 ---
 
-Overview of the `job` module in the `@serverless-stack/node` package. This module helps with creating and running [Jobs](../constructs/Job.md) handler functions. You can [read more about it over on the job docs](../long-running-jobs.md).
+Overview of the `job` module in the `sst/node` package. This module helps with creating and running [Jobs](../constructs/Job.md) handler functions. You can [read more about it over on the job docs](../long-running-jobs.md).
 
 ```ts
-import { ... } from "@serverless-stack/node/job"
+import { ... } from "sst/node/job"
 ```
 
 The `job` module has the following exports.
@@ -23,7 +23,7 @@ Types to help you define the shape of your function arguments.
 A type interface you can extend to define the job payload types.
 
 ```ts
-declare module "@serverless-stack/node/job" {
+declare module "sst/node/job" {
   export interface JobTypes {
     myJob: {
       num: number;
@@ -45,7 +45,7 @@ Methods that you can call in this module.
 This export helps with interacting with the [`Job`](../constructs/Job.md) constructs.
 
 ```ts
-import { Job } from "@serverless-stack/node/job";
+import { Job } from "sst/node/job";
 ```
 
 #### run
@@ -74,7 +74,7 @@ The handlers can wrap around your Lambda function handler.
 The `JobHandler` provides a function that can be used to implement the job handler function.
 
 ```ts
-import { JobHandler } from "@serverless-stack/node/job";
+import { JobHandler } from "sst/node/job";
 
 export const handler = JobHandler("myJob", async (payload) => {
   // payload is typesafe

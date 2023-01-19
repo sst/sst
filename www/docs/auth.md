@@ -59,7 +59,7 @@ You can use the Minimal TypeScript starter by running `npx create-sst@latest` > 
 Import the [`Auth`](constructs/Auth.md) construct, attach it to your API and point it to a handler function.
 
 ```js title="stacks/api.ts"
-import { Auth } from "@serverless-stack/resources";
+import { Auth } from "sst/constructs";
 
 new Auth(stack, "auth", {
   authenticator: {
@@ -93,7 +93,7 @@ Now let's implement the handler.
 Start by creating a new function in `services/functions/auth.ts` that'll handle authentication requests.
 
 ```ts title="services/functions/auth.ts"
-import { AuthHandler } from "@serverless-stack/node/auth";
+import { AuthHandler } from "sst/node/auth";
 
 export const handler = AuthHandler({
   providers: {},
@@ -109,7 +109,7 @@ Let's configure the provider.
 To allow our users to _Sign in with Google_, we'll add the [`GoogleAdapter`](#google) as a provider in our `AuthHandler`.
 
 ```js title="services/functions/auth.ts" {5-14}
-import { AuthHandler, GoogleAdapter } from "@serverless-stack/node/auth";
+import { AuthHandler, GoogleAdapter } from "sst/node/auth";
 
 export const handler = AuthHandler({
   providers: {
@@ -165,7 +165,7 @@ We allow you to define multiple session types because in the future you may supp
 You can add your session types to the `SessionTypes` interface, like so.
 
 ```ts title="services/functions/auth.ts"
-declare module "@serverless-stack/node/auth" {
+declare module "sst/node/auth" {
   export interface SessionTypes {
     user: {
       userID: string;
@@ -251,8 +251,8 @@ In your API you'll need to check if the token is passed in and is valid. But it 
 To make it easy to check and validate the session across your app, SST has the [`useSession`](clients/auth.md#usesession) hook.
 
 ```js title="services/functions/rest/foo.ts"
-import { ApiHandler } from "@serverless-stack/node/api";
-import { useSession } from "@serverless-stack/node/auth";
+import { ApiHandler } from "sst/node/api";
+import { useSession } from "sst/node/auth";
 
 export const needsAuthHandler = ApiHandler(async (event) => {
   const session = useSession();
@@ -316,7 +316,7 @@ If you are using the [`GraphQLHandler`](clients/graphql.md#graphqlhandler) that 
 Here's an example of a GraphQL query that gets the current user from the session.
 
 ```js title="services/functions/graphql/types/foo.ts" {7}
-import { useSession } from "@serverless-stack/node/auth";
+import { useSession } from "sst/node/auth";
 
 builder.mutationFields((t) => ({
   createTask: t.field({
@@ -523,7 +523,7 @@ You can create your own adapters with the `createAdapter` function for handling 
 A common example would be to conditionally use different providers based on multi-tenant configuration. Here's an example:
 
 ```js
-import { createAdapter } from "@serverless-stack/node/auth";
+import { createAdapter } from "sst/node/auth";
 
 const google = GoogleAdapter({...});
 const link = LinkAdapter({...});

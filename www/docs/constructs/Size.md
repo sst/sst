@@ -1,5 +1,5 @@
 ---
-description: "Docs for how size are handled in the @serverless-stack/resources"
+description: "Docs for how size are handled in the sst/constructs"
 ---
 
 SST makes it easy to specify size values as typed string values.

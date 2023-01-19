@@ -8,7 +8,7 @@ The `Auth` construct is a higher level CDK construct that makes it easy to confi
 ### Using the minimal config
 
 ```js
-import { Cognito } from "@serverless-stack/resources";
+import { Cognito } from "sst/constructs";
 
 new Cognito(stack, "Auth");
 ```
@@ -35,7 +35,7 @@ There are two ways of setting this up.
 
    ```js
    new Cognito(stack, "Auth", {
-     login: ["email", "phone", "username", "preferredUsername"]
+     login: ["email", "phone", "username", "preferredUsername"],
    });
    ```
 
@@ -53,7 +53,7 @@ There are two ways of setting this up.
 
    ```js
    new Cognito(stack, "Auth", {
-     login: ["email", "phone"]
+     login: ["email", "phone"],
    });
    ```
 
@@ -114,7 +114,7 @@ Note that, you can set the `defaults.function` while using the `FunctionProps` p
 
 ```js
 new Cognito(stack, "Auth", {
-    defaults: {
+  defaults: {
     function: {
       timeout: 20,
       environment: { tableName: table.tableName },
@@ -165,7 +165,7 @@ const auth = new Cognito(stack, "Auth", {
 auth.attachPermissionsForTriggers("preAuthentication", ["s3"]);
 ```
 
-Here we are referring to the trigger using the trigger key, `preAuthentication`. 
+Here we are referring to the trigger using the trigger key, `preAuthentication`.
 
 ### Identity Pool federation
 
@@ -247,12 +247,12 @@ new Cognito(stack, "Auth", {
         address: { required: false, mutable: true },
       },
       customAttributes: {
-        'gameId': new StringAttribute({ minLen: 5, maxLen: 15, mutable: false }),
-        'participants': new NumberAttribute({ min: 1, max: 3, mutable: true }),
-        'isCompleted': new BooleanAttribute({ mutable: true }),
-        'startedAt': new DateTimeAttribute(),
+        gameId: new StringAttribute({ minLen: 5, maxLen: 15, mutable: false }),
+        participants: new NumberAttribute({ min: 1, max: 3, mutable: true }),
+        isCompleted: new BooleanAttribute({ mutable: true }),
+        startedAt: new DateTimeAttribute(),
       },
-    }
+    },
   },
 });
 ```
@@ -267,7 +267,11 @@ import { UserPool, UserPoolClient } from "aws-cdk-lib/aws-cognito";
 new Cognito(stack, "Auth", {
   cdk: {
     userPool: UserPool.fromUserPoolId(stack, "IUserPool", "pool-id"),
-    userPoolClient: UserPoolClient.fromUserPoolClientId(stack, "IUserPoolClient", "pool-client-id"),
+    userPoolClient: UserPoolClient.fromUserPoolClientId(
+      stack,
+      "IUserPoolClient",
+      "pool-client-id"
+    ),
   },
 });
 ```
@@ -277,24 +281,24 @@ new Cognito(stack, "Auth", {
 You can create the Auth construct in one stack, and attach permissions in other stacks. To do this, return the Auth construct from your stack function.
 
 ```ts title="stacks/AuthStack.ts"
-import { Cognito, StackContext } from "@serverless-stack/resources";
+import { Cognito, StackContext } from "sst/constructs";
 
 export function AuthStack({ stack }: StackContext) {
   const auth = new Cognito(stack, "Auth");
   return {
-    auth
-  }
+    auth,
+  };
 }
 ```
 
 Then import the auth construct into another stack with `use` and attach the permissions.
 
 ```js {13} title="stacks/ApiStack.ts"
-import { Api, StackContext } from "@serverless-stack/resources";
-import { AuthStack } from "./AuthStack"
+import { Api, StackContext } from "sst/constructs";
+import { AuthStack } from "./AuthStack";
 
 export function ApiStack({ stack }: StackContext) {
-  const { auth } = use(AuthStack)
+  const { auth } = use(AuthStack);
   const api = new Api(stack, "Api", {
     routes: {
       "GET  /notes": "src/list.main",

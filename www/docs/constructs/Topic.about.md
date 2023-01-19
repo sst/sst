@@ -9,12 +9,12 @@ This construct makes it easier to define a topic and its subscribers. It also in
 ### Using the minimal config
 
 ```js
-import { Topic } from "@serverless-stack/resources";
+import { Topic } from "sst/constructs";
 
 new Topic(stack, "Topic", {
   subscribers: {
     subscriber1: "src/function1.handler",
-    subscriber2: "src/function2.handler"
+    subscriber2: "src/function2.handler",
   },
 });
 ```
@@ -172,7 +172,7 @@ const myQueue = new Queue(stack, "MyQueue");
 
 new Topic(stack, "Topic", {
   subscribers: {
-    subscriber: myQueue
+    subscriber: myQueue,
   },
 });
 ```

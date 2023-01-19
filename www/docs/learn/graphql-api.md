@@ -135,7 +135,7 @@ Let's take a look at how this is all wired up.
 
    ```ts title="services/functions/graphql/graphql.ts"
    import { schema } from "./schema";
-   import { GraphQLHandler } from "@serverless-stack/node/graphql";
+   import { GraphQLHandler } from "sst/node/graphql";
 
    export const handler = GraphQLHandler({
      schema,

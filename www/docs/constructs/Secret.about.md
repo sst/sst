@@ -3,7 +3,7 @@ The `Config.Secret` construct is a higher level CDK construct that makes it easy
 ## Examples
 
 ```js
-import { Config } from "@serverless-stack/resources";
+import { Config } from "sst/constructs";
 
 new Config.Secret(stack, "STRIPE_KEY");
 ```

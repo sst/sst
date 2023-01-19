@@ -15,7 +15,7 @@ Let's look at them in detail below.
 To create simple RESTful APIs you can use the [`Api`](constructs/Api.md) construct. Behind the scenes it uses the [Amazon API Gateway HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api.html). It enables you to create serverless RESTful APIs with low latency and low cost.
 
 ```js
-import { Api } from "@serverless-stack/resources";
+import { Api } from "sst/constructs";
 
 new Api(stack, "Api", {
   routes: {
@@ -61,7 +61,7 @@ new Api(stack, "Api", {
 To create a serverless GraphQL API, use the [`GraphQLApi`](constructs/GraphQLApi.md) construct. It uses [Apollo Server](https://www.apollographql.com/docs/apollo-server/) and [Amazon API Gateway HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api.html).
 
 ```js
-import { GraphQLApi } from "@serverless-stack/resources";
+import { GraphQLApi } from "sst/constructs";
 
 new GraphQLApi(stack, "Api", {
   server: "src/graphql.handler",
@@ -85,7 +85,7 @@ The [SST Console](console.md) also gives you a way to query your GraphQL endpoin
 To create a WebSocket API use the [`WebSocketApi`](constructs/WebSocketApi.md) construct. It uses [Amazon API Gateway WebSocket API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api.html) behind the scenes. And enables you to create serverless WebSocket APIs and helps you with WebSocket lifecycle.
 
 ```js
-import { WebSocketApi } from "@serverless-stack/resources";
+import { WebSocketApi } from "sst/constructs";
 
 new WebSocketApi(stack, "Api", {
   routes: {
@@ -337,7 +337,7 @@ new GraphQLApi(stack, "GraphApi", {
 You can use the [`AppSyncApi`](constructs/AppSyncApi.md) construct to create an AppSync API.
 
 ```js
-import { AppSyncApi } from "@serverless-stack/resources";
+import { AppSyncApi } from "sst/constructs";
 
 new AppSyncApi(stack, "GraphqlApi", {
   graphqlApi: {

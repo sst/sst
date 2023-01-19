@@ -9,7 +9,7 @@ The `Table` construct is a higher level CDK construct that makes it easy to crea
 ### Primary index
 
 ```js
-import { Table } from "@serverless-stack/resources";
+import { Table } from "sst/constructs";
 
 new Table(stack, "Notes", {
   fields: {
@@ -128,7 +128,7 @@ new Table(stack, "Notes", {
   consumers: {
     consumer1: "src/consumer1.main",
     consumer2: "src/consumer2.main",
-  }
+  },
 });
 ```
 
@@ -147,7 +147,7 @@ new Table(stack, "Notes", {
         environment: { topicName: topic.topicName },
         permissions: [topic],
       },
-    }
+    },
   },
 });
 ```
@@ -255,13 +255,13 @@ new Table(stack, "Notes", {
           dynamodb: {
             Keys: {
               Id: {
-                N: ["101"]
-              }
-            }
-          }
-        }
+                N: ["101"],
+              },
+            },
+          },
+        },
       ],
-    }
+    },
   },
 });
 ```
@@ -295,7 +295,7 @@ new Table(stack, "Notes", {
 ### Kinesis Streams
 
 ```js {10}
-import { KinesisStream } from "@serverless-stack/resources";
+import { KinesisStream } from "sst/constructs";
 
 const stream = new KinesisStream(stack, "Stream");
 
@@ -361,7 +361,7 @@ const table = new Table(stack, "Notes", {
   primaryIndex: { partitionKey: "noteId" },
   cdk: {
     table: {
-      replicationRegions: ['us-east-1', 'us-east-2', 'us-west-2'],
+      replicationRegions: ["us-east-1", "us-east-2", "us-west-2"],
       replicationTimeout: Duration.hours(2),
     },
   },

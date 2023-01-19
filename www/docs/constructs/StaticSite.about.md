@@ -108,7 +108,7 @@ new StaticSite(stack, "react", {
 Deploys a plain HTML website in the `path/to/site` directory.
 
 ```js
-import { StaticSite } from "@serverless-stack/resources";
+import { StaticSite } from "sst/constructs";
 
 new StaticSite(stack, "frontend", {
   path: "path/to/site",

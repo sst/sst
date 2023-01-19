@@ -26,7 +26,7 @@ To start, there are 3 types of tests you can write for your SST apps:
 2. Tests for your APIs, the endpoints handling requests.
 3. Tests for your stacks, the code that creates your infrastructure.
 
-SST uses [Vitest](https://vitest.dev) to help you write these tests. And it uses the [`sst bind`](packages/sst.md#sst-bind) CLI to bind the resources to your tests. This allows the [`@serverless-stack/node`](clients/index.md) helper library to work as if the tests were running inside a Lambda function.
+SST uses [Vitest](https://vitest.dev) to help you write these tests. And it uses the [`sst bind`](packages/sst.md#sst-bind) CLI to bind the resources to your tests. This allows the [`sst/node`](clients/index.md) helper library to work as if the tests were running inside a Lambda function.
 
 ---
 
@@ -132,7 +132,7 @@ Open `services/test/graphql/article.test.ts`, you can see the test is similar to
 
 ```ts
 import { expect, it } from "vitest";
-import { Config } from "@serverless-stack/node/config";
+import { Config } from "sst/node/config";
 import { createClient } from "@my-sst-app/graphql/genql";
 import { Article } from "@my-sst-app/core/article";
 
@@ -182,7 +182,7 @@ Create a new file at `stacks/test/Database.test.ts`:
 ```ts
 import { it } from "vitest";
 import { Template } from "aws-cdk-lib/assertions";
-import { App, getStack } from "@serverless-stack/resources";
+import { App, getStack } from "sst/constructs";
 import { Database } from "../Database";
 
 it("point-in-time recovery is enabled", async () => {
@@ -282,4 +282,4 @@ The `sst bind` CLI sets the following environment variables:
 
 </details>
 
-This allows the [`@serverless-stack/node`](clients/index.md) helper library to work as if it was running inside a Lambda function.
+This allows the [`sst/node`](clients/index.md) helper library to work as if it was running inside a Lambda function.

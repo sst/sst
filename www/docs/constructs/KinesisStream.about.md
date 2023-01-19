@@ -7,12 +7,12 @@ This construct makes it easy to define a stream and its consumers. It also inter
 ### Using the minimal config
 
 ```js
-import { KinesisStream } from "@serverless-stack/resources";
+import { KinesisStream } from "sst/constructs";
 
 new KinesisStream(stack, "Stream", {
   consumers: {
     myConsumer: "src/lambda.main",
-  }
+  },
 });
 ```
 
@@ -27,7 +27,7 @@ const stream = new KinesisStream(stack, "Stream", {
   consumers: {
     consumer1: "src/consumer1.main",
     consumer2: "src/consumer2.main",
-  }
+  },
 });
 
 stream.addConsumers(stack, {
@@ -51,7 +51,7 @@ new KinesisStream(stack, "Stream", {
   consumers: {
     consumer1: "src/consumer1.main",
     consumer2: "src/consumer2.main",
-  }
+  },
 });
 ```
 
@@ -69,7 +69,7 @@ new KinesisStream(stack, "Stream", {
         environment: { tableName: table.tableName },
         permissions: [table],
       },
-    }
+    },
   },
 });
 ```
@@ -118,7 +118,7 @@ new KinesisStream(stack, "Stream", {
         },
       },
     },
-  }
+  },
 });
 ```
 
@@ -131,7 +131,7 @@ const stream = new KinesisStream(stack, "Stream", {
   consumers: {
     consumer1: "src/consumer1.main",
     consumer2: "src/consumer2.main",
-  }
+  },
 });
 
 stream.attachPermissions(["s3"]);
@@ -146,7 +146,7 @@ const stream = new KinesisStream(stack, "Stream", {
   consumers: {
     consumer1: "src/consumer1.main",
     consumer2: "src/consumer2.main",
-  }
+  },
 });
 
 stream.attachPermissionsToConsumer("consumer1", ["s3"]);

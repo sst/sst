@@ -90,7 +90,7 @@ If you are deploying the `AstroSite` in the `edge` mode, use the edge adapter in
 5. Add the `AstroSite` construct to an existing stack in your SST app. You can also create a new stack for the app.
 
 ```ts
-import { AstroSite, StackContext } as sst from "@serverless-stack/resources";
+import { AstroSite, StackContext } as sst from "sst/constructs";
 
 export default function MyStack({ stack }: StackContext) {
 

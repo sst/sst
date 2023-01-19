@@ -11,7 +11,7 @@ A construct for a Lambda Function that allows you to [develop it locally](live-l
 ### Creating a Function
 
 ```js
-import { Function } from "@serverless-stack/resources";
+import { Function } from "sst/constructs";
 
 new Function(stack, "MySnsLambda", {
   handler: "src/sns/index.main",

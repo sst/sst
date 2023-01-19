@@ -3,7 +3,7 @@ The `Config.Parameter` construct is a higher level CDK construct that makes it e
 ## Examples
 
 ```js {5-7}
-import { Config, Topic } from "@serverless-stack/resources";
+import { Config, Topic } from "sst/constructs";
 
 const topic = new Topic(stack, "USER_UPDATED");
 

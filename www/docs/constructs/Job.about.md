@@ -5,7 +5,7 @@ The `Job` construct is a higher level CDK construct that makes it easy to perfor
 ### Creating a Job
 
 ```js
-import { Job } from "@serverless-stack/resources";
+import { Job } from "sst/constructs";
 
 new Job(stack, "MyJob", {
   handler: "src/job.main",
@@ -28,7 +28,7 @@ new Job(stack, "MyJob", {
 ### Create a job in a VPC
 
 ```js
-import { Job } from "@serverless-stack/resources";
+import { Job } from "sst/constructs";
 import { Vpc } from "aws-cdk-lib/aws-ec2";
 
 new Job(stack, "MyJob", {
@@ -36,7 +36,7 @@ new Job(stack, "MyJob", {
   cdk: {
     vpc: Vpc.fromLookup(stack, "VPC", {
       vpcId: "vpc-xxxxxxxxxx",
-    })
-  }
+    }),
+  },
 });
 ```

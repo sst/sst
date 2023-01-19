@@ -1,5 +1,5 @@
 ---
-description: "Docs for how length of time are handled in the @serverless-stack/resources"
+description: "Docs for how length of time are handled in the sst/constructs"
 ---
 
 SST makes it easy to specify length of time values as typed string values.
@@ -25,6 +25,6 @@ new Api(stack, "MyApi", {
     allowMethods: ["GET"],
     allowOrigins: ["https://domain.com"],
     maxAge: "5 minutes",
-  }
+  },
 });
 ```

@@ -29,7 +29,7 @@ Want to learn more about `Config`? Check out the [launch livestream on YouTube](
 If you want to pass values from SST constructs to your functions, you should bind them using [Resource Binding](resource-binding.md).
 :::
 
-And once you've defined your Secrets and Parameters, you can fetch them in your Lambda functions with the [`@serverless-stack/node/config`](clients/config.md) package.
+And once you've defined your Secrets and Parameters, you can fetch them in your Lambda functions with the [`sst/node/config`](clients/config.md) package.
 
 ---
 
@@ -54,7 +54,7 @@ Follow along by creating the Minimal TypeScript starter by running `npx create-s
    You'll also need to import `Config` at the top.
 
    ```ts
-   import { Config } from "@serverless-stack/resources";
+   import { Config } from "sst/constructs";
    ```
 
    Note that you are not setting the values for the secret in your code. You shouldn't have sensitive values committed to Git.
@@ -75,7 +75,7 @@ Follow along by creating the Minimal TypeScript starter by running `npx create-s
 
    ```ts title="services/functions/lambda.ts" {8}
    import { APIGatewayProxyHandlerV2 } from "aws-lambda";
-   import { Config } from "@serverless-stack/node/config";
+   import { Config } from "sst/node/config";
 
    export const handler: APIGatewayProxyHandlerV2 = async () => {
      return {
@@ -89,7 +89,7 @@ Follow along by creating the Minimal TypeScript starter by running `npx create-s
    You'll also need to install the node package in the `services/` directory.
 
    ```bash
-   npm install --save @serverless-stack/node
+   npm install --save sst/node
    ```
 
    That's it!
@@ -146,7 +146,7 @@ It adds a Lambda environment variables named `SST_Secret_value_STRIPE_KEY` to th
 At runtime when you import the `Config` package in your function.
 
 ```ts
-import { Config } from "@serverless-stack/node/config";
+import { Config } from "sst/node/config";
 ```
 
 It performs a top-level await to fetch and decrypt `STRIPE_KEY` from SSM. Once fetched, you can reference `Config.STRIPE_KEY` directly in your code.
@@ -211,7 +211,7 @@ Similar to the `set` command, SST creates an AWS SSM Parameter of the type `Secu
 The fallback value can only be inherited by stages deployed in the same AWS account and region.
 :::
 
-If a function uses the `STRIPE_KEY` secret, but neither the secret value or the fallback value has been set, you'll get a runtime error when you import `@serverless-stack/node/config`.
+If a function uses the `STRIPE_KEY` secret, but neither the secret value or the fallback value has been set, you'll get a runtime error when you import `sst/node/config`.
 
 ```
 The following secrets were not found: STRIPE_KEY
@@ -242,7 +242,7 @@ Follow along by creating the Minimal TypeScript starter by running `npx create-s
    You'll also need to import `Config` at the top.
 
    ```ts
-   import { Config } from "@serverless-stack/resources";
+   import { Config } from "sst/constructs";
    ```
 
 2. Bind the `APP_VERSION` to the `api`.
@@ -255,7 +255,7 @@ Follow along by creating the Minimal TypeScript starter by running `npx create-s
 
    ```ts title="services/functions/lambda.ts" {8}
    import { APIGatewayProxyHandlerV2 } from "aws-lambda";
-   import { Config } from "@serverless-stack/node/config";
+   import { Config } from "sst/node/config";
 
    export const handler: APIGatewayProxyHandlerV2 = async () => {
      return {
@@ -269,7 +269,7 @@ Follow along by creating the Minimal TypeScript starter by running `npx create-s
    You'll also need to install the node package in the `services/` directory.
 
    ```bash
-   npm install --save @serverless-stack/node
+   npm install --save sst/node
    ```
 
    That's it!
@@ -296,7 +296,7 @@ A Lambda environment variable is added to the function, named `SST_Parameter_val
 At runtime when you import the `Config` package in your function.
 
 ```ts
-import { Config } from "@serverless-stack/node/config";
+import { Config } from "sst/node/config";
 ```
 
 It reads the value from `process.env.SST_Parameter_value_USER_UPDATED_TOPIC` and assigns it to `Config.USER_UPDATED_TOPIC`. You can then reference `Config.USER_UPDATED_TOPIC` directly in your code.
