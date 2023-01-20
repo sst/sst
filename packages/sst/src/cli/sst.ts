@@ -19,6 +19,7 @@ import { remove } from "./commands/remove.js";
 import { consoleCommand } from "./commands/console.js";
 import { secrets } from "./commands/secrets/secrets.js";
 import { update } from "./commands/update.js";
+import { updateMod } from "./commands/update-mod.js";
 import { diff } from "./commands/diff.js";
 
 dev(program);
@@ -29,6 +30,7 @@ env(program);
 secrets(program);
 remove(program);
 update(program);
+updateMod(program);
 consoleCommand(program);
 diff(program);
 
@@ -53,6 +55,6 @@ process.on("uncaughtException", (err) => {
   process.exit(1);
 });
 
-process.on("beforeExit", () => {});
+process.on("beforeExit", () => { });
 
 program.parse();

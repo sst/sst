@@ -43,7 +43,7 @@ export const program = yargs(hideBin(process.argv))
   .fail((_, error, yargs) => {
     if (!error) {
       yargs.showHelp();
-      return;
+      process.exit(1);
     }
     throw error;
   });

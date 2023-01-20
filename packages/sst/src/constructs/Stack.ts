@@ -69,8 +69,6 @@ export class Stack extends cdk.Stack {
     // Create a custom resource handler per stack. This handler will
     // be used by all the custom resources in the stack.
     this.customResourceHandler = this.createCustomResourceHandler();
-
-    this.createSecretsMigrationResource();
   }
 
   /**
@@ -236,31 +234,6 @@ export class Stack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_16_X,
       timeout: cdk.Duration.seconds(900),
       memorySize: 1024,
-    });
-  }
-
-  private createSecretsMigrationResource() {
-    const app = useApp();
-
-    // Add permissions to migrate SSM paths for secrets
-    this.customResourceHandler.addToRolePolicy(
-      new iam.PolicyStatement({
-        actions: ["ssm:GetParametersByPath", "ssm:PutParameter", "sns:Publish"],
-        resources: [
-          `arn:${this.partition}:ssm:${app.region}:${app.account}:parameter/sst/${app.name}/${app.stage}/*`,
-          `arn:${this.partition}:ssm:${app.region}:${app.account}:parameter/sst/${app.name}/.fallback/*`,
-        ],
-      })
-    );
-
-    new cdk.CustomResource(this, "SecretsMigration", {
-      serviceToken: this.customResourceHandler.functionArn,
-      resourceType: "Custom::SecretsMigration",
-      properties: {
-        App: app.name,
-        Stage: this.stage,
-        SSTVersion: useProject().version,
-      },
     });
   }
 

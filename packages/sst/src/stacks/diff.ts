@@ -41,7 +41,6 @@ export async function diff(stack: CloudFormationStackArtifact, oldTemplate: any)
   const stream = {
     write(chunk: string) {
       output.push(`  ${chunk}`);
-      output.push(`  ${chunk}`);
     }
   } as FormatStream;
   const pathMap = await buildLogicalToPathMap(stack);
