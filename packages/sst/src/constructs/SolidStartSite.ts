@@ -45,6 +45,7 @@ export class SolidStartSite extends SsrSite {
       description: "Server handler",
       handler,
       logRetention: "three_days",
+      architecture: defaults?.function?.architecture,
       runtime: "nodejs16.x",
       memorySize: defaults?.function?.memorySize || "512 MB",
       timeout: defaults?.function?.timeout || "10 seconds",

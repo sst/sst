@@ -56,6 +56,7 @@ export class AstroSite extends SsrSite {
       handler,
       logRetention: "three_days",
       runtime: "nodejs16.x",
+      architecture: defaults?.function?.architecture,
       memorySize: defaults?.function?.memorySize || "512 MB",
       timeout: defaults?.function?.timeout || "10 seconds",
       nodejs: {

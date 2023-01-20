@@ -129,6 +129,9 @@ export interface SsrSiteProps {
 
   defaults?: {
     function?: {
+      architecture?: Lowercase<
+        keyof Pick<typeof lambda.Architecture, "ARM_64" | "X86_64">
+      >; 
       timeout?: number;
       memorySize?: number;
       permissions?: Permissions;

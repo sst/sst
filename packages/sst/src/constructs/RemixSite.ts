@@ -11,6 +11,7 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 
 import { Logger } from "../logger.js";
 import { SsrSite } from "./SsrSite.js";
+import { Function } from "./Function.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
@@ -166,17 +167,18 @@ export class RemixSite extends SsrSite {
       ? this.createServerLambdaBundleWithStub()
       : this.createServerLambdaBundle("regional-server.js");
 
-    return new lambda.Function(this, `ServerFunction`, {
+    return new Function(this, `ServerFunction`, {
       description: "Server handler for Remix",
       handler: "server.handler",
       currentVersionOptions: {
         removalPolicy: RemovalPolicy.DESTROY,
       },
-      logRetention: logs.RetentionDays.THREE_DAYS,
+      logRetention: 'three_days',
       code: lambda.Code.fromAsset(bundlePath),
-      runtime: lambda.Runtime.NODEJS_16_X,
+      architecture: defaults?.function?.architecture,
+      runtime: 'nodejs16.x',
       memorySize: defaults?.function?.memorySize || 512,
-      timeout: Duration.seconds(defaults?.function?.timeout || 10),
+      timeout: defaults?.function?.timeout || '10 seconds',
       environment,
     });
   }
