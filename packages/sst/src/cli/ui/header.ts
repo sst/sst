@@ -12,6 +12,7 @@ export async function printHeader(input: { console?: boolean }) {
         local.url
       )}`
     );
+  Colors.gap();
 }
 
 export function printConsole() {}
