@@ -2,6 +2,8 @@ import type { Program } from "../program.js";
 import type { CloudAssembly } from "aws-cdk-lib/cx-api";
 import chalk from "chalk";
 import { Colors } from "../colors.js";
+import { useLocalServerConfig } from "../local/server.js";
+import { printHeader } from "../ui/header.js";
 
 export const dev = (program: Program) =>
   program.command(
@@ -246,24 +248,14 @@ export const dev = (program: Program) =>
 
       const primary = chalk.hex("#E27152");
       const link = chalk.cyan;
-      const local = await useLocalServer({
+      await useLocalServer({
         key: "",
         cert: "",
         live: true,
       });
 
       console.clear();
-      console.log();
-      console.log(
-        `  ${Colors.primary(`${bold(`SST`)} v${project.version}`)}  ${dim(
-          `ready!`
-        )}`
-      );
-      console.log();
-      console.log(
-        `  ${primary(`➜`)}  ${bold(`Stage:`)}   ${dim(project.config.stage)}`
-      );
-      console.log(`  ${primary(`➜`)}  ${bold(`Console:`)} ${link(local.url)}`);
+      await printHeader({ console: true });
       /*
       console.log(`  ${primary(`➜`)}  ${bold(dim(`Outputs:`))}`);
       for (let i = 0; i < 3; i++) {

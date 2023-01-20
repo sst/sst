@@ -15,6 +15,7 @@ import { useProject } from "../../project.js";
 import { useBus } from "../../bus.js";
 import { useRuntimeServerConfig } from "../../runtime/server.js";
 import getPort from "get-port";
+import { Context } from "../../context/context.js";
 
 type Opts = {
   key: any;
@@ -28,11 +29,23 @@ declare module "../../bus.js" {
   }
 }
 
-export async function useLocalServer(opts: Opts) {
+export const useLocalServerConfig = Context.memo(async () => {
   const project = useProject();
   const port = await getPort({
     port: 13557,
   });
+
+  return {
+    port,
+    url: `https://console.sst.dev/${project.config.name}/${
+      project.config.stage
+    }${port !== 13557 ? `?port=${port}` : ""}`,
+  };
+});
+
+export async function useLocalServer(opts: Opts) {
+  const cfg = await useLocalServerConfig();
+  const project = useProject();
   let state: State = {
     app: project.config.name,
     stage: project.config.stage,
@@ -148,7 +161,7 @@ export async function useLocalServer(opts: Opts) {
     socket.terminate();
   });
 
-  server.listen(port);
+  server.listen(cfg.port);
   const handler = applyWSSHandler({
     wss,
     router,
@@ -258,10 +271,6 @@ export async function useLocalServer(opts: Opts) {
   });
 
   const result = {
-    port,
-    url: `https://console.sst.dev/${project.config.name}/${
-      project.config.stage
-    }${port !== 13557 ? `?port=${port}` : ""}`,
     updateState,
     updateFunction,
   };

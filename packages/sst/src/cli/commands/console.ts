@@ -1,3 +1,4 @@
+import { useLocalServerConfig } from "../local/server.js";
 import type { Program } from "../program.js";
 
 export const consoleCommand = async (program: Program) =>
@@ -9,7 +10,7 @@ export const consoleCommand = async (program: Program) =>
       const { blue } = await import("colorette");
       const { useRuntimeServer } = await import("../../runtime/server.js");
       const { useLocalServer } = await import("../local/server.js");
-      const [_, local] = await Promise.all([
+      await Promise.all([
         useRuntimeServer(),
         useLocalServer({
           key: "",
@@ -17,6 +18,7 @@ export const consoleCommand = async (program: Program) =>
           live: false,
         }),
       ]);
-      console.log(`Console started: ${blue(local.url)}`);
+      const local = await useLocalServerConfig();
+      console.log(`Console started: ${local.url}`);
     }
   );

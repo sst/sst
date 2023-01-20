@@ -5,4 +5,7 @@ export const Colors = {
   link: chalk.cyan,
   success: chalk.green,
   danger: chalk.red,
+  dim: chalk.dim,
+  bold: chalk.bold,
+  all: chalk,
 };
