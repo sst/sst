@@ -37,7 +37,6 @@ export const dev = (program: Program) =>
       const { useRDSWarmer } = await import("./plugins/warmer.js");
       const { useProject } = await import("../../project.js");
       const { useMetadata } = await import("../../stacks/metadata.js");
-      const { Functions } = await import("../ui/functions.js");
 
       if (args._[0] === "start") {
         console.log(
@@ -50,68 +49,101 @@ export const dev = (program: Program) =>
       }
 
       const useFunctionLogger = Context.memo(async () => {
-        const component = render(<Functions />);
         const bus = useBus();
 
-        /*
+        const colors = ["#01cdfe", "#ff71ce", "#05ffa1", "#b967ff"];
+        let index = 0;
+
+        interface Pending {
+          requestID: string;
+          started: number;
+          color: string;
+        }
+        const pending = new Map<string, Pending>();
+
+        function start(requestID: string) {
+          pending.set(requestID, {
+            requestID,
+            started: Date.now(),
+            color: colors[index % colors.length],
+          });
+          index++;
+        }
+        function prefix(requestID: string) {
+          return Colors.hex(pending.get(requestID)!.color)(Colors.prefix);
+        }
+        function end(requestID: string) {
+          // index--;
+          // if (index < 0) index = colors.length - 1;
+          pending.delete(requestID);
+        }
+
         bus.subscribe("function.invoked", async (evt) => {
-          console.log(
-            bold(magenta(`  ➜ `)),
-            useFunctions().fromID(evt.properties.functionID).handler!
+          start(evt.properties.requestID);
+          Colors.line(
+            prefix(evt.properties.requestID),
+            Colors.dim.bold("Invoked"),
+            Colors.dim(
+              useFunctions().fromID(evt.properties.functionID).handler!
+            )
           );
         });
 
+        bus.subscribe("worker.stdout", async (evt) => {
+          const { started } = pending.get(evt.properties.requestID)!;
+          for (let line of evt.properties.message.split("\n")) {
+            Colors.line(
+              prefix(evt.properties.requestID),
+              Colors.dim(("+" + (Date.now() - started) + "ms").padEnd(7)),
+              Colors.dim(line)
+            );
+          }
+        });
+
+        /*
         bus.subscribe("function.build.success", async (evt) => {
           console.log(
             bold(gray(`Built   `)),
             useFunctions().fromID(evt.properties.functionID).handler!
           );
         });
+        */
+
         bus.subscribe("function.build.failed", async (evt) => {
-          console.log(
-            bold(red(`Build failed `)),
+          Colors.line(
+            Colors.danger(Colors.prefix),
             useFunctions().fromID(evt.properties.functionID).handler!
           );
-          console.log(dim(evt.properties.errors.join("\n")));
-        });
-
-        bus.subscribe("worker.stdout", async (evt) => {
-          const { message } = evt.properties;
-          const lines = message.split("\n");
-          for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
-            lines[i] = "     " + line;
+          for (const line of evt.properties.errors) {
+            Colors.line(Colors.danger(Colors.prefix), line);
           }
-          console.log(
-            bold(blue(`  ➜ `)),
-            useFunctions().fromID(evt.properties.functionID).handler!
-          );
-          console.log(dim(lines.join("\n")));
         });
-        */
 
-        /*
         bus.subscribe("function.success", async (evt) => {
-          console.log(
-            bold(green(`  ✔ `)),
-            useFunctions().fromID(evt.properties.functionID).handler!
-          );
-          console.log();
+          // stdout logs sometimes come in after
+          const req = pending.get(evt.properties.requestID)!;
+          setTimeout(() => {
+            Colors.line(
+              prefix(evt.properties.requestID),
+              Colors.dim(`Done in ${Date.now() - req.started - 100}ms`)
+            );
+            end(evt.properties.requestID);
+          }, 100);
         });
-        */
 
-        /*
         bus.subscribe("function.error", async (evt) => {
-          console.log(
-            bold(red(`  ✖ `)),
-            useFunctions().fromID(evt.properties.functionID).handler!
-          );
-          console.log(`     ${Colors.danger(evt.properties.errorMessage)}`);
-          for (const line of evt.properties.trace || []) {
-            console.log(`     ${dim(line)}`);
-          }
+          setTimeout(() => {
+            Colors.line(
+              prefix(evt.properties.requestID),
+              Colors.danger.bold("Error:"),
+              Colors.danger.bold(evt.properties.errorMessage)
+            );
+            for (const line of evt.properties.trace || []) {
+              Colors.line(prefix(evt.properties.requestID), `${dim(line)}`);
+            }
+            end(evt.properties.requestID);
+          }, 100);
         });
-        */
       });
 
       const useStackBuilder = Context.memo(async () => {
@@ -124,8 +156,8 @@ export const dev = (program: Program) =>
         let isDeploying = false;
 
         async function build() {
+          Colors.gap();
           const spinner = createSpinner({
-            indent: 2,
             color: "gray",
             text: lastDeployed
               ? ` Building stacks`
@@ -148,7 +180,7 @@ export const dev = (program: Program) =>
             Logger.debug("Checksum", "next", next, "old", lastDeployed);
             if (next === lastDeployed) {
               spinner.succeed(" No changes");
-              console.log();
+              Colors.gap();
               return;
             }
             if (!lastDeployed) {
@@ -161,12 +193,13 @@ export const dev = (program: Program) =>
             if (lastDeployed) setTimeout(() => deploy(), 100);
           } catch (ex: any) {
             spinner.fail();
-            console.log(
+            Colors.line(
               ex.stack
                 .split("\n")
-                .map((line: any) => "     " + line)
+                .map((line: any) => "   " + line)
                 .join("\n")
             );
+            Colors.gap();
           }
         }
 
@@ -177,15 +210,14 @@ export const dev = (program: Program) =>
           const assembly = pending;
           const nextChecksum = await checksum(assembly.directory);
           pending = undefined;
-          console.log();
 
+          if (lastDeployed) console.log();
           const component = render(
             <DeploymentUI stacks={assembly.stacks.map((s) => s.stackName)} />
           );
           const results = await Stacks.deployMany(assembly.stacks);
           component.clear();
           component.unmount();
-          render(<Functions />);
           lastDeployed = nextChecksum;
           printDeploymentResults(assembly, results);
 

@@ -4,8 +4,6 @@ import { Box, Text } from "ink";
 import { useBus } from "../../bus.js";
 import { Stacks } from "../../stacks/index.js";
 import inkSpinner from "ink-spinner";
-import { useProject } from "../../project.js";
-import { blue, bold, dim, green, red } from "colorette";
 import { Colors } from "../colors.js";
 import { CloudAssembly } from "aws-cdk-lib/cx-api";
 
@@ -27,7 +25,9 @@ export const DeploymentUI = (props: Props) => {
   const [resources2, setResources2] = useState<Record<string, StackEvent>>({});
 
   useEffect(() => {
-    console.log(`  ${Colors.primary(`➜`)}  ${bold(dim(`Deploying...`))}`);
+    Colors.gap();
+    Colors.line(`${Colors.primary(`➜`)}  ${Colors.bold(`Deploying...`)}`);
+    Colors.gap();
     const bus = useBus();
 
     const update = bus.subscribe("stack.updated", (payload) => {
@@ -49,13 +49,14 @@ export const DeploymentUI = (props: Props) => {
       if (event.ResourceType === "AWS::CloudFormation::Stack") return;
       setResources2((previous) => {
         if (Stacks.isFinal(event.ResourceStatus!)) {
-          console.log(
-            dim(
-              `     ${event.StackName} ${event.ResourceType} ${event.LogicalResourceId}`
+          Colors.line(
+            Colors.warning(Colors.prefix),
+            Colors.dim(
+              `${event.StackName} ${event.ResourceType} ${event.LogicalResourceId}`
             ),
             Stacks.isFailed(event.ResourceStatus!)
               ? Colors.danger(event.ResourceStatus!)
-              : dim(event.ResourceStatus!)
+              : Colors.dim(event.ResourceStatus!)
           );
           const { [event.LogicalResourceId!]: _, ...next } = previous;
           return next;
@@ -88,7 +89,6 @@ export const DeploymentUI = (props: Props) => {
         return (
           <Box key={evt.LogicalResourceId}>
             <Text>
-              {"  "}
               <Spinner />
               {"  "}
               {evt.StackName} {evt.ResourceType} {evt.LogicalResourceId}{" "}
@@ -117,32 +117,32 @@ export function printDeploymentResults(
   assembly: CloudAssembly,
   results: Awaited<ReturnType<typeof Stacks.deployMany>>
 ) {
-  console.log();
-
-  console.log(`  ${green(`✔`)}  ${bold(dim(`Deployed:`))}`);
+  Colors.gap();
+  Colors.line(Colors.success(`✔`), Colors.bold(` Deployed`));
   for (const [stack, result] of Object.entries(results)) {
+    if (Object.values(result.errors).length) continue;
     const outputs = Object.entries(result.outputs).filter(([key, _]) => {
       if (key.startsWith("Export")) return false;
       if (key.includes("SstSiteEnv")) return false;
       if (key === "SSTMetadata") return false;
       return true;
     });
-    console.log(`     ${dim(stack)}`);
+    Colors.line(`   ${Colors.dim(stack)}`);
     if (outputs.length > 0) {
       for (const key of Object.keys(Object.fromEntries(outputs)).sort()) {
         const value = result.outputs[key];
-        console.log(`     ${bold(dim(key))}: ${value}`);
+        Colors.line(`   ${Colors.bold.dim(key)}: ${value}`);
       }
     }
   }
-  console.log();
+  Colors.gap();
 
   if (Object.values(results).flatMap((s) => Object.keys(s.errors)).length) {
-    console.log(`  ${red(`✖`)}  ${bold(dim(`Errors:`))}`);
+    Colors.line(`${Colors.danger(`✖`)}  ${Colors.bold.dim(`Errors`)}`);
     for (const [stack, result] of Object.entries(results)) {
       const hasErrors = Object.entries(result.errors).length > 0;
       if (!hasErrors) continue;
-      console.log(`     ${dim(stack)}`);
+      Colors.line(`   ${Colors.dim(stack)}`);
       for (const [id, error] of Object.entries(result.errors)) {
         const found =
           Object.entries(
@@ -158,9 +158,9 @@ export function printDeploymentResults(
           .slice(1, -1)
           .join("/");
 
-        console.log(`     ${bold(red(readable))}: ${error}`);
+        Colors.line(`  ${Colors.danger.bold(readable)}: ${error}`);
       }
-      console.log();
     }
+    Colors.gap();
   }
 }
