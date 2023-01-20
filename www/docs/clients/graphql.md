@@ -2,10 +2,10 @@
 description: "Overview of the `graphql` module."
 ---
 
-Overview of the `graphql` module in the `@serverless-stack/node` package.
+Overview of the `graphql` module in the `sst/node` package.
 
 ```ts
-import { ... } from "@serverless-stack/node/graphql"
+import { ... } from "sst/node/graphql"
 ```
 
 The `graphql` module has the following exports.
@@ -23,7 +23,7 @@ The handlers can wrap around your Lambda function handler.
 A Lambda optimized GraphQL server that minimizes cold starts. It has a similar API to other alternatives like Apollo server so should be simple to switch.
 
 ```js
-import { GraphQLHandler } from "@serverless-stack/node/graphql";
+import { GraphQLHandler } from "sst/node/graphql";
 
 export const handler = GraphQLHandler({
   schema,

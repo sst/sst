@@ -19,7 +19,7 @@ Access the resources in your app in a secure and typesafe way.
 **Resource Binding** allows you to connect your functions with your infrastructure. This is done in two steps:
 
 1. Bind a resource to the functions in your infrastructure code through the `bind` prop.
-2. Use the [`@serverless-stack/node`](clients/index.md) package to access the resource in your function.
+2. Use the [`sst/node`](clients/index.md) package to access the resource in your function.
 
 ---
 
@@ -38,7 +38,7 @@ Follow along by creating the Minimal TypeScript starter by running `npx create-s
    You'll also need to import `Bucket` at the top.
 
    ```ts
-   import { Bucket } from "@serverless-stack/resources";
+   import { Bucket } from "sst/constructs";
    ```
 
 2. Then, bind the `bucket` to the `api`.
@@ -51,7 +51,7 @@ Follow along by creating the Minimal TypeScript starter by running `npx create-s
 
    ```ts title="services/functions/lambda.ts" {10}
    import { APIGatewayProxyHandlerV2 } from "aws-lambda";
-   import { Bucket } from "@serverless-stack/node/bucket";
+   import { Bucket } from "sst/node/bucket";
    import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
    const s3 = new S3Client({});
 
@@ -73,13 +73,7 @@ Follow along by creating the Minimal TypeScript starter by running `npx create-s
    };
    ```
 
-   You'll also need to install the node package in the `services/` directory.
-
-   ```bash
-   npm install --save @serverless-stack/node
-   ```
-
-   And the AWS SDK for this example.
+   And install the AWS SDK for this example.
 
    ```bash
    npm install --save @aws-sdk/client-s3
@@ -97,16 +91,14 @@ Let's take a look at some of the key features of Resource Binding, and how it ma
 
 ### Typesafety
 
-In the above example, the `Bucket` object that's imported from `@serverless-stack/node/bucket` is typesafe. Your editor should be able to autocomplete the bucket name `myFiles`, as well as its property `bucketName`.
-
-![resource binding typesafe](/img/resource-binding/typesafe.png)
+In the above example, the `Bucket` object that's imported from `sst/node/bucket` is typesafe. Your editor should be able to autocomplete the bucket name `myFiles`, as well as its property `bucketName`.
 
 <details>
 <summary>Behind the scenes</summary>
 
 Let's take a look at how this is all wired up.
 
-1. First, the `@serverless-stack/node/table` package predefines an interface.
+1. First, the `sst/node/table` package predefines an interface.
 
    ```ts
    export interface BucketResources {}
@@ -115,8 +107,8 @@ Let's take a look at how this is all wired up.
 2. When SST builds the app, it generates a type file and adds the bucket name to the `BucketResources` interface.
 
    ```ts title="node_modules/@types/serverless-stack__node/Bucket-myFiles.d.ts"
-   import "@serverless-stack/node/bucket";
-   declare module "@serverless-stack/node/bucket" {
+   import "sst/node/bucket";
+   declare module "sst/node/bucket" {
      export interface BucketResources {
        myFiles: {
          bucketName: string;
@@ -131,7 +123,7 @@ Let's take a look at how this is all wired up.
    export * from "./Bucket-myFiles";
    ```
 
-3. So when the `Bucket` object is imported from `@serverless-stack/node/bucket`, it has the type `BucketResources`.
+3. So when the `Bucket` object is imported from `sst/node/bucket`, it has the type `BucketResources`.
 
 </details>
 
@@ -154,10 +146,10 @@ Cannot use Bucket.myFiles. Please make sure it is bound to this function.
 When testing your code, you can use the [`sst bind`](packages/sst.md#sst-bind) CLI to bind the resources to your tests.
 
 ```bash
-sst bind -- vitest run
+sst bind "vitest run"
 ```
 
-This allows the [`@serverless-stack/node`](clients/index.md) helper library to work as if it was running inside a Lambda function.
+This allows the [`sst/node`](clients/index.md) helper library to work as if it was running inside a Lambda function.
 
 [Read more about testing](testing.md) and [learn about the `sst bind` CLI](testing.md#how-sst-bind-works).
 
@@ -199,7 +191,7 @@ Resource Binding works across all [SST constructs](constructs/index.md). Here ar
 - Getting the Next.js URL
 
   ```ts
-  import { NextjsSite } from "@serverless-stack/node/site";
+  import { NextjsSite } from "sst/node/site";
 
   NextjsSite.myFrontend.url;
   ```
@@ -207,7 +199,7 @@ Resource Binding works across all [SST constructs](constructs/index.md). Here ar
 - DynamoDB table name
 
   ```ts
-  import { Table } from "@serverless-stack/node/table";
+  import { Table } from "sst/node/table";
 
   Table.myTable.tableName;
   ```
@@ -215,7 +207,7 @@ Resource Binding works across all [SST constructs](constructs/index.md). Here ar
 - RDS cluster data
 
   ```ts
-  import { RDS } from "@serverless-stack/node/rds";
+  import { RDS } from "sst/node/rds";
 
   RDS.myDB.clusterArn;
   RDS.myDB.secretArn;
@@ -260,7 +252,7 @@ npx sst secrets set STRIPE_KEY sk_test_abc123
 And access the value in the function.
 
 ```ts
-import { Config } from "@serverless-stack/node/config";
+import { Config } from "sst/node/config";
 
 Config.STRIPE_KEY;
 ```
@@ -292,7 +284,7 @@ api.bind([MY_CLUSTER_NAME]);
 And you can access the value in your function.
 
 ```ts
-import { Config } from "@serverless-stack/node/config";
+import { Config } from "sst/node/config";
 
 Config.MY_CLUSTER_NAME;
 ```
@@ -303,7 +295,7 @@ Config.MY_CLUSTER_NAME;
 
 When a resource is bound to a Lambda function, the resource values are stored as environment variables for the function. In our example, the bucket name is stored as a Lambda environment variable named `SST_Bucket_bucketName_myBucket`.
 
-At runtime, the `@serverless-stack/node/bucket` package reads the value `process.env.SST_Bucket_bucketName_MyBucket` and makes it accessible via `Bucket.myBucket.bucketName`.
+At runtime, the `sst/node/bucket` package reads the value `process.env.SST_Bucket_bucketName_MyBucket` and makes it accessible via `Bucket.myBucket.bucketName`.
 
 SST also stores a copy of the bucket name in [AWS SSM](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html). In this case, an SSM parameter of the type `String` is created with the name `/sst/{appName}/{stageName}/Bucket/MyBucket/bucketName`, where `{appName}` is the name of your SST app, and `{stageName}` is the stage. The parameter value is the name of the bucket stored in plain text.
 
@@ -377,4 +369,4 @@ For sensitive values, the values are stored in AWS SSM. When the Lambda containe
 
 For non-Node.js runtimes, you can continue to use Lambda environment variables.
 
-If you want to use Resource Binding, you would need to read the bound values from the Lambda environment variable and AWS SSM directly. Refer to the [`@serverless-stack/node`](clients/index.md) package to see how it is done in Node.js.
+If you want to use Resource Binding, you would need to read the bound values from the Lambda environment variable and AWS SSM directly. Refer to the [`sst/node`](clients/index.md) package to see how it is done in Node.js.

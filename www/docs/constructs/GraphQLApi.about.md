@@ -7,7 +7,7 @@ The `GraphQLApi` construct internally extends the [`Api`](Api) construct.
 ### Using the minimal config
 
 ```js
-import { GraphQLApi } from "@serverless-stack/resources";
+import { GraphQLApi } from "sst/constructs";
 
 new GraphQLApi(stack, "Api", {
   server: "src/graphql.handler",

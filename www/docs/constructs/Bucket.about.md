@@ -5,7 +5,7 @@ The `Bucket` construct is a higher level CDK construct that makes it easy to cre
 ### Using the minimal config
 
 ```js
-import { Bucket } from "@serverless-stack/resources";
+import { Bucket } from "sst/constructs";
 
 new Bucket(stack, "Bucket");
 ```
@@ -15,7 +15,7 @@ new Bucket(stack, "Bucket");
 #### Using the minimal config
 
 ```js
-import { Bucket } from "@serverless-stack/resources";
+import { Bucket } from "sst/constructs";
 
 new Bucket(stack, "Bucket", {
   notifications: {
@@ -183,7 +183,7 @@ bucket.attachPermissionsToNotification(0, ["s3"]);
 You can directly pass in an instance of the [Queue](Queue.md) construct.
 
 ```js {6}
-import { Queue } from "@serverless-stack/resources";
+import { Queue } from "sst/constructs";
 
 const myQueue = new Queue(stack, "MyQueue");
 
@@ -205,7 +205,7 @@ new Bucket(stack, "Bucket", {
       queue: myQueue,
       events: ["object_created_put"],
       filters: [{ prefix: "imports/" }, { suffix: ".jpg" }],
-    }
+    },
   },
 });
 ```
@@ -217,7 +217,7 @@ new Bucket(stack, "Bucket", {
 You can directly pass in an instance of the [Topic](Topic.md) construct.
 
 ```js {6}
-import { Topic } from "@serverless-stack/resources";
+import { Topic } from "sst/constructs";
 
 const myTopic = new Topic(stack, "MyTopic");
 
@@ -239,7 +239,7 @@ new Bucket(stack, "Bucket", {
       topic: myTopic,
       events: ["object_created_put"],
       filters: [{ prefix: "imports/" }, { suffix: ".jpg" }],
-    }
+    },
   },
 });
 ```

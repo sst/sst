@@ -115,7 +115,7 @@ new RDS(stack, "Database", {
 ### Using the minimal config
 
 ```js
-import { RDS } from "@serverless-stack/resources";
+import { RDS } from "sst/constructs";
 
 new RDS(stack, "Database", {
   engine: "postgresql11.13",

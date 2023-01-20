@@ -111,20 +111,6 @@ module.exports = {
         "packages/create-sst",
       ]
     },
-    {
-      Reference: [
-        {
-          type: "link",
-          label: "Clients",
-          href: "/clients"
-        },
-        {
-          type: "link",
-          label: "Constructs",
-          href: "/constructs"
-        },
-      ]
-    },
   ],
   learn: [
     "learn/index",

@@ -90,7 +90,7 @@ If you are deploying the `SolidStartSite` in the `edge` mode, use the edge adapt
 5. Add the `SolidStartSite` construct to an existing stack in your SST app. You can also create a new stack for the app.
 
 ```ts
-import { SolidStartSite, StackContext } as sst from "@serverless-stack/resources";
+import { SolidStartSite, StackContext } as sst from "sst/constructs";
 
 export default function MyStack({ stack }: StackContext) {
 

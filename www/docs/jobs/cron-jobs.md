@@ -20,7 +20,7 @@ There are two ways to specify the schedule in the construct.
 You can specify a rate at which a function runs. For example, every 5 minutes.
 
 ```js {4}
-import { Cron } from "@serverless-stack/resources";
+import { Cron } from "sst/constructs";
 
 new Cron(stack, "Cron", {
   schedule: "rate(5 minutes)",
@@ -50,7 +50,7 @@ If the value is equal to 1, then the unit must be singular. If the value is grea
 Alternatively, you can specify a cron expression to have a function run at specific times, ie. every day at 12:00pm.
 
 ```js {4}
-import { Cron } from "@serverless-stack/resources";
+import { Cron } from "sst/constructs";
 
 new Cron(stack, "Cron", {
   schedule: "cron(0 12 * * ? *)",

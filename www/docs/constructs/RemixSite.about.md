@@ -80,7 +80,7 @@ Update the package.json scripts for your Remix application.
 4. Add the `RemixSite` construct to an existing stack in your SST app. You can also create a new stack for the app.
 
 ```ts
-import { RemixSite, StackContext } as sst from "@serverless-stack/resources";
+import { RemixSite, StackContext } as sst from "sst/constructs";
 
 export default function MyStack({ stack }: StackContext) {
 

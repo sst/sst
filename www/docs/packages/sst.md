@@ -328,7 +328,21 @@ Manage secrets in your app.
 npx sst secrets <command> [options]
 ```
 
-This takes the following commands.
+#### Options
+
+- **`--fallback`**
+
+  _Default_: false
+
+  Set this option if you want to `get`, `set`, or `remove` the fallback version of a secret. For example, to get the fallback of a secret.
+
+  ```bash
+  npx sst secrets get --fallback STRIPE_KEY
+  ```
+
+  Note that, the fallback value can only be inherited by stages deployed in the same AWS account and region. [Read more about fallback values](../config.md#fallback-values).
+
+`sst secrets` takes the following commands.
 
 ---
 
@@ -368,40 +382,6 @@ Removes the secret with the given `name`.
 
 ```bash
 npx sst secrets remove <name> [options]
-```
-
----
-
-#### `sst secrets get-fallback`
-
-Decrypts and prints the fallback value of the secret with the given `name`.
-
-```bash
-npx sst secrets get-fallback <name> [options]
-```
-
-:::note
-The fallback value can only be inherited by stages deployed in the same AWS account and region. [Read more about fallback values](../config.md#fallback-values).
-:::
-
----
-
-#### `sst secrets set-fallback`
-
-Sets the fallback `value` of a secret with the given `name`.
-
-```bash
-npx sst secrets set-fallback <name> <value> [options]
-```
-
----
-
-#### `sst secrets remove-fallback`
-
-Removes the fallback for a secret with the given `name`.
-
-```bash
-npx sst secrets remove-fallback <name> [options]
 ```
 
 ---
@@ -462,17 +442,9 @@ npx sst telemetry enable
 
 - **`--stage`**
 
-  _Default_: Local stage
+  _Default_: Your personal stage
 
-  The stage you want to deploy to. If this is not specified, it will default to the stage configured during the initial run of the CLI.
-
-  This option applies to the `dev`, `build`, `deploy`, `remove`, and `secrets` commands.
-
-- **`--region`**
-
-  _Default_: Stage set in the SST config.
-
-  The region you want to deploy to. Defaults to the one specified in your `sst.json`. Or uses `us-east-1`.
+  The stage you want to deploy to. If this is not specified, it will default to the stage configured during the initial run of the CLI. This is cached in the `.sst/` directory.
 
   This option applies to the `dev`, `build`, `deploy`, `remove`, and `secrets` commands.
 
@@ -482,20 +454,22 @@ npx sst telemetry enable
 
   The AWS profile you want to use for deployment. Defaults to the `default` profile in your AWS credentials file.
 
-- **`--fullscreen`**
+- **`--region`**
 
-  _Default_: `true`
+  _Default_: Stage set in the SST config.
 
-  Disable the full screen CLI UI by passing in `--fullscreen=false`.
+  The region you want to deploy to. Defaults to the one specified in your `sst.json`. Or uses `us-east-1`.
 
-- **`--no-color`**
+  This option applies to the `dev`, `build`, `deploy`, `remove`, and `secrets` commands.
+
+- **`--verbose`**
 
   _Default_: `false`
 
-  Remove color and any style from the console outputs.
+  Prints verbose logs.
 
-- **`--role-arn`**
+- **`--role`**
 
-  ARN of the IAM Role to use when invoking CloudFormation. This role must be assumable by the AWS account being used.
+  ARN of the IAM Role to use when invoking AWS. This role must be assumable by the AWS account being used.
 
   This option applies to the `start`, `deploy`, and `remove` commands.

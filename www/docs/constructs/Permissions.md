@@ -1,5 +1,5 @@
 ---
-description: "Docs for how permissions are handled in the @serverless-stack/resources"
+description: "Docs for how permissions are handled in the sst/constructs"
 ---
 
 import config from "../../config";
@@ -48,7 +48,7 @@ Specify a list of AWS IAM actions that this function has complete access to. Tak
 ### Access to a list of SST constructs
 
 ```js
-import { Topic, Table } from "@serverless-stack/resources";
+import { Topic, Table } from "sst/constructs";
 
 const topic = new topic(stack, "Topic");
 const table = new Table(stack, "Table");
@@ -82,8 +82,8 @@ const topic = new sns.Topic(stack, "Topic");
 const table = new dynamodb.Table(stack, "Table");
 
 fun.attachPermissions([
- [topic, "grantPublish"],
- [table, "grantReadData"],
+  [topic, "grantPublish"],
+  [table, "grantReadData"],
 ]);
 ```
 
@@ -99,20 +99,18 @@ Unlike the previous option, this supports all the CDK constructs.
 import * as iam from "aws-cdk-lib/aws-iam";
 
 fun.attachPermissions([
- new iam.PolicyStatement({
-   actions: ["s3:*"],
-   effect: iam.Effect.ALLOW,
-   resources: [
-     bucket.bucketArn + "/private/${cognito-identity.amazonaws.com:sub}/*",
-   ],
- }),
- new iam.PolicyStatement({
-   actions: ["execute-api:Invoke"],
-   effect: iam.Effect.ALLOW,
-   resources: [
-     `arn:aws:execute-api:${region}:${account}:${api.httpApiId}/*`,
-   ],
- }),
+  new iam.PolicyStatement({
+    actions: ["s3:*"],
+    effect: iam.Effect.ALLOW,
+    resources: [
+      bucket.bucketArn + "/private/${cognito-identity.amazonaws.com:sub}/*",
+    ],
+  }),
+  new iam.PolicyStatement({
+    actions: ["execute-api:Invoke"],
+    effect: iam.Effect.ALLOW,
+    resources: [`arn:aws:execute-api:${region}:${account}:${api.httpApiId}/*`],
+  }),
 ]);
 ```
 
@@ -178,7 +176,7 @@ new cdk.aws-iam.PolicyStatement({
 
 You can grant access to an CDK construct.
 
-``` js
+```js
 fun.attachPermissions([topic, table]);
 ```
 

@@ -15,7 +15,7 @@ Here is an example of creating a VPC using the CDK construct, and then using the
 
 ```ts
 import { Vpc } from "aws-cdk-lib/aws-ec2";
-import { Api, StackContext } from "@serverless-stack/resources";
+import { Api, StackContext } from "sst/constructs";
 
 function Stack({ stack }: StackContext) {
   // Create a VPC using CDK construct
@@ -25,7 +25,7 @@ function Stack({ stack }: StackContext) {
   const api = new Api(stack, "Api", {
     defaults: {
       function: {
-        vpc
+        vpc,
       },
     },
     routes: {

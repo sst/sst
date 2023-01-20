@@ -15,7 +15,7 @@ Add it to your app in `stacks/index.js`.
 <TabItem value="js">
 
 ```js
-import { DebugStack } from "@serverless-stack/resources";
+import { DebugStack } from "sst/constructs";
 
 export function debugApp(app) {
   new DebugStack(app, "debug-stack");
@@ -28,7 +28,7 @@ export function debugApp(app) {
 <TabItem value="ts">
 
 ```ts
-import { DebugApp, DebugStack } from "@serverless-stack/resources";
+import { DebugApp, DebugStack } from "sst/constructs";
 
 export function debugApp(app: DebugApp) {
   new DebugStack(app, "debug-stack");
@@ -123,8 +123,8 @@ export function debugApp(app) {
     cdk: {
       table: {
         pointInTimeRecovery: true,
-      }
-    }
+      },
+    },
   });
 }
 ```

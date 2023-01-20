@@ -27,7 +27,7 @@ To do that use the `debugApp` callback method in your `stacks/index.js`.
 
 ```js title="stacks/index.js" {8-12}
 import { Tags } from "aws-cdk-lib";
-import { DebugStack } from "@serverless-stack/resources";
+import { DebugStack } from "sst/constructs";
 
 export default function main(app) {
   // Define your stacks here

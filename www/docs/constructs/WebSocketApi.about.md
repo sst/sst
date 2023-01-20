@@ -5,7 +5,7 @@ The `WebSocketApi` construct is a higher level CDK construct that makes it easy 
 ### Minimal Config
 
 ```js
-import { WebSocketApi } from "@serverless-stack/resources";
+import { WebSocketApi } from "sst/constructs";
 
 new WebSocketApi(stack, "Api", {
   routes: {
@@ -71,7 +71,7 @@ new WebSocketApi(stack, "Api", {
         handler: "src/default.main",
         permissions: [table],
         environment: { tableName: table.tableName },
-      }
+      },
     },
   },
 });
@@ -175,7 +175,7 @@ new WebSocketApi(stack, "WebSocketApi", {
     path: "chat",
     cdk: {
       domainName: coreApi.cdk.domainName,
-    }
+    },
   },
 });
 ```
@@ -265,7 +265,7 @@ new WebSocketApi(stack, "Api", {
 You can also use a Lambda function to authorize users to access your API.
 
 ```js {4-9}
-import { Function, WebSocketApi } from "@serverless-stack/resources";
+import { Function, WebSocketApi } from "sst/constructs";
 
 new WebSocketApi(stack, "Api", {
   authorizer: {

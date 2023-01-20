@@ -36,7 +36,7 @@ Alternatively, you can refer to [this example repo](https://github.com/serverles
    To create a new job, import [`Job`](constructs/Job.md) at the top of `stacks/MyStack.ts`.
 
    ```ts title="stacks/MyStack.ts"
-   import { Job } from "@serverless-stack/resources";
+   import { Job } from "sst/constructs";
    ```
 
    And add a `Job` construct below the API.
@@ -56,24 +56,16 @@ Alternatively, you can refer to [this example repo](https://github.com/serverles
    api.bind([job]);
    ```
 
-3. **Install dependency**
-
-   Go into `services/` and run
-
-   ```bash
-   npm install --save @serverless-stack/node
-   ```
-
-4. **Define the handler function**
+3. **Define the handler function**
 
    Create the function with the code that needs to run for long. Here for example, we are creating a function to calculate the factorial of a given number.
 
    Define the shape of the function payload.
 
    ```ts title="services/functions/myJob.ts"
-   import { JobHandler } from "@serverless-stack/node/job";
+   import { JobHandler } from "sst/node/job";
 
-   declare module "@serverless-stack/node/job" {
+   declare module "sst/node/job" {
      export interface JobTypes {
        myJob: {
          num: number;
@@ -98,12 +90,12 @@ Alternatively, you can refer to [this example repo](https://github.com/serverles
    });
    ```
 
-5. **Run the job**
+4. **Run the job**
 
    And finally we can run this job in our API using the [`Job.myJob.run`](clients/job.md) helper. Change `services/functions/lambda.ts` to:
 
    ```ts title="services/functions/lambda.ts"
-   import { Job } from "@serverless-stack/node/job";
+   import { Job } from "sst/node/job";
    import { APIGatewayProxyHandlerV2 } from "aws-lambda";
 
    export const handler: APIGatewayProxyHandlerV2 = async (event) => {
@@ -177,8 +169,8 @@ new Job (stack, "myJob, {
 Now you can access the table at runtime.
 
 ```ts
-import { Table } from "@serverless-stack/node/table";
-import { JobHandler } from "@serverless-stack/node/job";
+import { Table } from "sst/node/table";
+import { JobHandler } from "sst/node/job";
 
 export const handler = JobHandler("myJob", async (payload) => {
   console.log(Table.myTable.tableName);
@@ -287,7 +279,7 @@ This is being used in two places to ensure typesafety.
 
 Let's take a look at how this is all wired up.
 
-1. First, the `@serverless-stack/node/job` package predefines two interfaces.
+1. First, the `sst/node/job` package predefines two interfaces.
 
    ```ts
    export interface JobNames {}
@@ -297,8 +289,8 @@ Let's take a look at how this is all wired up.
 2. `JobNames` is managed by SST. When SST builds the app, it generates a type file and adds all job names to the `JobNames` interface.
 
    ```ts title="node_modules/@types/@serverless-stack__node/Job-LongJob.d.ts"
-   import "@serverless-stack/node/job";
-   declare module "@serverless-stack/node/job" {
+   import "sst/node/job";
+   declare module "sst/node/job" {
      export interface JobNames {
        myJob: string;
      }

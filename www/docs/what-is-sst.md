@@ -296,7 +296,7 @@ api.bind([rds]);
 Now the functions in your API will have **type safe access** to your database.
 
 ```ts {6-8} title="services/list.ts"
-import { RDS } from "@serverless-stack/node/rds";
+import { RDS } from "sst/node/rds";
 
 export async function main() {
   new ExecuteStatementCommand({
