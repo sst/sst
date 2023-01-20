@@ -1,6 +1,7 @@
 export * from "./assembly.js";
 export * from "./build.js";
 export * from "./deploy.js";
+export * from "./diff.js";
 export * from "./metadata.js";
 export * from "./synth.js";
 export * from "./monitor.js";
