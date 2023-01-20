@@ -1,4 +1,6 @@
+import { Colors } from "../colors.js";
 import type { Program } from "../program.js";
+import { printHeader } from "../ui/header.js";
 
 export const deploy = (program: Program) =>
   program.command(
@@ -23,18 +25,9 @@ export const deploy = (program: Program) =>
       const { loadAssembly, Stacks } = await import("../../stacks/index.js");
       const { render } = await import("ink");
       const { DeploymentUI } = await import("../ui/deploy.js");
-      const { Colors } = await import("../colors.js");
       const project = useProject();
 
-      console.log();
-      console.log(`  ${Colors.primary(`${bold(`SST`)} v${project.version}`)}`);
-      console.log();
-      console.log(
-        `  ${Colors.primary(`➜`)}  ${bold(`Stage:`)}   ${dim(
-          project.config.stage
-        )}`
-      );
-      console.log();
+      printHeader({});
 
       // Generate cloud assembly
       // - if --from is specified, we will use the existing cloud assembly
@@ -47,7 +40,6 @@ export const deploy = (program: Program) =>
 
         const spinner = createSpinner({
           text: " Building stacks",
-          indent: 2,
         });
         const result = await Stacks.synth({
           fn: project.stacks,
@@ -64,7 +56,7 @@ export const deploy = (program: Program) =>
           s.stackName.toLowerCase().includes(args.filter.toLowerCase())
       );
       if (!target.length) {
-        console.log(`No stacks found matching ${blue(args.filter!)}`);
+        Colors.line(`No stacks found matching ${blue(args.filter!)}`);
         process.exit(1);
       }
       const component = render(

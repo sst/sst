@@ -20,37 +20,37 @@ export async function load(input: string) {
   const pkg = JSON.parse(
     await fs.readFile(path.join(root, "package.json")).then((x) => x.toString())
   );
-  const result = await esbuild.build({
-    keepNames: true,
-    bundle: true,
-    sourcemap: "inline",
-    platform: "node",
-    target: "esnext",
-    metafile: true,
-    format: "esm",
-    external: [
-      "aws-cdk-lib",
-      "sst",
-      ...Object.keys({
-        ...pkg.devDependencies,
-        ...pkg.dependencies,
-        ...pkg.peerDependencies,
-      }),
-    ],
-    absWorkingDir: root,
-    outfile,
-    banner: {
-      js: [
-        `import { createRequire as topLevelCreateRequire } from 'module';`,
-        `const require = topLevelCreateRequire(import.meta.url);`,
-      ].join(""),
-    },
-    // The entry can have any file name (ie. "stacks/anything.ts"). We want the
-    // build output to be always named "lib/index.js". This allow us to always
-    // import from "buildDir" without needing to pass "anything" around.
-    entryPoints: [input],
-  });
   try {
+    const result = await esbuild.build({
+      keepNames: true,
+      bundle: true,
+      sourcemap: "inline",
+      platform: "node",
+      target: "esnext",
+      metafile: true,
+      format: "esm",
+      external: [
+        "aws-cdk-lib",
+        "sst",
+        ...Object.keys({
+          ...pkg.devDependencies,
+          ...pkg.dependencies,
+          ...pkg.peerDependencies,
+        }),
+      ],
+      absWorkingDir: root,
+      outfile,
+      banner: {
+        js: [
+          `import { createRequire as topLevelCreateRequire } from 'module';`,
+          `const require = topLevelCreateRequire(import.meta.url);`,
+        ].join(""),
+      },
+      // The entry can have any file name (ie. "stacks/anything.ts"). We want the
+      // build output to be always named "lib/index.js". This allow us to always
+      // import from "buildDir" without needing to pass "anything" around.
+      entryPoints: [input],
+    });
     const mod = await dynamicImport(outfile);
     await fs.rm(outfile, {
       force: true,
