@@ -514,7 +514,7 @@ export interface JavaProps {
    * @example
    * ```js
    * new Function(stack, "Function", {
-   *   bundle: {
+   *   java: {
    *     buildTask: "bundle"
    *   }
    * })
@@ -529,7 +529,7 @@ export interface JavaProps {
    * @example
    * ```js
    * new Function(stack, "Function", {
-   *   bundle: {
+   *   java: {
    *     buildOutputDir: "output"
    *   }
    * })
@@ -544,7 +544,7 @@ export interface JavaProps {
    * @example
    * ```js
    * new Function(stack, "Function", {
-   *   bundle: {
+   *   java: {
    *     experimentalUseProvidedRuntime: "provided.al2"
    *   }
    * })
@@ -589,9 +589,7 @@ export interface FunctionBundlePythonProps extends FunctionBundleBase {
  * @example
  * ```js
  * new Function(stack, "Function", {
- *   bundle: {
- *     copyFiles: [{ from: "src/index.js" }]
- *   }
+ *   copyFiles: [{ from: "src/index.js" }]
  * })
  *```
  */
