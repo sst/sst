@@ -412,7 +412,7 @@ export interface NodeJSProps {
    * @example
    * ```js
    * new Function(stack, "Function", {
-   *   bundle: {
+   *   nodejs: {
    *     loader: {
    *      ".png": "file"
    *     }
@@ -428,7 +428,7 @@ export interface NodeJSProps {
    * @example
    * ```js
    * new Function(stack, "Function", {
-   *   bundle: {
+   *   nodejs: {
    *     nodeModules: ["pg"]
    *   }
    * })
@@ -442,7 +442,7 @@ export interface NodeJSProps {
    * @example
    * ```js
    * new Function(stack, "Function", {
-   *   bundle: {
+   *   nodejs: {
    *     banner: "console.log('Function starting')"
    *   }
    * })
@@ -463,7 +463,7 @@ export interface NodeJSProps {
    * @example
    * ```js
    * new Function(stack, "Function", {
-   *   bundle: {
+   *   nodejs: {
    *     minify: false
    *   }
    * })
@@ -478,7 +478,7 @@ export interface NodeJSProps {
    * @example
    * ```js
    * new Function(stack, "Function", {
-   *   bundle: {
+   *   nodejs: {
    *     format: "esm"
    *   }
    * })
@@ -493,8 +493,8 @@ export interface NodeJSProps {
    * @example
    * ```js
    * new Function(stack, "Function", {
-   *   bundle: {
-   *   sourcemap: true
+   *   nodejs: {
+   *     sourcemap: true
    *   }
    * })
    * ```
