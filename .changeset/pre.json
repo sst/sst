@@ -11,6 +11,7 @@
     "astro-sst": "2.0.0-rc.17"
   },
   "changesets": [
+    "big-avocados-destroy",
     "big-pants-repair",
     "breezy-ants-attend",
     "bright-teachers-remember",
@@ -63,6 +64,7 @@
     "tiny-frogs-fold",
     "tricky-countries-cry",
     "violet-weeks-tease",
+    "weak-squids-share",
     "wicked-onions-wait",
     "wicked-rivers-love",
     "wise-emus-perform",
