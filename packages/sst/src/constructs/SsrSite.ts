@@ -30,7 +30,6 @@ import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Logger } from "../logger.js";
 import { SSTConstruct, isCDKConstruct } from "./Construct.js";
-import { Runtime } from './Function.js'
 import { EdgeFunction } from "./EdgeFunction.js";
 import {
   BaseSiteDomainProps,
