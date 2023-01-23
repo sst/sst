@@ -1,7 +1,6 @@
 import fs from "fs";
 import url from "url";
 import path from "path";
-import esbuild from "esbuild";
 import spawn from "cross-spawn";
 import { Construct } from "constructs";
 import { buildErrorResponsesForRedirectToIndex } from "./BaseSite.js";
@@ -9,13 +8,11 @@ import {
   Fn,
   Duration,
   RemovalPolicy,
-  SymlinkFollowMode,
 } from "aws-cdk-lib";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
-import { Permissions } from "./util/permission.js";
 
 import { SsrSite, SsrSiteProps } from "./SsrSite.js";
 import { EdgeFunction } from "./EdgeFunction.js";
