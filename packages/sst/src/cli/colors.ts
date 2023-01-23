@@ -1,10 +1,14 @@
 import chalk from "chalk";
 
 let last: "line" | "gap" = "gap";
+
 export const Colors = {
   line: (message?: any, ...optionalParams: any[]) => {
     last = "line";
     console.log(message, ...optionalParams);
+  },
+  mode(input: typeof last) {
+    last = input;
   },
   gap() {
     if (last === "line") {

@@ -14,15 +14,7 @@ interface Props {
   stacks: string[];
 }
 export const DeploymentUI = (props: Props) => {
-  const [stacks, setStacks] = useState<Record<string, string>>(
-    Object.fromEntries(props.stacks.map((s) => [s, ""]))
-  );
-
-  const [resources, setResources] = useState<Record<string, StackResource[]>>(
-    {}
-  );
-
-  const [resources2, setResources2] = useState<Record<string, StackEvent>>({});
+  const [resources, setResources] = useState<Record<string, StackEvent>>({});
 
   useEffect(() => {
     Colors.gap();
@@ -30,24 +22,10 @@ export const DeploymentUI = (props: Props) => {
     Colors.gap();
     const bus = useBus();
 
-    const update = bus.subscribe("stack.updated", (payload) => {
-      setStacks((prev) => ({
-        ...prev,
-        [payload.properties.stackID]: "",
-      }));
-    });
-
-    const status = bus.subscribe("stack.status", (payload) => {
-      setStacks((prev) => ({
-        ...prev,
-        [payload.properties.stackID]: payload.properties.status,
-      }));
-    });
-
     const event = bus.subscribe("stack.event", (payload) => {
       const { event } = payload.properties;
       if (event.ResourceType === "AWS::CloudFormation::Stack") return;
-      setResources2((previous) => {
+      setResources((previous) => {
         if (Stacks.isFinal(event.ResourceStatus!)) {
           Colors.line(
             Colors.warning(Colors.prefix),
@@ -72,8 +50,6 @@ export const DeploymentUI = (props: Props) => {
 
     return () => {
       bus.unsubscribe(event);
-      bus.unsubscribe(update);
-      bus.unsubscribe(status);
     };
   }, []);
 
@@ -85,7 +61,7 @@ export const DeploymentUI = (props: Props) => {
 
   return (
     <Box flexDirection="column">
-      {Object.entries(resources2).map(([_, evt]) => {
+      {Object.entries(resources).map(([_, evt]) => {
         return (
           <Box key={evt.LogicalResourceId}>
             <Text>
@@ -99,16 +75,15 @@ export const DeploymentUI = (props: Props) => {
           </Box>
         );
       })}
-      {/*
-      <Box>
-        <Text>
-          {"     "}
-          <Spinner />
-          <Text dimColor> Polling for updates </Text>
-        </Text>
-      </Box>
-      */}
-      <Box />
+      {Object.entries(resources).length === 0 && (
+        <Box>
+          <Text>
+            <Spinner />
+            {"  "}
+            <Text dimColor>Waiting for changes</Text>
+          </Text>
+        </Box>
+      )}
     </Box>
   );
 };

@@ -7,6 +7,7 @@ import { exec } from "child_process";
 import { promisify } from "util";
 const execAsync = promisify(exec);
 import path from "path";
+import { Colors } from "../../colors.js";
 
 export const usePothosBuilder = Context.memo(() => {
   let routes: Extract<
@@ -23,10 +24,13 @@ export const usePothosBuilder = Context.memo(() => {
       await fs.writeFile(route.output, schema);
       // bus.publish("pothos.extracted", { file: route.output });
       await Promise.all(route.commands.map((cmd: string) => execAsync(cmd)));
-      console.log("Done building pothos schema");
-    } catch (ex) {
-      console.error("Failed to extract schema from pothos");
-      console.error(ex);
+      Colors.line(Colors.prefix);
+      Colors.line(Colors.success(`✔`), " Extracted pothos schema");
+    } catch (ex: any) {
+      Colors.line(Colors.danger(`✖`), " Failed to extract schema from pothos:");
+      for (let line of ex.message.split("\n")) {
+        console.log(`  `, line);
+      }
     }
   }
 

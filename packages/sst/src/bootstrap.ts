@@ -49,6 +49,7 @@ export async function initBootstrap() {
     loadCDKStatus(),
     loadSSTStatus(),
   ]);
+  Logger.debug("Loaded bootstrap status");
   const needToBootstrapCDK = !cdkStatus;
   const needToBootstrapSST = !sstStatus || sstStatus.version !== LATEST_VERSION;
 
@@ -65,7 +66,8 @@ export async function initBootstrap() {
 
       // fetch bootstrap status
       sstStatus = await loadSSTStatus();
-      if (!sstStatus) throw new VisibleError("Failed to load bootstrap stack status");
+      if (!sstStatus)
+        throw new VisibleError("Failed to load bootstrap stack status");
     }
     spinner.succeed();
   }
@@ -82,18 +84,20 @@ async function loadCDKStatus() {
         StackName: "CDKToolkit",
       })
     );
-    if (stacks && stacks.length > 0 && [
-      "CREATE_COMPLETE",
-      "UPDATE_COMPLETE",
-    ].includes(stacks[0].StackStatus!)) {
+    if (
+      stacks &&
+      stacks.length > 0 &&
+      ["CREATE_COMPLETE", "UPDATE_COMPLETE"].includes(stacks[0].StackStatus!)
+    ) {
       return true;
     }
   } catch (e: any) {
-    if (e.name === "ValidationError"
-      && e.message === "Stack with id CDKToolkit does not exist") {
+    if (
+      e.name === "ValidationError" &&
+      e.message === "Stack with id CDKToolkit does not exist"
+    ) {
       return false;
-    }
-    else {
+    } else {
       throw e;
     }
   }
@@ -229,8 +233,7 @@ async function bootstrapCDK() {
       Logger.debug("CDK bootstrap exited with code " + code);
       if (code === 0) {
         resolve();
-      }
-      else {
+      } else {
         console.log(bold(dim(stderr)));
         reject(new VisibleError(`Failed to bootstrap`));
       }

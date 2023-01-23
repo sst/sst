@@ -9,7 +9,11 @@ export const dev = (program: Program) =>
   program.command(
     ["dev", "start"],
     "Work on your app locally",
-    (yargs) => yargs,
+    (yargs) =>
+      yargs.option("increase-timeout", {
+        type: "boolean",
+        description: "Increase function timeout",
+      }),
     async (args) => {
       const { useRuntimeWorkers } = await import("../../runtime/workers.js");
       const { useIOTBridge } = await import("../../runtime/iot.js");
@@ -100,23 +104,27 @@ export const dev = (program: Program) =>
           }
         });
 
-        /*
         bus.subscribe("function.build.success", async (evt) => {
-          console.log(
-            bold(gray(`Built   `)),
-            useFunctions().fromID(evt.properties.functionID).handler!
+          Colors.line(
+            Colors.dim(
+              Colors.prefix,
+              "Built",
+              useFunctions().fromID(evt.properties.functionID).handler!
+            )
           );
         });
-        */
 
         bus.subscribe("function.build.failed", async (evt) => {
+          Colors.gap();
           Colors.line(
-            Colors.danger(Colors.prefix),
+            Colors.danger("✖ "),
+            "Build failed",
             useFunctions().fromID(evt.properties.functionID).handler!
           );
           for (const line of evt.properties.errors) {
-            Colors.line(Colors.danger(Colors.prefix), line);
+            Colors.line("  ", line);
           }
+          Colors.gap();
         });
 
         bus.subscribe("function.success", async (evt) => {
@@ -139,7 +147,7 @@ export const dev = (program: Program) =>
               Colors.danger.bold(evt.properties.errorMessage)
             );
             for (const line of evt.properties.trace || []) {
-              Colors.line(prefix(evt.properties.requestID), `${dim(line)}`);
+              Colors.line("  ", `${dim(line)}`);
             }
             end(evt.properties.requestID);
           }, 100);
@@ -186,8 +194,10 @@ export const dev = (program: Program) =>
             if (!lastDeployed) {
               spinner.stop();
               spinner.clear();
+              Colors.mode("gap");
             } else {
               spinner.succeed(` Stacks built!`);
+              Colors.mode("gap");
             }
             pending = assembly;
             if (lastDeployed) setTimeout(() => deploy(), 100);

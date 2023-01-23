@@ -11,6 +11,7 @@ interface SynthOptions {
   buildDir?: string;
   outDir?: string;
   skipBuild?: boolean;
+  increaseTimeout?: boolean;
   mode: App["mode"];
   fn: (app: App) => Promise<void> | void;
 }
@@ -55,6 +56,7 @@ export async function synth(opts: SynthOptions) {
         name: project.config.name,
         region: project.config.region,
         mode: opts.mode,
+        debugIncreaseTimeout: opts.increaseTimeout,
         skipBuild: opts.mode === "remove",
       },
       {

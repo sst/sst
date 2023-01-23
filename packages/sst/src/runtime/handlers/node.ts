@@ -3,13 +3,14 @@ import fs from "fs/promises";
 import { exec } from "child_process";
 import fsSync from "fs";
 import { useProject } from "../../project.js";
-import esbuild, { BuildOptions } from "esbuild";
+import esbuild, { BuildOptions, BuildResult } from "esbuild";
 import url from "url";
 import { Worker } from "worker_threads";
 import { useRuntimeHandlers } from "../handlers.js";
 import { useRuntimeWorkers } from "../workers.js";
 import { Context } from "../../context/context.js";
 import { VisibleError } from "../../error.js";
+import { Colors } from "../../cli/colors.js";
 
 export const useNodeHandler = Context.memo(async () => {
   const workers = await useRuntimeWorkers();
@@ -125,6 +126,7 @@ export const useNodeHandler = Context.memo(async () => {
         ],
         keepNames: true,
         bundle: true,
+        logLevel: "silent",
         metafile: true,
         ...(isESM
           ? {
@@ -154,66 +156,78 @@ export const useNodeHandler = Context.memo(async () => {
         ...override,
       };
 
-      const result = await esbuild.build(options);
+      try {
+        const result = await esbuild.build(options);
 
-      // Install node_modules
-      if (options.external?.length) {
-        async function find(dir: string, target: string): Promise<string> {
-          if (dir === "/")
-            throw new VisibleError("Could not find a package.json file");
-          if (
-            await fs
-              .access(path.join(dir, target))
-              .then(() => true)
-              .catch(() => false)
-          )
-            return dir;
-          return find(path.join(dir, ".."), target);
-        }
+        // Install node_modules
+        if (options.external?.length) {
+          async function find(dir: string, target: string): Promise<string> {
+            if (dir === "/")
+              throw new VisibleError("Could not find a package.json file");
+            if (
+              await fs
+                .access(path.join(dir, target))
+                .then(() => true)
+                .catch(() => false)
+            )
+              return dir;
+            return find(path.join(dir, ".."), target);
+          }
 
-        if (input.mode === "deploy" && nodejs.install) {
-          const src = await find(parsed.dir, "package.json");
-          const json = JSON.parse(
-            await fs
-              .readFile(path.join(src, "package.json"))
-              .then((x) => x.toString())
-          );
-          fs.writeFile(
-            path.join(input.out, "package.json"),
-            JSON.stringify({
-              dependencies: Object.fromEntries(
-                nodejs.install?.map((x) => [x, json.dependencies?.[x] || "*"])
-              ),
-            })
-          );
-          await new Promise<void>((resolve) => {
-            const process = exec("npm install", {
-              cwd: input.out,
-            });
-            process.on("exit", () => resolve());
-          });
-        }
-
-        if (input.mode === "start") {
-          const dir = path.join(
-            await find(parsed.dir, "package.json"),
-            "node_modules"
-          );
-          try {
-            await fs.symlink(
-              path.resolve(dir),
-              path.resolve(path.join(input.out, "node_modules")),
-              "dir"
+          if (input.mode === "deploy" && nodejs.install) {
+            const src = await find(parsed.dir, "package.json");
+            const json = JSON.parse(
+              await fs
+                .readFile(path.join(src, "package.json"))
+                .then((x) => x.toString())
             );
-          } catch {}
-        }
-      }
+            fs.writeFile(
+              path.join(input.out, "package.json"),
+              JSON.stringify({
+                dependencies: Object.fromEntries(
+                  nodejs.install?.map((x) => [x, json.dependencies?.[x] || "*"])
+                ),
+              })
+            );
+            await new Promise<void>((resolve) => {
+              const process = exec("npm install", {
+                cwd: input.out,
+              });
+              process.on("exit", () => resolve());
+            });
+          }
 
-      cache[input.functionID] = result;
-      return {
-        type: "success",
-        handler,
-      };
+          if (input.mode === "start") {
+            const dir = path.join(
+              await find(parsed.dir, "package.json"),
+              "node_modules"
+            );
+            try {
+              await fs.symlink(
+                path.resolve(dir),
+                path.resolve(path.join(input.out, "node_modules")),
+                "dir"
+              );
+            } catch {}
+          }
+        }
+
+        cache[input.functionID] = result;
+        return {
+          type: "success",
+          handler,
+        };
+      } catch (ex: any) {
+        const result = ex as BuildResult;
+        return {
+          type: "error",
+          errors: result.errors.flatMap((x) => [
+            Colors.bold(x.text),
+            x.location?.file || "",
+            Colors.dim(x.location?.line, "│", x.location?.lineText),
+          ]),
+        };
+      }
     },
   });
 });

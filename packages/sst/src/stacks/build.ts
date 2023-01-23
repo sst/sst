@@ -29,6 +29,7 @@ export async function load(input: string) {
       target: "esnext",
       metafile: true,
       format: "esm",
+      logLevel: "silent",
       external: [
         "aws-cdk-lib",
         "sst",

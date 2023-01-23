@@ -98,6 +98,7 @@ const MetadataContext = Context.create(async () => {
   const bus = useBus();
   const cache = await useCache();
   const data = await metadata();
+  bus.publish("stacks.metadata", data);
 
   bus.subscribe("stacks.metadata.updated", async () => {
     const data = await metadata();
