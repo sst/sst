@@ -178,6 +178,7 @@ export const dev = (program: Program) =>
             project.metafile = metafile;
             project.stacks = sstConfig.stacks;
             const assembly = await Stacks.synth({
+              increaseTimeout: args["increase-timeout"],
               fn: project.stacks,
               outDir: `.sst/cdk.out`,
               mode: "dev",
