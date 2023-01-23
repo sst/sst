@@ -75,7 +75,7 @@ export async function synth(opts: SynthOptions) {
     if (missing && missing.length) {
       const next = missing.map((x) => x.key);
       if (next.length === previous.size && next.every((x) => previous.has(x)))
-        throw new VisibleError(`Could not resolve context values for ${next}`);
+        throw new VisibleError(formatErrorMessage(next.join("")));
       Logger.debug("Looking up context for:", next, "Previous:", previous);
       previous = new Set(next);
       await contextproviders.provideContextValues(
@@ -91,4 +91,25 @@ export async function synth(opts: SynthOptions) {
     Logger.debug("Finished synthesizing");
     return assembly;
   }
+}
+
+function formatErrorMessage(message: string) {
+  return formatCustomDomainError(message)
+    || `Could not resolve context values for ${message}`;
+}
+
+function formatCustomDomainError(message: string) {
+  const ret = message.match(/hosted-zone:account=\d+:domainName=(\S+):/);
+  if (!ret) {
+    return;
+  }
+
+  const hostedZone = ret && ret[1];
+  return [
+    `It seems you are configuring custom domains for you URL.`,
+    hostedZone
+      ? `And SST is not able to find the hosted zone "${hostedZone}" in your AWS Route 53 account.`
+      : `And SST is not able to find the hosted zone in your AWS Route 53 account.`,
+    `Please double check and make sure the zone exists, or pass in a different zone.`,
+  ].join(" ");
 }

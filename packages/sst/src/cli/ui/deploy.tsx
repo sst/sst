@@ -6,6 +6,7 @@ import { Stacks } from "../../stacks/index.js";
 import inkSpinner from "ink-spinner";
 import { Colors } from "../colors.js";
 import type { CloudAssembly } from "aws-cdk-lib/cx-api";
+import { useProject } from "../../project.js";
 
 // @ts-ignore
 const { default: Spinner } = inkSpinner;
@@ -18,8 +19,6 @@ export const DeploymentUI = (props: Props) => {
 
   useEffect(() => {
     Colors.gap();
-    Colors.line(`${Colors.primary(`➜`)}  ${Colors.bold(`Deploying...`)}`);
-    Colors.gap();
     const bus = useBus();
 
     const event = bus.subscribe("stack.event", (payload) => {
@@ -27,10 +26,12 @@ export const DeploymentUI = (props: Props) => {
       if (event.ResourceType === "AWS::CloudFormation::Stack") return;
       setResources((previous) => {
         if (Stacks.isFinal(event.ResourceStatus!)) {
-          const readable = Stacks.logicalIdToCdkPath(props.assembly, event.StackName!, event.LogicalResourceId!);
+          const readable = logicalIdToCdkPath(props.assembly, event.StackName!, event.LogicalResourceId!);
           Colors.line(
             Colors.warning(Colors.prefix),
-            Colors.dim(`${event.StackName} ${readable} ${event.ResourceType}`),
+            readable
+              ? Colors.dim(`${stackNameToId(event.StackName!)} ${readable} ${event.ResourceType}`)
+              : Colors.dim(`${stackNameToId(event.StackName!)} ${event.ResourceType}`),
             Stacks.isFailed(event.ResourceStatus!)
               ? Colors.danger(event.ResourceStatus!)
               : Colors.dim(event.ResourceStatus!)
@@ -61,13 +62,17 @@ export const DeploymentUI = (props: Props) => {
   return (
     <Box flexDirection="column">
       {Object.entries(resources).map(([_, evt]) => {
-        const readable = Stacks.logicalIdToCdkPath(props.assembly, evt.StackName!, evt.LogicalResourceId!);
+        const readable = logicalIdToCdkPath(props.assembly, evt.StackName!, evt.LogicalResourceId!);
         return (
           <Box key={evt.LogicalResourceId}>
             <Text>
               <Spinner />
               {"  "}
-              {evt.StackName} {readable} {evt.ResourceType}{" "}
+              {
+                readable
+                  ? `${stackNameToId(evt.StackName!)} ${readable} ${evt.ResourceType}`
+                  : `${stackNameToId(evt.StackName!)} ${evt.ResourceType}`
+              }{" "}
             </Text>
             <Text color={color(evt.ResourceStatus || "")}>
               {evt.ResourceStatus}
@@ -80,6 +85,7 @@ export const DeploymentUI = (props: Props) => {
           <Text>
             <Spinner />
             {"  "}
+            <Text dimColor>Deploying...</Text>
           </Text>
         </Box>
       )}
@@ -96,7 +102,7 @@ export function printDeploymentResults(
     .filter(([_stack, result]) => Object.keys(result.errors).length === 0);
   if (success.length) {
     Colors.gap();
-    Colors.line(Colors.success(`✔`), Colors.bold(` Deployed`));
+    Colors.line(Colors.success(`✔`), Colors.bold(` Deployed:`));
     for (const [stack, result] of success) {
       const outputs = Object.entries(result.outputs).filter(([key, _]) => {
         if (key.startsWith("Export")) return false;
@@ -104,7 +110,7 @@ export function printDeploymentResults(
         if (key === "SSTMetadata") return false;
         return true;
       });
-      Colors.line(`   ${Colors.dim(stack)}`);
+      Colors.line(`   ${Colors.dim(stackNameToId(stack))}`);
       if (outputs.length > 0) {
         for (const key of Object.keys(Object.fromEntries(outputs)).sort()) {
           const value = result.outputs[key];
@@ -121,12 +127,40 @@ export function printDeploymentResults(
     Colors.gap();
     Colors.line(`${Colors.danger(`✖`)}  ${Colors.bold.dim(`Errors`)}`);
     for (const [stack, result] of failed) {
-      Colors.line(`   ${Colors.dim(stack)}`);
+      Colors.line(`   ${Colors.dim(stackNameToId(stack))}`);
       for (const [id, error] of Object.entries(result.errors)) {
-        const readable = Stacks.logicalIdToCdkPath(assembly, stack, id);
+        const readable = logicalIdToCdkPath(assembly, stack, id) || id;
         Colors.line(`   ${Colors.danger.bold(readable + ":")} ${error}`);
       }
     }
     Colors.gap();
   }
+}
+
+function stackNameToId(stack: string) {
+  const project = useProject();
+  const prefix = `${project.config.stage}-${project.config.name}-`;
+  return stack.startsWith(prefix)
+    ? stack.substring(prefix.length)
+    : stack;
+}
+
+function logicalIdToCdkPath(assembly: CloudAssembly, stack: string, logicalId: string) {
+  const found =
+    Object.entries(
+      assembly.manifest.artifacts?.[stack].metadata || {}
+    ).find(
+      ([_key, value]) =>
+        value[0]?.type === "aws:cdk:logicalId" && value[0]?.data === logicalId
+    )?.[0];
+
+  if (!found) {
+    return;
+  }
+
+  return found
+    .split("/")
+    .filter(Boolean)
+    .slice(1, -1)
+    .join("/");
 }
