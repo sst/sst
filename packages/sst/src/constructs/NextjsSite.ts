@@ -15,14 +15,14 @@ import * as logs from "aws-cdk-lib/aws-logs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
+import { Permissions } from "./util/permission.js";
 
 import { SsrSite, SsrSiteProps } from "./SsrSite.js";
-import { Function } from "./Function.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
-export interface NextjsSiteProps extends Omit<SsrSiteProps, "edge"> { }
+export interface NextjsSiteProps extends Omit<SsrSiteProps, "edge"> {}
 
 /**
  * The `NextjsSite` construct is a higher level CDK construct that makes it easy to create a Next.js app.
@@ -35,6 +35,7 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "edge"> { }
  * });
  * ```
  */
+
 export class NextjsSite extends SsrSite {
   constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
     super(scope, id, {
@@ -89,24 +90,19 @@ export class NextjsSite extends SsrSite {
       handler = "index.handler";
     }
 
-    return new Function(this, `ServerFunction`, {
+    return new lambda.Function(this, `ServerFunction`, {
       description: "Server handler for Next.js",
       handler,
       currentVersionOptions: {
         removalPolicy: RemovalPolicy.DESTROY,
       },
-      logRetention: 'three_days',
+      logRetention: logs.RetentionDays.THREE_DAYS,
       code: lambda.Code.fromAsset(bundlePath),
-      architecture: defaults?.function?.architecture,
-      runtime: defaults?.function?.runtime || 'nodejs18.x',
+      architecture: defaults?.function?.architecture === 'arm_64' ? lambda.Architecture.ARM_64 : lambda.Architecture.X86_64,
+      runtime: lambda.Runtime.NODEJS_18_X,
       memorySize: defaults?.function?.memorySize || 512,
-      timeout: defaults?.function?.timeout || '10 seconds',
+      timeout: Duration.seconds(defaults?.function?.timeout || 10),
       environment,
-      url: {
-        cors: {
-          
-        }
-      }
     });
   }
 

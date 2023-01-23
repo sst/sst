@@ -84,10 +84,6 @@ export interface FunctionProps
     | "logRetention"
   > {
   /**
-   * Used to configure bundled code.
-   */
-  code?: lambda.Code;
-  /**
    * Used to configure additional files to copy into the function bundle
    *
    * @example
@@ -702,7 +698,7 @@ export class Function extends lambda.Function implements SSTConstruct {
       super(scope, id, {
         ...props,
         architecture,
-        code: props.code || lambda.Code.fromAsset(
+        code: lambda.Code.fromAsset(
           path.resolve(__dirname, "../support/bridge")
         ),
         handler: "bridge.handler",
