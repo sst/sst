@@ -30,6 +30,7 @@ import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Logger } from "../logger.js";
 import { SSTConstruct, isCDKConstruct } from "./Construct.js";
+import { Runtime } from './Function.js'
 import { EdgeFunction } from "./EdgeFunction.js";
 import {
   BaseSiteDomainProps,
@@ -132,9 +133,10 @@ export interface SsrSiteProps {
       architecture?: Lowercase<
         keyof Pick<typeof lambda.Architecture, "ARM_64" | "X86_64">
       >; 
-      timeout?: number;
       memorySize?: number;
       permissions?: Permissions;
+      runtime?: Runtime;
+      timeout?: number;
     };
   };
 

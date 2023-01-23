@@ -98,10 +98,15 @@ export class NextjsSite extends SsrSite {
       logRetention: 'three_days',
       code: lambda.Code.fromAsset(bundlePath),
       architecture: defaults?.function?.architecture,
-      runtime: 'nodejs18.x',
+      runtime: defaults?.function?.runtime || 'nodejs18.x',
       memorySize: defaults?.function?.memorySize || 512,
       timeout: defaults?.function?.timeout || '10 seconds',
       environment,
+      url: {
+        cors: {
+          
+        }
+      }
     });
   }
 
