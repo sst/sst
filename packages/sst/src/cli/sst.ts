@@ -34,6 +34,8 @@ updateMod(program);
 consoleCommand(program);
 diff(program);
 
+// @ts-expect-error
+process.setSourceMapsEnabled(true);
 process.removeAllListeners("uncaughtException");
 process.on("uncaughtException", (err) => {
   Logger.debug(err);
@@ -55,6 +57,6 @@ process.on("uncaughtException", (err) => {
   process.exit(1);
 });
 
-process.on("beforeExit", () => { });
+process.on("beforeExit", () => {});
 
 program.parse();
