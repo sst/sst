@@ -80,7 +80,6 @@ export const DeploymentUI = (props: Props) => {
           <Text>
             <Spinner />
             {"  "}
-            <Text dimColor>Waiting for changes</Text>
           </Text>
         </Box>
       )}
