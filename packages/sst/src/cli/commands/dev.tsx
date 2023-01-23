@@ -223,7 +223,7 @@ export const dev = (program: Program) =>
 
           if (lastDeployed) console.log();
           const component = render(
-            <DeploymentUI stacks={assembly.stacks.map((s) => s.stackName)} />
+            <DeploymentUI assembly={assembly} />
           );
           const results = await Stacks.deployMany(assembly.stacks);
           component.clear();

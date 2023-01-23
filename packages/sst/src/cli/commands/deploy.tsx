@@ -60,7 +60,7 @@ export const deploy = (program: Program) =>
         process.exit(1);
       }
       const component = render(
-        <DeploymentUI stacks={assembly.stacks.map((s) => s.stackName)} />
+        <DeploymentUI assembly={assembly} />
       );
       const results = await Stacks.deployMany(assembly.stacks);
       component.clear();

@@ -53,7 +53,7 @@ export const remove = (program: Program) =>
         process.exit(1);
       }
       const component = render(
-        <DeploymentUI stacks={assembly.stacks.map((s) => s.stackName)} />
+        <DeploymentUI assembly={assembly} />
       );
       const results = await Stacks.removeMany(target);
       component.clear();

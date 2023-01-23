@@ -5,13 +5,13 @@ import { useBus } from "../../bus.js";
 import { Stacks } from "../../stacks/index.js";
 import inkSpinner from "ink-spinner";
 import { Colors } from "../colors.js";
-import { CloudAssembly } from "aws-cdk-lib/cx-api";
+import type { CloudAssembly } from "aws-cdk-lib/cx-api";
 
 // @ts-ignore
 const { default: Spinner } = inkSpinner;
 
 interface Props {
-  stacks: string[];
+  assembly: CloudAssembly;
 }
 export const DeploymentUI = (props: Props) => {
   const [resources, setResources] = useState<Record<string, StackEvent>>({});
@@ -27,11 +27,10 @@ export const DeploymentUI = (props: Props) => {
       if (event.ResourceType === "AWS::CloudFormation::Stack") return;
       setResources((previous) => {
         if (Stacks.isFinal(event.ResourceStatus!)) {
+          const readable = Stacks.logicalIdToCdkPath(props.assembly, event.StackName!, event.LogicalResourceId!);
           Colors.line(
             Colors.warning(Colors.prefix),
-            Colors.dim(
-              `${event.StackName} ${event.ResourceType} ${event.LogicalResourceId}`
-            ),
+            Colors.dim(`${event.StackName} ${readable} ${event.ResourceType}`),
             Stacks.isFailed(event.ResourceStatus!)
               ? Colors.danger(event.ResourceStatus!)
               : Colors.dim(event.ResourceStatus!)
@@ -62,12 +61,13 @@ export const DeploymentUI = (props: Props) => {
   return (
     <Box flexDirection="column">
       {Object.entries(resources).map(([_, evt]) => {
+        const readable = Stacks.logicalIdToCdkPath(props.assembly, evt.StackName!, evt.LogicalResourceId!);
         return (
           <Box key={evt.LogicalResourceId}>
             <Text>
               <Spinner />
               {"  "}
-              {evt.StackName} {evt.ResourceType} {evt.LogicalResourceId}{" "}
+              {evt.StackName} {readable} {evt.ResourceType}{" "}
             </Text>
             <Text color={color(evt.ResourceStatus || "")}>
               {evt.ResourceStatus}
@@ -80,7 +80,6 @@ export const DeploymentUI = (props: Props) => {
           <Text>
             <Spinner />
             {"  "}
-            <Text dimColor>Waiting for changes</Text>
           </Text>
         </Box>
       )}
@@ -92,48 +91,40 @@ export function printDeploymentResults(
   assembly: CloudAssembly,
   results: Awaited<ReturnType<typeof Stacks.deployMany>>
 ) {
-  Colors.gap();
-  Colors.line(Colors.success(`✔`), Colors.bold(` Deployed`));
-  for (const [stack, result] of Object.entries(results)) {
-    if (Object.values(result.errors).length) continue;
-    const outputs = Object.entries(result.outputs).filter(([key, _]) => {
-      if (key.startsWith("Export")) return false;
-      if (key.includes("SstSiteEnv")) return false;
-      if (key === "SSTMetadata") return false;
-      return true;
-    });
-    Colors.line(`   ${Colors.dim(stack)}`);
-    if (outputs.length > 0) {
-      for (const key of Object.keys(Object.fromEntries(outputs)).sort()) {
-        const value = result.outputs[key];
-        Colors.line(`   ${Colors.bold.dim(key)}: ${value}`);
+  // Print success stacks
+  const success = Object.entries(results)
+    .filter(([_stack, result]) => Object.keys(result.errors).length === 0);
+  if (success.length) {
+    Colors.gap();
+    Colors.line(Colors.success(`✔`), Colors.bold(` Deployed`));
+    for (const [stack, result] of success) {
+      const outputs = Object.entries(result.outputs).filter(([key, _]) => {
+        if (key.startsWith("Export")) return false;
+        if (key.includes("SstSiteEnv")) return false;
+        if (key === "SSTMetadata") return false;
+        return true;
+      });
+      Colors.line(`   ${Colors.dim(stack)}`);
+      if (outputs.length > 0) {
+        for (const key of Object.keys(Object.fromEntries(outputs)).sort()) {
+          const value = result.outputs[key];
+          Colors.line(`   ${Colors.bold.dim(key + ":")} ${value}`);
+        }
       }
     }
   }
-  Colors.gap();
 
-  if (Object.values(results).flatMap((s) => Object.keys(s.errors)).length) {
+  // Print failed stacks
+  const failed = Object.entries(results)
+    .filter(([_stack, result]) => Object.keys(result.errors).length > 0);
+  if (failed.length) {
+    Colors.gap();
     Colors.line(`${Colors.danger(`✖`)}  ${Colors.bold.dim(`Errors`)}`);
-    for (const [stack, result] of Object.entries(results)) {
-      const hasErrors = Object.entries(result.errors).length > 0;
-      if (!hasErrors) continue;
+    for (const [stack, result] of failed) {
       Colors.line(`   ${Colors.dim(stack)}`);
       for (const [id, error] of Object.entries(result.errors)) {
-        const found =
-          Object.entries(
-            assembly.manifest.artifacts?.[stack].metadata || {}
-          ).find(
-            ([_key, value]) =>
-              value[0]?.type === "aws:cdk:logicalId" && value[0]?.data === id
-          )?.[0] || "";
-
-        const readable = found
-          .split("/")
-          .filter(Boolean)
-          .slice(1, -1)
-          .join("/");
-
-        Colors.line(`  ${Colors.danger.bold(readable)}: ${error}`);
+        const readable = Stacks.logicalIdToCdkPath(assembly, stack, id);
+        Colors.line(`   ${Colors.danger.bold(readable + ":")} ${error}`);
       }
     }
     Colors.gap();
