@@ -175,7 +175,7 @@ export class RemixSite extends SsrSite {
       logRetention: logs.RetentionDays.THREE_DAYS,
       code: lambda.Code.fromAsset(bundlePath),
       architecture: defaults?.function?.architecture === 'arm_64' ? lambda.Architecture.ARM_64 : lambda.Architecture.X86_64,
-      runtime: lambda.Runtime.NODEJS_16_X,
+      runtime: defaults?.function?.runtime || lambda.Runtime.NODEJS_16_X,
       memorySize: defaults?.function?.memorySize || 512,
       timeout: Duration.seconds(defaults?.function?.timeout || 10),
       environment,

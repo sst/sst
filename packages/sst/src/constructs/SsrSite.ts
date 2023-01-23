@@ -135,7 +135,7 @@ export interface SsrSiteProps {
       >; 
       memorySize?: number;
       permissions?: Permissions;
-      runtime?: Runtime;
+      runtime?: lambda.Runtime;
       timeout?: number;
     };
   };
