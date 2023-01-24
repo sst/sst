@@ -95,6 +95,7 @@ export const dev = (program: Program) =>
         });
 
         bus.subscribe("worker.stdout", async (evt) => {
+          prefix(evt.properties.requestID);
           const { started } = pending.get(evt.properties.requestID)!;
           for (let line of evt.properties.message.split("\n")) {
             Colors.line(
@@ -224,9 +225,7 @@ export const dev = (program: Program) =>
           pending = undefined;
 
           if (lastDeployed) console.log();
-          const component = render(
-            <DeploymentUI assembly={assembly} />
-          );
+          const component = render(<DeploymentUI assembly={assembly} />);
           const results = await Stacks.deployMany(assembly.stacks);
           component.clear();
           component.unmount();
