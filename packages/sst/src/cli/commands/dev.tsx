@@ -65,16 +65,18 @@ export const dev = (program: Program) =>
         }
         const pending = new Map<string, Pending>();
 
-        function start(requestID: string) {
+        function prefix(requestID: string): string {
+          const exists = pending.get(requestID);
+          if (exists) {
+            return Colors.hex(exists.color)(Colors.prefix);
+          }
           pending.set(requestID, {
             requestID,
             started: Date.now(),
             color: colors[index % colors.length],
           });
           index++;
-        }
-        function prefix(requestID: string) {
-          return Colors.hex(pending.get(requestID)!.color)(Colors.prefix);
+          return prefix(requestID);
         }
         function end(requestID: string) {
           // index--;
@@ -83,7 +85,6 @@ export const dev = (program: Program) =>
         }
 
         bus.subscribe("function.invoked", async (evt) => {
-          start(evt.properties.requestID);
           Colors.line(
             prefix(evt.properties.requestID),
             Colors.dim.bold("Invoked"),
