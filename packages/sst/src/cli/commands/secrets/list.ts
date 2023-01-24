@@ -12,7 +12,12 @@ export const list = (program: Program) =>
     async (args) => {
       const { Config } = await import("../../../config.js");
       const { gray } = await import("colorette");
+      const { Colors } = await import("../../colors.js");
       const secrets = await Config.secrets();
+      if (Object.entries(secrets).length === 0) {
+        Colors.line("No secrets set");
+        return;
+      }
       switch (args.format || "table") {
         case "env":
           for (const [key, value] of Object.entries(secrets)) {

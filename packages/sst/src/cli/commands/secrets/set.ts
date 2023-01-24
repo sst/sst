@@ -24,9 +24,7 @@ export const set = (program: Program) =>
       const { Config } = await import("../../../config.js");
       const { blue } = await import("colorette");
       const { createSpinner } = await import("../../spinner.js");
-      const setting = createSpinner(
-        `Setting secret ${blue(args.name)}`
-      ).start();
+      const setting = createSpinner(` Setting "${args.name}"`).start();
       await Config.setSecret({
         key: args.name,
         value: args.value,
@@ -34,9 +32,9 @@ export const set = (program: Program) =>
       });
       setting.succeed();
       const restarting = createSpinner(
-        `Restarting all functions using ${blue(args.name)}...`
+        ` Restarting all functions using ${blue(args.name)}...`
       ).start();
       const count = await Config.restart(args.name);
-      restarting.succeed(`Restarted ${blue(count)} functions`);
+      restarting.succeed(` Restarted ${count} functions`);
     }
   );

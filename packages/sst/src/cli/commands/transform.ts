@@ -1,30 +1,35 @@
 import type { Program } from "../program.js";
 
-export const updateMod = (program: Program) =>
+export const transform = (program: Program) =>
   program.command(
-    "update-mod <transform>",
-    "Transforms your SST app",
+    "transform <mod>",
+    "Apply a transform on your SST app",
     (yargs) =>
-      yargs.positional("transform", {
+      yargs.positional("mod", {
         type: "string",
         describe: "Name of the transform",
         demandOption: true,
       }),
     async (args) => {
-      const { green } = await import("colorette");
-      if (args.transform === "resource-binding-secrets") {
+      const { Colors } = await import("../colors.js");
+      if (args.mod === "resource-binding-secrets") {
         await handleSecretsMigration();
+        Colors.line(
+          Colors.success(`✔ `),
+          `Transform "${args.mod}" applied successfully!`
+        );
+        return;
       }
-      console.log(
-        green(`Update transform "${args.transform}" has been applied successfully!`)
-      );
+
+      Colors.line(Colors.danger(`✖ `), `Transform "${args.mod}" not found`);
     }
   );
 
 async function handleSecretsMigration() {
   const { useProject } = await import("../../project.js");
   const { useAWSClient } = await import("../../credentials.js");
-  const { SSMClient, GetParametersByPathCommand, PutParameterCommand } = await import("@aws-sdk/client-ssm");
+  const { SSMClient, GetParametersByPathCommand, PutParameterCommand } =
+    await import("@aws-sdk/client-ssm");
   const project = useProject();
   const { name: app, stage } = project.config;
   const ssm = useAWSClient(SSMClient);
@@ -58,12 +63,14 @@ async function handleSecretsMigration() {
       if (name === "SST_AUTH_PRIVATE" || name === "SST_AUTH_PUBLIC") {
         continue;
       }
-      await ssm.send(new PutParameterCommand({
-        Name: `${newPrefix}${name}/value`,
-        Value: secret.Value!,
-        Type: secret.Type!,
-        Overwrite: true,
-      }));
+      await ssm.send(
+        new PutParameterCommand({
+          Name: `${newPrefix}${name}/value`,
+          Value: secret.Value!,
+          Type: secret.Type!,
+          Overwrite: true,
+        })
+      );
     }
   }
   await migrateSecretsSSMPath(stage);

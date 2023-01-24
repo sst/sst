@@ -1,3 +1,4 @@
+import { useSTSIdentity } from "../../credentials.js";
 import { Colors } from "../colors.js";
 import type { Program } from "../program.js";
 import { printHeader } from "../ui/header.js";
@@ -26,8 +27,19 @@ export const deploy = (program: Program) =>
       const { render } = await import("ink");
       const { DeploymentUI } = await import("../ui/deploy.js");
       const project = useProject();
+      const identity = await useSTSIdentity();
 
-      printHeader({});
+      Colors.line(`${Colors.primary.bold(`SST v${project.version}`)}`);
+      Colors.gap();
+      Colors.line(
+        `${Colors.primary(`➜`)}  ${Colors.bold("App:")}     ${
+          project.config.name
+        }`
+      );
+      Colors.line(`   ${Colors.bold("Stage:")}   ${project.config.stage}`);
+      Colors.line(`   ${Colors.bold("Region:")}  ${project.config.region}`);
+      Colors.line(`   ${Colors.bold("Account:")} ${identity.Account}`);
+      Colors.gap();
 
       // Generate cloud assembly
       // - if --from is specified, we will use the existing cloud assembly
@@ -46,7 +58,6 @@ export const deploy = (program: Program) =>
           mode: "deploy",
         });
         spinner.succeed();
-        console.log();
         return result;
       })();
 
@@ -59,9 +70,7 @@ export const deploy = (program: Program) =>
         Colors.line(`No stacks found matching ${blue(args.filter!)}`);
         process.exit(1);
       }
-      const component = render(
-        <DeploymentUI assembly={assembly} />
-      );
+      const component = render(<DeploymentUI assembly={assembly} />);
       const results = await Stacks.deployMany(assembly.stacks);
       component.clear();
       component.unmount();

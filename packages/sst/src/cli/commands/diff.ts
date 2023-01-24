@@ -1,4 +1,5 @@
 import type { Program } from "../program.js";
+import { stackNameToId } from "../ui/stack.js";
 
 export const diff = (program: Program) =>
   program.command(
@@ -18,23 +19,23 @@ export const diff = (program: Program) =>
       );
       const { createSpinner } = await import("../spinner.js");
       const { green } = await import("colorette");
+      const { Colors } = await import("../colors.js");
 
       // Build app
-      const spinner = createSpinner("Building stacks");
       const project = useProject();
       const assembly = await Stacks.synth({
         fn: project.stacks,
         mode: args.dev ? "dev" : "deploy",
       });
-      spinner.succeed();
-      console.log("");
 
       // Diff each stack
       let changesAcc = 0;
       let changedStacks = 0;
       const cfn = useAWSClient(CloudFormationClient);
       for (const stack of assembly.stacks) {
-        const spinner = createSpinner(`${stack.stackName}: Checking for changes...`);
+        const spinner = createSpinner(
+          `${stack.stackName}: Checking for changes...`
+        );
 
         // get old template
         const response = await cfn.send(
@@ -51,19 +52,29 @@ export const diff = (program: Program) =>
 
         // print diff result
         if (count === 0) {
-          console.log(`➜ ${stack.stackName}: No changes`);
-          console.log("");
-        }
-        else if (count === 1) {
-          console.log(`➜ ${stack.stackName}: ${count} change`);
-          console.log("");
+          Colors.line(
+            `➜  ${Colors.dim.bold(
+              stackNameToId(stack.stackName) + ":"
+            )} No changes`
+          );
+          Colors.gap();
+        } else if (count === 1) {
+          Colors.line(
+            `➜  ${Colors.dim.bold(
+              stackNameToId(stack.stackName) + ":"
+            )} ${count} change`
+          );
+          Colors.gap();
           console.log(diff);
           changesAcc += count;
           changedStacks++;
-        }
-        else {
-          console.log(`➜ ${stack.stackName}: ${count} changes`);
-          console.log("");
+        } else {
+          Colors.line(
+            `➜  ${Colors.dim.bold(
+              stackNameToId(stack.stackName) + ":"
+            )} ${count} changes`
+          );
+          Colors.gap();
           console.log(diff);
           changesAcc += count;
           changedStacks++;
@@ -72,17 +83,13 @@ export const diff = (program: Program) =>
 
       // Handle no changes
       if (changedStacks === 0) {
-        console.log(green("✔"), " There were no changes");
-      }
-      else {
-        console.log(
-          green("✔"),
-          changesAcc === 1
-            ? "1 change found in"
-            : `${changesAcc} changes found in`,
-          changedStacks === 1
-            ? "1 stack"
-            : `${changedStacks} stacks`
+        Colors.line(Colors.success(`✔`), Colors.bold(" Diff:"), "No changes");
+      } else {
+        Colors.line(
+          Colors.success(`✔`),
+          Colors.bold(" Diff:"),
+          changesAcc === 1 ? "1 change found in" : `${changesAcc} changes in`,
+          changedStacks === 1 ? "1 stack" : `${changedStacks} stacks`
         );
       }
 

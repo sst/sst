@@ -18,15 +18,15 @@ export const get = (program: Program) =>
     async (args) => {
       const { red } = await import("colorette");
       const { Config } = await import("../../../config.js");
-      const { bold } = await import("colorette");
+      const { Colors } = await import("../../colors.js");
       try {
         const result = await Config.getSecret({
           key: args.name,
           fallback: args.fallback === true,
         });
-        console.log(bold(result!));
+        console.log(result!);
       } catch {
-        console.log(red(`${bold(args.name)} is not set`));
+        Colors.line(Colors.danger(`✖ `), `"${args.name}" is not set`);
       }
     }
   );

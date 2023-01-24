@@ -11,15 +11,22 @@ export const build = (program: Program) =>
       }),
     async (args) => {
       const { useProject } = await import("../../project.js");
-      const { createSpinner } = await import("../spinner.js");
       const { Stacks } = await import("../../stacks/index.js");
-      const spinner = createSpinner("Building stacks").start();
-      await Stacks.synth({
+      const { Colors } = await import("../colors.js");
+      const path = await import("path");
+      const result = await Stacks.synth({
         fn: useProject().stacks,
         buildDir: args.to,
         mode: "deploy",
       });
-      spinner.succeed();
+      Colors.line("");
+      Colors.line(
+        Colors.success(`✔`),
+        Colors.bold(" Built:"),
+        `${result.stacks.length} stack${
+          result.stacks.length > 1 ? "s" : ""
+        } to ${path.relative(process.cwd(), result.directory)}`
+      );
       process.exit(0);
     }
   );

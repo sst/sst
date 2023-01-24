@@ -37,6 +37,7 @@ interface Project {
       [key in keyof typeof DEFAULTS]: Exclude<ConfigOptions[key], undefined>;
     }>;
   version: string;
+  cdkVersion: string;
   paths: {
     root: string;
     config: string;
@@ -99,22 +100,23 @@ export async function initProject(globals: GlobalOptions) {
     globals.stage ||
     (await usePersonalStage(out)) ||
     (await promptPersonalStage(out));
-
+  const [version, cdkVersion] = await (async () => {
+    try {
+      const packageJson = JSON.parse(
+        await fs
+          .readFile(
+            url.fileURLToPath(new URL("./package.json", import.meta.url))
+          )
+          .then((x) => x.toString())
+      );
+      return [packageJson.version, packageJson.dependencies["aws-cdk-lib"]];
+    } catch {
+      return ["unknown", "unknown"];
+    }
+  })();
   const project: Project = {
-    version: await (async () => {
-      try {
-        const packageJson = JSON.parse(
-          await fs
-            .readFile(
-              url.fileURLToPath(new URL("./package.json", import.meta.url))
-            )
-            .then((x) => x.toString())
-        );
-        return packageJson.version;
-      } catch {
-        return "unknown";
-      }
-    })(),
+    version,
+    cdkVersion,
     config: {
       ...config,
       stage,

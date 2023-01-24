@@ -18,18 +18,21 @@ export const remove = (program: Program) =>
       const { DeploymentUI } = await import("../ui/deploy.js");
       const { printDeploymentResults } = await import("../ui/deploy.js");
       const { Colors } = await import("../colors.js");
+      const { useSTSIdentity } = await import("../../credentials.js");
 
       const project = useProject();
+      const identity = await useSTSIdentity();
 
-      console.log();
-      console.log(`  ${Colors.primary(`${bold(`SST`)} v${project.version}`)}`);
-      console.log();
-      console.log(
-        `  ${Colors.primary(`➜`)}  ${bold(`Stage:`)}   ${dim(
-          project.config.stage
-        )}`
+      Colors.line(`${Colors.primary.bold(`SST v${project.version}`)}`);
+      Colors.gap();
+      Colors.line(
+        `${Colors.primary(`➜`)}  ${Colors.bold("App:")}     ${
+          project.config.name
+        }`
       );
-      console.log();
+      Colors.line(`   ${Colors.bold("Stage:")}   ${project.config.stage}`);
+      Colors.line(`   ${Colors.bold("Region:")}  ${project.config.region}`);
+      Colors.line(`   ${Colors.bold("Account:")} ${identity.Account}`);
 
       const assembly = await (async function () {
         if (args.from) {
@@ -52,13 +55,11 @@ export const remove = (program: Program) =>
         console.log(`No stacks found matching ${blue(args.filter!)}`);
         process.exit(1);
       }
-      const component = render(
-        <DeploymentUI assembly={assembly} />
-      );
+      const component = render(<DeploymentUI assembly={assembly} />);
       const results = await Stacks.removeMany(target);
       component.clear();
       component.unmount();
-      printDeploymentResults(assembly, results);
+      printDeploymentResults(assembly, results, true);
       if (Object.values(results).some((stack) => Stacks.isFailed(stack.status)))
         process.exit(1);
       process.exit(0);

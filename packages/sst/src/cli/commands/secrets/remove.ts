@@ -17,9 +17,15 @@ export const remove = (program: Program) =>
         }),
     async (args) => {
       const { Config } = await import("../../../config.js");
-      await Config.removeSecret({
-        key: args.name,
-        fallback: args.fallback === true,
-      });
+      const { Colors } = await import("../../colors.js");
+      try {
+        await Config.removeSecret({
+          key: args.name,
+          fallback: args.fallback === true,
+        });
+        Colors.line(Colors.success(`✔ `), `Removed "${args.name}"`);
+      } catch {
+        Colors.line(Colors.danger(`✖ `), `"${args.name}" is not set`);
+      }
     }
   );

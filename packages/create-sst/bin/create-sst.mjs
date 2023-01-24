@@ -21,6 +21,7 @@ program
 
     const [preset, name, destination] = await (async function () {
       const files = await fs.readdir(cwd);
+
       if (files.some((f) => f.startsWith("next.config"))) {
         const { confirm } = await inquirer.prompt([
           {
@@ -33,6 +34,20 @@ program
         ]);
         if (!confirm) return;
         return ["presets/dropin/nextjs", path.parse(cwd).name, cwd];
+      }
+
+      if (files.some((f) => f.startsWith("astro.config"))) {
+        const { confirm } = await inquirer.prompt([
+          {
+            name: "confirm",
+            type: "confirm",
+            default: true,
+            message:
+              "You are in an Astro project so SST will be setup in drop-in mode. Continue?",
+          },
+        ]);
+        if (!confirm) return;
+        return ["presets/dropin/astro", path.parse(cwd).name, cwd];
       }
 
       const answers = await inquirer.prompt([

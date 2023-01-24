@@ -19,6 +19,7 @@ export const update = (program: Program) =>
       const path = await import("path");
       const { fetch } = await import("undici");
       const { useProject } = await import("../../project.js");
+      const { Colors } = await import("../colors.js");
 
       async function find(dir: string): Promise<string[]> {
         const children = await fs.readdir(dir);
@@ -80,23 +81,25 @@ export const update = (program: Program) =>
       await Promise.all(tasks);
 
       if (results.size === 0) {
-        console.log(
-          green(`All packages already match version ${metadata.version}`)
-        );
+        Colors.line(Colors.success(`✔ `), `Already using v${metadata.version}`);
         return;
       }
 
       for (const [file, pkgs] of results.entries()) {
-        console.log(green(`✅ ${path.relative(project.paths.root, file)}`));
+        Colors.line(
+          Colors.success(`✔ `),
+          Colors.bold.dim(path.relative(project.paths.root, file))
+        );
         for (const [pkg, version] of pkgs) {
-          console.log(green(`     ${pkg}@${version}`));
+          Colors.line(Colors.dim(`   ${pkg}@${version}`));
         }
       }
 
-      console.log(
-        yellow(
-          "Don't forget to run your package manager to install the packages"
-        )
+      Colors.gap();
+      Colors.line(
+        `${Colors.primary(`➜`)}  ${Colors.warning(
+          "Make sure to run: npm install (or pnpm install, or yarn)"
+        )}`
       );
     }
   );

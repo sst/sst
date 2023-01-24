@@ -10,6 +10,7 @@ export const consoleCommand = async (program: Program) =>
       const { blue } = await import("colorette");
       const { useRuntimeServer } = await import("../../runtime/server.js");
       const { useLocalServer } = await import("../local/server.js");
+      const { printHeader } = await import("../ui/header.js");
       await Promise.all([
         useRuntimeServer(),
         useLocalServer({
@@ -18,7 +19,7 @@ export const consoleCommand = async (program: Program) =>
           live: false,
         }),
       ]);
-      const local = await useLocalServerConfig();
-      console.log(`Console started: ${local.url}`);
+      console.clear();
+      printHeader({ console: true, hint: "ready!" });
     }
   );

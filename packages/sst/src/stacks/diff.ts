@@ -1,8 +1,13 @@
 import type { CloudFormationStackArtifact } from "aws-cdk-lib/cx-api";
-import type { FormatStream } from '@aws-cdk/cloudformation-diff';
+import type { FormatStream } from "@aws-cdk/cloudformation-diff";
 
-export async function diff(stack: CloudFormationStackArtifact, oldTemplate: any) {
-  const { diffTemplate, formatDifferences, TemplateDiff } = await import("@aws-cdk/cloudformation-diff");
+export async function diff(
+  stack: CloudFormationStackArtifact,
+  oldTemplate: any
+) {
+  const { diffTemplate, formatDifferences, TemplateDiff } = await import(
+    "@aws-cdk/cloudformation-diff"
+  );
 
   // Generate diff
   const diff = diffTemplate(oldTemplate, stack.template);
@@ -40,8 +45,8 @@ export async function diff(stack: CloudFormationStackArtifact, oldTemplate: any)
   const output: string[] = [];
   const stream = {
     write(chunk: string) {
-      output.push(`  ${chunk}`);
-    }
+      output.push(`   ${chunk}`);
+    },
   } as FormatStream;
   const pathMap = await buildLogicalToPathMap(stack);
   formatDifferences(stream, diff, pathMap);
@@ -50,8 +55,7 @@ export async function diff(stack: CloudFormationStackArtifact, oldTemplate: any)
   while (true) {
     if (output[output.length - 1].match(/^\s*$/)) {
       output.pop();
-    }
-    else {
+    } else {
       break;
     }
   }
@@ -63,9 +67,13 @@ export async function diff(stack: CloudFormationStackArtifact, oldTemplate: any)
 }
 
 async function buildLogicalToPathMap(stack: CloudFormationStackArtifact) {
-  const { ArtifactMetadataEntryType } = await import("@aws-cdk/cloud-assembly-schema");
+  const { ArtifactMetadataEntryType } = await import(
+    "@aws-cdk/cloud-assembly-schema"
+  );
   const map: { [id: string]: string } = {};
-  for (const md of stack.findMetadataByType(ArtifactMetadataEntryType.LOGICAL_ID)) {
+  for (const md of stack.findMetadataByType(
+    ArtifactMetadataEntryType.LOGICAL_ID
+  )) {
     map[md.data as string] = md.path;
   }
   return map;

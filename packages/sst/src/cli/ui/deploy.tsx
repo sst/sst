@@ -109,7 +109,8 @@ export const DeploymentUI = (props: Props) => {
 
 export function printDeploymentResults(
   assembly: CloudAssembly,
-  results: Awaited<ReturnType<typeof Stacks.deployMany>>
+  results: Awaited<ReturnType<typeof Stacks.deployMany>>,
+  remove?: boolean
 ) {
   // Print success stacks
   const success = Object.entries(results).filter(
@@ -117,7 +118,10 @@ export function printDeploymentResults(
   );
   if (success.length) {
     Colors.gap();
-    Colors.line(Colors.success(`✔`), Colors.bold(` Deployed:`));
+    Colors.line(
+      Colors.success(`✔`),
+      Colors.bold(remove ? `  Removed:` : ` Deployed:`)
+    );
     for (const [stack, result] of success) {
       const outputs = Object.entries(result.outputs).filter(([key, _]) => {
         if (key.startsWith("Export")) return false;

@@ -169,9 +169,7 @@ export const dev = (program: Program) =>
           Colors.gap();
           const spinner = createSpinner({
             color: "gray",
-            text: lastDeployed
-              ? ` Building stacks`
-              : dim(` Checking for changes`),
+            text: lastDeployed ? ` Building...` : dim(` Checking for changes`),
           }).start();
           try {
             const [metafile, sstConfig] = await Stacks.load(
@@ -190,8 +188,7 @@ export const dev = (program: Program) =>
             const next = await checksum(assembly.directory);
             Logger.debug("Checksum", "next", next, "old", lastDeployed);
             if (next === lastDeployed) {
-              spinner.succeed(" No changes");
-              Colors.gap();
+              spinner.succeed(Colors.dim(" Built with no changes"));
               return;
             }
             if (!lastDeployed) {
@@ -199,7 +196,7 @@ export const dev = (program: Program) =>
               spinner.clear();
               Colors.mode("gap");
             } else {
-              spinner.succeed(` Stacks built!`);
+              spinner.succeed(Colors.dim(` Built`));
               Colors.mode("gap");
             }
             pending = assembly;
@@ -298,7 +295,7 @@ export const dev = (program: Program) =>
       });
 
       console.clear();
-      await printHeader({ console: true });
+      await printHeader({ console: true, hint: "ready!" });
       /*
       console.log(`  ${primary(`➜`)}  ${bold(dim(`Outputs:`))}`);
       for (let i = 0; i < 3; i++) {
