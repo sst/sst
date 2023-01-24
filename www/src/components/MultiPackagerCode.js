@@ -9,6 +9,7 @@ export default function MultiPackagerCode(props) {
       values={[
         { label: "npm", value: "npm" },
         { label: "yarn", value: "yarn" },
+        { label: "pnpm", value: "pnpm" },
       ]}
     >
       {props.children}

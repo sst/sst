@@ -51,6 +51,13 @@ yarn create sst my-sst-app
 ```
 
 </TabItem>
+<TabItem value="pnpm">
+
+```bash
+pnpm create sst my-sst-app
+```
+
+</TabItem>
 </MultiPackagerCode>
 
 ---
@@ -101,6 +108,14 @@ yarn
 ```
 
 </TabItem>
+<TabItem value="pnpm">
+
+```bash
+cd my-sst-app
+pnpm install
+```
+
+</TabItem>
 </MultiPackagerCode>
 
 ---
@@ -120,7 +135,14 @@ npx sst dev
 <TabItem value="yarn">
 
 ```bash
-yarn run start
+yarn sst dev
+```
+
+</TabItem>
+<TabItem value="pnpm">
+
+```bash
+pnpm sst dev
 ```
 
 </TabItem>
@@ -186,6 +208,14 @@ npm run dev
 ```bash
 cd web
 yarn run dev
+```
+
+</TabItem>
+<TabItem value="pnpm">
+
+```bash
+cd web
+pnpm run dev
 ```
 
 </TabItem>
@@ -323,7 +353,14 @@ npx sst deploy --stage prod
 <TabItem value="yarn">
 
 ```bash
-yarn run deploy --stage prod
+yarn sst deploy --stage prod
+```
+
+</TabItem>
+<TabItem value="pnpm">
+
+```bash
+pnpm sst deploy --stage prod
 ```
 
 </TabItem>
@@ -362,8 +399,16 @@ npx sst remove --stage prod
 <TabItem value="yarn">
 
 ```bash
-yarn run remove
-yarn run remove --stage prod
+yarn sst remove
+yarn sst remove --stage prod
+```
+
+</TabItem>
+<TabItem value="pnpm">
+
+```bash
+pnpm sst remove
+pnpm sst remove --stage prod
 ```
 
 </TabItem>

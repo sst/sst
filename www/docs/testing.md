@@ -69,6 +69,13 @@ yarn test
 ```
 
 </TabItem>
+<TabItem value="pnpm">
+
+```bash
+pnpm test
+```
+
+</TabItem>
 </MultiPackagerCode>
 
 ---

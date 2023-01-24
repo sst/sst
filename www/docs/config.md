@@ -4,7 +4,6 @@ description: "Working with environment variables and secrets in SST."
 ---
 
 import HeadlineText from "@site/src/components/HeadlineText";
-import MultiPackagerCode from "@site/src/components/MultiPackagerCode";
 
 <HeadlineText>
 

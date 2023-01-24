@@ -48,6 +48,13 @@ yarn add sst --exact
 ```
 
 </TabItem>
+<TabItem value="pnpm">
+
+```bash
+pnpm add sst --save-exact
+```
+
+</TabItem>
 </MultiPackagerCode>
 
 If you are using our starters, the `sst` package should already be installed.

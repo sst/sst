@@ -20,11 +20,17 @@ npx create-sst@latest
 ```
 
 </TabItem>
-
 <TabItem value="yarn">
 
 ```bash
 yarn create sst
+```
+
+</TabItem>
+<TabItem value="pnpm">
+
+```bash
+pnpm create sst
 ```
 
 </TabItem>

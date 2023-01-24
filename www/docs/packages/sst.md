@@ -36,6 +36,13 @@ yarn add sst --exact
 ```
 
 </TabItem>
+<TabItem value="pnpm">
+
+```bash
+pnpm add sst --save-exact
+```
+
+</TabItem>
 </MultiPackagerCode>
 
 If you are using our starters, the `sst` package should already be installed.
@@ -58,6 +65,13 @@ npx sst <command>
 
 ```bash
 yarn sst <command>
+```
+
+</TabItem>
+<TabItem value="pnpm">
+
+```bash
+pnpm sst <command>
 ```
 
 </TabItem>
@@ -232,6 +246,16 @@ Build your app and synthesize your stacks. Generates a `.build/` directory with 
 npx sst build [options]
 ```
 
+In addition to the [global options](#global-options), the following options are supported.
+
+#### Options
+
+- **`--to`**
+
+  _Default_: `.sst/dist`
+
+  Pass in a path for the build output. This lets you split up the deploy process and deploy without having to build the app again.
+
 ---
 
 ### `sst deploy`
@@ -252,11 +276,11 @@ In addition to the [global options](#global-options), the following options are 
 
   Pass in this option if you want to write the AWS CloudFormation stack outputs to a JSON file. Works the same way as the [`--outputs-file`](https://docs.aws.amazon.com/cdk/latest/guide/cli.html#w108aac23b7c33c13) option in AWS CDK.
 
-- **`--rollback`**
+- **`--from`**
 
-  _Default_: `true`
+  _Default_: `.sst/dist`
 
-  By default SST enables rollback on failure. This is so that any mistakes do not leave your infrastructure in an inconsistent state. To override this behavior pass in `--rollback=false`.
+  Pass in a path for the build output. This lets you split up the deploy process and deploy without having to build the app again.
 
 ---
 
