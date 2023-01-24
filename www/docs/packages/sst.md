@@ -276,10 +276,10 @@ By default, AWS does not remove resources like S3 buckets or DynamoDB tables. To
 
 ### `sst update`
 
-Updates the SST and CDK packages in your `package.json` to the given `ver`.
+Updates the SST and CDK packages in your `package.json` to the latest version. Or optionally to the given `version`.
 
 ```bash
-npx sst update [ver] [options]
+npx sst update [version] [options]
 ```
 
 ---
@@ -326,6 +326,24 @@ Manage secrets in your app.
 
 ```bash
 npx sst secrets <command> [options]
+```
+
+For example, you can set a secret.
+
+```bash
+npx sst secrets set MY_SECRET abc
+```
+
+Get the secret.
+
+```bash
+npx sst secrets get MY_SECRET
+```
+
+And remove the secret.
+
+```bash
+npx sst secrets remove MY_SECRET
 ```
 
 #### Options
@@ -383,36 +401,6 @@ Removes the secret with the given `name`.
 ```bash
 npx sst secrets remove <name> [options]
 ```
-
----
-
-### `sst add-cdk`
-
-Installs the given AWS CDK npm packages with the appropriate CDK version. This convenience method helps get around the [known CDK issue of version mismatches](known-issues.md).
-
-```bash
-npx sst add-cdk <package..> [options]
-```
-
-So instead of installing the CDK npm packages directly:
-
-```bash
-npm install @aws-cdk/aws-apigatewayv2-alpha @aws-cdk/aws-appsync-alpha
-```
-
-Use the `add-cdk` command instead.
-
-```bash
-npx sst add-cdk @aws-cdk/aws-apigatewayv2-alpha @aws-cdk/aws-appsync-alpha
-```
-
-In addition to the [global options](#global-options), the following options are supported.
-
-#### Options
-
-- **`--dev`**
-
-  You can also pass in the `--dev` option if want to add the packages to the `devDependencies`.
 
 ---
 
