@@ -7,9 +7,6 @@ type ExtractMetadata<T extends SSTConstruct> = ReturnType<
 import type { Api } from "./Api.js";
 export type ApiMetadata = ExtractMetadata<Api<any>>;
 
-import { GraphQLApi } from "./GraphQLApi.js";
-export type GraphQLApiMetadata = ExtractMetadata<GraphQLApi>;
-
 import type { ApiGatewayV1Api } from "./ApiGatewayV1Api.js";
 export type ApiGatewayV1ApiMetadata = ExtractMetadata<ApiGatewayV1Api<any>>;
 
@@ -71,5 +68,4 @@ export type Metadata =
   | TableMetadata
   | TopicMetadata
   | WebSocketApiMetadata
-  | GraphQLApiMetadata
   | RDSMetadata;

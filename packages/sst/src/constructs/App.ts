@@ -15,7 +15,6 @@ import {
   isStackConstruct,
 } from "./Construct.js";
 import { Function, FunctionProps } from "./Function.js";
-import * as Config from "./Config.js";
 import { Permissions } from "./util/permission.js";
 import { bindParameters, bindType } from "./util/functionBinding.js";
 import { StackProps } from "./Stack.js";
@@ -254,26 +253,6 @@ export class App extends cdk.App {
     this.defaultFunctionProps.push({
       environment,
     });
-  }
-
-  /**
-   * Adds additional default config to be applied to all Lambda functions in the app.
-   *
-   * @deprecated The "addDefaultFunctionConfig" method will be removed in SST v2. Pass Parameters and Secrets in through the "addDefaultFunctionBinding" function. Read more about how to upgrade here — https://docs.serverless-stack.com/upgrade-guide#upgrade-to-v116
-   *
-   * @example
-   * ```js
-   * // Change
-   * app.addDefaultFunctionConfig([STRIPE_KEY]);
-   *
-   * // To
-   * app.addDefaultFunctionBinding([STRIPE_KEY]);
-   * ```
-   */
-  public addDefaultFunctionConfig(
-    config: (Config.Secret | Config.Parameter)[]
-  ) {
-    this.defaultFunctionProps.push({ config });
   }
 
   /**

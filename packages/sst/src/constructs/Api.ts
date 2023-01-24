@@ -184,9 +184,9 @@ export interface ApiLambdaAuthorizer extends ApiBaseAuthorizer {
   };
 }
 
-export interface ApiCorsProps extends apigV2Cors.CorsProps {}
-export interface ApiDomainProps extends apigV2Domain.CustomDomainProps {}
-export interface ApiAccessLogProps extends apigV2AccessLog.AccessLogProps {}
+export interface ApiCorsProps extends apigV2Cors.CorsProps { }
+export interface ApiDomainProps extends apigV2Domain.CustomDomainProps { }
+export interface ApiAccessLogProps extends apigV2AccessLog.AccessLogProps { }
 
 export interface ApiProps<
   Authorizers extends Record<string, ApiAuthorizer> = Record<
@@ -338,11 +338,11 @@ export interface ApiProps<
      * ```
      */
     authorizer?:
-      | "none"
-      | "iam"
-      | (string extends AuthorizerKeys
-          ? Omit<AuthorizerKeys, "none" | "iam">
-          : AuthorizerKeys);
+    | "none"
+    | "iam"
+    | (string extends AuthorizerKeys
+      ? Omit<AuthorizerKeys, "none" | "iam">
+      : AuthorizerKeys);
     /**
      * An array of scopes to include in the authorization when using `user_pool` or `jwt` authorizers. These will be merged with the scopes from the attached authorizer.
      * @default []
@@ -436,16 +436,15 @@ export type ApiRouteProps<AuthorizerKeys> =
   | ApiFunctionRouteProps<AuthorizerKeys>
   | ApiHttpRouteProps<AuthorizerKeys>
   | ApiAlbRouteProps<AuthorizerKeys>
-  | ApiGraphQLRouteProps<AuthorizerKeys>
-  | ApiPothosRouteProps<AuthorizerKeys>;
+  | ApiGraphQLRouteProps<AuthorizerKeys>;
 
 interface ApiBaseRouteProps<AuthorizerKeys = string> {
   authorizer?:
-    | "none"
-    | "iam"
-    | (string extends AuthorizerKeys
-        ? Omit<AuthorizerKeys, "none" | "iam">
-        : AuthorizerKeys);
+  | "none"
+  | "iam"
+  | (string extends AuthorizerKeys
+    ? Omit<AuthorizerKeys, "none" | "iam">
+    : AuthorizerKeys);
   authorizationScopes?: string[];
 }
 
@@ -544,65 +543,6 @@ export interface ApiAlbRouteProps<AuthorizersKeys>
 
 /**
  * Specify a route handler that handles GraphQL queries using Pothos
- * @deprecated "pothos" routes are deprecated for the Api construct, and will be removed in SST v2. Use "graphql" routes instead. Read more about how to upgrade here — https://docs.sst.dev/upgrade-guide#upgrade-to-v118
- * @example
- * ```js
- * // Change
- * api.addRoutes(stack, {
- *   "POST /graphql": {
- *     type: "pothos",
- *     function: {
- *       handler: "functions/graphql/graphql.ts",
- *     },
- *     schema: "backend/functions/graphql/schema.ts",
- *     output: "graphql/schema.graphql",
- *     commands: [
- *       "./genql graphql/graphql.schema graphql/
- *     ]
- *   }
- * })
- *
- * // To
- * api.addRoutes(stack, {
- *   "POST /graphql": {
- *     type: "graphql",
- *     function: {
- *       handler: "functions/graphql/graphql.ts",
- *     },
- *     pothos: {
- *       schema: "backend/functions/graphql/schema.ts",
- *       output: "graphql/schema.graphql",
- *       commands: [
- *         "./genql graphql/graphql.schema graphql/
- *       ]
- *     }
- *   }
- * })
- * ```
- */
-export interface ApiPothosRouteProps<AuthorizerKeys>
-  extends ApiBaseRouteProps<AuthorizerKeys> {
-  type: "pothos";
-  /**
-   * The function definition used to create the function for this route. Must be a graphql handler
-   */
-  function: FunctionDefinition;
-  /**
-   * Path to pothos schema
-   */
-  schema?: string;
-  /**
-   * File to write graphql schema to
-   */
-  output?: string;
-  /**
-   * Commands to run after generating schema. Useful for code generation steps
-   */
-  commands?: string[];
-}
-
-/**
- * Specify a route handler that handles GraphQL queries using Pothos
  *
  * @example
  * ```js
@@ -670,14 +610,13 @@ export interface ApiGraphQLRouteProps<AuthorizerKeys>
  * ```
  */
 export class Api<
-    Authorizers extends Record<string, ApiAuthorizer> = Record<
-      string,
-      ApiAuthorizer
-    >
+  Authorizers extends Record<string, ApiAuthorizer> = Record<
+    string,
+    ApiAuthorizer
   >
+>
   extends Construct
-  implements SSTConstruct
-{
+  implements SSTConstruct {
   public readonly id: string;
   public readonly cdk: {
     /**
@@ -701,18 +640,14 @@ export class Api<
   private _customDomainUrl?: string;
   private routesData: {
     [key: string]:
-      | { type: "function"; function: Fn }
-      | { type: "lambda_function"; function: lambda.IFunction }
-      | ({ type: "pothos"; function: Fn } & Pick<
-          ApiPothosRouteProps<any>,
-          "schema" | "output" | "commands"
-        >)
-      | ({
-          type: "graphql";
-          function: Fn;
-        } & ApiGraphQLRouteProps<any>["pothos"])
-      | { type: "url"; url: string }
-      | { type: "alb"; alb: elb.IApplicationListener };
+    | { type: "function"; function: Fn }
+    | { type: "lambda_function"; function: lambda.IFunction }
+    | ({
+      type: "graphql";
+      function: Fn;
+    } & ApiGraphQLRouteProps<any>["pothos"])
+    | { type: "url"; url: string }
+    | { type: "alb"; alb: elb.IApplicationListener };
   };
   private authorizersData: Record<string, apig.IHttpRouteAuthorizer>;
   private bindingForAllRoutes: SSTConstruct[] = [];
@@ -739,9 +674,8 @@ export class Api<
     const app = this.node.root as App;
     return this.cdk.httpApi instanceof apig.HttpApi
       ? this.cdk.httpApi.apiEndpoint
-      : `https://${(this.cdk.httpApi as apig.IHttpApi).apiId}.execute-api.${
-          app.region
-        }.amazonaws.com`;
+      : `https://${(this.cdk.httpApi as apig.IHttpApi).apiId}.execute-api.${app.region
+      }.amazonaws.com`;
   }
 
   /**
@@ -817,7 +751,6 @@ export class Api<
     if (!route) return;
     if (
       route.type === "function" ||
-      route.type === "pothos" ||
       route.type === "graphql"
     ) {
       return route.function;
@@ -837,7 +770,6 @@ export class Api<
     for (const route of Object.values(this.routesData)) {
       if (
         route.type === "function" ||
-        route.type === "pothos" ||
         route.type === "graphql"
       ) {
         route.function.bind(constructs);
@@ -885,7 +817,6 @@ export class Api<
     for (const route of Object.values(this.routesData)) {
       if (
         route.type === "function" ||
-        route.type === "pothos" ||
         route.type === "graphql"
       ) {
         route.function.attachPermissions(permissions);
@@ -937,16 +868,6 @@ export class Api<
               type: "function" as const,
               route: key,
               fn: getFunctionRef(data.function),
-            };
-
-          if (data.type === "pothos")
-            return {
-              type: "pothos" as const,
-              route: key,
-              fn: getFunctionRef(data.function),
-              schema: data.schema,
-              output: data.output,
-              commands: data.commands,
             };
 
           if (data.type === "graphql")
@@ -1150,7 +1071,7 @@ export class Api<
                 value.responseTypes.map(
                   (type) =>
                     apigAuthorizers.HttpLambdaResponseType[
-                      type.toUpperCase() as keyof typeof apigAuthorizers.HttpLambdaResponseType
+                    type.toUpperCase() as keyof typeof apigAuthorizers.HttpLambdaResponseType
                     ]
                 ),
               resultsCacheTtl: value.resultsCacheTtl
@@ -1234,17 +1155,6 @@ export class Api<
         return [
           routeValue,
           this.createHttpIntegration(scope, routeKey, routeValue, postfixName),
-        ];
-      }
-      if (routeValue.type === "pothos") {
-        return [
-          routeValue,
-          this.createPothosIntegration(
-            scope,
-            routeKey,
-            routeValue,
-            postfixName
-          ),
         ];
       }
       if (routeValue.type === "graphql") {
@@ -1363,34 +1273,6 @@ export class Api<
     return integration;
   }
 
-  protected createPothosIntegration(
-    scope: Construct,
-    routeKey: string,
-    routeProps: ApiPothosRouteProps<keyof Authorizers>,
-    postfixName: string
-  ): apig.HttpRouteIntegration {
-    const result = this.createFunctionIntegration(
-      scope,
-      routeKey,
-      {
-        ...routeProps,
-        type: "function",
-        payloadFormatVersion: "2.0",
-      },
-      postfixName
-    );
-    const data = this.routesData[routeKey];
-    if (data.type === "function") {
-      this.routesData[routeKey] = {
-        ...data,
-        type: "pothos",
-        output: routeProps.output,
-        schema: routeProps.schema,
-        commands: routeProps.commands,
-      };
-    }
-    return result;
-  }
   protected createGraphQLIntegration(
     scope: Construct,
     routeKey: string,
@@ -1566,7 +1448,7 @@ export class Api<
     const authorizationScopes =
       authorizationType === "jwt" || authorizationType === "user_pool"
         ? routeProps?.authorizationScopes ||
-          this.props.defaults?.authorizationScopes
+        this.props.defaults?.authorizationScopes
         : undefined;
 
     return { authorizationType, authorizer, authorizationScopes };

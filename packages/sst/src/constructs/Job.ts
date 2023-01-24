@@ -10,7 +10,6 @@ import * as codebuild from "aws-cdk-lib/aws-codebuild";
 
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
-import { Secret, Parameter } from "./Config.js";
 import { SSTConstruct } from "./Construct.js";
 import { Function } from "./Function.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
@@ -18,7 +17,6 @@ import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import { bindEnvironment, bindPermissions } from "./util/functionBinding.js";
 import { IVpc } from "aws-cdk-lib/aws-ec2";
 import { useDeferredTasks } from "./deferred_task.js";
-import { useWarning } from "./util/warning.js";
 import { useProject } from "../project.js";
 import { useRuntimeHandlers } from "../runtime/handlers.js";
 
@@ -108,27 +106,6 @@ export interface JobProps {
    */
   bind?: SSTConstruct[];
   /**
-   * Configure environment variables for the job
-   *
-   * @deprecated The "config" prop is deprecated, and will be removed in SST v2. Pass Parameters and Secrets in through the "bind" prop. Read more about how to upgrade here — https://docs.serverless-stack.com/constructs/function
-   *
-   * @example
-   * ```js
-   * // Change
-   * new Job(stack, "MyJob", {
-   *   handler: "src/job.handler",
-   *   config: [STRIPE_KEY, API_URL]
-   * })
-   *
-   * // To
-   * new Job(stack, "MyJob", {
-   *   handler: "src/job.handler",
-   *   bind: [STRIPE_KEY, API_URL]
-   * })
-   * ```
-   */
-  config?: (Secret | Parameter)[];
-  /**
    * Attaches the given list of permissions to the job. Configuring this property is equivalent to calling `attachPermissions()` after the job is created.
    *
    * @example
@@ -213,7 +190,6 @@ export class Job extends Construct implements SSTConstruct {
       this.buildCodeBuildProjectCode();
     }
     this.attachPermissions(props.permissions || []);
-    this.addConfig(props.config || []);
     this.bind(props.bind || []);
     Object.entries(props.environment || {}).forEach(([key, value]) => {
       this.addEnvironment(key, value);
@@ -254,31 +230,6 @@ export class Job extends Construct implements SSTConstruct {
   public bind(constructs: SSTConstruct[]): void {
     this._jobInvoker.bind(constructs);
     this.useForCodeBuild(constructs);
-  }
-
-  /**
-   * Attaches additional configs to job.
-   *
-   * @deprecated The "config" prop is deprecated, and will be removed in SST v2. Pass Parameters and Secrets in through the "bind" prop. Read more about how to upgrade here — https://docs.serverless-stack.com/constructs/function
-   *
-   * @example
-   * ```js
-   * const STRIPE_KEY = new Config.Secret(stack, "STRIPE_KEY");
-   *
-   * // Change
-   * job.addConfig([STRIPE_KEY]);
-   *
-   * // To
-   * job.bind([STRIPE_KEY]);
-   * ```
-   */
-  public addConfig(config: (Secret | Parameter)[]): void {
-    const app = this.node.root as App;
-    this.bind(config);
-
-    if (config.length > 0) {
-      useWarning().add("config.deprecated");
-    }
   }
 
   /**
@@ -440,7 +391,7 @@ export class Job extends Construct implements SSTConstruct {
   }
 
   private createLocalInvoker(): Function {
-    const { handler, config, environment, permissions } = this.props;
+    const { handler, permissions } = this.props;
 
     // Note: make the invoker function the same ID as the Job
     //       construct so users can identify the invoker function
@@ -451,7 +402,6 @@ export class Job extends Construct implements SSTConstruct {
       runtime: "nodejs16.x",
       timeout: 10,
       memorySize: 1024,
-      config,
       environment: {
         SST_DEBUG_TYPE: "job",
       },

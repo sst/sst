@@ -13,8 +13,8 @@ import * as ssm from "aws-cdk-lib/aws-ssm";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Job } from "./Job.js";
-import { Secret, Parameter } from "./Config.js";
-import { isSSTConstruct, SSTConstruct } from "./Construct.js";
+import { Secret } from "./Config.js";
+import { SSTConstruct } from "./Construct.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { bindEnvironment, bindPermissions } from "./util/functionBinding.js";
@@ -23,7 +23,6 @@ import * as functionUrlCors from "./util/functionUrlCors.js";
 
 import url from "url";
 import { useDeferredTasks } from "./deferred_task.js";
-import { useWarning } from "./util/warning.js";
 import { useProject } from "../project.js";
 import { useRuntimeHandlers } from "../runtime/handlers.js";
 import { createAppContext } from "./context.js";
@@ -57,7 +56,7 @@ const supportedRuntimes = {
 export type Runtime = keyof typeof supportedRuntimes;
 export type FunctionInlineDefinition = string | Function;
 export type FunctionDefinition = string | Function | FunctionProps;
-export interface FunctionUrlCorsProps extends functionUrlCors.CorsProps {}
+export interface FunctionUrlCorsProps extends functionUrlCors.CorsProps { }
 
 export interface FunctionHooks {
   /**
@@ -261,27 +260,6 @@ export interface FunctionProps
    * ```
    */
   bind?: SSTConstruct[];
-  /**
-   * Configure environment variables for the function
-   *
-   * @deprecated The "config" prop is deprecated, and will be removed in SST v2. Pass Parameters and Secrets in through the "bind" prop. Read more about how to upgrade here — https://docs.serverless-stack.com/constructs/function
-   *
-   * @example
-   * ```js
-   * // Change
-   * new Function(stack, "Function", {
-   *   handler: "src/function.handler",
-   *   config: [STRIPE_KEY, API_URL]
-   * })
-   *
-   * // To
-   * new Function(stack, "Function", {
-   *   handler: "src/function.handler",
-   *   bind: [STRIPE_KEY, API_URL]
-   * })
-   * ```
-   */
-  config?: (Secret | Parameter)[];
   /**
    * Attaches the given list of permissions to the function. Configuring this property is equivalent to calling `attachPermissions()` after the function is created.
    *
@@ -555,7 +533,7 @@ export interface JavaProps {
 
 export type FunctionBundleProp = FunctionBundlePythonProps | boolean;
 
-interface FunctionBundleBase {}
+interface FunctionBundleBase { }
 
 /**
  * Used to configure Python bundling options
@@ -659,12 +637,12 @@ export class Function extends lambda.Function implements SSTConstruct {
     const diskSize = Function.normalizeDiskSize(props.diskSize);
     const tracing =
       lambda.Tracing[
-        (props.tracing || "active").toUpperCase() as keyof typeof lambda.Tracing
+      (props.tracing || "active").toUpperCase() as keyof typeof lambda.Tracing
       ];
     const logRetention =
       props.logRetention &&
       logs.RetentionDays[
-        props.logRetention.toUpperCase() as keyof typeof logs.RetentionDays
+      props.logRetention.toUpperCase() as keyof typeof logs.RetentionDays
       ];
     const isLiveDevEnabled = props.enableLiveDev === false ? false : true;
 
@@ -817,7 +795,6 @@ export class Function extends lambda.Function implements SSTConstruct {
     this.addEnvironment("SST_SSM_PREFIX", useProject().config.ssmPrefix, {
       removeInEdge: true,
     });
-    this.addConfig(props.config || []);
     this.bind(props.bind || []);
 
     this.createUrl();
@@ -864,27 +841,6 @@ export class Function extends lambda.Function implements SSTConstruct {
   }
 
   /**
-   * Attaches additional configs to function.
-   *
-   * @deprecated The "config" prop is deprecated, and will be removed in SST v2. Pass Parameters and Secrets in through the "bind" prop. Read more about how to upgrade here — https://docs.serverless-stack.com/constructs/function
-   *
-   * @example
-   * ```js
-   * const STRIPE_KEY = new Config.Secret(stack, "STRIPE_KEY");
-   *
-   * // Change
-   * job.addConfig([STRIPE_KEY]);
-   *
-   * // To
-   * job.bind([STRIPE_KEY]);
-   * ```
-   */
-  public addConfig(config: (Secret | Parameter)[]): void {
-    this.bind(config);
-    if (config.length > 0) useWarning().add("config.deprecated");
-  }
-
-  /**
    * Attaches additional permissions to function.
    *
    * @example
@@ -904,23 +860,18 @@ export class Function extends lambda.Function implements SSTConstruct {
         .filter((p) => p instanceof Job)
         .forEach((p) => this.bind([p as Job]));
     }
-
-    // Warn user if SST constructs are passed into permissions
-    if (permissions !== "*" && permissions.some((p) => isSSTConstruct(p))) {
-      useWarning().add("permissions.noConstructs");
-    }
   }
 
   /** @internal */
   public getConstructMetadata() {
-    const { config, bind } = this.props;
+    const { bind } = this.props;
 
     return {
       type: "Function" as const,
       data: {
         arn: this.functionArn,
         localId: this.node.addr,
-        secrets: [...(config || []), ...(bind || [])]
+        secrets: (bind || [])
           .filter((c) => c instanceof Secret)
           .map((c) => (c as Secret).name),
       },
@@ -1073,7 +1024,7 @@ export class Function extends lambda.Function implements SSTConstruct {
       if (inheritedProps && Object.keys(inheritedProps).length > 0) {
         throw new Error(
           inheritErrorMessage ||
-            `Cannot inherit default props when a Function is provided`
+          `Cannot inherit default props when a Function is provided`
         );
       }
       return definition;
@@ -1109,10 +1060,6 @@ export class Function extends lambda.Function implements SSTConstruct {
     const layers = [...(baseProps?.layers || []), ...(props?.layers || [])];
     const layersProp = layers.length === 0 ? {} : { layers };
 
-    // Merge config
-    const config = [...(baseProps?.config || []), ...(props?.config || [])];
-    const configProp = config.length === 0 ? {} : { config };
-
     // Merge bind
     const bind = [...(baseProps?.bind || []), ...(props?.bind || [])];
     const bindProp = bind.length === 0 ? {} : { bind };
@@ -1134,7 +1081,6 @@ export class Function extends lambda.Function implements SSTConstruct {
       ...(baseProps || {}),
       ...(props || {}),
       ...bindProp,
-      ...configProp,
       ...layersProp,
       ...environmentProp,
       ...permissionsProp,
