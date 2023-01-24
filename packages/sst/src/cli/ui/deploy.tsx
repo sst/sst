@@ -19,8 +19,6 @@ export const DeploymentUI = (props: Props) => {
 
   useEffect(() => {
     Colors.gap();
-    Colors.line(`${Colors.primary(`➜`)}  ${Colors.bold(`Deploying...`)}`);
-    Colors.gap();
     const bus = useBus();
 
     const event = bus.subscribe("stack.event", (payload) => {
@@ -101,7 +99,7 @@ export const DeploymentUI = (props: Props) => {
           <Text>
             <Spinner />
             {"  "}
-            <Text dimColor>Waiting...</Text>
+            <Text dimColor>Deploying...</Text>
           </Text>
         </Box>
       )}
