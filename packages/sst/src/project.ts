@@ -33,9 +33,9 @@ const DEFAULTS = {
 
 interface Project {
   config: ConfigOptions &
-  Required<{
-    [key in keyof typeof DEFAULTS]: Exclude<ConfigOptions[key], undefined>;
-  }>;
+    Required<{
+      [key in keyof typeof DEFAULTS]: Exclude<ConfigOptions[key], undefined>;
+    }>;
   version: string;
   cdkVersion: string;
   paths: {

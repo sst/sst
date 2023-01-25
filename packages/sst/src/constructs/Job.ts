@@ -11,7 +11,7 @@ import * as codebuild from "aws-cdk-lib/aws-codebuild";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { SSTConstruct } from "./Construct.js";
-import { Function } from "./Function.js";
+import { Function, useFunctions } from "./Function.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import { bindEnvironment, bindPermissions } from "./util/functionBinding.js";
@@ -175,6 +175,10 @@ export class Job extends Construct implements SSTConstruct {
     const app = this.node.root as App;
     this.id = id;
     this.props = props;
+    useFunctions().add(this.node.addr, {
+      ...props,
+      runtime: "nodejs16.x",
+    });
     this.localId = path.posix
       .join(scope.node.path, id)
       .replace(/\$/g, "-")
@@ -384,7 +388,9 @@ export class Job extends Construct implements SSTConstruct {
         actions: ["s3:*"],
         effect: iam.Effect.ALLOW,
         resources: [
-          `arn:${Stack.of(this).partition}:s3:::${codeConfig.s3Location?.bucketName}/${codeConfig.s3Location?.objectKey}`,
+          `arn:${Stack.of(this).partition}:s3:::${
+            codeConfig.s3Location?.bucketName
+          }/${codeConfig.s3Location?.objectKey}`,
         ],
       }),
     ]);
@@ -413,7 +419,7 @@ export class Job extends Construct implements SSTConstruct {
 
   private createCodeBuildInvoker(): Function {
     return new Function(this, this.node.id, {
-      handler: path.join(__dirname, "../dist/support/job-invoke/index.main"),
+      handler: path.join(__dirname, "../support/job-invoker/index.main"),
       runtime: "nodejs16.x",
       timeout: 10,
       memorySize: 1024,
