@@ -21,6 +21,29 @@ export const useAWSCredentialsProvider = Context.memo(() => {
   const provider = fromNodeProviderChain({
     profile: project.config.profile,
     roleArn: project.config.role,
+    mfaCodeProvider: async (serialArn: string) => {
+      const readline = await import("readline");
+      const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+      });
+      return new Promise<string>((resolve) => {
+        Logger.debug(`Require MFA token for serial ARN ${serialArn}`);
+        const prompt = () =>
+          rl.question(
+            `Enter MFA code for ${serialArn}: `,
+            async (input) => {
+              if (input.trim() !== "") {
+                resolve(input.trim());
+                rl.close();
+              }
+              // prompt again if no input
+              prompt();
+            }
+          );
+        prompt();
+      });
+    },
   });
   return provider;
 });
