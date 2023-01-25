@@ -52,16 +52,32 @@ export function useAWSClient<C extends Client<any, any, any, any>>(
   const cache = useClientCache();
   const existing = cache.get(client.name);
   if (existing && !force) return existing as C;
+
   const [project, credentials] = [useProject(), useAWSCredentialsProvider()];
+  const printNoInternet = (() => {
+    let lastPrinted = 0;
+    return () => {
+      const now = Date.now();
+      if (now - lastPrinted > 5000) {
+        console.log("Waiting for internet connection...");
+        lastPrinted = now;
+      }
+    };
+  })();
   const result = new client({
     region: project.config.region,
     credentials: credentials,
     retryStrategy: new StandardRetryStrategy(async () => 10000, {
-      retryDecider: (err) => {
+      retryDecider: (err: any) => {
         if (err.$fault === "client") return false;
         if (err.name === "CredentialsProviderError") return false;
         if (err.message === "Could not load credentials from any providers")
           return false;
+
+        // Handle no internet connection
+        if (err.code === "ENOTFOUND") {
+          printNoInternet();
+        }
 
         return true;
       },
@@ -93,14 +109,14 @@ export const useAWSProvider = Context.memo(async () => {
       get(cb) {
         cb();
       },
-      async getPromise() {},
+      async getPromise() { },
       needsRefresh() {
         return false;
       },
       refresh(cb) {
         cb();
       },
-      async refreshPromise() {},
+      async refreshPromise() { },
       expired: false,
       expireTime: creds.expiration!,
       accessKeyId: creds.accessKeyId!,
