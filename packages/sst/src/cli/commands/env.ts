@@ -24,6 +24,8 @@ export const env = (program: Program) =>
       const fs = await import("fs/promises");
       const { SiteEnv } = await import("../../site-env.js");
       const { spawnSync } = await import("child_process");
+      const { useProject } = await import("../../project.js");
+      
       let spinner: ReturnType<typeof createSpinner> | undefined;
       while (true) {
         const exists = await fs
@@ -38,10 +40,13 @@ export const env = (program: Program) =>
         spinner?.succeed();
 
         const sites = await SiteEnv.values();
+        const project = useProject();
         const env = sites[process.cwd()] || {};
 
         const result = spawnSync(args.command, {
           env: {
+            AWS_PROFILE: project.config.profile,
+            AWS_REGION: project.config.region,
             ...process.env,
             ...env,
           },
