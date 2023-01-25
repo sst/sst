@@ -120,7 +120,9 @@ export async function initProject(globals: GlobalOptions) {
     config: {
       ...config,
       stage,
-      profile: globals.profile || config.profile,
+      profile: process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY
+        ? undefined
+        : (globals.profile || config.profile),
       region: globals.region || config.region,
       role: globals.role || config.role,
       ssmPrefix: config.ssmPrefix || `/sst/${config.name}/${stage}/`,
