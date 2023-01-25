@@ -41,6 +41,7 @@ export const dev = (program: Program) =>
       const { useRDSWarmer } = await import("./plugins/warmer.js");
       const { useProject } = await import("../../project.js");
       const { useMetadata } = await import("../../stacks/metadata.js");
+      const { clear } = await import("../terminal.js");
 
       if (args._[0] === "start") {
         console.log(
@@ -294,7 +295,7 @@ export const dev = (program: Program) =>
         live: true,
       });
 
-      console.clear();
+      clear();
       await printHeader({ console: true, hint: "ready!" });
       /*
       console.log(`  ${primary(`➜`)}  ${bold(dim(`Outputs:`))}`);
