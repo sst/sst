@@ -70,8 +70,26 @@ await esbuild.build({
   outfile: "./dist/support/bridge/bridge.mjs",
 });
 
+// support/job-invoker
+await esbuild.build({
+  keepNames: true,
+  bundle: true,
+  minify: true,
+  platform: "node",
+  target: "esnext",
+  format: "esm",
+  entryPoints: ["./support/job-invoker/index.ts"],
+  banner: {
+    js: [
+      `import { createRequire as topLevelCreateRequire } from 'module';`,
+      `const require = topLevelCreateRequire(import.meta.url);`,
+    ].join(""),
+  },
+  outfile: "./dist/support/job-invoker/index.mjs",
+});
+
 // support/rds-migrator
-// note: do not add topLevelCreateRequire banner b/c the 
+// note: do not add topLevelCreateRequire banner b/c the
 //       migrator function will get built again in RDS.
 await esbuild.build({
   keepNames: true,
@@ -110,73 +128,71 @@ await esbuild.build({
 });
 
 // Move support packages that need to be transpiled
-await Promise.all([
-  "bootstrap-metadata-function",
-  "custom-resources",
-  "script-function",
-].map((dir) =>
-  esbuild.build({
-    keepNames: true,
-    bundle: true,
-    platform: "node",
-    target: "esnext",
-    format: "esm",
-    entryPoints: [`./support/${dir}/index.ts`],
-    banner: {
-      js: [
-        `import { createRequire as topLevelCreateRequire } from 'module';`,
-        `const require = topLevelCreateRequire(import.meta.url);`,
-      ].join(""),
-    },
-    outExtension: {
-      ".js": ".mjs",
-    },
-    outdir: `./dist/support/${dir}/`,
-  })
-));
-
+await Promise.all(
+  ["bootstrap-metadata-function", "custom-resources", "script-function"].map(
+    (dir) =>
+      esbuild.build({
+        keepNames: true,
+        bundle: true,
+        platform: "node",
+        target: "esnext",
+        format: "esm",
+        entryPoints: [`./support/${dir}/index.ts`],
+        banner: {
+          js: [
+            `import { createRequire as topLevelCreateRequire } from 'module';`,
+            `const require = topLevelCreateRequire(import.meta.url);`,
+          ].join(""),
+        },
+        outExtension: {
+          ".js": ".mjs",
+        },
+        outdir: `./dist/support/${dir}/`,
+      })
+  )
+);
 
 // Move support scripts that need to be transpiled
-await Promise.all([
-  "base-site-archiver",
-  "ssr-site-function-archiver",
-].map((file) =>
-  esbuild.build({
-    keepNames: true,
-    bundle: true,
-    minify: true,
-    platform: "node",
-    target: "esnext",
-    format: "esm",
-    entryPoints: [`./support/${file}.cjs`],
-    banner: {
-      js: [
-        `import { createRequire as topLevelCreateRequire } from 'module';`,
-        `const require = topLevelCreateRequire(import.meta.url);`,
-      ].join(""),
-    },
-    outfile: `./dist/support/${file}.mjs`,
-  })
-));
+await Promise.all(
+  ["base-site-archiver", "ssr-site-function-archiver"].map((file) =>
+    esbuild.build({
+      keepNames: true,
+      bundle: true,
+      minify: true,
+      platform: "node",
+      target: "esnext",
+      format: "esm",
+      entryPoints: [`./support/${file}.cjs`],
+      banner: {
+        js: [
+          `import { createRequire as topLevelCreateRequire } from 'module';`,
+          `const require = topLevelCreateRequire(import.meta.url);`,
+        ].join(""),
+      },
+      outfile: `./dist/support/${file}.mjs`,
+    })
+  )
+);
 
 // Move support packages that don't need to be transpiled
-await Promise.all([
-  "astro-site-html-stub",
-  "edge-function-code-replacer",
-  "nextjs-site-html-stub",
-  "remix-site-function",
-  "remix-site-html-stub",
-  "sls-nextjs-site-stub",
-  "sls-nextjs-site-build-helper",
-  "solid-start-site-html-stub",
-  "ssr-site-function-stub",
-  "static-site-stub",
-  "base-site-custom-resource",
-  "python-runtime",
-  "java-runtime",
-  "dotnet31-bootstrap",
-  "dotnet6-bootstrap",
-].map((dir) =>
+await Promise.all(
+  [
+    "astro-site-html-stub",
+    "edge-function-code-replacer",
+    "nextjs-site-html-stub",
+    "remix-site-function",
+    "remix-site-html-stub",
+    "sls-nextjs-site-stub",
+    "sls-nextjs-site-build-helper",
+    "solid-start-site-html-stub",
+    "ssr-site-function-stub",
+    "static-site-stub",
+    "base-site-custom-resource",
+    "python-runtime",
+    "java-runtime",
+    "dotnet31-bootstrap",
+    "dotnet6-bootstrap",
+  ].map((dir) =>
     fs.cp(`support/${dir}`, `dist/support/${dir}`, {
       recursive: true,
     })

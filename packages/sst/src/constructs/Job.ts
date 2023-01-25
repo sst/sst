@@ -175,7 +175,10 @@ export class Job extends Construct implements SSTConstruct {
     const app = this.node.root as App;
     this.id = id;
     this.props = props;
-    useFunctions().add(this.node.addr, props);
+    useFunctions().add(this.node.addr, {
+      ...props,
+      runtime: "nodejs16.x",
+    });
     this.localId = path.posix
       .join(scope.node.path, id)
       .replace(/\$/g, "-")
@@ -416,7 +419,7 @@ export class Job extends Construct implements SSTConstruct {
 
   private createCodeBuildInvoker(): Function {
     return new Function(this, this.node.id, {
-      handler: path.join(__dirname, "../dist/support/job-invoke/index.main"),
+      handler: path.join(__dirname, "../support/job-invoker/index.main"),
       runtime: "nodejs16.x",
       timeout: 10,
       memorySize: 1024,
