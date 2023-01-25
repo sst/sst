@@ -1,5 +1,5 @@
 {
-  "name": "@rest-services/services",
+  "name": "@rest-api/services",
   "version": "0.0.0",
   "type": "module",
   "scripts": {},

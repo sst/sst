@@ -12,7 +12,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@rest-services/core": "./services/core",
+      "@rest-api/core": "./services/core",
     },
   },
 });
