@@ -409,7 +409,7 @@ export class App extends cdk.App {
     if (current instanceof cdk.CfnResource) {
       current.applyRemovalPolicy(
         cdk.RemovalPolicy[
-        policy.toUpperCase() as keyof typeof cdk.RemovalPolicy
+          policy.toUpperCase() as keyof typeof cdk.RemovalPolicy
         ]
       );
     }
@@ -582,7 +582,7 @@ export class App extends cdk.App {
     fs.mkdirSync(typesPath, {
       recursive: true,
     });
-    fs.writeFileSync(
+    fs.appendFileSync(
       `${typesPath}/index.ts`,
       [
         `import "sst/node/config";`,
@@ -614,27 +614,27 @@ export class App extends cdk.App {
 
         // Case 1: variable does not have properties, ie. Secrets and Parameters
 
-        fs.writeFileSync(
-          `${typesPath}/${className}-${id}.ts`,
+        fs.appendFileSync(
+          `${typesPath}/index.ts`,
           (binding.variables[0] === "."
             ? [
-              `import "sst/node/${binding.clientPackage}";`,
-              `declare module "sst/node/${binding.clientPackage}" {`,
-              `  export interface ${className}Resources {`,
-              `    "${id}": string;`,
-              `  }`,
-              `}`,
-            ]
+                `import "sst/node/${binding.clientPackage}";`,
+                `declare module "sst/node/${binding.clientPackage}" {`,
+                `  export interface ${className}Resources {`,
+                `    "${id}": string;`,
+                `  }`,
+                `}`,
+              ]
             : [
-              `import "sst/node/${binding.clientPackage}";`,
-              `declare module "sst/node/${binding.clientPackage}" {`,
-              `  export interface ${className}Resources {`,
-              `    "${id}": {`,
-              ...binding.variables.map((p) => `      ${p}: string;`),
-              `    }`,
-              `  }`,
-              `}`,
-            ]
+                `import "sst/node/${binding.clientPackage}";`,
+                `declare module "sst/node/${binding.clientPackage}" {`,
+                `  export interface ${className}Resources {`,
+                `    "${id}": {`,
+                ...binding.variables.map((p) => `      ${p}: string;`),
+                `    }`,
+                `  }`,
+                `}`,
+              ]
           ).join("\n")
         );
       }
