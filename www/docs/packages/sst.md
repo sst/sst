@@ -278,7 +278,7 @@ In addition to the [global options](#global-options), the following options are 
 
 - **`--from`**
 
-  _Default_: `.sst/dist`
+  _Default_: none
 
   Pass in a path for the build output. This lets you split up the deploy process and deploy without having to build the app again.
 
