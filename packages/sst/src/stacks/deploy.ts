@@ -2,7 +2,12 @@ import { useBus } from "../bus.js";
 import { useAWSProvider } from "../credentials.js";
 import { Logger } from "../logger.js";
 import type { CloudFormationStackArtifact } from "aws-cdk-lib/cx-api";
-import { isFailed, monitor, StackDeploymentResult } from "./monitor.js";
+import {
+  filterOutputs,
+  isFailed,
+  monitor,
+  StackDeploymentResult,
+} from "./monitor.js";
 
 export async function publishAssets(stacks: CloudFormationStackArtifact[]) {
   Logger.debug("Publishing assets");
@@ -13,16 +18,13 @@ export async function publishAssets(stacks: CloudFormationStackArtifact[]) {
 
   const results: Record<string, any> = {};
   for (const stack of stacks) {
-    const result = await publishDeployAssets(
-      provider,
-      {
-        stack: stack as any,
-        quiet: false,
-        deploymentMethod: {
-          method: "direct",
-        },
-      }
-    );
+    const result = await publishDeployAssets(provider, {
+      stack: stack as any,
+      quiet: false,
+      deploymentMethod: {
+        method: "direct",
+      },
+    });
     results[stack.stackName] = result;
   }
   return results;
@@ -119,7 +121,7 @@ export async function deploy(
       });
       return {
         errors: {},
-        outputs: result.outputs,
+        outputs: filterOutputs(result.outputs),
         status: "SKIPPED",
       };
     }

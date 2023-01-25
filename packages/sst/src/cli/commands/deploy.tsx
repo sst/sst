@@ -1,7 +1,8 @@
 import { useSTSIdentity } from "../../credentials.js";
 import { Colors } from "../colors.js";
 import type { Program } from "../program.js";
-import { printHeader } from "../ui/header.js";
+import fs from "fs/promises";
+import path from "path";
 
 export const deploy = (program: Program) =>
   program.command(
@@ -26,6 +27,7 @@ export const deploy = (program: Program) =>
       const { loadAssembly, Stacks } = await import("../../stacks/index.js");
       const { render } = await import("ink");
       const { DeploymentUI } = await import("../ui/deploy.js");
+      const { mapValues } = await import("remeda");
       const project = useProject();
       const identity = await useSTSIdentity();
 
@@ -77,6 +79,14 @@ export const deploy = (program: Program) =>
       printDeploymentResults(assembly, results);
       if (Object.values(results).some((stack) => Stacks.isFailed(stack.status)))
         process.exit(1);
+      fs.writeFile(
+        path.join(project.paths.out, "outputs.json"),
+        JSON.stringify(
+          mapValues(results, (val) => val.outputs),
+          null,
+          2
+        )
+      );
       process.exit(0);
     }
   );

@@ -4,6 +4,7 @@ import chalk from "chalk";
 import { Colors } from "../colors.js";
 import { useLocalServerConfig } from "../local/server.js";
 import { printHeader } from "../ui/header.js";
+import { mapValues } from "remeda";
 
 export const dev = (program: Program) =>
   program.command(
@@ -132,10 +133,11 @@ export const dev = (program: Program) =>
 
         bus.subscribe("function.success", async (evt) => {
           // stdout logs sometimes come in after
+          const p = prefix(evt.properties.requestID);
           const req = pending.get(evt.properties.requestID)!;
           setTimeout(() => {
             Colors.line(
-              prefix(evt.properties.requestID),
+              p,
               Colors.dim(`Done in ${Date.now() - req.started - 100}ms`)
             );
             end(evt.properties.requestID);
@@ -245,6 +247,15 @@ export const dev = (program: Program) =>
             }
             await SiteEnv.writeValues(result);
           }
+
+          fs.writeFile(
+            path.join(project.paths.out, "outputs.json"),
+            JSON.stringify(
+              mapValues(results, (val) => val.outputs),
+              null,
+              2
+            )
+          );
 
           isDeploying = false;
           deploy();

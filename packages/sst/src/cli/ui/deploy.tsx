@@ -123,12 +123,7 @@ export function printDeploymentResults(
       Colors.bold(remove ? `  Removed:` : ` Deployed:`)
     );
     for (const [stack, result] of success) {
-      const outputs = Object.entries(result.outputs).filter(([key, _]) => {
-        if (key.startsWith("Export")) return false;
-        if (key.includes("SstSiteEnv")) return false;
-        if (key === "SSTMetadata") return false;
-        return true;
-      });
+      const outputs = Object.entries(result.outputs);
       Colors.line(`   ${Colors.dim(stackNameToId(stack))}`);
       if (outputs.length > 0) {
         for (const key of Object.keys(Object.fromEntries(outputs)).sort()) {
@@ -137,6 +132,7 @@ export function printDeploymentResults(
         }
       }
     }
+    Colors.gap();
   }
 
   // Print failed stacks
@@ -188,9 +184,11 @@ function logicalIdToCdkPath(
 
 function getHelper(error: string) {
   return `This is a common deploy error. Check out this GitHub issue for more details - https://github.com/serverless-stack/sst/issues/125`;
-  return getApiAccessLogPermissionsHelper(error)
-    || getAppSyncMultiResolverHelper(error)
-    || getApiLogRoleHelper(error);
+  return (
+    getApiAccessLogPermissionsHelper(error) ||
+    getAppSyncMultiResolverHelper(error) ||
+    getApiLogRoleHelper(error)
+  );
 }
 
 function getApiAccessLogPermissionsHelper(error: string) {
