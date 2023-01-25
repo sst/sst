@@ -33,9 +33,9 @@ const DEFAULTS = {
 
 interface Project {
   config: ConfigOptions &
-    Required<{
-      [key in keyof typeof DEFAULTS]: Exclude<ConfigOptions[key], undefined>;
-    }>;
+  Required<{
+    [key in keyof typeof DEFAULTS]: Exclude<ConfigOptions[key], undefined>;
+  }>;
   version: string;
   cdkVersion: string;
   paths: {
@@ -96,8 +96,8 @@ export async function initProject(globals: GlobalOptions) {
 
   const config = await Promise.resolve(sstConfig.config(globals));
   const stage =
-    config.stage ||
     globals.stage ||
+    config.stage ||
     (await usePersonalStage(out)) ||
     (await promptPersonalStage(out));
   const [version, cdkVersion] = await (async () => {
@@ -120,9 +120,9 @@ export async function initProject(globals: GlobalOptions) {
     config: {
       ...config,
       stage,
-      profile: config.profile || globals.profile,
-      region: config.region || globals.region,
-      role: config.role || globals.role,
+      profile: globals.profile || config.profile,
+      region: globals.region || config.region,
+      role: globals.role || config.role,
       ssmPrefix: config.ssmPrefix || `/sst/${config.name}/${stage}/`,
     },
     stacks: sstConfig.stacks,
