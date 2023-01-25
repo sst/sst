@@ -163,8 +163,11 @@ export async function monitor(stack: string) {
           if (isFinal(first.StackStatus)) {
             return {
               status: first.StackStatus as (typeof STATUSES)[number],
-              outputs: Object.fromEntries(
-                first.Outputs?.map((o) => [o.OutputKey!, o.OutputValue!]) || []
+              outputs: pipe(
+                first.Outputs || [],
+                map((o) => [o.OutputKey!, o.OutputValue!]),
+                Object.fromEntries,
+                filterOutputs
               ),
               errors: isFailed(first.StackStatus) ? errors : {},
             };
@@ -186,6 +189,20 @@ export async function monitor(stack: string) {
     }
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
+}
+
+import { map, omitBy, pipe } from "remeda";
+export function filterOutputs(input: Record<string, string>) {
+  return pipe(
+    input,
+    omitBy((_, key) => {
+      return (
+        key.startsWith("Export") ||
+        key.includes("SstSiteEnv") ||
+        key === "SSTMetadata"
+      );
+    })
+  );
 }
 
 export type StackDeploymentResult = Awaited<ReturnType<typeof monitor>>;
