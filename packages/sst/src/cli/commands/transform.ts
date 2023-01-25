@@ -3,7 +3,7 @@ import type { Program } from "../program.js";
 export const transform = (program: Program) =>
   program.command(
     "transform <mod>",
-    "Apply a transform on your SST app",
+    "Apply a transform to your SST app",
     (yargs) =>
       yargs.positional("mod", {
         type: "string",

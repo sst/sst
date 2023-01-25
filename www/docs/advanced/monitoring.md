@@ -38,6 +38,13 @@ yarn add --dev datadog-cdk-constructs
 ```
 
 </TabItem>
+<TabItem value="pnpm">
+
+```bash
+pnpm add --save-dev datadog-cdk-constructs
+```
+
+</TabItem>
 </MultiPackagerCode>
 
 Next, to monitor all the functions in an app, add the following at the bootom of the `main()` function in your `stacks/index.ts` file.
@@ -54,7 +61,6 @@ if (!app.local) {
     // Loop through each stack in the app
     app.node.children.forEach((stack) => {
       if (stack instanceof sst.Stack) {
-
         const datadog = new Datadog(stack, "Datadog", {
           nodeLayerVersion: 65,
           extensionLayerVersion: 13,
@@ -65,7 +71,7 @@ if (!app.local) {
         datadog.addLambdaFunctions(stack.getAllFunctions());
       }
     });
-  }
+  };
 }
 ```
 
@@ -232,7 +238,6 @@ if (!app.local) {
     // Loop through each stack in the app
     app.node.children.forEach((stack) => {
       if (stack instanceof sst.Stack) {
-
         const newRelicLayer = LayerVersion.fromLayerVersionArn(
           stack,
           "NewRelicLayer",
@@ -249,7 +254,7 @@ if (!app.local) {
         });
       }
     });
-  }
+  };
 }
 ```
 
@@ -279,6 +284,13 @@ npm install --save-dev epsagon
 
 ```bash
 yarn add --dev epsagon
+```
+
+</TabItem>
+<TabItem value="pnpm">
+
+```bash
+pnpm add --save-dev epsagon
 ```
 
 </TabItem>

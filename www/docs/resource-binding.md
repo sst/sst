@@ -4,7 +4,6 @@ description: "Access the resources in your SST app in a secure and typesafe way.
 ---
 
 import HeadlineText from "@site/src/components/HeadlineText";
-import MultiPackagerCode from "@site/src/components/MultiPackagerCode";
 
 <HeadlineText>
 

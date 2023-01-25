@@ -95,7 +95,7 @@ module.exports = {
     },
     {
       Info: [
-        "known-issues",
+        //"known-issues",
         "upgrade-guide",
         "design-principles",
         "anonymous-telemetry",
