@@ -109,22 +109,16 @@ export const dev = (program: Program) =>
         });
 
         bus.subscribe("function.build.success", async (evt) => {
-          Colors.line(
-            Colors.dim(
-              Colors.prefix,
-              "Built",
-              useFunctions().fromID(evt.properties.functionID).handler!
-            )
-          );
+          const info = useFunctions().fromID(evt.properties.functionID);
+          if (!info.enableLiveDev) return;
+          Colors.line(Colors.dim(Colors.prefix, "Built", info.handler!));
         });
 
         bus.subscribe("function.build.failed", async (evt) => {
+          const info = useFunctions().fromID(evt.properties.functionID);
+          if (!info.enableLiveDev) return;
           Colors.gap();
-          Colors.line(
-            Colors.danger("✖ "),
-            "Build failed",
-            useFunctions().fromID(evt.properties.functionID).handler!
-          );
+          Colors.line(Colors.danger("✖ "), "Build failed", info.handler!);
           for (const line of evt.properties.errors) {
             Colors.line("  ", line);
           }
