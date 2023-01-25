@@ -165,10 +165,16 @@ export const dev = (program: Program) =>
         const bus = useBus();
 
         let lastDeployed: string;
-        let pending: CloudAssembly | undefined;
-        let isDeploying = false;
+        let isWorking = false;
+        let isDirty = false;
 
         async function build() {
+          if (isWorking) {
+            isDirty = true;
+            return;
+          }
+          isDirty = false;
+          isWorking = true;
           Colors.gap();
           const spinner = createSpinner({
             color: "gray",
@@ -192,6 +198,8 @@ export const dev = (program: Program) =>
             Logger.debug("Checksum", "next", next, "old", lastDeployed);
             if (next === lastDeployed) {
               spinner.succeed(Colors.dim(" Built with no changes"));
+              isWorking = false;
+              if (isDirty) build();
               return;
             }
             if (!lastDeployed) {
@@ -200,10 +208,9 @@ export const dev = (program: Program) =>
               Colors.mode("gap");
             } else {
               spinner.succeed(Colors.dim(` Built`));
-              Colors.mode("gap");
+              Colors.gap();
             }
-            pending = assembly;
-            if (lastDeployed) setTimeout(() => deploy(), 100);
+            deploy(assembly);
           } catch (ex: any) {
             spinner.fail();
             Colors.line(
@@ -216,15 +223,9 @@ export const dev = (program: Program) =>
           }
         }
 
-        async function deploy() {
-          if (!pending) return;
-          if (isDeploying) return;
-          isDeploying = true;
-          const assembly = pending;
+        async function deploy(assembly: CloudAssembly) {
           const nextChecksum = await checksum(assembly.directory);
-          pending = undefined;
 
-          if (lastDeployed) console.log();
           const component = render(<DeploymentUI assembly={assembly} />);
           const results = await Stacks.deployMany(assembly.stacks);
           component.clear();
@@ -257,8 +258,8 @@ export const dev = (program: Program) =>
             )
           );
 
-          isDeploying = false;
-          deploy();
+          isWorking = false;
+          if (isDirty) build();
         }
 
         async function checksum(cdkOutPath: string) {
@@ -293,13 +294,8 @@ export const dev = (program: Program) =>
         });
 
         await build();
-        await deploy();
       });
 
-      const project = useProject();
-
-      const primary = chalk.hex("#E27152");
-      const link = chalk.cyan;
       await useLocalServer({
         key: "",
         cert: "",
@@ -308,18 +304,6 @@ export const dev = (program: Program) =>
 
       clear();
       await printHeader({ console: true, hint: "ready!" });
-      /*
-      console.log(`  ${primary(`➜`)}  ${bold(dim(`Outputs:`))}`);
-      for (let i = 0; i < 3; i++) {
-        console.log(`       ${dim(`thdxr-scratch-MyStack`)}`);
-        console.log(
-          `       ${bold(
-            dim(`ApiEndpoint`)
-          )}: https://hdq3z0es2d.execute-api.us-east-1.amazonaws.com`
-        );
-      }
-      */
-
       await Promise.all([
         useRuntimeWorkers(),
         useIOTBridge(),
