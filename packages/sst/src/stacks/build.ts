@@ -16,7 +16,7 @@ declare module "../bus.js" {
 export async function load(input: string) {
   const parsed = path.parse(input);
   const root = await findAbove(input, "package.json");
-  const outfile = path.join(parsed.dir, `${parsed.name}.${Date.now()}.mjs`);
+  const outfile = path.join(parsed.dir, `.${parsed.name}.${Date.now()}.mjs`);
   const pkg = JSON.parse(
     await fs.readFile(path.join(root, "package.json")).then((x) => x.toString())
   );
