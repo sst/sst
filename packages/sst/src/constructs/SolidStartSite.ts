@@ -6,6 +6,7 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 
 import { SsrSite } from "./SsrSite.js";
 import { Function } from "./Function.js";
+import { useProject } from "../project.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
@@ -28,7 +29,6 @@ export class SolidStartSite extends SsrSite {
       serverBuildOutputFile: "dist/server/index.mjs",
       clientBuildOutputDir: "dist/client",
       clientBuildVersionedSubDir: "assets",
-      siteStub: path.resolve(__dirname, "../support/solid-start-site-html-stub"),
     };
   }
 
@@ -36,9 +36,7 @@ export class SolidStartSite extends SsrSite {
     const { defaults, environment } = this.props;
 
     // Bundle code
-    const handler = this.isPlaceholder
-      ? path.resolve(__dirname, "../support/ssr-site-function-stub/index.handler")
-      : path.join(this.props.path, "dist", "server", "index.handler");
+    const handler = path.join(this.props.path, "dist", "server", "index.handler");
 
     // Create function
     const fn = new Function(this, `ServerFunction`, {
@@ -62,58 +60,47 @@ export class SolidStartSite extends SsrSite {
   protected createFunctionForEdge(): EdgeFunction {
     const { defaults, environment } = this.props;
 
+    // Create a directory that we will use to create the bundled version
+    // of the "core server build" along with our custom Lamba server handler.
+    const outputPath = path.resolve(
+      path.join(
+        useProject().paths.artifacts,
+        `SolidStartSiteFunction-${this.node.id}-${this.node.addr}`
+      )
+    );
+
     // Bundle code
-    let bundlePath;
-    let handler;
-    if (this.isPlaceholder) {
-      bundlePath = path.resolve(__dirname, "../support/ssr-site-function-stub");
-      handler = "index.handler";
+    const result = esbuild.buildSync({
+      entryPoints: [path.join(this.props.path, this.buildConfig.serverBuildOutputFile)],
+      target: "esnext",
+      format: "esm",
+      platform: "node",
+      metafile: true,
+      bundle: true,
+      write: true,
+      allowOverwrite: true,
+      outfile: path.join(outputPath, "server.mjs"),
+      banner: {
+        js: [
+          `import { createRequire as topLevelCreateRequire } from 'module';`,
+          `const require = topLevelCreateRequire(import.meta.url);`,
+        ].join(""),
+      },
+    });
+
+    if (result.errors.length > 0) {
+      result.errors.forEach((error) => console.error(error));
+      throw new Error(`There was a problem bundling the function code for the ${this.id} SolidStartSite.`);
     }
-    else {
-      // Create a directory that we will use to create the bundled version
-      // of the "core server build" along with our custom Lamba server handler.
-      const outputPath = path.resolve(
-        path.join(
-          this.sstBuildDir,
-          `SolidStartSiteFunction-${this.node.id}-${this.node.addr}`
-        )
-      );
 
-      const result = esbuild.buildSync({
-        entryPoints: [path.join(this.props.path, this.buildConfig.serverBuildOutputFile)],
-        target: "esnext",
-        format: "esm",
-        platform: "node",
-        metafile: true,
-        bundle: true,
-        write: true,
-        allowOverwrite: true,
-        outfile: path.join(outputPath, "server.mjs"),
-        banner: {
-          js: [
-            `import { createRequire as topLevelCreateRequire } from 'module';`,
-            `const require = topLevelCreateRequire(import.meta.url);`,
-          ].join(""),
-        },
-      });
-
-      if (result.errors.length > 0) {
-        result.errors.forEach((error) => console.error(error));
-        throw new Error(`There was a problem bundling the function code for the ${this.id} SolidStartSite.`);
-      }
-
-      // Create package.json
-      fs.writeFileSync(path.join(outputPath, "package.json"), `{"type":"module"}`);
-
-      bundlePath = outputPath;
-      handler = "server.handler";
-    }
+    // Create package.json
+    fs.writeFileSync(path.join(outputPath, "package.json"), `{"type":"module"}`);
 
     // Create function
     return new EdgeFunction(this, `Server`, {
       scopeOverride: this,
-      bundlePath,
-      handler,
+      bundlePath: outputPath,
+      handler: "server.handler",
       timeout: defaults?.function?.timeout,
       memory: defaults?.function?.memorySize,
       permissions: defaults?.function?.permissions,

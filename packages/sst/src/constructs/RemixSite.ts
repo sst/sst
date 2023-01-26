@@ -11,6 +11,7 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 
 import { Logger } from "../logger.js";
 import { SsrSite } from "./SsrSite.js";
+import { useProject } from "../project.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
@@ -77,7 +78,6 @@ export class RemixSite extends SsrSite {
       serverBuildOutputFile: "build/index.js",
       clientBuildOutputDir: "public",
       clientBuildVersionedSubDir: "build",
-      siteStub: path.resolve(__dirname, "../support/remix-site-html-stub"),
     };
   }
 
@@ -118,7 +118,7 @@ export class RemixSite extends SsrSite {
     // of the "core server build" along with our custom Lamba server handler.
     const outputPath = path.resolve(
       path.join(
-        this.sstBuildDir,
+        useProject().paths.artifacts,
         `RemixSiteFunction-${this.node.id}-${this.node.addr}`
       )
     );
@@ -154,17 +154,10 @@ export class RemixSite extends SsrSite {
     return outputPath;
   }
 
-  private createServerLambdaBundleWithStub(): string {
-    // Use existing stub bundle in assets
-    return path.resolve(__dirname, "../support/ssr-site-function-stub");
-  }
-
   protected createFunctionForRegional(): lambda.Function {
     const { defaults, environment } = this.props;
 
-    const bundlePath = this.isPlaceholder
-      ? this.createServerLambdaBundleWithStub()
-      : this.createServerLambdaBundle("regional-server.js");
+    const bundlePath = this.createServerLambdaBundle("regional-server.js");
 
     return new lambda.Function(this, `ServerFunction`, {
       description: "Server handler for Remix",
@@ -184,9 +177,7 @@ export class RemixSite extends SsrSite {
   protected createFunctionForEdge(): EdgeFunction {
     const { defaults, environment } = this.props;
 
-    const bundlePath = this.isPlaceholder
-      ? this.createServerLambdaBundleWithStub()
-      : this.createServerLambdaBundle("edge-server.js");
+    const bundlePath = this.createServerLambdaBundle("edge-server.js");
 
     return new EdgeFunction(this, `Server`, {
       scopeOverride: this,

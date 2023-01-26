@@ -6,6 +6,7 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 
 import { SsrSite } from "./SsrSite.js";
 import { Function } from "./Function.js";
+import { useProject } from "../project.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
@@ -27,7 +28,6 @@ export class AstroSite extends SsrSite {
       serverBuildOutputFile: "dist/server/entry.mjs",
       clientBuildOutputDir: "dist/client",
       clientBuildVersionedSubDir: "assets",
-      siteStub: path.resolve(__dirname, "../support/astro-site-html-stub"),
     };
   }
 
@@ -46,18 +46,10 @@ export class AstroSite extends SsrSite {
   protected createFunctionForRegional(): lambda.Function {
     const { defaults, environment, bind } = this.props;
 
-    // Bundle code
-    const handler = this.isPlaceholder
-      ? path.resolve(
-          __dirname,
-          "../support/ssr-site-function-stub/index.handler"
-        )
-      : path.join(this.props.path, "dist", "server", "entry.handler");
-
     // Create function
     const fn = new Function(this, `ServerFunction`, {
       description: "Server handler",
-      handler,
+      handler: path.join(this.props.path, "dist", "server", "entry.handler"),
       bind,
       logRetention: "three_days",
       runtime: "nodejs16.x",
@@ -77,64 +69,53 @@ export class AstroSite extends SsrSite {
   protected createFunctionForEdge(): EdgeFunction {
     const { defaults, environment } = this.props;
 
-    // Bundle code
-    let bundlePath;
-    let handler;
-    if (this.isPlaceholder) {
-      bundlePath = path.resolve(__dirname, "../support/ssr-site-function-stub");
-      handler = "index.handler";
-    } else {
-      // Create a directory that we will use to create the bundled version
-      // of the "core server build" along with our custom Lamba server handler.
-      const outputPath = path.resolve(
-        path.join(
-          this.sstBuildDir,
-          `AstroSiteFunction-${this.node.id}-${this.node.addr}`
-        )
+    // Create a directory that we will use to create the bundled version
+    // of the "core server build" along with our custom Lamba server handler.
+    const outputPath = path.resolve(
+      path.join(
+        useProject().paths.artifacts,
+        `AstroSiteFunction-${this.node.id}-${this.node.addr}`
+      )
+    );
+
+    const result = esbuild.buildSync({
+      entryPoints: [
+        path.join(this.props.path, this.buildConfig.serverBuildOutputFile),
+      ],
+      target: "esnext",
+      format: "esm",
+      platform: "node",
+      metafile: true,
+      bundle: true,
+      write: true,
+      allowOverwrite: true,
+      outfile: path.join(outputPath, "entry.mjs"),
+      banner: {
+        js: [
+          `import { createRequire as topLevelCreateRequire } from 'module';`,
+          `const require = topLevelCreateRequire(import.meta.url);`,
+        ].join(""),
+      },
+    });
+
+    if (result.errors.length > 0) {
+      result.errors.forEach((error) => console.error(error));
+      throw new Error(
+        `There was a problem bundling the function code for the ${this.id} AstroSite.`
       );
-
-      const result = esbuild.buildSync({
-        entryPoints: [
-          path.join(this.props.path, this.buildConfig.serverBuildOutputFile),
-        ],
-        target: "esnext",
-        format: "esm",
-        platform: "node",
-        metafile: true,
-        bundle: true,
-        write: true,
-        allowOverwrite: true,
-        outfile: path.join(outputPath, "entry.mjs"),
-        banner: {
-          js: [
-            `import { createRequire as topLevelCreateRequire } from 'module';`,
-            `const require = topLevelCreateRequire(import.meta.url);`,
-          ].join(""),
-        },
-      });
-
-      if (result.errors.length > 0) {
-        result.errors.forEach((error) => console.error(error));
-        throw new Error(
-          `There was a problem bundling the function code for the ${this.id} AstroSite.`
-        );
-      }
-
-      // Create package.json
-      fs.writeFileSync(
-        path.join(outputPath, "package.json"),
-        `{"type":"module"}`
-      );
-
-      bundlePath = outputPath;
-      handler = "entry.handler";
     }
+
+    // Create package.json
+    fs.writeFileSync(
+      path.join(outputPath, "package.json"),
+      `{"type":"module"}`
+    );
 
     // Create function
     return new EdgeFunction(this, `Server`, {
       scopeOverride: this,
-      bundlePath,
-      handler,
+      bundlePath: outputPath,
+      handler: "entry.handler",
       timeout: defaults?.function?.timeout,
       memory: defaults?.function?.memorySize,
       permissions: defaults?.function?.permissions,
