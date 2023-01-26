@@ -4,7 +4,7 @@ import chalk from "chalk";
 import { Colors } from "../colors.js";
 import { useLocalServerConfig } from "../local/server.js";
 import { printHeader } from "../ui/header.js";
-import { mapValues } from "remeda";
+import { mapValues, omitBy, pipe } from "remeda";
 
 export const dev = (program: Program) =>
   program.command(
@@ -246,7 +246,11 @@ export const dev = (program: Program) =>
           fs.writeFile(
             path.join(project.paths.out, "outputs.json"),
             JSON.stringify(
-              mapValues(results, (val) => val.outputs),
+              pipe(
+                results,
+                omitBy((_, key) => key.includes("SstSiteEnv")),
+                mapValues((val) => val.outputs)
+              ),
               null,
               2
             )
