@@ -115,7 +115,7 @@ new AppSyncApi(stack, "GraphqlApi", {
 
 ### cdk.graphqlApi?
 
-_Type_ : <span class='mono'><span class="mono">[IGraphqlApi](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-appsync-alpha.IGraphqlApi.html)</span> | <span class="mono">[AppSyncApiCdkGraphqlProps](#appsyncapicdkgraphqlprops)</span></span>
+_Type_ : <span class='mono'><span class="mono">[IGraphqlApi](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_appsync.IGraphqlApi.html)</span> | <span class="mono">[AppSyncApiCdkGraphqlProps](#appsyncapicdkgraphqlprops)</span></span>
 
 Allows you to override default settings this construct uses internally to create the AppSync API.
 
@@ -171,7 +171,7 @@ If custom domain is enabled, this is the internally created CDK Certificate inst
 
 ### cdk.graphqlApi
 
-_Type_ : <span class="mono">[GraphqlApi](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-appsync-alpha.GraphqlApi.html)</span>
+_Type_ : <span class="mono">[GraphqlApi](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_appsync.GraphqlApi.html)</span>
 
 The internally created appsync api
 
@@ -445,7 +445,7 @@ VTL response mapping template
 
 ### cdk.resolver
 
-_Type_ : <span class="mono">Omit&lt;<span class="mono">[ResolverProps](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-appsync-alpha.ResolverProps.html)</span>, <span class='mono'><span class="mono">"api"</span> | <span class="mono">"fieldName"</span> | <span class="mono">"typeName"</span> | <span class="mono">"dataSource"</span></span>&gt;</span>
+_Type_ : <span class="mono">Omit&lt;<span class="mono">[ResolverProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_appsync.ResolverProps.html)</span>, <span class='mono'><span class="mono">"api"</span> | <span class="mono">"fieldName"</span> | <span class="mono">"typeName"</span> | <span class="mono">"dataSource"</span></span>&gt;</span>
 
 This allows you to override the default settings this construct uses internally to create the resolver.
 
@@ -561,7 +561,7 @@ String literal to signify that this data source is an HTTP endpoint
 
 ### cdk.dataSource.authorizationConfig?
 
-_Type_ : <span class="mono">[AwsIamConfig](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-appsync-alpha.AwsIamConfig.html)</span>
+_Type_ : <span class="mono">[AwsIamConfig](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_appsync.AwsIamConfig.html)</span>
 
 
 
