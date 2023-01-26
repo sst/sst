@@ -24,6 +24,7 @@ import { update } from "./commands/update.js";
 import { transform } from "./commands/transform.js";
 import { diff } from "./commands/diff.js";
 import { version } from "./commands/version.js";
+import { telemetry } from "./commands/telemetry.js";
 
 dev(program);
 deploy(program);
@@ -37,6 +38,7 @@ transform(program);
 consoleCommand(program);
 diff(program);
 version(program);
+telemetry(program);
 
 // @ts-expect-error
 process.setSourceMapsEnabled(true);
