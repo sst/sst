@@ -44,14 +44,23 @@ export class AstroSite extends SsrSite {
   }
 
   protected createFunctionForRegional(): lambda.Function {
-    const { defaults, environment, bind } = this.props;
+    const {
+      defaults,
+      environment,
+      bind,
+      vpc,
+      vpcSubnets,
+      securityGroups,
+      allowAllOutbound,
+      allowPublicSubnet,
+    } = this.props;
 
     // Bundle code
     const handler = this.isPlaceholder
       ? path.resolve(
-          __dirname,
-          "../support/ssr-site-function-stub/index.handler"
-        )
+        __dirname,
+        "../support/ssr-site-function-stub/index.handler"
+      )
       : path.join(this.props.path, "dist", "server", "entry.handler");
 
     // Create function
@@ -59,6 +68,11 @@ export class AstroSite extends SsrSite {
       description: "Server handler",
       handler,
       bind,
+      vpc,
+      vpcSubnets,
+      securityGroups,
+      allowAllOutbound,
+      allowPublicSubnet,
       logRetention: "three_days",
       runtime: "nodejs16.x",
       memorySize: defaults?.function?.memorySize || "512 MB",

@@ -37,7 +37,6 @@ type RemixConfig = {
  * ```
  */
 export class RemixSite extends SsrSite {
-
   protected initBuildConfig() {
     const { path: sitePath } = this.props;
 
@@ -108,7 +107,7 @@ export class RemixSite extends SsrSite {
     // Write the server lambda
     const templatePath = path.resolve(
       __dirname,
-      `../support/remix-site-function/${wrapperFile}`,
+      `../support/remix-site-function/${wrapperFile}`
     );
     fs.copyFileSync(templatePath, serverPath);
 
@@ -160,7 +159,15 @@ export class RemixSite extends SsrSite {
   }
 
   protected createFunctionForRegional(): lambda.Function {
-    const { defaults, environment } = this.props;
+    const {
+      defaults,
+      environment,
+      vpc,
+      vpcSubnets,
+      securityGroups,
+      allowAllOutbound,
+      allowPublicSubnet,
+    } = this.props;
 
     const bundlePath = this.isPlaceholder
       ? this.createServerLambdaBundleWithStub()
@@ -178,6 +185,11 @@ export class RemixSite extends SsrSite {
       memorySize: defaults?.function?.memorySize || 512,
       timeout: Duration.seconds(defaults?.function?.timeout || 10),
       environment,
+      vpc,
+      vpcSubnets,
+      securityGroups,
+      allowAllOutbound,
+      allowPublicSubnet,
     });
   }
 

@@ -22,22 +22,35 @@ const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
  * ```
  */
 export class SolidStartSite extends SsrSite {
-
   protected initBuildConfig() {
     return {
       serverBuildOutputFile: "dist/server/index.mjs",
       clientBuildOutputDir: "dist/client",
       clientBuildVersionedSubDir: "assets",
-      siteStub: path.resolve(__dirname, "../support/solid-start-site-html-stub"),
+      siteStub: path.resolve(
+        __dirname,
+        "../support/solid-start-site-html-stub"
+      ),
     };
   }
 
   protected createFunctionForRegional(): lambda.Function {
-    const { defaults, environment } = this.props;
+    const {
+      defaults,
+      environment,
+      vpc,
+      vpcSubnets,
+      securityGroups,
+      allowPublicSubnet,
+      allowAllOutbound,
+    } = this.props;
 
     // Bundle code
     const handler = this.isPlaceholder
-      ? path.resolve(__dirname, "../support/ssr-site-function-stub/index.handler")
+      ? path.resolve(
+        __dirname,
+        "../support/ssr-site-function-stub/index.handler"
+      )
       : path.join(this.props.path, "dist", "server", "index.handler");
 
     // Create function
@@ -53,6 +66,11 @@ export class SolidStartSite extends SsrSite {
       },
       enableLiveDev: false,
       environment,
+      vpc,
+      vpcSubnets,
+      securityGroups,
+      allowAllOutbound,
+      allowPublicSubnet,
     });
     fn._disableBind = true;
 
@@ -68,8 +86,7 @@ export class SolidStartSite extends SsrSite {
     if (this.isPlaceholder) {
       bundlePath = path.resolve(__dirname, "../support/ssr-site-function-stub");
       handler = "index.handler";
-    }
-    else {
+    } else {
       // Create a directory that we will use to create the bundled version
       // of the "core server build" along with our custom Lamba server handler.
       const outputPath = path.resolve(
@@ -80,7 +97,9 @@ export class SolidStartSite extends SsrSite {
       );
 
       const result = esbuild.buildSync({
-        entryPoints: [path.join(this.props.path, this.buildConfig.serverBuildOutputFile)],
+        entryPoints: [
+          path.join(this.props.path, this.buildConfig.serverBuildOutputFile),
+        ],
         target: "esnext",
         format: "esm",
         platform: "node",
@@ -99,11 +118,16 @@ export class SolidStartSite extends SsrSite {
 
       if (result.errors.length > 0) {
         result.errors.forEach((error) => console.error(error));
-        throw new Error(`There was a problem bundling the function code for the ${this.id} SolidStartSite.`);
+        throw new Error(
+          `There was a problem bundling the function code for the ${this.id} SolidStartSite.`
+        );
       }
 
       // Create package.json
-      fs.writeFileSync(path.join(outputPath, "package.json"), `{"type":"module"}`);
+      fs.writeFileSync(
+        path.join(outputPath, "package.json"),
+        `{"type":"module"}`
+      );
 
       bundlePath = outputPath;
       handler = "server.handler";

@@ -17,6 +17,7 @@ import {
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as s3Assets from "aws-cdk-lib/aws-s3-assets";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
@@ -55,8 +56,8 @@ export type SsrBuildConfig = {
   siteStub: string;
 };
 
-export interface SsrDomainProps extends BaseSiteDomainProps {}
-export interface SsrCdkDistributionProps extends BaseSiteCdkDistributionProps {}
+export interface SsrDomainProps extends BaseSiteDomainProps { }
+export interface SsrCdkDistributionProps extends BaseSiteCdkDistributionProps { }
 export interface SsrSiteProps {
   /**
    * Bind resources for the function
@@ -70,6 +71,60 @@ export interface SsrSiteProps {
    * ```
    */
   bind?: SSTConstruct[];
+
+  /**
+   * VPC network to place Lambda network interfaces
+   *
+   * Specify this if the Lambda function needs to access resources in a VPC.
+   * This is required when `vpcSubnets` is specified.
+   *
+   * @default - Function is not placed within a VPC.
+   */
+  vpc?: ec2.IVpc;
+
+  /**
+   * Where to place the network interfaces within the VPC.
+   *
+   * This requires `vpc` to be specified in order for interfaces to actually be
+   * placed in the subnets. If `vpc` is not specify, this will raise an error.
+   *
+   * Note: Internet access for Lambda Functions requires a NAT Gateway, so picking
+   * public subnets is not allowed (unless `allowPublicSubnet` is set to `true`).
+   *
+   * @default - the Vpc default strategy if not specified
+   */
+  vpcSubnets?: ec2.SubnetSelection;
+
+  /**
+   * The list of security groups to associate with the Lambda's network interfaces.
+   *
+   * Only used if 'vpc' is supplied.
+   *
+   * @default - If the function is placed within a VPC and a security group is
+   * not specified, either by this or securityGroup prop, a dedicated security
+   * group will be created for this function.
+   */
+  securityGroups?: ec2.ISecurityGroup[];
+
+  /**
+   * Whether to allow the Lambda to send all network traffic
+   *
+   * If set to false, you must individually add traffic rules to allow the
+   * Lambda to connect to network targets.
+   *
+   * @default true
+   */
+  allowAllOutbound?: boolean;
+
+  /**
+   * Lambda Functions in a public subnet can NOT access the internet.
+   * Use this property to acknowledge this limitation and still place the function in a public subnet.
+   * @see https://stackoverflow.com/questions/52992085/why-cant-an-aws-lambda-function-inside-a-public-subnet-in-a-vpc-connect-to-the/52994841#52994841
+   *
+   * @default false
+   */
+  allowPublicSubnet?: boolean;
+
   /**
    * The SSR function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
    * @default false
@@ -412,8 +467,7 @@ export class SsrSite extends Construct implements SSTConstruct {
       },
       permissions: {
         "ssm:GetParameters": [
-          `arn:${Stack.of(this).partition}:ssm:${app.region}:${
-            app.account
+          `arn:${Stack.of(this).partition}:ssm:${app.region}:${app.account
           }:parameter${getParameterPath(this, "url")}`,
         ],
       },
@@ -509,8 +563,8 @@ export class SsrSite extends Construct implements SSTConstruct {
     const script = path.resolve(__dirname, "../support/base-site-archiver.mjs");
     const fileSizeLimit = app.isRunningSSTTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
-        this.props.sstTestFileSizeLimitOverride || 200
+      // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
+      this.props.sstTestFileSizeLimitOverride || 200
       : 200;
     const result = spawn.sync(
       "node",
@@ -913,8 +967,8 @@ export class SsrSite extends Construct implements SSTConstruct {
     const waitForInvalidation = this.isPlaceholder
       ? false
       : this.props.waitForInvalidation === false
-      ? false
-      : true;
+        ? false
+        : true;
     return new CustomResource(this, "CloudFrontInvalidation", {
       serviceToken: invalidator.functionArn,
       resourceType: "Custom::SSTCloudFrontInvalidation",
