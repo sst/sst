@@ -4,7 +4,7 @@ import chalk from "chalk";
 import { Colors } from "../colors.js";
 import { useLocalServerConfig } from "../local/server.js";
 import { printHeader } from "../ui/header.js";
-import { mapValues } from "remeda";
+import { mapValues, omitBy, pipe } from "remeda";
 
 export const dev = (program: Program) =>
   program.command(
@@ -109,22 +109,16 @@ export const dev = (program: Program) =>
         });
 
         bus.subscribe("function.build.success", async (evt) => {
-          Colors.line(
-            Colors.dim(
-              Colors.prefix,
-              "Built",
-              useFunctions().fromID(evt.properties.functionID).handler!
-            )
-          );
+          const info = useFunctions().fromID(evt.properties.functionID);
+          if (!info.enableLiveDev) return;
+          Colors.line(Colors.dim(Colors.prefix, "Built", info.handler!));
         });
 
         bus.subscribe("function.build.failed", async (evt) => {
+          const info = useFunctions().fromID(evt.properties.functionID);
+          if (!info.enableLiveDev) return;
           Colors.gap();
-          Colors.line(
-            Colors.danger("✖ "),
-            "Build failed",
-            useFunctions().fromID(evt.properties.functionID).handler!
-          );
+          Colors.line(Colors.danger("✖ "), "Build failed", info.handler!);
           for (const line of evt.properties.errors) {
             Colors.line("  ", line);
           }
@@ -165,10 +159,16 @@ export const dev = (program: Program) =>
         const bus = useBus();
 
         let lastDeployed: string;
-        let pending: CloudAssembly | undefined;
-        let isDeploying = false;
+        let isWorking = false;
+        let isDirty = false;
 
         async function build() {
+          if (isWorking) {
+            isDirty = true;
+            return;
+          }
+          isDirty = false;
+          isWorking = true;
           Colors.gap();
           const spinner = createSpinner({
             color: "gray",
@@ -192,6 +192,8 @@ export const dev = (program: Program) =>
             Logger.debug("Checksum", "next", next, "old", lastDeployed);
             if (next === lastDeployed) {
               spinner.succeed(Colors.dim(" Built with no changes"));
+              isWorking = false;
+              if (isDirty) build();
               return;
             }
             if (!lastDeployed) {
@@ -200,10 +202,9 @@ export const dev = (program: Program) =>
               Colors.mode("gap");
             } else {
               spinner.succeed(Colors.dim(` Built`));
-              Colors.mode("gap");
+              Colors.gap();
             }
-            pending = assembly;
-            if (lastDeployed) setTimeout(() => deploy(), 100);
+            deploy(assembly);
           } catch (ex: any) {
             spinner.fail();
             Colors.line(
@@ -216,15 +217,9 @@ export const dev = (program: Program) =>
           }
         }
 
-        async function deploy() {
-          if (!pending) return;
-          if (isDeploying) return;
-          isDeploying = true;
-          const assembly = pending;
+        async function deploy(assembly: CloudAssembly) {
           const nextChecksum = await checksum(assembly.directory);
-          pending = undefined;
 
-          if (lastDeployed) console.log();
           const component = render(<DeploymentUI assembly={assembly} />);
           const results = await Stacks.deployMany(assembly.stacks);
           component.clear();
@@ -251,14 +246,18 @@ export const dev = (program: Program) =>
           fs.writeFile(
             path.join(project.paths.out, "outputs.json"),
             JSON.stringify(
-              mapValues(results, (val) => val.outputs),
+              pipe(
+                results,
+                omitBy((_, key) => key.includes("SstSiteEnv")),
+                mapValues((val) => val.outputs)
+              ),
               null,
               2
             )
           );
 
-          isDeploying = false;
-          deploy();
+          isWorking = false;
+          if (isDirty) build();
         }
 
         async function checksum(cdkOutPath: string) {
@@ -293,13 +292,8 @@ export const dev = (program: Program) =>
         });
 
         await build();
-        await deploy();
       });
 
-      const project = useProject();
-
-      const primary = chalk.hex("#E27152");
-      const link = chalk.cyan;
       await useLocalServer({
         key: "",
         cert: "",
@@ -308,18 +302,6 @@ export const dev = (program: Program) =>
 
       clear();
       await printHeader({ console: true, hint: "ready!" });
-      /*
-      console.log(`  ${primary(`➜`)}  ${bold(dim(`Outputs:`))}`);
-      for (let i = 0; i < 3; i++) {
-        console.log(`       ${dim(`thdxr-scratch-MyStack`)}`);
-        console.log(
-          `       ${bold(
-            dim(`ApiEndpoint`)
-          )}: https://hdq3z0es2d.execute-api.us-east-1.amazonaws.com`
-        );
-      }
-      */
-
       await Promise.all([
         useRuntimeWorkers(),
         useIOTBridge(),

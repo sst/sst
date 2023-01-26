@@ -53,7 +53,7 @@ export const deploy = (program: Program) =>
         }
 
         const spinner = createSpinner({
-          text: " Building stacks",
+          text: " Building...",
         });
         const result = await Stacks.synth({
           fn: project.stacks,
