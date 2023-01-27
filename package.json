@@ -4,19 +4,18 @@
   "license": "MIT",
   "private": true,
   "type": "module",
-  "workspaces": {
-    "packages": [
-      "packages/*",
-      "packages/assets/*",
-      "www"
-    ]
-  },
+  "workspaces": [
+    "packages/*",
+    "packages/assets/*",
+    "www"
+  ],
   "scripts": {
     "build": "turbo run build --filter=!@serverless-stack/docs --filter=!@serverless-stack/console --filter=!@serverless-stack/cli-*",
+    "prettier": "prettier --cache -w --loglevel=error .",
     "version": "./.changeset/version",
     "release": "./.changeset/release",
     "release-snapshot": "./.changeset/snapshot",
-    "test": "turbo run test"
+    "prepare": "husky install"
   },
   "repository": {
     "type": "git",
@@ -25,6 +24,7 @@
   "devDependencies": {
     "@changesets/changelog-github": "^0.4.8",
     "@changesets/cli": "^2.26.0",
+    "husky": "^8.0.3",
     "prettier": "^2.8.2",
     "turbo": "^1.2.8",
     "typescript": "^4.9.4",
