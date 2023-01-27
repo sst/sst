@@ -84,7 +84,6 @@ export const DeploymentUI = (props: Props) => {
               <Text>
                 <Spinner />
                 {"  "}
-                {process.stdout.rows}
                 {readable
                   ? `${stackNameToId(evt.StackName!)} ${readable} ${
                       evt.ResourceType
