@@ -1,8 +1,6 @@
 import type { Program } from "../program.js";
 import type { CloudAssembly } from "aws-cdk-lib/cx-api";
-import chalk from "chalk";
 import { Colors } from "../colors.js";
-import { useLocalServerConfig } from "../local/server.js";
 import { printHeader } from "../ui/header.js";
 import { mapValues, omitBy, pipe } from "remeda";
 
@@ -21,21 +19,23 @@ export const dev = (program: Program) =>
       const { useRuntimeServer } = await import("../../runtime/server.js");
       const { useBus } = await import("../../bus.js");
       const { useWatcher } = await import("../../watcher.js");
-      const { Stacks } = await import("../../stacks/index.js");
+      const {
+        useAppMetadata,
+        saveAppMetadata,
+        Stacks,
+      } = await import("../../stacks/index.js");
       const { Logger } = await import("../../logger.js");
       const { createSpinner } = await import("../spinner.js");
-      const { bold, magenta, green, blue, red } = await import("colorette");
+      const { bold, dim, yellow } = await import("colorette");
       const { render } = await import("ink");
       const React = await import("react");
       const { Context } = await import("../../context/context.js");
-      const { DeploymentUI } = await import("../ui/deploy.js");
+      const { printDeploymentResults, DeploymentUI } = await import("../ui/deploy.js");
       const { useLocalServer } = await import("../local/server.js");
       const path = await import("path");
       const fs = await import("fs/promises");
       const crypto = await import("crypto");
-      const { printDeploymentResults } = await import("../ui/deploy.js");
       const { useFunctions } = await import("../../constructs/Function.js");
-      const { dim, gray, yellow } = await import("colorette");
       const { SiteEnv } = await import("../../site-env.js");
       const { usePothosBuilder } = await import("./plugins/pothos.js");
       const { useKyselyTypeGenerator } = await import("./plugins/kysely.js");
@@ -224,9 +224,16 @@ export const dev = (program: Program) =>
           const results = await Stacks.deployMany(assembly.stacks);
           component.clear();
           component.unmount();
-          lastDeployed = nextChecksum;
           printDeploymentResults(assembly, results);
 
+          // Update app state
+          if (!lastDeployed) {
+            await saveAppMetadata({ mode: "dev" });
+          }
+
+          lastDeployed = nextChecksum;
+
+          // Update site env
           const keys = await SiteEnv.keys();
           if (keys.length) {
             const result: Record<string, Record<string, string>> = {};
@@ -243,6 +250,7 @@ export const dev = (program: Program) =>
             await SiteEnv.writeValues(result);
           }
 
+          // Write outputs.json
           fs.writeFile(
             path.join(project.paths.out, "outputs.json"),
             JSON.stringify(
@@ -294,11 +302,21 @@ export const dev = (program: Program) =>
         await build();
       });
 
-      await useLocalServer({
-        key: "",
-        cert: "",
-        live: true,
-      });
+      const [appMetadata] = await Promise.all([
+        useAppMetadata(),
+        useLocalServer({
+          key: "",
+          cert: "",
+          live: true,
+        }),
+      ]);
+
+      // Check app mode changed
+      if (appMetadata && appMetadata.mode !== "dev") {
+        if (!await promptChangeMode()) {
+          process.exit(0);
+        }
+      }
 
       clear();
       await printHeader({ console: true, hint: "ready!" });
@@ -315,3 +333,21 @@ export const dev = (program: Program) =>
       ]);
     }
   );
+
+async function promptChangeMode() {
+  const readline = await import("readline");
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  return new Promise<boolean>((resolve) => {
+        console.log("");
+    rl.question(
+      "You have previously deployed this stage in production. It is recommended that you use a different stage for development. Read more here — https://docs.sst.dev/live-lambda-development\n\nAre you sure you want to run this stage in dev mode? [y/N] ",
+      async (input) => {
+        rl.close();
+        resolve(input.trim() === "y");
+      }
+    );
+  });
+}

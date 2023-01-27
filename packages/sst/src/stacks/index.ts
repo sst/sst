@@ -1,3 +1,4 @@
+export * from "./app-metadata.js";
 export * from "./assembly.js";
 export * from "./build.js";
 export * from "./deploy.js";

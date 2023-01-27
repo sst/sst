@@ -13,7 +13,11 @@ export const remove = (program: Program) =>
       const React = await import("react");
       const { dim, blue, bold } = await import("colorette");
       const { useProject } = await import("../../project.js");
-      const { loadAssembly, Stacks } = await import("../../stacks/index.js");
+      const {
+        loadAssembly,
+        clearAppMetadata,
+        Stacks,
+      } = await import("../../stacks/index.js");
       const { render } = await import("ink");
       const { DeploymentUI } = await import("../ui/deploy.js");
       const { printDeploymentResults } = await import("../ui/deploy.js");
@@ -62,6 +66,9 @@ export const remove = (program: Program) =>
       printDeploymentResults(assembly, results, true);
       if (Object.values(results).some((stack) => Stacks.isFailed(stack.status)))
         process.exit(1);
+
+      await clearAppMetadata();
+
       process.exit(0);
     }
   );

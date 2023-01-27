@@ -185,7 +185,6 @@ function logicalIdToCdkPath(
 }
 
 function getHelper(error: string) {
-  return `This is a common deploy error. Check out this GitHub issue for more details - https://github.com/serverless-stack/sst/issues/125`;
   return (
     getApiAccessLogPermissionsHelper(error) ||
     getAppSyncMultiResolverHelper(error) ||

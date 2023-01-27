@@ -24,12 +24,27 @@ export const deploy = (program: Program) =>
       const { createSpinner } = await import("../spinner.js");
       const { dim, blue, bold } = await import("colorette");
       const { useProject } = await import("../../project.js");
-      const { loadAssembly, Stacks } = await import("../../stacks/index.js");
+      const {
+        loadAssembly,
+        useAppMetadata,
+        saveAppMetadata,
+        Stacks,
+      } = await import("../../stacks/index.js");
       const { render } = await import("ink");
       const { DeploymentUI } = await import("../ui/deploy.js");
       const { mapValues } = await import("remeda");
       const project = useProject();
-      const identity = await useSTSIdentity();
+      const [identity, appMetadata] = await Promise.all([
+        useSTSIdentity(),
+        useAppMetadata(),
+      ]);
+
+      // Check app mode changed
+      if (appMetadata && appMetadata.mode !== "deploy") {
+        if (!await promptChangeMode()) {
+          process.exit(0);
+        }
+      }
 
       Colors.line(`${Colors.primary.bold(`SST v${project.version}`)}`);
       Colors.gap();
@@ -87,6 +102,28 @@ export const deploy = (program: Program) =>
           2
         )
       );
+
+      // Update app state
+      await saveAppMetadata({ mode: "deploy" });
+
       process.exit(0);
     }
   );
+
+async function promptChangeMode() {
+  const readline = await import("readline");
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  return new Promise<boolean>((resolve) => {
+        console.log("");
+    rl.question(
+      "You were previously running this stage in dev mode. It is recommended that you use a different stage for production. Read more here — https://docs.sst.dev/live-lambda-development\n\nAre you sure you want to deploy to this stage? (y/N) ",
+      async (input) => {
+        rl.close();
+        resolve(input.trim() === "y");
+      }
+    );
+  });
+}
