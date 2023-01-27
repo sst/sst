@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { styled } from "~/stitches.config";
 import { Functions } from "./Functions";
 import { Stacks } from "./Stacks";
@@ -62,7 +62,7 @@ export function Stage() {
             <Route path="graphql/*" element={<GraphQL />} />
             <Route path="dynamodb/*" element={<Dynamo />} />
             <Route path="api/*" element={<Api />} />
-            <Route path="/" element={<Local />} />
+            <Route path="/" element={() => <Navigate to="./local" />} />
           </Routes>
         </Content>
       </Fill>
