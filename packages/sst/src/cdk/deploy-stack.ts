@@ -912,6 +912,12 @@ async function canSkipDeploy(
     return false;
   }
 
+  // SST check: stack is not busy
+  if (cloudFormationStack.stackStatus.isInProgress) {
+    debug(`${deployName}: stack is busy`);
+    return false;
+  }
+
   // Template has changed (assets taken into account here)
   if (
     JSON.stringify(deployStackOptions.stack.template) !==
