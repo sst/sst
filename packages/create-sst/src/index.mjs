@@ -192,6 +192,7 @@ export async function execute(opts) {
     const appAlpha = app.replace(/[^a-zA-Z0-9]/g, "");
 
     for (const file of await listFiles(opts.destination)) {
+      if (file.includes(".git")) continue;
       try {
         const contents = await fs.readFile(file, "utf8");
         if (file.endsWith(".png") || file.endsWith(".ico")) continue;
