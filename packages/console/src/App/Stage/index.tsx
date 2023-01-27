@@ -62,7 +62,7 @@ export function Stage() {
             <Route path="graphql/*" element={<GraphQL />} />
             <Route path="dynamodb/*" element={<Dynamo />} />
             <Route path="api/*" element={<Api />} />
-            <Route path="/" element={() => <Navigate to="./local" />} />
+            <Route path="*" element={<Navigate to="./local" />} />
           </Routes>
         </Content>
       </Fill>
