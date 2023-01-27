@@ -71,29 +71,32 @@ export const DeploymentUI = (props: Props) => {
 
   return (
     <Box flexDirection="column">
-      {Object.entries(resources).map(([_, evt]) => {
-        const readable = logicalIdToCdkPath(
-          props.assembly,
-          evt.StackName!,
-          evt.LogicalResourceId!
-        );
-        return (
-          <Box key={evt.LogicalResourceId}>
-            <Text>
-              <Spinner />
-              {"  "}
-              {readable
-                ? `${stackNameToId(evt.StackName!)} ${readable} ${
-                    evt.ResourceType
-                  }`
-                : `${stackNameToId(evt.StackName!)} ${evt.ResourceType}`}{" "}
-            </Text>
-            <Text color={color(evt.ResourceStatus || "")}>
-              {evt.ResourceStatus}
-            </Text>
-          </Box>
-        );
-      })}
+      {Object.entries(resources)
+        .slice(0, process.stdout.rows - 2)
+        .map(([_, evt], index) => {
+          const readable = logicalIdToCdkPath(
+            props.assembly,
+            evt.StackName!,
+            evt.LogicalResourceId!
+          );
+          return (
+            <Box key={index}>
+              <Text>
+                <Spinner />
+                {"  "}
+                {process.stdout.rows}
+                {readable
+                  ? `${stackNameToId(evt.StackName!)} ${readable} ${
+                      evt.ResourceType
+                    }`
+                  : `${stackNameToId(evt.StackName!)} ${evt.ResourceType}`}{" "}
+              </Text>
+              <Text color={color(evt.ResourceStatus || "")}>
+                {evt.ResourceStatus}
+              </Text>
+            </Box>
+          );
+        })}
       {Object.entries(resources).length === 0 && (
         <Box>
           <Text>
