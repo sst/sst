@@ -197,11 +197,7 @@ export function filterOutputs(input: Record<string, string>) {
   return pipe(
     input,
     omitBy((_, key) => {
-      return (
-        key.startsWith("Export") ||
-        key.includes("SstSiteEnv") ||
-        key === "SSTMetadata"
-      );
+      return key.startsWith("Export") || key === "SSTMetadata";
     })
   );
 }
