@@ -1,16 +1,27 @@
-import { GetParametersCommand, SSMClient, Parameter } from "@aws-sdk/client-ssm";
+import {
+  GetParametersCommand,
+  SSMClient,
+  Parameter,
+} from "@aws-sdk/client-ssm";
 const ssm = new SSMClient({});
-import { createProxy, parseEnvironment, buildSsmPath, ssmNameToConstructId } from "../util/index.js";
+import {
+  createProxy,
+  parseEnvironment,
+  buildSsmPath,
+  ssmNameToConstructId,
+} from "../util/index.js";
 
-export interface StaticSiteResources { }
-export interface ReactStaticSiteResources { }
-export interface ViteStaticSiteResources { }
-export interface NextjsSiteResources { }
-export interface RemixSiteResources { }
+export interface StaticSiteResources {}
+export interface ReactStaticSiteResources {}
+export interface ViteStaticSiteResources {}
+export interface NextjsSiteResources {}
+export interface RemixSiteResources {}
 
 export const StaticSite = createProxy<StaticSiteResources>("StaticSite");
-export const ReactStaticSite = createProxy<ReactStaticSiteResources>("ReactStaticSite");
-export const ViteStaticSite = createProxy<ViteStaticSiteResources>("ViteStaticSite");
+export const ReactStaticSite =
+  createProxy<ReactStaticSiteResources>("ReactStaticSite");
+export const ViteStaticSite =
+  createProxy<ViteStaticSiteResources>("ViteStaticSite");
 export const RemixSite = createProxy<RemixSiteResources>("RemixSite");
 export const NextjsSite = createProxy<NextjsSiteResources>("NextjsSite");
 const staticSiteData = parseEnvironment("StaticSite", ["url"]);
@@ -30,11 +41,14 @@ Object.assign(ViteStaticSite, viteSiteData);
 Object.assign(NextjsSite, nextjsSiteData);
 Object.assign(RemixSite, remixSiteData);
 
-async function replaceWithSsmValues(className: string, siteData: Record<string, any>) {
+async function replaceWithSsmValues(
+  className: string,
+  siteData: Record<string, any>
+) {
   // Find all the site data that match the prefix
-  const names = Object
-    .keys(siteData)
-    .filter((name) => siteData[name].url === "__FETCH_FROM_SSM__");
+  const names = Object.keys(siteData).filter(
+    (name) => siteData[name].url === "__FETCH_FROM_SSM__"
+  );
   if (names.length === 0) {
     return;
   }

@@ -271,7 +271,10 @@ export class EventBus extends Construct implements SSTConstruct {
     eventBus: events.IEventBus;
   };
   private readonly rulesData: Record<string, events.Rule> = {};
-  private readonly targetsData: Record<string, Record<string, Fn | Queue | lambda.IFunction>> = {};
+  private readonly targetsData: Record<
+    string,
+    Record<string, Fn | Queue | lambda.IFunction>
+  > = {};
   private readonly bindingForAllTargets: SSTConstruct[] = [];
   private readonly permissionsAttachedForAllTargets: Permissions[] = [];
   private readonly props: EventBusProps;

@@ -316,7 +316,5 @@ function parseRoute53Domain(domainName: string) {
   // If the domain contains subdomain, ie. api.example.com,
   // strip the subdomain and use the root domain, ie. example.com.
   // Otherwise, use the domain as is.
-  return parts.length <= 2
-    ? domainName
-    : parts.slice(1).join(".");
+  return parts.length <= 2 ? domainName : parts.slice(1).join(".");
 }

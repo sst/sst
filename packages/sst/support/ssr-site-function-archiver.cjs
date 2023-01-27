@@ -9,7 +9,7 @@ process.on("unhandledRejection", (err) => {
 
 const path = require("path");
 const fs = require("fs/promises");
-const fsSync = require("fs")
+const fsSync = require("fs");
 const archiver = require("archiver");
 
 // Parse arguments
@@ -28,8 +28,8 @@ function generateZips() {
     let archive;
 
     await fs.mkdir(path.dirname(ZIP_PATH), {
-      recursive: true
-    })
+      recursive: true,
+    });
     output = fsSync.createWriteStream(ZIP_PATH);
     archive = archiver("zip");
 
@@ -44,7 +44,7 @@ function generateZips() {
     archive.pipe(output);
 
     //archive.directory(SITE_PATH, false);
-    archive.glob("**", { cwd: SITE_PATH, dot: true,  });
+    archive.glob("**", { cwd: SITE_PATH, dot: true });
 
     await archive.finalize();
   });

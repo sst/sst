@@ -8,46 +8,46 @@ import * as cfnResponse from "./cfn-response.js";
 const lambda = new AWS.Lambda({ region: "us-east-1" });
 const LIVE_ALIAS = "live";
 
-export const handler = cfnResponse.safeHandler(async (
-  cfnRequest: AWSLambda.CloudFormationCustomResourceEvent
-) => {
-  log("onEventHandler", cfnRequest);
+export const handler = cfnResponse.safeHandler(
+  async (cfnRequest: AWSLambda.CloudFormationCustomResourceEvent) => {
+    log("onEventHandler", cfnRequest);
 
-  // Process request
-  let PhysicalResourceId;
-  let Data;
-  const functionArn = cfnRequest.ResourceProperties.FunctionArn;
-  const functionName = functionArn.split(":").pop();
-  switch (cfnRequest.RequestType) {
-    case "Create": {
-      const ret = await createVersion(functionName);
-      const version = ret.Version as string;
-      await createAlias(functionName, version);
-      PhysicalResourceId = `${functionArn}:${version}`;
-      Data = { Version: version };
-      break;
+    // Process request
+    let PhysicalResourceId;
+    let Data;
+    const functionArn = cfnRequest.ResourceProperties.FunctionArn;
+    const functionName = functionArn.split(":").pop();
+    switch (cfnRequest.RequestType) {
+      case "Create": {
+        const ret = await createVersion(functionName);
+        const version = ret.Version as string;
+        await createAlias(functionName, version);
+        PhysicalResourceId = `${functionArn}:${version}`;
+        Data = { Version: version };
+        break;
+      }
+      case "Update": {
+        PhysicalResourceId = cfnRequest.PhysicalResourceId;
+        Data = { Version: cfnRequest.PhysicalResourceId.split(":").pop() };
+        break;
+      }
+      case "Delete": {
+        await deleteOldVersions(functionName);
+        PhysicalResourceId = cfnRequest.PhysicalResourceId;
+        break;
+      }
+      default:
+        throw new Error("Unsupported request type");
     }
-    case "Update": {
-      PhysicalResourceId = cfnRequest.PhysicalResourceId;
-      Data = { Version: cfnRequest.PhysicalResourceId.split(":").pop() };
-      break;
-    }
-    case "Delete": {
-      await deleteOldVersions(functionName);
-      PhysicalResourceId = cfnRequest.PhysicalResourceId;
-      break;
-    }
-    default:
-      throw new Error("Unsupported request type");
+
+    // Build response
+    return cfnResponse.submitResponse("SUCCESS", {
+      ...cfnRequest,
+      PhysicalResourceId,
+      Data,
+    });
   }
-
-  // Build response
-  return cfnResponse.submitResponse("SUCCESS", {
-    ...cfnRequest,
-    PhysicalResourceId,
-    Data,
-  });
-});
+);
 
 async function createVersion(functionName: string) {
   log(`createVersion() called with functionName`, functionName);

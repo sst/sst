@@ -9,7 +9,7 @@ process.on("unhandledRejection", (err) => {
 
 const path = require("path");
 const fs = require("fs/promises");
-const fsSync = require("fs")
+const fsSync = require("fs");
 const archiver = require("archiver");
 const glob = require("glob");
 
@@ -48,11 +48,11 @@ function generateZips() {
       const partId = statuses.length;
       const filePath = path.join(ZIP_PATH, `part${partId}.zip`);
       await fs.mkdir(path.dirname(filePath), {
-        recursive: true
-      })
+        recursive: true,
+      });
       output = fsSync.createWriteStream(filePath);
       archive = archiver("zip");
-      totalSize = 0, "w";
+      (totalSize = 0), "w";
       statuses.push({
         output,
         archive,

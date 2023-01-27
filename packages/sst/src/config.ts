@@ -61,8 +61,9 @@ export namespace Config {
     prop: string;
     fallback?: boolean;
   }) {
-    return `${input.fallback ? PREFIX.FALLBACK : PREFIX.STAGE}${input.type
-      }/${normalizeID(input.id)}/${input.prop}`;
+    return `${input.fallback ? PREFIX.FALLBACK : PREFIX.STAGE}${
+      input.type
+    }/${normalizeID(input.id)}/${input.prop}`;
   }
 
   export function normalizeID(input: string) {

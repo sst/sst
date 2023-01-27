@@ -38,7 +38,6 @@ type RemixConfig = {
  * ```
  */
 export class RemixSite extends SsrSite {
-
   protected initBuildConfig() {
     const { path: sitePath } = this.props;
 
@@ -108,7 +107,7 @@ export class RemixSite extends SsrSite {
     // Write the server lambda
     const templatePath = path.resolve(
       __dirname,
-      `../support/remix-site-function/${wrapperFile}`,
+      `../support/remix-site-function/${wrapperFile}`
     );
     fs.copyFileSync(templatePath, serverPath);
 

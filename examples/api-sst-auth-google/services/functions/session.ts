@@ -18,7 +18,7 @@ export const handler = ApiHandler(async () => {
       TableName: Table.users.tableName,
       Key: marshall({
         userId: session.properties.userID,
-      })
+      }),
     })
   );
 

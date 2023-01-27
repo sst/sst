@@ -173,9 +173,13 @@ test("consumer: is cdk.Function", async () => {
       cdk: {
         function: lambda.Function.fromFunctionAttributes(stack, "IFunction", {
           functionArn: "arn:aws:lambda:us-east-1:123456789:function:test",
-          role: iam.Role.fromRoleArn(stack, "IRole", "arn:aws:iam::123456789:role/test"),
+          role: iam.Role.fromRoleArn(
+            stack,
+            "IRole",
+            "arn:aws:iam::123456789:role/test"
+          ),
         }),
-      }
+      },
     },
   });
   countResources(stack, "AWS::Lambda::Function", 0);

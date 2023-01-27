@@ -1,7 +1,7 @@
 import { forwardRef } from "react";
 import { styled, theme } from "~/stitches.config";
 
-type Spaces = keyof typeof theme["space"];
+type Spaces = keyof (typeof theme)["space"];
 
 const Root = styled("div", {});
 

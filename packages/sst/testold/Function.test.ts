@@ -874,7 +874,7 @@ test("layers: imported from ARN", async () => {
 
 test("constructor: debugIncreaseTimeout true", async () => {
   const app = new App({
-    synthCallback: () => { },
+    synthCallback: () => {},
     debugEndpoint: "placeholder",
     debugBucketArn: "placeholder",
     debugBucketName: "placeholder",
@@ -894,7 +894,7 @@ test("constructor: debugIncreaseTimeout true", async () => {
 
 test("constructor: debugIncreaseTimeout false", async () => {
   const app = new App({
-    synthCallback: () => { },
+    synthCallback: () => {},
     debugEndpoint: "placeholder",
     debugBucketArn: "placeholder",
     debugBucketName: "placeholder",
@@ -914,7 +914,7 @@ test("constructor: debugIncreaseTimeout false", async () => {
 
 test("constructor: debug: layers removed", async () => {
   const app = new App({
-    synthCallback: () => { },
+    synthCallback: () => {},
     debugEndpoint: "placeholder",
     debugBucketArn: "placeholder",
     debugBucketName: "placeholder",
@@ -1695,9 +1695,9 @@ test("mergeProps-bind", async () => {
   const stack = new Stack(new App(), "stack");
   const bucketA = new Bucket(stack, "bucketA");
   const bucketB = new Bucket(stack, "bucketB");
-  expect(
-    Function.mergeProps({ bind: [bucketA] }, { bind: [bucketB] })
-  ).toEqual({ bind: [bucketA, bucketB] });
+  expect(Function.mergeProps({ bind: [bucketA] }, { bind: [bucketB] })).toEqual(
+    { bind: [bucketA, bucketB] }
+  );
 });
 
 test("mergeProps-layers", async () => {

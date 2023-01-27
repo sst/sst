@@ -398,7 +398,11 @@ test("targets: cdk.Function with target props", async () => {
           "0": {
             function: "test/lambda.handler",
             cdk: {
-              function: lambda.Function.fromFunctionName(stack, "IFunction", "arn:aws:lambda:us-east-1:123456789:function/test"),
+              function: lambda.Function.fromFunctionName(
+                stack,
+                "IFunction",
+                "arn:aws:lambda:us-east-1:123456789:function/test"
+              ),
               target: {
                 retryAttempts: 20,
               },
@@ -422,8 +426,8 @@ test("targets: cdk.Function with target props", async () => {
               "arn:",
               { Ref: "AWS::Partition" },
               ":lambda:us-east-1:my-account:function:arn:aws:lambda:us-east-1:123456789:function/test",
-            ]
-          ]
+            ],
+          ],
         },
         RetryPolicy: {
           MaximumRetryAttempts: 20,

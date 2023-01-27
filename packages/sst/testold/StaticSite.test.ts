@@ -109,7 +109,7 @@ test("constructor: no domain", async () => {
         "--include",
         "*.html",
         "--cache-control",
-        "max-age=0,no-cache,no-store,must-revalidate"
+        "max-age=0,no-cache,no-store,must-revalidate",
       ],
       [
         "--exclude",
@@ -119,7 +119,7 @@ test("constructor: no domain", async () => {
         "--include",
         "*.css",
         "--cache-control",
-        "max-age=31536000,public,immutable"
+        "max-age=31536000,public,immutable",
       ],
     ],
     ReplaceValues: [],
@@ -791,7 +791,7 @@ test("vite.types: defined", async () => {
     path: "test/vite-static-site",
     vite: {
       types: "src/my-env.d.ts",
-    }
+    },
   });
   expect(fs.existsSync("test/vite-static-site/src/sst-env.d.ts")).toBeFalsy();
   expect(fs.existsSync("test/vite-static-site/src/my-env.d.ts")).toBeTruthy();
@@ -1134,15 +1134,15 @@ test("constructor: local debug with disablePlaceholder true", async () => {
     DistributionConfig: objectLike({
       CustomErrorResponses: [
         {
-          "ErrorCode": 403,
-          "ResponseCode": 200,
-          "ResponsePagePath": "/index.html"
+          ErrorCode: 403,
+          ResponseCode: 200,
+          ResponsePagePath: "/index.html",
         },
         {
-          "ErrorCode": 404,
-          "ResponseCode": 200,
-          "ResponsePagePath": "/index.html"
-        }
+          ErrorCode: 404,
+          ResponseCode: 200,
+          ResponsePagePath: "/index.html",
+        },
       ],
     }),
   });

@@ -23,7 +23,7 @@ function createApp() {
     name: "my-app",
     stage: "dev",
     region: "us-east-1",
-  })
+  });
 }
 
 /////////////////////////////
@@ -43,9 +43,9 @@ test("cdk.table defined", async () => {
   const stack = new DebugStack(createApp(), "stack", {
     cdk: {
       table: {
-        pointInTimeRecovery: true
-      }
-    }
+        pointInTimeRecovery: true,
+      },
+    },
   });
   hasResource(stack, "AWS::DynamoDB::Table", {
     TableName: ABSENT,

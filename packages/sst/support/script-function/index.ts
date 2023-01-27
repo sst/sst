@@ -1,7 +1,4 @@
-import {
-  LambdaClient,
-  InvokeCommand,
-} from "@aws-sdk/client-lambda";
+import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 import { log, wrapper } from "./util.js";
 
 const lambda = new LambdaClient({ logger: console });
@@ -22,7 +19,6 @@ export const handler = wrapper(async (cfnRequest: any) => {
     await invokeUserFunction(fnDelete, { params: fnParams });
   }
 });
-
 
 async function invokeUserFunction(functionName: string, payload: any) {
   log("invokeUserFunction()", functionName, payload);

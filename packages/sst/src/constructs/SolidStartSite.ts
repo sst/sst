@@ -23,7 +23,6 @@ const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
  * ```
  */
 export class SolidStartSite extends SsrSite {
-
   protected initBuildConfig() {
     return {
       serverBuildOutputFile: "dist/server/index.mjs",
@@ -36,7 +35,12 @@ export class SolidStartSite extends SsrSite {
     const { defaults, environment } = this.props;
 
     // Bundle code
-    const handler = path.join(this.props.path, "dist", "server", "index.handler");
+    const handler = path.join(
+      this.props.path,
+      "dist",
+      "server",
+      "index.handler"
+    );
 
     // Create function
     const fn = new Function(this, `ServerFunction`, {
@@ -71,7 +75,9 @@ export class SolidStartSite extends SsrSite {
 
     // Bundle code
     const result = esbuild.buildSync({
-      entryPoints: [path.join(this.props.path, this.buildConfig.serverBuildOutputFile)],
+      entryPoints: [
+        path.join(this.props.path, this.buildConfig.serverBuildOutputFile),
+      ],
       target: "esnext",
       format: "esm",
       platform: "node",
@@ -90,11 +96,16 @@ export class SolidStartSite extends SsrSite {
 
     if (result.errors.length > 0) {
       result.errors.forEach((error) => console.error(error));
-      throw new Error(`There was a problem bundling the function code for the ${this.id} SolidStartSite.`);
+      throw new Error(
+        `There was a problem bundling the function code for the ${this.id} SolidStartSite.`
+      );
     }
 
     // Create package.json
-    fs.writeFileSync(path.join(outputPath, "package.json"), `{"type":"module"}`);
+    fs.writeFileSync(
+      path.join(outputPath, "package.json"),
+      `{"type":"module"}`
+    );
 
     // Create function
     return new EdgeFunction(this, `Server`, {

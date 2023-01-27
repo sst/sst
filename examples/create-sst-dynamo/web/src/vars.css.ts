@@ -2,7 +2,7 @@ import { createGlobalTheme } from "@vanilla-extract/css";
 
 export const constants = {
   mobileWidth: "600px",
-}
+};
 
 const colors = {
   brand: "#E27152",
@@ -14,8 +14,8 @@ const colors = {
 
   text: {
     normal: "#383736",
-    dimmed: "#706F6C"
-  }
+    dimmed: "#706F6C",
+  },
 };
 
 const root = createGlobalTheme(":root", {

@@ -1,4 +1,5 @@
-body, html {
+body,
+html {
   height: 100%;
   display: grid;
   font-family: sans-serif;

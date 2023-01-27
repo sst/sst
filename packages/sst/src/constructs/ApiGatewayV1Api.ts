@@ -39,7 +39,7 @@ const allowedMethods = [
 /////////////////////
 
 export interface ApiGatewayV1ApiAccessLogProps
-  extends apigV1AccessLog.AccessLogProps { }
+  extends apigV1AccessLog.AccessLogProps {}
 
 export interface ApiGatewayV1ApiProps<
   Authorizers extends Record<string, ApiGatewayV1ApiAuthorizer> = Record<
@@ -179,9 +179,9 @@ export interface ApiGatewayV1ApiProps<
      * ```
      */
     authorizer?:
-    | "none"
-    | "iam"
-    | (string extends AuthorizerKeys ? never : AuthorizerKeys);
+      | "none"
+      | "iam"
+      | (string extends AuthorizerKeys ? never : AuthorizerKeys);
     /**
      * An array of scopes to include in the authorization when using `user_pool` or `jwt` authorizers. These will be merged with the scopes from the attached authorizer.
      * @default []
@@ -259,9 +259,9 @@ export type ApiGatewayV1ApiRouteProps<AuthorizerKeys> =
 export interface ApiGatewayV1ApiFunctionRouteProps<AuthorizerKeys = never> {
   function?: FunctionDefinition;
   authorizer?:
-  | "none"
-  | "iam"
-  | (string extends AuthorizerKeys ? never : AuthorizerKeys);
+    | "none"
+    | "iam"
+    | (string extends AuthorizerKeys ? never : AuthorizerKeys);
   authorizationScopes?: string[];
   cdk?: {
     method?: Omit<
@@ -536,13 +536,14 @@ export interface ApiGatewayV1ApiCustomDomainProps {
  * ```
  */
 export class ApiGatewayV1Api<
-  Authorizers extends Record<string, ApiGatewayV1ApiAuthorizer> = Record<
-    string,
-    never
+    Authorizers extends Record<string, ApiGatewayV1ApiAuthorizer> = Record<
+      string,
+      never
+    >
   >
->
   extends Construct
-  implements SSTConstruct {
+  implements SSTConstruct
+{
   public readonly id: string;
   public readonly cdk: {
     /**
@@ -681,7 +682,7 @@ export class ApiGatewayV1Api<
   public bind(constructs: SSTConstruct[]) {
     Object.values(this.functions).forEach((fn) => {
       if (fn instanceof Fn) {
-        fn.bind(constructs)
+        fn.bind(constructs);
       }
     });
     this.bindingForAllRoutes.push(...constructs);
@@ -702,10 +703,7 @@ export class ApiGatewayV1Api<
    * ```
    *
    */
-  public bindToRoute(
-    routeKey: string,
-    constructs: SSTConstruct[]
-  ): void {
+  public bindToRoute(routeKey: string, constructs: SSTConstruct[]): void {
     const fn = this.getFunction(routeKey);
     if (!fn) {
       throw new Error(
@@ -1110,7 +1108,7 @@ export class ApiGatewayV1Api<
         endpointType:
           endpointType &&
           apig.EndpointType[
-          endpointType.toLocaleUpperCase() as keyof typeof apig.EndpointType
+            endpointType.toLocaleUpperCase() as keyof typeof apig.EndpointType
           ],
         mtls: mtls && {
           ...mtls,
@@ -1120,8 +1118,8 @@ export class ApiGatewayV1Api<
           securityPolicy === "TLS 1.0"
             ? apig.SecurityPolicy.TLS_1_0
             : securityPolicy === "TLS 1.2"
-              ? apig.SecurityPolicy.TLS_1_2
-              : undefined,
+            ? apig.SecurityPolicy.TLS_1_2
+            : undefined,
       });
       this.cdk.domainName = apigDomainName;
 
@@ -1344,21 +1342,20 @@ export class ApiGatewayV1Api<
     ///////////////////
     const [routeProps, lambda] = (() => {
       if (Fn.isInlineDefinition(routeValue)) {
-        const routeProps: ApiGatewayV1ApiFunctionRouteProps<keyof Authorizers> = {
-          function: routeValue
-        };
+        const routeProps: ApiGatewayV1ApiFunctionRouteProps<keyof Authorizers> =
+          {
+            function: routeValue,
+          };
         return [
           routeProps,
           this.createFunction(scope, routeKey, routeProps, postfixName),
         ];
-      }
-      else if (routeValue.cdk?.function) {
+      } else if (routeValue.cdk?.function) {
         return [
           routeValue,
           this.createCdkFunction(scope, routeKey, routeValue, postfixName),
         ];
-      }
-      else {
+      } else {
         return [
           routeValue,
           this.createFunction(scope, routeKey, routeValue, postfixName),
@@ -1396,9 +1393,8 @@ export class ApiGatewayV1Api<
     scope: Construct,
     routeKey: string,
     routeProps: ApiGatewayV1ApiFunctionRouteProps<keyof Authorizers>,
-    postfixName: string,
+    postfixName: string
   ): Fn {
-
     const lambda = Fn.fromDefinition(
       scope,
       `Lambda_${postfixName}`,
@@ -1413,7 +1409,7 @@ export class ApiGatewayV1Api<
     const root = scope.node.root as App;
     if (root.local) {
       lambda.addEnvironment("SST_DEBUG_IS_API_ROUTE", "1", {
-        removeInEdge: true
+        removeInEdge: true,
       });
     }
 

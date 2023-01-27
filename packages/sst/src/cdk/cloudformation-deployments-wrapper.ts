@@ -67,18 +67,18 @@ export async function publishDeployAssets(
 }
 
 const useDeployment = Context.memo(() => {
-  const state = new Map<SdkProvider, {
-    deployment: CloudFormationDeployments,
-    toolkitInfo: ToolkitInfo,
-    stackSdk: ISDK,
-    resolvedEnvironment: cxapi.Environment,
-    cloudFormationRoleArn?: string,
-  }>();
+  const state = new Map<
+    SdkProvider,
+    {
+      deployment: CloudFormationDeployments;
+      toolkitInfo: ToolkitInfo;
+      stackSdk: ISDK;
+      resolvedEnvironment: cxapi.Environment;
+      cloudFormationRoleArn?: string;
+    }
+  >();
   return {
-    async get(
-      sdkProvider: SdkProvider,
-      options: PublishStackAssetsOptions
-    ) {
+    async get(sdkProvider: SdkProvider, options: PublishStackAssetsOptions) {
       if (!state.has(sdkProvider)) {
         const deployment = new CloudFormationDeployments({ sdkProvider });
         const { stackSdk, resolvedEnvironment, cloudFormationRoleArn } =
@@ -106,13 +106,11 @@ const useDeployment = Context.memo(() => {
         });
       }
       return state.get(sdkProvider)!;
-    }
-  }
+    },
+  };
 });
 
-async function deployStack(
-  options: DeployStackOptions
-): Promise<any> {
+async function deployStack(options: DeployStackOptions): Promise<any> {
   const stackArtifact = options.stack;
 
   const stackEnv = options.resolvedEnvironment;
@@ -157,9 +155,9 @@ async function deployStack(
   );
   const stackParams = options.usePreviousParameters
     ? templateParams.updateExisting(
-      finalParameterValues,
-      cloudFormationStack.parameters
-    )
+        finalParameterValues,
+        cloudFormationStack.parameters
+      )
     : templateParams.supplyAll(finalParameterValues);
 
   const bodyParameter = await makeBodyParameter(
@@ -180,13 +178,19 @@ async function deployStack(
   );
 
   return {
-    isUpdate: cloudFormationStack.exists && cloudFormationStack.stackStatus.name !== 'REVIEW_IN_PROGRESS',
+    isUpdate:
+      cloudFormationStack.exists &&
+      cloudFormationStack.stackStatus.name !== "REVIEW_IN_PROGRESS",
     params: {
       StackName: deployName,
       TemplateBody: bodyParameter.TemplateBody,
       TemplateURL: bodyParameter.TemplateURL,
       Parameters: stackParams.apiParameters,
-      Capabilities: ['CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM', 'CAPABILITY_AUTO_EXPAND'],
+      Capabilities: [
+        "CAPABILITY_IAM",
+        "CAPABILITY_NAMED_IAM",
+        "CAPABILITY_AUTO_EXPAND",
+      ],
       Tags: options.tags,
     },
   };

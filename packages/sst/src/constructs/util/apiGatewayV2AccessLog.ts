@@ -27,7 +27,7 @@ const defaultHttpFields = [
   // caller info
   `"ip":"$context.identity.sourceIp"`,
   `"userAgent":"$context.identity.userAgent"`,
-  `"cognitoIdentityId":"$context.identity.cognitoIdentityId"`
+  `"cognitoIdentityId":"$context.identity.cognitoIdentityId"`,
 ];
 
 const defaultWebSocketFields = [
@@ -47,7 +47,7 @@ const defaultWebSocketFields = [
   `"userAgent":"$context.identity.userAgent"`,
   `"cognitoIdentityId":"$context.identity.cognitoIdentityId"`,
   `"connectedAt":"$context.connectedAt"`,
-  `"connectionId":"$context.connectionId"`
+  `"connectionId":"$context.connectionId"`,
 ];
 
 export function buildAccessLogData(
@@ -81,9 +81,9 @@ export function buildAccessLogData(
       logGroupName: [
         `/aws/vendedlogs/apis`,
         `/${cleanupLogGroupName(apiName)}-${apiStage.api.apiId}`,
-        `/${cleanupLogGroupName(apiStage.stageName)}`
+        `/${cleanupLogGroupName(apiStage.stageName)}`,
       ].join(""),
-      retention: buildLogGroupRetention(accessLog)
+      retention: buildLogGroupRetention(accessLog),
     });
     destinationArn = logGroup.logGroupArn;
   }

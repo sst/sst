@@ -1,7 +1,17 @@
 import { SQSEvent, EventBridgeEvent } from "aws-lambda";
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
-import { IoTDataPlaneClient, PublishCommand } from "@aws-sdk/client-iot-data-plane";
-import { CloudFormationClient, DescribeStacksCommand } from "@aws-sdk/client-cloudformation";
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
+import {
+  IoTDataPlaneClient,
+  PublishCommand,
+} from "@aws-sdk/client-iot-data-plane";
+import {
+  CloudFormationClient,
+  DescribeStacksCommand,
+} from "@aws-sdk/client-cloudformation";
 const s3 = new S3Client({ logger: console });
 const iot = new IoTDataPlaneClient({ logger: console });
 const cf = new CloudFormationClient({ logger: console });
@@ -15,11 +25,16 @@ export async function handler(event: SQSEvent) {
 }
 
 async function processRecord(record: EventBridgeEvent<any, any>) {
-  console.log("EventBridge event details:", { source: record.source, detailType: record["detail-type"] });
+  console.log("EventBridge event details:", {
+    source: record.source,
+    detailType: record["detail-type"],
+  });
 
   // Validate event source
-  if (record.source !== "aws.cloudformation"
-    || record["detail-type"] !== "CloudFormation Stack Status Change") {
+  if (
+    record.source !== "aws.cloudformation" ||
+    record["detail-type"] !== "CloudFormation Stack Status Change"
+  ) {
     return;
   }
 
@@ -44,40 +59,56 @@ async function processRecord(record: EventBridgeEvent<any, any>) {
   if (stackStatus === "DELETE_COMPLETE") {
     await deleteMetadata(stackName, bucket, app, stage);
     await sendIotEvent(app, stage, `stacks.metadata.updated`);
-  }
-  else {
+  } else {
     await saveMetadata(stackName, bucket, app, stage, metadata);
     await sendIotEvent(app, stage, `stacks.metadata.deleted`);
   }
 }
 
 async function sendIotEvent(app: string, stage: string, type: string) {
-  await callAWS(() => iot.send(
-    new PublishCommand({
-      topic: `/sst/${app}/${stage}/events`,
-      payload: Buffer.from(JSON.stringify({ type })),
-    })
-  ));
-}
-
-async function saveMetadata(stack: string, bucket: string, app: string, stage: string, metadata: any[]) {
-  await callAWS(() => s3.send(
-    new PutObjectCommand({
-      Bucket: bucket,
-      Key: `stackMetadata/app.${app}/stage.${stage}/stack.${stack}.json`,
-      Body: JSON.stringify(metadata),
-    })
-  ));
-}
-
-async function deleteMetadata(stackName: string, bucket: string, app: string, stage: string) {
-  try {
-    await callAWS(() => s3.send(
-      new DeleteObjectCommand({
-        Bucket: bucket,
-        Key: `stackMetadata/app.${app}/stage.${stage}/stack.${stackName}.json`,
+  await callAWS(() =>
+    iot.send(
+      new PublishCommand({
+        topic: `/sst/${app}/${stage}/events`,
+        payload: Buffer.from(JSON.stringify({ type })),
       })
-    ));
+    )
+  );
+}
+
+async function saveMetadata(
+  stack: string,
+  bucket: string,
+  app: string,
+  stage: string,
+  metadata: any[]
+) {
+  await callAWS(() =>
+    s3.send(
+      new PutObjectCommand({
+        Bucket: bucket,
+        Key: `stackMetadata/app.${app}/stage.${stage}/stack.${stack}.json`,
+        Body: JSON.stringify(metadata),
+      })
+    )
+  );
+}
+
+async function deleteMetadata(
+  stackName: string,
+  bucket: string,
+  app: string,
+  stage: string
+) {
+  try {
+    await callAWS(() =>
+      s3.send(
+        new DeleteObjectCommand({
+          Bucket: bucket,
+          Key: `stackMetadata/app.${app}/stage.${stage}/stack.${stackName}.json`,
+        })
+      )
+    );
   } catch (e: any) {
     if (e.code === "NoSuchBucket") {
       console.log(e);
@@ -88,13 +119,15 @@ async function deleteMetadata(stackName: string, bucket: string, app: string, st
 }
 
 async function getMetadata(stackName: string) {
-  const ret = await callAWS(() => cf.send(
-    new DescribeStacksCommand({
-      StackName: stackName,
-    })
-  ));
-  const metadataOutput = ret.Stacks?.at(0)?.Outputs?.find((o: any) =>
-    o.OutputKey === "SSTMetadata"
+  const ret = await callAWS(() =>
+    cf.send(
+      new DescribeStacksCommand({
+        StackName: stackName,
+      })
+    )
+  );
+  const metadataOutput = ret.Stacks?.at(0)?.Outputs?.find(
+    (o: any) => o.OutputKey === "SSTMetadata"
   )?.OutputValue;
 
   if (!metadataOutput) {
@@ -107,7 +140,8 @@ function callAWS<Result extends () => any>(cb: Result): ReturnType<Result> {
   try {
     return cb();
   } catch (e: any) {
-    if ((e.code === "ThrottlingException" && e.message === "Rate exceeded") ||
+    if (
+      (e.code === "ThrottlingException" && e.message === "Rate exceeded") ||
       (e.code === "Throttling" && e.message === "Rate exceeded") ||
       (e.code === "TooManyRequestsException" &&
         e.message === "Too Many Requests") ||
@@ -115,7 +149,8 @@ function callAWS<Result extends () => any>(cb: Result): ReturnType<Result> {
       e.code === "OperationAbortedException" ||
       e.code === "TimeoutError" ||
       e.code === "NetworkingError" ||
-      e.code === "ResourceConflictException") {
+      e.code === "ResourceConflictException"
+    ) {
       return callAWS(cb);
     }
     throw e;

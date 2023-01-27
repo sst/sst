@@ -54,8 +54,8 @@ export type SsrBuildConfig = {
   clientBuildVersionedSubDir: string;
 };
 
-export interface SsrDomainProps extends BaseSiteDomainProps { }
-export interface SsrCdkDistributionProps extends BaseSiteCdkDistributionProps { }
+export interface SsrDomainProps extends BaseSiteDomainProps {}
+export interface SsrCdkDistributionProps extends BaseSiteCdkDistributionProps {}
 export interface SsrSiteProps {
   /**
    * Bind resources for the function
@@ -257,7 +257,11 @@ export class SsrSite extends Construct implements SSTConstruct {
     // Create S3 Deployment
     const assets = this.createS3Assets();
     const assetFileOptions = this.createS3AssetFileOptions();
-    const s3deployCR = this.createS3Deployment(cliLayer, assets, assetFileOptions);
+    const s3deployCR = this.createS3Deployment(
+      cliLayer,
+      assets,
+      assetFileOptions
+    );
 
     // Create CloudFront
     this.validateCloudFrontDistributionSettings();
@@ -282,7 +286,9 @@ export class SsrSite extends Construct implements SSTConstruct {
    * The CloudFront URL of the website.
    */
   public get url(): string | undefined {
-    if (this.doNotDeploy) { return; }
+    if (this.doNotDeploy) {
+      return;
+    }
 
     return `https://${this.distribution.distributionDomainName}`;
   }
@@ -292,10 +298,14 @@ export class SsrSite extends Construct implements SSTConstruct {
    * custom domain.
    */
   public get customDomainUrl(): string | undefined {
-    if (this.doNotDeploy) { return; }
+    if (this.doNotDeploy) {
+      return;
+    }
 
     const { customDomain } = this.props;
-    if (!customDomain) { return; }
+    if (!customDomain) {
+      return;
+    }
 
     if (typeof customDomain === "string") {
       return `https://${customDomain}`;
@@ -309,8 +319,10 @@ export class SsrSite extends Construct implements SSTConstruct {
    */
   public get cdk() {
     if (this.doNotDeploy) {
-      throw new VisibleError(`Cannot access CDK resources for the "${this.node.id}" site in dev mode`);
-    };
+      throw new VisibleError(
+        `Cannot access CDK resources for the "${this.node.id}" site in dev mode`
+      );
+    }
 
     return {
       function: this.serverLambdaForRegional,
@@ -372,7 +384,8 @@ export class SsrSite extends Construct implements SSTConstruct {
       },
       permissions: {
         "ssm:GetParameters": [
-          `arn:${Stack.of(this).partition}:ssm:${app.region}:${app.account
+          `arn:${Stack.of(this).partition}:ssm:${app.region}:${
+            app.account
           }:parameter${getParameterPath(this, "url")}`,
         ],
       },
@@ -458,7 +471,10 @@ export class SsrSite extends Construct implements SSTConstruct {
   private createS3Assets(): s3Assets.Asset[] {
     // Create temp folder, clean up if exists
     const zipOutDir = path.resolve(
-      path.join(useProject().paths.artifacts, `Site-${this.node.id}-${this.node.addr}`)
+      path.join(
+        useProject().paths.artifacts,
+        `Site-${this.node.id}-${this.node.addr}`
+      )
     );
     fs.rmSync(zipOutDir, { recursive: true, force: true });
 
@@ -467,8 +483,8 @@ export class SsrSite extends Construct implements SSTConstruct {
     const script = path.resolve(__dirname, "../support/base-site-archiver.mjs");
     const fileSizeLimit = app.isRunningSSTTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
-      this.props.sstTestFileSizeLimitOverride || 200
+        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
+        this.props.sstTestFileSizeLimitOverride || 200
       : 200;
     const result = spawn.sync(
       "node",

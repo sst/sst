@@ -12,6 +12,6 @@ export default function MyStack({ stack }: StackContext) {
   });
 
   stack.addOutputs({
-    URL: distribution.domainName
-  })
+    URL: distribution.domainName,
+  });
 }

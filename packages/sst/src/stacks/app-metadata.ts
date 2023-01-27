@@ -1,7 +1,5 @@
 import { useBootstrap } from "../bootstrap.js";
-import {
-  useAWSCredentials,
-} from "../credentials.js";
+import { useAWSCredentials } from "../credentials.js";
 import {
   S3Client,
   GetObjectCommand,

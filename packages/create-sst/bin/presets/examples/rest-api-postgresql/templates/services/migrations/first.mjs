@@ -6,10 +6,10 @@ import { Kysely } from "kysely";
 export async function up(db) {
   await db.schema
     .createTable("tblcounter")
-    .addColumn("counter", "text", col => col.primaryKey())
+    .addColumn("counter", "text", (col) => col.primaryKey())
     .addColumn("tally", "integer")
     .execute();
-  
+
   await db
     .insertInto("tblcounter")
     .values({

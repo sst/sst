@@ -14,13 +14,13 @@ export const GoogleAdapter = /* @__PURE__ */ createAdapter(
     if ("clientSecret" in config) {
       return OauthAdapter({
         issuer,
-        ...config
+        ...config,
       });
     }
     return OidcAdapter({
       issuer,
       scope: "openid email profile",
-      ...config
+      ...config,
     });
   }
 );

@@ -184,7 +184,8 @@ async function run(json) {
     );
     if (!constructor)
       throw new Error(`Could not find Constructor in ${file.name}`);
-    const isInternal = constructor.signatures[0].comment?.modifierTags?.includes("@internal");
+    const isInternal =
+      constructor.signatures[0].comment?.modifierTags?.includes("@internal");
     if (!isInternal) {
       lines.push("\n## Constructor");
       for (const signature of constructor.signatures) {
@@ -270,7 +271,7 @@ async function run(json) {
       .forEach((c) => {
         const hoisted = c.name === `${file.name}Props` ? props : lines;
         hoisted.push(`## ${c.name}`);
-        hoisted.push(...(c.comment?.summary || []).map(e => e.text));
+        hoisted.push(...(c.comment?.summary || []).map((e) => e.text));
         hoisted.push(...(c.comment?.blockTags || []).map(renderTag));
         hoisted.push(...renderProperties(file, json.children, c.children));
       });
@@ -286,7 +287,7 @@ async function run(json) {
  * @param tag {JSONOutput.CommentTag}
  */
 function renderTag(tag) {
-  return (tag.content || []).map(e => e.text).join("\n");
+  return (tag.content || []).map((e) => e.text).join("\n");
 }
 
 /**
@@ -299,9 +300,9 @@ function renderTag(tag) {
  */
 function renderType(file, files, prefix, parameter) {
   if (!parameter) {
-  // TODO
-  console.log("= = File", JSON.stringify({ prefix, file}, null, 2));
-  console.log("= = = Parameter", JSON.stringify({ parameter}, null, 2));
+    // TODO
+    console.log("= = File", JSON.stringify({ prefix, file }, null, 2));
+    console.log("= = = Parameter", JSON.stringify({ parameter }, null, 2));
     console.trace();
     throw new Error("No parameter");
     //return "";
@@ -386,8 +387,7 @@ function renderType(file, files, prefix, parameter) {
         return `<span class="mono">[${
           parameter.name
         }](https://esbuild.github.io/api/#${parameter.name.toLowerCase()})</span>`;
-      if (parameter.package === ".pnpm")
-        return "<span>.pnpm</span>";
+      if (parameter.package === ".pnpm") return "<span>.pnpm</span>";
 
       throw "Did not implement handler for package " + parameter.package;
     }
@@ -468,12 +468,14 @@ function renderProperties(file, files, properties, prefix, onlyPublic) {
         "\n"
     );
     if (signature.comment) {
-      const def = signature.comment.modifierTags?.find((x) => x.tag === "@default");
+      const def = signature.comment.modifierTags?.find(
+        (x) => x.tag === "@default"
+      );
       if (def)
         lines.push(
           `_Default_ : <span class="mono">${def.content[0].text.trim()}</span>\n`
         );
-      lines.push(...(signature.comment.summary || []).map(e => e.text));
+      lines.push(...(signature.comment.summary || []).map((e) => e.text));
       const tags = signature.comment.blockTags || [];
       const examples = tags.filter((x) => x.tag === "@example");
       if (examples.length) {
@@ -526,7 +528,7 @@ function renderSignature(file, children, method, signature) {
   }
   if (signature.comment) {
     lines.push("\n");
-    lines.push(...(signature.comment.summary || []).map(e => e.text));
+    lines.push(...(signature.comment.summary || []).map((e) => e.text));
     const tags = signature.comment.blockTags || [];
     const examples = tags.filter((x) => x.tag === "@example");
     if (examples.length) {
@@ -563,7 +565,7 @@ function renderSignatureForDeprecated(file, method, signature) {
 
   if (signature.comment) {
     lines.push("\n");
-    lines.push(...(signature.comment.summary || []).map(e => e.text));
+    lines.push(...(signature.comment.summary || []).map((e) => e.text));
     const tags = signature.comment.blockTags || [];
     const examples = tags.filter((x) => x.tag === "@example");
     if (examples.length) {

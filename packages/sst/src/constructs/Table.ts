@@ -65,8 +65,8 @@ export interface TableLocalIndexProps {
    * @default "all"
    */
   projection?:
-  | Lowercase<keyof Pick<typeof dynamodb.ProjectionType, "ALL" | "KEYS_ONLY">>
-  | string[];
+    | Lowercase<keyof Pick<typeof dynamodb.ProjectionType, "ALL" | "KEYS_ONLY">>
+    | string[];
   cdk?: {
     /**
      * Override the settings of the internally created local secondary indexes
@@ -89,8 +89,8 @@ export interface TableGlobalIndexProps {
    * @default "all"
    */
   projection?:
-  | Lowercase<keyof Pick<typeof dynamodb.ProjectionType, "ALL" | "KEYS_ONLY">>
-  | string[];
+    | Lowercase<keyof Pick<typeof dynamodb.ProjectionType, "ALL" | "KEYS_ONLY">>
+    | string[];
   cdk?: {
     /**
      * Override the settings of the internally created global secondary index
@@ -271,8 +271,8 @@ export interface TableProps {
      * Override the settings of the internally created cdk table
      */
     table?:
-    | dynamodb.ITable
-    | Omit<dynamodb.TableProps, "partitionKey" | "sortKey">;
+      | dynamodb.ITable
+      | Omit<dynamodb.TableProps, "partitionKey" | "sortKey">;
   };
 }
 
@@ -289,7 +289,7 @@ export interface TableProps {
  *
  * ```js
  * import { Table } from "@serverless-stack/resources";
- * 
+ *
  * new Table(stack, "Notes", {
  *   fields: {
  *     userId: "string",
@@ -418,7 +418,7 @@ export class Table extends Construct implements SSTConstruct {
           return {
             projectionType:
               dynamodb.ProjectionType[
-              projection.toUpperCase() as keyof typeof dynamodb.ProjectionType
+                projection.toUpperCase() as keyof typeof dynamodb.ProjectionType
               ],
           };
         })(),
@@ -476,7 +476,7 @@ export class Table extends Construct implements SSTConstruct {
           return {
             projectionType:
               dynamodb.ProjectionType[
-              projection.toUpperCase() as keyof typeof dynamodb.ProjectionType
+                projection.toUpperCase() as keyof typeof dynamodb.ProjectionType
               ],
           };
         })(),
@@ -516,9 +516,7 @@ export class Table extends Construct implements SSTConstruct {
    * ```
    */
   public bind(constructs: SSTConstruct[]) {
-    Object.values(this.functions).forEach((fn) =>
-      fn.bind(constructs)
-    );
+    Object.values(this.functions).forEach((fn) => fn.bind(constructs));
     this.bindingForAllConsumers.push(...constructs);
   }
 
@@ -614,7 +612,7 @@ export class Table extends Construct implements SSTConstruct {
     return {
       clientPackage: "table",
       variables: {
-        "tableName": {
+        tableName: {
           environment: this.tableName,
           parameter: this.tableName,
         },
@@ -626,7 +624,8 @@ export class Table extends Construct implements SSTConstruct {
   }
 
   private createTable() {
-    const { fields, primaryIndex, stream, timeToLiveAttribute, cdk } = this.props;
+    const { fields, primaryIndex, stream, timeToLiveAttribute, cdk } =
+      this.props;
     const app = this.node.root as App;
     const id = this.node.id;
 
@@ -749,13 +748,13 @@ export class Table extends Construct implements SSTConstruct {
 
     // set filter pattern
     if (filters && filters.length > 0) {
-      const cfnEventSource = fn.node.children.find(c =>
-        c instanceof lambda.EventSourceMapping
+      const cfnEventSource = fn.node.children.find(
+        (c) => c instanceof lambda.EventSourceMapping
       )?.node.defaultChild as lambda.CfnEventSourceMapping;
       cfnEventSource.addPropertyOverride("FilterCriteria", {
-        Filters: filters.map(filter => ({
+        Filters: filters.map((filter) => ({
           Pattern: JSON.stringify(filter),
-        }))
+        })),
       });
     }
 

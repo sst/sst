@@ -11,7 +11,15 @@ import {
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
-import { App, Stack, Function, Table, TableProps, KinesisStream, Bucket } from "../src";
+import {
+  App,
+  Stack,
+  Function,
+  Table,
+  TableProps,
+  KinesisStream,
+  Bucket,
+} from "../src";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
@@ -948,7 +956,7 @@ test("consumers: TableConsumerProps", async () => {
   countResources(stack, "AWS::Lambda::EventSourceMapping", 1);
   hasResource(stack, "AWS::Lambda::EventSourceMapping", {
     StartingPosition: "TRIM_HORIZON",
-    FilterCriteria: ABSENT
+    FilterCriteria: ABSENT,
   });
 });
 
@@ -964,18 +972,20 @@ test("consumers: TableConsumerProps with filters", async () => {
           {
             dynamodb: {
               StreamViewType: ["NEW_AND_OLD_IMAGES"],
-            }
-          }
-        ]
+            },
+          },
+        ],
       },
     },
   });
   hasResource(stack, "AWS::Lambda::EventSourceMapping", {
     FilterCriteria: {
-      Filters: [{
-        Pattern: "{\"dynamodb\":{\"StreamViewType\":[\"NEW_AND_OLD_IMAGES\"]}}"
-      }]
-    }
+      Filters: [
+        {
+          Pattern: '{"dynamodb":{"StreamViewType":["NEW_AND_OLD_IMAGES"]}}',
+        },
+      ],
+    },
   });
 });
 

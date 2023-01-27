@@ -25,7 +25,7 @@ export const FacebookAdapter = /* @__PURE__ */ createAdapter(
   (config: OauthBasicConfig) => {
     return OauthAdapter({
       issuer,
-      ...config
+      ...config,
     });
   }
 );

@@ -1,4 +1,10 @@
-import { StackContext, Api, Auth, StaticSite, Table } from "@serverless-stack/resources";
+import {
+  StackContext,
+  Api,
+  Auth,
+  StaticSite,
+  Table,
+} from "@serverless-stack/resources";
 
 export function MyStack({ stack }: StackContext) {
   // Create a database Table

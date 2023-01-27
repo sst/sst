@@ -1,36 +1,33 @@
-import type { SSRManifest } from "astro"
+import type { SSRManifest } from "astro";
 import type {
   CloudFrontRequestEvent,
   CloudFrontRequestResult,
   CloudFrontHeaders,
-} from "aws-lambda"
-import { NodeApp } from "astro/app/node"
-import { polyfill } from "@astrojs/webapi"
-import { isBinaryContentType } from "../lib/binary.js"
+} from "aws-lambda";
+import { NodeApp } from "astro/app/node";
+import { polyfill } from "@astrojs/webapi";
+import { isBinaryContentType } from "../lib/binary.js";
 
 polyfill(globalThis, {
   exclude: "window document",
-})
+});
 
 export function createExports(manifest: SSRManifest) {
-  const app = new NodeApp(manifest)
+  const app = new NodeApp(manifest);
 
   return {
-    async handler(event: CloudFrontRequestEvent): Promise<CloudFrontRequestResult> {
-      const {
-        uri,
-        method,
-        headers,
-        querystring,
-        body,
-      } = event.Records[0].cf.request;
+    async handler(
+      event: CloudFrontRequestEvent
+    ): Promise<CloudFrontRequestResult> {
+      const { uri, method, headers, querystring, body } =
+        event.Records[0].cf.request;
 
       // Convert CloudFront request to Node request
-      const requestHeaders = new Headers()
+      const requestHeaders = new Headers();
       for (const [key, values] of Object.entries(headers)) {
         for (const { value } of values) {
           if (value) {
-            requestHeaders.append(key, value)
+            requestHeaders.append(key, value);
           }
         }
       }
@@ -51,11 +48,14 @@ export function createExports(manifest: SSRManifest) {
       const rendered = await app.render(request);
 
       // Build cookies
-      const responseHeaders: CloudFrontHeaders = {}
+      const responseHeaders: CloudFrontHeaders = {};
       const rawHeaders = rendered.headers.entries();
       for (const [key, value] of rawHeaders) {
         for (const v of value) {
-          responseHeaders[key] = [...(responseHeaders[key] || []), { key, value: v }];
+          responseHeaders[key] = [
+            ...(responseHeaders[key] || []),
+            { key, value: v },
+          ];
         }
       }
 
@@ -68,7 +68,7 @@ export function createExports(manifest: SSRManifest) {
         headers: responseHeaders,
         bodyEncoding: responseIsBase64Encoded ? "base64" : "text",
         body: await rendered.text(),
-      }
-    }
-  }
+      };
+    },
+  };
 }

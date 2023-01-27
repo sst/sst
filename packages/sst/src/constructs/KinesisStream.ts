@@ -201,8 +201,8 @@ export class KinesisStream extends Construct implements SSTConstruct {
     scope: Construct,
     consumers: {
       [consumerName: string]:
-      | FunctionInlineDefinition
-      | KinesisStreamConsumerProps;
+        | FunctionInlineDefinition
+        | KinesisStreamConsumerProps;
     }
   ): void {
     Object.keys(consumers).forEach((consumerName: string) => {
@@ -220,9 +220,7 @@ export class KinesisStream extends Construct implements SSTConstruct {
    * ```
    */
   public bind(constructs: SSTConstruct[]) {
-    Object.values(this.functions).forEach((fn) =>
-      fn.bind(constructs)
-    );
+    Object.values(this.functions).forEach((fn) => fn.bind(constructs));
     this.bindingForAllConsumers.push(...constructs);
   }
 

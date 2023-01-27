@@ -7,43 +7,43 @@ import { log } from "./util.js";
 import * as cfnResponse from "./cfn-response.js";
 const s3 = new AWS.S3({ region: "us-east-1" });
 
-export const handler = cfnResponse.safeHandler(async (
-  cfnRequest: AWSLambda.CloudFormationCustomResourceEvent
-) => {
-  log("onEventHandler", cfnRequest);
+export const handler = cfnResponse.safeHandler(
+  async (cfnRequest: AWSLambda.CloudFormationCustomResourceEvent) => {
+    log("onEventHandler", cfnRequest);
 
-  // Get bucket name
-  const bucketName =
-    cfnRequest.RequestType === "Create"
-      ? generateBucketName(cfnRequest.ResourceProperties.BucketNamePrefix)
-      : cfnRequest.PhysicalResourceId;
+    // Get bucket name
+    const bucketName =
+      cfnRequest.RequestType === "Create"
+        ? generateBucketName(cfnRequest.ResourceProperties.BucketNamePrefix)
+        : cfnRequest.PhysicalResourceId;
 
-  // Process request
-  let responseData;
-  switch (cfnRequest.RequestType) {
-    case "Create":
-      await createBucket(bucketName);
-      responseData = {
-        BucketName: bucketName,
-      };
-      break;
-    case "Update":
-      break;
-    case "Delete":
-      await emptyBucket(bucketName);
-      await deleteBucket(bucketName);
-      break;
-    default:
-      throw new Error("Unsupported request type");
+    // Process request
+    let responseData;
+    switch (cfnRequest.RequestType) {
+      case "Create":
+        await createBucket(bucketName);
+        responseData = {
+          BucketName: bucketName,
+        };
+        break;
+      case "Update":
+        break;
+      case "Delete":
+        await emptyBucket(bucketName);
+        await deleteBucket(bucketName);
+        break;
+      default:
+        throw new Error("Unsupported request type");
+    }
+
+    // Build response
+    return cfnResponse.submitResponse("SUCCESS", {
+      ...cfnRequest,
+      PhysicalResourceId: bucketName,
+      Data: responseData,
+    });
   }
-
-  // Build response
-  return cfnResponse.submitResponse("SUCCESS", {
-    ...cfnRequest,
-    PhysicalResourceId: bucketName,
-    Data: responseData,
-  });
-});
+);
 
 async function createBucket(bucketName: string) {
   log(`createBucket() called with bucketName`, bucketName);

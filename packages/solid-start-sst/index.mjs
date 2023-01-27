@@ -9,7 +9,7 @@ import { fileURLToPath } from "url";
 export default function ({ edge } = {}) {
   return {
     name: "aws",
-    start() { },
+    start() {},
     async build(config, builder) {
       const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
@@ -35,14 +35,14 @@ export default function ({ edge } = {}) {
           json(),
           nodeResolve({
             preferBuiltins: true,
-            exportConditions: ["node", "solid"]
+            exportConditions: ["node", "solid"],
           }),
-          common()
-        ]
+          common(),
+        ],
       });
       await bundle.write({
         format: "esm",
-        dir: join(config.root, "dist", "server")
+        dir: join(config.root, "dist", "server"),
       });
       renameSync(
         join(config.root, "dist", "server", "index.js"),
@@ -51,6 +51,6 @@ export default function ({ edge } = {}) {
 
       // closes the bundle
       await bundle.close();
-    }
+    },
   };
 }

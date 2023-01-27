@@ -4,6 +4,6 @@ export default [
   extract(),
   install({
     packages: ["electrodb", "@aws-sdk/client-dynamodb"],
-    path: "services"
-  })
+    path: "services",
+  }),
 ];

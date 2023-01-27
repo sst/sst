@@ -83,11 +83,10 @@ export function buildCorsConfig(
   return {
     allowCredentials: cors.allowCredentials,
     allowedHeaders: cors.allowHeaders || ["*"],
-    allowedMethods: (cors.allowMethods || ["*"]).map(
-      (method) =>
-        method === "*"
-          ? HttpMethod.ALL
-          : HttpMethod[method as keyof typeof HttpMethod]
+    allowedMethods: (cors.allowMethods || ["*"]).map((method) =>
+      method === "*"
+        ? HttpMethod.ALL
+        : HttpMethod[method as keyof typeof HttpMethod]
     ),
     allowedOrigins: cors.allowOrigins || ["*"],
     exposedHeaders: cors.exposeHeaders,

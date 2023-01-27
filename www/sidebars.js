@@ -5,60 +5,56 @@ module.exports = {
         "index",
         "what-is-sst",
         "quick-start",
-//        {
-//          type: "category",
-//          label: "Frontends",
-//          collapsible: true,
-//          collapsed: false,
-//          link: {type: "doc", id: "frontends/index"},
-//          items: [
-//            "frontends/nextjs",
-//            "frontends/remix",
-//            "frontends/astro",
-//            "frontends/solid",
-//            "frontends/static-sites",
-//          ]
-//        },
-      ]
+        //        {
+        //          type: "category",
+        //          label: "Frontends",
+        //          collapsible: true,
+        //          collapsed: false,
+        //          link: {type: "doc", id: "frontends/index"},
+        //          items: [
+        //            "frontends/nextjs",
+        //            "frontends/remix",
+        //            "frontends/astro",
+        //            "frontends/solid",
+        //            "frontends/static-sites",
+        //          ]
+        //        },
+      ],
     },
     {
-      "Local Dev": [
-        "live-lambda-development",
-        "console",
-        "editor-integration",
-      ]
+      "Local Dev": ["live-lambda-development", "console", "editor-integration"],
     },
-//    {
-//      Features: [
-//        {
-//          type: "category",
-//          label: "Databases",
-//          collapsible: true,
-//          collapsed: true,
-//          link: {type: "doc", id: "databases/index"},
-//          items: [
-//            "databases/postgresql",
-//            "databases/dynamodb",
-//          ]
-//        },
-//        "apis",
-//        "auth",
-//        {
-//          type: "category",
-//          label: "Jobs",
-//          collapsible: true,
-//          collapsed: true,
-//          link: {type: "doc", id: "jobs/index"},
-//          items: [
-//            "jobs/cron-jobs",
-//            "jobs/long-running-jobs",
-//          ]
-//        },
-//        "config",
-//        "queues",
-//        "file-uploads",
-//      ]
-//    },
+    //    {
+    //      Features: [
+    //        {
+    //          type: "category",
+    //          label: "Databases",
+    //          collapsible: true,
+    //          collapsed: true,
+    //          link: {type: "doc", id: "databases/index"},
+    //          items: [
+    //            "databases/postgresql",
+    //            "databases/dynamodb",
+    //          ]
+    //        },
+    //        "apis",
+    //        "auth",
+    //        {
+    //          type: "category",
+    //          label: "Jobs",
+    //          collapsible: true,
+    //          collapsed: true,
+    //          link: {type: "doc", id: "jobs/index"},
+    //          items: [
+    //            "jobs/cron-jobs",
+    //            "jobs/long-running-jobs",
+    //          ]
+    //        },
+    //        "config",
+    //        "queues",
+    //        "file-uploads",
+    //      ]
+    //    },
     {
       "How-Tos": [
         "auth",
@@ -88,10 +84,10 @@ module.exports = {
             "advanced/linting-and-type-checking",
             "advanced/customizing-ssm-parameters",
             //"advanced/monorepo-project-structure",
-            "advanced/environment-specific-resources"
-          ]
+            "advanced/environment-specific-resources",
+          ],
         },
-      ]
+      ],
     },
     {
       Info: [
@@ -99,17 +95,14 @@ module.exports = {
         "upgrade-guide",
         "design-principles",
         "anonymous-telemetry",
-        "faq"
-      ]
+        "faq",
+      ],
     },
     {
-      "Migrating From": ["migrating/cdk", "migrating/serverless-framework"]
+      "Migrating From": ["migrating/cdk", "migrating/serverless-framework"],
     },
     {
-      CLI: [
-        "packages/sst",
-        "packages/create-sst",
-      ]
+      CLI: ["packages/sst", "packages/create-sst"],
     },
   ],
   learn: [
@@ -122,16 +115,13 @@ module.exports = {
         "learn/project-structure",
         "learn/initialize-the-database",
         "learn/start-the-frontend",
-        "learn/breakpoint-debugging"
-      ]
+        "learn/breakpoint-debugging",
+      ],
     },
     {
       type: "category",
       label: "2 - Add a New Feature",
-      items: [
-        "learn/domain-driven-design",
-        "learn/write-to-the-database",
-      ]
+      items: ["learn/domain-driven-design", "learn/write-to-the-database"],
     },
     {
       type: "category",
@@ -139,28 +129,23 @@ module.exports = {
       items: [
         "learn/graphql-api",
         "learn/add-api-types",
-        "learn/queries-and-mutations"
-      ]
+        "learn/queries-and-mutations",
+      ],
     },
     {
       type: "category",
       label: "4 - Update the Frontend",
-      items: [
-        "learn/render-queries",
-        "learn/make-updates",
-      ]
+      items: ["learn/render-queries", "learn/make-updates"],
     },
     {
       type: "category",
       label: "5 - Deployment",
-      items: [
-        "learn/deploy-to-prod",
-      ]
-    }
+      items: ["learn/deploy-to-prod"],
+    },
   ],
   constructsv0: [
     {
-      " ": ["constructs/v0/index", "constructs/v0/migration"]
+      " ": ["constructs/v0/index", "constructs/v0/migration"],
     },
     {
       Constructs: [
@@ -185,15 +170,15 @@ module.exports = {
         "constructs/v0/KinesisStream", // shorter in length viewed in browser
         "constructs/v0/WebSocketApi",
         "constructs/v0/ReactStaticSite",
-        "constructs/v0/ApiGatewayV1Api"
-      ]
+        "constructs/v0/ApiGatewayV1Api",
+      ],
     },
     {
-      Util: ["constructs/v0/Permissions"]
+      Util: ["constructs/v0/Permissions"],
     },
     {
-      Internals: ["constructs/v0/DebugApp", "constructs/v0/DebugStack"]
-    }
+      Internals: ["constructs/v0/DebugApp", "constructs/v0/DebugStack"],
+    },
   ],
   constructs: [
     {
@@ -202,14 +187,14 @@ module.exports = {
         {
           type: "link",
           label: "v0 Constructs",
-          href: "/constructs/v0"
+          href: "/constructs/v0",
         },
         {
           type: "link",
           label: "Migrate to v1.0",
-          href: "/constructs/v0/migration"
-        }
-      ]
+          href: "/constructs/v0/migration",
+        },
+      ],
     },
     {
       Core: [
@@ -221,11 +206,8 @@ module.exports = {
           label: "Config",
           collapsible: true,
           collapsed: true,
-          items: [
-            "constructs/Secret",
-            "constructs/Parameter",
-          ],
-        }
+          items: ["constructs/Secret", "constructs/Parameter"],
+        },
       ],
       Frontend: [
         "constructs/StaticSite",
@@ -238,7 +220,7 @@ module.exports = {
       Api: [
         "constructs/Api",
         "constructs/AppSyncApi",
-        "constructs/WebSocketApi"
+        "constructs/WebSocketApi",
       ],
       Async: [
         "constructs/Job",
@@ -246,14 +228,14 @@ module.exports = {
         "constructs/Topic",
         "constructs/Queue",
         "constructs/EventBus",
-        "constructs/KinesisStream"
+        "constructs/KinesisStream",
       ],
       Storage: ["constructs/Bucket"],
       Auth: ["constructs/Auth", "constructs/Cognito"],
       Types: [
         "constructs/Size",
         "constructs/Duration",
-        "constructs/Permissions"
+        "constructs/Permissions",
       ],
       Other: [
         "constructs/Script",
@@ -262,15 +244,13 @@ module.exports = {
         "constructs/GraphQLApi",
         "constructs/ViteStaticSite",
         "constructs/ReactStaticSite",
-        "constructs/ApiGatewayV1Api"
-      ]
-    }
+        "constructs/ApiGatewayV1Api",
+      ],
+    },
   ],
   clients: [
     {
-      " ": [
-        "clients/index",
-      ],
+      " ": ["clients/index"],
       Modules: [
         "clients/api",
         "clients/rds",
@@ -286,7 +266,7 @@ module.exports = {
         "clients/function",
         "clients/event-bus",
         "clients/kinesis-stream",
-      ]
+      ],
     },
   ],
 };

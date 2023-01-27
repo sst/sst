@@ -8,17 +8,17 @@ import {
   getFunctionRef,
   SSTConstruct,
   isCDKConstruct,
-  isConstruct
+  isConstruct,
 } from "./Construct.js";
 import {
   Function as Fn,
   FunctionProps,
-  FunctionDefinition
+  FunctionDefinition,
 } from "./Function.js";
 import {
   Permissions,
   attachPermissionsToRole,
-  attachPermissionsToPolicy
+  attachPermissionsToPolicy,
 } from "./util/permission.js";
 
 const CognitoUserPoolTriggerOperationMapping = {
@@ -34,7 +34,7 @@ const CognitoUserPoolTriggerOperationMapping = {
   preTokenGeneration: cognito.UserPoolOperation.PRE_TOKEN_GENERATION,
   userMigration: cognito.UserPoolOperation.USER_MIGRATION,
   verifyAuthChallengeResponse:
-    cognito.UserPoolOperation.VERIFY_AUTH_CHALLENGE_RESPONSE
+    cognito.UserPoolOperation.VERIFY_AUTH_CHALLENGE_RESPONSE,
 };
 
 export interface CognitoUserPoolTriggers {
@@ -285,9 +285,7 @@ export class Cognito extends Construct implements SSTConstruct {
   }
 
   public bindForTriggers(constructs: SSTConstruct[]): void {
-    Object.values(this.functions).forEach(fn =>
-      fn.bind(constructs)
-    );
+    Object.values(this.functions).forEach((fn) => fn.bind(constructs));
   }
 
   public bindForTrigger(
@@ -305,7 +303,7 @@ export class Cognito extends Construct implements SSTConstruct {
   }
 
   public attachPermissionsForTriggers(permissions: Permissions): void {
-    Object.values(this.functions).forEach(fn =>
+    Object.values(this.functions).forEach((fn) =>
       fn.attachPermissions(permissions)
     );
   }
@@ -338,9 +336,9 @@ export class Cognito extends Construct implements SSTConstruct {
         userPoolId: this.cdk.userPool.userPoolId,
         triggers: Object.entries(this.functions).map(([name, fun]) => ({
           name,
-          fn: getFunctionRef(fun)
-        }))
-      }
+          fn: getFunctionRef(fun),
+        })),
+      },
     };
   }
 
@@ -413,7 +411,7 @@ export class Cognito extends Construct implements SSTConstruct {
         selfSignUpEnabled: true,
         signInCaseSensitive: false,
         signInAliases: this.buildSignInAliases(login),
-        ...cognitoUserPoolProps
+        ...cognitoUserPoolProps,
       });
     }
   }
@@ -431,7 +429,7 @@ export class Cognito extends Construct implements SSTConstruct {
         "UserPoolClient",
         {
           userPool: this.cdk.userPool,
-          ...clientProps
+          ...clientProps,
         }
       );
     }
@@ -456,18 +454,12 @@ export class Cognito extends Construct implements SSTConstruct {
     const urlSuffix = Stack.of(this).urlSuffix;
     cognitoIdentityProviders.push({
       providerName: `cognito-idp.${app.region}.${urlSuffix}/${this.cdk.userPool.userPoolId}`,
-      clientId: this.cdk.userPoolClient.userPoolClientId
+      clientId: this.cdk.userPoolClient.userPoolClientId,
     });
 
     if (typeof identityPoolFederation === "object") {
-      const {
-        auth0,
-        amazon,
-        apple,
-        facebook,
-        google,
-        twitter
-      } = identityPoolFederation;
+      const { auth0, amazon, apple, facebook, google, twitter } =
+        identityPoolFederation;
 
       ////////////////////
       // Handle OpenId Connect Providers (ie. Cognito)
@@ -487,7 +479,7 @@ export class Cognito extends Construct implements SSTConstruct {
           url: auth0.domain.startsWith("https://")
             ? auth0.domain
             : `https://${auth0.domain}`,
-          clientIds: [auth0.clientId]
+          clientIds: [auth0.clientId],
         });
         openIdConnectProviderArns.push(provider.openIdConnectProviderArn);
       }
@@ -558,7 +550,7 @@ export class Cognito extends Construct implements SSTConstruct {
         cognitoIdentityProviders,
         supportedLoginProviders,
         openIdConnectProviderArns,
-        ...identityPoolProps
+        ...identityPoolProps,
       }
     );
     this.cdk.authRole = this.createAuthRole(this.cdk.cfnIdentityPool);
@@ -572,8 +564,8 @@ export class Cognito extends Construct implements SSTConstruct {
         identityPoolId: this.cdk.cfnIdentityPool.ref,
         roles: {
           authenticated: this.cdk.authRole.roleArn,
-          unauthenticated: this.cdk.unauthRole.roleArn
-        }
+          unauthenticated: this.cdk.unauthRole.roleArn,
+        },
       }
     );
   }
@@ -639,14 +631,14 @@ export class Cognito extends Construct implements SSTConstruct {
         "cognito-identity.amazonaws.com",
         {
           StringEquals: {
-            "cognito-identity.amazonaws.com:aud": identityPool.ref
+            "cognito-identity.amazonaws.com:aud": identityPool.ref,
           },
           "ForAnyValue:StringLike": {
-            "cognito-identity.amazonaws.com:amr": "authenticated"
-          }
+            "cognito-identity.amazonaws.com:amr": "authenticated",
+          },
         },
         "sts:AssumeRoleWithWebIdentity"
-      )
+      ),
     });
 
     role.addToPolicy(
@@ -655,9 +647,9 @@ export class Cognito extends Construct implements SSTConstruct {
         actions: [
           "mobileanalytics:PutEvents",
           "cognito-sync:*",
-          "cognito-identity:*"
+          "cognito-identity:*",
         ],
-        resources: ["*"]
+        resources: ["*"],
       })
     );
 
@@ -670,21 +662,21 @@ export class Cognito extends Construct implements SSTConstruct {
         "cognito-identity.amazonaws.com",
         {
           StringEquals: {
-            "cognito-identity.amazonaws.com:aud": identityPool.ref
+            "cognito-identity.amazonaws.com:aud": identityPool.ref,
           },
           "ForAnyValue:StringLike": {
-            "cognito-identity.amazonaws.com:amr": "unauthenticated"
-          }
+            "cognito-identity.amazonaws.com:amr": "unauthenticated",
+          },
         },
         "sts:AssumeRoleWithWebIdentity"
-      )
+      ),
     });
 
     role.addToPolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
         actions: ["mobileanalytics:PutEvents", "cognito-sync:*"],
-        resources: ["*"]
+        resources: ["*"],
       })
     );
 
@@ -702,7 +694,7 @@ export class Cognito extends Construct implements SSTConstruct {
       email: login.includes("email"),
       phone: login.includes("phone"),
       username: login.includes("username"),
-      preferredUsername: login.includes("preferredUsername")
+      preferredUsername: login.includes("preferredUsername"),
     };
   }
 }

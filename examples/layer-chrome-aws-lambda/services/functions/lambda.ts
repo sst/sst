@@ -25,7 +25,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   await page.goto(url!);
 
   // Take the screenshot
-  const screenshot = await page.screenshot({ encoding: "base64" }) as string;
+  const screenshot = (await page.screenshot({ encoding: "base64" })) as string;
 
   return {
     statusCode: 200,

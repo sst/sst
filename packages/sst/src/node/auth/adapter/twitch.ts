@@ -9,7 +9,7 @@ export const TwitchAdapter = /* @__PURE__ */ createAdapter(
     return OidcAdapter({
       issuer,
       scope: "openid",
-      ...config
+      ...config,
     });
   }
 );

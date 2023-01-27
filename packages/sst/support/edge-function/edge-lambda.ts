@@ -8,62 +8,62 @@ import * as cfnResponse from "./cfn-response.js";
 const s3 = new AWS.S3({ region: "us-east-1" });
 const lambda = new AWS.Lambda({ region: "us-east-1" });
 
-export const handler = cfnResponse.safeHandler(async (
-  cfnRequest: AWSLambda.CloudFormationCustomResourceEvent
-) => {
-  log("onEventHandler", cfnRequest);
+export const handler = cfnResponse.safeHandler(
+  async (cfnRequest: AWSLambda.CloudFormationCustomResourceEvent) => {
+    log("onEventHandler", cfnRequest);
 
-  // Get bucket name
-  const functionName =
-    cfnRequest.RequestType === "Create"
-      ? generateFunctionName(cfnRequest.ResourceProperties.FunctionNamePrefix)
-      : (cfnRequest.PhysicalResourceId.split(":").pop() as string);
+    // Get bucket name
+    const functionName =
+      cfnRequest.RequestType === "Create"
+        ? generateFunctionName(cfnRequest.ResourceProperties.FunctionNamePrefix)
+        : (cfnRequest.PhysicalResourceId.split(":").pop() as string);
 
-  // Process request
-  let PhysicalResourceId;
-  let Data;
-  const bucket = cfnRequest.ResourceProperties.FunctionBucket;
-  const params = cfnRequest.ResourceProperties.FunctionParams;
-  switch (cfnRequest.RequestType) {
-    case "Create": {
-      await copyAsset(bucket, params);
-      const ret = await createFunction(functionName, params);
-      PhysicalResourceId = ret.FunctionArn;
-      Data = {
-        FunctionArn: ret.FunctionArn,
-      };
-      break;
-    }
-    case "Update": {
-      const oldParams = cfnRequest.OldResourceProperties.FunctionParams;
-      if (isConfigurationChanged(params, oldParams)) {
-        await updateFunctionConfiguration(functionName, params);
-      }
-      if (isCodeChanged(params, oldParams)) {
+    // Process request
+    let PhysicalResourceId;
+    let Data;
+    const bucket = cfnRequest.ResourceProperties.FunctionBucket;
+    const params = cfnRequest.ResourceProperties.FunctionParams;
+    switch (cfnRequest.RequestType) {
+      case "Create": {
         await copyAsset(bucket, params);
-        await updateFunctionCode(functionName, params);
+        const ret = await createFunction(functionName, params);
+        PhysicalResourceId = ret.FunctionArn;
+        Data = {
+          FunctionArn: ret.FunctionArn,
+        };
+        break;
       }
-      PhysicalResourceId = cfnRequest.PhysicalResourceId;
-      Data = {
-        FunctionArn: cfnRequest.PhysicalResourceId,
-      };
-      break;
+      case "Update": {
+        const oldParams = cfnRequest.OldResourceProperties.FunctionParams;
+        if (isConfigurationChanged(params, oldParams)) {
+          await updateFunctionConfiguration(functionName, params);
+        }
+        if (isCodeChanged(params, oldParams)) {
+          await copyAsset(bucket, params);
+          await updateFunctionCode(functionName, params);
+        }
+        PhysicalResourceId = cfnRequest.PhysicalResourceId;
+        Data = {
+          FunctionArn: cfnRequest.PhysicalResourceId,
+        };
+        break;
+      }
+      case "Delete": {
+        await deleteFunction(functionName);
+        break;
+      }
+      default:
+        throw new Error("Unsupported request type");
     }
-    case "Delete": {
-      await deleteFunction(functionName);
-      break;
-    }
-    default:
-      throw new Error("Unsupported request type");
-  }
 
-  // Build response
-  return cfnResponse.submitResponse("SUCCESS", {
-    ...cfnRequest,
-    PhysicalResourceId,
-    Data,
-  });
-});
+    // Build response
+    return cfnResponse.submitResponse("SUCCESS", {
+      ...cfnRequest,
+      PhysicalResourceId,
+      Data,
+    });
+  }
+);
 
 function generateFunctionName(prefix: string) {
   const MAX_NAME_LENGTH = 64;
@@ -116,11 +116,13 @@ async function updateFunctionConfiguration(functionName: string, params: any) {
   log(`updateFunctionConfiguration() called with params`, params);
 
   try {
-    const resp = await lambda.updateFunctionConfiguration({
-      FunctionName: functionName,
-      ...params,
-      Code: undefined,
-    }).promise();
+    const resp = await lambda
+      .updateFunctionConfiguration({
+        FunctionName: functionName,
+        ...params,
+        Code: undefined,
+      })
+      .promise();
     log(`response`, resp);
     return;
   } catch (e) {
@@ -136,11 +138,13 @@ async function updateFunctionCode(functionName: string, params: any) {
   log(`updateFunctionCode() called with params`, params);
 
   try {
-    const resp = await lambda.updateFunctionCode({
-      FunctionName: functionName,
-      Publish: false,
-      ...params.Code,
-    }).promise();
+    const resp = await lambda
+      .updateFunctionCode({
+        FunctionName: functionName,
+        Publish: false,
+        ...params.Code,
+      })
+      .promise();
     log(`response`, resp);
     return;
   } catch (e) {

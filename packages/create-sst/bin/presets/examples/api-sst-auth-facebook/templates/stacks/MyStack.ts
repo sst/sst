@@ -1,4 +1,11 @@
-import { StackContext, Api, Auth, Config, StaticSite, Table } from "@serverless-stack/resources";
+import {
+  StackContext,
+  Api,
+  Auth,
+  Config,
+  StaticSite,
+  Table,
+} from "@serverless-stack/resources";
 
 export function MyStack({ stack }: StackContext) {
   // Create a database Table
@@ -39,7 +46,7 @@ export function MyStack({ stack }: StackContext) {
       bind: [
         new Config.Secret(stack, "FACEBOOK_APP_ID"),
         new Config.Secret(stack, "FACEBOOK_APP_SECRET"),
-        site
+        site,
       ],
     },
   });

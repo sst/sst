@@ -1,11 +1,22 @@
-import { GetParametersCommand, SSMClient, Parameter } from "@aws-sdk/client-ssm";
+import {
+  GetParametersCommand,
+  SSMClient,
+  Parameter,
+} from "@aws-sdk/client-ssm";
 const ssm = new SSMClient({});
-import { createProxy, parseEnvironment, buildSsmPath, buildSsmFallbackPath, ssmNameToConstructId, ssmFallbackNameToConstructId } from "../util/index.js";
+import {
+  createProxy,
+  parseEnvironment,
+  buildSsmPath,
+  buildSsmFallbackPath,
+  ssmNameToConstructId,
+  ssmFallbackNameToConstructId,
+} from "../util/index.js";
 
-export interface ParameterResources { };
-export interface SecretResources { };
+export interface ParameterResources {}
+export interface SecretResources {}
 
-export interface ConfigTypes { };
+export interface ConfigTypes {}
 export type ParameterTypes = {
   [T in keyof ParameterResources]: string;
 };
@@ -13,7 +24,9 @@ export type SecretTypes = {
   [T in keyof SecretResources]: string;
 };
 
-export const Config = createProxy<ConfigTypes & ParameterTypes & SecretTypes>("Config");
+export const Config = createProxy<ConfigTypes & ParameterTypes & SecretTypes>(
+  "Config"
+);
 const metadata = parseMetadataEnvironment();
 const parametersRaw = parseEnvironment("Parameter", ["value"]);
 const secretsRaw = parseEnvironment("Secret", ["value"]);
@@ -29,12 +42,17 @@ Object.assign(Config, metadata, parameters, secrets);
 function parseMetadataEnvironment() {
   // If SST_APP and SST_STAGE are not set, it is likely the
   // user is using an older version of SST.
-  const errorMsg = "This is usually the case when you are using an older version of SST. Please update SST to the latest version to use the SST Config feature.";
+  const errorMsg =
+    "This is usually the case when you are using an older version of SST. Please update SST to the latest version to use the SST Config feature.";
   if (!process.env.SST_APP) {
-    throw new Error(`Cannot find the SST_APP environment variable. ${errorMsg}`);
+    throw new Error(
+      `Cannot find the SST_APP environment variable. ${errorMsg}`
+    );
   }
   if (!process.env.SST_STAGE) {
-    throw new Error(`Cannot find the SST_STAGE environment variable. ${errorMsg}`);
+    throw new Error(
+      `Cannot find the SST_STAGE environment variable. ${errorMsg}`
+    );
   }
   return {
     APP: process.env.SST_APP,
@@ -42,7 +60,9 @@ function parseMetadataEnvironment() {
   };
 }
 
-function flattenConfigValues(configValues: ReturnType<typeof parseEnvironment>) {
+function flattenConfigValues(
+  configValues: ReturnType<typeof parseEnvironment>
+) {
   const acc: Record<string, string> = {};
   Object.keys(configValues).forEach((name) => {
     acc[name] = configValues[name].value;
@@ -52,9 +72,9 @@ function flattenConfigValues(configValues: ReturnType<typeof parseEnvironment>) 
 
 async function replaceSecretsWithRealValues() {
   // Find all the secrets and params that match the prefix
-  const names = Object
-    .keys(secrets)
-    .filter((name) => secrets[name] === "__FETCH_FROM_SSM__");
+  const names = Object.keys(secrets).filter(
+    (name) => secrets[name] === "__FETCH_FROM_SSM__"
+  );
   if (names.length === 0) {
     return;
   }
@@ -70,7 +90,9 @@ async function replaceSecretsWithRealValues() {
   // Fetch fallback secrets
   if (results.invalidParams.length > 0) {
     const missingNames = results.invalidParams.map(ssmNameToConstructId);
-    const missingPaths = missingNames.map((name) => buildSsmFallbackPath("Secret", name, "value"));
+    const missingPaths = missingNames.map((name) =>
+      buildSsmFallbackPath("Secret", name, "value")
+    );
     const missingResults = await loadSecrets(missingPaths);
     missingResults.validParams.forEach((item) => {
       const name = ssmFallbackNameToConstructId(item.Name!);

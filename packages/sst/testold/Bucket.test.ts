@@ -24,8 +24,8 @@ test("cdk.id: undefined", async () => {
     Resources: {
       BucketD7FEB781: objectLike({
         Type: "AWS::S3::Bucket",
-      })
-    }
+      }),
+    },
   });
 });
 
@@ -34,14 +34,14 @@ test("cdk.id: defined", async () => {
   const bucket = new Bucket(stack, "Bucket", {
     cdk: {
       id: "MyBucket",
-    }
+    },
   });
   templateMatches(stack, {
     Resources: {
       MyBucketCB5E0479: objectLike({
         Type: "AWS::S3::Bucket",
-      })
-    }
+      }),
+    },
   });
 });
 

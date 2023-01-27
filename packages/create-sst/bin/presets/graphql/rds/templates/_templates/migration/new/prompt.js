@@ -5,6 +5,6 @@ module.exports = [
   {
     type: "input",
     name: "name",
-    message: "Migration name"
-  }
+    message: "Migration name",
+  },
 ];

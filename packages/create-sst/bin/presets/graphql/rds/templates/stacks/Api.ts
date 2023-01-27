@@ -22,7 +22,7 @@ export function Api({ stack }: StackContext) {
           commands: [
             "npx genql --output ./graphql/genql --schema ./graphql/schema.graphql --esm",
           ],
-        }
+        },
       },
     },
   });

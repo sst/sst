@@ -25,9 +25,9 @@ import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog.js";
 /////////////////////
 
 export interface WebSocketApiDomainProps
-  extends apigV2Domain.CustomDomainProps { }
+  extends apigV2Domain.CustomDomainProps {}
 export interface WebSocketApiAccessLogProps
-  extends apigV2AccessLog.AccessLogProps { }
+  extends apigV2AccessLog.AccessLogProps {}
 
 export interface WebSocketApiProps {
   /**
@@ -386,9 +386,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
    * ```
    */
   public bind(constructs: SSTConstruct[]) {
-    Object.values(this.functions).forEach((fn) =>
-      fn.bind(constructs)
-    );
+    Object.values(this.functions).forEach((fn) => fn.bind(constructs));
     this.bindingForAllRoutes.push(...constructs);
   }
 
@@ -401,10 +399,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
    * ```
    *
    */
-  public bindToRoute(
-    routeKey: string,
-    constructs: SSTConstruct[]
-  ): void {
+  public bindToRoute(routeKey: string, constructs: SSTConstruct[]): void {
     const fn = this.getFunction(routeKey);
     if (!fn) {
       throw new Error(

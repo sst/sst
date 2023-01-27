@@ -7,10 +7,7 @@ export default [
   cmd({ cmd: "npx create-vite@2.9.5 web --template=react" }),
   extract(),
   install({
-    packages: [
-      "@aws-sdk/client-dynamodb",
-      "@aws-sdk/util-dynamodb",
-    ],
+    packages: ["@aws-sdk/client-dynamodb", "@aws-sdk/util-dynamodb"],
     path: "services",
   }),
   install({
@@ -24,8 +21,6 @@ export default [
   }),
   patch({
     file: "package.json",
-    operations: [
-      { op: "add", path: "/workspaces/-", value: "web" },
-    ],
+    operations: [{ op: "add", path: "/workspaces/-", value: "web" }],
   }),
 ];

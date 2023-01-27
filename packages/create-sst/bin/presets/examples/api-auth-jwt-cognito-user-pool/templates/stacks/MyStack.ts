@@ -8,7 +8,7 @@ import {
 export function MyStack({ stack, app }: StackContext) {
   // Create User Pool
   const auth = new Cognito(stack, "Auth", {
-    login: ["email"]
+    login: ["email"],
   });
 
   // Create Api
@@ -18,20 +18,20 @@ export function MyStack({ stack, app }: StackContext) {
         type: "user_pool",
         userPool: {
           id: auth.userPoolId,
-          clientIds: [auth.userPoolClientId]
-        }
-      }
+          clientIds: [auth.userPoolClientId],
+        },
+      },
     },
     defaults: {
-      authorizer: "jwt"
+      authorizer: "jwt",
     },
     routes: {
       "GET /private": "functions/private.main",
       "GET /public": {
         function: "functions/public.main",
-        authorizer: "none"
-      }
-    }
+        authorizer: "none",
+      },
+    },
   });
 
   // attach permissions for authenticated users to the api
@@ -45,8 +45,8 @@ export function MyStack({ stack, app }: StackContext) {
       VITE_APP_API_URL: api.url,
       VITE_APP_REGION: app.region,
       VITE_APP_USER_POOL_ID: auth.userPoolId,
-      VITE_APP_USER_POOL_CLIENT_ID: auth.userPoolClientId
-    }
+      VITE_APP_USER_POOL_CLIENT_ID: auth.userPoolClientId,
+    },
   });
 
   // Show the API endpoint and other info in the output
@@ -54,6 +54,6 @@ export function MyStack({ stack, app }: StackContext) {
     ApiEndpoint: api.url,
     UserPoolId: auth.userPoolId,
     UserPoolClientId: auth.userPoolClientId,
-    SiteUrl: site.url
+    SiteUrl: site.url,
   });
 }

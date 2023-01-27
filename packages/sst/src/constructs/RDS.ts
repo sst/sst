@@ -275,8 +275,8 @@ export class RDS extends Construct implements SSTConstruct {
         types:
           typeof types === "string"
             ? {
-              path: types,
-            }
+                path: types,
+              }
             : types,
         clusterArn: this.clusterArn,
         clusterIdentifier: this.clusterIdentifier,
@@ -415,8 +415,8 @@ export class RDS extends Construct implements SSTConstruct {
         scaling?.autoPause === false
           ? cdk.Duration.minutes(0)
           : scaling?.autoPause === true || scaling?.autoPause === undefined
-            ? cdk.Duration.minutes(5)
-            : cdk.Duration.minutes(scaling?.autoPause),
+          ? cdk.Duration.minutes(5)
+          : cdk.Duration.minutes(scaling?.autoPause),
       minCapacity: rds.AuroraCapacityUnit[scaling?.minCapacity || "ACU_2"],
       maxCapacity: rds.AuroraCapacityUnit[scaling?.maxCapacity || "ACU_16"],
     };
@@ -521,7 +521,9 @@ export class RDS extends Construct implements SSTConstruct {
 
     // Create custom resource handler
     const handler = new lambda.Function(this, "MigrationHandler", {
-      code: lambda.Code.fromAsset(path.join(__dirname, "../support/script-function")),
+      code: lambda.Code.fromAsset(
+        path.join(__dirname, "../support/script-function")
+      ),
       runtime: lambda.Runtime.NODEJS_16_X,
       handler: "index.handler",
       timeout: cdk.Duration.minutes(15),

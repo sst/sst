@@ -4,15 +4,15 @@ export function MyStack({ stack }: StackContext) {
   // Create Api
   const api = new Api(stack, "Api", {
     defaults: {
-      authorizer: "iam"
+      authorizer: "iam",
     },
     routes: {
       "GET /private": "functions/private.main",
       "GET /public": {
         function: "functions/public.main",
-        authorizer: "none"
-      }
-    }
+        authorizer: "none",
+      },
+    },
   });
 
   // Create auth provider
@@ -20,9 +20,9 @@ export function MyStack({ stack }: StackContext) {
     identityPoolFederation: {
       auth0: {
         domain: "https://myorg.us.auth0.com",
-        clientId: "UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif"
-      }
-    }
+        clientId: "UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif",
+      },
+    },
   });
 
   // Allow authenticated users invoke API
@@ -31,6 +31,6 @@ export function MyStack({ stack }: StackContext) {
   // Show the API endpoint and other info in the output
   stack.addOutputs({
     ApiEndpoint: api.url,
-    IdentityPoolId: auth.cognitoIdentityPoolId
+    IdentityPoolId: auth.cognitoIdentityPoolId,
   });
 }

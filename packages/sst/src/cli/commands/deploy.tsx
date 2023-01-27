@@ -24,12 +24,8 @@ export const deploy = (program: Program) =>
       const { createSpinner } = await import("../spinner.js");
       const { dim, blue, bold } = await import("colorette");
       const { useProject } = await import("../../project.js");
-      const {
-        loadAssembly,
-        useAppMetadata,
-        saveAppMetadata,
-        Stacks,
-      } = await import("../../stacks/index.js");
+      const { loadAssembly, useAppMetadata, saveAppMetadata, Stacks } =
+        await import("../../stacks/index.js");
       const { render } = await import("ink");
       const { DeploymentUI } = await import("../ui/deploy.js");
       const { mapValues } = await import("remeda");
@@ -41,7 +37,7 @@ export const deploy = (program: Program) =>
 
       // Check app mode changed
       if (appMetadata && appMetadata.mode !== "deploy") {
-        if (!await promptChangeMode()) {
+        if (!(await promptChangeMode())) {
           process.exit(0);
         }
       }
@@ -117,7 +113,7 @@ async function promptChangeMode() {
     output: process.stdout,
   });
   return new Promise<boolean>((resolve) => {
-        console.log("");
+    console.log("");
     rl.question(
       "You were previously running this stage in dev mode. It is recommended that you use a different stage for production. Read more here — https://docs.sst.dev/live-lambda-development\n\nAre you sure you want to deploy to this stage? (y/N) ",
       async (input) => {

@@ -172,7 +172,7 @@ export function useStacks() {
         });
 
         // Limit to 3 at a time to avoid hitting AWS limits
-        const meta: Awaited<ReturnType<typeof work[number]>>[] = [];
+        const meta: Awaited<ReturnType<(typeof work)[number]>>[] = [];
         while (work.length) {
           meta.push(...(await Promise.all(work.splice(0, 3).map((f) => f()))));
         }

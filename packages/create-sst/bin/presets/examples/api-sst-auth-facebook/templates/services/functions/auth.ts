@@ -1,4 +1,8 @@
-import { Session, AuthHandler, FacebookAdapter } from "@serverless-stack/node/auth";
+import {
+  Session,
+  AuthHandler,
+  FacebookAdapter,
+} from "@serverless-stack/node/auth";
 import { Table } from "@serverless-stack/node/table";
 import { Config } from "@serverless-stack/node/config";
 import { StaticSite } from "@serverless-stack/node/site";
@@ -23,18 +27,22 @@ export const handler = AuthHandler({
         const claims = tokenset.claims();
 
         const ddb = new DynamoDBClient({});
-        await ddb.send(new PutItemCommand({
-          TableName: Table.users.tableName,
-          Item: marshall({
-            userId: claims.sub,
-            email: claims.email,
-            picture: claims.picture,
-            name: claims.given_name,
-          }),
-        }));
+        await ddb.send(
+          new PutItemCommand({
+            TableName: Table.users.tableName,
+            Item: marshall({
+              userId: claims.sub,
+              email: claims.email,
+              picture: claims.picture,
+              name: claims.given_name,
+            }),
+          })
+        );
 
         return Session.parameter({
-          redirect: process.env.IS_LOCAL ? "http://127.0.0.1:5173" : StaticSite.site.url,
+          redirect: process.env.IS_LOCAL
+            ? "http://127.0.0.1:5173"
+            : StaticSite.site.url,
           type: "user",
           properties: {
             userID: claims.sub,

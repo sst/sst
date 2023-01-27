@@ -30,17 +30,14 @@ export const useAWSCredentialsProvider = Context.memo(() => {
       return new Promise<string>((resolve) => {
         Logger.debug(`Require MFA token for serial ARN ${serialArn}`);
         const prompt = () =>
-          rl.question(
-            `Enter MFA code for ${serialArn}: `,
-            async (input) => {
-              if (input.trim() !== "") {
-                resolve(input.trim());
-                rl.close();
-              }
-              // prompt again if no input
-              prompt();
+          rl.question(`Enter MFA code for ${serialArn}: `, async (input) => {
+            if (input.trim() !== "") {
+              resolve(input.trim());
+              rl.close();
             }
-          );
+            // prompt again if no input
+            prompt();
+          });
         prompt();
       });
     },
@@ -132,14 +129,14 @@ export const useAWSProvider = Context.memo(async () => {
       get(cb) {
         cb();
       },
-      async getPromise() { },
+      async getPromise() {},
       needsRefresh() {
         return false;
       },
       refresh(cb) {
         cb();
       },
-      async refreshPromise() { },
+      async refreshPromise() {},
       expired: false,
       expireTime: creds.expiration!,
       accessKeyId: creds.accessKeyId!,

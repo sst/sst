@@ -44,10 +44,8 @@ export async function AuthKeys(cfnRequest: any) {
       ]);
       break;
     case "Update":
-      const {
-        privatePath: oldPrivatePath,
-        publicPath: oldPublicPath,
-      } = cfnRequest.OldResourceProperties;
+      const { privatePath: oldPrivatePath, publicPath: oldPublicPath } =
+        cfnRequest.OldResourceProperties;
       if (oldPrivatePath !== privatePath) {
         try {
           const oldPrivateKey = await client.send(

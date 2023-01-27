@@ -7,12 +7,7 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as s3Assets from "aws-cdk-lib/aws-s3-assets";
 import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
-import {
-  Lazy,
-  Duration,
-  CfnResource,
-  CustomResource,
-} from "aws-cdk-lib";
+import { Lazy, Duration, CfnResource, CustomResource } from "aws-cdk-lib";
 
 import { Stack } from "./Stack.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
@@ -94,12 +89,14 @@ export class EdgeFunction extends Construct {
       fs.existsSync(path.join(bundlePath, handlerImportPath + ext))
     )!;
 
-    const imports = this.props.format === "esm"
-      ? `import * as index from "./${handlerImportPath}${handlerExt}";`
-      : `"use strict"; const index = require("./${handlerImportPath}");`;
-    const exports = this.props.format === "esm"
-      ? `export { handler };`
-      : `exports.handler = handler;`;
+    const imports =
+      this.props.format === "esm"
+        ? `import * as index from "./${handlerImportPath}${handlerExt}";`
+        : `"use strict"; const index = require("./${handlerImportPath}");`;
+    const exports =
+      this.props.format === "esm"
+        ? `export { handler };`
+        : `exports.handler = handler;`;
 
     const content = `${imports}
 const handler = async (event) => {
@@ -129,7 +126,10 @@ const handler = async (event) => {
 ${exports}
 `;
     fs.writeFileSync(
-      path.join(bundlePath, `index-wrapper.${format === "esm" ? "mjs" : "cjs"}`),
+      path.join(
+        bundlePath,
+        `index-wrapper.${format === "esm" ? "mjs" : "cjs"}`
+      ),
       content
     );
   }
@@ -149,13 +149,15 @@ ${exports}
     const role = new iam.Role(this.scope, `ServerLambdaRole`, {
       assumedBy: new iam.CompositePrincipal(
         new iam.ServicePrincipal("lambda.amazonaws.com"),
-        new iam.ServicePrincipal("edgelambda.amazonaws.com"),
+        new iam.ServicePrincipal("edgelambda.amazonaws.com")
       ),
       managedPolicies: [
         iam.ManagedPolicy.fromManagedPolicyArn(
           this,
           "EdgeLambdaPolicy",
-          `arn:${Stack.of(this).partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole`
+          `arn:${
+            Stack.of(this).partition
+          }:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole`
         ),
       ],
     });
@@ -178,23 +180,18 @@ ${exports}
     const bucketName = bucketCR.getAttString("BucketName");
 
     // Create a Lambda function in us-east-1
-    const functionCR = this.createFunctionCR(
-      name,
-      this.role,
-      bucketName,
-      {
-        Description: `${name} handler`,
-        Handler: "index-wrapper.handler",
-        Code: {
-          S3Bucket: asset.s3BucketName,
-          S3Key: asset.s3ObjectKey,
-        },
-        Runtime: lambda.Runtime.NODEJS_18_X.name,
-        MemorySize: memory || 512,
-        Timeout: Duration.seconds(timeout || 10).toSeconds(),
-        Role: this.role.roleArn,
-      }
-    );
+    const functionCR = this.createFunctionCR(name, this.role, bucketName, {
+      Description: `${name} handler`,
+      Handler: "index-wrapper.handler",
+      Code: {
+        S3Bucket: asset.s3BucketName,
+        S3Key: asset.s3ObjectKey,
+      },
+      Runtime: lambda.Runtime.NODEJS_18_X.name,
+      MemorySize: memory || 512,
+      Timeout: Duration.seconds(timeout || 10).toSeconds(),
+      Role: this.role.roleArn,
+    });
     const functionArn = functionCR.getAttString("FunctionArn");
 
     // Create a Lambda function version in us-east-1
@@ -255,7 +252,9 @@ ${exports}
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
         actions: ["s3:*"],
-        resources: [`arn:${stack.partition}:s3:::${asset.s3BucketName}/${asset.s3ObjectKey}`],
+        resources: [
+          `arn:${stack.partition}:s3:::${asset.s3BucketName}/${asset.s3ObjectKey}`,
+        ],
       })
     );
 
@@ -268,11 +267,13 @@ ${exports}
           BucketName: asset.s3BucketName,
           ObjectKey: asset.s3ObjectKey,
         },
-        ReplaceValues: [{
-          files: `index-wrapper.${format === "esm" ? "mjs" : "cjs"}`,
-          search: '"{{ _SST_EDGE_FUNCTION_ENVIRONMENT_ }}"',
-          replace: JSON.stringify(this.props.environment || {}),
-        }],
+        ReplaceValues: [
+          {
+            files: `index-wrapper.${format === "esm" ? "mjs" : "cjs"}`,
+            search: '"{{ _SST_EDGE_FUNCTION_ENVIRONMENT_ }}"',
+            replace: JSON.stringify(this.props.environment || {}),
+          },
+        ],
       },
     });
 
@@ -368,10 +369,7 @@ ${exports}
     return resource;
   }
 
-  private createVersionCR(
-    name: string,
-    functionArn: string
-  ): CustomResource {
+  private createVersionCR(name: string, functionArn: string): CustomResource {
     // Do not recreate if exist
     const providerId = "EdgeLambdaVersionProvider";
     const resId = `${name}EdgeLambdaVersion`;

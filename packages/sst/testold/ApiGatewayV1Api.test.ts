@@ -25,7 +25,7 @@ const actualHostedZoneFromLookup = route53.HostedZone.fromLookup;
 
 beforeEach(() => {
   route53.HostedZone.fromLookup = actualHostedZoneFromLookup;
-})
+});
 
 ///////////////////
 // Test Constructor
@@ -128,9 +128,10 @@ test("cors-undefined", async () => {
           ResponseParameters: {
             "method.response.header.Access-Control-Allow-Headers": "'*'",
             "method.response.header.Access-Control-Allow-Origin": "'*'",
-            "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+            "method.response.header.Access-Control-Allow-Methods":
+              "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
           },
-        })
+        }),
       ],
     }),
   });
@@ -147,9 +148,10 @@ test("cors-true", async () => {
           ResponseParameters: {
             "method.response.header.Access-Control-Allow-Headers": "'*'",
             "method.response.header.Access-Control-Allow-Origin": "'*'",
-            "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+            "method.response.header.Access-Control-Allow-Methods":
+              "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
           },
-        })
+        }),
       ],
     }),
   });
@@ -555,7 +557,7 @@ test("customDomain: internal domain: domainName is string (imported ssm), cdk.ho
         hostedZone: new route53.HostedZone(stack, "Zone", {
           zoneName: "domain.com",
         }),
-      }
+      },
     },
   });
 
@@ -574,20 +576,18 @@ test("customDomain: internal domain: domainName is string (imported ssm), cdk.ho
 
 test("customDomain: internal domain: domainName is string, cdk.hostedZone defined", async () => {
   const stack = new Stack(new App({ name: "apiv1" }), "stack");
-  route53.HostedZone.fromLookup = vi
-    .fn()
-    .mockImplementation(() => {
-      // If cdk.hostedZone is provided that should be used and no lookup should be required
-      throw new Error('No hosted zone should be looked up');
-    });
+  route53.HostedZone.fromLookup = vi.fn().mockImplementation(() => {
+    // If cdk.hostedZone is provided that should be used and no lookup should be required
+    throw new Error("No hosted zone should be looked up");
+  });
   new ApiGatewayV1Api(stack, "Api", {
     customDomain: {
-      domainName: 'api.domain.com',
+      domainName: "api.domain.com",
       cdk: {
         hostedZone: new route53.HostedZone(stack, "Zone", {
           zoneName: "domain.com",
         }),
-      }
+      },
     },
   });
 
@@ -618,15 +618,17 @@ test("customDomain: internal domain: domainName is string, hostedZone is string,
     new ApiGatewayV1Api(stack, "Api", {
       customDomain: {
         domainName: "api.domain.com",
-        hostedZone: 'domain.com',
+        hostedZone: "domain.com",
         cdk: {
           hostedZone: new route53.HostedZone(stack, "Zone", {
             zoneName: "domain.com",
           }),
-        }
+        },
       },
     });
-  }).toThrow(/Use either the "customDomain.hostedZone" or the "customDomain.cdk.hostedZone"/);
+  }).toThrow(
+    /Use either the "customDomain.hostedZone" or the "customDomain.cdk.hostedZone"/
+  );
 });
 
 test("customDomain: internal domain: domainName is string (imported ssm), hostedZone undefined", async () => {

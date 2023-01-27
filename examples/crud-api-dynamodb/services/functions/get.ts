@@ -19,11 +19,11 @@ export const main: APIGatewayProxyHandlerV2 = async (event) => {
 
   return results.Item
     ? {
-      statusCode: 200,
-      body: JSON.stringify(results.Item),
-    }
+        statusCode: 200,
+        body: JSON.stringify(results.Item),
+      }
     : {
-      statusCode: 404,
-      body: JSON.stringify({ error: true }),
-    };
+        statusCode: 404,
+        body: JSON.stringify({ error: true }),
+      };
 };

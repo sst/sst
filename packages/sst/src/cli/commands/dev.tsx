@@ -19,18 +19,18 @@ export const dev = (program: Program) =>
       const { useRuntimeServer } = await import("../../runtime/server.js");
       const { useBus } = await import("../../bus.js");
       const { useWatcher } = await import("../../watcher.js");
-      const {
-        useAppMetadata,
-        saveAppMetadata,
-        Stacks,
-      } = await import("../../stacks/index.js");
+      const { useAppMetadata, saveAppMetadata, Stacks } = await import(
+        "../../stacks/index.js"
+      );
       const { Logger } = await import("../../logger.js");
       const { createSpinner } = await import("../spinner.js");
       const { bold, dim, yellow } = await import("colorette");
       const { render } = await import("ink");
       const React = await import("react");
       const { Context } = await import("../../context/context.js");
-      const { printDeploymentResults, DeploymentUI } = await import("../ui/deploy.js");
+      const { printDeploymentResults, DeploymentUI } = await import(
+        "../ui/deploy.js"
+      );
       const { useLocalServer } = await import("../local/server.js");
       const path = await import("path");
       const fs = await import("fs/promises");
@@ -313,7 +313,7 @@ export const dev = (program: Program) =>
 
       // Check app mode changed
       if (appMetadata && appMetadata.mode !== "dev") {
-        if (!await promptChangeMode()) {
+        if (!(await promptChangeMode())) {
           process.exit(0);
         }
       }
@@ -341,7 +341,7 @@ async function promptChangeMode() {
     output: process.stdout,
   });
   return new Promise<boolean>((resolve) => {
-        console.log("");
+    console.log("");
     rl.question(
       "You have previously deployed this stage in production. It is recommended that you use a different stage for development. Read more here — https://docs.sst.dev/live-lambda-development\n\nAre you sure you want to run this stage in dev mode? [y/N] ",
       async (input) => {

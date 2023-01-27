@@ -2,9 +2,9 @@ import { createProxy, parseEnvironment } from "../util/index.js";
 import { InvokeCommand, LambdaClient } from "@aws-sdk/client-lambda";
 const lambda = new LambdaClient({});
 
-export interface JobResources { }
+export interface JobResources {}
 
-export interface JobTypes { }
+export interface JobTypes {}
 
 export type JobRunProps<T extends keyof JobResources> = {
   payload?: JobTypes[T];

@@ -56,7 +56,7 @@ const supportedRuntimes = {
 export type Runtime = keyof typeof supportedRuntimes;
 export type FunctionInlineDefinition = string | Function;
 export type FunctionDefinition = string | Function | FunctionProps;
-export interface FunctionUrlCorsProps extends functionUrlCors.CorsProps { }
+export interface FunctionUrlCorsProps extends functionUrlCors.CorsProps {}
 
 export interface FunctionHooks {
   /**
@@ -533,7 +533,7 @@ export interface JavaProps {
 
 export type FunctionBundleProp = FunctionBundlePythonProps | boolean;
 
-interface FunctionBundleBase { }
+interface FunctionBundleBase {}
 
 /**
  * Used to configure Python bundling options
@@ -637,12 +637,12 @@ export class Function extends lambda.Function implements SSTConstruct {
     const diskSize = Function.normalizeDiskSize(props.diskSize);
     const tracing =
       lambda.Tracing[
-      (props.tracing || "active").toUpperCase() as keyof typeof lambda.Tracing
+        (props.tracing || "active").toUpperCase() as keyof typeof lambda.Tracing
       ];
     const logRetention =
       props.logRetention &&
       logs.RetentionDays[
-      props.logRetention.toUpperCase() as keyof typeof logs.RetentionDays
+        props.logRetention.toUpperCase() as keyof typeof logs.RetentionDays
       ];
     const isLiveDevEnabled = props.enableLiveDev === false ? false : true;
 
@@ -1024,7 +1024,7 @@ export class Function extends lambda.Function implements SSTConstruct {
       if (inheritedProps && Object.keys(inheritedProps).length > 0) {
         throw new Error(
           inheritErrorMessage ||
-          `Cannot inherit default props when a Function is provided`
+            `Cannot inherit default props when a Function is provided`
         );
       }
       return definition;

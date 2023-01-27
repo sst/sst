@@ -44,19 +44,23 @@ export default {
 - In your functions code replace all imports from `@serverless-stack/node/xxx` to `sst/node/xxx`
 - We've made changes to the `FunctionProps` API so you should be seeing type errors around the `bundle` property. Most of the options there have been moved to a `nodejs` property instead
 - We've removed the need for `srcPath` in function definitions but all your handler paths need to be specified relative to the root of the project.
-Before
+  Before
+
 ```
 new Function(stack, "fn", {
   srcPath: "services",
   handler: "path/to/func.handler"
 })
 ```
+
 After
+
 ```
 new Function(stack, "fn", {
   handler: "services/path/to/func.handler"
 })
 ```
+
 - If you're using function binding need to make sure `../.sst/types` is listed in the `include` array in `services/tsconfig.json`
 - If you were using `@serverless-stack/static-site-env` for your frontend, it can be replaced with the `sst env <command>` command
 - sst start has been renamed to sst dev (although both will work)

@@ -10,7 +10,7 @@ import {
   ENVIRONMENT_PLACEHOLDER,
   FunctionBindingProps,
   getEnvironmentKey,
-  getParameterPath
+  getParameterPath,
 } from "./util/functionBinding.js";
 import { CustomResource } from "aws-cdk-lib";
 
@@ -112,8 +112,8 @@ export class Auth extends Construct implements SSTConstruct {
       resourceType: "Custom::AuthKeys",
       properties: {
         publicPath: getParameterPath(this, PUBLIC_KEY_PROP),
-        privatePath: getParameterPath(this, PRIVATE_KEY_PROP)
-      }
+        privatePath: getParameterPath(this, PRIVATE_KEY_PROP),
+      },
     });
   }
 
@@ -121,7 +121,7 @@ export class Auth extends Construct implements SSTConstruct {
   public getConstructMetadata() {
     return {
       type: "Auth" as const,
-      data: {}
+      data: {},
     };
   }
 
@@ -134,17 +134,16 @@ export class Auth extends Construct implements SSTConstruct {
         publicKey: {
           environment: ENVIRONMENT_PLACEHOLDER,
           // SSM parameters will be created by the custom resource
-          parameter: undefined
-        }
+          parameter: undefined,
+        },
       },
       permissions: {
         "ssm:GetParameters": [
-          `arn:${Stack.of(this).partition}:ssm:${app.region}:${app.account}:parameter${getParameterPath(
-            this,
-            PUBLIC_KEY_PROP
-          )}`
-        ]
-      }
+          `arn:${Stack.of(this).partition}:ssm:${app.region}:${
+            app.account
+          }:parameter${getParameterPath(this, PUBLIC_KEY_PROP)}`,
+        ],
+      },
     };
   }
 
@@ -173,7 +172,7 @@ export class Auth extends Construct implements SSTConstruct {
     }
 
     // Validate: one Api can only have one Auth attached to it
-    if (Array.from(Auth.list).some(auth => auth.apis.has(props.api))) {
+    if (Array.from(Auth.list).some((auth) => auth.apis.has(props.api))) {
       throw new Error(
         "This Api construct already has an Auth construct attached."
       );
@@ -185,8 +184,8 @@ export class Auth extends Construct implements SSTConstruct {
       props.api.addRoutes(scope, {
         [path]: {
           type: "function",
-          function: this.authenticator
-        }
+          function: this.authenticator,
+        },
       });
 
       // Auth construct has two types of Function bindinds:
@@ -208,10 +207,11 @@ export class Auth extends Construct implements SSTConstruct {
           actions: ["ssm:GetParameters"],
           effect: Effect.ALLOW,
           resources: [
-            `arn:${Stack.of(this).partition}:ssm:${app.region}:${app.account
-            }:parameter${getParameterPath(this, "*")}`
-          ]
-        })
+            `arn:${Stack.of(this).partition}:ssm:${app.region}:${
+              app.account
+            }:parameter${getParameterPath(this, "*")}`,
+          ],
+        }),
       ]);
     }
 
@@ -221,7 +221,7 @@ export class Auth extends Construct implements SSTConstruct {
     if (this.apis.size === 0) {
       new ssm.StringParameter(this, "prefix", {
         parameterName: getParameterPath(this, PREFIX_PROP),
-        stringValue: prefix
+        stringValue: prefix,
       });
     }
 

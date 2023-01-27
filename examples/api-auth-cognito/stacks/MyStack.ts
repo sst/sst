@@ -4,20 +4,20 @@ export function MyStack({ stack }: StackContext) {
   // Create Api
   const api = new Api(stack, "Api", {
     defaults: {
-      authorizer: "iam"
+      authorizer: "iam",
     },
     routes: {
       "GET /private": "functions/private.main",
       "GET /public": {
         function: "functions/public.main",
-        authorizer: "none"
-      }
-    }
+        authorizer: "none",
+      },
+    },
   });
 
   // Create auth provider
   const auth = new Cognito(stack, "Auth", {
-    login: ["email"]
+    login: ["email"],
   });
 
   // Allow authenticated users invoke API
@@ -28,6 +28,6 @@ export function MyStack({ stack }: StackContext) {
     ApiEndpoint: api.url,
     UserPoolId: auth.userPoolId,
     UserPoolClientId: auth.userPoolClientId,
-    IdentityPoolId: auth.cognitoIdentityPoolId
+    IdentityPoolId: auth.cognitoIdentityPoolId,
   });
 }

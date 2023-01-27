@@ -247,10 +247,10 @@ export class Topic extends Construct implements SSTConstruct {
     scope: Construct,
     subscribers: {
       [subscriberName: string]:
-      | FunctionInlineDefinition
-      | TopicFunctionSubscriberProps
-      | Queue
-      | TopicQueueSubscriberProps;
+        | FunctionInlineDefinition
+        | TopicFunctionSubscriberProps
+        | Queue
+        | TopicQueueSubscriberProps;
     }
   ): void {
     Object.entries(subscribers).forEach(([subscriberName, subscriber]) => {
@@ -373,7 +373,7 @@ export class Topic extends Construct implements SSTConstruct {
     return {
       clientPackage: "topic",
       variables: {
-        "topicArn": {
+        topicArn: {
           environment: this.topicArn,
           parameter: this.topicArn,
         },

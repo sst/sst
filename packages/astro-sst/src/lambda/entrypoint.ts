@@ -1,21 +1,23 @@
-import type { SSRManifest } from "astro"
+import type { SSRManifest } from "astro";
 import type {
   APIGatewayProxyEventV2,
   APIGatewayProxyStructuredResultV2,
-} from "aws-lambda"
-import { NodeApp } from "astro/app/node"
-import { polyfill } from "@astrojs/webapi"
-import { isBinaryContentType } from "../lib/binary.js"
+} from "aws-lambda";
+import { NodeApp } from "astro/app/node";
+import { polyfill } from "@astrojs/webapi";
+import { isBinaryContentType } from "../lib/binary.js";
 
 polyfill(globalThis, {
   exclude: "window document",
-})
+});
 
 export function createExports(manifest: SSRManifest) {
-  const app = new NodeApp(manifest)
+  const app = new NodeApp(manifest);
 
   return {
-    async handler(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyStructuredResultV2> {
+    async handler(
+      event: APIGatewayProxyEventV2
+    ): Promise<APIGatewayProxyStructuredResultV2> {
       const {
         body,
         headers,
@@ -29,18 +31,16 @@ export function createExports(manifest: SSRManifest) {
       const scheme = headers["x-forwarded-protocol"] || "https";
       const host = headers["x-forwarded-host"] || headers.host;
       const qs = rawQueryString.length > 0 ? `?${rawQueryString}` : "";
-      const url = new URL(`${rawPath}${qs}`, `${scheme}://${host}`)
+      const url = new URL(`${rawPath}${qs}`, `${scheme}://${host}`);
       const encoding = isBase64Encoded ? "base64" : "utf8";
       const request = new Request(url.toString(), {
         method: requestContext.http.method,
         headers: new Headers(headers as any),
-        body: typeof body === "string"
-          ? Buffer.from(body, encoding)
-          : body,
-      })
+        body: typeof body === "string" ? Buffer.from(body, encoding) : body,
+      });
 
       // Process request
-      const rendered = await app.render(request)
+      const rendered = await app.render(request);
 
       // Build cookies
       // note: AWS API Gateway will send back set-cookies outside of response headers
@@ -62,7 +62,7 @@ export function createExports(manifest: SSRManifest) {
           ? Buffer.from(await rendered.arrayBuffer()).toString("base64")
           : await rendered.text(),
         isBase64Encoded: responseIsBase64Encoded,
-      }
+      };
     },
-  }
+  };
 }

@@ -578,7 +578,7 @@ export class CloudFormationDeployments {
           stackSdk: result.sdk,
         };
       }
-    } catch { }
+    } catch {}
     // fall back to the deploy role
     return this.prepareSdkFor(stackArtifact, undefined, Mode.ForReading);
   }

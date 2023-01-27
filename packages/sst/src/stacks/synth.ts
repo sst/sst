@@ -94,8 +94,10 @@ export async function synth(opts: SynthOptions) {
 }
 
 function formatErrorMessage(message: string) {
-  return formatCustomDomainError(message)
-    || `Could not resolve context values for ${message}`;
+  return (
+    formatCustomDomainError(message) ||
+    `Could not resolve context values for ${message}`
+  );
 }
 
 function formatCustomDomainError(message: string) {
