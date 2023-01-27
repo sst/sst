@@ -11,6 +11,10 @@ import dotenv from "dotenv";
 dotenv.config({
   override: true,
 });
+dotenv.config({
+  path: ".env.local",
+  override: true,
+});
 
 import { env } from "./commands/env.js";
 import { dev } from "./commands/dev.js";
