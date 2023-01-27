@@ -48,7 +48,7 @@ interface Project {
   stacks: SSTConfig["stacks"];
 }
 
-export const ProjectContext = Context.create<Project>();
+export const ProjectContext = Context.create<Project>("Project");
 
 export function useProject() {
   return ProjectContext.use();
@@ -120,9 +120,10 @@ export async function initProject(globals: GlobalOptions) {
     config: {
       ...config,
       stage,
-      profile: process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY
-        ? undefined
-        : (globals.profile || config.profile),
+      profile:
+        process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY
+          ? undefined
+          : globals.profile || config.profile,
       region: globals.region || config.region,
       role: globals.role || config.role,
       ssmPrefix: config.ssmPrefix || `/sst/${config.name}/${stage}/`,

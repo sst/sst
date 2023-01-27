@@ -36,10 +36,10 @@ const OUTPUT_BUCKET = "BucketName";
 const LATEST_VERSION = "6";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
-const BootstrapContext = Context.create<{
+export const BootstrapContext = Context.create<{
   version: string;
   bucket: string;
-}>();
+}>("Bootstrap");
 
 export const useBootstrap = BootstrapContext.use;
 

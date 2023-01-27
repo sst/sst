@@ -42,7 +42,6 @@ import {
 import { gray } from "colorette";
 import { useProject } from "../project.js";
 import { SiteEnv } from "../site-env.js";
-import { VisibleError } from "../error.js";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -220,21 +219,19 @@ export interface StaticSiteProps {
    * ```
    */
   purgeFiles?: boolean;
-  dev?: {
-    /**
-     * When running `sst dev, site is not deployed. This is to ensure `sst dev` can start up quickly.
-     * @default false
-     * @example
-     * ```js
-     * new StaticSite(stack, "frontend", {
-     *  dev: {
-     *    deploy: true
-     *  }
-     * });
-     * ```
-     */
-    deploy?: boolean;
-  };
+  /**
+   * When running `sst start`, a placeholder site is deployed. This is to ensure that the site content remains unchanged, and subsequent `sst start` can start up quickly.
+   *
+   * @default false
+   *
+   * @example
+   * ```js
+   * new StaticSite(stack, "frontend", {
+   *  disablePlaceholder: true
+   * });
+   * ```
+   */
+  disablePlaceholder?: boolean;
   vite?: {
     /**
      * The path where code-gen should place the type definition for environment variables
@@ -252,11 +249,11 @@ export interface StaticSiteProps {
   };
   /**
    * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
-   * @default false
+   * @default true
    * @example
    * ```js
    * new StaticSite(stack, "frontend", {
-   *  waitForInvalidation: true
+   *  waitForInvalidation: false
    * });
    * ```
    */
@@ -301,10 +298,10 @@ export interface StaticSiteProps {
   };
 }
 
-export interface StaticSiteDomainProps extends BaseSiteDomainProps { }
-export interface StaticSiteReplaceProps extends BaseSiteReplaceProps { }
+export interface StaticSiteDomainProps extends BaseSiteDomainProps {}
+export interface StaticSiteReplaceProps extends BaseSiteReplaceProps {}
 export interface StaticSiteCdkDistributionProps
-  extends BaseSiteCdkDistributionProps { }
+  extends BaseSiteCdkDistributionProps {}
 
 /////////////////////
 // Construct
@@ -327,65 +324,78 @@ export interface StaticSiteCdkDistributionProps
  */
 export class StaticSite extends Construct implements SSTConstruct {
   public readonly id: string;
-  private props: Omit<StaticSiteProps, "path"> & { path: string; };
-  private doNotDeploy: boolean;
-  private bucket: s3.Bucket;
-  private distribution: cloudfront.Distribution;
-  private hostedZone?: route53.IHostedZone;
-  private certificate?: acm.ICertificate;
+  public readonly cdk: {
+    /**
+     * The internally created CDK `Bucket` instance.
+     */
+    bucket: s3.Bucket;
+    /**
+     * The internally created CDK `Distribution` instance.
+     */
+    distribution: cloudfront.Distribution;
+    /**
+     * The Route 53 hosted zone for the custom domain.
+     */
+    hostedZone?: route53.IHostedZone;
+    /*
+     * The AWS Certificate Manager certificate for the custom domain.
+     */
+    certificate?: acm.ICertificate;
+  };
+  private props: Omit<StaticSiteProps, "path"> & { path: string };
+  private isPlaceholder: boolean;
+  private assets: s3Assets.Asset[];
+  private filenamesAsset?: s3Assets.Asset;
+  private awsCliLayer: AwsCliLayer;
 
   constructor(scope: Construct, id: string, props?: StaticSiteProps) {
     super(scope, props?.cdk?.id || id);
 
     const app = scope.node.root as App;
     this.id = id;
-    this.props = {
-      path: ".",
-      waitForInvalidation: false,
-      ...props,
-    };
+    this.props = { path: ".", ...props };
+    this.cdk = {} as any;
 
-    this.doNotDeploy = (app.local || app.skipBuild) && !this.props.dev?.deploy;
-
-    this.validateCustomDomainSettings();
-    this.registerSiteEnvironment();
-    this.generateViteTypes();
-
-    if (this.doNotDeploy) {
-      // @ts-ignore
-      this.bucket = this.distribution = null;
-      return;
-    }
-
-    const cliLayer = new AwsCliLayer(this, "AwsCliLayer");
-
-    // Build app
+    // Local development or skip build => stub asset
+    this.isPlaceholder =
+      (app.local || app.skipBuild) && !this.props.disablePlaceholder;
     const fileSizeLimit = app.isRunningSSTTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
-      this.props.sstTestFileSizeLimitOverride || 200
+        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
+        this.props.sstTestFileSizeLimitOverride || 200
       : 200;
+
+    this.awsCliLayer = new AwsCliLayer(this, "AwsCliLayer");
+    this.registerSiteEnvironment();
+
+    // Validate input
+    this.validateCustomDomainSettings();
+
+    // Generate Vite types
+    this.generateViteTypes();
+
+    // Build app
     this.buildApp();
-    const assets = this.bundleAssets(fileSizeLimit);
-    const filenamesAsset = this.bundleFilenamesAsset();
+    this.assets = this.bundleAssets(fileSizeLimit);
+    this.filenamesAsset = this.bundleFilenamesAsset();
 
     // Create Bucket
-    this.bucket = this.createS3Bucket();
+    this.cdk.bucket = this.createS3Bucket();
 
     // Create Custom Domain
-    this.hostedZone = this.lookupHostedZone();
-    this.certificate = this.createCertificate();
+    this.cdk.hostedZone = this.lookupHostedZone();
+    this.cdk.certificate = this.createCertificate();
 
     // Create S3 Deployment
-    const s3deployCR = this.createS3Deployment(cliLayer, assets, filenamesAsset);
+    const s3deployCR = this.createS3Deployment();
 
     // Create CloudFront
-    this.distribution = this.createCfDistribution();
-    this.distribution.node.addDependency(s3deployCR);
+    this.cdk.distribution = this.createCfDistribution();
+    this.cdk.distribution.node.addDependency(s3deployCR);
 
     // Invalidate CloudFront
-    const invalidationCR = this.createCloudFrontInvalidation(cliLayer, assets);
-    invalidationCR.node.addDependency(this.distribution);
+    const invalidationCR = this.createCloudFrontInvalidation();
+    invalidationCR.node.addDependency(this.cdk.distribution);
 
     // Connect Custom Domain to CloudFront Distribution
     this.createRoute53Records();
@@ -394,20 +404,18 @@ export class StaticSite extends Construct implements SSTConstruct {
   /**
    * The CloudFront URL of the website.
    */
-  public get url(): string | undefined {
-    if (this.doNotDeploy) { return; }
-
-    return `https://${this.distribution.distributionDomainName}`;
+  public get url(): string {
+    return `https://${this.cdk.distribution.distributionDomainName}`;
   }
 
   /**
    * If the custom domain is enabled, this is the URL of the website with the custom domain.
    */
   public get customDomainUrl(): string | undefined {
-    if (this.doNotDeploy) { return; }
-
     const { customDomain } = this.props;
-    if (!customDomain) { return; }
+    if (!customDomain) {
+      return;
+    }
 
     if (typeof customDomain === "string") {
       return `https://${customDomain}`;
@@ -417,25 +425,38 @@ export class StaticSite extends Construct implements SSTConstruct {
   }
 
   /**
-   * The internally created CDK resources.
+   * The ARN of the internally created S3 Bucket.
    */
-  public get cdk() {
-    if (this.doNotDeploy) {
-      throw new VisibleError(`Cannot access CDK resources for the "${this.node.id}" site in dev mode`);
-    };
+  public get bucketArn(): string {
+    return this.cdk.bucket.bucketArn;
+  }
 
-    return {
-      bucket: this.bucket,
-      distribution: this.distribution,
-      hostedZone: this.hostedZone,
-      certificate: this.certificate,
-    };
+  /**
+   * The name of the internally created S3 Bucket.
+   */
+  public get bucketName(): string {
+    return this.cdk.bucket.bucketName;
+  }
+
+  /**
+   * The ID of the internally created CloudFront Distribution.
+   */
+  public get distributionId(): string {
+    return this.cdk.distribution.distributionId;
+  }
+
+  /**
+   * The domain name of the internally created CloudFront Distribution.
+   */
+  public get distributionDomain(): string {
+    return this.cdk.distribution.distributionDomainName;
   }
 
   public getConstructMetadata() {
     return {
       type: "StaticSite" as const,
       data: {
+        distributionId: this.cdk.distribution.distributionId,
         customDomainUrl: this.customDomainUrl,
       },
     };
@@ -458,10 +479,9 @@ export class StaticSite extends Construct implements SSTConstruct {
       },
       permissions: {
         "ssm:GetParameters": [
-          `arn:${Stack.of(this).partition}:ssm:${app.region}:${app.account}:parameter${getParameterPath(
-            this,
-            "url"
-          )}`,
+          `arn:${Stack.of(this).partition}:ssm:${app.region}:${
+            app.account
+          }:parameter${getParameterPath(this, "url")}`,
         ],
       },
     };
@@ -489,8 +509,8 @@ export class StaticSite extends Construct implements SSTConstruct {
     const content = `/// <reference types="vite/client" />
 interface ImportMetaEnv {
 ${Object.keys(environment || {})
-        .map((key) => `  readonly ${key}: string`)
-        .join("\n")}
+  .map((key) => `  readonly ${key}: string`)
+  .join("\n")}
 }
 interface ImportMeta {
   readonly env: ImportMetaEnv
@@ -502,12 +522,17 @@ interface ImportMeta {
   }
 
   private buildApp() {
+    if (this.isPlaceholder) {
+      return;
+    }
+
     const { path: sitePath, buildCommand } = this.props;
 
     // validate site path exists
     if (!fs.existsSync(sitePath)) {
       throw new Error(
-        `No path found at "${path.resolve(sitePath)}" for the "${this.node.id
+        `No path found at "${path.resolve(sitePath)}" for the "${
+          this.node.id
         }" StaticSite.`
       );
     }
@@ -533,6 +558,14 @@ interface ImportMeta {
   }
 
   private bundleAssets(fileSizeLimit: number): s3Assets.Asset[] {
+    if (this.isPlaceholder) {
+      return [
+        new s3Assets.Asset(this, "Asset", {
+          path: path.resolve(__dirname, "../support/static-site-stub"),
+        }),
+      ];
+    }
+
     const { path: sitePath } = this.props;
     const buildOutput = this.props.buildOutput || ".";
 
@@ -590,6 +623,9 @@ interface ImportMeta {
   }
 
   private bundleFilenamesAsset(): s3Assets.Asset | undefined {
+    if (this.isPlaceholder) {
+      return;
+    }
     if (this.props.purgeFiles === false) {
       return;
     }
@@ -645,7 +681,7 @@ interface ImportMeta {
     }
   }
 
-  private createS3Deployment(cliLayer: AwsCliLayer, assets: s3Assets.Asset[], filenamesAsset?: s3Assets.Asset): CustomResource {
+  private createS3Deployment(): CustomResource {
     const fileOptions = this.props.fileOptions || [
       {
         exclude: "*",
@@ -664,21 +700,21 @@ interface ImportMeta {
       code: lambda.Code.fromAsset(
         path.join(__dirname, "../support/base-site-custom-resource")
       ),
-      layers: [cliLayer],
+      layers: [this.awsCliLayer],
       runtime: lambda.Runtime.PYTHON_3_7,
       handler: "s3-upload.handler",
       timeout: Duration.minutes(15),
       memorySize: 1024,
     });
-    this.bucket.grantReadWrite(uploader);
-    assets.forEach((asset) => asset.grantRead(uploader));
+    this.cdk.bucket.grantReadWrite(uploader);
+    this.assets.forEach((asset) => asset.grantRead(uploader));
 
     // Create the custom resource function
     const handler = new lambda.Function(this, "S3Handler", {
       code: lambda.Code.fromAsset(
         path.join(__dirname, "../support/base-site-custom-resource")
       ),
-      layers: [cliLayer],
+      layers: [this.awsCliLayer],
       runtime: lambda.Runtime.PYTHON_3_7,
       handler: "s3-handler.handler",
       timeout: Duration.minutes(15),
@@ -687,8 +723,8 @@ interface ImportMeta {
         UPLOADER_FUNCTION_NAME: uploader.functionName,
       },
     });
-    this.bucket.grantReadWrite(handler);
-    filenamesAsset?.grantRead(handler);
+    this.cdk.bucket.grantReadWrite(handler);
+    this.filenamesAsset?.grantRead(handler);
     uploader.grantInvoke(handler);
 
     // Create custom resource
@@ -696,14 +732,14 @@ interface ImportMeta {
       serviceToken: handler.functionArn,
       resourceType: "Custom::SSTBucketDeployment",
       properties: {
-        Sources: assets.map((asset) => ({
+        Sources: this.assets.map((asset) => ({
           BucketName: asset.s3BucketName,
           ObjectKey: asset.s3ObjectKey,
         })),
-        DestinationBucketName: this.bucket.bucketName,
-        Filenames: filenamesAsset && {
-          BucketName: filenamesAsset.s3BucketName,
-          ObjectKey: filenamesAsset.s3ObjectKey,
+        DestinationBucketName: this.cdk.bucket.bucketName,
+        Filenames: this.filenamesAsset && {
+          BucketName: this.filenamesAsset.s3BucketName,
+          ObjectKey: this.filenamesAsset.s3ObjectKey,
         },
         FileOptions: (fileOptions || []).map(
           ({ exclude, include, cacheControl }) => {
@@ -769,10 +805,16 @@ interface ImportMeta {
     }
 
     // Build errorResponses
-    const errorResponses =
-      errorPage === "redirect_to_index_page" || errorPage === undefined
-        ? buildErrorResponsesForRedirectToIndex(indexPage)
-        : buildErrorResponsesFor404ErrorPage(errorPage as string);
+    let errorResponses;
+    // case: sst start => showing stub site, and redirect all routes to the index page
+    if (this.isPlaceholder) {
+      errorResponses = buildErrorResponsesForRedirectToIndex(indexPage);
+    } else {
+      errorResponses =
+        errorPage === "redirect_to_index_page" || errorPage === undefined
+          ? buildErrorResponsesForRedirectToIndex(indexPage)
+          : buildErrorResponsesFor404ErrorPage(errorPage as string);
+    }
 
     // Create CloudFront distribution
     return new cloudfront.Distribution(this, "Distribution", {
@@ -782,22 +824,22 @@ interface ImportMeta {
       ...cdk?.distribution,
       // these values can NOT be overwritten by cfDistributionProps
       domainNames,
-      certificate: this.certificate,
+      certificate: this.cdk.certificate,
       defaultBehavior: {
-        origin: new cfOrigins.S3Origin(this.bucket),
+        origin: new cfOrigins.S3Origin(this.cdk.bucket),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         ...cdk?.distribution?.defaultBehavior,
       },
     });
   }
 
-  private createCloudFrontInvalidation(cliLayer: AwsCliLayer, assets: s3Assets.Asset[]): CustomResource {
+  private createCloudFrontInvalidation(): CustomResource {
     // Create a Lambda function that will be doing the invalidation
     const invalidator = new lambda.Function(this, "CloudFrontInvalidator", {
       code: lambda.Code.fromAsset(
         path.join(__dirname, "../support/base-site-custom-resource")
       ),
-      layers: [cliLayer],
+      layers: [this.awsCliLayer],
       runtime: lambda.Runtime.PYTHON_3_7,
       handler: "cf-invalidate.handler",
       timeout: Duration.minutes(15),
@@ -819,18 +861,23 @@ interface ImportMeta {
     // Need the AssetHash field so the CR gets updated on each deploy
     const assetsHash = crypto
       .createHash("md5")
-      .update(assets.map(({ assetHash }) => assetHash).join(""))
+      .update(this.assets.map(({ assetHash }) => assetHash).join(""))
       .digest("hex");
 
     // Create custom resource
+    const waitForInvalidation = this.isPlaceholder
+      ? false
+      : this.props.waitForInvalidation === false
+      ? false
+      : true;
     return new CustomResource(this, "CloudFrontInvalidation", {
       serviceToken: invalidator.functionArn,
       resourceType: "Custom::SSTCloudFrontInvalidation",
       properties: {
         AssetsHash: assetsHash,
-        DistributionId: this.distribution.distributionId,
+        DistributionId: this.cdk.distribution.distributionId,
         DistributionPaths: ["/*"],
-        WaitForInvalidation: this.props.waitForInvalidation,
+        WaitForInvalidation: waitForInvalidation,
       },
     });
   }
@@ -915,11 +962,11 @@ interface ImportMeta {
     let acmCertificate;
 
     // HostedZone is set for Route 53 domains
-    if (this.hostedZone) {
+    if (this.cdk.hostedZone) {
       if (typeof customDomain === "string") {
         acmCertificate = new acm.DnsValidatedCertificate(this, "Certificate", {
           domainName: customDomain,
-          hostedZone: this.hostedZone,
+          hostedZone: this.cdk.hostedZone,
           region: "us-east-1",
         });
       } else if (customDomain.cdk?.certificate) {
@@ -927,7 +974,7 @@ interface ImportMeta {
       } else {
         acmCertificate = new acm.DnsValidatedCertificate(this, "Certificate", {
           domainName: customDomain.domainName,
-          hostedZone: this.hostedZone,
+          hostedZone: this.cdk.hostedZone,
           region: "us-east-1",
         });
       }
@@ -945,7 +992,7 @@ interface ImportMeta {
   protected createRoute53Records(): void {
     const { customDomain } = this.props;
 
-    if (!customDomain || !this.hostedZone) {
+    if (!customDomain || !this.cdk.hostedZone) {
       return;
     }
 
@@ -961,9 +1008,9 @@ interface ImportMeta {
     // Create DNS record
     const recordProps = {
       recordName,
-      zone: this.hostedZone,
+      zone: this.cdk.hostedZone,
       target: route53.RecordTarget.fromAlias(
-        new route53Targets.CloudFrontTarget(this.distribution)
+        new route53Targets.CloudFrontTarget(this.cdk.distribution)
       ),
     };
     new route53.ARecord(this, "AliasRecord", recordProps);
@@ -972,7 +1019,7 @@ interface ImportMeta {
     // Create Alias redirect record
     if (domainAlias) {
       new route53Patterns.HttpsRedirect(this, "Redirect", {
-        zone: this.hostedZone,
+        zone: this.cdk.hostedZone,
         recordNames: [domainAlias],
         targetDomain: recordName,
       });

@@ -1,8 +1,14 @@
 import { Match, Matcher, MatchResult, Template } from "aws-cdk-lib/assertions";
 import { Stack } from "aws-cdk-lib";
 import { App } from "../../dist/constructs";
-import { initProject, ProjectContext, useProject } from "../../dist/app";
+import { ProjectContext, useProject } from "../../dist/project.js";
 import { resolve } from "path";
+import { BootstrapContext } from "../../dist/bootstrap";
+import { useNodeHandler } from "../../dist/runtime/handlers/node.js";
+import { usePythonHandler } from "../../dist/runtime/handlers/python.js";
+import { useDotnetHandler } from "../../dist/runtime/handlers/dotnet.js";
+import { useJavaHandler } from "../../dist/runtime/handlers/java.js";
+import { useGoHandler } from "../../dist/runtime/handlers/go.js";
 
 ///////////////////////
 // Matcher functions //
@@ -14,22 +20,43 @@ export const not = Match.not;
 export const arrayWith = Match.arrayWith;
 export const objectLike = Match.objectLike;
 
-export async function app() {
-  await initProject({
-    stage: "test",
-    root: resolve("test/constructs/"),
+export async function createApp() {
+  ProjectContext.provide({
+    version: "test",
+    cdkVersion: "test",
+    stacks: async () => {},
+    metafile: null as any,
+    config: {
+      stage: "test",
+      name: "app",
+      ssmPrefix: "/test/test/",
+      region: "us-east-1",
+    },
+    paths: {
+      root: resolve("test/constructs/"),
+      out: resolve("test/constructs/.sst"),
+      config: resolve("test/constructs/sst.config.ts"),
+      artifacts: resolve("test/constructs/.sst/artifacts"),
+    },
   });
   const project = useProject();
 
+  BootstrapContext.provide({
+    version: "test",
+    bucket: "test",
+  });
+
+  await useNodeHandler();
+  await usePythonHandler();
+  await useDotnetHandler();
+  await useJavaHandler();
+  await useGoHandler();
+
   return new App({
     mode: "deploy",
-    name: project.name,
-    stage: project.stage,
-    bootstrap: {
-      bucket: undefined,
-      stack: undefined,
-      version: undefined,
-    },
+    stage: project.config.stage,
+    name: project.config.name,
+    region: project.config.region,
   });
 }
 

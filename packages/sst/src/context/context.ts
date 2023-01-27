@@ -15,8 +15,8 @@ interface ContextInfo {
   dependants: Set<any>;
 }
 
-function create<C>(cb?: (() => C) | string) {
-  const id = Symbol(cb?.toString());
+function create<C>(cb?: (() => C) | string, name?: string) {
+  const id = typeof cb === "string" ? cb : name || Symbol(cb?.toString());
   return {
     use() {
       let result = state.contexts.get(id);
@@ -72,7 +72,7 @@ function resetDependencies(id: any) {
   }
 }
 
-export function memo<C>(cb: () => C) {
-  const ctx = create(cb);
+export function memo<C>(cb: () => C, name?: string) {
+  const ctx = create(cb, name);
   return ctx.use;
 }

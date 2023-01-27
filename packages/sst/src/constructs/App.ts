@@ -280,7 +280,6 @@ export class App extends cdk.App {
     Auth.injectConfig();
     this.ensureUniqueConstructIds();
     this.codegenTypes();
-    this.buildConstructsMetadata();
     this.createBindingSsmParameters();
     this.removeGovCloudUnsupportedResourceProperties();
 
@@ -314,6 +313,7 @@ export class App extends cdk.App {
 
   public async finish() {
     await useDeferredTasks().run();
+    this.buildConstructsMetadata();
   }
 
   isRunningSSTTest(): boolean {
