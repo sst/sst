@@ -23,7 +23,9 @@ export const usePothosBuilder = Context.memo(() => {
       });
       await fs.writeFile(route.output, schema);
       // bus.publish("pothos.extracted", { file: route.output });
-      await Promise.all(route.commands.map((cmd: string) => execAsync(cmd)));
+      if (Array.isArray(route.commands) && route.commands.length > 0) {
+        await Promise.all(route.commands?.map((cmd: string) => execAsync(cmd)));
+      }
       Colors.line(Colors.success(`✔`), " Pothos: Extracted pothos schema");
     } catch (ex: any) {
       Colors.line(Colors.danger(`✖`), " Pothos: Failed to extract schema:");
