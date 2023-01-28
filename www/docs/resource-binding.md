@@ -319,7 +319,7 @@ When binding resources that contain sensitive values, placeholders are stored in
 
 ## Cost
 
-Resource Binding values are stored in AWS SSM with the _Standard Parameter type_ and _Standard Throughput_. This makes it [free to use](https://aws.amazon.com/systems-manager/pricing/) in your SST apps.
+Resource Binding values are stored in AWS SSM with the _Standard Parameter type_ and _Standard Throughput_. This makes AWS SSM [free to use](https://aws.amazon.com/systems-manager/pricing/) in your SST apps, however when storing a `Config.Secret` the value is encrypted by AWS KMS. Secrets like this must be retrieved at runtime in you Lambda functions each time the Lambda starts up, AWS KMS has a [free tier](https://aws.amazon.com/kms/pricing/#Free_tier) limit of 20,000 API interactions per month. It costs $0.03 for every 10,000 subsequent AWS KMS API calls, this is important to keep in mind if you need to fetch secrets like database credentials for every request as the costs may add up quick.
 
 ## FAQ
 
