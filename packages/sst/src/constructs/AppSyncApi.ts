@@ -14,8 +14,7 @@ const { mergeTypeDefs } = await weakImport("@graphql-tools/merge");
 
 import { Construct } from "constructs";
 import * as rds from "aws-cdk-lib/aws-rds";
-import * as cfnAppsync from "aws-cdk-lib/aws-appsync";
-import * as appsync from "@aws-cdk/aws-appsync-alpha";
+import * as appsync from "aws-cdk-lib/aws-appsync";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
@@ -434,7 +433,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
   };
   private readonly props: AppSyncApiProps;
   private _customDomainUrl?: string;
-  _cfnDomainName?: cfnAppsync.CfnDomainName;
+  _cfnDomainName?: appsync.CfnDomainName;
   private readonly functionsByDsKey: { [key: string]: Fn } = {};
   private readonly dataSourcesByDsKey: {
     [key: string]: appsync.BaseDataSource;
@@ -768,14 +767,14 @@ export class AppSyncApi extends Construct implements SSTConstruct {
       if (domainData) {
         this._cfnDomainName = this.cdk.graphqlApi.node.children.find(
           (child) =>
-            (child as cfnAppsync.CfnDomainName).cfnResourceType ===
+            (child as appsync.CfnDomainName).cfnResourceType ===
             "AWS::AppSync::DomainName"
-        ) as cfnAppsync.CfnDomainName;
+        ) as appsync.CfnDomainName;
         const cfnDomainNameApiAssociation =
           this.cdk.graphqlApi.node.children.find(
             (child) =>
-              (child as cfnAppsync.CfnDomainNameApiAssociation)
-                .cfnResourceType === "AWS::AppSync::DomainNameApiAssociation"
+              (child as appsync.CfnDomainNameApiAssociation).cfnResourceType ===
+              "AWS::AppSync::DomainNameApiAssociation"
           );
         if (this._cfnDomainName && cfnDomainNameApiAssociation) {
           cfnDomainNameApiAssociation.node.addDependency(this._cfnDomainName);

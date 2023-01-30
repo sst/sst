@@ -1,6 +1,6 @@
 import { Token, Lazy } from "aws-cdk-lib";
 import * as route53 from "aws-cdk-lib/aws-route53";
-import * as appsync from "@aws-cdk/aws-appsync-alpha";
+import * as appsync from "aws-cdk-lib/aws-appsync";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import { AppSyncApi } from "../AppSyncApi.js";
 

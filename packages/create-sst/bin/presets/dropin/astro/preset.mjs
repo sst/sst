@@ -5,7 +5,7 @@ export default [
   install({
     packages: [
       "sst@rc",
-      "aws-cdk-lib@2.55.0",
+      "aws-cdk-lib@2.62.2",
       "constructs@10.1.156",
       "astro-sst",
     ],

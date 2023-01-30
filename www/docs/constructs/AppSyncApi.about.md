@@ -218,7 +218,7 @@ const dataSource = api.getDataSource("Query listNotes");
 ### Data source: DynamoDB
 
 ```js {14}
-import { MappingTemplate } from "@aws-cdk/aws-appsync-alpha";
+import { MappingTemplate } from "aws-cdk-lib/aws-appsync";
 
 const notesTable = new Table(stack, "Notes", {
   fields: {
@@ -504,7 +504,7 @@ Note that you can also migrate externally hosted domains to Route 53 by [followi
 
 ```js {8-15}
 import * as cdk from "aws-cdk-lib";
-import * as appsync from "@aws-cdk/aws-appsync-alpha";
+import * as appsync from "aws-cdk-lib/aws-appsync";
 
 new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
@@ -526,7 +526,7 @@ new AppSyncApi(stack, "GraphqlApi", {
 #### Using Cognito User Pool
 
 ```js {11-18}
-import * as appsync from "@aws-cdk/aws-appsync-alpha";
+import * as appsync from "aws-cdk-lib/aws-appsync";
 import { Auth, AppSyncApi } from "sst/constructs";
 
 // Create a User Pool using the Auth construct
@@ -552,7 +552,7 @@ new AppSyncApi(stack, "GraphqlApi", {
 #### Using AWS IAM
 
 ```js {7-11}
-import * as appsync from "@aws-cdk/aws-appsync-alpha";
+import * as appsync from "aws-cdk-lib/aws-appsync";
 
 new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
@@ -571,7 +571,7 @@ new AppSyncApi(stack, "GraphqlApi", {
 #### Using OpenID Connect
 
 ```js {7-14}
-import * as appsync from "@aws-cdk/aws-appsync-alpha";
+import * as appsync from "aws-cdk-lib/aws-appsync";
 
 new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
@@ -593,7 +593,7 @@ new AppSyncApi(stack, "GraphqlApi", {
 #### Using Lambda
 
 ```js {12-19}
-import * as appsync from "@aws-cdk/aws-appsync-alpha";
+import * as appsync from "aws-cdk-lib/aws-appsync";
 import { Function, AppSyncApi } from "sst/constructs";
 
 const authorizer = new Function(stack, "AuthorizerFn", {
@@ -621,7 +621,7 @@ new AppSyncApi(stack, "GraphqlApi", {
 
 ```js {8-20}
 import * as cdk from "aws-cdk-lib";
-import * as appsync from "@aws-cdk/aws-appsync-alpha";
+import * as appsync from "aws-cdk-lib/aws-appsync";
 
 new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
@@ -652,7 +652,7 @@ new AppSyncApi(stack, "GraphqlApi", {
 Configure the internally created CDK `GraphqlApi` instance.
 
 ```js {6-11}
-import * as appsync from "@aws-cdk/aws-appsync-alpha";
+import * as appsync from "aws-cdk-lib/aws-appsync";
 
 new AppSyncApi(stack, "GraphqlApi", {
   schema: "graphql/schema.graphql",
@@ -674,7 +674,7 @@ new AppSyncApi(stack, "GraphqlApi", {
 Override the internally created CDK `GraphqlApi` instance.
 
 ```js {7-10}
-import { GraphqlApi } from "@aws-cdk/aws-appsync-alpha";
+import { GraphqlApi } from "aws-cdk-lib/aws-appsync";
 
 new AppSyncApi(stack, "GraphqlApi", {
   cdk: {
