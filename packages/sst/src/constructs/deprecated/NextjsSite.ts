@@ -485,7 +485,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     }
 
     // create zip files
-    const script = path.join(__dirname, "../../support/base-site-archiver.cjs");
+    const script = path.join(__dirname, "../../support/base-site-archiver.mjs");
     const zipPath = path.resolve(
       path.join(
         this.sstBuildDir,
