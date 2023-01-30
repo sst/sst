@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.0.0-rc.56
+
+### Patch Changes
+
+- [#2388](https://github.com/serverless-stack/sst/pull/2388) [`64317dda5`](https://github.com/serverless-stack/sst/commit/64317dda561dfb1f327897da8805d84f19df499c) Thanks [@andykenward](https://github.com/andykenward)! - bug: sst plugin pothos throwing error when no commands array
+
+- [`e823810bc`](https://github.com/serverless-stack/sst/commit/e823810bc79fb48f05d5d3b943e40f7817d773d2) Thanks [@thdxr](https://github.com/thdxr)! - Restore static site changes
+
 ## 2.0.0-rc.55
 
 ### Patch Changes
