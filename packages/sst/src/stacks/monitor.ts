@@ -118,7 +118,8 @@ export async function monitor(stack: string) {
       Logger.debug("Stack description", describe);
 
       if (lastEvent) {
-        for (const event of events.StackEvents ?? []) {
+        const eventsReversed = [...(events.StackEvents ?? [])].reverse();
+        for (const event of eventsReversed) {
           if (!event.Timestamp) continue;
           if (event.Timestamp.getTime() > lastEvent.getTime()) {
             bus.publish("stack.event", {
