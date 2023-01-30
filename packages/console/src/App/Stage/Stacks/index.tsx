@@ -85,12 +85,16 @@ export function Stacks() {
                     </Table.Row>
                   </Table.Head>
                   <Table.Body>
-                    {s.info.Outputs?.map((o) => (
-                      <Table.Row key={o.OutputKey}>
-                        <Table.Cell>{o.OutputKey}</Table.Cell>
-                        <Table.Cell>{o.OutputValue}</Table.Cell>
-                      </Table.Row>
-                    ))}
+                    {(s.info.Outputs ?? [])
+                      .filter((o) => !o.OutputKey?.includes("SstSiteEnv"))
+                      .filter((o) => !o.OutputKey?.startsWith("ExportsOutput"))
+                      .filter((o) => o.OutputKey !== "SSTMetadata")
+                      .map((o) => (
+                        <Table.Row key={o.OutputKey}>
+                          <Table.Cell>{o.OutputKey}</Table.Cell>
+                          <Table.Cell>{o.OutputValue}</Table.Cell>
+                        </Table.Row>
+                      ))}
                   </Table.Body>
                 </Table.Root>
               )}
