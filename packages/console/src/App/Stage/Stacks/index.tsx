@@ -65,45 +65,47 @@ export function Stacks() {
         <HeaderTitle>Stacks</HeaderTitle>
       </Header>
       <Content>
-        {stacks.data!.all.map((s) => (
-          <StackItem key={s.info.StackName}>
-            <Stack space="lg">
-              <Row alignHorizontal="justify" alignVertical="start">
-                <Stack space="sm">
-                  <StackName>{s.info.StackName}</StackName>
-                  {!s.info.Outputs?.length && !s.constructs.all.length && (
-                    <StackMetric>No exports in this stack</StackMetric>
-                  )}
-                </Stack>
-              </Row>
-              {Boolean(s.info.Outputs?.length) && (
-                <Table.Root>
-                  <Table.Head>
-                    <Table.Row>
-                      <Table.Header>Output</Table.Header>
-                      <Table.Header>Value</Table.Header>
-                    </Table.Row>
-                  </Table.Head>
-                  <Table.Body>
-                    {(s.info.Outputs ?? [])
-                      .filter((o) => !o.OutputKey?.includes("SstSiteEnv"))
-                      .filter((o) => !o.OutputKey?.startsWith("ExportsOutput"))
-                      .filter((o) => o.OutputKey !== "SSTMetadata")
-                      .map((o) => (
+        {stacks.data!.all.map((s) => {
+          const outputs = (s.info.Outputs ?? [])
+            .filter((o) => !o.OutputKey?.includes("SstSiteEnv"))
+            .filter((o) => !o.OutputKey?.startsWith("ExportsOutput"))
+            .filter((o) => o.OutputKey !== "SSTMetadata");
+
+          return (
+            <StackItem key={s.info.StackName}>
+              <Stack space="lg">
+                <Row alignHorizontal="justify" alignVertical="start">
+                  <Stack space="sm">
+                    <StackName>{s.info.StackName}</StackName>
+                    {!outputs.length && !s.constructs.all.length && (
+                      <StackMetric>No exports in this stack</StackMetric>
+                    )}
+                  </Stack>
+                </Row>
+                {Boolean(outputs.length) && (
+                  <Table.Root>
+                    <Table.Head>
+                      <Table.Row>
+                        <Table.Header>Output</Table.Header>
+                        <Table.Header>Value</Table.Header>
+                      </Table.Row>
+                    </Table.Head>
+                    <Table.Body>
+                      {outputs.map((o) => (
                         <Table.Row key={o.OutputKey}>
                           <Table.Cell>{o.OutputKey}</Table.Cell>
                           <Table.Cell>{o.OutputValue}</Table.Cell>
                         </Table.Row>
                       ))}
-                  </Table.Body>
-                </Table.Root>
-              )}
-              {s.constructs.all.length > 0 && (
-                <Constructs>
-                  {s.constructs.all
-                    .filter((c) => c.type !== "Function")
-                    .map((c) => {
-                      /*
+                    </Table.Body>
+                  </Table.Root>
+                )}
+                {s.constructs.all.length > 0 && (
+                  <Constructs>
+                    {s.constructs.all
+                      .filter((c) => c.type !== "Function")
+                      .map((c) => {
+                        /*
                         const _link = (() => {
                           switch (c.type) {
                             case "Cognito":
@@ -126,22 +128,23 @@ export function Stacks() {
                           }
                         })();
                         */
-                      return (
-                        <ConstructsItem>
-                          <Stack space="xs">
-                            <ConstructsItemName title={c.id}>
-                              {c.id}
-                            </ConstructsItemName>
-                            <ConstructsItemType>{c.type}</ConstructsItemType>
-                          </Stack>
-                        </ConstructsItem>
-                      );
-                    })}
-                </Constructs>
-              )}
-            </Stack>
-          </StackItem>
-        ))}
+                        return (
+                          <ConstructsItem>
+                            <Stack space="xs">
+                              <ConstructsItemName title={c.id}>
+                                {c.id}
+                              </ConstructsItemName>
+                              <ConstructsItemType>{c.type}</ConstructsItemType>
+                            </Stack>
+                          </ConstructsItem>
+                        );
+                      })}
+                  </Constructs>
+                )}
+              </Stack>
+            </StackItem>
+          );
+        })}
       </Content>
     </>
   );
