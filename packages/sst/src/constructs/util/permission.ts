@@ -303,7 +303,6 @@ function permissionsToStatementsAndGrants(
         );
       grants.push(permission);
     } else {
-      Logger.debug("permission object", permission);
       throw new Error(`The specified permissions are not supported.`);
     }
   });

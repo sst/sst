@@ -59,7 +59,7 @@ test("handlerPath: entry", async () => {
 test("constructor: props with minimum config", async () => {
   const stack = new Stack(await createApp(), "stack");
   new Function(stack, "Function", {
-    handler: "test/lambda.handler",
+    handler: "test/constructs/lambda.handler",
   });
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "index.placeholder",
@@ -73,7 +73,7 @@ test("constructor: props with minimum config", async () => {
 test("constructor: props with full config", async () => {
   const stack = new Stack(await createApp(), "stack");
   new Function(stack, "Function", {
-    handler: "test/lambda.handler",
+    handler: "test/constructs/lambda.handler",
     timeout: 20,
     memorySize: 512,
   });
@@ -95,13 +95,13 @@ test("constructor: props disabling live development ", async () => {
   const stack = new Stack(await createApp(), "stack");
   new Function(stack, "Function", {
     enableLiveDev: false,
-    handler: "test/lambda.handler",
+    handler: "test/constructs/lambda.handler",
   });
   countResourcesLike(stack, "AWS::Lambda::Function", 0, {
     Environment: {
       Variables: {
         SST_DEBUG_SRC_PATH: ".",
-        SST_DEBUG_SRC_HANDLER: "test/lambda.handler",
+        SST_DEBUG_SRC_HANDLER: "test/constructs/lambda.handler",
         SST_DEBUG_ENDPOINT: "placeholder",
         SST_DEBUG_BUCKET_NAME: "placeholder",
         SST_FUNCTION_ID: "02056f69",
@@ -114,7 +114,7 @@ test("constructor: props disabling live development ", async () => {
 test("constructor: liveDev prop defaults to true", async () => {
   const stack = new Stack(await createApp(), "stack");
   new Function(stack, "Function", {
-    handler: "test/lambda.handler",
+    handler: "test/constructs/lambda.handler",
   });
   hasResource(stack, "AWS::Lambda::Function", {
     Environment: {
@@ -126,7 +126,7 @@ test("constructor: liveDev prop defaults to true", async () => {
 test("constructor: handler is jsx", async () => {
   const stack = new Stack(await createApp(), "stack");
   new Function(stack, "Function", {
-    handler: "test/lambda-jsx.handler",
+    handler: "test/constructs/lambda-jsx.handler",
   });
   countResources(stack, "AWS::Lambda::Function", 1);
 });
@@ -145,7 +145,7 @@ test("constructor: handler not exist", async () => {
 test("functionName: undefined", async () => {
   const stack = new Stack(await createApp(), "stack");
   new Function(stack, "Function", {
-    handler: "test/lambda.handler",
+    handler: "test/constructs/lambda.handler",
   });
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "index.placeholder",
@@ -157,7 +157,7 @@ test("functionName: string", async () => {
   const stack = new Stack(await createApp(), "stack");
   new Function(stack, "Function", {
     functionName: "my-fn-name",
-    handler: "test/lambda.handler",
+    handler: "test/constructs/lambda.handler",
   });
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "index.placeholder",
@@ -198,7 +198,7 @@ test("copyFiles absolute to", async () => {
   const app = await createApp();
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
-    handler: "test/lambda.handler",
+    handler: "test/constructs/lambda.handler",
     copyFiles: [{ from: "test/lambda.js", to: "/test/fail.js" }],
   });
   await expect(async () => {
@@ -210,19 +210,19 @@ test("copyFiles nonexistent", async () => {
   const app = await createApp();
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
-    handler: "test/lambda.handler",
+    handler: "test/constructs/lambda.handler",
     copyFiles: [{ from: "test/fail.js", to: "test/fail.js" }],
   });
   await expect(async () => {
     await app.finish();
-  }).rejects.toThrow(/Tried to copy nonexistent file/);
+  }).rejects.toThrow(/no such file/);
 });
 
 test("runtime-string", async () => {
   const app = await createApp();
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
-    handler: "test/lambda.handler",
+    handler: "test/constructs/lambda.handler",
     runtime: "nodejs10.x",
   });
   await app.finish();
@@ -232,13 +232,15 @@ test("runtime-string", async () => {
 });
 
 test("runtime-string-invalid", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  expect(() => {
-    new Function(stack, "Function", {
-      handler: "test/lambda.handler",
-      runtime: "ruby" as any,
-    });
-  }).toThrow(/The specified runtime is not supported/);
+  const app = await createApp();
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    handler: "test/constructs/lambda.handler",
+    runtime: "ruby" as any,
+  });
+  await expect(async () => {
+    await app.finish();
+  }).rejects.toThrow(/runtime/);
 });
 
 test("timeout-number", async () => {
@@ -379,8 +381,30 @@ test("constructor: bind", async () => {
           Action: "ssm:GetParameters",
           Effect: "Allow",
           Resource: [
-            "arn:aws:ssm:us-east-1:my-account:parameter/sst/app/test/Secret/MY_SECRET/value",
-            "arn:aws:ssm:us-east-1:my-account:parameter/sst/app/.fallback/Secret/MY_SECRET/value",
+            {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    Ref: "AWS::Partition",
+                  },
+                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/MY_SECRET/value",
+                ],
+              ],
+            },
+            {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    Ref: "AWS::Partition",
+                  },
+                  ":ssm:us-east-1:my-account:parameter/sst/app/.fallback/Secret/MY_SECRET/value",
+                ],
+              ],
+            },
           ],
         },
       ],
@@ -861,8 +885,14 @@ test("attachPermissions: array: sst Api", async () => {
             "Fn::Join": [
               "",
               [
-                "arn:aws:execute-api:us-east-1:my-account:",
-                { Ref: "ApiCD79AAA0" },
+                "arn:",
+                {
+                  Ref: "AWS::Partition",
+                },
+                ":execute-api:us-east-1:my-account:",
+                {
+                  Ref: "ApiCD79AAA0",
+                },
                 "/*",
               ],
             ],
