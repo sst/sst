@@ -13,6 +13,7 @@
   "license": "MIT",
   "scripts": {
     "build": "node build.mjs && tsc",
+    "test": "vitest run",
     "dev": "tsc -w"
   },
   "repository": {

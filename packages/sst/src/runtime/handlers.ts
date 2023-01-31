@@ -70,7 +70,7 @@ export const useRuntimeHandlers = Context.memo(() => {
     },
     for: (runtime: string) => {
       const result = handlers.find((x) => x.canHandle(runtime));
-      if (!result) throw new Error(`No handler found for runtime ${runtime}`);
+      if (!result) throw new Error(`${runtime} runtime is unsupported`);
       return result;
     },
     async build(functionID: string, mode: BuildInput["mode"]) {

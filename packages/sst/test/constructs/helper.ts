@@ -1,6 +1,6 @@
 import { Match, Matcher, MatchResult, Template } from "aws-cdk-lib/assertions";
 import { Stack } from "aws-cdk-lib";
-import { App } from "../../dist/constructs";
+import { App, AppDeployProps, AppProps } from "../../dist/constructs";
 import { ProjectContext, useProject } from "../../dist/project.js";
 import { resolve } from "path";
 import { BootstrapContext } from "../../dist/bootstrap";
@@ -9,6 +9,10 @@ import { usePythonHandler } from "../../dist/runtime/handlers/python.js";
 import { useDotnetHandler } from "../../dist/runtime/handlers/dotnet.js";
 import { useJavaHandler } from "../../dist/runtime/handlers/java.js";
 import { useGoHandler } from "../../dist/runtime/handlers/go.js";
+import os from "os";
+import path from "path";
+import fs from "fs/promises";
+import crypto from "crypto";
 
 ///////////////////////
 // Matcher functions //
@@ -20,7 +24,10 @@ export const not = Match.not;
 export const arrayWith = Match.arrayWith;
 export const objectLike = Match.objectLike;
 
-export async function createApp() {
+export async function createApp(props?: Partial<AppDeployProps>) {
+  const root = path.join(os.tmpdir(), "sst", crypto.randomUUID());
+  await fs.mkdir(root, { recursive: true });
+  await fs.mkdir(path.join(root, ".sst"), { recursive: true });
   ProjectContext.provide({
     version: "test",
     cdkVersion: "test",
@@ -33,10 +40,10 @@ export async function createApp() {
       region: "us-east-1",
     },
     paths: {
-      root: resolve("test/constructs/"),
-      out: resolve("test/constructs/.sst"),
-      config: resolve("test/constructs/sst.config.ts"),
-      artifacts: resolve("test/constructs/.sst/artifacts"),
+      root: root,
+      out: path.join(root, ".sst"),
+      config: path.join(root, "sst.config.ts"),
+      artifacts: path.join(root, ".sst", "artifacts"),
     },
   });
   const project = useProject();
@@ -57,6 +64,7 @@ export async function createApp() {
     stage: project.config.stage,
     name: project.config.name,
     region: project.config.region,
+    ...props,
   });
 }
 
