@@ -100,7 +100,7 @@ export class NextjsSite extends SsrSite {
       environment: {
         BUCKET_NAME: this.cdk.bucket.bucketName,
       },
-      vpc: cdk?.vpc,
+      ...cdk?.server,
     });
   }
 

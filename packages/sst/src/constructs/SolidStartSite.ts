@@ -54,7 +54,7 @@ export class SolidStartSite extends SsrSite {
         format: "esm",
       },
       environment,
-      vpc: cdk?.vpc,
+      ...cdk?.server,
     });
     fn._disableBind = true;
 

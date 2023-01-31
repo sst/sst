@@ -178,7 +178,7 @@ export class RemixSite extends SsrSite {
           ? toCdkDuration(timeout)
           : CdkDuration.seconds(timeout),
       environment,
-      vpc: cdk?.vpc,
+      ...cdk?.server,
     });
   }
 

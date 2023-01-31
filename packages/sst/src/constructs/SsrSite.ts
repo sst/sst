@@ -23,6 +23,7 @@ import {
   Code,
   Runtime,
   FunctionUrlAuthType,
+  FunctionProps,
 } from "aws-cdk-lib/aws-lambda";
 import {
   HostedZone,
@@ -224,19 +225,14 @@ export interface SsrSiteProps {
        */
       serverRequests?: ICachePolicy;
     };
-    /**
-     * Runs server function in the specified VPC. Note this will only in non-edge mode.
-     *
-     * @example
-     * ```js
-     * cdk: {
-     *   vpc: Vpc.fromLookup(stack, "VPC", {
-     *     vpcId: "vpc-xxxxxxxxxx",
-     *   }),
-     * }
-     * ```
-     */
-    vpc?: IVpc;
+    server?: Pick<
+      FunctionProps,
+      | "vpc"
+      | "vpcSubnets"
+      | "securityGroups"
+      | "allowAllOutbound"
+      | "allowPublicSubnet"
+    >;
   };
 }
 
