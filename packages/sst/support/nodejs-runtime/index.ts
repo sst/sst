@@ -32,6 +32,7 @@ try {
       trace: ex.stack?.split("\n"),
     }),
   });
+  process.exit(1);
 }
 
 let timeout: NodeJS.Timeout | undefined;

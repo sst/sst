@@ -64,6 +64,7 @@ export const useRuntimeWorkers = Context.memo(async () => {
     if (!handler) return;
     const build = await builder.artifact(evt.properties.functionID);
     if (!build) return;
+    lastRequestId.set(evt.properties.workerID, evt.properties.requestID);
     await handler.startWorker({
       ...build,
       workerID: evt.properties.workerID,
@@ -83,6 +84,9 @@ export const useRuntimeWorkers = Context.memo(async () => {
   return {
     fromID(workerID: string) {
       return workers.get(workerID)!;
+    },
+    getCurrentRequestID(workerID: string) {
+      return lastRequestId.get(workerID);
     },
     setCurrentRequestID(workerID: string, requestID: string) {
       lastRequestId.set(workerID, requestID);
