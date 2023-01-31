@@ -1,5 +1,11 @@
 # create-sst
 
+## 2.0.0-rc.57
+
+### Patch Changes
+
+- [#2396](https://github.com/serverless-stack/sst/pull/2396) [`da3d0740f`](https://github.com/serverless-stack/sst/commit/da3d0740f56c53872ba2321f8c8b312ca8b68bf4) Thanks [@github-actions](https://github.com/apps/github-actions)! - Update CDK to 2.62.2
+
 ## 2.0.0-rc.56
 
 ## 2.0.0-rc.55
