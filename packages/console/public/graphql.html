@@ -1,51 +1,61 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="user-scalable=no, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, minimal-ui"
+    />
+    <title>GraphQL Playground</title>
+    <link
+      rel="stylesheet"
+      href="//cdn.jsdelivr.net/npm/graphql-playground-react/build/static/css/index.css"
+    />
+    <link
+      rel="shortcut icon"
+      href="//cdn.jsdelivr.net/npm/graphql-playground-react/build/favicon.png"
+    />
+    <link
+      rel="stylesheet"
+      href="/@fs/home/thdxr/dev/projects/sst/serverless-stack/node_modules/@fontsource/jetbrains-mono/latin.css"
+    />
+    <script src="//cdn.jsdelivr.net/npm/graphql-playground-react/build/static/js/middleware.js"></script>
+  </head>
 
-<head>
-  <meta charset=utf-8/>
-  <meta name="viewport" content="user-scalable=no, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, minimal-ui">
-  <title>GraphQL Playground</title>
-  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/graphql-playground-react/build/static/css/index.css" />
-  <link rel="shortcut icon" href="//cdn.jsdelivr.net/npm/graphql-playground-react/build/favicon.png" />
-  <link rel="stylesheet" href="/@fs/home/thdxr/dev/projects/sst/serverless-stack/node_modules/@fontsource/jetbrains-mono/latin.css" />
-  <script src="//cdn.jsdelivr.net/npm/graphql-playground-react/build/static/js/middleware.js"></script>
-</head>
-
-<body>
-  <style>
-    .lbSfdq {
-      opacity: 1;
-      transform: initial;
-      animation: initial;
-    }
-    .hlyxcp {
-      background: transparent;
-    }
-    .emFIyf {
-      display: none;
-    }
-    .sc-daURTG {
-      height: 41px;
-    }
-    .dDuAEY {
-      margin-top: 0;
-    }
-    .sc-cmthru {
-      margin-right: 0;
-    }
-    .jsBJIl {
-      height: calc(-41px + 100vh);
-    }
-  </style>
-  <div id="root">
-  </div>
-  <script>
-    const { searchParams } = new URL(document.location)
-    const config = JSON.parse(atob(searchParams.get('config')))
-    console.log(config)
-    window.addEventListener('load', function (event) {
-      GraphQLPlayground.init(document.getElementById('root'), config)
-    })</script>
-</body>
-
+  <body>
+    <style>
+      .lbSfdq {
+        opacity: 1;
+        transform: initial;
+        animation: initial;
+      }
+      .hlyxcp {
+        background: transparent;
+      }
+      .emFIyf {
+        display: none;
+      }
+      .sc-daURTG {
+        height: 41px;
+      }
+      .dDuAEY {
+        margin-top: 0;
+      }
+      .sc-cmthru {
+        margin-right: 0;
+      }
+      .jsBJIl {
+        height: calc(-41px + 100vh);
+      }
+    </style>
+    <div id="root"></div>
+    <script>
+      const { searchParams } = new URL(document.location);
+      const config = JSON.parse(atob(searchParams.get("config")));
+      console.log(config);
+      window.addEventListener("load", function (event) {
+        GraphQLPlayground.init(document.getElementById("root"), config);
+      });
+    </script>
+  </body>
 </html>

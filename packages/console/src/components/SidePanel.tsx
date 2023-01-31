@@ -3,7 +3,7 @@ import {} from "react-icons";
 import {
   AiOutlineClose,
   AiOutlineCloseCircle,
-  AiOutlineCloseSquare
+  AiOutlineCloseSquare,
 } from "react-icons/ai";
 
 export const Root = styled("div", {
@@ -11,7 +11,7 @@ export const Root = styled("div", {
   width: 400,
   flexShrink: 0,
   position: "relative",
-  overflowY: "auto"
+  overflowY: "auto",
 });
 
 export const Header = styled("div", {
@@ -19,17 +19,17 @@ export const Header = styled("div", {
   display: "flex",
   padding: "0 $lg",
   alignItems: "center",
-  justifyContent: "space-between"
+  justifyContent: "space-between",
 });
 
 export const Content = styled("div", {
-  padding: "0 $lg"
+  padding: "0 $lg",
 });
 
 export const Toolbar = styled("div", {
   display: "flex",
   justifyContent: "end",
-  row: "$md"
+  row: "$md",
 });
 
 export const Close = styled(AiOutlineClose, {
@@ -41,5 +41,5 @@ export const Close = styled(AiOutlineClose, {
   cursor: "pointer",
   display: "block",
   padding: "$sm",
-  color: "$hiContrast"
+  color: "$hiContrast",
 });

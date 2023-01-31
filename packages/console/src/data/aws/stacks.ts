@@ -69,7 +69,7 @@ export function useStacks() {
               new GetParameterCommand({
                 Name: `/sst/bootstrap/bucket-name`,
               })
-            )
+            );
             return value.Parameter.Value;
           } catch (e: any) {
             if (e.name === "ParameterNotFound") {
@@ -79,8 +79,8 @@ export function useStacks() {
                   StackName: "SSTBootstrap",
                 })
               );
-              const output = (describe.Stacks![0].Outputs || []).find((o) =>
-                o.OutputKey === "BucketName"
+              const output = (describe.Stacks![0].Outputs || []).find(
+                (o) => o.OutputKey === "BucketName"
               );
               return output.OutputValue;
             }
@@ -192,7 +192,7 @@ export function useStacks() {
         });
 
         // Limit to 3 at a time to avoid hitting AWS limits
-        const meta: Awaited<ReturnType<typeof work[number]>>[] = [];
+        const meta: Awaited<ReturnType<(typeof work)[number]>>[] = [];
         while (work.length) {
           meta.push(...(await Promise.all(work.splice(0, 3).map((f) => f()))));
         }
