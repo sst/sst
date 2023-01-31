@@ -38,34 +38,6 @@ console.log(StaticSite.myWeb.url);
 
 ---
 
-### ViteStaticSite
-
-This module helps with accessing [`ViteStaticSite`](../constructs/ViteStaticSite.md) constructs.
-
-```ts
-import { ViteStaticSite } from "sst/node/site";
-```
-
-#### url
-
-_Type_ : <span class="mono">string</span>
-
-The URL of the site. If custom domain is enabled, this is the custom domain URL of the site.
-
-```ts
-console.log(ViteStaticSite.myWeb.url);
-```
-
----
-
-### ReactStaticSite
-
-This module helps with accessing [`ReactStaticSite`](../constructs/ReactStaticSite.md) constructs.
-
-```ts
-import { ReactStaticSite } from "sst/node/site";
-```
-
 #### url
 
 _Type_ : <span class="mono">string</span>

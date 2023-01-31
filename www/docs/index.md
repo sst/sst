@@ -17,41 +17,56 @@ SST makes it easy to build modern full-stack applications on AWS.
 
 </HeadlineText>
 
-<div className={styles.summary}>
-
-- **Your favourite frontends**
-
-  Deploy Next.js, Remix, Astro, and Solid apps to your AWS account.
-
-- **Truly full-stack**
-
-  Add any backend feature you need — APIs, databases, auth, cron jobs, and more.
-
-- **Designed for your team**
-
-  Create preview environments or feature environments. Or one for everyone on your team.
+---
 
 <div className={styles.heading}>
-  <h3>Add Any Backend Feature</h3>
-  <p>SST gives you the full power of AWS. Making it easy to add any feature to your product.</p>
+  <h3>Start With Your Frontend</h3>
+  <p>Deploy Next.js, Remix, Astro, Solid, or any static site to AWS.</p>
 </div>
+
+<ul className={styles.features}>
+  <li>
+    <a href={useBaseUrl("/constructs/NextjsSite")}>
+      <h3>Next.js</h3>
+      <p>Deploy a serverless Next.js app to your AWS account.</p>
+    </a>
+  </li>
+  <li>
+    <a href={useBaseUrl("/constructs/RemixSite")}>
+      <h3>Remix</h3>
+      <p>Deploy a Remix SSR app to your AWS account.</p>
+    </a>
+  </li>
+  <li>
+    <a href={useBaseUrl("/constructs/AstroSite")}>
+      <h3>Astro</h3>
+      <p>Deploy an Astro SSR app to your AWS account.</p>
+    </a>
+  </li>
+  <li>
+    <a href={useBaseUrl("/constructs/SolidStartSite")}>
+      <h3>Solid</h3>
+      <p>Deploy a SolidStart app to your AWS account.</p>
+    </a>
+  </li>
+  <li>
+    <a href={useBaseUrl("/constructs/StaticSite")}>
+      <h3>Static sites</h3>
+      <p>Deploy any static site to your AWS account.</p>
+    </a>
+  </li>
+</ul>
 
 :::tip Learn more
 Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
 :::
 
 <div className={styles.heading}>
-  <h3>Everything you need</h3>
+  <h3>Add Any Backend Feature</h3>
   <p>SST gives you the full power of AWS. Making it easy to add any feature to your product.</p>
 </div>
 
 <ul className={styles.features}>
-  <li>
-    <a href={useBaseUrl("/constructs/Api")}>
-      <h3>APIs</h3>
-      <p>Add a GraphQL or a simple REST API to your app.</p>
-    </a>
-  </li>
   <li>
     <a href={useBaseUrl("/constructs/RDS")}>
       <h3>Databases</h3>
@@ -59,7 +74,13 @@ Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/auth")}>
+    <a href={useBaseUrl("/constructs/Api")}>
+      <h3>APIs</h3>
+      <p>Add a GraphQL or a simple REST API to your app.</p>
+    </a>
+  </li>
+  <li>
+    <a href={useBaseUrl("/constructs/Auth")}>
       <h3>Auth</h3>
       <p>Authenticate your users through any auth provider.</p>
     </a>
@@ -72,8 +93,8 @@ Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
   </li>
   <li>
     <a href={useBaseUrl("/constructs/Cron")}>
-      <h3>Cron jobs</h3>
-      <p>Run cron jobs powered by serverless functions.</p>
+      <h3>Jobs</h3>
+      <p>Run cron jobs or long running jobs powered by serverless functions.</p>
     </a>
   </li>
   <li>
@@ -83,6 +104,28 @@ Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
     </a>
   </li>
 </ul>
+
+<div className={styles.start}>
+
+<span><i className="fas fa-stream"></i></span>
+
+  <div className={styles.startContent}>
+    <h4>Quick start</h4>
+    <p>Take a quick 10 minute tour of SST to get started.</p>
+  </div>
+  <div>
+    <div className={styles.startCode}>
+      <code>> npm create sst@latest</code>
+    </div>
+    <a className={styles.startCta} href={useBaseUrl("/quick-start")}>
+      Get Started
+      <i class="fas fa-arrow-right"></i>
+    </a>
+  </div>
+
+</div>
+
+---
 
 <div className={styles.heading}>
   <h3>CLI Docs</h3>

@@ -86,6 +86,10 @@ const CDK_DOCS_MAP = {
   IOriginRequestPolicy: "aws_cloudfront",
   OriginRequestPolicyProps: "aws_cloudfront",
   AddBehaviorOptions: "aws_cloudfront",
+  GraphqlApi: "aws_appsync",
+  IGraphqlApi: "aws_appsync",
+  ResolverProps: "aws_appsync",
+  AwsIamConfig: "aws_appsync",
 };
 
 const app = new Application();
@@ -114,11 +118,8 @@ app.bootstrap({
     "../packages/sst/src/constructs/StaticSite.ts",
     "../packages/sst/src/constructs/NextjsSite.ts",
     "../packages/sst/src/constructs/AppSyncApi.ts",
-    "../packages/sst/src/constructs/GraphQLApi.ts",
-    "../packages/sst/src/constructs/ViteStaticSite.ts",
     "../packages/sst/src/constructs/KinesisStream.ts",
     "../packages/sst/src/constructs/WebSocketApi.ts",
-    "../packages/sst/src/constructs/ReactStaticSite.ts",
     "../packages/sst/src/constructs/DebugApp.ts",
     "../packages/sst/src/constructs/DebugStack.ts",
     "../packages/sst/src/constructs/AstroSite.tsdoc.ts",

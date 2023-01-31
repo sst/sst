@@ -242,8 +242,6 @@ module.exports = {
         "constructs/DebugApp",
         "constructs/DebugStack",
         "constructs/GraphQLApi",
-        "constructs/ViteStaticSite",
-        "constructs/ReactStaticSite",
         "constructs/ApiGatewayV1Api",
       ],
     },

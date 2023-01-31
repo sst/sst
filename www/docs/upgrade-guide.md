@@ -16,6 +16,116 @@ To view the latest release and all historical releases, <a href={`${config.githu
 
 ---
 
+## Upgrade to v2.0
+
+The 2.0 upgrade is primarily ergonomic and should not result in any infrastructure changes.
+
+#### Packages
+
+1. SST is now a monorepo, remove all packages referencing `@serverless-stack/resources` `@serverless-stack/cli` `@serverless-stack/node` and `@serverless-stack/static-site-env`. Install the `sst` package
+```diff
+{
+  "devDependencies": {
+-   "@serverless-stack/resources": "xxx",
+-   "@serverless-stack/cli": "xxx",
+-   "@serverless-stack/static-site-env": "xxx",
+-   "@serverless-stack/node": "xxx",
++   "sst": "2.x",
++   "constructs": "10.1.156"
+  }
+}
+```
+
+2. Ensure `"constructs": "10.1.156"` is installed
+3. `sst start` has been renamed to `sst dev` (although both will work)
+
+#### Config
+
+`sst.json` is now specified as a `sst.config.ts` file. The `main` field has been replaced with a function that can directly import your stacks.
+
+```js
+import type { SSTConfig } from "sst"
+import { Api } from "./stacks/Api.js"
+import { Dynamo } from "./stacks/Dynamo.js"
+
+export default {
+  config(input) {
+    return {
+      name: "myapp",
+      region: "us-east-1",
+      profile: "my-company-dev"
+    }
+  },
+  stacks(app) {
+    app.setDefaultFunctionProps({
+      runtime: "nodejs16.x",
+      architecture: "arm_64",
+    })
+
+    app
+      .stack(Api)
+      .stack(Dynamo)
+  },
+} satisfies SSTConfig
+```
+
+#### Stacks
+
+1. In your stacks code replace all imports from `@serverless-stack/resources` to `sst/constructs`
+```diff
+- import { Function } from "@serverless-stack/resources"
++ import { Function } from "sst/constructs"
+```
+
+2. We've made changes to the `FunctionProps` API so you should be seeing type errors around the `bundle` property. Most of the options there have been moved to a `nodejs` property instead
+```diff
+const fn = new Function(stack, "fn", {
+- bundle: {
+-   format: "esm",
+- },
++ nodejs: {
++   format: "esm"
++ }
+})
+```
+
+3. We've removed the need for `srcPath` in function definitions but all your handler paths need to be specified relative to the root of the project.
+
+##### Before
+```js
+new Function(stack, "fn", {
+  srcPath: "services",
+  handler: "path/to/func.handler"
+})
+```
+##### After
+```js
+new Function(stack, "fn", {
+  handler: "services/path/to/func.handler"
+})
+```
+
+#### Functions
+
+1. In your functions code replace all imports from `@serverless-stack/node/xxx` to `sst/node/xxx`
+```diff
+- import { Bucket } from "@serverless-stack/node/bucket"
++ import { Bucket } from "sst/node/bucket"
+```
+
+2. If you're using function binding need to make sure `../.sst/types` is listed in the `include` array in `tsconfig.json`
+
+#### Frontend
+
+1. If you were using `@serverless-stack/static-site-env` for your frontend, it can be replaced with the `sst env '<command>'` command
+
+```diff
+- static-site-env -- vite dev
++ sst env 'vite dev'
+```
+
+
+
 ## Upgrade to v1.18
 
 #### Constructs
