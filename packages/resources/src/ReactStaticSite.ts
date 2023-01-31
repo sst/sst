@@ -14,7 +14,7 @@ export type ReactStaticSiteProps = StaticSiteProps;
 
 /**
  * The `ReactStaticSite` construct is a higher level CDK construct that makes it easy to create a React single page app.
- * 
+ *
  * @example
  *
  * Deploys a Create React App in the `path/to/src` directory.

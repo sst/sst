@@ -25,7 +25,7 @@ export function createPothosBuilder(opts: Opts) {
   async function build(route: any) {
     try {
       const schema = await Pothos.generate({
-        schema: route.schema
+        schema: route.schema,
       });
       await fs.writeFile(route.output, schema);
       opts.bus.publish("pothos.extracted", { file: route.output });
@@ -37,7 +37,7 @@ export function createPothosBuilder(opts: Opts) {
     }
   }
 
-  opts.bus.subscribe("file.changed", async evt => {
+  opts.bus.subscribe("file.changed", async (evt) => {
     if (evt.properties.file.endsWith("out.mjs")) return;
     for (const route of routes) {
       const dir = path.dirname(route.schema);
@@ -47,12 +47,12 @@ export function createPothosBuilder(opts: Opts) {
     }
   });
 
-  opts.bus.subscribe("stacks.deployed", evt => {
+  opts.bus.subscribe("stacks.deployed", (evt) => {
     routes = evt.properties.metadata
-      .filter(c => c.type == "Api")
-      .flatMap(c => c.data.routes)
-      .filter(r => ["pothos", "graphql"].includes(r.type))
-      .filter(r => r.schema);
+      .filter((c) => c.type == "Api")
+      .flatMap((c) => c.data.routes)
+      .filter((r) => ["pothos", "graphql"].includes(r.type))
+      .filter((r) => r.schema);
     for (const route of routes) build(route);
   });
 }

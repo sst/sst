@@ -11,13 +11,8 @@ const ssm = new SSM({
 
 export async function SecretsMigration(cfnRequest: any) {
   log("SecretsMigration()");
-  const {
-    App: app,
-    Stage: stage,
-  } = cfnRequest.ResourceProperties;
-  const {
-    SSTVersion: version,
-  } = (cfnRequest.OldResourceProperties || {});
+  const { App: app, Stage: stage } = cfnRequest.ResourceProperties;
+  const { SSTVersion: version } = cfnRequest.OldResourceProperties || {};
 
   switch (cfnRequest.RequestType) {
     case "Create":
@@ -46,8 +41,11 @@ async function migrateSecretsSSMPath(input: {
     const parts = version.split(".");
     const majorVersion = parseInt(parts[0]);
     const minorVersion = parseInt(parts[1]);
-    const needToMigrate = (majorVersion < 1 || majorVersion === 1 && minorVersion < 16);
-    if (!needToMigrate) { return; }
+    const needToMigrate =
+      majorVersion < 1 || (majorVersion === 1 && minorVersion < 16);
+    if (!needToMigrate) {
+      return;
+    }
   }
 
   // Load secrets
@@ -62,16 +60,21 @@ async function migrateSecretsSSMPath(input: {
       continue;
     }
     const newKey = `/sst/${app}/${stage}/Secret/${name}/value`;
-    await ssm.putParameter({
-      Name: newKey,
-      Value: secret.Value!,
-      Type: secret.Type!,
-      Overwrite: true,
-    }).promise();
+    await ssm
+      .putParameter({
+        Name: newKey,
+        Value: secret.Value!,
+        Type: secret.Type!,
+        Overwrite: true,
+      })
+      .promise();
   }
 }
 
-async function ssmGetPrametersByPath(prefix: string, token?: string): Promise<ParameterList> {
+async function ssmGetPrametersByPath(
+  prefix: string,
+  token?: string
+): Promise<ParameterList> {
   // Create a function that load all pages of secrets
   const result = await ssm
     .getParametersByPath({
@@ -83,6 +86,8 @@ async function ssmGetPrametersByPath(prefix: string, token?: string): Promise<Pa
     .promise();
   return [
     ...(result.Parameters || []),
-    ...(result.NextToken ? await ssmGetPrametersByPath(prefix, result.NextToken) : []),
+    ...(result.NextToken
+      ? await ssmGetPrametersByPath(prefix, result.NextToken)
+      : []),
   ];
 }
