@@ -5,7 +5,7 @@ import * as esbuild from "esbuild";
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 
-import { Duration, RemovalPolicy } from "aws-cdk-lib";
+import { Duration as CdkDuration, RemovalPolicy } from "aws-cdk-lib";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 
@@ -13,6 +13,8 @@ import { Logger } from "../logger.js";
 import { SsrSite } from "./SsrSite.js";
 import { useProject } from "../project.js";
 import { EdgeFunction } from "./EdgeFunction.js";
+import { toCdkSize } from "./util/size.js";
+import { toCdkDuration } from "./util/duration.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -154,7 +156,7 @@ export class RemixSite extends SsrSite {
   }
 
   protected createFunctionForRegional(): lambda.Function {
-    const { defaults, environment } = this.props;
+    const { timeout, memorySize, environment, cdk } = this.props;
 
     const bundlePath = this.createServerLambdaBundle("regional-server.js");
 
@@ -167,24 +169,32 @@ export class RemixSite extends SsrSite {
       logRetention: logs.RetentionDays.THREE_DAYS,
       code: lambda.Code.fromAsset(bundlePath),
       runtime: lambda.Runtime.NODEJS_16_X,
-      memorySize: defaults?.function?.memorySize || 512,
-      timeout: Duration.seconds(defaults?.function?.timeout || 10),
+      memorySize:
+        typeof memorySize === "string"
+          ? toCdkSize(memorySize).toMebibytes()
+          : memorySize,
+      timeout:
+        typeof timeout === "string"
+          ? toCdkDuration(timeout)
+          : CdkDuration.seconds(timeout),
       environment,
+      vpc: cdk?.vpc,
     });
   }
 
   protected createFunctionForEdge(): EdgeFunction {
-    const { defaults, environment } = this.props;
+    const { timeout, memorySize, permissions, environment } = this.props;
 
     const bundlePath = this.createServerLambdaBundle("edge-server.js");
 
     return new EdgeFunction(this, `Server`, {
       scopeOverride: this,
+      format: "cjs",
       bundlePath,
       handler: "server.handler",
-      timeout: defaults?.function?.timeout,
-      memory: defaults?.function?.memorySize,
-      permissions: defaults?.function?.permissions,
+      timeout,
+      memorySize,
+      permissions,
       environment,
     });
   }

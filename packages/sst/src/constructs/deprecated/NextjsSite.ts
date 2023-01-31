@@ -35,7 +35,6 @@ import {
   BaseSiteDomainProps,
   BaseSiteReplaceProps,
   BaseSiteCdkDistributionProps,
-  BaseSiteEnvironmentOutputsInfo,
   getBuildCmdEnvironment,
   buildErrorResponsesForRedirectToIndex,
 } from "../BaseSite.js";

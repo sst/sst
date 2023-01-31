@@ -117,30 +117,28 @@ export interface JobProps {
    * ```
    */
   permissions?: Permissions;
-  cdk?: JobCDKProps;
-}
-
-export interface JobCDKProps {
-  /**
-   * Allows you to override default id for this construct.
-   */
-  id?: string;
-  /**
-   * Runs codebuild job in the specified VPC. Note this will only work once deployed.
-   *
-   * @example
-   * ```js
-   * new Job(stack, "MyJob", {
-   *   handler: "src/job.handler",
-   *   cdk: {
-   *     vpc: Vpc.fromLookup(stack, "VPC", {
-   *       vpcId: "vpc-xxxxxxxxxx",
-   *     }),
-   *   }
-   * })
-   * ```
-   */
-  vpc?: IVpc;
+  cdk?: {
+    /**
+     * Allows you to override default id for this construct.
+     */
+    id?: string;
+    /**
+     * Runs codebuild job in the specified VPC. Note this will only work once deployed.
+     *
+     * @example
+     * ```js
+     * new Job(stack, "MyJob", {
+     *   handler: "src/job.handler",
+     *   cdk: {
+     *     vpc: Vpc.fromLookup(stack, "VPC", {
+     *       vpcId: "vpc-xxxxxxxxxx",
+     *     }),
+     *   }
+     * })
+     * ```
+     */
+    vpc?: IVpc;
+  };
 }
 
 /////////////////////

@@ -7,9 +7,16 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as s3Assets from "aws-cdk-lib/aws-s3-assets";
 import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
-import { Lazy, Duration, CfnResource, CustomResource } from "aws-cdk-lib";
+import {
+  Lazy,
+  Duration as CdkDuration,
+  CfnResource,
+  CustomResource,
+} from "aws-cdk-lib";
 
 import { Stack } from "./Stack.js";
+import { Size, toCdkSize } from "./util/size.js";
+import { Duration, toCdkDuration } from "./util/duration.js";
 import { BaseSiteReplaceProps } from "./BaseSite.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
@@ -17,10 +24,10 @@ const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 export interface EdgeFunctionProps {
   bundlePath: string;
   handler: string;
-  timeout?: number;
-  memory?: number;
+  timeout: number | Duration;
+  memorySize: number | Size;
   permissions?: Permissions;
-  format?: "cjs" | "esm";
+  format: "cjs" | "esm";
   environment?: Record<string, string>;
   /**
    * This is intended to be used internally by SST to make constructs
@@ -172,7 +179,7 @@ ${exports}
   }
 
   private createFunction(asset: s3Assets.Asset) {
-    const { timeout, memory, bundlePath } = this.props;
+    const { timeout, memorySize } = this.props;
     const name = this.node.id;
 
     // Create a S3 bucket in us-east-1 to store Lambda code. Create
@@ -189,8 +196,14 @@ ${exports}
         S3Key: asset.s3ObjectKey,
       },
       Runtime: lambda.Runtime.NODEJS_18_X.name,
-      MemorySize: memory || 512,
-      Timeout: Duration.seconds(timeout || 10).toSeconds(),
+      MemorySize:
+        typeof memorySize === "string"
+          ? toCdkSize(memorySize).toMebibytes()
+          : memorySize,
+      Timeout:
+        typeof timeout === "string"
+          ? toCdkDuration(timeout).toSeconds()
+          : timeout,
       Role: this.role.roleArn,
     });
     const functionArn = functionCR.getAttString("FunctionArn");
@@ -250,7 +263,7 @@ ${exports}
       ),
       handler: "s3-bucket.handler",
       runtime: lambda.Runtime.NODEJS_16_X,
-      timeout: Duration.minutes(15),
+      timeout: CdkDuration.minutes(15),
       memorySize: 1024,
       initialPolicy: [
         new iam.PolicyStatement({
@@ -293,7 +306,7 @@ ${exports}
         ),
         handler: "edge-lambda.handler",
         runtime: lambda.Runtime.NODEJS_16_X,
-        timeout: Duration.minutes(15),
+        timeout: CdkDuration.minutes(15),
         memorySize: 1024,
         initialPolicy: [
           new iam.PolicyStatement({
@@ -337,7 +350,7 @@ ${exports}
         ),
         handler: "edge-lambda-version.handler",
         runtime: lambda.Runtime.NODEJS_16_X,
-        timeout: Duration.minutes(15),
+        timeout: CdkDuration.minutes(15),
         memorySize: 1024,
         initialPolicy: [
           new iam.PolicyStatement({

@@ -10,22 +10,49 @@ import { Construct } from "constructs";
 import {
   Fn,
   Token,
-  Duration,
+  Duration as CdkDuration,
   CfnOutput,
   RemovalPolicy,
   CustomResource,
 } from "aws-cdk-lib";
-import * as s3 from "aws-cdk-lib/aws-s3";
-import * as iam from "aws-cdk-lib/aws-iam";
-import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as route53 from "aws-cdk-lib/aws-route53";
-import * as s3Assets from "aws-cdk-lib/aws-s3-assets";
-import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
-import * as acm from "aws-cdk-lib/aws-certificatemanager";
+import { Bucket, BucketProps, IBucket } from "aws-cdk-lib/aws-s3";
+import { IVpc } from "aws-cdk-lib/aws-ec2";
+import { Role, Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
+import {
+  Function,
+  Code,
+  Runtime,
+  FunctionUrlAuthType,
+} from "aws-cdk-lib/aws-lambda";
+import {
+  HostedZone,
+  IHostedZone,
+  ARecord,
+  AaaaRecord,
+  RecordTarget,
+} from "aws-cdk-lib/aws-route53";
+import { Asset } from "aws-cdk-lib/aws-s3-assets";
+import {
+  Distribution,
+  ICachePolicy,
+  BehaviorOptions,
+  ViewerProtocolPolicy,
+  AllowedMethods,
+  CachedMethods,
+  LambdaEdgeEventType,
+  CachePolicy,
+  CacheQueryStringBehavior,
+  CacheHeaderBehavior,
+  CacheCookieBehavior,
+} from "aws-cdk-lib/aws-cloudfront";
+import {
+  ICertificate,
+  DnsValidatedCertificate,
+} from "aws-cdk-lib/aws-certificatemanager";
 import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
-import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
-import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
-import * as route53Patterns from "aws-cdk-lib/aws-route53-patterns";
+import { S3Origin, HttpOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
+import { CloudFrontTarget } from "aws-cdk-lib/aws-route53-targets";
+import { HttpsRedirect } from "aws-cdk-lib/aws-route53-patterns";
 
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
@@ -38,6 +65,8 @@ import {
   BaseSiteCdkDistributionProps,
   getBuildCmdEnvironment,
 } from "./BaseSite.js";
+import { Size } from "./util/size.js";
+import { Duration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import {
   ENVIRONMENT_PLACEHOLDER,
@@ -73,17 +102,10 @@ export interface SsrSiteProps {
    */
   bind?: SSTConstruct[];
   /**
-   * The SSR function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
-   * @default false
-   */
-  edge?: boolean;
-
-  /**
    * Path to the directory where the app is located.
    * @default "."
    */
   path?: string;
-
   /**
    * The command for building the website
    * @default `npm run build`
@@ -93,7 +115,6 @@ export interface SsrSiteProps {
    * ```
    */
   buildCommand?: string;
-
   /**
    * The customDomain for this website. SST supports domains that are hosted
    * either on [Route 53](https://aws.amazon.com/route53/) or externally.
@@ -115,7 +136,37 @@ export interface SsrSiteProps {
    * ```
    */
   customDomain?: string | SsrDomainProps;
-
+  /**
+   * The SSR function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
+   * @default false
+   */
+  edge?: boolean;
+  /**
+   * The execution timeout in seconds for SSR function.
+   * @default 10 seconds
+   * @example
+   * ```js
+   * timeout: "5 seconds",
+   * ```
+   */
+  timeout?: number | Duration;
+  /**
+   * The amount of memory in MB allocated for SSR function.
+   * @default 1024 MB
+   * @example
+   * ```js
+   * memorySize: "512 MB",
+   * ```
+   */
+  memorySize?: number | Size;
+  /**
+   * Attaches the given list of permissions to the SSR function. Configuring this property is equivalent to calling `attachPermissions()` after the site is created.
+   * @example
+   * ```js
+   * permissions: ["ses"]
+   * ```
+   */
+  permissions?: Permissions;
   /**
    * An object with the key being the environment variable name.
    *
@@ -128,7 +179,6 @@ export interface SsrSiteProps {
    * ```
    */
   environment?: Record<string, string>;
-
   dev?: {
     /**
      * When running `sst dev, site is not deployed. This is to ensure `sst dev` can start up quickly.
@@ -142,21 +192,11 @@ export interface SsrSiteProps {
      */
     deploy?: boolean;
   };
-
-  defaults?: {
-    function?: {
-      timeout?: number;
-      memorySize?: number;
-      permissions?: Permissions;
-    };
-  };
-
   /**
    * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
    * @default false
    */
   waitForInvalidation?: boolean;
-
   cdk?: {
     /**
      * Allows you to override default id for this construct.
@@ -165,7 +205,7 @@ export interface SsrSiteProps {
     /**
      * Allows you to override default settings this construct uses internally to ceate the bucket
      */
-    bucket?: s3.BucketProps | s3.IBucket;
+    bucket?: BucketProps | IBucket;
     /**
      * Pass in a value to override the default settings this construct uses to
      * create the CDK `Distribution` internally.
@@ -182,8 +222,21 @@ export interface SsrSiteProps {
        * @note The default cache policy that is used in the abscene of this property
        * is one that performs no caching of the server response.
        */
-      serverRequests?: cloudfront.ICachePolicy;
+      serverRequests?: ICachePolicy;
     };
+    /**
+     * Runs server function in the specified VPC. Note this will only in non-edge mode.
+     *
+     * @example
+     * ```js
+     * cdk: {
+     *   vpc: Vpc.fromLookup(stack, "VPC", {
+     *     vpcId: "vpc-xxxxxxxxxx",
+     *   }),
+     * }
+     * ```
+     */
+    vpc?: IVpc;
   };
 }
 
@@ -200,15 +253,19 @@ export interface SsrSiteProps {
  */
 export class SsrSite extends Construct implements SSTConstruct {
   public readonly id: string;
-  protected props: Omit<SsrSiteProps, "path"> & { path: string };
+  protected props: Omit<SsrSiteProps, "path"> & {
+    path: string;
+    timeout: number | Duration;
+    memorySize: number | Size;
+  };
   private doNotDeploy: boolean;
   protected buildConfig: SsrBuildConfig;
   private serverLambdaForEdge?: EdgeFunction;
-  protected serverLambdaForRegional?: lambda.Function;
-  private bucket: s3.Bucket;
-  private distribution: cloudfront.Distribution;
-  private hostedZone?: route53.IHostedZone;
-  private certificate?: acm.ICertificate;
+  protected serverLambdaForRegional?: Function;
+  private bucket: Bucket;
+  private distribution: Distribution;
+  private hostedZone?: IHostedZone;
+  private certificate?: ICertificate;
 
   constructor(scope: Construct, id: string, props?: SsrSiteProps) {
     super(scope, props?.cdk?.id || id);
@@ -218,6 +275,8 @@ export class SsrSite extends Construct implements SSTConstruct {
     this.props = {
       path: ".",
       waitForInvalidation: false,
+      timeout: "10 seconds",
+      memorySize: "1024 MB",
       ...props,
     };
     this.doNotDeploy = (app.local || app.skipBuild) && !this.props.dev?.deploy;
@@ -349,7 +408,7 @@ export class SsrSite extends Construct implements SSTConstruct {
   public attachPermissions(permissions: Permissions): void {
     if (this.serverLambdaForRegional) {
       attachPermissionsToRole(
-        this.serverLambdaForRegional.role as iam.Role,
+        this.serverLambdaForRegional.role as Role,
         permissions
       );
     }
@@ -468,7 +527,7 @@ export class SsrSite extends Construct implements SSTConstruct {
   // Bundle S3 Assets
   /////////////////////
 
-  private createS3Assets(): s3Assets.Asset[] {
+  private createS3Assets(): Asset[] {
     // Create temp folder, clean up if exists
     const zipOutDir = path.resolve(
       path.join(
@@ -510,7 +569,7 @@ export class SsrSite extends Construct implements SSTConstruct {
         break;
       }
       assets.push(
-        new s3Assets.Asset(this, `Asset${partId}`, {
+        new Asset(this, `Asset${partId}`, {
           path: zipFilePath,
         })
       );
@@ -551,17 +610,17 @@ export class SsrSite extends Construct implements SSTConstruct {
     return fileOptions;
   }
 
-  private createS3Bucket(): s3.Bucket {
+  private createS3Bucket(): Bucket {
     const { cdk } = this.props;
 
     // cdk.bucket is an imported construct
     if (cdk?.bucket && isCDKConstruct(cdk?.bucket)) {
-      return cdk.bucket as s3.Bucket;
+      return cdk.bucket as Bucket;
     }
     // cdk.bucket is a prop
     else {
-      const bucketProps = cdk?.bucket as s3.BucketProps;
-      return new s3.Bucket(this, "S3Bucket", {
+      const bucketProps = cdk?.bucket as BucketProps;
+      return new Bucket(this, "S3Bucket", {
         publicReadAccess: true,
         autoDeleteObjects: true,
         removalPolicy: RemovalPolicy.DESTROY,
@@ -572,32 +631,32 @@ export class SsrSite extends Construct implements SSTConstruct {
 
   private createS3Deployment(
     cliLayer: AwsCliLayer,
-    assets: s3Assets.Asset[],
+    assets: Asset[],
     fileOptions: { exclude: string; include: string; cacheControl: string }[]
   ): CustomResource {
     // Create a Lambda function that will be doing the uploading
-    const uploader = new lambda.Function(this, "S3Uploader", {
-      code: lambda.Code.fromAsset(
+    const uploader = new Function(this, "S3Uploader", {
+      code: Code.fromAsset(
         path.join(__dirname, "../support/base-site-custom-resource")
       ),
       layers: [cliLayer],
-      runtime: lambda.Runtime.PYTHON_3_7,
+      runtime: Runtime.PYTHON_3_7,
       handler: "s3-upload.handler",
-      timeout: Duration.minutes(15),
+      timeout: CdkDuration.minutes(15),
       memorySize: 1024,
     });
     this.bucket.grantReadWrite(uploader);
     assets.forEach((asset) => asset.grantRead(uploader));
 
     // Create the custom resource function
-    const handler = new lambda.Function(this, "S3Handler", {
-      code: lambda.Code.fromAsset(
+    const handler = new Function(this, "S3Handler", {
+      code: Code.fromAsset(
         path.join(__dirname, "../support/base-site-custom-resource")
       ),
       layers: [cliLayer],
-      runtime: lambda.Runtime.PYTHON_3_7,
+      runtime: Runtime.PYTHON_3_7,
       handler: "s3-handler.handler",
-      timeout: Duration.minutes(15),
+      timeout: CdkDuration.minutes(15),
       memorySize: 1024,
       environment: {
         UPLOADER_FUNCTION_NAME: uploader.functionName,
@@ -637,8 +696,8 @@ export class SsrSite extends Construct implements SSTConstruct {
   // Bundle Lambda Server
   /////////////////////
 
-  protected createFunctionForRegional(): lambda.Function {
-    return {} as lambda.Function;
+  protected createFunctionForRegional(): Function {
+    return {} as Function;
   }
 
   protected createFunctionForEdge(): EdgeFunction {
@@ -646,13 +705,13 @@ export class SsrSite extends Construct implements SSTConstruct {
   }
 
   private createFunctionPermissionsForRegional() {
-    const { defaults } = this.props;
+    const { permissions } = this.props;
 
     this.bucket.grantReadWrite(this.serverLambdaForRegional!.role!);
-    if (defaults?.function?.permissions) {
+    if (permissions) {
       attachPermissionsToRole(
-        this.serverLambdaForRegional!.role as iam.Role,
-        defaults.function.permissions
+        this.serverLambdaForRegional!.role as Role,
+        permissions
       );
     }
   }
@@ -680,12 +739,12 @@ export class SsrSite extends Construct implements SSTConstruct {
     }
   }
 
-  protected createCloudFrontDistributionForRegional(): cloudfront.Distribution {
+  protected createCloudFrontDistributionForRegional(): Distribution {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-    const s3Origin = new origins.S3Origin(this.bucket);
+    const s3Origin = new S3Origin(this.bucket);
 
-    return new cloudfront.Distribution(this, "Distribution", {
+    return new Distribution(this, "Distribution", {
       // these values can be overwritten by cfDistributionProps
       defaultRootObject: "",
       // Override props.
@@ -701,12 +760,12 @@ export class SsrSite extends Construct implements SSTConstruct {
     });
   }
 
-  private createCloudFrontDistributionForEdge(): cloudfront.Distribution {
+  private createCloudFrontDistributionForEdge(): Distribution {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-    const s3Origin = new origins.S3Origin(this.bucket);
+    const s3Origin = new S3Origin(this.bucket);
 
-    return new cloudfront.Distribution(this, "Distribution", {
+    return new Distribution(this, "Distribution", {
       // these values can be overwritten by cfDistributionProps
       defaultRootObject: "",
       // Override props.
@@ -735,19 +794,19 @@ export class SsrSite extends Construct implements SSTConstruct {
     return domainNames;
   }
 
-  private buildDistributionDefaultBehaviorForRegional(): cloudfront.BehaviorOptions {
+  private buildDistributionDefaultBehaviorForRegional(): BehaviorOptions {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
 
     const fnUrl = this.serverLambdaForRegional!.addFunctionUrl({
-      authType: lambda.FunctionUrlAuthType.NONE,
+      authType: FunctionUrlAuthType.NONE,
     });
 
     return {
-      viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      origin: new origins.HttpOrigin(Fn.parseDomainName(fnUrl.url)),
-      allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-      cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
+      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      origin: new HttpOrigin(Fn.parseDomainName(fnUrl.url)),
+      allowedMethods: AllowedMethods.ALLOW_ALL,
+      cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
       cachePolicy:
         cdk?.cachePolicies?.serverRequests ??
@@ -757,16 +816,16 @@ export class SsrSite extends Construct implements SSTConstruct {
   }
 
   private buildDistributionDefaultBehaviorForEdge(
-    origin: origins.S3Origin
-  ): cloudfront.BehaviorOptions {
+    origin: S3Origin
+  ): BehaviorOptions {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
 
     return {
-      viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       origin,
-      allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-      cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
+      allowedMethods: AllowedMethods.ALLOW_ALL,
+      cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
       cachePolicy:
         cdk?.cachePolicies?.serverRequests ??
@@ -776,7 +835,7 @@ export class SsrSite extends Construct implements SSTConstruct {
       edgeLambdas: [
         {
           includeBody: true,
-          eventType: cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST,
+          eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
           functionVersion: this.serverLambdaForEdge!.currentVersion,
         },
         ...(cfDistributionProps.defaultBehavior?.edgeLambdas || []),
@@ -785,22 +844,22 @@ export class SsrSite extends Construct implements SSTConstruct {
   }
 
   protected buildDistributionStaticFileBehaviors(
-    origin: origins.S3Origin
-  ): Record<string, cloudfront.BehaviorOptions> {
+    origin: S3Origin
+  ): Record<string, BehaviorOptions> {
     const { cdk } = this.props;
 
     // Create additional behaviours for statics
-    const staticBehaviourOptions: cloudfront.BehaviorOptions = {
-      viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+    const staticBehaviourOptions: BehaviorOptions = {
+      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       origin,
-      allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
-      cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
+      allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+      cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
-      cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+      cachePolicy: CachePolicy.CACHING_OPTIMIZED,
     };
 
     // Add behaviour for public folder statics (excluding build)
-    const staticsBehaviours: Record<string, cloudfront.BehaviorOptions> = {};
+    const staticsBehaviours: Record<string, BehaviorOptions> = {};
     const publicDir = path.join(
       this.props.path,
       this.buildConfig.clientBuildOutputDir
@@ -816,14 +875,14 @@ export class SsrSite extends Construct implements SSTConstruct {
     return staticsBehaviours;
   }
 
-  protected createCloudFrontServerCachePolicy(): cloudfront.CachePolicy {
-    return new cloudfront.CachePolicy(this, "ServerCache", {
-      queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
-      headerBehavior: cloudfront.CacheHeaderBehavior.none(),
-      cookieBehavior: cloudfront.CacheCookieBehavior.all(),
-      defaultTtl: Duration.days(0),
-      maxTtl: Duration.days(365),
-      minTtl: Duration.days(0),
+  protected createCloudFrontServerCachePolicy(): CachePolicy {
+    return new CachePolicy(this, "ServerCache", {
+      queryStringBehavior: CacheQueryStringBehavior.all(),
+      headerBehavior: CacheHeaderBehavior.none(),
+      cookieBehavior: CacheCookieBehavior.all(),
+      defaultTtl: CdkDuration.days(0),
+      maxTtl: CdkDuration.days(365),
+      minTtl: CdkDuration.days(0),
       enableAcceptEncodingBrotli: true,
       enableAcceptEncodingGzip: true,
       comment: "SST server response cache policy",
@@ -832,21 +891,21 @@ export class SsrSite extends Construct implements SSTConstruct {
 
   private createCloudFrontInvalidation(cliLayer: AwsCliLayer): CustomResource {
     // Create a Lambda function that will be doing the invalidation
-    const invalidator = new lambda.Function(this, "CloudFrontInvalidator", {
-      code: lambda.Code.fromAsset(
+    const invalidator = new Function(this, "CloudFrontInvalidator", {
+      code: Code.fromAsset(
         path.join(__dirname, "../support/base-site-custom-resource")
       ),
       layers: [cliLayer],
-      runtime: lambda.Runtime.PYTHON_3_7,
+      runtime: Runtime.PYTHON_3_7,
       handler: "cf-invalidate.handler",
-      timeout: Duration.minutes(15),
+      timeout: CdkDuration.minutes(15),
       memorySize: 1024,
     });
 
     // Grant permissions to invalidate CF Distribution
     invalidator.addToRolePolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
+      new PolicyStatement({
+        effect: Effect.ALLOW,
         actions: [
           "cloudfront:GetInvalidation",
           "cloudfront:CreateInvalidation",
@@ -902,7 +961,7 @@ export class SsrSite extends Construct implements SSTConstruct {
     }
   }
 
-  protected lookupHostedZone(): route53.IHostedZone | undefined {
+  protected lookupHostedZone(): IHostedZone | undefined {
     const { customDomain } = this.props;
 
     // Skip if customDomain is not configured
@@ -913,13 +972,13 @@ export class SsrSite extends Construct implements SSTConstruct {
     let hostedZone;
 
     if (typeof customDomain === "string") {
-      hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
+      hostedZone = HostedZone.fromLookup(this, "HostedZone", {
         domainName: customDomain,
       });
     } else if (customDomain.cdk?.hostedZone) {
       hostedZone = customDomain.cdk.hostedZone;
     } else if (typeof customDomain.hostedZone === "string") {
-      hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
+      hostedZone = HostedZone.fromLookup(this, "HostedZone", {
         domainName: customDomain.hostedZone,
       });
     } else if (typeof customDomain.domainName === "string") {
@@ -928,7 +987,7 @@ export class SsrSite extends Construct implements SSTConstruct {
         return;
       }
 
-      hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
+      hostedZone = HostedZone.fromLookup(this, "HostedZone", {
         domainName: customDomain.domainName,
       });
     } else {
@@ -938,7 +997,7 @@ export class SsrSite extends Construct implements SSTConstruct {
     return hostedZone;
   }
 
-  private createCertificate(): acm.ICertificate | undefined {
+  private createCertificate(): ICertificate | undefined {
     const { customDomain } = this.props;
 
     if (!customDomain) {
@@ -950,7 +1009,7 @@ export class SsrSite extends Construct implements SSTConstruct {
     // HostedZone is set for Route 53 domains
     if (this.hostedZone) {
       if (typeof customDomain === "string") {
-        acmCertificate = new acm.DnsValidatedCertificate(this, "Certificate", {
+        acmCertificate = new DnsValidatedCertificate(this, "Certificate", {
           domainName: customDomain,
           hostedZone: this.hostedZone,
           region: "us-east-1",
@@ -958,7 +1017,7 @@ export class SsrSite extends Construct implements SSTConstruct {
       } else if (customDomain.cdk?.certificate) {
         acmCertificate = customDomain.cdk.certificate;
       } else {
-        acmCertificate = new acm.DnsValidatedCertificate(this, "Certificate", {
+        acmCertificate = new DnsValidatedCertificate(this, "Certificate", {
           domainName: customDomain.domainName,
           hostedZone: this.hostedZone,
           region: "us-east-1",
@@ -995,16 +1054,14 @@ export class SsrSite extends Construct implements SSTConstruct {
     const recordProps = {
       recordName,
       zone: this.hostedZone,
-      target: route53.RecordTarget.fromAlias(
-        new route53Targets.CloudFrontTarget(this.distribution)
-      ),
+      target: RecordTarget.fromAlias(new CloudFrontTarget(this.distribution)),
     };
-    new route53.ARecord(this, "AliasRecord", recordProps);
-    new route53.AaaaRecord(this, "AliasRecordAAAA", recordProps);
+    new ARecord(this, "AliasRecord", recordProps);
+    new AaaaRecord(this, "AliasRecordAAAA", recordProps);
 
     // Create Alias redirect record
     if (domainAlias) {
-      new route53Patterns.HttpsRedirect(this, "Redirect", {
+      new HttpsRedirect(this, "Redirect", {
         zone: this.hostedZone,
         recordNames: [domainAlias],
         targetDomain: recordName,

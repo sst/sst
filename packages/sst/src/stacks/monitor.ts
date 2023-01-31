@@ -143,7 +143,7 @@ export async function monitor(stack: string) {
             "Resource creation cancelled"
           ) ||
           resource.ResourceStatusReason?.includes(
-            "Resource updated cancelled"
+            "Resource update cancelled"
           ) ||
           resource.ResourceStatusReason?.includes("Resource creation Initiated")
         )

@@ -2,7 +2,7 @@ import fs from "fs";
 import url from "url";
 import path from "path";
 import { Construct } from "constructs";
-import { Fn, Duration, RemovalPolicy } from "aws-cdk-lib";
+import { Fn, Duration as CdkDuration, RemovalPolicy } from "aws-cdk-lib";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
@@ -11,10 +11,24 @@ import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 import { SsrSite, SsrSiteProps } from "./SsrSite.js";
+import { Size, toCdkSize } from "./util/size.js";
+import { Duration } from "./util/duration.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
-export interface NextjsSiteProps extends Omit<SsrSiteProps, "edge"> {}
+export interface NextjsSiteProps extends Omit<SsrSiteProps, "edge"> {
+  imageOptimization?: {
+    /**
+     * The amount of memory in MB allocated for image optimization function.
+     * @default 1024 MB
+     * @example
+     * ```js
+     * memorySize: "512 MB",
+     * ```
+     */
+    memorySize?: number | Size;
+  };
+}
 
 /**
  * The `NextjsSite` construct is a higher level CDK construct that makes it easy to create a Next.js app.
@@ -28,6 +42,12 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "edge"> {}
  * ```
  */
 export class NextjsSite extends SsrSite {
+  protected declare props: Omit<NextjsSiteProps, "path"> & {
+    path: string;
+    timeout: number | Duration;
+    memorySize: number | Size;
+  };
+
   constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
     super(scope, id, {
       buildCommand: "npm_config_yes=true npx open-next@latest build",
@@ -44,21 +64,21 @@ export class NextjsSite extends SsrSite {
   }
 
   protected createFunctionForRegional(): lambda.Function {
-    const { defaults, environment } = this.props;
+    const { timeout, memorySize, permissions, environment } = this.props;
     const ssrFn = new SsrFunction(this, `ServerFunction`, {
       description: "Server handler for Next.js",
       bundlePath: path.join(this.props.path, ".open-next", "server-function"),
       handler: "index.handler",
-      timeout: defaults?.function?.timeout,
-      memory: defaults?.function?.memorySize,
-      permissions: defaults?.function?.permissions,
+      timeout,
+      memorySize,
+      permissions,
       environment,
     });
     return ssrFn.function;
   }
 
   private createImageOptimizationFunctionForRegional(): lambda.Function {
-    const { defaults, path: sitePath } = this.props;
+    const { imageOptimization, path: sitePath, cdk } = this.props;
 
     return new lambda.Function(this, `ImageFunction`, {
       description: "Image optimization handler for Next.js",
@@ -71,16 +91,21 @@ export class NextjsSite extends SsrSite {
         path.join(sitePath, ".open-next/image-optimization-function")
       ),
       runtime: lambda.Runtime.NODEJS_18_X,
-      memorySize: defaults?.function?.memorySize || 512,
-      timeout: Duration.seconds(defaults?.function?.timeout || 10),
+      memorySize: imageOptimization?.memorySize
+        ? typeof imageOptimization.memorySize === "string"
+          ? toCdkSize(imageOptimization.memorySize).toMebibytes()
+          : imageOptimization.memorySize
+        : 512,
+      timeout: CdkDuration.seconds(25),
       environment: {
         BUCKET_NAME: this.cdk.bucket.bucketName,
       },
+      vpc: cdk?.vpc,
     });
   }
 
   private createMiddlewareEdgeFunctionForRegional() {
-    const { defaults, environment, path: sitePath } = this.props;
+    const { permissions, environment, path: sitePath } = this.props;
     const middlewarePath = path.resolve(
       sitePath,
       ".open-next/middleware-function"
@@ -99,9 +124,9 @@ export class NextjsSite extends SsrSite {
     const fn = new EdgeFunction(this, "Middleware", {
       bundlePath,
       handler,
-      timeout: 5,
-      memory: 128,
-      permissions: defaults?.function?.permissions,
+      timeout: 10,
+      memorySize: 512,
+      permissions,
       environment,
       format: "esm",
     });
@@ -262,9 +287,9 @@ export class NextjsSite extends SsrSite {
         "x-middleware-prefetch"
       ),
       cookieBehavior: cloudfront.CacheCookieBehavior.all(),
-      defaultTtl: Duration.days(0),
-      maxTtl: Duration.days(365),
-      minTtl: Duration.days(0),
+      defaultTtl: CdkDuration.days(0),
+      maxTtl: CdkDuration.days(365),
+      minTtl: CdkDuration.days(0),
       enableAcceptEncodingBrotli: true,
       enableAcceptEncodingGzip: true,
       comment: "SST server response cache policy",

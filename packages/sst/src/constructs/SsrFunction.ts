@@ -6,21 +6,22 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as s3Assets from "aws-cdk-lib/aws-s3-assets";
-import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
-import { Duration, CustomResource } from "aws-cdk-lib";
+import { Duration as CdkDuration, CustomResource } from "aws-cdk-lib";
 
 import { Stack } from "./Stack.js";
 import { BaseSiteReplaceProps } from "./BaseSite.js";
 import { useProject } from "../project.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
+import { Size, toCdkSize } from "./util/size.js";
+import { Duration, toCdkDuration } from "./util/duration.js";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 export interface SsrFunctionProps {
   description?: string;
   bundlePath: string;
   handler: string;
-  timeout?: number;
-  memory?: number;
+  timeout: number | Duration;
+  memorySize: number | Size;
   permissions?: Permissions;
   environment?: Record<string, string>;
 }
@@ -48,7 +49,8 @@ export class SsrFunction extends Construct {
   }
 
   private createFunction() {
-    const { timeout, memory, handler, bundlePath, environment } = this.props;
+    const { timeout, memorySize, handler, bundlePath, environment } =
+      this.props;
 
     // Note: cannot point the bundlePath to the `.open-next/server-function`
     //       b/c the folder contains node_modules. And pnpm node_modules
@@ -90,8 +92,14 @@ export class SsrFunction extends Construct {
       logRetention: logs.RetentionDays.THREE_DAYS,
       code: lambda.Code.fromBucket(asset.bucket, asset.s3ObjectKey),
       runtime: lambda.Runtime.NODEJS_18_X,
-      memorySize: memory || 512,
-      timeout: Duration.seconds(timeout || 10),
+      memorySize:
+        typeof memorySize === "string"
+          ? toCdkSize(memorySize).toMebibytes()
+          : memorySize,
+      timeout:
+        typeof timeout === "string"
+          ? toCdkDuration(timeout)
+          : CdkDuration.seconds(timeout),
       environment,
     });
     fn.node.addDependency(replacer);
