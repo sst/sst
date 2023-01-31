@@ -442,7 +442,7 @@ test("edge: true: environment generates placeholders", async () => {
     ReplaceValues: [
       {
         files: "index-wrapper.js",
-        search: '"{{ _SST_EDGE_FUNCTION_ENVIRONMENT_ }}"',
+        search: '"{{ _SST_FUNCTION_ENVIRONMENT_ }}"',
         replace: {
           "Fn::Join": [
             "",

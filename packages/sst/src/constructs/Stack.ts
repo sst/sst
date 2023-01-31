@@ -203,7 +203,7 @@ export class Stack extends cdk.Stack {
       code: lambda.Code.fromAsset(
         path.join(__dirname, "../support/custom-resources/"),
         {
-          assetHash: this.stackName + "-custom-resources-v1",
+          assetHash: this.stackName + "-custom-resources-20230130",
         }
       ),
       handler: "index.handler",

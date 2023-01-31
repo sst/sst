@@ -115,6 +115,18 @@ export class Auth extends Construct implements SSTConstruct {
         privatePath: getParameterPath(this, PRIVATE_KEY_PROP),
       },
     });
+    stack.customResourceHandler.role?.addToPrincipalPolicy(
+      new PolicyStatement({
+        actions: [
+          "ssm:GetParameter",
+          "ssm:PutParameter",
+          "ssm:DeleteParameter",
+        ],
+        resources: [
+          `arn:${stack.partition}:ssm:${stack.region}:${stack.account}:parameter/*`,
+        ],
+      })
+    );
   }
 
   /** @internal */

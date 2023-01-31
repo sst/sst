@@ -775,7 +775,10 @@ export class NextjsSite extends Construct implements SSTConstruct {
     if (!provider) {
       provider = new lambda.Function(stack, providerId, {
         code: lambda.Code.fromAsset(
-          path.join(__dirname, "../../support/edge-function-code-replacer")
+          path.join(
+            __dirname,
+            "../../support/sls-nextjs-site-function-code-replacer"
+          )
         ),
         layers: [this.awsCliLayer],
         runtime: lambda.Runtime.PYTHON_3_7,

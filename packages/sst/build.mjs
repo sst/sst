@@ -177,10 +177,10 @@ await Promise.all(
 // Move support packages that don't need to be transpiled
 await Promise.all(
   [
-    "edge-function-code-replacer",
     "remix-site-function",
     "sls-nextjs-site-stub",
     "sls-nextjs-site-build-helper",
+    "sls-nextjs-site-function-code-replacer",
     "ssr-site-function-stub",
     "base-site-custom-resource",
     "python-runtime",

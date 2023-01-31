@@ -1,7 +1,6 @@
 import fs from "fs";
 import url from "url";
 import path from "path";
-import spawn from "cross-spawn";
 import { Construct } from "constructs";
 import { Fn, Duration, RemovalPolicy } from "aws-cdk-lib";
 import * as logs from "aws-cdk-lib/aws-logs";
@@ -9,7 +8,7 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 
-import { useProject } from "../project.js";
+import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 import { SsrSite, SsrSiteProps } from "./SsrSite.js";
 
@@ -46,51 +45,16 @@ export class NextjsSite extends SsrSite {
 
   protected createFunctionForRegional(): lambda.Function {
     const { defaults, environment } = this.props;
-
-    // Note: cannot point the bundlePath to the `.open-next/server-function`
-    //       b/c the folder contains node_modules. And pnpm node_modules
-    //       contains symlinks. CDK cannot zip symlinks correctly.
-    //       https://github.com/aws/aws-cdk/issues/9251
-    //       We will zip the folder ourselves.
-    const zipOutDir = path.resolve(
-      path.join(
-        useProject().paths.artifacts,
-        `Site-${this.node.id}-${this.node.addr}`
-      )
-    );
-    const script = path.resolve(
-      __dirname,
-      "../support/ssr-site-function-archiver.mjs"
-    );
-    const result = spawn.sync(
-      "node",
-      [
-        script,
-        path.join(this.props.path, ".open-next", "server-function"),
-        path.join(zipOutDir, "server-function.zip"),
-      ],
-      {
-        stdio: "inherit",
-      }
-    );
-
-    if (result.status !== 0) {
-      throw new Error(`There was a problem generating the assets package.`);
-    }
-
-    return new lambda.Function(this, `ServerFunction`, {
+    const ssrFn = new SsrFunction(this, `ServerFunction`, {
       description: "Server handler for Next.js",
+      bundlePath: path.join(this.props.path, ".open-next", "server-function"),
       handler: "index.handler",
-      currentVersionOptions: {
-        removalPolicy: RemovalPolicy.DESTROY,
-      },
-      logRetention: logs.RetentionDays.THREE_DAYS,
-      code: lambda.Code.fromAsset(path.join(zipOutDir, "server-function.zip")),
-      runtime: lambda.Runtime.NODEJS_18_X,
-      memorySize: defaults?.function?.memorySize || 512,
-      timeout: Duration.seconds(defaults?.function?.timeout || 10),
+      timeout: defaults?.function?.timeout,
+      memory: defaults?.function?.memorySize,
+      permissions: defaults?.function?.permissions,
       environment,
     });
+    return ssrFn.function;
   }
 
   private createImageOptimizationFunctionForRegional(): lambda.Function {

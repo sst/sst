@@ -9,6 +9,7 @@ import { execSync } from "child_process";
 import { Construct } from "constructs";
 import {
   Fn,
+  Token,
   Duration,
   CfnOutput,
   RemovalPolicy,
@@ -33,8 +34,9 @@ import { SSTConstruct, isCDKConstruct } from "./Construct.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 import {
   BaseSiteDomainProps,
-  getBuildCmdEnvironment,
+  BaseSiteReplaceProps,
   BaseSiteCdkDistributionProps,
+  getBuildCmdEnvironment,
 } from "./BaseSite.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import {
@@ -55,6 +57,7 @@ export type SsrBuildConfig = {
 };
 
 export interface SsrDomainProps extends BaseSiteDomainProps {}
+export interface SsrSiteReplaceProps extends BaseSiteReplaceProps {}
 export interface SsrCdkDistributionProps extends BaseSiteCdkDistributionProps {}
 export interface SsrSiteProps {
   /**
@@ -199,9 +202,6 @@ export class SsrSite extends Construct implements SSTConstruct {
   public readonly id: string;
   protected props: Omit<SsrSiteProps, "path"> & { path: string };
   private doNotDeploy: boolean;
-  /**
-   * The root SST directory used for builds.
-   */
   protected buildConfig: SsrBuildConfig;
   private serverLambdaForEdge?: EdgeFunction;
   protected serverLambdaForRegional?: lambda.Function;
@@ -628,6 +628,7 @@ export class SsrSite extends Construct implements SSTConstruct {
             ];
           }
         ),
+        ReplaceValues: this.getS3ContentReplaceValues(),
       },
     });
   }
@@ -1014,6 +1015,29 @@ export class SsrSite extends Construct implements SSTConstruct {
   /////////////////////
   // Helper Functions
   /////////////////////
+
+  private getS3ContentReplaceValues() {
+    const replaceValues: SsrSiteReplaceProps[] = [];
+
+    Object.entries(this.props.environment || {})
+      .filter(([, value]) => Token.isUnresolved(value))
+      .forEach(([key, value]) => {
+        const token = `{{ ${key} }}`;
+        replaceValues.push(
+          {
+            files: "**/*.html",
+            search: token,
+            replace: value,
+          },
+          {
+            files: "**/*.js",
+            search: token,
+            replace: value,
+          }
+        );
+      });
+    return replaceValues;
+  }
 
   private validateSiteExists() {
     const { path: sitePath } = this.props;

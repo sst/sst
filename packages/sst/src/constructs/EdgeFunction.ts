@@ -10,6 +10,7 @@ import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
 import { Lazy, Duration, CfnResource, CustomResource } from "aws-cdk-lib";
 
 import { Stack } from "./Stack.js";
+import { BaseSiteReplaceProps } from "./BaseSite.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -46,7 +47,7 @@ export class EdgeFunction extends Construct {
     super(scope, id);
 
     this.props = props;
-    const { format, scopeOverride } = props;
+    const { scopeOverride } = props;
 
     // Correct scope
     this.scope = scopeOverride || this;
@@ -105,7 +106,7 @@ const handler = async (event) => {
     // replacer to inject the environment variables assigned to the
     // EdgeFunction construct.
     //
-    // "{{ _SST_EDGE_FUNCTION_ENVIRONMENT_ }}" will get replaced during
+    // "{{ _SST_FUNCTION_ENVIRONMENT_ }}" will get replaced during
     // deployment with an object of environment key-value pairs, ie.
     // const environment = {"API_URL": "https://api.example.com"};
     //
@@ -113,7 +114,7 @@ const handler = async (event) => {
     // support runtime environment variables. A downside of this approach
     // is that environment variables cannot be toggled after deployment,
     // each change to one requires a redeployment.
-    const environment = "{{ _SST_EDGE_FUNCTION_ENVIRONMENT_ }}";
+    const environment = "{{ _SST_FUNCTION_ENVIRONMENT_ }}";
     process.env = { ...process.env, ...environment };
   } catch (e) {
     console.log("Failed to set SST Lambda@Edge environment.");
@@ -200,82 +201,34 @@ ${exports}
     this.updateVersionLogicalId(functionCR, versionCR);
 
     // Deploy after the code is updated
-    const updaterCR = this.createLambdaCodeReplacer(name, asset);
+    const updaterCR = this.createLambdaCodeReplacer(asset);
     functionCR.node.addDependency(updaterCR);
 
     return { functionArn, versionId };
   }
 
-  private createSingletonAwsCliLayer(): AwsCliLayer {
-    // Do not recreate if exist
-    const resId = "AwsCliLayer";
-    const stack = Stack.of(this);
-    const existingResource = stack.node.tryFindChild(resId);
-    if (existingResource) {
-      return existingResource as AwsCliLayer;
-    }
-
-    // Create custom resource
-    return new AwsCliLayer(stack, resId);
-  }
-
-  private createLambdaCodeReplacer(
-    name: string,
-    asset: s3Assets.Asset
-  ): CustomResource {
+  private createLambdaCodeReplacer(asset: s3Assets.Asset): CustomResource {
     // Note: Source code for the Lambda functions have "{{ ENV_KEY }}" in them.
     //       They need to be replaced with real values before the Lambda
     //       functions get deployed.
+    const stack = Stack.of(this) as Stack;
 
-    const { format } = this.props;
-    const providerId = "LambdaCodeReplacerProvider";
-    const resId = `${name}LambdaCodeReplacer`;
-    const stack = Stack.of(this);
-    let provider = stack.node.tryFindChild(providerId) as lambda.Function;
-
-    // Create provider if not already created
-    if (!provider) {
-      provider = new lambda.Function(stack, providerId, {
-        code: lambda.Code.fromAsset(
-          path.join(__dirname, "../support/edge-function-code-replacer")
-        ),
-        layers: [this.createSingletonAwsCliLayer()],
-        runtime: lambda.Runtime.PYTHON_3_7,
-        handler: "lambda-code-updater.handler",
-        timeout: Duration.minutes(15),
-        memorySize: 1024,
-      });
-    }
-
-    // Allow provider to perform search/replace on the asset
-    provider.role?.addToPrincipalPolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: ["s3:*"],
-        resources: [
-          `arn:${stack.partition}:s3:::${asset.s3BucketName}/${asset.s3ObjectKey}`,
-        ],
-      })
-    );
-
-    // Create custom resource to replace the code
-    const resource = new CustomResource(this.scope, resId, {
-      serviceToken: provider.functionArn,
-      resourceType: "Custom::SSTLambdaCodeUpdater",
+    const resource = new CustomResource(this.scope, "AssetReplacer", {
+      serviceToken: stack.customResourceHandler.functionArn,
+      resourceType: "Custom::AssetReplacer",
       properties: {
-        Source: {
-          BucketName: asset.s3BucketName,
-          ObjectKey: asset.s3ObjectKey,
-        },
-        ReplaceValues: [
-          {
-            files: `index-wrapper.${format === "esm" ? "mjs" : "cjs"}`,
-            search: '"{{ _SST_EDGE_FUNCTION_ENVIRONMENT_ }}"',
-            replace: JSON.stringify(this.props.environment || {}),
-          },
-        ],
+        bucket: asset.s3BucketName,
+        key: asset.s3ObjectKey,
+        replacements: this.getLambdaContentReplaceValues(),
       },
     });
+    stack.customResourceHandler.role?.addToPrincipalPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ["s3:GetObject", "s3:PutObject"],
+        resources: [`arn:${stack.partition}:s3:::${asset.s3BucketName}/*`],
+      })
+    );
 
     return resource;
   }
@@ -409,6 +362,40 @@ ${exports}
   /////////////////////
   // Internal Functions
   /////////////////////
+
+  private getLambdaContentReplaceValues() {
+    const { format } = this.props;
+    const replaceValues: BaseSiteReplaceProps[] = [];
+
+    Object.entries(this.props.environment || {}).forEach(([key, value]) => {
+      const token = `{{ ${key} }}`;
+      replaceValues.push(
+        {
+          files: "**/*.js",
+          search: token,
+          replace: value,
+        },
+        {
+          files: "**/*.cjs",
+          search: token,
+          replace: value,
+        },
+        {
+          files: "**/*.mjs",
+          search: token,
+          replace: value,
+        }
+      );
+    });
+
+    replaceValues.push({
+      files: `index-wrapper.${format === "esm" ? "mjs" : "cjs"}`,
+      search: '"{{ _SST_FUNCTION_ENVIRONMENT_ }}"',
+      replace: JSON.stringify(this.props.environment || {}),
+    });
+
+    return replaceValues;
+  }
 
   private updateVersionLogicalId(
     functionCR: CustomResource,
