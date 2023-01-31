@@ -1,7 +1,7 @@
 import { atom, useAtom } from "jotai";
 import { atomWithStorage, selectAtom } from "jotai/utils";
 import { trpc } from "./trpc";
-import { State } from "../../../sst/src/cli/local/router";
+import { State } from "../../../core/src/local/router";
 import { useMemo } from "react";
 
 const DarkModeAtom = atomWithStorage<boolean>(

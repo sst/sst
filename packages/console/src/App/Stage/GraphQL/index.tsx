@@ -63,9 +63,7 @@ export function Explorer() {
       stacks.data?.constructs.byType.Api?.filter((item) => {
         return (
           (item.data.graphql as any) === "true" ||
-          item.data.routes.some(
-            (x) => x.type === "pothos" || x.type === "graphql"
-          )
+          item.data.routes.some((x) => x.type === "pothos" || x.type === "graphql")
         );
       }) || [];
     const appsync = stacks.data?.constructs.byType.AppSync || [];
@@ -82,9 +80,7 @@ export function Explorer() {
     if (!selected) return;
     const base = selected.data.customDomainUrl || selected.data.url;
     if (selected.type === "Api") {
-      const route = selected.data.routes.find(
-        (x) => x.type === "pothos" || x.type === "graphql"
-      );
+      const route = selected.data.routes.find((x) => x.type === "pothos" || x.type === "graphql");
       if (!route) return base;
       return base.replace(/[\/]+$/g, "") + route.route.split(" ")[1];
     }

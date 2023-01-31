@@ -57,10 +57,6 @@ export function Detail() {
     [params.function]
   );
 
-  useRealtimeState((s) =>
-    console.log(s.functions, functionMetadata.data.localId)
-  );
-
   return (
     <Root key={params.function}>
       <Header>
@@ -149,14 +145,7 @@ const Invoke = memo((props: { metadata: FunctionMetadata }) => {
 
   return (
     <InvokeRoot>
-      <form
-        onSubmit={onSubmit}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && e.metaKey) {
-            onSubmit();
-          }
-        }}
-      >
+      <form onSubmit={onSubmit}>
         <InvokeTextarea
           maxRows={20}
           minRows={5}

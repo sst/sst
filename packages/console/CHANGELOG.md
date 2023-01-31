@@ -1,132 +1,18 @@
 # @serverless-stack/console
 
-## 2.0.0-rc.57
+## 1.18.4
 
-## 2.0.0-rc.56
+## 1.18.3
 
-## 2.0.0-rc.55
+## 1.18.2
 
-## 2.0.0-rc.54
+## 1.18.1
 
-## 2.0.0-rc.53
+## 1.18.0
 
-## 2.0.0-rc.52
+### Minor Changes
 
-## 2.0.0-rc.51
-
-## 2.0.0-rc.50
-
-## 2.0.0-rc.49
-
-## 2.0.0-rc.48
-
-## 2.0.0-rc.47
-
-## 2.0.0-rc.46
-
-## 2.0.0-rc.45
-
-## 2.0.0-rc.44
-
-## 2.0.0-rc.43
-
-## 2.0.0-rc.42
-
-## 2.0.0-rc.41
-
-## 2.0.0-rc.40
-
-## 2.0.0-rc.39
-
-## 2.0.0-rc.38
-
-## 2.0.0-rc.37
-
-## 2.0.0-rc.36
-
-## 2.0.0-rc.35
-
-## 2.0.0-rc.34
-
-## 2.0.0-rc.33
-
-## 2.0.0-rc.32
-
-## 2.0.0-rc.31
-
-## 2.0.0-rc.30
-
-## 2.0.0-rc.29
-
-## 2.0.0-rc.28
-
-## 2.0.0-rc.27
-
-## 2.0.0-rc.26
-
-## 2.0.0-rc.25
-
-## 2.0.0-rc.24
-
-## 2.0.0-rc.23
-
-## 2.0.0-rc.22
-
-## 2.0.0-rc.21
-
-## 2.0.0-rc.20
-
-## 2.0.0-rc.19
-
-## 2.0.0-rc.18
-
-## 2.0.0-rc.17
-
-## 2.0.0-rc.16
-
-### Patch Changes
-
-- [`8371c7bb9`](https://github.com/serverless-stack/sst/commit/8371c7bb935f9ae9c02e2790bb4735a94a022146) Thanks [@fwang](https://github.com/fwang)! - StaticSite: fix script path
-
-## 2.0.0-rc.15
-
-### Patch Changes
-
-- [`591b21b83`](https://github.com/serverless-stack/sst/commit/591b21b83c94ba87b4079f33d783fd4b672db603) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: fix script path
-
-## 2.0.0-rc.14
-
-## 2.0.0-rc.13
-
-## 2.0.0-rc.12
-
-## 2.0.0-rc.11
-
-## 2.0.0-rc.10
-
-## 2.0.0-rc.9
-
-## 2.0.0-rc.8
-
-## 2.0.0-rc.7
-
-## 2.0.0-rc.6
-
-## 2.0.0-rc.5
-
-## 2.0.0-rc.4
-
-## 2.0.0-rc.3
-
-## 2.0.0-rc.2
-
-## 2.0.0-rc.1
-
-## 2.0.0-rc.0
-
-### Major Changes
-
-- [`db5aadfbc`](https://github.com/serverless-stack/sst/commit/db5aadfbca8628eb23eee486c07e5819bb6cf750) Thanks [@thdxr](https://github.com/thdxr)! - 2.0
+- [#2194](https://github.com/serverless-stack/sst/pull/2194) [`dcb36ad54`](https://github.com/serverless-stack/sst/commit/dcb36ad546464434916b372fd7a33f51ee4612b2) Thanks [@fwang](https://github.com/fwang)! - Merge GraphQLApi into Api
 
 ## 1.17.1
 

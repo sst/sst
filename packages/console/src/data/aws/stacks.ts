@@ -53,8 +53,8 @@ type Result = {
 export function useStacks() {
   const params = useParams<{ app: string; stage: string }>();
   const cf = useClient(CloudFormationClient);
-  const ssm = useClient(SSMClient);
   const s3 = useClient(S3Client);
+  const ssm = useClient(SSMClient);
 
   return useQuery(
     ["stacks", params.app!, params.stage!],
@@ -62,12 +62,32 @@ export function useStacks() {
       let stacks: StackInfo[] = [];
 
       try {
-        const value = await ssm.send(
-          new GetParameterCommand({
-            Name: `/sst/bootstrap/bucket-name`,
-          })
-        );
-        const bucketName = value.Parameter.Value;
+        async function getMetadataBucket() {
+          // Lookup from SSM first (SST v1)
+          try {
+            const value = await ssm.send(
+              new GetParameterCommand({
+                Name: `/sst/bootstrap/bucket-name`,
+              })
+            )
+            return value.Parameter.Value;
+          } catch (e: any) {
+            if (e.name === "ParameterNotFound") {
+              // Lookup from Bootstrap stack output (SST v2)
+              const describe = await cf.send(
+                new DescribeStacksCommand({
+                  StackName: "SSTBootstrap",
+                })
+              );
+              const output = (describe.Stacks![0].Outputs || []).find((o) =>
+                o.OutputKey === "BucketName"
+              );
+              return output.OutputValue;
+            }
+            throw e;
+          }
+        }
+        const bucketName = await getMetadataBucket();
         const list = await s3.send(
           new ListObjectsV2Command({
             Bucket: bucketName,
@@ -172,7 +192,7 @@ export function useStacks() {
         });
 
         // Limit to 3 at a time to avoid hitting AWS limits
-        const meta: Awaited<ReturnType<(typeof work)[number]>>[] = [];
+        const meta: Awaited<ReturnType<typeof work[number]>>[] = [];
         while (work.length) {
           meta.push(...(await Promise.all(work.splice(0, 3).map((f) => f()))));
         }
