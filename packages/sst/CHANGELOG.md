@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.0.0-rc.59
+
+### Patch Changes
+
+- [`293df5ff3`](https://github.com/serverless-stack/sst/commit/293df5ff373b2c22aaf72f0d0bc4d8bce823df2b) Thanks [@fwang](https://github.com/fwang)! - SsrSite: support vpc
+
 ## 2.0.0-rc.58
 
 ### Patch Changes
