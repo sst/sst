@@ -8,7 +8,8 @@
     "@serverless-stack/docs": "1.9.1",
     "astro-aws": "2.0.0-rc.16",
     "solid-start-sst": "2.0.0-rc.16",
-    "astro-sst": "2.0.0-rc.17"
+    "astro-sst": "2.0.0-rc.17",
+    "@serverless-stack/static-site-env": "1.18.4"
   },
   "changesets": [
     "big-avocados-destroy",
@@ -42,6 +43,7 @@
     "lazy-pets-change",
     "lovely-frogs-refuse",
     "lovely-moons-move",
+    "many-boxes-join",
     "many-monkeys-smile",
     "metal-scissors-judge",
     "metal-windows-film",
