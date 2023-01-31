@@ -378,7 +378,7 @@ export class SsrSite extends Construct implements SSTConstruct {
           // depend on the Site. B/c often the site depends on the Api, causing
           // a CloudFormation circular dependency if the Api and the Site belong
           // to different stacks.
-          environment: ENVIRONMENT_PLACEHOLDER,
+          environment: this.doNotDeploy ? "" : ENVIRONMENT_PLACEHOLDER,
           parameter: this.customDomainUrl || this.url,
         },
       },

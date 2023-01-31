@@ -42,7 +42,7 @@ export function bindParameters(c: SSTConstruct) {
 
   const app = c.node.root as App;
   Object.entries(binding.variables)
-    .filter(([, variable]) => variable.parameter)
+    .filter(([, variable]) => variable.parameter !== undefined)
     .forEach(([prop, variable]) => {
       const resId = `Parameter_${prop}`;
       if (!c.node.tryFindChild(resId)) {
