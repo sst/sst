@@ -22,7 +22,7 @@ It features built-in support for setting breakpoints in your Lambda functions, a
 
 ## Breakpoints
 
-With [Live Lambda Development](live-lambda-development.md) you can set breakpoints in your Lamnda functions and test them locally.
+With [Live Lambda Development](live-lambda-development.md) you can set breakpoints in your Lambda functions and test them locally.
 
 :::info
 To setup breakpoint debugging in WebStorm or IntelliJ, follow these docs:

@@ -2,6 +2,10 @@ The `GraphQLApi` construct is a higher level CDK construct that makes it easy to
 
 The `GraphQLApi` construct internally extends the [`Api`](Api) construct.
 
+:::warning
+The `GraphQLApi` construct is deprecated, and will be removed in SST v2. Use the [`Api`](Api.md) construct with a `graphql` route instead. [Read more about how to upgrade.](../upgrade-guide.md#upgrade-to-v118)
+:::
+
 ## Examples
 
 ### Using the minimal config

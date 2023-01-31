@@ -130,7 +130,7 @@ Create a stack for the construct. Let's call it `BeforeDeployStack` and add it t
 ```ts
 import { dependsOn, StackContext, Script } from "sst/constructs";
 
-function BeforeDeployStack(ctx: StackContext) {
+function BeforeDeployStack({stack}: StackContext) {
   new Script(stack, "BeforeDeploy", {
     onCreate: "src/script.create",
   });
@@ -162,9 +162,9 @@ Create a `AfterDeployStack` in `stacks/index.js`.
 ```ts
 import { dependsOn, StackContext, Script } from "sst/constructs";
 
-function AfterDeployStack(ctx: StackContext) {
-  dependsOn(ApiStack);
-  dependsOn(DBStack);
+function AfterDeployStack({stack}: StackContext) {
+  dependsOn(ApiStack)
+  dependsOn(DBStack)
   new Script(stack, "AfterDeploy", {
     onCreate: "src/script.create",
   });

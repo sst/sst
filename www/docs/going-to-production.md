@@ -29,13 +29,13 @@ The `--stage` takes a string and uses it to namespace all the resources in your 
 
 If you are working on an SST app as a team, you don't want to deploy using the CLI because you might end up overwriting each other's changes.
 
-Instead you should set it up so that your changes are deployed when you push your changes to Git. So if you have a CI/CD provider like, [GitHub Actions](https://www.travis-ci.com) or [Travis](https://github.com/features/actions) connected to your Git repo. You can add a script that'll run the `sst deploy` command when you push to `master`.
+Instead you should set it up so that your changes are deployed when you push your changes to Git. So if you have a CI/CD provider like, [GitHub Actions](https://github.com/features/actions) or [Travis](https://www.travis-ci.com) connected to your Git repo. You can add a script that'll run the `sst deploy` command when you push to `master`.
 
 ---
 
 ### PR workflow
 
-Additionally, since your are using serverless, it makes sense to have separate environments per feature or pull request.
+Additionally, since you are using serverless, it makes sense to have separate environments per feature or pull request.
 
 :::info
 Serverless and SST makes it easy and cost-effective for teams to embrace a Git workflow complete with feature branches and preview environments.

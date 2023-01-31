@@ -328,6 +328,44 @@ my-sst-app
 ```
 
 Where the `web/` directory is your frontend, `services/` is the backend, and `stacks/` has your infrastructure definitions.
+For the frontend of your application, SST lets you deploy [**Next.js**](constructs/NextjsSite.md) and [**Remix**](constructs/RemixSite.md) apps. Or any [static website](constructs/StaticSite.md).
+
+Here for example, we are defining a [Vite](https://vitejs.dev) static site using the [`StaticSite`](constructs/StaticSite.md) construct.
+
+```ts
+new StaticSite(this, "site", {
+  path: "web",
+  buildCommand: "npm run build",
+  buildOutput: "dist",
+  customDomain: "my-sst-app.com",
+  environment: {
+    VITE_API_URL: api.url,
+  },
+});
+```
+
+Behind the scenes, this creates a static website powered by [Amazon S3](https://aws.amazon.com/s3/) and serves it through [Amazon CloudFront](https://aws.amazon.com/cloudfront/), a CDN.
+
+---
+
+### Connect to the API
+
+SST makes it easy to connect your frontend to your API by letting you share config between constructs.
+
+For example, you can grab the API endpoint from the API construct and pass it to our frontend as an environment variable.
+
+```ts {1,6}
+const api = new Api(/* ... */);
+
+new StaticSite(this, "site", {
+  // ...
+  environment: {
+    VITE_API_URL: api.url,
+  },
+});
+```
+
+With SST, we **don't need to hardcode our backend config** in the frontend.
 
 ---
 

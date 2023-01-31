@@ -19,7 +19,7 @@ new StaticSite(stack, "react", {
   environment: {
     // Pass in the API endpoint to our app
     VITE_API_URL: api.url,
-  },
+  }, 
 });
 ```
 
@@ -35,7 +35,7 @@ new StaticSite(stack, "vue", {
   environment: {
     // Pass in the API endpoint to our app
     VITE_API_URL: api.url,
-  },
+  }, 
 });
 ```
 
@@ -51,7 +51,7 @@ new StaticSite(stack, "svelte", {
   environment: {
     // Pass in the API endpoint to our app
     VITE_API_URL: api.url,
-  },
+  }, 
 });
 ```
 
@@ -115,6 +115,18 @@ new StaticSite(stack, "frontend", {
 });
 ```
 
+### Creating a plain HTML site
+
+Deploys a plain HTML website in the `path/to/site` directory.
+
+```js
+import { StaticSite } from "@serverless-stack/resources";
+
+new StaticSite(stack, "frontend", {
+  path: "path/to/site",
+});
+```
+
 ### Environment variables
 
 The `StaticSite` construct allows you to set the environment variables that are passed through your build system based on outputs from other constructs in your SST app. So you don't have to hard code the config from your backend.
@@ -172,7 +184,7 @@ new StaticSite(stack, "frontend", {
   },
   vite: {
     types: "types/my-env.d.ts",
-  },
+  }
 });
 ```
 
@@ -221,7 +233,6 @@ There are a couple of things happening behind the scenes here:
   sst.json
   vite-app/
 ```
-
 :::
 
 ### Custom domains

@@ -250,7 +250,7 @@ import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new NextjsSite(stack, "Site", {
   path: "path/to/site",
-  cutomDomain: {
+  customDomain: {
     isExternalDomain: true,
     domainName: "domain.com",
     cdk: {
