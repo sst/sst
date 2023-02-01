@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.0.0-rc.62
+
+### Patch Changes
+
+- [`7ef60acf8`](https://github.com/serverless-stack/sst/commit/7ef60acf866584b1a0426c4b03499133921b872c) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: set server function architecture to arm64
+
 ## 2.0.0-rc.61
 
 ### Patch Changes
