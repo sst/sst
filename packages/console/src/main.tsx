@@ -77,30 +77,14 @@ ReactDOM.render(
 
 function Trpc(props: PropsWithChildren<{}>) {
   const [client, setClient] = useState<ReturnType<typeof trpc.createClient>>();
-  const [, setSSL] = useSSL();
 
   useEffect(() => {
     async function boot() {
-      let isSSL = true;
       const port = new URLSearchParams(location.search).get("_port") || "13557";
-
-      while (true) {
-        const protocol = isSSL ? "https" : "http";
-        const resp = await fetch(
-          isSSL
-            ? `https://localhost:${port}/ping`
-            : `http://localhost:12557/proxy/https://jsonplaceholder.typicode.com/todos/1`
-        ).catch((err) => {
-          console.log(protocol, JSON.stringify(err));
-        });
-        if (resp && resp.status === 200) break;
-        await new Promise((r) => setTimeout(r, 1000));
-        isSSL = !isSSL;
-      }
 
       // create persistent WebSocket connection
       const ws = createWSClient({
-        url: `${isSSL ? "wss" : "ws"}://localhost:${port}`,
+        url: `ws://localhost:${port}`,
         retryDelayMs: () => 5000,
       });
 
@@ -111,8 +95,6 @@ function Trpc(props: PropsWithChildren<{}>) {
           }),
         ],
       });
-
-      setSSL(isSSL);
       setClient(trpcClient);
     }
 
