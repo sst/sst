@@ -112,7 +112,6 @@ test("constructor: graphqlApi is construct", async () => {
   });
 });
 
-/*
 test("constructor: graphqlApi is imported", async () => {
   const stack = new Stack(await createApp(), "stack");
   new AppSyncApi(stack, "Api", {
@@ -138,12 +137,13 @@ test("customDomain is string", async () => {
     });
 
   const api = new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     customDomain: "api.domain.com",
   });
   expect(api.customDomainUrl).toMatch(/https:\/\/api.domain.com/);
   expect(api.cdk.certificate).toBeDefined();
   hasResource(stack, "AWS::AppSync::GraphQLApi", {
-    Name: "test-api-Api",
+    Name: "test-app-Api",
   });
   hasResource(stack, "AWS::AppSync::DomainName", {
     DomainName: "api.domain.com",
@@ -174,6 +174,7 @@ test("customDomain is string (uppercase error)", async () => {
   const stack = new Stack(await createApp(), "stack");
   expect(() => {
     new AppSyncApi(stack, "Api", {
+      schema: path.resolve(__dirname, "appsync/schema.graphql"),
       customDomain: "API.domain.com",
     });
   }).toThrow(/The domain name needs to be in lowercase/);
@@ -184,6 +185,7 @@ test("customDomain is string (imported ssm)", async () => {
   const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
   expect(() => {
     new AppSyncApi(stack, "Api", {
+      schema: path.resolve(__dirname, "appsync/schema.graphql"),
       customDomain: domain,
     });
   }).toThrow(
@@ -200,13 +202,14 @@ test("customDomain.domainName is string", async () => {
     });
 
   const api = new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     customDomain: {
       domainName: "api.domain.com",
       hostedZone: "api.domain.com",
     },
   });
   hasResource(stack, "AWS::AppSync::GraphQLApi", {
-    Name: "test-api-Api",
+    Name: "test-app-Api",
   });
   hasResource(stack, "AWS::AppSync::DomainName", {
     DomainName: "api.domain.com",
@@ -227,6 +230,7 @@ test("customDomain.domainName is string (uppercase error)", async () => {
   const stack = new Stack(await createApp(), "stack");
   expect(() => {
     new AppSyncApi(stack, "Api", {
+      schema: path.resolve(__dirname, "appsync/schema.graphql"),
       customDomain: {
         domainName: "API.domain.com",
       },
@@ -239,6 +243,7 @@ test("customDomain.domainName is string (imported ssm), hostedZone undefined", a
   const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
   expect(() => {
     new AppSyncApi(stack, "Api", {
+      schema: path.resolve(__dirname, "appsync/schema.graphql"),
       customDomain: {
         domainName: domain,
       },
@@ -251,6 +256,7 @@ test("customDomain.domainName is string (imported ssm), hostedZone undefined", a
 test("customDomain: isExternalDomain true", async () => {
   const stack = new Stack(await createApp(), "stack");
   const api = new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     customDomain: {
       domainName: "api.domain.com",
       isExternalDomain: true,
@@ -263,7 +269,7 @@ test("customDomain: isExternalDomain true", async () => {
   });
   expect(api.customDomainUrl).toEqual("https://api.domain.com/graphql");
   hasResource(stack, "AWS::AppSync::GraphQLApi", {
-    Name: "test-api-Api",
+    Name: "test-app-Api",
   });
   hasResource(stack, "AWS::AppSync::DomainName", {
     DomainName: "api.domain.com",
@@ -274,6 +280,7 @@ test("customDomain: isExternalDomain true and no certificate", async () => {
   const stack = new Stack(await createApp(), "stack");
   expect(() => {
     new AppSyncApi(stack, "Site", {
+      schema: path.resolve(__dirname, "appsync/schema.graphql"),
       customDomain: {
         domainName: "www.domain.com",
         isExternalDomain: true,
@@ -288,6 +295,7 @@ test("customDomain: isExternalDomain true and hostedZone set", async () => {
   const stack = new Stack(await createApp(), "stack");
   expect(() => {
     new AppSyncApi(stack, "Site", {
+      schema: path.resolve(__dirname, "appsync/schema.graphql"),
       customDomain: {
         domainName: "www.domain.com",
         isExternalDomain: true,
@@ -308,6 +316,7 @@ test("customDomain.domainName is string (imported ssm), hostedZone defined", asy
   const stack = new Stack(await createApp(), "stack");
   const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
   new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     customDomain: {
       domainName: domain,
       hostedZone: "domain.com",
@@ -339,6 +348,7 @@ test("customDomain.hostedZone-generated-from-minimal-domainName", async () => {
     });
 
   new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     customDomain: "api.domain.com",
   });
   hasResource(stack, "AWS::Route53::HostedZone", {
@@ -355,6 +365,7 @@ test("customDomain.hostedZone-generated-from-full-domainName", async () => {
     });
 
   new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     customDomain: {
       domainName: "api.domain.com",
     },
@@ -372,7 +383,9 @@ test("customDomain props-redefined", async () => {
       cdk: {
         graphqlApi: new appsync.GraphqlApi(stack, "GraphQLApi", {
           name: "Api",
-        schema: appsync.SchemaFile.fromAsset(path.resolve(__dirname, "appsync/schema.graphql")),
+          schema: appsync.SchemaFile.fromAsset(
+            path.resolve(__dirname, "appsync/schema.graphql")
+          ),
         }),
       },
     });
@@ -383,13 +396,16 @@ test("customDomain props-redefined", async () => {
 
 test("dataSources-undefined", async () => {
   const stack = new Stack(await createApp(), "stack");
-  new AppSyncApi(stack, "Api", {});
+  new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
+  });
   countResources(stack, "AWS::AppSync::DataSource", 0);
 });
 
 test("dataSources-empty", async () => {
   const stack = new Stack(await createApp(), "stack");
   new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     dataSources: {},
   });
   countResources(stack, "AWS::AppSync::DataSource", 0);
@@ -398,6 +414,7 @@ test("dataSources-empty", async () => {
 test("dataSources-FunctionDefinition-string", async () => {
   const stack = new Stack(await createApp(), "stack");
   new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     dataSources: {
       lambdaDS: "test/lambda.handler",
     },
@@ -415,6 +432,7 @@ test("dataSources-FunctionDefinition-string", async () => {
 test("dataSources-FunctionDefinition-with-defaults.function", async () => {
   const stack = new Stack(await createApp(), "stack");
   new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     dataSources: {
       lambdaDS: "test/lambda.handler",
     },
@@ -440,6 +458,7 @@ test("dataSources-FunctionDefinition-construct-with-defaults.function", async ()
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
   expect(() => {
     new AppSyncApi(stack, "Api", {
+      schema: path.resolve(__dirname, "appsync/schema.graphql"),
       dataSources: {
         lambdaDS: f,
       },
@@ -455,6 +474,7 @@ test("dataSources-FunctionDefinition-construct-with-defaults.function", async ()
 test("dataSources-LambdaDataSource-string", async () => {
   const stack = new Stack(await createApp(), "stack");
   new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     dataSources: {
       lambdaDS: {
         function: "test/lambda.handler",
@@ -474,6 +494,7 @@ test("dataSources-LambdaDataSource-string", async () => {
 test("dataSources-LambdaDataSource-props", async () => {
   const stack = new Stack(await createApp(), "stack");
   new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     dataSources: {
       lambdaDS: {
         function: {
@@ -497,6 +518,7 @@ test("dataSources-LambdaDataSource-props", async () => {
 test("dataSources-LambdaDataSource-with-defaults.function", async () => {
   const stack = new Stack(await createApp(), "stack");
   new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     dataSources: {
       lambdaDS: {
         function: "test/lambda.handler",
@@ -522,6 +544,7 @@ test("dataSources-LambdaDataSource-with-defaults.function", async () => {
 test("dataSources-LambdaDataSource-with-options", async () => {
   const stack = new Stack(await createApp(), "stack");
   new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     dataSources: {
       lambdaDS: {
         function: "test/lambda.handler",
@@ -546,6 +569,7 @@ test("dataSources-DynamoDbDataSource-sstTable", async () => {
     primaryIndex: { partitionKey: "id" },
   });
   new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     dataSources: {
       dbDS: {
         type: "dynamodb",
@@ -567,6 +591,7 @@ test("dataSources-DynamoDbDataSource-dynamodbTable", async () => {
     partitionKey: { name: "id", type: dynamodb.AttributeType.STRING },
   });
   new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     dataSources: {
       dbDS: {
         type: "dynamodb",
@@ -593,6 +618,7 @@ test("dataSources-DynamoDbDataSource-with-options", async () => {
     primaryIndex: { partitionKey: "id" },
   });
   new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     dataSources: {
       dbDS: {
         type: "dynamodb",
@@ -616,6 +642,7 @@ test("dataSources-RdsDataSource-sstRds", async () => {
     defaultDatabaseName: "acme",
   });
   new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     dataSources: {
       rdsDS: {
         type: "rds",
@@ -643,6 +670,7 @@ test("dataSources-RdsDataSource-rdsServerlessCluster", async () => {
     vpc: new ec2.Vpc(stack, "VPC"),
   });
   new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     dataSources: {
       rdsDS: {
         type: "rds",
@@ -673,6 +701,7 @@ test("dataSources-RdsDataSource-with-options", async () => {
     defaultDatabaseName: "acme",
   });
   new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     dataSources: {
       rdsDS: {
         type: "rds",
@@ -695,6 +724,7 @@ test("dataSources-RdsDataSource-with-options", async () => {
 test("dataSources-HttpDataSource", async () => {
   const stack = new Stack(await createApp(), "stack");
   new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     dataSources: {
       httpDS: {
         type: "http",
@@ -715,6 +745,7 @@ test("dataSources-HttpDataSource", async () => {
 test("dataSources-HttpDataSource-with-options", async () => {
   const stack = new Stack(await createApp(), "stack");
   new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     dataSources: {
       httpDS: {
         type: "http",
@@ -736,6 +767,7 @@ test("dataSources-HttpDataSource-with-options", async () => {
 test("dataSources-NoneDataSource", async () => {
   const stack = new Stack(await createApp(), "stack");
   new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     dataSources: {
       noneDS: {
         type: "none",
@@ -752,6 +784,7 @@ test("dataSources-NoneDataSource", async () => {
 test("dataSources-NoneDataSource-with-options", async () => {
   const stack = new Stack(await createApp(), "stack");
   new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     dataSources: {
       noneDS: {
         type: "none",
@@ -768,13 +801,16 @@ test("dataSources-NoneDataSource-with-options", async () => {
 
 test("resolvers: undefined", async () => {
   const stack = new Stack(await createApp(), "stack");
-  new AppSyncApi(stack, "Api", {});
+  new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
+  });
   countResources(stack, "AWS::AppSync::Resolver", 0);
 });
 
 test("resolvers: empty", async () => {
   const stack = new Stack(await createApp(), "stack");
   new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     resolvers: {},
   });
   countResources(stack, "AWS::AppSync::Resolver", 0);
@@ -784,6 +820,7 @@ test("resolvers: invalid", async () => {
   const stack = new Stack(await createApp(), "stack");
   expect(() => {
     new AppSyncApi(stack, "Api", {
+      schema: path.resolve(__dirname, "appsync/schema.graphql"),
       resolvers: {
         "Query / 1 2 3": "test/lambda.handler",
       },
@@ -795,6 +832,7 @@ test("resolvers: invalid-field", async () => {
   const stack = new Stack(await createApp(), "stack");
   expect(() => {
     new AppSyncApi(stack, "Api", {
+      schema: path.resolve(__dirname, "appsync/schema.graphql"),
       resolvers: {
         "Query ": "test/lambda.handler",
       },
@@ -805,6 +843,7 @@ test("resolvers: invalid-field", async () => {
 test("resolvers: is datasource string", async () => {
   const stack = new Stack(await createApp(), "stack");
   new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     dataSources: {
       lambdaDS: "test/lambda.handler",
     },
@@ -834,6 +873,7 @@ test("resolvers: is datasource string not exist error", async () => {
   const stack = new Stack(await createApp(), "stack");
   expect(() => {
     new AppSyncApi(stack, "Api", {
+      schema: path.resolve(__dirname, "appsync/schema.graphql"),
       resolvers: {
         "Query notes": "lambdaDS",
       },
@@ -844,6 +884,7 @@ test("resolvers: is datasource string not exist error", async () => {
 test("resolvers: is FunctionDefinition", async () => {
   const stack = new Stack(await createApp(), "stack");
   new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     resolvers: {
       "Query notes": "test/lambda.handler",
       "Mutation notes": "test/lambda.handler",
@@ -879,6 +920,7 @@ test("resolvers: is FunctionDefinition", async () => {
 test("resolvers: is FunctionDefinition with defaults.function", async () => {
   const stack = new Stack(await createApp(), "stack");
   new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     resolvers: {
       "Query notes": "test/lambda.handler",
       "Mutation notes": "test/lambda.handler",
@@ -898,6 +940,7 @@ test("resolvers: is FunctionDefinition with defaults.function", async () => {
 test("resolvers: is datasource props: datasource is string", async () => {
   const stack = new Stack(await createApp(), "stack");
   new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     dataSources: {
       lambdaDS: "test/lambda.handler",
     },
@@ -935,6 +978,7 @@ test("resolvers: is datasource props: datasource is string", async () => {
 test("resolvers: is datasource props: datasource is string with resolverProps", async () => {
   const stack = new Stack(await createApp(), "stack");
   new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     dataSources: {
       lambdaDS: "test/lambda.handler",
     },
@@ -974,6 +1018,7 @@ test("resolvers: is datasource props: datasource is string with resolverProps", 
 test("resolvers: is datasource props: datasource is FunctionDefinition", async () => {
   const stack = new Stack(await createApp(), "stack");
   new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     resolvers: {
       "Query notes": {
         function: "test/lambda.handler",
@@ -1014,6 +1059,7 @@ test("resolvers: is datasource props: datasource is FunctionDefinition", async (
 test("getDataSource-datasource-key", async () => {
   const stack = new Stack(await createApp(), "stack");
   const api = new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     dataSources: {
       lambdaDs: "test/lambda.handler",
     },
@@ -1025,6 +1071,7 @@ test("getDataSource-datasource-key", async () => {
 test("getDataSource-resolver-key", async () => {
   const stack = new Stack(await createApp(), "stack");
   const api = new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     resolvers: {
       "Query notes": "test/lambda.handler",
     },
@@ -1037,6 +1084,7 @@ test("getDataSource-resolver-key", async () => {
 test("getFunction-dataSource-key", async () => {
   const stack = new Stack(await createApp(), "stack");
   const api = new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     dataSources: {
       lambdaDs: "test/lambda.handler",
     },
@@ -1048,6 +1096,7 @@ test("getFunction-dataSource-key", async () => {
 test("getFunction-resolver-key", async () => {
   const stack = new Stack(await createApp(), "stack");
   const api = new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     resolvers: {
       "Query notes": "test/lambda.handler",
     },
@@ -1060,6 +1109,7 @@ test("getFunction-resolver-key", async () => {
 test("getResolver", async () => {
   const stack = new Stack(await createApp(), "stack");
   const api = new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     resolvers: {
       "Query notes": "test/lambda.handler",
     },
@@ -1072,6 +1122,7 @@ test("getResolver", async () => {
 test("attachPermissions", async () => {
   const stack = new Stack(await createApp(), "stack");
   const api = new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     resolvers: {
       "Query notes": "test/lambda.handler",
       "Query notes2": "test/lambda.handler",
@@ -1092,6 +1143,7 @@ test("attachPermissions", async () => {
 test("attachPermissionsToDataSource-dataSource-key", async () => {
   const stack = new Stack(await createApp(), "stack");
   const api = new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     dataSources: {
       lambdaDS: "test/lambda.handler",
       lambdaDS2: "test/lambda.handler",
@@ -1118,6 +1170,7 @@ test("attachPermissionsToDataSource-dataSource-key", async () => {
 test("attachPermissionsToDataSource-resolver-key", async () => {
   const stack = new Stack(await createApp(), "stack");
   const api = new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     resolvers: {
       "Query notes": "test/lambda.handler",
       "Query notes2": "test/lambda.handler",
@@ -1146,6 +1199,7 @@ test("attachPermissions-after-addResolvers", async () => {
   const stackA = new Stack(app, "stackA");
   const stackB = new Stack(app, "stackB");
   const api = new AppSyncApi(stackA, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     resolvers: {
       "Query notes": "test/lambda.handler",
       "Query notes2": "test/lambda.handler",
@@ -1179,6 +1233,7 @@ test("bind", async () => {
   const stack = new Stack(await createApp(), "stack");
   const bucket = new Bucket(stack, "bucket");
   const api = new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     resolvers: {
       "Query notes": "test/lambda.handler",
       "Query notes2": "test/lambda.handler",
@@ -1200,6 +1255,7 @@ test("bindToDataSource-dataSource-key", async () => {
   const stack = new Stack(await createApp(), "stack");
   const bucket = new Bucket(stack, "bucket");
   const api = new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     dataSources: {
       lambdaDS: "test/lambda.handler",
       lambdaDS2: "test/lambda.handler",
@@ -1227,6 +1283,7 @@ test("bindToDataSource-resolver-key", async () => {
   const stack = new Stack(await createApp(), "stack");
   const bucket = new Bucket(stack, "bucket");
   const api = new AppSyncApi(stack, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     resolvers: {
       "Query notes": "test/lambda.handler",
       "Query notes2": "test/lambda.handler",
@@ -1256,6 +1313,7 @@ test("bind-after-addResolvers", async () => {
   const stackB = new Stack(app, "stackB");
   const bucket = new Bucket(stackB, "bucket");
   const api = new AppSyncApi(stackA, "Api", {
+    schema: path.resolve(__dirname, "appsync/schema.graphql"),
     resolvers: {
       "Query notes": "test/lambda.handler",
       "Query notes2": "test/lambda.handler",
@@ -1285,4 +1343,5 @@ test("bind-after-addResolvers", async () => {
   });
 });
 
-*/
+/*
+ */

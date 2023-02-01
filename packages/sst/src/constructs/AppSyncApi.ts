@@ -289,7 +289,7 @@ export interface AppSyncApiProps {
    * });
    * ```
    */
-  schema: string | string[];
+  schema?: string | string[];
   /**
    * Specify a custom domain to use in addition to the automatically generated one. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/)
    *
@@ -719,7 +719,9 @@ export class AppSyncApi extends Construct implements SSTConstruct {
 
       // build schema
       let mainSchema: appsync.SchemaFile;
-      if (typeof schema === "string") {
+      if (!schema) {
+        throw new Error(`Missing "schema" in "${id}" AppSyncApi`);
+      } else if (typeof schema === "string") {
         mainSchema = appsync.SchemaFile.fromAsset(schema);
       } else {
         if (schema.length === 0) {

@@ -101,6 +101,7 @@
   "devDependencies": {
     "@aws-sdk/client-codebuild": "^3.257.0",
     "@aws-sdk/types": "^3.208.0",
+    "@graphql-tools/merge": "^8.3.16",
     "@sls-next/lambda-at-edge": "^3.7.0",
     "@tsconfig/node16": "^1.0.3",
     "@types/adm-zip": "^0.5.0",
