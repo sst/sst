@@ -44,8 +44,10 @@ diff(program);
 version(program);
 telemetry(program);
 
-// @ts-expect-error
-process.setSourceMapsEnabled(true);
+if ("setSourceMapsEnabled" in process) {
+  // @ts-expect-error
+  process.setSourceMapsEnabled(true);
+}
 process.removeAllListeners("uncaughtException");
 process.on("uncaughtException", (err) => {
   Logger.debug(err);
