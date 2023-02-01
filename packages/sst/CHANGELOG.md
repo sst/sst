@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.0.0-rc.63
+
+### Patch Changes
+
+- [#2405](https://github.com/serverless-stack/sst/pull/2405) [`b69121bef`](https://github.com/serverless-stack/sst/commit/b69121befa514e85f1ccf88aa4b50a837ab11062) Thanks [@github-actions](https://github.com/apps/github-actions)! - SsrSite: allow overriding architecture
+
+- [`efe53b587`](https://github.com/serverless-stack/sst/commit/efe53b5878f98fdca9292605353e039712eb8c84) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: fix middleware Lambda memory issue
+
 ## 2.0.0-rc.62
 
 ### Patch Changes
