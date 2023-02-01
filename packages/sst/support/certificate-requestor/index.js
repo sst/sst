@@ -1,9 +1,9 @@
-'use strict';
+"use strict";
 
-const aws = require('aws-sdk');
+const aws = require("aws-sdk");
 
 const defaultSleep = function (ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
 // These are used for test purposes only
@@ -24,10 +24,17 @@ let maxAttempts = 10;
  * @param {string} [reason] reason for failure, if any, to convey to the user
  * @returns {Promise} Promise that is resolved on success, or rejected on connection error or HTTP error response
  */
-let report = function (event, context, responseStatus, physicalResourceId, responseData, reason) {
+let report = function (
+  event,
+  context,
+  responseStatus,
+  physicalResourceId,
+  responseData,
+  reason
+) {
   return new Promise((resolve, reject) => {
-    const https = require('https');
-    const { URL } = require('url');
+    const https = require("https");
+    const { URL } = require("url");
 
     var responseBody = JSON.stringify({
       Status: responseStatus,
@@ -36,7 +43,7 @@ let report = function (event, context, responseStatus, physicalResourceId, respo
       StackId: event.StackId,
       RequestId: event.RequestId,
       LogicalResourceId: event.LogicalResourceId,
-      Data: responseData
+      Data: responseData,
     });
 
     const parsedUrl = new URL(event.ResponseURL || defaultResponseURL);
@@ -44,24 +51,29 @@ let report = function (event, context, responseStatus, physicalResourceId, respo
       hostname: parsedUrl.hostname,
       port: 443,
       path: parsedUrl.pathname + parsedUrl.search,
-      method: 'PUT',
+      method: "PUT",
       headers: {
-        'Content-Type': '',
-        'Content-Length': responseBody.length
-      }
+        "Content-Type": "",
+        "Content-Length": responseBody.length,
+      },
     };
 
-    https.request(options)
-      .on('error', reject)
-      .on('response', res => {
+    https
+      .request(options)
+      .on("error", reject)
+      .on("response", (res) => {
         res.resume();
         if (res.statusCode >= 400) {
-          reject(new Error(`Server returned error ${res.statusCode}: ${res.statusMessage}`));
+          reject(
+            new Error(
+              `Server returned error ${res.statusCode}: ${res.statusMessage}`
+            )
+          );
         } else {
           resolve();
         }
       })
-      .end(responseBody, 'utf8');
+      .end(responseBody, "utf8");
   });
 };
 
@@ -72,15 +84,20 @@ let report = function (event, context, responseStatus, physicalResourceId, respo
  * @param {string} region the region the certificate exists in
  * @param {map} tags Tags to add to the requested certificate
  */
-const addTags = async function(certificateArn, region, tags) {
-  const result = Array.from(Object.entries(tags)).map(([Key, Value]) => ({ Key, Value }))
+const addTags = async function (certificateArn, region, tags) {
+  const result = Array.from(Object.entries(tags)).map(([Key, Value]) => ({
+    Key,
+    Value,
+  }));
   const acm = new aws.ACM({ region });
 
-  await acm.addTagsToCertificate({
-    CertificateArn: certificateArn,
-    Tags: result,
-  }).promise();
-}
+  await acm
+    .addTagsToCertificate({
+      CertificateArn: certificateArn,
+      Tags: result,
+    })
+    .promise();
+};
 
 /**
  * Requests a public certificate from AWS Certificate Manager, using DNS validation.
@@ -94,10 +111,20 @@ const addTags = async function(certificateArn, region, tags) {
  * @param {string} hostedZoneId the Route53 Hosted Zone ID
  * @returns {string} Validated certificate ARN
  */
-const requestCertificate = async function (requestId, domainName, subjectAlternativeNames, certificateTransparencyLoggingPreference, hostedZoneId, region, route53Endpoint) {
-  const crypto = require('crypto');
+const requestCertificate = async function (
+  requestId,
+  domainName,
+  subjectAlternativeNames,
+  certificateTransparencyLoggingPreference,
+  hostedZoneId,
+  region,
+  route53Endpoint
+) {
+  const crypto = require("crypto");
   const acm = new aws.ACM({ region });
-  const route53 = route53Endpoint ? new aws.Route53({ endpoint: route53Endpoint }) : new aws.Route53();
+  const route53 = route53Endpoint
+    ? new aws.Route53({ endpoint: route53Endpoint })
+    : new aws.Route53();
   if (waiter) {
     // Used by the test suite, since waiters aren't mockable yet
     route53.waitFor = acm.waitFor = waiter;
@@ -105,25 +132,34 @@ const requestCertificate = async function (requestId, domainName, subjectAlterna
 
   console.log(`Requesting certificate for ${domainName}`);
 
-  const reqCertResponse = await acm.requestCertificate({
-    DomainName: domainName,
-    SubjectAlternativeNames: subjectAlternativeNames,
-    Options: {
-      CertificateTransparencyLoggingPreference: certificateTransparencyLoggingPreference
-    },
-    IdempotencyToken: crypto.createHash('sha256').update(requestId).digest('hex').slice(0, 32),
-    ValidationMethod: 'DNS'
-  }).promise();
+  const reqCertResponse = await acm
+    .requestCertificate({
+      DomainName: domainName,
+      SubjectAlternativeNames: subjectAlternativeNames,
+      Options: {
+        CertificateTransparencyLoggingPreference:
+          certificateTransparencyLoggingPreference,
+      },
+      IdempotencyToken: crypto
+        .createHash("sha256")
+        .update(requestId)
+        .digest("hex")
+        .slice(0, 32),
+      ValidationMethod: "DNS",
+    })
+    .promise();
 
   console.log(`Certificate ARN: ${reqCertResponse.CertificateArn}`);
 
-  console.log('Waiting for ACM to provide DNS records for validation...');
+  console.log("Waiting for ACM to provide DNS records for validation...");
 
   let records = [];
   for (let attempt = 0; attempt < maxAttempts && !records.length; attempt++) {
-    const { Certificate } = await acm.describeCertificate({
-      CertificateArn: reqCertResponse.CertificateArn
-    }).promise();
+    const { Certificate } = await acm
+      .describeCertificate({
+        CertificateArn: reqCertResponse.CertificateArn,
+      })
+      .promise();
 
     records = getDomainValidationRecords(Certificate);
     if (!records.length) {
@@ -135,22 +171,28 @@ const requestCertificate = async function (requestId, domainName, subjectAlterna
     }
   }
   if (!records.length) {
-    throw new Error(`Response from describeCertificate did not contain DomainValidationOptions after ${maxAttempts} attempts.`)
+    throw new Error(
+      `Response from describeCertificate did not contain DomainValidationOptions after ${maxAttempts} attempts.`
+    );
   }
 
-  console.log(`Upserting ${records.length} DNS records into zone ${hostedZoneId}:`);
+  console.log(
+    `Upserting ${records.length} DNS records into zone ${hostedZoneId}:`
+  );
 
   await commitRoute53Records(route53, records, hostedZoneId);
 
-  console.log('Waiting for validation...');
-  await acm.waitFor('certificateValidated', {
-    // Wait up to 9 minutes and 30 seconds
-    $waiter: {
-      delay: 30,
-      maxAttempts: 19
-    },
-    CertificateArn: reqCertResponse.CertificateArn
-  }).promise();
+  console.log("Waiting for validation...");
+  await acm
+    .waitFor("certificateValidated", {
+      // Wait up to 9 minutes and 30 seconds
+      $waiter: {
+        delay: 30,
+        maxAttempts: 19,
+      },
+      CertificateArn: reqCertResponse.CertificateArn,
+    })
+    .promise();
 
   return reqCertResponse.CertificateArn;
 };
@@ -161,9 +203,17 @@ const requestCertificate = async function (requestId, domainName, subjectAlterna
  *
  * @param {string} arn The certificate ARN
  */
-const deleteCertificate = async function (arn, region, hostedZoneId, route53Endpoint, cleanupRecords) {
+const deleteCertificate = async function (
+  arn,
+  region,
+  hostedZoneId,
+  route53Endpoint,
+  cleanupRecords
+) {
   const acm = new aws.ACM({ region });
-  const route53 = route53Endpoint ? new aws.Route53({ endpoint: route53Endpoint }) : new aws.Route53();
+  const route53 = route53Endpoint
+    ? new aws.Route53({ endpoint: route53Endpoint })
+    : new aws.Route53();
   if (waiter) {
     // Used by the test suite, since waiters aren't mockable yet
     route53.waitFor = acm.waitFor = waiter;
@@ -175,9 +225,11 @@ const deleteCertificate = async function (arn, region, hostedZoneId, route53Endp
     let inUseByResources;
     let records = [];
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      const { Certificate } = await acm.describeCertificate({
-        CertificateArn: arn
-      }).promise();
+      const { Certificate } = await acm
+        .describeCertificate({
+          CertificateArn: arn,
+        })
+        .promise();
 
       if (cleanupRecords) {
         records = getDomainValidationRecords(Certificate);
@@ -196,26 +248,33 @@ const deleteCertificate = async function (arn, region, hostedZoneId, route53Endp
     }
 
     if (inUseByResources.length) {
-      throw new Error(`Response from describeCertificate did not contain an empty InUseBy list after ${maxAttempts} attempts.`)
+      throw new Error(
+        `Response from describeCertificate did not contain an empty InUseBy list after ${maxAttempts} attempts.`
+      );
     }
     if (cleanupRecords && !records.length) {
-      throw new Error(`Response from describeCertificate did not contain DomainValidationOptions after ${maxAttempts} attempts.`)
+      throw new Error(
+        `Response from describeCertificate did not contain DomainValidationOptions after ${maxAttempts} attempts.`
+      );
     }
 
     console.log(`Deleting certificate ${arn}`);
 
-    await acm.deleteCertificate({
-      CertificateArn: arn
-    }).promise();
+    await acm
+      .deleteCertificate({
+        CertificateArn: arn,
+      })
+      .promise();
 
     if (cleanupRecords) {
-      console.log(`Deleting ${records.length} DNS records from zone ${hostedZoneId}:`);
+      console.log(
+        `Deleting ${records.length} DNS records from zone ${hostedZoneId}:`
+      );
 
-      await commitRoute53Records(route53, records, hostedZoneId, 'DELETE');
+      await commitRoute53Records(route53, records, hostedZoneId, "DELETE");
     }
-
   } catch (err) {
-    if (err.name !== 'ResourceNotFoundException') {
+    if (err.name !== "ResourceNotFoundException") {
       throw err;
     }
   }
@@ -229,7 +288,10 @@ const deleteCertificate = async function (arn, region, hostedZoneId, route53Endp
 function getDomainValidationRecords(certificate) {
   const options = certificate.DomainValidationOptions || [];
   // Ensure all records are ready; there is (at least a theory there's) a chance of a partial response here in rare cases.
-  if (options.length > 0 && options.every(opt => opt && !!opt.ResourceRecord)) {
+  if (
+    options.length > 0 &&
+    options.every((opt) => opt && !!opt.ResourceRecord)
+  ) {
     // some alternative names will produce the same validation record
     // as the main domain (eg. example.com + *.example.com)
     // filtering duplicates to avoid errors with adding the same record
@@ -240,7 +302,9 @@ function getDomainValidationRecords(certificate) {
         acc[cur.Name] = cur;
         return acc;
       }, {});
-    return Object.keys(unique).sort().map(key => unique[key]);
+    return Object.keys(unique)
+      .sort()
+      .map((key) => unique[key]);
   }
   return [];
 }
@@ -249,36 +313,47 @@ function getDomainValidationRecords(certificate) {
  * Execute Route53 ChangeResourceRecordSets for a set of records within a Hosted Zone,
  * and wait for the records to commit. Defaults to an 'UPSERT' action.
  */
-async function commitRoute53Records(route53, records, hostedZoneId, action = 'UPSERT') {
-  const changeBatch = await route53.changeResourceRecordSets({
-    ChangeBatch: {
-      Changes: records.map((record) => {
-        console.log(`${record.Name} ${record.Type} ${record.Value}`);
-        return {
-          Action: action,
-          ResourceRecordSet: {
-            Name: record.Name,
-            Type: record.Type,
-            TTL: 60,
-            ResourceRecords: [{
-              Value: record.Value
-            }]
-          }
-        };
-      }),
-    },
-    HostedZoneId: hostedZoneId
-  }).promise();
+async function commitRoute53Records(
+  route53,
+  records,
+  hostedZoneId,
+  action = "UPSERT"
+) {
+  const changeBatch = await route53
+    .changeResourceRecordSets({
+      ChangeBatch: {
+        Changes: records.map((record) => {
+          console.log(`${record.Name} ${record.Type} ${record.Value}`);
+          return {
+            Action: action,
+            ResourceRecordSet: {
+              Name: record.Name,
+              Type: record.Type,
+              TTL: 60,
+              ResourceRecords: [
+                {
+                  Value: record.Value,
+                },
+              ],
+            },
+          };
+        }),
+      },
+      HostedZoneId: hostedZoneId,
+    })
+    .promise();
 
-  console.log('Waiting for DNS records to commit...');
-  await route53.waitFor('resourceRecordSetsChanged', {
-    // Wait up to 5 minutes
-    $waiter: {
-      delay: 30,
-      maxAttempts: 10
-    },
-    Id: changeBatch.ChangeInfo.Id
-  }).promise();
+  console.log("Waiting for DNS records to commit...");
+  await route53
+    .waitFor("resourceRecordSetsChanged", {
+      // Wait up to 5 minutes
+      $waiter: {
+        delay: 30,
+        maxAttempts: 10,
+      },
+      Id: changeBatch.ChangeInfo.Id,
+    })
+    .promise();
 }
 
 /**
@@ -292,11 +367,17 @@ async function commitRoute53Records(route53, records, hostedZoneId, action = 'UP
 function shouldUpdate(oldParams, newParams, physicalResourceId) {
   if (!oldParams) return true;
   if (oldParams.DomainName !== newParams.DomainName) return true;
-  if (oldParams.SubjectAlternativeNames !== newParams.SubjectAlternativeNames) return true;
-  if (oldParams.CertificateTransparencyLoggingPreference !== newParams.CertificateTransparencyLoggingPreference) return true;
+  if (oldParams.SubjectAlternativeNames !== newParams.SubjectAlternativeNames)
+    return true;
+  if (
+    oldParams.CertificateTransparencyLoggingPreference !==
+    newParams.CertificateTransparencyLoggingPreference
+  )
+    return true;
   if (oldParams.HostedZoneId !== newParams.HostedZoneId) return true;
   if (oldParams.Region !== newParams.Region) return true;
-  if (!physicalResourceId || !physicalResourceId.startsWith('arn:')) return true;
+  if (!physicalResourceId || !physicalResourceId.startsWith("arn:"))
+    return true;
   return false;
 }
 
@@ -315,41 +396,65 @@ exports.certificateRequestHandler = async function (event, context) {
       event.ResourceProperties.CertificateTransparencyLoggingPreference,
       event.ResourceProperties.HostedZoneId,
       event.ResourceProperties.Region,
-      event.ResourceProperties.Route53Endpoint,
+      event.ResourceProperties.Route53Endpoint
     );
     responseData.Arn = physicalResourceId = certificateArn;
   }
 
   try {
     switch (event.RequestType) {
-      case 'Create':
+      case "Create":
         await processRequest();
-        if (event.ResourceProperties.Tags && physicalResourceId.startsWith('arn:')) {
-          await addTags(physicalResourceId, event.ResourceProperties.Region, event.ResourceProperties.Tags);
+        if (
+          event.ResourceProperties.Tags &&
+          physicalResourceId.startsWith("arn:")
+        ) {
+          await addTags(
+            physicalResourceId,
+            event.ResourceProperties.Region,
+            event.ResourceProperties.Tags
+          );
         }
         break;
-      case 'Update':
-        if (shouldUpdate(event.OldResourceProperties, event.ResourceProperties, event.PhysicalResourceId)) {
+      case "Update":
+        if (
+          shouldUpdate(
+            event.OldResourceProperties,
+            event.ResourceProperties,
+            event.PhysicalResourceId
+          )
+        ) {
           await processRequest();
         } else {
           responseData.Arn = physicalResourceId = event.PhysicalResourceId;
         }
-        if (event.ResourceProperties.Tags && physicalResourceId.startsWith('arn:')) {
-          await addTags(physicalResourceId, event.ResourceProperties.Region, event.ResourceProperties.Tags);
+        if (
+          event.ResourceProperties.Tags &&
+          physicalResourceId.startsWith("arn:")
+        ) {
+          await addTags(
+            physicalResourceId,
+            event.ResourceProperties.Region,
+            event.ResourceProperties.Tags
+          );
         }
         break;
-      case 'Delete':
+      case "Delete":
         physicalResourceId = event.PhysicalResourceId;
-        const removalPolicy = event.ResourceProperties.RemovalPolicy ?? 'destroy';
+        const removalPolicy =
+          event.ResourceProperties.RemovalPolicy ?? "destroy";
         // If the resource didn't create correctly, the physical resource ID won't be the
         // certificate ARN, so don't try to delete it in that case.
-        if (physicalResourceId.startsWith('arn:') && removalPolicy === 'destroy') {
+        if (
+          physicalResourceId.startsWith("arn:") &&
+          removalPolicy === "destroy"
+        ) {
           await deleteCertificate(
             physicalResourceId,
             event.ResourceProperties.Region,
             event.ResourceProperties.HostedZoneId,
             event.ResourceProperties.Route53Endpoint,
-            event.ResourceProperties.CleanupRecords === "true",
+            event.ResourceProperties.CleanupRecords === "true"
           );
         }
         break;
@@ -358,11 +463,18 @@ exports.certificateRequestHandler = async function (event, context) {
     }
 
     console.log(`Uploading SUCCESS response to S3...`);
-    await report(event, context, 'SUCCESS', physicalResourceId, responseData);
-    console.log('Done.');
+    await report(event, context, "SUCCESS", physicalResourceId, responseData);
+    console.log("Done.");
   } catch (err) {
     console.log(`Caught error ${err}. Uploading FAILED message to S3.`);
-    await report(event, context, 'FAILED', physicalResourceId, null, err.message);
+    await report(
+      event,
+      context,
+      "FAILED",
+      physicalResourceId,
+      null,
+      err.message
+    );
   }
 };
 
@@ -399,39 +511,39 @@ exports.resetWaiter = function () {
  */
 exports.withSleep = function (s) {
   sleep = s;
-}
+};
 
 /**
  * @private
  */
 exports.resetSleep = function () {
   sleep = defaultSleep;
-}
+};
 
 /**
  * @private
  */
 exports.withRandom = function (r) {
   random = r;
-}
+};
 
 /**
  * @private
  */
 exports.resetRandom = function () {
   random = Math.random;
-}
+};
 
 /**
  * @private
  */
 exports.withMaxAttempts = function (ma) {
   maxAttempts = ma;
-}
+};
 
 /**
  * @private
  */
 exports.resetMaxAttempts = function () {
   maxAttempts = 10;
-}
+};
