@@ -231,6 +231,7 @@ export interface SsrSiteProps {
       | "securityGroups"
       | "allowAllOutbound"
       | "allowPublicSubnet"
+      | "architecture"
     >;
   };
 }

@@ -1,15 +1,13 @@
 import fs from "fs";
 import url from "url";
 import path from "path";
-import * as esbuild from "esbuild";
-import * as lambda from "aws-cdk-lib/aws-lambda";
+import { buildSync } from "esbuild";
+import { Architecture, Function as CdkFunction } from "aws-cdk-lib/aws-lambda";
 
 import { SsrSite } from "./SsrSite.js";
 import { Function } from "./Function.js";
 import { useProject } from "../project.js";
 import { EdgeFunction } from "./EdgeFunction.js";
-
-const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 /**
  * The `SolidStartSite` construct is a higher level CDK construct that makes it easy to create a SolidStart app.
@@ -31,7 +29,7 @@ export class SolidStartSite extends SsrSite {
     };
   }
 
-  protected createFunctionForRegional(): lambda.Function {
+  protected createFunctionForRegional(): CdkFunction {
     const { timeout, memorySize, environment, cdk } = this.props;
 
     // Bundle code
@@ -55,6 +53,8 @@ export class SolidStartSite extends SsrSite {
       },
       environment,
       ...cdk?.server,
+      architecture:
+        cdk?.server?.architecture === Architecture.ARM_64 ? "arm_64" : "x86_64",
     });
     fn._disableBind = true;
 
@@ -74,7 +74,7 @@ export class SolidStartSite extends SsrSite {
     );
 
     // Bundle code
-    const result = esbuild.buildSync({
+    const result = buildSync({
       entryPoints: [
         path.join(this.props.path, this.buildConfig.serverBuildOutputFile),
       ],

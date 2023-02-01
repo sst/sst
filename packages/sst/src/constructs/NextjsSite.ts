@@ -64,7 +64,7 @@ export class NextjsSite extends SsrSite {
   }
 
   protected createFunctionForRegional(): lambda.Function {
-    const { timeout, memorySize, permissions, environment } = this.props;
+    const { timeout, memorySize, permissions, environment, cdk } = this.props;
     const ssrFn = new SsrFunction(this, `ServerFunction`, {
       description: "Server handler for Next.js",
       bundlePath: path.join(this.props.path, ".open-next", "server-function"),
@@ -73,12 +73,13 @@ export class NextjsSite extends SsrSite {
       memorySize,
       permissions,
       environment,
+      ...cdk?.server,
     });
     return ssrFn.function;
   }
 
   private createImageOptimizationFunctionForRegional(): lambda.Function {
-    const { imageOptimization, path: sitePath, cdk } = this.props;
+    const { imageOptimization, path: sitePath } = this.props;
 
     return new lambda.Function(this, `ImageFunction`, {
       description: "Image optimization handler for Next.js",
@@ -101,7 +102,6 @@ export class NextjsSite extends SsrSite {
       environment: {
         BUCKET_NAME: this.cdk.bucket.bucketName,
       },
-      ...cdk?.server,
     });
   }
 

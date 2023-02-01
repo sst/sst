@@ -14,16 +14,16 @@ import { useProject } from "../project.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
+import { FunctionOptions } from "aws-cdk-lib/aws-lambda";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
-export interface SsrFunctionProps {
-  description?: string;
+export interface SsrFunctionProps
+  extends Omit<FunctionOptions, "memorySize" | "timeout" | "runtime"> {
   bundlePath: string;
   handler: string;
   timeout: number | Duration;
   memorySize: number | Size;
   permissions?: Permissions;
-  environment?: Record<string, string>;
 }
 
 /////////////////////
@@ -49,8 +49,7 @@ export class SsrFunction extends Construct {
   }
 
   private createFunction() {
-    const { timeout, memorySize, handler, bundlePath, environment } =
-      this.props;
+    const { timeout, memorySize, handler, bundlePath } = this.props;
 
     // Note: cannot point the bundlePath to the `.open-next/server-function`
     //       b/c the folder contains node_modules. And pnpm node_modules
@@ -87,7 +86,7 @@ export class SsrFunction extends Construct {
     const replacer = this.createLambdaCodeReplacer(asset);
 
     const fn = new lambda.Function(this, `ServerFunction`, {
-      description: this.props.description,
+      ...this.props,
       handler,
       logRetention: logs.RetentionDays.THREE_DAYS,
       code: lambda.Code.fromBucket(asset.bucket, asset.s3ObjectKey),
@@ -101,7 +100,6 @@ export class SsrFunction extends Construct {
         typeof timeout === "string"
           ? toCdkDuration(timeout)
           : CdkDuration.seconds(timeout),
-      environment,
     });
     fn.node.addDependency(replacer);
 
