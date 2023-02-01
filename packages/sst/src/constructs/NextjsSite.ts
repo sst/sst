@@ -125,7 +125,7 @@ export class NextjsSite extends SsrSite {
     const fn = new EdgeFunction(this, "Middleware", {
       bundlePath,
       handler,
-      timeout: 10,
+      timeout: 5,
       memorySize: 128,
       permissions,
       environment,
