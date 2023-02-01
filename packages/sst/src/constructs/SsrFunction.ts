@@ -92,6 +92,7 @@ export class SsrFunction extends Construct {
       logRetention: logs.RetentionDays.THREE_DAYS,
       code: lambda.Code.fromBucket(asset.bucket, asset.s3ObjectKey),
       runtime: lambda.Runtime.NODEJS_18_X,
+      architecture: lambda.Architecture.ARM_64,
       memorySize:
         typeof memorySize === "string"
           ? toCdkSize(memorySize).toMebibytes()

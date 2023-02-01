@@ -95,8 +95,9 @@ export class NextjsSite extends SsrSite {
         ? typeof imageOptimization.memorySize === "string"
           ? toCdkSize(imageOptimization.memorySize).toMebibytes()
           : imageOptimization.memorySize
-        : 512,
+        : 1536,
       timeout: CdkDuration.seconds(25),
+      architecture: lambda.Architecture.ARM_64,
       environment: {
         BUCKET_NAME: this.cdk.bucket.bucketName,
       },

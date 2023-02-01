@@ -16,7 +16,6 @@ import {
   CustomResource,
 } from "aws-cdk-lib";
 import { Bucket, BucketProps, IBucket } from "aws-cdk-lib/aws-s3";
-import { IVpc } from "aws-cdk-lib/aws-ec2";
 import { Role, Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import {
   Function,
