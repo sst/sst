@@ -126,7 +126,7 @@ export class NextjsSite extends SsrSite {
       bundlePath,
       handler,
       timeout: 10,
-      memorySize: 512,
+      memorySize: 128,
       permissions,
       environment,
       format: "esm",
