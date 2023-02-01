@@ -118,7 +118,7 @@
     "@types/ws": "^8.5.3",
     "@types/yargs": "^17.0.13",
     "tsx": "^3.12.1",
-    "vitest": "^0.15.1"
+    "vitest": "^0.28.3"
   },
   "peerDependencies": {
     "@sls-next/lambda-at-edge": "^3.7.0"
