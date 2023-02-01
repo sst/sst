@@ -187,6 +187,7 @@ await Promise.all(
     "java-runtime",
     "dotnet31-bootstrap",
     "dotnet6-bootstrap",
+    "certificate-requestor",
   ].map((dir) =>
     fs.cp(`support/${dir}`, `dist/support/${dir}`, {
       recursive: true,

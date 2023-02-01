@@ -6,17 +6,19 @@ import {
   hasResource,
   objectLike,
   arrayWith,
+  printResource,
   ANY,
   ABSENT,
+  createApp,
 } from "./helper.js";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as cf from "aws-cdk-lib/aws-cloudfront";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
-import { App, Api, Stack, RemixSite } from "../../dist/constructs/";
+import { Api, Stack, RemixSite } from "../../dist/constructs/";
 
 process.env.SST_RESOURCES_TESTS = "enabled";
-const sitePath = "test/remix-site";
+const sitePath = "test/constructs/remix-site";
 
 beforeAll(async () => {
   // ℹ️ Uncomment the below to iterate faster on tests in vitest watch mode;
@@ -43,16 +45,16 @@ beforeAll(async () => {
 test("edge: undefined", async () => {
   const stack = new Stack(await createApp(), "stack");
   const site = new RemixSite(stack, "Site", {
-    path: "test/remix-site",
+    path: sitePath,
     // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
   });
   expect(site.url).toBeDefined();
   expect(site.customDomainUrl).toBeUndefined();
-  expect(site.bucketArn).toBeDefined();
-  expect(site.bucketName).toBeDefined();
-  expect(site.distributionId).toBeDefined();
-  expect(site.distributionDomain).toBeDefined();
+  expect(site.cdk.bucket.bucketArn).toBeDefined();
+  expect(site.cdk.bucket.bucketName).toBeDefined();
+  expect(site.cdk.distribution.distributionId).toBeDefined();
+  expect(site.cdk.distribution.distributionDomainName).toBeDefined();
   expect(site.cdk.certificate).toBeUndefined();
   countResources(stack, "AWS::S3::Bucket", 1);
   countResources(stack, "AWS::Lambda::Function", 6);
@@ -63,35 +65,29 @@ test("edge: undefined", async () => {
       CacheBehaviors: [
         {
           AllowedMethods: ["GET", "HEAD", "OPTIONS"],
-          CachePolicyId: {
-            Ref: "SiteBuildCache0ED8AF59",
-          },
+          CachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
           CachedMethods: ["GET", "HEAD", "OPTIONS"],
           Compress: true,
           PathPattern: "build/*",
-          TargetOriginId: "devmyappstackSiteDistributionOrigin22B8FA4E2",
+          TargetOriginId: "testappstackSiteDistributionOrigin207C27B19",
           ViewerProtocolPolicy: "redirect-to-https",
         },
         {
           AllowedMethods: ["GET", "HEAD", "OPTIONS"],
-          CachePolicyId: {
-            Ref: "SiteStaticsCache29AFAE7C",
-          },
+          CachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
           CachedMethods: ["GET", "HEAD", "OPTIONS"],
           Compress: true,
           PathPattern: "favicon.ico",
-          TargetOriginId: "devmyappstackSiteDistributionOrigin22B8FA4E2",
+          TargetOriginId: "testappstackSiteDistributionOrigin207C27B19",
           ViewerProtocolPolicy: "redirect-to-https",
         },
         {
           AllowedMethods: ["GET", "HEAD", "OPTIONS"],
-          CachePolicyId: {
-            Ref: "SiteStaticsCache29AFAE7C",
-          },
+          CachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
           CachedMethods: ["GET", "HEAD", "OPTIONS"],
           Compress: true,
           PathPattern: "foo/*",
-          TargetOriginId: "devmyappstackSiteDistributionOrigin22B8FA4E2",
+          TargetOriginId: "testappstackSiteDistributionOrigin207C27B19",
           ViewerProtocolPolicy: "redirect-to-https",
         },
       ],
@@ -110,7 +106,7 @@ test("edge: undefined", async () => {
         },
         CachedMethods: ["GET", "HEAD", "OPTIONS"],
         Compress: true,
-        TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
+        TargetOriginId: "testappstackSiteDistributionOrigin1DD2DF794",
         ViewerProtocolPolicy: "redirect-to-https",
       },
       DefaultRootObject: "",
@@ -126,13 +122,13 @@ test("edge: undefined", async () => {
           DomainName: {
             "Fn::Select": ANY,
           },
-          Id: "devmyappstackSiteDistributionOrigin1F25265FA",
+          Id: "testappstackSiteDistributionOrigin1DD2DF794",
         },
         {
           DomainName: {
             "Fn::GetAtt": ["SiteS3Bucket43E5BB2F", "RegionalDomainName"],
           },
-          Id: "devmyappstackSiteDistributionOrigin22B8FA4E2",
+          Id: "testappstackSiteDistributionOrigin207C27B19",
           S3OriginConfig: {
             OriginAccessIdentity: {
               "Fn::Join": [
@@ -181,7 +177,7 @@ test("edge: undefined", async () => {
         "--include",
         "favicon.ico",
         "--cache-control",
-        "public,max-age=3600,must-revalidate",
+        "public,max-age=0,s-maxage=31536000,must-revalidate",
       ],
       [
         "--exclude",
@@ -189,7 +185,7 @@ test("edge: undefined", async () => {
         "--include",
         "foo/*",
         "--cache-control",
-        "public,max-age=3600,must-revalidate",
+        "public,max-age=0,s-maxage=31536000,must-revalidate",
       ],
     ],
   });
@@ -203,7 +199,7 @@ test("edge: undefined: environment set on server function", async () => {
   const stack = new Stack(await createApp(), "stack");
   const api = new Api(stack, "Api");
   new RemixSite(stack, "Site", {
-    path: "test/remix-site",
+    path: sitePath,
     environment: {
       CONSTANT_ENV: "my-url",
       REFERENCE_ENV: api.url,
@@ -225,7 +221,7 @@ test("edge: undefined: environment set on server function", async () => {
 test("edge: false", async () => {
   const stack = new Stack(await createApp(), "stack");
   const site = new RemixSite(stack, "Site", {
-    path: "test/remix-site",
+    path: sitePath,
     edge: false,
     // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
@@ -241,13 +237,13 @@ test("edge: false", async () => {
           DomainName: {
             "Fn::Select": ANY,
           },
-          Id: "devmyappstackSiteDistributionOrigin1F25265FA",
+          Id: "testappstackSiteDistributionOrigin1DD2DF794",
         },
         {
           DomainName: {
             "Fn::GetAtt": ["SiteS3Bucket43E5BB2F", "RegionalDomainName"],
           },
-          Id: "devmyappstackSiteDistributionOrigin22B8FA4E2",
+          Id: "testappstackSiteDistributionOrigin207C27B19",
           S3OriginConfig: {
             OriginAccessIdentity: {
               "Fn::Join": [
@@ -270,20 +266,20 @@ test("edge: false", async () => {
 test("edge: true", async () => {
   const stack = new Stack(await createApp(), "stack");
   const site = new RemixSite(stack, "Site", {
-    path: "test/remix-site",
+    path: sitePath,
     edge: true,
     // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
   });
   expect(site.url).toBeDefined();
   expect(site.customDomainUrl).toBeUndefined();
-  expect(site.bucketArn).toBeDefined();
-  expect(site.bucketName).toBeDefined();
-  expect(site.distributionId).toBeDefined();
-  expect(site.distributionDomain).toBeDefined();
+  expect(site.cdk.bucket.bucketArn).toBeDefined();
+  expect(site.cdk.bucket.bucketName).toBeDefined();
+  expect(site.cdk.distribution.distributionId).toBeDefined();
+  expect(site.cdk.distribution.distributionDomainName).toBeDefined();
   expect(site.cdk.certificate).toBeUndefined();
   countResources(stack, "AWS::S3::Bucket", 1);
-  countResources(stack, "AWS::Lambda::Function", 8);
+  countResources(stack, "AWS::Lambda::Function", 7);
   countResources(stack, "AWS::CloudFront::Distribution", 1);
   hasResource(stack, "AWS::CloudFront::Distribution", {
     DistributionConfig: {
@@ -291,35 +287,29 @@ test("edge: true", async () => {
       CacheBehaviors: [
         {
           AllowedMethods: ["GET", "HEAD", "OPTIONS"],
-          CachePolicyId: {
-            Ref: "SiteBuildCache0ED8AF59",
-          },
+          CachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
           CachedMethods: ["GET", "HEAD", "OPTIONS"],
           Compress: true,
           PathPattern: "build/*",
-          TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
+          TargetOriginId: "testappstackSiteDistributionOrigin1DD2DF794",
           ViewerProtocolPolicy: "redirect-to-https",
         },
         {
           AllowedMethods: ["GET", "HEAD", "OPTIONS"],
-          CachePolicyId: {
-            Ref: "SiteStaticsCache29AFAE7C",
-          },
+          CachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
           CachedMethods: ["GET", "HEAD", "OPTIONS"],
           Compress: true,
           PathPattern: "favicon.ico",
-          TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
+          TargetOriginId: "testappstackSiteDistributionOrigin1DD2DF794",
           ViewerProtocolPolicy: "redirect-to-https",
         },
         {
           AllowedMethods: ["GET", "HEAD", "OPTIONS"],
-          CachePolicyId: {
-            Ref: "SiteStaticsCache29AFAE7C",
-          },
+          CachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
           CachedMethods: ["GET", "HEAD", "OPTIONS"],
           Compress: true,
           PathPattern: "foo/*",
-          TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
+          TargetOriginId: "testappstackSiteDistributionOrigin1DD2DF794",
           ViewerProtocolPolicy: "redirect-to-https",
         },
       ],
@@ -345,7 +335,7 @@ test("edge: true", async () => {
             LambdaFunctionARN: ANY,
           },
         ],
-        TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
+        TargetOriginId: "testappstackSiteDistributionOrigin1DD2DF794",
         ViewerProtocolPolicy: "redirect-to-https",
       },
       DefaultRootObject: "",
@@ -357,7 +347,7 @@ test("edge: true", async () => {
           DomainName: {
             "Fn::GetAtt": ["SiteS3Bucket43E5BB2F", "RegionalDomainName"],
           },
-          Id: "devmyappstackSiteDistributionOrigin1F25265FA",
+          Id: "testappstackSiteDistributionOrigin1DD2DF794",
           S3OriginConfig: {
             OriginAccessIdentity: {
               "Fn::Join": [
@@ -406,7 +396,7 @@ test("edge: true", async () => {
         "--include",
         "favicon.ico",
         "--cache-control",
-        "public,max-age=3600,must-revalidate",
+        "public,max-age=0,s-maxage=31536000,must-revalidate",
       ],
       [
         "--exclude",
@@ -414,7 +404,7 @@ test("edge: true", async () => {
         "--include",
         "foo/*",
         "--cache-control",
-        "public,max-age=3600,must-revalidate",
+        "public,max-age=0,s-maxage=31536000,must-revalidate",
       ],
     ],
   });
@@ -428,7 +418,7 @@ test("edge: true: environment generates placeholders", async () => {
   const stack = new Stack(await createApp(), "stack");
   const api = new Api(stack, "Api");
   new RemixSite(stack, "Site", {
-    path: "test/remix-site",
+    path: sitePath,
     edge: true,
     environment: {
       CONSTANT_ENV: "my-url",
@@ -438,17 +428,55 @@ test("edge: true: environment generates placeholders", async () => {
     sstTest: true,
   });
 
-  countResourcesLike(stack, "Custom::SSTLambdaCodeUpdater", 1, {
-    ReplaceValues: [
+  countResourcesLike(stack, "Custom::AssetReplacer", 1, {
+    replacements: [
       {
-        files: "index-wrapper.js",
-        search: '"{{ _SST_EDGE_FUNCTION_ENVIRONMENT_ }}"',
+        files: "**/*.js",
+        search: "{{ CONSTANT_ENV }}",
+        replace: "my-url",
+      },
+      {
+        files: "**/*.cjs",
+        search: "{{ CONSTANT_ENV }}",
+        replace: "my-url",
+      },
+      {
+        files: "**/*.mjs",
+        search: "{{ CONSTANT_ENV }}",
+        replace: "my-url",
+      },
+      {
+        files: "**/*.js",
+        search: "{{ REFERENCE_ENV }}",
+        replace: {
+          "Fn::GetAtt": ["ApiCD79AAA0", "ApiEndpoint"],
+        },
+      },
+      {
+        files: "**/*.cjs",
+        search: "{{ REFERENCE_ENV }}",
+        replace: {
+          "Fn::GetAtt": ["ApiCD79AAA0", "ApiEndpoint"],
+        },
+      },
+      {
+        files: "**/*.mjs",
+        search: "{{ REFERENCE_ENV }}",
+        replace: {
+          "Fn::GetAtt": ["ApiCD79AAA0", "ApiEndpoint"],
+        },
+      },
+      {
+        files: "index-wrapper.cjs",
+        search: '"{{ _SST_FUNCTION_ENVIRONMENT_ }}"',
         replace: {
           "Fn::Join": [
             "",
             [
               '{"CONSTANT_ENV":"my-url","REFERENCE_ENV":"',
-              { "Fn::GetAtt": ANY },
+              {
+                "Fn::GetAtt": ["ApiCD79AAA0", "ApiEndpoint"],
+              },
               '"}',
             ],
           ],
@@ -466,17 +494,17 @@ test("constructor: with domain", async () => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
     });
   const site = new RemixSite(stack, "Site", {
-    path: "test/remix-site",
+    path: sitePath,
     customDomain: "domain.com",
     // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
   });
   expect(site.url).toBeDefined();
   expect(site.customDomainUrl).toBeDefined();
-  expect(site.bucketArn).toBeDefined();
-  expect(site.bucketName).toBeDefined();
-  expect(site.distributionId).toBeDefined();
-  expect(site.distributionDomain).toBeDefined();
+  expect(site.cdk.bucket.bucketArn).toBeDefined();
+  expect(site.cdk.bucket.bucketName).toBeDefined();
+  expect(site.cdk.distribution.distributionId).toBeDefined();
+  expect(site.cdk.distribution.distributionDomainName).toBeDefined();
   expect(site.cdk.certificate).toBeDefined();
   countResources(stack, "AWS::S3::Bucket", 1);
   countResources(stack, "AWS::CloudFront::Distribution", 1);
@@ -542,7 +570,7 @@ test("constructor: with domain with alias", async () => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
     });
   const site = new RemixSite(stack, "Site", {
-    path: "test/remix-site",
+    path: sitePath,
     customDomain: {
       domainName: "domain.com",
       domainAlias: "www.domain.com",
@@ -552,10 +580,10 @@ test("constructor: with domain with alias", async () => {
   });
   expect(site.url).toBeDefined();
   expect(site.customDomainUrl).toBeDefined();
-  expect(site.bucketArn).toBeDefined();
-  expect(site.bucketName).toBeDefined();
-  expect(site.distributionId).toBeDefined();
-  expect(site.distributionDomain).toBeDefined();
+  expect(site.cdk.bucket.bucketArn).toBeDefined();
+  expect(site.cdk.bucket.bucketName).toBeDefined();
+  expect(site.cdk.distribution.distributionId).toBeDefined();
+  expect(site.cdk.distribution.distributionDomainName).toBeDefined();
   expect(site.cdk.certificate).toBeDefined();
   countResources(stack, "AWS::S3::Bucket", 2);
   hasResource(stack, "AWS::S3::Bucket", {
@@ -601,7 +629,7 @@ test("customDomain: string", async () => {
     });
 
   const site = new RemixSite(stack, "Site", {
-    path: "test/remix-site",
+    path: sitePath,
     customDomain: "domain.com",
     // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
@@ -633,7 +661,7 @@ test("customDomain: domainName string", async () => {
     });
 
   const site = new RemixSite(stack, "Site", {
-    path: "test/remix-site",
+    path: sitePath,
     customDomain: {
       domainName: "domain.com",
     },
@@ -667,7 +695,7 @@ test("customDomain: hostedZone string", async () => {
     });
 
   const site = new RemixSite(stack, "Site", {
-    path: "test/remix-site",
+    path: sitePath,
     customDomain: {
       domainName: "www.domain.com",
       hostedZone: "domain.com",
@@ -702,7 +730,7 @@ test("customDomain: hostedZone construct", async () => {
     });
 
   const site = new RemixSite(stack, "Site", {
-    path: "test/remix-site",
+    path: sitePath,
     customDomain: {
       domainName: "www.domain.com",
       cdk: {
@@ -742,7 +770,7 @@ test("customDomain: certificate imported", async () => {
     });
 
   const site = new RemixSite(stack, "Site", {
-    path: "test/remix-site",
+    path: sitePath,
     customDomain: {
       domainName: "www.domain.com",
       hostedZone: "domain.com",
@@ -773,7 +801,7 @@ test("customDomain: certificate imported", async () => {
 test("customDomain: isExternalDomain true", async () => {
   const stack = new Stack(await createApp(), "stack");
   const site = new RemixSite(stack, "Site", {
-    path: "test/remix-site",
+    path: sitePath,
     customDomain: {
       domainName: "www.domain.com",
       cdk: {
@@ -802,7 +830,7 @@ test("customDomain: isExternalDomain true and no certificate", async () => {
   const stack = new Stack(await createApp(), "stack");
   expect(() => {
     new RemixSite(stack, "Site", {
-      path: "test/remix-site",
+      path: sitePath,
       customDomain: {
         domainName: "www.domain.com",
         isExternalDomain: true,
@@ -819,7 +847,7 @@ test("customDomain: isExternalDomain true and domainAlias set", async () => {
   const stack = new Stack(await createApp(), "stack");
   expect(() => {
     new RemixSite(stack, "Site", {
-      path: "test/remix-site",
+      path: sitePath,
       customDomain: {
         domainName: "domain.com",
         domainAlias: "www.domain.com",
@@ -842,7 +870,7 @@ test("customDomain: isExternalDomain true and hostedZone set", async () => {
   const stack = new Stack(await createApp(), "stack");
   expect(() => {
     new RemixSite(stack, "Site", {
-      path: "test/remix-site",
+      path: sitePath,
       customDomain: {
         domainName: "www.domain.com",
         hostedZone: "domain.com",
@@ -869,29 +897,13 @@ test("constructor: path not exist", async () => {
       // @ts-expect-error: "sstTest" is not exposed in props
       sstTest: true,
     });
-  }).toThrow(/Could not find "remix.config.js"/);
-});
-
-test("constructor: skipbuild doesn't expect path", async () => {
-  const stack = new Stack(
-    new App({
-      skipBuild: true,
-    }),
-    "stack"
-  );
-  expect(() => {
-    new RemixSite(stack, "Site", {
-      path: "does-not-exist",
-      // @ts-expect-error: "sstTest" is not exposed in props
-      sstTest: true,
-    });
-  }).not.toThrow(/No path found/);
+  }).toThrow(/No site found/);
 });
 
 test("cdk.bucket is props", async () => {
   const stack = new Stack(await createApp(), "stack");
   new RemixSite(stack, "Site", {
-    path: "test/remix-site",
+    path: sitePath,
     cdk: {
       bucket: {
         bucketName: "my-bucket",
@@ -909,7 +921,7 @@ test("cdk.bucket is props", async () => {
 test("cdk.bucket is construct", async () => {
   const stack = new Stack(await createApp(), "stack");
   new RemixSite(stack, "Site", {
-    path: "test/remix-site",
+    path: sitePath,
     cdk: {
       bucket: s3.Bucket.fromBucketName(stack, "Bucket", "my-bucket"),
     },
@@ -947,24 +959,14 @@ test("cdk.bucket is construct", async () => {
 test("constructor: cfCachePolicies props default", async () => {
   const stack = new Stack(await createApp(), "stack");
   new RemixSite(stack, "Site", {
-    path: "test/remix-site",
+    path: sitePath,
     // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
   });
-  countResources(stack, "AWS::CloudFront::CachePolicy", 3);
+  countResources(stack, "AWS::CloudFront::CachePolicy", 1);
   hasResource(stack, "AWS::CloudFront::CachePolicy", {
     CachePolicyConfig: objectLike({
-      Comment: "SST RemixSite Browser Build Default Cache Policy",
-    }),
-  });
-  hasResource(stack, "AWS::CloudFront::CachePolicy", {
-    CachePolicyConfig: objectLike({
-      Comment: "SST RemixSite Public Folder Default Cache Policy",
-    }),
-  });
-  hasResource(stack, "AWS::CloudFront::CachePolicy", {
-    CachePolicyConfig: objectLike({
-      Comment: "SST RemixSite Server Response Default Cache Policy",
+      Comment: "SST server response cache policy",
     }),
   });
 });
@@ -972,20 +974,10 @@ test("constructor: cfCachePolicies props default", async () => {
 test("constructor: cfCachePolicies props override", async () => {
   const stack = new Stack(await createApp(), "stack");
   new RemixSite(stack, "Site", {
-    path: "test/remix-site",
+    path: sitePath,
     cdk: {
       cachePolicies: {
-        buildCachePolicy: cf.CachePolicy.fromCachePolicyId(
-          stack,
-          "BuildCachePolicy",
-          "BuildCachePolicyId"
-        ),
-        staticsCachePolicy: cf.CachePolicy.fromCachePolicyId(
-          stack,
-          "StaticsCachePolicy",
-          "StaticsCachePolicyId"
-        ),
-        serverCachePolicy: cf.CachePolicy.fromCachePolicyId(
+        serverRequests: cf.CachePolicy.fromCachePolicyId(
           stack,
           "ServerCachePolicy",
           "ServerCachePolicyId"
@@ -1001,7 +993,7 @@ test("constructor: cfCachePolicies props override", async () => {
 test("constructor: cfDistribution props", async () => {
   const stack = new Stack(await createApp(), "stack");
   new RemixSite(stack, "Site", {
-    path: "test/remix-site",
+    path: sitePath,
     cdk: {
       distribution: {
         comment: "My Comment",
@@ -1021,7 +1013,7 @@ test("constructor: cfDistribution props", async () => {
 test("constructor: cfDistribution defaultBehavior override", async () => {
   const stack = new Stack(await createApp(), "stack");
   new RemixSite(stack, "Site", {
-    path: "test/remix-site",
+    path: sitePath,
     cdk: {
       distribution: {
         defaultBehavior: {
@@ -1056,7 +1048,7 @@ test("constructor: cfDistribution certificate conflict", async () => {
   const stack = new Stack(await createApp(), "stack");
   expect(() => {
     new RemixSite(stack, "Site", {
-      path: "test/remix-site",
+      path: sitePath,
       cdk: {
         distribution: {
           certificate: new acm.Certificate(stack, "Cert", {
@@ -1074,7 +1066,7 @@ test("constructor: cfDistribution domainNames conflict", async () => {
   const stack = new Stack(await createApp(), "stack");
   expect(() => {
     new RemixSite(stack, "Site", {
-      path: "test/remix-site",
+      path: sitePath,
       cdk: {
         distribution: {
           domainNames: ["domain.com"],
@@ -1086,104 +1078,48 @@ test("constructor: cfDistribution domainNames conflict", async () => {
   }).toThrow(/Do not configure the "cfDistribution.domainNames"/);
 });
 
-/////////////////////////////
-// Test Constructor for Local Debug
-/////////////////////////////
-
-test("constructor: local debug", async () => {
-  const app = new App({
-    debugEndpoint: "placeholder",
+test("constructor: sst dev", async () => {
+  const stack = new Stack(await createApp({ mode: "dev" }), "stack");
+  const site = new RemixSite(stack, "Site", {
+    path: sitePath,
   });
-  const stack = new Stack(app, "stack");
-  new RemixSite(stack, "Site", {
-    path: "test/remix-site",
-    // @ts-expect-error: "sstTest" is not exposed in props
-    sstTest: true,
-  });
-  countResources(stack, "Custom::SSTBucketDeployment", 1);
-  hasResource(stack, "Custom::SSTBucketDeployment", {
-    Sources: [
-      {
-        BucketName: ANY,
-        ObjectKey: ANY,
-      },
-    ],
-    DestinationBucketName: {
-      Ref: "SiteS3Bucket43E5BB2F",
-    },
-  });
-  countResources(stack, "Custom::SSTCloudFrontInvalidation", 1);
-  hasResource(stack, "Custom::SSTCloudFrontInvalidation", {
-    DistributionPaths: ["/*"],
-    WaitForInvalidation: false,
-  });
-  hasResource(stack, "AWS::CloudFront::Distribution", {
-    DistributionConfig: objectLike({
-      CustomErrorResponses: [
-        {
-          ErrorCode: 403,
-          ResponseCode: 200,
-          ResponsePagePath: "/index.html",
-        },
-        {
-          ErrorCode: 404,
-          ResponseCode: 200,
-          ResponsePagePath: "/index.html",
-        },
-      ],
-    }),
-  });
+  expect(site.url).toBeUndefined();
+  expect(site.customDomainUrl).toBeUndefined();
+  expect(() => {
+    expect(site.cdk.bucket).toBeUndefined();
+  }).toThrow(/Cannot access CDK resources/);
+  countResources(stack, "Custom::SSTBucketDeployment", 0);
+  countResources(stack, "Custom::SSTCloudFrontInvalidation", 0);
+  countResources(stack, "AWS::CloudFront::Distribution", 0);
 });
 
-test("constructor: local debug with disablePlaceholder true", async () => {
-  const app = new App({
-    debugEndpoint: "placeholder",
-  });
-  const stack = new Stack(app, "stack");
-  new RemixSite(stack, "Site", {
-    path: "test/remix-site",
-    disablePlaceholder: true,
+test("constructor: sst dev with disablePlaceholder true", async () => {
+  const stack = new Stack(await createApp({ mode: "dev" }), "stack");
+  const site = new RemixSite(stack, "Site", {
+    path: sitePath,
+    dev: {
+      deploy: true,
+    },
     // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
   });
-  countResources(stack, "Custom::SSTBucketDeployment", 1);
-  hasResource(stack, "Custom::SSTBucketDeployment", {
-    Sources: [
-      {
-        BucketName: ANY,
-        ObjectKey: ANY,
-      },
-    ],
-    DestinationBucketName: {
-      Ref: "SiteS3Bucket43E5BB2F",
-    },
-  });
-  hasResource(stack, "AWS::CloudFront::Distribution", {
-    DistributionConfig: objectLike({
-      CustomErrorResponses: ABSENT,
-    }),
-  });
-  hasResource(stack, "Custom::SSTCloudFrontInvalidation", {
-    DistributionPaths: ["/*"],
-    WaitForInvalidation: true,
-  });
+  expect(site.url).toBeDefined();
+  countResources(stack, "AWS::CloudFront::Distribution", 1);
 });
 
-/////////////////////////////
-// Test Constructor for skipBuild
-/////////////////////////////
-
-test("constructor: skipBuild", async () => {
-  const app = new App({
-    skipBuild: true,
+test("constructor: sst remove", async () => {
+  const stack = new Stack(await createApp({ mode: "remove" }), "stack");
+  const site = new RemixSite(stack, "Site", {
+    path: sitePath,
   });
-  const stack = new Stack(app, "stack");
-  new RemixSite(stack, "Site", {
-    path: "test/remix-site",
-    // @ts-expect-error: "sstTest" is not exposed in props
-    sstTest: true,
-  });
-  countResources(stack, "Custom::SSTBucketDeployment", 1);
+  expect(site.url).toBeUndefined();
+  expect(site.customDomainUrl).toBeUndefined();
+  expect(() => {
+    expect(site.cdk.bucket).toBeUndefined();
+  }).toThrow(/Cannot access CDK resources/);
+  countResources(stack, "Custom::SSTBucketDeployment", 0);
+  countResources(stack, "Custom::SSTCloudFrontInvalidation", 0);
+  countResources(stack, "AWS::CloudFront::Distribution", 0);
 });
 
 /////////////////////////////
@@ -1193,7 +1129,7 @@ test("constructor: skipBuild", async () => {
 test("attachPermissions", async () => {
   const stack = new Stack(await createApp(), "stack");
   const site = new RemixSite(stack, "Site", {
-    path: "test/remix-site",
+    path: sitePath,
     // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
   });

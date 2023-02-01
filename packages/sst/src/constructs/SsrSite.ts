@@ -45,14 +45,10 @@ import {
   CacheHeaderBehavior,
   CacheCookieBehavior,
 } from "aws-cdk-lib/aws-cloudfront";
-import {
-  ICertificate,
-  DnsValidatedCertificate,
-} from "aws-cdk-lib/aws-certificatemanager";
+import { ICertificate } from "aws-cdk-lib/aws-certificatemanager";
 import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
 import { S3Origin, HttpOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
 import { CloudFrontTarget } from "aws-cdk-lib/aws-route53-targets";
-import { HttpsRedirect } from "aws-cdk-lib/aws-route53-patterns";
 
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
@@ -65,6 +61,8 @@ import {
   BaseSiteCdkDistributionProps,
   getBuildCmdEnvironment,
 } from "./BaseSite.js";
+import { HttpsRedirect } from "./cdk/website-redirect.js";
+import { DnsValidatedCertificate } from "./cdk/dns-validated-certificate.js";
 import { Size } from "./util/size.js";
 import { Duration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";

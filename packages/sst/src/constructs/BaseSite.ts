@@ -1,8 +1,12 @@
-import * as cdk from "aws-cdk-lib";
-import * as route53 from "aws-cdk-lib/aws-route53";
-import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
-import * as acm from "aws-cdk-lib/aws-certificatemanager";
-import { createAppContext } from "./context.js";
+import { Token } from "aws-cdk-lib";
+import { IHostedZone } from "aws-cdk-lib/aws-route53";
+import {
+  ErrorResponse,
+  DistributionProps,
+  BehaviorOptions,
+  IOrigin,
+} from "aws-cdk-lib/aws-cloudfront";
+import { ICertificate } from "aws-cdk-lib/aws-certificatemanager";
 
 /**
  * The customDomain for this website. SST supports domains that are hosted either on [Route 53](https://aws.amazon.com/route53/) or externally.
@@ -64,13 +68,13 @@ export interface BaseSiteDomainProps {
     /**
      * Import the underlying Route 53 hosted zone.
      */
-    hostedZone?: route53.IHostedZone;
+    hostedZone?: IHostedZone;
     /**
      * Import the certificate for the domain. By default, SST will create a certificate with the domain name. The certificate will be created in the `us-east-1`(N. Virginia) region as required by AWS CloudFront.
      *
      * Set this option if you have an existing certificate in the `us-east-1` region in AWS Certificate Manager you want to use.
      */
-    certificate?: acm.ICertificate;
+    certificate?: ICertificate;
   };
 }
 
@@ -88,7 +92,7 @@ export interface BaseSiteReplaceProps {
 
 export function buildErrorResponsesForRedirectToIndex(
   indexPage: string
-): cloudfront.ErrorResponse[] {
+): ErrorResponse[] {
   return [
     {
       httpStatus: 403,
@@ -105,7 +109,7 @@ export function buildErrorResponsesForRedirectToIndex(
 
 export function buildErrorResponsesFor404ErrorPage(
   errorPage: string
-): cloudfront.ErrorResponse[] {
+): ErrorResponse[] {
   return [
     {
       httpStatus: 403,
@@ -119,9 +123,9 @@ export function buildErrorResponsesFor404ErrorPage(
 }
 
 export interface BaseSiteCdkDistributionProps
-  extends Omit<cloudfront.DistributionProps, "defaultBehavior"> {
-  defaultBehavior?: Omit<cloudfront.BehaviorOptions, "origin"> & {
-    origin?: cloudfront.IOrigin;
+  extends Omit<DistributionProps, "defaultBehavior"> {
+  defaultBehavior?: Omit<BehaviorOptions, "origin"> & {
+    origin?: IOrigin;
   };
 }
 
@@ -138,7 +142,7 @@ export function getBuildCmdEnvironment(siteEnvironment?: {
   //
   const buildCmdEnvironment: Record<string, string> = {};
   Object.entries(siteEnvironment || {}).forEach(([key, value]) => {
-    buildCmdEnvironment[key] = cdk.Token.isUnresolved(value)
+    buildCmdEnvironment[key] = Token.isUnresolved(value)
       ? `{{ ${key} }}`
       : value;
   });

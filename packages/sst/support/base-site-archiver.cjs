@@ -95,7 +95,7 @@ function generateZips() {
       // Create a new zip file if current filesize exceeds
       if (totalSize + filesize > FILE_SIZE_LIMIT_IN_BYTES) {
         await archive.finalize();
-        openZip();
+        await openZip();
       }
 
       archive.append(data, {

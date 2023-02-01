@@ -15,6 +15,7 @@ import { Stack } from "./Stack.js";
 import { Bucket } from "./Bucket.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct.js";
+import { DnsValidatedCertificate } from "./cdk/dns-validated-certificate.js";
 import {
   Function as Fn,
   FunctionProps,
@@ -561,7 +562,7 @@ export class ApiGatewayV1Api<
     /**
      * The internally created certificate
      */
-    certificate?: acm.Certificate | acm.DnsValidatedCertificate;
+    certificate?: acm.Certificate | DnsValidatedCertificate;
   };
   private _deployment?: apig.Deployment;
   private _customDomainUrl?: string;
@@ -1079,7 +1080,7 @@ export class ApiGatewayV1Api<
     /////////////////////
     if (!apigDomainName && !certificate) {
       if (endpointType === "edge") {
-        certificate = new acm.DnsValidatedCertificate(
+        certificate = new DnsValidatedCertificate(
           this,
           "CrossRegionCertificate",
           {

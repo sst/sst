@@ -17,7 +17,6 @@ import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as route53 from "aws-cdk-lib/aws-route53";
-import * as route53Patterns from "aws-cdk-lib/aws-route53-patterns";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as cfOrigins from "aws-cdk-lib/aws-cloudfront-origins";
@@ -33,6 +32,8 @@ import {
   buildErrorResponsesFor404ErrorPage,
   buildErrorResponsesForRedirectToIndex,
 } from "./BaseSite.js";
+import { HttpsRedirect } from "./cdk/website-redirect.js";
+import { DnsValidatedCertificate } from "./cdk/dns-validated-certificate.js";
 import { SSTConstruct, isCDKConstruct } from "./Construct.js";
 import {
   ENVIRONMENT_PLACEHOLDER,
@@ -936,7 +937,7 @@ interface ImportMeta {
     // HostedZone is set for Route 53 domains
     if (this.hostedZone) {
       if (typeof customDomain === "string") {
-        acmCertificate = new acm.DnsValidatedCertificate(this, "Certificate", {
+        acmCertificate = new DnsValidatedCertificate(this, "Certificate", {
           domainName: customDomain,
           hostedZone: this.hostedZone,
           region: "us-east-1",
@@ -944,7 +945,7 @@ interface ImportMeta {
       } else if (customDomain.cdk?.certificate) {
         acmCertificate = customDomain.cdk.certificate;
       } else {
-        acmCertificate = new acm.DnsValidatedCertificate(this, "Certificate", {
+        acmCertificate = new DnsValidatedCertificate(this, "Certificate", {
           domainName: customDomain.domainName,
           hostedZone: this.hostedZone,
           region: "us-east-1",
@@ -990,7 +991,7 @@ interface ImportMeta {
 
     // Create Alias redirect record
     if (domainAlias) {
-      new route53Patterns.HttpsRedirect(this, "Redirect", {
+      new HttpsRedirect(this, "Redirect", {
         zone: this.hostedZone,
         recordNames: [domainAlias],
         targetDomain: recordName,

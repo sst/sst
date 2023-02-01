@@ -64,6 +64,7 @@ export async function createApp(props?: Partial<AppDeployProps>) {
     stage: project.config.stage,
     name: project.config.name,
     region: project.config.region,
+    skipBuild: props?.mode === "remove",
     ...props,
   });
 }
