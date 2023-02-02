@@ -121,8 +121,6 @@ app.bootstrap({
     "../packages/sst/src/constructs/AppSyncApi.ts",
     "../packages/sst/src/constructs/KinesisStream.ts",
     "../packages/sst/src/constructs/WebSocketApi.ts",
-    "../packages/sst/src/constructs/DebugApp.ts",
-    "../packages/sst/src/constructs/DebugStack.ts",
     "../packages/sst/src/constructs/AstroSite.tsdoc.ts",
     "../packages/sst/src/constructs/SolidStartSite.tsdoc.ts",
     "../packages/sst/src/constructs/RemixSite.tsdoc.ts",

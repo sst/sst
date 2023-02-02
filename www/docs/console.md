@@ -106,7 +106,7 @@ It allows you to **upload**, **delete**, and **download** files. You can also cr
 
 ### GraphQL
 
-The GraphQL explorer lets you **query GraphQL endpoints** created with the [`GraphQLApi`](constructs/GraphQLApi.md) and [`AppSyncApi`](constructs/AppSyncApi.md) constructs in your app.
+The GraphQL explorer lets you **query GraphQL endpoints** created with the [`Api`](constructs/Api.md) and [`AppSyncApi`](constructs/AppSyncApi.md) constructs in your app.
 
 ![SST Console GraphQL tab](/img/console/sst-console-graphql-tab.png)
 

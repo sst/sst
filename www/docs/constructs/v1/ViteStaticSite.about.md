@@ -11,7 +11,7 @@ The `ViteStaticSite` construct internally extends the [`StaticSite`](StaticSite.
 - [`fileOptions`](StaticSite.md#fileoptions) sets the cache control to `max-age=0,no-cache,no-store,must-revalidate` for HTML files; and `max-age=31536000,public,immutable` for JS/CSS files.
 
 :::warning
-The `ViteStaticSite` construct is deprecated, and will be removed in SST v2. Use the [`StaticSite`](StaticSite.md) construct instead. [Read more about how to upgrade.](../upgrade-guide.md#upgrade-to-v118)
+The `ViteStaticSite` construct is deprecated, and will be removed in SST v2. Use the [`StaticSite`](StaticSite.md) construct instead. [Read more about how to upgrade.](../../upgrade-guide.md#upgrade-to-v118)
 :::
 
 ## Examples
@@ -63,16 +63,16 @@ SST also creates a type definition file for the environment variables in `src/ss
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly VITE_API_URL: string;
-  readonly VITE_USER_POOL_CLIENT: string;
+  readonly VITE_API_URL: string
+  readonly VITE_USER_POOL_CLIENT: string
 }
 
 interface ImportMeta {
-  readonly env: ImportMetaEnv;
+  readonly env: ImportMetaEnv
 }
 ```
 
-This tells your editor the environment variables that are available and autocompletes them for you.
+This tells your editor the environment variables that are available and autocompletes them for you. 
 
 ![Vite environment variables autocomplete](/img/screens/vite-environment-variables-autocomplete.png)
 
@@ -95,17 +95,23 @@ On `sst deploy`, the environment variables will first be replaced by placeholder
 
 #### While developing
 
-To use these values while developing, run `sst dev` to start the [Live Lambda Development](/live-lambda-development.md) environment.
+To use these values while developing, run `sst start` to start the [Live Lambda Development](/live-lambda-development.md) environment.
 
-```bash
-npx sst dev
+``` bash
+npx sst start
 ```
 
-Then in your Vite app to reference these variables, add the [`sst env`](../packages/sst.md#sst-env) command.
+Then in your Vite app to reference these variables, add the [`sst-env`](/packages/static-site-env.md) package.
+
+```bash
+npm install --save-dev @serverless-stack/static-site-env
+```
+
+And tweak the Vite `dev` script to:
 
 ```json title="package.json" {2}
 "scripts": {
-  "dev": "sst env vite",
+  "dev": "sst-env -- vite",
   "build": "vite build",
   "preview": "vite preview"
 },
@@ -113,26 +119,25 @@ Then in your Vite app to reference these variables, add the [`sst env`](../packa
 
 Now you can start your Vite app as usualy and it'll have the environment variables from your SST app.
 
-```bash
+``` bash
 npm run dev
 ```
 
 There are a couple of things happening behind the scenes here:
 
-1. The `sst dev` command generates a file with the values specified by `ViteStaticSite`'s `environment` prop.
-2. The `sst env` CLI will traverse up the directories to look for the root of your SST app.
+1. The `sst start` command generates a file with the values specified by `ViteStaticSite`'s `environment` prop.
+2. The `sst-env` CLI will traverse up the directories to look for the root of your SST app.
 3. It'll then find the file that's generated in step 1.
 4. It'll load these as environment variables before running the start command.
 
 :::note
-`sst env` only works if the Vite app is located inside the SST app or inside one of its subdirectories. For example:
+`sst-env` only works if the Vite app is located inside the SST app or inside one of its subdirectories. For example:
 
 ```
 /
   sst.json
   vite-app/
 ```
-
 :::
 
 ### Custom domains

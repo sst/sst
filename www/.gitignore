@@ -7,7 +7,7 @@
 # Generated files
 .docusaurus
 .cache-loader
-*.tsdoc.md
+docs/constructs/*.tsdoc.md
 
 # Misc
 .DS_Store

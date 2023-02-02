@@ -143,43 +143,6 @@ module.exports = {
       items: ["learn/deploy-to-prod"],
     },
   ],
-  constructsv0: [
-    {
-      " ": ["constructs/v0/index", "constructs/v0/migration"],
-    },
-    {
-      Constructs: [
-        "constructs/v0/Api",
-        "constructs/v0/App",
-        "constructs/v0/RDS",
-        "constructs/v0/Cron",
-        "constructs/v0/Auth",
-        "constructs/v0/Table",
-        "constructs/v0/Topic",
-        "constructs/v0/Stack",
-        "constructs/v0/Script", // shorter in length viewed in browser
-        "constructs/v0/Queue",
-        "constructs/v0/Bucket",
-        "constructs/v0/Function",
-        "constructs/v0/EventBus",
-        "constructs/v0/StaticSite", // shorter in length viewed in browser
-        "constructs/v0/NextjsSite",
-        "constructs/v0/AppSyncApi",
-        "constructs/v0/GraphQLApi",
-        "constructs/v0/ViteStaticSite", // shorter in length viewed in browser
-        "constructs/v0/KinesisStream", // shorter in length viewed in browser
-        "constructs/v0/WebSocketApi",
-        "constructs/v0/ReactStaticSite",
-        "constructs/v0/ApiGatewayV1Api",
-      ],
-    },
-    {
-      Util: ["constructs/v0/Permissions"],
-    },
-    {
-      Internals: ["constructs/v0/DebugApp", "constructs/v0/DebugStack"],
-    },
-  ],
   constructs: [
     {
       " ": ["constructs/index"],
@@ -227,9 +190,9 @@ module.exports = {
       ],
       Other: [
         "constructs/Script",
-        "constructs/DebugApp",
-        "constructs/DebugStack",
         "constructs/ApiGatewayV1Api",
+        "constructs/v1/index",
+        "constructs/v0/index",
       ],
     },
   ],
@@ -252,6 +215,97 @@ module.exports = {
         "clients/event-bus",
         "clients/kinesis-stream",
       ],
+    },
+  ],
+  constructsv1: [
+    {
+      " ": ["constructs/v1/index"],
+    },
+    {
+      Core: [
+        "constructs/v1/App",
+        "constructs/v1/Stack",
+        "constructs/v1/Function",
+        {
+          type: "category",
+          label: "Config",
+          collapsible: true,
+          collapsed: true,
+          items: ["constructs/v1/Secret", "constructs/v1/Parameter"],
+        },
+      ],
+      Api: [
+        "constructs/v1/Api",
+        "constructs/v1/AppSyncApi",
+        "constructs/v1/WebSocketApi",
+      ],
+      Frontend: [
+        "constructs/v1/StaticSite",
+        "constructs/v1/NextjsSite",
+        "constructs/v1/RemixSite",
+      ],
+      Database: ["constructs/v1/RDS", "constructs/v1/Table"],
+      Async: [
+        "constructs/v1/Cron",
+        "constructs/v1/Topic",
+        "constructs/v1/Queue",
+        "constructs/v1/EventBus",
+        "constructs/v1/KinesisStream",
+      ],
+      Storage: ["constructs/v1/Bucket"],
+      Auth: ["constructs/v1/Auth", "constructs/v1/Cognito"],
+      Types: [
+        "constructs/v1/Size",
+        "constructs/v1/Duration",
+        "constructs/v1/Permissions",
+      ],
+      Other: [
+        "constructs/v1/Job",
+        "constructs/v1/Script",
+        "constructs/v1/DebugApp",
+        "constructs/v1/DebugStack",
+        "constructs/v1/GraphQLApi",
+        "constructs/v1/ViteStaticSite",
+        "constructs/v1/ReactStaticSite",
+        "constructs/v1/ApiGatewayV1Api",
+      ],
+    },
+  ],
+  constructsv0: [
+    {
+      " ": ["constructs/v0/index", "constructs/v0/migration"],
+    },
+    {
+      Constructs: [
+        "constructs/v0/Api",
+        "constructs/v0/App",
+        "constructs/v0/RDS",
+        "constructs/v0/Cron",
+        "constructs/v0/Auth",
+        "constructs/v0/Table",
+        "constructs/v0/Topic",
+        "constructs/v0/Stack",
+        "constructs/v0/Script", // shorter in length viewed in browser
+        "constructs/v0/Queue",
+        "constructs/v0/Bucket",
+        "constructs/v0/Function",
+        "constructs/v0/EventBus",
+        "constructs/v0/StaticSite", // shorter in length viewed in browser
+        "constructs/v0/NextjsSite",
+        "constructs/v0/AppSyncApi",
+        "constructs/v0/GraphQLApi",
+        "constructs/v0/ViteStaticSite", // shorter in length viewed in browser
+        "constructs/v0/KinesisStream", // shorter in length viewed in browser
+        "constructs/v0/WebSocketApi",
+        "constructs/v0/ReactStaticSite",
+        "constructs/v0/ApiGatewayV1Api",
+      ],
+    },
+    {
+      Util: ["constructs/v0/Permissions"],
+    },
+    {
+      Internals: ["constructs/v0/DebugApp", "constructs/v0/DebugStack"],
     },
   ],
 };

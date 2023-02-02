@@ -16,31 +16,13 @@ SST provides a couple of constructs that allow you to build and deploy your web 
 
 ### Frameworks
 
-SST provides out of the box support for [Create React App](https://reactjs.org), [Vite](https://vitejs.dev/), [Next.js](https://nextjs.org), and any static site framework through the [`StaticSite`](constructs/StaticSite.md) construct.
+SST provides out of the box support for [Next.js](https://nextjs.org), Remix, Astro, SolidStart, and any static site framework through the [`StaticSite`](constructs/StaticSite.md) construct.
 
 <MultiSiteCode>
 <TabItem value="next">
 
 ```js
 new NextjsSite(stack, "Next", {
-  path: "path/to/site",
-});
-```
-
-</TabItem>
-<TabItem value="react">
-
-```js
-new ReactStaticSite(stack, "React", {
-  path: "path/to/site",
-});
-```
-
-</TabItem>
-<TabItem value="vite">
-
-```js
-new ViteStaticSite(stack, "Vite", {
   path: "path/to/site",
 });
 ```
@@ -89,26 +71,6 @@ new NextjsSite(stack, "Next", {
 ```
 
 </TabItem>
-<TabItem value="react">
-
-```js {3}
-new ReactStaticSite(stack, "React", {
-  path: "path/to/site",
-  customDomain: "domain.com",
-});
-```
-
-</TabItem>
-<TabItem value="vite">
-
-```js {3}
-new ViteStaticSite(stack, "Vite", {
-  path: "path/to/site",
-  customDomain: "domain.com",
-});
-```
-
-</TabItem>
 <TabItem value="static">
 
 ```js {3}
@@ -130,32 +92,6 @@ If a domain alias is configured, visitors to the alias domain will be redirected
 
 ```js {5}
 new NextjsSite(stack, "Next", {
-  path: "path/to/site",
-  customDomain: {
-    domainName: "domain.com",
-    domainAlias: "www.domain.com",
-  },
-});
-```
-
-</TabItem>
-<TabItem value="react">
-
-```js {5}
-new ReactStaticSite(stack, "React", {
-  path: "path/to/site",
-  customDomain: {
-    domainName: "domain.com",
-    domainAlias: "www.domain.com",
-  },
-});
-```
-
-</TabItem>
-<TabItem value="vite">
-
-```js {5}
-new ViteStaticSite(stack, "Vite", {
   path: "path/to/site",
   customDomain: {
     domainName: "domain.com",
@@ -203,42 +139,6 @@ new NextjsSite(stack, "Next", {
 ```
 
 </TabItem>
-<TabItem value="react">
-
-```js {9-11}
-const api = new Api(stack, "Api", {
-  routes: {
-    "GET /": "src/lambda.main",
-  },
-});
-
-new ReactStaticSite(stack, "React", {
-  path: "path/to/site",
-  environment: {
-    REACT_APP_API_URL: api.url,
-  },
-});
-```
-
-</TabItem>
-<TabItem value="vite">
-
-```js {9-11}
-const api = new Api(stack, "Api", {
-  routes: {
-    "GET /": "src/lambda.main",
-  },
-});
-
-new ReactStaticSite(stack, "React", {
-  path: "path/to/site",
-  environment: {
-    VITE_API_URL: api.url,
-  },
-});
-```
-
-</TabItem>
 <TabItem value="static">
 
 ```js {9-11}
@@ -266,20 +166,6 @@ You can now reference the environment variable in your web app.
 
 ```js
 fetch(process.env.NEXT_PUBLIC_API_URL);
-```
-
-</TabItem>
-<TabItem value="react">
-
-```js
-fetch(process.env.REACT_APP_API_URL);
-```
-
-</TabItem>
-<TabItem value="vite">
-
-```js
-fetch(import.meta.env.VITE_API_URL);
 ```
 
 </TabItem>
@@ -315,7 +201,7 @@ After the `Api` construct is deployed, SST will replace all occurrences of `{{ R
 
 #### Editor autocomplete
 
-The [`ViteStaticSite`](constructs/ViteStaticSite.md) construct also [creates a type definition file](constructs/ViteStaticSite.md#type-definitions) for the environment variables in `src/sst-env.d.ts`. This tells your editor the environment variables that are available and autocompletes them for you.
+The [`StaticSite`](constructs/StaticSite.md) construct also [creates a type definition file](constructs/StaticSite.md#type-definitions) for the environment variables in `src/sst-env.d.ts`. This tells your editor the environment variables that are available and autocompletes them for you.
 
 ![Vite environment variables autocomplete](/img/screens/vite-environment-variables-autocomplete.png)
 
@@ -342,29 +228,6 @@ Then in your frontend app add the [`sst env`](../packages/sst.md#sst-env) comman
   "build": "next build",
   "start": "next start",
   "lint": "next lint"
-},
-```
-
-</TabItem>
-<TabItem value="react">
-
-```json title="package.json" {2}
-"scripts": {
-  "start": "sst env \"react-scripts start\"",
-  "build": "react-scripts build",
-  "test": "react-scripts test",
-  "eject": "react-scripts eject"
-},
-```
-
-</TabItem>
-<TabItem value="vite">
-
-```json title="package.json" {2}
-"scripts": {
-  "dev": "sst env vite",
-  "build": "tsc && vite build",
-  "preview": "vite preview"
 },
 ```
 

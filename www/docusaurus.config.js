@@ -64,7 +64,7 @@ module.exports = {
           to: "/constructs",
           label: "Constructs",
           position: "left",
-          activeBaseRegex: "^/constructs$|^/constructs/(?!v0)",
+          activeBaseRegex: "^/constructs$|^/constructs/(?!v0|v1)",
         },
         {
           to: "/clients",

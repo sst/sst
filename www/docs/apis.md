@@ -58,7 +58,7 @@ new Api(stack, "Api", {
 
 ## GraphQL API
 
-To create a serverless GraphQL API, use the [`GraphQLApi`](constructs/GraphQLApi.md) construct. It uses [Apollo Server](https://www.apollographql.com/docs/apollo-server/) and [Amazon API Gateway HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api.html).
+To create a serverless GraphQL API, use the `GraphQLApi` construct. It uses [Apollo Server](https://www.apollographql.com/docs/apollo-server/) and [Amazon API Gateway HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api.html).
 
 ```js
 import { GraphQLApi } from "sst/constructs";

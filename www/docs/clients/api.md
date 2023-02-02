@@ -38,23 +38,6 @@ console.log(Api.myApi.url);
 
 ---
 
-### GraphQLApi
-
-This module helps with accessing [GraphqlApis](../constructs/GraphQLApi.md).
-
-```ts
-import { GraphQLApi } from "sst/node/api";
-console.log(GraphQLApi.myApi.url);
-```
-
-#### url
-
-_Type_ : <span class="mono">string</span>
-
-The URL of the API. If custom domain is enabled, this is the custom domain URL of the API.
-
----
-
 ### AppSyncApi
 
 This module helps with accessing [AppSyncApis](../constructs/AppSyncApi.md).
