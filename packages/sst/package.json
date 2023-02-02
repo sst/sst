@@ -4,7 +4,7 @@
     "access": "public"
   },
   "name": "sst",
-  "version": "2.0.0-rc.64",
+  "version": "2.0.0-rc.65",
   "bin": {
     "sst": "cli/sst.js"
   },
@@ -118,7 +118,7 @@
     "@types/ws": "^8.5.3",
     "@types/yargs": "^17.0.13",
     "tsx": "^3.12.1",
-    "vitest": "^0.15.1"
+    "vitest": "^0.28.3"
   },
   "peerDependencies": {
     "@sls-next/lambda-at-edge": "^3.7.0"

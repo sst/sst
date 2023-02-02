@@ -84,7 +84,7 @@ export const deploy = (program: Program) =>
         process.exit(1);
       }
       const component = render(<DeploymentUI assembly={assembly} />);
-      const results = await Stacks.deployMany(assembly.stacks);
+      const results = await Stacks.deployMany(target);
       component.clear();
       component.unmount();
       printDeploymentResults(assembly, results);

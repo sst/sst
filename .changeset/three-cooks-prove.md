@@ -1,5 +1,0 @@
----
-"sst": patch
----
-
-Fix resolve
