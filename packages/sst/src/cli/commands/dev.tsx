@@ -206,6 +206,7 @@ export const dev = (program: Program) =>
             }
             deploy(assembly);
           } catch (ex: any) {
+            isWorking = false;
             spinner.fail();
             Colors.line(
               ex.stack
