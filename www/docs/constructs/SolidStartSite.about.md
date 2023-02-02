@@ -48,7 +48,7 @@ my-sst-app
    └─ vite.config.ts
 ```
 
-3. Let's set up the AWS adapter for your SolidStart app, since we will be deploying the app to AWS. To do that, make sure your `vite.config.ts` looks like the following.
+3. Let's set up the [`solid-start-sst` adapter](https://www.npmjs.com/package/solid-start-sst) for your SolidStart app. The adapter will transform the SSR functions to a format that can be deployed to AWS. To do that, make sure your `vite.config.ts` looks like the following.
 
 ```ts
 import solid from "solid-start/vite";

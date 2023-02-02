@@ -1,4 +1,4 @@
-The `NextjsSite` construct is a higher level CDK construct that makes it easy to create a Next.js app. It uses the [OpenNext](https://github.com/serverless-stack/open-next) project to build and package your Next.js app. The OpenNext project is maintained by the SST team🧡.
+The `NextjsSite` construct is a higher level CDK construct that makes it easy to create a Next.js app. It uses the [OpenNext](https://github.com/serverless-stack/open-next) project to build your Next.js app, and transforms the build output to a format that can be deployed to AWS. The OpenNext project is maintained by the SST team🧡.
 
 The `NextjsSite` construct provides a simple way to build and deploy the app to AWS:
 

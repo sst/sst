@@ -46,7 +46,7 @@ my-sst-app
    └─ astro.config.mjs
 ```
 
-3. Let's set up the AWS adapter for your Astro app, since we will be deploying the app to AWS. To do that, run `astro add` from your Astro app.
+3. Let's set up the [`astro-sst` adapter](https://www.npmjs.com/package/astro-sst) for your Astro app. The adapter will transform the SSR functions to a format that can be deployed to AWS. To do that, run `astro add` from your Astro app.
 
 ```sh
 npx astro add astro-sst
