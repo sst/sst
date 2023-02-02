@@ -153,8 +153,7 @@ export class NextjsSite extends SsrSite {
       cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
       cachePolicy:
-        cdk?.cachePolicies?.serverRequests ??
-        this.createCloudFrontServerCachePolicy(),
+        cdk?.serverCachePolicy ?? this.createCloudFrontServerCachePolicy(),
       edgeLambdas: isMiddlewareEnabled
         ? [
             {
