@@ -96,6 +96,7 @@ export async function extractSchema(opts: { schema: string }) {
                   !types.isMemberExpression(callPath.node.callee) ||
                   !types.isIdentifier(callPath.node.callee.object) ||
                   !types.isIdentifier(callPath.node.callee.property) ||
+                  !schemaBuilder ||
                   (callPath.node.callee.object.name !==
                     (schemaBuilder.node.id as any).name &&
                     callPath.node.callee.property.name !== "implement")
