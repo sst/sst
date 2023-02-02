@@ -75,6 +75,7 @@ const CDK_DOCS_MAP = {
   Function: "aws_lambda",
   IFunction: "aws_lambda",
   ILayerVersion: "aws_lambda",
+  FunctionProps: "aws_lambda",
   FunctionOptions: "aws_lambda",
   SqsEventSourceProps: "aws_lambda",
   DynamoEventSourceProps: "aws_lambda",

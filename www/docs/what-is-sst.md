@@ -66,7 +66,7 @@ new AstroSite(stack, "site", {
 And the [`SolidStartSite`](constructs/SolidStartSite.md) for [Solid](https://www.solidjs.com).
 
 ```ts
-new SolidSite(stack, "site", {
+new SolidStartSite(stack, "site", {
   path: "web",
   customDomain: "my-solid-app.com",
 });

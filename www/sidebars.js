@@ -182,19 +182,7 @@ module.exports = {
   ],
   constructs: [
     {
-      " ": [
-        "constructs/index",
-        {
-          type: "link",
-          label: "v0 Constructs",
-          href: "/constructs/v0",
-        },
-        {
-          type: "link",
-          label: "Migrate to v1.0",
-          href: "/constructs/v0/migration",
-        },
-      ],
+      " ": ["constructs/index"],
     },
     {
       Core: [
@@ -241,7 +229,6 @@ module.exports = {
         "constructs/Script",
         "constructs/DebugApp",
         "constructs/DebugStack",
-        "constructs/GraphQLApi",
         "constructs/ApiGatewayV1Api",
       ],
     },

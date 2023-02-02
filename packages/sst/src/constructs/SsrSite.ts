@@ -210,18 +210,13 @@ export interface SsrSiteProps {
      */
     distribution?: SsrCdkDistributionProps;
     /**
-     * Override the default CloudFront cache policies created internally.
+     * Override the CloudFront cache policy properties for responses from the
+     * server rendering Lambda.
+     *
+     * @note The default cache policy that is used in the abscene of this property
+     * is one that performs no caching of the server response.
      */
-    cachePolicies?: {
-      /**
-       * Override the CloudFront cache policy properties for responses from the
-       * server rendering Lambda.
-       *
-       * @note The default cache policy that is used in the abscene of this property
-       * is one that performs no caching of the server response.
-       */
-      serverRequests?: ICachePolicy;
-    };
+    serverCachePolicy?: ICachePolicy;
     server?: Pick<
       FunctionProps,
       | "vpc"
@@ -803,8 +798,7 @@ export class SsrSite extends Construct implements SSTConstruct {
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
       cachePolicy:
-        cdk?.cachePolicies?.serverRequests ??
-        this.createCloudFrontServerCachePolicy(),
+        cdk?.serverCachePolicy ?? this.createCloudFrontServerCachePolicy(),
       ...(cfDistributionProps.defaultBehavior || {}),
     };
   }
@@ -822,8 +816,7 @@ export class SsrSite extends Construct implements SSTConstruct {
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
       cachePolicy:
-        cdk?.cachePolicies?.serverRequests ??
-        this.createCloudFrontServerCachePolicy(),
+        cdk?.serverCachePolicy ?? this.createCloudFrontServerCachePolicy(),
       ...(cfDistributionProps.defaultBehavior || {}),
       // concatenate edgeLambdas
       edgeLambdas: [

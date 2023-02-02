@@ -203,11 +203,11 @@ On `sst deploy`, the Remix app server is deployed to a Lambda function, and the 
 If you enabled the `edge` option, the Remix app server will instead get deployed to a Lambda@Edge function. We have an issue here, AWS Lambda@Edge does not support runtime environment variables. To get around this limitation, we insert a snippet to the top of your app server:
 
 ```ts
-const environment = "{{ _SST_EDGE_SITE_ENVIRONMENT_ }}";
+const environment = "{{ _SST_FUNCTION_ENVIRONMENT_ }}";
 process.env = { ...process.env, ...environment };
 ```
 
-And at deploy time, after the referenced resources have been created, the API in this case, a CloudFormation custom resource will update the app server's code and replace the placeholder `{{ _SST_EDGE_SITE_ENVIRONMENT_ }}` with the actual value:
+And at deploy time, after the referenced resources have been created, the API in this case, a CloudFormation custom resource will update the app server's code and replace the placeholder `{{ _SST_FUNCTION_ENVIRONMENT_ }}` with the actual value:
 
 ```ts
 const environment = {
@@ -430,20 +430,13 @@ Note that the certificate needs be created in the `us-east-1`(N. Virginia) regio
 
 Also note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
 
-### Configuring the Lambda Function
+### Configuring server function
 
-Configure the internally created CDK [`Lambda Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html) instance.
-
-```js {4-8}
+```js {3-4}
 new RemixSite(stack, "Site", {
   path: "my-remix-app/",
-  defaults: {
-    function: {
-      timeout: 20,
-      memorySize: 2048,
-      permissions: ["sns"],
-    },
-  },
+  timeout: "5 seconds",
+  memorySize: "2048 MB",
 });
 ```
 
@@ -464,40 +457,34 @@ new RemixSite(stack, "Site", {
 
 #### Reusing CloudFront cache policies
 
-CloudFront has a limit of 20 cache policies per AWS account. This is a hard limit, and cannot be increased. Each `RemixSite` creates 3 cache policies. If you plan to deploy multiple Remix sites, you can have the constructs share the same cache policies by reusing them across sites.
+CloudFront has a limit of 20 cache policies per AWS account. This is a hard limit, and cannot be increased. If you plan to deploy multiple Remix sites, you can have the constructs share the same cache policies by reusing them across sites.
 
 ```js
-import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
+import * as cdk from "aws-cdk-lib";
+import * as cf from "aws-cdk-lib/aws-cloudfront";
 
-const cachePolicies = {
-  browserBuildCachePolicy: new cloudfront.CachePolicy(
-    stack,
-    "BrowserBuildStaticsCache",
-    RemixSite.browserBuildCachePolicyProps
-  ),
-  publicCachePolicy: new cloudfront.CachePolicy(
-    stack,
-    "PublicStaticsCache",
-    RemixSite.publicCachePolicyProps
-  ),
-  serverResponseCachePolicy: new cloudfront.CachePolicy(
-    stack,
-    "ServerResponseCache",
-    RemixSite.serverResponseCachePolicyProps
-  ),
-};
+const serverCachePolicy = new cf.CachePolicy(stack, "ServerCache", {
+  queryStringBehavior: cf.CacheQueryStringBehavior.all(),
+  headerBehavior: cf.CacheHeaderBehavior.none(),
+  cookieBehavior: cf.CacheCookieBehavior.all(),
+  defaultTtl: cdk.Duration.days(0),
+  maxTtl: cdk.Duration.days(365),
+  minTtl: cdk.Duration.days(0),
+  enableAcceptEncodingBrotli: true,
+  enableAcceptEncodingGzip: true,
+});
 
 new RemixSite(stack, "Site1", {
   path: "my-remix-app/",
   cdk: {
-    cachePolicies,
+    serverCachePolicy,
   },
 });
 
 new RemixSite(stack, "Site2", {
   path: "another-remix-app/",
   cdk: {
-    cachePolicies,
+    serverCachePolicy,
   },
 });
 ```

@@ -562,7 +562,7 @@ export class ApiGatewayV1Api<
     /**
      * The internally created certificate
      */
-    certificate?: acm.Certificate | DnsValidatedCertificate;
+    certificate?: acm.ICertificate;
   };
   private _deployment?: apig.Deployment;
   private _customDomainUrl?: string;

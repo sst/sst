@@ -1,79 +1,170 @@
-The `NextjsSite` construct is a higher level CDK construct that makes it easy to create a Next.js app. It provides a simple way to build and deploy the site to an S3 bucket; setup a CloudFront CDN for fast content delivery; and configure a custom domain for the website URL.
+The `NextjsSite` construct is a higher level CDK construct that makes it easy to create a Next.js app. It uses the [OpenNext](https://github.com/serverless-stack/open-next) project to build and package your Next.js app. The OpenNext project is maintained by the SST team🧡.
 
-It also allows you to [automatically set the environment variables](#configuring-environment-variables) in your Next.js app directly from the outputs in your SST app.
+The `NextjsSite` construct provides a simple way to build and deploy the app to AWS:
 
-## Next.js Features
+- The client assets are deployed to an S3 Bucket, and served out from a CloudFront CDN for fast content delivery.
+- The app server and API functions are deployed to Lambda. And the middleware functions are deployed to Lambda@Edge.
+- It enables you to [configure custom domains](#custom-domains) for the website URL.
+- It also enable you to [automatically set the environment variables](#environment-variables) for your Next.js app directly from the outputs in your SST app.
+- It provides a simple interface to [grant permissions](#using-aws-services) for your app to access AWS resources.
 
-The `NextjsSite` construct uses the [`@sls-next/lambda-at-edge`](https://github.com/serverless-nextjs/serverless-next.js/tree/master/packages/libs/lambda-at-edge) package from the [`serverless-next.js`](https://github.com/serverless-nextjs/serverless-next.js) project to build and package your Next.js app so that it can be deployed to Lambda@Edge and CloudFront.
+## Quick Start
 
-:::note
-
-To use the `NextjsSite` construct, you have to install `@sls-next/lambda-at-edge` as a dependency in your `package.json`.
+1. If you are creating a new Next.js app, run `create-next-app` from the root of your SST app.
 
 ```bash
-npm install --save @sls-next/lambda-at-edge
+npx create-next-app@latest
 ```
 
-:::
+![Create Next.js App template](/img/nextjs/bootstrap-nextjs.png)
 
-Most of the Next.js 11 features are supported, including:
+After the Next.js app is created, your SST app structure should look like:
 
-- [Static Site Generation (SSG)](https://nextjs.org/docs/basic-features/data-fetching#getstaticprops-static-generation): Static pages are served out through the CloudFront CDN.
-- [Server Side Rendering (SSR)](https://nextjs.org/docs/basic-features/data-fetching#getserversideprops-server-side-rendering): Server side rendering is performed at CloudFront edge locations using Lambda@Edge.
-- [API Routes](https://nextjs.org/docs/api-routes/introduction): API requests are served from CloudFront edge locations using Lambda@Edge.
-- [Incremental Static Regeneration (ISR)](https://nextjs.org/docs/basic-features/data-fetching#incremental-static-regeneration): Regeneration is performed using Lambda functions, and the generated pages will be served out through the CloudFront CDN.
-- [Image Optimization](https://nextjs.org/docs/basic-features/image-optimization): Images are resized and optimized at CloudFront edge locations using Lambda@Edge.
+```bash
+my-sst-app
+├─ sst.json
+├─ services
+├─ stacks
+└─ my-next-app     <-- new Next.js app
+   ├─ pages
+   ├─ public
+   ├─ styles
+   └─ next.config.js
+```
 
-Next.js 12 features like middleware and AVIF image are not yet supported. You can [read more about the features supported by `serverless-next.js`](https://github.com/serverless-nextjs/serverless-next.js#features). And you can [follow the progress on Next.js 12 support here](https://github.com/serverless-nextjs/serverless-next.js/issues/2016).
+Continue to step 3.
 
-## Examples
+2. Alternatively, if you have an existing Next.js app, move the app to the root of your SST app. Your SST app structure should look like:
 
-### Creating a Next.js app
+```bash
+my-sst-app
+├─ sst.json
+├─ services
+├─ stacks
+└─ my-next-app     <-- your Next.js app
+   ├─ pages
+   ├─ public
+   ├─ styles
+   └─ next.config.js
+```
 
-Deploys a Next.js app in the `path/to/site` directory.
+3. Also add the `sst env` command to your Next.js app's `package.json`. `sst env` enables you to [automatically set the environment variables](#environment-variables) for your Next.js app directly from the outputs in your SST app.
 
-```js
-new NextjsSite(stack, "NextSite", {
-  path: "path/to/site",
+```diff
+  "scripts": {
+-   "dev": "next dev",
++   "dev": "sst env \"next dev\"",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+```
+
+4. Add the `NextjsSite` construct to an existing stack in your SST app. You can also create a new stack for the app.
+
+```ts
+import { NextjsSite, StackContext } as sst from "sst/constructs";
+
+export default function MyStack({ stack }: StackContext) {
+
+  // ... existing constructs
+
+  // Create the Next.js site
+  const site = new NextjsSite(stack, "Site", {
+    path: "my-next-app/",
+  });
+
+  // Add the site's URL to stack output
+  stack.addOutputs({
+    URL: site.url,
+  });
+}
+```
+
+When you are building your SST app, `NextjsSite` will invoke `npx open-next@latest build` inside the Next.js app directory. Make sure `path` is pointing to the your Next.js app.
+
+Note that we also added the site's URL to the stack output. After deploy succeeds, the URL will be printed out in the terminal.
+
+## Custom domains
+
+You can configure the website with a custom domain hosted either on [Route 53](https://aws.amazon.com/route53/) or [externally](#configuring-externally-hosted-domain).
+
+```js {5}
+const site = new NextjsSite(stack, "Site", {
+  path: "my-next-app/",
+  customDomain: "my-app.com",
 });
 ```
 
-### Environment variables
+Note that visitors to the `http://` URL will be redirected to the `https://` URL.
 
-The `NextjsSite` construct allows you to set the environment variables in your Next.js app based on outputs from other constructs in your SST app. So you don't have to hard code the config from your backend. Let's look at how.
+You can also configure an alias domain to point to the main domain. For example, to setup `www.my-app.com` redirecting to `my-app.com`:
 
-Next.js supports [setting build time environment variables](https://nextjs.org/docs/basic-features/environment-variables). In your JS files this looks like:
-
-```js title="pages/index.js"
-console.log(process.env.API_URL);
-console.log(process.env.USER_POOL_CLIENT);
-```
-
-You can pass these in directly from the construct.
-
-```js {3-6}
-new NextjsSite(stack, "NextSite", {
-  path: "path/to/site",
-  environment: {
-    API_URL: api.url,
-    USER_POOL_CLIENT: auth.cognitoUserPoolClient.userPoolClientId,
+```js {5}
+const site = new NextjsSite(stack, "Site", {
+  path: "my-next-app/",
+  customDomain: {
+    domainName: "my-app.com",
+    domainAlias: "www.my-app.com",
   },
 });
 ```
 
-Where `api.url` or `auth.cognitoUserPoolClient.userPoolClientId` are coming from other constructs in your SST app.
+## Environment variables
+
+The `NextjsSite` construct allows you to set the environment variables in your Next.js app based on outputs from other constructs in your SST app. So you don't have to hard code the config from your backend. Let's look at how.
+
+To expose environment variables to your Next.js application you should utilise the `NextjsSite` construct `environment` configuration property rather than an `.env` file within your Next.js application root.
+
+Imagine you have an S3 bucket created using the [`Bucket`](../constructs/Bucket.md) construct, and you want to upload files to the bucket. You'd pass the bucket's name to your Next.js app.
+
+```ts {7-9}
+const bucket = new Bucket(stack, "Bucket", {
+  // ...
+});
+
+new NextjsSite(stack, "Site", {
+  path: "my-next-app/",
+  environment: {
+    BUCKET_NAME: bucket.bucketName,
+  },
+});
+```
+
+Then you can access the bucket's name in your server code:
+
+```ts
+console.log(process.env.BUCKET_NAME);
+```
+
+Note that, in Next.js, only environment variables prefixed with `NEXT_PUBLIC_` are available in your browser code. [Read more about using environment variables](https://nextjs.org/docs/basic-features/environment-variables#exposing-environment-variables-to-the-browser).
+
+For example, if you want to access the bucket's name in your frontend js code, you'd name it `NEXT_PUBLIC_BUCKET_NAME`:
+
+```js
+new NextjsSite(stack, "Site", {
+  path: "my-next-app/",
+  environment: {
+    NEXT_PUBLIC_BUCKET_NAME: bucket.bucketName,
+  },
+});
+```
+
+Let's take look at what is happening behind the scene.
 
 #### While deploying
 
-On `sst deploy`, the environment variables will first be replaced by placeholder values, `{{ API_URL }}` and `{{ USER_POOL_CLIENT }}`, when building the Next.js app. And after the referenced resources have been created, the Api and User Pool in this case, the placeholders in the HTML and JS files will then be replaced with the actual values.
+On `sst deploy`, the Next.js server function is deployed to a Lambda function, and the NextjsSite's `environment` values are set as Lambda function environment variables. In this case, `process.env.BUCKET_NAME` will be available at runtime.
+
+If environment variables are referenced in the browser code, they will first be replaced by placeholder values, ie. `{{ NEXT_PUBLIC_BUCKET_NAME }}`, when building the Next.js app. And after the S3 bucket has been created, the placeholders in the HTML and JS files will then be replaced with the actual values.
 
 :::caution
-Since the actual values are determined at deploy time, you should not rely on the values at build time. For example, you cannot fetch from `process.env.API_URL` inside `getStaticProps()` at build time.
+Since the actual values are determined at deploy time, you should not rely on the values at build time. For example, you cannot reference `process.env.BUCKET_NAME` inside `getStaticProps()` at build time.
 
 There are a couple of work arounds:
 
-- Hardcode the API URL
-- Read the API URL dynamically at build time (ie. from an SSM value)
+- Hardcode the bucket name
+- Read the bucket name dynamically at build time (ie. from an SSM value)
 - Use [fallback pages](https://nextjs.org/docs/basic-features/data-fetching#fallback-pages) to generate the page on the fly
   :::
 
@@ -109,17 +200,41 @@ There are a couple of things happening behind the scenes here:
 4. It'll load these as environment variables before running the start command.
 
 :::note
-`sst env` only works if the Astro app is located inside the SST app or inside one of its subdirectories. For example:
+`sst env` only works if the Next.js app is located inside the SST app or inside one of its subdirectories. For example:
 
 ```
 /
   sst.json
-  nextjs-app/
+  my-next-app/
 ```
-
 :::
 
-### Custom domains
+## Using AWS services
+
+Since the `NextjsSite` construct deploys your Next.js app to your AWS account, it's very convenient to access other resources in your AWS account. `NextjsSite` provides a simple way to grant [permissions](Permissions.md) to access specific AWS resources.
+
+Imagine you have an S3 bucket created using the [`Bucket`](../constructs/Bucket.md) construct, and you want to upload files to the bucket.
+
+```ts {12}
+const bucket = new Bucket(stack, "Bucket", {
+  // ...
+});
+
+const site = new NextjsSite(stack, "Site", {
+  path: "my-next-app/",
+  environment: {
+    BUCKET_NAME: bucket.bucketName,
+  },
+});
+
+site.attachPermissions([bucket]);
+```
+
+Note that we are also passing the bucket name into the environment, so the Next.js server code can fetch the value `process.env.BUCKET_NAME` when calling the AWS S3 SDK API to upload a file.
+
+## Examples
+
+### Configurng custom domains
 
 You can configure the website with a custom domain hosted either on [Route 53](https://aws.amazon.com/route53/) or [externally](#configuring-externally-hosted-domain).
 
@@ -127,8 +242,8 @@ You can configure the website with a custom domain hosted either on [Route 53](h
 
 ```js {3}
 new NextjsSite(stack, "Site", {
-  path: "path/to/site",
-  customDomain: "domain.com",
+  path: "my-next-app/",
+  customDomain: "my-app.com",
 });
 ```
 
@@ -136,10 +251,10 @@ new NextjsSite(stack, "Site", {
 
 ```js {3-6}
 new NextjsSite(stack, "Site", {
-  path: "path/to/site",
+  path: "my-next-app/",
   customDomain: {
-    domainName: "domain.com",
-    domainAlias: "www.domain.com",
+    domainName: "my-app.com",
+    domainAlias: "www.my-app.com",
   },
 });
 ```
@@ -148,11 +263,11 @@ new NextjsSite(stack, "Site", {
 
 ```js {3-7}
 new NextjsSite(stack, "Site", {
-  path: "path/to/site",
+  path: "my-next-app/",
   customDomain: {
     domainName:
-      scope.stage === "prod" ? "domain.com" : `${scope.stage}.domain.com`,
-    domainAlias: scope.stage === "prod" ? "www.domain.com" : undefined,
+      scope.stage === "prod" ? "my-app.com" : `${scope.stage}.my-app.com`,
+    domainAlias: scope.stage === "prod" ? "www.my-app.com" : undefined,
   },
 });
 ```
@@ -168,23 +283,23 @@ import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 
 // Look up hosted zone
 const hostedZone = route53.HostedZone.fromLookup(stack, "HostedZone", {
-  domainName: "domain.com",
+  domainName: "my-app.com",
 });
 
 // Create a certificate with alternate domain names
 const certificate = new acm.DnsValidatedCertificate(stack, "Certificate", {
-  domainName: "foo.domain.com",
+  domainName: "foo.my-app.com",
   hostedZone,
   region: "us-east-1",
-  subjectAlternativeNames: ["bar.domain.com"],
+  subjectAlternativeNames: ["bar.my-app.com"],
 });
 
 // Create site
 const site = new NextjsSite(stack, "Site", {
-  path: "path/to/site",
+  path: "my-next-app/",
   customDomain: {
-    domainName: "foo.domain.com",
-    alternateNames: ["bar.domain.com"],
+    domainName: "foo.my-app.com",
+    alternateNames: ["bar.my-app.com"],
     cdk: {
       hostedZone,
       certificate,
@@ -194,7 +309,7 @@ const site = new NextjsSite(stack, "Site", {
 
 // Create A and AAAA records for the alternate domain names
 const recordProps = {
-  recordName: "bar.domain.com",
+  recordName: "bar.my-app.com",
   zone: hostedZone,
   target: route53.RecordTarget.fromAlias(
     new route53Targets.CloudFrontTarget(site.cdk.distribution)
@@ -210,9 +325,9 @@ new route53.AaaaRecord(stack, "AlternateAAAARecord", recordProps);
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new NextjsSite(stack, "Site", {
-  path: "path/to/site",
+  path: "my-next-app/",
   customDomain: {
-    domainName: "domain.com",
+    domainName: "my-app.com",
     cdk: {
       certificate: Certificate.fromCertificateArn(stack, "MyCert", certArn),
     },
@@ -230,9 +345,9 @@ If you have multiple hosted zones for a given domain, you can choose the one you
 import { HostedZone } from "aws-cdk-lib/aws-route53";
 
 new NextjsSite(stack, "Site", {
-  path: "path/to/site",
+  path: "my-next-app/",
   customDomain: {
-    domainName: "domain.com",
+    domainName: "my-app.com",
     cdk: {
       hostedZone: HostedZone.fromHostedZoneAttributes(stack, "MyZone", {
         hostedZoneId,
@@ -249,10 +364,10 @@ new NextjsSite(stack, "Site", {
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new NextjsSite(stack, "Site", {
-  path: "path/to/site",
+  path: "my-next-app/",
   customDomain: {
     isExternalDomain: true,
-    domainName: "domain.com",
+    domainName: "my-app.com",
     cdk: {
       certificate: Certificate.fromCertificateArn(stack, "MyCert", certArn),
     },
@@ -264,33 +379,25 @@ Note that the certificate needs be created in the `us-east-1`(N. Virginia) regio
 
 Also note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
 
-### Configuring the Lambda Functions
+### Configuring server function
 
-Configure the internally created CDK [`Lambda Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html) instance.
-
-```js {4-8}
+```js {3-4}
 new NextjsSite(stack, "Site", {
-  path: "path/to/site",
-  defaults: {
-    function: {
-      timeout: 20,
-      memorySize: 2048,
-      permissions: ["sns"],
-    },
-  },
+  path: "my-next-app/",
+  timeout: "5 seconds",
+  memorySize: "2048 MB",
 });
 ```
 
-### Permissions
+### Configuring image optimization function
 
-You can attach a set of [permissions](Permissions.md) to allow the Next.js API routes and Server Side rendering `getServerSideProps` to access other AWS resources.
-
-```js {5}
-const site = new NextjsSite(stack, "Site", {
-  path: "path/to/site",
+```js {3-5}
+new NextjsSite(stack, "Site", {
+  path: "my-next-app/",
+  imageOptimization: {
+    memorySize: "2048 MB",
+  }
 });
-
-site.attachPermissions(["sns"]);
 ```
 
 ### Advanced examples
@@ -301,94 +408,43 @@ site.attachPermissions(["sns"]);
 import * as s3 from "aws-cdk-lib/aws-s3";
 
 new NextjsSite(stack, "Site", {
-  path: "path/to/site",
+  path: "my-next-app/",
   cdk: {
     bucket: s3.Bucket.fromBucketName(stack, "Bucket", "my-bucket"),
   },
 });
 ```
 
-#### Configuring Lambda Functions
-
-Configure the internally created CDK [`Lambda Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html) instance.
-
-```js {4-8}
-new NextjsSite(stack, "Site", {
-  path: "path/to/site",
-  defaults: {
-    function: {
-      timeout: 20,
-      memorySize: 2048,
-      permissions: ["sns"],
-    },
-  },
-});
-```
-
 #### Reusing CloudFront cache policies
 
-CloudFront has a limit of 20 cache policies per AWS account. This is a hard limit, and cannot be increased. Each `NextjsSite` creates 3 cache policies. If you plan to deploy multiple Next.js sites, you can have the constructs share the same cache policies by reusing them across sites.
+CloudFront has a limit of 20 cache policies per AWS account. This is a hard limit, and cannot be increased. If you plan to deploy multiple Next.js sites, you can have the constructs share the same cache policies by reusing them across sites.
 
 ```js
-import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
+import * as cdk from "aws-cdk-lib";
+import * as cf from "aws-cdk-lib/aws-cloudfront";
 
-const cachePolicies = {
-  staticCachePolicy: new cloudfront.CachePolicy(
-    stack,
-    "StaticCache",
-    NextjsSite.staticCachePolicyProps
-  ),
-  imageCachePolicy: new cloudfront.CachePolicy(
-    stack,
-    "ImageCache",
-    NextjsSite.imageCachePolicyProps
-  ),
-  lambdaCachePolicy: new cloudfront.CachePolicy(
-    stack,
-    "LambdaCache",
-    NextjsSite.lambdaCachePolicyProps
-  ),
-};
+const serverCachePolicy = new cf.CachePolicy(stack, "ServerCache", {
+  queryStringBehavior: cf.CacheQueryStringBehavior.all(),
+  headerBehavior: cf.CacheHeaderBehavior.none(),
+  cookieBehavior: cf.CacheCookieBehavior.all(),
+  defaultTtl: cdk.Duration.days(0),
+  maxTtl: cdk.Duration.days(365),
+  minTtl: cdk.Duration.days(0),
+  enableAcceptEncodingBrotli: true,
+  enableAcceptEncodingGzip: true,
+});
 
 new NextjsSite(stack, "Site1", {
-  path: "path/to/site1",
+  path: "my-next-app/",
   cdk: {
-    cachePolicies,
+    serverCachePolicy,
   },
 });
 
 new NextjsSite(stack, "Site2", {
-  path: "path/to/site2",
+  path: "another-next-app/",
   cdk: {
-    cachePolicies,
-  },
-});
-```
-
-#### Reusing CloudFront image origin request policy
-
-CloudFront has a limit of 20 origin request policies per AWS account. This is a hard limit, and cannot be increased. Each `NextjsSite` creates a new origin request policy by default. If you plan to deploy multiple Next.js sites, you can have the constructs share the same origin request policy by reusing them across sites.
-
-```js
-import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
-
-const imageOriginRequestPolicy = new cloudfront.OriginRequestPolicy(
-  stack,
-  "ImageOriginRequest",
-  NextjsSite.imageOriginRequestPolicyProps
-);
-
-new NextjsSite(stack, "Site1", {
-  path: "path/to/site1",
-  cdk: {
-    imageOriginRequestPolicy,
-  },
-});
-
-new NextjsSite(stack, "Site2", {
-  path: "path/to/site2",
-  cdk: {
-    imageOriginRequestPolicy,
+    serverCachePolicy,
   },
 });
 ```

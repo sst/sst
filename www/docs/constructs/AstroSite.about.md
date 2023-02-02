@@ -46,32 +46,21 @@ my-sst-app
    └─ astro.config.mjs
 ```
 
-3. Let's set up the AWS adapter for your Astro app, since we will be deploying the app to AWS. To do that, make sure your `astro.config.mjs` looks like the following.
+3. Let's set up the AWS adapter for your Astro app, since we will be deploying the app to AWS. To do that, run `astro add` from your Astro app.
 
-```ts
-import { defineConfig } from "astro/config";
-import aws from "@astrojs/aws/lambda";
-
-export default defineConfig({
-  output: "server",
-  adapter: aws(),
-});
+```sh
+npx astro add astro-sst
 ```
 
-And add the `@astrojs/aws` dependency to your Astro app's `package.json`.
-
-```bash
-npm install --save-dev @astrojs/aws
-```
+This will install the adapter and make the appropriate changes to your `astro.config.mjs` file in one step.
 
 :::info
-If you are deploying the `AstroSite` in the `edge` mode, use the edge adapter instead.
+If you are deploying the `AstroSite` in the `edge` mode, import the adapter from the `astro-sst/edge` package in your `astro.config.mjs` file.
 
 ```diff
-- import aws from "@astrojs/aws/lambda";
-+ import aws from "@astrojs/aws/edge";
+- import aws from "astro-sst/lambda";
++ import aws from "astro-sst/edge";
 ```
-
 :::
 
 4. Also add the `sst env` command to your Astro app's `package.json`. `sst env` enables you to [automatically set the environment variables](#environment-variables) for your Astro app directly from the outputs in your SST app.
@@ -207,11 +196,11 @@ On `sst deploy`, the Astro app server is deployed to a Lambda function, and the 
 If you enabled the `edge` option, the Astro app server will instead get deployed to a Lambda@Edge function. We have an issue here, AWS Lambda@Edge does not support runtime environment variables. To get around this limitation, we insert a snippet to the top of your app server:
 
 ```ts
-const environment = "{{ _SST_EDGE_SITE_ENVIRONMENT_ }}";
+const environment = "{{ _SST_FUNCTION_ENVIRONMENT_ }}";
 process.env = { ...process.env, ...environment };
 ```
 
-And at deploy time, after the referenced resources have been created, the API in this case, a CloudFormation custom resource will update the app server's code and replace the placeholder `{{ _SST_EDGE_SITE_ENVIRONMENT_ }}` with the actual value:
+And at deploy time, after the referenced resources have been created, the API in this case, a CloudFormation custom resource will update the app server's code and replace the placeholder `{{ _SST_FUNCTION_ENVIRONMENT_ }}` with the actual value:
 
 ```ts
 const environment = {
@@ -263,7 +252,6 @@ There are a couple of things happening behind the scenes here:
   sst.json
   my-astro-app/
 ```
-
 :::
 
 ## Using AWS services
@@ -436,20 +424,13 @@ Note that the certificate needs be created in the `us-east-1`(N. Virginia) regio
 
 Also note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
 
-### Configuring the Lambda Function
+### Configuring server function
 
-Configure the internally created CDK [`Lambda Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html) instance.
-
-```js {4-8}
+```js {3-4}
 new AstroSite(stack, "Site", {
   path: "my-astro-app/",
-  defaults: {
-    function: {
-      timeout: 20,
-      memorySize: 2048,
-      permissions: ["sns"],
-    },
-  },
+  timeout: "5 seconds",
+  memorySize: "2048 MB",
 });
 ```
 
@@ -470,40 +451,34 @@ new AstroSite(stack, "Site", {
 
 #### Reusing CloudFront cache policies
 
-CloudFront has a limit of 20 cache policies per AWS account. This is a hard limit, and cannot be increased. Each `AstroSite` creates 3 cache policies. If you plan to deploy multiple Astro sites, you can have the constructs share the same cache policies by reusing them across sites.
+CloudFront has a limit of 20 cache policies per AWS account. This is a hard limit, and cannot be increased. If you plan to deploy multiple Astro sites, you can have the constructs share the same cache policies by reusing them across sites.
 
 ```js
-import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
+import * as cdk from "aws-cdk-lib";
+import * as cf from "aws-cdk-lib/aws-cloudfront";
 
-const cachePolicies = {
-  buildCachePolicy: new cloudfront.CachePolicy(
-    stack,
-    "BuildCache",
-    AstroSite.buildCachePolicyProps
-  ),
-  staticsCachePolicy: new cloudfront.CachePolicy(
-    stack,
-    "StaticsCache",
-    AstroSite.staticsCachePolicyProps
-  ),
-  serverCachePolicy: new cloudfront.CachePolicy(
-    stack,
-    "ServerCache",
-    AstroSite.serverCachePolicyProps
-  ),
-};
+const serverCachePolicy = new cf.CachePolicy(stack, "ServerCache", {
+  queryStringBehavior: cf.CacheQueryStringBehavior.all(),
+  headerBehavior: cf.CacheHeaderBehavior.none(),
+  cookieBehavior: cf.CacheCookieBehavior.all(),
+  defaultTtl: cdk.Duration.days(0),
+  maxTtl: cdk.Duration.days(365),
+  minTtl: cdk.Duration.days(0),
+  enableAcceptEncodingBrotli: true,
+  enableAcceptEncodingGzip: true,
+});
 
 new AstroSite(stack, "Site1", {
   path: "my-astro-app/",
   cdk: {
-    cachePolicies,
+    serverCachePolicy,
   },
 });
 
 new AstroSite(stack, "Site2", {
   path: "another-astro-app/",
   cdk: {
-    cachePolicies,
+    serverCachePolicy,
   },
 });
 ```
