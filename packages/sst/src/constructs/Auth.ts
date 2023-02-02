@@ -197,6 +197,7 @@ export class Auth extends Construct implements SSTConstruct {
         [path]: {
           type: "function",
           function: this.authenticator,
+          authorizer: "none",
         },
       });
 
