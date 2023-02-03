@@ -93,6 +93,7 @@ module.exports = {
     {
       Info: [
         //"known-issues",
+        "configuring-sst",
         "upgrade-guide",
         "design-principles",
         "anonymous-telemetry",

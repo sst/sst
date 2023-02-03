@@ -7,10 +7,5 @@ export default {
       region: "us-east-1",
     };
   },
-  stacks(app) {
-    app.setDefaultFunctionProps({
-      runtime: "nodejs16.x",
-      architecture: "arm_64",
-    });
-  },
+  stacks(app) {},
 } satisfies SSTConfig;

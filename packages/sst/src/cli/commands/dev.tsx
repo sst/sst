@@ -116,7 +116,7 @@ export const dev = (program: Program) =>
 
         bus.subscribe("function.build.failed", async (evt) => {
           const info = useFunctions().fromID(evt.properties.functionID);
-          if (!info.enableLiveDev) return;
+          if (info.enableLiveDev === false) return;
           Colors.gap();
           Colors.line(Colors.danger("✖ "), "Build failed", info.handler!);
           for (const line of evt.properties.errors) {

@@ -11,7 +11,7 @@ export default [
     operations: [{ op: "add", path: "/scripts/gen", value: "hygen" }],
   }),
   install({
-    packages: ["kysely", "kysely-data-api"],
-    path: "services",
+    packages: ["kysely", "kysely-data-api", "aws-sdk"],
+    path: "packages/core",
   }),
 ];

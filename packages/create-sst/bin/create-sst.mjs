@@ -58,11 +58,11 @@ program
           message: "Project name",
         },
       ]);
-      return [
-        "presets/standard/base",
-        answers.name,
-        path.join(cwd, answers.name),
-      ];
+      const destination = path.join(cwd, answers.name);
+      if (opts.template) {
+        return [`presets/${opts.template}`, answers.name, destination];
+      }
+      return ["presets/standard/base", answers.name, destination];
     })();
 
     const spinner = ora();
