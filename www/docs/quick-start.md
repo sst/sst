@@ -62,31 +62,6 @@ pnpm create sst my-sst-app
 
 ---
 
-### Pick a starter
-
-This will prompt you to select a starter.
-
-```
-? What kind of project do you want to create? (Use arrow keys)
-❯ graphql
-  minimal
-  examples
-```
-
-The `graphql` starter is a full-stack TypeScript app organized as a monorepo. It comes with a GraphQL API, a frontend React app, and all of our best practices. Let's pick that.
-
-Next, it will prompt you to select a database; either [RDS](https://aws.amazon.com/rds/) (PostgreSQL or MySQL) or [DynamoDB](https://aws.amazon.com/dynamodb/).
-
-```
-? Select a database (you can change this later or use both) (Use arrow keys)
-  RDS (Postgres or MySQL)
-❯ DynamoDB
-```
-
-Let's use DynamoDB for now. If you want to use PostgreSQL, [check out our tutorial](learn/index.md), we cover it in detail.
-
----
-
 ### Install dependencies
 
 Next install the dependencies.
@@ -178,60 +153,16 @@ The initial deploy can take a few minutes. It will deploy your app to AWS, and a
 Once complete, you'll see something like this.
 
 ```
-==========================
- Starting Live Lambda Dev
-==========================
+➜  App:     my-sst-app
+   Stage:   Jay
+   Console: https://console.sst.dev/my-sst-app/Jay/local
 
-SST Console: https://console.sst.dev/my-sst-app/Jay/local
-Debug session started. Listening for requests...
+✔  Deployed:
+   API
+   ApiEndpoint: https://bmodl6wkkj.execute-api.us-east-1.amazonaws.com
 ```
 
 Now our app has been **deployed** to **AWS** and it's **connected** to our **local machine**!
-
----
-
-### Start the frontend
-
-The frontend in our starter is a React app created with [Vite](https://vitejs.dev). Let's start it locally from the `web/` directory.
-
-<MultiPackagerCode>
-<TabItem value="npm">
-
-```bash
-cd web
-npm run dev
-```
-
-</TabItem>
-<TabItem value="yarn">
-
-```bash
-cd web
-yarn run dev
-```
-
-</TabItem>
-<TabItem value="pnpm">
-
-```bash
-cd web
-pnpm run dev
-```
-
-</TabItem>
-</MultiPackagerCode>
-
-Once complete, you can navigate to the URL in your output — `http://localhost:3000/`. You should see the homepage of our starter! It's a simple Reddit clone where you can post links.
-
-:::info
-Your frontend is automatically connected to your API on AWS.
-:::
-
-Try posting a link.
-
-![SST starter homepage](/img/quick-start/sst-starter-homepage.png)
-
-If you check the developer console in your browser, you'll notice that it's making requests to an endpoint in AWS — `https://cok8brhsqk.execute-api.us-east-1.amazonaws.com/graphql`
 
 ---
 
@@ -239,100 +170,32 @@ If you check the developer console in your browser, you'll notice that it's maki
 
 The `sst dev` command also powers a web based dashboard, called the [SST Console](console.md). Head over to the URL above or simply — **<ConsoleUrl url={config.console} />**
 
-Click on the **DynamoDB** tab on the left.
+Select the **API** tab on the left, and click **Send**. This will make a request to the above endpoint in AWS.
 
-![SST Console DynamoDB tab](/img/quick-start/sst-console-dynamodb.png)
+![SST Console API tab](/img/quick-start/sst-console-api.png)
 
-You should see a row for the newly posted link. Note that, just like the GraphQL API above, the database is not running locally, it's on AWS.
+You should see a `Hello world` message in the response.
 
 ---
 
 ## 3. Make a change
 
-Let's make a change to our API and see what the workflow is like. Replace the following in `services/functions/graphql/types/article.ts`.
+Let's make a change to our API and see what the workflow is like. Replace the following in `packages/functions/src/lambda.ts`.
 
-```diff title="services/functions/graphql/types/article.ts" {5-8}
-fields: (t) => ({
-  id: t.exposeID("articleID"),
-  url: t.exposeString("url"),
-- title: t.exposeString("title"),
-+ title: t.field({
-+   type: "String",
-+   resolve: (article) => `🔥 ${article.title}`,
-+ }),
-}),
+```diff title="packages/functions/src/lambda.ts" {3-4}
+export const handler = ApiHandler(async (_evt) => {
+  return {
+-   body: `Hello world. The time is ${Time.now()}`,
++   body: "This is my awesome API!",
+  };
+});
 ```
 
-We are editing our GraphQL resolver to format the titles of our articles. Now if you refresh your browser.
+Switch back to the SST Console, and click **Send** again.
 
-![SST starter updated homepage](/img/quick-start/sst-starter-updated-homepage.png)
+![SST Console API tab](/img/quick-start/sst-console-api-after-change.png)
 
-<details>
-<summary>Behind the scenes</summary>
-
-Here's how this all works behind the scenes. All our infrastructure is defined in the `stacks/` directory.
-
-1. Here we define our database in `stacks/Database.ts` using the [`Table`](constructs/Table.md) construct.
-
-   ```ts
-   const table = new Table(stack, "table", {
-     /** **/
-   });
-   ```
-
-2. We then define an API using the [`Api`](constructs/Api.md) in `stacks/Api.ts`.
-
-   ```ts
-   const api = new ApiGateway(stack, "api", {
-     /** **/
-   });
-   ```
-
-   We bind our database details to the API so our functions can make queries to it.
-
-   ```ts
-   function: {
-     bind: [db.table],
-   },
-   ```
-
-3. Next we define our frontend in `stacks/Web.ts` using the [`StaticSite`](constructs/StaticSite.md) construct.
-
-   ```ts
-   const site = new StaticSite(stack, "site", {
-     /** **/
-   });
-   ```
-
-   And we pass in our API URL to the frontend.
-
-   ```ts
-   environment: {
-     VITE_GRAPHQL_URL: api.url + "/graphql",
-   },
-   ```
-
-4. Finally, we tie these all together in `stacks/index.ts`.
-
-   ```ts
-   app.stack(Database).stack(Api).stack(Web);
-   ```
-
-   And we specify the directory with our functions code.
-
-   ```ts
-   srcPath: "services",
-   ```
-
-5. Our function handlers are in the `services/functions/` directory.
-
-6. Finally, our core domain logic or business logic is in the `services/core/` directory. It's organized using [Domain Driven Design](learn/domain-driven-design.md).
-
-The `graphql/` directory is code-genned and allows us to share the backend types in our frontend. It should be committed to Git.
-
-</details>
-
-So to recap, our frontend is running locally and it's talking to our GraphQL API hosted on AWS. However we can make changes to the functions and they get live reloaded.
+You should see the updated message in the response.
 
 ---
 
@@ -368,18 +231,15 @@ pnpm sst deploy --stage prod
 
 This will take a few minutes to run and will create a complete new version of your app. Once complete you'll notice these outputs.
 
-```bash {4,6}
-Stack Jay-my-sst-app-Web
-  Status: deployed
-  Outputs:
-    SITE: https://dzennbvva4xas.cloudfront.net
-  site:
-    VITE_GRAPHQL_URL: https://q14k5arhm8wl.execute-api.us-east-1.amazonaws.com/graphql
+```bash {3}
+✔  Deployed:
+   API
+   ApiEndpoint: https://2q0mwp6r8d.execute-api.us-east-1.amazonaws.com
 ```
 
-Our site is now live at `SITE` and it's talking to our GraphQL API at `VITE_API_URL`. You'll notice this is a completely new API endpoint.
+You'll notice this is a completely new API endpoint.
 
-You can also add [**custom domains**](constructs/StaticSite.md#custom-domains) to your app and [API](constructs/Api.md#custom-domains), but we'll cover that in a separate tutorial.
+You can also add [**custom domains**](constructs/Api.md#custom-domains) to your app, but we'll cover that in a separate tutorial.
 
 ---
 
@@ -415,10 +275,6 @@ pnpm sst remove --stage prod
 </MultiPackagerCode>
 
 This removes the local and prod environments of your app.
-
-:::info
-By default, SST does not remove your DynamoDB table. This prevents accidental removals. You'll need to set the [Removal Policy](advanced/removal-policy.md) to force remove it.
-:::
 
 ---
 
