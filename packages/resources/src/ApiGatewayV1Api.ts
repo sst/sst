@@ -1235,7 +1235,7 @@ export class ApiGatewayV1Api<
           const userPools = value.userPoolIds.map((userPoolId) =>
             cognito.UserPool.fromUserPoolId(
               this,
-              `${key}-ImportedUserPool`,
+              `${key}-${userPoolId}-ImportedUserPool`,
               userPoolId
             )
           );
