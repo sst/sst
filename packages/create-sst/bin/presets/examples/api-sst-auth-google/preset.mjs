@@ -1,7 +1,7 @@
 import { cmd, patch, extend, extract, install } from "create-sst";
 
 export default [
-  extend("presets/minimal/typescript-starter"),
+  extend("presets/base/example"),
   // Vanilla Extract doesn't support Vite 3 yet
   // https://github.com/seek-oss/vanilla-extract/issues/760
   cmd({ cmd: "npx create-vite@2.9.5 web --template=react" }),
