@@ -10,6 +10,5 @@ export default [
       "@middy/http-json-body-parser",
       "@middy/validator",
     ],
-    path: "services",
   }),
 ];

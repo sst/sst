@@ -5,6 +5,5 @@ export default [
   extract(),
   install({
     packages: ["@types/node"],
-    path: "services",
   }),
 ];

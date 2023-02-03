@@ -5,6 +5,5 @@ export default [
   extract(),
   install({
     packages: ["mongodb"],
-    path: "services",
   }),
 ];

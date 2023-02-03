@@ -5,11 +5,10 @@ export default [
   extract(),
   install({
     packages: ["uuid"],
-    path: "services",
   }),
   install({
     packages: ["@types/uuid"],
-    path: "services",
+
     dev: true,
   }),
 ];

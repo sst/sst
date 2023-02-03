@@ -5,6 +5,5 @@ export default [
   extract(),
   install({
     packages: ["apollo-server-lambda"],
-    path: "services",
   }),
 ];

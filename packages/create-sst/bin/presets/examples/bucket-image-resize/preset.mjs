@@ -5,11 +5,10 @@ export default [
   extract(),
   install({
     packages: ["sharp"],
-    path: "services",
   }),
   install({
     packages: ["@types/sharp"],
-    path: "services",
+
     dev: true,
   }),
 ];

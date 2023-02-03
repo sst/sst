@@ -8,7 +8,6 @@ export default [
   extract(),
   install({
     packages: ["@aws-sdk/client-dynamodb", "@aws-sdk/util-dynamodb"],
-    path: "services",
   }),
   install({
     packages: ["@serverless-stack/static-site-env"],
