@@ -72,6 +72,7 @@ module.exports = {
           items: [
             "advanced/monitoring",
             "advanced/source-maps",
+            "advanced/bootstrapping",
             "advanced/extending-sst",
             "advanced/removal-policy",
             "advanced/lambda-layers",
