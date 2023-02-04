@@ -12,7 +12,9 @@
     "@serverless-stack/static-site-env": "1.18.4"
   },
   "changesets": [
+    "clever-icons-walk",
     "large-bottles-live",
-    "stupid-spiders-matter"
+    "stupid-spiders-matter",
+    "twelve-terms-kneel"
   ]
 }
