@@ -12,6 +12,7 @@
     "@serverless-stack/static-site-env": "1.18.4"
   },
   "changesets": [
-    "large-bottles-live"
+    "large-bottles-live",
+    "stupid-spiders-matter"
   ]
 }
