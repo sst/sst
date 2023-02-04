@@ -16,9 +16,9 @@ export function ExampleStack({ stack, app }: StackContext) {
       authorizer: "auth0",
     },
     routes: {
-      "GET /private": "packages/functions/srcprivate.main",
+      "GET /private": "packages/functions/src/private.main",
       "GET /public": {
-        function: "packages/functions/srcpublic.main",
+        function: "packages/functions/src/public.main",
         authorizer: "none",
       },
     },

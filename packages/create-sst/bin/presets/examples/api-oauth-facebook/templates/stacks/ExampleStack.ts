@@ -74,9 +74,9 @@ export function ExampleStack({ stack, app }: StackContext) {
       authorizer: "userPool",
     },
     routes: {
-      "GET /private": "packages/functions/srcprivate.handler",
+      "GET /private": "packages/functions/src/private.handler",
       "GET /public": {
-        function: "packages/functions/srcpublic.handler",
+        function: "packages/functions/src/public.handler",
         authorizer: "none",
       },
     },

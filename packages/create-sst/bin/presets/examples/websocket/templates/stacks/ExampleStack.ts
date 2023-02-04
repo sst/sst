@@ -17,9 +17,9 @@ export function ExampleStack({ stack }: StackContext) {
       },
     },
     routes: {
-      $connect: "packages/functions/srcconnect.main",
-      $disconnect: "packages/functions/srcdisconnect.main",
-      sendmessage: "packages/functions/srcsendMessage.main",
+      $connect: "packages/functions/src/connect.main",
+      $disconnect: "packages/functions/src/disconnect.main",
+      sendmessage: "packages/functions/src/sendMessage.main",
     },
   });
 

@@ -7,7 +7,7 @@ export function ExampleStack({ stack }: StackContext) {
     notifications: {
       resize: {
         function: {
-          handler: "packages/functions/srcresize.main",
+          handler: "packages/functions/src/resize.main",
           nodejs: {
             esbuild: {
               externalModules: ["sharp"],

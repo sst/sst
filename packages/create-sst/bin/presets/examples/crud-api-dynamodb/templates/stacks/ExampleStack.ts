@@ -19,11 +19,11 @@ export function ExampleStack({ stack }: StackContext) {
       },
     },
     routes: {
-      "GET    /notes": "packages/functions/srclist.main",
-      "POST   /notes": "packages/functions/srccreate.main",
-      "GET    /notes/{id}": "packages/functions/srcget.main",
-      "PUT    /notes/{id}": "packages/functions/srcupdate.main",
-      "DELETE /notes/{id}": "packages/functions/srcdelete.main",
+      "GET    /notes": "packages/functions/src/list.main",
+      "POST   /notes": "packages/functions/src/create.main",
+      "GET    /notes/{id}": "packages/functions/src/get.main",
+      "PUT    /notes/{id}": "packages/functions/src/update.main",
+      "DELETE /notes/{id}": "packages/functions/src/delete.main",
     },
   });
 

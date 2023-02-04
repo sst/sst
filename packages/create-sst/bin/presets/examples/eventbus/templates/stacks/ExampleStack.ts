@@ -9,8 +9,8 @@ export function ExampleStack({ stack }: StackContext) {
           detailType: ["Order"],
         },
         targets: {
-          receipt: "packages/functions/srcreceipt.handler",
-          shipping: "packages/functions/srcshipping.handler",
+          receipt: "packages/functions/src/receipt.handler",
+          shipping: "packages/functions/src/shipping.handler",
         },
       },
     },
@@ -24,7 +24,7 @@ export function ExampleStack({ stack }: StackContext) {
       },
     },
     routes: {
-      "POST /order": "packages/functions/srcorder.handler",
+      "POST /order": "packages/functions/src/order.handler",
     },
   });
 

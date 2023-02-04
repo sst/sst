@@ -4,7 +4,7 @@ export function ExampleStack({ stack }: StackContext) {
   // Create a HTTP API
   const api = new Api(stack, "Api", {
     routes: {
-      "POST /": "packages/functions/srclambda.handler",
+      "POST /": "packages/functions/src/lambda.handler",
     },
   });
 

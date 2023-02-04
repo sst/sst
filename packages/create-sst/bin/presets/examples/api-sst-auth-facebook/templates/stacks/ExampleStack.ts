@@ -24,8 +24,8 @@ export function ExampleStack({ stack }: StackContext) {
       },
     },
     routes: {
-      "GET /": "packages/functions/srclambda.handler",
-      "GET /session": "packages/functions/srcsession.handler",
+      "GET /": "packages/functions/src/lambda.handler",
+      "GET /session": "packages/functions/src/session.handler",
     },
   });
 
@@ -42,7 +42,7 @@ export function ExampleStack({ stack }: StackContext) {
   // Create Auth provider
   const auth = new Auth(stack, "auth", {
     authenticator: {
-      handler: "packages/functions/srcauth.handler",
+      handler: "packages/functions/src/auth.handler",
       bind: [
         new Config.Secret(stack, "FACEBOOK_APP_ID"),
         new Config.Secret(stack, "FACEBOOK_APP_SECRET"),

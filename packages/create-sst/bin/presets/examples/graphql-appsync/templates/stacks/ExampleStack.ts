@@ -19,7 +19,7 @@ export function ExampleStack({ stack }: StackContext) {
       },
     },
     dataSources: {
-      notes: "packages/functions/srcmain.handler",
+      notes: "packages/functions/src/main.handler",
     },
     resolvers: {
       "Query    listNotes": "notes",
