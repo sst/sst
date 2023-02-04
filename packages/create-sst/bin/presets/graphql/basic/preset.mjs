@@ -1,9 +1,6 @@
 import { remove, cmd, patch, extend, extract, install } from "create-sst";
 export default [
-  extend("presets/standard/base"),
-  remove("packages/core/src/time.ts"),
-  remove("packages/functions/src/lambda.ts"),
-  remove("stacks/MyStack.ts"),
+  extend("presets/base/monorepo"),
   patch({
     file: "package.json",
     operations: [
