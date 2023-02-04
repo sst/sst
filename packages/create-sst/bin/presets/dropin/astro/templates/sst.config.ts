@@ -12,7 +12,7 @@ export default {
     app.stack(function Site(ctx) {
       const site = new AstroSite(ctx.stack, "site");
       ctx.stack.addOutputs({
-        url: site.url,
+        url: site.url || "http://localhost:3000",
       });
     });
   },
