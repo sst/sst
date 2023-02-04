@@ -7,9 +7,9 @@ export function ExampleStack({ stack }: StackContext) {
       authorizer: "iam",
     },
     routes: {
-      "GET /private": "functions/private.main",
+      "GET /private": "packages/functions/srcprivate.main",
       "GET /public": {
-        function: "functions/public.main",
+        function: "packages/functions/srcpublic.main",
         authorizer: "none",
       },
     },

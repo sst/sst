@@ -16,7 +16,7 @@ export function ExampleStack({ stack }: StackContext) {
       },
     },
     routes: {
-      "POST /": "functions/lambda.handler",
+      "POST /": "packages/functions/srclambda.handler",
     },
   });
 

@@ -23,8 +23,8 @@ export function ExampleStack({ stack }: StackContext) {
       },
     },
     routes: {
-      "GET /": "functions/lambda.handler",
-      "GET /session": "functions/session.handler",
+      "GET /": "packages/functions/srclambda.handler",
+      "GET /session": "packages/functions/srcsession.handler",
     },
   });
 
@@ -39,7 +39,7 @@ export function ExampleStack({ stack }: StackContext) {
   // Create Auth provider
   const auth = new Auth(stack, "auth", {
     authenticator: {
-      handler: "functions/auth.handler",
+      handler: "packages/functions/srcauth.handler",
       bind: [site],
     },
   });

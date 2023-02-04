@@ -50,7 +50,7 @@ export function ExampleStack({ stack, app }: StackContext) {
       },
     },
     routes: {
-      "GET /post": "functions/index.handler",
+      "GET /post": "packages/functions/srcindex.handler",
     },
   });
 

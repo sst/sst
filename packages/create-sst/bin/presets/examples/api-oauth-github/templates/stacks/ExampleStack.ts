@@ -45,11 +45,11 @@ export function ExampleStack({ stack, app }: StackContext) {
       authorizer: "none",
     },
     routes: {
-      "GET /public": "functions/public.handler",
-      "GET /user": "functions/user.handler",
-      "POST /token": "functions/token.handler",
+      "GET /public": "packages/functions/srcpublic.handler",
+      "GET /user": "packages/functions/srcuser.handler",
+      "POST /token": "packages/functions/srctoken.handler",
       "GET /private": {
-        function: "functions/private.handler",
+        function: "packages/functions/srcprivate.handler",
         authorizer: "userPool",
       },
     },

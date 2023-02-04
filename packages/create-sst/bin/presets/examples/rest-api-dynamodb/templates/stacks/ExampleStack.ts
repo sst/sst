@@ -18,7 +18,7 @@ export function ExampleStack({ stack }: StackContext) {
       },
     },
     routes: {
-      "POST /": "functions/lambda.main",
+      "POST /": "packages/functions/srclambda.main",
     },
   });
 

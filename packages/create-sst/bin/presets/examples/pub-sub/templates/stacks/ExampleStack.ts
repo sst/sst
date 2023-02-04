@@ -4,8 +4,8 @@ export function ExampleStack({ stack }: StackContext) {
   // Create Topic
   const topic = new Topic(stack, "Ordered", {
     subscribers: {
-      receipt: "functions/receipt.main",
-      shipping: "functions/shipping.main",
+      receipt: "packages/functions/srcreceipt.main",
+      shipping: "packages/functions/srcshipping.main",
     },
   });
 
@@ -18,7 +18,7 @@ export function ExampleStack({ stack }: StackContext) {
       },
     },
     routes: {
-      "POST /order": "functions/order.main",
+      "POST /order": "packages/functions/srcorder.main",
     },
   });
 

@@ -7,7 +7,7 @@ export function ExampleStack({ stack }: StackContext) {
       lambda: {
         type: "lambda",
         function: new Function(stack, "authorizer", {
-          handler: "functions/authorizer.main",
+          handler: "packages/functions/srcauthorizer.main",
         }),
       },
     },
@@ -15,9 +15,9 @@ export function ExampleStack({ stack }: StackContext) {
       authorizer: "lambda",
     },
     routes: {
-      "GET /private": "functions/private.main",
+      "GET /private": "packages/functions/srcprivate.main",
       "GET /public": {
-        function: "functions/public.main",
+        function: "packages/functions/srcpublic.main",
         authorizer: "none",
       },
     },

@@ -3,7 +3,7 @@ import { StackContext, Queue, Api } from "sst/constructs";
 export function ExampleStack({ stack }: StackContext) {
   // Create Queue
   const queue = new Queue(stack, "Queue", {
-    consumer: "functions/consumer.main",
+    consumer: "packages/functions/srcconsumer.main",
   });
 
   // Create the HTTP API
@@ -15,7 +15,7 @@ export function ExampleStack({ stack }: StackContext) {
       },
     },
     routes: {
-      "POST /": "functions/lambda.main",
+      "POST /": "packages/functions/srclambda.main",
     },
   });
 

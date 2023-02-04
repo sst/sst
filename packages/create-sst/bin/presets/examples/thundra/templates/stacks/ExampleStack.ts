@@ -32,7 +32,7 @@ export function ExampleStack({ stack, app }: StackContext) {
       },
     },
     routes: {
-      "GET /": "functions/lambda.handler",
+      "GET /": "packages/functions/srclambda.handler",
     },
   });
 

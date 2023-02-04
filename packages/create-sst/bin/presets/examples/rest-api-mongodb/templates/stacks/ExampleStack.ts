@@ -11,7 +11,7 @@ export function ExampleStack({ stack }: StackContext) {
       },
     },
     routes: {
-      "GET /": "functions/lambda.handler",
+      "GET /": "packages/functions/srclambda.handler",
     },
   });
 
