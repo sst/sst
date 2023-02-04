@@ -45,7 +45,9 @@ export const DeploymentUI = (props: Props) => {
             Stacks.isFailed(event.ResourceStatus!)
               ? Colors.danger(event.ResourceStatus!)
               : Colors.dim(event.ResourceStatus!),
-            Stacks.isFailed(event.ResourceStatus!) && event.ResourceStatusReason
+            Stacks.isFailed(event.ResourceStatus!)
+              ? event.ResourceStatusReason
+              : ""
           );
           const { [event.LogicalResourceId!]: _, ...next } = previous;
           return next;
