@@ -10,12 +10,12 @@ export default {
   },
   stacks(app) {
     app.setDefaultFunctionProps({
-      runtime: "dotnetcore3.1",
+      runtime: "go1.x",
     });
-    app.stack(function Stack({ stack }: StackContext) {
+    app.stack(function Stack({ stack }) {
       const api = new Api(stack, "api", {
         routes: {
-          "GET /": "Api::Api.Handlers::Handler",
+          "GET /": "services/functions/lambda/main.go",
         },
       });
       stack.addOutputs({

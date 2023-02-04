@@ -13,8 +13,7 @@ program
   .description("CLI to create SST projects")
   .option("--template <template>", "Use a specific template")
   .argument("[name]", "The name of your project")
-  .action(async () => {
-    const opts = program.opts();
+  .action(async (argumentName, opts) => {
     const cwd = process.cwd();
     const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
     process.chdir(__dirname);
@@ -55,14 +54,16 @@ program
           name: "name",
           type: "input",
           default: "my-sst-app",
+          when: !argumentName,
           message: "Project name",
         },
       ]);
+      answers.name = answers.name || argumentName;
       const destination = path.join(cwd, answers.name);
       if (opts.template) {
         return [`presets/${opts.template}`, answers.name, destination];
       }
-      return ["presets/standard/base", answers.name, destination];
+      return ["presets/standard/api", answers.name, destination];
     })();
 
     const spinner = ora();
@@ -70,7 +71,7 @@ program
     try {
       await fs.access(preset);
     } catch {
-      spinner.fail(`Template not found at ` + preset);
+      spinner.fail(`Template not found for ` + preset.replace("presets/", ""));
       return;
     }
     spinner.start("Creating project");
