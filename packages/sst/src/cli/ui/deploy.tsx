@@ -23,7 +23,7 @@ export const DeploymentUI = (props: Props) => {
 
     const event = bus.subscribe("stack.event", (payload) => {
       const { event } = payload.properties;
-      if (event.ResourceType === "AWS::CloudFormation::Stack") return;
+      // if (event.ResourceType === "AWS::CloudFormation::Stack") return;
       setResources((previous) => {
         if (Stacks.isFinal(event.ResourceStatus!)) {
           const readable = logicalIdToCdkPath(
@@ -45,7 +45,7 @@ export const DeploymentUI = (props: Props) => {
             Stacks.isFailed(event.ResourceStatus!)
               ? Colors.danger(event.ResourceStatus!)
               : Colors.dim(event.ResourceStatus!),
-            Stacks.isFailed(event.ResourceStatus!)
+            Stacks.isFailed(event.ResourceStatus!) && event.ResourceStatusReason
               ? event.ResourceStatusReason
               : ""
           );
@@ -151,7 +151,7 @@ export function printDeploymentResults(
     Colors.line(`${Colors.danger(`✖`)}  ${Colors.bold.dim(`Errors`)}`);
     for (const [stack, result] of failed) {
       Colors.line(
-        `   ${Colors.dim(stackNameToId(stack))} ${Colors.danger(result.status)}`
+        `   ${Colors.dim(stackNameToId(stack))} ${Colors.dim(result.status)}`
       );
       for (const [id, error] of Object.entries(result.errors)) {
         const readable = logicalIdToCdkPath(assembly, stack, id) || id;

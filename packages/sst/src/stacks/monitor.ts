@@ -126,6 +126,21 @@ export async function monitor(stack: string) {
               event: event,
               stackID: stack,
             });
+            if (event.ResourceStatusReason) {
+              if (
+                event.ResourceStatusReason.includes(
+                  "Resource creation cancelled"
+                ) ||
+                event.ResourceStatusReason.includes(
+                  "Resource update cancelled"
+                ) ||
+                event.ResourceStatusReason?.includes(
+                  "Resource creation Initiated"
+                )
+              )
+                continue;
+              errors[event.LogicalResourceId!] = event.ResourceStatusReason;
+            }
           }
         }
         Logger.debug("Last event set to", lastEvent);
