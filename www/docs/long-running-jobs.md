@@ -27,9 +27,7 @@ Tasks related to video processing, ETL, and ML can take long. These exceed Lambd
 
 ## Quick start
 
-To follow along, you can create the Minimal TypeScript starter by running `npx create-sst@latest` > `minimal` > `minimal/typescript-starter`.
-
-Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/minimal-typescript) that's based on the same template.
+To follow along, you can create a new SST app by running `npx create-sst@latest`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/standard) that's based on the same template.
 
 1. **Create the infrastructure**
 
@@ -62,7 +60,7 @@ Alternatively, you can refer to [this example repo](https://github.com/serverles
 
    Define the shape of the function payload.
 
-   ```ts title="services/functions/myJob.ts"
+   ```ts title="packages/functions/src/myJob.ts"
    import { JobHandler } from "sst/node/job";
 
    declare module "sst/node/job" {
@@ -92,9 +90,9 @@ Alternatively, you can refer to [this example repo](https://github.com/serverles
 
 4. **Run the job**
 
-   And finally we can run this job in our API using the [`Job.myJob.run`](clients/job.md) helper. Change `services/functions/lambda.ts` to:
+   And finally we can run this job in our API using the [`Job.myJob.run`](clients/job.md) helper. Change `packages/functions/src/lambda.ts` to:
 
-   ```ts title="services/functions/lambda.ts"
+   ```ts title="packages/functions/src/lambda.ts"
    import { Job } from "sst/node/job";
    import { APIGatewayProxyHandlerV2 } from "aws-lambda";
 
@@ -240,9 +238,9 @@ Here we are passing in `{"num":5}` as the payload for the job.
 
 ## Typesafe payload
 
-In our example, we defined the job type in `services/functions/myJob.ts`.
+In our example, we defined the job type in `packages/functions/src/myJob.ts`.
 
-```ts title="services/functions/myJob.ts"
+```ts title="packages/functions/src/myJob.ts"
 export interface JobTypes {
   myJob: {
     num: number;
@@ -303,9 +301,9 @@ Let's take a look at how this is all wired up.
    export * from "./Job-LongJob";
    ```
 
-3. `JobTypes` is managed by you. In our example, you defined the payload types in `services/functions/myJob.ts`.
+3. `JobTypes` is managed by you. In our example, you defined the payload types in `packages/functions/src/myJob.ts`.
 
-   ```ts title="services/functions/myJob.ts"
+   ```ts title="packages/functions/src/myJob.ts"
    export interface JobTypes {
      myJob: {
        num: number;

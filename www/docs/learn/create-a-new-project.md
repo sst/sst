@@ -29,7 +29,7 @@ Let's create our starter. We'll be using the [`create sst`](../packages/create-s
 </ChangeText>
 
 ```bash
-npx create-sst@latest
+npx create-sst@one
 ```
 
 :::tip

@@ -123,7 +123,7 @@ This can be tuned between the values of 0 and 1. Where 0 means that no performan
 
 You also need to wrap your function handlers.
 
-```js title="services/functions/foo.js"
+```js title="packages/functions/src/foo.js"
 import * as Sentry from "@sentry/serverless";
 
 export const handler = Sentry.AWSLambda.wrapHandler(async (event) => {
@@ -298,7 +298,7 @@ pnpm add --save-dev epsagon
 
 And wrap your Lambda functions with their tracing wrapper.
 
-```js title="services/functions/foo.js"
+```js title="packages/functions/src/foo.js"
 const handler = epsagon.lambdaWrapper(function (event, context) {
   // Lambda code
 });

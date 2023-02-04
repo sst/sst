@@ -26,7 +26,7 @@ Access the resources in your app in a secure and typesafe way.
 
 To see how Resource Binding works, we are going to create an S3 bucket and bind it to a Lambda function.
 
-Follow along by creating the Minimal TypeScript starter by running `npx create-sst@latest` > `minimal` > `minimal/typescript-starter`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/minimal-typescript) that's based on the same template.
+To follow along, you can create a new SST app by running `npx create-sst@latest`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/standard) that's based on the same template.
 
 1. To create a new bucket, open up `stacks/MyStack.ts` and add a [`Bucket`](constructs/Bucket.md) construct below the API.
 
@@ -46,9 +46,9 @@ Follow along by creating the Minimal TypeScript starter by running `npx create-s
    api.bind([bucket]);
    ```
 
-3. Now we can access the bucket's name in our API using the [`Bucket`](clients/bucket.md) helper. Change `services/functions/lambda.ts` to:
+3. Now we can access the bucket's name in our API using the [`Bucket`](clients/bucket.md) helper. Change `packages/functions/src/lambda.ts` to:
 
-   ```ts title="services/functions/lambda.ts" {10}
+   ```ts title="packages/functions/src/lambda.ts" {10}
    import { APIGatewayProxyHandlerV2 } from "aws-lambda";
    import { Bucket } from "sst/node/bucket";
    import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
@@ -324,7 +324,7 @@ Prior to Resource Binding, people used Lambda environment variables to pass info
 
 Aside from the lack of typesafety and error handling, Lambda environment variables have a few drawbacks. Imagine you have a Lambda function that looks like this.
 
-```ts title="services/users/updated.ts"
+```ts title="packages/functions/src/updated.ts"
 export const handler = async () => {
   if (process.env.TOPIC_NAME !== "UserUpdated") {
     return;
@@ -340,7 +340,7 @@ Where `TOPIC_NAME` is stored as a Lambda environment variable. You'll need to ha
 
 2. In addition, imagine you have another function that also has a `TOPIC_NAME` Lambda environment variable, but with a different value.
 
-   ```ts title="services/billing/charged.ts"
+   ```ts title="packages/functions/src/charged.ts"
    export const handler = async () => {
      if (process.env.TOPIC_NAME !== "InvoiceCharged") {
        return;

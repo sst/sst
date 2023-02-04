@@ -31,7 +31,7 @@ Changes are automatically detected, built, and **live reloaded** in under 10 mil
 
 ## Quick start
 
-To give it a try, create a new SST app with our Minimal JavaScript starter by running `npx create-sst@latest` > `minimal` > `minimal/javascript-starter`. Once the app is created, install the dependencies.
+To give it a try, create a new SST app by running `npx create-sst@latest`. Once the app is created, install the dependencies.
 
 To start the Live Lambda Development environment run:
 
@@ -65,7 +65,7 @@ Outputs:
   ApiEndpoint: https://s8gecmmzxf.execute-api.us-east-1.amazonaws.com
 ```
 
-If you head over to the endpoint, it'll invoke the Lambda function in `services/functions/lambda.js`. You can try changing this file and hitting the endpoint again. You should **see your changes reflected right away**!
+If you head over to the endpoint, it'll invoke the Lambda function in `packages/functions/src/lambda.js`. You can try changing this file and hitting the endpoint again. You should **see your changes reflected right away**!
 
 Before we look at how Live Lambda works behind the scenes, let's start with a little bit of background.
 

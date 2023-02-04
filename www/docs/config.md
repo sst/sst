@@ -42,7 +42,7 @@ And once you've defined your Secrets and Parameters, you can fetch them in your 
 
 To see how Secrets work, we are going to create a Secret with Stripe secret key and bind it to a Lambda function.
 
-Follow along by creating the Minimal TypeScript starter by running `npx create-sst@latest` > `minimal` > `minimal/typescript-starter`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/minimal-typescript) that's based on the same template.
+Follow along by creating a new SST app by running `npx create-sst@latest`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/standard) that's based on the same template.
 
 1. To create a new secret, open up `stacks/MyStack.ts` and add a [`Config.Secret`](constructs/Secret.md) construct below the API. You can also create a new stack to define all secrets used in your app.
 
@@ -70,9 +70,9 @@ Follow along by creating the Minimal TypeScript starter by running `npx create-s
    npx sst secrets set STRIPE_KEY sk_test_abc123
    ```
 
-4. Now you can access the Stripe key in your API using the [`Config`](clients/config.md) helper. Change `services/functions/lambda.ts` to:
+4. Now you can access the Stripe key in your API using the [`Config`](clients/config.md) helper. Change `packages/functions/src/lambda.ts` to:
 
-   ```ts title="services/functions/lambda.ts" {8}
+   ```ts title="packages/functions/src/lambda.ts" {8}
    import { APIGatewayProxyHandlerV2 } from "aws-lambda";
    import { Config } from "sst/node/config";
 
@@ -222,7 +222,7 @@ The following secrets were not found: STRIPE_KEY
 
 To see how Parameters work, we are going to create a Parameter with the version of your app and bind it to a Lambda function.
 
-Follow along by creating the Minimal TypeScript starter by running `npx create-sst@latest` > `minimal` > `minimal/typescript-starter`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/minimal-typescript) that's based on the same template.
+Follow along by creating a new SST app by running `npx create-sst@latest`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/standard) that's based on the same template.
 
 1. To create a new parameter, open up `stacks/MyStack.ts` and add a [`Config.Parameter`](constructs/Parameter.md) construct below the API.
 
@@ -244,9 +244,9 @@ Follow along by creating the Minimal TypeScript starter by running `npx create-s
    api.bind([APP_VERSION]);
    ```
 
-3. Now you can access the app verion in your API using the [Config](clients/config.md) helper. Change `services/functions/lambda.ts` to:
+3. Now you can access the app verion in your API using the [Config](clients/config.md) helper. Change `packages/functions/src/lambda.ts` to:
 
-   ```ts title="services/functions/lambda.ts" {8}
+   ```ts title="packages/functions/src/lambda.ts" {8}
    import { APIGatewayProxyHandlerV2 } from "aws-lambda";
    import { Config } from "sst/node/config";
 
