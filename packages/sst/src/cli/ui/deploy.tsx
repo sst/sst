@@ -118,8 +118,8 @@ export function printDeploymentResults(
   remove?: boolean
 ) {
   // Print success stacks
-  const success = Object.entries(results).filter(
-    ([_stack, result]) => Object.keys(result.errors).length === 0
+  const success = Object.entries(results).filter(([_stack, result]) =>
+    Stacks.isSuccess(result.status)
   );
   if (success.length) {
     Colors.gap();
@@ -143,14 +143,16 @@ export function printDeploymentResults(
   }
 
   // Print failed stacks
-  const failed = Object.entries(results).filter(
-    ([_stack, result]) => Object.keys(result.errors).length > 0
+  const failed = Object.entries(results).filter(([_stack, result]) =>
+    Stacks.isFailed(result.status)
   );
   if (failed.length) {
     Colors.gap();
     Colors.line(`${Colors.danger(`✖`)}  ${Colors.bold.dim(`Errors`)}`);
     for (const [stack, result] of failed) {
-      Colors.line(`   ${Colors.dim(stackNameToId(stack))}`);
+      Colors.line(
+        `   ${Colors.dim(stackNameToId(stack))} ${Colors.danger(result.status)}`
+      );
       for (const [id, error] of Object.entries(result.errors)) {
         const readable = logicalIdToCdkPath(assembly, stack, id) || id;
         Colors.line(`   ${Colors.danger.bold(readable + ":")} ${error}`);
