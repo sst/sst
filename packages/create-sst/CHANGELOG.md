@@ -1,5 +1,11 @@
 # create-sst
 
+## 2.0.0-rc.67
+
+### Patch Changes
+
+- [#2419](https://github.com/serverless-stack/sst/pull/2419) [`45cef3d65`](https://github.com/serverless-stack/sst/commit/45cef3d651138a602147841ee41f095e76a59481) Thanks [@github-actions](https://github.com/apps/github-actions)! - Rework examples for sst2
+
 ## 2.0.0-rc.66
 
 ## 2.0.0-rc.65
