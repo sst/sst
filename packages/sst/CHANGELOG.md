@@ -1,5 +1,7 @@
 # @serverless-stack/cli2
 
+## 2.0.0-rc.69
+
 ## 2.0.0-rc.68
 
 ### Patch Changes

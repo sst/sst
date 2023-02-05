@@ -1,5 +1,11 @@
 # create-sst
 
+## 2.0.0-rc.69
+
+### Patch Changes
+
+- [`97cf64acd`](https://github.com/serverless-stack/sst/commit/97cf64acd6f69f737f8bb9424f7fb9044f944071) Thanks [@thdxr](https://github.com/thdxr)! - Fix accidental stack in base template
+
 ## 2.0.0-rc.68
 
 ## 2.0.0-rc.67
