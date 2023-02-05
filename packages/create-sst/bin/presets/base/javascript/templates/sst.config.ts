@@ -8,19 +8,5 @@ export default {
       region: "us-east-1",
     };
   },
-  stacks(app) {
-    app.setDefaultFunctionProps({
-      runtime: "dotnetcore3.1",
-    });
-    app.stack(function Stack({ stack }: StackContext) {
-      const api = new Api(stack, "api", {
-        routes: {
-          "GET /": "Api::Api.Handlers::Handler",
-        },
-      });
-      stack.addOutputs({
-        ApiEndpoint: api.url,
-      });
-    });
-  },
+  stacks(app) {},
 } satisfies SSTConfig;
