@@ -50,7 +50,7 @@ export class NextjsSite extends SsrSite {
 
   constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
     super(scope, id, {
-      buildCommand: "npm_config_yes=true npx open-next@latest build",
+      buildCommand: "npx --yes open-next@latest build",
       ...props,
     });
   }
