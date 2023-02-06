@@ -7,21 +7,21 @@ export default [
   }),
   extract(),
   install({
-    packages: ["vitest", "@types/node", "sst@rc"],
+    packages: ["vitest", "@types/node", "sst"],
     path: "packages/core",
     dev: true,
   }),
   install({
-    packages: ["sst@rc"],
+    packages: ["sst"],
     path: "packages/core",
   }),
   install({
-    packages: ["@types/node", "@types/aws-lambda", "sst@rc"],
+    packages: ["@types/node", "@types/aws-lambda", "sst"],
     path: "packages/functions",
     dev: true,
   }),
   install({
-    packages: ["sst@rc"],
+    packages: ["sst"],
     path: "packages/functions",
   }),
 ];
