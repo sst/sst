@@ -1,5 +1,7 @@
 # create-sst
 
+## 2.0.0-rc.70
+
 ## 2.0.0-rc.69
 
 ### Patch Changes
