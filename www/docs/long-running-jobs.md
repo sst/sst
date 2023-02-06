@@ -27,16 +27,14 @@ Tasks related to video processing, ETL, and ML can take long. These exceed Lambd
 
 ## Quick start
 
-To follow along, you can create the Minimal TypeScript starter by running `npx create-sst@latest` > `minimal` > `minimal/typescript-starter`.
-
-Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/minimal-typescript) that's based on the same template.
+To follow along, you can create a new SST app by running `npx create-sst@latest`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/standard) that's based on the same template.
 
 1. **Create the infrastructure**
 
    To create a new job, import [`Job`](constructs/Job.md) at the top of `stacks/MyStack.ts`.
 
    ```ts title="stacks/MyStack.ts"
-   import { Job } from "@serverless-stack/resources";
+   import { Job } from "sst/constructs";
    ```
 
    And add a `Job` construct below the API.
@@ -56,24 +54,16 @@ Alternatively, you can refer to [this example repo](https://github.com/serverles
    api.bind([job]);
    ```
 
-3. **Install dependency**
-
-   Go into `services/` and run
-
-   ```bash
-   npm install --save @serverless-stack/node
-   ```
-
-4. **Define the handler function**
+3. **Define the handler function**
 
    Create the function with the code that needs to run for long. Here for example, we are creating a function to calculate the factorial of a given number.
 
    Define the shape of the function payload.
 
-   ```ts title="services/functions/myJob.ts"
-   import { JobHandler } from "@serverless-stack/node/job";
+   ```ts title="packages/functions/src/myJob.ts"
+   import { JobHandler } from "sst/node/job";
 
-   declare module "@serverless-stack/node/job" {
+   declare module "sst/node/job" {
      export interface JobTypes {
        myJob: {
          num: number;
@@ -98,12 +88,12 @@ Alternatively, you can refer to [this example repo](https://github.com/serverles
    });
    ```
 
-5. **Run the job**
+4. **Run the job**
 
-   And finally we can run this job in our API using the [`Job.myJob.run`](clients/job.md) helper. Change `services/functions/lambda.ts` to:
+   And finally we can run this job in our API using the [`Job.myJob.run`](clients/job.md) helper. Change `packages/functions/src/lambda.ts` to:
 
-   ```ts title="services/functions/lambda.ts"
-   import { Job } from "@serverless-stack/node/job";
+   ```ts title="packages/functions/src/lambda.ts"
+   import { Job } from "sst/node/job";
    import { APIGatewayProxyHandlerV2 } from "aws-lambda";
 
    export const handler: APIGatewayProxyHandlerV2 = async (event) => {
@@ -177,8 +167,8 @@ new Job (stack, "myJob, {
 Now you can access the table at runtime.
 
 ```ts
-import { Table } from "@serverless-stack/node/table";
-import { JobHandler } from "@serverless-stack/node/job";
+import { Table } from "sst/node/table";
+import { JobHandler } from "sst/node/job";
 
 export const handler = JobHandler("myJob", async (payload) => {
   console.log(Table.myTable.tableName);
@@ -226,9 +216,9 @@ Let's look at how `Job` works. It uses a few resources behind the scenes:
 
 ---
 
-### `sst start`
+### `sst dev`
 
-On `sst start`, the invoker function is replaced with a stub function. The stub function sends the request to your local machine, and the local version of the job function is executed. This is similar to how [Live Lambda Development](live-lambda-development.md) works for a [`Function`](constructs/Function.md).
+On `sst dev`, the invoker function is replaced with a stub function. The stub function sends the request to your local machine, and the local version of the job function is executed. This is similar to how [Live Lambda Development](live-lambda-development.md) works for a [`Function`](constructs/Function.md).
 
 :::info
 Your locally invoked job has the **same IAM permissions** as the deployed CodeBuild job.
@@ -248,9 +238,9 @@ Here we are passing in `{"num":5}` as the payload for the job.
 
 ## Typesafe payload
 
-In our example, we defined the job type in `services/functions/myJob.ts`.
+In our example, we defined the job type in `packages/functions/src/myJob.ts`.
 
-```ts title="services/functions/myJob.ts"
+```ts title="packages/functions/src/myJob.ts"
 export interface JobTypes {
   myJob: {
     num: number;
@@ -287,7 +277,7 @@ This is being used in two places to ensure typesafety.
 
 Let's take a look at how this is all wired up.
 
-1. First, the `@serverless-stack/node/job` package predefines two interfaces.
+1. First, the `sst/node/job` package predefines two interfaces.
 
    ```ts
    export interface JobNames {}
@@ -297,8 +287,8 @@ Let's take a look at how this is all wired up.
 2. `JobNames` is managed by SST. When SST builds the app, it generates a type file and adds all job names to the `JobNames` interface.
 
    ```ts title="node_modules/@types/@serverless-stack__node/Job-LongJob.d.ts"
-   import "@serverless-stack/node/job";
-   declare module "@serverless-stack/node/job" {
+   import "sst/node/job";
+   declare module "sst/node/job" {
      export interface JobNames {
        myJob: string;
      }
@@ -311,9 +301,9 @@ Let's take a look at how this is all wired up.
    export * from "./Job-LongJob";
    ```
 
-3. `JobTypes` is managed by you. In our example, you defined the payload types in `services/functions/myJob.ts`.
+3. `JobTypes` is managed by you. In our example, you defined the payload types in `packages/functions/src/myJob.ts`.
 
-   ```ts title="services/functions/myJob.ts"
+   ```ts title="packages/functions/src/myJob.ts"
    export interface JobTypes {
      myJob: {
        num: number;

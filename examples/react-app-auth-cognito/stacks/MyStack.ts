@@ -2,29 +2,29 @@ import {
   Api,
   Cognito,
   ReactStaticSite,
-  StackContext
+  StackContext,
 } from "@serverless-stack/resources";
 
 export function MyStack({ stack, app }: StackContext) {
   // Create a Cognito User Pool to manage auth
   const auth = new Cognito(stack, "Auth", {
-    login: ["email", "phone"]
+    login: ["email", "phone"],
   });
 
   // Create an HTTP API
   const api = new Api(stack, "Api", {
     // Secure it with IAM Auth
     defaults: {
-      authorizer: "iam"
+      authorizer: "iam",
     },
     routes: {
       "GET /private": "functions/private.handler",
       // Make an endpoint public
       "GET /public": {
         function: "functions/public.handler",
-        authorizer: "none"
-      }
-    }
+        authorizer: "none",
+      },
+    },
   });
 
   // Allow authenticated users to invoke the API
@@ -39,8 +39,8 @@ export function MyStack({ stack, app }: StackContext) {
       REACT_APP_REGION: app.region,
       REACT_APP_USER_POOL_ID: auth.userPoolId,
       REACT_APP_IDENTITY_POOL_ID: auth.cognitoIdentityPoolId,
-      REACT_APP_USER_POOL_CLIENT_ID: auth.userPoolClientId
-    }
+      REACT_APP_USER_POOL_CLIENT_ID: auth.userPoolClientId,
+    },
   });
 
   // Show the endpoint in the output

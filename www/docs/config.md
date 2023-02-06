@@ -4,7 +4,6 @@ description: "Working with environment variables and secrets in SST."
 ---
 
 import HeadlineText from "@site/src/components/HeadlineText";
-import MultiPackagerCode from "@site/src/components/MultiPackagerCode";
 
 <HeadlineText>
 
@@ -22,14 +21,14 @@ Want to learn more about `Config`? Check out the [launch livestream on YouTube](
 
 `Config` allows you to securely pass the following into your functions.
 
-1. [**Secrets**](#secrets): Sensitive values that cannot be defined in your code. You can use the [`sst secrets`](packages/cli.md#secrets-action) CLI to set them.
+1. [**Secrets**](#secrets): Sensitive values that cannot be defined in your code. You can use the [`sst secrets`](packages/sst.md#sst-secrets) CLI to set them.
 2. [**Parameters**](#parameters): Values from non-SST constructs, ie. CDK constructs or static values.
 
 :::info
 If you want to pass values from SST constructs to your functions, you should bind them using [Resource Binding](resource-binding.md).
 :::
 
-And once you've defined your Secrets and Parameters, you can fetch them in your Lambda functions with the [`@serverless-stack/node/config`](clients/config.md) package.
+And once you've defined your Secrets and Parameters, you can fetch them in your Lambda functions with the [`sst/node/config`](clients/config.md) package.
 
 ---
 
@@ -43,7 +42,7 @@ And once you've defined your Secrets and Parameters, you can fetch them in your 
 
 To see how Secrets work, we are going to create a Secret with Stripe secret key and bind it to a Lambda function.
 
-Follow along by creating the Minimal TypeScript starter by running `npx create-sst@latest` > `minimal` > `minimal/typescript-starter`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/minimal-typescript) that's based on the same template.
+Follow along by creating a new SST app by running `npx create-sst@latest`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/standard) that's based on the same template.
 
 1. To create a new secret, open up `stacks/MyStack.ts` and add a [`Config.Secret`](constructs/Secret.md) construct below the API. You can also create a new stack to define all secrets used in your app.
 
@@ -54,7 +53,7 @@ Follow along by creating the Minimal TypeScript starter by running `npx create-s
    You'll also need to import `Config` at the top.
 
    ```ts
-   import { Config } from "@serverless-stack/resources";
+   import { Config } from "sst/constructs";
    ```
 
    Note that you are not setting the values for the secret in your code. You shouldn't have sensitive values committed to Git.
@@ -62,7 +61,7 @@ Follow along by creating the Minimal TypeScript starter by running `npx create-s
 2. Bind the `STRIPE_KEY` to the `api`.
 
    ```ts title="stacks/MyStack.ts"
-    api.bind([STRIPE_KEY]);
+   api.bind([STRIPE_KEY]);
    ```
 
 3. Then in your terminal, run the `sst secrets` CLI to set a value for the secret.
@@ -71,11 +70,11 @@ Follow along by creating the Minimal TypeScript starter by running `npx create-s
    npx sst secrets set STRIPE_KEY sk_test_abc123
    ```
 
-4. Now you can access the Stripe key in your API using the [`Config`](clients/config.md) helper. Change `services/functions/lambda.ts` to:
+4. Now you can access the Stripe key in your API using the [`Config`](clients/config.md) helper. Change `packages/functions/src/lambda.ts` to:
 
-   ```ts title="services/functions/lambda.ts" {8}
+   ```ts title="packages/functions/src/lambda.ts" {8}
    import { APIGatewayProxyHandlerV2 } from "aws-lambda";
-   import { Config } from "@serverless-stack/node/config";
+   import { Config } from "sst/node/config";
 
    export const handler: APIGatewayProxyHandlerV2 = async () => {
      return {
@@ -86,19 +85,13 @@ Follow along by creating the Minimal TypeScript starter by running `npx create-s
    };
    ```
 
-   You'll also need to install the node package in the `services/` directory.
-
-   ```bash
-   npm install --save @serverless-stack/node
-   ```
-
    That's it!
 
 ---
 
 ### `sst secrets`
 
-We used the [`sst secrets set`](packages/cli.md#secrets-action) CLI in the above example to set a secret. Here are some of the other commands.
+We used the [`sst secrets set`](packages/sst.md#sst-secrets-set) CLI in the above example to set a secret. Here are some of the other commands.
 
 - `npx sst secrets get STRIPE_KEY` to check the value of a secret
 - `npx sst secrets list` to get the values of all the secrets
@@ -110,7 +103,7 @@ You can also pass in a stage name to manage the secrets for a specific stage.
 npx sst secrets list --stage prod
 ```
 
-[Read more about the `sst secrets` CLI](packages/cli.md#secrets-action).
+[Read more about the `sst secrets` CLI](packages/sst.md#sst-secrets).
 
 ---
 
@@ -146,7 +139,7 @@ It adds a Lambda environment variables named `SST_Secret_value_STRIPE_KEY` to th
 At runtime when you import the `Config` package in your function.
 
 ```ts
-import { Config } from "@serverless-stack/node/config";
+import { Config } from "sst/node/config";
 ```
 
 It performs a top-level await to fetch and decrypt `STRIPE_KEY` from SSM. Once fetched, you can reference `Config.STRIPE_KEY` directly in your code.
@@ -202,7 +195,7 @@ Set a fallback value for your secret so you don't have to set them for ephemeral
 In the above example, it's likely all the dev stages share the same `STRIPE_KEY`. So set a fallback value by running:
 
 ```bash
-npx sst secrets set-fallback STRIPE_KEY sk_test_abc123
+npx sst secrets set --fallback STRIPE_KEY sk_test_abc123
 ```
 
 Similar to the `set` command, SST creates an AWS SSM Parameter of the type `SecureString`. And the parameter name in this case is `/sst/{appName}/.fallback/Secret/STRIPE_KEY/value`.
@@ -211,7 +204,7 @@ Similar to the `set` command, SST creates an AWS SSM Parameter of the type `Secu
 The fallback value can only be inherited by stages deployed in the same AWS account and region.
 :::
 
-If a function uses the `STRIPE_KEY` secret, but neither the secret value or the fallback value has been set, you'll get a runtime error when you import `@serverless-stack/node/config`.
+If a function uses the `STRIPE_KEY` secret, but neither the secret value or the fallback value has been set, you'll get a runtime error when you import `sst/node/config`.
 
 ```
 The following secrets were not found: STRIPE_KEY
@@ -229,7 +222,7 @@ The following secrets were not found: STRIPE_KEY
 
 To see how Parameters work, we are going to create a Parameter with the version of your app and bind it to a Lambda function.
 
-Follow along by creating the Minimal TypeScript starter by running `npx create-sst@latest` > `minimal` > `minimal/typescript-starter`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/minimal-typescript) that's based on the same template.
+Follow along by creating a new SST app by running `npx create-sst@latest`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/standard) that's based on the same template.
 
 1. To create a new parameter, open up `stacks/MyStack.ts` and add a [`Config.Parameter`](constructs/Parameter.md) construct below the API.
 
@@ -242,7 +235,7 @@ Follow along by creating the Minimal TypeScript starter by running `npx create-s
    You'll also need to import `Config` at the top.
 
    ```ts
-   import { Config } from "@serverless-stack/resources";
+   import { Config } from "sst/constructs";
    ```
 
 2. Bind the `APP_VERSION` to the `api`.
@@ -251,11 +244,11 @@ Follow along by creating the Minimal TypeScript starter by running `npx create-s
    api.bind([APP_VERSION]);
    ```
 
-3. Now you can access the app verion in your API using the [Config](clients/config.md) helper. Change `services/functions/lambda.ts` to:
+3. Now you can access the app verion in your API using the [Config](clients/config.md) helper. Change `packages/functions/src/lambda.ts` to:
 
-   ```ts title="services/functions/lambda.ts" {8}
+   ```ts title="packages/functions/src/lambda.ts" {8}
    import { APIGatewayProxyHandlerV2 } from "aws-lambda";
-   import { Config } from "@serverless-stack/node/config";
+   import { Config } from "sst/node/config";
 
    export const handler: APIGatewayProxyHandlerV2 = async () => {
      return {
@@ -264,12 +257,6 @@ Follow along by creating the Minimal TypeScript starter by running `npx create-s
        body: `App version is ${Config.APP_VERSION}.`,
      };
    };
-   ```
-
-   You'll also need to install the node package in the `services/` directory.
-
-   ```bash
-   npm install --save @serverless-stack/node
    ```
 
    That's it!
@@ -296,7 +283,7 @@ A Lambda environment variable is added to the function, named `SST_Parameter_val
 At runtime when you import the `Config` package in your function.
 
 ```ts
-import { Config } from "@serverless-stack/node/config";
+import { Config } from "sst/node/config";
 ```
 
 It reads the value from `process.env.SST_Parameter_value_USER_UPDATED_TOPIC` and assigns it to `Config.USER_UPDATED_TOPIC`. You can then reference `Config.USER_UPDATED_TOPIC` directly in your code.
@@ -307,7 +294,7 @@ It reads the value from `process.env.SST_Parameter_value_USER_UPDATED_TOPIC` and
 
 SST also stores a copy of the parameter value in [AWS SSM](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html). For each parameter, an SSM parameter of the type `String` is created with the name `/sst/{appName}/{stageName}/parameters/USER_UPDATED_TOPIC`, where `{appName}` is the name of your SST app, and `{stageName}` is the stage. The parameter value is the topic name stored in plain text.
 
-Storing the parameter values in SSM might seem redundant. But it provides a convenient way to fetch all the parameters used in your application. This can make it easy to test your functions. [Read more about how SST uses `Config` to make testing easier](advanced/testing.md#how-sst-bind-works).
+Storing the parameter values in SSM might seem redundant. But it provides a convenient way to fetch all the parameters used in your application. This can make it easy to test your functions. [Read more about how SST uses `Config` to make testing easier](testing.md#how-sst-bind-works).
 
 ---
 
@@ -449,7 +436,7 @@ The `.env` environment variables are only available in your infrastructure code.
 You can also set them as Lambda environment variables by including them in the [Function](constructs/Function.md) `environment` prop:
 
 ```js
-new Function(this, "MyFunction", {
+new Function(stack, "MyFunction", {
   handler: "src/api.main",
   environment: {
     MY_ENV_VAR: process.env.MY_ENV_VAR,
@@ -502,7 +489,7 @@ npx sst secrets set STRIPE_KEY sk_live_xyz789 --stage bar
 You can also set a fallback value for ephemeral stages.
 
 ```bash
-npx sst secrets set-fallback STRIPE_KEY sk_test_abc123
+npx sst secrets set --fallback STRIPE_KEY sk_test_abc123
 ```
 
 At runtime, the functions are going to pick up the correct value based on the stage, whether they are running locally, inside a test, or in production.

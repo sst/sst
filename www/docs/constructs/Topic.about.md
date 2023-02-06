@@ -9,12 +9,12 @@ This construct makes it easier to define a topic and its subscribers. It also in
 ### Using the minimal config
 
 ```js
-import { Topic } from "@serverless-stack/resources";
+import { Topic } from "sst/constructs";
 
 new Topic(stack, "Topic", {
   subscribers: {
     subscriber1: "src/function1.handler",
-    subscriber2: "src/function2.handler"
+    subscriber2: "src/function2.handler",
   },
 });
 ```
@@ -33,7 +33,7 @@ const topic = new Topic(stack, "Topic", {
   },
 });
 
-topic.addSubscribers(this, {
+topic.addSubscribers(stack, {
   subscriber3: "src/subscriber3.main",
 });
 ```
@@ -168,11 +168,11 @@ new Topic(stack, "Topic", {
 You can directly pass in an instance of the Queue construct.
 
 ```js {5}
-const myQueue = new Queue(this, "MyQueue");
+const myQueue = new Queue(stack, "MyQueue");
 
 new Topic(stack, "Topic", {
   subscribers: {
-    subscriber: myQueue
+    subscriber: myQueue,
   },
 });
 ```
@@ -184,7 +184,7 @@ Configure the internally created CDK `Subscription`.
 ```js {10-16}
 import { SubscriptionFilter } from "aws-cdk-lib/aws-sns";
 
-const myQueue = new Queue(this, "MyQueue");
+const myQueue = new Queue(stack, "MyQueue");
 
 new Topic(stack, "Topic", {
   subscribers: {
@@ -251,7 +251,7 @@ new Topic(stack, "Topic", {
     subscriber2: "src/subscriber2.main",
   },
   cdk: {
-    topic: sns.Topic.fromTopicArn(this, "MySnsTopic", topicArn),
+    topic: sns.Topic.fromTopicArn(stack, "MySnsTopic", topicArn),
   },
 });
 ```

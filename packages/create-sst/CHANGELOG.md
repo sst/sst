@@ -1,14 +1,178 @@
 # create-sst
 
-## 1.18.4
+## 2.0.0-rc.71
 
-## 1.18.3
+## 2.0.0-rc.70
 
-## 1.18.2
+## 2.0.0-rc.69
 
-## 1.18.1
+### Patch Changes
 
-## 1.18.0
+- [`97cf64acd`](https://github.com/serverless-stack/sst/commit/97cf64acd6f69f737f8bb9424f7fb9044f944071) Thanks [@thdxr](https://github.com/thdxr)! - Fix accidental stack in base template
+
+## 2.0.0-rc.68
+
+## 2.0.0-rc.67
+
+### Patch Changes
+
+- [#2419](https://github.com/serverless-stack/sst/pull/2419) [`45cef3d65`](https://github.com/serverless-stack/sst/commit/45cef3d651138a602147841ee41f095e76a59481) Thanks [@github-actions](https://github.com/apps/github-actions)! - Rework examples for sst2
+
+## 2.0.0-rc.66
+
+## 2.0.0-rc.65
+
+## 2.0.0-rc.64
+
+## 2.0.0-rc.63
+
+## 2.0.0-rc.62
+
+## 2.0.0-rc.61
+
+## 2.0.0-rc.60
+
+## 2.0.0-rc.59
+
+## 2.0.0-rc.58
+
+## 2.0.0-rc.57
+
+### Patch Changes
+
+- [#2396](https://github.com/serverless-stack/sst/pull/2396) [`da3d0740f`](https://github.com/serverless-stack/sst/commit/da3d0740f56c53872ba2321f8c8b312ca8b68bf4) Thanks [@github-actions](https://github.com/apps/github-actions)! - Update CDK to 2.62.2
+
+## 2.0.0-rc.56
+
+## 2.0.0-rc.55
+
+## 2.0.0-rc.54
+
+## 2.0.0-rc.53
+
+## 2.0.0-rc.52
+
+## 2.0.0-rc.51
+
+## 2.0.0-rc.50
+
+## 2.0.0-rc.49
+
+## 2.0.0-rc.48
+
+## 2.0.0-rc.47
+
+## 2.0.0-rc.46
+
+## 2.0.0-rc.45
+
+## 2.0.0-rc.44
+
+## 2.0.0-rc.43
+
+## 2.0.0-rc.42
+
+## 2.0.0-rc.41
+
+## 2.0.0-rc.40
+
+## 2.0.0-rc.39
+
+## 2.0.0-rc.38
+
+## 2.0.0-rc.37
+
+## 2.0.0-rc.36
+
+## 2.0.0-rc.35
+
+## 2.0.0-rc.34
+
+## 2.0.0-rc.33
+
+## 2.0.0-rc.32
+
+## 2.0.0-rc.31
+
+## 2.0.0-rc.30
+
+## 2.0.0-rc.29
+
+## 2.0.0-rc.28
+
+## 2.0.0-rc.27
+
+## 2.0.0-rc.26
+
+## 2.0.0-rc.25
+
+## 2.0.0-rc.24
+
+## 2.0.0-rc.23
+
+## 2.0.0-rc.22
+
+## 2.0.0-rc.21
+
+## 2.0.0-rc.20
+
+## 2.0.0-rc.19
+
+## 2.0.0-rc.18
+
+## 2.0.0-rc.17
+
+## 2.0.0-rc.16
+
+### Patch Changes
+
+- [`8371c7bb9`](https://github.com/serverless-stack/sst/commit/8371c7bb935f9ae9c02e2790bb4735a94a022146) Thanks [@fwang](https://github.com/fwang)! - StaticSite: fix script path
+
+## 2.0.0-rc.15
+
+### Patch Changes
+
+- [`591b21b83`](https://github.com/serverless-stack/sst/commit/591b21b83c94ba87b4079f33d783fd4b672db603) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: fix script path
+
+## 2.0.0-rc.14
+
+## 2.0.0-rc.13
+
+## 2.0.0-rc.12
+
+## 2.0.0-rc.11
+
+## 2.0.0-rc.10
+
+### Patch Changes
+
+- [`293aee1cb`](https://github.com/serverless-stack/sst/commit/293aee1cb7861404d39ece9dd97611060d0b14e5) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: zip OpenNext server function
+
+- [#2293](https://github.com/serverless-stack/sst/pull/2293) [`b5eddfdd4`](https://github.com/serverless-stack/sst/commit/b5eddfdd4326116774e78a1318a0503a1ee899d4) Thanks [@github-actions](https://github.com/apps/github-actions)! - Fix RDS migrator and Script bundling issue
+
+## 2.0.0-rc.9
+
+## 2.0.0-rc.8
+
+## 2.0.0-rc.7
+
+## 2.0.0-rc.6
+
+## 2.0.0-rc.5
+
+## 2.0.0-rc.4
+
+## 2.0.0-rc.3
+
+## 2.0.0-rc.2
+
+## 2.0.0-rc.1
+
+## 2.0.0-rc.0
+
+### Major Changes
+
+- [`db5aadfbc`](https://github.com/serverless-stack/sst/commit/db5aadfbca8628eb23eee486c07e5819bb6cf750) Thanks [@thdxr](https://github.com/thdxr)! - 2.0
 
 ## 1.17.1
 

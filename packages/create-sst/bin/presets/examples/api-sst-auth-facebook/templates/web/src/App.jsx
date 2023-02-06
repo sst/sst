@@ -12,7 +12,7 @@ const App = () => {
     }
     setLoading(false);
   };
-  
+
   useEffect(() => {
     getSession();
   }, []);
@@ -55,18 +55,18 @@ const App = () => {
     <div className="container">
       <h2>SST Auth Example</h2>
       {session ? (
-      <div className="profile">
-        <p>Welcome {session.name}!</p>
-        <img
-          src={session.picture}
-          style={{ borderRadius: "50%" }}
-          width={100}
-          height={100}
-          alt=""
-        />
-        <p>{session.email}</p>
-        <button onClick={signOut}>Sign out</button>
-      </div>
+        <div className="profile">
+          <p>Welcome {session.name}!</p>
+          <img
+            src={session.picture}
+            style={{ borderRadius: "50%" }}
+            width={100}
+            height={100}
+            alt=""
+          />
+          <p>{session.email}</p>
+          <button onClick={signOut}>Sign out</button>
+        </div>
       ) : (
         <div>
           <a

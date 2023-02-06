@@ -20,7 +20,7 @@
   --ifm-font-size-base: 0.975rem;
 
   --custom-color-black: #383736;
-  --custom-border-color: #F2F2F2;
+  --custom-border-color: #f2f2f2;
   --custom-code-block-selection-color: #e2e8f0;
 
   --ifm-font-color-base: var(--custom-color-black);
@@ -238,22 +238,27 @@ nav.menu > ul > li:not(:last-child) {
 }
 
 .menu__link:hover,
-.menu__link--active:not(.menu__link--sublist) {
+.menu__link--active:not(.menu__link--sublist-caret) {
   color: var(--ifm-color-primary-lighter);
   background: none;
   border-left: 2px solid var(--ifm-color-primary-lightest);
   border-radius: 0;
 }
 
-.menu__link--active:not(.menu__link--sublist) {
-  font-weight: 600;
-}
-.menu__link--sublist:after {
-  background: var(--ifm-menu-link-sublist-icon) 50% / 1.5rem 1.5rem;
+.menu__caret:hover,
+.menu__list-item-collapsible--active {
+  background: none;
 }
 
+.menu__link--active:not(.menu__link--sublist) {
+}
+
+.menu__caret::before,
 .menu__link--sublist-caret:after {
-  background: var(--ifm-menu-link-sublist-icon) 50% / 1.5rem 1.5rem;
+  width: 1rem;
+  height: 1rem;
+  opacity: 0.9;
+  background: var(--ifm-menu-link-sublist-icon) 50% / 1.25rem 1.25rem;
 }
 
 /** DocSearch button **/

@@ -5,7 +5,7 @@ import { execSync } from "node:child_process";
 const THANKLESS_COMMITTERS = ["thdxr", "fwang", "jayair"];
 
 const { version } = JSON.parse(
-  await fs.readFile("./packages/core/package.json")
+  await fs.readFile("./packages/sst/package.json")
 );
 
 const changesets = JSON.parse(await fs.readFile(".changeset/config.json"));
@@ -54,8 +54,8 @@ const notes = [
   `---`,
   `Update using:`,
   "``` sh",
-  "$ npx sst update v" + version,
-  "$ yarn sst update v" + version,
+  "$ npx sst update " + version,
+  "$ yarn sst update " + version,
   "```",
 ];
 console.log(notes.join("\n"));

@@ -14,7 +14,7 @@ The easiest way to go to production is by deploying using the CLI.
 
 <ChangeText>
 
-Stop the `npx sst start` process in the CLI. And run this instead.
+Stop the `npx sst dev` process in the CLI. And run this instead.
 
 </ChangeText>
 

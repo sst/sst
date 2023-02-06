@@ -2,10 +2,10 @@
 description: "Overview of the `function` module."
 ---
 
-Overview of the `function` module in the `@serverless-stack/node` package.
+Overview of the `function` module in the `sst/node` package.
 
 ```ts
-import { ... } from "@serverless-stack/node/function"
+import { ... } from "sst/node/function"
 ```
 
 The `function` module has the following exports.
@@ -23,7 +23,7 @@ The properties let you access the resources that are bound to the function.
 This module helps with accessing [`Function`](../constructs/Function.md) constructs.
 
 ```ts
-import { Function } from "@serverless-stack/node/function";
+import { Function } from "sst/node/function";
 ```
 
 #### functionName

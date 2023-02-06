@@ -58,6 +58,7 @@ $ yarn
 ```
 
 Build the project
+
 ```bash
 $ yarn build
 ```

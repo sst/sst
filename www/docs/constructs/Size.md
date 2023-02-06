@@ -1,5 +1,5 @@
 ---
-description: "Docs for how size are handled in the @serverless-stack/resources"
+description: "Docs for how size are handled in the sst/constructs"
 ---
 
 SST makes it easy to specify size values as typed string values.
@@ -11,7 +11,7 @@ _Type_ : <span class="mono">${number} MB</span> | <span class="mono">${number} G
 ### Function memory size
 
 ```js {3}
-new Function(this, "MyFunction", {
+new Function(stack, "MyFunction", {
   handler: "src/lambda.main",
   memorySize: "512 MB",
 });
@@ -20,7 +20,7 @@ new Function(this, "MyFunction", {
 ### Function disk size
 
 ```js {3}
-new Function(this, "MyFunction", {
+new Function(stack, "MyFunction", {
   handler: "src/lambda.main",
   diskSize: "5 GB",
 });

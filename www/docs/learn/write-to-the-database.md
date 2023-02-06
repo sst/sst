@@ -178,7 +178,7 @@ There are a couple of interesting details here, let's dig in:
 2. `RDS` is coming from the SST Node client package.
 
    ```ts title="services/core/sql.ts"
-   import { RDS } from "@serverless-stack/node/rds";
+   import { RDS } from "sst/node/rds";
    ```
 
    It has access to the config of our database, thanks to [Resource Binding](../resource-binding.md). You might recall us **binding** our database to the functions in our API back in the [Project Structure](project-structure.md#stacks) chapter.

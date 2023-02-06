@@ -1,6 +1,6 @@
 ---
 title: create-sst
-description: "Docs for the create-sst package"
+description: "Reference docs for the create-sst CLI."
 ---
 
 import MultiPackagerCode from "@site/src/components/MultiPackagerCode";
@@ -20,11 +20,17 @@ npx create-sst@latest
 ```
 
 </TabItem>
-
 <TabItem value="yarn">
 
 ```bash
 yarn create sst
+```
+
+</TabItem>
+<TabItem value="pnpm">
+
+```bash
+pnpm create sst
 ```
 
 </TabItem>
@@ -41,7 +47,7 @@ Pass in the following (optional) options.
 Instead of the standard starter, you can choose to use one of our minimal setups or examples as the template to bootstrap.
 
 ```bash
-npx create-sst@latest --template=minimal/javascript-starter
+npx create-sst@latest --template=other/go
 ```
 
 ## Arguments

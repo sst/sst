@@ -1,4 +1,10 @@
-import { StackContext, Api, Auth, ViteStaticSite, Table } from "@serverless-stack/resources";
+import {
+  StackContext,
+  Api,
+  Auth,
+  StaticSite,
+  Table,
+} from "@serverless-stack/resources";
 
 export function MyStack({ stack }: StackContext) {
   // Create a database Table
@@ -23,8 +29,10 @@ export function MyStack({ stack }: StackContext) {
   });
 
   // Create a React site
-  const site = new ViteStaticSite(stack, "site", {
+  const site = new StaticSite(stack, "site", {
     path: "web",
+    buildCommand: "npm run build",
+    buildOutput: "dist",
     environment: {
       VITE_APP_API_URL: api.url,
     },
