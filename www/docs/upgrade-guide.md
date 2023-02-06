@@ -121,7 +121,11 @@ export default {
     + import { Bucket } from "sst/node/bucket"
     ```
 
-2. If you're using function binding need to make sure `../.sst/types` is listed in the `include` array in `tsconfig.json`
+2. If you're using function binding we moved type generation into a `.sst` folder. To include this place an `sst-env.d.ts` file in any package that needs the types that contains the following:
+   ```js
+   /// <reference path="../.sst/types/index.ts" />
+   ```
+   Make sure you specify the path correctly
 
 
 
