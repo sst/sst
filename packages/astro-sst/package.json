@@ -39,10 +39,10 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@astrojs/webapi": "^1.1.1"
+    "@astrojs/webapi": "^2.0.0"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.108",
-    "astro": "^1.9.1"
+    "@types/aws-lambda": "^8.10.110",
+    "astro": "^2.0.6"
   }
 }
