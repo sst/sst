@@ -1,5 +1,7 @@
 # @serverless-stack/docs
 
+## 2.0.0
+
 ## 2.0.0-rc.2
 
 ### Patch Changes
