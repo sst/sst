@@ -15,6 +15,7 @@ import {
 const s3 = new S3Client({ logger: console });
 const iot = new IoTDataPlaneClient({ logger: console });
 const cf = new CloudFormationClient({ logger: console });
+const BUCKET_NAME = process.env.BUCKET_NAME!;
 
 export async function handler(event: SQSEvent) {
   console.log("SQS event:", event);
@@ -54,13 +55,13 @@ async function processRecord(record: EventBridgeEvent<any, any>) {
   }
 
   // Update metadata
-  const { bootstrapBucket: bucket, app, stage, metadata } = res;
+  const { app, stage, metadata } = res;
   const stackName = stack.split("/")[1];
   if (stackStatus === "DELETE_COMPLETE") {
-    await deleteMetadata(stackName, bucket, app, stage);
+    await deleteMetadata(stackName, app, stage);
     await sendIotEvent(app, stage, `stacks.metadata.updated`);
   } else {
-    await saveMetadata(stackName, bucket, app, stage, metadata);
+    await saveMetadata(stackName, app, stage, metadata);
     await sendIotEvent(app, stage, `stacks.metadata.deleted`);
   }
 }
@@ -78,7 +79,6 @@ async function sendIotEvent(app: string, stage: string, type: string) {
 
 async function saveMetadata(
   stack: string,
-  bucket: string,
   app: string,
   stage: string,
   metadata: any[]
@@ -86,7 +86,7 @@ async function saveMetadata(
   await callAWS(() =>
     s3.send(
       new PutObjectCommand({
-        Bucket: bucket,
+        Bucket: BUCKET_NAME,
         Key: `stackMetadata/app.${app}/stage.${stage}/stack.${stack}.json`,
         Body: JSON.stringify(metadata),
       })
@@ -94,17 +94,12 @@ async function saveMetadata(
   );
 }
 
-async function deleteMetadata(
-  stackName: string,
-  bucket: string,
-  app: string,
-  stage: string
-) {
+async function deleteMetadata(stackName: string, app: string, stage: string) {
   try {
     await callAWS(() =>
       s3.send(
         new DeleteObjectCommand({
-          Bucket: bucket,
+          Bucket: BUCKET_NAME,
           Key: `stackMetadata/app.${app}/stage.${stage}/stack.${stackName}.json`,
         })
       )

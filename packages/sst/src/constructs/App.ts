@@ -23,7 +23,6 @@ import { createRequire } from "module";
 import { Auth } from "./Auth.js";
 import { useDeferredTasks } from "./deferred_task.js";
 import { AppContext } from "./context.js";
-import { useBootstrap } from "../bootstrap.js";
 import { useProject } from "../project.js";
 import { Logger } from "../logger.js";
 import { SiteEnv } from "../site-env.js";
@@ -386,7 +385,6 @@ export class App extends cdk.App {
             app: this.name,
             stage: this.stage,
             version: useProject().version,
-            bootstrapBucket: useBootstrap().bucket,
             metadata: byStack[stackName] || [],
           }),
         });

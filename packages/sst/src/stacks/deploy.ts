@@ -261,7 +261,7 @@ async function listImports(exportName: string) {
     return ret.Imports || [];
   } catch (e: any) {
     if (
-      e.code === "ValidationError" &&
+      e.name === "ValidationError" &&
       e.message.includes("is not imported by any stack")
     ) {
       return [];

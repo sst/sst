@@ -135,6 +135,9 @@ async function bootstrapSST() {
     ),
     handler: "index.handler",
     runtime: Runtime.NODEJS_18_X,
+    environment: {
+      BUCKET_NAME: bucket.bucketName,
+    },
     initialPolicy: [
       new PolicyStatement({
         actions: ["cloudformation:DescribeStacks"],
