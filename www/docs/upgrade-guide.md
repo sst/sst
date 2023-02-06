@@ -44,8 +44,10 @@ The 2.0 upgrade is primarily ergonomic and should not result in any infrastructu
     ```
 4. If you were using `@serverless-stack/static-site-env` for your frontend, replace it with the `sst env '<command>'` command
     ```diff
-    - static-site-env -- vite dev
-    + sst env 'vite dev'
+    "scripts": {
+    - "dev": "static-site-env -- vite dev",
+    + "dev": "sst env 'vite dev'",
+    }
     ```
 
 #### Config
