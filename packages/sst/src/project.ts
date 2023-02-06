@@ -139,8 +139,6 @@ export async function initProject(globals: GlobalOptions) {
   };
 
   ProjectContext.provide(project);
-  const { initBootstrap } = await import("./bootstrap.js");
-  await initBootstrap();
   dotenv.config({
     path: path.join(project.paths.root, `.env.${project.config.stage}`),
     override: true,

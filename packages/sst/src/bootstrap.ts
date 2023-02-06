@@ -36,14 +36,7 @@ const OUTPUT_BUCKET = "BucketName";
 const LATEST_VERSION = "6";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
-export const BootstrapContext = Context.create<{
-  version: string;
-  bucket: string;
-}>("Bootstrap");
-
-export const useBootstrap = BootstrapContext.use;
-
-export async function initBootstrap() {
+export const useBootstrap = Context.memo(async () => {
   Logger.debug("Initializing bootstrap context");
   let [cdkStatus, sstStatus] = await Promise.all([
     loadCDKStatus(),
@@ -72,9 +65,12 @@ export async function initBootstrap() {
     spinner.succeed();
   }
 
-  BootstrapContext.provide(sstStatus!);
   Logger.debug("Bootstrap context initialized", sstStatus);
-}
+  return sstStatus as {
+    version: string;
+    bucket: string;
+  };
+}, "Bootstrap");
 
 async function loadCDKStatus() {
   const client = useAWSClient(CloudFormationClient);
