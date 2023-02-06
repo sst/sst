@@ -47,7 +47,7 @@ Pass in the following (optional) options.
 Instead of the standard starter, you can choose to use one of our minimal setups or examples as the template to bootstrap.
 
 ```bash
-npx create-sst@latest --template=javascript
+npx create-sst@latest --template=other/go
 ```
 
 ## Arguments
