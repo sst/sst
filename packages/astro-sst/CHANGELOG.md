@@ -1,5 +1,11 @@
 # astro-sst
 
+## 2.0.0-rc.71
+
+### Patch Changes
+
+- [`7688c39e1`](https://github.com/serverless-stack/sst/commit/7688c39e13c5470763cdbbad30ffcc3e579ed295) Thanks [@thdxr](https://github.com/thdxr)! - Update to astro 2.0
+
 ## 2.0.0-rc.18
 
 ### Patch Changes
