@@ -79,52 +79,83 @@ export default {
 ```
 
 #### CLI
-`sst start` has been renamed to `sst dev` (although both will work)
+1. `sst start` has been renamed to `sst dev` (although both will work)
+2. `sst load-config` has been removed — [see v1.16](#upgrade-to-v116)
 
 #### Constructs
 
-1. Function: We've made changes to the `FunctionProps` API so you should be seeing type errors around the `bundle` property. Most of the options there have been moved to a `nodejs` property instead.
-    ```diff
-    const fn = new Function(stack, "fn", {
-    - bundle: {
-    -   format: "esm",
-    - },
-    + nodejs: {
-    +   format: "esm"
-    + }
-    })
-    ```
+1. Function
+    1. Default runtime is `nodejs18.x`
+    1. Default format is `esm`
+    1. We've made changes to the `FunctionProps` API so you should be seeing type errors around the `bundle` property. Most of the options there have been moved to a `nodejs` property instead.
+        ```diff
+        const fn = new Function(stack, "fn", {
+        - bundle: {
+        -   format: "esm",
+        - },
+        + nodejs: {
+        +   format: "esm"
+        + }
+        })
+        ```
+    1. We've removed the need for `srcPath` in function definitions but all your handler paths need to be specified relative to the root of the project.
+        ```diff
+        new Function(stack, "fn", {
+        - srcPath: "services",
+        - handler: "path/to/func.handler"
+        + handler: "services/path/to/func.handler"
+        })
+        ```
+    1. Removed `config` prop — [see v1.16](#upgrade-to-v116)
+1. Api: removed the `pothos` route type — [see v1.18](#upgrade-to-v118)
+1. StaticSite, NextjsSite, and RemixSite
+    1. Following attributes were renamed:
+        - `bucketArn` renamed to `cdk.bucket.bucketArn`
+        - `bucketName` renamed to `cdk.bucket.bucketName`
+        - `distributionId` renamed to `cdk.distribution.distributionId`
+        - `distributionDomain` renamed to `cdk.distribution.distributionDomainName`
+        ```diff
+        const site = new StaticSite(stack, "MySite");
+        - site.bucketArn
+        - site.bucketName
+        - site.distributionId
+        - site.distributionDomain
+        + site.cdk.bucket.bucketArn
+        + site.cdk.bucket.bucketName
+        + site.cdk.distribution.distributionId
+        + site.cdk.distribution.distributionDomainName
+        ```
+    1. Running `sst dev` no longer deploys a placeholder site
+        - `site.url` is `undefined` in dev mode
+        - `site.customDomainUrl` is `undefined` in dev mode
+    1. `waitForInvalidation` now defaults to `false`
 
-2. Function: We've removed the need for `srcPath` in function definitions but all your handler paths need to be specified relative to the root of the project.
-    ```diff
-    new Function(stack, "fn", {
-    - srcPath: "services",
-    - handler: "path/to/func.handler"
-    + handler: "services/path/to/func.handler"
-    })
-    ```
+1. NextjsSite
+    1. in SST v1, the `NextjsSite` construct uses the [`@sls-next/lambda-at-edge package`](https://github.com/serverless-nextjs/serverless-next.js/tree/master/packages/libs/lambda-at-edge) package from the [`serverless-next.js`](https://github.com/serverless-nextjs/serverless-next.js) project to build and package your Next.js app so that it can be deployed to AWS. The project is no longer maintained. SST v2 uses the [`OpenNext`](https://open-next.js.org) project. You can still use the old `NextjsSite` construct like this:
+        ```ts
+        import { NextjsSite } from "sst/constructs/deprecated";
+        ```
+    2. `commandHooks.afterBuild` renamed to `buildCommand`
+        ```diff
+        new NextjsSite(stack, "NextSite", {
+          path: "path/to/site",
+        - commandHooks: {
+        -   afterBuild: ["npx next-sitemap"],
+        - }
+        + buildCommand: "npx open-next@latest build && npx next-sitemap"
+        });
+        ```
+1. Removed ViteStaticSite and ReactStaticSite — [see v1.18](#upgrade-to-v118)
+1. Removed GraphQLApi — [see v1.18](#upgrade-to-v118)
 
-3 StaticSite, NextjsSite, and RemixSite
-  - `waitForInvalidation` now defaults to `false`
-  - `bucketArn` renamed to `cdk.bucket.bucketArn`
-  - `bucketName` renamed to `cdk.bucket.bucketName`
-  - `distributionId` renamed to `cdk.distribution.distributionId`
-  - `distributionDomain` renamed to `cdk.distribution.distributionDomainName`
-  - `site.url` is `undefined` in dev mode
-  - `site.customDomainUrl` is `undefined` in dev mode
-
-#### Functions
+#### Function code
 
 1. In your functions code replace all imports from `@serverless-stack/node/xxx` to `sst/node/xxx`
     ```diff
     - import { Bucket } from "@serverless-stack/node/bucket"
     + import { Bucket } from "sst/node/bucket"
     ```
-
-2. If you're using function binding need to make sure `../.sst/types` is listed in the `include` array in `tsconfig.json`
-
-
-
+1. If you're using function binding need to make sure `../.sst/types` is listed in the `include` array in `tsconfig.json`
 
 ## Upgrade to v1.18
 
