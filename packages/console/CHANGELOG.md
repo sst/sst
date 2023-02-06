@@ -1,5 +1,7 @@
 # @serverless-stack/console
 
+## 2.0.0-rc.71
+
 ## 2.0.0-rc.70
 
 ## 2.0.0-rc.69
