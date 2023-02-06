@@ -11,7 +11,7 @@ export function ExampleStack({ stack, app }: StackContext) {
 
   // Create a Next.js site
   const site = new NextjsSite(stack, "Site", {
-    path: "frontend",
+    path: "packages/frontend",
     environment: {
       // Pass the table details to our app
       REGION: app.region,
