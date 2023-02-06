@@ -37,7 +37,16 @@ The 2.0 upgrade is primarily ergonomic and should not result in any infrastructu
     ```
 
 2. Ensure `"constructs": "10.1.156"` is installed
-3. `sst start` has been renamed to `sst dev` (although both will work)
+3. In your stacks code replace all imports from `@serverless-stack/resources` to `sst/constructs`
+    ```diff
+    - import { Function } from "@serverless-stack/resources"
+    + import { Function } from "sst/constructs"
+    ```
+4. If you were using `@serverless-stack/static-site-env` for your frontend, replace it with the `sst env '<command>'` command
+    ```diff
+    - static-site-env -- vite dev
+    + sst env 'vite dev'
+    ```
 
 #### Config
 
@@ -69,15 +78,12 @@ export default {
 } satisfies SSTConfig
 ```
 
-#### Stacks
+#### CLI
+`sst start` has been renamed to `sst dev` (although both will work)
 
-1. In your stacks code replace all imports from `@serverless-stack/resources` to `sst/constructs`
-    ```diff
-    - import { Function } from "@serverless-stack/resources"
-    + import { Function } from "sst/constructs"
-    ```
+#### Constructs
 
-2. We've made changes to the `FunctionProps` API so you should be seeing type errors around the `bundle` property. Most of the options there have been moved to a `nodejs` property instead
+1. Function: We've made changes to the `FunctionProps` API so you should be seeing type errors around the `bundle` property. Most of the options there have been moved to a `nodejs` property instead.
     ```diff
     const fn = new Function(stack, "fn", {
     - bundle: {
@@ -89,7 +95,7 @@ export default {
     })
     ```
 
-3. We've removed the need for `srcPath` in function definitions but all your handler paths need to be specified relative to the root of the project.
+2. Function: We've removed the need for `srcPath` in function definitions but all your handler paths need to be specified relative to the root of the project.
     ```diff
     new Function(stack, "fn", {
     - srcPath: "services",
@@ -97,6 +103,15 @@ export default {
     + handler: "services/path/to/func.handler"
     })
     ```
+
+3 StaticSite, NextjsSite, and RemixSite
+  - `waitForInvalidation` now defaults to `false`
+  - `bucketArn` renamed to `cdk.bucket.bucketArn`
+  - `bucketName` renamed to `cdk.bucket.bucketName`
+  - `distributionId` renamed to `cdk.distribution.distributionId`
+  - `distributionDomain` renamed to `cdk.distribution.distributionDomainName`
+  - `site.url` is `undefined` in dev mode
+  - `site.customDomainUrl` is `undefined` in dev mode
 
 #### Functions
 
@@ -108,13 +123,6 @@ export default {
 
 2. If you're using function binding need to make sure `../.sst/types` is listed in the `include` array in `tsconfig.json`
 
-#### Frontend
-
-1. If you were using `@serverless-stack/static-site-env` for your frontend, it can be replaced with the `sst env '<command>'` command
-    ```diff
-    - static-site-env -- vite dev
-    + sst env 'vite dev'
-    ```
 
 
 
