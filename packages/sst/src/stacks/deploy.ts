@@ -1,5 +1,5 @@
 import { useBus } from "../bus.js";
-import { useAWSProvider } from "../credentials.js";
+import { useAWSClient, useAWSProvider } from "../credentials.js";
 import { Logger } from "../logger.js";
 import type { CloudFormationStackArtifact } from "aws-cdk-lib/cx-api";
 import {
@@ -107,6 +107,7 @@ export async function deploy(
     sdkProvider: provider,
   });
   try {
+    await addInUseExports(stack);
     const result = await deployment.deployStack({
       stack: stack as any,
       quiet: true,
@@ -146,4 +147,139 @@ export async function deploy(
       status: "UPDATE_FAILED",
     };
   }
+}
+
+async function addInUseExports(stack: CloudFormationStackArtifact) {
+  // Get old outputs
+  const oldOutputs = await getCloudFormationStackOutputs(stack);
+  if (!oldOutputs) return;
+
+  // Get new exports
+  // note: that we only want to handle outputs exported by CDK.
+  // ie.
+  // "Outputs": {
+  //   "ExportsOutputRefauthUserPoolA78B038B8D9965B5": {
+  //     "Value": {
+  //       "Ref": "authUserPoolA78B038B"
+  //     },
+  //     "Export": {
+  //       "Name": "frank-acme-auth:ExportsOutputRefauthUserPoolA78B038B8D9965B5"
+  //     }
+  //   },
+  const newTemplate = JSON.parse(await getLocalTemplate(stack));
+  const newOutputs = newTemplate.Outputs || {};
+  const newExportNames = Object.keys(newOutputs)
+    .filter((outputKey) => outputKey.startsWith("ExportsOutput"))
+    .filter((outputKey) => newOutputs[outputKey].Export)
+    .map((outputKey) => newOutputs[outputKey].Export.Name);
+
+  // Add missing exports
+  // ie.
+  // Outputs [{
+  //   OutputKey: (String)
+  //   OutputValue: (String)
+  //   Description: (String)
+  //   ExportName: (String)
+  // }]
+  let isDirty = false;
+  await Promise.all(
+    oldOutputs
+      .filter((output) => output.OutputKey?.startsWith("ExportsOutput"))
+      .filter((output) => output.ExportName)
+      // filter exports not in the new template (ie. CloudFormation will be removing)
+      .filter((output) => !newExportNames.includes(output.ExportName))
+      // filter the exports still in-use by other stacks
+      .map(async (output) => {
+        const imports = await listImports(output.ExportName!);
+        // update template
+        if (imports.length > 0) {
+          Logger.debug(
+            `deploy stack: addInUseExports: export ${
+              output.ExportName
+            } used in ${imports.join(", ")}`
+          );
+          newTemplate.Outputs = newTemplate.Outputs || {};
+          newTemplate.Outputs[output.OutputKey!] = {
+            Description: `Output added by SST b/c exported value still used in ${imports.join(
+              ", "
+            )}`,
+            Value: output.OutputValue,
+            Export: {
+              Name: output.ExportName,
+            },
+          };
+          isDirty = true;
+        }
+      })
+  );
+
+  // Save new template
+  if (isDirty) {
+    await saveLocalTemplate(stack, JSON.stringify(newTemplate, null, 2));
+  }
+}
+
+async function getCloudFormationStackOutputs(
+  stack: CloudFormationStackArtifact
+) {
+  const { CloudFormationClient, DescribeStacksCommand } = await import(
+    "@aws-sdk/client-cloudformation"
+  );
+  const client = useAWSClient(CloudFormationClient);
+  try {
+    const { Stacks: stacks } = await client.send(
+      new DescribeStacksCommand({
+        StackName: stack.id,
+      })
+    );
+    if (!stacks || stacks.length === 0) return;
+    return stacks[0].Outputs || [];
+  } catch (e: any) {
+    if (
+      e.name === "ValidationError" &&
+      e.message.includes("Stack with id") &&
+      e.message.includes("does not exist")
+    ) {
+      return;
+    } else {
+      throw e;
+    }
+  }
+}
+
+async function listImports(exportName: string) {
+  const { CloudFormationClient, ListImportsCommand } = await import(
+    "@aws-sdk/client-cloudformation"
+  );
+  const client = useAWSClient(CloudFormationClient);
+  try {
+    const ret = await client.send(
+      new ListImportsCommand({
+        ExportName: exportName,
+      })
+    );
+    return ret.Imports || [];
+  } catch (e: any) {
+    if (
+      e.code === "ValidationError" &&
+      e.message.includes("is not imported by any stack")
+    ) {
+      return [];
+    }
+    throw e;
+  }
+}
+
+async function getLocalTemplate(stack: CloudFormationStackArtifact) {
+  const fs = await import("fs/promises");
+  const fileContent = await fs.readFile(stack.templateFullPath);
+  return fileContent.toString();
+}
+
+async function saveLocalTemplate(
+  stack: CloudFormationStackArtifact,
+  content: string
+) {
+  const fs = await import("fs/promises");
+  await fs.writeFile(stack.templateFullPath, content);
 }
