@@ -5,7 +5,15 @@
     { "repo": "serverless-stack/sst" }
   ],
   "commit": false,
-  "fixed": [["@serverless-stack/console", "create-sst", "sst", "astro-sst"]],
+  "fixed": [
+    [
+      "@serverless-stack/console",
+      "create-sst",
+      "sst",
+      "astro-sst",
+      "solid-start-sst"
+    ]
+  ],
   "linked": [],
   "access": "public",
   "baseBranch": "master",
