@@ -1,5 +1,11 @@
 # create-sst
 
+## 2.0.1
+
+### Patch Changes
+
+- [`4268dbeaa`](https://github.com/serverless-stack/sst/commit/4268dbeaa998a7ef65d6e5bfaed5bab587a3ddb7) Thanks [@thdxr](https://github.com/thdxr)! - Remove references to rc in create-sst templates
+
 ## 2.0.0
 
 ### Major Changes
