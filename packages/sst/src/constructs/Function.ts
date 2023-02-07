@@ -539,7 +539,7 @@ export interface JavaProps {
  * })
  *```
  */
-interface FunctionCopyFilesProps {
+export interface FunctionCopyFilesProps {
   /**
    * Source path relative to sst.json
    */
