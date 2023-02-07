@@ -92,7 +92,7 @@ export interface FunctionProps
    * })
    *```
    */
-  copyFiles?: FunctionBundleCopyFilesProps[];
+  copyFiles?: FunctionCopyFilesProps[];
 
   /**
    * Used to configure nodejs function properties
@@ -153,13 +153,13 @@ export interface FunctionProps
   /**
    * Root directory of the project, typically where package.json is located. Set if using a monorepo with multiple subpackages
    *
-   * @default Defaults to the same directory as sst.json
+   * @default "nodejs16.x"
    *
    * @example
    * ```js
    * new Function(stack, "Function", {
-   *   srcPath: "packages/backend",
    *   handler: "function.handler",
+   *   runtime: "nodejs18.x",
    * })
    *```
    */
@@ -390,7 +390,7 @@ export interface NodeJSProps {
    * @example
    * ```js
    * new Function(stack, "Function", {
-   *   bundle: {
+   *   nodejs: {
    *     loader: {
    *      ".png": "file"
    *     }
@@ -406,7 +406,7 @@ export interface NodeJSProps {
    * @example
    * ```js
    * new Function(stack, "Function", {
-   *   bundle: {
+   *   nodejs: {
    *     nodeModules: ["pg"]
    *   }
    * })
@@ -420,7 +420,7 @@ export interface NodeJSProps {
    * @example
    * ```js
    * new Function(stack, "Function", {
-   *   bundle: {
+   *   nodejs: {
    *     banner: "console.log('Function starting')"
    *   }
    * })
@@ -441,7 +441,7 @@ export interface NodeJSProps {
    * @example
    * ```js
    * new Function(stack, "Function", {
-   *   bundle: {
+   *   nodejs: {
    *     minify: false
    *   }
    * })
@@ -449,14 +449,14 @@ export interface NodeJSProps {
    */
   minify?: boolean;
   /**
-   * Configure bundle format
+   * Configure format
    *
    * @default "cjs"
    *
    * @example
    * ```js
    * new Function(stack, "Function", {
-   *   bundle: {
+   *   nodejs: {
    *     format: "esm"
    *   }
    * })
@@ -471,8 +471,8 @@ export interface NodeJSProps {
    * @example
    * ```js
    * new Function(stack, "Function", {
-   *   bundle: {
-   *   sourcemap: true
+   *   nodejs: {
+   *     sourcemap: true
    *   }
    * })
    * ```
@@ -492,7 +492,7 @@ export interface JavaProps {
    * @example
    * ```js
    * new Function(stack, "Function", {
-   *   bundle: {
+   *   java: {
    *     buildTask: "bundle"
    *   }
    * })
@@ -507,7 +507,7 @@ export interface JavaProps {
    * @example
    * ```js
    * new Function(stack, "Function", {
-   *   bundle: {
+   *   java: {
    *     buildOutputDir: "output"
    *   }
    * })
@@ -522,7 +522,7 @@ export interface JavaProps {
    * @example
    * ```js
    * new Function(stack, "Function", {
-   *   bundle: {
+   *   java: {
    *     experimentalUseProvidedRuntime: "provided.al2"
    *   }
    * })
@@ -531,50 +531,17 @@ export interface JavaProps {
   experimentalUseProvidedRuntime?: "provided" | "provided.al2";
 }
 
-export type FunctionBundleProp = FunctionBundlePythonProps | boolean;
-
-interface FunctionBundleBase {}
-
-/**
- * Used to configure Python bundling options
- */
-export interface FunctionBundlePythonProps extends FunctionBundleBase {
-  /**
-   * A list of commands to override the [default installing behavior](Function#bundle) for Python dependencies.
-   *
-   * Each string in the array is a command that'll be run. For example:
-   *
-   * @default "[]"
-   *
-   * @example
-   * ```js
-   * new Function(stack, "Function", {
-   *   bundle: {
-   *     installCommands: [
-   *       'export VARNAME="my value"',
-   *       'pip install --index-url https://domain.com/pypi/myprivatemodule/simple/ --extra-index-url https://pypi.org/simple -r requirements.txt .',
-   *     ]
-   *   }
-   * })
-   * ```
-   */
-  installCommands?: string[];
-}
-
 /**
  * Used to configure additional files to copy into the function bundle
  *
  * @example
  * ```js
  * new Function(stack, "Function", {
- *   bundle: {
- *     copyFiles: [{ from: "src/index.js" }]
- *   }
+ *   copyFiles: [{ from: "src/index.js" }]
  * })
  *```
  */
-
-export interface FunctionBundleCopyFilesProps {
+interface FunctionCopyFilesProps {
   /**
    * Source path relative to sst.json
    */
@@ -956,10 +923,6 @@ export class Function extends lambda.Function implements SSTConstruct {
       return toCdkDuration(timeout);
     }
     return cdk.Duration.seconds(timeout || 10);
-  }
-
-  static normalizeSrcPath(srcPath: string): string {
-    return srcPath.replace(/\/+$/, "");
   }
 
   static handleImportedLayer(

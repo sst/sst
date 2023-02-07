@@ -1591,17 +1591,6 @@ test("mergeProps-layers", async () => {
 });
 
 /////////////////////////////
-// Test normalizeSrcPath
-/////////////////////////////
-
-test("normalizeSrcPath", async () => {
-  expect(Function.normalizeSrcPath(".")).toEqual(".");
-  expect(Function.normalizeSrcPath("abc")).toEqual("abc");
-  expect(Function.normalizeSrcPath("abc/")).toEqual("abc");
-  expect(Function.normalizeSrcPath("/abc/xyz")).toEqual("/abc/xyz");
-});
-
-/////////////////////////////
 // Test defaultFunctionProps
 /////////////////////////////
 
