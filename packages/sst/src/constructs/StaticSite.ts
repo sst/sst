@@ -385,6 +385,7 @@ export class StaticSite extends Construct implements SSTConstruct {
     );
 
     // Create CloudFront
+    this.validateCloudFrontDistributionSettings();
     this.distribution = this.createCfDistribution();
     this.distribution.node.addDependency(s3deployCR);
 
@@ -746,20 +747,17 @@ interface ImportMeta {
   // CloudFront Distribution
   /////////////////////
 
-  private createCfDistribution(): cloudfront.Distribution {
-    const { cdk, customDomain } = this.props;
-    const indexPage = this.props.indexPage || "index.html";
-    const errorPage = this.props.errorPage;
+  private validateCloudFrontDistributionSettings() {
+    const { cdk, errorPage } = this.props;
 
-    // Validate input
     if (cdk?.distribution?.certificate) {
       throw new Error(
-        `Do not configure the "cfDistribution.certificate". Use the "customDomain" to configure the StaticSite domain certificate.`
+        `Do not configure the "cfDistribution.certificate". Use the "customDomain" to configure the domain certificate.`
       );
     }
     if (cdk?.distribution?.domainNames) {
       throw new Error(
-        `Do not configure the "cfDistribution.domainNames". Use the "customDomain" to configure the StaticSite domain.`
+        `Do not configure the "cfDistribution.domainNames". Use the "customDomain" to configure the domain name.`
       );
     }
     if (errorPage && cdk?.distribution?.errorResponses) {
@@ -767,8 +765,10 @@ interface ImportMeta {
         `Cannot configure the "cfDistribution.errorResponses" when "errorPage" is passed in. Use one or the other to configure the behavior for error pages.`
       );
     }
+  }
 
-    // Build domainNames
+  protected buildDistributionDomainNames(): string[] {
+    const { customDomain } = this.props;
     const domainNames = [];
     if (!customDomain) {
       // no domain
@@ -784,21 +784,24 @@ interface ImportMeta {
         domainNames.push(...customDomain.alternateNames);
       }
     }
+    return domainNames;
+  }
 
-    // Build errorResponses
-    const errorResponses =
-      errorPage === "redirect_to_index_page" || errorPage === undefined
-        ? buildErrorResponsesForRedirectToIndex(indexPage)
-        : buildErrorResponsesFor404ErrorPage(errorPage as string);
+  private createCfDistribution(): cloudfront.Distribution {
+    const { cdk, errorPage } = this.props;
+    const indexPage = this.props.indexPage || "index.html";
 
     // Create CloudFront distribution
     return new cloudfront.Distribution(this, "Distribution", {
       // these values can be overwritten by cfDistributionProps
       defaultRootObject: indexPage,
-      errorResponses,
+      errorResponses:
+        !errorPage || errorPage === "redirect_to_index_page"
+          ? buildErrorResponsesForRedirectToIndex(indexPage)
+          : buildErrorResponsesFor404ErrorPage(errorPage as string),
       ...cdk?.distribution,
       // these values can NOT be overwritten by cfDistributionProps
-      domainNames,
+      domainNames: this.buildDistributionDomainNames(),
       certificate: this.certificate,
       defaultBehavior: {
         origin: new cfOrigins.S3Origin(this.bucket),

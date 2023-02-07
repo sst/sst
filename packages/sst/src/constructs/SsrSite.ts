@@ -715,13 +715,12 @@ export class SsrSite extends Construct implements SSTConstruct {
 
   private validateCloudFrontDistributionSettings() {
     const { cdk } = this.props;
-    const cfDistributionProps = cdk?.distribution || {};
-    if (cfDistributionProps.certificate) {
+    if (cdk?.distribution?.certificate) {
       throw new Error(
         `Do not configure the "cfDistribution.certificate". Use the "customDomain" to configure the domain certificate.`
       );
     }
-    if (cfDistributionProps.domainNames) {
+    if (cdk?.distribution?.domainNames) {
       throw new Error(
         `Do not configure the "cfDistribution.domainNames". Use the "customDomain" to configure the domain name.`
       );
