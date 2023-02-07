@@ -40,7 +40,7 @@ Create a new SST app using the [`create-sst`](packages/create-sst.md) CLI.
 <TabItem value="npm">
 
 ```bash
-npx create-sst@latest my-sst-app
+npx create-sst@one my-sst-app
 ```
 
 </TabItem>

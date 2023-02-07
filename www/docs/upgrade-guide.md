@@ -163,6 +163,8 @@ export default {
    ```
    Make sure you specify the path correctly
 
+---
+
 ## Upgrade to v1.18
 
 #### Constructs
@@ -398,4 +400,4 @@ Following are the steps to upgrade.
 
 ## Migrate to v1.0
 
-[View the full migration guide](./constructs/v0/migration.md).
+[View the full migration guide](./constructs/v0/migration.md)
