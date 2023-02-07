@@ -198,7 +198,7 @@ export class RemixSite extends SsrSite {
       format: "cjs",
       bundlePath,
       handler: "server.handler",
-      runtime: runtime || "nodejs18.x",
+      runtime,
       timeout,
       memorySize,
       permissions,

@@ -273,6 +273,7 @@ export class SsrSite extends Construct implements SSTConstruct {
     this.props = {
       path: ".",
       waitForInvalidation: false,
+      runtime: "nodejs18.x",
       timeout: "10 seconds",
       memorySize: "1024 MB",
       ...props,

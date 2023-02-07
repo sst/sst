@@ -52,7 +52,7 @@ export class AstroSite extends SsrSite {
       handler: path.join(this.props.path, "dist", "server", "entry.handler"),
       bind,
       logRetention: "three_days",
-      runtime: runtime || "nodejs18.x",
+      runtime,
       memorySize,
       timeout,
       nodejs: {
@@ -119,7 +119,7 @@ export class AstroSite extends SsrSite {
       scopeOverride: this,
       bundlePath: outputPath,
       handler: "entry.handler",
-      runtime: runtime || "nodejs18.x",
+      runtime,
       timeout,
       memorySize,
       permissions,

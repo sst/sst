@@ -45,7 +45,7 @@ export class SolidStartSite extends SsrSite {
       description: "Server handler",
       handler,
       logRetention: "three_days",
-      runtime: runtime || "nodejs18.x",
+      runtime,
       memorySize,
       timeout,
       nodejs: {
@@ -113,7 +113,7 @@ export class SolidStartSite extends SsrSite {
       scopeOverride: this,
       bundlePath: outputPath,
       handler: "server.handler",
-      runtime: runtime || "nodejs18.x",
+      runtime,
       timeout,
       memorySize,
       permissions,

@@ -70,7 +70,7 @@ export class NextjsSite extends SsrSite {
       description: "Server handler for Next.js",
       bundlePath: path.join(this.props.path, ".open-next", "server-function"),
       handler: "index.handler",
-      runtime: runtime || "nodejs18.x",
+      runtime,
       timeout,
       memorySize,
       permissions,
