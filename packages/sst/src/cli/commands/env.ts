@@ -24,6 +24,8 @@ export const env = (program: Program) =>
       const fs = await import("fs/promises");
       const { SiteEnv } = await import("../../site-env.js");
       const { spawnSync } = await import("child_process");
+      const { useAWSCredentials } = await import("../../credentials.js");
+      const { useProject } = await import("../../project.js");
       let spinner: ReturnType<typeof createSpinner> | undefined;
       while (true) {
         const exists = await fs
@@ -41,11 +43,17 @@ export const env = (program: Program) =>
 
         const sites = await SiteEnv.values();
         const env = sites[process.cwd()] || {};
+        const project = useProject();
+        const credentials = await useAWSCredentials();
 
         const result = spawnSync(args.command, {
           env: {
             ...process.env,
             ...env,
+            AWS_ACCESS_KEY_ID: credentials.accessKeyId,
+            AWS_SECRET_ACCESS_KEY: credentials.secretAccessKey,
+            AWS_SESSION_TOKEN: credentials.sessionToken,
+            AWS_REGION: project.config.region,
           },
           stdio: "inherit",
           shell: process.env.SHELL || true,
