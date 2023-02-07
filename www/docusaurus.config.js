@@ -212,7 +212,7 @@ module.exports = {
             from: "/working-locally",
           },
           {
-            to: "/constructs/GraphQLApi",
+            to: "/constructs/Api",
             from: "/constructs/ApolloApi",
           },
           {

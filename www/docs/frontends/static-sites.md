@@ -1,3 +1,0 @@
----
-title: Static Sites
----
