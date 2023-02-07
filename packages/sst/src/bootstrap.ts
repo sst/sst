@@ -80,13 +80,26 @@ async function loadCDKStatus() {
         StackName: "CDKToolkit",
       })
     );
+    // Check CDK bootstrap stack exists
+    if (!stacks || stacks.length === 0) return false;
+
+    // Check CDK bootstrap stack deployed successfully
     if (
-      stacks &&
-      stacks.length > 0 &&
-      ["CREATE_COMPLETE", "UPDATE_COMPLETE"].includes(stacks[0].StackStatus!)
+      !["CREATE_COMPLETE", "UPDATE_COMPLETE"].includes(stacks[0].StackStatus!)
     ) {
-      return true;
+      return false;
     }
+
+    // Check CDK bootstrap stack is up to date
+    // note: there is no a programmatical way to get the minimal required version
+    //       of CDK bootstrap stack. We are going to hardcode it to 14 for now,
+    //       which is the latest version as of CDK v2.62.2
+    const output = stacks[0].Outputs?.find(
+      (o) => o.OutputKey === "BootstrapVersion"
+    );
+    if (!output || parseInt(output.OutputValue!) < 14) return false;
+
+    return true;
   } catch (e: any) {
     if (
       e.name === "ValidationError" &&
