@@ -779,6 +779,13 @@ export class SsrSite extends Construct implements SSTConstruct {
       domainNames.push(customDomain);
     } else {
       domainNames.push(customDomain.domainName);
+      if (customDomain.alternateNames) {
+        if (!customDomain.cdk?.certificate)
+          throw new Error(
+            "Certificates for alternate domains cannot be automatically created. Please specify certificate to use"
+          );
+        domainNames.push(...customDomain.alternateNames);
+      }
     }
     return domainNames;
   }
