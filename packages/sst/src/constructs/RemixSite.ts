@@ -156,7 +156,7 @@ export class RemixSite extends SsrSite {
   }
 
   protected createFunctionForRegional(): lambda.Function {
-    const { timeout, memorySize, environment, cdk } = this.props;
+    const { runtime, timeout, memorySize, environment, cdk } = this.props;
 
     const bundlePath = this.createServerLambdaBundle("regional-server.js");
 
@@ -168,7 +168,12 @@ export class RemixSite extends SsrSite {
       },
       logRetention: logs.RetentionDays.THREE_DAYS,
       code: lambda.Code.fromAsset(bundlePath),
-      runtime: lambda.Runtime.NODEJS_16_X,
+      runtime:
+        runtime === "nodejs14.x"
+          ? lambda.Runtime.NODEJS_14_X
+          : runtime === "nodejs16.x"
+          ? lambda.Runtime.NODEJS_16_X
+          : lambda.Runtime.NODEJS_18_X,
       memorySize:
         typeof memorySize === "string"
           ? toCdkSize(memorySize).toMebibytes()
@@ -183,7 +188,8 @@ export class RemixSite extends SsrSite {
   }
 
   protected createFunctionForEdge(): EdgeFunction {
-    const { timeout, memorySize, permissions, environment } = this.props;
+    const { runtime, timeout, memorySize, permissions, environment } =
+      this.props;
 
     const bundlePath = this.createServerLambdaBundle("edge-server.js");
 
@@ -192,6 +198,7 @@ export class RemixSite extends SsrSite {
       format: "cjs",
       bundlePath,
       handler: "server.handler",
+      runtime,
       timeout,
       memorySize,
       permissions,
