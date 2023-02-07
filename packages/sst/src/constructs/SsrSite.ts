@@ -158,6 +158,15 @@ export interface SsrSiteProps {
    */
   memorySize?: number | Size;
   /**
+   * The runtime environment for the SSR function.
+   * @default nodejs18.x
+   * @example
+   * ```js
+   * runtime: "nodejs16.x",
+   * ```
+   */
+  runtime?: "nodejs14.x" | "nodejs16.x" | "nodejs18.x";
+  /**
    * Attaches the given list of permissions to the SSR function. Configuring this property is equivalent to calling `attachPermissions()` after the site is created.
    * @example
    * ```js

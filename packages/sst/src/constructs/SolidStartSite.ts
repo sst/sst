@@ -30,7 +30,7 @@ export class SolidStartSite extends SsrSite {
   }
 
   protected createFunctionForRegional(): CdkFunction {
-    const { timeout, memorySize, environment, cdk } = this.props;
+    const { runtime, timeout, memorySize, environment, cdk } = this.props;
 
     // Bundle code
     const handler = path.join(
@@ -45,7 +45,7 @@ export class SolidStartSite extends SsrSite {
       description: "Server handler",
       handler,
       logRetention: "three_days",
-      runtime: "nodejs16.x",
+      runtime: runtime || "nodejs18.x",
       memorySize,
       timeout,
       nodejs: {
@@ -62,7 +62,8 @@ export class SolidStartSite extends SsrSite {
   }
 
   protected createFunctionForEdge(): EdgeFunction {
-    const { timeout, memorySize, permissions, environment } = this.props;
+    const { runtime, timeout, memorySize, permissions, environment } =
+      this.props;
 
     // Create a directory that we will use to create the bundled version
     // of the "core server build" along with our custom Lamba server handler.
@@ -112,6 +113,7 @@ export class SolidStartSite extends SsrSite {
       scopeOverride: this,
       bundlePath: outputPath,
       handler: "server.handler",
+      runtime: runtime || "nodejs18.x",
       timeout,
       memorySize,
       permissions,

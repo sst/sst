@@ -24,6 +24,7 @@ const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 export interface EdgeFunctionProps {
   bundlePath: string;
   handler: string;
+  runtime?: "nodejs14.x" | "nodejs16.x" | "nodejs18.x";
   timeout: number | Duration;
   memorySize: number | Size;
   permissions?: Permissions;
@@ -179,7 +180,7 @@ ${exports}
   }
 
   private createFunction(asset: s3Assets.Asset) {
-    const { timeout, memorySize } = this.props;
+    const { runtime, timeout, memorySize } = this.props;
     const name = this.node.id;
 
     // Create a S3 bucket in us-east-1 to store Lambda code. Create
@@ -195,7 +196,12 @@ ${exports}
         S3Bucket: asset.s3BucketName,
         S3Key: asset.s3ObjectKey,
       },
-      Runtime: lambda.Runtime.NODEJS_18_X.name,
+      Runtime:
+        runtime === "nodejs14.x"
+          ? lambda.Runtime.NODEJS_14_X.name
+          : runtime === "nodejs16.x"
+          ? lambda.Runtime.NODEJS_16_X.name
+          : lambda.Runtime.NODEJS_18_X.name,
       MemorySize:
         typeof memorySize === "string"
           ? toCdkSize(memorySize).toMebibytes()

@@ -21,6 +21,7 @@ export interface SsrFunctionProps
   extends Omit<FunctionOptions, "memorySize" | "timeout" | "runtime"> {
   bundlePath: string;
   handler: string;
+  runtime?: "nodejs14.x" | "nodejs16.x" | "nodejs18.x";
   timeout: number | Duration;
   memorySize: number | Size;
   permissions?: Permissions;
@@ -49,7 +50,7 @@ export class SsrFunction extends Construct {
   }
 
   private createFunction() {
-    const { timeout, memorySize, handler, bundlePath } = this.props;
+    const { runtime, timeout, memorySize, handler, bundlePath } = this.props;
 
     // Note: cannot point the bundlePath to the `.open-next/server-function`
     //       b/c the folder contains node_modules. And pnpm node_modules
@@ -90,7 +91,12 @@ export class SsrFunction extends Construct {
       handler,
       logRetention: logs.RetentionDays.THREE_DAYS,
       code: lambda.Code.fromBucket(asset.bucket, asset.s3ObjectKey),
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime:
+        runtime === "nodejs14.x"
+          ? lambda.Runtime.NODEJS_14_X
+          : runtime === "nodejs16.x"
+          ? lambda.Runtime.NODEJS_16_X
+          : lambda.Runtime.NODEJS_18_X,
       architecture: lambda.Architecture.ARM_64,
       memorySize:
         typeof memorySize === "string"

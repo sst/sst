@@ -151,10 +151,8 @@ export interface FunctionProps
    */
   handler?: string;
   /**
-   * Root directory of the project, typically where package.json is located. Set if using a monorepo with multiple subpackages
-   *
+   * The runtime environment for the function.
    * @default "nodejs16.x"
-   *
    * @example
    * ```js
    * new Function(stack, "Function", {

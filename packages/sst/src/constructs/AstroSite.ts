@@ -44,7 +44,7 @@ export class AstroSite extends SsrSite {
   }
 
   protected createFunctionForRegional(): CdkFunction {
-    const { memorySize, timeout, environment, bind, cdk } = this.props;
+    const { runtime, memorySize, timeout, environment, bind, cdk } = this.props;
 
     // Create function
     const fn = new Function(this, `ServerFunction`, {
@@ -52,7 +52,7 @@ export class AstroSite extends SsrSite {
       handler: path.join(this.props.path, "dist", "server", "entry.handler"),
       bind,
       logRetention: "three_days",
-      runtime: "nodejs16.x",
+      runtime: runtime || "nodejs18.x",
       memorySize,
       timeout,
       nodejs: {
@@ -69,7 +69,8 @@ export class AstroSite extends SsrSite {
   }
 
   protected createFunctionForEdge(): EdgeFunction {
-    const { timeout, memorySize, permissions, environment } = this.props;
+    const { runtime, timeout, memorySize, permissions, environment } =
+      this.props;
 
     // Create a directory that we will use to create the bundled version
     // of the "core server build" along with our custom Lamba server handler.
@@ -118,6 +119,7 @@ export class AstroSite extends SsrSite {
       scopeOverride: this,
       bundlePath: outputPath,
       handler: "entry.handler",
+      runtime: runtime || "nodejs18.x",
       timeout,
       memorySize,
       permissions,
