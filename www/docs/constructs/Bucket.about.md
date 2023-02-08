@@ -27,8 +27,6 @@ new Bucket(stack, "Bucket", {
 Or configuring the notification events.
 
 ```js {y}
-import { EventType } from "aws-cdk-lib/aws-s3";
-
 const bucket = new Bucket(stack, "Bucket", {
   notifications: {
     myNotification: {
@@ -134,9 +132,7 @@ So in the above example, the `myNotification1` function doesn't use the `timeout
 
 Allow the notification functions to access S3.
 
-```js {16}
-import { EventType } from "aws-cdk-lib/aws-s3";
-
+```js {14}
 const bucket = new Bucket(stack, "Bucket", {
   notifications: {
     myNotification1: {
@@ -157,9 +153,7 @@ bucket.attachPermissions(["s3"]);
 
 Allow the first notification function to access S3.
 
-```js {16}
-import { EventType } from "aws-cdk-lib/aws-s3";
-
+```js {14}
 const bucket = new Bucket(stack, "Bucket", {
   notifications: {
     myNotification1: {
