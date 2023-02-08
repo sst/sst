@@ -35,11 +35,11 @@ export const usePythonHandler = Context.memo(async () => {
     },
     canHandle: (input) => input.startsWith("python"),
     startWorker: async (input) => {
-      const src = "services";
+      const src = await findAbove(input.handler, "requirements.txt");
       const parsed = path.parse(path.relative(src, input.handler));
       const target = [...parsed.dir.split(path.sep), parsed.name].join(".");
       const proc = spawn(
-        os.platform() === "win32" ? "python.exe" : "python3.6".split(".")[0],
+        os.platform() === "win32" ? "python.exe" : "python3",
         [
           "-u",
           url.fileURLToPath(
@@ -58,7 +58,7 @@ export const usePythonHandler = Context.memo(async () => {
             AWS_LAMBDA_RUNTIME_API: `localhost:${server.port}/${input.workerID}`,
           },
           shell: true,
-          cwd: path.join(process.cwd(), src),
+          cwd: src,
         }
       );
       proc.on("exit", () => workers.exited(input.workerID));
