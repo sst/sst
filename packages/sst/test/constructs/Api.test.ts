@@ -1731,6 +1731,117 @@ test("routes: ApiAlbRouteProps method is HttpMethod", async () => {
   });
 });
 
+test("routes: ApiNlbRouteProps method is undefined", async () => {
+  const stack = new Stack(await createApp(), "stack");
+
+  // Ceate NLB listener
+  const vpc = new ec2.Vpc(stack, "VPC");
+  const lb = new elb.NetworkLoadBalancer(stack, "LB", { vpc });
+  const listener = lb.addListener("Listener", { port: 80 });
+  const asg = new autoscaling.AutoScalingGroup(stack, "ASG", {
+    vpc,
+    instanceType: ec2.InstanceType.of(
+      ec2.InstanceClass.BURSTABLE2,
+      ec2.InstanceSize.MICRO
+    ),
+    machineImage: new ec2.AmazonLinuxImage(),
+  });
+  listener.addTargets("ApplicationFleet", {
+    port: 8080,
+    targets: [asg],
+  });
+
+  new Api(stack, "Api", {
+    routes: {
+      "GET /": {
+        type: "nlb",
+        cdk: {
+          nlbListener: listener,
+        },
+      },
+    },
+  });
+  countResources(stack, "AWS::Lambda::Function", 0);
+  countResources(stack, "AWS::EC2::VPC", 1);
+  countResources(stack, "AWS::ElasticLoadBalancingV2::LoadBalancer", 1);
+  countResources(stack, "AWS::ElasticLoadBalancingV2::Listener", 1);
+  countResources(stack, "AWS::ApiGatewayV2::VpcLink", 1);
+  countResources(stack, "AWS::ApiGatewayV2::Route", 1);
+  countResources(stack, "AWS::ApiGatewayV2::Integration", 1);
+  hasResource(stack, "AWS::ApiGatewayV2::Integration", {
+    ApiId: {
+      Ref: "ApiCD79AAA0",
+    },
+    IntegrationType: "HTTP_PROXY",
+    ConnectionId: {
+      Ref: "ApiVpcLink195B99851",
+    },
+    ConnectionType: "VPC_LINK",
+    IntegrationMethod: "ANY",
+    IntegrationUri: {
+      Ref: "LBListener49E825B4",
+    },
+    PayloadFormatVersion: "1.0",
+  });
+});
+
+test("routes: ApiNlbRouteProps method is HttpMethod", async () => {
+  const stack = new Stack(await createApp(), "stack");
+
+  // Ceate NLB listener
+  const vpc = new ec2.Vpc(stack, "VPC");
+  const lb = new elb.NetworkLoadBalancer(stack, "LB", { vpc });
+  const listener = lb.addListener("Listener", { port: 80 });
+  const asg = new autoscaling.AutoScalingGroup(stack, "ASG", {
+    vpc,
+    instanceType: ec2.InstanceType.of(
+      ec2.InstanceClass.BURSTABLE2,
+      ec2.InstanceSize.MICRO
+    ),
+    machineImage: new ec2.AmazonLinuxImage(),
+  });
+  listener.addTargets("ApplicationFleet", {
+    port: 8080,
+    targets: [asg],
+  });
+
+  new Api(stack, "Api", {
+    routes: {
+      "GET /": {
+        type: "nlb",
+        cdk: {
+          nlbListener: listener,
+          integration: {
+            method: apig.HttpMethod.DELETE,
+          },
+        },
+      },
+    },
+  });
+  countResources(stack, "AWS::Lambda::Function", 0);
+  countResources(stack, "AWS::EC2::VPC", 1);
+  countResources(stack, "AWS::ElasticLoadBalancingV2::LoadBalancer", 1);
+  countResources(stack, "AWS::ElasticLoadBalancingV2::Listener", 1);
+  countResources(stack, "AWS::ApiGatewayV2::VpcLink", 1);
+  countResources(stack, "AWS::ApiGatewayV2::Route", 1);
+  countResources(stack, "AWS::ApiGatewayV2::Integration", 1);
+  hasResource(stack, "AWS::ApiGatewayV2::Integration", {
+    ApiId: {
+      Ref: "ApiCD79AAA0",
+    },
+    IntegrationType: "HTTP_PROXY",
+    ConnectionId: {
+      Ref: "ApiVpcLink195B99851",
+    },
+    ConnectionType: "VPC_LINK",
+    IntegrationMethod: "DELETE",
+    IntegrationUri: {
+      Ref: "LBListener49E825B4",
+    },
+    PayloadFormatVersion: "1.0",
+  });
+});
+
 test("routes: ApiHttpRouteProps method is undefined", async () => {
   const stack = new Stack(await createApp(), "stack");
 
