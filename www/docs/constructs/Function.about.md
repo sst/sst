@@ -91,137 +91,18 @@ For example, if your handler file is in `src/lambda.ts` and it exported a functi
 
 SST checks for a file with a `.ts`, `.tsx`, `.js`, or `.jsx` extension.
 
-If the `srcPath` is set, then the path to the `handler` is relative to it. So if the `srcPath` is set to `src`. Then `lambda.main` as the `handler` would mean that the file is in src/lambda.js (or the other extensions).
-
-#### srcPath
-
-The directory that needs to zipped up as the Lambda function package. Only applicable if the [`bundle`](#bundle) option is set to `false`.
-
-Note that for TypeScript functions, if the `srcPath` is not the project root, SST expects the `tsconfig.json` to be in this directory.
-
-#### bundle
-
-Bundles your Lambda functions with [esbuild](https://esbuild.github.io). Turn this off if you have npm packages that cannot be bundled. Currently bundle cannot be disabled if the `srcPath` is set to the project root. [Read more about this here](https://github.com/serverless-stack/sst/issues/78).
-
-If you want to configure the bundling process, you can pass in the [FunctionBundleNodejsProps](#functionbundlenodejsprops).
-
-#### Disabling bundling
-
-```js
-new Function(stack, "MyLambda", {
-  bundle: false,
-  srcPath: "src",
-  handler: "lambda.main",
-});
-```
-
-In this case, SST will zip the entire `src/` directory for the Lambda function.
-
-#### Configure bundling
-
-```js
-new Function(stack, "MyLambda", {
-  bundle: {
-    externalModules: ["fsevents"],
-    nodeModules: ["uuid"],
-    format: "esm",
-    loader: {
-      ".png": "dataurl",
-    },
-    copyFiles: [{ from: "public", to: "." }],
-    commandHooks: {
-      beforeBundling: (inputDir, outputDir) => {
-        return ["echo beforeBundling"];
-      },
-      beforeInstall: (inputDir, outputDir) => {
-        return ["echo beforeInstall"];
-      },
-      afterBundling: (inputDir, outputDir) => {
-        return ["echo afterBundling"];
-      },
-    },
-  },
-  handler: "src/lambda.main",
-});
-```
-
-#### Configure esbuild plugins
-
-To use an [esbuild plugin](https://esbuild.github.io/plugins/), install the plugin npm package in your project. Then create a config file that exports the plugin.
-
-```js title="config/esbuild.js"
-const { esbuildDecorators } = require("@anatine/esbuild-decorators");
-
-module.exports = [esbuildDecorators()];
-```
-
-You can now reference the config file in your functions.
-
-```js title="stacks/MyStack.js" {3}
-new Function(stack, "MyLambda", {
-  bundle: {
-    esbuildConfig: {
-      plugins: "config/esbuild.js",
-    },
-  },
-  handler: "src/lambda.main",
-});
-```
 
 ### Configuring Python runtime
 
 #### handler
 
-Path to the entry point and handler function relative to the `srcPath`. Uses the format, `path/to/file.function`. Where the first part is the path to the file, followed by the name of the function that's exported in that file.
-
-For example, if your `srcPath` is `src/`, your handler file is in `src/lambda.py`, and it exported a function called `main`. The handler would be `lambda.main`.
-
-#### srcPath
-
-For Python functions, `srcPath` is required. This is the directory where the `requirements.txt`, `Pipfile`, or `poetry.lock` is expected.
-
-```js
-new Function(stack, "MyLambda", {
-  bundle: {
-    installCommands: [
-      "pip install --index-url https://domain.com/pypi/myprivatemodule/simple/ --extra-index-url https://pypi.org/simple -r requirements.txt .",
-    ],
-  },
-  srcPath: "src",
-  handler: "index.main",
-  runtime: "python3.7",
-});
-```
-
-#### bundle
-
-For Python functions, a dependency manager is used to install the packages. The dependency manager is selected based on which of the following files are found in the `srcPath`:
-
-| File               | Steps                                                                                                                              |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `requirements.txt` | [pip](https://packaging.python.org/key_projects/#pip) is used to run `pip install`                                                 |
-| `Pipfile`          | [Pipenv](https://packaging.python.org/key_projects/#pipenv) is used to generate a `requirements.txt` and then `pip install` is run |
-| `poetry.lock`      | [poetry](https://packaging.python.org/key_projects/#poetry) is used to generate a `requirements.txt` and then `pip install` is run |
-
-You can override this behavior by passing in the `installCommands` through the [FunctionBundlePythonProps](#functionbundlepythonprops).
-
-Note that for Python functions, you'll need to have Docker installed. When building and deploying, this construct will handle installing all the required modules in a [Lambda compatible Docker container](https://github.com/aws/aws-sam-build-images/tree/develop/build-image-src), based on the runtime. This ensures that the Python Lambda functions are compiled correctly.
+Path to the entry point and handler function relative to the root. Uses the format, `path/to/file.function`. Where the first part is the path to the file, followed by the name of the function that's exported in that file.
 
 ### Configuring Go runtime
 
 #### handler
 
 Path to the handler function. Uses the format, `/path/to/file.go` or just `/path/to`.
-
-If the `srcPath` is set, then the path to the `handler` is relative to it. So if the `srcPath` is set to `src`. Then `lambda.go` as the `handler` would mean that the file is in `src/lambda.go`.
-
-#### srcPath
-
-The directory where `go.mod` is found.
-
-#### bundle
-
-Only supported for the **Node.js** and **Python** runtimes.
 
 ### Configuring C#(.NET) runtime
 
@@ -250,14 +131,6 @@ namespace Example
 
 The handler would be, `MyApp::Example.Hello::MyHandler`.
 
-#### srcPath
-
-The directory where `.csproj` is found.
-
-#### bundle
-
-Only supported for the **Node.js** and **Python** runtimes.
-
 ### Configuring F#(.NET) runtime
 
 #### handler
@@ -280,14 +153,6 @@ module Hello =
 ```
 
 The handler would be: `MyApp::Example.Hello::MyHandler`.
-
-#### srcPath
-
-The directory where `.fsproj` is found.
-
-#### bundle
-
-Only supported for the **Node.js** and **Python** runtimes.
 
 ### Configuring Java runtime
 
@@ -353,21 +218,16 @@ public class Handler implements RequestHandler<Map<String,String>, String>{
 
 The handler would be: `example.Handler::handleRequest`.
 
-#### srcPath
-
-The directory where `build.gradle` is found.
-
-#### bundle
+#### options
 
 If you want to configure the bundling process, you can pass in the [FunctionBundleJavaProps](#functionbundlejavaprops).
 
 ```ts
 new Function(stack, "MyLambda", {
-  bundle: {
+  java: {
     buildTask: "bundle",
     buildOutputDir: "output",
   },
-  srcPath: "src",
   handler: "example.Handler::handleRequest",
   runtime: "java11",
 });
