@@ -42,6 +42,7 @@ importers:
       '@aws-sdk/client-rds-data': 3.43.0
       '@aws-sdk/client-s3': 3.43.0
       '@aws-sdk/client-ssm': 3.43.0
+      '@aws-sdk/fetch-http-handler': ^3.6.1
       '@aws-sdk/s3-request-presigner': 3.43.0
       '@aws-sdk/util-dynamodb': ^3.52.0
       '@fontsource/jetbrains-mono': ^4.5.0
@@ -70,6 +71,7 @@ importers:
       deep-object-diff: ^1.1.7
       dendriform-immer-patch-optimiser: ^2.1.0
       file-saver: ^2.0.5
+      immer: '9'
       jotai: ^1.4.7
       react: ^17.0.2
       react-ace: ^9.5.0
@@ -82,6 +84,7 @@ importers:
       react-redux: 7.2.6
       react-router-dom: ^6.3.0
       react-spinners: ^0.11.0
+      react-textarea-autosize: ^8.4.0
       react-virtual: ^2.10.0
       remeda: ^0.0.32
       vite: ^2.7.0
@@ -96,6 +99,7 @@ importers:
       '@aws-sdk/client-rds-data': 3.43.0
       '@aws-sdk/client-s3': 3.43.0
       '@aws-sdk/client-ssm': 3.43.0
+      '@aws-sdk/fetch-http-handler': 3.257.0
       '@aws-sdk/s3-request-presigner': 3.43.0
       '@aws-sdk/util-dynamodb': 3.208.0
       '@fontsource/jetbrains-mono': 4.5.11
@@ -118,9 +122,10 @@ importers:
       ace-builds: 1.12.5
       buffer: 6.0.3
       deep-object-diff: 1.1.7
-      dendriform-immer-patch-optimiser: 2.1.3
+      dendriform-immer-patch-optimiser: 2.1.3_immer@9.0.16
       file-saver: 2.0.5
-      jotai: 1.9.2_react@17.0.2
+      immer: 9.0.16
+      jotai: 1.9.2_immer@9.0.16+react@17.0.2
       react: 17.0.2
       react-ace: 9.5.0_sfoxds7t5ydpegc3knd667wn6m
       react-dom: 17.0.2_react@17.0.2
@@ -132,6 +137,7 @@ importers:
       react-redux: 7.2.6_sfoxds7t5ydpegc3knd667wn6m
       react-router-dom: 6.4.3_sfoxds7t5ydpegc3knd667wn6m
       react-spinners: 0.11.0_gzv7pa6nrbev3fs6gyzn7sadkq
+      react-textarea-autosize: 8.4.0_q5o373oqrklnndq2vhekyuzhxi
       react-virtual: 2.10.4_react@17.0.2
       remeda: 0.0.32
     devDependencies:
@@ -2716,8 +2722,7 @@ packages:
       '@aws-sdk/querystring-builder': 3.257.0
       '@aws-sdk/types': 3.257.0
       '@aws-sdk/util-base64': 3.208.0
-      tslib: 2.4.1
-    dev: true
+      tslib: 2.5.0
 
   /@aws-sdk/fetch-http-handler/3.40.0:
     resolution: {integrity: sha512-w1HiZromoU+/bbEo89uO81l6UO/M+c2uOMnXntZqe6t3ZHUUUo3AbvhKh0QGVFqRQa+Oi0+95KqWmTHa72/9Iw==}
@@ -2859,7 +2864,7 @@ packages:
     resolution: {integrity: sha512-UPez5qLh3dNgt0DYnPD/q0mVJY84rA17QE26hVNOW3fAji8W2wrwrxdacWOxyXvlxWsVRcKmr+lay1MDqpAMfg==}
     engines: {node: '>=14.0.0'}
     dependencies:
-      tslib: 2.4.1
+      tslib: 2.5.0
 
   /@aws-sdk/is-array-buffer/3.37.0:
     resolution: {integrity: sha512-XLjA/a6AuGnCvcJZLsMTy2jxF2upgGhqCCkoIJgLlzzXHSihur13KcmPvW/zcaGnCRj0SvKWXiJHl4vDlW75VQ==}
@@ -3638,8 +3643,7 @@ packages:
     engines: {node: '>=14.0.0'}
     dependencies:
       '@aws-sdk/types': 3.257.0
-      tslib: 2.4.1
-    dev: true
+      tslib: 2.5.0
 
   /@aws-sdk/protocol-http/3.40.0:
     resolution: {integrity: sha512-f4ea7/HZkjpvGBrnRIuzc/bhrExWrgDv7eulj4htPukZGHdTqSJD3Jk8lEXWvFuX2vUKQDGhEhCDsqup7YWJQQ==}
@@ -3672,8 +3676,7 @@ packages:
     dependencies:
       '@aws-sdk/types': 3.257.0
       '@aws-sdk/util-uri-escape': 3.201.0
-      tslib: 2.4.1
-    dev: true
+      tslib: 2.5.0
 
   /@aws-sdk/querystring-builder/3.40.0:
     resolution: {integrity: sha512-gO24oipnNaxJRBXB7lhLfa96vIMOd8gtMBqJTjelTjS2e1ZP1YY12CNKKTWwafSk8Ge021erZAG/YTOaXGpv+g==}
@@ -4046,7 +4049,7 @@ packages:
     engines: {node: '>=14.0.0'}
     dependencies:
       '@aws-sdk/util-buffer-from': 3.208.0
-      tslib: 2.4.1
+      tslib: 2.5.0
 
   /@aws-sdk/util-body-length-browser/3.188.0:
     resolution: {integrity: sha512-8VpnwFWXhnZ/iRSl9mTf+VKOX9wDE8QtN4bj9pBfxwf90H1X7E8T6NkiZD3k+HubYf2J94e7DbeHs7fuCPW5Qg==}
@@ -4090,7 +4093,7 @@ packages:
     engines: {node: '>=14.0.0'}
     dependencies:
       '@aws-sdk/is-array-buffer': 3.201.0
-      tslib: 2.4.1
+      tslib: 2.5.0
 
   /@aws-sdk/util-buffer-from/3.37.0:
     resolution: {integrity: sha512-aa3SBwjLwImuJoE4+hxDIWQ9REz3UFb3p7KFPe9qopdXb/yB12RTcbrXVb4whUux4i4mO6KRij0ZNjFZrjrKPg==}
@@ -4339,7 +4342,7 @@ packages:
     resolution: {integrity: sha512-TeTWbGx4LU2c5rx0obHeDFeO9HvwYwQtMh1yniBz00pQb6Qt6YVOETVQikRZ+XRQwEyCg/dA375UplIpiy54mA==}
     engines: {node: '>=14.0.0'}
     dependencies:
-      tslib: 2.4.1
+      tslib: 2.5.0
 
   /@aws-sdk/util-uri-escape/3.37.0:
     resolution: {integrity: sha512-8pKf4YJTELP5lm/CEgYw2atyJBB1RWWqFa0sZx6YJmTlOtLF5G6raUdAi4iDa2hldGt2B6IAdIIyuusT8zeU8Q==}
@@ -5995,7 +5998,6 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       regenerator-runtime: 0.13.11
-    dev: true
 
   /@babel/template/7.18.10:
     resolution: {integrity: sha512-TI+rCtooWHr3QJ27kJxfjutghu44DLnasDMwpDqCXVTal9RLp3RSYNh4NdBrRP2cQAoG9A8juOQl6P6oZG4JxA==}
@@ -7039,7 +7041,7 @@ packages:
     dependencies:
       '@babel/helper-module-imports': 7.18.6
       '@babel/plugin-syntax-jsx': 7.18.6
-      '@babel/runtime': 7.20.1
+      '@babel/runtime': 7.20.13
       '@emotion/hash': 0.9.0
       '@emotion/memoize': 0.8.0
       '@emotion/serialize': 1.1.1
@@ -7081,7 +7083,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.20.1
+      '@babel/runtime': 7.20.13
       '@emotion/babel-plugin': 11.10.5
       '@emotion/cache': 11.10.5
       '@emotion/serialize': 1.1.1
@@ -8083,7 +8085,7 @@ packages:
   /@radix-ui/popper/0.1.0:
     resolution: {integrity: sha512-uzYeElL3w7SeNMuQpXiFlBhTT+JyaNMCwDfjKkrzugEcYrf5n52PHqncNdQPUtR42hJh8V9FsqyEDbDxkeNjJQ==}
     dependencies:
-      '@babel/runtime': 7.20.1
+      '@babel/runtime': 7.20.13
       csstype: 3.1.1
     dev: false
 
@@ -8115,7 +8117,7 @@ packages:
     peerDependencies:
       react: ^16.8 || ^17.0
     dependencies:
-      '@babel/runtime': 7.20.1
+      '@babel/runtime': 7.20.13
       '@radix-ui/react-primitive': 0.1.4_react@17.0.2
       react: 17.0.2
     dev: false
@@ -8460,7 +8462,7 @@ packages:
     peerDependencies:
       react: ^16.8 || ^17.0
     dependencies:
-      '@babel/runtime': 7.20.1
+      '@babel/runtime': 7.20.13
       '@radix-ui/react-use-layout-effect': 0.1.0_react@17.0.2
       react: 17.0.2
     dev: false
@@ -8536,7 +8538,7 @@ packages:
     peerDependencies:
       react: ^16.8 || ^17.0
     dependencies:
-      '@babel/runtime': 7.20.1
+      '@babel/runtime': 7.20.13
       react: 17.0.2
     dev: false
 
@@ -8553,7 +8555,7 @@ packages:
   /@radix-ui/rect/0.1.1:
     resolution: {integrity: sha512-g3hnE/UcOg7REdewduRPAK88EPuLZtaq7sA9ouu8S+YEtnyFRI16jgv6GZYe3VMoQLL1T171ebmEPtDjyxWLzw==}
     dependencies:
-      '@babel/runtime': 7.20.1
+      '@babel/runtime': 7.20.13
     dev: false
 
   /@reach/observe-rect/1.2.0:
@@ -10383,7 +10385,7 @@ packages:
     resolution: {integrity: sha512-Cg7TFGpIr01vOQNODXOOaGz2NpCU5gl8x1qJFbb6hbZxR7XrcE2vtbAsTAbJ7/xwJtUuJEw8K8Zr/AE0LHlesg==}
     engines: {node: '>=10', npm: '>=6'}
     dependencies:
-      '@babel/runtime': 7.20.1
+      '@babel/runtime': 7.20.13
       cosmiconfig: 7.0.1
       resolve: 1.22.1
     dev: false
@@ -12090,13 +12092,6 @@ packages:
 
   /delegates/1.0.0:
     resolution: {integrity: sha512-bd2L678uiWATM6m5Z1VzNCErI3jiGzt6HGY8OVICs40JQq/HALfbyNJmp0UDakEY4pMMaN0Ly5om/B1VI/+xfQ==}
-
-  /dendriform-immer-patch-optimiser/2.1.3:
-    resolution: {integrity: sha512-QG2IegUCdlhycVwsBOJ7SNd18PgzyWPxBivTzuF0E1KFxaU47fHy/frud74A9E66a4WXyFFp9FLLC2XQDkVj7g==}
-    engines: {node: '>=10'}
-    peerDependencies:
-      immer: '9'
-    dev: false
 
   /dendriform-immer-patch-optimiser/2.1.3_immer@9.0.16:
     resolution: {integrity: sha512-QG2IegUCdlhycVwsBOJ7SNd18PgzyWPxBivTzuF0E1KFxaU47fHy/frud74A9E66a4WXyFFp9FLLC2XQDkVj7g==}
@@ -15081,7 +15076,7 @@ packages:
     resolution: {integrity: sha512-wLe+lJHeG8Xt6uEubS4x0LVjS/3kXXu9dGoj9BNnlhYq7Kts0Pbb2pvv5KiI0yaKH/eaiR0LUOBhOVo9ktd05A==}
     dev: false
 
-  /jotai/1.9.2_react@17.0.2:
+  /jotai/1.9.2_immer@9.0.16+react@17.0.2:
     resolution: {integrity: sha512-/893WrniZwoVc0+3JR056r0FTC/tGbgyHco9dfgde6K8TU6XNxrOSw4jCRdDicncw67A37v2GNGzXSpHKbHPmw==}
     engines: {node: '>=12.7.0'}
     peerDependencies:
@@ -15112,6 +15107,7 @@ packages:
       xstate:
         optional: true
     dependencies:
+      immer: 9.0.16
       react: 17.0.2
     dev: false
 
@@ -18717,7 +18713,7 @@ packages:
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0
     dependencies:
-      '@babel/runtime': 7.20.1
+      '@babel/runtime': 7.20.13
       react: 17.0.2
       use-composed-ref: 1.3.0_react@17.0.2
       use-latest: 1.2.1_q5o373oqrklnndq2vhekyuzhxi
@@ -18877,7 +18873,7 @@ packages:
   /redux/4.2.0:
     resolution: {integrity: sha512-oSBmcKKIuIR4ME29/AeNUnl5L+hvBq7OaJWzaptTQJAntaPvxIJqfnjbaEiCzzaIz+XmVILfqAM3Ob0aXLPfjA==}
     dependencies:
-      '@babel/runtime': 7.20.1
+      '@babel/runtime': 7.20.13
     dev: false
 
   /regenerate-unicode-properties/10.1.0:
@@ -18894,7 +18890,6 @@ packages:
 
   /regenerator-runtime/0.13.11:
     resolution: {integrity: sha512-kY1AZVr2Ra+t+piVaJ4gxaFaReZVH40AKNo7UCX6W+dEwBo/2oZJzqfuN1qLq1oL45o56cPaTXELwrTh8Fpggg==}
-    dev: true
 
   /regenerator-transform/0.15.1:
     resolution: {integrity: sha512-knzmNAcuyxV+gQCufkYcvOqX/qIIfHLv0u5x79kRxuGojfYVky1f15TzZEu2Avte8QGepvUNTnLskf8E6X6Vyg==}
@@ -20589,7 +20584,6 @@ packages:
 
   /tslib/2.5.0:
     resolution: {integrity: sha512-336iVw3rtn2BUK7ORdIAHTyxHGRIHVReokCR3XjbckJMK7ms8FysBfhLR8IXnAgy7T0PTPNBWKiH514FOW/WSg==}
-    dev: true
 
   /tsx/3.12.1:
     resolution: {integrity: sha512-Rcg1x+rNe7qwlP8j7kx4VjP/pJo/V57k+17hlrn6a7FuQLNwkaw5W4JF75tYornNVCxkXdSUnqlIT8JY/ttvIw==}
@@ -21002,7 +20996,7 @@ packages:
   /unload/2.2.0:
     resolution: {integrity: sha512-B60uB5TNBLtN6/LsgAf3udH9saB5p7gqJwcFfbOEZ8BcBHnGwCf6G/TGiEqkRAxX7zAFIUtzdrXQSdL3Q/wqNA==}
     dependencies:
-      '@babel/runtime': 7.20.1
+      '@babel/runtime': 7.20.13
       detect-node: 2.1.0
     dev: false
 
