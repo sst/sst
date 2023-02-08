@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.0.3
+
+### Patch Changes
+
+- [`332c5e06d`](https://github.com/serverless-stack/sst/commit/332c5e06d9f187725b6ab5235ae479bde22e3b6c) Thanks [@thdxr](https://github.com/thdxr)! - Remove quote requirement for bind and env commands. Be sure to update your `sst env` and `sst bind` commands to remove the `'`
+
 ## 2.0.2
 
 ### Patch Changes
