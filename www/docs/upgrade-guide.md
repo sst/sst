@@ -46,7 +46,7 @@ The 2.0 upgrade is primarily ergonomic and should not result in any infrastructu
     ```diff
     "scripts": {
     - "dev": "static-site-env -- vite dev",
-    + "dev": "sst env 'vite dev'",
+    + "dev": "sst env vite dev",
     }
     ```
 

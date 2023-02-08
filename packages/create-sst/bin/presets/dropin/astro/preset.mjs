@@ -11,7 +11,7 @@ export default [
     operations: [
       { op: "add", path: "/scripts/sst:deploy", value: "sst deploy" },
       { op: "add", path: "/scripts/sst:dev", value: "sst dev" },
-      { op: "add", path: "/scripts/dev", value: "sst bind 'astro dev'" },
+      { op: "add", path: "/scripts/dev", value: "sst bind astro dev" },
     ],
   }),
   patch({
