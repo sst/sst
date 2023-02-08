@@ -2,8 +2,6 @@ import { Match, Matcher, MatchResult, Template } from "aws-cdk-lib/assertions";
 import { Stack } from "aws-cdk-lib";
 import { App, AppDeployProps, AppProps } from "../../dist/constructs";
 import { ProjectContext, useProject } from "../../dist/project.js";
-import { resolve } from "path";
-import { BootstrapContext } from "../../dist/bootstrap";
 import { useNodeHandler } from "../../dist/runtime/handlers/node.js";
 import { usePythonHandler } from "../../dist/runtime/handlers/python.js";
 import { useDotnetHandler } from "../../dist/runtime/handlers/dotnet.js";
@@ -47,11 +45,6 @@ export async function createApp(props?: Partial<AppDeployProps>) {
     },
   });
   const project = useProject();
-
-  BootstrapContext.provide({
-    version: "test",
-    bucket: "test",
-  });
 
   await useNodeHandler();
   await usePythonHandler();
