@@ -19,7 +19,7 @@ import {
   zipWith,
 } from "remeda";
 import { useParams } from "react-router-dom";
-import type { Metadata } from "../../../../resources/src/Metadata";
+import type { Metadata } from "../../../../sst/src/constructs/Metadata";
 import { useClient } from "./client";
 import {
   GetObjectCommand,
@@ -269,7 +269,7 @@ export function useStacks() {
                       .map((c) => [c.fn!.node, construct]);
                   case "Topic":
                     return construct.data.subscribers
-                      .filter((r) => r.fn)
+                      .filter((r) => r)
                       .map((fn) => [fn!.node, construct]);
                   default:
                     return [];
