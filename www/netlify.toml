@@ -1,4 +1,0 @@
-# Temporary since master uses yarn vs sst2 that uses pnpm
-# Remove after merging to master
-[context.branch-deploy]
-  command = "pnpm run build"
