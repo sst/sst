@@ -183,7 +183,7 @@ module.exports = {
               const splits = params.docPath.split("/");
               const name = splits[splits.length - 1].replace(".md", ".ts");
               return (
-                "https://github.com/serverless-stack/sst/blob/master/packages/resources/src/" +
+                "https://github.com/serverless-stack/sst/blob/master/packages/sst/src/constructs/" +
                 name
               );
             }
