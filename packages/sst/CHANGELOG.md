@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.0.5
+
+### Patch Changes
+
+- [#2445](https://github.com/serverless-stack/sst/pull/2445) [`d7d18fa31`](https://github.com/serverless-stack/sst/commit/d7d18fa318d696b7e1873079d88afa30e9f9fecb) Thanks [@fwang](https://github.com/fwang)! - Api: support NLB route type
+
 ## 2.0.4
 
 ### Patch Changes
