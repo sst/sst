@@ -264,15 +264,13 @@ export function useStacks() {
                     if (!construct.data.consumer) return [];
                     return [[construct.data.consumer.node, construct]];
                   case "Table":
-                    return construct.data.consumers.map((c) => [
-                      c.fn!.node,
-                      construct,
-                    ]);
+                    return construct.data.consumers
+                      .filter((r) => r.fn)
+                      .map((c) => [c.fn!.node, construct]);
                   case "Topic":
-                    return construct.data.subscribers.map((fn) => [
-                      fn!.node,
-                      construct,
-                    ]);
+                    return construct.data.subscribers
+                      .filter((r) => r.fn)
+                      .map((fn) => [fn!.node, construct]);
                   default:
                     return [];
                 }
