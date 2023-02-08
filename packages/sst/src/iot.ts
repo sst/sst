@@ -49,6 +49,10 @@ export const useIOT = Context.memo(async () => {
 
   const fragments = new Map<string, Map<number, Fragment>>();
 
+  device.on("connect", () => {
+    Logger.debug("IoT connected");
+  });
+
   device.on("error", (err) => {
     Logger.debug("IoT error", err);
   });
