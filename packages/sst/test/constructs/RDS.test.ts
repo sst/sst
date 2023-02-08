@@ -111,7 +111,7 @@ test("cdk.cluster contains enableDataApi error", async () => {
   ).toThrow(/Do not configure the "cdk.cluster.enableDataApi"/);
 });
 
-test("cdk.cluster is construct", async () => {
+test("cdk.cluster is imported", async () => {
   const stack = new Stack(await createApp(), "stack");
   const cluster = new RDS(stack, "Cluster", {
     engine: "postgresql11.13",
@@ -137,7 +137,57 @@ test("cdk.cluster is construct", async () => {
   );
 });
 
-test("cdk.cluster is construct: no secret error", async () => {
+test("cdk.cluster is imported: secret imported by partial arn", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  const cluster = new RDS(stack, "Cluster", {
+    engine: "postgresql11.13",
+    defaultDatabaseName: "acme",
+    cdk: {
+      cluster: rds.ServerlessCluster.fromServerlessClusterAttributes(
+        stack,
+        "ICluster",
+        {
+          clusterIdentifier: "my-cluster",
+        }
+      ),
+      secret: secretsManager.Secret.fromSecretAttributes(stack, "ISecret", {
+        secretPartialArn:
+          "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret",
+      }),
+    },
+  });
+  expect(
+    cluster.getFunctionBinding().permissions["secretsmanager:GetSecretValue"][0]
+  ).toBe("arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret*");
+});
+
+test("cdk.cluster is imported: secret imported by full arn", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  const cluster = new RDS(stack, "Cluster", {
+    engine: "postgresql11.13",
+    defaultDatabaseName: "acme",
+    cdk: {
+      cluster: rds.ServerlessCluster.fromServerlessClusterAttributes(
+        stack,
+        "ICluster",
+        {
+          clusterIdentifier: "my-cluster",
+        }
+      ),
+      secret: secretsManager.Secret.fromSecretAttributes(stack, "ISecret", {
+        secretCompleteArn:
+          "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret-123456",
+      }),
+    },
+  });
+  expect(
+    cluster.getFunctionBinding().permissions["secretsmanager:GetSecretValue"][0]
+  ).toBe(
+    "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret-123456"
+  );
+});
+
+test("cdk.cluster is imported: no secret error", async () => {
   const stack = new Stack(await createApp(), "stack");
   expect(
     () =>

@@ -307,8 +307,12 @@ export class RDS extends Construct implements SSTConstruct {
       },
       permissions: {
         "rds-data:*": [this.clusterArn],
-        "secretsmanager:GetSecretValue": [this.secret.secretArn],
-        "secretsmanager:DescribeSecret": [this.secret.secretArn],
+        "secretsmanager:GetSecretValue": [
+          this.secret.secretFullArn || `${this.secret.secretArn}*`,
+        ],
+        "secretsmanager:DescribeSecret": [
+          this.secret.secretFullArn || `${this.secret.secretArn}*`,
+        ],
       },
     };
   }
