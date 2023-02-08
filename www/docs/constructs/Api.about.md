@@ -232,6 +232,23 @@ new Api(stack, "Api", {
 });
 ```
 
+### Configuring NLB routes
+
+You can configure a route to integrate with Network Load Balancers in your VPC.
+
+```js
+new Api(stack, "Api", {
+  routes: {
+    "GET /": {
+      type: "nlb",
+      cdk: {
+        nlbListener,
+      },
+    },
+  },
+});
+```
+
 ### Configuring HTTP proxy routes
 
 You can configure a route to pass the entire request to a publicly routable HTTP endpoint.

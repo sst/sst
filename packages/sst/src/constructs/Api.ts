@@ -26,7 +26,7 @@ import * as apigV2Domain from "./util/apiGatewayV2Domain.js";
 import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog.js";
 
 const PayloadFormatVersions = ["1.0", "2.0"] as const;
-export type ApiPayloadFormatVersion = (typeof PayloadFormatVersions)[number];
+export type ApiPayloadFormatVersion = typeof PayloadFormatVersions[number];
 type ApiHttpMethod = keyof typeof apig.HttpMethod;
 
 /////////////////////
@@ -196,7 +196,7 @@ export interface ApiProps<
   AuthorizerKeys = keyof Authorizers
 > {
   /**
-   * Define the routes for the API. Can be a function, proxy to another API, or point to an ALB
+   * Define the routes for the API. Can be a function, proxy to another API, or point to an load balancer
    *
    * @example
    *
@@ -436,6 +436,7 @@ export type ApiRouteProps<AuthorizerKeys> =
   | ApiFunctionRouteProps<AuthorizerKeys>
   | ApiHttpRouteProps<AuthorizerKeys>
   | ApiAlbRouteProps<AuthorizerKeys>
+  | ApiNlbRouteProps<AuthorizerKeys>
   | ApiGraphQLRouteProps<AuthorizerKeys>;
 
 interface ApiBaseRouteProps<AuthorizerKeys = string> {
@@ -538,6 +539,33 @@ export interface ApiAlbRouteProps<AuthorizersKeys>
      */
     albListener: elb.IApplicationListener;
     integration?: apigIntegrations.HttpAlbIntegrationProps;
+  };
+}
+
+/**
+ * Specify a route handler that forwards to an NLB
+ *
+ * @example
+ * ```js
+ * api.addRoutes(stack, {
+ *   "GET /notes/{id}": {
+ *     type: "nlb",
+ *     cdk: {
+ *       nlbListener: listener,
+ *     }
+ *   }
+ * });
+ * ```
+ */
+export interface ApiNlbRouteProps<AuthorizersKeys>
+  extends ApiBaseRouteProps<AuthorizersKeys> {
+  type: "nlb";
+  cdk: {
+    /**
+     * The listener to the application load balancer used for the integration.
+     */
+    nlbListener: elb.INetworkListener;
+    integration?: apigIntegrations.HttpNlbIntegrationProps;
   };
 }
 
@@ -648,7 +676,8 @@ export class Api<
           function: Fn;
         } & ApiGraphQLRouteProps<any>["pothos"])
       | { type: "url"; url: string }
-      | { type: "alb"; alb: elb.IApplicationListener };
+      | { type: "alb"; alb: elb.IApplicationListener }
+      | { type: "nlb"; nlb: elb.INetworkListener };
   };
   private authorizersData: Record<string, apig.IHttpRouteAuthorizer>;
   private bindingForAllRoutes: SSTConstruct[] = [];
@@ -1144,6 +1173,12 @@ export class Api<
           this.createAlbIntegration(scope, routeKey, routeValue, postfixName),
         ];
       }
+      if (routeValue.type === "nlb") {
+        return [
+          routeValue,
+          this.createNlbIntegration(scope, routeKey, routeValue, postfixName),
+        ];
+      }
       if (routeValue.type === "url") {
         return [
           routeValue,
@@ -1188,7 +1223,7 @@ export class Api<
           `Function definition must be nested under the "function" key in the route props for "${routeKey}". ie. { function: { handler: "myfunc.handler" } }`
         );
       throw new Error(
-        `Invalid route type for "${routeKey}". Must be one of: alb, url, function`
+        `Invalid route type for "${routeKey}". Must be one of: alb, nlb, url, or function`
       );
     })();
 
@@ -1261,6 +1296,30 @@ export class Api<
     this.routesData[routeKey] = {
       type: "alb",
       alb: routeProps.cdk?.albListener!,
+    };
+
+    return integration;
+  }
+
+  private createNlbIntegration(
+    scope: Construct,
+    routeKey: string,
+    routeProps: ApiNlbRouteProps<keyof Authorizers>,
+    postfixName: string
+  ): apig.HttpRouteIntegration {
+    ///////////////////
+    // Create integration
+    ///////////////////
+    const integration = new apigIntegrations.HttpNlbIntegration(
+      `Integration_${postfixName}`,
+      routeProps.cdk?.nlbListener!,
+      routeProps.cdk?.integration
+    );
+
+    // Store route
+    this.routesData[routeKey] = {
+      type: "nlb",
+      nlb: routeProps.cdk?.nlbListener!,
     };
 
     return integration;
