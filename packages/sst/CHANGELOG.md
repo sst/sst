@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.0.6
+
+### Patch Changes
+
+- [`9b2683c99`](https://github.com/serverless-stack/sst/commit/9b2683c997b521c2ec2d5e9bfae4134fc7de2a90) Thanks [@fwang](https://github.com/fwang)! - RDS: fix permission error when secrets imported by partial arn
+
 ## 2.0.5
 
 ### Patch Changes
