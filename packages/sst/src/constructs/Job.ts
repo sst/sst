@@ -416,7 +416,7 @@ export class Job extends Construct implements SSTConstruct {
   }
 
   private createCodeBuildInvoker(): Function {
-    return new Function(this, this.node.id, {
+    const fn = new Function(this, this.node.id, {
       handler: path.join(__dirname, "../support/job-invoker/index.main"),
       runtime: "nodejs16.x",
       timeout: 10,
@@ -434,7 +434,10 @@ export class Job extends Construct implements SSTConstruct {
       nodejs: {
         format: "esm",
       },
+      enableLiveDev: false,
     });
+    fn._disableBind = true;
+    return fn;
   }
 
   private useForCodeBuild(constructs: SSTConstruct[]): void {
