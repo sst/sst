@@ -70,24 +70,6 @@ await esbuild.build({
   outfile: "./dist/support/bridge/bridge.mjs",
 });
 
-// support/job-invoker
-await esbuild.build({
-  keepNames: true,
-  bundle: true,
-  minify: true,
-  platform: "node",
-  target: "esnext",
-  format: "esm",
-  entryPoints: ["./support/job-invoker/index.ts"],
-  banner: {
-    js: [
-      `import { createRequire as topLevelCreateRequire } from 'module';`,
-      `const require = topLevelCreateRequire(import.meta.url);`,
-    ].join(""),
-  },
-  outfile: "./dist/support/job-invoker/index.mjs",
-});
-
 // support/rds-migrator
 // note: do not add topLevelCreateRequire banner b/c the
 //       migrator function will get built again in RDS.
@@ -149,6 +131,26 @@ await Promise.all(
         },
         outdir: `./dist/support/${dir}/`,
       })
+  )
+);
+
+// Move support packages that need to be transpiled, but will be used
+// in sst.Function that will get transpiled again.
+// Note: do not add `createRequire` banner.
+await Promise.all(
+  ["job-invoker"].map((dir) =>
+    esbuild.build({
+      keepNames: true,
+      bundle: true,
+      platform: "node",
+      target: "esnext",
+      format: "esm",
+      entryPoints: [`./support/${dir}/index.ts`],
+      outExtension: {
+        ".js": ".mjs",
+      },
+      outdir: `./dist/support/${dir}/`,
+    })
   )
 );
 

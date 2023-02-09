@@ -3,10 +3,16 @@ import url from "url";
 import path from "path";
 import fs from "fs/promises";
 import { Construct } from "constructs";
-import * as cdk from "aws-cdk-lib";
-import * as iam from "aws-cdk-lib/aws-iam";
-import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as codebuild from "aws-cdk-lib/aws-codebuild";
+import { Duration as CdkDuration } from "aws-cdk-lib";
+import { PolicyStatement, Role, Effect } from "aws-cdk-lib/aws-iam";
+import { AssetCode, Code } from "aws-cdk-lib/aws-lambda";
+import {
+  Project,
+  CfnProject,
+  LinuxBuildImage,
+  BuildSpec,
+  ComputeType,
+} from "aws-cdk-lib/aws-codebuild";
 
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
@@ -163,7 +169,7 @@ export class Job extends Construct implements SSTConstruct {
   public readonly id: string;
   private readonly localId: string;
   private readonly props: JobProps;
-  private readonly job: codebuild.Project;
+  private readonly job: Project;
   private readonly isLiveDevEnabled: boolean;
   public readonly _jobInvoker: Function;
 
@@ -262,10 +268,10 @@ export class Job extends Construct implements SSTConstruct {
     this.addEnvironmentForCodeBuild(name, value);
   }
 
-  private createCodeBuildProject(): codebuild.Project {
+  private createCodeBuildProject(): Project {
     const app = this.node.root as App;
 
-    return new codebuild.Project(this, "JobProject", {
+    return new Project(this, "JobProject", {
       vpc: this.props.cdk?.vpc,
       projectName: app.logicalPrefixedName(this.node.id),
       environment: {
@@ -275,7 +281,7 @@ export class Job extends Construct implements SSTConstruct {
         // purpose of this demo, I use STANDARD_5_0. It takes 30s to boot.
         //buildImage: codebuild.LinuxBuildImage.STANDARD_6_0,
         //buildImage: codebuild.LinuxBuildImage.STANDARD_5_0,
-        buildImage: codebuild.LinuxBuildImage.fromDockerRegistry(
+        buildImage: LinuxBuildImage.fromDockerRegistry(
           "amazon/aws-lambda-nodejs:16"
         ),
         computeType: this.normalizeMemorySize(this.props.memorySize || "3 GB"),
@@ -286,7 +292,7 @@ export class Job extends Construct implements SSTConstruct {
         SST_SSM_PREFIX: { value: useProject().config.ssmPrefix },
       },
       timeout: this.normalizeTimeout(this.props.timeout || "8 hours"),
-      buildSpec: codebuild.BuildSpec.fromObject({
+      buildSpec: BuildSpec.fromObject({
         version: "0.2",
         phases: {
           build: {
@@ -358,17 +364,17 @@ export class Job extends Construct implements SSTConstruct {
           ].join("\n")
         );
 
-        const code = lambda.AssetCode.fromAsset(bundle.out);
+        const code = AssetCode.fromAsset(bundle.out);
         this.updateCodeBuildProjectCode(code, "handler-wrapper.js");
         // This should always be true b/c runtime is always Node.js
       });
     }
   }
 
-  private updateCodeBuildProjectCode(code: lambda.Code, script: string) {
+  private updateCodeBuildProjectCode(code: Code, script: string) {
     // Update job's commands
     const codeConfig = code.bind(this);
-    const project = this.job.node.defaultChild as codebuild.CfnProject;
+    const project = this.job.node.defaultChild as CfnProject;
     project.source = {
       type: "S3",
       location: `${codeConfig.s3Location?.bucketName}/${codeConfig.s3Location?.objectKey}`,
@@ -382,9 +388,9 @@ export class Job extends Construct implements SSTConstruct {
     };
 
     this.attachPermissions([
-      new iam.PolicyStatement({
+      new PolicyStatement({
         actions: ["s3:*"],
-        effect: iam.Effect.ALLOW,
+        effect: Effect.ALLOW,
         resources: [
           `arn:${Stack.of(this).partition}:s3:::${
             codeConfig.s3Location?.bucketName
@@ -418,15 +424,15 @@ export class Job extends Construct implements SSTConstruct {
   private createCodeBuildInvoker(): Function {
     const fn = new Function(this, this.node.id, {
       handler: path.join(__dirname, "../support/job-invoker/index.main"),
-      runtime: "nodejs16.x",
+      runtime: "nodejs18.x",
       timeout: 10,
       memorySize: 1024,
       environment: {
         PROJECT_NAME: this.job.projectName,
       },
       permissions: [
-        new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
+        new PolicyStatement({
+          effect: Effect.ALLOW,
           actions: ["codebuild:StartBuild"],
           resources: [this.job.projectArn],
         }),
@@ -454,9 +460,9 @@ export class Job extends Construct implements SSTConstruct {
       const permissions = bindPermissions(c);
       Object.entries(permissions).forEach(([action, resources]) =>
         this.attachPermissionsForCodeBuild([
-          new iam.PolicyStatement({
+          new PolicyStatement({
             actions: [action],
-            effect: iam.Effect.ALLOW,
+            effect: Effect.ALLOW,
             resources,
           }),
         ])
@@ -465,34 +471,32 @@ export class Job extends Construct implements SSTConstruct {
   }
 
   private attachPermissionsForCodeBuild(permissions: Permissions): void {
-    attachPermissionsToRole(this.job.role as iam.Role, permissions);
+    attachPermissionsToRole(this.job.role as Role, permissions);
   }
 
   private addEnvironmentForCodeBuild(name: string, value: string): void {
-    const project = this.job.node.defaultChild as codebuild.CfnProject;
-    const env = project.environment as codebuild.CfnProject.EnvironmentProperty;
+    const project = this.job.node.defaultChild as CfnProject;
+    const env = project.environment as CfnProject.EnvironmentProperty;
     const envVars =
-      env.environmentVariables as codebuild.CfnProject.EnvironmentVariableProperty[];
+      env.environmentVariables as CfnProject.EnvironmentVariableProperty[];
     envVars.push({ name, value });
   }
 
-  private normalizeMemorySize(
-    memorySize: JobMemorySize
-  ): codebuild.ComputeType {
+  private normalizeMemorySize(memorySize: JobMemorySize): ComputeType {
     if (memorySize === "3 GB") {
-      return codebuild.ComputeType.SMALL;
+      return ComputeType.SMALL;
     } else if (memorySize === "7 GB") {
-      return codebuild.ComputeType.MEDIUM;
+      return ComputeType.MEDIUM;
     } else if (memorySize === "15 GB") {
-      return codebuild.ComputeType.LARGE;
+      return ComputeType.LARGE;
     } else if (memorySize === "145 GB") {
-      return codebuild.ComputeType.X2_LARGE;
+      return ComputeType.X2_LARGE;
     }
 
     throw new Error(`Invalid memory size value for the ${this.node.id} Job.`);
   }
 
-  private normalizeTimeout(timeout: Duration): cdk.Duration {
+  private normalizeTimeout(timeout: Duration): CdkDuration {
     const value = toCdkDuration(timeout);
     if (value.toSeconds() < 5 * 60 || value.toSeconds() > 480 * 60) {
       throw new Error(`Invalid timeout value for the ${this.node.id} Job.`);
