@@ -89,6 +89,12 @@ export const usePythonHandler = Context.memo(async () => {
         recursive: true,
       });
 
+      if (input.props.python?.installCommands) {
+        for (const cmd of input.props.python.installCommands) {
+          await execAsync(cmd);
+        }
+      }
+
       const result = {
         type: "success",
         handler: path.relative(src, path.resolve(input.props.handler!)),

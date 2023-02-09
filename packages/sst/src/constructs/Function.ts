@@ -105,6 +105,11 @@ export interface FunctionProps
   java?: JavaProps;
 
   /**
+   * Used to configure python function properties
+   */
+  python?: PythonProps;
+
+  /**
    * Hooks to run before and after function builds
    */
   hooks?: FunctionHooks;
@@ -476,6 +481,32 @@ export interface NodeJSProps {
    * ```
    */
   sourcemap?: boolean;
+}
+
+/**
+ * Used to configure Python bundling options
+ */
+export interface PythonProps {
+  /**
+   * A list of commands to override the [default installing behavior](Function#bundle) for Python dependencies.
+   *
+   * Each string in the array is a command that'll be run. For example:
+   *
+   * @default "[]"
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   python: {
+   *     installCommands: [
+   *       'export VARNAME="my value"',
+   *       'pip install --index-url https://domain.com/pypi/myprivatemodule/simple/ --extra-index-url https://pypi.org/simple -r requirements.txt .',
+   *     ]
+   *   }
+   * })
+   * ```
+   */
+  installCommands?: string[];
 }
 
 /**
