@@ -54,7 +54,7 @@ jobs:
       - name: Generate
         run: |
           rm -rf ./examples/${{ matrix.example }}
-          pnpm create-sst --template=examples/${{ matrix.example }} ./examples/${{ matrix.example }}
+          ./packages/create-sst/bin/create-sst.mjs --template=examples/${{ matrix.example }} ./examples/${{ matrix.example }}
           find ./examples/${{ matrix.example }}
       - uses: actions/upload-artifact@v3
         with:
