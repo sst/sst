@@ -289,22 +289,7 @@ If you are using [IntelliJ IDEA](https://www.jetbrains.com/idea/), [follow this 
 
 ## Built-in environment variables
 
-SST sets the `IS_LOCAL` environment variable to `true` by default when running inside `sst dev`.
-
-The `process.env.IS_LOCAL` is set in both the stack and function code.
-
-So in your stack code you can do something like.
-
-```js title="stacks/MyStack.js" {3}
-function Stack(ctx) {
-  // Increase the timeout locally
-  const timeout = process.env.IS_LOCAL ? 900 : 15;
-
-  // Rest of the resources
-}
-```
-
-And in your Lambda functions.
+SST sets the `IS_LOCAL` environment variable to `true` for functions running inside `sst dev`.
 
 ```js title="src/lambda.js" {2}
 export async function main(event) {
