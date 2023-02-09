@@ -34,7 +34,7 @@ module.exports = {
       content: `SST v2 is now available! Checkout the <a href="https://docs.sst.dev/upgrade-guide">migration guide</a>`,
       backgroundColor: "#395C6B",
       textColor: "#FFFFFF",
-      isCloseable: true,
+      isCloseable: false,
     },
     navbar: {
       title: "",
