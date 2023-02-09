@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.0.11
+
+### Patch Changes
+
+- [`f224eb94d`](https://github.com/serverless-stack/sst/commit/f224eb94d044541c5457a6a2a42f43e2fb93ecc3) Thanks [@fwang](https://github.com/fwang)! - Job: fix invoker not respecting live flag
+
 ## 2.0.10
 
 ### Patch Changes
