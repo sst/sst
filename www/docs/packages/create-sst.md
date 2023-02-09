@@ -4,12 +4,13 @@ description: "Reference docs for the create-sst CLI."
 ---
 
 import MultiPackagerCode from "@site/src/components/MultiPackagerCode";
+import config from "../../config";
 import TabItem from "@theme/TabItem";
 import HeadlineText from "@site/src/components/HeadlineText";
 
 <HeadlineText>
 
-A simple CLI that sets up a modern web application powered by SST.
+A simple CLI to create new SST projects.
 
 </HeadlineText>
 
@@ -43,7 +44,9 @@ pnpm create sst
 </TabItem>
 </MultiPackagerCode>
 
-This will prompt you for the database option and a folder name. And it will bootstrap the application in that directory.
+This will prompt you for a name and bootstrap a new project in that directory.
+
+---
 
 ## Options
 
@@ -51,20 +54,60 @@ Pass in the following (optional) options.
 
 ### `--template`
 
-Instead of the standard starter, you can choose to use one of our minimal setups or examples as the template to bootstrap.
+Instead of the standard starter, you can choose to use one of our <a href={`${config.github}//tree/master/packages/create-sst/bin/presets`}>minimal setups or examples</a> as the template to bootstrap.
+
+<MultiPackagerCode>
+<TabItem value="npm">
 
 ```bash
 npx create-sst@latest --template=other/go
 ```
 
+</TabItem>
+<TabItem value="yarn">
+
+```bash
+yarn create sst --template=other/go
+```
+
+</TabItem>
+<TabItem value="pnpm">
+
+```bash
+pnpm create sst --template=other/go
+```
+
+</TabItem>
+</MultiPackagerCode>
+
+---
+
 ## Arguments
 
 ### `<destination>`
 
-Specify a destination directory instead of typing it into the interactive prompt
+Specify a project name, instead of typing it into the interactive prompt.
+
+<MultiPackagerCode>
+<TabItem value="npm">
 
 ```bash
 npx create-sst@latest my-sst-app
 ```
 
-Note that extra `--` when using `npm init`.
+</TabItem>
+<TabItem value="yarn">
+
+```bash
+yarn create sst my-sst-app
+```
+
+</TabItem>
+<TabItem value="pnpm">
+
+```bash
+pnpm create sst my-sst-app
+```
+
+</TabItem>
+</MultiPackagerCode>

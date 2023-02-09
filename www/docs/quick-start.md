@@ -1,7 +1,7 @@
 ---
 id: quick-start
 title: Quick Start
-description: "Take SST for a spin and create your first full-stack serverless app."
+description: "Take SST for a spin and create your project."
 ---
 
 import config from "../config";
@@ -14,7 +14,7 @@ export const ConsoleUrl = ({url}) =>
 
 <HeadlineText>
 
-SST is a collection of <a href={ `${ config.github }/tree/master/packages` }>npm packages</a> that allow you to define your infrastructure, write functions, and connect it to your frontend.
+Take SST for a spin and create your first project.
 
 </HeadlineText>
 
@@ -23,8 +23,6 @@ SST is a collection of <a href={ `${ config.github }/tree/master/packages` }>npm
 ## 0. Prerequisites
 
 SST is built with Node, so make sure your local machine has it installed; [Node.js 14](https://nodejs.org/) and [npm 7](https://www.npmjs.com/).
-
----
 
 ### AWS credentials
 
@@ -40,7 +38,7 @@ Create a new SST app using the [`create-sst`](packages/create-sst.md) CLI.
 <TabItem value="npm">
 
 ```bash
-npx create-sst@one my-sst-app
+npx create-sst@latest my-sst-app
 ```
 
 </TabItem>
@@ -59,8 +57,6 @@ pnpm create sst my-sst-app
 
 </TabItem>
 </MultiPackagerCode>
-
----
 
 ### Install dependencies
 
@@ -170,7 +166,7 @@ Now our app has been **deployed** to **AWS** and it's **connected** to our **loc
 
 The `sst dev` command also powers a web based dashboard, called the [SST Console](console.md). Head over to the URL above or simply — **<ConsoleUrl url={config.console} />**
 
-Select the **API** tab on the left, and click **Send**. This will make a request to the above endpoint in AWS.
+Select the **API** tab on the left, and click **Send**. This will make a request to the endpoint in AWS.
 
 ![SST Console API tab](/img/quick-start/sst-console-api.png)
 
