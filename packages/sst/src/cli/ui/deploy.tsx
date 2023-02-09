@@ -178,7 +178,7 @@ function logicalIdToCdkPath(
   logicalId: string
 ) {
   const found = Object.entries(
-    assembly.manifest.artifacts?.[stack].metadata || {}
+    assembly.manifest.artifacts?.[stack]?.metadata || {}
   ).find(
     ([_key, value]) =>
       value[0]?.type === "aws:cdk:logicalId" && value[0]?.data === logicalId
