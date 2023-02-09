@@ -317,13 +317,13 @@ Following are the steps to upgrade.
       For example, if you have two buckets with the same id.
 
       ```diff
-      - new Bucket(stack), "bucket");
-      - new Bucket(stack), "bucket");
+      - new Bucket(stack, "bucket");
+      - new Bucket(stack, "bucket");
 
-      + new Bucket(stack), "usersFiles", {
+      + new Bucket(stack, "usersFiles", {
       +   cdk: { id: "bucket" },
       + });
-      + new Bucket(stack), "adminFiles", {
+      + new Bucket(stack, "adminFiles", {
       +   cdk: { id: "bucket" },
       + });
       ```
