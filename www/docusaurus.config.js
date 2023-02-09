@@ -31,7 +31,7 @@ module.exports = {
     metaImage: "img/og-image.png",
     announcementBar: {
       id: "announcement",
-      content: `If you like SST, <a target="_blank" href="${config.github}">give it a star on GitHub</a>! <span class="icon" />`,
+      content: `SST v2 is now available! Checkout the <a href="https://docs.sst.dev/upgrade-guide">migration guide</a>`,
       backgroundColor: "#395C6B",
       textColor: "#FFFFFF",
       isCloseable: true,
