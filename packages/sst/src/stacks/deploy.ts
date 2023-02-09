@@ -106,11 +106,14 @@ export async function deploy(
   const deployment = new CloudFormationDeployments({
     sdkProvider: provider,
   });
+  const stackTags = Object.entries(stack.tags ?? {})
+    .map(([Key, Value]) => ({ Key, Value }));
   try {
     await addInUseExports(stack);
     const result = await deployment.deployStack({
       stack: stack as any,
       quiet: true,
+      tags: stackTags,
       deploymentMethod: {
         method: "direct",
       },
