@@ -55,7 +55,7 @@ export const useBootstrap = Context.memo(async () => {
       await bootstrapCDK();
     }
     if (needToBootstrapSST) {
-      await bootstrapSST();
+      await bootstrapSST({});
 
       // fetch bootstrap status
       sstStatus = await loadSSTStatus();
@@ -113,7 +113,7 @@ async function loadCDKStatus() {
   return false;
 }
 
-async function bootstrapSST() {
+export async function bootstrapSST(tags: Record<string, string>) {
   // Create bootstrap stack
   const project = useProject();
   const app = new App();
@@ -124,7 +124,6 @@ async function bootstrapSST() {
   });
 
   // Add tags to stack
-  const tags: Record<string, string> = {};
   for (const [key, value] of Object.entries(tags)) {
     Tags.of(app).add(key, value);
   }
