@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.0.7
+
+### Patch Changes
+
+- [`d83ab3c7c`](https://github.com/serverless-stack/sst/commit/d83ab3c7cd00a42008602ecac10e5f798d73e544) Thanks [@thdxr](https://github.com/thdxr)! - Nicer error messages when function handler is not found
+
 ## 2.0.6
 
 ### Patch Changes
