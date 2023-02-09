@@ -50,7 +50,7 @@ The 2.0 upgrade is primarily ergonomic and should not result in any infrastructu
     }
     ```
 
-#### Config
+#### App configuration
 
 `sst.json` is now specified as a `sst.config.ts` file. The `main` field has been replaced with a function that can directly import your stacks.
 
@@ -84,7 +84,7 @@ export default {
 1. `sst start` has been renamed to `sst dev` (although both will work)
 2. `sst load-config` has been removed — [see v1.16](#upgrade-to-v116)
 
-#### Constructs
+#### Stacks code
 
 1. In stacks code, process.env.IS_LOCAL is no longer available. Please is app.mode to see if it's running in "dev" mode. `app.local` will continue to work but likely will be deprecated at some point.
 1. Function
@@ -163,6 +163,12 @@ export default {
    /// <reference path="../.sst/types/index.ts" />
    ```
    Make sure you specify the path correctly
+
+#### Secrets
+1. The SSM parameter path for storing the secret values have changed in v1.16. If you are upgrading from a version prior to v1.16, run this `sst transform` command in each stage with secrets set:
+    ```bash
+    sst transform resource-binding-secrets
+    ```
 
 ---
 
