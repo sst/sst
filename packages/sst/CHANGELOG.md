@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.0.12
+
+### Patch Changes
+
+- [`119667da1`](https://github.com/serverless-stack/sst/commit/119667da1204720bbb8a59163bfea693d911ebf3) Thanks [@thdxr](https://github.com/thdxr)! - Fix sst deploy and remove filter
+
 ## 2.0.11
 
 ### Patch Changes
