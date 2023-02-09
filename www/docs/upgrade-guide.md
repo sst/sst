@@ -198,20 +198,37 @@ export default {
 
 2. GraphQLApi: The `GraphQLApi` construct is deprecated, and will be removed in SST v2. **Use the `Api` construct with a `graphql` route instead**.
 
-   ```diff
-   - new GraphQLApi(stack, "api", {
-   -   server: "src/graphql.handler",
-   - });
+    ```diff
+    - new GraphQLApi(stack, "api", {
+    -   server: "src/graphql.handler",
+    - });
 
-   + new Api(stack, "api", {
-   +   routes: {
-   +     "POST /": {
-   +       type: "graphql",
-   +       function: "src/graphql.handler",
-   +     }
-   +   }
-   + });
-   ```
+    + new Api(stack, "api", {
+    +   routes: {
+    +     "POST /": {
+    +       type: "graphql",
+    +       function: "src/graphql.handler",
+    +     }
+    +   }
+    + });
+    ```
+
+    Note that the `GraphQLApi` construct used to create both `GET` and `POST` routes. In most cases, only `POST` is used. You can also create the `GET` route like this:
+
+    ```diff
+    new Api(stack, "api", {
+      routes: {
+    +   "GET /": {
+    +     type: "graphql",
+    +     function: "src/graphql.handler",
+    +   },
+        "POST /": {
+          type: "graphql",
+          function: "src/graphql.handler",
+        }
+      }
+    });
+    ```
 
 3. ViteStaticSite: The `ViteStaticSite` construct is deprecated, and will be removed in SST v2. **Use the `StaticSite` construct instead. Specify `buildCommand`, `buildOutput`, and rename `typesPath` to `vite.types`**.
 
