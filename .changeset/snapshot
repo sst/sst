@@ -6,6 +6,6 @@ sed -i.bak -e '3,6d' .changeset/config.json
 pnpm changeset version --snapshot 
 cp packages/sst/package.json packages/sst/dist/package.json
 sed -i.bak -e '2,5d' packages/sst/dist/package.json
-pnpm changeset publish --no-git-tag --tag=latest
+pnpm changeset publish --no-git-tag --tag=snapshot
 cp .changeset/config.json.bak .changeset/config.json
 git checkout '**/package.json' '**/CHANGELOG.md' '.changeset'
