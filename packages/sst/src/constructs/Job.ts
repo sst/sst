@@ -170,7 +170,6 @@ export class Job extends Construct implements SSTConstruct {
   private readonly localId: string;
   private readonly props: JobProps;
   private readonly job: Project;
-  private readonly isLiveDevEnabled: boolean;
   public readonly _jobInvoker: Function;
 
   constructor(scope: Construct, id: string, props: JobProps) {
@@ -188,10 +187,11 @@ export class Job extends Construct implements SSTConstruct {
       .replace(/\$/g, "-")
       .replace(/\//g, "-")
       .replace(/\./g, "-");
-    this.isLiveDevEnabled = this.props.enableLiveDev === false ? false : true;
+    const isLiveDevEnabled =
+      app.local && (this.props.enableLiveDev === false ? false : true);
 
     this.job = this.createCodeBuildProject();
-    if (app.local && this.isLiveDevEnabled) {
+    if (isLiveDevEnabled) {
       this._jobInvoker = this.createLocalInvoker();
     } else {
       this._jobInvoker = this.createCodeBuildInvoker();
@@ -309,66 +309,46 @@ export class Job extends Construct implements SSTConstruct {
     const app = this.node.root as App;
 
     // Handle remove (ie. sst remove)
-    if (app.mode !== "deploy") {
-      // do nothing
-    }
-    // Handle build
-    else {
-      useDeferredTasks().add(async () => {
-        // Build function
-        /*
-        const bundled = await Runtime.Handler.bundle({
-          id: this.localId,
-          root: app.appPath,
-          handler,
-          runtime: "nodejs16.x",
-          srcPath,
-          bundle
-        })!;
-        */
-        // TODO: Fix
-        const bundle = await useRuntimeHandlers().build(
-          this.node.addr,
-          "deploy"
-        );
+    if (app.mode === "remove") return;
 
-        // handle copy files
+    useDeferredTasks().add(async () => {
+      // Build function
+      const bundle = await useRuntimeHandlers().build(this.node.addr, "deploy");
 
-        // create wrapper that calls the handler
-        if (bundle.type === "error")
-          throw new Error(`Failed to build job "${this.props.handler}"`);
-        const parsed = path.parse(bundle.handler);
-        await fs.writeFile(
-          path.join(bundle.out, "handler-wrapper.js"),
-          [
-            `console.log("")`,
-            `console.log("//////////////////////")`,
-            `console.log("// Start of the job //")`,
-            `console.log("//////////////////////")`,
-            `console.log("")`,
-            `import { ${parsed.ext.substring(1)} } from "./${path.join(
-              parsed.dir,
-              parsed.name
-            )}.mjs";`,
-            `const event = JSON.parse(process.env.SST_PAYLOAD);`,
-            `const result = await ${parsed.name}(event);`,
-            `console.log("")`,
-            `console.log("----------------------")`,
-            `console.log("")`,
-            `console.log("Result:", result);`,
-            `console.log("")`,
-            `console.log("//////////////////////")`,
-            `console.log("//  End of the job  //")`,
-            `console.log("//////////////////////")`,
-            `console.log("")`,
-          ].join("\n")
-        );
+      // create wrapper that calls the handler
+      if (bundle.type === "error")
+        throw new Error(`Failed to build job "${this.props.handler}"`);
 
-        const code = AssetCode.fromAsset(bundle.out);
-        this.updateCodeBuildProjectCode(code, "handler-wrapper.js");
-        // This should always be true b/c runtime is always Node.js
-      });
-    }
+      const parsed = path.parse(bundle.handler);
+      const importName = parsed.ext.substring(1);
+      const importPath = `./${path.join(parsed.dir, parsed.name)}.mjs`;
+      await fs.writeFile(
+        path.join(bundle.out, "handler-wrapper.mjs"),
+        [
+          `console.log("")`,
+          `console.log("//////////////////////")`,
+          `console.log("// Start of the job //")`,
+          `console.log("//////////////////////")`,
+          `console.log("")`,
+          `import { ${importName} } from "${importPath}";`,
+          `const event = JSON.parse(process.env.SST_PAYLOAD);`,
+          `const result = await ${importName}(event);`,
+          `console.log("")`,
+          `console.log("----------------------")`,
+          `console.log("")`,
+          `console.log("Result:", result);`,
+          `console.log("")`,
+          `console.log("//////////////////////")`,
+          `console.log("//  End of the job  //")`,
+          `console.log("//////////////////////")`,
+          `console.log("")`,
+        ].join("\n")
+      );
+
+      const code = AssetCode.fromAsset(bundle.out);
+      this.updateCodeBuildProjectCode(code, "handler-wrapper.mjs");
+      // This should always be true b/c runtime is always Node.js
+    });
   }
 
   private updateCodeBuildProjectCode(code: Code, script: string) {
