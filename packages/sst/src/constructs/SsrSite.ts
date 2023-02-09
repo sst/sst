@@ -15,7 +15,12 @@ import {
   RemovalPolicy,
   CustomResource,
 } from "aws-cdk-lib";
-import { Bucket, BucketProps, IBucket } from "aws-cdk-lib/aws-s3";
+import {
+  BlockPublicAccess,
+  Bucket,
+  BucketProps,
+  IBucket,
+} from "aws-cdk-lib/aws-s3";
 import { Role, Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import {
   Function,
@@ -44,6 +49,13 @@ import {
   CacheQueryStringBehavior,
   CacheHeaderBehavior,
   CacheCookieBehavior,
+  FunctionEventType,
+  FunctionCode,
+  Function as CloudfrontFunction,
+  OriginRequestPolicy,
+  OriginRequestCookieBehavior,
+  OriginRequestQueryStringBehavior,
+  OriginRequestHeaderBehavior,
 } from "aws-cdk-lib/aws-cloudfront";
 import { ICertificate } from "aws-cdk-lib/aws-certificatemanager";
 import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
@@ -83,9 +95,9 @@ export type SsrBuildConfig = {
   clientBuildVersionedSubDir: string;
 };
 
-export interface SsrDomainProps extends BaseSiteDomainProps {}
-export interface SsrSiteReplaceProps extends BaseSiteReplaceProps {}
-export interface SsrCdkDistributionProps extends BaseSiteCdkDistributionProps {}
+export interface SsrDomainProps extends BaseSiteDomainProps { }
+export interface SsrSiteReplaceProps extends BaseSiteReplaceProps { }
+export interface SsrCdkDistributionProps extends BaseSiteCdkDistributionProps { }
 export interface SsrSiteProps {
   /**
    * Bind resources for the function
@@ -442,8 +454,7 @@ export class SsrSite extends Construct implements SSTConstruct {
       },
       permissions: {
         "ssm:GetParameters": [
-          `arn:${Stack.of(this).partition}:ssm:${app.region}:${
-            app.account
+          `arn:${Stack.of(this).partition}:ssm:${app.region}:${app.account
           }:parameter${getParameterPath(this, "url")}`,
         ],
       },
@@ -541,8 +552,8 @@ export class SsrSite extends Construct implements SSTConstruct {
     const script = path.resolve(__dirname, "../support/base-site-archiver.mjs");
     const fileSizeLimit = app.isRunningSSTTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
-        this.props.sstTestFileSizeLimitOverride || 200
+      // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
+      this.props.sstTestFileSizeLimitOverride || 200
       : 200;
     const result = spawn.sync(
       "node",
@@ -620,7 +631,8 @@ export class SsrSite extends Construct implements SSTConstruct {
     else {
       const bucketProps = cdk?.bucket as BucketProps;
       return new Bucket(this, "S3Bucket", {
-        publicReadAccess: true,
+        publicReadAccess: false,
+        blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
         autoDeleteObjects: true,
         removalPolicy: RemovalPolicy.DESTROY,
         ...bucketProps,
@@ -808,6 +820,32 @@ export class SsrSite extends Construct implements SSTConstruct {
     });
 
     return {
+      functionAssociations: [
+        {
+          eventType: FunctionEventType.VIEWER_REQUEST,
+          function: new CloudfrontFunction(this, "CloudfrontFunction", {
+            code: FunctionCode.fromInline(
+              `function handler(event) {
+                    var request = event.request;
+                    request.headers["x-forwarded-host"] = request.headers.host;
+                    return request;
+                  }`
+            ),
+          }),
+        },
+      ],
+      originRequestPolicy: new OriginRequestPolicy(
+        this,
+        "OriginRequestPolicy",
+        {
+          cookieBehavior: OriginRequestCookieBehavior.all(),
+          queryStringBehavior: OriginRequestQueryStringBehavior.all(),
+          headerBehavior: OriginRequestHeaderBehavior.allowList(
+            "X-Forwarded-Host",
+            "Referer"
+          ),
+        }
+      ),
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       origin: new HttpOrigin(Fn.parseDomainName(fnUrl.url)),
       allowedMethods: AllowedMethods.ALLOW_ALL,
@@ -826,6 +864,32 @@ export class SsrSite extends Construct implements SSTConstruct {
     const cfDistributionProps = cdk?.distribution || {};
 
     return {
+      functionAssociations: [
+        {
+          eventType: FunctionEventType.VIEWER_REQUEST,
+          function: new CloudfrontFunction(this, "CloudfrontFunction", {
+            code: FunctionCode.fromInline(
+              `function handler(event) {
+                    var request = event.request;
+                    request.headers["x-forwarded-host"] = request.headers.host;
+                    return request;
+                  }`
+            ),
+          }),
+        },
+      ],
+      originRequestPolicy: new OriginRequestPolicy(
+        this,
+        "OriginRequestPolicy",
+        {
+          cookieBehavior: OriginRequestCookieBehavior.all(),
+          queryStringBehavior: OriginRequestQueryStringBehavior.all(),
+          headerBehavior: OriginRequestHeaderBehavior.allowList(
+            "X-Forwarded-Host",
+            "Referer"
+          ),
+        }
+      ),
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       origin,
       allowedMethods: AllowedMethods.ALLOW_ALL,
