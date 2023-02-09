@@ -1,0 +1,10 @@
+{
+  "extends": "@tsconfig/node16/tsconfig.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "baseUrl": ".",
+    "paths": {
+      "@layer-chrome-aws-lambda/core/*": ["../core/src/*"]
+    }
+  }
+}

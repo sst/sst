@@ -1,0 +1,12 @@
+{
+  "name": "@graphql-dynamo/graphql",
+  "version": "0.0.0",
+  "type": "module",
+  "dependencies": {
+    "wonka": "^6.1.2",
+    "@genql/runtime": "^2.10.0"
+  },
+  "devDependencies": {
+    "@genql/cli": "^2.10.0"
+  }
+}
