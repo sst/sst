@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.0.10
+
+### Patch Changes
+
+- [`7b2debf10`](https://github.com/serverless-stack/sst/commit/7b2debf108cde084ed155d8576d226a911789aeb) Thanks [@thdxr](https://github.com/thdxr)! - Allow setting tags on bootstrap stack
+
 ## 2.0.9
 
 ### Patch Changes
