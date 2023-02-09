@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.0.13
+
+### Patch Changes
+
+- [`69f491f0a`](https://github.com/serverless-stack/sst/commit/69f491f0a8276e6ae6708f667d37beb4293a2d67) Thanks [@fwang](https://github.com/fwang)! - Job: fix createRequire banner added twice
+
+- [#2457](https://github.com/serverless-stack/sst/pull/2457) [`bb1e79e42`](https://github.com/serverless-stack/sst/commit/bb1e79e42d621ac6b61d3b6f3fd5557aaf255be4) Thanks [@RichiCoder1](https://github.com/RichiCoder1)! - fix: send tags with deployment call
+
 ## 2.0.12
 
 ### Patch Changes
