@@ -185,9 +185,9 @@ new Api(stack, "Api", {
 
 ### routes?
 
-_Type_ : <span class="mono">Record&lt;<span class="mono">string</span>, <span class='mono'><span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span></span> | <span class="mono">[ApiFunctionRouteProps](#apifunctionrouteprops)</span> | <span class="mono">[ApiHttpRouteProps](#apihttprouteprops)</span> | <span class="mono">[ApiAlbRouteProps](#apialbrouteprops)</span> | <span class="mono">[ApiGraphQLRouteProps](#apigraphqlrouteprops)</span></span>&gt;</span>
+_Type_ : <span class="mono">Record&lt;<span class="mono">string</span>, <span class='mono'><span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span></span> | <span class="mono">[ApiFunctionRouteProps](#apifunctionrouteprops)</span> | <span class="mono">[ApiHttpRouteProps](#apihttprouteprops)</span> | <span class="mono">[ApiAlbRouteProps](#apialbrouteprops)</span> | <span class="mono">[ApiNlbRouteProps](#apinlbrouteprops)</span> | <span class="mono">[ApiGraphQLRouteProps](#apigraphqlrouteprops)</span></span>&gt;</span>
 
-Define the routes for the API. Can be a function, proxy to another API, or point to an ALB
+Define the routes for the API. Can be a function, proxy to another API, or point to an load balancer
 ```js
 new Api(stack, "api", {
   routes: {
@@ -317,7 +317,7 @@ addRoutes(scope, routes)
 ```
 _Parameters_
 - __scope__ <span class="mono">[Construct](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)</span>
-- __routes__ <span class="mono">Record&lt;<span class="mono">string</span>, <span class='mono'><span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span></span> | <span class="mono">[ApiFunctionRouteProps](#apifunctionrouteprops)</span> | <span class="mono">[ApiHttpRouteProps](#apihttprouteprops)</span> | <span class="mono">[ApiAlbRouteProps](#apialbrouteprops)</span> | <span class="mono">[ApiGraphQLRouteProps](#apigraphqlrouteprops)</span></span>&gt;</span>
+- __routes__ <span class="mono">Record&lt;<span class="mono">string</span>, <span class='mono'><span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span></span> | <span class="mono">[ApiFunctionRouteProps](#apifunctionrouteprops)</span> | <span class="mono">[ApiHttpRouteProps](#apihttprouteprops)</span> | <span class="mono">[ApiAlbRouteProps](#apialbrouteprops)</span> | <span class="mono">[ApiNlbRouteProps](#apinlbrouteprops)</span> | <span class="mono">[ApiGraphQLRouteProps](#apigraphqlrouteprops)</span></span>&gt;</span>
 
 
 Adds routes to the Api after it has been created.
@@ -556,7 +556,7 @@ _Type_ : <span class="mono">"alb"</span>
 
 ### cdk.albListener
 
-_Type_ : <span class="mono">[IApplicationListener](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IApplicationListener.IApplicationListener.html)</span>
+_Type_ : <span class="mono">[IApplicationListener](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_elasticloadbalancingv2.IApplicationListener.html)</span>
 
 The listener to the application load balancer used for the integration.
 ### cdk.integration?
@@ -612,6 +612,41 @@ String literal to signify that the authorizer is JWT authorizer.
 _Type_ : <span class="mono">[HttpJwtAuthorizer](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-authorizers-alpha.HttpJwtAuthorizer.html)</span>
 
 This allows you to override the default settings this construct uses internally to create the authorizer.
+
+## ApiNlbRouteProps
+Specify a route handler that forwards to an NLB
+```js
+api.addRoutes(stack, {
+  "GET /notes/{id}": {
+    type: "nlb",
+    cdk: {
+      nlbListener: listener,
+    }
+  }
+});
+```
+### authorizationScopes?
+
+_Type_ : <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
+
+### authorizer?
+
+_Type_ : <span class='mono'><span class="mono">"none"</span> | <span class="mono">"iam"</span> | <span class="mono">string</span></span>
+
+### type
+
+_Type_ : <span class="mono">"nlb"</span>
+
+
+### cdk.integration?
+
+_Type_ : <span class="mono">[HttpNlbIntegrationProps](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-integrations-alpha.HttpNlbIntegrationProps.html)</span>
+
+### cdk.nlbListener
+
+_Type_ : <span class="mono">[INetworkListener](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_elasticloadbalancingv2.INetworkListener.html)</span>
+
+The listener to the application load balancer used for the integration.
 
 ## ApiAccessLogProps
 ### destinationArn?

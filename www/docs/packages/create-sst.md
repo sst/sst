@@ -5,8 +5,15 @@ description: "Reference docs for the create-sst CLI."
 
 import MultiPackagerCode from "@site/src/components/MultiPackagerCode";
 import TabItem from "@theme/TabItem";
+import HeadlineText from "@site/src/components/HeadlineText";
 
-A simple CLI [`create-sst`](https://www.npmjs.com/package/create-sst) that sets up a modern web application powered by SST
+<HeadlineText>
+
+A simple CLI that sets up a modern web application powered by SST.
+
+</HeadlineText>
+
+---
 
 ## Usage
 

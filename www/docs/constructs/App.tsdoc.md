@@ -98,11 +98,6 @@ Adds additional default Permissions to be applied to all Lambda functions in the
 ```js
 app.addDefaultFunctionPermissions(["s3"])
 ```
-### finish
-
-```ts
-finish()
-```
 ### logicalPrefixedName
 
 ```ts
