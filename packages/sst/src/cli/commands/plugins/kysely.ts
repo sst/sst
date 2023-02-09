@@ -82,7 +82,7 @@ export const useKyselyTypeGenerator = Context.memo(async () => {
     const transformer = new Transformer();
     const nodes = transformer.transform({
       dialect: new PostgresDialect(),
-      camelCase: (db.types.camelCase as any) === "true",
+      camelCase: (db.types.camelCase as any) === true,
       metadata: new DatabaseMetadata(metadata, new EnumCollection()),
     });
     const lastIndex = nodes.length - 1;
