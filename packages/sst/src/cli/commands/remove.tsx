@@ -51,7 +51,11 @@ export const remove = (program: Program) =>
       const target = assembly.stacks.filter(
         (s) =>
           !args.filter ||
-          s.stackName.toLowerCase().includes(args.filter.toLowerCase())
+          s.id
+            .toLowerCase()
+            .replace(project.config.name.toLowerCase(), "")
+            .replace(project.config.stage.toLowerCase(), "")
+            .includes(args.filter.toLowerCase())
       );
       if (!target.length) {
         console.log(`No stacks found matching ${blue(args.filter!)}`);

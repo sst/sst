@@ -125,7 +125,7 @@ export function printDeploymentResults(
     Colors.gap();
     Colors.line(
       Colors.success(`✔`),
-      Colors.bold(remove ? `  Removed:` : ` Deployed:`)
+      Colors.bold(remove ? ` Removed:` : ` Deployed:`)
     );
     for (const [stack, result] of success) {
       const outputs = Object.entries(result.outputs).filter(
