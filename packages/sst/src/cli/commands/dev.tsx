@@ -146,6 +146,8 @@ export const dev = (program: Program) =>
               Colors.danger.bold(evt.properties.errorMessage)
             );
             for (const line of evt.properties.trace || []) {
+              // Skip double printing error message
+              if (line.includes(evt.properties.errorMessage)) continue;
               Colors.line("  ", `${dim(line)}`);
             }
             end(evt.properties.requestID);

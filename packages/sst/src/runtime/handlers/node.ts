@@ -81,9 +81,10 @@ export const useNodeHandler = Context.memo(async () => {
           return fsSync.existsSync(file);
         })!;
       if (!file)
-        throw new Error(
-          `Cannot find a handler file for "${input.props.handler}"`
-        );
+        return {
+          type: "error",
+          errors: [`Could not find file for handler ${input.props.handler}`],
+        };
 
       const nodejs = input.props.nodejs || {};
       const isESM = (nodejs.format || "esm") === "esm";

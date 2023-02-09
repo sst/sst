@@ -14,11 +14,20 @@ const file = [".js", ".jsx", ".mjs", ".cjs"]
     return fs.existsSync(file);
   })!;
 
-let mod: any;
+let fn: any;
 
 try {
   const { href } = url.pathToFileURL(file);
-  mod = await import(href);
+  const mod = await import(href);
+  const handler = parsed.ext.substring(1);
+  fn = mod[handler];
+  if (!fn) {
+    throw new Error(
+      `Function "${handler}" not found in "${
+        input.handler
+      }". Found ${Object.keys(mod).join(", ")}`
+    );
+  }
   // if (!mod) mod = require(file);
 } catch (ex: any) {
   await fetch(`${input.url}/runtime/init/error`, {
@@ -64,7 +73,7 @@ while (true) {
     context.awsRequestId;
 
   try {
-    response = await mod[parsed.ext.substring(1)](request, context);
+    response = await fn(request, context);
   } catch (ex: any) {
     await fetch(
       `${input.url}/runtime/invocation/${context.awsRequestId}/error`,
