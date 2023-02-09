@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.0.9
+
+### Patch Changes
+
+- [`e987ab02c`](https://github.com/serverless-stack/sst/commit/e987ab02c33de45cf20d3e1beb92f38c9472b841) Thanks [@thdxr](https://github.com/thdxr)! - fix logical id mapping when metadata isn't available
+
 ## 2.0.8
 
 ### Patch Changes
