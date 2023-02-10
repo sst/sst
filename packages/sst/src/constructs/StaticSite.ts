@@ -14,7 +14,7 @@ import {
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as s3Assets from "aws-cdk-lib/aws-s3-assets";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
-import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
@@ -833,15 +833,19 @@ interface ImportMeta {
       },
     });
 
-    stack.customResourceHandler.role?.addToPrincipalPolicy(
-      new PolicyStatement({
-        effect: Effect.ALLOW,
-        actions: [
-          "cloudfront:GetInvalidation",
-          "cloudfront:CreateInvalidation",
-        ],
-        resources: [
-          `arn:${stack.partition}:cloudfront::${stack.account}:distribution/${this.distribution.distributionId}`,
+    stack.customResourceHandler.role?.attachInlinePolicy(
+      new Policy(this, "CloudFrontInvalidatorPolicy", {
+        statements: [
+          new PolicyStatement({
+            effect: Effect.ALLOW,
+            actions: [
+              "cloudfront:GetInvalidation",
+              "cloudfront:CreateInvalidation",
+            ],
+            resources: [
+              `arn:${stack.partition}:cloudfront::${stack.account}:distribution/${this.distribution.distributionId}`,
+            ],
+          }),
         ],
       })
     );
