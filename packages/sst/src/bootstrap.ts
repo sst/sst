@@ -1,12 +1,19 @@
 import url from "url";
 import path from "path";
-import { bold, dim, red } from "colorette";
+import { bold, dim } from "colorette";
 import { spawn } from "child_process";
 import {
   DescribeStacksCommand,
   CloudFormationClient,
 } from "@aws-sdk/client-cloudformation";
-import { Tags, Stack, RemovalPolicy, App, CfnOutput } from "aws-cdk-lib";
+import {
+  Duration,
+  Tags,
+  Stack,
+  RemovalPolicy,
+  App,
+  CfnOutput,
+} from "aws-cdk-lib";
 import { Function, Runtime, Code } from "aws-cdk-lib/aws-lambda";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { PolicyStatement } from "aws-cdk-lib/aws-iam";
@@ -33,7 +40,7 @@ import { Stacks } from "./stacks/index.js";
 const STACK_NAME = "SSTBootstrap";
 const OUTPUT_VERSION = "Version";
 const OUTPUT_BUCKET = "BucketName";
-const LATEST_VERSION = "6";
+const LATEST_VERSION = "7";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 export const useBootstrap = Context.memo(async () => {
@@ -110,7 +117,6 @@ async function loadCDKStatus() {
       throw e;
     }
   }
-  return false;
 }
 
 export async function bootstrapSST(tags: Record<string, string>) {
@@ -163,7 +169,10 @@ export async function bootstrapSST(tags: Record<string, string>) {
       }),
     ],
   });
-  const queue = new Queue(stack, "MetadataQueue");
+  const queue = new Queue(stack, "MetadataQueue", {
+    visibilityTimeout: Duration.seconds(30),
+    retentionPeriod: Duration.minutes(2),
+  });
   fn.addEventSource(new SqsEventSource(queue));
   const rule = new Rule(stack, "MetadataRule", {
     eventPattern: {
