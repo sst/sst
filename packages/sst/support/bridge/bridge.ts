@@ -128,7 +128,7 @@ export async function handler(event: any, context: any) {
   console.log("Got result", result);
 
   if (result.type === "function.timeout")
-    return "This function is in live debug mode but there is no `sst dev` session running";
+    return "This function is in live debug mode but did not get a response from your machine. If you do have an `sst dev` session running, there have been reports of certain firewalls blocking communication. Please join our discord so we can work through the issue: https://sst.dev/discord";
 
   if (result.type === "function.success") {
     return result.properties.body;
