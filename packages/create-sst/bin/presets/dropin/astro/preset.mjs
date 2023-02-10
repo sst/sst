@@ -14,12 +14,4 @@ export default [
       { op: "add", path: "/scripts/dev", value: "sst bind astro dev" },
     ],
   }),
-  patch({
-    file: "tsconfig.json",
-    operations: [{ op: "add", path: "/include", value: [] }],
-  }),
-  patch({
-    file: "tsconfig.json",
-    operations: [{ op: "add", path: "/include/-", value: ".sst/types" }],
-  }),
 ];

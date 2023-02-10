@@ -13,6 +13,10 @@ export default {
       const site = new NextjsSite(ctx.stack, "site", {
         path: ".",
       });
+
+      ctx.stack.addOutputs({
+        SiteUrl: site.url || "http://localhost:3000",
+      });
     });
   },
 } satisfies SSTConfig;
