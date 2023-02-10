@@ -239,6 +239,17 @@ ${exports}
     //       functions get deployed.
     const stack = Stack.of(this) as Stack;
 
+    const policy = new Policy(this, "AssetReplacerPolicy", {
+      statements: [
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: ["s3:GetObject", "s3:PutObject"],
+          resources: [`arn:${stack.partition}:s3:::${asset.s3BucketName}/*`],
+        }),
+      ],
+    });
+    stack.customResourceHandler.role?.attachInlinePolicy(policy);
+
     const resource = new CustomResource(this.scope, "AssetReplacer", {
       serviceToken: stack.customResourceHandler.functionArn,
       resourceType: "Custom::AssetReplacer",
@@ -248,17 +259,7 @@ ${exports}
         replacements: this.getLambdaContentReplaceValues(),
       },
     });
-    stack.customResourceHandler.role?.attachInlinePolicy(
-      new Policy(this, "AssetReplacerPolicy", {
-        statements: [
-          new PolicyStatement({
-            effect: Effect.ALLOW,
-            actions: ["s3:GetObject", "s3:PutObject"],
-            resources: [`arn:${stack.partition}:s3:::${asset.s3BucketName}/*`],
-          }),
-        ],
-      })
-    );
+    resource.node.addDependency(policy);
 
     return resource;
   }

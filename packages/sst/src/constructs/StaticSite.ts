@@ -822,6 +822,22 @@ interface ImportMeta {
       .update(assets.map(({ assetHash }) => assetHash).join(""))
       .digest("hex");
 
+    const policy = new Policy(this, "CloudFrontInvalidatorPolicy", {
+      statements: [
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: [
+            "cloudfront:GetInvalidation",
+            "cloudfront:CreateInvalidation",
+          ],
+          resources: [
+            `arn:${stack.partition}:cloudfront::${stack.account}:distribution/${this.distribution.distributionId}`,
+          ],
+        }),
+      ],
+    });
+    stack.customResourceHandler.role?.attachInlinePolicy(policy);
+
     const resource = new CustomResource(this, "CloudFrontInvalidator", {
       serviceToken: stack.customResourceHandler.functionArn,
       resourceType: "Custom::CloudFrontInvalidator",
@@ -832,23 +848,7 @@ interface ImportMeta {
         waitForInvalidation: this.props.waitForInvalidation,
       },
     });
-
-    stack.customResourceHandler.role?.attachInlinePolicy(
-      new Policy(this, "CloudFrontInvalidatorPolicy", {
-        statements: [
-          new PolicyStatement({
-            effect: Effect.ALLOW,
-            actions: [
-              "cloudfront:GetInvalidation",
-              "cloudfront:CreateInvalidation",
-            ],
-            resources: [
-              `arn:${stack.partition}:cloudfront::${stack.account}:distribution/${this.distribution.distributionId}`,
-            ],
-          }),
-        ],
-      })
-    );
+    resource.node.addDependency(policy);
 
     return resource;
   }

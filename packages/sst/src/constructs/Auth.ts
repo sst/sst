@@ -107,7 +107,23 @@ export class Auth extends Construct implements SSTConstruct {
     const stack = Stack.of(scope) as Stack;
     this.authenticator = props.authenticator;
 
-    new CustomResource(this, "StackMetadata", {
+    const policy = new Policy(this, "CloudFrontInvalidatorPolicy", {
+      statements: [
+        new PolicyStatement({
+          actions: [
+            "ssm:GetParameter",
+            "ssm:PutParameter",
+            "ssm:DeleteParameter",
+          ],
+          resources: [
+            `arn:${stack.partition}:ssm:${stack.region}:${stack.account}:parameter/*`,
+          ],
+        }),
+      ],
+    });
+    stack.customResourceHandler.role?.attachInlinePolicy(policy);
+
+    const resource = new CustomResource(this, "StackMetadata", {
       serviceToken: stack.customResourceHandler.functionArn,
       resourceType: "Custom::AuthKeys",
       properties: {
@@ -115,22 +131,7 @@ export class Auth extends Construct implements SSTConstruct {
         privatePath: getParameterPath(this, PRIVATE_KEY_PROP),
       },
     });
-    stack.customResourceHandler.role?.attachInlinePolicy(
-      new Policy(this, "CloudFrontInvalidatorPolicy", {
-        statements: [
-          new PolicyStatement({
-            actions: [
-              "ssm:GetParameter",
-              "ssm:PutParameter",
-              "ssm:DeleteParameter",
-            ],
-            resources: [
-              `arn:${stack.partition}:ssm:${stack.region}:${stack.account}:parameter/*`,
-            ],
-          }),
-        ],
-      })
-    );
+    resource.node.addDependency(policy);
   }
 
   /** @internal */
