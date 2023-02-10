@@ -16,7 +16,7 @@ import {
   CustomResource,
 } from "aws-cdk-lib";
 import { Bucket, BucketProps, IBucket } from "aws-cdk-lib/aws-s3";
-import { Role, Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { Role, Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import {
   Function,
   Code,
@@ -329,8 +329,7 @@ export class SsrSite extends Construct implements SSTConstruct {
     this.distribution.node.addDependency(s3deployCR);
 
     // Invalidate CloudFront
-    const invalidationCR = this.createCloudFrontInvalidation();
-    invalidationCR.node.addDependency(this.distribution);
+    this.createCloudFrontInvalidation();
 
     // Connect Custom Domain to CloudFront Distribution
     this.createRoute53Records();
@@ -906,15 +905,19 @@ export class SsrSite extends Construct implements SSTConstruct {
       },
     });
 
-    stack.customResourceHandler.role?.addToPrincipalPolicy(
-      new PolicyStatement({
-        effect: Effect.ALLOW,
-        actions: [
-          "cloudfront:GetInvalidation",
-          "cloudfront:CreateInvalidation",
-        ],
-        resources: [
-          `arn:${stack.partition}:cloudfront::${stack.account}:distribution/${this.distribution.distributionId}`,
+    stack.customResourceHandler.role?.attachInlinePolicy(
+      new Policy(this, "CloudFrontInvalidatorPolicy", {
+        statements: [
+          new PolicyStatement({
+            effect: Effect.ALLOW,
+            actions: [
+              "cloudfront:GetInvalidation",
+              "cloudfront:CreateInvalidation",
+            ],
+            resources: [
+              `arn:${stack.partition}:cloudfront::${stack.account}:distribution/${this.distribution.distributionId}`,
+            ],
+          }),
         ],
       })
     );

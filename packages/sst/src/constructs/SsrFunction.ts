@@ -2,7 +2,7 @@ import url from "url";
 import path from "path";
 import spawn from "cross-spawn";
 import { Construct } from "constructs";
-import * as iam from "aws-cdk-lib/aws-iam";
+import { Effect, Role, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as s3Assets from "aws-cdk-lib/aws-s3-assets";
@@ -46,7 +46,7 @@ export class SsrFunction extends Construct {
   }
 
   public attachPermissions(permissions: Permissions) {
-    attachPermissionsToRole(this.function.role as iam.Role, permissions);
+    attachPermissionsToRole(this.function.role as Role, permissions);
   }
 
   private createFunction() {
@@ -127,11 +127,15 @@ export class SsrFunction extends Construct {
         replacements: this.getLambdaContentReplaceValues(),
       },
     });
-    stack.customResourceHandler.role?.addToPrincipalPolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: ["s3:GetObject", "s3:PutObject"],
-        resources: [`arn:${stack.partition}:s3:::${asset.s3BucketName}/*`],
+    stack.customResourceHandler.role?.attachInlinePolicy(
+      new Policy(this, "AssetReplacerPolicy", {
+        statements: [
+          new PolicyStatement({
+            effect: Effect.ALLOW,
+            actions: ["s3:GetObject", "s3:PutObject"],
+            resources: [`arn:${stack.partition}:s3:::${asset.s3BucketName}/*`],
+          }),
+        ],
       })
     );
 

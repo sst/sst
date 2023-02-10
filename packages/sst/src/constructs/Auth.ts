@@ -1,5 +1,5 @@
 import * as ssm from "aws-cdk-lib/aws-ssm";
-import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { Construct } from "constructs";
 import { Api } from "./Api.js";
 import { FunctionDefinition } from "./Function.js";
@@ -115,15 +115,19 @@ export class Auth extends Construct implements SSTConstruct {
         privatePath: getParameterPath(this, PRIVATE_KEY_PROP),
       },
     });
-    stack.customResourceHandler.role?.addToPrincipalPolicy(
-      new PolicyStatement({
-        actions: [
-          "ssm:GetParameter",
-          "ssm:PutParameter",
-          "ssm:DeleteParameter",
-        ],
-        resources: [
-          `arn:${stack.partition}:ssm:${stack.region}:${stack.account}:parameter/*`,
+    stack.customResourceHandler.role?.attachInlinePolicy(
+      new Policy(this, "CloudFrontInvalidatorPolicy", {
+        statements: [
+          new PolicyStatement({
+            actions: [
+              "ssm:GetParameter",
+              "ssm:PutParameter",
+              "ssm:DeleteParameter",
+            ],
+            resources: [
+              `arn:${stack.partition}:ssm:${stack.region}:${stack.account}:parameter/*`,
+            ],
+          }),
         ],
       })
     );

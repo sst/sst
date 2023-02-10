@@ -3,10 +3,17 @@ import url from "url";
 import path from "path";
 import crypto from "crypto";
 import { Construct, IConstruct } from "constructs";
-import * as iam from "aws-cdk-lib/aws-iam";
+import {
+  Effect,
+  Role,
+  Policy,
+  PolicyStatement,
+  CompositePrincipal,
+  ServicePrincipal,
+  ManagedPolicy,
+} from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as s3Assets from "aws-cdk-lib/aws-s3-assets";
-import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
 import {
   Lazy,
   Duration as CdkDuration,
@@ -45,7 +52,7 @@ export interface EdgeFunctionProps {
 /////////////////////
 
 export class EdgeFunction extends Construct {
-  public role: iam.Role;
+  public role: Role;
   public functionArn: string;
   private scope: IConstruct;
   private versionId: string;
@@ -155,13 +162,13 @@ ${exports}
     const { permissions } = this.props;
 
     // Create function role
-    const role = new iam.Role(this.scope, `ServerLambdaRole`, {
-      assumedBy: new iam.CompositePrincipal(
-        new iam.ServicePrincipal("lambda.amazonaws.com"),
-        new iam.ServicePrincipal("edgelambda.amazonaws.com")
+    const role = new Role(this.scope, `ServerLambdaRole`, {
+      assumedBy: new CompositePrincipal(
+        new ServicePrincipal("lambda.amazonaws.com"),
+        new ServicePrincipal("edgelambda.amazonaws.com")
       ),
       managedPolicies: [
-        iam.ManagedPolicy.fromManagedPolicyArn(
+        ManagedPolicy.fromManagedPolicyArn(
           this,
           "EdgeLambdaPolicy",
           `arn:${
@@ -241,11 +248,15 @@ ${exports}
         replacements: this.getLambdaContentReplaceValues(),
       },
     });
-    stack.customResourceHandler.role?.addToPrincipalPolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: ["s3:GetObject", "s3:PutObject"],
-        resources: [`arn:${stack.partition}:s3:::${asset.s3BucketName}/*`],
+    stack.customResourceHandler.role?.attachInlinePolicy(
+      new Policy(this, "AssetReplacerPolicy", {
+        statements: [
+          new PolicyStatement({
+            effect: Effect.ALLOW,
+            actions: ["s3:GetObject", "s3:PutObject"],
+            resources: [`arn:${stack.partition}:s3:::${asset.s3BucketName}/*`],
+          }),
+        ],
       })
     );
 
@@ -272,8 +283,8 @@ ${exports}
       timeout: CdkDuration.minutes(15),
       memorySize: 1024,
       initialPolicy: [
-        new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
+        new PolicyStatement({
+          effect: Effect.ALLOW,
           actions: ["s3:*"],
           resources: ["*"],
         }),
@@ -294,7 +305,7 @@ ${exports}
 
   private createFunctionCR(
     name: string,
-    role: iam.Role,
+    role: Role,
     bucketName: string,
     functionParams: any
   ): CustomResource {
@@ -315,8 +326,8 @@ ${exports}
         timeout: CdkDuration.minutes(15),
         memorySize: 1024,
         initialPolicy: [
-          new iam.PolicyStatement({
-            effect: iam.Effect.ALLOW,
+          new PolicyStatement({
+            effect: Effect.ALLOW,
             actions: ["lambda:*", "s3:*"],
             resources: ["*"],
           }),
@@ -359,8 +370,8 @@ ${exports}
         timeout: CdkDuration.minutes(15),
         memorySize: 1024,
         initialPolicy: [
-          new iam.PolicyStatement({
-            effect: iam.Effect.ALLOW,
+          new PolicyStatement({
+            effect: Effect.ALLOW,
             actions: ["lambda:*"],
             resources: ["*"],
           }),
