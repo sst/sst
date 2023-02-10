@@ -20,6 +20,10 @@ To view the latest release and all historical releases, <a href={`${config.githu
 
 The 2.0 upgrade is primarily ergonomic and should not result in any infrastructure changes.
 
+#### Before you upgrade
+
+SST no longer need to deploy a debug stack to support [Live Lambda Development](./live-lambda-development.md). You can remove the debug stack by going to your AWS CloudFormation console. Find the stack named `{stageName}-{appName}-debug-stack`, where `{stageName}` is the name of the stage, and `{appName}` is the name of your SST app. And remove the stack.
+
 #### Packages
 
 1. SST is now a monorepo, remove all packages referencing `@serverless-stack/resources` `@serverless-stack/cli` `@serverless-stack/node` and `@serverless-stack/static-site-env`. Install the `sst` package
