@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.0.14
+
+### Patch Changes
+
+- [#2459](https://github.com/serverless-stack/sst/pull/2459) [`5bd397611`](https://github.com/serverless-stack/sst/commit/5bd3976117cd2311193202bb57d767a9afa10d92) Thanks [@fwang](https://github.com/fwang)! - StaticSite/SsrSite: fix CF invalidation failed
+
 ## 2.0.13
 
 ### Patch Changes
