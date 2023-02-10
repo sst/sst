@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.0.15
+
+### Patch Changes
+
+- [#2463](https://github.com/serverless-stack/sst/pull/2463) [`d22ced926`](https://github.com/serverless-stack/sst/commit/d22ced926179433421e0103b7e2bbe158d176c88) Thanks [@fwang](https://github.com/fwang)! - SsrSite: fix circular dependency on deploy
+
 ## 2.0.14
 
 ### Patch Changes
