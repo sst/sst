@@ -25,7 +25,7 @@ export function ExampleStack({ stack, app }: StackContext) {
   });
 
   const site = new StaticSite(stack, "Site", {
-    path: "frontend",
+    path: "packages/frontend",
     buildCommand: "npm run build",
     buildOutput: "dist",
     environment: {

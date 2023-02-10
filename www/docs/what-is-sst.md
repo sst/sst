@@ -322,19 +322,20 @@ SST applications are monorepo by default.
 my-sst-app
 ├─ sst.config.ts
 ├─ package.json
-├─ services
+├─ packages
+│  ├─ frontend
+│  └─ functions
 ├─ stacks
-└─ web
 ```
 
-Where the `web/` directory is your frontend, `services/` is the backend, and `stacks/` has your infrastructure definitions.
+Where the `packages/frontend/` directory is your frontend, `packages/functions/` is the backend, and `stacks/` has your infrastructure definitions.
 For the frontend of your application, SST lets you deploy [**Next.js**](constructs/NextjsSite.md) and [**Remix**](constructs/RemixSite.md) apps. Or any [static website](constructs/StaticSite.md).
 
 Here for example, we are defining a [Vite](https://vitejs.dev) static site using the [`StaticSite`](constructs/StaticSite.md) construct.
 
 ```ts
 new StaticSite(this, "site", {
-  path: "web",
+  path: "packages/frontend",
   buildCommand: "npm run build",
   buildOutput: "dist",
   customDomain: "my-sst-app.com",

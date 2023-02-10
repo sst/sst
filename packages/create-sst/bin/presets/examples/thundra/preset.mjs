@@ -8,8 +8,4 @@ export default [
 
     dev: true,
   }),
-  patch({
-    file: "package.json",
-    operations: [{ op: "add", path: "/workspaces/-", value: "frontend" }],
-  }),
 ];
