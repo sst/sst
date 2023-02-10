@@ -13,7 +13,14 @@ import {
   CustomResource,
 } from "aws-cdk-lib";
 import * as s3 from "aws-cdk-lib/aws-s3";
-import * as iam from "aws-cdk-lib/aws-iam";
+import {
+  Role,
+  Effect,
+  PolicyStatement,
+  CompositePrincipal,
+  ServicePrincipal,
+  ManagedPolicy,
+} from "aws-cdk-lib/aws-iam";
 import * as sqs from "aws-cdk-lib/aws-sqs";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
@@ -295,7 +302,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
   private assets: s3Assets.Asset[];
   private awsCliLayer: AwsCliLayer;
   private routesManifest: RoutesManifest | null;
-  private edgeLambdaRole: iam.Role;
+  private edgeLambdaRole: Role;
   private mainFunctionVersion: lambda.IVersion;
   private apiFunctionVersion: lambda.IVersion;
   private imageFunctionVersion: lambda.IVersion;
@@ -664,17 +671,17 @@ export class NextjsSite extends Construct implements SSTConstruct {
     );
   }
 
-  private createEdgeFunctionRole(): iam.Role {
+  private createEdgeFunctionRole(): Role {
     const { defaults } = this.props;
 
     // Create function role
-    const role = new iam.Role(this, `EdgeLambdaRole`, {
-      assumedBy: new iam.CompositePrincipal(
-        new iam.ServicePrincipal("lambda.amazonaws.com"),
-        new iam.ServicePrincipal("edgelambda.amazonaws.com")
+    const role = new Role(this, `EdgeLambdaRole`, {
+      assumedBy: new CompositePrincipal(
+        new ServicePrincipal("lambda.amazonaws.com"),
+        new ServicePrincipal("edgelambda.amazonaws.com")
       ),
       managedPolicies: [
-        iam.ManagedPolicy.fromManagedPolicyArn(
+        ManagedPolicy.fromManagedPolicyArn(
           this,
           "EdgeLambdaPolicy",
           `arn:${
@@ -789,8 +796,8 @@ export class NextjsSite extends Construct implements SSTConstruct {
 
     // Allow provider to perform search/replace on the asset
     provider.role?.addToPrincipalPolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
+      new PolicyStatement({
+        effect: Effect.ALLOW,
         actions: ["s3:*"],
         resources: [
           `arn:${Stack.of(this).partition}:s3:::${asset.s3BucketName}/${
@@ -1212,29 +1219,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
   }
 
   private createCloudFrontInvalidation(): CustomResource {
-    // Create a Lambda function that will be doing the invalidation
-    const invalidator = new lambda.Function(this, "CloudFrontInvalidator", {
-      code: lambda.Code.fromAsset(
-        path.join(__dirname, "../../support/base-site-custom-resource")
-      ),
-      layers: [this.awsCliLayer],
-      runtime: lambda.Runtime.PYTHON_3_7,
-      handler: "cf-invalidate.handler",
-      timeout: Duration.minutes(15),
-      memorySize: 1024,
-    });
-
-    // Grant permissions to invalidate CF Distribution
-    invalidator.addToRolePolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: [
-          "cloudfront:GetInvalidation",
-          "cloudfront:CreateInvalidation",
-        ],
-        resources: ["*"],
-      })
-    );
+    const stack = Stack.of(this) as Stack;
 
     // need the BuildId field so this CR gets updated on each deploy
     let buildId: string;
@@ -1251,16 +1236,32 @@ export class NextjsSite extends Construct implements SSTConstruct {
       : this.props.waitForInvalidation === false
       ? false
       : true;
-    return new CustomResource(this, "CloudFrontInvalidation", {
-      serviceToken: invalidator.functionArn,
-      resourceType: "Custom::SSTCloudFrontInvalidation",
+
+    const resource = new CustomResource(this, "CloudFrontInvalidator", {
+      serviceToken: stack.customResourceHandler.functionArn,
+      resourceType: "Custom::CloudFrontInvalidator",
       properties: {
-        BuildId: buildId,
-        DistributionId: this.cdk.distribution.distributionId,
-        DistributionPaths: ["/*"],
-        WaitForInvalidation: waitForInvalidation,
+        buildId,
+        distributionId: this.cdk.distribution.distributionId,
+        paths: ["/*"],
+        waitForInvalidation,
       },
     });
+
+    stack.customResourceHandler.role?.addToPrincipalPolicy(
+      new PolicyStatement({
+        effect: Effect.ALLOW,
+        actions: [
+          "cloudfront:GetInvalidation",
+          "cloudfront:CreateInvalidation",
+        ],
+        resources: [
+          `arn:${stack.partition}:cloudfront::${stack.account}:distribution/${this.cdk.distribution.distributionId}`,
+        ],
+      })
+    );
+
+    return resource;
   }
 
   /////////////////////

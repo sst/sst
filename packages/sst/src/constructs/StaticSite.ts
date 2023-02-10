@@ -14,7 +14,7 @@ import {
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as s3Assets from "aws-cdk-lib/aws-s3-assets";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
-import * as iam from "aws-cdk-lib/aws-iam";
+import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
@@ -390,7 +390,7 @@ export class StaticSite extends Construct implements SSTConstruct {
     this.distribution.node.addDependency(s3deployCR);
 
     // Invalidate CloudFront
-    const invalidationCR = this.createCloudFrontInvalidation(cliLayer, assets);
+    const invalidationCR = this.createCloudFrontInvalidation(assets);
     invalidationCR.node.addDependency(this.distribution);
 
     // Connect Custom Domain to CloudFront Distribution
@@ -812,32 +812,9 @@ interface ImportMeta {
   }
 
   private createCloudFrontInvalidation(
-    cliLayer: AwsCliLayer,
     assets: s3Assets.Asset[]
   ): CustomResource {
-    // Create a Lambda function that will be doing the invalidation
-    const invalidator = new lambda.Function(this, "CloudFrontInvalidator", {
-      code: lambda.Code.fromAsset(
-        path.join(__dirname, "../support/base-site-custom-resource")
-      ),
-      layers: [cliLayer],
-      runtime: lambda.Runtime.PYTHON_3_7,
-      handler: "cf-invalidate.handler",
-      timeout: Duration.minutes(15),
-      memorySize: 1024,
-    });
-
-    // Grant permissions to invalidate CF Distribution
-    invalidator.addToRolePolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: [
-          "cloudfront:GetInvalidation",
-          "cloudfront:CreateInvalidation",
-        ],
-        resources: ["*"],
-      })
-    );
+    const stack = Stack.of(this) as Stack;
 
     // Need the AssetHash field so the CR gets updated on each deploy
     const assetsHash = crypto
@@ -845,17 +822,31 @@ interface ImportMeta {
       .update(assets.map(({ assetHash }) => assetHash).join(""))
       .digest("hex");
 
-    // Create custom resource
-    return new CustomResource(this, "CloudFrontInvalidation", {
-      serviceToken: invalidator.functionArn,
-      resourceType: "Custom::SSTCloudFrontInvalidation",
+    const resource = new CustomResource(this, "CloudFrontInvalidator", {
+      serviceToken: stack.customResourceHandler.functionArn,
+      resourceType: "Custom::CloudFrontInvalidator",
       properties: {
-        AssetsHash: assetsHash,
-        DistributionId: this.distribution.distributionId,
-        DistributionPaths: ["/*"],
-        WaitForInvalidation: this.props.waitForInvalidation,
+        assetsHash,
+        distributionId: this.distribution.distributionId,
+        paths: ["/*"],
+        waitForInvalidation: this.props.waitForInvalidation,
       },
     });
+
+    stack.customResourceHandler.role?.addToPrincipalPolicy(
+      new PolicyStatement({
+        effect: Effect.ALLOW,
+        actions: [
+          "cloudfront:GetInvalidation",
+          "cloudfront:CreateInvalidation",
+        ],
+        resources: [
+          `arn:${stack.partition}:cloudfront::${stack.account}:distribution/${this.distribution.distributionId}`,
+        ],
+      })
+    );
+
+    return resource;
   }
 
   /////////////////////

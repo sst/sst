@@ -329,7 +329,7 @@ export class SsrSite extends Construct implements SSTConstruct {
     this.distribution.node.addDependency(s3deployCR);
 
     // Invalidate CloudFront
-    const invalidationCR = this.createCloudFrontInvalidation(cliLayer);
+    const invalidationCR = this.createCloudFrontInvalidation();
     invalidationCR.node.addDependency(this.distribution);
 
     // Connect Custom Domain to CloudFront Distribution
@@ -892,42 +892,34 @@ export class SsrSite extends Construct implements SSTConstruct {
     });
   }
 
-  private createCloudFrontInvalidation(cliLayer: AwsCliLayer): CustomResource {
-    // Create a Lambda function that will be doing the invalidation
-    const invalidator = new Function(this, "CloudFrontInvalidator", {
-      code: Code.fromAsset(
-        path.join(__dirname, "../support/base-site-custom-resource")
-      ),
-      layers: [cliLayer],
-      runtime: Runtime.PYTHON_3_7,
-      handler: "cf-invalidate.handler",
-      timeout: CdkDuration.minutes(15),
-      memorySize: 1024,
+  private createCloudFrontInvalidation(): CustomResource {
+    const stack = Stack.of(this) as Stack;
+
+    const resource = new CustomResource(this, "CloudFrontInvalidator", {
+      serviceToken: stack.customResourceHandler.functionArn,
+      resourceType: "Custom::CloudFrontInvalidator",
+      properties: {
+        buildId: this.generateBuildId(),
+        distributionId: this.distribution.distributionId,
+        paths: ["/*"],
+        waitForInvalidation: this.props.waitForInvalidation,
+      },
     });
 
-    // Grant permissions to invalidate CF Distribution
-    invalidator.addToRolePolicy(
+    stack.customResourceHandler.role?.addToPrincipalPolicy(
       new PolicyStatement({
         effect: Effect.ALLOW,
         actions: [
           "cloudfront:GetInvalidation",
           "cloudfront:CreateInvalidation",
         ],
-        resources: ["*"],
+        resources: [
+          `arn:${stack.partition}:cloudfront::${stack.account}:distribution/${this.distribution.distributionId}`,
+        ],
       })
     );
 
-    return new CustomResource(this, "CloudFrontInvalidation", {
-      serviceToken: invalidator.functionArn,
-      resourceType: "Custom::SSTCloudFrontInvalidation",
-      properties: {
-        BuildId: this.generateBuildId(),
-        DistributionId: this.distribution.distributionId,
-        // TODO: Ignore the browser build path as it may speed up invalidation
-        DistributionPaths: ["/*"],
-        WaitForInvalidation: this.props.waitForInvalidation,
-      },
-    });
+    return resource;
   }
 
   /////////////////////

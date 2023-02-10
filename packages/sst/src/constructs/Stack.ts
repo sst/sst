@@ -1,3 +1,4 @@
+import fs from "fs";
 import url from "url";
 import * as path from "path";
 import { Construct, IConstruct } from "constructs";
@@ -199,13 +200,13 @@ export class Stack extends cdk.Stack {
   }
 
   private createCustomResourceHandler() {
+    const dir = path.join(__dirname, "../support/custom-resources/");
     return new lambda.Function(this, "CustomResourceHandler", {
-      code: lambda.Code.fromAsset(
-        path.join(__dirname, "../support/custom-resources/"),
-        {
-          assetHash: this.stackName + "-custom-resources-20230130",
-        }
-      ),
+      code: lambda.Code.fromAsset(dir, {
+        //assetHash: this.stackName + "-custom-resources-20230130",
+        assetHash:
+          this.stackName + fs.readFileSync(dir + "/index.mjs").toString(),
+      }),
       handler: "index.handler",
       runtime: lambda.Runtime.NODEJS_16_X,
       timeout: cdk.Duration.seconds(900),
