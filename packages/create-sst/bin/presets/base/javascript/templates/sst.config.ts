@@ -1,5 +1,4 @@
 import { SSTConfig } from "sst";
-import { Api } from "sst/constructs";
 
 export default {
   config(_input) {
