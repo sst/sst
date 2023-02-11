@@ -87,6 +87,7 @@ export const usePythonHandler = Context.memo(async () => {
       const src = await findAbove(input.props.handler!, "requirements.txt");
       await fs.cp(src, input.out, {
         recursive: true,
+        filter: (src) => !src.includes(".sst"),
       });
 
       if (input.props.python?.installCommands) {
