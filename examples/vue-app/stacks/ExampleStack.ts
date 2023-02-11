@@ -27,7 +27,7 @@ export function ExampleStack({ stack }: StackContext) {
   });
 
   const site = new StaticSite(stack, "VueJSSite", {
-    path: "frontend",
+    path: "packages/frontend",
     buildOutput: "dist",
     buildCommand: "npm run build",
     errorPage: "redirect_to_index_page",

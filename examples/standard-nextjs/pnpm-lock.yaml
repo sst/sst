@@ -46,16 +46,16 @@ packages:
       '@jridgewell/trace-mapping': 0.3.17
     dev: true
 
-  /@aws-cdk/asset-awscli-v1/2.2.63:
-    resolution: {integrity: sha512-LP+RSwH6JCx2T/AJyaveRg8VRvrM612TxGnec8SVuf9pQ6ah82LcW+4abuMhizeXDcx2ZufwNf9g/G2rp47bjA==}
+  /@aws-cdk/asset-awscli-v1/2.2.64:
+    resolution: {integrity: sha512-2N6bLz//iKv0W8ZBRHIVdbsHXR7mV3yY12ImF5g3lzJRq6i/ZY5Uz19Y1eHGWz2f/+bZqDKHAJOlXqimqJZ1Uw==}
     dev: true
 
   /@aws-cdk/asset-kubectl-v20/2.1.1:
     resolution: {integrity: sha512-U1ntiX8XiMRRRH5J1IdC+1t5CE89015cwyt5U63Cpk0GnMlN5+h9WsWMlKlPXZR4rdq/m806JRlBMRpBUB2Dhw==}
     dev: true
 
-  /@aws-cdk/asset-node-proxy-agent-v5/2.0.52:
-    resolution: {integrity: sha512-sQhGP8QhAeP3ZsXxoOQrRFW/0VMH3HvI8NjZe/9ORtKwh8Gyjv2BJWIxlXLvRcc2o26FEl1oHIKRbaK/z/4iMw==}
+  /@aws-cdk/asset-node-proxy-agent-v5/2.0.53:
+    resolution: {integrity: sha512-gDNdL+Lf2oBhYOr61ovO/QV+Hw2WzSGuKoz+O7Dc56DAF9OiTTc5DZA4la6FUcLPIamlVwxVdASqWXJZfRf64A==}
     dev: true
 
   /@aws-cdk/aws-apigatewayv2-alpha/2.62.2-alpha.0_iqmstt3dpu37s47wyywi32lmnq:
@@ -2323,9 +2323,9 @@ packages:
     peerDependencies:
       constructs: ^10.0.0
     dependencies:
-      '@aws-cdk/asset-awscli-v1': 2.2.63
+      '@aws-cdk/asset-awscli-v1': 2.2.64
       '@aws-cdk/asset-kubectl-v20': 2.1.1
-      '@aws-cdk/asset-node-proxy-agent-v5': 2.0.52
+      '@aws-cdk/asset-node-proxy-agent-v5': 2.0.53
       constructs: 10.1.156
     dev: true
     bundledDependencies:
@@ -2514,7 +2514,7 @@ packages:
     hasBin: true
     dependencies:
       caniuse-lite: 1.0.30001451
-      electron-to-chromium: 1.4.294
+      electron-to-chromium: 1.4.295
       node-releases: 2.0.10
       update-browserslist-db: 1.0.10_browserslist@4.21.5
     dev: true
@@ -3047,8 +3047,8 @@ packages:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
     dev: true
 
-  /electron-to-chromium/1.4.294:
-    resolution: {integrity: sha512-PuHZB3jEN7D8WPPjLmBQAsqQz8tWHlkkB4n0E2OYw8RwVdmBYV0Wn+rUFH8JqYyIRb4HQhhedgxlZL163wqLrQ==}
+  /electron-to-chromium/1.4.295:
+    resolution: {integrity: sha512-lEO94zqf1bDA3aepxwnWoHUjA8sZ+2owgcSZjYQy0+uOSEclJX0VieZC+r+wLpSxUHRd6gG32znTWmr+5iGzFw==}
     dev: true
 
   /emoji-regex/8.0.0:

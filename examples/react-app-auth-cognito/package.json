@@ -19,7 +19,6 @@
     "@tsconfig/node16": "^1.0.3"
   },
   "workspaces": [
-    "packages/*",
-    "frontend"
+    "packages/*"
   ]
 }

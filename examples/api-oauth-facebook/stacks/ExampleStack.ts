@@ -87,7 +87,7 @@ export function ExampleStack({ stack, app }: StackContext) {
 
   // Create a React Static Site
   const site = new StaticSite(stack, "Site", {
-    path: "frontend",
+    path: "packages/frontend",
     buildCommand: "npm run build",
     buildOutput: "dist",
     environment: {

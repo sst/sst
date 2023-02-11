@@ -27,7 +27,7 @@ export function ExampleStack({ stack }: StackContext) {
   });
 
   const site = new StaticSite(stack, "GatsbySite", {
-    path: "frontend",
+    path: "packages/frontend",
     buildOutput: "public",
     buildCommand: "npm run build",
     errorPage: "redirect_to_index_page",

@@ -38,7 +38,7 @@ export function ExampleStack({ stack, app }: StackContext) {
   auth.attachPermissionsForAuthUsers(stack, [api]);
 
   const site = new StaticSite(stack, "Site", {
-    path: "frontend",
+    path: "packages/frontend",
     buildCommand: "npm run build",
     buildOutput: "dist",
     environment: {

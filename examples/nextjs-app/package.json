@@ -19,8 +19,7 @@
     "@tsconfig/node16": "^1.0.3"
   },
   "workspaces": [
-    "packages/*",
-    "frontend"
+    "packages/*"
   ],
   "dependencies": {
     "@sls-next/lambda-at-edge": "^3.7.0"
