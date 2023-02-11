@@ -1,5 +1,13 @@
 # create-sst
 
+## 2.0.17
+
+### Patch Changes
+
+- [`86ac31dca`](https://github.com/serverless-stack/sst/commit/86ac31dca6a9eefd5373b907aa22209fcad88473) Thanks [@thdxr](https://github.com/thdxr)! - Dropin mode for NextJS + standard template
+
+- [#2467](https://github.com/serverless-stack/sst/pull/2467) [`03eeca4fa`](https://github.com/serverless-stack/sst/commit/03eeca4fae04215c8ce3f4951b82f47f6ba13cb1) Thanks [@ivanzorcic](https://github.com/ivanzorcic)! - Project Structure: frontend/ folder should be inside packages/
+
 ## 2.0.16
 
 ## 2.0.15
