@@ -29,7 +29,7 @@ export function ExampleStack({ stack }: StackContext) {
 
   // Deploy our React app
   const site = new StaticSite(stack, "ReactSite", {
-    path: "frontend",
+    path: "packages/frontend",
     buildCommand: "npm run build",
     buildOutput: "build",
     environment: {

@@ -29,7 +29,7 @@ export function ExampleStack({ stack }: StackContext) {
 
   // Deploy our Svelte app
   const site = new StaticSite(stack, "SvelteJSSite", {
-    path: "frontend",
+    path: "packages/frontend",
     buildCommand: "npm run build",
     buildOutput: "dist",
     environment: {
