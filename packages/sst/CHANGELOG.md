@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.0.17
+
+### Patch Changes
+
+- [#2470](https://github.com/serverless-stack/sst/pull/2470) [`2b78ba0bd`](https://github.com/serverless-stack/sst/commit/2b78ba0bd862de21b001e5a50a23fba2e1273dd4) Thanks [@ecumene](https://github.com/ecumene)! - Python Runtime: Don't copy SST directory
+
+- [`36e22c436`](https://github.com/serverless-stack/sst/commit/36e22c43649105bd355e551433d65c8b510fecad) Thanks [@fwang](https://github.com/fwang)! - Bootstrap: retry uploading metadata for up to 2 minutes
+
 ## 2.0.16
 
 ### Patch Changes
