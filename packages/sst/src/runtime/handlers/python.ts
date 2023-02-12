@@ -85,10 +85,20 @@ export const usePythonHandler = Context.memo(async () => {
         };
 
       const src = await findAbove(input.props.handler!, "requirements.txt");
-      await fs.cp(src, input.out, {
-        recursive: true,
-        filter: (src) => !src.includes(".sst"),
-      });
+      const handlerPath = input.props.handler!.split(path.sep);
+      if (handlerPath.length === 1) {
+        throw new Error(
+          `Handler ${input.props.handler} must be a file in a subdirectory`
+        );
+      }
+      const handlerHome = handlerPath[0];
+      await fs.cp(
+        path.join(src, handlerHome),
+        path.join(input.out, handlerHome),
+        {
+          recursive: true,
+        }
+      );
 
       if (input.props.python?.installCommands) {
         for (const cmd of input.props.python.installCommands) {
