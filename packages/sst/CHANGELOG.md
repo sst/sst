@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.0.18
+
+### Patch Changes
+
+- [#2478](https://github.com/serverless-stack/sst/pull/2478) [`301ca13ce`](https://github.com/serverless-stack/sst/commit/301ca13ce6d60dfda27f82b06cee049d65fbdec6) Thanks [@fwang](https://github.com/fwang)! - Fix `stream/consumer` not available in Node.js 14
+
 ## 2.0.17
 
 ### Patch Changes
