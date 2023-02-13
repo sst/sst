@@ -124,7 +124,6 @@ export const useRuntimeServer = Context.memo(async () => {
       limit: "10mb",
     }),
     (req, res) => {
-      console.log(JSON.stringify(req.body, null, 4));
       Logger.debug("Worker", req.params.workerID, "got response", req.body);
       const worker = workers.fromID(req.params.workerID)!;
       bus.publish("function.success", {
