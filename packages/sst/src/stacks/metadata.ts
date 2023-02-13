@@ -8,11 +8,9 @@ import {
   GetObjectCommand,
   ListObjectsV2Command,
 } from "@aws-sdk/client-s3";
-import { json } from "stream/consumers";
 import { useCache } from "../cache.js";
 import { Context } from "../context/context.js";
 import { useBus } from "../bus.js";
-import { Stacks } from "./index.js";
 import { Logger } from "../logger.js";
 import { useProject } from "../project.js";
 import type { Metadata } from "../constructs/Metadata.js";
@@ -48,15 +46,14 @@ export async function metadata() {
     await Promise.all(
       list.Contents?.map(async (obj) => {
         const stackID = obj.Key?.split("/").pop();
-        const result = await s3
-          .send(
-            new GetObjectCommand({
-              Key: obj.Key!,
-              Bucket: bootstrap.bucket,
-            })
-          )
-          .then((result) => json(result.Body as any));
-        return [stackID, result];
+        const result = await s3.send(
+          new GetObjectCommand({
+            Key: obj.Key!,
+            Bucket: bootstrap.bucket,
+          })
+        );
+        const body = await result.Body!.transformToString();
+        return [stackID, JSON.parse(body) as Metadata];
       }) || []
     )
   );
@@ -79,15 +76,14 @@ export async function metadataForStack(stackID: string) {
   Logger.debug("Getting metadata", key, "from", bootstrap.bucket);
 
   try {
-    const result = await s3
-      .send(
-        new GetObjectCommand({
-          Key: key,
-          Bucket: bootstrap.bucket,
-        })
-      )
-      .then((result) => json(result.Body as any));
-    return result as any[];
+    const result = await s3.send(
+      new GetObjectCommand({
+        Key: key,
+        Bucket: bootstrap.bucket,
+      })
+    );
+    const body = await result.Body!.transformToString();
+    return JSON.parse(body) as any[];
   } catch (ex) {
     console.error(ex);
     return [];
