@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.0.19
+
+### Patch Changes
+
+- [#2481](https://github.com/serverless-stack/sst/pull/2481) [`f117acce5`](https://github.com/serverless-stack/sst/commit/f117acce5f547a8aa8662edb590a4483a2cd0911) Thanks [@fwang](https://github.com/fwang)! - WebSocketApi: create CloudWatch role automatically
+
 ## 2.0.18
 
 ### Patch Changes
