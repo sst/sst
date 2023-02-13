@@ -46,9 +46,11 @@ jobs:
         run: pnpm prettier --cache -c --loglevel=error .
 
       - name: Build
-        run: pnpm -r build
+        run: pnpm build
+        working-directory: packages/sst
 
 
       - name: Test
-        run: pnpm -r test
+        run: pnpm test
+        working-directory: packages/sst
 
