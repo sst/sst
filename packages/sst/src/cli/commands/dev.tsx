@@ -238,20 +238,18 @@ export const dev = (program: Program) =>
 
           // Update site env
           const keys = await SiteEnv.keys();
-          if (keys.length) {
-            const result: Record<string, Record<string, string>> = {};
-            for (const key of keys) {
-              const stack = results[key.stack];
-              const value = stack.outputs[key.output];
-              let existing = result[key.path];
-              if (!existing) {
-                result[key.path] = existing;
-                existing = result[key.path] = {};
-              }
-              existing[key.environment] = value;
+          const result: Record<string, Record<string, string>> = {};
+          for (const key of keys) {
+            const stack = results[key.stack];
+            const value = stack.outputs[key.output];
+            let existing = result[key.path];
+            if (!existing) {
+              result[key.path] = existing;
+              existing = result[key.path] = {};
             }
-            await SiteEnv.writeValues(result);
+            existing[key.environment] = value;
           }
+          await SiteEnv.writeValues(result);
 
           // Write outputs.json
           fs.writeFile(
