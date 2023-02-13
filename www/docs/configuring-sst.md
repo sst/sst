@@ -60,7 +60,7 @@ For example, you can use a different profile based on what stage is being used.
 config(input) {
   return {
     name: "myapp",
-    region: input.stage === "production"
+    profile: input.stage === "production"
       ? "myapp-production"
       : "myapp-dev"
   }
