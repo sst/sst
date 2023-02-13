@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.0.20
+
+### Patch Changes
+
+- [`7e2fd9e40`](https://github.com/serverless-stack/sst/commit/7e2fd9e406b4c21e55afea1089ff3b4a51d92f3b) Thanks [@thdxr](https://github.com/thdxr)! - Throw error when trying to deploy 0 stacks
+
 ## 2.0.19
 
 ### Patch Changes
