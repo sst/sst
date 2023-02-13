@@ -2,10 +2,13 @@ import url from "url";
 import path from "path";
 import spawn from "cross-spawn";
 import { Construct } from "constructs";
+import { SSTConstruct } from "./Construct.js";
+import { bindEnvironment, bindPermissions } from "./util/functionBinding.js";
 import { Effect, Role, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as s3Assets from "aws-cdk-lib/aws-s3-assets";
+import * as iam from "aws-cdk-lib/aws-iam";
 import { Duration as CdkDuration, CustomResource } from "aws-cdk-lib";
 
 import { Stack } from "./Stack.js";
@@ -14,6 +17,7 @@ import { useProject } from "../project.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
+import { App } from "./App.js";
 import { FunctionOptions } from "aws-cdk-lib/aws-lambda";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -25,6 +29,7 @@ export interface SsrFunctionProps
   timeout: number | Duration;
   memorySize: number | Size;
   permissions?: Permissions;
+  bind?: SSTConstruct[];
 }
 
 /////////////////////
@@ -43,6 +48,19 @@ export class SsrFunction extends Construct {
 
     this.function = this.createFunction();
     this.attachPermissions(permissions || []);
+    const app = scope.node.root as App;
+    this.function.addEnvironment("SST_APP", app.name, { removeInEdge: true });
+    this.function.addEnvironment("SST_STAGE", app.stage, {
+      removeInEdge: true,
+    });
+    this.function.addEnvironment(
+      "SST_SSM_PREFIX",
+      useProject().config.ssmPrefix,
+      {
+        removeInEdge: true,
+      }
+    );
+    props.bind && this.bind(props.bind);
   }
 
   public attachPermissions(permissions: Permissions) {
@@ -110,6 +128,27 @@ export class SsrFunction extends Construct {
     fn.node.addDependency(replacer);
 
     return fn;
+  }
+  public bind(constructs: SSTConstruct[]): void {
+    constructs.forEach((c) => {
+      // Bind environment
+      const env = bindEnvironment(c);
+      Object.entries(env).forEach(([key, value]) =>
+        this.function.addEnvironment(key, value)
+      );
+
+      // Bind permissions
+      const permissions = bindPermissions(c);
+      Object.entries(permissions).forEach(([action, resources]) =>
+        this.attachPermissions([
+          new iam.PolicyStatement({
+            actions: [action],
+            effect: iam.Effect.ALLOW,
+            resources,
+          }),
+        ])
+      );
+    });
   }
 
   private createLambdaCodeReplacer(asset: s3Assets.Asset): CustomResource {
