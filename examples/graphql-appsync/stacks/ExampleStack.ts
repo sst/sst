@@ -11,7 +11,7 @@ export function ExampleStack({ stack }: StackContext) {
 
   // Create the AppSync GraphQL API
   const api = new AppSyncApi(stack, "AppSyncApi", {
-    schema: "api/graphql/schema.graphql",
+    schema: "services/graphql/schema.graphql",
     defaults: {
       function: {
         // Bind the table name to the function
