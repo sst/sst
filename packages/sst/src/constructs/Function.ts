@@ -29,6 +29,7 @@ import { createAppContext } from "./context.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 const supportedRuntimes = {
+  rust: lambda.Runtime.PROVIDED_AL2,
   nodejs: lambda.Runtime.NODEJS,
   "nodejs4.3": lambda.Runtime.NODEJS_4_3,
   "nodejs6.10": lambda.Runtime.NODEJS_6_10,

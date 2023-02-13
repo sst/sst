@@ -21,6 +21,7 @@ export async function synth(opts: SynthOptions) {
   const { App } = await import("../constructs/App.js");
   const { useNodeHandler } = await import("../runtime/handlers/node.js");
   const { useGoHandler } = await import("../runtime/handlers/go.js");
+  const { useRustHandler } = await import("../runtime/handlers/rust.js");
   const { usePythonHandler } = await import("../runtime/handlers/python.js");
   const { useJavaHandler } = await import("../runtime/handlers/java.js");
   useNodeHandler();
@@ -28,6 +29,7 @@ export async function synth(opts: SynthOptions) {
   usePythonHandler();
   useJavaHandler();
   useDotnetHandler();
+  useRustHandler();
   const { Configuration } = await import("aws-cdk/lib/settings.js");
   const project = useProject();
   const identity = await useSTSIdentity();

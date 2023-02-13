@@ -99,9 +99,13 @@ export const useRuntimeServer = Context.memo(async () => {
         "Lambda-Runtime-Client-Context": JSON.stringify(
           payload.context.clientContext || {}
         ),
-        "Lambda-Runtime-Cognito-Identity": JSON.stringify(
-          payload.context.identity || {}
-        ),
+        ...(payload.context.identity
+          ? {
+              "Lambda-Runtime-Cognito-Identity": JSON.stringify(
+                payload.context.identity
+              ),
+            }
+          : {}),
       });
       res.json(payload.event);
     }
@@ -114,10 +118,13 @@ export const useRuntimeServer = Context.memo(async () => {
     `/:workerID/${cfg.API_VERSION}/runtime/invocation/:awsRequestId/response`,
     express.json({
       strict: false,
-      type: ["application/json", "application/*+json"],
+      type() {
+        return true;
+      },
       limit: "10mb",
     }),
     (req, res) => {
+      console.log(JSON.stringify(req.body, null, 4));
       Logger.debug("Worker", req.params.workerID, "got response", req.body);
       const worker = workers.fromID(req.params.workerID)!;
       bus.publish("function.success", {
