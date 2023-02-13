@@ -1,4 +1,5 @@
 import { Construct } from "constructs";
+import { CustomResource } from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
@@ -6,6 +7,7 @@ import * as cfnApig from "aws-cdk-lib/aws-apigatewayv2";
 import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
 import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
 import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
+import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
@@ -550,7 +552,11 @@ export class WebSocketApi extends Construct implements SSTConstruct {
         this._customDomainUrl = `wss://${customDomainData.url}`;
       }
 
+      // Create CloudWatch Role
+      const customResource = this.createCloudWatchRole();
+
       // Create stage
+      // note: create the CloudWatch role before creating the Api
       this.cdk.webSocketStage = new apig.WebSocketStage(this, "Stage", {
         webSocketApi: this.cdk.webSocketApi,
         stageName: (this.node.root as App).stage,
@@ -558,6 +564,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
         domainMapping,
         ...webSocketStageProps,
       });
+      this.cdk.webSocketStage.node.addDependency(customResource);
 
       // Configure Access Log
       this.cdk.accessLogGroup = apigV2AccessLog.buildAccessLogData(
@@ -567,6 +574,42 @@ export class WebSocketApi extends Construct implements SSTConstruct {
         true
       );
     }
+  }
+
+  private createCloudWatchRole() {
+    const stack = Stack.of(this) as Stack;
+
+    const roleName = "apigateway-cloudwatch-logs-role";
+    const roleArn = `arn:${stack.partition}:iam::${stack.account}:role/${roleName}`;
+    const policy = new Policy(this, "APIGatewayCloudWatchRolePolicy", {
+      statements: [
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: ["apigateway:GET", "apigateway:PATCH"],
+          resources: [
+            `arn:${stack.partition}:apigateway:${stack.region}::/account`,
+          ],
+        }),
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: ["iam:CreateRole", "iam:PassRole", "iam:AttachRolePolicy"],
+          resources: [roleArn],
+        }),
+      ],
+    });
+    stack.customResourceHandler.role?.attachInlinePolicy(policy);
+
+    const resource = new CustomResource(this, "APIGatewayCloudWatchRole", {
+      serviceToken: stack.customResourceHandler.functionArn,
+      resourceType: "Custom::APIGatewayCloudWatchRole",
+      properties: {
+        roleName,
+        roleArn,
+      },
+    });
+    resource.node.addDependency(policy);
+
+    return resource;
   }
 
   private addAuthorizer() {
