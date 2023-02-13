@@ -6,7 +6,6 @@ import {
   PutObjectCommand,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
-import { json } from "stream/consumers";
 import { Context } from "../context/context.js";
 import { Logger } from "../logger.js";
 import { useProject } from "../project.js";
@@ -28,15 +27,14 @@ async function metadata() {
   });
 
   try {
-    const result = await s3
-      .send(
-        new GetObjectCommand({
-          Key: useS3Key(),
-          Bucket: bootstrap.bucket,
-        })
-      )
-      .then((result) => json(result.Body as any));
-    return result as Metadata;
+    const result = await s3.send(
+      new GetObjectCommand({
+        Key: useS3Key(),
+        Bucket: bootstrap.bucket,
+      })
+    );
+    const body = await result.Body!.transformToString();
+    return JSON.parse(body) as Metadata;
   } catch (ex) {
     Logger.debug("Fetching app metadata: not found");
   }

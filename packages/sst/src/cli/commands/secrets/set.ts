@@ -35,6 +35,10 @@ export const set = (program: Program) =>
         ` Restarting all functions using ${blue(args.name)}...`
       ).start();
       const count = await Config.restart(args.name);
-      restarting.succeed(` Restarted ${count} functions`);
+      restarting.succeed(
+        count === 1
+          ? ` Restarted ${count} function`
+          : ` Restarted ${count} functions`
+      );
     }
   );
