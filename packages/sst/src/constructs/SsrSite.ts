@@ -891,7 +891,7 @@ export class SsrSite extends Construct implements SSTConstruct {
     });
   }
 
-  private createCloudFrontInvalidation(): CustomResource {
+  private createCloudFrontInvalidation() {
     const stack = Stack.of(this) as Stack;
 
     const policy = new Policy(this, "CloudFrontInvalidatorPolicy", {
