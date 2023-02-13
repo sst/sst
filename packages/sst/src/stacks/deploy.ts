@@ -8,6 +8,7 @@ import {
   monitor,
   StackDeploymentResult,
 } from "./monitor.js";
+import { VisibleError } from "../error.js";
 
 export async function publishAssets(stacks: CloudFormationStackArtifact[]) {
   Logger.debug("Publishing assets");
@@ -31,6 +32,9 @@ export async function publishAssets(stacks: CloudFormationStackArtifact[]) {
 }
 
 export async function deployMany(stacks: CloudFormationStackArtifact[]) {
+  if (stacks.length === 0) {
+    throw new VisibleError("No stacks to deploy");
+  }
   Logger.debug(
     "Deploying stacks",
     stacks.map((s) => s.stackName)
@@ -106,8 +110,10 @@ export async function deploy(
   const deployment = new CloudFormationDeployments({
     sdkProvider: provider,
   });
-  const stackTags = Object.entries(stack.tags ?? {})
-    .map(([Key, Value]) => ({ Key, Value }));
+  const stackTags = Object.entries(stack.tags ?? {}).map(([Key, Value]) => ({
+    Key,
+    Value,
+  }));
   try {
     await addInUseExports(stack);
     const result = await deployment.deployStack({
