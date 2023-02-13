@@ -45,6 +45,10 @@ jobs:
       - name: Check prettier
         run: pnpm prettier --cache -c --loglevel=error .
 
+      - name: Build
+        run: pnpm -r build
+
+
       - name: Test
         run: pnpm -r test
 
