@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.0.21
+
+### Patch Changes
+
+- [`761284c9e`](https://github.com/serverless-stack/sst/commit/761284c9ef388ac987f155bd62e3712e190629ea) Thanks [@thdxr](https://github.com/thdxr)! - Remove rogue log
+
+- [`53f9625fa`](https://github.com/serverless-stack/sst/commit/53f9625faade446f42ec67f5010d1ce648bbb88d) Thanks [@thdxr](https://github.com/thdxr)! - Retry failed fetch calls
+
 ## 2.0.20
 
 ### Patch Changes
