@@ -11,12 +11,12 @@ The Api construct uses [API Gateway V2](https://aws.amazon.com/blogs/compute/ann
 ### Minimal config
 
 ```js
-import { ApiGatewayV1Api } from "@serverless-stack/resources";
+import { ApiGatewayV1Api } from "sst/constructs";
 
 new ApiGatewayV1Api(stack, "Api", {
   routes: {
-    "GET    /notes"     : "src/list.main",
-    "POST   /notes"     : "src/create.main",
+    "GET    /notes": "src/list.main",
+    "POST   /notes": "src/create.main",
     "GET    /notes/{id}": "src/get.main",
     "PUT    /notes/{id}": "src/update.main",
     "DELETE /notes/{id}": "src/delete.main",
@@ -33,7 +33,7 @@ Add routes after the API has been created.
 ```js {4}
 const api = new ApiGatewayV1Api(stack, "Api", {
   routes: {
-    "GET /notes"   : "src/list.main",
+    "GET /notes": "src/list.main",
     "ANY /{proxy+}": "src/catch.main",
   },
 });
@@ -129,8 +129,8 @@ Allow the entire API to access S3.
 ```js {11}
 const api = new ApiGatewayV1Api(stack, "Api", {
   routes: {
-    "GET    /notes"     : "src/list.main",
-    "POST   /notes"     : "src/create.main",
+    "GET    /notes": "src/list.main",
+    "POST   /notes": "src/create.main",
     "GET    /notes/{id}": "src/get.main",
     "PUT    /notes/{id}": "src/update.main",
     "DELETE /notes/{id}": "src/delete.main",
@@ -147,8 +147,8 @@ Allow one of the routes to access S3.
 ```js {11}
 const api = new ApiGatewayV1Api(stack, "Api", {
   routes: {
-    "GET    /notes"     : "src/list.main",
-    "POST   /notes"     : "src/create.main",
+    "GET    /notes": "src/list.main",
+    "POST   /notes": "src/create.main",
     "GET    /notes/{id}": "src/get.main",
     "PUT    /notes/{id}": "src/update.main",
     "DELETE /notes/{id}": "src/delete.main",
@@ -163,8 +163,8 @@ api.attachPermissionsToRoute("GET /notes", ["s3"]);
 ```js {11}
 const api = new ApiGatewayV1Api(stack, "Api", {
   routes: {
-    "GET    /notes"     : "src/list.main",
-    "POST   /notes"     : "src/create.main",
+    "GET    /notes": "src/list.main",
+    "POST   /notes": "src/create.main",
     "GET    /notes/{id}": "src/get.main",
     "PUT    /notes/{id}": "src/update.main",
     "DELETE /notes/{id}": "src/delete.main",
@@ -272,7 +272,10 @@ If you have the domain name stored in AWS SSM Parameter Store, you can reference
 ```js {3,6-9}
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
 
-const rootDomain = StringParameter.valueForStringParameter(stack, `/myApp/domain`);
+const rootDomain = StringParameter.valueForStringParameter(
+  stack,
+  `/myApp/domain`
+);
 
 new ApiGatewayV1Api(stack, "Api", {
   customDomain: {
@@ -392,7 +395,7 @@ new ApiGatewayV1Api(stack, "Api", {
     myAuthorizer: {
       type: "user_pools",
       userPoolIds: [userPool.userPoolId],
-    }
+    },
   },
   defaults: {
     authorizer: "myAuthorizer",
@@ -469,7 +472,7 @@ new ApiGatewayV1Api(stack, "Api", {
     "GET /": {
       cdk: {
         function: fn,
-      }
+      },
     },
   },
 });
@@ -491,7 +494,7 @@ new ApiGatewayV1Api(stack, "Api", {
     "GET /": {
       cdk: {
         function: alias,
-      }
+      },
     },
   },
 });
@@ -532,8 +535,8 @@ const api = new ApiGatewayV1Api(stack, "Api", {
 const plan = api.cdk.restApi.addUsagePlan("UsagePlan", {
   throttle: {
     rateLimit: 10,
-    burstLimit: 2
-  }
+    burstLimit: 2,
+  },
 });
 
 const key = api.cdk.restApi.addApiKey("ApiKey");
@@ -553,11 +556,11 @@ new ApiGatewayV1Api(stack, "Api", {
           requestParameters: {
             "application/json": JSON.stringify({
               action: "sayHello",
-              pollId: "$util.escapeJavaScript($input.params('who'))"
-            })
-          }
-        }
-      }
+              pollId: "$util.escapeJavaScript($input.params('who'))",
+            }),
+          },
+        },
+      },
     },
   },
 });

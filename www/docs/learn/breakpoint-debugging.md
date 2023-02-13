@@ -14,13 +14,13 @@ Open `services/core/article.ts` and set a breakpoint in the `list` function.
 
 The `list` domain function is called by our GraphQL API to get the list of all the articles that've been submitted. So it'll get run when we load our app homepage.
 
-We currently have `sst start` running in our terminal. Let's switch over to debugging through VS Code.
+We currently have `sst dev` running in our terminal. Let's switch over to debugging through VS Code.
 
 ---
 
 ## Run and debug
 
-First, stop the `sst start` CLI.
+First, stop the `sst dev` CLI.
 
 Then select the **Run and Debug** tab in the top left menu in VS Code, and click **Start Debugging** at the top.
 

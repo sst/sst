@@ -1,0 +1,17 @@
+{
+  "name": "@api-sst-auth-google/core",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "sst bind vitest",
+    "typecheck": "tsc -noEmit"
+  },
+  "devDependencies": {
+    "vitest": "^0.28.5",
+    "@types/node": "^18.13.0",
+    "sst": "^2.0.18"
+  },
+  "dependencies": {
+    "sst": "^2.0.18"
+  }
+}

@@ -12,7 +12,7 @@ Install the example.
 $ npx create-sst@latest --template=examples/planetscale
 # Or with Yarn
 $ yarn create sst --template=examples/planetscale
-``` 
+```
 
 ## Commands
 

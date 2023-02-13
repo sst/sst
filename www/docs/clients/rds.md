@@ -2,10 +2,10 @@
 description: "Overview of the `rds` module."
 ---
 
-Overview of the `rds` module in the `@serverless-stack/node` package.
+Overview of the `rds` module in the `sst/node` package.
 
 ```ts
-import { ... } from "@serverless-stack/node/rds"
+import { ... } from "sst/node/rds"
 ```
 
 The `rds` module has the following exports.
@@ -23,7 +23,7 @@ The properties let you access the resources that are bound to the function.
 This module helps with accessing [`RDS`](../constructs/RDS.md) constructs.
 
 ```ts
-import { RDS } from "@serverless-stack/node/rds";
+import { RDS } from "sst/node/rds";
 ```
 
 #### clusterArn

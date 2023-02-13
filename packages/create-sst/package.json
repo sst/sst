@@ -1,11 +1,14 @@
 {
   "name": "create-sst",
-  "version": "1.18.2",
+  "version": "2.0.21",
   "homepage": "https://serverless-stack.com",
   "description": "Create Serverless Stack apps.",
   "main": "src/index.mjs",
   "bin": {
     "create-sst": "./bin/create-sst.mjs"
+  },
+  "exports": {
+    "import": "./src/index.mjs"
   },
   "author": {
     "name": "Serverless Stack",
@@ -23,15 +26,18 @@
   "dependencies": {
     "cli-spinners": "^2.6.1",
     "commander": "^9.1.0",
+    "diff-match-patch": "^1.0.5",
     "fast-json-patch": "^3.1.1",
     "inquirer": "^8.2.2",
     "node-fetch": "3.2.10",
     "ora": "^6.1.0",
+    "patch-package": "^6.5.1",
     "undici": "^5.9.1"
   },
   "gitHead": "8ac2d0abc11d5de721c87658bb445e3d6c211dcf",
   "devDependencies": {
     "@tsconfig/node14": "^1.0.1",
+    "@types/diff-match-patch": "^1.0.32",
     "@types/inquirer": "^8.2.1",
     "@types/node": "^17.0.23",
     "typescript": "^4.8.4"

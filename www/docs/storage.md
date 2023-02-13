@@ -22,7 +22,7 @@ It allows you upload, delete, and download files. You can also create and delete
 ## Creating a Bucket
 
 ```js
-import { Bucket } from "@serverless-stack/resources";
+import { Bucket } from "sst/constructs";
 
 new Bucket(stack, "myFiles");
 ```
@@ -32,7 +32,7 @@ new Bucket(stack, "myFiles");
 To access your files inside a Lambda Function, you need to bind the bucket to the function.
 
 ```js {10,12}
-import { Bucket, Function } from "@serverless-stack/resources";
+import { Bucket, Function } from "sst/constructs";
 
 // Create a Bucket
 const bucket = new Bucket(stack, "myFiles");
@@ -47,7 +47,7 @@ new Function(stack, "Function", {
 You can then use the AWS S3 SDK to access files in the Bucket.
 
 ```js title="src/lambda.js"
-import { Bucket } from "@serverless-stack/node/bucket";
+import { Bucket } from "sst/node/bucket";
 import AWS from "aws-sdk";
 const S3 = new AWS.S3();
 
@@ -82,7 +82,7 @@ new Api(stack, "Api", {
 And the Lambda function requests a URL from S3.
 
 ```js
-import { Bucket } from "@serverless-stack/node/bucket";
+import { Bucket } from "sst/node/bucket";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const signedUrl = s3.getSignedUrl("putObject", {

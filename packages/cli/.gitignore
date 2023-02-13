@@ -1,4 +1,0 @@
-# Build outputs in test
-/test/**/.build/**
-/test/**/.sst/**
-/test/**/cdk.out/**

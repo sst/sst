@@ -1,6 +1,0 @@
-{
-  "name": "config-main-js",
-  "stage": "prod",
-  "region": "us-west-2",
-  "main": "infra/index.js"
-}

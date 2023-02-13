@@ -41,19 +41,17 @@ SST is an extension of [AWS CDK](https://aws.amazon.com/cdk/). It's fairly simpl
    Your classes are written as functions instead of `cdk.Stack`. Here is what the JavaScript version looks like.
 
    ```js
-   import * as sst from "@serverless-stack/resources";
+   import * as sst from "sst/constructs";
 
-   export function MyStack(ctx) {
-   }
+   export function MyStack(ctx) {}
    ```
 
    And in TypeScript.
 
    ```ts
-   import * as sst from "@serverless-stack/resources";
+   import * as sst from "sst/constructs";
 
-   export function MyStack(ctx: sst.StackContext) {
-   }
+   export function MyStack(ctx: sst.StackContext) {}
    ```
 
 4. Lambdas use `sst.Function`
@@ -62,4 +60,4 @@ SST is an extension of [AWS CDK](https://aws.amazon.com/cdk/). It's fairly simpl
 
 5. Include the right packages
 
-   You don't need the `aws-cdk` package in your `package.json`. Instead you'll need [`@serverless-stack/cli`](packages/cli.md) and [`@serverless-stack/resources`](constructs/index.md).
+   You don't need the `aws-cdk` package in your `package.json`. Instead you'll need [`sst`](packages/sst.md) package.

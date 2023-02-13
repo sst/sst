@@ -7,18 +7,15 @@
   "commit": false,
   "fixed": [
     [
-      "@serverless-stack/resources",
-      "@serverless-stack/cli",
-      "@serverless-stack/cli2",
-      "@serverless-stack/core",
       "@serverless-stack/console",
       "create-sst",
-      "@serverless-stack/node",
-      "@serverless-stack/static-site-env"
+      "sst",
+      "astro-sst",
+      "solid-start-sst"
     ]
   ],
   "linked": [],
-  "access": "restricted",
+  "access": "public",
   "baseBranch": "master",
   "updateInternalDependencies": "patch",
   "ignore": []

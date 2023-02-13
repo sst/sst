@@ -30,11 +30,11 @@ module.exports = {
     image: "img/og-image.png",
     metaImage: "img/og-image.png",
     announcementBar: {
-      id: "announcement",
-      content: `If you like SST, <a target="_blank" href="${config.github}">give it a star on GitHub</a>! <span class="icon" />`,
+      id: "v2",
+      content: `SST v2 is now available! Checkout the <a href="https://docs.sst.dev/upgrade-guide">migration guide</a>`,
       backgroundColor: "#395C6B",
       textColor: "#FFFFFF",
-      isCloseable: true,
+      isCloseable: false,
     },
     navbar: {
       title: "",
@@ -47,7 +47,13 @@ module.exports = {
           to: "/",
           label: "Home",
           position: "left",
-          activeBaseRegex: "^/(?!(constructs|clients))",
+          activeBaseRegex: "^/(?!(constructs|clients|learn))",
+        },
+        {
+          to: "/learn",
+          label: "Learn",
+          position: "left",
+          activeBaseRegex: "^/learn",
         },
         {
           href: config.examples,
@@ -58,7 +64,7 @@ module.exports = {
           to: "/constructs",
           label: "Constructs",
           position: "left",
-          activeBaseRegex: "^/constructs$|^/constructs/(?!v0)",
+          activeBaseRegex: "^/constructs$|^/constructs/(?!v0|v1)",
         },
         {
           to: "/clients",
@@ -87,20 +93,20 @@ module.exports = {
           title: "Docs",
           items: [
             {
-              label: "Learn SST",
-              to: "learn",
-            },
-            {
               label: "Quick Start",
               to: "quick-start",
             },
             {
-              label: "@serverless-stack/cli",
-              to: "packages/cli",
+              label: "What is SST",
+              to: "what-is-sst",
             },
             {
-              label: "Live Lambda Development",
+              label: "Live Lambda Dev",
               to: "live-lambda-development",
+            },
+            {
+              label: "Frequently Asked Questions",
+              to: "faq",
             },
           ],
         },
@@ -177,7 +183,7 @@ module.exports = {
               const splits = params.docPath.split("/");
               const name = splits[splits.length - 1].replace(".md", ".ts");
               return (
-                "https://github.com/serverless-stack/sst/blob/master/packages/resources/src/" +
+                "https://github.com/serverless-stack/sst/blob/master/packages/sst/src/constructs/" +
                 name
               );
             }
@@ -206,7 +212,7 @@ module.exports = {
             from: "/working-locally",
           },
           {
-            to: "/constructs/GraphQLApi",
+            to: "/constructs/Api",
             from: "/constructs/ApolloApi",
           },
           {

@@ -2,10 +2,10 @@
 description: "Overview of the `queue` module."
 ---
 
-Overview of the `queue` module in the `@serverless-stack/node` package.
+Overview of the `queue` module in the `sst/node` package.
 
 ```ts
-import { ... } from "@serverless-stack/node/queue"
+import { ... } from "sst/node/queue"
 ```
 
 The `queue` module has the following exports.
@@ -23,7 +23,7 @@ The properties let you access the resources that are bound to the function.
 This module helps with accessing [`Queue`](../constructs/Queue.md) constructs.
 
 ```ts
-import { Queue } from "@serverless-stack/node/queue";
+import { Queue } from "sst/node/queue";
 ```
 
 #### queueUrl

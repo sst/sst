@@ -19,7 +19,7 @@ import {
   zipWith,
 } from "remeda";
 import { useParams } from "react-router-dom";
-import type { Metadata } from "../../../../resources/src/Metadata";
+import type { Metadata } from "../../../../sst/src/constructs/Metadata";
 import { useClient } from "./client";
 import {
   GetObjectCommand,
@@ -53,8 +53,8 @@ type Result = {
 export function useStacks() {
   const params = useParams<{ app: string; stage: string }>();
   const cf = useClient(CloudFormationClient);
-  const ssm = useClient(SSMClient);
   const s3 = useClient(S3Client);
+  const ssm = useClient(SSMClient);
 
   return useQuery(
     ["stacks", params.app!, params.stage!],
@@ -62,12 +62,32 @@ export function useStacks() {
       let stacks: StackInfo[] = [];
 
       try {
-        const value = await ssm.send(
-          new GetParameterCommand({
-            Name: `/sst/bootstrap/bucket-name`,
-          })
-        )
-        const bucketName = value.Parameter.Value;
+        async function getMetadataBucket() {
+          // Lookup from SSM first (SST v1)
+          try {
+            const value = await ssm.send(
+              new GetParameterCommand({
+                Name: `/sst/bootstrap/bucket-name`,
+              })
+            );
+            return value.Parameter.Value;
+          } catch (e: any) {
+            if (e.name === "ParameterNotFound") {
+              // Lookup from Bootstrap stack output (SST v2)
+              const describe = await cf.send(
+                new DescribeStacksCommand({
+                  StackName: "SSTBootstrap",
+                })
+              );
+              const output = (describe.Stacks![0].Outputs || []).find(
+                (o) => o.OutputKey === "BucketName"
+              );
+              return output.OutputValue;
+            }
+            throw e;
+          }
+        }
+        const bucketName = await getMetadataBucket();
         const list = await s3.send(
           new ListObjectsV2Command({
             Bucket: bucketName,
@@ -87,6 +107,7 @@ export function useStacks() {
                 const stackName = item.Key.split(".").at(-2);
                 const resp = new Response(result.Body as ReadableStream);
                 const constructs = ((await resp.json()) || []) as Metadata[];
+                console.log(constructs);
                 // Get the stack info. Note that if stack is not found in CloudFormation,
                 // supress the error.
                 let describe;
@@ -172,7 +193,7 @@ export function useStacks() {
         });
 
         // Limit to 3 at a time to avoid hitting AWS limits
-        const meta: Awaited<ReturnType<typeof work[number]>>[] = [];
+        const meta: Awaited<ReturnType<(typeof work)[number]>>[] = [];
         while (work.length) {
           meta.push(...(await Promise.all(work.splice(0, 3).map((f) => f()))));
         }
@@ -191,84 +212,87 @@ export function useStacks() {
         );
       }
 
-      const result: Result = {
-        app: params.app!,
-        stage: params.stage!,
-        all: stacks,
-        byName: fromPairs(stacks.map((x) => [x.info.StackName!, x])),
-        constructs: {
-          integrations: pipe(
-            stacks,
-            flatMap((x) => x.constructs.all),
-            flatMap((construct): [string, Metadata][] => {
-              // TODO: Not sure why data is ever undefined but Phil Astle reported it
-              if (!construct.data) return [];
-              switch (construct.type) {
-                case "WebSocketApi":
-                case "ApiGatewayV1Api":
-                  return construct.data.routes
-                    .filter((r) => r.fn)
-                    .map((r) => [r.fn!.node, construct]);
-                case "Api":
-                  return construct.data.routes
-                    .filter((r) => r.fn)
-                    .map((r) => [r.fn!.node, construct]);
-                case "AppSync":
-                  return construct.data.dataSources
-                    .filter((r) => r.fn)
-                    .map((r) => [r.fn!.node, construct]);
-                case "Cognito":
-                  return construct.data.triggers
-                    .filter((r) => r.fn)
-                    .map((r) => [r.fn!.node, construct]);
-                case "Bucket":
-                  return construct.data.notifications
-                    .filter((fn) => fn)
-                    .map((fn) => [fn!.node, construct]);
-                case "Cron":
-                  if (!construct.data.job) return [];
-                  return [[construct.data.job.node, construct]];
-                case "EventBus":
-                  return construct.data.rules.flatMap((r) =>
-                    r.targets.map(
-                      (fn) => [fn!.node, construct] as [string, Metadata]
-                    )
-                  );
-                case "KinesisStream":
-                  return construct.data.consumers
-                    .filter((c) => c.fn)
-                    .map((c) => [c.fn!.node, construct]);
-                case "Queue":
-                  if (!construct.data.consumer) return [];
-                  return [[construct.data.consumer.node, construct]];
-                case "Table":
-                  return construct.data.consumers.map((c) => [
-                    c.fn!.node,
-                    construct,
-                  ]);
-                case "Topic":
-                  return construct.data.subscribers.map((fn) => [
-                    fn!.node,
-                    construct,
-                  ]);
-                default:
-                  return [];
-              }
-            }),
-            groupBy((x) => x[0]),
-            mapValues((x) => x.map((tuple) => tuple[1])),
-            mapValues((list) => uniqBy(list, (m) => m.addr))
-          ),
-          byType: pipe(
-            stacks,
-            map((stack) => pipe(stack.constructs.byAddr, values)),
-            flatMap((x) => x),
-            groupBy((x) => x.type)
-          ),
-        },
-      };
-      console.log("Processed metadata", result);
-      return result;
+      try {
+        const result: Result = {
+          app: params.app!,
+          stage: params.stage!,
+          all: stacks,
+          byName: fromPairs(stacks.map((x) => [x.info.StackName!, x])),
+          constructs: {
+            integrations: pipe(
+              stacks,
+              flatMap((x) => x.constructs.all),
+              flatMap((construct): [string, Metadata][] => {
+                // TODO: Not sure why data is ever undefined but Phil Astle reported it
+                if (!construct.data) return [];
+                switch (construct.type) {
+                  case "WebSocketApi":
+                  case "ApiGatewayV1Api":
+                    return construct.data.routes
+                      .filter((r) => r.fn)
+                      .map((r) => [r.fn!.node, construct]);
+                  case "Api":
+                    return construct.data.routes
+                      .filter((r) => r.fn)
+                      .map((r) => [r.fn!.node, construct]);
+                  case "AppSync":
+                    return construct.data.dataSources
+                      .filter((r) => r.fn)
+                      .map((r) => [r.fn!.node, construct]);
+                  case "Cognito":
+                    return construct.data.triggers
+                      .filter((r) => r.fn)
+                      .map((r) => [r.fn!.node, construct]);
+                  case "Bucket":
+                    return construct.data.notifications
+                      .filter((fn) => fn)
+                      .map((fn) => [fn!.node, construct]);
+                  case "Cron":
+                    if (!construct.data.job) return [];
+                    return [[construct.data.job.node, construct]];
+                  case "EventBus":
+                    return construct.data.rules.flatMap((r) =>
+                      r.targets.map(
+                        (fn) => [fn!.node, construct] as [string, Metadata]
+                      )
+                    );
+                  case "KinesisStream":
+                    return construct.data.consumers
+                      .filter((c) => c.fn)
+                      .map((c) => [c.fn!.node, construct]);
+                  case "Queue":
+                    if (!construct.data.consumer) return [];
+                    return [[construct.data.consumer.node, construct]];
+                  case "Table":
+                    return construct.data.consumers
+                      .filter((r) => r.fn)
+                      .map((c) => [c.fn!.node, construct]);
+                  case "Topic":
+                    return construct.data.subscribers
+                      .filter((r) => r)
+                      .map((fn) => [fn!.node, construct]);
+                  default:
+                    return [];
+                }
+              }),
+              groupBy((x) => x[0]),
+              mapValues((x) => x.map((tuple) => tuple[1])),
+              mapValues((list) => uniqBy(list, (m) => m.addr))
+            ),
+            byType: pipe(
+              stacks,
+              map((stack) => pipe(stack.constructs.byAddr, values)),
+              flatMap((x) => x),
+              groupBy((x) => x.type)
+            ),
+          },
+        };
+        console.log("Processed metadata", result);
+        return result;
+      } catch (ex) {
+        console.error(ex);
+        throw ex;
+      }
     },
     {
       retry: true,

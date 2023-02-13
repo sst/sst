@@ -1,86 +1,93 @@
 ---
 title: Constructs
 sidebar_label: Overview
-description: "Constructs are the basic building blocks of SST apps."
+description: "Import from sst/constructs to add a construct to your app."
 ---
 
 import config from "../../config";
+import TabItem from "@theme/TabItem";
 import HeadlineText from "@site/src/components/HeadlineText";
+import MultiPackagerCode from "@site/src/components/MultiPackagerCode";
 
 <HeadlineText>
 
-Constructs are the basic building blocks of SST apps.
+Import from `sst/constructs` to add a construct to your app.
 
 </HeadlineText>
 
+Use the constructs to can add any feature to your app. Like a frontend, database, API, cron job, etc.
+
 ---
 
-They allow you to define the infrastructure of your app. Each construct bring together multiple AWS resources to make up a functional unit.
+## About
 
-<details>
-<summary>Behind the scenes</summary>
+A Construct is a TypeScript or JavaScript class, and each class corresponds to a feature of your app.
 
 SST's constructs are built on top of [AWS CDK](https://aws.amazon.com/cdk/). They are designed to address specific use cases and have sensible defaults that make it easier to use AWS.
 
-However, you can configure these defaults. You can even use CDK constructs in your SST app. Read more about the [design principles](../design-principles.md#progressive-disclosure) we use to build our constructs.
-
-</details>
-
-The [`@serverless-stack/resources`](https://www.npmjs.com/package/@serverless-stack/resources) package provides a set of additional CDK constructs necessary to build an SST app.
+However, you can configure these defaults. You can even use CDK constructs in your SST app. To learn more [read about our design principles](../design-principles.md#progressive-disclosure).
 
 ---
 
 ## Installation
 
-This package is usually installed together with [`@serverless-stack/cli`](../packages/cli.md).
+The constructs are available through the [`sst`](https://www.npmjs.com/package/sst) npm package.
+
+<MultiPackagerCode>
+<TabItem value="npm">
 
 ```bash
-# With npm
-npm install @serverless-stack/cli @serverless-stack/resources --save-exact
-# Or with Yarn
-yarn add @serverless-stack/cli @serverless-stack/resources --exact
+npm install sst --save-exact
 ```
 
-Note that, the version of these packages should be kept in sync.
+</TabItem>
+<TabItem value="yarn">
+
+```bash
+yarn add sst --exact
+```
+
+</TabItem>
+<TabItem value="pnpm">
+
+```bash
+pnpm add sst --save-exact
+```
+
+</TabItem>
+</MultiPackagerCode>
+
+If you are using our starters, the `sst` package should already be installed.
 
 ---
 
-## Importing constructs
+## Usage
 
-You can either import specific constructs in your app.
+You can then import the constructs through `sst/constructs`.
 
-```js
-import { Api } from "@serverless-stack/resources";
+```ts
+import { Api } from "sst/constructs";
 ```
 
-Or import them all.
+And then add that feature by creating a new instance in your stacks.
 
-```js
-import * as sst from "@serverless-stack/resources";
+```ts
+new Api(stack, "Api", {
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
 ```
 
 ---
 
-## Type of constructs
+## Types of constructs
 
-SST comes with a two types of constructs.
+Check out the sidebar on the left for the different kinds of constructs that SST has. Including:
 
-### Low-level
-
-These either extend or replace the native CDK constructs.
-
-- [`App`](../constructs/App.md)
-- [`Stack`](../constructs/Stack.md)
-- [`Function`](../constructs/Function.md)
-
-### Higher-level
-
-These are higher level abstractions that wrap around multiple constructs to serve specific use cases.
-
-- [`Api`](../constructs/Api.md)
-- [`Auth`](../constructs/Auth.md)
-- [`Cron`](../constructs/Cron.md)
-- [`Table`](../constructs/Table.md)
-- [`Topic`](../constructs/Topic.md)
-- [`Queue`](../constructs/Queue.md)
-- _And many more!_
+- **Core**: Used by every SST app.
+- **Frontend**: Deploys a frontend to AWS.
+- **Database**: Add a serverless database to your app.
+- **API**: Add a dedicated API to your app.
+- **Async**: This includes async features like cron jobs, long running jobs, queues, etc.
+- **S3 buckets**, and more.

@@ -5,7 +5,7 @@ The `Bucket` construct is a higher level CDK construct that makes it easy to cre
 ### Using the minimal config
 
 ```js
-import { Bucket } from "@serverless-stack/resources";
+import { Bucket } from "sst/constructs";
 
 new Bucket(stack, "Bucket");
 ```
@@ -15,7 +15,7 @@ new Bucket(stack, "Bucket");
 #### Using the minimal config
 
 ```js
-import { Bucket } from "@serverless-stack/resources";
+import { Bucket } from "sst/constructs";
 
 new Bucket(stack, "Bucket", {
   notifications: {
@@ -27,8 +27,6 @@ new Bucket(stack, "Bucket", {
 Or configuring the notification events.
 
 ```js {y}
-import { EventType } from "aws-cdk-lib/aws-s3";
-
 const bucket = new Bucket(stack, "Bucket", {
   notifications: {
     myNotification: {
@@ -46,7 +44,7 @@ Create an _empty_ bucket and lazily add the notifications.
 ```js {3}
 const bucket = new Bucket(stack, "Bucket");
 
-bucket.addNotifications(this, {
+bucket.addNotifications(stack, {
   myNotification: "src/notification.main",
 });
 ```
@@ -134,9 +132,7 @@ So in the above example, the `myNotification1` function doesn't use the `timeout
 
 Allow the notification functions to access S3.
 
-```js {16}
-import { EventType } from "aws-cdk-lib/aws-s3";
-
+```js {14}
 const bucket = new Bucket(stack, "Bucket", {
   notifications: {
     myNotification1: {
@@ -157,9 +153,7 @@ bucket.attachPermissions(["s3"]);
 
 Allow the first notification function to access S3.
 
-```js {16}
-import { EventType } from "aws-cdk-lib/aws-s3";
-
+```js {14}
 const bucket = new Bucket(stack, "Bucket", {
   notifications: {
     myNotification1: {
@@ -183,9 +177,9 @@ bucket.attachPermissionsToNotification(0, ["s3"]);
 You can directly pass in an instance of the [Queue](Queue.md) construct.
 
 ```js {6}
-import { Queue } from "@serverless-stack/resources";
+import { Queue } from "sst/constructs";
 
-const myQueue = new Queue(this, "MyQueue");
+const myQueue = new Queue(stack, "MyQueue");
 
 new Bucket(stack, "Bucket", {
   notifications: {
@@ -197,7 +191,7 @@ new Bucket(stack, "Bucket", {
 #### Configuring the notification
 
 ```js {5-9}
-const myQueue = new Queue(this, "MyQueue");
+const myQueue = new Queue(stack, "MyQueue");
 
 new Bucket(stack, "Bucket", {
   notifications: {
@@ -205,7 +199,7 @@ new Bucket(stack, "Bucket", {
       queue: myQueue,
       events: ["object_created_put"],
       filters: [{ prefix: "imports/" }, { suffix: ".jpg" }],
-    }
+    },
   },
 });
 ```
@@ -217,9 +211,9 @@ new Bucket(stack, "Bucket", {
 You can directly pass in an instance of the [Topic](Topic.md) construct.
 
 ```js {6}
-import { Topic } from "@serverless-stack/resources";
+import { Topic } from "sst/constructs";
 
-const myTopic = new Topic(this, "MyTopic");
+const myTopic = new Topic(stack, "MyTopic");
 
 new Bucket(stack, "Bucket", {
   notifications: {
@@ -231,7 +225,7 @@ new Bucket(stack, "Bucket", {
 #### Configuring the notification
 
 ```js {5-9}
-const myTopic = new Topic(this, "MyTopic");
+const myTopic = new Topic(stack, "MyTopic");
 
 new Bucket(stack, "Bucket", {
   notifications: {
@@ -239,7 +233,7 @@ new Bucket(stack, "Bucket", {
       topic: myTopic,
       events: ["object_created_put"],
       filters: [{ prefix: "imports/" }, { suffix: ".jpg" }],
-    }
+    },
   },
 });
 ```
@@ -286,7 +280,7 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 
 new Bucket(stack, "Bucket", {
   cdk: {
-    bucket: s3.Bucket.fromBucketArn(this, "IBucket", bucketArn),
+    bucket: s3.Bucket.fromBucketArn(stack, "IBucket", bucketArn),
   },
 });
 ```

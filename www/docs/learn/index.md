@@ -1,6 +1,5 @@
 ---
 title: Learn SST
-sidebar_label: Preface
 description: "Learn how to build your first full-stack application with SST."
 ---
 

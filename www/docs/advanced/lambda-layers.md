@@ -36,13 +36,13 @@ Say you wanted to use the [sharp package](https://www.npmjs.com/package/sharp) i
    ```js
    import * as lambda from "aws-cdk-lib/aws-lambda";
 
-   new sst.Function(this, "Function", {
+   new sst.Function(stack, "Function", {
      handler: "src/lambda.main",
      bundle: {
        externalModules: ["sharp"],
      },
      layers: [
-       new lambda.LayerVersion(this, "MyLayer", {
+       new lambda.LayerVersion(stack, "MyLayer", {
          code: lambda.Code.fromAsset("layers/sharp"),
        }),
      ],
@@ -74,13 +74,13 @@ Say you wanted to use the [chrome-aws-lambda-layer](https://github.com/shelfio/c
    const layerArn =
      "arn:aws:lambda:us-east-1:764866452798:layer:chrome-aws-lambda:22";
 
-   new sst.Function(this, "Function", {
+   new sst.Function(stack, "Function", {
      handler: "src/lambda.main",
      bundle: {
        externalModules: ["chrome-aws-lambda"],
      },
      layers: [
-       lambda.LayerVersion.fromLayerVersionArn(this, "ChromeLayer", layerArn),
+       lambda.LayerVersion.fromLayerVersionArn(stack, "ChromeLayer", layerArn),
      ],
    });
    ```

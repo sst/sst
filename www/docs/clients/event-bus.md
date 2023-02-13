@@ -2,10 +2,10 @@
 description: "Overview of the `event-bus` module."
 ---
 
-Overview of the `event-bus` module in the `@serverless-stack/node` package.
+Overview of the `event-bus` module in the `sst/node` package.
 
 ```ts
-import { ... } from "@serverless-stack/node/event-bus"
+import { ... } from "sst/node/event-bus"
 ```
 
 The `event-bus` module has the following exports.
@@ -23,7 +23,7 @@ The properties let you access the resources that are bound to the function.
 This module helps with accessing [`EventBus`](../constructs/EventBus.md) constructs.
 
 ```ts
-import { EventBus } from "@serverless-stack/node/event-bus";
+import { EventBus } from "sst/node/event-bus";
 ```
 
 #### eventBusName

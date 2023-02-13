@@ -4,7 +4,17 @@ title: Anonymous Telemetry
 description: "SST collects completely anonymous telemetry data about general usage. You can opt-out of this program at any time."
 ---
 
-SST collects completely **anonymous** telemetry data about general usage. Participation in this anonymous program is optional, and you can opt-out if you'd not like to share any information.
+import HeadlineText from "@site/src/components/HeadlineText";
+
+<HeadlineText>
+
+SST collects completely anonymous telemetry data about general usage.
+
+</HeadlineText>
+
+Participation in this anonymous program is optional, and you can opt-out if you'd not like to share any information.
+
+---
 
 ### How do I opt-out?
 
@@ -28,6 +38,8 @@ npx sst telemetry enable
 
 You can also opt-out by setting an environment variable: `SST_TELEMETRY_DISABLED=1`.
 
+---
+
 ### Why is telemetry collected?
 
 SST has grown considerably since its release. Prior to telemetry collection, our improvement process has been very much a manual one.
@@ -36,11 +48,13 @@ Telemetry allows us to accurately gauge SST feature usage, pain points, and cust
 
 It also allows us to verify if the improvements made to SST are improving the baseline for all applications.
 
+---
+
 ### What is being collected?
 
 We track the following anonymously:
 
-- Command invoked (ie. `sst build`, `sst start`, or `sst deploy`)
+- Command invoked (ie. `sst build`, `sst dev`, or `sst deploy`)
 - Version of SST in use
 - General machine information (e.g. number of CPUs, macOS/Windows/Linux, whether or not the command was run within CI)
 
@@ -59,6 +73,8 @@ An example telemetry event looks like:
 
 These events are then sent to an endpoint hosted on our side. You can view the source for the service that stores the telemetry events in this repo: [`serverless-stack/telemetry`](https://github.com/serverless-stack/telemetry)
 
+---
+
 ### What about sensitive data or secrets?
 
 We **do not** collect any metrics which may contain sensitive data.
@@ -66,6 +82,8 @@ We **do not** collect any metrics which may contain sensitive data.
 This includes, but is not limited to: environment variables, file paths, contents of files, logs, or serialized JavaScript errors.
 
 We take your privacy and our security very seriously.
+
+---
 
 ### Will this data be shared?
 
