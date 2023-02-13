@@ -92,14 +92,21 @@ while (true) {
     continue;
   }
 
-  await fetch(
-    `${input.url}/runtime/invocation/${context.awsRequestId}/response`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(response),
+  while (true) {
+    try {
+      await fetch(
+        `${input.url}/runtime/invocation/${context.awsRequestId}/response`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(response),
+        }
+      );
+      break;
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, 500));
     }
-  );
+  }
 }
