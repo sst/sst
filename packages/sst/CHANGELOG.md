@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.0.22
+
+### Patch Changes
+
+- [`1302913cf`](https://github.com/serverless-stack/sst/commit/1302913cfc82e7a23dae1712149345883b8305b9) Thanks [@fwang](https://github.com/fwang)! - sst env: handle sites without environment
+
 ## 2.0.21
 
 ### Patch Changes
