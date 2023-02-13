@@ -9,10 +9,10 @@
   "devDependencies": {
     "@types/node": "^18.13.0",
     "@types/aws-lambda": "^8.10.110",
-    "sst": "^2.0.16"
+    "sst": "^2.0.18"
   },
   "dependencies": {
-    "sst": "^2.0.16",
+    "sst": "^2.0.18",
     "@pothos/core": "^3.25.0",
     "graphql": "^16.6.0",
     "ulid": "^2.3.0",

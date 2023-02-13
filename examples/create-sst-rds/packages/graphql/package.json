@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "type": "module",
   "dependencies": {
-    "wonka": "^6.2.1",
+    "wonka": "^6.2.3",
     "@genql/runtime": "^2.10.0"
   },
   "devDependencies": {
