@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.0.23
+
+### Patch Changes
+
+- [`b25e6719a`](https://github.com/serverless-stack/sst/commit/b25e6719a0f6a005f0109c96a9792ccd438f9919) Thanks [@thdxr](https://github.com/thdxr)! - Fix stack file changes not detected on windows
+
 ## 2.0.22
 
 ### Patch Changes
