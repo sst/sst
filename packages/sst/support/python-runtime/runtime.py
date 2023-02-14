@@ -74,7 +74,7 @@ if __name__ == '__main__':
         r.getheader('Lambda-Runtime-Invoked-Function-Arn'),
         r.getheader('Lambda-Runtime-Aws-Request-Id'),
         r.getheader('Lambda-Runtime-Deadline-Ms'),
-        r.getheader('Lambda-Runtime-Cognito-Identity'),
+        r.getheader('Lambda-Runtime-Cognito-Identity') or '{}',
         r.getheader('Lambda-Runtime-Client-Context')
     )
 
