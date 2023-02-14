@@ -282,6 +282,8 @@ export class NextjsSite extends SsrSite {
       headerBehavior: cloudfront.CacheHeaderBehavior.allowList(
         // required by image optimization request
         "accept",
+        // required by middleware for <Link /> routing in place
+        "rsc",
         // required by server request
         "x-op-middleware-request-headers",
         "x-op-middleware-response-headers",
