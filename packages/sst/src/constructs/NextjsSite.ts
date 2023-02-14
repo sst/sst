@@ -64,14 +64,22 @@ export class NextjsSite extends SsrSite {
   }
 
   protected createFunctionForRegional(): lambda.Function {
-    const { runtime, timeout, memorySize, permissions, environment, cdk } =
-      this.props;
+    const {
+      runtime,
+      timeout,
+      memorySize,
+      permissions,
+      environment,
+      cdk,
+      bind,
+    } = this.props;
     const ssrFn = new SsrFunction(this, `ServerFunction`, {
       description: "Server handler for Next.js",
       bundlePath: path.join(this.props.path, ".open-next", "server-function"),
       handler: "index.handler",
       runtime,
       timeout,
+      bind,
       memorySize,
       permissions,
       environment,
