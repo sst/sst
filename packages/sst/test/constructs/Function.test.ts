@@ -139,7 +139,7 @@ test("constructor: handler not exist", async () => {
   });
   await expect(async () => {
     await app.finish();
-  }).rejects.toThrow(/Cannot find a handler file for "test\/random.handler"/);
+  }).rejects.toThrow(/Could not find file for handler "test\/random.handler"/);
 });
 
 test("functionName: undefined", async () => {

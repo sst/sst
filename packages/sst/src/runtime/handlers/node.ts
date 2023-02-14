@@ -83,7 +83,7 @@ export const useNodeHandler = Context.memo(async () => {
       if (!file)
         return {
           type: "error",
-          errors: [`Could not find file for handler ${input.props.handler}`],
+          errors: [`Could not find file for handler "${input.props.handler}"`],
         };
 
       const nodejs = input.props.nodejs || {};
