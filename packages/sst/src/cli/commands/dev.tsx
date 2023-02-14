@@ -1,8 +1,5 @@
 import type { Program } from "../program.js";
 import type { CloudAssembly } from "aws-cdk-lib/cx-api";
-import { Colors } from "../colors.js";
-import { printHeader } from "../ui/header.js";
-import { mapValues, omitBy, pipe } from "remeda";
 
 export const dev = (program: Program) =>
   program.command(
@@ -14,6 +11,10 @@ export const dev = (program: Program) =>
         description: "Increase function timeout",
       }),
     async (args) => {
+      const { Colors } = await import("../colors.js");
+      const { printHeader } = await import("../ui/header.js");
+      const { mapValues, omitBy, pipe } = await import("remeda");
+      const path = await import("path");
       const { useRuntimeWorkers } = await import("../../runtime/workers.js");
       const { useIOTBridge } = await import("../../runtime/iot.js");
       const { useRuntimeServer } = await import("../../runtime/server.js");
@@ -32,7 +33,6 @@ export const dev = (program: Program) =>
         "../ui/deploy.js"
       );
       const { useLocalServer } = await import("../local/server.js");
-      const path = await import("path");
       const fs = await import("fs/promises");
       const crypto = await import("crypto");
       const { useFunctions } = await import("../../constructs/Function.js");
@@ -296,7 +296,12 @@ export const dev = (program: Program) =>
 
         watcher.subscribe("file.changed", async (evt) => {
           if (!project.metafile) return;
-          if (!project.metafile.inputs[evt.properties.relative]) return;
+          if (
+            !project.metafile.inputs[
+              evt.properties.relative.split(path.sep).join(path.posix.sep)
+            ]
+          )
+            return;
           build();
         });
 
