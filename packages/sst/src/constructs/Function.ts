@@ -411,7 +411,7 @@ export interface NodeJSProps {
    * ```js
    * new Function(stack, "Function", {
    *   nodejs: {
-   *     nodeModules: ["pg"]
+   *     install: ["pg"]
    *   }
    * })
    * ```
