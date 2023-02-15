@@ -282,7 +282,9 @@ export class NextjsSite extends SsrSite {
       headerBehavior: cloudfront.CacheHeaderBehavior.allowList(
         // required by image optimization request
         "accept",
-        // required by middleware for routing in place
+        // required by middleware for routing in place; see: https://github.com/vercel/next.js/blob/canary/packages/next/src/client/components/app-router-headers.ts#L8
+        // rsc = React Server Component, with next-router-<prefetch,state-tree> - it tells next-server to prefetch the routes
+        // with its relevant chunk assets to load
         "rsc", "next-router-prefetch", "next-router-state-tree",
         // required by server request
         "x-op-middleware-request-headers",
