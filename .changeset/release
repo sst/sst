@@ -1,0 +1,8 @@
+#!/bin/bash
+set -e
+
+pnpm build
+cp packages/sst/package.json packages/sst/dist/package.json
+cp packages/sst/README.md packages/sst/dist/README.md
+sed -i.bak -e '2,5d' packages/sst/dist/package.json
+pnpm changeset publish

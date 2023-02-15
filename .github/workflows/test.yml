@@ -1,0 +1,56 @@
+name: Test
+
+on:
+  push
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        # https://github.com/actions/checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        # https://github.com/actions/setup-node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16.x
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 7
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v3
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Check prettier
+        run: pnpm prettier --cache -c --loglevel=error .
+
+      - name: Build
+        run: pnpm build
+        working-directory: packages/sst
+
+
+      - name: Test
+        run: pnpm test
+        working-directory: packages/sst
+

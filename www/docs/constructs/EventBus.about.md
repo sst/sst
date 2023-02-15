@@ -10,7 +10,7 @@ You can have two types of targets; Function targets (with a Lambda function) or 
 ### Using the minimal config
 
 ```js
-import { EventBus } from "@serverless-stack/resources";
+import { EventBus } from "sst/constructs";
 
 new EventBus(stack, "Bus", {
   rules: {
@@ -18,7 +18,7 @@ new EventBus(stack, "Bus", {
       pattern: { source: ["myevent"] },
       targets: {
         myTarget1: "src/function1.handler",
-        myTarget2: "src/function2.handler"
+        myTarget2: "src/function2.handler",
       },
     },
   },
@@ -46,7 +46,7 @@ const bus = new EventBus(stack, "Bus", {
   },
 });
 
-bus.addRules(this, {
+bus.addRules(stack, {
   myRule2: {
     pattern: { source: ["myevent"] },
     targets: {
@@ -181,7 +181,7 @@ So in the above example, the `target1` function doesn't use the `timeout` that i
 Configure the internally created CDK `Target`.
 
 ```js {11-14}
-import { RuleTargetInput } from 'aws-cdk-lib/aws-events';
+import { RuleTargetInput } from "aws-cdk-lib/aws-events";
 
 new EventBus(stack, "Bus", {
   rules: {
@@ -193,7 +193,7 @@ new EventBus(stack, "Bus", {
           cdk: {
             target: {
               retryAttempts: 20,
-              message: RuleTargetInput.fromEventPath('$.detail'),
+              message: RuleTargetInput.fromEventPath("$.detail"),
             },
           },
         },
@@ -202,7 +202,8 @@ new EventBus(stack, "Bus", {
   },
 });
 ```
-In the example above, the function is invoked with the contents of the `detail` property on the event, instead of the envelope -  i.e. the original payload put onto the EventBus.
+
+In the example above, the function is invoked with the contents of the `detail` property on the event, instead of the envelope - i.e. the original payload put onto the EventBus.
 
 #### Attaching permissions for all targets
 
@@ -244,7 +245,7 @@ const bus = new EventBus(stack, "Bus", {
 bus.attachPermissionsToTarget("myRule", 0, ["s3"]);
 ```
 
-Here we are referring to the rule using the rule key, `myRule`. 
+Here we are referring to the rule using the rule key, `myRule`.
 
 ### Configuring Queue targets
 
@@ -253,14 +254,14 @@ Here we are referring to the rule using the rule key, `myRule`.
 You can directly pass in a [`Queue`](Queue.md).
 
 ```js {8}
-const myQueue = new Queue(this, "MyQueue");
+const myQueue = new Queue(stack, "MyQueue");
 
 new EventBus(stack, "Bus", {
   rules: {
     myRule: {
       pattern: { source: ["myevent"] },
       targets: {
-        myTarget1: myQueue
+        myTarget1: myQueue,
       },
     },
   },
@@ -300,9 +301,7 @@ import * as events from "aws-cdk-lib/aws-events";
 
 new EventBus(stack, "Bus", {
   cdk: {
-    eventBus: events.EventBus.fromEventBusName(
-      this, "ImportedBus", "default"
-    ),
+    eventBus: events.EventBus.fromEventBusName(stack, "ImportedBus", "default"),
   },
   rules: {
     myRule: {
@@ -351,7 +350,9 @@ import * as events from "aws-cdk-lib/aws-events";
 new EventBus(stack, "Bus", {
   cdk: {
     eventBus: events.EventBus.fromEventBusName(
-      this, "ImportedBus", eventBusArn
+      stack,
+      "ImportedBus",
+      eventBusArn
     ),
   },
   rules: {
@@ -378,7 +379,11 @@ new EventBus(stack, "Bus", {
       targets: {
         myTarget: {
           cdk: {
-            function: lambda.Function.fromFunctionName(stack, "ITarget", "my-function"),
+            function: lambda.Function.fromFunctionName(
+              stack,
+              "ITarget",
+              "my-function"
+            ),
           },
         },
       },
@@ -392,7 +397,7 @@ new EventBus(stack, "Bus", {
 You can create the EventBus construct in one stack, and add rules in other stacks. To do this, return the EventBus from the stack function
 
 ```ts title="stacks/MainStack.ts"
-import { EventBus, App, StackContext } from "@serverless-stack/resources";
+import { EventBus, App, StackContext } from "sst/constructs";
 
 export function MainStack({ stack }: StackContext) {
   const bus = new EventBus(stack, "Bus", {
@@ -408,16 +413,16 @@ export function MainStack({ stack }: StackContext) {
   });
 
   return {
-    bus
-  }
+    bus,
+  };
 }
 ```
 
 Then import the auth construct into another stack with `use` and call `addRules`. Note that the AWS resources for the added routes will be created in `AnotherStack`.
 
 ```ts title="stacks/AnotherStack.ts"
-import { EventBus, StackContext } from "@serverless-stack/resources";
-import { MainStack } from "./MainStack"
+import { EventBus, StackContext } from "sst/constructs";
+import { MainStack } from "./MainStack";
 
 export function AnotherStack({ stack }: StackContext) {
   const { bus } = use(MainStack);

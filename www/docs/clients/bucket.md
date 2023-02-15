@@ -2,10 +2,10 @@
 description: "Overview of the `bucket` module."
 ---
 
-Overview of the `bucket` module in the `@serverless-stack/node` package.
+Overview of the `bucket` module in the `sst/node` package.
 
 ```ts
-import { ... } from "@serverless-stack/node/bucket"
+import { ... } from "sst/node/bucket"
 ```
 
 The `bucket` module has the following exports.
@@ -23,7 +23,7 @@ The properties let you access the resources that are bound to the function.
 This module helps with accessing [`Bucket`](../constructs/Bucket.md) constructs.
 
 ```ts
-import { Bucket } from "@serverless-stack/node/bucket";
+import { Bucket } from "sst/node/bucket";
 ```
 
 #### bucketName

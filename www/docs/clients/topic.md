@@ -2,13 +2,13 @@
 description: "Overview of the `topic` module."
 ---
 
-Overview of the `topic` module in the `@serverless-stack/node` package.
+Overview of the `topic` module in the `sst/node` package.
 
 ```ts
-import { ... } from "@serverless-stack/node/topic"
+import { ... } from "sst/node/topic"
 ```
 
-The `topic` module has the following exports. 
+The `topic` module has the following exports.
 
 ---
 
@@ -17,7 +17,7 @@ The `topic` module has the following exports.
 This module helps with accessing [`Topic`](../constructs/Topic.md) constructs.
 
 ```ts
-import { Topic } from "@serverless-stack/node/topic";
+import { Topic } from "sst/node/topic";
 ```
 
 ### topicName

@@ -1,0 +1,8 @@
+@@ -25,16 +25,69 @@
+ m %22sst%22;
++%0Aimport %7B ExampleStack %7D from %22./stacks/ExampleStack%22
+ %0A%0Aexport
+@@ -204,16 +204,47 @@
+ s(app) %7B
++%0A    app.stack(ExampleStack)%0A  
+ %7D,%0A%7D sat

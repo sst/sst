@@ -50,14 +50,12 @@ The `ReactStaticSite` construct allows you to set the environment variables in y
 
 Create React App supports [setting build time environment variables](https://create-react-app.dev/docs/adding-custom-environment-variables/). In your JS files this looks like:
 
-
 ```js title="src/App.js"
 console.log(process.env.REACT_APP_API_URL);
 console.log(process.env.REACT_APP_USER_POOL_CLIENT);
 ```
 
 And in your HTML files:
-
 
 ```html title="public/index.html"
 <p>Api endpoint is: %REACT_APP_API_URL%</p>
@@ -85,21 +83,15 @@ On `sst deploy`, the environment variables will first be replaced by placeholder
 
 To use these values while developing, run `sst start` to start the [Live Lambda Development](../../live-lambda-development.md) environment.
 
-``` bash
+```bash
 npx sst start
 ```
 
-Then in your React app to reference these variables, add the [`sst-env`](../../packages/static-site-env.md) package.
-
-```bash
-npm install --save-dev @serverless-stack/static-site-env
-```
-
-And tweak the React `start` script to:
+Then in your React app to reference these variables, add the `sst env` command.
 
 ```json title="package.json" {2}
 "scripts": {
-  "start": "sst-env -- react-scripts start",
+  "start": "sst env \"react-scripts start\"",
   "build": "react-scripts build",
   "test": "react-scripts test",
   "eject": "react-scripts eject"
@@ -108,25 +100,26 @@ And tweak the React `start` script to:
 
 Now you can start your React app as usualy and it'll have the environment variables from your SST app.
 
-``` bash
+```bash
 npm run start
 ```
 
 There are a couple of things happening behind the scenes here:
 
 1. The `sst start` command generates a file with the values specified by `ReactStaticSite`'s `environment` prop.
-2. The `sst-env` CLI will traverse up the directories to look for the root of your SST app.
+2. The `sst env` CLI will traverse up the directories to look for the root of your SST app.
 3. It'll then find the file that's generated in step 1.
 4. It'll load these as environment variables before running the start command.
 
 :::note
-`sst-env` only works if the React app is located inside the SST app or inside one of its subdirectories. For example:
+`sst env` only works if the React app is located inside the SST app or inside one of its subdirectories. For example:
 
 ```
 /
   sst.json
   react-app/
 ```
+
 :::
 
 ### Configuring custom domains

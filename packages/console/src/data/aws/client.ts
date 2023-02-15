@@ -18,8 +18,7 @@ class CustomHandler extends FetchHttpHandler {
   handle(req: any, opts: any) {
     const { protocol, hostname, path } = req;
     req.protocol = this.ssl ? "https:" : "http:";
-    // TODO: can remove this ternary after some time
-    req.hostname = this.ssl ? "localhost:13557" : "localhost:12557";
+    req.hostname = "localhost:13557";
     req.path = `/proxy/${protocol}//${hostname}${path}`;
     return super.handle(req, opts);
   }

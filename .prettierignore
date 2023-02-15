@@ -15,3 +15,6 @@ package-lock.json
 /www/build/*.*
 # Ignore Next.js outputs
 /examples/**/.next/**/*.*
+dist
+build
+pnpm-lock.yaml

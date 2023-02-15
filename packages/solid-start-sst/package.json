@@ -1,0 +1,41 @@
+{
+  "name": "solid-start-sst",
+  "version": "2.0.23",
+  "description": "Adapter for Solid apps to work on AWS Lambda and AWS Lambda@Edge.",
+  "main": "./index.mjs",
+  "type": "module",
+  "solid": {
+    "type": "adapter"
+  },
+  "exports": {
+    "import": "./index.mjs"
+  },
+  "author": {
+    "name": "SST",
+    "url": "https://sst.dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/serverless-stack/sst.git",
+    "directory": "packages/solid-start-sst"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@rollup/plugin-commonjs": "^24.0.0",
+    "@rollup/plugin-json": "^6.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.1",
+    "rollup": "^2.79.1",
+    "terser": "^5.15.1"
+  },
+  "devDependencies": {
+    "solid-start": "0.2.11",
+    "vite": "^3.1.8"
+  },
+  "peerDependencies": {
+    "solid-start": "*",
+    "vite": "*"
+  }
+}

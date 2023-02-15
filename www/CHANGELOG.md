@@ -1,5 +1,31 @@
 # @serverless-stack/docs
 
+## 2.0.1
+
+### Patch Changes
+
+- [`332c5e06d`](https://github.com/serverless-stack/sst/commit/332c5e06d9f187725b6ab5235ae479bde22e3b6c) Thanks [@thdxr](https://github.com/thdxr)! - Remove quote requirement for bind and env commands. Be sure to update your `sst env` and `sst bind` commands to remove the `'`
+
+## 2.0.0
+
+## 2.0.0-rc.2
+
+### Patch Changes
+
+- [`8371c7bb9`](https://github.com/serverless-stack/sst/commit/8371c7bb935f9ae9c02e2790bb4735a94a022146) Thanks [@fwang](https://github.com/fwang)! - StaticSite: fix script path
+
+## 2.0.0-rc.1
+
+### Patch Changes
+
+- [`591b21b83`](https://github.com/serverless-stack/sst/commit/591b21b83c94ba87b4079f33d783fd4b672db603) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: fix script path
+
+## 2.0.0-rc.0
+
+### Major Changes
+
+- [`db5aadfbc`](https://github.com/serverless-stack/sst/commit/db5aadfbca8628eb23eee486c07e5819bb6cf750) Thanks [@thdxr](https://github.com/thdxr)! - 2.0
+
 ## 1.9.1
 
 ### Patch Changes

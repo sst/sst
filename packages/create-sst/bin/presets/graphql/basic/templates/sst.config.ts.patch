@@ -1,0 +1,8 @@
+@@ -25,16 +25,131 @@
+ m %22sst%22;
++%0Aimport %7B Database %7D from %22./stacks/Database%22%0Aimport %7B Web %7D from %22./stacks/Web%22%0Aimport %7B Api %7D from %22./stacks/Api%22
+ %0A%0Aexport
+@@ -266,16 +266,86 @@
+ s(app) %7B
++%0A    app%0A      .stack(Database)%0A      .stack(Api)%0A      .stack(Web)%0A  
+ %7D,%0A%7D sat

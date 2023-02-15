@@ -48,7 +48,7 @@ Want to learn more about `Auth`? Check out the [launch livestream on YouTube](ht
 
 Let's look at an example of how to add auth to your app. We'll be allowing your users to _Sign in with Google_.
 
-You can use the Minimal TypeScript starter by running `npx create-sst@latest` > `minimal` > `minimal/typescript-starter`.
+Follow along by creating a new SST app by running `npx create-sst@latest`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/standard) that's based on the same template.
 
 ---
 
@@ -58,8 +58,8 @@ You can use the Minimal TypeScript starter by running `npx create-sst@latest` > 
 
 Import the [`Auth`](constructs/Auth.md) construct, attach it to your API and point it to a handler function.
 
-```js title="stacks/api.ts"
-import { Auth } from "@serverless-stack/resources";
+```js title="stacks/MyStack.ts"
+import { Auth } from "sst/constructs";
 
 const auth = new Auth(stack, "auth", {
   authenticator: {
@@ -68,7 +68,7 @@ const auth = new Auth(stack, "auth", {
 });
 
 auth.attach(stack, {
-  api: myApi,
+  api,
   prefix: "/auth", // optional
 });
 ```
@@ -90,10 +90,10 @@ Now let's implement the handler.
 
 ### Add a handler
 
-Start by creating a new function in `services/functions/auth.ts` that'll handle authentication requests.
+Start by creating a new function in `packages/functions/src/auth.ts` that'll handle authentication requests.
 
-```ts title="services/functions/auth.ts"
-import { AuthHandler } from "@serverless-stack/node/auth";
+```ts title="packages/functions/src/auth.ts"
+import { AuthHandler } from "sst/node/auth";
 
 export const handler = AuthHandler({
   providers: {},
@@ -108,8 +108,8 @@ Let's configure the provider.
 
 To allow our users to _Sign in with Google_, we'll add the [`GoogleAdapter`](#google) as a provider in our `AuthHandler`.
 
-```js title="services/functions/auth.ts" {5-14}
-import { AuthHandler, GoogleAdapter } from "@serverless-stack/node/auth";
+```js title="packages/functions/src/auth.ts" {5-14}
+import { AuthHandler, GoogleAdapter } from "sst/node/auth";
 
 export const handler = AuthHandler({
   providers: {
@@ -164,8 +164,8 @@ We allow you to define multiple session types because in the future you may supp
 
 You can add your session types to the `SessionTypes` interface, like so.
 
-```ts title="services/functions/auth.ts"
-declare module "@serverless-stack/node/auth" {
+```ts title="packages/functions/src/auth.ts"
+declare module "sst/node/auth" {
   export interface SessionTypes {
     user: {
       userID: string;
@@ -184,7 +184,7 @@ Here we are creating a new type of session called `user`.
 
 Now in our `onSuccess` callback we can use the session `type: "users"` to create a session for the authenticated user.
 
-```js title="services/functions/auth.ts"
+```js title="packages/functions/src/auth.ts"
 onSuccess: async (tokenset) => {
   const claims = tokenset.claims()
   const user = /** TODO: create or look up a user from your db **/
@@ -250,9 +250,9 @@ In your API you'll need to check if the token is passed in and is valid. But it 
 
 To make it easy to check and validate the session across your app, SST has the [`useSession`](clients/auth.md#usesession) hook.
 
-```js title="services/functions/rest/foo.ts"
-import { ApiHandler } from "@serverless-stack/node/api";
-import { useSession } from "@serverless-stack/node/auth";
+```js title="packages/functions/src/rest/foo.ts"
+import { ApiHandler } from "sst/node/api";
+import { useSession } from "sst/node/auth";
 
 export const needsAuthHandler = ApiHandler(async (event) => {
   const session = useSession();
@@ -287,7 +287,7 @@ This will initialize the context and allow you to call the `useSession` hook any
 
 For example, if we look at the `needsAuthHandler` from our example above:
 
-```js title="services/functions/rest/foo.ts"
+```js title="packages/functions/src/rest/foo.ts"
 export const needsAuthHandler = Handler("api", async (event) => {
   const session = useSession();
 
@@ -311,24 +311,7 @@ Note that the `session` object here is the same as the one we defined previously
 }
 ```
 
-If you are using the [`GraphQLHandler`](clients/graphql.md#graphqlhandler) that comes with the GraphQL starter in the [`create sst`](packages/create-sst.md) CLI, it'll transparently initialize the context system.
-
-Here's an example of a GraphQL query that gets the current user from the session.
-
-```js title="services/functions/graphql/types/foo.ts" {7}
-import { useSession } from "@serverless-stack/node/auth";
-
-builder.mutationFields((t) => ({
-  createTask: t.field({
-    type: TaskType,
-    resolve: () => {
-      const session = useSession();
-      if (session.type !== "user") throw new Error("Must be logged in");
-      return Task.create(session.properties.userID);
-    },
-  }),
-}));
-```
+If you are using the [`GraphQLHandler`](clients/graphql.md#graphqlhandler), it'll transparently initialize the context system.
 
 </details>
 
@@ -523,7 +506,7 @@ You can create your own adapters with the `createAdapter` function for handling 
 A common example would be to conditionally use different providers based on multi-tenant configuration. Here's an example:
 
 ```js
-import { createAdapter } from "@serverless-stack/node/auth";
+import { createAdapter } from "sst/node/auth";
 
 const google = GoogleAdapter({...});
 const link = LinkAdapter({...});
@@ -554,7 +537,7 @@ The `Session` library can be used to generate a token by encrypting a session ob
 
 As covered in the example in the [Quick start](#quick-start), `Session.parameter` uses the query string parameter to return the session token.
 
-```js title="services/functions/auth.ts" {7-13}
+```js title="packages/functions/src/auth.ts" {7-13}
 export const handler = AuthHandler({
   // TODO: Define provider
   // ...
@@ -580,7 +563,7 @@ Here the handler will redirect to the given URL with a `token=xxx` query paramet
 
 Similarly, you can use cookies to pass the token back to the frontend.
 
-```js title="services/functions/auth.ts" {7-13}
+```js title="packages/functions/src/auth.ts" {7-13}
 export const handler = AuthHandler({
   // TODO: Define provider
   // ...
@@ -608,7 +591,7 @@ You must allow cookies to be sent cross-origin from your frontend, which is usua
 
 So update your [`Api`](constructs/Api.md) with the correct `cors` options.
 
-```js title="stacks/api.ts"
+```js title="stacks/MyStack.ts"
 new Api(stack, "api", {
   cors: {
     allowCredentials: true,

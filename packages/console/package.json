@@ -1,7 +1,7 @@
 {
   "name": "@serverless-stack/console",
   "private": true,
-  "version": "1.18.4",
+  "version": "2.0.23",
   "scripts": {
     "dev": "vite",
     "typecheck": "tsc --noEmit",
@@ -18,6 +18,7 @@
     "@aws-sdk/client-rds-data": "3.43.0",
     "@aws-sdk/client-s3": "3.43.0",
     "@aws-sdk/client-ssm": "3.43.0",
+    "@aws-sdk/fetch-http-handler": "^3.6.1",
     "@aws-sdk/s3-request-presigner": "3.43.0",
     "@aws-sdk/util-dynamodb": "^3.52.0",
     "@fontsource/jetbrains-mono": "^4.5.0",
@@ -42,6 +43,7 @@
     "deep-object-diff": "^1.1.7",
     "dendriform-immer-patch-optimiser": "^2.1.0",
     "file-saver": "^2.0.5",
+    "immer": "9",
     "jotai": "^1.4.7",
     "react": "^17.0.2",
     "react-ace": "^9.5.0",
@@ -54,6 +56,7 @@
     "react-redux": "7.2.6",
     "react-router-dom": "^6.3.0",
     "react-spinners": "^0.11.0",
+    "react-textarea-autosize": "^8.4.0",
     "react-virtual": "^2.10.0",
     "remeda": "^0.0.32"
   },

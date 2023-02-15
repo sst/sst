@@ -35,11 +35,11 @@ And if you have multiple credentials configured, it might look like:
 [default]
 aws_access_key_id = <DEFAULT_ACCESS_KEY_ID>
 aws_secret_access_key = <DEFAULT_SECRET_ACCESS_KEY>
-    
+
 [staging]
 aws_access_key_id = <STAGING_ACCESS_KEY_ID>
 aws_secret_access_key = <STAGING_SECRET_ACCESS_KEY>
-    
+
 [production]
 aws_access_key_id = <PRODUCTION_ACCESS_KEY_ID>
 aws_secret_access_key = <PRODUCTION_SECRET_ACCESS_KEY>
@@ -47,13 +47,14 @@ aws_secret_access_key = <PRODUCTION_SECRET_ACCESS_KEY>
 
 By default, SST uses the credentials for the `[default]` profile. To use one of the other profiles, set the `AWS_PROFILE` environment variable. For example:
 
-``` bash
+```bash
 $ AWS_PROFILE=staging npx sst deploy
 ```
 
 ### Loading from environment variables
 
 SST automatically detects AWS credentials in your environment and uses them for making requests to AWS. The environment variables that you need to set are:
+
 - AWS_ACCESS_KEY_ID
 - AWS_SECRET_ACCESS_KEY
 
@@ -61,7 +62,7 @@ This is often the most convenient way to configure credentials when deploying yo
 
 ### Configuring AWS Vault
 
-If you are using [AWS Vault](https://github.com/99designs/aws-vault) to store your IAM credentials locally, it needs to be MFA authenticated. Add the `mfa_serial` property in your AWS config file. This will cause AWS Vault to prompt for the MFA token. 
+If you are using [AWS Vault](https://github.com/99designs/aws-vault) to store your IAM credentials locally, it needs to be MFA authenticated. Add the `mfa_serial` property in your AWS config file. This will cause AWS Vault to prompt for the MFA token.
 
 ### Configuring Leapp
 
@@ -96,21 +97,13 @@ For example, to create a CRUD API endpoint that uses DynamoDB, the following per
     {
       "Sid": "ManageCloudFormationStacks",
       "Effect": "Allow",
-      "Action": [
-        "cloudformation:*"
-      ],
+      "Action": ["cloudformation:*"],
       "Resource": "*"
     },
     {
       "Sid": "ManageApi",
       "Effect": "Allow",
-      "Action": [
-        "iam:*",
-        "logs:*",
-        "lambda:*",
-        "dynamodb:*",
-        "apigateway:*"
-      ],
+      "Action": ["iam:*", "logs:*", "lambda:*", "dynamodb:*", "apigateway:*"],
       "Resource": "*"
     }
   ]
@@ -122,13 +115,9 @@ If you decide to enable custom domains for the API endpoint, a couple more permi
 ```json
 {
   "Sid": "ManageCustomDomain",
-    "Effect": "Allow",
-    "Action": [
-      "acm:*",
-      "route53:*",
-      "cloudfront:*"
-    ],
-    "Resource": "*"
+  "Effect": "Allow",
+  "Action": ["acm:*", "route53:*", "cloudfront:*"],
+  "Resource": "*"
 }
 ```
 
@@ -148,7 +137,7 @@ For example, you might have full `AdministratorAccess` permission, but you can l
 
 Alternatively, you might not want everyone on the team to have the permissions to create Lambda functions directly in the AWS console or via AWS CLI, but they can trigger a deployment, and let CloudFormation create Lambda functions as part of the SST app.
 
-Use the [`--role-arn`](packages/cli.md#--role-arn) option to configure the CloudFormation service role that SST will use. [Read more about this option here](packages/cli.md#--role-arn).
+Use the [`--role-arn`](../packages/sst.md#global-options) option to configure the CloudFormation service role that SST will use. [Read more about this option here](../packages/sst.md#global-options).
 
 ## Additional permissions
 
@@ -165,7 +154,7 @@ The CDK Bootstrap stack needs to be deployed once per AWS account, per region. I
 
 You can [read more about CDK Bootstrap here](https://docs.aws.amazon.com/cdk/latest/guide/bootstrapping.html). And you can [find the latest stack template here](https://github.com/aws/aws-cdk/blob/master/packages/aws-cdk/lib/api/bootstrap/bootstrap-template.yaml).
 
-The SST Debug stack is deployed along your SST app when you run `sst start`. The stack contains the following AWS resources:
+The SST Debug stack is deployed along your SST app when you run `sst dev`. The stack contains the following AWS resources:
 
 - AWS::IAM::Role
 - AWS::IAM::Policy

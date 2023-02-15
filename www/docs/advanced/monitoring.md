@@ -38,6 +38,13 @@ yarn add --dev datadog-cdk-constructs
 ```
 
 </TabItem>
+<TabItem value="pnpm">
+
+```bash
+pnpm add --save-dev datadog-cdk-constructs
+```
+
+</TabItem>
 </MultiPackagerCode>
 
 Next, to monitor all the functions in an app, add the following at the bootom of the `main()` function in your `stacks/index.ts` file.
@@ -54,7 +61,6 @@ if (!app.local) {
     // Loop through each stack in the app
     app.node.children.forEach((stack) => {
       if (stack instanceof sst.Stack) {
-
         const datadog = new Datadog(stack, "Datadog", {
           nodeLayerVersion: 65,
           extensionLayerVersion: 13,
@@ -65,7 +71,7 @@ if (!app.local) {
         datadog.addLambdaFunctions(stack.getAllFunctions());
       }
     });
-  }
+  };
 }
 ```
 
@@ -117,7 +123,7 @@ This can be tuned between the values of 0 and 1. Where 0 means that no performan
 
 You also need to wrap your function handlers.
 
-```js title="services/functions/foo.js"
+```js title="packages/functions/src/foo.js"
 import * as Sentry from "@sentry/serverless";
 
 export const handler = Sentry.AWSLambda.wrapHandler(async (event) => {
@@ -232,7 +238,6 @@ if (!app.local) {
     // Loop through each stack in the app
     app.node.children.forEach((stack) => {
       if (stack instanceof sst.Stack) {
-
         const newRelicLayer = LayerVersion.fromLayerVersionArn(
           stack,
           "NewRelicLayer",
@@ -249,7 +254,7 @@ if (!app.local) {
         });
       }
     });
-  }
+  };
 }
 ```
 
@@ -282,11 +287,18 @@ yarn add --dev epsagon
 ```
 
 </TabItem>
+<TabItem value="pnpm">
+
+```bash
+pnpm add --save-dev epsagon
+```
+
+</TabItem>
 </MultiPackagerCode>
 
 And wrap your Lambda functions with their tracing wrapper.
 
-```js title="services/functions/foo.js"
+```js title="packages/functions/src/foo.js"
 const handler = epsagon.lambdaWrapper(function (event, context) {
   // Lambda code
 });

@@ -19,14 +19,14 @@ Your project will look something like this.
 ```
 my-sst-app
 ├─ sst.json
-├─ services
+├─ packages
 │  ├─ core
+│  ├─ frontend
 │  ├─ functions
 │  │  └─ graphql
 │  └─ migrations
 ├─ graphql
-├─ stacks
-└─ web
+└─ stacks
 ```
 
 We are using a monorepo setup. We recommend using it because it's the best way to manage a growing project with interconnected parts (like the backend, frontend, and infrastructure).
@@ -117,17 +117,19 @@ We typically group related resources together into stacks. In the `stacks/` dire
 
 ---
 
-## `services/`
+## `packages/`
 
-The `services/` directory houses everything that powers our backend. This includes our GraphQL API, but also all your business logic, and whatever else you need.
+The `packages/` directory houses everything that powers our backend. This includes our GraphQL API, but also all your business logic, and whatever else you need.
 
-- `services/core` contains all of your business logic. The `create sst` setup encourages [Domain Driven Design](domain-driven-design.md). It helps you keep your business logic separate from your API and Lambda functions. This allows you to write simple, maintainable code. It implements all the things your application can do. These are then called by external facing services — like an API.
+- `packages/core` contains all of your business logic. The `create sst` setup encourages [Domain Driven Design](domain-driven-design.md). It helps you keep your business logic separate from your API and Lambda functions. This allows you to write simple, maintainable code. It implements all the things your application can do. These are then called by external facing services — like an API.
 
-- `services/functions` is where you can place all the code for your Lambda functions. Your functions should generally be fairly simple. They should mostly be calling into code previously defined in `services/core`.
+- `packages/frontend` contains a React application created with [Vite](https://vitejs.dev/). It's already wired up to be able to talk to the GraphQL API. If you are using a different frontend, for example NextJS, you can delete this folder and provision it yourself.
 
-- `services/functions/graphql` is a predefined function and it includes supporting code that serves up a GraphQL API. It's wired up for code-generation and connected to the API defined in `stacks/Api.ts`.
+- `packages/functions` is where you can place all the code for your Lambda functions. Your functions should generally be fairly simple. They should mostly be calling into code previously defined in `services/core`.
 
-- `services/migrations` is created by default to house your SQL migrations.
+- `packages/functions/graphql` is a predefined function and it includes supporting code that serves up a GraphQL API. It's wired up for code-generation and connected to the API defined in `stacks/Api.ts`.
+
+- `packages/migrations` is created by default to house your SQL migrations.
 
 :::info
 Our starter is structured to encourage [Domain Driven Design](domain-driven-design.md).
@@ -138,12 +140,6 @@ Our starter is structured to encourage [Domain Driven Design](domain-driven-desi
 ## `graphql/`
 
 The `graphql/` directory will contain the outputs of GraphQL related code generation. Typically you won't be touching this but it needs to be committed to Git. It contains code shared between the frontend and backend.
-
----
-
-## `web/`
-
-The `web/` directory contains a React application created with [Vite](https://vitejs.dev/). It's already wired up to be able to talk to the GraphQL API. If you are using a different frontend, for example NextJS, you can delete this folder and provision it yourself.
 
 ---
 
@@ -159,13 +155,12 @@ As we had mentioned above, we are using [Workspaces](https://docs.npmjs.com/cli/
 
 Workspaces are now supported in both [npm](https://docs.npmjs.com/cli/v7/using-npm/workspaces) and [Yarn](https://classic.yarnpkg.com/lang/en/docs/workspaces/) and you can learn more about them in their docs. In a nutshell, they help you manage dependencies for separate _packages_ inside your repo that have their own `package.json` files.
 
-We have three workspaces in our setup.
+We have workspaces in our setup.
 
 ```json title="package.json"
 "workspaces": [
-  "services",
-  "graphql",
-  "web"
+  "packages/*",
+  "graphql"
 ]
 ```
 
@@ -190,7 +185,7 @@ Our starter also comes with a few helpful scripts.
 
 ```json title="package.json"
 "scripts": {
-  "start": "sst start",
+  "dev": "sst dev",
   "build": "sst build",
   "deploy": "sst deploy",
   "remove": "sst remove",
@@ -238,4 +233,4 @@ Finally, the `sst.json` contains the project config.
 
 ---
 
-By now your `sst start` process should be complete. So let's run our first migration and initialize our database!
+By now your `sst dev` process should be complete. So let's run our first migration and initialize our database!

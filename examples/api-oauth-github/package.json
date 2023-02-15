@@ -2,24 +2,27 @@
   "name": "api-oauth-github",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "start": "sst start",
+    "dev": "sst dev",
     "build": "sst build",
     "deploy": "sst deploy",
     "remove": "sst remove",
     "console": "sst console",
-    "typecheck": "tsc --noEmit",
-    "test": "sst bind -- vitest run"
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "aws-cdk-lib": "2.39.1",
-    "@serverless-stack/cli": "^1.16.1",
-    "@serverless-stack/resources": "^1.16.1",
-    "typescript": "^4.8.4",
-    "@tsconfig/node16": "^1.0.3",
-    "vitest": "^0.24.5"
+    "sst": "^2.0.18",
+    "aws-cdk-lib": "2.62.2",
+    "constructs": "10.1.156",
+    "typescript": "^4.9.5",
+    "@tsconfig/node16": "^1.0.3"
   },
   "workspaces": [
-    "services"
-  ]
+    "packages/*"
+  ],
+  "dependencies": {
+    "node-fetch": "^3.3.0",
+    "lambda-multipart-parser": "^1.0.1"
+  }
 }
