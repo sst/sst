@@ -1,5 +1,15 @@
 # @serverless-stack/cli2
 
+## 2.0.24
+
+### Patch Changes
+
+- [`85da2991a`](https://github.com/serverless-stack/sst/commit/85da2991a2ad7034ffd00bd0e668916370989d18) Thanks [@thdxr](https://github.com/thdxr)! - Drop deprecated go runtime and support arm64 builds
+
+- [`b6d28622b`](https://github.com/serverless-stack/sst/commit/b6d28622b8a9ce0440fee62bc0e0b3e35c054806) Thanks [@thdxr](https://github.com/thdxr)! - Support pipfile and poetry.lock
+
+- [`6db19f16c`](https://github.com/serverless-stack/sst/commit/6db19f16cdff0f6787408f334db73a542ce33ac1) Thanks [@thdxr](https://github.com/thdxr)! - Ignore telemetry errors
+
 ## 2.0.23
 
 ### Patch Changes
