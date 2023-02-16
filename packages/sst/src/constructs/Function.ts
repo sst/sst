@@ -26,6 +26,7 @@ import { useDeferredTasks } from "./deferred_task.js";
 import { useProject } from "../project.js";
 import { useRuntimeHandlers } from "../runtime/handlers.js";
 import { createAppContext } from "./context.js";
+import { useWarning } from "./util/warning.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 const supportedRuntimes = {
@@ -52,6 +53,7 @@ const supportedRuntimes = {
   java8: lambda.Runtime.JAVA_8,
   java11: lambda.Runtime.JAVA_11,
   "go1.x": lambda.Runtime.PROVIDED_AL2,
+  go: lambda.Runtime.PROVIDED_AL2,
 };
 
 export type Runtime = keyof typeof supportedRuntimes;
@@ -616,6 +618,7 @@ export class Function extends lambda.Function implements SSTConstruct {
         props = Function.mergeProps(per, props);
       });
     props.runtime = props.runtime || "nodejs16.x";
+    if (props.runtime === "go1.x") useWarning().add("go.deprecated");
 
     // Set defaults
     const functionName =
