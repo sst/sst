@@ -51,7 +51,7 @@ const supportedRuntimes = {
   dotnet6: lambda.Runtime.DOTNET_6,
   java8: lambda.Runtime.JAVA_8,
   java11: lambda.Runtime.JAVA_11,
-  "go1.x": lambda.Runtime.GO_1_X,
+  "go1.x": lambda.Runtime.PROVIDED_AL2,
 };
 
 export type Runtime = keyof typeof supportedRuntimes;

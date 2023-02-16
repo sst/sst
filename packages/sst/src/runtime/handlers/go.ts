@@ -16,7 +16,8 @@ export const useGoHandler = Context.memo(async () => {
   const handlers = useRuntimeHandlers();
   const processes = new Map<string, ChildProcessWithoutNullStreams>();
   const sources = new Map<string, string>();
-  const handlerName = process.platform === "win32" ? `handler.exe` : `handler`;
+  const handlerName =
+    process.platform === "win32" ? `bootstrap.exe` : `bootstrap`;
 
   handlers.register({
     shouldBuild: (input) => {
@@ -76,19 +77,16 @@ export const useGoHandler = Context.memo(async () => {
 
       if (input.mode === "deploy") {
         try {
-          const target = path.join(input.out, "handler");
-          const result = await execAsync(
-            `go build -ldflags '-s -w' -o ${target} ./${src}`,
-            {
-              cwd: project,
-              env: {
-                ...process.env,
-                CGO_ENABLED: "0",
-                GOARCH: "amd64",
-                GOOS: "linux",
-              },
-            }
-          );
+          const target = path.join(input.out, "bootstrap");
+          await execAsync(`go build -ldflags '-s -w' -o ${target} ./${src}`, {
+            cwd: project,
+            env: {
+              ...process.env,
+              CGO_ENABLED: "0",
+              GOARCH: input.props.architecture === "arm_64" ? "arm64" : "amd64",
+              GOOS: "linux",
+            },
+          });
         } catch {
           throw new VisibleError("Failed to build");
         }
@@ -96,7 +94,7 @@ export const useGoHandler = Context.memo(async () => {
 
       return {
         type: "success",
-        handler: "handler",
+        handler: "bootstrap",
       };
     },
   });
