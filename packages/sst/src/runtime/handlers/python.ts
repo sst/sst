@@ -103,13 +103,11 @@ export const usePythonHandler = Context.memo(async () => {
       if (await existsAsync(path.join(src, "Pipfile"))) {
         await execAsync("pipenv requirements > requirements.txt");
       }
-
       if (await existsAsync(path.join(src, "poetry.lock"))) {
         await execAsync(
-          "poetry export --with-credentials --format requirements.txxt --output requirements.txt"
+          "poetry export --with-credentials --format requirements.txt --output requirements.txt"
         );
       }
-
       if (await existsAsync(path.join(src, "requirements.txt"))) {
         await execAsync("pip install -r requirements.txt");
       }
