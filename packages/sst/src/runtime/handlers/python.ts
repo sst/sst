@@ -5,7 +5,7 @@ import { Context } from "../../context/context.js";
 import { ChildProcessWithoutNullStreams, exec, spawn } from "child_process";
 import { promisify } from "util";
 import { useRuntimeServerConfig } from "../server.js";
-import { findAbove, isChild } from "../../util/fs.js";
+import { existsAsync, findAbove, isChild } from "../../util/fs.js";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
 import fs from "fs/promises";
 const execAsync = promisify(exec);
@@ -27,6 +27,14 @@ export const usePythonHandler = Context.memo(async () => {
   const processes = new Map<string, ChildProcessWithoutNullStreams>();
   const sources = new Map<string, string>();
 
+  async function findSrc(input: string) {
+    const hints = ["requirements.txt", "Pipfile", "poetry.lock"];
+    for (const hint of hints) {
+      const result = await findAbove(input, hint);
+      if (result) return result;
+    }
+  }
+
   handlers.register({
     shouldBuild: (input) => {
       const parent = sources.get(input.functionID);
@@ -35,7 +43,8 @@ export const usePythonHandler = Context.memo(async () => {
     },
     canHandle: (input) => input.startsWith("python"),
     startWorker: async (input) => {
-      const src = await findAbove(input.handler, "requirements.txt");
+      const src = await findSrc(input.handler);
+      if (!src) throw new Error(`Could not find src for ${input.handler}`);
       const parsed = path.parse(path.relative(src, input.handler));
       const target = [...parsed.dir.split(path.sep), parsed.name].join(".");
       const proc = spawn(
@@ -84,7 +93,26 @@ export const usePythonHandler = Context.memo(async () => {
           handler: input.props.handler!,
         };
 
-      const src = await findAbove(input.props.handler!, "requirements.txt");
+      const src = await findSrc(input.props.handler!);
+      if (!src)
+        return {
+          type: "error",
+          errors: [`Could not find src for ${input.props.handler}`],
+        };
+
+      if (await existsAsync(path.join(src, "Pipfile"))) {
+        await execAsync("pipenv requirements > requirements.txt");
+      }
+
+      if (await existsAsync(path.join(src, "poetry.lock"))) {
+        await execAsync(
+          "poetry export --with-credentials --format requirements.txxt --output requirements.txt"
+        );
+      }
+
+      if (await existsAsync(path.join(src, "requirements.txt"))) {
+        await execAsync("pip install -r requirements.txt");
+      }
       await fs.cp(src, input.out, {
         recursive: true,
         filter: (src) => !src.includes(".sst"),
