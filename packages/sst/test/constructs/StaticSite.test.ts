@@ -139,9 +139,9 @@ test("base: no domain", async () => {
     ],
     ReplaceValues: [],
   });
-  countResources(stack, "Custom::SSTCloudFrontInvalidation", 1);
-  hasResource(stack, "Custom::SSTCloudFrontInvalidation", {
-    DistributionPaths: ["/*"],
+  countResources(stack, "Custom::CloudFrontInvalidator", 1);
+  hasResource(stack, "Custom::CloudFrontInvalidator", {
+    paths: ["/*"],
   });
 });
 
@@ -1109,7 +1109,7 @@ test("constructor: sst dev", async () => {
   }).toThrow(/Cannot access CDK resources/);
   countResources(stack, "AWS::CloudFront::Distribution", 0);
   countResources(stack, "Custom::SSTBucketDeployment", 0);
-  countResources(stack, "Custom::SSTCloudFrontInvalidation", 0);
+  countResources(stack, "Custom::CloudFrontInvalidator", 0);
 });
 
 test("constructor: sst remove", async () => {
@@ -1125,7 +1125,7 @@ test("constructor: sst remove", async () => {
   }).toThrow(/Cannot access CDK resources/);
   countResources(stack, "AWS::CloudFront::Distribution", 0);
   countResources(stack, "Custom::SSTBucketDeployment", 0);
-  countResources(stack, "Custom::SSTCloudFrontInvalidation", 0);
+  countResources(stack, "Custom::CloudFrontInvalidator", 0);
 });
 
 /////////////////////////////
@@ -1133,11 +1133,11 @@ test("constructor: sst remove", async () => {
 /////////////////////////////
 
 test("constructor: extending createRoute53Records", async () => {
-  class MyStaticSite extends StaticSite {
-    public dummy?: string;
+  let dummy: string;
 
+  class MyStaticSite extends StaticSite {
     protected createRoute53Records(): void {
-      this.dummy = "dummy";
+      dummy = "dummy";
     }
   }
 
@@ -1153,7 +1153,7 @@ test("constructor: extending createRoute53Records", async () => {
   });
   expect(site.url).toBeDefined();
   expect(site.customDomainUrl).toBeDefined();
-  expect(site.dummy).toMatch("dummy");
+  expect(dummy!).toMatch("dummy");
   countResources(stack, "AWS::S3::Bucket", 1);
   countResources(stack, "AWS::CloudFront::Distribution", 1);
   countResources(stack, "AWS::Route53::RecordSet", 0);
