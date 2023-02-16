@@ -281,6 +281,7 @@ importers:
       react: 17.0.2
       remeda: ^1.3.0
       tsx: ^3.12.1
+      typescript: ^4.9.5
       undici: ^5.12.0
       uuid: ^9.0.0
       vitest: ^0.28.3
@@ -363,7 +364,7 @@ importers:
       '@aws-sdk/client-codebuild': 3.279.0
       '@aws-sdk/types': 3.272.0
       '@graphql-tools/merge': 8.3.16_graphql@16.6.0
-      '@sls-next/lambda-at-edge': 3.7.0_pmaootrvhn4gwweihnlchlnc2q
+      '@sls-next/lambda-at-edge': 3.7.0_igtysnkehmkxcvswabkhi5maza
       '@tsconfig/node16': 1.0.3
       '@types/adm-zip': 0.5.0
       '@types/aws-iot-device-sdk': 2.2.4
@@ -379,6 +380,7 @@ importers:
       '@types/ws': 8.5.3
       '@types/yargs': 17.0.13
       tsx: 3.12.1
+      typescript: 4.9.5
       vitest: 0.28.3
     publishDirectory: dist
 
@@ -8744,12 +8746,12 @@ packages:
       webpack-sources: 3.2.3
     dev: false
 
-  /@sls-next/aws-common/3.7.0_hbpeznisyp26yy7c5u6cu4xcqu:
+  /@sls-next/aws-common/3.7.0_lqj3kxfzs6ryaoz6cwn47eev6a:
     resolution: {integrity: sha512-NNaJkBg+iJBlZW3pj4we3P6dzuLEMloWSnwzNXU518KGWvx7r3+2pD0kMe+LprTRBuOP82DCeYMHxncM3CvC+w==}
     dependencies:
       '@aws-sdk/client-s3': 3.54.0_nqq4dw5jcdtgsd5c7xgwp4u2d4
       '@aws-sdk/client-sqs': 3.54.0
-      '@sls-next/core': 3.7.0_@babel+core@7.20.2
+      '@sls-next/core': 3.7.0_lkvkaxmtubw7l3u327e5djl6jy
     transitivePeerDependencies:
       - '@aws-sdk/signature-v4-crt'
       - '@babel/core'
@@ -8761,7 +8763,7 @@ packages:
       - webpack
     dev: true
 
-  /@sls-next/core/3.7.0_@babel+core@7.20.2:
+  /@sls-next/core/3.7.0_lkvkaxmtubw7l3u327e5djl6jy:
     resolution: {integrity: sha512-fCRV0iI84FboRk8YKATSFVp4dzR27zd6Rez/qfa4Utv9HL9UZbDTpKlyuUp24vEvADAZSp5laxj1JgOZBn2iOQ==}
     dependencies:
       '@hapi/accept': 5.0.2
@@ -8772,7 +8774,7 @@ packages:
       fs-extra: 9.1.0
       is-animated: 2.0.2
       jsonwebtoken: 8.5.1
-      next: 11.1.2_m5j7lwbckoquomtbl6yhnt55ua
+      next: 11.1.2_5aqiwhcm3cpmqbq7sjwoqlxp2i
       node-fetch: 2.6.5
       normalize-path: 3.0.0
       path-to-regexp: 6.2.0
@@ -8790,7 +8792,7 @@ packages:
       - webpack
     dev: true
 
-  /@sls-next/lambda-at-edge/3.7.0_pmaootrvhn4gwweihnlchlnc2q:
+  /@sls-next/lambda-at-edge/3.7.0_igtysnkehmkxcvswabkhi5maza:
     resolution: {integrity: sha512-7eTqq1baZEuvEhexDchsP3QdOqPYaW123c7TupYB60Rs31KQ12xXvpzgn+mTMuFVIOQUDY5y8EKsuzYGRrQfcw==}
     hasBin: true
     peerDependencies:
@@ -8798,8 +8800,8 @@ packages:
     dependencies:
       '@aws-sdk/client-s3': 3.54.0_nqq4dw5jcdtgsd5c7xgwp4u2d4
       '@aws-sdk/client-sqs': 3.54.0
-      '@sls-next/aws-common': 3.7.0_hbpeznisyp26yy7c5u6cu4xcqu
-      '@sls-next/core': 3.7.0_@babel+core@7.20.2
+      '@sls-next/aws-common': 3.7.0_lqj3kxfzs6ryaoz6cwn47eev6a
+      '@sls-next/core': 3.7.0_lkvkaxmtubw7l3u327e5djl6jy
       '@vercel/nft': 0.17.5
       builtin-modules: 3.2.0
       execa: 5.1.1
@@ -16415,7 +16417,7 @@ packages:
     resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
     dev: false
 
-  /next/11.1.2_m5j7lwbckoquomtbl6yhnt55ua:
+  /next/11.1.2_5aqiwhcm3cpmqbq7sjwoqlxp2i:
     resolution: {integrity: sha512-azEYL0L+wFjv8lstLru3bgvrzPvK0P7/bz6B/4EJ9sYkXeW8r5Bjh78D/Ol7VOg0EIPz0CXoe72hzAlSAXo9hw==}
     engines: {node: '>=12.0.0'}
     hasBin: true
@@ -16466,7 +16468,7 @@ packages:
       os-browserify: 0.3.0
       p-limit: 3.1.0
       path-browserify: 1.0.1
-      pnp-webpack-plugin: 1.6.4
+      pnp-webpack-plugin: 1.6.4_typescript@4.9.5
       postcss: 8.2.15
       process: 0.11.10
       querystring-es3: 0.2.1
@@ -17285,11 +17287,11 @@ packages:
     resolution: {integrity: sha512-fnWVljUchTro6RiCFvCXBbNhJc2NijN7oIQxbwsyL0buWJPG85v81ehlHI9fXrJsMNgTofEoWIQeClKpgxFLrg==}
     dev: true
 
-  /pnp-webpack-plugin/1.6.4:
+  /pnp-webpack-plugin/1.6.4_typescript@4.9.5:
     resolution: {integrity: sha512-7Wjy+9E3WwLOEL30D+m8TSTF7qJJUJLONBnwQp0518siuMxUQUbgZwssaFX+QKlZkjHZcw/IpZCt/H0srrntSg==}
     engines: {node: '>=6'}
     dependencies:
-      ts-pnp: 1.2.0
+      ts-pnp: 1.2.0_typescript@4.9.5
     transitivePeerDependencies:
       - typescript
     dev: true
@@ -20541,7 +20543,7 @@ packages:
     resolution: {integrity: sha512-AqTiAOLcj85xS7vQ8QkAV41hPDIJ71XJB4RCUrzo/1GM2CQwhkJGaf9Hgr7BOugMRpgGUrqRg/DrBDl4H40+8g==}
     dev: true
 
-  /ts-pnp/1.2.0:
+  /ts-pnp/1.2.0_typescript@4.9.5:
     resolution: {integrity: sha512-csd+vJOb/gkzvcCHgTGSChYpy5f1/XKNsmvBGO4JXS+z1v2HobugDz4s1IeFXM3wZB44uczs+eazB5Q/ccdhQw==}
     engines: {node: '>=6'}
     peerDependencies:
@@ -20549,6 +20551,8 @@ packages:
     peerDependenciesMeta:
       typescript:
         optional: true
+    dependencies:
+      typescript: 4.9.5
     dev: true
 
   /tsconfig-resolver/3.0.1:
@@ -21355,7 +21359,7 @@ packages:
       picocolors: 1.0.0
       source-map: 0.6.1
       source-map-support: 0.5.21
-      vite: 4.1.4_@types+node@18.14.2
+      vite: 3.2.5_@types+node@18.14.2
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -21431,6 +21435,40 @@ packages:
       postcss: 8.4.21
       resolve: 1.22.1
       rollup: 2.77.3
+    optionalDependencies:
+      fsevents: 2.3.2
+    dev: true
+
+  /vite/3.2.5_@types+node@18.14.2:
+    resolution: {integrity: sha512-4mVEpXpSOgrssFZAOmGIr85wPHKvaDAcXqxVxVRZhljkJOMZi1ibLibzjLHzJvcok8BMguLc7g1W6W/GqZbLdQ==}
+    engines: {node: ^14.18.0 || >=16.0.0}
+    hasBin: true
+    peerDependencies:
+      '@types/node': '>= 14'
+      less: '*'
+      sass: '*'
+      stylus: '*'
+      sugarss: '*'
+      terser: ^5.4.0
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+      less:
+        optional: true
+      sass:
+        optional: true
+      stylus:
+        optional: true
+      sugarss:
+        optional: true
+      terser:
+        optional: true
+    dependencies:
+      '@types/node': 18.14.2
+      esbuild: 0.15.18
+      postcss: 8.4.21
+      resolve: 1.22.1
+      rollup: 2.79.1
     optionalDependencies:
       fsevents: 2.3.2
     dev: true

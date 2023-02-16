@@ -1,6 +1,7 @@
 import { createProxy, getVariables } from "../util/index.js";
 import { Context } from "../../context/context.js";
 import { useEvent, Handler } from "../../context/handler.js";
+import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 
 export interface ApiResources {}
 export interface AppSyncApiResources {}
@@ -27,18 +28,23 @@ Object.assign(WebSocketApi, getVariables("WebSocketApi"));
  * ```
  */
 export function ApiHandler(cb: Parameters<typeof Handler<"api">>[1]) {
-  return Handler("api", cb);
+  return Handler("api", async (evt, ctx) => {
+    const result = await cb(evt, ctx);
+    return useResponse().serialize(result || {});
+  });
 }
 
 export const useCookies = /* @__PURE__ */ Context.memo(() => {
   const evt = useEvent("api");
   const cookies = evt.cookies || [];
-  return Object.fromEntries(cookies.map((c) => c.split("=")));
+  return Object.fromEntries(
+    cookies.map((c) => c.split("=")).map(([k, v]) => [k, decodeURIComponent(v)])
+  );
 });
 
 export function useCookie(name: string) {
   const cookies = useCookies();
-  return cookies[name];
+  return cookies[name] as string | undefined;
 }
 
 export const useBody = /* @__PURE__ */ Context.memo(() => {
@@ -66,6 +72,76 @@ export const useFormData = /* @__PURE__ */ Context.memo(() => {
 export const usePath = /* @__PURE__ */ Context.memo(() => {
   const evt = useEvent("api");
   return evt.rawPath.split("/").filter(Boolean);
+});
+
+interface CookieOptions {
+  expires?: Date;
+  maxAge?: number;
+  domain?: string;
+  path?: string;
+  secure?: boolean;
+  httpOnly?: boolean;
+  sameSite?: "Strict" | "Lax" | "None";
+}
+
+export const useResponse = /* @__PURE__ */ Context.memo(() => {
+  const response: APIGatewayProxyStructuredResultV2 = {
+    headers: {},
+    cookies: [],
+  };
+
+  const result = {
+    cookies(values: Record<string, string>, options: CookieOptions) {
+      for (const [key, value] of Object.entries(values)) {
+        result.cookie({
+          key,
+          value,
+          ...options,
+        });
+      }
+      return result;
+    },
+    cookie(
+      input: {
+        key: string;
+        value: string;
+      } & CookieOptions
+    ) {
+      const value = encodeURIComponent(input.value);
+      const parts = [input.key + "=" + value];
+      if (input.domain) parts.push("Domain=" + input.domain);
+      if (input.path) parts.push("Path=" + input.path);
+      if (input.expires) parts.push("Expires=" + input.expires.toUTCString());
+      if (input.maxAge) parts.push("Max-Age=" + input.maxAge);
+      if (input.httpOnly) parts.push("HttpOnly");
+      if (input.secure) parts.push("Secure");
+      if (input.sameSite) parts.push("SameSite=" + input.sameSite);
+      response.cookies!.push(parts.join("; "));
+      return result;
+    },
+    status(code: number) {
+      response.statusCode = code;
+      return result;
+    },
+    header(key: string, value: string) {
+      response.headers![key] = value;
+      return result;
+    },
+    serialize(
+      input: APIGatewayProxyStructuredResultV2
+    ): APIGatewayProxyStructuredResultV2 {
+      return {
+        ...response,
+        ...input,
+        cookies: [...(input.cookies || []), ...response.cookies!],
+        headers: {
+          ...response.headers,
+          ...input.headers,
+        },
+      };
+    },
+  };
+  return result;
 });
 
 export function useDomainName() {
@@ -99,8 +175,8 @@ export function useQueryParams() {
   return query;
 }
 
-export function useQueryParam(name: string) {
-  return useQueryParams()[name];
+export function useQueryParam<T = string>(name: string) {
+  return useQueryParams()[name] as T | undefined;
 }
 
 export function usePathParams() {
