@@ -125,6 +125,7 @@ export const useNodeHandler = Context.memo(async () => {
           ...(nodejs.install || []),
           ...(external || []),
         ],
+        loader: nodejs.loader,
         keepNames: true,
         bundle: true,
         logLevel: "silent",
