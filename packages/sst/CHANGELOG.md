@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.0.25
+
+### Patch Changes
+
+- [#2501](https://github.com/serverless-stack/sst/pull/2501) [`8fd694a12`](https://github.com/serverless-stack/sst/commit/8fd694a12f92b8f80119c6fe4e4abaa50e98d0ad) Thanks [@uwilken](https://github.com/uwilken)! - fix: CLI hrows error, when committing MFA on Node18
+
+- [`d0272abca`](https://github.com/serverless-stack/sst/commit/d0272abcabd7b0a0b364222538e4b602f67c12b4) Thanks [@thdxr](https://github.com/thdxr)! - Fixed nodejs loader options not respect
+
 ## 2.0.24
 
 ### Patch Changes
