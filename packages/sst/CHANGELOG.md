@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.0.27
+
+### Patch Changes
+
+- [#2495](https://github.com/serverless-stack/sst/pull/2495) [`61d65a5be`](https://github.com/serverless-stack/sst/commit/61d65a5be5e2ee1e14a43bddb3694b509f87846b) Thanks [@khuezy](https://github.com/khuezy)! - NextjsSite: allow rsc headers for in-place routing
+
 ## 2.0.26
 
 ### Patch Changes
