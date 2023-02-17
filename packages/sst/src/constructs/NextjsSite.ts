@@ -286,7 +286,11 @@ export class NextjsSite extends SsrSite {
         "x-op-middleware-request-headers",
         "x-op-middleware-response-headers",
         "x-nextjs-data",
-        "x-middleware-prefetch"
+        "x-middleware-prefetch",
+        // required by server request (in-place routing)
+        "rsc",
+        "next-router-prefetch",
+        "next-router-state-tree"
       ),
       cookieBehavior: cloudfront.CacheCookieBehavior.all(),
       defaultTtl: CdkDuration.days(0),
