@@ -93,7 +93,7 @@ export const useRuntimeServer = Context.memo(async () => {
       Logger.debug("Worker", req.params.workerID, "sending next payload");
       res.set({
         "Lambda-Runtime-Aws-Request-Id": payload.context.awsRequestId,
-        "Lambda-Runtime-Deadline-Ms": payload.deadline,
+        "Lambda-Runtime-Deadline-Ms": Date.now() + payload.deadline,
         "Lambda-Runtime-Invoked-Function-Arn":
           payload.context.invokedFunctionArn,
         "Lambda-Runtime-Client-Context": JSON.stringify(
