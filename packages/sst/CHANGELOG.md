@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.0.26
+
+### Patch Changes
+
+- [`d40c4ccf5`](https://github.com/serverless-stack/sst/commit/d40c4ccf5f5ebc6b20651dc220759c060aaf1626) Thanks [@thdxr](https://github.com/thdxr)! - Send correct deadline to local lambda
+
+- [#2508](https://github.com/serverless-stack/sst/pull/2508) [`d4e8c6f01`](https://github.com/serverless-stack/sst/commit/d4e8c6f01eee6413917e5d98c24667c6bc1a0c04) Thanks [@moochannel](https://github.com/moochannel)! - Project: Fix .env.<stage>.local is not loaded
+
 ## 2.0.25
 
 ### Patch Changes
