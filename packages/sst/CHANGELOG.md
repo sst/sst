@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.0.28
+
+### Patch Changes
+
+- [`31c626c25`](https://github.com/serverless-stack/sst/commit/31c626c252c3f002e2875a7918cb295dc29febad) Thanks [@fwang](https://github.com/fwang)! - Sites: block public access on Bucket
+
 ## 2.0.27
 
 ### Patch Changes
