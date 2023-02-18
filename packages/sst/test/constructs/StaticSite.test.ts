@@ -55,6 +55,14 @@ test("base: no domain", async () => {
   expect(site.cdk.distribution.distributionDomainName).toBeDefined();
   expect(site.cdk.certificate).toBeUndefined();
   countResources(stack, "AWS::S3::Bucket", 1);
+  hasResource(stack, "AWS::S3::Bucket", {
+    PublicAccessBlockConfiguration: {
+      BlockPublicAcls: true,
+      BlockPublicPolicy: true,
+      IgnorePublicAcls: true,
+      RestrictPublicBuckets: true,
+    },
+  });
   countResources(stack, "AWS::CloudFront::Distribution", 1);
   hasResource(stack, "AWS::CloudFront::Distribution", {
     DistributionConfig: {
