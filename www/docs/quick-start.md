@@ -22,7 +22,7 @@ Take SST for a spin and create your first project.
 
 ## 0. Prerequisites
 
-SST is built with Node, so make sure your local machine has it installed; [Node.js 14](https://nodejs.org/) and [npm 7](https://www.npmjs.com/).
+SST is built with Node, so make sure your local machine has it installed; at least [Node.js 14](https://nodejs.org/) and [npm 7](https://www.npmjs.com/).
 
 ### AWS credentials
 
