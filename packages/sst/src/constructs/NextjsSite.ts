@@ -13,6 +13,7 @@ import { EdgeFunction } from "./EdgeFunction.js";
 import { SsrSite, SsrSiteProps } from "./SsrSite.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Duration } from "./util/duration.js";
+import { Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -83,7 +84,7 @@ export class NextjsSite extends SsrSite {
   private createImageOptimizationFunctionForRegional(): lambda.Function {
     const { imageOptimization, path: sitePath } = this.props;
 
-    return new lambda.Function(this, `ImageFunction`, {
+    const fn = new lambda.Function(this, `ImageFunction`, {
       description: "Image optimization handler for Next.js",
       handler: "index.handler",
       currentVersionOptions: {
@@ -105,6 +106,14 @@ export class NextjsSite extends SsrSite {
         BUCKET_NAME: this.cdk.bucket.bucketName,
       },
     });
+    fn.role?.attachInlinePolicy(new Policy(this, 'image-opt-policy', {
+      statements: [new PolicyStatement({
+        actions: ['s3:GetObject'],
+        resources: [this.cdk.bucket.arnForObjects('*')]
+      })]
+    }));
+
+    return fn;
   }
 
   private createMiddlewareEdgeFunctionForRegional() {
