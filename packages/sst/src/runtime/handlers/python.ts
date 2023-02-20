@@ -100,25 +100,35 @@ export const usePythonHandler = Context.memo(async () => {
           errors: [`Could not find src for ${input.props.handler}`],
         };
 
-      if (await existsAsync(path.join(src, "Pipfile"))) {
-        await execAsync("pipenv requirements > requirements.txt");
-      }
-      if (await existsAsync(path.join(src, "poetry.lock"))) {
-        await execAsync(
-          "poetry export --with-credentials --format requirements.txt --output requirements.txt"
-        );
-      }
-      if (await existsAsync(path.join(src, "requirements.txt"))) {
-        await execAsync("pip install -r requirements.txt");
-      }
       await fs.cp(src, input.out, {
         recursive: true,
         filter: (src) => !src.includes(".sst"),
       });
 
+      if (await existsAsync(path.join(src, "Pipfile"))) {
+        await execAsync("pipenv requirements > requirements.txt", {
+          cwd: input.out,
+        });
+      }
+      if (await existsAsync(path.join(src, "poetry.lock"))) {
+        await execAsync(
+          "poetry export --with-credentials --format requirements.txt --output requirements.txt",
+          {
+            cwd: input.out,
+          }
+        );
+      }
+      if (await existsAsync(path.join(src, "requirements.txt"))) {
+        await execAsync("pip install -r requirements.txt", {
+          cwd: input.out,
+        });
+      }
+
       if (input.props.python?.installCommands) {
         for (const cmd of input.props.python.installCommands) {
-          await execAsync(cmd);
+          await execAsync(cmd, {
+            cwd: input.out,
+          });
         }
       }
 
