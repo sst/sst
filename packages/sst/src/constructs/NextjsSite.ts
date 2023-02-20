@@ -84,7 +84,7 @@ export class NextjsSite extends SsrSite {
   private createImageOptimizationFunctionForRegional(): lambda.Function {
     const { imageOptimization, path: sitePath } = this.props;
 
-    const fn = new lambda.Function(this, `ImageFunction`, {
+    return new lambda.Function(this, `ImageFunction`, {
       description: "Image optimization handler for Next.js",
       handler: "index.handler",
       currentVersionOptions: {
@@ -105,15 +105,13 @@ export class NextjsSite extends SsrSite {
       environment: {
         BUCKET_NAME: this.cdk.bucket.bucketName,
       },
+      initialPolicy: [
+        new PolicyStatement({
+          actions: ["s3:GetObject"],
+          resources: [this.cdk.bucket.arnForObjects("*")],
+        }),
+      ],
     });
-    fn.role?.attachInlinePolicy(new Policy(this, 'image-opt-policy', {
-      statements: [new PolicyStatement({
-        actions: ['s3:GetObject'],
-        resources: [this.cdk.bucket.arnForObjects('*')]
-      })]
-    }));
-
-    return fn;
   }
 
   private createMiddlewareEdgeFunctionForRegional() {
