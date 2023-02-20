@@ -1,10 +1,4 @@
-import {
-  StackContext,
-  Api,
-  Auth,
-  ViteStaticSite,
-  Table,
-} from "sst/constructs";
+import { StackContext, Api, Auth, ViteStaticSite, Table } from "sst/constructs";
 
 export function ExampleStack({ stack }: StackContext) {
   // Create a database Table
@@ -51,6 +45,6 @@ export function ExampleStack({ stack }: StackContext) {
   // Show the API endpoint and other info in the output
   stack.addOutputs({
     ApiEndpoint: api.url,
-    SiteURL: site.url,
+    SiteURL: site.url || "http://localhost:5173",
   });
 }

@@ -1,9 +1,4 @@
-import {
-  Api,
-  Cognito,
-  StaticSite,
-  StackContext,
-} from "sst/constructs";
+import { Api, Cognito, StaticSite, StackContext } from "sst/constructs";
 
 export function ExampleStack({ stack, app }: StackContext) {
   // Create User Pool
@@ -54,6 +49,6 @@ export function ExampleStack({ stack, app }: StackContext) {
     ApiEndpoint: api.url,
     UserPoolId: auth.userPoolId,
     UserPoolClientId: auth.userPoolClientId,
-    SiteUrl: site.url,
+    SiteUrl: site.url || "http://localhost:3000",
   });
 }
