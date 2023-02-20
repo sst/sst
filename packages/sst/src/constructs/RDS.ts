@@ -485,7 +485,7 @@ export class RDS extends Construct implements SSTConstruct {
 
     const fn = new Fn(this, "MigrationFunction", {
       handler: path.resolve(
-        path.join(__dirname, "../support/rds-migrator/index.handler")
+        path.join(__dirname, "../../support/rds-migrator/index.handler")
       ),
       runtime: "nodejs16.x",
       timeout: 900,
