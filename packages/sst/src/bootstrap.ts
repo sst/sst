@@ -148,7 +148,9 @@ export async function bootstrapSST(tags: Record<string, string>) {
       path.resolve(__dirname, "support/bootstrap-metadata-function")
     ),
     handler: "index.handler",
-    runtime: Runtime.NODEJS_18_X,
+    runtime: app.region?.startsWith("us-gov-")
+      ? Runtime.NODEJS_16_X
+      : Runtime.NODEJS_18_X,
     environment: {
       BUCKET_NAME: bucket.bucketName,
     },
