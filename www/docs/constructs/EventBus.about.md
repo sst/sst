@@ -57,6 +57,25 @@ bus.addRules(stack, {
 });
 ```
 
+#### Lazily adding targets
+
+```js
+const bus = new EventBus(stack, "Bus", {
+  rules: {
+    myRule: {
+      pattern: { source: ["myevent"] },
+      targets: {
+        myTarget1: "src/target1.main",
+      },
+    },
+  },
+});
+
+bus.addTargets(stack, "myRule", {
+  myTarget2: "src/target2.main",
+});
+```
+
 #### Configuring the Rule
 
 Configure the internally created CDK `Rule` instance.
