@@ -139,11 +139,11 @@ Alternatively, you might not want everyone on the team to have the permissions t
 
 Use the [`--role-arn`](../packages/sst.md#global-options) option to configure the CloudFormation service role that SST will use. [Read more about this option here](../packages/sst.md#global-options).
 
-## Additional permissions
+## Bootstrap permissions
 
-In addition to the permissions required to deploy your SST app, you also need permissions to deploy the resources in the CDK Bootstrap stack, and the SST Debug stack.
+In addition to the permissions required to deploy your SST app, you also need permissions to deploy the resources in the CDK Bootstrap stack.
 
-The CDK Bootstrap stack needs to be deployed once per AWS account, per region. It will be automatically deployed the first time you run `sst deploy`. The stack contains the following AWS resources:
+The CDK Bootstrap stack needs to be deployed once per AWS account, per region. It will be automatically deployed the first time you run `sst deploy` or `sst dev`. The stack contains the following AWS resources:
 
 - AWS::IAM::Role
 - AWS::IAM::Policy
@@ -154,18 +154,26 @@ The CDK Bootstrap stack needs to be deployed once per AWS account, per region. I
 
 You can [read more about CDK Bootstrap here](https://docs.aws.amazon.com/cdk/latest/guide/bootstrapping.html). And you can [find the latest stack template here](https://github.com/aws/aws-cdk/blob/master/packages/aws-cdk/lib/api/bootstrap/bootstrap-template.yaml).
 
-The SST Debug stack is deployed along your SST app when you run `sst dev`. The stack contains the following AWS resources:
+## CLI permissions
 
-- AWS::IAM::Role
-- AWS::IAM::Policy
-- AWS::S3::Bucket
-- AWS::S3::BucketPolicy
-- AWS::DynamoDB::Table
-- AWS::Lambda::Function
-- AWS::Lambda::Permission
-- AWS::ApiGatewayV2::Api
-- AWS::ApiGatewayV2::Stage
-- AWS::ApiGatewayV2::Route
-- AWS::ApiGatewayV2::Integration
+The SST CLI command also makes AWS SDK calls to your AWS account. Here is a list of IAM permissions required by the CLI:
+- cloudformation:DeleteStack
+- cloudformation:DescribeStackEvents
+- cloudformation:DescribeStackResources
+- cloudformation:DescribeStacks
+- cloudformation:GetTemplate
+- cloudformation:ListImports
+- iot:DescribeEndpoint
+- s3:GetObject
+- s3:PutObject
+- s3:DeleteObject
+- s3:ListObjectsV2
+- ssm:PutParameter
+- ssm:GetParameter
+- ssm:DeleteParameter
+- ssm:GetParametersByPath
+- lambda:GetFunctionConfiguration
+- lambda:UpdateFunctionConfiguration
 
-These resources power the Live Lambda Development environment. You can [read more about it here](../live-lambda-development.md).
+And if you are using the [`RDS`](../constructs/RDS.md) construct, you will also need:
+- rds-data:ExecuteStatement
