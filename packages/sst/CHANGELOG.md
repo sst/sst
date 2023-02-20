@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.0.29
+
+### Patch Changes
+
+- [#2519](https://github.com/serverless-stack/sst/pull/2519) [`91882698a`](https://github.com/serverless-stack/sst/commit/91882698ab20da8824106a16c72f8d7e7a0b3700) Thanks [@khuezy](https://github.com/khuezy)! - NextjsSite: fix image optimization lambda does not have s3 permission
+
 ## 2.0.28
 
 ### Patch Changes
