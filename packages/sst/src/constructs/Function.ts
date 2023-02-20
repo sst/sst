@@ -646,13 +646,8 @@ export class Function extends lambda.Function implements SSTConstruct {
       ];
     const isLiveDevEnabled = props.enableLiveDev === false ? false : true;
 
-    // Validate handler
-    if (!handler) {
-      throw new Error(`No handler defined for the "${id}" Lambda function`);
-    }
-
-    // Validate input
-    const isNodeRuntime = props.runtime.startsWith("nodejs");
+    Function.validateHandlerSet(id, props);
+    Function.validateVpcSettings(id, props);
 
     // Handle local development (ie. sst start)
     // - set runtime to nodejs12.x for non-Node runtimes (b/c the stub is in Node)
@@ -784,7 +779,7 @@ export class Function extends lambda.Function implements SSTConstruct {
     this.id = id;
     this.props = props || {};
 
-    if (isNodeRuntime) {
+    if (this.isNodeRuntime()) {
       // Enable reusing connections with Keep-Alive for NodeJs
       // Lambda function
       this.addEnvironment("AWS_NODEJS_CONNECTION_REUSE_ENABLED", "1", {
@@ -922,6 +917,25 @@ export class Function extends lambda.Function implements SSTConstruct {
       authType,
       cors: functionUrlCors.buildCorsConfig(cors),
     });
+  }
+
+  private isNodeRuntime() {
+    const { runtime } = this.props;
+    return runtime!.startsWith("nodejs");
+  }
+
+  static validateHandlerSet(id: string, props: FunctionProps) {
+    if (!props.handler) {
+      throw new Error(`No handler defined for the "${id}" Lambda function`);
+    }
+  }
+
+  static validateVpcSettings(id: string, props: FunctionProps) {
+    if (props.securityGroups && !props.vpc) {
+      throw new Error(
+        `Cannot configure "securityGroups" without "vpc" for the "${id}" Lambda function.`
+      );
+    }
   }
 
   static buildLayers(scope: Construct, id: string, props: FunctionProps) {
