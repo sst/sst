@@ -13,6 +13,7 @@ import { EdgeFunction } from "./EdgeFunction.js";
 import { SsrSite, SsrSiteProps } from "./SsrSite.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Duration } from "./util/duration.js";
+import { Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -104,6 +105,12 @@ export class NextjsSite extends SsrSite {
       environment: {
         BUCKET_NAME: this.cdk.bucket.bucketName,
       },
+      initialPolicy: [
+        new PolicyStatement({
+          actions: ["s3:GetObject"],
+          resources: [this.cdk.bucket.arnForObjects("*")],
+        }),
+      ],
     });
   }
 
