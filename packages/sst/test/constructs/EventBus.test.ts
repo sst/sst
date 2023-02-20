@@ -660,6 +660,57 @@ test("addRules: thrashing rule name error", async () => {
   }).toThrow(/A rule already exists for "rule1"/);
 });
 
+test("addTargets", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  const bus = new EventBus(stack, "EventBus", {
+    rules: {
+      rule1: {
+        pattern: { source: ["aws.codebuild"] },
+        targets: { "0": "test/lambda.handler" },
+      },
+    },
+  });
+  bus.addTargets(stack, "rule1", { "1": "test/lambda.handler" });
+  countResources(stack, "AWS::Lambda::Function", 2);
+  countResources(stack, "AWS::Events::EventBus", 1);
+  countResources(stack, "AWS::Events::Rule", 1);
+  hasResource(stack, "AWS::Events::Rule", {
+    Targets: [
+      {
+        Id: "Target0",
+        Arn: ANY,
+      },
+      {
+        Id: "Target1",
+        Arn: ANY,
+      },
+    ],
+  });
+});
+
+test("addTargets: target does not exist", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  const bus = new EventBus(stack, "EventBus");
+  expect(() => {
+    bus.addTargets(stack, "unknown-rule", { "0": "test/lambda.handler" });
+  }).toThrow(/Cannot find the rule "unknown-rule" in the "EventBus" EventBus./);
+});
+
+test("addTargets: target already exists", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  const bus = new EventBus(stack, "EventBus", {
+    rules: {
+      rule1: {
+        pattern: { source: ["aws.codebuild"] },
+        targets: { "0": "test/lambda.handler" },
+      },
+    },
+  });
+  expect(() => {
+    bus.addTargets(stack, "rule1", { "0": "test/lambda.handler" });
+  }).toThrow(/A target with name "0" already exists in rule "rule1"/);
+});
+
 test("getRule", async () => {
   const stack = new Stack(await createApp(), "stack");
   const api = new EventBus(stack, "EventBus", {
