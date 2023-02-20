@@ -100,7 +100,7 @@ export default function MyStack({ stack }: StackContext) {
 
 When you are building your SST app, `RemixSite` will invoke `npm build` inside the Remix app directory. Make sure `path` is pointing to the your Remix app.
 
-We also added the site's URL to the stack output. After deploy succeeds, the URL will be printed out in the terminal. Note that during development, the site is not deployed. You should run the site locally. In this case, `site.url` is `undefined`. [Read more about how environment variables work during development](#while-developing).
+We also added the site's URL to the stack output. After the deploy succeeds, the URL will be printed out in the terminal. Note that during development, the site is not deployed. You should run the site locally. In this case, `site.url` is `undefined`. [Read more about how environment variables work during development](#while-developing).
 
 :::tip
 The site is not deployed when running `sst dev`. [Run the site locally while developing.](#while-developing)

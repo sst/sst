@@ -100,6 +100,6 @@ export function ExampleStack({ stack, app }: StackContext) {
     api_url: api.url,
     auth_client_id: auth.userPoolClientId,
     auth_domain: `https://${domain.domainName}.auth.${app.region}.amazoncognito.com`,
-    site_url: site.url || "http://localhost:3000",
+    site_url: site.url || "http://localhost:5173",
   });
 }
