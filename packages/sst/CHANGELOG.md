@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.0.32
+
+### Patch Changes
+
+- [`d3bab944b`](https://github.com/serverless-stack/sst/commit/d3bab944b4ec4b8c48f90d48754d9e9b03fa38fd) Thanks [@fwang](https://github.com/fwang)! - EventBus: support adding targets to existing rules.
+
 ## 2.0.31
 
 ### Patch Changes
