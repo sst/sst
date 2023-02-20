@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.0.31
+
+### Patch Changes
+
+- [`776fb8f26`](https://github.com/serverless-stack/sst/commit/776fb8f269ab20c574fb7e365bffbb88d30d4a60) Thanks [@fwang](https://github.com/fwang)! - Bootstrap: use Node.js 16 runtime for gov cloud regions
+
 ## 2.0.30
 
 ### Patch Changes
