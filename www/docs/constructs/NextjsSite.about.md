@@ -53,7 +53,7 @@ my-sst-app
 ```diff
   "scripts": {
 -   "dev": "next dev",
-+   "dev": "sst env \"next dev\"",
++   "dev": "sst env next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -76,14 +76,18 @@ export default function MyStack({ stack }: StackContext) {
 
   // Add the site's URL to stack output
   stack.addOutputs({
-    URL: site.url,
+    URL: site.url || "localhost",
   });
 }
 ```
 
 When you are building your SST app, `NextjsSite` will invoke `npx open-next@latest build` inside the Next.js app directory. Make sure `path` is pointing to the your Next.js app.
 
-Note that we also added the site's URL to the stack output. After deploy succeeds, the URL will be printed out in the terminal.
+We also added the site's URL to the stack output. After deploy succeeds, the URL will be printed out in the terminal. Note that during development, the site is not deployed. You should run the site locally. In this case, `site.url` is `undefined`. [Read more about how environment variables work during development](#while-developing).
+
+:::tip
+The site is not deployed when running `sst dev`. [Run the site locally while developing.](#while-developing)
+:::
 
 ## Custom domains
 
@@ -166,7 +170,7 @@ There are a couple of work arounds:
 - Hardcode the bucket name
 - Read the bucket name dynamically at build time (ie. from an SSM value)
 - Use [fallback pages](https://nextjs.org/docs/basic-features/data-fetching#fallback-pages) to generate the page on the fly
-  :::
+:::
 
 #### While developing
 
@@ -180,7 +184,7 @@ Then in your Next.js app to reference these variables, add the [`sst env`](../pa
 
 ```json title="package.json" {2}
 "scripts": {
-  "dev": "sst env \"next dev\"",
+  "dev": "sst env next dev",
   "build": "next build",
   "start": "next start"
 },
