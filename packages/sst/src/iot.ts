@@ -40,6 +40,7 @@ export const useIOT = Context.memo(async () => {
   const device = new iot.device({
     protocol: "wss",
     host: endpoint,
+    region: project.config.region,
     accessKeyId: creds.accessKeyId,
     secretKey: creds.secretAccessKey,
     sessionToken: creds.sessionToken,
