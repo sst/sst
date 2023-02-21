@@ -310,7 +310,6 @@ export class App extends cdk.App {
     return cloudAssembly;
   }
 
-  /** @internal */
   public async finish() {
     await useDeferredTasks().run();
     this.buildConstructsMetadata();
