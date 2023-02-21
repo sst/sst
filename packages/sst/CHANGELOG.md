@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.0.35
+
+### Patch Changes
+
+- [`6e36d8e6a`](https://github.com/serverless-stack/sst/commit/6e36d8e6ad6ae1afe7dc149be42cc110b9d4603b) Thanks [@thdxr](https://github.com/thdxr)! - Do not recreate function path if absolute path
+
 ## 2.0.34
 
 ### Patch Changes
