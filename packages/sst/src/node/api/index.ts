@@ -31,7 +31,6 @@ export function ApiHandler(cb: Parameters<typeof Handler<"api">>[1]) {
   return Handler("api", async (evt, ctx) => {
     const result = await cb(evt, ctx);
     const serialized = useResponse().serialize(result || {});
-    console.log(serialized);
     return serialized;
   });
 }
