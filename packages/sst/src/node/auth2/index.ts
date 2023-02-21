@@ -28,6 +28,7 @@ export function AuthHandler<
   }[keyof Providers]
 >(input: {
   providers: Providers;
+  clients: () => Promise<Record<string, string>>;
   onAuthorize?: (
     event: APIGatewayProxyEventV2
   ) => Promise<void | keyof Providers>;
@@ -144,6 +145,15 @@ export function AuthHandler<
         };
       }
 
+      if (response_type === "code") {
+        return {
+          statusCode: 302,
+          headers: {
+            Location: `${redirect_uri}?code=${token}&state=${state || ""}`,
+          },
+        };
+      }
+
       return {
         statusCode: 400,
         body: `Unsupported response_type: ${response_type}`,
@@ -167,3 +177,5 @@ export type Adapter<T = any> = (evt: APIGatewayProxyEventV2) => Promise<
 export * from "./adapter/oidc.js";
 export * from "./adapter/google.js";
 export * from "./adapter/link.js";
+export * from "./adapter/github.js";
+export * from "./adapter/oauth.js";

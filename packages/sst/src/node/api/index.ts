@@ -30,7 +30,9 @@ Object.assign(WebSocketApi, getVariables("WebSocketApi"));
 export function ApiHandler(cb: Parameters<typeof Handler<"api">>[1]) {
   return Handler("api", async (evt, ctx) => {
     const result = await cb(evt, ctx);
-    return useResponse().serialize(result || {});
+    const serialized = useResponse().serialize(result || {});
+    console.log(serialized);
+    return serialized;
   });
 }
 
