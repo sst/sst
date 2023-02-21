@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.0.33
+
+### Patch Changes
+
+- [`cf23cea67`](https://github.com/serverless-stack/sst/commit/cf23cea678da7b9ee623ce76c8ab26a9259d5ac1) Thanks [@fwang](https://github.com/fwang)! - Function: do not allow setting securityGroups when vpc is not configured.
+
+- [`531310c1c`](https://github.com/serverless-stack/sst/commit/531310c1cc2e9fd26d33b20eac07a953f7e70396) Thanks [@fwang](https://github.com/fwang)! - sst dev: fix IoT region not parsed correctly for GovCloud
+
 ## 2.0.32
 
 ### Patch Changes
