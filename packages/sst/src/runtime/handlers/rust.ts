@@ -58,6 +58,11 @@ export const useRustHandler = Context.memo(async () => {
     build: async (input) => {
       const parsed = path.parse(input.props.handler!);
       const project = await findAbove(parsed.dir, "Cargo.toml");
+      if (!project)
+        return {
+          type: "error",
+          errors: ["Could not find a Cargo.toml file"],
+        };
       sources.set(input.functionID, project);
 
       if (input.mode === "start") {

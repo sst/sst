@@ -1,5 +1,83 @@
 # @serverless-stack/cli2
 
+## 2.0.34
+
+### Patch Changes
+
+- [`d8e6ab9ed`](https://github.com/serverless-stack/sst/commit/d8e6ab9eda2394e0f9e1bc782a74371edf2531f4) Thanks [@thdxr](https://github.com/thdxr)! - Fix type errors with graphql preset
+
+## 2.0.33
+
+### Patch Changes
+
+- [`cf23cea67`](https://github.com/serverless-stack/sst/commit/cf23cea678da7b9ee623ce76c8ab26a9259d5ac1) Thanks [@fwang](https://github.com/fwang)! - Function: do not allow setting securityGroups when vpc is not configured.
+
+- [`531310c1c`](https://github.com/serverless-stack/sst/commit/531310c1cc2e9fd26d33b20eac07a953f7e70396) Thanks [@fwang](https://github.com/fwang)! - sst dev: fix IoT region not parsed correctly for GovCloud
+
+## 2.0.32
+
+### Patch Changes
+
+- [`d3bab944b`](https://github.com/serverless-stack/sst/commit/d3bab944b4ec4b8c48f90d48754d9e9b03fa38fd) Thanks [@fwang](https://github.com/fwang)! - EventBus: support adding targets to existing rules.
+
+## 2.0.31
+
+### Patch Changes
+
+- [`776fb8f26`](https://github.com/serverless-stack/sst/commit/776fb8f269ab20c574fb7e365bffbb88d30d4a60) Thanks [@fwang](https://github.com/fwang)! - Bootstrap: use Node.js 16 runtime for gov cloud regions
+
+## 2.0.30
+
+### Patch Changes
+
+- [`e6020cede`](https://github.com/serverless-stack/sst/commit/e6020cedeaec8007f9c205d3cd582dc60d7572a2) Thanks [@thdxr](https://github.com/thdxr)! - Install python dependencies from target directory
+
+- [#2516](https://github.com/serverless-stack/sst/pull/2516) [`cedcd1dca`](https://github.com/serverless-stack/sst/commit/cedcd1dcaf83a951c37f906c0e64e4927c08a451) Thanks [@m4tty-d](https://github.com/m4tty-d)! - RDS: Fix migrator function handler path
+
+## 2.0.29
+
+### Patch Changes
+
+- [#2519](https://github.com/serverless-stack/sst/pull/2519) [`91882698a`](https://github.com/serverless-stack/sst/commit/91882698ab20da8824106a16c72f8d7e7a0b3700) Thanks [@khuezy](https://github.com/khuezy)! - NextjsSite: fix image optimization lambda does not have s3 permission
+
+## 2.0.28
+
+### Patch Changes
+
+- [`31c626c25`](https://github.com/serverless-stack/sst/commit/31c626c252c3f002e2875a7918cb295dc29febad) Thanks [@fwang](https://github.com/fwang)! - Sites: block public access on Bucket
+
+## 2.0.27
+
+### Patch Changes
+
+- [#2495](https://github.com/serverless-stack/sst/pull/2495) [`61d65a5be`](https://github.com/serverless-stack/sst/commit/61d65a5be5e2ee1e14a43bddb3694b509f87846b) Thanks [@khuezy](https://github.com/khuezy)! - NextjsSite: allow rsc headers for in-place routing
+
+## 2.0.26
+
+### Patch Changes
+
+- [`d40c4ccf5`](https://github.com/serverless-stack/sst/commit/d40c4ccf5f5ebc6b20651dc220759c060aaf1626) Thanks [@thdxr](https://github.com/thdxr)! - Send correct deadline to local lambda
+
+- [#2508](https://github.com/serverless-stack/sst/pull/2508) [`d4e8c6f01`](https://github.com/serverless-stack/sst/commit/d4e8c6f01eee6413917e5d98c24667c6bc1a0c04) Thanks [@moochannel](https://github.com/moochannel)! - Project: Fix .env.<stage>.local is not loaded
+
+## 2.0.25
+
+### Patch Changes
+
+- [#2501](https://github.com/serverless-stack/sst/pull/2501) [`8fd694a12`](https://github.com/serverless-stack/sst/commit/8fd694a12f92b8f80119c6fe4e4abaa50e98d0ad) Thanks [@uwilken](https://github.com/uwilken)! - fix: CLI hrows error, when committing MFA on Node18
+
+- [`d0272abca`](https://github.com/serverless-stack/sst/commit/d0272abcabd7b0a0b364222538e4b602f67c12b4) Thanks [@thdxr](https://github.com/thdxr)! - Fixed nodejs loader options not respect
+
+## 2.0.24
+
+### Patch Changes
+
+- [`85da2991a`](https://github.com/serverless-stack/sst/commit/85da2991a2ad7034ffd00bd0e668916370989d18) Thanks [@thdxr](https://github.com/thdxr)! - Drop deprecated go runtime and support arm64 builds
+
+- [`b6d28622b`](https://github.com/serverless-stack/sst/commit/b6d28622b8a9ce0440fee62bc0e0b3e35c054806) Thanks [@thdxr](https://github.com/thdxr)! - Support pipfile and poetry.lock
+
+- [`6db19f16c`](https://github.com/serverless-stack/sst/commit/6db19f16cdff0f6787408f334db73a542ce33ac1) Thanks [@thdxr](https://github.com/thdxr)! - Ignore telemetry errors
+
 ## 2.0.23
 
 ### Patch Changes

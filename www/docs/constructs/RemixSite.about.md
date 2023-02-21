@@ -72,7 +72,7 @@ Update the package.json scripts for your Remix application.
   "scripts": {
     "build": "remix build",
 -   "dev": "remix dev",
-+   "dev": "sst env \"remix dev\"",
++   "dev": "sst env remix dev",
     "start": "remix-serve build"
   },
 ```
@@ -93,14 +93,18 @@ export default function MyStack({ stack }: StackContext) {
 
   // Add the site's URL to stack output
   stack.addOutputs({
-    URL: site.url,
+    URL: site.url || "localhost",
   });
 }
 ```
 
 When you are building your SST app, `RemixSite` will invoke `npm build` inside the Remix app directory. Make sure `path` is pointing to the your Remix app.
 
-Note that we also added the site's URL to the stack output. After deploy succeeds, the URL will be printed out in the terminal.
+We also added the site's URL to the stack output. After the deploy succeeds, the URL will be printed out in the terminal. Note that during development, the site is not deployed. You should run the site locally. In this case, `site.url` is `undefined`. [Read more about how environment variables work during development](#while-developing).
+
+:::tip
+The site is not deployed when running `sst dev`. [Run the site locally while developing.](#while-developing)
+:::
 
 ## Single region vs edge
 
@@ -231,7 +235,7 @@ Then in your Remix app to reference these variables, add the [`sst env`](../pack
 ```json title="package.json" {2}
 "scripts": {
   "build": "remix build",
-  "dev": "sst env \"remix dev\"",
+  "dev": "sst env remix dev",
   "start": "remix-serve build"
 },
 ```

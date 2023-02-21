@@ -15,7 +15,12 @@ import {
   RemovalPolicy,
   CustomResource,
 } from "aws-cdk-lib";
-import { Bucket, BucketProps, IBucket } from "aws-cdk-lib/aws-s3";
+import {
+  BlockPublicAccess,
+  Bucket,
+  BucketProps,
+  IBucket,
+} from "aws-cdk-lib/aws-s3";
 import { Role, Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import {
   Function,
@@ -619,7 +624,8 @@ export class SsrSite extends Construct implements SSTConstruct {
     else {
       const bucketProps = cdk?.bucket as BucketProps;
       return new Bucket(this, "S3Bucket", {
-        publicReadAccess: true,
+        publicReadAccess: false,
+        blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
         autoDeleteObjects: true,
         removalPolicy: RemovalPolicy.DESTROY,
         ...bucketProps,

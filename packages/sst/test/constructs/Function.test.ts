@@ -11,6 +11,7 @@ import {
   createApp,
 } from "./helper";
 import * as s3 from "aws-cdk-lib/aws-s3";
+import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as sns from "aws-cdk-lib/aws-sns";
 import * as lambda from "aws-cdk-lib/aws-lambda";
@@ -783,6 +784,20 @@ test("layers: imported from ARN", async () => {
   hasResource(stack2, "AWS::Lambda::Function", {
     Layers: ["arn"],
   });
+});
+
+test("vpc: securityGroups configured without vpc", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  expect(() => {
+    new Function(stack, "Function", {
+      handler: "test/lambda.handler",
+      securityGroups: [
+        new ec2.SecurityGroup(stack, "sg", {
+          vpc: new ec2.Vpc(stack, "vpc"),
+        }),
+      ],
+    });
+  }).toThrow(/Cannot configure "securityGroups"/);
 });
 
 /////////////////////////////

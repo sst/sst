@@ -26,6 +26,7 @@ import { useDeferredTasks } from "./deferred_task.js";
 import { useProject } from "../project.js";
 import { useRuntimeHandlers } from "../runtime/handlers.js";
 import { createAppContext } from "./context.js";
+import { useWarning } from "./util/warning.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 const supportedRuntimes = {
@@ -51,7 +52,8 @@ const supportedRuntimes = {
   dotnet6: lambda.Runtime.DOTNET_6,
   java8: lambda.Runtime.JAVA_8,
   java11: lambda.Runtime.JAVA_11,
-  "go1.x": lambda.Runtime.GO_1_X,
+  "go1.x": lambda.Runtime.PROVIDED_AL2,
+  go: lambda.Runtime.PROVIDED_AL2,
 };
 
 export type Runtime = keyof typeof supportedRuntimes;
@@ -616,6 +618,7 @@ export class Function extends lambda.Function implements SSTConstruct {
         props = Function.mergeProps(per, props);
       });
     props.runtime = props.runtime || "nodejs16.x";
+    if (props.runtime === "go1.x") useWarning().add("go.deprecated");
 
     // Set defaults
     const functionName =
@@ -643,13 +646,8 @@ export class Function extends lambda.Function implements SSTConstruct {
       ];
     const isLiveDevEnabled = props.enableLiveDev === false ? false : true;
 
-    // Validate handler
-    if (!handler) {
-      throw new Error(`No handler defined for the "${id}" Lambda function`);
-    }
-
-    // Validate input
-    const isNodeRuntime = props.runtime.startsWith("nodejs");
+    Function.validateHandlerSet(id, props);
+    Function.validateVpcSettings(id, props);
 
     // Handle local development (ie. sst start)
     // - set runtime to nodejs12.x for non-Node runtimes (b/c the stub is in Node)
@@ -781,7 +779,7 @@ export class Function extends lambda.Function implements SSTConstruct {
     this.id = id;
     this.props = props || {};
 
-    if (isNodeRuntime) {
+    if (this.isNodeRuntime()) {
       // Enable reusing connections with Keep-Alive for NodeJs
       // Lambda function
       this.addEnvironment("AWS_NODEJS_CONNECTION_REUSE_ENABLED", "1", {
@@ -919,6 +917,25 @@ export class Function extends lambda.Function implements SSTConstruct {
       authType,
       cors: functionUrlCors.buildCorsConfig(cors),
     });
+  }
+
+  private isNodeRuntime() {
+    const { runtime } = this.props;
+    return runtime!.startsWith("nodejs");
+  }
+
+  static validateHandlerSet(id: string, props: FunctionProps) {
+    if (!props.handler) {
+      throw new Error(`No handler defined for the "${id}" Lambda function`);
+    }
+  }
+
+  static validateVpcSettings(id: string, props: FunctionProps) {
+    if (props.securityGroups && !props.vpc) {
+      throw new Error(
+        `Cannot configure "securityGroups" without "vpc" for the "${id}" Lambda function.`
+      );
+    }
   }
 
   static buildLayers(scope: Construct, id: string, props: FunctionProps) {

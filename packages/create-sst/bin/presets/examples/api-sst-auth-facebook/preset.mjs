@@ -9,14 +9,9 @@ export default [
   install({
     packages: ["@aws-sdk/client-dynamodb", "@aws-sdk/util-dynamodb"],
   }),
-  install({
-    packages: ["@serverless-stack/static-site-env"],
-    path: "web",
-    dev: true,
-  }),
   patch({
     file: "web/package.json",
-    operations: [{ op: "add", path: "/scripts/dev", value: "sst-env -- vite" }],
+    operations: [{ op: "add", path: "/scripts/dev", value: "sst env vite" }],
   }),
   patch({
     file: "package.json",

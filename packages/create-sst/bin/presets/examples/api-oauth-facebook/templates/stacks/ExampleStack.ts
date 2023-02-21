@@ -1,10 +1,5 @@
 import * as cognito from "aws-cdk-lib/aws-cognito";
-import {
-  Api,
-  Cognito,
-  StaticSite,
-  StackContext,
-} from "sst/constructs";
+import { Api, Cognito, StaticSite, StackContext } from "sst/constructs";
 
 export function ExampleStack({ stack, app }: StackContext) {
   // Create auth
@@ -105,6 +100,6 @@ export function ExampleStack({ stack, app }: StackContext) {
     api_url: api.url,
     auth_client_id: auth.userPoolClientId,
     auth_domain: `https://${domain.domainName}.auth.${app.region}.amazoncognito.com`,
-    site_url: site.url,
+    site_url: site.url || "http://localhost:5173",
   });
 }

@@ -1,5 +1,31 @@
 # create-sst
 
+## 2.0.34
+
+### Patch Changes
+
+- [`d8e6ab9ed`](https://github.com/serverless-stack/sst/commit/d8e6ab9eda2394e0f9e1bc782a74371edf2531f4) Thanks [@thdxr](https://github.com/thdxr)! - Fix type errors with graphql preset
+
+## 2.0.33
+
+## 2.0.32
+
+## 2.0.31
+
+## 2.0.30
+
+## 2.0.29
+
+## 2.0.28
+
+## 2.0.27
+
+## 2.0.26
+
+## 2.0.25
+
+## 2.0.24
+
 ## 2.0.23
 
 ## 2.0.22

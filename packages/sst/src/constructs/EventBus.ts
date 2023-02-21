@@ -168,7 +168,7 @@ export interface EventBusRuleProps {
      *         },
      *       },
      *       targets: {
-     *         myTarget1: "test/lambda.handler",
+     *         myTarget1: "src/lambda.handler",
      *       },
      *     },
      *   },
@@ -305,6 +305,18 @@ export class EventBus extends Construct implements SSTConstruct {
   }
 
   /**
+   * Get a rule
+   *
+   * @example
+   * ```js
+   * bus.getRule("myRule");
+   * ```
+   */
+  public getRule(key: string): events.Rule | undefined {
+    return this.rulesData[key];
+  }
+
+  /**
    * Add rules after the EventBus has been created.
    *
    * @example
@@ -330,15 +342,39 @@ export class EventBus extends Construct implements SSTConstruct {
   }
 
   /**
-   * Get a rule
+   * Add targets to existing rules.
    *
    * @example
    * ```js
-   * bus.getRule("myRule");
+   * bus.addRules(stack, "myRule", {
+   *   myTarget1: "src/function1.handler"
+   *   myTarget2: "src/function2.handler"
+   * });
    * ```
    */
-  public getRule(key: string): events.Rule | undefined {
-    return this.rulesData[key];
+  public addTargets(
+    scope: Construct,
+    ruleKey: string,
+    targets: Record<
+      string,
+      | FunctionInlineDefinition
+      | EventBusFunctionTargetProps
+      | Queue
+      | EventBusQueueTargetProps
+    >
+  ): void {
+    // Get rule
+    const eventsRule = this.getRule(ruleKey);
+    if (!eventsRule) {
+      throw new Error(
+        `Cannot find the rule "${ruleKey}" in the "${this.node.id}" EventBus.`
+      );
+    }
+
+    // Add targets
+    Object.entries(targets).forEach(([targetName, target]) =>
+      this.addTarget(scope, ruleKey, eventsRule, targetName, target)
+    );
   }
 
   /**
@@ -541,9 +577,7 @@ export class EventBus extends Construct implements SSTConstruct {
     this.rulesData[ruleKey] = eventsRule;
 
     // Create Targets
-    Object.entries(rule.targets || {}).forEach(([targetName, target]) =>
-      this.addTarget(scope, ruleKey, eventsRule, targetName, target)
-    );
+    this.addTargets(scope, ruleKey, rule.targets || {});
   }
 
   private addTarget(
@@ -558,6 +592,13 @@ export class EventBus extends Construct implements SSTConstruct {
       | EventBusQueueTargetProps
   ): void {
     this.targetsData[ruleKey] = this.targetsData[ruleKey] || {};
+
+    // Validate rule not redefined
+    if (this.targetsData[ruleKey][targetName]) {
+      throw new Error(
+        `A target with name "${targetName}" already exists in rule "${ruleKey}"`
+      );
+    }
 
     if (target instanceof Queue || (target as EventBusQueueTargetProps).queue) {
       target = target as Queue | EventBusQueueTargetProps;

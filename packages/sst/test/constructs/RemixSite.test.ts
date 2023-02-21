@@ -57,7 +57,7 @@ test("edge: undefined", async () => {
   expect(site.cdk.distribution.distributionDomainName).toBeDefined();
   expect(site.cdk.certificate).toBeUndefined();
   countResources(stack, "AWS::S3::Bucket", 1);
-  countResources(stack, "AWS::Lambda::Function", 6);
+  countResources(stack, "AWS::Lambda::Function", 5);
   countResources(stack, "AWS::CloudFront::Distribution", 1);
   hasResource(stack, "AWS::CloudFront::Distribution", {
     DistributionConfig: {
@@ -189,9 +189,9 @@ test("edge: undefined", async () => {
       ],
     ],
   });
-  countResources(stack, "Custom::SSTCloudFrontInvalidation", 1);
-  hasResource(stack, "Custom::SSTCloudFrontInvalidation", {
-    DistributionPaths: ["/*"],
+  countResources(stack, "Custom::CloudFrontInvalidator", 1);
+  hasResource(stack, "Custom::CloudFrontInvalidator", {
+    paths: ["/*"],
   });
 });
 
@@ -279,7 +279,7 @@ test("edge: true", async () => {
   expect(site.cdk.distribution.distributionDomainName).toBeDefined();
   expect(site.cdk.certificate).toBeUndefined();
   countResources(stack, "AWS::S3::Bucket", 1);
-  countResources(stack, "AWS::Lambda::Function", 7);
+  countResources(stack, "AWS::Lambda::Function", 6);
   countResources(stack, "AWS::CloudFront::Distribution", 1);
   hasResource(stack, "AWS::CloudFront::Distribution", {
     DistributionConfig: {
@@ -408,9 +408,9 @@ test("edge: true", async () => {
       ],
     ],
   });
-  countResources(stack, "Custom::SSTCloudFrontInvalidation", 1);
-  hasResource(stack, "Custom::SSTCloudFrontInvalidation", {
-    DistributionPaths: ["/*"],
+  countResources(stack, "Custom::CloudFrontInvalidator", 1);
+  hasResource(stack, "Custom::CloudFrontInvalidator", {
+    paths: ["/*"],
   });
 });
 
@@ -976,13 +976,11 @@ test("constructor: cfCachePolicies props override", async () => {
   new RemixSite(stack, "Site", {
     path: sitePath,
     cdk: {
-      cachePolicies: {
-        serverRequests: cf.CachePolicy.fromCachePolicyId(
-          stack,
-          "ServerCachePolicy",
-          "ServerCachePolicyId"
-        ),
-      },
+      serverCachePolicy: cf.CachePolicy.fromCachePolicyId(
+        stack,
+        "ServerCachePolicy",
+        "ServerCachePolicyId"
+      ),
     },
     // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
@@ -1089,7 +1087,7 @@ test("constructor: sst dev", async () => {
     expect(site.cdk.bucket).toBeUndefined();
   }).toThrow(/Cannot access CDK resources/);
   countResources(stack, "Custom::SSTBucketDeployment", 0);
-  countResources(stack, "Custom::SSTCloudFrontInvalidation", 0);
+  countResources(stack, "Custom::CloudFrontInvalidator", 0);
   countResources(stack, "AWS::CloudFront::Distribution", 0);
 });
 
@@ -1118,7 +1116,7 @@ test("constructor: sst remove", async () => {
     expect(site.cdk.bucket).toBeUndefined();
   }).toThrow(/Cannot access CDK resources/);
   countResources(stack, "Custom::SSTBucketDeployment", 0);
-  countResources(stack, "Custom::SSTCloudFrontInvalidation", 0);
+  countResources(stack, "Custom::CloudFrontInvalidator", 0);
   countResources(stack, "AWS::CloudFront::Distribution", 0);
 });
 

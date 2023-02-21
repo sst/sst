@@ -91,7 +91,7 @@ export const dev = (program: Program) =>
             prefix(evt.properties.requestID),
             Colors.dim.bold("Invoked"),
             Colors.dim(
-              useFunctions().fromID(evt.properties.functionID).handler!
+              useFunctions().fromID(evt.properties.functionID)?.handler
             )
           );
         });

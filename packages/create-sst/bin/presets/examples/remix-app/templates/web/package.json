@@ -5,7 +5,7 @@
   "sideEffects": false,
   "scripts": {
     "build": "remix build",
-    "dev": "sst-env -- remix dev",
+    "dev": "sst env remix dev",
     "start": "remix-serve build"
   },
   "dependencies": {
@@ -19,7 +19,6 @@
   "devDependencies": {
     "@remix-run/dev": "^1.6.3",
     "@remix-run/eslint-config": "^1.6.3",
-    "@serverless-stack/static-site-env": "^1.5.0",
     "@types/react": "^17.0.45",
     "@types/react-dom": "^17.0.17",
     "eslint": "^8.15.0",

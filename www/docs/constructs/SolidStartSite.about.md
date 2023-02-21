@@ -81,7 +81,7 @@ If you are deploying the `SolidStartSite` in the `edge` mode, use the edge adapt
 ```diff
   "scripts": {
 -   "dev": "solid-start dev",
-+   "dev": "sst env \"solid-start dev\"",
++   "dev": "sst env solid-start dev",
     "build": "solid-start build",
     "start": "solid-start start"
   },
@@ -103,14 +103,18 @@ export default function MyStack({ stack }: StackContext) {
 
   // Add the site's URL to stack output
   stack.addOutputs({
-    URL: site.url,
+    URL: site.url || "localhost",
   });
 }
 ```
 
 When you are building your SST app, `SolidStartSite` will invoke `npm build` inside the SolidStart app directory. Make sure `path` is pointing to the your SolidStart app.
 
-Note that we also added the site's URL to the stack output. After deploy succeeds, the URL will be printed out in the terminal.
+We also added the site's URL to the stack output. After the deploy succeeds, the URL will be printed out in the terminal. Note that during development, the site is not deployed. You should run the site locally. In this case, `site.url` is `undefined`. [Read more about how environment variables work during development](#while-developing).
+
+:::tip
+The site is not deployed when running `sst dev`. [Run the site locally while developing.](#while-developing)
+:::
 
 ## Single region vs edge
 
@@ -234,7 +238,7 @@ Then in your SolidStart app to reference these variables, add the [`sst env`](..
 
 ```json title="package.json" {2}
 "scripts": {
-  "dev": "sst-env \"solid-start dev\"",
+  "dev": "sst env solid-start dev",
   "build": "solid-start build",
   "start": "solid-start start"
 },

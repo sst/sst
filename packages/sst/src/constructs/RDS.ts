@@ -223,6 +223,7 @@ export class RDS extends Construct implements SSTConstruct {
     }
 
     // Create the migrator function
+
     if (migrations) {
       this.validateMigrationsFileExists(migrations);
       this.createMigrationsFunction(migrations);

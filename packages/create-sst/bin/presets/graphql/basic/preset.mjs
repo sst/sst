@@ -51,11 +51,11 @@ export default [
     ],
   }),
   install({
-    packages: ["wonka", "@genql/runtime"],
+    packages: ["wonka", "@genql/runtime", "urql", "graphql", "react"],
     path: "packages/graphql",
   }),
   install({
-    packages: ["@genql/cli"],
+    packages: ["@genql/cli", "@types/react"],
     dev: true,
     path: "packages/graphql",
   }),

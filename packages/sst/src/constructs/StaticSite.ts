@@ -11,15 +11,26 @@ import {
   RemovalPolicy,
   CustomResource,
 } from "aws-cdk-lib";
-import * as s3 from "aws-cdk-lib/aws-s3";
-import * as s3Assets from "aws-cdk-lib/aws-s3-assets";
-import * as acm from "aws-cdk-lib/aws-certificatemanager";
+import {
+  BlockPublicAccess,
+  Bucket,
+  BucketProps,
+  IBucket,
+} from "aws-cdk-lib/aws-s3";
+import { Asset } from "aws-cdk-lib/aws-s3-assets";
+import { ICertificate } from "aws-cdk-lib/aws-certificatemanager";
 import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
-import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as route53 from "aws-cdk-lib/aws-route53";
-import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
-import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
-import * as cfOrigins from "aws-cdk-lib/aws-cloudfront-origins";
+import { Code, Function, Runtime } from "aws-cdk-lib/aws-lambda";
+import {
+  HostedZone,
+  IHostedZone,
+  ARecord,
+  AaaaRecord,
+  RecordTarget,
+} from "aws-cdk-lib/aws-route53";
+import { CloudFrontTarget } from "aws-cdk-lib/aws-route53-targets";
+import { Distribution, ViewerProtocolPolicy } from "aws-cdk-lib/aws-cloudfront";
+import { S3Origin } from "aws-cdk-lib/aws-cloudfront-origins";
 import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
 
 import { App } from "./App.js";
@@ -282,7 +293,7 @@ export interface StaticSiteProps {
      * });
      * ```
      */
-    bucket?: s3.BucketProps | s3.IBucket;
+    bucket?: BucketProps | IBucket;
     /**
      * Configure the internally created CDK `Distribution` instance.
      *
@@ -330,10 +341,10 @@ export class StaticSite extends Construct implements SSTConstruct {
   public readonly id: string;
   private props: Omit<StaticSiteProps, "path"> & { path: string };
   private doNotDeploy: boolean;
-  private bucket: s3.Bucket;
-  private distribution: cloudfront.Distribution;
-  private hostedZone?: route53.IHostedZone;
-  private certificate?: acm.ICertificate;
+  private bucket: Bucket;
+  private distribution: Distribution;
+  private hostedZone?: IHostedZone;
+  private certificate?: ICertificate;
 
   constructor(scope: Construct, id: string, props?: StaticSiteProps) {
     super(scope, props?.cdk?.id || id);
@@ -546,7 +557,7 @@ interface ImportMeta {
     }
   }
 
-  private bundleAssets(fileSizeLimit: number): s3Assets.Asset[] {
+  private bundleAssets(fileSizeLimit: number): Asset[] {
     const { path: sitePath } = this.props;
     const buildOutput = this.props.buildOutput || ".";
 
@@ -595,7 +606,7 @@ interface ImportMeta {
       }
 
       assets.push(
-        new s3Assets.Asset(this, `Asset${partId}`, {
+        new Asset(this, `Asset${partId}`, {
           path: zipFilePath,
         })
       );
@@ -603,7 +614,7 @@ interface ImportMeta {
     return assets;
   }
 
-  private bundleFilenamesAsset(): s3Assets.Asset | undefined {
+  private bundleFilenamesAsset(): Asset | undefined {
     if (this.props.purgeFiles === false) {
       return;
     }
@@ -623,21 +634,21 @@ interface ImportMeta {
       );
     }
 
-    return new s3Assets.Asset(this, `AssetFilenames`, {
+    return new Asset(this, `AssetFilenames`, {
       path: filenamesPath,
     });
   }
 
-  private createS3Bucket(): s3.Bucket {
+  private createS3Bucket(): Bucket {
     const { cdk } = this.props;
 
     // cdk.bucket is an imported construct
     if (cdk?.bucket && isCDKConstruct(cdk?.bucket)) {
-      return cdk.bucket as s3.Bucket;
+      return cdk.bucket as Bucket;
     }
     // cdk.bucket is a prop
     else {
-      const bucketProps = cdk?.bucket as s3.BucketProps;
+      const bucketProps = cdk?.bucket as BucketProps;
       // Validate s3Bucket
       if (bucketProps?.websiteIndexDocument) {
         throw new Error(
@@ -651,7 +662,9 @@ interface ImportMeta {
         );
       }
 
-      return new s3.Bucket(this, "S3Bucket", {
+      return new Bucket(this, "S3Bucket", {
+        publicReadAccess: false,
+        blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
         autoDeleteObjects: true,
         removalPolicy: RemovalPolicy.DESTROY,
         ...bucketProps,
@@ -661,8 +674,8 @@ interface ImportMeta {
 
   private createS3Deployment(
     cliLayer: AwsCliLayer,
-    assets: s3Assets.Asset[],
-    filenamesAsset?: s3Assets.Asset
+    assets: Asset[],
+    filenamesAsset?: Asset
   ): CustomResource {
     const fileOptions = this.props.fileOptions || [
       {
@@ -678,12 +691,12 @@ interface ImportMeta {
     ];
 
     // Create a Lambda function that will be doing the uploading
-    const uploader = new lambda.Function(this, "S3Uploader", {
-      code: lambda.Code.fromAsset(
+    const uploader = new Function(this, "S3Uploader", {
+      code: Code.fromAsset(
         path.join(__dirname, "../support/base-site-custom-resource")
       ),
       layers: [cliLayer],
-      runtime: lambda.Runtime.PYTHON_3_7,
+      runtime: Runtime.PYTHON_3_7,
       handler: "s3-upload.handler",
       timeout: Duration.minutes(15),
       memorySize: 1024,
@@ -692,12 +705,12 @@ interface ImportMeta {
     assets.forEach((asset) => asset.grantRead(uploader));
 
     // Create the custom resource function
-    const handler = new lambda.Function(this, "S3Handler", {
-      code: lambda.Code.fromAsset(
+    const handler = new Function(this, "S3Handler", {
+      code: Code.fromAsset(
         path.join(__dirname, "../support/base-site-custom-resource")
       ),
       layers: [cliLayer],
-      runtime: lambda.Runtime.PYTHON_3_7,
+      runtime: Runtime.PYTHON_3_7,
       handler: "s3-handler.handler",
       timeout: Duration.minutes(15),
       memorySize: 1024,
@@ -787,12 +800,12 @@ interface ImportMeta {
     return domainNames;
   }
 
-  private createCfDistribution(): cloudfront.Distribution {
+  private createCfDistribution(): Distribution {
     const { cdk, errorPage } = this.props;
     const indexPage = this.props.indexPage || "index.html";
 
     // Create CloudFront distribution
-    return new cloudfront.Distribution(this, "Distribution", {
+    return new Distribution(this, "Distribution", {
       // these values can be overwritten by cfDistributionProps
       defaultRootObject: indexPage,
       errorResponses:
@@ -804,16 +817,14 @@ interface ImportMeta {
       domainNames: this.buildDistributionDomainNames(),
       certificate: this.certificate,
       defaultBehavior: {
-        origin: new cfOrigins.S3Origin(this.bucket),
-        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        origin: new S3Origin(this.bucket),
+        viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         ...cdk?.distribution?.defaultBehavior,
       },
     });
   }
 
-  private createCloudFrontInvalidation(
-    assets: s3Assets.Asset[]
-  ): CustomResource {
+  private createCloudFrontInvalidation(assets: Asset[]): CustomResource {
     const stack = Stack.of(this) as Stack;
 
     // Need the AssetHash field so the CR gets updated on each deploy
@@ -887,7 +898,7 @@ interface ImportMeta {
     }
   }
 
-  protected lookupHostedZone(): route53.IHostedZone | undefined {
+  protected lookupHostedZone(): IHostedZone | undefined {
     const { customDomain } = this.props;
 
     // Skip if customDomain is not configured
@@ -898,13 +909,13 @@ interface ImportMeta {
     let hostedZone;
 
     if (typeof customDomain === "string") {
-      hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
+      hostedZone = HostedZone.fromLookup(this, "HostedZone", {
         domainName: customDomain,
       });
     } else if (customDomain.cdk?.hostedZone) {
       hostedZone = customDomain.cdk.hostedZone;
     } else if (typeof customDomain.hostedZone === "string") {
-      hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
+      hostedZone = HostedZone.fromLookup(this, "HostedZone", {
         domainName: customDomain.hostedZone,
       });
     } else if (typeof customDomain.domainName === "string") {
@@ -913,7 +924,7 @@ interface ImportMeta {
         return;
       }
 
-      hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
+      hostedZone = HostedZone.fromLookup(this, "HostedZone", {
         domainName: customDomain.domainName,
       });
     } else {
@@ -923,7 +934,7 @@ interface ImportMeta {
     return hostedZone;
   }
 
-  private createCertificate(): acm.ICertificate | undefined {
+  private createCertificate(): ICertificate | undefined {
     const { customDomain } = this.props;
 
     if (!customDomain) {
@@ -980,12 +991,10 @@ interface ImportMeta {
     const recordProps = {
       recordName,
       zone: this.hostedZone,
-      target: route53.RecordTarget.fromAlias(
-        new route53Targets.CloudFrontTarget(this.distribution)
-      ),
+      target: RecordTarget.fromAlias(new CloudFrontTarget(this.distribution)),
     };
-    new route53.ARecord(this, "AliasRecord", recordProps);
-    new route53.AaaaRecord(this, "AliasRecordAAAA", recordProps);
+    new ARecord(this, "AliasRecord", recordProps);
+    new AaaaRecord(this, "AliasRecordAAAA", recordProps);
 
     // Create Alias redirect record
     if (domainAlias) {

@@ -1,9 +1,4 @@
-import {
-  Api,
-  Table,
-  StaticSite,
-  StackContext,
-} from "sst/constructs";
+import { Api, Table, StaticSite, StackContext } from "sst/constructs";
 
 export function ExampleStack({ stack }: StackContext) {
   // Create the table
@@ -39,7 +34,7 @@ export function ExampleStack({ stack }: StackContext) {
 
   // Show the URLs in the output
   stack.addOutputs({
-    SiteUrl: site.url,
+    SiteUrl: site.url || "http://localhost:5173",
     ApiEndpoint: api.url,
   });
 }

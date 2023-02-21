@@ -34,9 +34,10 @@ export const useAWSCredentialsProvider = Context.memo(() => {
             if (input.trim() !== "") {
               resolve(input.trim());
               rl.close();
+            } else {
+              // prompt again if no input
+              prompt();
             }
-            // prompt again if no input
-            prompt();
           });
         prompt();
       });

@@ -2,8 +2,11 @@ import { VisibleError } from "../error.js";
 import fs from "fs/promises";
 import path from "path";
 
-export async function findAbove(dir: string, target: string): Promise<string> {
-  if (dir === "/") throw new VisibleError(`Could not find a ${target} file`);
+export async function findAbove(
+  dir: string,
+  target: string
+): Promise<string | undefined> {
+  if (dir === "/") return undefined;
   if (await existsAsync(path.join(dir, target))) return dir;
   return findAbove(path.resolve(path.join(dir, "..")), target);
 }
