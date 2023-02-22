@@ -155,7 +155,7 @@ export class Auth extends Construct implements SSTConstruct {
         // Example of referencing a secret
         //publicKey2: {
         //  type: "secret_reference",
-        //  secret: new Secret(this, "PUBLIC_KEY2");
+        //  secret: this.publicKey2,
         //},
       },
       permissions: {

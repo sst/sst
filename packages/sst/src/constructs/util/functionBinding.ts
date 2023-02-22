@@ -27,7 +27,7 @@ export interface FunctionBindingProps {
     | {
         // value points to a Secret value
         // - environment: placeholder value with reference to Secret name
-        // - SSM parameter: not created
+        // - SSM parameter: placeholder value with reference to Secret name
         // ie. Auth's public key
         type: "secret_reference";
         secret: Secret;
@@ -71,14 +71,19 @@ export function bindParameters(c: SSTConstruct) {
 
   const app = c.node.root as App;
   Object.entries(binding.variables).forEach(([prop, variable]) => {
-    if (variable.type !== "plain" && variable.type !== "site_url") return;
-
     const resId = `Parameter_${prop}`;
     if (!c.node.tryFindChild(resId)) {
-      new ssm.StringParameter(c, resId, {
-        parameterName: getParameterPath(c, prop),
-        stringValue: variable.value,
-      });
+      if (variable.type === "plain" || variable.type === "site_url") {
+        new ssm.StringParameter(c, resId, {
+          parameterName: getParameterPath(c, prop),
+          stringValue: variable.value,
+        });
+      } else if (variable.type === "secret_reference") {
+        new ssm.StringParameter(c, resId, {
+          parameterName: getParameterPath(c, prop),
+          stringValue: placeholderSecretReferenceValue(variable.secret),
+        });
+      }
     }
   });
 }
