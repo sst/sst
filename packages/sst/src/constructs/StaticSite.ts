@@ -47,7 +47,6 @@ import { HttpsRedirect } from "./cdk/website-redirect.js";
 import { DnsValidatedCertificate } from "./cdk/dns-validated-certificate.js";
 import { SSTConstruct, isCDKConstruct } from "./Construct.js";
 import {
-  ENVIRONMENT_PLACEHOLDER,
   FunctionBindingProps,
   getParameterPath,
 } from "./util/functionBinding.js";
@@ -472,14 +471,19 @@ export class StaticSite extends Construct implements SSTConstruct {
     return {
       clientPackage: "site",
       variables: {
-        url: {
-          // Do not set real value b/c we don't want to make the Lambda function
-          // depend on the Site. B/c often the site depends on the Api, causing
-          // a CloudFormation circular dependency if the Api and the Site belong
-          // to different stacks.
-          environment: this.doNotDeploy ? "" : ENVIRONMENT_PLACEHOLDER,
-          parameter: this.customDomainUrl || this.url,
-        },
+        url: this.doNotDeploy
+          ? {
+              type: "plain",
+              value: "localhost",
+            }
+          : {
+              // Do not set real value b/c we don't want to make the Lambda function
+              // depend on the Site. B/c often the site depends on the Api, causing
+              // a CloudFormation circular dependency if the Api and the Site belong
+              // to different stacks.
+              type: "site_url",
+              value: this.customDomainUrl || this.url!,
+            },
       },
       permissions: {
         "ssm:GetParameters": [

@@ -15,6 +15,7 @@ import {
   FunctionProps,
   FunctionDefinition,
 } from "./Function.js";
+import { FunctionBindingProps } from "./util/functionBinding.js";
 import {
   Permissions,
   attachPermissionsToRole,

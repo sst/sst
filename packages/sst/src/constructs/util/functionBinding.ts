@@ -1,33 +1,62 @@
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import { SSTConstruct } from "../Construct.js";
 import { App } from "../App.js";
+import { Secret } from "../Secret.js";
 import { Config } from "../../config.js";
-
-export const ENVIRONMENT_PLACEHOLDER = "__FETCH_FROM_SSM__";
 
 export interface FunctionBindingProps {
   clientPackage: string;
   permissions: Record<string, string[]>;
   variables: Record<
     string,
-    {
-      // environments are used for 2 purposes:
-      //  - pass binding values to the function (ie. bucket name)
-      //  - pass placeholder value to the function (ie. secret)
-      environment: string;
-      parameter?: string;
-    }
+    | {
+        // value will be stored in environment variable and SSM
+        // - environment: real value
+        // - SSM parameter: real value
+        // ie. Bucket's name
+        type: "plain";
+        value: string;
+      }
+    | {
+        // value will be created in SSM manually by user
+        // - environment: placeholder value
+        // - SSM parameter: not created (user will create it manually)
+        // ie. Secret's value
+        type: "secret";
+      }
+    | {
+        // value points to a Secret value
+        // - environment: placeholder value with reference to Secret name
+        // - SSM parameter: not created
+        // ie. Auth's public key
+        type: "secret_reference";
+        secret: Secret;
+      }
+    | {
+        // value will be stored in SSM
+        // - environment: placeholder value
+        // - SSM parameter: real value
+        // ie. Site's url
+        type: "site_url";
+        value: string;
+      }
   >;
 }
 
 export function bindEnvironment(c: SSTConstruct) {
   const binding = c.getFunctionBinding();
 
-  const environment: Record<string, string> = {};
+  let environment: Record<string, string> = {};
   if (binding) {
     Object.entries(binding.variables).forEach(([prop, variable]) => {
       const envName = getEnvironmentKey(c, prop);
-      environment[envName] = variable.environment;
+      if (variable.type === "plain") {
+        environment[envName] = variable.value;
+      } else if (variable.type === "secret" || variable.type === "site_url") {
+        environment[envName] = placeholderSecretValue();
+      } else if (variable.type === "secret_reference") {
+        environment[envName] = placeholderSecretReferenceValue(variable.secret);
+      }
     });
   }
 
@@ -41,21 +70,25 @@ export function bindParameters(c: SSTConstruct) {
   }
 
   const app = c.node.root as App;
-  Object.entries(binding.variables)
-    .filter(([, variable]) => variable.parameter !== undefined)
-    .forEach(([prop, variable]) => {
-      const resId = `Parameter_${prop}`;
-      if (!c.node.tryFindChild(resId)) {
-        new ssm.StringParameter(c, resId, {
-          // Parameters, Secrets, and Jobs do not have a name
-          parameterName: getParameterPath(c, prop),
-          stringValue: variable.parameter!,
-        });
-      }
-    });
+  Object.entries(binding.variables).forEach(([prop, variable]) => {
+    if (variable.type !== "plain" && variable.type !== "site_url") return;
+
+    const resId = `Parameter_${prop}`;
+    if (!c.node.tryFindChild(resId)) {
+      new ssm.StringParameter(c, resId, {
+        parameterName: getParameterPath(c, prop),
+        stringValue: variable.value,
+      });
+    }
+  });
 }
 
 export function bindPermissions(c: SSTConstruct) {
+  const binding = c.getFunctionBinding();
+  if (!binding) {
+    return {};
+  }
+
   return c.getFunctionBinding()?.permissions || {};
 }
 
@@ -69,6 +102,20 @@ export function bindType(c: SSTConstruct) {
     clientPackage: binding.clientPackage,
     variables: Object.keys(binding.variables),
   };
+}
+
+export function getReferencedSecrets(c: SSTConstruct) {
+  const binding = c.getFunctionBinding();
+  const secrets: Secret[] = [];
+  if (binding) {
+    Object.values(binding.variables).forEach((variable) => {
+      if (variable.type === "secret_reference") {
+        secrets.push(variable.secret);
+      }
+    });
+  }
+
+  return secrets;
 }
 
 export function getEnvironmentKey(c: SSTConstruct, prop: string): string {
@@ -99,4 +146,12 @@ export function getParameterFallbackPath(
     prop: prop,
     fallback: true,
   });
+}
+
+export function placeholderSecretValue() {
+  return "__FETCH_FROM_SSM__";
+}
+
+export function placeholderSecretReferenceValue(secret: Secret) {
+  return "__FETCH_FROM_SECRET__:" + secret.name;
 }

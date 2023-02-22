@@ -1,6 +1,7 @@
 import path from "path";
 import glob from "glob";
 import fs from "fs";
+import url from "url";
 import * as crypto from "crypto";
 import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
@@ -11,7 +12,7 @@ import * as secretsManager from "aws-cdk-lib/aws-secretsmanager";
 import { App } from "./App.js";
 import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct.js";
 import { Function as Fn } from "./Function.js";
-import url from "url";
+import { FunctionBindingProps } from "./util/functionBinding.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 /////////////////////
@@ -289,21 +290,21 @@ export class RDS extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding() {
+  public getFunctionBinding(): FunctionBindingProps {
     return {
       clientPackage: "rds",
       variables: {
         clusterArn: {
-          environment: this.clusterArn,
-          parameter: this.clusterArn,
+          type: "plain",
+          value: this.clusterArn,
         },
         secretArn: {
-          environment: this.secretArn,
-          parameter: this.secretArn,
+          type: "plain",
+          value: this.secretArn,
         },
         defaultDatabaseName: {
-          environment: this.defaultDatabaseName,
-          parameter: this.defaultDatabaseName,
+          type: "plain",
+          value: this.defaultDatabaseName,
         },
       },
       permissions: {

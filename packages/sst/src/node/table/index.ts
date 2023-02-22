@@ -1,6 +1,6 @@
-import { createProxy, parseEnvironment } from "../util/index.js";
+import { createProxy, getVariables } from "../util/index.js";
 
 export interface TableResources {}
 
 export const Table = createProxy<TableResources>("Table");
-Object.assign(Table, parseEnvironment("Table", ["tableName"]));
+Object.assign(Table, await getVariables("Table"));

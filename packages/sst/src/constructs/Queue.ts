@@ -9,6 +9,7 @@ import {
   FunctionInlineDefinition,
   FunctionDefinition,
 } from "./Function.js";
+import { FunctionBindingProps } from "./util/functionBinding.js";
 import { toCdkDuration } from "./util/duration.js";
 import { Permissions } from "./util/permission.js";
 
@@ -303,13 +304,13 @@ export class Queue extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding() {
+  public getFunctionBinding(): FunctionBindingProps {
     return {
       clientPackage: "queue",
       variables: {
         queueUrl: {
-          environment: this.queueUrl,
-          parameter: this.queueUrl,
+          type: "plain",
+          value: this.queueUrl,
         },
       },
       permissions: {

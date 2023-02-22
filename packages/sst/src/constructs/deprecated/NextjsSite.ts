@@ -48,7 +48,6 @@ import {
 import { Permissions, attachPermissionsToRole } from "../util/permission.js";
 import { getHandlerHash } from "../util/builder.js";
 import {
-  ENVIRONMENT_PLACEHOLDER,
   FunctionBindingProps,
   getParameterPath,
 } from "../util/functionBinding.js";
@@ -467,8 +466,8 @@ export class NextjsSite extends Construct implements SSTConstruct {
           // depend on the Site. B/c often the site depends on the Api, causing
           // a CloudFormation circular dependency if the Api and the Site belong
           // to different stacks.
-          environment: ENVIRONMENT_PLACEHOLDER,
-          parameter: this.customDomainUrl || this.url,
+          type: "site_url",
+          value: this.customDomainUrl || this.url,
         },
       },
       permissions: {

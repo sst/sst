@@ -16,11 +16,17 @@ import {
 
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
+import { Secret } from "./Config.js";
 import { SSTConstruct } from "./Construct.js";
 import { Function, useFunctions } from "./Function.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
-import { bindEnvironment, bindPermissions } from "./util/functionBinding.js";
+import {
+  FunctionBindingProps,
+  bindEnvironment,
+  bindPermissions,
+  getReferencedSecrets,
+} from "./util/functionBinding.js";
 import { IVpc } from "aws-cdk-lib/aws-ec2";
 import { useDeferredTasks } from "./deferred_task.js";
 import { useProject } from "../project.js";
@@ -212,13 +218,13 @@ export class Job extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding() {
+  public getFunctionBinding(): FunctionBindingProps {
     return {
       clientPackage: "job",
       variables: {
         functionName: {
-          environment: this._jobInvoker.functionName,
-          parameter: this._jobInvoker.functionName,
+          type: "plain",
+          value: this._jobInvoker.functionName,
         },
       },
       permissions: {
@@ -237,7 +243,7 @@ export class Job extends Construct implements SSTConstruct {
    */
   public bind(constructs: SSTConstruct[]): void {
     this._jobInvoker.bind(constructs);
-    this.useForCodeBuild(constructs);
+    this.bindForCodeBuild(constructs);
   }
 
   /**
@@ -426,10 +432,14 @@ export class Job extends Construct implements SSTConstruct {
     return fn;
   }
 
-  private useForCodeBuild(constructs: SSTConstruct[]): void {
-    const app = this.node.root as App;
+  private bindForCodeBuild(constructs: SSTConstruct[]): void {
+    // Get referenced secrets
+    const referencedSecrets: Secret[] = [];
+    constructs.forEach((c) =>
+      referencedSecrets.push(...getReferencedSecrets(c))
+    );
 
-    constructs.forEach((c) => {
+    [...constructs, ...referencedSecrets].forEach((c) => {
       // Bind environment
       const env = bindEnvironment(c);
       Object.entries(env).forEach(([key, value]) =>

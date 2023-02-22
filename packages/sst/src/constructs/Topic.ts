@@ -15,6 +15,7 @@ import {
   FunctionDefinition,
 } from "./Function.js";
 import { Queue } from "./Queue.js";
+import { FunctionBindingProps } from "./util/functionBinding.js";
 import { Permissions } from "./util/permission.js";
 
 /////////////////////
@@ -369,13 +370,13 @@ export class Topic extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding() {
+  public getFunctionBinding(): FunctionBindingProps {
     return {
       clientPackage: "topic",
       variables: {
         topicArn: {
-          environment: this.topicArn,
-          parameter: this.topicArn,
+          type: "plain",
+          value: this.topicArn,
         },
       },
       permissions: {

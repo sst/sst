@@ -1,9 +1,6 @@
-import { createProxy, parseEnvironment } from "../util/index.js";
+import { createProxy, getVariables } from "../util/index.js";
 
 export interface RDSResources {}
 
 export const RDS = createProxy<RDSResources>("RDS");
-Object.assign(
-  RDS,
-  parseEnvironment("RDS", ["clusterArn", "secretArn", "defaultDatabaseName"])
-);
+Object.assign(RDS, await getVariables("RDS"));

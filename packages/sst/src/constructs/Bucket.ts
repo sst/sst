@@ -10,6 +10,7 @@ import {
   FunctionInlineDefinition,
   FunctionDefinition,
 } from "./Function.js";
+import { FunctionBindingProps } from "./util/functionBinding.js";
 import { Permissions } from "./util/permission.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 
@@ -448,13 +449,13 @@ export class Bucket extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding() {
+  public getFunctionBinding(): FunctionBindingProps {
     return {
       clientPackage: "bucket",
       variables: {
         bucketName: {
-          environment: this.bucketName,
-          parameter: this.bucketName,
+          type: "plain",
+          value: this.bucketName,
         },
       },
       permissions: {

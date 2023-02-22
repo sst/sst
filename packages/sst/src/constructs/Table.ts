@@ -11,6 +11,7 @@ import {
   FunctionDefinition,
 } from "./Function.js";
 import { KinesisStream } from "./KinesisStream.js";
+import { FunctionBindingProps } from "./util/functionBinding.js";
 import { Permissions } from "./util/permission.js";
 
 /////////////////////
@@ -608,13 +609,13 @@ export class Table extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding() {
+  public getFunctionBinding(): FunctionBindingProps {
     return {
       clientPackage: "table",
       variables: {
         tableName: {
-          environment: this.tableName,
-          parameter: this.tableName,
+          type: "plain",
+          value: this.tableName,
         },
       },
       permissions: {

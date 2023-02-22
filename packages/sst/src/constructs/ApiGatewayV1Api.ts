@@ -13,6 +13,7 @@ import * as apigV1AccessLog from "./util/apiGatewayV1AccessLog.js";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Bucket } from "./Bucket.js";
+import { FunctionBindingProps } from "./util/functionBinding.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct.js";
 import { DnsValidatedCertificate } from "./cdk/dns-validated-certificate.js";
@@ -780,13 +781,13 @@ export class ApiGatewayV1Api<
   }
 
   /** @internal */
-  public getFunctionBinding() {
+  public getFunctionBinding(): FunctionBindingProps {
     return {
       clientPackage: "api",
       variables: {
         url: {
-          environment: this.customDomainUrl || this.url,
-          parameter: this.customDomainUrl || this.url,
+          type: "plain",
+          value: this.customDomainUrl || this.url,
         },
       },
       permissions: {},

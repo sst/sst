@@ -1,6 +1,6 @@
 import { Construct } from "constructs";
-import { App } from "./App.js";
 import { SSTConstruct } from "./Construct.js";
+import { FunctionBindingProps } from "./util/functionBinding.js";
 
 export interface ParameterProps {
   /**
@@ -45,13 +45,13 @@ export class Parameter extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding() {
+  public getFunctionBinding(): FunctionBindingProps {
     return {
       clientPackage: "config",
       variables: {
         value: {
-          environment: this.value,
-          parameter: this.value,
+          type: "plain",
+          value: this.value,
         },
       },
       permissions: {},

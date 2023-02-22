@@ -1,6 +1,6 @@
-import { createProxy, parseEnvironment } from "../util/index.js";
+import { createProxy, getVariables } from "../util/index.js";
 
 export interface BucketResources {}
 
 export const Bucket = createProxy<BucketResources>("Bucket");
-Object.assign(Bucket, parseEnvironment("Bucket", ["bucketName"]));
+Object.assign(Bucket, await getVariables("Bucket"));

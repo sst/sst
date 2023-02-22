@@ -275,8 +275,10 @@ export class App extends cdk.App {
     });
   }
 
-  synth(options: cdk.StageSynthesisOptions = {}): cxapi.CloudAssembly {
+  public async finish() {
+    await useDeferredTasks().run();
     Auth.injectConfig();
+    this.buildConstructsMetadata();
     this.ensureUniqueConstructIds();
     this.codegenTypes();
     this.createBindingSsmParameters();
@@ -304,15 +306,6 @@ export class App extends cdk.App {
         }
       }
     }
-
-    const cloudAssembly = super.synth(options);
-
-    return cloudAssembly;
-  }
-
-  public async finish() {
-    await useDeferredTasks().run();
-    this.buildConstructsMetadata();
   }
 
   isRunningSSTTest(): boolean {

@@ -18,6 +18,7 @@ import {
   FunctionInlineDefinition,
   FunctionDefinition,
 } from "./Function.js";
+import { FunctionBindingProps } from "./util/functionBinding.js";
 import { Permissions } from "./util/permission.js";
 import * as apigV2Domain from "./util/apiGatewayV2Domain.js";
 import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog.js";
@@ -466,13 +467,13 @@ export class WebSocketApi extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding() {
+  public getFunctionBinding(): FunctionBindingProps {
     return {
       clientPackage: "api",
       variables: {
         url: {
-          environment: this.customDomainUrl || this.url,
-          parameter: this.customDomainUrl || this.url,
+          type: "plain",
+          value: this.customDomainUrl || this.url,
         },
       },
       permissions: {},

@@ -1,4 +1,4 @@
-import { createProxy, parseEnvironment } from "../util/index.js";
+import { createProxy, getVariables } from "../util/index.js";
 import { InvokeCommand, LambdaClient } from "@aws-sdk/client-lambda";
 const lambda = new LambdaClient({});
 
@@ -18,7 +18,7 @@ export type JobType = {
 };
 
 export const Job = createProxy<JobType>("Job");
-const jobData = parseEnvironment("Job", ["functionName"]);
+const jobData = await getVariables("Job");
 Object.keys(jobData).forEach((name) => {
   // @ts-ignore
   Job[name] = JobControl(name);

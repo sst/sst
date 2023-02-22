@@ -3,7 +3,6 @@ import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { SSTConstruct } from "./Construct.js";
 import {
-  ENVIRONMENT_PLACEHOLDER,
   getParameterPath,
   getParameterFallbackPath,
   FunctionBindingProps,
@@ -49,9 +48,7 @@ export class Secret extends Construct implements SSTConstruct {
       clientPackage: "config",
       variables: {
         value: {
-          environment: ENVIRONMENT_PLACEHOLDER,
-          // SSM parameters will be created manually via CLI
-          parameter: undefined,
+          type: "secret",
         },
       },
       permissions: {

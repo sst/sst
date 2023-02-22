@@ -19,6 +19,7 @@ import {
   FunctionInlineDefinition,
   FunctionDefinition,
 } from "./Function.js";
+import { FunctionBindingProps } from "./util/functionBinding.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions } from "./util/permission.js";
 import * as apigV2Cors from "./util/apiGatewayV2Cors.js";
@@ -909,13 +910,13 @@ export class Api<
   }
 
   /** @internal */
-  public getFunctionBinding() {
+  public getFunctionBinding(): FunctionBindingProps {
     return {
       clientPackage: "api",
       variables: {
         url: {
-          environment: this.customDomainUrl || this.url,
-          parameter: this.customDomainUrl || this.url,
+          type: "plain",
+          value: this.customDomainUrl || this.url,
         },
       },
       permissions: {},

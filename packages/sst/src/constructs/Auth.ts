@@ -4,13 +4,14 @@ import { Construct } from "constructs";
 import { Api } from "./Api.js";
 import { FunctionDefinition } from "./Function.js";
 import { SSTConstruct } from "./Construct.js";
-import { Stack } from "./Stack.js";
 import { App } from "./App.js";
+import { Stack } from "./Stack.js";
+import { Secret } from "./Secret.js";
 import {
-  ENVIRONMENT_PLACEHOLDER,
   FunctionBindingProps,
   getEnvironmentKey,
   getParameterPath,
+  placeholderSecretValue,
 } from "./util/functionBinding.js";
 import { CustomResource } from "aws-cdk-lib";
 
@@ -149,10 +150,13 @@ export class Auth extends Construct implements SSTConstruct {
       clientPackage: "auth",
       variables: {
         publicKey: {
-          environment: ENVIRONMENT_PLACEHOLDER,
-          // SSM parameters will be created by the custom resource
-          parameter: undefined,
+          type: "secret",
         },
+        // Example of referencing a secret
+        //publicKey2: {
+        //  type: "secret_reference",
+        //  secret: new Secret(this, "PUBLIC_KEY2");
+        //},
       },
       permissions: {
         "ssm:GetParameters": [
@@ -208,17 +212,17 @@ export class Auth extends Construct implements SSTConstruct {
 
       // Auth construct has two types of Function bindinds:
       // - Api routes: bindings defined in `getFunctionBinding()`
-      //     ie. calling `use.([auth])` will grant functions access to the public key
+      //     ie. calling `bind([auth])` will grant functions access to the public key
       // - Auth authenticator: binds manually. Need to grant access to the prefix and private key
       const fn = props.api.getFunction(path)!;
       fn.addEnvironment(getEnvironmentKey(this, PREFIX_PROP), prefix);
       fn.addEnvironment(
         getEnvironmentKey(this, PUBLIC_KEY_PROP),
-        ENVIRONMENT_PLACEHOLDER
+        placeholderSecretValue()
       );
       fn.addEnvironment(
         getEnvironmentKey(this, PRIVATE_KEY_PROP),
-        ENVIRONMENT_PLACEHOLDER
+        placeholderSecretValue()
       );
       fn.attachPermissions([
         new PolicyStatement({

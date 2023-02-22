@@ -30,6 +30,7 @@ import {
   FunctionInlineDefinition,
   FunctionDefinition,
 } from "./Function.js";
+import { FunctionBindingProps } from "./util/functionBinding.js";
 import { Permissions } from "./util/permission.js";
 import { useProject } from "../project.js";
 
@@ -688,13 +689,13 @@ export class AppSyncApi extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding() {
+  public getFunctionBinding(): FunctionBindingProps {
     return {
       clientPackage: "api",
       variables: {
         url: {
-          environment: this.customDomainUrl || this.url,
-          parameter: this.customDomainUrl || this.url,
+          type: "plain",
+          value: this.customDomainUrl || this.url,
         },
       },
       permissions: {},

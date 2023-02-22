@@ -1,6 +1,6 @@
-import { createProxy, parseEnvironment } from "../util/index.js";
+import { createProxy, getVariables } from "../util/index.js";
 
 export interface QueueResources {}
 
 export const Queue = createProxy<QueueResources>("Queue");
-Object.assign(Queue, parseEnvironment("Queue", ["queueUrl"]));
+Object.assign(Queue, await getVariables("Queue"));

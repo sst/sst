@@ -1,81 +1,21 @@
-import {
-  GetParametersCommand,
-  SSMClient,
-  Parameter,
-} from "@aws-sdk/client-ssm";
-const ssm = new SSMClient({});
-import {
-  parseEnvironment,
-  buildSsmPath,
-  ssmNameToPropName,
-} from "../util/index.js";
+import { getVariables } from "../util/index.js";
 import { Handler } from "../../context/handler.js";
 import { useDomainName, usePath } from "../api/index.js";
 import { Adapter } from "./adapter/adapter.js";
 
 const className = "Auth";
-const authData = parseEnvironment(className, [
-  "publicKey",
-  "privateKey",
-  "prefix",
-]);
-let prefix: string;
-let publicKey: string;
-let privateKey: string;
 
 // Each function can only be attached to one Auth construct, so we can
 // assume there is only one entry in authData.
-const authNames = Object.keys(authData);
-if (authNames.length !== 0) {
-  const authName = authNames[0];
-  await replaceWithSsmValues(authName);
-  // @ts-ignore
-  prefix = authData[authName].prefix;
-  // @ts-ignore
-  publicKey = authData[authName].publicKey;
-  // @ts-ignore
-  privateKey = authData[authName].privateKey;
-}
-
-async function replaceWithSsmValues(name: string) {
-  // Fetch all secrets
-  const props = ["privateKey", "publicKey"].filter(
-    (prop) => authData[name][prop] === "__FETCH_FROM_SSM__"
-  );
-  if (props.length === 0) {
-    return;
-  }
-  const results = await loadSsm(name, props);
-
-  if (results.invalidParams.length > 0) {
-    const missingProps = results.invalidParams.map(ssmNameToPropName);
-    throw new Error(
-      `The following Auth parameters were not found: ${missingProps.join(", ")}`
-    );
-  }
-
-  // Store all secrets in a map
-  for (const item of results.validParams) {
-    const prop = ssmNameToPropName(item.Name!);
-    // @ts-ignore
-    authData[name][prop] = item.Value!;
-  }
-}
-
-async function loadSsm(name: string, props: string[]) {
-  const SSM_PREFIX = `/sst/${process.env.SST_APP}/${process.env.SST_STAGE}/${className}/${name}`;
-  // Fetch secrets
-  const validParams: Parameter[] = [];
-  const invalidParams: string[] = [];
-  const command = new GetParametersCommand({
-    Names: props.map((prop) => buildSsmPath(className, name, prop)),
-    WithDecryption: true,
-  });
-  const result = await ssm.send(command);
-  return {
-    validParams: result.Parameters || [],
-    invalidParams: result.InvalidParameters || [],
-  };
+const authData = await getVariables(className);
+const authValues = Object.values(authData);
+let prefix: string;
+let publicKey: string;
+let privateKey: string;
+if (authValues.length !== 0) {
+  prefix = authValues[0].prefix;
+  publicKey = authValues[0].publicKey;
+  privateKey = authValues[0].privateKey;
 }
 
 export function getPublicKey() {

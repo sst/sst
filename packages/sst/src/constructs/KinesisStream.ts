@@ -10,6 +10,7 @@ import {
   FunctionInlineDefinition,
   FunctionDefinition,
 } from "./Function.js";
+import { FunctionBindingProps } from "./util/functionBinding.js";
 import { Permissions } from "./util/permission.js";
 
 /////////////////////
@@ -308,13 +309,13 @@ export class KinesisStream extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding() {
+  public getFunctionBinding(): FunctionBindingProps {
     return {
       clientPackage: "kinesis-stream",
       variables: {
         streamName: {
-          environment: this.streamName,
-          parameter: this.streamName,
+          type: "plain",
+          value: this.streamName,
         },
       },
       permissions: {

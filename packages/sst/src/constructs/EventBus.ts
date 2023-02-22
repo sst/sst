@@ -11,6 +11,7 @@ import {
   FunctionInlineDefinition,
   FunctionDefinition,
 } from "./Function.js";
+import { FunctionBindingProps } from "./util/functionBinding.js";
 import { Permissions } from "./util/permission.js";
 
 /////////////////////
@@ -510,13 +511,13 @@ export class EventBus extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding() {
+  public getFunctionBinding(): FunctionBindingProps {
     return {
       clientPackage: "event-bus",
       variables: {
         eventBusName: {
-          environment: this.eventBusName,
-          parameter: this.eventBusName,
+          type: "plain",
+          value: this.eventBusName,
         },
       },
       permissions: {

@@ -17,7 +17,12 @@ import { Secret } from "./Config.js";
 import { SSTConstruct } from "./Construct.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
-import { bindEnvironment, bindPermissions } from "./util/functionBinding.js";
+import {
+  FunctionBindingProps,
+  bindEnvironment,
+  bindPermissions,
+  getReferencedSecrets,
+} from "./util/functionBinding.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import * as functionUrlCors from "./util/functionUrlCors.js";
 
@@ -604,6 +609,7 @@ export class Function extends lambda.Function implements SSTConstruct {
   public _disableBind?: boolean;
   private functionUrl?: lambda.FunctionUrl;
   private props: FunctionProps;
+  private allBindings: SSTConstruct[] = [];
 
   constructor(scope: Construct, id: string, props: FunctionProps) {
     const app = scope.node.root as App;
@@ -820,7 +826,13 @@ export class Function extends lambda.Function implements SSTConstruct {
    * ```
    */
   public bind(constructs: SSTConstruct[]): void {
-    constructs.forEach((c) => {
+    // Get referenced secrets
+    const referencedSecrets: Secret[] = [];
+    constructs.forEach((c) =>
+      referencedSecrets.push(...getReferencedSecrets(c))
+    );
+
+    [...constructs, ...referencedSecrets].forEach((c) => {
       // Bind environment
       const env = bindEnvironment(c);
       Object.entries(env).forEach(([key, value]) =>
@@ -839,6 +851,8 @@ export class Function extends lambda.Function implements SSTConstruct {
         ])
       );
     });
+
+    this.allBindings.push(...constructs, ...referencedSecrets);
   }
 
   /**
@@ -865,14 +879,12 @@ export class Function extends lambda.Function implements SSTConstruct {
 
   /** @internal */
   public getConstructMetadata() {
-    const { bind } = this.props;
-
     return {
       type: "Function" as const,
       data: {
         arn: this.functionArn,
         localId: this.node.addr,
-        secrets: (bind || [])
+        secrets: this.allBindings
           .filter((c) => c instanceof Secret)
           .map((c) => (c as Secret).name),
       },
@@ -880,13 +892,13 @@ export class Function extends lambda.Function implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding() {
+  public getFunctionBinding(): FunctionBindingProps {
     return {
       clientPackage: "function",
       variables: {
         functionName: {
-          environment: this.functionName,
-          parameter: this.functionName,
+          type: "plain",
+          value: this.functionName,
         },
       },
       permissions: {
