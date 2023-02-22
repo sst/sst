@@ -27,7 +27,8 @@ class Context(object):
         self.aws_request_id = aws_request_id
         self.memory_limit_in_mb = os.environ['AWS_LAMBDA_FUNCTION_MEMORY_SIZE']
         self.deadline_ms = deadline_ms
-        self.identity = Identity(**json.loads(identity))
+        if(identity != None):
+            self.identity = Identity(**json.loads(identity))
         self.client_context = ClientContext(**json.loads(client_context))
 
     def get_remaining_time_in_millis(self):
@@ -113,4 +114,3 @@ if __name__ == '__main__':
     req =  request.Request(url, method="POST", data=data)
     req.add_header('Content-Type', 'application/json')
     r = request.urlopen(req, data=data)
-

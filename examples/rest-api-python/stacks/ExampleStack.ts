@@ -1,16 +1,17 @@
-import { Api, StackContext } from "sst/constructs";
+import { Api, StackContext, Function } from "sst/constructs";
 
 export function ExampleStack({ stack }: StackContext) {
   // Create the HTTP API
-  const api = new Api(stack, "Api", {
+  const api = new Api(stack, "api", {
     routes: {
-      "GET /notes": "packages/functions/src/list.main",
-      "GET /notes/{id}": "packages/functions/src/get.main",
-      "PUT /notes/{id}": "packages/functions/src/update.main",
+      "GET /": new Function(stack, "HelloWorld", {
+        runtime: "python3.9",
+        handler: "packages/hello/src/lambda.handler",
+      }),
     },
   });
 
-  // Show API endpoint in output
+  // Add the API Endpoint to the outputs
   stack.addOutputs({
     ApiEndpoint: api.url,
   });
