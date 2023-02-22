@@ -13,7 +13,7 @@ import {
   useQueryParams,
   useResponse,
 } from "../api/index.js";
-import { SessionValue } from "./session.js";
+import type { SessionValue } from "./session.js";
 
 export function AuthHandler<
   Providers extends Record<string, Adapter<any>>,
