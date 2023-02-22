@@ -97,7 +97,7 @@ export const useNodeHandler = Context.memo(async () => {
       const extension = isESM ? ".mjs" : ".cjs";
       const target = path.join(
         input.out,
-        !relative.startsWith("..") && !path.isAbsolute(relative)
+        !relative.startsWith("..") && !path.isAbsolute(input.props.handler!)
           ? relative
           : "",
         parsed.name + extension
