@@ -8,13 +8,12 @@ import {
   ApiHandler,
   useCookie,
   useCookies,
-  usePath,
   usePathParam,
   useQueryParam,
   useQueryParams,
   useResponse,
 } from "../api/index.js";
-import { Session, SessionValue } from "../auth/session.js";
+import { SessionValue } from "./session.js";
 
 export function AuthHandler<
   Providers extends Record<string, Adapter<any>>,

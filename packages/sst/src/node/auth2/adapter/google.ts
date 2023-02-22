@@ -1,5 +1,4 @@
 import { Issuer } from "openid-client";
-import { Adapter } from "../index.js";
 import { OidcAdapter, OidcBasicConfig } from "./oidc.js";
 
 const issuer = await Issuer.discover("https://accounts.google.com");

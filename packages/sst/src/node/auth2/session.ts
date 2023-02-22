@@ -1,9 +1,8 @@
 import { createSigner, createVerifier, SignerOptions } from "fast-jwt";
-import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 import { Context } from "../../context/context.js";
 import { useCookie, useHeader } from "../api/index.js";
 import { Auth } from "../auth/index.js";
-import { Config } from "../../config.js";
+import { Config } from "../config/index.js";
 
 export interface SessionTypes {
   public: {};
