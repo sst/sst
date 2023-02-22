@@ -4,4 +4,4 @@ export interface KinesisStreamResources {}
 
 export const KinesisStream =
   createProxy<KinesisStreamResources>("KinesisStream");
-Object.assign(KinesisStream, await getVariables("KinesisStream"));
+Object.assign(KinesisStream, getVariables("KinesisStream"));

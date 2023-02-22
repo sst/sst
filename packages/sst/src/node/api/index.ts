@@ -12,10 +12,10 @@ export const AppSyncApi = createProxy<AppSyncApiResources>("AppSyncApi");
 export const ApiGatewayV1Api =
   createProxy<ApiGatewayV1ApiResources>("ApiGatewayV1Api");
 export const WebSocketApi = createProxy<WebSocketApiResources>("WebSocketApi");
-Object.assign(Api, await getVariables("Api"));
-Object.assign(AppSyncApi, await getVariables("AppSyncApi"));
-Object.assign(ApiGatewayV1Api, await getVariables("ApiGatewayV1Api"));
-Object.assign(WebSocketApi, await getVariables("WebSocketApi"));
+Object.assign(Api, getVariables("Api"));
+Object.assign(AppSyncApi, getVariables("AppSyncApi"));
+Object.assign(ApiGatewayV1Api, getVariables("ApiGatewayV1Api"));
+Object.assign(WebSocketApi, getVariables("WebSocketApi"));
 
 /**
  * Create a new api handler that can be used to create an authenticated session.

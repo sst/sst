@@ -15,8 +15,8 @@ export const Config = createProxy<ConfigTypes & ParameterTypes & SecretTypes>(
   "Config"
 );
 const metadata = parseMetadataEnvironment();
-const parameters = flattenValues(await getVariables("Parameter"));
-const secrets = flattenValues(await getVariables("Secret"));
+const parameters = flattenValues(getVariables("Parameter"));
+const secrets = flattenValues(getVariables("Secret"));
 Object.assign(Config, metadata, parameters, secrets);
 
 ///////////////

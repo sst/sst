@@ -18,7 +18,7 @@ export type JobType = {
 };
 
 export const Job = createProxy<JobType>("Job");
-const jobData = await getVariables("Job");
+const jobData = getVariables("Job");
 Object.keys(jobData).forEach((name) => {
   // @ts-ignore
   Job[name] = JobControl(name);

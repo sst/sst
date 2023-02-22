@@ -13,11 +13,11 @@ export const ViteStaticSite =
   createProxy<ViteStaticSiteResources>("ViteStaticSite");
 export const RemixSite = createProxy<RemixSiteResources>("RemixSite");
 export const NextjsSite = createProxy<NextjsSiteResources>("NextjsSite");
-const staticSiteData = await getVariables("StaticSite");
-const reactSiteData = await getVariables("ReactStaticSite");
-const viteSiteData = await getVariables("ViteStaticSite");
-const nextjsSiteData = await getVariables("NextjsSite");
-const remixSiteData = await getVariables("RemixSite");
+const staticSiteData = getVariables("StaticSite");
+const reactSiteData = getVariables("ReactStaticSite");
+const viteSiteData = getVariables("ViteStaticSite");
+const nextjsSiteData = getVariables("NextjsSite");
+const remixSiteData = getVariables("RemixSite");
 Object.assign(StaticSite, staticSiteData);
 Object.assign(ReactStaticSite, reactSiteData);
 Object.assign(ViteStaticSite, viteSiteData);

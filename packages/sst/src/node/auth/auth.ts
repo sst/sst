@@ -7,7 +7,7 @@ const className = "Auth";
 
 // Each function can only be attached to one Auth construct, so we can
 // assume there is only one entry in authData.
-const authData = await getVariables(className);
+const authData = getVariables(className);
 const authValues = Object.values(authData);
 let prefix: string;
 let publicKey: string;

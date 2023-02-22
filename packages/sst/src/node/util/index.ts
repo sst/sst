@@ -13,7 +13,8 @@ const ssm = new SSMClient({});
 //     }
 //   }
 // }
-let allVariables: Record<string, Record<string, Record<string, string>>>;
+let allVariables: Record<string, Record<string, Record<string, string>>> = {};
+await parseEnvironment();
 
 interface Variable {
   constructName: string;
@@ -41,12 +42,7 @@ export function createProxy<T extends object>(constructName: string) {
   });
 }
 
-export async function getVariables(constructName: string) {
-  if (!allVariables) {
-    allVariables = {};
-    await parseEnvironment();
-  }
-
+export function getVariables(constructName: string) {
   return allVariables[constructName] || {};
 }
 
