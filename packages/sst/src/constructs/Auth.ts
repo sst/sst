@@ -81,7 +81,6 @@ export class Auth extends Construct implements SSTConstruct {
   public readonly id: string;
   private readonly authenticator: FunctionDefinition;
 
-  /** @internal */
   private api: Api;
   private publicKey: Secret;
   private privateKey: Secret;
@@ -120,7 +119,7 @@ export class Auth extends Construct implements SSTConstruct {
     const fn = this.api.getFunction("ANY /{step}")!;
     fn.bind([this.publicKey, this.privateKey]);
     const app = this.node.root as App;
-    fn.addEnvironment("AUTH_ID", this.id);
+    fn.addEnvironment("AUTH_ID", id);
     fn.attachPermissions([
       new PolicyStatement({
         actions: ["ssm:GetParameters"],

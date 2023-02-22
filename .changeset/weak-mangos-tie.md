@@ -1,0 +1,5 @@
+---
+"sst": patch
+---
+
+New auth
