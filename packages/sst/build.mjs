@@ -183,7 +183,7 @@ await Promise.all(
     "sls-nextjs-site-stub",
     "sls-nextjs-site-build-helper",
     "sls-nextjs-site-function-code-replacer",
-    "ssr-site-function-stub",
+    "sls-nextjs-site-function-stub",
     "base-site-custom-resource",
     "python-runtime",
     "java-runtime",

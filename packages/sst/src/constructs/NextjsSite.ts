@@ -120,28 +120,18 @@ export class NextjsSite extends SsrSite {
       sitePath,
       ".open-next/middleware-function"
     );
-    const isMiddlewareEnabled = fs.existsSync(middlewarePath);
 
-    let bundlePath, handler;
-    if (isMiddlewareEnabled) {
-      bundlePath = middlewarePath;
-      handler = "index.handler";
-    } else {
-      bundlePath = path.resolve(__dirname, "../support/ssr-site-function-stub");
-      handler = "server.handler";
+    if (fs.existsSync(middlewarePath)) {
+      return new EdgeFunction(this, "Middleware", {
+        bundlePath: middlewarePath,
+        handler: "index.handler",
+        timeout: 5,
+        memorySize: 128,
+        permissions,
+        environment,
+        format: "esm",
+      });
     }
-
-    const fn = new EdgeFunction(this, "Middleware", {
-      bundlePath,
-      handler,
-      timeout: 5,
-      memorySize: 128,
-      permissions,
-      environment,
-      format: "esm",
-    });
-
-    return { fn, isMiddlewareEnabled };
   }
 
   protected createCloudFrontDistributionForRegional(): cloudfront.Distribution {
@@ -150,27 +140,24 @@ export class NextjsSite extends SsrSite {
     const s3Origin = new origins.S3Origin(this.cdk.bucket);
 
     // Create server behavior
-    const { fn: middlewareFn, isMiddlewareEnabled } =
-      this.createMiddlewareEdgeFunctionForRegional();
-    const fnUrl = this.serverLambdaForRegional!.addFunctionUrl({
+    const middlewareFn = this.createMiddlewareEdgeFunctionForRegional();
+    const serverFnUrl = this.serverLambdaForRegional!.addFunctionUrl({
       authType: lambda.FunctionUrlAuthType.NONE,
     });
     const serverBehavior = {
       viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      origin: new origins.HttpOrigin(Fn.parseDomainName(fnUrl.url)),
+      origin: new origins.HttpOrigin(Fn.parseDomainName(serverFnUrl.url)),
       allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
       cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
       cachePolicy:
         cdk?.serverCachePolicy ?? this.createCloudFrontServerCachePolicy(),
-      edgeLambdas: isMiddlewareEnabled
-        ? [
-            {
-              eventType: cloudfront.LambdaEdgeEventType.VIEWER_REQUEST,
-              functionVersion: middlewareFn.currentVersion,
-            },
-          ]
-        : undefined,
+      edgeLambdas: middlewareFn && [
+        {
+          eventType: cloudfront.LambdaEdgeEventType.VIEWER_REQUEST,
+          functionVersion: middlewareFn.currentVersion,
+        },
+      ],
     };
 
     // Create image optimization behavior
