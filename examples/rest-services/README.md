@@ -9,9 +9,9 @@ An example serverless app created with SST.
 Install the example.
 
 ```bash
-$ npx create-sst@latest --template=examples/rest-api
+$ npx create-sst@latest --template=examples/rest-services
 # Or with Yarn
-$ yarn create sst --template=examples/rest-api
+$ yarn create sst --template=examples/rest-services
 ```
 
 ## Commands
