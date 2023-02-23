@@ -1,5 +1,11 @@
 # astro-sst
 
+## 2.0.36
+
+### Patch Changes
+
+- [`d81ac9fae`](https://github.com/serverless-stack/sst/commit/d81ac9faecbca341f685082a9d1b6042886a288a) Thanks [@thdxr](https://github.com/thdxr)! - Fixed issue with astro adapter not forwarding cookies
+
 ## 2.0.35
 
 ## 2.0.34

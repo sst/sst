@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.0.36
+
+### Patch Changes
+
+- [`429aa6fee`](https://github.com/serverless-stack/sst/commit/429aa6fee3b306aa3c79e4b44424e02f35fc291a) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: do not create edge function when middleware is not used
+
+- [`7491ca5b9`](https://github.com/serverless-stack/sst/commit/7491ca5b989babad3a37775ae9644aa208d1c1a4) Thanks [@thdxr](https://github.com/thdxr)! - Add \_\_dirname shim to default banner
+
 ## 2.0.35
 
 ### Patch Changes
