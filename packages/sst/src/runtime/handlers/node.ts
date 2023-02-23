@@ -139,6 +139,8 @@ export const useNodeHandler = Context.memo(async () => {
                 js: [
                   `import { createRequire as topLevelCreateRequire } from 'module';`,
                   `const require = topLevelCreateRequire(import.meta.url);`,
+                  `import url from "url"`,
+                  `const __dirname = url.fileURLToPath(new URL(".", import.meta.url))`,
                   nodejs.banner || "",
                 ].join("\n"),
               },
