@@ -160,13 +160,13 @@ export namespace Config {
     );
   }
 
-  export async function restart(key: string) {
+  export async function restart(keys: string[]) {
     const lambda = useAWSClient(LambdaClient);
     const metadata = await Stacks.metadata();
     const filtered = Object.values(metadata)
       .flat()
       .filter((f): f is FunctionMetadata => f.type === "Function")
-      .filter((f) => f.data.secrets.includes(key));
+      .filter((f) => keys.some((key) => f.data.secrets.includes(key)));
 
     await Promise.all(
       filtered.map(async (f) => {

@@ -34,7 +34,7 @@ export const set = (program: Program) =>
       const restarting = createSpinner(
         ` Restarting all functions using ${blue(args.name)}...`
       ).start();
-      const count = await Config.restart(args.name);
+      const count = await Config.restart([args.name]);
       restarting.succeed(
         count === 1
           ? ` Restarted ${count} function`
