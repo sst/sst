@@ -163,7 +163,11 @@ The SST CLI command also makes AWS SDK calls to your AWS account. Here is a list
 - cloudformation:DescribeStacks
 - cloudformation:GetTemplate
 - cloudformation:ListImports
+- iot:Connect
 - iot:DescribeEndpoint
+- iot:Publish
+- iot:Receive
+- iot:Subscribe
 - s3:GetObject
 - s3:PutObject
 - s3:DeleteObject
