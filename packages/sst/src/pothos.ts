@@ -22,6 +22,11 @@ export async function generate(opts: GenerateOpts) {
   const out = path.join(path.dirname(opts.schema), "out.mjs");
 
   await fs.writeFile(out, contents, "utf8");
+
+  const transpileContents = await extractSchema({ schema: out });
+
+  await fs.writeFile(out, transpileContents, "utf8");
+
   const { schema } = await import(
     url.pathToFileURL(out).href + "?bust=" + Date.now()
   );
@@ -30,7 +35,8 @@ export async function generate(opts: GenerateOpts) {
   return schemaAsString;
 }
 
-export async function extractSchema(opts: { schema: string }) {
+
+export async function extractSchema(opts: GenerateOpts) {
   const result = await esbuild.build({
     platform: "node",
     bundle: true,
