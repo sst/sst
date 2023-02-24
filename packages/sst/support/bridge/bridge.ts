@@ -53,6 +53,7 @@ const ENVIRONMENT = Object.fromEntries(
 const device = new iot.device({
   protocol: "wss",
   host: endpoint,
+  region: ENVIRONMENT.AWS_REGION,
 });
 device.on("error", console.log);
 device.on("connect", console.log);
