@@ -99,7 +99,7 @@ export async function extractSchema(opts: { schema: string }) {
                   !schemaBuilder ||
                   (callPath.node.callee.object.name !==
                     (schemaBuilder.node.id as any).name &&
-                    callPath.node.callee.property.name !== "implement")
+                    !["field", "implement"].includes(callPath.node.callee.property.name))
                 ) {
                   return;
                 }
