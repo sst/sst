@@ -4,8 +4,13 @@
 import fs from "fs";
 import url from "url";
 import path from "path";
-import * as cdk from "aws-cdk-lib";
-import * as lambda from "aws-cdk-lib/aws-lambda";
+import { AssetCode, Code, Runtime } from "aws-cdk-lib/aws-lambda";
+import {
+  AssetHashType,
+  AssetStaging,
+  DockerImage,
+  FileSystem,
+} from "aws-cdk-lib";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 /**
@@ -30,7 +35,7 @@ export interface BundlingOptions {
   /**
    * The runtime of the lambda function
    */
-  readonly runtime: lambda.Runtime;
+  readonly runtime: Runtime;
 
   /**
    * Output path suffix ('python' for a layer, '.' otherwise)
@@ -59,7 +64,7 @@ export interface BundlingOptions {
    * default is `CUSTOM`. This means that only updates to the source will cause
    * the asset to rebuild.
    */
-  readonly assetHashType?: cdk.AssetHashType;
+  readonly assetHashType?: AssetHashType;
 
   /**
    * Specify a custom hash for this asset. If `assetHashType` is set it must
@@ -83,10 +88,10 @@ export interface BundlingOptions {
 /**
  * Produce bundled Lambda asset code
  */
-export function bundle(options: BundlingOptions): lambda.AssetCode {
+export function bundle(options: BundlingOptions & { out: string }) {
   const { entry, runtime, outputPathSuffix, installCommands } = options;
 
-  const stagedir = cdk.FileSystem.mkdtemp("python-bundling-");
+  const stagedir = FileSystem.mkdtemp("python-bundling-");
   const hasDeps = stageDependencies(entry, stagedir);
   const hasInstallCommands = stageInstallCommands(
     installCommands || [],
@@ -95,10 +100,11 @@ export function bundle(options: BundlingOptions): lambda.AssetCode {
 
   const depsCommand = chain([
     hasDeps || hasInstallCommands
-      ? `rsync -r ${BUNDLER_DEPENDENCIES_CACHE}/. ${cdk.AssetStaging.BUNDLING_OUTPUT_DIR}/${outputPathSuffix}`
+      ? `rsync -r ${BUNDLER_DEPENDENCIES_CACHE}/. ${AssetStaging.BUNDLING_OUTPUT_DIR}/${outputPathSuffix}`
       : "",
-    `rsync -r . ${cdk.AssetStaging.BUNDLING_OUTPUT_DIR}/${outputPathSuffix}`,
+    `rsync -r . ${AssetStaging.BUNDLING_OUTPUT_DIR}/${outputPathSuffix}`,
   ]);
+  console.log("Commands", depsCommand);
 
   // Determine which dockerfile to use. When dependencies are present, we use a
   // Dockerfile that can create a cacheable layer. We can't use this Dockerfile
@@ -112,25 +118,29 @@ export function bundle(options: BundlingOptions): lambda.AssetCode {
 
   // copy Dockerfile to workdir
   fs.copyFileSync(
-    path.join(__dirname, "../../../assets/python", dockerfile),
+    path.join(__dirname, "../../support/python-runtime", dockerfile),
     path.join(stagedir, dockerfile)
   );
 
-  const image = cdk.DockerImage.fromBuild(stagedir, {
+  const image = DockerImage.fromBuild(stagedir, {
     buildArgs: {
       IMAGE: runtime.bundlingImage.image,
     },
     file: dockerfile,
   });
-
-  return lambda.Code.fromAsset(entry, {
-    assetHashType: options.assetHashType,
-    assetHash: options.assetHash,
-    exclude: DEPENDENCY_EXCLUDES,
-    bundling: {
-      image,
-      command: ["bash", "-c", depsCommand],
-    },
+  image.run({
+    command: ["bash", "-c", depsCommand],
+    workingDirectory: AssetStaging.BUNDLING_INPUT_DIR,
+    volumes: [
+      {
+        hostPath: entry,
+        containerPath: AssetStaging.BUNDLING_INPUT_DIR,
+      },
+      {
+        hostPath: options.out,
+        containerPath: AssetStaging.BUNDLING_OUTPUT_DIR,
+      },
+    ],
   });
 }
 
