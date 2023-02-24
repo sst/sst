@@ -156,7 +156,7 @@ So for Next.js, you can updated your `package.json` to.
 
 ```json title="package.json" {2}
 "scripts": {
-  "dev": "sst env \"next dev\"",
+  "dev": "sst env next dev",
 },
 ```
 
@@ -168,39 +168,13 @@ Now when you run `npm run dev` in your Next.js app, it'll have access to the [en
 Here's what's going on behind the scenes.
 
 1. The `sst dev` command generates a file with the values specified by `StaticSite`, `RemixSite`, or `NextjsSite` construct's `environment` prop.
-2. The `sst env` CLI will traverse up the directories to look for the root of your SST app. If the static site or Next.js app is located outside the SST app folder, pass in [`--path`](#--path) to specify the relative path of the SST app.
-3. It'll then find the file that's generated in step 1.
+2. The `sst env` CLI will traverse up the directories to look for the root of your SST app.
+3. It'll then find the file that's generated in Step 1.
 4. It'll load these as environment variables before running the given command.
 
 </details>
 
 You can [read more about how this works for running tests](../testing.md).
-
-#### Options
-
-- **`--path`**
-
-  _Default_: none
-
-  A relative path to the directory containing the `sst.config.ts` file.
-
-  The `sst env` CLI will traverse up the directories to look for the root of your SST app. If the static site or Next.js app is located outside the SST app folder, for example:
-
-  ```
-  /
-    backend/
-      sst.config.ts
-    frontend/
-      package.json
-  ```
-
-  Pass in `--path` to specify the relative path of the SST app.
-
-  ```json title="package.json" {2}
-  "scripts": {
-    "dev": "sst env --path ../backend \"next dev\"",
-  },
-  ```
 
 ---
 
