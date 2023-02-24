@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.0.37
+
+### Patch Changes
+
+- [`2c332911f`](https://github.com/serverless-stack/sst/commit/2c332911ffa2ee6d6d459ab2464dc21cd04c9405) Thanks [@thdxr](https://github.com/thdxr)! - Send empty cognito identity when it's not available
+
+- [#2548](https://github.com/serverless-stack/sst/pull/2548) [`4f9aa499d`](https://github.com/serverless-stack/sst/commit/4f9aa499dfc27541340781bd10d874db2700c7ab) Thanks [@afrackspace](https://github.com/afrackspace)! - Fix dev mode in GovCloud (SSTv2)
+
 ## 2.0.36
 
 ### Patch Changes

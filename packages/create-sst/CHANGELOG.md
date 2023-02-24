@@ -1,5 +1,11 @@
 # create-sst
 
+## 2.0.37
+
+### Patch Changes
+
+- [`4dd96ede4`](https://github.com/serverless-stack/sst/commit/4dd96ede4c01bd0fbc64a0487fedb4e02a118cb8) Thanks [@thdxr](https://github.com/thdxr)! - Pin genql at 2.x
+
 ## 2.0.36
 
 ## 2.0.35
