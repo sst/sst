@@ -131,6 +131,23 @@ namespace Example
 
 The handler would be, `MyApp::Example.Hello::MyHandler`.
 
+#### .NET Minimal API
+
+When using an ASP.NET Core minimal API, the handler reference works differently, [read more about this here](https://docs.aws.amazon.com/lambda/latest/dg/csharp-handler.html) regarding projects using top-level statements such as minimal APIs.
+
+Consider a project with `MyApp.csproj` and the following handler function:
+
+```csharp
+using Amazon.Lambda.RuntimeSupport;
+var handler = (Stream stream) =>
+{
+  //function logic
+};
+await LambdaBootstrapBuilder.Create(handler).Build().RunAsync();
+```
+
+The handler would simply be, `MyApp`. As a result, you should avoid using the same name for your .NET projects regardless of the folder structure to avoid naming collisions.
+
 ### Configuring F#(.NET) runtime
 
 #### handler
