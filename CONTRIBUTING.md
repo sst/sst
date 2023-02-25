@@ -100,10 +100,10 @@ $ yarn test <path_to_the_test_for_the_construct>
 
 ### CLI
 
-If you are working on the `packages/cli` just go ahead and make your changes. Then run your tests.
+If you are working on the `packages/sst` just go ahead and make your changes. Then run your tests.
 
 ```bash
-$ cd packages/cli
+$ cd packages/sst
 $ yarn test
 ```
 
