@@ -83,6 +83,14 @@ export default {
 #### CLI
 1. `sst start` has been renamed to `sst dev` (although both will work)
 2. `sst load-config` has been removed — [see v1.16](#upgrade-to-v116)
+3. `sst dev` requires additional IAM permissions:
+    - iot:Connect
+    - iot:DescribeEndpoint
+    - iot:Publish
+    - iot:Receive
+    - iot:Subscribe
+
+    [View the complete list of permissions](./advanced/iam-credentials.md#cli-permissions) required by the CLI.
 
 #### Stacks code
 
