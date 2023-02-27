@@ -1,5 +1,7 @@
 # create-sst
 
+## 2.0.38
+
 ## 2.0.37
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.0.38
+
+### Patch Changes
+
+- [`8882f47ba`](https://github.com/serverless-stack/sst/commit/8882f47bab552a2cbae0a858acd4051636a5d536) Thanks [@thdxr](https://github.com/thdxr)! - Update aws dependencies
+
+- [`13eb42c04`](https://github.com/serverless-stack/sst/commit/13eb42c041aceca3b221ae3fa60be21eea86e11a) Thanks [@thdxr](https://github.com/thdxr)! - Use docker to bundle python function
+
 ## 2.0.37
 
 ### Patch Changes
