@@ -14,7 +14,7 @@ Let's look at how these work in our app.
 
 To start with we have two queries. One to fetch a single article, called `article`. And another to fetch all the articles, called `articles`.
 
-```ts title="services/functions/graphql/types/article.ts" {2,11}
+```ts title="packages/functions/src/graphql/types/article.ts" {2,11}
 builder.queryFields((t) => ({
   article: t.field({
     type: ArticleType,
@@ -42,7 +42,7 @@ The `article` query above returns a single article given an article id.
 
 - The return `type` here is the `ArticleType`, that we defined in the [last chapter](add-api-types.md#defining-types).
 - It needs the article id as an argument. So we define `articleID` in the `args`. We also specify its type as a string and set it as `required: true`.
-- Finally, we have a function to `resolve` the query. It grabs the `articleID` and calls the `Article.get()` domain function in `services/core/article.ts`.
+- Finally, we have a function to `resolve` the query. It grabs the `articleID` and calls the `Article.get()` domain function in `packages/core/src/article.ts`.
 
 On the other hand, the `articles` query returns a list of articles of type `ArticleType` with a resolver that calls the `Article.list()` domain function.
 
@@ -52,7 +52,7 @@ On the other hand, the `articles` query returns a list of articles of type `Arti
 
 Mutations are similar to queries but are meant for writing data or for triggering actions. For our app, we need a mutation that can create an article.
 
-```ts title="services/functions/graphql/types/article.ts"
+```ts title="packages/functions/src/graphql/types/article.ts"
 builder.mutationFields((t) => ({
   createArticle: t.field({
     type: ArticleType,
@@ -79,11 +79,11 @@ Let's add a mutation to create a comment.
 
 <ChangeText>
 
-In `services/functions/graphql/types/article.ts`, add this above the `createArticle` mutation:
+In `packages/functions/src/graphql/types/article.ts`, add this above the `createArticle` mutation:
 
 </ChangeText>
 
-```ts title="services/functions/graphql/types/article.ts"
+```ts title="packages/functions/src/graphql/types/article.ts"
 addComment: t.field({
   type: CommentType,
   args: {

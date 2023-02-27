@@ -8,7 +8,7 @@ We now have our entire app; frontend and backend running locally. Let's see what
 
 ## Set a breakpoint
 
-Open `services/core/article.ts` and set a breakpoint in the `list` function.
+Open `packages/core/src/article.ts` and set a breakpoint in the `list` function.
 
 ![VS Code set breakpoint](/img/breakpoint-debugging/set-breakpoint.png)
 

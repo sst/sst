@@ -4,7 +4,7 @@ import { useTypedQuery } from "@@@app/graphql/urql";
 import Empty from "../components/Empty";
 import Navbar from "../components/Navbar";
 import Loading from "../components/Loading";
-import * as styles from "./Home.css";
+import styles from "./Home.module.css";
 
 export default function Home() {
   // Handle empty document cache
