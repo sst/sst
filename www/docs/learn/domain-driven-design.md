@@ -15,13 +15,13 @@ In this chapter we'll look at this pattern at a very high level.
 
 ## What is DDD
 
-The basic idea behind DDD is to keep a separate layer that purely implements your business logic. This is agnostic to any API specifics. In practice, this looks like creating a collection of modules and functions in the `services/core` directory that implements all the capabilities of your system.
+The basic idea behind DDD is to keep a separate layer that purely implements your business logic. This is agnostic to any API specifics. In practice, this looks like creating a collection of modules and functions in the `packages/core` directory that implements all the capabilities of your system.
 
 :::info
 The basic idea behind Domain Driven Design is to have a separate layer that holds your business logic.
 :::
 
-In the starter we provide a `core/article.ts` module which contains actions you can take that are related to the business concept of _Articles_. It exposes high level functions that handle the work of talking to the database, storing and retrieving them, and allows for more complex functionality in the future — like publishing notifications to an event bus.
+In the starter we provide a `core/src/article.ts` module which contains actions you can take that are related to the business concept of _Articles_. It exposes high level functions that handle the work of talking to the database, storing and retrieving them, and allows for more complex functionality in the future — like publishing notifications to an event bus.
 
 The API and Lambda function code are unaware of these details and simply call into these modules to compose the logic together.
 

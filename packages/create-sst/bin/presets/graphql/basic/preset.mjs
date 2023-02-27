@@ -64,11 +64,7 @@ export default [
     cwd: "packages/graphql",
   }),
   install({
-    packages: [
-      "@vanilla-extract/css",
-      "@vanilla-extract/vite-plugin",
-      "react-icons",
-    ],
+    packages: [ "react-icons" ],
     path: "packages/web",
   }),
   remove("packages/web/src/App.tsx"),

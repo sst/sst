@@ -51,16 +51,6 @@ Here's roughly what we'll be covering in the next few chapters:
 
 ---
 
-### Watch this as a video
-
-If you'd like, you can follow this tutorial as a video. We did a livestream where we worked through all the steps and talked about it in detail.
-
-<div class={styles.videoWrapper}>
-  <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/i7xEKHWTKNk" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-</div>
-
----
-
 ## What is in the starter
 
 Our _Links_ app is based on a starter that we recommend for building full-stack serverless applications. At a very high level, we are using the following:
@@ -87,7 +77,6 @@ We also use a couple of other notable open-source libraries in our setup.
 - [Kysely](https://koskimas.github.io/kysely), a typesafe TypeScript SQL query builder
 - [Pothos](https://pothos-graphql.dev), a typesafe TypeScript GraphQL schema builder
 - [Urql](https://formidable.com/open-source/urql/) with [Genql](https://genql.vercel.app), a typesafe GraphQL client
-- [Vanilla Extract](https://vanilla-extract.style), a typesafe CSS-in-TS preprocessor
 
 The starter we are using is in _TypeScript_ and so is this tutorial. You might've guessed that we really care about typesafety!
 
@@ -95,7 +84,7 @@ The starter we are using is in _TypeScript_ and so is this tutorial. You might'v
 End-to-end typesafety is one of the defining features of SST.
 :::
 
-Everything from our frontend components, styles, backend, schema definitions, environment variables, and infrastructure is typesafe. It helps us prevent any mistakes, and allows our editors to autocomplete our code!
+Everything from our frontend components, backend, schema definitions, environment variables, and infrastructure is typesafe. It helps us prevent any mistakes, and allows our editors to autocomplete our code!
 
 ---
 

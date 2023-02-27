@@ -14,11 +14,11 @@ We'll start by updating our homepage to show the number of comments in each arti
 
 <ChangeText>
 
-In `web/src/pages/Home.tsx`, replace the `useTypedQuery` with:
+In `packages/web/src/pages/Home.tsx`, replace the `useTypedQuery` with:
 
 </ChangeText>
 
-```ts {13-15} title="web/src/pages/Home.tsx"
+```ts {4,13-15} title="packages/web/src/pages/Home.tsx"
 // Handle empty document cache
 // https://formidable.com/open-source/urql/docs/basics/document-caching/#adding-typenames
 const context = useMemo(
@@ -69,9 +69,9 @@ The `useTypedQuery` hook is imported from the `graphql/` directory in our app. T
 import { useTypedQuery } from "@my-sst-app/graphql/urql";
 ```
 
-The `useTypedQuery` hook needs an instance of our GraphQL client to make the queries. We define this in `web/src/main.tsx`.
+The `useTypedQuery` hook needs an instance of our GraphQL client to make the queries. We define this in `packages/web/src/main.tsx`.
 
-```ts title="web/src/main.tsx"
+```ts title="packages/web/src/main.tsx"
 const urql = createClient({
   url: import.meta.env.VITE_GRAPHQL_URL,
 });
@@ -81,7 +81,7 @@ Where `VITE_GRAPHQL_URL` is an environment variable that's passed in through our
 
 To ensure that the `useTypedQuery` hook is able to access our Urql client across our app, we wrap it around our app using the [React Context](https://reactjs.org/docs/context.html).
 
-```tsx title="web/src/main.tsx"
+```tsx title="packages/web/src/main.tsx"
 <React.StrictMode>
   <UrqlProvider value={urql}>
     <App />
@@ -103,7 +103,7 @@ Replace the `<li>` tag in the `return` statement of the `Home` component with.
 
 </ChangeText>
 
-```tsx {11-15} title="web/src/pages/Home.tsx"
+```tsx {11-15} title="packages/web/src/pages/Home.tsx"
 <li key={article.id} className={styles.article}>
   <div>
     <h2 className={styles.title}>
@@ -142,9 +142,9 @@ We currently have two pages in our application:
 
 We also need a route to handle _404_ pages. For now, we'll redirect everything that doesn't match — `*`, to the homepage.
 
-All of this is configured on the app level in `web/src/main.tsx`.
+All of this is configured on the app level in `packages/web/src/main.tsx`.
 
-```tsx title="web/src/main.tsx"
+```tsx title="packages/web/src/main.tsx"
 function App() {
   return (
     <BrowserRouter>
@@ -160,7 +160,7 @@ function App() {
 
 In our article page, we can grab the id of the article from the URL. We do this using the [`useParams`](https://v5.reactrouter.com/web/api/Hooks/useparams) React Router hook.
 
-```ts file="web/src/pages/Article.tsx"
+```ts file="packages/web/src/pages/Article.tsx"
 import { useParams } from "react-router-dom";
 
 export default function Article() {
@@ -179,140 +179,19 @@ We also need to add a couple of styles to render the comments count in our homep
 
 <ChangeText>
 
-Add this to the bottom of our stylesheet in `web/src/pages/Home.css.ts`.
+Add this to the bottom of our stylesheet in `packages/web/src/pages/Home.module.css`.
 
 </ChangeText>
 
-```ts title="web/src/pages/Home.css.ts"
-export const footer = style({
-  marginTop: "0.8rem",
-});
-
-export const footerSeparator = style({
-  margin: "0 0.5rem",
-});
-```
-
-We are writing our styles in TypeScript as well.
-
----
-
-## CSS-in-TS
-
-To do this we use [Vanilla Extract](https://vanilla-extract.style). We define the styles for a component in a `.css.ts`. And we import it in our `Home` component.
-
-```ts
-import * as styles from "./Home.css";
-```
-
-Then apply it to our HTML components as a regular `className`. So for example, the footer HTML looks like:
-
-```tsx {1,3}
-<div className={styles.footer}>
-  <strong>{article.comments.length}</strong>
-  <span className={styles.footerSeparator}>&bull;</span>
-  <Link to={`/article/${article.id}`}>View Comments</Link>
-</div>
-```
-
-Using _CSS-in-TS_ has a couple of advantages:
-
-1. Style definitions are tied to the components. This isolates the styles to the components, making styles easier to maintain.
-2. Full typesafety and autocomplete support. This prevents mistakes in the style definitions.
-3. Vanilla Extract also generates static CSS at build time. So it performs just like handwritten CSS.
-
-<details>
-<summary>Behind the scenes</summary>
-
-Let's look at how our styles are configured behind the scenes.
-
-Our React app is built using [Vite](https://vitejs.dev). Vanilla Extract has a Vite plugin to process our `*.css.ts` styles.
-
-```ts title="web/vite.config.ts"
-import { vanillaExtractPlugin } from "@vanilla-extract/vite-plugin";
-```
-
-We then declare a set of CSS variables as our theme in `web/src/vars.css.ts`.
-
-```ts title="web/src/vars.css.ts"
-const root = createGlobalTheme(":root", {
-  fonts: {
-    body: '"Source Sans Pro", sans-serif',
-    code: '"Source Code Pro", monospace',
-    heading: '"Roboto Slab", serif',
-  },
-  buttons: {
-    // ...
-  },
-  colors: {
-    // ...
-  },
-});
-```
-
-These get transformed at runtime into something like this:
-
-```css
-:root {
-  --fonts-body__1m2xgwb8: "Source Sans Pro", sans-serif;
-  --fonts-code__1m2xgwb9: "Source Code Pro", monospace;
-  --fonts-heading__1m2xgwba: "Roboto Slab", serif;
-}
-```
-
-Once declared, we can now use these variables in our styles. For example, we define some global styles in `web/src/index.css.ts`.
-
-```ts title="web/src/index.css.ts"
-import { vars } from "./vars.css";
-
-globalStyle("body", {
-  margin: 0,
-
-  fontFamily: vars.fonts.body,
-  color: vars.colors.text.normal,
-  background: vars.colors.background,
-});
-```
-
-Just as before, these get rendered in runtime into regular CSS.
-
-```css
-body {
-  font-family: var(--fonts-body__1m2xgwb8);
-  color: var(--colors-text-normal__1m2xgwb6);
-  background: var(--colors-background__1m2xgwb5);
-}
-```
-
-Finally, when we add a style using a `className`; Vanilla Extract replaces it with a autogenerated class name. So the following class:
-
-```ts title="web/src/pages/Home.css.ts"
-export const footer = style({
-  marginTop: "0.8rem",
-});
-```
-
-Gets transformed into:
-
-```css
-.Home__1fe9q1b4 {
+```css title="packages/web/src/pages/Home.module.css"
+.footer {
   margin-top: 0.8rem;
 }
+
+.footerSeparator {
+  margin: 0 0.5rem;
+}
 ```
-
-And the HTML for the component goes from this:
-
-```tsx
-<div className={styles.footer}>...</div>
-```
-
-To this:
-
-```html
-<div class="Home__1fe9q1b4">...</div>
-```
-
-</details>
 
 Now if you refresh the app, you should see the comment count being displayed under each article.
 
