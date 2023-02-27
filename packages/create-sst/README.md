@@ -5,7 +5,6 @@
 <p align="center">
   <a href="https://sst.dev/discord"><img alt="Discord" src="https://img.shields.io/discord/983865673656705025?style=flat-square" /></a>
   <a href="https://www.npmjs.com/package/create-sst"><img alt="npm" src="https://img.shields.io/npm/v/create-sst?style=flat-square" /></a>
-  <a href="https://github.com/serverless-stack/sst/actions/workflows/ci.yml"><img alt="Build status" src="https://img.shields.io/github/workflow/status/serverless-stack/sst/CI?style=flat-square" /></a>
 </p>
 
 ---
