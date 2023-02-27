@@ -163,11 +163,14 @@ The SST CLI command also makes AWS SDK calls to your AWS account. Here is a list
 - cloudformation:DescribeStacks
 - cloudformation:GetTemplate
 - cloudformation:ListImports
+- iam:PassRole
 - iot:Connect
 - iot:DescribeEndpoint
 - iot:Publish
 - iot:Receive
 - iot:Subscribe
+- lambda:GetFunctionConfiguration
+- lambda:UpdateFunctionConfiguration
 - s3:GetObject
 - s3:PutObject
 - s3:DeleteObject
@@ -176,8 +179,7 @@ The SST CLI command also makes AWS SDK calls to your AWS account. Here is a list
 - ssm:GetParameter
 - ssm:DeleteParameter
 - ssm:GetParametersByPath
-- lambda:GetFunctionConfiguration
-- lambda:UpdateFunctionConfiguration
+- sts:AssumeRole
 
 And if you are using the [`RDS`](../constructs/RDS.md) construct, you will also need:
 - rds-data:ExecuteStatement
