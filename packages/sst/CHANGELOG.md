@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.0.39
+
+### Patch Changes
+
+- [`0f104cf36`](https://github.com/serverless-stack/sst/commit/0f104cf36ddb625ea3043480460f12400928a636) Thanks [@thdxr](https://github.com/thdxr)! - Fix CLI crash when kysely codegen fails
+
 ## 2.0.38
 
 ### Patch Changes

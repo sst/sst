@@ -1,5 +1,11 @@
 # create-sst
 
+## 2.0.39
+
+### Patch Changes
+
+- [`c6f8f3cbc`](https://github.com/serverless-stack/sst/commit/c6f8f3cbc8e64f0355dd405761ba315884064fb8) Thanks [@thdxr](https://github.com/thdxr)! - Fix migration generator in graphql stack
+
 ## 2.0.38
 
 ## 2.0.37
