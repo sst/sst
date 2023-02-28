@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.1.1
+
+### Patch Changes
+
+- [#2562](https://github.com/serverless-stack/sst/pull/2562) [`59f524e19`](https://github.com/serverless-stack/sst/commit/59f524e1904c3316c6883a331e8868a6032835af) Thanks [@georgeevans1995](https://github.com/georgeevans1995)! - Update KyselyTypeGenerator to use the correct dialect based on db engine
+
 ## 2.1.0
 
 ### Minor Changes
