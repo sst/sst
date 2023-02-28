@@ -29,7 +29,14 @@ import {
   RecordTarget,
 } from "aws-cdk-lib/aws-route53";
 import { CloudFrontTarget } from "aws-cdk-lib/aws-route53-targets";
-import { Distribution, ViewerProtocolPolicy } from "aws-cdk-lib/aws-cloudfront";
+import {
+  BehaviorOptions,
+  Distribution,
+  Function as CfFunction,
+  FunctionCode as CfFunctionCode,
+  FunctionEventType as CfFunctionEventType,
+  ViewerProtocolPolicy,
+} from "aws-cdk-lib/aws-cloudfront";
 import { S3Origin } from "aws-cdk-lib/aws-cloudfront-origins";
 import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
 
@@ -53,7 +60,6 @@ import {
 import { gray } from "colorette";
 import { useProject } from "../project.js";
 import { SiteEnv } from "../site-env.js";
-import { VisibleError } from "../error.js";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -774,26 +780,6 @@ interface ImportMeta {
     }
   }
 
-  protected buildDistributionDomainNames(): string[] {
-    const { customDomain } = this.props;
-    const domainNames = [];
-    if (!customDomain) {
-      // no domain
-    } else if (typeof customDomain === "string") {
-      domainNames.push(customDomain);
-    } else {
-      domainNames.push(customDomain.domainName);
-      if (customDomain.alternateNames) {
-        if (!customDomain.cdk?.certificate)
-          throw new Error(
-            "Certificates for alternate domains cannot be automatically created. Please specify certificate to use"
-          );
-        domainNames.push(...customDomain.alternateNames);
-      }
-    }
-    return domainNames;
-  }
-
   private createCfDistribution(): Distribution {
     const { cdk, errorPage } = this.props;
     const indexPage = this.props.indexPage || "index.html";
@@ -810,11 +796,7 @@ interface ImportMeta {
       // these values can NOT be overwritten by cfDistributionProps
       domainNames: this.buildDistributionDomainNames(),
       certificate: this.certificate,
-      defaultBehavior: {
-        origin: new S3Origin(this.bucket),
-        viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        ...cdk?.distribution?.defaultBehavior,
-      },
+      defaultBehavior: this.buildDistributionBehavior(),
     });
   }
 
@@ -856,6 +838,56 @@ interface ImportMeta {
     resource.node.addDependency(policy);
 
     return resource;
+  }
+
+  protected buildDistributionDomainNames(): string[] {
+    const { customDomain } = this.props;
+    const domainNames = [];
+    if (!customDomain) {
+      // no domain
+    } else if (typeof customDomain === "string") {
+      domainNames.push(customDomain);
+    } else {
+      domainNames.push(customDomain.domainName);
+      if (customDomain.alternateNames) {
+        if (!customDomain.cdk?.certificate)
+          throw new Error(
+            "Certificates for alternate domains cannot be automatically created. Please specify certificate to use"
+          );
+        domainNames.push(...customDomain.alternateNames);
+      }
+    }
+    return domainNames;
+  }
+
+  private buildDistributionBehavior(): BehaviorOptions {
+    const { cdk } = this.props;
+    return {
+      origin: new S3Origin(this.bucket),
+      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      functionAssociations: [
+        {
+          function: new CfFunction(this, "CloudFrontFunction", {
+            code: CfFunctionCode.fromInline(`
+function handler(event) {
+  var request = event.request;
+  var uri = request.uri;
+  
+  if (uri.endsWith("/")) {
+    request.uri += "index.html";
+  } else if (!uri.split("/").pop().includes(".")) {
+    request.uri += ".html";
+  }
+
+  return request;
+}
+          `),
+          }),
+          eventType: CfFunctionEventType.VIEWER_REQUEST,
+        },
+      ],
+      ...cdk?.distribution?.defaultBehavior,
+    };
   }
 
   /////////////////////
