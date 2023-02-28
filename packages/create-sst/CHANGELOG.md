@@ -1,5 +1,11 @@
 # create-sst
 
+## 2.1.1
+
+### Patch Changes
+
+- [`136304a55`](https://github.com/serverless-stack/sst/commit/136304a55dc5061570e2b24282c1874d6b0b7af2) Thanks [@fwang](https://github.com/fwang)! - Examples: add ExampleStack in base example template
+
 ## 2.1.0
 
 ## 2.0.39
