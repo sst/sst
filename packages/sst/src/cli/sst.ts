@@ -44,7 +44,7 @@ consoleCommand(program);
 diff(program);
 version(program);
 telemetry(program);
-bootstrap(program)
+bootstrap(program);
 
 if ("setSourceMapsEnabled" in process) {
   // @ts-expect-error
@@ -72,5 +72,13 @@ process.on("uncaughtException", (err) => {
 });
 
 process.on("beforeExit", () => {});
+
+// Check Node version
+const nodeVersion = process.versions.node;
+if (Number(nodeVersion.split(".")[0]) < 16) {
+  throw new VisibleError(
+    `Node.js version ${nodeVersion} is not supported by SST. Please upgrade to Node.js 16 or later.`
+  );
+}
 
 program.parse();
