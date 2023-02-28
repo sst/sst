@@ -8,6 +8,7 @@ import {
   EnumCollection,
   ExportStatementNode,
   PostgresDialect,
+  MysqlDialect,
   Serializer,
   Transformer,
 } from "kysely-codegen";
@@ -80,8 +81,9 @@ export const useKyselyTypeGenerator = Context.memo(async () => {
         }));
 
     const transformer = new Transformer();
+    const Dialect = db.engine.includes("postgres") ? new PostgresDialect() : new MysqlDialect()
     const nodes = transformer.transform({
-      dialect: new PostgresDialect(),
+      dialect: Dialect,
       camelCase: (db.types.camelCase as any) === true,
       metadata: new DatabaseMetadata(metadata, new EnumCollection()),
     });
