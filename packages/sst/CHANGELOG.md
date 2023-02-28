@@ -1,5 +1,17 @@
 # @serverless-stack/cli2
 
+## 2.1.0
+
+### Minor Changes
+
+- [`3e3a4e440`](https://github.com/serverless-stack/sst/commit/3e3a4e440a8510eeb57cd83debcf8c759ccc533a) Thanks [@fwang](https://github.com/fwang)! - Drop support for Node.js 14
+
+### Patch Changes
+
+- [`79f744c79`](https://github.com/serverless-stack/sst/commit/79f744c79058c35f7b44f63fad7bdd088208b9c8) Thanks [@fwang](https://github.com/fwang)! - StaticSite/SsrSite: return undefined instead of throw when accessing site.cdk
+
+- [#2564](https://github.com/serverless-stack/sst/pull/2564) [`608883ad5`](https://github.com/serverless-stack/sst/commit/608883ad5ff0931f4af68f8c941eaa9f3e463b35) Thanks [@fwang](https://github.com/fwang)! - StaticSite: append index.html to urls with trailing slash
+
 ## 2.0.39
 
 ### Patch Changes
