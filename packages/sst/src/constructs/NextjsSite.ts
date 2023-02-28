@@ -103,12 +103,12 @@ export class NextjsSite extends SsrSite {
       timeout: CdkDuration.seconds(25),
       architecture: lambda.Architecture.ARM_64,
       environment: {
-        BUCKET_NAME: this.cdk.bucket.bucketName,
+        BUCKET_NAME: this.cdk!.bucket.bucketName,
       },
       initialPolicy: [
         new PolicyStatement({
           actions: ["s3:GetObject"],
-          resources: [this.cdk.bucket.arnForObjects("*")],
+          resources: [this.cdk!.bucket.arnForObjects("*")],
         }),
       ],
     });
@@ -137,7 +137,7 @@ export class NextjsSite extends SsrSite {
   protected createCloudFrontDistributionForRegional(): cloudfront.Distribution {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-    const s3Origin = new origins.S3Origin(this.cdk.bucket);
+    const s3Origin = new origins.S3Origin(this.cdk!.bucket);
 
     // Create server behavior
     const middlewareFn = this.createMiddlewareEdgeFunctionForRegional();
@@ -258,7 +258,7 @@ export class NextjsSite extends SsrSite {
       ...cfDistributionProps,
       // these values can NOT be overwritten by cfDistributionProps
       domainNames: this.buildDistributionDomainNames(),
-      certificate: this.cdk.certificate,
+      certificate: this.cdk!.certificate,
       defaultBehavior: defaultBehavior,
       additionalBehaviors: {
         "api/*": serverBehavior,

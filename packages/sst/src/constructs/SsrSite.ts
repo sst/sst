@@ -346,10 +346,8 @@ export class SsrSite extends Construct implements SSTConstruct {
   /**
    * The CloudFront URL of the website.
    */
-  public get url(): string | undefined {
-    if (this.doNotDeploy) {
-      return;
-    }
+  public get url() {
+    if (this.doNotDeploy) return;
 
     return `https://${this.distribution.distributionDomainName}`;
   }
@@ -358,15 +356,11 @@ export class SsrSite extends Construct implements SSTConstruct {
    * If the custom domain is enabled, this is the URL of the website with the
    * custom domain.
    */
-  public get customDomainUrl(): string | undefined {
-    if (this.doNotDeploy) {
-      return;
-    }
+  public get customDomainUrl() {
+    if (this.doNotDeploy) return;
 
     const { customDomain } = this.props;
-    if (!customDomain) {
-      return;
-    }
+    if (!customDomain) return;
 
     if (typeof customDomain === "string") {
       return `https://${customDomain}`;
@@ -379,11 +373,7 @@ export class SsrSite extends Construct implements SSTConstruct {
    * The internally created CDK resources.
    */
   public get cdk() {
-    if (this.doNotDeploy) {
-      throw new VisibleError(
-        `Cannot access CDK resources for the "${this.node.id}" site in dev mode`
-      );
-    }
+    if (this.doNotDeploy) return;
 
     return {
       function: this.serverLambdaForRegional,

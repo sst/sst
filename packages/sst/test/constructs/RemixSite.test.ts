@@ -1083,9 +1083,7 @@ test("constructor: sst dev", async () => {
   });
   expect(site.url).toBeUndefined();
   expect(site.customDomainUrl).toBeUndefined();
-  expect(() => {
-    expect(site.cdk.bucket).toBeUndefined();
-  }).toThrow(/Cannot access CDK resources/);
+  expect(site.cdk).toBeUndefined();
   countResources(stack, "Custom::SSTBucketDeployment", 0);
   countResources(stack, "Custom::CloudFrontInvalidator", 0);
   countResources(stack, "AWS::CloudFront::Distribution", 0);
@@ -1112,9 +1110,7 @@ test("constructor: sst remove", async () => {
   });
   expect(site.url).toBeUndefined();
   expect(site.customDomainUrl).toBeUndefined();
-  expect(() => {
-    expect(site.cdk.bucket).toBeUndefined();
-  }).toThrow(/Cannot access CDK resources/);
+  expect(site.cdk).toBeUndefined();
   countResources(stack, "Custom::SSTBucketDeployment", 0);
   countResources(stack, "Custom::CloudFrontInvalidator", 0);
   countResources(stack, "AWS::CloudFront::Distribution", 0);
