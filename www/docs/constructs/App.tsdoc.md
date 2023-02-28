@@ -14,7 +14,7 @@ _Type_ : <span class="mono">string</span>
 The AWS account the app is being deployed to. This comes from the IAM credentials being used to run the SST CLI.
 ### defaultRemovalPolicy
 
-_Type_ : <span class='mono'><span class="mono">undefined</span> | <span class="mono">"destroy"</span> | <span class="mono">"retain"</span> | <span class="mono">"snapshot"</span></span>
+_Type_ : <span class="mono">undefined</span><span class='mono'> | </span><span class="mono">"destroy"</span><span class='mono'> | </span><span class="mono">"retain"</span><span class='mono'> | </span><span class="mono">"snapshot"</span>
 
 ### local
 
@@ -24,7 +24,7 @@ Whether or not the app is running locally under
 `sst start`
 ### mode
 
-_Type_ : <span class='mono'><span class="mono">"deploy"</span> | <span class="mono">"dev"</span> | <span class="mono">"remove"</span></span>
+_Type_ : <span class="mono">"deploy"</span><span class='mono'> | </span><span class="mono">"dev"</span><span class='mono'> | </span><span class="mono">"remove"</span>
 
 Whether the app is running locally under start, deploy or remove
 ### name
@@ -98,6 +98,11 @@ Adds additional default Permissions to be applied to all Lambda functions in the
 ```js
 app.addDefaultFunctionPermissions(["s3"])
 ```
+### finish
+
+```ts
+finish()
+```
 ### logicalPrefixedName
 
 ```ts
@@ -121,7 +126,7 @@ console.log(app.logicalPrefixedName("myTopic"));
 setDefaultFunctionProps(props)
 ```
 _Parameters_
-- __props__ <span class='mono'><span class="mono">[FunctionProps](Function#functionprops)</span> | <span class="mono">[Stack](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Stack.html)</span> => <span class="mono">[FunctionProps](Function#functionprops)</span></span>
+- __props__ <span class="mono">[FunctionProps](Function#functionprops)</span><span class='mono'> | </span><span class="mono">[Stack](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Stack.html)</span> => <span class="mono">[FunctionProps](Function#functionprops)</span>
 
 
 The default function props to be applied to all the Lambda functions in the app. These default values will be overridden if a Function sets its own props.
@@ -138,7 +143,7 @@ app.setDefaultFunctionProps({
 setDefaultRemovalPolicy(policy)
 ```
 _Parameters_
-- __policy__ <span class='mono'><span class="mono">"destroy"</span> | <span class="mono">"retain"</span> | <span class="mono">"snapshot"</span></span>
+- __policy__ <span class="mono">"destroy"</span><span class='mono'> | </span><span class="mono">"retain"</span><span class='mono'> | </span><span class="mono">"snapshot"</span>
 
 
 The default removal policy that'll be applied to all the resources in the app. This can be useful to set ephemeral (dev or feature branch) environments to remove all the resources on deletion.

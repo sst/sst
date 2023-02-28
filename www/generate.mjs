@@ -354,14 +354,10 @@ function renderType(file, files, prefix, parameter) {
     );
   }
   if (parameter.type === "union") {
-    return (
-      "<span class='mono'>" +
-      parameter.types
-        .map((t) => renderType(file, files, prefix, t))
-        .filter((x) => x)
-        .join(" | ") +
-      "</span>"
-    );
+    return parameter.types
+      .map((t) => renderType(file, files, prefix, t))
+      .filter((x) => x)
+      .join("<span class='mono'> | </span>");
   }
   if (parameter.type === "reference") {
     if (parameter.package === "typescript")
