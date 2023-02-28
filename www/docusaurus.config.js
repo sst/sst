@@ -163,8 +163,8 @@ module.exports = {
       //contextualSearch: true,
       exclusionPatterns: [
         // Exclude the "v0" and "v1" constructs docs from search results
-        "constructs/v0/**",
-        "constructs/v1/**",
+        "https://docs.sst.dev/constructs/v0/**",
+        "https://docs.sst.dev/constructs/v1/**",
       ],
     },
   },
@@ -176,8 +176,8 @@ module.exports = {
           routeBasePath: "/",
           // exclude these pages from user accessing them
           exclude: [
-            "constructs/*.about.md",
-            "constructs/*.tsdoc.md",
+            "**.about.md",
+            "**.tsdoc.md",
             "advanced/monorepo-project-structure.md",
           ],
           sidebarCollapsible: false,
