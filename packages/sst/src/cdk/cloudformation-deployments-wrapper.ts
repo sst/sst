@@ -1,4 +1,4 @@
-import * as cxapi from "@aws-cdk/cx-api";
+import { Environment } from "@aws-cdk/cx-api";
 import { debug } from "aws-cdk/lib/logging.js";
 import {
   CloudFormationStack,
@@ -68,18 +68,19 @@ export async function publishDeployAssets(
 
 const useDeployment = Context.memo(() => {
   const state = new Map<
-    SdkProvider,
+    string,
     {
       deployment: CloudFormationDeployments;
       toolkitInfo: ToolkitInfo;
       stackSdk: ISDK;
-      resolvedEnvironment: cxapi.Environment;
+      resolvedEnvironment: Environment;
       cloudFormationRoleArn?: string;
     }
   >();
   return {
     async get(sdkProvider: SdkProvider, options: PublishStackAssetsOptions) {
-      if (!state.has(sdkProvider)) {
+      const region = options.stack.environment.region;
+      if (!state.has(region)) {
         const deployment = new CloudFormationDeployments({ sdkProvider });
         const { stackSdk, resolvedEnvironment, cloudFormationRoleArn } =
           await deployment.prepareSdkFor(options.stack, options.roleArn);
@@ -97,7 +98,7 @@ const useDeployment = Context.memo(() => {
           toolkitInfo
         );
 
-        state.set(sdkProvider, {
+        state.set(region, {
           deployment,
           toolkitInfo,
           stackSdk,
@@ -105,7 +106,7 @@ const useDeployment = Context.memo(() => {
           cloudFormationRoleArn,
         });
       }
-      return state.get(sdkProvider)!;
+      return state.get(region)!;
     },
   };
 });
@@ -118,6 +119,7 @@ async function deployStack(options: DeployStackOptions): Promise<any> {
   options.sdk.appendCustomUserAgent(options.extraUserAgent);
   const cfn = options.sdk.cloudFormation();
   const deployName = options.deployName || stackArtifact.stackName;
+
   let cloudFormationStack = await CloudFormationStack.lookup(cfn, deployName);
 
   if (cloudFormationStack.stackStatus.isCreationFailure) {
