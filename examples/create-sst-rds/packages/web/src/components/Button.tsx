@@ -1,10 +1,12 @@
 import React from "react";
 import { CgSpinner } from "react-icons/cg";
-import * as styles from "./Button.css";
+import styles from "./Button.module.css";
+
+type Variants = "primary" | "secondary";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
-  variant?: keyof typeof styles.button;
+  variant?: Variants;
 }
 
 export default function Button({
@@ -15,7 +17,7 @@ export default function Button({
   variant = "primary",
   ...props
 }: ButtonProps) {
-  const baseClassName = styles.button[variant];
+  const baseClassName = styles[variant];
 
   return (
     <button type={type} className={`${baseClassName} ${className}`}>

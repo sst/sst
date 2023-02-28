@@ -3,7 +3,7 @@ import { useTypedQuery } from "@create-sst-rds/graphql/urql";
 import Empty from "../components/Empty";
 import Navbar from "../components/Navbar";
 import Loading from "../components/Loading";
-import * as styles from "./Article.css";
+import styles from "./Article.module.css";
 
 export default function Article() {
   const { id = "" } = useParams();

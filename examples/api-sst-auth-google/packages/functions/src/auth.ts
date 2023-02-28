@@ -41,9 +41,7 @@ export const handler = AuthHandler({
         );
 
         return Session.parameter({
-          redirect: process.env.IS_LOCAL
-            ? "http://127.0.0.1:5173"
-            : ViteStaticSite.site.url,
+          redirect: ViteStaticSite.site.url || "http://127.0.0.1:5173",
           type: "user",
           properties: {
             userID: claims.sub,

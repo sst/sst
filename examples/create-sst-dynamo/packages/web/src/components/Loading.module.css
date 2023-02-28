@@ -1,0 +1,21 @@
+.spinner {
+  opacity: 0.35;
+  font-size: 2rem;
+  vertical-align: middle;
+  margin-right: 0.3125rem;
+  margin-bottom: 0.0625rem;
+  animation: 3s infinite rotate;
+}
+
+.loading {
+  width: 100%;
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@keyframes rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

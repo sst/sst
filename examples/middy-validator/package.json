@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "sst": "^2.0.18",
+    "sst": "^2.1.1",
     "aws-cdk-lib": "2.62.2",
     "constructs": "10.1.156",
     "typescript": "^4.9.5",
@@ -22,9 +22,9 @@
     "packages/*"
   ],
   "dependencies": {
-    "@middy/core": "^4.2.3",
-    "@middy/http-error-handler": "^4.2.3",
-    "@middy/http-json-body-parser": "^4.2.3",
-    "@middy/validator": "^4.2.3"
+    "@middy/core": "^4.2.6",
+    "@middy/http-error-handler": "^4.2.6",
+    "@middy/http-json-body-parser": "^4.2.6",
+    "@middy/validator": "^4.2.6"
   }
 }

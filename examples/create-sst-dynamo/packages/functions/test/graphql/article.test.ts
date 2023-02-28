@@ -1,4 +1,4 @@
-import { Api } from "@serverless-stack/node/api";
+import { Api } from "sst/constructs";
 import { expect, it } from "vitest";
 import { createClient } from "@create-sst-dynamo/graphql/genql";
 import { Article } from "@create-sst-dynamo/core/article";

@@ -4,7 +4,7 @@ import { Provider as UrqlProvider, createClient } from "urql";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import Article from "./pages/Article";
-import "./index.css";
+import "./globals.css";
 
 const urql = createClient({
   url: import.meta.env.VITE_GRAPHQL_URL,
