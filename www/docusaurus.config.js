@@ -161,6 +161,8 @@ module.exports = {
       apiKey: "42ee2027a8dbe57a09913af0c27df9ad",
       // Turn on when we have versions
       //contextualSearch: true,
+      // Had to update this in Aloglia's crawler editor to have it picked up
+      // by Algolia - https://crawler.algolia.com
       exclusionPatterns: [
         // Exclude the "v0" and "v1" constructs docs from search results
         "https://docs.sst.dev/constructs/v0/**",
