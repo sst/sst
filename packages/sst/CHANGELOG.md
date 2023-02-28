@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.1.2
+
+### Patch Changes
+
+- [#2566](https://github.com/serverless-stack/sst/pull/2566) [`2413cced5`](https://github.com/serverless-stack/sst/commit/2413cced523f35c330173aae1ecd2b5c8b79ce2d) Thanks [@afrackspace](https://github.com/afrackspace)! - Improve Python bundling speed
+
 ## 2.1.1
 
 ### Patch Changes
