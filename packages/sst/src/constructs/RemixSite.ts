@@ -10,7 +10,7 @@ import * as logs from "aws-cdk-lib/aws-logs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 
 import { Logger } from "../logger.js";
-import { SsrSite } from "./SsrSite.js";
+import { SsrSite, SsrSiteProps } from "./SsrSite.js";
 import { useProject } from "../project.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 import { toCdkSize } from "./util/size.js";
@@ -82,7 +82,10 @@ export class RemixSite extends SsrSite {
     };
   }
 
-  private createServerLambdaBundle(wrapperFile: string): string {
+  private createServerLambdaBundle(
+    wrapperFile: string,
+    external: string[]
+  ): string {
     // Create a Lambda@Edge handler for the Remix server bundle.
     //
     // Note: Remix does perform their own internal ESBuild process, but it
@@ -137,7 +140,7 @@ export class RemixSite extends SsrSite {
       bundle: true,
       target: "node16",
       platform: "node",
-      external: ["aws-sdk"],
+      external,
       outfile: path.join(outputPath, "server.js"),
       // We need to ensure that the polyfills are injected above other code that
       // will depend on them. Importing them within the top of the lambda code
@@ -156,9 +159,19 @@ export class RemixSite extends SsrSite {
   }
 
   protected createFunctionForRegional(): lambda.Function {
-    const { runtime, timeout, memorySize, environment, cdk } = this.props;
+    const {
+      runtime: runtimeRaw,
+      timeout,
+      memorySize,
+      environment,
+      cdk,
+    } = this.props;
+    const runtime = this.normalizeRuntime(runtimeRaw);
 
-    const bundlePath = this.createServerLambdaBundle("regional-server.js");
+    const bundlePath = this.createServerLambdaBundle(
+      "regional-server.js",
+      runtime === "nodejs18.x" ? [] : ["aws-sdk"]
+    );
 
     return new lambda.Function(this, `ServerFunction`, {
       description: "Server handler for Remix",
@@ -188,10 +201,19 @@ export class RemixSite extends SsrSite {
   }
 
   protected createFunctionForEdge(): EdgeFunction {
-    const { runtime, timeout, memorySize, permissions, environment } =
-      this.props;
+    const {
+      runtime: runtimeRaw,
+      timeout,
+      memorySize,
+      permissions,
+      environment,
+    } = this.props;
+    const runtime = this.normalizeRuntime(runtimeRaw);
 
-    const bundlePath = this.createServerLambdaBundle("edge-server.js");
+    const bundlePath = this.createServerLambdaBundle(
+      "edge-server.js",
+      runtime === "nodejs18.x" ? [] : ["aws-sdk"]
+    );
 
     return new EdgeFunction(this, `Server`, {
       scopeOverride: this,
@@ -204,5 +226,9 @@ export class RemixSite extends SsrSite {
       permissions,
       environment,
     });
+  }
+
+  private normalizeRuntime(runtime: SsrSiteProps["runtime"]) {
+    return runtime || "nodejs18.x";
   }
 }
