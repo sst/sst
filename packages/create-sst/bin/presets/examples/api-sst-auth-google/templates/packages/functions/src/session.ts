@@ -1,6 +1,6 @@
-import { Table } from "@serverless-stack/node/table";
-import { ApiHandler } from "@serverless-stack/node/api";
-import { useSession } from "@serverless-stack/node/auth";
+import { Table } from "sst/node/table";
+import { ApiHandler } from "sst/node/api";
+import { useSession } from "sst/node/auth";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { DynamoDBClient, GetItemCommand } from "@aws-sdk/client-dynamodb";
 

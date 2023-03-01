@@ -1,5 +1,5 @@
 import AWS from "aws-sdk";
-import { EventBus } from "@serverless-stack/node/event-bus";
+import { EventBus } from "sst/node/event-bus";
 
 const client = new AWS.EventBridge();
 

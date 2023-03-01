@@ -1,5 +1,5 @@
 import AWS from "aws-sdk";
-import { Topic } from "@serverless-stack/node/topic";
+import { Topic } from "sst/node/topic";
 
 const sns = new AWS.SNS();
 
