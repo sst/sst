@@ -7,13 +7,13 @@ importers:
       '@tsconfig/node16': ^1.0.3
       aws-cdk-lib: 2.62.2
       constructs: 10.1.156
-      sst: ^2.1.1
+      sst: ^2.1.3
       typescript: ^4.9.5
     devDependencies:
       '@tsconfig/node16': 1.0.3
       aws-cdk-lib: 2.62.2_constructs@10.1.156
       constructs: 10.1.156
-      sst: 2.1.1
+      sst: 2.1.3
       typescript: 4.9.5
 
   packages/next:
@@ -44,16 +44,16 @@ packages:
       '@jridgewell/trace-mapping': 0.3.17
     dev: true
 
-  /@aws-cdk/asset-awscli-v1/2.2.84:
-    resolution: {integrity: sha512-rpYl0eEswNq9N/U0/2gmHgU7gKgxgF0UgP/k+ySuIWw1ghO9B4aXEmBbIrjmz6jF2BVbeL5tL08AfUxpdX2vLw==}
+  /@aws-cdk/asset-awscli-v1/2.2.85:
+    resolution: {integrity: sha512-oNX4HMupi2+/blbUNctA8WIwyqFTLOGhGDB+gginMSy7QHevLWb/duMlwa7Np4wpiHeiBDMF/ccc5Mfb352srg==}
     dev: true
 
   /@aws-cdk/asset-kubectl-v20/2.1.1:
     resolution: {integrity: sha512-U1ntiX8XiMRRRH5J1IdC+1t5CE89015cwyt5U63Cpk0GnMlN5+h9WsWMlKlPXZR4rdq/m806JRlBMRpBUB2Dhw==}
     dev: true
 
-  /@aws-cdk/asset-node-proxy-agent-v5/2.0.70:
-    resolution: {integrity: sha512-MRiW3unEC4Mnip5vgPPwUqUccphBj68aif/tI0wGjS4yKXo+uJtat9WMAWxGIsaLi+EdGTD2t1YPdTkUmPnBTw==}
+  /@aws-cdk/asset-node-proxy-agent-v5/2.0.71:
+    resolution: {integrity: sha512-vB/KF9naAYkELP6Hi5+Oib59B4ZAz6jjtrpsKNzsIZTmcTs0IIBb4nVdAuwMpMkPcwT0mzhMg2tlsiSyjrOFBA==}
     dev: true
 
   /@aws-cdk/aws-apigatewayv2-alpha/2.62.2-alpha.0_iqmstt3dpu37s47wyywi32lmnq:
@@ -2400,9 +2400,9 @@ packages:
     peerDependencies:
       constructs: ^10.0.0
     dependencies:
-      '@aws-cdk/asset-awscli-v1': 2.2.84
+      '@aws-cdk/asset-awscli-v1': 2.2.85
       '@aws-cdk/asset-kubectl-v20': 2.1.1
-      '@aws-cdk/asset-node-proxy-agent-v5': 2.0.70
+      '@aws-cdk/asset-node-proxy-agent-v5': 2.0.71
       constructs: 10.1.156
     dev: true
     bundledDependencies:
@@ -4800,8 +4800,8 @@ packages:
     resolution: {integrity: sha512-UUFYD2oWbNwULH6WoVtLUOw8ch586B+HUqcsAjjjeoBQAM1bD4wZRXu01koaxyd8UeYpybWqW4h+lO1Okv40Tg==}
     dev: true
 
-  /sst/2.1.1:
-    resolution: {integrity: sha512-1i8W27PdJpsy5FGZ+XDg5FX0lDuWMGM2FKtEMUepLEoFwhmYbgaaResL1Jl7fk+Z8QojE7VdOWl23hqIKjuWsw==}
+  /sst/2.1.3:
+    resolution: {integrity: sha512-+npHhEuMmefJidjgEr6gRAvjvrBgfTvHNDTwCtX0i4oGHuFi0pbak1uwJcgiJh91f9bSVgbwq0Syqd4KX5Nswg==}
     hasBin: true
     peerDependencies:
       '@sls-next/lambda-at-edge': ^3.7.0

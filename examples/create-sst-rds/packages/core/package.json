@@ -9,10 +9,10 @@
   "devDependencies": {
     "vitest": "^0.29.2",
     "@types/node": "^18.14.2",
-    "sst": "^2.1.1"
+    "sst": "^2.1.2"
   },
   "dependencies": {
-    "sst": "^2.1.1",
+    "sst": "^2.1.2",
     "ulid": "^2.3.0",
     "kysely": "^0.23.4",
     "kysely-data-api": "^0.1.4",
