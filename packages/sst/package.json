@@ -4,7 +4,7 @@
     "access": "public"
   },
   "name": "sst",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "bin": {
     "sst": "cli/sst.js"
   },
