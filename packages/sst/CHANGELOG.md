@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.1.5
+
+### Patch Changes
+
+- [`746701795`](https://github.com/serverless-stack/sst/commit/746701795a62ee156944cc75528f1764d25487ad) Thanks [@thdxr](https://github.com/thdxr)! - Fix aws-sdk warning message
+
 ## 2.1.4
 
 ### Patch Changes
