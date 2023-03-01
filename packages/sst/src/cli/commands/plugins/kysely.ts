@@ -1,6 +1,6 @@
 import { Kysely } from "kysely";
 import { DataApiDialect } from "kysely-data-api";
-import RDSDataService from "aws-sdk/clients/rdsdataservice.js";
+import { RDSData } from "@aws-sdk/client-rds-data";
 import * as fs from "fs/promises";
 import {
   ColumnMetadata,
@@ -18,6 +18,7 @@ import { useProject } from "../../../project.js";
 import { FunctionMetadata, RDSMetadata } from "../../../constructs/Metadata.js";
 import { Logger } from "../../../logger.js";
 import {
+  useAWSClient,
   useAWSCredentials,
   useAWSCredentialsProvider,
 } from "../../../credentials.js";
@@ -51,10 +52,7 @@ export const useKyselyTypeGenerator = Context.memo(async () => {
           secretArn: db.secretArn,
           resourceArn: db.clusterArn,
           database: db.defaultDatabaseName,
-          client: new RDSDataService({
-            region: project.config.region,
-            credentials,
-          }),
+          client: useAWSClient(RDSData),
         },
       }),
     });
@@ -81,7 +79,9 @@ export const useKyselyTypeGenerator = Context.memo(async () => {
         }));
 
     const transformer = new Transformer();
-    const Dialect = db.engine.includes("postgres") ? new PostgresDialect() : new MysqlDialect()
+    const Dialect = db.engine.includes("postgres")
+      ? new PostgresDialect()
+      : new MysqlDialect();
     const nodes = transformer.transform({
       dialect: Dialect,
       camelCase: (db.types.camelCase as any) === true,

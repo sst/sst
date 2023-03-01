@@ -44,9 +44,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Check prettier
-        run: pnpm prettier --cache -c --loglevel=error .
-
       - name: Create Release Pull Request or Publish to npm
         id: changesets
         # https://github.com/changesets/action
