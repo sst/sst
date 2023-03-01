@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.1.3
+
+### Patch Changes
+
+- [`42b49dd35`](https://github.com/serverless-stack/sst/commit/42b49dd351601152bd046b7d35f1586304d51ff7) Thanks [@fwang](https://github.com/fwang)! - RemixSite: fix nodejs18.x runtime error
+
 ## 2.1.2
 
 ### Patch Changes

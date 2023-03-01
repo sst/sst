@@ -1,5 +1,11 @@
 # create-sst
 
+## 2.1.3
+
+### Patch Changes
+
+- [`9b34bff19`](https://github.com/serverless-stack/sst/commit/9b34bff192457418590147cf330e37866c852455) Thanks [@fwang](https://github.com/fwang)! - Examples: update to SST v2
+
 ## 2.1.2
 
 ## 2.1.1
