@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.1.4
+
+### Patch Changes
+
+- [`3198bd91e`](https://github.com/serverless-stack/sst/commit/3198bd91ee8d7dc9e354a05b6bf63fc8b9dd481f) Thanks [@thdxr](https://github.com/thdxr)! - Upgrade to kysely data api v3
+
 ## 2.1.3
 
 ### Patch Changes
