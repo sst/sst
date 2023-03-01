@@ -112,6 +112,9 @@ export function useAWSClient<C extends Client<any, any, any, any>>(
   return result;
 }
 
+// @ts-expect-error
+import stupid from "aws-sdk/lib/maintenance_mode_message.js";
+stupid.suppress = true;
 import aws from "aws-sdk";
 import { useProject } from "./project.js";
 import { HostHeaderConditionConfig } from "aws-sdk/clients/elbv2.js";

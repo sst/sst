@@ -63,7 +63,7 @@
     "aws-cdk": "2.62.2",
     "aws-cdk-lib": "2.62.2",
     "aws-iot-device-sdk": "^2.2.12",
-    "aws-sdk": "^2.1323.0",
+    "aws-sdk": "^2.1326.0",
     "builtin-modules": "3.2.0",
     "cdk-assets": "2.62.2",
     "chalk": "^4.1.2",

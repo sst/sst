@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - sst2
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
@@ -43,6 +44,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
+
+      - name: Check prettier
+        run: pnpm prettier --cache -c --loglevel=error .
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets
