@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.1.6
+
+### Patch Changes
+
+- [#2571](https://github.com/serverless-stack/sst/pull/2571) [`5d04dbcf8`](https://github.com/serverless-stack/sst/commit/5d04dbcf8b72cbeb841dfc858e38a1782916d67b) Thanks [@GinIsTheAnswer](https://github.com/GinIsTheAnswer)! - Ensure that output of path.relative uses posix separator
+
 ## 2.1.5
 
 ### Patch Changes
