@@ -189,12 +189,14 @@ Create a new file at `stacks/test/Database.test.ts`:
 ```ts
 import { it } from "vitest";
 import { Template } from "aws-cdk-lib/assertions";
+import { initProject } from "sst/project";
 import { App, getStack } from "sst/constructs";
 import { Database } from "../Database";
 
 it("point-in-time recovery is enabled", async () => {
+  await initProject({});
+  const app = new App({ mode: "deploy" });
   // Create the Database stack
-  const app = new App();
   app.stack(Database);
 
   // Get the CloudFormation template of the stack
