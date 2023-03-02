@@ -379,8 +379,8 @@ export class StaticSite extends Construct implements SSTConstruct {
     // Build app
     const fileSizeLimit = app.isRunningSSTTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
-      this.props.sstTestFileSizeLimitOverride || 200
+        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
+        this.props.sstTestFileSizeLimitOverride || 200
       : 200;
     this.buildApp();
     const assets = this.bundleAssets(fileSizeLimit);
@@ -469,21 +469,22 @@ export class StaticSite extends Construct implements SSTConstruct {
       variables: {
         url: this.doNotDeploy
           ? {
-            type: "plain",
-            value: "localhost",
-          }
+              type: "plain",
+              value: "localhost",
+            }
           : {
-            // Do not set real value b/c we don't want to make the Lambda function
-            // depend on the Site. B/c often the site depends on the Api, causing
-            // a CloudFormation circular dependency if the Api and the Site belong
-            // to different stacks.
-            type: "site_url",
-            value: this.customDomainUrl || this.url!,
-          },
+              // Do not set real value b/c we don't want to make the Lambda function
+              // depend on the Site. B/c often the site depends on the Api, causing
+              // a CloudFormation circular dependency if the Api and the Site belong
+              // to different stacks.
+              type: "site_url",
+              value: this.customDomainUrl || this.url!,
+            },
       },
       permissions: {
         "ssm:GetParameters": [
-          `arn:${Stack.of(this).partition}:ssm:${app.region}:${app.account
+          `arn:${Stack.of(this).partition}:ssm:${app.region}:${
+            app.account
           }:parameter${getParameterPath(this, "url")}`,
         ],
       },
@@ -512,8 +513,8 @@ export class StaticSite extends Construct implements SSTConstruct {
     const content = `/// <reference types="vite/client" />
 interface ImportMetaEnv {
 ${Object.keys(environment || {})
-        .map((key) => `  readonly ${key}: string`)
-        .join("\n")}
+  .map((key) => `  readonly ${key}: string`)
+  .join("\n")}
 }
 interface ImportMeta {
   readonly env: ImportMetaEnv
@@ -530,7 +531,8 @@ interface ImportMeta {
     // validate site path exists
     if (!fs.existsSync(sitePath)) {
       throw new Error(
-        `No path found at "${path.resolve(sitePath)}" for the "${this.node.id
+        `No path found at "${path.resolve(sitePath)}" for the "${
+          this.node.id
         }" StaticSite.`
       );
     }
@@ -859,10 +861,11 @@ interface ImportMeta {
   }
 
   private buildDistributionBehavior(): BehaviorOptions {
-    const { functionAssociations = [
-      {
-        function: new CfFunction(this, "CloudFrontFunction", {
-          code: CfFunctionCode.fromInline(`
+    const {
+      functionAssociations = [
+        {
+          function: new CfFunction(this, "CloudFrontFunction", {
+            code: CfFunctionCode.fromInline(`
 function handler(event) {
   var request = event.request;
   var uri = request.uri;
@@ -876,10 +879,12 @@ function handler(event) {
   return request;
 }
           `),
-        }),
-        eventType: CfFunctionEventType.VIEWER_REQUEST,
-      },
-    ], ...rest } = this.props.cdk?.distribution?.defaultBehavior ?? {}
+          }),
+          eventType: CfFunctionEventType.VIEWER_REQUEST,
+        },
+      ],
+      ...rest
+    } = this.props.cdk?.distribution?.defaultBehavior ?? {};
 
     return {
       origin: new S3Origin(this.bucket),
