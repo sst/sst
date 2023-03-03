@@ -100,12 +100,18 @@ function create<T extends keyof SessionTypes>(input: {
  */
 function verify<T = SessionValue>(token: string) {
   if (token) {
-    const jwt = createVerifier({
-      algorithms: ["RS512"],
-      key: getPublicKey(),
-    })(token);
-    return jwt as T;
+    try {
+      const jwt = createVerifier({
+        algorithms: ["RS512"],
+        key: getPublicKey(),
+      })(token);
+      return jwt as T;
+    } catch {}
   }
+  return {
+    type: "public",
+    properties: {},
+  };
 }
 
 export const Session = {

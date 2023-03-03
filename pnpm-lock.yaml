@@ -436,7 +436,7 @@ importers:
       aws-cdk: 2.62.2
       aws-cdk-lib: 2.62.2
       aws-iot-device-sdk: ^2.2.12
-      aws-sdk: ^2.1323.0
+      aws-sdk: ^2.1326.0
       builtin-modules: 3.2.0
       cdk-assets: 2.62.2
       chalk: ^4.1.2
@@ -458,9 +458,9 @@ importers:
       immer: '9'
       ink: ^3.2.0
       ink-spinner: ^4.0.3
-      kysely: ^0.23.3
+      kysely: ^0.23.4
       kysely-codegen: ^0.9.0
-      kysely-data-api: ^0.1.4
+      kysely-data-api: ^0.2.0
       minimatch: ^6.1.6
       openid-client: ^5.1.8
       ora: ^6.1.2
@@ -468,6 +468,7 @@ importers:
       react: 17.0.2
       remeda: ^1.3.0
       tsx: ^3.12.1
+      typescript: ^4.9.5
       undici: ^5.12.0
       uuid: ^9.0.0
       vitest: ^0.28.3
@@ -532,7 +533,7 @@ importers:
       ink-spinner: 4.0.3_ink@3.2.0+react@17.0.2
       kysely: 0.23.4
       kysely-codegen: 0.9.0_kysely@0.23.4
-      kysely-data-api: 0.1.4_gikwyg3k5ldlcinrfncej2n43i
+      kysely-data-api: 0.2.0_mw5yj24emorir33vi6uk6vcs7u
       minimatch: 6.1.6
       openid-client: 5.3.0
       ora: 6.1.2
@@ -549,7 +550,7 @@ importers:
       '@aws-sdk/client-codebuild': 3.279.0
       '@aws-sdk/types': 3.272.0
       '@graphql-tools/merge': 8.3.16_graphql@16.6.0
-      '@sls-next/lambda-at-edge': 3.7.0_yibcaz4dqksmuko7ri6oj525g4
+      '@sls-next/lambda-at-edge': 3.7.0_nvpnbrrhyh6eyudfrf7tcgd3e4
       '@tsconfig/node16': 1.0.3
       '@types/adm-zip': 0.5.0
       '@types/aws-iot-device-sdk': 2.2.4
@@ -565,6 +566,7 @@ importers:
       '@types/ws': 8.5.3
       '@types/yargs': 17.0.13
       tsx: 3.12.1
+      typescript: 4.9.5
       vitest: 0.28.3
 
   www:
@@ -8939,12 +8941,12 @@ packages:
       webpack-sources: 3.2.3
     dev: false
 
-  /@sls-next/aws-common/3.7.0_gaw2vpku64og7svnf3ydhqqdmq:
+  /@sls-next/aws-common/3.7.0_le54ittoumchqmdvb3rsmpr5z4:
     resolution: {integrity: sha512-NNaJkBg+iJBlZW3pj4we3P6dzuLEMloWSnwzNXU518KGWvx7r3+2pD0kMe+LprTRBuOP82DCeYMHxncM3CvC+w==}
     dependencies:
       '@aws-sdk/client-s3': 3.54.0_nqq4dw5jcdtgsd5c7xgwp4u2d4
       '@aws-sdk/client-sqs': 3.54.0
-      '@sls-next/core': 3.7.0_@babel+core@7.20.12
+      '@sls-next/core': 3.7.0_56pcy4vhlzcrxrntyrevcrzjiy
     transitivePeerDependencies:
       - '@aws-sdk/signature-v4-crt'
       - '@babel/core'
@@ -8973,7 +8975,7 @@ packages:
       - webpack
     dev: true
 
-  /@sls-next/core/3.7.0_@babel+core@7.20.12:
+  /@sls-next/core/3.7.0_56pcy4vhlzcrxrntyrevcrzjiy:
     resolution: {integrity: sha512-fCRV0iI84FboRk8YKATSFVp4dzR27zd6Rez/qfa4Utv9HL9UZbDTpKlyuUp24vEvADAZSp5laxj1JgOZBn2iOQ==}
     dependencies:
       '@hapi/accept': 5.0.2
@@ -8984,7 +8986,7 @@ packages:
       fs-extra: 9.1.0
       is-animated: 2.0.2
       jsonwebtoken: 8.5.1
-      next: 11.1.2_jiuppbrrdpqsioctsbaxdlfu4e
+      next: 11.1.2_hlszf5b36got6eddf4bbqru3by
       node-fetch: 2.6.5
       normalize-path: 3.0.0
       path-to-regexp: 6.2.0
@@ -9060,7 +9062,7 @@ packages:
       - webpack
     dev: true
 
-  /@sls-next/lambda-at-edge/3.7.0_yibcaz4dqksmuko7ri6oj525g4:
+  /@sls-next/lambda-at-edge/3.7.0_nvpnbrrhyh6eyudfrf7tcgd3e4:
     resolution: {integrity: sha512-7eTqq1baZEuvEhexDchsP3QdOqPYaW123c7TupYB60Rs31KQ12xXvpzgn+mTMuFVIOQUDY5y8EKsuzYGRrQfcw==}
     hasBin: true
     peerDependencies:
@@ -9068,8 +9070,8 @@ packages:
     dependencies:
       '@aws-sdk/client-s3': 3.54.0_nqq4dw5jcdtgsd5c7xgwp4u2d4
       '@aws-sdk/client-sqs': 3.54.0
-      '@sls-next/aws-common': 3.7.0_gaw2vpku64og7svnf3ydhqqdmq
-      '@sls-next/core': 3.7.0_@babel+core@7.20.12
+      '@sls-next/aws-common': 3.7.0_le54ittoumchqmdvb3rsmpr5z4
+      '@sls-next/core': 3.7.0_56pcy4vhlzcrxrntyrevcrzjiy
       '@vercel/nft': 0.17.5
       builtin-modules: 3.2.0
       execa: 5.1.1
@@ -15542,16 +15544,6 @@ packages:
       minimist: 1.2.7
     dev: false
 
-  /kysely-data-api/0.1.4_gikwyg3k5ldlcinrfncej2n43i:
-    resolution: {integrity: sha512-7xgXbNuhsBAOi3PWAc5vETt0kMPCMH9qeOSsmkoVVqhvswa9v3lWUxGOQGhg9ABQqFyTbJe+JdLgd/wChIMiFw==}
-    peerDependencies:
-      aws-sdk: 2.x
-      kysely: 0.x
-    dependencies:
-      aws-sdk: 2.1326.0
-      kysely: 0.23.4
-    dev: false
-
   /kysely-data-api/0.2.0_mw5yj24emorir33vi6uk6vcs7u:
     resolution: {integrity: sha512-Jkuqoxs8XInYeUnKDFKraA1lmuW8flY5hse59EmFIKbWDv0diRjkthCrc21egEwpfqVmLYq0/zj+SWWrH8a0hw==}
     peerDependencies:
@@ -16787,7 +16779,7 @@ packages:
       - webpack
     dev: true
 
-  /next/11.1.2_jiuppbrrdpqsioctsbaxdlfu4e:
+  /next/11.1.2_hlszf5b36got6eddf4bbqru3by:
     resolution: {integrity: sha512-azEYL0L+wFjv8lstLru3bgvrzPvK0P7/bz6B/4EJ9sYkXeW8r5Bjh78D/Ol7VOg0EIPz0CXoe72hzAlSAXo9hw==}
     engines: {node: '>=12.0.0'}
     hasBin: true
@@ -16838,7 +16830,7 @@ packages:
       os-browserify: 0.3.0
       p-limit: 3.1.0
       path-browserify: 1.0.1
-      pnp-webpack-plugin: 1.6.4
+      pnp-webpack-plugin: 1.6.4_typescript@4.9.5
       postcss: 8.2.15
       process: 0.11.10
       querystring-es3: 0.2.1
@@ -17655,15 +17647,6 @@ packages:
 
   /platform/1.3.6:
     resolution: {integrity: sha512-fnWVljUchTro6RiCFvCXBbNhJc2NijN7oIQxbwsyL0buWJPG85v81ehlHI9fXrJsMNgTofEoWIQeClKpgxFLrg==}
-    dev: true
-
-  /pnp-webpack-plugin/1.6.4:
-    resolution: {integrity: sha512-7Wjy+9E3WwLOEL30D+m8TSTF7qJJUJLONBnwQp0518siuMxUQUbgZwssaFX+QKlZkjHZcw/IpZCt/H0srrntSg==}
-    engines: {node: '>=6'}
-    dependencies:
-      ts-pnp: 1.2.0
-    transitivePeerDependencies:
-      - typescript
     dev: true
 
   /pnp-webpack-plugin/1.6.4_typescript@4.9.5:
@@ -20942,16 +20925,6 @@ packages:
 
   /trough/2.1.0:
     resolution: {integrity: sha512-AqTiAOLcj85xS7vQ8QkAV41hPDIJ71XJB4RCUrzo/1GM2CQwhkJGaf9Hgr7BOugMRpgGUrqRg/DrBDl4H40+8g==}
-    dev: true
-
-  /ts-pnp/1.2.0:
-    resolution: {integrity: sha512-csd+vJOb/gkzvcCHgTGSChYpy5f1/XKNsmvBGO4JXS+z1v2HobugDz4s1IeFXM3wZB44uczs+eazB5Q/ccdhQw==}
-    engines: {node: '>=6'}
-    peerDependencies:
-      typescript: '*'
-    peerDependenciesMeta:
-      typescript:
-        optional: true
     dev: true
 
   /ts-pnp/1.2.0_typescript@4.9.5:
