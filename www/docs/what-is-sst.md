@@ -103,7 +103,7 @@ Let's look at it in detail.
 
 #### Constructs
 
-These snippets are called [**Constructs**](constructs/index.md). They are **TypeScript** or **JavaScript** classes, where each class corresponds to a feature that can be configured it through its props.
+These snippets are called [**Constructs**](constructs/index.md). They are **TypeScript** or **JavaScript** classes, where each class corresponds to a feature that can be configured through its props.
 
 ```ts
 const site = new NextjsSite(stack, "site", {
