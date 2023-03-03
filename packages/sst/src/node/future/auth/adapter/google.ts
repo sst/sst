@@ -1,4 +1,5 @@
 import { Issuer } from "openid-client";
+import { Adapter } from "./adapter.js";
 import { OidcAdapter, OidcBasicConfig } from "./oidc.js";
 
 const issuer = await Issuer.discover("https://accounts.google.com");
@@ -10,5 +11,5 @@ export function GoogleAdapter(config: GoogleConfig) {
     issuer,
     scope: "openid email profile",
     ...config,
-  });
+  }) satisfies Adapter;
 }

@@ -1,15 +1,12 @@
-import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
-import { BaseClient, generators, Issuer, TokenSet } from "openid-client";
+import { generators, Issuer } from "openid-client";
 import {
   useCookie,
   useDomainName,
   useFormData,
-  usePath,
   usePathParam,
   useResponse,
-} from "../../api/index.js";
-import { SessionTypes } from "../../auth/session.js";
-import { Adapter, SessionCreateInput } from "../index.js";
+} from "../../../api/index.js";
+import { Adapter } from "./adapter.js";
 
 export interface OidcBasicConfig {
   /**

@@ -23,9 +23,11 @@
   },
   "exports": {
     "./constructs/deprecated": "./constructs/deprecated/index.js",
+    "./constructs/future": "./constructs/future/index.js",
     "./constructs": "./constructs/index.js",
     "./context": "./context/index.js",
     "./node/*": "./node/*/index.js",
+    "./node/future/*": "./node/*/index.js",
     ".": "./index.js",
     "./*": "./*"
   },

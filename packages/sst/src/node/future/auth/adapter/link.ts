@@ -1,15 +1,14 @@
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 import { createSigner, createVerifier } from "fast-jwt";
-import { Config } from "../../../node/config/index.js";
+import { Config } from "../../../config/index.js";
 
 import {
   useDomainName,
-  usePath,
   usePathParam,
   useQueryParam,
   useQueryParams,
-} from "../../api/index.js";
-import { Adapter } from "../index.js";
+} from "../../../api/index.js";
+import { Adapter } from "./adapter.js";
 
 export function LinkAdapter(config: {
   onLink: (

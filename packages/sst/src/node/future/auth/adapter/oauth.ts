@@ -3,12 +3,11 @@ import { BaseClient, generators, Issuer, TokenSet } from "openid-client";
 import {
   useCookie,
   useDomainName,
-  usePath,
   usePathParam,
   useQueryParams,
   useResponse,
-} from "../../api/index.js";
-import { Adapter } from "../index.js";
+} from "../../../api/index.js";
+import { Adapter } from "./adapter.js";
 
 export interface OauthBasicConfig {
   /**

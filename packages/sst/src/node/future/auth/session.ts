@@ -1,8 +1,8 @@
 import { createSigner, createVerifier, SignerOptions } from "fast-jwt";
-import { Context } from "../../context/context.js";
-import { useCookie, useHeader } from "../api/index.js";
-import { Auth } from "../auth/index.js";
-import { Config } from "../config/index.js";
+import { Context } from "../../../context/context.js";
+import { useCookie, useHeader } from "../../api/index.js";
+import { Auth } from "../../auth/index.js";
+import { Config } from "../../config/index.js";
 
 export interface SessionTypes {
   public: {};
@@ -21,15 +21,22 @@ const SessionMemo = /* @__PURE__ */ Context.memo(() => {
   const header = useHeader("authorization")!;
   if (header) token = header.substring(7);
 
-  const cookie = useCookie("auth-token");
+  const cookie = useCookie("sst_auth_token");
   if (cookie) token = cookie;
 
   if (token) {
-    const jwt = createVerifier({
-      algorithms: ["RS512"],
-      key: getPublicKey(),
-    })(token);
-    return jwt;
+    try {
+      const jwt = createVerifier({
+        algorithms: ["RS512"],
+        key: getPublicKey(),
+      })(token);
+      return jwt;
+    } catch {
+      return {
+        type: "public",
+        properties: {},
+      };
+    }
   }
 
   return {

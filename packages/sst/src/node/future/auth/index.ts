@@ -2,17 +2,20 @@ import type {
   APIGatewayProxyEventV2,
   APIGatewayProxyStructuredResultV2,
 } from "aws-lambda";
-import { createSigner, SignerOptions } from "fast-jwt";
-import { Config } from "../../node/config/index.js";
+import { createSigner, createVerifier, SignerOptions } from "fast-jwt";
+import { Config } from "../../config/index.js";
 import {
   ApiHandler,
   useCookie,
   useCookies,
+  useDomainName,
+  useFormValue,
   usePathParam,
   useQueryParam,
   useQueryParams,
   useResponse,
-} from "../api/index.js";
+} from "../../api/index.js";
+import { Adapter } from "./adapter/adapter.js";
 import type { SessionValue } from "./session.js";
 
 export function AuthHandler<
@@ -32,9 +35,74 @@ export function AuthHandler<
     event: APIGatewayProxyEventV2
   ) => Promise<void | keyof Providers>;
   onSuccess: (input: Result) => Promise<SessionCreateInput>;
+  onError: () => Promise<APIGatewayProxyStructuredResultV2>;
 }) {
   return ApiHandler(async (evt) => {
     const step = usePathParam("step");
+    if (!step) {
+      return {
+        statusCode: 200,
+        headers: {
+          "Content-Type": "text/html",
+        },
+        body: `
+          <html>
+            <body>
+            ${Object.keys(input.providers).map((name) => {
+              return `<a href="/authorize?provider=${name}&response_type=code&client_id=local&redirect_uri=http://localhost:300">${name}</a>`;
+            })}
+            </body>
+          </html>
+        `,
+      };
+    }
+
+    if (step === "token") {
+      if (useFormValue("grant_type") !== "authorization_code") {
+        return {
+          statusCode: 400,
+          body: "Invalid grant_type",
+        };
+      }
+      const code = useFormValue("code");
+      if (!code) {
+        return {
+          statusCode: 400,
+          body: "Missing code",
+        };
+      }
+      // @ts-expect-error
+      const pub = Config[process.env.AUTH_ID + "PublicKey"] as string;
+      const verified = createVerifier({
+        algorithms: ["RS512"],
+        key: pub,
+      })(code);
+
+      if (verified.redirect_uri !== useFormValue("redirect_uri")) {
+        return {
+          statusCode: 400,
+          body: "redirect_uri mismatch",
+        };
+      }
+
+      if (verified.client_id !== useFormValue("client_id")) {
+        return {
+          statusCode: 400,
+          body: "client_id mismatch",
+        };
+      }
+
+      return {
+        statusCode: 200,
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          access_token: verified.value,
+        }),
+      };
+    }
+
     let provider = useCookie("provider");
 
     if (step === "authorize") {
@@ -118,17 +186,19 @@ export function AuthHandler<
         provider,
         ...result.properties,
       });
+
+      // @ts-expect-error
+      const priv = Config[process.env.AUTH_ID + "PrivateKey"] as string;
       const signer = createSigner({
         ...rest,
-        // @ts-expect-error
-        key: Config[process.env.AUTH_ID + "PrivateKey"],
+        key: priv,
         algorithm: "RS512",
       });
       const token = signer({
         type,
         properties,
       });
-      const { response_type, redirect_uri, state } = {
+      const { client_id, response_type, redirect_uri, state } = {
         ...useCookies(),
         ...useQueryParams(),
       } as Record<string, string>;
@@ -145,10 +215,22 @@ export function AuthHandler<
       }
 
       if (response_type === "code") {
+        // This allows the code to be reused within a 30 second window
+        // The code should be single use but we're making this tradeoff to remain stateless
+        // In the future can store this in a dynamo table to ensure single use
+        const code = createSigner({
+          expiresIn: 1000 * 60 * 5,
+          key: priv,
+          algorithm: "RS512",
+        })({
+          client_id,
+          redirect_uri,
+          token: token,
+        });
         return {
           statusCode: 302,
           headers: {
-            Location: `${redirect_uri}?code=${token}&state=${state || ""}`,
+            Location: `${redirect_uri}?code=${code}&state=${state || ""}`,
           },
         };
       }
@@ -159,19 +241,13 @@ export function AuthHandler<
       };
     }
 
-    return result;
+    if (result.type === "error") {
+      return input.onError();
+    }
   });
 }
 
 export type SessionCreateInput = SessionValue & Partial<SignerOptions>;
-
-export type Adapter<T = any> = (evt: APIGatewayProxyEventV2) => Promise<
-  | { type: "step"; properties: APIGatewayProxyStructuredResultV2 }
-  | {
-      type: "success";
-      properties: T;
-    }
->;
 
 export * from "./adapter/oidc.js";
 export * from "./adapter/google.js";
