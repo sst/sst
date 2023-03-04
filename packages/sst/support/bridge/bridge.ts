@@ -52,12 +52,15 @@ const ENVIRONMENT = Object.fromEntries(
 
 const device = new iot.device({
   protocol: "wss",
+  debug: true,
   host: endpoint,
   region: ENVIRONMENT.AWS_REGION,
 });
 device.on("error", console.log);
 device.on("connect", console.log);
-device.subscribe(`${PREFIX}/events`);
+device.subscribe(`${PREFIX}/events`, {
+  qos: 1,
+});
 
 interface Fragment {
   id: string;
@@ -72,6 +75,7 @@ let onMessage: (evt: any) => void;
 
 device.on("message", (_topic, buffer: Buffer) => {
   const fragment = JSON.parse(buffer.toString()) as Fragment;
+  console.log("Got fragment", fragment.id, fragment.index);
   let pending = fragments.get(fragment.id);
   if (!pending) {
     pending = new Map();
@@ -80,32 +84,18 @@ device.on("message", (_topic, buffer: Buffer) => {
   pending.set(fragment.index, fragment);
 
   if (pending.size === fragment.count) {
+    console.log("Got all fragments", fragment.id);
+    fragments.delete(fragment.id);
     const data = [...pending.values()]
       .sort((a, b) => a.index - b.index)
       .map((item) => item.data)
       .join("");
-
     const evt = JSON.parse(data);
     onMessage(evt);
   }
 });
 
 export async function handler(event: any, context: any) {
-  for (const fragment of encode({
-    type: "function.invoked",
-    properties: {
-      workerID: workerID,
-      requestID: context.awsRequestId,
-      functionID: process.env.SST_FUNCTION_ID,
-      deadline: context.getRemainingTimeInMillis(),
-      event,
-      context,
-      env: ENVIRONMENT,
-    },
-  })) {
-    device.publish(`${PREFIX}/events`, JSON.stringify(fragment));
-  }
-
   const result = await new Promise<any>((r) => {
     const timeout = setTimeout(() => {
       r({
@@ -125,8 +115,28 @@ export async function handler(event: any, context: any) {
         }
       }
     };
+    for (const fragment of encode({
+      type: "function.invoked",
+      properties: {
+        workerID: workerID,
+        requestID: context.awsRequestId,
+        functionID: process.env.SST_FUNCTION_ID,
+        deadline: context.getRemainingTimeInMillis(),
+        event,
+        context,
+        env: ENVIRONMENT,
+      },
+    })) {
+      device.publish(
+        `${PREFIX}/events`,
+        JSON.stringify(fragment),
+        { qos: 1 },
+        console.log
+      );
+    }
   });
-  console.log("Got result", result);
+
+  console.log("Got result", result.type);
 
   if (result.type === "function.timeout")
     return "This function is in live debug mode but did not get a response from your machine. If you do have an `sst dev` session running, there have been reports of certain firewalls blocking communication. Please join our discord so we can work through the issue: https://sst.dev/discord";

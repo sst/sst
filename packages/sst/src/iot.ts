@@ -23,6 +23,7 @@ import iot from "aws-iot-device-sdk";
 import { EventPayload, Events, EventTypes, useBus } from "./bus.js";
 import { useProject } from "./project.js";
 import { Logger } from "./logger.js";
+import { randomUUID } from "crypto";
 
 interface Fragment {
   id: string;
@@ -37,6 +38,36 @@ export const useIOT = Context.memo(async () => {
   const endpoint = await useIOTEndpoint();
   const creds = await useAWSCredentials();
   const project = useProject();
+  /*
+  console.log(endpoint, creds);
+  const config =
+    iotsdk.iot.AwsIotMqttConnectionConfigBuilder.new_with_websockets({
+      region: project.config.region!,
+      credentials_provider: iotsdk.auth.AwsCredentialsProvider.newStatic(
+        creds.accessKeyId,
+        creds.secretAccessKey,
+        creds.sessionToken
+      ),
+    })
+      .with_client_id(randomUUID())
+      .with_endpoint(endpoint)
+      .build();
+  console.log(config);
+
+  const device2 = new iotsdk.mqtt.MqttClient();
+  const conn = device2.new_connection(config);
+  conn.on("connect", () => {
+    console.log("CONNECTED");
+  });
+  conn.on("error", console.log);
+  conn.on("connect", console.log);
+  conn.on("resume", console.log);
+  conn.on("message", console.log);
+  conn.on("disconnect", console.log);
+  conn.connect();
+  console.log(device2);
+  */
+
   const device = new iot.device({
     protocol: "wss",
     host: endpoint,
@@ -44,9 +75,10 @@ export const useIOT = Context.memo(async () => {
     accessKeyId: creds.accessKeyId,
     secretKey: creds.secretAccessKey,
     sessionToken: creds.sessionToken,
+    reconnectPeriod: 1,
   });
   const PREFIX = `/sst/${project.config.name}/${project.config.stage}`;
-  device.subscribe(`${PREFIX}/events`);
+  device.subscribe(`${PREFIX}/events`, { qos: 1 });
 
   const fragments = new Map<string, Map<number, Fragment>>();
 
@@ -57,6 +89,15 @@ export const useIOT = Context.memo(async () => {
   device.on("error", (err) => {
     Logger.debug("IoT error", err);
   });
+
+  device.on("close", () => {
+    Logger.debug("IoT closed");
+  });
+
+  device.on("reconnect", () => {
+    Logger.debug("IoT reconnected");
+  });
+
   device.on("message", (_topic, buffer: Buffer) => {
     const fragment = JSON.parse(buffer.toString());
     if (!fragment.id) {
@@ -85,7 +126,7 @@ export const useIOT = Context.memo(async () => {
 
   return {
     prefix: PREFIX,
-    publish<Type extends EventTypes>(
+    async publish<Type extends EventTypes>(
       topic: string,
       type: Type,
       properties: Events[Type]
@@ -96,10 +137,20 @@ export const useIOT = Context.memo(async () => {
         sourceID: bus.sourceID,
       };
       for (const fragment of encode(payload)) {
-        device.publish(topic, JSON.stringify(fragment), {
-          qos: 1,
+        await new Promise<void>((r) => {
+          device.publish(
+            topic,
+            JSON.stringify(fragment),
+            {
+              qos: 1,
+            },
+            () => {
+              r();
+            }
+          );
         });
       }
+      Logger.debug("IOT Published", topic, type);
     },
   };
 });
