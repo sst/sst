@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.1.7
+
+### Patch Changes
+
+- [`56c73fe8c`](https://github.com/serverless-stack/sst/commit/56c73fe8cd45ef3b85a0aa743b1fa78f613057b7) Thanks [@thdxr](https://github.com/thdxr)! - IOT performance upgrades
+
 ## 2.1.6
 
 ### Patch Changes
