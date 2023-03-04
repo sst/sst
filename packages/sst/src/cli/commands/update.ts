@@ -76,7 +76,9 @@ export const update = (program: Program) =>
           }
         }
 
-        await fs.writeFile(file, JSON.stringify(data, null, 2));
+        if (results.has(file) {
+          await fs.writeFile(file, JSON.stringify(data, null, 2));
+        }
       });
       await Promise.all(tasks);
 
