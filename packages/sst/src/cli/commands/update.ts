@@ -76,7 +76,7 @@ export const update = (program: Program) =>
           }
         }
 
-        if (results.has(file) {
+        if (results.has(file)) {
           await fs.writeFile(file, JSON.stringify(data, null, 2));
         }
       });
