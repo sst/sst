@@ -15,6 +15,7 @@ import {
   useResponse,
 } from "../../api/index.js";
 import { SessionValue } from "./session.js";
+import { Config } from "../../config/index.js";
 
 export function AuthHandler<
   Providers extends Record<string, Adapter<any>>,
@@ -96,7 +97,7 @@ export function AuthHandler<
           "content-type": "application/json",
         },
         body: JSON.stringify({
-          access_token: verified.value,
+          access_token: verified.token,
         }),
       };
     }
