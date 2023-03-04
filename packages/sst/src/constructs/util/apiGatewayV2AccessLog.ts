@@ -26,8 +26,7 @@ const defaultHttpFields = [
   `"integrationServiceStatus":"$context.integration.integrationStatus"`,
   // caller info
   `"ip":"$context.identity.sourceIp"`,
-  `"userAgent":"$context.identity.userAgent"`,
-  `"cognitoIdentityId":"$context.identity.cognitoIdentityId"`,
+  `"userAgent":"$context.identity.userAgent"`
 ];
 
 const defaultWebSocketFields = [
@@ -45,7 +44,6 @@ const defaultWebSocketFields = [
   // caller info
   `"ip":"$context.identity.sourceIp"`,
   `"userAgent":"$context.identity.userAgent"`,
-  `"cognitoIdentityId":"$context.identity.cognitoIdentityId"`,
   `"connectedAt":"$context.connectedAt"`,
   `"connectionId":"$context.connectionId"`,
 ];
