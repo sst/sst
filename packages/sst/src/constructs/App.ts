@@ -277,6 +277,7 @@ export class App extends cdk.App {
 
   public async finish() {
     await useDeferredTasks().run();
+    Auth.injectConfig();
     this.buildConstructsMetadata();
     this.ensureUniqueConstructIds();
     this.codegenTypes();
