@@ -66,7 +66,7 @@ Let's start our local development environment. Or what SST calls [Live Lambda De
 </ChangeText>
 
 ```bash
-npm sst dev
+npx sst dev
 ```
 
 The first time the SST command is run, you'll be prompted to enter a default stage name to use. The stage name will be stored locally in a `.sst/` directory; it's automatically ignored from Git.
