@@ -400,13 +400,11 @@ export interface NodeJSProps {
    *
    * @example
    * ```js
-   * new Function(stack, "Function", {
-   *   nodejs: {
-   *     loader: {
-   *      ".png": "file"
-   *     }
+   * nodejs: {
+   *   loader: {
+   *    ".png": "file"
    *   }
-   * })
+   * }
    * ```
    */
   loader?: Record<string, Loader>;
@@ -416,11 +414,9 @@ export interface NodeJSProps {
    *
    * @example
    * ```js
-   * new Function(stack, "Function", {
-   *   nodejs: {
-   *     install: ["pg"]
-   *   }
-   * })
+   * nodejs: {
+   *   install: ["pg"]
+   * }
    * ```
    */
   install?: string[];
@@ -430,11 +426,9 @@ export interface NodeJSProps {
    *
    * @example
    * ```js
-   * new Function(stack, "Function", {
-   *   nodejs: {
-   *     banner: "console.log('Function starting')"
-   *   }
-   * })
+   * nodejs: {
+   *   banner: "console.log('Function starting')"
+   * }
    * ```
    */
   banner?: string;
@@ -451,11 +445,9 @@ export interface NodeJSProps {
    *
    * @example
    * ```js
-   * new Function(stack, "Function", {
-   *   nodejs: {
-   *     minify: false
-   *   }
-   * })
+   * nodejs: {
+   *   minify: false
+   * }
    * ```
    */
   minify?: boolean;
@@ -466,11 +458,9 @@ export interface NodeJSProps {
    *
    * @example
    * ```js
-   * new Function(stack, "Function", {
-   *   nodejs: {
-   *     format: "esm"
-   *   }
-   * })
+   * nodejs: {
+   *   format: "esm"
+   * }
    * ```
    */
   format?: "cjs" | "esm";
@@ -481,11 +471,9 @@ export interface NodeJSProps {
    *
    * @example
    * ```js
-   * new Function(stack, "Function", {
-   *   nodejs: {
-   *     sourcemap: true
-   *   }
-   * })
+   * nodejs: {
+   *   sourcemap: true
+   * }
    * ```
    */
   sourcemap?: boolean;

@@ -35,7 +35,7 @@ import { useRuntimeHandlers } from "../runtime/handlers.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 export type JobMemorySize = "3 GB" | "7 GB" | "15 GB" | "145 GB";
-export type JobNodeJSProps = NodeJSProps;
+export interface JobNodeJSProps extends NodeJSProps {}
 
 export interface JobProps {
   /**
