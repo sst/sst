@@ -102,6 +102,8 @@ export const useRuntimeServer = Context.memo(async () => {
         "Lambda-Runtime-Cognito-Identity": JSON.stringify(
           payload.context.identity || {}
         ),
+        "Lambda-Runtime-Log-Group-Name": payload.context.logGroupName,
+        "Lambda-Runtime-Log-Stream-Name": payload.context.logStreamName,
       });
       res.json(payload.event);
     }

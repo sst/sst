@@ -3,8 +3,56 @@ import path from "path";
 import { fetch } from "undici";
 import fs from "fs";
 import url from "url";
+import type { Context as LambdaContext } from "aws-lambda";
 // import { createRequire } from "module";
 // global.require = createRequire(import.meta.url);
+
+const createLambdaContext = (
+  invokedFunctionArn: string,
+  awsRequestId: string,
+  deadlineMs: string,
+  identity: string,
+  clientContext: string,
+  logGroupName: string,
+  logStreamName: string
+): LambdaContext => ({
+  awsRequestId,
+  invokedFunctionArn,
+  getRemainingTimeInMillis: () =>
+    Math.max(Number(deadlineMs) - Math.round(Date.now()), 0),
+  identity: JSON.parse(identity),
+  clientContext: JSON.parse(clientContext),
+  functionName: process.env.AWS_LAMBDA_FUNCTION_NAME!,
+  functionVersion: "$LATEST",
+  memoryLimitInMB: process.env.AWS_LAMBDA_FUNCTION_MEMORY_SIZE!,
+  logGroupName,
+  logStreamName,
+  callbackWaitsForEmptyEventLoop: {
+    set value(_value: boolean) {
+      throw new Error(
+        "`callbackWaitsForEmptyEventLoop` on lambda Context is not implemented by SST Live Lambda Development."
+      );
+    },
+    get value() {
+      return true;
+    },
+  }.value,
+  done() {
+    throw new Error(
+      "`done` on lambda Context is not implemented by SST Live Lambda Development."
+    );
+  },
+  fail() {
+    throw new Error(
+      "`fail` on lambda Context is not implemented by SST Live Lambda Development."
+    );
+  },
+  succeed() {
+    throw new Error(
+      "`succeed` on lambda Context is not implemented by SST Live Lambda Development."
+    );
+  },
+});
 
 const input = workerData;
 const parsed = path.parse(input.handler);
@@ -52,19 +100,19 @@ while (true) {
   }, 1000 * 60 * 15);
   let request: any;
   let response: any;
-  let context: {
-    awsRequestId: string;
-    invokedFunctionArn: string;
-  } = {} as any;
+  let context: LambdaContext;
 
   try {
     const result = await fetch(`${input.url}/runtime/invocation/next`);
-    context = {
-      awsRequestId: result.headers.get("lambda-runtime-aws-request-id")!,
-      invokedFunctionArn: result.headers.get(
-        "lambda-runtime-invoked-function-arn"
-      )!,
-    };
+    context = createLambdaContext(
+      result.headers.get("lambda-runtime-invoked-function-arn")!,
+      result.headers.get("lambda-runtime-aws-request-id")!,
+      result.headers.get("lambda-runtime-deadline-ms")!,
+      result.headers.get("lambda-runtime-cognito-identity")!,
+      result.headers.get("lambda-runtime-client-context")!,
+      result.headers.get("lambda-runtime-log-group-name")!,
+      result.headers.get("lambda-runtime-log-stream-name")!
+    );
     request = await result.json();
   } catch {
     continue;
