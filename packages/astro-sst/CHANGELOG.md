@@ -1,5 +1,11 @@
 # astro-sst
 
+## 2.1.10
+
+### Patch Changes
+
+- [`d2e7d097d`](https://github.com/serverless-stack/sst/commit/d2e7d097d186c68c5ebde1bdd1c56a9de4f31787) Thanks [@fwang](https://github.com/fwang)! - SsrSite: set "x-forwarded-host" using CloudFront function
+
 ## 2.1.9
 
 ## 2.1.8
