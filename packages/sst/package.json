@@ -62,7 +62,6 @@
     "archiver": "^5.3.1",
     "aws-cdk": "2.62.2",
     "aws-cdk-lib": "2.62.2",
-    "aws-crt": "1.0.0",
     "aws-iot-device-sdk": "^2.2.12",
     "aws-iot-device-sdk-v2": "^1.9.5",
     "aws-sdk": "^2.1326.0",
