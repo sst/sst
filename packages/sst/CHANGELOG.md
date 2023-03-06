@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.1.8
+
+### Patch Changes
+
+- [#2599](https://github.com/serverless-stack/sst/pull/2599) [`4e7449b1f`](https://github.com/serverless-stack/sst/commit/4e7449b1f7efe9b22e6d63fbed5682a518e86c47) Thanks [@zackheil](https://github.com/zackheil)! - Removes `aws-crt` dependency to fix macOS crashes
+
 ## 2.1.7
 
 ### Patch Changes
