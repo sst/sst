@@ -21,7 +21,7 @@ class ClientContext(object):
     #__slots__ = ['custom', 'env', 'client']
 
 class Context(object):
-    def __init__(self, invoked_function_arn, aws_request_id, deadline_ms, identity, client_context):
+    def __init__(self, invoked_function_arn, aws_request_id, deadline_ms, identity, client_context, log_group_name, log_stream_name):
         self.function_name = os.environ['AWS_LAMBDA_FUNCTION_NAME']
         self.invoked_function_arn = invoked_function_arn
         self.aws_request_id = aws_request_id
@@ -29,6 +29,8 @@ class Context(object):
         self.deadline_ms = deadline_ms
         self.identity = Identity(**json.loads(identity))
         self.client_context = ClientContext(**json.loads(client_context))
+        self.log_group_name = log_group_name
+        self.log_stream_name = log_stream_name
 
     def get_remaining_time_in_millis(self):
         return int(max(self.deadline_ms - int(round(time() * 1000)), 0))
@@ -75,7 +77,9 @@ if __name__ == '__main__':
         r.getheader('Lambda-Runtime-Aws-Request-Id'),
         r.getheader('Lambda-Runtime-Deadline-Ms'),
         r.getheader('Lambda-Runtime-Cognito-Identity'),
-        r.getheader('Lambda-Runtime-Client-Context')
+        r.getheader('Lambda-Runtime-Client-Context'),
+        r.getheader('Lambda-Runtime-Log-Group-Name'),
+        r.getheader('Lambda-Runtime-Log-Stream-Name')
     )
 
     # invoke handler
