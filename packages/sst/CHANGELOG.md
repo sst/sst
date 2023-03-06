@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.1.12
+
+### Patch Changes
+
+- [`37c0f4fed`](https://github.com/serverless-stack/sst/commit/37c0f4fed4c1468d78f70d9e26adab833aca1b02) Thanks [@fwang](https://github.com/fwang)! - sst dev/deploy: do not display "The following resource(s) failed" message
+
+- [`225e2706b`](https://github.com/serverless-stack/sst/commit/225e2706b48fb1a73b55976e0a50bfadde22b7f6) Thanks [@fwang](https://github.com/fwang)! - Script: fail deployment if script fails to run
+
 ## 2.1.11
 
 ### Patch Changes
