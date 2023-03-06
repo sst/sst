@@ -5,7 +5,7 @@ import fs from "fs/promises";
 import { Construct } from "constructs";
 import { Duration as CdkDuration } from "aws-cdk-lib";
 import { PolicyStatement, Role, Effect } from "aws-cdk-lib/aws-iam";
-import { AssetCode, Code } from "aws-cdk-lib/aws-lambda";
+import { AssetCode, Code, FunctionProps } from "aws-cdk-lib/aws-lambda";
 import {
   Project,
   CfnProject,
@@ -18,7 +18,7 @@ import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Secret } from "./Config.js";
 import { SSTConstruct } from "./Construct.js";
-import { Function, useFunctions } from "./Function.js";
+import { Function, useFunctions, NodeJSProps } from "./Function.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import {
@@ -35,6 +35,7 @@ import { useRuntimeHandlers } from "../runtime/handlers.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 export type JobMemorySize = "3 GB" | "7 GB" | "15 GB" | "145 GB";
+export type JobNodeJSProps = NodeJSProps;
 
 export interface JobProps {
   /**
@@ -77,6 +78,10 @@ export interface JobProps {
    *```
    */
   timeout?: Duration;
+  /**
+   * Used to configure nodejs function properties
+   */
+  nodejs?: JobNodeJSProps;
   /**
    * Can be used to disable Live Lambda Development when using `sst start`. Useful for things like Custom Resources that need to execute during deployment.
    *
