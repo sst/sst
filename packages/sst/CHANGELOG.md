@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.1.9
+
+### Patch Changes
+
+- [#2602](https://github.com/serverless-stack/sst/pull/2602) [`e84d5c846`](https://github.com/serverless-stack/sst/commit/e84d5c84621e515d177819f6fb7144f2c24a661e) Thanks [@fwang](https://github.com/fwang)! - Api: fix access log field "cognitoIdentityId" not supported in us-west-2
+
 ## 2.1.8
 
 ### Patch Changes
