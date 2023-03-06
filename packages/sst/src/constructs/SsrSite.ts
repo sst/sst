@@ -49,6 +49,10 @@ import {
   CacheQueryStringBehavior,
   CacheHeaderBehavior,
   CacheCookieBehavior,
+  OriginRequestPolicy,
+  Function as CfFunction,
+  FunctionCode as CfFunctionCode,
+  FunctionEventType as CfFunctionEventType,
 } from "aws-cdk-lib/aws-cloudfront";
 import { ICertificate } from "aws-cdk-lib/aws-certificatemanager";
 import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
@@ -77,7 +81,6 @@ import {
 } from "./util/functionBinding.js";
 import { SiteEnv } from "../site-env.js";
 import { useProject } from "../project.js";
-import { VisibleError } from "../error.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -808,12 +811,14 @@ export class SsrSite extends Construct implements SSTConstruct {
 
     return {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      functionAssociations: this.buildBehaviorFunctionAssociations(),
       origin: new HttpOrigin(Fn.parseDomainName(fnUrl.url)),
       allowedMethods: AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
       cachePolicy:
         cdk?.serverCachePolicy ?? this.createCloudFrontServerCachePolicy(),
+      originRequestPolicy: this.createCloudFrontServerOriginRequestPolicy(),
       ...(cfDistributionProps.defaultBehavior || {}),
     };
   }
@@ -826,12 +831,14 @@ export class SsrSite extends Construct implements SSTConstruct {
 
     return {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      functionAssociations: this.buildBehaviorFunctionAssociations(),
       origin,
       allowedMethods: AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
       cachePolicy:
         cdk?.serverCachePolicy ?? this.createCloudFrontServerCachePolicy(),
+      originRequestPolicy: this.createCloudFrontServerOriginRequestPolicy(),
       ...(cfDistributionProps.defaultBehavior || {}),
       // concatenate edgeLambdas
       edgeLambdas: [
@@ -843,6 +850,22 @@ export class SsrSite extends Construct implements SSTConstruct {
         ...(cfDistributionProps.defaultBehavior?.edgeLambdas || []),
       ],
     };
+  }
+
+  private buildBehaviorFunctionAssociations() {
+    return [
+      {
+        eventType: CfFunctionEventType.VIEWER_REQUEST,
+        function: new CfFunction(this, "CloudFrontFunction", {
+          code: CfFunctionCode.fromInline(`
+function handler(event) {
+  var request = event.request;
+  request.headers["x-forwarded-host"] = request.headers.host;
+  return request;
+}`),
+        }),
+      },
+    ];
   }
 
   protected buildDistributionStaticFileBehaviors(
@@ -877,7 +900,7 @@ export class SsrSite extends Construct implements SSTConstruct {
     return staticsBehaviours;
   }
 
-  protected createCloudFrontServerCachePolicy(): CachePolicy {
+  protected createCloudFrontServerCachePolicy() {
     return new CachePolicy(this, "ServerCache", {
       queryStringBehavior: CacheQueryStringBehavior.all(),
       headerBehavior: CacheHeaderBehavior.none(),
@@ -889,6 +912,15 @@ export class SsrSite extends Construct implements SSTConstruct {
       enableAcceptEncodingGzip: true,
       comment: "SST server response cache policy",
     });
+  }
+
+  protected createCloudFrontServerOriginRequestPolicy() {
+    // CloudFront's Managed-AllViewerExceptHostHeader policy
+    return OriginRequestPolicy.fromOriginRequestPolicyId(
+      this,
+      "ServerOriginRequestPolicy",
+      "b689b0a8-53d0-40ab-baf2-68738e2966ac"
+    );
   }
 
   private createCloudFrontInvalidation() {
