@@ -134,8 +134,12 @@ export async function monitor(stack: string) {
                 event.ResourceStatusReason.includes(
                   "Resource update cancelled"
                 ) ||
-                event.ResourceStatusReason?.includes(
+                event.ResourceStatusReason.includes(
                   "Resource creation Initiated"
+                ) ||
+                // ie. The following resource(s) failed to update: [MyResource10A5921D].
+                event.ResourceStatusReason.startsWith(
+                  "The following resource(s) failed to"
                 )
               )
                 continue;
@@ -160,7 +164,13 @@ export async function monitor(stack: string) {
           resource.ResourceStatusReason?.includes(
             "Resource update cancelled"
           ) ||
-          resource.ResourceStatusReason?.includes("Resource creation Initiated")
+          resource.ResourceStatusReason?.includes(
+            "Resource creation Initiated"
+          ) ||
+          // ie. The following resource(s) failed to update: [MyResource10A5921D].
+          resource.ResourceStatusReason?.startsWith(
+            "The following resource(s) failed to"
+          )
         )
           continue;
         if (resource.ResourceStatusReason)
