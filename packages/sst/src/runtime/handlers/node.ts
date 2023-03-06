@@ -23,10 +23,10 @@ export const useNodeHandler = Context.memo(async () => {
     shouldBuild: (input) => {
       const result = cache[input.functionID];
       if (!result) return false;
-      const relative = path.relative(
-        project.paths.root,
-        input.file
-      ).split(path.sep).join(path.posix.sep);
+      const relative = path
+        .relative(project.paths.root, input.file)
+        .split(path.sep)
+        .join(path.posix.sep);
       return Boolean(result.metafile?.inputs[relative]);
     },
     canHandle: (input) => input.startsWith("nodejs"),
@@ -223,13 +223,20 @@ export const useNodeHandler = Context.memo(async () => {
         };
       } catch (ex: any) {
         const result = ex as BuildResult;
+        if ("errors" in result) {
+          return {
+            type: "error",
+            errors: result.errors.flatMap((x) => [
+              Colors.bold(x.text),
+              x.location?.file || "",
+              Colors.dim(x.location?.line, "│", x.location?.lineText),
+            ]),
+          };
+        }
+
         return {
           type: "error",
-          errors: result.errors.flatMap((x) => [
-            Colors.bold(x.text),
-            x.location?.file || "",
-            Colors.dim(x.location?.line, "│", x.location?.lineText),
-          ]),
+          errors: [ex.toString()],
         };
       }
     },

@@ -130,6 +130,8 @@ We can rewrite the above test so that instead of calling `Article.create()`, you
 To call the GraphQL API in our test, we need to know the API's URL. We create a [`Parameter`](config.md#parameters) in `stacks/Api.ts`:
 
 ```ts title="stacks/Api.ts"
+import { Config } from "sst/constructs";
+
 new Config.Parameter(stack, "API_URL", {
   value: api.url,
 });
