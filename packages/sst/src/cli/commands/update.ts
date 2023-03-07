@@ -1,6 +1,6 @@
 import type { Program } from "../program.js";
 
-const PACKAGE_MATCH = ["sst", "aws-cdk", "@aws-cdk", "constructs"];
+const PACKAGE_MATCH = ["sst", "astro-sst", "aws-cdk", "@aws-cdk", "constructs"];
 
 const FIELDS = ["dependencies", "devDependencies"];
 
@@ -59,7 +59,8 @@ export const update = (program: Program) =>
           for (const [pkg, existing] of Object.entries(deps)) {
             if (!PACKAGE_MATCH.some((x) => pkg.startsWith(x))) continue;
             const desired = (() => {
-              if (pkg === "sst") return metadata.version;
+              // Both sst and astro-sst should be sharing the same version
+              if (["sst", "astro-sst"].includes(pkg)) return metadata.version;
               if (pkg === "constructs") return metadata.dependencies.constructs;
               if (pkg.endsWith("alpha"))
                 return metadata.dependencies["@aws-cdk/aws-apigatewayv2-alpha"];
