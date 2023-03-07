@@ -69,7 +69,7 @@ export default {
   },
   stacks(app) {
     app.setDefaultFunctionProps({
-      runtime: "nodejs16.x",
+      runtime: "nodejs18.x",
       architecture: "arm_64",
     })
 
@@ -97,7 +97,7 @@ export default {
 1. In stacks code, process.env.IS_LOCAL is no longer available. Please use app.mode to see if it's running in "dev" mode. `app.local` will continue to work but likely will be deprecated at some point.
 1. SST no longer requires a DebugStack to be deployed - feel free to delete this from your AWS console.
 1. Function
-    1. Default runtime is `nodejs18.x`
+    1. Default runtime is `nodejs16.x`
     1. Default format is `esm`
     1. We've made changes to the `FunctionProps` API so you should be seeing type errors around the `bundle` property. Most of the options there have been moved to a `nodejs` property instead.
         ```diff
