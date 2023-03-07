@@ -3,7 +3,7 @@ import path from "path";
 import { fetch } from "undici";
 import fs from "fs";
 import url from "url";
-import type { Context as LambdaContext } from "aws-lambda";
+import { Context as LambdaContext } from "aws-lambda";
 // import { createRequire } from "module";
 // global.require = createRequire(import.meta.url);
 
@@ -20,8 +20,10 @@ const createLambdaContext = (
   invokedFunctionArn,
   getRemainingTimeInMillis: () =>
     Math.max(Number(deadlineMs) - Math.round(Date.now()), 0),
-  identity: JSON.parse(identity),
-  clientContext: JSON.parse(clientContext),
+  // If identity is null, we want to mimick AWS behavior and return undefined
+  identity:  JSON.parse(identity) ?? undefined,
+  // If clientContext is null, we want to mimick AWS behavior and return undefined
+  clientContext:  JSON.parse(clientContext) ?? undefined,
   functionName: process.env.AWS_LAMBDA_FUNCTION_NAME!,
   functionVersion: "$LATEST",
   memoryLimitInMB: process.env.AWS_LAMBDA_FUNCTION_MEMORY_SIZE!,

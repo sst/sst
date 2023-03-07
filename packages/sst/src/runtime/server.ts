@@ -97,10 +97,10 @@ export const useRuntimeServer = Context.memo(async () => {
         "Lambda-Runtime-Invoked-Function-Arn":
           payload.context.invokedFunctionArn,
         "Lambda-Runtime-Client-Context": JSON.stringify(
-          payload.context.clientContext || {}
+          payload.context.clientContext || null
         ),
         "Lambda-Runtime-Cognito-Identity": JSON.stringify(
-          payload.context.identity || {}
+          payload.context.identity || null
         ),
         "Lambda-Runtime-Log-Group-Name": payload.context.logGroupName,
         "Lambda-Runtime-Log-Stream-Name": payload.context.logStreamName,

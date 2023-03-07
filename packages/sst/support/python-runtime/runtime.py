@@ -27,8 +27,10 @@ class Context(object):
         self.aws_request_id = aws_request_id
         self.memory_limit_in_mb = os.environ['AWS_LAMBDA_FUNCTION_MEMORY_SIZE']
         self.deadline_ms = deadline_ms
-        self.identity = Identity(**json.loads(identity))
-        self.client_context = ClientContext(**json.loads(client_context))
+        # If identity is null, we want to mimick AWS behavior and return an object with None values
+        self.identity = Identity(**json.loads(identity)) if identity != 'null' else Identity(cognito_identity_id = None, cognito_identity_pool_id = None)
+        # If client_context is null, we want to mimick AWS behavior and return None
+        self.client_context = ClientContext(**json.loads(client_context)) if client_context != 'null' else None
         self.log_group_name = log_group_name
         self.log_stream_name = log_stream_name
 
