@@ -2,8 +2,8 @@ import fs from "fs";
 import url from "url";
 import path from "path";
 import * as esbuild from "esbuild";
-import { createRequire } from "module";
-const require = createRequire(import.meta.url);
+import spawn from "cross-spawn";
+import { gray } from "colorette";
 
 import { Duration as CdkDuration, RemovalPolicy } from "aws-cdk-lib";
 import * as logs from "aws-cdk-lib/aws-logs";
@@ -17,14 +17,6 @@ import { toCdkSize } from "./util/size.js";
 import { toCdkDuration } from "./util/duration.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
-
-type RemixConfig = {
-  assetsBuildDirectory: string;
-  publicPath: string;
-  serverBuildPath: string;
-  serverBuildTarget: string;
-  server?: string;
-};
 
 /**
  * The `RemixSite` construct is a higher level CDK construct that makes it easy to create a Remix app.
@@ -43,13 +35,6 @@ export class RemixSite extends SsrSite {
   protected initBuildConfig() {
     const { path: sitePath } = this.props;
 
-    const configDefaults: RemixConfig = {
-      assetsBuildDirectory: "public/build",
-      publicPath: "/build/",
-      serverBuildPath: "build/index.js",
-      serverBuildTarget: "node-cjs",
-    };
-
     // Validate config path
     const configPath = path.resolve(sitePath, "remix.config.js");
     if (!fs.existsSync(configPath)) {
@@ -57,23 +42,26 @@ export class RemixSite extends SsrSite {
         `Could not find "remix.config.js" at expected path "${configPath}".`
       );
     }
-
-    // Load config
-    const userConfig = require(configPath);
-    const config: RemixConfig = {
-      ...configDefaults,
-      ...userConfig,
-    };
-
-    // Validate config
-    Object.keys(configDefaults).forEach((key) => {
-      const k = key as keyof RemixConfig;
-      if (config[k] !== configDefaults[k]) {
-        throw new Error(
-          `RemixSite: remix.config.js "${key}" must be "${configDefaults[k]}".`
-        );
+    console.log(gray(`Verifying RemixSite config ${configPath}`));
+    const result = spawn.sync(
+      "node",
+      [
+        path.join(__dirname, "../../support/remix-config-verifier/verify.cjs"),
+        "--path",
+        path.resolve(configPath),
+      ],
+      {
+        cwd: sitePath,
+        stdio: "inherit",
+        env: process.env,
       }
-    });
+    );
+    if (result.status !== 0) {
+      console.error(
+        `There was a problem with the "${this.node.id}" RemixSite config.`
+      );
+      process.exit(1);
+    }
 
     return {
       serverBuildOutputFile: "build/index.js",
