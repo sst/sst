@@ -3,7 +3,7 @@
 import path from "path";
 import { Kysely, Migrator, NO_MIGRATIONS } from "kysely";
 import { DataApiDialect } from "kysely-data-api";
-import RDSDataService from "aws-sdk/clients/rdsdataservice";
+import { RDSData } from "@aws-sdk/client-rds-data";
 import url from "url";
 
 export async function handler(evt) {
@@ -11,7 +11,7 @@ export async function handler(evt) {
     dialect: new DataApiDialect({
       mode: process.env.RDS_ENGINE_MODE,
       driver: {
-        client: new RDSDataService(),
+        client: new RDSData({}),
         database: evt?.database || process.env.RDS_DATABASE,
         secretArn: process.env.RDS_SECRET,
         resourceArn: process.env.RDS_ARN,
