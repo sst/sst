@@ -454,12 +454,12 @@ export interface NodeJSProps {
   /**
    * Configure format
    *
-   * @default "cjs"
+   * @default "esm"
    *
    * @example
    * ```js
    * nodejs: {
-   *   format: "esm"
+   *   format: "cjs"
    * }
    * ```
    */
