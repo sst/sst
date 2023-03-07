@@ -36,7 +36,7 @@ export const bind = (program: Program) =>
             AWS_REGION: project.config.region,
           },
           stdio: "inherit",
-          shell: process.env.SHELL || true,
+          shell: true,
         });
         process.exitCode = result.status || undefined;
       }
