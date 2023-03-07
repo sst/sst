@@ -18,12 +18,11 @@ const createLambdaContext = (
 ): LambdaContext => ({
   awsRequestId,
   invokedFunctionArn,
-  getRemainingTimeInMillis: () =>
-    Math.max(Number(deadlineMs) - Date.now(), 0),
+  getRemainingTimeInMillis: () => Math.max(Number(deadlineMs) - Date.now(), 0),
   // If identity is null, we want to mimick AWS behavior and return undefined
-  identity:  JSON.parse(identity) ?? undefined,
+  identity: JSON.parse(identity) ?? undefined,
   // If clientContext is null, we want to mimick AWS behavior and return undefined
-  clientContext:  JSON.parse(clientContext) ?? undefined,
+  clientContext: JSON.parse(clientContext) ?? undefined,
   functionName: process.env.AWS_LAMBDA_FUNCTION_NAME!,
   functionVersion: "$LATEST",
   memoryLimitInMB: process.env.AWS_LAMBDA_FUNCTION_MEMORY_SIZE!,
