@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.1.14
+
+### Patch Changes
+
+- [#2616](https://github.com/serverless-stack/sst/pull/2616) [`ac124bc7e`](https://github.com/serverless-stack/sst/commit/ac124bc7ead276c1e7b351ebd70b3c57ff84e751) Thanks [@iloewensen](https://github.com/iloewensen)! - RDS: use AWS SDK v3 in migration script
+
 ## 2.1.13
 
 ### Patch Changes
