@@ -151,12 +151,10 @@ importers:
   packages/create-sst:
     specifiers:
       '@tsconfig/node14': ^1.0.1
-      '@types/diff-match-patch': ^1.0.32
       '@types/inquirer': ^8.2.1
       '@types/node': ^17.0.23
       cli-spinners: ^2.6.1
       commander: ^9.1.0
-      diff-match-patch: ^1.0.5
       fast-json-patch: ^3.1.1
       inquirer: ^8.2.2
       node-fetch: 3.2.10
@@ -167,7 +165,6 @@ importers:
     dependencies:
       cli-spinners: 2.7.0
       commander: 9.4.1
-      diff-match-patch: 1.0.5
       fast-json-patch: 3.1.1
       inquirer: 8.2.5
       node-fetch: 3.2.10
@@ -176,7 +173,6 @@ importers:
       undici: 5.12.0
     devDependencies:
       '@tsconfig/node14': 1.0.3
-      '@types/diff-match-patch': 1.0.32
       '@types/inquirer': 8.2.5
       '@types/node': 17.0.45
       typescript: 4.8.4
@@ -9149,10 +9145,6 @@ packages:
       '@types/ms': 0.7.31
     dev: true
 
-  /@types/diff-match-patch/1.0.32:
-    resolution: {integrity: sha512-bPYT5ECFiblzsVzyURaNhljBH2Gh1t9LowgUwciMrNAhFewLkHT2H0Mto07Y4/3KCOGZHRQll3CTtQZ0X11D/A==}
-    dev: true
-
   /@types/eslint-scope/3.7.4:
     resolution: {integrity: sha512-9K4zoImiZc3HlIp6AVUDE4CWYx22a+lhSZMYNpbjW04+YF0KWj4pJXnEMjdnFTiQibFFmElcsasJXDbdI/EPhA==}
     dependencies:
@@ -10275,7 +10267,7 @@ packages:
   /axios/0.21.4_debug@4.3.4:
     resolution: {integrity: sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==}
     dependencies:
-      follow-redirects: 1.15.2_debug@4.3.4
+      follow-redirects: 1.15.2
     transitivePeerDependencies:
       - debug
 
@@ -10297,7 +10289,7 @@ packages:
   /axios/0.25.0_debug@4.3.4:
     resolution: {integrity: sha512-cD8FOb0tRH3uuEe6+evtAbgJtfxr7ly3fQjYcMcuPlgkwVS9xboaVIpcDV+cYQe+yGykgwZCs1pzjntcGa6l5g==}
     dependencies:
-      follow-redirects: 1.15.2_debug@4.3.4
+      follow-redirects: 1.15.2
     transitivePeerDependencies:
       - debug
     dev: true
@@ -13481,17 +13473,6 @@ packages:
     peerDependenciesMeta:
       debug:
         optional: true
-
-  /follow-redirects/1.15.2_debug@4.3.4:
-    resolution: {integrity: sha512-VQLG33o04KaQ8uYi2tVNbdrWp1QWxNNea+nmIB4EVM28v0hmP17z7aG1+wAkNzVq4KeXTq3221ye5qTJP91JwA==}
-    engines: {node: '>=4.0'}
-    peerDependencies:
-      debug: '*'
-    peerDependenciesMeta:
-      debug:
-        optional: true
-    dependencies:
-      debug: 4.3.4
 
   /for-each/0.3.3:
     resolution: {integrity: sha512-jqYfLp7mo9vIyQf8ykW2v7A+2N4QjeCeI5+Dz9XraiO1ign81wjiH7Fb9vSOWvQfNtmSa4H2RoQTrrXivdUZmw==}

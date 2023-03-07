@@ -1,7 +1,0 @@
-@@ -25,16 +25,56 @@
- m %22sst%22;
-+%0Aimport %7B Default %7D from %22./stacks/Default%22;
-@@ -192,16 +192,35 @@
- (app) %7B%0A
-+    app.stack(Default)%0A
-   %7D,%0A%7D s
