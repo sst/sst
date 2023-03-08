@@ -1,5 +1,11 @@
 # create-sst
 
+## 2.1.15
+
+### Patch Changes
+
+- [`186b545b3`](https://github.com/serverless-stack/sst/commit/186b545b3795f6a285534ff05d196ab8a04e3daa) Thanks [@fwang](https://github.com/fwang)! - create-sst: fix template formatting issue
+
 ## 2.1.14
 
 ## 2.1.13
