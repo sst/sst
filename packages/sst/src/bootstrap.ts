@@ -62,7 +62,7 @@ export const useBootstrap = Context.memo(async () => {
       await bootstrapCDK();
     }
     if (needToBootstrapSST) {
-      await bootstrapSST({});
+      await bootstrapSST();
 
       // fetch bootstrap status
       sstStatus = await loadSSTStatus();
@@ -119,7 +119,15 @@ async function loadCDKStatus() {
   }
 }
 
-export async function bootstrapSST(tags: Record<string, string>) {
+export async function bootstrapSST(
+  tags?: Record<string, string>,
+  publicAccessBlockConfiguration?: boolean
+) {
+  // Normalize input
+  tags = tags || {};
+  publicAccessBlockConfiguration =
+    publicAccessBlockConfiguration === false ? false : true;
+
   // Create bootstrap stack
   const project = useProject();
   const app = new App();
@@ -139,7 +147,9 @@ export async function bootstrapSST(tags: Record<string, string>) {
     encryption: BucketEncryption.S3_MANAGED,
     removalPolicy: RemovalPolicy.DESTROY,
     autoDeleteObjects: true,
-    blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+    blockPublicAccess: publicAccessBlockConfiguration
+      ? BlockPublicAccess.BLOCK_ALL
+      : undefined,
   });
 
   // Create Function and subscribe to CloudFormation events
