@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.1.17
+
+### Patch Changes
+
+- [#2590](https://github.com/serverless-stack/sst/pull/2590) [`1df37b1dc`](https://github.com/serverless-stack/sst/commit/1df37b1dc7707dbecf7e92d5b1fc7463eb725eae) Thanks [@thdxr](https://github.com/thdxr)! - Release next version of auth under `future` namespace for people who want to try it out early
+
 ## 2.1.16
 
 ### Patch Changes
