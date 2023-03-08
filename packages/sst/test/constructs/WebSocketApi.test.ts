@@ -37,7 +37,7 @@ const manageConnectionsPolicy = {
         { Ref: "AWS::Partition" },
         ":execute-api:us-east-1:my-account:",
         { Ref: "ApiCD79AAA0" },
-        "/test/POST/*",
+        "/*/*/@connections/*",
       ],
     ],
   },
@@ -1132,7 +1132,7 @@ test("attachPermissions-after-addRoutes", async () => {
                   "Fn::ImportValue":
                     "test-app-stackA:ExportsOutputRefApiCD79AAA0A1504A18",
                 },
-                "/test/POST/*",
+                "/*/*/@connections/*",
               ],
             ],
           },
@@ -1237,7 +1237,7 @@ test("bind-after-addRoutes", async () => {
                   "Fn::ImportValue":
                     "test-app-stackA:ExportsOutputRefApiCD79AAA0A1504A18",
                 },
-                "/test/POST/*",
+                "/*/*/@connections/*",
               ],
             ],
           },
