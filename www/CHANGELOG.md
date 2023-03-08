@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.0.2
+
+### Patch Changes
+
+- [`a061a0d1f`](https://github.com/serverless-stack/sst/commit/a061a0d1f8df6cb9594d3bd37bd5ad314e044149) Thanks [@fwang](https://github.com/fwang)! - Bootstrap: add --public-access-block-configuration option
+
 ## 2.0.1
 
 ### Patch Changes
