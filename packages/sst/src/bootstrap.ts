@@ -250,7 +250,7 @@ async function bootstrapCDK() {
           AWS_PROFILE: profile,
         },
         stdio: "pipe",
-        shell: process.env.SHELL || true,
+        shell: true,
       }
     );
     let stderr = "";
