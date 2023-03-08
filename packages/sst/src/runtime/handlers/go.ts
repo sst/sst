@@ -71,7 +71,7 @@ export const useGoHandler = Context.memo(async () => {
             }
           );
         } catch (ex) {
-          throw new VisibleError("Failed to build");
+          throw new VisibleError(`Failed to build ${ex}`);
         }
       }
 
