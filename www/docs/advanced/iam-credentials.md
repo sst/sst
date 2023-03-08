@@ -137,7 +137,7 @@ For example, you might have full `AdministratorAccess` permission, but you can l
 
 Alternatively, you might not want everyone on the team to have the permissions to create Lambda functions directly in the AWS console or via AWS CLI, but they can trigger a deployment, and let CloudFormation create Lambda functions as part of the SST app.
 
-Use the [`--role-arn`](../packages/sst.md#global-options) option to configure the CloudFormation service role that SST will use. [Read more about this option here](../packages/sst.md#global-options).
+Use the [`--role`](../packages/sst.md#global-options) option to configure the CloudFormation service role that SST will use. [Read more about this option here](../packages/sst.md#global-options).
 
 ## Bootstrap permissions
 
