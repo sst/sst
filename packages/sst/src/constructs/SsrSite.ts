@@ -258,10 +258,15 @@ export interface SsrSiteProps {
  */
 export class SsrSite extends Construct implements SSTConstruct {
   public readonly id: string;
-  protected props: Omit<SsrSiteProps, "path"> & {
-    path: string;
-    timeout: number | Duration;
-    memorySize: number | Size;
+  protected props: SsrSiteProps & {
+    path: Exclude<SsrSiteProps["path"], undefined>;
+    runtime: Exclude<SsrSiteProps["runtime"], undefined>;
+    timeout: Exclude<SsrSiteProps["timeout"], undefined>;
+    memorySize: Exclude<SsrSiteProps["memorySize"], undefined>;
+    waitForInvalidation: Exclude<
+      SsrSiteProps["waitForInvalidation"],
+      undefined
+    >;
   };
   private doNotDeploy: boolean;
   protected buildConfig: SsrBuildConfig;
@@ -706,15 +711,7 @@ export class SsrSite extends Construct implements SSTConstruct {
   }
 
   private createFunctionPermissionsForRegional() {
-    const { permissions } = this.props;
-
     this.bucket.grantReadWrite(this.serverLambdaForRegional!.role!);
-    if (permissions) {
-      attachPermissionsToRole(
-        this.serverLambdaForRegional!.role as Role,
-        permissions
-      );
-    }
   }
 
   private createFunctionPermissionsForEdge() {

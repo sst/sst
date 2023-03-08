@@ -134,7 +134,7 @@ export const useNodeHandler = Context.memo(async () => {
           ? {
               format: "esm",
               target: "esnext",
-              mainFields: isESM ? ["module", "main"] : undefined,
+              mainFields: ["module", "main"],
               banner: {
                 js: [
                   `import { createRequire as topLevelCreateRequire } from 'module';`,

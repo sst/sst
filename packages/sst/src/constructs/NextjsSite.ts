@@ -43,10 +43,15 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "edge"> {
  * ```
  */
 export class NextjsSite extends SsrSite {
-  protected declare props: Omit<NextjsSiteProps, "path"> & {
-    path: string;
-    timeout: number | Duration;
-    memorySize: number | Size;
+  protected declare props: NextjsSiteProps & {
+    path: Exclude<NextjsSiteProps["path"], undefined>;
+    runtime: Exclude<NextjsSiteProps["runtime"], undefined>;
+    timeout: Exclude<NextjsSiteProps["timeout"], undefined>;
+    memorySize: Exclude<NextjsSiteProps["memorySize"], undefined>;
+    waitForInvalidation: Exclude<
+      NextjsSiteProps["waitForInvalidation"],
+      undefined
+    >;
   };
 
   constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
@@ -65,15 +70,23 @@ export class NextjsSite extends SsrSite {
   }
 
   protected createFunctionForRegional(): lambda.Function {
-    const { runtime, timeout, memorySize, permissions, environment, cdk } =
-      this.props;
+    const {
+      runtime,
+      timeout,
+      memorySize,
+      bind,
+      permissions,
+      environment,
+      cdk,
+    } = this.props;
     const ssrFn = new SsrFunction(this, `ServerFunction`, {
       description: "Server handler for Next.js",
-      bundlePath: path.join(this.props.path, ".open-next", "server-function"),
+      bundle: path.join(this.props.path, ".open-next", "server-function"),
       handler: "index.handler",
       runtime,
       timeout,
       memorySize,
+      bind,
       permissions,
       environment,
       ...cdk?.server,
@@ -123,8 +136,9 @@ export class NextjsSite extends SsrSite {
 
     if (fs.existsSync(middlewarePath)) {
       return new EdgeFunction(this, "Middleware", {
-        bundlePath: middlewarePath,
+        bundle: middlewarePath,
         handler: "index.handler",
+        runtime: "nodejs18.x",
         timeout: 5,
         memorySize: 128,
         permissions,

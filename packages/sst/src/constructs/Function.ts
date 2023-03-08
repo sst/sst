@@ -594,7 +594,7 @@ export class Function extends lambda.Function implements SSTConstruct {
   public readonly id: string;
   public readonly _isLiveDevEnabled: boolean;
   /** @internal */
-  public _disableBind?: boolean;
+  public _doNotAllowOthersToBind?: boolean;
   private functionUrl?: lambda.FunctionUrl;
   private props: FunctionProps;
   private allBindings: SSTConstruct[] = [];
@@ -1034,7 +1034,7 @@ export class Function extends lambda.Function implements SSTConstruct {
         ...(inheritedProps || {}),
         handler: definition,
       });
-      fn._disableBind = true;
+      fn._doNotAllowOthersToBind = true;
       return fn;
     } else if (definition instanceof Function) {
       if (inheritedProps && Object.keys(inheritedProps).length > 0) {
@@ -1054,7 +1054,7 @@ export class Function extends lambda.Function implements SSTConstruct {
         id,
         Function.mergeProps(inheritedProps, definition)
       );
-      fn._disableBind = true;
+      fn._doNotAllowOthersToBind = true;
       return fn;
     }
     throw new Error(`Invalid function definition for the "${id}" Function`);

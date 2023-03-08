@@ -408,7 +408,7 @@ export class Job extends Construct implements SSTConstruct {
       },
       permissions,
     });
-    fn._disableBind = true;
+    fn._doNotAllowOthersToBind = true;
     return fn;
   }
 
@@ -433,7 +433,7 @@ export class Job extends Construct implements SSTConstruct {
       },
       enableLiveDev: false,
     });
-    fn._disableBind = true;
+    fn._doNotAllowOthersToBind = true;
     return fn;
   }
 
