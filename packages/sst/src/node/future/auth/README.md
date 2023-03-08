@@ -168,7 +168,7 @@ export async function get(ctx: APIContext) {
 
 Make sure the auth construct is bound to your API like in the example above. Then you can just call `useSession()` to access the current session.
 
-```
+```js
 import { ApiHandler } from "sst/node/api"
 
 export const handler = ApiHandler(() => {
