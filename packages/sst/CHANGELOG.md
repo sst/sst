@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.1.16
+
+### Patch Changes
+
+- [`a9bd02b15`](https://github.com/serverless-stack/sst/commit/a9bd02b1513b7b8a42579fcff606a40e8a582151) Thanks [@thdxr](https://github.com/thdxr)! - Fix go builds failing without printing error
+
 ## 2.1.15
 
 ### Patch Changes
