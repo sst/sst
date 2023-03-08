@@ -204,7 +204,8 @@ export class Stack extends cdk.Stack {
         typeof value === "string"
           ? new cdk.CfnOutput(this, `SSTStackOutput${key}`, { value })
           : new cdk.CfnOutput(this, `SSTStackOutput${key}`, value);
-      output.overrideLogicalId(key);
+      // CloudFormation only allows alphanumeric characters in the output name.
+      output.overrideLogicalId(key.replace(/[^A-Za-z0-9]/g, ""));
     });
   }
 
