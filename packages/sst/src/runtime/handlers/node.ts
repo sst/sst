@@ -181,6 +181,19 @@ export const useNodeHandler = Context.memo(async () => {
             ),
         ];
 
+        // TODO bubble up the warnings
+        const warnings: string[] = [];
+        Object.entries(result.metafile?.inputs || {}).forEach(
+          ([inputPath, { imports }]) =>
+            imports
+              .filter(({ path }) => path.includes("sst/constructs"))
+              .forEach(({ path }) => {
+                warnings.push(
+                  `You are importing from "${path}" in "${inputPath}". Did you mean to import from "sst/node"?`
+                );
+              })
+        );
+
         async function find(dir: string, target: string): Promise<string> {
           if (dir === "/")
             throw new VisibleError("Could not find a package.json file");
