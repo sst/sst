@@ -31,6 +31,7 @@ export class SolidStartSite extends SsrSite {
       timeout,
       memorySize,
       bind,
+      nodejs,
       permissions,
       environment,
       cdk,
@@ -46,6 +47,7 @@ export class SolidStartSite extends SsrSite {
       timeout,
       nodejs: {
         format: "esm",
+        ...nodejs,
       },
       bind,
       environment,
@@ -60,8 +62,15 @@ export class SolidStartSite extends SsrSite {
   }
 
   protected createFunctionForEdge(): EdgeFunction {
-    const { runtime, timeout, memorySize, bind, permissions, environment } =
-      this.props;
+    const {
+      runtime,
+      timeout,
+      memorySize,
+      bind,
+      permissions,
+      environment,
+      nodejs,
+    } = this.props;
 
     return new EdgeFunction(this, `Server`, {
       scopeOverride: this,
@@ -72,7 +81,10 @@ export class SolidStartSite extends SsrSite {
       bind,
       permissions,
       environment,
-      format: "esm",
+      nodejs: {
+        format: "esm",
+        ...nodejs,
+      },
     });
   }
 }

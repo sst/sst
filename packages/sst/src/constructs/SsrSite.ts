@@ -63,6 +63,7 @@ import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Logger } from "../logger.js";
 import { SSTConstruct, isCDKConstruct } from "./Construct.js";
+import { NodeJSProps } from "./Function.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 import {
   BaseSiteDomainProps,
@@ -90,6 +91,7 @@ export type SsrBuildConfig = {
   clientBuildVersionedSubDir: string;
 };
 
+export interface SsrSiteNodeJSProps extends NodeJSProps {}
 export interface SsrDomainProps extends BaseSiteDomainProps {}
 export interface SsrSiteReplaceProps extends BaseSiteReplaceProps {}
 export interface SsrCdkDistributionProps extends BaseSiteCdkDistributionProps {}
@@ -173,6 +175,10 @@ export interface SsrSiteProps {
    * ```
    */
   runtime?: "nodejs14.x" | "nodejs16.x" | "nodejs18.x";
+  /**
+   * Used to configure nodejs function properties
+   */
+  nodejs?: SsrSiteNodeJSProps;
   /**
    * Attaches the given list of permissions to the SSR function. Configuring this property is equivalent to calling `attachPermissions()` after the site is created.
    * @example

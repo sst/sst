@@ -5,7 +5,7 @@ import fs from "fs/promises";
 import { Construct } from "constructs";
 import { Duration as CdkDuration } from "aws-cdk-lib";
 import { PolicyStatement, Role, Effect } from "aws-cdk-lib/aws-iam";
-import { AssetCode, Code, FunctionProps } from "aws-cdk-lib/aws-lambda";
+import { AssetCode, Code } from "aws-cdk-lib/aws-lambda";
 import {
   Project,
   CfnProject,

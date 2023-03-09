@@ -2,7 +2,6 @@ import fs from "fs";
 import url from "url";
 import path from "path";
 import crypto from "crypto";
-import { BuildOptions, buildSync } from "esbuild";
 import { Construct, IConstruct } from "constructs";
 import {
   Effect,
@@ -12,6 +11,7 @@ import {
   CompositePrincipal,
   ServicePrincipal,
   ManagedPolicy,
+  CfnPolicy,
 } from "aws-cdk-lib/aws-iam";
 import {
   Version,
@@ -26,14 +26,18 @@ import {
   Duration as CdkDuration,
   CfnResource,
   CustomResource,
+  CfnCustomResource,
 } from "aws-cdk-lib";
 
 import { useProject } from "../project.js";
+import { useRuntimeHandlers } from "../runtime/handlers.js";
 import { BaseSiteReplaceProps } from "./BaseSite.js";
 import { SSTConstruct } from "./Construct.js";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Secret } from "./Config.js";
+import { useFunctions, NodeJSProps } from "./Function.js";
+import { useDeferredTasks } from "./deferred_task.js";
 import {
   bindEnvironment,
   bindPermissions,
@@ -53,8 +57,7 @@ export interface EdgeFunctionProps {
   permissions?: Permissions;
   environment?: Record<string, string>;
   bind?: SSTConstruct[];
-  esbuild?: BuildOptions;
-  format: "cjs" | "esm";
+  nodejs?: NodeJSProps;
   scopeOverride?: IConstruct;
 }
 
@@ -65,11 +68,13 @@ export interface EdgeFunctionProps {
 export class EdgeFunction extends Construct {
   public role: Role;
   public functionArn: string;
+  private function: CustomResource;
+  private assetReplacer: CustomResource;
+  private assetReplacerPolicy: Policy;
   private scope: IConstruct;
   private versionId: string;
   private bindingEnvs: Record<string, string>;
   private props: EdgeFunctionProps & {
-    bundle: Exclude<EdgeFunctionProps["bundle"], undefined>;
     environment: Exclude<EdgeFunctionProps["environment"], undefined>;
     permissions: Exclude<EdgeFunctionProps["permissions"], undefined>;
   };
@@ -87,34 +92,71 @@ export class EdgeFunction extends Construct {
 
     this.props = {
       ...props,
-      bundle: props.bundle || "placeholder",
       environment: props.environment || {},
       permissions: props.permissions || [],
     };
 
-    // Build bundle if not prebuilt
-    const { bundle, handler, handlerFilename } = props.bundle
-      ? this.updateBundleWithEnvWrapper()
-      : this.buildBundle();
-    this.props.bundle = bundle;
-    this.props.handler = handler;
+    const { assetBucket, assetKey, handlerFilename } = (
+      props.bundle
+        ? // Case: bundle is pre-built
+          () => {
+            const { asset, handlerFilename } = this.buildAssetFromBundle(
+              props.bundle!,
+              props.handler
+            );
+            return {
+              assetBucket: asset.s3BucketName,
+              assetKey: asset.s3ObjectKey,
+              handlerFilename,
+            };
+          }
+        : // Case: bundle is NOT pre-built
+          () => {
+            this.buildAssetFromHandler((asset, handlerFilename) => {
+              this.updateCodeReplacer(
+                asset.s3BucketName,
+                asset.s3ObjectKey,
+                handlerFilename
+              );
+              this.updateFunctionInUsEast1(
+                asset.s3BucketName,
+                asset.s3ObjectKey
+              );
+            });
+            return {
+              assetBucket: "placeholder",
+              assetKey: "placeholder",
+              handlerFilename: "placeholder",
+            };
+          }
+    )();
 
     // Bind first b/e function's environment variables cannot be added after
     this.bindingEnvs = {};
     this.bind(props.bind || []);
 
-    const asset = this.createCodeAsset();
-    const assetReplacer = this.createCodeReplacer(asset, handlerFilename);
+    const { assetReplacer, assetReplacerPolicy } = this.createCodeReplacer(
+      assetBucket,
+      assetKey,
+      handlerFilename
+    );
     this.role = this.createRole();
-    const bucket = this.createSingletonBucketInUsEast1();
-    const { fn, fnArn } = this.createFunctionInUsEast1(asset, bucket);
+    const lambdaBucket = this.createSingletonBucketInUsEast1();
+    const { fn, fnArn } = this.createFunctionInUsEast1(
+      assetBucket,
+      assetKey,
+      lambdaBucket
+    );
     const { versionId } = this.createVersionInUsEast1(fn, fnArn);
 
     // Deploy after the code is updated
     fn.node.addDependency(assetReplacer);
 
+    this.function = fn;
     this.functionArn = fnArn;
     this.versionId = versionId;
+    this.assetReplacer = assetReplacer;
+    this.assetReplacerPolicy = assetReplacerPolicy;
   }
 
   public get currentVersion(): IVersion {
@@ -129,79 +171,47 @@ export class EdgeFunction extends Construct {
     attachPermissionsToRole(this.role, permissions);
   }
 
-  private buildBundle() {
-    const { handler, format, esbuild, runtime } = this.props;
-    const isESM = format === "esm";
-    const {
-      dir: inputPath,
-      base: inputHandler,
-      name: inputFilename,
-      ext: inputHandlerFunction,
-    } = path.parse(handler);
-    const inputFileExt = this.getHandlerExtension(
-      path.join(inputPath, inputFilename)
-    );
+  private buildAssetFromHandler(
+    onBundled: (asset: Asset, filename: string) => void
+  ) {
+    const { nodejs } = this.props;
 
-    // Create a directory that we will use to create the bundled version
-    // of the "core server build" along with our custom Lamba server handler.
-    const outputPath = path.resolve(
-      path.join(
-        useProject().paths.artifacts,
-        `EdgeFunction-${this.node.id}-${this.node.addr}`
-      )
-    );
-    const outputHandler = inputHandler;
-    const outputFilename = inputFilename;
-    const outputFileExt = isESM ? ".mjs" : ".cjs";
-
-    const { external, ...override } = esbuild || {};
-    const result = buildSync({
-      entryPoints: [handler.replace(inputHandlerFunction, inputFileExt)],
-      platform: "node",
-      external: [
-        ...(isESM || runtime === "nodejs18.x" ? [] : ["aws-sdk"]),
-        ...(external || []),
-      ],
-      metafile: true,
-      bundle: true,
-      ...(isESM
-        ? {
-            format: "esm",
-            target: "esnext",
-            mainFields: ["module", "main"],
-            banner: {
-              js: [
-                `import { createRequire as topLevelCreateRequire } from 'module';`,
-                `const require = topLevelCreateRequire(import.meta.url);`,
-                `import { fileURLToPath as topLevelFileUrlToPath } from "url"`,
-                `const __dirname = topLevelFileUrlToPath(new URL(".", import.meta.url))`,
-                `process.env = { ...process.env, ..."{{ _SST_FUNCTION_ENVIRONMENT_ }}" };`,
-              ].join("\n"),
-            },
-          }
-        : {
-            format: "cjs",
-            target: "node14",
-          }),
-      outfile: path.join(outputPath, outputFilename + outputFileExt),
-      ...override,
+    useFunctions().add(this.node.addr, {
+      ...this.props,
+      nodejs: {
+        ...nodejs,
+        banner: [
+          `process.env = { ...process.env, ..."{{ _SST_FUNCTION_ENVIRONMENT_ }}" };`,
+          nodejs?.banner || "",
+        ].join("\n"),
+      },
     });
 
-    if (result.errors.length > 0) {
-      result.errors.forEach((error) => console.error(error));
-      throw new Error(
-        `There was a problem bundling the SSR function for the "${this.scope.node.id}" Site.`
-      );
-    }
+    useDeferredTasks().add(async () => {
+      // Build function
+      const bundle = await useRuntimeHandlers().build(this.node.addr, "deploy");
 
-    return {
-      bundle: outputPath,
-      handler: outputHandler,
-      handlerFilename: outputFilename + outputFileExt,
-    };
+      // create wrapper that calls the handler
+      if (bundle.type === "error")
+        throw new Error(
+          `There was a problem bundling the SSR function for the "${this.scope.node.id}" Site.`
+        );
+
+      const asset = new Asset(this.scope, `FunctionAsset`, {
+        path: bundle.out,
+      });
+
+      // Get handler filename
+      const isESM = (nodejs?.format || "esm") === "esm";
+      const parsed = path.parse(bundle.handler);
+      const handlerFilename = `${parsed.dir}/${parsed.name}${
+        isESM ? ".mjs" : ".cjs"
+      }`;
+      onBundled(asset, handlerFilename);
+    });
   }
 
-  private updateBundleWithEnvWrapper() {
+  private buildAssetFromBundle(bundle: string, handler: string) {
     // We expose an environment variable token which is used by the code
     // replacer to inject the environment variables assigned to the
     // EdgeFunction construct.
@@ -215,7 +225,6 @@ export class EdgeFunction extends Construct {
     // is that environment variables cannot be toggled after deployment,
     // each change to one requires a redeployment.
 
-    const { bundle, handler } = this.props;
     const {
       dir: inputPath,
       name: inputFilename,
@@ -232,7 +241,12 @@ export class EdgeFunction extends Construct {
       `process.env = { ...process.env, ..."{{ _SST_FUNCTION_ENVIRONMENT_ }}" };\n${fileData}`
     );
 
-    return { bundle, handler, handlerFilename };
+    // Create asset
+    const asset = new Asset(this.scope, `FunctionAsset`, {
+      path: bundle,
+    });
+
+    return { handlerFilename, asset };
   }
 
   private bind(constructs: SSTConstruct[]): void {
@@ -273,15 +287,11 @@ export class EdgeFunction extends Construct {
     });
   }
 
-  private createCodeAsset() {
-    const { bundle } = this.props;
-
-    return new Asset(this.scope, `FunctionAsset`, {
-      path: bundle,
-    });
-  }
-
-  private createCodeReplacer(asset: Asset, handlerFilename: string) {
+  private createCodeReplacer(
+    assetBucket: string,
+    assetKey: string,
+    handlerFilename: string
+  ) {
     const { environment } = this.props;
 
     const replacements: BaseSiteReplaceProps[] = [
@@ -310,7 +320,7 @@ export class EdgeFunction extends Construct {
         new PolicyStatement({
           effect: Effect.ALLOW,
           actions: ["s3:GetObject", "s3:PutObject"],
-          resources: [`arn:${stack.partition}:s3:::${asset.s3BucketName}/*`],
+          resources: [`arn:${stack.partition}:s3:::${assetBucket}/*`],
         }),
       ],
     });
@@ -320,14 +330,34 @@ export class EdgeFunction extends Construct {
       serviceToken: stack.customResourceHandler.functionArn,
       resourceType: "Custom::AssetReplacer",
       properties: {
-        bucket: asset.s3BucketName,
-        key: asset.s3ObjectKey,
+        bucket: assetBucket,
+        key: assetKey,
         replacements,
       },
     });
     resource.node.addDependency(policy);
 
-    return resource;
+    return { assetReplacer: resource, assetReplacerPolicy: policy };
+  }
+
+  private updateCodeReplacer(
+    assetBucket: string,
+    assetKey: string,
+    handlerFilename: string
+  ) {
+    const stack = Stack.of(this) as Stack;
+
+    const cfnReplacer = this.assetReplacer.node
+      .defaultChild as CfnCustomResource;
+    cfnReplacer.addPropertyOverride("bucket", assetBucket);
+    cfnReplacer.addPropertyOverride("key", assetKey);
+    cfnReplacer.addPropertyOverride("replacements.0.files", handlerFilename);
+
+    const cfnPolicy = this.assetReplacerPolicy.node.defaultChild as CfnPolicy;
+    cfnPolicy.addPropertyOverride(
+      "PolicyDocument.Statement.0.Resource",
+      `arn:${stack.partition}:s3:::${assetBucket}/*`
+    );
   }
 
   private createRole() {
@@ -399,7 +429,11 @@ export class EdgeFunction extends Construct {
     return resource;
   }
 
-  private createFunctionInUsEast1(asset: Asset, bucket: CustomResource) {
+  private createFunctionInUsEast1(
+    assetBucket: string,
+    assetKey: string,
+    lambdaBucket: CustomResource
+  ) {
     const { handler, runtime, timeout, memorySize } = this.props;
 
     // Do not recreate if exist
@@ -435,13 +469,13 @@ export class EdgeFunction extends Construct {
       resourceType: "Custom::SSTEdgeLambda",
       properties: {
         FunctionNamePrefix: `${Stack.of(this).stackName}-${resId}`,
-        FunctionBucket: bucket.getAttString("BucketName"),
+        FunctionBucket: lambdaBucket.getAttString("BucketName"),
         FunctionParams: {
           Description: `${this.node.id} handler`,
           Handler: handler,
           Code: {
-            S3Bucket: asset.s3BucketName,
-            S3Key: asset.s3ObjectKey,
+            S3Bucket: assetBucket,
+            S3Key: assetKey,
           },
           Runtime:
             runtime === "nodejs14.x"
@@ -462,6 +496,14 @@ export class EdgeFunction extends Construct {
       },
     });
     return { fn, fnArn: fn.getAttString("FunctionArn") };
+  }
+
+  private updateFunctionInUsEast1(assetBucket: string, assetKey: string) {
+    const cfnLambda = this.function.node.defaultChild as CfnCustomResource;
+    cfnLambda.addPropertyOverride("FunctionParams.Code", {
+      S3Bucket: assetBucket,
+      S3Key: assetKey,
+    });
   }
 
   private createVersionInUsEast1(fn: CustomResource, fnArn: string) {

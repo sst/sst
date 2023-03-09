@@ -129,6 +129,7 @@ export class RemixSite extends SsrSite {
       permissions,
       environment,
       bind,
+      nodejs,
       cdk,
     } = this.props;
 
@@ -144,8 +145,12 @@ export class RemixSite extends SsrSite {
       timeout,
       nodejs: {
         format: "cjs",
-        install: ["sharp"],
-        esbuild,
+        ...nodejs,
+        esbuild: {
+          ...esbuild,
+          ...nodejs?.esbuild,
+          inject: [...(nodejs?.esbuild?.inject || []), ...esbuild.inject],
+        },
       },
       bind,
       environment,
@@ -160,8 +165,15 @@ export class RemixSite extends SsrSite {
   }
 
   protected createFunctionForEdge(): EdgeFunction {
-    const { runtime, timeout, memorySize, bind, permissions, environment } =
-      this.props;
+    const {
+      runtime,
+      timeout,
+      memorySize,
+      bind,
+      permissions,
+      environment,
+      nodejs,
+    } = this.props;
 
     const { handler, esbuild } =
       this.createServerLambdaBundle("edge-server.js");
@@ -175,8 +187,15 @@ export class RemixSite extends SsrSite {
       bind,
       environment,
       permissions,
-      format: "cjs",
-      esbuild,
+      nodejs: {
+        format: "cjs",
+        ...nodejs,
+        esbuild: {
+          ...esbuild,
+          ...nodejs?.esbuild,
+          inject: [...(nodejs?.esbuild?.inject || []), ...esbuild.inject],
+        },
+      },
     });
   }
 }

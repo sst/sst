@@ -45,6 +45,7 @@ export class AstroSite extends SsrSite {
       memorySize,
       permissions,
       environment,
+      nodejs,
       bind,
       cdk,
     } = this.props;
@@ -58,6 +59,7 @@ export class AstroSite extends SsrSite {
       timeout,
       nodejs: {
         format: "esm",
+        ...nodejs,
       },
       bind,
       environment,
@@ -72,8 +74,15 @@ export class AstroSite extends SsrSite {
   }
 
   protected createFunctionForEdge(): EdgeFunction {
-    const { runtime, timeout, memorySize, bind, permissions, environment } =
-      this.props;
+    const {
+      runtime,
+      timeout,
+      memorySize,
+      bind,
+      permissions,
+      environment,
+      nodejs,
+    } = this.props;
 
     return new EdgeFunction(this, `Server`, {
       scopeOverride: this,
@@ -84,7 +93,10 @@ export class AstroSite extends SsrSite {
       bind,
       environment,
       permissions,
-      format: "esm",
+      nodejs: {
+        format: "esm",
+        ...nodejs,
+      },
     });
   }
 }
