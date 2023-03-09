@@ -1,5 +1,11 @@
 # create-sst
 
+## 2.1.18
+
+### Patch Changes
+
+- [`3db05a0e9`](https://github.com/serverless-stack/sst/commit/3db05a0e9b7a116b1285d10cc142bea496a47fa5) Thanks [@thdxr](https://github.com/thdxr)! - create-sst: ensure root tsconfig does not typecheck packages
+
 ## 2.1.17
 
 ## 2.1.16
