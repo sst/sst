@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.1.19
+
+### Patch Changes
+
+- [`e5e2042f5`](https://github.com/serverless-stack/sst/commit/e5e2042f5bd648698b11078a56e54156c289852a) Thanks [@thdxr](https://github.com/thdxr)! - Fix for copyFiles breaking under sst dev when in nested folders
+
 ## 2.1.18
 
 ### Patch Changes
