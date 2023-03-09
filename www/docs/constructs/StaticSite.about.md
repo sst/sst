@@ -2,7 +2,7 @@ The `StaticSite` construct is a higher level CDK construct that makes it easy to
 
 - The assets are deployed to an S3 Bucket, and served out from a CloudFront CDN for fast content delivery.
 - It enables you to [configure custom domains](#custom-domains) for the website URL.
-- It also enable you to [automatically set the environment variables](#environment-variables) for your Astro app directly from the outputs in your SST app.
+- It also enable you to [automatically set the environment variables](#environment-variables) for your static site directly from the outputs in your SST app.
 
 ## Custom domains
 
