@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.1.22
+
+### Patch Changes
+
+- [`ffbd20ca9`](https://github.com/serverless-stack/sst/commit/ffbd20ca91891075f9add628bff4bf51d0a51d59) Thanks [@thdxr](https://github.com/thdxr)! - Disconnect when multiple sst dev sessions are started for the same stage
+
+- [`36c688ad7`](https://github.com/serverless-stack/sst/commit/36c688ad7ab35e945eefa1b3f437438ed35aea5c) Thanks [@fwang](https://github.com/fwang)! - WebSocketApi: fix API Gateway CloudWatch role permissions issue
+
 ## 2.1.21
 
 ### Patch Changes
