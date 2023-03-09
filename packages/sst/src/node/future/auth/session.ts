@@ -31,12 +31,7 @@ const SessionMemo = /* @__PURE__ */ Context.memo(() => {
         key: getPublicKey(),
       })(token);
       return jwt;
-    } catch {
-      return {
-        type: "public",
-        properties: {},
-      };
-    }
+    } catch {}
   }
 
   return {
