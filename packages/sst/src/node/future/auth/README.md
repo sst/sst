@@ -110,7 +110,7 @@ const params = new URLSearchParams({
   response_type: "token",
   provider: "github",
 })
-location.href = import.meta.env.AUTH_URL + "?" + params.toString()
+location.href = import.meta.env.AUTH_URL + "/authorize?" + params.toString()
 ```
 
 This will redirect the user to github auth and when auth is complete they will be redirected back to the frontend with `#access_token=<token>` in the URL. You can parse it like this and store it in local storage or a cookie.
@@ -133,7 +133,7 @@ const params = new URLSearchParams({
   response_type: "token",
   provider: "github",
 })
-location.href = import.meta.env.AUTH_URL + "?" + params.toString()
+location.href = import.meta.env.AUTH_URL + "/authorize?" + params.toString()
 ```
 
 Once the auth flow is done the user will be redirected to the callback url with a code in the query string. You can exchange this code for an access_token and store it in a cookie to be included with all future requests.
