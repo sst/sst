@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.1.20
+
+### Patch Changes
+
+- [`7d7f20ae3`](https://github.com/serverless-stack/sst/commit/7d7f20ae3afb1093831769484452f5d41d411049) Thanks [@thdxr](https://github.com/thdxr)! - Fix issue where stdout messages were appearing under wrong request
+
 ## 2.1.19
 
 ### Patch Changes
