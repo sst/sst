@@ -42,6 +42,7 @@ export const dev = (program: Program) =>
       const { useRDSWarmer } = await import("./plugins/warmer.js");
       const { useProject } = await import("../../project.js");
       const { useMetadata } = await import("../../stacks/metadata.js");
+      const { useIOT } = await import("../../iot.js");
       const { clear } = await import("../terminal.js");
 
       if (args._[0] === "start") {
@@ -308,6 +309,32 @@ export const dev = (program: Program) =>
         await build();
       });
 
+      const useDisconnector = Context.memo(async () => {
+        const bus = useBus();
+        const project = useProject();
+        const iot = await useIOT();
+
+        bus.subscribe("cli.dev", async (evt) => {
+          const topic = `${iot.prefix}/events`;
+          iot.publish(topic, "cli.dev", evt.properties);
+        });
+
+        bus.publish("cli.dev", {
+          stage: project.config.stage,
+          app: project.config.name,
+        });
+
+        bus.subscribe("cli.dev", async (evt) => {
+          if (evt.properties.stage !== project.config.stage) return;
+          if (evt.properties.app !== project.config.name) return;
+          Colors.line(
+            Colors.danger(`➜ `),
+            "Another sst dev session has been started up for this stage. Exiting"
+          );
+          process.exit(0);
+        });
+      });
+
       const [appMetadata] = await Promise.all([
         useAppMetadata(),
         useLocalServer({
@@ -327,6 +354,7 @@ export const dev = (program: Program) =>
       clear();
       await printHeader({ console: true, hint: "ready!" });
       await Promise.all([
+        useDisconnector(),
         useRuntimeWorkers(),
         useIOTBridge(),
         useRuntimeServer(),
@@ -356,4 +384,12 @@ async function promptChangeMode() {
       }
     );
   });
+}
+declare module "../../bus.js" {
+  interface Events {
+    "cli.dev": {
+      app: string;
+      stage: string;
+    };
+  }
 }
