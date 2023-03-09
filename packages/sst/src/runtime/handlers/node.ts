@@ -117,11 +117,16 @@ export const useNodeHandler = Context.memo(async () => {
       }
 
       const { external, ...override } = nodejs.esbuild || {};
+      const forceExternal = [
+        "sharp",
+        "pg-native",
+        ...(isESM || input.props.runtime === "nodejs18.x" ? [] : ["aws-sdk"]),
+      ];
       const options: BuildOptions = {
         entryPoints: [file],
         platform: "node",
         external: [
-          ...(isESM || input.props.runtime === "nodejs18.x" ? [] : ["aws-sdk"]),
+          ...forceExternal,
           ...(nodejs.install || []),
           ...(external || []),
         ],
@@ -164,56 +169,75 @@ export const useNodeHandler = Context.memo(async () => {
         const result = await esbuild.build(options);
 
         // Install node_modules
-        if (options.external?.length) {
-          async function find(dir: string, target: string): Promise<string> {
-            if (dir === "/")
-              throw new VisibleError("Could not find a package.json file");
-            if (
-              await fs
-                .access(path.join(dir, target))
-                .then(() => true)
-                .catch(() => false)
-            )
-              return dir;
-            return find(path.join(dir, ".."), target);
-          }
+        const installPackages = [
+          ...(nodejs.install || []),
+          ...forceExternal
+            .filter((pkg) => pkg !== "aws-sdk")
+            .filter((pkg) => !external?.includes(pkg))
+            .filter((pkg) =>
+              Object.values(result.metafile?.inputs || {}).some(({ imports }) =>
+                imports.some(({ path }) => path === pkg)
+              )
+            ),
+        ];
 
-          if (input.mode === "deploy" && nodejs.install) {
-            const src = await find(parsed.dir, "package.json");
-            const json = JSON.parse(
-              await fs
-                .readFile(path.join(src, "package.json"))
-                .then((x) => x.toString())
+        async function find(dir: string, target: string): Promise<string> {
+          if (dir === "/")
+            throw new VisibleError("Could not find a package.json file");
+          if (
+            await fs
+              .access(path.join(dir, target))
+              .then(() => true)
+              .catch(() => false)
+          )
+            return dir;
+          return find(path.join(dir, ".."), target);
+        }
+
+        if (input.mode === "deploy" && installPackages) {
+          const src = await find(parsed.dir, "package.json");
+          const json = JSON.parse(
+            await fs
+              .readFile(path.join(src, "package.json"))
+              .then((x) => x.toString())
+          );
+          fs.writeFile(
+            path.join(input.out, "package.json"),
+            JSON.stringify({
+              dependencies: Object.fromEntries(
+                installPackages.map((x) => [x, json.dependencies?.[x] || "*"])
+              ),
+            })
+          );
+          const cmd = ["npm install"];
+          if (installPackages.includes("sharp")) {
+            cmd.push(
+              "--platform=linux",
+              input.props.architecture === "arm_64"
+                ? "--arch=arm64"
+                : "--arch=x64"
             );
-            fs.writeFile(
-              path.join(input.out, "package.json"),
-              JSON.stringify({
-                dependencies: Object.fromEntries(
-                  nodejs.install?.map((x) => [x, json.dependencies?.[x] || "*"])
-                ),
-              })
-            );
-            await new Promise<void>((resolve) => {
-              const process = exec("npm install", {
-                cwd: input.out,
-              });
-              process.on("exit", () => resolve());
+          }
+          await new Promise<void>((resolve) => {
+            const process = exec(cmd.join(" "), {
+              cwd: input.out,
             });
-          }
+            process.on("exit", () => resolve());
+          });
+        }
 
-          if (input.mode === "start") {
-            const dir = path.join(
-              await find(parsed.dir, "package.json"),
-              "node_modules"
+        if (input.mode === "start") {
+          const dir = path.join(
+            await find(parsed.dir, "package.json"),
+            "node_modules"
+          );
+          try {
+            await fs.symlink(
+              path.resolve(dir),
+              path.resolve(path.join(input.out, "node_modules")),
+              "dir"
             );
-            try {
-              await fs.symlink(
-                path.resolve(dir),
-                path.resolve(path.join(input.out, "node_modules")),
-                "dir"
-              );
-            } catch {}
-          }
+          } catch {}
         }
 
         cache[input.functionID] = result;
