@@ -3,7 +3,7 @@ import {
   SSMClient,
   Parameter,
 } from "@aws-sdk/client-ssm";
-const ssm = new SSMClient({});
+const ssm = new SSMClient({ region: process.env.SST_REGION });
 
 // Example:
 // {

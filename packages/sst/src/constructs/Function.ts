@@ -400,13 +400,11 @@ export interface NodeJSProps {
    *
    * @example
    * ```js
-   * new Function(stack, "Function", {
-   *   nodejs: {
-   *     loader: {
-   *      ".png": "file"
-   *     }
+   * nodejs: {
+   *   loader: {
+   *    ".png": "file"
    *   }
-   * })
+   * }
    * ```
    */
   loader?: Record<string, Loader>;
@@ -416,11 +414,9 @@ export interface NodeJSProps {
    *
    * @example
    * ```js
-   * new Function(stack, "Function", {
-   *   nodejs: {
-   *     install: ["pg"]
-   *   }
-   * })
+   * nodejs: {
+   *   install: ["pg"]
+   * }
    * ```
    */
   install?: string[];
@@ -430,11 +426,9 @@ export interface NodeJSProps {
    *
    * @example
    * ```js
-   * new Function(stack, "Function", {
-   *   nodejs: {
-   *     banner: "console.log('Function starting')"
-   *   }
-   * })
+   * nodejs: {
+   *   banner: "console.log('Function starting')"
+   * }
    * ```
    */
   banner?: string;
@@ -451,26 +445,22 @@ export interface NodeJSProps {
    *
    * @example
    * ```js
-   * new Function(stack, "Function", {
-   *   nodejs: {
-   *     minify: false
-   *   }
-   * })
+   * nodejs: {
+   *   minify: false
+   * }
    * ```
    */
   minify?: boolean;
   /**
    * Configure format
    *
-   * @default "cjs"
+   * @default "esm"
    *
    * @example
    * ```js
-   * new Function(stack, "Function", {
-   *   nodejs: {
-   *     format: "esm"
-   *   }
-   * })
+   * nodejs: {
+   *   format: "cjs"
+   * }
    * ```
    */
   format?: "cjs" | "esm";
@@ -481,11 +471,9 @@ export interface NodeJSProps {
    *
    * @example
    * ```js
-   * new Function(stack, "Function", {
-   *   nodejs: {
-   *     sourcemap: true
-   *   }
-   * })
+   * nodejs: {
+   *   sourcemap: true
+   * }
    * ```
    */
   sourcemap?: boolean;
@@ -606,7 +594,7 @@ export class Function extends lambda.Function implements SSTConstruct {
   public readonly id: string;
   public readonly _isLiveDevEnabled: boolean;
   /** @internal */
-  public _disableBind?: boolean;
+  public _doNotAllowOthersToBind?: boolean;
   private functionUrl?: lambda.FunctionUrl;
   private props: FunctionProps;
   private allBindings: SSTConstruct[] = [];
@@ -1046,7 +1034,7 @@ export class Function extends lambda.Function implements SSTConstruct {
         ...(inheritedProps || {}),
         handler: definition,
       });
-      fn._disableBind = true;
+      fn._doNotAllowOthersToBind = true;
       return fn;
     } else if (definition instanceof Function) {
       if (inheritedProps && Object.keys(inheritedProps).length > 0) {
@@ -1066,7 +1054,7 @@ export class Function extends lambda.Function implements SSTConstruct {
         id,
         Function.mergeProps(inheritedProps, definition)
       );
-      fn._disableBind = true;
+      fn._doNotAllowOthersToBind = true;
       return fn;
     }
     throw new Error(`Invalid function definition for the "${id}" Function`);

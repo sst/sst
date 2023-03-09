@@ -1,4 +1,12 @@
-import { remove, cmd, patch, extend, extract, install } from "create-sst";
+import {
+  remove,
+  cmd,
+  patch,
+  extend,
+  extract,
+  install,
+  str_replace,
+} from "create-sst";
 export default [
   extend("presets/base/monorepo"),
   patch({
@@ -15,6 +23,28 @@ export default [
     cwd: "packages",
   }),
   extract(),
+  str_replace({
+    file: "sst.config.ts",
+    pattern: `import { SSTConfig } from "sst";`,
+    replacement: [
+      `import { SSTConfig } from "sst";`,
+      `import { Api } from "./stacks/Api";`,
+      `import { Web } from "./stacks/Web";`,
+      `import { Database } from "./stacks/Database";`,
+    ].join("\n"),
+  }),
+  str_replace({
+    file: "sst.config.ts",
+    pattern: `stacks(app) {},`,
+    replacement: [
+      `stacks(app) {`,
+      `    app`,
+      `      .stack(Database)`,
+      `      .stack(Api)`,
+      `      .stack(Web);`,
+      `  }`,
+    ].join("\n"),
+  }),
   install({
     packages: ["ulid"],
     path: "packages/core",
@@ -64,7 +94,7 @@ export default [
     cwd: "packages/graphql",
   }),
   install({
-    packages: [ "react-icons" ],
+    packages: ["react-icons"],
     path: "packages/web",
   }),
   remove("packages/web/src/App.tsx"),

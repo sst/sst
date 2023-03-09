@@ -4,7 +4,7 @@
     "access": "public"
   },
   "name": "sst",
-  "version": "2.1.8",
+  "version": "2.1.21",
   "bin": {
     "sst": "cli/sst.js"
   },
@@ -23,8 +23,10 @@
   },
   "exports": {
     "./constructs/deprecated": "./constructs/deprecated/index.js",
+    "./constructs/future": "./constructs/future/index.js",
     "./constructs": "./constructs/index.js",
     "./context": "./context/index.js",
+    "./node/future/*": "./node/future/*/index.js",
     "./node/*": "./node/*/index.js",
     ".": "./index.js",
     "./*": "./*"
@@ -122,6 +124,7 @@
     "@types/ws": "^8.5.3",
     "@types/yargs": "^17.0.13",
     "tsx": "^3.12.1",
+    "typescript": "^4.9.5",
     "vitest": "^0.28.3"
   },
   "peerDependencies": {

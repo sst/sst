@@ -1,7 +1,7 @@
 import { workerData } from "node:worker_threads";
 import path from "path";
-import { fetch } from "undici";
 import fs from "fs";
+import http from "http";
 import url from "url";
 import { Context as LambdaContext } from "aws-lambda";
 // import { createRequire } from "module";
@@ -65,6 +65,45 @@ const file = [".js", ".jsx", ".mjs", ".cjs"]
 
 let fn: any;
 
+function fetch(req: {
+  path: string;
+  method: string;
+  headers: Record<string, string>;
+  body?: any;
+}) {
+  return new Promise<{
+    statusCode: number;
+    headers: Record<string, any>;
+    body: string;
+  }>((resolve, reject) => {
+    const request = http.request(
+      input.url + req.path,
+      {
+        headers: req.headers,
+        method: req.method,
+      },
+      (res) => {
+        let body = "";
+        res.setEncoding("utf8");
+        res.on("data", (chunk) => {
+          body += chunk.toString();
+        });
+
+        res.on("end", () => {
+          resolve({
+            statusCode: res.statusCode!,
+            headers: res.headers,
+            body,
+          });
+        });
+      }
+    );
+    request.on("error", reject);
+    if (req.body) request.write(req.body);
+    request.end();
+  });
+}
+
 try {
   const { href } = url.pathToFileURL(file);
   const mod = await import(href);
@@ -79,7 +118,8 @@ try {
   }
   // if (!mod) mod = require(file);
 } catch (ex: any) {
-  await fetch(`${input.url}/runtime/init/error`, {
+  await fetch({
+    path: `/runtime/init/error`,
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -104,17 +144,21 @@ while (true) {
   let context: LambdaContext;
 
   try {
-    const result = await fetch(`${input.url}/runtime/invocation/next`);
+    const result = await fetch({
+      path: `/runtime/invocation/next`,
+      method: "GET",
+      headers: {},
+    });
     context = createLambdaContext(
-      result.headers.get("lambda-runtime-invoked-function-arn")!,
-      result.headers.get("lambda-runtime-aws-request-id")!,
-      result.headers.get("lambda-runtime-deadline-ms")!,
-      result.headers.get("lambda-runtime-cognito-identity")!,
-      result.headers.get("lambda-runtime-client-context")!,
-      result.headers.get("lambda-runtime-log-group-name")!,
-      result.headers.get("lambda-runtime-log-stream-name")!
+      result.headers["lambda-runtime-invoked-function-arn"],
+      result.headers["lambda-runtime-aws-request-id"],
+      result.headers["lambda-runtime-deadline-ms"],
+      result.headers["lambda-runtime-cognito-identity"],
+      result.headers["lambda-runtime-client-context"],
+      result.headers["lambda-runtime-log-group-name"],
+      result.headers["lambda-runtime-log-stream-name"]
     );
-    request = await result.json();
+    request = JSON.parse(result.body);
   } catch {
     continue;
   }
@@ -124,37 +168,34 @@ while (true) {
   try {
     response = await fn(request, context);
   } catch (ex: any) {
-    await fetch(
-      `${input.url}/runtime/invocation/${context.awsRequestId}/error`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          errorType: "Error",
-          errorMessage: ex.message,
-          trace: ex.stack?.split("\n"),
-        }),
-      }
-    );
+    await fetch({
+      path: `/runtime/invocation/${context.awsRequestId}/error`,
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        errorType: "Error",
+        errorMessage: ex.message,
+        trace: ex.stack?.split("\n"),
+      }),
+    });
     continue;
   }
 
   while (true) {
     try {
-      await fetch(
-        `${input.url}/runtime/invocation/${context.awsRequestId}/response`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(response),
-        }
-      );
+      await fetch({
+        path: `/runtime/invocation/${context.awsRequestId}/response`,
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(response),
+      });
       break;
-    } catch {
+    } catch (ex) {
+      console.error(ex);
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
   }

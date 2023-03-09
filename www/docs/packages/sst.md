@@ -402,6 +402,38 @@ npx sst secrets remove <name> [options]
 
 ---
 
+### `sst bootstrap`
+
+Create the [SST bootstrap stack](../advanced/bootstrapping.md).
+
+```bash
+npx sst bootstrap [options]
+```
+
+#### Options
+
+- **`--tags`**
+
+  _Default_: no tags
+
+  Tags to add for the bootstrap stack.
+
+  ```bash
+  npx sst bootstrap --tags teamId=foo customerId=bar 
+  ```
+
+- **`--public-access-block-configuration`**
+
+  _Default_: true
+
+  Block public access configuration on bootstrap bucket.
+
+  ```bash
+  npx sst bootstrap --public-access-block-configuration false
+  ```
+
+---
+
 ### `sst telemetry`
 
 SST [collects completely anonymous telemetry](../anonymous-telemetry.md) data about general usage.

@@ -331,7 +331,7 @@ export class App extends cdk.App {
         if (!isSSTConstruct(c)) {
           return;
         }
-        if (c instanceof Function && c._disableBind) {
+        if (c instanceof Function && c._doNotAllowOthersToBind) {
           return;
         }
 
@@ -498,7 +498,7 @@ export class App extends cdk.App {
         if (!isSSTConstruct(c)) {
           return;
         }
-        if (c instanceof Function && c._disableBind) {
+        if (c instanceof Function && c._doNotAllowOthersToBind) {
           return;
         }
 
@@ -591,7 +591,7 @@ export class App extends cdk.App {
         if (!isSSTConstruct(c)) {
           return;
         }
-        if (c instanceof Function && c._disableBind) {
+        if (c instanceof Function && c._doNotAllowOthersToBind) {
           return;
         }
 

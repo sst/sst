@@ -1,5 +1,43 @@
 # create-sst
 
+## 2.1.21
+
+## 2.1.20
+
+## 2.1.19
+
+## 2.1.18
+
+### Patch Changes
+
+- [`3db05a0e9`](https://github.com/serverless-stack/sst/commit/3db05a0e9b7a116b1285d10cc142bea496a47fa5) Thanks [@thdxr](https://github.com/thdxr)! - create-sst: ensure root tsconfig does not typecheck packages
+
+## 2.1.17
+
+## 2.1.16
+
+### Patch Changes
+
+- [`a9bd02b15`](https://github.com/serverless-stack/sst/commit/a9bd02b1513b7b8a42579fcff606a40e8a582151) Thanks [@thdxr](https://github.com/thdxr)! - Fix go builds failing without printing error
+
+## 2.1.15
+
+### Patch Changes
+
+- [`186b545b3`](https://github.com/serverless-stack/sst/commit/186b545b3795f6a285534ff05d196ab8a04e3daa) Thanks [@fwang](https://github.com/fwang)! - create-sst: fix template formatting issue
+
+## 2.1.14
+
+## 2.1.13
+
+## 2.1.12
+
+## 2.1.11
+
+## 2.1.10
+
+## 2.1.9
+
 ## 2.1.8
 
 ## 2.1.7

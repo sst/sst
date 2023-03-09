@@ -27,7 +27,8 @@ const defaultHttpFields = [
   // caller info
   `"ip":"$context.identity.sourceIp"`,
   `"userAgent":"$context.identity.userAgent"`,
-  `"cognitoIdentityId":"$context.identity.cognitoIdentityId"`,
+  // `cognitoIdentityId` is not supported in us-west-2 region
+  //`"cognitoIdentityId":"$context.identity.cognitoIdentityId"`,
 ];
 
 const defaultWebSocketFields = [

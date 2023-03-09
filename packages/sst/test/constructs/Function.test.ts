@@ -947,7 +947,7 @@ test("attachPermissions: array: sst WebSocketApi", async () => {
                 {
                   Ref: "ApiCD79AAA0",
                 },
-                "/test/POST/*",
+                "/*/*/@connections/*",
               ],
             ],
           },

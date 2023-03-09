@@ -191,11 +191,21 @@ export class Stack extends cdk.Stack {
       const value = outputs[key];
       if (value === undefined) {
         throw new Error(`The stack output "${key}" is undefined`);
-      } else if (typeof value === "string") {
-        new cdk.CfnOutput(this, key, { value });
-      } else {
-        new cdk.CfnOutput(this, key, value);
       }
+      // Note: add "SSTStackOutput" prefix to the CfnOutput id to ensure the id
+      //       does not thrash w/ construct ids in the stack. So users can do this:
+      //       ```
+      //       const table = new Table(stack, "myTable");
+      //       stack.addOutputs({ myTable: table.name });
+      //       ```
+      //       And then we override the logical id so the actual output name is
+      //       still "myTable".
+      const output =
+        typeof value === "string"
+          ? new cdk.CfnOutput(this, `SSTStackOutput${key}`, { value })
+          : new cdk.CfnOutput(this, `SSTStackOutput${key}`, value);
+      // CloudFormation only allows alphanumeric characters in the output name.
+      output.overrideLogicalId(key.replace(/[^A-Za-z0-9]/g, ""));
     });
   }
 

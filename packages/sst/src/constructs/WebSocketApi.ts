@@ -326,9 +326,10 @@ export class WebSocketApi extends Construct implements SSTConstruct {
   }
 
   public get _connectionsArn(): string {
+    this.cdk.webSocketApi.grantManageConnections;
     return Stack.of(this).formatArn({
       service: "execute-api",
-      resourceName: `${this.cdk.webSocketStage.stageName}/POST/*`,
+      resourceName: "*/*/@connections/*",
       resource: this.cdk.webSocketApi.apiId,
     });
   }
@@ -476,7 +477,9 @@ export class WebSocketApi extends Construct implements SSTConstruct {
           value: this.customDomainUrl || this.url,
         },
       },
-      permissions: {},
+      permissions: {
+        "execute-api:ManageConnections": [this._connectionsArn],
+      },
     };
   }
 

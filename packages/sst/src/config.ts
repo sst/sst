@@ -168,28 +168,42 @@ export namespace Config {
       .filter((f): f is FunctionMetadata => f.type === "Function")
       .filter((f) => f.data.secrets.includes(key));
 
-    await Promise.all(
+    const restarted = await Promise.all(
       filtered.map(async (f) => {
-        const config = await lambda.send(
-          new GetFunctionConfigurationCommand({
-            FunctionName: f.data.arn,
-          })
-        );
+        // Note: in the case where the function is removed, but the metadata
+        //       is not updated, we ignore the Function not found error.
+        try {
+          const config = await lambda.send(
+            new GetFunctionConfigurationCommand({
+              FunctionName: f.data.arn,
+            })
+          );
 
-        await lambda.send(
-          new UpdateFunctionConfigurationCommand({
-            FunctionName: f.data.arn,
-            Environment: {
-              Variables: {
-                ...(config.Environment?.Variables || {}),
-                [SECRET_UPDATED_AT_ENV]: Date.now().toString(),
+          await lambda.send(
+            new UpdateFunctionConfigurationCommand({
+              FunctionName: f.data.arn,
+              Environment: {
+                Variables: {
+                  ...(config.Environment?.Variables || {}),
+                  [SECRET_UPDATED_AT_ENV]: Date.now().toString(),
+                },
               },
-            },
-          })
-        );
+            })
+          );
+
+          return true;
+        } catch (e: any) {
+          if (
+            e.name === "ResourceNotFoundException" &&
+            e.message.startsWith("Function not found")
+          ) {
+            return;
+          }
+        }
       })
     );
-    return filtered.length;
+
+    return restarted.filter(Boolean).length;
   }
 }
 

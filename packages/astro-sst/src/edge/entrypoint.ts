@@ -31,7 +31,7 @@ export function createExports(manifest: SSRManifest) {
           }
         }
       }
-      const host = headers["host"][0].value;
+      const host = (headers["x-forwarded-host"] || headers["host"])[0].value;
       const qs = querystring.length > 0 ? `?${querystring}` : "";
       const url = new URL(`${uri}${qs}`, `https://${host}`);
       const request = new Request(url.toString(), {
