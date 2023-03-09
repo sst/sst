@@ -118,7 +118,7 @@ while (true) {
         JSON.parse(result.headers["lambda-runtime-client-context"]) ??
         undefined,
       functionName: process.env.AWS_LAMBDA_FUNCTION_NAME!,
-      functionVersion: '$LATEST',
+      functionVersion: process.env.AWS_LAMBDA_FUNCTION_VERSION!,
       memoryLimitInMB: process.env.AWS_LAMBDA_FUNCTION_MEMORY_SIZE!,
       logGroupName: result.headers["lambda-runtime-log-group-name"],
       logStreamName: result.headers["lambda-runtime-log-stream-name"],
