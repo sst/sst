@@ -7,12 +7,13 @@ import {
   CloudFormationClient,
 } from "@aws-sdk/client-cloudformation";
 import {
+  App,
+  DefaultStackSynthesizer,
+  CfnOutput,
   Duration,
   Tags,
   Stack,
   RemovalPolicy,
-  App,
-  CfnOutput,
 } from "aws-cdk-lib";
 import { Function, Runtime, Code } from "aws-cdk-lib/aws-lambda";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
@@ -121,7 +122,8 @@ async function loadCDKStatus() {
 
 export async function bootstrapSST(
   tags?: Record<string, string>,
-  publicAccessBlockConfiguration?: boolean
+  publicAccessBlockConfiguration?: boolean,
+  qualifier?: string
 ) {
   // Normalize input
   tags = tags || {};
@@ -135,6 +137,9 @@ export async function bootstrapSST(
     env: {
       region: project.config.region,
     },
+    synthesizer: new DefaultStackSynthesizer({
+      qualifier,
+    }),
   });
 
   // Add tags to stack

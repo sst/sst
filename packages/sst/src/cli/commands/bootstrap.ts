@@ -11,6 +11,11 @@ export const bootstrap = (program: Program) =>
           string: true,
           describe: "Tags to add for the bootstrap stack",
         })
+        .option("qualifier", {
+          type: "string",
+          describe:
+            "A string that is added to the names of all resources in the bootstrap stack",
+        })
         .option("public-access-block-configuration", {
           type: "boolean",
           default: true,
@@ -31,7 +36,11 @@ export const bootstrap = (program: Program) =>
         Colors.line(`${Colors.primary(`➜`)}  Using tags`, tags);
       }
       const spinner = createSpinner(" Deploying bootstrap stack").start();
-      await bootstrapSST(tags, args.publicAccessBlockConfiguration);
+      await bootstrapSST(
+        tags,
+        args.publicAccessBlockConfiguration,
+        args.qualifier
+      );
       spinner.succeed(
         Colors.bold(
           ` Bootstrapped account ${identity.Account} in region ${project.config.region}`
