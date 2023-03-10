@@ -134,7 +134,7 @@ function StackItem(props: { stack: StackInfo }) {
           </Function>
         ));
       case "Topic":
-        return c.data.subscribers.map((fn, index) => (
+        return c.data.subscribers.filter(fn => fn).map((fn, index) => (
           <Function key={c.addr + fn.node} to={`${fn.stack}/${fn.node}`}>
             <Stack space="sm">
               <FunctionName>{c.id}</FunctionName>
