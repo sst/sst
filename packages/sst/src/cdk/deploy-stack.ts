@@ -30,6 +30,7 @@ import {
   StackActivityProgress,
 } from "aws-cdk/lib/api/util/cloudformation/stack-activity-monitor.js";
 import { blue } from "colorette";
+import { callWithRetry } from "./util.js";
 
 type TemplateBodyParameter = {
   TemplateBody?: string;
@@ -259,7 +260,9 @@ export async function deployStack(
   options.sdk.appendCustomUserAgent(options.extraUserAgent);
   const cfn = options.sdk.cloudFormation();
   const deployName = options.deployName || stackArtifact.stackName;
-  let cloudFormationStack = await CloudFormationStack.lookup(cfn, deployName);
+  let cloudFormationStack = await callWithRetry(() =>
+    CloudFormationStack.lookup(cfn, deployName)
+  );
 
   if (cloudFormationStack.stackStatus.isCreationFailure) {
     debug(

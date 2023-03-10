@@ -33,6 +33,7 @@ import {
 } from "aws-cdk/lib/api/util/cloudformation.js";
 import { StackActivityProgress } from "aws-cdk/lib/api/util/cloudformation/stack-activity-monitor.js";
 import { replaceEnvPlaceholders } from "aws-cdk/lib/api/util/placeholders.js";
+import { callWithRetry } from "./util.js";
 
 /**
  * SDK obtained by assuming the lookup role
@@ -483,10 +484,12 @@ export class CloudFormationDeployments {
     const { stackSdk, resolvedEnvironment, cloudFormationRoleArn } =
       await this.prepareSdkFor(options.stack, options.roleArn);
 
-    const toolkitInfo = await ToolkitInfo.lookup(
-      resolvedEnvironment,
-      stackSdk,
-      options.toolkitStackName
+    const toolkitInfo = await callWithRetry(() =>
+      ToolkitInfo.lookup(
+        resolvedEnvironment,
+        stackSdk,
+        options.toolkitStackName
+      )
     );
 
     // Publish any assets before doing the actual deploy (do not publish any assets on import operation)
