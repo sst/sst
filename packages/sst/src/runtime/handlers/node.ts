@@ -38,7 +38,6 @@ export const useNodeHandler = Context.memo(async () => {
           ),
           {
             env: {
-              ...process.env,
               ...input.environment,
               IS_LOCAL: "true",
             },
