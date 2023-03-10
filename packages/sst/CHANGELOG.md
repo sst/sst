@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.1.23
+
+### Patch Changes
+
+- [`1dcf6402b`](https://github.com/serverless-stack/sst/commit/1dcf6402bd7cddc87b9c4e592a1116482f6acc98) Thanks [@fwang](https://github.com/fwang)! - sst deploy/dev: retry on CDK DescribeStacks rate exceeded error
+
 ## 2.1.22
 
 ### Patch Changes
