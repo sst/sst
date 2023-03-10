@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.1.24
+
+### Patch Changes
+
+- [`b0baaf0ee`](https://github.com/serverless-stack/sst/commit/b0baaf0eefd071190c73fbed3ea3fa724e80575d) Thanks [@thdxr](https://github.com/thdxr)! - IoT usage optimization by narrowing subscriptions
+
 ## 2.1.23
 
 ### Patch Changes

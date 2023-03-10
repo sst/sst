@@ -58,7 +58,7 @@ const device = new iot.device({
 });
 device.on("error", console.log);
 device.on("connect", console.log);
-device.subscribe(`${PREFIX}/events`, {
+device.subscribe(`${PREFIX}/events/${workerID}`, {
   qos: 1,
 });
 
