@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.1.25
+
+### Patch Changes
+
+- [`1500d4311`](https://github.com/serverless-stack/sst/commit/1500d4311317bad611e2d922bd4d13fe5e6151e2) Thanks [@fwang](https://github.com/fwang)! - Bootstrap: support --qualifier
+
 ## 2.1.24
 
 ### Patch Changes
