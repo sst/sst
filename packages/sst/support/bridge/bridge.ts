@@ -141,7 +141,7 @@ export async function handler(event: any, context: any) {
   if (result.type === "function.timeout")
     return {
       statusCode: 500,
-      body: "This function is in live debug mode but did not get a response from your machine. If you do have an `sst dev` session running, there have been reports of certain firewalls blocking communication. Please join our discord so we can work through the issue: https://sst.dev/discord",
+      body: "This function is in live debug mode but did not get a response from your machine. If you do have an `sst dev` session running and this is the first time you have ever run SST in this AWS account, it can take 10 minutes for AWS to provision the underlying infrastructure. Check back shortly.",
     };
 
   if (result.type === "function.success") {
