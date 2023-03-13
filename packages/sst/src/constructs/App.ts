@@ -275,7 +275,10 @@ export class App extends cdk.App {
     });
   }
 
+  private isFinished = false;
   public async finish() {
+    if (this.isFinished) return;
+    this.isFinished = true;
     await useDeferredTasks().run();
     Auth.injectConfig();
     this.buildConstructsMetadata();
