@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.1.26
+
+### Patch Changes
+
+- [`164ec076f`](https://github.com/serverless-stack/sst/commit/164ec076febaf7a51e8272c598e83f083a36daf5) Thanks [@thdxr](https://github.com/thdxr)! - Prevent app.finish from being called multiple times
+
+- [`31f7d6cd7`](https://github.com/serverless-stack/sst/commit/31f7d6cd757285799c4825049328198f3548c0e7) Thanks [@thdxr](https://github.com/thdxr)! - Better message when iot errors happen
+
 ## 2.1.25
 
 ### Patch Changes
