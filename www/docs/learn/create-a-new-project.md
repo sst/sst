@@ -104,7 +104,7 @@ The `sst dev` command, as you might've guessed, deploys to your AWS account. It 
 The `sst dev` command starts up the [Live Lambda Dev](../live-lambda-development.md) environment.
 :::
 
-The first time you run `sst dev` it can take around 5 minutes to set everything up.
+The first time you run `sst dev` in a new AWS region and account, it can take around 5 minutes to set everything up.
 
 ---
 
