@@ -264,6 +264,43 @@ new Api(stack, "Api", {
 });
 ```
 
+### Configuring AWS proxy routes
+
+You can configure a route to pass the entire request to an AWS service. [Read more about supported AWS services](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-aws-services-reference.html).
+
+```js
+new Api(stack, "Api", {
+  routes: {
+    "POST /send_events": {
+      type: "aws",
+      cdk: {
+        integration: {
+          subtype: "EventBridge-PutEvents",
+          parameterMapping: ParameterMapping.fromObject({
+            Source: MappingValue.custom("$request.body.source"),
+            DetailType: MappingValue.custom("$request.body.detailType"),
+            Detail: MappingValue.custom("$request.body.detail"),
+          }),
+        },
+      },
+    },
+  },
+});
+```
+
+And you can send a POST request to the `/send_events` endpoint to put an event in the default bus.
+
+```bash
+curl --request POST \
+  --url https://api.endpoint.com/send_events \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"source": "my.source",
+	"detailType": "my.type",
+	"detail": {"foo": "bar"}
+}'
+```
+
 ### Custom domains
 
 You can configure the API with a custom domain hosted either on [Route 53](https://aws.amazon.com/route53/) or [externally](#using-externally-hosted-domain).
