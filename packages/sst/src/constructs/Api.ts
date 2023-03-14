@@ -527,7 +527,7 @@ export interface ApiFunctionRouteProps<AuthorizersKeys = string>
  * });
  * ```
  */
-export interface ApiAwsRouteProps<AuthorizersKeys = string>
+export interface ApiAwsRouteProps<AuthorizersKeys>
   extends ApiBaseRouteProps<AuthorizersKeys> {
   /**
    * This is a constant
