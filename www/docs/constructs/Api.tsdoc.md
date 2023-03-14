@@ -185,7 +185,7 @@ new Api(stack, "Api", {
 
 ### routes?
 
-_Type_ : <span class="mono">Record&lt;<span class="mono">string</span>, <span class="mono">string</span><span class='mono'> | </span><span class="mono">[Function](Function#function)</span><span class='mono'> | </span><span class="mono">[ApiFunctionRouteProps](#apifunctionrouteprops)</span><span class='mono'> | </span><span class="mono">[ApiHttpRouteProps](#apihttprouteprops)</span><span class='mono'> | </span><span class="mono">[ApiAlbRouteProps](#apialbrouteprops)</span><span class='mono'> | </span><span class="mono">[ApiNlbRouteProps](#apinlbrouteprops)</span><span class='mono'> | </span><span class="mono">[ApiGraphQLRouteProps](#apigraphqlrouteprops)</span>&gt;</span>
+_Type_ : <span class="mono">Record&lt;<span class="mono">string</span>, <span class="mono">string</span><span class='mono'> | </span><span class="mono">[Function](Function#function)</span><span class='mono'> | </span><span class="mono">[ApiFunctionRouteProps](#apifunctionrouteprops)</span><span class='mono'> | </span><span class="mono">[ApiAwsRouteProps](#apiawsrouteprops)</span><span class='mono'> | </span><span class="mono">[ApiHttpRouteProps](#apihttprouteprops)</span><span class='mono'> | </span><span class="mono">[ApiAlbRouteProps](#apialbrouteprops)</span><span class='mono'> | </span><span class="mono">[ApiNlbRouteProps](#apinlbrouteprops)</span><span class='mono'> | </span><span class="mono">[ApiGraphQLRouteProps](#apigraphqlrouteprops)</span>&gt;</span>
 
 Define the routes for the API. Can be a function, proxy to another API, or point to an load balancer
 ```js
@@ -317,7 +317,7 @@ addRoutes(scope, routes)
 ```
 _Parameters_
 - __scope__ <span class="mono">[Construct](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)</span>
-- __routes__ <span class="mono">Record&lt;<span class="mono">string</span>, <span class="mono">string</span><span class='mono'> | </span><span class="mono">[Function](Function#function)</span><span class='mono'> | </span><span class="mono">[ApiFunctionRouteProps](#apifunctionrouteprops)</span><span class='mono'> | </span><span class="mono">[ApiHttpRouteProps](#apihttprouteprops)</span><span class='mono'> | </span><span class="mono">[ApiAlbRouteProps](#apialbrouteprops)</span><span class='mono'> | </span><span class="mono">[ApiNlbRouteProps](#apinlbrouteprops)</span><span class='mono'> | </span><span class="mono">[ApiGraphQLRouteProps](#apigraphqlrouteprops)</span>&gt;</span>
+- __routes__ <span class="mono">Record&lt;<span class="mono">string</span>, <span class="mono">string</span><span class='mono'> | </span><span class="mono">[Function](Function#function)</span><span class='mono'> | </span><span class="mono">[ApiFunctionRouteProps](#apifunctionrouteprops)</span><span class='mono'> | </span><span class="mono">[ApiAwsRouteProps](#apiawsrouteprops)</span><span class='mono'> | </span><span class="mono">[ApiHttpRouteProps](#apihttprouteprops)</span><span class='mono'> | </span><span class="mono">[ApiAlbRouteProps](#apialbrouteprops)</span><span class='mono'> | </span><span class="mono">[ApiNlbRouteProps](#apinlbrouteprops)</span><span class='mono'> | </span><span class="mono">[ApiGraphQLRouteProps](#apigraphqlrouteprops)</span>&gt;</span>
 
 
 Adds routes to the Api after it has been created.
@@ -562,6 +562,44 @@ The listener to the application load balancer used for the integration.
 ### cdk.integration?
 
 _Type_ : <span class="mono">[HttpAlbIntegrationProps](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-integrations-alpha.HttpAlbIntegrationProps.html)</span>
+
+
+## ApiAwsRouteProps
+Specify a function route handler and configure additional options
+```js
+api.addRoutes(stack, {
+  "GET /notes/{id}": {
+    type: "aws",
+    cdk: {
+      integration: {
+        subtype: "EventBridge-PutEvents",
+        parameterMapping: ParameterMapping.fromObject({
+          Source: MappingValue.custom("$request.body.source"),
+          DetailType: MappingValue.custom("$request.body.detailType"),
+          Detail: MappingValue.custom("$request.body.detail"),
+        }),
+      }
+    }
+  }
+});
+```
+### authorizationScopes?
+
+_Type_ : <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
+
+### authorizer?
+
+_Type_ : <span class="mono">"none"</span><span class='mono'> | </span><span class="mono">"iam"</span><span class='mono'> | </span><span class="mono">string</span>
+
+### type
+
+_Type_ : <span class="mono">"aws"</span>
+
+This is a constant
+
+### cdk.integration
+
+_Type_ : <span class="mono">Omit&lt;<span class="mono">[CdkHttpAwsIntegrationProps](#cdkhttpawsintegrationprops)</span>, <span class="mono">"credentials"</span>&gt;</span>
 
 
 ## ApiJwtAuthorizer
@@ -897,3 +935,20 @@ The AWS region of the user pool.
 _Type_ : <span class="mono">[HttpUserPoolAuthorizer](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-authorizers-alpha.HttpUserPoolAuthorizer.html)</span>
 
 This allows you to override the default settings this construct uses internally to create the authorizer.
+
+## CdkHttpAwsIntegrationProps
+### credentials
+
+_Type_ : <span class="mono">[IntegrationCredentials](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.IntegrationCredentials.html)</span>
+
+The credentials with which to invoke the integration.
+### parameterMapping
+
+_Type_ : <span class="mono">[ParameterMapping](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.ParameterMapping.html)</span>
+
+Specifies how to transform HTTP requests before sending them to the backend
+### subtype
+
+_Type_ : <span class="mono">[HttpIntegrationSubtype](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.HttpIntegrationSubtype.html)</span>
+
+Specifies the AWS service action to invoke

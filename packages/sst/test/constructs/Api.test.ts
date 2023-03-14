@@ -20,14 +20,12 @@ import * as ssm from "aws-cdk-lib/aws-ssm";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as logs from "aws-cdk-lib/aws-logs";
 import {
-  App,
   Bucket,
   Stack,
   Api,
   Function,
   FunctionDefinition,
 } from "../../dist/constructs/index.js";
-import { resolve } from "path";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
@@ -1886,6 +1884,45 @@ test("routes: ApiHttpRouteProps method is HttpMethod", async () => {
   hasResource(stack, "AWS::ApiGatewayV2::Integration", {
     IntegrationMethod: "DELETE",
     IntegrationUri: "https://domain.com",
+  });
+});
+
+test("routes: ApiAwsRouteProps method is undefined", async () => {
+  const stack = new Stack(await createApp(), "stack");
+
+  new Api(stack, "Api", {
+    routes: {
+      "POST /": {
+        type: "aws",
+        cdk: {
+          integration: {
+            subtype: "EventBridge-PutEvents",
+            parameterMapping: apig.ParameterMapping.fromObject({
+              Source: apig.MappingValue.custom("$request.body.source"),
+              DetailType: apig.MappingValue.custom("$request.body.detailType"),
+              Detail: apig.MappingValue.custom("$request.body.detail"),
+            }),
+          },
+        },
+      },
+    },
+  });
+  countResources(stack, "AWS::Lambda::Function", 0);
+  countResources(stack, "AWS::ApiGatewayV2::Route", 1);
+  countResources(stack, "AWS::ApiGatewayV2::Integration", 1);
+  hasResource(stack, "AWS::ApiGatewayV2::Integration", {
+    ApiId: {
+      Ref: "ApiCD79AAA0",
+    },
+    RequestParameters: {
+      Source: "$request.body.source",
+      DetailType: "$request.body.detailType",
+      Detail: "$request.body.detail",
+    },
+    IntegrationType: "AWS_PROXY",
+    IntegrationMethod: ABSENT,
+    IntegrationUri: ABSENT,
+    CredentialsArn: ANY,
   });
 });
 
