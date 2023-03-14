@@ -200,7 +200,7 @@ This might seem like a lot of scripts but we don't need to worry about them now.
 
 ## `sst.config.ts`
 
-Finally, ths `sst.config.ts` defines the project config and the stacks in the app.
+Finally, the `sst.config.ts` defines the project config and the stacks in the app.
 
 ```ts title="sst.config.ts"
 export default {
