@@ -1896,7 +1896,7 @@ test("routes: ApiAwsRouteProps method is undefined", async () => {
         type: "aws",
         cdk: {
           integration: {
-            subtype: "EventBridge-PutEvents",
+            subtype: apig.HttpIntegrationSubtype.EVENTBRIDGE_PUT_EVENTS,
             parameterMapping: apig.ParameterMapping.fromObject({
               Source: apig.MappingValue.custom("$request.body.source"),
               DetailType: apig.MappingValue.custom("$request.body.detailType"),

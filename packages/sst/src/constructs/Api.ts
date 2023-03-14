@@ -515,7 +515,7 @@ export interface ApiFunctionRouteProps<AuthorizersKeys = string>
  *     type: "aws",
  *     cdk: {
  *       integration: {
- *         subtype: "EventBridge-PutEvents",
+ *         subtype: apig.HttpIntegrationSubtype.EVENTBRIDGE_PUT_EVENTS,
  *         parameterMapping: ParameterMapping.fromObject({
  *           Source: MappingValue.custom("$request.body.source"),
  *           DetailType: MappingValue.custom("$request.body.detailType"),

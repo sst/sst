@@ -269,7 +269,7 @@ new Api(stack, "Api", {
 You can configure a route to pass the entire request to an AWS service. [Read more about supported AWS services](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-aws-services-reference.html).
 
 ```js
-import { ParameterMapping, MappingValue } from "@aws-cdk/aws-apigatewayv2-alpha";
+import { HttpIntegrationSubtype, ParameterMapping, MappingValue } from "@aws-cdk/aws-apigatewayv2-alpha";
 
 new Api(stack, "Api", {
   routes: {
@@ -277,7 +277,7 @@ new Api(stack, "Api", {
       type: "aws",
       cdk: {
         integration: {
-          subtype: "EventBridge-PutEvents",
+          subtype: HttpIntegrationSubtype.EVENTBRIDGE_PUT_EVENTS,
           parameterMapping: ParameterMapping.fromObject({
             Source: MappingValue.custom("$request.body.source"),
             DetailType: MappingValue.custom("$request.body.detailType"),
