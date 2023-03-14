@@ -1,5 +1,11 @@
 # astro-sst
 
+## 2.1.29
+
+### Patch Changes
+
+- [`1c5fe4976`](https://github.com/serverless-stack/sst/commit/1c5fe4976ccec198ca35548419af8f114e144b8c) Thanks [@thdxr](https://github.com/thdxr)! - Use latest astro
+
 ## 2.1.28
 
 ## 2.1.27
