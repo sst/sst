@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.1.28
+
+### Patch Changes
+
+- [#2656](https://github.com/serverless-stack/sst/pull/2656) [`7d8c6e149`](https://github.com/serverless-stack/sst/commit/7d8c6e149de29bcc071975a255944a338ac94062) Thanks [@fwang](https://github.com/fwang)! - Api: support AWS proxy route type
+
 ## 2.1.27
 
 ### Patch Changes
