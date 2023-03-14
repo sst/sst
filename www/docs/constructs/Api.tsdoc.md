@@ -573,11 +573,11 @@ api.addRoutes(stack, {
     cdk: {
       integration: {
         subtype: "EventBridge-PutEvents",
-        parameterMapping: {
-          Detail: "$request.body.source",
-          DetailType: "$request.body.detail",
-          Source: "$request.body.detailType",
-        }
+        parameterMapping: ParameterMapping.fromObject({
+          Source: MappingValue.custom("$request.body.source"),
+          DetailType: MappingValue.custom("$request.body.detailType"),
+          Detail: MappingValue.custom("$request.body.detail"),
+        }),
       }
     }
   }
@@ -947,7 +947,6 @@ The credentials with which to invoke the integration.
 _Type_ : <span class="mono">[ParameterMapping](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.ParameterMapping.html)</span>
 
 Specifies how to transform HTTP requests before sending them to the backend
-https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-parameter-mapping.html
 ### subtype
 
 _Type_ : <span class="mono">[HttpIntegrationSubtype](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.HttpIntegrationSubtype.html)</span>
