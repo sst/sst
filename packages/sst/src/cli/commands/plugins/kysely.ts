@@ -38,12 +38,10 @@ interface Database {
 export const useKyselyTypeGenerator = Context.memo(async () => {
   let databases: Database[] = [];
   const bus = useBus();
-  const project = useProject();
 
   async function generate(db: Database) {
     if (!db.types) return;
     Logger.debug("Generating types for", db.migratorID);
-    const credentials = await useAWSCredentials();
 
     const k = new Kysely<Database>({
       dialect: new DataApiDialect({
@@ -127,7 +125,7 @@ export const useKyselyTypeGenerator = Context.memo(async () => {
       (db) => db.migratorID === evt.properties.functionID
     );
     if (!db) return;
-    generate(db);
+    generate(db).catch(() => {});
   });
   Logger.debug("Loaded kyseley type generator");
 });

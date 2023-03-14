@@ -436,6 +436,7 @@ importers:
       aws-cdk: 2.62.2
       aws-cdk-lib: 2.62.2
       aws-iot-device-sdk: ^2.2.12
+      aws-iot-device-sdk-v2: ^1.9.5
       aws-sdk: ^2.1326.0
       builtin-modules: 3.2.0
       cdk-assets: 2.62.2
@@ -509,6 +510,7 @@ importers:
       aws-cdk: 2.62.2
       aws-cdk-lib: 2.62.2_constructs@10.1.156
       aws-iot-device-sdk: 2.2.12
+      aws-iot-device-sdk-v2: 1.9.5
       aws-sdk: 2.1326.0
       builtin-modules: 3.2.0
       cdk-assets: 2.62.2
@@ -10546,7 +10548,7 @@ packages:
   /axios/0.24.0:
     resolution: {integrity: sha512-Q6cWsys88HoPgAaFAVUb0WpPk0O8iTeisR9IMqy9G8AbO4NlpVknrnQS03zzF9PGAWgO3cgletO3VjV/P7VztA==}
     dependencies:
-      follow-redirects: 1.15.2_debug@4.3.4
+      follow-redirects: 1.15.2
     transitivePeerDependencies:
       - debug
 
