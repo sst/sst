@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.1.27
+
+### Patch Changes
+
+- [`fd1deffec`](https://github.com/serverless-stack/sst/commit/fd1deffecced1a84c4c7d088bbcc597ec55d1af8) Thanks [@thdxr](https://github.com/thdxr)! - Fixed issue with trying to codegen before RDS is fully up
+
 ## 2.1.26
 
 ### Patch Changes
