@@ -1,5 +1,11 @@
 # @serverless-stack/console
 
+## 2.1.31
+
+### Patch Changes
+
+- [`77b09c3d9`](https://github.com/serverless-stack/sst/commit/77b09c3d9429f87db38d2e7b6f9f8b446d010cf2) Thanks [@thdxr](https://github.com/thdxr)! - Support dynamic bootstrap stack name in console
+
 ## 2.1.30
 
 ## 2.1.29
