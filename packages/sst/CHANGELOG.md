@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.1.35
+
+### Patch Changes
+
+- [`fd30b0341`](https://github.com/serverless-stack/sst/commit/fd30b034121fd0708d2a96d16aab6242ccd798c0) Thanks [@fwang](https://github.com/fwang)! - CLI: handle AWS SDK throttled requests
+
 ## 2.1.34
 
 ### Patch Changes
