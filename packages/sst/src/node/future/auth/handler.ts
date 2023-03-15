@@ -39,6 +39,7 @@ export function AuthHandler<
   return ApiHandler(async (evt) => {
     const step = usePathParam("step");
     if (!step) {
+      const clients = await input.clients();
       return {
         statusCode: 200,
         headers: {
@@ -47,9 +48,19 @@ export function AuthHandler<
         body: `
           <html>
             <body>
+            <table>
+              <tr>${Object.keys(clients).map(
+                (client) => `<td>${client}</td>`
+              )}</tr>
             ${Object.keys(input.providers).map((name) => {
-              return `<a href="/authorize?provider=${name}&response_type=code&client_id=local&redirect_uri=http://localhost:3000">${name}</a>`;
+              return `<tr>
+                ${Object.keys(clients).map((client_id) => {
+                  const redirect_uri = clients[client_id];
+                  return `<td><a href="/authorize?provider=${name}&response_type=token&client_id=${client_id}&redirect_uri=${redirect_uri}">${name} - ${client_id}</a></td>`;
+                })}
+              </tr>`;
             })}
+            </table>
             </body>
           </html>
         `,
