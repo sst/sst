@@ -57,7 +57,7 @@ export function useStacks() {
   const s3 = useClient(S3Client);
   const ssm = useClient(SSMClient);
   const bootstrap = useRealtimeState(
-    (state) => state.bootstrap.stackName || "SSTBootstrap"
+    (state) => state.bootstrap?.stackName || "SSTBootstrap"
   );
 
   return useQuery(
