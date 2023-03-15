@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.1.34
+
+### Patch Changes
+
+- [`2f8879950`](https://github.com/serverless-stack/sst/commit/2f8879950d9c8652b7d7d80c9f85ab96c68d3b63) Thanks [@fwang](https://github.com/fwang)! - Job: support logRetention setting
+
 ## 2.1.33
 
 ### Patch Changes
