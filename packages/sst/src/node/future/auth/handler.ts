@@ -48,7 +48,7 @@ export function AuthHandler<
           <html>
             <body>
             ${Object.keys(input.providers).map((name) => {
-              return `<a href="/authorize?provider=${name}&response_type=code&client_id=local&redirect_uri=http://localhost:300">${name}</a>`;
+              return `<a href="/authorize?provider=${name}&response_type=code&client_id=local&redirect_uri=http://localhost:3000">${name}</a>`;
             })}
             </body>
           </html>
