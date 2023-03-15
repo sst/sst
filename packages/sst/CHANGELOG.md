@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.1.30
+
+### Patch Changes
+
+- [`02c3e454c`](https://github.com/serverless-stack/sst/commit/02c3e454cbadb0e5fa35164c77206b4042ec8108) Thanks [@fwang](https://github.com/fwang)! - Support customizing SST and CDK bootstrap stack
+
 ## 2.1.29
 
 ## 2.1.28
