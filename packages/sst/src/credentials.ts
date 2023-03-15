@@ -89,18 +89,28 @@ export function useAWSClient<C extends Client<any, any, any, any>>(
     region: project.config.region,
     credentials: credentials,
     retryStrategy: new StandardRetryStrategy(async () => 10000, {
-      retryDecider: (err: any) => {
-        // Handle credential errors => no retry
-        if (err.name === "CredentialsProviderError") return false;
-        if (err.message === "Could not load credentials from any providers")
-          return false;
-
-        // Handle no internet connection
-        if (err.code === "ENOTFOUND") {
+      retryDecider: (e: any) => {
+        // Handle no internet connection => retry
+        if (e.code === "ENOTFOUND") {
           printNoInternet();
         }
 
-        return true;
+        // Handle throttling errors => retry
+        if (
+          [
+            "ThrottlingException",
+            "Throttling",
+            "TooManyRequestsException",
+            "OperationAbortedException",
+            "TimeoutError",
+            "NetworkingError",
+          ].includes(e.name)
+        ) {
+          Logger.debug("Retry AWS call", e.name, e.message);
+          return true;
+        }
+
+        return false;
       },
       delayDecider: (_, attempts) => {
         return Math.min(1.5 ** attempts * 100, 5000);
