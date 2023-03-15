@@ -8,6 +8,7 @@ export type State = {
   app: string;
   stage: string;
   functions: Record<string, FunctionState>;
+  bootstrap: ReturnType<typeof useProject>["config"]["bootstrap"];
   live: boolean;
   stacks: {
     status: any;

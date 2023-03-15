@@ -26,6 +26,7 @@ import {
   ListObjectsV2Command,
   S3Client,
 } from "@aws-sdk/client-s3";
+import { useRealtimeState } from "../global";
 
 export type StackInfo = {
   info: Stack;
@@ -55,9 +56,12 @@ export function useStacks() {
   const cf = useClient(CloudFormationClient);
   const s3 = useClient(S3Client);
   const ssm = useClient(SSMClient);
+  const bootstrap = useRealtimeState(
+    (state) => state.bootstrap.stackName || "SSTBootstrap"
+  );
 
   return useQuery(
-    ["stacks", params.app!, params.stage!],
+    ["stacks", params.app!, params.stage!, bootstrap],
     async () => {
       let stacks: StackInfo[] = [];
 
@@ -76,7 +80,7 @@ export function useStacks() {
               // Lookup from Bootstrap stack output (SST v2)
               const describe = await cf.send(
                 new DescribeStacksCommand({
-                  StackName: "SSTBootstrap",
+                  StackName: bootstrap,
                 })
               );
               const output = (describe.Stacks![0].Outputs || []).find(

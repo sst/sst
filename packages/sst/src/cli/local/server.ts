@@ -48,6 +48,7 @@ export async function useLocalServer(opts: Opts) {
   let state: State = {
     app: project.config.name,
     stage: project.config.stage,
+    bootstrap: project.config.bootstrap,
     live: opts.live,
     stacks: {
       status: "idle",
