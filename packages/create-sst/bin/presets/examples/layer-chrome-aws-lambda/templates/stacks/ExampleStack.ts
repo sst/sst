@@ -22,7 +22,7 @@ export function ExampleStack({ stack }: StackContext) {
           // Exclude bundling it in the Lambda function
           nodejs: {
             esbuild: {
-              externalModules: ["chrome-aws-lambda"],
+              external: ["chrome-aws-lambda"],
             },
           },
         },
