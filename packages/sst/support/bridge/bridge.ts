@@ -1,7 +1,13 @@
 import iot from "aws-iot-device-sdk";
 import crypto from "crypto";
 import { IoTClient, DescribeEndpointCommand } from "@aws-sdk/client-iot";
+import {
+  DeleteObjectCommand,
+  GetObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
 
+const s3 = new S3Client({});
 const client = new IoTClient({});
 const response = await client.send(
   new DescribeEndpointCommand({ endpointType: "iot:Data-ATS" })
@@ -73,7 +79,7 @@ const fragments = new Map<string, Map<number, Fragment>>();
 
 let onMessage: (evt: any) => void;
 
-device.on("message", (_topic, buffer: Buffer) => {
+device.on("message", async (_topic, buffer: Buffer) => {
   const fragment = JSON.parse(buffer.toString()) as Fragment;
   console.log("Got fragment", fragment.id, fragment.index);
   let pending = fragments.get(fragment.id);
@@ -91,6 +97,25 @@ device.on("message", (_topic, buffer: Buffer) => {
       .map((item) => item.data)
       .join("");
     const evt = JSON.parse(data);
+    if (evt.type === "pointer") {
+      console.log("Got pointer", evt.properties);
+
+      const result = await s3.send(
+        new GetObjectCommand({
+          Key: evt.properties.key,
+          Bucket: evt.properties.bucket,
+        })
+      );
+      const str = await result.Body!.transformToString();
+      onMessage(JSON.parse(str));
+      await s3.send(
+        new DeleteObjectCommand({
+          Key: evt.properties.key,
+          Bucket: evt.properties.bucket,
+        })
+      );
+      return;
+    }
     onMessage(evt);
   }
 });
