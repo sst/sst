@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.1.33
+
+### Patch Changes
+
+- [`0d2c33ec5`](https://github.com/serverless-stack/sst/commit/0d2c33ec50b1e695f1fc8e22929b4930f6d31cbf) Thanks [@thdxr](https://github.com/thdxr)! - Route live dev payloads over 3mb through S3
+
 ## 2.1.32
 
 ### Patch Changes
