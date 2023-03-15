@@ -13,6 +13,7 @@ const { default: Spinner } = inkSpinner;
 
 interface Props {
   assembly: CloudAssembly;
+  remove?: boolean;
 }
 export const DeploymentUI = (props: Props) => {
   const [resources, setResources] = useState<Record<string, StackEvent>>({});
@@ -104,7 +105,9 @@ export const DeploymentUI = (props: Props) => {
           <Text>
             <Spinner />
             {"  "}
-            <Text dimColor>Deploying...</Text>
+            <Text dimColor>
+              {props.remove ? "Removing..." : "Deploying..."}
+            </Text>
           </Text>
         </Box>
       )}
