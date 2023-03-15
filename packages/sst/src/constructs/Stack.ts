@@ -5,6 +5,7 @@ import { Construct, IConstruct } from "constructs";
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 
+import { useProject } from "../project.js";
 import { FunctionProps, Function as Fn } from "./Function.js";
 import type { App } from "./App.js";
 import { isConstruct, SSTConstruct } from "./Construct.js";
@@ -56,6 +57,7 @@ export class Stack extends cdk.Stack {
         account: root.account,
         region: root.region,
       },
+      synthesizer: props?.synthesizer || Stack.buildSynthesizer(),
     });
 
     this.stage = root.stage;
@@ -221,6 +223,21 @@ export class Stack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_16_X,
       timeout: cdk.Duration.seconds(900),
       memorySize: 1024,
+    });
+  }
+
+  private static buildSynthesizer() {
+    const config = useProject().config;
+    const customSynethesizerKeys = Object.keys(config.cdk || {}).filter((key) =>
+      key.startsWith("qualifier")
+    );
+    if (customSynethesizerKeys.length === 0) {
+      return;
+    }
+
+    return new cdk.DefaultStackSynthesizer({
+      qualifier: config.cdk?.qualifier,
+      fileAssetsBucketName: config.cdk?.fileAssetsBucketName,
     });
   }
 

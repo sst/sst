@@ -29,7 +29,6 @@ import { transform } from "./commands/transform.js";
 import { diff } from "./commands/diff.js";
 import { version } from "./commands/version.js";
 import { telemetry } from "./commands/telemetry.js";
-import { bootstrap } from "./commands/bootstrap.js";
 
 dev(program);
 deploy(program);
@@ -44,7 +43,6 @@ consoleCommand(program);
 diff(program);
 version(program);
 telemetry(program);
-bootstrap(program);
 
 if ("setSourceMapsEnabled" in process) {
   // @ts-expect-error

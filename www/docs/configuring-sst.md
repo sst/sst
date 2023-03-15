@@ -79,6 +79,14 @@ Here's the full list of config options that can be returned:
 - **`profile`** AWS profile to use\*
 - **`role`** AWS role to use\*
 - **`ssmPrefix`** SSM prefix for all SSM parameters that SST creates
+- **`bootstrap`**
+  - **`stackName`** The name of the SST bootstrap stack
+  - **`tags`** The tags to add for the SST bootstrap stack
+- **`cdk`**
+  - **`toolkitStackName`** The name of the CDK toolkit stack
+  - **`qualifier`** The qualifier for the CDK toolkit stack
+  - **`fileAssetsBucketName`** The name of the CDK toolkit bucket
+  - **`publicAccessBlockConfiguration`** Block public access configuration on the CDK toolkit bucket
 
 \*These won't take effect if the CLI flag for it is specified.
 
