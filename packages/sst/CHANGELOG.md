@@ -1,5 +1,15 @@
 # @serverless-stack/cli2
 
+## 2.1.32
+
+### Patch Changes
+
+- [#2661](https://github.com/serverless-stack/sst/pull/2661) [`f51d90684`](https://github.com/serverless-stack/sst/commit/f51d90684827da353048bb48c19f331c8b5253fb) Thanks [@justindra](https://github.com/justindra)! - Updated the return page to have a table with all of the clients and input providers
+
+- [#2661](https://github.com/serverless-stack/sst/pull/2661) [`f51d90684`](https://github.com/serverless-stack/sst/commit/f51d90684827da353048bb48c19f331c8b5253fb) Thanks [@justindra](https://github.com/justindra)! - Fixed future Auth redirection to go to port 3000 instead of 300
+
+- [`0fee5241b`](https://github.com/serverless-stack/sst/commit/0fee5241b87441e558c68f5c9ec1a4928a0e11f5) Thanks [@fwang](https://github.com/fwang)! - CLI: retry on throttling errors
+
 ## 2.1.31
 
 ### Patch Changes
