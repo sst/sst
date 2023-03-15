@@ -24,6 +24,8 @@ import { EventPayload, Events, EventTypes, useBus } from "./bus.js";
 import { useProject } from "./project.js";
 import { Logger } from "./logger.js";
 import { randomUUID } from "crypto";
+import { useBootstrap } from "./bootstrap.js";
+import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 interface Fragment {
   id: string;
@@ -38,6 +40,48 @@ export const useIOT = Context.memo(async () => {
   const endpoint = await useIOTEndpoint();
   const creds = await useAWSCredentials();
   const project = useProject();
+  const bootstrap = await useBootstrap();
+  const s3 = useAWSClient(S3Client);
+
+  async function encode(input: any) {
+    const id = Math.random().toString();
+    const json = JSON.stringify(input);
+    if (json.length > 1024 * 1024 * 3) {
+      // upload to s3
+      const key = `pointers/${id}`;
+      await s3.send(
+        new PutObjectCommand({
+          Bucket: bootstrap.bucket,
+          Key: key,
+          Body: json,
+        })
+      );
+
+      return [
+        {
+          id,
+          index: 0,
+          count: 1,
+          data: JSON.stringify({
+            type: "pointer",
+            properties: {
+              key,
+              bucket: bootstrap.bucket,
+            },
+          }),
+        },
+      ];
+    }
+    const parts = json.match(/.{1,100000}/g);
+    if (!parts) return [];
+    Logger.debug("Encoded iot message into", parts?.length, "parts");
+    return parts.map((part, index) => ({
+      id,
+      index,
+      count: parts?.length,
+      data: part,
+    }));
+  }
   /*
   console.log(endpoint, creds);
   const config =
@@ -136,7 +180,7 @@ export const useIOT = Context.memo(async () => {
         properties,
         sourceID: bus.sourceID,
       };
-      for (const fragment of encode(payload)) {
+      for (const fragment of await encode(payload)) {
         await new Promise<void>((r) => {
           device.publish(
             topic,
@@ -154,16 +198,3 @@ export const useIOT = Context.memo(async () => {
     },
   };
 });
-
-function encode(input: any) {
-  const json = JSON.stringify(input);
-  const parts = json.match(/.{1,100000}/g);
-  if (!parts) return [];
-  const id = Math.random().toString();
-  return parts.map((part, index) => ({
-    id,
-    index,
-    count: parts?.length,
-    data: part,
-  }));
-}

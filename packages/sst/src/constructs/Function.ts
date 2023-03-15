@@ -45,6 +45,7 @@ import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Token, Size as CDKSize, Duration as CDKDuration } from "aws-cdk-lib";
 import { Effect, PolicyStatement, Role } from "aws-cdk-lib/aws-iam";
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
+import { useBootstrap } from "../bootstrap.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 const supportedRuntimes = {
@@ -694,7 +695,7 @@ export class Function extends CDKFunction implements SSTConstruct {
       this.addEnvironment("SST_FUNCTION_ID", this.node.addr);
       this.attachPermissions([
         new PolicyStatement({
-          actions: ["iot:*"],
+          actions: ["iot:*", "s3:*"],
           effect: Effect.ALLOW,
           resources: ["*"],
         }),
