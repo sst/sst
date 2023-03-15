@@ -42,7 +42,7 @@ import {
   Tracing,
 } from "aws-cdk-lib/aws-lambda";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
-import { Token, Size as CDKSize } from "aws-cdk-lib";
+import { Token, Size as CDKSize, Duration as CDKDuration } from "aws-cdk-lib";
 import { Effect, PolicyStatement, Role } from "aws-cdk-lib/aws-iam";
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
@@ -975,7 +975,7 @@ export class Function extends CDKFunction implements SSTConstruct {
     if (typeof timeout === "string") {
       return toCdkDuration(timeout);
     }
-    return toCdkDuration("10 seconds");
+    return CDKDuration.seconds(timeout || 10);
   }
 
   static handleImportedLayer(
