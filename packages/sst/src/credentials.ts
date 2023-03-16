@@ -7,7 +7,7 @@ import { RetryInputConfig } from "@aws-sdk/middleware-retry";
 import { AwsAuthInputConfig } from "@aws-sdk/middleware-signing";
 import { GetCallerIdentityCommand, STSClient } from "@aws-sdk/client-sts";
 import { Logger } from "./logger.js";
-import { SdkProvider } from "aws-cdk/lib/api/aws-auth/sdk-provider.js";
+import { SdkProvider } from "sst-aws-cdk/lib/api/aws-auth/sdk-provider.js";
 import { StandardRetryStrategy } from "@aws-sdk/middleware-retry";
 
 type Config = RegionInputConfig &

@@ -250,7 +250,7 @@ export class Script extends Construct {
     //       when rebuilding infrastructure. Otherwise, there will always be
     //       a change when rebuilding infrastructure b/c the "BuildAt" property
     //       changes on each build.
-    const builtAt = app.local ? app.debugStartedAt : Date.now();
+    const builtAt = app.mode === "dev" ? app.debugStartedAt : Date.now();
     new cdk.CustomResource(this, "ScriptResource", {
       serviceToken: crFunction.functionArn,
       resourceType: "Custom::SSTScript",

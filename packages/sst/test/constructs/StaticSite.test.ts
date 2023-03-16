@@ -49,11 +49,11 @@ test("base: no domain", async () => {
   });
   expect(site.url).toBeDefined();
   expect(site.customDomainUrl).toBeUndefined();
-  expect(site.cdk.bucket.bucketArn).toBeDefined();
-  expect(site.cdk.bucket.bucketName).toBeDefined();
-  expect(site.cdk.distribution.distributionId).toBeDefined();
-  expect(site.cdk.distribution.distributionDomainName).toBeDefined();
-  expect(site.cdk.certificate).toBeUndefined();
+  expect(site.cdk!.bucket.bucketArn).toBeDefined();
+  expect(site.cdk!.bucket.bucketName).toBeDefined();
+  expect(site.cdk!.distribution.distributionId).toBeDefined();
+  expect(site.cdk!.distribution.distributionDomainName).toBeDefined();
+  expect(site.cdk!.certificate).toBeUndefined();
   countResources(stack, "AWS::S3::Bucket", 1);
   hasResource(stack, "AWS::S3::Bucket", {
     PublicAccessBlockConfiguration: {
@@ -166,11 +166,11 @@ test("base: with domain", async () => {
   });
   expect(site.url).toBeDefined();
   expect(site.customDomainUrl).toBeDefined();
-  expect(site.cdk.bucket.bucketArn).toBeDefined();
-  expect(site.cdk.bucket.bucketName).toBeDefined();
-  expect(site.cdk.distribution.distributionId).toBeDefined();
-  expect(site.cdk.distribution.distributionDomainName).toBeDefined();
-  expect(site.cdk.certificate).toBeDefined();
+  expect(site.cdk!.bucket.bucketArn).toBeDefined();
+  expect(site.cdk!.bucket.bucketName).toBeDefined();
+  expect(site.cdk!.distribution.distributionId).toBeDefined();
+  expect(site.cdk!.distribution.distributionDomainName).toBeDefined();
+  expect(site.cdk!.certificate).toBeDefined();
   countResources(stack, "AWS::S3::Bucket", 1);
   countResources(stack, "AWS::CloudFront::Distribution", 1);
   hasResource(stack, "AWS::CloudFront::Distribution", {
@@ -243,11 +243,11 @@ test("base: with domain with alias", async () => {
   });
   expect(site.url).toBeDefined();
   expect(site.customDomainUrl).toBeDefined();
-  expect(site.cdk.bucket.bucketArn).toBeDefined();
-  expect(site.cdk.bucket.bucketName).toBeDefined();
-  expect(site.cdk.distribution.distributionId).toBeDefined();
-  expect(site.cdk.distribution.distributionDomainName).toBeDefined();
-  expect(site.cdk.certificate).toBeDefined();
+  expect(site.cdk!.bucket.bucketArn).toBeDefined();
+  expect(site.cdk!.bucket.bucketName).toBeDefined();
+  expect(site.cdk!.distribution.distributionId).toBeDefined();
+  expect(site.cdk!.distribution.distributionDomainName).toBeDefined();
+  expect(site.cdk!.certificate).toBeDefined();
   countResources(stack, "AWS::S3::Bucket", 2);
   hasResource(stack, "AWS::S3::Bucket", {
     WebsiteConfiguration: {
@@ -1102,6 +1102,25 @@ test("constructor: environment appends to replaceValues", async () => {
       },
     ],
   });
+});
+
+test("constructor: sst deploy inactive stack", async () => {
+  const app = await createApp({
+    mode: "deploy",
+    isActiveStack(stackName) {
+      return false;
+    },
+  });
+  const stack = new Stack(app, "stack");
+  const site = new StaticSite(stack, "Site", {
+    path: "test/constructs/site",
+  });
+  expect(site.url).toBeUndefined();
+  expect(site.customDomainUrl).toBeUndefined();
+  expect(site.cdk).toBeUndefined();
+  countResources(stack, "AWS::CloudFront::Distribution", 0);
+  countResources(stack, "Custom::SSTBucketDeployment", 0);
+  countResources(stack, "Custom::CloudFrontInvalidator", 0);
 });
 
 test("constructor: sst dev", async () => {

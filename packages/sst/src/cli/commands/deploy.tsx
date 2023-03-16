@@ -54,6 +54,14 @@ export const deploy = (program: Program) =>
       Colors.line(`   ${Colors.bold("Account:")} ${identity.Account}`);
       Colors.gap();
 
+      const isActiveStack = (stackId: string) =>
+        !args.filter ||
+        stackId
+          .toLowerCase()
+          .replace(project.config.name.toLowerCase(), "")
+          .replace(project.config.stage.toLowerCase(), "")
+          .includes(args.filter.toLowerCase());
+
       // Generate cloud assembly
       // - if --from is specified, we will use the existing cloud assembly
       // - if --from is not specified, we will call synth to generate
@@ -69,20 +77,13 @@ export const deploy = (program: Program) =>
         const result = await Stacks.synth({
           fn: project.stacks,
           mode: "deploy",
+          isActiveStack,
         });
         spinner.succeed();
         return result;
       })();
 
-      const target = assembly.stacks.filter(
-        (s) =>
-          !args.filter ||
-          s.id
-            .toLowerCase()
-            .replace(project.config.name.toLowerCase(), "")
-            .replace(project.config.stage.toLowerCase(), "")
-            .includes(args.filter.toLowerCase())
-      );
+      const target = assembly.stacks.filter((s) => isActiveStack(s.id));
       if (!target.length) {
         Colors.line(`No stacks found matching ${blue(args.filter!)}`);
         process.exit(1);

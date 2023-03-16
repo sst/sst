@@ -199,6 +199,7 @@ export class Job extends Construct implements SSTConstruct {
     super(scope, props.cdk?.id || id);
 
     const app = this.node.root as App;
+    const stack = Stack.of(scope) as Stack;
     this.id = id;
     this.props = props;
     useFunctions().add(this.node.addr, {
@@ -211,11 +212,13 @@ export class Job extends Construct implements SSTConstruct {
       .replace(/\//g, "-")
       .replace(/\./g, "-");
     const isLiveDevEnabled =
-      app.local && (this.props.enableLiveDev === false ? false : true);
+      app.mode === "dev" && (this.props.enableLiveDev === false ? false : true);
 
     this.job = this.createCodeBuildProject();
     this.createLogRetention();
-    if (isLiveDevEnabled) {
+    if (!stack.isActive) {
+      this._jobInvoker = this.createCodeBuildInvoker();
+    } else if (isLiveDevEnabled) {
       this._jobInvoker = this.createLocalInvoker();
     } else {
       this._jobInvoker = this.createCodeBuildInvoker();
@@ -346,9 +349,6 @@ export class Job extends Construct implements SSTConstruct {
 
   private buildCodeBuildProjectCode() {
     const app = this.node.root as App;
-
-    // Handle remove (ie. sst remove)
-    if (app.mode === "remove") return;
 
     useDeferredTasks().add(async () => {
       // Build function

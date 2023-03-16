@@ -40,13 +40,22 @@ export class Stack extends cdk.Stack {
   public readonly defaultFunctionProps: FunctionProps[];
 
   /**
+   * Create a custom resource handler per stack. This handler will
+   * be used by all the custom resources in the stack.
    * @internal
    */
   public readonly customResourceHandler: lambda.Function;
 
+  /**
+   * Skip building Function/Site code when stack is not active
+   * ie. `sst remove` and `sst deploy PATTERN` (pattern not matched)
+   * @internal
+   */
+  public readonly isActive: boolean;
+
   constructor(scope: Construct, id: string, props?: StackProps) {
-    const root = scope.node.root as App;
-    const stackId = root.logicalPrefixedName(id);
+    const app = scope.node.root as App;
+    const stackId = app.logicalPrefixedName(id);
 
     Stack.checkForPropsIsConstruct(id, props);
     Stack.checkForEnvInProps(id, props);
@@ -54,20 +63,20 @@ export class Stack extends cdk.Stack {
     super(scope, stackId, {
       ...props,
       env: {
-        account: root.account,
-        region: root.region,
+        account: app.account,
+        region: app.region,
       },
       synthesizer: props?.synthesizer || Stack.buildSynthesizer(),
     });
 
-    this.stage = root.stage;
-    this.defaultFunctionProps = root.defaultFunctionProps.map((dfp) =>
+    this.stage = app.stage;
+    this.defaultFunctionProps = app.defaultFunctionProps.map((dfp) =>
       typeof dfp === "function" ? dfp(this) : dfp
     );
-
-    // Create a custom resource handler per stack. This handler will
-    // be used by all the custom resources in the stack.
     this.customResourceHandler = this.createCustomResourceHandler();
+    this.isActive =
+      app.mode !== "remove" &&
+      (!app.isActiveStack || app.isActiveStack?.(this.stackName) === true);
   }
 
   /**

@@ -651,18 +651,39 @@ export class Function extends CDKFunction implements SSTConstruct {
       RetentionDays[
         props.logRetention.toUpperCase() as keyof typeof RetentionDays
       ];
-    const isLiveDevEnabled = props.enableLiveDev === false ? false : true;
+    const isLiveDevEnabled =
+      app.mode === "dev" && (props.enableLiveDev === false ? false : true);
 
     Function.validateHandlerSet(id, props);
     Function.validateVpcSettings(id, props);
 
+    // Handle inactive stacks
+    if (!stack.isActive) {
+      // Note: need to override runtime as CDK does not support inline code
+      //       for some runtimes.
+      super(scope, id, {
+        ...props,
+        architecture,
+        code: Code.fromInline("export function placeholder() {}"),
+        handler: "index.placeholder",
+        functionName,
+        runtime: CDKRuntime.NODEJS_16_X,
+        memorySize,
+        ephemeralStorageSize: diskSize,
+        timeout,
+        tracing,
+        environment: props.environment,
+        layers: Function.buildLayers(scope, id, props),
+        logRetention,
+      });
+    }
     // Handle local development (ie. sst start)
     // - set runtime to nodejs12.x for non-Node runtimes (b/c the stub is in Node)
     // - set retry to 0. When the debugger is disconnected, the Cron construct
     //   will still try to periodically invoke the Lambda, and the requests would
     //   fail and retry. So when launching `sst start`, a couple of retry requests
     //   from recent failed request will be received. And this behavior is confusing.
-    if (isLiveDevEnabled && app.mode === "dev") {
+    else if (isLiveDevEnabled) {
       // If debugIncreaseTimeout is enabled:
       //   set timeout to 900s. This will give people more time to debug the function
       //   without timing out the request. Note API Gateway requests have a maximum
@@ -701,26 +722,6 @@ export class Function extends CDKFunction implements SSTConstruct {
         }),
       ]);
     }
-    // Handle remove (ie. sst remove)
-    else if (app.skipBuild) {
-      // Note: need to override runtime as CDK does not support inline code
-      //       for some runtimes.
-      super(scope, id, {
-        ...props,
-        architecture,
-        code: Code.fromInline("export function placeholder() {}"),
-        handler: "index.placeholder",
-        functionName,
-        runtime: CDKRuntime.NODEJS_16_X,
-        memorySize,
-        ephemeralStorageSize: diskSize,
-        timeout,
-        tracing,
-        environment: props.environment,
-        layers: Function.buildLayers(scope, id, props),
-        logRetention,
-      });
-    }
     // Handle build
     else {
       super(scope, id, {
@@ -753,15 +754,24 @@ export class Function extends CDKFunction implements SSTConstruct {
             ].join("\n")
           );
         }
-        const code = AssetCode.fromAsset(result.out);
 
-        // Update function's code
-        const codeConfig = code.bind(this);
+        // Update code
         const cfnFunction = this.node.defaultChild as CfnFunction;
-        cfnFunction.runtime =
-          supportedRuntimes[
-            props.runtime as keyof typeof supportedRuntimes
-          ].toString();
+        const code = AssetCode.fromAsset(result.out);
+        const codeConfig = code.bind(this);
+        cfnFunction.code = {
+          s3Bucket: codeConfig.s3Location?.bucketName,
+          s3Key: codeConfig.s3Location?.objectKey,
+          s3ObjectVersion: codeConfig.s3Location?.objectVersion,
+        };
+        cfnFunction.handler = result.handler;
+        code.bindToResource(cfnFunction);
+
+        // Update runtime
+        // @ts-ignore - override "runtime" private property
+        this.runtime =
+          supportedRuntimes[props.runtime as keyof typeof supportedRuntimes];
+        cfnFunction.runtime = this.runtime.toString();
         /*
         if (isJavaRuntime) {
           const providedRuntime = (bundle as FunctionBundleJavaProps)
@@ -771,13 +781,6 @@ export class Function extends CDKFunction implements SSTConstruct {
           }
         }
         */
-        cfnFunction.code = {
-          s3Bucket: codeConfig.s3Location?.bucketName,
-          s3Key: codeConfig.s3Location?.objectKey,
-          s3ObjectVersion: codeConfig.s3Location?.objectVersion,
-        };
-        cfnFunction.handler = result.handler;
-        code.bindToResource(cfnFunction);
       });
     }
 

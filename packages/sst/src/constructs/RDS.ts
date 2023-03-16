@@ -499,7 +499,8 @@ export class RDS extends Construct implements SSTConstruct {
         RDS_ENGINE_MODE: engine.includes("postgres") ? "postgres" : "mysql",
         // for live development, perserve the migrations path so the migrator
         // can locate the migration files
-        RDS_MIGRATIONS_PATH: app.local ? migrations : migrationsDestination,
+        RDS_MIGRATIONS_PATH:
+          app.mode === "dev" ? migrations : migrationsDestination,
       },
       // Note that we need to generate a relative path of the migrations off the
       // srcPath because sst.Function internally builds the copy "from" path by
@@ -545,17 +546,16 @@ export class RDS extends Construct implements SSTConstruct {
     //       infrastructure. Otherwise, there will always be a change when
     //       rebuilding infrastructure b/c the "BuildAt" property changes on
     //       each build.
-    const hash = app.local ? 0 : this.generateMigrationsHash(migrations);
+    const hash =
+      app.mode === "dev" ? 0 : this.generateMigrationsHash(migrations);
     new cdk.CustomResource(this, "MigrationResource", {
       serviceToken: handler.functionArn,
       resourceType: "Custom::SSTScript",
       properties: {
-        UserCreateFunction: app.local
-          ? undefined
-          : this.migratorFunction?.functionName,
-        UserUpdateFunction: app.local
-          ? undefined
-          : this.migratorFunction?.functionName,
+        UserCreateFunction:
+          app.mode === "dev" ? undefined : this.migratorFunction?.functionName,
+        UserUpdateFunction:
+          app.mode === "dev" ? undefined : this.migratorFunction?.functionName,
         UserParams: JSON.stringify({}),
         MigrationsHash: hash,
       },
