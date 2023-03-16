@@ -36,4 +36,4 @@ export function ExampleStack({ stack }: StackContext) {
     APiUrl: api.url,
     ApiKey: api.cdk.graphqlApi.apiKey || "",
   });
-k
+}
