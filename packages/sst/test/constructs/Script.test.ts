@@ -102,8 +102,9 @@ test("onCreate: is string", async () => {
   });
 });
 
-test("onCreate: is Function: liveDebug enabled", async () => {
-  const stack = new Stack(await createApp(), "stack");
+test("onCreate: is Function: sst dev", async () => {
+  const app = await createApp({ mode: "dev" });
+  const stack = new Stack(app, "stack");
   const f = new Function(stack, "Function", { handler: "test/lambda.handler" });
   expect(() => {
     new Script(stack, "Script", {
@@ -116,8 +117,9 @@ test("onCreate: is Function: liveDebug enabled", async () => {
   );
 });
 
-test("onCreate: is Function: liveDebug disabled", async () => {
-  const stack = new Stack(await createApp(), "stack");
+test("onCreate: is Function: sst dev: liveDebug disabled", async () => {
+  const app = await createApp({ mode: "dev" });
+  const stack = new Stack(app, "stack");
   const f = new Function(stack, "Function", {
     handler: "test/lambda.handler",
     timeout: 20,
@@ -147,7 +149,7 @@ test("onCreate: is Function: liveDebug disabled", async () => {
   });
 });
 
-test("onCreate: is Function: liveDebug enabled", async () => {
+test("onCreate: is Function: set defaults", async () => {
   const stack = new Stack(await createApp(), "stack");
   const f = new Function(stack, "Function", {
     handler: "test/lambda.handler",
