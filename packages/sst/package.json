@@ -62,7 +62,7 @@
     "@trpc/server": "9.16.0",
     "adm-zip": "^0.5.10",
     "archiver": "^5.3.1",
-    "sst-aws-cdk": "2.62.2",
+    "sst-aws-cdk": "2.69.0",
     "aws-cdk-lib": "2.62.2",
     "aws-iot-device-sdk": "^2.2.12",
     "aws-iot-device-sdk-v2": "^1.9.5",
