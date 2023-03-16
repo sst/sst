@@ -27,7 +27,7 @@ You can set the removal policy on all the resources in your SST app.
 Make sure to not set the default removal policy to `DESTROY` for production environments.
 :::
 
-```ts title="sst.config.ts"
+```ts title="sst.config.ts" {1,8-11}
 import { RemovalPolicy } from "aws-cdk-lib";
 
 export default {
