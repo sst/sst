@@ -355,6 +355,7 @@ export class StaticSite extends Construct implements SSTConstruct {
     super(scope, props?.cdk?.id || id);
 
     const app = scope.node.root as App;
+    const stack = Stack.of(this) as Stack;
     this.id = id;
     this.props = {
       path: ".",
@@ -362,7 +363,8 @@ export class StaticSite extends Construct implements SSTConstruct {
       ...props,
     };
 
-    this.doNotDeploy = (app.local || app.skipBuild) && !this.props.dev?.deploy;
+    this.doNotDeploy =
+      !stack.isActive || (app.mode === "dev" && !this.props.dev?.deploy);
 
     this.validateCustomDomainSettings();
     this.registerSiteEnvironment();

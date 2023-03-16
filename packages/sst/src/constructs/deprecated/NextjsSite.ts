@@ -312,9 +312,10 @@ export class NextjsSite extends Construct implements SSTConstruct {
 
     this.id = id;
     const app = scope.node.root as App;
+    const stack = Stack.of(this) as Stack;
     // Local development or skip build => stub asset
     this.isPlaceholder =
-      (app.local || app.skipBuild) && !props.disablePlaceholder;
+      !stack.isActive && app.mode === "dev" && !props.disablePlaceholder;
     this.sstBuildDir = useProject().paths.artifacts;
     const fileSizeLimit = app.isRunningSSTTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment

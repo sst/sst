@@ -75,3 +75,40 @@ test("getAllFunctions", async () => {
 
   expect(stack1.getAllFunctions().length).toBe(2);
 });
+
+test("isActive: deploy mode", async () => {
+  const app = await createApp({
+    mode: "deploy",
+  });
+  const stack = new Stack(app, "stack");
+  expect(stack.isActive).toBeTruthy();
+});
+
+test("isActive: deploy mode with active stacks", async () => {
+  const app = await createApp({
+    mode: "deploy",
+    isActiveStack(stackName) {
+      return stackName.includes("stack1");
+    },
+  });
+  const stack1 = new Stack(app, "stack1");
+  const stack2 = new Stack(app, "stack2");
+  expect(stack1.isActive).toBeTruthy();
+  expect(stack2.isActive).toBeFalsy();
+});
+
+test("isActive: dev mode", async () => {
+  const app = await createApp({
+    mode: "dev",
+  });
+  const stack = new Stack(app, "stack");
+  expect(stack.isActive).toBeTruthy();
+});
+
+test("isActive: remove mode", async () => {
+  const app = await createApp({
+    mode: "remove",
+  });
+  const stack = new Stack(app, "stack");
+  expect(stack.isActive).toBeFalsy();
+});

@@ -57,13 +57,15 @@ export async function createApp(props?: Partial<AppDeployProps>) {
     stage: project.config.stage,
     name: project.config.name,
     region: project.config.region,
-    skipBuild: props?.mode === "remove",
     ...props,
   });
 }
 
 export function stringLike(pattern: RegExp): Matcher {
   return new StringMatch("stringLike", pattern);
+}
+export function stringNotLike(pattern: RegExp): Matcher {
+  return new StringNotMatch("stringLike", pattern);
 }
 
 class StringMatch extends Matcher {
@@ -74,6 +76,24 @@ class StringMatch extends Matcher {
   public test(actual: any): MatchResult {
     const result = new MatchResult(actual);
     if (!actual.match(this.pattern)) {
+      result.recordFailure({
+        matcher: this,
+        path: [],
+        message: `Expected ${this.pattern} but received ${actual}`,
+      });
+    }
+    return result;
+  }
+}
+
+class StringNotMatch extends Matcher {
+  constructor(public readonly name: string, private readonly pattern: RegExp) {
+    super();
+  }
+
+  public test(actual: any): MatchResult {
+    const result = new MatchResult(actual);
+    if (actual.match(this.pattern)) {
       result.recordFailure({
         matcher: this,
         path: [],

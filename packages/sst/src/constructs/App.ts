@@ -70,15 +70,11 @@ export interface AppDeployProps {
   readonly region?: string;
 
   readonly buildDir?: string;
-  readonly skipBuild?: boolean;
   readonly account?: string;
-  readonly debugEndpoint?: string;
-  readonly debugBucketArn?: string;
-  readonly debugBucketName?: string;
   readonly debugStartedAt?: number;
-  readonly debugBridge?: string;
   readonly debugIncreaseTimeout?: boolean;
   readonly mode: "deploy" | "dev" | "remove";
+  readonly isActiveStack?: (stackName: string) => boolean;
 }
 
 type AppRemovalPolicy = Lowercase<RemovalPolicy>;
@@ -116,19 +112,13 @@ export class App extends CDKApp {
    */
   public readonly account: string;
   /** @internal */
-  public readonly debugBridge?: string;
-  /** @internal */
-  public readonly debugEndpoint?: string;
-  /** @internal */
-  public readonly debugBucketArn?: string;
-  /** @internal */
-  public readonly debugBucketName?: string;
-  /** @internal */
   public readonly debugStartedAt?: number;
   /** @internal */
   public readonly debugIncreaseTimeout?: boolean;
   /** @internal */
   public readonly appPath: string;
+  /** @internal */
+  public readonly isActiveStack?: (stackName: string) => boolean;
 
   /** @internal */
   public defaultFunctionProps: (
@@ -141,20 +131,6 @@ export class App extends CDKApp {
   public get defaultRemovalPolicy() {
     return this._defaultRemovalPolicy;
   }
-
-  /**
-   * Skip building Function code
-   * Note that on `sst remove`, we do not want to bundle the Lambda functions.
-   *      CDK disables bundling (ie. zipping) for `cdk destroy` command.
-   *      But SST runs `cdk synth` first then manually remove each stack. Hence
-   *      we cannot rely on CDK to disable bundling, and we disable it manually.
-   *      This allows us to disable BOTH building and bundling, where as CDK
-   *      would only disable the latter. For example, `cdk destroy` still trys
-   *      to install Python dependencies in Docker.
-   *
-   * @internal
-   */
-  public readonly skipBuild: boolean;
 
   /**
    * @internal
@@ -173,19 +149,12 @@ export class App extends CDKApp {
       deployProps.region || process.env.CDK_DEFAULT_REGION || "us-east-1";
     this.account =
       deployProps.account || process.env.CDK_DEFAULT_ACCOUNT || "my-account";
-    this.skipBuild = deployProps.skipBuild || false;
+    this.isActiveStack = deployProps.isActiveStack;
     this.defaultFunctionProps = [];
 
-    if (deployProps.debugEndpoint) {
-      this.local = true;
-      this.debugEndpoint = deployProps.debugEndpoint;
-      this.debugBucketArn = deployProps.debugBucketArn;
-      this.debugBucketName = deployProps.debugBucketName;
+    if (this.mode === "dev") {
       this.debugStartedAt = deployProps.debugStartedAt;
       this.debugIncreaseTimeout = deployProps.debugIncreaseTimeout;
-      if (deployProps.debugBridge) {
-        this.debugBridge = deployProps.debugBridge;
-      }
     }
   }
 
@@ -210,7 +179,7 @@ export class App extends CDKApp {
    * :::
    * @example
    * ```js
-   * app.setDefaultRemovalPolicy(app.local ? "destroy" : "retain")
+   * app.setDefaultRemovalPolicy(app.mode === "dev" ? "destroy" : "retain")
    * ```
    */
   public setDefaultRemovalPolicy(policy: AppRemovalPolicy) {

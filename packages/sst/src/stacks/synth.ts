@@ -10,10 +10,10 @@ import { useDotnetHandler } from "../runtime/handlers/dotnet.js";
 interface SynthOptions {
   buildDir?: string;
   outDir?: string;
-  skipBuild?: boolean;
   increaseTimeout?: boolean;
   mode: App["mode"];
   fn: (app: App) => Promise<void> | void;
+  isActiveStack?: (stackName: string) => boolean;
 }
 
 export async function synth(opts: SynthOptions) {
@@ -59,7 +59,7 @@ export async function synth(opts: SynthOptions) {
         region: project.config.region,
         mode: opts.mode,
         debugIncreaseTimeout: opts.increaseTimeout,
-        skipBuild: opts.mode === "remove",
+        isActiveStack: opts.isActiveStack,
       },
       {
         outdir: opts.buildDir,
