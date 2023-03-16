@@ -1,0 +1,20 @@
+name: aws-cdk
+
+on:
+  workflow_dispatch:
+
+jobs:
+  patch:
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        # https://github.com/actions/setup-node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16.x
+
+      - name: patch
+        run: node ./github/workflows/patch.mjs
+

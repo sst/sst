@@ -78,6 +78,7 @@ export interface AppDeployProps {
   readonly debugStartedAt?: number;
   readonly debugBridge?: string;
   readonly debugIncreaseTimeout?: boolean;
+
   readonly mode: "deploy" | "dev" | "remove";
 }
 

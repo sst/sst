@@ -1,0 +1,33 @@
+#!/bin/bash
+set -e
+
+mkdir tmp || true
+cd tmp
+
+TAR_FILE=$(curl https://registry.npmjs.org/aws-cdk/2.62.2 | jq -r '.dist.tarball')
+wget $TAR_FILE -O cdk.tar.gz
+tar -xvf cdk.tar.gz
+PACKAGE_JSON=./package/package.json
+VERSION=$(jq -r .version $PACKAGE_JSON)
+jq '
+  .dependencies += {chalk: .devDependencies.chalk, yaml: .devDependencies.yaml} |
+  del(.devDependencies.chalk, .devDependencies.yaml) |
+  .name = "sst-aws-cdk"
+' $PACKAGE_JSON > tmp.json
+mv tmp.json $PACKAGE_JSON
+cd package
+
+if npm publish; then
+  echo "Successfully published to npm"
+else
+  echo "Already published this version"
+fi
+
+cd ../../
+rm -rf tmp
+
+echo "Updating version to $VERSION"
+jq "
+  .dependencies[\"sst-aws-cdk\"] = \"$VERSION\"
+" ./packages/sst/package.json > tmp.json && mv tmp.json ./packages/sst/package.json
+

@@ -25,13 +25,7 @@ const SessionMemo = /* @__PURE__ */ Context.memo(() => {
   if (cookie) token = cookie;
 
   if (token) {
-    try {
-      const jwt = createVerifier({
-        algorithms: ["RS512"],
-        key: getPublicKey(),
-      })(token);
-      return jwt;
-    } catch {}
+    return Session.verify(token);
   }
 
   return {
