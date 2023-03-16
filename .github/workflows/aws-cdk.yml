@@ -67,6 +67,6 @@ jobs:
           git commit -am "Version updated"
           git push origin HEAD
 
-          gh pr create --title "Update sst-aws-cdk to $VERSION"
+          gh pr create --title "Update sst-aws-cdk to $VERSION" --fill
 
 
