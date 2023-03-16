@@ -1,9 +1,9 @@
-import { GenqlError } from './error'
-import { BatchOptions, createFetcher } from './fetcher'
-import { ExecutionResult, LinkedType } from './types'
+
+import  { type BatchOptions, createFetcher } from './fetcher'
+import type { ExecutionResult, LinkedType } from './types'
 import {
     generateGraphqlOperation,
-    GraphqlOperation,
+    type GraphqlOperation,
 } from './generateGraphqlOperation'
 
 export type Headers =

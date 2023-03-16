@@ -17,7 +17,7 @@ $ yarn create sst --template=examples/api-auth-lambda-authorizer-iam-response
 Start the Live Lambda Development environment.
 
 ```bash
-$ npm run start
+$ npm run dev
 ```
 
 Test the `/public` endpoint.
@@ -42,7 +42,7 @@ Note that the first time you hit the `/private` endpoint with a given username a
 
 ## Commands
 
-### `npm run start`
+### `npm run dev`
 
 Starts the Live Lambda Development environment.
 
@@ -57,10 +57,6 @@ Deploy all your stacks to AWS. Or optionally deploy, a specific stack.
 ### `npm run remove [stack]`
 
 Remove all your stacks and all of their resources from AWS. Or optionally removes, a specific stack.
-
-### `npm run test`
-
-Runs your tests using Jest. Takes all the [Jest CLI options](https://jestjs.io/docs/en/cli).
 
 ## Documentation
 

@@ -10,7 +10,7 @@ export function ExampleStack({ stack }: StackContext) {
           handler: "packages/functions/src/resize.main",
           nodejs: {
             esbuild: {
-              externalModules: ["sharp"],
+              external: ["sharp"],
             },
           },
           layers: [

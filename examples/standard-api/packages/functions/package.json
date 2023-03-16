@@ -3,15 +3,12 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "test": "sst bind 'vitest'",
+    "test": "sst bind vitest",
     "typecheck": "tsc -noEmit"
   },
   "devDependencies": {
-    "@types/node": "^18.14.2",
-    "@types/aws-lambda": "^8.10.111",
-    "sst": "^2.1.3"
-  },
-  "dependencies": {
-    "sst": "^2.1.3"
+    "@types/node": "^18.15.3",
+    "@types/aws-lambda": "^8.10.113",
+    "sst": "^2.1.35"
   }
 }

@@ -3,19 +3,18 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "test": "sst bind 'vitest'",
+    "test": "sst bind vitest",
     "typecheck": "tsc -noEmit"
   },
   "devDependencies": {
-    "@types/node": "^18.14.2",
-    "@types/aws-lambda": "^8.10.111",
-    "sst": "^2.1.2"
+    "@types/node": "^18.15.3",
+    "@types/aws-lambda": "^8.10.113",
+    "sst": "^2.1.35"
   },
   "dependencies": {
-    "sst": "^2.1.2",
-    "@pothos/core": "^3.27.0",
+    "@pothos/core": "^3.28.0",
     "graphql": "^16.6.0",
     "ulid": "^2.3.0",
-    "@types/aws-lambda": "^8.10.111"
+    "@types/aws-lambda": "^8.10.113"
   }
 }
