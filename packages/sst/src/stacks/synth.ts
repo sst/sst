@@ -2,7 +2,7 @@ import { Logger } from "../logger.js";
 import type { App } from "../constructs/App.js";
 import { useProject } from "../project.js";
 import { useAWSProvider, useSTSIdentity } from "../credentials.js";
-import * as contextproviders from "aws-cdk/lib/context-providers/index.js";
+import * as contextproviders from "sst-aws-cdk/lib/context-providers/index.js";
 import path from "path";
 import { VisibleError } from "../error.js";
 import { useDotnetHandler } from "../runtime/handlers/dotnet.js";
@@ -30,7 +30,7 @@ export async function synth(opts: SynthOptions) {
   useJavaHandler();
   useDotnetHandler();
   useRustHandler();
-  const { Configuration } = await import("aws-cdk/lib/settings.js");
+  const { Configuration } = await import("sst-aws-cdk/lib/settings.js");
   const project = useProject();
   const identity = await useSTSIdentity();
   opts = {

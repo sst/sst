@@ -245,7 +245,6 @@ importers:
       '@types/yargs': ^17.0.13
       adm-zip: ^0.5.10
       archiver: ^5.3.1
-      aws-cdk: 2.62.2
       aws-cdk-lib: 2.62.2
       aws-iot-device-sdk: ^2.2.12
       aws-iot-device-sdk-v2: ^1.9.5
@@ -280,6 +279,7 @@ importers:
       promptly: ^3.2.0
       react: 17.0.2
       remeda: ^1.3.0
+      sst-aws-cdk: 2.62.2
       tsx: ^3.12.1
       typescript: ^4.9.5
       undici: ^5.12.0
@@ -319,7 +319,6 @@ importers:
       '@trpc/server': 9.16.0
       adm-zip: 0.5.10
       archiver: 5.3.1
-      aws-cdk: 2.62.2
       aws-cdk-lib: 2.62.2_constructs@10.1.156
       aws-iot-device-sdk: 2.2.12
       aws-iot-device-sdk-v2: 1.9.5
@@ -354,6 +353,7 @@ importers:
       promptly: 3.2.0
       react: 17.0.2
       remeda: 1.3.0
+      sst-aws-cdk: 2.62.2
       undici: 5.12.0
       uuid: 9.0.0
       ws: 8.11.0
@@ -383,193 +383,6 @@ importers:
       typescript: 4.9.5
       vitest: 0.28.3
     publishDirectory: dist
-
-  packages/sst/dist:
-    specifiers:
-      '@aws-cdk/aws-apigatewayv2-alpha': ^2.62.2-alpha.0
-      '@aws-cdk/aws-apigatewayv2-authorizers-alpha': ^2.62.2-alpha.0
-      '@aws-cdk/aws-apigatewayv2-integrations-alpha': ^2.62.2-alpha.0
-      '@aws-cdk/cloud-assembly-schema': 2.62.2
-      '@aws-cdk/cloudformation-diff': 2.62.2
-      '@aws-cdk/cx-api': 2.62.2
-      '@aws-cdk/region-info': 2.62.2
-      '@aws-sdk/client-api-gateway': ^3.208.0
-      '@aws-sdk/client-cloudformation': ^3.279.0
-      '@aws-sdk/client-cloudfront': ^3.279.0
-      '@aws-sdk/client-codebuild': ^3.279.0
-      '@aws-sdk/client-iam': ^3.279.0
-      '@aws-sdk/client-iot': ^3.279.0
-      '@aws-sdk/client-iot-data-plane': ^3.279.0
-      '@aws-sdk/client-lambda': ^3.279.0
-      '@aws-sdk/client-rds-data': ^3.279.0
-      '@aws-sdk/client-s3': ^3.279.0
-      '@aws-sdk/client-ssm': ^3.279.0
-      '@aws-sdk/client-sts': ^3.279.0
-      '@aws-sdk/config-resolver': ^3.272.0
-      '@aws-sdk/credential-providers': ^3.279.0
-      '@aws-sdk/middleware-retry': ^3.272.0
-      '@aws-sdk/middleware-signing': ^3.272.0
-      '@aws-sdk/signature-v4-crt': ^3.272.0
-      '@aws-sdk/smithy-client': ^3.279.0
-      '@aws-sdk/types': ^3.272.0
-      '@babel/core': ^7.0.0-0
-      '@babel/generator': ^7.20.5
-      '@graphql-tools/merge': ^8.3.16
-      '@sls-next/lambda-at-edge': ^3.7.0
-      '@trpc/server': 9.16.0
-      '@tsconfig/node16': ^1.0.3
-      '@types/adm-zip': ^0.5.0
-      '@types/aws-iot-device-sdk': ^2.2.4
-      '@types/aws-lambda': ^8.10.108
-      '@types/babel__core': ^7.1.20
-      '@types/babel__generator': ^7.6.4
-      '@types/cross-spawn': ^6.0.2
-      '@types/express': ^4.17.14
-      '@types/glob': ^8.0.0
-      '@types/node': ^18.11.9
-      '@types/react': ^17.0.33
-      '@types/uuid': ^8.3.4
-      '@types/ws': ^8.5.3
-      '@types/yargs': ^17.0.13
-      adm-zip: ^0.5.10
-      archiver: ^5.3.1
-      aws-cdk: 2.62.2
-      aws-cdk-lib: 2.62.2
-      aws-iot-device-sdk: ^2.2.12
-      aws-iot-device-sdk-v2: ^1.9.5
-      aws-sdk: ^2.1326.0
-      builtin-modules: 3.2.0
-      cdk-assets: 2.62.2
-      chalk: ^4.1.2
-      chokidar: ^3.5.3
-      ci-info: ^3.7.0
-      colorette: ^2.0.19
-      conf: ^10.2.0
-      constructs: 10.1.156
-      cross-spawn: ^7.0.3
-      dendriform-immer-patch-optimiser: ^2.1.0
-      dotenv: ^16.0.3
-      esbuild: 0.16.13
-      express: ^4.18.2
-      fast-jwt: ^1.6.1
-      get-port: ^6.1.2
-      glob: ^8.0.3
-      graphql: '*'
-      graphql-helix: ^1.12.0
-      immer: '9'
-      ink: ^3.2.0
-      ink-spinner: ^4.0.3
-      kysely: ^0.23.4
-      kysely-codegen: ^0.9.0
-      kysely-data-api: ^0.2.0
-      minimatch: ^6.1.6
-      openid-client: ^5.1.8
-      ora: ^6.1.2
-      promptly: ^3.2.0
-      react: 17.0.2
-      remeda: ^1.3.0
-      tsx: ^3.12.1
-      typescript: ^4.9.5
-      undici: ^5.12.0
-      uuid: ^9.0.0
-      vitest: ^0.28.3
-      ws: ^8.11.0
-      yaml: 1.10.2
-      yargs: ^17.6.2
-      zip-local: ^0.3.5
-    dependencies:
-      '@aws-cdk/aws-apigatewayv2-alpha': 2.62.2-alpha.0_iqmstt3dpu37s47wyywi32lmnq
-      '@aws-cdk/aws-apigatewayv2-authorizers-alpha': 2.62.2-alpha.0_3y6ce3zap7bex36i7p46op7pcq
-      '@aws-cdk/aws-apigatewayv2-integrations-alpha': 2.62.2-alpha.0_3y6ce3zap7bex36i7p46op7pcq
-      '@aws-cdk/cloud-assembly-schema': 2.62.2
-      '@aws-cdk/cloudformation-diff': 2.62.2
-      '@aws-cdk/cx-api': 2.62.2_nodar2w6kpyag25oumcbwumkbq
-      '@aws-cdk/region-info': 2.62.2
-      '@aws-sdk/client-api-gateway': 3.208.0
-      '@aws-sdk/client-cloudformation': 3.279.0
-      '@aws-sdk/client-cloudfront': 3.279.0
-      '@aws-sdk/client-iam': 3.279.0
-      '@aws-sdk/client-iot': 3.279.0
-      '@aws-sdk/client-iot-data-plane': 3.279.0
-      '@aws-sdk/client-lambda': 3.279.0
-      '@aws-sdk/client-rds-data': 3.279.0
-      '@aws-sdk/client-s3': 3.279.0_nqq4dw5jcdtgsd5c7xgwp4u2d4
-      '@aws-sdk/client-ssm': 3.279.0
-      '@aws-sdk/client-sts': 3.279.0
-      '@aws-sdk/config-resolver': 3.272.0
-      '@aws-sdk/credential-providers': 3.279.0
-      '@aws-sdk/middleware-retry': 3.272.0
-      '@aws-sdk/middleware-signing': 3.272.0
-      '@aws-sdk/signature-v4-crt': 3.272.0
-      '@aws-sdk/smithy-client': 3.279.0
-      '@babel/core': 7.21.3
-      '@babel/generator': 7.21.3
-      '@trpc/server': 9.16.0
-      adm-zip: 0.5.10
-      archiver: 5.3.1
-      aws-cdk: 2.62.2
-      aws-cdk-lib: 2.62.2_constructs@10.1.156
-      aws-iot-device-sdk: 2.2.12
-      aws-iot-device-sdk-v2: 1.9.5
-      aws-sdk: 2.1326.0
-      builtin-modules: 3.2.0
-      cdk-assets: 2.62.2
-      chalk: 4.1.2
-      chokidar: 3.5.3
-      ci-info: 3.8.0
-      colorette: 2.0.19
-      conf: 10.2.0
-      constructs: 10.1.156
-      cross-spawn: 7.0.3
-      dendriform-immer-patch-optimiser: 2.1.3_immer@9.0.16
-      dotenv: 16.0.3
-      esbuild: 0.16.13
-      express: 4.18.2
-      fast-jwt: 1.7.1
-      get-port: 6.1.2
-      glob: 8.0.3
-      graphql: 16.6.0
-      graphql-helix: 1.13.0_graphql@16.6.0
-      immer: 9.0.16
-      ink: 3.2.0_q5o373oqrklnndq2vhekyuzhxi
-      ink-spinner: 4.0.3_ink@3.2.0+react@17.0.2
-      kysely: 0.23.4
-      kysely-codegen: 0.9.0_kysely@0.23.4
-      kysely-data-api: 0.2.0_mw5yj24emorir33vi6uk6vcs7u
-      minimatch: 6.1.6
-      openid-client: 5.3.0
-      ora: 6.1.2
-      promptly: 3.2.0
-      react: 17.0.2
-      remeda: 1.3.0
-      undici: 5.21.0
-      uuid: 9.0.0
-      ws: 8.11.0
-      yaml: 1.10.2
-      yargs: 17.7.1
-      zip-local: 0.3.5
-    devDependencies:
-      '@aws-sdk/client-codebuild': 3.279.0
-      '@aws-sdk/types': 3.272.0
-      '@graphql-tools/merge': 8.3.16_graphql@16.6.0
-      '@sls-next/lambda-at-edge': 3.7.0_e4p4zyhvzxrmirisv5gbcr44ny
-      '@tsconfig/node16': 1.0.3
-      '@types/adm-zip': 0.5.0
-      '@types/aws-iot-device-sdk': 2.2.4
-      '@types/aws-lambda': 8.10.112
-      '@types/babel__core': 7.20.0
-      '@types/babel__generator': 7.6.4
-      '@types/cross-spawn': 6.0.2
-      '@types/express': 4.17.14
-      '@types/glob': 8.0.0
-      '@types/node': 18.15.3
-      '@types/react': 17.0.52
-      '@types/uuid': 8.3.4
-      '@types/ws': 8.5.3
-      '@types/yargs': 17.0.13
-      tsx: 3.12.1
-      typescript: 4.9.5
-      vitest: 0.28.3
 
   www:
     specifiers:
@@ -4895,10 +4708,6 @@ packages:
     resolution: {integrity: sha512-EWZ4mE2diW3QALKvDMiXnbZpRvlj+nayZ112nK93SnhqOtpdsbVD4W+2tEoT3YNBAG9RBR0ISY758ZkOgsn6pQ==}
     engines: {node: '>=6.9.0'}
 
-  /@babel/compat-data/7.20.14:
-    resolution: {integrity: sha512-0YpKHD6ImkWMEINCyDAD0HLLUH/lPCefG8ld9it8DJB2wnApraKuhgYTvTY1z7UFIfBTGy5LwncZ+5HWWGbhFw==}
-    engines: {node: '>=6.9.0'}
-
   /@babel/compat-data/7.21.0:
     resolution: {integrity: sha512-gMuZsmsgxk/ENC3O/fRw5QY8A9/uxQbbCEypnLIiYYc/qVJtEV7ouxC3EllIIwNzMqAQee5tanFabWsUOutS7g==}
     engines: {node: '>=6.9.0'}
@@ -4993,6 +4802,7 @@ packages:
       semver: 6.3.0
     transitivePeerDependencies:
       - supports-color
+    dev: true
 
   /@babel/generator/7.20.14:
     resolution: {integrity: sha512-AEmuXHdcD3A52HHXxaTmYlb8q/xMEhoRP67B3T4Oq7lbmSoqroMZzjnGj3+i1io3pdnF8iBYVu4Ilj+c4hBxYg==}
@@ -5035,6 +4845,7 @@ packages:
       '@jridgewell/gen-mapping': 0.3.2
       '@jridgewell/trace-mapping': 0.3.17
       jsesc: 2.5.2
+    dev: true
 
   /@babel/helper-annotate-as-pure/7.18.6:
     resolution: {integrity: sha512-duORpUiYrEpzKIop6iNbjnwKLAKnJ47csTyRACyEmWj0QdUrm5aqNJGHSSEQSUAvNW0ojX0dOmK9dZduvkfeXA==}
@@ -5067,9 +4878,9 @@ packages:
     peerDependencies:
       '@babel/core': ^7.0.0
     dependencies:
-      '@babel/compat-data': 7.20.14
+      '@babel/compat-data': 7.21.0
       '@babel/core': 7.20.12
-      '@babel/helper-validator-option': 7.18.6
+      '@babel/helper-validator-option': 7.21.0
       browserslist: 4.21.5
       lru-cache: 5.1.1
       semver: 6.3.0
@@ -5086,6 +4897,7 @@ packages:
       browserslist: 4.21.5
       lru-cache: 5.1.1
       semver: 6.3.0
+    dev: true
 
   /@babel/helper-create-class-features-plugin/7.20.2_@babel+core@7.20.12:
     resolution: {integrity: sha512-k22GoYRAHPYr9I+Gvy2ZQlAe5mGy8BqWst2wRt8cwIufWTxrsVshhIBvYNqC80N0GSFWTsqRVexOtfzlgOEDvA==}
@@ -5170,6 +4982,7 @@ packages:
     dependencies:
       '@babel/template': 7.20.7
       '@babel/types': 7.21.3
+    dev: true
 
   /@babel/helper-hoist-variables/7.18.6:
     resolution: {integrity: sha512-UlJQPkFqFULIcyW5sbzgbkxn2FKRgwWiRexcuaR8RNJRy8+LLveqPjwZV/bwrLZCN0eUHD/x8D0heK1ozuoo6Q==}
@@ -5240,6 +5053,7 @@ packages:
       '@babel/types': 7.21.3
     transitivePeerDependencies:
       - supports-color
+    dev: true
 
   /@babel/helper-optimise-call-expression/7.18.6:
     resolution: {integrity: sha512-HP59oD9/fEHQkdcbgFCnbmgH5vIQTJbxh2yf+CdM89/glUNnuzr87Q8GIjGEnOktTROemO0Pe0iPAYbqZuOUiA==}
@@ -5366,6 +5180,7 @@ packages:
       '@babel/types': 7.21.3
     transitivePeerDependencies:
       - supports-color
+    dev: true
 
   /@babel/highlight/7.18.6:
     resolution: {integrity: sha512-u7stbOuYjaPezCuLj29hNW1v64M2Md2qupEKP1fHc7WdOA3DgLh37suiSrZYY7haUB7iBeQZ9P1uiRF359do3g==}
@@ -5677,16 +5492,6 @@ packages:
       '@babel/core': ^7.0.0-0
     dependencies:
       '@babel/core': 7.20.2
-      '@babel/helper-plugin-utils': 7.20.2
-    dev: true
-
-  /@babel/plugin-syntax-jsx/7.14.5_@babel+core@7.21.3:
-    resolution: {integrity: sha512-ohuFIsOMXJnbOMRfX7/w7LocdR6R7whhuRD4ax8IipLcLPlZGJKkBxgHp++U4N/vKyU16/YDQr2f5seajD3jIw==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.21.3
       '@babel/helper-plugin-utils': 7.20.2
     dev: true
 
@@ -6548,6 +6353,7 @@ packages:
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
+    dev: true
 
   /@babel/types/7.15.0:
     resolution: {integrity: sha512-OBvfqnllOIdX4ojTHpwZbpvz4j3EWyjkZEdmjH0/cgsd6QOdSgU8rLSk6ard/pcW7rlmjdVSX/AWOaORR1uNOQ==}
@@ -9070,23 +8876,6 @@ packages:
       webpack-sources: 3.2.3
     dev: false
 
-  /@sls-next/aws-common/3.7.0_2sdd4zq22celvct5p4ofi4vyeq:
-    resolution: {integrity: sha512-NNaJkBg+iJBlZW3pj4we3P6dzuLEMloWSnwzNXU518KGWvx7r3+2pD0kMe+LprTRBuOP82DCeYMHxncM3CvC+w==}
-    dependencies:
-      '@aws-sdk/client-s3': 3.54.0_nqq4dw5jcdtgsd5c7xgwp4u2d4
-      '@aws-sdk/client-sqs': 3.54.0
-      '@sls-next/core': 3.7.0_mu77bufrqcxtjvesakdvp65cii
-    transitivePeerDependencies:
-      - '@aws-sdk/signature-v4-crt'
-      - '@babel/core'
-      - fibers
-      - node-sass
-      - sass
-      - supports-color
-      - typescript
-      - webpack
-    dev: true
-
   /@sls-next/aws-common/3.7.0_lqj3kxfzs6ryaoz6cwn47eev6a:
     resolution: {integrity: sha512-NNaJkBg+iJBlZW3pj4we3P6dzuLEMloWSnwzNXU518KGWvx7r3+2pD0kMe+LprTRBuOP82DCeYMHxncM3CvC+w==}
     dependencies:
@@ -9125,64 +8914,6 @@ packages:
       sharp: 0.29.1
     transitivePeerDependencies:
       - '@babel/core'
-      - fibers
-      - node-sass
-      - sass
-      - supports-color
-      - typescript
-      - webpack
-    dev: true
-
-  /@sls-next/core/3.7.0_mu77bufrqcxtjvesakdvp65cii:
-    resolution: {integrity: sha512-fCRV0iI84FboRk8YKATSFVp4dzR27zd6Rez/qfa4Utv9HL9UZbDTpKlyuUp24vEvADAZSp5laxj1JgOZBn2iOQ==}
-    dependencies:
-      '@hapi/accept': 5.0.2
-      cookie: 0.4.2
-      execa: 5.1.1
-      fast-glob: 3.2.11
-      fresh: 0.5.2
-      fs-extra: 9.1.0
-      is-animated: 2.0.2
-      jsonwebtoken: 8.5.1
-      next: 11.1.2_gy5jcic3qpn24m2awrx62vzj2a
-      node-fetch: 2.6.5
-      normalize-path: 3.0.0
-      path-to-regexp: 6.2.0
-      react: 17.0.2
-      react-dom: 17.0.2_react@17.0.2
-      send: 0.17.2
-      sharp: 0.29.1
-    transitivePeerDependencies:
-      - '@babel/core'
-      - fibers
-      - node-sass
-      - sass
-      - supports-color
-      - typescript
-      - webpack
-    dev: true
-
-  /@sls-next/lambda-at-edge/3.7.0_e4p4zyhvzxrmirisv5gbcr44ny:
-    resolution: {integrity: sha512-7eTqq1baZEuvEhexDchsP3QdOqPYaW123c7TupYB60Rs31KQ12xXvpzgn+mTMuFVIOQUDY5y8EKsuzYGRrQfcw==}
-    hasBin: true
-    peerDependencies:
-      builtin-modules: 3.2.0
-    dependencies:
-      '@aws-sdk/client-s3': 3.54.0_nqq4dw5jcdtgsd5c7xgwp4u2d4
-      '@aws-sdk/client-sqs': 3.54.0
-      '@sls-next/aws-common': 3.7.0_2sdd4zq22celvct5p4ofi4vyeq
-      '@sls-next/core': 3.7.0_mu77bufrqcxtjvesakdvp65cii
-      '@vercel/nft': 0.17.5
-      builtin-modules: 3.2.0
-      execa: 5.1.1
-      fs-extra: 9.1.0
-      get-stream: 6.0.1
-      node-fetch: 2.6.5
-      normalize-path: 3.0.0
-    transitivePeerDependencies:
-      - '@aws-sdk/signature-v4-crt'
-      - '@babel/core'
-      - encoding
       - fibers
       - node-sass
       - sass
@@ -10612,14 +10343,6 @@ packages:
       - semver
       - yaml
 
-  /aws-cdk/2.62.2:
-    resolution: {integrity: sha512-fACUQEdc43AfiqKKXUZLuHB2VADLU965hl50Fn6BhMemFmUsc+iS/GFfOwvfCUO3/iaRtsn/gk+dQ3zZ+snKRw==}
-    engines: {node: '>= 14.15.0'}
-    hasBin: true
-    optionalDependencies:
-      fsevents: 2.3.2
-    dev: false
-
   /aws-crt/1.15.9:
     resolution: {integrity: sha512-tInTJwASvrj+iIQZd+p/S3fUf2nWp3mNQv+TJHndZIllCQg3tcy8vF6pkXR++3fF/eAIOYnr7adf7z2/JneJ8g==}
     requiresBuild: true
@@ -10682,14 +10405,14 @@ packages:
   /axios/0.21.4_debug@4.3.4:
     resolution: {integrity: sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==}
     dependencies:
-      follow-redirects: 1.15.2_debug@4.3.4
+      follow-redirects: 1.15.2
     transitivePeerDependencies:
       - debug
 
   /axios/0.24.0:
     resolution: {integrity: sha512-Q6cWsys88HoPgAaFAVUb0WpPk0O8iTeisR9IMqy9G8AbO4NlpVknrnQS03zzF9PGAWgO3cgletO3VjV/P7VztA==}
     dependencies:
-      follow-redirects: 1.15.2_debug@4.3.4
+      follow-redirects: 1.15.2
     transitivePeerDependencies:
       - debug
 
@@ -10704,7 +10427,7 @@ packages:
   /axios/0.25.0_debug@4.3.4:
     resolution: {integrity: sha512-cD8FOb0tRH3uuEe6+evtAbgJtfxr7ly3fQjYcMcuPlgkwVS9xboaVIpcDV+cYQe+yGykgwZCs1pzjntcGa6l5g==}
     dependencies:
-      follow-redirects: 1.15.2
+      follow-redirects: 1.15.2_debug@4.3.4
     transitivePeerDependencies:
       - debug
     dev: true
@@ -11446,6 +11169,7 @@ packages:
   /ci-info/3.8.0:
     resolution: {integrity: sha512-eXTggHWSooYhq49F2opQhuHWgzucfF2YgODK4e1566GQs5BIfP30B0oenwBJHfWxAs2fyPB1s7Mg949zLf61Yw==}
     engines: {node: '>=8'}
+    dev: true
 
   /cipher-base/1.0.4:
     resolution: {integrity: sha512-Kkht5ye6ZGmwv40uUDZztayT2ThLQGfnj/T71N/XzeZeo3nf8foyW7zGTsPYkEya3m5f3cAypH+qe7YOrM1U2Q==}
@@ -13894,6 +13618,7 @@ packages:
         optional: true
     dependencies:
       debug: 4.3.4
+    dev: true
 
   /for-each/0.3.3:
     resolution: {integrity: sha512-jqYfLp7mo9vIyQf8ykW2v7A+2N4QjeCeI5+Dz9XraiO1ign81wjiH7Fb9vSOWvQfNtmSa4H2RoQTrrXivdUZmw==}
@@ -16899,88 +16624,6 @@ packages:
       stream-http: 3.1.1
       string_decoder: 1.3.0
       styled-jsx: 4.0.1_dzj4tgexvvjhyxdh56ztoytblu
-      timers-browserify: 2.0.12
-      tty-browserify: 0.0.1
-      use-subscription: 1.5.1_react@17.0.2
-      util: 0.12.4
-      vm-browserify: 1.1.2
-      watchpack: 2.1.1
-    optionalDependencies:
-      '@next/swc-darwin-arm64': 11.1.2
-      '@next/swc-darwin-x64': 11.1.2
-      '@next/swc-linux-x64-gnu': 11.1.2
-      '@next/swc-win32-x64-msvc': 11.1.2
-    transitivePeerDependencies:
-      - '@babel/core'
-      - supports-color
-      - typescript
-      - webpack
-    dev: true
-
-  /next/11.1.2_gy5jcic3qpn24m2awrx62vzj2a:
-    resolution: {integrity: sha512-azEYL0L+wFjv8lstLru3bgvrzPvK0P7/bz6B/4EJ9sYkXeW8r5Bjh78D/Ol7VOg0EIPz0CXoe72hzAlSAXo9hw==}
-    engines: {node: '>=12.0.0'}
-    hasBin: true
-    peerDependencies:
-      fibers: '>= 3.1.0'
-      node-sass: ^4.0.0 || ^5.0.0
-      react: ^17.0.2
-      react-dom: ^17.0.2
-      sass: ^1.3.0
-    peerDependenciesMeta:
-      fibers:
-        optional: true
-      node-sass:
-        optional: true
-      sass:
-        optional: true
-    dependencies:
-      '@babel/runtime': 7.15.3
-      '@hapi/accept': 5.0.2
-      '@next/env': 11.1.2
-      '@next/polyfill-module': 11.1.2
-      '@next/react-dev-overlay': 11.1.2_sfoxds7t5ydpegc3knd667wn6m
-      '@next/react-refresh-utils': 11.1.2_react-refresh@0.8.3
-      '@node-rs/helper': 1.2.1
-      assert: 2.0.0
-      ast-types: 0.13.2
-      browserify-zlib: 0.2.0
-      browserslist: 4.16.6
-      buffer: 5.6.0
-      caniuse-lite: 1.0.30001466
-      chalk: 2.4.2
-      chokidar: 3.5.1
-      constants-browserify: 1.0.0
-      crypto-browserify: 3.12.0
-      cssnano-simple: 3.0.0_postcss@8.2.15
-      domain-browser: 4.19.0
-      encoding: 0.1.13
-      etag: 1.8.1
-      find-cache-dir: 3.3.1
-      get-orientation: 1.1.2
-      https-browserify: 1.0.0
-      image-size: 1.0.0
-      jest-worker: 27.0.0-next.5
-      native-url: 0.3.4
-      node-fetch: 2.6.1
-      node-html-parser: 1.4.9
-      node-libs-browser: 2.2.1
-      os-browserify: 0.3.0
-      p-limit: 3.1.0
-      path-browserify: 1.0.1
-      pnp-webpack-plugin: 1.6.4_typescript@4.9.5
-      postcss: 8.2.15
-      process: 0.11.10
-      querystring-es3: 0.2.1
-      raw-body: 2.4.1
-      react: 17.0.2
-      react-dom: 17.0.2_react@17.0.2
-      react-is: 17.0.2
-      react-refresh: 0.8.3
-      stream-browserify: 3.0.0
-      stream-http: 3.1.1
-      string_decoder: 1.3.0
-      styled-jsx: 4.0.1_5fmge5r255ee3ygfpazexljz5y
       timers-browserify: 2.0.12
       tty-browserify: 0.0.1
       use-subscription: 1.5.1_react@17.0.2
@@ -20442,6 +20085,17 @@ packages:
   /sprintf-js/1.0.3:
     resolution: {integrity: sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g==}
 
+  /sst-aws-cdk/2.62.2:
+    resolution: {integrity: sha512-wnmq8n5Wob9nkaMkhVgSPtikgMI+GbNwnkep7VDrl+yUuC8pZ6vUvP5dCQ1CKgFI/dI/V4BVJLTmn58A1YR/TA==}
+    engines: {node: '>= 14.15.0'}
+    hasBin: true
+    dependencies:
+      chalk: 4.1.2
+      yaml: 1.10.2
+    optionalDependencies:
+      fsevents: 2.3.2
+    dev: false
+
   /stable/0.1.8:
     resolution: {integrity: sha512-ji9qxRnOVfcuLDySj9qzhGSEFVobyt1kIOSkj1qZzYLzq7Tos/oUUWvotUPQLlrsidqsK6tBH89Bc9kL5zHA6w==}
     deprecated: 'Modern JS already guarantees Array#sort() is a stable sort, so this library is deprecated. See the compatibility table on MDN: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#browser_compatibility'
@@ -20695,28 +20349,6 @@ packages:
     dependencies:
       inline-style-parser: 0.1.1
     dev: false
-
-  /styled-jsx/4.0.1_5fmge5r255ee3ygfpazexljz5y:
-    resolution: {integrity: sha512-Gcb49/dRB1k8B4hdK8vhW27Rlb2zujCk1fISrizCcToIs+55B4vmUM0N9Gi4nnVfFZWe55jRdWpAqH1ldAKWvQ==}
-    engines: {node: '>= 12.0.0'}
-    peerDependencies:
-      '@babel/core': '*'
-      react: '>= 16.8.0 || 17.x.x || 18.x.x'
-    peerDependenciesMeta:
-      '@babel/core':
-        optional: true
-    dependencies:
-      '@babel/core': 7.21.3
-      '@babel/plugin-syntax-jsx': 7.14.5_@babel+core@7.21.3
-      '@babel/types': 7.15.0
-      convert-source-map: 1.7.0
-      loader-utils: 1.2.3
-      react: 17.0.2
-      source-map: 0.7.3
-      string-hash: 1.1.3
-      stylis: 3.5.4
-      stylis-rule-sheet: 0.0.10_stylis@3.5.4
-    dev: true
 
   /styled-jsx/4.0.1_dzj4tgexvvjhyxdh56ztoytblu:
     resolution: {integrity: sha512-Gcb49/dRB1k8B4hdK8vhW27Rlb2zujCk1fISrizCcToIs+55B4vmUM0N9Gi4nnVfFZWe55jRdWpAqH1ldAKWvQ==}
@@ -21338,6 +20970,7 @@ packages:
     engines: {node: '>=12.18'}
     dependencies:
       busboy: 1.6.0
+    dev: true
 
   /unherit/1.1.3:
     resolution: {integrity: sha512-Ft16BJcnapDKp0+J/rqFC3Rrk6Y/Ng4nzsC028k2jdDII/rdZ7Wd3pPT/6+vIIxRagwRc9K0IUX0Ra4fKvw+WQ==}
@@ -22821,6 +22454,7 @@ packages:
       string-width: 4.2.3
       y18n: 5.0.8
       yargs-parser: 21.1.1
+    dev: true
 
   /yargs/3.32.0:
     resolution: {integrity: sha512-ONJZiimStfZzhKamYvR/xvmgW3uEkAUFSP91y2caTEPhzF6uP2JfPiVZcq66b/YR0C3uitxSV7+T1x8p5bkmMg==}

@@ -73,6 +73,7 @@ export interface AppDeployProps {
   readonly account?: string;
   readonly debugStartedAt?: number;
   readonly debugIncreaseTimeout?: boolean;
+
   readonly mode: "deploy" | "dev" | "remove";
   readonly isActiveStack?: (stackName: string) => boolean;
 }
