@@ -3,9 +3,9 @@
   "version": "0.0.0",
   "type": "module",
   "dependencies": {
-    "wonka": "^6.2.3",
+    "wonka": "^6.2.4",
     "@genql/runtime": "2.x",
-    "urql": "^3.0.3",
+    "urql": "^3.0.4",
     "graphql": "^16.6.0",
     "react": "^18.2.0"
   },

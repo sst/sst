@@ -1,7 +1,7 @@
 import { QueryBatcher } from './batcher'
 
-import { ClientOptions } from './createClient'
-import { GraphqlOperation } from './generateGraphqlOperation'
+import type { ClientOptions } from './createClient'
+import type { GraphqlOperation } from './generateGraphqlOperation'
 import { GenqlError } from './error'
 
 export interface Fetcher {

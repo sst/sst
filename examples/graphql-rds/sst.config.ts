@@ -1,7 +1,7 @@
 import { SSTConfig } from "sst";
-import { Database } from "./stacks/Database"
-import { Web } from "./stacks/Web"
-import { Api } from "./stacks/Api"
+import { Api } from "./stacks/Api";
+import { Web } from "./stacks/Web";
+import { Database } from "./stacks/Database";
 
 export default {
   config(_input) {
@@ -14,6 +14,6 @@ export default {
     app
       .stack(Database)
       .stack(Api)
-      .stack(Web)
-  },
+      .stack(Web);
+  }
 } satisfies SSTConfig;

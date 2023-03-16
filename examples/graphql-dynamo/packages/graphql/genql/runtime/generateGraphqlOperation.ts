@@ -1,4 +1,4 @@
-import { LinkedField, LinkedType } from './types'
+import type { LinkedField, LinkedType } from './types'
 
 export interface Args {
     [arg: string]: any | undefined
@@ -174,6 +174,7 @@ export const generateGraphqlOperation = (
             },
             {},
         ),
+        ...(operationName ? { operationName: operationName.toString() } : {}),
     }
 }
 
