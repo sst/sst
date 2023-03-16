@@ -754,15 +754,24 @@ export class Function extends CDKFunction implements SSTConstruct {
             ].join("\n")
           );
         }
-        const code = AssetCode.fromAsset(result.out);
 
-        // Update function's code
-        const codeConfig = code.bind(this);
+        // Update code
         const cfnFunction = this.node.defaultChild as CfnFunction;
-        cfnFunction.runtime =
-          supportedRuntimes[
-            props.runtime as keyof typeof supportedRuntimes
-          ].toString();
+        const code = AssetCode.fromAsset(result.out);
+        const codeConfig = code.bind(this);
+        cfnFunction.code = {
+          s3Bucket: codeConfig.s3Location?.bucketName,
+          s3Key: codeConfig.s3Location?.objectKey,
+          s3ObjectVersion: codeConfig.s3Location?.objectVersion,
+        };
+        cfnFunction.handler = result.handler;
+        code.bindToResource(cfnFunction);
+
+        // Update runtime
+        // @ts-ignore - override "runtime" private property
+        this.runtime =
+          supportedRuntimes[props.runtime as keyof typeof supportedRuntimes];
+        cfnFunction.runtime = this.runtime.toString();
         /*
         if (isJavaRuntime) {
           const providedRuntime = (bundle as FunctionBundleJavaProps)
@@ -772,13 +781,6 @@ export class Function extends CDKFunction implements SSTConstruct {
           }
         }
         */
-        cfnFunction.code = {
-          s3Bucket: codeConfig.s3Location?.bucketName,
-          s3Key: codeConfig.s3Location?.objectKey,
-          s3ObjectVersion: codeConfig.s3Location?.objectVersion,
-        };
-        cfnFunction.handler = result.handler;
-        code.bindToResource(cfnFunction);
       });
     }
 
