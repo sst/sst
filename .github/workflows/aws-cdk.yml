@@ -5,6 +5,8 @@ on:
 
 jobs:
   patch:
+    name: patch
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v3
