@@ -40,8 +40,6 @@
     "@aws-cdk/cloudformation-diff": "2.62.2",
     "@aws-cdk/cx-api": "2.62.2",
     "@aws-sdk/client-cloudformation": "^3.279.0",
-    "@aws-sdk/client-cloudfront": "^3.279.0",
-    "@aws-sdk/client-iam": "^3.279.0",
     "@aws-sdk/client-iot": "^3.279.0",
     "@aws-sdk/client-iot-data-plane": "^3.279.0",
     "@aws-sdk/client-lambda": "^3.279.0",
@@ -58,7 +56,6 @@
     "@babel/core": "^7.0.0-0",
     "@babel/generator": "^7.20.5",
     "@trpc/server": "9.16.0",
-    "adm-zip": "^0.5.10",
     "aws-cdk-lib": "2.62.2",
     "aws-iot-device-sdk": "^2.2.12",
     "aws-sdk": "^2.1326.0",
@@ -99,6 +96,9 @@
     "zip-local": "^0.3.5"
   },
   "devDependencies": {
+    "adm-zip": "^0.5.10",
+    "@aws-sdk/client-iam": "^3.279.0",
+    "@aws-sdk/client-cloudfront": "^3.279.0",
     "@aws-sdk/client-api-gateway": "^3.208.0",
     "@aws-sdk/client-codebuild": "^3.279.0",
     "@aws-sdk/types": "^3.272.0",
