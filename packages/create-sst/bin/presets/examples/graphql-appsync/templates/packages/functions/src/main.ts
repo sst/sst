@@ -1,9 +1,9 @@
-import Note from "../../../services/Note";
-import listNotes from "../../../services/listNotes";
-import createNote from "../../../services/createNote";
-import updateNote from "../../../services/updateNote";
-import deleteNote from "../../../services/deleteNote";
-import getNoteById from "../../../services/getNoteById";
+import Note from "./graphql/Note";
+import listNotes from "./graphql/listNotes";
+import createNote from "./graphql/createNote";
+import updateNote from "./graphql/updateNote";
+import deleteNote from "./graphql/deleteNote";
+import getNoteById from "./graphql/getNoteById";
 
 type AppSyncEvent = {
   info: {

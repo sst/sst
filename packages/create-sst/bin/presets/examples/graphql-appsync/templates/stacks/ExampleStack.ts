@@ -11,7 +11,7 @@ export function ExampleStack({ stack }: StackContext) {
 
   // Create the AppSync GraphQL API
   const api = new AppSyncApi(stack, "AppSyncApi", {
-    schema: "api/graphql/schema.graphql",
+    schema: "packages/functions/src/graphql/schema.graphql",
     defaults: {
       function: {
         // Bind the table name to the function
@@ -30,10 +30,10 @@ export function ExampleStack({ stack }: StackContext) {
     },
   });
 
-  // Show the AppSync API Id in the output
-  this.addOutputs({
+  // Show the AppSync API Id and API Key in the output
+  stack.addOutputs({
     ApiId: api.apiId,
-    ApiKey: api.cdk.graphqlApi.apiKey,
     APiUrl: api.url,
+    ApiKey: api.cdk.graphqlApi.apiKey || "",
   });
-}
+k
