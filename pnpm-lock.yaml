@@ -276,7 +276,7 @@ importers:
       ora: ^6.1.2
       react: 17.0.2
       remeda: ^1.3.0
-      sst-aws-cdk: 2.62.2
+      sst-aws-cdk: 2.62.2-1
       tsx: ^3.12.1
       typescript: ^4.9.5
       undici: ^5.12.0
@@ -293,8 +293,6 @@ importers:
       '@aws-cdk/cloudformation-diff': 2.62.2
       '@aws-cdk/cx-api': 2.62.2_nodar2w6kpyag25oumcbwumkbq
       '@aws-sdk/client-cloudformation': 3.279.0
-      '@aws-sdk/client-cloudfront': 3.279.0
-      '@aws-sdk/client-iam': 3.279.0
       '@aws-sdk/client-iot': 3.279.0
       '@aws-sdk/client-iot-data-plane': 3.279.0
       '@aws-sdk/client-lambda': 3.279.0
@@ -311,7 +309,6 @@ importers:
       '@babel/core': 7.20.2
       '@babel/generator': 7.20.5
       '@trpc/server': 9.16.0
-      adm-zip: 0.5.10
       aws-cdk-lib: 2.62.2_constructs@10.1.156
       aws-iot-device-sdk: 2.2.12
       aws-sdk: 2.1326.0
@@ -344,7 +341,7 @@ importers:
       ora: 6.1.2
       react: 17.0.2
       remeda: 1.3.0
-      sst-aws-cdk: 2.62.2
+      sst-aws-cdk: 2.62.2-1
       undici: 5.12.0
       uuid: 9.0.0
       ws: 8.11.0
@@ -352,7 +349,9 @@ importers:
       zip-local: 0.3.5
     devDependencies:
       '@aws-sdk/client-api-gateway': 3.208.0
+      '@aws-sdk/client-cloudfront': 3.279.0
       '@aws-sdk/client-codebuild': 3.279.0
+      '@aws-sdk/client-iam': 3.279.0
       '@aws-sdk/types': 3.272.0
       '@graphql-tools/merge': 8.3.16_graphql@16.6.0
       '@sls-next/lambda-at-edge': 3.7.0_r5ddxvoxsycsg5thz43mzgdxc4
@@ -370,6 +369,7 @@ importers:
       '@types/uuid': 8.3.4
       '@types/ws': 8.5.3
       '@types/yargs': 17.0.13
+      adm-zip: 0.5.10
       archiver: 5.3.1
       tsx: 3.12.1
       typescript: 4.9.5
@@ -1073,7 +1073,7 @@ packages:
       tslib: 2.5.0
     transitivePeerDependencies:
       - aws-crt
-    dev: false
+    dev: true
 
   /@aws-sdk/client-cloudwatch-logs/3.43.0:
     resolution: {integrity: sha512-fFx6sACkfPTBtQykx+pw6tzL59aUynXhW3RaI+shtsYxrcvRGLApky1Qu2HZJ4IUnvRMywhjLV8D7US2bMmebQ==}
@@ -1358,7 +1358,7 @@ packages:
       tslib: 2.5.0
     transitivePeerDependencies:
       - aws-crt
-    dev: false
+    dev: true
 
   /@aws-sdk/client-iot-data-plane/3.279.0:
     resolution: {integrity: sha512-+AKay5gj6G3ILnBRBVogm1whERxx0NHTJCVBTcJN/zEGAFRLCo26NwbzVbGuxa2rGqdRho90/pwZHD8/xiPL8g==}
@@ -4701,7 +4701,6 @@ packages:
       '@aws-sdk/abort-controller': 3.272.0
       '@aws-sdk/types': 3.272.0
       tslib: 2.5.0
-    dev: false
 
   /@aws-sdk/util-waiter/3.40.0:
     resolution: {integrity: sha512-jdxwNEZdID49ZvyAnxaeNm5w2moIfMLOwj/q6TxKlxYoXMs16FQWkhyfGue0vEASzchS49ewbyt+KBqpT31Ebg==}
@@ -4726,7 +4725,6 @@ packages:
     engines: {node: '>=14.0.0'}
     dependencies:
       tslib: 2.5.0
-    dev: false
 
   /@aws-sdk/xml-builder/3.37.0:
     resolution: {integrity: sha512-Vf0f4ZQ+IBo/l9wUaTOXLqqQO9b/Ll5yPbg+EhHx8zlHbTHIm89ettkVCGyT/taGagC1X+ZeTK9maX6ymEOBow==}
@@ -9898,7 +9896,7 @@ packages:
   /adm-zip/0.5.10:
     resolution: {integrity: sha512-x0HvcHqVJNTPk/Bw8JbLWlWoo6Wwnsug0fnYYro1HBrjxZ3G7/AZk7Ahv8JwDe1uIcz8eBqvu86FuF1POiG7vQ==}
     engines: {node: '>=6.0'}
-    dev: false
+    dev: true
 
   /agent-base/6.0.2:
     resolution: {integrity: sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==}
@@ -18276,6 +18274,12 @@ packages:
       asap: 2.0.6
     dev: false
 
+  /promptly/3.2.0:
+    resolution: {integrity: sha512-WnR9obtgW+rG4oUV3hSnNGl1pHm3V1H/qD9iJBumGSmVsSC5HpZOLuu8qdMb6yCItGfT7dcRszejr/5P3i9Pug==}
+    dependencies:
+      read: 1.0.7
+    dev: false
+
   /prompts/2.4.2:
     resolution: {integrity: sha512-NxNv/kLguCA7p3jE8oL2aEBsrJWgAakBpgmgK6lpPWV+WuOmY6r2/zbAVnP+T8bQlA0nzHXSJSJW0Hq7ylaD2Q==}
     engines: {node: '>= 6'}
@@ -18902,6 +18906,13 @@ packages:
       pify: 4.0.1
       strip-bom: 3.0.0
     dev: true
+
+  /read/1.0.7:
+    resolution: {integrity: sha512-rSOKNYUmaxy0om1BNjMN4ezNT6VKK+2xF4GBhc81mkH7L60i6dp8qPYrkndNLT3QPphoII3maL9PVC9XmhHwVQ==}
+    engines: {node: '>=0.8'}
+    dependencies:
+      mute-stream: 0.0.8
+    dev: false
 
   /readable-stream/1.0.34:
     resolution: {integrity: sha512-ok1qVCJuRkNmvebYikljxJA/UEsKwLl2nI1OmaqAu4/UE+h0wKCHok4XkL/gvi39OacXvw59RJUOFUkDib2rHg==}
@@ -20060,12 +20071,13 @@ packages:
   /sprintf-js/1.0.3:
     resolution: {integrity: sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g==}
 
-  /sst-aws-cdk/2.62.2:
-    resolution: {integrity: sha512-wnmq8n5Wob9nkaMkhVgSPtikgMI+GbNwnkep7VDrl+yUuC8pZ6vUvP5dCQ1CKgFI/dI/V4BVJLTmn58A1YR/TA==}
+  /sst-aws-cdk/2.62.2-1:
+    resolution: {integrity: sha512-tvINYIntv2b+/ATzEgm3L/dI3W86TSHcYluy4zvh7UUn5/lycBtZBYuzdV3Qu/mDLhfxdvGhsI8S4uNNTy3Dsg==}
     engines: {node: '>= 14.15.0'}
     hasBin: true
     dependencies:
       chalk: 4.1.2
+      promptly: 3.2.0
       yaml: 1.10.2
     optionalDependencies:
       fsevents: 2.3.2
