@@ -67,8 +67,6 @@ jobs:
           git commit -am "Version updated"
           git push origin HEAD
 
-          PR_BODY=""
-          PR_TITLE="Update aws-cdk to $VERSION"
-          BASE_BRANCH="main"
-          PR_URL=$(curl -fsSL -X POST -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: application/json" -d "{\"title\":\"$PR_TITLE\", \"body\":\"$PR_BODY\", \"head\":\"new-branch\", \"base\":\"$BASE_BRANCH\"}" https://api.github.com/repos/$GITHUB_REPOSITORY/pulls)
-          echo "Pull request created: $PR_URL"
+          gh pr create --title "Update sst-aws-cdk to $VERSION"
+
+
