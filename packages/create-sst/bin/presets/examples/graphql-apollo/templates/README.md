@@ -16,7 +16,7 @@ $ yarn create sst --template=examples/graphql-apollo
 
 ## Commands
 
-### `npm run start`
+### `npm run dev`
 
 Starts the local Lambda development environment.
 
@@ -33,10 +33,6 @@ Deploy all your stacks to AWS. Or optionally deploy a specific stack.
 ### `npm run remove [stack]`
 
 Remove all your stacks and all of their resources from AWS. Or optionally remove a specific stack.
-
-### `npm run test`
-
-Runs your tests using Jest. Takes all the [Jest CLI options](https://jestjs.io/docs/en/cli).
 
 ## Documentation
 
