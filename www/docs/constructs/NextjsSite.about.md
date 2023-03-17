@@ -238,7 +238,7 @@ Note that we are also passing the bucket name into the environment, so the Next.
 
 ## Examples
 
-### Configurng custom domains
+### Configuring custom domains
 
 You can configure the website with a custom domain hosted either on [Route 53](https://aws.amazon.com/route53/) or [externally](#configuring-externally-hosted-domain).
 
