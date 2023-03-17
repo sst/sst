@@ -3,6 +3,7 @@ import path from "path";
 import fs from "fs";
 import http from "http";
 import url from "url";
+import { Context as LambdaContext } from "aws-lambda";
 // import { createRequire } from "module";
 // global.require = createRequire(import.meta.url);
 
@@ -92,10 +93,7 @@ while (true) {
   }, 1000 * 60 * 15);
   let request: any;
   let response: any;
-  let context: {
-    awsRequestId: string;
-    invokedFunctionArn: string;
-  } = {} as any;
+  let context: LambdaContext;
 
   try {
     const result = await fetch({
@@ -104,8 +102,51 @@ while (true) {
       headers: {},
     });
     context = {
-      awsRequestId: result.headers["lambda-runtime-aws-request-id"]!,
+      awsRequestId: result.headers["lambda-runtime-aws-request-id"],
       invokedFunctionArn: result.headers["lambda-runtime-invoked-function-arn"],
+      getRemainingTimeInMillis: () =>
+        Math.max(
+          Number(result.headers["lambda-runtime-deadline-ms"]) - Date.now(),
+          0
+        ),
+      // If identity is null, we want to mimick AWS behavior and return undefined
+      identity:
+        JSON.parse(result.headers["lambda-runtime-cognito-identity"]) ??
+        undefined,
+      // If clientContext is null, we want to mimick AWS behavior and return undefined
+      clientContext:
+        JSON.parse(result.headers["lambda-runtime-client-context"]) ??
+        undefined,
+      functionName: process.env.AWS_LAMBDA_FUNCTION_NAME!,
+      functionVersion: process.env.AWS_LAMBDA_FUNCTION_VERSION!,
+      memoryLimitInMB: process.env.AWS_LAMBDA_FUNCTION_MEMORY_SIZE!,
+      logGroupName: result.headers["lambda-runtime-log-group-name"],
+      logStreamName: result.headers["lambda-runtime-log-stream-name"],
+      callbackWaitsForEmptyEventLoop: {
+        set value(_value: boolean) {
+          throw new Error(
+            "`callbackWaitsForEmptyEventLoop` on lambda Context is not implemented by SST Live Lambda Development."
+          );
+        },
+        get value() {
+          return true;
+        },
+      }.value,
+      done() {
+        throw new Error(
+          "`done` on lambda Context is not implemented by SST Live Lambda Development."
+        );
+      },
+      fail() {
+        throw new Error(
+          "`fail` on lambda Context is not implemented by SST Live Lambda Development."
+        );
+      },
+      succeed() {
+        throw new Error(
+          "`succeed` on lambda Context is not implemented by SST Live Lambda Development."
+        );
+      },
     };
     request = JSON.parse(result.body);
   } catch {
