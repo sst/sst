@@ -276,7 +276,7 @@ importers:
       ora: ^6.1.2
       react: 17.0.2
       remeda: ^1.3.0
-      sst-aws-cdk: 2.62.2-2
+      sst-aws-cdk: 2.62.2-3
       tsx: ^3.12.1
       typescript: ^4.9.5
       undici: ^5.12.0
@@ -341,7 +341,7 @@ importers:
       ora: 6.1.2
       react: 17.0.2
       remeda: 1.3.0
-      sst-aws-cdk: 2.62.2-2
+      sst-aws-cdk: 2.62.2-3
       undici: 5.12.0
       uuid: 9.0.0
       ws: 8.11.0
@@ -20071,11 +20071,12 @@ packages:
   /sprintf-js/1.0.3:
     resolution: {integrity: sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g==}
 
-  /sst-aws-cdk/2.62.2-2:
-    resolution: {integrity: sha512-11TQvBxbRsUBJfLrZvFtU9xZDRrt4FDg5QwqJdiAteB9Dkd9ZqJsnOQI+gh471yudxT2BvEk3MMzCpDLIRMH+A==}
+  /sst-aws-cdk/2.62.2-3:
+    resolution: {integrity: sha512-scNMkuwTm7Gr/8l8/lCNIxVD2z8TX+4Yr5Mb5OzsUeumYCmF0KGegNy/0pYgYArObAExEnbju8kRuB/VwJRhUQ==}
     engines: {node: '>= 14.15.0'}
     hasBin: true
     dependencies:
+      archiver: 5.3.1
       chalk: 4.1.2
       promptly: 3.2.0
       yaml: 1.10.2
