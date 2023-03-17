@@ -1,5 +1,17 @@
 # @serverless-stack/cli2
 
+## 2.2.1
+
+### Patch Changes
+
+- [#2604](https://github.com/serverless-stack/sst/pull/2604) [`72cfe68d3`](https://github.com/serverless-stack/sst/commit/72cfe68d3f4eba13edb01ceec3b3418c58f01bda) Thanks [@DCzajkowski](https://github.com/DCzajkowski)! - Fix `sst dev` Node runtime not having all lambda `context` values
+
+- [#2646](https://github.com/serverless-stack/sst/pull/2646) [`4062b3769`](https://github.com/serverless-stack/sst/commit/4062b3769edda28bf94ab5d65f0fb56153c89cbd) Thanks [@DCzajkowski](https://github.com/DCzajkowski)! - Fixed local lambda runtime having access to local env variables
+
+- [`19137504e`](https://github.com/serverless-stack/sst/commit/19137504eec4ae361359fd05eaf19679028ca522) Thanks [@thdxr](https://github.com/thdxr)! - Fixed missing archiver dependency
+
+- [#2677](https://github.com/serverless-stack/sst/pull/2677) [`16a936e38`](https://github.com/serverless-stack/sst/commit/16a936e38e56f5f88c5de7a9c07527949d36f7be) Thanks [@justindra](https://github.com/justindra)! - Exported the Adapter type for future auth, so others can create their own custom adapters
+
 ## 2.2.0
 
 ### Minor Changes
