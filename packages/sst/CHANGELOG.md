@@ -1,5 +1,23 @@
 # @serverless-stack/cli2
 
+## 2.2.0
+
+### Minor Changes
+
+- [`6e256f344`](https://github.com/serverless-stack/sst/commit/6e256f34402cbd3ef9f64afda036cdb2a64d03d1) Thanks [@thdxr](https://github.com/thdxr)! - Switch to using sst-aws-cdk to patch aws-cdk specifying dependencies incorrectly in their package.json
+
+### Patch Changes
+
+- [`f994e0576`](https://github.com/serverless-stack/sst/commit/f994e057619e51a3b460a6c42abfc8328d9d350d) Thanks [@fwang](https://github.com/fwang)! - sst deploy: skip building Functions and Sites in non-matched stacks
+
+- [`484daf51c`](https://github.com/serverless-stack/sst/commit/484daf51c592a6a7bb46120ef0d0a2cfb3afe7ad) Thanks [@fwang](https://github.com/fwang)! - Function: update runtime property after deferred task
+
+- [#2673](https://github.com/serverless-stack/sst/pull/2673) [`a32692ae3`](https://github.com/serverless-stack/sst/commit/a32692ae352fdc8d23bb013fd17d215413e73464) Thanks [@elonniu](https://github.com/elonniu)! - Bootstrap: use Nodejs16.x runtime in China regions
+
+- [`1ba0f4716`](https://github.com/serverless-stack/sst/commit/1ba0f471682196d53ca86aaf6140dca62da7d6ad) Thanks [@fwang](https://github.com/fwang)! - EventBus: support LogGroup targets
+
+- [`88c7c2e81`](https://github.com/serverless-stack/sst/commit/88c7c2e81376830d61f43fadcd4b800955760e86) Thanks [@fwang](https://github.com/fwang)! - sst remove: update removing loading sign copy
+
 ## 2.1.35
 
 ### Patch Changes
