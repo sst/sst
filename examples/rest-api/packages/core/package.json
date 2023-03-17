@@ -1,0 +1,14 @@
+{
+  "name": "@rest-api/core",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "sst bind vitest",
+    "typecheck": "tsc -noEmit"
+  },
+  "devDependencies": {
+    "vitest": "^0.29.3",
+    "@types/node": "^18.15.3",
+    "sst": "^2.2.0"
+  }
+}

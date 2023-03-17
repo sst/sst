@@ -9,7 +9,7 @@
   "devDependencies": {
     "@types/node": "^18.15.3",
     "@types/aws-lambda": "^8.10.113",
-    "sst": "^2.1.35"
+    "sst": "^2.2.0"
   },
   "dependencies": {
     "@pothos/core": "^3.28.0",
