@@ -84,7 +84,7 @@ new StaticSite(stack, "Site", {
   },
   vite: {
     types: "types/my-env.d.ts",
-  }
+  },
 });
 ```
 
@@ -104,7 +104,7 @@ Then in your Vite app to reference these variables, add the [`sst env`](../packa
 
 ```json title="package.json" {2}
 "scripts": {
-  "dev": "sst env \"vite\"",
+  "dev": "sst env vite",
   "build": "vite build",
   "preview": "vite preview"
 },
@@ -131,6 +131,7 @@ There are a couple of things happening behind the scenes here:
   sst.json
   vite-app/
 ```
+
 :::
 
 ## Examples
@@ -149,7 +150,7 @@ new StaticSite(stack, "react", {
   environment: {
     // Pass in the API endpoint to our app
     VITE_APP_API_URL: api.url,
-  }, 
+  },
 });
 ```
 
@@ -165,7 +166,7 @@ new StaticSite(stack, "vue", {
   environment: {
     // Pass in the API endpoint to our app
     VITE_APP_API_URL: api.url,
-  }, 
+  },
 });
 ```
 
@@ -181,7 +182,7 @@ new StaticSite(stack, "svelte", {
   environment: {
     // Pass in the API endpoint to our app
     VITE_APP_API_URL: api.url,
-  }, 
+  },
 });
 ```
 
