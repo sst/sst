@@ -16,6 +16,8 @@ The AWS account the app is being deployed to. This comes from the IAM credential
 
 _Type_ : <span class="mono">undefined</span><span class='mono'> | </span><span class="mono">"destroy"</span><span class='mono'> | </span><span class="mono">"retain"</span><span class='mono'> | </span><span class="mono">"snapshot"</span>
 
+<span class="mono">string</span> => <span class="mono">boolean</span>
+
 ### local
 
 _Type_ : <span class="mono">boolean</span>
@@ -153,5 +155,5 @@ Make sure to not set the default removal policy to
  for production environments.
 :::
 ```js
-app.setDefaultRemovalPolicy(app.local ? "destroy" : "retain")
+app.setDefaultRemovalPolicy(app.mode === "dev" ? "destroy" : "retain")
 ```

@@ -19,6 +19,8 @@ const CDK_DOCS_MAP = {
   CfnOutputProps: "",
   IVpc: "aws_ec2",
   LogGroup: "aws_logs",
+  LogGroupProps: "aws_logs",
+  ILogGroup: "aws_logs",
   IHostedZone: "aws_route53",
   ISecret: "aws_secretsmanager",
   IApplicationListener: "aws_elasticloadbalancingv2",
