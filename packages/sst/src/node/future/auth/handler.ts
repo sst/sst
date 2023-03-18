@@ -208,6 +208,14 @@ export function AuthHandler<
         type,
         properties,
       });
+      useResponse().cookie({
+        key: "sst_auth_token",
+        value: token,
+        maxAge: 10 * 365 * 24 * 60 * 60,
+        secure: true,
+        sameSite: "None",
+        httpOnly: true,
+      });
       const { client_id, response_type, redirect_uri, state } = {
         ...useCookies(),
         ...useQueryParams(),

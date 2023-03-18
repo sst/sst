@@ -41,6 +41,12 @@ export function useSession<T = SessionValue>() {
 }
 
 function getPublicKey() {
+  // This is the auth function accessing the public key
+  if (process.env.AUTH_ID) {
+    // @ts-expect-error
+    const key = Config[process.env.AUTH_ID + "PublicKey"];
+    if (key) return key as string;
+  }
   const [first] = Object.values(Auth);
   if (!first)
     throw new Error("No auth provider found. Did you forget to add one?");
