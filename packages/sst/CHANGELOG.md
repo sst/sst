@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.2.2
+
+### Patch Changes
+
+- [`e7107261c`](https://github.com/serverless-stack/sst/commit/e7107261c1110423e27bae0d494fd36942d9d9a2) Thanks [@thdxr](https://github.com/thdxr)! - Support calling useSession in auth function itself
+
 ## 2.2.1
 
 ### Patch Changes
