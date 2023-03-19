@@ -104,5 +104,6 @@ export const update = (program: Program) =>
           "Make sure to run: npm install (or pnpm install, or yarn)"
         )}`
       );
+      process.exit(0);
     }
   );
