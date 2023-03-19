@@ -8,7 +8,7 @@ import { ChildProcessWithoutNullStreams, exec, spawn } from "child_process";
 import { promisify } from "util";
 import { useRuntimeServerConfig } from "../server.js";
 import { isChild } from "../../util/fs.js";
-const execAsync = promisify(exec);
+import { execAsync } from "../../util/process.js";
 
 export const useGoHandler = Context.memo(async () => {
   const workers = await useRuntimeWorkers();
@@ -62,7 +62,7 @@ export const useGoHandler = Context.memo(async () => {
         try {
           const target = path.join(input.out, handlerName);
           const result = await execAsync(
-            `go build -ldflags '-s -w' -o ${target} ./${src}`,
+            `go build -ldflags '-s -w' -o '${target}' ./${src}`,
             {
               cwd: project,
               env: {
@@ -78,7 +78,7 @@ export const useGoHandler = Context.memo(async () => {
       if (input.mode === "deploy") {
         try {
           const target = path.join(input.out, "bootstrap");
-          await execAsync(`go build -ldflags '-s -w' -o ${target} ./${src}`, {
+          await execAsync(`go build -ldflags '-s -w' -o '${target}' ./${src}`, {
             cwd: project,
             env: {
               ...process.env,
