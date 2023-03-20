@@ -8,7 +8,7 @@
   },
   "devDependencies": {
     "@types/node": "^18.15.3",
-    "@types/aws-lambda": "^8.10.113",
-    "sst": "^2.2.0"
+    "@types/aws-lambda": "^8.10.114",
+    "sst": "^2.2.2"
   }
 }

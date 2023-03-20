@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "type": "module",
   "dependencies": {
-    "wonka": "^6.2.4",
+    "wonka": "^6.2.5",
     "@genql/runtime": "2.x",
     "urql": "^3.0.4",
     "graphql": "^16.6.0",
