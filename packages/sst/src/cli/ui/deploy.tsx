@@ -3,13 +3,10 @@ import type { StackEvent, StackResource } from "@aws-sdk/client-cloudformation";
 import { Box, Text } from "ink";
 import { useBus } from "../../bus.js";
 import { Stacks } from "../../stacks/index.js";
-import inkSpinner from "ink-spinner";
+import Spinner from "ink-spinner";
 import { Colors } from "../colors.js";
 import type { CloudAssembly } from "aws-cdk-lib/cx-api";
 import { useProject } from "../../project.js";
-
-// @ts-ignore
-const { default: Spinner } = inkSpinner;
 
 interface Props {
   assembly: CloudAssembly;
