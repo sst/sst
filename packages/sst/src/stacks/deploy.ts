@@ -64,14 +64,14 @@ export async function deployMany(stacks: CloudFormationStackArtifact[]) {
           continue;
 
         deploy(stack).then((result) => {
-          results[stack.id] = result;
+          results[stack.stackName] = result;
           complete.add(stack.id);
 
           if (isFailed(result.status))
             stacks.forEach((s) => {
-              if (todo.delete(s.stackName)) {
-                complete.add(s.stackName);
-                results[s.id] = {
+              if (todo.delete(s.id)) {
+                complete.add(s.id);
+                results[s.stackName] = {
                   status: "DEPENDENCY_FAILED",
                   outputs: {},
                   errors: {},
