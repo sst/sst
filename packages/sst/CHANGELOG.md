@@ -1,5 +1,15 @@
 # @serverless-stack/cli2
 
+## 2.2.3
+
+### Patch Changes
+
+- [`e836f2d41`](https://github.com/serverless-stack/sst/commit/e836f2d41f97a1ad5f88da7907dff658e72645c4) Thanks [@thdxr](https://github.com/thdxr)! - Allow spaces in folder names go runtime
+
+- [`263c1eff3`](https://github.com/serverless-stack/sst/commit/263c1eff39d19130c56061298387ba4b76c4b81d) Thanks [@thdxr](https://github.com/thdxr)! - Update to ink4 and React 18
+
+- [`6eb618478`](https://github.com/serverless-stack/sst/commit/6eb618478c759305d908ce6213123c505bc2eb0b) Thanks [@thdxr](https://github.com/thdxr)! - Make sure update command exits
+
 ## 2.2.2
 
 ### Patch Changes
