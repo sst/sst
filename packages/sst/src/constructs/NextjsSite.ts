@@ -222,7 +222,7 @@ export class NextjsSite extends SsrSite {
 
     // Create default behavior
     // default handler for requests that don't match any other path:
-    //   - try lambda handler first first
+    //   - try lambda handler first
     //   - if failed, fall back to S3
     const fallbackOriginGroup = new OriginGroup({
       primaryOrigin: serverBehavior.origin,
@@ -235,6 +235,7 @@ export class NextjsSite extends SsrSite {
       compress: true,
       cachePolicy: serverBehavior.cachePolicy,
       edgeLambdas: serverBehavior.edgeLambdas,
+      ...(cfDistributionProps.defaultBehavior || {}),
     };
 
     /**
