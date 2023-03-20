@@ -701,7 +701,12 @@ export class AppSyncApi extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding(): FunctionBindingProps {
+  public getFunctionBinding() {
+    // Do not bind imported AppSync APIs b/c we don't know the API URL
+    if (!this.url) {
+      return;
+    }
+
     return {
       clientPackage: "api",
       variables: {
@@ -711,7 +716,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         },
       },
       permissions: {},
-    };
+    } as FunctionBindingProps;
   }
 
   private createGraphApi() {
