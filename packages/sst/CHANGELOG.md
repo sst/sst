@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.2.4
+
+### Patch Changes
+
+- [`d3b50eed3`](https://github.com/serverless-stack/sst/commit/d3b50eed30790d30c4940f048099b6ae19cf8922) Thanks [@fwang](https://github.com/fwang)! - AppSyncApi: do not bind imported API
+
+- [`c06523416`](https://github.com/serverless-stack/sst/commit/c0652341667959c53eab7f0022a9c6b6501bf791) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: support customizing defaultBehavior
+
 ## 2.2.3
 
 ### Patch Changes
