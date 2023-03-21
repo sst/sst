@@ -116,7 +116,7 @@ export const useKyselyTypeGenerator = Context.memo(async () => {
         defaultDatabaseName: c.data.defaultDatabaseName,
         secretArn: c.data.secretArn,
       }));
-    databases.map((db) => generate(db).catch());
+    databases.map((db) => generate(db).catch(() => {}));
   });
 
   bus.subscribe("function.success", async (evt) => {
