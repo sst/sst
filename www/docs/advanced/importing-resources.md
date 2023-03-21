@@ -35,9 +35,11 @@ new Api(stack, "Api", {
 import { HttpApi } from "@aws-cdk/aws-apigatewayv2";
 
 new Api(stack, "Api", {
-  httpApi: HttpApi.fromHttpApiAttributes(stack, "ExistingApi", {
+  cdk: {
+   httpApi: HttpApi.fromHttpApiAttributes(stack, "ExistingApi", {
     httpApiId,
-  }),
+   }),
+  },
   routes: {
     "GET /new": "src/lambda.main",
   },
