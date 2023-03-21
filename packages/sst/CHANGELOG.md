@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.2.5
+
+### Patch Changes
+
+- [`a6cb8e633`](https://github.com/serverless-stack/sst/commit/a6cb8e633a045aaf723f3ccd64cf348faa2d8bf0) Thanks [@thdxr](https://github.com/thdxr)! - Ignore errors during kysely codegen
+
 ## 2.2.4
 
 ### Patch Changes
