@@ -32,12 +32,15 @@ new Api(stack, "Api", {
 ### Adding routes to an existing HTTP API
 
 ```js {4-6}
+import { Api } from 'sst/constructs';
 import { HttpApi } from "@aws-cdk/aws-apigatewayv2";
 
 new Api(stack, "Api", {
-  httpApi: HttpApi.fromHttpApiAttributes(stack, "ExistingApi", {
+  cdk: {
+   httpApi: HttpApi.fromHttpApiAttributes(stack, "ExistingApi", {
     httpApiId,
-  }),
+   }),
+  },
   routes: {
     "GET /new": "src/lambda.main",
   },
