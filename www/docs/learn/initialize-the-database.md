@@ -119,7 +119,7 @@ We'll do this later in the tutorial. For now, let's apply our first migration.
 
 <ChangeText>
 
-Click on the **Migrations** button on the top left. And click the **Apply** button on the **article** migration.
+Click on the **Migrations** button on the top right. And click the **Apply** button on the **article** migration.
 
 </ChangeText>
 
