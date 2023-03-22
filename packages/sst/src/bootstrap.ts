@@ -197,9 +197,10 @@ export async function bootstrapSST() {
       path.resolve(__dirname, "support/bootstrap-metadata-function")
     ),
     handler: "index.handler",
-    runtime: (region?.startsWith("us-gov-") || region?.startsWith("cn-"))
-      ? Runtime.NODEJS_16_X
-      : Runtime.NODEJS_18_X,
+    runtime:
+      region?.startsWith("us-gov-") || region?.startsWith("cn-")
+        ? Runtime.NODEJS_16_X
+        : Runtime.NODEJS_18_X,
     environment: {
       BUCKET_NAME: bucket.bucketName,
     },

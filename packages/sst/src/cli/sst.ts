@@ -16,6 +16,7 @@ dotenv.config({
   override: true,
 });
 
+import { bootstrap } from "./commands/bootstrap.js";
 import { env } from "./commands/env.js";
 import { dev } from "./commands/dev.js";
 import { bind } from "./commands/bind.js";
@@ -30,6 +31,7 @@ import { diff } from "./commands/diff.js";
 import { version } from "./commands/version.js";
 import { telemetry } from "./commands/telemetry.js";
 
+bootstrap(program);
 dev(program);
 deploy(program);
 build(program);
