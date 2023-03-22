@@ -35,6 +35,24 @@ export const deploy = (program: Program) =>
         useAppMetadata(),
       ]);
 
+      async function promptChangeMode() {
+        const readline = await import("readline");
+        const rl = readline.createInterface({
+          input: process.stdin,
+          output: process.stdout,
+        });
+        return new Promise<boolean>((resolve) => {
+          console.log("");
+          rl.question(
+            `You were previously running the stage "${project.config.stage}" in dev mode. It is recommended that you use a different stage for production. Read more here — https://docs.sst.dev/live-lambda-development\n\nAre you sure you want to deploy to this stage? (y/N) `,
+            async (input) => {
+              rl.close();
+              resolve(input.trim() === "y");
+            }
+          );
+        });
+      }
+
       // Check app mode changed
       if (appMetadata && appMetadata.mode !== "deploy") {
         if (!(await promptChangeMode())) {
@@ -110,21 +128,3 @@ export const deploy = (program: Program) =>
       process.exit(0);
     }
   );
-
-async function promptChangeMode() {
-  const readline = await import("readline");
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-  return new Promise<boolean>((resolve) => {
-    console.log("");
-    rl.question(
-      "You were previously running this stage in dev mode. It is recommended that you use a different stage for production. Read more here — https://docs.sst.dev/live-lambda-development\n\nAre you sure you want to deploy to this stage? (y/N) ",
-      async (input) => {
-        rl.close();
-        resolve(input.trim() === "y");
-      }
-    );
-  });
-}
