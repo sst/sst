@@ -35,6 +35,13 @@ export function AuthHandler<
   ) => Promise<void | keyof Providers>;
   onSuccess: (input: Result) => Promise<SessionCreateInput>;
   onError: () => Promise<APIGatewayProxyStructuredResultV2>;
+  /**
+   * The domain to set the cookie on, this allows for removing of auth cookies
+   * from the frontend. As the auth endpoint is always set on a different domain
+   * to the frontend or the api. This is optional, if not set the cookie will
+   * be set on the current domain only.
+   */
+  cookieDomain?: string;
 }) {
   return ApiHandler(async (evt) => {
     const step = usePathParam("step");
@@ -215,6 +222,8 @@ export function AuthHandler<
         secure: true,
         sameSite: "None",
         httpOnly: true,
+        // Set the cookie on the domain if it was provided
+        domain: input.cookieDomain,
       });
       const { client_id, response_type, redirect_uri, state } = {
         ...useCookies(),

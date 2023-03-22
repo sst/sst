@@ -23,6 +23,13 @@ export interface OauthBasicConfig {
    */
   scope: string;
   prompt?: string;
+  /**
+   * The domain to set the cookie on, this allows for removing of auth cookies
+   * from the frontend. As the auth endpoint is always set on a different domain
+   * to the frontend or the api. This is optional, if not set the cookie will
+   * be set on the current domain only.
+   */
+  cookieDomain?: string;
 }
 
 export interface OauthConfig extends OauthBasicConfig {
@@ -66,6 +73,8 @@ export const OauthAdapter =
             secure: true,
             maxAge: 60 * 10,
             sameSite: "None",
+            // Set the cookie on the domain if it was provided
+            domain: config.cookieDomain,
           }
         );
         return {
