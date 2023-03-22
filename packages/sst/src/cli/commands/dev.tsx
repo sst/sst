@@ -344,6 +344,25 @@ export const dev = (program: Program) =>
         }),
       ]);
 
+      async function promptChangeMode() {
+        const readline = await import("readline");
+        const rl = readline.createInterface({
+          input: process.stdin,
+          output: process.stdout,
+        });
+        return new Promise<boolean>((resolve) => {
+          console.log("");
+          rl.question(
+            `You have previously deployed the stage "${
+              useProject().config.stage
+            }" in production. It is recommended that you use a different stage for development. Read more here — https://docs.sst.dev/live-lambda-development\n\nAre you sure you want to run this stage in dev mode? [y/N] `,
+            async (input) => {
+              rl.close();
+              resolve(input.trim() === "y");
+            }
+          );
+        });
+      }
       // Check app mode changed
       if (appMetadata && appMetadata.mode !== "dev") {
         if (!(await promptChangeMode())) {
@@ -368,23 +387,6 @@ export const dev = (program: Program) =>
     }
   );
 
-async function promptChangeMode() {
-  const readline = await import("readline");
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-  return new Promise<boolean>((resolve) => {
-    console.log("");
-    rl.question(
-      "You have previously deployed this stage in production. It is recommended that you use a different stage for development. Read more here — https://docs.sst.dev/live-lambda-development\n\nAre you sure you want to run this stage in dev mode? [y/N] ",
-      async (input) => {
-        rl.close();
-        resolve(input.trim() === "y");
-      }
-    );
-  });
-}
 declare module "../../bus.js" {
   interface Events {
     "cli.dev": {
