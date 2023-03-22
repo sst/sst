@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.2.8
+
+### Patch Changes
+
+- [`dd755650f`](https://github.com/serverless-stack/sst/commit/dd755650ff863825af7c241b6516f2c28bda2acd) Thanks [@fwang](https://github.com/fwang)! - sst bootstrap: bootstrap CDK if required
+
 ## 2.2.7
 
 ### Patch Changes
