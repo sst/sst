@@ -1,5 +1,15 @@
 # create-sst
 
+## 2.2.6
+
+### Patch Changes
+
+- [`b68f1bb8c`](https://github.com/serverless-stack/sst/commit/b68f1bb8c0ceec8ed9b9e257d2c86b3ff3bfd417) Thanks [@thdxr](https://github.com/thdxr)! - Updated graphql rds template for sdkv3
+
+## 2.2.5
+
+## 2.2.4
+
 ## 2.2.3
 
 ## 2.2.2

@@ -1,4 +1,4 @@
-import RDSDataService from "aws-sdk/clients/rdsdataservice";
+import { RDSData } from "@aws-sdk/client-rds-data";
 import { RDS } from "sst/node/rds";
 import { Kysely, Selectable } from "kysely";
 import { DataApiDialect } from "kysely-data-api";
@@ -11,7 +11,7 @@ export const DB = new Kysely<Database>({
       secretArn: RDS.db.secretArn,
       resourceArn: RDS.db.clusterArn,
       database: RDS.db.defaultDatabaseName,
-      client: new RDSDataService(),
+      client: new RDSData({}),
     },
   }),
 });
