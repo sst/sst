@@ -33,7 +33,7 @@ npx sst dev
 
 Let's add a file upload feature to our app.
 
-Add an S3 bucket to your app.
+Add an S3 bucket to your `sst.config.ts`.
 
 ```ts title="sst.config.ts"
 const bucket = new Bucket(ctx.stack, "public", {
@@ -50,7 +50,7 @@ const site = new NextjsSite(ctx.stack, "site", {
 });
 ```
 
-To upload a file to S3 we'll add an API to generate a presigned URL.
+To upload a file to S3 we'll add an API `pages/api/upload.ts` to generate a presigned URL and redirect to it.
 
 ```ts title="pages/api/upload.ts" {7}
 export default async function handler(
@@ -100,7 +100,7 @@ export default function Home() {
 
 This will upload an image and redirect to it!
 
-Next, we'll add a cron job that'll remove the uploaded files every day.
+Next, we'll add a cron job to `sst.config.ts` that'll remove the uploaded files every day.
 
 ```ts title="sst.config.ts" {5}
 new Cron(ctx.stack, "cron", {
