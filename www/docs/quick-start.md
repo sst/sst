@@ -31,6 +31,12 @@ npx create-sst@latest
 npx sst dev
 ```
 
+And start Next.js.
+
+```bash
+npm run dev
+```
+
 Let's add a file upload feature to our app.
 
 Add an S3 bucket to your `sst.config.ts`.
