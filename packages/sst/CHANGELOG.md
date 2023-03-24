@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.3.0
+
+### Minor Changes
+
+- [#2703](https://github.com/serverless-stack/sst/pull/2703) [`9aa0b7a9f`](https://github.com/serverless-stack/sst/commit/9aa0b7a9f6364a7dfc5f85c713c66687f71110e7) Thanks [@fwang](https://github.com/fwang)! - sst bind: support binding SSR sites
+
 ## 2.2.8
 
 ### Patch Changes
