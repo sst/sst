@@ -16,6 +16,39 @@ To view the latest release and all historical releases, <a href={`${config.githu
 
 ---
 
+## Upgrade to v2.3.0
+
+[Resource Binding](resource-binding.md) now lets you bind resources to your frontend frameworks. It simplifies accessing the resources in the server side rendered (SSR) code. For example, here's how we bind the bucket to the Next.js app:
+
+```diff
+const bucket = new Bucket(stack, "myFiles");
+
+new NextjsSite(stack, "mySite", {
+- environment: {
+-   BUCKET_NAME: bucket.bucketName,
+- },
+- permissions: [bucket],
++ bind: [bucket],
+});
+```
+
+And here's how we access it in our SSR code.
+
+```diff
++ import { Bucket } from "sst/node/bucket";
+
+- process.env.BUCKET_NAME
++ Bucket.myFiles.bucketName
+```
+
+Following are the steps to upgrade.
+
+1. **`sst env` has been renamed to `sst bind`** (although both will work). `sst env` will be removed in SST v3
+
+   ```diff
+   - sst env next dev
+   + sst bind next dev
+   ```
 ## Upgrade to v2.0
 
 The 2.0 upgrade is primarily ergonomic and should not result in any infrastructure changes.

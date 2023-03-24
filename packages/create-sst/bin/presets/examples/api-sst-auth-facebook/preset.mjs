@@ -11,7 +11,7 @@ export default [
   }),
   patch({
     file: "web/package.json",
-    operations: [{ op: "add", path: "/scripts/dev", value: "sst env vite" }],
+    operations: [{ op: "add", path: "/scripts/dev", value: "sst bind vite" }],
   }),
   patch({
     file: "package.json",
