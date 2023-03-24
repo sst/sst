@@ -20,7 +20,7 @@ export function getOrCreateBucket(scope: Construct): cdk.CustomResource {
   // Create provider
   const provider = new lambda.Function(stack, providerId, {
     code: lambda.Code.fromAsset(
-      path.join(__dirname, "../../../../support/edge-function")
+      path.join(__dirname, "../../../support/edge-function")
     ),
     handler: "s3-bucket.handler",
     runtime: lambda.Runtime.NODEJS_16_X,
@@ -64,7 +64,7 @@ export function createFunction(
   if (!provider) {
     provider = new lambda.Function(stack, providerId, {
       code: lambda.Code.fromAsset(
-        path.join(__dirname, "../../../../support/edge-function")
+        path.join(__dirname, "../../../support/edge-function")
       ),
       handler: "edge-lambda.handler",
       runtime: lambda.Runtime.NODEJS_16_X,
@@ -112,7 +112,7 @@ export function createVersion(
   if (!provider) {
     provider = new lambda.Function(stack, providerId, {
       code: lambda.Code.fromAsset(
-        path.join(__dirname, "../../../../support/edge-function")
+        path.join(__dirname, "../../../support/edge-function")
       ),
       handler: "edge-lambda-version.handler",
       runtime: lambda.Runtime.NODEJS_16_X,
