@@ -59,7 +59,6 @@ import {
 } from "./util/functionBinding.js";
 import { gray } from "colorette";
 import { useProject } from "../project.js";
-import { SiteEnv } from "../site-env.js";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -367,7 +366,6 @@ export class StaticSite extends Construct implements SSTConstruct {
       !stack.isActive || (app.mode === "dev" && !this.props.dev?.deploy);
 
     this.validateCustomDomainSettings();
-    this.registerSiteEnvironment();
     this.generateViteTypes();
 
     if (this.doNotDeploy) {
@@ -458,6 +456,8 @@ export class StaticSite extends Construct implements SSTConstruct {
     return {
       type: "StaticSite" as const,
       data: {
+        path: this.props.path,
+        environment: this.props.environment || {},
         customDomainUrl: this.customDomainUrl,
       },
     };
@@ -1060,18 +1060,5 @@ function handler(event) {
         );
       });
     return replaceValues;
-  }
-
-  private registerSiteEnvironment() {
-    for (const [key, value] of Object.entries(this.props.environment || {})) {
-      const outputId = `SstSiteEnv_${key}`;
-      const output = new CfnOutput(this, outputId, { value });
-      SiteEnv.append({
-        path: this.props.path,
-        output: Stack.of(this).getLogicalId(output),
-        environment: key,
-        stack: Stack.of(this).stackName,
-      });
-    }
   }
 }

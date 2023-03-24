@@ -582,7 +582,7 @@ export interface JavaProps {
  */
 export interface FunctionCopyFilesProps {
   /**
-   * Source path relative to sst.json
+   * Source path relative to sst.config.ts
    */
   from: string;
   /**

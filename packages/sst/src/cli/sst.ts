@@ -16,7 +16,6 @@ dotenv.config({
   override: true,
 });
 
-import { env } from "./commands/env.js";
 import { dev } from "./commands/dev.js";
 import { bind } from "./commands/bind.js";
 import { build } from "./commands/build.js";
@@ -34,7 +33,6 @@ dev(program);
 deploy(program);
 build(program);
 bind(program);
-env(program);
 secrets(program);
 remove(program);
 update(program);
