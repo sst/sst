@@ -496,7 +496,7 @@ export class SsrSite extends Construct implements SSTConstruct {
 
   protected initBuildConfig(): SsrBuildConfig {
     return {
-      typesPath: "placeholder",
+      typesPath: ".",
       serverBuildOutputFile: "placeholder",
       clientBuildOutputDir: "placeholder",
       clientBuildVersionedSubDir: "placeholder",
