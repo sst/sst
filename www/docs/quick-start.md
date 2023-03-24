@@ -56,21 +56,18 @@ const site = new NextjsSite(ctx.stack, "site", {
 });
 ```
 
-To upload a file to S3 we'll add an API `pages/api/upload.ts` to generate a presigned URL and redirect to it.
+To upload a file to S3 we'll first generate a presigned URL when the page loads. Add this to `pages/index.ts`.
 
-```ts title="pages/api/upload.ts" {7}
-export default async function handler(
-  request: NextApiRequest,
-  response: NextApiResponse
-) {
+```ts title="pages/index.ts" {7}
+export async function getServerSideProps() {
   const command = new PutObjectCommand({
     ACL: "public-read",
+    Key: crypto.randomUUID(),
     Bucket: Bucket.public.bucketName,
-    Key: request.query.name as string,
   });
   const url = await getSignedUrl(new S3Client({}), command);
 
-  response.redirect(url);
+  return { props: { url } };
 }
 ```
 
@@ -79,7 +76,7 @@ Thanks to [Resource Binding](resource-binding.md) we can access our S3 bucket in
 Let's add the form. Replace your `pages/index.tsx` with.
 
 ```tsx title="pages/index.tsx"
-export default function Home() {
+export default function Home({ url }: { url: string }) {
   return (
     <main>
       <form
@@ -87,13 +84,17 @@ export default function Home() {
           e.preventDefault();
 
           const file = (e.target as HTMLFormElement).file.files?.[0]!;
-          const { url } = await fetch(`/api/upload?name=${file.name}`, {
+
+          const image = await fetch(url, {
             body: file,
             method: "PUT",
-            headers: { "Content-Type": file.type },
+            headers: {
+              "Content-Type": file.type,
+              "Content-Disposition": `attachment; filename="${file.name}"`,
+            },
           });
 
-          window.location.href = url.split("?")[0];
+          window.location.href = image.url.split("?")[0];
         }}
       >
         <input name="file" type="file" accept="image/png, image/jpeg" />
