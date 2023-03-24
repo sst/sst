@@ -1,5 +1,19 @@
 # @serverless-stack/cli2
 
+## 2.2.8
+
+### Patch Changes
+
+- [`dd755650f`](https://github.com/serverless-stack/sst/commit/dd755650ff863825af7c241b6516f2c28bda2acd) Thanks [@fwang](https://github.com/fwang)! - sst bootstrap: bootstrap CDK if required
+
+## 2.2.7
+
+### Patch Changes
+
+- [`3977db3f1`](https://github.com/serverless-stack/sst/commit/3977db3f1dd61d71da2fda74edbc25c4ae05d579) Thanks [@fwang](https://github.com/fwang)! - Handle AWS SDK retry failure due to depleted retry tokens
+
+- [`561a1eff3`](https://github.com/serverless-stack/sst/commit/561a1eff35730cb3637448a7a8cfc517c9601c9d) Thanks [@thdxr](https://github.com/thdxr)! - Include stage name in warnings
+
 ## 2.2.6
 
 ## 2.2.5

@@ -115,6 +115,14 @@ export function useAWSClient<C extends Client<any, any, any, any>>(
       delayDecider: (_, attempts) => {
         return Math.min(1.5 ** attempts * 100, 5000);
       },
+      // AWS SDK v3 has an idea of "retry tokens" which are used to
+      // prevent multiple retries from happening at the same time.
+      // This is a workaround to disable that.
+      retryQuota: {
+        hasRetryTokens: () => true,
+        releaseRetryTokens: () => {},
+        retrieveRetryTokens: () => 1,
+      },
     }),
   });
   cache.set(client.name, result);
