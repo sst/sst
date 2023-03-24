@@ -13,7 +13,7 @@ export const dev = (program: Program) =>
     async (args) => {
       const { Colors } = await import("../colors.js");
       const { printHeader } = await import("../ui/header.js");
-      const { mapValues, omitBy, pipe } = await import("remeda");
+      const { mapValues } = await import("remeda");
       const path = await import("path");
       const { useRuntimeWorkers } = await import("../../runtime/workers.js");
       const { useIOTBridge } = await import("../../runtime/iot.js");
@@ -36,7 +36,6 @@ export const dev = (program: Program) =>
       const fs = await import("fs/promises");
       const crypto = await import("crypto");
       const { useFunctions } = await import("../../constructs/Function.js");
-      const { SiteEnv } = await import("../../site-env.js");
       const { usePothosBuilder } = await import("./plugins/pothos.js");
       const { useKyselyTypeGenerator } = await import("./plugins/kysely.js");
       const { useRDSWarmer } = await import("./plugins/warmer.js");
@@ -237,30 +236,11 @@ export const dev = (program: Program) =>
 
           lastDeployed = nextChecksum;
 
-          // Update site env
-          const keys = await SiteEnv.keys();
-          const result: Record<string, Record<string, string>> = {};
-          for (const key of keys) {
-            const stack = results[key.stack];
-            const value = stack.outputs[key.output];
-            let existing = result[key.path];
-            if (!existing) {
-              result[key.path] = existing;
-              existing = result[key.path] = {};
-            }
-            existing[key.environment] = value;
-          }
-          await SiteEnv.writeValues(result);
-
           // Write outputs.json
           fs.writeFile(
             path.join(project.paths.out, "outputs.json"),
             JSON.stringify(
-              pipe(
-                results,
-                omitBy((_, key) => key.includes("SstSiteEnv")),
-                mapValues((val) => val.outputs)
-              ),
+              mapValues(results, (val) => val.outputs),
               null,
               2
             )

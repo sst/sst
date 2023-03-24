@@ -70,6 +70,7 @@ export class RemixSite extends SsrSite {
     });
 
     return {
+      typesPath: ".",
       serverBuildOutputFile: "build/index.js",
       clientBuildOutputDir: "public",
       clientBuildVersionedSubDir: "build",
