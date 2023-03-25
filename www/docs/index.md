@@ -50,6 +50,12 @@ SST makes it easy to build modern full-stack applications on AWS.
     </a>
   </li>
   <li>
+    <a href={useBaseUrl("/constructs/ViteSsrSite")}>
+      <h3>Vite SSR</h3>
+      <p>Deploy an Vite SSR app to your AWS account.</p>
+    </a>
+  </li>
+  <li>
     <a href={useBaseUrl("/constructs/StaticSite")}>
       <h3>Static sites</h3>
       <p>Deploy any static site to your AWS account.</p>

@@ -74,6 +74,22 @@ new SolidStartSite(stack, "site", {
 
 ---
 
+### Vite SSR
+
+Or the [`ViteSsrSite`](constructs/ViteSsrSite.md) for [Vite](https://vitejs.dev) with [vite-plugin-ssr](https://vite-plugin-ssr.com).
+
+```ts
+new ViteSsrSite(stack, "site", {
+  path: "web",
+  serverHandler: {
+    path: 'app/server.ts',
+  },
+  customDomain: "my-vite-ssr-app.com",
+});
+```
+
+---
+
 ### Static sites
 
 There's also the [`StaticSite`](constructs/StaticSite.md) for any static site builder.

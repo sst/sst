@@ -28,6 +28,7 @@ Deploy Next.js, Remix, Astro, Solid, or any static site to AWS.
 - [**Remix**](https://docs.sst.dev/constructs/RemixSite)
 - [**Astro**](https://docs.sst.dev/constructs/AstroSite)
 - [**Solid**](https://docs.sst.dev/constructs/SolidStartSite)
+- [**Vite SSR**](https://docs.sst.dev/constructs/ViteSsrSite)
 - [**Static site**](https://docs.sst.dev/constructs/StaticSite)
 
 ### Add any backend feature
