@@ -212,6 +212,7 @@ export async function monitor(stack: string) {
           errors: {} as Record<string, string>,
         };
       }
+      throw ex;
     }
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
