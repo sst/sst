@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.3.1
+
+### Patch Changes
+
+- [`2872eb4ac`](https://github.com/serverless-stack/sst/commit/2872eb4ac10a7fc68d20aa8470340ddea43f379f) Thanks [@fwang](https://github.com/fwang)! - deprecated/NextjsSite: fix invalid file path
+
+- [`f4cd2559f`](https://github.com/serverless-stack/sst/commit/f4cd2559f1d373b1dcf0fd22dc9eb8c9253c4c55) Thanks [@thdxr](https://github.com/thdxr)! - Properly throw errors when monitoring stacks fails
+
 ## 2.3.0
 
 ### Minor Changes
