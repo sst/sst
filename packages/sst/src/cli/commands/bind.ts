@@ -12,6 +12,7 @@ const SITE_CONFIG = {
   AstroSite: "astro.config",
   RemixSite: "remix.config",
   SolidStartSite: "vite.config",
+  ViteSsrSite: "vite.config",
   StaticSite: "vite.config",
   SlsNextjsSite: "next.config",
 };

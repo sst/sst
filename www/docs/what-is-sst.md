@@ -82,7 +82,7 @@ Or the [`ViteSsrSite`](constructs/ViteSsrSite.md) for [Vite](https://vitejs.dev)
 new ViteSsrSite(stack, "site", {
   path: "web",
   serverHandler: {
-    path: 'app/server.ts',
+    path: 'server/index.ts',
   },
   customDomain: "my-vite-ssr-app.com",
 });

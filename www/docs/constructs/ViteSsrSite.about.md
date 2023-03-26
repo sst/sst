@@ -125,7 +125,7 @@ By default, the Vite app server is deployed to a single region defined in your `
 
 You can enable edge like this:
 
-```ts
+```ts {6}
 const site = new ViteSsrSite(stack, "Site", {
   path: "my-vite-ssr-app/",
   serverHandler: {
@@ -145,7 +145,7 @@ We recommend you to deploy to a single region when unsure.
 
 You can configure the website with a custom domain hosted either on [Route 53](https://aws.amazon.com/route53/) or [externally](#configuring-externally-hosted-domain).
 
-```js {5}
+```ts {6}
 const site = new ViteSsrSite(stack, "Site", {
   path: "my-vite-ssr-app/",
   serverHandler: {
@@ -159,7 +159,7 @@ Note that visitors to the `http://` URL will be redirected to the `https://` URL
 
 You can also configure an alias domain to point to the main domain. For example, to setup `www.my-app.com` redirecting to `my-app.com`:
 
-```js {5}
+```ts {8}
 const site = new ViteSsrSite(stack, "Site", {
   path: "my-vite-ssr-app/",
   serverHandler: {
@@ -180,7 +180,7 @@ To expose environment variables to your Vite application you should utilise the 
 
 Imagine you have an API created using the [`Api`](../constructs/Api.md) construct, and you want to fetch data from the API. You'd pass the API's endpoint to your Vite app.
 
-```ts {7-9}
+```ts {10-12}
 const api = new Api(stack, "Api", {
   // ...
 });
@@ -273,7 +273,7 @@ Since the `ViteSsrSite` construct deploys your Vite app to your AWS account, it'
 
 Imagine you have a DynamoDB table created using the [`Table`](../constructs/Table.md) construct, and you want to fetch data from the Table.
 
-```ts {12}
+```ts {15}
 const table = new Table(stack, "Table", {
   // ...
 });
@@ -301,7 +301,7 @@ You can configure the website with a custom domain hosted either on [Route 53](h
 
 #### Using the basic config (Route 53 domains)
 
-```js {3}
+```ts {6}
 new ViteSsrSite(stack, "Site", {
   path: "my-vite-ssr-app",
   serverHandler: {
@@ -313,7 +313,7 @@ new ViteSsrSite(stack, "Site", {
 
 #### Redirect www to non-www (Route 53 domains)
 
-```js {3-6}
+```ts {6-9}
 new ViteSsrSite(stack, "Site", {
   path: "my-vite-ssr-app",
   serverHandler: {
@@ -328,7 +328,7 @@ new ViteSsrSite(stack, "Site", {
 
 #### Configuring domains across stages (Route 53 domains)
 
-```js {3-7}
+```ts {6-10}
 new ViteSsrSite(stack, "Site", {
   path: "my-vite-ssr-app",
   serverHandler: {
@@ -394,7 +394,7 @@ new route53.AaaaRecord(stack, "AlternateAAAARecord", recordProps);
 
 #### Importing an existing certificate (Route 53 domains)
 
-```js {8}
+```js {11}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new ViteSsrSite(stack, "Site", {
@@ -417,7 +417,7 @@ Note that, the certificate needs be created in the `us-east-1`(N. Virginia) regi
 
 If you have multiple hosted zones for a given domain, you can choose the one you want to use to configure the domain.
 
-```js {8-11}
+```js {11-14}
 import { HostedZone } from "aws-cdk-lib/aws-route53";
 
 new ViteSsrSite(stack, "Site", {
@@ -439,7 +439,7 @@ new ViteSsrSite(stack, "Site", {
 
 #### Configuring externally hosted domain
 
-```js {5-11}
+```js {8-14}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new ViteSsrSite(stack, "Site", {
@@ -463,7 +463,7 @@ Also note that you can also migrate externally hosted domains to Route 53 by [fo
 
 ### Configuring server function
 
-```js {3-4}
+```js {6-7}
 new ViteSsrSite(stack, "Site", {
   path: "my-vite-ssr-app",
   serverHandler: {
@@ -478,7 +478,7 @@ new ViteSsrSite(stack, "Site", {
 
 #### Using an existing S3 Bucket
 
-```js {5-7}
+```js {8-10}
 import * as s3 from "aws-cdk-lib/aws-s3";
 
 new ViteSsrSite(stack, "Site", {

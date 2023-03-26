@@ -91,7 +91,7 @@ import {
 import { useProject } from "../project.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
-type SsrSiteType = "NextjsSite" | "RemixSite" | "AstroSite" | "SolidStartSite";
+type SsrSiteType = "NextjsSite" | "RemixSite" | "AstroSite" | "SolidStartSite" | "ViteSsrSite";
 
 export type SsrBuildConfig = {
   typesPath: string;

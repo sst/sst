@@ -128,6 +128,7 @@ app.bootstrap({
     "../packages/sst/src/constructs/AstroSite.tsdoc.ts",
     "../packages/sst/src/constructs/SolidStartSite.tsdoc.ts",
     "../packages/sst/src/constructs/RemixSite.tsdoc.ts",
+    "../packages/sst/src/constructs/ViteSsrSite.tsdoc.ts",
   ],
   tsconfig: path.resolve("../packages/sst/tsconfig.json"),
   preserveWatchOutput: true,
