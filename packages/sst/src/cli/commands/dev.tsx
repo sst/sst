@@ -307,9 +307,10 @@ export const dev = (program: Program) =>
         bus.subscribe("cli.dev", async (evt) => {
           if (evt.properties.stage !== project.config.stage) return;
           if (evt.properties.app !== project.config.name) return;
+          Colors.gap();
           Colors.line(
             Colors.danger(`➜ `),
-            "Another sst dev session has been started up for this stage. Exiting"
+            "Another `sst dev` session has been started for this stage. Exiting..."
           );
           process.exit(0);
         });
