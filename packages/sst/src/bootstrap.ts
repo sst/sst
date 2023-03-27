@@ -271,7 +271,6 @@ async function bootstrapCDK() {
   const identity = await useSTSIdentity();
   const credentials = await useAWSCredentials();
   const { region, profile, cdk } = useProject().config;
-  cdk || {};
   await new Promise<void>((resolve, reject) => {
     const proc = spawn(
       [
@@ -291,6 +290,9 @@ async function bootstrapCDK() {
         ...(cdk?.qualifier ? ["--qualifier", cdk.qualifier] : []),
         ...(cdk?.fileAssetsBucketName
           ? ["--toolkit-bucket-name", cdk.fileAssetsBucketName]
+          : []),
+        ...(cdk?.customPermissionsBoundary
+          ? ["--custom-permissions-boundary", cdk.customPermissionsBoundary]
           : []),
       ].join(" "),
       {

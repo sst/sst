@@ -32,6 +32,7 @@ export interface ConfigOptions {
     toolkitStackName?: string;
     qualifier?: string;
     fileAssetsBucketName?: string;
+    customPermissionsBoundary?: string;
     publicAccessBlockConfiguration?: boolean;
   };
 }
