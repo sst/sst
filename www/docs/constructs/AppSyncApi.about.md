@@ -283,7 +283,7 @@ new AppSyncApi(stack, "GraphqlApi", {
 
 ### Data source: OpenSearch
 
-```js {4-7}
+```js {6-17}
 import { Domain } from "aws-cdk-lib/aws-opensearchservice";
 
 new AppSyncApi(stack, "GraphqlApi", {
