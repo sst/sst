@@ -17,7 +17,7 @@ export const Colors = {
     }
   },
   hex: chalk.hex,
-  primary: chalk.hex("#3700B3"),
+  primary: chalk.hex("#FF9000"),
   link: chalk.cyan,
   success: chalk.green,
   danger: chalk.red,
