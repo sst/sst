@@ -298,6 +298,10 @@ export const bind = (program: Program) =>
             stdio: "inherit",
             shell: true,
           });
+
+          p.on("exit", (code) => {
+            process.exit();
+          });
         }
 
         function areEnvsSame(
