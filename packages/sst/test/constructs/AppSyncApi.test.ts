@@ -1,4 +1,3 @@
-import path from "path";
 import { test, expect, vi } from "vitest";
 import {
   ANY,
@@ -17,8 +16,8 @@ import * as rds from "aws-cdk-lib/aws-rds";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
+import * as opensearch from "aws-cdk-lib/aws-opensearchservice";
 import {
-  App,
   RDS,
   Bucket,
   Stack,
@@ -719,6 +718,36 @@ test("dataSources-RdsDataSource-with-options", async () => {
     }),
   });
   countResources(stack, "AWS::RDS::DBCluster", 1);
+});
+
+test("dataSources-OpenSearchDataSource", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new AppSyncApi(stack, "Api", {
+    schema: "test/constructs/appsync/schema.graphql",
+    dataSources: {
+      searchDS: {
+        type: "open_search",
+        cdk: {
+          dataSource: {
+            domain: opensearch.Domain.fromDomainEndpoint(
+              stack,
+              "IDomain",
+              "https://search-test-domain-1234567890.us-east-1.es.amazonaws.com"
+            ),
+          },
+        },
+      },
+    },
+  });
+  countResources(stack, "AWS::AppSync::DataSource", 1);
+  hasResource(stack, "AWS::AppSync::DataSource", {
+    Name: "searchDS",
+    Type: "AMAZON_OPENSEARCH_SERVICE",
+    OpenSearchServiceConfig: objectLike({
+      Endpoint:
+        "https://search-test-domain-1234567890.us-east-1.es.amazonaws.com",
+    }),
+  });
 });
 
 test("dataSources-HttpDataSource", async () => {

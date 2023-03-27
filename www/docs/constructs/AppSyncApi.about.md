@@ -281,6 +281,51 @@ new AppSyncApi(stack, "GraphqlApi", {
 });
 ```
 
+### Data source: OpenSearch
+
+```js {4-7}
+import { Domain } from "aws-cdk-lib/aws-opensearchservice";
+
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  dataSources: {
+    searchDS: {
+      type: "open_search",
+      cdk: {
+        dataSource: {
+          domain: Domain.fromDomainEndpoint(
+            stack,
+            "IDomain",
+            "https://search-test-domain-1234567890.us-east-1.es.amazonaws.com"
+          )
+        }
+      }
+    },
+  },
+  resolvers: {
+    "Query listNotes": {
+      dataSource: "searchDS",
+      requestMappingTemplate: appsync.MappingTemplate.fromString(JSON.stringify({
+        version: '2017-02-28',
+        operation: 'GET',
+        path: '/id/post/_search',
+        params: {
+          headers: {},
+          queryString: {},
+          body: { from: 0, size: 50 },
+        },
+      })),
+      responseMappingTemplate: appsync.MappingTemplate.fromString(`[
+        #foreach($entry in $context.result.hits.hits)
+        #if( $velocityCount > 1 ) , #end
+        $utils.toJson($entry.get("_source"))
+        #end
+      ]`),
+    },
+  },
+});
+```
+
 ### Data source: HTTP
 
 Starting a Step Function execution on the Mutation `callStepFunction`.
