@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.0.3
+
+### Patch Changes
+
+- [`a2bb76f1c`](https://github.com/serverless-stack/sst/commit/a2bb76f1c6db138f6823837232fa4029ea2a9a55) Thanks [@fwang](https://github.com/fwang)! - AppSyncApi: support OpenSource data source
+
 ## 2.0.2
 
 ### Patch Changes
