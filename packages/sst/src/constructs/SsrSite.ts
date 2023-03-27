@@ -68,6 +68,7 @@ import { CloudFrontTarget } from "aws-cdk-lib/aws-route53-targets";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Logger } from "../logger.js";
+import { createAppContext } from "./context.js";
 import { SSTConstruct, isCDKConstruct } from "./Construct.js";
 import { NodeJSProps, Function } from "./Function.js";
 import { Secret } from "./Secret.js";
@@ -90,6 +91,7 @@ import {
 import { useProject } from "../project.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
+type SsrSiteType = "NextjsSite" | "RemixSite" | "AstroSite" | "SolidStartSite";
 
 export type SsrBuildConfig = {
   typesPath: string;
@@ -258,6 +260,14 @@ export interface SsrSiteProps {
   };
 }
 
+type SsrSiteNormalizedProps = SsrSiteProps & {
+  path: Exclude<SsrSiteProps["path"], undefined>;
+  runtime: Exclude<SsrSiteProps["runtime"], undefined>;
+  timeout: Exclude<SsrSiteProps["timeout"], undefined>;
+  memorySize: Exclude<SsrSiteProps["memorySize"], undefined>;
+  waitForInvalidation: Exclude<SsrSiteProps["waitForInvalidation"], undefined>;
+};
+
 /**
  * The `SsrSite` construct is a higher level CDK construct that makes it easy to create modern web apps with Server Side Rendering capabilities.
  * @example
@@ -271,16 +281,7 @@ export interface SsrSiteProps {
  */
 export class SsrSite extends Construct implements SSTConstruct {
   public readonly id: string;
-  protected props: SsrSiteProps & {
-    path: Exclude<SsrSiteProps["path"], undefined>;
-    runtime: Exclude<SsrSiteProps["runtime"], undefined>;
-    timeout: Exclude<SsrSiteProps["timeout"], undefined>;
-    memorySize: Exclude<SsrSiteProps["memorySize"], undefined>;
-    waitForInvalidation: Exclude<
-      SsrSiteProps["waitForInvalidation"],
-      undefined
-    >;
-  };
+  protected props: SsrSiteNormalizedProps;
   private doNotDeploy: boolean;
   protected buildConfig: SsrBuildConfig;
   private serverLambdaForEdge?: EdgeFunction;
@@ -311,6 +312,8 @@ export class SsrSite extends Construct implements SSTConstruct {
     this.buildConfig = this.initBuildConfig();
     this.validateSiteExists();
     this.writeTypesFile();
+
+    useSites().add(id, this.constructor.name as SsrSiteType, this.props);
 
     if (this.doNotDeploy) {
       // @ts-ignore
@@ -436,11 +439,7 @@ export class SsrSite extends Construct implements SSTConstruct {
   /** @internal */
   public getConstructMetadata() {
     return {
-      type: this.constructor.name as
-        | "NextjsSite"
-        | "RemixSite"
-        | "AstroSite"
-        | "SolidStartSite",
+      type: this.constructor.name as SsrSiteType,
       data: {
         mode: this.doNotDeploy
           ? ("placeholder" as const)
@@ -1239,3 +1238,19 @@ function handler(event) {
     return buildId;
   }
 }
+
+export const useSites = createAppContext(() => {
+  const sites: {
+    name: string;
+    type: SsrSiteType;
+    props: SsrSiteNormalizedProps;
+  }[] = [];
+  return {
+    add(name: string, type: SsrSiteType, props: SsrSiteNormalizedProps) {
+      sites.push({ name, type, props });
+    },
+    get all() {
+      return sites;
+    },
+  };
+});

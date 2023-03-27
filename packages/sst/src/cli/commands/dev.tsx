@@ -36,6 +36,7 @@ export const dev = (program: Program) =>
       const fs = await import("fs/promises");
       const crypto = await import("crypto");
       const { useFunctions } = await import("../../constructs/Function.js");
+      const { useSites } = await import("../../constructs/SsrSite.js");
       const { usePothosBuilder } = await import("./plugins/pothos.js");
       const { useKyselyTypeGenerator } = await import("./plugins/kysely.js");
       const { useRDSWarmer } = await import("./plugins/warmer.js");
@@ -229,9 +230,36 @@ export const dev = (program: Program) =>
           component.unmount();
           printDeploymentResults(assembly, results);
 
-          // Update app state
+          // Run after initial deploy
           if (!lastDeployed) {
             await saveAppMetadata({ mode: "dev" });
+
+            // print start frontend commands
+            useSites()
+              .all.filter(({ props }) => props.dev?.deploy !== true)
+              .forEach(({ type, props }) => {
+                const framework =
+                  type === "AstroSite"
+                    ? "Astro"
+                    : type === "NextjsSite"
+                    ? "Next.js"
+                    : type === "RemixSite"
+                    ? "Remix"
+                    : type === "SolidStartSite"
+                    ? "SolidStart"
+                    : undefined;
+                if (framework) {
+                  const cdCmd =
+                    path.resolve(props.path) === process.cwd()
+                      ? ""
+                      : `cd ${props.path} && `;
+                  Colors.line(
+                    Colors.danger(`➜ `),
+                    Colors.bold(`Start ${framework}:`),
+                    `${cdCmd}npm run dev`
+                  );
+                }
+              });
           }
 
           lastDeployed = nextChecksum;
