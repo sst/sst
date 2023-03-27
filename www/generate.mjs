@@ -94,6 +94,7 @@ const CDK_DOCS_MAP = {
   IGraphqlApi: "aws_appsync",
   ResolverProps: "aws_appsync",
   AwsIamConfig: "aws_appsync",
+  IDomain: "aws_opensearchservice",
 };
 
 const app = new Application();
