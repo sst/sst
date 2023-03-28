@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.3.3
+
+### Patch Changes
+
+- [`36fcf1cb8`](https://github.com/serverless-stack/sst/commit/36fcf1cb8c64a0311bc0751b842c62cd3595634c) Thanks [@thdxr](https://github.com/thdxr)! - File watcher should ignore git folder
+
 ## 2.3.2
 
 ### Patch Changes
