@@ -24,7 +24,7 @@ This default behavior is good for production environments. It allows you to reco
 You can set the removal policy on all the resources in your SST app.
 
 :::danger
-Make sure to not set the default removal policy to `DESTROY` for production environments.
+Make sure to not set the default removal policy to `destroy` for production environments.
 :::
 
 ```ts title="sst.config.ts" {1,8-11}
