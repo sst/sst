@@ -28,8 +28,6 @@ Make sure to not set the default removal policy to `DESTROY` for production envi
 :::
 
 ```ts title="sst.config.ts" {1,8-11}
-import { RemovalPolicy } from "aws-cdk-lib";
-
 export default {
   config(_input) {
     // ...
@@ -37,7 +35,7 @@ export default {
   stacks(app) {
     // Remove all resources when non-prod stages are removed
     if (app.stage !== "prod") {
-      app.setDefaultRemovalPolicy(RemovalPolicy.DESTROY);
+      app.setDefaultRemovalPolicy("destroy");
     }
     
     // ...
