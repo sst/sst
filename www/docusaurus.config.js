@@ -93,8 +93,8 @@ module.exports = {
           title: "Docs",
           items: [
             {
-              label: "Quick Start",
-              to: "quick-start",
+              label: "Get Started",
+              to: "/",
             },
             {
               label: "What is SST",
@@ -216,6 +216,10 @@ module.exports = {
       {
         redirects: [
           {
+            to: "/start/standalone",
+            from: "/quick-start",
+          },
+          {
             to: "/live-lambda-development",
             from: "/working-locally",
           },
@@ -224,7 +228,7 @@ module.exports = {
             from: "/constructs/ApolloApi",
           },
           {
-            to: "/quick-start",
+            to: "/",
             from: "/deploying-your-app",
           },
           {

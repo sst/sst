@@ -1,10 +1,11 @@
 ---
-id: quick-start
-title: Quick Start
-description: "Take SST for a spin and create your project."
+id: standalone
+sidebar_label: Standalone
+title: Create a Standalone SST App
+description: "Create and deploy your first SST app."
 ---
 
-import config from "../config";
+import config from "../../config";
 import TabItem from "@theme/TabItem";
 import HeadlineText from "@site/src/components/HeadlineText";
 import MultiPackagerCode from "@site/src/components/MultiPackagerCode";
@@ -20,7 +21,7 @@ Take SST for a spin and create your first project.
 
 ---
 
-## 0. Prerequisites
+## Prerequisites
 
 SST is built with Node, so make sure your local machine has it installed; at least [Node.js 16](https://nodejs.org/) and [npm 7](https://www.npmjs.com/).
 
@@ -168,7 +169,7 @@ The `sst dev` command also powers a web based dashboard, called the [SST Console
 
 Select the **API** tab on the left, and click **Send**. This will make a request to the endpoint in AWS.
 
-![SST Console API tab](/img/quick-start/sst-console-api.png)
+![SST Console API tab](/img/start/sst-console-api.png)
 
 You should see a `Hello world` message in the response.
 
@@ -189,7 +190,7 @@ export const handler = ApiHandler(async (_evt) => {
 
 Switch back to the SST Console, and click **Send** again.
 
-![SST Console API tab](/img/quick-start/sst-console-api-after-change.png)
+![SST Console API tab](/img/start/sst-console-api-after-change.png)
 
 You should see the updated message in the response.
 
@@ -274,6 +275,6 @@ This removes the local and prod environments of your app.
 
 ---
 
-## 6. Next steps
+## Next steps
 
 If you are ready to dive into the details of SST, [**check out our tutorial**](learn/index.md).
