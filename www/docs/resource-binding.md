@@ -136,7 +136,7 @@ Cannot use Bucket.public. Please make sure it is bound to this function.
 When testing your code, you can use the [`sst bind`](packages/sst.md#sst-bind) CLI to bind the resources to your tests.
 
 ```bash
-sst bind "vitest run"
+sst bind vitest run
 ```
 
 This allows the [`sst/node`](clients/index.md) helper library to work as if it was running inside a Lambda function.
