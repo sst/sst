@@ -253,23 +253,43 @@ export const bind = (program: Program) =>
           const { Logger } = await import("../../logger.js");
           const { useAWSClient } = await import("../../credentials.js");
           const sts = useAWSClient(STSClient);
-          try {
+          const assumeRole = async (duration: number) => {
             const { Credentials: credentials } = await sts.send(
               new AssumeRoleCommand({
                 RoleArn: roleArn,
                 RoleSessionName: "dev-session",
-                DurationSeconds: 43200,
+                DurationSeconds: duration,
               })
             );
             return credentials;
+          };
+
+          // Assue role with max duration first. This can fail if chaining roles, or if
+          // the role has a max duration set. If it fails, assume role with 1 hour duration.
+          let err: any;
+          try {
+            return await assumeRole(43200);
           } catch (e) {
-            Colors.line(
-              Colors.warning(
-                `Failed to assume SSR role ${roleArn}. Falling back to using local IAM credentials.`
-              )
-            );
-            Logger.debug(`Failed to assume ${roleArn}.`, e);
+            err = e;
           }
+
+          if (
+            err.name === "ValidationError" &&
+            err.message.startsWith("The requested DurationSeconds exceeds")
+          ) {
+            try {
+              return await assumeRole(3600);
+            } catch (e) {
+              err = e;
+            }
+          }
+
+          Colors.line(
+            Colors.warning(
+              `Failed to assume SSR role ${roleArn}. Falling back to using local IAM credentials.`
+            )
+          );
+          Logger.debug(`Failed to assume ${roleArn}.`, err);
         }
 
         async function localIamCredentials() {
