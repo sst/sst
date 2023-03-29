@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.3.4
+
+### Patch Changes
+
+- [`4318b5c72`](https://github.com/serverless-stack/sst/commit/4318b5c727c4341073edab8da5009de031aaf324) Thanks [@fwang](https://github.com/fwang)! - sst bind: handle chained roles has max session duration of 1hr
+
 ## 2.3.3
 
 ### Patch Changes
