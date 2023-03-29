@@ -254,10 +254,11 @@ export const dev = (program: Program) =>
                       ? ""
                       : `cd ${props.path} && `;
                   Colors.line(
-                    Colors.danger(`➜ `),
+                    Colors.primary(`➜ `),
                     Colors.bold(`Start ${framework}:`),
                     `${cdCmd}npm run dev`
                   );
+                  Colors.gap();
                 }
               });
           }

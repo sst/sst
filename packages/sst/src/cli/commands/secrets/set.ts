@@ -63,7 +63,7 @@ export const set = (program: Program) =>
       }
       edgeSites.forEach(({ id, type }) => {
         Colors.line(
-          Colors.danger(`➜ `),
+          Colors.primary(`➜ `),
           `Redeploy the "${id}" ${type} to use the new secret`
         );
       });
