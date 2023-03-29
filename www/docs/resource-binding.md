@@ -17,21 +17,21 @@ Access the resources in your app in a secure and typesafe way.
 
 **Resource Binding** allows you to connect your functions with your infrastructure. This is done in two steps:
 
-1. Bind a resource to the functions in your infrastructure code through the `bind` prop.
+1. Bind a resource to your frontend or API through the `bind` prop.
 2. Use the [`sst/node`](clients/index.md) package to access the resource in your function.
 
 ---
 
 ## Quick start
 
-To see how Resource Binding works, we are going to create an S3 bucket and bind it to a Lambda function.
+To see how Resource Binding works, we are going to create an S3 bucket and bind it to a Next.js frontend.
 
-To follow along, you can create a new SST app by running `npx create-sst@latest`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/standard) that's based on the same template.
+To follow along, you can create a new SST app by running `npx create-sst@latest`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/standard-nextjs) that's based on the same template.
 
-1. To create a new bucket, open up `stacks/MyStack.ts` and add a [`Bucket`](constructs/Bucket.md) construct below the API.
+1. To create a new bucket, open up `stacks/Default.ts` and add a [`Bucket`](constructs/Bucket.md) construct below the [`NextjsSite`](constructs/NextjsSite.md).
 
-   ```ts title="stacks/MyStack.ts"
-   const bucket = new Bucket(stack, "myFiles");
+   ```ts title="stacks/Default.ts"
+   const bucket = new Bucket(stack, "public");
    ```
 
    You'll also need to import `Bucket` at the top.
@@ -40,42 +40,39 @@ To follow along, you can create a new SST app by running `npx create-sst@latest`
    import { Bucket } from "sst/constructs";
    ```
 
-2. Then, bind the `bucket` to the `api`.
+2. Then, bind the `bucket` to the `site`.
 
-   ```ts title="stacks/MyStack.ts"
-   api.bind([bucket]);
+   ```diff title="stacks/Default.ts"
+   const site = new NextjsSite(stack, "site", {
+     path: "packages/next",
+   + bind: [bucket],
+   });
    ```
 
-3. Now we can access the bucket's name in our API using the [`Bucket`](clients/bucket.md) helper. Change `packages/functions/src/lambda.ts` to:
+3. Now we can access the bucket's name in our frontend using the [`Bucket`](clients/bucket.md) helper. Add this to `packages/next/pages/index.ts` to generate a presigned URL.
 
-   ```ts title="packages/functions/src/lambda.ts" {10}
-   import { APIGatewayProxyHandlerV2 } from "aws-lambda";
+   ```ts title="packages/next/pages/index.ts" {10}
+   import crypto from "crypto";
    import { Bucket } from "sst/node/bucket";
    import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-   const s3 = new S3Client({});
+   import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-   export const handler: APIGatewayProxyHandlerV2 = async (event) => {
-     // Upload a file to the bucket
-     await s3.send(
-       new PutObjectCommand({
-         Bucket: Bucket.myFiles.bucketName,
-         Key: "greeting.txt",
-         Body: "Hello world!",
-       })
-     );
+   export async function getServerSideProps() {
+     const command = new PutObjectCommand({
+       ACL: "public-read",
+       Key: crypto.randomUUID(),
+       Bucket: Bucket.public.bucketName,
+     });
+     const url = await getSignedUrl(new S3Client({}), command);
 
-     return {
-       statusCode: 200,
-       headers: { "Content-Type": "text/plain" },
-       body: `File uploaded`,
-     };
-   };
+     return { props: { url } };
+   }
    ```
 
    And install the AWS SDK for this example.
 
    ```bash
-   npm install --save @aws-sdk/client-s3
+   npm install --save @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
    ```
 
    That's it!
@@ -90,7 +87,7 @@ Let's take a look at some of the key features of Resource Binding, and how it ma
 
 ### Typesafety
 
-In the above example, the `Bucket` object that's imported from `sst/node/bucket` is typesafe. Your editor should be able to autocomplete the bucket name `myFiles`, as well as its property `bucketName`.
+In the above example, the `Bucket` object that's imported from `sst/node/bucket` is typesafe. Your editor should be able to autocomplete the bucket name `public`, as well as its property `bucketName`.
 
 <details>
 <summary>Behind the scenes</summary>
@@ -105,21 +102,15 @@ Let's take a look at how this is all wired up.
 
 2. When SST builds the app, it generates a type file and adds the bucket name to the `BucketResources` interface.
 
-   ```ts title="node_modules/@types/serverless-stack__node/Bucket-myFiles.d.ts"
+   ```ts title=".sst/types/index.ts"
    import "sst/node/bucket";
    declare module "sst/node/bucket" {
      export interface BucketResources {
-       myFiles: {
+       public: {
          bucketName: string;
        };
      }
    }
-   ```
-
-   This type file then gets appended to `index.d.ts`.
-
-   ```ts title="node_modules/@types/@serverless-stack__node/index.d.ts"
-   export * from "./Bucket-myFiles";
    ```
 
 3. So when the `Bucket` object is imported from `sst/node/bucket`, it has the type `BucketResources`.
@@ -130,12 +121,12 @@ Let's take a look at how this is all wired up.
 
 ### Error handling
 
-If you reference a resource that doesn't exist in your SST app, or hasn't been bound to the function, you'll get a runtime error.
+If you reference a resource that doesn't exist in your SST app, or hasn't been bound to the frontend, you'll get a runtime error.
 
-For example, if you forget to bind the `bucket` to the API, you'll get the following error when the function is invoked.
+For example, if you forget to bind the `bucket` to the `site`, you'll get the following error when the function is invoked.
 
 ```
-Cannot use Bucket.myFiles. Please make sure it is bound to this function.
+Cannot use Bucket.public. Please make sure it is bound to this function.
 ```
 
 ---
@@ -159,10 +150,10 @@ This allows the [`sst/node`](clients/index.md) helper library to work as if it w
 When a resource is bound to a Lambda function, the permissions to access that resource are automatically granted to the function.
 
 ```ts
-api.bind([bucket]);
+site.bind([bucket]);
 ```
 
-Here, by binding the `bucket` to the `api`, the API routes are able to perform file download, upload, delete, and other actions against the bucket.
+Here, by binding the `bucket` to the `site`, the frontend is able to perform file download, upload, delete, and other actions against the bucket.
 
 <details>
 <summary>Behind the scenes</summary>
@@ -186,14 +177,6 @@ The IAM policy statement looks like:
 ### Construct support
 
 Resource Binding works across all [SST constructs](constructs/index.md). Here are a few more examples.
-
-- Getting the Next.js URL
-
-  ```ts
-  import { NextjsSite } from "sst/node/site";
-
-  NextjsSite.myFrontend.url;
-  ```
 
 - DynamoDB table name
 
@@ -219,9 +202,9 @@ See the [full list of helpers](clients/index.md).
 
 ## Binding other resources
 
-So far we've seen how Resource Binding allows your functions to access values from other SST constructs. But there are 2 other types of values you might want to access in your functions.
+So far we've seen how Resource Binding allows your frontend to access values from other SST constructs. But there are 2 other types of values you might want to access in your frontend.
 
-1. Secrets, because you can't define the value of the secrets in your functions.
+1. Secrets, because you can't define the value of the secrets in your frontend.
 2. Values from non-SST constructs, for example static values or values from CDK constructs.
 
 For these you can use [`Config`](config.md). Here are a couple of examples.
@@ -230,16 +213,19 @@ For these you can use [`Config`](config.md). Here are a couple of examples.
 
 #### Binding secrets
 
-To bind a secret to our function, start by creating a `Config.Secret` construct.
+To bind a secret to our frontend, start by creating a `Config.Secret` construct.
 
 ```ts
 const STRIPE_KEY = new Config.Secret(stack, "STRIPE_KEY");
 ```
 
-And continuing with our example, bind it to the `api`.
+And continuing with our example, bind it to the `site`.
 
-```ts
-api.bind([STRIPE_KEY]);
+```diff
+const site = new NextjsSite(stack, "site", {
+  path: "packages/next",
++ bind: [STRIPE_KEY],
+});
 ```
 
 Now set the secret value using the SST CLI.
@@ -274,10 +260,13 @@ const MY_CLUSTER_NAME = new Config.Parameter(stack, "MY_CLUSTER_NAME", {
 });
 ```
 
-Then bind it to the `api` from our example.
+Then bind it to the `site` from our example.
 
-```ts
-api.bind([MY_CLUSTER_NAME]);
+```diff
+const site = new NextjsSite(stack, "site", {
+  path: "packages/next",
++ bind: [MY_CLUSTER_NAME],
+});
 ```
 
 And you can access the value in your function.
