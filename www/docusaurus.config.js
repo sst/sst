@@ -93,8 +93,8 @@ module.exports = {
           title: "Docs",
           items: [
             {
-              label: "Quick Start",
-              to: "quick-start",
+              label: "Get Started",
+              to: "/",
             },
             {
               label: "What is SST",
@@ -224,7 +224,7 @@ module.exports = {
             from: "/constructs/ApolloApi",
           },
           {
-            to: "/quick-start",
+            to: "/",
             from: "/deploying-your-app",
           },
           {
