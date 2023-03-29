@@ -50,6 +50,11 @@
   margin-bottom: 0.4rem;
   font-size: 1.1rem;
 }
+.features li h3 img {
+  margin-right: 6px;
+  vertical-align: -2px;
+  height: 16px;
+}
 .features li:hover {
   border-color: var(--ifm-link-color);
 }

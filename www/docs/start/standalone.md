@@ -1,10 +1,11 @@
 ---
-id: quick-start
-title: Quick Start
-description: "Take SST for a spin and create your project."
+id: standalone
+sidebar_label: Standalone
+title: Create a Standalone SST App
+description: "Create and deploy your first SST app."
 ---
 
-import config from "../config";
+import config from "../../config";
 import TabItem from "@theme/TabItem";
 import HeadlineText from "@site/src/components/HeadlineText";
 import MultiPackagerCode from "@site/src/components/MultiPackagerCode";
@@ -20,153 +21,7 @@ Take SST for a spin and create your first project.
 
 ---
 
-```bash
-npx create-next-app@latest
-```
-
-Initialize SST.
-
-```bash
-npx create-sst@latest
-npx sst dev
-```
-
-And start Next.js.
-
-```bash
-npm run dev
-```
-
-Let's add a file upload feature to our app.
-
-Add an S3 bucket to your `sst.config.ts`.
-
-```ts title="sst.config.ts"
-const bucket = new Bucket(ctx.stack, "public", {
-  cors: true,
-});
-```
-
-Bind it to your Next.js app.
-
-```diff title="sst.config.ts"
-const site = new NextjsSite(ctx.stack, "site", {
-  path: ".",
-+ bind: [bucket],
-});
-```
-
-To upload a file to S3 we'll first generate a presigned URL when the page loads. Add this to `pages/index.ts`.
-
-```ts title="pages/index.ts" {7}
-export async function getServerSideProps() {
-  const command = new PutObjectCommand({
-    ACL: "public-read",
-    Key: crypto.randomUUID(),
-    Bucket: Bucket.public.bucketName,
-  });
-  const url = await getSignedUrl(new S3Client({}), command);
-
-  return { props: { url } };
-}
-```
-
-Thanks to [Resource Binding](resource-binding.md) we can access our S3 bucket in a typesafe way in our Next.js app — `Bucket.public.bucketName`.
-
-Let's add the form. Replace your `pages/index.tsx` with.
-
-```tsx title="pages/index.tsx"
-export default function Home({ url }: { url: string }) {
-  return (
-    <main>
-      <form
-        onSubmit={async (e) => {
-          e.preventDefault();
-
-          const file = (e.target as HTMLFormElement).file.files?.[0]!;
-
-          const image = await fetch(url, {
-            body: file,
-            method: "PUT",
-            headers: {
-              "Content-Type": file.type,
-              "Content-Disposition": `attachment; filename="${file.name}"`,
-            },
-          });
-
-          window.location.href = image.url.split("?")[0];
-        }}
-      >
-        <input name="file" type="file" accept="image/png, image/jpeg" />
-        <button type="submit">Upload</button>
-      </form>
-    </main>
-  );
-}
-```
-
-This will upload an image and redirect to it!
-
-Next, we'll add a cron job to `sst.config.ts` that'll remove the uploaded files every day.
-
-```ts title="sst.config.ts" {5}
-new Cron(ctx.stack, "cron", {
-  schedule: "rate(1 day)",
-  job: {
-    function: {
-      bind: [bucket],
-      handler: "functions/delete.handler",
-    },
-  },
-});
-```
-
-Just like our Next.js app, we are binding our cron job to the S3 bucket.
-
-Add a function to `functions/delete.ts` that'll go through all the files in the bucket and remove it.
-
-```ts title="functions/delete.ts"
-export async function handler() {
-  const client = new S3Client({});
-
-  const list = await client.send(
-    new ListObjectsCommand({
-      Bucket: Bucket.public.bucketName,
-    })
-  );
-
-  await Promise.all(
-    (list.Contents || []).map(async (file) => {
-      await client.send(
-        new DeleteObjectCommand({
-          Key: file.Key,
-          Bucket: Bucket.public.bucketName,
-        })
-      );
-    })
-  );
-}
-```
-
-And that's it. We have a simple Next.js app that uploads files to S3 and runs a cron job to delete them!
-
-Let's end with deploying it to prod.
-
-```bash
-npx sst deploy --stage prod
-```
-
----
-
----
-
----
-
----
-
----
-
-## 0. Prerequisites
+## Prerequisites
 
 SST is built with Node, so make sure your local machine has it installed; at least [Node.js 16](https://nodejs.org/) and [npm 7](https://www.npmjs.com/).
 
@@ -314,7 +169,7 @@ The `sst dev` command also powers a web based dashboard, called the [SST Console
 
 Select the **API** tab on the left, and click **Send**. This will make a request to the endpoint in AWS.
 
-![SST Console API tab](/img/quick-start/sst-console-api.png)
+![SST Console API tab](/img/start/sst-console-api.png)
 
 You should see a `Hello world` message in the response.
 
@@ -335,7 +190,7 @@ export const handler = ApiHandler(async (_evt) => {
 
 Switch back to the SST Console, and click **Send** again.
 
-![SST Console API tab](/img/quick-start/sst-console-api-after-change.png)
+![SST Console API tab](/img/start/sst-console-api-after-change.png)
 
 You should see the updated message in the response.
 
@@ -420,6 +275,6 @@ This removes the local and prod environments of your app.
 
 ---
 
-## 6. Next steps
+## Next steps
 
 If you are ready to dive into the details of SST, [**check out our tutorial**](learn/index.md).

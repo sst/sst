@@ -4,26 +4,27 @@ module.exports = {
       " ": [
         "index",
         "what-is-sst",
-        "quick-start",
-        //        {
-        //          type: "category",
-        //          label: "Frontends",
-        //          collapsible: true,
-        //          collapsed: false,
-        //          link: {type: "doc", id: "frontends/index"},
-        //          items: [
-        //            "frontends/nextjs",
-        //            "frontends/remix",
-        //            "frontends/astro",
-        //            "frontends/solid",
-        //            "frontends/static-sites",
-        //          ]
-        //        },
+        {
+          type: "category",
+          label: "Get Started",
+          collapsible: true,
+          collapsed: false,
+          items: [
+            "start/standalone",
+            "start/nextjs",
+            "start/astro",
+          ]
+        },
       ],
     },
-    {
-      "Local Dev": ["live-lambda-development", "console", "editor-integration"],
-    },
+//    {
+//      "Get Started": [
+//        "start/basics",
+//        "start/nextjs",
+//        "start/astro",
+//        "start/vite",
+//      ],
+//    },
     //    {
     //      Features: [
     //        {
@@ -93,9 +94,12 @@ module.exports = {
     {
       Info: [
         //"known-issues",
+        "live-lambda-development",
+        "console",
         "configuring-sst",
         "upgrade-guide",
         "design-principles",
+        "editor-integration",
         "anonymous-telemetry",
         "faq",
       ],
