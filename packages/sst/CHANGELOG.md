@@ -1,5 +1,53 @@
 # @serverless-stack/cli2
 
+## 2.3.4
+
+### Patch Changes
+
+- [`4318b5c72`](https://github.com/serverless-stack/sst/commit/4318b5c727c4341073edab8da5009de031aaf324) Thanks [@fwang](https://github.com/fwang)! - sst bind: handle chained roles has max session duration of 1hr
+
+## 2.3.3
+
+### Patch Changes
+
+- [`36fcf1cb8`](https://github.com/serverless-stack/sst/commit/36fcf1cb8c64a0311bc0751b842c62cd3595634c) Thanks [@thdxr](https://github.com/thdxr)! - File watcher should ignore git folder
+
+## 2.3.2
+
+### Patch Changes
+
+- [`2a5eb1893`](https://github.com/serverless-stack/sst/commit/2a5eb1893377821d2bd25a83ee374df784266b05) Thanks [@fwang](https://github.com/fwang)! - CLI: update primary color to distinguish from error red
+
+- [`73fc2fa6f`](https://github.com/serverless-stack/sst/commit/73fc2fa6f953ac3575a6755058b11622f8cdae06) Thanks [@fwang](https://github.com/fwang)! - bootstrap: support setting custom permissions boundary
+
+- [#2710](https://github.com/serverless-stack/sst/pull/2710) [`6f59768f6`](https://github.com/serverless-stack/sst/commit/6f59768f6dee24d6d82ae67c993ba9a3ebbb3058) Thanks [@fwang](https://github.com/fwang)! - sst bind: fix command not exiting
+
+- [`a2bb76f1c`](https://github.com/serverless-stack/sst/commit/a2bb76f1c6db138f6823837232fa4029ea2a9a55) Thanks [@fwang](https://github.com/fwang)! - AppSyncApi: support OpenSource data source
+
+- [`6e3ae2054`](https://github.com/serverless-stack/sst/commit/6e3ae2054d945897da05e34d9663dc08340f7d42) Thanks [@fwang](https://github.com/fwang)! - Stack: ignore instead of throw on undefined stack output value
+
+- [`c40be2c74`](https://github.com/serverless-stack/sst/commit/c40be2c748f08c00562f9eff4aa683f1f7dd5ca8) Thanks [@fwang](https://github.com/fwang)! - sst dev: print start frontend commands
+
+## 2.3.1
+
+### Patch Changes
+
+- [`2872eb4ac`](https://github.com/serverless-stack/sst/commit/2872eb4ac10a7fc68d20aa8470340ddea43f379f) Thanks [@fwang](https://github.com/fwang)! - deprecated/NextjsSite: fix invalid file path
+
+- [`f4cd2559f`](https://github.com/serverless-stack/sst/commit/f4cd2559f1d373b1dcf0fd22dc9eb8c9253c4c55) Thanks [@thdxr](https://github.com/thdxr)! - Properly throw errors when monitoring stacks fails
+
+## 2.3.0
+
+### Minor Changes
+
+- [#2703](https://github.com/serverless-stack/sst/pull/2703) [`9aa0b7a9f`](https://github.com/serverless-stack/sst/commit/9aa0b7a9f6364a7dfc5f85c713c66687f71110e7) Thanks [@fwang](https://github.com/fwang)! - sst bind: support binding SSR sites
+
+## 2.2.8
+
+### Patch Changes
+
+- [`dd755650f`](https://github.com/serverless-stack/sst/commit/dd755650ff863825af7c241b6516f2c28bda2acd) Thanks [@fwang](https://github.com/fwang)! - sst bootstrap: bootstrap CDK if required
+
 ## 2.2.7
 
 ### Patch Changes

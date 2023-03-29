@@ -45,7 +45,7 @@ const App = () => {
   };
 
   const signOut = async () => {
-    localStorage.clear("session");
+    localStorage.removeItem("session");
     setSession(null);
   };
 

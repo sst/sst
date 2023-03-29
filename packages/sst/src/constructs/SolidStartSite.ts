@@ -19,6 +19,7 @@ import { EdgeFunction } from "./EdgeFunction.js";
 export class SolidStartSite extends SsrSite {
   protected initBuildConfig() {
     return {
+      typesPath: ".",
       serverBuildOutputFile: "dist/server/index.mjs",
       clientBuildOutputDir: "dist/client",
       clientBuildVersionedSubDir: "assets",

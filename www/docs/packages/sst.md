@@ -144,40 +144,6 @@ In addition to the [global options](#global-options), the following options are 
 
 ---
 
-### `sst env`
-
-Command to load and start your frontend with the environment variables from SST.
-
-```bash
-npx sst env <command> [options]
-```
-
-So for Next.js, you can updated your `package.json` to.
-
-```json title="package.json" {2}
-"scripts": {
-  "dev": "sst env next dev",
-},
-```
-
-Now when you run `npm run dev` in your Next.js app, it'll have access to the [environment variables in your frontend](../constructs/NextjsSite.md#environment-variables).
-
-<details>
-<summary>How it works</summary>
-
-Here's what's going on behind the scenes.
-
-1. The `sst dev` command generates a file with the values specified by `StaticSite`, `RemixSite`, or `NextjsSite` construct's `environment` prop.
-2. The `sst env` CLI will traverse up the directories to look for the root of your SST app.
-3. It'll then find the file that's generated in Step 1.
-4. It'll load these as environment variables before running the given command.
-
-</details>
-
-You can [read more about how this works for running tests](../testing.md).
-
----
-
 ### `sst diff`
 
 Compares the current version of the stacks in your app with the ones that've been deployed to AWS. This can be helpful in doing a quick check before deploying your changes to prod.
@@ -202,10 +168,16 @@ Bind your app's resources to the given `command`. This allows the [`sst/node`](c
 npx sst bind <command> [options]
 ```
 
-So for example, you can bind all the resources in your app and use it to run your tests.
+So for example, you can start your frontend with all the binding values.
 
 ```bash
-npx sst bind "vitest run"
+npx sst bind next dev
+```
+
+You can also bind all the resources in your app and use it to run your tests.
+
+```bash
+npx sst bind vitest run
 ```
 
 You can [read more about how this works for running tests](../testing.md).

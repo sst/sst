@@ -20,6 +20,7 @@ import { EdgeFunction } from "./EdgeFunction.js";
 export class AstroSite extends SsrSite {
   protected initBuildConfig() {
     return {
+      typesPath: "src",
       serverBuildOutputFile: "dist/server/entry.mjs",
       clientBuildOutputDir: "dist/client",
       clientBuildVersionedSubDir: "assets",

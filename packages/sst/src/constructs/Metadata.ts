@@ -34,11 +34,17 @@ export type KinesisStreamMetadata = ExtractMetadata<KinesisStream>;
 import type { NextjsSite } from "./NextjsSite.js";
 export type NextjsMetadata = ExtractMetadata<NextjsSite>;
 
+import type { NextjsSite as SlsNextjsSite } from "./deprecated/NextjsSite.js";
+export type SlsNextjsMetadata = ExtractMetadata<SlsNextjsSite>;
+
 import type { Queue } from "./Queue.js";
 export type QueueMetadata = ExtractMetadata<Queue>;
 
 import type { StaticSite } from "./StaticSite.js";
 export type StaticSiteMetadata = ExtractMetadata<StaticSite>;
+
+import type { SsrSite } from "./SsrSite.js";
+export type SsrSiteMetadata = ExtractMetadata<SsrSite>;
 
 import type { Table } from "./Table.js";
 export type TableMetadata = ExtractMetadata<Table>;
@@ -63,8 +69,10 @@ export type Metadata =
   | FunctionMetadata
   | KinesisStreamMetadata
   | NextjsMetadata
+  | SlsNextjsMetadata
   | QueueMetadata
   | StaticSiteMetadata
+  | SsrSiteMetadata
   | TableMetadata
   | TopicMetadata
   | WebSocketApiMetadata

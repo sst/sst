@@ -216,6 +216,10 @@ module.exports = {
       {
         redirects: [
           {
+            to: "/start/standalone",
+            from: "/quick-start",
+          },
+          {
             to: "/live-lambda-development",
             from: "/working-locally",
           },

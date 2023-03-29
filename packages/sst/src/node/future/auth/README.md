@@ -130,7 +130,7 @@ You can start by redirecting the user to the auth flow and specifying the redire
 const params = new URLSearchParams({
   client_id: "local",
   redirect_uri: "<SSR_URL>/auth/callback",
-  response_type: "token",
+  response_type: "code",
   provider: "github",
 })
 location.href = import.meta.env.AUTH_URL + "/authorize?" + params.toString()

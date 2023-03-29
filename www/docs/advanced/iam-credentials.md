@@ -171,14 +171,18 @@ The SST CLI command also makes AWS SDK calls to your AWS account. Here is a list
 - iot:Subscribe
 - lambda:GetFunctionConfiguration
 - lambda:UpdateFunctionConfiguration
+- ecr:CreateRepository
 - s3:GetObject
 - s3:PutObject
 - s3:DeleteObject
 - s3:ListObjectsV2
-- ssm:PutParameter
-- ssm:GetParameter
+- s3:CreateBucket
+- s3:PutBucketPolicy
 - ssm:DeleteParameter
+- ssm:GetParameter
+- ssm:GetParameters
 - ssm:GetParametersByPath
+- ssm:PutParameter
 - sts:AssumeRole
 
 And if you are using the [`RDS`](../constructs/RDS.md) construct, you will also need:

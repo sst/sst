@@ -5,7 +5,7 @@
   "sideEffects": false,
   "scripts": {
     "build": "remix build",
-    "dev": "sst env remix dev",
+    "dev": "sst bind remix dev",
     "start": "remix-serve build"
   },
   "dependencies": {

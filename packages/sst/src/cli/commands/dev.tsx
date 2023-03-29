@@ -13,7 +13,7 @@ export const dev = (program: Program) =>
     async (args) => {
       const { Colors } = await import("../colors.js");
       const { printHeader } = await import("../ui/header.js");
-      const { mapValues, omitBy, pipe } = await import("remeda");
+      const { mapValues } = await import("remeda");
       const path = await import("path");
       const { useRuntimeWorkers } = await import("../../runtime/workers.js");
       const { useIOTBridge } = await import("../../runtime/iot.js");
@@ -36,7 +36,7 @@ export const dev = (program: Program) =>
       const fs = await import("fs/promises");
       const crypto = await import("crypto");
       const { useFunctions } = await import("../../constructs/Function.js");
-      const { SiteEnv } = await import("../../site-env.js");
+      const { useSites } = await import("../../constructs/SsrSite.js");
       const { usePothosBuilder } = await import("./plugins/pothos.js");
       const { useKyselyTypeGenerator } = await import("./plugins/kysely.js");
       const { useRDSWarmer } = await import("./plugins/warmer.js");
@@ -230,37 +230,46 @@ export const dev = (program: Program) =>
           component.unmount();
           printDeploymentResults(assembly, results);
 
-          // Update app state
+          // Run after initial deploy
           if (!lastDeployed) {
             await saveAppMetadata({ mode: "dev" });
+
+            // print start frontend commands
+            useSites()
+              .all.filter(({ props }) => props.dev?.deploy !== true)
+              .forEach(({ type, props }) => {
+                const framework =
+                  type === "AstroSite"
+                    ? "Astro"
+                    : type === "NextjsSite"
+                    ? "Next.js"
+                    : type === "RemixSite"
+                    ? "Remix"
+                    : type === "SolidStartSite"
+                    ? "SolidStart"
+                    : undefined;
+                if (framework) {
+                  const cdCmd =
+                    path.resolve(props.path) === process.cwd()
+                      ? ""
+                      : `cd ${props.path} && `;
+                  Colors.line(
+                    Colors.primary(`➜ `),
+                    Colors.bold(`Start ${framework}:`),
+                    `${cdCmd}npm run dev`
+                  );
+                  Colors.gap();
+                }
+              });
           }
 
           lastDeployed = nextChecksum;
-
-          // Update site env
-          const keys = await SiteEnv.keys();
-          const result: Record<string, Record<string, string>> = {};
-          for (const key of keys) {
-            const stack = results[key.stack];
-            const value = stack.outputs[key.output];
-            let existing = result[key.path];
-            if (!existing) {
-              result[key.path] = existing;
-              existing = result[key.path] = {};
-            }
-            existing[key.environment] = value;
-          }
-          await SiteEnv.writeValues(result);
 
           // Write outputs.json
           fs.writeFile(
             path.join(project.paths.out, "outputs.json"),
             JSON.stringify(
-              pipe(
-                results,
-                omitBy((_, key) => key.includes("SstSiteEnv")),
-                mapValues((val) => val.outputs)
-              ),
+              mapValues(results, (val) => val.outputs),
               null,
               2
             )
@@ -327,9 +336,10 @@ export const dev = (program: Program) =>
         bus.subscribe("cli.dev", async (evt) => {
           if (evt.properties.stage !== project.config.stage) return;
           if (evt.properties.app !== project.config.name) return;
+          Colors.gap();
           Colors.line(
             Colors.danger(`➜ `),
-            "Another sst dev session has been started up for this stage. Exiting"
+            "Another `sst dev` session has been started for this stage. Exiting..."
           );
           process.exit(0);
         });

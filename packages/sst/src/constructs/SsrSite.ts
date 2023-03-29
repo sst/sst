@@ -21,9 +21,15 @@ import {
   BucketProps,
   IBucket,
 } from "aws-cdk-lib/aws-s3";
-import { Role, Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import {
-  Function,
+  Role,
+  Effect,
+  Policy,
+  PolicyStatement,
+  AnyPrincipal,
+} from "aws-cdk-lib/aws-iam";
+import {
+  Function as CdkFunction,
   Code,
   Runtime,
   FunctionUrlAuthType,
@@ -62,8 +68,10 @@ import { CloudFrontTarget } from "aws-cdk-lib/aws-route53-targets";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Logger } from "../logger.js";
+import { createAppContext } from "./context.js";
 import { SSTConstruct, isCDKConstruct } from "./Construct.js";
-import { NodeJSProps } from "./Function.js";
+import { NodeJSProps, Function } from "./Function.js";
+import { Secret } from "./Secret.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 import {
   BaseSiteDomainProps,
@@ -80,12 +88,13 @@ import {
   FunctionBindingProps,
   getParameterPath,
 } from "./util/functionBinding.js";
-import { SiteEnv } from "../site-env.js";
 import { useProject } from "../project.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
+type SsrSiteType = "NextjsSite" | "RemixSite" | "AstroSite" | "SolidStartSite";
 
 export type SsrBuildConfig = {
+  typesPath: string;
   serverBuildOutputFile: string;
   clientBuildOutputDir: string;
   clientBuildVersionedSubDir: string;
@@ -251,6 +260,14 @@ export interface SsrSiteProps {
   };
 }
 
+type SsrSiteNormalizedProps = SsrSiteProps & {
+  path: Exclude<SsrSiteProps["path"], undefined>;
+  runtime: Exclude<SsrSiteProps["runtime"], undefined>;
+  timeout: Exclude<SsrSiteProps["timeout"], undefined>;
+  memorySize: Exclude<SsrSiteProps["memorySize"], undefined>;
+  waitForInvalidation: Exclude<SsrSiteProps["waitForInvalidation"], undefined>;
+};
+
 /**
  * The `SsrSite` construct is a higher level CDK construct that makes it easy to create modern web apps with Server Side Rendering capabilities.
  * @example
@@ -264,20 +281,12 @@ export interface SsrSiteProps {
  */
 export class SsrSite extends Construct implements SSTConstruct {
   public readonly id: string;
-  protected props: SsrSiteProps & {
-    path: Exclude<SsrSiteProps["path"], undefined>;
-    runtime: Exclude<SsrSiteProps["runtime"], undefined>;
-    timeout: Exclude<SsrSiteProps["timeout"], undefined>;
-    memorySize: Exclude<SsrSiteProps["memorySize"], undefined>;
-    waitForInvalidation: Exclude<
-      SsrSiteProps["waitForInvalidation"],
-      undefined
-    >;
-  };
+  protected props: SsrSiteNormalizedProps;
   private doNotDeploy: boolean;
   protected buildConfig: SsrBuildConfig;
   private serverLambdaForEdge?: EdgeFunction;
-  protected serverLambdaForRegional?: Function;
+  protected serverLambdaForRegional?: CdkFunction;
+  private serverLambdaForDev?: CdkFunction;
   private bucket: Bucket;
   private distribution: Distribution;
   private hostedZone?: IHostedZone;
@@ -300,19 +309,22 @@ export class SsrSite extends Construct implements SSTConstruct {
     this.doNotDeploy =
       !stack.isActive || (app.mode === "dev" && !this.props.dev?.deploy);
 
+    this.buildConfig = this.initBuildConfig();
     this.validateSiteExists();
-    this.registerSiteEnvironment();
+    this.writeTypesFile();
+
+    useSites().add(id, this.constructor.name as SsrSiteType, this.props);
 
     if (this.doNotDeploy) {
       // @ts-ignore
-      this.buildConfig = this.bucket = this.distribution = null;
+      this.bucket = this.distribution = null;
+      this.serverLambdaForDev = this.createFunctionForDev();
       return;
     }
 
     const cliLayer = new AwsCliLayer(this, "AwsCliLayer");
 
     // Build app
-    this.buildConfig = this.initBuildConfig();
     this.buildApp();
 
     // Create Bucket which will be utilised to contain the statics
@@ -427,9 +439,22 @@ export class SsrSite extends Construct implements SSTConstruct {
   /** @internal */
   public getConstructMetadata() {
     return {
-      type: "SsrSite" as const,
+      type: this.constructor.name as SsrSiteType,
       data: {
+        mode: this.doNotDeploy
+          ? ("placeholder" as const)
+          : ("deployed" as const),
+        path: this.props.path,
         customDomainUrl: this.customDomainUrl,
+        edge: this.props.edge,
+        server: (
+          this.serverLambdaForDev ||
+          this.serverLambdaForRegional ||
+          this.serverLambdaForEdge
+        )?.functionArn!,
+        secrets: (this.props.bind || [])
+          .filter((c) => c instanceof Secret)
+          .map((c) => (c as Secret).name),
       },
     };
   }
@@ -470,6 +495,7 @@ export class SsrSite extends Construct implements SSTConstruct {
 
   protected initBuildConfig(): SsrBuildConfig {
     return {
+      typesPath: ".",
       serverBuildOutputFile: "placeholder",
       clientBuildOutputDir: "placeholder",
       clientBuildVersionedSubDir: "placeholder",
@@ -649,7 +675,7 @@ export class SsrSite extends Construct implements SSTConstruct {
     fileOptions: { exclude: string; include: string; cacheControl: string }[]
   ): CustomResource {
     // Create a Lambda function that will be doing the uploading
-    const uploader = new Function(this, "S3Uploader", {
+    const uploader = new CdkFunction(this, "S3Uploader", {
       code: Code.fromAsset(
         path.join(__dirname, "../support/base-site-custom-resource")
       ),
@@ -663,7 +689,7 @@ export class SsrSite extends Construct implements SSTConstruct {
     assets.forEach((asset) => asset.grantRead(uploader));
 
     // Create the custom resource function
-    const handler = new Function(this, "S3Handler", {
+    const handler = new CdkFunction(this, "S3Handler", {
       code: Code.fromAsset(
         path.join(__dirname, "../support/base-site-custom-resource")
       ),
@@ -710,12 +736,37 @@ export class SsrSite extends Construct implements SSTConstruct {
   // Bundle Lambda Server
   /////////////////////
 
-  protected createFunctionForRegional(): Function {
-    return {} as Function;
+  protected createFunctionForRegional(): CdkFunction {
+    return {} as CdkFunction;
   }
 
   protected createFunctionForEdge(): EdgeFunction {
     return {} as EdgeFunction;
+  }
+
+  protected createFunctionForDev(): Function {
+    const { runtime, timeout, memorySize, permissions, environment, bind } =
+      this.props;
+
+    const role = new Role(this, "ServerFunctionRole", {
+      assumedBy: new AnyPrincipal(),
+      maxSessionDuration: CdkDuration.hours(12),
+    });
+
+    const fn = new Function(this, `ServerFunction`, {
+      description: "Server handler placeholder",
+      handler: "placeholder",
+      runtime,
+      memorySize,
+      timeout,
+      bind,
+      environment,
+      permissions,
+      role,
+    });
+    fn._doNotAllowOthersToBind = true;
+
+    return fn;
   }
 
   private createFunctionPermissionsForRegional() {
@@ -1138,17 +1189,24 @@ function handler(event) {
     }
   }
 
-  private registerSiteEnvironment() {
-    for (const [key, value] of Object.entries(this.props.environment || {})) {
-      const outputId = `SstSiteEnv_${key}`;
-      const output = new CfnOutput(this, outputId, { value });
-      SiteEnv.append({
-        path: this.props.path,
-        output: Stack.of(this).getLogicalId(output),
-        environment: key,
-        stack: Stack.of(this).stackName,
-      });
-    }
+  private writeTypesFile() {
+    const typesPath = path.resolve(
+      this.props.path,
+      this.buildConfig.typesPath,
+      "sst-env.d.ts"
+    );
+
+    // Do not override the types file if it already exists
+    if (fs.existsSync(typesPath)) return;
+
+    const relPathToSstTypesFile = path.join(
+      path.relative(path.dirname(typesPath), useProject().paths.root),
+      ".sst/types/index.ts"
+    );
+    fs.writeFileSync(
+      typesPath,
+      `/// <reference path="${relPathToSstTypesFile}" />`
+    );
   }
 
   protected generateBuildId(): string {
@@ -1180,3 +1238,19 @@ function handler(event) {
     return buildId;
   }
 }
+
+export const useSites = createAppContext(() => {
+  const sites: {
+    name: string;
+    type: SsrSiteType;
+    props: SsrSiteNormalizedProps;
+  }[] = [];
+  return {
+    add(name: string, type: SsrSiteType, props: SsrSiteNormalizedProps) {
+      sites.push({ name, type, props });
+    },
+    get all() {
+      return sites;
+    },
+  };
+});

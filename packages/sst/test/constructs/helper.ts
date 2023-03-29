@@ -142,31 +142,39 @@ export function countResourcesLike(
   }
 }
 
-export function hasResource(stack: Stack, type: string, props: any): void {
+export function hasResource(stack: Stack, type: string, props: any) {
   const template = Template.fromStack(stack);
   template.hasResourceProperties(type, props);
 }
 
-export function hasResourceTemplate(
-  stack: Stack,
-  type: string,
-  props: any
-): void {
+export function hasResourceTemplate(stack: Stack, type: string, props: any) {
   const template = Template.fromStack(stack);
   template.hasResource(type, props);
 }
 
-export function hasOutput(stack: Stack, logicalId: string, props: any): void {
+export function hasOutput(stack: Stack, logicalId: string, props: any) {
   const template = Template.fromStack(stack);
   template.hasOutput(logicalId, props);
 }
 
-export function templateMatches(stack: Stack, props: any): void {
+export function hasNoOutput(stack: Stack, logicalId: string) {
+  const template = Template.fromStack(stack);
+  const results = template.findOutputs(logicalId);
+  if (results[logicalId]) {
+    throw new Error(
+      `Expected "${logicalId}" output to not exist. But found value "${JSON.stringify(
+        results[logicalId]
+      )}"`
+    );
+  }
+}
+
+export function templateMatches(stack: Stack, props: any) {
   const template = Template.fromStack(stack);
   template.templateMatches(props);
 }
 
-export function printResource(stack: Stack, type: string): void {
+export function printResource(stack: Stack, type: string) {
   const template = Template.fromStack(stack);
   const resources = template.findResources(type);
   console.log(JSON.stringify(resources, null, 2));

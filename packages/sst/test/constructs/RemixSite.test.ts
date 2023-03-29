@@ -876,7 +876,7 @@ test("constructor: path not exist", async () => {
       // @ts-expect-error: "sstTest" is not exposed in props
       sstTest: true,
     });
-  }).toThrow(/No site found/);
+  }).toThrow(/Could not find/);
 });
 
 test("cdk.bucket is props", async () => {

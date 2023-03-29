@@ -83,6 +83,7 @@ export class NextjsSite extends SsrSite {
 
   protected initBuildConfig() {
     return {
+      typesPath: ".",
       serverBuildOutputFile: ".open-next/server-function/index.mjs",
       clientBuildOutputDir: ".open-next/assets",
       clientBuildVersionedSubDir: "_next",

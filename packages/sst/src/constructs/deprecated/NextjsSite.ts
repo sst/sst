@@ -53,7 +53,6 @@ import {
 } from "../util/functionBinding.js";
 import * as crossRegionHelper from "./cross-region-helper.js";
 import { gray, red } from "colorette";
-import { SiteEnv } from "../../site-env.js";
 import { useProject } from "../../project.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
@@ -326,7 +325,6 @@ export class NextjsSite extends Construct implements SSTConstruct {
     this.props = props;
     this.cdk = {} as any;
     this.awsCliLayer = new AwsCliLayer(this, "AwsCliLayer");
-    this.registerSiteEnvironment();
 
     // Build app
     if (this.isPlaceholder) {
@@ -448,8 +446,10 @@ export class NextjsSite extends Construct implements SSTConstruct {
 
   public getConstructMetadata() {
     return {
-      type: "NextSite" as const,
+      type: "SlsNextjsSite" as const,
       data: {
+        path: this.props.path,
+        environment: this.props.environment || {},
         distributionId: this.cdk.distribution.distributionId,
         customDomainUrl: this.customDomainUrl,
       },
@@ -1499,19 +1499,6 @@ export class NextjsSite extends Construct implements SSTConstruct {
     });
 
     return replaceValues;
-  }
-
-  private registerSiteEnvironment() {
-    for (const [key, value] of Object.entries(this.props.environment || {})) {
-      const outputId = `SstSiteEnv_${key}`;
-      const output = new CfnOutput(this, outputId, { value });
-      SiteEnv.append({
-        path: this.props.path,
-        output: Stack.of(this).getLogicalId(output),
-        environment: key,
-        stack: Stack.of(this).stackName,
-      });
-    }
   }
 
   private normalizeRuntime(runtime?: string): lambda.Runtime {

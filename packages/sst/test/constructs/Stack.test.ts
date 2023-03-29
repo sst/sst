@@ -1,7 +1,7 @@
 import { test, expect } from "vitest";
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
-import { hasOutput, countResources, createApp } from "./helper";
+import { hasOutput, hasNoOutput, countResources, createApp } from "./helper";
 import * as cdk from "aws-cdk-lib";
 import { App, Stack, Api } from "../../dist/constructs/";
 
@@ -32,13 +32,10 @@ test("addOutputs", async () => {
 
 test("addOutputs-undefined-value", async () => {
   const stack = new Stack(await createApp(), "stack");
-  expect(() => {
-    stack.addOutputs({
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore: Test undefined value
-      keyA: stack.abc,
-    });
-  }).toThrow(/The stack output "keyA" is undefined/);
+  stack.addOutputs({
+    keyA: undefined,
+  });
+  hasNoOutput(stack, "keyA");
 });
 
 test("props: is construct", async () => {

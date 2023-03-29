@@ -45,6 +45,7 @@ import {
   SchemaFile,
 } from "aws-cdk-lib/aws-appsync";
 import { ICertificate } from "aws-cdk-lib/aws-certificatemanager";
+import { IDomain } from "aws-cdk-lib/aws-opensearchservice";
 
 /////////////////////
 // Interfaces
@@ -133,7 +134,7 @@ export interface AppSyncApiDynamoDbDataSourceProps
  *   dataSources: {
  *     rds: {
  *       type: "rds",
- *       rds: MyRDSCluster
+ *       rds: myRDSCluster
  *     },
  *   },
  * });
@@ -158,6 +159,38 @@ export interface AppSyncApiRdsDataSourceProps
       serverlessCluster: IServerlessCluster;
       secretStore: ISecret;
       databaseName?: string;
+    };
+  };
+}
+
+/**
+ * Used to define a OpenSearch data source
+ *
+ * @example
+ * ```js
+ * new AppSyncApi(stack, "AppSync", {
+ *   dataSources: {
+ *     search: {
+ *       type: "open_search",
+ *       cdk: {
+ *         dataSource: {
+ *           domain: myOpenSearchDomain,
+ *         }
+ *       }
+ *     }
+ *   }
+ * });
+ * ```
+ */
+export interface AppSyncApiOpenSearchDataSourceProps
+  extends AppSyncApiBaseDataSourceProps {
+  /**
+   * String literal to signify that this data source is an OpenSearch domain
+   */
+  type: "open_search";
+  cdk: {
+    dataSource: {
+      domain: IDomain;
     };
   };
 }
@@ -345,6 +378,7 @@ export interface AppSyncApiProps {
     | AppSyncApiLambdaDataSourceProps
     | AppSyncApiDynamoDbDataSourceProps
     | AppSyncApiRdsDataSourceProps
+    | AppSyncApiOpenSearchDataSourceProps
     | AppSyncApiHttpDataSourceProps
     | AppSyncApiNoneDataSourceProps
   >;
@@ -533,6 +567,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         | AppSyncApiLambdaDataSourceProps
         | AppSyncApiDynamoDbDataSourceProps
         | AppSyncApiRdsDataSourceProps
+        | AppSyncApiOpenSearchDataSourceProps
         | AppSyncApiHttpDataSourceProps
         | AppSyncApiNoneDataSourceProps;
     }
@@ -811,6 +846,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
       | AppSyncApiLambdaDataSourceProps
       | AppSyncApiDynamoDbDataSourceProps
       | AppSyncApiRdsDataSourceProps
+      | AppSyncApiOpenSearchDataSourceProps
       | AppSyncApiHttpDataSourceProps
       | AppSyncApiNoneDataSourceProps
   ) {
@@ -841,7 +877,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         }
       );
     }
-    // Rds ds
+    // RDS ds
     else if (dsValue.type === "rds") {
       dataSource = this.cdk.graphqlApi.addRdsDataSource(
         dsKey,
@@ -854,6 +890,17 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         dsValue.rds
           ? dsValue.databaseName || dsValue.rds.defaultDatabaseName
           : dsValue.cdk?.dataSource?.databaseName,
+        {
+          name: dsValue.name,
+          description: dsValue.description,
+        }
+      );
+    }
+    // OpenSearch ds
+    else if (dsValue.type === "open_search") {
+      dataSource = this.cdk.graphqlApi.addOpenSearchDataSource(
+        dsKey,
+        dsValue.cdk?.dataSource?.domain!,
         {
           name: dsValue.name,
           description: dsValue.description,

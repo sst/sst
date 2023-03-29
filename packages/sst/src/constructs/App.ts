@@ -19,7 +19,6 @@ import { useDeferredTasks } from "./deferred_task.js";
 import { AppContext } from "./context.js";
 import { useProject } from "../project.js";
 import { Logger } from "../logger.js";
-import { SiteEnv } from "../site-env.js";
 import {
   AppProps as CDKAppProps,
   App as CDKApp,
@@ -97,7 +96,7 @@ export class App extends CDKApp {
   public readonly mode: AppDeployProps["mode"];
 
   /**
-   * The name of your app, comes from the `name` in your `sst.json`
+   * The name of your app, comes from the `name` in your `sst.config.ts`
    */
   public readonly name: string;
   /**
@@ -105,7 +104,7 @@ export class App extends CDKApp {
    */
   public readonly stage: string;
   /**
-   * The region the app is being deployed to. If this is not specified as the --region option in the SST CLI, it'll default to the region in your sst.json.
+   * The region the app is being deployed to. If this is not specified as the --region option in the SST CLI, it'll default to the region in your sst.config.ts.
    */
   public readonly region: string;
   /**
@@ -139,7 +138,6 @@ export class App extends CDKApp {
   constructor(deployProps: AppDeployProps, props: AppProps = {}) {
     super(props);
     AppContext.provide(this);
-    SiteEnv.reset();
     this.appPath = process.cwd();
 
     this.mode = deployProps.mode;

@@ -13,7 +13,7 @@
     "gen": "hygen"
   },
   "devDependencies": {
-    "sst": "^2.2.6",
+    "sst": "^2.3.0",
     "aws-cdk-lib": "2.62.2",
     "constructs": "10.1.156",
     "typescript": "^5.0.2",

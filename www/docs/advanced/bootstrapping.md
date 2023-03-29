@@ -59,6 +59,7 @@ config(input) {
     cdk: {
       qualifier: "my-team",
       fileAssetsBucketName: "my-team-CDKToolkit",
+      customPermissionsBoundary: "my-team-pb",
     }
   }
 },
