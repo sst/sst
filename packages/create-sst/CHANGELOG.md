@@ -1,5 +1,11 @@
 # create-sst
 
+## 2.3.5
+
+### Patch Changes
+
+- [`c0057dd1f`](https://github.com/serverless-stack/sst/commit/c0057dd1f453431cad540871e9915ccdc3d2f300) Thanks [@thdxr](https://github.com/thdxr)! - Improve dropin mode templates and copy
+
 ## 2.3.4
 
 ## 2.3.3
