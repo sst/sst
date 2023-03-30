@@ -1,5 +1,5 @@
 import { SSTConfig } from "sst";
-import { Cron, Bucket, NextjsSite } from "sst/constructs";
+import { Cron, Bucket, AstroSite } from "sst/constructs";
 
 export default {
   config(_input) {
@@ -13,7 +13,7 @@ export default {
       const bucket = new Bucket(stack, "public", {
         cors: true,
       });
-      const site = new NextjsSite(stack, "site", {
+      const site = new AstroSite(stack, "site", {
         bind: [bucket],
       });
       new Cron(stack, "cron", {
