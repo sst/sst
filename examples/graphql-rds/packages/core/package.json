@@ -7,15 +7,15 @@
     "typecheck": "tsc -noEmit"
   },
   "devDependencies": {
-    "vitest": "^0.29.7",
-    "@types/node": "^18.15.6",
-    "sst": "^2.3.0"
+    "vitest": "^0.29.8",
+    "@types/node": "^18.15.11",
+    "sst": "^2.3.5"
   },
   "dependencies": {
     "ulid": "^2.3.0",
-    "kysely": "^0.23.5",
+    "kysely": "^0.24.2",
     "kysely-data-api": "^0.2.0",
-    "aws-sdk": "^2.1342.0",
-    "@aws-sdk/client-rds-data": "^3.298.0"
+    "aws-sdk": "^2.1347.0",
+    "@aws-sdk/client-rds-data": "^3.303.0"
   }
 }
