@@ -293,4 +293,10 @@ Head over to GitHub and [**view the source**](https://github.com/serverless-stac
 And if you are ready to dive into the details of SST, [**check out our tutorial**](learn/index.md).
 -->
 
-Ready to dive into the details of SST? [**Check out our tutorial**](learn/index.md).
+1. Learn more about SST
+   - [`Cron`](../constructs/Cron.md) — Add a cron job to your app
+   - [`Bucket`](../constructs/Bucket.md) — Add S3 buckets to your app
+   - [`NextjsSite`](../constructs/NextjsSite.md) — Deploy Next.js apps to AWS
+   - [Live Lambda Dev](../live-lambda-development.md) — SST's local dev environment
+   - [Resource Binding](../resource-binding.md) — Typesafe access to your resources
+2. Ready to dive into the details of SST? [**Check out our tutorial**](learn/index.md).

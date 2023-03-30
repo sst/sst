@@ -10,7 +10,6 @@ pagination_next: null
 import config from "../config";
 import styles from "./about.module.css";
 import useBaseUrl from "@docusaurus/useBaseUrl";
-import HeadlineText from "@site/src/components/HeadlineText";
 
 ---
 
