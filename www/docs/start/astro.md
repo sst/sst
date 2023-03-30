@@ -279,15 +279,13 @@ pnpm sst deploy --stage prod
 
 ![Astro site deployed to AWS with SST](/img/start/astro-site-deployed-to-aws-with-sst.png)
 
+:::info
+[View the source](https://github.com/serverless-stack/sst/tree/master/examples/quickstart-astro) for this example on GitHub.
+:::
+
 ---
 
 ## Next steps
-
-<!--
-Head over to GitHub and [**view the source**](https://github.com/serverless-stack/sst) for this example.
-
-And if you are ready to dive into the details of SST, [**check out our tutorial**](learn/index.md).
--->
 
 1. Learn more about SST
    - [`Cron`](../constructs/Cron.md) — Add a cron job to your app
