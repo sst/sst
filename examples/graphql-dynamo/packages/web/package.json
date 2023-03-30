@@ -10,7 +10,7 @@
   "dependencies": {
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "react-router-dom": "^6.9.0",
+    "react-router-dom": "^6.10.0",
     "urql": "^3.0.4",
     "graphql": "^16.6.0",
     "@graphql-dynamo/graphql": "0.0.0",
@@ -22,6 +22,6 @@
     "@vitejs/plugin-react": "^1.3.0",
     "typescript": "^4.6.3",
     "vite": "^2.9.15",
-    "sst": "^2.3.0"
+    "sst": "^2.3.5"
   }
 }

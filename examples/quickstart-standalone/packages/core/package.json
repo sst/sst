@@ -1,0 +1,14 @@
+{
+  "name": "@quickstart-standalone/core",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "sst bind vitest",
+    "typecheck": "tsc -noEmit"
+  },
+  "devDependencies": {
+    "vitest": "^0.29.8",
+    "@types/node": "^18.15.11",
+    "sst": "^2.3.5"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "quickstart-nextjs",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "sst bind next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.303.0",
+    "@aws-sdk/s3-request-presigner": "^3.303.0",
+    "@types/node": "^18.15.11",
+    "@types/react": "^18.0.31",
+    "@types/react-dom": "^18.0.11",
+    "next": "^13.2.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "typescript": "^5.0.3"
+  },
+  "devDependencies": {
+    "sst": "^2.3.5",
+    "aws-cdk-lib": "2.62.2",
+    "constructs": "10.1.156"
+  }
+}
