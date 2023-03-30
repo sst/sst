@@ -83,9 +83,11 @@ program
       spinner.succeed("Copied template files");
       console.log();
       console.log(`Next steps:`);
-      console.log(`  1: cd ${name}`);
-      console.log(`  2: npm install (or pnpm install, or yarn)`);
-      console.log(`  3: npm run dev`);
+      if (destination !== cwd) {
+        console.log(`- cd ${name}`);
+      }
+      console.log(`- npm install (or pnpm install, or yarn)`);
+      console.log(`- npm run dev`);
     } catch (e) {
       spinner.fail("Failed");
       console.error(e);
