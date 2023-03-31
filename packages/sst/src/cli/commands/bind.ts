@@ -320,7 +320,7 @@ export const bind = (program: Program) =>
           });
 
           p.on("exit", (code) => {
-            process.exit();
+            process.exit(code || 0);
           });
         }
 
