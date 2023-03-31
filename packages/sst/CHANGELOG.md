@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.3.6
+
+### Patch Changes
+
+- [`d928120d2`](https://github.com/serverless-stack/sst/commit/d928120d272fdce39376a9362d5a2b00085e7f6e) Thanks [@fwang](https://github.com/fwang)! - sst bind: set correct exit code
+
 ## 2.3.5
 
 ## 2.3.4
