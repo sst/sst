@@ -5,6 +5,7 @@ import { Construct, IConstruct } from "constructs";
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 
+import { useProject } from "../project.js";
 import { FunctionProps, Function as Fn } from "./Function.js";
 import type { App } from "./App.js";
 import { isConstruct, SSTConstruct } from "./Construct.js";
@@ -39,13 +40,22 @@ export class Stack extends cdk.Stack {
   public readonly defaultFunctionProps: FunctionProps[];
 
   /**
+   * Create a custom resource handler per stack. This handler will
+   * be used by all the custom resources in the stack.
    * @internal
    */
   public readonly customResourceHandler: lambda.Function;
 
+  /**
+   * Skip building Function/Site code when stack is not active
+   * ie. `sst remove` and `sst deploy PATTERN` (pattern not matched)
+   * @internal
+   */
+  public readonly isActive: boolean;
+
   constructor(scope: Construct, id: string, props?: StackProps) {
-    const root = scope.node.root as App;
-    const stackId = root.logicalPrefixedName(id);
+    const app = scope.node.root as App;
+    const stackId = app.logicalPrefixedName(id);
 
     Stack.checkForPropsIsConstruct(id, props);
     Stack.checkForEnvInProps(id, props);
@@ -53,19 +63,20 @@ export class Stack extends cdk.Stack {
     super(scope, stackId, {
       ...props,
       env: {
-        account: root.account,
-        region: root.region,
+        account: app.account,
+        region: app.region,
       },
+      synthesizer: props?.synthesizer || Stack.buildSynthesizer(),
     });
 
-    this.stage = root.stage;
-    this.defaultFunctionProps = root.defaultFunctionProps.map((dfp) =>
+    this.stage = app.stage;
+    this.defaultFunctionProps = app.defaultFunctionProps.map((dfp) =>
       typeof dfp === "function" ? dfp(this) : dfp
     );
-
-    // Create a custom resource handler per stack. This handler will
-    // be used by all the custom resources in the stack.
     this.customResourceHandler = this.createCustomResourceHandler();
+    this.isActive =
+      app.mode !== "remove" &&
+      (!app.isActiveStack || app.isActiveStack?.(this.stackName) === true);
   }
 
   /**
@@ -185,18 +196,28 @@ export class Stack extends cdk.Stack {
    * ```
    */
   public addOutputs(
-    outputs: Record<string, string | cdk.CfnOutputProps>
+    outputs: Record<string, string | cdk.CfnOutputProps | undefined>
   ): void {
-    Object.keys(outputs).forEach((key) => {
-      const value = outputs[key];
-      if (value === undefined) {
-        throw new Error(`The stack output "${key}" is undefined`);
-      } else if (typeof value === "string") {
-        new cdk.CfnOutput(this, key, { value });
-      } else {
-        new cdk.CfnOutput(this, key, value);
-      }
-    });
+    Object.entries(outputs)
+      .filter(
+        (e): e is [string, string | cdk.CfnOutputProps] => e[1] !== undefined
+      )
+      .forEach(([key, value]) => {
+        // Note: add "SSTStackOutput" prefix to the CfnOutput id to ensure the id
+        //       does not thrash w/ construct ids in the stack. So users can do this:
+        //       ```
+        //       const table = new Table(stack, "myTable");
+        //       stack.addOutputs({ myTable: table.name });
+        //       ```
+        //       And then we override the logical id so the actual output name is
+        //       still "myTable".
+        const output =
+          typeof value === "string"
+            ? new cdk.CfnOutput(this, `SSTStackOutput${key}`, { value })
+            : new cdk.CfnOutput(this, `SSTStackOutput${key}`, value);
+        // CloudFormation only allows alphanumeric characters in the output name.
+        output.overrideLogicalId(key.replace(/[^A-Za-z0-9]/g, ""));
+      });
   }
 
   private createCustomResourceHandler() {
@@ -211,6 +232,21 @@ export class Stack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_16_X,
       timeout: cdk.Duration.seconds(900),
       memorySize: 1024,
+    });
+  }
+
+  private static buildSynthesizer() {
+    const config = useProject().config;
+    const customSynethesizerKeys = Object.keys(config.cdk || {}).filter((key) =>
+      key.startsWith("qualifier")
+    );
+    if (customSynethesizerKeys.length === 0) {
+      return;
+    }
+
+    return new cdk.DefaultStackSynthesizer({
+      qualifier: config.cdk?.qualifier,
+      fileAssetsBucketName: config.cdk?.fileAssetsBucketName,
     });
   }
 

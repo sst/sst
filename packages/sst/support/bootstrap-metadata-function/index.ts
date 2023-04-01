@@ -59,10 +59,10 @@ async function processRecord(record: EventBridgeEvent<any, any>) {
   const stackName = stack.split("/")[1];
   if (stackStatus === "DELETE_COMPLETE") {
     await deleteMetadata(stackName, app, stage);
-    await sendIotEvent(app, stage, `stacks.metadata.updated`);
+    await sendIotEvent(app, stage, `stacks.metadata.deleted`);
   } else {
     await saveMetadata(stackName, app, stage, metadata);
-    await sendIotEvent(app, stage, `stacks.metadata.deleted`);
+    await sendIotEvent(app, stage, `stacks.metadata.updated`);
   }
 }
 

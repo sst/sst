@@ -144,7 +144,10 @@ export const usePythonHandler = Context.memo(async () => {
 
       return {
         type: "success",
-        handler: path.relative(src, path.resolve(input.props.handler!)),
+        handler: path
+          .relative(src, path.resolve(input.props.handler!))
+          .split(path.sep)
+          .join(path.posix.sep),
       };
     },
   });

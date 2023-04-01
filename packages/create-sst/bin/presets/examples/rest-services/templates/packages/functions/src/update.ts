@@ -1,4 +1,4 @@
-import notes from "../notes";
+import notes from "../../../services/notes";
 
 import { APIGatewayProxyHandlerV2 } from "aws-lambda";
 

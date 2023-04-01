@@ -22,8 +22,11 @@ export const set = (program: Program) =>
         }),
     async (args) => {
       const { Config } = await import("../../../config.js");
+      const { Colors } = await import("../../colors.js");
       const { blue } = await import("colorette");
       const { createSpinner } = await import("../../spinner.js");
+
+      // Set secret value
       const setting = createSpinner(` Setting "${args.name}"`).start();
       await Config.setSecret({
         key: args.name,
@@ -31,14 +34,40 @@ export const set = (program: Program) =>
         fallback: args.fallback === true,
       });
       setting.succeed();
+
+      // Restart functions & sites
       const restarting = createSpinner(
-        ` Restarting all functions using ${blue(args.name)}...`
+        ` Reloading all resources using ${blue(args.name)}...`
       ).start();
-      const count = await Config.restart(args.name);
-      restarting.succeed(
-        count === 1
-          ? ` Restarted ${count} function`
-          : ` Restarted ${count} functions`
-      );
+      const { edgeSites, sites, placeholderSites, functions } =
+        await Config.restart(args.name);
+      restarting.stop().clear();
+
+      const siteCount = sites.length + placeholderSites.length;
+      if (siteCount > 0) {
+        Colors.line(
+          Colors.success(`✔ `),
+          siteCount === 1
+            ? `Reloaded ${siteCount} site`
+            : `Reloaded ${siteCount} sites`
+        );
+      }
+      const functionCount = functions.length;
+      if (functionCount > 0) {
+        Colors.line(
+          Colors.success(`✔ `),
+          functionCount === 1
+            ? `Reloaded ${functionCount} function`
+            : `Reloaded ${functionCount} functions`
+        );
+      }
+      edgeSites.forEach(({ id, type }) => {
+        Colors.line(
+          Colors.primary(`➜ `),
+          `Redeploy the "${id}" ${type} to use the new secret`
+        );
+      });
+
+      process.exit(0);
     }
   );

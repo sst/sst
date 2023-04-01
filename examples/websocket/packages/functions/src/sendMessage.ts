@@ -1,5 +1,5 @@
 import { DynamoDB, ApiGatewayManagementApi } from "aws-sdk";
-import { Table } from "@serverless-stack/node/table";
+import { Table } from "sst/node/table";
 
 const TableName = Table.Connections.tableName;
 const dynamoDb = new DynamoDB.DocumentClient();

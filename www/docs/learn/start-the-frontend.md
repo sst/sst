@@ -21,7 +21,7 @@ Run the following in your project root.
 </ChangeText>
 
 ```bash
-cd packages/frontend
+cd packages/web
 npm run dev
 ```
 

@@ -8,7 +8,7 @@
     "gatsby"
   ],
   "scripts": {
-    "develop": "sst env gatsby develop",
+    "develop": "sst bind gatsby develop",
     "start": "gatsby develop",
     "build": "gatsby build",
     "serve": "gatsby serve",

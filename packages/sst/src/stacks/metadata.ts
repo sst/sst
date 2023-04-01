@@ -61,35 +61,6 @@ export async function metadata() {
   return result as Record<string, Metadata[]>;
 }
 
-export async function metadataForStack(stackID: string) {
-  const [project, credentials, bootstrap] = await Promise.all([
-    useProject(),
-    useAWSCredentialsProvider(),
-    useBootstrap(),
-  ]);
-
-  const s3 = new S3Client({
-    region: project.config.region,
-    credentials: credentials,
-  });
-  const key = `stackMetadata/app.${project.config.name}/stage.${project.config.stage}/stack.${stackID}.json`;
-  Logger.debug("Getting metadata", key, "from", bootstrap.bucket);
-
-  try {
-    const result = await s3.send(
-      new GetObjectCommand({
-        Key: key,
-        Bucket: bootstrap.bucket,
-      })
-    );
-    const body = await result.Body!.transformToString();
-    return JSON.parse(body) as any[];
-  } catch (ex) {
-    console.error(ex);
-    return [];
-  }
-}
-
 const MetadataContext = Context.create(async () => {
   const bus = useBus();
   const cache = await useCache();

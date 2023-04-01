@@ -63,7 +63,7 @@ import { Auth } from "sst/constructs";
 
 const auth = new Auth(stack, "auth", {
   authenticator: {
-    handler: "functions/auth.handler",
+    handler: "packages/functions/src/auth.handler",
   },
 });
 

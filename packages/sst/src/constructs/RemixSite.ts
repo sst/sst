@@ -1,20 +1,14 @@
 import fs from "fs";
 import url from "url";
 import path from "path";
-import * as esbuild from "esbuild";
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 
-import { Duration as CdkDuration, RemovalPolicy } from "aws-cdk-lib";
-import * as logs from "aws-cdk-lib/aws-logs";
-import * as lambda from "aws-cdk-lib/aws-lambda";
+import { Architecture, Function as CdkFunction } from "aws-cdk-lib/aws-lambda";
 
-import { Logger } from "../logger.js";
 import { SsrSite } from "./SsrSite.js";
-import { useProject } from "../project.js";
+import { Function } from "./Function.js";
 import { EdgeFunction } from "./EdgeFunction.js";
-import { toCdkSize } from "./util/size.js";
-import { toCdkDuration } from "./util/duration.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -76,13 +70,14 @@ export class RemixSite extends SsrSite {
     });
 
     return {
+      typesPath: ".",
       serverBuildOutputFile: "build/index.js",
       clientBuildOutputDir: "public",
       clientBuildVersionedSubDir: "build",
     };
   }
 
-  private createServerLambdaBundle(wrapperFile: string): string {
+  private createServerLambdaBundle(wrapperFile: string) {
     // Create a Lambda@Edge handler for the Remix server bundle.
     //
     // Note: Remix does perform their own internal ESBuild process, but it
@@ -101,108 +96,107 @@ export class RemixSite extends SsrSite {
     // template to create this wrapper within the "core server build" output
     // directory.
 
-    Logger.debug(`Creating Lambda@Edge handler for server`);
-
-    // Resolve the path to create the server lambda handler at.
-    const serverPath = path.join(this.props.path, "build/server.js");
-
-    // Write the server lambda
-    const templatePath = path.resolve(
-      __dirname,
-      `../support/remix-site-function/${wrapperFile}`
-    );
-    fs.copyFileSync(templatePath, serverPath);
-
-    Logger.debug(`Bundling server`);
-
-    // Create a directory that we will use to create the bundled version
-    // of the "core server build" along with our custom Lamba server handler.
-    const outputPath = path.resolve(
-      path.join(
-        useProject().paths.artifacts,
-        `RemixSiteFunction-${this.node.id}-${this.node.addr}`
-      )
+    // Copy the server lambda handler
+    const handler = path.join(this.props.path, "build", "server.js");
+    fs.copyFileSync(
+      path.resolve(__dirname, `../support/remix-site-function/${wrapperFile}`),
+      handler
     );
 
     // Copy the Remix polyfil to the server build directory
-    const polyfillSource = path.resolve(
-      __dirname,
-      "../support/remix-site-function/polyfill.js"
-    );
+    //
+    // Note: We need to ensure that the polyfills are injected above other code that
+    // will depend on them. Importing them within the top of the lambda code
+    // doesn't appear to guarantee this, we therefore leverage ESBUild's
+    // `inject` option to ensure that the polyfills are injected at the top of
+    // the bundle.
     const polyfillDest = path.join(this.props.path, "build/polyfill.js");
-    fs.copyFileSync(polyfillSource, polyfillDest);
+    fs.copyFileSync(
+      path.resolve(__dirname, "../support/remix-site-function/polyfill.js"),
+      polyfillDest
+    );
 
-    const result = esbuild.buildSync({
-      entryPoints: [serverPath],
-      bundle: true,
-      target: "node16",
-      platform: "node",
-      external: ["aws-sdk"],
-      outfile: path.join(outputPath, "server.js"),
-      // We need to ensure that the polyfills are injected above other code that
-      // will depend on them. Importing them within the top of the lambda code
-      // doesn't appear to guarantee this, we therefore leverage ESBUild's
-      // `inject` option to ensure that the polyfills are injected at the top of
-      // the bundle.
-      inject: [polyfillDest],
-    });
-
-    if (result.errors.length > 0) {
-      result.errors.forEach((error) => console.error(error));
-      throw new Error(`There was a problem bundling the server.`);
-    }
-
-    return outputPath;
+    return {
+      handler: path.join(this.props.path, "build", "server.handler"),
+      esbuild: { inject: [polyfillDest] },
+    };
   }
 
-  protected createFunctionForRegional(): lambda.Function {
-    const { runtime, timeout, memorySize, environment, cdk } = this.props;
-
-    const bundlePath = this.createServerLambdaBundle("regional-server.js");
-
-    return new lambda.Function(this, `ServerFunction`, {
-      description: "Server handler for Remix",
-      handler: "server.handler",
-      currentVersionOptions: {
-        removalPolicy: RemovalPolicy.DESTROY,
-      },
-      logRetention: logs.RetentionDays.THREE_DAYS,
-      code: lambda.Code.fromAsset(bundlePath),
-      runtime:
-        runtime === "nodejs14.x"
-          ? lambda.Runtime.NODEJS_14_X
-          : runtime === "nodejs16.x"
-          ? lambda.Runtime.NODEJS_16_X
-          : lambda.Runtime.NODEJS_18_X,
-      memorySize:
-        typeof memorySize === "string"
-          ? toCdkSize(memorySize).toMebibytes()
-          : memorySize,
-      timeout:
-        typeof timeout === "string"
-          ? toCdkDuration(timeout)
-          : CdkDuration.seconds(timeout),
-      environment,
-      ...cdk?.server,
-    });
-  }
-
-  protected createFunctionForEdge(): EdgeFunction {
-    const { runtime, timeout, memorySize, permissions, environment } =
-      this.props;
-
-    const bundlePath = this.createServerLambdaBundle("edge-server.js");
-
-    return new EdgeFunction(this, `Server`, {
-      scopeOverride: this,
-      format: "cjs",
-      bundlePath,
-      handler: "server.handler",
+  protected createFunctionForRegional(): CdkFunction {
+    const {
       runtime,
       timeout,
       memorySize,
       permissions,
       environment,
+      bind,
+      nodejs,
+      cdk,
+    } = this.props;
+
+    const { handler, esbuild } =
+      this.createServerLambdaBundle("regional-server.js");
+
+    const fn = new Function(this, `ServerFunction`, {
+      description: "Server handler",
+      handler,
+      logRetention: "three_days",
+      runtime,
+      memorySize,
+      timeout,
+      nodejs: {
+        format: "cjs",
+        ...nodejs,
+        esbuild: {
+          ...esbuild,
+          ...nodejs?.esbuild,
+          inject: [...(nodejs?.esbuild?.inject || []), ...esbuild.inject],
+        },
+      },
+      bind,
+      environment,
+      permissions,
+      ...cdk?.server,
+      architecture:
+        cdk?.server?.architecture === Architecture.ARM_64 ? "arm_64" : "x86_64",
+    });
+    fn._doNotAllowOthersToBind = true;
+
+    return fn;
+  }
+
+  protected createFunctionForEdge(): EdgeFunction {
+    const {
+      runtime,
+      timeout,
+      memorySize,
+      bind,
+      permissions,
+      environment,
+      nodejs,
+    } = this.props;
+
+    const { handler, esbuild } =
+      this.createServerLambdaBundle("edge-server.js");
+
+    return new EdgeFunction(this, `Server`, {
+      scopeOverride: this,
+      handler,
+      runtime,
+      timeout,
+      memorySize,
+      bind,
+      environment,
+      permissions,
+      nodejs: {
+        format: "cjs",
+        ...nodejs,
+        esbuild: {
+          ...esbuild,
+          ...nodejs?.esbuild,
+          inject: [...(nodejs?.esbuild?.inject || []), ...esbuild.inject],
+        },
+      },
     });
   }
 }

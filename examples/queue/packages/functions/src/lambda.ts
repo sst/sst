@@ -1,5 +1,5 @@
 import AWS from "aws-sdk";
-import { Queue } from "@serverless-stack/node/queue";
+import { Queue } from "sst/node/queue";
 
 const sqs = new AWS.SQS();
 

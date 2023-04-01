@@ -7,12 +7,13 @@ import {
   CloudFormationClient,
 } from "@aws-sdk/client-cloudformation";
 import {
+  App,
+  DefaultStackSynthesizer,
+  CfnOutput,
   Duration,
   Tags,
   Stack,
   RemovalPolicy,
-  App,
-  CfnOutput,
 } from "aws-cdk-lib";
 import { Function, Runtime, Code } from "aws-cdk-lib/aws-lambda";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
@@ -37,7 +38,8 @@ import { VisibleError } from "./error.js";
 import { Logger } from "./logger.js";
 import { Stacks } from "./stacks/index.js";
 
-const STACK_NAME = "SSTBootstrap";
+const CDK_STACK_NAME = "CDKToolkit";
+const SST_STACK_NAME = "SSTBootstrap";
 const OUTPUT_VERSION = "Version";
 const OUTPUT_BUCKET = "BucketName";
 const LATEST_VERSION = "7";
@@ -62,7 +64,7 @@ export const useBootstrap = Context.memo(async () => {
       await bootstrapCDK();
     }
     if (needToBootstrapSST) {
-      await bootstrapSST({});
+      await bootstrapSST();
 
       // fetch bootstrap status
       sstStatus = await loadSSTStatus();
@@ -80,12 +82,12 @@ export const useBootstrap = Context.memo(async () => {
 }, "Bootstrap");
 
 async function loadCDKStatus() {
+  const { cdk } = useProject().config;
   const client = useAWSClient(CloudFormationClient);
+  const stackName = cdk?.toolkitStackName || CDK_STACK_NAME;
   try {
     const { Stacks: stacks } = await client.send(
-      new DescribeStacksCommand({
-        StackName: "CDKToolkit",
-      })
+      new DescribeStacksCommand({ StackName: stackName })
     );
     // Check CDK bootstrap stack exists
     if (!stacks || stacks.length === 0) return false;
@@ -110,7 +112,7 @@ async function loadCDKStatus() {
   } catch (e: any) {
     if (
       e.name === "ValidationError" &&
-      e.message === "Stack with id CDKToolkit does not exist"
+      e.message === `Stack with id ${stackName} does not exist`
     ) {
       return false;
     } else {
@@ -119,27 +121,74 @@ async function loadCDKStatus() {
   }
 }
 
-export async function bootstrapSST(tags: Record<string, string>) {
+async function loadSSTStatus() {
+  // Get bootstrap CloudFormation stack
+  const { bootstrap } = useProject().config;
+  const cf = useAWSClient(CloudFormationClient);
+  const stackName = bootstrap?.stackName || SST_STACK_NAME;
+  let result;
+  try {
+    result = await cf.send(
+      new DescribeStacksCommand({
+        StackName: stackName,
+      })
+    );
+  } catch (e: any) {
+    if (
+      e.Code === "ValidationError" &&
+      e.message === `Stack with id ${stackName} does not exist`
+    ) {
+      return null;
+    }
+    throw e;
+  }
+
+  // Parse stack outputs
+  let version, bucket;
+  (result.Stacks![0].Outputs || []).forEach((o) => {
+    if (o.OutputKey === OUTPUT_VERSION) {
+      version = o.OutputValue;
+    } else if (o.OutputKey === OUTPUT_BUCKET) {
+      bucket = o.OutputValue;
+    }
+  });
+  if (!version || !bucket) {
+    return null;
+  }
+
+  return { version, bucket };
+}
+
+export async function bootstrapSST() {
+  const { region, bootstrap, cdk } = useProject().config;
+
   // Create bootstrap stack
-  const project = useProject();
   const app = new App();
-  const stack = new Stack(app, STACK_NAME, {
+  const stackName = bootstrap?.stackName || SST_STACK_NAME;
+  const stack = new Stack(app, stackName, {
     env: {
-      region: project.config.region,
+      region,
     },
+    synthesizer: new DefaultStackSynthesizer({
+      qualifier: cdk?.qualifier,
+      fileAssetsBucketName: cdk?.fileAssetsBucketName,
+    }),
   });
 
   // Add tags to stack
-  for (const [key, value] of Object.entries(tags)) {
+  for (const [key, value] of Object.entries(bootstrap?.tags || {})) {
     Tags.of(app).add(key, value);
   }
 
   // Create S3 bucket to store stacks metadata
-  const bucket = new Bucket(stack, project.config.region!, {
+  const bucket = new Bucket(stack, region!, {
     encryption: BucketEncryption.S3_MANAGED,
     removalPolicy: RemovalPolicy.DESTROY,
     autoDeleteObjects: true,
-    blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+    blockPublicAccess:
+      cdk?.publicAccessBlockConfiguration !== false
+        ? BlockPublicAccess.BLOCK_ALL
+        : undefined,
   });
 
   // Create Function and subscribe to CloudFormation events
@@ -148,9 +197,10 @@ export async function bootstrapSST(tags: Record<string, string>) {
       path.resolve(__dirname, "support/bootstrap-metadata-function")
     ),
     handler: "index.handler",
-    runtime: project.config.region?.startsWith("us-gov-")
-      ? Runtime.NODEJS_16_X
-      : Runtime.NODEJS_18_X,
+    runtime:
+      region?.startsWith("us-gov-") || region?.startsWith("cn-")
+        ? Runtime.NODEJS_16_X
+        : Runtime.NODEJS_18_X,
     environment: {
       BUCKET_NAME: bucket.bucketName,
     },
@@ -220,7 +270,7 @@ export async function bootstrapSST(tags: Record<string, string>) {
 async function bootstrapCDK() {
   const identity = await useSTSIdentity();
   const credentials = await useAWSCredentials();
-  const { region, profile } = useProject().config;
+  const { region, profile, cdk } = useProject().config;
   await new Promise<void>((resolve, reject) => {
     const proc = spawn(
       [
@@ -229,6 +279,21 @@ async function bootstrapCDK() {
         "bootstrap",
         `aws://${identity.Account!}/${region}`,
         "--no-version-reporting",
+        ...(cdk?.publicAccessBlockConfiguration === false
+          ? ["--public-access-block-configuration", "false"]
+          : cdk?.publicAccessBlockConfiguration === true
+          ? ["--public-access-block-configuration", "false"]
+          : []),
+        ...(cdk?.toolkitStackName
+          ? ["--toolkit-stack-name", cdk.toolkitStackName]
+          : []),
+        ...(cdk?.qualifier ? ["--qualifier", cdk.qualifier] : []),
+        ...(cdk?.fileAssetsBucketName
+          ? ["--toolkit-bucket-name", cdk.fileAssetsBucketName]
+          : []),
+        ...(cdk?.customPermissionsBoundary
+          ? ["--custom-permissions-boundary", cdk.customPermissionsBoundary]
+          : []),
       ].join(" "),
       {
         env: {
@@ -240,7 +305,7 @@ async function bootstrapCDK() {
           AWS_PROFILE: profile,
         },
         stdio: "pipe",
-        shell: process.env.SHELL || true,
+        shell: true,
       }
     );
     let stderr = "";
@@ -261,40 +326,4 @@ async function bootstrapCDK() {
       }
     });
   });
-}
-
-async function loadSSTStatus() {
-  // Get bootstrap CloudFormation stack
-  const cf = useAWSClient(CloudFormationClient);
-  let result;
-  try {
-    result = await cf.send(
-      new DescribeStacksCommand({
-        StackName: STACK_NAME,
-      })
-    );
-  } catch (e: any) {
-    if (
-      e.Code === "ValidationError" &&
-      e.message === `Stack with id ${STACK_NAME} does not exist`
-    ) {
-      return null;
-    }
-    throw e;
-  }
-
-  // Parse stack outputs
-  let version, bucket;
-  (result.Stacks![0].Outputs || []).forEach((o) => {
-    if (o.OutputKey === OUTPUT_VERSION) {
-      version = o.OutputValue;
-    } else if (o.OutputKey === OUTPUT_BUCKET) {
-      bucket = o.OutputValue;
-    }
-  });
-  if (!version || !bucket) {
-    return null;
-  }
-
-  return { version, bucket };
 }

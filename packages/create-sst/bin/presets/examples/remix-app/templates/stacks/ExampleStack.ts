@@ -10,8 +10,8 @@ export function ExampleStack({ stack }: StackContext) {
   });
 
   // Create a Remix site
-  const site = new RemixSite(stack, "web", {
-    path: "web/",
+  const site = new RemixSite(stack, "RemixSite", {
+    path: "packages/frontend",
     environment: {
       REGION: stack.region,
       TABLE_NAME: table.tableName,

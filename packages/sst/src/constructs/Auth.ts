@@ -6,7 +6,6 @@ import { FunctionDefinition } from "./Function.js";
 import { SSTConstruct } from "./Construct.js";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
-import { Secret } from "./Secret.js";
 import {
   FunctionBindingProps,
   getEnvironmentKey,

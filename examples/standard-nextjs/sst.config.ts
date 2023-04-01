@@ -8,6 +8,7 @@ export default {
       region: "us-east-1",
     };
   },
-  stacks(app) {    app.stack(Default)
-},
+  stacks(app) {
+    app.stack(Default);
+  }
 } satisfies SSTConfig;

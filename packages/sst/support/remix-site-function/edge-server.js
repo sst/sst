@@ -9,9 +9,9 @@ installGlobals();
 import {
   Headers as NodeHeaders,
   Request as NodeRequest,
+  createRequestHandler as createNodeRequestHandler,
   readableStreamToString,
 } from "@remix-run/node";
-import { createRequestHandler as createRemixRequestHandler } from "@remix-run/server-runtime";
 import { URL } from "url";
 
 // Import the server build that was produced by `remix build`;
@@ -146,7 +146,7 @@ async function convertNodeResponseToCf(nodeResponse) {
 }
 
 function createCfHandler(build) {
-  const requestHandler = createRemixRequestHandler(build, process.env.NODE_ENV);
+  const requestHandler = createNodeRequestHandler(build, process.env.NODE_ENV);
 
   return async (event) => {
     const request = convertCfRequestToNode(event);

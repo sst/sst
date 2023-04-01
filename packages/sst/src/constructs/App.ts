@@ -1,12 +1,6 @@
 import path from "path";
 import fs from "fs";
-import * as cdk from "aws-cdk-lib";
 import { IConstruct } from "constructs";
-import * as s3 from "aws-cdk-lib/aws-s3";
-import * as iam from "aws-cdk-lib/aws-iam";
-import * as logs from "aws-cdk-lib/aws-logs";
-import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as cxapi from "aws-cdk-lib/cx-api";
 import { Stack } from "./Stack.js";
 import {
   SSTConstruct,
@@ -25,7 +19,23 @@ import { useDeferredTasks } from "./deferred_task.js";
 import { AppContext } from "./context.js";
 import { useProject } from "../project.js";
 import { Logger } from "../logger.js";
-import { SiteEnv } from "../site-env.js";
+import {
+  AppProps as CDKAppProps,
+  App as CDKApp,
+  Stack as CDKStack,
+  Tags,
+  IAspect,
+  CfnResource,
+  RemovalPolicy,
+  CustomResourceProvider,
+  CustomResourceProviderRuntime,
+  CustomResource,
+  Aspects,
+} from "aws-cdk-lib";
+import { CfnFunction, ILayerVersion } from "aws-cdk-lib/aws-lambda";
+import { Bucket } from "aws-cdk-lib/aws-s3";
+import { ArnPrincipal, PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { CfnLogGroup } from "aws-cdk-lib/aws-logs";
 const require = createRequire(import.meta.url);
 
 function exitWithMessage(message: string) {
@@ -59,25 +69,22 @@ export interface AppDeployProps {
   readonly region?: string;
 
   readonly buildDir?: string;
-  readonly skipBuild?: boolean;
   readonly account?: string;
-  readonly debugEndpoint?: string;
-  readonly debugBucketArn?: string;
-  readonly debugBucketName?: string;
   readonly debugStartedAt?: number;
-  readonly debugBridge?: string;
   readonly debugIncreaseTimeout?: boolean;
+
   readonly mode: "deploy" | "dev" | "remove";
+  readonly isActiveStack?: (stackName: string) => boolean;
 }
 
-type AppRemovalPolicy = Lowercase<keyof typeof cdk.RemovalPolicy>;
+type AppRemovalPolicy = Lowercase<RemovalPolicy>;
 
-export type AppProps = cdk.AppProps;
+export type AppProps = CDKAppProps;
 
 /**
  * The App construct extends cdk.App and is used internally by SST.
  */
-export class App extends cdk.App {
+export class App extends CDKApp {
   /**
    * Whether or not the app is running locally under `sst start`
    */
@@ -89,7 +96,7 @@ export class App extends cdk.App {
   public readonly mode: AppDeployProps["mode"];
 
   /**
-   * The name of your app, comes from the `name` in your `sst.json`
+   * The name of your app, comes from the `name` in your `sst.config.ts`
    */
   public readonly name: string;
   /**
@@ -97,7 +104,7 @@ export class App extends cdk.App {
    */
   public readonly stage: string;
   /**
-   * The region the app is being deployed to. If this is not specified as the --region option in the SST CLI, it'll default to the region in your sst.json.
+   * The region the app is being deployed to. If this is not specified as the --region option in the SST CLI, it'll default to the region in your sst.config.ts.
    */
   public readonly region: string;
   /**
@@ -105,24 +112,18 @@ export class App extends cdk.App {
    */
   public readonly account: string;
   /** @internal */
-  public readonly debugBridge?: string;
-  /** @internal */
-  public readonly debugEndpoint?: string;
-  /** @internal */
-  public readonly debugBucketArn?: string;
-  /** @internal */
-  public readonly debugBucketName?: string;
-  /** @internal */
   public readonly debugStartedAt?: number;
   /** @internal */
   public readonly debugIncreaseTimeout?: boolean;
   /** @internal */
   public readonly appPath: string;
+  /** @internal */
+  public readonly isActiveStack?: (stackName: string) => boolean;
 
   /** @internal */
   public defaultFunctionProps: (
     | FunctionProps
-    | ((stack: cdk.Stack) => FunctionProps)
+    | ((stack: Stack) => FunctionProps)
   )[];
   private _defaultRemovalPolicy?: AppRemovalPolicy;
 
@@ -132,26 +133,11 @@ export class App extends cdk.App {
   }
 
   /**
-   * Skip building Function code
-   * Note that on `sst remove`, we do not want to bundle the Lambda functions.
-   *      CDK disables bundling (ie. zipping) for `cdk destroy` command.
-   *      But SST runs `cdk synth` first then manually remove each stack. Hence
-   *      we cannot rely on CDK to disable bundling, and we disable it manually.
-   *      This allows us to disable BOTH building and bundling, where as CDK
-   *      would only disable the latter. For example, `cdk destroy` still trys
-   *      to install Python dependencies in Docker.
-   *
-   * @internal
-   */
-  public readonly skipBuild: boolean;
-
-  /**
    * @internal
    */
   constructor(deployProps: AppDeployProps, props: AppProps = {}) {
     super(props);
     AppContext.provide(this);
-    SiteEnv.reset();
     this.appPath = process.cwd();
 
     this.mode = deployProps.mode;
@@ -162,19 +148,12 @@ export class App extends cdk.App {
       deployProps.region || process.env.CDK_DEFAULT_REGION || "us-east-1";
     this.account =
       deployProps.account || process.env.CDK_DEFAULT_ACCOUNT || "my-account";
-    this.skipBuild = deployProps.skipBuild || false;
+    this.isActiveStack = deployProps.isActiveStack;
     this.defaultFunctionProps = [];
 
-    if (deployProps.debugEndpoint) {
-      this.local = true;
-      this.debugEndpoint = deployProps.debugEndpoint;
-      this.debugBucketArn = deployProps.debugBucketArn;
-      this.debugBucketName = deployProps.debugBucketName;
+    if (this.mode === "dev") {
       this.debugStartedAt = deployProps.debugStartedAt;
       this.debugIncreaseTimeout = deployProps.debugIncreaseTimeout;
-      if (deployProps.debugBridge) {
-        this.debugBridge = deployProps.debugBridge;
-      }
     }
   }
 
@@ -199,7 +178,7 @@ export class App extends cdk.App {
    * :::
    * @example
    * ```js
-   * app.setDefaultRemovalPolicy(app.local ? "destroy" : "retain")
+   * app.setDefaultRemovalPolicy(app.mode === "dev" ? "destroy" : "retain")
    * ```
    */
   public setDefaultRemovalPolicy(policy: AppRemovalPolicy) {
@@ -219,7 +198,7 @@ export class App extends cdk.App {
    * ```
    */
   public setDefaultFunctionProps(
-    props: FunctionProps | ((stack: cdk.Stack) => FunctionProps)
+    props: FunctionProps | ((stack: CDKStack) => FunctionProps)
   ): void {
     this.defaultFunctionProps.push(props);
   }
@@ -269,13 +248,16 @@ export class App extends cdk.App {
   /**
    * Adds additional default layers to be applied to all Lambda functions in the stack.
    */
-  public addDefaultFunctionLayers(layers: lambda.ILayerVersion[]) {
+  public addDefaultFunctionLayers(layers: ILayerVersion[]) {
     this.defaultFunctionProps.push({
       layers,
     });
   }
 
+  private isFinished = false;
   public async finish() {
+    if (this.isFinished) return;
+    this.isFinished = true;
     await useDeferredTasks().run();
     Auth.injectConfig();
     this.buildConstructsMetadata();
@@ -287,8 +269,8 @@ export class App extends cdk.App {
     for (const child of this.node.children) {
       if (isStackConstruct(child)) {
         // Tag stacks
-        cdk.Tags.of(child).add("sst:app", this.name);
-        cdk.Tags.of(child).add("sst:stage", this.stage);
+        Tags.of(child).add("sst:app", this.name);
+        Tags.of(child).add("sst:stage", this.stage);
 
         // Set removal policy
         if (this._defaultRemovalPolicy)
@@ -326,12 +308,12 @@ export class App extends cdk.App {
   }
 
   private createBindingSsmParameters() {
-    class CreateSsmParameters implements cdk.IAspect {
+    class CreateSsmParameters implements IAspect {
       public visit(c: IConstruct): void {
         if (!isSSTConstruct(c)) {
           return;
         }
-        if (c instanceof Function && c._disableBind) {
+        if (c instanceof Function && c._doNotAllowOthersToBind) {
           return;
         }
 
@@ -339,7 +321,7 @@ export class App extends cdk.App {
       }
     }
 
-    cdk.Aspects.of(this).add(new CreateSsmParameters());
+    Aspects.of(this).add(new CreateSsmParameters());
   }
 
   private buildConstructsMetadata(): void {
@@ -397,22 +379,20 @@ export class App extends cdk.App {
   }
 
   private applyRemovalPolicy(current: IConstruct, policy: AppRemovalPolicy) {
-    if (current instanceof cdk.CfnResource) {
+    if (current instanceof CfnResource) {
       current.applyRemovalPolicy(
-        cdk.RemovalPolicy[
-          policy.toUpperCase() as keyof typeof cdk.RemovalPolicy
-        ]
+        RemovalPolicy[policy.toUpperCase() as keyof typeof RemovalPolicy]
       );
     }
 
     // Had to copy this in to enable deleting objects in bucket
     // https://github.com/aws/aws-cdk/blob/master/packages/%40aws-cdk/aws-s3/lib/bucket.ts#L1910
     if (
-      current instanceof s3.Bucket &&
+      current instanceof Bucket &&
       !current.node.tryFindChild("AutoDeleteObjectsCustomResource")
     ) {
       const AUTO_DELETE_OBJECTS_RESOURCE_TYPE = "Custom::S3AutoDeleteObjects";
-      const provider = cdk.CustomResourceProvider.getOrCreateProvider(
+      const provider = CustomResourceProvider.getOrCreateProvider(
         current,
         AUTO_DELETE_OBJECTS_RESOURCE_TYPE,
         {
@@ -420,7 +400,7 @@ export class App extends cdk.App {
             require.resolve("aws-cdk-lib/aws-s3"),
             "../lib/auto-delete-objects-handler"
           ),
-          runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
+          runtime: CustomResourceProviderRuntime.NODEJS_16_X,
           description: `Lambda function for auto-deleting objects in ${current.bucketName} S3 bucket.`,
         }
       );
@@ -428,7 +408,7 @@ export class App extends cdk.App {
       // Use a bucket policy to allow the custom resource to delete
       // objects in the bucket
       current.addToResourcePolicy(
-        new iam.PolicyStatement({
+        new PolicyStatement({
           actions: [
             // list objects
             "s3:GetBucket*",
@@ -437,11 +417,11 @@ export class App extends cdk.App {
             "s3:DeleteObject*",
           ],
           resources: [current.bucketArn, current.arnForObjects("*")],
-          principals: [new iam.ArnPrincipal(provider.roleArn)],
+          principals: [new ArnPrincipal(provider.roleArn)],
         })
       );
 
-      const customResource = new cdk.CustomResource(
+      const customResource = new CustomResource(
         current,
         "AutoDeleteObjectsCustomResource",
         {
@@ -470,17 +450,17 @@ export class App extends cdk.App {
       return;
     }
 
-    class RemoveGovCloudUnsupportedResourceProperties implements cdk.IAspect {
+    class RemoveGovCloudUnsupportedResourceProperties implements IAspect {
       public visit(node: IConstruct): void {
-        if (node instanceof lambda.CfnFunction) {
+        if (node instanceof CfnFunction) {
           node.addPropertyDeletionOverride("EphemeralStorage");
-        } else if (node instanceof logs.CfnLogGroup) {
+        } else if (node instanceof CfnLogGroup) {
           node.addPropertyDeletionOverride("Tags");
         }
       }
     }
 
-    cdk.Aspects.of(this).add(new RemoveGovCloudUnsupportedResourceProperties());
+    Aspects.of(this).add(new RemoveGovCloudUnsupportedResourceProperties());
   }
 
   private ensureUniqueConstructIds() {
@@ -493,12 +473,12 @@ export class App extends cdk.App {
     // }
     const ids: Record<string, Record<string, string>> = {};
 
-    class EnsureUniqueConstructIds implements cdk.IAspect {
+    class EnsureUniqueConstructIds implements IAspect {
       public visit(c: IConstruct): void {
         if (!isSSTConstruct(c)) {
           return;
         }
-        if (c instanceof Function && c._disableBind) {
+        if (c instanceof Function && c._doNotAllowOthersToBind) {
           return;
         }
 
@@ -557,7 +537,7 @@ export class App extends cdk.App {
       }
     }
 
-    cdk.Aspects.of(this).add(new EnsureUniqueConstructIds());
+    Aspects.of(this).add(new EnsureUniqueConstructIds());
   }
 
   private codegenTypes() {
@@ -586,12 +566,12 @@ export class App extends cdk.App {
       ].join("\n")
     );
 
-    class CodegenTypes implements cdk.IAspect {
+    class CodegenTypes implements IAspect {
       public visit(c: IConstruct): void {
         if (!isSSTConstruct(c)) {
           return;
         }
-        if (c instanceof Function && c._disableBind) {
+        if (c instanceof Function && c._doNotAllowOthersToBind) {
           return;
         }
 
@@ -631,7 +611,7 @@ export class App extends cdk.App {
       }
     }
 
-    cdk.Aspects.of(this).add(new CodegenTypes());
+    Aspects.of(this).add(new CodegenTypes());
   }
 
   // Functional Stack

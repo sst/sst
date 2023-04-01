@@ -24,6 +24,17 @@ export interface ConfigOptions {
   profile?: string;
   role?: string;
   ssmPrefix?: string;
+  bootstrap?: {
+    stackName?: string;
+    tags?: Record<string, string>;
+  };
+  cdk?: {
+    toolkitStackName?: string;
+    qualifier?: string;
+    fileAssetsBucketName?: string;
+    customPermissionsBoundary?: string;
+    publicAccessBlockConfiguration?: boolean;
+  };
 }
 
 const DEFAULTS = {
@@ -127,6 +138,8 @@ export async function initProject(globals: GlobalOptions) {
       region: globals.region || config.region,
       role: globals.role || config.role,
       ssmPrefix: config.ssmPrefix || `/sst/${config.name}/${stage}/`,
+      bootstrap: config.bootstrap,
+      cdk: config.cdk,
     },
     stacks: sstConfig.stacks,
     metafile,

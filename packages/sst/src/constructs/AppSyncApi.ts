@@ -13,11 +13,6 @@ const { print, buildSchema } = await weakImport("graphql");
 const { mergeTypeDefs } = await weakImport("@graphql-tools/merge");
 
 import { Construct } from "constructs";
-import * as rds from "aws-cdk-lib/aws-rds";
-import * as appsync from "aws-cdk-lib/aws-appsync";
-import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
-import * as acm from "aws-cdk-lib/aws-certificatemanager";
-import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 
 import { App } from "./App.js";
 import { Table } from "./Table.js";
@@ -33,6 +28,24 @@ import {
 import { FunctionBindingProps } from "./util/functionBinding.js";
 import { Permissions } from "./util/permission.js";
 import { useProject } from "../project.js";
+import { Table as CDKTable } from "aws-cdk-lib/aws-dynamodb";
+import { IServerlessCluster } from "aws-cdk-lib/aws-rds";
+import { ISecret } from "aws-cdk-lib/aws-secretsmanager";
+import {
+  AwsIamConfig,
+  BaseDataSource,
+  CfnDomainName,
+  CfnDomainNameApiAssociation,
+  GraphqlApi,
+  GraphqlApiProps,
+  IGraphqlApi,
+  MappingTemplate as CDKMappingTemplate,
+  Resolver,
+  ResolverProps,
+  SchemaFile,
+} from "aws-cdk-lib/aws-appsync";
+import { ICertificate } from "aws-cdk-lib/aws-certificatemanager";
+import { IDomain } from "aws-cdk-lib/aws-opensearchservice";
 
 /////////////////////
 // Interfaces
@@ -107,7 +120,7 @@ export interface AppSyncApiDynamoDbDataSourceProps
   table?: Table;
   cdk?: {
     dataSource?: {
-      table: dynamodb.Table;
+      table: CDKTable;
     };
   };
 }
@@ -121,7 +134,7 @@ export interface AppSyncApiDynamoDbDataSourceProps
  *   dataSources: {
  *     rds: {
  *       type: "rds",
- *       rds: MyRDSCluster
+ *       rds: myRDSCluster
  *     },
  *   },
  * });
@@ -143,9 +156,41 @@ export interface AppSyncApiRdsDataSourceProps
   databaseName?: string;
   cdk?: {
     dataSource?: {
-      serverlessCluster: rds.IServerlessCluster;
-      secretStore: secretsmanager.ISecret;
+      serverlessCluster: IServerlessCluster;
+      secretStore: ISecret;
       databaseName?: string;
+    };
+  };
+}
+
+/**
+ * Used to define a OpenSearch data source
+ *
+ * @example
+ * ```js
+ * new AppSyncApi(stack, "AppSync", {
+ *   dataSources: {
+ *     search: {
+ *       type: "open_search",
+ *       cdk: {
+ *         dataSource: {
+ *           domain: myOpenSearchDomain,
+ *         }
+ *       }
+ *     }
+ *   }
+ * });
+ * ```
+ */
+export interface AppSyncApiOpenSearchDataSourceProps
+  extends AppSyncApiBaseDataSourceProps {
+  /**
+   * String literal to signify that this data source is an OpenSearch domain
+   */
+  type: "open_search";
+  cdk: {
+    dataSource: {
+      domain: IDomain;
     };
   };
 }
@@ -177,7 +222,7 @@ export interface AppSyncApiHttpDataSourceProps
   endpoint: string;
   cdk?: {
     dataSource?: {
-      authorizationConfig?: appsync.AwsIamConfig;
+      authorizationConfig?: AwsIamConfig;
     };
   };
 }
@@ -272,7 +317,7 @@ export interface AppSyncApiResolverProps {
      * This allows you to override the default settings this construct uses internally to create the resolver.
      */
     resolver: Omit<
-      appsync.ResolverProps,
+      ResolverProps,
       "api" | "fieldName" | "typeName" | "dataSource"
     >;
   };
@@ -333,6 +378,7 @@ export interface AppSyncApiProps {
     | AppSyncApiLambdaDataSourceProps
     | AppSyncApiDynamoDbDataSourceProps
     | AppSyncApiRdsDataSourceProps
+    | AppSyncApiOpenSearchDataSourceProps
     | AppSyncApiHttpDataSourceProps
     | AppSyncApiNoneDataSourceProps
   >;
@@ -383,12 +429,12 @@ export interface AppSyncApiProps {
     /**
      * Allows you to override default settings this construct uses internally to create the AppSync API.
      */
-    graphqlApi?: appsync.IGraphqlApi | AppSyncApiCdkGraphqlProps;
+    graphqlApi?: IGraphqlApi | AppSyncApiCdkGraphqlProps;
   };
 }
 
 export interface AppSyncApiCdkGraphqlProps
-  extends Omit<appsync.GraphqlApiProps, "name" | "schema"> {
+  extends Omit<GraphqlApiProps, "name" | "schema"> {
   name?: string;
 }
 
@@ -426,21 +472,21 @@ export class AppSyncApi extends Construct implements SSTConstruct {
     /**
      * The internally created appsync api
      */
-    graphqlApi: appsync.GraphqlApi;
+    graphqlApi: GraphqlApi;
     /**
      * If custom domain is enabled, this is the internally created CDK Certificate instance.
      */
-    certificate?: acm.ICertificate;
+    certificate?: ICertificate;
   };
   private readonly props: AppSyncApiProps;
   private _customDomainUrl?: string;
-  _cfnDomainName?: appsync.CfnDomainName;
+  _cfnDomainName?: CfnDomainName;
   private readonly functionsByDsKey: { [key: string]: Fn } = {};
   private readonly dataSourcesByDsKey: {
-    [key: string]: appsync.BaseDataSource;
+    [key: string]: BaseDataSource;
   } = {};
   private readonly dsKeysByResKey: { [key: string]: string } = {};
-  private readonly resolversByResKey: { [key: string]: appsync.Resolver } = {};
+  private readonly resolversByResKey: { [key: string]: Resolver } = {};
   private readonly bindingForAllFunctions: SSTConstruct[] = [];
   private readonly permissionsAttachedForAllFunctions: Permissions[] = [];
 
@@ -521,6 +567,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         | AppSyncApiLambdaDataSourceProps
         | AppSyncApiDynamoDbDataSourceProps
         | AppSyncApiRdsDataSourceProps
+        | AppSyncApiOpenSearchDataSourceProps
         | AppSyncApiHttpDataSourceProps
         | AppSyncApiNoneDataSourceProps;
     }
@@ -577,7 +624,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
    * api.getDataSource("billingDS");
    * ```
    */
-  public getDataSource(key: string): appsync.BaseDataSource | undefined {
+  public getDataSource(key: string): BaseDataSource | undefined {
     let ds = this.dataSourcesByDsKey[key];
 
     if (!ds) {
@@ -596,7 +643,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
    * api.getResolver("Mutation charge");
    * ```
    */
-  public getResolver(key: string): appsync.Resolver | undefined {
+  public getResolver(key: string): Resolver | undefined {
     const resKey = this.normalizeResolverKey(key);
     return this.resolversByResKey[resKey];
   }
@@ -689,7 +736,12 @@ export class AppSyncApi extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getFunctionBinding(): FunctionBindingProps {
+  public getFunctionBinding() {
+    // Do not bind imported AppSync APIs b/c we don't know the API URL
+    if (!this.url) {
+      return;
+    }
+
     return {
       clientPackage: "api",
       variables: {
@@ -699,7 +751,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         },
       },
       permissions: {},
-    };
+    } as FunctionBindingProps;
   }
 
   private createGraphApi() {
@@ -713,17 +765,17 @@ export class AppSyncApi extends Construct implements SSTConstruct {
           `Cannot configure the "customDomain" when "graphqlApi" is a construct`
         );
       }
-      this.cdk.graphqlApi = cdk?.graphqlApi as appsync.GraphqlApi;
+      this.cdk.graphqlApi = cdk?.graphqlApi as GraphqlApi;
     } else {
       const graphqlApiProps = (cdk?.graphqlApi ||
         {}) as AppSyncApiCdkGraphqlProps;
 
       // build schema
-      let mainSchema: appsync.SchemaFile;
+      let mainSchema: SchemaFile;
       if (!schema) {
         throw new Error(`Missing "schema" in "${id}" AppSyncApi`);
       } else if (typeof schema === "string") {
-        mainSchema = appsync.SchemaFile.fromAsset(schema);
+        mainSchema = SchemaFile.fromAsset(schema);
       } else {
         if (schema.length === 0) {
           throw new Error(
@@ -741,7 +793,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
           `appsyncapi-${id}-${this.node.addr}.graphql`
         );
         fs.writeFileSync(filePath, print(mergedSchema));
-        mainSchema = appsync.SchemaFile.fromAsset(filePath);
+        mainSchema = SchemaFile.fromAsset(filePath);
       }
 
       // build domain
@@ -752,7 +804,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
       this._customDomainUrl =
         domainData && `https://${domainData.domainName}/graphql`;
 
-      this.cdk.graphqlApi = new appsync.GraphqlApi(this, "Api", {
+      this.cdk.graphqlApi = new GraphqlApi(this, "Api", {
         name: app.logicalPrefixedName(id),
         xrayEnabled: true,
         schema: mainSchema,
@@ -770,13 +822,13 @@ export class AppSyncApi extends Construct implements SSTConstruct {
       if (domainData) {
         this._cfnDomainName = this.cdk.graphqlApi.node.children.find(
           (child) =>
-            (child as appsync.CfnDomainName).cfnResourceType ===
+            (child as CfnDomainName).cfnResourceType ===
             "AWS::AppSync::DomainName"
-        ) as appsync.CfnDomainName;
+        ) as CfnDomainName;
         const cfnDomainNameApiAssociation =
           this.cdk.graphqlApi.node.children.find(
             (child) =>
-              (child as appsync.CfnDomainNameApiAssociation).cfnResourceType ===
+              (child as CfnDomainNameApiAssociation).cfnResourceType ===
               "AWS::AppSync::DomainNameApiAssociation"
           );
         if (this._cfnDomainName && cfnDomainNameApiAssociation) {
@@ -794,6 +846,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
       | AppSyncApiLambdaDataSourceProps
       | AppSyncApiDynamoDbDataSourceProps
       | AppSyncApiRdsDataSourceProps
+      | AppSyncApiOpenSearchDataSourceProps
       | AppSyncApiHttpDataSourceProps
       | AppSyncApiNoneDataSourceProps
   ) {
@@ -824,7 +877,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         }
       );
     }
-    // Rds ds
+    // RDS ds
     else if (dsValue.type === "rds") {
       dataSource = this.cdk.graphqlApi.addRdsDataSource(
         dsKey,
@@ -837,6 +890,17 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         dsValue.rds
           ? dsValue.databaseName || dsValue.rds.defaultDatabaseName
           : dsValue.cdk?.dataSource?.databaseName,
+        {
+          name: dsValue.name,
+          description: dsValue.description,
+        }
+      );
+    }
+    // OpenSearch ds
+    else if (dsValue.type === "open_search") {
+      dataSource = this.cdk.graphqlApi.addOpenSearchDataSource(
+        dsKey,
+        dsValue.cdk?.dataSource?.domain!,
         {
           name: dsValue.name,
           description: dsValue.description,
@@ -1038,12 +1102,10 @@ export class AppSyncApi extends Construct implements SSTConstruct {
     }
 
     if ((mapping as MappingTemplateFile).file) {
-      return appsync.MappingTemplate.fromFile(
-        (mapping as MappingTemplateFile).file
-      );
+      return CDKMappingTemplate.fromFile((mapping as MappingTemplateFile).file);
     }
 
-    return appsync.MappingTemplate.fromString(
+    return CDKMappingTemplate.fromString(
       (mapping as MappingTemplateInline).inline
     );
   }

@@ -50,11 +50,11 @@ test("default", async () => {
   });
   expect(site.url).toBeDefined();
   expect(site.customDomainUrl).toBeUndefined();
-  expect(site.cdk.bucket.bucketArn).toBeDefined();
-  expect(site.cdk.bucket.bucketName).toBeDefined();
-  expect(site.cdk.distribution.distributionId).toBeDefined();
-  expect(site.cdk.distribution.distributionDomainName).toBeDefined();
-  expect(site.cdk.certificate).toBeUndefined();
+  expect(site.cdk?.bucket.bucketArn).toBeDefined();
+  expect(site.cdk?.bucket.bucketName).toBeDefined();
+  expect(site.cdk?.distribution.distributionId).toBeDefined();
+  expect(site.cdk?.distribution.distributionDomainName).toBeDefined();
+  expect(site.cdk?.certificate).toBeUndefined();
   countResources(stack, "AWS::S3::Bucket", 1);
   hasResource(stack, "AWS::S3::Bucket", {
     PublicAccessBlockConfiguration: {
@@ -63,5 +63,26 @@ test("default", async () => {
       IgnorePublicAcls: true,
       RestrictPublicBuckets: true,
     },
+  });
+});
+
+test("cdk.distribution.defaultBehavior", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  const site = new NextjsSite(stack, "Site", {
+    path: sitePath,
+    cdk: {
+      distribution: {
+        defaultBehavior: {
+          viewerProtocolPolicy: cf.ViewerProtocolPolicy.HTTPS_ONLY,
+        },
+      },
+    },
+  });
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      DefaultCacheBehavior: objectLike({
+        ViewerProtocolPolicy: "https-only",
+      }),
+    }),
   });
 });

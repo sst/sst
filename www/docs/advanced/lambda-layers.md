@@ -38,8 +38,8 @@ Say you wanted to use the [sharp package](https://www.npmjs.com/package/sharp) i
 
    new sst.Function(stack, "Function", {
      handler: "src/lambda.main",
-     bundle: {
-       externalModules: ["sharp"],
+     nodejs: {
+       install: ["sharp"],
      },
      layers: [
        new lambda.LayerVersion(stack, "MyLayer", {
@@ -76,8 +76,8 @@ Say you wanted to use the [chrome-aws-lambda-layer](https://github.com/shelfio/c
 
    new sst.Function(stack, "Function", {
      handler: "src/lambda.main",
-     bundle: {
-       externalModules: ["chrome-aws-lambda"],
+     nodejs: {
+       install: ["chrome-aws-lambda"],
      },
      layers: [
        lambda.LayerVersion.fromLayerVersionArn(stack, "ChromeLayer", layerArn),

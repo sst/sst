@@ -1,7 +1,7 @@
 import { test, expect } from "vitest";
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
-import { hasOutput, countResources, createApp } from "./helper";
+import { hasOutput, hasNoOutput, countResources, createApp } from "./helper";
 import * as cdk from "aws-cdk-lib";
 import { App, Stack, Api } from "../../dist/constructs/";
 
@@ -32,13 +32,10 @@ test("addOutputs", async () => {
 
 test("addOutputs-undefined-value", async () => {
   const stack = new Stack(await createApp(), "stack");
-  expect(() => {
-    stack.addOutputs({
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore: Test undefined value
-      keyA: stack.abc,
-    });
-  }).toThrow(/The stack output "keyA" is undefined/);
+  stack.addOutputs({
+    keyA: undefined,
+  });
+  hasNoOutput(stack, "keyA");
 });
 
 test("props: is construct", async () => {
@@ -74,4 +71,41 @@ test("getAllFunctions", async () => {
   });
 
   expect(stack1.getAllFunctions().length).toBe(2);
+});
+
+test("isActive: deploy mode", async () => {
+  const app = await createApp({
+    mode: "deploy",
+  });
+  const stack = new Stack(app, "stack");
+  expect(stack.isActive).toBeTruthy();
+});
+
+test("isActive: deploy mode with active stacks", async () => {
+  const app = await createApp({
+    mode: "deploy",
+    isActiveStack(stackName) {
+      return stackName.includes("stack1");
+    },
+  });
+  const stack1 = new Stack(app, "stack1");
+  const stack2 = new Stack(app, "stack2");
+  expect(stack1.isActive).toBeTruthy();
+  expect(stack2.isActive).toBeFalsy();
+});
+
+test("isActive: dev mode", async () => {
+  const app = await createApp({
+    mode: "dev",
+  });
+  const stack = new Stack(app, "stack");
+  expect(stack.isActive).toBeTruthy();
+});
+
+test("isActive: remove mode", async () => {
+  const app = await createApp({
+    mode: "remove",
+  });
+  const stack = new Stack(app, "stack");
+  expect(stack.isActive).toBeFalsy();
 });

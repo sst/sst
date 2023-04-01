@@ -21,9 +21,15 @@ import {
   BucketProps,
   IBucket,
 } from "aws-cdk-lib/aws-s3";
-import { Role, Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import {
-  Function,
+  Role,
+  Effect,
+  Policy,
+  PolicyStatement,
+  AnyPrincipal,
+} from "aws-cdk-lib/aws-iam";
+import {
+  Function as CdkFunction,
   Code,
   Runtime,
   FunctionUrlAuthType,
@@ -49,6 +55,10 @@ import {
   CacheQueryStringBehavior,
   CacheHeaderBehavior,
   CacheCookieBehavior,
+  OriginRequestPolicy,
+  Function as CfFunction,
+  FunctionCode as CfFunctionCode,
+  FunctionEventType as CfFunctionEventType,
 } from "aws-cdk-lib/aws-cloudfront";
 import { ICertificate } from "aws-cdk-lib/aws-certificatemanager";
 import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
@@ -58,7 +68,10 @@ import { CloudFrontTarget } from "aws-cdk-lib/aws-route53-targets";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Logger } from "../logger.js";
+import { createAppContext } from "./context.js";
 import { SSTConstruct, isCDKConstruct } from "./Construct.js";
+import { NodeJSProps, Function } from "./Function.js";
+import { Secret } from "./Secret.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 import {
   BaseSiteDomainProps,
@@ -75,18 +88,19 @@ import {
   FunctionBindingProps,
   getParameterPath,
 } from "./util/functionBinding.js";
-import { SiteEnv } from "../site-env.js";
 import { useProject } from "../project.js";
-import { VisibleError } from "../error.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
+type SsrSiteType = "NextjsSite" | "RemixSite" | "AstroSite" | "SolidStartSite";
 
 export type SsrBuildConfig = {
+  typesPath: string;
   serverBuildOutputFile: string;
   clientBuildOutputDir: string;
   clientBuildVersionedSubDir: string;
 };
 
+export interface SsrSiteNodeJSProps extends NodeJSProps {}
 export interface SsrDomainProps extends BaseSiteDomainProps {}
 export interface SsrSiteReplaceProps extends BaseSiteReplaceProps {}
 export interface SsrCdkDistributionProps extends BaseSiteCdkDistributionProps {}
@@ -171,6 +185,10 @@ export interface SsrSiteProps {
    */
   runtime?: "nodejs14.x" | "nodejs16.x" | "nodejs18.x";
   /**
+   * Used to configure nodejs function properties
+   */
+  nodejs?: SsrSiteNodeJSProps;
+  /**
    * Attaches the given list of permissions to the SSR function. Configuring this property is equivalent to calling `attachPermissions()` after the site is created.
    * @example
    * ```js
@@ -242,6 +260,14 @@ export interface SsrSiteProps {
   };
 }
 
+type SsrSiteNormalizedProps = SsrSiteProps & {
+  path: Exclude<SsrSiteProps["path"], undefined>;
+  runtime: Exclude<SsrSiteProps["runtime"], undefined>;
+  timeout: Exclude<SsrSiteProps["timeout"], undefined>;
+  memorySize: Exclude<SsrSiteProps["memorySize"], undefined>;
+  waitForInvalidation: Exclude<SsrSiteProps["waitForInvalidation"], undefined>;
+};
+
 /**
  * The `SsrSite` construct is a higher level CDK construct that makes it easy to create modern web apps with Server Side Rendering capabilities.
  * @example
@@ -255,15 +281,12 @@ export interface SsrSiteProps {
  */
 export class SsrSite extends Construct implements SSTConstruct {
   public readonly id: string;
-  protected props: Omit<SsrSiteProps, "path"> & {
-    path: string;
-    timeout: number | Duration;
-    memorySize: number | Size;
-  };
+  protected props: SsrSiteNormalizedProps;
   private doNotDeploy: boolean;
   protected buildConfig: SsrBuildConfig;
   private serverLambdaForEdge?: EdgeFunction;
-  protected serverLambdaForRegional?: Function;
+  protected serverLambdaForRegional?: CdkFunction;
+  private serverLambdaForDev?: CdkFunction;
   private bucket: Bucket;
   private distribution: Distribution;
   private hostedZone?: IHostedZone;
@@ -273,6 +296,7 @@ export class SsrSite extends Construct implements SSTConstruct {
     super(scope, props?.cdk?.id || id);
 
     const app = scope.node.root as App;
+    const stack = Stack.of(this) as Stack;
     this.id = id;
     this.props = {
       path: ".",
@@ -282,21 +306,25 @@ export class SsrSite extends Construct implements SSTConstruct {
       memorySize: "1024 MB",
       ...props,
     };
-    this.doNotDeploy = (app.local || app.skipBuild) && !this.props.dev?.deploy;
+    this.doNotDeploy =
+      !stack.isActive || (app.mode === "dev" && !this.props.dev?.deploy);
 
+    this.buildConfig = this.initBuildConfig();
     this.validateSiteExists();
-    this.registerSiteEnvironment();
+    this.writeTypesFile();
+
+    useSites().add(id, this.constructor.name as SsrSiteType, this.props);
 
     if (this.doNotDeploy) {
       // @ts-ignore
-      this.buildConfig = this.bucket = this.distribution = null;
+      this.bucket = this.distribution = null;
+      this.serverLambdaForDev = this.createFunctionForDev();
       return;
     }
 
     const cliLayer = new AwsCliLayer(this, "AwsCliLayer");
 
     // Build app
-    this.buildConfig = this.initBuildConfig();
     this.buildApp();
 
     // Create Bucket which will be utilised to contain the statics
@@ -346,10 +374,8 @@ export class SsrSite extends Construct implements SSTConstruct {
   /**
    * The CloudFront URL of the website.
    */
-  public get url(): string | undefined {
-    if (this.doNotDeploy) {
-      return;
-    }
+  public get url() {
+    if (this.doNotDeploy) return;
 
     return `https://${this.distribution.distributionDomainName}`;
   }
@@ -358,15 +384,11 @@ export class SsrSite extends Construct implements SSTConstruct {
    * If the custom domain is enabled, this is the URL of the website with the
    * custom domain.
    */
-  public get customDomainUrl(): string | undefined {
-    if (this.doNotDeploy) {
-      return;
-    }
+  public get customDomainUrl() {
+    if (this.doNotDeploy) return;
 
     const { customDomain } = this.props;
-    if (!customDomain) {
-      return;
-    }
+    if (!customDomain) return;
 
     if (typeof customDomain === "string") {
       return `https://${customDomain}`;
@@ -379,11 +401,7 @@ export class SsrSite extends Construct implements SSTConstruct {
    * The internally created CDK resources.
    */
   public get cdk() {
-    if (this.doNotDeploy) {
-      throw new VisibleError(
-        `Cannot access CDK resources for the "${this.node.id}" site in dev mode`
-      );
-    }
+    if (this.doNotDeploy) return;
 
     return {
       function: this.serverLambdaForRegional,
@@ -421,9 +439,22 @@ export class SsrSite extends Construct implements SSTConstruct {
   /** @internal */
   public getConstructMetadata() {
     return {
-      type: "SsrSite" as const,
+      type: this.constructor.name as SsrSiteType,
       data: {
+        mode: this.doNotDeploy
+          ? ("placeholder" as const)
+          : ("deployed" as const),
+        path: this.props.path,
         customDomainUrl: this.customDomainUrl,
+        edge: this.props.edge,
+        server: (
+          this.serverLambdaForDev ||
+          this.serverLambdaForRegional ||
+          this.serverLambdaForEdge
+        )?.functionArn!,
+        secrets: (this.props.bind || [])
+          .filter((c) => c instanceof Secret)
+          .map((c) => (c as Secret).name),
       },
     };
   }
@@ -464,6 +495,7 @@ export class SsrSite extends Construct implements SSTConstruct {
 
   protected initBuildConfig(): SsrBuildConfig {
     return {
+      typesPath: ".",
       serverBuildOutputFile: "placeholder",
       clientBuildOutputDir: "placeholder",
       clientBuildVersionedSubDir: "placeholder",
@@ -643,7 +675,7 @@ export class SsrSite extends Construct implements SSTConstruct {
     fileOptions: { exclude: string; include: string; cacheControl: string }[]
   ): CustomResource {
     // Create a Lambda function that will be doing the uploading
-    const uploader = new Function(this, "S3Uploader", {
+    const uploader = new CdkFunction(this, "S3Uploader", {
       code: Code.fromAsset(
         path.join(__dirname, "../support/base-site-custom-resource")
       ),
@@ -657,7 +689,7 @@ export class SsrSite extends Construct implements SSTConstruct {
     assets.forEach((asset) => asset.grantRead(uploader));
 
     // Create the custom resource function
-    const handler = new Function(this, "S3Handler", {
+    const handler = new CdkFunction(this, "S3Handler", {
       code: Code.fromAsset(
         path.join(__dirname, "../support/base-site-custom-resource")
       ),
@@ -704,24 +736,41 @@ export class SsrSite extends Construct implements SSTConstruct {
   // Bundle Lambda Server
   /////////////////////
 
-  protected createFunctionForRegional(): Function {
-    return {} as Function;
+  protected createFunctionForRegional(): CdkFunction {
+    return {} as CdkFunction;
   }
 
   protected createFunctionForEdge(): EdgeFunction {
     return {} as EdgeFunction;
   }
 
-  private createFunctionPermissionsForRegional() {
-    const { permissions } = this.props;
+  protected createFunctionForDev(): Function {
+    const { runtime, timeout, memorySize, permissions, environment, bind } =
+      this.props;
 
+    const role = new Role(this, "ServerFunctionRole", {
+      assumedBy: new AnyPrincipal(),
+      maxSessionDuration: CdkDuration.hours(12),
+    });
+
+    const fn = new Function(this, `ServerFunction`, {
+      description: "Server handler placeholder",
+      handler: "placeholder",
+      runtime,
+      memorySize,
+      timeout,
+      bind,
+      environment,
+      permissions,
+      role,
+    });
+    fn._doNotAllowOthersToBind = true;
+
+    return fn;
+  }
+
+  private createFunctionPermissionsForRegional() {
     this.bucket.grantReadWrite(this.serverLambdaForRegional!.role!);
-    if (permissions) {
-      attachPermissionsToRole(
-        this.serverLambdaForRegional!.role as Role,
-        permissions
-      );
-    }
   }
 
   private createFunctionPermissionsForEdge() {
@@ -818,12 +867,14 @@ export class SsrSite extends Construct implements SSTConstruct {
 
     return {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      functionAssociations: this.buildBehaviorFunctionAssociations(),
       origin: new HttpOrigin(Fn.parseDomainName(fnUrl.url)),
       allowedMethods: AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
       cachePolicy:
         cdk?.serverCachePolicy ?? this.createCloudFrontServerCachePolicy(),
+      originRequestPolicy: this.createCloudFrontServerOriginRequestPolicy(),
       ...(cfDistributionProps.defaultBehavior || {}),
     };
   }
@@ -836,12 +887,14 @@ export class SsrSite extends Construct implements SSTConstruct {
 
     return {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      functionAssociations: this.buildBehaviorFunctionAssociations(),
       origin,
       allowedMethods: AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
       cachePolicy:
         cdk?.serverCachePolicy ?? this.createCloudFrontServerCachePolicy(),
+      originRequestPolicy: this.createCloudFrontServerOriginRequestPolicy(),
       ...(cfDistributionProps.defaultBehavior || {}),
       // concatenate edgeLambdas
       edgeLambdas: [
@@ -853,6 +906,22 @@ export class SsrSite extends Construct implements SSTConstruct {
         ...(cfDistributionProps.defaultBehavior?.edgeLambdas || []),
       ],
     };
+  }
+
+  private buildBehaviorFunctionAssociations() {
+    return [
+      {
+        eventType: CfFunctionEventType.VIEWER_REQUEST,
+        function: new CfFunction(this, "CloudFrontFunction", {
+          code: CfFunctionCode.fromInline(`
+function handler(event) {
+  var request = event.request;
+  request.headers["x-forwarded-host"] = request.headers.host;
+  return request;
+}`),
+        }),
+      },
+    ];
   }
 
   protected buildDistributionStaticFileBehaviors(
@@ -887,7 +956,7 @@ export class SsrSite extends Construct implements SSTConstruct {
     return staticsBehaviours;
   }
 
-  protected createCloudFrontServerCachePolicy(): CachePolicy {
+  protected createCloudFrontServerCachePolicy() {
     return new CachePolicy(this, "ServerCache", {
       queryStringBehavior: CacheQueryStringBehavior.all(),
       headerBehavior: CacheHeaderBehavior.none(),
@@ -899,6 +968,15 @@ export class SsrSite extends Construct implements SSTConstruct {
       enableAcceptEncodingGzip: true,
       comment: "SST server response cache policy",
     });
+  }
+
+  protected createCloudFrontServerOriginRequestPolicy() {
+    // CloudFront's Managed-AllViewerExceptHostHeader policy
+    return OriginRequestPolicy.fromOriginRequestPolicyId(
+      this,
+      "ServerOriginRequestPolicy",
+      "b689b0a8-53d0-40ab-baf2-68738e2966ac"
+    );
   }
 
   private createCloudFrontInvalidation() {
@@ -1111,17 +1189,24 @@ export class SsrSite extends Construct implements SSTConstruct {
     }
   }
 
-  private registerSiteEnvironment() {
-    for (const [key, value] of Object.entries(this.props.environment || {})) {
-      const outputId = `SstSiteEnv_${key}`;
-      const output = new CfnOutput(this, outputId, { value });
-      SiteEnv.append({
-        path: this.props.path,
-        output: Stack.of(this).getLogicalId(output),
-        environment: key,
-        stack: Stack.of(this).stackName,
-      });
-    }
+  private writeTypesFile() {
+    const typesPath = path.resolve(
+      this.props.path,
+      this.buildConfig.typesPath,
+      "sst-env.d.ts"
+    );
+
+    // Do not override the types file if it already exists
+    if (fs.existsSync(typesPath)) return;
+
+    const relPathToSstTypesFile = path.join(
+      path.relative(path.dirname(typesPath), useProject().paths.root),
+      ".sst/types/index.ts"
+    );
+    fs.writeFileSync(
+      typesPath,
+      `/// <reference path="${relPathToSstTypesFile}" />`
+    );
   }
 
   protected generateBuildId(): string {
@@ -1153,3 +1238,19 @@ export class SsrSite extends Construct implements SSTConstruct {
     return buildId;
   }
 }
+
+export const useSites = createAppContext(() => {
+  const sites: {
+    name: string;
+    type: SsrSiteType;
+    props: SsrSiteNormalizedProps;
+  }[] = [];
+  return {
+    add(name: string, type: SsrSiteType, props: SsrSiteNormalizedProps) {
+      sites.push({ name, type, props });
+    },
+    get all() {
+      return sites;
+    },
+  };
+});

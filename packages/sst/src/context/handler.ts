@@ -10,7 +10,7 @@ import { Context } from "./context.js";
 export interface Handlers {
   api: {
     event: APIGatewayProxyEventV2;
-    response: APIGatewayProxyStructuredResultV2;
+    response: APIGatewayProxyStructuredResultV2 | void;
   };
   sqs: {
     event: SQSEvent;

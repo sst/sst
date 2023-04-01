@@ -29,6 +29,19 @@ async function invokeUserFunction(functionName: string, payload: any) {
       Payload: Buffer.from(JSON.stringify(payload)),
     })
   );
+  if (resp.FunctionError) {
+    const payload = JSON.parse(Buffer.from(resp.Payload!).toString());
+    const error = new Error();
+    // @ts-ignore
+    error.reason = `${payload.errorType}: ${payload.errorMessage} - https://${
+      process.env.AWS_REGION
+    }.console.aws.amazon.com/cloudwatch/home?region=${
+      process.env.AWS_REGION
+    }#logsV2:log-groups/log-group/${encodeURIComponent(
+      `/aws/lambda/${functionName}`
+    )}`;
+    throw error;
+  }
 
   log(`response`, resp);
 }

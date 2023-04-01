@@ -29,7 +29,14 @@ import {
   RecordTarget,
 } from "aws-cdk-lib/aws-route53";
 import { CloudFrontTarget } from "aws-cdk-lib/aws-route53-targets";
-import { Distribution, ViewerProtocolPolicy } from "aws-cdk-lib/aws-cloudfront";
+import {
+  BehaviorOptions,
+  Distribution,
+  Function as CfFunction,
+  FunctionCode as CfFunctionCode,
+  FunctionEventType as CfFunctionEventType,
+  ViewerProtocolPolicy,
+} from "aws-cdk-lib/aws-cloudfront";
 import { S3Origin } from "aws-cdk-lib/aws-cloudfront-origins";
 import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
 
@@ -52,8 +59,6 @@ import {
 } from "./util/functionBinding.js";
 import { gray } from "colorette";
 import { useProject } from "../project.js";
-import { SiteEnv } from "../site-env.js";
-import { VisibleError } from "../error.js";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -349,6 +354,7 @@ export class StaticSite extends Construct implements SSTConstruct {
     super(scope, props?.cdk?.id || id);
 
     const app = scope.node.root as App;
+    const stack = Stack.of(this) as Stack;
     this.id = id;
     this.props = {
       path: ".",
@@ -356,10 +362,10 @@ export class StaticSite extends Construct implements SSTConstruct {
       ...props,
     };
 
-    this.doNotDeploy = (app.local || app.skipBuild) && !this.props.dev?.deploy;
+    this.doNotDeploy =
+      !stack.isActive || (app.mode === "dev" && !this.props.dev?.deploy);
 
     this.validateCustomDomainSettings();
-    this.registerSiteEnvironment();
     this.generateViteTypes();
 
     if (this.doNotDeploy) {
@@ -410,10 +416,8 @@ export class StaticSite extends Construct implements SSTConstruct {
   /**
    * The CloudFront URL of the website.
    */
-  public get url(): string | undefined {
-    if (this.doNotDeploy) {
-      return;
-    }
+  public get url() {
+    if (this.doNotDeploy) return;
 
     return `https://${this.distribution.distributionDomainName}`;
   }
@@ -421,15 +425,11 @@ export class StaticSite extends Construct implements SSTConstruct {
   /**
    * If the custom domain is enabled, this is the URL of the website with the custom domain.
    */
-  public get customDomainUrl(): string | undefined {
-    if (this.doNotDeploy) {
-      return;
-    }
+  public get customDomainUrl() {
+    if (this.doNotDeploy) return;
 
     const { customDomain } = this.props;
-    if (!customDomain) {
-      return;
-    }
+    if (!customDomain) return;
 
     if (typeof customDomain === "string") {
       return `https://${customDomain}`;
@@ -442,11 +442,7 @@ export class StaticSite extends Construct implements SSTConstruct {
    * The internally created CDK resources.
    */
   public get cdk() {
-    if (this.doNotDeploy) {
-      throw new VisibleError(
-        `Cannot access CDK resources for the "${this.node.id}" site in dev mode`
-      );
-    }
+    if (this.doNotDeploy) return;
 
     return {
       bucket: this.bucket,
@@ -460,6 +456,8 @@ export class StaticSite extends Construct implements SSTConstruct {
     return {
       type: "StaticSite" as const,
       data: {
+        path: this.props.path,
+        environment: this.props.environment || {},
         customDomainUrl: this.customDomainUrl,
       },
     };
@@ -784,26 +782,6 @@ interface ImportMeta {
     }
   }
 
-  protected buildDistributionDomainNames(): string[] {
-    const { customDomain } = this.props;
-    const domainNames = [];
-    if (!customDomain) {
-      // no domain
-    } else if (typeof customDomain === "string") {
-      domainNames.push(customDomain);
-    } else {
-      domainNames.push(customDomain.domainName);
-      if (customDomain.alternateNames) {
-        if (!customDomain.cdk?.certificate)
-          throw new Error(
-            "Certificates for alternate domains cannot be automatically created. Please specify certificate to use"
-          );
-        domainNames.push(...customDomain.alternateNames);
-      }
-    }
-    return domainNames;
-  }
-
   private createCfDistribution(): Distribution {
     const { cdk, errorPage } = this.props;
     const indexPage = this.props.indexPage || "index.html";
@@ -820,11 +798,7 @@ interface ImportMeta {
       // these values can NOT be overwritten by cfDistributionProps
       domainNames: this.buildDistributionDomainNames(),
       certificate: this.certificate,
-      defaultBehavior: {
-        origin: new S3Origin(this.bucket),
-        viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        ...cdk?.distribution?.defaultBehavior,
-      },
+      defaultBehavior: this.buildDistributionBehavior(),
     });
   }
 
@@ -866,6 +840,56 @@ interface ImportMeta {
     resource.node.addDependency(policy);
 
     return resource;
+  }
+
+  protected buildDistributionDomainNames(): string[] {
+    const { customDomain } = this.props;
+    const domainNames = [];
+    if (!customDomain) {
+      // no domain
+    } else if (typeof customDomain === "string") {
+      domainNames.push(customDomain);
+    } else {
+      domainNames.push(customDomain.domainName);
+      if (customDomain.alternateNames) {
+        if (!customDomain.cdk?.certificate)
+          throw new Error(
+            "Certificates for alternate domains cannot be automatically created. Please specify certificate to use"
+          );
+        domainNames.push(...customDomain.alternateNames);
+      }
+    }
+    return domainNames;
+  }
+
+  private buildDistributionBehavior(): BehaviorOptions {
+    const { cdk } = this.props;
+    return {
+      origin: new S3Origin(this.bucket),
+      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      functionAssociations: [
+        {
+          function: new CfFunction(this, "CloudFrontFunction", {
+            code: CfFunctionCode.fromInline(`
+function handler(event) {
+  var request = event.request;
+  var uri = request.uri;
+  
+  if (uri.endsWith("/")) {
+    request.uri += "index.html";
+  } else if (!uri.split("/").pop().includes(".")) {
+    request.uri += ".html";
+  }
+
+  return request;
+}
+          `),
+          }),
+          eventType: CfFunctionEventType.VIEWER_REQUEST,
+        },
+      ],
+      ...cdk?.distribution?.defaultBehavior,
+    };
   }
 
   /////////////////////
@@ -1036,18 +1060,5 @@ interface ImportMeta {
         );
       });
     return replaceValues;
-  }
-
-  private registerSiteEnvironment() {
-    for (const [key, value] of Object.entries(this.props.environment || {})) {
-      const outputId = `SstSiteEnv_${key}`;
-      const output = new CfnOutput(this, outputId, { value });
-      SiteEnv.append({
-        path: this.props.path,
-        output: Stack.of(this).getLogicalId(output),
-        environment: key,
-        stack: Stack.of(this).stackName,
-      });
-    }
   }
 }

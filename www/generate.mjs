@@ -19,6 +19,8 @@ const CDK_DOCS_MAP = {
   CfnOutputProps: "",
   IVpc: "aws_ec2",
   LogGroup: "aws_logs",
+  LogGroupProps: "aws_logs",
+  ILogGroup: "aws_logs",
   IHostedZone: "aws_route53",
   ISecret: "aws_secretsmanager",
   IApplicationListener: "aws_elasticloadbalancingv2",
@@ -92,6 +94,7 @@ const CDK_DOCS_MAP = {
   IGraphqlApi: "aws_appsync",
   ResolverProps: "aws_appsync",
   AwsIamConfig: "aws_appsync",
+  IDomain: "aws_opensearchservice",
 };
 
 const app = new Application();
@@ -354,14 +357,10 @@ function renderType(file, files, prefix, parameter) {
     );
   }
   if (parameter.type === "union") {
-    return (
-      "<span class='mono'>" +
-      parameter.types
-        .map((t) => renderType(file, files, prefix, t))
-        .filter((x) => x)
-        .join(" | ") +
-      "</span>"
-    );
+    return parameter.types
+      .map((t) => renderType(file, files, prefix, t))
+      .filter((x) => x)
+      .join("<span class='mono'> | </span>");
   }
   if (parameter.type === "reference") {
     if (parameter.package === "typescript")

@@ -1,9 +1,4 @@
-import {
-  Api,
-  Cognito,
-  StaticSite,
-  StackContext,
-} from "sst/constructs";
+import { Api, Cognito, StaticSite, StackContext } from "sst/constructs";
 
 export function ExampleStack({ stack, app }: StackContext) {
   // Create a Cognito User Pool to manage auth
@@ -47,7 +42,7 @@ export function ExampleStack({ stack, app }: StackContext) {
 
   // Show the endpoint in the output
   stack.addOutputs({
-    SiteUrl: site.url,
+    SiteUrl: site.url || "http://localhost:5173",
     ApiEndpoint: api.url,
   });
 }

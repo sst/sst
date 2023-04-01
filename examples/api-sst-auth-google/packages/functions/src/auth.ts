@@ -1,17 +1,13 @@
-import {
-  Session,
-  AuthHandler,
-  GoogleAdapter,
-} from "@serverless-stack/node/auth";
-import { Table } from "@serverless-stack/node/table";
-import { ViteStaticSite } from "@serverless-stack/node/site";
+import { Session, AuthHandler, GoogleAdapter } from "sst/node/auth";
+import { Table } from "sst/node/table";
+import { ViteStaticSite } from "sst/node/site";
 import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { marshall } from "@aws-sdk/util-dynamodb";
 
 const GOOGLE_CLIENT_ID =
   "1051197502784-vjtbj1rnckpagefmcoqnaon0cbglsdac.apps.googleusercontent.com";
 
-declare module "@serverless-stack/node/auth" {
+declare module "sst/node/auth" {
   export interface SessionTypes {
     user: {
       userID: string;
@@ -41,9 +37,7 @@ export const handler = AuthHandler({
         );
 
         return Session.parameter({
-          redirect: process.env.IS_LOCAL
-            ? "http://127.0.0.1:5173"
-            : ViteStaticSite.site.url,
+          redirect: ViteStaticSite.site.url || "http://127.0.0.1:5173",
           type: "user",
           properties: {
             userID: claims.sub,

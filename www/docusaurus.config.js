@@ -93,8 +93,8 @@ module.exports = {
           title: "Docs",
           items: [
             {
-              label: "Quick Start",
-              to: "quick-start",
+              label: "Get Started",
+              to: "/",
             },
             {
               label: "What is SST",
@@ -161,6 +161,13 @@ module.exports = {
       apiKey: "42ee2027a8dbe57a09913af0c27df9ad",
       // Turn on when we have versions
       //contextualSearch: true,
+      // Had to update this in Aloglia's crawler editor to have it picked up
+      // by Algolia - https://crawler.algolia.com
+      exclusionPatterns: [
+        // Exclude the "v0" and "v1" constructs docs from search results
+        "https://docs.sst.dev/constructs/v0/**",
+        "https://docs.sst.dev/constructs/v1/**",
+      ],
     },
   },
   presets: [
@@ -169,9 +176,10 @@ module.exports = {
       {
         docs: {
           routeBasePath: "/",
+          // exclude these pages from user accessing them
           exclude: [
-            "constructs/*.about.md",
-            "constructs/*.tsdoc.md",
+            "**.about.md",
+            "**.tsdoc.md",
             "advanced/monorepo-project-structure.md",
           ],
           sidebarCollapsible: false,
@@ -208,6 +216,10 @@ module.exports = {
       {
         redirects: [
           {
+            to: "/start/standalone",
+            from: "/quick-start",
+          },
+          {
             to: "/live-lambda-development",
             from: "/working-locally",
           },
@@ -216,7 +228,7 @@ module.exports = {
             from: "/constructs/ApolloApi",
           },
           {
-            to: "/quick-start",
+            to: "/",
             from: "/deploying-your-app",
           },
           {

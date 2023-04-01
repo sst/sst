@@ -351,7 +351,7 @@ import * as events from "aws-cdk-lib/aws-events";
 new EventBus(stack, "Bus", {
   cdk: {
     eventBus: events.EventBus.fromEventBusName(
-      this, "ImportedBus", eventBusArn
+      this, "ImportedBus", eventBusName
     ),
   },
   rules: {

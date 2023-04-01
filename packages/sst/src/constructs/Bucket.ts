@@ -1,6 +1,4 @@
 import { Construct } from "constructs";
-import * as s3 from "aws-cdk-lib/aws-s3";
-import * as s3Notifications from "aws-cdk-lib/aws-s3-notifications";
 import { Queue } from "./Queue.js";
 import { Topic } from "./Topic.js";
 import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct.js";
@@ -13,6 +11,19 @@ import {
 import { FunctionBindingProps } from "./util/functionBinding.js";
 import { Permissions } from "./util/permission.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
+import {
+  BucketProps as CDKBucketProps,
+  Bucket as CDKBucket,
+  IBucket,
+  EventType,
+  CorsRule,
+  HttpMethods,
+} from "aws-cdk-lib/aws-s3";
+import {
+  LambdaDestination,
+  SnsDestination,
+  SqsDestination,
+} from "aws-cdk-lib/aws-s3-notifications";
 
 /////////////////////
 // Interfaces
@@ -22,7 +33,7 @@ export interface BucketCorsRule {
   /**
    * The collection of allowed HTTP methods.
    */
-  allowedMethods: (keyof typeof s3.HttpMethods)[];
+  allowedMethods: (keyof typeof HttpMethods)[];
   /**
    * The collection of allowed origins.
    *
@@ -58,7 +69,7 @@ interface BucketBaseNotificationProps {
   /**
    * The S3 event types that will trigger the notification.
    */
-  events?: Lowercase<keyof typeof s3.EventType>[];
+  events?: Lowercase<keyof typeof EventType>[];
   /**
    * S3 object key filter rules to determine which objects trigger this event.
    */
@@ -247,7 +258,7 @@ export interface BucketProps {
      * });
      * ```
      */
-    bucket?: s3.IBucket | s3.BucketProps;
+    bucket?: IBucket | CDKBucketProps;
   };
 }
 
@@ -272,7 +283,7 @@ export class Bucket extends Construct implements SSTConstruct {
     /**
      * The internally created CDK `Bucket` instance.
      */
-    bucket: s3.IBucket;
+    bucket: IBucket;
   };
   readonly notifications: Record<string, Fn | Queue | Topic> = {};
   readonly bindingForAllNotifications: SSTConstruct[] = [];
@@ -473,9 +484,9 @@ export class Bucket extends Construct implements SSTConstruct {
           `Cannot configure the "cors" when "cdk.bucket" is a construct`
         );
       }
-      this.cdk.bucket = cdk?.bucket as s3.Bucket;
+      this.cdk.bucket = cdk?.bucket as CDKBucket;
     } else {
-      this.cdk.bucket = new s3.Bucket(this, "Bucket", {
+      this.cdk.bucket = new CDKBucket(this, "Bucket", {
         bucketName: name,
         cors: this.buildCorsConfig(cors),
         ...cdk?.bucket,
@@ -515,7 +526,7 @@ export class Bucket extends Construct implements SSTConstruct {
   }
 
   private addQueueNotification(
-    scope: Construct,
+    _scope: Construct,
     notificationName: string,
     notification: Queue | BucketQueueNotificationProps
   ): void {
@@ -543,15 +554,15 @@ export class Bucket extends Construct implements SSTConstruct {
     const filters = notificationProps?.filters || [];
     events.forEach((event) =>
       this.cdk.bucket.addEventNotification(
-        s3.EventType[event.toUpperCase() as keyof typeof s3.EventType],
-        new s3Notifications.SqsDestination(queue.cdk.queue),
+        EventType[event.toUpperCase() as keyof typeof EventType],
+        new SqsDestination(queue.cdk.queue),
         ...filters
       )
     );
   }
 
   private addTopicNotification(
-    scope: Construct,
+    _scope: Construct,
     notificationName: string,
     notification: Topic | BucketTopicNotificationProps
   ): void {
@@ -579,8 +590,8 @@ export class Bucket extends Construct implements SSTConstruct {
     const filters = notificationProps?.filters || [];
     events.forEach((event) =>
       this.cdk.bucket.addEventNotification(
-        s3.EventType[event.toUpperCase() as keyof typeof s3.EventType],
-        new s3Notifications.SnsDestination(topic.cdk.topic),
+        EventType[event.toUpperCase() as keyof typeof EventType],
+        new SnsDestination(topic.cdk.topic),
         ...filters
       )
     );
@@ -622,8 +633,8 @@ export class Bucket extends Construct implements SSTConstruct {
     const filters = notificationProps?.filters || [];
     events.forEach((event) =>
       this.cdk.bucket.addEventNotification(
-        s3.EventType[event.toUpperCase() as keyof typeof s3.EventType],
-        new s3Notifications.LambdaDestination(fn),
+        EventType[event.toUpperCase() as keyof typeof EventType],
+        new LambdaDestination(fn),
         ...filters
       )
     );
@@ -637,7 +648,7 @@ export class Bucket extends Construct implements SSTConstruct {
 
   private buildCorsConfig(
     cors?: boolean | BucketCorsRule[]
-  ): s3.CorsRule[] | undefined {
+  ): CorsRule[] | undefined {
     if (cors === undefined || cors === false) {
       return;
     }
@@ -646,11 +657,11 @@ export class Bucket extends Construct implements SSTConstruct {
         {
           allowedHeaders: ["*"],
           allowedMethods: [
-            s3.HttpMethods.GET,
-            s3.HttpMethods.PUT,
-            s3.HttpMethods.HEAD,
-            s3.HttpMethods.POST,
-            s3.HttpMethods.DELETE,
+            HttpMethods.GET,
+            HttpMethods.PUT,
+            HttpMethods.HEAD,
+            HttpMethods.POST,
+            HttpMethods.DELETE,
           ],
           allowedOrigins: ["*"],
         },
@@ -659,7 +670,7 @@ export class Bucket extends Construct implements SSTConstruct {
 
     return cors.map((e) => ({
       allowedMethods: (e.allowedMethods || []).map(
-        (method) => s3.HttpMethods[method as keyof typeof s3.HttpMethods]
+        (method) => HttpMethods[method as keyof typeof HttpMethods]
       ),
       allowedOrigins: e.allowedOrigins,
       allowedHeaders: e.allowedHeaders,

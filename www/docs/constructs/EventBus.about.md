@@ -298,12 +298,35 @@ new EventBus(stack, "Bus", {
       pattern: { source: ["myevent"] },
       targets: {
         myTarget1: {
+          type: "queue",
           queue: myQueue,
           cdk: {
             target: {
               messageGroupId: "group1",
             },
           },
+        },
+      },
+    },
+  },
+});
+```
+
+### Configuring Log Group targets
+
+```js
+import { LogGroup } from "aws-cdk-lib/aws-logs";
+
+new EventBus(stack, "Bus", {
+  rules: {
+    myRule: {
+      pattern: { source: ["myevent"] },
+      targets: {
+        myTarget1: {
+          type: "log_group",
+          cdk: {
+            logGroup: LogGroup.fromLogGroupName(stack, "Logs", "/my/target/log"),
+          }
         },
       },
     },

@@ -1,5 +1,5 @@
 import AWS from "aws-sdk";
-import { Table } from "@serverless-stack/node/table";
+import { Table } from "sst/node/table";
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 

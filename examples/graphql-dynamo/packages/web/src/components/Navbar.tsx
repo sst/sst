@@ -1,7 +1,8 @@
+import { CgLink } from "react-icons/cg";
 import { Link, useNavigate } from "react-router-dom";
 import { useTypedMutation } from "@graphql-dynamo/graphql/urql";
 import Button from "./Button";
-import * as styles from "./Navbar.css";
+import styles from "./Navbar.module.css";
 
 interface ArticleForm {
   url: string;
@@ -21,11 +22,12 @@ export default function Navbar() {
 
   return (
     <div className={styles.navbar}>
-      <div className={styles.header}>
-        <Link to="/" className={styles.title}>
-          <span className={styles.logo}>&#128279;</span> Links
-        </Link>
-      </div>
+      <Link to="/" className={styles.title}>
+        <span className={styles.logo}>
+          <CgLink className={styles.logoIcon} />
+        </span>
+        <span className={styles.titleCopy}>Links</span>
+      </Link>
       <form
         className={styles.form}
         onSubmit={async (e) => {

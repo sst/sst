@@ -1,16 +1,16 @@
-import * as cxapi from "@aws-cdk/cx-api";
-import { debug } from "aws-cdk/lib/logging.js";
+import { Environment } from "@aws-cdk/cx-api";
+import { debug } from "sst-aws-cdk/lib/logging.js";
 import {
   CloudFormationStack,
   TemplateParameters,
   waitForStackDelete,
-} from "aws-cdk/lib/api/util/cloudformation.js";
-import { ISDK } from "aws-cdk/lib/api/aws-auth/sdk.js";
-import { ToolkitInfo } from "aws-cdk/lib/api/toolkit-info.js";
-import { addMetadataAssetsToManifest } from "aws-cdk/lib/assets.js";
-import { publishAssets } from "aws-cdk/lib/util/asset-publishing.js";
-import { SdkProvider } from "aws-cdk/lib/api/aws-auth/sdk-provider.js";
-import { AssetManifestBuilder } from "aws-cdk/lib/util/asset-manifest-builder.js";
+} from "sst-aws-cdk/lib/api/util/cloudformation.js";
+import { ISDK } from "sst-aws-cdk/lib/api/aws-auth/sdk.js";
+import { ToolkitInfo } from "sst-aws-cdk/lib/api/toolkit-info.js";
+import { addMetadataAssetsToManifest } from "sst-aws-cdk/lib/assets.js";
+import { publishAssets } from "sst-aws-cdk/lib/util/asset-publishing.js";
+import { SdkProvider } from "sst-aws-cdk/lib/api/aws-auth/sdk-provider.js";
+import { AssetManifestBuilder } from "sst-aws-cdk/lib/util/asset-manifest-builder.js";
 import {
   CloudFormationDeployments,
   DeployStackOptions as PublishStackAssetsOptions,
@@ -68,18 +68,19 @@ export async function publishDeployAssets(
 
 const useDeployment = Context.memo(() => {
   const state = new Map<
-    SdkProvider,
+    string,
     {
       deployment: CloudFormationDeployments;
       toolkitInfo: ToolkitInfo;
       stackSdk: ISDK;
-      resolvedEnvironment: cxapi.Environment;
+      resolvedEnvironment: Environment;
       cloudFormationRoleArn?: string;
     }
   >();
   return {
     async get(sdkProvider: SdkProvider, options: PublishStackAssetsOptions) {
-      if (!state.has(sdkProvider)) {
+      const region = options.stack.environment.region;
+      if (!state.has(region)) {
         const deployment = new CloudFormationDeployments({ sdkProvider });
         const { stackSdk, resolvedEnvironment, cloudFormationRoleArn } =
           await deployment.prepareSdkFor(options.stack, options.roleArn);
@@ -97,7 +98,7 @@ const useDeployment = Context.memo(() => {
           toolkitInfo
         );
 
-        state.set(sdkProvider, {
+        state.set(region, {
           deployment,
           toolkitInfo,
           stackSdk,
@@ -105,7 +106,7 @@ const useDeployment = Context.memo(() => {
           cloudFormationRoleArn,
         });
       }
-      return state.get(sdkProvider)!;
+      return state.get(region)!;
     },
   };
 });
@@ -118,6 +119,7 @@ async function deployStack(options: DeployStackOptions): Promise<any> {
   options.sdk.appendCustomUserAgent(options.extraUserAgent);
   const cfn = options.sdk.cloudFormation();
   const deployName = options.deployName || stackArtifact.stackName;
+
   let cloudFormationStack = await CloudFormationStack.lookup(cfn, deployName);
 
   if (cloudFormationStack.stackStatus.isCreationFailure) {

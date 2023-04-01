@@ -8,8 +8,27 @@ import {
   AttachRolePolicyCommand,
   CreateRoleCommand,
 } from "@aws-sdk/client-iam";
+import { StandardRetryStrategy } from "@aws-sdk/middleware-retry";
 
-const apig = new APIGatewayClient({ logger: console });
+const apig = new APIGatewayClient({
+  logger: console,
+  retryStrategy: new StandardRetryStrategy(async () => 10000, {
+    retryDecider: (e: any) => {
+      if (
+        e.name === "TooManyRequestsException" &&
+        e.message === "Too Many Requests"
+      ) {
+        console.log("Retry on error", e.name);
+        return true;
+      }
+
+      return false;
+    },
+    delayDecider: (_, attempts) => {
+      return Math.min(1.5 ** attempts * 100, 3000);
+    },
+  }),
+});
 const iam = new IAMClient({ logger: console });
 
 export async function ApiGatewayCloudWatchRole(cfnRequest: any) {
@@ -88,15 +107,31 @@ async function createRole(roleName: string) {
 async function attachRoleToApiGateway(roleArn: string) {
   console.log("attachRoleToApiGateway");
 
-  await apig.send(
-    new UpdateAccountCommand({
-      patchOperations: [
-        {
-          op: "replace",
-          path: "/cloudwatchRoleArn",
-          value: roleArn,
-        },
-      ],
-    })
-  );
+  try {
+    await apig.send(
+      new UpdateAccountCommand({
+        patchOperations: [
+          {
+            op: "replace",
+            path: "/cloudwatchRoleArn",
+            value: roleArn,
+          },
+        ],
+      })
+    );
+  } catch (e: any) {
+    console.log(e);
+    if (
+      e.name === "BadRequestException" &&
+      e.message ===
+        "The role ARN does not have required permissions configured. Please grant trust permission for API Gateway and add the required role policy."
+    ) {
+      console.log("Retry after 1 second");
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await attachRoleToApiGateway(roleArn);
+      return;
+    }
+
+    throw e;
+  }
 }

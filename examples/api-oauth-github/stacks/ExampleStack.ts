@@ -1,9 +1,4 @@
-import {
-  Api,
-  Cognito,
-  StaticSite,
-  StackContext,
-} from "sst/constructs";
+import { Api, Cognito, StaticSite, StackContext } from "sst/constructs";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 
 export function ExampleStack({ stack, app }: StackContext) {
@@ -120,6 +115,6 @@ export function ExampleStack({ stack, app }: StackContext) {
     api_endpoint: api.url,
     auth_client_id: auth.userPoolClientId,
     domain: domain.domainName,
-    site_url: site.url,
+    site_url: site.url || "http://localhost:5173",
   });
 }

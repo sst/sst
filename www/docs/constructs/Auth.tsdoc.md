@@ -17,7 +17,7 @@ _Parameters_
 ## AuthProps
 ### authenticator
 
-_Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span> | <span class="mono">[FunctionProps](Function#functionprops)</span></span>
+_Type_ : <span class="mono">string</span><span class='mono'> | </span><span class="mono">[Function](Function#function)</span><span class='mono'> | </span><span class="mono">[FunctionProps](Function#functionprops)</span>
 
 The function that will handle authentication
 

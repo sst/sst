@@ -2,18 +2,17 @@ import * as cxapi from "@aws-cdk/cx-api";
 import type { CloudFormation } from "aws-sdk";
 import fs from "fs/promises";
 import * as uuid from "uuid";
-import { addMetadataAssetsToManifest } from "aws-cdk/lib/assets.js";
-import { Tag } from "aws-cdk/lib/cdk-toolkit.js";
-import { debug, error, print } from "aws-cdk/lib/logging.js";
-import { toYAML } from "aws-cdk/lib/serialize.js";
-import { AssetManifestBuilder } from "aws-cdk/lib/util/asset-manifest-builder.js";
-import { publishAssets } from "aws-cdk/lib/util/asset-publishing.js";
-import { contentHash } from "aws-cdk/lib/util/content-hash.js";
-import { ISDK, SdkProvider } from "aws-cdk/lib/api/aws-auth/index.js";
-import { CfnEvaluationException } from "aws-cdk/lib/api/evaluate-cloudformation-template.js";
-import { tryHotswapDeployment } from "aws-cdk/lib/api/hotswap-deployments.js";
-import { ICON } from "aws-cdk/lib/api/hotswap/common.js";
-import { ToolkitInfo } from "aws-cdk/lib/api/toolkit-info.js";
+import { addMetadataAssetsToManifest } from "sst-aws-cdk/lib/assets.js";
+import { Tag } from "sst-aws-cdk/lib/cdk-toolkit.js";
+import { debug, error, print } from "sst-aws-cdk/lib/logging.js";
+import { toYAML } from "sst-aws-cdk/lib/serialize.js";
+import { AssetManifestBuilder } from "sst-aws-cdk/lib/util/asset-manifest-builder.js";
+import { publishAssets } from "sst-aws-cdk/lib/util/asset-publishing.js";
+import { contentHash } from "sst-aws-cdk/lib/util/content-hash.js";
+import { ISDK, SdkProvider } from "sst-aws-cdk/lib/api/aws-auth/index.js";
+import { CfnEvaluationException } from "sst-aws-cdk/lib/api/evaluate-cloudformation-template.js";
+import { tryHotswapDeployment } from "sst-aws-cdk/lib/api/hotswap-deployments.js";
+import { ToolkitInfo } from "sst-aws-cdk/lib/api/toolkit-info.js";
 import {
   changeSetHasNoChanges,
   CloudFormationStack,
@@ -24,12 +23,13 @@ import {
   ParameterValues,
   ParameterChanges,
   ResourcesToImport,
-} from "aws-cdk/lib/api/util/cloudformation.js";
+} from "sst-aws-cdk/lib/api/util/cloudformation.js";
 import {
   // StackActivityMonitor,
   StackActivityProgress,
-} from "aws-cdk/lib/api/util/cloudformation/stack-activity-monitor.js";
+} from "sst-aws-cdk/lib/api/util/cloudformation/stack-activity-monitor.js";
 import { blue } from "colorette";
+import { callWithRetry } from "./util.js";
 
 type TemplateBodyParameter = {
   TemplateBody?: string;
@@ -259,7 +259,9 @@ export async function deployStack(
   options.sdk.appendCustomUserAgent(options.extraUserAgent);
   const cfn = options.sdk.cloudFormation();
   const deployName = options.deployName || stackArtifact.stackName;
-  let cloudFormationStack = await CloudFormationStack.lookup(cfn, deployName);
+  let cloudFormationStack = await callWithRetry(() =>
+    CloudFormationStack.lookup(cfn, deployName)
+  );
 
   if (cloudFormationStack.stackStatus.isCreationFailure) {
     debug(

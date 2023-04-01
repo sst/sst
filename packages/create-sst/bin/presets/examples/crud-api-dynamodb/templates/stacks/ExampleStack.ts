@@ -27,9 +27,6 @@ export function ExampleStack({ stack }: StackContext) {
     },
   });
 
-  // Allow the API to access the table
-  api.attachPermissions([table]);
-
   // Show the API endpoint in the output
   stack.addOutputs({
     ApiEndpoint: api.url,

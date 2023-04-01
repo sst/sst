@@ -14,11 +14,11 @@ To do that, let's update the query in the article page.
 
 <ChangeText>
 
-In `web/src/pages/Article.tsx`, replace the `useTypedQuery` with:
+In `packages/web/src/pages/Article.tsx`, replace the `useTypedQuery` with:
 
 </ChangeText>
 
-```ts title="web/src/pages/Article.tsx" {1-3,12-15,19}
+```ts title="packages/web/src/pages/Article.tsx" {1-3,12-15,19}
 // Handle empty document cache
 // https://formidable.com/open-source/urql/docs/basics/document-caching/#adding-typenames
 const context = useMemo(() => ({ additionalTypenames: ["Comment"] }), []);
@@ -74,7 +74,7 @@ Add this below the `useTypedQuery`.
 
 </ChangeText>
 
-```ts title="web/src/pages/Article.tsx"
+```ts title="packages/web/src/pages/Article.tsx"
 const [result, addComment] = useTypedMutation((opts: CommentForm) => ({
   addComment: [
     {
@@ -94,11 +94,11 @@ This query takes two arguments; `text` and `articleID`. This will be sent when t
 
 <ChangeText>
 
-Add this below all of our imports at the top of `web/pages/Article.tsx`.
+Add this below all of our imports at the top of `packages/web/pages/Article.tsx`.
 
 </ChangeText>
 
-```ts title="web/src/pages/Article.tsx"
+```ts title="packages/web/src/pages/Article.tsx"
 interface CommentForm {
   text: string;
   articleID: string;
@@ -117,7 +117,7 @@ Add this below the HTML `<p>...</p>` component in the `return` statement.
 
 </ChangeText>
 
-```tsx title="web/src/pages/Article.tsx"
+```tsx title="packages/web/src/pages/Article.tsx"
 <ol className={styles.comments}>
   {article.data.article.comments?.map((comment) => (
     <li key={comment.id} className={styles.comment}>
@@ -141,7 +141,7 @@ Add this below the `<ol>...</ol>` component that we just added.
 
 </ChangeText>
 
-```tsx title="web/src/pages/Article.tsx"
+```tsx title="packages/web/src/pages/Article.tsx"
 <form
   className={styles.form}
   onSubmit={async (e) => {
@@ -180,11 +180,11 @@ Let's import this `Button` component and a couple of other things.
 
 <ChangeText>
 
-Replace the `useTypedQuery` import in `web/pages/Article.tsx` with this:
+Replace the `useTypedQuery` import in `packages/web/pages/Article.tsx` with this:
 
 </ChangeText>
 
-```ts title="web/src/pages/Article.tsx"
+```ts title="packages/web/src/pages/Article.tsx"
 import { useMemo } from "react";
 import { useTypedQuery, useTypedMutation } from "@my-sst-app/graphql/urql";
 import Button from "../components/Button";
@@ -198,47 +198,35 @@ Our components also need some styles, let's add that next.
 
 <ChangeText>
 
-Add the following at the end of `web/pages/Article.css.ts`.
+Add the following at the end of `packages/web/pages/Article.module.css`.
 
 </ChangeText>
 
-```ts title="web/src/pages/Article.css.ts"
-export const comments = style({
-  padding: 0,
-  margin: "1rem 0 0",
-  listStyle: "none",
-});
+```css title="packages/web/src/pages/Article.module.css"
+.comments {
+  padding: 0;
+  margin: 1rem 0 0;
+  list-style: none;
+}
 
-export const comment = style({
-  padding: "0.75rem 0",
-  borderBottom: `1px solid ${vars.colors.divider}`,
-});
+.comment {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--color-divider);
+}
 
-export const form = style({
-  marginTop: "1rem",
-});
+.form {
+  margin-top: 1rem;
+}
 
-export const field = style({
-  width: "100%",
-  display: "block",
-  maxWidth: "600px",
-});
+.field {
+  width: 100%;
+  display: block;
+  max-width: 600px;
+}
 
-export const button = style({
-  marginTop: "1rem",
-});
-```
-
-We also need to import the `vars` for our styles.
-
-<ChangeText>
-
-Add this to the imports of `web/src/pages/Article.css.ts`.
-
-</ChangeText>
-
-```ts title="web/src/pages/Article.css.ts"
-import { vars } from "../vars.css";
+.button {
+  margin-top: 1rem;
+}
 ```
 
 Now if you refresh the app, and head over to an article page, you'll see the comment form.

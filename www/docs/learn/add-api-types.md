@@ -24,11 +24,11 @@ You can read more about this over on the [Pothos docs](https://pothos-graphql.de
 
 In the last chapter, we looked at how our GraphQL setup is wired up.
 
-If you recall, we build our GraphQL schema in Pothos using a [`SchemaBuilder`](https://pothos-graphql.dev/docs/guide/schema-builder). These GraphQL types are stored in `services/functions/graphql/types/`.
+If you recall, we build our GraphQL schema in Pothos using a [`SchemaBuilder`](https://pothos-graphql.dev/docs/guide/schema-builder). These GraphQL types are stored in `packages/functions/src/graphql/types/`.
 
 </details>
 
-Currently we define the GraphQL schema for our _article_ in `services/functions/graphql/types/article.ts`. We do three things there — define a type, add a query, and define a mutation.
+Currently we define the GraphQL schema for our _article_ in `packages/functions/src/graphql/types/article.ts`. We do three things there — define a type, add a query, and define a mutation.
 
 In this chapter we'll look at how to define the types. While in the [next chapter](queries-and-mutations.md), we'll look at queries and mutations.
 
@@ -38,9 +38,9 @@ Let's start by looking at what we have so far.
 
 ## Defining types
 
-If you open up `services/functions/graphql/types/article.ts`, you'll see that we've defined a type for our article.
+If you open up `packages/functions/src/graphql/types/article.ts`, you'll see that we've defined a type for our article.
 
-```ts title="services/functions/graphql/types/article.ts"
+```ts title="packages/functions/src/graphql/types/article.ts"
 const ArticleType = builder.objectRef<SQL.Row["article"]>("Article").implement({
   fields: (t) => ({
     id: t.exposeID("articleID"),
@@ -61,17 +61,17 @@ Let's look at what's going on here:
 <details>
 <summary>Behind the scenes</summary>
 
-The `SQL.Row["article"]` is the type for our `article` table. This is defined in `services/core/sql.ts`.
+The `SQL.Row["article"]` is the type for our `article` table. This is defined in `packages/core/src/sql.ts`.
 
-```ts title="services/core/sql.ts"
+```ts title="packages/core/src/sql.ts"
 export type Row = {
   [Key in keyof Database]: Selectable<Database[Key]>;
 };
 ```
 
-Where the `Database[Key]` is coming from `services/core/sql.generated.ts`, and each key is the type for each table.
+Where the `Database[Key]` is coming from `packages/core/src/sql.generated.ts`, and each key is the type for each table.
 
-The types in `services/core/sql.generated.ts` are auto-generated when we run our migrations. We talked about this back in the [Write to the Database](write-to-the-database.md) chapter.
+The types in `packages/core/src/sql.generated.ts` are auto-generated when we run our migrations. We talked about this back in the [Write to the Database](write-to-the-database.md) chapter.
 
 </details>
 
@@ -83,11 +83,11 @@ Let's add a new `Comment` type for our comments feature.
 
 <ChangeText>
 
-In `services/functions/graphql/types/article.ts`, add the following above the `ArticleType`.
+In `packages/functions/src/graphql/types/article.ts`, add the following above the `ArticleType`.
 
 </ChangeText>
 
-```ts title="services/functions/graphql/types/article.ts"
+```ts title="packages/functions/src/graphql/types/article.ts"
 const CommentType = builder.objectRef<SQL.Row["comment"]>("Comment").implement({
   fields: (t) => ({
     id: t.exposeID("commentID"),
@@ -112,11 +112,11 @@ A _resolver_ is a function that does an action; it either reads or writes some d
 
 <ChangeText>
 
-Add a `comments` field to the `ArticleType` in `services/functions/graphql/types/article.ts`.
+Add a `comments` field to the `ArticleType` in `packages/functions/src/graphql/types/article.ts`.
 
 </ChangeText>
 
-```ts {6-9} title="services/functions/graphql/types/article.ts"
+```ts {6-9} title="packages/functions/src/graphql/types/article.ts"
 const ArticleType = builder.objectRef<SQL.Row["article"]>("Article").implement({
   fields: (t) => ({
     id: t.exposeID("articleID"),
@@ -134,7 +134,7 @@ Here we are:
 
 - Using the `Comment` type from above and defining a resolver.
 - The resolver function takes an `article` object.
-- It grabs the `articleID` from it and calls the `Article.comments()` domain function in `services/core/article.ts`. We implemented this back in the [Write to the Database](write-to-the-database.md) chapter.
+- It grabs the `articleID` from it and calls the `Article.comments()` domain function in `packages/core/src/article.ts`. We implemented this back in the [Write to the Database](write-to-the-database.md) chapter.
 
 ---
 

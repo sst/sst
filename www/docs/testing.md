@@ -130,6 +130,8 @@ We can rewrite the above test so that instead of calling `Article.create()`, you
 To call the GraphQL API in our test, we need to know the API's URL. We create a [`Parameter`](config.md#parameters) in `stacks/Api.ts`:
 
 ```ts title="stacks/Api.ts"
+import { Config } from "sst/constructs";
+
 new Config.Parameter(stack, "API_URL", {
   value: api.url,
 });
@@ -189,12 +191,14 @@ Create a new file at `stacks/test/Database.test.ts`:
 ```ts
 import { it } from "vitest";
 import { Template } from "aws-cdk-lib/assertions";
+import { initProject } from "sst/project";
 import { App, getStack } from "sst/constructs";
 import { Database } from "../Database";
 
 it("point-in-time recovery is enabled", async () => {
+  await initProject({});
+  const app = new App({ mode: "deploy" });
   // Create the Database stack
-  const app = new App();
   app.stack(Database);
 
   // Get the CloudFormation template of the stack

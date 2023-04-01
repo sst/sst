@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "sst-env -- next dev",
+    "dev": "sst bind next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -15,7 +15,6 @@
     "react-dom": "17.0.2"
   },
   "devDependencies": {
-    "@serverless-stack/static-site-env": "^0.43.2",
     "eslint": "7.32.0",
     "eslint-config-next": "11.1.2"
   }

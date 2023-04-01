@@ -57,6 +57,7 @@ export const useRuntimeWorkers = Context.memo(async () => {
       functionID: evt.properties.functionID,
       workerID: evt.properties.workerID,
     });
+    lastRequestId.set(evt.properties.workerID, evt.properties.requestID);
     let worker = workers.get(evt.properties.workerID);
     if (worker) return;
     const props = useFunctions().fromID(evt.properties.functionID);
@@ -64,7 +65,6 @@ export const useRuntimeWorkers = Context.memo(async () => {
     if (!handler) return;
     const build = await builder.artifact(evt.properties.functionID);
     if (!build) return;
-    lastRequestId.set(evt.properties.workerID, evt.properties.requestID);
     await handler.startWorker({
       ...build,
       workerID: evt.properties.workerID,
@@ -88,9 +88,6 @@ export const useRuntimeWorkers = Context.memo(async () => {
     getCurrentRequestID(workerID: string) {
       return lastRequestId.get(workerID);
     },
-    setCurrentRequestID(workerID: string, requestID: string) {
-      lastRequestId.set(workerID, requestID);
-    },
     stdout(workerID: string, message: string) {
       const worker = workers.get(workerID)!;
       bus.publish("worker.stdout", {
@@ -103,6 +100,7 @@ export const useRuntimeWorkers = Context.memo(async () => {
       const existing = workers.get(workerID);
       if (!existing) return;
       workers.delete(workerID);
+      lastRequestId.delete(workerID);
       bus.publish("worker.exited", existing);
     },
     subscribe: bus.forward(

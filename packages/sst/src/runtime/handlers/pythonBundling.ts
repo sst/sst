@@ -98,14 +98,6 @@ export function bundle(options: BundlingOptions & { out: string }) {
     stagedir
   );
 
-  const depsCommand = chain([
-    hasDeps || hasInstallCommands
-      ? `rsync -r ${BUNDLER_DEPENDENCIES_CACHE}/. ${AssetStaging.BUNDLING_OUTPUT_DIR}/${outputPathSuffix}`
-      : "",
-    `rsync -r . ${AssetStaging.BUNDLING_OUTPUT_DIR}/${outputPathSuffix}`,
-  ]);
-  console.log("Commands", depsCommand);
-
   // Determine which dockerfile to use. When dependencies are present, we use a
   // Dockerfile that can create a cacheable layer. We can't use this Dockerfile
   // if there aren't dependencies or the Dockerfile will complain about missing
@@ -128,19 +120,17 @@ export function bundle(options: BundlingOptions & { out: string }) {
     },
     file: dockerfile,
   });
-  image.run({
-    command: ["bash", "-c", depsCommand],
-    workingDirectory: AssetStaging.BUNDLING_INPUT_DIR,
-    volumes: [
-      {
-        hostPath: entry,
-        containerPath: AssetStaging.BUNDLING_INPUT_DIR,
-      },
-      {
-        hostPath: options.out,
-        containerPath: AssetStaging.BUNDLING_OUTPUT_DIR,
-      },
-    ],
+
+  const outputPath = path.join(options.out, outputPathSuffix);
+
+  // Copy dependencies to the bundle if applicable.
+  if (hasDeps || hasInstallCommands) {
+    image.cp(`${BUNDLER_DEPENDENCIES_CACHE}/.`, outputPath);
+  }
+
+  // Copy source code to the bundle.
+  fs.cpSync(entry, outputPath, {
+    recursive: true,
   });
 }
 
@@ -177,8 +167,4 @@ function stageInstallCommands(
   }
 
   return found;
-}
-
-function chain(commands: string[]): string {
-  return commands.filter((c) => !!c).join(" && ");
 }

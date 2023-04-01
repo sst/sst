@@ -1,6 +1,6 @@
 import { Kysely } from "kysely";
 import { DataApiDialect } from "kysely-data-api";
-import RDSDataService from "aws-sdk/clients/rdsdataservice.js";
+import { RDSData } from "@aws-sdk/client-rds-data";
 import * as fs from "fs/promises";
 import {
   ColumnMetadata,
@@ -8,6 +8,7 @@ import {
   EnumCollection,
   ExportStatementNode,
   PostgresDialect,
+  MysqlDialect,
   Serializer,
   Transformer,
 } from "kysely-codegen";
@@ -17,6 +18,7 @@ import { useProject } from "../../../project.js";
 import { FunctionMetadata, RDSMetadata } from "../../../constructs/Metadata.js";
 import { Logger } from "../../../logger.js";
 import {
+  useAWSClient,
   useAWSCredentials,
   useAWSCredentialsProvider,
 } from "../../../credentials.js";
@@ -36,12 +38,10 @@ interface Database {
 export const useKyselyTypeGenerator = Context.memo(async () => {
   let databases: Database[] = [];
   const bus = useBus();
-  const project = useProject();
 
   async function generate(db: Database) {
     if (!db.types) return;
     Logger.debug("Generating types for", db.migratorID);
-    const credentials = await useAWSCredentials();
 
     const k = new Kysely<Database>({
       dialect: new DataApiDialect({
@@ -50,10 +50,7 @@ export const useKyselyTypeGenerator = Context.memo(async () => {
           secretArn: db.secretArn,
           resourceArn: db.clusterArn,
           database: db.defaultDatabaseName,
-          client: new RDSDataService({
-            region: project.config.region,
-            credentials,
-          }),
+          client: useAWSClient(RDSData),
         },
       }),
     });
@@ -80,8 +77,11 @@ export const useKyselyTypeGenerator = Context.memo(async () => {
         }));
 
     const transformer = new Transformer();
+    const Dialect = db.engine.includes("postgres")
+      ? new PostgresDialect()
+      : new MysqlDialect();
     const nodes = transformer.transform({
-      dialect: new PostgresDialect(),
+      dialect: Dialect,
       camelCase: (db.types.camelCase as any) === true,
       metadata: new DatabaseMetadata(metadata, new EnumCollection()),
     });
@@ -116,7 +116,7 @@ export const useKyselyTypeGenerator = Context.memo(async () => {
         defaultDatabaseName: c.data.defaultDatabaseName,
         secretArn: c.data.secretArn,
       }));
-    databases.map((db) => generate(db));
+    databases.map((db) => generate(db).catch(() => {}));
   });
 
   bus.subscribe("function.success", async (evt) => {
@@ -125,7 +125,7 @@ export const useKyselyTypeGenerator = Context.memo(async () => {
       (db) => db.migratorID === evt.properties.functionID
     );
     if (!db) return;
-    generate(db);
+    generate(db).catch(() => {});
   });
   Logger.debug("Loaded kyseley type generator");
 });
