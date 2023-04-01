@@ -47,7 +47,7 @@ _Parameters_
 
 Attaches auth construct to an API
 ```js
-const api = new Auth(stack, "Api", {});
+const api = new Api(stack, "Api", {});
 const auth = new Auth(stack, "Auth", {
   authenticator: "functions/authenticator.handler"
 })
@@ -62,7 +62,7 @@ _Type_ : <span class="mono">[Api](Api#api)</span>
 
 The API to attach auth routes to
 ```js
-const api = new Auth(stack, "Api", {});
+const api = new Api(stack, "Api", {});
 const auth = new Auth(stack, "Auth", {
   authenticator: "functions/authenticator.handler"
 })
@@ -76,7 +76,7 @@ _Type_ : <span class="mono">string</span>
 
 Optionally specify the prefix to mount authentication routes
 ```js
-const api = new Auth(stack, "Api", {});
+const api = new Api(stack, "Api", {});
 const auth = new Auth(stack, "Auth", {
   authenticator: "functions/authenticator.handler"
 })
