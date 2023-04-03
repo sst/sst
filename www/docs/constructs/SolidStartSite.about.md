@@ -10,117 +10,133 @@ The `SolidStartSite` construct is a higher level CDK construct that makes it eas
 
 1. If you are creating a new SolidStart app, create a `my-solid-start-app` folder at the root of your SST app.
 
-Then run `create-solid` from the `my-solid-start-app` folder.
+   Then run `create-solid` from the `my-solid-start-app` folder.
 
-```bash
-npx create-solid@latest
-```
+   ```bash
+   npx create-solid@latest
+   ```
 
-And make sure to enable `Server Side Rendering`.
+   And make sure to enable `Server Side Rendering`.
 
-![Select SolidStart App template](/img/solid-start/bootstrap-solid-start.png)
+   ![Select SolidStart App template](/img/solid-start/bootstrap-solid-start.png)
 
-After the SolidStart app is created, your SST app structure should look like:
+   After the SolidStart app is created, your SST app structure should look like:
 
-```bash
-my-sst-app
-├─ sst.json
-├─ services
-├─ stacks
-└─ my-solid-start-app     <-- new SolidStart app
-   ├─ src
-   ├─ public
-   └─ vite.config.ts
-```
+   ```bash
+   my-sst-app
+   ├─ sst.config.ts
+   ├─ services
+   ├─ stacks
+   └─ my-solid-start-app     <-- new SolidStart app
+      ├─ src
+      ├─ public
+      └─ vite.config.ts
+   ```
 
-Continue to step 3.
+   Continue to step 3.
 
 2. Alternatively, if you have an existing SolidStart app, move the app to the root of your SST app. Your SST app structure should look like:
 
-```bash
-my-sst-app
-├─ sst.json
-├─ services
-├─ stacks
-└─ my-solid-start-app     <-- your SolidStart app
-   ├─ src
-   ├─ public
-   └─ vite.config.ts
-```
+   ```bash
+   my-sst-app
+   ├─ sst.config.ts
+   ├─ services
+   ├─ stacks
+   └─ my-solid-start-app     <-- your SolidStart app
+      ├─ src
+      ├─ public
+      └─ vite.config.ts
+   ```
 
 3. Let's set up the [`solid-start-sst` adapter](https://www.npmjs.com/package/solid-start-sst) for your SolidStart app. The adapter will transform the SSR functions to a format that can be deployed to AWS. To do that, make sure your `vite.config.ts` looks like the following.
 
-```ts
-import solid from "solid-start/vite";
-import aws from "solid-start-sst";
-import { defineConfig } from "vite";
+   ```ts
+   import solid from "solid-start/vite";
+   import aws from "solid-start-sst";
+   import { defineConfig } from "vite";
 
-export default defineConfig({
-  plugins: [solid({ adapter: aws() })],
-});
-```
+   export default defineConfig({
+     plugins: [solid({ adapter: aws() })],
+   });
+   ```
 
-And add the `solid-start-sst` dependency to your SolidStart app's `package.json`.
+   And add the `solid-start-sst` dependency to your SolidStart app's `package.json`.
 
-```bash
-npm install --save-dev solid-start-sst
-```
+   ```bash
+   npm install --save-dev solid-start-sst
+   ```
 
-:::info
-If you are deploying the `SolidStartSite` in the `edge` mode, use the edge adapter instead.
+   :::info
+   If you are deploying the `SolidStartSite` in the `edge` mode, use the edge adapter instead.
 
-```diff
-- plugins: [solid({ adapter: aws() })],
-+ plugins: [solid({ adapter: aws({ edge: true }) })],
-```
+   ```diff
+   - plugins: [solid({ adapter: aws() })],
+   + plugins: [solid({ adapter: aws({ edge: true }) })],
+   ```
 
-:::
+   :::
 
-4. Also add the `sst env` command to your SolidStart app's `package.json`. `sst env` enables you to [automatically set the environment variables](#environment-variables) for your SolidStart app directly from the outputs in your SST app.
+4. Also add the `sst bind` command to your SolidStart app's `package.json`. `sst env` enables you to [automatically set the environment variables](#environment-variables) for your SolidStart app directly from the outputs in your SST app.
 
-```diff
-  "scripts": {
--   "dev": "solid-start dev",
-+   "dev": "sst env solid-start dev",
-    "build": "solid-start build",
-    "start": "solid-start start"
-  },
-```
+   ```diff
+     "scripts": {
+   -   "dev": "solid-start dev",
+   +   "dev": "sst bind solid-start dev",
+       "build": "solid-start build",
+       "start": "solid-start start"
+     },
+   ```
 
 5. Add the `SolidStartSite` construct to an existing stack in your SST app. You can also create a new stack for the app.
 
-```ts
-import { SolidStartSite, StackContext } as sst from "sst/constructs";
+   ```ts
+   import { SolidStartSite, StackContext } as sst from "sst/constructs";
 
-export default function MyStack({ stack }: StackContext) {
+   export default function MyStack({ stack }: StackContext) {
 
-  // ... existing constructs
+     // ... existing constructs
 
-  // Create the SolidStart site
-  const site = new SolidStartSite(stack, "Site", {
-    path: "my-solid-start-app/",
-  });
+     // Create the SolidStart site
+     const site = new SolidStartSite(stack, "Site", {
+       path: "my-solid-start-app/",
+     });
 
-  // Add the site's URL to stack output
-  stack.addOutputs({
-    URL: site.url || "localhost",
-  });
-}
-```
+     // Add the site's URL to stack output
+     stack.addOutputs({
+       URL: site.url || "localhost",
+     });
+   }
+   ```
 
-When you are building your SST app, `SolidStartSite` will invoke `npm build` inside the SolidStart app directory. Make sure `path` is pointing to the your SolidStart app.
+   When you are building your SST app, `SolidStartSite` will invoke `npm build` inside the SolidStart app directory. Make sure `path` is pointing to the your SolidStart app.
 
-We also added the site's URL to the stack output. After the deploy succeeds, the URL will be printed out in the terminal. Note that during development, the site is not deployed. You should run the site locally. In this case, `site.url` is `undefined`. [Read more about how environment variables work during development](#while-developing).
+   We also added the site's URL to the stack output. After the deploy succeeds, the URL will be printed out in the terminal.
 
-:::tip
-The site is not deployed when running `sst dev`. [Run the site locally while developing.](#while-developing)
+## Working locally
+
+To work on your SolidStart app locally with SST:
+
+1. Start SST in your project root.
+
+   ```bash
+   npx sst dev
+   ```
+
+2. Then start your SolidStart app. This should run `sst bind remix dev`.
+
+   ```bash
+   npm run dev
+   ```
+
+:::note
+When running `sst dev`, SST does not deploy your SolidStart app. It's meant to be run locally.
 :::
 
 ## Single region vs edge
 
 There are two ways you can deploy the SolidStart app to your AWS account.
 
-By default, the SolidStart app server is deployed to a single region defined in your `sst.json` or passed in via the `--region` flag. Alternatively, you can choose to deploy to the edge. When deployed to the edge, loaders/actions are running on edge location that is physically closer to the end user. In this case, the app server is deployed to AWS Lambda@Edge.
+By default, the SolidStart app server is deployed to a single region defined in your `sst.config.ts` or passed in via the `--region` flag. Alternatively, you can choose to deploy to the edge. When deployed to the edge, loaders/actions are running on edge location that is physically closer to the end user. In this case, the app server is deployed to AWS Lambda@Edge.
 
 You can enable edge like this:
 
@@ -234,11 +250,11 @@ To use these values while developing, run `sst dev` to start the [Live Lambda De
 npx sst dev
 ```
 
-Then in your SolidStart app to reference these variables, add the [`sst env`](../packages/sst.md#sst-env) command.
+Then in your SolidStart app to reference these variables, add the [`sst bind`](../packages/sst.md#sst-env) command.
 
 ```json title="package.json" {2}
 "scripts": {
-  "dev": "sst env solid-start dev",
+  "dev": "sst bind solid-start dev",
   "build": "solid-start build",
   "start": "solid-start start"
 },
@@ -253,16 +269,16 @@ npm run dev
 There are a couple of things happening behind the scenes here:
 
 1. The `sst dev` command generates a file with the values specified by the `SolidStartSite` construct's `environment` prop.
-2. The `sst env` CLI will traverse up the directories to look for the root of your SST app.
+2. The `sst bind` CLI will traverse up the directories to look for the root of your SST app.
 3. It'll then find the file that's generated in step 1.
 4. It'll load these as environment variables before running the start command.
 
 :::note
-`sst env` only works if the SolidStart app is located inside the SST app or inside one of its subdirectories. For example:
+`sst bind` only works if the SolidStart app is located inside the SST app or inside one of its subdirectories. For example:
 
 ```
 /
-  sst.json
+  sst.config.ts
   my-solid-start-app/
 ```
 
