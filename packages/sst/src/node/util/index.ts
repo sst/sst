@@ -14,7 +14,9 @@ const ssm = new SSMClient({ region: process.env.SST_REGION });
 //   }
 // }
 let allVariables: Record<string, Record<string, Record<string, string>>> = {};
-await parseEnvironment();
+// NOTE: top level await must be assigned to a variable, otherwise it would
+//       throw a top level await error.
+const env = await parseEnvironment();
 
 interface Variable {
   constructName: string;
