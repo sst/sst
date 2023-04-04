@@ -9,7 +9,7 @@ For Lambda functions with Node.js runtimes, SST will automatically generate sour
 
 You can enable the use of source maps by setting `--enable-source-maps` in the `NODE_OPTIONS` environment variable.
 
-```js {4}
+```js {4,6-8}
 new Function(stack, "MyFunction", {
   handler: "src/lambda.main",
   environment: {
@@ -23,7 +23,7 @@ new Function(stack, "MyFunction", {
 
 Alternatively, you can also enable source maps for all the functions in your app.
 
-```js title="sst.config.ts" {4}
+```js title="sst.config.ts" {8,10-12}
 export default {
   config() {
     // Config
