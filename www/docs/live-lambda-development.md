@@ -275,6 +275,10 @@ You can also set breakpoints and debug your Lambda functions locally with [WebSt
   <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/_cLM_0On_Cc" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
+:::note
+In some versions of WebStorm you might need to disable stepping through library scripts. You can do this by heading to **Preferences** > **Build, Execution, Deployment** > **Debugger** > **Stepping** > unchecking **Do not step into library scripts**.
+:::
+
 ---
 
 ## Debugging with IntelliJ IDEA
