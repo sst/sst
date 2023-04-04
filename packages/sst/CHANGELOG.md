@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.3.7
+
+### Patch Changes
+
+- [#2730](https://github.com/serverless-stack/sst/pull/2730) [`80312d49c`](https://github.com/serverless-stack/sst/commit/80312d49c6cc62a4f03dcab5f4e57259eb1ba5ef) Thanks [@justindra](https://github.com/justindra)! - Added Facebook Adapter into future auth
+
+- [`25ea7eff8`](https://github.com/serverless-stack/sst/commit/25ea7eff864e89fb14fbe0f3763bad959eae6ad5) Thanks [@thdxr](https://github.com/thdxr)! - Export issue from auth
+
 ## 2.3.6
 
 ### Patch Changes
