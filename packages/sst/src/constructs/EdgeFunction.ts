@@ -2,6 +2,7 @@ import fs from "fs";
 import url from "url";
 import path from "path";
 import crypto from "crypto";
+import spawn from "cross-spawn";
 import { Construct, IConstruct } from "constructs";
 import {
   Effect,
@@ -241,9 +242,31 @@ export class EdgeFunction extends Construct {
       `process.env = { ...process.env, ..."{{ _SST_FUNCTION_ENVIRONMENT_ }}" };\n${fileData}`
     );
 
+    // Note: cannot point the bundle to the `.open-next/server-function`
+    //       b/c the folder contains node_modules. And pnpm node_modules
+    //       contains symlinks. CDK cannot zip symlinks correctly.
+    //       https://github.com/aws/aws-cdk/issues/9251
+    //       We will zip the folder ourselves.
+    const outputPath = path.resolve(
+      useProject().paths.artifacts,
+      `SsrFunction-${this.node.id}-${this.node.addr}`
+    );
+    const script = path.resolve(
+      __dirname,
+      "../support/ssr-site-function-archiver.mjs"
+    );
+    const result = spawn.sync(
+      "node",
+      [script, path.join(bundle), path.join(outputPath, "server-function.zip")],
+      { stdio: "inherit" }
+    );
+    if (result.status !== 0) {
+      throw new Error(`There was a problem generating the assets package.`);
+    }
+
     // Create asset
     const asset = new Asset(this.scope, `FunctionAsset`, {
-      path: bundle,
+      path: path.join(outputPath, "server-function.zip"),
     });
 
     return { handlerFilename, asset };
