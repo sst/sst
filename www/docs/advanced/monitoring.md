@@ -19,60 +19,118 @@ Once your app has been [deployed to production](../going-to-production.md), ther
 
 ## Datadog
 
-[Datadog](https://www.datadoghq.com) offers an [End-to-end Serverless Monitoring](https://www.datadoghq.com/product/serverless-monitoring/) solution that works with Lambda functions. The best way to integrate is by using the [CDK construct](https://github.com/DataDog/datadog-cdk-constructs) they provide.
+[Datadog](https://www.datadoghq.com) offers an [End-to-end Serverless Monitoring](https://www.datadoghq.com/product/serverless-monitoring/) solution that works with Lambda functions.
 
-Start by adding it to your project.
+Datadog's solution consists of the following three distinct libraries:
+* `datadog-cdk-constructs-v2`, which provides a [CDK construct](https://github.com/DataDog/datadog-cdk-constructs) which sets up Lambda layers, environment variables, and a Lambda handler override that provides some convenient wrapping around keeping the Datadog API key in an AWS Secrets Manager Secret. This is highly recommended, although technically optional, as you could add the Lambda layers, environment variables, and the Datadog API key separately through SST if you prefer.
+* `dd-trace`, which is Datadog's [JavaScript APM tracer](https://github.com/DataDog/dd-trace-js). This is necessary if you wish to add traces to your Lambda functions.
+* `datadog-lambda-js`, which is a [Lambda-specific version of `dd-trace`](https://github.com/DataDog/datadog-lambda-js). This is necessary if you wish to add traces or custom metrics to your Lambda functions.
+
+Start by adding the libraries to your project:
 
 <MultiPackagerCode>
 <TabItem value="npm">
 
 ```bash
-npm install --save-dev datadog-cdk-constructs
+npm install --save-dev datadog-cdk-constructs-v2 dd-trace datadog-lambda-js
 ```
 
 </TabItem>
 <TabItem value="yarn">
 
 ```bash
-yarn add --dev datadog-cdk-constructs
+yarn add --dev datadog-cdk-constructs-v2 dd-trace datadog-lambda-js
 ```
 
 </TabItem>
 <TabItem value="pnpm">
 
 ```bash
-pnpm add --save-dev datadog-cdk-constructs
+pnpm add --save-dev datadog-cdk-constructs-v2 dd-trace datadog-lambda-js
 ```
-
 </TabItem>
 </MultiPackagerCode>
 
-Next, to monitor all the functions in an app, add the following at the bootom of the `main()` function in your `stacks/index.ts` file.
+Note that they are added as development dependencies. The `datadog-cdk-constructs-v2` dependency is a development dependency because it is used by SST, not by your Lambda code directly. The `dd-trace` and `datadog-lambda-js` dependencies are development dependencies so that they will not be bundled with your Lambda upon deployment, but rather be loaded from the Lambda layer provided by Datadog's CDK construct.
 
-```ts title="stacks/index.ts"
-import { Datadog } from "datadog-cdk-constructs";
-import { CfnFunction } from "aws-cdk-lib/aws-lambda";
+When you setup an AWS account to be monitored by DataDog, the process uses a CloudFormation stack to set up an API key for forwarding logs, metrics, traces, and other observability data to your DataDog account. The CloudFormation stack sets up this API key in an AWS Secrets Manager Secret, and it can be re-used by the DataDog serverless monitoring CDK construct.
 
-if (!app.local) {
-  const runDeferredBuildsBk = app.runDeferredBuilds;
-  app.runDeferredBuilds = async () => {
-    await runDeferredBuildsBk();
+To monitor all the functions in an app, add the following to your `sst.config.ts`:
 
-    // Loop through each stack in the app
-    app.node.children.forEach((stack) => {
-      if (stack instanceof sst.Stack) {
-        const datadog = new Datadog(stack, "Datadog", {
-          nodeLayerVersion: 65,
-          extensionLayerVersion: 13,
-          apiKey: "<DATADOG_API_KEY>",
-        });
+```ts title="sst.config.ts"
+import {SSTConfig} from "sst";
+import {Stack} from "sst/constructs";
+import {Datadog} from "datadog-cdk-constructs-v2";
+import {Effect, PolicyStatement} from "aws-cdk-lib/aws-iam";
 
-        // Monitor all the functions in the stack
-        datadog.addLambdaFunctions(stack.getAllFunctions());
-      }
-    });
-  };
+export default {
+    // config(_input) ommitted for the sake of brevity
+    async stacks(app) {
+        // substitute the API Key Secret ARN for the one which your DataDog Integration CloudFormation stack created
+        const datadogApiKeySecretArn = 'arn:aws:secretsmanager:us-east-1:123456789012:secret:DdApiKeySecret-abcdef123456-789ABC'
+        const enableDatadog = !app.local
+        if (enableDatadog) {
+            app.addDefaultFunctionPermissions([
+                new PolicyStatement({
+                    effect: Effect.ALLOW,
+                    actions: ['secretmanager:GetSecretValue'],
+                    resources: [datadogApiKeySecretArn]
+                })
+            ])
+        }
+
+        // add your stacks here
+        app.stack(MyStack)
+        app.stack(...)
+
+        if (enableDatadog) {
+            await app.finish()
+            app.node.children.forEach((stack) => {
+                if (stack instanceof Stack) {
+                    const datadog = new Datadog(stack, 'datadog', {
+                        // find the latest version here: https://github.com/DataDog/datadog-lambda-js/releases
+                        nodeLayerVersion: 87,
+                        // find the latest version here: https://github.com/DataDog/datadog-lambda-extension/releases
+                        extensionLayerVersion: 40,
+                        site: 'datadoghq.com'
+                        apiKeySecretArn: datadogApiKeySecretArn,
+                        env: app.stage,
+                        service: app.name,
+                        // just a recommendation, feel free to change the version per your CI/CD
+                        version: process.env.SEED_BUILD_SERVICE_SHA || process.env.GITHUB_SHA || undefined,
+                    })
+
+                    datadog.addLambdaFunctions(stack.getAllFunctions())
+                }
+            })
+        }
+    }
+} satisfies SSTConfig;
+```
+
+In each SST stack that uses `datadog-lambda-js` and/or `dd-trace`, you should exclude them from the build, so that they will be loaded from
+the Lambda layers added by the CDK construct, as follows:
+
+```ts title="stacks/MyStack.ts"
+const myFunction = new Function(stack, 'myFunction', {
+    nodejs: {
+        install: ['dd-trace', 'datadog-lambda-js']
+    }
+})
+```
+
+In each Lambda function, you should wrap your function with the handler provided by `datadog-lambda-js`, as follows:
+
+```ts title="packages/functions/src/lambda.ts"
+import {datadog} from 'datadog-lambda-js';
+
+const businessLogic = async () => {
+    // put your real logic here
+    console.log('Hello world!')
 }
+
+// this is the handler you reference in your SST/CDK Function
+export const handler = datadog(businessLogic)
 ```
 
 For more details, [check out the Datadog docs](https://docs.datadoghq.com/serverless/installation/nodejs/?tab=awscdk).
