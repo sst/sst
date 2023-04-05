@@ -1,3 +1,4 @@
+// @ts-nocheck
 export { createClient } from './createClient'
 export type { ClientOptions } from './createClient'
 export type { FieldsSelection } from './typeSelection'

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { GraphqlOperation } from './generateGraphqlOperation'
 import { GenqlError } from './error'
 

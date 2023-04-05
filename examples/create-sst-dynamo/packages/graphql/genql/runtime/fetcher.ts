@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { QueryBatcher } from './batcher'
 
 import type { ClientOptions } from './createClient'

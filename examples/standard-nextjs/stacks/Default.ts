@@ -5,6 +5,6 @@ export function Default({ stack }: StackContext) {
     path: "packages/next",
   });
   stack.addOutputs({
-    ApiEndpoint: site.url || "http://localhost:3000",
+    SiteUrl: site.url,
   });
 }

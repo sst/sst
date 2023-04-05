@@ -9,13 +9,13 @@
   "devDependencies": {
     "vitest": "^0.29.8",
     "@types/node": "^18.15.11",
-    "sst": "^2.3.5"
+    "sst": "^2.4.1"
   },
   "dependencies": {
     "ulid": "^2.3.0",
     "kysely": "^0.24.2",
     "kysely-data-api": "^0.2.0",
-    "aws-sdk": "^2.1347.0",
-    "@aws-sdk/client-rds-data": "^3.303.0"
+    "aws-sdk": "^2.1351.0",
+    "@aws-sdk/client-rds-data": "^3.306.0"
   }
 }

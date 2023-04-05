@@ -1,4 +1,5 @@
-import {
+// @ts-nocheck
+import type {
   QueryGenqlSelection,
   Query,
   MutationGenqlSelection,

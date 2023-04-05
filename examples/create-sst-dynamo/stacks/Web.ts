@@ -14,6 +14,6 @@ export function Web({ stack }: StackContext) {
   });
 
   stack.addOutputs({
-    SITE: site.url || "https://localhost:3000",
+    SITE: site.url,
   });
 }

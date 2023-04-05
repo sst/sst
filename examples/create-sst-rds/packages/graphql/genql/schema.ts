@@ -1,3 +1,4 @@
+// @ts-nocheck
 export type Scalars = {
     ID: string,
     String: string,

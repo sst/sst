@@ -49,6 +49,6 @@ export function ExampleStack({ stack, app }: StackContext) {
     ApiEndpoint: api.url,
     UserPoolId: auth.userPoolId,
     UserPoolClientId: auth.userPoolClientId,
-    SiteUrl: site.url || "http://localhost:5173",
+    SiteUrl: site.url,
   });
 }
