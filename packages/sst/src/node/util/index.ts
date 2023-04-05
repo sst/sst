@@ -115,6 +115,18 @@ async function fetchValuesFromSSM(variablesFromSsm: Variable[]) {
     const variable = parseSsmFallbackPath(item.Name!);
     storeVariable(variable, item.Value!);
   });
+
+  // Throw error if any values are missing
+  const missingSecrets = fallbackResults.invalidParams
+    .map((name) => parseSsmFallbackPath(name))
+    .filter((variable) => variable.constructName === "Secret")
+    .map((variable) => variable.constructId);
+
+  if (missingSecrets.length > 0) {
+    throw new Error(
+      `The following secrets were not found: ${missingSecrets.join(", ")}`
+    );
+  }
 }
 
 async function loadSecrets(paths: string[]) {
