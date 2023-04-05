@@ -93,9 +93,9 @@ module.exports = {
     },
     {
       Info: [
-        //"known-issues",
         "live-lambda-development",
         "console",
+        "known-issues",
         "configuring-sst",
         "upgrade-guide",
         "design-principles",
