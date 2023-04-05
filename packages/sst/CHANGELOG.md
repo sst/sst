@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.4.0
+
+### Minor Changes
+
+- [#2736](https://github.com/serverless-stack/sst/pull/2736) [`8ff508f44`](https://github.com/serverless-stack/sst/commit/8ff508f448ae1e54e39c22c90424b85bb42c253d) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: support OpenNext v0.8.0
+
+- [#2736](https://github.com/serverless-stack/sst/pull/2736) [`8ff508f44`](https://github.com/serverless-stack/sst/commit/8ff508f448ae1e54e39c22c90424b85bb42c253d) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: support edge mode
+
 ## 2.3.7
 
 ### Patch Changes
