@@ -76,7 +76,7 @@ export class NextjsSite extends SsrSite {
 
   constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
     super(scope, id, {
-      buildCommand: "npx --yes open-next@latest build",
+      buildCommand: "npx --yes open-next@0.8.0 build",
       ...props,
     });
   }
