@@ -12,21 +12,19 @@
 
 ---
 
-SST makes it easy to build modern full-stack applications on AWS.
+SST makes it easy to build modern full-stack applications on AWS. [Learn more](https://docs.sst.dev/what-is-sst).
 
 ```bash
 $ npx create-sst@latest
 ```
 
-[Take a quick tour of SST](https://docs.sst.dev/quick-start).
-
 ### Start With Your Frontend
 
 Deploy Next.js, Remix, Astro, Solid, or any static site to AWS.
 
-- [**Next.js**](https://docs.sst.dev/constructs/NextjsSite)
+- [**Next.js**](https://docs.sst.dev/start/nextjs)
 - [**Remix**](https://docs.sst.dev/constructs/RemixSite)
-- [**Astro**](https://docs.sst.dev/constructs/AstroSite)
+- [**Astro**](https://docs.sst.dev/start/astro)
 - [**Solid**](https://docs.sst.dev/constructs/SolidStartSite)
 - [**Static site**](https://docs.sst.dev/constructs/StaticSite)
 
@@ -44,10 +42,6 @@ SST gives you the full power of AWS. Making it easy to add any feature to your p
 ### Collaborate with your team
 
 Finally, you can `git push` to deploy using [_**Seed**_](https://seed.run), a service built by the team behind SST. And you can work on your apps together with your team with automatic preview environments.
-
-## Learn more
-
-To learn more, [**head over to our docs**](https://docs.sst.dev).
 
 ---
 
