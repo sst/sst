@@ -28,6 +28,7 @@
     "commander": "^9.1.0",
     "fast-json-patch": "^3.1.1",
     "inquirer": "^8.2.2",
+    "magicast": "^0.2.0",
     "node-fetch": "3.2.10",
     "ora": "^6.1.0",
     "patch-package": "^6.5.1",
