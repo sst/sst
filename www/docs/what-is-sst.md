@@ -1,6 +1,6 @@
 ---
 title: What is SST
-description: "A high-level overview of SST in plain english."
+description: "SST is a framework that makes it easy to build modern full-stack applications on AWS."
 ---
 
 import styles from "./video.module.css";
@@ -12,7 +12,7 @@ SST is a framework that makes it easy to build modern full-stack applications on
 
 </HeadlineText>
 
-Deploy a serverless Next.js, Remix, Astro, or Solid site to your AWS account and add any backend feature to it.
+Deploy a serverless Next.js, Remix, Astro, or Solid app to your AWS account and add any backend feature to it.
 
 ---
 
@@ -26,12 +26,11 @@ Start by defining, **_in code_**, the frontend you are using. SST supports the f
 
 ```ts
 new NextjsSite(stack, "site", {
-  path: "web",
   customDomain: "my-next-app.com",
 });
 ```
 
-Behind the scenes, [`NextjsSite`](constructs/NextjsSite.md) will create the infrastructure to host your serverless [Next.js](https://nextjs.org/) app on AWS. Including [Lambda functions](https://aws.amazon.com/lambda/) for SSR, [edge functions](https://aws.amazon.com/lambda/edge/) for Middleware, a [CDN](https://aws.amazon.com/cloudfront/), and an [S3 bucket](https://aws.amazon.com/s3/) for static assets.
+Behind the scenes, [`NextjsSite`](constructs/NextjsSite.md) will create the infrastructure to host your serverless [Next.js](https://nextjs.org/) app on AWS. You can also configure it with your custom domain.
 
 ---
 
@@ -41,7 +40,6 @@ Similarly there's [`RemixSite`](constructs/RemixSite.md) for [Remix](https://rem
 
 ```ts
 new RemixSite(stack, "site", {
-  path: "web",
   customDomain: "my-remix-app.com",
 });
 ```
@@ -54,7 +52,6 @@ Or the [`AstroSite`](constructs/AstroSite.md) for [Astro](https://astro.build).
 
 ```ts
 new AstroSite(stack, "site", {
-  path: "web",
   customDomain: "my-astro-app.com",
 });
 ```
@@ -67,7 +64,6 @@ And the [`SolidStartSite`](constructs/SolidStartSite.md) for [Solid](https://www
 
 ```ts
 new SolidStartSite(stack, "site", {
-  path: "web",
   customDomain: "my-solid-app.com",
 });
 ```
@@ -78,7 +74,7 @@ new SolidStartSite(stack, "site", {
 
 There's also the [`StaticSite`](constructs/StaticSite.md) for any static site builder.
 
-```ts
+```ts {3,4}
 new StaticSite(stack, "site", {
   path: "web",
   buildOutput: "dist",
@@ -97,13 +93,11 @@ The above snippets are a way of defining the features of your application in cod
 
 You can add backend features like APIs, databases, cron jobs, and more. All **without ever using the AWS Console**.
 
-Let's look at it in detail.
-
 ---
 
 #### Constructs
 
-These snippets are called [**Constructs**](constructs/index.md). They are **TypeScript** or **JavaScript** classes, where each class corresponds to a feature that can be configured through its props.
+These snippets are called [**Constructs**](constructs/index.md). They are **TypeScript** or **JavaScript** classes, where each class corresponds to a feature and it can be configured through its props.
 
 ```ts
 const site = new NextjsSite(stack, "site", {
@@ -135,19 +129,17 @@ Finally, you add all your stacks to your app in the `sst.config.ts`.
 
 ```ts title="sst.config.ts" {9}
 export default {
-  config(input) {
+  config() {
     return {
       name: "my-sst-app",
       region: "us-east-1",
-    }
+    };
   },
   stacks(app) {
     app.stack(Database).stack(Api).stack(Web);
   },
 } satisfies SSTConfig;
 ```
-
-Here we are also specifying a name for our app and the AWS region it'll be deployed to.
 
 Now let's look at how you can add the backend for your app with these constructs.
 
@@ -164,10 +156,10 @@ SST has constructs for most backend features. And you can even use any AWS servi
 For example, with the [`Api`](constructs/Api.md) construct you can define an API in a few lines.
 
 ```js
-new Api(stack, "API", {
+new Api(stack, "api", {
   routes: {
-    "GET  /notes": "services/list.main",
-    "POST /notes": "services/create.main",
+    "GET  /notes": "functions/list.main",
+    "POST /notes": "functions/create.main",
   },
 });
 ```
@@ -181,12 +173,12 @@ Behind the scenes, this creates a serverless API using [Amazon API Gateway](http
 So when a user hits the `/notes` route in your API.
 
 ```ts
-"GET /notes": "services/list.main"
+"GET /notes": "functions/list.main"
 ```
 
-The `main` function in `services/list.ts` gets executed. The API then responds with what's returned.
+The `main` function in `functions/list.ts` gets executed. The API then responds with what's returned.
 
-```ts title="services/list.ts"
+```ts title="functions/list.ts"
 export async function main() {
   return {
     statusCode: 200,
@@ -203,7 +195,7 @@ Your functions can be in **TypeScript**, **JavaScript**, **Python**, **Golang**,
 
 ### Databases
 
-You can add a serverless database to your app. Here the [`RDS`](constructs/RDS.md) construct configures a new [Amazon RDS](https://aws.amazon.com/rds/) serverless PostgreSQL cluster.
+You can add a serverless database to your app. For example, the [`RDS`](constructs/RDS.md) construct configures a new [Amazon RDS](https://aws.amazon.com/rds/) serverless PostgreSQL cluster.
 
 ```ts
 new RDS(stack, "notesDb", {
@@ -217,14 +209,24 @@ In addition to SQL databases, SST also supports [Amazon DynamoDB](constructs/Tab
 
 ---
 
+### File uploads
+
+Or create S3 buckets to support file uploads in your application.
+
+```ts
+new Bucket(stack, "public");
+```
+
+---
+
 ### Cron jobs
 
-You can add cron jobs to your application with a few lines. Here's a cron job that calls a function every minute.
+And add cron jobs to your application with a few lines. Here's a cron job that calls a function every minute.
 
 ```ts
 new Cron(stack, "cron", {
   schedule: "rate(1 minute)",
-  job: "services/cronjob.main",
+  job: "functions/cronjob.main",
 });
 ```
 
@@ -254,61 +256,28 @@ This ensures that as your app grows, you'll be able to add any feature you need.
 
 Once you've added a couple of features, SST can help you connect them together. This is great because you **won't need to hardcode** anything in your app.
 
----
+For example, you can [_bind_](resource-binding.md) an S3 bucket to your Next.js app.
 
-#### In the frontend
-
-For example, you can grab the endpoint of your API and pass it to Next.js as an environment variable.
-
-```ts {1,6}
-const api = new Api(/* ... */);
+```ts {1,5}
+const bucket = new Bucket(stack, "public");
 
 new NextjsSite(stack, "site", {
   // ...
-  environment: {
-    API_URL: api.url,
-  },
+  bind: [bucket],
 });
 ```
 
-You can then connect to your API in Next.js without hardcoding the URL.
+You can then connect to the S3 bucket in Next.js without hardcoding the bucket name.
 
-```ts {2} title="web/pages/index.tsx"
-export async function getStaticProps() {
-  const notes = await fetch(process.env.API_URL);
-  // ...
+```ts title="pages/index.tsx" {4}
+import { Bucket } from "sst/node/bucket";
+
+export async function getServerSideProps() {
+  const name = Bucket.public.bucketName;
 }
 ```
 
----
-
-#### In the backend
-
-Similarly, you can allow your backend functions to securely connect to your infrastructure, through a concept we call [Resource Binding](resource-binding.md). For example, you can _bind_ the PostgreSQL database to the API.
-
-```ts {4}
-const rds = new RDS(stack, "notesDb" /* ... */);
-const api = new Api(/* ... */);
-
-api.bind([rds]);
-```
-
-Now the functions in your API will have **type safe access** to your database.
-
-```ts {6-8} title="services/list.ts"
-import { RDS } from "sst/node/rds";
-
-export async function main() {
-  new ExecuteStatementCommand({
-    sql: "select * from notes",
-    secretArn: RDS.notesDb.secretArn,
-    resourceArn: RDS.notesDb.clusterArn,
-    database: RDS.notesDb.defaultDatabaseName,
-  });
-}
-```
-
-Behind the scenes SST also adds the required [**permissions**](https://aws.amazon.com/iam/), so only your API has access to the database.
+Behind the scenes SST also adds the required [**permissions**](https://aws.amazon.com/iam/), so only your Next.js app has access to the bucket.
 
 ---
 
@@ -316,57 +285,42 @@ Behind the scenes SST also adds the required [**permissions**](https://aws.amazo
 
 We've looked at a couple of different types of files. Let's take a step back and see what an SST app looks like in practice.
 
-SST applications are monorepo by default.
+---
+
+#### Standalone mode
+
+Running [`npm create sst`](packages/create-sst.md) generates a _standalone_ SST app. It's monorepo by default.
 
 ```
 my-sst-app
 ├─ sst.config.ts
 ├─ package.json
 ├─ packages
-│  ├─ frontend
-│  └─ functions
-├─ stacks
+│  ├─ functions
+│  ├─ core
+│  └─ web
+└─ stacks
 ```
 
-Where the `packages/frontend/` directory is your frontend, `packages/functions/` is the backend, and `stacks/` has your infrastructure definitions.
-For the frontend of your application, SST lets you deploy [**Next.js**](constructs/NextjsSite.md) and [**Remix**](constructs/RemixSite.md) apps. Or any [static website](constructs/StaticSite.md).
-
-Here for example, we are defining a [Vite](https://vitejs.dev) static site using the [`StaticSite`](constructs/StaticSite.md) construct.
-
-```ts
-new StaticSite(this, "site", {
-  path: "packages/frontend",
-  buildCommand: "npm run build",
-  buildOutput: "dist",
-  customDomain: "my-sst-app.com",
-  environment: {
-    VITE_API_URL: api.url,
-  },
-});
-```
-
-Behind the scenes, this creates a static website powered by [Amazon S3](https://aws.amazon.com/s3/) and serves it through [Amazon CloudFront](https://aws.amazon.com/cloudfront/), a CDN.
+Where you can add your frontend to the `packages/web/` directory, `packages/functions/` are for backend functions, `packages/core/` is for any shared business logic. Finally, `stacks/` has your infrastructure definitions.
 
 ---
 
-### Connect to the API
+#### Drop-in mode
 
-SST makes it easy to connect your frontend to your API by letting you share config between constructs.
+SST can also be used as a part of your frontend app. For example, if you run `npm create sst` inside a Next.js app, it'll drop a `sst.config.ts` in your project.
 
-For example, you can grab the API endpoint from the API construct and pass it to our frontend as an environment variable.
-
-```ts {1,6}
-const api = new Api(/* ... */);
-
-new StaticSite(this, "site", {
-  // ...
-  environment: {
-    VITE_API_URL: api.url,
-  },
-});
+```text {3}
+my-nextjs-app
+├─ next.config.js
+├─ sst.config.ts
+├─ package.json
+├─ public
+├─ styles
+└─ pages
 ```
 
-With SST, we **don't need to hardcode our backend config** in the frontend.
+This is great if you have a simple Next.js app and you just want to deploy it to AWS with SST.
 
 ---
 
@@ -384,11 +338,10 @@ The [`sst dev`](live-lambda-development.md) command starts a local development e
 npx sst dev
 ```
 
-Now you can start your frontend with the [`sst env`](packages/sst.md#sst-env) command. It'll connect your frontend to the backend by loading all the environment variables.
+Now you can start your frontend with the [`sst bind`](packages/sst.md#sst-bind) command and it'll connect your frontend to the backend.
 
 ```bash
-cd web
-sst env "next dev"
+sst bind next dev
 ```
 
 With this you can **make changes to your backend on AWS**, and see them **directly in your frontend**!
@@ -443,18 +396,10 @@ Or, you can get **automatic preview environments** with [**_SEED_**](https://see
 
 ---
 
-## Starters
+## Next steps
 
-To create your first SST app you can use one of our starters with the [`create-sst`](packages/create-sst.md) CLI.
-
-```bash
-npm create sst@latest
-```
-
-This will set you up with a full-stack TypeScript app with a React frontend, GraphQL API, and a PostgreSQL database.
-
-However, if you are a more advanced user, you can pick one of our minimal templates and use our constructs to build the type of app you need.
-
----
-
-To get started with SST, [**check out our tutorial**](learn/index.md).
+1. Create your first SST app
+   - [Create a standalone SST app](start/standalone.md)
+   - [Use SST with your Next.js app](start/nextjs.md)
+   - [Use SST with your Astro site](start/astro.md)
+2. Ready to dive into the details of SST? [**Check out our tutorial**](learn/index.md).
