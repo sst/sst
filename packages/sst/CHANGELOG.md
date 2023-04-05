@@ -1,5 +1,17 @@
 # @serverless-stack/cli2
 
+## 2.4.1
+
+### Patch Changes
+
+- [`5dfe3f7f5`](https://github.com/serverless-stack/sst/commit/5dfe3f7f54b191860f1de366df1a6bd23c33891d) Thanks [@fwang](https://github.com/fwang)! - sst/node: distinguish between secrets not set vs not found
+
+- [#2731](https://github.com/serverless-stack/sst/pull/2731) [`563ca24c3`](https://github.com/serverless-stack/sst/commit/563ca24c3dfa0d531c895bd03f5db948678d9911) Thanks [@khuezy](https://github.com/khuezy)! - sst/node: top level await without assignment build error
+
+- [`bdbcce1e1`](https://github.com/serverless-stack/sst/commit/bdbcce1e1bcb699c318cddb7f6808ce61fcbcd66) Thanks [@fwang](https://github.com/fwang)! - sst bind: add strict checking for solid-start in vite.config
+
+- [#2740](https://github.com/serverless-stack/sst/pull/2740) [`79b84a1cf`](https://github.com/serverless-stack/sst/commit/79b84a1cf54d7e36dc4bf7708bba0ad6e04498b3) Thanks [@Brian-Azizi](https://github.com/Brian-Azizi)! - NextjsSite: pin minor OpenNext version
+
 ## 2.4.0
 
 ### Minor Changes
