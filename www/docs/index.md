@@ -1,5 +1,5 @@
 ---
-title: SST Docs
+title: Docs
 sidebar_label: Home
 hide_table_of_contents: true
 description: "SST makes it easy to build modern full-stack applications on AWS."
@@ -22,14 +22,14 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
   <li>
     <a href={useBaseUrl("/start/standalone")}>
       <h3>Standalone</h3>
-      <p>Create and deploy a standalone SST app to AWS.</p>
+      <p>Create a standalone SST app, add any frontend to it, and deploy it to AWS.</p>
     </a>
   </li>
 </ul>
 
 <div className={styles.heading}>
   <h3>Start With Your Frontend</h3>
-  <p>Add SST to Next.js, Remix, Astro, Solid, or static site and deploy it to AWS.</p>
+  <p>Start with a Next.js, Remix, Astro, or Solid app and deploy it to AWS with SST.</p>
 </div>
 
 <ul className={styles.features}>
@@ -55,12 +55,6 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
     <a href={useBaseUrl("/constructs/SolidStartSite")}>
       <h3><img src="/img/logos/solid.svg" />Solid</h3>
       <p>Create and deploy a serverless SolidStart app to AWS with SST.</p>
-    </a>
-  </li>
-  <li>
-    <a href={useBaseUrl("/constructs/StaticSite")}>
-      <h3><img src="/img/logos/html.svg" />Static sites</h3>
-      <p>Create and deploy a serverless static site to AWS with SST.</p>
     </a>
   </li>
 </ul>
