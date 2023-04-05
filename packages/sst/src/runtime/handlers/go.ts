@@ -1,5 +1,6 @@
 import path from "path";
 import fs from "fs/promises";
+import os from "os";
 import { useRuntimeHandlers } from "../handlers.js";
 import { useRuntimeWorkers } from "../workers.js";
 import { Context } from "../../context/context.js";
@@ -61,8 +62,9 @@ export const useGoHandler = Context.memo(async () => {
       if (input.mode === "start") {
         try {
           const target = path.join(input.out, handlerName);
+          const srcPath = (os.platform() === "win32" ? src.replaceAll("\\","\\\\") : src);
           const result = await execAsync(
-            `go build -ldflags '-s -w' -o '${target}' ./${src}`,
+            `go build -ldflags "-s -w" -o "${target}" ./${srcPath}`,
             {
               cwd: project,
               env: {
@@ -78,7 +80,8 @@ export const useGoHandler = Context.memo(async () => {
       if (input.mode === "deploy") {
         try {
           const target = path.join(input.out, "bootstrap");
-          await execAsync(`go build -ldflags '-s -w' -o '${target}' ./${src}`, {
+          const srcPath = (os.platform() === "win32" ? src.replaceAll("\\","\\\\") : src);
+          await execAsync(`go build -ldflags "-s -w" -o "${target}" ./${srcPath}`, {
             cwd: project,
             env: {
               ...process.env,
@@ -87,8 +90,8 @@ export const useGoHandler = Context.memo(async () => {
               GOOS: "linux",
             },
           });
-        } catch {
-          throw new VisibleError("Failed to build");
+        } catch (ex) {
+          throw new VisibleError(`Failed to build ${ex}`);
         }
       }
 
