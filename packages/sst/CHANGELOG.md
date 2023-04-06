@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.4.3
+
+### Patch Changes
+
+- [`399c99f62`](https://github.com/serverless-stack/sst/commit/399c99f621532c9f8cb241f0cbe34f9bf202985e) Thanks [@thdxr](https://github.com/thdxr)! - Fix empty output on sst diff
+
 ## 2.4.2
 
 ### Patch Changes
