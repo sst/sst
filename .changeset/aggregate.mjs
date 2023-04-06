@@ -56,6 +56,7 @@ const notes = [
   "``` sh",
   "$ npx sst update " + version,
   "$ yarn sst update " + version,
+  "$ pnpm sst update " + version,  
   "```",
 ];
 console.log(notes.join("\n"));
