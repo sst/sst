@@ -53,7 +53,7 @@ export async function diff(
 
   // Remove trailing newline
   while (true) {
-    if (output[output.length - 1].match(/^\s*$/)) {
+    if (output[output.length - 1]?.match(/^\s*$/)) {
       output.pop();
     } else {
       break;

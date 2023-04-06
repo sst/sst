@@ -14,14 +14,9 @@ import {
 } from "kysely-codegen";
 import { Context } from "../../../context/context.js";
 import { useBus } from "../../../bus.js";
-import { useProject } from "../../../project.js";
 import { FunctionMetadata, RDSMetadata } from "../../../constructs/Metadata.js";
 import { Logger } from "../../../logger.js";
-import {
-  useAWSClient,
-  useAWSCredentials,
-  useAWSCredentialsProvider,
-} from "../../../credentials.js";
+import { useAWSClient } from "../../../credentials.js";
 
 interface Database {
   migratorID: string;
