@@ -1,5 +1,19 @@
 # @serverless-stack/cli2
 
+## 2.4.3
+
+### Patch Changes
+
+- [`399c99f62`](https://github.com/serverless-stack/sst/commit/399c99f621532c9f8cb241f0cbe34f9bf202985e) Thanks [@thdxr](https://github.com/thdxr)! - Fix empty output on sst diff
+
+## 2.4.2
+
+### Patch Changes
+
+- [#2721](https://github.com/serverless-stack/sst/pull/2721) [`6ef0bb4be`](https://github.com/serverless-stack/sst/commit/6ef0bb4be6dfdbf2ada7aa7c702010af2e2fa777) Thanks [@tmianhill](https://github.com/tmianhill)! - fix go build for Win32 #2719
+
+- [`def4665db`](https://github.com/serverless-stack/sst/commit/def4665db960a67e5cfd32115922c2bf36fdbb51) Thanks [@thdxr](https://github.com/thdxr)! - More kysely codegen logs
+
 ## 2.4.1
 
 ### Patch Changes
