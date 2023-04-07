@@ -1,6 +1,13 @@
 import type { Program } from "../program.js";
 
-const PACKAGE_MATCH = ["sst", "astro-sst", "aws-cdk", "@aws-cdk", "constructs"];
+const PACKAGE_MATCH = [
+  "sst",
+  "astro-sst",
+  "aws-cdk",
+  "@aws-cdk",
+  "constructs",
+  "solid-start-sst",
+];
 
 const FIELDS = ["dependencies", "devDependencies"];
 
