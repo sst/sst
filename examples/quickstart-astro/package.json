@@ -18,8 +18,8 @@
     "astro": "^2.2.0"
   },
   "devDependencies": {
-    "sst": "^2.4.1",
-    "astro-sst": "^2.4.1",
+    "sst": "^2.5.0",
+    "astro-sst": "^2.5.0",
     "aws-cdk-lib": "2.62.2",
     "constructs": "10.1.156"
   }

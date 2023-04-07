@@ -14,13 +14,13 @@
     "@types/node": "^18.15.11",
     "@types/react": "^18.0.33",
     "@types/react-dom": "^18.0.11",
-    "next": "^13.2.4",
+    "next": "^13.3.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "typescript": "^5.0.3"
   },
   "devDependencies": {
-    "sst": "^2.4.1",
+    "sst": "^2.5.0",
     "aws-cdk-lib": "2.62.2",
     "constructs": "10.1.156"
   }

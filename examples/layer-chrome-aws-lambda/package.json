@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "sst": "^2.4.1",
+    "sst": "^2.5.0",
     "aws-cdk-lib": "2.62.2",
     "constructs": "10.1.156",
     "typescript": "^5.0.3",
@@ -23,7 +23,7 @@
   ],
   "dependencies": {
     "chrome-aws-lambda": "^10.1.0",
-    "puppeteer": "^19.8.3",
-    "puppeteer-core": "^19.8.3"
+    "puppeteer": "^19.8.5",
+    "puppeteer-core": "^19.8.5"
   }
 }
