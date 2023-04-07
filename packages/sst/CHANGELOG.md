@@ -1,5 +1,7 @@
 # @serverless-stack/cli2
 
+## 2.5.1
+
 ## 2.5.0
 
 ### Minor Changes

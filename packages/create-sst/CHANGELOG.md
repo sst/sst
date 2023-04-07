@@ -1,5 +1,11 @@
 # create-sst
 
+## 2.5.1
+
+### Patch Changes
+
+- [`ce1305f3e`](https://github.com/serverless-stack/sst/commit/ce1305f3e8b645133bcc07f620c5e91a9271c280) Thanks [@fwang](https://github.com/fwang)! - Update CDK version in examples
+
 ## 2.5.0
 
 ## 2.4.3
