@@ -91,7 +91,12 @@ if __name__ == '__main__':
         # would fail with error ModuleNotFoundError
         sys.path.append(args.src_path)
 
-        module = import_module(args.handler_module)
+        # remove leading zeros for relative imports
+        if args.handler_module.startswith('.'):
+          module = import_module(args.handler_module[1:])
+        else: 
+          module = import_module(args.handler_module)
+
         handler = getattr(module, args.handler_name)
         result = handler(event, context)
         data = json.dumps(result, default=handleUnserializable).encode("utf-8")
