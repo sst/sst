@@ -43,29 +43,35 @@ export const useDotnetHandler = Context.memo(async () => {
     canHandle: (input) => input.startsWith("dotnet"),
     startWorker: async (input) => {
       const name = input.handler!.split(":")[0];
-      const proc = spawn(
-        `dotnet`,
+      const isMinimalApi = !input.handler.includes("::");
+      const envOptions = {
+        env: {
+          ...process.env,
+          ...input.environment,
+          IS_LOCAL: "true",
+          AWS_LAMBDA_RUNTIME_API: `localhost:${server.port}/${input.workerID}`,
+          AWS_LAMBDA_DOTNET_DEBUG_RUN_ONCE: "true",
+        },
+        cwd: input.out,
+      };
+
+      const proc = isMinimalApi ? 
+        spawn('dotnet', 
         [
-          `exec`,
-          url.fileURLToPath(
-            new URL(
-              `../../support/${BOOTSTRAP_MAP["dotnetcore3.1"]}/release/dotnet-bootstrap.dll`,
-              import.meta.url
+          url.fileURLToPath(new URL(`${input.out}/${name}.dll`, import.meta.url))
+        ], 
+        envOptions) :
+        spawn('dotnet', 
+        [
+            `exec`,
+            url.fileURLToPath(new URL(`../../support/${BOOTSTRAP_MAP["dotnetcore3.1"]}/release/dotnet-bootstrap.dll`, 
+            import.meta.url
             )
           ),
           name + ".dll",
           input.handler,
-        ],
-        {
-          env: {
-            ...process.env,
-            ...input.environment,
-            IS_LOCAL: "true",
-            AWS_LAMBDA_RUNTIME_API: `localhost:${server.port}/${input.workerID}`,
-            AWS_LAMBDA_DOTNET_DEBUG_RUN_ONCE: "true",
-          },
-          cwd: input.out,
-        }
+        ], 
+        envOptions
       );
       proc.on("exit", () => workers.exited(input.workerID));
       proc.stdout.on("data", (data: Buffer) => {
