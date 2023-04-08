@@ -4,6 +4,28 @@ The `StaticSite` construct is a higher level CDK construct that makes it easy to
 - It enables you to [configure custom domains](#custom-domains) for the website URL.
 - It also enable you to [automatically set the environment variables](#environment-variables) for your static site directly from the outputs in your SST app.
 
+## Working locally
+
+To work on your static site locally with SST:
+
+1. Start SST in your project root.
+
+   ```bash
+   npx sst dev
+   ```
+
+2. Then start your static site. With [Vite](https://vitejs.dev) for example:
+
+   ```bash
+   npm run dev
+   ```
+
+   This should run `sst bind vite`.
+
+:::note
+When running `sst dev`, SST does not deploy your static site. It's meant to be run locally.
+:::
+
 ## Custom domains
 
 You can configure the website with a custom domain hosted either on [Route 53](https://aws.amazon.com/route53/) or [externally](#configuring-externally-hosted-domain).

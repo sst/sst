@@ -13,7 +13,7 @@ export default {
       const site = new NextjsSite(stack, "site");
 
       stack.addOutputs({
-        SiteUrl: site.url || "http://localhost:3000",
+        SiteUrl: site.url,
       });
     });
   },

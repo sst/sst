@@ -314,6 +314,19 @@ The `Config` object in your Lambda function code is also typesafe and your edito
 
 ---
 
+#### Default values
+
+By default the app name and the current stage are also made available in the `Config` object as well.
+
+```ts
+import { Config } from "sst/node/config";
+
+Config.APP;
+Config.STAGE;
+```
+
+---
+
 ## Cost
 
 Secrets and Parameters are stored in AWS SSM with the _Standard Parameter type_ and _Standard Throughput_. This makes `Config` [free to use](https://aws.amazon.com/systems-manager/pricing/) in your SST apps.

@@ -1,5 +1,23 @@
 # solid-start-sst
 
+## 2.5.1
+
+## 2.5.0
+
+## 2.4.3
+
+### Patch Changes
+
+- [#2744](https://github.com/serverless-stack/sst/pull/2744) [`349a72869`](https://github.com/serverless-stack/sst/commit/349a72869841e6467aeea933b52a3ff54b5d6421) Thanks [@alistairstead](https://github.com/alistairstead)! - fix solid start globals import
+
+## 2.4.2
+
+## 2.4.1
+
+## 2.4.0
+
+## 2.3.7
+
 ## 2.3.6
 
 ## 2.3.5

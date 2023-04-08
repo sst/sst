@@ -1,3 +1,4 @@
+// @ts-nocheck
 
 export interface ExecutionResult<TData = { [key: string]: any }> {
     errors?: Array<Error>

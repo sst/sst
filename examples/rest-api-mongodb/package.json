@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "sst": "^2.3.5",
+    "sst": "^2.5.0",
     "aws-cdk-lib": "2.62.2",
     "constructs": "10.1.156",
     "typescript": "^5.0.3",
@@ -22,6 +22,6 @@
     "packages/*"
   ],
   "dependencies": {
-    "mongodb": "^5.1.0"
+    "mongodb": "^5.2.0"
   }
 }

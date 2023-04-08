@@ -4,10 +4,24 @@ import path from "path";
 import { execSync } from "child_process";
 import { applyOperation } from "fast-json-patch/index.mjs";
 import { pathToFileURL } from "url";
+import { loadFile, writeFile } from "magicast";
 
 export function extract() {
   return /** @type {const} */ ({
     type: "extract",
+  });
+}
+
+/**
+ * @param {{
+ *   file: string,
+ *   fn: (mod) => void,
+ * }} opts
+ */
+export function magicast(opts) {
+  return /** @type {const} */ ({
+    type: "magicast",
+    ...opts,
   });
 }
 
@@ -86,7 +100,7 @@ export function extend(path) {
 }
 
 /**
- * @typedef {ReturnType<typeof remove> | ReturnType<typeof patch> | ReturnType<typeof str_replace> | ReturnType<typeof install> | ReturnType<typeof extract> | ReturnType<typeof extend> | ReturnType<typeof cmd>} Step
+ * @typedef {ReturnType<typeof remove> | ReturnType<typeof patch> | ReturnType<typeof str_replace> | ReturnType<typeof install> | ReturnType<typeof extract> | ReturnType<typeof extend> | ReturnType<typeof cmd> | ReturnType<typeof magicast>} Step
  */
 
 /**
@@ -106,6 +120,12 @@ export async function execute(opts) {
 
   for (const step of steps) {
     switch (step.type) {
+      case "magicast": {
+        const file = path.join(opts.destination, step.file);
+        const mod = await loadFile(file);
+        step.fn(mod);
+        await writeFile(mod);
+      }
       case "extract": {
         const templates = path.join(source, "templates");
         const files = await listFiles(templates);

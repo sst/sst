@@ -5,12 +5,12 @@
   "dependencies": {
     "wonka": "^6.3.1",
     "@genql/runtime": "2.x",
-    "urql": "^3.0.4",
+    "urql": "^4.0.0",
     "graphql": "^16.6.0",
     "react": "^18.2.0"
   },
   "devDependencies": {
     "@genql/cli": "2.x",
-    "@types/react": "^18.0.31"
+    "@types/react": "^18.0.33"
   }
 }

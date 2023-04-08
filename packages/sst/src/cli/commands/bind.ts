@@ -7,12 +7,11 @@ import type {
   StaticSiteMetadata,
 } from "../../constructs/Metadata.js";
 
-const SITE_CONFIG = {
+const SSR_SITE_CONFIG = {
   NextjsSite: "next.config",
   AstroSite: "astro.config",
   RemixSite: "remix.config",
   SolidStartSite: "vite.config",
-  StaticSite: "vite.config",
   SlsNextjsSite: "next.config",
 };
 type BIND_REASON =
@@ -40,6 +39,7 @@ export const bind = (program: Program) =>
         const { useBus } = await import("../../bus.js");
         const { useIOT } = await import("../../iot.js");
         const { Colors } = await import("../colors.js");
+        const { Logger } = await import("../../logger.js");
 
         if (args._[0] === "env") {
           Colors.line(
@@ -55,25 +55,26 @@ export const bind = (program: Program) =>
         const bus = useBus();
         const project = useProject();
         const command = args.command?.join(" ");
-        const isFrontend = await isRunningInFrontend();
+        const isSsrSite = await isRunningInSsrSite();
         let p: ReturnType<typeof spawn> | undefined;
         let timer: ReturnType<typeof setTimeout> | undefined;
-        let metadataCache:
-          | Awaited<ReturnType<typeof getSiteMetadata>>
+        let siteConfigCache:
+          | Awaited<ReturnType<typeof parseSiteConfig>>
           | undefined;
 
         // Handle missing command
         if (!command) {
           throw new VisibleError(
             `Command is required, e.g. sst bind ${
-              isFrontend ? "next dev" : "env"
+              isSsrSite ? "next dev" : "env"
             }`
           );
         }
 
         // Bind script
         const initialMetadata = await getSiteMetadata();
-        if (!initialMetadata) {
+        if (!initialMetadata && !isSsrSite) {
+          Logger.debug("Running in script mode.");
           return await bindScript();
         }
 
@@ -87,8 +88,8 @@ export const bind = (program: Program) =>
         );
         bus.subscribe("config.secret.updated", (payload) => {
           const secretName = payload.properties.name;
-          if (metadataCache?.secrets === undefined) return;
-          if (!metadataCache.secrets.includes(secretName)) return;
+          if (siteConfigCache?.secrets === undefined) return;
+          if (!siteConfigCache.secrets.includes(secretName)) return;
 
           Colors.line(
             `\n`,
@@ -97,14 +98,20 @@ export const bind = (program: Program) =>
           bindSite("secrets_updated");
         });
 
-        async function isRunningInFrontend() {
+        async function isRunningInSsrSite() {
           const { existsAsync } = await import("../../util/fs.js");
+          const { readFile } = await import("fs/promises");
           const results = await Promise.all(
-            Object.values(SITE_CONFIG)
+            Object.values(SSR_SITE_CONFIG)
               .map((config) =>
-                [".js", ".cjs", ".mjs", ".ts"].map((ext) =>
-                  existsAsync(`${config}${ext}`)
-                )
+                [".js", ".cjs", ".mjs", ".ts"].map(async (ext) => {
+                  const exists = await existsAsync(`${config}${ext}`);
+                  if (exists && config === "vite.config") {
+                    const content = await readFile(`${config}${ext}`);
+                    return content.includes("solid-start");
+                  }
+                  return exists;
+                })
               )
               .flat()
           );
@@ -113,23 +120,27 @@ export const bind = (program: Program) =>
 
         async function bindSite(reason: BIND_REASON) {
           // Get metadata
-          const metadata = (
-            reason === "init" ? initialMetadata : await getSiteMetadata()
+          const siteMetadata = (
+            reason === "init"
+              ? initialMetadata
+              : await getSiteMetadataUntilAvailable()
           )!;
+          const siteConfig = await parseSiteConfig(siteMetadata);
 
           // Handle rebind due to metadata updated
           if (reason === "metadata_updated") {
-            if (areEnvsSame(metadata.envs, metadataCache?.envs || {})) return;
+            if (areEnvsSame(siteConfig.envs, siteConfigCache?.envs || {}))
+              return;
             Colors.line(
               `\n`,
               `SST resources have been updated. Restarting \`${command}\`...`
             );
           }
-          metadataCache = metadata;
+          siteConfigCache = siteConfig;
 
           // Assume function's role credentials
-          if (metadata.role) {
-            const credentials = await assumeSsrRole(metadata.role);
+          if (siteConfig.role) {
+            const credentials = await assumeSsrRole(siteConfig.role);
             if (credentials) {
               // refresh crecentials 1 minute before expiration
               const expireAt = credentials.Expiration!.getTime() - 60000;
@@ -143,7 +154,7 @@ export const bind = (program: Program) =>
               }, expireAt - Date.now());
 
               runCommand({
-                ...metadata.envs,
+                ...siteConfig.envs,
                 AWS_ACCESS_KEY_ID: credentials!.AccessKeyId,
                 AWS_SECRET_ACCESS_KEY: credentials!.SecretAccessKey,
                 AWS_SESSION_TOKEN: credentials!.SessionToken,
@@ -154,7 +165,7 @@ export const bind = (program: Program) =>
 
           // Fallback to use local IAM credentials
           runCommand({
-            ...metadata.envs,
+            ...siteConfig.envs,
             ...(await localIamCredentials()),
           });
         }
@@ -167,37 +178,42 @@ export const bind = (program: Program) =>
           });
         }
 
-        async function getSiteMetadata() {
-          const { metadata } = await import("../../stacks/metadata.js");
-          const { createSpinner } = await import("../spinner.js");
+        async function parseSiteConfig(
+          metadata: SlsNextjsMetadata | StaticSiteMetadata | SsrSiteMetadata
+        ) {
           const { LambdaClient, GetFunctionCommand } = await import(
             "@aws-sdk/client-lambda"
           );
           const { useAWSClient } = await import("../../credentials.js");
+
+          const isBindSupported =
+            metadata.type !== "StaticSite" && metadata.type !== "SlsNextjsSite";
+
+          // Handle StaticSite
+          if (!isBindSupported) {
+            return { envs: metadata.data.environment };
+          }
+
+          // Get function details
+          const lambda = useAWSClient(LambdaClient);
+          const { Configuration: functionConfig } = await lambda.send(
+            new GetFunctionCommand({
+              FunctionName: metadata.data.server,
+            })
+          );
+
+          return {
+            role: functionConfig?.Role!,
+            envs: functionConfig?.Environment?.Variables || {},
+            secrets: metadata.data.secrets,
+          };
+        }
+
+        async function getSiteMetadataUntilAvailable() {
+          const { createSpinner } = await import("../spinner.js");
           const spinner = createSpinner({});
           while (true) {
-            const metadataData = await metadata();
-            const data = Object.values(metadataData)
-              .flat()
-              .filter(
-                (
-                  c
-                ): c is
-                  | SsrSiteMetadata
-                  | StaticSiteMetadata
-                  | SlsNextjsMetadata => Boolean(c)
-              )
-              .filter((c) => Boolean(SITE_CONFIG[c.type]))
-              .find(
-                (c) =>
-                  path.resolve(project.paths.root, c.data.path) ===
-                  process.cwd()
-              );
-
-            // Do not retry if not running in frontend
-            if (!data && !isFrontend) {
-              return;
-            }
+            const data = await getSiteMetadata();
 
             // Handle site metadata not found
             if (!data) {
@@ -225,32 +241,36 @@ export const bind = (program: Program) =>
             }
             spinner.isSpinning && spinner.stop().clear();
 
-            // Handle StaticSite
-            if (!isBindSupported) {
-              return { envs: data.data.environment };
-            }
-
-            // Get function details
-            const lambda = useAWSClient(LambdaClient);
-            const { Configuration: functionConfig } = await lambda.send(
-              new GetFunctionCommand({
-                FunctionName: data.data.server,
-              })
-            );
-
-            return {
-              role: functionConfig?.Role!,
-              envs: functionConfig?.Environment?.Variables || {},
-              secrets: data.data.secrets,
-            };
+            return data;
           }
+        }
+
+        async function getSiteMetadata() {
+          const { metadata } = await import("../../stacks/metadata.js");
+          const metadataData = await metadata();
+          return Object.values(metadataData)
+            .flat()
+            .filter(
+              (
+                c
+              ): c is
+                | SsrSiteMetadata
+                | StaticSiteMetadata
+                | SlsNextjsMetadata => Boolean(c)
+            )
+            .filter(
+              (c) => c.type === "StaticSite" || Boolean(SSR_SITE_CONFIG[c.type])
+            )
+            .find(
+              (c) =>
+                path.resolve(project.paths.root, c.data.path) === process.cwd()
+            );
         }
 
         async function assumeSsrRole(roleArn: string) {
           const { STSClient, AssumeRoleCommand } = await import(
             "@aws-sdk/client-sts"
           );
-          const { Logger } = await import("../../logger.js");
           const { useAWSClient } = await import("../../credentials.js");
           const sts = useAWSClient(STSClient);
           const assumeRole = async (duration: number) => {
@@ -285,9 +305,7 @@ export const bind = (program: Program) =>
           }
 
           Colors.line(
-            Colors.warning(
-              `Failed to assume SSR role ${roleArn}. Falling back to using local IAM credentials.`
-            )
+            "Using local IAM credentials since `sst dev` is not running."
           );
           Logger.debug(`Failed to assume ${roleArn}.`, err);
         }

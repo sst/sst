@@ -284,7 +284,7 @@ export class SsrSite extends Construct implements SSTConstruct {
   protected props: SsrSiteNormalizedProps;
   private doNotDeploy: boolean;
   protected buildConfig: SsrBuildConfig;
-  private serverLambdaForEdge?: EdgeFunction;
+  protected serverLambdaForEdge?: EdgeFunction;
   protected serverLambdaForRegional?: CdkFunction;
   private serverLambdaForDev?: CdkFunction;
   private bucket: Bucket;
@@ -808,15 +808,15 @@ export class SsrSite extends Construct implements SSTConstruct {
       // these values can NOT be overwritten by cfDistributionProps
       domainNames: this.buildDistributionDomainNames(),
       certificate: this.certificate,
-      defaultBehavior: this.buildDistributionDefaultBehaviorForRegional(),
+      defaultBehavior: this.buildDefaultBehaviorForRegional(),
       additionalBehaviors: {
-        ...this.buildDistributionStaticFileBehaviors(s3Origin),
+        ...this.buildStaticFileBehaviors(s3Origin),
         ...(cfDistributionProps.additionalBehaviors || {}),
       },
     });
   }
 
-  private createCloudFrontDistributionForEdge(): Distribution {
+  protected createCloudFrontDistributionForEdge(): Distribution {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
     const s3Origin = new S3Origin(this.bucket);
@@ -829,9 +829,9 @@ export class SsrSite extends Construct implements SSTConstruct {
       // these values can NOT be overwritten by cfDistributionProps
       domainNames: this.buildDistributionDomainNames(),
       certificate: this.certificate,
-      defaultBehavior: this.buildDistributionDefaultBehaviorForEdge(s3Origin),
+      defaultBehavior: this.buildDefaultBehaviorForEdge(s3Origin),
       additionalBehaviors: {
-        ...this.buildDistributionStaticFileBehaviors(s3Origin),
+        ...this.buildStaticFileBehaviors(s3Origin),
         ...(cfDistributionProps.additionalBehaviors || {}),
       },
     });
@@ -857,7 +857,7 @@ export class SsrSite extends Construct implements SSTConstruct {
     return domainNames;
   }
 
-  private buildDistributionDefaultBehaviorForRegional(): BehaviorOptions {
+  protected buildDefaultBehaviorForRegional(): BehaviorOptions {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
 
@@ -872,16 +872,13 @@ export class SsrSite extends Construct implements SSTConstruct {
       allowedMethods: AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
-      cachePolicy:
-        cdk?.serverCachePolicy ?? this.createCloudFrontServerCachePolicy(),
-      originRequestPolicy: this.createCloudFrontServerOriginRequestPolicy(),
+      cachePolicy: cdk?.serverCachePolicy ?? this.buildServerCachePolicy(),
+      originRequestPolicy: this.buildServerOriginRequestPolicy(),
       ...(cfDistributionProps.defaultBehavior || {}),
     };
   }
 
-  private buildDistributionDefaultBehaviorForEdge(
-    origin: S3Origin
-  ): BehaviorOptions {
+  private buildDefaultBehaviorForEdge(origin: S3Origin): BehaviorOptions {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
 
@@ -892,11 +889,9 @@ export class SsrSite extends Construct implements SSTConstruct {
       allowedMethods: AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
-      cachePolicy:
-        cdk?.serverCachePolicy ?? this.createCloudFrontServerCachePolicy(),
-      originRequestPolicy: this.createCloudFrontServerOriginRequestPolicy(),
+      cachePolicy: cdk?.serverCachePolicy ?? this.buildServerCachePolicy(),
+      originRequestPolicy: this.buildServerOriginRequestPolicy(),
       ...(cfDistributionProps.defaultBehavior || {}),
-      // concatenate edgeLambdas
       edgeLambdas: [
         {
           includeBody: true,
@@ -924,7 +919,7 @@ function handler(event) {
     ];
   }
 
-  protected buildDistributionStaticFileBehaviors(
+  private buildStaticFileBehaviors(
     origin: S3Origin
   ): Record<string, BehaviorOptions> {
     const { cdk } = this.props;
@@ -956,7 +951,7 @@ function handler(event) {
     return staticsBehaviours;
   }
 
-  protected createCloudFrontServerCachePolicy() {
+  protected buildServerCachePolicy() {
     return new CachePolicy(this, "ServerCache", {
       queryStringBehavior: CacheQueryStringBehavior.all(),
       headerBehavior: CacheHeaderBehavior.none(),
@@ -970,7 +965,7 @@ function handler(event) {
     });
   }
 
-  protected createCloudFrontServerOriginRequestPolicy() {
+  protected buildServerOriginRequestPolicy() {
     // CloudFront's Managed-AllViewerExceptHostHeader policy
     return OriginRequestPolicy.fromOriginRequestPolicyId(
       this,

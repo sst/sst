@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type {
     CompressedType,
     CompressedTypeMap,
@@ -116,20 +117,20 @@ export const resolveConcreteTypes = (linkedTypeMap: LinkedTypeMap) => {
                                 linkedTypeMap[typeName] = { name: typeName }
                             }
 
-                            arg[0] = <LinkedType>linkedTypeMap[typeName]
+                            arg[0] = linkedTypeMap[typeName]!
                         }
                     }
                 })
             }
 
-            const typeName = <LinkedType | string>field.type
+            const typeName = field.type as LinkedType | string
 
             if (typeof typeName === 'string') {
                 if (!linkedTypeMap[typeName]) {
                     linkedTypeMap[typeName] = { name: typeName }
                 }
 
-                field.type = <LinkedType>linkedTypeMap[typeName]
+                field.type = linkedTypeMap[typeName]!
             }
         })
     })

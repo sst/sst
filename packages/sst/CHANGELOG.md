@@ -1,5 +1,55 @@
 # @serverless-stack/cli2
 
+## 2.5.1
+
+## 2.5.0
+
+### Minor Changes
+
+- [#2755](https://github.com/serverless-stack/sst/pull/2755) [`5d206930e`](https://github.com/serverless-stack/sst/commit/5d206930ef832a0a1b2fb7956239d74e03f8ff30) Thanks [@fwang](https://github.com/fwang)! - Update CDK to 2.72.1
+
+## 2.4.3
+
+### Patch Changes
+
+- [`399c99f62`](https://github.com/serverless-stack/sst/commit/399c99f621532c9f8cb241f0cbe34f9bf202985e) Thanks [@thdxr](https://github.com/thdxr)! - Fix empty output on sst diff
+
+## 2.4.2
+
+### Patch Changes
+
+- [#2721](https://github.com/serverless-stack/sst/pull/2721) [`6ef0bb4be`](https://github.com/serverless-stack/sst/commit/6ef0bb4be6dfdbf2ada7aa7c702010af2e2fa777) Thanks [@tmianhill](https://github.com/tmianhill)! - fix go build for Win32 #2719
+
+- [`def4665db`](https://github.com/serverless-stack/sst/commit/def4665db960a67e5cfd32115922c2bf36fdbb51) Thanks [@thdxr](https://github.com/thdxr)! - More kysely codegen logs
+
+## 2.4.1
+
+### Patch Changes
+
+- [`5dfe3f7f5`](https://github.com/serverless-stack/sst/commit/5dfe3f7f54b191860f1de366df1a6bd23c33891d) Thanks [@fwang](https://github.com/fwang)! - sst/node: distinguish between secrets not set vs not found
+
+- [#2731](https://github.com/serverless-stack/sst/pull/2731) [`563ca24c3`](https://github.com/serverless-stack/sst/commit/563ca24c3dfa0d531c895bd03f5db948678d9911) Thanks [@khuezy](https://github.com/khuezy)! - sst/node: top level await without assignment build error
+
+- [`bdbcce1e1`](https://github.com/serverless-stack/sst/commit/bdbcce1e1bcb699c318cddb7f6808ce61fcbcd66) Thanks [@fwang](https://github.com/fwang)! - sst bind: add strict checking for solid-start in vite.config
+
+- [#2740](https://github.com/serverless-stack/sst/pull/2740) [`79b84a1cf`](https://github.com/serverless-stack/sst/commit/79b84a1cf54d7e36dc4bf7708bba0ad6e04498b3) Thanks [@Brian-Azizi](https://github.com/Brian-Azizi)! - NextjsSite: pin minor OpenNext version
+
+## 2.4.0
+
+### Minor Changes
+
+- [#2736](https://github.com/serverless-stack/sst/pull/2736) [`8ff508f44`](https://github.com/serverless-stack/sst/commit/8ff508f448ae1e54e39c22c90424b85bb42c253d) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: support OpenNext v0.8.0
+
+- [#2736](https://github.com/serverless-stack/sst/pull/2736) [`8ff508f44`](https://github.com/serverless-stack/sst/commit/8ff508f448ae1e54e39c22c90424b85bb42c253d) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: support edge mode
+
+## 2.3.7
+
+### Patch Changes
+
+- [#2730](https://github.com/serverless-stack/sst/pull/2730) [`80312d49c`](https://github.com/serverless-stack/sst/commit/80312d49c6cc62a4f03dcab5f4e57259eb1ba5ef) Thanks [@justindra](https://github.com/justindra)! - Added Facebook Adapter into future auth
+
+- [`25ea7eff8`](https://github.com/serverless-stack/sst/commit/25ea7eff864e89fb14fbe0f3763bad959eae6ad5) Thanks [@thdxr](https://github.com/thdxr)! - Export issue from auth
+
 ## 2.3.6
 
 ### Patch Changes

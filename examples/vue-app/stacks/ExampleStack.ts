@@ -34,7 +34,7 @@ export function ExampleStack({ stack }: StackContext) {
 
   // Show the URLs in the output
   stack.addOutputs({
-    SiteUrl: site.url || "http://localhost:3000",
+    SiteUrl: site.url,
     ApiEndpoint: api.url,
   });
 }

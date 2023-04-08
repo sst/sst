@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { LinkedField, LinkedType } from './types'
 
 export interface Args {
@@ -220,5 +221,5 @@ export const getFieldFromPath = (
         current = field
     })
 
-    return <LinkedField>current
+    return current as LinkedField
 }

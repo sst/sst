@@ -20,7 +20,7 @@ export function ExampleStack({ stack }: StackContext) {
   site.attachPermissions([table]);
 
   stack.addOutputs({
-    SiteURL: site.url || "http://localhost:3000",
+    SiteURL: site.url,
     TableName: table.tableName,
   });
 }
