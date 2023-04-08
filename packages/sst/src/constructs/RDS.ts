@@ -28,7 +28,7 @@ export interface RDSProps {
   /**
    * Database engine of the cluster. Cannot be changed once set.
    */
-  engine: "mysql5.6" | "mysql5.7" | "postgresql10.14" | "postgresql11.13";
+  engine: "mysql5.6" | "mysql5.7" | "postgresql10.14" | "postgresql11.13" | "postgresql11.18" | "postgresql12.13" | "postgresql13.9"  | "postgresql14.6";
 
   /**
    * Name of a database which is automatically created inside the cluster.
