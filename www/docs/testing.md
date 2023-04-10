@@ -29,7 +29,7 @@ To start, there are 3 types of tests you can write for your SST apps:
 SST uses [Vitest](https://vitest.dev) to help you write these tests. And it uses the [`sst bind`](packages/sst.md#sst-bind) CLI to bind the resources to your tests. This allows the [`sst/node`](clients/index.md) helper library to work as if the tests were running inside a Lambda function.
 
 :::caution
-Due to [the way sst bind works](testing/index.md#how-sst-bind-works), it does not support vitest in threaded mode. We recommend disabling threads by [setting the `threads` config option](https://vitest.dev/config/#threads) to false or by using the runtime flag `--threads=false`.
+Due to [the way sst bind works](#how-sst-bind-works), it does not support vitest in threaded mode. We recommend disabling threads by [setting the `threads` config option](https://vitest.dev/config/#threads) to false or by using the runtime flag `--threads=false`.
 :::
 
 ---
