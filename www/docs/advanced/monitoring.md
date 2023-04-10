@@ -84,7 +84,7 @@ export default {
         new PolicyStatement({
           effect: Effect.ALLOW,
           resources: [datadogApiKeySecretArn]
-          actions: ["secretmanager:GetSecretValue"],
+          actions: ["secretsmanager:GetSecretValue"],
         })
       ]);
       // Exclude from the function bundle
