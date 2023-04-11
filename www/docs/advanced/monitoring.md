@@ -83,7 +83,7 @@ export default {
       app.addDefaultFunctionPermissions([
         new PolicyStatement({
           effect: Effect.ALLOW,
-          resources: [datadogApiKeySecretArn]
+          resources: [datadogApiKeySecretArn],
           actions: ["secretmanager:GetSecretValue"],
         })
       ]);
@@ -242,31 +242,74 @@ To enable Lambda monitoring, you'll need to add a layer to the functions you wan
 
 With the layer ARN, you can use the layer construct in your CDK code. To ensure the Lambda function is instrumented correctly, the function handler must be set to the handler provided by the New Relic layer. Note we only want to enable this when the function is deployed, not in [Live Lambda Dev](live-lambda-development.md) as the layer will prevent the debugger from connecting.
 
-Add the following at the bootom of the `main()` function in your `stacks/index.ts` file.
+Note: If you use NodeJS then you will probably need to use Node 18 is you plan on using ESM modules.
 
-```ts title="stacks/index.ts"
+Add the following to the top of the `stacks()` function in your `sst.config.ts` file.
+
+```ts title="sst.config.ts"
+app.setDefaultFunctionProps((stack) => {
+
+  const layers: string[] = [];
+  if (!app.local) {
+    // Find your "<ARN>" here: https://layers.newrelic-external.com/
+    // Make sure you select the correct region and version
+    const newRelicLayer = LayerVersion.fromLayerVersionArn(
+      stack,
+      "NewRelicLayer",
+      "<ARN>"
+    );
+    layers.push(newRelicLayer.layerVersionArn);
+  }
+
+  return {
+    layers: layers,
+    // And any other defaults you want to set
+  };
+});
+
+```
+
+And add the following at the bottom of the `stacks()` function in your `sst.config.ts` file.
+
+```ts title="sst.config.ts"
 import { CfnFunction, LayerVersion } from "aws-cdk-lib/aws-lambda";
 
 if (!app.local) {
-  const runDeferredBuildsBk = app.runDeferredBuilds;
-  app.runDeferredBuilds = async () => {
-    await runDeferredBuildsBk();
+  const originFinish = app.finish.bind(app);
+  app.finish = async () => {
+    await originFinish();
 
     // Loop through each stack in the app
     app.node.children.forEach((stack) => {
       if (stack instanceof sst.Stack) {
-        const newRelicLayer = LayerVersion.fromLayerVersionArn(
-          stack,
-          "NewRelicLayer",
-          "<ARN>>"
-        );
+        const policy = new PolicyStatement({
+          actions: ["secretsmanager:GetSecretValue"],
+          effect: Effect.ALLOW,
+          resources: [
+              Fn.importValue("NewRelicLicenseKeySecret-NewRelic-LicenseKeySecretARN")
+          ],
+        });
 
-        child.getAllFunctions().forEach((fn) => {
+        stack.getAllFunctions().forEach((fn) => {
           const cfnFunction = fn.node.defaultChild as CfnFunction;
           if (cfnFunction.handler) {
             fn.addEnvironment("NEW_RELIC_LAMBDA_HANDLER", cfnFunction.handler);
+            fn.addEnvironment("NEW_RELIC_ACCOUNT_ID", "YOUR_ACCOUNT_ID");
+            // If your New Relic account has a parent account, this value should be that account ID. Otherwise, just
+            // your account id.
+            fn.addEnvironment("NEW_RELIC_TRUSTED_ACCOUNT_KEY", "YOUR_ACCOUNT_ID_OR_PARENT_ACCOUNT_ID");
           }
 
+          // Give your function access to the secret containing your New Relic license key
+          // You will set this key using the `newrelic-lambda integrations install` command
+          // More info: https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring/enable-lambda-monitoring/account-linking/ 
+          fn.attachPermissions([
+            policy
+          ]);
+
+          // See #3 on the link below for the correct handler name to use based on your runtime
+          // The handler name below is for NodeJS
+          // https://github.com/newrelic/newrelic-lambda-layers#manual-instrumentation-using-layers
           cfnFunction.handler = "newrelic-lambda-wrapper.handler";
         });
       }
@@ -274,6 +317,8 @@ if (!app.local) {
   };
 }
 ```
+
+You will get an error if you try to add the layer in the bottom block of code.
 
 ---
 
