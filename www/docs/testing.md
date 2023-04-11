@@ -28,6 +28,10 @@ To start, there are 3 types of tests you can write for your SST apps:
 
 SST uses [Vitest](https://vitest.dev) to help you write these tests. And it uses the [`sst bind`](packages/sst.md#sst-bind) CLI to bind the resources to your tests. This allows the [`sst/node`](clients/index.md) helper library to work as if the tests were running inside a Lambda function.
 
+:::caution
+Due to [the way sst bind works](#how-sst-bind-works), it does not support vitest in threaded mode. We recommend disabling threads by [setting the `threads` config option](https://vitest.dev/config/#threads) to false or by using the runtime flag `--threads=false`.
+:::
+
 ---
 
 ### Test script
@@ -77,6 +81,13 @@ pnpm test
 
 </TabItem>
 </MultiPackagerCode>
+
+<details>
+<summary>Behind the scenes</summary>
+
+The `sst bind` CLI will join any argument that is not a flag but won't join flags. For instance, the command `sst bind vitest run path/to/test.ts` is valid, but the command `sst bind vitest run --threads=false` is not! To pass flags, wrap the command in quotes: `sst bind "vitest run --threads=false"`.
+
+</details>
 
 ---
 
@@ -290,6 +301,7 @@ The `sst bind` CLI sets the following environment variables:
   ie. In our example above, `SST_Table_tableName_table` is created with value from `/sst/{appName}/{stageName}/Table/table/tableName`
 
 - For [`Secrets`](constructs/Secret.md), fallback values are also fetched from SSM Parameters prefixed with `/sst/{appName}/.fallback/Secret/*`.
+- To be able to accomplish it, `sst bind` will spawn child processes. That's why vitest's threaded mode is not supported: it would also spawn child processes and the combination of different threads will cause tests to fail intermittently.
 
 </details>
 
