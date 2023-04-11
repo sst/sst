@@ -58,6 +58,10 @@ SST automatically detects AWS credentials in your environment and uses them for 
 - AWS_ACCESS_KEY_ID
 - AWS_SECRET_ACCESS_KEY
 
+If you are using temporary credentials, also set:
+
+- AWS_SESSION_TOKEN
+
 This is often the most convenient way to configure credentials when deploying your SST app in a CI environment. If you are deploying through [Seed](https://seed.run/), [follow this guide to configure IAM credentials](https://seed.run/docs/iam-credentials-per-stage).
 
 ### Configuring AWS Vault
