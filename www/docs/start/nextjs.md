@@ -78,6 +78,10 @@ pnpm create sst
 </TabItem>
 </MultiPackagerCode>
 
+:::tip Ready to deploy
+Your Next.js app is now ready to be deployed to AWS! Just run — `npx sst deploy`. But let's take a second to look at how SST makes it easy to add other features to your app.
+:::
+
 Start your local dev environment.
 
 <MultiPackagerCode>
