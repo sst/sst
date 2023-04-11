@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.0.4
+
+### Patch Changes
+
+- [#2769](https://github.com/serverless-stack/sst/pull/2769) [`b492c53ef`](https://github.com/serverless-stack/sst/commit/b492c53ef2e4653b01e18dd6bd5040eb30e48ecb) Thanks [@michelts](https://github.com/michelts)! - Document lack of support for vitest threaded mode
+
 ## 2.0.3
 
 ### Patch Changes
