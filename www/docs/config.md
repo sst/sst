@@ -42,7 +42,7 @@ And once you've defined your Secrets and Parameters, you can fetch them in your 
 
 To see how Secrets work, we are going to create a Secret with Stripe secret key and bind it to a Lambda function.
 
-Follow along by creating a new SST app by running `npx create-sst@latest`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/standard) that's based on the same template.
+Follow along by creating a new SST app by running `npx create-sst@latest`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/standard-api) that's based on the same template.
 
 1. To create a new secret, open up `stacks/MyStack.ts` and add a [`Config.Secret`](constructs/Secret.md) construct below the API. You can also create a new stack to define all secrets used in your app.
 
@@ -222,7 +222,7 @@ The following secrets were not found: STRIPE_KEY
 
 To see how Parameters work, we are going to create a Parameter with the version of your app and bind it to a Lambda function.
 
-Follow along by creating a new SST app by running `npx create-sst@latest`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/standard) that's based on the same template.
+Follow along by creating a new SST app by running `npx create-sst@latest`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/standard-api) that's based on the same template.
 
 1. To create a new parameter, open up `stacks/MyStack.ts` and add a [`Config.Parameter`](constructs/Parameter.md) construct below the API.
 
