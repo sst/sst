@@ -232,58 +232,6 @@ For more details, [check out the Lumigo docs on auto-tracing](https://docs.lumig
 
 ---
 
-## Thundra
-
-[Thundra](https://thundra.io) offers [Thundra APM - Application Performance Monitoring for Serverless and Containers](https://thundra.io/apm).
-
-To get started, [sign up for an account](https://console.thundra.io/landing/). Then [follow the steps in the quick start guide](https://apm.docs.thundra.io/getting-started/quick-start-guide/connect-thundra) to deploy their stack into the AWS account you wish to monitor.
-
-To enable Lambda monitoring, you'll need to add a layer to the functions you want to monitor. To figure out the layer ARN for the latest version, [check the badge here](https://apm.docs.thundra.io/node.js/nodejs-integration-options).
-
-With the layer ARN, you can use the layer construct in your CDK code.
-
-```ts title="stacks/Foo.js"
-import { LayerVersion } from "aws-cdk-lib/aws-lambda";
-
-const thundraLayer = LayerVersion.fromLayerVersionArn(
-  stack,
-  "ThundraLayer",
-  "<ARN>"
-);
-```
-
-You can then set it for all the functions in your stack using the [`addDefaultFunctionLayers`](constructs/Stack.md#adddefaultfunctionlayers) and [`addDefaultFunctionEnv`](constructs/Stack.md#adddefaultfunctionenv). Note we only want to enable this when the function is deployed, not in [Live Lambda Dev](live-lambda-development.md) as the layer will prevent the debugger from connecting.
-
-```ts title="stacks/Foo.js"
-if (!scope.local) {
-  const thundraAWSAccountNo = 269863060030;
-  const thundraNodeLayerVersion = 94; // Latest version at time of writing
-  const thundraLayer = LayerVersion.fromLayerVersionArn(
-    stack,
-    "ThundraLayer",
-    `arn:aws:lambda:${scope.region}:${thundraAWSAccountNo}:layer:thundra-lambda-node-layer:${thundraNodeLayerVersion}`
-  );
-  stack.addDefaultFunctionLayers([thundraLayer]);
-
-  stack.addDefaultFunctionEnv({
-    THUNDRA_APIKEY: process.env.THUNDRA_API_KEY,
-    NODE_OPTIONS: "-r @thundra/core/dist/bootstrap/lambda",
-  });
-}
-```
-
-For more details, [check out the Thundra docs](https://apm.docs.thundra.io/node.js/nodejs-integration-options).
-
----
-
-#### Time Travel Debugging
-
-Thudra also offers a feature called [Time Travel Debugging (TTD)](https://apm.docs.thundra.io/debugging/offline-debugging) that makes it possible to travel back in time to previous states of your application by getting a snapshot of when each line is executed. You can step over each line of the code and track the values of the variables captured during execution.
-
-To enable TTD in your SST app, you'll need to modify the esbuild config. [Check out the Thundra docs on this](https://apm.docs.thundra.io/node.js/ttd-time-travel-debugging-for-nodejs#using-with-sst).
-
----
-
 ## New Relic
 
 [New Relic](https://newrelic.com/) offers [New Relic Serverless for AWS Lambda](https://newrelic.com/products/serverless-aws-lambda).
