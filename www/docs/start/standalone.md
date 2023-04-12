@@ -249,4 +249,4 @@ pnpm sst deploy --stage prod
    - [`StaticSite`](../constructs/StaticSite.md) — Deploy a static site to AWS
    - [Live Lambda Dev](../live-lambda-development.md) — SST's local dev environment
    - [Resource Binding](../resource-binding.md) — Typesafe access to your resources
-2. Ready to dive into the details of SST? [**Check out our tutorial**](learn/index.md).
+2. Ready to dive into the details of SST? [**Check out our tutorial**](../learn/index.md).
