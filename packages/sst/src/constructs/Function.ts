@@ -714,13 +714,21 @@ export class Function extends CDKFunction implements SSTConstruct {
         ...(debugOverrideProps || {}),
       });
       this.addEnvironment("SST_FUNCTION_ID", this.node.addr);
-      this.attachPermissions([
-        new PolicyStatement({
-          actions: ["iot:*", "s3:*"],
-          effect: Effect.ALLOW,
-          resources: ["*"],
-        }),
-      ]);
+      useDeferredTasks().add(async () => {
+        const bootstrap = await useBootstrap();
+        this.attachPermissions([
+          new PolicyStatement({
+            actions: ["iot:*"],
+            effect: Effect.ALLOW,
+            resources: ["*"],
+          }),
+          new PolicyStatement({
+            actions: ["s3:*"],
+            effect: Effect.ALLOW,
+            resources: [`arn:aws:s3:::${bootstrap.bucket}`],
+          }),
+        ]);
+      });
     }
     // Handle build
     else {
