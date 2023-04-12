@@ -12,7 +12,7 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - id: set-matrix
         run: echo "::set-output name=matrix::$(ls packages/create-sst/bin/presets/examples/ | jq -R -s -c 'split("\n")[:-1]')"
   generate:
@@ -22,7 +22,7 @@ jobs:
       matrix:
         example: ${{ fromJson(needs.list.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
@@ -67,7 +67,7 @@ jobs:
     needs: generate
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
