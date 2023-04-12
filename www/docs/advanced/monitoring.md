@@ -83,7 +83,7 @@ export default {
       app.addDefaultFunctionPermissions([
         new PolicyStatement({
           effect: Effect.ALLOW,
-          resources: [datadogApiKeySecretArn]
+          resources: [datadogApiKeySecretArn],
           actions: ["secretsmanager:GetSecretValue"],
         }),
       ]);
