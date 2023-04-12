@@ -105,7 +105,11 @@ module.exports = {
       ],
     },
     {
-      "Migrating From": ["migrating/cdk", "migrating/serverless-framework"],
+      "Migrating From": [
+        "migrating/cdk",
+        "migrating/vercel",
+        "migrating/serverless-framework"
+      ],
     },
     {
       CLI: ["packages/sst", "packages/create-sst"],

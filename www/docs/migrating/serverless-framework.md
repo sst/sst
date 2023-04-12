@@ -1,12 +1,20 @@
 ---
 title: Migrating From Serverless Framework
 sidebar_label: Serverless Framework
-description: "Migrating from Serverless Framework to SST"
+description: "Migrate your from Serverless Framework app to SST."
 ---
 
-In this guide we'll look at how to migrate a Serverless Framework app to SST.
+import HeadlineText from "@site/src/components/HeadlineText";
 
-Note that, this document is a work in progress. If you have experience migrating your Serverless Framework app to SST, please consider contributing.
+<HeadlineText>
+
+A guide to migrating your Serverless Framework app to SST.
+
+</HeadlineText>
+
+---
+
+This document is a work in progress. If you have experience migrating your Serverless Framework app to SST, please consider contributing.
 
 ## Incrementally Adopting SST
 
