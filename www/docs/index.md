@@ -88,7 +88,7 @@ Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/constructs/Bucket")}>
+    <a href={useBaseUrl("/file-uploads")}>
       <h3>File uploads</h3>
       <p>Upload files to S3 and manage them through the SST console.</p>
     </a>

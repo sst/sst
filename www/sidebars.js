@@ -61,6 +61,7 @@ module.exports = {
         "auth",
         "config",
         "testing",
+        "file-uploads",
         "resource-binding",
         "long-running-jobs",
         "going-to-production",
