@@ -222,7 +222,7 @@ export class App extends CDKApp {
    *
    * @example
    * ```js
-   * app.addDefaultFunctionPermissions({
+   * app.addDefaultFunctionEnv({
    *   "MY_ENV_VAR": "my-value"
    * })
    * ```

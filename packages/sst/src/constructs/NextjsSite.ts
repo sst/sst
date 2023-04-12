@@ -76,7 +76,7 @@ export class NextjsSite extends SsrSite {
 
   constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
     super(scope, id, {
-      buildCommand: "npx --yes open-next@^0.8.0 build",
+      buildCommand: "npx --yes open-next@^0.9.0 build",
       ...props,
     });
   }
@@ -372,7 +372,7 @@ export class NextjsSite extends SsrSite {
     const fallbackOriginGroup = new OriginGroup({
       primaryOrigin: serverOrigin,
       fallbackOrigin: s3Origin,
-      fallbackStatusCodes: [404],
+      fallbackStatusCodes: [503],
     });
     return {
       origin: fallbackOriginGroup,

@@ -60,10 +60,10 @@ When you setup an AWS account to be monitored by Datadog, the process uses a Clo
 To monitor all the functions in an app, add the following to your `sst.config.ts`:
 
 ```ts title="sst.config.ts"
-import {SSTConfig} from "sst";
-import {Stack} from "sst/constructs";
-import {Datadog} from "datadog-cdk-constructs-v2";
-import {Effect, PolicyStatement} from "aws-cdk-lib/aws-iam";
+import { SSTConfig } from "sst";
+import { Stack } from "sst/constructs";
+import { Datadog } from "datadog-cdk-constructs-v2";
+import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
 
 export default {
   config() {
@@ -73,7 +73,7 @@ export default {
     // Replace with the API Key Secret ARN from your
     // Datadog Integration CloudFormation stack
     const datadogApiKeySecretArn =
-    "arn:aws:secretsmanager:us-east-1:123456789012:secret:DdApiKeySecret-abcdef123456-789ABC";
+      "arn:aws:secretsmanager:us-east-1:123456789012:secret:DdApiKeySecret-abcdef123456-789ABC";
 
     // Don't enable locally
     const enableDatadog = !app.local;
@@ -85,7 +85,7 @@ export default {
           effect: Effect.ALLOW,
           resources: [datadogApiKeySecretArn]
           actions: ["secretsmanager:GetSecretValue"],
-        })
+        }),
       ]);
       // Exclude from the function bundle
       // since they'll be loaded from the Layer
@@ -97,7 +97,7 @@ export default {
     }
 
     // Add your stacks
-    app.stack( /* ... */ );
+    app.stack(/* ... */);
 
     if (enableDatadog) {
       await app.finish();
@@ -127,7 +127,7 @@ export default {
         }
       });
     }
-  }
+  },
 } satisfies SSTConfig;
 ```
 
@@ -232,99 +232,95 @@ For more details, [check out the Lumigo docs on auto-tracing](https://docs.lumig
 
 ---
 
-## Thundra
-
-[Thundra](https://thundra.io) offers [Thundra APM - Application Performance Monitoring for Serverless and Containers](https://thundra.io/apm).
-
-To get started, [sign up for an account](https://console.thundra.io/landing/). Then [follow the steps in the quick start guide](https://apm.docs.thundra.io/getting-started/quick-start-guide/connect-thundra) to deploy their stack into the AWS account you wish to monitor.
-
-To enable Lambda monitoring, you'll need to add a layer to the functions you want to monitor. To figure out the layer ARN for the latest version, [check the badge here](https://apm.docs.thundra.io/node.js/nodejs-integration-options).
-
-With the layer ARN, you can use the layer construct in your CDK code.
-
-```ts title="stacks/Foo.js"
-import { LayerVersion } from "aws-cdk-lib/aws-lambda";
-
-const thundraLayer = LayerVersion.fromLayerVersionArn(
-  stack,
-  "ThundraLayer",
-  "<ARN>"
-);
-```
-
-You can then set it for all the functions in your stack using the [`addDefaultFunctionLayers`](constructs/Stack.md#adddefaultfunctionlayers) and [`addDefaultFunctionEnv`](constructs/Stack.md#adddefaultfunctionenv). Note we only want to enable this when the function is deployed, not in [Live Lambda Dev](live-lambda-development.md) as the layer will prevent the debugger from connecting.
-
-```ts title="stacks/Foo.js"
-if (!scope.local) {
-  const thundraAWSAccountNo = 269863060030;
-  const thundraNodeLayerVersion = 94; // Latest version at time of writing
-  const thundraLayer = LayerVersion.fromLayerVersionArn(
-    stack,
-    "ThundraLayer",
-    `arn:aws:lambda:${scope.region}:${thundraAWSAccountNo}:layer:thundra-lambda-node-layer:${thundraNodeLayerVersion}`
-  );
-  stack.addDefaultFunctionLayers([thundraLayer]);
-
-  stack.addDefaultFunctionEnv({
-    THUNDRA_APIKEY: process.env.THUNDRA_API_KEY,
-    NODE_OPTIONS: "-r @thundra/core/dist/bootstrap/lambda",
-  });
-}
-```
-
-For more details, [check out the Thundra docs](https://apm.docs.thundra.io/node.js/nodejs-integration-options).
-
----
-
-#### Time Travel Debugging
-
-Thudra also offers a feature called [Time Travel Debugging (TTD)](https://apm.docs.thundra.io/debugging/offline-debugging) that makes it possible to travel back in time to previous states of your application by getting a snapshot of when each line is executed. You can step over each line of the code and track the values of the variables captured during execution.
-
-To enable TTD in your SST app, you'll need to modify the esbuild config. [Check out the Thundra docs on this](https://apm.docs.thundra.io/node.js/ttd-time-travel-debugging-for-nodejs#using-with-sst).
-
----
-
 ## New Relic
 
-[New Relic](https://newrelic.com/) offers [New Relic Serverless for AWS Lambda](https://newrelic.com/products/serverless-aws-lambda).
-
-To get started, [follow the steps in the documentation](https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring/get-started/monitoring-aws-lambda-serverless-monitoring/).
+[New Relic](https://newrelic.com/) offers [New Relic Serverless for AWS Lambda](https://newrelic.com/products/serverless-aws-lambda). To get started, [follow the steps in the documentation](https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring/get-started/monitoring-aws-lambda-serverless-monitoring/).
 
 To enable Lambda monitoring, you'll need to add a layer to the functions you want to monitor. To figure out the layer ARN for the latest version, [check the available layers per region here](https://layers.newrelic-external.com/).
 
 With the layer ARN, you can use the layer construct in your CDK code. To ensure the Lambda function is instrumented correctly, the function handler must be set to the handler provided by the New Relic layer. Note we only want to enable this when the function is deployed, not in [Live Lambda Dev](live-lambda-development.md) as the layer will prevent the debugger from connecting.
 
-Add the following at the bootom of the `main()` function in your `stacks/index.ts` file.
+:::info
+If you use Node.js then you'll probably need to use Node 18 if you plan on using ESM modules.
+:::
 
-```ts title="stacks/index.ts"
-import { CfnFunction, LayerVersion } from "aws-cdk-lib/aws-lambda";
+Add the following to the top of the `stacks()` function in your `sst.config.ts` file.
 
-if (!app.local) {
-  const runDeferredBuildsBk = app.runDeferredBuilds;
-  app.runDeferredBuilds = async () => {
-    await runDeferredBuildsBk();
+```ts title="sst.config.ts"
+export default {
+  config() {
+    // Config
+  },
+  async stacks(app) {
+    // Don't enable locally
+    const enableNR = !app.local;
 
-    // Loop through each stack in the app
-    app.node.children.forEach((stack) => {
-      if (stack instanceof sst.Stack) {
+    if (enableNR) {
+      app.setDefaultFunctionProps((stack) => {
         const newRelicLayer = LayerVersion.fromLayerVersionArn(
           stack,
           "NewRelicLayer",
-          "<ARN>>"
+          // Find your "<ARN>" here: https://layers.newrelic-external.com/
+          // Make sure you select the correct region and version
+          "<ARN>"
         );
 
-        child.getAllFunctions().forEach((fn) => {
-          const cfnFunction = fn.node.defaultChild as CfnFunction;
-          if (cfnFunction.handler) {
-            fn.addEnvironment("NEW_RELIC_LAMBDA_HANDLER", cfnFunction.handler);
-          }
+        return {
+          layers: [newRelicLayer.layerVersionArn],
+        };
+      });
+    }
 
-          cfnFunction.handler = "newrelic-lambda-wrapper.handler";
-        });
-      }
-    });
-  };
-}
+    // Add your stacks
+    app.stack(/* ... */);
+
+    if (enableNR) {
+      await app.finish();
+
+      // Loop through each stack in the app
+      app.node.children.forEach((stack) => {
+        if (stack instanceof sst.Stack) {
+          const policy = new PolicyStatement({
+            actions: ["secretsmanager:GetSecretValue"],
+            effect: Effect.ALLOW,
+            resources: [
+              Fn.importValue(
+                "NewRelicLicenseKeySecret-NewRelic-LicenseKeySecretARN"
+              ),
+            ],
+          });
+
+          stack.getAllFunctions().forEach((fn) => {
+            const cfnFunction = fn.node.defaultChild as CfnFunction;
+            if (cfnFunction.handler) {
+              fn.addEnvironment(
+                "NEW_RELIC_LAMBDA_HANDLER",
+                cfnFunction.handler
+              );
+              fn.addEnvironment("NEW_RELIC_ACCOUNT_ID", "YOUR_ACCOUNT_ID");
+              // If your New Relic account has a parent account, this value should be that account ID. Otherwise, just
+              // your account id.
+              fn.addEnvironment(
+                "NEW_RELIC_TRUSTED_ACCOUNT_KEY",
+                "YOUR_ACCOUNT_ID_OR_PARENT_ACCOUNT_ID"
+              );
+            }
+
+            // Give your function access to the secret containing your New Relic license key
+            // You will set this key using the `newrelic-lambda integrations install` command
+            // More info: https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring/enable-lambda-monitoring/account-linking/
+            fn.attachPermissions([policy]);
+
+            // See #3 on the link below for the correct handler name to use based on your runtime
+            // The handler name below is for NodeJS
+            // https://github.com/newrelic/newrelic-lambda-layers#manual-instrumentation-using-layers
+            cfnFunction.handler = "newrelic-lambda-wrapper.handler";
+          });
+        }
+      });
+    }
+  },
+} satisfies SSTConfig;
 ```
 
 ---
