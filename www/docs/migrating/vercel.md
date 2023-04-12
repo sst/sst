@@ -81,7 +81,7 @@ Now to start your local environment, start SST.
 npx sst dev
 ```
 
-Then start Next.js.
+Then start Next.js in another terminal.
 
 ```bash
 npm run dev
