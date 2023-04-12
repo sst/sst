@@ -7,7 +7,7 @@ import HeadlineText from "@site/src/components/HeadlineText";
 
 <HeadlineText>
 
-A guide to adding S3 file uploads to your SST app.
+Add S3 file uploads to your SST app.
 
 </HeadlineText>
 
