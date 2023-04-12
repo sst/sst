@@ -96,11 +96,11 @@ If you are new to the GraphQL starter, it creates a very simple Reddit clone. Yo
 
 ### Testing domain code
 
-Open up `services/core/article.ts`, it contains a `create()` function to create an article, and a `list()` function to list all submitted articles. This code is responsible for the _article domain_.
+Open up `packages/core/src/article.ts`, it contains a `create()` function to create an article, and a `list()` function to list all submitted articles. This code is responsible for the _article domain_.
 
-Let's write a test for our _article domain_ code. Create a new file at `services/test/core/article.test.ts`:
+Let's write a test for our _article domain_ code. Create a new file at `packages/core/test/article.test.ts`:
 
-```ts title="services/test/core/article.test.ts"
+```ts title="packages/core/test/article.test.ts"
 import { expect, it } from "vitest";
 import { Article } from "@my-sst-app/core/article";
 
@@ -116,12 +116,12 @@ it("create an article", async () => {
 });
 ```
 
-Both the `create()` and `list()` functions call `services/core/dynamo.ts` to talk to the database. And `services/core/dynamo.ts` references `Table.table.tableName`.
+Both the `create()` and `list()` functions call `packages/core/src/dynamo.ts` to talk to the database. And `packages/core/src/dynamo.ts` references `Table.table.tableName`.
 
 <details>
 <summary>Behind the scenes</summary>
 
-The above test only works if we run `sst bind -- vitest run`. The `sst bind` CLI fetches the value for the `Table.table.tableName` and passes it to the test. If we run `vitest run` directly, we'll get an error complaining that `Table.table.tableName` cannot be resolved.
+The above test only works if we run `sst bind vitest run`. The `sst bind` CLI fetches the value for the `Table.table.tableName` and passes it to the test. If we run `vitest run` directly, we'll get an error complaining that `Table.table.tableName` cannot be resolved.
 
 </details>
 
@@ -131,27 +131,17 @@ The above test only works if we run `sst bind -- vitest run`. The `sst bind` CLI
 
 We can rewrite the above test so that instead of calling `Article.create()`, you make a request to the GraphQL API to create the article. In fact, the GraphQL stack template already includes this test.
 
-To call the GraphQL API in our test, we need to know the API's URL. We create a [`Parameter`](config.md#parameters) in `stacks/Api.ts`:
-
-```ts title="stacks/Api.ts"
-import { Config } from "sst/constructs";
-
-new Config.Parameter(stack, "API_URL", {
-  value: api.url,
-});
-```
-
-Open `services/test/graphql/article.test.ts`, you can see the test is similar to our domain function test above.
+Open `packages/functions/test/graphql/article.test.ts`, you can see the test is similar to our domain function test above.
 
 ```ts
 import { expect, it } from "vitest";
-import { Config } from "sst/node/config";
+import { Api } from "sst/node/api";
 import { createClient } from "@my-sst-app/graphql/genql";
 import { Article } from "@my-sst-app/core/article";
 
 it("create an article", async () => {
   const client = createClient({
-    url: Config.API_URL + "/graphql",
+    url: Api.api.url + "/graphql",
   });
 
   // Call the API to create a new article
@@ -174,7 +164,7 @@ it("create an article", async () => {
 });
 ```
 
-Again, just like the domain test above, this only works if we run [`sst bind -- vitest run`](#how-sst-bind-works).
+Again, just like the domain test above, this only works if we run [`sst bind vitest run`](#how-sst-bind-works).
 
 :::tip
 Testing APIs are often more useful than testing Domain code because they test the app from the perspective of a user. Ignoring most of the implementation details.
