@@ -62,6 +62,7 @@ module.exports = {
         "auth",
         "config",
         "testing",
+        "cron-jobs",
         "file-uploads",
         "resource-binding",
         "long-running-jobs",
