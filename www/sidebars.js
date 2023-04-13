@@ -58,6 +58,7 @@ module.exports = {
     //    },
     {
       "How-Tos": [
+        "apis",
         "auth",
         "config",
         "testing",

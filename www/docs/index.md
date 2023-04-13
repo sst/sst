@@ -76,9 +76,9 @@ Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/constructs/Api")}>
+    <a href={useBaseUrl("/apis")}>
       <h3>APIs</h3>
-      <p>Add a GraphQL or a simple REST API to your app.</p>
+      <p>Add a dedicated REST or GraphQL API to your app.</p>
     </a>
   </li>
   <li>

@@ -34,18 +34,6 @@ Start by creating a new SST + Next.js app by running the following command in yo
 npx create-sst@latest --template standard/nextjs
 ```
 
-This will generate a new SST + Next.js app. Now to start your local environment, start SST.
-
-```bash
-npx sst dev
-```
-
-Then start Next.js in another terminal.
-
-```bash
-npm run dev
-```
-
 ---
 
 ## Add an S3 bucket
@@ -59,6 +47,13 @@ const bucket = new Bucket(stack, "public", {
 ```
 
 The `cors` property enables Cross-Origin Resource Sharing (CORS), which allows your app to access the S3 bucket from your Next.js app.
+
+Make sure to import the [`Bucket`](constructs/Bucket.md) construct.
+
+```diff title="stacks/Default.ts"
+- import { StackContext, NextjsSite } from "sst/constructs";
++ import { Bucket, StackContext, NextjsSite } from "sst/constructs";
+```
 
 ---
 
