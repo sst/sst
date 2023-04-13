@@ -13,15 +13,22 @@ Add S3 file uploads to your SST app.
 
 ---
 
-## Prerequisites
+## Overview
 
-You'll need at least [Node.js 16](https://nodejs.org/) and [npm 7](https://www.npmjs.com/). You also need to have an AWS account and [**AWS credentials configured locally**](advanced/iam-credentials.md#loading-from-a-file).
+To allow your users to upload files to your app you'll need to:
+
+1. Create an S3 bucket
+2. Bind your frontend to the bucket
+3. Generate a presigned URL for the upload
+4. Upload the file by making a request to the URL
+
+Let's look at this in detail!
 
 ---
 
-## Create a new app
+#### Get started
 
-Start by creating a new SST + Next.js app by running the following command in your terminal.
+Start by creating a new SST + Next.js app by running the following command in your terminal. We are using Next.js for this example but you can use your favorite frontend.
 
 ```bash
 npx create-sst@latest --template standard/nextjs
@@ -70,7 +77,7 @@ This allows Next.js app to access our S3 bucket.
 
 ---
 
-## Generating a presigned URL
+## Generate a presigned URL
 
 When a user uploads a file, we want to generate a presigned URL that allows them to upload the file directly to S3. We will do this using the AWS SDK.
 
@@ -110,7 +117,7 @@ npm install @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
 
 ---
 
-## Creating an upload form
+## Create an upload form
 
 Finally, we can create a form that allows users to upload a file:
 
@@ -145,16 +152,6 @@ export default function Home({ url }: { url: string }) {
 ```
 
 This form uploads the file directly to S3 and redirects to the file's URL.
-
----
-
-## Deploy to prod
-
-Let's end with deploying our app to production.
-
-```bash
-npx sst deploy --stage prod
-```
 
 ---
 
