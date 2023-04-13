@@ -33,6 +33,8 @@ import { IRole, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { Bucket, BucketProps, IBucket } from "aws-cdk-lib/aws-s3";
 import { isCDKConstruct } from "./Construct.js";
 import { BucketDeployment, Source } from "aws-cdk-lib/aws-s3-deployment";
+import { IQueue, Queue } from "aws-cdk-lib/aws-sqs";
+import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -80,6 +82,8 @@ export class NextjsSite extends SsrSite {
     waitForInvalidation: Exclude<NextjsSiteProps["waitForInvalidation"], undefined>;
   };
   cacheBucket: IBucket;
+  revalidationQueue: IQueue;
+  revalidationFn: CdkFunction;
 
   constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
     super(scope, id, {
@@ -87,6 +91,9 @@ export class NextjsSite extends SsrSite {
       ...props,
     });
     this.cacheBucket = this.createCacheBucket(props?.enableExperimentalCacheInterception);
+    const { revalidationFn, queue } = this.createRevalidation();
+    this.revalidationFn = revalidationFn;
+    this.revalidationQueue = queue;
   }
 
   private createCacheBucket(cacheInterception = false): IBucket {
@@ -106,13 +113,39 @@ export class NextjsSite extends SsrSite {
     });
 
     this.cdk?.function?.addEnvironment("CACHE_BUCKET_NAME", _bucket.bucketName);
-    this.cdk?.function?.addEnvironment("CACHE_BUCKET_REGION", Stack.of(this).region);
+    this.cdk?.function?.addEnvironment("ORIGIN_REGION", Stack.of(this).region);
     if (cacheInterception) {
       this.cdk?.function?.addEnvironment("EXPERIMENTAL_CACHE_INTERCEPTION", "true");
     }
     _bucket.grantReadWrite(this.cdk?.function?.role as IRole);
 
     return deployment.deployedBucket;
+  }
+
+  protected createRevalidation() {
+    const queue = new Queue(this, "RevalidationQueue", {
+      fifo: true,
+    });
+    const revalidationFn = new CdkFunction(this, "RevalidationFunction", {
+      handler: "index.handler",
+      code: Code.fromAsset(
+        path.join(this.props.path, ".open-next", "revalidation-function")
+      ),
+      runtime: Runtime.NODEJS_18_X,
+      timeout: CdkDuration.seconds(30),
+      environment: {
+        HOST: this.cdk?.distribution?.domainName as string,
+      },
+    });
+    revalidationFn.addEventSource(
+      new SqsEventSource(queue, {
+        batchSize: 5,
+      })
+    );
+    this.cdk?.function?.addEnvironment("REVALIDATION_QUEUE_URL", queue.queueUrl);
+    queue.grantSendMessages(this.cdk?.function?.role as IRole);
+    queue.grantConsumeMessages(revalidationFn);
+    return { revalidationFn, queue };
   }
 
   protected initBuildConfig() {
