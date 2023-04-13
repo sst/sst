@@ -198,7 +198,7 @@ export async function bootstrapSST() {
     ),
     handler: "index.handler",
     runtime:
-      region?.startsWith("us-gov-") || region?.startsWith("cn-")
+      region?.startsWith("us-gov-")
         ? Runtime.NODEJS_16_X
         : Runtime.NODEJS_18_X,
     environment: {
