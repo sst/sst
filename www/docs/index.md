@@ -27,7 +27,7 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 </ul>
 
 <div className={styles.heading}>
-  <h3>Start With Your Frontend</h3>
+  <h3>Pick Your Frontend</h3>
   <p>Start with a Next.js, Remix, Astro, or Solid app and deploy it to AWS with SST.</p>
 </div>
 
@@ -63,7 +63,7 @@ Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
 :::
 
 <div className={styles.heading}>
-  <h3>Add Any Backend Feature</h3>
+  <h3>Add Any Feature</h3>
   <p>SST gives you the full power of AWS. Making it easy to add any feature to your product.</p>
 </div>
 
