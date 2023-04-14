@@ -47,6 +47,10 @@ new Cron(stack, "cron", {
 
 This defines a cron job that'll run every minute and points to the function that will be invoked.
 
+:::info
+The fastest rate a cron job can be run is every minute.
+:::
+
 Make sure to import the [`Cron`](constructs/Bucket.md) construct.
 
 ```diff title="stacks/Default.ts"
@@ -67,6 +71,56 @@ export async function handler() {
 ```
 
 Once your app updates, you'll notice the logs being printed out every minute in your terminal.
+
+---
+
+## Cron schedule
+
+There are a couple of ways to specify the schedule of a cron jon.
+
+---
+
+#### Rate expressions
+
+Rate expressions are the simplest way to do it. Here are some sample rate expressions:
+
+- `rate(1 minute)`
+- `rate(5 minutes)`
+- `rate(1 hour)`
+- `rate(12 hours)`
+- `rate(1 day)`
+- `rate(7 days)`
+
+If the value is equal to 1, then the unit must be singular. If the value is greater than 1, the unit must be plural.
+
+---
+
+#### Cron expressions
+
+Alternatively, you can specify a cron expression to have it run at specific times, ie. every day at 12:00pm.
+
+```ts
+schedule: "cron(0 12 * * ? *)",
+```
+
+:::info
+All cron expressions use the UTC+0 time zone.
+:::
+
+Here are some example cron expressions:
+
+| Minutes | Hours | Day of month | Month | Day of week | Year | Description                                                                                                     |
+| ------- | ----- | ------------ | ----- | ----------- | ---- | --------------------------------------------------------------------------------------------------------------- |
+| 0       | 10    | \*           | \*    | ?           | \*   | Run at 10:00 am every day                                                                                       |
+| 15      | 12    | \*           | \*    | ?           | \*   | Run at 12:15 pm every day                                                                                       |
+| 0       | 18    | ?            | \*    | MON\-FRI    | \*   | Run at 6:00 pm every Monday through Friday                                                                      |
+| 0       | 8     | 1            | \*    | ?           | \*   | Run at 8:00 am every 1st day of the month                                                                       |
+| 0/15    | \*    | \*           | \*    | ?           | \*   | Run every 15 minutes                                                                                            |
+| 0/10    | \*    | ?            | \*    | MON\-FRI    | \*   | Run every 10 minutes Monday through Friday                                                                      |
+| 0/5     | 8\-17 | ?            | \*    | MON\-FRI    | \*   | Run every 5 minutes Monday through Friday between 8:00 am and 5:55 pm                                           |
+| 0/30    | 20\-2 | ?            | \*    | MON\-FRI    | \*   | Run every 30 minutes Monday through Friday between 10:00 pm on the starting day to 2:00 am on the following day |
+
+You can [read more about the cron expressions syntax](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-create-rule-schedule.html#eb-cron-expressions).
 
 ---
 

@@ -82,7 +82,7 @@ Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/constructs/Auth")}>
+    <a href={useBaseUrl("/auth")}>
       <h3>Auth</h3>
       <p>Authenticate your users through any auth provider.</p>
     </a>
@@ -94,15 +94,15 @@ Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/constructs/Cron")}>
+    <a href={useBaseUrl("/cron-jobs")}>
       <h3>Jobs</h3>
       <p>Run cron jobs or long running jobs powered by serverless functions.</p>
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/constructs/Queue")}>
-      <h3>Queues</h3>
-      <p>Work with serverless queues without any infrastructure.</p>
+    <a href={useBaseUrl("/async-tasks")}>
+      <h3>Async tasks</h3>
+      <p>Run tasks after your app has returned to your user.</p>
     </a>
   </li>
 </ul>
