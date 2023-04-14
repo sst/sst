@@ -32,12 +32,12 @@ Deploy Next.js, Remix, Astro, Solid, or any static site to AWS.
 
 SST gives you the full power of AWS. Making it easy to add any feature to your product.
 
-- [Databases](https://docs.sst.dev/constructs/RDS) — Use a serverless SQL or NoSQL database to power your app.
-- [APIs](https://docs.sst.dev/constructs/Api) — Add a GraphQL or a simple REST API to your app.
-- [Auth](https://docs.sst.dev/constructs/Auth) — Authenticate your users through any auth provider.
-- [File uploads](https://docs.sst.dev/constructs/Bucket) — Upload files to S3 and manage them through the SST console.
+- [Databases](https://docs.sst.dev/databases) — Use a serverless SQL or NoSQL database to power your app.
+- [APIs](https://docs.sst.dev/apis) — Add a GraphQL or a simple REST API to your app.
+- [Auth](https://docs.sst.dev/auth) — Authenticate your users through any auth provider.
+- [File uploads](https://docs.sst.dev/file-uploads) — Upload files to S3 and manage them through the SST console.
 - [Jobs](https://docs.sst.dev/constructs/Cron) — Run cron jobs or long running jobs powered by serverless functions.
-- [Queues](https://docs.sst.dev/constructs/Queue) — Work with serverless queues without any infrastructure.
+- [Async tasks](https://docs.sst.dev/constructs/async-tasks) — Run tasks after your app has returned to your user.
 
 ### Collaborate with your team
 
