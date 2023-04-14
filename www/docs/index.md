@@ -7,7 +7,6 @@ pagination_prev: null
 pagination_next: null
 ---
 
-import config from "../config";
 import styles from "./about.module.css";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 
@@ -70,7 +69,7 @@ Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
 
 <ul className={styles.features}>
   <li>
-    <a href={useBaseUrl("/constructs/RDS")}>
+    <a href={useBaseUrl("/databases")}>
       <h3>Databases</h3>
       <p>Use a serverless SQL or NoSQL database to power your app.</p>
     </a>

@@ -27,7 +27,7 @@ You can set the removal policy on all the resources in your SST app.
 Make sure to not set the default removal policy to `destroy` for production environments.
 :::
 
-```ts title="sst.config.ts" {1,8-11}
+```ts title="sst.config.ts" {7-9}
 export default {
   config(_input) {
     // ...
@@ -37,8 +37,8 @@ export default {
     if (app.stage !== "prod") {
       app.setDefaultRemovalPolicy("destroy");
     }
-    
+
     // ...
-  }
+  },
 } satisfies SSTConfig;
 ```

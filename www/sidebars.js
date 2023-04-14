@@ -63,6 +63,7 @@ module.exports = {
         "config",
         "testing",
         "cron-jobs",
+        "databases",
         "async-tasks",
         "file-uploads",
         "long-running-jobs",
