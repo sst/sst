@@ -72,7 +72,7 @@ export const useIOT = Context.memo(async () => {
         },
       ];
     }
-    const parts = json.match(/.{1,100000}/g);
+    const parts = json.match(/.{1,50000}/g);
     if (!parts) return [];
     Logger.debug("Encoded iot message into", parts?.length, "parts");
     return parts.map((part, index) => ({
