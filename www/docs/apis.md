@@ -33,7 +33,7 @@ npx create-sst@latest --template standard/nextjs
 
 ---
 
-## REST API
+## Add a REST API
 
 To add a REST API, add the following to your stacks.
 
@@ -65,7 +65,7 @@ And make sure to import the [`Api`](constructs/Api.md) construct.
 
 ---
 
-##### Add the handler
+## Add the handler
 
 Let's add the function that'll handle the new endpoint.
 
@@ -85,98 +85,7 @@ export const handler = ApiHandler(async (_evt) => {
 Now once your app is updated it'll print out the new API URL in the terminal. And if you go to that URL in your browser, you'll notice your _Hello World!_ message.
 
 :::tip Tutorial
-
 [Check out a tutorial](https://sst.dev/examples/how-to-create-a-crud-api-with-serverless-using-dynamodb.html) on how to build a CRUD API with SST.
-
-:::
-
----
-
-## GraphQL API
-
-There are two main ways to add a GraphQL API in SST.
-
----
-
-### Pothos
-
-You can use [Pothos](https://pothos-graphql.dev/), which is a code-first schema approach. Add a new route to your API, say `POST /graphql`.
-
-```ts title="stacks/Default.ts" {3-11}
-new Api(stack, "api", {
-  routes: {
-    "POST /graphql": {
-      type: "graphql",
-      function: "packages/functions/src/graphql.handler",
-      pothos: {
-        schema: "backend/functions/graphql/schema.ts",
-        output: "graphql/schema.graphql",
-        commands: ["./genql graphql/graphql.schema graphql/"],
-      },
-    },
-  },
-});
-```
-
-:::tip Tutorial
-
-[Check out our tutorial](learn/index.md) on how to build an app with a GraphQL API.
-
-:::
-
----
-
-### AppSync
-
-The second involves using [AppSync](https://aws.amazon.com/appsync/) with the [`AppSyncApi`](constructs/AppSyncApi.md) construct.
-
-```ts title="stacks/Default.ts"
-import { AppSyncApi } from "sst/constructs";
-
-new AppSyncApi(stack, "graphql", {
-  schema: "graphql/schema.graphql",
-  dataSources: {
-    notesDS: "packages/functions/src/notes.handler",
-  },
-  resolvers: {
-    "Query    listNotes": "notesDS",
-    "Query    getNoteById": "notesDS",
-    "Mutation createNote": "notesDS",
-    "Mutation updateNote": "notesDS",
-    "Mutation deleteNote": "notesDS",
-  },
-});
-```
-
-:::tip Tutorial
-
-[Check out our AppSync tutorial](https://sst.dev/examples/how-to-create-a-serverless-graphql-api-with-aws-appsync.html) to get started.
-
-:::
-
----
-
-## WebSocket API
-
-To add a WebSocket API to your app use the [`WebSocketApi`](constructs/WebSocketApi.md) construct. It uses [Amazon API Gateway WebSocket API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api.html) behind the scenes.
-
-```ts title="stacks/Default.ts"
-import { WebSocketApi } from "sst/constructs";
-
-new WebSocketApi(stack, "ws", {
-  routes: {
-    $connect: "packages/functions/src/connect.handler",
-    $default: "packages/functions/src/default.handler",
-    $disconnect: "packages/functions/src/disconnect.handler",
-    sendMessage: "packages/functions/src/sendMessage.handler",
-  },
-});
-```
-
-:::tip Tutorial
-
-[Check out our WebSocket tutorial](https://sst.dev/examples/how-to-create-a-websocket-api-with-serverless.html) to get started.
-
 :::
 
 ---
@@ -274,6 +183,95 @@ new Api(stack, "api", {
   },
 });
 ```
+
+---
+
+## Other options
+
+Aside from REST APIs, you can also add GraphQL and WebSocket APIs to your app.
+
+---
+
+### GraphQL
+
+There are two main ways to add a GraphQL API in SST.
+
+---
+
+#### Pothos
+
+You can use [Pothos](https://pothos-graphql.dev/), which is a code-first schema approach. Add a new route to your API, say `POST /graphql`.
+
+```ts title="stacks/Default.ts" {3-11}
+new Api(stack, "api", {
+  routes: {
+    "POST /graphql": {
+      type: "graphql",
+      function: "packages/functions/src/graphql.handler",
+      pothos: {
+        schema: "backend/functions/graphql/schema.ts",
+        output: "graphql/schema.graphql",
+        commands: ["./genql graphql/graphql.schema graphql/"],
+      },
+    },
+  },
+});
+```
+
+:::tip Tutorial
+[Check out our tutorial](learn/index.md) on how to build an app with a GraphQL API.
+:::
+
+---
+
+#### AppSync
+
+The second involves using [AppSync](https://aws.amazon.com/appsync/) with the [`AppSyncApi`](constructs/AppSyncApi.md) construct.
+
+```ts title="stacks/Default.ts"
+import { AppSyncApi } from "sst/constructs";
+
+new AppSyncApi(stack, "graphql", {
+  schema: "graphql/schema.graphql",
+  dataSources: {
+    notesDS: "packages/functions/src/notes.handler",
+  },
+  resolvers: {
+    "Query    listNotes": "notesDS",
+    "Query    getNoteById": "notesDS",
+    "Mutation createNote": "notesDS",
+    "Mutation updateNote": "notesDS",
+    "Mutation deleteNote": "notesDS",
+  },
+});
+```
+
+:::tip Tutorial
+[Check out our AppSync tutorial](https://sst.dev/examples/how-to-create-a-serverless-graphql-api-with-aws-appsync.html) to get started.
+:::
+
+---
+
+### WebSocket
+
+To add a WebSocket API to your app use the [`WebSocketApi`](constructs/WebSocketApi.md) construct. It uses [Amazon API Gateway WebSocket API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api.html) behind the scenes.
+
+```ts title="stacks/Default.ts"
+import { WebSocketApi } from "sst/constructs";
+
+new WebSocketApi(stack, "ws", {
+  routes: {
+    $connect: "packages/functions/src/connect.handler",
+    $default: "packages/functions/src/default.handler",
+    $disconnect: "packages/functions/src/disconnect.handler",
+    sendMessage: "packages/functions/src/sendMessage.handler",
+  },
+});
+```
+
+:::tip Tutorial
+[Check out our WebSocket tutorial](https://sst.dev/examples/how-to-create-a-websocket-api-with-serverless.html) to get started.
+:::
 
 ---
 
