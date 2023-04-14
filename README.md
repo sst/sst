@@ -18,7 +18,7 @@ SST makes it easy to build modern full-stack applications on AWS. [Learn more](h
 $ npx create-sst@latest
 ```
 
-### Start With Your Frontend
+### Pick your frontend
 
 Deploy Next.js, Remix, Astro, Solid, or any static site to AWS.
 
@@ -26,18 +26,17 @@ Deploy Next.js, Remix, Astro, Solid, or any static site to AWS.
 - [**Remix**](https://docs.sst.dev/constructs/RemixSite)
 - [**Astro**](https://docs.sst.dev/start/astro)
 - [**Solid**](https://docs.sst.dev/constructs/SolidStartSite)
-- [**Static site**](https://docs.sst.dev/constructs/StaticSite)
 
-### Add any backend feature
+### Add any feature
 
 SST gives you the full power of AWS. Making it easy to add any feature to your product.
 
-- [Databases](https://docs.sst.dev/databases) — Use a serverless SQL or NoSQL database to power your app.
-- [APIs](https://docs.sst.dev/apis) — Add a GraphQL or a simple REST API to your app.
+- [File uploads](https://docs.sst.dev/file-uploads) — Allow your users to upload files to S3.
 - [Auth](https://docs.sst.dev/auth) — Authenticate your users through any auth provider.
-- [File uploads](https://docs.sst.dev/file-uploads) — Upload files to S3 and manage them through the SST console.
-- [Jobs](https://docs.sst.dev/constructs/Cron) — Run cron jobs or long running jobs powered by serverless functions.
-- [Async tasks](https://docs.sst.dev/constructs/async-tasks) — Run tasks after your app has returned to your user.
+- [Async tasks](https://docs.sst.dev/async-tasks) — Run tasks after your app has returned to your user.
+- [Databases](https://docs.sst.dev/databases) — Use a serverless SQL or NoSQL database to power your app.
+- [Jobs](https://docs.sst.dev/cron-jobs) — Run cron jobs or long running jobs powered by serverless functions.
+- [APIs](https://docs.sst.dev/apis) — Add a dedicated serverless REST, GraphQL, or WebSocket API to your app.
 
 ### Collaborate with your team
 
