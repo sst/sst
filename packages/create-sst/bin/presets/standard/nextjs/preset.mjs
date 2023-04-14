@@ -15,6 +15,11 @@ export default [
       },
     ],
   }),
+  install({
+    packages: ["sst"],
+    path: "packages/web",
+    dev: true,
+  }),
   patch({
     file: "packages/web/package.json",
     operations: [
