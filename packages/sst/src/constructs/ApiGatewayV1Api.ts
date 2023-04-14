@@ -781,7 +781,12 @@ export class ApiGatewayV1Api<
   }
 
   /** @internal */
-  public getFunctionBinding(): FunctionBindingProps {
+  public getFunctionBinding() {
+    // Do not bind imported ApiGatewayV1Api APIs b/c we don't know the API URL
+    if (!this.url) {
+      return;
+    }
+
     return {
       clientPackage: "api",
       variables: {
@@ -791,7 +796,7 @@ export class ApiGatewayV1Api<
         },
       },
       permissions: {},
-    };
+    } as FunctionBindingProps;
   }
 
   private createRestApi() {
