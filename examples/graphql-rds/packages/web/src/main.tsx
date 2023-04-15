@@ -8,6 +8,7 @@ import "./globals.css";
 
 const urql = createClient({
   url: import.meta.env.VITE_GRAPHQL_URL,
+  exchanges: []
 });
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
