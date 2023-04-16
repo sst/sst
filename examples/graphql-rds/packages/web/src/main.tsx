@@ -1,12 +1,12 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { Provider as UrqlProvider, createClient , cacheExchange, fetchExchange} from "urql";
+import { Provider as UrqlProvider, Client , cacheExchange, fetchExchange} from "urql";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import Article from "./pages/Article";
 import "./globals.css";
 
-const urql = createClient({
+const urql = new Client({
   url: import.meta.env.VITE_GRAPHQL_URL,
   exchanges: [ cacheExchange, fetchExchange ]
 });
