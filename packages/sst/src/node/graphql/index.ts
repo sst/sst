@@ -55,7 +55,7 @@ export function GraphQLHandler<C>(config: GraphQLHandlerConfig<C>) {
     };
 
     const { operationName, query, variables } = getGraphQLParameters(request);
-    const validationRules = config.disableIntrospection ? [...specifiedRules, NoSchemaIntrospectionCustomRule] : [specifiedRules];
+    const validationRules = config.disableIntrospection ? [...specifiedRules, NoSchemaIntrospectionCustomRule] : [...specifiedRules];
 
     const result = await processRequest({
       operationName,
