@@ -1,6 +1,6 @@
 import { Context } from "aws-lambda";
 import { APIGatewayProxyEventV2 } from "aws-lambda";
-import { GraphQLSchema } from "graphql";
+import { GraphQLSchema, specifiedRules, NoSchemaIntrospectionCustomRule } from "graphql";
 import {
   ExecutionContext,
   FormatPayloadParams,
@@ -39,6 +39,10 @@ interface GraphQLHandlerConfig<C> {
    * Override the GraphQL execute function, sometimes used by plugins
    */
   execute?: ProcessRequestOptions<any, any>["execute"];
+  /**
+   * Disable introspection for production
+   */
+  disableIntrospection?: boolean;
 }
 
 export function GraphQLHandler<C>(config: GraphQLHandlerConfig<C>) {
@@ -51,12 +55,14 @@ export function GraphQLHandler<C>(config: GraphQLHandlerConfig<C>) {
     };
 
     const { operationName, query, variables } = getGraphQLParameters(request);
+    const validationRules = config.disableIntrospection ? [...specifiedRules, NoSchemaIntrospectionCustomRule] : [...specifiedRules];
 
     const result = await processRequest({
       operationName,
       query,
       variables,
       request,
+      validationRules,
       execute: config.execute,
       schema: config.schema,
       formatPayload: config.formatPayload as any,
