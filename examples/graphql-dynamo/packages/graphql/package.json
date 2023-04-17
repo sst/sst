@@ -11,6 +11,6 @@
   },
   "devDependencies": {
     "@genql/cli": "2.x",
-    "@types/react": "^18.0.33"
+    "@types/react": "^18.0.37"
   }
 }

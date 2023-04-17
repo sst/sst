@@ -12,10 +12,10 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "sst": "^2.5.0",
-    "aws-cdk-lib": "2.62.2",
+    "sst": "^2.5.3",
+    "aws-cdk-lib": "2.72.1",
     "constructs": "10.1.156",
-    "typescript": "^5.0.3",
+    "typescript": "^5.0.4",
     "@tsconfig/node16": "^1.0.3",
     "@thundra/esbuild-plugin": "^1.0.3"
   },

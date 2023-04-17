@@ -9,19 +9,19 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.306.0",
-    "@aws-sdk/s3-request-presigner": "^3.306.0",
+    "@aws-sdk/client-s3": "^3.312.0",
+    "@aws-sdk/s3-request-presigner": "^3.312.0",
     "@types/node": "^18.15.11",
-    "@types/react": "^18.0.33",
+    "@types/react": "^18.0.37",
     "@types/react-dom": "^18.0.11",
     "next": "^13.3.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "typescript": "^5.0.3"
+    "typescript": "^5.0.4"
   },
   "devDependencies": {
-    "sst": "^2.5.0",
-    "aws-cdk-lib": "2.62.2",
+    "sst": "^2.5.3",
+    "aws-cdk-lib": "2.72.1",
     "constructs": "10.1.156"
   }
 }
