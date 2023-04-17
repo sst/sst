@@ -151,6 +151,17 @@ export async function initProject(globals: GlobalOptions) {
     },
   };
 
+  // Cleanup old config files
+  (async function () {
+    const files = await fs.readdir(project.paths.root);
+    for (const file of files) {
+      if (file.startsWith(".sst.config")) {
+        await fs.unlink(path.join(project.paths.root, file));
+        Logger.debug(`Removed old config file ${file}`);
+      }
+    }
+  })();
+
   ProjectContext.provide(project);
   dotenv.config({
     path: path.join(project.paths.root, `.env.${project.config.stage}`),

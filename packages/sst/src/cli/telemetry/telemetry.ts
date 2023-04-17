@@ -81,7 +81,7 @@ function willNotRecord() {
   return !isEnabled() || !!process.env.SST_TELEMETRY_DISABLED;
 }
 
-function record(name: string, properties: any): Promise<any> {
+async function record(name: string, properties: any): Promise<any> {
   if (willNotRecord()) {
     return Promise.resolve();
   }
@@ -92,16 +92,18 @@ function record(name: string, properties: any): Promise<any> {
     sessionId,
   };
 
-  return postPayload(TELEMETRY_API, {
-    context,
-    environment: getEnvironmentData(),
-    events: [
-      {
-        name,
-        properties,
-      },
-    ],
-  });
+  try {
+    await postPayload(TELEMETRY_API, {
+      context,
+      environment: getEnvironmentData(),
+      events: [
+        {
+          name,
+          properties,
+        },
+      ],
+    });
+  } catch {}
 }
 
 function getAnonymousId(): string {
