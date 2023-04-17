@@ -111,7 +111,7 @@ export const dev = (program: Program) =>
 
         bus.subscribe("function.build.success", async (evt) => {
           const info = useFunctions().fromID(evt.properties.functionID);
-          if (!info.enableLiveDev) return;
+          if (info.enableLiveDev === false) return;
           Colors.line(Colors.dim(Colors.prefix, "Built", info.handler!));
         });
 
