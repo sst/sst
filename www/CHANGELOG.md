@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.0.5
+
+### Patch Changes
+
+- [#2758](https://github.com/serverless-stack/sst/pull/2758) [`1e9dd488d`](https://github.com/serverless-stack/sst/commit/1e9dd488d872762e27f5832f1728454f9bb38568) Thanks [@jensonb](https://github.com/jensonb)! - Reduced IOT message chunk size to fix Live Lambda bug (#2723)
+
 ## 2.0.4
 
 ### Patch Changes

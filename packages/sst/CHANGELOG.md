@@ -1,5 +1,19 @@
 # @serverless-stack/cli2
 
+## 2.5.3
+
+### Patch Changes
+
+- [`4fc2a79d3`](https://github.com/serverless-stack/sst/commit/4fc2a79d3da9aa905ab77ee0ee44da0e93e8eb08) Thanks [@thdxr](https://github.com/thdxr)! - More restrictive s3 permissions for dev functions
+
+- [`b78571ccd`](https://github.com/serverless-stack/sst/commit/b78571ccda247986aeb3f04715dac3f508b842aa) Thanks [@thdxr](https://github.com/thdxr)! - Make sure function build events are printed
+
+- [#2758](https://github.com/serverless-stack/sst/pull/2758) [`1e9dd488d`](https://github.com/serverless-stack/sst/commit/1e9dd488d872762e27f5832f1728454f9bb38568) Thanks [@jensonb](https://github.com/jensonb)! - Reduced IOT message chunk size to fix Live Lambda bug (#2723)
+
+- [`9d97ab8d7`](https://github.com/serverless-stack/sst/commit/9d97ab8d7e2bbcc306ef24935ad6dea22a5e9448) Thanks [@thdxr](https://github.com/thdxr)! - Cleanup hanging .sst.config files
+
+- [`9d97ab8d7`](https://github.com/serverless-stack/sst/commit/9d97ab8d7e2bbcc306ef24935ad6dea22a5e9448) Thanks [@thdxr](https://github.com/thdxr)! - Properly ignore telemetry errors
+
 ## 2.5.2
 
 ### Patch Changes
