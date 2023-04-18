@@ -80,6 +80,7 @@ test("constructor: restApi-importedConstruct", async () => {
       restApi: api.cdk.restApi,
     },
   });
+  expect(api.url).toBeDefined();
   countResources(stackA, "AWS::ApiGateway::RestApi", 1);
   countResources(stackA, "AWS::ApiGateway::Deployment", 1);
   countResources(stackB, "AWS::ApiGateway::RestApi", 0);
