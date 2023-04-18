@@ -70,7 +70,7 @@ Recall from the [Project Structure](project-structure.md) chapter that the migra
 
 The starter creates the first migration for you. It's called `article` and you'll find it in `packages/core/migrations/1650000012557_article.mjs`.
 
-We use [Kysely](https://koskimas.github.io/kysely/) to build our SQL queries in a typesafe way. We use that for our migrations as well.
+We use [Kysely](https://kysely-org.github.io/kysely/) to build our SQL queries in a typesafe way. We use that for our migrations as well.
 
 ```js title="packages/core/migrations/1650000012557_article.mjs"
 import { Kysely } from "kysely";

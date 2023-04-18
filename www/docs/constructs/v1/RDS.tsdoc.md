@@ -33,7 +33,7 @@ Database engine of the cluster. Cannot be changed once set.
 
 _Type_ : <span class="mono">string</span>
 
-Path to the directory that contains the migration scripts. The `RDS` construct uses [Kysely](https://koskimas.github.io/kysely/) to run and manage schema migrations. The `migrations` prop should point to the folder where your migration files are.
+Path to the directory that contains the migration scripts. The `RDS` construct uses [Kysely](https://kysely-org.github.io/kysely/) to run and manage schema migrations. The `migrations` prop should point to the folder where your migration files are.
 
 
 

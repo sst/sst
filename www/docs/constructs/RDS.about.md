@@ -7,7 +7,7 @@ The `RDS` construct is a higher level CDK construct that makes it easy to create
 
 ## Migrations
 
-The `RDS` construct uses [Kysely](https://koskimas.github.io/kysely/) to run and manage schema migrations. The `migrations` prop should point to the folder where your migration files are.
+The `RDS` construct uses [Kysely](https://kysely-org.github.io/kysely/) to run and manage schema migrations. The `migrations` prop should point to the folder where your migration files are.
 
 ```js
 new RDS(stack, "Database", {
