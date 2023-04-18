@@ -72,7 +72,7 @@ import { useTypedQuery } from "@my-sst-app/graphql/urql";
 The `useTypedQuery` hook needs an instance of our GraphQL client to make the queries. We define this in `packages/web/src/main.tsx`.
 
 ```ts title="packages/web/src/main.tsx"
-const urql = createClient({
+const urql = new Client({
   url: import.meta.env.VITE_GRAPHQL_URL,
 });
 ```
