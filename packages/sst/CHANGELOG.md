@@ -1,5 +1,17 @@
 # @serverless-stack/cli2
 
+## 2.5.4
+
+### Patch Changes
+
+- [#2780](https://github.com/serverless-stack/sst/pull/2780) [`ea7e565fe`](https://github.com/serverless-stack/sst/commit/ea7e565fee7c7b8d08eb08339f1a0d15636132cd) Thanks [@Bhavikpatel576](https://github.com/Bhavikpatel576)! - Disable Introspection in GraphQL Helix
+
+- [`7bb418200`](https://github.com/serverless-stack/sst/commit/7bb4182009dfabe6b0cfa93b332bd7c4f54d5dbc) Thanks [@fwang](https://github.com/fwang)! - ApiGatewayV1Api: support binding imported API
+
+- [`01d40bf3a`](https://github.com/serverless-stack/sst/commit/01d40bf3a89fb9ad1c318f96fed0ee409c599224) Thanks [@thdxr](https://github.com/thdxr)! - Handle symlink errors
+
+- [`9b4593bf1`](https://github.com/serverless-stack/sst/commit/9b4593bf1def9be46da941881b232ef39ae2fc21) Thanks [@thdxr](https://github.com/thdxr)! - Fix error with top level URL in banner
+
 ## 2.5.3
 
 ### Patch Changes
