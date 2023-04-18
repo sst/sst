@@ -101,7 +101,9 @@ function verify<T = SessionValue>(token: string) {
         key: getPublicKey(),
       })(token);
       return jwt as T;
-    } catch {}
+    } catch (e) {
+      console.log(e);
+    }
   }
   return {
     type: "public",
