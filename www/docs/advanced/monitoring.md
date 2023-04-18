@@ -244,7 +244,7 @@ With the layer ARN, you can use the layer construct in your CDK code. To ensure 
 If you use Node.js then you'll probably need to use Node 18 if you plan on using ESM modules.
 :::
 
-Add the following to the top of the `stacks()` function in your `sst.config.ts` file.
+Add the following to your `sst.config.ts` file.
 
 ```ts title="sst.config.ts"
 export default {
