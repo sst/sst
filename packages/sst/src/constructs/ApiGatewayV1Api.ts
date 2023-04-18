@@ -594,7 +594,11 @@ export class ApiGatewayV1Api<
    * The AWS generated URL of the Api.
    */
   public get url(): string {
-    return this.cdk.restApi.url;
+    const app = this.node.root as App;
+    return (
+      this.cdk.restApi.url ??
+      `https://${this.cdk.restApi.restApiId}.execute-api.${app.region}.amazonaws.com/${app.stage}/`
+    );
   }
 
   /**
