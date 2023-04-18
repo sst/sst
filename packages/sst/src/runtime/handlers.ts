@@ -110,9 +110,13 @@ export const useRuntimeHandlers = Context.memo(() => {
                   recursive: true,
                 });
               if (mode === "start") {
-                const dir = path.dirname(toPath);
-                await fs.mkdir(dir, { recursive: true });
-                await fs.symlink(fromPath, toPath);
+                try {
+                  const dir = path.dirname(toPath);
+                  await fs.mkdir(dir, { recursive: true });
+                  await fs.symlink(fromPath, toPath);
+                } catch (ex) {
+                  Logger.debug("Failed to symlink", fromPath, toPath, ex);
+                }
               }
             })
           );

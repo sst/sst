@@ -62,7 +62,8 @@ export const useGoHandler = Context.memo(async () => {
       if (input.mode === "start") {
         try {
           const target = path.join(input.out, handlerName);
-          const srcPath = (os.platform() === "win32" ? src.replaceAll("\\","\\\\") : src);
+          const srcPath =
+            os.platform() === "win32" ? src.replaceAll("\\", "\\\\") : src;
           const result = await execAsync(
             `go build -ldflags "-s -w" -o "${target}" ./${srcPath}`,
             {
@@ -73,25 +74,36 @@ export const useGoHandler = Context.memo(async () => {
             }
           );
         } catch (ex) {
-          throw new VisibleError(`Failed to build ${ex}`);
+          return {
+            type: "error",
+            errors: [String(ex)],
+          };
         }
       }
 
       if (input.mode === "deploy") {
         try {
           const target = path.join(input.out, "bootstrap");
-          const srcPath = (os.platform() === "win32" ? src.replaceAll("\\","\\\\") : src);
-          await execAsync(`go build -ldflags "-s -w" -o "${target}" ./${srcPath}`, {
-            cwd: project,
-            env: {
-              ...process.env,
-              CGO_ENABLED: "0",
-              GOARCH: input.props.architecture === "arm_64" ? "arm64" : "amd64",
-              GOOS: "linux",
-            },
-          });
+          const srcPath =
+            os.platform() === "win32" ? src.replaceAll("\\", "\\\\") : src;
+          await execAsync(
+            `go build -ldflags "-s -w" -o "${target}" ./${srcPath}`,
+            {
+              cwd: project,
+              env: {
+                ...process.env,
+                CGO_ENABLED: "0",
+                GOARCH:
+                  input.props.architecture === "arm_64" ? "arm64" : "amd64",
+                GOOS: "linux",
+              },
+            }
+          );
         } catch (ex) {
-          throw new VisibleError(`Failed to build ${ex}`);
+          return {
+            type: "error",
+            errors: [String(ex)],
+          };
         }
       }
 
