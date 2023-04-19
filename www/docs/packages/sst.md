@@ -174,13 +174,33 @@ So for example, you can start your frontend with all the binding values.
 npx sst bind next dev
 ```
 
-You can also bind all the resources in your app and use it to run your tests.
+`sst bind` auto-detects the following frontend frameworks. If your framework is not listed here, feel free to hop on to our <a href={ config.discord }>Discord</a> and let us know.
+
+- Angular: detects `angular.json`
+- Astro: detects `astro.config.js`
+- Create React App: detects `react-scripts` in `package.json`
+- Ember: detects `ember-cli-build.js`
+- Gatsby: detects `gatsby-config.js`
+- Next.js: detects `next.config.js`
+- Plain HTML: detects `index.html`
+- Preact: detects `@preact/preset-vite` in `vite.config.js`
+- React: detects `plugin-react` in `vite.config.js`
+- Remix: detects `remix.config.js`
+- Solid: detects `solid-start` in `vite.config.js`
+- Svelte: detects `svelte.config.js`
+- Vue: detects `plugin-vue` in `vite.config.js`
+
+When detected, `sst bind` will load the site's bound resources, environment variables, and the IAM permissions granted to the site.
+
+If a frontend framework is not detected in the current directory, `sst bind` will bind all the resources in your app and use it to run the command.
+
+For example, you can use it to [run your tests](../testing.md).
 
 ```bash
 npx sst bind vitest run
 ```
 
-You can [read more about how this works for running tests](../testing.md).
+You can also use the `sst bind` to run any scripts.
 
 ---
 
