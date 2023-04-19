@@ -49,6 +49,7 @@ interface Project {
     }>;
   version: string;
   cdkVersion: string;
+  constructsVersion: string;
   paths: {
     root: string;
     config: string;
@@ -111,7 +112,7 @@ export async function initProject(globals: GlobalOptions) {
     config.stage ||
     (await usePersonalStage(out)) ||
     (await promptPersonalStage(out));
-  const [version, cdkVersion] = await (async () => {
+  const [version, cdkVersion, constructsVersion] = await (async () => {
     try {
       const packageJson = JSON.parse(
         await fs
@@ -120,7 +121,11 @@ export async function initProject(globals: GlobalOptions) {
           )
           .then((x) => x.toString())
       );
-      return [packageJson.version, packageJson.dependencies["aws-cdk-lib"]];
+      return [
+        packageJson.version,
+        packageJson.dependencies["aws-cdk-lib"],
+        packageJson.dependencies["constructs"],
+      ];
     } catch {
       return ["unknown", "unknown"];
     }
@@ -128,6 +133,7 @@ export async function initProject(globals: GlobalOptions) {
   const project: Project = {
     version,
     cdkVersion,
+    constructsVersion,
     config: {
       ...config,
       stage,
