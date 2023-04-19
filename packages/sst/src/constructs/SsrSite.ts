@@ -286,7 +286,7 @@ export class SsrSite extends Construct implements SSTConstruct {
   protected buildConfig: SsrBuildConfig;
   protected serverLambdaForEdge?: EdgeFunction;
   protected serverLambdaForRegional?: CdkFunction;
-  private serverLambdaForDev?: CdkFunction;
+  private serverLambdaForDev?: Function;
   private bucket: Bucket;
   private distribution: Distribution;
   private hostedZone?: IHostedZone;
@@ -426,14 +426,14 @@ export class SsrSite extends Construct implements SSTConstruct {
    * ```
    */
   public attachPermissions(permissions: Permissions): void {
+    this.serverLambdaForDev?.attachPermissions(permissions);
+    this.serverLambdaForEdge?.attachPermissions(permissions);
     if (this.serverLambdaForRegional) {
       attachPermissionsToRole(
         this.serverLambdaForRegional.role as Role,
         permissions
       );
     }
-
-    this.serverLambdaForEdge?.attachPermissions(permissions);
   }
 
   /** @internal */
