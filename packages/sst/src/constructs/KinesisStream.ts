@@ -135,7 +135,7 @@ export interface KinesisStreamProps {
  * @example
  *
  * ```js
- * import { KinesisStream } from "@serverless-stack/resources";
+ * import { KinesisStream } from "sst/constructs";
  *
  * new KinesisStream(stack, "Stream", {
  *   consumers: {

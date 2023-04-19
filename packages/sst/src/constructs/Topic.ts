@@ -156,7 +156,7 @@ export interface TopicProps {
  * @example
  *
  * ```js
- * import { Topic } from "@serverless-stack/resources";
+ * import { Topic } from "sst/constructs";
  *
  * new Topic(stack, "Topic", {
  *   subscribers: {

@@ -216,7 +216,7 @@ export interface JobProps {
  * @example
  *
  * ```js
- * import { Cron } from "@serverless-stack/resources";
+ * import { Cron } from "sst/constructs";
  *
  * new Cron(stack, "Cron", {
  *   schedule: "rate(1 minute)",

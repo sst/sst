@@ -334,7 +334,7 @@ export interface StaticSiteCdkDistributionProps
  * Deploys a plain HTML website in the `path/to/src` directory.
  *
  * ```js
- * import { StaticSite } from "@serverless-stack/resources";
+ * import { StaticSite } from "sst/constructs";
  *
  * new StaticSite(stack, "Site", {
  *   path: "path/to/src",

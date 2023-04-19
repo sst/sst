@@ -597,7 +597,7 @@ export interface FunctionCopyFilesProps {
  * @example
  *
  * ```js
- * import { Function } from "@serverless-stack/resources";
+ * import { Function } from "sst/constructs";
  *
  * new Function(stack, "MySnsLambda", {
  *   handler: "src/sns/index.main",

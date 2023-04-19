@@ -449,7 +449,7 @@ export interface AppSyncApiCdkGraphqlProps
  * @example
  *
  * ```js
- * import { AppSyncApi } from "@serverless-stack/resources";
+ * import { AppSyncApi } from "sst/constructs";
  *
  * new AppSyncApi(stack, "GraphqlApi", {
  *   schema: "graphql/schema.graphql",

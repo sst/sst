@@ -186,7 +186,7 @@ export interface CognitoProps {
  * @example
  *
  * ```js
- * import { Cognito } from "@serverless-stack/resources";
+ * import { Cognito } from "sst/constructs";
  *
  * new Cognito(stack, "Cognito");
  * ```

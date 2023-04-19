@@ -290,7 +290,7 @@ export interface EventBusProps {
  * @example
  *
  * ```js
- * import { EventBus } from "@serverless-stack/resources";
+ * import { EventBus } from "sst/constructs";
  *
  * new EventBus(stack, "Bus", {
  *   rules: {
