@@ -27,7 +27,7 @@ import {
   bindPermissions,
   getReferencedSecrets,
 } from "./util/functionBinding.js";
-import { IVpc } from "aws-cdk-lib/aws-ec2";
+import { ISecurityGroup, IVpc, SubnetSelection } from "aws-cdk-lib/aws-ec2";
 import { useDeferredTasks } from "./deferred_task.js";
 import { useProject } from "../project.js";
 import { useRuntimeHandlers } from "../runtime/handlers.js";
@@ -167,6 +167,42 @@ export interface JobProps {
      * ```
      */
     vpc?: IVpc;
+    /**
+     * Where to place the network interfaces within the VPC.
+     * @default All private subnets.
+     * @example
+     * ```js
+     * import { SubnetType } from "aws-cdk-lib/aws-ec2";
+     *
+     * new Job(stack, "MyJob", {
+     *   handler: "src/job.handler",
+     *   cdk: {
+     *     vpc,
+     *     vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS }
+     *   }
+     * })
+     * ```
+     */
+    vpcSubnets?: SubnetSelection;
+    /**
+     * The list of security groups to associate with the Job's network interfaces.
+     * @default A new security group is created.
+     * @example
+     * ```js
+     * import { SecurityGroup } from "aws-cdk-lib/aws-ec2";
+     *
+     * new Job(stack, "MyJob", {
+     *   handler: "src/job.handler",
+     *   cdk: {
+     *     vpc,
+     *     securityGroups: [
+     *       new SecurityGroup(stack, "MyJobSG", { vpc })
+     *     ]
+     *   }
+     * })
+     * ```
+     */
+    securityGroups?: ISecurityGroup[];
   };
 }
 
@@ -300,7 +336,6 @@ export class Job extends Construct implements SSTConstruct {
     const app = this.node.root as App;
 
     return new Project(this, "JobProject", {
-      vpc: cdk?.vpc,
       projectName: app.logicalPrefixedName(this.node.id),
       environment: {
         // CodeBuild offers different build images. The newer ones have much quicker
@@ -330,6 +365,9 @@ export class Job extends Construct implements SSTConstruct {
           },
         },
       }),
+      vpc: cdk?.vpc,
+      securityGroups: cdk?.securityGroups,
+      subnetSelection: cdk?.vpcSubnets,
     });
   }
 
