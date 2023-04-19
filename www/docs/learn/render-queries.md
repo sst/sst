@@ -74,6 +74,7 @@ The `useTypedQuery` hook needs an instance of our GraphQL client to make the que
 ```ts title="packages/web/src/main.tsx"
 const urql = new Client({
   url: import.meta.env.VITE_GRAPHQL_URL,
+  exchanges: [cacheExchange, fetchExchange],
 });
 ```
 

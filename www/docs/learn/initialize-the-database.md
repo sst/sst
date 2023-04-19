@@ -9,7 +9,7 @@ Now let's check back in on the `sst dev` command that we started in the [Create 
 Once your local development environment is up and running, you should see the following printed out in the terminal.
 
 ```
-SST v2.0.37  ready!
+SST v2.5.5  ready!
 
 ➜  App:     my-sst-app
    Stage:   Jay
