@@ -699,7 +699,7 @@ export interface ApiGraphQLRouteProps<AuthorizerKeys>
  * @example
  *
  * ```ts
- * import { Api } from "@serverless-stack/resources";
+ * import { Api } from "sst/constructs";
  *
  * new Api(stack, "Api", {
  *   routes: {

@@ -18,6 +18,8 @@ const CDK_DOCS_MAP = {
   StackProps: "",
   CfnOutputProps: "",
   IVpc: "aws_ec2",
+  ISecurityGroup: "aws_ec2",
+  SubnetSelection: "aws_ec2",
   LogGroup: "aws_logs",
   LogGroupProps: "aws_logs",
   ILogGroup: "aws_logs",

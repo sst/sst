@@ -7,18 +7,13 @@ import type {
   StaticSiteMetadata,
 } from "../../constructs/Metadata.js";
 
-const SSR_SITE_CONFIG = {
-  NextjsSite: "next.config",
-  AstroSite: "astro.config",
-  RemixSite: "remix.config",
-  SolidStartSite: "vite.config",
-  SlsNextjsSite: "next.config",
-};
 type BIND_REASON =
   | "init"
   | "metadata_updated"
   | "secrets_updated"
   | "iam_expired";
+
+class OutdatedMetadataError extends Error {}
 
 export const bind = (program: Program) =>
   program
@@ -55,31 +50,44 @@ export const bind = (program: Program) =>
         const bus = useBus();
         const project = useProject();
         const command = args.command?.join(" ");
-        const isSsrSite = await isRunningInSsrSite();
+        const isSite = await isRunningInSite();
         let p: ReturnType<typeof spawn> | undefined;
         let timer: ReturnType<typeof setTimeout> | undefined;
         let siteConfigCache:
-          | Awaited<ReturnType<typeof parseSiteConfig>>
+          | Awaited<ReturnType<typeof parseSiteMetadata>>
           | undefined;
 
         // Handle missing command
         if (!command) {
           throw new VisibleError(
             `Command is required, e.g. sst bind ${
-              isSsrSite ? "next dev" : "env"
+              isSite ? "next dev" : "vitest run"
             }`
           );
         }
 
         // Bind script
-        const initialMetadata = await getSiteMetadata();
-        if (!initialMetadata && !isSsrSite) {
+        if (!isSite) {
           Logger.debug("Running in script mode.");
           return await bindScript();
         }
 
         // Bind site
-        await bindSite("init");
+        try {
+          await bindSite("init");
+        } catch (e: any) {
+          // Bind script (fallback)
+          if (e instanceof OutdatedMetadataError) {
+            Colors.line(
+              Colors.warning(
+                "Warning: This was deployed with an old version of SST. Run `sst dev` or `sst deploy` to update."
+              )
+            );
+            return await bindScript();
+          }
+          throw e;
+        }
+
         bus.subscribe("stacks.metadata.updated", () =>
           bindSite("metadata_updated")
         );
@@ -88,8 +96,7 @@ export const bind = (program: Program) =>
         );
         bus.subscribe("config.secret.updated", (payload) => {
           const secretName = payload.properties.name;
-          if (siteConfigCache?.secrets === undefined) return;
-          if (!siteConfigCache.secrets.includes(secretName)) return;
+          if (!(siteConfigCache?.secrets || []).includes(secretName)) return;
 
           Colors.line(
             `\n`,
@@ -98,34 +105,53 @@ export const bind = (program: Program) =>
           bindSite("secrets_updated");
         });
 
-        async function isRunningInSsrSite() {
+        async function isRunningInSite() {
           const { existsAsync } = await import("../../util/fs.js");
           const { readFile } = await import("fs/promises");
+          const SITE_CONFIGS = [
+            { file: "next.config", multiExtension: true },
+            { file: "astro.config", multiExtension: true },
+            { file: "remix.config", multiExtension: true },
+            { file: "svelte.config", multiExtension: true },
+            { file: "gatsby-config", multiExtension: true },
+            { file: "angular.json" },
+            { file: "ember-cli-build.js" },
+            {
+              file: "vite.config",
+              multiExtension: true,
+              match: /solid-start|plugin-vue|plugin-react|@preact\/preset-vite/,
+            },
+            { file: "package.json", match: /react-scripts/ }, // CRA
+            { file: "index.html" }, // plain HTML
+          ];
           const results = await Promise.all(
-            Object.values(SSR_SITE_CONFIG)
-              .map((config) =>
-                [".js", ".cjs", ".mjs", ".ts"].map(async (ext) => {
-                  const exists = await existsAsync(`${config}${ext}`);
-                  if (exists && config === "vite.config") {
-                    const content = await readFile(`${config}${ext}`);
-                    return content.includes("solid-start");
-                  }
-                  return exists;
-                })
-              )
-              .flat()
+            SITE_CONFIGS.map((site) => {
+              const files = site.multiExtension
+                ? [".js", ".cjs", ".mjs", ".ts"].map(
+                    (ext) => `${site.file}${ext}`
+                  )
+                : [site.file];
+              return files.map(async (file) => {
+                const exists = await existsAsync(file);
+                if (!exists) return false;
+
+                if (site.match) {
+                  const content = await readFile(file);
+                  return content.toString().match(site.match);
+                }
+
+                return true;
+              });
+            }).flat()
           );
+
           return results.some(Boolean);
         }
 
         async function bindSite(reason: BIND_REASON) {
           // Get metadata
-          const siteMetadata = (
-            reason === "init"
-              ? initialMetadata
-              : await getSiteMetadataUntilAvailable()
-          )!;
-          const siteConfig = await parseSiteConfig(siteMetadata);
+          const siteMetadata = await getSiteMetadataUntilAvailable();
+          const siteConfig = await parseSiteMetadata(siteMetadata!);
 
           // Handle rebind due to metadata updated
           if (reason === "metadata_updated") {
@@ -178,7 +204,65 @@ export const bind = (program: Program) =>
           });
         }
 
-        async function parseSiteConfig(
+        async function getSiteMetadataUntilAvailable() {
+          const { createSpinner } = await import("../spinner.js");
+          const spinner = createSpinner({});
+          while (true) {
+            const data = await getSiteMetadata();
+
+            // Handle site metadata not found
+            if (!data) {
+              spinner.start("Make sure `sst dev` is running...");
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+              continue;
+            }
+
+            spinner.isSpinning && spinner.stop().clear();
+
+            return data;
+          }
+        }
+
+        async function getSiteMetadata() {
+          const { metadata } = await import("../../stacks/metadata.js");
+          const metadataData = await metadata();
+          return Object.values(metadataData)
+            .flat()
+            .filter(
+              (
+                c
+              ): c is
+                | SsrSiteMetadata
+                | StaticSiteMetadata
+                | SlsNextjsMetadata =>
+                [
+                  "StaticSite",
+                  "NextjsSite",
+                  "AstroSite",
+                  "RemixSite",
+                  "SolidStartSite",
+                  "SlsNextjsSite",
+                ].includes(c.type)
+            )
+            .find((c) => {
+              // Handle metadata prior to SST v2.3.0 doesn't have path
+              const isSsr =
+                c.type !== "StaticSite" && c.type !== "SlsNextjsSite";
+              if (
+                !c.data.path ||
+                (isSsr && !c.data.server) ||
+                (!isSsr && !c.data.environment)
+              ) {
+                throw new OutdatedMetadataError();
+              }
+
+              return (
+                path.resolve(project.paths.root, c.data.path) === process.cwd()
+              );
+            });
+        }
+
+        async function parseSiteMetadata(
           metadata: SlsNextjsMetadata | StaticSiteMetadata | SsrSiteMetadata
         ) {
           const { LambdaClient, GetFunctionCommand } = await import(
@@ -207,64 +291,6 @@ export const bind = (program: Program) =>
             envs: functionConfig?.Environment?.Variables || {},
             secrets: metadata.data.secrets,
           };
-        }
-
-        async function getSiteMetadataUntilAvailable() {
-          const { createSpinner } = await import("../spinner.js");
-          const spinner = createSpinner({});
-          while (true) {
-            const data = await getSiteMetadata();
-
-            // Handle site metadata not found
-            if (!data) {
-              spinner.start(
-                //"Waiting for SST to start for the first time. Run `sst dev`..."
-                //"Run `sst dev` for the first time. Waiting..."
-                "Make sure `sst dev` is running..."
-              );
-              await new Promise((resolve) => setTimeout(resolve, 1000));
-              continue;
-            }
-
-            // Handle site metadata is old
-            const isBindSupported =
-              data.type !== "StaticSite" && data.type !== "SlsNextjsSite";
-            if (
-              (isBindSupported && !data.data.server) ||
-              (!isBindSupported && !data.data.environment)
-            ) {
-              spinner.start(
-                "This was deployed with an old version of SST. Make sure to restart `sst dev`..."
-              );
-              await new Promise((resolve) => setTimeout(resolve, 1000));
-              continue;
-            }
-            spinner.isSpinning && spinner.stop().clear();
-
-            return data;
-          }
-        }
-
-        async function getSiteMetadata() {
-          const { metadata } = await import("../../stacks/metadata.js");
-          const metadataData = await metadata();
-          return Object.values(metadataData)
-            .flat()
-            .filter(
-              (
-                c
-              ): c is
-                | SsrSiteMetadata
-                | StaticSiteMetadata
-                | SlsNextjsMetadata => Boolean(c)
-            )
-            .filter(
-              (c) => c.type === "StaticSite" || Boolean(SSR_SITE_CONFIG[c.type])
-            )
-            .find(
-              (c) =>
-                path.resolve(project.paths.root, c.data.path) === process.cwd()
-            );
         }
 
         async function assumeSsrRole(roleArn: string) {

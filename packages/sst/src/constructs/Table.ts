@@ -289,7 +289,7 @@ export interface TableProps {
  * Deploys a plain HTML website in the `path/to/src` directory.
  *
  * ```js
- * import { Table } from "@serverless-stack/resources";
+ * import { Table } from "sst/constructs";
  *
  * new Table(stack, "Notes", {
  *   fields: {

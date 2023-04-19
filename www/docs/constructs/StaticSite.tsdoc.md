@@ -235,7 +235,7 @@ new StaticSite(stack, "frontend", {
 
 _Type_ : <span class="mono">[IBucket](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.IBucket.html)</span><span class='mono'> | </span><span class="mono">[BucketProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.BucketProps.html)</span>
 
-Allows you to override default settings this construct uses internally to ceate the bucket
+Allows you to override default settings this construct uses internally to create the bucket
 ```js
 new StaticSite(stack, "Site", {
   path: "path/to/src",

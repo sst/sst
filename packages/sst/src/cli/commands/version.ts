@@ -11,5 +11,6 @@ export const version = (program: Program) =>
       const project = useProject();
       Colors.line(Colors.bold(`SST:`), `v${project.version}`);
       Colors.line(Colors.bold(`CDK:`), `v${project.cdkVersion}`);
+      Colors.line(Colors.bold(`Constructs:`), `v${project.constructsVersion}`);
     }
   );

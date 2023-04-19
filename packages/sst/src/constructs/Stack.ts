@@ -21,7 +21,7 @@ export type StackProps = cdk.StackProps;
  * @example
  *
  * ```js
- * import { StackContext } from "@serverless-stack/resources";
+ * import { StackContext } from "sst/constructs";
  *
  * export function MyStack({ stack }: StackContext) {
  *   // Define your stack

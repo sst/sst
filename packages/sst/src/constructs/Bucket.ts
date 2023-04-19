@@ -272,7 +272,7 @@ export interface BucketProps {
  * @example
  *
  * ```js
- * import { Bucket } from "@serverless-stack/resources";
+ * import { Bucket } from "sst/constructs";
  *
  * new Bucket(stack, "Bucket");
  * ```

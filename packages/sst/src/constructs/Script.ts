@@ -19,7 +19,7 @@ export interface ScriptProps {
    *
    * @example
    * ```js
-   * import { Script } from "@serverless-stack/resources";
+   * import { Script } from "sst/constructs";
    *
    * new Script(stack, "Script", {
    *   onCreate: "src/script.create",
@@ -92,7 +92,7 @@ export interface ScriptProps {
  * @example
  *
  * ```js
- * import { Script } from "@serverless-stack/resources";
+ * import { Script } from "sst/constructs";
  *
  * new Script(stack, "Script", {
  *   onCreate: "src/function.create",

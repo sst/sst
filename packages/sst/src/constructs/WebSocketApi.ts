@@ -235,7 +235,7 @@ export interface WebSocketApiCdkStageProps
  *
  * @example
  * ```js
- * import { WebSocketApi } from "@serverless-stack/resources";
+ * import { WebSocketApi } from "sst/constructs";
  *
  * new WebSocketApi(stack, "Api", {
  *   routes: {

@@ -15,7 +15,7 @@ import {
  * ### Using the minimal config
  *
  * ```js
- * import { Config } from "@serverless-stack/resources";
+ * import { Config } from "sst/constructs";
  *
  * new Config.Secret(stack, "STRIPE_KEY");
  * ```
