@@ -763,6 +763,9 @@ export class SsrSite extends Construct implements SSTConstruct {
       environment,
       permissions,
       role,
+      // Force enable live dev to prevent the function handler to be built
+      // in the case user set "enableLiveDev: false" on the app or stack.
+      enableLiveDev: true,
     });
     fn._doNotAllowOthersToBind = true;
 
