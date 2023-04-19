@@ -131,19 +131,17 @@ export const bind = (program: Program) =>
                     (ext) => `${site.file}${ext}`
                   )
                 : [site.file];
-              return Promise.all(
-                files.map(async (file) => {
-                  const exists = await existsAsync(file);
-                  if (!exists) return false;
+              return files.map(async (file) => {
+                const exists = await existsAsync(file);
+                if (!exists) return false;
 
-                  if (site.match) {
-                    const content = await readFile(file);
-                    return content.toString().match(site.match);
-                  }
+                if (site.match) {
+                  const content = await readFile(file);
+                  return content.toString().match(site.match);
+                }
 
-                  return true;
-                })
-              );
+                return true;
+              });
             }).flat()
           );
 
