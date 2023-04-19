@@ -1,5 +1,15 @@
 # @serverless-stack/cli2
 
+## 2.5.5
+
+### Patch Changes
+
+- [`b22686bba`](https://github.com/serverless-stack/sst/commit/b22686bba1fba9abb00d536e2d8ed48fe6d7170a) Thanks [@fwang](https://github.com/fwang)! - sst bind: handle old stack metadata
+
+- [`42c6b5f14`](https://github.com/serverless-stack/sst/commit/42c6b5f14d3f6734948e51c6a1d3420cf1650111) Thanks [@fwang](https://github.com/fwang)! - sst version: print constructs version
+
+- [`fe6103a40`](https://github.com/serverless-stack/sst/commit/fe6103a406d17384c422469c9298f7b60a4c6c83) Thanks [@fwang](https://github.com/fwang)! - Job: support vps security groups and subnet selection
+
 ## 2.5.4
 
 ### Patch Changes
