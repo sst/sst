@@ -3,7 +3,7 @@
     "directory": "dist",
     "access": "public"
   },
-  "name": "sst",
+  "name": "@estyrke/sst",
   "version": "2.5.7",
   "bin": {
     "sst": "cli/sst.js"
@@ -18,7 +18,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/serverless-stack/sst.git",
+    "url": "git+https://github.com/estyrke/serverless-stack.git",
     "directory": "packages/cli"
   },
   "exports": {
