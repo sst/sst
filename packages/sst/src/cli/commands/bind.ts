@@ -30,6 +30,7 @@ export const bind = (program: Program) =>
           ),
       async (args) => {
         const { spawn } = await import("child_process");
+        const kill = await import("tree-kill");
         const { useProject } = await import("../../project.js");
         const { useBus } = await import("../../bus.js");
         const { useIOT } = await import("../../iot.js");
@@ -179,7 +180,7 @@ export const bind = (program: Program) =>
                 bindSite("iam_expired");
               }, expireAt - Date.now());
 
-              runCommand({
+              await runCommand({
                 ...siteConfig.envs,
                 AWS_ACCESS_KEY_ID: credentials!.AccessKeyId,
                 AWS_SECRET_ACCESS_KEY: credentials!.SecretAccessKey,
@@ -190,7 +191,7 @@ export const bind = (program: Program) =>
           }
 
           // Fallback to use local IAM credentials
-          runCommand({
+          await runCommand({
             ...siteConfig.envs,
             ...(await localIamCredentials()),
           });
@@ -198,7 +199,7 @@ export const bind = (program: Program) =>
 
         async function bindScript() {
           const { Config } = await import("../../config.js");
-          runCommand({
+          await runCommand({
             ...(await Config.env()),
             ...(await localIamCredentials()),
           });
@@ -346,11 +347,22 @@ export const bind = (program: Program) =>
           };
         }
 
-        function runCommand(envs: Record<string, string | undefined>) {
+        async function runCommand(envs: Record<string, string | undefined>) {
           Colors.gap();
 
           if (p) {
-            p.kill();
+            p.removeAllListeners("exit");
+            // Note: calling p.kill() does not kill child processes. And in the
+            // cases of Next.js and CRA, servers are child processes. Need to
+            // kill the entire process tree to free up port ie. 3000.
+            await new Promise((resolve, reject) => {
+              kill.default(p?.pid!, (error) => {
+                if (error) {
+                  return reject(error);
+                }
+                resolve(true);
+              });
+            });
           }
 
           p = spawn(command!, {
