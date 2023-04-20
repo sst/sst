@@ -15,10 +15,10 @@ export default {
     // Config
   },
   async stacks(app) {
+    Tags.of(app).add("my-tag", `${app.stage}-${app.region}`);
+
     // Add your stacks
     app.stack(/* ... */);
-
-    Tags.of(app).add("my-tag", `${app.stage}-${app.region}`);
   },
 } satisfies SSTConfig;
 ```
