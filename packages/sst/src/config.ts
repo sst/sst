@@ -33,7 +33,7 @@ export namespace Config {
     const result: (ReturnType<typeof parse> & { value: string })[] = [];
 
     for await (const p of scan(PREFIX.FALLBACK)) {
-      const parsed = parse(p.Name!);
+      const parsed = parse(p.Name!, PREFIX.FALLBACK);
       if (parsed.type === "secrets") continue;
       result.push({
         ...parsed,
@@ -42,7 +42,7 @@ export namespace Config {
     }
 
     for await (const p of scan(PREFIX.STAGE)) {
-      const parsed = parse(p.Name!);
+      const parsed = parse(p.Name!, PREFIX.STAGE);
       if (parsed.type === "secrets") continue;
       result.push({
         ...parsed,
@@ -81,13 +81,13 @@ export namespace Config {
     const result: Record<string, Secret> = {};
 
     for await (const p of scan(PREFIX.STAGE + "Secret")) {
-      const parsed = parse(p.Name!);
+      const parsed = parse(p.Name!, PREFIX.STAGE);
       if (!result[parsed.id]) result[parsed.id] = {};
       result[parsed.id].value = p.Value;
     }
 
     for await (const p of scan(PREFIX.FALLBACK + "Secret")) {
-      const parsed = parse(p.Name!);
+      const parsed = parse(p.Name!, PREFIX.FALLBACK);
       if (!result[parsed.id]) result[parsed.id] = {};
       result[parsed.id].fallback = p.Value;
     }
@@ -256,7 +256,7 @@ const SECRET_UPDATED_AT_ENV = "SST_ADMIN_SECRET_UPDATED_AT";
 const PREFIX = {
   get STAGE() {
     const project = useProject();
-    return `/sst/${project.config.name}/${project.config.stage}/`;
+    return project.config.ssmPrefix;
   },
   get FALLBACK() {
     const project = useProject();
@@ -264,12 +264,12 @@ const PREFIX = {
   },
 };
 
-function parse(ssmName: string) {
-  const parts = ssmName.split("/");
+function parse(ssmName: string, prefix: string) {
+  const parts = ssmName.substring(prefix.length).split("/");
   return {
-    type: parts[4],
-    id: parts[5],
-    prop: parts.slice(6).join("/"),
+    type: parts[0],
+    id: parts[1],
+    prop: parts.slice(2).join("/"),
   };
 }
 
