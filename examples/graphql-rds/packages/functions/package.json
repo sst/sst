@@ -7,9 +7,9 @@
     "typecheck": "tsc -noEmit"
   },
   "devDependencies": {
-    "@types/node": "^18.15.11",
+    "@types/node": "^18.15.12",
     "@types/aws-lambda": "^8.10.114",
-    "sst": "^2.5.3"
+    "sst": "^2.5.6"
   },
   "dependencies": {
     "@pothos/core": "^3.29.0",
