@@ -1,5 +1,17 @@
 # @serverless-stack/cli2
 
+## 2.5.6
+
+### Patch Changes
+
+- [`0636496a2`](https://github.com/serverless-stack/sst/commit/0636496a287b61bde5f4af5874a7fb547c3a9364) Thanks [@fwang](https://github.com/fwang)! - SsrSite: fix sst dev error when enableLiveDev is set to false
+
+- [`1e7c32887`](https://github.com/serverless-stack/sst/commit/1e7c328877e8d4fc0cd3561c6e2b172266ab2820) Thanks [@fwang](https://github.com/fwang)! - SsrSite: fix permissions not attached to placeholder server function
+
+- [`2f16a73da`](https://github.com/serverless-stack/sst/commit/2f16a73daf77c800dc2b65bb2ebfe4d29a0e76fb) Thanks [@fwang](https://github.com/fwang)! - sst secrets: fix ssmPrefix is not respected
+
+- [`5cd2d4fde`](https://github.com/serverless-stack/sst/commit/5cd2d4fded67969e6dd6befd125d3c6f402dd0d8) Thanks [@fwang](https://github.com/fwang)! - Sanitize stage names with invalid characters
+
 ## 2.5.5
 
 ### Patch Changes
