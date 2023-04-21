@@ -11,6 +11,7 @@ export const load = (program: Program) =>
       }),
     async (args) => {
       const { Config } = await import("../../../config.js");
+      const { Colors } = await import("../../colors.js");
       const { blue } = await import("colorette");
       const { createSpinner } = await import("../../spinner.js");
       const { parse } = await import("dotenv");
@@ -22,23 +23,45 @@ export const load = (program: Program) =>
 
       // Set secrets
       const setting = createSpinner(
-        ` Loading secrets from "${args.filename}"`
+        ` Setting secrets from "${args.filename}"`
       ).start();
       for (const [key, value] of Object.entries(envVars)) {
         await Config.setSecret({ key, value });
       }
       setting.succeed();
 
-      // Restart secrets
+      // Restart functions & sites
       const envNames = Object.keys(envVars);
       const restarting = createSpinner(
-        ` Restarting all functions using ${blue(envNames.join(", "))}...`
+        ` Restarting all resources using ${blue(envNames.join(", "))}...`
       ).start();
-      const count = await Config.restart(envNames);
-      restarting.succeed(
-        count === 1
-          ? ` Restarted ${count} function`
-          : ` Restarted ${count} functions`
-      );
+      const { edgeSites, sites, placeholderSites, functions } =
+        await Config.restart(envNames);
+      restarting.stop().clear();
+
+      const siteCount = sites.length + placeholderSites.length;
+      if (siteCount > 0) {
+        Colors.line(
+          Colors.success(`✔ `),
+          siteCount === 1
+            ? `Reloaded ${siteCount} site`
+            : `Reloaded ${siteCount} sites`
+        );
+      }
+      const functionCount = functions.length;
+      if (functionCount > 0) {
+        Colors.line(
+          Colors.success(`✔ `),
+          functionCount === 1
+            ? `Reloaded ${functionCount} function`
+            : `Reloaded ${functionCount} functions`
+        );
+      }
+      edgeSites.forEach(({ id, type }) => {
+        Colors.line(
+          Colors.primary(`➜ `),
+          `Redeploy the "${id}" ${type} to use the new secret`
+        );
+      });
     }
   );
