@@ -1,4 +1,4 @@
-import { Api } from "sst/constructs";
+import { Api } from "sst/node/api";
 import { expect, it } from "vitest";
 import { createClient } from "@create-sst-dynamo/graphql/genql";
 import { Article } from "@create-sst-dynamo/core/article";
