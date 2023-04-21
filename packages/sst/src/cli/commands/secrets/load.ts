@@ -63,5 +63,7 @@ export const load = (program: Program) =>
           `Redeploy the "${id}" ${type} to use the new secret`
         );
       });
+
+      process.exit(0);
     }
   );
