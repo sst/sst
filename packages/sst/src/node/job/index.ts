@@ -55,7 +55,7 @@ function JobControl<Name extends keyof JobResources>(name: Name) {
  *
  * @example
  * ```ts
- * declare module "@serverless-stack/node/job" {
+ * declare module "sst/node/job" {
  *   export interface JobTypes {
  *     MyJob: {
  *       title: string;
