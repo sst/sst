@@ -1,5 +1,5 @@
 import AWS from "aws-sdk";
-import { KinesisStream } from "@serverless-stack/node/kinesis-stream";
+import { KinesisStream } from "sst/node/kinesis-stream";
 
 const stream = new AWS.Kinesis();
 

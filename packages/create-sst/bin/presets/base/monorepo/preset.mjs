@@ -12,16 +12,8 @@ export default [
     dev: true,
   }),
   install({
-    packages: ["sst"],
-    path: "packages/core",
-  }),
-  install({
     packages: ["@types/node", "@types/aws-lambda", "sst"],
     path: "packages/functions",
     dev: true,
-  }),
-  install({
-    packages: ["sst"],
-    path: "packages/functions",
   }),
 ];

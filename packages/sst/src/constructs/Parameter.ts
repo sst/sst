@@ -16,7 +16,7 @@ export interface ParameterProps {
  * ### Using the minimal config
  *
  * ```js
- * import { Config } from "@serverless-stack/resources";
+ * import { Config } from "sst/constructs";
  *
  * new Config.Parameter(stack, "TABLE_NAME", table.tableName);
  * ```

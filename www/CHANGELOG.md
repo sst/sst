@@ -1,5 +1,29 @@
 # @serverless-stack/docs
 
+## 2.0.5
+
+### Patch Changes
+
+- [#2758](https://github.com/serverless-stack/sst/pull/2758) [`1e9dd488d`](https://github.com/serverless-stack/sst/commit/1e9dd488d872762e27f5832f1728454f9bb38568) Thanks [@jensonb](https://github.com/jensonb)! - Reduced IOT message chunk size to fix Live Lambda bug (#2723)
+
+## 2.0.4
+
+### Patch Changes
+
+- [#2769](https://github.com/serverless-stack/sst/pull/2769) [`b492c53ef`](https://github.com/serverless-stack/sst/commit/b492c53ef2e4653b01e18dd6bd5040eb30e48ecb) Thanks [@michelts](https://github.com/michelts)! - Document lack of support for vitest threaded mode
+
+## 2.0.3
+
+### Patch Changes
+
+- [`a2bb76f1c`](https://github.com/serverless-stack/sst/commit/a2bb76f1c6db138f6823837232fa4029ea2a9a55) Thanks [@fwang](https://github.com/fwang)! - AppSyncApi: support OpenSource data source
+
+## 2.0.2
+
+### Patch Changes
+
+- [`a061a0d1f`](https://github.com/serverless-stack/sst/commit/a061a0d1f8df6cb9594d3bd37bd5ad314e044149) Thanks [@fwang](https://github.com/fwang)! - Bootstrap: add --public-access-block-configuration option
+
 ## 2.0.1
 
 ### Patch Changes

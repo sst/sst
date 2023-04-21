@@ -20,8 +20,8 @@ export function postPayload(endpoint: string, body: any) {
       );
       req.write(JSON.stringify(body));
       req.end();
-    } catch {
-      resolve();
+    } catch (ex) {
+      reject(ex);
     }
   });
 }

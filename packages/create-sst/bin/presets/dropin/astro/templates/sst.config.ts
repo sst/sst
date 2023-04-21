@@ -9,10 +9,10 @@ export default {
     };
   },
   stacks(app) {
-    app.stack(function Site(ctx) {
-      const site = new AstroSite(ctx.stack, "site");
-      ctx.stack.addOutputs({
-        url: site.url || "http://localhost:3000",
+    app.stack(function Site({ stack }) {
+      const site = new AstroSite(stack, "site");
+      stack.addOutputs({
+        url: site.url,
       });
     });
   },

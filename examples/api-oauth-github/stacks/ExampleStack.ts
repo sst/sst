@@ -1,9 +1,4 @@
-import {
-  Api,
-  Cognito,
-  StaticSite,
-  StackContext,
-} from "sst/constructs";
+import { Api, Cognito, StaticSite, StackContext } from "sst/constructs";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 
 export function ExampleStack({ stack, app }: StackContext) {

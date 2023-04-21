@@ -17,7 +17,7 @@ _Parameters_
 ## ApiProps
 ### accessLog?
 
-_Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">boolean</span> | <span class="mono">[ApiAccessLogProps](#apiaccesslogprops)</span></span>
+_Type_ : <span class="mono">string</span><span class='mono'> | </span><span class="mono">boolean</span><span class='mono'> | </span><span class="mono">[ApiAccessLogProps](#apiaccesslogprops)</span>
 
 Enable CloudWatch access logs for this API
 ```js
@@ -37,7 +37,7 @@ new Api(stack, "Api", {
 ```
 ### authorizers?
 
-_Type_ : <span class="mono">Record&lt;<span class="mono">string</span>, <span class='mono'><span class="mono">[ApiUserPoolAuthorizer](#apiuserpoolauthorizer)</span> | <span class="mono">[ApiJwtAuthorizer](#apijwtauthorizer)</span> | <span class="mono">[ApiLambdaAuthorizer](#apilambdaauthorizer)</span></span>&gt;</span>
+_Type_ : <span class="mono">Record&lt;<span class="mono">string</span>, <span class="mono">[ApiUserPoolAuthorizer](#apiuserpoolauthorizer)</span><span class='mono'> | </span><span class="mono">[ApiJwtAuthorizer](#apijwtauthorizer)</span><span class='mono'> | </span><span class="mono">[ApiLambdaAuthorizer](#apilambdaauthorizer)</span>&gt;</span>
 
 Define the authorizers for the API. Can be a user pool, JWT, or Lambda authorizers.
 ```js
@@ -55,7 +55,7 @@ new Api(stack, "Api", {
 ```
 ### cors?
 
-_Type_ : <span class='mono'><span class="mono">boolean</span> | <span class="mono">[ApiCorsProps](#apicorsprops)</span></span>
+_Type_ : <span class="mono">boolean</span><span class='mono'> | </span><span class="mono">[ApiCorsProps](#apicorsprops)</span>
 
 CORS support applied to all endpoints in this API
 ```js
@@ -67,7 +67,7 @@ new Api(stack, "Api", {
 ```
 ### customDomain?
 
-_Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[ApiDomainProps](#apidomainprops)</span></span>
+_Type_ : <span class="mono">string</span><span class='mono'> | </span><span class="mono">[ApiDomainProps](#apidomainprops)</span>
 
 Specify a custom domain to use in addition to the automatically generated one. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/)
 ```js
@@ -99,7 +99,7 @@ An array of scopes to include in the authorization when using
  authorizers. These will be merged with the scopes from the attached authorizer.
 ### defaults.authorizer?
 
-_Type_ : <span class='mono'><span class="mono">"none"</span> | <span class="mono">"iam"</span> | <span class="mono">string</span></span>
+_Type_ : <span class="mono">"none"</span><span class='mono'> | </span><span class="mono">"iam"</span><span class='mono'> | </span><span class="mono">string</span>
 
 The default authorizer for all the routes in the API.
 ```js
@@ -149,7 +149,7 @@ new Api(stack, "Api", {
 ```
 ### defaults.payloadFormatVersion?
 
-_Type_ : <span class='mono'><span class="mono">"1.0"</span> | <span class="mono">"2.0"</span></span>
+_Type_ : <span class="mono">"1.0"</span><span class='mono'> | </span><span class="mono">"2.0"</span>
 
 The [payload format version](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html#http-api-develop-integrations-lambda.proxy-format) for all the endpoints in the API.
 
@@ -185,7 +185,7 @@ new Api(stack, "Api", {
 
 ### routes?
 
-_Type_ : <span class="mono">Record&lt;<span class="mono">string</span>, <span class='mono'><span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span></span> | <span class="mono">[ApiFunctionRouteProps](#apifunctionrouteprops)</span> | <span class="mono">[ApiHttpRouteProps](#apihttprouteprops)</span> | <span class="mono">[ApiAlbRouteProps](#apialbrouteprops)</span> | <span class="mono">[ApiNlbRouteProps](#apinlbrouteprops)</span> | <span class="mono">[ApiGraphQLRouteProps](#apigraphqlrouteprops)</span></span>&gt;</span>
+_Type_ : <span class="mono">Record&lt;<span class="mono">string</span>, <span class="mono">string</span><span class='mono'> | </span><span class="mono">[Function](Function#function)</span><span class='mono'> | </span><span class="mono">[ApiFunctionRouteProps](#apifunctionrouteprops)</span><span class='mono'> | </span><span class="mono">[ApiAwsRouteProps](#apiawsrouteprops)</span><span class='mono'> | </span><span class="mono">[ApiHttpRouteProps](#apihttprouteprops)</span><span class='mono'> | </span><span class="mono">[ApiAlbRouteProps](#apialbrouteprops)</span><span class='mono'> | </span><span class="mono">[ApiNlbRouteProps](#apinlbrouteprops)</span><span class='mono'> | </span><span class="mono">[ApiGraphQLRouteProps](#apigraphqlrouteprops)</span>&gt;</span>
 
 Define the routes for the API. Can be a function, proxy to another API, or point to an load balancer
 ```js
@@ -200,7 +200,7 @@ new Api(stack, "api", {
 
 ### cdk.httpApi?
 
-_Type_ : <span class='mono'><span class="mono">[IHttpApi](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.IHttpApi.html)</span> | <span class="mono">[HttpApiProps](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.HttpApiProps.html)</span></span>
+_Type_ : <span class="mono">[IHttpApi](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.IHttpApi.html)</span><span class='mono'> | </span><span class="mono">[HttpApiProps](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.HttpApiProps.html)</span>
 
 Import the underlying HTTP API or override the default configuration
 ```js
@@ -245,7 +245,7 @@ Allows you to override default id for this construct.
 An instance of `Api` has the following properties.
 ### customDomainUrl
 
-_Type_ : <span class='mono'><span class="mono">undefined</span> | <span class="mono">string</span></span>
+_Type_ : <span class="mono">undefined</span><span class='mono'> | </span><span class="mono">string</span>
 
 If custom domain is enabled, this is the custom domain URL of the Api.
 
@@ -317,7 +317,7 @@ addRoutes(scope, routes)
 ```
 _Parameters_
 - __scope__ <span class="mono">[Construct](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)</span>
-- __routes__ <span class="mono">Record&lt;<span class="mono">string</span>, <span class='mono'><span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span></span> | <span class="mono">[ApiFunctionRouteProps](#apifunctionrouteprops)</span> | <span class="mono">[ApiHttpRouteProps](#apihttprouteprops)</span> | <span class="mono">[ApiAlbRouteProps](#apialbrouteprops)</span> | <span class="mono">[ApiNlbRouteProps](#apinlbrouteprops)</span> | <span class="mono">[ApiGraphQLRouteProps](#apigraphqlrouteprops)</span></span>&gt;</span>
+- __routes__ <span class="mono">Record&lt;<span class="mono">string</span>, <span class="mono">string</span><span class='mono'> | </span><span class="mono">[Function](Function#function)</span><span class='mono'> | </span><span class="mono">[ApiFunctionRouteProps](#apifunctionrouteprops)</span><span class='mono'> | </span><span class="mono">[ApiAwsRouteProps](#apiawsrouteprops)</span><span class='mono'> | </span><span class="mono">[ApiHttpRouteProps](#apihttprouteprops)</span><span class='mono'> | </span><span class="mono">[ApiAlbRouteProps](#apialbrouteprops)</span><span class='mono'> | </span><span class="mono">[ApiNlbRouteProps](#apinlbrouteprops)</span><span class='mono'> | </span><span class="mono">[ApiGraphQLRouteProps](#apigraphqlrouteprops)</span>&gt;</span>
 
 
 Adds routes to the Api after it has been created.
@@ -423,7 +423,7 @@ const listFunction = api.getFunction("GET /notes");
 setCors(cors)
 ```
 _Parameters_
-- __cors__ <span class='mono'><span class="mono">boolean</span> | <span class="mono">[ApiCorsProps](#apicorsprops)</span></span>
+- __cors__ <span class="mono">boolean</span><span class='mono'> | </span><span class="mono">[ApiCorsProps](#apicorsprops)</span>
 
 
 Binds the given list of resources to a specific route.
@@ -454,7 +454,7 @@ allowHeaders: ["Accept", "Content-Type", "Authorization"]
 ```
 ### allowMethods?
 
-_Type_ : <span class='mono'>Array&lt;<span class='mono'><span class="mono">"GET"</span> | <span class="mono">"PUT"</span> | <span class="mono">"HEAD"</span> | <span class="mono">"POST"</span> | <span class="mono">"DELETE"</span> | <span class="mono">"ANY"</span> | <span class="mono">"PATCH"</span> | <span class="mono">"OPTIONS"</span></span>&gt;</span>
+_Type_ : <span class='mono'>Array&lt;<span class="mono">"GET"</span><span class='mono'> | </span><span class="mono">"PUT"</span><span class='mono'> | </span><span class="mono">"HEAD"</span><span class='mono'> | </span><span class="mono">"POST"</span><span class='mono'> | </span><span class="mono">"DELETE"</span><span class='mono'> | </span><span class="mono">"ANY"</span><span class='mono'> | </span><span class="mono">"PATCH"</span><span class='mono'> | </span><span class="mono">"OPTIONS"</span>&gt;</span>
 
 The collection of allowed HTTP methods.
 ```js
@@ -483,7 +483,7 @@ _Type_ : <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
 The collection of exposed headers.
 ### maxAge?
 
-_Type_ : <span class='mono'><span class="mono">${number} second</span> | <span class="mono">${number} seconds</span> | <span class="mono">${number} minute</span> | <span class="mono">${number} minutes</span> | <span class="mono">${number} hour</span> | <span class="mono">${number} hours</span> | <span class="mono">${number} day</span> | <span class="mono">${number} days</span></span>
+_Type_ : <span class="mono">${number} second</span><span class='mono'> | </span><span class="mono">${number} seconds</span><span class='mono'> | </span><span class="mono">${number} minute</span><span class='mono'> | </span><span class="mono">${number} minutes</span><span class='mono'> | </span><span class="mono">${number} hour</span><span class='mono'> | </span><span class="mono">${number} hours</span><span class='mono'> | </span><span class="mono">${number} day</span><span class='mono'> | </span><span class="mono">${number} days</span>
 
 Specify how long the results of a preflight response can be cached
 ```js
@@ -547,7 +547,7 @@ _Type_ : <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
 
 ### authorizer?
 
-_Type_ : <span class='mono'><span class="mono">"none"</span> | <span class="mono">"iam"</span> | <span class="mono">string</span></span>
+_Type_ : <span class="mono">"none"</span><span class='mono'> | </span><span class="mono">"iam"</span><span class='mono'> | </span><span class="mono">string</span>
 
 ### type
 
@@ -562,6 +562,44 @@ The listener to the application load balancer used for the integration.
 ### cdk.integration?
 
 _Type_ : <span class="mono">[HttpAlbIntegrationProps](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-integrations-alpha.HttpAlbIntegrationProps.html)</span>
+
+
+## ApiAwsRouteProps
+Specify a function route handler and configure additional options
+```js
+api.addRoutes(stack, {
+  "GET /notes/{id}": {
+    type: "aws",
+    cdk: {
+      integration: {
+        subtype: apig.HttpIntegrationSubtype.EVENTBRIDGE_PUT_EVENTS,
+        parameterMapping: ParameterMapping.fromObject({
+          Source: MappingValue.custom("$request.body.source"),
+          DetailType: MappingValue.custom("$request.body.detailType"),
+          Detail: MappingValue.custom("$request.body.detail"),
+        }),
+      }
+    }
+  }
+});
+```
+### authorizationScopes?
+
+_Type_ : <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
+
+### authorizer?
+
+_Type_ : <span class="mono">"none"</span><span class='mono'> | </span><span class="mono">"iam"</span><span class='mono'> | </span><span class="mono">string</span>
+
+### type
+
+_Type_ : <span class="mono">"aws"</span>
+
+This is a constant
+
+### cdk.integration
+
+_Type_ : <span class="mono">Omit&lt;<span class="mono">[CdkHttpAwsIntegrationProps](#cdkhttpawsintegrationprops)</span>, <span class="mono">"credentials"</span>&gt;</span>
 
 
 ## ApiJwtAuthorizer
@@ -631,7 +669,7 @@ _Type_ : <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
 
 ### authorizer?
 
-_Type_ : <span class='mono'><span class="mono">"none"</span> | <span class="mono">"iam"</span> | <span class="mono">string</span></span>
+_Type_ : <span class="mono">"none"</span><span class='mono'> | </span><span class="mono">"iam"</span><span class='mono'> | </span><span class="mono">string</span>
 
 ### type
 
@@ -659,7 +697,7 @@ _Type_ : <span class="mono">string</span>
 
 ### retention?
 
-_Type_ : <span class='mono'><span class="mono">"one_day"</span> | <span class="mono">"three_days"</span> | <span class="mono">"five_days"</span> | <span class="mono">"one_week"</span> | <span class="mono">"two_weeks"</span> | <span class="mono">"one_month"</span> | <span class="mono">"two_months"</span> | <span class="mono">"three_months"</span> | <span class="mono">"four_months"</span> | <span class="mono">"five_months"</span> | <span class="mono">"six_months"</span> | <span class="mono">"one_year"</span> | <span class="mono">"thirteen_months"</span> | <span class="mono">"eighteen_months"</span> | <span class="mono">"two_years"</span> | <span class="mono">"five_years"</span> | <span class="mono">"six_years"</span> | <span class="mono">"seven_years"</span> | <span class="mono">"eight_years"</span> | <span class="mono">"nine_years"</span> | <span class="mono">"ten_years"</span> | <span class="mono">"infinite"</span></span>
+_Type_ : <span class="mono">"one_day"</span><span class='mono'> | </span><span class="mono">"three_days"</span><span class='mono'> | </span><span class="mono">"five_days"</span><span class='mono'> | </span><span class="mono">"one_week"</span><span class='mono'> | </span><span class="mono">"two_weeks"</span><span class='mono'> | </span><span class="mono">"one_month"</span><span class='mono'> | </span><span class="mono">"two_months"</span><span class='mono'> | </span><span class="mono">"three_months"</span><span class='mono'> | </span><span class="mono">"four_months"</span><span class='mono'> | </span><span class="mono">"five_months"</span><span class='mono'> | </span><span class="mono">"six_months"</span><span class='mono'> | </span><span class="mono">"one_year"</span><span class='mono'> | </span><span class="mono">"thirteen_months"</span><span class='mono'> | </span><span class="mono">"eighteen_months"</span><span class='mono'> | </span><span class="mono">"two_years"</span><span class='mono'> | </span><span class="mono">"three_years"</span><span class='mono'> | </span><span class="mono">"five_years"</span><span class='mono'> | </span><span class="mono">"six_years"</span><span class='mono'> | </span><span class="mono">"seven_years"</span><span class='mono'> | </span><span class="mono">"eight_years"</span><span class='mono'> | </span><span class="mono">"nine_years"</span><span class='mono'> | </span><span class="mono">"ten_years"</span><span class='mono'> | </span><span class="mono">"infinite"</span>
 
 ## ApiHttpRouteProps
 Specify a route handler that forwards to another URL
@@ -677,7 +715,7 @@ _Type_ : <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
 
 ### authorizer?
 
-_Type_ : <span class='mono'><span class="mono">"none"</span> | <span class="mono">"iam"</span> | <span class="mono">string</span></span>
+_Type_ : <span class="mono">"none"</span><span class='mono'> | </span><span class="mono">"iam"</span><span class='mono'> | </span><span class="mono">string</span>
 
 ### type
 
@@ -727,7 +765,7 @@ _Type_ : <span class="mono">string</span>
 The name of the authorizer.
 ### responseTypes?
 
-_Type_ : <span class='mono'>Array&lt;<span class='mono'><span class="mono">"iam"</span> | <span class="mono">"simple"</span></span>&gt;</span>
+_Type_ : <span class='mono'>Array&lt;<span class="mono">"iam"</span><span class='mono'> | </span><span class="mono">"simple"</span>&gt;</span>
 
 The types of responses the lambda can return.
 
@@ -736,7 +774,7 @@ If
  is included then response format 2.0 will be used.
 ### resultsCacheTtl?
 
-_Type_ : <span class='mono'><span class="mono">${number} second</span> | <span class="mono">${number} seconds</span> | <span class="mono">${number} minute</span> | <span class="mono">${number} minutes</span> | <span class="mono">${number} hour</span> | <span class="mono">${number} hours</span> | <span class="mono">${number} day</span> | <span class="mono">${number} days</span></span>
+_Type_ : <span class="mono">${number} second</span><span class='mono'> | </span><span class="mono">${number} seconds</span><span class='mono'> | </span><span class="mono">${number} minute</span><span class='mono'> | </span><span class="mono">${number} minutes</span><span class='mono'> | </span><span class="mono">${number} hour</span><span class='mono'> | </span><span class="mono">${number} hours</span><span class='mono'> | </span><span class="mono">${number} day</span><span class='mono'> | </span><span class="mono">${number} days</span>
 
 The amount of time the results are cached.
 ### type
@@ -776,11 +814,11 @@ _Type_ : <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
 
 ### authorizer?
 
-_Type_ : <span class='mono'><span class="mono">"none"</span> | <span class="mono">"iam"</span> | <span class="mono">string</span></span>
+_Type_ : <span class="mono">"none"</span><span class='mono'> | </span><span class="mono">"iam"</span><span class='mono'> | </span><span class="mono">string</span>
 
 ### function
 
-_Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span> | <span class="mono">[FunctionProps](Function#functionprops)</span></span>
+_Type_ : <span class="mono">string</span><span class='mono'> | </span><span class="mono">[Function](Function#function)</span><span class='mono'> | </span><span class="mono">[FunctionProps](Function#functionprops)</span>
 
 The function definition used to create the function for this route. Must be a graphql handler
 
@@ -821,16 +859,16 @@ _Type_ : <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
 
 ### authorizer?
 
-_Type_ : <span class='mono'><span class="mono">"none"</span> | <span class="mono">"iam"</span> | <span class="mono">string</span></span>
+_Type_ : <span class="mono">"none"</span><span class='mono'> | </span><span class="mono">"iam"</span><span class='mono'> | </span><span class="mono">string</span>
 
 ### function?
 
-_Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span> | <span class="mono">[FunctionProps](Function#functionprops)</span></span>
+_Type_ : <span class="mono">string</span><span class='mono'> | </span><span class="mono">[Function](Function#function)</span><span class='mono'> | </span><span class="mono">[FunctionProps](Function#functionprops)</span>
 
 The function definition used to create the function for this route.
 ### payloadFormatVersion?
 
-_Type_ : <span class='mono'><span class="mono">"1.0"</span> | <span class="mono">"2.0"</span></span>
+_Type_ : <span class="mono">"1.0"</span><span class='mono'> | </span><span class="mono">"2.0"</span>
 
 The payload format version for the route.
 ### type?
@@ -897,3 +935,20 @@ The AWS region of the user pool.
 _Type_ : <span class="mono">[HttpUserPoolAuthorizer](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-authorizers-alpha.HttpUserPoolAuthorizer.html)</span>
 
 This allows you to override the default settings this construct uses internally to create the authorizer.
+
+## CdkHttpAwsIntegrationProps
+### credentials
+
+_Type_ : <span class="mono">[IntegrationCredentials](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.IntegrationCredentials.html)</span>
+
+The credentials with which to invoke the integration.
+### parameterMapping
+
+_Type_ : <span class="mono">[ParameterMapping](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.ParameterMapping.html)</span>
+
+Specifies how to transform HTTP requests before sending them to the backend
+### subtype
+
+_Type_ : <span class="mono">[HttpIntegrationSubtype](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.HttpIntegrationSubtype.html)</span>
+
+Specifies the AWS service action to invoke

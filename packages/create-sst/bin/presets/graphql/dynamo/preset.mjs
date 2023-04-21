@@ -6,4 +6,9 @@ export default [
     packages: ["electrodb", "@aws-sdk/client-dynamodb"],
     path: "packages/core",
   }),
+  install({
+    packages: ["@aws-sdk/types","@aws-sdk/smithy-client"],
+    path: "packages/core",
+    dev: true
+  }),
 ];

@@ -10,107 +10,123 @@ The `RemixSite` construct is a higher level CDK construct that makes it easy to 
 
 1. If you are creating a new Remix app, run `create-remix` from the root of your SST app.
 
-```bash
-npx create-remix@latest
-```
+   ```bash
+   npx create-remix@latest
+   ```
 
-And select `Remix App Server` as the deployment target.
+   And select `Remix App Server` as the deployment target.
 
-![Selecte Remix App Server deployment target](/img/remix/bootstrap-remix.png)
+   ![Selecte Remix App Server deployment target](/img/remix/bootstrap-remix.png)
 
-After the Remix app is created, your SST app structure should look like:
+   After the Remix app is created, your SST app structure should look like:
 
-```bash
-my-sst-app
-├─ sst.json
-├─ services
-├─ stacks
-└─ my-remix-app     <-- new Remix app
-   ├─ app
-   ├─ public
-   └─ remix.config.js
-```
+   ```bash
+   my-sst-app
+   ├─ sst.config.ts
+   ├─ services
+   ├─ stacks
+   └─ my-remix-app     <-- new Remix app
+      ├─ app
+      ├─ public
+      └─ remix.config.js
+   ```
 
-You can now jump to step 3 to complete the rest of the step.
+   You can now jump to step 3 to complete the rest of the step.
 
 2. If you have an existing Remix app, move the app to the root of your SST app. Your SST app structure should look like:
 
-```bash
-my-sst-app
-├─ sst.json
-├─ services
-├─ stacks
-└─ my-remix-app     <-- your Remix app
-   ├─ app
-   ├─ public
-   └─ remix.config.js
-```
+   ```bash
+   my-sst-app
+   ├─ sst.config.ts
+   ├─ services
+   ├─ stacks
+   └─ my-remix-app     <-- your Remix app
+      ├─ app
+      ├─ public
+      └─ remix.config.js
+   ```
 
-When you created your Remix app, you might've picked a different deployment target. We need to set the deploymen target to `Remix App Server`. To do that, make sure your `remix.config.js` contain the follow values.
+   When you created your Remix app, you might've picked a different deployment target. We need to set the deploymen target to `Remix App Server`. To do that, make sure your `remix.config.js` contain the follow values.
 
-```js
-module.exports = {
-  // ...
-  assetsBuildDirectory: "public/build",
-  publicPath: "/build/",
-  serverBuildPath: "build/index.js",
-  serverBuildTarget: "node-cjs",
-  server: undefined,
-  // ...
-};
-```
+   ```js
+   module.exports = {
+     // ...
+     assetsBuildDirectory: "public/build",
+     publicPath: "/build/",
+     serverBuildPath: "build/index.js",
+     serverBuildTarget: "node-cjs",
+     server: undefined,
+     // ...
+   };
+   ```
 
-:::info
-If you followed the `Developer Blog` or `Jokes App` tutorials on Remix's doc, it's likely you are using SQLite for database. SQLite databases cannot be deployed to a serverless environment. It is often used for local storage, and not recommended for modern web apps. It is recommended to use [PostgreSQL](../constructs/RDS.md), [DynamoDB](../constructs/Table.md), or one of third party services like MongoDB for your database.
-:::
+   :::info
+   If you followed the `Developer Blog` or `Jokes App` tutorials on Remix's doc, it's likely you are using SQLite for database. SQLite databases cannot be deployed to a serverless environment. It is often used for local storage, and not recommended for modern web apps. It is recommended to use [PostgreSQL](../constructs/RDS.md), [DynamoDB](../constructs/Table.md), or one of third party services like MongoDB for your database.
+   :::
 
-3. Go into your Remix app, and add the `sst env` command to your Remix application's `package.json`. `sst env` enables you to [automatically set the environment variables](#environment-variables) for your Remix app directly from the outputs in your SST app.
+3. Go into your Remix app, and add the `sst bind` command to your Remix application's `package.json`. `sst env` enables you to [automatically set the environment variables](#environment-variables) for your Remix app directly from the outputs in your SST app.
 
-Update the package.json scripts for your Remix application.
+   Update the package.json scripts for your Remix application.
 
-```diff
-  "scripts": {
-    "build": "remix build",
--   "dev": "remix dev",
-+   "dev": "sst env remix dev",
-    "start": "remix-serve build"
-  },
-```
+   ```diff
+     "scripts": {
+       "build": "remix build",
+   -   "dev": "remix dev",
+   +   "dev": "sst bind remix dev",
+       "start": "remix-serve build"
+     },
+   ```
 
 4. Add the `RemixSite` construct to an existing stack in your SST app. You can also create a new stack for the app.
 
-```ts
-import { RemixSite, StackContext } as sst from "sst/constructs";
+   ```ts
+   import { RemixSite, StackContext } as sst from "sst/constructs";
 
-export default function MyStack({ stack }: StackContext) {
+   export default function MyStack({ stack }: StackContext) {
 
-  // ... existing constructs
+     // ... existing constructs
 
-  // Create the Remix site
-  const site = new RemixSite(stack, "Site", {
-    path: "my-remix-app/",
-  });
+     // Create the Remix site
+     const site = new RemixSite(stack, "Site", {
+       path: "my-remix-app/",
+     });
 
-  // Add the site's URL to stack output
-  stack.addOutputs({
-    URL: site.url || "localhost",
-  });
-}
-```
+     // Add the site's URL to stack output
+     stack.addOutputs({
+       URL: site.url || "localhost",
+     });
+   }
+   ```
 
-When you are building your SST app, `RemixSite` will invoke `npm build` inside the Remix app directory. Make sure `path` is pointing to the your Remix app.
+   When you are building your SST app, `RemixSite` will invoke `npm build` inside the Remix app directory. Make sure `path` is pointing to the your Remix app.
 
-We also added the site's URL to the stack output. After the deploy succeeds, the URL will be printed out in the terminal. Note that during development, the site is not deployed. You should run the site locally. In this case, `site.url` is `undefined`. [Read more about how environment variables work during development](#while-developing).
+   We also added the site's URL to the stack output. After the deploy succeeds, the URL will be printed out in the terminal.
 
-:::tip
-The site is not deployed when running `sst dev`. [Run the site locally while developing.](#while-developing)
+## Working locally
+
+To work on your Remix app locally with SST:
+
+1. Start SST in your project root.
+
+   ```bash
+   npx sst dev
+   ```
+
+2. Then start your Remix app. This should run `sst bind remix dev`.
+
+   ```bash
+   npm run dev
+   ```
+
+:::note
+When running `sst dev`, SST does not deploy your Remix app. It's meant to be run locally.
 :::
 
 ## Single region vs edge
 
 There are two ways you can deploy the Remix app to your AWS account.
 
-By default, the Remix app server is deployed to a single region defined in your `sst.json` or passed in via the `--region` flag. Alternatively, you can choose to deploy to the edge. When deployed to the edge, loaders/actions are running on edge location that is physically closer to the end user. In this case, the app server is deployed to AWS Lambda@Edge.
+By default, the Remix app server is deployed to a single region defined in your `sst.config.ts` or passed in via the `--region` flag. Alternatively, you can choose to deploy to the edge. When deployed to the edge, loaders/actions are running on edge location that is physically closer to the end user. In this case, the app server is deployed to AWS Lambda@Edge.
 
 You can enable edge like this:
 
@@ -230,12 +246,12 @@ To use these values while developing, run `sst dev` to start the [Live Lambda De
 npx sst dev
 ```
 
-Then in your Remix app to reference these variables, add the [`sst env`](../packages/sst.md#sst-env) command.
+Then in your Remix app to reference these variables, add the [`sst bind`](../packages/sst.md#sst-env) command.
 
 ```json title="package.json" {2}
 "scripts": {
   "build": "remix build",
-  "dev": "sst env remix dev",
+  "dev": "sst bind remix dev",
   "start": "remix-serve build"
 },
 ```
@@ -249,16 +265,16 @@ npm run dev
 There are a couple of things happening behind the scenes here:
 
 1. The `sst dev` command generates a file with the values specified by the `RemixSite` construct's `environment` prop.
-2. The `sst env` CLI will traverse up the directories to look for the root of your SST app.
+2. The `sst bind` CLI will traverse up the directories to look for the root of your SST app.
 3. It'll then find the file that's generated in step 1.
 4. It'll load these as environment variables before running the start command.
 
 :::note
-`sst env` only works if the Remix app is located inside the SST app or inside one of its subdirectories. For example:
+`sst bind` only works if the Remix app is located inside the SST app or inside one of its subdirectories. For example:
 
 ```
 /
-  sst.json
+  sst.config.ts
   my-remix-app/
 ```
 

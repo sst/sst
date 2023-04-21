@@ -4,26 +4,27 @@ module.exports = {
       " ": [
         "index",
         "what-is-sst",
-        "quick-start",
-        //        {
-        //          type: "category",
-        //          label: "Frontends",
-        //          collapsible: true,
-        //          collapsed: false,
-        //          link: {type: "doc", id: "frontends/index"},
-        //          items: [
-        //            "frontends/nextjs",
-        //            "frontends/remix",
-        //            "frontends/astro",
-        //            "frontends/solid",
-        //            "frontends/static-sites",
-        //          ]
-        //        },
+        {
+          type: "category",
+          label: "Get Started",
+          collapsible: true,
+          collapsed: false,
+          items: [
+            "start/standalone",
+            "start/nextjs",
+            "start/astro",
+          ]
+        },
       ],
     },
-    {
-      "Local Dev": ["live-lambda-development", "console", "editor-integration"],
-    },
+//    {
+//      "Get Started": [
+//        "start/basics",
+//        "start/nextjs",
+//        "start/astro",
+//        "start/vite",
+//      ],
+//    },
     //    {
     //      Features: [
     //        {
@@ -57,13 +58,31 @@ module.exports = {
     //    },
     {
       "How-Tos": [
+        "apis",
         "auth",
         "config",
         "testing",
-        "resource-binding",
+        "cron-jobs",
+        "databases",
+        "async-tasks",
+        "file-uploads",
         "long-running-jobs",
+      ],
+    },
+    {
+      Info: [
+        "live-lambda-development",
+        "console",
+        "known-issues",
+        "upgrade-guide",
+        "configuring-sst",
+        "design-principles",
+        "resource-binding",
+        "editor-integration",
         "going-to-production",
+        "anonymous-telemetry",
         "working-with-your-team",
+        "faq",
         {
           type: "category",
           label: "Advanced",
@@ -91,17 +110,11 @@ module.exports = {
       ],
     },
     {
-      Info: [
-        //"known-issues",
-        "configuring-sst",
-        "upgrade-guide",
-        "design-principles",
-        "anonymous-telemetry",
-        "faq",
+      "Migrating From": [
+        "migrating/cdk",
+        "migrating/vercel",
+        "migrating/serverless-framework"
       ],
-    },
-    {
-      "Migrating From": ["migrating/cdk", "migrating/serverless-framework"],
     },
     {
       CLI: ["packages/sst", "packages/create-sst"],

@@ -1,6 +1,6 @@
 import { Kysely } from "kysely";
 import { DataApiDialect } from "kysely-data-api";
-import RDSDataService from "aws-sdk/clients/rdsdataservice.js";
+import { RDSData } from "@aws-sdk/client-rds-data";
 import * as fs from "fs/promises";
 import {
   ColumnMetadata,
@@ -8,18 +8,15 @@ import {
   EnumCollection,
   ExportStatementNode,
   PostgresDialect,
+  MysqlDialect,
   Serializer,
   Transformer,
 } from "kysely-codegen";
 import { Context } from "../../../context/context.js";
 import { useBus } from "../../../bus.js";
-import { useProject } from "../../../project.js";
 import { FunctionMetadata, RDSMetadata } from "../../../constructs/Metadata.js";
 import { Logger } from "../../../logger.js";
-import {
-  useAWSCredentials,
-  useAWSCredentialsProvider,
-} from "../../../credentials.js";
+import { useAWSClient } from "../../../credentials.js";
 
 interface Database {
   migratorID: string;
@@ -36,12 +33,11 @@ interface Database {
 export const useKyselyTypeGenerator = Context.memo(async () => {
   let databases: Database[] = [];
   const bus = useBus();
-  const project = useProject();
+  const logger = Logger.debug.bind(null, "[kysely-codegen]");
 
   async function generate(db: Database) {
     if (!db.types) return;
-    Logger.debug("Generating types for", db.migratorID);
-    const credentials = await useAWSCredentials();
+    logger("generating types for", db.migratorID);
 
     const k = new Kysely<Database>({
       dialect: new DataApiDialect({
@@ -50,14 +46,12 @@ export const useKyselyTypeGenerator = Context.memo(async () => {
           secretArn: db.secretArn,
           resourceArn: db.clusterArn,
           database: db.defaultDatabaseName,
-          client: new RDSDataService({
-            region: project.config.region,
-            credentials,
-          }),
+          client: useAWSClient(RDSData),
         },
       }),
     });
     const tables = await k.introspection.getTables();
+    logger("introspected tables");
     const metadata = db.engine.includes("postgres")
       ? tables.map((table) => ({
           ...table,
@@ -78,13 +72,18 @@ export const useKyselyTypeGenerator = Context.memo(async () => {
             enumValues: null,
           })),
         }));
+    logger("generated metadata", metadata.length);
 
     const transformer = new Transformer();
+    const Dialect = db.engine.includes("postgres")
+      ? new PostgresDialect()
+      : new MysqlDialect();
     const nodes = transformer.transform({
-      dialect: new PostgresDialect(),
+      dialect: Dialect,
       camelCase: (db.types.camelCase as any) === true,
       metadata: new DatabaseMetadata(metadata, new EnumCollection()),
     });
+    logger("transformed nodes", nodes.length);
     const lastIndex = nodes.length - 1;
     const last = nodes[lastIndex] as ExportStatementNode;
     nodes[lastIndex] = {
@@ -116,7 +115,11 @@ export const useKyselyTypeGenerator = Context.memo(async () => {
         defaultDatabaseName: c.data.defaultDatabaseName,
         secretArn: c.data.secretArn,
       }));
-    databases.map((db) => generate(db));
+    databases.map((db) =>
+      generate(db).catch((err) => {
+        logger(err);
+      })
+    );
   });
 
   bus.subscribe("function.success", async (evt) => {
@@ -125,7 +128,9 @@ export const useKyselyTypeGenerator = Context.memo(async () => {
       (db) => db.migratorID === evt.properties.functionID
     );
     if (!db) return;
-    generate(db);
+    generate(db).catch((err) => {
+      logger(err);
+    });
   });
-  Logger.debug("Loaded kyseley type generator");
+  logger("Loaded kyseley type generator");
 });

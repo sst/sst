@@ -8,6 +8,7 @@ import { useRuntimeServerConfig } from "../server.js";
 import { existsAsync, findAbove, isChild } from "../../util/fs.js";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
 import fs from "fs/promises";
+import { bundle } from "./pythonBundling.js";
 const execAsync = promisify(exec);
 import os from "os";
 import url from "url";
@@ -100,6 +101,14 @@ export const usePythonHandler = Context.memo(async () => {
           errors: [`Could not find src for ${input.props.handler}`],
         };
 
+      bundle({
+        installCommands: input.props.python?.installCommands,
+        entry: src,
+        runtime: RUNTIME_MAP[input.props.runtime!],
+        outputPathSuffix: ".",
+        out: input.out,
+      });
+      /*
       await fs.cp(src, input.out, {
         recursive: true,
         filter: (src) => !src.includes(".sst"),
@@ -131,12 +140,15 @@ export const usePythonHandler = Context.memo(async () => {
           });
         }
       }
+      */
 
-      const result = {
+      return {
         type: "success",
-        handler: path.relative(src, path.resolve(input.props.handler!)),
-      } as const;
-      return result;
+        handler: path
+          .relative(src, path.resolve(input.props.handler!))
+          .split(path.sep)
+          .join(path.posix.sep),
+      };
     },
   });
 });

@@ -1,7 +1,13 @@
 import iot from "aws-iot-device-sdk";
 import crypto from "crypto";
 import { IoTClient, DescribeEndpointCommand } from "@aws-sdk/client-iot";
+import {
+  DeleteObjectCommand,
+  GetObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
 
+const s3 = new S3Client({});
 const client = new IoTClient({});
 const response = await client.send(
   new DescribeEndpointCommand({ endpointType: "iot:Data-ATS" })
@@ -52,11 +58,15 @@ const ENVIRONMENT = Object.fromEntries(
 
 const device = new iot.device({
   protocol: "wss",
+  debug: true,
   host: endpoint,
+  region: ENVIRONMENT.AWS_REGION,
 });
 device.on("error", console.log);
 device.on("connect", console.log);
-device.subscribe(`${PREFIX}/events`);
+device.subscribe(`${PREFIX}/events/${workerID}`, {
+  qos: 1,
+});
 
 interface Fragment {
   id: string;
@@ -69,8 +79,9 @@ const fragments = new Map<string, Map<number, Fragment>>();
 
 let onMessage: (evt: any) => void;
 
-device.on("message", (_topic, buffer: Buffer) => {
+device.on("message", async (_topic, buffer: Buffer) => {
   const fragment = JSON.parse(buffer.toString()) as Fragment;
+  console.log("Got fragment", fragment.id, fragment.index);
   let pending = fragments.get(fragment.id);
   if (!pending) {
     pending = new Map();
@@ -79,32 +90,37 @@ device.on("message", (_topic, buffer: Buffer) => {
   pending.set(fragment.index, fragment);
 
   if (pending.size === fragment.count) {
+    console.log("Got all fragments", fragment.id);
+    fragments.delete(fragment.id);
     const data = [...pending.values()]
       .sort((a, b) => a.index - b.index)
       .map((item) => item.data)
       .join("");
-
     const evt = JSON.parse(data);
+    if (evt.type === "pointer") {
+      console.log("Got pointer", evt.properties);
+
+      const result = await s3.send(
+        new GetObjectCommand({
+          Key: evt.properties.key,
+          Bucket: evt.properties.bucket,
+        })
+      );
+      const str = await result.Body!.transformToString();
+      onMessage(JSON.parse(str));
+      await s3.send(
+        new DeleteObjectCommand({
+          Key: evt.properties.key,
+          Bucket: evt.properties.bucket,
+        })
+      );
+      return;
+    }
     onMessage(evt);
   }
 });
 
 export async function handler(event: any, context: any) {
-  for (const fragment of encode({
-    type: "function.invoked",
-    properties: {
-      workerID: workerID,
-      requestID: context.awsRequestId,
-      functionID: process.env.SST_FUNCTION_ID,
-      deadline: context.getRemainingTimeInMillis(),
-      event,
-      context,
-      env: ENVIRONMENT,
-    },
-  })) {
-    device.publish(`${PREFIX}/events`, JSON.stringify(fragment));
-  }
-
   const result = await new Promise<any>((r) => {
     const timeout = setTimeout(() => {
       r({
@@ -124,11 +140,34 @@ export async function handler(event: any, context: any) {
         }
       }
     };
+    for (const fragment of encode({
+      type: "function.invoked",
+      properties: {
+        workerID: workerID,
+        requestID: context.awsRequestId,
+        functionID: process.env.SST_FUNCTION_ID,
+        deadline: context.getRemainingTimeInMillis(),
+        event,
+        context,
+        env: ENVIRONMENT,
+      },
+    })) {
+      device.publish(
+        `${PREFIX}/events`,
+        JSON.stringify(fragment),
+        { qos: 1 },
+        console.log
+      );
+    }
   });
-  console.log("Got result", result);
+
+  console.log("Got result", result.type);
 
   if (result.type === "function.timeout")
-    return "This function is in live debug mode but did not get a response from your machine. If you do have an `sst dev` session running, there have been reports of certain firewalls blocking communication. Please join our discord so we can work through the issue: https://sst.dev/discord";
+    return {
+      statusCode: 500,
+      body: "This function is in live debug mode but did not get a response from your machine. If you do have an `sst dev` session running and this is the first time you have ever run SST in this AWS account, it can take 10 minutes for AWS to provision the underlying infrastructure. Check back shortly.",
+    };
 
   if (result.type === "function.success") {
     return result.properties.body;

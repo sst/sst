@@ -1,58 +1,59 @@
 ---
-title: Introduction
+title: Docs
+sidebar_label: Home
 hide_table_of_contents: true
 description: "SST makes it easy to build modern full-stack applications on AWS."
 pagination_prev: null
 pagination_next: null
 ---
 
-import config from "../config";
 import styles from "./about.module.css";
 import useBaseUrl from "@docusaurus/useBaseUrl";
-import HeadlineText from "@site/src/components/HeadlineText";
-
-<HeadlineText>
-
-SST makes it easy to build modern full-stack applications on AWS.
-
-</HeadlineText>
 
 ---
 
 <div className={styles.heading}>
-  <h3>Start With Your Frontend</h3>
-  <p>Deploy Next.js, Remix, Astro, Solid, or any static site to AWS.</p>
+  <h3>Get Started</h3>
+  <p>Start with a standalone SST project. And add any frontend you like.</p>
 </div>
 
 <ul className={styles.features}>
   <li>
-    <a href={useBaseUrl("/constructs/NextjsSite")}>
-      <h3>Next.js</h3>
-      <p>Deploy a serverless Next.js app to your AWS account.</p>
+    <a href={useBaseUrl("/start/standalone")}>
+      <h3>Standalone</h3>
+      <p>Create a standalone SST app, add any frontend to it, and deploy it to AWS.</p>
+    </a>
+  </li>
+</ul>
+
+<div className={styles.heading}>
+  <h3>Pick Your Frontend</h3>
+  <p>Start with a Next.js, Remix, Astro, or Solid app and deploy it to AWS with SST.</p>
+</div>
+
+<ul className={styles.features}>
+  <li>
+    <a href={useBaseUrl("/start/nextjs")}>
+      <h3><img src="/img/logos/nextjs.svg" />Next.js</h3>
+      <p>Create and deploy a serverless Next.js app to AWS with SST.</p>
     </a>
   </li>
   <li>
     <a href={useBaseUrl("/constructs/RemixSite")}>
-      <h3>Remix</h3>
-      <p>Deploy a Remix SSR app to your AWS account.</p>
+      <h3><img src="/img/logos/remix.svg" />Remix</h3>
+      <p>Create and deploy a serverless Remix app to AWS with SST.</p>
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/constructs/AstroSite")}>
-      <h3>Astro</h3>
-      <p>Deploy an Astro SSR app to your AWS account.</p>
+    <a href={useBaseUrl("/start/astro")}>
+      <h3><img src="/img/logos/astro.svg" />Astro</h3>
+      <p>Create and deploy an serverless Astro site to AWS with SST.</p>
     </a>
   </li>
   <li>
     <a href={useBaseUrl("/constructs/SolidStartSite")}>
-      <h3>Solid</h3>
-      <p>Deploy a SolidStart app to your AWS account.</p>
-    </a>
-  </li>
-  <li>
-    <a href={useBaseUrl("/constructs/StaticSite")}>
-      <h3>Static sites</h3>
-      <p>Deploy any static site to your AWS account.</p>
+      <h3><img src="/img/logos/solid.svg" />Solid</h3>
+      <p>Create and deploy a serverless SolidStart app to AWS with SST.</p>
     </a>
   </li>
 </ul>
@@ -62,45 +63,45 @@ Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
 :::
 
 <div className={styles.heading}>
-  <h3>Add Any Backend Feature</h3>
+  <h3>Add Any Feature</h3>
   <p>SST gives you the full power of AWS. Making it easy to add any feature to your product.</p>
 </div>
 
 <ul className={styles.features}>
   <li>
-    <a href={useBaseUrl("/constructs/RDS")}>
+    <a href={useBaseUrl("/databases")}>
       <h3>Databases</h3>
       <p>Use a serverless SQL or NoSQL database to power your app.</p>
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/constructs/Api")}>
+    <a href={useBaseUrl("/apis")}>
       <h3>APIs</h3>
-      <p>Add a GraphQL or a simple REST API to your app.</p>
+      <p>Add a dedicated REST or GraphQL API to your app.</p>
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/constructs/Auth")}>
+    <a href={useBaseUrl("/auth")}>
       <h3>Auth</h3>
       <p>Authenticate your users through any auth provider.</p>
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/constructs/Bucket")}>
+    <a href={useBaseUrl("/file-uploads")}>
       <h3>File uploads</h3>
       <p>Upload files to S3 and manage them through the SST console.</p>
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/constructs/Cron")}>
+    <a href={useBaseUrl("/cron-jobs")}>
       <h3>Jobs</h3>
       <p>Run cron jobs or long running jobs powered by serverless functions.</p>
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/constructs/Queue")}>
-      <h3>Queues</h3>
-      <p>Work with serverless queues without any infrastructure.</p>
+    <a href={useBaseUrl("/async-tasks")}>
+      <h3>Async tasks</h3>
+      <p>Run tasks after your app has returned to your user.</p>
     </a>
   </li>
 </ul>
@@ -117,7 +118,7 @@ Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
     <div className={styles.startCode}>
       <code>> npm create sst@latest</code>
     </div>
-    <a className={styles.startCta} href={useBaseUrl("/quick-start")}>
+    <a className={styles.startCta} href={useBaseUrl("/start/standalone")}>
       Get Started
       <i class="fas fa-arrow-right"></i>
     </a>

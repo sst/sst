@@ -9,13 +9,11 @@ export default {
     };
   },
   stacks(app) {
-    app.stack(function Site(ctx) {
-      const site = new NextjsSite(ctx.stack, "site", {
-        path: ".",
-      });
+    app.stack(function Site({ stack }) {
+      const site = new NextjsSite(stack, "site");
 
-      ctx.stack.addOutputs({
-        SiteUrl: site.url || "http://localhost:3000",
+      stack.addOutputs({
+        SiteUrl: site.url,
       });
     });
   },

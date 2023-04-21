@@ -45,6 +45,6 @@ export function ExampleStack({ stack }: StackContext) {
   // Show the API endpoint and other info in the output
   stack.addOutputs({
     ApiEndpoint: api.url,
-    SiteURL: site.url || "http://localhost:5173",
+    SiteURL: site.url,
   });
 }

@@ -1,12 +1,10 @@
 import { dim } from "colorette";
 import { Box, Newline, Text } from "ink";
-import inkSpinner from "ink-spinner";
+import Spinner from "ink-spinner";
 import React, { useEffect, useState } from "react";
 import { useBus } from "../../bus.js";
 import { useFunctions } from "../../constructs/Function.js";
 import { Colors } from "../colors.js";
-// @ts-ignore
-const { default: Spinner } = inkSpinner;
 
 interface Pending {
   requestID: string;

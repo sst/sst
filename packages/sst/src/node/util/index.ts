@@ -3,7 +3,7 @@ import {
   SSMClient,
   Parameter,
 } from "@aws-sdk/client-ssm";
-const ssm = new SSMClient({});
+const ssm = new SSMClient({ region: process.env.SST_REGION });
 
 // Example:
 // {
@@ -14,7 +14,10 @@ const ssm = new SSMClient({});
 //   }
 // }
 let allVariables: Record<string, Record<string, Record<string, string>>> = {};
-await parseEnvironment();
+// NOTE: in some setups, top level await must be assigned to a variable,
+//       otherwise it would throw a top level await error.
+//       https://discord.com/channels/983865673656705025/1089184080534446110
+const _placeholder = await parseEnvironment();
 
 interface Variable {
   constructName: string;
@@ -112,6 +115,18 @@ async function fetchValuesFromSSM(variablesFromSsm: Variable[]) {
     const variable = parseSsmFallbackPath(item.Name!);
     storeVariable(variable, item.Value!);
   });
+
+  // Throw error if any values are missing
+  const missingSecrets = fallbackResults.invalidParams
+    .map((name) => parseSsmFallbackPath(name))
+    .filter((variable) => variable.constructName === "Secret")
+    .map((variable) => variable.constructId);
+
+  if (missingSecrets.length > 0) {
+    throw new Error(
+      `The following secrets were not found: ${missingSecrets.join(", ")}`
+    );
+  }
 }
 
 async function loadSecrets(paths: string[]) {

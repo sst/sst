@@ -42,22 +42,13 @@ export function createExports(manifest: SSRManifest) {
       // Process request
       const rendered = await app.render(request);
 
-      // Build cookies
-      // note: AWS API Gateway will send back set-cookies outside of response headers
-      const responseCookies = Array.from(rendered.headers.entries())
-        .filter(([key]) => key === "set-cookie")
-        .map(([_, value]) => value);
-      if (responseCookies.length) {
-        rendered.headers.delete("set-cookie");
-      }
-
       // Convert Node response to API Gateway response
       const contentType = rendered.headers.get("content-type");
       const responseIsBase64Encoded = isBinaryContentType(contentType);
       return {
         statusCode: rendered.status,
         headers: Object.fromEntries(rendered.headers.entries()),
-        cookies: responseCookies,
+        cookies: Array.from(app.setCookieHeaders(rendered)),
         body: responseIsBase64Encoded
           ? Buffer.from(await rendered.arrayBuffer()).toString("base64")
           : await rendered.text(),

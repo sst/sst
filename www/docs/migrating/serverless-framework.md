@@ -1,12 +1,20 @@
 ---
 title: Migrating From Serverless Framework
 sidebar_label: Serverless Framework
-description: "Migrating from Serverless Framework to SST"
+description: "Migrate your from Serverless Framework app to SST."
 ---
 
-In this guide we'll look at how to migrate a Serverless Framework app to SST.
+import HeadlineText from "@site/src/components/HeadlineText";
 
-Note that, this document is a work in progress. If you have experience migrating your Serverless Framework app to SST, please consider contributing.
+<HeadlineText>
+
+A guide to migrating your Serverless Framework app to SST.
+
+</HeadlineText>
+
+---
+
+This document is a work in progress. If you have experience migrating your Serverless Framework app to SST, please consider contributing.
 
 ## Incrementally Adopting SST
 
@@ -269,9 +277,14 @@ Optionally, you can now create another new topic in SST called `MyTopic` and fol
 
 #### Migrate only the functions
 
-Now for resources that have persistent data like DynamoDB and S3, it won't be possible to remove them and recreate them. For these cases you can leave them as-is, while migrating over the DynamoDB stream subscribers and S3 bucket event subscribers as a first step.
+Now for resources that have persistent data like DynamoDB and S3, it won't be possible to remove them and recreate them. For these cases you have two choices:
 
-Here's an example for DynamoDB streams. Assume you have a DynamoDB table that is named based on the stage it's deployed to.
+1. Use them as-is by referencing them
+2. Or, migrate them over
+
+We talk about this in detail over on our doc on [Importing resources](../advanced/importing-resources.md).
+
+Here's an example of referencing a resource for DynamoDB streams. Assume you have a DynamoDB table that is named based on the stage it's deployed to.
 
 ```yml title="serverless.yml"
 resources:
@@ -295,7 +308,7 @@ resources:
               StreamViewType: NEW_IMAGE
 ```
 
-Now in SST, you can import the table and create an SST function to subscribe to its streams.
+Now in SST, you can reference the table and create an SST function to subscribe to its streams.
 
 ```js
 // Import table
@@ -315,6 +328,8 @@ processor.addEventSource(
   })
 );
 ```
+
+If you want to completely migrate over a resource, it is a manual process but it'll give you full control. You can [follow these steps](../advanced/importing-resources.md#migrate-resources).
 
 ## Workflow
 

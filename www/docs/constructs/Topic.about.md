@@ -206,7 +206,7 @@ new Topic(stack, "Topic", {
 
 ### FIFO topic
 
-```js {7-9}
+```js {4}
 new Topic(stack, "Topic", {
   cdk: {
     topic: {

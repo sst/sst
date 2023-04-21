@@ -114,9 +114,9 @@ export function safeHandler(block: (event: any) => Promise<void>) {
 
       // this is an actual error, fail the activity altogether and exist.
       // append a reference to the log group.
-      const reason = [
-        e.message,
-        `Logs: https://${
+      const reason =
+        e.reason ||
+        `${e.message} - Logs: https://${
           process.env.AWS_REGION
         }.console.aws.amazon.com/cloudwatch/home?region=${
           process.env.AWS_REGION
@@ -124,8 +124,7 @@ export function safeHandler(block: (event: any) => Promise<void>) {
           process.env.AWS_LAMBDA_LOG_GROUP_NAME!
         )}/log-events/${encodeURIComponent(
           process.env.AWS_LAMBDA_LOG_STREAM_NAME!
-        )}`,
-      ].join("\n");
+        )}`;
 
       await submitResponse("FAILED", event, { reason });
     }

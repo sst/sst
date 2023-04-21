@@ -119,7 +119,7 @@ export interface QueueProps {
  * @example
  *
  * ```js
- * import { Queue } from "@serverless-stack/resources";
+ * import { Queue } from "sst/constructs";
  *
  * new Queue(stack, "Queue", {
  *   consumer: "src/queueConsumer.main",

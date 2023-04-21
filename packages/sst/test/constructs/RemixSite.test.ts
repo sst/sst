@@ -273,11 +273,11 @@ test("edge: true", async () => {
   });
   expect(site.url).toBeDefined();
   expect(site.customDomainUrl).toBeUndefined();
-  expect(site.cdk.bucket.bucketArn).toBeDefined();
-  expect(site.cdk.bucket.bucketName).toBeDefined();
-  expect(site.cdk.distribution.distributionId).toBeDefined();
-  expect(site.cdk.distribution.distributionDomainName).toBeDefined();
-  expect(site.cdk.certificate).toBeUndefined();
+  expect(site.cdk!.bucket.bucketArn).toBeDefined();
+  expect(site.cdk!.bucket.bucketName).toBeDefined();
+  expect(site.cdk!.distribution.distributionId).toBeDefined();
+  expect(site.cdk!.distribution.distributionDomainName).toBeDefined();
+  expect(site.cdk!.certificate).toBeUndefined();
   countResources(stack, "AWS::S3::Bucket", 1);
   countResources(stack, "AWS::Lambda::Function", 6);
   countResources(stack, "AWS::CloudFront::Distribution", 1);
@@ -415,7 +415,8 @@ test("edge: true", async () => {
 });
 
 test("edge: true: environment generates placeholders", async () => {
-  const stack = new Stack(await createApp(), "stack");
+  const app = await createApp();
+  const stack = new Stack(app, "stack");
   const api = new Api(stack, "Api");
   new RemixSite(stack, "Site", {
     path: sitePath,
@@ -427,47 +428,13 @@ test("edge: true: environment generates placeholders", async () => {
     // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
   });
+  await app.finish();
 
+  printResource(stack, "Custom::AssetReplacer");
   countResourcesLike(stack, "Custom::AssetReplacer", 1, {
     replacements: [
       {
-        files: "**/*.js",
-        search: "{{ CONSTANT_ENV }}",
-        replace: "my-url",
-      },
-      {
-        files: "**/*.cjs",
-        search: "{{ CONSTANT_ENV }}",
-        replace: "my-url",
-      },
-      {
-        files: "**/*.mjs",
-        search: "{{ CONSTANT_ENV }}",
-        replace: "my-url",
-      },
-      {
-        files: "**/*.js",
-        search: "{{ REFERENCE_ENV }}",
-        replace: {
-          "Fn::GetAtt": ["ApiCD79AAA0", "ApiEndpoint"],
-        },
-      },
-      {
-        files: "**/*.cjs",
-        search: "{{ REFERENCE_ENV }}",
-        replace: {
-          "Fn::GetAtt": ["ApiCD79AAA0", "ApiEndpoint"],
-        },
-      },
-      {
-        files: "**/*.mjs",
-        search: "{{ REFERENCE_ENV }}",
-        replace: {
-          "Fn::GetAtt": ["ApiCD79AAA0", "ApiEndpoint"],
-        },
-      },
-      {
-        files: "index-wrapper.cjs",
+        files: "/server.cjs",
         search: '"{{ _SST_FUNCTION_ENVIRONMENT_ }}"',
         replace: {
           "Fn::Join": [
@@ -477,9 +444,21 @@ test("edge: true: environment generates placeholders", async () => {
               {
                 "Fn::GetAtt": ["ApiCD79AAA0", "ApiEndpoint"],
               },
-              '"}',
+              '","SST_APP":"app","SST_STAGE":"test","SST_REGION":"us-east-1","SST_SSM_PREFIX":"/test/test/"}',
             ],
           ],
+        },
+      },
+      {
+        files: "**/*.*js",
+        search: "{{ CONSTANT_ENV }}",
+        replace: "my-url",
+      },
+      {
+        files: "**/*.*js",
+        search: "{{ REFERENCE_ENV }}",
+        replace: {
+          "Fn::GetAtt": ["ApiCD79AAA0", "ApiEndpoint"],
         },
       },
     ],
@@ -501,11 +480,11 @@ test("constructor: with domain", async () => {
   });
   expect(site.url).toBeDefined();
   expect(site.customDomainUrl).toBeDefined();
-  expect(site.cdk.bucket.bucketArn).toBeDefined();
-  expect(site.cdk.bucket.bucketName).toBeDefined();
-  expect(site.cdk.distribution.distributionId).toBeDefined();
-  expect(site.cdk.distribution.distributionDomainName).toBeDefined();
-  expect(site.cdk.certificate).toBeDefined();
+  expect(site.cdk!.bucket.bucketArn).toBeDefined();
+  expect(site.cdk!.bucket.bucketName).toBeDefined();
+  expect(site.cdk!.distribution.distributionId).toBeDefined();
+  expect(site.cdk!.distribution.distributionDomainName).toBeDefined();
+  expect(site.cdk!.certificate).toBeDefined();
   countResources(stack, "AWS::S3::Bucket", 1);
   countResources(stack, "AWS::CloudFront::Distribution", 1);
   hasResource(stack, "AWS::CloudFront::Distribution", {
@@ -580,11 +559,11 @@ test("constructor: with domain with alias", async () => {
   });
   expect(site.url).toBeDefined();
   expect(site.customDomainUrl).toBeDefined();
-  expect(site.cdk.bucket.bucketArn).toBeDefined();
-  expect(site.cdk.bucket.bucketName).toBeDefined();
-  expect(site.cdk.distribution.distributionId).toBeDefined();
-  expect(site.cdk.distribution.distributionDomainName).toBeDefined();
-  expect(site.cdk.certificate).toBeDefined();
+  expect(site.cdk!.bucket.bucketArn).toBeDefined();
+  expect(site.cdk!.bucket.bucketName).toBeDefined();
+  expect(site.cdk!.distribution.distributionId).toBeDefined();
+  expect(site.cdk!.distribution.distributionDomainName).toBeDefined();
+  expect(site.cdk!.certificate).toBeDefined();
   countResources(stack, "AWS::S3::Bucket", 2);
   hasResource(stack, "AWS::S3::Bucket", {
     WebsiteConfiguration: {
@@ -897,7 +876,7 @@ test("constructor: path not exist", async () => {
       // @ts-expect-error: "sstTest" is not exposed in props
       sstTest: true,
     });
-  }).toThrow(/No site found/);
+  }).toThrow(/Could not find/);
 });
 
 test("cdk.bucket is props", async () => {
@@ -1083,9 +1062,7 @@ test("constructor: sst dev", async () => {
   });
   expect(site.url).toBeUndefined();
   expect(site.customDomainUrl).toBeUndefined();
-  expect(() => {
-    expect(site.cdk.bucket).toBeUndefined();
-  }).toThrow(/Cannot access CDK resources/);
+  expect(site.cdk).toBeUndefined();
   countResources(stack, "Custom::SSTBucketDeployment", 0);
   countResources(stack, "Custom::CloudFrontInvalidator", 0);
   countResources(stack, "AWS::CloudFront::Distribution", 0);
@@ -1112,9 +1089,7 @@ test("constructor: sst remove", async () => {
   });
   expect(site.url).toBeUndefined();
   expect(site.customDomainUrl).toBeUndefined();
-  expect(() => {
-    expect(site.cdk.bucket).toBeUndefined();
-  }).toThrow(/Cannot access CDK resources/);
+  expect(site.cdk).toBeUndefined();
   countResources(stack, "Custom::SSTBucketDeployment", 0);
   countResources(stack, "Custom::CloudFrontInvalidator", 0);
   countResources(stack, "AWS::CloudFront::Distribution", 0);

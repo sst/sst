@@ -8,7 +8,7 @@ Let's create our first SST app!
 
 ## Prerequisites
 
-- SST is built with Node, so make sure your local machine has it installed; [Node.js 14](https://nodejs.org/) and [npm 7](https://www.npmjs.com/).
+- SST is built with Node, so make sure your local machine has it installed; [Node.js 16](https://nodejs.org/) and [npm 7](https://www.npmjs.com/).
 - And we'll need a code editor. We use [VS Code](https://code.visualstudio.com/) in this tutorial.
 - Some basic TypeScript, AWS, or React knowledge would help, but it's not necessary.
 
@@ -29,31 +29,18 @@ Let's create our starter. We'll be using the [`create sst`](../packages/create-s
 </ChangeText>
 
 ```bash
-npx create-sst@one
+npx create-sst@latest --template=graphql/rds
 ```
 
 :::tip
 In this tutorial, we'll be using the **keyboard icon** <img width="18" style={{ "margin": "0 4px", "vertical-align": "text-bottom" }} src="/img/components/keyboard.svg" /> for code snippets where we want you to **make a change**.
 :::
 
-Select `graphql` here, as we'll be using the GraphQL starter in this tutorial.
+Select a name for your app. We'll just use the default.
 
 ```bash
-? What kind of project do you want to create? (Use arrow keys)
-❯ graphql
-  minimal
-  examples
+? Project name (my-sst-app)
 ```
-
-This will prompt you to select a database; either [RDS](https://aws.amazon.com/rds/) or [DynamoDB](https://aws.amazon.com/dynamodb/).
-
-```bash
-? Select a database (you can change this later or use both) (Use arrow keys)
-❯ RDS (Postgres or MySQL)
-  DynamoDB
-```
-
-You can always change this later, or even use both. Let's pick RDS. We'll be using PostgreSQL in this tutorial.
 
 <ChangeText>
 
@@ -66,7 +53,7 @@ cd my-sst-app
 npm install
 ```
 
-The `create sst` CLI by default bootstraps a full-stack starter that we'll be using in this tutorial. It can also create a more minimal setup, if you pass in `--minimal`. We recommend going that route if you want to piece your stack together.
+The `create sst` CLI by default bootstraps a full-stack starter that we'll be using in this tutorial. It can also create a more minimal setup, if you don't pass in `--template`. We recommend going that route if you want to piece your stack together.
 
 ---
 
@@ -106,8 +93,8 @@ Or if you are picking your own, make sure to use a stage name that is specific t
 
 The `sst dev` command, as you might've guessed, deploys to your AWS account. It does a couple of interesting things:
 
-1. Bootstraps your AWS account for SST.
-1. Deploys the infrastructure to run the Live Lambda Dev environment.
+1. Bootstraps your AWS account for SST. This only needs to be done once per account.
+1. Setups up the [Live Lambda Dev environment](../live-lambda-development.md).
 1. Deploys your app to AWS.
 1. Runs a local server to:
    1. Proxy Lambda requests to your local machine.
@@ -117,7 +104,7 @@ The `sst dev` command, as you might've guessed, deploys to your AWS account. It 
 The `sst dev` command starts up the [Live Lambda Dev](../live-lambda-development.md) environment.
 :::
 
-The first time you run `sst dev` it can take around 5 minutes to set everything up.
+The first time you run `sst dev` in a new AWS region and account, it can take around 5 minutes to set everything up.
 
 ---
 

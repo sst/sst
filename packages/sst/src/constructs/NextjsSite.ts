@@ -3,21 +3,41 @@ import url from "url";
 import path from "path";
 import { Construct } from "constructs";
 import { Fn, Duration as CdkDuration, RemovalPolicy } from "aws-cdk-lib";
-import * as logs from "aws-cdk-lib/aws-logs";
-import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
-import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
+import { RetentionDays } from "aws-cdk-lib/aws-logs";
+import {
+  Function as CdkFunction,
+  Code,
+  Runtime,
+  Architecture,
+  FunctionUrlAuthType,
+  IVersion,
+} from "aws-cdk-lib/aws-lambda";
+import {
+  Distribution,
+  ViewerProtocolPolicy,
+  AllowedMethods,
+  LambdaEdgeEventType,
+  BehaviorOptions,
+  CachedMethods,
+  CachePolicy,
+  ICachePolicy,
+  IOriginRequestPolicy,
+} from "aws-cdk-lib/aws-cloudfront";
+import {
+  S3Origin,
+  HttpOrigin,
+  OriginGroup,
+} from "aws-cdk-lib/aws-cloudfront-origins";
 
 import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 import { SsrSite, SsrSiteProps } from "./SsrSite.js";
 import { Size, toCdkSize } from "./util/size.js";
-import { Duration } from "./util/duration.js";
-import { Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { PolicyStatement } from "aws-cdk-lib/aws-iam";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
-export interface NextjsSiteProps extends Omit<SsrSiteProps, "edge"> {
+export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   imageOptimization?: {
     /**
      * The amount of memory in MB allocated for image optimization function.
@@ -43,37 +63,51 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "edge"> {
  * ```
  */
 export class NextjsSite extends SsrSite {
-  protected declare props: Omit<NextjsSiteProps, "path"> & {
-    path: string;
-    timeout: number | Duration;
-    memorySize: number | Size;
+  protected declare props: NextjsSiteProps & {
+    path: Exclude<NextjsSiteProps["path"], undefined>;
+    runtime: Exclude<NextjsSiteProps["runtime"], undefined>;
+    timeout: Exclude<NextjsSiteProps["timeout"], undefined>;
+    memorySize: Exclude<NextjsSiteProps["memorySize"], undefined>;
+    waitForInvalidation: Exclude<
+      NextjsSiteProps["waitForInvalidation"],
+      undefined
+    >;
   };
 
   constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
     super(scope, id, {
-      buildCommand: "npx --yes open-next@latest build",
+      buildCommand: "npx --yes open-next@^0.9.0 build",
       ...props,
     });
   }
 
   protected initBuildConfig() {
     return {
+      typesPath: ".",
       serverBuildOutputFile: ".open-next/server-function/index.mjs",
       clientBuildOutputDir: ".open-next/assets",
       clientBuildVersionedSubDir: "_next",
     };
   }
 
-  protected createFunctionForRegional(): lambda.Function {
-    const { runtime, timeout, memorySize, permissions, environment, cdk } =
-      this.props;
+  protected createFunctionForRegional(): CdkFunction {
+    const {
+      runtime,
+      timeout,
+      memorySize,
+      bind,
+      permissions,
+      environment,
+      cdk,
+    } = this.props;
     const ssrFn = new SsrFunction(this, `ServerFunction`, {
       description: "Server handler for Next.js",
-      bundlePath: path.join(this.props.path, ".open-next", "server-function"),
+      bundle: path.join(this.props.path, ".open-next", "server-function"),
       handler: "index.handler",
       runtime,
       timeout,
       memorySize,
+      bind,
       permissions,
       environment,
       ...cdk?.server,
@@ -81,126 +115,55 @@ export class NextjsSite extends SsrSite {
     return ssrFn.function;
   }
 
-  private createImageOptimizationFunctionForRegional(): lambda.Function {
+  protected createFunctionForEdge(): EdgeFunction {
+    const { runtime, timeout, memorySize, bind, permissions, environment } =
+      this.props;
+    return new EdgeFunction(this, "ServerFunction", {
+      bundle: path.join(this.props.path, ".open-next", "server-function"),
+      handler: "index.handler",
+      runtime,
+      timeout,
+      memorySize,
+      bind,
+      permissions,
+      environment,
+    });
+  }
+
+  private createImageOptimizationFunction(): CdkFunction {
     const { imageOptimization, path: sitePath } = this.props;
 
-    return new lambda.Function(this, `ImageFunction`, {
+    return new CdkFunction(this, `ImageFunction`, {
       description: "Image optimization handler for Next.js",
       handler: "index.handler",
       currentVersionOptions: {
         removalPolicy: RemovalPolicy.DESTROY,
       },
-      logRetention: logs.RetentionDays.THREE_DAYS,
-      code: lambda.Code.fromAsset(
+      logRetention: RetentionDays.THREE_DAYS,
+      code: Code.fromAsset(
         path.join(sitePath, ".open-next/image-optimization-function")
       ),
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: Runtime.NODEJS_18_X,
       memorySize: imageOptimization?.memorySize
         ? typeof imageOptimization.memorySize === "string"
           ? toCdkSize(imageOptimization.memorySize).toMebibytes()
           : imageOptimization.memorySize
         : 1536,
       timeout: CdkDuration.seconds(25),
-      architecture: lambda.Architecture.ARM_64,
+      architecture: Architecture.ARM_64,
       environment: {
-        BUCKET_NAME: this.cdk.bucket.bucketName,
+        BUCKET_NAME: this.cdk!.bucket.bucketName,
       },
       initialPolicy: [
         new PolicyStatement({
           actions: ["s3:GetObject"],
-          resources: [this.cdk.bucket.arnForObjects("*")],
+          resources: [this.cdk!.bucket.arnForObjects("*")],
         }),
       ],
     });
   }
 
-  private createMiddlewareEdgeFunctionForRegional() {
-    const { permissions, environment, path: sitePath } = this.props;
-    const middlewarePath = path.resolve(
-      sitePath,
-      ".open-next/middleware-function"
-    );
-
-    if (fs.existsSync(middlewarePath)) {
-      return new EdgeFunction(this, "Middleware", {
-        bundlePath: middlewarePath,
-        handler: "index.handler",
-        timeout: 5,
-        memorySize: 128,
-        permissions,
-        environment,
-        format: "esm",
-      });
-    }
-  }
-
-  protected createCloudFrontDistributionForRegional(): cloudfront.Distribution {
-    const { cdk } = this.props;
-    const cfDistributionProps = cdk?.distribution || {};
-    const s3Origin = new origins.S3Origin(this.cdk.bucket);
-
-    // Create server behavior
-    const middlewareFn = this.createMiddlewareEdgeFunctionForRegional();
-    const serverFnUrl = this.serverLambdaForRegional!.addFunctionUrl({
-      authType: lambda.FunctionUrlAuthType.NONE,
-    });
-    const serverBehavior = {
-      viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      origin: new origins.HttpOrigin(Fn.parseDomainName(serverFnUrl.url)),
-      allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-      cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
-      compress: true,
-      cachePolicy:
-        cdk?.serverCachePolicy ?? this.createCloudFrontServerCachePolicy(),
-      edgeLambdas: middlewareFn && [
-        {
-          eventType: cloudfront.LambdaEdgeEventType.VIEWER_REQUEST,
-          functionVersion: middlewareFn.currentVersion,
-        },
-      ],
-    };
-
-    // Create image optimization behavior
-    const imageFn = this.createImageOptimizationFunctionForRegional();
-    const imageFnUrl = imageFn.addFunctionUrl({
-      authType: lambda.FunctionUrlAuthType.NONE,
-    });
-    const imageBehavior = {
-      viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      origin: new origins.HttpOrigin(Fn.parseDomainName(imageFnUrl.url)),
-      allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-      cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
-      compress: true,
-      cachePolicy: serverBehavior.cachePolicy,
-    };
-
-    // Create statics behavior
-    const staticFileBehaviour: cloudfront.BehaviorOptions = {
-      origin: s3Origin,
-      viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
-      cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
-      compress: true,
-      cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-    };
-
-    // Create default behavior
-    // default handler for requests that don't match any other path:
-    //   - try lambda handler first first
-    //   - if failed, fall back to S3
-    const fallbackOriginGroup = new origins.OriginGroup({
-      primaryOrigin: serverBehavior.origin,
-      fallbackOrigin: s3Origin,
-      fallbackStatusCodes: [404],
-    });
-    const defaultBehavior = {
-      origin: fallbackOriginGroup,
-      viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      compress: true,
-      cachePolicy: serverBehavior.cachePolicy,
-      edgeLambdas: serverBehavior.edgeLambdas,
-    };
-
+  protected createCloudFrontDistributionForRegional(): Distribution {
     /**
      * Next.js requests
      *
@@ -251,49 +214,203 @@ export class NextjsSite extends SsrSite {
      *    - x-vercel-cache: MISS
      */
 
-    return new cloudfront.Distribution(this, "Distribution", {
+    const { cdk } = this.props;
+    const cfDistributionProps = cdk?.distribution || {};
+    const s3Origin = new S3Origin(this.cdk!.bucket);
+    const serverFnUrl = this.serverLambdaForRegional!.addFunctionUrl({
+      authType: FunctionUrlAuthType.NONE,
+    });
+    const serverOrigin = new HttpOrigin(Fn.parseDomainName(serverFnUrl.url));
+    const cachePolicy = cdk?.serverCachePolicy ?? this.buildServerCachePolicy();
+    const originRequestPolicy = this.buildServerOriginRequestPolicy();
+    const serverBehavior = this.buildServerBehaviorForRegional(
+      serverOrigin,
+      cachePolicy,
+      originRequestPolicy
+    );
+
+    return new Distribution(this, "Distribution", {
       // these values can be overwritten by cfDistributionProps
       defaultRootObject: "",
       // Override props.
       ...cfDistributionProps,
       // these values can NOT be overwritten by cfDistributionProps
       domainNames: this.buildDistributionDomainNames(),
-      certificate: this.cdk.certificate,
-      defaultBehavior: defaultBehavior,
+      certificate: this.cdk!.certificate,
+      defaultBehavior: this.buildDefaultNextjsBehaviorForRegional(
+        serverOrigin,
+        s3Origin,
+        cachePolicy,
+        originRequestPolicy
+      ),
       additionalBehaviors: {
         "api/*": serverBehavior,
         "_next/data/*": serverBehavior,
-        "_next/image*": imageBehavior,
-        "_next/*": staticFileBehaviour,
+        "_next/image*": this.buildImageBehavior(cachePolicy),
+        "_next/*": this.buildStaticFileBehavior(s3Origin),
         ...(cfDistributionProps.additionalBehaviors || {}),
       },
     });
   }
 
-  protected createCloudFrontServerCachePolicy(): cloudfront.CachePolicy {
-    return new cloudfront.CachePolicy(this, "ServerCache", {
-      queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
-      headerBehavior: cloudfront.CacheHeaderBehavior.allowList(
-        // required by image optimization request
-        "accept",
-        // required by server request
-        "x-op-middleware-request-headers",
-        "x-op-middleware-response-headers",
-        "x-nextjs-data",
-        "x-middleware-prefetch",
-        // required by server request (in-place routing)
-        "rsc",
-        "next-router-prefetch",
-        "next-router-state-tree"
+  protected createCloudFrontDistributionForEdge(): Distribution {
+    const { cdk } = this.props;
+    const cfDistributionProps = cdk?.distribution || {};
+    const s3Origin = new S3Origin(this.cdk!.bucket);
+    const cachePolicy = cdk?.serverCachePolicy ?? this.buildServerCachePolicy();
+    const originRequestPolicy = this.buildServerOriginRequestPolicy();
+    const functionVersion = this.serverLambdaForEdge!.currentVersion;
+    const serverBehavior = this.buildServerBehaviorForEdge(
+      functionVersion,
+      s3Origin,
+      cachePolicy,
+      originRequestPolicy
+    );
+
+    return new Distribution(this, "Distribution", {
+      // these values can be overwritten by cfDistributionProps
+      defaultRootObject: "",
+      // Override props.
+      ...cfDistributionProps,
+      // these values can NOT be overwritten by cfDistributionProps
+      domainNames: this.buildDistributionDomainNames(),
+      certificate: this.cdk!.certificate,
+      defaultBehavior: this.buildDefaultNextjsBehaviorForEdge(
+        functionVersion,
+        s3Origin,
+        cachePolicy,
+        originRequestPolicy
       ),
-      cookieBehavior: cloudfront.CacheCookieBehavior.all(),
-      defaultTtl: CdkDuration.days(0),
-      maxTtl: CdkDuration.days(365),
-      minTtl: CdkDuration.days(0),
-      enableAcceptEncodingBrotli: true,
-      enableAcceptEncodingGzip: true,
-      comment: "SST server response cache policy",
+      additionalBehaviors: {
+        "api/*": serverBehavior,
+        "_next/data/*": serverBehavior,
+        "_next/image*": this.buildImageBehavior(cachePolicy),
+        "_next/*": this.buildStaticFileBehavior(s3Origin),
+        ...(cfDistributionProps.additionalBehaviors || {}),
+      },
     });
+  }
+
+  private buildServerBehaviorForRegional(
+    serverOrigin: HttpOrigin,
+    cachePolicy: ICachePolicy,
+    originRequestPolicy: IOriginRequestPolicy
+  ): BehaviorOptions {
+    return {
+      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      origin: serverOrigin,
+      allowedMethods: AllowedMethods.ALLOW_ALL,
+      cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
+      compress: true,
+      cachePolicy,
+      originRequestPolicy,
+    };
+  }
+
+  private buildServerBehaviorForEdge(
+    functionVersion: IVersion,
+    s3Origin: S3Origin,
+    cachePolicy: ICachePolicy,
+    originRequestPolicy: IOriginRequestPolicy
+  ): BehaviorOptions {
+    return {
+      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      origin: s3Origin,
+      allowedMethods: AllowedMethods.ALLOW_ALL,
+      cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
+      compress: true,
+      cachePolicy,
+      originRequestPolicy,
+      edgeLambdas: [
+        {
+          includeBody: true,
+          eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
+          functionVersion,
+        },
+      ],
+    };
+  }
+
+  private buildImageBehavior(cachePolicy: ICachePolicy): BehaviorOptions {
+    const imageFn = this.createImageOptimizationFunction();
+    const imageFnUrl = imageFn.addFunctionUrl({
+      authType: FunctionUrlAuthType.NONE,
+    });
+    return {
+      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      origin: new HttpOrigin(Fn.parseDomainName(imageFnUrl.url)),
+      allowedMethods: AllowedMethods.ALLOW_ALL,
+      cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
+      compress: true,
+      cachePolicy,
+    };
+  }
+
+  private buildStaticFileBehavior(s3Origin: S3Origin): BehaviorOptions {
+    return {
+      origin: s3Origin,
+      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+      cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
+      compress: true,
+      cachePolicy: CachePolicy.CACHING_OPTIMIZED,
+    };
+  }
+
+  private buildDefaultNextjsBehaviorForRegional(
+    serverOrigin: HttpOrigin,
+    s3Origin: S3Origin,
+    cachePolicy: ICachePolicy,
+    originRequestPolicy: IOriginRequestPolicy
+  ): BehaviorOptions {
+    // Create default behavior
+    // default handler for requests that don't match any other path:
+    //   - try lambda handler first
+    //   - if failed, fall back to S3
+    const { cdk } = this.props;
+    const cfDistributionProps = cdk?.distribution || {};
+    const fallbackOriginGroup = new OriginGroup({
+      primaryOrigin: serverOrigin,
+      fallbackOrigin: s3Origin,
+      fallbackStatusCodes: [503],
+    });
+    return {
+      origin: fallbackOriginGroup,
+      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      compress: true,
+      cachePolicy,
+      originRequestPolicy,
+      ...(cfDistributionProps.defaultBehavior || {}),
+    };
+  }
+
+  private buildDefaultNextjsBehaviorForEdge(
+    functionVersion: IVersion,
+    s3Origin: S3Origin,
+    cachePolicy: ICachePolicy,
+    originRequestPolicy: IOriginRequestPolicy
+  ): BehaviorOptions {
+    const { cdk } = this.props;
+    const cfDistributionProps = cdk?.distribution || {};
+
+    return {
+      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      origin: s3Origin,
+      allowedMethods: AllowedMethods.ALLOW_ALL,
+      cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
+      compress: true,
+      cachePolicy,
+      originRequestPolicy,
+      ...(cfDistributionProps.defaultBehavior || {}),
+      edgeLambdas: [
+        {
+          includeBody: true,
+          eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
+          functionVersion,
+        },
+        ...(cfDistributionProps.defaultBehavior?.edgeLambdas || []),
+      ],
+    };
   }
 
   protected generateBuildId(): string {

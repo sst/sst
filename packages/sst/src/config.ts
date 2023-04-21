@@ -13,8 +13,15 @@ import {
 import { pipe, map } from "remeda";
 import { useProject } from "./project.js";
 import { useAWSClient } from "./credentials.js";
+import { useIOT } from "./iot.js";
 import { Stacks } from "./stacks/index.js";
-import { FunctionMetadata } from "./constructs/Metadata.js";
+import { FunctionMetadata, SsrSiteMetadata } from "./constructs/Metadata.js";
+
+declare module "./bus.js" {
+  export interface Events {
+    "config.secret.updated": { name: string };
+  }
+}
 
 interface Secret {
   value?: string;
@@ -26,7 +33,7 @@ export namespace Config {
     const result: (ReturnType<typeof parse> & { value: string })[] = [];
 
     for await (const p of scan(PREFIX.FALLBACK)) {
-      const parsed = parse(p.Name!);
+      const parsed = parse(p.Name!, PREFIX.FALLBACK);
       if (parsed.type === "secrets") continue;
       result.push({
         ...parsed,
@@ -35,7 +42,7 @@ export namespace Config {
     }
 
     for await (const p of scan(PREFIX.STAGE)) {
-      const parsed = parse(p.Name!);
+      const parsed = parse(p.Name!, PREFIX.STAGE);
       if (parsed.type === "secrets") continue;
       result.push({
         ...parsed,
@@ -74,13 +81,13 @@ export namespace Config {
     const result: Record<string, Secret> = {};
 
     for await (const p of scan(PREFIX.STAGE + "Secret")) {
-      const parsed = parse(p.Name!);
+      const parsed = parse(p.Name!, PREFIX.STAGE);
       if (!result[parsed.id]) result[parsed.id] = {};
       result[parsed.id].value = p.Value;
     }
 
     for await (const p of scan(PREFIX.FALLBACK + "Secret")) {
-      const parsed = parse(p.Name!);
+      const parsed = parse(p.Name!, PREFIX.FALLBACK);
       if (!result[parsed.id]) result[parsed.id] = {};
       result[parsed.id].fallback = p.Value;
     }
@@ -112,7 +119,7 @@ export namespace Config {
     fallback?: boolean;
   }) {
     const ssm = useAWSClient(SSMClient);
-    const result = await ssm.send(
+    await ssm.send(
       new PutParameterCommand({
         Name: pathFor({
           id: input.key,
@@ -125,6 +132,11 @@ export namespace Config {
         Overwrite: true,
       })
     );
+
+    // Publish event
+    const iot = await useIOT();
+    const topic = `${iot.prefix}/events`;
+    await iot.publish(topic, "config.secret.updated", { name: input.key });
   }
 
   export async function getSecret(input: { key: string; fallback?: boolean }) {
@@ -160,36 +172,61 @@ export namespace Config {
     );
   }
 
-  export async function restart(keys: string[]) {
-    const lambda = useAWSClient(LambdaClient);
+  export async function restart(key: string) {
     const metadata = await Stacks.metadata();
-    const filtered = Object.values(metadata)
+    const siteData = Object.values(metadata)
       .flat()
-      .filter((f): f is FunctionMetadata => f.type === "Function")
-      .filter((f) => keys.some((key) => f.data.secrets.includes(key)));
-
-    await Promise.all(
-      filtered.map(async (f) => {
-        const config = await lambda.send(
-          new GetFunctionConfigurationCommand({
-            FunctionName: f.data.arn,
-          })
-        );
-
-        await lambda.send(
-          new UpdateFunctionConfigurationCommand({
-            FunctionName: f.data.arn,
-            Environment: {
-              Variables: {
-                ...(config.Environment?.Variables || {}),
-                [SECRET_UPDATED_AT_ENV]: Date.now().toString(),
-              },
-            },
-          })
-        );
-      })
+      .filter(
+        (c): c is SsrSiteMetadata =>
+          c.type === "AstroSite" ||
+          c.type === "NextjsSite" ||
+          c.type === "RemixSite" ||
+          c.type === "SolidStartSite"
+      )
+      .filter((c) => c.data.secrets.includes(key));
+    const siteDataPlaceholder = siteData.filter(
+      (c) => c.data.mode === "placeholder"
     );
-    return filtered.length;
+    const siteDataEdge = siteData
+      .filter((c) => c.data.mode === "deployed")
+      .filter((c) => c.data.edge);
+    const siteDataRegional = siteData
+      .filter((c) => c.data.mode === "deployed")
+      .filter((c) => !c.data.edge);
+    const regionalSiteArns = siteData.map((s) => s.data.server);
+    const functionData = Object.values(metadata)
+      .flat()
+      .filter((c): c is FunctionMetadata => c.type === "Function")
+      // filter out SSR functions for sites
+      .filter((c) => !regionalSiteArns.includes(c.data.arn))
+      .filter((c) => c.data.secrets.includes(key));
+
+    // Restart sites
+    const restartedSites = (
+      await Promise.all(
+        siteDataRegional.map(async (s) => {
+          const restarted = await restartFunction(s.data.server);
+          return restarted ? s : restarted;
+        })
+      )
+    ).filter((c): c is SsrSiteMetadata => Boolean(c));
+
+    // Restart functions
+    const restartedFunctions = (
+      await Promise.all(
+        functionData.map(async (f) => {
+          const restarted = await restartFunction(f.data.arn);
+          return restarted ? f : restarted;
+        })
+      )
+    ).filter((c): c is FunctionMetadata => Boolean(c));
+
+    return {
+      edgeSites: siteDataEdge,
+      sites: restartedSites,
+      placeholderSites: siteDataPlaceholder,
+      functions: restartedFunctions,
+    };
   }
 }
 
@@ -219,7 +256,7 @@ const SECRET_UPDATED_AT_ENV = "SST_ADMIN_SECRET_UPDATED_AT";
 const PREFIX = {
   get STAGE() {
     const project = useProject();
-    return `/sst/${project.config.name}/${project.config.stage}/`;
+    return project.config.ssmPrefix;
   },
   get FALLBACK() {
     const project = useProject();
@@ -227,11 +264,46 @@ const PREFIX = {
   },
 };
 
-function parse(ssmName: string) {
-  const parts = ssmName.split("/");
+function parse(ssmName: string, prefix: string) {
+  const parts = ssmName.substring(prefix.length).split("/");
   return {
-    type: parts[4],
-    id: parts[5],
-    prop: parts.slice(6).join("/"),
+    type: parts[0],
+    id: parts[1],
+    prop: parts.slice(2).join("/"),
   };
+}
+
+async function restartFunction(arn: string) {
+  const lambda = useAWSClient(LambdaClient);
+
+  // Note: in the case where the function is removed, but the metadata
+  //       is not updated, we ignore the Function not found error.
+  try {
+    const config = await lambda.send(
+      new GetFunctionConfigurationCommand({
+        FunctionName: arn,
+      })
+    );
+
+    await lambda.send(
+      new UpdateFunctionConfigurationCommand({
+        FunctionName: arn,
+        Environment: {
+          Variables: {
+            ...(config.Environment?.Variables || {}),
+            [SECRET_UPDATED_AT_ENV]: Date.now().toString(),
+          },
+        },
+      })
+    );
+
+    return true;
+  } catch (e: any) {
+    if (
+      e.name === "ResourceNotFoundException" &&
+      e.message.startsWith("Function not found")
+    ) {
+      return;
+    }
+  }
 }

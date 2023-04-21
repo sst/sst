@@ -16,7 +16,7 @@ dotenv.config({
   override: true,
 });
 
-import { env } from "./commands/env.js";
+import { bootstrap } from "./commands/bootstrap.js";
 import { dev } from "./commands/dev.js";
 import { bind } from "./commands/bind.js";
 import { build } from "./commands/build.js";
@@ -29,13 +29,12 @@ import { transform } from "./commands/transform.js";
 import { diff } from "./commands/diff.js";
 import { version } from "./commands/version.js";
 import { telemetry } from "./commands/telemetry.js";
-import { bootstrap } from "./commands/bootstrap.js";
 
+bootstrap(program);
 dev(program);
 deploy(program);
 build(program);
 bind(program);
-env(program);
 secrets(program);
 remove(program);
 update(program);
@@ -44,7 +43,6 @@ consoleCommand(program);
 diff(program);
 version(program);
 telemetry(program);
-bootstrap(program)
 
 if ("setSourceMapsEnabled" in process) {
   // @ts-expect-error
@@ -72,5 +70,13 @@ process.on("uncaughtException", (err) => {
 });
 
 process.on("beforeExit", () => {});
+
+// Check Node version
+const nodeVersion = process.versions.node;
+if (Number(nodeVersion.split(".")[0]) < 16) {
+  throw new VisibleError(
+    `Node.js version ${nodeVersion} is not supported by SST. Please upgrade to Node.js 16 or later.`
+  );
+}
 
 program.parse();

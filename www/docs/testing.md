@@ -28,6 +28,10 @@ To start, there are 3 types of tests you can write for your SST apps:
 
 SST uses [Vitest](https://vitest.dev) to help you write these tests. And it uses the [`sst bind`](packages/sst.md#sst-bind) CLI to bind the resources to your tests. This allows the [`sst/node`](clients/index.md) helper library to work as if the tests were running inside a Lambda function.
 
+:::info
+Due to [the way sst bind works](#how-sst-bind-works), it does not support Vitest in threaded mode. We recommend disabling threads by [setting the `threads` config option](https://vitest.dev/config/#threads) to false or by using the flag `--threads=false`.
+:::
+
 ---
 
 ### Test script
@@ -42,14 +46,14 @@ If you created your app with `create-sst` a [Vitest](https://vitest.dev/config/)
   "remove": "sst remove",
   "console": "sst console",
   "typecheck": "tsc --noEmit",
-  "test": "sst bind \"vitest run\""
+  "test": "sst bind vitest run"
 },
 ```
 
 We'll look at how the `sst bind` CLI works a little in the chapter.
 
 :::note
-If you created your app using `create-sst` prior to v1.9.0, make sure to prepend `sst bind --` to your test script.
+The `sst bind` CLI will join any argument that is not a flag but won't join flags. This means that `sst bind vitest run path/to/test.ts` is valid, but `sst bind vitest run --threads=false` is not! To pass in flags, wrap the command in quotes: `sst bind "vitest run --threads=false"`.
 :::
 
 You can now run your tests using.
@@ -92,11 +96,11 @@ If you are new to the GraphQL starter, it creates a very simple Reddit clone. Yo
 
 ### Testing domain code
 
-Open up `services/core/article.ts`, it contains a `create()` function to create an article, and a `list()` function to list all submitted articles. This code is responsible for the _article domain_.
+Open up `packages/core/src/article.ts`, it contains a `create()` function to create an article, and a `list()` function to list all submitted articles. This code is responsible for the _article domain_.
 
-Let's write a test for our _article domain_ code. Create a new file at `services/test/core/article.test.ts`:
+Let's write a test for our _article domain_ code. Create a new file at `packages/core/test/article.test.ts`:
 
-```ts title="services/test/core/article.test.ts"
+```ts title="packages/core/test/article.test.ts"
 import { expect, it } from "vitest";
 import { Article } from "@my-sst-app/core/article";
 
@@ -112,12 +116,12 @@ it("create an article", async () => {
 });
 ```
 
-Both the `create()` and `list()` functions call `services/core/dynamo.ts` to talk to the database. And `services/core/dynamo.ts` references `Table.table.tableName`.
+Both the `create()` and `list()` functions call `packages/core/src/dynamo.ts` to talk to the database. And `packages/core/src/dynamo.ts` references `Table.table.tableName`.
 
 <details>
 <summary>Behind the scenes</summary>
 
-The above test only works if we run `sst bind -- vitest run`. The `sst bind` CLI fetches the value for the `Table.table.tableName` and passes it to the test. If we run `vitest run` directly, we'll get an error complaining that `Table.table.tableName` cannot be resolved.
+The above test only works if we run `sst bind vitest run`. The `sst bind` CLI fetches the value for the `Table.table.tableName` and passes it to the test. If we run `vitest run` directly, we'll get an error complaining that `Table.table.tableName` cannot be resolved.
 
 </details>
 
@@ -127,25 +131,17 @@ The above test only works if we run `sst bind -- vitest run`. The `sst bind` CLI
 
 We can rewrite the above test so that instead of calling `Article.create()`, you make a request to the GraphQL API to create the article. In fact, the GraphQL stack template already includes this test.
 
-To call the GraphQL API in our test, we need to know the API's URL. We create a [`Parameter`](config.md#parameters) in `stacks/Api.ts`:
-
-```ts title="stacks/Api.ts"
-new Config.Parameter(stack, "API_URL", {
-  value: api.url,
-});
-```
-
-Open `services/test/graphql/article.test.ts`, you can see the test is similar to our domain function test above.
+Open `packages/functions/test/graphql/article.test.ts`, you can see the test is similar to our domain function test above.
 
 ```ts
 import { expect, it } from "vitest";
-import { Config } from "sst/node/config";
+import { Api } from "sst/node/api";
 import { createClient } from "@my-sst-app/graphql/genql";
 import { Article } from "@my-sst-app/core/article";
 
 it("create an article", async () => {
   const client = createClient({
-    url: Config.API_URL + "/graphql",
+    url: Api.api.url + "/graphql",
   });
 
   // Call the API to create a new article
@@ -168,7 +164,7 @@ it("create an article", async () => {
 });
 ```
 
-Again, just like the domain test above, this only works if we run [`sst bind -- vitest run`](#how-sst-bind-works).
+Again, just like the domain test above, this only works if we run [`sst bind vitest run`](#how-sst-bind-works).
 
 :::tip
 Testing APIs are often more useful than testing Domain code because they test the app from the perspective of a user. Ignoring most of the implementation details.
@@ -189,12 +185,14 @@ Create a new file at `stacks/test/Database.test.ts`:
 ```ts
 import { it } from "vitest";
 import { Template } from "aws-cdk-lib/assertions";
+import { initProject } from "sst/project";
 import { App, getStack } from "sst/constructs";
 import { Database } from "../Database";
 
 it("point-in-time recovery is enabled", async () => {
+  await initProject({});
+  const app = new App({ mode: "deploy" });
   // Create the Database stack
-  const app = new App();
   app.stack(Database);
 
   // Get the CloudFormation template of the stack
@@ -281,11 +279,9 @@ The `sst bind` CLI sets the following environment variables:
 
 - `SST_APP` with the name of your SST app
 - `SST_STAGE` with the stage
-- It fetches all SSM Parameters prefixed with `/sst/{appName}/{stageName}/*`, and sets the environment variables prefixed with `SST_*`.
-
-  ie. In our example above, `SST_Table_tableName_table` is created with value from `/sst/{appName}/{stageName}/Table/table/tableName`
-
+- It fetches all SSM Parameters prefixed with `/sst/{appName}/{stageName}/*`, and sets the environment variables prefixed with `SST_*`. Ie. In our example above, `SST_Table_tableName_table` is created with value from `/sst/{appName}/{stageName}/Table/table/tableName`
 - For [`Secrets`](constructs/Secret.md), fallback values are also fetched from SSM Parameters prefixed with `/sst/{appName}/.fallback/Secret/*`.
+- To do this, `sst bind` spawns child processes. This is why Vitest's threaded mode is not supported. Since it also spawns child processes, the combination of different threads might cause tests to fail intermittently.
 
 </details>
 

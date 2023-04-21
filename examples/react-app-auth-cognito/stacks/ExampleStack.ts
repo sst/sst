@@ -1,9 +1,4 @@
-import {
-  Api,
-  Cognito,
-  StaticSite,
-  StackContext,
-} from "sst/constructs";
+import { Api, Cognito, StaticSite, StackContext } from "sst/constructs";
 
 export function ExampleStack({ stack, app }: StackContext) {
   // Create a Cognito User Pool to manage auth

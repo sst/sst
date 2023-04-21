@@ -115,6 +115,6 @@ export function ExampleStack({ stack, app }: StackContext) {
     api_endpoint: api.url,
     auth_client_id: auth.userPoolClientId,
     domain: domain.domainName,
-    site_url: site.url || "http://localhost:5173",
+    site_url: site.url,
   });
 }

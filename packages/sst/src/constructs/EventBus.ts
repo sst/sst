@@ -1,7 +1,15 @@
 import { Construct } from "constructs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as events from "aws-cdk-lib/aws-events";
-import * as eventsTargets from "aws-cdk-lib/aws-events-targets";
+import {
+  LambdaFunction as LambdaFunctionTarget,
+  LambdaFunctionProps as LambdaFunctionTargetProps,
+  SqsQueue as SqsQueueTarget,
+  SqsQueueProps as SqsQueueTargetProps,
+  CloudWatchLogGroup as LogGroupTarget,
+  LogGroupProps as LogGroupTargetProps,
+} from "aws-cdk-lib/aws-events-targets";
+import { ILogGroup } from "aws-cdk-lib/aws-logs";
 import { App } from "./App.js";
 import { Queue } from "./Queue.js";
 import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct.js";
@@ -20,6 +28,18 @@ import { Permissions } from "./util/permission.js";
 
 /**
  * Used to configure an EventBus function target
+ * @example
+ * ```js
+ * new EventBus(stack, "Bus", {
+ *   rules: {
+ *     myRule: {
+ *       targets: {
+ *         myTarget: { function: "src/function.handler" },
+ *       }
+ *     },
+ *   },
+ * });
+ * ```
  */
 export interface EventBusFunctionTargetProps {
   /**
@@ -28,27 +48,32 @@ export interface EventBusFunctionTargetProps {
   type?: "function";
   /**
    * The function to trigger
-   *
-   * @example
-   * ```js
-   * new EventBus(stack, "Bus", {
-   *   rules: {
-   *     myRule: {
-   *       targets: {
-   *         myTarget: { function: "src/function.handler" },
-   *       }
-   *     },
-   *   },
-   * });
-   * ```
    */
   function?: FunctionDefinition;
   cdk?: {
     function?: lambda.IFunction;
-    target?: eventsTargets.LambdaFunctionProps;
+    target?: LambdaFunctionTargetProps;
   };
 }
 
+/**
+ * Used to configure an EventBus queue target
+ * @example
+ * ```js
+ * new EventBus(stack, "Bus", {
+ *   rules: {
+ *     myRule: {
+ *       targets: {
+ *         myTarget: {
+ *           type: "queue",
+ *           queue: new Queue(stack, "Queue")
+ *         }
+ *       }
+ *     },
+ *   },
+ * });
+ * ```
+ */
 export interface EventBusQueueTargetProps {
   /**
    * String literal to signify that the target is a queue
@@ -56,28 +81,44 @@ export interface EventBusQueueTargetProps {
   type: "queue";
   /**
    * The queue to trigger
-   *
-   * @example
-   * ```js
-   * new EventBus(stack, "Bus", {
-   *   rules: {
-   *     myRule: {
-   *       targets: {
-   *         myTarget: {
-   *           type: "queue",
-   *           queue: new Queue(stack, "Queue")
-   *         }
-   *       }
-   *     },
-   *   },
-   * });
-   * ```
    */
   queue: Queue;
   cdk?: {
-    target?: eventsTargets.SqsQueueProps;
+    target?: SqsQueueTargetProps;
   };
 }
+
+/**
+ * Used to configure an EventBus log group target
+ * @example
+ * ```js
+ * new EventBus(stack, "Bus", {
+ *   rules: {
+ *     myRule: {
+ *       targets: {
+ *         myTarget: {
+ *           type: "log_group",
+ *           cdk: {
+ *            logGroup: LogGroup.fromLogGroupName(stack, "Logs", "/my/target/log"),
+ *           }
+ *         }
+ *       }
+ *     },
+ *   },
+ * });
+ * ```
+ */
+export interface EventBusLogGroupTargetProps {
+  /**
+   * String literal to signify that the target is a log group
+   */
+  type: "log_group";
+  cdk: {
+    logGroup: ILogGroup;
+    target?: LogGroupTargetProps;
+  };
+}
+
 /**
  * Used to configure an EventBus rule
  */
@@ -130,7 +171,7 @@ export interface EventBusRuleProps {
     detailType?: string[];
   };
   /**
-   * Configure targets for this rule. Can be a function or queue
+   * Configure targets for this rule.
    *
    * @example
    * ```js
@@ -152,6 +193,7 @@ export interface EventBusRuleProps {
     | EventBusFunctionTargetProps
     | Queue
     | EventBusQueueTargetProps
+    | EventBusLogGroupTargetProps
   >;
   cdk?: {
     /**
@@ -248,7 +290,7 @@ export interface EventBusProps {
  * @example
  *
  * ```js
- * import { EventBus } from "@serverless-stack/resources";
+ * import { EventBus } from "sst/constructs";
  *
  * new EventBus(stack, "Bus", {
  *   rules: {
@@ -274,7 +316,7 @@ export class EventBus extends Construct implements SSTConstruct {
   private readonly rulesData: Record<string, events.Rule> = {};
   private readonly targetsData: Record<
     string,
-    Record<string, Fn | Queue | lambda.IFunction>
+    Record<string, Fn | Queue | lambda.IFunction | ILogGroup>
   > = {};
   private readonly bindingForAllTargets: SSTConstruct[] = [];
   private readonly permissionsAttachedForAllTargets: Permissions[] = [];
@@ -362,6 +404,7 @@ export class EventBus extends Construct implements SSTConstruct {
       | EventBusFunctionTargetProps
       | Queue
       | EventBusQueueTargetProps
+      | EventBusLogGroupTargetProps
     >
   ): void {
     // Get rule
@@ -591,6 +634,7 @@ export class EventBus extends Construct implements SSTConstruct {
       | EventBusFunctionTargetProps
       | Queue
       | EventBusQueueTargetProps
+      | EventBusLogGroupTargetProps
   ): void {
     this.targetsData[ruleKey] = this.targetsData[ruleKey] || {};
 
@@ -604,6 +648,9 @@ export class EventBus extends Construct implements SSTConstruct {
     if (target instanceof Queue || (target as EventBusQueueTargetProps).queue) {
       target = target as Queue | EventBusQueueTargetProps;
       this.addQueueTarget(scope, ruleKey, eventsRule, targetName, target);
+    } else if ((target as EventBusLogGroupTargetProps).cdk?.logGroup) {
+      target = target as EventBusLogGroupTargetProps;
+      this.addLogGroupTarget(scope, ruleKey, eventsRule, targetName, target);
     } else if ((target as EventBusFunctionTargetProps).cdk?.function) {
       target = target as EventBusFunctionTargetProps;
       this.addCdkFunctionTarget(scope, ruleKey, eventsRule, targetName, target);
@@ -634,9 +681,19 @@ export class EventBus extends Construct implements SSTConstruct {
     this.targetsData[ruleKey][targetName] = queue;
 
     // Create target
-    eventsRule.addTarget(
-      new eventsTargets.SqsQueue(queue.cdk.queue, targetProps)
-    );
+    eventsRule.addTarget(new SqsQueueTarget(queue.cdk.queue, targetProps));
+  }
+
+  private addLogGroupTarget(
+    scope: Construct,
+    ruleKey: string,
+    eventsRule: events.Rule,
+    targetName: string,
+    target: EventBusLogGroupTargetProps
+  ): void {
+    const { logGroup, target: targetProps } = target.cdk;
+    this.targetsData[ruleKey][targetName] = logGroup;
+    eventsRule.addTarget(new LogGroupTarget(logGroup, targetProps));
   }
 
   private addCdkFunctionTarget(
@@ -652,7 +709,7 @@ export class EventBus extends Construct implements SSTConstruct {
     this.targetsData[ruleKey][targetName] = fn;
 
     // Create target
-    eventsRule.addTarget(new eventsTargets.LambdaFunction(fn, targetProps));
+    eventsRule.addTarget(new LambdaFunctionTarget(fn, targetProps));
   }
 
   private addFunctionTarget(
@@ -685,7 +742,7 @@ export class EventBus extends Construct implements SSTConstruct {
     this.targetsData[ruleKey][targetName] = fn;
 
     // Create target
-    eventsRule.addTarget(new eventsTargets.LambdaFunction(fn, targetProps));
+    eventsRule.addTarget(new LambdaFunctionTarget(fn, targetProps));
 
     // Attach existing permissions
     this.permissionsAttachedForAllTargets.forEach((permissions) =>

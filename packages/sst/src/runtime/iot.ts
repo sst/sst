@@ -8,12 +8,24 @@ export const useIOTBridge = Context.memo(async () => {
   const topic = `${iot.prefix}/events`;
 
   bus.subscribe("function.success", async (evt) => {
-    iot.publish(topic, "function.success", evt.properties);
+    iot.publish(
+      topic + "/" + evt.properties.workerID,
+      "function.success",
+      evt.properties
+    );
   });
   bus.subscribe("function.error", async (evt) => {
-    iot.publish(topic, "function.error", evt.properties);
+    iot.publish(
+      topic + "/" + evt.properties.workerID,
+      "function.error",
+      evt.properties
+    );
   });
   bus.subscribe("function.ack", async (evt) => {
-    iot.publish(topic, "function.ack", evt.properties);
+    iot.publish(
+      topic + "/" + evt.properties.workerID,
+      "function.ack",
+      evt.properties
+    );
   });
 });

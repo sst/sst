@@ -1,6 +1,16 @@
+import {
+  ITopic,
+  Subscription,
+  Topic as AWSTopic,
+  TopicProps as AWSTopicProps,
+} from "aws-cdk-lib/aws-sns";
+import {
+  LambdaSubscription,
+  LambdaSubscriptionProps,
+  SqsSubscription,
+  SqsSubscriptionProps,
+} from "aws-cdk-lib/aws-sns-subscriptions";
 import { Construct } from "constructs";
-import * as sns from "aws-cdk-lib/aws-sns";
-import * as snsSubscriptions from "aws-cdk-lib/aws-sns-subscriptions";
 import { App } from "./App.js";
 import {
   getFunctionRef,
@@ -52,7 +62,7 @@ export interface TopicQueueSubscriberProps {
     /**
      * This allows you to override the default settings this construct uses internally to create the subscriber.
      */
-    subscription?: snsSubscriptions.SqsSubscriptionProps;
+    subscription?: SqsSubscriptionProps;
   };
 }
 
@@ -81,7 +91,7 @@ export interface TopicFunctionSubscriberProps {
     /**
      * This allows you to override the default settings this construct uses internally to create the subscriber.
      */
-    subscription?: snsSubscriptions.LambdaSubscriptionProps;
+    subscription?: LambdaSubscriptionProps;
   };
 }
 
@@ -132,7 +142,7 @@ export interface TopicProps {
     /**
      * Override the default settings this construct uses internally to create the topic.
      */
-    topic?: sns.ITopic | sns.TopicProps;
+    topic?: ITopic | AWSTopicProps;
   };
 }
 
@@ -146,7 +156,7 @@ export interface TopicProps {
  * @example
  *
  * ```js
- * import { Topic } from "@serverless-stack/resources";
+ * import { Topic } from "sst/constructs";
  *
  * new Topic(stack, "Topic", {
  *   subscribers: {
@@ -162,7 +172,7 @@ export class Topic extends Construct implements SSTConstruct {
     /**
      * The internally created CDK `Topic` instance.
      */
-    topic: sns.ITopic;
+    topic: ITopic;
   };
   private subscribers: Record<string, Fn | Queue> = {};
   private bindingForAllSubscribers: SSTConstruct[] = [];
@@ -197,7 +207,7 @@ export class Topic extends Construct implements SSTConstruct {
   /**
    * Get a list of subscriptions for this topic
    */
-  public get subscriptions(): sns.Subscription[] {
+  public get subscriptions(): Subscription[] {
     return Object.values(this.subscribers).map((sub) => {
       let children;
       // look for sns.Subscription inside Queue.sqsQueue
@@ -215,7 +225,7 @@ export class Topic extends Construct implements SSTConstruct {
           "aws-cdk-lib.aws_sns.Subscription"
         );
       });
-      return child as sns.Subscription;
+      return child as Subscription;
     });
   }
 
@@ -232,7 +242,7 @@ export class Topic extends Construct implements SSTConstruct {
    * Add subscribers to the topic.
    *
    * @example
-   * ```js {5}
+   * ```js
    * const topic = new Topic(stack, "Topic", {
    *   subscribers: {
    *     subscriber1: "src/function1.handler",
@@ -284,7 +294,7 @@ export class Topic extends Construct implements SSTConstruct {
   /**
    * Binds the given list of resources to a specific subscriber.
    * @example
-   * ```js {5}
+   * ```js {8}
    * const topic = new Topic(stack, "Topic", {
    *   subscribers: {
    *     subscriber1: "src/function1.handler",
@@ -333,7 +343,7 @@ export class Topic extends Construct implements SSTConstruct {
   /**
    * Attaches the list of permissions to a specific subscriber.
    * @example
-   * ```js {5}
+   * ```js {8}
    * const topic = new Topic(stack, "Topic", {
    *   subscribers: {
    *     subscriber1: "src/function1.handler",
@@ -390,10 +400,10 @@ export class Topic extends Construct implements SSTConstruct {
     const { cdk } = this.props;
 
     if (isCDKConstruct(cdk?.topic)) {
-      this.cdk.topic = cdk?.topic as sns.Topic;
+      this.cdk.topic = cdk?.topic as AWSTopic;
     } else {
-      const snsTopicProps = (cdk?.topic || {}) as sns.TopicProps;
-      this.cdk.topic = new sns.Topic(this, "Topic", {
+      const snsTopicProps = (cdk?.topic || {}) as TopicProps;
+      this.cdk.topic = new AWSTopic(this, "Topic", {
         topicName: app.logicalPrefixedName(this.node.id),
         ...snsTopicProps,
       });
@@ -424,7 +434,7 @@ export class Topic extends Construct implements SSTConstruct {
   }
 
   private addQueueSubscriber(
-    scope: Construct,
+    _scope: Construct,
     subscriberName: string,
     subscriber: Queue | TopicQueueSubscriberProps
   ): void {
@@ -443,7 +453,7 @@ export class Topic extends Construct implements SSTConstruct {
 
     // Create Subscription
     this.cdk.topic.addSubscription(
-      new snsSubscriptions.SqsSubscription(queue.cdk.queue, subscriptionProps)
+      new SqsSubscription(queue.cdk.queue, subscriptionProps)
     );
   }
 
@@ -475,7 +485,7 @@ export class Topic extends Construct implements SSTConstruct {
 
     // Create Subscription
     this.cdk.topic.addSubscription(
-      new snsSubscriptions.LambdaSubscription(fn, subscriptionProps)
+      new LambdaSubscription(fn, subscriptionProps)
     );
 
     // Attach existing permissions

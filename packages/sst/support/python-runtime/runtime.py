@@ -21,14 +21,18 @@ class ClientContext(object):
     #__slots__ = ['custom', 'env', 'client']
 
 class Context(object):
-    def __init__(self, invoked_function_arn, aws_request_id, deadline_ms, identity, client_context):
+    def __init__(self, invoked_function_arn, aws_request_id, deadline_ms, identity, client_context, log_group_name, log_stream_name):
         self.function_name = os.environ['AWS_LAMBDA_FUNCTION_NAME']
         self.invoked_function_arn = invoked_function_arn
         self.aws_request_id = aws_request_id
         self.memory_limit_in_mb = os.environ['AWS_LAMBDA_FUNCTION_MEMORY_SIZE']
         self.deadline_ms = deadline_ms
-        self.identity = Identity(**json.loads(identity))
-        self.client_context = ClientContext(**json.loads(client_context))
+        # If identity is null, we want to mimick AWS behavior and return an object with None values
+        self.identity = Identity(**json.loads(identity)) if identity != 'null' else Identity(cognito_identity_id = None, cognito_identity_pool_id = None)
+        # If client_context is null, we want to mimick AWS behavior and return None
+        self.client_context = ClientContext(**json.loads(client_context)) if client_context != 'null' else None
+        self.log_group_name = log_group_name
+        self.log_stream_name = log_stream_name
 
     def get_remaining_time_in_millis(self):
         return int(max(self.deadline_ms - int(round(time() * 1000)), 0))
@@ -75,7 +79,9 @@ if __name__ == '__main__':
         r.getheader('Lambda-Runtime-Aws-Request-Id'),
         r.getheader('Lambda-Runtime-Deadline-Ms'),
         r.getheader('Lambda-Runtime-Cognito-Identity'),
-        r.getheader('Lambda-Runtime-Client-Context')
+        r.getheader('Lambda-Runtime-Client-Context'),
+        r.getheader('Lambda-Runtime-Log-Group-Name'),
+        r.getheader('Lambda-Runtime-Log-Stream-Name')
     )
 
     # invoke handler
@@ -85,7 +91,12 @@ if __name__ == '__main__':
         # would fail with error ModuleNotFoundError
         sys.path.append(args.src_path)
 
-        module = import_module(args.handler_module)
+        # remove leading zeros for relative imports
+        if args.handler_module.startswith('.'):
+          module = import_module(args.handler_module[1:])
+        else: 
+          module = import_module(args.handler_module)
+
         handler = getattr(module, args.handler_name)
         result = handler(event, context)
         data = json.dumps(result, default=handleUnserializable).encode("utf-8")

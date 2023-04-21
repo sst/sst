@@ -27,9 +27,9 @@ Tasks related to video processing, ETL, and ML can take long. These exceed Lambd
 
 ## Quick start
 
-To follow along, you can create a new SST app by running `npx create-sst@latest`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/standard) that's based on the same template.
+Let's look at how to trigger a long running job from an API. To follow along, you can create a new SST app by running `npx create-sst@latest`.
 
-1. **Create the infrastructure**
+1. **Define the long running job**
 
    To create a new job, import [`Job`](constructs/Job.md) at the top of `stacks/MyStack.ts`.
 
@@ -39,7 +39,7 @@ To follow along, you can create a new SST app by running `npx create-sst@latest`
 
    And add a `Job` construct below the API.
 
-   ```ts
+   ```ts title="stacks/MyStack.ts"
    const job = new Job(stack, "myJob", {
      srcPath: "services",
      handler: "functions/myJob.handler",
@@ -48,7 +48,7 @@ To follow along, you can create a new SST app by running `npx create-sst@latest`
 
 2. **Grant permissions**
 
-   Give `api` the permissions to run the job.
+   Let's allow the API in `stacks/MyStack.ts` to invoke our job.
 
    ```ts title="stacks/MyStack.ts"
    api.bind([job]);
@@ -94,9 +94,9 @@ To follow along, you can create a new SST app by running `npx create-sst@latest`
 
    ```ts title="packages/functions/src/lambda.ts"
    import { Job } from "sst/node/job";
-   import { APIGatewayProxyHandlerV2 } from "aws-lambda";
+   import { ApiHandler } from "sst/node/api";
 
-   export const handler: APIGatewayProxyHandlerV2 = async (event) => {
+   export const handler = ApiHandler(async (event) => {
      await Job.myJob.run({
        payload: {
          num: 100,
@@ -105,10 +105,9 @@ To follow along, you can create a new SST app by running `npx create-sst@latest`
 
      return {
        statusCode: 200,
-       headers: { "Content-Type": "text/plain" },
        body: `Job started at ${event.requestContext.time}.`,
      };
-   };
+   });
    ```
 
    You'll notice that your editor will autocomplete the `payload` for you.

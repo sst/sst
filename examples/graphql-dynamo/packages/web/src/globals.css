@@ -1,0 +1,135 @@
+:root {
+  --font-body: "Source Sans Pro", sans-serif;
+  --font-code: "Source Code Pro", monospace;
+  --font-heading: "Roboto Slab", serif;
+
+  --color-base-brand: 13, 71%;
+  --color-base-white: 0, 0%;
+  --color-base-black: 216, 13%;
+  --color-base-blue: 213, 89%;
+
+  --color-brand: hsl(var(--color-base-brand), 60%);
+  --color-white: hsl(var(--color-base-white), 100%);
+  --color-black: hsl(var(--color-base-black), 16%);
+  --color-blue: hsl(var(--color-base-blue), 64%);
+}
+
+:root {
+  --color-divider: hsl(var(--color-base-white), 88%);
+  --color-background: var(--color-white);
+  --color-inverted-background: var(--color-black);
+
+  --text-normal: hsl(var(--color-base-black), 20%);
+  --text-dimmed: hsl(var(--color-base-black), 47%);
+
+  --link-color: hsl(var(--color-base-blue), 44%);
+  --link-hover: hsl(var(--color-base-blue), 58%);
+
+  --button-primary-border: hsl(var(--color-base-brand), 48%);
+  --button-primary-color: var(--color-brand);
+  --button-primary-hover: hsl(var(--color-base-brand), 63%);
+  --button-primary-active: hsl(var(--color-base-brand), 55%);
+  --button-secondary-border: hsl(var(--color-base-white), 78%);
+  --button-secondary-color: var(--color-background);
+  --button-secondary-hover: hsl(var(--color-base-white), 98%);
+  --button-secondary-active: hsl(var(--color-base-white), 96%);
+
+  --input-border: hsl(var(--color-base-white), 78%);
+  --input-focus-border: hsl(var(--color-base-white), 68%);
+  --input-background: var(--color-white);
+  --input-focus-glow: hsla(var(--color-base-blue), 64%, 0.35);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-divider: hsl(var(--color-base-black), 29%);
+    --color-background: var(--color-black);
+    --color-inverted-background: var(--color-white);
+
+    --text-normal: hsl(var(--color-base-white), 95%);
+    --text-dimmed: hsl(var(--color-base-white), 70%);
+
+    --link-color: var(--color-blue);
+    --link-hover: hsl(var(--color-base-blue), 74%);
+
+    --button-primary-border: var(--color-brand);
+    --button-primary-color: var(--color-brand);
+    --button-primary-hover: hsl(var(--color-base-brand), 63%);
+    --button-primary-active: hsl(var(--color-base-brand), 55%);
+    --button-secondary-border: hsl(var(--color-base-white), 49%);
+    --button-secondary-color: var(--color-background);
+    --button-secondary-hover: hsl(var(--color-base-black), 24%);
+    --button-secondary-active: hsl(var(--color-base-black), 20%);
+
+    --input-border: hsl(var(--color-base-black), 49%);
+    --input-focus-border: hsl(var(--color-base-black), 59%);
+    --input-background: hsl(var(--color-base-black), 21%);
+    --input-focus-glow: hsla(var(--color-base-blue), 74%, 0.5);
+  }
+
+  html {
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  margin: 0;
+
+  color: var(--text-normal);
+  font-family: var(--font-body);
+  background: var(--color-background);
+
+  font-synthesis: none;
+  text-size-adjust: none;
+  -webkit-text-size-adjust: none;
+  text-rendering: optimizeLegibility;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  font-family: var(--font-heading);
+}
+
+a {
+  transition: color .2s;
+  text-decoration: none;
+  color: var(--link-color);
+}
+a:hover {
+  color: var(--link-hover);
+}
+
+code {
+  font-family: var(--font-code);
+}
+
+input[type=text], textarea {
+  appearance: none;
+  padding: 0.375rem 0.75rem;
+
+  font-size: 1rem;
+  line-height: 1.5;
+  font-family: var(--font-body);
+
+  box-sizing: border-box;
+  border-radius: 0.25rem;
+  border: 1px solid var(--input-border);
+  background-color: var(--input-background);
+  background-clip: padding-box;
+
+  transition: border-color .15s ease-in-out,
+              box-shadow .15s ease-in-out;
+}
+input[type=text]:focus, textarea:focus {
+  outline: 0;
+  border-color: var(--input-focus-border);
+  box-shadow: 0 0 0 0.125rem var(--input-focus-glow);
+}

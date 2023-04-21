@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - sst2
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
@@ -14,11 +15,11 @@ jobs:
     steps:
       - name: Checkout Repo
         # https://github.com/actions/checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup Node.js
         # https://github.com/actions/setup-node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: 16.x
 

@@ -58,6 +58,10 @@ SST automatically detects AWS credentials in your environment and uses them for 
 - AWS_ACCESS_KEY_ID
 - AWS_SECRET_ACCESS_KEY
 
+If you are using temporary credentials, also set:
+
+- AWS_SESSION_TOKEN
+
 This is often the most convenient way to configure credentials when deploying your SST app in a CI environment. If you are deploying through [Seed](https://seed.run/), [follow this guide to configure IAM credentials](https://seed.run/docs/iam-credentials-per-stage).
 
 ### Configuring AWS Vault
@@ -137,7 +141,7 @@ For example, you might have full `AdministratorAccess` permission, but you can l
 
 Alternatively, you might not want everyone on the team to have the permissions to create Lambda functions directly in the AWS console or via AWS CLI, but they can trigger a deployment, and let CloudFormation create Lambda functions as part of the SST app.
 
-Use the [`--role-arn`](../packages/sst.md#global-options) option to configure the CloudFormation service role that SST will use. [Read more about this option here](../packages/sst.md#global-options).
+Use the [`--role`](../packages/sst.md#global-options) option to configure the CloudFormation service role that SST will use. [Read more about this option here](../packages/sst.md#global-options).
 
 ## Bootstrap permissions
 
@@ -163,17 +167,27 @@ The SST CLI command also makes AWS SDK calls to your AWS account. Here is a list
 - cloudformation:DescribeStacks
 - cloudformation:GetTemplate
 - cloudformation:ListImports
+- iam:PassRole
+- iot:Connect
 - iot:DescribeEndpoint
+- iot:Publish
+- iot:Receive
+- iot:Subscribe
+- lambda:GetFunctionConfiguration
+- lambda:UpdateFunctionConfiguration
+- ecr:CreateRepository
 - s3:GetObject
 - s3:PutObject
 - s3:DeleteObject
 - s3:ListObjectsV2
-- ssm:PutParameter
-- ssm:GetParameter
+- s3:CreateBucket
+- s3:PutBucketPolicy
 - ssm:DeleteParameter
+- ssm:GetParameter
+- ssm:GetParameters
 - ssm:GetParametersByPath
-- lambda:GetFunctionConfiguration
-- lambda:UpdateFunctionConfiguration
+- ssm:PutParameter
+- sts:AssumeRole
 
 And if you are using the [`RDS`](../constructs/RDS.md) construct, you will also need:
 - rds-data:ExecuteStatement

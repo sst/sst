@@ -7,7 +7,7 @@ import { RetryInputConfig } from "@aws-sdk/middleware-retry";
 import { AwsAuthInputConfig } from "@aws-sdk/middleware-signing";
 import { GetCallerIdentityCommand, STSClient } from "@aws-sdk/client-sts";
 import { Logger } from "./logger.js";
-import { SdkProvider } from "aws-cdk/lib/api/aws-auth/sdk-provider.js";
+import { SdkProvider } from "sst-aws-cdk/lib/api/aws-auth/sdk-provider.js";
 import { StandardRetryStrategy } from "@aws-sdk/middleware-retry";
 
 type Config = RegionInputConfig &
@@ -89,21 +89,40 @@ export function useAWSClient<C extends Client<any, any, any, any>>(
     region: project.config.region,
     credentials: credentials,
     retryStrategy: new StandardRetryStrategy(async () => 10000, {
-      retryDecider: (err: any) => {
-        if (err.$fault === "client") return false;
-        if (err.name === "CredentialsProviderError") return false;
-        if (err.message === "Could not load credentials from any providers")
-          return false;
-
-        // Handle no internet connection
-        if (err.code === "ENOTFOUND") {
+      retryDecider: (e: any) => {
+        // Handle no internet connection => retry
+        if (e.code === "ENOTFOUND") {
           printNoInternet();
+          return true;
         }
 
-        return true;
+        // Handle throttling errors => retry
+        if (
+          [
+            "ThrottlingException",
+            "Throttling",
+            "TooManyRequestsException",
+            "OperationAbortedException",
+            "TimeoutError",
+            "NetworkingError",
+          ].includes(e.name)
+        ) {
+          Logger.debug("Retry AWS call", e.name, e.message);
+          return true;
+        }
+
+        return false;
       },
       delayDecider: (_, attempts) => {
         return Math.min(1.5 ** attempts * 100, 5000);
+      },
+      // AWS SDK v3 has an idea of "retry tokens" which are used to
+      // prevent multiple retries from happening at the same time.
+      // This is a workaround to disable that.
+      retryQuota: {
+        hasRetryTokens: () => true,
+        releaseRetryTokens: () => {},
+        retrieveRetryTokens: () => 1,
       },
     }),
   });
@@ -112,6 +131,9 @@ export function useAWSClient<C extends Client<any, any, any, any>>(
   return result;
 }
 
+// @ts-expect-error
+import stupid from "aws-sdk/lib/maintenance_mode_message.js";
+stupid.suppress = true;
 import aws from "aws-sdk";
 import { useProject } from "./project.js";
 import { HostHeaderConditionConfig } from "aws-sdk/clients/elbv2.js";

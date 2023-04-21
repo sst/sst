@@ -1,7 +1,7 @@
 import { RDSDataService } from "aws-sdk";
 import { Kysely } from "kysely";
 import { DataApiDialect } from "kysely-data-api";
-import { RDS } from "@serverless-stack/node/rds";
+import { RDS } from "sst/node/rds";
 
 interface Database {
   tblcounter: {

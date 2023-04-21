@@ -31,5 +31,4 @@ This runs the `sst test` command in debug mode. Allowing you to set breakpoints 
 Learn more about the SST.
 
 - [Docs](https://docs.sst.dev/)
-- [@serverless-stack/cli](https://docs.sst.dev/packages/cli)
-- [@serverless-stack/resources](https://docs.sst.dev/packages/resources)
+- [sst](https://docs.sst.dev/packages/sst)

@@ -1,12 +1,12 @@
 {
   "name": "@serverless-stack/docs",
-  "version": "2.0.1",
+  "version": "2.0.5",
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
     "watch": "node ./generate.mjs watch",
-    "build": "cd ../packages/sst && npm run build && cd ../../www && node ./generate.mjs build && docusaurus build",
+    "build": "cd ../packages/sst && pnpm run build && cd ../../www && node ./generate.mjs build && docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "serve": "docusaurus serve",
@@ -39,6 +39,6 @@
   "devDependencies": {
     "constructs": "10.1.156",
     "typedoc": "^0.23.21",
-    "typescript": "~4.8.4"
+    "typescript": "^4.9.5"
   }
 }

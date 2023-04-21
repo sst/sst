@@ -57,13 +57,15 @@ export async function createApp(props?: Partial<AppDeployProps>) {
     stage: project.config.stage,
     name: project.config.name,
     region: project.config.region,
-    skipBuild: props?.mode === "remove",
     ...props,
   });
 }
 
 export function stringLike(pattern: RegExp): Matcher {
   return new StringMatch("stringLike", pattern);
+}
+export function stringNotLike(pattern: RegExp): Matcher {
+  return new StringNotMatch("stringLike", pattern);
 }
 
 class StringMatch extends Matcher {
@@ -74,6 +76,24 @@ class StringMatch extends Matcher {
   public test(actual: any): MatchResult {
     const result = new MatchResult(actual);
     if (!actual.match(this.pattern)) {
+      result.recordFailure({
+        matcher: this,
+        path: [],
+        message: `Expected ${this.pattern} but received ${actual}`,
+      });
+    }
+    return result;
+  }
+}
+
+class StringNotMatch extends Matcher {
+  constructor(public readonly name: string, private readonly pattern: RegExp) {
+    super();
+  }
+
+  public test(actual: any): MatchResult {
+    const result = new MatchResult(actual);
+    if (actual.match(this.pattern)) {
       result.recordFailure({
         matcher: this,
         path: [],
@@ -122,31 +142,39 @@ export function countResourcesLike(
   }
 }
 
-export function hasResource(stack: Stack, type: string, props: any): void {
+export function hasResource(stack: Stack, type: string, props: any) {
   const template = Template.fromStack(stack);
   template.hasResourceProperties(type, props);
 }
 
-export function hasResourceTemplate(
-  stack: Stack,
-  type: string,
-  props: any
-): void {
+export function hasResourceTemplate(stack: Stack, type: string, props: any) {
   const template = Template.fromStack(stack);
   template.hasResource(type, props);
 }
 
-export function hasOutput(stack: Stack, logicalId: string, props: any): void {
+export function hasOutput(stack: Stack, logicalId: string, props: any) {
   const template = Template.fromStack(stack);
   template.hasOutput(logicalId, props);
 }
 
-export function templateMatches(stack: Stack, props: any): void {
+export function hasNoOutput(stack: Stack, logicalId: string) {
+  const template = Template.fromStack(stack);
+  const results = template.findOutputs(logicalId);
+  if (results[logicalId]) {
+    throw new Error(
+      `Expected "${logicalId}" output to not exist. But found value "${JSON.stringify(
+        results[logicalId]
+      )}"`
+    );
+  }
+}
+
+export function templateMatches(stack: Stack, props: any) {
   const template = Template.fromStack(stack);
   template.templateMatches(props);
 }
 
-export function printResource(stack: Stack, type: string): void {
+export function printResource(stack: Stack, type: string) {
   const template = Template.fromStack(stack);
   const resources = template.findResources(type);
   console.log(JSON.stringify(resources, null, 2));

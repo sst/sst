@@ -61,7 +61,9 @@ export const remove = (program: Program) =>
         console.log(`No stacks found matching ${blue(args.filter!)}`);
         process.exit(1);
       }
-      const component = render(<DeploymentUI assembly={assembly} />);
+      const component = render(
+        <DeploymentUI assembly={assembly} remove={true} />
+      );
       const results = await Stacks.removeMany(target);
       component.clear();
       component.unmount();

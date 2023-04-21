@@ -26,6 +26,7 @@ export const useWatcher = Context.memo(() => {
       "**/node_modules/**",
       "**/.build/**",
       "**/.sst/**",
+      "**/.git/**",
       "**/debug.log",
     ],
     awaitWriteFinish: {

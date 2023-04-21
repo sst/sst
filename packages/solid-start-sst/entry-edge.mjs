@@ -1,4 +1,4 @@
-import "solid-start/node/globals";
+import "solid-start/node/globals.js";
 import manifest from "../../dist/client/route-manifest.json";
 import server from "./entry-server";
 

@@ -1,14 +1,24 @@
 import { Construct } from "constructs";
-import * as cdkLib from "aws-cdk-lib";
-import * as cognito from "aws-cdk-lib/aws-cognito";
-import * as acm from "aws-cdk-lib/aws-certificatemanager";
-import * as cfnApig from "aws-cdk-lib/aws-apigatewayv2";
-import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
-import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
-import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
-import * as elb from "aws-cdk-lib/aws-elasticloadbalancingv2";
-import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as logs from "aws-cdk-lib/aws-logs";
+import {
+  Role,
+  ServicePrincipal,
+  PolicyDocument,
+  PolicyStatement,
+} from "aws-cdk-lib/aws-iam";
+import { CfnApi, CfnRoute, CfnStage } from "aws-cdk-lib/aws-apigatewayv2";
+import {
+  HttpUrlIntegration,
+  HttpUrlIntegrationProps,
+  HttpAlbIntegration,
+  HttpAlbIntegrationProps,
+  HttpNlbIntegration,
+  HttpNlbIntegrationProps,
+  HttpLambdaIntegration,
+} from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
+import {
+  HttpAwsIntegration,
+  HttpAwsIntegrationProps,
+} from "./cdk/HttpAwsIntegration.js";
 
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
@@ -25,10 +35,42 @@ import { Permissions } from "./util/permission.js";
 import * as apigV2Cors from "./util/apiGatewayV2Cors.js";
 import * as apigV2Domain from "./util/apiGatewayV2Domain.js";
 import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog.js";
+import {
+  DomainName,
+  HttpApi,
+  HttpApiProps,
+  HttpMethod,
+  HttpNoneAuthorizer,
+  HttpRoute,
+  HttpRouteIntegration,
+  HttpRouteKey,
+  HttpStage,
+  HttpStageProps,
+  IHttpApi,
+  IHttpRouteAuthorizer,
+  IntegrationCredentials,
+  PayloadFormatVersion,
+} from "@aws-cdk/aws-apigatewayv2-alpha";
+import {
+  HttpIamAuthorizer,
+  HttpJwtAuthorizer,
+  HttpLambdaAuthorizer,
+  HttpLambdaResponseType,
+  HttpUserPoolAuthorizer,
+} from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
+import { IFunction } from "aws-cdk-lib/aws-lambda";
+import {
+  IApplicationListener,
+  INetworkListener,
+} from "aws-cdk-lib/aws-elasticloadbalancingv2";
+import { LogGroup } from "aws-cdk-lib/aws-logs";
+import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
+import { UserPool, UserPoolClient } from "aws-cdk-lib/aws-cognito";
 
 const PayloadFormatVersions = ["1.0", "2.0"] as const;
-export type ApiPayloadFormatVersion = typeof PayloadFormatVersions[number];
-type ApiHttpMethod = keyof typeof apig.HttpMethod;
+export type ApiPayloadFormatVersion = (typeof PayloadFormatVersions)[number];
+type ApiHttpMethod = keyof typeof HttpMethod;
+export interface CdkHttpAwsIntegrationProps extends HttpAwsIntegrationProps {}
 
 /////////////////////
 // Interfaces
@@ -92,7 +134,7 @@ export interface ApiUserPoolAuthorizer extends ApiBaseAuthorizer {
     /**
      * This allows you to override the default settings this construct uses internally to create the authorizer.
      */
-    authorizer: apigAuthorizers.HttpUserPoolAuthorizer;
+    authorizer: HttpUserPoolAuthorizer;
   };
 }
 
@@ -133,7 +175,7 @@ export interface ApiJwtAuthorizer extends ApiBaseAuthorizer {
     /**
      * This allows you to override the default settings this construct uses internally to create the authorizer.
      */
-    authorizer: apigAuthorizers.HttpJwtAuthorizer;
+    authorizer: HttpJwtAuthorizer;
   };
 }
 
@@ -169,9 +211,7 @@ export interface ApiLambdaAuthorizer extends ApiBaseAuthorizer {
    * If `simple` is included then response format 2.0 will be used.
    * @default ["iam"]
    */
-  responseTypes?: Lowercase<
-    keyof typeof apigAuthorizers.HttpLambdaResponseType
-  >[];
+  responseTypes?: Lowercase<keyof typeof HttpLambdaResponseType>[];
   /**
    * The amount of time the results are cached.
    * @default Not cached
@@ -181,7 +221,7 @@ export interface ApiLambdaAuthorizer extends ApiBaseAuthorizer {
     /**
      * This allows you to override the default settings this construct uses internally to create the authorizer.
      */
-    authorizer: apigAuthorizers.HttpLambdaAuthorizer;
+    authorizer: HttpLambdaAuthorizer;
   };
 }
 
@@ -408,7 +448,7 @@ export interface ApiProps<
      * });
      * ```
      */
-    httpApi?: apig.IHttpApi | apig.HttpApiProps;
+    httpApi?: IHttpApi | HttpApiProps;
     /**
      * Configures the stages to create for the HTTP API.
      *
@@ -428,13 +468,14 @@ export interface ApiProps<
      * });
      * ```
      */
-    httpStages?: Omit<apig.HttpStageProps, "httpApi">[];
+    httpStages?: Omit<HttpStageProps, "httpApi">[];
   };
 }
 
 export type ApiRouteProps<AuthorizerKeys> =
   | FunctionInlineDefinition
   | ApiFunctionRouteProps<AuthorizerKeys>
+  | ApiAwsRouteProps<AuthorizerKeys>
   | ApiHttpRouteProps<AuthorizerKeys>
   | ApiAlbRouteProps<AuthorizerKeys>
   | ApiNlbRouteProps<AuthorizerKeys>
@@ -481,7 +522,40 @@ export interface ApiFunctionRouteProps<AuthorizersKeys = string>
     /**
      * Use an existing Lambda function.
      */
-    function?: lambda.IFunction;
+    function?: IFunction;
+  };
+}
+
+/**
+ * Specify a function route handler and configure additional options
+ *
+ * @example
+ * ```js
+ * api.addRoutes(stack, {
+ *   "GET /notes/{id}": {
+ *     type: "aws",
+ *     cdk: {
+ *       integration: {
+ *         subtype: apig.HttpIntegrationSubtype.EVENTBRIDGE_PUT_EVENTS,
+ *         parameterMapping: ParameterMapping.fromObject({
+ *           Source: MappingValue.custom("$request.body.source"),
+ *           DetailType: MappingValue.custom("$request.body.detailType"),
+ *           Detail: MappingValue.custom("$request.body.detail"),
+ *         }),
+ *       }
+ *     }
+ *   }
+ * });
+ * ```
+ */
+export interface ApiAwsRouteProps<AuthorizersKeys>
+  extends ApiBaseRouteProps<AuthorizersKeys> {
+  /**
+   * This is a constant
+   */
+  type: "aws";
+  cdk: {
+    integration: Omit<CdkHttpAwsIntegrationProps, "credentials">;
   };
 }
 
@@ -512,7 +586,7 @@ export interface ApiHttpRouteProps<AuthorizersKeys>
     /**
      * Override the underlying CDK integration
      */
-    integration: apigIntegrations.HttpUrlIntegrationProps;
+    integration: HttpUrlIntegrationProps;
   };
 }
 
@@ -538,8 +612,8 @@ export interface ApiAlbRouteProps<AuthorizersKeys>
     /**
      * The listener to the application load balancer used for the integration.
      */
-    albListener: elb.IApplicationListener;
-    integration?: apigIntegrations.HttpAlbIntegrationProps;
+    albListener: IApplicationListener;
+    integration?: HttpAlbIntegrationProps;
   };
 }
 
@@ -565,8 +639,8 @@ export interface ApiNlbRouteProps<AuthorizersKeys>
     /**
      * The listener to the application load balancer used for the integration.
      */
-    nlbListener: elb.INetworkListener;
-    integration?: apigIntegrations.HttpNlbIntegrationProps;
+    nlbListener: INetworkListener;
+    integration?: HttpNlbIntegrationProps;
   };
 }
 
@@ -625,7 +699,7 @@ export interface ApiGraphQLRouteProps<AuthorizerKeys>
  * @example
  *
  * ```ts
- * import { Api } from "@serverless-stack/resources";
+ * import { Api } from "sst/constructs";
  *
  * new Api(stack, "Api", {
  *   routes: {
@@ -652,35 +726,36 @@ export class Api<
     /**
      * The internally created CDK HttpApi instance.
      */
-    httpApi: apig.HttpApi;
+    httpApi: HttpApi;
     /**
      * If access logs are enabled, this is the internally created CDK LogGroup instance.
      */
-    accessLogGroup?: logs.LogGroup;
+    accessLogGroup?: LogGroup;
     /**
      * If custom domain is enabled, this is the internally created CDK DomainName instance.
      */
-    domainName?: apig.DomainName;
+    domainName?: DomainName;
     /**
      * If custom domain is enabled, this is the internally created CDK Certificate instance.
      */
-    certificate?: acm.Certificate;
+    certificate?: Certificate;
   };
   private props: ApiProps<Authorizers>;
   private _customDomainUrl?: string;
   private routesData: {
     [key: string]:
       | { type: "function"; function: Fn }
-      | { type: "lambda_function"; function: lambda.IFunction }
+      | { type: "lambda_function"; function: IFunction }
+      | { type: "aws" }
       | ({
           type: "graphql";
           function: Fn;
         } & ApiGraphQLRouteProps<any>["pothos"])
       | { type: "url"; url: string }
-      | { type: "alb"; alb: elb.IApplicationListener }
-      | { type: "nlb"; nlb: elb.INetworkListener };
+      | { type: "alb"; alb: IApplicationListener }
+      | { type: "nlb"; nlb: INetworkListener };
   };
-  private authorizersData: Record<string, apig.IHttpRouteAuthorizer>;
+  private authorizersData: Record<string, IHttpRouteAuthorizer>;
   private bindingForAllRoutes: SSTConstruct[] = [];
   private permissionsAttachedForAllRoutes: Permissions[] = [];
 
@@ -703,9 +778,9 @@ export class Api<
    */
   public get url(): string {
     const app = this.node.root as App;
-    return this.cdk.httpApi instanceof apig.HttpApi
+    return this.cdk.httpApi instanceof HttpApi
       ? this.cdk.httpApi.apiEndpoint
-      : `https://${(this.cdk.httpApi as apig.IHttpApi).apiId}.execute-api.${
+      : `https://${(this.cdk.httpApi as IHttpApi).apiId}.execute-api.${
           app.region
         }.amazonaws.com`;
   }
@@ -949,9 +1024,9 @@ export class Api<
           `Cannot configure the "stages" when "cdk.httpApi" is a construct`
         );
       }
-      this.cdk.httpApi = cdk?.httpApi as apig.HttpApi;
+      this.cdk.httpApi = cdk?.httpApi as HttpApi;
     } else {
-      const httpApiProps = (cdk?.httpApi || {}) as apig.HttpApiProps;
+      const httpApiProps = (cdk?.httpApi || {}) as HttpApiProps;
 
       // Validate input
       if (httpApiProps.corsPreflight !== undefined) {
@@ -973,11 +1048,10 @@ export class Api<
       let defaultDomainMapping;
       if (customDomainData) {
         if (customDomainData.isApigDomainCreated) {
-          this.cdk.domainName = customDomainData.apigDomain as apig.DomainName;
+          this.cdk.domainName = customDomainData.apigDomain as DomainName;
         }
         if (customDomainData.isCertificatedCreated) {
-          this.cdk.certificate =
-            customDomainData.certificate as acm.Certificate;
+          this.cdk.certificate = customDomainData.certificate as Certificate;
         }
         defaultDomainMapping = {
           domainName: customDomainData.apigDomain,
@@ -986,18 +1060,18 @@ export class Api<
         this._customDomainUrl = `https://${customDomainData.url}`;
       }
 
-      this.cdk.httpApi = new apig.HttpApi(this, "Api", {
+      this.cdk.httpApi = new HttpApi(this, "Api", {
         apiName: app.logicalPrefixedName(id),
         corsPreflight: apigV2Cors.buildCorsConfig(cors),
         defaultDomainMapping,
         ...httpApiProps,
       });
 
-      const httpStage = this.cdk.httpApi.defaultStage as apig.HttpStage;
+      const httpStage = this.cdk.httpApi.defaultStage as HttpStage;
 
       // Configure throttling
       if (defaults?.throttle?.burst && defaults?.throttle?.rate) {
-        const cfnStage = httpStage.node.defaultChild as cfnApig.CfnStage;
+        const cfnStage = httpStage.node.defaultChild as CfnStage;
         cfnStage.defaultRouteSettings = {
           ...(cfnStage.routeSettings || {}),
           throttlingBurstLimit: defaults.throttle.burst,
@@ -1007,7 +1081,7 @@ export class Api<
 
       // Configure access log
       for (const def of cdk?.httpStages || []) {
-        const stage = new apig.HttpStage(this, "Stage" + def.stageName, {
+        const stage = new HttpStage(this, "Stage" + def.stageName, {
           ...def,
           httpApi: this.cdk.httpApi,
         });
@@ -1018,7 +1092,7 @@ export class Api<
         this.cdk.accessLogGroup = apigV2AccessLog.buildAccessLogData(
           this,
           accessLog,
-          this.cdk.httpApi.defaultStage as apig.HttpStage,
+          this.cdk.httpApi.defaultStage as HttpStage,
           true
         );
     }
@@ -1037,7 +1111,7 @@ export class Api<
           if (!value.userPool) {
             throw new Error(`Missing "userPool" for "${key}" authorizer`);
           }
-          const userPool = cognito.UserPool.fromUserPoolId(
+          const userPool = UserPool.fromUserPoolId(
             this,
             `Api-${this.node.id}-Authorizer-${key}-UserPool`,
             value.userPool.id
@@ -1045,19 +1119,22 @@ export class Api<
           const userPoolClients =
             value.userPool.clientIds &&
             value.userPool.clientIds.map((clientId, i) =>
-              cognito.UserPoolClient.fromUserPoolClientId(
+              UserPoolClient.fromUserPoolClientId(
                 this,
                 `Api-${this.node.id}-Authorizer-${key}-UserPoolClient-${i}`,
                 clientId
               )
             );
-          this.authorizersData[key] =
-            new apigAuthorizers.HttpUserPoolAuthorizer(key, userPool, {
+          this.authorizersData[key] = new HttpUserPoolAuthorizer(
+            key,
+            userPool,
+            {
               authorizerName: value.name,
               identitySource: value.identitySource,
               userPoolClients,
               userPoolRegion: value.userPool.region,
-            });
+            }
+          );
         }
       } else if (value.type === "jwt") {
         if (value.cdk?.authorizer) {
@@ -1066,7 +1143,7 @@ export class Api<
           if (!value.jwt) {
             throw new Error(`Missing "jwt" for "${key}" authorizer`);
           }
-          this.authorizersData[key] = new apigAuthorizers.HttpJwtAuthorizer(
+          this.authorizersData[key] = new HttpJwtAuthorizer(
             key,
             value.jwt.issuer,
             {
@@ -1083,7 +1160,7 @@ export class Api<
           if (!value.function) {
             throw new Error(`Missing "function" for "${key}" authorizer`);
           }
-          this.authorizersData[key] = new apigAuthorizers.HttpLambdaAuthorizer(
+          this.authorizersData[key] = new HttpLambdaAuthorizer(
             key,
             value.function,
             {
@@ -1093,13 +1170,13 @@ export class Api<
                 value.responseTypes &&
                 value.responseTypes.map(
                   (type) =>
-                    apigAuthorizers.HttpLambdaResponseType[
-                      type.toUpperCase() as keyof typeof apigAuthorizers.HttpLambdaResponseType
+                    HttpLambdaResponseType[
+                      type.toUpperCase() as keyof typeof HttpLambdaResponseType
                     ]
                 ),
               resultsCacheTtl: value.resultsCacheTtl
                 ? toCdkDuration(value.resultsCacheTtl)
-                : cdkLib.Duration.seconds(0),
+                : toCdkDuration("0 seconds"),
             }
           );
         }
@@ -1129,7 +1206,7 @@ export class Api<
     let path;
     if (routeKey === "$default") {
       postfixName = "default";
-      httpRouteKey = apig.HttpRouteKey.DEFAULT;
+      httpRouteKey = HttpRouteKey.DEFAULT;
       method = "ANY";
       path = routeKey;
     } else {
@@ -1138,7 +1215,7 @@ export class Api<
         throw new Error(`Invalid route ${routeKey}`);
       }
       method = routeKeyParts[0].toUpperCase() as ApiHttpMethod;
-      if (!apig.HttpMethod[method]) {
+      if (!HttpMethod[method]) {
         throw new Error(`Invalid method defined for "${routeKey}"`);
       }
       path = routeKeyParts[1];
@@ -1147,7 +1224,7 @@ export class Api<
       }
 
       postfixName = `${method}_${path}`;
-      httpRouteKey = apig.HttpRouteKey.with(path, apig.HttpMethod[method]);
+      httpRouteKey = HttpRouteKey.with(path, HttpMethod[method]);
     }
 
     ///////////////////
@@ -1164,6 +1241,17 @@ export class Api<
             scope,
             routeKey,
             routeProps,
+            postfixName
+          ),
+        ];
+      }
+      if (routeValue.type === "aws") {
+        return [
+          routeValue,
+          this.createAwsProxyIntegration(
+            scope,
+            routeKey,
+            routeValue,
             postfixName
           ),
         ];
@@ -1224,13 +1312,13 @@ export class Api<
           `Function definition must be nested under the "function" key in the route props for "${routeKey}". ie. { function: { handler: "myfunc.handler" } }`
         );
       throw new Error(
-        `Invalid route type for "${routeKey}". Must be one of: alb, nlb, url, or function`
+        `Invalid route type "${routeValue.type}" for "${routeKey}".`
       );
     })();
 
     const { authorizationType, authorizer, authorizationScopes } =
       this.buildRouteAuth(routeProps);
-    const route = new apig.HttpRoute(scope, `Route_${postfixName}`, {
+    const route = new HttpRoute(scope, `Route_${postfixName}`, {
       httpApi: this.cdk.httpApi,
       routeKey: httpRouteKey,
       integration,
@@ -1246,7 +1334,7 @@ export class Api<
     //       the CloudFormation template (ie. set to undefined), CloudFormation
     //       doesn't updates the route. The route's authorizationType would still
     //       be `AWS_IAM`.
-    const cfnRoute = route.node.defaultChild! as cfnApig.CfnRoute;
+    const cfnRoute = route.node.defaultChild! as CfnRoute;
     if (authorizationType === "iam") {
       cfnRoute.authorizationType = "AWS_IAM";
     } else if (authorizationType === "none") {
@@ -1254,16 +1342,59 @@ export class Api<
     }
   }
 
-  private createHttpIntegration(
+  private createAwsProxyIntegration(
     scope: Construct,
+    routeKey: string,
+    routeProps: ApiAwsRouteProps<keyof Authorizers>,
+    postfixName: string
+  ): HttpRouteIntegration {
+    // Create IAM role for API Gateway to call the AWS services
+    const [service, serviceApi] = routeProps.cdk.integration.subtype.split("-");
+    const servicePrefix = {
+      EventBridge: "events",
+      SQS: "sqs",
+      AppConfig: "appconfig",
+      Kinesis: "kinesis",
+      StepFunctions: "states",
+    }[service];
+    const role = new Role(scope, `IntegrationRole_${postfixName}`, {
+      assumedBy: new ServicePrincipal("apigateway.amazonaws.com"),
+      inlinePolicies: {
+        Policy: new PolicyDocument({
+          statements: [
+            new PolicyStatement({
+              actions: [`${servicePrefix}:${serviceApi}`],
+              resources: ["*"],
+            }),
+          ],
+        }),
+      },
+    });
+
+    // Create integration
+    const integration = new HttpAwsIntegration(`Integration_${postfixName}`, {
+      ...routeProps.cdk.integration,
+      credentials: IntegrationCredentials.fromRole(role),
+    });
+
+    // Store route
+    this.routesData[routeKey] = {
+      type: "aws",
+    };
+
+    return integration;
+  }
+
+  private createHttpIntegration(
+    _scope: Construct,
     routeKey: string,
     routeProps: ApiHttpRouteProps<keyof Authorizers>,
     postfixName: string
-  ): apig.HttpRouteIntegration {
+  ): HttpRouteIntegration {
     ///////////////////
     // Create integration
     ///////////////////
-    const integration = new apigIntegrations.HttpUrlIntegration(
+    const integration = new HttpUrlIntegration(
       `Integration_${postfixName}`,
       routeProps.url,
       routeProps.cdk?.integration
@@ -1279,15 +1410,15 @@ export class Api<
   }
 
   private createAlbIntegration(
-    scope: Construct,
+    _scope: Construct,
     routeKey: string,
     routeProps: ApiAlbRouteProps<keyof Authorizers>,
     postfixName: string
-  ): apig.HttpRouteIntegration {
+  ): HttpRouteIntegration {
     ///////////////////
     // Create integration
     ///////////////////
-    const integration = new apigIntegrations.HttpAlbIntegration(
+    const integration = new HttpAlbIntegration(
       `Integration_${postfixName}`,
       routeProps.cdk?.albListener!,
       routeProps.cdk?.integration
@@ -1303,15 +1434,15 @@ export class Api<
   }
 
   private createNlbIntegration(
-    scope: Construct,
+    _scope: Construct,
     routeKey: string,
     routeProps: ApiNlbRouteProps<keyof Authorizers>,
     postfixName: string
-  ): apig.HttpRouteIntegration {
+  ): HttpRouteIntegration {
     ///////////////////
     // Create integration
     ///////////////////
-    const integration = new apigIntegrations.HttpNlbIntegration(
+    const integration = new HttpNlbIntegration(
       `Integration_${postfixName}`,
       routeProps.cdk?.nlbListener!,
       routeProps.cdk?.integration
@@ -1331,7 +1462,7 @@ export class Api<
     routeKey: string,
     routeProps: ApiGraphQLRouteProps<keyof Authorizers>,
     postfixName: string
-  ): apig.HttpRouteIntegration {
+  ): HttpRouteIntegration {
     const result = this.createFunctionIntegration(
       scope,
       routeKey,
@@ -1357,11 +1488,11 @@ export class Api<
   }
 
   protected createCdkFunctionIntegration(
-    scope: Construct,
+    _scope: Construct,
     routeKey: string,
     routeProps: ApiFunctionRouteProps<keyof Authorizers>,
     postfixName: string
-  ): apig.HttpRouteIntegration {
+  ): HttpRouteIntegration {
     ///////////////////
     // Get payload format
     ///////////////////
@@ -1376,8 +1507,8 @@ export class Api<
     }
     const integrationPayloadFormatVersion =
       payloadFormatVersion === "1.0"
-        ? apig.PayloadFormatVersion.VERSION_1_0
-        : apig.PayloadFormatVersion.VERSION_2_0;
+        ? PayloadFormatVersion.VERSION_1_0
+        : PayloadFormatVersion.VERSION_2_0;
 
     ///////////////////
     // Create Function
@@ -1387,7 +1518,7 @@ export class Api<
     ///////////////////
     // Create integration
     ///////////////////
-    const integration = new apigIntegrations.HttpLambdaIntegration(
+    const integration = new HttpLambdaIntegration(
       `Integration_${postfixName}`,
       lambda,
       {
@@ -1409,7 +1540,7 @@ export class Api<
     routeKey: string,
     routeProps: ApiFunctionRouteProps<keyof Authorizers>,
     postfixName: string
-  ): apig.HttpRouteIntegration {
+  ): HttpRouteIntegration {
     ///////////////////
     // Get payload format
     ///////////////////
@@ -1424,8 +1555,8 @@ export class Api<
     }
     const integrationPayloadFormatVersion =
       payloadFormatVersion === "1.0"
-        ? apig.PayloadFormatVersion.VERSION_1_0
-        : apig.PayloadFormatVersion.VERSION_2_0;
+        ? PayloadFormatVersion.VERSION_1_0
+        : PayloadFormatVersion.VERSION_2_0;
 
     ///////////////////
     // Create Function
@@ -1450,7 +1581,7 @@ export class Api<
     ///////////////////
     // Create integration
     ///////////////////
-    const integration = new apigIntegrations.HttpLambdaIntegration(
+    const integration = new HttpLambdaIntegration(
       `Integration_${postfixName}`,
       lambda,
       {
@@ -1479,12 +1610,12 @@ export class Api<
     if (authorizerKey === "none") {
       return {
         authorizationType: "none",
-        authorizer: new apig.HttpNoneAuthorizer(),
+        authorizer: new HttpNoneAuthorizer(),
       };
     } else if (authorizerKey === "iam") {
       return {
         authorizationType: "iam",
-        authorizer: new apigAuthorizers.HttpIamAuthorizer(),
+        authorizer: new HttpIamAuthorizer(),
       };
     }
 
@@ -1535,7 +1666,7 @@ export class Api<
       }
     } else {
       // Cannot set CORS via cdk.httpApi. Always use Api.cors.
-      const httpApiProps = (cdk?.httpApi || {}) as apig.HttpApiProps;
+      const httpApiProps = (cdk?.httpApi || {}) as HttpApiProps;
       if (httpApiProps.corsPreflight !== undefined) {
         throw new Error(
           `Cannot configure the "httpApi.corsPreflight" in the Api`
@@ -1544,7 +1675,7 @@ export class Api<
 
       const corsConfig = apigV2Cors.buildCorsConfig(cors);
       if (corsConfig) {
-        const cfnApi = this.cdk.httpApi.node.defaultChild as cfnApig.CfnApi;
+        const cfnApi = this.cdk.httpApi.node.defaultChild as CfnApi;
         cfnApi.corsConfiguration = {
           allowCredentials: corsConfig?.allowCredentials,
           allowHeaders: corsConfig?.allowHeaders,

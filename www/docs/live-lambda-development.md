@@ -115,7 +115,7 @@ The AWS IoT events are published using the format `/sst/<app>/<stage>/<event>`. 
 
 Each Lambda function invocation is made up of three events; the original request fired by the remote Lambda function, the local CLI acknowledging the request, and the response fired by the local CLI.
 
-If the payload of the events are larger than 100kb, they get chunked into separate events.
+If the payload of the events are larger than 50kb, they get chunked into separate events.
 
 </details>
 
@@ -274,6 +274,10 @@ You can also set breakpoints and debug your Lambda functions locally with [WebSt
 <div class={styles.videoWrapper}>
   <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/_cLM_0On_Cc" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
+
+:::note
+In some versions of WebStorm you might need to disable stepping through library scripts. You can do this by heading to **Preferences** > **Build, Execution, Deployment** > **Debugger** > **Stepping** > unchecking **Do not step into library scripts**.
+:::
 
 ---
 

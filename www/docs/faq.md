@@ -117,7 +117,7 @@ CDK is designed to support multiple programming languages. While, SST is designe
 Yes. The only caveats are:
 
 - [`sst.App`](constructs/App.md) is included by default and is used in place of `cdk.App`.
-- [`sst.Stack`](constructs/Stack.md) is necessary for SST to be able to [deploy to multiple stages](quick-start.md#deploying-an-app) and is used in place of `cdk.Stack`.
+- [`sst.Stack`](constructs/Stack.md) is necessary for SST to be able to deploy to multiple stages and is used in place of `cdk.Stack`.
 - [`sst.Function`](constructs/Function.md) is necessary for the [Live Lambda Development](live-lambda-development.md) environment. But if you don't need that you can use the CDK function constructs.
 
 ---

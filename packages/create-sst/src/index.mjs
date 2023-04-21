@@ -1,16 +1,27 @@
 import fs from "fs/promises";
 import fetch from "node-fetch";
 import path from "path";
-import { exec, execSync } from "child_process";
+import { execSync } from "child_process";
 import { applyOperation } from "fast-json-patch/index.mjs";
 import { pathToFileURL } from "url";
-import { diff_match_patch } from "diff-match-patch";
-
-const DMP = new diff_match_patch();
+import { loadFile, writeFile } from "magicast";
 
 export function extract() {
   return /** @type {const} */ ({
     type: "extract",
+  });
+}
+
+/**
+ * @param {{
+ *   file: string,
+ *   fn: (mod) => void,
+ * }} opts
+ */
+export function magicast(opts) {
+  return /** @type {const} */ ({
+    type: "magicast",
+    ...opts,
   });
 }
 
@@ -33,6 +44,20 @@ export function remove(path) {
 export function patch(opts) {
   return /** @type {const} */ ({
     type: "patch",
+    ...opts,
+  });
+}
+
+/**
+ * @param {{
+ *   file: string,
+ *   pattern: string,
+ *   replacement: string,
+ * }} opts
+ */
+export function str_replace(opts) {
+  return /** @type {const} */ ({
+    type: "str_replace",
     ...opts,
   });
 }
@@ -75,7 +100,7 @@ export function extend(path) {
 }
 
 /**
- * @typedef {ReturnType<typeof remove> | ReturnType<typeof patch> | ReturnType<typeof install> | ReturnType<typeof extract> | ReturnType<typeof extend> | ReturnType<typeof cmd>} Step
+ * @typedef {ReturnType<typeof remove> | ReturnType<typeof patch> | ReturnType<typeof str_replace> | ReturnType<typeof install> | ReturnType<typeof extract> | ReturnType<typeof extend> | ReturnType<typeof cmd> | ReturnType<typeof magicast>} Step
  */
 
 /**
@@ -95,30 +120,20 @@ export async function execute(opts) {
 
   for (const step of steps) {
     switch (step.type) {
+      case "magicast": {
+        const file = path.join(opts.destination, step.file);
+        const mod = await loadFile(file);
+        step.fn(mod);
+        await writeFile(mod);
+      }
       case "extract": {
         const templates = path.join(source, "templates");
         const files = await listFiles(templates);
         for (const file of files) {
-          const parsed = path.parse(file);
           const relative = path.relative(
             templates,
             file.replace("gitignore", ".gitignore")
           );
-          if (parsed.ext === ".patch") {
-            const data = await fs.readFile(file).then((buf) => buf.toString());
-            const patches = DMP.patch_fromText(data);
-            const destination = path.join(
-              opts.destination,
-              relative.replace(".patch", "")
-            );
-            const original = await fs
-              .readFile(destination)
-              .then((buf) => buf.toString());
-            const [applied] = DMP.patch_apply(patches, original);
-            await fs.mkdir(path.dirname(destination), { recursive: true });
-            await fs.writeFile(destination, applied);
-            continue;
-          }
           const destination = path.join(opts.destination, relative);
           await fs.mkdir(path.dirname(destination), { recursive: true });
           await fs.copyFile(file, destination);
@@ -147,6 +162,15 @@ export async function execute(opts) {
           applyOperation(contents, operation);
         }
         await fs.writeFile(file, JSON.stringify(contents, null, 2));
+        break;
+      }
+      case "str_replace": {
+        const file = path.join(opts.destination, step.file);
+        const contents = await fs.readFile(file, "utf8");
+        await fs.writeFile(
+          file,
+          contents.replace(step.pattern, step.replacement)
+        );
         break;
       }
       case "cmd": {

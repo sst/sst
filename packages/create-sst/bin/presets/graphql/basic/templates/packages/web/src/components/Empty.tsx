@@ -1,4 +1,4 @@
-import * as styles from "./Empty.css";
+import styles from "./Empty.module.css";
 
 interface Props {
   children: React.ReactNode;

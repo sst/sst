@@ -43,8 +43,6 @@ const lambdaDefaultPolicy = {
 // Test constructor
 /////////////////////////////
 
-beforeAll(() => {});
-
 test("handlerPath: entry", async () => {
   const app = await createApp();
   const stack = new Stack(app, "stack");
@@ -799,20 +797,80 @@ test("vpc: securityGroups configured without vpc", async () => {
     });
   }).toThrow(/Cannot configure "securityGroups"/);
 });
-
 /////////////////////////////
 // Test Constructor for Local Debug
 /////////////////////////////
 
-test("constructor: debug: layers removed", async () => {
-  const app = await createApp();
+test("constructor: sst deploy: inactive stack", async () => {
+  const app = await createApp({
+    mode: "deploy",
+    isActiveStack(stackName) {
+      return false;
+    },
+  });
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
+    description: "identifier",
+  });
+  await app.finish();
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "index.placeholder",
+    Description: "identifier",
+  });
+});
+
+test("constructor: sst dev", async () => {
+  const app = await createApp({
+    mode: "dev",
+  });
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    description: "identifier",
+    timeout: 10,
     layers: [lambda.LayerVersion.fromLayerVersionArn(stack, "layer", "arn")],
   });
+  await app.finish();
   hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "bridge.handler",
+    Description: "identifier",
+    Timeout: 10,
     Layers: ABSENT,
+  });
+});
+
+test("constructor: sst dev: debugIncreaseTimeout", async () => {
+  const app = await createApp({
+    mode: "dev",
+    debugIncreaseTimeout: true,
+  });
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    description: "identifier",
+  });
+  await app.finish();
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "bridge.handler",
+    Description: "identifier",
+    Timeout: 900,
+  });
+});
+
+test("constructor: sst remove", async () => {
+  const app = await createApp({
+    mode: "remove",
+  });
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    description: "identifier",
+  });
+  await app.finish();
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "index.placeholder",
+    Description: "identifier",
   });
 });
 
@@ -947,7 +1005,7 @@ test("attachPermissions: array: sst WebSocketApi", async () => {
                 {
                   Ref: "ApiCD79AAA0",
                 },
-                "/test/POST/*",
+                "/*/*/@connections/*",
               ],
             ],
           },

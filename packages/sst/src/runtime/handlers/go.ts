@@ -1,5 +1,6 @@
 import path from "path";
 import fs from "fs/promises";
+import os from "os";
 import { useRuntimeHandlers } from "../handlers.js";
 import { useRuntimeWorkers } from "../workers.js";
 import { Context } from "../../context/context.js";
@@ -8,7 +9,7 @@ import { ChildProcessWithoutNullStreams, exec, spawn } from "child_process";
 import { promisify } from "util";
 import { useRuntimeServerConfig } from "../server.js";
 import { isChild } from "../../util/fs.js";
-const execAsync = promisify(exec);
+import { execAsync } from "../../util/process.js";
 
 export const useGoHandler = Context.memo(async () => {
   const workers = await useRuntimeWorkers();
@@ -61,8 +62,10 @@ export const useGoHandler = Context.memo(async () => {
       if (input.mode === "start") {
         try {
           const target = path.join(input.out, handlerName);
+          const srcPath =
+            os.platform() === "win32" ? src.replaceAll("\\", "\\\\") : src;
           const result = await execAsync(
-            `go build -ldflags '-s -w' -o ${target} ./${src}`,
+            `go build -ldflags "-s -w" -o "${target}" ./${srcPath}`,
             {
               cwd: project,
               env: {
@@ -71,24 +74,36 @@ export const useGoHandler = Context.memo(async () => {
             }
           );
         } catch (ex) {
-          throw new VisibleError("Failed to build");
+          return {
+            type: "error",
+            errors: [String(ex)],
+          };
         }
       }
 
       if (input.mode === "deploy") {
         try {
           const target = path.join(input.out, "bootstrap");
-          await execAsync(`go build -ldflags '-s -w' -o ${target} ./${src}`, {
-            cwd: project,
-            env: {
-              ...process.env,
-              CGO_ENABLED: "0",
-              GOARCH: input.props.architecture === "arm_64" ? "arm64" : "amd64",
-              GOOS: "linux",
-            },
-          });
-        } catch {
-          throw new VisibleError("Failed to build");
+          const srcPath =
+            os.platform() === "win32" ? src.replaceAll("\\", "\\\\") : src;
+          await execAsync(
+            `go build -ldflags "-s -w" -o "${target}" ./${srcPath}`,
+            {
+              cwd: project,
+              env: {
+                ...process.env,
+                CGO_ENABLED: "0",
+                GOARCH:
+                  input.props.architecture === "arm_64" ? "arm64" : "amd64",
+                GOOS: "linux",
+              },
+            }
+          );
+        } catch (ex) {
+          return {
+            type: "error",
+            errors: [String(ex)],
+          };
         }
       }
 

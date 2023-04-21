@@ -3,16 +3,14 @@ import type { StackEvent, StackResource } from "@aws-sdk/client-cloudformation";
 import { Box, Text } from "ink";
 import { useBus } from "../../bus.js";
 import { Stacks } from "../../stacks/index.js";
-import inkSpinner from "ink-spinner";
+import Spinner from "ink-spinner";
 import { Colors } from "../colors.js";
 import type { CloudAssembly } from "aws-cdk-lib/cx-api";
 import { useProject } from "../../project.js";
 
-// @ts-ignore
-const { default: Spinner } = inkSpinner;
-
 interface Props {
   assembly: CloudAssembly;
+  remove?: boolean;
 }
 export const DeploymentUI = (props: Props) => {
   const [resources, setResources] = useState<Record<string, StackEvent>>({});
@@ -104,7 +102,9 @@ export const DeploymentUI = (props: Props) => {
           <Text>
             <Spinner />
             {"  "}
-            <Text dimColor>Deploying...</Text>
+            <Text dimColor>
+              {props.remove ? "Removing..." : "Deploying..."}
+            </Text>
           </Text>
         </Box>
       )}
@@ -128,15 +128,10 @@ export function printDeploymentResults(
       Colors.bold(remove ? ` Removed:` : ` Deployed:`)
     );
     for (const [stack, result] of success) {
-      const outputs = Object.entries(result.outputs).filter(
-        ([key, _]) => !key.includes("SstSiteEnv")
-      );
       Colors.line(`   ${Colors.dim(stackNameToId(stack))}`);
-      if (outputs.length > 0) {
-        for (const key of Object.keys(Object.fromEntries(outputs)).sort()) {
-          const value = result.outputs[key];
-          Colors.line(`   ${Colors.bold.dim(key + ":")} ${value}`);
-        }
+      for (const key of Object.keys(result.outputs).sort()) {
+        const value = result.outputs[key];
+        Colors.line(`   ${Colors.bold.dim(key + ":")} ${value}`);
       }
     }
     Colors.gap();

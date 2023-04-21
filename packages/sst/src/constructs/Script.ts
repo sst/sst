@@ -19,7 +19,7 @@ export interface ScriptProps {
    *
    * @example
    * ```js
-   * import { Script } from "@serverless-stack/resources";
+   * import { Script } from "sst/constructs";
    *
    * new Script(stack, "Script", {
    *   onCreate: "src/script.create",
@@ -92,7 +92,7 @@ export interface ScriptProps {
  * @example
  *
  * ```js
- * import { Script } from "@serverless-stack/resources";
+ * import { Script } from "sst/constructs";
  *
  * new Script(stack, "Script", {
  *   onCreate: "src/function.create",
@@ -250,7 +250,7 @@ export class Script extends Construct {
     //       when rebuilding infrastructure. Otherwise, there will always be
     //       a change when rebuilding infrastructure b/c the "BuildAt" property
     //       changes on each build.
-    const builtAt = app.local ? app.debugStartedAt : Date.now();
+    const builtAt = app.mode === "dev" ? app.debugStartedAt : Date.now();
     new cdk.CustomResource(this, "ScriptResource", {
       serviceToken: crFunction.functionArn,
       resourceType: "Custom::SSTScript",

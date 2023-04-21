@@ -12,81 +12,99 @@ The `NextjsSite` construct provides a simple way to build and deploy the app to 
 
 1. If you are creating a new Next.js app, run `create-next-app` from the root of your SST app.
 
-```bash
-npx create-next-app@latest
-```
+   ```bash
+   npx create-next-app@latest
+   ```
 
-![Create Next.js App template](/img/nextjs/bootstrap-nextjs.png)
+   ![Create Next.js App template](/img/nextjs/bootstrap-nextjs.png)
 
-After the Next.js app is created, your SST app structure should look like:
+   After the Next.js app is created, your SST app structure should look like:
 
-```bash
-my-sst-app
-├─ sst.json
-├─ services
-├─ stacks
-└─ my-next-app     <-- new Next.js app
-   ├─ pages
-   ├─ public
-   ├─ styles
-   └─ next.config.js
-```
+   ```bash
+   my-sst-app
+   ├─ sst.config.ts
+   ├─ services
+   ├─ stacks
+   └─ my-next-app     <-- new Next.js app
+      ├─ pages
+      ├─ public
+      ├─ styles
+      └─ next.config.js
+   ```
 
-Continue to step 3.
+   Continue to step 3.
 
 2. Alternatively, if you have an existing Next.js app, move the app to the root of your SST app. Your SST app structure should look like:
 
-```bash
-my-sst-app
-├─ sst.json
-├─ services
-├─ stacks
-└─ my-next-app     <-- your Next.js app
-   ├─ pages
-   ├─ public
-   ├─ styles
-   └─ next.config.js
-```
+   ```bash
+   my-sst-app
+   ├─ sst.config.ts
+   ├─ services
+   ├─ stacks
+   └─ my-next-app     <-- your Next.js app
+      ├─ pages
+      ├─ public
+      ├─ styles
+      └─ next.config.js
+   ```
 
-3. Also add the `sst env` command to your Next.js app's `package.json`. `sst env` enables you to [automatically set the environment variables](#environment-variables) for your Next.js app directly from the outputs in your SST app.
+3. Also add the `sst bind` command to your Next.js app's `package.json`. `sst bind` enables you to [automatically set the environment variables](#environment-variables) for your Next.js app directly from the outputs in your SST app.
 
-```diff
-  "scripts": {
--   "dev": "next dev",
-+   "dev": "sst env next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
-  },
-```
+   ```diff
+     "scripts": {
+   -   "dev": "next dev",
+   +   "dev": "sst bind next dev",
+       "build": "next build",
+       "start": "next start",
+       "lint": "next lint"
+     },
+   ```
 
 4. Add the `NextjsSite` construct to an existing stack in your SST app. You can also create a new stack for the app.
 
-```ts
-import { NextjsSite, StackContext } as sst from "sst/constructs";
+   ```ts
+   import { NextjsSite, StackContext } as sst from "sst/constructs";
 
-export default function MyStack({ stack }: StackContext) {
+   export default function MyStack({ stack }: StackContext) {
 
-  // ... existing constructs
+     // ... existing constructs
 
-  // Create the Next.js site
-  const site = new NextjsSite(stack, "Site", {
-    path: "my-next-app/",
-  });
+     // Create the Next.js site
+     const site = new NextjsSite(stack, "Site", {
+       path: "my-next-app/",
+     });
 
-  // Add the site's URL to stack output
-  stack.addOutputs({
-    URL: site.url || "localhost",
-  });
-}
-```
+     // Add the site's URL to stack output
+     stack.addOutputs({
+       URL: site.url,
+     });
+   }
+   ```
 
-When you are building your SST app, `NextjsSite` will invoke `npx open-next@latest build` inside the Next.js app directory. Make sure `path` is pointing to the your Next.js app.
+   When you are building your SST app, `NextjsSite` will invoke `npx open-next@latest build` inside the Next.js app directory. Make sure `path` is pointing to the your Next.js app.
 
-We also added the site's URL to the stack output. After the deploy succeeds, the URL will be printed out in the terminal. Note that during development, the site is not deployed. You should run the site locally. In this case, `site.url` is `undefined`. [Read more about how environment variables work during development](#while-developing).
+   We also added the site's URL to the stack output. After the deploy succeeds, the URL will be printed out in the terminal.
 
-:::tip
-The site is not deployed when running `sst dev`. [Run the site locally while developing.](#while-developing)
+   Note that during development, the site is not deployed. You should run the site locally. In this case, `site.url` is `undefined`. [Read more about how environment variables work during development](#while-developing).
+
+## Working locally
+
+To work on your Next.js app locally with SST:
+
+1. Start SST in your project root.
+
+   ```bash
+   npx sst dev
+   ```
+
+2. Then start your Next.js app. This should run `sst bind next dev`.
+
+   ```bash
+   npm run dev
+   ```
+
+:::note
+When running `sst dev`, SST does not deploy your Next.js app. It's meant to be run locally.
 :::
 
 ## Custom domains
@@ -170,6 +188,7 @@ There are a couple of work arounds:
 - Hardcode the bucket name
 - Read the bucket name dynamically at build time (ie. from an SSM value)
 - Use [fallback pages](https://nextjs.org/docs/basic-features/data-fetching#fallback-pages) to generate the page on the fly
+
 :::
 
 #### While developing
@@ -180,11 +199,11 @@ To use these values while developing, run `sst dev` to start the [Live Lambda De
 npx sst dev
 ```
 
-Then in your Next.js app to reference these variables, add the [`sst env`](../packages/sst.md#sst-env) command.
+Then in your Next.js app to reference these variables, add the [`sst bind`](../packages/sst.md#sst-bind) command.
 
 ```json title="package.json" {2}
 "scripts": {
-  "dev": "sst env next dev",
+  "dev": "sst bind next dev",
   "build": "next build",
   "start": "next start"
 },
@@ -199,18 +218,19 @@ npm run dev
 There are a couple of things happening behind the scenes here:
 
 1. The `sst dev` command generates a file with the values specified by the `NextjsSite` construct's `environment` prop.
-2. The `sst env` CLI will traverse up the directories to look for the root of your SST app.
+2. The `sst bind` CLI will traverse up the directories to look for the root of your SST app.
 3. It'll then find the file that's generated in step 1.
 4. It'll load these as environment variables before running the start command.
 
 :::note
-`sst env` only works if the Next.js app is located inside the SST app or inside one of its subdirectories. For example:
+`sst bind` only works if the Next.js app is located inside the SST app or inside one of its subdirectories. For example:
 
 ```
 /
-  sst.json
+  sst.config.ts
   my-next-app/
 ```
+
 :::
 
 ## Using AWS services
@@ -238,7 +258,7 @@ Note that we are also passing the bucket name into the environment, so the Next.
 
 ## Examples
 
-### Configurng custom domains
+### Configuring custom domains
 
 You can configure the website with a custom domain hosted either on [Route 53](https://aws.amazon.com/route53/) or [externally](#configuring-externally-hosted-domain).
 
@@ -400,7 +420,7 @@ new NextjsSite(stack, "Site", {
   path: "my-next-app/",
   imageOptimization: {
     memorySize: "2048 MB",
-  }
+  },
 });
 ```
 

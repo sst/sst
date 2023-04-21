@@ -1,4 +1,3 @@
-// import path from "path";
 import url from "url";
 import path from "path";
 import fs from "fs/promises";
@@ -13,12 +12,13 @@ import {
   BuildSpec,
   ComputeType,
 } from "aws-cdk-lib/aws-codebuild";
+import { RetentionDays, LogRetention } from "aws-cdk-lib/aws-logs";
 
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Secret } from "./Config.js";
 import { SSTConstruct } from "./Construct.js";
-import { Function, useFunctions } from "./Function.js";
+import { Function, useFunctions, NodeJSProps } from "./Function.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import {
@@ -27,7 +27,7 @@ import {
   bindPermissions,
   getReferencedSecrets,
 } from "./util/functionBinding.js";
-import { IVpc } from "aws-cdk-lib/aws-ec2";
+import { ISecurityGroup, IVpc, SubnetSelection } from "aws-cdk-lib/aws-ec2";
 import { useDeferredTasks } from "./deferred_task.js";
 import { useProject } from "../project.js";
 import { useRuntimeHandlers } from "../runtime/handlers.js";
@@ -35,6 +35,7 @@ import { useRuntimeHandlers } from "../runtime/handlers.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 export type JobMemorySize = "3 GB" | "7 GB" | "15 GB" | "145 GB";
+export interface JobNodeJSProps extends NodeJSProps {}
 
 export interface JobProps {
   /**
@@ -77,6 +78,10 @@ export interface JobProps {
    *```
    */
   timeout?: Duration;
+  /**
+   * Used to configure nodejs function properties
+   */
+  nodejs?: JobNodeJSProps;
   /**
    * Can be used to disable Live Lambda Development when using `sst start`. Useful for things like Custom Resources that need to execute during deployment.
    *
@@ -129,6 +134,18 @@ export interface JobProps {
    * ```
    */
   permissions?: Permissions;
+  /**
+   * The duration logs are kept in CloudWatch Logs.
+   * @default Logs retained indefinitely
+   * @example
+   * ```js
+   * new Job(stack, "MyJob", {
+   *   handler: "src/job.handler",
+   *   logRetention: "one_week"
+   * })
+   * ```
+   */
+  logRetention?: Lowercase<keyof typeof RetentionDays>;
   cdk?: {
     /**
      * Allows you to override default id for this construct.
@@ -150,6 +167,42 @@ export interface JobProps {
      * ```
      */
     vpc?: IVpc;
+    /**
+     * Where to place the network interfaces within the VPC.
+     * @default All private subnets.
+     * @example
+     * ```js
+     * import { SubnetType } from "aws-cdk-lib/aws-ec2";
+     *
+     * new Job(stack, "MyJob", {
+     *   handler: "src/job.handler",
+     *   cdk: {
+     *     vpc,
+     *     vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS }
+     *   }
+     * })
+     * ```
+     */
+    vpcSubnets?: SubnetSelection;
+    /**
+     * The list of security groups to associate with the Job's network interfaces.
+     * @default A new security group is created.
+     * @example
+     * ```js
+     * import { SecurityGroup } from "aws-cdk-lib/aws-ec2";
+     *
+     * new Job(stack, "MyJob", {
+     *   handler: "src/job.handler",
+     *   cdk: {
+     *     vpc,
+     *     securityGroups: [
+     *       new SecurityGroup(stack, "MyJobSG", { vpc })
+     *     ]
+     *   }
+     * })
+     * ```
+     */
+    securityGroups?: ISecurityGroup[];
   };
 }
 
@@ -163,7 +216,7 @@ export interface JobProps {
  * @example
  *
  * ```js
- * import { Cron } from "@serverless-stack/resources";
+ * import { Cron } from "sst/constructs";
  *
  * new Cron(stack, "Cron", {
  *   schedule: "rate(1 minute)",
@@ -182,6 +235,7 @@ export class Job extends Construct implements SSTConstruct {
     super(scope, props.cdk?.id || id);
 
     const app = this.node.root as App;
+    const stack = Stack.of(scope) as Stack;
     this.id = id;
     this.props = props;
     useFunctions().add(this.node.addr, {
@@ -194,10 +248,13 @@ export class Job extends Construct implements SSTConstruct {
       .replace(/\//g, "-")
       .replace(/\./g, "-");
     const isLiveDevEnabled =
-      app.local && (this.props.enableLiveDev === false ? false : true);
+      app.mode === "dev" && (this.props.enableLiveDev === false ? false : true);
 
     this.job = this.createCodeBuildProject();
-    if (isLiveDevEnabled) {
+    this.createLogRetention();
+    if (!stack.isActive) {
+      this._jobInvoker = this.createCodeBuildInvoker();
+    } else if (isLiveDevEnabled) {
       this._jobInvoker = this.createLocalInvoker();
     } else {
       this._jobInvoker = this.createCodeBuildInvoker();
@@ -275,10 +332,10 @@ export class Job extends Construct implements SSTConstruct {
   }
 
   private createCodeBuildProject(): Project {
+    const { cdk, memorySize, timeout } = this.props;
     const app = this.node.root as App;
 
     return new Project(this, "JobProject", {
-      vpc: this.props.cdk?.vpc,
       projectName: app.logicalPrefixedName(this.node.id),
       environment: {
         // CodeBuild offers different build images. The newer ones have much quicker
@@ -290,14 +347,14 @@ export class Job extends Construct implements SSTConstruct {
         buildImage: LinuxBuildImage.fromDockerRegistry(
           "amazon/aws-lambda-nodejs:16"
         ),
-        computeType: this.normalizeMemorySize(this.props.memorySize || "3 GB"),
+        computeType: this.normalizeMemorySize(memorySize || "3 GB"),
       },
       environmentVariables: {
         SST_APP: { value: app.name },
         SST_STAGE: { value: app.stage },
         SST_SSM_PREFIX: { value: useProject().config.ssmPrefix },
       },
-      timeout: this.normalizeTimeout(this.props.timeout || "8 hours"),
+      timeout: this.normalizeTimeout(timeout || "8 hours"),
       buildSpec: BuildSpec.fromObject({
         version: "0.2",
         phases: {
@@ -308,14 +365,28 @@ export class Job extends Construct implements SSTConstruct {
           },
         },
       }),
+      vpc: cdk?.vpc,
+      securityGroups: cdk?.securityGroups,
+      subnetSelection: cdk?.vpcSubnets,
+    });
+  }
+
+  private createLogRetention() {
+    const { logRetention } = this.props;
+    if (!logRetention) return;
+
+    new LogRetention(this, "LogRetention", {
+      logGroupName: `/aws/codebuild/${this.job.projectName}`,
+      retention:
+        RetentionDays[logRetention.toUpperCase() as keyof typeof RetentionDays],
+      logRetentionRetryOptions: {
+        maxRetries: 100,
+      },
     });
   }
 
   private buildCodeBuildProjectCode() {
     const app = this.node.root as App;
-
-    // Handle remove (ie. sst remove)
-    if (app.mode === "remove") return;
 
     useDeferredTasks().add(async () => {
       // Build function
@@ -403,7 +474,7 @@ export class Job extends Construct implements SSTConstruct {
       },
       permissions,
     });
-    fn._disableBind = true;
+    fn._doNotAllowOthersToBind = true;
     return fn;
   }
 
@@ -428,7 +499,7 @@ export class Job extends Construct implements SSTConstruct {
       },
       enableLiveDev: false,
     });
-    fn._disableBind = true;
+    fn._doNotAllowOthersToBind = true;
     return fn;
   }
 

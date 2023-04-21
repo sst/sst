@@ -24,6 +24,8 @@ The above resources are defined in a CloudFormation stack called `SSTBootstrap`.
 
 The bootstrap stack is deployed per AWS account per region. This means that deploying multiple SST apps in the same AWS account and region will result in only one `SSTBootstrap` stack being created in that region.
 
+You can configure the bootstrap stack, such as the stack name and tags, in [`sst.config.ts`](../configuring-sst.md#config-options).
+
 ---
 
 ## App metadata
@@ -40,6 +42,7 @@ The stack metadata includes information about the constructs created in each sta
 
 - [SST Console](../console.md)
 - [Config](../config#updating-secrets) to look up the functions that need to be restarted when updating secret values
+- [sst bind](../packages/sst.md#sst-bind) to look up the resources bound to the functions and sites
 
 Stack metadata is stored in the S3 bucket at `appMetadata/app.{appName}/stage.{stageName}/stack.{stackName}.json`.
 
@@ -48,3 +51,19 @@ Stack metadata is stored in the S3 bucket at `appMetadata/app.{appName}/stage.{s
 ## CDK bootstrap
 
 SST is built on top of [AWS CDK](https://aws.amazon.com/cdk/), which also has its own bootstrapping process. The CDK bootstrapping process is similar to SST. Each AWS account and region needs to be bootstrapped only once. You can read more about [CDK bootstrapping process](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html).
+
+You can configure the CDK bootstrap stack, such as the stack name and qualifier, in [`sst.config.ts`](../configuring-sst.md#config-options).
+
+```ts title="sst.config.ts"
+config(input) {
+  return {
+    cdk: {
+      qualifier: "my-team",
+      fileAssetsBucketName: "my-team-CDKToolkit",
+      customPermissionsBoundary: "my-team-pb",
+    }
+  }
+},
+```
+
+When configured, [`Stack synthesizers`](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html#bootstrapping-synthesizers) are automatically configured for all stacks in your app.

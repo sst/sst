@@ -10,106 +10,122 @@ The `AstroSite` construct is a higher level CDK construct that makes it easy to 
 
 1. If you are creating a new Astro app, run `create-astro` from the root of your SST app.
 
-```bash
-npx create-astro@latest
-```
+   ```bash
+   npx create-astro@latest
+   ```
 
-And select `Astro App Server` as the deployment target.
+   And select `Astro App Server` as the deployment target.
 
-![Select Astro App template](/img/astro/bootstrap-astro.png)
+   ![Select Astro App template](/img/astro/bootstrap-astro.png)
 
-After the Astro app is created, your SST app structure should look like:
+   After the Astro app is created, your SST app structure should look like:
 
-```bash
-my-sst-app
-├─ sst.json
-├─ services
-├─ stacks
-└─ my-astro-app     <-- new Astro app
-   ├─ src
-   ├─ public
-   └─ astro.config.mjs
-```
+   ```bash
+   my-sst-app
+   ├─ sst.config.ts
+   ├─ services
+   ├─ stacks
+   └─ my-astro-app     <-- new Astro app
+      ├─ src
+      ├─ public
+      └─ astro.config.mjs
+   ```
 
-Continue to step 3.
+   Continue to step 3.
 
 2. Alternatively, if you have an existing Astro app, move the app to the root of your SST app. Your SST app structure should look like:
 
-```bash
-my-sst-app
-├─ sst.json
-├─ services
-├─ stacks
-└─ my-astro-app     <-- your Astro app
-   ├─ src
-   ├─ public
-   └─ astro.config.mjs
-```
+   ```bash
+   my-sst-app
+   ├─ sst.config.ts
+   ├─ services
+   ├─ stacks
+   └─ my-astro-app     <-- your Astro app
+      ├─ src
+      ├─ public
+      └─ astro.config.mjs
+   ```
 
 3. Let's set up the [`astro-sst` adapter](https://www.npmjs.com/package/astro-sst) for your Astro app. The adapter will transform the SSR functions to a format that can be deployed to AWS. To do that, run `astro add` from your Astro app.
 
-```sh
-npx astro add astro-sst
-```
+   ```sh
+   npx astro add astro-sst
+   ```
 
-This will install the adapter and make the appropriate changes to your `astro.config.mjs` file in one step.
+   This will install the adapter and make the appropriate changes to your `astro.config.mjs` file in one step.
 
-:::info
-If you are deploying the `AstroSite` in the `edge` mode, import the adapter from the `astro-sst/edge` package in your `astro.config.mjs` file.
+   :::info
+   If you are deploying the `AstroSite` in the `edge` mode, import the adapter from the `astro-sst/edge` package in your `astro.config.mjs` file.
 
-```diff
-- import aws from "astro-sst/lambda";
-+ import aws from "astro-sst/edge";
-```
-:::
+   ```diff
+   - import aws from "astro-sst/lambda";
+   + import aws from "astro-sst/edge";
+   ```
 
-4. Also add the `sst env` command to your Astro app's `package.json`. `sst env` enables you to [automatically set the environment variables](#environment-variables) for your Astro app directly from the outputs in your SST app.
+   :::
 
-```diff
-  "scripts": {
--   "dev": "astro dev",
-+   "dev": "sst env astro dev",
-    "start": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview",
-    "astro": "astro"
-  },
-```
+4. Also add the `sst bind` command to your Astro app's `package.json`. `sst env` enables you to [automatically set the environment variables](#environment-variables) for your Astro app directly from the outputs in your SST app.
+
+   ```diff
+     "scripts": {
+   -   "dev": "astro dev",
+   +   "dev": "sst bind astro dev",
+       "start": "astro dev",
+       "build": "astro build",
+       "preview": "astro preview",
+       "astro": "astro"
+     },
+   ```
 
 5. Add the `AstroSite` construct to an existing stack in your SST app. You can also create a new stack for the app.
 
-```ts
-import { AstroSite, StackContext } as sst from "sst/constructs";
+   ```ts
+   import { AstroSite, StackContext } from "sst/constructs";
 
-export default function MyStack({ stack }: StackContext) {
+   export default function MyStack({ stack }: StackContext) {
+     // ... existing constructs
 
-  // ... existing constructs
+     // Create the Astro site
+     const site = new AstroSite(stack, "Site", {
+       path: "my-astro-app/",
+     });
 
-  // Create the Astro site
-  const site = new AstroSite(stack, "Site", {
-    path: "my-astro-app/",
-  });
+     // Add the site's URL to stack output
+     stack.addOutputs({
+       URL: site.url,
+     });
+   }
+   ```
 
-  // Add the site's URL to stack output
-  stack.addOutputs({
-    URL: site.url || "localhost",
-  });
-}
-```
+   When you are building your SST app, `AstroSite` will invoke `npm build` inside the Astro app directory. Make sure `path` is pointing to the your Astro app.
 
-When you are building your SST app, `AstroSite` will invoke `npm build` inside the Astro app directory. Make sure `path` is pointing to the your Astro app.
+   We also added the site's URL to the stack output. After the deploy succeeds, the URL will be printed out in the terminal.
 
-We also added the site's URL to the stack output. After the deploy succeeds, the URL will be printed out in the terminal. Note that during development, the site is not deployed. You should run the site locally. In this case, `site.url` is `undefined`. [Read more about how environment variables work during development](#while-developing).
+## Working locally
 
-:::tip
-The site is not deployed when running `sst dev`. [Run the site locally while developing.](#while-developing)
+To work on your Astro site locally with SST:
+
+1. Start SST in your project root.
+
+   ```bash
+   npx sst dev
+   ```
+
+2. Then start your Astro site. This should run `sst bind astro dev`.
+
+   ```bash
+   npm run dev
+   ```
+
+:::note
+When running `sst dev`, SST does not deploy your Astro site. It's meant to be run locally.
 :::
 
 ## Single region vs edge
 
 There are two ways you can deploy the Astro app to your AWS account.
 
-By default, the Astro app server is deployed to a single region defined in your `sst.json` or passed in via the `--region` flag. Alternatively, you can choose to deploy to the edge. When deployed to the edge, loaders/actions are running on edge location that is physically closer to the end user. In this case, the app server is deployed to AWS Lambda@Edge.
+By default, the Astro app server is deployed to a single region defined in your `sst.config.ts` or passed in via the `--region` flag. Alternatively, you can choose to deploy to the edge. When deployed to the edge, loaders/actions are running on edge location that is physically closer to the end user. In this case, the app server is deployed to AWS Lambda@Edge.
 
 You can enable edge like this:
 
@@ -223,11 +239,11 @@ To use these values while developing, run `sst dev` to start the [Live Lambda De
 npx sst dev
 ```
 
-Then in your Astro app to reference these variables, add the [`sst env`](../packages/sst.md#sst-env) command.
+Then in your Astro app to reference these variables, add the [`sst bind`](../packages/sst.md#sst-env) command.
 
 ```json title="package.json" {2}
 "scripts": {
-  "dev": "sst env astro dev",
+  "dev": "sst bind astro dev",
   "start": "astro dev",
   "build": "astro build",
   "preview": "astro preview",
@@ -244,18 +260,19 @@ npm run dev
 There are a couple of things happening behind the scenes here:
 
 1. The `sst dev` command generates a file with the values specified by the `AstroSite` construct's `environment` prop.
-2. The `sst env` CLI will traverse up the directories to look for the root of your SST app.
+2. The `sst bind` CLI will traverse up the directories to look for the root of your SST app.
 3. It'll then find the file that's generated in step 1.
 4. It'll load these as environment variables before running the start command.
 
 :::note
-`sst env` only works if the Astro app is located inside the SST app or inside one of its subdirectories. For example:
+`sst bind` only works if the Astro app is located inside the SST app or inside one of its subdirectories. For example:
 
 ```
 /
-  sst.json
+  sst.config.ts
   my-astro-app/
 ```
+
 :::
 
 ## Using AWS services

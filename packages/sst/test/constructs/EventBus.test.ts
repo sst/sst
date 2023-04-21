@@ -10,6 +10,7 @@ import {
 } from "./helper";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as events from "aws-cdk-lib/aws-events";
+import { LogGroup } from "aws-cdk-lib/aws-logs";
 import {
   App,
   Stack,
@@ -513,6 +514,50 @@ test("targets: Queue with target props", async () => {
         },
         SqsParameters: {
           MessageGroupId: "group-id",
+        },
+      },
+    ],
+  });
+});
+
+test("targets: LogGroup", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  const logGroup = new LogGroup(stack, "LogGroup");
+  new EventBus(stack, "EventBus", {
+    rules: {
+      rule1: {
+        pattern: { source: ["aws.codebuild"] },
+        targets: {
+          "0": {
+            type: "log_group",
+            cdk: {
+              logGroup,
+              target: {
+                retryAttempts: 123,
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+  hasResource(stack, "AWS::Events::Rule", {
+    Targets: [
+      {
+        Id: "Target0",
+        Arn: {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              { Ref: "AWS::Partition" },
+              ":logs:us-east-1:my-account:log-group:",
+              { Ref: "LogGroupF5B46931" },
+            ],
+          ],
+        },
+        RetryPolicy: {
+          MaximumRetryAttempts: 123,
         },
       },
     ],

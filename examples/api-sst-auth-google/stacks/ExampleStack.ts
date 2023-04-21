@@ -1,10 +1,4 @@
-import {
-  StackContext,
-  Api,
-  Auth,
-  ViteStaticSite,
-  Table,
-} from "sst/constructs";
+import { StackContext, Api, Auth, ViteStaticSite, Table } from "sst/constructs";
 
 export function ExampleStack({ stack }: StackContext) {
   // Create a database Table

@@ -1,9 +1,4 @@
-import {
-  Api,
-  StackContext,
-  StaticSite,
-  Table,
-} from "sst/constructs";
+import { Api, StackContext, StaticSite, Table } from "sst/constructs";
 
 export function ExampleStack({ stack }: StackContext) {
   const table = new Table(stack, "Counter", {

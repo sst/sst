@@ -16,6 +16,39 @@ To view the latest release and all historical releases, <a href={`${config.githu
 
 ---
 
+## Upgrade to v2.3.0
+
+[Resource Binding](resource-binding.md) now lets you bind resources to your frontend frameworks. It simplifies accessing the resources in the server side rendered (SSR) code. For example, here's how we bind the bucket to the Next.js app:
+
+```diff
+const bucket = new Bucket(stack, "myFiles");
+
+new NextjsSite(stack, "mySite", {
+- environment: {
+-   BUCKET_NAME: bucket.bucketName,
+- },
+- permissions: [bucket],
++ bind: [bucket],
+});
+```
+
+And here's how we access it in our SSR code.
+
+```diff
++ import { Bucket } from "sst/node/bucket";
+
+- process.env.BUCKET_NAME
++ Bucket.myFiles.bucketName
+```
+
+Following are the steps to upgrade.
+
+1. **`sst env` has been renamed to `sst bind`** (although both will work). `sst env` will be removed in SST v3
+
+   ```diff
+   - sst env next dev
+   + sst bind next dev
+   ```
 ## Upgrade to v2.0
 
 The 2.0 upgrade is primarily ergonomic and should not result in any infrastructure changes.
@@ -23,32 +56,33 @@ The 2.0 upgrade is primarily ergonomic and should not result in any infrastructu
 #### Packages
 
 1. SST is now a monorepo, remove all packages referencing `@serverless-stack/resources` `@serverless-stack/cli` `@serverless-stack/node` and `@serverless-stack/static-site-env`. Install the `sst` package
-    ```diff
-    {
-      "devDependencies": {
-    -   "@serverless-stack/resources": "xxx",
-    -   "@serverless-stack/cli": "xxx",
-    -   "@serverless-stack/static-site-env": "xxx",
-    -   "@serverless-stack/node": "xxx",
-    +   "sst": "2.x",
-    +   "constructs": "10.1.156"
-      }
-    }
-    ```
+
+   ```diff
+   {
+     "devDependencies": {
+   -   "@serverless-stack/resources": "xxx",
+   -   "@serverless-stack/cli": "xxx",
+   -   "@serverless-stack/static-site-env": "xxx",
+   -   "@serverless-stack/node": "xxx",
+   +   "sst": "2.x",
+   +   "constructs": "10.1.156"
+     }
+   }
+   ```
 
 2. Ensure `"constructs": "10.1.156"` is installed
 3. In your stacks code replace all imports from `@serverless-stack/resources` to `sst/constructs`
-    ```diff
-    - import { Function } from "@serverless-stack/resources"
-    + import { Function } from "sst/constructs"
-    ```
+   ```diff
+   - import { Function } from "@serverless-stack/resources"
+   + import { Function } from "sst/constructs"
+   ```
 4. If you were using `@serverless-stack/static-site-env` for your frontend, replace it with the `sst env '<command>'` command
-    ```diff
-    "scripts": {
-    - "dev": "static-site-env -- vite dev",
-    + "dev": "sst env vite dev",
-    }
-    ```
+   ```diff
+   "scripts": {
+   - "dev": "static-site-env -- vite dev",
+   + "dev": "sst env vite dev",
+   }
+   ```
 
 #### App configuration
 
@@ -69,7 +103,7 @@ export default {
   },
   stacks(app) {
     app.setDefaultFunctionProps({
-      runtime: "nodejs16.x",
+      runtime: "nodejs18.x",
       architecture: "arm_64",
     })
 
@@ -81,84 +115,102 @@ export default {
 ```
 
 #### CLI
+
 1. `sst start` has been renamed to `sst dev` (although both will work)
 2. `sst load-config` has been removed — [see v1.16](#upgrade-to-v116)
+3. `sst dev` requires additional IAM permissions:
+
+   - iot:Connect
+   - iot:DescribeEndpoint
+   - iot:Publish
+   - iot:Receive
+   - iot:Subscribe
+
+   [View the complete list of permissions](./advanced/iam-credentials.md#cli-permissions) required by the CLI.
 
 #### Stacks code
 
-1. In stacks code, process.env.IS_LOCAL is no longer available. Please is app.mode to see if it's running in "dev" mode. `app.local` will continue to work but likely will be deprecated at some point.
+1. In stacks code, process.env.IS_LOCAL is no longer available. Please use app.mode to see if it's running in "dev" mode. `app.local` will continue to work but likely will be deprecated at some point.
 1. SST no longer requires a DebugStack to be deployed - feel free to delete this from your AWS console.
 1. Function
-    1. Default runtime is `nodejs18.x`
-    1. Default format is `esm`
-    1. We've made changes to the `FunctionProps` API so you should be seeing type errors around the `bundle` property. Most of the options there have been moved to a `nodejs` property instead.
-        ```diff
-        const fn = new Function(stack, "fn", {
-        - bundle: {
-        -   format: "esm",
-        - },
-        + nodejs: {
-        +   format: "esm"
-        + }
-        })
-        ```
-    1. We've removed the need for `srcPath` in function definitions but all your handler paths need to be specified relative to the root of the project.
-        ```diff
-        new Function(stack, "fn", {
-        - srcPath: "services",
-        - handler: "path/to/func.handler"
-        + handler: "services/path/to/func.handler"
-        })
-        ```
-    1. Removed `config` prop — [see v1.16](#upgrade-to-v116)
+   1. Default runtime is `nodejs16.x`
+   1. Default format is `esm` instead of `cjs`. However, you might have some dependencies that have not properly supported `esm` yet. To get around this you can set the [`format`](constructs/Function.md#format) to `cjs` in your default function props. While v2 doesn't need you to upgrade to `esm`, the SST [Node client](clients/index.md) requires `esm` because of their use of top-level await. So it's recommended that you move over in the near future.
+      ```ts title="sst.config.ts"
+      app.setDefaultFunctionProps({
+        nodejs: {
+          format: "cjs",
+        },
+      });
+      ```
+   1. We've made changes to the `FunctionProps` API so you should be seeing type errors around the `bundle` property. Most of the options there have been moved to a `nodejs` property instead.
+      ```diff
+      const fn = new Function(stack, "fn", {
+      - bundle: {
+      -   format: "esm",
+      - },
+      + nodejs: {
+      +   format: "esm"
+      + }
+      })
+      ```
+   1. We've removed the need for `srcPath` in function definitions but all your handler paths need to be specified relative to the root of the project.
+      ```diff
+      new Function(stack, "fn", {
+      - srcPath: "services",
+      - handler: "path/to/func.handler"
+      + handler: "services/path/to/func.handler"
+      })
+      ```
+   1. Removed `config` prop — [see v1.16](#upgrade-to-v116)
 1. Api: removed the `pothos` route type — [see v1.18](#upgrade-to-v118)
 1. StaticSite, NextjsSite, and RemixSite
-    1. Following attributes were renamed:
-        - `bucketArn` renamed to `cdk.bucket.bucketArn`
-        - `bucketName` renamed to `cdk.bucket.bucketName`
-        - `distributionId` renamed to `cdk.distribution.distributionId`
-        - `distributionDomain` renamed to `cdk.distribution.distributionDomainName`
-        ```diff
-        const site = new StaticSite(stack, "MySite");
-        - site.bucketArn
-        - site.bucketName
-        - site.distributionId
-        - site.distributionDomain
-        + site.cdk.bucket.bucketArn
-        + site.cdk.bucket.bucketName
-        + site.cdk.distribution.distributionId
-        + site.cdk.distribution.distributionDomainName
-        ```
-    1. Running `sst dev` no longer deploys a placeholder site
-        - `site.url` is `undefined` in dev mode
-        - `site.customDomainUrl` is `undefined` in dev mode
-    1. `waitForInvalidation` now defaults to `false`
+
+   1. Following attributes were renamed:
+      - `bucketArn` renamed to `cdk.bucket.bucketArn`
+      - `bucketName` renamed to `cdk.bucket.bucketName`
+      - `distributionId` renamed to `cdk.distribution.distributionId`
+      - `distributionDomain` renamed to `cdk.distribution.distributionDomainName`
+      ```diff
+      const site = new StaticSite(stack, "MySite");
+      - site.bucketArn
+      - site.bucketName
+      - site.distributionId
+      - site.distributionDomain
+      + site.cdk.bucket.bucketArn
+      + site.cdk.bucket.bucketName
+      + site.cdk.distribution.distributionId
+      + site.cdk.distribution.distributionDomainName
+      ```
+   1. Running `sst dev` no longer deploys a placeholder site
+      - `site.url` is `undefined` in dev mode
+      - `site.customDomainUrl` is `undefined` in dev mode
+   1. `waitForInvalidation` now defaults to `false`
 
 1. NextjsSite
-    1. in SST v1, the `NextjsSite` construct uses the [`@sls-next/lambda-at-edge package`](https://github.com/serverless-nextjs/serverless-next.js/tree/master/packages/libs/lambda-at-edge) package from the [`serverless-next.js`](https://github.com/serverless-nextjs/serverless-next.js) project to build and package your Next.js app so that it can be deployed to AWS. The project is no longer maintained. SST v2 uses the [`OpenNext`](https://open-next.js.org) project. You can still use the old `NextjsSite` construct like this:
-        ```ts
-        import { NextjsSite } from "sst/constructs/deprecated";
-        ```
-    2. `commandHooks.afterBuild` renamed to `buildCommand`
-        ```diff
-        new NextjsSite(stack, "NextSite", {
-          path: "path/to/site",
-        - commandHooks: {
-        -   afterBuild: ["npx next-sitemap"],
-        - }
-        + buildCommand: "npx open-next@latest build && npx next-sitemap"
-        });
-        ```
+   1. in SST v1, the `NextjsSite` construct uses the [`@sls-next/lambda-at-edge package`](https://github.com/serverless-nextjs/serverless-next.js/tree/master/packages/libs/lambda-at-edge) package from the [`serverless-next.js`](https://github.com/serverless-nextjs/serverless-next.js) project to build and package your Next.js app so that it can be deployed to AWS. The project is no longer maintained. SST v2 uses the [`OpenNext`](https://open-next.js.org) project. You can still use the old `NextjsSite` construct like this:
+      ```ts
+      import { NextjsSite } from "sst/constructs/deprecated";
+      ```
+   2. `commandHooks.afterBuild` renamed to `buildCommand`
+      ```diff
+      new NextjsSite(stack, "NextSite", {
+        path: "path/to/site",
+      - commandHooks: {
+      -   afterBuild: ["npx next-sitemap"],
+      - }
+      + buildCommand: "npx open-next@latest build && npx next-sitemap"
+      });
+      ```
 1. Removed ViteStaticSite and ReactStaticSite — [see v1.18](#upgrade-to-v118)
 1. Removed GraphQLApi — [see v1.18](#upgrade-to-v118)
 
 #### Function code
 
 1. In your functions code replace all imports from `@serverless-stack/node/xxx` to `sst/node/xxx`
-    ```diff
-    - import { Bucket } from "@serverless-stack/node/bucket"
-    + import { Bucket } from "sst/node/bucket"
-    ```
+   ```diff
+   - import { Bucket } from "@serverless-stack/node/bucket"
+   + import { Bucket } from "sst/node/bucket"
+   ```
 1. If you're using function binding we moved type generation into a `.sst` folder. To include this place an `sst-env.d.ts` file in any package that needs the types that contains the following:
    ```js
    /// <reference path="../.sst/types/index.ts" />
@@ -166,10 +218,11 @@ export default {
    Make sure you specify the path correctly
 
 #### Secrets
+
 1. The SSM parameter path for storing the secret values have changed in v1.16. If you are upgrading from a version prior to v1.16, run this `sst transform` command in each stage with secrets set:
-    ```bash
-    sst transform resource-binding-secrets
-    ```
+   ```bash
+   sst transform resource-binding-secrets
+   ```
 
 #### Say bye to debug stack 👋
 
@@ -209,37 +262,37 @@ In v1, SST used to deploy a debug stack in your AWS account when you ran `sst st
 
 2. GraphQLApi: The `GraphQLApi` construct is deprecated, and will be removed in SST v2. **Use the `Api` construct with a `graphql` route instead**.
 
-    ```diff
-    - new GraphQLApi(stack, "api", {
-    -   server: "src/graphql.handler",
-    - });
+   ```diff
+   - new GraphQLApi(stack, "api", {
+   -   server: "src/graphql.handler",
+   - });
 
-    + new Api(stack, "api", {
-    +   routes: {
-    +     "POST /": {
-    +       type: "graphql",
-    +       function: "src/graphql.handler",
-    +     }
-    +   }
-    + });
-    ```
+   + new Api(stack, "api", {
+   +   routes: {
+   +     "POST /": {
+   +       type: "graphql",
+   +       function: "src/graphql.handler",
+   +     }
+   +   }
+   + });
+   ```
 
-    Note that the `GraphQLApi` construct used to create both `GET` and `POST` routes. In most cases, only `POST` is used. You can also create the `GET` route like this:
+   Note that the `GraphQLApi` construct used to create both `GET` and `POST` routes. In most cases, only `POST` is used. You can also create the `GET` route like this:
 
-    ```diff
-    new Api(stack, "api", {
-      routes: {
-    +   "GET /": {
-    +     type: "graphql",
-    +     function: "src/graphql.handler",
-    +   },
-        "POST /": {
-          type: "graphql",
-          function: "src/graphql.handler",
-        }
-      }
-    });
-    ```
+   ```diff
+   new Api(stack, "api", {
+     routes: {
+   +   "GET /": {
+   +     type: "graphql",
+   +     function: "src/graphql.handler",
+   +   },
+       "POST /": {
+         type: "graphql",
+         function: "src/graphql.handler",
+       }
+     }
+   });
+   ```
 
 3. ViteStaticSite: The `ViteStaticSite` construct is deprecated, and will be removed in SST v2. **Use the `StaticSite` construct instead. Specify `buildCommand`, `buildOutput`, and rename `typesPath` to `vite.types`**.
 
@@ -274,6 +327,7 @@ In v1, SST used to deploy a debug stack in your AWS account when you ran `sst st
        },
      });
    ```
+
 ---
 
 ## Upgrade to v1.16

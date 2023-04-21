@@ -41,8 +41,7 @@ Runs your tests using vitest. Takes all the [Vitest CLI options](https://vitest.
 Learn more about SST.
 
 - [Docs](https://docs.sst.dev)
-- [@serverless-stack/cli](https://docs.sst.dev/packages/cli)
-- [@serverless-stack/resources](https://docs.sst.dev/packages/resources)
+- [sst](https://docs.sst.dev/packages/sst)
 
 ## Community
 

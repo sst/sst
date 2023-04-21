@@ -1,4 +1,4 @@
-import notes from "../notes";
+import notes from "../../../services/notes";
 
 export async function main() {
   return {

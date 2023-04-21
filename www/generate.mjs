@@ -18,7 +18,11 @@ const CDK_DOCS_MAP = {
   StackProps: "",
   CfnOutputProps: "",
   IVpc: "aws_ec2",
+  ISecurityGroup: "aws_ec2",
+  SubnetSelection: "aws_ec2",
   LogGroup: "aws_logs",
+  LogGroupProps: "aws_logs",
+  ILogGroup: "aws_logs",
   IHostedZone: "aws_route53",
   ISecret: "aws_secretsmanager",
   IApplicationListener: "aws_elasticloadbalancingv2",
@@ -69,8 +73,8 @@ const CDK_DOCS_MAP = {
   ITopic: "aws_sns",
   TopicProps: "aws_sns",
   Subscription: "aws_sns",
-  SqsSubscriptionProps: "aws_sns",
-  LambdaSubscriptionProps: "aws_sns",
+  SqsSubscriptionProps: "aws_sns_subscriptions",
+  LambdaSubscriptionProps: "aws_sns_subscriptions",
   Runtime: "aws_lambda",
   Tracing: "aws_lambda",
   Function: "aws_lambda",
@@ -78,7 +82,7 @@ const CDK_DOCS_MAP = {
   ILayerVersion: "aws_lambda",
   FunctionProps: "aws_lambda",
   FunctionOptions: "aws_lambda",
-  SqsEventSourceProps: "aws_lambda",
+  SqsEventSourceProps: "aws_lambda_event_sources",
   DynamoEventSourceProps: "aws_lambda",
   KinesisEventSourceProps: "aws_lambda",
   ICommandHooks: "aws_lambda_nodejs",
@@ -92,6 +96,7 @@ const CDK_DOCS_MAP = {
   IGraphqlApi: "aws_appsync",
   ResolverProps: "aws_appsync",
   AwsIamConfig: "aws_appsync",
+  IDomain: "aws_opensearchservice",
 };
 
 const app = new Application();
@@ -354,14 +359,10 @@ function renderType(file, files, prefix, parameter) {
     );
   }
   if (parameter.type === "union") {
-    return (
-      "<span class='mono'>" +
-      parameter.types
-        .map((t) => renderType(file, files, prefix, t))
-        .filter((x) => x)
-        .join(" | ") +
-      "</span>"
-    );
+    return parameter.types
+      .map((t) => renderType(file, files, prefix, t))
+      .filter((x) => x)
+      .join("<span class='mono'> | </span>");
   }
   if (parameter.type === "reference") {
     if (parameter.package === "typescript")

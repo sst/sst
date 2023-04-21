@@ -41,7 +41,7 @@ new StaticSite(stack, "Site", {
 ```
 ### customDomain?
 
-_Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[StaticSiteDomainProps](#staticsitedomainprops)</span></span>
+_Type_ : <span class="mono">string</span><span class='mono'> | </span><span class="mono">[StaticSiteDomainProps](#staticsitedomainprops)</span>
 
 The customDomain for this website. SST supports domains that are hosted either on [Route 53](https://aws.amazon.com/route53/) or externally.
 
@@ -93,7 +93,7 @@ new StaticSite(stack, "frontend", {
 ```
 ### errorPage?
 
-_Type_ : <span class='mono'><span class="mono">"redirect_to_index_page"</span> | <span class="mono">Omit&lt;<span class="mono">string</span>, <span class="mono">"redirect_to_index_page"</span>&gt;</span></span>
+_Type_ : <span class="mono">"redirect_to_index_page"</span><span class='mono'> | </span><span class="mono">Omit&lt;<span class="mono">string</span>, <span class="mono">"redirect_to_index_page"</span>&gt;</span>
 
 The error page behavior for this website. Takes either an HTML page.
 
@@ -233,9 +233,9 @@ new StaticSite(stack, "frontend", {
 
 ### cdk.bucket?
 
-_Type_ : <span class='mono'><span class="mono">[IBucket](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.IBucket.html)</span> | <span class="mono">[BucketProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.BucketProps.html)</span></span>
+_Type_ : <span class="mono">[IBucket](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.IBucket.html)</span><span class='mono'> | </span><span class="mono">[BucketProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.BucketProps.html)</span>
 
-Allows you to override default settings this construct uses internally to ceate the bucket
+Allows you to override default settings this construct uses internally to create the bucket
 ```js
 new StaticSite(stack, "Site", {
   path: "path/to/src",
@@ -273,7 +273,7 @@ Allows you to override default id for this construct.
 An instance of `StaticSite` has the following properties.
 ### customDomainUrl
 
-_Type_ : <span class='mono'><span class="mono">undefined</span> | <span class="mono">string</span></span>
+_Type_ : <span class="mono">undefined</span><span class='mono'> | </span><span class="mono">string</span>
 
 If the custom domain is enabled, this is the URL of the website with the custom domain.
 ### id
@@ -282,17 +282,19 @@ _Type_ : <span class="mono">string</span>
 
 ### url
 
-_Type_ : <span class='mono'><span class="mono">undefined</span> | <span class="mono">string</span></span>
+_Type_ : <span class="mono">undefined</span><span class='mono'> | </span><span class="mono">string</span>
 
 The CloudFront URL of the website.
+### cdk
 
+_Type_ : <span class="mono">undefined</span><span class='mono'> | </span>
 ### cdk.bucket
 
 _Type_ : <span class="mono">[Bucket](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.Bucket.html)</span>
 
 ### cdk.certificate
 
-_Type_ : <span class='mono'><span class="mono">undefined</span> | <span class="mono">[ICertificate](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_certificatemanager.ICertificate.html)</span></span>
+_Type_ : <span class="mono">undefined</span><span class='mono'> | </span><span class="mono">[ICertificate](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_certificatemanager.ICertificate.html)</span>
 
 ### cdk.distribution
 
@@ -300,7 +302,7 @@ _Type_ : <span class="mono">[Distribution](https://docs.aws.amazon.com/cdk/api/v
 
 ### cdk.hostedZone
 
-_Type_ : <span class='mono'><span class="mono">undefined</span> | <span class="mono">[IHostedZone](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_route53.IHostedZone.html)</span></span>
+_Type_ : <span class="mono">undefined</span><span class='mono'> | </span><span class="mono">[IHostedZone](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_route53.IHostedZone.html)</span>
 
 
 The internally created CDK resources.
@@ -367,11 +369,11 @@ _Type_ : <span class="mono">string</span>
 
 ### exclude
 
-_Type_ : <span class='mono'><span class="mono">string</span> | <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span></span>
+_Type_ : <span class="mono">string</span><span class='mono'> | </span><span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
 
 ### include
 
-_Type_ : <span class='mono'><span class="mono">string</span> | <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span></span>
+_Type_ : <span class="mono">string</span><span class='mono'> | </span><span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
 
 ## StaticSiteReplaceProps
 ### files

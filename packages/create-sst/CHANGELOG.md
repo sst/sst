@@ -1,5 +1,183 @@
 # create-sst
 
+## 2.5.7
+
+## 2.5.6
+
+## 2.5.5
+
+## 2.5.4
+
+## 2.5.3
+
+## 2.5.2
+
+## 2.5.1
+
+### Patch Changes
+
+- [`ce1305f3e`](https://github.com/serverless-stack/sst/commit/ce1305f3e8b645133bcc07f620c5e91a9271c280) Thanks [@fwang](https://github.com/fwang)! - Update CDK version in examples
+
+## 2.5.0
+
+## 2.4.3
+
+## 2.4.2
+
+## 2.4.1
+
+## 2.4.0
+
+## 2.3.7
+
+## 2.3.6
+
+## 2.3.5
+
+### Patch Changes
+
+- [`c0057dd1f`](https://github.com/serverless-stack/sst/commit/c0057dd1f453431cad540871e9915ccdc3d2f300) Thanks [@thdxr](https://github.com/thdxr)! - Improve dropin mode templates and copy
+
+## 2.3.4
+
+## 2.3.3
+
+## 2.3.2
+
+## 2.3.1
+
+## 2.3.0
+
+## 2.2.8
+
+## 2.2.7
+
+## 2.2.6
+
+### Patch Changes
+
+- [`b68f1bb8c`](https://github.com/serverless-stack/sst/commit/b68f1bb8c0ceec8ed9b9e257d2c86b3ff3bfd417) Thanks [@thdxr](https://github.com/thdxr)! - Updated graphql rds template for sdkv3
+
+## 2.2.5
+
+## 2.2.4
+
+## 2.2.3
+
+## 2.2.2
+
+## 2.2.1
+
+## 2.2.0
+
+## 2.1.35
+
+## 2.1.34
+
+## 2.1.33
+
+## 2.1.32
+
+## 2.1.31
+
+## 2.1.30
+
+## 2.1.29
+
+## 2.1.28
+
+## 2.1.27
+
+## 2.1.26
+
+## 2.1.25
+
+## 2.1.24
+
+## 2.1.23
+
+## 2.1.22
+
+## 2.1.21
+
+## 2.1.20
+
+## 2.1.19
+
+## 2.1.18
+
+### Patch Changes
+
+- [`3db05a0e9`](https://github.com/serverless-stack/sst/commit/3db05a0e9b7a116b1285d10cc142bea496a47fa5) Thanks [@thdxr](https://github.com/thdxr)! - create-sst: ensure root tsconfig does not typecheck packages
+
+## 2.1.17
+
+## 2.1.16
+
+### Patch Changes
+
+- [`a9bd02b15`](https://github.com/serverless-stack/sst/commit/a9bd02b1513b7b8a42579fcff606a40e8a582151) Thanks [@thdxr](https://github.com/thdxr)! - Fix go builds failing without printing error
+
+## 2.1.15
+
+### Patch Changes
+
+- [`186b545b3`](https://github.com/serverless-stack/sst/commit/186b545b3795f6a285534ff05d196ab8a04e3daa) Thanks [@fwang](https://github.com/fwang)! - create-sst: fix template formatting issue
+
+## 2.1.14
+
+## 2.1.13
+
+## 2.1.12
+
+## 2.1.11
+
+## 2.1.10
+
+## 2.1.9
+
+## 2.1.8
+
+## 2.1.7
+
+## 2.1.6
+
+## 2.1.5
+
+## 2.1.4
+
+## 2.1.3
+
+### Patch Changes
+
+- [`9b34bff19`](https://github.com/serverless-stack/sst/commit/9b34bff192457418590147cf330e37866c852455) Thanks [@fwang](https://github.com/fwang)! - Examples: update to SST v2
+
+## 2.1.2
+
+## 2.1.1
+
+### Patch Changes
+
+- [`136304a55`](https://github.com/serverless-stack/sst/commit/136304a55dc5061570e2b24282c1874d6b0b7af2) Thanks [@fwang](https://github.com/fwang)! - Examples: add ExampleStack in base example template
+
+## 2.1.0
+
+## 2.0.39
+
+### Patch Changes
+
+- [`c6f8f3cbc`](https://github.com/serverless-stack/sst/commit/c6f8f3cbc8e64f0355dd405761ba315884064fb8) Thanks [@thdxr](https://github.com/thdxr)! - Fix migration generator in graphql stack
+
+## 2.0.38
+
+## 2.0.37
+
+### Patch Changes
+
+- [`4dd96ede4`](https://github.com/serverless-stack/sst/commit/4dd96ede4c01bd0fbc64a0487fedb4e02a118cb8) Thanks [@thdxr](https://github.com/thdxr)! - Pin genql at 2.x
+
+## 2.0.36
+
 ## 2.0.35
 
 ## 2.0.34

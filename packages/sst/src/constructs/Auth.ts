@@ -6,7 +6,6 @@ import { FunctionDefinition } from "./Function.js";
 import { SSTConstruct } from "./Construct.js";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
-import { Secret } from "./Secret.js";
 import {
   FunctionBindingProps,
   getEnvironmentKey,
@@ -73,7 +72,7 @@ export interface ApiAttachmentProps {
  * SST Auth is a lightweight authentication solution for your applications. With a simple set of configuration you can deploy a function attached to your API that can handle various authentication flows.  *
  * @example
  * ```
- * import { Auth } from "@serverless-stack/resources"
+ * import { Auth } from "sst/constructs"
  *
  * new Auth(stack, "auth", {
  *   authenticator: "functions/authenticator.handler"

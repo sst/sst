@@ -3,20 +3,18 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "dev": "sst env vite",
+    "dev": "sst bind vite",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "react-router-dom": "^6.8.1",
-    "urql": "^3.0.3",
+    "react-router-dom": "^6.10.0",
+    "urql": "^4.0.0",
     "graphql": "^16.6.0",
     "@create-sst-rds/graphql": "0.0.0",
-    "@vanilla-extract/css": "^1.9.5",
-    "@vanilla-extract/vite-plugin": "^3.8.0",
-    "react-icons": "^4.7.1"
+    "react-icons": "^4.8.0"
   },
   "devDependencies": {
     "@types/react": "^18.0.0",
@@ -24,6 +22,6 @@
     "@vitejs/plugin-react": "^1.3.0",
     "typescript": "^4.6.3",
     "vite": "^2.9.15",
-    "sst": "^2.0.18"
+    "sst": "^2.5.6"
   }
 }

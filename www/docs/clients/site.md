@@ -38,18 +38,6 @@ console.log(StaticSite.myWeb.url);
 
 ---
 
-#### url
-
-_Type_ : <span class="mono">string</span>
-
-The URL of the site. If custom domain is enabled, this is the custom domain URL of the site.
-
-```ts
-console.log(ReactStaticSite.myWeb.url);
-```
-
----
-
 ### NextjsSite
 
 This module helps with accessing [`NextjsSite`](../constructs/NextjsSite.md) constructs.
