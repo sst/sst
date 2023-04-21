@@ -2,4 +2,4 @@
 "sst": patch
 ---
 
-cli(secrets): Add load command
+sst secrets: load secrets from .env files
