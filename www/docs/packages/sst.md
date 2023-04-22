@@ -374,6 +374,16 @@ npx sst secrets set <name> <value> [options]
 
 ---
 
+#### `sst secrets load`
+
+Loads secrets from an .env file.
+
+```bash
+npx sst secrets load <filename>
+```
+
+---
+
 #### `sst secrets list`
 
 Decrypts and prints out all the secrets with the given `format`; `table` or `env`. Where `env` is the dotenv format. Defaults to `table`.
