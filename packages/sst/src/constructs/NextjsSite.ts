@@ -76,7 +76,7 @@ export class NextjsSite extends SsrSite {
 
   constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
     super(scope, id, {
-      buildCommand: "npx --yes open-next@^0.9.0 build",
+      buildCommand: "npx --yes open-next@~1.1.0 build",
       ...props,
     });
   }
@@ -298,6 +298,7 @@ export class NextjsSite extends SsrSite {
   ): BehaviorOptions {
     return {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      functionAssociations: this.buildBehaviorFunctionAssociations(),
       origin: serverOrigin,
       allowedMethods: AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
@@ -315,6 +316,7 @@ export class NextjsSite extends SsrSite {
   ): BehaviorOptions {
     return {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      functionAssociations: this.buildBehaviorFunctionAssociations(),
       origin: s3Origin,
       allowedMethods: AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
@@ -377,6 +379,7 @@ export class NextjsSite extends SsrSite {
     return {
       origin: fallbackOriginGroup,
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      functionAssociations: this.buildBehaviorFunctionAssociations(),
       compress: true,
       cachePolicy,
       originRequestPolicy,
@@ -395,6 +398,7 @@ export class NextjsSite extends SsrSite {
 
     return {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      functionAssociations: this.buildBehaviorFunctionAssociations(),
       origin: s3Origin,
       allowedMethods: AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
