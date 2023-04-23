@@ -172,7 +172,7 @@ export namespace Config {
     );
   }
 
-  export async function restart(key: string) {
+  export async function restart(keys: string[]) {
     const metadata = await Stacks.metadata();
     const siteData = Object.values(metadata)
       .flat()
@@ -183,7 +183,7 @@ export namespace Config {
           c.type === "RemixSite" ||
           c.type === "SolidStartSite"
       )
-      .filter((c) => c.data.secrets.includes(key));
+      .filter((c) => keys.some((key) => c.data.secrets.includes(key)));
     const siteDataPlaceholder = siteData.filter(
       (c) => c.data.mode === "placeholder"
     );
@@ -199,7 +199,7 @@ export namespace Config {
       .filter((c): c is FunctionMetadata => c.type === "Function")
       // filter out SSR functions for sites
       .filter((c) => !regionalSiteArns.includes(c.data.arn))
-      .filter((c) => c.data.secrets.includes(key));
+      .filter((c) => keys.some((key) => c.data.secrets.includes(key)));
 
     // Restart sites
     const restartedSites = (

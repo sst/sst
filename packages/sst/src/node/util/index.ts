@@ -26,7 +26,7 @@ interface Variable {
 }
 
 export function createProxy<T extends object>(constructName: string) {
-  return new Proxy<T>({} as any, {
+  const result = new Proxy<T>({} as any, {
     get(target, prop) {
       if (typeof prop === "string") {
         // normalize prop to convert kebab cases like `my-table` to `my_table`
@@ -43,9 +43,11 @@ export function createProxy<T extends object>(constructName: string) {
       return Reflect.get(target, prop);
     },
   });
+  Object.assign(result, getVariables2(constructName));
+  return result;
 }
 
-export function getVariables(constructName: string) {
+export function getVariables2(constructName: string) {
   return allVariables[constructName] || {};
 }
 

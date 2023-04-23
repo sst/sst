@@ -1,5 +1,15 @@
 # solid-start-sst
 
+## 2.7.0
+
+### Patch Changes
+
+- [#2753](https://github.com/serverless-stack/sst/pull/2753) [`823647bd7`](https://github.com/serverless-stack/sst/commit/823647bd7348aa94b6b23a68cedc94e756982b7e) Thanks [@alistairstead](https://github.com/alistairstead)! - Add types for solid-start-sst
+
+## 2.6.0
+
+## 2.5.8
+
 ## 2.5.7
 
 ## 2.5.6

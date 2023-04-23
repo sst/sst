@@ -1,6 +1,5 @@
-import { createProxy, getVariables } from "../util/index.js";
+import { createProxy } from "../util/index.js";
 
 export interface RDSResources {}
 
-export const RDS = createProxy<RDSResources>("RDS");
-Object.assign(RDS, getVariables("RDS"));
+export const RDS = /* @__PURE__ */ createProxy<RDSResources>("RDS");

@@ -39,7 +39,7 @@ async function down(db) {
 module.exports = { up, down };
 ```
 
-[Read more about writing migrations](https://koskimas.github.io/kysely/#migrations) over on the Kysely docs.
+[Read more about writing migrations](https://kysely-org.github.io/kysely/#migrations) over on the Kysely docs.
 
 ### Migrations with PostgreSQL
 

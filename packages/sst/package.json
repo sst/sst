@@ -3,8 +3,9 @@
     "directory": "dist",
     "access": "public"
   },
+  "sideEffects": false,
   "name": "sst",
-  "version": "2.5.7",
+  "version": "2.7.0",
   "bin": {
     "sst": "cli/sst.js"
   },
@@ -18,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/serverless-stack/sst.git",
+    "url": "git+https://github.com/estyrke/serverless-stack.git",
     "directory": "packages/cli"
   },
   "exports": {
@@ -76,7 +77,7 @@
     "get-port": "^6.1.2",
     "glob": "^8.0.3",
     "graphql": "*",
-    "graphql-helix": "^1.12.0",
+    "graphql-yoga": "^3.9.0",
     "immer": "9",
     "ink": "^4.0.0",
     "ink-spinner": "^5.0.0",

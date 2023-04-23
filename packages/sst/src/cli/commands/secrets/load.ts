@@ -1,46 +1,42 @@
 import type { Program } from "../../program.js";
 
-export const set = (program: Program) =>
+export const load = (program: Program) =>
   program.command(
-    "set <name> <value>",
-    "Set the value of a secret",
+    "load <filename>",
+    "Loads secrets from an .env file",
     (yargs) =>
-      yargs
-        .positional("name", {
-          type: "string",
-          describe: "Name of the secret",
-          demandOption: true,
-        })
-        .positional("value", {
-          type: "string",
-          describe: "Value of the secret",
-          demandOption: true,
-        })
-        .option("fallback", {
-          type: "boolean",
-          describe: "Set the fallback value",
-        }),
+      yargs.positional("filename", {
+        type: "string",
+        demandOption: true,
+      }),
     async (args) => {
       const { Config } = await import("../../../config.js");
       const { Colors } = await import("../../colors.js");
       const { blue } = await import("colorette");
       const { createSpinner } = await import("../../spinner.js");
+      const { parse } = await import("dotenv");
+      const fs = await import("fs/promises");
 
-      // Set secret value
-      const setting = createSpinner(` Setting "${args.name}"`).start();
-      await Config.setSecret({
-        key: args.name,
-        value: args.value,
-        fallback: args.fallback === true,
-      });
+      // Parse .env file
+      const fileContent = await fs.readFile(args.filename, "utf-8");
+      const envVars = parse(fileContent);
+
+      // Set secrets
+      const setting = createSpinner(
+        ` Setting secrets from "${args.filename}"`
+      ).start();
+      for (const [key, value] of Object.entries(envVars)) {
+        await Config.setSecret({ key, value });
+      }
       setting.succeed();
 
       // Restart functions & sites
+      const envNames = Object.keys(envVars);
       const restarting = createSpinner(
-        ` Reloading all resources using ${blue(args.name)}...`
+        ` Restarting all resources using ${blue(envNames.join(", "))}...`
       ).start();
       const { edgeSites, sites, placeholderSites, functions } =
-        await Config.restart([args.name]);
+        await Config.restart(envNames);
       restarting.stop().clear();
 
       const siteCount = sites.length + placeholderSites.length;

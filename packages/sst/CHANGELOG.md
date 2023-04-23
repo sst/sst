@@ -1,5 +1,31 @@
 # @serverless-stack/cli2
 
+## 2.7.0
+
+### Minor Changes
+
+- [#2792](https://github.com/serverless-stack/sst/pull/2792) [`4983573a3`](https://github.com/serverless-stack/sst/commit/4983573a35f47503d83ed1d7aa108d65ce6ccd9e) Thanks [@estyrke](https://github.com/estyrke)! - Small fixes to future/auth
+
+## 2.6.0
+
+### Minor Changes
+
+- [`19fa6919c`](https://github.com/serverless-stack/sst/commit/19fa6919cdca5148c70d8aa3562675f1ae0e7830) Thanks [@thdxr](https://github.com/thdxr)! - Remove side-effects from node package for more granular bundling
+
+### Patch Changes
+
+- [#2784](https://github.com/serverless-stack/sst/pull/2784) [`b08bd7ba9`](https://github.com/serverless-stack/sst/commit/b08bd7ba9acf2be25d248eb951dad46adeb86df0) Thanks [@michaelgmcd](https://github.com/michaelgmcd)! - GraphQLHandler: replace graphql-helix with graphql-yoga
+
+## 2.5.8
+
+### Patch Changes
+
+- [`d4671b05c`](https://github.com/serverless-stack/sst/commit/d4671b05caf089a8a48fc13bdf9e096c763a798a) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: support OpenNext 1.1.0
+
+- [#2544](https://github.com/serverless-stack/sst/pull/2544) [`3b5263753`](https://github.com/serverless-stack/sst/commit/3b52637532ed610d41cc80a83cbe8e250b07614c) Thanks [@andynaguyen](https://github.com/andynaguyen)! - sst secrets: load secrets from .env files
+
+- [`d4671b05c`](https://github.com/serverless-stack/sst/commit/d4671b05caf089a8a48fc13bdf9e096c763a798a) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: set "x-forwarded-host" header in CF function
+
 ## 2.5.7
 
 ### Patch Changes

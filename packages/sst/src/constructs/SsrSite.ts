@@ -288,6 +288,7 @@ export class SsrSite extends Construct implements SSTConstruct {
   protected serverLambdaForRegional?: CdkFunction;
   private serverLambdaForDev?: Function;
   private bucket: Bucket;
+  private cfFunction: CfFunction;
   private distribution: Distribution;
   private hostedZone?: IHostedZone;
   private certificate?: ICertificate;
@@ -317,7 +318,7 @@ export class SsrSite extends Construct implements SSTConstruct {
 
     if (this.doNotDeploy) {
       // @ts-ignore
-      this.bucket = this.distribution = null;
+      this.cfFunction = this.bucket = this.distribution = null;
       this.serverLambdaForDev = this.createFunctionForDev();
       return;
     }
@@ -355,6 +356,7 @@ export class SsrSite extends Construct implements SSTConstruct {
 
     // Create CloudFront
     this.validateCloudFrontDistributionSettings();
+    this.cfFunction = this.createCloudFrontFunction();
     this.distribution = this.props.edge
       ? this.createCloudFrontDistributionForEdge()
       : this.createCloudFrontDistributionForRegional();
@@ -798,6 +800,17 @@ export class SsrSite extends Construct implements SSTConstruct {
     }
   }
 
+  private createCloudFrontFunction() {
+    return new CfFunction(this, "CloudFrontFunction", {
+      code: CfFunctionCode.fromInline(`
+function handler(event) {
+  var request = event.request;
+  request.headers["x-forwarded-host"] = request.headers.host;
+  return request;
+}`),
+    });
+  }
+
   protected createCloudFrontDistributionForRegional(): Distribution {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
@@ -906,18 +919,11 @@ export class SsrSite extends Construct implements SSTConstruct {
     };
   }
 
-  private buildBehaviorFunctionAssociations() {
+  protected buildBehaviorFunctionAssociations() {
     return [
       {
         eventType: CfFunctionEventType.VIEWER_REQUEST,
-        function: new CfFunction(this, "CloudFrontFunction", {
-          code: CfFunctionCode.fromInline(`
-function handler(event) {
-  var request = event.request;
-  request.headers["x-forwarded-host"] = request.headers.host;
-  return request;
-}`),
-        }),
+        function: this.cfFunction,
       },
     ];
   }

@@ -15,10 +15,12 @@ export function LinkAdapter(config: {
     link: string,
     claims: Record<string, any>
   ) => Promise<APIGatewayProxyStructuredResultV2>;
-  onError: () => Promise<APIGatewayProxyStructuredResultV2>;
+  onError: (error: any) => Promise<APIGatewayProxyStructuredResultV2>;
 }) {
   // @ts-expect-error
   const key = Config[process.env.AUTH_ID + "PrivateKey"];
+  // @ts-expect-error
+  const publicKey = Config[process.env.AUTH_ID + "PublicKey"];
   const signer = createSigner({
     expiresIn: 1000 * 60 * 10,
     key,
@@ -45,17 +47,17 @@ export function LinkAdapter(config: {
       try {
         const verifier = createVerifier({
           algorithms: ["RS512"],
-          key,
+          key: publicKey,
         });
         const jwt = verifier(token);
         return {
           type: "success",
           properties: jwt,
         };
-      } catch {
+      } catch (ex) {
         return {
           type: "step",
-          properties: await config.onError(),
+          properties: await config.onError(ex),
         };
       }
     }
