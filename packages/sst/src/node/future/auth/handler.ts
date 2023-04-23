@@ -222,12 +222,12 @@ export function AuthHandler<
       } as Record<string, string>;
 
       if (response_type === "token") {
+        const location = new URL(redirect_uri);
+        location.hash = `access_token=${token}&state=${state || ""}`;
         return {
           statusCode: 302,
           headers: {
-            Location: `${redirect_uri}#access_token=${token}&state=${
-              state || ""
-            }`,
+            Location: location.href,
           },
         };
       }
@@ -245,10 +245,13 @@ export function AuthHandler<
           redirect_uri,
           token: token,
         });
+        const location = new URL(redirect_uri);
+        location.searchParams.set("code", code);
+        location.searchParams.set("state", state || "");
         return {
           statusCode: 302,
           headers: {
-            Location: `${redirect_uri}?code=${code}&state=${state || ""}`,
+            Location: location.href,
           },
         };
       }
