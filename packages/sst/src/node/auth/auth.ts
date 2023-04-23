@@ -1,4 +1,4 @@
-import { getVariables } from "../util/index.js";
+import { getVariables2 } from "../util/index.js";
 import { Handler } from "../../context/handler.js";
 import { useDomainName, usePath } from "../api/index.js";
 import { Adapter } from "./adapter/adapter.js";
@@ -7,7 +7,7 @@ const className = "Auth";
 
 // Each function can only be attached to one Auth construct, so we can
 // assume there is only one entry in authData.
-const authData = getVariables(className);
+const authData = getVariables2(className);
 const authValues = Object.values(authData);
 let prefix: string;
 let publicKey: string;

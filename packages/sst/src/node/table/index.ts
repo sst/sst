@@ -1,6 +1,7 @@
-import { createProxy, getVariables } from "../util/index.js";
+import { createProxy } from "../util/index.js";
 
 export interface TableResources {}
 
-export const Table = createProxy<TableResources>("Table");
-Object.assign(Table, getVariables("Table"));
+export const Table =
+  /* @__PURE__ */
+  createProxy<TableResources>("Table");

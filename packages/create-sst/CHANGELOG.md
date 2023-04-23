@@ -1,5 +1,13 @@
 # create-sst
 
+## 2.6.0
+
+### Patch Changes
+
+- [`302c7e205`](https://github.com/serverless-stack/sst/commit/302c7e205bd82fe26c1fd6940d6a056a3cb79032) Thanks [@thdxr](https://github.com/thdxr)! - Fix issue with python template
+
+## 2.5.8
+
 ## 2.5.7
 
 ## 2.5.6
