@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.1.0
+
+### Minor Changes
+
+- [#2784](https://github.com/serverless-stack/sst/pull/2784) [`b08bd7ba9`](https://github.com/serverless-stack/sst/commit/b08bd7ba9acf2be25d248eb951dad46adeb86df0) Thanks [@michaelgmcd](https://github.com/michaelgmcd)! - GraphQLHandler: replace graphql-helix with graphql-yoga
+
 ## 2.0.5
 
 ### Patch Changes
