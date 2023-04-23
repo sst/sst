@@ -445,6 +445,23 @@ GithubAdapter({
 
 ---
 
+### Slack
+
+Use `OauthAdapter` with Slack discovery endpoint.
+
+```js
+OauthAdapter({
+  issuer: await Issuer.discover(
+    'https://slack.com/.well-known/openid-configuration'
+  ),
+  clientID: '<client-id>',
+  clientSecret: '<client-secret>',
+  scope: 'openid,profile,email',
+  onSuccess: async (tokenset) => {},
+})
+```
+
+---
 ### Twitch
 
 Extends the `OidcAdapter` and is preconfigured with Twitch OIDC urls.
