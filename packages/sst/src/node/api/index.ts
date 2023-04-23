@@ -1,4 +1,4 @@
-import { createProxy, getVariables } from "../util/index.js";
+import { createProxy } from "../util/index.js";
 import { Context } from "../../context/context.js";
 import { useEvent, Handler } from "../../context/handler.js";
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
@@ -8,15 +8,13 @@ export interface AppSyncApiResources {}
 export interface ApiGatewayV1ApiResources {}
 export interface WebSocketApiResources {}
 
-export const Api = createProxy<ApiResources>("Api");
-export const AppSyncApi = createProxy<AppSyncApiResources>("AppSyncApi");
+export const Api = /* @__PURE__ */ createProxy<ApiResources>("Api");
+export const AppSyncApi =
+  /* @__PURE__ */ createProxy<AppSyncApiResources>("AppSyncApi");
 export const ApiGatewayV1Api =
-  createProxy<ApiGatewayV1ApiResources>("ApiGatewayV1Api");
-export const WebSocketApi = createProxy<WebSocketApiResources>("WebSocketApi");
-Object.assign(Api, getVariables("Api"));
-Object.assign(AppSyncApi, getVariables("AppSyncApi"));
-Object.assign(ApiGatewayV1Api, getVariables("ApiGatewayV1Api"));
-Object.assign(WebSocketApi, getVariables("WebSocketApi"));
+  /* @__PURE__ */ createProxy<ApiGatewayV1ApiResources>("ApiGatewayV1Api");
+export const WebSocketApi =
+  /* @__PURE__ */ createProxy<WebSocketApiResources>("WebSocketApi");
 
 /**
  * Create a new api handler that can be used to create an authenticated session.

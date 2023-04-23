@@ -1,4 +1,4 @@
-import { createProxy, getVariables } from "../util/index.js";
+import { createProxy, getVariables2 } from "../util/index.js";
 
 export interface ParameterResources {}
 export interface SecretResources {}
@@ -11,12 +11,12 @@ export type SecretTypes = {
   [T in keyof SecretResources]: string;
 };
 
-export const Config = createProxy<ConfigTypes & ParameterTypes & SecretTypes>(
-  "Config"
-);
+export const Config = /* @__PURE__ */ createProxy<
+  ConfigTypes & ParameterTypes & SecretTypes
+>("Config");
 const metadata = parseMetadataEnvironment();
-const parameters = flattenValues(getVariables("Parameter"));
-const secrets = flattenValues(getVariables("Secret"));
+const parameters = flattenValues(getVariables2("Parameter"));
+const secrets = flattenValues(getVariables2("Secret"));
 Object.assign(Config, metadata, parameters, secrets);
 
 ///////////////

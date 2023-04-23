@@ -3,6 +3,7 @@
     "directory": "dist",
     "access": "public"
   },
+  "sideEffects": false,
   "name": "sst",
   "version": "2.5.8",
   "bin": {

@@ -1,4 +1,4 @@
-import { createProxy, getVariables } from "../util/index.js";
+import { createProxy, getVariables2 } from "../util/index.js";
 import { InvokeCommand, LambdaClient } from "@aws-sdk/client-lambda";
 const lambda = new LambdaClient({});
 
@@ -17,12 +17,15 @@ export type JobType = {
   [T in keyof JobResources]: ReturnType<typeof JobControl<T>>;
 };
 
-export const Job = createProxy<JobType>("Job");
-const jobData = getVariables("Job");
-Object.keys(jobData).forEach((name) => {
-  // @ts-ignore
-  Job[name] = JobControl(name);
-});
+export const Job = /* @__PURE__ */ (() => {
+  const result = createProxy<JobType>("Job");
+  const vars = getVariables2("Job");
+  Object.keys(vars).forEach((name) => {
+    // @ts-ignore
+    result[name] = JobControl(name);
+  });
+  return result;
+})();
 
 function JobControl<Name extends keyof JobResources>(name: Name) {
   return {
