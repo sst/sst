@@ -81,7 +81,7 @@ This allows Next.js app to access the table.
 
 We'll start by reading from the table.
 
-```ts title="functions/web/pages/index.ts"
+```ts title="functions/web/pages/index.ts" {5}
 export async function getServerSideProps() {
   const db = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 

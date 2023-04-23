@@ -79,7 +79,7 @@ This allows us to access the queue in our Next.js app.
 
 Now in our Next.js API we'll send a message to the queue.
 
-```ts title="packages/web/pages/api/hello.ts" {7-11}
+```ts title="packages/web/pages/api/hello.ts" {8}
 const sqs = new SQSClient({});
 
 export default async function handler(

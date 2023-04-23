@@ -33,14 +33,14 @@ npx create-sst@latest --template standard/nextjs
 
 ---
 
-## Add a REST API
+## Add an API
 
 To add a REST API, add the following to your stacks.
 
 ```ts title="stacks/Default.ts"
 const api = new Api(stack, "api", {
   routes: {
-    "GET /": "packages/functions/src/hello.handler",
+    "GET /": "packages/functions/src/time.handler",
   },
 });
 ```
@@ -65,24 +65,56 @@ And make sure to import the [`Api`](constructs/Api.md) construct.
 
 ---
 
+## Bind the API
+
+After adding the API, bind your Next.js app to it.
+
+```diff title="stacks/Default.ts"
+const site = new NextjsSite(stack, "site", {
+  path: "packages/web",
++ bind: [api],
+});
+```
+
+This allows us to access the API in our Next.js app.
+
+---
+
 ## Add the handler
 
 Let's add the function that'll handle the new endpoint.
 
-Create a file in `packages/functions/src/hello.ts`.
-
-```ts title="packages/functions/src/hello.ts"
+```ts title="packages/functions/src/time.ts"
 import { ApiHandler } from "sst/node/api";
 
-export const handler = ApiHandler(async (_evt) => {
+export const handler = ApiHandler(async (evt) => {
   return {
     statusCode: 200,
-    body: "Hello World!",
+    body: evt.requestContext.time,
   };
 });
 ```
 
-Now once your app is updated it'll print out the new API URL in the terminal. And if you go to that URL in your browser, you'll notice your _Hello World!_ message.
+Now once your app is updated it'll print out the new API URL in the terminal. And if you go to that URL in your browser, you'll notice it prints out the time!
+
+---
+
+## Call the API
+
+Let's make a request to the API in our Next.js app.
+
+```ts title="functions/web/pages/index.ts" {4}
+import { Api } from "sst/node/api";
+
+export async function getServerSideProps() {
+  const results = await fetch(Api.api.url);
+  console.log(await results.text());
+
+  return { props: { loaded: true } };
+}
+```
+
+Now if you refresh your Next.js app locally, it'll print the time in the Next.js terminal!
 
 :::tip Tutorial
 [Check out a tutorial](https://sst.dev/examples/how-to-create-a-crud-api-with-serverless-using-dynamodb.html) on how to build a CRUD API with SST.

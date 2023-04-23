@@ -76,7 +76,7 @@ This allows Next.js app to access our S3 bucket.
 
 When a user uploads a file, we want to generate a presigned URL that allows them to upload the file directly to S3. We will do this using the AWS SDK.
 
-```ts title="functions/web/pages/index.ts"
+```ts title="functions/web/pages/index.ts" {5}
 export async function getServerSideProps() {
   const command = new PutObjectCommand({
     ACL: "public-read",
