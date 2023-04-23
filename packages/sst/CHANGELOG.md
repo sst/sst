@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.7.0
+
+### Minor Changes
+
+- [#2792](https://github.com/serverless-stack/sst/pull/2792) [`4983573a3`](https://github.com/serverless-stack/sst/commit/4983573a35f47503d83ed1d7aa108d65ce6ccd9e) Thanks [@estyrke](https://github.com/estyrke)! - Small fixes to future/auth
+
 ## 2.6.0
 
 ### Minor Changes
