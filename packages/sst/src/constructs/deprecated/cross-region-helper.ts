@@ -20,7 +20,7 @@ export function getOrCreateBucket(scope: Construct): cdk.CustomResource {
   // Create provider
   const provider = new lambda.Function(stack, providerId, {
     code: lambda.Code.fromAsset(
-      path.join(__dirname, "../../../support/edge-function")
+      path.join(__dirname, "../../support/edge-function")
     ),
     handler: "s3-bucket.handler",
     runtime: lambda.Runtime.NODEJS_16_X,
