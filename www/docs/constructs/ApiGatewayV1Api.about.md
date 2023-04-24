@@ -521,6 +521,47 @@ new ApiGatewayV1Api(stack, "Api", {
 });
 ```
 
+#### Configuring Private endpoint
+
+Configure the internally created CDK `RestApi` instance. By doing so, API Gateway will generate a new Route53 Alias DNS record which you can use to invoke your private APIs.
+
+```js {4-10}
+import { EndpointType } from "aws-cdk-lib/aws-apigateway";
+import { InterfaceVpcEndpoint } from "aws-cdk-lib/aws-ec2";
+
+const vpcEndpoint = new InterfaceVpcEndpoint(stack, "ApiVpcEndpoint", {
+  vpc,
+  service: {
+    name: `com.amazonaws.${app.region}.execute-api`,
+    port: 443
+  },
+  subnets: {
+    subnets: [subnet1, subnet2]
+  },
+  privateDnsEnabled: true,
+  securityGroups: [sg]
+});
+
+new ApiGatewayV1Api(stack, "Api", {
+  cdk: {
+    restApi: {
+      endpointConfiguration: {
+        types: [EndpointType.PRIVATE],
+        vpcEndpoints: [vpcEndpoint],
+      },
+    },
+  },
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+The private endpoint has the following format:
+```
+https://{rest-api-id}-{vpc-id}.execute-api.{region}.amazonaws.com/{stage}
+```
+
 #### Usage Plan & API Keys
 
 Usage plans allow configuring who can access the API, and setting throttling limits and quota limits.
