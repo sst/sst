@@ -1,11 +1,6 @@
 import { APIGatewayProxyEventV2, Context } from "aws-lambda";
 import { createYoga, YogaServerOptions } from "graphql-yoga";
 import { Handler, useEvent, useLambdaContext } from "../../context/handler.js";
-import {
-  GraphQLSchema,
-  specifiedRules,
-  NoSchemaIntrospectionCustomRule,
-} from "graphql";
 
 type ServerContext = {
   event: APIGatewayProxyEventV2;
