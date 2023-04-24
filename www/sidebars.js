@@ -61,7 +61,6 @@ module.exports = {
         "apis",
         "auth",
         "config",
-        "testing",
         "cron-jobs",
         "databases",
         "async-tasks",
@@ -71,6 +70,7 @@ module.exports = {
     },
     {
       Info: [
+        "testing",
         "live-lambda-development",
         "console",
         "known-issues",
