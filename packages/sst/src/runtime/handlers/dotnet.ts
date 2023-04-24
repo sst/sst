@@ -50,7 +50,7 @@ export const useDotnetHandler = Context.memo(async () => {
           ...input.environment,
           IS_LOCAL: "true",
           AWS_LAMBDA_RUNTIME_API: `localhost:${server.port}/${input.workerID}`,
-          AWS_LAMBDA_DOTNET_DEBUG_RUN_ONCE: "true",
+          AWS_LAMBDA_DOTNET_DEBUG_RUN_ONCE: isMinimalApi ? "false": "true",
         },
         cwd: input.out,
       };
