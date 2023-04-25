@@ -3,7 +3,7 @@ The `NextjsSite` construct is a higher level CDK construct that makes it easy to
 The `NextjsSite` construct provides a simple way to build and deploy the app to AWS:
 
 - The client assets are deployed to an S3 Bucket, and served out from a CloudFront CDN for fast content delivery.
-- The app server and API functions are deployed to Lambda. And the middleware functions are deployed to Lambda@Edge.
+- The app server and API functions are deployed to Lambda. You can deploy to Lambda@Edge instead if the `edge` flag is enabled. Read more about [Single region vs Edge](#single-region-vs-edge).
 - It enables you to [configure custom domains](#custom-domains) for the website URL.
 - It also enable you to [automatically set the environment variables](#environment-variables) for your Next.js app directly from the outputs in your SST app.
 - It provides a simple interface to [grant permissions](#using-aws-services) for your app to access AWS resources.
@@ -105,6 +105,27 @@ To work on your Next.js app locally with SST:
 
 :::note
 When running `sst dev`, SST does not deploy your Next.js app. It's meant to be run locally.
+:::
+
+## Single region vs edge
+
+There are two ways you can deploy the Next.js app to your AWS account.
+
+By default, the Next.js app server is deployed to a single region defined in your `sst.config.ts` or passed in via the `--region` flag. Alternatively, you can choose to deploy to the edge. When deployed to the edge, middleware, SSR functions, and API routes are running on edge location that is physically closer to the end user. In this case, the app server is deployed to AWS Lambda@Edge.
+
+You can enable edge like this:
+
+```ts
+const site = new NextjsSite(stack, "Site", {
+  path: "my-next-app/",
+  edge: true,
+});
+```
+
+Note that, in the case you have a centralized database, Edge locations are often far away from your database. If you are quering your database in your SSR functions and API routes, you might experience much longer latency when deployed to the edge.
+
+:::info
+We recommend you to deploy to a single region when unsure.
 :::
 
 ## Custom domains
@@ -425,6 +446,32 @@ new NextjsSite(stack, "Site", {
 ```
 
 ### Advanced examples
+
+#### Configuring VPC
+
+Note that VPC is only supported when deploying to a [single region](#single-region-vs-edge).
+
+```js
+import { Vpc, SubnetType } as ec2 from "aws-cdk-lib/aws-ec2";
+
+// Create a VPC
+const vpc = new Vpc(stack, "myVPC");
+
+// Alternatively use an existing VPC
+const vpc = Vpc.fromLookup(stack, "myVPC", { ... });
+
+new NextjsSite(stack, "Site", {
+  path: "my-next-app/",
+  cdk: {
+    server: {
+      vpc,
+      vpcSubnets: {
+        subnetType: SubnetType.PRIVATE_WITH_NAT,
+      }
+    }
+  }
+});
+```
 
 #### Using an existing S3 Bucket
 

@@ -466,6 +466,32 @@ new SolidStartSite(stack, "Site", {
 
 ### Advanced examples
 
+#### Configuring VPC
+
+Note that VPC is only supported when deploying to a [single region](#single-region-vs-edge).
+
+```js
+import { Vpc, SubnetType } as ec2 from "aws-cdk-lib/aws-ec2";
+
+// Create a VPC
+const vpc = new Vpc(stack, "myVPC");
+
+// Alternatively use an existing VPC
+const vpc = Vpc.fromLookup(stack, "myVPC", { ... });
+
+new SolidStartSite(stack, "Site", {
+  path: "my-solid-start-app/",
+  cdk: {
+    server: {
+      vpc,
+      vpcSubnets: {
+        subnetType: SubnetType.PRIVATE_WITH_NAT,
+      }
+    }
+  }
+});
+```
+
 #### Using an existing S3 Bucket
 
 ```js {5-7}
