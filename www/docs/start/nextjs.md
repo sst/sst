@@ -2,7 +2,7 @@
 id: nextjs
 sidebar_label: Next.js
 title: Use Next.js with SST
-description: "Create and deploy a Next.js app to AWS with SST."
+description: "Create and deploy a Next.js app to AWS with SST and OpenNext."
 ---
 
 import config from "../../config";
@@ -12,7 +12,7 @@ import MultiPackagerCode from "@site/src/components/MultiPackagerCode";
 
 <HeadlineText>
 
-Create and deploy a Next.js app to AWS with SST.
+Create and deploy a Next.js app to AWS with SST and [OpenNext](https://open-next.js.org).
 
 </HeadlineText>
 
@@ -284,6 +284,10 @@ pnpm sst deploy --stage prod
 
 </TabItem>
 </MultiPackagerCode>
+
+:::note
+The `sst deploy` command internally uses OpenNext to build your app.
+:::
 
 ![Next.js app deployed to AWS with SST](/img/start/nextjs-app-deployed-to-aws-with-sst.png)
 

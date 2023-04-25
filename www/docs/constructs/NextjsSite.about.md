@@ -1,68 +1,33 @@
-The `NextjsSite` construct is a higher level CDK construct that makes it easy to create a Next.js app. It uses the [OpenNext](https://github.com/serverless-stack/open-next) project to build your Next.js app, and transforms the build output to a format that can be deployed to AWS. The OpenNext project is maintained by the SST team🧡.
+The `NextjsSite` construct is a higher level CDK construct that lets you create Next.js apps on AWS. It uses [OpenNext](https://open-next.js.org) to build your Next.js app, and transforms the build output to a format that can be deployed to AWS.
 
-The `NextjsSite` construct provides a simple way to build and deploy the app to AWS:
+Here's how it works at a high level.
 
 - The client assets are deployed to an S3 Bucket, and served out from a CloudFront CDN for fast content delivery.
 - The app server and API functions are deployed to Lambda. You can deploy to Lambda@Edge instead if the `edge` flag is enabled. Read more about [Single region vs Edge](#single-region-vs-edge).
-- It enables you to [configure custom domains](#custom-domains) for the website URL.
-- It also enable you to [automatically set the environment variables](#environment-variables) for your Next.js app directly from the outputs in your SST app.
-- It provides a simple interface to [grant permissions](#using-aws-services) for your app to access AWS resources.
+- You can [reference other AWS resources](#using-aws-services) directly in your Next.js app.
+- You can [configure custom domains](#custom-domains).
+
+---
 
 ## Quick Start
 
-1. If you are creating a new Next.js app, run `create-next-app` from the root of your SST app.
+1. You can use SST in an existing Next.js app in _drop-in mode_ or inside a monorepo app in _standalone mode_.
 
-   ```bash
-   npx create-next-app@latest
-   ```
+   - If you have an existing Next.js app, just run `npx create-sst` at the root and it'll configure SST in [_drop-in mode_](../what-is-sst.md#drop-in-mode).
 
-   ![Create Next.js App template](/img/nextjs/bootstrap-nextjs.png)
+     ```bash
+     npx create-sst@latest
+     ```
 
-   After the Next.js app is created, your SST app structure should look like:
+   - If you are starting from scratch, we recommend using our monorepo starter in [_standalone mode_](../what-is-sst.md#standalone-mode).
 
-   ```bash
-   my-sst-app
-   ├─ sst.config.ts
-   ├─ services
-   ├─ stacks
-   └─ my-next-app     <-- new Next.js app
-      ├─ pages
-      ├─ public
-      ├─ styles
-      └─ next.config.js
-   ```
+     ```bash
+     npx create-sst@latest --template standard/nextjs
+     ```
 
-   Continue to step 3.
+2. This adds the `NextjsSite` construct to your stacks code.
 
-2. Alternatively, if you have an existing Next.js app, move the app to the root of your SST app. Your SST app structure should look like:
-
-   ```bash
-   my-sst-app
-   ├─ sst.config.ts
-   ├─ services
-   ├─ stacks
-   └─ my-next-app     <-- your Next.js app
-      ├─ pages
-      ├─ public
-      ├─ styles
-      └─ next.config.js
-   ```
-
-3. Also add the `sst bind` command to your Next.js app's `package.json`. `sst bind` enables you to [automatically set the environment variables](#environment-variables) for your Next.js app directly from the outputs in your SST app.
-
-   ```diff
-     "scripts": {
-   -   "dev": "next dev",
-   +   "dev": "sst bind next dev",
-       "build": "next build",
-       "start": "next start",
-       "lint": "next lint"
-     },
-   ```
-
-4. Add the `NextjsSite` construct to an existing stack in your SST app. You can also create a new stack for the app.
-
-   ```ts
+   ```ts {8-10}
    import { NextjsSite, StackContext } as sst from "sst/constructs";
 
    export default function MyStack({ stack }: StackContext) {
@@ -71,7 +36,7 @@ The `NextjsSite` construct provides a simple way to build and deploy the app to 
 
      // Create the Next.js site
      const site = new NextjsSite(stack, "Site", {
-       path: "my-next-app/",
+       path: "packages/web",
      });
 
      // Add the site's URL to stack output
@@ -81,11 +46,21 @@ The `NextjsSite` construct provides a simple way to build and deploy the app to 
    }
    ```
 
-   When you are building your SST app, `NextjsSite` will invoke `npx open-next@latest build` inside the Next.js app directory. Make sure `path` is pointing to the your Next.js app.
+   When you are building your SST app, `NextjsSite` will invoke `npx open-next@latest build` inside the Next.js app directory. We also print out the `site.url` once deployed.
 
-   We also added the site's URL to the stack output. After the deploy succeeds, the URL will be printed out in the terminal.
+3. We also use the [`sst bind`](../packages/sst.md#sst-bind) command in your Next.js app's `package.json` to run `next dev`. This allows you to [bind your AWS resources](#using-aws-services) directly to your Next.js app.
 
-   Note that during development, the site is not deployed. You should run the site locally. In this case, `site.url` is `undefined`. [Read more about how environment variables work during development](#while-developing).
+   ```diff {3}
+     "scripts": {
+   -   "dev": "next dev",
+   +   "dev": "sst bind next dev",
+       "build": "next build",
+     },
+   ```
+
+Check out the [full Next.js tutorial](../start/nextjs.md).
+
+---
 
 ## Working locally
 
@@ -107,41 +82,49 @@ To work on your Next.js app locally with SST:
 When running `sst dev`, SST does not deploy your Next.js app. It's meant to be run locally.
 :::
 
+---
+
 ## Single region vs edge
 
-There are two ways you can deploy the Next.js app to your AWS account.
+There are two ways you can deploy a Next.js app to your AWS account.
 
-By default, the Next.js app server is deployed to a single region defined in your `sst.config.ts` or passed in via the `--region` flag. Alternatively, you can choose to deploy to the edge. When deployed to the edge, middleware, SSR functions, and API routes are running on edge location that is physically closer to the end user. In this case, the app server is deployed to AWS Lambda@Edge.
+- Single region
 
-You can enable edge like this:
+  By default, the Next.js app server is deployed to a single region defined in your [`sst.config.ts`](../configuring-sst.md#config-function) or passed in via the [`--region`](packages/sst.md#global-options) flag.
 
-```ts
-const site = new NextjsSite(stack, "Site", {
-  path: "my-next-app/",
-  edge: true,
-});
-```
+- Edge
 
-Note that, in the case you have a centralized database, Edge locations are often far away from your database. If you are quering your database in your SSR functions and API routes, you might experience much longer latency when deployed to the edge.
+  Alternatively, you can choose to deploy to the edge. When deployed to the edge, middleware, SSR functions, and API routes are running on edge location that is physically closer to the end user. In this case, the app server is deployed to AWS Lambda@Edge.
+
+  ```ts {3}
+  const site = new NextjsSite(stack, "Site", {
+    path: "my-next-app/",
+    edge: true,
+  });
+  ```
+
+Note that, if you have a centralized database, Edge locations are often far away from your database. If you are querying your database in your SSR functions and API routes, you might experience much longer latency when deployed to the edge.
 
 :::info
-We recommend you to deploy to a single region when unsure.
+If you are not sure which one to use, we recommend deploying to a single region.
 :::
+
+---
 
 ## Custom domains
 
-You can configure the website with a custom domain hosted either on [Route 53](https://aws.amazon.com/route53/) or [externally](#configuring-externally-hosted-domain).
+You can configure the app with a custom domain hosted either on [Route 53](https://aws.amazon.com/route53/) or [externally](#configuring-externally-hosted-domain).
 
-```js {5}
+```js {3}
 const site = new NextjsSite(stack, "Site", {
   path: "my-next-app/",
   customDomain: "my-app.com",
 });
 ```
 
-Note that visitors to the `http://` URL will be redirected to the `https://` URL.
+Note that visitors to `http://` will be redirected to `https://`.
 
-You can also configure an alias domain to point to the main domain. For example, to setup `www.my-app.com` redirecting to `my-app.com`:
+You can also configure an alias domain to point to the main domain. For example, to setup `www.my-app.com` to redirect to `my-app.com`:
 
 ```js {5}
 const site = new NextjsSite(stack, "Site", {
@@ -153,129 +136,61 @@ const site = new NextjsSite(stack, "Site", {
 });
 ```
 
-## Environment variables
+---
 
-The `NextjsSite` construct allows you to set the environment variables in your Next.js app based on outputs from other constructs in your SST app. So you don't have to hard code the config from your backend. Let's look at how.
+## Using AWS services
 
-To expose environment variables to your Next.js application you should utilise the `NextjsSite` construct `environment` configuration property rather than an `.env` file within your Next.js application root.
+SST makes it very easy for your `NextjsSite` construct to access other resources in your AWS account. Imagine you have an S3 bucket created using the [`Bucket`](../constructs/Bucket.md) construct. You can bind it to your Next.js app.
 
-Imagine you have an S3 bucket created using the [`Bucket`](../constructs/Bucket.md) construct, and you want to upload files to the bucket. You'd pass the bucket's name to your Next.js app.
+```ts {5}
+const bucket = new Bucket(stack, "Uploads");
 
-```ts {7-9}
-const bucket = new Bucket(stack, "Bucket", {
-  // ...
-});
-
-new NextjsSite(stack, "Site", {
-  path: "my-next-app/",
-  environment: {
-    BUCKET_NAME: bucket.bucketName,
-  },
+const site = new NextjsSite(stack, "Site", {
+  path: "packages/web",
+  bind: [bucket],
 });
 ```
 
-Then you can access the bucket's name in your server code:
+This will attach the necessary IAM permissions and allow your Next.js app to access the bucket through the typesafe [`sst/node`](../clients/index.md) client.
 
-```ts
-console.log(process.env.BUCKET_NAME);
+```ts {4}
+import { Bucket } from "sst/node/bucket";
+
+export async function getServerSideProps() {
+  console.log(Bucket.Uploads.bucketName);
+}
 ```
 
-Note that, in Next.js, only environment variables prefixed with `NEXT_PUBLIC_` are available in your browser code. [Read more about using environment variables](https://nextjs.org/docs/basic-features/environment-variables#exposing-environment-variables-to-the-browser).
+You can read more about this over on the [Resource Binding](../resource-binding.md) doc.
 
-For example, if you want to access the bucket's name in your frontend js code, you'd name it `NEXT_PUBLIC_BUCKET_NAME`:
+---
 
-```js
+#### Client side environment variables
+
+You can also pass in environment variables directly to your client side code.
+
+```ts {5-7}
+const bucket = new Bucket(stack, "Bucket");
+
 new NextjsSite(stack, "Site", {
-  path: "my-next-app/",
+  path: "packages/web",
   environment: {
     NEXT_PUBLIC_BUCKET_NAME: bucket.bucketName,
   },
 });
 ```
 
-Let's take look at what is happening behind the scene.
+Now you can access the bucket's name in your client side code.
 
-#### While deploying
-
-On `sst deploy`, the Next.js server function is deployed to a Lambda function, and the NextjsSite's `environment` values are set as Lambda function environment variables. In this case, `process.env.BUCKET_NAME` will be available at runtime.
-
-If environment variables are referenced in the browser code, they will first be replaced by placeholder values, ie. `{{ NEXT_PUBLIC_BUCKET_NAME }}`, when building the Next.js app. And after the S3 bucket has been created, the placeholders in the HTML and JS files will then be replaced with the actual values.
-
-:::caution
-Since the actual values are determined at deploy time, you should not rely on the values at build time. For example, you cannot reference `process.env.BUCKET_NAME` inside `getStaticProps()` at build time.
-
-There are a couple of work arounds:
-
-- Hardcode the bucket name
-- Read the bucket name dynamically at build time (ie. from an SSM value)
-- Use [fallback pages](https://nextjs.org/docs/basic-features/data-fetching#fallback-pages) to generate the page on the fly
-
-:::
-
-#### While developing
-
-To use these values while developing, run `sst dev` to start the [Live Lambda Development](/live-lambda-development.md) environment.
-
-```bash
-npx sst dev
+```ts
+console.log(process.env.NEXT_PUBLIC_BUCKET_NAME);
 ```
 
-Then in your Next.js app to reference these variables, add the [`sst bind`](../packages/sst.md#sst-bind) command.
+In Next.js, only environment variables prefixed with `NEXT_PUBLIC_` are available in your client side code. Read more about using environment variables over on the [Next.js docs](https://nextjs.org/docs/basic-features/environment-variables#exposing-environment-variables-to-the-browser).
 
-```json title="package.json" {2}
-"scripts": {
-  "dev": "sst bind next dev",
-  "build": "next build",
-  "start": "next start"
-},
-```
+You can also [read about how this works](../resource-binding.md#client-side-environment-variables) behind the scenes in SST.
 
-Now you can start your Next.js app as usual and it'll have the environment variables from your SST app.
-
-```bash
-npm run dev
-```
-
-There are a couple of things happening behind the scenes here:
-
-1. The `sst dev` command generates a file with the values specified by the `NextjsSite` construct's `environment` prop.
-2. The `sst bind` CLI will traverse up the directories to look for the root of your SST app.
-3. It'll then find the file that's generated in step 1.
-4. It'll load these as environment variables before running the start command.
-
-:::note
-`sst bind` only works if the Next.js app is located inside the SST app or inside one of its subdirectories. For example:
-
-```
-/
-  sst.config.ts
-  my-next-app/
-```
-
-:::
-
-## Using AWS services
-
-Since the `NextjsSite` construct deploys your Next.js app to your AWS account, it's very convenient to access other resources in your AWS account. `NextjsSite` provides a simple way to grant [permissions](Permissions.md) to access specific AWS resources.
-
-Imagine you have an S3 bucket created using the [`Bucket`](../constructs/Bucket.md) construct, and you want to upload files to the bucket.
-
-```ts {12}
-const bucket = new Bucket(stack, "Bucket", {
-  // ...
-});
-
-const site = new NextjsSite(stack, "Site", {
-  path: "my-next-app/",
-  environment: {
-    BUCKET_NAME: bucket.bucketName,
-  },
-});
-
-site.attachPermissions([bucket]);
-```
-
-Note that we are also passing the bucket name into the environment, so the Next.js server code can fetch the value `process.env.BUCKET_NAME` when calling the AWS S3 SDK API to upload a file.
+---
 
 ## Examples
 
