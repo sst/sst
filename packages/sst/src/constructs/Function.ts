@@ -725,7 +725,9 @@ export class Function extends CDKFunction implements SSTConstruct {
           new PolicyStatement({
             actions: ["s3:*"],
             effect: Effect.ALLOW,
-            resources: [`arn:aws:s3:::${bootstrap.bucket}`],
+            resources: [
+              `arn:${Stack.of(this).partition}:s3:::${bootstrap.bucket}`,
+            ],
           }),
         ]);
       });
