@@ -525,7 +525,7 @@ new ApiGatewayV1Api(stack, "Api", {
 
 Configure the internally created CDK `RestApi` instance. By doing so, API Gateway will generate a new Route53 Alias DNS record which you can use to invoke your private APIs.
 
-```js {4-10}
+```js {20-23}
 import { EndpointType } from "aws-cdk-lib/aws-apigateway";
 import { InterfaceVpcEndpoint } from "aws-cdk-lib/aws-ec2";
 
