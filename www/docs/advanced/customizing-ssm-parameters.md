@@ -15,7 +15,7 @@ To provide a prefix, open up the `sst.json` and add a `ssmPrefix` field.
   "region": "us-east-1",
 - "main": "lib/index.ts"
 + "main": "lib/index.ts",
-+ "ssmPrefix": "/myOrg/myTeam"
++ "ssmPrefix": "/myOrg/myTeam/"
 }
 ```
 
