@@ -1127,7 +1127,9 @@ export const useFunctions = createAppContext(() => {
 
   return {
     fromID(id: string) {
-      return functions[id];
+      const result = functions[id];
+      if (!result) return;
+      return result;
     },
     add(name: string, props: FunctionProps) {
       functions[name] = props;
