@@ -119,7 +119,7 @@ import { useSession } from "sst/node/auth";
 
 const session = useSession();
 
-if (session.type === "user) {
+if (session.type === "user") {
   console.log(session.properties.userID);
 }
 ```

@@ -111,12 +111,14 @@ export const dev = (program: Program) =>
 
         bus.subscribe("function.build.success", async (evt) => {
           const info = useFunctions().fromID(evt.properties.functionID);
+          if (!info) return;
           if (info.enableLiveDev === false) return;
           Colors.line(Colors.dim(Colors.prefix, "Built", info.handler!));
         });
 
         bus.subscribe("function.build.failed", async (evt) => {
           const info = useFunctions().fromID(evt.properties.functionID);
+          if (!info) return;
           if (info.enableLiveDev === false) return;
           Colors.gap();
           Colors.line(Colors.danger("✖ "), "Build failed", info.handler!);
@@ -159,7 +161,6 @@ export const dev = (program: Program) =>
       const useStackBuilder = Context.memo(async () => {
         const watcher = useWatcher();
         const project = useProject();
-        const bus = useBus();
 
         let lastDeployed: string;
         let isWorking = false;

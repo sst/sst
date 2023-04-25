@@ -1,5 +1,5 @@
 import { dim } from "colorette";
-import { Box, Newline, Text } from "ink";
+import { Text } from "ink";
 import Spinner from "ink-spinner";
 import React, { useEffect, useState } from "react";
 import { useBus } from "../../bus.js";
@@ -60,7 +60,7 @@ export function Functions() {
           () => {
             console.log(
               Colors.primary(`  ➜ `),
-              useFunctions().fromID(input.functionID).handler!
+              useFunctions().fromID(input.functionID)?.handler
             );
             for (const log of input.logs) {
               console.log(`     ${dim(log)}`);
@@ -98,7 +98,7 @@ export function Functions() {
           () => {
             console.log(
               Colors.primary(`  ➜ `),
-              useFunctions().fromID(input.functionID).handler!
+              useFunctions().fromID(input.functionID)?.handler
             );
             for (const log of input.logs) {
               console.log(`     ${dim(log)}`);
@@ -151,7 +151,7 @@ export function Functions() {
               {"  "}
               <Spinner />
               {"  "}
-              {useFunctions().fromID(evt.functionID).handler!}
+              {useFunctions().fromID(evt.functionID)?.handler}
             </Text>
             {evt.logs.map((log, index) => (
               <Text dimColor key={index}>

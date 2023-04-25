@@ -462,9 +462,35 @@ new RemixSite(stack, "Site", {
 
 ### Advanced examples
 
+#### Configuring VPC
+
+Note that VPC is only supported when deploying to a [single region](#single-region-vs-edge).
+
+```js {12-17}
+import { Vpc, SubnetType } as ec2 from "aws-cdk-lib/aws-ec2";
+
+// Create a VPC
+const vpc = new Vpc(stack, "myVPC");
+
+// Alternatively use an existing VPC
+const vpc = Vpc.fromLookup(stack, "myVPC", { ... });
+
+new RemixSite(stack, "Site", {
+  path: "my-remix-app/",
+  cdk: {
+    server: {
+      vpc,
+      vpcSubnets: {
+        subnetType: SubnetType.PRIVATE_WITH_NAT,
+      }
+    }
+  }
+});
+```
+
 #### Using an existing S3 Bucket
 
-```js {5-7}
+```js {6}
 import * as s3 from "aws-cdk-lib/aws-s3";
 
 new RemixSite(stack, "Site", {
