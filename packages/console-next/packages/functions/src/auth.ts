@@ -5,24 +5,26 @@ import {
   useQueryParam,
   useQueryParams,
 } from "sst/node/api";
-import { Adapter, AuthHandler } from "sst/node/future/auth";
+import { Adapter, AuthHandler, GithubAdapter } from "sst/node/future/auth";
 import { createSigner, createVerifier } from "fast-jwt";
 import { Config } from "sst/node/config";
+import { Octokit } from "@octokit/rest";
 
-console.log("fetching", process.env, process.env.AUTH_ID, "PrivateKey");
+declare module "sst/node/future/auth" {
+  export interface SessionTypes {
+    email: {
+      email: string;
+    };
+  }
+}
 
 export const handler = AuthHandler({
   providers: {
-    link: LinkAdapter({
-      onLink: async (link) => {
-        console.log(link);
-        return {
-          statusCode: 301,
-          headers: {
-            Location: link,
-          },
-        };
-      },
+    github: GithubAdapter({
+      mode: "oauth",
+      scope: "read:user user:email",
+      clientID: Config.GITHUB_CLIENT_ID,
+      clientSecret: Config.GITHUB_CLIENT_SECRET,
     }),
   },
   async clients() {
@@ -30,7 +32,21 @@ export const handler = AuthHandler({
       solid: "",
     };
   },
-  onSuccess: async () => {
+  onSuccess: async (input) => {
+    if (input.provider === "github") {
+      const o = new Octokit({
+        auth: input.tokenset.access_token,
+      });
+      const emails = await o.request("GET /user/emails");
+      const email = emails.data.find((x) => x.primary)?.email;
+      if (!email) throw new Error("No email found");
+      return {
+        type: "email",
+        properties: {
+          email,
+        },
+      };
+    }
     return {
       type: "public",
       properties: {},

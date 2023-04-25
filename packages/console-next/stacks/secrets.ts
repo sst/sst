@@ -8,5 +8,10 @@ export function Secrets(ctx: StackContext) {
       "PLANETSCALE_USERNAME",
       "PLANETSCALE_PASSWORD"
     ),
+    github: Config.Secret.create(
+      ctx.stack,
+      "GITHUB_CLIENT_ID",
+      "GITHUB_CLIENT_SECRET"
+    ),
   };
 }

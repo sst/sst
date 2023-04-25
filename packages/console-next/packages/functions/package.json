@@ -12,6 +12,7 @@
     "sst": "2.7.1"
   },
   "dependencies": {
+    "@octokit/rest": "^19.0.7",
     "fast-jwt": "^2.2.1"
   }
 }

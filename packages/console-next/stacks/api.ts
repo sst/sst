@@ -12,6 +12,7 @@ export function API({ stack }: StackContext) {
     },
     routes: {
       "GET /": "packages/functions/src/lambda.handler",
+      "POST /replicache/pull": "packages/functions/src/replicache/pull.handler",
     },
   });
 

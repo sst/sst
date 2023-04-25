@@ -5,7 +5,6 @@ import {
   varchar,
 } from "drizzle-orm/mysql-core";
 import { timestamps, id, cuid } from "../util/sql";
-import { business } from "../business/business.sql";
 
 export const workspace = mysqlTable(
   "workspace",

@@ -7,7 +7,7 @@ import { zod } from "../util/zod";
 import { createId } from "@paralleldrive/cuid2";
 import { db } from "../drizzle";
 import { eq } from "drizzle-orm";
-import { useTransaction } from "../util/sql";
+import { useTransaction } from "../util/transaction";
 
 export const Info = createSelectSchema(workspace, {
   id: (schema) => schema.id.cuid2(),

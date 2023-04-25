@@ -1,23 +1,36 @@
 import { Replicache } from "replicache";
-import { ParentProps, createContext } from "solid-js";
+import { ParentProps, createContext, useContext } from "solid-js";
 
-const ReplicacheContext = createContext<ReturnType<typeof createReplicache>>();
+const GlobalReplicacheContext =
+  createContext<ReturnType<typeof createGlobalReplicache>>();
 
-function createReplicache() {
+function createGlobalReplicache() {
   const replicache = new Replicache({
-    name: "sst",
-    auth: "",
+    name: "global",
     licenseKey: "l24ea5a24b71247c1b2bb78fa2bca2336",
+    pullURL: import.meta.env.VITE_API_URL + "/replicache/pull",
+    pushURL: import.meta.env.VITE_API_URL + "/replicache/push",
   });
   return replicache;
 }
 
-export function ReplicacheProvider(props: ParentProps) {
-  const rep = createReplicache();
+export function GlobalReplicacheProvider(props: ParentProps) {
+  const rep = createGlobalReplicache();
 
   return (
-    <ReplicacheContext.Provider value={rep}>
+    <GlobalReplicacheContext.Provider value={rep}>
       {props.children}
-    </ReplicacheContext.Provider>
+    </GlobalReplicacheContext.Provider>
   );
+}
+
+export function useGlobalReplicache() {
+  const result = useContext(GlobalReplicacheContext);
+  if (!result) {
+    throw new Error(
+      "useGlobalReplicache must be used within a GlobalReplicacheProvider"
+    );
+  }
+
+  return result;
 }

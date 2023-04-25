@@ -21,8 +21,3 @@ export const user = mysqlTable(
     email: uniqueIndex("email").on(user.email, user.workspaceID),
   })
 );
-
-// business
-// workspace
-// user
-// *
