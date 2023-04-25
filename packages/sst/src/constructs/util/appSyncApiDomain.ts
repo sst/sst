@@ -1,8 +1,13 @@
 import { Token, Lazy } from "aws-cdk-lib";
 import * as route53 from "aws-cdk-lib/aws-route53";
+import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import * as appsync from "aws-cdk-lib/aws-appsync";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import { AppSyncApi } from "../AppSyncApi.js";
+import {
+  CfnDomainName,
+  CfnDomainNameApiAssociation,
+} from "aws-cdk-lib/aws-appsync";
 
 export interface CustomDomainProps {
   /**
@@ -13,6 +18,11 @@ export interface CustomDomainProps {
    * The hosted zone in Route 53 that contains the domain. By default, SST will look for a hosted zone by stripping out the first part of the domainName that's passed in. So, if your domainName is api.domain.com. SST will default the hostedZone to domain.com.
    */
   hostedZone?: string;
+  /**
+   * Set this option if the domain is not hosted on Amazon Route 53.
+   * @default CNAME
+   */
+  recordType?: "CNAME" | "A_AAAA";
   /**
    * Set this option if the domain is not hosted on Amazon Route 53.
    */
@@ -29,10 +39,17 @@ export interface CustomDomainProps {
   };
 }
 
+interface CustomDomainData {
+  certificate: acm.ICertificate;
+  domainName: string;
+  hostedZone?: route53.IHostedZone;
+  recordType?: CustomDomainProps["recordType"];
+}
+
 export function buildCustomDomainData(
   scope: AppSyncApi,
   customDomain: string | CustomDomainProps | undefined
-): appsync.DomainOptions | undefined {
+): CustomDomainData | undefined {
   if (customDomain === undefined) {
     return;
   }
@@ -52,10 +69,22 @@ export function buildCustomDomainData(
   );
 }
 
-function buildDataForStringInput(
-  scope: AppSyncApi,
-  customDomain: string
-): appsync.DomainOptions {
+export function cleanup(scope: AppSyncApi, domainData: CustomDomainData) {
+  const cfnDomainName = getCfnDomainName(scope);
+  const cfnDomainNameApiAssociation = getCfnDomainNameApiAssociation(scope);
+  if (domainData.hostedZone) {
+    createRecords(
+      scope,
+      domainData.domainName,
+      domainData.hostedZone,
+      domainData.recordType,
+      cfnDomainName
+    );
+  }
+  fixDomainResourceDependencies(cfnDomainName, cfnDomainNameApiAssociation);
+}
+
+function buildDataForStringInput(scope: AppSyncApi, customDomain: string) {
   // validate: customDomain is a TOKEN string
   // ie. imported SSM value: ssm.StringParameter.valueForStringParameter()
   if (Token.isUnresolved(customDomain)) {
@@ -70,18 +99,18 @@ function buildDataForStringInput(
   const hostedZoneDomain = domainName.split(".").slice(1).join(".");
   const hostedZone = lookupHostedZone(scope, hostedZoneDomain);
   const certificate = createCertificate(scope, domainName, hostedZone);
-  createRecord(scope, hostedZone, domainName);
 
   return {
     certificate,
     domainName,
+    hostedZone,
   };
 }
 
 function buildDataForInternalDomainInput(
   scope: AppSyncApi,
   customDomain: CustomDomainProps
-): appsync.DomainOptions {
+) {
   // If customDomain is a TOKEN string, "hostedZone" has to be passed in. This
   // is because "hostedZone" cannot be parsed from a TOKEN value.
   if (Token.isUnresolved(customDomain.domainName)) {
@@ -118,18 +147,18 @@ function buildDataForInternalDomainInput(
     ? customDomain.cdk.certificate
     : createCertificate(scope, domainName, hostedZone);
 
-  createRecord(scope, hostedZone, domainName);
-
   return {
     certificate,
     domainName,
+    hostedZone,
+    recordType: customDomain.recordType,
   };
 }
 
 function buildDataForExternalDomainInput(
   scope: AppSyncApi,
   customDomain: CustomDomainProps
-): appsync.DomainOptions {
+) {
   // if it is external, then a certificate is required
   if (!customDomain.cdk?.certificate) {
     throw new Error(
@@ -170,30 +199,79 @@ function createCertificate(
   });
 }
 
-function createRecord(
+function createRecords(
   scope: AppSyncApi,
+  domainName: string,
   hostedZone: route53.IHostedZone,
-  domainName: string
+  recordType: CustomDomainProps["recordType"],
+  cfnDomainName: CfnDomainName
 ) {
   // create DNS record
-  const record = new route53.CnameRecord(scope, "CnameRecord", {
+  const aRecordProps = {
     recordName: domainName,
     zone: hostedZone,
-    domainName: Lazy.string({
-      produce() {
-        return scope._cfnDomainName!.attrAppSyncDomainName;
+    target: route53.RecordTarget.fromAlias({
+      bind() {
+        return {
+          hostedZoneId: route53Targets.CloudFrontTarget.CLOUDFRONT_ZONE_ID,
+          dnsName: cfnDomainName.attrAppSyncDomainName,
+        };
       },
     }),
-  });
-
+  };
+  const records =
+    (recordType || "CNAME") === "CNAME"
+      ? [
+          new route53.CnameRecord(scope, "CnameRecord", {
+            recordName: domainName,
+            zone: hostedZone,
+            domainName: cfnDomainName.attrAppSyncDomainName,
+          }),
+        ]
+      : [
+          new route53.ARecord(scope, "AliasRecord", aRecordProps),
+          new route53.AaaaRecord(scope, "AliasRecordAAAA", aRecordProps),
+        ];
   // note: If domainName is a TOKEN string ie. ${TOKEN..}, the route53.ARecord
   //       construct will append ".${hostedZoneName}" to the end of the domain.
   //       This is because the construct tries to check if the record name
   //       ends with the domain name. If not, it will append the domain name.
   //       So, we need remove this behavior.
   if (Token.isUnresolved(domainName)) {
-    const cfnRecord = record.node.defaultChild as route53.CfnRecordSet;
-    cfnRecord.name = domainName;
+    records.forEach((record) => {
+      const cfnRecord = record.node.defaultChild as route53.CfnRecordSet;
+      cfnRecord.name = domainName;
+    });
+  }
+}
+
+function getCfnDomainName(scope: AppSyncApi) {
+  return scope.cdk.graphqlApi.node.children.find(
+    (child) =>
+      (child as CfnDomainName).cfnResourceType === "AWS::AppSync::DomainName"
+  ) as CfnDomainName;
+}
+
+function getCfnDomainNameApiAssociation(scope: AppSyncApi) {
+  return scope.cdk.graphqlApi.node.children.find(
+    (child) =>
+      (child as CfnDomainNameApiAssociation).cfnResourceType ===
+      "AWS::AppSync::DomainNameApiAssociation"
+  ) as CfnDomainNameApiAssociation;
+}
+
+function fixDomainResourceDependencies(
+  cfnDomainName: CfnDomainName,
+  cfnDomainNameApiAssociation: CfnDomainNameApiAssociation
+) {
+  // note: As of CDK 2.20.0, the "AWS::AppSync::DomainNameApiAssociation" resource
+  //       is not dependent on the "AWS::AppSync::DomainName" resource. This leads
+  //       CloudFormation deploy error if DomainNameApiAssociation is created before
+  //       DomainName is created.
+  //       https://github.com/aws/aws-cdk/issues/18395#issuecomment-1099455502
+  //       To workaround this issue, we need to add a dependency manually.
+  if (cfnDomainName && cfnDomainNameApiAssociation) {
+    cfnDomainNameApiAssociation.node.addDependency(cfnDomainName);
   }
 }
 
