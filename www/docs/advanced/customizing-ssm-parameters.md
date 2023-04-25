@@ -28,5 +28,5 @@ For example, the default SSM parameter name that's created for a [Bucket](../con
 With the `ssmPrefix` specified, the SSM parameter name will be:
 
 ```
-/myOrg/myTeam/sst/my-sst-app/dev/Bucket/myBucket/bucketName
+/myOrg/myTeam/Bucket/myBucket/bucketName
 ```
