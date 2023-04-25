@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.7.1
+
+### Patch Changes
+
+- [`74395668f`](https://github.com/serverless-stack/sst/commit/74395668f1533b3f06777b5394990932f497cf91) Thanks [@thdxr](https://github.com/thdxr)! - Fix issue with root Auth route
+
 ## 2.7.0
 
 ### Minor Changes
