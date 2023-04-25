@@ -1,5 +1,21 @@
 # @serverless-stack/cli2
 
+## 2.7.2
+
+### Patch Changes
+
+- [`17314466a`](https://github.com/serverless-stack/sst/commit/17314466aaf4f72c23ba28d50a35cfbdc3a3ee45) Thanks [@thdxr](https://github.com/thdxr)! - Gracefully handle dangling invocations
+
+- [`d7e469c93`](https://github.com/serverless-stack/sst/commit/d7e469c934971926edbbebcc27411c11e0a13202) Thanks [@fwang](https://github.com/fwang)! - sst deploy: do not prompt mode change in CI environment
+
+- [`179483f6c`](https://github.com/serverless-stack/sst/commit/179483f6c1dc5a7e0885d0f793429badfa188d5b) Thanks [@fwang](https://github.com/fwang)! - Function: remove hardcoding ARN partition to "aws"
+
+- [#2805](https://github.com/serverless-stack/sst/pull/2805) [`4713910a3`](https://github.com/serverless-stack/sst/commit/4713910a3afd1958ee8e47259959704d644a23c7) Thanks [@theodiablo](https://github.com/theodiablo)! - deprecated/NextjsSite: fix custom resource import path
+
+- [`8cd24268f`](https://github.com/serverless-stack/sst/commit/8cd24268f415a0d862e9ab6db5c711970e1f9172) Thanks [@fwang](https://github.com/fwang)! - sst diff: handle new stacks added
+
+- [`514cd63f9`](https://github.com/serverless-stack/sst/commit/514cd63f9ff102b275b2833f0581741ead9547ce) Thanks [@fwang](https://github.com/fwang)! - AppSyncApi: support using A/AAAA record for custom domain
+
 ## 2.7.1
 
 ### Patch Changes
