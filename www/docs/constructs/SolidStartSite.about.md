@@ -470,7 +470,7 @@ new SolidStartSite(stack, "Site", {
 
 Note that VPC is only supported when deploying to a [single region](#single-region-vs-edge).
 
-```js
+```js {12-17}
 import { Vpc, SubnetType } as ec2 from "aws-cdk-lib/aws-ec2";
 
 // Create a VPC
@@ -494,7 +494,7 @@ new SolidStartSite(stack, "Site", {
 
 #### Using an existing S3 Bucket
 
-```js {5-7}
+```js {6}
 import * as s3 from "aws-cdk-lib/aws-s3";
 
 new SolidStartSite(stack, "Site", {
