@@ -44,6 +44,7 @@ export const dev = (program: Program) =>
       const { useMetadata } = await import("../../stacks/metadata.js");
       const { useIOT } = await import("../../iot.js");
       const { clear } = await import("../terminal.js");
+      const { getCiInfo } = await import("../ci-info.js");
 
       if (args._[0] === "start") {
         console.log(
@@ -375,7 +376,7 @@ export const dev = (program: Program) =>
         });
       }
       // Check app mode changed
-      if (appMetadata && appMetadata.mode !== "dev") {
+      if (!getCiInfo().isCI && appMetadata && appMetadata.mode !== "dev") {
         if (!(await promptChangeMode())) {
           process.exit(0);
         }

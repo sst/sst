@@ -1,5 +1,5 @@
 import os from "os";
-import ciInfo from "ci-info";
+import { getCiInfo } from "../ci-info.js";
 import { useProject } from "../../project.js";
 
 type EnvironmentData = {
@@ -23,7 +23,7 @@ export function getEnvironmentData(): EnvironmentData {
   }
 
   const cpus = os.cpus() || [];
-  const isSeed = !!process.env.SEED_APP_NAME;
+  const ciInfo = getCiInfo();
 
   data = {
     // Software information
@@ -36,8 +36,8 @@ export function getEnvironmentData(): EnvironmentData {
     cpuSpeed: cpus.length ? cpus[0].speed : null,
     memoryInMb: Math.trunc(os.totalmem() / Math.pow(1024, 2)),
     // Environment information
-    isCI: ciInfo.isCI || isSeed,
-    ciName: (isSeed ? "Seed" : ciInfo.name) || null,
+    isCI: ciInfo.isCI,
+    ciName: ciInfo.name,
     sstVersion: useProject().version,
   };
 
