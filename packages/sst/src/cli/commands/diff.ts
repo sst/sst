@@ -18,7 +18,6 @@ export const diff = (program: Program) =>
         "@aws-sdk/client-cloudformation"
       );
       const { createSpinner } = await import("../spinner.js");
-      const { green } = await import("colorette");
       const { Colors } = await import("../colors.js");
 
       // Build app
@@ -38,16 +37,20 @@ export const diff = (program: Program) =>
         );
 
         // get old template
-        const response = await cfn.send(
-          new GetTemplateCommand({
-            StackName: stack.stackName,
-          })
-        );
-        const oldTemplate = JSON.parse(response.TemplateBody!);
+        const oldTemplate = await getTemplate(stack.stackName);
+        if (!oldTemplate) {
+          spinner.clear();
+          Colors.line(
+            `➜  ${Colors.dim.bold(
+              stackNameToId(stack.stackName) + ":"
+            )} New stack`
+          );
+          Colors.gap();
+          continue;
+        }
 
         // generate diff
         const { count, diff } = await Stacks.diff(stack, oldTemplate);
-
         spinner.clear();
 
         // print diff result
@@ -94,5 +97,22 @@ export const diff = (program: Program) =>
       }
 
       process.exit(0);
+
+      async function getTemplate(stackName: string) {
+        try {
+          const response = await cfn.send(
+            new GetTemplateCommand({ StackName: stackName })
+          );
+          return JSON.parse(response.TemplateBody!);
+        } catch (e: any) {
+          if (
+            e.name === "ValidationError" &&
+            e.message.includes("does not exist")
+          ) {
+            return;
+          }
+          throw e;
+        }
+      }
     }
   );

@@ -4,7 +4,7 @@ An example serverless app created with SST.
 
 ## Getting Started
 
-[**Read the tutorial**](https://sst.dev/examples/how-to-use-eventbus-in-your-serverless-app.html)
+[**Read the tutorial**](https://sst.dev/examples/how-to-use-event-bus-in-your-serverless-app.html)
 
 Install the example.
 
