@@ -19,7 +19,7 @@ export interface CustomDomainProps {
    */
   hostedZone?: string;
   /**
-   * Set this option if the domain is not hosted on Amazon Route 53.
+   * DNS record type for the Route 53 record associated with the custom domain. Default is CNAME.
    * @default CNAME
    */
   recordType?: "CNAME" | "A_AAAA";
