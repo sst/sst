@@ -5,8 +5,11 @@ node_modules
 .sst
 .build
 
+# opennext
+.open-next
+
 # misc
 .DS_Store
 
 # local env files
-.env*.local
+.env\*.local
