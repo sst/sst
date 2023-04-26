@@ -226,8 +226,8 @@ new NextjsSite(stack, "Site", {
   path: "my-next-app/",
   customDomain: {
     domainName:
-      scope.stage === "prod" ? "my-app.com" : `${scope.stage}.my-app.com`,
-    domainAlias: scope.stage === "prod" ? "www.my-app.com" : undefined,
+      stack.stage === "prod" ? "my-app.com" : `${stack.stage}.my-app.com`,
+    domainAlias: stack.stage === "prod" ? "www.my-app.com" : undefined,
   },
 });
 ```
