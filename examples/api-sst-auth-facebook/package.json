@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "sst": "^2.5.7",
+    "sst": "^2.7.2",
     "aws-cdk-lib": "2.72.1",
     "constructs": "10.1.156",
     "typescript": "^5.0.4",
@@ -23,7 +23,7 @@
     "web"
   ],
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.316.0",
-    "@aws-sdk/util-dynamodb": "^3.316.0"
+    "@aws-sdk/client-dynamodb": "^3.319.0",
+    "@aws-sdk/util-dynamodb": "^3.319.0"
   }
 }
