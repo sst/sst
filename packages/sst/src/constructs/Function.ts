@@ -675,6 +675,7 @@ export class Function extends CDKFunction implements SSTConstruct {
         environment: props.environment,
         layers: Function.buildLayers(scope, id, props),
         logRetention,
+        logRetentionRetryOptions: logRetention && { maxRetries: 100 },
       });
     }
     // Handle local development (ie. sst start)
@@ -710,6 +711,7 @@ export class Function extends CDKFunction implements SSTConstruct {
         environment: props.environment,
         layers: [],
         logRetention,
+        logRetentionRetryOptions: logRetention && { maxRetries: 100 },
         retryAttempts: 0,
         ...(debugOverrideProps || {}),
       });
@@ -748,6 +750,7 @@ export class Function extends CDKFunction implements SSTConstruct {
         environment: props.environment,
         layers: Function.buildLayers(scope, id, props),
         logRetention,
+        logRetentionRetryOptions: logRetention && { maxRetries: 100 },
       });
 
       useDeferredTasks().add(async () => {
