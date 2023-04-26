@@ -3,14 +3,14 @@
   "version": "0.0.0",
   "type": "module",
   "dependencies": {
-    "wonka": "^6.3.1",
+    "wonka": "^6.3.2",
     "@genql/runtime": "2.x",
-    "urql": "^4.0.0",
+    "urql": "^4.0.1",
     "graphql": "^16.6.0",
     "react": "^18.2.0"
   },
   "devDependencies": {
     "@genql/cli": "2.x",
-    "@types/react": "^18.0.37"
+    "@types/react": "^18.2.0"
   }
 }

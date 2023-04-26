@@ -50,7 +50,7 @@ type HandleObject<SRC extends Anify<DST>, DST> = SRC extends Nil
               // using keyof SRC to maintain ?: relations of SRC type
               [Key in keyof SRC]: Key extends keyof DST
                   ? FieldsSelection<
-                        NonNullable<SRC[Key]>,
+                        SRC[Key],
                         NonNullable<DST[Key]>
                     >
                   : SRC[Key]

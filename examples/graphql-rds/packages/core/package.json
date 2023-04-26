@@ -8,14 +8,14 @@
   },
   "devDependencies": {
     "vitest": "^0.30.1",
-    "@types/node": "^18.15.13",
-    "sst": "^2.5.7"
+    "@types/node": "^18.16.1",
+    "sst": "^2.7.2"
   },
   "dependencies": {
     "ulid": "^2.3.0",
     "kysely": "^0.24.2",
     "kysely-data-api": "^0.2.0",
-    "aws-sdk": "^2.1363.0",
-    "@aws-sdk/client-rds-data": "^3.316.0"
+    "aws-sdk": "^2.1366.0",
+    "@aws-sdk/client-rds-data": "^3.319.0"
   }
 }
