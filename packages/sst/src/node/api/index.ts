@@ -6,15 +6,12 @@ import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 export interface ApiResources {}
 export interface AppSyncApiResources {}
 export interface ApiGatewayV1ApiResources {}
-export interface WebSocketApiResources {}
 
 export const Api = /* @__PURE__ */ createProxy<ApiResources>("Api");
 export const AppSyncApi =
   /* @__PURE__ */ createProxy<AppSyncApiResources>("AppSyncApi");
 export const ApiGatewayV1Api =
   /* @__PURE__ */ createProxy<ApiGatewayV1ApiResources>("ApiGatewayV1Api");
-export const WebSocketApi =
-  /* @__PURE__ */ createProxy<WebSocketApiResources>("WebSocketApi");
 
 /**
  * Create a new api handler that can be used to create an authenticated session.

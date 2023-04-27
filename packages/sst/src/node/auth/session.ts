@@ -1,8 +1,13 @@
 import { createSigner, createVerifier, SignerOptions } from "fast-jwt";
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 import { Context } from "../../context/context.js";
-import { useCookie, useHeader } from "../api/index.js";
+import {
+  useCookie as useApiCookie,
+  useHeader as useApiHeader,
+} from "../api/index.js";
+import { useHeader as useWebsocketHeader } from "../websocket-api/index.js";
 import { getPrivateKey, getPublicKey } from "./auth.js";
+import { HandlerTypes, useContextType } from "../../context/handler.js";
 
 export interface SessionTypes {
   public: {};
@@ -15,13 +20,28 @@ export type SessionValue = {
   };
 }[keyof SessionTypes];
 
+const hooksForContextTypes: Record<
+  Extract<HandlerTypes, "api" | "ws">,
+  {
+    useHeader: (name: string) => string;
+    useCookie: (name: string) => string;
+  }
+> = {
+  api: { useHeader: useApiHeader, useCookie: useApiCookie },
+  ws: { useHeader: useWebsocketHeader, useCookie: () => "" },
+};
+
 const SessionMemo = /* @__PURE__ */ Context.memo(() => {
+  // Get the context type and hooks that match that type
+  const ctxType = useContextType();
+  const hooks = hooksForContextTypes[ctxType];
+  if (!hooks) throw new Error(`Invalid context type: ${ctxType} for auth`);
   let token = "";
 
-  const header = useHeader("authorization")!;
+  const header = hooks.useHeader("authorization")!;
   if (header) token = header.substring(7);
 
-  const cookie = useCookie("auth-token");
+  const cookie = hooks.useCookie("auth-token");
   if (cookie) token = cookie;
 
   if (token) {
