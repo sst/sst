@@ -20,23 +20,30 @@ export type SessionValue = {
   };
 }[keyof SessionTypes];
 
-const hooksForContextTypes: Record<
-  Extract<HandlerTypes, "api" | "ws">,
-  {
-    useHeader: (name: string) => string;
-    useCookie: (name: string) => string;
-  }
-> = {
+type Hooks = {
+  useHeader: (name: string) => string | undefined;
+  useCookie: (name: string) => string | undefined;
+};
+
+const hooksForContextTypes: Record<HandlerTypes, Hooks | undefined> = {
   api: { useHeader: useApiHeader, useCookie: useApiCookie },
-  ws: { useHeader: useWebsocketHeader, useCookie: () => "" },
+  ws: { useHeader: useWebsocketHeader, useCookie: () => undefined },
+  sqs: undefined,
 };
 
 const SessionMemo = /* @__PURE__ */ Context.memo(() => {
   // Get the context type and hooks that match that type
   const ctxType = useContextType();
   const hooks = hooksForContextTypes[ctxType];
-  if (!hooks) throw new Error(`Invalid context type: ${ctxType} for auth`);
-
+  if (!hooks) {
+    console.warn(
+      `Invalid context type: ${ctxType} for auth, returning public session`
+    );
+    return {
+      type: "public",
+      properties: {},
+    };
+  }
   let token = "";
 
   const header = hooks.useHeader("authorization")!;
