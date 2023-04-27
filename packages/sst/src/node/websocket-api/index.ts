@@ -8,16 +8,16 @@ export const WebSocketApi =
   /* @__PURE__ */ createProxy<WebSocketApiResources>("WebSocketApi");
 
 /**
- * Create a new WebsocketApi handler that can be used to create an
+ * Create a new WebSocketApi handler that can be used to create an
  * authenticated session.
  *
  * @example
  * ```ts
- * export const handler = WebsocketApiHandler({
+ * export const handler = WebSocketApiHandler({
  * })
  * ```
  */
-export function WebsocketApiHandler(cb: Parameters<typeof Handler<"ws">>[1]) {
+export function WebSocketApiHandler(cb: Parameters<typeof Handler<"ws">>[1]) {
   return Handler("ws", async (evt, ctx) => {
     const result = await cb(evt, ctx);
     return result;

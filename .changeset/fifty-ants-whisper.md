@@ -2,4 +2,4 @@
 "sst": patch
 ---
 
-Added WebsocketApiHandler so that we can use the auth sessions inside of a Websocket's connect and disconnect requests
+Added WebSocketApiHandler so that we can use the auth sessions inside of a WebSocket's connect and disconnect requests

@@ -5,7 +5,7 @@ import {
   useCookie as useApiCookie,
   useHeader as useApiHeader,
 } from "../api/index.js";
-import { useHeader as useWebsocketHeader } from "../websocket-api/index.js";
+import { useHeader as useWebSocketHeader } from "../websocket-api/index.js";
 import { getPrivateKey, getPublicKey } from "./auth.js";
 import { HandlerTypes, useContextType } from "../../context/handler.js";
 
@@ -27,7 +27,7 @@ type Hooks = {
 
 const hooksForContextTypes: Record<HandlerTypes, Hooks | undefined> = {
   api: { useHeader: useApiHeader, useCookie: useApiCookie },
-  ws: { useHeader: useWebsocketHeader, useCookie: () => undefined },
+  ws: { useHeader: useWebSocketHeader, useCookie: () => undefined },
   sqs: undefined,
 };
 

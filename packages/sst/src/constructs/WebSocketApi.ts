@@ -34,7 +34,7 @@ export interface WebSocketApiAccessLogProps
 
 export interface WebSocketApiProps {
   /**
-   * The routes for the Websocket API
+   * The routes for the WebSocket API
    *
    * @example
    * ```js
