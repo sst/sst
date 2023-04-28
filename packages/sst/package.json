@@ -19,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/estyrke/serverless-stack.git",
+    "url": "git+https://github.com/serverless-stack/sst.git",
     "directory": "packages/cli"
   },
   "exports": {
