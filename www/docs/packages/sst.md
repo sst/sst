@@ -117,12 +117,6 @@ In addition to the [global options](#global-options), the following options are 
 
 #### Options
 
-- **`--outputs-file`**
-
-  _Default_: none
-
-  Pass in this option if you want to write the AWS CloudFormation stack outputs to a JSON file. Works the same way as the [`--outputs-file`](https://docs.aws.amazon.com/cdk/latest/guide/cli.html#w108aac23b7c33c13) option in AWS CDK.
-
 - **`--rollback`**
 
   _Default_: `true`
@@ -206,7 +200,7 @@ You can also use the `sst bind` to run any scripts.
 
 ### `sst build`
 
-Build your app and synthesize your stacks. Generates a `.build/` directory with the compiled files and a `.build/cdk.out/` directory with the synthesized CloudFormation stacks.
+Build your app and synthesize your stacks. Generates a `.sst/` directory with the compiled files and a `.sst/dist/` directory with the synthesized CloudFormation stacks.
 
 ```bash
 npx sst build [options]
@@ -218,7 +212,7 @@ In addition to the [global options](#global-options), the following options are 
 
 - **`--to`**
 
-  _Default_: `.sst/dist`
+  _Default_: `.sst/dist/`
 
   Pass in a path for the build output. This lets you split up the deploy process and deploy without having to build the app again.
 
@@ -235,12 +229,6 @@ npx sst deploy [filter] [options]
 In addition to the [global options](#global-options), the following options are supported.
 
 #### Options
-
-- **`--outputs-file`**
-
-  _Default_: none
-
-  Pass in this option if you want to write the AWS CloudFormation stack outputs to a JSON file. Works the same way as the [`--outputs-file`](https://docs.aws.amazon.com/cdk/latest/guide/cli.html#w108aac23b7c33c13) option in AWS CDK.
 
 - **`--from`**
 
