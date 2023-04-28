@@ -10,8 +10,8 @@
   "dependencies": {
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "react-router-dom": "^6.10.0",
-    "urql": "^4.0.1",
+    "react-router-dom": "^6.11.0",
+    "urql": "^4.0.2",
     "graphql": "^16.6.0",
     "@create-sst-dynamo/graphql": "0.0.0",
     "react-icons": "^4.8.0"

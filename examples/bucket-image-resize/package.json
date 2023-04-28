@@ -17,12 +17,12 @@
     "constructs": "10.1.156",
     "typescript": "^5.0.4",
     "@tsconfig/node16": "^1.0.3",
-    "@types/sharp": "^0.31.1"
+    "@types/sharp": "^0.32.0"
   },
   "workspaces": [
     "packages/*"
   ],
   "dependencies": {
-    "sharp": "^0.32.0"
+    "sharp": "^0.32.1"
   }
 }
