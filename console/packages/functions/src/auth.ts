@@ -72,8 +72,8 @@ export const handler = AuthHandler({
     return {
       type: "account",
       properties: {
-        accountID: accountID,
-        email,
+        accountID: accountID!,
+        email: email!,
       },
     };
   },

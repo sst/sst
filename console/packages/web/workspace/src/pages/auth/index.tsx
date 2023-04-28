@@ -1,5 +1,5 @@
 import { Route, Routes, Navigate } from "@solidjs/router";
-import { useGlobalReplicache } from "../../data/replicache";
+import { useReplicache } from "../../data/replicache";
 
 export function Auth() {
   return (
@@ -39,7 +39,7 @@ function Provider() {
 
 function Workspaces() {
   const params = new URLSearchParams(location.hash.slice(1));
-  const replicache = useGlobalReplicache();
+  const replicache = useReplicache();
   const access_token = params.get("access_token");
   if (!access_token) return <Navigate href="/auth" />;
   replicache.auth = access_token;

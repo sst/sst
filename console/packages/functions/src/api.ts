@@ -9,6 +9,7 @@ export async function useApiAuth() {
 
   const workspaceID = useHeader("x-sst-workspace");
   if (workspaceID) {
+    console.log("auth workspace", workspaceID);
     const account = assertActor("account");
     provideActor({
       type: "system",
@@ -22,6 +23,7 @@ export async function useApiAuth() {
         `User not found for email ${account.properties.email} in workspace ${workspaceID}`
       );
 
+    console.log("using user actor", user.id);
     provideActor({
       type: "user",
       properties: {
