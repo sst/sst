@@ -1,11 +1,13 @@
 import { createProxy } from "../util/index.js";
 import { Context } from "../../context/context.js";
-import { useEvent, Handler } from "../../context/handler.js";
+import { useEvent, Handler, HandlerTypes } from "../../context/handler.js";
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 
 export interface ApiResources {}
 export interface AppSyncApiResources {}
 export interface ApiGatewayV1ApiResources {}
+
+export type ApiHandlerTypes = Extract<HandlerTypes, "api" | "ws">;
 
 export const Api = /* @__PURE__ */ createProxy<ApiResources>("Api");
 export const AppSyncApi =
@@ -43,14 +45,16 @@ export function useCookie(name: string) {
   return cookies[name] as string | undefined;
 }
 
-export const useBody = /* @__PURE__ */ Context.memo(() => {
-  const evt = useEvent("api");
-  if (!evt.body) return;
-  const body = evt.isBase64Encoded
-    ? Buffer.from(evt.body, "base64").toString()
-    : evt.body;
-  return body;
-});
+export const useBody = /* @__PURE__ */ Context.memo(
+  (type: ApiHandlerTypes = "api") => {
+    const evt = useEvent(type);
+    if (!evt.body) return;
+    const body = evt.isBase64Encoded
+      ? Buffer.from(evt.body, "base64").toString()
+      : evt.body;
+    return body;
+  }
+);
 
 export const useJsonBody = /* @__PURE__ */ Context.memo(() => {
   const body = useBody();
@@ -140,8 +144,8 @@ export const useResponse = /* @__PURE__ */ Context.memo(() => {
   return result;
 });
 
-export function useDomainName() {
-  const evt = useEvent("api");
+export function useDomainName(type: ApiHandlerTypes = "api") {
+  const evt = useEvent(type);
   return evt.requestContext.domainName;
 }
 
@@ -150,13 +154,13 @@ export function useMethod() {
   return evt.requestContext.http.method;
 }
 
-export function useHeaders() {
-  const evt = useEvent("api");
+export function useHeaders(type: ApiHandlerTypes = "api") {
+  const evt = useEvent(type);
   return evt.headers || {};
 }
 
-export function useHeader(key: string) {
-  const headers = useHeaders();
+export function useHeader(key: string, type: ApiHandlerTypes = "api") {
+  const headers = useHeaders(type);
   return headers[key];
 }
 
@@ -165,14 +169,17 @@ export function useFormValue(name: string) {
   return params?.get(name);
 }
 
-export function useQueryParams() {
-  const evt = useEvent("api");
+export function useQueryParams(type: ApiHandlerTypes = "api") {
+  const evt = useEvent(type);
   const query = evt.queryStringParameters || {};
   return query;
 }
 
-export function useQueryParam<T = string>(name: string) {
-  return useQueryParams()[name] as T | undefined;
+export function useQueryParam<T = string>(
+  name: string,
+  type: ApiHandlerTypes = "api"
+) {
+  return useQueryParams(type)[name] as T | undefined;
 }
 
 export function usePathParams() {

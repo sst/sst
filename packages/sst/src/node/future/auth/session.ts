@@ -1,13 +1,9 @@
 import { createSigner, createVerifier, SignerOptions } from "fast-jwt";
 import { Context } from "../../../context/context.js";
-import {
-  useCookie as useApiCookie,
-  useHeader as useApiHeader,
-} from "../../api/index.js";
-import { useHeader as useWebSocketHeader } from "../../websocket-api/index.js";
+import { ApiHandlerTypes, useCookie, useHeader } from "../../api/index.js";
 import { Auth } from "../../auth/index.js";
 import { Config } from "../../config/index.js";
-import { HandlerTypes, useContextType } from "../../../context/handler.js";
+import { useContextType } from "../../../context/handler.js";
 
 export interface SessionTypes {
   public: {};
@@ -20,36 +16,15 @@ export type SessionValue = {
   };
 }[keyof SessionTypes];
 
-type Hooks = {
-  useHeader: (name: string) => string | undefined;
-  useCookie: (name: string) => string | undefined;
-};
-
-const hooksForContextTypes: Record<HandlerTypes, Hooks | undefined> = {
-  api: { useHeader: useApiHeader, useCookie: useApiCookie },
-  ws: { useHeader: useWebSocketHeader, useCookie: () => undefined },
-  sqs: undefined,
-};
-
 const SessionMemo = /* @__PURE__ */ Context.memo(() => {
   // Get the context type and hooks that match that type
   const ctxType = useContextType();
-  const hooks = hooksForContextTypes[ctxType];
-  if (!hooks) {
-    console.warn(
-      `Invalid context type: ${ctxType} for auth, returning public session`
-    );
-    return {
-      type: "public",
-      properties: {},
-    };
-  }
   let token = "";
 
-  const header = hooks.useHeader("authorization")!;
+  const header = useHeader("authorization", ctxType as ApiHandlerTypes)!;
   if (header) token = header.substring(7);
 
-  const cookie = hooks.useCookie("sst_auth_token");
+  const cookie = ctxType === "api" ? useCookie("sst_auth_token") : undefined;
   if (cookie) token = cookie;
 
   if (token) {
