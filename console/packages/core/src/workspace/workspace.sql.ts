@@ -11,11 +11,9 @@ export const workspace = mysqlTable(
   {
     ...id,
     ...timestamps,
-    businessID: cuid("business_id").notNull(),
     slug: varchar("slug", { length: 255 }).notNull(),
   },
   (table) => ({
     primary: primaryKey(table.id),
-    slug: uniqueIndex("slug").on(table.businessID, table.slug),
   })
 );

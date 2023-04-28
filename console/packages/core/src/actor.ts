@@ -7,13 +7,14 @@ export const PublicActor = z.object({
 });
 export type PublicActor = z.infer<typeof PublicActor>;
 
-export const EmailActor = z.object({
-  type: z.literal("email"),
+export const AccountActor = z.object({
+  type: z.literal("account"),
   properties: z.object({
+    accountID: z.string().cuid2(),
     email: z.string().email(),
   }),
 });
-export type EmailActor = z.infer<typeof EmailActor>;
+export type AccountActor = z.infer<typeof AccountActor>;
 
 export const UserActor = z.object({
   type: z.literal("user"),
@@ -24,10 +25,19 @@ export const UserActor = z.object({
 });
 export type UserActor = z.infer<typeof UserActor>;
 
+export const SystemActor = z.object({
+  type: z.literal("system"),
+  properties: z.object({
+    workspaceID: z.string().cuid2(),
+  }),
+});
+export type SystemActor = z.infer<typeof SystemActor>;
+
 export const Actor = z.discriminatedUnion("type", [
   UserActor,
-  EmailActor,
+  AccountActor,
   PublicActor,
+  SystemActor,
 ]);
 export type Actor = z.infer<typeof Actor>;
 
@@ -43,4 +53,10 @@ export function assertActor<T extends Actor["type"]>(type: T) {
   }
 
   return actor as Extract<Actor, { type: T }>;
+}
+
+export function useWorkspace() {
+  const actor = useActor();
+  if ("workspaceID" in actor.properties) return actor.properties.workspaceID;
+  throw new Error(`Expected actor to have workspaceID`);
 }

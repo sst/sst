@@ -1,29 +1,32 @@
-export * as Workspace from "./";
+export * as User from "./";
 
 import { createSelectSchema } from "drizzle-zod";
-import { workspace } from "./workspace.sql";
 import { z } from "zod";
 import { zod } from "../util/zod";
 import { createId } from "@paralleldrive/cuid2";
 import { db } from "../drizzle";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { useTransaction } from "../util/transaction";
+import { user } from "./user.sql";
+import { useWorkspace } from "../actor";
 
-export const Info = createSelectSchema(workspace, {
+export const Info = createSelectSchema(user, {
   id: (schema) => schema.id.cuid2(),
+  email: (schema) => schema.email.email(),
 });
 export type Info = z.infer<typeof Info>;
 
 export const create = zod(
-  Info.pick({ slug: true, id: true, businessID: true }).partial({
+  Info.pick({ email: true, id: true }).partial({
     id: true,
   }),
   async (input) => {
     const id = input.id ?? createId();
     return useTransaction(async (tx) => {
-      await tx.insert(workspace).values({
+      await tx.insert(user).values({
         id,
-        slug: input.slug,
+        email: input.email,
+        workspaceID: useWorkspace(),
       });
       return id;
     });
@@ -34,19 +37,20 @@ export const fromID = zod(Info.shape.id, async (id) =>
   db.transaction(async (tx) => {
     return tx
       .select()
-      .from(workspace)
-      .where(eq(workspace.id, id))
+      .from(user)
+      .where(and(eq(user.id, id), eq(user.workspaceID, useWorkspace())))
       .execute()
       .then((rows) => rows[0]);
   })
 );
 
-export const forBusiness = zod(Info.shape.businessID, async (businessID) =>
+export const fromEmail = zod(Info.shape.email, async (email) =>
   db.transaction(async (tx) => {
     return tx
       .select()
-      .from(workspace)
-      .where(eq(workspace.businessID, businessID))
-      .execute();
+      .from(user)
+      .where(and(eq(user.email, email), eq(user.workspaceID, useWorkspace())))
+      .execute()
+      .then((rows) => rows[0]);
   })
 );

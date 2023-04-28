@@ -14,7 +14,7 @@ export const user = mysqlTable(
     ...id,
     workspaceID: cuid("workspace_id").notNull(),
     ...timestamps,
-    email: varchar("email", { length: 255 }),
+    email: varchar("email", { length: 255 }).notNull(),
   },
   (user) => ({
     primary: primaryKey(user.id, user.workspaceID),

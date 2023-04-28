@@ -20,6 +20,7 @@
     "@tsconfig/node16": "^1.0.3"
   },
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "packages/web/*"
   ]
 }

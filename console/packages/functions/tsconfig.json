@@ -1,6 +1,7 @@
 {
   "extends": "@tsconfig/node16/tsconfig.json",
   "compilerOptions": {
+    "noUncheckedIndexedAccess": true,
     "module": "esnext",
     "baseUrl": ".",
     "paths": {
