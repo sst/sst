@@ -42,6 +42,21 @@ If your domains are hosted elsewhere, [check out the section below](#externally-
 
 ---
 
+## Redirect www
+
+For root domains, people prefer to redirect `www.my-app.com` to `my-app.com`. You can configure this by setting a `domainAlias`.
+
+```ts {4}
+new NextjsSite(stack, "site", {
+  customDomain: {
+    domainName: "my-app.com",
+    domainAlias: "www.my-app.com",
+  },
+});
+```
+
+---
+
 ## Using subdomains
 
 Route 53 has a concept of [hosted zones](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/hosted-zones-working-with.html); a collection of records belonging to a single root domain. If you are using a subdomain as your custom domain, you'll need to specify the Route 53 hosted zone you are using. Usually this is just the root domain.
@@ -56,21 +71,6 @@ new NextjsSite(stack, "site", {
 ```
 
 Note that we didn't have to do that for the API example above because behind the scenes the `Api` construct defaults to the hosted zone for the root domain.
-
----
-
-## Redirect www
-
-For root domains, people prefer to redirect `www.my-app.com` to `my-app.com`. You can configure this by setting a `domainAlias`.
-
-```ts {4}
-new NextjsSite(stack, "site", {
-  customDomain: {
-    domainName: "my-app.com",
-    domainAlias: "www.my-app.com",
-  },
-});
-```
 
 ---
 
@@ -156,6 +156,31 @@ You can further configure how your custom domains are set.
 
 ---
 
+### Importing a certificate
+
+You can import existing certificates to use with your custom domain.
+
+:::note
+The certificate needs be created in the `us-east-1` (N. Virginia) region as required by CloudFront.
+:::
+
+```js {7}
+import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
+
+new NextjsSite(stack, "site", {
+  customDomain: {
+    domainName: "my-app.com",
+    cdk: {
+      certificate: Certificate.fromCertificateArn(stack, "MyCert", certArn),
+    },
+  },
+});
+```
+
+Here `certArn` is the ARN of the certificate.
+
+---
+
 ### Alternate domain names
 
 In addition to your custom domain, you can specify additional domain names.
@@ -207,25 +232,32 @@ new route53.AaaaRecord(stack, "AlternateAAAARecord", recordProps);
 
 ---
 
-### Importing a certificate
+### Sharing domains across accounts
 
-You can import existing certificates to use with your custom domain.
+It's good practice to use [separate AWS accounts for your environments](working-with-your-team.md#aws-account-per-environment). However this means that you'll need to share a domain across AWS accounts. Imagine we want the following scheme.
 
-:::note
-The certificate needs be created in the `us-east-1` (N. Virginia) region as required by CloudFront.
-:::
+- `prod` ⇒ my-app.com
+- `dev` ⇒ dev.my-app.com
 
-```js {7}
-import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
+Our `prod` account has the root domain and we want to use `dev.my-app.com` in a separate `dev` account. Let's look at how to do this.
 
+1. Create a hosted zone in the new account. Go into the Route 53 console for the `dev` account and create a new hosted zone called `dev.my-app.com`.
+2. Once created, copy the 4 lines from the **Values** field of the **NS** record.
+3. Now go to the Route 53 hosted zone for `my-app.com` in the `prod` account.
+4. Create a **new Record set** with the following.
+   - **Name**: `dev`
+   - **Type**: "NS - Name server"
+   - **Value**: _Paste the 4 lines from above_
+
+That's it. Now you've delegated this subdomain to your `dev` account. To use this subdomain, you'll need to specify the new hosted zone you created.
+
+```ts {4}
 new NextjsSite(stack, "site", {
   customDomain: {
-    domainName: "my-app.com",
-    cdk: {
-      certificate: Certificate.fromCertificateArn(stack, "MyCert", certArn),
-    },
+    domainName: "dev.my-app.com",
+    hostedZone: "dev.my-app.com",
   },
 });
 ```
 
-Here `certArn` is the ARN of the certificate.
+Note that we are using `dev.my-app.com` and not `my-app.com` as the hosted zone because we are using the `dev` account.
