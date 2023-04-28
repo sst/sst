@@ -42,6 +42,23 @@ If your domains are hosted elsewhere, [check out the section below](#externally-
 
 ---
 
+## Using subdomains
+
+Route 53 has a concept of [hosted zones](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/hosted-zones-working-with.html); a collection of records belonging to a single root domain. If you are using a subdomain as your custom domain, you'll need to specify the Route 53 hosted zone you are using. Usually this is just the root domain.
+
+```ts {4}
+new NextjsSite(stack, "site", {
+  customDomain: {
+    domainName: "dev.my-app.com",
+    hostedZone: "my-app.com",
+  },
+});
+```
+
+Note that we didn't have to do that for the API example above because behind the scenes the `Api` construct defaults to the hosted zone for the root domain.
+
+---
+
 ## Redirect www
 
 For root domains, people prefer to redirect `www.my-app.com` to `my-app.com`. You can configure this by setting a `domainAlias`.
