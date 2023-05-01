@@ -9,10 +9,11 @@
   "devDependencies": {
     "@types/aws-lambda": "^8.10.114",
     "@types/node": "^18.16.0",
-    "sst": "2.7.1"
+    "sst": "2.7.2"
   },
   "dependencies": {
     "@octokit/rest": "^19.0.7",
+    "drizzle-orm": "0.25.3",
     "fast-jwt": "^2.2.1"
   }
 }

@@ -1,13 +1,15 @@
 import { StackContext, Api, use } from "sst/constructs";
 import { Auth } from "./auth";
+import { Secrets } from "./secrets";
 
 export function API({ stack }: StackContext) {
   const auth = use(Auth);
+  const secrets = use(Secrets);
 
   const api = new Api(stack, "api", {
     defaults: {
       function: {
-        bind: [auth],
+        bind: [auth, ...Object.values(secrets.database)],
       },
     },
     routes: {
