@@ -20,7 +20,7 @@ The easiest way to set a custom domain in SST is by having your domains hosted i
 - For your [frontend](constructs/NextjsSite.md#customdomain)
 
   ```ts {2}
-  new NextjsSite(stack, "site", {
+  const site = new NextjsSite(stack, "site", {
     customDomain: "my-app.com",
   });
   ```
@@ -28,7 +28,7 @@ The easiest way to set a custom domain in SST is by having your domains hosted i
 - Or [API](constructs/Api.md#customdomain)
 
   ```ts {2}
-  new Api(stack, "api", {
+  const api = new Api(stack, "api", {
     customDomain: "api.my-app.com",
     routes: {
       "GET /": "packages/functions/src/lambda.handler",
@@ -42,7 +42,22 @@ If your domains are hosted elsewhere, [check out the section below](#externally-
 
 ---
 
-## Redirect www
+## Custom domain URL
+
+Once set, you can output the URLs using `customDomainUrl`. Both for the [frontend](constructs/NextjsSite.md#customdomainurl) and [API](constructs/Api.md#customdomainurl).
+
+```ts {2,3}
+stack.addOutputs({
+  Url: site.customDomainUrl || site.url,
+  Url: api.customDomainUrl || api.url,
+});
+```
+
+It's good practice to fallback to the auto-generated URL in case the custom domain URL is not set.
+
+---
+
+## Redirect to www
 
 For root domains, people prefer to redirect `www.my-app.com` to `my-app.com`. You can configure this by setting a `domainAlias`.
 
@@ -57,7 +72,7 @@ new NextjsSite(stack, "site", {
 
 ---
 
-## Using subdomains
+## Use a subdomain
 
 Route 53 has a concept of [hosted zones](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/hosted-zones-working-with.html); a collection of records belonging to a single root domain. If you are using a subdomain as your custom domain, you'll need to specify the Route 53 hosted zone you are using. Usually this is just the root domain.
 
