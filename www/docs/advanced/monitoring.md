@@ -152,9 +152,7 @@ For more details, [check out the Datadog docs](https://docs.datadoghq.com/server
 
 [Sentry](https://sentry.io) offers [Serverless Error Monitoring](https://sentry.io/for/serverless/) for your Lambda functions. Integration is done through a Lambda Layer.
 
-Head over to the [Layer that Sentry provides](https://docs.sentry.io/platforms/node/guides/aws-lambda/layer/), select your region and copy the layer ARN.
-
-Then add the Layer to your stack.
+Head over to the [Layer that Sentry provides](https://docs.sentry.io/platforms/node/guides/aws-lambda/layer/), select your region and copy the layer ARN. Then add the Layer to your stack.
 
 ```ts title="stacks/Foo.js"
 import { LayerVersion } from "aws-cdk-lib/aws-lambda";
@@ -200,7 +198,7 @@ export const handler = Sentry.AWSLambda.wrapHandler(async (event) => {
 });
 ```
 
-For more details, [check out the Sentry docs](https://docs.sentry.io/platforms/node/guides/aws-lambda/).
+For more details, [check out the Sentry docs](https://docs.sentry.io/platforms/node/guides/aws-lambda/). Also, [check out our docs on how to upload source maps to Sentry](./source-maps.md#upload-source-maps-to-sentry).
 
 ---
 
