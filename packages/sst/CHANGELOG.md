@@ -1,5 +1,17 @@
 # @serverless-stack/cli2
 
+## 2.8.0
+
+### Minor Changes
+
+- [#2824](https://github.com/serverless-stack/sst/pull/2824) [`eebce13c1`](https://github.com/serverless-stack/sst/commit/eebce13c18cb51f2fd6ead53492ed5d8fc375040) Thanks [@fwang](https://github.com/fwang)! - Add support for SvelteKit
+
+### Patch Changes
+
+- [`986f01505`](https://github.com/serverless-stack/sst/commit/986f015058f9e314f166b3277d9961356fa9e05a) Thanks [@fwang](https://github.com/fwang)! - SsrSite: server function do not inherit default function props
+
+- [`42ab9acbe`](https://github.com/serverless-stack/sst/commit/42ab9acbee06ade79774c2d1b3f58a78e2f62a7f) Thanks [@fwang](https://github.com/fwang)! - Function: handle Rate Exceeded error setting log retention
+
 ## 2.7.2
 
 ### Patch Changes
