@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.8.3
+
+### Patch Changes
+
+- [`ac7622928`](https://github.com/serverless-stack/sst/commit/ac7622928998c438f4645f38bef6a038b309b061) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: add "accpet", "rsc", and state tree headers to cache policy
+
 ## 2.8.2
 
 ### Patch Changes
