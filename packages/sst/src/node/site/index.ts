@@ -1,20 +1,17 @@
 import { createProxy } from "../util/index.js";
 
 export interface StaticSiteResources {}
-export interface ReactStaticSiteResources {}
-export interface ViteStaticSiteResources {}
 export interface NextjsSiteResources {}
+export interface AstroSiteResources {}
 export interface RemixSiteResources {}
 export interface SolidStartSiteResources {}
+export interface SvelteKitSiteResources {}
 
 export const StaticSite =
   /* @__PURE__ */ createProxy<StaticSiteResources>("StaticSite");
-export const ReactStaticSite =
+export const AstroSite =
   /* @__PURE__ */
-  createProxy<ReactStaticSiteResources>("ReactStaticSite");
-export const ViteStaticSite =
-  /* @__PURE__ */
-  createProxy<ViteStaticSiteResources>("ViteStaticSite");
+  createProxy<AstroSiteResources>("AstroSite");
 export const RemixSite =
   /* @__PURE__ */
   createProxy<RemixSiteResources>("RemixSite");
@@ -24,3 +21,7 @@ export const NextjsSite =
 export const SolidStartSite =
   /* @__PURE__ */
   createProxy<SolidStartSiteResources>("SolidStartSite");
+
+export const SvelteKitSite =
+  /* @__PURE__ */
+  createProxy<SvelteKitSiteResources>("SvelteKitSite");

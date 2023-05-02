@@ -242,6 +242,7 @@ export const bind = (program: Program) =>
                   "AstroSite",
                   "RemixSite",
                   "SolidStartSite",
+                  "SvelteKitSite",
                   "SlsNextjsSite",
                 ].includes(c.type)
             )

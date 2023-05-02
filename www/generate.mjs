@@ -129,6 +129,7 @@ app.bootstrap({
     "../packages/sst/src/constructs/WebSocketApi.ts",
     "../packages/sst/src/constructs/AstroSite.tsdoc.ts",
     "../packages/sst/src/constructs/SolidStartSite.tsdoc.ts",
+    "../packages/sst/src/constructs/SvelteKitSite.tsdoc.ts",
     "../packages/sst/src/constructs/RemixSite.tsdoc.ts",
   ],
   tsconfig: path.resolve("../packages/sst/tsconfig.json"),

@@ -5,6 +5,12 @@ import {
 } from "@aws-sdk/client-ssm";
 const ssm = new SSMClient({ region: process.env.SST_REGION });
 
+interface Variable {
+  constructName: string;
+  constructId: string;
+  propName: string;
+}
+
 // Example:
 // {
 //   Bucket: {
@@ -19,16 +25,24 @@ let allVariables: Record<string, Record<string, Record<string, string>>> = {};
 //       https://discord.com/channels/983865673656705025/1089184080534446110
 const _placeholder = await parseEnvironment();
 
-interface Variable {
-  constructName: string;
-  constructId: string;
-  propName: string;
-}
-
 export function createProxy<T extends object>(constructName: string) {
   const result = new Proxy<T>({} as any, {
     get(target, prop) {
       if (typeof prop === "string") {
+        // If SST_APP and SST_STAGE are not set, it is likely the
+        // user is using an older version of SST.
+        // Note: cannot run this check at the top level b/c SvelteKit
+        //       run code analysis after build. The code analysis runs
+        //       the top level code, and would fail b/c "SST_APP" and
+        //       "SST_STAGE" are undefined at build time.
+        for (const builtInEnv of ["SST_APP", "SST_STAGE"]) {
+          if (!process.env[builtInEnv]) {
+            throw new Error(
+              `Cannot find the ${builtInEnv} environment variable. This is usually the case when you are using an older version of SST. Please update SST to the latest version to use the SST Config feature.`
+            );
+          }
+        }
+
         // normalize prop to convert kebab cases like `my-table` to `my_table`
         const normProp = normalizeId(prop);
         if (!(normProp in target)) {

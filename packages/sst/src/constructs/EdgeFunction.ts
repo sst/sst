@@ -150,7 +150,7 @@ export class EdgeFunction extends Construct {
     );
     const { versionId } = this.createVersionInUsEast1(fn, fnArn);
 
-    // Deploy after the code is updated
+    // Create function after the code is updated
     fn.node.addDependency(assetReplacer);
 
     this.function = fn;
@@ -316,7 +316,11 @@ export class EdgeFunction extends Construct {
     handlerFilename: string
   ) {
     const { environment } = this.props;
+    const stack = Stack.of(this) as Stack;
 
+    // Note: Source code for the Lambda functions have "{{ ENV_KEY }}" in them.
+    //       They need to be replaced with real values before the Lambda
+    //       functions get deployed.
     const replacements: BaseSiteReplaceProps[] = [
       {
         files: handlerFilename,
@@ -327,16 +331,11 @@ export class EdgeFunction extends Construct {
         }),
       },
       ...Object.entries(environment).map(([key, value]) => ({
-        files: "**/*.*js",
+        files: "**/*.@(*js|json|html)",
         search: `{{ ${key} }}`,
         replace: value,
       })),
     ];
-
-    // Note: Source code for the Lambda functions have "{{ ENV_KEY }}" in them.
-    //       They need to be replaced with real values before the Lambda
-    //       functions get deployed.
-    const stack = Stack.of(this) as Stack;
 
     const policy = new Policy(this, "AssetReplacerPolicy", {
       statements: [

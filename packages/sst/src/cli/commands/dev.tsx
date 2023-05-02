@@ -249,6 +249,8 @@ export const dev = (program: Program) =>
                     ? "Remix"
                     : type === "SolidStartSite"
                     ? "SolidStart"
+                    : type === "SvelteKitSite"
+                    ? "SvelteKit"
                     : undefined;
                 if (framework) {
                   const cdCmd =

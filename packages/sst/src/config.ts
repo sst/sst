@@ -181,7 +181,8 @@ export namespace Config {
           c.type === "AstroSite" ||
           c.type === "NextjsSite" ||
           c.type === "RemixSite" ||
-          c.type === "SolidStartSite"
+          c.type === "SolidStartSite" ||
+          c.type === "SvelteKitSite"
       )
       .filter((c) => keys.some((key) => c.data.secrets.includes(key)));
     const siteDataPlaceholder = siteData.filter(
