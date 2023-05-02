@@ -982,10 +982,13 @@ function handler(event) {
     return staticsBehaviours;
   }
 
-  protected buildServerCachePolicy() {
+  protected buildServerCachePolicy(allowedHeaders?: string[]) {
     return new CachePolicy(this, "ServerCache", {
       queryStringBehavior: CacheQueryStringBehavior.all(),
-      headerBehavior: CacheHeaderBehavior.none(),
+      headerBehavior:
+        allowedHeaders && allowedHeaders.length > 0
+          ? CacheHeaderBehavior.allowList(...allowedHeaders)
+          : CacheHeaderBehavior.none(),
       cookieBehavior: CacheCookieBehavior.all(),
       defaultTtl: CdkDuration.days(0),
       maxTtl: CdkDuration.days(365),

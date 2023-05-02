@@ -221,7 +221,14 @@ export class NextjsSite extends SsrSite {
       authType: FunctionUrlAuthType.NONE,
     });
     const serverOrigin = new HttpOrigin(Fn.parseDomainName(serverFnUrl.url));
-    const cachePolicy = cdk?.serverCachePolicy ?? this.buildServerCachePolicy();
+    const cachePolicy =
+      cdk?.serverCachePolicy ??
+      this.buildServerCachePolicy([
+        "accept",
+        "rsc",
+        "next-router-prefetch",
+        "next-router-state-tree",
+      ]);
     const originRequestPolicy = this.buildServerOriginRequestPolicy();
     const serverBehavior = this.buildServerBehaviorForRegional(
       serverOrigin,
@@ -257,7 +264,14 @@ export class NextjsSite extends SsrSite {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
     const s3Origin = new S3Origin(this.cdk!.bucket);
-    const cachePolicy = cdk?.serverCachePolicy ?? this.buildServerCachePolicy();
+    const cachePolicy =
+      cdk?.serverCachePolicy ??
+      this.buildServerCachePolicy([
+        "accept",
+        "rsc",
+        "next-router-prefetch",
+        "next-router-state-tree",
+      ]);
     const originRequestPolicy = this.buildServerOriginRequestPolicy();
     const functionVersion = this.serverLambdaForEdge!.currentVersion;
     const serverBehavior = this.buildServerBehaviorForEdge(
