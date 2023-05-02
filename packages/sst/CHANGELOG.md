@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.8.2
+
+### Patch Changes
+
+- [`f239e3292`](https://github.com/serverless-stack/sst/commit/f239e3292b6a379c20472717574120c470ba0b55) Thanks [@fwang](https://github.com/fwang)! - SsrSite: fix dev mode placeholder function path
+
 ## 2.8.1
 
 ### Patch Changes
