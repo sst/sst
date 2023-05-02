@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.2.1
+
+### Patch Changes
+
+- [`6cd6c2d1e`](https://github.com/serverless-stack/sst/commit/6cd6c2d1eae10979fabdfad6912e61a3c7211e3f) Thanks [@fwang](https://github.com/fwang)! - Add support for SvelteKit
+
 ## 2.2.0
 
 ### Minor Changes
