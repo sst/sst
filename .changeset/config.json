@@ -11,6 +11,7 @@
       "create-sst",
       "sst",
       "astro-sst",
+      "svelte-kit-sst",
       "solid-start-sst"
     ]
   ],

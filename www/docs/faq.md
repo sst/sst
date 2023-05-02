@@ -77,7 +77,7 @@ AWS created [AWS SAM](https://github.com/aws/aws-sam-cli) in response to [Server
 It extends [AWS CloudFormation](https://aws.amazon.com/cloudformation/) and is more native to AWS. But in general has worse developer experience. It also has a smaller open source community around it. It's not a good choice for building modern full-stack applications because:
 
 - It is not designed to work with your frontend.
-  - There are no built-in ways to deploy Next.js, Remix, Astro, or other SSR frontends.
+  - There are no built-in ways to deploy Next.js, Svelte, Remix, Astro, or other SSR frontends.
   - There are no easy ways to connect your frontend and your backend.
 - You need to use AWS CloudFormation to define the infrastructure for your backend. It is verbose and needs a lot of AWS knowledge.
 - The local development experience for SAM is really poor. It takes a few seconds to redeploy every time you make a change and you can't set breakpoints.

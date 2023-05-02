@@ -20,9 +20,10 @@ $ npx create-sst@latest
 
 ### Pick your frontend
 
-Deploy Next.js, Remix, Astro, Solid, or any static site to AWS.
+Deploy Next.js, Svelte, Remix, Astro, Solid, or any static site to AWS.
 
 - [**Next.js**](https://docs.sst.dev/start/nextjs)
+- [**Svelte**](https://docs.sst.dev/constructs/SvelteKitSite)
 - [**Remix**](https://docs.sst.dev/constructs/RemixSite)
 - [**Astro**](https://docs.sst.dev/start/astro)
 - [**Solid**](https://docs.sst.dev/constructs/SolidStartSite)

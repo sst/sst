@@ -6,6 +6,7 @@ const PACKAGE_MATCH = [
   "aws-cdk",
   "@aws-cdk",
   "constructs",
+  "svelte-kit-sst",
   "solid-start-sst",
 ];
 

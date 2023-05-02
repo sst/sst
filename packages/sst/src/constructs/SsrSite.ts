@@ -91,13 +91,20 @@ import {
 import { useProject } from "../project.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
-type SsrSiteType = "NextjsSite" | "RemixSite" | "AstroSite" | "SolidStartSite";
+type SsrSiteType =
+  | "NextjsSite"
+  | "RemixSite"
+  | "AstroSite"
+  | "SolidStartSite"
+  | "SvelteKitSite";
 
 export type SsrBuildConfig = {
   typesPath: string;
   serverBuildOutputFile: string;
+  serverCFFunctionInjection?: string;
   clientBuildOutputDir: string;
   clientBuildVersionedSubDir: string;
+  prerenderedBuildOutputDir?: string;
 };
 
 export interface SsrSiteNodeJSProps extends NodeJSProps {}
@@ -590,7 +597,17 @@ export class SsrSite extends Construct implements SSTConstruct {
       "node",
       [
         script,
-        path.join(this.props.path, this.buildConfig.clientBuildOutputDir),
+        [
+          path.join(this.props.path, this.buildConfig.clientBuildOutputDir),
+          ...(this.buildConfig.prerenderedBuildOutputDir
+            ? [
+                path.join(
+                  this.props.path,
+                  this.buildConfig.prerenderedBuildOutputDir
+                ),
+              ]
+            : []),
+        ].join(","),
         zipOutDir,
         `${fileSizeLimit}`,
       ],
@@ -806,6 +823,7 @@ export class SsrSite extends Construct implements SSTConstruct {
 function handler(event) {
   var request = event.request;
   request.headers["x-forwarded-host"] = request.headers.host;
+  ${this.buildConfig.serverCFFunctionInjection || ""}
   return request;
 }`),
     });
@@ -1178,6 +1196,11 @@ function handler(event) {
           },
           {
             files: "**/*.js",
+            search: token,
+            replace: value,
+          },
+          {
+            files: "**/*.json",
             search: token,
             replace: value,
           }

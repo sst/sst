@@ -22,6 +22,7 @@ export * from "./NextjsSite.js";
 export * from "./RemixSite.js";
 export * from "./SolidStartSite.js";
 export * from "./StaticSite.js";
+export * from "./SvelteKitSite.js";
 export * from "./util/size.js";
 export * from "./util/duration.js";
 export * from "./util/permission.js";

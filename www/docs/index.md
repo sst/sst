@@ -28,7 +28,7 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 <div className={styles.heading}>
   <h3>Pick Your Frontend</h3>
-  <p>Start with a Next.js, Remix, Astro, or Solid app and deploy it to AWS with SST.</p>
+  <p>Start with a Next.js, Svelte, Remix, Astro, or Solid app and deploy it to AWS with SST.</p>
 </div>
 
 <ul className={styles.features}>

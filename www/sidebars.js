@@ -9,22 +9,18 @@ module.exports = {
           label: "Get Started",
           collapsible: true,
           collapsed: false,
-          items: [
-            "start/standalone",
-            "start/nextjs",
-            "start/astro",
-          ]
+          items: ["start/standalone", "start/nextjs", "start/astro"],
         },
       ],
     },
-//    {
-//      "Get Started": [
-//        "start/basics",
-//        "start/nextjs",
-//        "start/astro",
-//        "start/vite",
-//      ],
-//    },
+    //    {
+    //      "Get Started": [
+    //        "start/basics",
+    //        "start/nextjs",
+    //        "start/astro",
+    //        "start/vite",
+    //      ],
+    //    },
     //    {
     //      Features: [
     //        {
@@ -114,7 +110,7 @@ module.exports = {
       "Migrating From": [
         "migrating/cdk",
         "migrating/vercel",
-        "migrating/serverless-framework"
+        "migrating/serverless-framework",
       ],
     },
     {
@@ -179,6 +175,7 @@ module.exports = {
       Frontend: [
         "constructs/StaticSite",
         "constructs/NextjsSite",
+        "constructs/SvelteKitSite",
         "constructs/RemixSite",
         "constructs/AstroSite",
         "constructs/SolidStartSite",
