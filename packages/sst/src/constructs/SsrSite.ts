@@ -780,7 +780,7 @@ export class SsrSite extends Construct implements SSTConstruct {
 
     const ssrFn = new SsrFunction(this, `ServerFunction`, {
       description: "Server handler placeholder",
-      bundle: path.join(__dirname, "../../support/ssr-site-function-stub"),
+      bundle: path.join(__dirname, "../support/ssr-site-function-stub"),
       handler: "index.handler",
       runtime,
       memorySize,
