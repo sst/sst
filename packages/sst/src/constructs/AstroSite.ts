@@ -1,9 +1,9 @@
 import fs from "fs";
 import path from "path";
-import { Architecture, Function as CdkFunction } from "aws-cdk-lib/aws-lambda";
+import { Function as CdkFunction } from "aws-cdk-lib/aws-lambda";
 
 import { SsrSite } from "./SsrSite.js";
-import { Function } from "./Function.js";
+import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 
 /**
@@ -51,10 +51,9 @@ export class AstroSite extends SsrSite {
       cdk,
     } = this.props;
 
-    const fn = new Function(this, `ServerFunction`, {
-      description: "Server handler",
+    const ssrFn = new SsrFunction(this, `ServerFunction`, {
+      description: "Server handler for Astro",
       handler: path.join(this.props.path, "dist", "server", "entry.handler"),
-      logRetention: "three_days",
       runtime,
       memorySize,
       timeout,
@@ -66,12 +65,9 @@ export class AstroSite extends SsrSite {
       environment,
       permissions,
       ...cdk?.server,
-      architecture:
-        cdk?.server?.architecture === Architecture.ARM_64 ? "arm_64" : "x86_64",
     });
-    fn._doNotAllowOthersToBind = true;
 
-    return fn;
+    return ssrFn.function;
   }
 
   protected createFunctionForEdge(): EdgeFunction {

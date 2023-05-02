@@ -11,7 +11,6 @@ import {
   Fn,
   Token,
   Duration as CdkDuration,
-  CfnOutput,
   RemovalPolicy,
   CustomResource,
 } from "aws-cdk-lib";
@@ -29,6 +28,7 @@ import {
   AnyPrincipal,
 } from "aws-cdk-lib/aws-iam";
 import {
+  Architecture,
   Function as CdkFunction,
   Code,
   Runtime,
@@ -72,6 +72,7 @@ import { createAppContext } from "./context.js";
 import { SSTConstruct, isCDKConstruct } from "./Construct.js";
 import { NodeJSProps, Function } from "./Function.js";
 import { Secret } from "./Secret.js";
+import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 import {
   BaseSiteDomainProps,
@@ -293,7 +294,7 @@ export class SsrSite extends Construct implements SSTConstruct {
   protected buildConfig: SsrBuildConfig;
   protected serverLambdaForEdge?: EdgeFunction;
   protected serverLambdaForRegional?: CdkFunction;
-  private serverLambdaForDev?: Function;
+  private serverLambdaForDev?: CdkFunction;
   private bucket: Bucket;
   private cfFunction: CfFunction;
   private distribution: Distribution;
@@ -435,8 +436,13 @@ export class SsrSite extends Construct implements SSTConstruct {
    * ```
    */
   public attachPermissions(permissions: Permissions): void {
-    this.serverLambdaForDev?.attachPermissions(permissions);
     this.serverLambdaForEdge?.attachPermissions(permissions);
+    if (this.serverLambdaForDev) {
+      attachPermissionsToRole(
+        this.serverLambdaForDev.role as Role,
+        permissions
+      );
+    }
     if (this.serverLambdaForRegional) {
       attachPermissionsToRole(
         this.serverLambdaForRegional.role as Role,
@@ -763,7 +769,7 @@ export class SsrSite extends Construct implements SSTConstruct {
     return {} as EdgeFunction;
   }
 
-  protected createFunctionForDev(): Function {
+  protected createFunctionForDev(): CdkFunction {
     const { runtime, timeout, memorySize, permissions, environment, bind } =
       this.props;
 
@@ -772,23 +778,21 @@ export class SsrSite extends Construct implements SSTConstruct {
       maxSessionDuration: CdkDuration.hours(12),
     });
 
-    const fn = new Function(this, `ServerFunction`, {
+    const ssrFn = new SsrFunction(this, `ServerFunction`, {
       description: "Server handler placeholder",
-      handler: "placeholder",
+      bundle: path.join(__dirname, "../../support/ssr-site-function-stub"),
+      handler: "index.handler",
       runtime,
       memorySize,
       timeout,
+      role,
       bind,
       environment,
       permissions,
-      role,
-      // Force enable live dev to prevent the function handler to be built
-      // in the case user set "enableLiveDev: false" on the app or stack.
-      enableLiveDev: true,
+      // note: do not need to set vpc settings b/c this function is not being used
     });
-    fn._doNotAllowOthersToBind = true;
 
-    return fn;
+    return ssrFn.function;
   }
 
   private createFunctionPermissionsForRegional() {

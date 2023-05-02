@@ -558,7 +558,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     const assetPath =
       hasRealCode && this.buildOutDir
         ? path.join(this.buildOutDir, handlerPath)
-        : path.join(__dirname, "../../support/sls-nextjs-site-function-stub");
+        : path.join(__dirname, "../../support/ssr-site-function-stub");
     const asset = new s3Assets.Asset(this, `${name}FunctionAsset`, {
       path: assetPath,
     });
