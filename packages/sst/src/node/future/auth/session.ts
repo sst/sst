@@ -1,6 +1,6 @@
 import { createSigner, createVerifier, SignerOptions } from "fast-jwt";
 import { Context } from "../../../context/context.js";
-import { ApiHandlerTypes, useCookie, useHeader } from "../../api/index.js";
+import { useCookie, useHeader } from "../../api/index.js";
 import { Auth } from "../../auth/index.js";
 import { Config } from "../../config/index.js";
 import { useContextType } from "../../../context/handler.js";
@@ -18,12 +18,12 @@ export type SessionValue = {
 
 const SessionMemo = /* @__PURE__ */ Context.memo(() => {
   // Get the context type and hooks that match that type
-  const ctxType = useContextType();
   let token = "";
 
-  const header = useHeader("authorization", ctxType as ApiHandlerTypes)!;
+  const header = useHeader("authorization")!;
   if (header) token = header.substring(7);
 
+  const ctxType = useContextType();
   const cookie = ctxType === "api" ? useCookie("sst_auth_token") : undefined;
   if (cookie) token = cookie;
 

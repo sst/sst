@@ -1,7 +1,7 @@
 import { createSigner, createVerifier, SignerOptions } from "fast-jwt";
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 import { Context } from "../../context/context.js";
-import { ApiHandlerTypes, useCookie, useHeader } from "../api/index.js";
+import { useCookie, useHeader } from "../api/index.js";
 import { getPrivateKey, getPublicKey } from "./auth.js";
 import { useContextType } from "../../context/handler.js";
 
@@ -18,12 +18,12 @@ export type SessionValue = {
 
 const SessionMemo = /* @__PURE__ */ Context.memo(() => {
   // Get the context type and hooks that match that type
-  const ctxType = useContextType();
   let token = "";
 
-  const header = useHeader("authorization", ctxType as ApiHandlerTypes)!;
+  const header = useHeader("authorization")!;
   if (header) token = header.substring(7);
 
+  const ctxType = useContextType();
   const cookie = ctxType === "api" ? useCookie("auth-token") : undefined;
   if (cookie) token = cookie;
 
