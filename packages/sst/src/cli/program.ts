@@ -23,6 +23,10 @@ export const program = yargs(hideBin(process.argv))
     type: "string",
     describe: "ARN of the IAM role to use when invoking AWS",
   })
+  .option("future", {
+    type: "boolean",
+    describe: "DO NOT USE. For enabling untested, experimental features",
+  })
   .group(["stage", "profile", "region", "role", "verbose", "help"], "Global:")
   .middleware(async (argv) => {
     if (argv.verbose) {
