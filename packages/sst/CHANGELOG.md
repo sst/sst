@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.8.4
+
+### Patch Changes
+
+- [`c3c712bb1`](https://github.com/serverless-stack/sst/commit/c3c712bb1e19633fc6040fabd499a5d881f9d165) Thanks [@thdxr](https://github.com/thdxr)! - fixed issue with job data not loading correctly
+
 ## 2.8.3
 
 ### Patch Changes
