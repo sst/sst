@@ -1,13 +1,10 @@
 import { provideActor } from "@console/core/actor";
-import { AWS } from "@console/core/aws";
+import { Bus } from "@console/core/bus";
 
 provideActor({
   type: "system",
   properties: {
-    workspaceID: "a8hf2o91zf79zbnt6wodqxq0",
+    workspaceID: "none",
   },
 });
-
-await AWS.assumeRole({
-  stageID: "wnbjaaq4hzaqxyz1h23cxtam",
-});
+await Bus.publish("test.event", { foo: "bar" });

@@ -14,6 +14,7 @@
     "vitest": "^0.25.3"
   },
   "dependencies": {
+    "@aws-sdk/client-eventbridge": "^3.325.0",
     "@aws-sdk/client-sts": "^3.321.1",
     "@octokit/rest": "^19.0.7",
     "@paralleldrive/cuid2": "^2.2.0",
