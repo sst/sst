@@ -10,11 +10,6 @@ export const main: APIGatewayProxyHandler = async (event) => {
   const messageData = JSON.parse(event.body).data;
   const { stage, domainName } = event.requestContext;
 
-  // Get all the connections
-  const connections = await dynamoDb
-    .scan({ TableName, ProjectionExpression: "id" })
-    .promise();
-
   const apiG = new ApiGatewayManagementApi({
     endpoint: `${domainName}/${stage}`,
   });
@@ -33,8 +28,21 @@ export const main: APIGatewayProxyHandler = async (event) => {
     }
   };
 
-  // Iterate through all the connections
-  await Promise.all(connections.Items.map(postToConnection));
+  let connections: DynamoDB.DocumentClient.ScanOutput | undefined;
+
+  do {
+    // Scan for connections
+    connections = await dynamoDb
+      .scan({
+        TableName,
+        ProjectionExpression: "id",
+        ExclusiveStartKey: connections?.LastEvaluatedKey,
+      })
+      .promise();
+
+    // Iterate through all the connections
+    await Promise.all(connections.Items.map(postToConnection as any));
+  } while (typeof connections.LastEvaluatedKey !== "undefined");
 
   return { statusCode: 200, body: "Message sent" };
 };
