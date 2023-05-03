@@ -686,6 +686,10 @@ export interface ApiGraphQLRouteProps<AuthorizerKeys>
      * Commands to run after generating schema. Useful for code generation steps
      */
     commands?: string[];
+    /**
+     * List of packages that should be considered internal during schema generation
+     */
+    internalPackages?: string[];
   };
 }
 
@@ -974,6 +978,7 @@ export class Api<
               route: key,
               fn: getFunctionRef(data.function),
               schema: data.schema,
+              internalPackages: data.internalPackages,
               output: data.output,
               commands: data.commands,
             };
@@ -1481,6 +1486,7 @@ export class Api<
         output: routeProps.pothos?.output,
         schema: routeProps.pothos?.schema,
         commands: routeProps.pothos?.commands,
+        internalPackages: routeProps.pothos?.internalPackages,
       };
     }
 
