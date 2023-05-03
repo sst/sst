@@ -10,6 +10,24 @@ import {
 } from "solid-js";
 import { createStore, reconcile } from "solid-js/store";
 import { useAuth } from "./auth";
+import type { ServerType } from "@console/functions/replicache/server";
+import { Client } from "../../../../functions/src/replicache/framework";
+import { AppStore } from "./app";
+
+const mutators = new Client<ServerType>()
+  .mutation("app_create", async (tx, input) => {
+    await AppStore.put(tx, {
+      ...input,
+      id: input.id!,
+      timeCreated: new Date().toISOString(),
+      timeUpdated: new Date().toISOString(),
+      timeDeleted: null,
+    });
+  })
+  .mutation("app_stage_create", async (tx, input) => {})
+  .mutation("aws_account_create", async (tx, input) => {})
+  .mutation("connect", async (tx, input) => {})
+  .build();
 
 const ReplicacheContext =
   createContext<() => ReturnType<typeof createReplicache>>();
@@ -22,11 +40,18 @@ function createReplicache(workspaceID: string, token: string) {
     pullURL: import.meta.env.VITE_API_URL + "/replicache/pull",
     pushURL: import.meta.env.VITE_API_URL + "/replicache/push",
     pullInterval: 10 * 1000,
+    mutators,
   });
   const oldPuller = replicache.puller;
   replicache.puller = (opts) => {
     opts.headers.append("x-sst-workspace", workspaceID);
     return oldPuller(opts);
+  };
+
+  const oldPusher = replicache.pusher;
+  replicache.pusher = (opts) => {
+    opts.headers.append("x-sst-workspace", workspaceID);
+    return oldPusher(opts);
   };
 
   return replicache;

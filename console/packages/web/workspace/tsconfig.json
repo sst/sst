@@ -10,6 +10,12 @@
     "jsxImportSource": "solid-js",
     "types": ["vite/client"],
     "noEmit": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "baseUrl": ".",
+    "paths": {
+      "@console/functions/*": ["../../functions/src/*"],
+      "@console/core/*": ["../../core/src/*"]
+    }
+
   }
 }

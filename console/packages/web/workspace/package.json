@@ -19,6 +19,7 @@
   "dependencies": {
     "@macaron-css/core": "^1.2.0",
     "@macaron-css/solid": "^1.0.1",
+    "@paralleldrive/cuid2": "^2.2.0",
     "@solidjs/router": "^0.8.2",
     "modern-normalize": "^1.1.0",
     "replicache": "^12.2.1",

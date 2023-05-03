@@ -1,12 +1,10 @@
 import {
   mysqlTable,
   primaryKey,
-  text,
   uniqueIndex,
   varchar,
 } from "drizzle-orm/mysql-core";
 import { cuid, id, timestamps } from "../util/sql";
-import { workspace } from "../workspace/workspace.sql";
 
 export const user = mysqlTable(
   "user",

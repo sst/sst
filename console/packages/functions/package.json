@@ -14,6 +14,8 @@
   "dependencies": {
     "@octokit/rest": "^19.0.7",
     "drizzle-orm": "0.25.3",
-    "fast-jwt": "^2.2.1"
+    "fast-jwt": "^2.2.1",
+    "replicache": "^12.2.1",
+    "zod": "^3.21.4"
   }
 }

@@ -1,0 +1,13 @@
+{
+  "name": "@console/scripts",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "sst bind tsx"
+  },
+  "dependencies": {
+    "@tsconfig/node16": "^1.0.3",
+    "sst": "2.7.2",
+    "tsx": "^3.12.7"
+  }
+}

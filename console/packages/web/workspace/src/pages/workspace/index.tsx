@@ -1,5 +1,6 @@
-import { Routes, useParams } from "@solidjs/router";
+import { Route, Routes, useParams } from "@solidjs/router";
 import { ReplicacheProvider } from "../../data/replicache";
+import { Connect } from "./connect";
 
 export function Workspace() {
   const params = useParams();
@@ -9,7 +10,9 @@ export function Workspace() {
       accountID={params.accountID}
       workspaceID={params.workspaceID}
     >
-      Hello
+      <Routes>
+        <Route path="connect" component={Connect} />
+      </Routes>
     </ReplicacheProvider>
   );
 }

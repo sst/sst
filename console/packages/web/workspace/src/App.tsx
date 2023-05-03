@@ -5,6 +5,7 @@ import { createSubscription } from "./data/replicache";
 import { UserStore } from "./data/user";
 import { WorkspaceStore } from "./data/workspace";
 import { Workspace } from "./pages/workspace";
+import { Connect } from "./pages/connect";
 
 console.log(import.meta.env.VITE_API_URL);
 export const App: Component = () => {
@@ -13,7 +14,8 @@ export const App: Component = () => {
       <Router>
         <Routes>
           <Route path="/" component={Header} />
-          <Route path={":accountID/:workspaceID"} component={Workspace} />
+          <Route path="connect" component={Connect} />
+          <Route path=":accountID/:workspaceID/*" component={Workspace} />
         </Routes>
       </Router>
     </AuthProvider>
@@ -47,7 +49,7 @@ function Header() {
                         href={`/${entry.token.accountID}/${workspace()?.id}`}
                       >
                         {" "}
-                        Workspace: {workspace()?.id}
+                        Workspace: {workspace()?.slug}
                       </Link>
                     </li>
                   );
