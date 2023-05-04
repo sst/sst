@@ -155,12 +155,22 @@ export function useMethod() {
 
 export function useHeaders() {
   const evt = useEvent("api");
-  return evt.headers || {};
+  // Convert header keys to all lowercase for consistency
+  if (evt.headers) {
+    const headers: Record<string, string> = {};
+    for (const [key, value] of Object.entries(evt.headers)) {
+      if (value) {
+        headers[key.toLowerCase()] = value;
+      }
+    }
+    return headers;
+  }
+  return {};
 }
 
 export function useHeader(key: string) {
   const headers = useHeaders();
-  return headers[key];
+  return headers[key.toLowerCase()];
 }
 
 export function useFormValue(name: string) {
