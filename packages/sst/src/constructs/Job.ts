@@ -146,6 +146,21 @@ export interface JobProps {
    * ```
    */
   logRetention?: Lowercase<keyof typeof RetentionDays>;
+  /**
+   * Commands to be executed during runtime before the job handler entrypoint.
+   * @default []
+   * @example
+   * ```js
+   * new Job(stack, "MyJob", {
+   *   handler: "src/job.handler",
+   *   setupCommands: [
+   *     "yum install google-chrome",
+   *     "npm install",
+   *   ],
+   * })
+   *```
+   */
+  setupCommands?: string[];
   cdk?: {
     /**
      * Allows you to override default id for this construct.
@@ -432,16 +447,25 @@ export class Job extends Construct implements SSTConstruct {
     // Update job's commands
     const codeConfig = code.bind(this);
     const project = this.job.node.defaultChild as CfnProject;
-    project.source = {
-      type: "S3",
-      location: `${codeConfig.s3Location?.bucketName}/${codeConfig.s3Location?.objectKey}`,
-      buildSpec: [
-        "version: 0.2",
+
+    const buildSpec = [
+      "version: 0.2",
         "phases:",
         "  build:",
         "    commands:",
-        `      - node ${script}`,
-      ].join("\n"),
+    ]
+
+    if(this.props.setupCommands) {
+      for(const cmd of this.props.setupCommands) {
+        buildSpec.push(`      - ${cmd}`)
+      }
+    }
+    buildSpec.push(`      - node ${script}`)
+
+    project.source = {
+      type: "S3",
+      location: `${codeConfig.s3Location?.bucketName}/${codeConfig.s3Location?.objectKey}`,
+      buildSpec: buildSpec.join("\n"),
     };
 
     this.attachPermissions([

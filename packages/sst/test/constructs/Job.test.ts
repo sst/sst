@@ -162,6 +162,26 @@ test("constructor: environment", async () => {
   });
 });
 
+test("constructor: setupCommands", async () => {
+  const app = await createApp({
+    mode: "deploy",
+  });
+  const stack = new Stack(app, "stack");
+  new Job(stack, "Job", {
+    handler: "test/constructs/lambda.handler",
+    setupCommands: [
+      "yarn install google-chrome"
+    ]
+  });
+  await app.finish();
+  // Invoker needs to call CodeBuild on `sst start`
+  hasResource(stack, "AWS::CodeBuild::Project", {
+    Source: objectLike({
+      BuildSpec: stringLike(/commands:\n\s+- yarn install google-chrome\n\s+- node handler-wrapper.mjs/),
+    }),
+  });
+});
+
 test("constructor: cdk.vpc", async () => {
   const stack = new Stack(await createApp(), "stack");
   new Job(stack, "Job", {
