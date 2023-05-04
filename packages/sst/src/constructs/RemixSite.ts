@@ -41,7 +41,8 @@ export class RemixSite extends SsrSite {
       assetsBuildDirectory: "public/build",
       publicPath: "/build/",
       serverBuildPath: "build/index.js",
-      serverBuildTarget: "node-cjs",
+      serverModuleFormat: "cjs",
+      serverPlatform: "node",
     };
 
     // Validate config path
