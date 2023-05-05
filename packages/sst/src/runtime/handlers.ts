@@ -32,6 +32,7 @@ interface StartWorkerInput {
   environment: Record<string, string>;
   out: string;
   handler: string;
+  runtime: string;
 }
 
 interface ShouldBuildInput {
