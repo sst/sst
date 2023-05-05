@@ -20,6 +20,7 @@ export const usePothosBuilder = Context.memo(() => {
     try {
       const schema = await Pothos.generate({
         schema: route.schema,
+        internalPackages: route.internalPackages,
       });
       await fs.writeFile(route.output, schema);
       // bus.publish("pothos.extracted", { file: route.output });
