@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.8.5
+
+### Patch Changes
+
+- [`f0dbf9c84`](https://github.com/serverless-stack/sst/commit/f0dbf9c84785049c529c2215093a8a84f51bb6db) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: use OpenNext v1.2.x
+
+- [`5debc11a7`](https://github.com/serverless-stack/sst/commit/5debc11a7f0b4af68c50c716adf3e1ab968605bf) Thanks [@fwang](https://github.com/fwang)! - Sites: fix files not uploaded to s3
+
 ## 2.8.4
 
 ### Patch Changes
