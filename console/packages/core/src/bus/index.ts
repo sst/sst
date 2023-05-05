@@ -17,11 +17,12 @@ export interface Events {
 
 export type EventName = keyof Events;
 
-export function publish<Name extends EventName>(
+export async function publish<Name extends EventName>(
   name: Name,
   properties: Events[Name]
 ) {
-  return client.send(
+  console.log("publishing event", name, properties);
+  await client.send(
     new PutEventsCommand({
       Entries: [
         {

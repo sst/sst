@@ -1,7 +1,8 @@
 export * as App from "./";
+export { Stage } from "./stage";
 
 import { createSelectSchema } from "drizzle-zod";
-import { app, stage } from "./app.sql";
+import { app, stage, resource } from "./app.sql";
 import { z } from "zod";
 import { zod } from "../util/zod";
 import { createId } from "@paralleldrive/cuid2";
@@ -9,6 +10,13 @@ import { db } from "../drizzle";
 import { eq, and } from "drizzle-orm";
 import { useTransaction } from "../util/transaction";
 import { useWorkspace } from "../actor";
+import { AWS } from "../aws";
+import {
+  GetObjectCommand,
+  ListObjectsV2Command,
+  S3Client,
+} from "@aws-sdk/client-s3";
+import { awsAccount } from "../aws/aws.sql";
 
 export const Info = createSelectSchema(app, {
   id: (schema) => schema.id.cuid2(),
@@ -54,37 +62,4 @@ export const fromName = zod(Info.shape.name, async (name) =>
       .execute()
       .then((rows) => rows[0]);
   })
-);
-
-export const Stage = createSelectSchema(stage, {
-  id: (schema) => schema.id.cuid2(),
-});
-export type Stage = z.infer<typeof Stage>;
-
-export const connectStage = zod(
-  Stage.pick({ name: true, appID: true, id: true, awsAccountID: true }).partial(
-    {
-      id: true,
-    }
-  ),
-  async (input) => {
-    const id = input.id ?? createId();
-    return useTransaction(async (tx) => {
-      await tx
-        .insert(stage)
-        .values({
-          id,
-          appID: input.appID,
-          workspaceID: useWorkspace(),
-          awsAccountID: input.awsAccountID,
-          name: input.name,
-        })
-        .onDuplicateKeyUpdate({
-          set: {
-            awsAccountID: input.awsAccountID,
-          },
-        });
-      return id;
-    });
-  }
 );

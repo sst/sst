@@ -11,21 +11,32 @@ export type Transaction = MySqlTransaction<
   PlanetScalePreparedQueryHKT
 >;
 
-const TransactionContext = Context.create<Transaction>();
+const TransactionContext = Context.create<{
+  tx: Transaction;
+  effects: (() => void | Promise<void>)[];
+}>();
 
 export function useTransaction<T>(callback: (trx: Transaction) => Promise<T>) {
   try {
-    const tx = TransactionContext.use();
+    const { tx } = TransactionContext.use();
     return callback(tx);
   } catch {
     return db.transaction(
       async (tx) => {
-        TransactionContext.provide(tx);
-        return callback(tx);
+        const effects: (() => void | Promise<void>)[] = [];
+        TransactionContext.provide({ tx, effects: effects });
+        const result = await callback(tx);
+        await Promise.all(effects.map((x) => x()));
+        return result;
       },
       {
         isolationLevel: "serializable",
       }
     );
   }
+}
+
+export function createTransactionEffect(effect: () => void | Promise<void>) {
+  const { effects } = TransactionContext.use();
+  effects.push(effect);
 }

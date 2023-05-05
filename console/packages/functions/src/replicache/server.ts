@@ -9,6 +9,7 @@ export const server = new Server().mutation(
     app: z.string(),
     aws_account_id: z.string(),
     stage: z.string(),
+    region: z.string(),
   },
   async (input) => {
     let appID = await App.fromName(input.app).then((x) => x?.id);
@@ -23,10 +24,11 @@ export const server = new Server().mutation(
         accountID: input.aws_account_id,
       });
 
-    await App.connectStage({
+    await App.Stage.connect({
       appID,
       name: input.stage,
       awsAccountID: awsID,
+      region: input.region,
     });
   }
 );

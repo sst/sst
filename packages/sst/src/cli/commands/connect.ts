@@ -26,7 +26,7 @@ export const connect = (program: Program) =>
                 {
                   Effect: "Allow",
                   Principal: {
-                    AWS: "arn:aws:iam::917397401067:root",
+                    AWS: "arn:aws:iam::917397401067:role/*",
                   },
                   Action: "sts:AssumeRole",
                 },
@@ -50,7 +50,7 @@ export const connect = (program: Program) =>
       console.log(
         `http://localhost:3000/connect?app=${project.config.name}&stage=${
           project.config.stage
-        }&aws_account_id=${identity.Account!}`
+        }&aws_account_id=${identity.Account!}&region=${project.config.region}`
       );
     }
   );

@@ -1,10 +1,11 @@
 import { provideActor } from "@console/core/actor";
-import { Bus } from "@console/core/bus";
+import { App } from "@console/core/app";
 
 provideActor({
   type: "system",
   properties: {
-    workspaceID: "none",
+    workspaceID: "a8hf2o91zf79zbnt6wodqxq0",
   },
 });
-await Bus.publish("test.event", { foo: "bar" });
+
+const result = await App.Stage.syncMetadata("vdapvhs9olt0fdzsfja99x5t");

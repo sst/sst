@@ -4,11 +4,16 @@ import { createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 import { zod } from "../util/zod";
 import { createId } from "@paralleldrive/cuid2";
-import { useTransaction } from "../util/transaction";
+import { createTransactionEffect, useTransaction } from "../util/transaction";
 import { awsAccount } from "./aws.sql";
 import { useWorkspace } from "../actor";
 import { and, eq } from "drizzle-orm";
 import { Bus } from "../bus";
+import { assumeRole } from ".";
+import {
+  CloudFormationClient,
+  DescribeStacksCommand,
+} from "@aws-sdk/client-cloudformation";
 
 export const Info = createSelectSchema(awsAccount, {
   id: (schema) => schema.id.cuid2(),
@@ -19,7 +24,7 @@ export type Info = z.infer<typeof Info>;
 declare module "../bus" {
   export interface Events {
     "aws.account.created": {
-      id: string;
+      awsAccountID: string;
     };
   }
 }
@@ -28,18 +33,17 @@ export const create = zod(
   Info.pick({ id: true, accountID: true }).partial({
     id: true,
   }),
-  async (input) => {
-    const id = input.id ?? createId();
-    return useTransaction(async (tx) => {
+  async (input) =>
+    useTransaction(async (tx) => {
+      const id = input.id ?? createId();
       await tx.insert(awsAccount).values({
         id,
         workspaceID: useWorkspace(),
         accountID: input.accountID,
       });
-      await Bus.publish("aws.account.created", { id });
+      createTransactionEffect(() => Bus.publish("aws.account.created", { id }));
       return id;
-    });
-  }
+    })
 );
 
 export const fromAccountID = zod(Info.shape.accountID, async (accountID) =>
@@ -56,4 +60,34 @@ export const fromAccountID = zod(Info.shape.accountID, async (accountID) =>
       .execute()
       .then((rows) => rows[0])
   )
+);
+
+export const bootstrap = zod(
+  z.custom<Awaited<ReturnType<typeof assumeRole>>>(),
+  async (credentials) => {
+    const cf = new CloudFormationClient({
+      credentials,
+    });
+
+    const bootstrap = await cf
+      .send(
+        new DescribeStacksCommand({
+          StackName: "SSTBootstrap",
+        })
+      )
+      .then((x) => x?.Stacks?.[0]);
+    if (!bootstrap) {
+      throw new Error("Bootstrap stack not found");
+    }
+
+    const bucket = bootstrap.Outputs?.find(
+      (x) => x.OutputKey === "BucketName"
+    )?.OutputValue;
+
+    if (!bucket) throw new Error("BucketName not found");
+
+    return {
+      bucket,
+    };
+  }
 );
