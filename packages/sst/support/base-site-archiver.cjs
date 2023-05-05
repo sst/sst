@@ -69,9 +69,8 @@ function generateZips() {
         });
 
         totalSize += filesize;
+        allFiles.push(file);
       }
-
-      allFiles.push(files);
     }
 
     await archive.finalize();
