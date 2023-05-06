@@ -49,7 +49,9 @@ export const useDotnetHandler = Context.memo(async () => {
           `exec`,
           url.fileURLToPath(
             new URL(
-              `../../support/${BOOTSTRAP_MAP[input.runtime]}/release/dotnet-bootstrap.dll`,
+              `../../support/${
+                BOOTSTRAP_MAP[input.runtime]
+              }/release/dotnet-bootstrap.dll`,
               import.meta.url
             )
           ),
@@ -95,7 +97,7 @@ export const useDotnetHandler = Context.memo(async () => {
             "dotnet",
             "publish",
             "--output",
-            "\"" + input.out + "\"",
+            '"' + input.out + '"',
             "--configuration",
             "Release",
             "--framework",
@@ -120,7 +122,7 @@ export const useDotnetHandler = Context.memo(async () => {
         return {
           type: "success",
           handler: input.props.handler!,
-          runtime: input.props.runtime
+          runtime: input.props.runtime,
         };
       } catch (ex: any) {
         return {
