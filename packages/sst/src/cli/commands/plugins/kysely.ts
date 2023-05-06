@@ -3,9 +3,6 @@ import { DataApiDialect } from "kysely-data-api";
 import { RDSData } from "@aws-sdk/client-rds-data";
 import * as fs from "fs/promises";
 import {
-  ColumnMetadata,
-  DatabaseMetadata,
-  EnumCollection,
   ExportStatementNode,
   PostgresDialect,
   MysqlDialect,
@@ -39,49 +36,34 @@ export const useKyselyTypeGenerator = Context.memo(async () => {
     if (!db.types) return;
     logger("generating types for", db.migratorID);
 
-    const k = new Kysely<Database>({
-      dialect: new DataApiDialect({
-        mode: db.engine.includes("postgres") ? "postgres" : "mysql",
-        driver: {
-          secretArn: db.secretArn,
-          resourceArn: db.clusterArn,
-          database: db.defaultDatabaseName,
-          client: useAWSClient(RDSData),
-        },
-      }),
+    const dataApi = new DataApiDialect({
+      mode: db.engine.includes("postgres") ? "postgres" : "mysql",
+      driver: {
+        secretArn: db.secretArn,
+        resourceArn: db.clusterArn,
+        database: db.defaultDatabaseName,
+        client: useAWSClient(RDSData),
+      },
     });
-    const tables = await k.introspection.getTables();
-    logger("introspected tables");
-    const metadata = db.engine.includes("postgres")
-      ? tables.map((table) => ({
-          ...table,
-          columns: table.columns.map((column): ColumnMetadata => {
-            const isArray = column.dataType.startsWith("_");
-            return {
-              ...column,
-              dataType: isArray ? column.dataType.slice(1) : column.dataType,
-              enumValues: null,
-              isArray,
-            };
-          }),
-        }))
-      : tables.map((table) => ({
-          ...table,
-          columns: table.columns.map((column) => ({
-            ...column,
-            enumValues: null,
-          })),
-        }));
-    logger("generated metadata", metadata.length);
 
-    const transformer = new Transformer();
-    const Dialect = db.engine.includes("postgres")
+    const k = new Kysely<any>({
+      dialect: dataApi,
+    });
+
+    const dialect = db.engine.includes("postgres")
       ? new PostgresDialect()
       : new MysqlDialect();
+    const instrospection = await dialect.introspector.introspect({
+      // @ts-ignore
+      db: k,
+    });
+    logger("introspected tables");
+
+    const transformer = new Transformer();
     const nodes = transformer.transform({
-      dialect: Dialect,
+      dialect: dialect,
       camelCase: (db.types.camelCase as any) === true,
-      metadata: new DatabaseMetadata(metadata, new EnumCollection()),
+      metadata: instrospection,
     });
     logger("transformed nodes", nodes.length);
     const lastIndex = nodes.length - 1;
