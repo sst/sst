@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.8.7
+
+### Patch Changes
+
+- [`69662a713`](https://github.com/serverless-stack/sst/commit/69662a7132fcb4316547333b260714ee6880af4e) Thanks [@fwang](https://github.com/fwang)! - SsrSite: allow principles from the same AWS account to assume the dev role
+
 ## 2.8.6
 
 ### Patch Changes
