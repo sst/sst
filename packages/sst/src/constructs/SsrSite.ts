@@ -25,7 +25,7 @@ import {
   Effect,
   Policy,
   PolicyStatement,
-  AnyPrincipal,
+  AccountPrincipal,
 } from "aws-cdk-lib/aws-iam";
 import {
   Architecture,
@@ -773,8 +773,9 @@ export class SsrSite extends Construct implements SSTConstruct {
     const { runtime, timeout, memorySize, permissions, environment, bind } =
       this.props;
 
+    const app = this.node.root as App;
     const role = new Role(this, "ServerFunctionRole", {
-      assumedBy: new AnyPrincipal(),
+      assumedBy: new AccountPrincipal(app.account),
       maxSessionDuration: CdkDuration.hours(12),
     });
 
