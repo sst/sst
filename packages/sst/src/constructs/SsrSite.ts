@@ -25,7 +25,7 @@ import {
   Effect,
   Policy,
   PolicyStatement,
-  AccountPrincipal,
+  ServicePrincipal,
 } from "aws-cdk-lib/aws-iam";
 import {
   Architecture,
@@ -775,7 +775,7 @@ export class SsrSite extends Construct implements SSTConstruct {
 
     const app = this.node.root as App;
     const role = new Role(this, "ServerFunctionRole", {
-      assumedBy: new AccountPrincipal(app.account),
+      assumedBy: new ServicePrincipal("lambda.amazonaws.com"),
       maxSessionDuration: CdkDuration.hours(12),
     });
 
