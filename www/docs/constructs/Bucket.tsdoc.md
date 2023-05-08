@@ -15,6 +15,21 @@ _Parameters_
 - __id__ <span class="mono">string</span>
 - __props__ <span class="mono">[BucketProps](#bucketprops)</span>
 ## BucketProps
+### blockPublicACLs?
+
+_Type_ : <span class="mono">boolean</span>
+
+Block public access to this bucket. Setting this to 
+`true`
+ alllows uploading objects with public ACLs.
+Note that setting to 
+`true`
+ does not necessarily mean that the bucket is completely accessible to the public. Rather, it enables the granting of public permissions through public ACLs.
+```js
+new Bucket(stack, "Bucket", {
+  blockPublicACLs: true,
+});
+```
 ### cors?
 
 _Type_ : <span class="mono">boolean</span><span class='mono'> | </span><span class='mono'>Array&lt;<span class="mono">[BucketCorsRule](#bucketcorsrule)</span>&gt;</span>

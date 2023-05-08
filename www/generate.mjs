@@ -88,6 +88,7 @@ const CDK_DOCS_MAP = {
   KinesisEventSourceProps: "aws_lambda",
   ICommandHooks: "aws_lambda_nodejs",
   Distribution: "aws_cloudfront",
+  IDistribution: "aws_cloudfront",
   ICachePolicy: "aws_cloudfront",
   CachePolicyProps: "aws_cloudfront",
   IOriginRequestPolicy: "aws_cloudfront",
