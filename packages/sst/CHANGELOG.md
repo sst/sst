@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.8.9
+
+### Patch Changes
+
+- [`f29249879`](https://github.com/serverless-stack/sst/commit/f29249879ccf9fd30c79f66d07419eec74ace3be) Thanks [@fwang](https://github.com/fwang)! - Bucket: set default options to allow public access and enable CORS
+
 ## 2.8.8
 
 ### Patch Changes
