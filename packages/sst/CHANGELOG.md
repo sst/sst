@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.8.11
+
+### Patch Changes
+
+- [`ae4af45db`](https://github.com/serverless-stack/sst/commit/ae4af45db4dbeb8a850161c32ba446577e11370e) Thanks [@fwang](https://github.com/fwang)! - SvelteKitSite: set "SST" build time environment variable
+
+- [`21d49d5a4`](https://github.com/serverless-stack/sst/commit/21d49d5a4fd711e6322415da7b9bb8ed5f4a0de8) Thanks [@fwang](https://github.com/fwang)! - Job: show build errors on build failure
+
 ## 2.8.10
 
 ### Patch Changes
