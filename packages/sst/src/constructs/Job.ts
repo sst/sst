@@ -390,17 +390,23 @@ export class Job extends Construct implements SSTConstruct {
 
     useDeferredTasks().add(async () => {
       // Build function
-      const bundle = await useRuntimeHandlers().build(this.node.addr, "deploy");
+      const result = await useRuntimeHandlers().build(this.node.addr, "deploy");
 
       // create wrapper that calls the handler
-      if (bundle.type === "error")
-        throw new Error(`Failed to build job "${this.props.handler}"`);
+      if (result.type === "error") {
+        throw new Error(
+          [
+            `Failed to build job "${this.props.handler}"`,
+            ...result.errors,
+          ].join("\n")
+        );
+      }
 
-      const parsed = path.parse(bundle.handler);
+      const parsed = path.parse(result.handler);
       const importName = parsed.ext.substring(1);
       const importPath = `./${path.join(parsed.dir, parsed.name)}.mjs`;
       await fs.writeFile(
-        path.join(bundle.out, "handler-wrapper.mjs"),
+        path.join(result.out, "handler-wrapper.mjs"),
         [
           `console.log("")`,
           `console.log("//////////////////////")`,
@@ -422,7 +428,7 @@ export class Job extends Construct implements SSTConstruct {
         ].join("\n")
       );
 
-      const code = AssetCode.fromAsset(bundle.out);
+      const code = AssetCode.fromAsset(result.out);
       this.updateCodeBuildProjectCode(code, "handler-wrapper.mjs");
       // This should always be true b/c runtime is always Node.js
     });
