@@ -10,9 +10,7 @@ export default {
   },
   stacks(app) {
     app.stack(function Site({ stack }) {
-      const bucket = new Bucket(stack, "public", {
-        cors: true,
-      });
+      const bucket = new Bucket(stack, "public");
       const site = new AstroSite(stack, "site", {
         bind: [bucket],
       });
