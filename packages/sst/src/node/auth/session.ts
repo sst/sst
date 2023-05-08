@@ -27,6 +27,16 @@ const SessionMemo = /* @__PURE__ */ Context.memo(() => {
   const cookie = ctxType === "api" ? useCookie("auth-token") : undefined;
   if (cookie) token = cookie;
 
+  // WebSocket may also set the token in the protocol header
+  // TODO: Once https://github.com/serverless-stack/sst/pull/2838 is merged,
+  // then we should no longer need to check both casing for the header.
+  const wsProtocol =
+    ctxType === "ws"
+      ? useHeader("sec-websocket-protocol") ||
+        useHeader("Sec-WebSocket-Protocol")
+      : undefined;
+  if (wsProtocol) token = wsProtocol.split(",")[0].trim();
+
   if (token) {
     const jwt = createVerifier({
       algorithms: ["RS512"],
