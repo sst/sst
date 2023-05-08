@@ -32,6 +32,7 @@ import { CloudFrontTarget } from "aws-cdk-lib/aws-route53-targets";
 import {
   BehaviorOptions,
   Distribution,
+  IDistribution,
   Function as CfFunction,
   FunctionCode as CfFunctionCode,
   FunctionEventType as CfFunctionEventType,
@@ -299,7 +300,7 @@ export interface StaticSiteProps {
      */
     bucket?: BucketProps | IBucket;
     /**
-     * Configure the internally created CDK `Distribution` instance.
+     * Configure the internally created CDK `Distribution` instance or provide an existing distribution
      *
      * @example
      * ```js
@@ -313,7 +314,7 @@ export interface StaticSiteProps {
      * });
      * ```
      */
-    distribution?: StaticSiteCdkDistributionProps;
+    distribution?: IDistribution | StaticSiteCdkDistributionProps;
   };
 }
 
@@ -401,7 +402,6 @@ export class StaticSite extends Construct implements SSTConstruct {
     );
 
     // Create CloudFront
-    this.validateCloudFrontDistributionSettings();
     this.distribution = this.createCfDistribution();
     this.distribution.node.addDependency(s3deployCR);
 
@@ -762,9 +762,21 @@ interface ImportMeta {
   // CloudFront Distribution
   /////////////////////
 
-  private validateCloudFrontDistributionSettings() {
+  private createCfDistribution(): Distribution {
     const { cdk, errorPage } = this.props;
 
+    const isImportedCloudFrontDistribution = (
+      distribution?: IDistribution | StaticSiteCdkDistributionProps
+    ): distribution is IDistribution => {
+      return distribution !== undefined && isCDKConstruct(distribution);
+    };
+
+    // cdk.distribution is an imported construct
+    if (isImportedCloudFrontDistribution(cdk?.distribution)) {
+      return cdk?.distribution as Distribution;
+    }
+
+    // Validate input
     if (cdk?.distribution?.certificate) {
       throw new Error(
         `Do not configure the "cfDistribution.certificate". Use the "customDomain" to configure the domain certificate.`
@@ -780,13 +792,9 @@ interface ImportMeta {
         `Cannot configure the "cfDistribution.errorResponses" when "errorPage" is passed in. Use one or the other to configure the behavior for error pages.`
       );
     }
-  }
-
-  private createCfDistribution(): Distribution {
-    const { cdk, errorPage } = this.props;
-    const indexPage = this.props.indexPage || "index.html";
 
     // Create CloudFront distribution
+    const indexPage = this.props.indexPage || "index.html";
     return new Distribution(this, "Distribution", {
       // these values can be overwritten by cfDistributionProps
       defaultRootObject: indexPage,
@@ -888,7 +896,7 @@ function handler(event) {
           eventType: CfFunctionEventType.VIEWER_REQUEST,
         },
       ],
-      ...cdk?.distribution?.defaultBehavior,
+      ...(cdk?.distribution as StaticSiteCdkDistributionProps)?.defaultBehavior,
     };
   }
 

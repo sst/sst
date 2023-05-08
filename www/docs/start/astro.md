@@ -1,5 +1,4 @@
 ---
-id: astro
 sidebar_label: Astro
 title: Use Astro with SST
 description: "Create and deploy an Astro site to AWS with SST."

@@ -1,5 +1,4 @@
 ---
-id: nextjs
 sidebar_label: Next.js
 title: Use Next.js with SST
 description: "Create and deploy a Next.js app to AWS with SST and OpenNext."

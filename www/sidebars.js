@@ -9,7 +9,7 @@ module.exports = {
           label: "Get Started",
           collapsible: true,
           collapsed: false,
-          items: ["start/standalone", "start/nextjs", "start/astro"],
+          items: ["start/standalone", "start/nextjs", "start/svelte", "start/astro"],
         },
       ],
     },

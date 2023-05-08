@@ -270,8 +270,8 @@ importers:
       immer: '9'
       ink: ^4.0.0
       ink-spinner: ^5.0.0
-      kysely: ^0.23.4
-      kysely-codegen: ^0.9.0
+      kysely: ^0.23.5
+      kysely-codegen: ^0.10.0
       kysely-data-api: ^0.2.0
       minimatch: ^6.1.6
       openid-client: ^5.1.8
@@ -336,9 +336,9 @@ importers:
       immer: 9.0.16
       ink: 4.0.0_dsvndo4wjx7umk5x4kyqypffly
       ink-spinner: 5.0.0_ink@4.0.0+react@18.2.0
-      kysely: 0.23.4
-      kysely-codegen: 0.9.0_kysely@0.23.4
-      kysely-data-api: 0.2.0_mw5yj24emorir33vi6uk6vcs7u
+      kysely: 0.23.5
+      kysely-codegen: 0.10.0_kysely@0.23.5
+      kysely-data-api: 0.2.0_f35k2uml32z7se3dwowbq3m5iy
       minimatch: 6.1.6
       openid-client: 5.3.0
       ora: 6.1.2
@@ -11715,7 +11715,7 @@ packages:
     resolution: {integrity: sha512-rraC8NXWOEjhADbZe9QBNzLAN5Q3fsTPQtBV+fEVj6xKIgDgNiEVE6ZNfHpZOqfQ21YUzfVNUXLOEZquYvQPPg==}
     dependencies:
       leven: 2.1.0
-      minimist: 1.2.7
+      minimist: 1.2.8
 
   /common-ancestor-path/1.0.1:
     resolution: {integrity: sha512-L3sHRo1pXXEqX8VU28kfgUY+YGsk09hPqZiZmLacNib6XNTCM8ubYeT7ryXQw8asB1sKgcU5lkB7ONug08aB8w==}
@@ -15570,7 +15570,7 @@ packages:
     resolution: {integrity: sha512-aKS4WQjPenRxiQsC93MNfjx+nbF4PAdYzmd/1JIj8HYzqfbu86beTuNgXDzPknWk0n0uARlyewZo4s++ES36Ow==}
     hasBin: true
     dependencies:
-      minimist: 1.2.7
+      minimist: 1.2.8
     dev: true
 
   /json5/2.2.1:
@@ -15678,8 +15678,8 @@ packages:
     resolution: {integrity: sha512-dLkz37Ab97HWMx9KTes3Tbi3D1ln9fCAy2zr2YVExJasDRPGRaKcoE4fycWNtnCAJfjFqe0cnY+f8KT2JePEXQ==}
     dev: true
 
-  /kysely-codegen/0.9.0_kysely@0.23.4:
-    resolution: {integrity: sha512-VCkrEY0WPwObvT4LGJkwLn29DXmvwG2oAv94qa+yAXDPAWtYTfO8NQSqyeEiNHEWmuKI+Sl+ANSn63by2Xn1tw==}
+  /kysely-codegen/0.10.0_kysely@0.23.5:
+    resolution: {integrity: sha512-EV2v9yr9N9WrUPrURvFl5FPTtz39npsi1p1tLpJwEcFeOAKAPJruBpAASvnZWdqu5Pw/aaTssStE3qcI2sfxMQ==}
     hasBin: true
     peerDependencies:
       better-sqlite3: '>=7.6.2'
@@ -15696,23 +15696,23 @@ packages:
     dependencies:
       chalk: 4.1.2
       dotenv: 16.0.3
-      kysely: 0.23.4
+      kysely: 0.23.5
       micromatch: 4.0.5
-      minimist: 1.2.7
+      minimist: 1.2.8
     dev: false
 
-  /kysely-data-api/0.2.0_mw5yj24emorir33vi6uk6vcs7u:
+  /kysely-data-api/0.2.0_f35k2uml32z7se3dwowbq3m5iy:
     resolution: {integrity: sha512-Jkuqoxs8XInYeUnKDFKraA1lmuW8flY5hse59EmFIKbWDv0diRjkthCrc21egEwpfqVmLYq0/zj+SWWrH8a0hw==}
     peerDependencies:
       '@aws-sdk/client-rds-data': 3.x
       kysely: 0.x
     dependencies:
       '@aws-sdk/client-rds-data': 3.279.0
-      kysely: 0.23.4
+      kysely: 0.23.5
     dev: false
 
-  /kysely/0.23.4:
-    resolution: {integrity: sha512-3icLnj1fahUtZsP9zzOvF4DcdhekGsLX4ZaoBaIz0ZeHegyRDdbwpJD7zezAJ+KwQZNDeKchel6MikFNLsSZIA==}
+  /kysely/0.23.5:
+    resolution: {integrity: sha512-TH+b56pVXQq0tsyooYLeNfV11j6ih7D50dyN8tkM0e7ndiUH28Nziojiog3qRFlmEj9XePYdZUrNJ2079Qjdow==}
     engines: {node: '>=14.0.0'}
     dev: false
 
@@ -16672,6 +16672,9 @@ packages:
   /minimist/1.2.7:
     resolution: {integrity: sha512-bzfL1YUZsP41gmu/qjrEk0Q6i2ix/cVeAhbCbqH9u3zYutS1cLg00qhrD0M2MVdCcx4Sc0UpP2eBWo9rotpq6g==}
 
+  /minimist/1.2.8:
+    resolution: {integrity: sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==}
+
   /minipass/2.9.0:
     resolution: {integrity: sha512-wxfUjg9WebH+CUDX/CdbRlh5SmfZiy/hpkxaRI16Y9W56Pa75sWgd/rvFilSgrauD9NyFymP/+JFV3KwzIsJeg==}
     dependencies:
@@ -16713,7 +16716,7 @@ packages:
     resolution: {integrity: sha512-FP+p8RB8OWpF3YZBCrP5gtADmtXApB5AMLn+vdyA+PyxCjrCs00mjyUozssO33cwDeT3wNGdLxJ5M//YqtHAJw==}
     hasBin: true
     dependencies:
-      minimist: 1.2.7
+      minimist: 1.2.8
 
   /mkdirp/1.0.4:
     resolution: {integrity: sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==}
@@ -16761,7 +16764,7 @@ packages:
       duplexify: 4.1.2
       help-me: 3.0.0
       inherits: 2.0.4
-      minimist: 1.2.7
+      minimist: 1.2.8
       mqtt-packet: 6.10.0
       pump: 3.0.0
       readable-stream: 3.6.2
@@ -18475,7 +18478,7 @@ packages:
       detect-libc: 1.0.3
       expand-template: 2.0.3
       github-from-package: 0.0.0
-      minimist: 1.2.7
+      minimist: 1.2.8
       mkdirp-classic: 0.5.3
       napi-build-utils: 1.0.2
       node-abi: 2.30.1
@@ -18762,7 +18765,7 @@ packages:
     dependencies:
       deep-extend: 0.6.0
       ini: 1.3.8
-      minimist: 1.2.7
+      minimist: 1.2.8
       strip-json-comments: 2.0.1
 
   /react-ace/9.5.0_sfoxds7t5ydpegc3knd667wn6m:

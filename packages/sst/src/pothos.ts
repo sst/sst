@@ -14,6 +14,7 @@ const dummyResolver = template(
 
 interface GenerateOpts {
   schema: string;
+  internalPackages?: string[];
 }
 
 export async function generate(opts: GenerateOpts) {
@@ -30,7 +31,7 @@ export async function generate(opts: GenerateOpts) {
   return schemaAsString;
 }
 
-export async function extractSchema(opts: { schema: string }) {
+export async function extractSchema(opts: GenerateOpts) {
   const result = await esbuild.build({
     platform: "node",
     bundle: true,
@@ -45,6 +46,9 @@ export async function extractSchema(opts: { schema: string }) {
         setup(build) {
           const filter = /^[^.\/]|^\.[^.\/]|^\.\.[^\/]/; // Must not start with "/" or "./" or "../"
           build.onResolve({ filter }, (args) => {
+            const packageName = args.path.match(/^(@[^\/]+\/[^\/]+|[^@/]+)/);
+            if (packageName && opts.internalPackages?.includes(packageName[0]))
+              return;
             return {
               path: args.path,
               external: true,

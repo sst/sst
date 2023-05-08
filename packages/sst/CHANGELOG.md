@@ -1,5 +1,39 @@
 # @serverless-stack/cli2
 
+## 2.8.9
+
+### Patch Changes
+
+- [`f29249879`](https://github.com/serverless-stack/sst/commit/f29249879ccf9fd30c79f66d07419eec74ace3be) Thanks [@fwang](https://github.com/fwang)! - Bucket: set default options to allow public access and enable CORS
+
+## 2.8.8
+
+### Patch Changes
+
+- [#2348](https://github.com/serverless-stack/sst/pull/2348) [`9a2142bba`](https://github.com/serverless-stack/sst/commit/9a2142bba0322be32e8d7cb0045c23b256672eb3) Thanks [@hoangnd25](https://github.com/hoangnd25)! - StaticSite: support importing existing CloudFront distribution
+
+- [#2812](https://github.com/serverless-stack/sst/pull/2812) [`9dae0be56`](https://github.com/serverless-stack/sst/commit/9dae0be565729d3be3122f1b4ebdc0199e1b44cc) Thanks [@jlanzarotti](https://github.com/jlanzarotti)! - Cognito: expose cfnIdentityPoolRoleAttachment prop
+
+- [#2849](https://github.com/serverless-stack/sst/pull/2849) [`2e71c9726`](https://github.com/serverless-stack/sst/commit/2e71c97269b8ccac612cf9b93a20186be3e357e5) Thanks [@danecwalker](https://github.com/danecwalker)! - SsrSite: Fix dev server role cannot be assumed by Lambda
+
+## 2.8.7
+
+### Patch Changes
+
+- [`69662a713`](https://github.com/serverless-stack/sst/commit/69662a7132fcb4316547333b260714ee6880af4e) Thanks [@fwang](https://github.com/fwang)! - SsrSite: allow principles from the same AWS account to assume the dev role
+
+## 2.8.6
+
+### Patch Changes
+
+- [#2831](https://github.com/serverless-stack/sst/pull/2831) [`ce5ce44c8`](https://github.com/serverless-stack/sst/commit/ce5ce44c8491eb7021288356f90e47681e0f5cb9) Thanks [@estyrke](https://github.com/estyrke)! - Allow packages to be marked as "internal" for Pothos extractor
+
+- [#2837](https://github.com/serverless-stack/sst/pull/2837) [`8a684c5a9`](https://github.com/serverless-stack/sst/commit/8a684c5a96e2e17e8a2b42a5666db10946f6fdf6) Thanks [@deb-oliveira](https://github.com/deb-oliveira)! - [Fix/Dotnet]: enable the selection of dotnet6 bootstrap and secure input.out with quotes
+
+- [#2831](https://github.com/serverless-stack/sst/pull/2831) [`ce5ce44c8`](https://github.com/serverless-stack/sst/commit/ce5ce44c8491eb7021288356f90e47681e0f5cb9) Thanks [@estyrke](https://github.com/estyrke)! - Allow for Pothos extractor to consider some packages as "internal"
+
+- [`d54d31884`](https://github.com/serverless-stack/sst/commit/d54d31884b5a10c7a7e133e29ea49e4f8863954b) Thanks [@thdxr](https://github.com/thdxr)! - upgrade kysely-codegen
+
 ## 2.8.5
 
 ### Patch Changes

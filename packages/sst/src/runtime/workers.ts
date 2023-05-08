@@ -72,6 +72,7 @@ export const useRuntimeWorkers = Context.memo(async () => {
       workerID: evt.properties.workerID,
       environment: evt.properties.env,
       url: `${server.url}/${evt.properties.workerID}/${server.API_VERSION}`,
+      runtime: props.runtime!,
     });
     workers.set(evt.properties.workerID, {
       workerID: evt.properties.workerID,

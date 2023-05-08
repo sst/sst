@@ -48,6 +48,7 @@ const CDK_DOCS_MAP = {
   SignInAliases: "aws_cognito",
   UserPoolProps: "aws_cognito",
   CfnIdentityPool: "aws_cognito",
+  CfnIdentityPoolRoleAttachment: "aws_cognito",
   IUserPoolClient: "aws_cognito",
   UserPoolClientOptions: "aws_cognito",
   Bucket: "aws_s3",
