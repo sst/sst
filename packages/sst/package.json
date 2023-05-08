@@ -5,7 +5,7 @@
   },
   "sideEffects": false,
   "name": "sst",
-  "version": "2.8.9",
+  "version": "2.8.10",
   "bin": {
     "sst": "cli/sst.js"
   },
