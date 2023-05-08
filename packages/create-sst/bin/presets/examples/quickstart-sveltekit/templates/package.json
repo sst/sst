@@ -1,0 +1,16 @@
+{
+  "name": "@@app",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "sst bind vite dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+    "sst:deploy": "sst deploy",
+    "sst:dev": "sst dev"
+  },
+  "devDependencies": {
+  },
+  "type": "module"
+}
