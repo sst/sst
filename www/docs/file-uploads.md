@@ -41,12 +41,8 @@ npx create-sst@latest --template standard/nextjs
 Next, add an S3 bucket to your stacks. This will allow you to store the uploaded files.
 
 ```ts title="stacks/Default.ts"
-const bucket = new Bucket(stack, "public", {
-  cors: true,
-});
+const bucket = new Bucket(stack, "public");
 ```
-
-The `cors` property enables Cross-Origin Resource Sharing (CORS), which allows your app to access the S3 bucket from your Next.js app.
 
 Make sure to import the [`Bucket`](constructs/Bucket.md) construct.
 

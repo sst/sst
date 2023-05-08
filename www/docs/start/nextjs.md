@@ -1,5 +1,4 @@
 ---
-id: nextjs
 sidebar_label: Next.js
 title: Use Next.js with SST
 description: "Create and deploy a Next.js app to AWS with SST and OpenNext."
@@ -130,9 +129,7 @@ Let's add a file upload feature to our Next.js app.
 Add an S3 bucket to your `sst.config.ts`.
 
 ```ts title="sst.config.ts"
-const bucket = new Bucket(stack, "public", {
-  cors: true,
-});
+const bucket = new Bucket(stack, "public");
 ```
 
 Bind it to your Next.js app.
