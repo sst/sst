@@ -14,7 +14,7 @@ We'll start by scaffolding the domain code first. As mentioned in the [last chap
 
 <ChangeText>
 
-Open up `services/core/article.ts` and add the following two functions to the bottom of the file.
+Open up `packages/core/src/article.ts` and add the following two functions to the bottom of the file.
 
 </ChangeText>
 
@@ -62,7 +62,7 @@ Once the migration is created, you should see the following in your terminal.
 ✔ Migration name · comment
 
 Loaded templates: _templates
-       added: services/migrations/1661988563371_comment.mjs
+       added: packages/core/migrations/1661988563371_comment.mjs
 ```
 
 <ChangeText>
@@ -71,7 +71,7 @@ Open up the new migration script and replace its content with:
 
 </ChangeText>
 
-```ts title="services/migrations/1661988563371_comment.mjs"
+```ts title="packages/core/migrations/1661988563371_comment.mjs"
 import { Kysely } from "kysely";
 
 /**
@@ -128,11 +128,11 @@ We are now ready to implement the `addComment` and `comments` functions.
 
 <ChangeText>
 
-Replace the two placeholder functions in `services/core/article.ts` with:
+Replace the two placeholder functions in `packages/core/src/article.ts` with:
 
 </ChangeText>
 
-```ts {2-9,13-16} title="services/core/article.ts"
+```ts {2-9,13-16} title="packages/core/src/article.ts"
 export function addComment(articleID: string, text: string) {
   return SQL.DB.insertInto("comment")
     .values({
@@ -152,16 +152,16 @@ export function comments(articleID: string) {
 }
 ```
 
-We are using [Kysely](https://koskimas.github.io/kysely/) to run typesafe queries against our database.
+We are using [Kysely](https://kysely-org.github.io/kysely/) to run typesafe queries against our database.
 
 <details>
 <summary>Behind the scenes</summary>
 
 There are a couple of interesting details here, let's dig in:
 
-1. `SQL.DB` is the Kysely instance imported from `services/core/sql.ts`.
+1. `SQL.DB` is the Kysely instance imported from `packages/core/src/sql.ts`.
 
-   ```ts title="services/core/sql.ts"
+   ```ts title="packages/core/src/sql.ts"
    export const DB = new Kysely<Database>({
      dialect: new DataApiDialect({
        mode: "postgres",
@@ -177,8 +177,8 @@ There are a couple of interesting details here, let's dig in:
 
 2. `RDS` is coming from the SST Node client package.
 
-   ```ts title="services/core/sql.ts"
-   import { RDS } from "@serverless-stack/node/rds";
+   ```ts title="packages/core/src/sql.ts"
+   import { RDS } from "sst/node/rds";
    ```
 
    It has access to the config of our database, thanks to [Resource Binding](../resource-binding.md). You might recall us **binding** our database to the functions in our API back in the [Project Structure](project-structure.md#stacks) chapter.
@@ -191,9 +191,9 @@ There are a couple of interesting details here, let's dig in:
 
    By binding the `rds` cluster to our API in `stacks/Api.ts`, our API can access the database ARN (an ARN is an AWS identifier), database name, and ARN of the secret to access the database in our functions.
 
-3. The Kysely instance also needs a `Database` type. This is coming from `services/core/sql.generated.ts`.
+3. The Kysely instance also needs a `Database` type. This is coming from `packages/core/src/sql.generated.ts`.
 
-   ```ts title="services/core/sql.generated.ts"
+   ```ts title="packages/core/src/sql.generated.ts"
    export interface Database {
      article: Article;
      comment: Comment;
@@ -217,8 +217,8 @@ There are a couple of interesting details here, let's dig in:
    ```ts title="stacks/Database.ts" {4}
    const rds = new RDS(stack, "rds", {
      engine: "postgresql11.13",
-     migrations: "services/migrations",
-     types: "services/core/sql.generated.ts",
+     migrations: "packages/core/migrations",
+     types: "packages/core/src/sql.generated.ts",
      defaultDatabaseName: "main",
    });
    ```

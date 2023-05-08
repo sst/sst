@@ -1,12 +1,20 @@
 ---
 title: Migrating From Serverless Framework
 sidebar_label: Serverless Framework
-description: "Migrating from Serverless Framework to SST"
+description: "Migrate your from Serverless Framework app to SST."
 ---
 
-In this guide we'll look at how to migrate a Serverless Framework app to SST.
+import HeadlineText from "@site/src/components/HeadlineText";
 
-Note that, this document is a work in progress. If you have experience migrating your Serverless Framework app to SST, please consider contributing.
+<HeadlineText>
+
+A guide to migrating your Serverless Framework app to SST.
+
+</HeadlineText>
+
+---
+
+This document is a work in progress. If you have experience migrating your Serverless Framework app to SST, please consider contributing.
 
 ## Incrementally Adopting SST
 
@@ -158,7 +166,7 @@ stack.addOutputs({
 And finally, to reference stack outputs across stacks in your SST app.
 
 ```js title="StackA.js"
-import { StackContext, Bucket } from "@serverless-stack/resources";
+import { StackContext, Bucket } from "sst/constructs";
 
 export function StackA({ stack }: StackContext) {
   const bucket = new s3.Bucket(stack, "MyBucket");
@@ -168,7 +176,7 @@ export function StackA({ stack }: StackContext) {
 ```
 
 ```js title="StackB.js"
-import { StackContext, use } from "@serverless-stack/resources";
+import { StackContext, use } from "sst/constructs";
 import { StackA } from "./StackA";
 
 export function StackA({ stack }: StackContext) {
@@ -192,7 +200,7 @@ import { Topic } from "aws-cdk-lib/aws-sns";
 
 // Lookup the existing SNS topic
 const snsTopic = Topic.fromTopicArn(
-  this,
+  stack,
   "ImportTopic",
   "arn:aws:sns:us-east-2:444455556666:MyTopic"
 );
@@ -269,9 +277,14 @@ Optionally, you can now create another new topic in SST called `MyTopic` and fol
 
 #### Migrate only the functions
 
-Now for resources that have persistent data like DynamoDB and S3, it won't be possible to remove them and recreate them. For these cases you can leave them as-is, while migrating over the DynamoDB stream subscribers and S3 bucket event subscribers as a first step.
+Now for resources that have persistent data like DynamoDB and S3, it won't be possible to remove them and recreate them. For these cases you have two choices:
 
-Here's an example for DynamoDB streams. Assume you have a DynamoDB table that is named based on the stage it's deployed to.
+1. Use them as-is by referencing them
+2. Or, migrate them over
+
+We talk about this in detail over on our doc on [Importing resources](../advanced/importing-resources.md).
+
+Here's an example of referencing a resource for DynamoDB streams. Assume you have a DynamoDB table that is named based on the stage it's deployed to.
 
 ```yml title="serverless.yml"
 resources:
@@ -295,12 +308,12 @@ resources:
               StreamViewType: NEW_IMAGE
 ```
 
-Now in SST, you can import the table and create an SST function to subscribe to its streams.
+Now in SST, you can reference the table and create an SST function to subscribe to its streams.
 
 ```js
 // Import table
 const table = dynamodb.fromTableName(
-  this,
+  stack,
   "MyTable",
   `${this.node.root.stage}-MyTable`
 );
@@ -316,13 +329,15 @@ processor.addEventSource(
 );
 ```
 
+If you want to completely migrate over a resource, it is a manual process but it'll give you full control. You can [follow these steps](../advanced/importing-resources.md#migrate-resources).
+
 ## Workflow
 
 A lot of the commands that you are used to using in Serverless Framework translate well to SST.
 
 | Serverless Framework      | SST          |
 | ------------------------- | ------------ |
-| `serverless invoke local` | `sst start`  |
+| `serverless invoke local` | `sst dev`    |
 | `serverless package`      | `sst build`  |
 | `serverless deploy`       | `sst deploy` |
 | `serverless remove`       | `sst remove` |
@@ -394,19 +409,19 @@ Serverless Framework supports a long list of popular plugins. In this section we
 
 To start with, let's look at the very popular [serverless-offline](https://github.com/dherault/serverless-offline) plugin. It's used to emulate a Lambda function locally but it's fairly limited in the workflows it supports. There are also a number of other plugins that work with serverless-offline to support various other Lambda triggers.
 
-Thanks to `sst start`, you don't need to worry about using them anymore.
+Thanks to `sst dev`, you don't need to worry about using them anymore.
 
 | Plugin                                                                                                                    | Alternative |
 | ------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| [serverless-offline](https://github.com/dherault/serverless-offline)                                                      | `sst start` |
-| [serverless-offline-sns](https://github.com/mj1618/serverless-offline-sns)                                                | `sst start` |
-| [serverless-offline-ssm](https://github.com/janders223/serverless-offline-ssm)                                            | `sst start` |
-| [serverless-dynamodb-local](https://github.com/99x/serverless-dynamodb-local)                                             | `sst start` |
-| [serverless-offline-scheduler](https://github.com/ajmath/serverless-offline-scheduler)                                    | `sst start` |
-| [serverless-step-functions-offline](https://github.com/vkkis93/serverless-step-functions-offline)                         | `sst start` |
-| [serverless-offline-direct-lambda](https://github.com/civicteam/serverless-offline-direct-lambda)                         | `sst start` |
-| [CoorpAcademy/serverless-plugins](https://github.com/CoorpAcademy/serverless-plugins)                                     | `sst start` |
-| [serverless-plugin-offline-dynamodb-stream](https://github.com/orchestrated-io/serverless-plugin-offline-dynamodb-stream) | `sst start` |
+| [serverless-offline](https://github.com/dherault/serverless-offline)                                                      | `sst dev`   |
+| [serverless-offline-sns](https://github.com/mj1618/serverless-offline-sns)                                                | `sst dev`   |
+| [serverless-offline-ssm](https://github.com/janders223/serverless-offline-ssm)                                            | `sst dev`   |
+| [serverless-dynamodb-local](https://github.com/99x/serverless-dynamodb-local)                                             | `sst dev`   |
+| [serverless-offline-scheduler](https://github.com/ajmath/serverless-offline-scheduler)                                    | `sst dev`   |
+| [serverless-step-functions-offline](https://github.com/vkkis93/serverless-step-functions-offline)                         | `sst dev`   |
+| [serverless-offline-direct-lambda](https://github.com/civicteam/serverless-offline-direct-lambda)                         | `sst dev`   |
+| [CoorpAcademy/serverless-plugins](https://github.com/CoorpAcademy/serverless-plugins)                                     | `sst dev`   |
+| [serverless-plugin-offline-dynamodb-stream](https://github.com/orchestrated-io/serverless-plugin-offline-dynamodb-stream) | `sst dev`   |
 
 Let's look at the other popular Serverless Framework plugins and how to set them up in SST.
 

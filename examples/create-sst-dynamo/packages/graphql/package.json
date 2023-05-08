@@ -1,0 +1,16 @@
+{
+  "name": "@create-sst-dynamo/graphql",
+  "version": "0.0.0",
+  "type": "module",
+  "dependencies": {
+    "wonka": "^6.3.2",
+    "@genql/runtime": "2.x",
+    "urql": "^4.0.2",
+    "graphql": "^16.6.0",
+    "react": "^18.2.0"
+  },
+  "devDependencies": {
+    "@genql/cli": "2.x",
+    "@types/react": "^18.2.0"
+  }
+}

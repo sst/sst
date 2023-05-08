@@ -5,7 +5,6 @@
 <p align="center">
   <a href="https://sst.dev/discord"><img alt="Discord" src="https://img.shields.io/discord/983865673656705025?style=flat-square" /></a>
   <a href="https://www.npmjs.com/package/create-sst"><img alt="npm" src="https://img.shields.io/npm/v/create-sst?style=flat-square" /></a>
-  <a href="https://github.com/serverless-stack/sst/actions/workflows/ci.yml"><img alt="Build status" src="https://img.shields.io/github/workflow/status/serverless-stack/sst/CI?style=flat-square" /></a>
 </p>
 
 ---
@@ -40,30 +39,29 @@ This will prompt you for a folder name and bootstrap the application in that dir
 
 Pass in the following (optional) options.
 
-### `--examples`
+### `--template`
 
-Instead of the standard starter, this will list our examples if you'd like to copy one of them to try it out.
-
-```bash
-npx create-sst@latest --examples
-```
-
-### `--minimal`
-
-Instead of the standard starter, this will list our minimal setups if you'd like to start from scratch.
+Instead of the standard starter, you can choose to use one of our minimal setups or examples as the template to bootstrap.
 
 ```bash
-npx create-sst@latest --minimal
+npx create-sst@latest --template=other/go
 ```
+
+---
 
 ## Arguments
 
 ### `<destination>`
 
-Specify a destination directory instead of typing it into the interactive prompt
+Specify a project name, instead of typing it into the interactive prompt.
+
 
 ```bash
 npx create-sst@latest my-sst-app
 ```
 
-Note that extra `--` when using `npm init`.
+For more details, [head over to our docs](https://docs.sst.dev).
+
+---
+
+**Join our community** [Discord](https://sst.dev/discord) | [YouTube](https://www.youtube.com/c/sst-dev) | [Twitter](https://twitter.com/SST_dev)

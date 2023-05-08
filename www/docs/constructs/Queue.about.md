@@ -7,7 +7,7 @@ This construct makes it easier to define a queue and a consumer. It also interna
 ### Using the minimal config
 
 ```js
-import { Queue } from "@serverless-stack/resources";
+import { Queue } from "sst/constructs";
 
 new Queue(stack, "Queue", {
   consumer: "src/queueConsumer.main",
@@ -35,7 +35,7 @@ new Queue(stack, "Queue", {
       handler: "src/queueConsumer.main",
       timeout: 10,
       environment: { bucketName: bucket.bucketName },
-      permissions: [bucket],      
+      permissions: [bucket],
     },
   },
 });
@@ -129,7 +129,11 @@ new Queue(stack, "Queue", {
     cdk: {
       function: lambda.Function.fromFunctionAttributes(stack, "IFunction", {
         functionArn: "arn:aws:lambda:us-east-1:123456789:function:my-function",
-        role: iam.Role.fromRoleArn(stack, "IRole", "arn:aws:iam::123456789:role/my-role"),
+        role: iam.Role.fromRoleArn(
+          stack,
+          "IRole",
+          "arn:aws:iam::123456789:role/my-role"
+        ),
       }),
     },
   },

@@ -1,0 +1,26 @@
+{
+  "name": "quickstart-astro",
+  "type": "module",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "sst bind astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "sst:deploy": "sst deploy",
+    "sst:dev": "sst dev"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.321.1",
+    "@aws-sdk/s3-request-presigner": "^3.321.1",
+    "astro": "^2.3.2"
+  },
+  "devDependencies": {
+    "sst": "^2.7.2",
+    "astro-sst": "^2.7.2",
+    "aws-cdk-lib": "2.72.1",
+    "constructs": "10.1.156"
+  }
+}

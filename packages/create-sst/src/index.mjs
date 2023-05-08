@@ -1,13 +1,27 @@
 import fs from "fs/promises";
 import fetch from "node-fetch";
 import path from "path";
-import { exec, execSync } from "child_process";
+import { execSync } from "child_process";
 import { applyOperation } from "fast-json-patch/index.mjs";
 import { pathToFileURL } from "url";
+import { loadFile, writeFile } from "magicast";
 
 export function extract() {
   return /** @type {const} */ ({
     type: "extract",
+  });
+}
+
+/**
+ * @param {{
+ *   file: string,
+ *   fn: (mod) => void,
+ * }} opts
+ */
+export function magicast(opts) {
+  return /** @type {const} */ ({
+    type: "magicast",
+    ...opts,
   });
 }
 
@@ -30,6 +44,20 @@ export function remove(path) {
 export function patch(opts) {
   return /** @type {const} */ ({
     type: "patch",
+    ...opts,
+  });
+}
+
+/**
+ * @param {{
+ *   file: string,
+ *   pattern: string,
+ *   replacement: string,
+ * }} opts
+ */
+export function str_replace(opts) {
+  return /** @type {const} */ ({
+    type: "str_replace",
     ...opts,
   });
 }
@@ -72,7 +100,7 @@ export function extend(path) {
 }
 
 /**
- * @typedef {ReturnType<typeof remove> | ReturnType<typeof patch> | ReturnType<typeof install> | ReturnType<typeof extract> | ReturnType<typeof extend> | ReturnType<typeof cmd>} Step
+ * @typedef {ReturnType<typeof remove> | ReturnType<typeof patch> | ReturnType<typeof str_replace> | ReturnType<typeof install> | ReturnType<typeof extract> | ReturnType<typeof extend> | ReturnType<typeof cmd> | ReturnType<typeof magicast>} Step
  */
 
 /**
@@ -92,6 +120,12 @@ export async function execute(opts) {
 
   for (const step of steps) {
     switch (step.type) {
+      case "magicast": {
+        const file = path.join(opts.destination, step.file);
+        const mod = await loadFile(file);
+        step.fn(mod);
+        await writeFile(mod);
+      }
       case "extract": {
         const templates = path.join(source, "templates");
         const files = await listFiles(templates);
@@ -128,6 +162,15 @@ export async function execute(opts) {
           applyOperation(contents, operation);
         }
         await fs.writeFile(file, JSON.stringify(contents, null, 2));
+        break;
+      }
+      case "str_replace": {
+        const file = path.join(opts.destination, step.file);
+        const contents = await fs.readFile(file, "utf8");
+        await fs.writeFile(
+          file,
+          contents.replace(step.pattern, step.replacement)
+        );
         break;
       }
       case "cmd": {
@@ -173,14 +216,19 @@ export async function execute(opts) {
     const appAlpha = app.replace(/[^a-zA-Z0-9]/g, "");
 
     for (const file of await listFiles(opts.destination)) {
-      const contents = await fs.readFile(file, "utf8");
-      if (file.endsWith(".png") || file.endsWith(".ico")) continue;
-      await fs.writeFile(
-        file,
-        contents
-          .replace(/\@\@app/g, app)
-          .replace(/\@\@normalizedapp/g, appAlpha)
-      );
+      if (file.includes(".git")) continue;
+      try {
+        const contents = await fs.readFile(file, "utf8");
+        if (file.endsWith(".png") || file.endsWith(".ico")) continue;
+        await fs.writeFile(
+          file,
+          contents
+            .replace(/\@\@app/g, app)
+            .replace(/\@\@normalizedapp/g, appAlpha)
+        );
+      } catch {
+        continue;
+      }
     }
   }
 }
@@ -189,6 +237,7 @@ export async function execute(opts) {
  * @param {string} dir
  */
 async function listFiles(dir) {
+  if (dir.endsWith("node_modules")) return [];
   const results = [];
   for (const file of await fs.readdir(dir)) {
     const p = path.join(dir, file);

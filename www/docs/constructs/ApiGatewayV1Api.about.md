@@ -11,12 +11,12 @@ The Api construct uses [API Gateway V2](https://aws.amazon.com/blogs/compute/ann
 ### Minimal config
 
 ```js
-import { ApiGatewayV1Api } from "@serverless-stack/resources";
+import { ApiGatewayV1Api } from "sst/constructs";
 
 new ApiGatewayV1Api(stack, "Api", {
   routes: {
-    "GET    /notes"     : "src/list.main",
-    "POST   /notes"     : "src/create.main",
+    "GET    /notes": "src/list.main",
+    "POST   /notes": "src/create.main",
     "GET    /notes/{id}": "src/get.main",
     "PUT    /notes/{id}": "src/update.main",
     "DELETE /notes/{id}": "src/delete.main",
@@ -33,7 +33,7 @@ Add routes after the API has been created.
 ```js {4}
 const api = new ApiGatewayV1Api(stack, "Api", {
   routes: {
-    "GET /notes"   : "src/list.main",
+    "GET /notes": "src/list.main",
     "ANY /{proxy+}": "src/catch.main",
   },
 });
@@ -129,8 +129,8 @@ Allow the entire API to access S3.
 ```js {11}
 const api = new ApiGatewayV1Api(stack, "Api", {
   routes: {
-    "GET    /notes"     : "src/list.main",
-    "POST   /notes"     : "src/create.main",
+    "GET    /notes": "src/list.main",
+    "POST   /notes": "src/create.main",
     "GET    /notes/{id}": "src/get.main",
     "PUT    /notes/{id}": "src/update.main",
     "DELETE /notes/{id}": "src/delete.main",
@@ -147,8 +147,8 @@ Allow one of the routes to access S3.
 ```js {11}
 const api = new ApiGatewayV1Api(stack, "Api", {
   routes: {
-    "GET    /notes"     : "src/list.main",
-    "POST   /notes"     : "src/create.main",
+    "GET    /notes": "src/list.main",
+    "POST   /notes": "src/create.main",
     "GET    /notes/{id}": "src/get.main",
     "PUT    /notes/{id}": "src/update.main",
     "DELETE /notes/{id}": "src/delete.main",
@@ -163,8 +163,8 @@ api.attachPermissionsToRoute("GET /notes", ["s3"]);
 ```js {11}
 const api = new ApiGatewayV1Api(stack, "Api", {
   routes: {
-    "GET    /notes"     : "src/list.main",
-    "POST   /notes"     : "src/create.main",
+    "GET    /notes": "src/list.main",
+    "POST   /notes": "src/create.main",
     "GET    /notes/{id}": "src/get.main",
     "PUT    /notes/{id}": "src/update.main",
     "DELETE /notes/{id}": "src/delete.main",
@@ -272,7 +272,10 @@ If you have the domain name stored in AWS SSM Parameter Store, you can reference
 ```js {3,6-9}
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
 
-const rootDomain = StringParameter.valueForStringParameter(stack, `/myApp/domain`);
+const rootDomain = StringParameter.valueForStringParameter(
+  stack,
+  `/myApp/domain`
+);
 
 new ApiGatewayV1Api(stack, "Api", {
   customDomain: {
@@ -392,7 +395,7 @@ new ApiGatewayV1Api(stack, "Api", {
     myAuthorizer: {
       type: "user_pools",
       userPoolIds: [userPool.userPoolId],
-    }
+    },
   },
   defaults: {
     authorizer: "myAuthorizer",
@@ -469,7 +472,7 @@ new ApiGatewayV1Api(stack, "Api", {
     "GET /": {
       cdk: {
         function: fn,
-      }
+      },
     },
   },
 });
@@ -491,7 +494,7 @@ new ApiGatewayV1Api(stack, "Api", {
     "GET /": {
       cdk: {
         function: alias,
-      }
+      },
     },
   },
 });
@@ -518,6 +521,47 @@ new ApiGatewayV1Api(stack, "Api", {
 });
 ```
 
+#### Configuring Private endpoint
+
+Configure the internally created CDK `RestApi` instance. By doing so, API Gateway will generate a new Route53 Alias DNS record which you can use to invoke your private APIs.
+
+```js {20-23}
+import { EndpointType } from "aws-cdk-lib/aws-apigateway";
+import { InterfaceVpcEndpoint } from "aws-cdk-lib/aws-ec2";
+
+const vpcEndpoint = new InterfaceVpcEndpoint(stack, "ApiVpcEndpoint", {
+  vpc,
+  service: {
+    name: `com.amazonaws.${app.region}.execute-api`,
+    port: 443
+  },
+  subnets: {
+    subnets: [subnet1, subnet2]
+  },
+  privateDnsEnabled: true,
+  securityGroups: [sg]
+});
+
+new ApiGatewayV1Api(stack, "Api", {
+  cdk: {
+    restApi: {
+      endpointConfiguration: {
+        types: [EndpointType.PRIVATE],
+        vpcEndpoints: [vpcEndpoint],
+      },
+    },
+  },
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+The private endpoint has the following format:
+```
+https://{rest-api-id}-{vpc-id}.execute-api.{region}.amazonaws.com/{stage}
+```
+
 #### Usage Plan & API Keys
 
 Usage plans allow configuring who can access the API, and setting throttling limits and quota limits.
@@ -532,8 +576,8 @@ const api = new ApiGatewayV1Api(stack, "Api", {
 const plan = api.cdk.restApi.addUsagePlan("UsagePlan", {
   throttle: {
     rateLimit: 10,
-    burstLimit: 2
-  }
+    burstLimit: 2,
+  },
 });
 
 const key = api.cdk.restApi.addApiKey("ApiKey");
@@ -553,11 +597,11 @@ new ApiGatewayV1Api(stack, "Api", {
           requestParameters: {
             "application/json": JSON.stringify({
               action: "sayHello",
-              pollId: "$util.escapeJavaScript($input.params('who'))"
-            })
-          }
-        }
-      }
+              pollId: "$util.escapeJavaScript($input.params('who'))",
+            }),
+          },
+        },
+      },
     },
   },
 });

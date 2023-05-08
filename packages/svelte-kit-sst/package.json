@@ -1,0 +1,37 @@
+{
+  "name": "svelte-kit-sst",
+  "description": "Adapter for SvelteKit apps to work on AWS Lambda and AWS Lambda@Edge.",
+  "version": "2.8.7",
+  "type": "module",
+  "license": "MIT",
+  "author": {
+    "name": "SST",
+    "url": "https://sst.dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/serverless-stack/sst.git",
+    "directory": "packages/svelte-kit-sst"
+  },
+  "keywords": [
+    "svelte",
+    "svelte-kit",
+    "svelte-kit-adapter"
+  ],
+  "bugs": "https://github.com/serverless-stack/sst/issues",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@sveltejs/kit": "^1.5.0",
+    "@types/aws-lambda": "^8.10.112"
+  }
+}

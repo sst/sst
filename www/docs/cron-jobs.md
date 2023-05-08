@@ -1,40 +1,88 @@
 ---
 title: Cron Jobs
-description: "Learn how to create cron jobs in your SST app."
+description: "Add a cron job to your SST app."
 ---
 
-SST can help you schedule Lambda functions to run at specified time intervals. To do this you can use the [`Cron`](constructs/Cron.md) construct.
+import HeadlineText from "@site/src/components/HeadlineText";
 
-:::tip Example
+<HeadlineText>
 
-Follow this tutorial on creating a simple serverless cron job in SST.
+Add a cron job to your SST app.
 
-[READ TUTORIAL](https://sst.dev/examples/how-to-use-cron-jobs-in-your-serverless-app.html)
+</HeadlineText>
 
-:::
+---
 
-There are two ways to specify the schedule in the construct.
+## Overview
 
-## Rate expressions
+SST makes it very easy to add serverless cron jobs to your app.
 
-You can specify a rate at which a function runs. For example, every 5 minutes.
+1. Add a construct and define the schedule
+2. Create the function that'll get run
 
-```js {4}
-import { Cron } from "@serverless-stack/resources";
+Let's look at how to do this in detail.
 
-new Cron(stack, "Cron", {
-  schedule: "rate(5 minutes)",
-  job: "src/lambda.main",
+---
+
+#### Get started
+
+Start by creating a new SST + Next.js app by running the following command in your terminal. We are using Next.js for this example but you can use your favorite frontend.
+
+```bash
+npx create-sst@latest --template standard/nextjs
+```
+
+---
+
+## Add the construct
+
+Add the construct to your stacks.
+
+```ts title="stacks/Default.ts"
+new Cron(stack, "cron", {
+  schedule: "rate(1 minute)",
+  job: "packages/functions/src/cron.handler",
 });
 ```
 
-:::note
+This defines a cron job that'll run every minute and points to the function that will be invoked.
 
+:::info
 The fastest rate a cron job can be run is every minute.
-
 :::
 
-Here are some sample rate expressions:
+Make sure to import the [`Cron`](constructs/Bucket.md) construct.
+
+```diff title="stacks/Default.ts"
+- import { StackContext, NextjsSite } from "sst/constructs";
++ import { Cron, StackContext, NextjsSite } from "sst/constructs";
+```
+
+---
+
+## Add the handler
+
+Let's add the function that'll be invoked. Create a file in `packages/functions/src/cron.ts`.
+
+```ts title="packages/functions/src/cron.ts"
+export async function handler() {
+  console.log("Running my cron job");
+}
+```
+
+Once your app updates, you'll notice the logs being printed out every minute in your terminal.
+
+---
+
+## Cron schedule
+
+There are a couple of ways to specify the schedule of a cron jon.
+
+---
+
+#### Rate expressions
+
+Rate expressions are the simplest way to do it. Here are some sample rate expressions:
 
 - `rate(1 minute)`
 - `rate(5 minutes)`
@@ -45,23 +93,18 @@ Here are some sample rate expressions:
 
 If the value is equal to 1, then the unit must be singular. If the value is greater than 1, the unit must be plural.
 
-## Cron expressions
+---
 
-Alternatively, you can specify a cron expression to have a function run at specific times, ie. every day at 12:00pm.
+#### Cron expressions
 
-```js {4}
-import { Cron } from "@serverless-stack/resources";
+Alternatively, you can specify a cron expression to have it run at specific times, ie. every day at 12:00pm.
 
-new Cron(stack, "Cron", {
-  schedule: "cron(0 12 * * ? *)",
-  job: "src/lambda.main",
-});
+```ts
+schedule: "cron(0 12 * * ? *)",
 ```
 
-:::note
-
+:::info
 All cron expressions use the UTC+0 time zone.
-
 :::
 
 Here are some example cron expressions:
@@ -77,4 +120,8 @@ Here are some example cron expressions:
 | 0/5     | 8\-17 | ?            | \*    | MON\-FRI    | \*   | Run every 5 minutes Monday through Friday between 8:00 am and 5:55 pm                                           |
 | 0/30    | 20\-2 | ?            | \*    | MON\-FRI    | \*   | Run every 30 minutes Monday through Friday between 10:00 pm on the starting day to 2:00 am on the following day |
 
-You can [read more about the cron expressions syntax](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-create-rule-schedule.html#eb-cron-expressions) over on the AWS docs.
+You can [read more about the cron expressions syntax](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-create-rule-schedule.html#eb-cron-expressions).
+
+---
+
+And that's it! You can now add cron jobs to your app. If your function needs to run for longer than the Lambda timeout, you can trigger a [long running job](long-running-jobs.md).

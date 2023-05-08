@@ -1,0 +1,48 @@
+{
+  "name": "astro-sst",
+  "description": "Adapter for Astro apps to work on AWS Lambda and AWS Lambda@Edge.",
+  "version": "2.8.7",
+  "type": "module",
+  "license": "MIT",
+  "author": {
+    "name": "SST",
+    "url": "https://sst.dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/serverless-stack/sst.git",
+    "directory": "packages/astro-sst"
+  },
+  "keywords": [
+    "withastro",
+    "astro-adapter"
+  ],
+  "bugs": "https://github.com/serverless-stack/sst/issues",
+  "exports": {
+    "./edge": "./dist/edge/adapter.js",
+    "./edge/entrypoint": "./dist/edge/entrypoint.js",
+    "./lambda": "./dist/lambda/adapter.js",
+    "./lambda/entrypoint": "./dist/lambda/entrypoint.js",
+    "./package.json": "./package.json"
+  },
+  "typesVersions": {
+    "*": {
+      "edge": [
+        "dist/edge/adapter.d.ts"
+      ],
+      "lambda": [
+        "dist/lambda/adapter.d.ts"
+      ]
+    }
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@astrojs/webapi": "^2.1.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.112",
+    "astro": "^2.1.3"
+  }
+}

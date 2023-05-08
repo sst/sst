@@ -40,7 +40,7 @@ You can then open the **Run and Debug** tab and click **Start Debugging** to set
 
 ---
 
-## Type Checking
+## Type checking
 
 SST is a TypeScript-first framework. SST projects are configured so that VS Code will **automatically** pick up the config and **typecheck** your code as you write it. This helps you fix issue early.
 

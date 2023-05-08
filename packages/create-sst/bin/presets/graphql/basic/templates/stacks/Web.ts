@@ -1,11 +1,11 @@
-import { use, StackContext, StaticSite } from "@serverless-stack/resources";
-import { Api } from "./Api";
+import { use, StackContext, StaticSite } from "sst/constructs";
+import { Api } from "./Api.js";
 
 export function Web({ stack }: StackContext) {
   const api = use(Api);
 
   const site = new StaticSite(stack, "site", {
-    path: "web",
+    path: "packages/web",
     buildCommand: "npm run build",
     buildOutput: "dist",
     environment: {

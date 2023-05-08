@@ -83,11 +83,10 @@ However, they only affect the functions that are created after the call.
 
 ```js title="stacks/index.js"
 export default function main(app) {
-
   new StackA(app, "stack-a");
 
   app.addDefaultFunctionEnv({
-    TABLE_NAME: "NOTES_TABLE"
+    TABLE_NAME: "NOTES_TABLE",
   });
 
   app.addDefaultFunctionPermissions(["s3"]);
@@ -108,7 +107,7 @@ You can also use the [Stack's `setDefaultFunctionProps`](Stack.md#setdefaultfunc
 
 You can set a removal policy to apply to all the resources in the app. This is useful for ephemeral environments that need to clean up all their resources on removal.
 
-``` js title="stacks/index.js"
+```js title="stacks/index.js"
 import { RemovalPolicy } from "aws-cdk-lib";
 
 export default function main(app) {
@@ -138,15 +137,15 @@ If you were previously calling `setDefaultFunctionProps` multiple times like so:
 
 ```js
 app.setDefaultFunctionProps({
-  environment: { FOO: "bar" }
+  environment: { FOO: "bar" },
 });
 
 class MyStack extends sst.Stack {
   constructor(scope) {
-    super(scope, "MyStack")
+    super(scope, "MyStack");
 
     app.setDefaultFunctionProps({
-      environment: { TABLE_NAME: "mytable" }
+      environment: { TABLE_NAME: "mytable" },
     });
   }
 }
@@ -159,15 +158,15 @@ new MyStack(app);
 
 ```ts
 app.setDefaultFunctionProps({
-  environment: { FOO: "bar" }
+  environment: { FOO: "bar" },
 });
 
 class MyStack extends sst.Stack {
   constructor(scope: sst.App) {
-    super(scope, "MyStack")
+    super(scope, "MyStack");
 
     app.setDefaultFunctionProps({
-      environment: { TABLE_NAME: "mytable" }
+      environment: { TABLE_NAME: "mytable" },
     });
   }
 }
@@ -178,7 +177,6 @@ new MyStack(app);
 </TabItem>
 </MultiLanguageCode>
 
-
 Change it to:
 
 <MultiLanguageCode>
@@ -186,14 +184,14 @@ Change it to:
 
 ```js
 app.setDefaultFunctionProps({
-  environment: { FOO: "bar" }
+  environment: { FOO: "bar" },
 });
 
 class MyStack extends sst.Stack {
   constructor(scope) {
-    super(scope, "MyStack")
+    super(scope, "MyStack");
 
-    app.addDefaultFunctionEnv({ TABLE_NAME: "mytable" })
+    app.addDefaultFunctionEnv({ TABLE_NAME: "mytable" });
   }
 }
 
@@ -205,14 +203,14 @@ new MyStack(app);
 
 ```ts
 app.setDefaultFunctionProps({
-  environment: { FOO: "bar" }
+  environment: { FOO: "bar" },
 });
 
 class MyStack extends sst.Stack {
   constructor(scope: sst.App) {
-    super(scope, "MyStack")
+    super(scope, "MyStack");
 
-    app.addDefaultFunctionEnv({ TABLE_NAME: "mytable" })
+    app.addDefaultFunctionEnv({ TABLE_NAME: "mytable" });
   }
 }
 
@@ -238,13 +236,13 @@ The name of the app. This comes from the `name` in your `sst.json`.
 
 _Type_ : `string`
 
-The stage the app is being deployed to. If this is not specified as the [`--stage`](../../packages/cli.md#--stage) option, it'll default to the stage configured during the initial run of the SST CLI.
+The stage the app is being deployed to. If this is not specified as the [`--stage`](../../packages/sst.md#--stage) option, it'll default to the stage configured during the initial run of the SST CLI.
 
 ### region
 
 _Type_ : `string`
 
-The region the app is being deployed to. If this is not specified as the [`--region`](../../packages/cli.md#--region) option in the SST CLI, it'll default to the `region` in your `sst.json`.
+The region the app is being deployed to. If this is not specified as the [`--region`](../../packages/sst.md#--region) option in the SST CLI, it'll default to the `region` in your `sst.json`.
 
 ### account
 
@@ -324,7 +322,6 @@ Adds additional default layers to be applied to all Lambda functions in the stac
 Only functions created after a `addDefaultFunctionLayers` call will contain the new values.
 :::
 
-
 ### setDefaultRemovalPolicy
 
 ```ts
@@ -340,7 +337,6 @@ The default removal policy that'll be applied to all the resources in the app. T
 :::danger
 Make sure to not set the default removal policy to `DESTROY` for production environments.
 :::
-
 
 ### logicalPrefixedName
 

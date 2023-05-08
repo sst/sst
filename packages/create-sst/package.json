@@ -1,11 +1,14 @@
 {
   "name": "create-sst",
-  "version": "1.18.4",
+  "version": "2.8.7",
   "homepage": "https://serverless-stack.com",
   "description": "Create Serverless Stack apps.",
   "main": "src/index.mjs",
   "bin": {
     "create-sst": "./bin/create-sst.mjs"
+  },
+  "exports": {
+    "import": "./src/index.mjs"
   },
   "author": {
     "name": "Serverless Stack",
@@ -25,8 +28,10 @@
     "commander": "^9.1.0",
     "fast-json-patch": "^3.1.1",
     "inquirer": "^8.2.2",
+    "magicast": "^0.2.0",
     "node-fetch": "3.2.10",
     "ora": "^6.1.0",
+    "patch-package": "^6.5.1",
     "undici": "^5.9.1"
   },
   "gitHead": "8ac2d0abc11d5de721c87658bb445e3d6c211dcf",

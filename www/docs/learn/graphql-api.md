@@ -77,17 +77,19 @@ Let's take a look at how this is all wired up.
 
    ```ts titlte="stacks/Api.ts"
    routes: {
-     "POST /graphql": {
-       type: "pothos",
-       function: {
-         handler: "functions/graphql/graphql.handler",
-       },
-       schema: "services/functions/graphql/schema.ts",
-       output: "graphql/schema.graphql",
-       commands: [
-         "npx genql --output ./graphql/genql --schema ./graphql/schema.graphql --esm",
-       ],
-     },
+    "POST /graphql": {
+      type: "graphql",
+      function: {
+        handler: "packages/functions/src/graphql/graphql.handler",
+      },
+      pothos: {
+        schema: "packages/functions/src/graphql/schema.ts",
+        output: "packages/graphql/schema.graphql",
+        commands: [
+          "cd packages/graphql && npx @genql/cli --output ./genql --schema ./schema.graphql --esm",
+        ],
+      },
+    },
    },
    ```
 
@@ -100,7 +102,7 @@ Let's take a look at how this is all wired up.
    - The `output` is where Pothos outputs the GraphQL schema to a file. By writing to a file, we are able to use other tools in the GraphQL ecosystem.
    - Finally, the `commands` let you specify any scripts you want to run after the schema has been generated. We'll look at what we are running below.
 
-2. The GraphQL schema is specified in `services/functions/graphql/schema.ts`.
+2. The GraphQL schema is specified in `packages/functions/src/graphql/schema.ts`.
 
    ```ts title="services/functions/graphql/schema.ts"
    import { builder } from "./builder";
@@ -112,9 +114,9 @@ Let's take a look at how this is all wired up.
 
    It's doing two things:
 
-   1. Get the Pothos [`SchemaBuilder`](https://pothos-graphql.dev/docs/guide/schema-builder) that we define in `services/functions/graphql/builder.ts`.
+   1. Get the Pothos [`SchemaBuilder`](https://pothos-graphql.dev/docs/guide/schema-builder) that we define in `packages/functions/src/graphql/builder.ts`.
 
-      ```ts title="services/functions/graphql/builder.ts"
+      ```ts title="packages/functions/src/graphql/builder.ts"
       import SchemaBuilder from "@pothos/core";
 
       export const builder = new SchemaBuilder({});
@@ -131,11 +133,11 @@ Let's take a look at how this is all wired up.
 
 3. We then pass the GraphQL schema into the Lambda optimized GraphQL handler, `GraphQLHandler`, that we talked about above.
 
-   It's defined in `services/functions/graphql/graphql.ts`.
+   It's defined in `packages/functions/src/graphql/graphql.ts`.
 
-   ```ts title="services/functions/graphql/graphql.ts"
+   ```ts title="packages/functions/src/graphql/graphql.ts"
    import { schema } from "./schema";
-   import { GraphQLHandler } from "@serverless-stack/node/graphql";
+   import { GraphQLHandler } from "sst/node/graphql";
 
    export const handler = GraphQLHandler({
      schema,

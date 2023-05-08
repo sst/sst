@@ -2424,7 +2424,7 @@ subscribers: [
 ]
 
 // to
-notifications: {
+subscribers: {
   "0": "src/subscriber1.main",
   "1": "src/subscriber2.main",
 }

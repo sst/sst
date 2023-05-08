@@ -1,5 +1,5 @@
 ---
-to: services/migrations/<%= Date.now() %>_<%= name.replace(/\s/g, "_") %>.mjs
+to: packages/core/migrations/<%= Date.now() %>_<%= name.replace(/\s/g, "_") %>.mjs
 ---
 import { Kysely } from "kysely";
 

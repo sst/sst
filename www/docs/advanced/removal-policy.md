@@ -24,18 +24,21 @@ This default behavior is good for production environments. It allows you to reco
 You can set the removal policy on all the resources in your SST app.
 
 :::danger
-Make sure to not set the default removal policy to `DESTROY` for production environments.
+Make sure to not set the default removal policy to `destroy` for production environments.
 :::
 
-```js title="stacks/index.js"
-import { RemovalPolicy } from "aws-cdk-lib";
+```ts title="sst.config.ts" {7-9}
+export default {
+  config(_input) {
+    // ...
+  },
+  stacks(app) {
+    // Remove all resources when non-prod stages are removed
+    if (app.stage !== "prod") {
+      app.setDefaultRemovalPolicy("destroy");
+    }
 
-export default function main(app) {
-  // Remove all resources when non-prod stages are removed
-  if (app.stage !== "prod") {
-    app.setDefaultRemovalPolicy(RemovalPolicy.DESTROY);
-  }
-
-  // Add stacks
-}
+    // ...
+  },
+} satisfies SSTConfig;
 ```

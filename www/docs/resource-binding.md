@@ -4,7 +4,6 @@ description: "Access the resources in your SST app in a secure and typesafe way.
 ---
 
 import HeadlineText from "@site/src/components/HeadlineText";
-import MultiPackagerCode from "@site/src/components/MultiPackagerCode";
 
 <HeadlineText>
 
@@ -18,71 +17,62 @@ Access the resources in your app in a secure and typesafe way.
 
 **Resource Binding** allows you to connect your functions with your infrastructure. This is done in two steps:
 
-1. Bind a resource to the functions in your infrastructure code through the `bind` prop.
-2. Use the [`@serverless-stack/node`](clients/index.md) package to access the resource in your function.
+1. Bind a resource to your frontend or API through the `bind` prop.
+2. Use the [`sst/node`](clients/index.md) package to access the resource in your function.
 
 ---
 
 ## Quick start
 
-To see how Resource Binding works, we are going to create an S3 bucket and bind it to a Lambda function.
+To see how Resource Binding works, we are going to create an S3 bucket and bind it to a Next.js frontend.
 
-Follow along by creating the Minimal TypeScript starter by running `npx create-sst@latest` > `minimal` > `minimal/typescript-starter`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/minimal-typescript) that's based on the same template.
+To follow along, you can create a new SST app by running `npx create-sst@latest`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/standard-nextjs) that's based on the same template.
 
-1. To create a new bucket, open up `stacks/MyStack.ts` and add a [`Bucket`](constructs/Bucket.md) construct below the API.
+1. To create a new bucket, open up `stacks/Default.ts` and add a [`Bucket`](constructs/Bucket.md) construct below the [`NextjsSite`](constructs/NextjsSite.md).
 
-   ```ts title="stacks/MyStack.ts"
-   const bucket = new Bucket(stack, "myFiles");
+   ```ts title="stacks/Default.ts"
+   const bucket = new Bucket(stack, "public");
    ```
 
    You'll also need to import `Bucket` at the top.
 
    ```ts
-   import { Bucket } from "@serverless-stack/resources";
+   import { Bucket } from "sst/constructs";
    ```
 
-2. Then, bind the `bucket` to the `api`.
+2. Then, bind the `bucket` to the `site`.
 
-   ```ts title="stacks/MyStack.ts"
-   api.bind([bucket]);
+   ```diff title="stacks/Default.ts"
+   const site = new NextjsSite(stack, "site", {
+     path: "packages/next",
+   + bind: [bucket],
+   });
    ```
 
-3. Now we can access the bucket's name in our API using the [`Bucket`](clients/bucket.md) helper. Change `services/functions/lambda.ts` to:
+3. Now we can access the bucket's name in our frontend using the [`Bucket`](clients/bucket.md) helper. Add this to `packages/next/pages/index.ts` to generate a presigned URL.
 
-   ```ts title="services/functions/lambda.ts" {10}
-   import { APIGatewayProxyHandlerV2 } from "aws-lambda";
-   import { Bucket } from "@serverless-stack/node/bucket";
+   ```ts title="packages/next/pages/index.ts" {10}
+   import crypto from "crypto";
+   import { Bucket } from "sst/node/bucket";
    import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-   const s3 = new S3Client({});
+   import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-   export const handler: APIGatewayProxyHandlerV2 = async (event) => {
-     // Upload a file to the bucket
-     await s3.send(
-       new PutObjectCommand({
-         Bucket: Bucket.myFiles.bucketName,
-         Key: "greeting.txt",
-         Body: "Hello world!",
-       })
-     );
+   export async function getServerSideProps() {
+     const command = new PutObjectCommand({
+       ACL: "public-read",
+       Key: crypto.randomUUID(),
+       Bucket: Bucket.public.bucketName,
+     });
+     const url = await getSignedUrl(new S3Client({}), command);
 
-     return {
-       statusCode: 200,
-       headers: { "Content-Type": "text/plain" },
-       body: `File uploaded`,
-     };
-   };
+     return { props: { url } };
+   }
    ```
 
-   You'll also need to install the node package in the `services/` directory.
+   And install the AWS SDK for this example.
 
    ```bash
-   npm install --save @serverless-stack/node
-   ```
-
-   And the AWS SDK for this example.
-
-   ```bash
-   npm install --save @aws-sdk/client-s3
+   npm install --save @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
    ```
 
    That's it!
@@ -97,16 +87,14 @@ Let's take a look at some of the key features of Resource Binding, and how it ma
 
 ### Typesafety
 
-In the above example, the `Bucket` object that's imported from `@serverless-stack/node/bucket` is typesafe. Your editor should be able to autocomplete the bucket name `myFiles`, as well as its property `bucketName`.
-
-![resource binding typesafe](/img/resource-binding/typesafe.png)
+In the above example, the `Bucket` object that's imported from `sst/node/bucket` is typesafe. Your editor should be able to autocomplete the bucket name `public`, as well as its property `bucketName`.
 
 <details>
 <summary>Behind the scenes</summary>
 
 Let's take a look at how this is all wired up.
 
-1. First, the `@serverless-stack/node/table` package predefines an interface.
+1. First, the `sst/node/table` package predefines an interface.
 
    ```ts
    export interface BucketResources {}
@@ -114,24 +102,18 @@ Let's take a look at how this is all wired up.
 
 2. When SST builds the app, it generates a type file and adds the bucket name to the `BucketResources` interface.
 
-   ```ts title="node_modules/@types/serverless-stack__node/Bucket-myFiles.d.ts"
-   import "@serverless-stack/node/bucket";
-   declare module "@serverless-stack/node/bucket" {
+   ```ts title=".sst/types/index.ts"
+   import "sst/node/bucket";
+   declare module "sst/node/bucket" {
      export interface BucketResources {
-       myFiles: {
+       public: {
          bucketName: string;
        };
      }
    }
    ```
 
-   This type file then gets appended to `index.d.ts`.
-
-   ```ts title="node_modules/@types/@serverless-stack__node/index.d.ts"
-   export * from "./Bucket-myFiles";
-   ```
-
-3. So when the `Bucket` object is imported from `@serverless-stack/node/bucket`, it has the type `BucketResources`.
+3. So when the `Bucket` object is imported from `sst/node/bucket`, it has the type `BucketResources`.
 
 </details>
 
@@ -139,27 +121,27 @@ Let's take a look at how this is all wired up.
 
 ### Error handling
 
-If you reference a resource that doesn't exist in your SST app, or hasn't been bound to the function, you'll get a runtime error.
+If you reference a resource that doesn't exist in your SST app, or hasn't been bound to the frontend, you'll get a runtime error.
 
-For example, if you forget to bind the `bucket` to the API, you'll get the following error when the function is invoked.
+For example, if you forget to bind the `bucket` to the `site`, you'll get the following error when the function is invoked.
 
 ```
-Cannot use Bucket.myFiles. Please make sure it is bound to this function.
+Cannot use Bucket.public. Please make sure it is bound to this function.
 ```
 
 ---
 
 ### Testing
 
-When testing your code, you can use the [`sst bind`](packages/cli.md#bind) CLI to bind the resources to your tests.
+When testing your code, you can use the [`sst bind`](packages/sst.md#sst-bind) CLI to bind the resources to your tests.
 
 ```bash
-sst bind -- vitest run
+sst bind vitest run
 ```
 
-This allows the [`@serverless-stack/node`](clients/index.md) helper library to work as if it was running inside a Lambda function.
+This allows the [`sst/node`](clients/index.md) helper library to work as if it was running inside a Lambda function.
 
-[Read more about testing](advanced/testing.md) and [learn about the `sst bind` CLI](advanced/testing.md#how-sst-bind-works).
+[Read more about testing](testing.md) and [learn about the `sst bind` CLI](testing.md#how-sst-bind-works).
 
 ---
 
@@ -168,10 +150,10 @@ This allows the [`@serverless-stack/node`](clients/index.md) helper library to w
 When a resource is bound to a Lambda function, the permissions to access that resource are automatically granted to the function.
 
 ```ts
-api.bind([bucket]);
+site.bind([bucket]);
 ```
 
-Here, by binding the `bucket` to the `api`, the API routes are able to perform file download, upload, delete, and other actions against the bucket.
+Here, by binding the `bucket` to the `site`, the frontend is able to perform file download, upload, delete, and other actions against the bucket.
 
 <details>
 <summary>Behind the scenes</summary>
@@ -196,18 +178,10 @@ The IAM policy statement looks like:
 
 Resource Binding works across all [SST constructs](constructs/index.md). Here are a few more examples.
 
-- Getting the Next.js URL
-
-  ```ts
-  import { NextjsSite } from "@serverless-stack/node/site";
-
-  NextjsSite.myFrontend.url;
-  ```
-
 - DynamoDB table name
 
   ```ts
-  import { Table } from "@serverless-stack/node/table";
+  import { Table } from "sst/node/table";
 
   Table.myTable.tableName;
   ```
@@ -215,7 +189,7 @@ Resource Binding works across all [SST constructs](constructs/index.md). Here ar
 - RDS cluster data
 
   ```ts
-  import { RDS } from "@serverless-stack/node/rds";
+  import { RDS } from "sst/node/rds";
 
   RDS.myDB.clusterArn;
   RDS.myDB.secretArn;
@@ -228,9 +202,9 @@ See the [full list of helpers](clients/index.md).
 
 ## Binding other resources
 
-So far we've seen how Resource Binding allows your functions to access values from other SST constructs. But there are 2 other types of values you might want to access in your functions.
+So far we've seen how Resource Binding allows your frontend to access values from other SST constructs. But there are 2 other types of values you might want to access in your frontend.
 
-1. Secrets, because you can't define the value of the secrets in your functions.
+1. Secrets, because you can't define the value of the secrets in your frontend.
 2. Values from non-SST constructs, for example static values or values from CDK constructs.
 
 For these you can use [`Config`](config.md). Here are a couple of examples.
@@ -239,16 +213,19 @@ For these you can use [`Config`](config.md). Here are a couple of examples.
 
 #### Binding secrets
 
-To bind a secret to our function, start by creating a `Config.Secret` construct.
+To bind a secret to our frontend, start by creating a `Config.Secret` construct.
 
 ```ts
 const STRIPE_KEY = new Config.Secret(stack, "STRIPE_KEY");
 ```
 
-And continuing with our example, bind it to the `api`.
+And continuing with our example, bind it to the `site`.
 
-```ts
-api.bind([STRIPE_KEY]);
+```diff
+const site = new NextjsSite(stack, "site", {
+  path: "packages/next",
++ bind: [STRIPE_KEY],
+});
 ```
 
 Now set the secret value using the SST CLI.
@@ -260,7 +237,7 @@ npx sst secrets set STRIPE_KEY sk_test_abc123
 And access the value in the function.
 
 ```ts
-import { Config } from "@serverless-stack/node/config";
+import { Config } from "sst/node/config";
 
 Config.STRIPE_KEY;
 ```
@@ -283,19 +260,103 @@ const MY_CLUSTER_NAME = new Config.Parameter(stack, "MY_CLUSTER_NAME", {
 });
 ```
 
-Then bind it to the `api` from our example.
+Then bind it to the `site` from our example.
 
-```ts
-api.bind([MY_CLUSTER_NAME]);
+```diff
+const site = new NextjsSite(stack, "site", {
+  path: "packages/next",
++ bind: [MY_CLUSTER_NAME],
+});
 ```
 
 And you can access the value in your function.
 
 ```ts
-import { Config } from "@serverless-stack/node/config";
+import { Config } from "sst/node/config";
 
 Config.MY_CLUSTER_NAME;
 ```
+
+---
+
+## Client side environment variables
+
+We've looked at how you can use the [`sst/node`](clients/index.md) client to access the resources that've been bound to your construct.
+
+However for frontends (like Next.js, Remix, etc.) you can read from an environment variable purely on the client side. SST supports setting these client side environment variables as well. This is useful if you have a completely static frontend and you want to pass in the outputs of other constructs in your SST app. Let's look at how.
+
+Imagine you have an S3 bucket created using the [`Bucket`](constructs/Bucket.md) construct, and you want to access the name of the bucket in your client side code. You can use the `environment` property in your [`NextjsSite`](constructs/NextjsSite.md) construct.
+
+```ts {4-6}
+const bucket = new Bucket(stack, "Bucket");
+
+new NextjsSite(stack, "Site", {
+  environment: {
+    NEXT_PUBLIC_BUCKET_NAME: bucket.bucketName,
+  },
+});
+```
+
+Now you can access the bucket's name in your client side code.
+
+```ts
+console.log(process.env.NEXT_PUBLIC_BUCKET_NAME);
+```
+
+In Next.js, only environment variables prefixed with `NEXT_PUBLIC_` are available in your client side code. [Read more about using environment variables](https://nextjs.org/docs/basic-features/environment-variables#exposing-environment-variables-to-the-browser).
+
+Let's take look at what is happening behind the scenes.
+
+---
+
+#### While developing
+
+To use these values while developing locally, make sure that you are running your frontend locally with the `sst bind` CLI.
+
+```json title="package.json" {2}
+"scripts": {
+  "dev": "sst bind next dev",
+  "build": "next build",
+  "start": "next start"
+},
+```
+
+Note that, `sst bind` only works if the Next.js app is located inside the SST app or inside one of its subdirectories. For example:
+
+```
+/
+  sst.config.ts
+  my-next-app/
+```
+
+<details>
+<summary>Behind the scenes</summary>
+
+There are a couple of things happening behind the scenes here:
+
+1. The `sst dev` command generates a file with the values specified by the `NextjsSite` construct's `environment` prop.
+2. The `sst bind` CLI will traverse up the directories to look for the root of your SST app.
+3. It'll then find the file that's generated in step 1.
+4. It'll load these as environment variables before running the start command.
+
+</details>
+
+---
+
+#### While deploying
+
+On `sst deploy` client side environment variables will first be replaced by placeholder values, ie. `{{ NEXT_PUBLIC_BUCKET_NAME }}`, when building the Next.js app. And after the S3 bucket has been created, the placeholders in the HTML and JS files will then be replaced with the actual values.
+
+:::caution
+Since the actual values are determined at deploy time, you should not rely on the values at build time. For example, you cannot reference `process.env.NEXT_PUBLIC_BUCKET_NAME` inside `getStaticProps()` at build time.
+
+There are a couple of workarounds:
+
+- Hardcode the bucket name
+- Read the bucket name dynamically at build time (ie. from an SSM value)
+- Use [fallback pages](https://nextjs.org/docs/basic-features/data-fetching#fallback-pages) to generate the page on the fly
+
+:::
 
 ---
 
@@ -303,9 +364,9 @@ Config.MY_CLUSTER_NAME;
 
 When a resource is bound to a Lambda function, the resource values are stored as environment variables for the function. In our example, the bucket name is stored as a Lambda environment variable named `SST_Bucket_bucketName_myBucket`.
 
-At runtime, the `@serverless-stack/node/bucket` package reads the value `process.env.SST_Bucket_bucketName_MyBucket` and makes it accessible via `Bucket.myBucket.bucketName`.
+At runtime, the `sst/node/bucket` package reads the value `process.env.SST_Bucket_bucketName_myBucket` and makes it accessible via `Bucket.myBucket.bucketName`.
 
-SST also stores a copy of the bucket name in [AWS SSM](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html). In this case, an SSM parameter of the type `String` is created with the name `/sst/{appName}/{stageName}/Bucket/MyBucket/bucketName`, where `{appName}` is the name of your SST app, and `{stageName}` is the stage. The parameter value is the name of the bucket stored in plain text.
+SST also stores a copy of the bucket name in [AWS SSM](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html). In this case, an SSM parameter of the type `String` is created with the name `/sst/{appName}/{stageName}/Bucket/myBucket/bucketName`, where `{appName}` is the name of your SST app, and `{stageName}` is the stage. The parameter value is the name of the bucket stored in plain text.
 
 Storing the bucket name in SSM might seem redundant. But it provides a convenient way to fetch all the bound resources in your application. This can be extremely useful for testing. This isn't possible when using Lambda environment variables and [we are going to see why](#resource-binding-or-lambda-environment-variables).
 
@@ -319,7 +380,9 @@ When binding resources that contain sensitive values, placeholders are stored in
 
 ## Cost
 
-Resource Binding values are stored in AWS SSM with the _Standard Parameter type_ and _Standard Throughput_. This makes it [free to use](https://aws.amazon.com/systems-manager/pricing/) in your SST apps.
+Resource Binding values are stored in AWS SSM with the _Standard Parameter type_ and _Standard Throughput_. This makes AWS SSM [free to use](https://aws.amazon.com/systems-manager/pricing/) in your SST apps. However when storing a `Config.Secret` the value is encrypted by AWS KMS. These are retrieved at runtime in your Lambda functions when it starts up. AWS KMS has a [free tier](https://aws.amazon.com/kms/pricing/#Free_tier) of 20,000 API calls per month. And it costs $0.03 for every 10,000 subsequent API calls. This is worth keeping in mind as these secrets are fetched per Lambda function cold start.
+
+---
 
 ## FAQ
 
@@ -333,7 +396,7 @@ Prior to Resource Binding, people used Lambda environment variables to pass info
 
 Aside from the lack of typesafety and error handling, Lambda environment variables have a few drawbacks. Imagine you have a Lambda function that looks like this.
 
-```ts title="services/users/updated.ts"
+```ts title="packages/functions/src/updated.ts"
 export const handler = async () => {
   if (process.env.TOPIC_NAME !== "UserUpdated") {
     return;
@@ -349,7 +412,7 @@ Where `TOPIC_NAME` is stored as a Lambda environment variable. You'll need to ha
 
 2. In addition, imagine you have another function that also has a `TOPIC_NAME` Lambda environment variable, but with a different value.
 
-   ```ts title="services/billing/charged.ts"
+   ```ts title="packages/functions/src/charged.ts"
    export const handler = async () => {
      if (process.env.TOPIC_NAME !== "InvoiceCharged") {
        return;
@@ -377,4 +440,4 @@ For sensitive values, the values are stored in AWS SSM. When the Lambda containe
 
 For non-Node.js runtimes, you can continue to use Lambda environment variables.
 
-If you want to use Resource Binding, you would need to read the bound values from the Lambda environment variable and AWS SSM directly. Refer to the [`@serverless-stack/node`](clients/index.md) package to see how it is done in Node.js.
+If you want to use Resource Binding, you would need to read the bound values from the Lambda environment variable and AWS SSM directly. Refer to the [`sst/node`](clients/index.md) package to see how it is done in Node.js.

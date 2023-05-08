@@ -18,15 +18,15 @@ Your project will look something like this.
 
 ```
 my-sst-app
-├─ sst.json
-├─ services
+├─ package.json
+├─ sst.config.ts
+├─ packages
 │  ├─ core
+│  │  └─ migrations
 │  ├─ functions
-│  │  └─ graphql
-│  └─ migrations
-├─ graphql
-├─ stacks
-└─ web
+│  ├─ graphql
+│  └─ web
+└─ stacks
 ```
 
 We are using a monorepo setup. We recommend using it because it's the best way to manage a growing project with interconnected parts (like the backend, frontend, and infrastructure).
@@ -105,45 +105,25 @@ We typically group related resources together into stacks. In the `stacks/` dire
   },
   ```
 
-- Finally, `index.ts` defines all the stacks in the app.
-
-  ```ts title="stacks/index.ts"
-  export default function main(app: App) {
-    // ...
-
-    app.stack(Database).stack(Api).stack(Web);
-  }
-  ```
-
 ---
 
-## `services/`
+## `packages/`
 
-The `services/` directory houses everything that powers our backend. This includes our GraphQL API, but also all your business logic, and whatever else you need.
+The `packages/` directory houses everything that powers our backend. This includes our GraphQL API, but also all your business logic, and whatever else you need.
 
-- `services/core` contains all of your business logic. The `create sst` setup encourages [Domain Driven Design](domain-driven-design.md). It helps you keep your business logic separate from your API and Lambda functions. This allows you to write simple, maintainable code. It implements all the things your application can do. These are then called by external facing services — like an API.
+- `packages/core` contains all of your business logic. The `create sst` setup encourages [Domain Driven Design](domain-driven-design.md). It helps you keep your business logic separate from your API and Lambda functions. This allows you to write simple, maintainable code. It implements all the things your application can do. These are then called by external facing services — like an API.
 
-- `services/functions` is where you can place all the code for your Lambda functions. Your functions should generally be fairly simple. They should mostly be calling into code previously defined in `services/core`.
+- `packages/core/migrations` is created by default to house your SQL migrations.
 
-- `services/functions/graphql` is a predefined function and it includes supporting code that serves up a GraphQL API. It's wired up for code-generation and connected to the API defined in `stacks/Api.ts`.
+- `packages/web` contains a React application created with [Vite](https://vitejs.dev/). It's already wired up to be able to talk to the GraphQL API. If you are using a different frontend, for example NextJS, you can delete this folder and provision it yourself.
 
-- `services/migrations` is created by default to house your SQL migrations.
+- `packages/functions` is where you can place all the code for your Lambda functions. Your functions should generally be fairly simple. They should mostly be calling into code previously defined in `services/core`.
+
+- `packages/graphql` contains the outputs of GraphQL related code generation. Typically you won't be touching this but it needs to be committed to Git. It contains code shared between the frontend and backend.
 
 :::info
 Our starter is structured to encourage [Domain Driven Design](domain-driven-design.md).
 :::
-
----
-
-## `graphql/`
-
-The `graphql/` directory will contain the outputs of GraphQL related code generation. Typically you won't be touching this but it needs to be committed to Git. It contains code shared between the frontend and backend.
-
----
-
-## `web/`
-
-The `web/` directory contains a React application created with [Vite](https://vitejs.dev/). It's already wired up to be able to talk to the GraphQL API. If you are using a different frontend, for example NextJS, you can delete this folder and provision it yourself.
 
 ---
 
@@ -153,19 +133,17 @@ The `package.json` for our app is relatively simple. But there are a couple of t
 
 ---
 
-### Workspaces
+#### Workspaces
 
 As we had mentioned above, we are using [Workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces) to organize our monorepo setup.
 
 Workspaces are now supported in both [npm](https://docs.npmjs.com/cli/v7/using-npm/workspaces) and [Yarn](https://classic.yarnpkg.com/lang/en/docs/workspaces/) and you can learn more about them in their docs. In a nutshell, they help you manage dependencies for separate _packages_ inside your repo that have their own `package.json` files.
 
-We have three workspaces in our setup.
+We have workspaces in our setup.
 
 ```json title="package.json"
 "workspaces": [
-  "services",
-  "graphql",
-  "web"
+  "packages/*",
 ]
 ```
 
@@ -184,13 +162,13 @@ For Yarn, you'll need to run `yarn add` in the workspace directory. And at the r
 
 ---
 
-### Scripts
+#### Scripts
 
 Our starter also comes with a few helpful scripts.
 
 ```json title="package.json"
 "scripts": {
-  "start": "sst start",
+  "dev": "sst dev",
   "build": "sst build",
   "deploy": "sst deploy",
   "remove": "sst remove",
@@ -203,7 +181,7 @@ Our starter also comes with a few helpful scripts.
 
 Here's what these scripts do:
 
-- `start`: Start the [Live Lambda Dev](../live-lambda-development.md) environment for the _default_ stage.
+- `dev`: Start the [Live Lambda Dev](../live-lambda-development.md) environment for the _default_ stage.
 - `build`: Build the [CloudFormation](https://aws.amazon.com/cloudformation/) for the infrastructure of the app for the _default_ stage. It converts the SST constructs to CloudFormation and packages the necessary assets, but it doesn't deploy them. This is helpful to check what's going to be deployed without actually deploying it.
 - `deploy`: Build the infrastructure and deploy the app to AWS.
 - `remove`: Completely remove the app's infrastructure from AWS for the _default_ stage. Use with caution!
@@ -220,22 +198,24 @@ This might seem like a lot of scripts but we don't need to worry about them now.
 
 ---
 
-## `sst.json`
+## `sst.config.ts`
 
-Finally, the `sst.json` contains the project config.
+Finally, the `sst.config.ts` defines the project config and the stacks in the app.
 
-```js title="sst.json"
-{
-  // The name of your app, is used to prefix stack and resource names.
-  "name": "my-sst-app",
-  // The default region your app is deployed to.
-  // Can be overridden using the `--region` CLI option
-  "region": "us-east-1",
-  // The entry point to your app, defaults to `stacks/index.ts`.
-  "main": "stacks/index.ts"
-}
+```ts title="sst.config.ts"
+export default {
+  config(_input) {
+    return {
+      name: "my-sst-app",
+      region: "us-east-1",
+    };
+  },
+  stacks(app) {
+    app.stack(Database).stack(Api).stack(Web);
+  },
+} satisfies SSTConfig;
 ```
 
 ---
 
-By now your `sst start` process should be complete. So let's run our first migration and initialize our database!
+By now your `sst dev` process should be complete. So let's run our first migration and initialize our database!

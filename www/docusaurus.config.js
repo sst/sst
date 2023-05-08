@@ -30,11 +30,11 @@ module.exports = {
     image: "img/og-image.png",
     metaImage: "img/og-image.png",
     announcementBar: {
-      id: "announcement",
-      content: `If you like SST, <a target="_blank" href="${config.github}">give it a star on GitHub</a>! <span class="icon" />`,
+      id: "v2",
+      content: `SST v2 is now available! Check out the <a href="https://docs.sst.dev/upgrade-guide">upgrade guide</a>.`,
       backgroundColor: "#395C6B",
       textColor: "#FFFFFF",
-      isCloseable: true,
+      isCloseable: false,
     },
     navbar: {
       title: "",
@@ -47,7 +47,13 @@ module.exports = {
           to: "/",
           label: "Home",
           position: "left",
-          activeBaseRegex: "^/(?!(constructs|clients))",
+          activeBaseRegex: "^/(?!(constructs|clients|learn))",
+        },
+        {
+          to: "/learn",
+          label: "Learn",
+          position: "left",
+          activeBaseRegex: "^/learn",
         },
         {
           href: config.examples,
@@ -58,7 +64,7 @@ module.exports = {
           to: "/constructs",
           label: "Constructs",
           position: "left",
-          activeBaseRegex: "^/constructs$|^/constructs/(?!v0)",
+          activeBaseRegex: "^/constructs$|^/constructs/(?!v0|v1)",
         },
         {
           to: "/clients",
@@ -87,20 +93,20 @@ module.exports = {
           title: "Docs",
           items: [
             {
-              label: "Learn SST",
-              to: "learn",
+              label: "Get Started",
+              to: "/",
             },
             {
-              label: "Quick Start",
-              to: "quick-start",
+              label: "What is SST",
+              to: "what-is-sst",
             },
             {
-              label: "@serverless-stack/cli",
-              to: "packages/cli",
-            },
-            {
-              label: "Live Lambda Development",
+              label: "Live Lambda Dev",
               to: "live-lambda-development",
+            },
+            {
+              label: "Frequently Asked Questions",
+              to: "faq",
             },
           ],
         },
@@ -155,6 +161,13 @@ module.exports = {
       apiKey: "42ee2027a8dbe57a09913af0c27df9ad",
       // Turn on when we have versions
       //contextualSearch: true,
+      // Had to update this in Aloglia's crawler editor to have it picked up
+      // by Algolia - https://crawler.algolia.com
+      exclusionPatterns: [
+        // Exclude the "v0" and "v1" constructs docs from search results
+        "https://docs.sst.dev/constructs/v0/**",
+        "https://docs.sst.dev/constructs/v1/**",
+      ],
     },
   },
   presets: [
@@ -163,9 +176,10 @@ module.exports = {
       {
         docs: {
           routeBasePath: "/",
+          // exclude these pages from user accessing them
           exclude: [
-            "constructs/*.about.md",
-            "constructs/*.tsdoc.md",
+            "**.about.md",
+            "**.tsdoc.md",
             "advanced/monorepo-project-structure.md",
           ],
           sidebarCollapsible: false,
@@ -177,7 +191,7 @@ module.exports = {
               const splits = params.docPath.split("/");
               const name = splits[splits.length - 1].replace(".md", ".ts");
               return (
-                "https://github.com/serverless-stack/sst/blob/master/packages/resources/src/" +
+                "https://github.com/serverless-stack/sst/blob/master/packages/sst/src/constructs/" +
                 name
               );
             }
@@ -202,15 +216,19 @@ module.exports = {
       {
         redirects: [
           {
+            to: "/start/standalone",
+            from: "/quick-start",
+          },
+          {
             to: "/live-lambda-development",
             from: "/working-locally",
           },
           {
-            to: "/constructs/GraphQLApi",
+            to: "/constructs/Api",
             from: "/constructs/ApolloApi",
           },
           {
-            to: "/quick-start",
+            to: "/",
             from: "/deploying-your-app",
           },
           {

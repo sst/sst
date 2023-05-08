@@ -10,7 +10,7 @@ The `Api` construct is designed to make it easy to get started with, while allow
 ### Using the minimal config
 
 ```ts
-import { Api } from "@serverless-stack/resources";
+import { Api } from "sst/constructs";
 
 new Api(stack, "Api", {
   routes: {
@@ -43,7 +43,7 @@ new Api(stack, "Api", {
 ```js {4}
 new Api(stack, "Api", {
   routes: {
-    "GET /notes"     : "src/list.main",
+    "GET /notes": "src/list.main",
     "GET /notes/{id}": "src/get.main",
   },
 });
@@ -56,7 +56,7 @@ A path variable `{proxy+}` catches all child routes. The greedy path variable mu
 ```js {4}
 new Api(stack, "Api", {
   routes: {
-    "GET /notes"         : "src/list.main",
+    "GET /notes": "src/list.main",
     "GET /notes/{proxy+}": "src/greedy.main",
   },
 });
@@ -71,7 +71,7 @@ new Api(stack, "Api", {
   routes: {
     "GET  /notes": "src/list.main",
     "POST /notes": "src/create.main",
-    "$default"   : "src/default.main",
+    $default: "src/default.main",
   },
 });
 ```
@@ -170,8 +170,8 @@ Allow the entire API to access S3.
 ```js {11}
 const api = new Api(stack, "Api", {
   routes: {
-    "GET    /notes"     : "src/list.main",
-    "POST   /notes"     : "src/create.main",
+    "GET    /notes": "src/list.main",
+    "POST   /notes": "src/create.main",
     "GET    /notes/{id}": "src/get.main",
     "PUT    /notes/{id}": "src/update.main",
     "DELETE /notes/{id}": "src/delete.main",
@@ -188,8 +188,8 @@ Allow one of the routes to access S3.
 ```js {11}
 const api = new Api(stack, "Api", {
   routes: {
-    "GET    /notes"     : "src/list.main",
-    "POST   /notes"     : "src/create.main",
+    "GET    /notes": "src/list.main",
+    "POST   /notes": "src/create.main",
     "GET    /notes/{id}": "src/get.main",
     "PUT    /notes/{id}": "src/update.main",
     "DELETE /notes/{id}": "src/delete.main",
@@ -226,7 +226,24 @@ new Api(stack, "Api", {
       type: "alb",
       cdk: {
         albListener,
-      }
+      },
+    },
+  },
+});
+```
+
+### Configuring NLB routes
+
+You can configure a route to integrate with Network Load Balancers in your VPC.
+
+```js
+new Api(stack, "Api", {
+  routes: {
+    "GET /": {
+      type: "nlb",
+      cdk: {
+        nlbListener,
+      },
     },
   },
 });
@@ -245,6 +262,45 @@ new Api(stack, "Api", {
     },
   },
 });
+```
+
+### Configuring AWS proxy routes
+
+You can configure a route to pass the entire request to an AWS service. [Read more about supported AWS services](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-aws-services-reference.html).
+
+```js
+import { HttpIntegrationSubtype, ParameterMapping, MappingValue } from "@aws-cdk/aws-apigatewayv2-alpha";
+
+new Api(stack, "Api", {
+  routes: {
+    "POST /send_events": {
+      type: "aws",
+      cdk: {
+        integration: {
+          subtype: HttpIntegrationSubtype.EVENTBRIDGE_PUT_EVENTS,
+          parameterMapping: ParameterMapping.fromObject({
+            Source: MappingValue.custom("$request.body.source"),
+            DetailType: MappingValue.custom("$request.body.detailType"),
+            Detail: MappingValue.custom("$request.body.detail"),
+          }),
+        },
+      },
+    },
+  },
+});
+```
+
+And you can send a POST request to the `/send_events` endpoint to put an event in the default bus.
+
+```bash
+curl --request POST \
+  --url https://api.endpoint.com/send_events \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"source": "my.source",
+	"detailType": "my.type",
+	"detail": {"foo": "bar"}
+}'
 ```
 
 ### Custom domains
@@ -303,7 +359,7 @@ new Api(stack, "PostsApi", {
     path: "posts",
     cdk: {
       domainName: usersApi.cdk.domainName,
-    }
+    },
   },
 });
 ```
@@ -378,7 +434,10 @@ If you have the domain name stored in AWS SSM Parameter Store, you can reference
 ```js {3,6-9}
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
 
-const rootDomain = StringParameter.valueForStringParameter(stack, `/myApp/domain`);
+const rootDomain = StringParameter.valueForStringParameter(
+  stack,
+  `/myApp/domain`
+);
 
 new Api(stack, "Api", {
   customDomain: {
@@ -467,7 +526,7 @@ new Api(stack, "Api", {
       jwt: {
         issuer: "https://myorg.us.auth0.com",
         audience: ["UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif"],
-      }
+      },
     },
   },
   defaults: {
@@ -492,7 +551,7 @@ new Api(stack, "Api", {
       jwt: {
         issuer: "https://myorg.us.auth0.com",
         audience: ["UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif"],
-      }
+      },
     },
   },
   routes: {
@@ -517,7 +576,7 @@ new Api(stack, "Api", {
       userPool: {
         id: userPool.userPoolId,
         clientIds: [userPoolClient.userPoolClientId],
-      }
+      },
     },
   },
   defaults: {
@@ -536,7 +595,7 @@ new Api(stack, "Api", {
 You can also use a Lambda function to authorize users to access your API. Like using JWT and IAM, the Lambda authorizer is another way to secure your API.
 
 ```js
-import { Function, Api } from "@serverless-stack/resources";
+import { Function, Api } from "sst/constructs";
 
 new Api(stack, "Api", {
   authorizers: {
@@ -565,7 +624,7 @@ Note that `resultsCacheTtl` configures how long the authorization result will be
 You can also secure specific routes using a Lambda authorizer by setting the `authorizer` per route.
 
 ```js {16}
-import { Function, Api } from "@serverless-stack/resources";
+import { Function, Api } from "sst/constructs";
 
 new Api(stack, "Api", {
   authorizers: {
@@ -700,7 +759,7 @@ new Api(stack, "Api", {
     throttle: {
       rate: 2000,
       burst: 100,
-    }
+    },
   },
   routes: {
     "GET  /notes": "list.main",
@@ -731,7 +790,7 @@ new Api(stack, "Api", {
 You can create the Api construct in one stack, and add routes in other stacks. To do this, return the API from your stack function.
 
 ```ts title="stacks/MainStack.ts"
-import { Api, StackContext } from "@serverless-stack/resources";
+import { Api, StackContext } from "sst/constructs";
 
 export function MainStack({ stack }: StackContext) {
   const api = new Api(stack, "Api", {
@@ -742,19 +801,19 @@ export function MainStack({ stack }: StackContext) {
   });
 
   return {
-    api
-  }
+    api,
+  };
 }
 ```
 
 Then in another stack, utilize `use` to import the first stack's API. Finally, call `addRoutes`. Note that the AWS resources for the added routes will be created in `AnotherStack`.
 
 ```ts title="stacks/AnotherStack.ts"
-import { StackContext, use } from "@serverless-stack/resources";
-import { MainStack } from "./MainStack"
+import { StackContext, use } from "sst/constructs";
+import { MainStack } from "./MainStack";
 
 export function AnotherStack({ stack }: StackContext) {
-  const { api } = use(MainStack)
+  const { api } = use(MainStack);
   api.addRoutes(stack, {
     "GET    /notes/{id}": "src/get.main",
     "PUT    /notes/{id}": "src/update.main",
@@ -771,16 +830,17 @@ Use `attachPermissionsToRole` to grant IAM permissions for the role.
 
 ```js {21-25}
 import * as iam from "aws-cdk-lib/aws-iam";
-import { attachPermissionsToRole } from "@serverless-stack/resources";
+import { attachPermissionsToRole } from "sst/constructs";
 
 // Create an IAM role
 const role = new iam.Role(stack, "ApiRole", {
   assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
   managedPolicies: [
     {
-      managedPolicyArn: "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-    }
-  ]
+      managedPolicyArn:
+        "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+    },
+  ],
 });
 
 // Attach permissions to role
@@ -819,7 +879,7 @@ new Api(stack, "Api", {
     "GET /": {
       cdk: {
         function: fn,
-      }
+      },
     },
   },
 });
@@ -841,7 +901,7 @@ new Api(stack, "Api", {
     "GET /": {
       cdk: {
         function: alias,
-      }
+      },
     },
   },
 });

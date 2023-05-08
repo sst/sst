@@ -4,6 +4,11 @@ export default [
   extract(),
   install({
     packages: ["electrodb", "@aws-sdk/client-dynamodb"],
-    path: "services"
-  })
+    path: "packages/core",
+  }),
+  install({
+    packages: ["@aws-sdk/types","@aws-sdk/smithy-client"],
+    path: "packages/core",
+    dev: true
+  }),
 ];

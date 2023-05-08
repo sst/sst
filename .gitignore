@@ -5,5 +5,4 @@ node_modules
 cdk.out
 .DS_Store
 dist
-*.tsdoc.md
-
+.vscode

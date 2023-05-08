@@ -1,5 +1,0 @@
-{
-  "name": "api-sst-auth-google",
-  "region": "us-east-1",
-  "main": "stacks/index.ts"
-}

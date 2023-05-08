@@ -13,88 +13,95 @@ program
   .description("CLI to create SST projects")
   .option("--template <template>", "Use a specific template")
   .argument("[name]", "The name of your project")
-  .action(async name => {
-    const opts = program.opts();
+  .action(async (argumentName, opts) => {
     const cwd = process.cwd();
     const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
     process.chdir(__dirname);
 
-    const preset = await (async function() {
-      if (opts.template) return path.join("presets", opts.template);
+    const [preset, name, destination] = await (async function () {
+      const files = await fs.readdir(cwd);
 
-      const { category } = await inquirer.prompt([
-        {
-          name: "category",
-          type: "list",
-          choices: ["graphql", "minimal", "examples"],
-          message: "What kind of project do you want to create?"
-        }
-      ]);
-
-      if (["minimal", "examples"].includes(category)) {
-        const folders = await fs.readdir(
-          path.join(__dirname, "presets", category)
-        );
-        const presets = folders.map(folder => path.join(category, folder));
-        const answers = await inquirer.prompt([
+      if (files.some((f) => f.startsWith("next.config"))) {
+        const { confirm } = await inquirer.prompt([
           {
-            name: "preset",
-            type: "list",
-            choices: presets.flat(),
-            message: "Select a template"
-          }
+            name: "confirm",
+            type: "confirm",
+            default: true,
+            message:
+              "You are in a Next.js project so SST will be setup in drop-in mode. Continue?",
+          },
         ]);
-        return path.join("presets", answers.preset);
+        if (!confirm) return;
+        return ["presets/dropin/nextjs", path.parse(cwd).name, cwd];
       }
 
-      if (category === "graphql") {
-        const result = await inquirer.prompt([
+      if (files.some((f) => f.startsWith("astro.config"))) {
+        const { confirm } = await inquirer.prompt([
           {
-            name: "database",
-            type: "list",
-            choices: [
-              { name: "RDS (Postgres or MySQL)", value: "rds" },
-              { name: "DynamoDB", value: "dynamo" }
-            ],
-            message: "Select a database (you can change this later or use both)"
-          }
+            name: "confirm",
+            type: "confirm",
+            default: true,
+            message:
+              "You are in an Astro project so SST will be setup in drop-in mode. Continue?",
+          },
         ]);
-        return path.join("presets", "graphql", result.database);
+        if (!confirm) return;
+        return ["presets/dropin/astro", path.parse(cwd).name, cwd];
       }
-    })();
 
-    if (!name) {
+      if (files.some((f) => f.startsWith("svelte.config"))) {
+        const { confirm } = await inquirer.prompt([
+          {
+            name: "confirm",
+            type: "confirm",
+            default: true,
+            message:
+              "You are in a Svelte project so SST will be setup in drop-in mode. Continue?",
+          },
+        ]);
+        if (!confirm) return;
+        return ["presets/dropin/svelte", path.parse(cwd).name, cwd];
+      }
+
       const answers = await inquirer.prompt([
         {
           name: "name",
           type: "input",
           default: "my-sst-app",
-          message: "Project name"
-        }
+          when: !argumentName,
+          message: "Project name",
+        },
       ]);
-      name = answers.name;
-    }
+      answers.name = answers.name || argumentName;
+      const destination = path.join(cwd, answers.name);
+      if (opts.template) {
+        return [`presets/${opts.template}`, answers.name, destination];
+      }
+      return ["presets/standard/api", answers.name, destination];
+    })();
 
     const spinner = ora();
 
     try {
       await fs.access(preset);
     } catch {
-      spinner.fail(`Template not found at ` + preset);
+      spinner.fail(`Template not found for ` + preset.replace("presets/", ""));
       return;
     }
     spinner.start("Creating project");
     try {
       await execute({
         source: preset,
-        destination: path.resolve(path.join(cwd, name))
+        destination: destination,
       });
       spinner.succeed("Copied template files");
       console.log();
       console.log(`Next steps:`);
-      console.log(`  1: cd ${name}`);
-      console.log(`  2: npm install (or pnpm install, or yarn)`);
-      console.log(`  3: npm start`);
+      if (destination !== cwd) {
+        console.log(`- cd ${name}`);
+      }
+      console.log(`- npm install (or pnpm install, or yarn)`);
+      console.log(`- npm run dev`);
     } catch (e) {
       spinner.fail("Failed");
       console.error(e);

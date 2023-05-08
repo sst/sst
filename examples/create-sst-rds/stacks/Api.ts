@@ -1,30 +1,26 @@
-import {
-  use,
-  StackContext,
-  Api as ApiGateway,
-} from "@serverless-stack/resources";
-import { Database } from "./Database";
+import { use, StackContext, Api as ApiGateway } from "sst/constructs";
+import { Database } from "./Database.js";
 
 export function Api({ stack }: StackContext) {
-  const rds = use(Database);
-
   const api = new ApiGateway(stack, "api", {
     defaults: {
       function: {
-        bind: [rds],
+        bind: [use(Database)],
       },
     },
     routes: {
       "POST /graphql": {
-        type: "pothos",
+        type: "graphql",
         function: {
-          handler: "functions/graphql/graphql.handler",
+          handler: "packages/functions/src/graphql/graphql.handler",
         },
-        schema: "services/functions/graphql/schema.ts",
-        output: "graphql/schema.graphql",
-        commands: [
-          "npx genql --output ./graphql/genql --schema ./graphql/schema.graphql --esm",
-        ],
+        pothos: {
+          schema: "packages/functions/src/graphql/schema.ts",
+          output: "packages/graphql/schema.graphql",
+          commands: [
+            "cd packages/graphql && npx @genql/cli --output ./genql --schema ./schema.graphql --esm",
+          ],
+        },
       },
     },
   });

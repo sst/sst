@@ -12,7 +12,7 @@ Here are a couple of examples on how to do that.
 For example, set a Lambda function's memory size based on the environment.
 
 ```ts {6}
-import { Function, StackContext } from "@serverless-stack/resources";
+import { Function, StackContext } from "sst/constructs";
 
 export function MyStack({ app, stack }: StackContext) {
   new Function(stack, "MyFunction", {
@@ -27,7 +27,7 @@ export function MyStack({ app, stack }: StackContext) {
 For example, run a cron job to perform a periodic task only in the `prod` environment.
 
 ```ts {4-9}
-import { Cron, StackContext } from "@serverless-stack/resources";
+import { Cron, StackContext } from "sst/constructs";
 
 export function MyStack({ app, stack }: StackContext) {
   if (app.stage === "prod") {
@@ -63,7 +63,7 @@ Here is an example of creating a VPC in the `dev` stage, and sharing it with the
 
 ```ts
 import * as ec2 from "@aws-cdk/aws-ec2";
-import { StackContext } from "@serverless-stack/resources";
+import { StackContext } from "sst/constructs";
 
 export function MyStack({ app, stack }: StackContext) {
   let vpc;
@@ -71,7 +71,7 @@ export function MyStack({ app, stack }: StackContext) {
   // Re-use VPC from the "dev" stage
   if (app.stage.startsWith("dev-feature-")) {
     const vpcId = "";
-    vpc = ec2.Vpc.fromLookup(stack, 'VPC', { vpcId });
+    vpc = ec2.Vpc.fromLookup(stack, "VPC", { vpcId });
   }
   // Create new VPC for other stages
   else {

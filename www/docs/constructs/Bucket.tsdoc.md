@@ -15,21 +15,18 @@ _Parameters_
 - __id__ <span class="mono">string</span>
 - __props__ <span class="mono">[BucketProps](#bucketprops)</span>
 ## BucketProps
-
-
 ### cors?
 
-_Type_ : <span class='mono'><span class="mono">boolean</span> | <span class='mono'>Array&lt;<span class="mono">[BucketCorsRule](#bucketcorsrule)</span>&gt;</span></span>
+_Type_ : <span class="mono">boolean</span><span class='mono'> | </span><span class='mono'>Array&lt;<span class="mono">[BucketCorsRule](#bucketcorsrule)</span>&gt;</span>
 
 The CORS configuration of this bucket.
-
-
-
 ```js
 new Bucket(stack, "Bucket", {
   cors: true,
 });
 ```
+
+
 
 ```js
 new Bucket(stack, "Bucket", {
@@ -42,15 +39,18 @@ new Bucket(stack, "Bucket", {
 });
 ```
 
-
 ### defaults.function?
 
 _Type_ : <span class="mono">[FunctionProps](Function#functionprops)</span>
 
 
-The default function props to be applied to all the Lambda functions in the API. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
-
-
+The default function props to be applied to all the Lambda functions in the API. The 
+`environment`
+, 
+`permissions`
+ and 
+`layers`
+ properties will be merged with per route definitions if they are defined.
 ```js
 new Bucket(stack, "Bucket", {
   defaults: {
@@ -60,28 +60,23 @@ new Bucket(stack, "Bucket", {
   },
 });
 ```
-
 ### name?
 
 _Type_ : <span class="mono">string</span>
 
 The name of the bucket.
+
 Note that it's not recommended to hard code a name for the bucket, because they must be globally unique.
-
-
 ```js
 new Bucket(stack, "Bucket", {
   name: "my-bucket",
 });
 ```
-
 ### notifications?
 
-_Type_ : <span class="mono">Record&lt;<span class="mono">string</span>, <span class='mono'><span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span></span> | <span class="mono">[Queue](Queue#queue)</span> | <span class="mono">[Topic](Topic#topic)</span> | <span class="mono">[BucketFunctionNotificationProps](#bucketfunctionnotificationprops)</span> | <span class="mono">[BucketQueueNotificationProps](#bucketqueuenotificationprops)</span> | <span class="mono">[BucketTopicNotificationProps](#buckettopicnotificationprops)</span></span>&gt;</span>
+_Type_ : <span class="mono">Record&lt;<span class="mono">string</span>, <span class="mono">[Queue](Queue#queue)</span><span class='mono'> | </span><span class="mono">[Topic](Topic#topic)</span><span class='mono'> | </span><span class="mono">string</span><span class='mono'> | </span><span class="mono">[Function](Function#function)</span><span class='mono'> | </span><span class="mono">[BucketFunctionNotificationProps](#bucketfunctionnotificationprops)</span><span class='mono'> | </span><span class="mono">[BucketQueueNotificationProps](#bucketqueuenotificationprops)</span><span class='mono'> | </span><span class="mono">[BucketTopicNotificationProps](#buckettopicnotificationprops)</span>&gt;</span>
 
 Used to create notifications for various bucket events
-
-
 ```js
 new Bucket(stack, "Bucket", {
   notifications: {
@@ -90,14 +85,11 @@ new Bucket(stack, "Bucket", {
 });
 ```
 
-
 ### cdk.bucket?
 
-_Type_ : <span class='mono'><span class="mono">[IBucket](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.IBucket.html)</span> | <span class="mono">[BucketProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.BucketProps.html)</span></span>
+_Type_ : <span class="mono">[IBucket](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.IBucket.html)</span><span class='mono'> | </span><span class="mono">[BucketProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.BucketProps.html)</span>
 
 Allows you to override default settings this construct uses internally to create the bucket.
-
-
 ```js
 new Bucket(stack, "Bucket", {
   cdk: {
@@ -107,13 +99,11 @@ new Bucket(stack, "Bucket", {
   }
 });
 ```
-
 ### cdk.id?
 
 _Type_ : <span class="mono">string</span>
 
 Allows you to override default id for this construct.
-
 
 ## Properties
 An instance of `Bucket` has the following properties.
@@ -121,14 +111,16 @@ An instance of `Bucket` has the following properties.
 
 _Type_ : <span class="mono">string</span>
 
-The ARN of the internally created `Bucket` instance.
-
+The ARN of the internally created 
+`Bucket`
+ instance.
 ### bucketName
 
 _Type_ : <span class="mono">string</span>
 
-The name of the internally created `Bucket` instance.
-
+The name of the internally created 
+`Bucket`
+ instance.
 ### id
 
 _Type_ : <span class="mono">string</span>
@@ -139,13 +131,13 @@ _Type_ : <span class='mono'>Array&lt;<span class="mono">[Function](Function#func
 
 A list of the internally created functions for the notifications.
 
-
 ### cdk.bucket
 
 _Type_ : <span class="mono">[IBucket](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.IBucket.html)</span>
 
-The internally created CDK `Bucket` instance.
-
+The internally created CDK 
+`Bucket`
+ instance.
 
 ## Methods
 An instance of `Bucket` has the following methods.
@@ -156,19 +148,16 @@ addNotifications(scope, notifications)
 ```
 _Parameters_
 - __scope__ <span class="mono">[Construct](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)</span>
-- __notifications__ <span class="mono">Record&lt;<span class="mono">string</span>, <span class='mono'><span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span></span> | <span class="mono">[Queue](Queue#queue)</span> | <span class="mono">[Topic](Topic#topic)</span> | <span class="mono">[BucketFunctionNotificationProps](#bucketfunctionnotificationprops)</span> | <span class="mono">[BucketQueueNotificationProps](#bucketqueuenotificationprops)</span> | <span class="mono">[BucketTopicNotificationProps](#buckettopicnotificationprops)</span></span>&gt;</span>
+- __notifications__ <span class="mono">Record&lt;<span class="mono">string</span>, <span class="mono">[Queue](Queue#queue)</span><span class='mono'> | </span><span class="mono">[Topic](Topic#topic)</span><span class='mono'> | </span><span class="mono">string</span><span class='mono'> | </span><span class="mono">[Function](Function#function)</span><span class='mono'> | </span><span class="mono">[BucketFunctionNotificationProps](#bucketfunctionnotificationprops)</span><span class='mono'> | </span><span class="mono">[BucketQueueNotificationProps](#bucketqueuenotificationprops)</span><span class='mono'> | </span><span class="mono">[BucketTopicNotificationProps](#buckettopicnotificationprops)</span>&gt;</span>
 
 
 Add notification subscriptions after the bucket has been created
-
-
 ```js {3}
 const bucket = new Bucket(stack, "Bucket");
 bucket.addNotifications(stack, {
   myNotification: "src/notification.main"
 });
 ```
-
 ### attachPermissions
 
 ```ts
@@ -179,8 +168,6 @@ _Parameters_
 
 
 Attaches additional permissions to all bucket notifications
-
-
 ```js {20}
 const bucket = new Bucket(stack, "Bucket", {
   notifications: {
@@ -190,7 +177,6 @@ const bucket = new Bucket(stack, "Bucket", {
 
 bucket.attachPermissions(["s3"]);
 ```
-
 ### attachPermissionsToNotification
 
 ```ts
@@ -202,8 +188,6 @@ _Parameters_
 
 
 Attaches additional permissions to a specific bucket notification
-
-
 ```js {20}
 const bucket = new Bucket(stack, "Bucket", {
   notifications: {
@@ -213,7 +197,6 @@ const bucket = new Bucket(stack, "Bucket", {
 
 bucket.attachPermissionsToNotification("myNotification", ["s3"]);
 ```
-
 ### bind
 
 ```ts
@@ -224,8 +207,6 @@ _Parameters_
 
 
 Binds the given list of resources to all bucket notifications
-
-
 ```js {20}
 const bucket = new Bucket(stack, "Bucket", {
   notifications: {
@@ -235,7 +216,6 @@ const bucket = new Bucket(stack, "Bucket", {
 
 bucket.bind([STRIPE_KEY, bucket]);
 ```
-
 ### bindToNotification
 
 ```ts
@@ -247,8 +227,6 @@ _Parameters_
 
 
 Binds the given list of resources to a specific bucket notification
-
-
 ```js {20}
 const bucket = new Bucket(stack, "Bucket", {
   notifications: {
@@ -258,44 +236,33 @@ const bucket = new Bucket(stack, "Bucket", {
 
 bucket.bindToNotification("myNotification", ["s3"]);
 ```
-
 ## BucketFilter
-
-
 ### prefix?
 
 _Type_ : <span class="mono">string</span>
 
 Filter what the key starts with
-
 ### suffix?
 
 _Type_ : <span class="mono">string</span>
 
 Filter what the key ends with
-
 ## BucketCorsRule
-
-
 ### allowedHeaders?
 
 _Type_ : <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
 
 The collection of allowed headers.
-
 ### allowedMethods
 
-_Type_ : <span class='mono'>Array&lt;<span class='mono'><span class="mono">"GET"</span> | <span class="mono">"PUT"</span> | <span class="mono">"HEAD"</span> | <span class="mono">"POST"</span> | <span class="mono">"DELETE"</span></span>&gt;</span>
+_Type_ : <span class='mono'>Array&lt;<span class="mono">"GET"</span><span class='mono'> | </span><span class="mono">"PUT"</span><span class='mono'> | </span><span class="mono">"HEAD"</span><span class='mono'> | </span><span class="mono">"POST"</span><span class='mono'> | </span><span class="mono">"DELETE"</span>&gt;</span>
 
 The collection of allowed HTTP methods.
-
 ### allowedOrigins
 
 _Type_ : <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
 
 The collection of allowed origins.
-
-
 ```js
 // Allow all origins
 allowOrigins: ["*"]
@@ -303,29 +270,23 @@ allowOrigins: ["*"]
 // Allow specific origins. Note that the url protocol, ie. "https://", is required.
 allowOrigins: ["https://domain.com"]
 ```
-
 ### exposedHeaders?
 
 _Type_ : <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
 
 The collection of exposed headers.
-
 ### id?
 
 _Type_ : <span class="mono">string</span>
 
 A unique identifier for this rule.
-
 ### maxAge?
 
-_Type_ : <span class='mono'><span class="mono">${number} second</span> | <span class="mono">${number} seconds</span> | <span class="mono">${number} minute</span> | <span class="mono">${number} minutes</span> | <span class="mono">${number} hour</span> | <span class="mono">${number} hours</span> | <span class="mono">${number} day</span> | <span class="mono">${number} days</span></span>
+_Type_ : <span class="mono">${number} second</span><span class='mono'> | </span><span class="mono">${number} seconds</span><span class='mono'> | </span><span class="mono">${number} minute</span><span class='mono'> | </span><span class="mono">${number} minutes</span><span class='mono'> | </span><span class="mono">${number} hour</span><span class='mono'> | </span><span class="mono">${number} hours</span><span class='mono'> | </span><span class="mono">${number} day</span><span class='mono'> | </span><span class="mono">${number} days</span>
 
 Specify how long the results of a preflight response can be cached
-
 ## BucketQueueNotificationProps
 Used to define a queue listener for the bucket
-
-
 ```js
 new Bucket(stack, "Bucket", {
   notifications: {
@@ -336,35 +297,28 @@ new Bucket(stack, "Bucket", {
   }
 }
 ```
-
 ### events?
 
-_Type_ : <span class='mono'>Array&lt;<span class='mono'><span class="mono">"object_created"</span> | <span class="mono">"object_created_put"</span> | <span class="mono">"object_created_post"</span> | <span class="mono">"object_created_copy"</span> | <span class="mono">"object_created_complete_multipart_upload"</span> | <span class="mono">"object_removed"</span> | <span class="mono">"object_removed_delete"</span> | <span class="mono">"object_removed_delete_marker_created"</span> | <span class="mono">"object_restore_post"</span> | <span class="mono">"object_restore_completed"</span> | <span class="mono">"object_restore_delete"</span> | <span class="mono">"reduced_redundancy_lost_object"</span> | <span class="mono">"replication_operation_failed_replication"</span> | <span class="mono">"replication_operation_missed_threshold"</span> | <span class="mono">"replication_operation_replicated_after_threshold"</span> | <span class="mono">"replication_operation_not_tracked"</span> | <span class="mono">"lifecycle_expiration"</span> | <span class="mono">"lifecycle_expiration_delete"</span> | <span class="mono">"lifecycle_expiration_delete_marker_created"</span> | <span class="mono">"lifecycle_transition"</span> | <span class="mono">"intelligent_tiering"</span> | <span class="mono">"object_tagging"</span> | <span class="mono">"object_tagging_put"</span> | <span class="mono">"object_tagging_delete"</span> | <span class="mono">"object_acl_put"</span></span>&gt;</span>
+_Type_ : <span class='mono'>Array&lt;<span class="mono">"object_created"</span><span class='mono'> | </span><span class="mono">"object_created_put"</span><span class='mono'> | </span><span class="mono">"object_created_post"</span><span class='mono'> | </span><span class="mono">"object_created_copy"</span><span class='mono'> | </span><span class="mono">"object_created_complete_multipart_upload"</span><span class='mono'> | </span><span class="mono">"object_removed"</span><span class='mono'> | </span><span class="mono">"object_removed_delete"</span><span class='mono'> | </span><span class="mono">"object_removed_delete_marker_created"</span><span class='mono'> | </span><span class="mono">"object_restore_post"</span><span class='mono'> | </span><span class="mono">"object_restore_completed"</span><span class='mono'> | </span><span class="mono">"object_restore_delete"</span><span class='mono'> | </span><span class="mono">"reduced_redundancy_lost_object"</span><span class='mono'> | </span><span class="mono">"replication_operation_failed_replication"</span><span class='mono'> | </span><span class="mono">"replication_operation_missed_threshold"</span><span class='mono'> | </span><span class="mono">"replication_operation_replicated_after_threshold"</span><span class='mono'> | </span><span class="mono">"replication_operation_not_tracked"</span><span class='mono'> | </span><span class="mono">"lifecycle_expiration"</span><span class='mono'> | </span><span class="mono">"lifecycle_expiration_delete"</span><span class='mono'> | </span><span class="mono">"lifecycle_expiration_delete_marker_created"</span><span class='mono'> | </span><span class="mono">"lifecycle_transition"</span><span class='mono'> | </span><span class="mono">"intelligent_tiering"</span><span class='mono'> | </span><span class="mono">"object_tagging"</span><span class='mono'> | </span><span class="mono">"object_tagging_put"</span><span class='mono'> | </span><span class="mono">"object_tagging_delete"</span><span class='mono'> | </span><span class="mono">"object_acl_put"</span>&gt;</span>
 
 The S3 event types that will trigger the notification.
-
 ### filters?
 
 _Type_ : <span class='mono'>Array&lt;<span class="mono">[BucketFilter](#bucketfilter)</span>&gt;</span>
 
 S3 object key filter rules to determine which objects trigger this event.
-
 ### queue
 
 _Type_ : <span class="mono">[Queue](Queue#queue)</span>
 
 The queue to send notifications to
-
 ### type
 
 _Type_ : <span class="mono">"queue"</span>
 
 String literal to signify that the notification is a queue
-
 ## BucketTopicNotificationProps
 Used to define a topic listener for the bucket
-
-
 ```js
 new Bucket(stack, "Bucket", {
   notifications: {
@@ -375,33 +329,27 @@ new Bucket(stack, "Bucket", {
   }],
 }
 ```
-
 ### events?
 
-_Type_ : <span class='mono'>Array&lt;<span class='mono'><span class="mono">"object_created"</span> | <span class="mono">"object_created_put"</span> | <span class="mono">"object_created_post"</span> | <span class="mono">"object_created_copy"</span> | <span class="mono">"object_created_complete_multipart_upload"</span> | <span class="mono">"object_removed"</span> | <span class="mono">"object_removed_delete"</span> | <span class="mono">"object_removed_delete_marker_created"</span> | <span class="mono">"object_restore_post"</span> | <span class="mono">"object_restore_completed"</span> | <span class="mono">"object_restore_delete"</span> | <span class="mono">"reduced_redundancy_lost_object"</span> | <span class="mono">"replication_operation_failed_replication"</span> | <span class="mono">"replication_operation_missed_threshold"</span> | <span class="mono">"replication_operation_replicated_after_threshold"</span> | <span class="mono">"replication_operation_not_tracked"</span> | <span class="mono">"lifecycle_expiration"</span> | <span class="mono">"lifecycle_expiration_delete"</span> | <span class="mono">"lifecycle_expiration_delete_marker_created"</span> | <span class="mono">"lifecycle_transition"</span> | <span class="mono">"intelligent_tiering"</span> | <span class="mono">"object_tagging"</span> | <span class="mono">"object_tagging_put"</span> | <span class="mono">"object_tagging_delete"</span> | <span class="mono">"object_acl_put"</span></span>&gt;</span>
+_Type_ : <span class='mono'>Array&lt;<span class="mono">"object_created"</span><span class='mono'> | </span><span class="mono">"object_created_put"</span><span class='mono'> | </span><span class="mono">"object_created_post"</span><span class='mono'> | </span><span class="mono">"object_created_copy"</span><span class='mono'> | </span><span class="mono">"object_created_complete_multipart_upload"</span><span class='mono'> | </span><span class="mono">"object_removed"</span><span class='mono'> | </span><span class="mono">"object_removed_delete"</span><span class='mono'> | </span><span class="mono">"object_removed_delete_marker_created"</span><span class='mono'> | </span><span class="mono">"object_restore_post"</span><span class='mono'> | </span><span class="mono">"object_restore_completed"</span><span class='mono'> | </span><span class="mono">"object_restore_delete"</span><span class='mono'> | </span><span class="mono">"reduced_redundancy_lost_object"</span><span class='mono'> | </span><span class="mono">"replication_operation_failed_replication"</span><span class='mono'> | </span><span class="mono">"replication_operation_missed_threshold"</span><span class='mono'> | </span><span class="mono">"replication_operation_replicated_after_threshold"</span><span class='mono'> | </span><span class="mono">"replication_operation_not_tracked"</span><span class='mono'> | </span><span class="mono">"lifecycle_expiration"</span><span class='mono'> | </span><span class="mono">"lifecycle_expiration_delete"</span><span class='mono'> | </span><span class="mono">"lifecycle_expiration_delete_marker_created"</span><span class='mono'> | </span><span class="mono">"lifecycle_transition"</span><span class='mono'> | </span><span class="mono">"intelligent_tiering"</span><span class='mono'> | </span><span class="mono">"object_tagging"</span><span class='mono'> | </span><span class="mono">"object_tagging_put"</span><span class='mono'> | </span><span class="mono">"object_tagging_delete"</span><span class='mono'> | </span><span class="mono">"object_acl_put"</span>&gt;</span>
 
 The S3 event types that will trigger the notification.
-
 ### filters?
 
 _Type_ : <span class='mono'>Array&lt;<span class="mono">[BucketFilter](#bucketfilter)</span>&gt;</span>
 
 S3 object key filter rules to determine which objects trigger this event.
-
 ### topic
 
 _Type_ : <span class="mono">[Topic](Topic#topic)</span>
 
 The topic to send notifications to
-
 ### type
 
 _Type_ : <span class="mono">"topic"</span>
 
 ## BucketFunctionNotificationProps
 Used to define a function listener for the bucket
-
-
 ```js
 new Bucket(stack, "Bucket", {
   notifications: {
@@ -411,25 +359,21 @@ new Bucket(stack, "Bucket", {
   }
 }
 ```
-
 ### events?
 
-_Type_ : <span class='mono'>Array&lt;<span class='mono'><span class="mono">"object_created"</span> | <span class="mono">"object_created_put"</span> | <span class="mono">"object_created_post"</span> | <span class="mono">"object_created_copy"</span> | <span class="mono">"object_created_complete_multipart_upload"</span> | <span class="mono">"object_removed"</span> | <span class="mono">"object_removed_delete"</span> | <span class="mono">"object_removed_delete_marker_created"</span> | <span class="mono">"object_restore_post"</span> | <span class="mono">"object_restore_completed"</span> | <span class="mono">"object_restore_delete"</span> | <span class="mono">"reduced_redundancy_lost_object"</span> | <span class="mono">"replication_operation_failed_replication"</span> | <span class="mono">"replication_operation_missed_threshold"</span> | <span class="mono">"replication_operation_replicated_after_threshold"</span> | <span class="mono">"replication_operation_not_tracked"</span> | <span class="mono">"lifecycle_expiration"</span> | <span class="mono">"lifecycle_expiration_delete"</span> | <span class="mono">"lifecycle_expiration_delete_marker_created"</span> | <span class="mono">"lifecycle_transition"</span> | <span class="mono">"intelligent_tiering"</span> | <span class="mono">"object_tagging"</span> | <span class="mono">"object_tagging_put"</span> | <span class="mono">"object_tagging_delete"</span> | <span class="mono">"object_acl_put"</span></span>&gt;</span>
+_Type_ : <span class='mono'>Array&lt;<span class="mono">"object_created"</span><span class='mono'> | </span><span class="mono">"object_created_put"</span><span class='mono'> | </span><span class="mono">"object_created_post"</span><span class='mono'> | </span><span class="mono">"object_created_copy"</span><span class='mono'> | </span><span class="mono">"object_created_complete_multipart_upload"</span><span class='mono'> | </span><span class="mono">"object_removed"</span><span class='mono'> | </span><span class="mono">"object_removed_delete"</span><span class='mono'> | </span><span class="mono">"object_removed_delete_marker_created"</span><span class='mono'> | </span><span class="mono">"object_restore_post"</span><span class='mono'> | </span><span class="mono">"object_restore_completed"</span><span class='mono'> | </span><span class="mono">"object_restore_delete"</span><span class='mono'> | </span><span class="mono">"reduced_redundancy_lost_object"</span><span class='mono'> | </span><span class="mono">"replication_operation_failed_replication"</span><span class='mono'> | </span><span class="mono">"replication_operation_missed_threshold"</span><span class='mono'> | </span><span class="mono">"replication_operation_replicated_after_threshold"</span><span class='mono'> | </span><span class="mono">"replication_operation_not_tracked"</span><span class='mono'> | </span><span class="mono">"lifecycle_expiration"</span><span class='mono'> | </span><span class="mono">"lifecycle_expiration_delete"</span><span class='mono'> | </span><span class="mono">"lifecycle_expiration_delete_marker_created"</span><span class='mono'> | </span><span class="mono">"lifecycle_transition"</span><span class='mono'> | </span><span class="mono">"intelligent_tiering"</span><span class='mono'> | </span><span class="mono">"object_tagging"</span><span class='mono'> | </span><span class="mono">"object_tagging_put"</span><span class='mono'> | </span><span class="mono">"object_tagging_delete"</span><span class='mono'> | </span><span class="mono">"object_acl_put"</span>&gt;</span>
 
 The S3 event types that will trigger the notification.
-
 ### filters?
 
 _Type_ : <span class='mono'>Array&lt;<span class="mono">[BucketFilter](#bucketfilter)</span>&gt;</span>
 
 S3 object key filter rules to determine which objects trigger this event.
-
 ### function
 
-_Type_ : <span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span> | <span class="mono">[FunctionProps](Function#functionprops)</span></span>
+_Type_ : <span class="mono">string</span><span class='mono'> | </span><span class="mono">[Function](Function#function)</span><span class='mono'> | </span><span class="mono">[FunctionProps](Function#functionprops)</span>
 
 The function to send notifications to
-
 ### type?
 
 _Type_ : <span class="mono">"function"</span>

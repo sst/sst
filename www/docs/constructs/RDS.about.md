@@ -1,13 +1,13 @@
- The `RDS` construct is a higher level CDK construct that makes it easy to create an [RDS Serverless Cluster](https://aws.amazon.com/rds/). It uses the following defaults:
- 
-   - Defaults to using the [Serverless v1 On-Demand autoscaling configuration](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.html) to make it serverless.
-   - Provides a built-in interface for running schema migrations using [Kysely](https://koskimas.github.io/kysely/#migrations).
-   - Enables [Data API](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html) to allow your Lambda functions to access the database cluster without needing to deploy the functions in a VPC (virtual private cloud).
-   - Enables [Backup Snapshot](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/BackupRestoreAurora.html) to make sure that you don't lose your data.
+The `RDS` construct is a higher level CDK construct that makes it easy to create an [RDS Serverless Cluster](https://aws.amazon.com/rds/). It uses the following defaults:
+
+- Defaults to using the [Serverless v1 On-Demand autoscaling configuration](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.html) to make it serverless.
+- Provides a built-in interface for running schema migrations using [Kysely](https://koskimas.github.io/kysely/#migrations).
+- Enables [Data API](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html) to allow your Lambda functions to access the database cluster without needing to deploy the functions in a VPC (virtual private cloud).
+- Enables [Backup Snapshot](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/BackupRestoreAurora.html) to make sure that you don't lose your data.
 
 ## Migrations
 
-The `RDS` construct uses [Kysely](https://koskimas.github.io/kysely/) to run and manage schema migrations. The `migrations` prop should point to the folder where your migration files are.
+The `RDS` construct uses [Kysely](https://kysely-org.github.io/kysely/) to run and manage schema migrations. The `migrations` prop should point to the folder where your migration files are.
 
 ```js
 new RDS(stack, "Database", {
@@ -19,7 +19,7 @@ new RDS(stack, "Database", {
 
 On `sst deploy`, all migrations that have not yet been run will be run as a part of the deploy process. The migrations are executed in alphabetical order by their name.
 
-On `sst start`, migrations are not automatically run. You can manually run them via the [SST Console](/console.md).
+On `sst dev`, migrations are not automatically run. You can manually run them via the [SST Console](/console.md).
 
 :::note
 New migrations must always have a name that comes alphabetically after the last executed migration.
@@ -39,7 +39,7 @@ async function down(db) {
 module.exports = { up, down };
 ```
 
-[Read more about writing migrations](https://koskimas.github.io/kysely/#migrations) over on the Kysely docs.
+[Read more about writing migrations](https://kysely-org.github.io/kysely/#migrations) over on the Kysely docs.
 
 ### Migrations with PostgreSQL
 
@@ -51,11 +51,11 @@ async function up(db) {
     .addColumn("first_name", "varchar", (col) => col.notNull())
     .addColumn("last_name", "varchar")
     .addColumn("gender", "varchar(50)", (col) => col.notNull())
-    .execute()
+    .execute();
 }
 
 async function down(db) {
-  await db.schema.dropTable("person").execute()
+  await db.schema.dropTable("person").execute();
 }
 
 module.exports = { up, down };
@@ -71,11 +71,11 @@ async function up(db) {
     .addColumn("first_name", "varchar(255)", (col) => col.notNull())
     .addColumn("last_name", "varchar(255)")
     .addColumn("gender", "varchar(50)", (col) => col.notNull())
-    .execute()
+    .execute();
 }
 
 async function down(db) {
-  await db.schema.dropTable("person").execute()
+  await db.schema.dropTable("person").execute();
 }
 
 module.exports = { up, down };
@@ -115,7 +115,7 @@ new RDS(stack, "Database", {
 ### Using the minimal config
 
 ```js
-import { RDS } from "@serverless-stack/resources";
+import { RDS } from "sst/constructs";
 
 new RDS(stack, "Database", {
   engine: "postgresql11.13",
@@ -153,11 +153,16 @@ new RDS(stack, "Database", {
   engine: "postgresql11.13",
   defaultDatabaseName: "acme",
   cdk: {
-    cluster: rds.ServerlessCluster.fromServerlessClusterAttributes(stack, "ICluster", {
-      clusterIdentifier: "my-existing-cluster",
-    }),
+    cluster: rds.ServerlessCluster.fromServerlessClusterAttributes(
+      stack,
+      "ICluster",
+      {
+        clusterIdentifier: "my-existing-cluster",
+      }
+    ),
     secret: secretsManager.Secret.fromSecretAttributes(stack, "ISecret", {
-      secretPartialArn: "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret",
+      secretPartialArn:
+        "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret",
     }),
   },
 });
@@ -182,8 +187,8 @@ new RDS(stack, "Database", {
   engine: "postgresql11.13",
   defaultDatabaseName: "acme",
   cdk: {
-    cluster: {  
-      vpc: ec2.Vpc.fromLookup(this, "VPC", {
+    cluster: {
+      vpc: ec2.Vpc.fromLookup(stack, "VPC", {
         vpcId: "vpc-xxxxxxxxxx",
       }),
       vpcSubnets: {

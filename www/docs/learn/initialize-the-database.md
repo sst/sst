@@ -4,17 +4,16 @@ title: Initialize the Database
 
 import ChangeText from "@site/src/components/ChangeText";
 
-Now let's check back in on the `sst start` command that we started in the [Create a New Project](create-a-new-project.md) chapter.
+Now let's check back in on the `sst dev` command that we started in the [Create a New Project](create-a-new-project.md) chapter.
 
 Once your local development environment is up and running, you should see the following printed out in the terminal.
 
 ```
-==========================
-Starting Live Lambda Dev
-==========================
+SST v2.5.5  ready!
 
-SST Console: https://console.sst.dev/my-sst-app/Jay/local
-Debug session started. Listening for requests...
+➜  App:     my-sst-app
+   Stage:   Jay
+   Console: https://console.sst.dev/my-sst-app/Jay
 ```
 
 We are now ready to initialize our database. We are using RDS with PostgreSQL in this setup.
@@ -67,13 +66,13 @@ At this point we don't have any tables in our database. To add them in, we are g
 
 Migrations are a set of files that contain the queries necessary to make updates to our database schema. They have an `up` function, that's run while applying the migration. And a `down` function, that's run while rolling back the migration.
 
-Recall from the [Project Structure](project-structure.md) chapter that the migration files are placed in `services/migrations/`.
+Recall from the [Project Structure](project-structure.md) chapter that the migration files are placed in `packages/core/migrations/`.
 
-The starter creates the first migration for you. It's called `article` and you'll find it in `services/migrations/1650000012557_article.mjs`.
+The starter creates the first migration for you. It's called `article` and you'll find it in `packages/core/migrations/1650000012557_article.mjs`.
 
-We use [Kysely](https://koskimas.github.io/kysely/) to build our SQL queries in a typesafe way. We use that for our migrations as well.
+We use [Kysely](https://kysely-org.github.io/kysely/) to build our SQL queries in a typesafe way. We use that for our migrations as well.
 
-```js title="services/migrations/1650000012557_article.mjs"
+```js title="packages/core/migrations/1650000012557_article.mjs"
 import { Kysely } from "kysely";
 
 /**
@@ -120,7 +119,7 @@ We'll do this later in the tutorial. For now, let's apply our first migration.
 
 <ChangeText>
 
-Click on the **Migrations** button on the top left. And click the **Apply** button on the **article** migration.
+Click on the **Migrations** button on the top right. And click the **Apply** button on the **article** migration.
 
 </ChangeText>
 
@@ -149,10 +148,10 @@ You should see the query returns **0 rows**.
 
 Let's quickly recap what we've done so far:
 
-1. We ran `sst start` to start the [Live Lambda Dev](../live-lambda-development.md) environment and the [SST Console](../console.md).
+1. We ran `sst dev` to start the [Live Lambda Dev](../live-lambda-development.md) environment and the [SST Console](../console.md).
 2. Deployed the infrastructure for our app to AWS:
    - Including a RDS PostgreSQL database based on `stacks/Database.ts`.
-3. We then opened up the Console and ran a migration in `services/migrations/`.
+3. We then opened up the Console and ran a migration in `packages/core/migrations/`.
 4. It created an `article` table that we'll use to store the links our users will submit.
 
 Finally, to test that everything is working, we queried our database.

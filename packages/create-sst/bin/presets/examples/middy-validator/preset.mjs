@@ -1,7 +1,7 @@
 import { extend, extract, install } from "create-sst";
 
 export default [
-  extend("presets/minimal/typescript-starter"),
+  extend("presets/base/example"),
   extract(),
   install({
     packages: [
@@ -10,6 +10,5 @@ export default [
       "@middy/http-json-body-parser",
       "@middy/validator",
     ],
-    path: "services",
   }),
 ];

@@ -5,7 +5,7 @@ The `WebSocketApi` construct is a higher level CDK construct that makes it easy 
 ### Minimal Config
 
 ```js
-import { WebSocketApi } from "@serverless-stack/resources";
+import { WebSocketApi } from "sst/constructs";
 
 new WebSocketApi(stack, "Api", {
   routes: {
@@ -32,7 +32,7 @@ const api = new WebSocketApi(stack, "Api", {
   },
 });
 
-api.addRoutes(this, {
+api.addRoutes(stack, {
   sendMessage: "src/sendMessage.main",
 });
 ```
@@ -71,7 +71,7 @@ new WebSocketApi(stack, "Api", {
         handler: "src/default.main",
         permissions: [table],
         environment: { tableName: table.tableName },
-      }
+      },
     },
   },
 });
@@ -163,7 +163,7 @@ new WebSocketApi(stack, "Api", {
 #### Mapping multiple APIs to the same domain
 
 ```js {11-13}
-const coreApi = new HttpApi(this, "HttpApi", {
+const coreApi = new HttpApi(stack, "HttpApi", {
   customDomain: {
     domainName: "api.domain.com",
     path: "core",
@@ -175,7 +175,7 @@ new WebSocketApi(stack, "WebSocketApi", {
     path: "chat",
     cdk: {
       domainName: coreApi.cdk.domainName,
-    }
+    },
   },
 });
 ```
@@ -189,7 +189,7 @@ new WebSocketApi(stack, "Api", {
   customDomain: {
     path: "newPath",
     cdk: {
-      domainName: DomainName.fromDomainNameAttributes(this, "MyDomain", {
+      domainName: DomainName.fromDomainNameAttributes(stack, "MyDomain", {
         name,
         regionalDomainName,
         regionalHostedZoneId,
@@ -211,7 +211,7 @@ new WebSocketApi(stack, "Api", {
   customDomain: {
     domainName: "api.domain.com",
     cdk: {
-      certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+      certificate: Certificate.fromCertificateArn(stack, "MyCert", certArn),
     },
   },
   routes: {
@@ -230,7 +230,7 @@ new WebSocketApi(stack, "Api", {
     isExternalDomain: true,
     domainName: "api.domain.com",
     cdk: {
-      certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+      certificate: Certificate.fromCertificateArn(stack, "MyCert", certArn),
     },
   },
   routes: {
@@ -265,12 +265,12 @@ new WebSocketApi(stack, "Api", {
 You can also use a Lambda function to authorize users to access your API.
 
 ```js {4-9}
-import { Function, WebSocketApi } from "@serverless-stack/resources";
+import { Function, WebSocketApi } from "sst/constructs";
 
 new WebSocketApi(stack, "Api", {
   authorizer: {
     type: "lambda",
-    function: new Function(this, "Authorizer", {
+    function: new Function(stack, "Authorizer", {
       handler: "src/authorizer.main",
     }),
   },

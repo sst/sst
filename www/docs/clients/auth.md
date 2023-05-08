@@ -2,10 +2,10 @@
 description: "Overview of the `auth` module."
 ---
 
-Overview of the `auth` module in the `@serverless-stack/node` package.
+Overview of the `auth` module in the `sst/node` package.
 
 ```ts
-import { ... } from "@serverless-stack/node/auth"
+import { ... } from "sst/node/auth"
 ```
 
 The `auth` module has the following exports.
@@ -23,7 +23,7 @@ Types to help you define the shape of your function arguments.
 A type interface you can extend to define the auth session types.
 
 ```ts
-declare module "@serverless-stack/node/auth" {
+declare module "sst/node/auth" {
   export interface SessionTypes {
     user: {
       userID: string;
@@ -45,7 +45,7 @@ Methods that you can call in this module.
 The [`Session`](../auth.md#session) module can then be used to create an encrypted session token that'll be passed to the client.
 
 ```ts
-import { Session } from "@serverless-stack/node/auth";
+import { Session } from "sst/node/auth";
 ```
 
 #### cookie
@@ -89,7 +89,7 @@ The handlers can wrap around your Lambda function handler.
 The `AuthHandler` provides a function that can be used to implement various authentication strategies. You can [read more about it over on the auth docs](../auth.md).
 
 ```ts
-import { AuthHandler } from "@serverless-stack/node/auth";
+import { AuthHandler } from "sst/node/auth";
 
 export const handler = AuthHandler({
   providers: {
@@ -115,11 +115,11 @@ The hooks are functions that have access to the current invocation.
 This hook returns the current session object.
 
 ```ts
-import { useSession } from "@serverless-stack/node/auth";
+import { useSession } from "sst/node/auth";
 
 const session = useSession();
 
-if (session.type === "user) {
+if (session.type === "user") {
   console.log(session.properties.userID);
 }
 ```

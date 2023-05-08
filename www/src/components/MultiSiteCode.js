@@ -7,8 +7,6 @@ export default function MultiSiteCode(props) {
       groupId="code-snippets"
       defaultValue="react"
       values={[
-        { label: "ReactStaticSite", value: "react" },
-        { label: "ViteStaticSite", value: "vite" },
         { label: "NextjsSite", value: "next" },
         { label: "StaticSite", value: "static" },
       ]}

@@ -1,0 +1,29 @@
+{
+  "name": "@console/core",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "sst bind vitest",
+    "typecheck": "tsc -noEmit",
+    "db:push": "sst bind drizzle-kit push:mysql"
+  },
+  "devDependencies": {
+    "@types/node": "^18.16.0",
+    "drizzle-kit": "0.17.6-76e73f3",
+    "sst": "2.7.2",
+    "vitest": "^0.25.3"
+  },
+  "dependencies": {
+    "@aws-sdk/client-cloudformation": "^3.326.0",
+    "@aws-sdk/client-eventbridge": "^3.325.0",
+    "@aws-sdk/client-s3": "^3.326.0",
+    "@aws-sdk/client-sts": "^3.321.1",
+    "@octokit/rest": "^19.0.7",
+    "@paralleldrive/cuid2": "^2.2.0",
+    "@planetscale/database": "^1.7.0",
+    "drizzle-orm": "0.25.3",
+    "drizzle-zod": "0.4.1",
+    "undici": "^5.22.0",
+    "zod": "^3.21.4"
+  }
+}

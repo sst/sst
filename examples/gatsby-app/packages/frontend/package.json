@@ -1,0 +1,22 @@
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "frontend",
+  "author": "Manitej66",
+  "keywords": [
+    "gatsby"
+  ],
+  "scripts": {
+    "develop": "sst bind gatsby develop",
+    "start": "gatsby develop",
+    "build": "gatsby build",
+    "serve": "gatsby serve",
+    "clean": "gatsby clean"
+  },
+  "dependencies": {
+    "gatsby": "^4.2.0",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1"
+  }
+}

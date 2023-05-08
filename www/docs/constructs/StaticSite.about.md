@@ -1,7 +1,160 @@
-The `StaticSite` construct is a higher level CDK construct that makes it easy to create a static website. It provides a simple way to build and deploy the site to an S3 bucket; setup a CloudFront CDN for fast content delivery; and configure a custom domain for the website URL. In addition:
+The `StaticSite` construct is a higher level CDK construct that makes it easy to create a static website. It provides a simple way to build and deploy the site to AWS:
 
-- Visitors to the `http://` url will be redirected to the `https://` URL.
-- If a [domain alias](#domainalias) is configured, visitors to the alias domain will be redirected to the main one. So if `www.example.com` is the domain alias for `example.com`, visitors to `www.example.com` will be redirected to `example.com`.
+- The assets are deployed to an S3 Bucket, and served out from a CloudFront CDN for fast content delivery.
+- It enables you to [configure custom domains](#custom-domains) for the website URL.
+- It also enable you to [automatically set the environment variables](#environment-variables) for your static site directly from the outputs in your SST app.
+
+## Working locally
+
+To work on your static site locally with SST:
+
+1. Start SST in your project root.
+
+   ```bash
+   npx sst dev
+   ```
+
+2. Then start your static site. With [Vite](https://vitejs.dev) for example:
+
+   ```bash
+   npm run dev
+   ```
+
+   This should run `sst bind vite`.
+
+:::note
+When running `sst dev`, SST does not deploy your static site. It's meant to be run locally.
+:::
+
+## Custom domains
+
+You can configure the website with a custom domain hosted either on [Route 53](https://aws.amazon.com/route53/) or [externally](#configuring-externally-hosted-domain).
+
+```js {5}
+new StaticSite(stack, "Site", {
+  path: "path/to/site",
+  customDomain: "my-app.com",
+});
+```
+
+Note that visitors to the `http://` URL will be redirected to the `https://` URL.
+
+You can also configure an alias domain to point to the main domain. For example, to setup `www.my-app.com` redirecting to `my-app.com`:
+
+```js {5}
+new StaticSite(stack, "Site", {
+  path: "path/to/site",
+  customDomain: {
+    domainName: "my-app.com",
+    domainAlias: "www.my-app.com",
+  },
+});
+```
+
+## Environment variables
+
+The `StaticSite` construct allows you to set the environment variables in your site based on outputs from other constructs in your SST app. So you don't have to hard code the config from your backend. Let's look at how.
+
+Imagine you have a Vite site and an API created using the [`Api`](../constructs/Api.md) construct. To fetch data from the API, you would pass the API's endpoint to your site.
+
+```ts {7-9}
+const api = new Api(stack, "Api", {
+  // ...
+});
+
+new StaticSite(stack, "Site", {
+  path: "vite-app/",
+  environment: {
+    VITE_APP_API_URL: api.url,
+  },
+});
+```
+
+Then you can access the API's URL in your frontend js code:
+
+```ts
+fetch(import.meta.env.VITE_APP_API_URL);
+```
+
+#### Type definitions
+
+If a `vite.config.js` file is detected in the `path` folder, SST also creates a type definition file for the environment variables in `src/sst-env.d.ts`.
+
+```ts
+/// <reference types="vite/client" />
+
+interface ImportMetaEnv {
+  readonly VITE_APP_API_URL: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+```
+
+This tells your editor the environment variables that are available and autocompletes them for you.
+
+![Vite environment variables autocomplete](/img/screens/vite-environment-variables-autocomplete.png)
+
+You can also override the path for the generated type definitions file.
+
+```js {7}
+new StaticSite(stack, "Site", {
+  path: "vite-app/",
+  environment: {
+    VITE_APP_API_URL: api.url,
+  },
+  vite: {
+    types: "types/my-env.d.ts",
+  },
+});
+```
+
+#### While deploying
+
+On `sst deploy`, the environment variables are will first be replaced by placeholder values, ie. `{{ VITE_APP_API_URL }}`, when building the Vite site. And after the api has been created, the placeholders in the HTML and JS files will then be replaced with the actual values.
+
+#### While developing
+
+To use these values while developing, run `sst dev` to start the [Live Lambda Development](/live-lambda-development.md) environment.
+
+```bash
+npx sst dev
+```
+
+Then in your Vite app to reference these variables, add the [`sst env`](../packages/sst.md#sst-env) command.
+
+```json title="package.json" {2}
+"scripts": {
+  "dev": "sst env vite",
+  "build": "vite build",
+  "preview": "vite preview"
+},
+```
+
+Now you can start your Vite app as usual and it'll have the environment variables from your SST app.
+
+```bash
+npm run dev
+```
+
+There are a couple of things happening behind the scenes here:
+
+1. The `sst dev` command generates a file with the values specified by `StaticSite`'s `environment` prop.
+2. The `sst env` CLI will traverse up the directories to look for the root of your SST app.
+3. It'll then find the file that's generated in step 1.
+4. It'll load these as environment variables before running the start command.
+
+:::note
+`sst env` only works if the Next.js app is located inside the SST app or inside one of its subdirectories. For example:
+
+```
+/
+  sst.json
+  vite-app/
+```
+
+:::
 
 ## Examples
 
@@ -18,8 +171,8 @@ new StaticSite(stack, "react", {
   buildCommand: "npm run build",
   environment: {
     // Pass in the API endpoint to our app
-    VITE_API_URL: api.url,
-  }, 
+    VITE_APP_API_URL: api.url,
+  },
 });
 ```
 
@@ -34,8 +187,8 @@ new StaticSite(stack, "vue", {
   buildCommand: "npm run build",
   environment: {
     // Pass in the API endpoint to our app
-    VITE_API_URL: api.url,
-  }, 
+    VITE_APP_API_URL: api.url,
+  },
 });
 ```
 
@@ -50,8 +203,8 @@ new StaticSite(stack, "svelte", {
   buildCommand: "npm run build",
   environment: {
     // Pass in the API endpoint to our app
-    VITE_API_URL: api.url,
-  }, 
+    VITE_APP_API_URL: api.url,
+  },
 });
 ```
 
@@ -99,7 +252,7 @@ new StaticSite(stack, "react", {
   environment: {
     // Pass in the API endpoint to our app
     REACT_APP_API_URL: api.url,
-  }, 
+  },
 });
 ```
 
@@ -114,118 +267,6 @@ new StaticSite(stack, "frontend", {
   path: "path/to/site",
 });
 ```
-
-### Environment variables
-
-The `StaticSite` construct allows you to set the environment variables that are passed through your build system based on outputs from other constructs in your SST app. So you don't have to hard code the config from your backend.
-
-You need to be using a build tool that supports setting build time environment variables (most do). For example, Vite supports [setting build time environment variables](https://vitejs.dev/guide/env-and-mode.html). In your JS files this looks like:
-
-```js title="src/App.js"
-console.log(import.meta.env.VITE_API_URL);
-console.log(import.meta.env.VITE_USER_POOL_CLIENT);
-```
-
-You can pass these in directly from the construct.
-
-```js {3-6}
-new StaticSite(stack, "frontend", {
-  path: "path/to/site",
-  environment: {
-    VITE_API_URL: api.url,
-    VITE_USER_POOL_CLIENT: auth.cognitoUserPoolClient.userPoolClientId,
-  },
-});
-```
-
-Where `api.url` or `auth.cognitoUserPoolClient.userPoolClientId` are coming from other constructs in your SST app.
-
-#### Type definitions
-
-If a `vite.config.js` file is detected in the `path` folder, SST also creates a type definition file for the environment variables in `src/sst-env.d.ts`.
-
-```ts
-/// <reference types="vite/client" />
-
-interface ImportMetaEnv {
-  readonly VITE_API_URL: string
-  readonly VITE_USER_POOL_CLIENT: string
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv
-}
-```
-
-This tells your editor the environment variables that are available and autocompletes them for you. 
-
-![Vite environment variables autocomplete](/img/screens/vite-environment-variables-autocomplete.png)
-
-You can also override the path for the generated type definitions file.
-
-```js {8}
-new StaticSite(stack, "frontend", {
-  path: "path/to/site",
-  environment: {
-    VITE_API_URL: api.url,
-    VITE_USER_POOL_CLIENT: auth.cognitoUserPoolClient.userPoolClientId,
-  },
-  vite: {
-    types: "types/my-env.d.ts",
-  }
-});
-```
-
-#### While deploying
-
-On `sst deploy`, the environment variables will first be replaced by placeholder values, `{{ VITE_API_URL }}` and `{{ VITE_USER_POOL_CLIENT }}`, when building the Vite app. And after the referenced resources have been created, the Api and User Pool in this case, the placeholders in the HTML and JS files will then be replaced with the actual values.
-
-#### While developing
-
-To use these values while developing, run `sst start` to start the [Live Lambda Development](/live-lambda-development.md) environment.
-
-``` bash
-npx sst start
-```
-
-Then in your Vite app to reference these variables, add the [`sst-env`](/packages/static-site-env.md) package.
-
-```bash
-npm install --save-dev @serverless-stack/static-site-env
-```
-
-And tweak the Vite `dev` script to:
-
-```json title="package.json" {2}
-"scripts": {
-  "dev": "sst-env -- vite",
-  "build": "vite build",
-  "preview": "vite preview"
-},
-```
-
-Now you can start your Vite app as usualy and it'll have the environment variables from your SST app.
-
-``` bash
-npm run dev
-```
-
-There are a couple of things happening behind the scenes here:
-
-1. The `sst start` command generates a file with the values specified by `StaticSite`'s `environment` prop.
-2. The `sst-env` CLI will traverse up the directories to look for the root of your SST app.
-3. It'll then find the file that's generated in step 1.
-4. It'll load these as environment variables before running the start command.
-
-:::note
-`sst-env` only works if the Vite app is located inside the SST app or inside one of its subdirectories. For example:
-
-```
-/
-  sst.json
-  vite-app/
-```
-:::
 
 ### Custom domains
 
@@ -452,8 +493,11 @@ new StaticSite(stack, "frontend", {
 
 The default behavior of the CloudFront distribution uses the internally created S3 bucket as the origin. You can configure this behavior.
 
-```js {6-11}
-import { ViewerProtocolPolicy, AllowedMethods } from "aws-cdk-lib/aws-cloudfront";
+```js {9-14}
+import {
+  ViewerProtocolPolicy,
+  AllowedMethods,
+} from "aws-cdk-lib/aws-cloudfront";
 
 new StaticSite(stack, "frontend", {
   path: "path/to/site",
@@ -475,7 +519,7 @@ import { Code, Runtime } from "aws-cdk-lib/aws-lambda";
 import { LambdaEdgeEventType, experimental } from "aws-cdk-lib/aws-cloudfront";
 
 const edgeFunc = new experimental.EdgeFunction(stack, "MyFunction", {
-  runtime: Runtime.NODEJS_16_X,
+  runtime: Runtime.NODEJS_18_X,
   handler: "lambda.handler",
   code: Code.fromAsset("path/to/dir"),
   stackId: `${scope.logicalPrefixedName("edge-lambda")}`,

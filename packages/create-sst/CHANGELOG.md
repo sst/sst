@@ -1,14 +1,490 @@
 # create-sst
 
-## 1.18.4
+## 2.8.7
 
-## 1.18.3
+## 2.8.6
 
-## 1.18.2
+## 2.8.5
 
-## 1.18.1
+## 2.8.4
 
-## 1.18.0
+## 2.8.3
+
+## 2.8.2
+
+## 2.8.1
+
+### Patch Changes
+
+- [`6cd6c2d1e`](https://github.com/serverless-stack/sst/commit/6cd6c2d1eae10979fabdfad6912e61a3c7211e3f) Thanks [@fwang](https://github.com/fwang)! - Add support for SvelteKit
+
+## 2.8.0
+
+### Minor Changes
+
+- [#2824](https://github.com/serverless-stack/sst/pull/2824) [`eebce13c1`](https://github.com/serverless-stack/sst/commit/eebce13c18cb51f2fd6ead53492ed5d8fc375040) Thanks [@fwang](https://github.com/fwang)! - Add support for SvelteKit
+
+## 2.7.2
+
+## 2.7.1
+
+## 2.7.0
+
+## 2.6.0
+
+### Patch Changes
+
+- [`302c7e205`](https://github.com/serverless-stack/sst/commit/302c7e205bd82fe26c1fd6940d6a056a3cb79032) Thanks [@thdxr](https://github.com/thdxr)! - Fix issue with python template
+
+## 2.5.8
+
+## 2.5.7
+
+## 2.5.6
+
+## 2.5.5
+
+## 2.5.4
+
+## 2.5.3
+
+## 2.5.2
+
+## 2.5.1
+
+### Patch Changes
+
+- [`ce1305f3e`](https://github.com/serverless-stack/sst/commit/ce1305f3e8b645133bcc07f620c5e91a9271c280) Thanks [@fwang](https://github.com/fwang)! - Update CDK version in examples
+
+## 2.5.0
+
+## 2.4.3
+
+## 2.4.2
+
+## 2.4.1
+
+## 2.4.0
+
+## 2.3.7
+
+## 2.3.6
+
+## 2.3.5
+
+### Patch Changes
+
+- [`c0057dd1f`](https://github.com/serverless-stack/sst/commit/c0057dd1f453431cad540871e9915ccdc3d2f300) Thanks [@thdxr](https://github.com/thdxr)! - Improve dropin mode templates and copy
+
+## 2.3.4
+
+## 2.3.3
+
+## 2.3.2
+
+## 2.3.1
+
+## 2.3.0
+
+## 2.2.8
+
+## 2.2.7
+
+## 2.2.6
+
+### Patch Changes
+
+- [`b68f1bb8c`](https://github.com/serverless-stack/sst/commit/b68f1bb8c0ceec8ed9b9e257d2c86b3ff3bfd417) Thanks [@thdxr](https://github.com/thdxr)! - Updated graphql rds template for sdkv3
+
+## 2.2.5
+
+## 2.2.4
+
+## 2.2.3
+
+## 2.2.2
+
+## 2.2.1
+
+## 2.2.0
+
+## 2.1.35
+
+## 2.1.34
+
+## 2.1.33
+
+## 2.1.32
+
+## 2.1.31
+
+## 2.1.30
+
+## 2.1.29
+
+## 2.1.28
+
+## 2.1.27
+
+## 2.1.26
+
+## 2.1.25
+
+## 2.1.24
+
+## 2.1.23
+
+## 2.1.22
+
+## 2.1.21
+
+## 2.1.20
+
+## 2.1.19
+
+## 2.1.18
+
+### Patch Changes
+
+- [`3db05a0e9`](https://github.com/serverless-stack/sst/commit/3db05a0e9b7a116b1285d10cc142bea496a47fa5) Thanks [@thdxr](https://github.com/thdxr)! - create-sst: ensure root tsconfig does not typecheck packages
+
+## 2.1.17
+
+## 2.1.16
+
+### Patch Changes
+
+- [`a9bd02b15`](https://github.com/serverless-stack/sst/commit/a9bd02b1513b7b8a42579fcff606a40e8a582151) Thanks [@thdxr](https://github.com/thdxr)! - Fix go builds failing without printing error
+
+## 2.1.15
+
+### Patch Changes
+
+- [`186b545b3`](https://github.com/serverless-stack/sst/commit/186b545b3795f6a285534ff05d196ab8a04e3daa) Thanks [@fwang](https://github.com/fwang)! - create-sst: fix template formatting issue
+
+## 2.1.14
+
+## 2.1.13
+
+## 2.1.12
+
+## 2.1.11
+
+## 2.1.10
+
+## 2.1.9
+
+## 2.1.8
+
+## 2.1.7
+
+## 2.1.6
+
+## 2.1.5
+
+## 2.1.4
+
+## 2.1.3
+
+### Patch Changes
+
+- [`9b34bff19`](https://github.com/serverless-stack/sst/commit/9b34bff192457418590147cf330e37866c852455) Thanks [@fwang](https://github.com/fwang)! - Examples: update to SST v2
+
+## 2.1.2
+
+## 2.1.1
+
+### Patch Changes
+
+- [`136304a55`](https://github.com/serverless-stack/sst/commit/136304a55dc5061570e2b24282c1874d6b0b7af2) Thanks [@fwang](https://github.com/fwang)! - Examples: add ExampleStack in base example template
+
+## 2.1.0
+
+## 2.0.39
+
+### Patch Changes
+
+- [`c6f8f3cbc`](https://github.com/serverless-stack/sst/commit/c6f8f3cbc8e64f0355dd405761ba315884064fb8) Thanks [@thdxr](https://github.com/thdxr)! - Fix migration generator in graphql stack
+
+## 2.0.38
+
+## 2.0.37
+
+### Patch Changes
+
+- [`4dd96ede4`](https://github.com/serverless-stack/sst/commit/4dd96ede4c01bd0fbc64a0487fedb4e02a118cb8) Thanks [@thdxr](https://github.com/thdxr)! - Pin genql at 2.x
+
+## 2.0.36
+
+## 2.0.35
+
+## 2.0.34
+
+### Patch Changes
+
+- [`d8e6ab9ed`](https://github.com/serverless-stack/sst/commit/d8e6ab9eda2394e0f9e1bc782a74371edf2531f4) Thanks [@thdxr](https://github.com/thdxr)! - Fix type errors with graphql preset
+
+## 2.0.33
+
+## 2.0.32
+
+## 2.0.31
+
+## 2.0.30
+
+## 2.0.29
+
+## 2.0.28
+
+## 2.0.27
+
+## 2.0.26
+
+## 2.0.25
+
+## 2.0.24
+
+## 2.0.23
+
+## 2.0.22
+
+## 2.0.21
+
+## 2.0.20
+
+## 2.0.19
+
+## 2.0.18
+
+## 2.0.17
+
+### Patch Changes
+
+- [`86ac31dca`](https://github.com/serverless-stack/sst/commit/86ac31dca6a9eefd5373b907aa22209fcad88473) Thanks [@thdxr](https://github.com/thdxr)! - Dropin mode for NextJS + standard template
+
+- [#2467](https://github.com/serverless-stack/sst/pull/2467) [`03eeca4fa`](https://github.com/serverless-stack/sst/commit/03eeca4fae04215c8ce3f4951b82f47f6ba13cb1) Thanks [@ivanzorcic](https://github.com/ivanzorcic)! - Project Structure: frontend/ folder should be inside packages/
+
+## 2.0.16
+
+## 2.0.15
+
+## 2.0.14
+
+## 2.0.13
+
+## 2.0.12
+
+## 2.0.11
+
+## 2.0.10
+
+## 2.0.9
+
+## 2.0.8
+
+## 2.0.7
+
+## 2.0.6
+
+## 2.0.5
+
+## 2.0.4
+
+## 2.0.3
+
+### Patch Changes
+
+- [`332c5e06d`](https://github.com/serverless-stack/sst/commit/332c5e06d9f187725b6ab5235ae479bde22e3b6c) Thanks [@thdxr](https://github.com/thdxr)! - Remove quote requirement for bind and env commands. Be sure to update your `sst env` and `sst bind` commands to remove the `'`
+
+## 2.0.2
+
+## 2.0.1
+
+### Patch Changes
+
+- [`4268dbeaa`](https://github.com/serverless-stack/sst/commit/4268dbeaa998a7ef65d6e5bfaed5bab587a3ddb7) Thanks [@thdxr](https://github.com/thdxr)! - Remove references to rc in create-sst templates
+
+## 2.0.0
+
+### Major Changes
+
+- [#2428](https://github.com/serverless-stack/sst/pull/2428) [`ce13bea66`](https://github.com/serverless-stack/sst/commit/ce13bea665ce80cfc5fb4a5b87e076e2f00ffece) Thanks [@thdxr](https://github.com/thdxr)! - SST 2.0
+
+  This is a major overhaul of the SST codebase primarily for ergonomics and performance. There should be no infrastructure changes however there are some project structure and package changes. Please view the upgrade guide here: https://docs.sst.dev/upgrade-guide
+
+## 2.0.0-rc.71
+
+## 2.0.0-rc.70
+
+## 2.0.0-rc.69
+
+### Patch Changes
+
+- [`97cf64acd`](https://github.com/serverless-stack/sst/commit/97cf64acd6f69f737f8bb9424f7fb9044f944071) Thanks [@thdxr](https://github.com/thdxr)! - Fix accidental stack in base template
+
+## 2.0.0-rc.68
+
+## 2.0.0-rc.67
+
+### Patch Changes
+
+- [#2419](https://github.com/serverless-stack/sst/pull/2419) [`45cef3d65`](https://github.com/serverless-stack/sst/commit/45cef3d651138a602147841ee41f095e76a59481) Thanks [@github-actions](https://github.com/apps/github-actions)! - Rework examples for sst2
+
+## 2.0.0-rc.66
+
+## 2.0.0-rc.65
+
+## 2.0.0-rc.64
+
+## 2.0.0-rc.63
+
+## 2.0.0-rc.62
+
+## 2.0.0-rc.61
+
+## 2.0.0-rc.60
+
+## 2.0.0-rc.59
+
+## 2.0.0-rc.58
+
+## 2.0.0-rc.57
+
+### Patch Changes
+
+- [#2396](https://github.com/serverless-stack/sst/pull/2396) [`da3d0740f`](https://github.com/serverless-stack/sst/commit/da3d0740f56c53872ba2321f8c8b312ca8b68bf4) Thanks [@github-actions](https://github.com/apps/github-actions)! - Update CDK to 2.62.2
+
+## 2.0.0-rc.56
+
+## 2.0.0-rc.55
+
+## 2.0.0-rc.54
+
+## 2.0.0-rc.53
+
+## 2.0.0-rc.52
+
+## 2.0.0-rc.51
+
+## 2.0.0-rc.50
+
+## 2.0.0-rc.49
+
+## 2.0.0-rc.48
+
+## 2.0.0-rc.47
+
+## 2.0.0-rc.46
+
+## 2.0.0-rc.45
+
+## 2.0.0-rc.44
+
+## 2.0.0-rc.43
+
+## 2.0.0-rc.42
+
+## 2.0.0-rc.41
+
+## 2.0.0-rc.40
+
+## 2.0.0-rc.39
+
+## 2.0.0-rc.38
+
+## 2.0.0-rc.37
+
+## 2.0.0-rc.36
+
+## 2.0.0-rc.35
+
+## 2.0.0-rc.34
+
+## 2.0.0-rc.33
+
+## 2.0.0-rc.32
+
+## 2.0.0-rc.31
+
+## 2.0.0-rc.30
+
+## 2.0.0-rc.29
+
+## 2.0.0-rc.28
+
+## 2.0.0-rc.27
+
+## 2.0.0-rc.26
+
+## 2.0.0-rc.25
+
+## 2.0.0-rc.24
+
+## 2.0.0-rc.23
+
+## 2.0.0-rc.22
+
+## 2.0.0-rc.21
+
+## 2.0.0-rc.20
+
+## 2.0.0-rc.19
+
+## 2.0.0-rc.18
+
+## 2.0.0-rc.17
+
+## 2.0.0-rc.16
+
+### Patch Changes
+
+- [`8371c7bb9`](https://github.com/serverless-stack/sst/commit/8371c7bb935f9ae9c02e2790bb4735a94a022146) Thanks [@fwang](https://github.com/fwang)! - StaticSite: fix script path
+
+## 2.0.0-rc.15
+
+### Patch Changes
+
+- [`591b21b83`](https://github.com/serverless-stack/sst/commit/591b21b83c94ba87b4079f33d783fd4b672db603) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: fix script path
+
+## 2.0.0-rc.14
+
+## 2.0.0-rc.13
+
+## 2.0.0-rc.12
+
+## 2.0.0-rc.11
+
+## 2.0.0-rc.10
+
+### Patch Changes
+
+- [`293aee1cb`](https://github.com/serverless-stack/sst/commit/293aee1cb7861404d39ece9dd97611060d0b14e5) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: zip OpenNext server function
+
+- [#2293](https://github.com/serverless-stack/sst/pull/2293) [`b5eddfdd4`](https://github.com/serverless-stack/sst/commit/b5eddfdd4326116774e78a1318a0503a1ee899d4) Thanks [@github-actions](https://github.com/apps/github-actions)! - Fix RDS migrator and Script bundling issue
+
+## 2.0.0-rc.9
+
+## 2.0.0-rc.8
+
+## 2.0.0-rc.7
+
+## 2.0.0-rc.6
+
+## 2.0.0-rc.5
+
+## 2.0.0-rc.4
+
+## 2.0.0-rc.3
+
+## 2.0.0-rc.2
+
+## 2.0.0-rc.1
+
+## 2.0.0-rc.0
+
+### Major Changes
+
+- [`db5aadfbc`](https://github.com/serverless-stack/sst/commit/db5aadfbca8628eb23eee486c07e5819bb6cf750) Thanks [@thdxr](https://github.com/thdxr)! - 2.0
 
 ## 1.17.1
 

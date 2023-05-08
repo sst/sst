@@ -1,0 +1,71 @@
+name: aws-cdk
+
+on:
+  workflow_dispatch:
+
+jobs:
+  patch:
+    name: patch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        # https://github.com/actions/setup-node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Set up Git and GitHub credentials
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "github-actions-bot@example.com"
+
+      - name: patch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          #!/bin/bash
+          set -e
+
+          mkdir tmp || true
+          cd tmp
+
+          TAR_FILE=$(curl https://registry.npmjs.org/aws-cdk/latest | jq -r '.dist.tarball')
+          wget $TAR_FILE -O cdk.tar.gz
+          tar -xvf cdk.tar.gz
+          PACKAGE_JSON=./package/package.json
+          VERSION=$(jq -r .version $PACKAGE_JSON)
+          jq '
+            .dependencies += {chalk: .devDependencies.chalk, yaml: .devDependencies.yaml, promptly: .devDependencies.promptly, archiver: .devDependencies.archiver } |
+            .name = "sst-aws-cdk"
+          ' $PACKAGE_JSON > tmp.json
+          mv tmp.json $PACKAGE_JSON
+          cd package
+
+          if npm publish; then
+            echo "Successfully published to npm"
+          else
+            echo "Already published this version"
+          fi
+
+          cd ../../
+          rm -rf tmp
+
+          git checkout -b update-aws-cdk-$VERSION
+          echo "Updating version to $VERSION"
+          jq "
+            .dependencies[\"sst-aws-cdk\"] = \"$VERSION\"
+          " ./packages/sst/package.json > tmp.json && mv tmp.json ./packages/sst/package.json
+
+          git commit -am "Version updated"
+          git push origin HEAD
+
+          gh pr create --title "Update sst-aws-cdk to $VERSION" --fill
+
+

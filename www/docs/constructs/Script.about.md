@@ -3,6 +3,7 @@ The `Script` construct is a higher level CDK construct that makes it easy to run
 Since the script is running inside a Lambda function, it can interact with resources like the RDS databases, that are inside a VPC; and make AWS API calls to services that the IAM credentials in your local environment or CI might not have permissions to.
 
 A few things to note:
+
 - It does not run locally. It runs inside a Lambda function.
 - It gets run on every deployment.
 - It can run for a maximum of 15 minutes.
@@ -13,7 +14,7 @@ A few things to note:
 ### Minimal config
 
 ```js
-import { Script } from "@serverless-stack/resources";
+import { Script } from "sst/constructs";
 
 new Script(stack, "Script", {
   onCreate: "src/function.create",
@@ -27,9 +28,9 @@ new Script(stack, "Script", {
 The `params` will be passed in as the `event` object to the function.
 
 ```js {12-15}
-import { Table, Script } from "@serverless-stack/resources";
+import { Table, Script } from "sst/constructs";
 
-const table = new Table(this, "Table", {
+const table = new Table(stack, "Table", {
   fields: {
     userId: "string",
   },
@@ -127,7 +128,7 @@ You can configure the `Script` to run at the beginning of the deployment, before
 Create a stack for the construct. Let's call it `BeforeDeployStack` and add it to your `stacks/index.js`.
 
 ```ts
-import { dependsOn, StackContext, Script } from "@serverless-stack/resources"
+import { dependsOn, StackContext, Script } from "sst/constructs";
 
 function BeforeDeployStack({stack}: StackContext) {
   new Script(stack, "BeforeDeploy", {
@@ -136,11 +137,11 @@ function BeforeDeployStack({stack}: StackContext) {
 }
 
 function ApiStack(ctx: StackContext) {
-  dependsOn(BeforeDeployStack)
+  dependsOn(BeforeDeployStack);
 }
 
 function DBStack(ctx: StackContext) {
-  dependsOn(BeforeDeployStack)
+  dependsOn(BeforeDeployStack);
 }
 ```
 
@@ -159,7 +160,7 @@ Similarly, you can configure a `Script` to run at the end of the deployment, aft
 Create a `AfterDeployStack` in `stacks/index.js`.
 
 ```ts
-import { dependsOn, StackContext, Script } from "@serverless-stack/resources"
+import { dependsOn, StackContext, Script } from "sst/constructs";
 
 function AfterDeployStack({stack}: StackContext) {
   dependsOn(ApiStack)
@@ -169,11 +170,9 @@ function AfterDeployStack({stack}: StackContext) {
   });
 }
 
-function ApiStack(ctx: StackContext) {
-}
+function ApiStack(ctx: StackContext) {}
 
-function DBStack(ctx: StackContext) {
-}
+function DBStack(ctx: StackContext) {}
 ```
 
 By making the `AfterDeployStack` depend on both `ApiStack` and `DBStack`, it will get deployed after the two stacks are done deploying.
