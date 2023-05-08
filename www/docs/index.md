@@ -39,8 +39,8 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/constructs/SvelteKitSite")}>
-      <h3><img src="/img/logos/svelte.svg" />SvelteKit</h3>
+    <a href={useBaseUrl("/start/svelte")}>
+      <h3><img src="/img/logos/svelte.svg" />Svelte</h3>
       <p>Create and deploy a serverless SvelteKit app to AWS with SST.</p>
     </a>
   </li>
