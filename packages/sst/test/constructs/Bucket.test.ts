@@ -25,14 +25,6 @@ test("cdk.id: undefined", async () => {
     Resources: {
       BucketD7FEB781: objectLike({
         Type: "AWS::S3::Bucket",
-        Properties: {
-          PublicAccessBlockConfiguration: {
-            BlockPublicAcls: false,
-            BlockPublicPolicy: false,
-            IgnorePublicAcls: false,
-            RestrictPublicBuckets: false,
-          },
-        },
       }),
     },
   });
@@ -171,6 +163,66 @@ test("cors: true", async () => {
           AllowedHeaders: ["*"],
           AllowedMethods: ["GET", "PUT", "HEAD", "POST", "DELETE"],
           AllowedOrigins: ["*"],
+        },
+      ],
+    },
+  });
+});
+
+test("blockPublicACLs: undefined", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new Bucket(stack, "Bucket");
+  hasResource(stack, "AWS::S3::Bucket", {
+    PublicAccessBlockConfiguration: {
+      BlockPublicAcls: false,
+      IgnorePublicAcls: false,
+    },
+    OwnershipControls: {
+      Rules: [
+        {
+          ObjectOwnership: "BucketOwnerPreferred",
+        },
+      ],
+    },
+  });
+});
+
+test("blockPublicACLs: true", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new Bucket(stack, "Bucket", {
+    blockPublicACLs: true,
+  });
+  hasResource(stack, "AWS::S3::Bucket", {
+    PublicAccessBlockConfiguration: {
+      BlockPublicAcls: true,
+      BlockPublicPolicy: true,
+      IgnorePublicAcls: true,
+      RestrictPublicBuckets: true,
+    },
+    OwnershipControls: {
+      Rules: [
+        {
+          ObjectOwnership: "BucketOwnerEnforced",
+        },
+      ],
+    },
+  });
+});
+
+test("blockPublicACLs: false", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new Bucket(stack, "Bucket", {
+    blockPublicACLs: false,
+  });
+  hasResource(stack, "AWS::S3::Bucket", {
+    PublicAccessBlockConfiguration: {
+      BlockPublicAcls: false,
+      IgnorePublicAcls: false,
+    },
+    OwnershipControls: {
+      Rules: [
+        {
+          ObjectOwnership: "BucketOwnerPreferred",
         },
       ],
     },

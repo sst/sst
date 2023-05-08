@@ -19,6 +19,7 @@ import {
   EventType,
   CorsRule,
   HttpMethods,
+  ObjectOwnership,
 } from "aws-cdk-lib/aws-s3";
 import {
   LambdaDestination,
@@ -203,16 +204,16 @@ export interface BucketProps {
   cors?: boolean | BucketCorsRule[];
   /**
    * Block public access to this bucket. Setting this to `true` alllows uploading objects with public ACLs.
-   * Note that setting to `true` does not necessarily mean that the bucket is completely accessible to the public. Rather, it enables the granting of public permissions through bucket policies and allows uploading objects with public ACLs.
+   * Note that setting to `true` does not necessarily mean that the bucket is completely accessible to the public. Rather, it enables the granting of public permissions through public ACLs.
    * @default false
    * @example
    * ```js
    * new Bucket(stack, "Bucket", {
-   *   blockPublicAccess: true,
+   *   blockPublicACLs: true,
    * });
    * ```
    */
-  blockPublicAccess?: boolean;
+  blockPublicACLs?: boolean;
   /**
    * The default function props to be applied to all the Lambda functions in the API. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
    *
@@ -488,7 +489,7 @@ export class Bucket extends Construct implements SSTConstruct {
   }
 
   private createBucket() {
-    const { name, cors, blockPublicAccess, cdk } = this.props;
+    const { name, cors, blockPublicACLs, cdk } = this.props;
 
     if (isCDKConstruct(cdk?.bucket)) {
       if (cors !== undefined) {
@@ -501,7 +502,8 @@ export class Bucket extends Construct implements SSTConstruct {
       this.cdk.bucket = new CDKBucket(this, "Bucket", {
         bucketName: name,
         cors: this.buildCorsConfig(cors),
-        blockPublicAccess: this.buildBlockPublicAccessConfig(blockPublicAccess),
+        blockPublicAccess: this.buildBlockPublicAccessConfig(blockPublicACLs),
+        objectOwnership: this.buildObjectOwnershipConfig(blockPublicACLs),
         ...cdk?.bucket,
       });
     }
@@ -698,9 +700,13 @@ export class Bucket extends Construct implements SSTConstruct {
       ? BlockPublicAccess.BLOCK_ALL
       : new BlockPublicAccess({
           blockPublicAcls: false,
-          blockPublicPolicy: false,
           ignorePublicAcls: false,
-          restrictPublicBuckets: false,
         });
+  }
+
+  private buildObjectOwnershipConfig(config?: boolean) {
+    return config === true
+      ? ObjectOwnership.BUCKET_OWNER_ENFORCED
+      : ObjectOwnership.BUCKET_OWNER_PREFERRED;
   }
 }
