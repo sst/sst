@@ -2,4 +2,4 @@
 "sst": patch
 ---
 
-SsrSite: Fix The role defined for the function cannot be assumed by Lambda.
+SsrSite: Fix dev server role cannot be assumed by Lambda
