@@ -927,27 +927,26 @@ test("constructor: cfDistribution props", async () => {
 });
 
 test("constructor: cfDistribution is construct", async () => {
-  const stack = new Stack(new App(), "stack");
-
+  const stack = new Stack(await createApp(), "stack");
   new StaticSite(stack, "Site", {
-    path: "test/site",
+    path: "test/constructs/site",
     customDomain: "domain.com",
     cdk: {
-      distribution: cloudfront.Distribution.fromDistributionAttributes(stack, "Distribution", {
-        distributionId: 'frontend-distribution-id',
-        domainName: "domain.com"
-      }),
+      distribution: cloudfront.Distribution.fromDistributionAttributes(
+        stack,
+        "IDistribution",
+        {
+          distributionId: "frontend-distribution-id",
+          domainName: "domain.com",
+        }
+      ),
     },
   });
   countResources(stack, "AWS::CloudFront::Distribution", 0);
-
-  countResources(stack, "Custom::SSTCloudFrontInvalidation", 1);
-  hasResource(stack, "Custom::SSTCloudFrontInvalidation", {
-    DistributionId: "frontend-distribution-id",
-    DistributionPaths: ["/*"],
-    WaitForInvalidation: true,
+  countResources(stack, "Custom::CloudFrontInvalidator", 1);
+  hasResource(stack, "Custom::CloudFrontInvalidator", {
+    paths: ["/*"],
   });
-
   countResources(stack, "AWS::Route53::HostedZone", 1);
   hasResource(stack, "AWS::Route53::HostedZone", {
     Name: "domain.com.",
