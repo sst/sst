@@ -1151,7 +1151,7 @@ test("constructor: sst deploy inactive stack", async () => {
   countResources(stack, "Custom::CloudFrontInvalidator", 0);
 });
 
-test("constructor: sst dev", async () => {
+test("constructor: sst dev: dev.url undefined", async () => {
   const app = await createApp({ mode: "dev" });
   const stack = new Stack(app, "stack");
   const site = new StaticSite(stack, "Site", {
@@ -1163,6 +1163,20 @@ test("constructor: sst dev", async () => {
   countResources(stack, "AWS::CloudFront::Distribution", 0);
   countResources(stack, "Custom::SSTBucketDeployment", 0);
   countResources(stack, "Custom::CloudFrontInvalidator", 0);
+});
+
+test("constructor: sst dev: dev.url string", async () => {
+  const app = await createApp({ mode: "dev" });
+  const stack = new Stack(app, "stack");
+  const site = new StaticSite(stack, "Site", {
+    path: "test/constructs/site",
+    dev: {
+      url: "localhost:3000",
+    },
+  });
+  expect(site.url).toBe("localhost:3000");
+  expect(site.customDomainUrl).toBeUndefined();
+  expect(site.cdk).toBeUndefined();
 });
 
 test("constructor: sst remove", async () => {

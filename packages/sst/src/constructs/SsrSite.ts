@@ -230,6 +230,16 @@ export interface SsrSiteProps {
      * ```
      */
     deploy?: boolean;
+    /**
+     * The local site URL when running `sst dev`.
+     * @example
+     * ```js
+     * dev: {
+     *   url: "http://localhost:3000"
+     * }
+     * ```
+     */
+    url?: string;
   };
   /**
    * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
@@ -387,7 +397,7 @@ export class SsrSite extends Construct implements SSTConstruct {
    * The CloudFront URL of the website.
    */
   public get url() {
-    if (this.doNotDeploy) return;
+    if (this.doNotDeploy) return this.props.dev?.url;
 
     return `https://${this.distribution.distributionDomainName}`;
   }
@@ -485,7 +495,7 @@ export class SsrSite extends Construct implements SSTConstruct {
         url: this.doNotDeploy
           ? {
               type: "plain",
-              value: "localhost",
+              value: this.props.dev?.url ?? "localhost",
             }
           : {
               // Do not set real value b/c we don't want to make the Lambda function
