@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { Bucket } from "sst/node/bucket";
 import type { PageServerLoad } from "./$types";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
