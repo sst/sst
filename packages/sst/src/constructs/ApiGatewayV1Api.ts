@@ -524,7 +524,7 @@ export interface ApiGatewayV1ApiCustomDomainProps {
  * @example
  *
  * ```js
- * import { ApiGatewayV1Api } from "@serverless-stack/resources";
+ * import { ApiGatewayV1Api } from "sst/constructs";
  *
  * new ApiGatewayV1Api(stack, "Api", {
  *   routes: {
@@ -594,7 +594,11 @@ export class ApiGatewayV1Api<
    * The AWS generated URL of the Api.
    */
   public get url(): string {
-    return this.cdk.restApi.url;
+    const app = this.node.root as App;
+    return (
+      this.cdk.restApi.url ??
+      `https://${this.cdk.restApi.restApiId}.execute-api.${app.region}.amazonaws.com/${app.stage}/`
+    );
   }
 
   /**

@@ -74,7 +74,7 @@ We also use a couple of other notable open-source libraries in our setup.
 
 ### Other libraries
 
-- [Kysely](https://koskimas.github.io/kysely), a typesafe TypeScript SQL query builder
+- [Kysely](https://kysely-org.github.io/kysely/), a typesafe TypeScript SQL query builder
 - [Pothos](https://pothos-graphql.dev), a typesafe TypeScript GraphQL schema builder
 - [Urql](https://formidable.com/open-source/urql/) with [Genql](https://genql.vercel.app), a typesafe GraphQL client
 

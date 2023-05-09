@@ -10,9 +10,8 @@ export * from "./adapter/oidc.js";
 export * from "./adapter/oauth.js";
 export * from "./adapter/link.js";
 
-import { createProxy, getVariables } from "../util/index.js";
+import { createProxy } from "../util/index.js";
 
 export interface AuthResources {}
 
 export const Auth = createProxy<AuthResources>("Auth");
-Object.assign(Auth, await getVariables("Auth"));

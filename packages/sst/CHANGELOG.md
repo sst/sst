@@ -1,5 +1,215 @@
 # @serverless-stack/cli2
 
+## 2.8.12
+
+### Patch Changes
+
+- [`c3e5acdc3`](https://github.com/serverless-stack/sst/commit/c3e5acdc3758a1f8b008206323b8dbb45ea704d0) Thanks [@fwang](https://github.com/fwang)! - SvelteKitSite: update adapter output destination
+
+## 2.8.11
+
+### Patch Changes
+
+- [`ae4af45db`](https://github.com/serverless-stack/sst/commit/ae4af45db4dbeb8a850161c32ba446577e11370e) Thanks [@fwang](https://github.com/fwang)! - SvelteKitSite: set "SST" build time environment variable
+
+- [`21d49d5a4`](https://github.com/serverless-stack/sst/commit/21d49d5a4fd711e6322415da7b9bb8ed5f4a0de8) Thanks [@fwang](https://github.com/fwang)! - Job: show build errors on build failure
+
+## 2.8.10
+
+### Patch Changes
+
+- [`b85fe2ed1`](https://github.com/serverless-stack/sst/commit/b85fe2ed1d96b45420f935281e0eac025648b3f3) Thanks [@fwang](https://github.com/fwang)! - Bucket: set default options to allow public ACLs and enable CORS
+
+## 2.8.9
+
+### Patch Changes
+
+- [`f29249879`](https://github.com/serverless-stack/sst/commit/f29249879ccf9fd30c79f66d07419eec74ace3be) Thanks [@fwang](https://github.com/fwang)! - Bucket: set default options to allow public access and enable CORS
+
+## 2.8.8
+
+### Patch Changes
+
+- [#2348](https://github.com/serverless-stack/sst/pull/2348) [`9a2142bba`](https://github.com/serverless-stack/sst/commit/9a2142bba0322be32e8d7cb0045c23b256672eb3) Thanks [@hoangnd25](https://github.com/hoangnd25)! - StaticSite: support importing existing CloudFront distribution
+
+- [#2812](https://github.com/serverless-stack/sst/pull/2812) [`9dae0be56`](https://github.com/serverless-stack/sst/commit/9dae0be565729d3be3122f1b4ebdc0199e1b44cc) Thanks [@jlanzarotti](https://github.com/jlanzarotti)! - Cognito: expose cfnIdentityPoolRoleAttachment prop
+
+- [#2849](https://github.com/serverless-stack/sst/pull/2849) [`2e71c9726`](https://github.com/serverless-stack/sst/commit/2e71c97269b8ccac612cf9b93a20186be3e357e5) Thanks [@danecwalker](https://github.com/danecwalker)! - SsrSite: Fix dev server role cannot be assumed by Lambda
+
+## 2.8.7
+
+### Patch Changes
+
+- [`69662a713`](https://github.com/serverless-stack/sst/commit/69662a7132fcb4316547333b260714ee6880af4e) Thanks [@fwang](https://github.com/fwang)! - SsrSite: allow principles from the same AWS account to assume the dev role
+
+## 2.8.6
+
+### Patch Changes
+
+- [#2831](https://github.com/serverless-stack/sst/pull/2831) [`ce5ce44c8`](https://github.com/serverless-stack/sst/commit/ce5ce44c8491eb7021288356f90e47681e0f5cb9) Thanks [@estyrke](https://github.com/estyrke)! - Allow packages to be marked as "internal" for Pothos extractor
+
+- [#2837](https://github.com/serverless-stack/sst/pull/2837) [`8a684c5a9`](https://github.com/serverless-stack/sst/commit/8a684c5a96e2e17e8a2b42a5666db10946f6fdf6) Thanks [@deb-oliveira](https://github.com/deb-oliveira)! - [Fix/Dotnet]: enable the selection of dotnet6 bootstrap and secure input.out with quotes
+
+- [#2831](https://github.com/serverless-stack/sst/pull/2831) [`ce5ce44c8`](https://github.com/serverless-stack/sst/commit/ce5ce44c8491eb7021288356f90e47681e0f5cb9) Thanks [@estyrke](https://github.com/estyrke)! - Allow for Pothos extractor to consider some packages as "internal"
+
+- [`d54d31884`](https://github.com/serverless-stack/sst/commit/d54d31884b5a10c7a7e133e29ea49e4f8863954b) Thanks [@thdxr](https://github.com/thdxr)! - upgrade kysely-codegen
+
+## 2.8.5
+
+### Patch Changes
+
+- [`f0dbf9c84`](https://github.com/serverless-stack/sst/commit/f0dbf9c84785049c529c2215093a8a84f51bb6db) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: use OpenNext v1.2.x
+
+- [`5debc11a7`](https://github.com/serverless-stack/sst/commit/5debc11a7f0b4af68c50c716adf3e1ab968605bf) Thanks [@fwang](https://github.com/fwang)! - Sites: fix files not uploaded to s3
+
+## 2.8.4
+
+### Patch Changes
+
+- [`c3c712bb1`](https://github.com/serverless-stack/sst/commit/c3c712bb1e19633fc6040fabd499a5d881f9d165) Thanks [@thdxr](https://github.com/thdxr)! - fixed issue with job data not loading correctly
+
+## 2.8.3
+
+### Patch Changes
+
+- [`ac7622928`](https://github.com/serverless-stack/sst/commit/ac7622928998c438f4645f38bef6a038b309b061) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: add "accpet", "rsc", and state tree headers to cache policy
+
+## 2.8.2
+
+### Patch Changes
+
+- [`f239e3292`](https://github.com/serverless-stack/sst/commit/f239e3292b6a379c20472717574120c470ba0b55) Thanks [@fwang](https://github.com/fwang)! - SsrSite: fix dev mode placeholder function path
+
+## 2.8.1
+
+### Patch Changes
+
+- [`6cd6c2d1e`](https://github.com/serverless-stack/sst/commit/6cd6c2d1eae10979fabdfad6912e61a3c7211e3f) Thanks [@fwang](https://github.com/fwang)! - Add support for SvelteKit
+
+## 2.8.0
+
+### Minor Changes
+
+- [#2824](https://github.com/serverless-stack/sst/pull/2824) [`eebce13c1`](https://github.com/serverless-stack/sst/commit/eebce13c18cb51f2fd6ead53492ed5d8fc375040) Thanks [@fwang](https://github.com/fwang)! - Add support for SvelteKit
+
+### Patch Changes
+
+- [`986f01505`](https://github.com/serverless-stack/sst/commit/986f015058f9e314f166b3277d9961356fa9e05a) Thanks [@fwang](https://github.com/fwang)! - SsrSite: server function do not inherit default function props
+
+- [`42ab9acbe`](https://github.com/serverless-stack/sst/commit/42ab9acbee06ade79774c2d1b3f58a78e2f62a7f) Thanks [@fwang](https://github.com/fwang)! - Function: handle Rate Exceeded error setting log retention
+
+## 2.7.2
+
+### Patch Changes
+
+- [`17314466a`](https://github.com/serverless-stack/sst/commit/17314466aaf4f72c23ba28d50a35cfbdc3a3ee45) Thanks [@thdxr](https://github.com/thdxr)! - Gracefully handle dangling invocations
+
+- [`d7e469c93`](https://github.com/serverless-stack/sst/commit/d7e469c934971926edbbebcc27411c11e0a13202) Thanks [@fwang](https://github.com/fwang)! - sst deploy: do not prompt mode change in CI environment
+
+- [`179483f6c`](https://github.com/serverless-stack/sst/commit/179483f6c1dc5a7e0885d0f793429badfa188d5b) Thanks [@fwang](https://github.com/fwang)! - Function: remove hardcoding ARN partition to "aws"
+
+- [#2805](https://github.com/serverless-stack/sst/pull/2805) [`4713910a3`](https://github.com/serverless-stack/sst/commit/4713910a3afd1958ee8e47259959704d644a23c7) Thanks [@theodiablo](https://github.com/theodiablo)! - deprecated/NextjsSite: fix custom resource import path
+
+- [`8cd24268f`](https://github.com/serverless-stack/sst/commit/8cd24268f415a0d862e9ab6db5c711970e1f9172) Thanks [@fwang](https://github.com/fwang)! - sst diff: handle new stacks added
+
+- [`514cd63f9`](https://github.com/serverless-stack/sst/commit/514cd63f9ff102b275b2833f0581741ead9547ce) Thanks [@fwang](https://github.com/fwang)! - AppSyncApi: support using A/AAAA record for custom domain
+
+## 2.7.1
+
+### Patch Changes
+
+- [`74395668f`](https://github.com/serverless-stack/sst/commit/74395668f1533b3f06777b5394990932f497cf91) Thanks [@thdxr](https://github.com/thdxr)! - Fix issue with root Auth route
+
+## 2.7.0
+
+### Minor Changes
+
+- [#2792](https://github.com/serverless-stack/sst/pull/2792) [`4983573a3`](https://github.com/serverless-stack/sst/commit/4983573a35f47503d83ed1d7aa108d65ce6ccd9e) Thanks [@estyrke](https://github.com/estyrke)! - Small fixes to future/auth
+
+## 2.6.0
+
+### Minor Changes
+
+- [`19fa6919c`](https://github.com/serverless-stack/sst/commit/19fa6919cdca5148c70d8aa3562675f1ae0e7830) Thanks [@thdxr](https://github.com/thdxr)! - Remove side-effects from node package for more granular bundling
+
+### Patch Changes
+
+- [#2784](https://github.com/serverless-stack/sst/pull/2784) [`b08bd7ba9`](https://github.com/serverless-stack/sst/commit/b08bd7ba9acf2be25d248eb951dad46adeb86df0) Thanks [@michaelgmcd](https://github.com/michaelgmcd)! - GraphQLHandler: replace graphql-helix with graphql-yoga
+
+## 2.5.8
+
+### Patch Changes
+
+- [`d4671b05c`](https://github.com/serverless-stack/sst/commit/d4671b05caf089a8a48fc13bdf9e096c763a798a) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: support OpenNext 1.1.0
+
+- [#2544](https://github.com/serverless-stack/sst/pull/2544) [`3b5263753`](https://github.com/serverless-stack/sst/commit/3b52637532ed610d41cc80a83cbe8e250b07614c) Thanks [@andynaguyen](https://github.com/andynaguyen)! - sst secrets: load secrets from .env files
+
+- [`d4671b05c`](https://github.com/serverless-stack/sst/commit/d4671b05caf089a8a48fc13bdf9e096c763a798a) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: set "x-forwarded-host" header in CF function
+
+## 2.5.7
+
+### Patch Changes
+
+- [`e8bf6d127`](https://github.com/serverless-stack/sst/commit/e8bf6d127f8e84953e5ec21a1c4e1f26d391bfd0) Thanks [@fwang](https://github.com/fwang)! - sst bind: kill entire process tree on restart
+
+- [`5203cccd1`](https://github.com/serverless-stack/sst/commit/5203cccd1d2c138c00af8d6d277075497a1d01f9) Thanks [@fwang](https://github.com/fwang)! - Retry AWS SDK calls on interrupted internet connection
+
+## 2.5.6
+
+### Patch Changes
+
+- [`0636496a2`](https://github.com/serverless-stack/sst/commit/0636496a287b61bde5f4af5874a7fb547c3a9364) Thanks [@fwang](https://github.com/fwang)! - SsrSite: fix sst dev error when enableLiveDev is set to false
+
+- [`1e7c32887`](https://github.com/serverless-stack/sst/commit/1e7c328877e8d4fc0cd3561c6e2b172266ab2820) Thanks [@fwang](https://github.com/fwang)! - SsrSite: fix permissions not attached to placeholder server function
+
+- [`2f16a73da`](https://github.com/serverless-stack/sst/commit/2f16a73daf77c800dc2b65bb2ebfe4d29a0e76fb) Thanks [@fwang](https://github.com/fwang)! - sst secrets: fix ssmPrefix is not respected
+
+- [`5cd2d4fde`](https://github.com/serverless-stack/sst/commit/5cd2d4fded67969e6dd6befd125d3c6f402dd0d8) Thanks [@fwang](https://github.com/fwang)! - Sanitize stage names with invalid characters
+
+## 2.5.5
+
+### Patch Changes
+
+- [`b22686bba`](https://github.com/serverless-stack/sst/commit/b22686bba1fba9abb00d536e2d8ed48fe6d7170a) Thanks [@fwang](https://github.com/fwang)! - sst bind: handle old stack metadata
+
+- [`42c6b5f14`](https://github.com/serverless-stack/sst/commit/42c6b5f14d3f6734948e51c6a1d3420cf1650111) Thanks [@fwang](https://github.com/fwang)! - sst version: print constructs version
+
+- [`fe6103a40`](https://github.com/serverless-stack/sst/commit/fe6103a406d17384c422469c9298f7b60a4c6c83) Thanks [@fwang](https://github.com/fwang)! - Job: support vps security groups and subnet selection
+
+## 2.5.4
+
+### Patch Changes
+
+- [#2780](https://github.com/serverless-stack/sst/pull/2780) [`ea7e565fe`](https://github.com/serverless-stack/sst/commit/ea7e565fee7c7b8d08eb08339f1a0d15636132cd) Thanks [@Bhavikpatel576](https://github.com/Bhavikpatel576)! - Disable Introspection in GraphQL Helix
+
+- [`7bb418200`](https://github.com/serverless-stack/sst/commit/7bb4182009dfabe6b0cfa93b332bd7c4f54d5dbc) Thanks [@fwang](https://github.com/fwang)! - ApiGatewayV1Api: support binding imported API
+
+- [`01d40bf3a`](https://github.com/serverless-stack/sst/commit/01d40bf3a89fb9ad1c318f96fed0ee409c599224) Thanks [@thdxr](https://github.com/thdxr)! - Handle symlink errors
+
+- [`9b4593bf1`](https://github.com/serverless-stack/sst/commit/9b4593bf1def9be46da941881b232ef39ae2fc21) Thanks [@thdxr](https://github.com/thdxr)! - Fix error with top level URL in banner
+
+## 2.5.3
+
+### Patch Changes
+
+- [`4fc2a79d3`](https://github.com/serverless-stack/sst/commit/4fc2a79d3da9aa905ab77ee0ee44da0e93e8eb08) Thanks [@thdxr](https://github.com/thdxr)! - More restrictive s3 permissions for dev functions
+
+- [`b78571ccd`](https://github.com/serverless-stack/sst/commit/b78571ccda247986aeb3f04715dac3f508b842aa) Thanks [@thdxr](https://github.com/thdxr)! - Make sure function build events are printed
+
+- [#2758](https://github.com/serverless-stack/sst/pull/2758) [`1e9dd488d`](https://github.com/serverless-stack/sst/commit/1e9dd488d872762e27f5832f1728454f9bb38568) Thanks [@jensonb](https://github.com/jensonb)! - Reduced IOT message chunk size to fix Live Lambda bug (#2723)
+
+- [`9d97ab8d7`](https://github.com/serverless-stack/sst/commit/9d97ab8d7e2bbcc306ef24935ad6dea22a5e9448) Thanks [@thdxr](https://github.com/thdxr)! - Cleanup hanging .sst.config files
+
+- [`9d97ab8d7`](https://github.com/serverless-stack/sst/commit/9d97ab8d7e2bbcc306ef24935ad6dea22a5e9448) Thanks [@thdxr](https://github.com/thdxr)! - Properly ignore telemetry errors
+
+## 2.5.2
+
+### Patch Changes
+
+- [`d7729bbbb`](https://github.com/serverless-stack/sst/commit/d7729bbbbe5ba50d6585d28a37ff0392c558b9d8) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: support 404 pages
+
+- [#2759](https://github.com/serverless-stack/sst/pull/2759) [`372ff2deb`](https://github.com/serverless-stack/sst/commit/372ff2deb7a8368f427318a67bd2e12d17cd59d5) Thanks [@kevinggrimm](https://github.com/kevinggrimm)! - Add support for relative python imports
+
 ## 2.5.1
 
 ## 2.5.0

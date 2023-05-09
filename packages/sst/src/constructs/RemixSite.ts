@@ -7,7 +7,7 @@ const require = createRequire(import.meta.url);
 import { Architecture, Function as CdkFunction } from "aws-cdk-lib/aws-lambda";
 
 import { SsrSite } from "./SsrSite.js";
-import { Function } from "./Function.js";
+import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
@@ -137,10 +137,9 @@ export class RemixSite extends SsrSite {
     const { handler, esbuild } =
       this.createServerLambdaBundle("regional-server.js");
 
-    const fn = new Function(this, `ServerFunction`, {
-      description: "Server handler",
+    const ssrFn = new SsrFunction(this, `ServerFunction`, {
+      description: "Server handler for Remix",
       handler,
-      logRetention: "three_days",
       runtime,
       memorySize,
       timeout,
@@ -157,12 +156,9 @@ export class RemixSite extends SsrSite {
       environment,
       permissions,
       ...cdk?.server,
-      architecture:
-        cdk?.server?.architecture === Architecture.ARM_64 ? "arm_64" : "x86_64",
     });
-    fn._doNotAllowOthersToBind = true;
 
-    return fn;
+    return ssrFn.function;
   }
 
   protected createFunctionForEdge(): EdgeFunction {

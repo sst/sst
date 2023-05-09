@@ -53,13 +53,20 @@ Feel free to let us know on <a href={ config.discord }>Discord</a> if you want u
 
 ### Amplify
 
-[AWS Amplify](https://aws.amazon.com/amplify/) is a collection of services, CLIs, client libraries, and UI kits with the broad goal of making it easy to build full-stack web and mobile applications. It was originally created in response to [Firebase](https://firebase.google.com). But over the years it has grown into a poorly designed and confusing set of products.
+[AWS Amplify](https://aws.amazon.com/amplify/) is a collection of services, CLIs, client libraries, and UI kits with the broad goal of making it easy to build full-stack web and mobile applications. It was originally created in response to [Firebase](https://firebase.google.com).
 
-For example, [Amplify Hosting](https://aws.amazon.com/amplify/hosting/), is a way to host modern frontends on AWS. It includes a CI/CD service as a part of the hosting. This is because it was created as a clone of Netlify and Vercel. But it's a much worse implementation. Additionally, its Next.js support is incomplete and buggy.
+One of their main services is [Amplify Hosting](https://aws.amazon.com/amplify/hosting/); a clone of [Vercel](https://vercel.com) and [Netlify](https://www.netlify.com). You can host [Next.js](https://nextjs.org) and other modern frontends by connecting your Git repo to it. While Amplify Hosting is connected to your AWS account, it's deployed as a separate service within your AWS account. This means that it does not **expose the underlying infrastructure** it uses.
 
-There's [Amplify Authentication](https://aws.amazon.com/amplify/authentication/), that simply creates a [Cogntio User Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html) for you. But it doesn't allow you to configure it properly. This applies to all the other backend features it supports; like DataStorage (database), Storage (file uploads), APIs, etc.
+For Next.js, Amplify has their own internal way of deploying Next.js using CloudFront, Lambda, S3, etc. For comparison, Vercel uses Lambda internally for Next.js as well, but it also uses CloudFlare and wires everything together in a proprietary and undocumented way. This means that you cannot get complete feature parity for Next.js on AWS. And you are going to run into **bugs and edge cases**.
 
-There are other issues with Amplify. But it mostly comes down to the combination of a poorly designed system that locks you into their way of doing things. So when you run up against all its issues or outgrow it, you'll need to drop it completely and migrate to a new backend. This can be very painful for a growing company and it's why we recommend staying away from it.
+This is made worse by the fact that Amplify is a **closed source service**. Here are some of the types of problems people run into:
+
+- The docs claim that they support a certain feature but users end up finding out that it doesn't ([#3320](https://github.com/aws-amplify/amplify-hosting/issues/3320#issuecomment-1460965192), [#3114](https://github.com/aws-amplify/amplify-hosting/issues/3114#issuecomment-1418508346)).
+- Performance issues being impossible to debug because the underlying infrastructure is not exposed ([#3359](https://github.com/aws-amplify/amplify-hosting/issues/3359), [#3357](https://github.com/aws-amplify/amplify-hosting/issues/3357)).
+- You cannot customize the infrastructure that Amplify creates ([tweet](https://twitter.com/dreamorosi/status/1650805208966938624)).
+- Finally, you can't just submit a PR for a bug fix or a new feature. You'll need to wait for the Amplify team to add support for it.
+
+SST on the other hand uses [OpenNext](https://open-next.js.org), a community-driven open source effort to reverse engineer how Vercel deploys Next.js internally. It also deploys all the infrastructure to your AWS account and allows you to customize it.
 
 ---
 
@@ -70,7 +77,7 @@ AWS created [AWS SAM](https://github.com/aws/aws-sam-cli) in response to [Server
 It extends [AWS CloudFormation](https://aws.amazon.com/cloudformation/) and is more native to AWS. But in general has worse developer experience. It also has a smaller open source community around it. It's not a good choice for building modern full-stack applications because:
 
 - It is not designed to work with your frontend.
-  - There are no built-in ways to deploy Next.js, Remix, Astro, or other SSR frontends.
+  - There are no built-in ways to deploy Next.js, Svelte, Remix, Astro, or other SSR frontends.
   - There are no easy ways to connect your frontend and your backend.
 - You need to use AWS CloudFormation to define the infrastructure for your backend. It is verbose and needs a lot of AWS knowledge.
 - The local development experience for SAM is really poor. It takes a few seconds to redeploy every time you make a change and you can't set breakpoints.

@@ -1,12 +1,18 @@
 ---
 title: Migrating From CDK
 sidebar_label: CDK
-description: "Migrating from AWS CDK to SST"
+description: "Migrating from AWS CDK to SST."
 ---
 
-:::note
-You can use all the CDK constructs in an SST app. This doc describes how to turn a CDK app into an SST app.
-:::
+import HeadlineText from "@site/src/components/HeadlineText";
+
+<HeadlineText>
+
+A guide to migrating your CDK app to SST.
+
+</HeadlineText>
+
+---
 
 SST is an extension of [AWS CDK](https://aws.amazon.com/cdk/). It's fairly simple to move a CDK app to SST. You just need to account for a couple of small differences:
 

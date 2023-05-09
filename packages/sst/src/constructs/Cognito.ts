@@ -186,7 +186,7 @@ export interface CognitoProps {
  * @example
  *
  * ```js
- * import { Cognito } from "@serverless-stack/resources";
+ * import { Cognito } from "sst/constructs";
  *
  * new Cognito(stack, "Cognito");
  * ```
@@ -197,6 +197,7 @@ export class Cognito extends Construct implements SSTConstruct {
     userPool: IUserPool;
     userPoolClient: IUserPoolClient;
     cfnIdentityPool?: CfnIdentityPool;
+    cfnIdentityPoolRoleAttachment?: CfnIdentityPoolRoleAttachment;
     authRole: Role;
     unauthRole: Role;
   };
@@ -556,13 +557,17 @@ export class Cognito extends Construct implements SSTConstruct {
     this.cdk.unauthRole = this.createUnauthRole(this.cdk.cfnIdentityPool);
 
     // Attach roles to Identity Pool
-    new CfnIdentityPoolRoleAttachment(this, "IdentityPoolRoleAttachment", {
-      identityPoolId: this.cdk.cfnIdentityPool.ref,
-      roles: {
-        authenticated: this.cdk.authRole.roleArn,
-        unauthenticated: this.cdk.unauthRole.roleArn,
-      },
-    });
+    this.cdk.cfnIdentityPoolRoleAttachment = new CfnIdentityPoolRoleAttachment(
+      this,
+      "IdentityPoolRoleAttachment",
+      {
+        identityPoolId: this.cdk.cfnIdentityPool.ref,
+        roles: {
+          authenticated: this.cdk.authRole.roleArn,
+          unauthenticated: this.cdk.unauthRole.roleArn,
+        },
+      }
+    );
   }
 
   private addTriggers(): void {

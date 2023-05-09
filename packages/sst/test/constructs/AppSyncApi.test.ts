@@ -252,6 +252,45 @@ test("customDomain.domainName is string (imported ssm), hostedZone undefined", a
   );
 });
 
+test("customDomain.recordType is A_AAAA", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  route53.HostedZone.fromLookup = vi
+    .fn()
+    .mockImplementation((scope, id, { domainName }) => {
+      return new route53.HostedZone(scope, id, { zoneName: domainName });
+    });
+
+  const api = new AppSyncApi(stack, "Api", {
+    schema: "test/constructs/appsync/schema.graphql",
+    customDomain: {
+      domainName: "api.domain.com",
+      recordType: "A_AAAA",
+    },
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "api.domain.com.",
+    Type: "A",
+    AliasTarget: {
+      DNSName: {
+        "Fn::GetAtt": ["ApiDomainNameF7396156", "AppSyncDomainName"],
+      },
+      HostedZoneId: "Z2FDTNDATAQYW2",
+    },
+    HostedZoneId: { Ref: "ApiHostedZone826B96E5" },
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "api.domain.com.",
+    Type: "AAAA",
+    AliasTarget: {
+      DNSName: {
+        "Fn::GetAtt": ["ApiDomainNameF7396156", "AppSyncDomainName"],
+      },
+      HostedZoneId: "Z2FDTNDATAQYW2",
+    },
+    HostedZoneId: { Ref: "ApiHostedZone826B96E5" },
+  });
+});
+
 test("customDomain: isExternalDomain true", async () => {
   const stack = new Stack(await createApp(), "stack");
   const api = new AppSyncApi(stack, "Api", {

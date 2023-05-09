@@ -1,6 +1,5 @@
-import { createProxy, getVariables } from "../util/index.js";
+import { createProxy } from "../util/index.js";
 
 export interface BucketResources {}
 
-export const Bucket = createProxy<BucketResources>("Bucket");
-Object.assign(Bucket, getVariables("Bucket"));
+export const Bucket = /* @__PURE__ */ createProxy<BucketResources>("Bucket");

@@ -12,7 +12,7 @@ export default [
     dev: true,
   }),
   install({
-    packages: ["@types/node", "@types/aws-lambda", "sst"],
+    packages: ["@types/node", "@types/aws-lambda", "vitest", "sst"],
     path: "packages/functions",
     dev: true,
   }),

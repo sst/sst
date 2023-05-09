@@ -40,7 +40,7 @@ export const set = (program: Program) =>
         ` Reloading all resources using ${blue(args.name)}...`
       ).start();
       const { edgeSites, sites, placeholderSites, functions } =
-        await Config.restart(args.name);
+        await Config.restart([args.name]);
       restarting.stop().clear();
 
       const siteCount = sites.length + placeholderSites.length;

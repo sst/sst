@@ -156,7 +156,7 @@ export interface TopicProps {
  * @example
  *
  * ```js
- * import { Topic } from "@serverless-stack/resources";
+ * import { Topic } from "sst/constructs";
  *
  * new Topic(stack, "Topic", {
  *   subscribers: {
@@ -242,7 +242,7 @@ export class Topic extends Construct implements SSTConstruct {
    * Add subscribers to the topic.
    *
    * @example
-   * ```js {5}
+   * ```js
    * const topic = new Topic(stack, "Topic", {
    *   subscribers: {
    *     subscriber1: "src/function1.handler",
@@ -294,7 +294,7 @@ export class Topic extends Construct implements SSTConstruct {
   /**
    * Binds the given list of resources to a specific subscriber.
    * @example
-   * ```js {5}
+   * ```js {8}
    * const topic = new Topic(stack, "Topic", {
    *   subscribers: {
    *     subscriber1: "src/function1.handler",
@@ -343,7 +343,7 @@ export class Topic extends Construct implements SSTConstruct {
   /**
    * Attaches the list of permissions to a specific subscriber.
    * @example
-   * ```js {5}
+   * ```js {8}
    * const topic = new Topic(stack, "Topic", {
    *   subscribers: {
    *     subscriber1: "src/function1.handler",

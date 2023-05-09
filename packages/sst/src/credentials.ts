@@ -93,6 +93,7 @@ export function useAWSClient<C extends Client<any, any, any, any>>(
         // Handle no internet connection => retry
         if (e.code === "ENOTFOUND") {
           printNoInternet();
+          return true;
         }
 
         // Handle throttling errors => retry

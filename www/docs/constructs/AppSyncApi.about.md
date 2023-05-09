@@ -455,6 +455,7 @@ new AppSyncApi(stack, "GraphqlApi", {
   customDomain: {
     domainName: "api.domain.com",
     hostedZone: "domain.com",
+    recordType: "A_AAAA",
   },
 });
 ```

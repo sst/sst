@@ -42,6 +42,7 @@ The stack metadata includes information about the constructs created in each sta
 
 - [SST Console](../console.md)
 - [Config](../config#updating-secrets) to look up the functions that need to be restarted when updating secret values
+- [sst bind](../packages/sst.md#sst-bind) to look up the resources bound to the functions and sites
 
 Stack metadata is stored in the S3 bucket at `appMetadata/app.{appName}/stage.{stageName}/stack.{stackName}.json`.
 

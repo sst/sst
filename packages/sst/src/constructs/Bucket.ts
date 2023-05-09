@@ -14,10 +14,12 @@ import { Duration, toCdkDuration } from "./util/duration.js";
 import {
   BucketProps as CDKBucketProps,
   Bucket as CDKBucket,
+  BlockPublicAccess,
   IBucket,
   EventType,
   CorsRule,
   HttpMethods,
+  ObjectOwnership,
 } from "aws-cdk-lib/aws-s3";
 import {
   LambdaDestination,
@@ -180,9 +182,8 @@ export interface BucketProps {
   name?: string;
   /**
    * The CORS configuration of this bucket.
-   *
+   * @default true
    * @example
-   *
    * ```js
    * new Bucket(stack, "Bucket", {
    *   cors: true,
@@ -201,6 +202,18 @@ export interface BucketProps {
    * ```
    */
   cors?: boolean | BucketCorsRule[];
+  /**
+   * Block public access to this bucket. Setting this to `true` alllows uploading objects with public ACLs.
+   * Note that setting to `true` does not necessarily mean that the bucket is completely accessible to the public. Rather, it enables the granting of public permissions through public ACLs.
+   * @default false
+   * @example
+   * ```js
+   * new Bucket(stack, "Bucket", {
+   *   blockPublicACLs: true,
+   * });
+   * ```
+   */
+  blockPublicACLs?: boolean;
   /**
    * The default function props to be applied to all the Lambda functions in the API. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
    *
@@ -272,7 +285,7 @@ export interface BucketProps {
  * @example
  *
  * ```js
- * import { Bucket } from "@serverless-stack/resources";
+ * import { Bucket } from "sst/constructs";
  *
  * new Bucket(stack, "Bucket");
  * ```
@@ -476,7 +489,7 @@ export class Bucket extends Construct implements SSTConstruct {
   }
 
   private createBucket() {
-    const { name, cors, cdk } = this.props;
+    const { name, cors, blockPublicACLs, cdk } = this.props;
 
     if (isCDKConstruct(cdk?.bucket)) {
       if (cors !== undefined) {
@@ -489,6 +502,8 @@ export class Bucket extends Construct implements SSTConstruct {
       this.cdk.bucket = new CDKBucket(this, "Bucket", {
         bucketName: name,
         cors: this.buildCorsConfig(cors),
+        blockPublicAccess: this.buildBlockPublicAccessConfig(blockPublicACLs),
+        objectOwnership: this.buildObjectOwnershipConfig(blockPublicACLs),
         ...cdk?.bucket,
       });
     }
@@ -649,10 +664,10 @@ export class Bucket extends Construct implements SSTConstruct {
   private buildCorsConfig(
     cors?: boolean | BucketCorsRule[]
   ): CorsRule[] | undefined {
-    if (cors === undefined || cors === false) {
+    if (cors === false) {
       return;
     }
-    if (cors === true) {
+    if (cors === undefined || cors === true) {
       return [
         {
           allowedHeaders: ["*"],
@@ -678,5 +693,20 @@ export class Bucket extends Construct implements SSTConstruct {
       id: e.id,
       maxAge: e.maxAge && toCdkDuration(e.maxAge).toSeconds(),
     }));
+  }
+
+  private buildBlockPublicAccessConfig(config?: boolean) {
+    return config === true
+      ? BlockPublicAccess.BLOCK_ALL
+      : new BlockPublicAccess({
+          blockPublicAcls: false,
+          ignorePublicAcls: false,
+        });
+  }
+
+  private buildObjectOwnershipConfig(config?: boolean) {
+    return config === true
+      ? ObjectOwnership.BUCKET_OWNER_ENFORCED
+      : ObjectOwnership.BUCKET_OWNER_PREFERRED;
   }
 }

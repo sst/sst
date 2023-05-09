@@ -697,7 +697,7 @@ _Type_ : <span class="mono">string</span>
 
 ### retention?
 
-_Type_ : <span class="mono">"one_day"</span><span class='mono'> | </span><span class="mono">"three_days"</span><span class='mono'> | </span><span class="mono">"five_days"</span><span class='mono'> | </span><span class="mono">"one_week"</span><span class='mono'> | </span><span class="mono">"two_weeks"</span><span class='mono'> | </span><span class="mono">"one_month"</span><span class='mono'> | </span><span class="mono">"two_months"</span><span class='mono'> | </span><span class="mono">"three_months"</span><span class='mono'> | </span><span class="mono">"four_months"</span><span class='mono'> | </span><span class="mono">"five_months"</span><span class='mono'> | </span><span class="mono">"six_months"</span><span class='mono'> | </span><span class="mono">"one_year"</span><span class='mono'> | </span><span class="mono">"thirteen_months"</span><span class='mono'> | </span><span class="mono">"eighteen_months"</span><span class='mono'> | </span><span class="mono">"two_years"</span><span class='mono'> | </span><span class="mono">"five_years"</span><span class='mono'> | </span><span class="mono">"six_years"</span><span class='mono'> | </span><span class="mono">"seven_years"</span><span class='mono'> | </span><span class="mono">"eight_years"</span><span class='mono'> | </span><span class="mono">"nine_years"</span><span class='mono'> | </span><span class="mono">"ten_years"</span><span class='mono'> | </span><span class="mono">"infinite"</span>
+_Type_ : <span class="mono">"one_day"</span><span class='mono'> | </span><span class="mono">"three_days"</span><span class='mono'> | </span><span class="mono">"five_days"</span><span class='mono'> | </span><span class="mono">"one_week"</span><span class='mono'> | </span><span class="mono">"two_weeks"</span><span class='mono'> | </span><span class="mono">"one_month"</span><span class='mono'> | </span><span class="mono">"two_months"</span><span class='mono'> | </span><span class="mono">"three_months"</span><span class='mono'> | </span><span class="mono">"four_months"</span><span class='mono'> | </span><span class="mono">"five_months"</span><span class='mono'> | </span><span class="mono">"six_months"</span><span class='mono'> | </span><span class="mono">"one_year"</span><span class='mono'> | </span><span class="mono">"thirteen_months"</span><span class='mono'> | </span><span class="mono">"eighteen_months"</span><span class='mono'> | </span><span class="mono">"two_years"</span><span class='mono'> | </span><span class="mono">"three_years"</span><span class='mono'> | </span><span class="mono">"five_years"</span><span class='mono'> | </span><span class="mono">"six_years"</span><span class='mono'> | </span><span class="mono">"seven_years"</span><span class='mono'> | </span><span class="mono">"eight_years"</span><span class='mono'> | </span><span class="mono">"nine_years"</span><span class='mono'> | </span><span class="mono">"ten_years"</span><span class='mono'> | </span><span class="mono">"infinite"</span>
 
 ## ApiHttpRouteProps
 Specify a route handler that forwards to another URL
@@ -827,6 +827,11 @@ The function definition used to create the function for this route. Must be a gr
 _Type_ : <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
 
 Commands to run after generating schema. Useful for code generation steps
+### pothos.internalPackages?
+
+_Type_ : <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
+
+List of packages that should be considered internal during schema generation
 ### pothos.output?
 
 _Type_ : <span class="mono">string</span>

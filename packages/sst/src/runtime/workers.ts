@@ -44,6 +44,7 @@ export const useRuntimeWorkers = Context.memo(async () => {
     for (const [_, worker] of workers) {
       if (worker.functionID === evt.properties.functionID) {
         const props = useFunctions().fromID(worker.functionID);
+        if (!props) return;
         const handler = handlers.for(props.runtime!);
         await handler?.stopWorker(worker.workerID);
         bus.publish("worker.stopped", worker);
@@ -61,6 +62,7 @@ export const useRuntimeWorkers = Context.memo(async () => {
     let worker = workers.get(evt.properties.workerID);
     if (worker) return;
     const props = useFunctions().fromID(evt.properties.functionID);
+    if (!props) return;
     const handler = handlers.for(props.runtime!);
     if (!handler) return;
     const build = await builder.artifact(evt.properties.functionID);
@@ -70,6 +72,7 @@ export const useRuntimeWorkers = Context.memo(async () => {
       workerID: evt.properties.workerID,
       environment: evt.properties.env,
       url: `${server.url}/${evt.properties.workerID}/${server.API_VERSION}`,
+      runtime: props.runtime!,
     });
     workers.set(evt.properties.workerID, {
       workerID: evt.properties.workerID,

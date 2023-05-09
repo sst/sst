@@ -7,9 +7,9 @@ import {
   countResourcesLike,
   createApp,
   hasResource,
+  stringLikeRegexp,
 } from "./helper";
 import {
-  App,
   Stack,
   Script,
   ScriptProps,
@@ -57,7 +57,6 @@ test("onCreate: onUpdate and onDelete not set", async () => {
     },
     UserCreateFunction: { Ref: "ScriptonCreateFunction86002BE3" },
     UserParams: "{}",
-    BuiltAt: ANY,
   });
   countResources(stack, "AWS::Lambda::Function", 2);
   countResourcesLike(stack, "AWS::Lambda::Function", 1, {
@@ -89,7 +88,6 @@ test("onCreate: is string", async () => {
     UserUpdateFunction: { Ref: "ScriptonUpdateFunctionC0351409" },
     UserDeleteFunction: { Ref: "ScriptonDeleteFunction83C52A89" },
     UserParams: "{}",
-    BuiltAt: ANY,
   });
   countResources(stack, "AWS::Lambda::Function", 4);
   countResourcesLike(stack, "AWS::Lambda::Function", 3, {
@@ -249,6 +247,47 @@ test("params: is props", async () => {
     UserParams: '{"hello":"world"}',
   });
   countResources(stack, "AWS::Lambda::Function", 4);
+});
+
+test("version: undefined", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new Script(stack, "Script", {
+    onCreate: "test/lambda.handler",
+  });
+  countResources(stack, "Custom::SSTScript", 1);
+  hasResource(stack, "Custom::SSTScript", {
+    Version: stringLikeRegexp("\\d{13}"),
+  });
+});
+
+test("version: defined", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new Script(stack, "Script", {
+    version: "v5",
+    onCreate: "test/lambda.handler",
+  });
+  countResources(stack, "Custom::SSTScript", 1);
+  hasResource(stack, "Custom::SSTScript", {
+    Version: "v5",
+  });
+});
+
+test("version: defined", async () => {
+  const stack = new Stack(
+    await createApp({
+      mode: "dev",
+      debugStartedAt: 123,
+    }),
+    "stack"
+  );
+  new Script(stack, "Script", {
+    version: "v5",
+    onCreate: "test/lambda.handler",
+  });
+  countResources(stack, "Custom::SSTScript", 1);
+  hasResource(stack, "Custom::SSTScript", {
+    Version: 123,
+  });
 });
 
 /////////////////////////////

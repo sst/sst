@@ -117,4 +117,4 @@ After building your project, the source maps will be moved to `.build/sourcemaps
 npx sentry-cli releases --org myorg --project myproj files $SENTRY_RELEASE upload-sourcemaps .build/sourcemaps
 ```
 
-You can [check out the Sentry docs](https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/typescript/) for more details on uploading source maps.
+You can [check out the Sentry docs](https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/typescript/) for more details on uploading source maps. Also, [check out our docs on how to use Sentry to monitor your app](./monitoring.md#sentry).

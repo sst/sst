@@ -49,6 +49,20 @@ program
         return ["presets/dropin/astro", path.parse(cwd).name, cwd];
       }
 
+      if (files.some((f) => f.startsWith("svelte.config"))) {
+        const { confirm } = await inquirer.prompt([
+          {
+            name: "confirm",
+            type: "confirm",
+            default: true,
+            message:
+              "You are in a Svelte project so SST will be setup in drop-in mode. Continue?",
+          },
+        ]);
+        if (!confirm) return;
+        return ["presets/dropin/svelte", path.parse(cwd).name, cwd];
+      }
+
       const answers = await inquirer.prompt([
         {
           name: "name",

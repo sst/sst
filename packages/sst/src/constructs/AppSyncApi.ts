@@ -449,7 +449,7 @@ export interface AppSyncApiCdkGraphqlProps
  * @example
  *
  * ```js
- * import { AppSyncApi } from "@serverless-stack/resources";
+ * import { AppSyncApi } from "sst/constructs";
  *
  * new AppSyncApi(stack, "GraphqlApi", {
  *   schema: "graphql/schema.graphql",
@@ -480,7 +480,6 @@ export class AppSyncApi extends Construct implements SSTConstruct {
   };
   private readonly props: AppSyncApiProps;
   private _customDomainUrl?: string;
-  _cfnDomainName?: CfnDomainName;
   private readonly functionsByDsKey: { [key: string]: Fn } = {};
   private readonly dataSourcesByDsKey: {
     [key: string]: BaseDataSource;
@@ -808,32 +807,16 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         name: app.logicalPrefixedName(id),
         xrayEnabled: true,
         schema: mainSchema,
-        domainName: domainData,
+        domainName: domainData && {
+          certificate: domainData.certificate,
+          domainName: domainData.domainName,
+        },
         ...graphqlApiProps,
       });
       this.cdk.certificate = domainData?.certificate;
 
-      // note: As of CDK 2.20.0, the "AWS::AppSync::DomainNameApiAssociation" resource
-      //       is not dependent on the "AWS::AppSync::DomainName" resource. This leads
-      //       CloudFormation deploy error if DomainNameApiAssociation is created before
-      //       DomainName is created.
-      //       https://github.com/aws/aws-cdk/issues/18395#issuecomment-1099455502
-      //       To workaround this issue, we need to add a dependency manually.
       if (domainData) {
-        this._cfnDomainName = this.cdk.graphqlApi.node.children.find(
-          (child) =>
-            (child as CfnDomainName).cfnResourceType ===
-            "AWS::AppSync::DomainName"
-        ) as CfnDomainName;
-        const cfnDomainNameApiAssociation =
-          this.cdk.graphqlApi.node.children.find(
-            (child) =>
-              (child as CfnDomainNameApiAssociation).cfnResourceType ===
-              "AWS::AppSync::DomainNameApiAssociation"
-          );
-        if (this._cfnDomainName && cfnDomainNameApiAssociation) {
-          cfnDomainNameApiAssociation.node.addDependency(this._cfnDomainName);
-        }
+        appSyncApiDomain.cleanup(this, domainData);
       }
     }
   }

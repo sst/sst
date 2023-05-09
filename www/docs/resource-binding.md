@@ -279,6 +279,87 @@ Config.MY_CLUSTER_NAME;
 
 ---
 
+## Client side environment variables
+
+We've looked at how you can use the [`sst/node`](clients/index.md) client to access the resources that've been bound to your construct.
+
+However for frontends (like Next.js, Remix, etc.) you can read from an environment variable purely on the client side. SST supports setting these client side environment variables as well. This is useful if you have a completely static frontend and you want to pass in the outputs of other constructs in your SST app. Let's look at how.
+
+Imagine you have an S3 bucket created using the [`Bucket`](constructs/Bucket.md) construct, and you want to access the name of the bucket in your client side code. You can use the `environment` property in your [`NextjsSite`](constructs/NextjsSite.md) construct.
+
+```ts {4-6}
+const bucket = new Bucket(stack, "Bucket");
+
+new NextjsSite(stack, "Site", {
+  environment: {
+    NEXT_PUBLIC_BUCKET_NAME: bucket.bucketName,
+  },
+});
+```
+
+Now you can access the bucket's name in your client side code.
+
+```ts
+console.log(process.env.NEXT_PUBLIC_BUCKET_NAME);
+```
+
+In Next.js, only environment variables prefixed with `NEXT_PUBLIC_` are available in your client side code. [Read more about using environment variables](https://nextjs.org/docs/basic-features/environment-variables#exposing-environment-variables-to-the-browser).
+
+Let's take look at what is happening behind the scenes.
+
+---
+
+#### While developing
+
+To use these values while developing locally, make sure that you are running your frontend locally with the `sst bind` CLI.
+
+```json title="package.json" {2}
+"scripts": {
+  "dev": "sst bind next dev",
+  "build": "next build",
+  "start": "next start"
+},
+```
+
+Note that, `sst bind` only works if the Next.js app is located inside the SST app or inside one of its subdirectories. For example:
+
+```
+/
+  sst.config.ts
+  my-next-app/
+```
+
+<details>
+<summary>Behind the scenes</summary>
+
+There are a couple of things happening behind the scenes here:
+
+1. The `sst dev` command generates a file with the values specified by the `NextjsSite` construct's `environment` prop.
+2. The `sst bind` CLI will traverse up the directories to look for the root of your SST app.
+3. It'll then find the file that's generated in step 1.
+4. It'll load these as environment variables before running the start command.
+
+</details>
+
+---
+
+#### While deploying
+
+On `sst deploy` client side environment variables will first be replaced by placeholder values, ie. `{{ NEXT_PUBLIC_BUCKET_NAME }}`, when building the Next.js app. And after the S3 bucket has been created, the placeholders in the HTML and JS files will then be replaced with the actual values.
+
+:::caution
+Since the actual values are determined at deploy time, you should not rely on the values at build time. For example, you cannot reference `process.env.NEXT_PUBLIC_BUCKET_NAME` inside `getStaticProps()` at build time.
+
+There are a couple of workarounds:
+
+- Hardcode the bucket name
+- Read the bucket name dynamically at build time (ie. from an SSM value)
+- Use [fallback pages](https://nextjs.org/docs/basic-features/data-fetching#fallback-pages) to generate the page on the fly
+
+:::
+
+---
+
 ## How it works
 
 When a resource is bound to a Lambda function, the resource values are stored as environment variables for the function. In our example, the bucket name is stored as a Lambda environment variable named `SST_Bucket_bucketName_myBucket`.
@@ -300,6 +381,8 @@ When binding resources that contain sensitive values, placeholders are stored in
 ## Cost
 
 Resource Binding values are stored in AWS SSM with the _Standard Parameter type_ and _Standard Throughput_. This makes AWS SSM [free to use](https://aws.amazon.com/systems-manager/pricing/) in your SST apps. However when storing a `Config.Secret` the value is encrypted by AWS KMS. These are retrieved at runtime in your Lambda functions when it starts up. AWS KMS has a [free tier](https://aws.amazon.com/kms/pricing/#Free_tier) of 20,000 API calls per month. And it costs $0.03 for every 10,000 subsequent API calls. This is worth keeping in mind as these secrets are fetched per Lambda function cold start.
+
+---
 
 ## FAQ
 

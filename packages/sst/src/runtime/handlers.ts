@@ -32,6 +32,7 @@ interface StartWorkerInput {
   environment: Record<string, string>;
   out: string;
   handler: string;
+  runtime: string;
 }
 
 interface ShouldBuildInput {
@@ -76,6 +77,11 @@ export const useRuntimeHandlers = Context.memo(() => {
     async build(functionID: string, mode: BuildInput["mode"]) {
       async function task() {
         const func = useFunctions().fromID(functionID);
+        if (!func)
+          return {
+            type: "error" as const,
+            errors: [`Function with ID "${functionID}" not found`],
+          };
         const handler = result.for(func.runtime!);
         const out = path.join(project.paths.artifacts, functionID);
         await fs.rm(out, { recursive: true, force: true });
@@ -110,9 +116,13 @@ export const useRuntimeHandlers = Context.memo(() => {
                   recursive: true,
                 });
               if (mode === "start") {
-                const dir = path.dirname(toPath);
-                await fs.mkdir(dir, { recursive: true });
-                await fs.symlink(fromPath, toPath);
+                try {
+                  const dir = path.dirname(toPath);
+                  await fs.mkdir(dir, { recursive: true });
+                  await fs.symlink(fromPath, toPath);
+                } catch (ex) {
+                  Logger.debug("Failed to symlink", fromPath, toPath, ex);
+                }
               }
             })
           );
@@ -159,6 +169,7 @@ export const useFunctionBuilder = Context.memo(() => {
     },
     build: async (functionID: string) => {
       const result = await handlers.build(functionID, "start");
+      if (!result) return;
       if (result.type === "error") return;
       artifacts.set(functionID, result);
       return artifacts.get(functionID)!;

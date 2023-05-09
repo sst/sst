@@ -117,12 +117,6 @@ In addition to the [global options](#global-options), the following options are 
 
 #### Options
 
-- **`--outputs-file`**
-
-  _Default_: none
-
-  Pass in this option if you want to write the AWS CloudFormation stack outputs to a JSON file. Works the same way as the [`--outputs-file`](https://docs.aws.amazon.com/cdk/latest/guide/cli.html#w108aac23b7c33c13) option in AWS CDK.
-
 - **`--rollback`**
 
   _Default_: `true`
@@ -174,19 +168,39 @@ So for example, you can start your frontend with all the binding values.
 npx sst bind next dev
 ```
 
-You can also bind all the resources in your app and use it to run your tests.
+`sst bind` auto-detects the following frontend frameworks. If your framework is not listed here, feel free to hop on to our <a href={ config.discord }>Discord</a> and let us know.
+
+- Angular: detects `angular.json`
+- Astro: detects `astro.config.js`
+- Create React App: detects `react-scripts` in `package.json`
+- Ember: detects `ember-cli-build.js`
+- Gatsby: detects `gatsby-config.js`
+- Next.js: detects `next.config.js`
+- Plain HTML: detects `index.html`
+- Preact: detects `@preact/preset-vite` in `vite.config.js`
+- React: detects `plugin-react` in `vite.config.js`
+- Remix: detects `remix.config.js`
+- Solid: detects `solid-start` in `vite.config.js`
+- Svelte: detects `svelte.config.js`
+- Vue: detects `plugin-vue` in `vite.config.js`
+
+When detected, `sst bind` will load the site's bound resources, environment variables, and the IAM permissions granted to the site.
+
+If a frontend framework is not detected in the current directory, `sst bind` will bind all the resources in your app and use it to run the command.
+
+For example, you can use it to [run your tests](../testing.md).
 
 ```bash
 npx sst bind vitest run
 ```
 
-You can [read more about how this works for running tests](../testing.md).
+You can also use the `sst bind` to run any scripts.
 
 ---
 
 ### `sst build`
 
-Build your app and synthesize your stacks. Generates a `.build/` directory with the compiled files and a `.build/cdk.out/` directory with the synthesized CloudFormation stacks.
+Build your app and synthesize your stacks. Generates a `.sst/` directory with the compiled files and a `.sst/dist/` directory with the synthesized CloudFormation stacks.
 
 ```bash
 npx sst build [options]
@@ -198,7 +212,7 @@ In addition to the [global options](#global-options), the following options are 
 
 - **`--to`**
 
-  _Default_: `.sst/dist`
+  _Default_: `.sst/dist/`
 
   Pass in a path for the build output. This lets you split up the deploy process and deploy without having to build the app again.
 
@@ -215,12 +229,6 @@ npx sst deploy [filter] [options]
 In addition to the [global options](#global-options), the following options are supported.
 
 #### Options
-
-- **`--outputs-file`**
-
-  _Default_: none
-
-  Pass in this option if you want to write the AWS CloudFormation stack outputs to a JSON file. Works the same way as the [`--outputs-file`](https://docs.aws.amazon.com/cdk/latest/guide/cli.html#w108aac23b7c33c13) option in AWS CDK.
 
 - **`--from`**
 
@@ -350,6 +358,16 @@ Sets the `value` of a secret with the given `name`.
 
 ```bash
 npx sst secrets set <name> <value> [options]
+```
+
+---
+
+#### `sst secrets load`
+
+Loads secrets from an .env file.
+
+```bash
+npx sst secrets load <filename>
 ```
 
 ---

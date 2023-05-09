@@ -1,4 +1,4 @@
-import { createProxy, getVariables } from "../util/index.js";
+import { createProxy, getVariables2 } from "../util/index.js";
 import { InvokeCommand, LambdaClient } from "@aws-sdk/client-lambda";
 const lambda = new LambdaClient({});
 
@@ -17,19 +17,24 @@ export type JobType = {
   [T in keyof JobResources]: ReturnType<typeof JobControl<T>>;
 };
 
-export const Job = createProxy<JobType>("Job");
-const jobData = getVariables("Job");
-Object.keys(jobData).forEach((name) => {
-  // @ts-ignore
-  Job[name] = JobControl(name);
-});
+export const Job = /* @__PURE__ */ (() => {
+  const result = createProxy<JobType>("Job");
+  const vars = getVariables2("Job");
+  Object.keys(vars).forEach((name) => {
+    // @ts-expect-error
+    result[name] = JobControl(name as keyof JobResources, vars[name]);
+  });
+  return result;
+})();
 
-function JobControl<Name extends keyof JobResources>(name: Name) {
+function JobControl<Name extends keyof JobResources>(
+  name: Name,
+  vars: Record<string, string>
+) {
   return {
     async run(props: JobRunProps<Name>) {
       // Handle job permission not granted
-      // @ts-ignore
-      const functionName = jobData[name].functionName;
+      const functionName = vars.functionName;
 
       // Invoke the Lambda function
       const ret = await lambda.send(
@@ -55,7 +60,7 @@ function JobControl<Name extends keyof JobResources>(name: Name) {
  *
  * @example
  * ```ts
- * declare module "@serverless-stack/node/job" {
+ * declare module "sst/node/job" {
  *   export interface JobTypes {
  *     MyJob: {
  *       title: string;

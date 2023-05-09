@@ -12,7 +12,7 @@ import {
   stringNotLike,
 } from "./helper";
 import { App, Stack, Job, Config, Topic } from "../../dist/constructs/";
-import { Vpc } from "aws-cdk-lib/aws-ec2";
+import { Vpc, SecurityGroup, SubnetType } from "aws-cdk-lib/aws-ec2";
 
 test("constructor: default", async () => {
   const stack = new Stack(await createApp(), "stack");
@@ -158,6 +158,86 @@ test("constructor: environment", async () => {
       EnvironmentVariables: arrayWith([
         objectLike({ Name: "DEBUG", Value: "*" }),
       ]),
+    },
+  });
+});
+
+test("constructor: cdk.vpc", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new Job(stack, "Job", {
+    handler: "test/constructs/lambda.handler",
+    timeout: "1 hour",
+    cdk: {
+      vpc: new Vpc(stack, "VPC"),
+    },
+  });
+  hasResource(stack, "AWS::CodeBuild::Project", {
+    Name: "test-app-Job",
+    VpcConfig: {
+      VpcId: { Ref: "VPCB9E5F0B4" },
+      SecurityGroupIds: [
+        { "Fn::GetAtt": ["JobJobProjectSecurityGroup600AA2AD", "GroupId"] },
+      ],
+      Subnets: [
+        { Ref: "VPCPrivateSubnet1Subnet8BCA10E0" },
+        { Ref: "VPCPrivateSubnet2SubnetCFCDAA7A" },
+        { Ref: "VPCPrivateSubnet3Subnet3EDCD457" },
+      ],
+    },
+  });
+});
+
+test("constructor: cdk.vpcSubnets", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new Job(stack, "Job", {
+    handler: "test/constructs/lambda.handler",
+    timeout: "1 hour",
+    cdk: {
+      vpc: new Vpc(stack, "VPC"),
+      vpcSubnets: {
+        subnetType: SubnetType.PUBLIC,
+      },
+    },
+  });
+  hasResource(stack, "AWS::CodeBuild::Project", {
+    Name: "test-app-Job",
+    VpcConfig: {
+      VpcId: { Ref: "VPCB9E5F0B4" },
+      SecurityGroupIds: [
+        { "Fn::GetAtt": ["JobJobProjectSecurityGroup600AA2AD", "GroupId"] },
+      ],
+      Subnets: [
+        { Ref: "VPCPublicSubnet1SubnetB4246D30" },
+        { Ref: "VPCPublicSubnet2Subnet74179F39" },
+        { Ref: "VPCPublicSubnet3Subnet631C5E25" },
+      ],
+    },
+  });
+});
+
+test("constructor: cdk.securityGroups", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  const vpc = new Vpc(stack, "VPC");
+  new Job(stack, "Job", {
+    handler: "test/constructs/lambda.handler",
+    timeout: "1 hour",
+    cdk: {
+      vpc,
+      securityGroups: [
+        SecurityGroup.fromSecurityGroupId(stack, "SecurityGroup", "sg-123"),
+      ],
+    },
+  });
+  hasResource(stack, "AWS::CodeBuild::Project", {
+    Name: "test-app-Job",
+    VpcConfig: {
+      VpcId: { Ref: "VPCB9E5F0B4" },
+      SecurityGroupIds: ["sg-123"],
+      Subnets: [
+        { Ref: "VPCPrivateSubnet1Subnet8BCA10E0" },
+        { Ref: "VPCPrivateSubnet2SubnetCFCDAA7A" },
+        { Ref: "VPCPrivateSubnet3Subnet3EDCD457" },
+      ],
     },
   });
 });
@@ -336,16 +416,4 @@ test("addEnvironment", async () => {
       ]),
     },
   });
-});
-
-test("vpc", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new Job(stack, "Job", {
-    handler: "test/constructs/lambda.handler",
-    timeout: "1 hour",
-    cdk: {
-      vpc: new Vpc(stack, "VPC"),
-    },
-  });
-  hasResource(stack, "AWS::EC2::VPC", {});
 });

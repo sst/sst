@@ -1,5 +1,35 @@
 # @serverless-stack/docs
 
+## 2.2.1
+
+### Patch Changes
+
+- [`6cd6c2d1e`](https://github.com/serverless-stack/sst/commit/6cd6c2d1eae10979fabdfad6912e61a3c7211e3f) Thanks [@fwang](https://github.com/fwang)! - Add support for SvelteKit
+
+## 2.2.0
+
+### Minor Changes
+
+- [#2824](https://github.com/serverless-stack/sst/pull/2824) [`eebce13c1`](https://github.com/serverless-stack/sst/commit/eebce13c18cb51f2fd6ead53492ed5d8fc375040) Thanks [@fwang](https://github.com/fwang)! - Add support for SvelteKit
+
+## 2.1.0
+
+### Minor Changes
+
+- [#2784](https://github.com/serverless-stack/sst/pull/2784) [`b08bd7ba9`](https://github.com/serverless-stack/sst/commit/b08bd7ba9acf2be25d248eb951dad46adeb86df0) Thanks [@michaelgmcd](https://github.com/michaelgmcd)! - GraphQLHandler: replace graphql-helix with graphql-yoga
+
+## 2.0.5
+
+### Patch Changes
+
+- [#2758](https://github.com/serverless-stack/sst/pull/2758) [`1e9dd488d`](https://github.com/serverless-stack/sst/commit/1e9dd488d872762e27f5832f1728454f9bb38568) Thanks [@jensonb](https://github.com/jensonb)! - Reduced IOT message chunk size to fix Live Lambda bug (#2723)
+
+## 2.0.4
+
+### Patch Changes
+
+- [#2769](https://github.com/serverless-stack/sst/pull/2769) [`b492c53ef`](https://github.com/serverless-stack/sst/commit/b492c53ef2e4653b01e18dd6bd5040eb30e48ecb) Thanks [@michelts](https://github.com/michelts)! - Document lack of support for vitest threaded mode
+
 ## 2.0.3
 
 ### Patch Changes

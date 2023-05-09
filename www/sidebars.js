@@ -10,21 +10,22 @@ module.exports = {
           collapsible: true,
           collapsed: false,
           items: [
-            "start/standalone",
-            "start/nextjs",
             "start/astro",
-          ]
+            "start/svelte",
+            "start/nextjs",
+            "start/standalone",
+          ],
         },
       ],
     },
-//    {
-//      "Get Started": [
-//        "start/basics",
-//        "start/nextjs",
-//        "start/astro",
-//        "start/vite",
-//      ],
-//    },
+    //    {
+    //      "Get Started": [
+    //        "start/basics",
+    //        "start/nextjs",
+    //        "start/astro",
+    //        "start/vite",
+    //      ],
+    //    },
     //    {
     //      Features: [
     //        {
@@ -58,13 +59,28 @@ module.exports = {
     //    },
     {
       "How-Tos": [
+        "apis",
         "auth",
         "config",
-        "testing",
-        "resource-binding",
+        "cron-jobs",
+        "databases",
+        "async-tasks",
+        "file-uploads",
         "long-running-jobs",
+      ],
+    },
+    {
+      Info: [
+        "testing",
+        "console",
+        "live-lambda-development",
+        "configuring-sst",
+        "custom-domains",
+        "design-principles",
+        "resource-binding",
+        "editor-integration",
         "going-to-production",
-        "working-with-your-team",
+        "faq",
         {
           type: "category",
           label: "Advanced",
@@ -73,8 +89,10 @@ module.exports = {
           items: [
             "advanced/monitoring",
             "advanced/source-maps",
+            "known-issues",
             "advanced/bootstrapping",
             "advanced/extending-sst",
+            "upgrade-guide",
             "advanced/removal-policy",
             "advanced/lambda-layers",
             "advanced/iam-credentials",
@@ -82,7 +100,9 @@ module.exports = {
             "advanced/importing-resources",
             "advanced/connecting-via-proxy",
             "advanced/permission-boundary",
+            "anonymous-telemetry",
             "advanced/cross-stack-references",
+            "working-with-your-team",
             "advanced/linting-and-type-checking",
             "advanced/customizing-ssm-parameters",
             //"advanced/monorepo-project-structure",
@@ -92,20 +112,11 @@ module.exports = {
       ],
     },
     {
-      Info: [
-        "live-lambda-development",
-        "console",
-        "known-issues",
-        "configuring-sst",
-        "upgrade-guide",
-        "design-principles",
-        "editor-integration",
-        "anonymous-telemetry",
-        "faq",
+      "Migrating From": [
+        "migrating/cdk",
+        "migrating/vercel",
+        "migrating/serverless-framework",
       ],
-    },
-    {
-      "Migrating From": ["migrating/cdk", "migrating/serverless-framework"],
     },
     {
       CLI: ["packages/sst", "packages/create-sst"],
@@ -169,6 +180,7 @@ module.exports = {
       Frontend: [
         "constructs/StaticSite",
         "constructs/NextjsSite",
+        "constructs/SvelteKitSite",
         "constructs/RemixSite",
         "constructs/AstroSite",
         "constructs/SolidStartSite",

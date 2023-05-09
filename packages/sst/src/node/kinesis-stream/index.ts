@@ -1,7 +1,6 @@
-import { createProxy, getVariables } from "../util/index.js";
+import { createProxy } from "../util/index.js";
 
 export interface KinesisStreamResources {}
 
 export const KinesisStream =
-  createProxy<KinesisStreamResources>("KinesisStream");
-Object.assign(KinesisStream, getVariables("KinesisStream"));
+  /* @__PURE__ */ createProxy<KinesisStreamResources>("KinesisStream");

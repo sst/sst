@@ -44,6 +44,7 @@ export const dev = (program: Program) =>
       const { useMetadata } = await import("../../stacks/metadata.js");
       const { useIOT } = await import("../../iot.js");
       const { clear } = await import("../terminal.js");
+      const { getCiInfo } = await import("../ci-info.js");
 
       if (args._[0] === "start") {
         console.log(
@@ -111,12 +112,14 @@ export const dev = (program: Program) =>
 
         bus.subscribe("function.build.success", async (evt) => {
           const info = useFunctions().fromID(evt.properties.functionID);
-          if (!info.enableLiveDev) return;
+          if (!info) return;
+          if (info.enableLiveDev === false) return;
           Colors.line(Colors.dim(Colors.prefix, "Built", info.handler!));
         });
 
         bus.subscribe("function.build.failed", async (evt) => {
           const info = useFunctions().fromID(evt.properties.functionID);
+          if (!info) return;
           if (info.enableLiveDev === false) return;
           Colors.gap();
           Colors.line(Colors.danger("✖ "), "Build failed", info.handler!);
@@ -159,7 +162,6 @@ export const dev = (program: Program) =>
       const useStackBuilder = Context.memo(async () => {
         const watcher = useWatcher();
         const project = useProject();
-        const bus = useBus();
 
         let lastDeployed: string;
         let isWorking = false;
@@ -247,6 +249,8 @@ export const dev = (program: Program) =>
                     ? "Remix"
                     : type === "SolidStartSite"
                     ? "SolidStart"
+                    : type === "SvelteKitSite"
+                    ? "SvelteKit"
                     : undefined;
                 if (framework) {
                   const cdCmd =
@@ -374,7 +378,7 @@ export const dev = (program: Program) =>
         });
       }
       // Check app mode changed
-      if (appMetadata && appMetadata.mode !== "dev") {
+      if (!getCiInfo().isCI && appMetadata && appMetadata.mode !== "dev") {
         if (!(await promptChangeMode())) {
           process.exit(0);
         }

@@ -1,6 +1,5 @@
-import { createProxy, getVariables } from "../util/index.js";
+import { createProxy } from "../util/index.js";
 
 export interface QueueResources {}
 
-export const Queue = createProxy<QueueResources>("Queue");
-Object.assign(Queue, getVariables("Queue"));
+export const Queue = /* @__PURE__ */ createProxy<QueueResources>("Queue");

@@ -26,6 +26,7 @@ export const deploy = (program: Program) =>
       const { useProject } = await import("../../project.js");
       const { loadAssembly, useAppMetadata, saveAppMetadata, Stacks } =
         await import("../../stacks/index.js");
+      const { getCiInfo } = await import("../ci-info.js");
       const { render } = await import("ink");
       const { DeploymentUI } = await import("../ui/deploy.js");
       const { mapValues } = await import("remeda");
@@ -54,7 +55,7 @@ export const deploy = (program: Program) =>
       }
 
       // Check app mode changed
-      if (appMetadata && appMetadata.mode !== "deploy") {
+      if (!getCiInfo().isCI && appMetadata && appMetadata.mode !== "deploy") {
         if (!(await promptChangeMode())) {
           process.exit(0);
         }

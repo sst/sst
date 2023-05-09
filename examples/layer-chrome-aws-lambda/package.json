@@ -12,10 +12,10 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "sst": "^2.5.0",
-    "aws-cdk-lib": "2.62.2",
+    "sst": "^2.8.12",
+    "aws-cdk-lib": "2.72.1",
     "constructs": "10.1.156",
-    "typescript": "^5.0.3",
+    "typescript": "^5.0.4",
     "@tsconfig/node16": "^1.0.3"
   },
   "workspaces": [
@@ -23,7 +23,7 @@
   ],
   "dependencies": {
     "chrome-aws-lambda": "^10.1.0",
-    "puppeteer": "^19.8.5",
-    "puppeteer-core": "^19.8.5"
+    "puppeteer": "^20.1.2",
+    "puppeteer-core": "^20.1.2"
   }
 }

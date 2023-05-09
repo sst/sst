@@ -1,5 +1,4 @@
 ---
-id: astro
 sidebar_label: Astro
 title: Use Astro with SST
 description: "Create and deploy an Astro site to AWS with SST."
@@ -78,6 +77,10 @@ pnpm create sst
 </TabItem>
 </MultiPackagerCode>
 
+:::tip Ready to deploy
+Your Astro site is now ready to be deployed to AWS! Just run — `npx sst deploy`. But let's take a second to look at how SST makes it easy to add other features to your site.
+:::
+
 Start your local dev environment.
 
 <MultiPackagerCode>
@@ -126,9 +129,7 @@ Let's add a file upload feature to our Astro site.
 Add an S3 bucket to your `sst.config.ts`.
 
 ```ts title="sst.config.ts"
-const bucket = new Bucket(stack, "public", {
-  cors: true,
-});
+const bucket = new Bucket(stack, "public");
 ```
 
 Bind it to your Astro site.
@@ -293,4 +294,4 @@ pnpm sst deploy --stage prod
    - [`AstroSite`](../constructs/AstroSite.md) — Deploy Astro sites to AWS
    - [Live Lambda Dev](../live-lambda-development.md) — SST's local dev environment
    - [Resource Binding](../resource-binding.md) — Typesafe access to your resources
-2. Ready to dive into the details of SST? [**Check out our tutorial**](learn/index.md).
+2. Ready to dive into the details of SST? [**Check out our tutorial**](../learn/index.md).

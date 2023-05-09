@@ -7,7 +7,6 @@ pagination_prev: null
 pagination_next: null
 ---
 
-import config from "../config";
 import styles from "./about.module.css";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 
@@ -28,8 +27,8 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 </ul>
 
 <div className={styles.heading}>
-  <h3>Start With Your Frontend</h3>
-  <p>Start with a Next.js, Remix, Astro, or Solid app and deploy it to AWS with SST.</p>
+  <h3>Pick Your Frontend</h3>
+  <p>Start with a Next.js, Svelte, Remix, Astro, or Solid app and deploy it to AWS with SST.</p>
 </div>
 
 <ul className={styles.features}>
@@ -37,6 +36,12 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
     <a href={useBaseUrl("/start/nextjs")}>
       <h3><img src="/img/logos/nextjs.svg" />Next.js</h3>
       <p>Create and deploy a serverless Next.js app to AWS with SST.</p>
+    </a>
+  </li>
+  <li>
+    <a href={useBaseUrl("/start/svelte")}>
+      <h3><img src="/img/logos/svelte.svg" />Svelte</h3>
+      <p>Create and deploy a serverless SvelteKit app to AWS with SST.</p>
     </a>
   </li>
   <li>
@@ -64,45 +69,45 @@ Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
 :::
 
 <div className={styles.heading}>
-  <h3>Add Any Backend Feature</h3>
+  <h3>Add Any Feature</h3>
   <p>SST gives you the full power of AWS. Making it easy to add any feature to your product.</p>
 </div>
 
 <ul className={styles.features}>
   <li>
-    <a href={useBaseUrl("/constructs/RDS")}>
+    <a href={useBaseUrl("/databases")}>
       <h3>Databases</h3>
       <p>Use a serverless SQL or NoSQL database to power your app.</p>
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/constructs/Api")}>
+    <a href={useBaseUrl("/apis")}>
       <h3>APIs</h3>
-      <p>Add a GraphQL or a simple REST API to your app.</p>
+      <p>Add a dedicated REST or GraphQL API to your app.</p>
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/constructs/Auth")}>
+    <a href={useBaseUrl("/auth")}>
       <h3>Auth</h3>
       <p>Authenticate your users through any auth provider.</p>
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/constructs/Bucket")}>
+    <a href={useBaseUrl("/file-uploads")}>
       <h3>File uploads</h3>
       <p>Upload files to S3 and manage them through the SST console.</p>
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/constructs/Cron")}>
+    <a href={useBaseUrl("/cron-jobs")}>
       <h3>Jobs</h3>
       <p>Run cron jobs or long running jobs powered by serverless functions.</p>
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/constructs/Queue")}>
-      <h3>Queues</h3>
-      <p>Work with serverless queues without any infrastructure.</p>
+    <a href={useBaseUrl("/async-tasks")}>
+      <h3>Async tasks</h3>
+      <p>Run tasks after your app has returned to your user.</p>
     </a>
   </li>
 </ul>

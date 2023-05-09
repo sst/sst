@@ -1,5 +1,65 @@
 # create-sst
 
+## 2.8.12
+
+## 2.8.11
+
+## 2.8.10
+
+## 2.8.9
+
+## 2.8.8
+
+## 2.8.7
+
+## 2.8.6
+
+## 2.8.5
+
+## 2.8.4
+
+## 2.8.3
+
+## 2.8.2
+
+## 2.8.1
+
+### Patch Changes
+
+- [`6cd6c2d1e`](https://github.com/serverless-stack/sst/commit/6cd6c2d1eae10979fabdfad6912e61a3c7211e3f) Thanks [@fwang](https://github.com/fwang)! - Add support for SvelteKit
+
+## 2.8.0
+
+### Minor Changes
+
+- [#2824](https://github.com/serverless-stack/sst/pull/2824) [`eebce13c1`](https://github.com/serverless-stack/sst/commit/eebce13c18cb51f2fd6ead53492ed5d8fc375040) Thanks [@fwang](https://github.com/fwang)! - Add support for SvelteKit
+
+## 2.7.2
+
+## 2.7.1
+
+## 2.7.0
+
+## 2.6.0
+
+### Patch Changes
+
+- [`302c7e205`](https://github.com/serverless-stack/sst/commit/302c7e205bd82fe26c1fd6940d6a056a3cb79032) Thanks [@thdxr](https://github.com/thdxr)! - Fix issue with python template
+
+## 2.5.8
+
+## 2.5.7
+
+## 2.5.6
+
+## 2.5.5
+
+## 2.5.4
+
+## 2.5.3
+
+## 2.5.2
+
 ## 2.5.1
 
 ### Patch Changes

@@ -19,7 +19,7 @@ export interface ScriptProps {
    *
    * @example
    * ```js
-   * import { Script } from "@serverless-stack/resources";
+   * import { Script } from "sst/constructs";
    *
    * new Script(stack, "Script", {
    *   onCreate: "src/script.create",
@@ -30,6 +30,20 @@ export interface ScriptProps {
    * ```
    */
   params?: Record<string, any>;
+  /**
+   * By default, the script runs during each deployment. If a version is provided, the script will only run when the version changes.
+   *
+   * @example
+   * ```js
+   * import { Script } from "sst/constructs";
+   *
+   * new Script(stack, "Script", {
+   *   onCreate: "src/script.create",
+   *   version: "v17",
+   * });
+   * ```
+   */
+  version?: string;
   defaults?: {
     /**
      * The default function props to be applied to all the Lambda functions in the API. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
@@ -92,7 +106,7 @@ export interface ScriptProps {
  * @example
  *
  * ```js
- * import { Script } from "@serverless-stack/resources";
+ * import { Script } from "sst/constructs";
  *
  * new Script(stack, "Script", {
  *   onCreate: "src/function.create",
@@ -242,15 +256,18 @@ export class Script extends Construct {
   }
 
   private createCustomResource(app: App, crFunction: lambda.Function): void {
-    // Note: "BuiltAt" is set to current timestamp to ensure the Custom
+    // Note: "Version" is set to current timestamp to ensure the Custom
     //       Resource function is run on every update.
     //
     //       Do not use the current timestamp in Live mode, b/c we want the
     //       this custom resource to remain the same in CloudFormation template
     //       when rebuilding infrastructure. Otherwise, there will always be
-    //       a change when rebuilding infrastructure b/c the "BuildAt" property
+    //       a change when rebuilding infrastructure b/c the "version" property
     //       changes on each build.
-    const builtAt = app.mode === "dev" ? app.debugStartedAt : Date.now();
+    const version =
+      app.mode === "dev"
+        ? app.debugStartedAt
+        : this.props.version ?? Date.now().toString();
     new cdk.CustomResource(this, "ScriptResource", {
       serviceToken: crFunction.functionArn,
       resourceType: "Custom::SSTScript",
@@ -259,7 +276,7 @@ export class Script extends Construct {
         UserUpdateFunction: this.updateFunction?.functionName,
         UserDeleteFunction: this.deleteFunction?.functionName,
         UserParams: JSON.stringify(this.props.params || {}),
-        BuiltAt: builtAt,
+        Version: version,
       },
     });
   }

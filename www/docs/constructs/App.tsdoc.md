@@ -73,7 +73,7 @@ _Parameters_
 
 Adds additional default environment variables to be applied to all Lambda functions in the app.
 ```js
-app.addDefaultFunctionPermissions({
+app.addDefaultFunctionEnv({
   "MY_ENV_VAR": "my-value"
 })
 ```

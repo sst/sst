@@ -76,7 +76,7 @@ export class NextjsSite extends SsrSite {
 
   constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
     super(scope, id, {
-      buildCommand: "npx --yes open-next@^0.8.0 build",
+      buildCommand: "npx --yes open-next@~1.2.0 build",
       ...props,
     });
   }
@@ -221,7 +221,14 @@ export class NextjsSite extends SsrSite {
       authType: FunctionUrlAuthType.NONE,
     });
     const serverOrigin = new HttpOrigin(Fn.parseDomainName(serverFnUrl.url));
-    const cachePolicy = cdk?.serverCachePolicy ?? this.buildServerCachePolicy();
+    const cachePolicy =
+      cdk?.serverCachePolicy ??
+      this.buildServerCachePolicy([
+        "accept",
+        "rsc",
+        "next-router-prefetch",
+        "next-router-state-tree",
+      ]);
     const originRequestPolicy = this.buildServerOriginRequestPolicy();
     const serverBehavior = this.buildServerBehaviorForRegional(
       serverOrigin,
@@ -257,7 +264,14 @@ export class NextjsSite extends SsrSite {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
     const s3Origin = new S3Origin(this.cdk!.bucket);
-    const cachePolicy = cdk?.serverCachePolicy ?? this.buildServerCachePolicy();
+    const cachePolicy =
+      cdk?.serverCachePolicy ??
+      this.buildServerCachePolicy([
+        "accept",
+        "rsc",
+        "next-router-prefetch",
+        "next-router-state-tree",
+      ]);
     const originRequestPolicy = this.buildServerOriginRequestPolicy();
     const functionVersion = this.serverLambdaForEdge!.currentVersion;
     const serverBehavior = this.buildServerBehaviorForEdge(
@@ -298,6 +312,7 @@ export class NextjsSite extends SsrSite {
   ): BehaviorOptions {
     return {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      functionAssociations: this.buildBehaviorFunctionAssociations(),
       origin: serverOrigin,
       allowedMethods: AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
@@ -315,6 +330,7 @@ export class NextjsSite extends SsrSite {
   ): BehaviorOptions {
     return {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      functionAssociations: this.buildBehaviorFunctionAssociations(),
       origin: s3Origin,
       allowedMethods: AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
@@ -372,11 +388,12 @@ export class NextjsSite extends SsrSite {
     const fallbackOriginGroup = new OriginGroup({
       primaryOrigin: serverOrigin,
       fallbackOrigin: s3Origin,
-      fallbackStatusCodes: [404],
+      fallbackStatusCodes: [503],
     });
     return {
       origin: fallbackOriginGroup,
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      functionAssociations: this.buildBehaviorFunctionAssociations(),
       compress: true,
       cachePolicy,
       originRequestPolicy,
@@ -395,6 +412,7 @@ export class NextjsSite extends SsrSite {
 
     return {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      functionAssociations: this.buildBehaviorFunctionAssociations(),
       origin: s3Origin,
       allowedMethods: AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,

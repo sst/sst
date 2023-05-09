@@ -1,8 +1,7 @@
 ---
-id: nextjs
 sidebar_label: Next.js
 title: Use Next.js with SST
-description: "Create and deploy a Next.js app to AWS with SST."
+description: "Create and deploy a Next.js app to AWS with SST and OpenNext."
 ---
 
 import config from "../../config";
@@ -12,7 +11,7 @@ import MultiPackagerCode from "@site/src/components/MultiPackagerCode";
 
 <HeadlineText>
 
-Create and deploy a Next.js app to AWS with SST.
+Create and deploy a Next.js app to AWS with SST and [OpenNext](https://open-next.js.org).
 
 </HeadlineText>
 
@@ -78,6 +77,10 @@ pnpm create sst
 </TabItem>
 </MultiPackagerCode>
 
+:::tip Ready to deploy
+Your Next.js app is now ready to be deployed to AWS! Just run — `npx sst deploy`. But let's take a second to look at how SST makes it easy to add other features to your app.
+:::
+
 Start your local dev environment.
 
 <MultiPackagerCode>
@@ -126,9 +129,7 @@ Let's add a file upload feature to our Next.js app.
 Add an S3 bucket to your `sst.config.ts`.
 
 ```ts title="sst.config.ts"
-const bucket = new Bucket(stack, "public", {
-  cors: true,
-});
+const bucket = new Bucket(stack, "public");
 ```
 
 Bind it to your Next.js app.
@@ -281,6 +282,10 @@ pnpm sst deploy --stage prod
 </TabItem>
 </MultiPackagerCode>
 
+:::note
+The `sst deploy` command internally uses OpenNext to build your app.
+:::
+
 ![Next.js app deployed to AWS with SST](/img/start/nextjs-app-deployed-to-aws-with-sst.png)
 
 :::info
@@ -297,4 +302,5 @@ pnpm sst deploy --stage prod
    - [`NextjsSite`](../constructs/NextjsSite.md) — Deploy Next.js apps to AWS
    - [Live Lambda Dev](../live-lambda-development.md) — SST's local dev environment
    - [Resource Binding](../resource-binding.md) — Typesafe access to your resources
-2. Ready to dive into the details of SST? [**Check out our tutorial**](learn/index.md).
+2. Have a Next.js app on Vercel? [**Migrate it to SST**](../migrating/vercel.md).
+3. Ready to dive into the details of SST? [**Check out our tutorial**](../learn/index.md).

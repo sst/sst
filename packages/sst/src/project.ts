@@ -24,6 +24,9 @@ export interface ConfigOptions {
   profile?: string;
   role?: string;
   ssmPrefix?: string;
+  advanced?: {
+    disableParameterizedStackNameCheck?: boolean;
+  };
   bootstrap?: {
     stackName?: string;
     tags?: Record<string, string>;
@@ -49,6 +52,7 @@ interface Project {
     }>;
   version: string;
   cdkVersion: string;
+  constructsVersion: string;
   paths: {
     root: string;
     config: string;
@@ -111,7 +115,7 @@ export async function initProject(globals: GlobalOptions) {
     config.stage ||
     (await usePersonalStage(out)) ||
     (await promptPersonalStage(out));
-  const [version, cdkVersion] = await (async () => {
+  const [version, cdkVersion, constructsVersion] = await (async () => {
     try {
       const packageJson = JSON.parse(
         await fs
@@ -120,7 +124,11 @@ export async function initProject(globals: GlobalOptions) {
           )
           .then((x) => x.toString())
       );
-      return [packageJson.version, packageJson.dependencies["aws-cdk-lib"]];
+      return [
+        packageJson.version,
+        packageJson.dependencies["aws-cdk-lib"],
+        packageJson.dependencies["constructs"],
+      ];
     } catch {
       return ["unknown", "unknown"];
     }
@@ -128,6 +136,7 @@ export async function initProject(globals: GlobalOptions) {
   const project: Project = {
     version,
     cdkVersion,
+    constructsVersion,
     config: {
       ...config,
       stage,
@@ -151,6 +160,17 @@ export async function initProject(globals: GlobalOptions) {
     },
   };
 
+  // Cleanup old config files
+  (async function () {
+    const files = await fs.readdir(project.paths.root);
+    for (const file of files) {
+      if (file.startsWith(".sst.config")) {
+        await fs.unlink(path.join(project.paths.root, file));
+        Logger.debug(`Removed old config file ${file}`);
+      }
+    }
+  })();
+
   ProjectContext.provide(project);
   dotenv.config({
     path: path.join(project.paths.root, `.env.${project.config.stage}`),
@@ -173,26 +193,37 @@ async function usePersonalStage(out: string) {
   }
 }
 
-async function promptPersonalStage(out: string) {
+async function promptPersonalStage(
+  out: string,
+  isRetry?: boolean
+): Promise<string> {
   const readline = await import("readline");
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
   });
-  return new Promise<string>((resolve) => {
-    const suggested = os.userInfo().username;
+  const stage = await new Promise<string>((resolve) => {
+    const suggested = sanitizeStageName(os.userInfo().username) || "local";
+    const instruction = !isRetry
+      ? `Please enter a name you’d like to use for your personal stage.`
+      : `Please enter a name that starts with a letter, followed by letters, numbers, or hyphens.`;
     rl.question(
-      `Please enter a name you’d like to use for your personal stage. Or hit enter to use ${blue(
-        suggested
-      )}: `,
+      `${instruction} Or hit enter to use ${blue(suggested)}: `,
       async (input) => {
         rl.close();
-        const result = input || suggested;
-        await fs.writeFile(path.join(out, "stage"), result);
+        const result = input === "" ? suggested : input;
         resolve(result);
       }
     );
   });
+
+  // Validate stage name
+  if (isValidStageName(stage)) {
+    await fs.writeFile(path.join(out, "stage"), stage);
+    return stage;
+  }
+
+  return await promptPersonalStage(out, true);
 }
 
 async function findRoot() {
@@ -214,3 +245,22 @@ async function findRoot() {
   const result = await find(process.cwd());
   return result;
 }
+
+function sanitizeStageName(stage: string) {
+  return (
+    stage
+      .replace(/[^A-Za-z0-9-]/g, "-")
+      .replace(/--+/g, "-")
+      .replace(/^[^A-Za-z]/, "")
+      .replace(/-$/, "") || "local"
+  );
+}
+
+function isValidStageName(stage: string) {
+  return Boolean(stage.match(/^[A-Za-z][A-Za-z0-9-]*$/));
+}
+
+export const exportedForTesting = {
+  sanitizeStageName,
+  isValidStageName,
+};

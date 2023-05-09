@@ -80,7 +80,7 @@ new RDS(this, "Database", {
 });
 ```
 
-The `RDS` construct uses [Kysely](https://koskimas.github.io/kysely/) to run and manage schema migrations. The `migrations` prop should point to the folder where your migration files are.
+The `RDS` construct uses [Kysely](https://kysely-org.github.io/kysely/) to run and manage schema migrations. The `migrations` prop should point to the folder where your migration files are.
 
 On `sst deploy`, all migrations that have not yet been run will be run as a part of the deploy process. The migrations are executed in alphabetical order by their name.
 
@@ -146,7 +146,7 @@ async function down(db) {
 module.exports = { up, down };
 ```
 
-[Read more about writing migrations](https://koskimas.github.io/kysely/#migrations) over on the Kysely docs.
+[Read more about writing migrations](https://kysely-org.github.io/kysely/#migrations) over on the Kysely docs.
 
 ### Configuring the RDS cluster
 

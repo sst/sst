@@ -68,7 +68,7 @@ export interface ApiAttachmentProps {
  * SST Auth is a lightweight authentication solution for your applications. With a simple set of configuration you can deploy a function attached to your API that can handle various authentication flows.  *
  * @example
  * ```
- * import { Auth } from "@serverless-stack/resources"
+ * import { Auth } from "sst/constructs"
  *
  * new Auth(stack, "auth", {
  *   authenticator: "functions/authenticator.handler"
@@ -102,6 +102,13 @@ export class Auth extends Construct implements SSTConstruct {
     this.authenticator = props.authenticator;
 
     this.api = new Api(this, id + "-api", {
+      defaults: {
+        function: {
+          environment: {
+            AUTH_ID: id,
+          },
+        },
+      },
       routes: {
         "ANY /{step}": {
           function: this.authenticator,
@@ -119,7 +126,6 @@ export class Auth extends Construct implements SSTConstruct {
     const fn = this.api.getFunction("ANY /{step}")!;
     fn.bind([this.publicKey, this.privateKey]);
     const app = this.node.root as App;
-    fn.addEnvironment("AUTH_ID", id);
     fn.attachPermissions([
       new PolicyStatement({
         actions: ["ssm:GetParameters"],

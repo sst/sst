@@ -597,7 +597,7 @@ export interface FunctionCopyFilesProps {
  * @example
  *
  * ```js
- * import { Function } from "@serverless-stack/resources";
+ * import { Function } from "sst/constructs";
  *
  * new Function(stack, "MySnsLambda", {
  *   handler: "src/sns/index.main",
@@ -675,6 +675,7 @@ export class Function extends CDKFunction implements SSTConstruct {
         environment: props.environment,
         layers: Function.buildLayers(scope, id, props),
         logRetention,
+        logRetentionRetryOptions: logRetention && { maxRetries: 100 },
       });
     }
     // Handle local development (ie. sst start)
@@ -710,17 +711,28 @@ export class Function extends CDKFunction implements SSTConstruct {
         environment: props.environment,
         layers: [],
         logRetention,
+        logRetentionRetryOptions: logRetention && { maxRetries: 100 },
         retryAttempts: 0,
         ...(debugOverrideProps || {}),
       });
       this.addEnvironment("SST_FUNCTION_ID", this.node.addr);
-      this.attachPermissions([
-        new PolicyStatement({
-          actions: ["iot:*", "s3:*"],
-          effect: Effect.ALLOW,
-          resources: ["*"],
-        }),
-      ]);
+      useDeferredTasks().add(async () => {
+        const bootstrap = await useBootstrap();
+        this.attachPermissions([
+          new PolicyStatement({
+            actions: ["iot:*"],
+            effect: Effect.ALLOW,
+            resources: ["*"],
+          }),
+          new PolicyStatement({
+            actions: ["s3:*"],
+            effect: Effect.ALLOW,
+            resources: [
+              `arn:${Stack.of(this).partition}:s3:::${bootstrap.bucket}`,
+            ],
+          }),
+        ]);
+      });
     }
     // Handle build
     else {
@@ -738,6 +750,7 @@ export class Function extends CDKFunction implements SSTConstruct {
         environment: props.environment,
         layers: Function.buildLayers(scope, id, props),
         logRetention,
+        logRetentionRetryOptions: logRetention && { maxRetries: 100 },
       });
 
       useDeferredTasks().add(async () => {
@@ -1119,7 +1132,9 @@ export const useFunctions = createAppContext(() => {
 
   return {
     fromID(id: string) {
-      return functions[id];
+      const result = functions[id];
+      if (!result) return;
+      return result;
     },
     add(name: string, props: FunctionProps) {
       functions[name] = props;

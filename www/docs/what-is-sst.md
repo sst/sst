@@ -12,7 +12,7 @@ SST is a framework that makes it easy to build modern full-stack applications on
 
 </HeadlineText>
 
-Deploy a serverless Next.js, Remix, Astro, or Solid app to your AWS account and add any backend feature to it.
+Deploy a serverless Next.js, Svelte, Remix, Astro, or Solid app to your AWS account and add any backend feature to it.
 
 ---
 
@@ -34,9 +34,21 @@ Behind the scenes, [`NextjsSite`](constructs/NextjsSite.md) will create the infr
 
 ---
 
+### Svelte
+
+Similarly there's [`SvelteKitSite`](constructs/SvelteKitSite.md) for [Svelte](https://svelte.dev).
+
+```ts
+new SvelteKitSite(stack, "site", {
+  customDomain: "my-svelte-app.com",
+});
+```
+
+---
+
 ### Remix
 
-Similarly there's [`RemixSite`](constructs/RemixSite.md) for [Remix](https://remix.run).
+Or the [`RemixSite`](constructs/RemixSite.md) for [Remix](https://remix.run).
 
 ```ts
 new RemixSite(stack, "site", {

@@ -10,14 +10,7 @@ import {
   createApp,
 } from "./helper";
 import * as s3 from "aws-cdk-lib/aws-s3";
-import {
-  App,
-  Stack,
-  Bucket,
-  Function,
-  Queue,
-  Topic,
-} from "../../dist/constructs";
+import { Stack, Bucket, Function, Queue, Topic } from "../../dist/constructs";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
@@ -27,7 +20,7 @@ const lambdaDefaultPolicy = {
 
 test("cdk.id: undefined", async () => {
   const stack = new Stack(await createApp(), "stack");
-  const bucket = new Bucket(stack, "Bucket");
+  new Bucket(stack, "Bucket");
   templateMatches(stack, {
     Resources: {
       BucketD7FEB781: objectLike({
@@ -39,7 +32,7 @@ test("cdk.id: undefined", async () => {
 
 test("cdk.id: defined", async () => {
   const stack = new Stack(await createApp(), "stack");
-  const bucket = new Bucket(stack, "Bucket", {
+  new Bucket(stack, "Bucket", {
     cdk: {
       id: "MyBucket",
     },
@@ -114,13 +107,23 @@ test("cors: undefined", async () => {
   const stack = new Stack(await createApp(), "stack");
   const bucket = new Bucket(stack, "Bucket");
   hasResource(stack, "AWS::S3::Bucket", {
-    CorsConfiguration: ABSENT,
+    CorsConfiguration: {
+      CorsRules: [
+        {
+          AllowedHeaders: ["*"],
+          AllowedMethods: ["GET", "PUT", "HEAD", "POST", "DELETE"],
+          AllowedOrigins: ["*"],
+        },
+      ],
+    },
   });
 });
 
 test("cors: false", async () => {
   const stack = new Stack(await createApp(), "stack");
-  const bucket = new Bucket(stack, "Bucket");
+  const bucket = new Bucket(stack, "Bucket", {
+    cors: false,
+  });
   hasResource(stack, "AWS::S3::Bucket", {
     CorsConfiguration: ABSENT,
   });
@@ -160,6 +163,66 @@ test("cors: true", async () => {
           AllowedHeaders: ["*"],
           AllowedMethods: ["GET", "PUT", "HEAD", "POST", "DELETE"],
           AllowedOrigins: ["*"],
+        },
+      ],
+    },
+  });
+});
+
+test("blockPublicACLs: undefined", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new Bucket(stack, "Bucket");
+  hasResource(stack, "AWS::S3::Bucket", {
+    PublicAccessBlockConfiguration: {
+      BlockPublicAcls: false,
+      IgnorePublicAcls: false,
+    },
+    OwnershipControls: {
+      Rules: [
+        {
+          ObjectOwnership: "BucketOwnerPreferred",
+        },
+      ],
+    },
+  });
+});
+
+test("blockPublicACLs: true", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new Bucket(stack, "Bucket", {
+    blockPublicACLs: true,
+  });
+  hasResource(stack, "AWS::S3::Bucket", {
+    PublicAccessBlockConfiguration: {
+      BlockPublicAcls: true,
+      BlockPublicPolicy: true,
+      IgnorePublicAcls: true,
+      RestrictPublicBuckets: true,
+    },
+    OwnershipControls: {
+      Rules: [
+        {
+          ObjectOwnership: "BucketOwnerEnforced",
+        },
+      ],
+    },
+  });
+});
+
+test("blockPublicACLs: false", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new Bucket(stack, "Bucket", {
+    blockPublicACLs: false,
+  });
+  hasResource(stack, "AWS::S3::Bucket", {
+    PublicAccessBlockConfiguration: {
+      BlockPublicAcls: false,
+      IgnorePublicAcls: false,
+    },
+    OwnershipControls: {
+      Rules: [
+        {
+          ObjectOwnership: "BucketOwnerPreferred",
         },
       ],
     },

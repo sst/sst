@@ -1,6 +1,7 @@
-import { createProxy, getVariables } from "../util/index.js";
+import { createProxy } from "../util/index.js";
 
 export interface TopicResources {}
 
-export const Topic = createProxy<TopicResources>("Topic");
-Object.assign(Topic, getVariables("Topic"));
+export const Topic =
+  /* @__PURE__ */
+  createProxy<TopicResources>("Topic");

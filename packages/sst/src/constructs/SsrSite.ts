@@ -11,7 +11,6 @@ import {
   Fn,
   Token,
   Duration as CdkDuration,
-  CfnOutput,
   RemovalPolicy,
   CustomResource,
 } from "aws-cdk-lib";
@@ -26,9 +25,12 @@ import {
   Effect,
   Policy,
   PolicyStatement,
-  AnyPrincipal,
+  AccountPrincipal,
+  ServicePrincipal,
+  CompositePrincipal,
 } from "aws-cdk-lib/aws-iam";
 import {
+  Architecture,
   Function as CdkFunction,
   Code,
   Runtime,
@@ -72,6 +74,7 @@ import { createAppContext } from "./context.js";
 import { SSTConstruct, isCDKConstruct } from "./Construct.js";
 import { NodeJSProps, Function } from "./Function.js";
 import { Secret } from "./Secret.js";
+import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 import {
   BaseSiteDomainProps,
@@ -91,13 +94,20 @@ import {
 import { useProject } from "../project.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
-type SsrSiteType = "NextjsSite" | "RemixSite" | "AstroSite" | "SolidStartSite";
+type SsrSiteType =
+  | "NextjsSite"
+  | "RemixSite"
+  | "AstroSite"
+  | "SolidStartSite"
+  | "SvelteKitSite";
 
 export type SsrBuildConfig = {
   typesPath: string;
   serverBuildOutputFile: string;
+  serverCFFunctionInjection?: string;
   clientBuildOutputDir: string;
   clientBuildVersionedSubDir: string;
+  prerenderedBuildOutputDir?: string;
 };
 
 export interface SsrSiteNodeJSProps extends NodeJSProps {}
@@ -288,6 +298,7 @@ export class SsrSite extends Construct implements SSTConstruct {
   protected serverLambdaForRegional?: CdkFunction;
   private serverLambdaForDev?: CdkFunction;
   private bucket: Bucket;
+  private cfFunction: CfFunction;
   private distribution: Distribution;
   private hostedZone?: IHostedZone;
   private certificate?: ICertificate;
@@ -317,7 +328,7 @@ export class SsrSite extends Construct implements SSTConstruct {
 
     if (this.doNotDeploy) {
       // @ts-ignore
-      this.bucket = this.distribution = null;
+      this.cfFunction = this.bucket = this.distribution = null;
       this.serverLambdaForDev = this.createFunctionForDev();
       return;
     }
@@ -355,6 +366,7 @@ export class SsrSite extends Construct implements SSTConstruct {
 
     // Create CloudFront
     this.validateCloudFrontDistributionSettings();
+    this.cfFunction = this.createCloudFrontFunction();
     this.distribution = this.props.edge
       ? this.createCloudFrontDistributionForEdge()
       : this.createCloudFrontDistributionForRegional();
@@ -426,14 +438,19 @@ export class SsrSite extends Construct implements SSTConstruct {
    * ```
    */
   public attachPermissions(permissions: Permissions): void {
+    this.serverLambdaForEdge?.attachPermissions(permissions);
+    if (this.serverLambdaForDev) {
+      attachPermissionsToRole(
+        this.serverLambdaForDev.role as Role,
+        permissions
+      );
+    }
     if (this.serverLambdaForRegional) {
       attachPermissionsToRole(
         this.serverLambdaForRegional.role as Role,
         permissions
       );
     }
-
-    this.serverLambdaForEdge?.attachPermissions(permissions);
   }
 
   /** @internal */
@@ -551,6 +568,7 @@ export class SsrSite extends Construct implements SSTConstruct {
         cwd: sitePath,
         stdio: "inherit",
         env: {
+          SST: "1",
           ...process.env,
           ...getBuildCmdEnvironment(environment),
         },
@@ -588,7 +606,17 @@ export class SsrSite extends Construct implements SSTConstruct {
       "node",
       [
         script,
-        path.join(this.props.path, this.buildConfig.clientBuildOutputDir),
+        [
+          path.join(this.props.path, this.buildConfig.clientBuildOutputDir),
+          ...(this.buildConfig.prerenderedBuildOutputDir
+            ? [
+                path.join(
+                  this.props.path,
+                  this.buildConfig.prerenderedBuildOutputDir
+                ),
+              ]
+            : []),
+        ].join(","),
         zipOutDir,
         `${fileSizeLimit}`,
       ],
@@ -744,29 +772,34 @@ export class SsrSite extends Construct implements SSTConstruct {
     return {} as EdgeFunction;
   }
 
-  protected createFunctionForDev(): Function {
+  protected createFunctionForDev(): CdkFunction {
     const { runtime, timeout, memorySize, permissions, environment, bind } =
       this.props;
 
+    const app = this.node.root as App;
     const role = new Role(this, "ServerFunctionRole", {
-      assumedBy: new AnyPrincipal(),
+      assumedBy: new CompositePrincipal(
+        new AccountPrincipal(app.account),
+        new ServicePrincipal("lambda.amazonaws.com")
+      ),
       maxSessionDuration: CdkDuration.hours(12),
     });
 
-    const fn = new Function(this, `ServerFunction`, {
+    const ssrFn = new SsrFunction(this, `ServerFunction`, {
       description: "Server handler placeholder",
-      handler: "placeholder",
+      bundle: path.join(__dirname, "../support/ssr-site-function-stub"),
+      handler: "index.handler",
       runtime,
       memorySize,
       timeout,
+      role,
       bind,
       environment,
       permissions,
-      role,
+      // note: do not need to set vpc settings b/c this function is not being used
     });
-    fn._doNotAllowOthersToBind = true;
 
-    return fn;
+    return ssrFn.function;
   }
 
   private createFunctionPermissionsForRegional() {
@@ -793,6 +826,18 @@ export class SsrSite extends Construct implements SSTConstruct {
         `Do not configure the "cfDistribution.domainNames". Use the "customDomain" to configure the domain name.`
       );
     }
+  }
+
+  private createCloudFrontFunction() {
+    return new CfFunction(this, "CloudFrontFunction", {
+      code: CfFunctionCode.fromInline(`
+function handler(event) {
+  var request = event.request;
+  request.headers["x-forwarded-host"] = request.headers.host;
+  ${this.buildConfig.serverCFFunctionInjection || ""}
+  return request;
+}`),
+    });
   }
 
   protected createCloudFrontDistributionForRegional(): Distribution {
@@ -903,18 +948,11 @@ export class SsrSite extends Construct implements SSTConstruct {
     };
   }
 
-  private buildBehaviorFunctionAssociations() {
+  protected buildBehaviorFunctionAssociations() {
     return [
       {
         eventType: CfFunctionEventType.VIEWER_REQUEST,
-        function: new CfFunction(this, "CloudFrontFunction", {
-          code: CfFunctionCode.fromInline(`
-function handler(event) {
-  var request = event.request;
-  request.headers["x-forwarded-host"] = request.headers.host;
-  return request;
-}`),
-        }),
+        function: this.cfFunction,
       },
     ];
   }
@@ -951,10 +989,13 @@ function handler(event) {
     return staticsBehaviours;
   }
 
-  protected buildServerCachePolicy() {
+  protected buildServerCachePolicy(allowedHeaders?: string[]) {
     return new CachePolicy(this, "ServerCache", {
       queryStringBehavior: CacheQueryStringBehavior.all(),
-      headerBehavior: CacheHeaderBehavior.none(),
+      headerBehavior:
+        allowedHeaders && allowedHeaders.length > 0
+          ? CacheHeaderBehavior.allowList(...allowedHeaders)
+          : CacheHeaderBehavior.none(),
       cookieBehavior: CacheCookieBehavior.all(),
       defaultTtl: CdkDuration.days(0),
       maxTtl: CdkDuration.days(365),
@@ -1169,6 +1210,11 @@ function handler(event) {
           },
           {
             files: "**/*.js",
+            search: token,
+            replace: value,
+          },
+          {
+            files: "**/*.json",
             search: token,
             replace: value,
           }

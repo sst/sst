@@ -1,30 +1,27 @@
-import { createProxy, getVariables } from "../util/index.js";
+import { createProxy } from "../util/index.js";
 
 export interface StaticSiteResources {}
-export interface ReactStaticSiteResources {}
-export interface ViteStaticSiteResources {}
 export interface NextjsSiteResources {}
+export interface AstroSiteResources {}
 export interface RemixSiteResources {}
 export interface SolidStartSiteResources {}
+export interface SvelteKitSiteResources {}
 
-export const StaticSite = createProxy<StaticSiteResources>("StaticSite");
-export const ReactStaticSite =
-  createProxy<ReactStaticSiteResources>("ReactStaticSite");
-export const ViteStaticSite =
-  createProxy<ViteStaticSiteResources>("ViteStaticSite");
-export const RemixSite = createProxy<RemixSiteResources>("RemixSite");
-export const NextjsSite = createProxy<NextjsSiteResources>("NextjsSite");
+export const StaticSite =
+  /* @__PURE__ */ createProxy<StaticSiteResources>("StaticSite");
+export const AstroSite =
+  /* @__PURE__ */
+  createProxy<AstroSiteResources>("AstroSite");
+export const RemixSite =
+  /* @__PURE__ */
+  createProxy<RemixSiteResources>("RemixSite");
+export const NextjsSite =
+  /* @__PURE__ */
+  createProxy<NextjsSiteResources>("NextjsSite");
 export const SolidStartSite =
+  /* @__PURE__ */
   createProxy<SolidStartSiteResources>("SolidStartSite");
-const staticSiteData = getVariables("StaticSite");
-const reactSiteData = getVariables("ReactStaticSite");
-const viteSiteData = getVariables("ViteStaticSite");
-const nextjsSiteData = getVariables("NextjsSite");
-const remixSiteData = getVariables("RemixSite");
-const solidStartSiteData = getVariables("SolidStartSite");
-Object.assign(StaticSite, staticSiteData);
-Object.assign(ReactStaticSite, reactSiteData);
-Object.assign(ViteStaticSite, viteSiteData);
-Object.assign(NextjsSite, nextjsSiteData);
-Object.assign(RemixSite, remixSiteData);
-Object.assign(SolidStartSite, solidStartSiteData);
+
+export const SvelteKitSite =
+  /* @__PURE__ */
+  createProxy<SvelteKitSiteResources>("SvelteKitSite");

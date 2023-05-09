@@ -1,4 +1,4 @@
-import { patch, extend, extract, cmd, str_replace } from "create-sst";
+import { patch, install, extend, extract, cmd, str_replace } from "create-sst";
 export default [
   extend("presets/base/monorepo"),
   cmd({
@@ -14,6 +14,11 @@ export default [
         value: ["../core/src/*"],
       },
     ],
+  }),
+  install({
+    packages: ["sst"],
+    path: "packages/web",
+    dev: true,
   }),
   patch({
     file: "packages/web/package.json",
