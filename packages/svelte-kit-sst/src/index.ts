@@ -8,7 +8,7 @@ export default function () {
   const adapter = {
     name: "svelte-kit-sst",
     async adapt(builder: Builder) {
-      const out = ".svelte-kit-sst";
+      const out = path.join(".svelte-kit", "svelte-kit-sst");
       const clientDir = path.join(out, "client");
       const serverDir = path.join(out, "server");
       const prerenderedDir = path.join(out, "prerendered");

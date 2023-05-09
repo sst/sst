@@ -21,7 +21,8 @@ export class SvelteKitSite extends SsrSite {
   protected initBuildConfig() {
     return {
       typesPath: "src",
-      serverBuildOutputFile: ".svelte-kit-sst/server/lambda-handler/index.js",
+      serverBuildOutputFile:
+        ".svelte-kit/svelte-kit-sst/server/lambda-handler/index.js",
       // Note: form action requests contain "/" in request query string
       //       ie. POST request with query string "?/action"
       //       CloudFront does not allow query string with "/". It needs to be encoded.
@@ -33,9 +34,9 @@ export class SvelteKitSite extends SsrSite {
           }
         }
       `,
-      clientBuildOutputDir: ".svelte-kit-sst/client",
+      clientBuildOutputDir: ".svelte-kit/svelte-kit-sst/client",
       clientBuildVersionedSubDir: "_app",
-      prerenderedBuildOutputDir: ".svelte-kit-sst/prerendered",
+      prerenderedBuildOutputDir: ".svelte-kit/svelte-kit-sst/prerendered",
     };
   }
 
@@ -55,7 +56,8 @@ export class SvelteKitSite extends SsrSite {
       description: "Server handler for SvelteKit",
       handler: path.join(
         this.props.path,
-        ".svelte-kit-sst",
+        ".svelte-kit",
+        "svelte-kit-sst",
         "server",
         "lambda-handler",
         "index.handler"
@@ -80,7 +82,12 @@ export class SvelteKitSite extends SsrSite {
       },
       copyFiles: [
         {
-          from: path.join(this.props.path, ".svelte-kit-sst", "prerendered"),
+          from: path.join(
+            this.props.path,
+            ".svelte-kit",
+            "svelte-kit-sst",
+            "prerendered"
+          ),
           to: "prerendered",
         },
       ],
@@ -105,7 +112,8 @@ export class SvelteKitSite extends SsrSite {
       scopeOverride: this,
       handler: path.join(
         this.props.path,
-        ".svelte-kit-sst",
+        ".svelte-kit",
+        "svelte-kit-sst",
         "server",
         "lambda-handler",
         "index.handler"
@@ -134,7 +142,7 @@ export class SvelteKitSite extends SsrSite {
   protected generateBuildId(): string {
     const filePath = path.join(
       this.props.path,
-      ".svelte-kit-sst/client/_app/version.json"
+      ".svelte-kit/svelte-kit-sst/client/_app/version.json"
     );
     const content = fs.readFileSync(filePath).toString();
     return JSON.parse(content).version;
