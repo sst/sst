@@ -1,5 +1,11 @@
 # create-sst
 
+## 2.8.14
+
+### Patch Changes
+
+- [`107814f56`](https://github.com/serverless-stack/sst/commit/107814f569be8f6d1d2c6b7ba87deb8f142b0d58) Thanks [@jayair](https://github.com/jayair)! - Updating standard nextjs starter
+
 ## 2.8.13
 
 ## 2.8.12
