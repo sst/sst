@@ -827,6 +827,11 @@ The function definition used to create the function for this route. Must be a gr
 _Type_ : <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
 
 Commands to run after generating schema. Useful for code generation steps
+### pothos.internalPackages?
+
+_Type_ : <span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>
+
+List of packages that should be considered internal during schema generation
 ### pothos.output?
 
 _Type_ : <span class="mono">string</span>

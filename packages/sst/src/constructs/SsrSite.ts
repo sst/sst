@@ -568,6 +568,7 @@ export class SsrSite extends Construct implements SSTConstruct {
         cwd: sitePath,
         stdio: "inherit",
         env: {
+          SST: "1",
           ...process.env,
           ...getBuildCmdEnvironment(environment),
         },

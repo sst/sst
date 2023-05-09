@@ -248,11 +248,11 @@ new StaticSite(stack, "Site", {
 ```
 ### cdk.distribution?
 
-_Type_ : <span class="mono">[StaticSiteCdkDistributionProps](#staticsitecdkdistributionprops)</span>
+_Type_ : <span class="mono">[IDistribution](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.IDistribution.html)</span><span class='mono'> | </span><span class="mono">[StaticSiteCdkDistributionProps](#staticsitecdkdistributionprops)</span>
 
 Configure the internally created CDK 
 `Distribution`
- instance.
+ instance or provide an existing distribution
 ```js
 new StaticSite(stack, "Site", {
   path: "path/to/src",

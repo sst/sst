@@ -12,6 +12,12 @@
 /.next/
 /out/
 
+# sst
+/.sst/
+
+# open-next
+/.open-next/
+
 # production
 /build
 
