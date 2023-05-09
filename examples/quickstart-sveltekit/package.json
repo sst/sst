@@ -20,10 +20,10 @@
     "@types/cookie": "^0.5.1",
     "aws-cdk-lib": "2.72.1",
     "constructs": "10.1.156",
-    "sst": "^2.8.12",
+    "sst": "^2.8.13",
     "svelte": "^3.59.1",
     "svelte-check": "^3.3.2",
-    "svelte-kit-sst": "^2.8.12",
+    "svelte-kit-sst": "^2.8.13",
     "tslib": "^2.5.0",
     "typescript": "^5.0.4",
     "vite": "^4.3.5"

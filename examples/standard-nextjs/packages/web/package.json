@@ -21,6 +21,6 @@
     "typescript": "^5.0.4"
   },
   "devDependencies": {
-    "sst": "^2.8.12"
+    "sst": "^2.8.13"
   }
 }
