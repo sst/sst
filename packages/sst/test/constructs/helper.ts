@@ -21,6 +21,7 @@ export const ABSENT = Match.absent();
 export const not = Match.not;
 export const arrayWith = Match.arrayWith;
 export const objectLike = Match.objectLike;
+export const stringLikeRegexp = Match.stringLikeRegexp;
 
 export async function createApp(props?: Partial<AppDeployProps>) {
   const root = path.join(os.tmpdir(), "sst", crypto.randomUUID());
