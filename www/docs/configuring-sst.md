@@ -79,9 +79,8 @@ Here's the full list of config options that can be returned:
 - **`profile`** AWS profile to use\*
 - **`role`** AWS role to use\*
 - **`ssmPrefix`** SSM prefix for all SSM parameters that SST creates
-- **`bootstrap`**
-  - **`stackName`** The name of the SST bootstrap stack
-  - **`tags`** The tags to add for the SST bootstrap stack
+- **`advanced`**
+  - **`disableParameterizedStackNameCheck`** Disable the check for stack names to be parameterized with the stage name.
 - **`cdk`**
   - **`toolkitStackName`** The name of the CDK toolkit stack
   - **`qualifier`** The qualifier for the CDK toolkit stack
