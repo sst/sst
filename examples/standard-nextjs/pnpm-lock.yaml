@@ -7,13 +7,13 @@ importers:
       '@tsconfig/node16': ^1.0.3
       aws-cdk-lib: 2.72.1
       constructs: 10.1.156
-      sst: ^2.8.10
+      sst: ^2.8.12
       typescript: ^5.0.4
     devDependencies:
       '@tsconfig/node16': 1.0.3
       aws-cdk-lib: 2.72.1_constructs@10.1.156
       constructs: 10.1.156
-      sst: 2.8.10_typescript@5.0.4
+      sst: 2.8.12_typescript@5.0.4
       typescript: 5.0.4
 
   packages/web:
@@ -55,16 +55,16 @@ packages:
       '@jridgewell/trace-mapping': 0.3.18
     dev: true
 
-  /@aws-cdk/asset-awscli-v1/2.2.166:
-    resolution: {integrity: sha512-PNawxuf6UzsT4XCskCQQSI+FqGz6jnOtMYhCCnpxYLO2//SiQTdfUdaSVS8w6lv97JNedwZEVPa+rpdEHHoM+w==}
+  /@aws-cdk/asset-awscli-v1/2.2.167:
+    resolution: {integrity: sha512-Xa6ytGc0DTR7QDA+S1RESTYQBz9xZa1D0lwy/totkw/i/k7agCfI8wAPxMmTYkkmcjZFKSVLosG77qYBVSZSog==}
     dev: true
 
   /@aws-cdk/asset-kubectl-v20/2.1.1:
     resolution: {integrity: sha512-U1ntiX8XiMRRRH5J1IdC+1t5CE89015cwyt5U63Cpk0GnMlN5+h9WsWMlKlPXZR4rdq/m806JRlBMRpBUB2Dhw==}
     dev: true
 
-  /@aws-cdk/asset-node-proxy-agent-v5/2.0.139:
-    resolution: {integrity: sha512-7vx6nDiZqk8KJ/mmCbR6jCcOlU2DgkRv4v908ej249R7+qnnngsJwYmmwyqeQGbDVWb3D8I563EojZB3h6b0vw==}
+  /@aws-cdk/asset-node-proxy-agent-v5/2.0.140:
+    resolution: {integrity: sha512-tVjD6frtKcSlzPIWbOwYvnkZDKG0waaMLREB35o2LOnzdxMhPnsJQNkYfT9iapzYyuHKNf+hKxjGlByjZsF/KA==}
     dev: true
 
   /@aws-cdk/aws-apigatewayv2-alpha/2.72.1-alpha.0_mmet4fn7yah4brorskikwhrya4:
@@ -2412,9 +2412,9 @@ packages:
     peerDependencies:
       constructs: ^10.0.0
     dependencies:
-      '@aws-cdk/asset-awscli-v1': 2.2.166
+      '@aws-cdk/asset-awscli-v1': 2.2.167
       '@aws-cdk/asset-kubectl-v20': 2.1.1
-      '@aws-cdk/asset-node-proxy-agent-v5': 2.0.139
+      '@aws-cdk/asset-node-proxy-agent-v5': 2.0.140
       constructs: 10.1.156
     dev: true
     bundledDependencies:
@@ -2594,7 +2594,7 @@ packages:
     hasBin: true
     dependencies:
       caniuse-lite: 1.0.30001486
-      electron-to-chromium: 1.4.385
+      electron-to-chromium: 1.4.387
       node-releases: 2.0.10
       update-browserslist-db: 1.0.11_browserslist@4.21.5
 
@@ -3145,8 +3145,8 @@ packages:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
     dev: true
 
-  /electron-to-chromium/1.4.385:
-    resolution: {integrity: sha512-L9zlje9bIw0h+CwPQumiuVlfMcV4boxRjFIWDcLfFqTZNbkwOExBzfmswytHawObQX4OUhtNv8gIiB21kOurIg==}
+  /electron-to-chromium/1.4.387:
+    resolution: {integrity: sha512-tutLf+alr1/0YqJwKPdstVvDLmxmLb5xNyDLNS0RZmenHcEYk9qKfpKDCVZEKJ00JVbnayJm1MZAbYhYDFpcOw==}
 
   /emoji-regex/8.0.0:
     resolution: {integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==}
@@ -5056,8 +5056,8 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /sst/2.8.10_typescript@5.0.4:
-    resolution: {integrity: sha512-Blb3sUr+DOBvU9OtECeCH+0rgznpPLLDR+Yiaeqem0zkGDUhJDdAotnFFC0MTakaEx/nSXM9h6XuMvRnIjwvsw==}
+  /sst/2.8.12_typescript@5.0.4:
+    resolution: {integrity: sha512-T8ITtQLebZx9bkd8wCiymfI9JUWyrcJjmWiHfcSqD+Cw9dftVoOQ7L2sZgotAXzrMH8h0cGN1828KxZP1Mw5/A==}
     hasBin: true
     peerDependencies:
       '@sls-next/lambda-at-edge': ^3.7.0

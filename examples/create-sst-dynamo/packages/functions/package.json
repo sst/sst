@@ -10,7 +10,7 @@
     "@types/node": "^20.1.1",
     "@types/aws-lambda": "^8.10.115",
     "vitest": "^0.31.0",
-    "sst": "^2.8.10"
+    "sst": "^2.8.12"
   },
   "dependencies": {
     "@pothos/core": "^3.30.0",
