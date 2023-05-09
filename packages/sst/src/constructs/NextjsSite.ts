@@ -117,7 +117,9 @@ export class NextjsSite extends SsrSite {
     if (cacheInterception) {
       this.cdk?.function?.addEnvironment("EXPERIMENTAL_CACHE_INTERCEPTION", "true");
     }
-    _bucket.grantReadWrite(this.cdk?.function?.role as IRole);
+    if (this.cdk?.function?.role) {
+      _bucket.grantReadWrite(this.cdk.function.role);
+    }
 
     return deployment.deployedBucket;
   }
@@ -143,7 +145,9 @@ export class NextjsSite extends SsrSite {
       })
     );
     this.cdk?.function?.addEnvironment("REVALIDATION_QUEUE_URL", queue.queueUrl);
-    queue.grantSendMessages(this.cdk?.function?.role as IRole);
+    if (this.cdk?.function?.role) {
+      queue.grantSendMessages(this.cdk.function.role);
+    }
     queue.grantConsumeMessages(revalidationFn);
     return { revalidationFn, queue };
   }
