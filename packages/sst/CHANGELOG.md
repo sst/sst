@@ -1,5 +1,15 @@
 # @serverless-stack/cli2
 
+## 2.8.13
+
+### Patch Changes
+
+- [`c15bf9aac`](https://github.com/serverless-stack/sst/commit/c15bf9aac359cd5e66b4e940df0c3d15cd644d43) Thanks [@fwang](https://github.com/fwang)! - Script: add "version" prop to control when the script runs
+
+- [`b42de5112`](https://github.com/serverless-stack/sst/commit/b42de51122483bbf7069b370982f242794965776) Thanks [@fwang](https://github.com/fwang)! - Add option to disable parameterized stack name check
+
+- [#2775](https://github.com/serverless-stack/sst/pull/2775) [`b6d2300d4`](https://github.com/serverless-stack/sst/commit/b6d2300d46c813a6500d131d887f849de39f2403) Thanks [@aphex](https://github.com/aphex)! - Sites: add ability to set site url in "sst dev" mode
+
 ## 2.8.12
 
 ### Patch Changes
