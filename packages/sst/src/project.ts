@@ -24,6 +24,9 @@ export interface ConfigOptions {
   profile?: string;
   role?: string;
   ssmPrefix?: string;
+  advanced?: {
+    disableParameterizedStackNameCheck?: boolean;
+  };
   bootstrap?: {
     stackName?: string;
     tags?: Record<string, string>;
