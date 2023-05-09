@@ -251,6 +251,18 @@ export interface StaticSiteProps {
      * ```
      */
     deploy?: boolean;
+    /**
+     * The local site URL when running `sst dev`.
+     * @example
+     * ```js
+     * new StaticSite(stack, "frontend", {
+     *  dev: {
+     *    url: "http://localhost:3000"
+     *  }
+     * });
+     * ```
+     */
+    url?: string;
   };
   vite?: {
     /**
@@ -417,7 +429,7 @@ export class StaticSite extends Construct implements SSTConstruct {
    * The CloudFront URL of the website.
    */
   public get url() {
-    if (this.doNotDeploy) return;
+    if (this.doNotDeploy) return this.props.dev?.url;
 
     return `https://${this.distribution.distributionDomainName}`;
   }
@@ -472,7 +484,7 @@ export class StaticSite extends Construct implements SSTConstruct {
         url: this.doNotDeploy
           ? {
               type: "plain",
-              value: "localhost",
+              value: this.props.dev?.url ?? "localhost",
             }
           : {
               // Do not set real value b/c we don't want to make the Lambda function
