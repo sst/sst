@@ -7,13 +7,13 @@ importers:
       '@tsconfig/node16': ^1.0.3
       aws-cdk-lib: 2.72.1
       constructs: 10.1.156
-      sst: ^2.8.12
+      sst: ^2.8.13
       typescript: ^5.0.4
     devDependencies:
       '@tsconfig/node16': 1.0.3
       aws-cdk-lib: 2.72.1_constructs@10.1.156
       constructs: 10.1.156
-      sst: 2.8.12_typescript@5.0.4
+      sst: 2.8.13_typescript@5.0.4
       typescript: 5.0.4
 
   packages/web:
@@ -2463,8 +2463,8 @@ packages:
       - utf-8-validate
     dev: true
 
-  /aws-sdk/2.1374.0:
-    resolution: {integrity: sha512-Q7TExvBskRM23GfE1iy0GRxpUF+d9LY7ggmdHvL+2gX/QTzxSYaHHRPa8MNzFtzZLz+BDcDIgAcMjYKsrm18Rw==}
+  /aws-sdk/2.1375.0:
+    resolution: {integrity: sha512-4JusqLa0+TJ4a2rfxuiPiaEHZVxVWDzREN8rAI4zhL+u4QbqGq95yfMh9v5QtSDkdNCAReA5DSSVXPOHbS80pA==}
     engines: {node: '>= 10.0.0'}
     dependencies:
       buffer: 4.9.2
@@ -2594,7 +2594,7 @@ packages:
     hasBin: true
     dependencies:
       caniuse-lite: 1.0.30001486
-      electron-to-chromium: 1.4.387
+      electron-to-chromium: 1.4.388
       node-releases: 2.0.10
       update-browserslist-db: 1.0.11_browserslist@4.21.5
 
@@ -2686,7 +2686,7 @@ packages:
       '@aws-cdk/cloud-assembly-schema': 2.72.1
       '@aws-cdk/cx-api': 2.72.1
       archiver: 5.3.1
-      aws-sdk: 2.1374.0
+      aws-sdk: 2.1375.0
       glob: 7.2.3
       mime: 2.6.0
       yargs: 16.2.0
@@ -3145,8 +3145,8 @@ packages:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
     dev: true
 
-  /electron-to-chromium/1.4.387:
-    resolution: {integrity: sha512-tutLf+alr1/0YqJwKPdstVvDLmxmLb5xNyDLNS0RZmenHcEYk9qKfpKDCVZEKJ00JVbnayJm1MZAbYhYDFpcOw==}
+  /electron-to-chromium/1.4.388:
+    resolution: {integrity: sha512-xZ0y4zjWZgp65okzwwt00f2rYibkFPHUv9qBz+Vzn8cB9UXIo9Zc6Dw81LJYhhNt0G/vR1OJEfStZ49NKl0YxQ==}
 
   /emoji-regex/8.0.0:
     resolution: {integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==}
@@ -5056,8 +5056,8 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /sst/2.8.12_typescript@5.0.4:
-    resolution: {integrity: sha512-T8ITtQLebZx9bkd8wCiymfI9JUWyrcJjmWiHfcSqD+Cw9dftVoOQ7L2sZgotAXzrMH8h0cGN1828KxZP1Mw5/A==}
+  /sst/2.8.13_typescript@5.0.4:
+    resolution: {integrity: sha512-ZWmqYb3Mu0EUyz+5en2mkPwbwFAytcMGu79zYjzZetZ8P3W6QoSofo8Tzt+RAR85dpd/8slOQ4NXU5mAuu26mg==}
     hasBin: true
     peerDependencies:
       '@sls-next/lambda-at-edge': ^3.7.0
@@ -5090,7 +5090,7 @@ packages:
       '@trpc/server': 9.16.0
       aws-cdk-lib: 2.72.1_constructs@10.1.156
       aws-iot-device-sdk: 2.2.12
-      aws-sdk: 2.1374.0
+      aws-sdk: 2.1375.0
       builtin-modules: 3.2.0
       cdk-assets: 2.72.1
       chalk: 5.2.0

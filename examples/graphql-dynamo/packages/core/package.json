@@ -9,7 +9,7 @@
   "devDependencies": {
     "vitest": "^0.31.0",
     "@types/node": "^20.1.1",
-    "sst": "^2.8.12",
+    "sst": "^2.8.13",
     "@aws-sdk/types": "^3.329.0",
     "@aws-sdk/smithy-client": "^3.329.0"
   },
