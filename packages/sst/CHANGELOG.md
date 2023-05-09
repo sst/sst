@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.8.12
+
+### Patch Changes
+
+- [`c3e5acdc3`](https://github.com/serverless-stack/sst/commit/c3e5acdc3758a1f8b008206323b8dbb45ea704d0) Thanks [@fwang](https://github.com/fwang)! - SvelteKitSite: update adapter output destination
+
 ## 2.8.11
 
 ### Patch Changes
