@@ -37,8 +37,8 @@ function createRequest(event) {
 
   // Build headers
   const headers = new Headers();
-  for (const [key, headerVal] of Object.entries(record.request.headers)) {
-    headers.append(key, headerVal[0].value);
+  for (const [key, values] of Object.entries(record.request.headers)) {
+    headers.append(key, values[0].value);
   }
 
   return new Request(url, {
