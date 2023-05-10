@@ -7,6 +7,7 @@ import { RDSData } from "@aws-sdk/client-rds-data";
 import url from "url";
 
 export async function handler(evt) {
+  console.log("initializing db");
   const db = new Kysely({
     dialect: new DataApiDialect({
       mode: process.env.RDS_ENGINE_MODE,
@@ -19,6 +20,7 @@ export async function handler(evt) {
     }),
   });
 
+  console.log("creating migrator");
   const migrator = new Migrator({
     db,
     provider: new DynamicFileMigrationProvider(
@@ -33,7 +35,9 @@ export async function handler(evt) {
     */
   });
 
+  console.log("processing event", evt);
   if (!evt.type || evt.type === "latest") {
+    console.log("migrating to latest");
     const result = await migrator.migrateToLatest();
     const err =
       result.error || result.results?.find((r) => r.status === "Error");
@@ -42,6 +46,7 @@ export async function handler(evt) {
   }
 
   if (evt.type === "to") {
+    console.log("migrating to", evt.data.name);
     if (!evt.data.name) return await migrator.migrateTo(NO_MIGRATIONS);
     const result = await migrator.migrateTo(evt.data.name);
     const err =
@@ -51,6 +56,7 @@ export async function handler(evt) {
   }
 
   if (evt.type === "list") {
+    console.log("listing migrations");
     return await migrator.getMigrations();
   }
 }
