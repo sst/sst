@@ -37,6 +37,11 @@ program
           tester: () => files.some((f) => f.startsWith("svelte.config")),
         },
         {
+          name: "Remix",
+          preset: "presets/dropin/remix",
+          tester: () => files.some((f) => f.startsWith("remix.config")),
+        },
+        {
           name: "Solid",
           preset: "presets/dropin/solid",
           tester: async () => {
