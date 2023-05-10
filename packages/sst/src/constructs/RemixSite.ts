@@ -16,7 +16,8 @@ type RemixConfig = {
   assetsBuildDirectory: string;
   publicPath: string;
   serverBuildPath: string;
-  serverBuildTarget: string;
+  serverModuleFormat: string;
+  serverPlatform: string;
   server?: string;
 };
 
@@ -41,7 +42,8 @@ export class RemixSite extends SsrSite {
       assetsBuildDirectory: "public/build",
       publicPath: "/build/",
       serverBuildPath: "build/index.js",
-      serverBuildTarget: "node-cjs",
+      serverModuleFormat: "cjs",
+      serverPlatform: "node",
     };
 
     // Validate config path
