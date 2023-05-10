@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.8.16
+
+### Patch Changes
+
+- [`a14a16acb`](https://github.com/serverless-stack/sst/commit/a14a16acb5fa4cd74b515b653d3670af20a2fc62) Thanks [@thdxr](https://github.com/thdxr)! - Upgrade kysely-data-api
+
 ## 2.8.15
 
 ## 2.8.14
