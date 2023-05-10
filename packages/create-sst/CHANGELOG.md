@@ -1,5 +1,11 @@
 # create-sst
 
+## 2.8.17
+
+### Patch Changes
+
+- [#2868](https://github.com/serverless-stack/sst/pull/2868) [`a2925849c`](https://github.com/serverless-stack/sst/commit/a2925849c50f5685624252baf5e735d1524cd914) Thanks [@fwang](https://github.com/fwang)! - Add dropin mode for Remix apps
+
 ## 2.8.16
 
 ## 2.8.15

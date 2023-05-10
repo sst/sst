@@ -1,5 +1,11 @@
 # solid-start-sst
 
+## 2.8.17
+
+### Patch Changes
+
+- [#2865](https://github.com/serverless-stack/sst/pull/2865) [`d27299b4d`](https://github.com/serverless-stack/sst/commit/d27299b4d94c370077b97722a4ef9c49ceb4b036) Thanks [@ShivamJoker](https://github.com/ShivamJoker)! - SolidStartSite: fix parsing CloudFront headers
+
 ## 2.8.16
 
 ## 2.8.15
