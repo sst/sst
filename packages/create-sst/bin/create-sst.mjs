@@ -42,7 +42,7 @@ program
           tester: async () => {
             for (const f of files) {
               if (!f.startsWith("vite.config")) continue;
-              const content = await fs.readFile(f);
+              const content = await fs.readFile(path.join(cwd, f));
               if (content.toString().match(/solid-start/)) {
                 return true;
               }
