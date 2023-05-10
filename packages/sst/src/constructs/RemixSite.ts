@@ -16,7 +16,8 @@ type RemixConfig = {
   assetsBuildDirectory: string;
   publicPath: string;
   serverBuildPath: string;
-  serverBuildTarget: string;
+  serverModuleFormat: string;
+  serverPlatform: string;
   server?: string;
 };
 
