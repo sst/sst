@@ -4,7 +4,7 @@ import path from "path";
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 
-import { Architecture, Function as CdkFunction } from "aws-cdk-lib/aws-lambda";
+import { Function as CdkFunction } from "aws-cdk-lib/aws-lambda";
 
 import { SsrSite } from "./SsrSite.js";
 import { SsrFunction } from "./SsrFunction.js";

@@ -195,7 +195,10 @@ export class EdgeFunction extends Construct {
       // create wrapper that calls the handler
       if (bundle.type === "error")
         throw new Error(
-          `There was a problem bundling the SSR function for the "${this.scope.node.id}" Site.`
+          [
+            `There was a problem bundling the SSR function for the "${this.scope.node.id}" Site.`,
+            ...bundle.errors,
+          ].join("\n")
         );
 
       const asset = new Asset(this.scope, `FunctionAsset`, {
