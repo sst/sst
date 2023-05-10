@@ -1,5 +1,11 @@
 # create-sst
 
+## 2.8.15
+
+### Patch Changes
+
+- [#2857](https://github.com/serverless-stack/sst/pull/2857) [`c5bdc2cfe`](https://github.com/serverless-stack/sst/commit/c5bdc2cfee3e2a27dfda0720ee1605cec05c4825) Thanks [@fwang](https://github.com/fwang)! - Add dropin mode for SolidStart apps
+
 ## 2.8.14
 
 ### Patch Changes
