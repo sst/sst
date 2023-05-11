@@ -1,5 +1,7 @@
 # svelte-kit-sst
 
+## 2.8.19
+
 ## 2.8.18
 
 ### Patch Changes
