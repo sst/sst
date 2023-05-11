@@ -1,5 +1,11 @@
 # svelte-kit-sst
 
+## 2.8.18
+
+### Patch Changes
+
+- [`04f01b75b`](https://github.com/serverless-stack/sst/commit/04f01b75b72dc7310911ac5da8554ebdbf5699f4) Thanks [@fwang](https://github.com/fwang)! - SvelteKitSite: fix response cookies not set
+
 ## 2.8.17
 
 ## 2.8.16
