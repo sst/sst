@@ -1,7 +1,7 @@
 {
   "name": "@serverless-stack/console",
   "private": true,
-  "version": "2.8.19",
+  "version": "2.8.20",
   "scripts": {
     "dev": "vite",
     "typecheck": "tsc --noEmit",

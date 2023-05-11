@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.8.20
+
+### Patch Changes
+
+- [`78e25f4ad`](https://github.com/serverless-stack/sst/commit/78e25f4addf5d0ce1eebeb452ce791a0773add9f) Thanks [@fwang](https://github.com/fwang)! - Job: apply nodejs options to local invoker
+
 ## 2.8.19
 
 ### Patch Changes
