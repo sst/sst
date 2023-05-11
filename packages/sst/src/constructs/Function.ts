@@ -71,6 +71,7 @@ const supportedRuntimes = {
   dotnet6: CDKRuntime.DOTNET_6,
   java8: CDKRuntime.JAVA_8,
   java11: CDKRuntime.JAVA_11,
+  java17: CDKRuntime.JAVA_17,
   "go1.x": CDKRuntime.PROVIDED_AL2,
   go: CDKRuntime.PROVIDED_AL2,
 };
