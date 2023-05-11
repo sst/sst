@@ -13,7 +13,7 @@ import {
   ListObjectsV2Command,
   S3Client,
 } from "@aws-sdk/client-s3";
-import { Bus } from "../bus";
+import { Bus, createEvent } from "../bus";
 import { useEvent } from "sst/context";
 
 export * as Stage from "./stage";
@@ -25,6 +25,12 @@ declare module "../bus" {
     };
   }
 }
+
+export const Events = {
+  StageConnected: createEvent("app.stage.connected", {
+    stageID: z.string().nonempty(),
+  }),
+};
 
 export const Info = createSelectSchema(stage, {
   id: (schema) => schema.id.cuid2(),

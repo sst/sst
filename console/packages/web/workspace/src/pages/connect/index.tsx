@@ -13,9 +13,9 @@ export function Connect() {
       <For each={Object.values(auth)}>
         {(entry) => {
           const users = createSubscription(
-            () => entry.replicache,
             UserStore.list,
-            []
+            [],
+            () => entry.replicache
           );
           return (
             <ol>
@@ -24,8 +24,8 @@ export function Connect() {
                 <For each={users()}>
                   {(user) => {
                     const workspace = createSubscription(
-                      () => entry.replicache,
-                      () => WorkspaceStore.fromID(user.workspaceID)
+                      () => WorkspaceStore.fromID(user.workspaceID),
+                      () => entry.replicache
                     );
                     return (
                       <li>

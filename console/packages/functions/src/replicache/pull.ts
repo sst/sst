@@ -6,7 +6,7 @@ import { useApiAuth } from "src/api";
 import { ApiHandler, useJsonBody } from "sst/node/api";
 import { eq, and, gt } from "drizzle-orm";
 import { workspace } from "@console/core/workspace/workspace.sql";
-import { app, stage } from "@console/core/app/app.sql";
+import { app, resource, stage } from "@console/core/app/app.sql";
 import { awsAccount } from "@console/core/aws/aws.sql";
 
 const VERSION = 1;
@@ -39,6 +39,113 @@ export const handler = ApiHandler(async () => {
 
   return await useTransaction(async (tx) => {
     const client = await Replicache.fromID(body.clientID);
+
+    if (actor.type === "user") {
+      const workspaceID = useWorkspace();
+      console.log("syncing user", actor.properties);
+      const [workspaces, users, awsAccounts, apps, stages, resources] =
+        await Promise.all([
+          await tx
+            .select()
+            .from(workspace)
+            .where(
+              and(
+                eq(workspace.id, useWorkspace()),
+                gt(workspace.timeUpdated, lastSync)
+              )
+            )
+            .execute(),
+          await tx
+            .select()
+            .from(user)
+            .where(
+              and(
+                eq(user.workspaceID, useWorkspace()),
+                gt(user.timeUpdated, lastSync)
+              )
+            )
+            .execute(),
+          await tx
+            .select()
+            .from(awsAccount)
+            .where(
+              and(
+                eq(awsAccount.workspaceID, workspaceID),
+                gt(awsAccount.timeUpdated, lastSync)
+              )
+            )
+            .execute(),
+          await tx
+            .select()
+            .from(app)
+            .where(
+              and(
+                eq(app.workspaceID, workspaceID),
+                gt(app.timeUpdated, lastSync)
+              )
+            )
+            .execute(),
+          await tx
+            .select()
+            .from(stage)
+            .where(
+              and(
+                eq(stage.workspaceID, workspaceID),
+                gt(stage.timeUpdated, lastSync)
+              )
+            )
+            .execute(),
+          await tx
+            .select()
+            .from(resource)
+            .where(
+              and(
+                eq(resource.workspaceID, workspaceID),
+                gt(resource.timeUpdated, lastSync)
+              )
+            )
+            .execute(),
+        ]);
+      result.patch.push(
+        ...users.map((item) => ({
+          op: "put",
+          key: `/user/${item.id}`,
+          value: item,
+        })),
+        ...workspaces.map((item) => ({
+          op: "put",
+          key: `/workspace/${item.id}`,
+          value: item,
+        })),
+        ...apps.map((item) => ({
+          op: "put",
+          key: `/app/${item.id}`,
+          value: item,
+        })),
+        ...stages.map((item) => ({
+          op: "put",
+          key: `/stage/${item.id}`,
+          value: item,
+        })),
+        ...awsAccounts.map((item) => ({
+          op: "put",
+          key: `/aws_account/${item.id}`,
+          value: item,
+        })),
+        ...resources.map((item) => ({
+          op: "put",
+          key: `/resource/${item.id}`,
+          value: item,
+        }))
+      );
+      result.lastSync =
+        result.patch
+          .filter((x) => x.op === "put")
+          .sort((a, b) =>
+            (b.value.timeUpdated || "") > (a.value.timeUpdated || "") ? 1 : -1
+          )[0]?.value?.timeUpdated || lastSync;
+    }
+
     if (actor.type === "account") {
       console.log("syncing account", actor.properties);
       const [users] = await Promise.all([
@@ -104,93 +211,6 @@ export const handler = ApiHandler(async () => {
         [...workspaces, ...users].sort((a, b) =>
           b.timeUpdated > a.timeUpdated ? 1 : -1
         )[0]?.timeUpdated || lastSync;
-    }
-
-    if (actor.type === "user") {
-      const workspaceID = useWorkspace();
-      console.log("syncing user", actor.properties);
-      const [workspaces, users, awsAccounts, apps, stages] = await Promise.all([
-        await tx
-          .select()
-          .from(workspace)
-          .where(
-            and(
-              eq(workspace.id, useWorkspace()),
-              gt(workspace.timeUpdated, lastSync)
-            )
-          )
-          .execute(),
-        await tx
-          .select()
-          .from(user)
-          .where(
-            and(
-              eq(user.workspaceID, useWorkspace()),
-              gt(user.timeUpdated, lastSync)
-            )
-          )
-          .execute(),
-        await tx
-          .select()
-          .from(awsAccount)
-          .where(
-            and(
-              eq(awsAccount.workspaceID, workspaceID),
-              gt(awsAccount.timeUpdated, lastSync)
-            )
-          )
-          .execute(),
-        await tx
-          .select()
-          .from(app)
-          .where(
-            and(eq(app.workspaceID, workspaceID), gt(app.timeUpdated, lastSync))
-          )
-          .execute(),
-        await tx
-          .select()
-          .from(stage)
-          .where(
-            and(
-              eq(stage.workspaceID, workspaceID),
-              gt(stage.timeUpdated, lastSync)
-            )
-          )
-          .execute(),
-      ]);
-      result.patch.push(
-        ...users.map((item) => ({
-          op: "put",
-          key: `/user/${item.id}`,
-          value: item,
-        })),
-        ...workspaces.map((item) => ({
-          op: "put",
-          key: `/workspace/${item.id}`,
-          value: item,
-        })),
-        ...apps.map((item) => ({
-          op: "put",
-          key: `/app/${item.id}`,
-          value: item,
-        })),
-        ...stages.map((item) => ({
-          op: "put",
-          key: `/stage/${item.id}`,
-          value: item,
-        })),
-        ...awsAccounts.map((item) => ({
-          op: "put",
-          key: `/aws_account/${item.id}`,
-          value: item,
-        }))
-      );
-      result.lastSync =
-        result.patch
-          .filter((x) => x.op === "put")
-          .sort((a, b) =>
-            (b.value.timeUpdated || "") > (a.value.timeUpdated || "") ? 1 : -1
-          )[0]?.value?.timeUpdated || lastSync;
     }
 
     return {

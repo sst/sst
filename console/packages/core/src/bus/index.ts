@@ -10,11 +10,7 @@ import { ZodAny, ZodObject, ZodRawShape, z } from "zod";
 
 const client = new EventBridgeClient({});
 
-export interface Events {
-  "test.event": {
-    foo: string;
-  };
-}
+export interface Events {}
 
 export type EventName = keyof Events;
 

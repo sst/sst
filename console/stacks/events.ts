@@ -6,6 +6,7 @@ import {
   use,
 } from "sst/constructs";
 import { Secrets } from "./secrets";
+import type { Stage } from "../packages/core/src/app/stage";
 
 export function Events({ stack }: StackContext) {
   const bus = new EventBus(stack, "bus");
@@ -35,6 +36,13 @@ export function Events({ stack }: StackContext) {
       },
     });
   }
+
+  // 1. be opinionated about event shape
+  // 2. add more useful bus.subscribe(queue: true)
+  // 3. remove the need to call bus.subscribe (detect event handlers) EventHandler
+  //    if need custom option, define whole thing in stack code
+  // 4. optionally customize in stack code
+
   const secrets = use(Secrets);
   subscribe("test.event", {
     handler: "packages/functions/src/events/test.handler",
