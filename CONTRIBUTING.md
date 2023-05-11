@@ -83,7 +83,7 @@ Alternatively, you can run the tests for a specific construct.
 $ pnpm test <path_to_the_test_for_the_construct>
 ```
 
-### CLI
+### Console
 
 If you are working on the `packages/console` just go ahead and make your changes. Then run your tests.
 
