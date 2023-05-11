@@ -1,5 +1,7 @@
 # solid-start-sst
 
+## 2.8.18
+
 ## 2.8.17
 
 ### Patch Changes
