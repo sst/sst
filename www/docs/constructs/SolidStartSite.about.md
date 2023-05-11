@@ -8,9 +8,9 @@ The `SolidStartSite` construct is a higher level CDK construct that makes it eas
 
 ## Quick Start
 
-1. If you are creating a new SolidStart app, create a `my-solid-start-app` folder at the root of your SST app.
+1. If you are creating a new SolidStart app, create a `my-solid-app` folder at the root of your SST app.
 
-   Then run `create-solid` from the `my-solid-start-app` folder.
+   Then run `create-solid` from the `my-solid-app` folder.
 
    ```bash
    npx create-solid@latest
@@ -27,7 +27,7 @@ The `SolidStartSite` construct is a higher level CDK construct that makes it eas
    ├─ sst.config.ts
    ├─ services
    ├─ stacks
-   └─ my-solid-start-app     <-- new SolidStart app
+   └─ my-solid-app     <-- new SolidStart app
       ├─ src
       ├─ public
       └─ vite.config.ts
@@ -42,7 +42,7 @@ The `SolidStartSite` construct is a higher level CDK construct that makes it eas
    ├─ sst.config.ts
    ├─ services
    ├─ stacks
-   └─ my-solid-start-app     <-- your SolidStart app
+   └─ my-solid-app     <-- your SolidStart app
       ├─ src
       ├─ public
       └─ vite.config.ts
@@ -98,7 +98,7 @@ The `SolidStartSite` construct is a higher level CDK construct that makes it eas
 
      // Create the SolidStart site
      const site = new SolidStartSite(stack, "Site", {
-       path: "my-solid-start-app/",
+       path: "my-solid-app/",
      });
 
      // Add the site's URL to stack output
@@ -142,7 +142,7 @@ You can enable edge like this:
 
 ```ts
 const site = new SolidStartSite(stack, "Site", {
-  path: "my-solid-start-app/",
+  path: "my-solid-app/",
   edge: true,
 });
 ```
@@ -159,7 +159,7 @@ You can configure the website with a custom domain hosted either on [Route 53](h
 
 ```js {5}
 const site = new SolidStartSite(stack, "Site", {
-  path: "my-solid-start-app/",
+  path: "my-solid-app/",
   customDomain: "my-app.com",
 });
 ```
@@ -170,7 +170,7 @@ You can also configure an alias domain to point to the main domain. For example,
 
 ```js {5}
 const site = new SolidStartSite(stack, "Site", {
-  path: "my-solid-start-app/",
+  path: "my-solid-app/",
   customDomain: {
     domainName: "my-app.com",
     domainAlias: "www.my-app.com",
@@ -279,7 +279,7 @@ There are a couple of things happening behind the scenes here:
 ```
 /
   sst.config.ts
-  my-solid-start-app/
+  my-solid-app/
 ```
 
 :::
@@ -296,7 +296,7 @@ const table = new Table(stack, "Table", {
 });
 
 const site = new SolidStartSite(stack, "Site", {
-  path: "my-solid-start-app/",
+  path: "my-solid-app/",
   environment: {
     TABLE_NAME: table.tableName,
   },
@@ -317,7 +317,7 @@ You can configure the website with a custom domain hosted either on [Route 53](h
 
 ```js {3}
 new SolidStartSite(stack, "Site", {
-  path: "my-solid-start-app/",
+  path: "my-solid-app/",
   customDomain: "my-app.com",
 });
 ```
@@ -326,7 +326,7 @@ new SolidStartSite(stack, "Site", {
 
 ```js {3-6}
 new SolidStartSite(stack, "Site", {
-  path: "my-solid-start-app/",
+  path: "my-solid-app/",
   customDomain: {
     domainName: "my-app.com",
     domainAlias: "www.my-app.com",
@@ -338,7 +338,7 @@ new SolidStartSite(stack, "Site", {
 
 ```js {3-7}
 new SolidStartSite(stack, "Site", {
-  path: "my-solid-start-app/",
+  path: "my-solid-app/",
   customDomain: {
     domainName:
       scope.stage === "prod" ? "my-app.com" : `${scope.stage}.my-app.com`,
@@ -371,7 +371,7 @@ const certificate = new acm.DnsValidatedCertificate(stack, "Certificate", {
 
 // Create site
 const site = new SolidStartSite(stack, "Site", {
-  path: "my-solid-start-app/",
+  path: "my-solid-app/",
   customDomain: {
     domainName: "foo.domain.com",
     alternateNames: ["bar.domain.com"],
@@ -400,7 +400,7 @@ new route53.AaaaRecord(stack, "AlternateAAAARecord", recordProps);
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new SolidStartSite(stack, "Site", {
-  path: "my-solid-start-app/",
+  path: "my-solid-app/",
   customDomain: {
     domainName: "my-app.com",
     cdk: {
@@ -420,7 +420,7 @@ If you have multiple hosted zones for a given domain, you can choose the one you
 import { HostedZone } from "aws-cdk-lib/aws-route53";
 
 new SolidStartSite(stack, "Site", {
-  path: "my-solid-start-app/",
+  path: "my-solid-app/",
   customDomain: {
     domainName: "my-app.com",
     cdk: {
@@ -439,7 +439,7 @@ new SolidStartSite(stack, "Site", {
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new SolidStartSite(stack, "Site", {
-  path: "my-solid-start-app/",
+  path: "my-solid-app/",
   cutomDomain: {
     isExternalDomain: true,
     domainName: "my-app.com",
@@ -458,7 +458,7 @@ Also note that you can also migrate externally hosted domains to Route 53 by [fo
 
 ```js {3-4}
 new SolidStartSite(stack, "Site", {
-  path: "my-solid-start-app/",
+  path: "my-solid-app/",
   timeout: "5 seconds",
   memorySize: "2048 MB",
 });
@@ -480,7 +480,7 @@ const vpc = new Vpc(stack, "myVPC");
 const vpc = Vpc.fromLookup(stack, "myVPC", { ... });
 
 new SolidStartSite(stack, "Site", {
-  path: "my-solid-start-app/",
+  path: "my-solid-app/",
   cdk: {
     server: {
       vpc,
@@ -498,7 +498,7 @@ new SolidStartSite(stack, "Site", {
 import * as s3 from "aws-cdk-lib/aws-s3";
 
 new SolidStartSite(stack, "Site", {
-  path: "my-solid-start-app/",
+  path: "my-solid-app/",
   cdk: {
     bucket: s3.Bucket.fromBucketName(stack, "Bucket", "my-bucket"),
   },
@@ -525,7 +525,7 @@ const serverCachePolicy = new cf.CachePolicy(stack, "ServerCache", {
 });
 
 new SolidStartSite(stack, "Site1", {
-  path: "my-solid-start-app/",
+  path: "my-solid-app/",
   cdk: {
     serverCachePolicy,
   },
@@ -550,7 +550,7 @@ import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 const api = new Api(stack, "Api");
 
 const site = new SolidStartSite(stack, "Site", {
-  path: "my-solid-start-app/",
+  path: "my-solid-app/",
   cdk: {
     distribution: {
       defaultBehavior: {

@@ -585,7 +585,7 @@ export class SsrSite extends Construct implements SSTConstruct {
       });
     } catch (e) {
       throw new Error(
-        `There was a problem building the "${this.node.id}" StaticSite.`
+        `There was a problem building the "${this.node.id}" site.`
       );
     }
   }

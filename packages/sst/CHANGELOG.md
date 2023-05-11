@@ -1,5 +1,19 @@
 # @serverless-stack/cli2
 
+## 2.8.17
+
+### Patch Changes
+
+- [#2835](https://github.com/serverless-stack/sst/pull/2835) [`ed60bd35a`](https://github.com/serverless-stack/sst/commit/ed60bd35add0cc7e88f769ef6a4e4179cb73c62b) Thanks [@danestves](https://github.com/danestves)! - RemixSite: update RemixConfig to prep for Remix v2
+
+## 2.8.16
+
+### Patch Changes
+
+- [`a14a16acb`](https://github.com/serverless-stack/sst/commit/a14a16acb5fa4cd74b515b653d3670af20a2fc62) Thanks [@thdxr](https://github.com/thdxr)! - Upgrade kysely-data-api
+
+## 2.8.15
+
 ## 2.8.14
 
 ## 2.8.13
