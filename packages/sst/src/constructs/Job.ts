@@ -18,7 +18,12 @@ import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Secret } from "./Config.js";
 import { SSTConstruct } from "./Construct.js";
-import { Function, useFunctions, NodeJSProps } from "./Function.js";
+import {
+  Function,
+  useFunctions,
+  NodeJSProps,
+  FunctionCopyFilesProps,
+} from "./Function.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import {
@@ -78,6 +83,17 @@ export interface JobProps {
    *```
    */
   timeout?: Duration;
+  /**
+   * Used to configure additional files to copy into the function bundle
+   *
+   * @example
+   * ```js
+   * new Job(stack, "job", {
+   *   copyFiles: [{ from: "src/index.js" }]
+   * })
+   *```
+   */
+  copyFiles?: FunctionCopyFilesProps[];
   /**
    * Used to configure nodejs function properties
    */
