@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.8.19
+
+### Patch Changes
+
+- [`0517859dd`](https://github.com/serverless-stack/sst/commit/0517859dd87794bbdc374ef4d0abd6f7558be323) Thanks [@thdxr](https://github.com/thdxr)! - Add copyFile support to sst.Job
+
 ## 2.8.18
 
 ## 2.8.17
