@@ -53,64 +53,49 @@ To run this project locally, clone the repo and initialize the project.
 
 ```bash
 $ git clone https://github.com/serverless-stack/sst.git
-$ cd serverless-stack
-$ yarn
+$ cd sst
+$ pnpm install
 ```
 
 Build the project
 
 ```bash
-$ yarn build
+$ pnpm build
 ```
 
-### Core
+### SST
 
-If you are working on the `packages/core` part, run the watcher at the root.
+If you are working on the `packages/sst` part, run the watcher at the root.
 
 ```bash
-$ yarn watch
+$ pnpm watch
 ```
 
-### Resources
-
-If you are working on the `packages/resources` part, run the watcher at the root.
+Finally, after making your changes, run all the tests in the `packages/sst` directory.
 
 ```bash
-$ yarn watch
-```
-
-And if you make changes to the stub Lambdas, you'll need to package them.
-
-```bash
-$ cd packages/resources
-$ yarn build
-```
-
-Finally, after making your changes, run all the tests in the `packages/resources` directory.
-
-```bash
-$ yarn test
+$ pnpm test
 ```
 
 Alternatively, you can run the tests for a specific construct.
 
 ```bash
-$ yarn test <path_to_the_test_for_the_construct>
+$ pnpm test <path_to_the_test_for_the_construct>
 ```
 
-### CLI
+### Console
 
-If you are working on the `packages/cli` just go ahead and make your changes. Then run your tests.
+If you are working on the `packages/console` just go ahead and make your changes. Then run your tests.
 
 ```bash
-$ cd packages/cli
-$ yarn test
+$ cd packages/console
+$ pnpm test
 ```
 
 Alternatively, you can run a specific test.
 
 ```bash
-$ yarn test <path_to_the_test_dir>
+$ pnpm test <path_to_the_test_dir>
 ```
 
 ### Docs
@@ -119,7 +104,7 @@ To run the docs site.
 
 ```bash
 $ cd www
-$ yarn start
+$ pnpm start
 ```
 
 ## Pull Requests
@@ -145,7 +130,7 @@ To cut a release, start by merging the PRs that are going into this release.
 1. Generate changelog
 
    ```bash
-   $ yarn changelog
+   $ pnpm changelog
    ```
 
    You'll need to configure the `GITHUB_AUTH` token locally to be able to run this. [Follow these steps](https://github.com/lerna/lerna-changelog#github-token) and configure the local environment variable.
@@ -155,7 +140,7 @@ To cut a release, start by merging the PRs that are going into this release.
    To publish the release to npm run:
 
    ```bash
-   $ yarn release
+   $ pnpm release
    ```
 
    Pick the version you want (patch/minor/major). This is based on the type of changes in the changelog above.
@@ -205,7 +190,7 @@ This is useful if you'd like to test your release before pushing it live.
 Create a canary release by running.
 
 ```bash
-$ yarn release-canary
+$ pnpm release-canary
 ```
 
 ## Deprecation
