@@ -131,7 +131,7 @@ export class SsrFunction extends Construct {
   }
 
   private createFunction(assetBucket: string, assetKey: string) {
-    const { runtime, timeout, memorySize, handler } = this.props;
+    const { runtime, timeout, memorySize, handler, architecture } = this.props;
 
     return new CdkFunction(this, `ServerFunction`, {
       ...this.props,
@@ -147,7 +147,7 @@ export class SsrFunction extends Construct {
           : runtime === "nodejs16.x"
           ? Runtime.NODEJS_16_X
           : Runtime.NODEJS_18_X,
-      architecture: Architecture.ARM_64,
+      architecture: architecture || Architecture.ARM_64,
       memorySize:
         typeof memorySize === "string"
           ? toCdkSize(memorySize).toMebibytes()
