@@ -64,7 +64,7 @@ process.on("uncaughtException", (err) => {
   }
   console.log();
   console.log(
-    `Need help with this error? Join the SST community on Discord ${blue(
+    `Need help with this error? Post it in #help on the SST Discord ${blue(
       `https://sst.dev/discord`
     )}`
   );
