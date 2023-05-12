@@ -4,13 +4,13 @@ import os from "os";
 import { useRuntimeHandlers } from "../handlers.js";
 import { useRuntimeWorkers } from "../workers.js";
 import { Context } from "../../context/context.js";
-import zipLocal from "zip-local";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { useRuntimeServerConfig } from "../server.js";
 import { existsAsync, findBelow, isChild } from "../../util/fs.js";
 import { useProject } from "../../project.js";
 import { execAsync } from "../../util/process.js";
 import url from "url";
+import AdmZip from "adm-zip";
 
 export const useJavaHandler = Context.memo(async () => {
   const workers = await useRuntimeWorkers();
@@ -89,7 +89,7 @@ export const useJavaHandler = Context.memo(async () => {
         const zip = (await fs.readdir(buildOutput)).find((f) =>
           f.endsWith(".zip")
         )!;
-        zipLocal.sync.unzip(path.join(buildOutput, zip)).save(input.out);
+        new AdmZip(path.join(buildOutput, zip)).extractAllTo(input.out);
         return {
           type: "success",
           handler: input.props.handler!,
