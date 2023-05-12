@@ -439,8 +439,8 @@ export class SsrSite extends Construct implements SSTConstruct {
   /////////////////////
 
   /**
-   * Attaches the given list of permissions to allow the Astro server side
-   * rendering to access other AWS resources.
+   * Attaches the given list of permissions to allow the server side
+   * rendering framework to access other AWS resources.
    *
    * @example
    * ```js
