@@ -922,7 +922,6 @@ function handler(event) {
 
     return {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      functionAssociations: this.buildBehaviorFunctionAssociations(),
       origin: new HttpOrigin(Fn.parseDomainName(fnUrl.url)),
       allowedMethods: AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
@@ -930,6 +929,10 @@ function handler(event) {
       cachePolicy: cdk?.serverCachePolicy ?? this.buildServerCachePolicy(),
       originRequestPolicy: this.buildServerOriginRequestPolicy(),
       ...(cfDistributionProps.defaultBehavior || {}),
+      functionAssociations: [
+        ...this.buildBehaviorFunctionAssociations()
+        ...(cfDistributionProps.defaultBehavior?.functionAssociations || []),
+      ],
     };
   }
 
