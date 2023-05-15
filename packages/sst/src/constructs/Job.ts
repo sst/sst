@@ -480,20 +480,18 @@ export class Job extends Construct implements SSTConstruct {
   }
 
   private createLocalInvoker(): Function {
-    const { handler, nodejs } = this.props;
-
     // Note: make the invoker function the same ID as the Job
     //       construct so users can identify the invoker function
     //       in the Console.
     const fn = new Function(this, this.node.id, {
-      handler,
-      nodejs,
       runtime: "nodejs16.x",
-      timeout: 10,
+      timeout: "15 minutes",
       memorySize: 1024,
       environment: {
+        ...this.props.environment,
         SST_DEBUG_TYPE: "job",
       },
+      ...this.props,
     });
     fn._doNotAllowOthersToBind = true;
     return fn;

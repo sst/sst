@@ -1,5 +1,6 @@
 import { provideActor } from "@console/core/actor";
 import { App } from "@console/core/app";
+import { User } from "@console/core/user";
 
 provideActor({
   type: "system",

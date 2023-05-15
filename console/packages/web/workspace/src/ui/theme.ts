@@ -1,6 +1,10 @@
-import { createGlobalTheme } from "@macaron-css/core";
+import {
+  createGlobalTheme,
+  createThemeContract,
+  createTheme,
+} from "@macaron-css/core";
 
-export const theme = createGlobalTheme(":root", {
+export const [themeClass, theme] = createTheme({
   color: {},
   space: {
     px: "1px",
@@ -39,5 +43,11 @@ export const theme = createGlobalTheme(":root", {
     80: "20rem",
     96: "24rem",
   },
+  font: {},
+});
+
+export const light = createTheme(theme, {
+  color: {},
+  space: {},
   font: {},
 });
