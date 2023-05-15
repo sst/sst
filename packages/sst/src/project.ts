@@ -165,6 +165,12 @@ export async function initProject(globals: GlobalOptions) {
     const files = await fs.readdir(project.paths.root);
     for (const file of files) {
       if (file.startsWith(".sst.config")) {
+        // Do not remove recently generated config files. This allows for multiple
+        // SST processes to run concurrently.
+        const timeGenerated = (file.match(/\b\d{13}\b/g) ?? []).at(0);
+        if (timeGenerated && Date.now() - parseInt(timeGenerated, 10) < 30000) {
+          continue;
+        }
         await fs.unlink(path.join(project.paths.root, file));
         Logger.debug(`Removed old config file ${file}`);
       }
