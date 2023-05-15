@@ -26,7 +26,7 @@ Deploy Next.js, Svelte, Remix, Astro, Solid, or any static site to AWS.
 - [**Svelte**](https://docs.sst.dev/start/svelte)
 - [**Remix**](https://docs.sst.dev/start/remix)
 - [**Astro**](https://docs.sst.dev/start/astro)
-- [**Solid**](https://docs.sst.dev/constructs/SolidStartSite)
+- [**Solid**](https://docs.sst.dev/start/solid)
 
 ### Add any feature
 
