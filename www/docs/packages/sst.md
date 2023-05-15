@@ -146,11 +146,23 @@ Compares the current version of the stacks in your app with the ones that've bee
 npx sst diff [stacks..] [options]
 ```
 
+You can diff against a stage.
+
+```bash
+npx sst diff --stage prod
+```
+
 You can also optionally compare a list of stacks.
 
 ```bash
 npx sst diff stack-a stack-b
 ```
+
+#### Options
+
+- **`--dev`**
+
+  By default, SST will diff against the target stage as it would be deployed using `sst deploy`. If you are running a stage locally using [`sst dev`](../live-lambda-development.md), then pass in `--dev` to diff against the dev version.
 
 ---
 

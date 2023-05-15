@@ -1,7 +1,7 @@
 ---
-sidebar_label: Next.js
-title: Use Next.js with SST
-description: "Create and deploy a Next.js app to AWS with SST and OpenNext."
+sidebar_label: Remix
+title: Use Remix with SST
+description: "Create and deploy a Remix app to AWS with SST."
 ---
 
 import config from "../../config";
@@ -11,7 +11,7 @@ import MultiPackagerCode from "@site/src/components/MultiPackagerCode";
 
 <HeadlineText>
 
-Create and deploy a Next.js app to AWS with SST and [OpenNext](https://open-next.js.org).
+Create and deploy a Remix app to AWS with SST.
 
 </HeadlineText>
 
@@ -25,27 +25,27 @@ You'll need at least [Node.js 16](https://nodejs.org/) and [npm 7](https://www.n
 
 ## 1. Create a new app
 
-Create a new Next.js app.
+Create a new Remix app.
 
 <MultiPackagerCode>
 <TabItem value="npm">
 
 ```bash
-npx create-next-app@latest
+npx create-remix@latest
 ```
 
 </TabItem>
 <TabItem value="yarn">
 
 ```bash
-yarn create next-app
+yarn create remix
 ```
 
 </TabItem>
 <TabItem value="pnpm">
 
 ```bash
-pnpm create next-app
+pnpm create remix
 ```
 
 </TabItem>
@@ -78,7 +78,7 @@ pnpm create sst
 </MultiPackagerCode>
 
 :::tip Ready to deploy
-Your Next.js app is now ready to be deployed to AWS! Just run — `npx sst deploy`. But let's take a second to look at how SST makes it easy to add other features to your app.
+Your Remix app is now ready to be deployed to AWS! Just run — `npx sst deploy`. But let's take a second to look at how SST makes it easy to add other features to your app.
 :::
 
 Start your local dev environment.
@@ -89,7 +89,7 @@ Start your local dev environment.
 ```bash
 # Start SST locally
 npx sst dev
-# Start Next.js locally
+# Start Remix locally
 npm run dev
 ```
 
@@ -99,7 +99,7 @@ npm run dev
 ```bash
 # Start SST locally
 yarn sst dev
-# Start Next.js locally
+# Start Remix locally
 yarn run dev
 ```
 
@@ -109,7 +109,7 @@ yarn run dev
 ```bash
 # Start SST locally
 pnpm sst dev
-# Start Next.js locally
+# Start Remix locally
 pnpm run dev
 ```
 
@@ -120,7 +120,7 @@ pnpm run dev
 
 ## 2. Add file uploads
 
-Let's add a file upload feature to our Next.js app.
+Let's add a file upload feature to our Remix app.
 
 ---
 
@@ -132,11 +132,14 @@ Add an S3 bucket to your `sst.config.ts`.
 const bucket = new Bucket(stack, "public");
 ```
 
-Bind it to your Next.js app.
+Let your Remix app access the bucket.
 
 ```diff title="sst.config.ts"
-const site = new NextjsSite(stack, "site", {
-+ bind: [bucket],
+const site = new RemixSite(stack, "site", {
++ permissions: [bucket],
++ environment: {
++   BUCKET_NAME: bucket.bucketName,
++ },
 });
 ```
 
@@ -144,42 +147,40 @@ const site = new NextjsSite(stack, "site", {
 
 #### Generate a presigned URL
 
-To upload a file to S3 we'll generate a presigned URL. Add this to `pages/index.tsx`.
+To upload a file to S3 we'll generate a presigned URL. Add this to `app/_index.tsx`.
 
-```ts title="pages/index.tsx" {5}
-export async function getServerSideProps() {
+```ts title="app/_index.tsx" {5}
+export async function loader() {
   const command = new PutObjectCommand({
     ACL: "public-read",
     Key: crypto.randomUUID(),
-    Bucket: Bucket.public.bucketName,
+    Bucket: process.env.BUCKET_NAME,
   });
   const url = await getSignedUrl(new S3Client({}), command);
 
-  return { props: { url } };
+  return json({ url });
 }
 ```
-
-:::tip
-With SST we can access our infrastructure in a typesafe way — `Bucket.public.bucketName`. [Learn more](resource-binding.md).
-:::
 
 ---
 
 #### Add an upload form
 
-Let's add the form. Replace the `Home` component in `pages/index.tsx` with.
+Let's add the form. Replace the `Index` component in `app/_index.tsx` with.
 
-```tsx title="pages/index.tsx"
-export default function Home({ url }: { url: string }) {
+```tsx title="app/_index.tsx"
+export default function Index() {
+  const data = useLoaderData<typeof loader>();
   return (
-    <main>
+    <div>
+      <h1>Welcome to Remix</h1>
       <form
         onSubmit={async (e) => {
           e.preventDefault();
 
           const file = (e.target as HTMLFormElement).file.files?.[0]!;
 
-          const image = await fetch(url, {
+          const image = await fetch(data.url, {
             body: file,
             method: "PUT",
             headers: {
@@ -194,7 +195,7 @@ export default function Home({ url }: { url: string }) {
         <input name="file" type="file" accept="image/png, image/jpeg" />
         <button type="submit">Upload</button>
       </form>
-    </main>
+    </div>
   );
 }
 ```
@@ -207,19 +208,22 @@ This will upload an image and redirect to it!
 
 Next, we'll add a cron job to remove the uploaded files every day. Add this to `sst.config.ts`.
 
-```ts title="sst.config.ts" {5}
+```ts title="sst.config.ts"
 new Cron(stack, "cron", {
-  schedule: "rate(1 day)",
+  schedule: "rate(1 minute)",
   job: {
     function: {
-      bind: [bucket],
+      permissions: [bucket],
+      environment: {
+        BUCKET_NAME: bucket.bucketName,
+      },
       handler: "functions/delete.handler",
     },
   },
 });
 ```
 
-Just like our Next.js app, we are binding the S3 bucket to our cron job.
+Just like our Remix app, we are letting our cron job access the S3 bucket.
 
 ---
 
@@ -233,7 +237,7 @@ export async function handler() {
 
   const list = await client.send(
     new ListObjectsCommand({
-      Bucket: Bucket.public.bucketName,
+      Bucket: process.env.BUCKET_NAME,
     })
   );
 
@@ -242,7 +246,7 @@ export async function handler() {
       client.send(
         new DeleteObjectCommand({
           Key: file.Key,
-          Bucket: Bucket.public.bucketName,
+          Bucket: process.env.BUCKET_NAME,
         })
       )
     )
@@ -250,7 +254,7 @@ export async function handler() {
 }
 ```
 
-And that's it. We have a simple Next.js app that uploads files to S3 and runs a cron job to delete them!
+And that's it. We have a simple Remix app that uploads files to S3 and runs a cron job to delete them!
 
 ---
 
@@ -282,14 +286,10 @@ pnpm sst deploy --stage prod
 </TabItem>
 </MultiPackagerCode>
 
-:::note
-The `sst deploy` command internally uses OpenNext to build your app.
-:::
-
-![Next.js app deployed to AWS with SST](/img/start/nextjs-app-deployed-to-aws-with-sst.png)
+![Remix app deployed to AWS with SST](/img/start/remix-app-deployed-to-aws-with-sst.png)
 
 :::info
-[View the source](https://github.com/serverless-stack/sst/tree/master/examples/quickstart-nextjs) for this example on GitHub.
+[View the source](https://github.com/serverless-stack/sst/tree/master/examples/quickstart-remix) for this example on GitHub.
 :::
 
 ---
@@ -299,8 +299,6 @@ The `sst deploy` command internally uses OpenNext to build your app.
 1. Learn more about SST
    - [`Cron`](../constructs/Cron.md) — Add a cron job to your app
    - [`Bucket`](../constructs/Bucket.md) — Add S3 buckets to your app
-   - [`NextjsSite`](../constructs/NextjsSite.md) — Deploy Next.js apps to AWS
+   - [`RemixSite`](../constructs/RemixSite.md) — Deploy Remix apps to AWS
    - [Live Lambda Dev](../live-lambda-development.md) — SST's local dev environment
-   - [Resource Binding](../resource-binding.md) — Typesafe access to your resources
-2. Have a Next.js app on Vercel? [**Migrate it to SST**](../migrating/vercel.md).
-3. Ready to dive into the details of SST? [**Check out our tutorial**](../learn/index.md).
+2. Ready to dive into the details of SST? [**Check out our tutorial**](../learn/index.md).
