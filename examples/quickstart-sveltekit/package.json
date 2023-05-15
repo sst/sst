@@ -11,8 +11,8 @@
     "sst:dev": "sst dev"
   },
   "devDependencies": {
-    "@aws-sdk/client-s3": "^3.329.0",
-    "@aws-sdk/s3-request-presigner": "^3.329.0",
+    "@aws-sdk/client-s3": "^3.332.0",
+    "@aws-sdk/s3-request-presigner": "^3.332.0",
     "@fontsource/fira-mono": "^4.5.10",
     "@neoconfetti/svelte": "^1.0.0",
     "@sveltejs/adapter-auto": "^2.0.1",
@@ -20,13 +20,13 @@
     "@types/cookie": "^0.5.1",
     "aws-cdk-lib": "2.72.1",
     "constructs": "10.1.156",
-    "sst": "^2.8.13",
+    "sst": "^2.8.22",
     "svelte": "^3.59.1",
     "svelte-check": "^3.3.2",
-    "svelte-kit-sst": "^2.8.13",
+    "svelte-kit-sst": "^2.8.22",
     "tslib": "^2.5.0",
     "typescript": "^5.0.4",
-    "vite": "^4.3.5"
+    "vite": "^4.3.6"
   },
   "type": "module"
 }

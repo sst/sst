@@ -12,18 +12,18 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "sst": "^2.8.13",
+    "sst": "^2.8.22",
     "aws-cdk-lib": "2.72.1",
     "constructs": "10.1.156",
     "typescript": "^5.0.4",
-    "@tsconfig/node16": "^1.0.3"
+    "@tsconfig/node16": "^1.0.4"
   },
   "workspaces": [
     "packages/*",
     "web"
   ],
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.329.0",
-    "@aws-sdk/util-dynamodb": "^3.329.0"
+    "@aws-sdk/client-dynamodb": "^3.332.0",
+    "@aws-sdk/util-dynamodb": "^3.332.0"
   }
 }

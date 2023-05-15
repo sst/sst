@@ -1,5 +1,11 @@
 # create-sst
 
+## 2.8.22
+
+### Patch Changes
+
+- [#2881](https://github.com/serverless-stack/sst/pull/2881) [`570dc6b14`](https://github.com/serverless-stack/sst/commit/570dc6b1413357076349ccfa4f3bd0188c57ecdc) Thanks [@jayair](https://github.com/jayair)! - Quickstart for Remix
+
 ## 2.8.21
 
 ## 2.8.20
