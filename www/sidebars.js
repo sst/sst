@@ -12,6 +12,7 @@ module.exports = {
           items: [
             "start/astro",
             "start/svelte",
+            "start/remix",
             "start/nextjs",
             "start/standalone",
           ],

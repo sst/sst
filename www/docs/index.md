@@ -45,7 +45,7 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/constructs/RemixSite")}>
+    <a href={useBaseUrl("/start/remix")}>
       <h3><img src="/img/logos/remix.svg" />Remix</h3>
       <p>Create and deploy a serverless Remix app to AWS with SST.</p>
     </a>
