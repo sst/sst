@@ -1,0 +1,35 @@
+{
+  "name": "quickstart-solidstart",
+  "scripts": {
+    "dev": "sst bind solid-start dev",
+    "build": "solid-start build",
+    "start": "solid-start start",
+    "sst:deploy": "sst deploy",
+    "sst:dev": "sst dev"
+  },
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^20.1.4",
+    "aws-cdk-lib": "2.72.1",
+    "constructs": "10.1.156",
+    "esbuild": "^0.17.19",
+    "postcss": "^8.4.23",
+    "solid-start-node": "^0.2.26",
+    "solid-start-sst": "^2.8.22",
+    "sst": "^2.8.22",
+    "typescript": "^5.0.4",
+    "vite": "^4.3.6"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.332.0",
+    "@aws-sdk/s3-request-presigner": "^3.332.0",
+    "@solidjs/meta": "^0.28.5",
+    "@solidjs/router": "^0.8.2",
+    "solid-js": "^1.7.5",
+    "solid-start": "^0.2.26",
+    "undici": "^5.22.1"
+  },
+  "engines": {
+    "node": ">=16.8"
+  }
+}
