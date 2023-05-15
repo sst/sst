@@ -1,5 +1,15 @@
 # @serverless-stack/cli2
 
+## 2.8.21
+
+### Patch Changes
+
+- [`ee5339521`](https://github.com/serverless-stack/sst/commit/ee53395212a045584fa97bac7f77ea8cb5674458) Thanks [@thdxr](https://github.com/thdxr)! - Temporary fix for DNS issue when fetching metadata
+
+- [#2878](https://github.com/serverless-stack/sst/pull/2878) [`848ae7fdd`](https://github.com/serverless-stack/sst/commit/848ae7fdd42b3f80fe5854ec2f28b794bc6ea45a) Thanks [@jamesgibbons92](https://github.com/jamesgibbons92)! - Cli: do not remove config files created by concurrent SST processes
+
+- [`73cff4132`](https://github.com/serverless-stack/sst/commit/73cff4132ec2787ecc27b3eeb8607f5d716d6521) Thanks [@fwang](https://github.com/fwang)! - Job: use posix import path on Windows
+
 ## 2.8.20
 
 ### Patch Changes
