@@ -135,7 +135,7 @@ export class SsrFunction extends Construct {
 
     return new CdkFunction(this, `ServerFunction`, {
       ...this.props,
-      handler,
+      handler: handler.split(path.sep).join(path.posix.sep),
       logRetention: RetentionDays.THREE_DAYS,
       code: Code.fromBucket(
         Bucket.fromBucketName(this, "IServerFunctionBucket", assetBucket),
