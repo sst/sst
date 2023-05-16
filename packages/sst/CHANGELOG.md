@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.8.23
+
+### Patch Changes
+
+- [`c590bf380`](https://github.com/serverless-stack/sst/commit/c590bf380bffd51f1625de1f0bc408d573438c8c) Thanks [@fwang](https://github.com/fwang)! - SvelteKitSite: construct function handler in posix format
+
+- [#2880](https://github.com/serverless-stack/sst/pull/2880) [`1f6af6a20`](https://github.com/serverless-stack/sst/commit/1f6af6a20c5f34d649e4d685f817f652dca9492b) Thanks [@tyrauber](https://github.com/tyrauber)! - SsrSite: merge user defined CloudFront function definitions
+
 ## 2.8.22
 
 ## 2.8.21
