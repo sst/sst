@@ -694,17 +694,15 @@ export class SsrSite extends Construct implements SSTConstruct {
     if (cdk?.bucket && isCDKConstruct(cdk?.bucket)) {
       return cdk.bucket as Bucket;
     }
+
     // cdk.bucket is a prop
-    else {
-      const bucketProps = cdk?.bucket as BucketProps;
-      return new Bucket(this, "S3Bucket", {
-        publicReadAccess: false,
-        blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-        autoDeleteObjects: true,
-        removalPolicy: RemovalPolicy.DESTROY,
-        ...bucketProps,
-      });
-    }
+    return new Bucket(this, "S3Bucket", {
+      publicReadAccess: false,
+      blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+      autoDeleteObjects: true,
+      removalPolicy: RemovalPolicy.DESTROY,
+      ...cdk?.bucket,
+    });
   }
 
   private createS3Deployment(
@@ -930,7 +928,7 @@ function handler(event) {
       originRequestPolicy: this.buildServerOriginRequestPolicy(),
       ...(cfDistributionProps.defaultBehavior || {}),
       functionAssociations: [
-        ...this.buildBehaviorFunctionAssociations()
+        ...this.buildBehaviorFunctionAssociations(),
         ...(cfDistributionProps.defaultBehavior?.functionAssociations || []),
       ],
     };
@@ -942,7 +940,6 @@ function handler(event) {
 
     return {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      functionAssociations: this.buildBehaviorFunctionAssociations(),
       origin,
       allowedMethods: AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
@@ -950,6 +947,10 @@ function handler(event) {
       cachePolicy: cdk?.serverCachePolicy ?? this.buildServerCachePolicy(),
       originRequestPolicy: this.buildServerOriginRequestPolicy(),
       ...(cfDistributionProps.defaultBehavior || {}),
+      functionAssociations: [
+        ...this.buildBehaviorFunctionAssociations(),
+        ...(cfDistributionProps.defaultBehavior?.functionAssociations || []),
+      ],
       edgeLambdas: [
         {
           includeBody: true,

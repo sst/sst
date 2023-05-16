@@ -12,7 +12,14 @@ import {
   createApp,
 } from "./helper.js";
 import * as s3 from "aws-cdk-lib/aws-s3";
-import * as cf from "aws-cdk-lib/aws-cloudfront";
+import {
+  Function as CfFunction,
+  FunctionCode as CfFunctionCode,
+  FunctionEventType,
+  CachePolicy,
+  ViewerProtocolPolicy,
+  AllowedMethods,
+} from "aws-cdk-lib/aws-cloudfront";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import { Api, Stack, RemixSite } from "../../dist/constructs/";
@@ -51,11 +58,11 @@ test("edge: undefined", async () => {
   });
   expect(site.url).toBeDefined();
   expect(site.customDomainUrl).toBeUndefined();
-  expect(site.cdk.bucket.bucketArn).toBeDefined();
-  expect(site.cdk.bucket.bucketName).toBeDefined();
-  expect(site.cdk.distribution.distributionId).toBeDefined();
-  expect(site.cdk.distribution.distributionDomainName).toBeDefined();
-  expect(site.cdk.certificate).toBeUndefined();
+  expect(site.cdk!.bucket.bucketArn).toBeDefined();
+  expect(site.cdk!.bucket.bucketName).toBeDefined();
+  expect(site.cdk!.distribution.distributionId).toBeDefined();
+  expect(site.cdk!.distribution.distributionDomainName).toBeDefined();
+  expect(site.cdk!.certificate).toBeUndefined();
   countResources(stack, "AWS::S3::Bucket", 1);
   countResources(stack, "AWS::Lambda::Function", 5);
   countResources(stack, "AWS::CloudFront::Distribution", 1);
@@ -450,12 +457,12 @@ test("edge: true: environment generates placeholders", async () => {
         },
       },
       {
-        files: "**/*.*js",
+        files: "**/*.@(*js|json|html)",
         search: "{{ CONSTANT_ENV }}",
         replace: "my-url",
       },
       {
-        files: "**/*.*js",
+        files: "**/*.@(*js|json|html)",
         search: "{{ REFERENCE_ENV }}",
         replace: {
           "Fn::GetAtt": ["ApiCD79AAA0", "ApiEndpoint"],
@@ -879,62 +886,6 @@ test("constructor: path not exist", async () => {
   }).toThrow(/Could not find/);
 });
 
-test("cdk.bucket is props", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new RemixSite(stack, "Site", {
-    path: sitePath,
-    cdk: {
-      bucket: {
-        bucketName: "my-bucket",
-      },
-    },
-    // @ts-expect-error: "sstTest" is not exposed in props
-    sstTest: true,
-  });
-  countResources(stack, "AWS::S3::Bucket", 1);
-  hasResource(stack, "AWS::S3::Bucket", {
-    BucketName: "my-bucket",
-  });
-});
-
-test("cdk.bucket is construct", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new RemixSite(stack, "Site", {
-    path: sitePath,
-    cdk: {
-      bucket: s3.Bucket.fromBucketName(stack, "Bucket", "my-bucket"),
-    },
-    // @ts-expect-error: "sstTest" is not exposed in props
-    sstTest: true,
-  });
-  countResources(stack, "AWS::S3::Bucket", 0);
-  hasResource(stack, "AWS::CloudFront::Distribution", {
-    DistributionConfig: objectLike({
-      Origins: [
-        ANY,
-        objectLike({
-          S3OriginConfig: {
-            OriginAccessIdentity: {
-              "Fn::Join": [
-                "",
-                [
-                  "origin-access-identity/cloudfront/",
-                  {
-                    Ref: "SiteDistributionOrigin2S3OriginD0424A5E",
-                  },
-                ],
-              ],
-            },
-          },
-        }),
-      ],
-    }),
-  });
-  hasResource(stack, "Custom::SSTBucketDeployment", {
-    DestinationBucketName: "my-bucket",
-  });
-});
-
 test("constructor: cfCachePolicies props default", async () => {
   const stack = new Stack(await createApp(), "stack");
   new RemixSite(stack, "Site", {
@@ -955,7 +906,7 @@ test("constructor: cfCachePolicies props override", async () => {
   new RemixSite(stack, "Site", {
     path: sitePath,
     cdk: {
-      serverCachePolicy: cf.CachePolicy.fromCachePolicyId(
+      serverCachePolicy: CachePolicy.fromCachePolicyId(
         stack,
         "ServerCachePolicy",
         "ServerCachePolicyId"
@@ -994,8 +945,8 @@ test("constructor: cfDistribution defaultBehavior override", async () => {
     cdk: {
       distribution: {
         defaultBehavior: {
-          viewerProtocolPolicy: cf.ViewerProtocolPolicy.HTTPS_ONLY,
-          allowedMethods: cf.AllowedMethods.ALLOW_ALL,
+          viewerProtocolPolicy: ViewerProtocolPolicy.HTTPS_ONLY,
+          allowedMethods: AllowedMethods.ALLOW_ALL,
         },
       },
     },
@@ -1055,8 +1006,121 @@ test("constructor: cfDistribution domainNames conflict", async () => {
   }).toThrow(/Do not configure the "cfDistribution.domainNames"/);
 });
 
-test("constructor: sst dev", async () => {
-  const stack = new Stack(await createApp({ mode: "dev" }), "stack");
+test("constructor: cdk.bucket is props", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new RemixSite(stack, "Site", {
+    path: sitePath,
+    cdk: {
+      bucket: {
+        bucketName: "my-bucket",
+      },
+    },
+    // @ts-expect-error: "sstTest" is not exposed in props
+    sstTest: true,
+  });
+  countResources(stack, "AWS::S3::Bucket", 1);
+  hasResource(stack, "AWS::S3::Bucket", {
+    BucketName: "my-bucket",
+  });
+});
+
+test("constructor: cdk.bucket is construct", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new RemixSite(stack, "Site", {
+    path: sitePath,
+    cdk: {
+      bucket: s3.Bucket.fromBucketName(stack, "Bucket", "my-bucket"),
+    },
+    // @ts-expect-error: "sstTest" is not exposed in props
+    sstTest: true,
+  });
+  countResources(stack, "AWS::S3::Bucket", 0);
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      Origins: [
+        ANY,
+        objectLike({
+          S3OriginConfig: {
+            OriginAccessIdentity: {
+              "Fn::Join": [
+                "",
+                [
+                  "origin-access-identity/cloudfront/",
+                  {
+                    Ref: "SiteDistributionOrigin2S3OriginD0424A5E",
+                  },
+                ],
+              ],
+            },
+          },
+        }),
+      ],
+    }),
+  });
+  hasResource(stack, "Custom::SSTBucketDeployment", {
+    DestinationBucketName: "my-bucket",
+  });
+});
+
+test("constructor: cdk.distribution.defaultBehavior no functionAssociations", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new RemixSite(stack, "Site", {
+    path: sitePath,
+  });
+  printResource(stack, "AWS::CloudFront::Distribution");
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      DefaultCacheBehavior: objectLike({
+        FunctionAssociations: [
+          {
+            EventType: "viewer-request",
+            FunctionARN: ANY,
+          },
+        ],
+      }),
+    }),
+  });
+});
+test("constructor: cdk.distribution.defaultBehavior additional functionAssociations", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new RemixSite(stack, "Site", {
+    path: sitePath,
+    cdk: {
+      distribution: {
+        defaultBehavior: {
+          functionAssociations: [
+            {
+              function: new CfFunction(stack, "CloudFrontFunction", {
+                code: CfFunctionCode.fromInline(`function handler(event) {}`),
+              }),
+              eventType: FunctionEventType.VIEWER_RESPONSE,
+            },
+          ],
+        },
+      },
+    },
+  });
+  printResource(stack, "AWS::CloudFront::Distribution");
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      DefaultCacheBehavior: objectLike({
+        FunctionAssociations: [
+          {
+            EventType: "viewer-request",
+            FunctionARN: ANY,
+          },
+          {
+            EventType: "viewer-response",
+            FunctionARN: ANY,
+          },
+        ],
+      }),
+    }),
+  });
+});
+
+test("constructor: sst remove", async () => {
+  const stack = new Stack(await createApp({ mode: "remove" }), "stack");
   const site = new RemixSite(stack, "Site", {
     path: sitePath,
   });
@@ -1068,7 +1132,50 @@ test("constructor: sst dev", async () => {
   countResources(stack, "AWS::CloudFront::Distribution", 0);
 });
 
-test("constructor: sst dev with disablePlaceholder true", async () => {
+test("constructor: sst deploy inactive stack", async () => {
+  const app = await createApp({
+    mode: "deploy",
+    isActiveStack(stackName) {
+      return false;
+    },
+  });
+  const stack = new Stack(app, "stack");
+  const site = new RemixSite(stack, "Site", {
+    path: sitePath,
+  });
+  expect(site.url).toBeUndefined();
+  expect(site.customDomainUrl).toBeUndefined();
+  expect(site.cdk).toBeUndefined();
+  countResources(stack, "AWS::CloudFront::Distribution", 0);
+  countResources(stack, "Custom::SSTBucketDeployment", 0);
+  countResources(stack, "Custom::CloudFrontInvalidator", 0);
+});
+
+test("constructor: sst dev: dev.url undefined", async () => {
+  const stack = new Stack(await createApp({ mode: "dev" }), "stack");
+  const site = new RemixSite(stack, "Site", {
+    path: sitePath,
+  });
+  expect(site.url).toBeUndefined();
+  expect(site.customDomainUrl).toBeUndefined();
+  expect(site.cdk).toBeUndefined();
+  countResources(stack, "AWS::CloudFront::Distribution", 0);
+  countResources(stack, "Custom::SSTBucketDeployment", 0);
+  countResources(stack, "Custom::CloudFrontInvalidator", 0);
+});
+
+test("constructor: sst dev: dev.url string", async () => {
+  const stack = new Stack(await createApp({ mode: "dev" }), "stack");
+  const site = new RemixSite(stack, "Site", {
+    path: sitePath,
+    dev: {
+      url: "localhost:3000",
+    },
+  });
+  expect(site.url).toBe("localhost:3000");
+});
+
+test("constructor: sst dev: disablePlaceholder true", async () => {
   const stack = new Stack(await createApp({ mode: "dev" }), "stack");
   const site = new RemixSite(stack, "Site", {
     path: sitePath,
@@ -1090,9 +1197,9 @@ test("constructor: sst remove", async () => {
   expect(site.url).toBeUndefined();
   expect(site.customDomainUrl).toBeUndefined();
   expect(site.cdk).toBeUndefined();
+  countResources(stack, "AWS::CloudFront::Distribution", 0);
   countResources(stack, "Custom::SSTBucketDeployment", 0);
   countResources(stack, "Custom::CloudFrontInvalidator", 0);
-  countResources(stack, "AWS::CloudFront::Distribution", 0);
 });
 
 /////////////////////////////
