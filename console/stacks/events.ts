@@ -3,13 +3,32 @@ import {
   FunctionDefinition,
   Queue,
   StackContext,
+  Function,
+  toCdkDuration,
   use,
 } from "sst/constructs";
 import { Secrets } from "./secrets";
-import type { Stage } from "../packages/core/src/app/stage";
+import { LambdaDestination } from "aws-cdk-lib/aws-lambda-destinations";
 
 export function Events({ stack }: StackContext) {
   const bus = new EventBus(stack, "bus");
+  const redriver = new Queue(stack, `bus-redriver`, {
+    consumer: {
+      function: {
+        handler: "packages/functions/src/events/redriver.handler",
+        permissions: ["lambda"],
+      },
+    },
+  });
+
+  const onFailure = new Queue(stack, `bus-dlq`, {
+    consumer: {
+      function: {
+        handler: "packages/functions/src/events/dlq.handler",
+        bind: [redriver],
+      },
+    },
+  });
 
   function subscribe(name: string, fn: FunctionDefinition) {
     const stripped = name.replace(/\./g, "_");
@@ -20,17 +39,14 @@ export function Events({ stack }: StackContext) {
         },
         targets: {
           handler: {
-            type: "queue",
-            queue: new Queue(stack, `${stripped}-handler-queue`, {
-              consumer: {
-                cdk: {
-                  eventSource: {
-                    reportBatchItemFailures: true,
-                  },
-                },
-                function: fn,
+            function: fn,
+            cdk: {
+              target: {
+                retryAttempts: 185,
+                maxEventAge: toCdkDuration("10 hours"),
+                deadLetterQueue: onFailure.cdk.queue,
               },
-            }),
+            },
           },
         },
       },
@@ -56,6 +72,7 @@ export function Events({ stack }: StackContext) {
     handler: "packages/functions/src/events/app-stage-connected.handler",
     bind: [...Object.values(secrets.database)],
     permissions: ["sts"],
+    onFailure: new LambdaDestination(onFailure.consumerFunction!),
   });
 
   return bus;
