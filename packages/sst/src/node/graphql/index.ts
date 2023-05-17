@@ -10,7 +10,10 @@ type ServerContext = {
 export function GraphQLHandler<UserContext extends {}>(
   options: YogaServerOptions<ServerContext, UserContext>
 ) {
-  const yoga = createYoga<ServerContext, UserContext>(options);
+  const yoga = createYoga<ServerContext, UserContext>({
+    graphqlEndpoint: process.env.GRAPHQL_ENDPOINT,
+    ...options,
+  });
 
   return Handler("api", async () => {
     const event = useEvent("api");
