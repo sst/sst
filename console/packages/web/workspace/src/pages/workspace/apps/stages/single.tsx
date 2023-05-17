@@ -1,5 +1,6 @@
 import { styled } from "@macaron-css/solid";
-import { theme } from "src/ui/theme";
+import { Button } from "../../../../ui/button";
+import { theme } from "../../../../ui/theme";
 
 const Root = styled("div", {
   base: {
@@ -39,6 +40,9 @@ export function Single() {
           <SidebarAvatar />
         </SidebarHeader>
       </Sidebar>
+      <div>
+        <Button color="danger">Delete</Button>
+      </div>
     </Root>
   );
 }

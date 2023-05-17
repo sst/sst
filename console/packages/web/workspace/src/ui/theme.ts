@@ -4,8 +4,27 @@ import {
   createTheme,
 } from "@macaron-css/core";
 
-export const [themeClass, theme] = createTheme({
-  color: {},
+export const [lightClass, theme] = createTheme({
+  color: {
+    danger: {
+      border: "hsl(2deg 84% 43%)",
+      surface: "hsl(2deg 84% 55%)",
+      foreground: "hsl(0deg 0% 100% / 93%)",
+      shadow:
+        "hsl(2.11deg 84.52% 67.06% / 80%) 0px 1px 0px 0px inset, hsl(240deg 29.41% 10% / 10%) 0px 1px 1px 0px, hsl(240deg 29.41% 10% / 10%) 0px 2px 2px 0px",
+      hover: {
+        surface: "hsl(2deg 84% 61%)",
+        border: "hsl(2deg 84% 49%)",
+      },
+      active: {
+        surface: "hsl(2deg 84% 49%)",
+        border: "transparent",
+      },
+    },
+  },
+  font: {
+    mono: "IBM Plex Mono",
+  },
   space: {
     px: "1px",
     0: "0px",
@@ -43,11 +62,8 @@ export const [themeClass, theme] = createTheme({
     80: "20rem",
     96: "24rem",
   },
-  font: {},
 });
 
-export const light = createTheme(theme, {
-  color: {},
-  space: {},
-  font: {},
+export const darkClass = createTheme(theme, {
+  ...theme,
 });
