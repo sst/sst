@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.8.25
+
+### Patch Changes
+
+- [`e0522a7b4`](https://github.com/serverless-stack/sst/commit/e0522a7b47c8af340b504da927348c443ee75d58) Thanks [@thdxr](https://github.com/thdxr)! - automatically set graphql endpoint if not manually set
+
 ## 2.8.24
 
 ### Patch Changes
