@@ -3,6 +3,7 @@ import { Context } from "../../../context/context.js";
 import { useCookie, useHeader } from "../../api/index.js";
 import { Auth } from "../../auth/index.js";
 import { Config } from "../../config/index.js";
+import { useContextType } from "../../../context/handler.js";
 
 export interface SessionTypes {
   public: {};
@@ -16,13 +17,25 @@ export type SessionValue = {
 }[keyof SessionTypes];
 
 const SessionMemo = /* @__PURE__ */ Context.memo(() => {
+  // Get the context type and hooks that match that type
   let token = "";
 
   const header = useHeader("authorization")!;
   if (header) token = header.substring(7);
 
-  const cookie = useCookie("sst_auth_token");
+  const ctxType = useContextType();
+  const cookie = ctxType === "api" ? useCookie("sst_auth_token") : undefined;
   if (cookie) token = cookie;
+
+  // WebSocket may also set the token in the protocol header
+  // TODO: Once https://github.com/serverless-stack/sst/pull/2838 is merged,
+  // then we should no longer need to check both casing for the header.
+  const wsProtocol =
+    ctxType === "ws"
+      ? useHeader("sec-websocket-protocol") ||
+        useHeader("Sec-WebSocket-Protocol")
+      : undefined;
+  if (wsProtocol) token = wsProtocol.split(",")[0].trim();
 
   if (token) {
     return Session.verify(token);
