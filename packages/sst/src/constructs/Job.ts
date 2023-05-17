@@ -485,13 +485,13 @@ export class Job extends Construct implements SSTConstruct {
     //       in the Console.
     const fn = new Function(this, this.node.id, {
       runtime: "nodejs16.x",
-      timeout: "15 minutes",
       memorySize: 1024,
       environment: {
         ...this.props.environment,
         SST_DEBUG_TYPE: "job",
       },
       ...this.props,
+      timeout: "15 minutes",
     });
     fn._doNotAllowOthersToBind = true;
     return fn;
