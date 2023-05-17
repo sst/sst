@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.2.3
+
+### Patch Changes
+
+- [#2817](https://github.com/serverless-stack/sst/pull/2817) [`2aec504bf`](https://github.com/serverless-stack/sst/commit/2aec504bfd5145d36c510171af207dbeca682e5f) Thanks [@justindra](https://github.com/justindra)! - Added a new WebSocketApiHandler to allow for websockets to use session hooks
+
 ## 2.2.2
 
 ### Patch Changes
