@@ -43,7 +43,7 @@ Disable the cron job from automatically running while developing.
 new Cron(stack, "Cron", {
   schedule: "rate(1 minute)",
   job: "src/lambda.main",
-  enabled: app.local,
+  enabled: !app.local,
 });
 ```
 
