@@ -2,8 +2,8 @@ import { Issuer } from "openid-client";
 import { Adapter } from "./adapter.js";
 import { OidcAdapter, OidcBasicConfig } from "./oidc.js";
 
-// This is the common use for all Microsoft account logins (Business and privte accounts)
-// Common: https://login.microsoftonline.com/common/v2.0
+// These are the different Microsoft auth urls for different types of accounts:
+// Common: https://login.microsoftonline.com/common/v2.0 (both business and private)
 // Business: https://login.microsoftonline.com/{tenant}/v2.0
 // Private: https://login.microsoftonline.com/consumers/v2.0
 
