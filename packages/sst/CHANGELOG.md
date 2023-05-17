@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.8.26
+
+### Patch Changes
+
+- [`7935511eb`](https://github.com/serverless-stack/sst/commit/7935511eba607294c7953c2afb9fa03270ac252b) Thanks [@thdxr](https://github.com/thdxr)! - sst update fix for svelte-kit-sst
+
 ## 2.8.25
 
 ### Patch Changes
