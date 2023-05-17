@@ -35,7 +35,7 @@ export default {
   stacks(app) {
     // Remove all resources when non-prod stages are removed
     if (app.stage !== "prod") {
-      app.setDefaultRemovalPolicy("destroy");
+      app.setDefaultRemovalPolicy(RemovalPolicy.DESTROY);
     }
 
     // ...
