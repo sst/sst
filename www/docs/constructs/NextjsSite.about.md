@@ -165,6 +165,25 @@ You can read more about this over on the [Resource Binding](../resource-binding.
 
 ---
 
+## Warming
+
+Server functions may experience performance issues due to Lambda cold starts. SST helps mitigate this by periodically invoking the server function.
+
+```ts {5}
+new NextjsSite(stack, "Site", {
+  path: "packages/web",
+  warm: 20,
+});
+```
+
+Setting `warm` to 20 keeps 20 server function instances active, invoking them every 5 minutes.
+
+Note that warming is currently supported only in regional mode.
+
+[Read more about how warming works and the associated cost.](https://github.com/serverless-stack/open-next#warmer-function)
+
+---
+
 #### Client side environment variables
 
 You can also pass in environment variables directly to your client side code.
