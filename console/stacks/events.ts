@@ -1,6 +1,6 @@
 import {
   EventBus,
-  FunctionDefinition,
+  FunctionProps,
   Queue,
   StackContext,
   Function,
@@ -12,6 +12,7 @@ import { LambdaDestination } from "aws-cdk-lib/aws-lambda-destinations";
 
 export function Events({ stack }: StackContext) {
   const bus = new EventBus(stack, "bus");
+
   const redriver = new Queue(stack, `bus-redriver`, {
     consumer: {
       function: {
@@ -21,16 +22,12 @@ export function Events({ stack }: StackContext) {
     },
   });
 
-  const onFailure = new Queue(stack, `bus-dlq`, {
-    consumer: {
-      function: {
-        handler: "packages/functions/src/events/dlq.handler",
-        bind: [redriver],
-      },
-    },
+  const onFailure = new Function(stack, `bus-onFailure`, {
+    handler: "packages/functions/src/events/dlq.handler",
+    bind: [redriver],
   });
 
-  function subscribe(name: string, fn: FunctionDefinition) {
+  function subscribe(name: string, fn: FunctionProps) {
     const stripped = name.replace(/\./g, "_");
     bus.addRules(stack, {
       [stripped]: {
@@ -39,13 +36,9 @@ export function Events({ stack }: StackContext) {
         },
         targets: {
           handler: {
-            function: fn,
-            cdk: {
-              target: {
-                retryAttempts: 185,
-                maxEventAge: toCdkDuration("10 hours"),
-                deadLetterQueue: onFailure.cdk.queue,
-              },
+            function: {
+              ...fn,
+              onFailure: new LambdaDestination(onFailure),
             },
           },
         },
@@ -53,16 +46,7 @@ export function Events({ stack }: StackContext) {
     });
   }
 
-  // 1. be opinionated about event shape
-  // 2. add more useful bus.subscribe(queue: true)
-  // 3. remove the need to call bus.subscribe (detect event handlers) EventHandler
-  //    if need custom option, define whole thing in stack code
-  // 4. optionally customize in stack code
-
   const secrets = use(Secrets);
-  subscribe("test.event", {
-    handler: "packages/functions/src/events/test.handler",
-  });
 
   subscribe("aws.account.created", {
     handler: "packages/functions/src/events/aws-account-created.handler",
@@ -72,7 +56,6 @@ export function Events({ stack }: StackContext) {
     handler: "packages/functions/src/events/app-stage-connected.handler",
     bind: [...Object.values(secrets.database)],
     permissions: ["sts"],
-    onFailure: new LambdaDestination(onFailure.consumerFunction!),
   });
 
   return bus;

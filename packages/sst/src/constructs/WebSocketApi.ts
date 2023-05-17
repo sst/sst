@@ -34,7 +34,7 @@ export interface WebSocketApiAccessLogProps
 
 export interface WebSocketApiProps {
   /**
-   * The routes for the Websocket API
+   * The routes for the WebSocket API
    *
    * @example
    * ```js
@@ -470,11 +470,18 @@ export class WebSocketApi extends Construct implements SSTConstruct {
   /** @internal */
   public getFunctionBinding(): FunctionBindingProps {
     return {
-      clientPackage: "api",
+      clientPackage: "websocket-api",
       variables: {
         url: {
           type: "plain",
           value: this.customDomainUrl || this.url,
+        },
+        httpsUrl: {
+          type: "plain",
+          value: (this.customDomainUrl || this.url).replace(
+            "wss://",
+            "https://"
+          ),
         },
       },
       permissions: {

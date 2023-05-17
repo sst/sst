@@ -8,7 +8,7 @@ export function Stages() {
   return (
     <Routes>
       <Route path="" component={List} />
-      <Route path=":stageID" element={Single} />
+      <Route path=":stageID" component={Single} />
     </Routes>
   );
 }
