@@ -124,6 +124,13 @@ Since we are dealing with sensitive info, Config is only supported in the fronte
 
 ---
 
+When running `sst build`, `sst deploy` or `sst dev`, types are generated for the defined `Config` properties in the `.sst` folder. To use these types, place an `sst-env.d.ts` file in any package that needs the types that contains the following:
+   ```js
+   /// <reference path="../.sst/types/index.ts" />
+   ```
+Make sure you specify the path correctly. With this in place, your IDE should recognise the types from the `Config` construct and autocomplete correctly.
+
+
 ## How it works
 
 Let's take a look at how secrets and parameters work behind the scenes.
