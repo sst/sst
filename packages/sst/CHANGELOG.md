@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.8.27
+
+### Patch Changes
+
+- [`7fb657e0e`](https://github.com/serverless-stack/sst/commit/7fb657e0ea08cfdabe4fec2577bf8cd71d7f4e9a) Thanks [@thdxr](https://github.com/thdxr)! - fix connect command by including iam client
+
 ## 2.8.26
 
 ### Patch Changes
