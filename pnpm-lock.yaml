@@ -302,6 +302,9 @@ importers:
       '@aws-sdk/client-cloudformation':
         specifier: ^3.279.0
         version: 3.279.0
+      '@aws-sdk/client-iam':
+        specifier: ^3.279.0
+        version: 3.279.0
       '@aws-sdk/client-iot':
         specifier: ^3.279.0
         version: 3.279.0
@@ -475,9 +478,6 @@ importers:
         specifier: ^3.279.0
         version: 3.279.0
       '@aws-sdk/client-codebuild':
-        specifier: ^3.279.0
-        version: 3.279.0
-      '@aws-sdk/client-iam':
         specifier: ^3.279.0
         version: 3.279.0
       '@aws-sdk/types':
@@ -1548,7 +1548,7 @@ packages:
       tslib: 2.5.0
     transitivePeerDependencies:
       - aws-crt
-    dev: true
+    dev: false
 
   /@aws-sdk/client-iot-data-plane@3.279.0:
     resolution: {integrity: sha512-+AKay5gj6G3ILnBRBVogm1whERxx0NHTJCVBTcJN/zEGAFRLCo26NwbzVbGuxa2rGqdRho90/pwZHD8/xiPL8g==}
