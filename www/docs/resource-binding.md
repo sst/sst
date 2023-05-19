@@ -363,6 +363,24 @@ When binding resources that contain sensitive values, placeholders are stored in
 
 ---
 
+#### Typesafety
+
+When running `sst build`, `sst deploy`, or `sst dev`, types are generated for the defined resources and `Config` properties in the `.sst` directory.
+
+:::tip
+If you are using one of our starters, this should be done automatically for you.
+:::
+
+To use these types, place the following `sst-env.d.ts` file in any package that needs the types.
+
+```js title="sst-env.d.ts"
+/// <reference path="../.sst/types/index.ts" />
+```
+
+Make sure you specify the path to the `.sst` directory correctly. With this in place, your IDE should recognize the generated types and autocomplete them.
+
+---
+
 #### Client side environment variables
 
 On `sst deploy` client side environment variables will first be replaced by placeholder values, ie. `{{ NEXT_PUBLIC_BUCKET_NAME }}`, when building the Next.js app. And after the S3 bucket has been created, the placeholders in the HTML and JS files will then be replaced with the actual values.
