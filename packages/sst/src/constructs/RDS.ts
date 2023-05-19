@@ -28,7 +28,7 @@ export interface RDSProps {
   /**
    * Database engine of the cluster. Cannot be changed once set.
    */
-  engine: "mysql5.6" | "mysql5.7" | "postgresql10.14" | "postgresql11.13";
+   engine: "mysql5.6" | "mysql5.7" | "postgresql10.14" | "postgresql11.13" | "postgresql11.16";
 
   /**
    * Name of a database which is automatically created inside the cluster.
@@ -405,6 +405,10 @@ export class RDS extends Construct implements SSTConstruct {
     } else if (engine === "postgresql11.13") {
       return rds.DatabaseClusterEngine.auroraPostgres({
         version: rds.AuroraPostgresEngineVersion.VER_11_13,
+      });
+    } else if (engine === "postgresql11.16") {
+      return rds.DatabaseClusterEngine.auroraPostgres({
+        version: rds.AuroraPostgresEngineVersion.VER_11_16,
       });
     }
 
