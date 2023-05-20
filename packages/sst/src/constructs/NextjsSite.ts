@@ -55,6 +55,7 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
      * ```
      */
     memorySize?: number | Size;
+    environment?: Record<string, string>;
   };
   /**
    * The number of server functions to keep warm. This option is only supported for the regional mode.
@@ -167,6 +168,7 @@ export class NextjsSite extends SsrSite {
       architecture: Architecture.ARM_64,
       environment: {
         BUCKET_NAME: this.cdk!.bucket.bucketName,
+        ...imageOptimization.environment
       },
       initialPolicy: [
         new PolicyStatement({
