@@ -168,7 +168,7 @@ export class NextjsSite extends SsrSite {
       architecture: Architecture.ARM_64,
       environment: {
         BUCKET_NAME: this.cdk!.bucket.bucketName,
-        ...imageOptimization.environment
+        ...(imageOptimization.environment ?? {})
       },
       initialPolicy: [
         new PolicyStatement({
