@@ -12,6 +12,8 @@ export const list = (program: Program) =>
     async (args) => {
       const { Config } = await import("../../../config.js");
       const { gray } = await import("colorette");
+      // @ts-ignore
+      const { default: envStringify } = await import("dotenv-stringify");
       const { Colors } = await import("../../colors.js");
       const secrets = await Config.secrets();
       if (Object.entries(secrets).length === 0) {
@@ -20,9 +22,14 @@ export const list = (program: Program) =>
       }
       switch (args.format || "table") {
         case "env":
-          for (const [key, value] of Object.entries(secrets)) {
-            console.log(`${key}=${value.value || value.fallback}`);
-          }
+          const env = Object.fromEntries(
+            Object.entries(secrets).map(([key, { value, fallback }]) => [
+              key,
+              value || fallback,
+            ])
+          );
+
+          console.log(envStringify(env));
           break;
         case "table":
           const keys = Object.keys(secrets);
