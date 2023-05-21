@@ -386,7 +386,7 @@ npx sst secrets load <filename>
 
 #### `sst secrets list`
 
-Decrypts and prints out all the secrets with the given `format`; `table` or `env`. Where `env` is the dotenv format. Defaults to `table`.
+Decrypts and prints out all the secrets with the given `format`; `table`, `json`, or `env`. Where `env` is the dotenv format. Defaults to `table`.
 
 ```bash
 npx sst secrets list [format] [options]
