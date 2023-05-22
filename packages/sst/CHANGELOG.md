@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.8.28
+
+### Patch Changes
+
+- [`f7f4a6ffc`](https://github.com/serverless-stack/sst/commit/f7f4a6ffc3c150a8f2e09e9d2136b5669b675fcd) Thanks [@thdxr](https://github.com/thdxr)! - fix job construct path problems when deployed from windows
+
 ## 2.8.27
 
 ### Patch Changes

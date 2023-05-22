@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.2.4
+
+### Patch Changes
+
+- [#2894](https://github.com/serverless-stack/sst/pull/2894) [`2aff836c3`](https://github.com/serverless-stack/sst/commit/2aff836c3b59529f476df83595101169ca3dfc12) Thanks [@rcoundon](https://github.com/rcoundon)! - Minor doc update to Config construct
+
 ## 2.2.3
 
 ### Patch Changes
