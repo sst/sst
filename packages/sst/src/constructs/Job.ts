@@ -420,7 +420,10 @@ export class Job extends Construct implements SSTConstruct {
 
       const parsed = path.parse(result.handler);
       const importName = parsed.ext.substring(1);
-      const importPath = `./${path.posix.join(parsed.dir, parsed.name)}.mjs`;
+      const importPath = `./${path
+        .join(parsed.dir, parsed.name)
+        .split(path.sep)
+        .join(path.posix.sep)}.mjs`;
       await fs.writeFile(
         path.join(result.out, "handler-wrapper.mjs"),
         [
