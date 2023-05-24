@@ -7,7 +7,7 @@ export const list = (program: Program) =>
     (yargs) =>
       yargs.positional("format", {
         type: "string",
-        choices: ["table", "env"],
+        choices: ["table", "env", "json"],
       }),
     async (args) => {
       const { Config } = await import("../../../config.js");
@@ -19,6 +19,16 @@ export const list = (program: Program) =>
         return;
       }
       switch (args.format || "table") {
+        case "json":
+          const env = Object.fromEntries(
+            Object.entries(secrets).map(([key, { value, fallback }]) => [
+              key,
+              value || fallback,
+            ])
+          );
+
+          console.log(JSON.stringify(env, null, 2));
+          break;
         case "env":
           for (const [key, value] of Object.entries(secrets)) {
             console.log(`${key}=${value.value || value.fallback}`);
