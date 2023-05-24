@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.10.1
+
+### Patch Changes
+
+- [`b87a96ffe`](https://github.com/serverless-stack/sst/commit/b87a96ffe2fb9d62754d025b0c950beec701d068) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: use 1.3.x instead of ~1.3.0 to pin minor OpenNext versions
+
 ## 2.10.0
 
 ### Minor Changes
