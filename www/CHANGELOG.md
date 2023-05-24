@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.3.0
+
+### Minor Changes
+
+- [#2902](https://github.com/serverless-stack/sst/pull/2902) [`e120a6c00`](https://github.com/serverless-stack/sst/commit/e120a6c0072c4be843a4686c68e2a429a5fb72cb) Thanks [@zvictor](https://github.com/zvictor)! - Add support for JSON format in secrets list
+
 ## 2.2.4
 
 ### Patch Changes
