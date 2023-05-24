@@ -1,5 +1,7 @@
 # @serverless-stack/console
 
+## 2.9.0
+
 ## 2.8.29
 
 ## 2.8.28
