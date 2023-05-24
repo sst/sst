@@ -7,7 +7,7 @@ export default [
       "@remix-run/eslint-config",
       "@types/react",
       "@types/react-dom",
-      "aws-cdk-lib@2.72.1",
+      "aws-cdk-lib@2.79.1",
       "constructs@10.1.156",
       "eslint",
       "sst",
