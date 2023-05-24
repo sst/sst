@@ -48,6 +48,7 @@ import { Asset } from "aws-cdk-lib/aws-s3-assets";
 import {
   Distribution,
   ICachePolicy,
+  IResponseHeadersPolicy,
   BehaviorOptions,
   ViewerProtocolPolicy,
   AllowedMethods,
@@ -268,6 +269,11 @@ export interface SsrSiteProps {
      * is one that performs no caching of the server response.
      */
     serverCachePolicy?: ICachePolicy;
+    /**
+     * Override the CloudFront response headers policy properties for responses
+     * from the server rendering Lambda.
+     */
+    responseHeadersPolicy?: IResponseHeadersPolicy;
     server?: Pick<
       FunctionProps,
       | "vpc"
@@ -925,6 +931,7 @@ function handler(event) {
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
       cachePolicy: cdk?.serverCachePolicy ?? this.buildServerCachePolicy(),
+      responseHeadersPolicy: cdk?.responseHeadersPolicy,
       originRequestPolicy: this.buildServerOriginRequestPolicy(),
       ...(cfDistributionProps.defaultBehavior || {}),
       functionAssociations: [
@@ -945,6 +952,7 @@ function handler(event) {
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
       cachePolicy: cdk?.serverCachePolicy ?? this.buildServerCachePolicy(),
+      responseHeadersPolicy: cdk?.responseHeadersPolicy,
       originRequestPolicy: this.buildServerOriginRequestPolicy(),
       ...(cfDistributionProps.defaultBehavior || {}),
       functionAssociations: [

@@ -453,3 +453,16 @@ new NextjsSite(stack, "Site2", {
   },
 });
 ```
+
+#### Configuring CloudFront response headers policies
+
+```js
+import * as cf from "aws-cdk-lib/aws-cloudfront";
+
+new NextjsSite(stack, "Site", {
+  path: "my-next-app/",
+  cdk: {
+    responseHeadersPolicy: cf.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS,
+  },
+});
+```

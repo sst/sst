@@ -382,6 +382,7 @@ export class NextjsSite extends SsrSite {
     cachePolicy: ICachePolicy,
     originRequestPolicy: IOriginRequestPolicy
   ): BehaviorOptions {
+    const { cdk } = this.props;
     return {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       functionAssociations: this.buildBehaviorFunctionAssociations(),
@@ -390,6 +391,7 @@ export class NextjsSite extends SsrSite {
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
       cachePolicy,
+      responseHeadersPolicy: cdk?.responseHeadersPolicy,
       originRequestPolicy,
     };
   }
@@ -400,6 +402,7 @@ export class NextjsSite extends SsrSite {
     cachePolicy: ICachePolicy,
     originRequestPolicy: IOriginRequestPolicy
   ): BehaviorOptions {
+    const { cdk } = this.props;
     return {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       functionAssociations: this.buildBehaviorFunctionAssociations(),
@@ -408,6 +411,7 @@ export class NextjsSite extends SsrSite {
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
       cachePolicy,
+      responseHeadersPolicy: cdk?.responseHeadersPolicy,
       originRequestPolicy,
       edgeLambdas: [
         {
@@ -420,6 +424,7 @@ export class NextjsSite extends SsrSite {
   }
 
   private buildImageBehavior(cachePolicy: ICachePolicy): BehaviorOptions {
+    const { cdk } = this.props;
     const imageFn = this.createImageOptimizationFunction();
     const imageFnUrl = imageFn.addFunctionUrl({
       authType: FunctionUrlAuthType.NONE,
@@ -431,10 +436,12 @@ export class NextjsSite extends SsrSite {
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
       cachePolicy,
+      responseHeadersPolicy: cdk?.responseHeadersPolicy,
     };
   }
 
   private buildStaticFileBehavior(s3Origin: S3Origin): BehaviorOptions {
+    const { cdk } = this.props;
     return {
       origin: s3Origin,
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
@@ -442,6 +449,7 @@ export class NextjsSite extends SsrSite {
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
       cachePolicy: CachePolicy.CACHING_OPTIMIZED,
+      responseHeadersPolicy: cdk?.responseHeadersPolicy,
     };
   }
 
@@ -468,6 +476,7 @@ export class NextjsSite extends SsrSite {
       functionAssociations: this.buildBehaviorFunctionAssociations(),
       compress: true,
       cachePolicy,
+      responseHeadersPolicy: cdk?.responseHeadersPolicy,
       originRequestPolicy,
       ...(cfDistributionProps.defaultBehavior || {}),
     };
@@ -490,6 +499,7 @@ export class NextjsSite extends SsrSite {
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
       cachePolicy,
+      responseHeadersPolicy: cdk?.responseHeadersPolicy,
       originRequestPolicy,
       ...(cfDistributionProps.defaultBehavior || {}),
       edgeLambdas: [

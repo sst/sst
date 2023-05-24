@@ -17,6 +17,7 @@ import {
   FunctionCode as CfFunctionCode,
   FunctionEventType,
   CachePolicy,
+  ResponseHeadersPolicy,
   ViewerProtocolPolicy,
   AllowedMethods,
 } from "aws-cdk-lib/aws-cloudfront";
@@ -886,7 +887,7 @@ test("constructor: path not exist", async () => {
   }).toThrow(/Could not find/);
 });
 
-test("constructor: cfCachePolicies props default", async () => {
+test("constructor: cdk.serverCachePolicy undefined", async () => {
   const stack = new Stack(await createApp(), "stack");
   new RemixSite(stack, "Site", {
     path: sitePath,
@@ -901,7 +902,7 @@ test("constructor: cfCachePolicies props default", async () => {
   });
 });
 
-test("constructor: cfCachePolicies props override", async () => {
+test("constructor: cdk.serverCachePolicy override", async () => {
   const stack = new Stack(await createApp(), "stack");
   new RemixSite(stack, "Site", {
     path: sitePath,
@@ -916,6 +917,31 @@ test("constructor: cfCachePolicies props override", async () => {
     sstTest: true,
   });
   countResources(stack, "AWS::CloudFront::CachePolicy", 0);
+});
+
+test("constructor: cdk.responseHeadersPolicy undefined", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new RemixSite(stack, "Site", {
+    path: sitePath,
+    // @ts-expect-error: "sstTest" is not exposed in props
+    sstTest: true,
+  });
+  countResources(stack, "AWS::CloudFront::ResponseHeadersPolicy", 0);
+});
+
+test("constructor: cdk.responseHeadersPolicy override", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new RemixSite(stack, "Site", {
+    path: sitePath,
+    cdk: {
+      responseHeadersPolicy: new ResponseHeadersPolicy(stack, "Policy", {
+        removeHeaders: ["Server"],
+      }),
+    },
+    // @ts-expect-error: "sstTest" is not exposed in props
+    sstTest: true,
+  });
+  countResources(stack, "AWS::CloudFront::CachePolicy", 1);
 });
 
 test("constructor: cfDistribution props", async () => {
