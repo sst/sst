@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.3.1
+
+### Patch Changes
+
+- [`0c4894a3f`](https://github.com/serverless-stack/sst/commit/0c4894a3f88e9d83430b7aed125efa240cd82a5a) Thanks [@fwang](https://github.com/fwang)! - SsrSite: allow overriding response header policy
+
 ## 2.3.0
 
 ### Minor Changes
