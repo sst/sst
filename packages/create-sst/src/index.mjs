@@ -217,6 +217,12 @@ export async function execute(opts) {
 
     for (const file of await listFiles(opts.destination)) {
       if (file.includes(".git")) continue;
+      if (
+        ![".ts", ".js", ".tsx", ".jsx", ".json"].some((ext) =>
+          file.endsWith(ext)
+        )
+      )
+        continue;
       try {
         const contents = await fs.readFile(file, "utf8");
         if (file.endsWith(".png") || file.endsWith(".ico")) continue;
