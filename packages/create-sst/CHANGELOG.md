@@ -1,5 +1,11 @@
 # create-sst
 
+## 2.8.29
+
+### Patch Changes
+
+- [`b5d868328`](https://github.com/serverless-stack/sst/commit/b5d86832861e4d69db7d293ee1bd4d39491f63dd) Thanks [@thdxr](https://github.com/thdxr)! - fix for file corruption in dropin mode
+
 ## 2.8.28
 
 ## 2.8.27
