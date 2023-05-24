@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.10.0
+
+### Minor Changes
+
+- [`2b0c6760f`](https://github.com/serverless-stack/sst/commit/2b0c6760f4fcd2cbf8a3b62181b20e0615f6b31c) Thanks [@fwang](https://github.com/fwang)! - Update CDK to v2.79.1
+
 ## 2.9.0
 
 ### Minor Changes
