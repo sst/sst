@@ -86,14 +86,30 @@ try {
 }
 
 let timeout: NodeJS.Timeout | undefined;
+let request: any;
+let response: any;
+let context: LambdaContext;
+
+async function error(ex: any) {
+  await fetch({
+    path: `/runtime/invocation/${context.awsRequestId}/error`,
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      errorType: "Error",
+      errorMessage: ex.message,
+      trace: ex.stack?.split("\n"),
+    }),
+  });
+}
+process.on("unhandledRejection", error);
 while (true) {
   if (timeout) clearTimeout(timeout);
   timeout = setTimeout(() => {
     process.exit(0);
   }, 1000 * 60 * 15);
-  let request: any;
-  let response: any;
-  let context: LambdaContext;
 
   try {
     const result = await fetch({
@@ -158,18 +174,7 @@ while (true) {
   try {
     response = await fn(request, context);
   } catch (ex: any) {
-    await fetch({
-      path: `/runtime/invocation/${context.awsRequestId}/error`,
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        errorType: "Error",
-        errorMessage: ex.message,
-        trace: ex.stack?.split("\n"),
-      }),
-    });
+    error(ex);
     continue;
   }
 

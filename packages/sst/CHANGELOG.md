@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.10.3
+
+### Patch Changes
+
+- [`6203bdfe7`](https://github.com/serverless-stack/sst/commit/6203bdfe73feac4df0a6079de70c97d98a3293b2) Thanks [@thdxr](https://github.com/thdxr)! - Fix unhandled promise rejections from crashing the app
+
 ## 2.10.2
 
 ### Patch Changes
