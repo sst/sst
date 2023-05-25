@@ -7,9 +7,14 @@ import { OidcAdapter, OidcBasicConfig } from "./oidc.js";
 // Business: https://login.microsoftonline.com/{tenant}/v2.0
 // Private: https://login.microsoftonline.com/consumers/v2.0
 
-const issuer = await Issuer.discover("https://login.microsoftonline.com/common/v2.0");
+const issuer = await Issuer.discover(
+  "https://login.microsoftonline.com/common/v2.0"
+);
 
-type MicrosoftConfig = OidcBasicConfig & { mode: "oidc" };
+type MicrosoftConfig = OidcBasicConfig & {
+  mode: "oidc";
+  prompt?: "login" | "none" | "consent" | "select_account";
+};
 
 export function MicrosoftAdapter(config: MicrosoftConfig) {
   return OidcAdapter({
