@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.10.4
+
+### Patch Changes
+
+- [`b4366a240`](https://github.com/serverless-stack/sst/commit/b4366a240b831a0685e485c521a6b43d8cec7ffd) Thanks [@fwang](https://github.com/fwang)! - sst/node: improve error message when SST_APP is not found
+
 ## 2.10.3
 
 ### Patch Changes
