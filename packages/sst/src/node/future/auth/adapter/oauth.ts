@@ -22,6 +22,9 @@ export interface OauthBasicConfig {
    * Various scopes requested for the access token
    */
   scope: string;
+  /**
+   * Determines whether users will be prompted for reauthentication and consent
+   */
   prompt?: string;
 }
 

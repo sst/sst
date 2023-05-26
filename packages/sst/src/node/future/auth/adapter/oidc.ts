@@ -13,6 +13,10 @@ export interface OidcBasicConfig {
    * The clientID provided by the third party oauth service
    */
   clientID: string;
+  /**
+   * Determines whether users will be prompted for reauthentication and consent
+   */
+  prompt?: string;
 }
 
 export interface OidcConfig extends OidcBasicConfig {
@@ -39,6 +43,7 @@ export const OidcAdapter = /* @__PURE__ */ (config: OidcConfig) => {
         response_mode: "form_post",
         nonce,
         state,
+        prompt: config.prompt,
       });
 
       useResponse().cookies(
