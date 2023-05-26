@@ -68,8 +68,13 @@ export const list = (program: Program) =>
             const value = secrets[key].value
               ? secrets[key].value!
               : `${secrets[key].fallback} ${gray("(fallback)")}`;
+
+            const colourPadding = secrets[key].value ? 0 : gray("").length;
+
             console.log(
-              `│ ${key.padEnd(keyLen)} │ ${value.padEnd(valueLen)} │`
+              `│ ${key.padEnd(keyLen)} │ ${value.padEnd(
+                valueLen + colourPadding
+              )} │`
             );
           });
           console.log(
