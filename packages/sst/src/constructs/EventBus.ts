@@ -768,7 +768,7 @@ export class EventBus extends Construct implements SSTConstruct {
         detailType: [type],
       },
       targets: {
-        [name]: {
+        [name + "_target"]: {
           type: "function",
           function: fn,
           retries: props?.retries,
