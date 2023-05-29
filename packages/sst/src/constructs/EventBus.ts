@@ -763,7 +763,7 @@ export class EventBus extends Construct implements SSTConstruct {
     this.subs.set(type, count);
     const name = `${type.replaceAll(/[^a-zA-Z_]/g, "_")}_${count}`;
     const fn = Fn.fromDefinition(this, name, target);
-    this.addRule(this, name, {
+    this.addRule(this, name + "_rule", {
       pattern: {
         detailType: [type],
       },
@@ -775,6 +775,7 @@ export class EventBus extends Construct implements SSTConstruct {
         },
       },
     });
+    return this;
   }
 
   private addFunctionTarget(
