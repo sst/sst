@@ -180,7 +180,7 @@ So for example, you can start your frontend with all the binding values.
 npx sst bind next dev
 ```
 
-`sst bind` auto-detects the following frontend frameworks. If your framework is not listed here, feel free to hop on to our <a href={ config.discord }>Discord</a> and let us know.
+`sst bind` auto-detects the following frontend frameworks.
 
 - Angular: detects `angular.json`
 - Astro: detects `astro.config.js`
@@ -207,6 +207,23 @@ npx sst bind vitest run
 ```
 
 You can also use the `sst bind` to run any scripts.
+
+#### Options
+
+- **`--site`**
+
+  If your framework is not auto-detected by SST, then pass in `--site` to signal to SST that you are starting your frontend.
+
+  ```bash
+  npx sst bind --site npm run start
+
+- **`--script`**
+
+  Similarly, if SST has detected a frontend framework in the current directory, but you are not starting your frontend, then pass in `--script`. This is useful when  you are running a script inside your frontend directory.
+
+  ```bash
+  npx sst bind --script npm run build
+  ```
 
 ---
 
