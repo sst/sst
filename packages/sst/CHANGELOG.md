@@ -1,5 +1,15 @@
 # @serverless-stack/cli2
 
+## 2.11.1
+
+### Patch Changes
+
+- [`20e275619`](https://github.com/serverless-stack/sst/commit/20e2756196e09414e38d58dc058b80e739f65657) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: allow using sst bind at build time
+
+- [`b2b07471b`](https://github.com/serverless-stack/sst/commit/b2b07471b5568e93353cb68c1ed05f225513bf3b) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: fix pinning to the latest minor version
+
+- [`08a9d15ef`](https://github.com/serverless-stack/sst/commit/08a9d15efe723cf34bb61bedb9b5ce786305a8a3) Thanks [@fwang](https://github.com/fwang)! - sst bind: support --site and --script options to override mode
+
 ## 2.11.0
 
 ### Minor Changes
