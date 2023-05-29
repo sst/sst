@@ -13,7 +13,8 @@ type BIND_REASON =
   | "secrets_updated"
   | "iam_expired";
 
-class OutdatedMetadataError extends Error {}
+class MetadataNotFoundError extends Error {}
+class MetadataOutdatedError extends Error {}
 
 export const bind = (program: Program) =>
   program
@@ -84,20 +85,7 @@ export const bind = (program: Program) =>
         }
 
         // Bind site
-        try {
-          await bindSite("init");
-        } catch (e: any) {
-          // Bind script (fallback)
-          if (e instanceof OutdatedMetadataError) {
-            Colors.line(
-              Colors.warning(
-                "Warning: This was deployed with an old version of SST. Run `sst dev` or `sst deploy` to update."
-              )
-            );
-            return await bindScript();
-          }
-          throw e;
-        }
+        await bindSite("init");
 
         bus.subscribe("stacks.metadata.updated", () =>
           bindSite("metadata_updated")
@@ -161,7 +149,32 @@ export const bind = (program: Program) =>
 
         async function bindSite(reason: BIND_REASON) {
           // Get metadata
-          const siteMetadata = await getSiteMetadataUntilAvailable();
+          let siteMetadata;
+          try {
+            siteMetadata = await getSiteMetadata();
+          } catch (e: any) {
+            // unhandled error
+            if (
+              !(e instanceof MetadataOutdatedError) &&
+              !(e instanceof MetadataNotFoundError)
+            ) {
+              throw e;
+            }
+
+            // ignore error if previously failed to fetch metadata
+            if (reason !== "init") return;
+
+            // run in script mode
+            Colors.line(
+              Colors.warning(
+                e instanceof MetadataOutdatedError
+                  ? "Warning: This was deployed with an old version of SST. Run `sst dev` or `sst deploy` to update."
+                  : "Warning: The site has not been deployed. Some resources might not be available."
+              )
+            );
+            return await bindScript();
+          }
+
           const siteConfig = await parseSiteMetadata(siteMetadata!);
 
           // Handle rebind due to metadata updated
@@ -195,29 +208,10 @@ export const bind = (program: Program) =>
           });
         }
 
-        async function getSiteMetadataUntilAvailable() {
-          const { createSpinner } = await import("../spinner.js");
-          const spinner = createSpinner({});
-          while (true) {
-            const data = await getSiteMetadata();
-
-            // Handle site metadata not found
-            if (!data) {
-              spinner.start("Make sure `sst dev` is running...");
-              await new Promise((resolve) => setTimeout(resolve, 1000));
-              continue;
-            }
-
-            spinner.isSpinning && spinner.stop().clear();
-
-            return data;
-          }
-        }
-
         async function getSiteMetadata() {
           const { metadata } = await import("../../stacks/metadata.js");
           const metadataData = await metadata();
-          return Object.values(metadataData)
+          const data = Object.values(metadataData)
             .flat()
             .filter(
               (
@@ -245,13 +239,18 @@ export const bind = (program: Program) =>
                 (isSsr && !c.data.server) ||
                 (!isSsr && !c.data.environment)
               ) {
-                throw new OutdatedMetadataError();
+                throw new MetadataOutdatedError();
               }
 
               return (
                 path.resolve(project.paths.root, c.data.path) === process.cwd()
               );
             });
+
+          if (!data) {
+            throw new MetadataNotFoundError();
+          }
+          return data;
         }
 
         async function parseSiteMetadata(
