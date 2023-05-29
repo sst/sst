@@ -90,7 +90,7 @@ class DynamicFileMigrationProvider {
           migrations[name] = migration;
           continue;
         }
-        const copy = fullPath.replace(/(mjs|cjs|js)/g, `${Date.now()}.$1`);
+        const copy = fullPath.replace(/(mjs|cjs|js)$/g, `${Date.now()}.$1`);
         try {
           await fs.copyFile(fullPath, copy);
           const migration = await import(url.pathToFileURL(copy).href);
