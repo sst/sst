@@ -102,6 +102,7 @@
     "@aws-sdk/client-api-gateway": "^3.208.0",
     "@aws-sdk/client-cloudfront": "^3.279.0",
     "@aws-sdk/client-codebuild": "^3.279.0",
+    "@aws-sdk/client-sqs": "^3.341.0",
     "@aws-sdk/types": "^3.272.0",
     "@graphql-tools/merge": "^8.3.16",
     "@sls-next/lambda-at-edge": "^3.7.0",

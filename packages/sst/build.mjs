@@ -70,6 +70,24 @@ await esbuild.build({
   outfile: "./dist/support/bridge/bridge.mjs",
 });
 
+// support/event-bus-redriver
+await esbuild.build({
+  keepNames: true,
+  bundle: true,
+  minify: true,
+  platform: "node",
+  target: "esnext",
+  format: "esm",
+  entryPoints: ["./support/event-bus-redriver/index.ts"],
+  banner: {
+    js: [
+      `import { createRequire as topLevelCreateRequire } from 'module';`,
+      `const require = topLevelCreateRequire(import.meta.url);`,
+    ].join(""),
+  },
+  outfile: "./dist/support/event-bus-redriver/index.mjs",
+});
+
 // support/rds-migrator
 // note: do not add topLevelCreateRequire banner b/c the
 //       migrator function will get built again in RDS.

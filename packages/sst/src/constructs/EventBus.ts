@@ -1,5 +1,6 @@
 import { Construct } from "constructs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as sqs from "aws-cdk-lib/aws-sqs";
 import * as events from "aws-cdk-lib/aws-events";
 import {
   LambdaFunction as LambdaFunctionTarget,
@@ -21,6 +22,9 @@ import {
 } from "./Function.js";
 import { FunctionBindingProps } from "./util/functionBinding.js";
 import { Permissions } from "./util/permission.js";
+import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
+import { SqsDestination } from "aws-cdk-lib/aws-lambda-destinations";
+import path from "path";
 
 /////////////////////
 // Interfaces
@@ -50,6 +54,10 @@ export interface EventBusFunctionTargetProps {
    * The function to trigger
    */
   function?: FunctionDefinition;
+  /**
+   * Number of retries
+   */
+  retries?: number;
   cdk?: {
     function?: lambda.IFunction;
     target?: LambdaFunctionTargetProps;
@@ -239,6 +247,17 @@ export interface EventBusProps {
      * ```
      */
     function?: FunctionProps;
+    /**
+     * Enable retries with exponential backoff for all lambda function targets in this eventbus
+     *
+     * @example
+     * ```js
+     * new EventBus(stack, "Bus", {
+     *   retries: 20
+     * });
+     * ```
+     */
+    retries?: number;
   };
   /**
    * The rules for the eventbus
@@ -569,6 +588,28 @@ export class EventBus extends Construct implements SSTConstruct {
     };
   }
 
+  private retrierQueue: sqs.Queue | undefined;
+  private retrierFn: lambda.Function | undefined;
+  private getRetrier() {
+    if (this.retrierFn && this.retrierQueue) {
+      return { fn: this.retrierFn, queue: this.retrierQueue };
+    }
+    this.retrierQueue = new sqs.Queue(this, `RetrierQueue`);
+    this.retrierFn = new lambda.Function(this, `RetrierFunction`, {
+      runtime: lambda.Runtime.NODEJS_14_X,
+      handler: "index.handler",
+      code: lambda.Code.fromAsset(
+        path.join(__dirname, "../support/event-bus-retrier")
+      ),
+      environment: {
+        RETRIER_QUEUE_URL: this.retrierQueue.queueUrl,
+      },
+    });
+    this.retrierFn.addEventSource(new SqsEventSource(this.retrierQueue));
+    this.retrierQueue.grantSendMessages(this.retrierFn);
+    return { fn: this.retrierFn, queue: this.retrierQueue };
+  }
+
   private createEventBus() {
     const app = this.node.root as App;
     const id = this.node.id;
@@ -712,6 +753,30 @@ export class EventBus extends Construct implements SSTConstruct {
     eventsRule.addTarget(new LambdaFunctionTarget(fn, targetProps));
   }
 
+  private subs = new Map<string, number>();
+  public subscribe(
+    type: string,
+    target: FunctionDefinition,
+    props?: { retries?: number }
+  ) {
+    const count = this.subs.get(type) || 0 + 1;
+    this.subs.set(type, count);
+    const name = `${type.replaceAll(/[^a-zA-Z_]/g, "_")}_${count}`;
+    const fn = Fn.fromDefinition(this, name, target);
+    this.addRule(this, name, {
+      pattern: {
+        detailType: [type],
+      },
+      targets: {
+        [name]: {
+          type: "function",
+          function: fn,
+          retries: props?.retries,
+        },
+      },
+    });
+  }
+
   private addFunctionTarget(
     scope: Construct,
     ruleKey: string,
@@ -722,10 +787,12 @@ export class EventBus extends Construct implements SSTConstruct {
     // Parse target props
     let targetProps;
     let functionDefinition;
+    let retries = this.props.defaults?.retries;
     if ((target as EventBusFunctionTargetProps).function) {
       target = target as EventBusFunctionTargetProps;
       targetProps = target.cdk?.target;
       functionDefinition = target.function!;
+      retries = target.retries;
     } else {
       target = target as FunctionInlineDefinition;
       functionDefinition = target;
@@ -743,6 +810,19 @@ export class EventBus extends Construct implements SSTConstruct {
 
     // Create target
     eventsRule.addTarget(new LambdaFunctionTarget(fn, targetProps));
+
+    // Configure retrier
+    if (retries) {
+      const retrier = this.getRetrier();
+      retrier.fn.addEnvironment(
+        `RETRIER_${retrier.fn.functionName}`,
+        retries.toString()
+      );
+      fn.grantInvoke(retrier.fn);
+      fn.configureAsyncInvoke({
+        onFailure: new SqsDestination(retrier.queue),
+      });
+    }
 
     // Attach existing permissions
     this.permissionsAttachedForAllTargets.forEach((permissions) =>
