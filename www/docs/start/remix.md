@@ -57,6 +57,7 @@ Now initialize SST in your project root.
 <TabItem value="npm">
 
 ```bash
+cd my-remix-app
 npx create-sst@latest
 ```
 
@@ -64,6 +65,7 @@ npx create-sst@latest
 <TabItem value="yarn">
 
 ```bash
+cd my-remix-app
 yarn create sst
 ```
 
@@ -71,6 +73,7 @@ yarn create sst
 <TabItem value="pnpm">
 
 ```bash
+cd my-remix-app
 pnpm create sst
 ```
 
