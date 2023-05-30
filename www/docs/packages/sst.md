@@ -359,7 +359,7 @@ npx sst secrets remove MY_SECRET
 
   _Default_: false
 
-  Set this option if you want to `get`, `set`, or `remove` the fallback version of a secret. For example, to get the fallback of a secret.
+  Set this option if you want to `get`, `set`, `list`, or `remove` the fallback version of a secret. For example, to get the fallback of a secret.
 
   ```bash
   npx sst secrets get --fallback STRIPE_KEY
