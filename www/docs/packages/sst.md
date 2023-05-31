@@ -230,7 +230,7 @@ You can also use the `sst bind` to run any scripts.
 
 ### `sst build`
 
-Build your app and synthesize your stacks. Generates a `.sst/` directory with the compiled files and a `.sst/dist/` directory with the synthesized CloudFormation stacks.
+Build your app and synthesize your stacks. Builds the assets for your functions and sites. And generates a `.sst/dist/` directory with the synthesized CloudFormation stacks.
 
 ```bash
 npx sst build [options]
@@ -248,13 +248,21 @@ In addition to the [global options](#global-options), the following options are 
 
 ---
 
+#### Build concurrency
+
+SST will build your assets concurrently using the number of cores available. This can be changed using the `SST_BUILD_CONCURRENCY` environment variable. Where `SST_BUILD_CONCURRENCY` defaults to the `number of cores - 1`.
+
+---
+
 ### `sst deploy`
 
-Deploy your app to AWS. Or optionally deploy a specific stack by passing in a `filter`.
+Deploys your app to AWS. Or optionally deploy a specific stack by passing in a `filter`.
 
 ```bash
 npx sst deploy [filter] [options]
 ```
+
+By default, it first builds your app and then deploys it. It also respects the [`SST_BUILD_CONCURRENCY`](#build-concurrency) environment variable.
 
 In addition to the [global options](#global-options), the following options are supported.
 
