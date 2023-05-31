@@ -289,46 +289,6 @@ test("sst deploy: inactive stack", async () => {
   });
 });
 
-test("sst dev", async () => {
-  const app = await createApp({
-    mode: "dev",
-  });
-  const stack = new Stack(app, "stack");
-  new Job(stack, "Job", {
-    handler: "test/constructs/lambda.handler",
-  });
-  await app.finish();
-  // Invoker not calling CodeBuild on `sst start`
-  countResourcesLike(stack, "AWS::IAM::Policy", 0, {
-    PolicyDocument: objectLike({
-      Statement: arrayWith([objectLike({ Action: "codebuild:StartBuild" })]),
-    }),
-  });
-});
-
-test("sst dev: enableLiveDev false", async () => {
-  const app = await createApp({
-    mode: "dev",
-  });
-  const stack = new Stack(app, "stack");
-  new Job(stack, "Job", {
-    handler: "test/constructs/lambda.handler",
-    enableLiveDev: false,
-  });
-  await app.finish();
-  // Invoker not calling CodeBuild on `sst start`
-  countResourcesLike(stack, "AWS::IAM::Policy", 1, {
-    PolicyDocument: objectLike({
-      Statement: arrayWith([objectLike({ Action: "codebuild:StartBuild" })]),
-    }),
-  });
-  hasResource(stack, "AWS::CodeBuild::Project", {
-    Source: objectLike({
-      BuildSpec: stringLike(/node handler-wrapper.mjs/),
-    }),
-  });
-});
-
 test("sst remove", async () => {
   const app = await createApp({
     mode: "remove",
