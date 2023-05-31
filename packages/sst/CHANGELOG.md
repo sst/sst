@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.11.5
+
+### Patch Changes
+
+- [`99704f9c4`](https://github.com/serverless-stack/sst/commit/99704f9c4dd60d4ebd14bbccaeb945a2a543c805) Thanks [@thdxr](https://github.com/thdxr)! - Fixed eventbusname
+
 ## 2.11.4
 
 ### Patch Changes
