@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.11.4
+
+### Patch Changes
+
+- [#2883](https://github.com/serverless-stack/sst/pull/2883) [`393cdfcb2`](https://github.com/serverless-stack/sst/commit/393cdfcb2d754482c7ea78fc6274c4d87b04aa23) Thanks [@justindra](https://github.com/justindra)! - Added SpotifyAdapter for future auth
+
 ## 2.11.3
 
 ### Patch Changes
