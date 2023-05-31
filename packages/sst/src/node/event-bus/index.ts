@@ -36,6 +36,10 @@ export function createEventBuilder<
             ZodObject<Exclude<MetadataShape, undefined>, "strip", ZodAny>
           >
         ) => Promise<void>;
+    const propertiesSchema = z.object(properties);
+    const metadataSchema = props.metadata
+      ? z.object(props.metadata)
+      : undefined;
     const publish = async (properties: any, metadata: any) => {
       console.log("publishing", type, properties);
       await client.send(
@@ -46,8 +50,16 @@ export function createEventBuilder<
               EventBusName: EventBus[props.bus].busName,
               Source: "console",
               Detail: JSON.stringify({
-                properties,
-                metadata: props.metadataFn ? props.metadataFn() : metadata,
+                properties: propertiesSchema.parse(properties),
+                metadata: (() => {
+                  if (metadataSchema) {
+                    return metadataSchema.parse(metadata);
+                  }
+
+                  if (props.metadataFn) {
+                    return props.metadataFn();
+                  }
+                })(),
               }),
               DetailType: type,
             },
