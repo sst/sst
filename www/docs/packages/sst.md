@@ -292,6 +292,20 @@ npx sst update [version] [options]
 
 ---
 
+### `sst version`
+
+Prints the version of SST your app is using. Also, prints the version of CDK that SST is using internally.
+
+```bash
+npx sst version
+```
+
+:::info
+When installing additional CDK packages make sure to use the same version as the one from the `sst verion` command.
+:::
+
+---
+
 ### `sst console`
 
 ```bash
