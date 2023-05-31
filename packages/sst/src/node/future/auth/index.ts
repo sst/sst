@@ -11,6 +11,7 @@ export * from "./adapter/github.js";
 export * from "./adapter/facebook.js";
 export * from "./adapter/microsoft.js";
 export * from "./adapter/oauth.js";
+export * from "./adapter/spotify.js";
 export type { Adapter } from "./adapter/adapter.js";
 
 export * from "./session.js";
