@@ -359,7 +359,7 @@ export interface ApiGatewayV1ApiLambdaTokenAuthorizer
   /**
    * Used to create the authorizer function
    */
-  function?: Fn;
+  function?: lambda.IFunction;
   /**
    * The identity source for which authorization is requested.
    */
@@ -409,7 +409,7 @@ export interface ApiGatewayV1ApiLambdaRequestAuthorizer
   /**
    * Used to create the authorizer function
    */
-  function?: Fn;
+  function?: lambda.IFunction;
   /**
    * The identity sources for which authorization is requested.
    */

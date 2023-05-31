@@ -919,6 +919,20 @@ test("defaultAuthorizationType-lambda_token", async () => {
   hasResource(stack, "AWS::ApiGateway::Authorizer", {
     Type: "TOKEN",
     IdentitySource: "method.request.header.Authorization",
+    AuthorizerUri: {
+      "Fn::Join": [
+        "",
+        [
+          "arn:",
+          { "Fn::Select": [ 1, { "Fn::Split": [ ":", { "Fn::GetAtt": [ "FC4345940", "Arn" ], } ] } ] },
+          ":apigateway:",
+          { "Fn::Select": [ 3, { "Fn::Split": [ ":", { "Fn::GetAtt": [ "FC4345940", "Arn" ], } ] } ] },
+          ":lambda:path/2015-03-31/functions/",
+          { "Fn::GetAtt": [ "FC4345940", "Arn" ], },
+          "/invocations",
+        ],
+      ],
+    },
   });
 });
 
@@ -950,6 +964,110 @@ test("defaultAuthorizationType-lambda_request", async () => {
   hasResource(stack, "AWS::ApiGateway::Authorizer", {
     Type: "REQUEST",
     IdentitySource: "method.request.header.Authorization",
+    AuthorizerUri: {
+      "Fn::Join": [
+        "",
+        [
+          "arn:",
+          { "Fn::Select": [ 1, { "Fn::Split": [ ":", { "Fn::GetAtt": [ "FC4345940", "Arn" ], } ] } ] },
+          ":apigateway:",
+          { "Fn::Select": [ 3, { "Fn::Split": [ ":", { "Fn::GetAtt": [ "FC4345940", "Arn" ], } ] } ] },
+          ":lambda:path/2015-03-31/functions/",
+          { "Fn::GetAtt": [ "FC4345940", "Arn" ], },
+          "/invocations",
+        ],
+      ],
+    },
+  });
+});
+
+test("authorizationFunctionCurrentVersion-lambda_token", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  const f = new Function(stack, "F", { handler: "test/lambda.handler" });
+  new ApiGatewayV1Api(stack, "Api", {
+    authorizers: {
+      MyAuthorizer: {
+        type: "lambda_token",
+        function: f.currentVersion,
+        identitySources: [apig.IdentitySource.header("Authorization")],
+      },
+    },
+    defaults: {
+      authorizer: "MyAuthorizer",
+    },
+    routes: {
+      "GET /": "test/lambda.handler",
+    },
+  });
+  hasResource(stack, "AWS::ApiGateway::RestApi", {
+    Name: "test-app-Api",
+  });
+  hasResource(stack, "AWS::ApiGateway::Method", {
+    AuthorizationType: "CUSTOM",
+    AuthorizerId: { Ref: "ApiMyAuthorizer6B7BC41E" },
+  });
+  hasResource(stack, "AWS::ApiGateway::Authorizer", {
+    Type: "TOKEN",
+    IdentitySource: "method.request.header.Authorization",
+    AuthorizerUri: {
+      "Fn::Join": [
+        "",
+        [
+          "arn:",
+          { "Fn::Select": [ 1, { "Fn::Split": [ ":", { "Ref": "FCurrentVersion58B8A55D207678ad7d19cf1a3a4859345c1f2a73" } ] } ] },
+          ":apigateway:",
+          { "Fn::Select": [ 3, { "Fn::Split": [ ":", { "Ref": "FCurrentVersion58B8A55D207678ad7d19cf1a3a4859345c1f2a73" } ] } ] },
+          ":lambda:path/2015-03-31/functions/",
+          { "Ref": "FCurrentVersion58B8A55D207678ad7d19cf1a3a4859345c1f2a73" },
+          "/invocations",
+        ],
+      ],
+    },
+  });
+});
+
+test("authorizationFunctionCurrentVersion-lambda_request", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  const f = new Function(stack, "F", { handler: "test/lambda.handler" });
+  new ApiGatewayV1Api(stack, "Api", {
+    authorizers: {
+      MyAuthorizer: {
+        type: "lambda_request",
+        function: f.currentVersion,
+        identitySources: [apig.IdentitySource.header("Authorization")],
+      },
+    },
+    defaults: {
+      authorizer: "MyAuthorizer",
+    },
+    routes: {
+      "GET /": "test/lambda.handler",
+    },
+  });
+  hasResource(stack, "AWS::ApiGateway::RestApi", {
+    Name: "test-app-Api",
+  });
+  hasResource(stack, "AWS::ApiGateway::Method", {
+    AuthorizationType: "CUSTOM",
+    AuthorizerId: { Ref: "ApiMyAuthorizer6B7BC41E" },
+  });
+  hasResource(stack, "AWS::ApiGateway::Authorizer", {
+    Type: "REQUEST",
+    IdentitySource: "method.request.header.Authorization",
+    AuthorizerUri: {
+      "Fn::Join": [
+        "",
+        [
+          "arn:",
+          { "Fn::Select": [ 1, { "Fn::Split": [ ":", { "Ref": "FCurrentVersion58B8A55D207678ad7d19cf1a3a4859345c1f2a73" } ] } ] },
+          ":apigateway:",
+          { "Fn::Select": [ 3, { "Fn::Split": [ ":", { "Ref": "FCurrentVersion58B8A55D207678ad7d19cf1a3a4859345c1f2a73" } ] } ] },
+          ":lambda:path/2015-03-31/functions/",
+          { "Ref": "FCurrentVersion58B8A55D207678ad7d19cf1a3a4859345c1f2a73" },
+          "/invocations",
+        ],
+      ],
+    },
   });
 });
 
