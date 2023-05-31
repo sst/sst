@@ -47,7 +47,7 @@ export function createEventBuilder<
           Entries: [
             {
               // @ts-expect-error
-              EventBusName: EventBus[props.bus].busName,
+              EventBusName: EventBus[props.bus].eventBusName,
               Source: "console",
               Detail: JSON.stringify({
                 properties: propertiesSchema.parse(properties),
