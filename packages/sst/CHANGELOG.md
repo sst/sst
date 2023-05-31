@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.11.2
+
+### Patch Changes
+
+- [`09cdb39e9`](https://github.com/serverless-stack/sst/commit/09cdb39e94fa3e52f6ae3d47f81bdc54389cac2b) Thanks [@thdxr](https://github.com/thdxr)! - Add retrier capability to eventbus
+
 ## 2.11.1
 
 ### Patch Changes
