@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.11.3
+
+### Patch Changes
+
+- [`1017fe643`](https://github.com/serverless-stack/sst/commit/1017fe64396cfb3eb5a52124898c01cb0a15b5fb) Thanks [@thdxr](https://github.com/thdxr)! - Typesafe event framework
+
 ## 2.11.2
 
 ### Patch Changes
