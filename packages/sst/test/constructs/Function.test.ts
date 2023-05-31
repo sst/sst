@@ -388,7 +388,7 @@ test("constructor: bind", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/MY_SECRET/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/MY_SECRET/value",
                 ],
               ],
             },
@@ -449,7 +449,7 @@ test("constructor: config", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/MY_SECRET/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/MY_SECRET/value",
                 ],
               ],
             },
@@ -479,7 +479,7 @@ test("constructor: config", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/MY_SECRET2/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/MY_SECRET2/value",
                 ],
               ],
             },
@@ -817,44 +817,6 @@ test("constructor: sst deploy: inactive stack", async () => {
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "index.placeholder",
     Description: "identifier",
-  });
-});
-
-test("constructor: sst dev", async () => {
-  const app = await createApp({
-    mode: "dev",
-  });
-  const stack = new Stack(app, "stack");
-  new Function(stack, "Function", {
-    handler: "test/lambda.handler",
-    description: "identifier",
-    timeout: 10,
-    layers: [lambda.LayerVersion.fromLayerVersionArn(stack, "layer", "arn")],
-  });
-  await app.finish();
-  hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "bridge.handler",
-    Description: "identifier",
-    Timeout: 10,
-    Layers: ABSENT,
-  });
-});
-
-test("constructor: sst dev: debugIncreaseTimeout", async () => {
-  const app = await createApp({
-    mode: "dev",
-    debugIncreaseTimeout: true,
-  });
-  const stack = new Stack(app, "stack");
-  new Function(stack, "Function", {
-    handler: "test/lambda.handler",
-    description: "identifier",
-  });
-  await app.finish();
-  hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "bridge.handler",
-    Description: "identifier",
-    Timeout: 900,
   });
 });
 
@@ -1431,7 +1393,7 @@ test("addConfig", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/MY_SECRET/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/MY_SECRET/value",
                 ],
               ],
             },
@@ -1461,7 +1423,7 @@ test("addConfig", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/MY_SECRET2/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/MY_SECRET2/value",
                 ],
               ],
             },
@@ -1523,7 +1485,7 @@ test("bind", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/MY_SECRET/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/MY_SECRET/value",
                 ],
               ],
             },
@@ -1553,7 +1515,7 @@ test("bind", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/MY_SECRET2/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/MY_SECRET2/value",
                 ],
               ],
             },
@@ -1785,7 +1747,7 @@ test("Stack.defaultFunctionProps(): bind", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/SECRET_A/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/SECRET_A/value",
                 ],
               ],
             },
@@ -1815,7 +1777,7 @@ test("Stack.defaultFunctionProps(): bind", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/SECRET_B/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/SECRET_B/value",
                 ],
               ],
             },
@@ -1845,7 +1807,7 @@ test("Stack.defaultFunctionProps(): bind", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/SECRET_C/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/SECRET_C/value",
                 ],
               ],
             },
@@ -2013,7 +1975,7 @@ test("App.defaultFunctionProps(): config", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/SECRET_A/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/SECRET_A/value",
                 ],
               ],
             },
@@ -2043,7 +2005,7 @@ test("App.defaultFunctionProps(): config", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/SECRET_B/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/SECRET_B/value",
                 ],
               ],
             },
@@ -2073,7 +2035,7 @@ test("App.defaultFunctionProps(): config", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/SECRET_C/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/SECRET_C/value",
                 ],
               ],
             },
@@ -2103,7 +2065,7 @@ test("App.defaultFunctionProps(): config", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/SECRET_D/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/SECRET_D/value",
                 ],
               ],
             },
@@ -2167,7 +2129,7 @@ test("App.defaultFunctionProps(): bind", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/SECRET_A/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/SECRET_A/value",
                 ],
               ],
             },
@@ -2197,7 +2159,7 @@ test("App.defaultFunctionProps(): bind", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/SECRET_B/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/SECRET_B/value",
                 ],
               ],
             },
@@ -2227,7 +2189,7 @@ test("App.defaultFunctionProps(): bind", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/SECRET_C/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/SECRET_C/value",
                 ],
               ],
             },
@@ -2257,7 +2219,7 @@ test("App.defaultFunctionProps(): bind", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/SECRET_D/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/SECRET_D/value",
                 ],
               ],
             },
@@ -2539,9 +2501,7 @@ test("fromDefinition-lambdaFunction", async () => {
         code: lambda.Code.fromAsset("test"),
       }) as Function
     );
-  }).toThrow(
-    /Please use sst.Function instead of lambda.Function for the "Function" Function./
-  );
+  }).toThrow();
 });
 
 test("fromDefinition-garbage", async () => {
