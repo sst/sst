@@ -216,10 +216,11 @@ You can also use the `sst bind` to run any scripts.
 
   ```bash
   npx sst bind --site npm run start
+  ```
 
 - **`--script`**
 
-  Similarly, if SST has detected a frontend framework in the current directory, but you are not starting your frontend, then pass in `--script`. This is useful when  you are running a script inside your frontend directory.
+  Similarly, if SST has detected a frontend framework in the current directory, but you are not starting your frontend, then pass in `--script`. This is useful when you are running a script inside your frontend directory.
 
   ```bash
   npx sst bind --script npm run build
