@@ -100,7 +100,7 @@ async function loadCDKStatus() {
     }
 
     // Check CDK bootstrap stack is up to date
-    // note: there is no a programmatical way to get the minimal required version
+    // note: there is no programmatic way to get the minimal required version
     //       of CDK bootstrap stack. We are going to hardcode it to 14 for now,
     //       which is the latest version as of CDK v2.62.2
     const output = stacks[0].Outputs?.find(

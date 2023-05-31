@@ -264,7 +264,7 @@ test("accessLog-props-with-retention-invalid", async () => {
   expect(() => {
     new Api(stack, "Api", {
       accessLog: {
-        // @ts-ignore Allow non-existant value
+        // @ts-ignore Allow non-existent value
         retention: "NOT_EXIST",
       },
     });
@@ -1065,7 +1065,7 @@ test("defaults: authorizer jwt missing authorizer", async () => {
         "GET /": "test/lambda.handler",
       },
       defaults: {
-        // @ts-ignore Allow non-existant value
+        // @ts-ignore Allow non-existent value
         authorizer: "foo",
       },
     });
@@ -1418,7 +1418,7 @@ test("routes: ApiFunctionRouteProps-authorizer-not-found", async () => {
           function: {
             handler: "test/lambda.handler",
           },
-          // @ts-ignore Allow non-existant value
+          // @ts-ignore Allow non-existent value
           authorizer: "ABC",
         },
       },
@@ -1621,7 +1621,7 @@ test("routes: ApiGraphQLRouteProps-function-string", async () => {
 test("routes: ApiAlbRouteProps method is undefined", async () => {
   const stack = new Stack(await createApp(), "stack");
 
-  // Ceate ALB listener
+  // Create ALB listener
   const vpc = new ec2.Vpc(stack, "VPC");
   const lb = new elb.ApplicationLoadBalancer(stack, "LB", { vpc });
   const listener = lb.addListener("Listener", { port: 80 });
@@ -1675,7 +1675,7 @@ test("routes: ApiAlbRouteProps method is undefined", async () => {
 test("routes: ApiAlbRouteProps method is HttpMethod", async () => {
   const stack = new Stack(await createApp(), "stack");
 
-  // Ceate ALB listener
+  // Create ALB listener
   const vpc = new ec2.Vpc(stack, "VPC");
   const lb = new elb.ApplicationLoadBalancer(stack, "LB", { vpc });
   const listener = lb.addListener("Listener", { port: 80 });
@@ -1732,7 +1732,7 @@ test("routes: ApiAlbRouteProps method is HttpMethod", async () => {
 test("routes: ApiNlbRouteProps method is undefined", async () => {
   const stack = new Stack(await createApp(), "stack");
 
-  // Ceate NLB listener
+  // Create NLB listener
   const vpc = new ec2.Vpc(stack, "VPC");
   const lb = new elb.NetworkLoadBalancer(stack, "LB", { vpc });
   const listener = lb.addListener("Listener", { port: 80 });
@@ -1786,7 +1786,7 @@ test("routes: ApiNlbRouteProps method is undefined", async () => {
 test("routes: ApiNlbRouteProps method is HttpMethod", async () => {
   const stack = new Stack(await createApp(), "stack");
 
-  // Ceate NLB listener
+  // Create NLB listener
   const vpc = new ec2.Vpc(stack, "VPC");
   const lb = new elb.NetworkLoadBalancer(stack, "LB", { vpc });
   const listener = lb.addListener("Listener", { port: 80 });

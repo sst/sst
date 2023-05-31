@@ -209,7 +209,7 @@ export class DnsValidatedCertificate
           Region: props.region,
           Route53Endpoint: props.route53Endpoint,
           RemovalPolicy: Lazy.any({ produce: () => this._removalPolicy }),
-          // Custom resources properties are always converted to strings; might as well be explict here.
+          // Custom resources properties are always converted to strings; might as well be explicit here.
           CleanupRecords: props.cleanupRoute53Records ? "true" : undefined,
           Tags: Lazy.list({ produce: () => this.tags.renderTags() }),
         },

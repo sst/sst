@@ -121,7 +121,7 @@ export interface RDSProps {
      */
     id?: string;
     /**
-     * Configure the internallly created RDS cluster.
+     * Configure the internally created RDS cluster.
      *
      * @example
      * ```js
@@ -497,7 +497,7 @@ export class RDS extends Construct implements SSTConstruct {
         RDS_SECRET: this.cdk.cluster.secret!.secretArn,
         RDS_DATABASE: defaultDatabaseName,
         RDS_ENGINE_MODE: engine.includes("postgres") ? "postgres" : "mysql",
-        // for live development, perserve the migrations path so the migrator
+        // for live development, preserve the migrations path so the migrator
         // can locate the migration files
         RDS_MIGRATIONS_PATH:
           app.mode === "dev" ? migrations : migrationsDestination,

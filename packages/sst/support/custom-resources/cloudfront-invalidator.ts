@@ -61,7 +61,7 @@ async function wait(distributionId: string, invalidationId: string) {
       }
     );
   } catch (e) {
-    // supress errors
+    // suppress errors
     console.error(e);
   }
 }

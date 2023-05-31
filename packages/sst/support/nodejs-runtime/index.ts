@@ -125,11 +125,11 @@ while (true) {
           Number(result.headers["lambda-runtime-deadline-ms"]) - Date.now(),
           0
         ),
-      // If identity is null, we want to mimick AWS behavior and return undefined
+      // If identity is null, we want to mimic AWS behavior and return undefined
       identity:
         JSON.parse(result.headers["lambda-runtime-cognito-identity"]) ??
         undefined,
-      // If clientContext is null, we want to mimick AWS behavior and return undefined
+      // If clientContext is null, we want to mimic AWS behavior and return undefined
       clientContext:
         JSON.parse(result.headers["lambda-runtime-client-context"]) ??
         undefined,

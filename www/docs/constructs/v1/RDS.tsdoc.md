@@ -118,7 +118,7 @@ new RDS(stack, "Database", {
 
 _Type_ : <span class='mono'><span class="mono">[IServerlessCluster](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_rds.IServerlessCluster.html)</span> | <span class="mono">[RDSCdkServerlessClusterProps](#rdscdkserverlessclusterprops)</span></span>
 
-Configure the internallly created RDS cluster.
+Configure the internally created RDS cluster.
 
 
 ```js

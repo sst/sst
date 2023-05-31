@@ -209,7 +209,7 @@ export class Auth extends Construct implements SSTConstruct {
         },
       });
 
-      // Auth construct has two types of Function bindinds:
+      // Auth construct has two types of Function bindings:
       // - Api routes: bindings defined in `getFunctionBinding()`
       //     ie. calling `bind([auth])` will grant functions access to the public key
       // - Auth authenticator: binds manually. Need to grant access to the prefix and private key

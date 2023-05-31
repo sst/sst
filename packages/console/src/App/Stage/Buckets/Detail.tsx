@@ -216,7 +216,7 @@ function formatFileSize(bytes: number): string {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   const num = parseFloat((bytes / Math.pow(k, i)).toFixed(2));
 
-  // Handle 1 Byte should be singluar, otherwise plural
+  // Handle 1 Byte should be singular, otherwise plural
   const unit = sizes[i] + (i === 0 && num !== 1 ? "s" : "");
 
   return `${num} ${unit}`;

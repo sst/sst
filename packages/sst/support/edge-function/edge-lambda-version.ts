@@ -150,12 +150,12 @@ async function deleteOldVersions(functionName: string) {
           .promise();
         log("response", resp);
       } catch (e) {
-        // Supress error because a version can fail to remove if still in use.
+        // suppress error because a version can fail to remove if still in use.
         log(`deleteVersion error`, e);
       }
     }
   } catch (e) {
-    // Supress error because it is fine if a specific version fails to remove.
+    // suppress error because it is fine if a specific version fails to remove.
     // All versions will be removed upon removing the function.
     log(`deleteOldVersions error`, e);
   }

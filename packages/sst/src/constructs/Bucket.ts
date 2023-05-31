@@ -203,7 +203,7 @@ export interface BucketProps {
    */
   cors?: boolean | BucketCorsRule[];
   /**
-   * Block public access to this bucket. Setting this to `true` alllows uploading objects with public ACLs.
+   * Block public access to this bucket. Setting this to `true` allows uploading objects with public ACLs.
    * Note that setting to `true` does not necessarily mean that the bucket is completely accessible to the public. Rather, it enables the granting of public permissions through public ACLs.
    * @default false
    * @example

@@ -11,7 +11,7 @@ export abstract class CertificateBase extends Resource implements ICertificate {
   public abstract readonly certificateArn: string;
 
   /**
-   * If the certificate is provisionned in a different region than the
+   * If the certificate is provisioned in a different region than the
    * containing stack, this should be the region in which the certificate lives
    * so we can correctly create `Metric` instances.
    */

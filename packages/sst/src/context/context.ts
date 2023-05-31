@@ -48,7 +48,7 @@ function create<C>(cb?: (() => C) | string, name?: string) {
         reset();
       }
 
-      // If the context is already set, we need to reset its dependants
+      // If the context is already set, we need to reset its dependents
       resetDependencies(id);
 
       state.contexts.set(id, {

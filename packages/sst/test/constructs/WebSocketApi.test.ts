@@ -208,7 +208,7 @@ test("accessLog-props-with-retention-invalid", async () => {
   expect(() => {
     new WebSocketApi(stack, "Api", {
       accessLog: {
-        // @ts-ignore Allow non-existant value
+        // @ts-ignore Allow non-existent value
         retention: "NOT_EXIST",
       },
     });

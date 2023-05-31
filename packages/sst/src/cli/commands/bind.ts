@@ -288,7 +288,7 @@ export const bind = (program: Program) =>
           const credentials = await assumeSsrRole(roleArn);
           if (!credentials) return;
 
-          // refresh crecentials 1 minute before expiration
+          // refresh credentials 1 minute before expiration
           const expireAt = credentials.Expiration!.getTime() - 60000;
           clearTimeout(timer);
           timer = setTimeout(() => {
@@ -376,7 +376,7 @@ export const bind = (program: Program) =>
             return credentials;
           };
 
-          // Assue role with max duration first. This can fail if chaining roles, or if
+          // Assume role with max duration first. This can fail if chaining roles, or if
           // the role has a max duration set. If it fails, assume role with 1 hour duration.
           let err: any;
           try {

@@ -85,8 +85,8 @@ export class EdgeFunction extends Construct {
 
     // Override scope
     // note: this is intended to be used internally by SST to make constructs
-    //       backwards compatible when the hirechical structure of the constructs
-    //       changes. When the hirerchical structure changes, the child AWS
+    //       backwards compatible when the hierarchical structure of the constructs
+    //       changes. When the hierarchical structure changes, the child AWS
     //       resources' logical ID will change. And CloudFormation will recreate
     //       them.
     this.scope = props.scopeOverride || this;

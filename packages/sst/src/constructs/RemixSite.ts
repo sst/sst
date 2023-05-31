@@ -105,7 +105,7 @@ export class RemixSite extends SsrSite {
       handler
     );
 
-    // Copy the Remix polyfil to the server build directory
+    // Copy the Remix polyfill to the server build directory
     //
     // Note: We need to ensure that the polyfills are injected above other code that
     // will depend on them. Importing them within the top of the lambda code

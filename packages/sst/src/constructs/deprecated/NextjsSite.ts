@@ -169,7 +169,7 @@ export interface NextjsSiteProps {
      */
     id?: string;
     /**
-     * Allows you to override default settings this construct uses internally to ceate the bucket
+     * Allows you to override default settings this construct uses internally to create the bucket
      */
     bucket?: s3.BucketProps | s3.IBucket;
     /**

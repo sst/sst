@@ -6,7 +6,7 @@ import { OauthAdapter, OauthBasicConfig } from "./oauth.js";
 // are not passed to Lambda event object. It is likely that Facebook only wants
 // to support redirecting to a frontend uri.
 //
-// We are only going to suppor the OAuth flow for now. More details about the flow:
+// We are only going to support the OAuth flow for now. More details about the flow:
 // https://developers.facebook.com/docs/facebook-login/guides/advanced/oidc-token
 //
 // Also note that Facebook's discover uri does not work for the OAuth flow, as the

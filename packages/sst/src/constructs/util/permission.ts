@@ -269,8 +269,8 @@ function permissionsToStatementsAndGrants(
       );
     } else if ((permission as any).clusterArn) {
       // For ServerlessCluster, we need to grant:
-      // - permisssions to access the Data API;
-      // - permisssions to access the Secret Manager (required by Data API).
+      // - permissions to access the Data API;
+      // - permissions to access the Secret Manager (required by Data API).
       // No need to grant the permissions for IAM database authentication
       statements.push(
         buildPolicyStatement("rds-data:*", [(permission as any).clusterArn])

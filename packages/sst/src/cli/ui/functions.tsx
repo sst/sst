@@ -53,7 +53,7 @@ export function Functions() {
       });
     });
 
-    // This is all ugly but the timeouts are for UI smootheness
+    // This is all ugly but the timeouts are for UI smoothness
     const success = bus.subscribe("function.success", (evt) => {
       function print(input: Pending, diff: number) {
         setTimeout(

@@ -253,7 +253,7 @@ export interface SsrSiteProps {
      */
     id?: string;
     /**
-     * Allows you to override default settings this construct uses internally to ceate the bucket
+     * Allows you to override default settings this construct uses internally to create the bucket
      */
     bucket?: BucketProps | IBucket;
     /**
@@ -265,7 +265,7 @@ export interface SsrSiteProps {
      * Override the CloudFront cache policy properties for responses from the
      * server rendering Lambda.
      *
-     * @note The default cache policy that is used in the abscene of this property
+     * @note The default cache policy that is used in the absence of this property
      * is one that performs no caching of the server response.
      */
     serverCachePolicy?: ICachePolicy;

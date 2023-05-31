@@ -113,7 +113,7 @@ export function useStacks() {
                 const constructs = ((await resp.json()) || []) as Metadata[];
                 console.log(constructs);
                 // Get the stack info. Note that if stack is not found in CloudFormation,
-                // supress the error.
+                // suppress the error.
                 let describe;
                 try {
                   describe = await cf.send(

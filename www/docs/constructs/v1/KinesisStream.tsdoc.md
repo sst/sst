@@ -242,7 +242,7 @@ new KinesisStream(stack, "Stream", {
 
 _Type_ : <span class="mono">[KinesisEventSourceProps](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.KinesisEventSourceProps.html)</span>
 
-Override the interally created event source
+Override the internally created event source
 
 
 ```js

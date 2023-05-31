@@ -102,7 +102,7 @@ export default {
     if (enableDatadog) {
       await app.finish();
 
-      // Attach the Datadog contruct to each stack
+      // Attach the Datadog construct to each stack
       app.node.children.forEach((stack) => {
         if (stack instanceof Stack) {
           const datadog = new Datadog(stack, "datadog", {

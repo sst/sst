@@ -327,7 +327,7 @@ export interface BuildStackAssetsOptions {
   readonly roleArn?: string;
 
   /**
-   * Options to pass on to `buildAsests()` function
+   * Options to pass on to `buildAssets()` function
    */
   readonly buildOptions?: BuildAssetsOptions;
 }
@@ -341,7 +341,7 @@ interface PublishStackAssetsOptions {
   readonly buildAssets?: boolean;
 
   /**
-   * Options to pass on to `publishAsests()` function
+   * Options to pass on to `publishAssets()` function
    */
   readonly publishOptions?: Omit<PublishAssetsOptions, "buildAssets">;
 }

@@ -41,7 +41,7 @@ export interface KinesisStreamConsumerProps {
   function: FunctionDefinition;
   cdk?: {
     /**
-     * Override the interally created event source
+     * Override the internally created event source
      *
      * @example
      * ```js

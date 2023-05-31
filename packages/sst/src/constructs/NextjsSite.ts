@@ -264,7 +264,7 @@ export class NextjsSite extends SsrSite {
      *
      * - SSR pages (user transition)
      *  Use case: When the page uses getServerSideProps(), and you request this page on
-     *            client-side page trasitions. Next.js sends an API request to the server,
+     *            client-side page transitions. Next.js sends an API request to the server,
      *            which runs getServerSideProps()
      *  Request: /_next/data/_-fpIB1rqWyRD-EJO59pO/myPage.json
      *  Response cache:
