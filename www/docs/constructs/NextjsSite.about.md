@@ -466,3 +466,19 @@ new NextjsSite(stack, "Site", {
   },
 });
 ```
+
+
+#### Increasing Log Retention for Server Lambda
+
+```js
+import { RetentionDays } from "aws-cdk-lib/aws-logs";
+
+new NextjsSite(stack, "Site", {
+  path: "my-next-app/",
+  cdk: {
+    server: {
+      logRetention: RetentionDays.ONE_MONTH
+    }
+  },
+});
+```
