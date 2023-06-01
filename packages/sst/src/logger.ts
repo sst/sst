@@ -1,13 +1,14 @@
 import fs from "fs/promises";
 import path from "path";
 import { Context } from "./context/context.js";
+import { useProject } from "./project.js";
 
 let previous = new Date();
 
 const useFile = Context.memo(async () => {
-  const { useProject } = await import("./project.js");
-  const project = useProject();
-  const filePath = path.join(project.paths.out, "debug.log");
+  // const project = useProject();
+  // const filePath = path.join(project.paths.out, "debug.log");
+  const filePath = ".sst/debug.log";
   const file = await fs.open(filePath, "w");
   return file;
 });

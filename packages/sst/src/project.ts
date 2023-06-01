@@ -87,18 +87,22 @@ interface GlobalOptions {
 }
 
 export async function initProject(globals: GlobalOptions) {
+  Logger.debug("initing project");
   const root = globals.root || (await findRoot());
   const out = path.join(root, ".sst");
   await fs.mkdir(out, {
     recursive: true,
   });
+  Logger.debug("made out dir");
 
   let file: string | undefined;
   const [metafile, sstConfig] = await (async function () {
     for (const ext of CONFIG_EXTENSIONS) {
       file = path.join(root, "sst" + ext);
       if (!fsSync.existsSync(file)) continue;
+      Logger.debug("found sst config");
       const [metafile, config] = await load(file);
+      Logger.debug("loaded sst config");
       return [metafile, config as SSTConfig];
     }
 
