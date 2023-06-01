@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.11.12
+
+### Patch Changes
+
+- [`0daef8c23`](https://github.com/serverless-stack/sst/commit/0daef8c236d45785cae5f27062500b59044a1cd3) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: pin to OpenNext v1.4.0
+
 ## 2.11.11
 
 ### Patch Changes
