@@ -160,6 +160,8 @@ const job = new Job(stack, "factorial", {
 });
 ```
 
+(Please note that local/dev environment jobs can only run for a maximum of 15 minutes, this is due to SST jobs using lambda functions locally)
+
 See a full list of [memory size](constructs/Job.md#memorysize) and [timeout](constructs/Job.md#timeout) configurations.
 
 ---
