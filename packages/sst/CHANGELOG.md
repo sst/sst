@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.11.7
+
+### Patch Changes
+
+- [`318b9c88f`](https://github.com/serverless-stack/sst/commit/318b9c88f7ecf7e86a0777885225900b5eaf51f0) Thanks [@thdxr](https://github.com/thdxr)! - improve performance of CLI start
+
 ## 2.11.6
 
 ### Patch Changes
