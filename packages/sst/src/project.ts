@@ -87,22 +87,22 @@ interface GlobalOptions {
 }
 
 export async function initProject(globals: GlobalOptions) {
-  Logger.debug("initing project");
+  // Logger.debug("initing project");
   const root = globals.root || (await findRoot());
   const out = path.join(root, ".sst");
   await fs.mkdir(out, {
     recursive: true,
   });
-  Logger.debug("made out dir");
+  // Logger.debug("made out dir");
 
   let file: string | undefined;
   const [metafile, sstConfig] = await (async function () {
     for (const ext of CONFIG_EXTENSIONS) {
       file = path.join(root, "sst" + ext);
       if (!fsSync.existsSync(file)) continue;
-      Logger.debug("found sst config");
+      // Logger.debug("found sst config");
       const [metafile, config] = await load(file);
-      Logger.debug("loaded sst config");
+      // Logger.debug("loaded sst config");
       return [metafile, config as SSTConfig];
     }
 
@@ -164,6 +164,8 @@ export async function initProject(globals: GlobalOptions) {
     },
   };
 
+  ProjectContext.provide(project);
+
   // Cleanup old config files
   (async function () {
     const files = await fs.readdir(project.paths.root);
@@ -181,7 +183,6 @@ export async function initProject(globals: GlobalOptions) {
     }
   })();
 
-  ProjectContext.provide(project);
   dotenv.config({
     path: path.join(project.paths.root, `.env.${project.config.stage}`),
     override: true,

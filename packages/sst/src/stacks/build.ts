@@ -23,7 +23,7 @@ export async function load(input: string) {
     await fs.readFile(path.join(root, "package.json")).then((x) => x.toString())
   );
   try {
-    Logger.debug("running esbuild on", input);
+    // Logger.debug("running esbuild on", input);
     const result = await esbuild.build({
       keepNames: true,
       bundle: true,
@@ -55,9 +55,9 @@ export async function load(input: string) {
       // import from "buildDir" without needing to pass "anything" around.
       entryPoints: [input],
     });
-    Logger.debug("built", input);
+    // Logger.debug("built", input);
     const mod = await dynamicImport(outfile);
-    Logger.debug("imported", input);
+    // Logger.debug("imported", input);
     await fs.rm(outfile, {
       force: true,
     });
