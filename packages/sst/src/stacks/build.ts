@@ -100,9 +100,9 @@ export async function load(input: string, shallow?: boolean) {
     // Logger.debug("built", input);
     const mod = await dynamicImport(outfile);
     // Logger.debug("imported", input);
-    // await fs.rm(outfile, {
-    //   force: true,
-    // });
+    await fs.rm(outfile, {
+      force: true,
+    });
     if (!mod.default?.config)
       throw new VisibleError(
         `The config file is improperly formatted.`,

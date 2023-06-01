@@ -59,7 +59,6 @@
     "@babel/core": "^7.0.0-0",
     "@babel/generator": "^7.20.5",
     "@babel/plugin-syntax-typescript": "^7.21.4",
-    "@babel/preset-env": "^7.22.4",
     "@trpc/server": "9.16.0",
     "adm-zip": "^0.5.10",
     "aws-cdk-lib": "2.79.1",
