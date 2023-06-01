@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.11.10
+
+### Patch Changes
+
+- [`5fb455ebf`](https://github.com/serverless-stack/sst/commit/5fb455ebfb81ee7e07871662d3c55243cff07d83) Thanks [@thdxr](https://github.com/thdxr)! - fix sst build
+
 ## 2.11.9
 
 ### Patch Changes
