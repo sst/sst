@@ -93,8 +93,9 @@ export const deploy = (program: Program) =>
         const spinner = createSpinner({
           text: " Building...",
         });
+        const [_metafile, sstConfig] = await Stacks.load(project.paths.config);
         const result = await Stacks.synth({
-          fn: project.stacks,
+          fn: sstConfig.stacks,
           mode: "deploy",
           isActiveStack,
         });
