@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.11.9
+
+### Patch Changes
+
+- [`bb1749953`](https://github.com/serverless-stack/sst/commit/bb174995332e4415ec9f527bb198e4d4213ee671) Thanks [@thdxr](https://github.com/thdxr)! - fix retrier not being activated
+
 ## 2.11.8
 
 ### Patch Changes
