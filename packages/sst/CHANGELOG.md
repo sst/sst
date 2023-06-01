@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.11.11
+
+### Patch Changes
+
+- [`b700ee400`](https://github.com/serverless-stack/sst/commit/b700ee400ba0c4065907949ea78d1446ec4dfe28) Thanks [@thdxr](https://github.com/thdxr)! - fix issue with deploy, diff, and remove
+
 ## 2.11.10
 
 ### Patch Changes
