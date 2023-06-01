@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.11.8
+
+### Patch Changes
+
+- [`d4de7e4b6`](https://github.com/serverless-stack/sst/commit/d4de7e4b668f8e545556f48024cf8fe7432d5f37) Thanks [@thdxr](https://github.com/thdxr)! - regex approach didn't work, had to use ast
+
 ## 2.11.7
 
 ### Patch Changes
