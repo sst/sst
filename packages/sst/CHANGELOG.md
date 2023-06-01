@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.11.6
+
+### Patch Changes
+
+- [`ea7995119`](https://github.com/serverless-stack/sst/commit/ea799511940131893c7e02d6dbc2303a70a3e016) Thanks [@thdxr](https://github.com/thdxr)! - update sst connect command to switch between prod and dev
+
 ## 2.11.5
 
 ### Patch Changes
