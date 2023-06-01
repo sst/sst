@@ -1,4 +1,3 @@
-import * as ssm from "aws-cdk-lib/aws-ssm";
 import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { Construct } from "constructs";
 import { Api, ApiProps } from "../Api.js";
@@ -11,7 +10,7 @@ import {
   FunctionBindingProps,
   getParameterPath,
 } from "../util/functionBinding.js";
-import { CustomResource } from "aws-cdk-lib";
+import { CustomResource } from "aws-cdk-lib/core";
 
 export interface AuthProps {
   /**

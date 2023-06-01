@@ -42,8 +42,9 @@ export const remove = (program: Program) =>
           return result;
         }
 
+        const [_metafile, sstConfig] = await Stacks.load(project.paths.config);
         return await Stacks.synth({
-          fn: project.stacks,
+          fn: sstConfig.stacks,
           mode: "remove",
         });
       })();

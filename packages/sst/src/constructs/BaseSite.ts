@@ -1,4 +1,4 @@
-import { Token } from "aws-cdk-lib";
+import { Token } from "aws-cdk-lib/core";
 import { IHostedZone } from "aws-cdk-lib/aws-route53";
 import {
   ErrorResponse,

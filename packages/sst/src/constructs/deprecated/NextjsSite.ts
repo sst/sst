@@ -8,10 +8,9 @@ import { Construct } from "constructs";
 import {
   Token,
   Duration,
-  CfnOutput,
   RemovalPolicy,
   CustomResource,
-} from "aws-cdk-lib";
+} from "aws-cdk-lib/core";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import {
   Role,
@@ -616,7 +615,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
 
   private createEdgeFunctionInNonUE1(
     name: string,
-    assetPath: string,
+    _assetPath: string,
     asset: s3Assets.Asset,
     hasRealCode: boolean
   ): lambda.IVersion {

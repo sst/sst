@@ -18,7 +18,7 @@ import {
   Bucket,
   RedirectProtocol,
 } from "aws-cdk-lib/aws-s3";
-import { ArnFormat, RemovalPolicy, Stack, Token } from "aws-cdk-lib";
+import { ArnFormat, RemovalPolicy, Stack, Token } from "aws-cdk-lib/core";
 import cdkHelpers from "aws-cdk-lib/core/lib/helpers-internal";
 import { Construct } from "constructs";
 import { DnsValidatedCertificate } from "./dns-validated-certificate.js";

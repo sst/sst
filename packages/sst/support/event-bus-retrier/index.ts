@@ -4,6 +4,7 @@ import { SQSHandler } from "aws-lambda";
 
 const lambda = new LambdaClient({});
 const sqs = new SQSClient({});
+const retries = JSON.parse(process.env.RETRIES!);
 
 export const handler: SQSHandler = async (evt) => {
   for (const record of evt.Records) {
@@ -11,7 +12,7 @@ export const handler: SQSHandler = async (evt) => {
     console.log("body", parsed);
     if (parsed.responsePayload) {
       const attempt = (parsed.requestPayload.attempts || 0) + 1;
-      if (attempt > 20) {
+      if (attempt > retries[parsed.requestContext.functionArn]) {
         console.log(`giving up after ${attempt} retries`);
         return;
       }
@@ -20,7 +21,7 @@ export const handler: SQSHandler = async (evt) => {
       parsed.requestPayload.attempts = attempt;
       await sqs.send(
         new SendMessageCommand({
-          QueueUrl: process.env.REDRIVER_QUEUE_URL,
+          QueueUrl: process.env.RETRIER_QUEUE_URL,
           DelaySeconds: seconds,
           MessageBody: JSON.stringify({
             requestPayload: parsed.requestPayload,

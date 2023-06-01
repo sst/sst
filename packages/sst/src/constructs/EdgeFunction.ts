@@ -28,7 +28,7 @@ import {
   CfnResource,
   CustomResource,
   CfnCustomResource,
-} from "aws-cdk-lib";
+} from "aws-cdk-lib/core";
 
 import { useProject } from "../project.js";
 import { useRuntimeHandlers } from "../runtime/handlers.js";

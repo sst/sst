@@ -4,7 +4,7 @@ import fs from "fs";
 import url from "url";
 import * as crypto from "crypto";
 import { Construct } from "constructs";
-import * as cdk from "aws-cdk-lib";
+import { Duration as CDKDuration, CustomResource } from "aws-cdk-lib/core";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as rds from "aws-cdk-lib/aws-rds";
 import * as lambda from "aws-cdk-lib/aws-lambda";
@@ -419,10 +419,10 @@ export class RDS extends Construct implements SSTConstruct {
     return {
       autoPause:
         scaling?.autoPause === false
-          ? cdk.Duration.minutes(0)
+          ? CDKDuration.minutes(0)
           : scaling?.autoPause === true || scaling?.autoPause === undefined
-          ? cdk.Duration.minutes(5)
-          : cdk.Duration.minutes(scaling?.autoPause),
+          ? CDKDuration.minutes(5)
+          : CDKDuration.minutes(scaling?.autoPause),
       minCapacity: rds.AuroraCapacityUnit[scaling?.minCapacity || "ACU_2"],
       maxCapacity: rds.AuroraCapacityUnit[scaling?.maxCapacity || "ACU_16"],
     };
@@ -533,7 +533,7 @@ export class RDS extends Construct implements SSTConstruct {
       ),
       runtime: lambda.Runtime.NODEJS_16_X,
       handler: "index.handler",
-      timeout: cdk.Duration.minutes(15),
+      timeout: CDKDuration.minutes(15),
       memorySize: 1024,
     });
     this.migratorFunction?.grantInvoke(handler);
@@ -548,7 +548,7 @@ export class RDS extends Construct implements SSTConstruct {
     //       each build.
     const hash =
       app.mode === "dev" ? 0 : this.generateMigrationsHash(migrations);
-    new cdk.CustomResource(this, "MigrationResource", {
+    new CustomResource(this, "MigrationResource", {
       serviceToken: handler.functionArn,
       resourceType: "Custom::SSTScript",
       properties: {

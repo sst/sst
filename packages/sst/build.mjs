@@ -70,7 +70,7 @@ await esbuild.build({
   outfile: "./dist/support/bridge/bridge.mjs",
 });
 
-// support/event-bus-redriver
+// support/event-bus-retrier
 await esbuild.build({
   keepNames: true,
   bundle: true,
@@ -78,14 +78,14 @@ await esbuild.build({
   platform: "node",
   target: "esnext",
   format: "esm",
-  entryPoints: ["./support/event-bus-redriver/index.ts"],
+  entryPoints: ["./support/event-bus-retrier/index.ts"],
   banner: {
     js: [
       `import { createRequire as topLevelCreateRequire } from 'module';`,
       `const require = topLevelCreateRequire(import.meta.url);`,
     ].join(""),
   },
-  outfile: "./dist/support/event-bus-redriver/index.mjs",
+  outfile: "./dist/support/event-bus-retrier/index.mjs",
 });
 
 // support/rds-migrator

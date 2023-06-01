@@ -1,5 +1,5 @@
 import { Construct } from "constructs";
-import * as cdk from "aws-cdk-lib";
+import { Token } from "aws-cdk-lib/core";
 import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
@@ -80,7 +80,7 @@ function buildDataForStringInput(
 ): CustomDomainData {
   // validate: customDomain is a TOKEN string
   // ie. imported SSM value: ssm.StringParameter.valueForStringParameter()
-  if (cdk.Token.isUnresolved(customDomain)) {
+  if (Token.isUnresolved(customDomain)) {
     throw new Error(
       `You also need to specify the "hostedZone" if the "domainName" is passed in as a reference.`
     );
@@ -110,7 +110,7 @@ function buildDataForInternalDomainInput(
 ): CustomDomainData {
   // If customDomain is a TOKEN string, "hostedZone" has to be passed in. This
   // is because "hostedZone" cannot be parsed from a TOKEN value.
-  if (cdk.Token.isUnresolved(customDomain.domainName)) {
+  if (Token.isUnresolved(customDomain.domainName)) {
     if (!customDomain.hostedZone && !customDomain.cdk?.hostedZone) {
       throw new Error(
         `You also need to specify the "hostedZone" if the "domainName" is passed in as a reference.`
@@ -183,7 +183,7 @@ function buildDataForExternalDomainInput(
   }
 
   // If domain is not a token, ensure it is lower case
-  if (!cdk.Token.isUnresolved(customDomain.domainName)) {
+  if (!Token.isUnresolved(customDomain.domainName)) {
     assertDomainNameIsLowerCase(customDomain.domainName!);
   }
 
@@ -203,7 +203,7 @@ function buildDataForExternalDomainInput(
 }
 
 function buildDataForConstructInput(
-  scope: Construct,
+  _scope: Construct,
   customDomain: CustomDomainProps
 ): CustomDomainData {
   //  Allow user passing in `apigDomain` object. The use case is a user creates
@@ -290,7 +290,7 @@ function createARecords(
   //       This is because the construct tries to check if the record name
   //       ends with the domain name. If not, it will append the domain name.
   //       So, we need remove this behavior.
-  if (cdk.Token.isUnresolved(domainName)) {
+  if (Token.isUnresolved(domainName)) {
     records.forEach((record) => {
       const cfnRecord = record.node.defaultChild as route53.CfnRecordSet;
       cfnRecord.name = domainName;
