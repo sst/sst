@@ -1,7 +1,6 @@
-import { Token, Lazy } from "aws-cdk-lib";
+import { Token } from "aws-cdk-lib/core";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
-import * as appsync from "aws-cdk-lib/aws-appsync";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import { AppSyncApi } from "../AppSyncApi.js";
 import {
@@ -156,7 +155,7 @@ function buildDataForInternalDomainInput(
 }
 
 function buildDataForExternalDomainInput(
-  scope: AppSyncApi,
+  _scope: AppSyncApi,
   customDomain: CustomDomainProps
 ) {
   // if it is external, then a certificate is required

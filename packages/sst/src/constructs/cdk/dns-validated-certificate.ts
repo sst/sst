@@ -11,7 +11,7 @@ import {
   Stack,
   CustomResource,
   Lazy,
-} from "aws-cdk-lib";
+} from "aws-cdk-lib/core";
 import {
   CertificateProps,
   ICertificate,

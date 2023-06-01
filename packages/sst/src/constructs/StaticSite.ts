@@ -7,10 +7,9 @@ import { Construct } from "constructs";
 import {
   Token,
   Duration,
-  CfnOutput,
   RemovalPolicy,
   CustomResource,
-} from "aws-cdk-lib";
+} from "aws-cdk-lib/core";
 import {
   BlockPublicAccess,
   Bucket,

@@ -2,17 +2,23 @@ import path from "path";
 import crypto from "crypto";
 import url from "url";
 import { Construct } from "constructs";
-import * as cdk from "aws-cdk-lib";
+import {
+  CfnResource,
+  CustomResource,
+  Duration,
+  Lazy,
+  Stack,
+} from "aws-cdk-lib/core";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
-export function getOrCreateBucket(scope: Construct): cdk.CustomResource {
+export function getOrCreateBucket(scope: Construct): CustomResource {
   // Do not recreate if exist
   const providerId = "EdgeLambdaBucketProvider";
   const resId = "EdgeLambdaBucket";
-  const stack = cdk.Stack.of(scope);
-  const existingResource = stack.node.tryFindChild(resId) as cdk.CustomResource;
+  const stack = Stack.of(scope);
+  const existingResource = stack.node.tryFindChild(resId) as CustomResource;
   if (existingResource) {
     return existingResource;
   }
@@ -24,7 +30,7 @@ export function getOrCreateBucket(scope: Construct): cdk.CustomResource {
     ),
     handler: "s3-bucket.handler",
     runtime: lambda.Runtime.NODEJS_16_X,
-    timeout: cdk.Duration.minutes(15),
+    timeout: Duration.minutes(15),
     memorySize: 1024,
     initialPolicy: [
       new iam.PolicyStatement({
@@ -36,7 +42,7 @@ export function getOrCreateBucket(scope: Construct): cdk.CustomResource {
   });
 
   // Create custom resource
-  const resource = new cdk.CustomResource(stack, resId, {
+  const resource = new CustomResource(stack, resId, {
     serviceToken: provider.functionArn,
     resourceType: "Custom::SSTEdgeLambdaBucket",
     properties: {
@@ -53,11 +59,11 @@ export function createFunction(
   role: iam.Role,
   bucketName: string,
   functionParams: any
-): cdk.CustomResource {
+): CustomResource {
   // Do not recreate if exist
   const providerId = "EdgeLambdaProvider";
   const resId = `${name}EdgeLambda`;
-  const stack = cdk.Stack.of(scope);
+  const stack = Stack.of(scope);
   let provider = stack.node.tryFindChild(providerId) as lambda.Function;
 
   // Create provider if not already created
@@ -68,7 +74,7 @@ export function createFunction(
       ),
       handler: "edge-lambda.handler",
       runtime: lambda.Runtime.NODEJS_16_X,
-      timeout: cdk.Duration.minutes(15),
+      timeout: Duration.minutes(15),
       memorySize: 1024,
       initialPolicy: [
         new iam.PolicyStatement({
@@ -84,11 +90,11 @@ export function createFunction(
   }
 
   // Create custom resource
-  const resource = new cdk.CustomResource(scope, resId, {
+  const resource = new CustomResource(scope, resId, {
     serviceToken: provider.functionArn,
     resourceType: "Custom::SSTEdgeLambda",
     properties: {
-      FunctionNamePrefix: `${cdk.Stack.of(scope).stackName}-${resId}`,
+      FunctionNamePrefix: `${Stack.of(scope).stackName}-${resId}`,
       FunctionBucket: bucketName,
       FunctionParams: functionParams,
     },
@@ -101,11 +107,11 @@ export function createVersion(
   scope: Construct,
   name: string,
   functionArn: string
-): cdk.CustomResource {
+): CustomResource {
   // Do not recreate if exist
   const providerId = "EdgeLambdaVersionProvider";
   const resId = `${name}EdgeLambdaVersion`;
-  const stack = cdk.Stack.of(scope);
+  const stack = Stack.of(scope);
   let provider = stack.node.tryFindChild(providerId) as lambda.Function;
 
   // Create provider if not already created
@@ -116,7 +122,7 @@ export function createVersion(
       ),
       handler: "edge-lambda-version.handler",
       runtime: lambda.Runtime.NODEJS_16_X,
-      timeout: cdk.Duration.minutes(15),
+      timeout: Duration.minutes(15),
       memorySize: 1024,
       initialPolicy: [
         new iam.PolicyStatement({
@@ -129,7 +135,7 @@ export function createVersion(
   }
 
   // Create custom resource
-  return new cdk.CustomResource(scope, resId, {
+  return new CustomResource(scope, resId, {
     serviceToken: provider.functionArn,
     resourceType: "Custom::SSTEdgeLambdaVersion",
     properties: {
@@ -139,18 +145,18 @@ export function createVersion(
 }
 
 export function updateVersionLogicalId(
-  functionCR: cdk.CustomResource,
-  versionCR: cdk.CustomResource
+  functionCR: CustomResource,
+  versionCR: CustomResource
 ) {
   // Override the version's logical ID with a lazy string which includes the
   // hash of the function itself, so a new version resource is created when
   // the function configuration changes.
-  const cfn = versionCR.node.defaultChild as cdk.CfnResource;
-  const originalLogicalId = cdk.Stack.of(versionCR).resolve(
+  const cfn = versionCR.node.defaultChild as CfnResource;
+  const originalLogicalId = Stack.of(versionCR).resolve(
     cfn.logicalId
   ) as string;
   cfn.overrideLogicalId(
-    cdk.Lazy.uncachedString({
+    Lazy.uncachedString({
       produce: () => {
         const hash = calculateHash(functionCR);
         const logicalId = trimFromStart(originalLogicalId, 255 - 32);
@@ -166,7 +172,7 @@ function trimFromStart(s: string, maxLength: number) {
   return s.substring(newStart);
 }
 
-function calculateHash(resource: cdk.CustomResource): string {
+function calculateHash(resource: CustomResource): string {
   // render the cloudformation resource from this function
   // config is of the shape:
   // {
@@ -175,8 +181,8 @@ function calculateHash(resource: cdk.CustomResource): string {
   //      Type: 'Function',
   //      Properties: { ... }
   // }}}
-  const cfnResource = resource.node.defaultChild as cdk.CfnResource;
-  const config = cdk.Stack.of(resource).resolve(
+  const cfnResource = resource.node.defaultChild as CfnResource;
+  const config = Stack.of(resource).resolve(
     (cfnResource as any)._toCloudFormation()
   );
   const resources = config.Resources;

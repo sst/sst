@@ -2,7 +2,7 @@ import url from "url";
 import path from "path";
 import fs from "fs/promises";
 import { Construct } from "constructs";
-import { Duration as CdkDuration } from "aws-cdk-lib";
+import { Duration as CdkDuration } from "aws-cdk-lib/core";
 import { PolicyStatement, Role, Effect } from "aws-cdk-lib/aws-iam";
 import { AssetCode, Code } from "aws-cdk-lib/aws-lambda";
 import {

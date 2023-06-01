@@ -1,4 +1,4 @@
-import { Duration as CDKDuration } from "aws-cdk-lib";
+import { Duration as CDKDuration } from "aws-cdk-lib/core";
 export type Duration = `${number} ${
   | "second"
   | "seconds"

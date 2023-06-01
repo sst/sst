@@ -1,13 +1,14 @@
-import * as cdk from "aws-cdk-lib";
+import { Size as CDKSize } from "aws-cdk-lib/core";
+
 export type Size = `${number} ${"MB" | "GB"}`;
 
-export function toCdkSize(size: Size): cdk.Size {
+export function toCdkSize(size: Size): CDKSize {
   const [count, unit] = size.split(" ");
   const countNum = parseInt(count);
   if (unit === "MB") {
-    return cdk.Size.mebibytes(countNum);
+    return CDKSize.mebibytes(countNum);
   } else if (unit === "GB") {
-    return cdk.Size.gibibytes(countNum);
+    return CDKSize.gibibytes(countNum);
   }
   throw new Error(`Invalid size ${size}`);
 }
