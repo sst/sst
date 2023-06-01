@@ -14,7 +14,7 @@ declare module "../bus.js" {
   }
 }
 
-export async function load(input: string) {
+export async function load(input: string, shallow?: boolean) {
   const parsed = path.parse(input);
   const root = await findAbove(input, "package.json");
   if (!root) throw new VisibleError("Could not find a package.json file");
@@ -22,6 +22,12 @@ export async function load(input: string) {
   const pkg = JSON.parse(
     await fs.readFile(path.join(root, "package.json")).then((x) => x.toString())
   );
+  let contents = await fs.readFile(input).then((x) => x.toString());
+  if (shallow)
+    contents = contents.replaceAll(
+      /stacks\(.*?\)\s*{[\s\S]*?}\s*[,;]/gs,
+      "stacks() {},"
+    );
   try {
     // Logger.debug("running esbuild on", input);
     const result = await esbuild.build({
@@ -33,6 +39,9 @@ export async function load(input: string) {
       metafile: true,
       format: "esm",
       logLevel: "silent",
+      define: {
+        "process.env.IS_SHALLOW": shallow ? "true" : "false",
+      },
       external: [
         "aws-cdk-lib",
         "sst",
@@ -53,7 +62,13 @@ export async function load(input: string) {
       // The entry can have any file name (ie. "stacks/anything.ts"). We want the
       // build output to be always named "lib/index.js". This allow us to always
       // import from "buildDir" without needing to pass "anything" around.
-      entryPoints: [input],
+
+      stdin: {
+        contents,
+        loader: "ts",
+        resolveDir: path.dirname(input),
+      },
+      // entryPoints: [input],
     });
     // Logger.debug("built", input);
     const mod = await dynamicImport(outfile);

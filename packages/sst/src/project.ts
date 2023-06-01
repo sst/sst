@@ -101,7 +101,7 @@ export async function initProject(globals: GlobalOptions) {
       file = path.join(root, "sst" + ext);
       if (!fsSync.existsSync(file)) continue;
       // Logger.debug("found sst config");
-      const [metafile, config] = await load(file);
+      const [metafile, config] = await load(file, true);
       // Logger.debug("loaded sst config");
       return [metafile, config as SSTConfig];
     }
