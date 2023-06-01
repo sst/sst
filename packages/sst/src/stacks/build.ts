@@ -4,6 +4,10 @@ import path from "path";
 import { dynamicImport } from "../util/module.js";
 import { findAbove } from "../util/fs.js";
 import { VisibleError } from "../error.js";
+import babel from "@babel/core";
+import generate from "@babel/generator";
+// @ts-expect-error
+import ts from "@babel/plugin-syntax-typescript";
 import { Logger } from "../logger.js";
 
 declare module "../bus.js" {
@@ -22,18 +26,11 @@ export async function load(input: string, shallow?: boolean) {
   const pkg = JSON.parse(
     await fs.readFile(path.join(root, "package.json")).then((x) => x.toString())
   );
-  let contents = await fs.readFile(input).then((x) => x.toString());
-  if (shallow)
-    contents = contents.replaceAll(
-      /stacks\(.*?\)\s*{[\s\S]*?}\s*[,;]/gs,
-      "stacks() {},"
-    );
   try {
     // Logger.debug("running esbuild on", input);
     const result = await esbuild.build({
       keepNames: true,
       bundle: true,
-      sourcemap: "inline",
       platform: "node",
       target: "esnext",
       metafile: true,
@@ -51,6 +48,36 @@ export async function load(input: string, shallow?: boolean) {
           ...pkg.peerDependencies,
         }),
       ],
+      plugins: [
+        {
+          name: "shallow",
+          setup(build) {
+            if (!shallow) return;
+            build.onLoad({ filter: /.*/ }, async (args) => {
+              if (args.path !== input) return;
+              let contents = await fs
+                .readFile(args.path)
+                .then((x) => x.toString());
+              const ast = babel.parse(contents, {
+                sourceType: "module",
+                plugins: [ts],
+              });
+              babel.traverse(ast, {
+                ObjectMethod(path) {
+                  const { key } = path.node;
+                  if ("name" in key && key.name === "stacks") {
+                    path.remove();
+                  }
+                },
+              });
+              return {
+                contents: generate.default(ast!).code,
+                loader: "ts",
+              };
+            });
+          },
+        },
+      ],
       absWorkingDir: root,
       outfile,
       banner: {
@@ -63,19 +90,19 @@ export async function load(input: string, shallow?: boolean) {
       // build output to be always named "lib/index.js". This allow us to always
       // import from "buildDir" without needing to pass "anything" around.
 
-      stdin: {
-        contents,
-        loader: "ts",
-        resolveDir: path.dirname(input),
-      },
-      // entryPoints: [input],
+      //  stdin: {
+      //    contents,
+      //    loader: "ts",
+      //    resolveDir: path.dirname(input),
+      //  },
+      entryPoints: [input],
     });
     // Logger.debug("built", input);
     const mod = await dynamicImport(outfile);
     // Logger.debug("imported", input);
-    await fs.rm(outfile, {
-      force: true,
-    });
+    // await fs.rm(outfile, {
+    //   force: true,
+    // });
     if (!mod.default?.config)
       throw new VisibleError(
         `The config file is improperly formatted.`,
