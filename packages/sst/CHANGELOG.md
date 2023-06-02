@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.11.14
+
+### Patch Changes
+
+- [`9fc713a3b`](https://github.com/serverless-stack/sst/commit/9fc713a3b857e33d0d45a861d1cbac1134d5e837) Thanks [@thdxr](https://github.com/thdxr)! - function: add handler path in metadata
+
 ## 2.11.13
 
 ### Patch Changes
