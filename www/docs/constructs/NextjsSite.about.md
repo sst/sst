@@ -409,7 +409,7 @@ new NextjsSite(stack, "Site", {
 
 #### Configuring log retention
 
-```js {6}
+```js {6-8}
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 
 new NextjsSite(stack, "Site", {
