@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.11.13
+
+### Patch Changes
+
+- [`557ab1a19`](https://github.com/serverless-stack/sst/commit/557ab1a191aaefcc016f3a87bbb405a71602c92e) Thanks [@fwang](https://github.com/fwang)! - SsrSite: add support for setting log retention
+
 ## 2.11.12
 
 ### Patch Changes
