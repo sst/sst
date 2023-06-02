@@ -902,6 +902,7 @@ export class Function extends CDKFunction implements SSTConstruct {
       type: "Function" as const,
       data: {
         arn: this.functionArn,
+        handler: this.props.handler,
         localId: this.node.addr,
         secrets: this.allBindings
           .filter((c) => c instanceof Secret)
