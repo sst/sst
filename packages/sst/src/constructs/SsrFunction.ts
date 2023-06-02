@@ -61,6 +61,7 @@ export interface SsrFunctionProps
   bind?: SSTConstruct[];
   nodejs?: NodeJSProps;
   copyFiles?: FunctionCopyFilesProps[];
+  logRetention?: RetentionDays;
 }
 
 /////////////////////
@@ -131,12 +132,12 @@ export class SsrFunction extends Construct {
   }
 
   private createFunction(assetBucket: string, assetKey: string) {
-    const { runtime, timeout, memorySize, handler } = this.props;
+    const { runtime, timeout, memorySize, handler, logRetention } = this.props;
 
     return new CdkFunction(this, `ServerFunction`, {
       ...this.props,
       handler: handler.split(path.sep).join(path.posix.sep),
-      logRetention: RetentionDays.THREE_DAYS,
+      logRetention: logRetention ?? RetentionDays.THREE_DAYS,
       code: Code.fromBucket(
         Bucket.fromBucketName(this, "IServerFunctionBucket", assetBucket),
         assetKey
@@ -156,6 +157,7 @@ export class SsrFunction extends Construct {
         typeof timeout === "string"
           ? toCdkDuration(timeout)
           : CdkDuration.seconds(timeout),
+      logRetentionRetryOptions: logRetention && { maxRetries: 100 },
     });
   }
 

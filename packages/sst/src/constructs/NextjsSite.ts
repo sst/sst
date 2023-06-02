@@ -1,5 +1,4 @@
 import fs from "fs";
-import url from "url";
 import path from "path";
 import { Construct } from "constructs";
 import {
@@ -41,8 +40,6 @@ import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 import { SsrSite, SsrSiteProps } from "./SsrSite.js";
 import { Size, toCdkSize } from "./util/size.js";
-
-const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   imageOptimization?: {

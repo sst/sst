@@ -30,7 +30,6 @@ import {
   CompositePrincipal,
 } from "aws-cdk-lib/aws-iam";
 import {
-  Architecture,
   Function as CdkFunction,
   Code,
   Runtime,
@@ -73,7 +72,7 @@ import { Stack } from "./Stack.js";
 import { Logger } from "../logger.js";
 import { createAppContext } from "./context.js";
 import { SSTConstruct, isCDKConstruct } from "./Construct.js";
-import { NodeJSProps, Function } from "./Function.js";
+import { NodeJSProps } from "./Function.js";
 import { Secret } from "./Secret.js";
 import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
@@ -282,6 +281,7 @@ export interface SsrSiteProps {
       | "allowAllOutbound"
       | "allowPublicSubnet"
       | "architecture"
+      | "logRetention"
     >;
   };
 }

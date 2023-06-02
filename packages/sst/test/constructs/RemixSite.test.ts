@@ -23,6 +23,7 @@ import {
 } from "aws-cdk-lib/aws-cloudfront";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
+import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Api, Stack, RemixSite } from "../../dist/constructs/";
 
 process.env.SST_RESOURCES_TESTS = "enabled";
@@ -1142,6 +1143,23 @@ test("constructor: cdk.distribution.defaultBehavior additional functionAssociati
         ],
       }),
     }),
+  });
+});
+
+test("constructor: cdk.server.logRetention", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new RemixSite(stack, "Site", {
+    path: sitePath,
+    cdk: {
+      server: {
+        logRetention: RetentionDays.ONE_MONTH,
+      },
+    },
+    // @ts-expect-error: "sstTest" is not exposed in props
+    sstTest: true,
+  });
+  hasResource(stack, "Custom::LogRetention", {
+    RetentionInDays: 30,
   });
 });
 
