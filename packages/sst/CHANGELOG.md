@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.11.15
+
+### Patch Changes
+
+- [`6645002d0`](https://github.com/serverless-stack/sst/commit/6645002d00be8085a4090ccbd86d3b1b1849c3d8) Thanks [@thdxr](https://github.com/thdxr)! - rds: add support for 11.16 postgres
+
 ## 2.11.14
 
 ### Patch Changes
