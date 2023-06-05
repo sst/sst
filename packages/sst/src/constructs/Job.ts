@@ -444,6 +444,7 @@ export class Job extends Construct implements SSTConstruct {
           `console.log("//  End of the job  //")`,
           `console.log("//////////////////////")`,
           `console.log("")`,
+          `process.exit(0)`,
         ].join("\n")
       );
 
