@@ -252,6 +252,11 @@ export class Stack extends CDKStack {
     return new DefaultStackSynthesizer({
       qualifier: config.cdk?.qualifier,
       fileAssetsBucketName: config.cdk?.fileAssetsBucketName,
+      deployRoleArn: config.cdk?.deployRoleArn,
+      fileAssetPublishingRoleArn: config.cdk?.fileAssetPublishingRoleArn,
+      imageAssetPublishingRoleArn: config.cdk?.imageAssetPublishingRoleArn,
+      cloudFormationExecutionRole: config.cdk?.cloudFormationExecutionRole,
+      lookupRoleArn: config.cdk?.lookupRoleArn,
     });
   }
 
