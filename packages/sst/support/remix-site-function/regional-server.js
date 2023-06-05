@@ -83,11 +83,13 @@ function isBinaryType(contentType) {
 }
 
 function convertApigRequestToNode(event) {
-  let host = event.headers["x-forwarded-host"] || event.headers.host;
-  let search = event.rawQueryString.length ? `?${event.rawQueryString}` : "";
-  let scheme = "https";
-  let url = new URL(event.rawPath + search, `${scheme}://${host}`);
-  let isFormData = event.headers["content-type"]?.includes(
+  if (event.headers["x-forwarded-host"]) {
+    event.headers.host = event.headers["x-forwarded-host"];
+  }
+
+  const search = event.rawQueryString.length ? `?${event.rawQueryString}` : "";
+  const url = new URL(event.rawPath + search, `https://${event.headers.host}`);
+  const isFormData = event.headers["content-type"]?.includes(
     "multipart/form-data"
   );
 
