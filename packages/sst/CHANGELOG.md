@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.11.17
+
+### Patch Changes
+
+- [`e74f8a350`](https://github.com/serverless-stack/sst/commit/e74f8a350b6439e50be715d53a6e223489f474e1) Thanks [@fwang](https://github.com/fwang)! - Job: exit process in the wrapper function
+
 ## 2.11.16
 
 ### Patch Changes

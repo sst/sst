@@ -1,5 +1,7 @@
 # @serverless-stack/console
 
+## 2.11.17
+
 ## 2.11.16
 
 ## 2.11.15
