@@ -172,6 +172,11 @@ export async function bootstrapSST() {
     synthesizer: new DefaultStackSynthesizer({
       qualifier: cdk?.qualifier,
       fileAssetsBucketName: cdk?.fileAssetsBucketName,
+      deployRoleArn: cdk?.deployRoleArn,
+      fileAssetPublishingRoleArn: cdk?.fileAssetPublishingRoleArn,
+      imageAssetPublishingRoleArn: cdk?.imageAssetPublishingRoleArn,
+      cloudFormationExecutionRole: cdk?.cloudFormationExecutionRole,
+      lookupRoleArn: cdk?.lookupRoleArn,
     }),
   });
 

@@ -37,6 +37,11 @@ export interface ConfigOptions {
     fileAssetsBucketName?: string;
     customPermissionsBoundary?: string;
     publicAccessBlockConfiguration?: boolean;
+    deployRoleArn?: string;
+    fileAssetPublishingRoleArn?: string;
+    imageAssetPublishingRoleArn?: string;
+    cloudFormationExecutionRole?: string;
+    lookupRoleArn?: string;
   };
 }
 
