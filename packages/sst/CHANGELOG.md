@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.11.16
+
+### Patch Changes
+
+- [`14c6bad3b`](https://github.com/serverless-stack/sst/commit/14c6bad3baa60d0a5c79745ce64514d8477d53bd) Thanks [@fwang](https://github.com/fwang)! - RemixSite: host header shows CloudFront domain
+
 ## 2.11.15
 
 ### Patch Changes
