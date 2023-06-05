@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.11.18
+
+### Patch Changes
+
+- [#2956](https://github.com/serverless-stack/sst/pull/2956) [`e23457d25`](https://github.com/serverless-stack/sst/commit/e23457d25d867329da93a50bd35d0a6cd1ff805e) Thanks [@fwang](https://github.com/fwang)! - Allow overriding CDK roles in sst.config.ts
+
 ## 2.11.17
 
 ### Patch Changes
