@@ -411,14 +411,14 @@ export class RDS extends Construct implements SSTConstruct {
       return rds.DatabaseClusterEngine.auroraPostgres({
         version: rds.AuroraPostgresEngineVersion.VER_11_13,
       });
-    } else if (engine === "postgres11.16") {
+    } else if (engine === "postgresql11.16") {
       return rds.DatabaseClusterEngine.auroraPostgres({
         version: rds.AuroraPostgresEngineVersion.VER_11_16,
       });
     }
 
     throw new Error(
-      `The specified "engine" is not supported for sst.RDS. Only mysql5.6, mysql5.7, postgresql10.14, and postgresql11.13 engines are currently supported.`
+      `The specified "engine" is not supported for sst.RDS. Only mysql5.6, mysql5.7, postgresql11.13, and postgresql11.16 engines are currently supported.`
     );
   }
 
