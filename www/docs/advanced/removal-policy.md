@@ -44,3 +44,23 @@ This behavior is good for production environments. It allows you to recover the 
 ## Changing the removal policy
 
 You can set the removal policy on all the resources in your SST app.
+
+:::danger
+Make sure to change the default removal policy to `retain` for production environments.
+:::
+
+```ts title="sst.config.ts" {7-9}
+export default {
+  config(_input) {
+    // ...
+  },
+  stacks(app) {
+    // Don't remove all resources when prod stages are removed
+    if (app.stage === "prod") {
+      app.setDefaultRemovalPolicy("retain");
+    }
+
+    // ...
+  },
+} satisfies SSTConfig;
+```
