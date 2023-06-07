@@ -1,5 +1,5 @@
 ---
-"sst": patch
+"sst": minor
 ---
 
 Breaking change in future/auth:
