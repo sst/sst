@@ -289,7 +289,9 @@ export class NextjsSite extends SsrSite {
     const serverFnUrl = this.serverLambdaForRegional!.addFunctionUrl({
       authType: FunctionUrlAuthType.NONE,
     });
-    const serverOrigin = new HttpOrigin(Fn.parseDomainName(serverFnUrl.url));
+    const serverOrigin = new HttpOrigin(Fn.parseDomainName(serverFnUrl.url), {
+      readTimeout: CdkDuration.seconds(60),
+    });
     const cachePolicy =
       cdk?.serverCachePolicy ??
       this.buildServerCachePolicy([
