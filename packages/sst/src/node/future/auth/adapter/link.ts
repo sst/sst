@@ -15,19 +15,18 @@ export function LinkAdapter(config: {
     link: string,
     claims: Record<string, any>
   ) => Promise<APIGatewayProxyStructuredResultV2>;
-  onError: (error: any) => Promise<APIGatewayProxyStructuredResultV2>;
 }) {
-  // @ts-expect-error
-  const key = Config[process.env.AUTH_ID + "PrivateKey"];
-  // @ts-expect-error
-  const publicKey = Config[process.env.AUTH_ID + "PublicKey"];
-  const signer = createSigner({
-    expiresIn: 1000 * 60 * 10,
-    key,
-    algorithm: "RS512",
-  });
-
   return async function () {
+    // @ts-expect-error
+    const key = Config[process.env.AUTH_ID + "PrivateKey"];
+    // @ts-expect-error
+    const publicKey = Config[process.env.AUTH_ID + "PublicKey"];
+    const signer = createSigner({
+      expiresIn: 1000 * 60 * 10,
+      key,
+      algorithm: "RS512",
+    });
+
     const callback = "https://" + useDomainName() + "/callback";
     const step = usePathParam("step");
 
@@ -54,14 +53,11 @@ export function LinkAdapter(config: {
           type: "success",
           properties: jwt,
         };
-      } catch (ex) {
-        return {
-          type: "step",
-          properties: await config.onError(ex),
-        };
-      }
+      } catch (ex) {}
     }
 
-    throw new Error("Invalid auth request");
+    return {
+      type: "error",
+    };
   } satisfies Adapter;
 }
