@@ -24,15 +24,15 @@ const onSuccessResponse = {
       properties: input,
     };
   },
-  step(input: APIGatewayProxyStructuredResultV2) {
+  http(input: APIGatewayProxyStructuredResultV2) {
     return {
-      type: "step" as const,
+      type: "http" as const,
       properties: input,
     };
   },
   provider(provider: string) {
     return {
-      type: "step" as const,
+      type: "http" as const,
       properties: {
         statusCode: 302,
         headers: {
@@ -316,7 +316,7 @@ export function AuthHandler<
         };
       }
 
-      if (onSuccess.type === "step") {
+      if (onSuccess.type === "http") {
         return onSuccess.properties;
       }
     }
