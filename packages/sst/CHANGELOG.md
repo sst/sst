@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.12.0
+
+### Minor Changes
+
+- [`5fa74500d`](https://github.com/serverless-stack/sst/commit/5fa74500d0ae32587372f95510bd7eb1ed31a3e2) Thanks [@thdxr](https://github.com/thdxr)! - Breaking change in future/auth:
+
+  Instead of returning the session directly from `onSuccess` there is now a second paramter passed in called `response`. You can use this to create sessions `return response.session` but can also instead chain other providers or return a normal HTTP response. This comes in handy when creating multi-step auth processes or when connecting external services to an existing account.
+
 ## 2.11.18
 
 ### Patch Changes
