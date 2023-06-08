@@ -1,5 +1,111 @@
 # create-sst
 
+## 2.11.18
+
+## 2.11.17
+
+## 2.11.16
+
+## 2.11.15
+
+## 2.11.14
+
+## 2.11.13
+
+## 2.11.12
+
+## 2.11.11
+
+## 2.11.10
+
+## 2.11.9
+
+## 2.11.8
+
+## 2.11.7
+
+## 2.11.6
+
+## 2.11.5
+
+## 2.11.4
+
+## 2.11.3
+
+## 2.11.2
+
+## 2.11.1
+
+## 2.11.0
+
+## 2.10.4
+
+## 2.10.3
+
+## 2.10.2
+
+## 2.10.1
+
+## 2.10.0
+
+### Minor Changes
+
+- [`2b0c6760f`](https://github.com/serverless-stack/sst/commit/2b0c6760f4fcd2cbf8a3b62181b20e0615f6b31c) Thanks [@fwang](https://github.com/fwang)! - Update CDK to v2.79.1
+
+## 2.9.0
+
+## 2.8.29
+
+### Patch Changes
+
+- [`b5d868328`](https://github.com/serverless-stack/sst/commit/b5d86832861e4d69db7d293ee1bd4d39491f63dd) Thanks [@thdxr](https://github.com/thdxr)! - fix for file corruption in dropin mode
+
+## 2.8.28
+
+## 2.8.27
+
+## 2.8.26
+
+## 2.8.25
+
+## 2.8.24
+
+## 2.8.23
+
+## 2.8.22
+
+### Patch Changes
+
+- [#2881](https://github.com/serverless-stack/sst/pull/2881) [`570dc6b14`](https://github.com/serverless-stack/sst/commit/570dc6b1413357076349ccfa4f3bd0188c57ecdc) Thanks [@jayair](https://github.com/jayair)! - Quickstart for Remix
+
+## 2.8.21
+
+## 2.8.20
+
+## 2.8.19
+
+## 2.8.18
+
+## 2.8.17
+
+### Patch Changes
+
+- [#2868](https://github.com/serverless-stack/sst/pull/2868) [`a2925849c`](https://github.com/serverless-stack/sst/commit/a2925849c50f5685624252baf5e735d1524cd914) Thanks [@fwang](https://github.com/fwang)! - Add dropin mode for Remix apps
+
+## 2.8.16
+
+## 2.8.15
+
+### Patch Changes
+
+- [#2857](https://github.com/serverless-stack/sst/pull/2857) [`c5bdc2cfe`](https://github.com/serverless-stack/sst/commit/c5bdc2cfee3e2a27dfda0720ee1605cec05c4825) Thanks [@fwang](https://github.com/fwang)! - Add dropin mode for SolidStart apps
+
+## 2.8.14
+
+### Patch Changes
+
+- [`107814f56`](https://github.com/serverless-stack/sst/commit/107814f569be8f6d1d2c6b7ba87deb8f142b0d58) Thanks [@jayair](https://github.com/jayair)! - Updating standard nextjs starter
+
 ## 2.8.13
 
 ## 2.8.12

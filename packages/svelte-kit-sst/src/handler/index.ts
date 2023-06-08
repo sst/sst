@@ -59,14 +59,18 @@ export async function handler(
   };
   debug("request", requestUrl, requestProps);
   const request = new Request(requestUrl, requestProps);
-  const response = await app.respond(request, {
+  const response: Response = await app.respond(request, {
     getClientAddress: () => internalEvent.remoteAddress,
   });
   debug("response", response);
 
   //Parse the response into lambda proxy response
   if (response) {
-    const headers = Object.fromEntries(response.headers.entries());
+    const headers: Record<string, string[]> = {};
+    response.headers.forEach((value, key) => {
+      headers[key] = headers[key] || [];
+      headers[key].push(value);
+    });
     const isBase64Encoded = isBinaryContentType(
       Array.isArray(headers["content-type"])
         ? headers["content-type"][0]

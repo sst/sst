@@ -165,6 +165,25 @@ You can read more about this over on the [Resource Binding](../resource-binding.
 
 ---
 
+## Warming
+
+Server functions may experience performance issues due to Lambda cold starts. SST helps mitigate this by periodically invoking the server function.
+
+```ts {5}
+new NextjsSite(stack, "Site", {
+  path: "packages/web",
+  warm: 20,
+});
+```
+
+Setting `warm` to 20 keeps 20 server function instances active, invoking them every 5 minutes.
+
+Note that warming is currently supported only in regional mode.
+
+[Read more about how warming works and the associated cost.](https://github.com/serverless-stack/open-next#warmer-function)
+
+---
+
 #### Client side environment variables
 
 You can also pass in environment variables directly to your client side code.
@@ -237,17 +256,17 @@ new NextjsSite(stack, "Site", {
 You can specify additional domain names for the site url. Note that the certificate for these names will not be automatically generated, so the certificate option must be specified. Also note that you need to manually create the Route 53 records for the alternate domain names.
 
 ```js
-import * as acm from "aws-cdk-lib/aws-certificatemanager";
-import * as route53 from "aws-cdk-lib/aws-route53";
-import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
+import { DnsValidatedCertificate } from "aws-cdk-lib/aws-certificatemanager";
+import { HostedZone, RecordTarget, ARecord, AaaaRecord } from "aws-cdk-lib/aws-route53";
+import { CloudFrontTarget } from "aws-cdk-lib/aws-route53-targets";
 
 // Look up hosted zone
-const hostedZone = route53.HostedZone.fromLookup(stack, "HostedZone", {
+const hostedZone = HostedZone.fromLookup(stack, "HostedZone", {
   domainName: "my-app.com",
 });
 
 // Create a certificate with alternate domain names
-const certificate = new acm.DnsValidatedCertificate(stack, "Certificate", {
+const certificate = new DnsValidatedCertificate(stack, "Certificate", {
   domainName: "foo.my-app.com",
   hostedZone,
   region: "us-east-1",
@@ -271,12 +290,12 @@ const site = new NextjsSite(stack, "Site", {
 const recordProps = {
   recordName: "bar.my-app.com",
   zone: hostedZone,
-  target: route53.RecordTarget.fromAlias(
-    new route53Targets.CloudFrontTarget(site.cdk.distribution)
+  target: RecordTarget.fromAlias(
+    new CloudFrontTarget(site.cdk.distribution)
   ),
 };
-new route53.ARecord(stack, "AlternateARecord", recordProps);
-new route53.AaaaRecord(stack, "AlternateAAAARecord", recordProps);
+new ARecord(stack, "AlternateARecord", recordProps);
+new AaaaRecord(stack, "AlternateAAAARecord", recordProps);
 ```
 
 #### Importing an existing certificate (Route 53 domains)
@@ -367,7 +386,7 @@ new NextjsSite(stack, "Site", {
 Note that VPC is only supported when deploying to a [single region](#single-region-vs-edge).
 
 ```js {12-17}
-import { Vpc, SubnetType } as ec2 from "aws-cdk-lib/aws-ec2";
+import { Vpc, SubnetType } from "aws-cdk-lib/aws-ec2";
 
 // Create a VPC
 const vpc = new Vpc(stack, "myVPC");
@@ -388,15 +407,30 @@ new NextjsSite(stack, "Site", {
 });
 ```
 
-#### Using an existing S3 Bucket
+#### Configuring log retention
 
-```js {6}
-import * as s3 from "aws-cdk-lib/aws-s3";
+```js {6-8}
+import { RetentionDays } from "aws-cdk-lib/aws-logs";
 
 new NextjsSite(stack, "Site", {
   path: "my-next-app/",
   cdk: {
-    bucket: s3.Bucket.fromBucketName(stack, "Bucket", "my-bucket"),
+    server: {
+      logRetention: RetentionDays.ONE_MONTH,
+    }
+  },
+});
+```
+
+#### Using an existing S3 Bucket
+
+```js {6}
+import { Bucket } from "aws-cdk-lib/aws-s3";
+
+new NextjsSite(stack, "Site", {
+  path: "my-next-app/",
+  cdk: {
+    bucket: Bucket.fromBucketName(stack, "Bucket", "my-bucket"),
   },
 });
 ```
@@ -406,16 +440,21 @@ new NextjsSite(stack, "Site", {
 CloudFront has a limit of 20 cache policies per AWS account. This is a hard limit, and cannot be increased. If you plan to deploy multiple Next.js sites, you can have the constructs share the same cache policies by reusing them across sites.
 
 ```js
-import * as cdk from "aws-cdk-lib";
-import * as cf from "aws-cdk-lib/aws-cloudfront";
+import { Duration } from "aws-cdk-lib";
+import {
+  CachePolicy,
+  CacheQueryStringBehavior,
+  CacheHeaderBehavior,
+  CacheCookieBehavior,
+} from "aws-cdk-lib/aws-cloudfront";
 
-const serverCachePolicy = new cf.CachePolicy(stack, "ServerCache", {
-  queryStringBehavior: cf.CacheQueryStringBehavior.all(),
-  headerBehavior: cf.CacheHeaderBehavior.none(),
-  cookieBehavior: cf.CacheCookieBehavior.all(),
-  defaultTtl: cdk.Duration.days(0),
-  maxTtl: cdk.Duration.days(365),
-  minTtl: cdk.Duration.days(0),
+const serverCachePolicy = new CachePolicy(stack, "ServerCache", {
+  queryStringBehavior: CacheQueryStringBehavior.all(),
+  headerBehavior: CacheHeaderBehavior.none(),
+  cookieBehavior: CacheCookieBehavior.all(),
+  defaultTtl: Duration.days(0),
+  maxTtl: Duration.days(365),
+  minTtl: Duration.days(0),
   enableAcceptEncodingBrotli: true,
   enableAcceptEncodingGzip: true,
 });
@@ -431,6 +470,19 @@ new NextjsSite(stack, "Site2", {
   path: "another-next-app/",
   cdk: {
     serverCachePolicy,
+  },
+});
+```
+
+#### Configuring CloudFront response headers policies
+
+```js
+import { ResponseHeadersPolicy } from "aws-cdk-lib/aws-cloudfront";
+
+new NextjsSite(stack, "Site", {
+  path: "my-next-app/",
+  cdk: {
+    responseHeadersPolicy: ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS,
   },
 });
 ```

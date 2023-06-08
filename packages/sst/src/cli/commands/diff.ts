@@ -22,8 +22,9 @@ export const diff = (program: Program) =>
 
       // Build app
       const project = useProject();
+      const [_metafile, sstConfig] = await Stacks.load(project.paths.config);
       const assembly = await Stacks.synth({
-        fn: project.stacks,
+        fn: sstConfig.stacks,
         mode: args.dev ? "dev" : "deploy",
       });
 

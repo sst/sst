@@ -31,7 +31,7 @@ import {
   CustomResourceProviderRuntime,
   CustomResource,
   Aspects,
-} from "aws-cdk-lib";
+} from "aws-cdk-lib/core";
 import { CfnFunction, ILayerVersion } from "aws-cdk-lib/aws-lambda";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import { ArnPrincipal, PolicyStatement } from "aws-cdk-lib/aws-iam";

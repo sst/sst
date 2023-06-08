@@ -25,6 +25,14 @@ export function log(title: any, ...args: any[]) {
   );
 }
 
+export const sdkLogger = {
+  info: console.info,
+  warn: console.warn,
+  error: console.error,
+  debug: () => {},
+  trace: () => {},
+};
+
 function defaultPhysicalResourceId(
   req: AWSLambda.CloudFormationCustomResourceEvent
 ) {

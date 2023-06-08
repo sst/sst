@@ -12,6 +12,8 @@
     "sst": "2.7.2"
   },
   "dependencies": {
+    "@aws-sdk/client-lambda": "^3.332.0",
+    "@aws-sdk/client-sqs": "^3.332.0",
     "@octokit/rest": "^19.0.7",
     "drizzle-orm": "0.25.3",
     "fast-jwt": "^2.2.1",

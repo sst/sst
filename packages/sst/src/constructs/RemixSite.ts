@@ -4,7 +4,7 @@ import path from "path";
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 
-import { Architecture, Function as CdkFunction } from "aws-cdk-lib/aws-lambda";
+import { Function as CdkFunction } from "aws-cdk-lib/aws-lambda";
 
 import { SsrSite } from "./SsrSite.js";
 import { SsrFunction } from "./SsrFunction.js";
@@ -16,7 +16,8 @@ type RemixConfig = {
   assetsBuildDirectory: string;
   publicPath: string;
   serverBuildPath: string;
-  serverBuildTarget: string;
+  serverModuleFormat: string;
+  serverPlatform: string;
   server?: string;
 };
 
@@ -41,7 +42,8 @@ export class RemixSite extends SsrSite {
       assetsBuildDirectory: "public/build",
       publicPath: "/build/",
       serverBuildPath: "build/index.js",
-      serverBuildTarget: "node-cjs",
+      serverModuleFormat: "cjs",
+      serverPlatform: "node",
     };
 
     // Validate config path

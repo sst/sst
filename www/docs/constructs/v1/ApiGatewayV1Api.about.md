@@ -526,18 +526,27 @@ Usage plans allow configuring who can access the API, and setting throttling lim
 const api = new ApiGatewayV1Api(stack, "Api", {
   routes: {
     "GET /notes": "src/list.main",
+    cdk: {
+      method: {
+        apiKeyRequired: true,
+      },
+    },
   },
 });
+
+const key = api.cdk.restApi.addApiKey("ApiKey");
 
 const plan = api.cdk.restApi.addUsagePlan("UsagePlan", {
   throttle: {
     rateLimit: 10,
     burstLimit: 2
-  }
+  },
+  apiStages: [
+    { api: api.cdk.restApi,
+      stage: api.cdk.restApi.deploymentStage
+    },
+  ],
 });
-
-const key = api.cdk.restApi.addApiKey("ApiKey");
-
 plan.addApiKey(key);
 ```
 

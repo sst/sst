@@ -8,7 +8,7 @@ import { createTransactionEffect, useTransaction } from "../util/transaction";
 import { awsAccount } from "./aws.sql";
 import { useWorkspace } from "../actor";
 import { and, eq } from "drizzle-orm";
-import { Bus } from "../bus";
+import { Bus, createEvent } from "../bus";
 import { assumeRole } from ".";
 import {
   CloudFormationClient,
@@ -21,13 +21,11 @@ export const Info = createSelectSchema(awsAccount, {
 });
 export type Info = z.infer<typeof Info>;
 
-declare module "../bus" {
-  export interface Events {
-    "aws.account.created": {
-      awsAccountID: string;
-    };
-  }
-}
+export const Events = {
+  Created: createEvent("aws.account.created", {
+    awsAccountID: z.string(),
+  }),
+};
 
 export const create = zod(
   Info.pick({ id: true, accountID: true }).partial({
@@ -41,7 +39,11 @@ export const create = zod(
         workspaceID: useWorkspace(),
         accountID: input.accountID,
       });
-      createTransactionEffect(() => Bus.publish("aws.account.created", { id }));
+      createTransactionEffect(() =>
+        Events.Created.publish({
+          awsAccountID: id,
+        })
+      );
       return id;
     })
 );

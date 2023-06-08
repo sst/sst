@@ -1,5 +1,4 @@
 import { Construct } from "constructs";
-import * as cdk from "aws-cdk-lib";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
@@ -24,6 +23,7 @@ import {
   FunctionDefinition,
 } from "./Function.js";
 import { Permissions } from "./util/permission.js";
+import { Duration as CDKDuration, Token } from "aws-cdk-lib/core";
 
 const allowedMethods = [
   "ANY",
@@ -980,7 +980,7 @@ export class ApiGatewayV1Api<
     if (typeof customDomain === "string") {
       // validate: customDomain is a TOKEN string
       // ie. imported SSM value: ssm.StringParameter.valueForStringParameter()
-      if (cdk.Token.isUnresolved(customDomain)) {
+      if (Token.isUnresolved(customDomain)) {
         throw new Error(
           `You also need to specify the "hostedZone" if the "domainName" is passed in as a reference.`
         );
@@ -996,7 +996,7 @@ export class ApiGatewayV1Api<
       domainName = customDomain.domainName;
 
       // parse customDomain.domainName
-      if (cdk.Token.isUnresolved(customDomain.domainName)) {
+      if (Token.isUnresolved(customDomain.domainName)) {
         // If customDomain is a TOKEN string, "hostedZone" has to be passed in. This
         // is because "hostedZone" cannot be parsed from a TOKEN value.
         if (!customDomain.hostedZone && !customDomain.cdk?.hostedZone) {
@@ -1150,7 +1150,7 @@ export class ApiGatewayV1Api<
 
     // Note: We only know the full custom domain if domainName is a string.
     //       _customDomainUrl will be undefined if apigDomainName is imported.
-    if (domainName && !cdk.Token.isUnresolved(domainName)) {
+    if (domainName && !Token.isUnresolved(domainName)) {
       this._customDomainUrl = basePath
         ? `https://${domainName}/${basePath}/`
         : `https://${domainName}`;
@@ -1179,7 +1179,7 @@ export class ApiGatewayV1Api<
     //       This is because the construct tries to check if the record name
     //       ends with the domain name. If not, it will append the domain name.
     //       So, we need remove this behavior.
-    if (cdk.Token.isUnresolved(domainName)) {
+    if (Token.isUnresolved(domainName)) {
       records.forEach((record) => {
         const cfnRecord = record.node.defaultChild as route53.CfnRecordSet;
         cfnRecord.name = domainName;
@@ -1252,7 +1252,7 @@ export class ApiGatewayV1Api<
               identitySource: value.identitySource,
               resultsCacheTtl: value.resultsCacheTtl
                 ? toCdkDuration(value.resultsCacheTtl)
-                : cdk.Duration.seconds(0),
+                : CDKDuration.seconds(0),
             }
           );
         }
@@ -1271,7 +1271,7 @@ export class ApiGatewayV1Api<
             assumeRole: value.cdk?.assumeRole,
             resultsCacheTtl: value.resultsCacheTtl
               ? toCdkDuration(value.resultsCacheTtl)
-              : cdk.Duration.seconds(0),
+              : CDKDuration.seconds(0),
           });
         }
       } else if (value.type === "lambda_request") {
@@ -1292,7 +1292,7 @@ export class ApiGatewayV1Api<
             assumeRole: value.cdk?.assumeRole,
             resultsCacheTtl: value.resultsCacheTtl
               ? toCdkDuration(value.resultsCacheTtl)
-              : cdk.Duration.seconds(0),
+              : CDKDuration.seconds(0),
           });
         }
       }
@@ -1385,10 +1385,10 @@ export class ApiGatewayV1Api<
   }
 
   private createCdkFunction(
-    scope: Construct,
+    _scope: Construct,
     routeKey: string,
     routeProps: ApiGatewayV1ApiFunctionRouteProps<keyof Authorizers>,
-    postfixName: string
+    _postfixName: string
   ): lambda.IFunction {
     const lambda = routeProps.cdk?.function!;
     this.functions[routeKey] = lambda;

@@ -1,5 +1,263 @@
 # @serverless-stack/cli2
 
+## 2.11.18
+
+### Patch Changes
+
+- [#2956](https://github.com/serverless-stack/sst/pull/2956) [`e23457d25`](https://github.com/serverless-stack/sst/commit/e23457d25d867329da93a50bd35d0a6cd1ff805e) Thanks [@fwang](https://github.com/fwang)! - Allow overriding CDK roles in sst.config.ts
+
+## 2.11.17
+
+### Patch Changes
+
+- [`e74f8a350`](https://github.com/serverless-stack/sst/commit/e74f8a350b6439e50be715d53a6e223489f474e1) Thanks [@fwang](https://github.com/fwang)! - Job: exit process in the wrapper function
+
+## 2.11.16
+
+### Patch Changes
+
+- [`14c6bad3b`](https://github.com/serverless-stack/sst/commit/14c6bad3baa60d0a5c79745ce64514d8477d53bd) Thanks [@fwang](https://github.com/fwang)! - RemixSite: host header shows CloudFront domain
+
+## 2.11.15
+
+### Patch Changes
+
+- [`6645002d0`](https://github.com/serverless-stack/sst/commit/6645002d00be8085a4090ccbd86d3b1b1849c3d8) Thanks [@thdxr](https://github.com/thdxr)! - rds: add support for 11.16 postgres
+
+## 2.11.14
+
+### Patch Changes
+
+- [`9fc713a3b`](https://github.com/serverless-stack/sst/commit/9fc713a3b857e33d0d45a861d1cbac1134d5e837) Thanks [@thdxr](https://github.com/thdxr)! - function: add handler path in metadata
+
+## 2.11.13
+
+### Patch Changes
+
+- [`557ab1a19`](https://github.com/serverless-stack/sst/commit/557ab1a191aaefcc016f3a87bbb405a71602c92e) Thanks [@fwang](https://github.com/fwang)! - SsrSite: add support for setting log retention
+
+## 2.11.12
+
+### Patch Changes
+
+- [`0daef8c23`](https://github.com/serverless-stack/sst/commit/0daef8c236d45785cae5f27062500b59044a1cd3) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: pin to OpenNext v1.4.0
+
+## 2.11.11
+
+### Patch Changes
+
+- [`b700ee400`](https://github.com/serverless-stack/sst/commit/b700ee400ba0c4065907949ea78d1446ec4dfe28) Thanks [@thdxr](https://github.com/thdxr)! - fix issue with deploy, diff, and remove
+
+## 2.11.10
+
+### Patch Changes
+
+- [`5fb455ebf`](https://github.com/serverless-stack/sst/commit/5fb455ebfb81ee7e07871662d3c55243cff07d83) Thanks [@thdxr](https://github.com/thdxr)! - fix sst build
+
+## 2.11.9
+
+### Patch Changes
+
+- [`bb1749953`](https://github.com/serverless-stack/sst/commit/bb174995332e4415ec9f527bb198e4d4213ee671) Thanks [@thdxr](https://github.com/thdxr)! - fix retrier not being activated
+
+## 2.11.8
+
+### Patch Changes
+
+- [`d4de7e4b6`](https://github.com/serverless-stack/sst/commit/d4de7e4b668f8e545556f48024cf8fe7432d5f37) Thanks [@thdxr](https://github.com/thdxr)! - regex approach didn't work, had to use ast
+
+## 2.11.7
+
+### Patch Changes
+
+- [`318b9c88f`](https://github.com/serverless-stack/sst/commit/318b9c88f7ecf7e86a0777885225900b5eaf51f0) Thanks [@thdxr](https://github.com/thdxr)! - improve performance of CLI start
+
+## 2.11.6
+
+### Patch Changes
+
+- [`ea7995119`](https://github.com/serverless-stack/sst/commit/ea799511940131893c7e02d6dbc2303a70a3e016) Thanks [@thdxr](https://github.com/thdxr)! - update sst connect command to switch between prod and dev
+
+## 2.11.5
+
+### Patch Changes
+
+- [`99704f9c4`](https://github.com/serverless-stack/sst/commit/99704f9c4dd60d4ebd14bbccaeb945a2a543c805) Thanks [@thdxr](https://github.com/thdxr)! - Fixed eventbusname
+
+## 2.11.4
+
+### Patch Changes
+
+- [#2883](https://github.com/serverless-stack/sst/pull/2883) [`393cdfcb2`](https://github.com/serverless-stack/sst/commit/393cdfcb2d754482c7ea78fc6274c4d87b04aa23) Thanks [@justindra](https://github.com/justindra)! - Added SpotifyAdapter for future auth
+
+## 2.11.3
+
+### Patch Changes
+
+- [`1017fe643`](https://github.com/serverless-stack/sst/commit/1017fe64396cfb3eb5a52124898c01cb0a15b5fb) Thanks [@thdxr](https://github.com/thdxr)! - Typesafe event framework
+
+## 2.11.2
+
+### Patch Changes
+
+- [`09cdb39e9`](https://github.com/serverless-stack/sst/commit/09cdb39e94fa3e52f6ae3d47f81bdc54389cac2b) Thanks [@thdxr](https://github.com/thdxr)! - Add retrier capability to eventbus
+
+## 2.11.1
+
+### Patch Changes
+
+- [`20e275619`](https://github.com/serverless-stack/sst/commit/20e2756196e09414e38d58dc058b80e739f65657) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: allow using sst bind at build time
+
+- [`b2b07471b`](https://github.com/serverless-stack/sst/commit/b2b07471b5568e93353cb68c1ed05f225513bf3b) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: fix pinning to the latest minor version
+
+- [`08a9d15ef`](https://github.com/serverless-stack/sst/commit/08a9d15efe723cf34bb61bedb9b5ce786305a8a3) Thanks [@fwang](https://github.com/fwang)! - sst bind: support --site and --script options to override mode
+
+## 2.11.0
+
+### Minor Changes
+
+- [#2909](https://github.com/serverless-stack/sst/pull/2909) [`2f8b14b02`](https://github.com/serverless-stack/sst/commit/2f8b14b02104b3e1503253b1ee4f84ba2c60db2b) Thanks [@archieedwards](https://github.com/archieedwards)! - future/auth: add prompt support for oidc
+
+- [#2917](https://github.com/serverless-stack/sst/pull/2917) [`6e4099d5e`](https://github.com/serverless-stack/sst/commit/6e4099d5e59dcec03515d3e197573be887f8c735) Thanks [@archieedwards](https://github.com/archieedwards)! - future/auth - forward query params to authorization endpoint
+
+### Patch Changes
+
+- [#2915](https://github.com/serverless-stack/sst/pull/2915) [`4ce2a9d12`](https://github.com/serverless-stack/sst/commit/4ce2a9d12890e1751daa6f3eecce4d165f1d1877) Thanks [@digitaltoad](https://github.com/digitaltoad)! - Allow filtering secrets by fallback values
+
+- [`b603961f0`](https://github.com/serverless-stack/sst/commit/b603961f052fb5da18d1112c4f86469aaae19d66) Thanks [@thdxr](https://github.com/thdxr)! - fix migrations breaking when js is in the path name
+
+- [#2916](https://github.com/serverless-stack/sst/pull/2916) [`fdcb548a1`](https://github.com/serverless-stack/sst/commit/fdcb548a1cac3ba02fb4b5021515e83afb713b02) Thanks [@justindra](https://github.com/justindra)! - Fix the missing padding due to color in secrets list
+
+## 2.10.4
+
+### Patch Changes
+
+- [`b4366a240`](https://github.com/serverless-stack/sst/commit/b4366a240b831a0685e485c521a6b43d8cec7ffd) Thanks [@fwang](https://github.com/fwang)! - sst/node: improve error message when SST_APP is not found
+
+## 2.10.3
+
+### Patch Changes
+
+- [`6203bdfe7`](https://github.com/serverless-stack/sst/commit/6203bdfe73feac4df0a6079de70c97d98a3293b2) Thanks [@thdxr](https://github.com/thdxr)! - Fix unhandled promise rejections from crashing the app
+
+## 2.10.2
+
+### Patch Changes
+
+- [`0c4894a3f`](https://github.com/serverless-stack/sst/commit/0c4894a3f88e9d83430b7aed125efa240cd82a5a) Thanks [@fwang](https://github.com/fwang)! - SsrSite: allow overriding response header policy
+
+## 2.10.1
+
+### Patch Changes
+
+- [`b87a96ffe`](https://github.com/serverless-stack/sst/commit/b87a96ffe2fb9d62754d025b0c950beec701d068) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: use 1.3.x instead of ~1.3.0 to pin minor OpenNext versions
+
+## 2.10.0
+
+### Minor Changes
+
+- [`2b0c6760f`](https://github.com/serverless-stack/sst/commit/2b0c6760f4fcd2cbf8a3b62181b20e0615f6b31c) Thanks [@fwang](https://github.com/fwang)! - Update CDK to v2.79.1
+
+## 2.9.0
+
+### Minor Changes
+
+- [#2902](https://github.com/serverless-stack/sst/pull/2902) [`e120a6c00`](https://github.com/serverless-stack/sst/commit/e120a6c0072c4be843a4686c68e2a429a5fb72cb) Thanks [@zvictor](https://github.com/zvictor)! - Add support for JSON format in secrets list
+
+## 2.8.29
+
+## 2.8.28
+
+### Patch Changes
+
+- [`f7f4a6ffc`](https://github.com/serverless-stack/sst/commit/f7f4a6ffc3c150a8f2e09e9d2136b5669b675fcd) Thanks [@thdxr](https://github.com/thdxr)! - fix job construct path problems when deployed from windows
+
+## 2.8.27
+
+### Patch Changes
+
+- [`7fb657e0e`](https://github.com/serverless-stack/sst/commit/7fb657e0ea08cfdabe4fec2577bf8cd71d7f4e9a) Thanks [@thdxr](https://github.com/thdxr)! - fix connect command by including iam client
+
+## 2.8.26
+
+### Patch Changes
+
+- [`7935511eb`](https://github.com/serverless-stack/sst/commit/7935511eba607294c7953c2afb9fa03270ac252b) Thanks [@thdxr](https://github.com/thdxr)! - sst update fix for svelte-kit-sst
+
+## 2.8.25
+
+### Patch Changes
+
+- [`e0522a7b4`](https://github.com/serverless-stack/sst/commit/e0522a7b47c8af340b504da927348c443ee75d58) Thanks [@thdxr](https://github.com/thdxr)! - automatically set graphql endpoint if not manually set
+
+## 2.8.24
+
+### Patch Changes
+
+- [#2817](https://github.com/serverless-stack/sst/pull/2817) [`2aec504bf`](https://github.com/serverless-stack/sst/commit/2aec504bfd5145d36c510171af207dbeca682e5f) Thanks [@justindra](https://github.com/justindra)! - Updated the function binding to include httpsUrl as that is required to send messages using the ApiGateway client
+
+- [#2817](https://github.com/serverless-stack/sst/pull/2817) [`2aec504bf`](https://github.com/serverless-stack/sst/commit/2aec504bfd5145d36c510171af207dbeca682e5f) Thanks [@justindra](https://github.com/justindra)! - Added WebSocketApiHandler so that we can use the auth sessions inside of a WebSocket's connect and disconnect requests
+
+- [#2817](https://github.com/serverless-stack/sst/pull/2817) [`2aec504bf`](https://github.com/serverless-stack/sst/commit/2aec504bfd5145d36c510171af207dbeca682e5f) Thanks [@justindra](https://github.com/justindra)! - Added a new WebSocketApiHandler to allow for websockets to use session hooks
+
+- [`a8444e766`](https://github.com/serverless-stack/sst/commit/a8444e76607256fc8428b376647d2d15887ee370) Thanks [@thdxr](https://github.com/thdxr)! - fix: job construct erroring when timeout set to greater than 15min
+
+- [#2879](https://github.com/serverless-stack/sst/pull/2879) [`5a8e115ff`](https://github.com/serverless-stack/sst/commit/5a8e115ffdb48bbc0177ef9261f48bdc3b376cb7) Thanks [@estyrke](https://github.com/estyrke)! - Replace zip-local package with adm-zip
+
+- [#2889](https://github.com/serverless-stack/sst/pull/2889) [`78cbdd721`](https://github.com/serverless-stack/sst/commit/78cbdd721429b505daf0360d2698cdac74166c10) Thanks [@mvanleest](https://github.com/mvanleest)! - future/auth: Added Microsoft adapter
+
+- [`522449fbd`](https://github.com/serverless-stack/sst/commit/522449fbde65cca9aa02ddd6ae503e85f68a5b8a) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: support warmer
+
+## 2.8.23
+
+### Patch Changes
+
+- [`c590bf380`](https://github.com/serverless-stack/sst/commit/c590bf380bffd51f1625de1f0bc408d573438c8c) Thanks [@fwang](https://github.com/fwang)! - SvelteKitSite: construct function handler in posix format
+
+- [#2880](https://github.com/serverless-stack/sst/pull/2880) [`1f6af6a20`](https://github.com/serverless-stack/sst/commit/1f6af6a20c5f34d649e4d685f817f652dca9492b) Thanks [@tyrauber](https://github.com/tyrauber)! - SsrSite: merge user defined CloudFront function definitions
+
+## 2.8.22
+
+## 2.8.21
+
+### Patch Changes
+
+- [`ee5339521`](https://github.com/serverless-stack/sst/commit/ee53395212a045584fa97bac7f77ea8cb5674458) Thanks [@thdxr](https://github.com/thdxr)! - Temporary fix for DNS issue when fetching metadata
+
+- [#2878](https://github.com/serverless-stack/sst/pull/2878) [`848ae7fdd`](https://github.com/serverless-stack/sst/commit/848ae7fdd42b3f80fe5854ec2f28b794bc6ea45a) Thanks [@jamesgibbons92](https://github.com/jamesgibbons92)! - Cli: do not remove config files created by concurrent SST processes
+
+- [`73cff4132`](https://github.com/serverless-stack/sst/commit/73cff4132ec2787ecc27b3eeb8607f5d716d6521) Thanks [@fwang](https://github.com/fwang)! - Job: use posix import path on Windows
+
+## 2.8.20
+
+### Patch Changes
+
+- [`78e25f4ad`](https://github.com/serverless-stack/sst/commit/78e25f4addf5d0ce1eebeb452ce791a0773add9f) Thanks [@fwang](https://github.com/fwang)! - Job: apply nodejs options to local invoker
+
+## 2.8.19
+
+### Patch Changes
+
+- [`0517859dd`](https://github.com/serverless-stack/sst/commit/0517859dd87794bbdc374ef4d0abd6f7558be323) Thanks [@thdxr](https://github.com/thdxr)! - Add copyFile support to sst.Job
+
+## 2.8.18
+
+## 2.8.17
+
+### Patch Changes
+
+- [#2835](https://github.com/serverless-stack/sst/pull/2835) [`ed60bd35a`](https://github.com/serverless-stack/sst/commit/ed60bd35add0cc7e88f769ef6a4e4179cb73c62b) Thanks [@danestves](https://github.com/danestves)! - RemixSite: update RemixConfig to prep for Remix v2
+
+## 2.8.16
+
+### Patch Changes
+
+- [`a14a16acb`](https://github.com/serverless-stack/sst/commit/a14a16acb5fa4cd74b515b653d3670af20a2fc62) Thanks [@thdxr](https://github.com/thdxr)! - Upgrade kysely-data-api
+
+## 2.8.15
+
+## 2.8.14
+
 ## 2.8.13
 
 ### Patch Changes

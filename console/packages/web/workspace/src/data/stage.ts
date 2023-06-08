@@ -1,17 +1,17 @@
 import { ReadTransaction } from "replicache";
-import type { App } from "@console/core/app";
+import type { Stage } from "@console/core/app/stage";
 
 export function list() {
   return async (tx: ReadTransaction) => {
     const result = await tx.scan({ prefix: `/stage/` }).toArray();
-    return (result || []) as unknown as App.Stage[];
+    return (result || []) as unknown as Stage.Info[];
   };
 }
 
 export function fromID(id: string) {
   return async (tx: ReadTransaction) => {
     const result = await tx.get(`/stage/${id}`);
-    return result as unknown as App.Stage;
+    return result as unknown as Stage.Info;
   };
 }
 
@@ -22,4 +22,4 @@ export function forApp(appID: string) {
   };
 }
 
-export * as AppStore from "./app";
+export * as StageStore from "./stage";

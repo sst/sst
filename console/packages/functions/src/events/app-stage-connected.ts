@@ -1,11 +1,11 @@
 import { provideActor } from "@console/core/actor";
 import { EventHandler } from "./handler";
-import { App } from "@console/core/app";
+import { Stage } from "@console/core/app/stage";
 
 export const handler = EventHandler(
-  "app.stage.connected",
+  Stage.Events.Connected,
   async (properties, actor) => {
     provideActor(actor);
-    App.Stage.syncMetadata(properties.stageID);
+    Stage.syncMetadata(properties.stageID);
   }
 );

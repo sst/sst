@@ -1,7 +1,7 @@
 import path from "path";
 import url from "url";
 import { Construct } from "constructs";
-import * as cdk from "aws-cdk-lib";
+import { CustomResource, Duration } from "aws-cdk-lib/core";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { App } from "./App.js";
 import {
@@ -245,7 +245,7 @@ export class Script extends Construct {
       ),
       runtime: lambda.Runtime.NODEJS_16_X,
       handler: "index.handler",
-      timeout: cdk.Duration.minutes(15),
+      timeout: Duration.minutes(15),
       memorySize: 1024,
     });
     this.createFunction?.grantInvoke(handler);
@@ -268,7 +268,7 @@ export class Script extends Construct {
       app.mode === "dev"
         ? app.debugStartedAt
         : this.props.version ?? Date.now().toString();
-    new cdk.CustomResource(this, "ScriptResource", {
+    new CustomResource(this, "ScriptResource", {
       serviceToken: crFunction.functionArn,
       resourceType: "Custom::SSTScript",
       properties: {

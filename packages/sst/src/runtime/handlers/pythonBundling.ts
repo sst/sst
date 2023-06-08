@@ -4,13 +4,8 @@
 import fs from "fs";
 import url from "url";
 import path from "path";
-import { AssetCode, Code, Runtime } from "aws-cdk-lib/aws-lambda";
-import {
-  AssetHashType,
-  AssetStaging,
-  DockerImage,
-  FileSystem,
-} from "aws-cdk-lib";
+import { Runtime } from "aws-cdk-lib/aws-lambda";
+import { AssetHashType, DockerImage, FileSystem } from "aws-cdk-lib/core";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 /**

@@ -12,7 +12,7 @@ import {
   getParameterPath,
   placeholderSecretValue,
 } from "./util/functionBinding.js";
-import { CustomResource } from "aws-cdk-lib";
+import { CustomResource } from "aws-cdk-lib/core";
 
 const PUBLIC_KEY_PROP = "publicKey";
 const PRIVATE_KEY_PROP = "privateKey";

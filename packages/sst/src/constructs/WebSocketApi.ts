@@ -1,12 +1,11 @@
 import { Construct } from "constructs";
-import { CustomResource } from "aws-cdk-lib";
+import { CustomResource } from "aws-cdk-lib/core";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as cfnApig from "aws-cdk-lib/aws-apigatewayv2";
 import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
 import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
-import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
 import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 
 import { App } from "./App.js";
@@ -22,6 +21,7 @@ import { FunctionBindingProps } from "./util/functionBinding.js";
 import { Permissions } from "./util/permission.js";
 import * as apigV2Domain from "./util/apiGatewayV2Domain.js";
 import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog.js";
+import { WebSocketLambdaIntegration } from "@aws-cdk/aws-apigatewayv2-integrations-alpha/lib/websocket/index.js";
 
 /////////////////////
 // Interfaces
@@ -34,7 +34,7 @@ export interface WebSocketApiAccessLogProps
 
 export interface WebSocketApiProps {
   /**
-   * The routes for the Websocket API
+   * The routes for the WebSocket API
    *
    * @example
    * ```js
@@ -470,11 +470,18 @@ export class WebSocketApi extends Construct implements SSTConstruct {
   /** @internal */
   public getFunctionBinding(): FunctionBindingProps {
     return {
-      clientPackage: "api",
+      clientPackage: "websocket-api",
       variables: {
         url: {
           type: "plain",
           value: this.customDomainUrl || this.url,
+        },
+        httpsUrl: {
+          type: "plain",
+          value: (this.customDomainUrl || this.url).replace(
+            "wss://",
+            "https://"
+          ),
         },
       },
       permissions: {
@@ -674,7 +681,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
     const route = new apig.WebSocketRoute(scope, `Route_${routeKey}`, {
       webSocketApi: this.cdk.webSocketApi,
       routeKey,
-      integration: new apigIntegrations.WebSocketLambdaIntegration(
+      integration: new WebSocketLambdaIntegration(
         `Integration_${routeKey}`,
         lambda
       ),

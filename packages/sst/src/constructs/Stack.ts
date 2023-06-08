@@ -2,7 +2,14 @@ import fs from "fs";
 import url from "url";
 import * as path from "path";
 import { Construct, IConstruct } from "constructs";
-import * as cdk from "aws-cdk-lib";
+import {
+  StackProps as CDKStackProps,
+  Stack as CDKStack,
+  CfnOutputProps,
+  CfnOutput,
+  Duration as CDKDuration,
+  DefaultStackSynthesizer,
+} from "aws-cdk-lib/core";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 
 import { useProject } from "../project.js";
@@ -13,7 +20,7 @@ import { Permissions } from "./util/permission.js";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
-export type StackProps = cdk.StackProps;
+export type StackProps = CDKStackProps;
 
 /**
  * The Stack construct extends cdk.Stack. It automatically prefixes the stack names with the stage and app name to ensure that they can be deployed to multiple regions in the same AWS account. It also ensure that the stack uses the same AWS profile and region as the app. They're defined using functions that return resources that can be imported by other stacks.
@@ -28,7 +35,7 @@ export type StackProps = cdk.StackProps;
  * }
  * ```
  */
-export class Stack extends cdk.Stack {
+export class Stack extends CDKStack {
   /**
    * The current stage of the stack.
    */
@@ -196,12 +203,10 @@ export class Stack extends cdk.Stack {
    * ```
    */
   public addOutputs(
-    outputs: Record<string, string | cdk.CfnOutputProps | undefined>
+    outputs: Record<string, string | CfnOutputProps | undefined>
   ): void {
     Object.entries(outputs)
-      .filter(
-        (e): e is [string, string | cdk.CfnOutputProps] => e[1] !== undefined
-      )
+      .filter((e): e is [string, string | CfnOutputProps] => e[1] !== undefined)
       .forEach(([key, value]) => {
         // Note: add "SSTStackOutput" prefix to the CfnOutput id to ensure the id
         //       does not thrash w/ construct ids in the stack. So users can do this:
@@ -213,8 +218,8 @@ export class Stack extends cdk.Stack {
         //       still "myTable".
         const output =
           typeof value === "string"
-            ? new cdk.CfnOutput(this, `SSTStackOutput${key}`, { value })
-            : new cdk.CfnOutput(this, `SSTStackOutput${key}`, value);
+            ? new CfnOutput(this, `SSTStackOutput${key}`, { value })
+            : new CfnOutput(this, `SSTStackOutput${key}`, value);
         // CloudFormation only allows alphanumeric characters in the output name.
         output.overrideLogicalId(key.replace(/[^A-Za-z0-9]/g, ""));
       });
@@ -230,7 +235,7 @@ export class Stack extends cdk.Stack {
       }),
       handler: "index.handler",
       runtime: lambda.Runtime.NODEJS_16_X,
-      timeout: cdk.Duration.seconds(900),
+      timeout: CDKDuration.seconds(900),
       memorySize: 1024,
     });
   }
@@ -244,9 +249,14 @@ export class Stack extends cdk.Stack {
       return;
     }
 
-    return new cdk.DefaultStackSynthesizer({
+    return new DefaultStackSynthesizer({
       qualifier: config.cdk?.qualifier,
       fileAssetsBucketName: config.cdk?.fileAssetsBucketName,
+      deployRoleArn: config.cdk?.deployRoleArn,
+      fileAssetPublishingRoleArn: config.cdk?.fileAssetPublishingRoleArn,
+      imageAssetPublishingRoleArn: config.cdk?.imageAssetPublishingRoleArn,
+      cloudFormationExecutionRole: config.cdk?.cloudFormationExecutionRole,
+      lookupRoleArn: config.cdk?.lookupRoleArn,
     });
   }
 

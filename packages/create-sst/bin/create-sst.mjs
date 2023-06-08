@@ -20,47 +20,55 @@ program
 
     const [preset, name, destination] = await (async function () {
       const files = await fs.readdir(cwd);
+      const frameworks = [
+        {
+          name: "Next.js",
+          preset: "presets/dropin/nextjs",
+          tester: () => files.some((f) => f.startsWith("next.config")),
+        },
+        {
+          name: "Astro",
+          preset: "presets/dropin/astro",
+          tester: () => files.some((f) => f.startsWith("astro.config")),
+        },
+        {
+          name: "Svelte",
+          preset: "presets/dropin/svelte",
+          tester: () => files.some((f) => f.startsWith("svelte.config")),
+        },
+        {
+          name: "Remix",
+          preset: "presets/dropin/remix",
+          tester: () => files.some((f) => f.startsWith("remix.config")),
+        },
+        {
+          name: "Solid",
+          preset: "presets/dropin/solid",
+          tester: async () => {
+            for (const f of files) {
+              if (!f.startsWith("vite.config")) continue;
+              const content = await fs.readFile(path.join(cwd, f));
+              if (content.toString().match(/solid-start/)) {
+                return true;
+              }
+            }
+            return false;
+          },
+        },
+      ];
+      for (const framework of frameworks) {
+        if (!(await framework.tester())) continue;
 
-      if (files.some((f) => f.startsWith("next.config"))) {
         const { confirm } = await inquirer.prompt([
           {
             name: "confirm",
             type: "confirm",
             default: true,
-            message:
-              "You are in a Next.js project so SST will be setup in drop-in mode. Continue?",
+            message: `You are in a ${framework.name} project so SST will be setup in drop-in mode. Continue?`,
           },
         ]);
         if (!confirm) return;
-        return ["presets/dropin/nextjs", path.parse(cwd).name, cwd];
-      }
-
-      if (files.some((f) => f.startsWith("astro.config"))) {
-        const { confirm } = await inquirer.prompt([
-          {
-            name: "confirm",
-            type: "confirm",
-            default: true,
-            message:
-              "You are in an Astro project so SST will be setup in drop-in mode. Continue?",
-          },
-        ]);
-        if (!confirm) return;
-        return ["presets/dropin/astro", path.parse(cwd).name, cwd];
-      }
-
-      if (files.some((f) => f.startsWith("svelte.config"))) {
-        const { confirm } = await inquirer.prompt([
-          {
-            name: "confirm",
-            type: "confirm",
-            default: true,
-            message:
-              "You are in a Svelte project so SST will be setup in drop-in mode. Continue?",
-          },
-        ]);
-        if (!confirm) return;
-        return ["presets/dropin/svelte", path.parse(cwd).name, cwd];
+        return [framework.preset, path.parse(cwd).name, cwd];
       }
 
       const answers = await inquirer.prompt([

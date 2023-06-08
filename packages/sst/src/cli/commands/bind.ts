@@ -13,7 +13,8 @@ type BIND_REASON =
   | "secrets_updated"
   | "iam_expired";
 
-class OutdatedMetadataError extends Error {}
+class MetadataNotFoundError extends Error {}
+class MetadataOutdatedError extends Error {}
 
 export const bind = (program: Program) =>
   program
@@ -22,11 +23,20 @@ export const bind = (program: Program) =>
       "Bind your app's resources to a command",
       (yargs) =>
         yargs
+          .option("site", {
+            type: "boolean",
+            describe: "Run in site mode",
+          })
+          .option("script", {
+            type: "boolean",
+            describe: "Run in script mode",
+          })
           .array("command")
-          .example(`sst bind "vitest run"`, "Bind your resources to your tests")
+          .example(`sst bind vitest run`, "Bind resources to your tests")
+          .example(`sst bind next dev`, "Bind resources to your site")
           .example(
-            `sst bind "tsx scripts/myscript.ts"`,
-            "Bind your resources to a script"
+            `sst bind --script next build`,
+            "Bind resources to your site before deployment"
           ),
       async (args) => {
         const { spawn } = await import("child_process");
@@ -52,6 +62,7 @@ export const bind = (program: Program) =>
         const project = useProject();
         const command = args.command?.join(" ");
         const isSite = await isRunningInSite();
+        const mode = args.site ? "site" : args.script ? "script" : "auto";
         let p: ReturnType<typeof spawn> | undefined;
         let timer: ReturnType<typeof setTimeout> | undefined;
         let siteConfigCache:
@@ -68,26 +79,13 @@ export const bind = (program: Program) =>
         }
 
         // Bind script
-        if (!isSite) {
+        if (args.script || (!isSite && !args.site)) {
           Logger.debug("Running in script mode.");
           return await bindScript();
         }
 
         // Bind site
-        try {
-          await bindSite("init");
-        } catch (e: any) {
-          // Bind script (fallback)
-          if (e instanceof OutdatedMetadataError) {
-            Colors.line(
-              Colors.warning(
-                "Warning: This was deployed with an old version of SST. Run `sst dev` or `sst deploy` to update."
-              )
-            );
-            return await bindScript();
-          }
-          throw e;
-        }
+        await bindSite("init");
 
         bus.subscribe("stacks.metadata.updated", () =>
           bindSite("metadata_updated")
@@ -151,7 +149,32 @@ export const bind = (program: Program) =>
 
         async function bindSite(reason: BIND_REASON) {
           // Get metadata
-          const siteMetadata = await getSiteMetadataUntilAvailable();
+          let siteMetadata;
+          try {
+            siteMetadata = await getSiteMetadata();
+          } catch (e: any) {
+            // unhandled error
+            if (
+              !(e instanceof MetadataOutdatedError) &&
+              !(e instanceof MetadataNotFoundError)
+            ) {
+              throw e;
+            }
+
+            // ignore error if previously failed to fetch metadata
+            if (reason !== "init") return;
+
+            // run in script mode
+            Colors.line(
+              Colors.warning(
+                e instanceof MetadataOutdatedError
+                  ? "Warning: This was deployed with an old version of SST. Run `sst dev` or `sst deploy` to update."
+                  : "Warning: The site has not been deployed. Some resources might not be available."
+              )
+            );
+            return await bindScript();
+          }
+
           const siteConfig = await parseSiteMetadata(siteMetadata!);
 
           // Handle rebind due to metadata updated
@@ -166,34 +189,14 @@ export const bind = (program: Program) =>
           siteConfigCache = siteConfig;
 
           // Assume function's role credentials
-          if (siteConfig.role) {
-            const credentials = await assumeSsrRole(siteConfig.role);
-            if (credentials) {
-              // refresh crecentials 1 minute before expiration
-              const expireAt = credentials.Expiration!.getTime() - 60000;
-              clearTimeout(timer);
-              timer = setTimeout(() => {
-                Colors.line(
-                  `\n`,
-                  `Your AWS session is about to expire. Creating a new session and restarting \`${command}\`...`
-                );
-                bindSite("iam_expired");
-              }, expireAt - Date.now());
-
-              await runCommand({
-                ...siteConfig.envs,
-                AWS_ACCESS_KEY_ID: credentials!.AccessKeyId,
-                AWS_SECRET_ACCESS_KEY: credentials!.SecretAccessKey,
-                AWS_SESSION_TOKEN: credentials!.SessionToken,
-              });
-              return;
-            }
-          }
-
           // Fallback to use local IAM credentials
+          const credentials =
+            (siteConfig.role &&
+              (await getLiveIamCredentials(siteConfig.role))) ||
+            (await getLocalIamCredentials());
           await runCommand({
             ...siteConfig.envs,
-            ...(await localIamCredentials()),
+            ...credentials,
           });
         }
 
@@ -201,33 +204,14 @@ export const bind = (program: Program) =>
           const { Config } = await import("../../config.js");
           await runCommand({
             ...(await Config.env()),
-            ...(await localIamCredentials()),
+            ...(await getLocalIamCredentials()),
           });
-        }
-
-        async function getSiteMetadataUntilAvailable() {
-          const { createSpinner } = await import("../spinner.js");
-          const spinner = createSpinner({});
-          while (true) {
-            const data = await getSiteMetadata();
-
-            // Handle site metadata not found
-            if (!data) {
-              spinner.start("Make sure `sst dev` is running...");
-              await new Promise((resolve) => setTimeout(resolve, 1000));
-              continue;
-            }
-
-            spinner.isSpinning && spinner.stop().clear();
-
-            return data;
-          }
         }
 
         async function getSiteMetadata() {
           const { metadata } = await import("../../stacks/metadata.js");
           const metadataData = await metadata();
-          return Object.values(metadataData)
+          const data = Object.values(metadataData)
             .flat()
             .filter(
               (
@@ -255,13 +239,18 @@ export const bind = (program: Program) =>
                 (isSsr && !c.data.server) ||
                 (!isSsr && !c.data.environment)
               ) {
-                throw new OutdatedMetadataError();
+                throw new MetadataOutdatedError();
               }
 
               return (
                 path.resolve(project.paths.root, c.data.path) === process.cwd()
               );
             });
+
+          if (!data) {
+            throw new MetadataNotFoundError();
+          }
+          return data;
         }
 
         async function parseSiteMetadata(
@@ -295,50 +284,29 @@ export const bind = (program: Program) =>
           };
         }
 
-        async function assumeSsrRole(roleArn: string) {
-          const { STSClient, AssumeRoleCommand } = await import(
-            "@aws-sdk/client-sts"
-          );
-          const { useAWSClient } = await import("../../credentials.js");
-          const sts = useAWSClient(STSClient);
-          const assumeRole = async (duration: number) => {
-            const { Credentials: credentials } = await sts.send(
-              new AssumeRoleCommand({
-                RoleArn: roleArn,
-                RoleSessionName: "dev-session",
-                DurationSeconds: duration,
-              })
+        async function getLiveIamCredentials(roleArn: string) {
+          const credentials = await assumeSsrRole(roleArn);
+          if (!credentials) return;
+
+          // refresh crecentials 1 minute before expiration
+          const expireAt = credentials.Expiration!.getTime() - 60000;
+          clearTimeout(timer);
+          timer = setTimeout(() => {
+            Colors.line(
+              `\n`,
+              `Your AWS session is about to expire. Creating a new session and restarting \`${command}\`...`
             );
-            return credentials;
+            bindSite("iam_expired");
+          }, expireAt - Date.now());
+
+          return {
+            AWS_ACCESS_KEY_ID: credentials!.AccessKeyId,
+            AWS_SECRET_ACCESS_KEY: credentials!.SecretAccessKey,
+            AWS_SESSION_TOKEN: credentials!.SessionToken,
           };
-
-          // Assue role with max duration first. This can fail if chaining roles, or if
-          // the role has a max duration set. If it fails, assume role with 1 hour duration.
-          let err: any;
-          try {
-            return await assumeRole(43200);
-          } catch (e) {
-            err = e;
-          }
-
-          if (
-            err.name === "ValidationError" &&
-            err.message.startsWith("The requested DurationSeconds exceeds")
-          ) {
-            try {
-              return await assumeRole(3600);
-            } catch (e) {
-              err = e;
-            }
-          }
-
-          Colors.line(
-            "Using local IAM credentials since `sst dev` is not running."
-          );
-          Logger.debug(`Failed to assume ${roleArn}.`, err);
         }
 
-        async function localIamCredentials() {
+        async function getLocalIamCredentials() {
           const { useAWSCredentials } = await import("../../credentials.js");
           const credentials = await useAWSCredentials();
           return {
@@ -389,6 +357,49 @@ export const bind = (program: Program) =>
             Object.keys(envs1).length === Object.keys(envs2).length &&
             Object.keys(envs1).every((key) => envs1[key] === envs2[key])
           );
+        }
+
+        async function assumeSsrRole(roleArn: string) {
+          const { STSClient, AssumeRoleCommand } = await import(
+            "@aws-sdk/client-sts"
+          );
+          const { useAWSClient } = await import("../../credentials.js");
+          const sts = useAWSClient(STSClient);
+          const assumeRole = async (duration: number) => {
+            const { Credentials: credentials } = await sts.send(
+              new AssumeRoleCommand({
+                RoleArn: roleArn,
+                RoleSessionName: "dev-session",
+                DurationSeconds: duration,
+              })
+            );
+            return credentials;
+          };
+
+          // Assue role with max duration first. This can fail if chaining roles, or if
+          // the role has a max duration set. If it fails, assume role with 1 hour duration.
+          let err: any;
+          try {
+            return await assumeRole(43200);
+          } catch (e) {
+            err = e;
+          }
+
+          if (
+            err.name === "ValidationError" &&
+            err.message.startsWith("The requested DurationSeconds exceeds")
+          ) {
+            try {
+              return await assumeRole(3600);
+            } catch (e) {
+              err = e;
+            }
+          }
+
+          Colors.line(
+            "Using local IAM credentials since `sst dev` is not running."
+          );
+          Logger.debug(`Failed to assume ${roleArn}.`, err);
         }
       }
     )

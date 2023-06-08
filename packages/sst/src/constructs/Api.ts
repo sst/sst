@@ -1480,6 +1480,7 @@ export class Api<
     );
     const data = this.routesData[routeKey];
     if (data.type === "function") {
+      data.function.addEnvironment("GRAPHQL_ENDPOINT", routeKey.split(" ")[1]);
       this.routesData[routeKey] = {
         ...data,
         type: "graphql",

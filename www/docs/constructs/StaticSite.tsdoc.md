@@ -77,6 +77,20 @@ new StaticSite(stack, "frontend", {
  }
 });
 ```
+### dev.url?
+
+_Type_ : <span class="mono">string</span>
+
+The local site URL when running 
+`sst dev`
+.
+```js
+new StaticSite(stack, "frontend", {
+ dev: {
+   url: "http://localhost:3000"
+ }
+});
+```
 
 ### environment?
 

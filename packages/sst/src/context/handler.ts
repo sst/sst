@@ -1,6 +1,12 @@
 import {
+  APIGatewayProxyEventHeaders,
+  APIGatewayProxyEventMultiValueHeaders,
+  APIGatewayProxyEventMultiValueQueryStringParameters,
+  APIGatewayProxyEventQueryStringParameters,
   APIGatewayProxyEventV2,
+  APIGatewayProxyResultV2,
   APIGatewayProxyStructuredResultV2,
+  APIGatewayProxyWebsocketEventV2,
   Context as LambdaContext,
   SQSBatchResponse,
   SQSEvent,
@@ -12,13 +18,24 @@ export interface Handlers {
     event: APIGatewayProxyEventV2;
     response: APIGatewayProxyStructuredResultV2 | void;
   };
+  ws: {
+    // These fields are being returned when we print it but for some reason not
+    // part of the APIGatewayProxyWebsocketEventV2 type
+    event: APIGatewayProxyWebsocketEventV2 & {
+      headers?: APIGatewayProxyEventHeaders;
+      multiValueHeaders?: APIGatewayProxyEventMultiValueHeaders;
+      queryStringParameters?: APIGatewayProxyEventQueryStringParameters | null;
+      multiValueQueryStringParameters?: APIGatewayProxyEventMultiValueQueryStringParameters | null;
+    };
+    response: APIGatewayProxyResultV2;
+  };
   sqs: {
     event: SQSEvent;
     response: SQSBatchResponse;
   };
 }
 
-type HandlerTypes = keyof Handlers;
+export type HandlerTypes = keyof Handlers;
 
 type Requests = {
   [key in HandlerTypes]: {
@@ -29,6 +46,11 @@ type Requests = {
 }[HandlerTypes];
 
 const RequestContext = Context.create<Requests>("RequestContext");
+
+export function useContextType(): HandlerTypes {
+  const ctx = RequestContext.use();
+  return ctx.type;
+}
 
 export function useEvent<Type extends HandlerTypes>(type: Type) {
   const ctx = RequestContext.use();

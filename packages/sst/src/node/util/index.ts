@@ -35,12 +35,8 @@ export function createProxy<T extends object>(constructName: string) {
         //       run code analysis after build. The code analysis runs
         //       the top level code, and would fail b/c "SST_APP" and
         //       "SST_STAGE" are undefined at build time.
-        for (const builtInEnv of ["SST_APP", "SST_STAGE"]) {
-          if (!process.env[builtInEnv]) {
-            throw new Error(
-              `Cannot find the ${builtInEnv} environment variable. This is usually the case when you are using an older version of SST. Please update SST to the latest version to use the SST Config feature.`
-            );
-          }
+        if (!process.env.SST_APP) {
+          throw new Error(buildMissingBuiltInEnvError());
         }
 
         // normalize prop to convert kebab cases like `my-table` to `my_table`
@@ -140,7 +136,9 @@ async function fetchValuesFromSSM(variablesFromSsm: Variable[]) {
 
   if (missingSecrets.length > 0) {
     throw new Error(
-      `The following secrets were not found: ${missingSecrets.join(", ")}`
+      `The following secret values are not set in the "${
+        process.env.SST_STAGE
+      } stage": ${missingSecrets.join(", ")}`
     );
   }
 }
@@ -220,4 +218,28 @@ function storeVariable(variable: Variable, value: string) {
   allVariables[c] = allVariables[c] || {};
   allVariables[c][id] = allVariables[c][id] || {};
   allVariables[c][id][prop] = value;
+}
+
+function buildMissingBuiltInEnvError() {
+  // Build environment => building SSR sites
+  if (process.env.SST) {
+    return [
+      "",
+      `Cannot access bound resources. This usually happens if the "sst/node" package is used at build time. For example:`,
+      "",
+      `  - The "sst/node" package is used inside the "getStaticProps()" function of a Next.js app.`,
+      `  - The "sst/node" package is used at the top level outside of the "load()" function of a SvelteKit app.`,
+      "",
+      `Please wrap your build script with "sst bind". For example, "sst bind next build".`,
+      "",
+    ].join("\n");
+  }
+
+  // Lambda/CodeBuild environment => Function/Job or SSR function
+  if (process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.CODEBUILD_BUILD_ARN) {
+    return `Cannot access bound resources. This usually happens if you are using an older version of SST. Please update SST to the latest version.`;
+  }
+
+  // Unknown environment => client-side code
+  return `Cannot access bound resources. This usually happens if the "sst/node" package is used on the client-side. Ensure that it's only called in your server functions.`;
 }

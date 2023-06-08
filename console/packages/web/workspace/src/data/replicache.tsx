@@ -12,20 +12,8 @@ import { createStore, reconcile } from "solid-js/store";
 import { useAuth } from "./auth";
 import type { ServerType } from "@console/functions/replicache/server";
 import { Client } from "../../../../functions/src/replicache/framework";
-import { AppStore } from "./app";
 
 const mutators = new Client<ServerType>()
-  .mutation("app_create", async (tx, input) => {
-    await AppStore.put(tx, {
-      ...input,
-      id: input.id!,
-      timeCreated: new Date().toISOString(),
-      timeUpdated: new Date().toISOString(),
-      timeDeleted: null,
-    });
-  })
-  .mutation("app_stage_create", async (tx, input) => {})
-  .mutation("aws_account_create", async (tx, input) => {})
   .mutation("connect", async (tx, input) => {})
   .build();
 
@@ -42,6 +30,16 @@ function createReplicache(workspaceID: string, token: string) {
     pullInterval: 10 * 1000,
     mutators,
   });
+
+  replicache.subscribe(
+    (tx) => {
+      return tx.scan({ prefix: "" }).entries().toArray();
+    },
+    {
+      onData: console.log,
+    }
+  );
+
   const oldPuller = replicache.puller;
   replicache.puller = (opts) => {
     opts.headers.append("x-sst-workspace", workspaceID);
@@ -90,9 +88,9 @@ export function useReplicache() {
 }
 
 export function createSubscription<R, D = undefined>(
-  replicache: () => Replicache,
   body: () => (tx: ReadTransaction) => Promise<R>,
-  initial?: D
+  initial?: D,
+  replicache?: () => Replicache
 ) {
   const [store, setStore] = createStore({ result: initial as any });
 
@@ -102,12 +100,16 @@ export function createSubscription<R, D = undefined>(
     if (unsubscribe) unsubscribe();
     setStore({ result: initial as any });
 
-    // @ts-expect-error
-    unsubscribe = replicache().subscribe(body(), {
-      onData: (val) => {
-        setStore(reconcile({ result: val }));
-      },
-    });
+    const r = replicache ? replicache() : useReplicache()();
+    unsubscribe = r.subscribe(
+      // @ts-expect-error
+      body(),
+      {
+        onData: (val) => {
+          setStore(reconcile({ result: val }));
+        },
+      }
+    );
   });
 
   onCleanup(() => {

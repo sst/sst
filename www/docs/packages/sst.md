@@ -83,7 +83,7 @@ This will run the commands using the locally installed version of SST.
 
 ### AWS profile
 
-Specify the AWS account you want to deploy to by using the `--profile` option. If not specified, uses the default AWS profile. [Read more about AWS profiles here](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html). For example:
+Specify the AWS account you want to deploy to by using the `--profile` option. If not specified, uses the default AWS profile. [Read more about AWS profiles here](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html#cli-configure-files-format). For example:
 
 ```bash
 npx sst deploy --profile=production
@@ -146,11 +146,23 @@ Compares the current version of the stacks in your app with the ones that've bee
 npx sst diff [stacks..] [options]
 ```
 
+You can diff against a stage.
+
+```bash
+npx sst diff --stage prod
+```
+
 You can also optionally compare a list of stacks.
 
 ```bash
 npx sst diff stack-a stack-b
 ```
+
+#### Options
+
+- **`--dev`**
+
+  By default, SST will diff against the target stage as it would be deployed using `sst deploy`. If you are running a stage locally using [`sst dev`](../live-lambda-development.md), then pass in `--dev` to diff against the dev version.
 
 ---
 
@@ -168,7 +180,7 @@ So for example, you can start your frontend with all the binding values.
 npx sst bind next dev
 ```
 
-`sst bind` auto-detects the following frontend frameworks. If your framework is not listed here, feel free to hop on to our <a href={ config.discord }>Discord</a> and let us know.
+`sst bind` auto-detects the following frontend frameworks.
 
 - Angular: detects `angular.json`
 - Astro: detects `astro.config.js`
@@ -196,11 +208,29 @@ npx sst bind vitest run
 
 You can also use the `sst bind` to run any scripts.
 
+#### Options
+
+- **`--site`**
+
+  If your framework is not auto-detected by SST, then pass in `--site` to signal to SST that you are starting your frontend.
+
+  ```bash
+  npx sst bind --site npm run start
+  ```
+
+- **`--script`**
+
+  Similarly, if SST has detected a frontend framework in the current directory, but you are not starting your frontend, then pass in `--script`. This is useful when you are running a script inside your frontend directory.
+
+  ```bash
+  npx sst bind --script npm run build
+  ```
+
 ---
 
 ### `sst build`
 
-Build your app and synthesize your stacks. Generates a `.sst/` directory with the compiled files and a `.sst/dist/` directory with the synthesized CloudFormation stacks.
+Build your app and synthesize your stacks. Builds the assets for your functions and sites. And generates a `.sst/dist/` directory with the synthesized CloudFormation stacks.
 
 ```bash
 npx sst build [options]
@@ -218,13 +248,21 @@ In addition to the [global options](#global-options), the following options are 
 
 ---
 
+#### Build concurrency
+
+SST will build your assets concurrently using the number of cores available. This can be changed using the `SST_BUILD_CONCURRENCY` environment variable. Where `SST_BUILD_CONCURRENCY` defaults to the `number of cores - 1`.
+
+---
+
 ### `sst deploy`
 
-Deploy your app to AWS. Or optionally deploy a specific stack by passing in a `filter`.
+Deploys your app to AWS. Or optionally deploy a specific stack by passing in a `filter`.
 
 ```bash
 npx sst deploy [filter] [options]
 ```
+
+By default, it first builds your app and then deploys it. It also respects the [`SST_BUILD_CONCURRENCY`](#build-concurrency) environment variable.
 
 In addition to the [global options](#global-options), the following options are supported.
 
@@ -259,6 +297,20 @@ Updates the SST and CDK packages in your `package.json` to the latest version. O
 ```bash
 npx sst update [version] [options]
 ```
+
+---
+
+### `sst version`
+
+Prints the version of SST your app is using. Also, prints the version of CDK that SST is using internally.
+
+```bash
+npx sst version
+```
+
+:::info
+When installing additional CDK packages make sure to use the same version as the one from the `sst verion` command.
+:::
 
 ---
 
@@ -330,7 +382,7 @@ npx sst secrets remove MY_SECRET
 
   _Default_: false
 
-  Set this option if you want to `get`, `set`, or `remove` the fallback version of a secret. For example, to get the fallback of a secret.
+  Set this option if you want to `get`, `set`, `list`, or `remove` the fallback version of a secret. For example, to get the fallback of a secret.
 
   ```bash
   npx sst secrets get --fallback STRIPE_KEY
@@ -374,7 +426,7 @@ npx sst secrets load <filename>
 
 #### `sst secrets list`
 
-Decrypts and prints out all the secrets with the given `format`; `table` or `env`. Where `env` is the dotenv format. Defaults to `table`.
+Decrypts and prints out all the secrets with the given `format`; `table`, `json`, or `env`. Where `env` is the dotenv format. Defaults to `table`.
 
 ```bash
 npx sst secrets list [format] [options]

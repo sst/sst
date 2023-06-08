@@ -64,8 +64,6 @@ export async function metadata() {
 const MetadataContext = Context.create(async () => {
   const bus = useBus();
   const cache = await useCache();
-  const data = await metadata();
-  bus.publish("stacks.metadata", data);
 
   bus.subscribe("stacks.metadata.updated", async () => {
     const data = await metadata();
@@ -81,7 +79,15 @@ const MetadataContext = Context.create(async () => {
     MetadataContext.provide(Promise.resolve(data));
   });
 
-  return data;
+  while (true) {
+    try {
+      const data = await metadata();
+      bus.publish("stacks.metadata", data);
+      return data;
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+  }
 });
 
 export const useMetadata = MetadataContext.use;

@@ -14,7 +14,7 @@ import {
   Tags,
   Stack,
   RemovalPolicy,
-} from "aws-cdk-lib";
+} from "aws-cdk-lib/core";
 import { Function, Runtime, Code } from "aws-cdk-lib/aws-lambda";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { PolicyStatement } from "aws-cdk-lib/aws-iam";
@@ -172,6 +172,11 @@ export async function bootstrapSST() {
     synthesizer: new DefaultStackSynthesizer({
       qualifier: cdk?.qualifier,
       fileAssetsBucketName: cdk?.fileAssetsBucketName,
+      deployRoleArn: cdk?.deployRoleArn,
+      fileAssetPublishingRoleArn: cdk?.fileAssetPublishingRoleArn,
+      imageAssetPublishingRoleArn: cdk?.imageAssetPublishingRoleArn,
+      cloudFormationExecutionRole: cdk?.cloudFormationExecutionRole,
+      lookupRoleArn: cdk?.lookupRoleArn,
     }),
   });
 
@@ -197,10 +202,9 @@ export async function bootstrapSST() {
       path.resolve(__dirname, "support/bootstrap-metadata-function")
     ),
     handler: "index.handler",
-    runtime:
-      region?.startsWith("us-gov-")
-        ? Runtime.NODEJS_16_X
-        : Runtime.NODEJS_18_X,
+    runtime: region?.startsWith("us-gov-")
+      ? Runtime.NODEJS_16_X
+      : Runtime.NODEJS_18_X,
     environment: {
       BUCKET_NAME: bucket.bucketName,
     },

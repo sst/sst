@@ -1,5 +1,35 @@
 # @serverless-stack/docs
 
+## 2.3.1
+
+### Patch Changes
+
+- [`0c4894a3f`](https://github.com/serverless-stack/sst/commit/0c4894a3f88e9d83430b7aed125efa240cd82a5a) Thanks [@fwang](https://github.com/fwang)! - SsrSite: allow overriding response header policy
+
+## 2.3.0
+
+### Minor Changes
+
+- [#2902](https://github.com/serverless-stack/sst/pull/2902) [`e120a6c00`](https://github.com/serverless-stack/sst/commit/e120a6c0072c4be843a4686c68e2a429a5fb72cb) Thanks [@zvictor](https://github.com/zvictor)! - Add support for JSON format in secrets list
+
+## 2.2.4
+
+### Patch Changes
+
+- [#2894](https://github.com/serverless-stack/sst/pull/2894) [`2aff836c3`](https://github.com/serverless-stack/sst/commit/2aff836c3b59529f476df83595101169ca3dfc12) Thanks [@rcoundon](https://github.com/rcoundon)! - Minor doc update to Config construct
+
+## 2.2.3
+
+### Patch Changes
+
+- [#2817](https://github.com/serverless-stack/sst/pull/2817) [`2aec504bf`](https://github.com/serverless-stack/sst/commit/2aec504bfd5145d36c510171af207dbeca682e5f) Thanks [@justindra](https://github.com/justindra)! - Added a new WebSocketApiHandler to allow for websockets to use session hooks
+
+## 2.2.2
+
+### Patch Changes
+
+- [#2881](https://github.com/serverless-stack/sst/pull/2881) [`570dc6b14`](https://github.com/serverless-stack/sst/commit/570dc6b1413357076349ccfa4f3bd0188c57ecdc) Thanks [@jayair](https://github.com/jayair)! - Quickstart for Remix
+
 ## 2.2.1
 
 ### Patch Changes

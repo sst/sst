@@ -25,7 +25,7 @@ import {
   Duration as CdkDuration,
   CustomResource,
   CfnCustomResource,
-} from "aws-cdk-lib";
+} from "aws-cdk-lib/core";
 
 import { useProject } from "../project.js";
 import { useRuntimeHandlers } from "../runtime/handlers.js";
@@ -61,6 +61,7 @@ export interface SsrFunctionProps
   bind?: SSTConstruct[];
   nodejs?: NodeJSProps;
   copyFiles?: FunctionCopyFilesProps[];
+  logRetention?: RetentionDays;
 }
 
 /////////////////////
@@ -131,12 +132,12 @@ export class SsrFunction extends Construct {
   }
 
   private createFunction(assetBucket: string, assetKey: string) {
-    const { runtime, timeout, memorySize, handler } = this.props;
+    const { runtime, timeout, memorySize, handler, logRetention } = this.props;
 
     return new CdkFunction(this, `ServerFunction`, {
       ...this.props,
-      handler,
-      logRetention: RetentionDays.THREE_DAYS,
+      handler: handler.split(path.sep).join(path.posix.sep),
+      logRetention: logRetention ?? RetentionDays.THREE_DAYS,
       code: Code.fromBucket(
         Bucket.fromBucketName(this, "IServerFunctionBucket", assetBucket),
         assetKey
@@ -156,6 +157,7 @@ export class SsrFunction extends Construct {
         typeof timeout === "string"
           ? toCdkDuration(timeout)
           : CdkDuration.seconds(timeout),
+      logRetentionRetryOptions: logRetention && { maxRetries: 100 },
     });
   }
 
@@ -250,7 +252,10 @@ export class SsrFunction extends Construct {
       // create wrapper that calls the handler
       if (bundle.type === "error")
         throw new Error(
-          `There was a problem bundling the SSR function for the "${this.node.id}" Site.`
+          [
+            `There was a problem bundling the SSR function for the "${this.node.id}" Site.`,
+            ...bundle.errors,
+          ].join("\n")
         );
 
       const code = AssetCode.fromAsset(bundle.out);

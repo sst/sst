@@ -1,6 +1,6 @@
 ---
 sidebar_label: Svelte
-title: Use Svelte with SST
+title: Use SvelteKit with SST
 description: "Create and deploy a SvelteKit app to AWS with SST."
 ---
 

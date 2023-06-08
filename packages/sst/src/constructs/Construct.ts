@@ -1,5 +1,5 @@
 import { Construct } from "constructs";
-import * as cdk from "aws-cdk-lib";
+import { Stack as CDKStack } from "aws-cdk-lib/core";
 import { Function as Fn } from "aws-cdk-lib/aws-lambda";
 import { Stack } from "./Stack.js";
 import { FunctionBindingProps } from "./util/functionBinding.js";
@@ -34,7 +34,7 @@ export function getFunctionRef(fn?: any) {
 export function isConstruct(construct: any) {
   return isSSTConstruct(construct) || isCDKConstruct(construct);
 }
-export function isStackConstruct(construct: any): construct is cdk.Stack {
+export function isStackConstruct(construct: any): construct is CDKStack {
   return isCDKConstructOf(construct, "aws-cdk-lib.Stack");
 }
 
@@ -42,7 +42,7 @@ export function isSSTConstruct(construct: any): construct is SSTConstruct {
   return typeof construct === "object" && "getConstructMetadata" in construct;
 }
 
-export function isSSTDebugStack(construct: any): construct is cdk.Stack {
+export function isSSTDebugStack(construct: any): construct is CDKStack {
   return (
     isStackConstruct(construct) && construct.constructor.name === "DebugStack"
   );

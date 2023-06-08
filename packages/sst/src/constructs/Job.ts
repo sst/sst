@@ -2,7 +2,7 @@ import url from "url";
 import path from "path";
 import fs from "fs/promises";
 import { Construct } from "constructs";
-import { Duration as CdkDuration } from "aws-cdk-lib";
+import { Duration as CdkDuration } from "aws-cdk-lib/core";
 import { PolicyStatement, Role, Effect } from "aws-cdk-lib/aws-iam";
 import { AssetCode, Code } from "aws-cdk-lib/aws-lambda";
 import {
@@ -18,7 +18,12 @@ import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Secret } from "./Config.js";
 import { SSTConstruct } from "./Construct.js";
-import { Function, useFunctions, NodeJSProps } from "./Function.js";
+import {
+  Function,
+  useFunctions,
+  NodeJSProps,
+  FunctionCopyFilesProps,
+} from "./Function.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import {
@@ -78,6 +83,17 @@ export interface JobProps {
    *```
    */
   timeout?: Duration;
+  /**
+   * Used to configure additional files to copy into the function bundle
+   *
+   * @example
+   * ```js
+   * new Job(stack, "job", {
+   *   copyFiles: [{ from: "src/index.js" }]
+   * })
+   *```
+   */
+  copyFiles?: FunctionCopyFilesProps[];
   /**
    * Used to configure nodejs function properties
    */
@@ -404,7 +420,10 @@ export class Job extends Construct implements SSTConstruct {
 
       const parsed = path.parse(result.handler);
       const importName = parsed.ext.substring(1);
-      const importPath = `./${path.join(parsed.dir, parsed.name)}.mjs`;
+      const importPath = `./${path
+        .join(parsed.dir, parsed.name)
+        .split(path.sep)
+        .join(path.posix.sep)}.mjs`;
       await fs.writeFile(
         path.join(result.out, "handler-wrapper.mjs"),
         [
@@ -425,6 +444,7 @@ export class Job extends Construct implements SSTConstruct {
           `console.log("//  End of the job  //")`,
           `console.log("//////////////////////")`,
           `console.log("")`,
+          `process.exit(0)`,
         ].join("\n")
       );
 
@@ -464,21 +484,18 @@ export class Job extends Construct implements SSTConstruct {
   }
 
   private createLocalInvoker(): Function {
-    const { handler, permissions } = this.props;
-
     // Note: make the invoker function the same ID as the Job
     //       construct so users can identify the invoker function
     //       in the Console.
     const fn = new Function(this, this.node.id, {
-      handler,
-      nodejs: { format: "esm" },
       runtime: "nodejs16.x",
-      timeout: 10,
       memorySize: 1024,
       environment: {
+        ...this.props.environment,
         SST_DEBUG_TYPE: "job",
       },
-      permissions,
+      ...this.props,
+      timeout: "15 minutes",
     });
     fn._doNotAllowOthersToBind = true;
     return fn;

@@ -113,7 +113,7 @@ new WebSocketApi(stack, "Api", {
 
 _Type_ : <span class="mono">Record&lt;<span class="mono">string</span>, <span class='mono'><span class='mono'><span class="mono">string</span> | <span class="mono">[Function](Function#function)</span></span> | <span class="mono">[WebSocketApiFunctionRouteProps](#websocketapifunctionrouteprops)</span></span>&gt;</span>
 
-The routes for the Websocket API
+The routes for the WebSocket API
 
 
 ```js

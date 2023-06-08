@@ -118,8 +118,8 @@ export async function getServerSideProps() {
 }
 ```
 
-:::note
-We don't want to expose the value of the secret in client code.
+:::tip
+Since we are dealing with sensitive info, Config is only supported in the frontend's server side functions.
 :::
 
 ---
@@ -153,7 +153,7 @@ new Function(stack, "MyFunction", {
 }
 ```
 
-It adds a Lambda environment variables named `SST_Secret_value_STRIPE_KEY` to the function. The environment variable has a placeholder value `__FETCH_FROM_SSM__` to indicate that the value for `STRIPE_KEY` needs to be fetched from SSM at runtime.
+It adds a Lambda environment variables named `SST_Secret_value_STRIPE_KEY` to the function. The environment variable has a placeholder value `__FETCH_FROM_SSM__` to indicate that the value for `STRIPE_KEY` needs to be fetched from SSM at runtime using [top-level await](https://v8.dev/features/top-level-await).
 
 ---
 
