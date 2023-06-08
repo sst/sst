@@ -340,8 +340,6 @@ export class Queue extends Construct implements SSTConstruct {
           !sqsQueueProps.visibilityTimeout ||
           sqsQueueProps.visibilityTimeout.toSeconds() < 900
         ) {
-          // TODO
-          console.log(toCdkDuration("900 seconds"));
           debugOverrideProps = {
             visibilityTimeout: toCdkDuration("900 seconds"),
           };
