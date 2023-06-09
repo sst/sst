@@ -33,7 +33,8 @@ export interface RDSProps {
     | "mysql5.7"
     | "postgresql10.14"
     | "postgresql11.13"
-    | "postgresql11.16";
+    | "postgresql11.16"
+    | "postgresql13.9";
 
   /**
    * Name of a database which is automatically created inside the cluster.
@@ -415,10 +416,14 @@ export class RDS extends Construct implements SSTConstruct {
       return rds.DatabaseClusterEngine.auroraPostgres({
         version: rds.AuroraPostgresEngineVersion.VER_11_16,
       });
+    } else if (engine === "postgresql13.9") {
+      return rds.DatabaseClusterEngine.auroraPostgres({
+        version: rds.AuroraPostgresEngineVersion.VER_13_9,
+      });
     }
 
     throw new Error(
-      `The specified "engine" is not supported for sst.RDS. Only mysql5.6, mysql5.7, postgresql11.13, and postgresql11.16 engines are currently supported.`
+      `The specified "engine" is not supported for sst.RDS. Only mysql5.6, mysql5.7, postgresql11.13, postgresql11.16, and postgres13.9 engines are currently supported.`
     );
   }
 
