@@ -1,13 +1,13 @@
 ---
-title: Async Tasks
-description: "Run asynchronous tasks in your SST app."
+title: Queues
+description: "Queue up work to be processed"
 ---
 
 import HeadlineText from "@site/src/components/HeadlineText";
 
 <HeadlineText>
 
-Run asynchronous tasks in your SST app.
+Queue up work in your SST app.
 
 </HeadlineText>
 
@@ -15,11 +15,7 @@ Run asynchronous tasks in your SST app.
 
 ## Overview
 
-Sometimes you might want to return a request to the user right away but run some tasks asynchronously. For example, you might want to process an order but send a confirmation email later. The easiest way to do this is to use a queue.
-
-- When your API gets invoked, you place items in the queue
-- Your API then returns right away
-- Later, you process the items from the queue
+Typically most async scenarios should be handled with [Events](./events). However if you want more control over processing you can use Queues.
 
 Let's look at it in detail.
 
@@ -139,33 +135,6 @@ Now if you go to the API endpoint in your browser — `http://localhost:3000/api
 
 Aside from queues you have a couple of other options for handling more complex asynchronous tasks in your app.
 
----
-
-### Topics
-
-The [`Topic`](constructs/Topic.md) construct supports a pub/sub model using [Amazon SNS](https://docs.aws.amazon.com/sns/latest/dg/welcome.html).
-
-```ts title="stacks/Default.ts"
-import { Topic } from "sst/constructs";
-
-new Topic(stack, "topic", {
-  subscribers: [
-    "packages/functions/src/subscriber1.handler",
-    "packages/functions/src/subscriber2.handler",
-  ],
-});
-```
-
-The main difference between a Topic and Queue is that a Topic can have **multiple subscribers**.
-
-:::tip Tutorial
-
-[Check out a tutorial](https://sst.dev/examples/how-to-use-pub-sub-in-your-serverless-app.html) on how a simple pub/sub system in SST.
-
-:::
-
----
-
 ### KinesisStream
 
 The [`KinesisStream`](constructs/KinesisStream.md) construct uses [Amazon Kinesis Data Streams](https://docs.aws.amazon.com/streams/latest/dev/introduction.html).
@@ -183,30 +152,3 @@ new KinesisStream(stack, "stream", {
 
 It's similar to the [`Queue`](constructs/Queue.md) in that the consumer pulls the messages, but it's designed to allow for multiple consumers. A KinesisStream also keeps a **record of historical messages** for up to 365 days, and consumers can **re-process them**. This makes it a good fit for cases where you are dealing with a large number of events.
 
----
-
-### EventBus
-
-The [`EventBus`](constructs/EventBus.md) construct uses [Amazon EventBridge](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-what-is.html).
-
-```ts title="stacks/Default.ts"
-import { EventBus } from "sst/constructs";
-
-new EventBus(stack, "bus", {
-  rules: {
-    rule1: {
-      eventPattern: { source: ["myevent"] },
-      targets: [
-        "packages/functions/src/target1.handler",
-        "packages/functions/src/target2.handler",
-      ],
-    },
-  },
-});
-```
-
-Similar to a Topic, it's a pub/sub model. It can also **archive** the messages coming in to the EventBus and **replay** them later.
-
----
-
-And that's it! You now know how to handle asynchronous tasks in your app. You also have a couple of options for when your app grows more complex.
