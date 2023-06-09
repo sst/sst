@@ -34,7 +34,7 @@ SST gives you the full power of AWS. Making it easy to add any feature to your p
 
 - [File uploads](https://docs.sst.dev/file-uploads) — Allow your users to upload files to S3.
 - [Auth](https://docs.sst.dev/auth) — Authenticate your users through any auth provider.
-- [Async tasks](https://docs.sst.dev/async-tasks) — Run tasks after your app has returned to your user.
+- [Events](https://docs.sst.dev/events) — Run tasks after your app has returned to your user.
 - [Databases](https://docs.sst.dev/databases) — Use a serverless SQL or NoSQL database to power your app.
 - [Jobs](https://docs.sst.dev/cron-jobs) — Run cron jobs or long running jobs powered by serverless functions.
 - [APIs](https://docs.sst.dev/apis) — Add a dedicated serverless REST, GraphQL, or WebSocket API to your app.

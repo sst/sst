@@ -105,8 +105,8 @@ Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/async-tasks")}>
-      <h3>Async tasks</h3>
+    <a href={useBaseUrl("/events")}>
+      <h3>Events</h3>
       <p>Run tasks after your app has returned to your user.</p>
     </a>
   </li>
