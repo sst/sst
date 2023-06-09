@@ -38,6 +38,7 @@
   },
   "devDependencies": {
     "constructs": "10.1.156",
+    "prism-react-renderer": "^2.0.5",
     "typedoc": "^0.23.21",
     "typescript": "^4.9.5"
   }

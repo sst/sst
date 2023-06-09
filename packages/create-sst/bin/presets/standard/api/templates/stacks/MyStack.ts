@@ -20,7 +20,7 @@ export function API({ stack }: StackContext) {
   });
 
   bus.subscribe("todo.created", {
-    handler: "packages/functions/src/events/test-created.handler",
+    handler: "packages/functions/src/events/todo-created.handler",
   });
 
   stack.addOutputs({
