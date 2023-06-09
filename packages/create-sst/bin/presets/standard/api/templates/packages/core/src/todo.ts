@@ -2,7 +2,7 @@ export * as Todo from "./todo";
 import { z } from "zod";
 import crypto from "crypto";
 
-import { event } from "./events";
+import { event } from "./event";
 
 export const Events = {
   Created: event("todo.created", {
