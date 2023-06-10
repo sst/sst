@@ -35,16 +35,13 @@ import {
 } from "aws-cdk-lib/aws-cloudfront-origins";
 import { Rule, Schedule } from "aws-cdk-lib/aws-events";
 import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
+import { Queue } from "aws-cdk-lib/aws-sqs";
+import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { Stack } from "./Stack.js";
 import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 import { SsrSite, SsrSiteProps } from "./SsrSite.js";
 import { Size, toCdkSize } from "./util/size.js";
-import { Bucket, BucketProps, IBucket } from "aws-cdk-lib/aws-s3";
-import { isCDKConstruct } from "./Construct.js";
-import { BucketDeployment, Source } from "aws-cdk-lib/aws-s3-deployment";
-import { IQueue, Queue } from "aws-cdk-lib/aws-sqs";
-import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 
 export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   imageOptimization?: {
@@ -58,16 +55,6 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
      */
     memorySize?: number | Size;
   };
-  cdk?: SsrSiteProps["cdk"] & {
-    cacheBucket?: BucketProps | IBucket;
-  };
-  /**
-   * Enable cache interception.
-   * Open next will try to intercept ssg and isr requests and serve them from cache.
-   * Enabling this will not trigger middleware on the server side.
-   * @default false
-   */
-  enableExperimentalCacheInterception?: boolean;
   /**
    * The number of server functions to keep warm. This option is only supported for the regional mode.
    * @default Server function is not kept warm
@@ -97,9 +84,6 @@ export class NextjsSite extends SsrSite {
       undefined
     >;
   };
-  cacheBucket: IBucket;
-  revalidationQueue: IQueue;
-  revalidationFn: CdkFunction;
 
   constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
     super(scope, id, {
@@ -107,77 +91,32 @@ export class NextjsSite extends SsrSite {
       ...props,
     });
 
+    if (this.doNotDeploy) return;
+
     this.createWarmer();
-    this.cacheBucket = this.createCacheBucket(
-      props?.enableExperimentalCacheInterception
-    );
-    const { revalidationFn, queue } = this.createRevalidation();
-    this.revalidationFn = revalidationFn;
-    this.revalidationQueue = queue;
-  }
-
-  private createCacheBucket(cacheInterception = false): IBucket {
-    let _bucket: Bucket;
-    const { cdk } = this.props;
-    if (cdk?.cacheBucket && isCDKConstruct(cdk.cacheBucket)) {
-      _bucket = cdk.cacheBucket as Bucket;
-    } else {
-      const bucketProps = cdk?.cacheBucket as BucketProps;
-      _bucket = new Bucket(this, "CacheBucket", {
-        ...bucketProps,
-      });
-    }
-    const deployment = new BucketDeployment(this, "CacheBucketDeployment", {
-      sources: [
-        Source.asset(path.join(this.props.path, ".open-next", "cache")),
-      ],
-      destinationBucket: _bucket,
-    });
-
-    this.cdk?.function?.addEnvironment("CACHE_BUCKET_NAME", _bucket.bucketName);
-    this.cdk?.function?.addEnvironment("ORIGIN_REGION", Stack.of(this).region);
-    if (cacheInterception) {
-      this.cdk?.function?.addEnvironment(
-        "EXPERIMENTAL_CACHE_INTERCEPTION",
-        "true"
-      );
-    }
-    if (this.cdk?.function?.role) {
-      _bucket.grantReadWrite(this.cdk.function.role);
-    }
-
-    return deployment.deployedBucket;
+    this.createRevalidation();
   }
 
   protected createRevalidation() {
-    const queue = new Queue(this, "RevalidationQueue", {
-      fifo: true,
-    });
-    const revalidationFn = new CdkFunction(this, "RevalidationFunction", {
+    if (!this.serverLambdaForRegional && !this.serverLambdaForEdge) return;
+
+    const queue = new Queue(this, "RevalidationQueue", { fifo: true });
+    const consumer = new CdkFunction(this, "RevalidationFunction", {
+      description: "Next.js revalidator",
       handler: "index.handler",
       code: Code.fromAsset(
         path.join(this.props.path, ".open-next", "revalidation-function")
       ),
       runtime: Runtime.NODEJS_18_X,
       timeout: CdkDuration.seconds(30),
-      environment: {
-        HOST: this.cdk?.distribution?.domainName as string,
-      },
     });
-    revalidationFn.addEventSource(
-      new SqsEventSource(queue, {
-        batchSize: 5,
-      })
-    );
-    this.cdk?.function?.addEnvironment(
-      "REVALIDATION_QUEUE_URL",
-      queue.queueUrl
-    );
-    if (this.cdk?.function?.role) {
-      queue.grantSendMessages(this.cdk.function.role);
-    }
-    queue.grantConsumeMessages(revalidationFn);
-    return { revalidationFn, queue };
+    consumer.addEventSource(new SqsEventSource(queue, { batchSize: 5 }));
+
+    // Allow server to send messages to the queue
+    const server = this.serverLambdaForRegional || this.serverLambdaForEdge;
+    server?.addEnvironment("REVALIDATION_QUEUE_URL", queue.queueUrl);
+    server?.addEnvironment("REVALIDATION_QUEUE_REGION", Stack.of(this).region);
+    queue.grantSendMessages(server?.role!);
   }
 
   protected initBuildConfig() {
@@ -186,6 +125,9 @@ export class NextjsSite extends SsrSite {
       serverBuildOutputFile: ".open-next/server-function/index.mjs",
       clientBuildOutputDir: ".open-next/assets",
       clientBuildVersionedSubDir: "_next",
+      clientBuildS3KeyPrefix: "_assets",
+      prerenderedBuildOutputDir: ".open-next/cache",
+      prerenderedBuildS3KeyPrefix: "_cache",
     };
   }
 
@@ -208,7 +150,11 @@ export class NextjsSite extends SsrSite {
       memorySize,
       bind,
       permissions,
-      environment,
+      environment: {
+        ...environment,
+        CACHE_BUCKET_NAME: this.bucket.bucketName,
+        CACHE_BUCKET_KEY_PREFIX: "_cache",
+      },
       ...cdk?.server,
     });
     return ssrFn.function;
@@ -217,7 +163,7 @@ export class NextjsSite extends SsrSite {
   protected createFunctionForEdge(): EdgeFunction {
     const { runtime, timeout, memorySize, bind, permissions, environment } =
       this.props;
-    const edgeFn = new EdgeFunction(this, "ServerFunction", {
+    return new EdgeFunction(this, "ServerFunction", {
       bundle: path.join(this.props.path, ".open-next", "server-function"),
       handler: "index.handler",
       runtime,
@@ -225,9 +171,12 @@ export class NextjsSite extends SsrSite {
       memorySize,
       bind,
       permissions,
-      environment,
+      environment: {
+        ...environment,
+        CACHE_BUCKET_NAME: this.bucket.bucketName,
+        CACHE_BUCKET_KEY_PREFIX: "_cache",
+      },
     });
-    return edgeFn;
   }
 
   private createImageOptimizationFunction(): CdkFunction {
@@ -253,6 +202,7 @@ export class NextjsSite extends SsrSite {
       architecture: Architecture.ARM_64,
       environment: {
         BUCKET_NAME: this.cdk!.bucket.bucketName,
+        BUCKET_KEY_PREFIX: "_assets",
       },
       initialPolicy: [
         new PolicyStatement({
@@ -374,7 +324,9 @@ export class NextjsSite extends SsrSite {
 
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-    const s3Origin = new S3Origin(this.cdk!.bucket);
+    const s3Origin = new S3Origin(this.cdk!.bucket, {
+      originPath: "/" + this.buildConfig.clientBuildS3KeyPrefix,
+    });
     const serverFnUrl = this.serverLambdaForRegional!.addFunctionUrl({
       authType: FunctionUrlAuthType.NONE,
     });
@@ -421,7 +373,9 @@ export class NextjsSite extends SsrSite {
   protected createCloudFrontDistributionForEdge(): Distribution {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-    const s3Origin = new S3Origin(this.cdk!.bucket);
+    const s3Origin = new S3Origin(this.cdk!.bucket, {
+      originPath: "/" + this.buildConfig.clientBuildS3KeyPrefix,
+    });
     const cachePolicy =
       cdk?.serverCachePolicy ??
       this.buildServerCachePolicy([

@@ -595,9 +595,15 @@ interface ImportMeta {
       force: true,
       recursive: true,
     });
-    const cmd = ["node", script, siteOutputPath, zipPath, fileSizeLimit].join(
-      " "
-    );
+    const cmd = [
+      "node",
+      script,
+      Buffer.from(JSON.stringify([{ src: siteOutputPath, tar: "" }])).toString(
+        "base64"
+      ),
+      zipPath,
+      fileSizeLimit,
+    ].join(" ");
 
     try {
       execSync(cmd, {

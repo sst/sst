@@ -107,7 +107,9 @@ export type SsrBuildConfig = {
   serverCFFunctionInjection?: string;
   clientBuildOutputDir: string;
   clientBuildVersionedSubDir: string;
+  clientBuildS3KeyPrefix?: string;
   prerenderedBuildOutputDir?: string;
+  prerenderedBuildS3KeyPrefix?: string;
 };
 
 export interface SsrSiteNodeJSProps extends NodeJSProps {}
@@ -308,12 +310,12 @@ type SsrSiteNormalizedProps = SsrSiteProps & {
 export class SsrSite extends Construct implements SSTConstruct {
   public readonly id: string;
   protected props: SsrSiteNormalizedProps;
-  private doNotDeploy: boolean;
+  protected doNotDeploy: boolean;
   protected buildConfig: SsrBuildConfig;
   protected serverLambdaForEdge?: EdgeFunction;
   protected serverLambdaForRegional?: CdkFunction;
   private serverLambdaForDev?: CdkFunction;
-  private bucket: Bucket;
+  protected bucket: Bucket;
   private cfFunction: CfFunction;
   private distribution: Distribution;
   private hostedZone?: IHostedZone;
@@ -622,17 +624,28 @@ export class SsrSite extends Construct implements SSTConstruct {
       "node",
       [
         script,
-        [
-          path.join(this.props.path, this.buildConfig.clientBuildOutputDir),
-          ...(this.buildConfig.prerenderedBuildOutputDir
-            ? [
-                path.join(
-                  this.props.path,
-                  this.buildConfig.prerenderedBuildOutputDir
-                ),
-              ]
-            : []),
-        ].join(","),
+        Buffer.from(
+          JSON.stringify([
+            {
+              src: path.join(
+                this.props.path,
+                this.buildConfig.clientBuildOutputDir
+              ),
+              tar: this.buildConfig.clientBuildS3KeyPrefix || "",
+            },
+            ...(this.buildConfig.prerenderedBuildOutputDir
+              ? [
+                  {
+                    src: path.join(
+                      this.props.path,
+                      this.buildConfig.prerenderedBuildOutputDir
+                    ),
+                    tar: this.buildConfig.prerenderedBuildS3KeyPrefix || "",
+                  },
+                ]
+              : []),
+          ])
+        ).toString("base64"),
         zipOutDir,
         `${fileSizeLimit}`,
       ],
