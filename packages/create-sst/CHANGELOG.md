@@ -1,5 +1,13 @@
 # create-sst
 
+## 2.12.1
+
+### Patch Changes
+
+- [`e278f4714`](https://github.com/serverless-stack/sst/commit/e278f47148c6e12214cc3b8dadfd1af3eedea298) Thanks [@thdxr](https://github.com/thdxr)! - default sst project comes with events example
+
+- [`4c32bea82`](https://github.com/serverless-stack/sst/commit/4c32bea82b18849f8c2d9a66d466a031b843d56c) Thanks [@thdxr](https://github.com/thdxr)! - rename events -> event
+
 ## 2.12.0
 
 ## 2.11.18
