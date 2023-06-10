@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.12.2
+
+### Patch Changes
+
+- [`b5d360c68`](https://github.com/serverless-stack/sst/commit/b5d360c68bbc14357d67387672477465970ac3a3) Thanks [@thdxr](https://github.com/thdxr)! - eventbus: support multiple events in subscription
+
 ## 2.12.1
 
 ## 2.12.0
