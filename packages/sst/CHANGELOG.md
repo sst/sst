@@ -1,5 +1,17 @@
 # @serverless-stack/cli2
 
+## 2.13.0
+
+### Minor Changes
+
+- [#2965](https://github.com/serverless-stack/sst/pull/2965) [`83909ce36`](https://github.com/serverless-stack/sst/commit/83909ce367e6e247a9b25063624ecbbd13bc1260) Thanks [@michaelgmcd](https://github.com/michaelgmcd)! - Support Postgres 13.9
+
+### Patch Changes
+
+- [`4a5eb23e1`](https://github.com/serverless-stack/sst/commit/4a5eb23e117366672a10c4cb88458b914e713d12) Thanks [@thdxr](https://github.com/thdxr)! - remove sigterm trapping
+
+- [`bec587f0b`](https://github.com/serverless-stack/sst/commit/bec587f0bddb766248095414ee116f79e4d14ba2) Thanks [@thdxr](https://github.com/thdxr)! - eventbus: support subscribing to multiple events
+
 ## 2.12.2
 
 ### Patch Changes
