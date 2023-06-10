@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.13.1
+
+### Patch Changes
+
+- [`e77262351`](https://github.com/serverless-stack/sst/commit/e77262351f15fb31073d6b729345f4263bf678b8) Thanks [@thdxr](https://github.com/thdxr)! - eventbus: handle subscriber name too long
+
 ## 2.13.0
 
 ### Minor Changes
