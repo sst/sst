@@ -15,7 +15,7 @@
   "dependencies": {
     "@docusaurus/core": "2.0.0-beta.18",
     "@docusaurus/plugin-client-redirects": "2.0.0-beta.18",
-    "@docusaurus/plugin-google-analytics": "2.0.0-beta.18",
+    "@docusaurus/plugin-google-gtag": "^2.4.1",
     "@docusaurus/preset-classic": "2.0.0-beta.18",
     "@jridgewell/gen-mapping": "^0.3.2",
     "@mdx-js/react": "^1.6.21",
