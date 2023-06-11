@@ -30,6 +30,7 @@ export async function AuthKeys(cfnRequest: any) {
           new PutParameterCommand({
             Name: privatePath,
             Value: privateKey,
+            Overwrite: true,
             Type: "SecureString",
           })
         ),
@@ -38,6 +39,7 @@ export async function AuthKeys(cfnRequest: any) {
           new PutParameterCommand({
             Name: publicPath,
             Value: publicKey,
+            Overwrite: true,
             Type: "SecureString",
           })
         ),

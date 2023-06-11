@@ -72,11 +72,17 @@ export function AuthHandler<
   ) => Promise<
     ReturnType<(typeof onSuccessResponse)[keyof typeof onSuccessResponse]>
   >;
-  onError: () => Promise<APIGatewayProxyStructuredResultV2>;
+  onIndex?: (
+    event: APIGatewayProxyEventV2
+  ) => Promise<APIGatewayProxyStructuredResultV2>;
+  onError?: () => Promise<APIGatewayProxyStructuredResultV2>;
 }) {
   return ApiHandler(async (evt) => {
     const step = usePathParam("step");
     if (!step) {
+      if (input.onIndex) {
+        return input.onIndex(evt);
+      }
       const clients = await input.clients();
       return {
         statusCode: 200,
@@ -322,7 +328,11 @@ export function AuthHandler<
     }
 
     if (result.type === "error") {
-      return input.onError();
+      if (input.onError) return input.onError();
+      return {
+        statusCode: 400,
+        body: "an error has occured",
+      };
     }
   });
 }
