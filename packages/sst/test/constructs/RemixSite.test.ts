@@ -60,6 +60,7 @@ test("edge: undefined", async () => {
   });
   expect(site.url).toBeDefined();
   expect(site.customDomainUrl).toBeUndefined();
+  expect(site.cdk!.function?.role?.roleArn).toBeDefined();
   expect(site.cdk!.bucket.bucketArn).toBeDefined();
   expect(site.cdk!.bucket.bucketName).toBeDefined();
   expect(site.cdk!.distribution.distributionId).toBeDefined();
@@ -282,6 +283,7 @@ test("edge: true", async () => {
   });
   expect(site.url).toBeDefined();
   expect(site.customDomainUrl).toBeUndefined();
+  expect(site.cdk!.function?.role?.roleArn).toBeDefined();
   expect(site.cdk!.bucket.bucketArn).toBeDefined();
   expect(site.cdk!.bucket.bucketName).toBeDefined();
   expect(site.cdk!.distribution.distributionId).toBeDefined();

@@ -342,7 +342,7 @@ export class NextjsSite extends SsrSite {
         "next-router-state-tree",
       ]);
     const originRequestPolicy = this.buildServerOriginRequestPolicy();
-    const functionVersion = this.serverLambdaForEdge!.currentVersion;
+    const functionVersion = this.serverEdgeFunction!.currentVersion;
     const serverBehavior = this.buildServerBehaviorForEdge(
       functionVersion,
       s3Origin,

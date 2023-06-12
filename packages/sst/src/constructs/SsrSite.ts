@@ -310,7 +310,8 @@ export class SsrSite extends Construct implements SSTConstruct {
   protected props: SsrSiteNormalizedProps;
   private doNotDeploy: boolean;
   protected buildConfig: SsrBuildConfig;
-  protected serverLambdaForEdge?: EdgeFunction;
+  protected serverEdgeFunction?: EdgeFunction;
+  private serverLambdaForEdge?: CdkFunction;
   protected serverLambdaForRegional?: CdkFunction;
   private serverLambdaForDev?: CdkFunction;
   private bucket: Bucket;
@@ -359,7 +360,15 @@ export class SsrSite extends Construct implements SSTConstruct {
 
     // Create Server functions
     if (this.props.edge) {
-      this.serverLambdaForEdge = this.createFunctionForEdge();
+      this.serverEdgeFunction = this.createFunctionForEdge();
+      this.serverLambdaForEdge = CdkFunction.fromFunctionAttributes(
+        this,
+        "IEdgeFunction",
+        {
+          functionArn: this.serverEdgeFunction.functionArn,
+          role: this.serverEdgeFunction.role,
+        }
+      ) as CdkFunction;
       this.createFunctionPermissionsForEdge();
     } else {
       this.serverLambdaForRegional = this.createFunctionForRegional();
@@ -432,7 +441,7 @@ export class SsrSite extends Construct implements SSTConstruct {
     if (this.doNotDeploy) return;
 
     return {
-      function: this.serverLambdaForRegional,
+      function: this.serverLambdaForEdge || this.serverLambdaForRegional,
       bucket: this.bucket,
       distribution: this.distribution,
       hostedZone: this.hostedZone,
@@ -454,19 +463,11 @@ export class SsrSite extends Construct implements SSTConstruct {
    * ```
    */
   public attachPermissions(permissions: Permissions): void {
-    this.serverLambdaForEdge?.attachPermissions(permissions);
-    if (this.serverLambdaForDev) {
-      attachPermissionsToRole(
-        this.serverLambdaForDev.role as Role,
-        permissions
-      );
-    }
-    if (this.serverLambdaForRegional) {
-      attachPermissionsToRole(
-        this.serverLambdaForRegional.role as Role,
-        permissions
-      );
-    }
+    const server =
+      this.serverLambdaForEdge ||
+      this.serverLambdaForRegional ||
+      this.serverLambdaForDev;
+    attachPermissionsToRole(server?.role as Role, permissions);
   }
 
   /** @internal */
@@ -821,7 +822,7 @@ export class SsrSite extends Construct implements SSTConstruct {
   }
 
   private createFunctionPermissionsForEdge() {
-    this.bucket.grantReadWrite(this.serverLambdaForEdge!.role);
+    this.bucket.grantReadWrite(this.serverLambdaForEdge!.role!);
   }
 
   /////////////////////
@@ -963,7 +964,7 @@ function handler(event) {
         {
           includeBody: true,
           eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
-          functionVersion: this.serverLambdaForEdge!.currentVersion,
+          functionVersion: this.serverEdgeFunction!.currentVersion,
         },
         ...(cfDistributionProps.defaultBehavior?.edgeLambdas || []),
       ],
