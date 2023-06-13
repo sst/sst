@@ -85,7 +85,7 @@ import {
 import { HttpsRedirect } from "./cdk/website-redirect.js";
 import { DnsValidatedCertificate } from "./cdk/dns-validated-certificate.js";
 import { Size } from "./util/size.js";
-import { Duration } from "./util/duration.js";
+import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import {
   FunctionBindingProps,
@@ -339,6 +339,7 @@ export class SsrSite extends Construct implements SSTConstruct {
 
     this.buildConfig = this.initBuildConfig();
     this.validateSiteExists();
+    this.validateTimeout();
     this.writeTypesFile();
 
     useSites().add(id, this.constructor.name as SsrSiteType, this.props);
@@ -918,7 +919,7 @@ function handler(event) {
   }
 
   protected buildDefaultBehaviorForRegional(): BehaviorOptions {
-    const { cdk } = this.props;
+    const { timeout, cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
 
     const fnUrl = this.serverLambdaForRegional!.addFunctionUrl({
@@ -927,7 +928,12 @@ function handler(event) {
 
     return {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      origin: new HttpOrigin(Fn.parseDomainName(fnUrl.url)),
+      origin: new HttpOrigin(Fn.parseDomainName(fnUrl.url), {
+        readTimeout:
+          typeof timeout === "string"
+            ? toCdkDuration(timeout)
+            : CdkDuration.seconds(timeout),
+      }),
       allowedMethods: AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
@@ -1250,6 +1256,22 @@ function handler(event) {
     const { path: sitePath } = this.props;
     if (!fs.existsSync(sitePath)) {
       throw new Error(`No site found at "${path.resolve(sitePath)}"`);
+    }
+  }
+
+  private validateTimeout() {
+    const { edge, timeout } = this.props;
+    const num =
+      typeof timeout === "number"
+        ? timeout
+        : toCdkDuration(timeout).toSeconds();
+    const limit = edge ? 30 : 180;
+    if (num > limit) {
+      throw new Error(
+        edge
+          ? `Timeout must be less than or equal to 30 seconds when the "edge" flag is enabled.`
+          : `Timeout must be less than or equal to 180 seconds.`
+      );
     }
   }
 

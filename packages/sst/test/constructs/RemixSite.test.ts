@@ -441,7 +441,6 @@ test("edge: true: environment generates placeholders", async () => {
   });
   await app.finish();
 
-  printResource(stack, "Custom::AssetReplacer");
   countResourcesLike(stack, "Custom::AssetReplacer", 1, {
     replacements: [
       {
@@ -879,6 +878,69 @@ test("customDomain: isExternalDomain true and hostedZone set", async () => {
   );
 });
 
+test("timeout undefined", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new RemixSite(stack, "Site", {
+    path: sitePath,
+    // @ts-expect-error: "sstTest" is not exposed in props
+    sstTest: true,
+  });
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      Origins: arrayWith([
+        objectLike({
+          CustomOriginConfig: objectLike({
+            OriginReadTimeout: 10,
+          }),
+        }),
+      ]),
+    }),
+  });
+});
+test("timeout defined", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new RemixSite(stack, "Site", {
+    path: sitePath,
+    // @ts-expect-error: "sstTest" is not exposed in props
+    sstTest: true,
+    timeout: 100,
+  });
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      Origins: arrayWith([
+        objectLike({
+          CustomOriginConfig: objectLike({
+            OriginReadTimeout: 100,
+          }),
+        }),
+      ]),
+    }),
+  });
+});
+test("timeout too alrge for regional", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  expect(() => {
+    new RemixSite(stack, "Site", {
+      path: sitePath,
+      // @ts-expect-error: "sstTest" is not exposed in props
+      sstTest: true,
+      timeout: 1000,
+    });
+  }).toThrow(/Timeout must be less than or equal to 180 seconds/);
+});
+test("timeout too alrge for edge", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  expect(() => {
+    new RemixSite(stack, "Site", {
+      path: sitePath,
+      // @ts-expect-error: "sstTest" is not exposed in props
+      sstTest: true,
+      edge: true,
+      timeout: 1000,
+    });
+  }).toThrow(/Timeout must be less than or equal to 30 seconds/);
+});
+
 test("constructor: path not exist", async () => {
   const stack = new Stack(await createApp(), "stack");
   expect(() => {
@@ -1096,7 +1158,6 @@ test("constructor: cdk.distribution.defaultBehavior no functionAssociations", as
   new RemixSite(stack, "Site", {
     path: sitePath,
   });
-  printResource(stack, "AWS::CloudFront::Distribution");
   hasResource(stack, "AWS::CloudFront::Distribution", {
     DistributionConfig: objectLike({
       DefaultCacheBehavior: objectLike({
@@ -1110,6 +1171,7 @@ test("constructor: cdk.distribution.defaultBehavior no functionAssociations", as
     }),
   });
 });
+
 test("constructor: cdk.distribution.defaultBehavior additional functionAssociations", async () => {
   const stack = new Stack(await createApp(), "stack");
   new RemixSite(stack, "Site", {
@@ -1129,7 +1191,6 @@ test("constructor: cdk.distribution.defaultBehavior additional functionAssociati
       },
     },
   });
-  printResource(stack, "AWS::CloudFront::Distribution");
   hasResource(stack, "AWS::CloudFront::Distribution", {
     DistributionConfig: objectLike({
       DefaultCacheBehavior: objectLike({

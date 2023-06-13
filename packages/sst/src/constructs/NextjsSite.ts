@@ -40,6 +40,7 @@ import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 import { SsrSite, SsrSiteProps } from "./SsrSite.js";
 import { Size, toCdkSize } from "./util/size.js";
+import { toCdkDuration } from "./util/duration.js";
 
 export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   imageOptimization?: {
@@ -283,13 +284,18 @@ export class NextjsSite extends SsrSite {
      *    - x-vercel-cache: MISS
      */
 
-    const { cdk } = this.props;
+    const { timeout, cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
     const s3Origin = new S3Origin(this.cdk!.bucket);
     const serverFnUrl = this.serverLambdaForRegional!.addFunctionUrl({
       authType: FunctionUrlAuthType.NONE,
     });
-    const serverOrigin = new HttpOrigin(Fn.parseDomainName(serverFnUrl.url));
+    const serverOrigin = new HttpOrigin(Fn.parseDomainName(serverFnUrl.url), {
+      readTimeout:
+        typeof timeout === "string"
+          ? toCdkDuration(timeout)
+          : CdkDuration.seconds(timeout),
+    });
     const cachePolicy =
       cdk?.serverCachePolicy ??
       this.buildServerCachePolicy([
