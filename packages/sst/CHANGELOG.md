@@ -1,5 +1,15 @@
 # @serverless-stack/cli2
 
+## 2.13.2
+
+### Patch Changes
+
+- [`80bb4f089`](https://github.com/serverless-stack/sst/commit/80bb4f089d0c071ae072be595e531229eaaa04f2) Thanks [@fwang](https://github.com/fwang)! - SsrSite: CloudFront origin timeout respect server lambda timeout
+
+- [`67ee41566`](https://github.com/serverless-stack/sst/commit/67ee4156662325121f4afeaf42dce07ba6ba28c3) Thanks [@fwang](https://github.com/fwang)! - SsrSite: expose cdk.function for edge mode
+
+- [`6dd69d9c7`](https://github.com/serverless-stack/sst/commit/6dd69d9c74a6941dc64fd1c21fd2064f0869eeb9) Thanks [@thdxr](https://github.com/thdxr)! - auth: allow customizing index page
+
 ## 2.13.1
 
 ### Patch Changes
