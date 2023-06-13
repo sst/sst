@@ -2,8 +2,10 @@ import path from "path";
 import url from "url";
 import { Construct } from "constructs";
 import { CustomResource, Duration } from "aws-cdk-lib/core";
-import * as lambda from "aws-cdk-lib/aws-lambda";
+import { PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { Code, Runtime, Function as CdkFunction } from "aws-cdk-lib/aws-lambda";
 import { App } from "./App.js";
+import { Stack } from "./Stack.js";
 import {
   Function as Fn,
   FunctionProps,
@@ -238,15 +240,19 @@ export class Script extends Construct {
     );
   }
 
-  private createCustomResourceFunction(): lambda.Function {
-    const handler = new lambda.Function(this, "ScriptHandler", {
-      code: lambda.Code.fromAsset(
-        path.join(__dirname, "../support/script-function")
-      ),
-      runtime: lambda.Runtime.NODEJS_16_X,
+  private createCustomResourceFunction(): CdkFunction {
+    const handler = new CdkFunction(this, "ScriptHandler", {
+      code: Code.fromAsset(path.join(__dirname, "../support/script-function")),
+      runtime: Runtime.NODEJS_16_X,
       handler: "index.handler",
       timeout: Duration.minutes(15),
       memorySize: 1024,
+      initialPolicy: [
+        new PolicyStatement({
+          actions: ["cloudformation:DescribeStacks"],
+          resources: [Stack.of(this).stackId],
+        }),
+      ],
     });
     this.createFunction?.grantInvoke(handler);
     this.updateFunction?.grantInvoke(handler);
@@ -255,7 +261,7 @@ export class Script extends Construct {
     return handler;
   }
 
-  private createCustomResource(app: App, crFunction: lambda.Function): void {
+  private createCustomResource(app: App, crFunction: CdkFunction): void {
     // Note: "Version" is set to current timestamp to ensure the Custom
     //       Resource function is run on every update.
     //
