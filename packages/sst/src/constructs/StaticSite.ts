@@ -888,6 +888,9 @@ interface ImportMeta {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       functionAssociations: [
         {
+          // Note: this is required in Frameworks like Astro where `index.html`
+          //       is required in the URL path.
+          //       https://docs.astro.build/en/guides/deploy/aws/#cloudfront-functions-setup
           function: new CfFunction(this, "CloudFrontFunction", {
             code: CfFunctionCode.fromInline(`
 function handler(event) {
