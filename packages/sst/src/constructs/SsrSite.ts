@@ -85,7 +85,7 @@ import {
 import { HttpsRedirect } from "./cdk/website-redirect.js";
 import { DnsValidatedCertificate } from "./cdk/dns-validated-certificate.js";
 import { Size } from "./util/size.js";
-import { Duration } from "./util/duration.js";
+import { Duration, toCdkDuration } from "./util/duration.js";
 import { Permissions, attachPermissionsToRole } from "./util/permission.js";
 import {
   FunctionBindingProps,
@@ -312,7 +312,8 @@ export class SsrSite extends Construct implements SSTConstruct {
   protected props: SsrSiteNormalizedProps;
   protected doNotDeploy: boolean;
   protected buildConfig: SsrBuildConfig;
-  protected serverLambdaForEdge?: EdgeFunction;
+  protected serverEdgeFunction?: EdgeFunction;
+  private serverLambdaForEdge?: CdkFunction;
   protected serverLambdaForRegional?: CdkFunction;
   private serverLambdaForDev?: CdkFunction;
   protected bucket: Bucket;
@@ -340,6 +341,7 @@ export class SsrSite extends Construct implements SSTConstruct {
 
     this.buildConfig = this.initBuildConfig();
     this.validateSiteExists();
+    this.validateTimeout();
     this.writeTypesFile();
 
     useSites().add(id, this.constructor.name as SsrSiteType, this.props);
@@ -361,7 +363,15 @@ export class SsrSite extends Construct implements SSTConstruct {
 
     // Create Server functions
     if (this.props.edge) {
-      this.serverLambdaForEdge = this.createFunctionForEdge();
+      this.serverEdgeFunction = this.createFunctionForEdge();
+      this.serverLambdaForEdge = CdkFunction.fromFunctionAttributes(
+        this,
+        "IEdgeFunction",
+        {
+          functionArn: this.serverEdgeFunction.functionArn,
+          role: this.serverEdgeFunction.role,
+        }
+      ) as CdkFunction;
       this.createFunctionPermissionsForEdge();
     } else {
       this.serverLambdaForRegional = this.createFunctionForRegional();
@@ -434,7 +444,7 @@ export class SsrSite extends Construct implements SSTConstruct {
     if (this.doNotDeploy) return;
 
     return {
-      function: this.serverLambdaForRegional,
+      function: this.serverLambdaForEdge || this.serverLambdaForRegional,
       bucket: this.bucket,
       distribution: this.distribution,
       hostedZone: this.hostedZone,
@@ -456,19 +466,11 @@ export class SsrSite extends Construct implements SSTConstruct {
    * ```
    */
   public attachPermissions(permissions: Permissions): void {
-    this.serverLambdaForEdge?.attachPermissions(permissions);
-    if (this.serverLambdaForDev) {
-      attachPermissionsToRole(
-        this.serverLambdaForDev.role as Role,
-        permissions
-      );
-    }
-    if (this.serverLambdaForRegional) {
-      attachPermissionsToRole(
-        this.serverLambdaForRegional.role as Role,
-        permissions
-      );
-    }
+    const server =
+      this.serverLambdaForEdge ||
+      this.serverLambdaForRegional ||
+      this.serverLambdaForDev;
+    attachPermissionsToRole(server?.role as Role, permissions);
   }
 
   /** @internal */
@@ -834,7 +836,7 @@ export class SsrSite extends Construct implements SSTConstruct {
   }
 
   private createFunctionPermissionsForEdge() {
-    this.bucket.grantReadWrite(this.serverLambdaForEdge!.role);
+    this.bucket.grantReadWrite(this.serverLambdaForEdge!.role!);
   }
 
   /////////////////////
@@ -930,7 +932,7 @@ function handler(event) {
   }
 
   protected buildDefaultBehaviorForRegional(): BehaviorOptions {
-    const { cdk } = this.props;
+    const { timeout, cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
 
     const fnUrl = this.serverLambdaForRegional!.addFunctionUrl({
@@ -939,7 +941,12 @@ function handler(event) {
 
     return {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      origin: new HttpOrigin(Fn.parseDomainName(fnUrl.url)),
+      origin: new HttpOrigin(Fn.parseDomainName(fnUrl.url), {
+        readTimeout:
+          typeof timeout === "string"
+            ? toCdkDuration(timeout)
+            : CdkDuration.seconds(timeout),
+      }),
       allowedMethods: AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
@@ -976,7 +983,7 @@ function handler(event) {
         {
           includeBody: true,
           eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
-          functionVersion: this.serverLambdaForEdge!.currentVersion,
+          functionVersion: this.serverEdgeFunction!.currentVersion,
         },
         ...(cfDistributionProps.defaultBehavior?.edgeLambdas || []),
       ],
@@ -1262,6 +1269,22 @@ function handler(event) {
     const { path: sitePath } = this.props;
     if (!fs.existsSync(sitePath)) {
       throw new Error(`No site found at "${path.resolve(sitePath)}"`);
+    }
+  }
+
+  private validateTimeout() {
+    const { edge, timeout } = this.props;
+    const num =
+      typeof timeout === "number"
+        ? timeout
+        : toCdkDuration(timeout).toSeconds();
+    const limit = edge ? 30 : 180;
+    if (num > limit) {
+      throw new Error(
+        edge
+          ? `Timeout must be less than or equal to 30 seconds when the "edge" flag is enabled.`
+          : `Timeout must be less than or equal to 180 seconds.`
+      );
     }
   }
 

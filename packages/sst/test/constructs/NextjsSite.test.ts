@@ -26,13 +26,13 @@ beforeAll(async () => {
   //   return;
   // }
 
-  // Install Remix app dependencies
+  // Install Next.js app dependencies
   execSync("npm install", {
     cwd: sitePath,
     stdio: "inherit",
   });
-  // Build Remix app
-  execSync("npx open-next@latest build", {
+  // Build Next.js app
+  execSync("npx --yes open-next@latest build", {
     cwd: sitePath,
     stdio: "inherit",
   });
@@ -66,10 +66,31 @@ test("default", async () => {
   });
 });
 
+test("timeout defined", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new NextjsSite(stack, "Site", {
+    path: sitePath,
+    buildCommand: "echo skip",
+    timeout: 100,
+  });
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      Origins: arrayWith([
+        objectLike({
+          CustomOriginConfig: objectLike({
+            OriginReadTimeout: 100,
+          }),
+        }),
+      ]),
+    }),
+  });
+});
+
 test("cdk.distribution.defaultBehavior", async () => {
   const stack = new Stack(await createApp(), "stack");
-  const site = new NextjsSite(stack, "Site", {
+  new NextjsSite(stack, "Site", {
     path: sitePath,
+    buildCommand: "echo skip",
     cdk: {
       distribution: {
         defaultBehavior: {

@@ -19,12 +19,12 @@ _Parameters_
 
 _Type_ : <span class="mono">boolean</span>
 
-Block public access to this bucket. Setting this to 
+Prevent any files from being uploaded with public access configured. Setting this to 
 `true`
- alllows uploading objects with public ACLs.
+ prevents uploading objects with public ACLs.
 Note that setting to 
-`true`
- does not necessarily mean that the bucket is completely accessible to the public. Rather, it enables the granting of public permissions through public ACLs.
+`false`
+ does not necessarily mean that the bucket is completely accessible to the public. Rather, it enables the granting of public permissions on a per file basis.
 ```js
 new Bucket(stack, "Bucket", {
   blockPublicACLs: true,

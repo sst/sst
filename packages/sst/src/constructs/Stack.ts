@@ -9,6 +9,7 @@ import {
   CfnOutput,
   Duration as CDKDuration,
   DefaultStackSynthesizer,
+  DefaultStackSynthesizerProps,
 } from "aws-cdk-lib/core";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 
@@ -241,15 +242,8 @@ export class Stack extends CDKStack {
   }
 
   private static buildSynthesizer() {
-    const config = useProject().config;
-    const customSynethesizerKeys = Object.keys(config.cdk || {}).filter((key) =>
-      key.startsWith("qualifier")
-    );
-    if (customSynethesizerKeys.length === 0) {
-      return;
-    }
-
-    return new DefaultStackSynthesizer({
+    const { config } = useProject();
+    const props: DefaultStackSynthesizerProps = {
       qualifier: config.cdk?.qualifier,
       fileAssetsBucketName: config.cdk?.fileAssetsBucketName,
       deployRoleArn: config.cdk?.deployRoleArn,
@@ -257,7 +251,12 @@ export class Stack extends CDKStack {
       imageAssetPublishingRoleArn: config.cdk?.imageAssetPublishingRoleArn,
       cloudFormationExecutionRole: config.cdk?.cloudFormationExecutionRole,
       lookupRoleArn: config.cdk?.lookupRoleArn,
-    });
+    };
+
+    const isEmpty = Object.values(props).every((v) => v === undefined);
+    if (isEmpty) return;
+
+    return new DefaultStackSynthesizer(props);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
