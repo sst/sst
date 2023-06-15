@@ -58,17 +58,34 @@ export function CodeAdapter(config: {
     }
 
     if (step === "callback") {
+      const error = new URL(useQueryParam("error") || "");
+      const qp = new URLSearchParams(error.search);
+      qp.set("error", "invalid_code");
+      error.search = qp.toString();
+
       const code = decrypt(useCookie("sst_code")!);
       const claims = decrypt(useCookie("sst_claims")!);
       if (!code || !claims) {
         return {
-          type: "error",
+          type: "step",
+          properties: {
+            statusCode: 302,
+            headers: {
+              location: error.toString(),
+            },
+          },
         };
       }
       const compare = useQueryParam("code");
       if (code !== compare) {
         return {
-          type: "error",
+          type: "step",
+          properties: {
+            statusCode: 302,
+            headers: {
+              location: error.toString(),
+            },
+          },
         };
       }
       useResponse().cookies(
