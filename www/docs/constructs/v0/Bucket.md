@@ -232,6 +232,7 @@ const myQueue = new Queue(this, "MyQueue");
 new Bucket(this, "Bucket", {
   notifications: [
     {
+      type: 'queue',
       queue: myQueue,
       notificationProps: {
         events: [EventType.OBJECT_CREATED_PUT],
