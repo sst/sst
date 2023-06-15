@@ -11,7 +11,11 @@ import {
   FunctionProps,
   FunctionDefinition,
 } from "./Function.js";
-import { SSTConstruct } from "./Construct.js";
+import {
+  SSTConstruct,
+  SSTConstructMetadata,
+  getFunctionRef,
+} from "./Construct.js";
 import { Permissions } from "./util/permission.js";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -117,7 +121,7 @@ export interface ScriptProps {
  * });
  * ```
  */
-export class Script extends Construct {
+export class Script extends Construct implements SSTConstruct {
   /**
    * The internally created onCreate `Function` instance.
    */
@@ -131,9 +135,11 @@ export class Script extends Construct {
    */
   public readonly deleteFunction?: Fn;
   protected readonly props: ScriptProps;
+  public readonly id: string;
 
   constructor(scope: Construct, id: string, props: ScriptProps) {
     super(scope, id);
+    this.id = id;
     if ((props as any).function) this.checkDeprecatedFunction();
 
     // Validate deprecated "function" prop
@@ -291,5 +297,22 @@ export class Script extends Construct {
     throw new Error(
       `The "function" property has been replaced by "onCreate" and "onUpdate". More details on upgrading - https://docs.sst.dev/constructs/Script#upgrading-to-v0460`
     );
+  }
+
+  /** @internal */
+  public getConstructMetadata() {
+    return {
+      type: "Script" as const,
+      data: {
+        createfn: getFunctionRef(this.createFunction),
+        deletefn: getFunctionRef(this.deleteFunction),
+        updatefn: getFunctionRef(this.updateFunction),
+      },
+    };
+  }
+
+  /** @internal */
+  public getFunctionBinding() {
+    return undefined;
   }
 }

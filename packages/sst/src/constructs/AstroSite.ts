@@ -96,4 +96,11 @@ export class AstroSite extends SsrSite {
       },
     });
   }
+
+  public getConstructMetadata() {
+    return {
+      type: "AstroSite" as const,
+      ...this.getConstructMetadataBase(),
+    };
+  }
 }

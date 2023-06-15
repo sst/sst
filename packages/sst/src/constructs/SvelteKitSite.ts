@@ -147,4 +147,11 @@ export class SvelteKitSite extends SsrSite {
     const content = fs.readFileSync(filePath).toString();
     return JSON.parse(content).version;
   }
+
+  public getConstructMetadata() {
+    return {
+      type: "SvelteKitSite" as const,
+      ...this.getConstructMetadataBase(),
+    };
+  }
 }

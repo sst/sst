@@ -41,6 +41,7 @@ import { EdgeFunction } from "./EdgeFunction.js";
 import { SsrSite, SsrSiteProps } from "./SsrSite.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { toCdkDuration } from "./util/duration.js";
+import { SSTConstructMetadata } from "./Construct.js";
 
 export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   imageOptimization?: {
@@ -519,5 +520,12 @@ export class NextjsSite extends SsrSite {
   protected generateBuildId(): string {
     const filePath = path.join(this.props.path, ".next/BUILD_ID");
     return fs.readFileSync(filePath).toString();
+  }
+
+  public getConstructMetadata() {
+    return {
+      type: "NextjsSite" as const,
+      ...this.getConstructMetadataBase(),
+    };
   }
 }
