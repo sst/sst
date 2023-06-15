@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.13.4
+
+### Patch Changes
+
+- [`4f196437a`](https://github.com/serverless-stack/sst/commit/4f196437a2b123174b812f48c8f2e5ea46fbaae9) Thanks [@thdxr](https://github.com/thdxr)! - site: include url in site metadata
+
 ## 2.13.3
 
 ### Patch Changes
