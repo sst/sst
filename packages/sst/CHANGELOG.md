@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.13.5
+
+### Patch Changes
+
+- [`a05a1359d`](https://github.com/serverless-stack/sst/commit/a05a1359db965e555d639bda18a607f2a7924c41) Thanks [@thdxr](https://github.com/thdxr)! - StaticSite: include url in metadata
+
 ## 2.13.4
 
 ### Patch Changes
