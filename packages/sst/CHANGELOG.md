@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.13.6
+
+### Patch Changes
+
+- [`468f35520`](https://github.com/serverless-stack/sst/commit/468f355204b17f740bc0c92abb926a9be33e2aea) Thanks [@thdxr](https://github.com/thdxr)! - auth: code adapter handles invalid
+
 ## 2.13.5
 
 ### Patch Changes
