@@ -313,7 +313,7 @@ export class SsrSite extends Construct implements SSTConstruct {
   protected doNotDeploy: boolean;
   protected buildConfig: SsrBuildConfig;
   protected serverEdgeFunction?: EdgeFunction;
-  private serverLambdaForEdge?: CdkFunction;
+  protected serverLambdaForEdge?: CdkFunction;
   protected serverLambdaForRegional?: CdkFunction;
   private serverLambdaForDev?: CdkFunction;
   protected bucket: Bucket;
@@ -372,11 +372,10 @@ export class SsrSite extends Construct implements SSTConstruct {
           role: this.serverEdgeFunction.role,
         }
       ) as CdkFunction;
-      this.createFunctionPermissionsForEdge();
     } else {
       this.serverLambdaForRegional = this.createFunctionForRegional();
-      this.createFunctionPermissionsForRegional();
     }
+    this.updateServerFunctionPermissions();
 
     // Create Custom Domain
     this.validateCustomDomainSettings();
@@ -831,12 +830,9 @@ export class SsrSite extends Construct implements SSTConstruct {
     return ssrFn.function;
   }
 
-  private createFunctionPermissionsForRegional() {
-    this.bucket.grantReadWrite(this.serverLambdaForRegional!.role!);
-  }
-
-  private createFunctionPermissionsForEdge() {
-    this.bucket.grantReadWrite(this.serverLambdaForEdge!.role!);
+  private updateServerFunctionPermissions() {
+    const server = this.serverLambdaForEdge || this.serverLambdaForRegional;
+    this.bucket.grantReadWrite(server!.role!);
   }
 
   /////////////////////
