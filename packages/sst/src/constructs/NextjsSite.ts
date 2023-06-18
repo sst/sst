@@ -101,7 +101,10 @@ export class NextjsSite extends SsrSite {
   protected createRevalidation() {
     if (!this.serverLambdaForRegional && !this.serverLambdaForEdge) return;
 
-    const queue = new Queue(this, "RevalidationQueue", { fifo: true });
+    const queue = new Queue(this, "RevalidationQueue", {
+      fifo: true,
+      receiveMessageWaitTime: CdkDuration.seconds(20),
+    });
     const consumer = new CdkFunction(this, "RevalidationFunction", {
       description: "Next.js revalidator",
       handler: "index.handler",
