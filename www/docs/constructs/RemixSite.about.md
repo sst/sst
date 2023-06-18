@@ -64,7 +64,7 @@ The `RemixSite` construct is a higher level CDK construct that makes it easy to 
    If you followed the `Developer Blog` or `Jokes App` tutorials on Remix's doc, it's likely you are using SQLite for database. SQLite databases cannot be deployed to a serverless environment. It is often used for local storage, and not recommended for modern web apps. It is recommended to use [PostgreSQL](../constructs/RDS.md), [DynamoDB](../constructs/Table.md), or one of third party services like MongoDB for your database.
    :::
 
-3. Go into your Remix app, and add the `sst bind` command to your Remix application's `package.json`. `sst env` enables you to [automatically set the environment variables](#environment-variables) for your Remix app directly from the outputs in your SST app.
+3. Go into your Remix app, and add the `sst bind` command to your Remix application's `package.json`. `sst bind` enables you to [automatically set the environment variables](#environment-variables) for your Remix app directly from the outputs in your SST app.
 
    Update the package.json scripts for your Remix application.
 
