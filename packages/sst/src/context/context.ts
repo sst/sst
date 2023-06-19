@@ -38,6 +38,9 @@ function create<C>(cb?: (() => C) | string, name?: string) {
       if (last) result!.dependants.add(last);
       return result!.value as C;
     },
+    reset() {
+      resetDependencies(id);
+    },
     provide(value: C) {
       // If a new request has started, automatically clear all contexts
       const requestID = (global as any)[
