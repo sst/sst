@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.13.8
+
+### Patch Changes
+
+- [`4b2a95621`](https://github.com/serverless-stack/sst/commit/4b2a95621b86b06e49668ad79b9912c5640b4f97) Thanks [@thdxr](https://github.com/thdxr)! - context: reset should reset itself as well
+
 ## 2.13.7
 
 ### Patch Changes
