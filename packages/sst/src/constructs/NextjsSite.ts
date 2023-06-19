@@ -35,6 +35,8 @@ import {
 } from "aws-cdk-lib/aws-cloudfront-origins";
 import { Rule, Schedule } from "aws-cdk-lib/aws-events";
 import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
+import { Queue } from "aws-cdk-lib/aws-sqs";
+import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { Stack } from "./Stack.js";
 import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
@@ -87,11 +89,39 @@ export class NextjsSite extends SsrSite {
 
   constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
     super(scope, id, {
-      buildCommand: "npx --yes open-next@1.4.0 build",
+      buildCommand: "npx --yes open-next@2.0.0 build",
       ...props,
     });
 
+    if (this.doNotDeploy) return;
+
     this.createWarmer();
+    this.createRevalidation();
+  }
+
+  protected createRevalidation() {
+    if (!this.serverLambdaForRegional && !this.serverLambdaForEdge) return;
+
+    const queue = new Queue(this, "RevalidationQueue", {
+      fifo: true,
+      receiveMessageWaitTime: CdkDuration.seconds(20),
+    });
+    const consumer = new CdkFunction(this, "RevalidationFunction", {
+      description: "Next.js revalidator",
+      handler: "index.handler",
+      code: Code.fromAsset(
+        path.join(this.props.path, ".open-next", "revalidation-function")
+      ),
+      runtime: Runtime.NODEJS_18_X,
+      timeout: CdkDuration.seconds(30),
+    });
+    consumer.addEventSource(new SqsEventSource(queue, { batchSize: 5 }));
+
+    // Allow server to send messages to the queue
+    const server = this.serverLambdaForRegional || this.serverLambdaForEdge;
+    server?.addEnvironment("REVALIDATION_QUEUE_URL", queue.queueUrl);
+    server?.addEnvironment("REVALIDATION_QUEUE_REGION", Stack.of(this).region);
+    queue.grantSendMessages(server?.role!);
   }
 
   protected initBuildConfig() {
@@ -100,6 +130,9 @@ export class NextjsSite extends SsrSite {
       serverBuildOutputFile: ".open-next/server-function/index.mjs",
       clientBuildOutputDir: ".open-next/assets",
       clientBuildVersionedSubDir: "_next",
+      clientBuildS3KeyPrefix: "_assets",
+      prerenderedBuildOutputDir: ".open-next/cache",
+      prerenderedBuildS3KeyPrefix: "_cache",
     };
   }
 
@@ -122,7 +155,12 @@ export class NextjsSite extends SsrSite {
       memorySize,
       bind,
       permissions,
-      environment,
+      environment: {
+        ...environment,
+        CACHE_BUCKET_NAME: this.bucket.bucketName,
+        CACHE_BUCKET_KEY_PREFIX: "_cache",
+        CACHE_BUCKET_REGION: Stack.of(this).region,
+      },
       ...cdk?.server,
     });
     return ssrFn.function;
@@ -139,7 +177,12 @@ export class NextjsSite extends SsrSite {
       memorySize,
       bind,
       permissions,
-      environment,
+      environment: {
+        ...environment,
+        CACHE_BUCKET_NAME: this.bucket.bucketName,
+        CACHE_BUCKET_KEY_PREFIX: "_cache",
+        CACHE_BUCKET_REGION: Stack.of(this).region,
+      },
     });
   }
 
@@ -166,6 +209,7 @@ export class NextjsSite extends SsrSite {
       architecture: Architecture.ARM_64,
       environment: {
         BUCKET_NAME: this.cdk!.bucket.bucketName,
+        BUCKET_KEY_PREFIX: "_assets",
       },
       initialPolicy: [
         new PolicyStatement({
@@ -287,7 +331,9 @@ export class NextjsSite extends SsrSite {
 
     const { timeout, cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-    const s3Origin = new S3Origin(this.cdk!.bucket);
+    const s3Origin = new S3Origin(this.cdk!.bucket, {
+      originPath: "/" + this.buildConfig.clientBuildS3KeyPrefix,
+    });
     const serverFnUrl = this.serverLambdaForRegional!.addFunctionUrl({
       authType: FunctionUrlAuthType.NONE,
     });
@@ -339,7 +385,9 @@ export class NextjsSite extends SsrSite {
   protected createCloudFrontDistributionForEdge(): Distribution {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-    const s3Origin = new S3Origin(this.cdk!.bucket);
+    const s3Origin = new S3Origin(this.cdk!.bucket, {
+      originPath: "/" + this.buildConfig.clientBuildS3KeyPrefix,
+    });
     const cachePolicy =
       cdk?.serverCachePolicy ??
       this.buildServerCachePolicy([
@@ -349,7 +397,7 @@ export class NextjsSite extends SsrSite {
         "next-router-state-tree",
       ]);
     const originRequestPolicy = this.buildServerOriginRequestPolicy();
-    const functionVersion = this.serverEdgeFunction!.currentVersion;
+    const functionVersion = this.serverLambdaForEdge!.currentVersion;
     const serverBehavior = this.buildServerBehaviorForEdge(
       functionVersion,
       s3Origin,
