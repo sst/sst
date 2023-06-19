@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.13.9
+
+### Patch Changes
+
+- [`bd83933d6`](https://github.com/serverless-stack/sst/commit/bd83933d697dc21209ed2fbfa86e08484c61d2c5) Thanks [@thdxr](https://github.com/thdxr)! - metadata: include script, job and auth metadata
+
 ## 2.13.8
 
 ### Patch Changes
