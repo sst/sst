@@ -158,6 +158,7 @@ export class NextjsSite extends SsrSite {
         ...environment,
         CACHE_BUCKET_NAME: this.bucket.bucketName,
         CACHE_BUCKET_KEY_PREFIX: "_cache",
+        CACHE_BUCKET_REGION: Stack.of(this).region,
       },
       ...cdk?.server,
     });
@@ -179,6 +180,7 @@ export class NextjsSite extends SsrSite {
         ...environment,
         CACHE_BUCKET_NAME: this.bucket.bucketName,
         CACHE_BUCKET_KEY_PREFIX: "_cache",
+        CACHE_BUCKET_REGION: Stack.of(this).region,
       },
     });
   }
@@ -394,7 +396,7 @@ export class NextjsSite extends SsrSite {
         "next-router-state-tree",
       ]);
     const originRequestPolicy = this.buildServerOriginRequestPolicy();
-    const functionVersion = this.serverEdgeFunction!.currentVersion;
+    const functionVersion = this.serverLambdaForEdge!.currentVersion;
     const serverBehavior = this.buildServerBehaviorForEdge(
       functionVersion,
       s3Origin,
