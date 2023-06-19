@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.13.7
+
+### Patch Changes
+
+- [`7b1956784`](https://github.com/serverless-stack/sst/commit/7b1956784cf89ab72e4f13c0b4effce31c70166f) Thanks [@thdxr](https://github.com/thdxr)! - allow context to be reset
+
 ## 2.13.6
 
 ### Patch Changes
