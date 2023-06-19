@@ -1,5 +1,53 @@
 # @serverless-stack/cli2
 
+## 2.13.9
+
+### Patch Changes
+
+- [`bd83933d6`](https://github.com/serverless-stack/sst/commit/bd83933d697dc21209ed2fbfa86e08484c61d2c5) Thanks [@thdxr](https://github.com/thdxr)! - metadata: include script, job and auth metadata
+
+## 2.13.8
+
+### Patch Changes
+
+- [`4b2a95621`](https://github.com/serverless-stack/sst/commit/4b2a95621b86b06e49668ad79b9912c5640b4f97) Thanks [@thdxr](https://github.com/thdxr)! - context: reset should reset itself as well
+
+## 2.13.7
+
+### Patch Changes
+
+- [`7b1956784`](https://github.com/serverless-stack/sst/commit/7b1956784cf89ab72e4f13c0b4effce31c70166f) Thanks [@thdxr](https://github.com/thdxr)! - allow context to be reset
+
+## 2.13.6
+
+### Patch Changes
+
+- [`468f35520`](https://github.com/serverless-stack/sst/commit/468f355204b17f740bc0c92abb926a9be33e2aea) Thanks [@thdxr](https://github.com/thdxr)! - auth: code adapter handles invalid
+
+## 2.13.5
+
+### Patch Changes
+
+- [`a05a1359d`](https://github.com/serverless-stack/sst/commit/a05a1359db965e555d639bda18a607f2a7924c41) Thanks [@thdxr](https://github.com/thdxr)! - StaticSite: include url in metadata
+
+## 2.13.4
+
+### Patch Changes
+
+- [`4f196437a`](https://github.com/serverless-stack/sst/commit/4f196437a2b123174b812f48c8f2e5ea46fbaae9) Thanks [@thdxr](https://github.com/thdxr)! - site: include url in site metadata
+
+## 2.13.3
+
+### Patch Changes
+
+- [`d8970b0fa`](https://github.com/serverless-stack/sst/commit/d8970b0fa36d6ab461b22af0ecd8d3bddcf3cdf4) Thanks [@fwang](https://github.com/fwang)! - Fix stack synthesizer not respect "cdk" props in sst.config
+
+- [`79f678179`](https://github.com/serverless-stack/sst/commit/79f678179761a455ac463e36f630beaabd13e19e) Thanks [@thdxr](https://github.com/thdxr)! - auth: encryption utilities + code adapter
+
+- [`4d9c70f3b`](https://github.com/serverless-stack/sst/commit/4d9c70f3b874fcf55de5ff9b0eade44e2f48fddf) Thanks [@thdxr](https://github.com/thdxr)! - constructs: metadata updates and fixes
+
+- [`1c8a7a39c`](https://github.com/serverless-stack/sst/commit/1c8a7a39c97206e5c90cbac93858c5bf7b2bf6a6) Thanks [@fwang](https://github.com/fwang)! - Script: do not run script on rollback
+
 ## 2.13.2
 
 ### Patch Changes

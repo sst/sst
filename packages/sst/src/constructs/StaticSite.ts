@@ -470,6 +470,7 @@ export class StaticSite extends Construct implements SSTConstruct {
         path: this.props.path,
         environment: this.props.environment || {},
         customDomainUrl: this.customDomainUrl,
+        url: this.url,
       },
     };
   }

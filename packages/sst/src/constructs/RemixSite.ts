@@ -197,4 +197,11 @@ export class RemixSite extends SsrSite {
       },
     });
   }
+
+  public getConstructMetadata() {
+    return {
+      type: "RemixSite" as const,
+      ...this.getConstructMetadataBase(),
+    };
+  }
 }

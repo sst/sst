@@ -95,12 +95,6 @@ import {
 import { useProject } from "../project.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
-type SsrSiteType =
-  | "NextjsSite"
-  | "RemixSite"
-  | "AstroSite"
-  | "SolidStartSite"
-  | "SvelteKitSite";
 
 export type SsrBuildConfig = {
   typesPath: string;
@@ -308,7 +302,7 @@ type SsrSiteNormalizedProps = SsrSiteProps & {
  * });
  * ```
  */
-export class SsrSite extends Construct implements SSTConstruct {
+export abstract class SsrSite extends Construct implements SSTConstruct {
   public readonly id: string;
   protected props: SsrSiteNormalizedProps;
   protected doNotDeploy: boolean;
@@ -345,7 +339,7 @@ export class SsrSite extends Construct implements SSTConstruct {
     this.validateTimeout();
     this.writeTypesFile();
 
-    useSites().add(id, this.constructor.name as SsrSiteType, this.props);
+    useSites().add(id, this.constructor.name, this.props);
 
     if (this.doNotDeploy) {
       // @ts-ignore
@@ -476,15 +470,15 @@ export class SsrSite extends Construct implements SSTConstruct {
   }
 
   /** @internal */
-  public getConstructMetadata() {
+  protected getConstructMetadataBase() {
     return {
-      type: this.constructor.name as SsrSiteType,
       data: {
         mode: this.doNotDeploy
           ? ("placeholder" as const)
           : ("deployed" as const),
         path: this.props.path,
         customDomainUrl: this.customDomainUrl,
+        url: this.url,
         edge: this.props.edge,
         server: (
           this.serverLambdaForDev ||
@@ -497,6 +491,10 @@ export class SsrSite extends Construct implements SSTConstruct {
       },
     };
   }
+
+  public abstract getConstructMetadata(): ReturnType<
+    SSTConstruct["getConstructMetadata"]
+  >;
 
   /** @internal */
   public getFunctionBinding(): FunctionBindingProps {
@@ -1358,11 +1356,11 @@ function handler(event) {
 export const useSites = createAppContext(() => {
   const sites: {
     name: string;
-    type: SsrSiteType;
+    type: string;
     props: SsrSiteNormalizedProps;
   }[] = [];
   return {
-    add(name: string, type: SsrSiteType, props: SsrSiteNormalizedProps) {
+    add(name: string, type: string, props: SsrSiteNormalizedProps) {
       sites.push({ name, type, props });
     },
     get all() {

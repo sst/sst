@@ -40,9 +40,6 @@ const onSuccessResponse = {
             "/authorize?" +
             new URLSearchParams({
               provider,
-              response_type: useCookie("response_type")!,
-              client_id: useCookie("client_id")!,
-              redirect_uri: useCookie("redirect_uri")!,
             }).toString(),
         },
       } satisfies APIGatewayProxyStructuredResultV2,
@@ -182,8 +179,10 @@ export function AuthHandler<
         };
       }
 
-      const { response_type, client_id, redirect_uri, state } =
-        useQueryParams();
+      const { response_type, client_id, redirect_uri, state } = {
+        ...useCookies(),
+        ...useQueryParams(),
+      } as Record<string, string>;
 
       if (!provider) {
         return {
@@ -268,14 +267,25 @@ export function AuthHandler<
           type,
           properties,
         });
-        useResponse().cookie({
-          key: "sst_auth_token",
-          value: token,
-          maxAge: 10 * 365 * 24 * 60 * 60,
-          secure: true,
-          sameSite: "None",
-          httpOnly: true,
-        });
+        useResponse()
+          .cookie({
+            key: "sst_auth_token",
+            value: token,
+            maxAge: 10 * 365 * 24 * 60 * 60,
+          })
+          .cookies(
+            {
+              provider: "",
+              response_type: "",
+              client_id: "",
+              redirect_uri: "",
+              state: "",
+            },
+            {
+              expires: new Date(1),
+            }
+          );
+
         const { client_id, response_type, redirect_uri, state } = {
           ...useCookies(),
           ...useQueryParams(),

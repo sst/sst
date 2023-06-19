@@ -83,4 +83,11 @@ export class SolidStartSite extends SsrSite {
       },
     });
   }
+
+  public getConstructMetadata() {
+    return {
+      type: "SolidStartSite" as const,
+      ...this.getConstructMetadataBase(),
+    };
+  }
 }
