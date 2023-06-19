@@ -40,6 +40,7 @@ function create<C>(cb?: (() => C) | string, name?: string) {
     },
     reset() {
       resetDependencies(id);
+      state.contexts.delete(id);
     },
     provide(value: C) {
       // If a new request has started, automatically clear all contexts
