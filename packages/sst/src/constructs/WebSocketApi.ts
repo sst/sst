@@ -457,6 +457,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
     return {
       type: "WebSocketApi" as const,
       data: {
+        url: this.url,
         httpApiId: this.cdk.webSocketApi.apiId,
         customDomainUrl: this._customDomainUrl,
         routes: Object.entries(this.functions).map(([routeKey, fn]) => ({
