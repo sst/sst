@@ -31,6 +31,7 @@ import {
 } from "aws-cdk-lib/aws-iam";
 import {
   Function as CdkFunction,
+  IFunction as ICdkFunction,
   Code,
   Runtime,
   FunctionUrlAuthType,
@@ -101,7 +102,9 @@ export type SsrBuildConfig = {
   serverCFFunctionInjection?: string;
   clientBuildOutputDir: string;
   clientBuildVersionedSubDir: string;
+  clientBuildS3KeyPrefix?: string;
   prerenderedBuildOutputDir?: string;
+  prerenderedBuildS3KeyPrefix?: string;
 };
 
 export interface SsrSiteNodeJSProps extends NodeJSProps {}
@@ -302,13 +305,13 @@ type SsrSiteNormalizedProps = SsrSiteProps & {
 export abstract class SsrSite extends Construct implements SSTConstruct {
   public readonly id: string;
   protected props: SsrSiteNormalizedProps;
-  private doNotDeploy: boolean;
+  protected doNotDeploy: boolean;
   protected buildConfig: SsrBuildConfig;
-  protected serverEdgeFunction?: EdgeFunction;
-  private serverLambdaForEdge?: CdkFunction;
+  private serverLambdaCdkFunctionForEdge?: ICdkFunction;
+  protected serverLambdaForEdge?: EdgeFunction;
   protected serverLambdaForRegional?: CdkFunction;
   private serverLambdaForDev?: CdkFunction;
-  private bucket: Bucket;
+  protected bucket: Bucket;
   private cfFunction: CfFunction;
   private distribution: Distribution;
   private hostedZone?: IHostedZone;
@@ -355,20 +358,19 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
     // Create Server functions
     if (this.props.edge) {
-      this.serverEdgeFunction = this.createFunctionForEdge();
-      this.serverLambdaForEdge = CdkFunction.fromFunctionAttributes(
+      this.serverLambdaForEdge = this.createFunctionForEdge();
+      this.serverLambdaCdkFunctionForEdge = CdkFunction.fromFunctionAttributes(
         this,
         "IEdgeFunction",
         {
-          functionArn: this.serverEdgeFunction.functionArn,
-          role: this.serverEdgeFunction.role,
+          functionArn: this.serverLambdaForEdge.functionArn,
+          role: this.serverLambdaForEdge.role,
         }
-      ) as CdkFunction;
-      this.createFunctionPermissionsForEdge();
+      );
     } else {
       this.serverLambdaForRegional = this.createFunctionForRegional();
-      this.createFunctionPermissionsForRegional();
     }
+    this.grantServerS3Permissions();
 
     // Create Custom Domain
     this.validateCustomDomainSettings();
@@ -391,6 +393,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       ? this.createCloudFrontDistributionForEdge()
       : this.createCloudFrontDistributionForRegional();
     this.distribution.node.addDependency(s3deployCR);
+    this.grantServerCloudFrontPermissions();
 
     // Invalidate CloudFront
     this.createCloudFrontInvalidation();
@@ -436,7 +439,8 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     if (this.doNotDeploy) return;
 
     return {
-      function: this.serverLambdaForEdge || this.serverLambdaForRegional,
+      function:
+        this.serverLambdaCdkFunctionForEdge || this.serverLambdaForRegional,
       bucket: this.bucket,
       distribution: this.distribution,
       hostedZone: this.hostedZone,
@@ -459,7 +463,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
    */
   public attachPermissions(permissions: Permissions): void {
     const server =
-      this.serverLambdaForEdge ||
+      this.serverLambdaCdkFunctionForEdge ||
       this.serverLambdaForRegional ||
       this.serverLambdaForDev;
     attachPermissionsToRole(server?.role as Role, permissions);
@@ -479,7 +483,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
         server: (
           this.serverLambdaForDev ||
           this.serverLambdaForRegional ||
-          this.serverLambdaForEdge
+          this.serverLambdaCdkFunctionForEdge
         )?.functionArn!,
         secrets: (this.props.bind || [])
           .filter((c) => c instanceof Secret)
@@ -622,17 +626,28 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       "node",
       [
         script,
-        [
-          path.join(this.props.path, this.buildConfig.clientBuildOutputDir),
-          ...(this.buildConfig.prerenderedBuildOutputDir
-            ? [
-                path.join(
-                  this.props.path,
-                  this.buildConfig.prerenderedBuildOutputDir
-                ),
-              ]
-            : []),
-        ].join(","),
+        Buffer.from(
+          JSON.stringify([
+            {
+              src: path.join(
+                this.props.path,
+                this.buildConfig.clientBuildOutputDir
+              ),
+              tar: this.buildConfig.clientBuildS3KeyPrefix || "",
+            },
+            ...(this.buildConfig.prerenderedBuildOutputDir
+              ? [
+                  {
+                    src: path.join(
+                      this.props.path,
+                      this.buildConfig.prerenderedBuildOutputDir
+                    ),
+                    tar: this.buildConfig.prerenderedBuildS3KeyPrefix || "",
+                  },
+                ]
+              : []),
+          ])
+        ).toString("base64"),
         zipOutDir,
         `${fileSizeLimit}`,
       ],
@@ -816,12 +831,27 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     return ssrFn.function;
   }
 
-  private createFunctionPermissionsForRegional() {
-    this.bucket.grantReadWrite(this.serverLambdaForRegional!.role!);
+  private grantServerS3Permissions() {
+    const server =
+      this.serverLambdaCdkFunctionForEdge || this.serverLambdaForRegional;
+    this.bucket.grantReadWrite(server!.role!);
   }
 
-  private createFunctionPermissionsForEdge() {
-    this.bucket.grantReadWrite(this.serverLambdaForEdge!.role!);
+  private grantServerCloudFrontPermissions() {
+    const stack = Stack.of(this) as Stack;
+    const server =
+      this.serverLambdaCdkFunctionForEdge || this.serverLambdaForRegional;
+    const policy = new Policy(this, "ServerFunctionInvalidatorPolicy", {
+      statements: [
+        new PolicyStatement({
+          actions: ["cloudfront:CreateInvalidation"],
+          resources: [
+            `arn:${stack.partition}:cloudfront::${stack.account}:distribution/${this.distribution.distributionId}`,
+          ],
+        }),
+      ],
+    });
+    server?.role?.attachInlinePolicy(policy);
   }
 
   /////////////////////
@@ -968,7 +998,7 @@ function handler(event) {
         {
           includeBody: true,
           eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
-          functionVersion: this.serverEdgeFunction!.currentVersion,
+          functionVersion: this.serverLambdaForEdge!.currentVersion,
         },
         ...(cfDistributionProps.defaultBehavior?.edgeLambdas || []),
       ],

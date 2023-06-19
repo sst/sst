@@ -172,6 +172,22 @@ export class EdgeFunction extends Construct {
     attachPermissionsToRole(this.role, permissions);
   }
 
+  public addEnvironment(key: string, value: string) {
+    // Note: addEnvironment currently only updates AssetReplacer's
+    //       "_SST_FUNCTION_ENVIRONMENT_" replacements
+    this.props.environment[key] = value;
+
+    const cfnReplacer = this.assetReplacer.node
+      .defaultChild as CfnCustomResource;
+    cfnReplacer.addPropertyOverride(
+      "replacements.0.replace",
+      JSON.stringify({
+        ...this.props.environment,
+        ...this.bindingEnvs,
+      })
+    );
+  }
+
   private buildAssetFromHandler(
     onBundled: (asset: Asset, filename: string) => void
   ) {

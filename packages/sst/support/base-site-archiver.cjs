@@ -15,7 +15,7 @@ const glob = require("glob");
 
 // Parse arguments
 const argv = process.argv.slice(2);
-const SITE_PATHS = argv[0];
+const SITE_PATHS = JSON.parse(Buffer.from(argv[0], "base64").toString());
 const ZIP_PATH = argv[1];
 const FILE_SIZE_LIMIT_IN_MB = argv[2];
 const FILE_SIZE_LIMIT_IN_BYTES = FILE_SIZE_LIMIT_IN_MB * 1024 * 1024;
@@ -37,12 +37,12 @@ function generateZips() {
     await openZip();
 
     // Loop through each folder need to be zipped
-    for (const sitePath of SITE_PATHS.split(",")) {
-      const files = getFilesInPath(sitePath);
+    for (const { src, tar } of SITE_PATHS) {
+      const files = getFilesInPath(src);
 
       // Append files serially to ensure file order
       for (const file of files) {
-        const fullPath = path.join(sitePath, file);
+        const fullPath = path.join(src, file);
         const [data, stat] = await Promise.all([
           fs.readFile(fullPath),
           fs.stat(fullPath),
@@ -63,7 +63,7 @@ function generateZips() {
         }
 
         archive.append(data, {
-          name: file,
+          name: path.join(tar, file),
           date: new Date("1980-01-01T00:00:00.000Z"), // reset dates to get the same hash for the same content
           mode: stat.mode,
         });
