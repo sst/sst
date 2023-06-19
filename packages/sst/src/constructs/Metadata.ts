@@ -52,6 +52,15 @@ export type WebSocketApiMetadata = ExtractMetadata<WebSocketApi>;
 import type { RDS } from "./RDS.js";
 export type RDSMetadata = ExtractMetadata<RDS>;
 
+import type { Auth } from "./future/Auth.js";
+export type AuthMetadata = ExtractMetadata<Auth>;
+
+import type { Script } from "./Script.js";
+export type ScriptMetadata = ExtractMetadata<Script>;
+
+import type { Job } from "./Job.js";
+export type JobMetadata = ExtractMetadata<Job>;
+
 // Sites
 
 import type { NextjsSite } from "./NextjsSite.js";
@@ -93,4 +102,7 @@ export type Metadata =
   | TopicMetadata
   | WebSocketApiMetadata
   | RDSMetadata
+  | AuthMetadata
+  | ScriptMetadata
+  | JobMetadata
   | SSRSiteMetadata;
