@@ -1,5 +1,11 @@
 # create-sst
 
+## 2.16.0
+
+### Minor Changes
+
+- [#3001](https://github.com/serverless-stack/sst/pull/3001) [`53fd3cb75`](https://github.com/serverless-stack/sst/commit/53fd3cb757baefc4af9129e8cd4183492d23fae4) Thanks [@fwang](https://github.com/fwang)! - Update CDK to v2.84.0
+
 ## 2.15.0
 
 ## 2.14.0
