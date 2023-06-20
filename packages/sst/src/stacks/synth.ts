@@ -11,6 +11,7 @@ interface SynthOptions {
   buildDir?: string;
   outDir?: string;
   increaseTimeout?: boolean;
+  scriptVersion?: string;
   mode: App["mode"];
   fn: (app: App) => Promise<void> | void;
   isActiveStack?: (stackName: string) => boolean;
@@ -59,6 +60,7 @@ export async function synth(opts: SynthOptions) {
         region: project.config.region,
         mode: opts.mode,
         debugIncreaseTimeout: opts.increaseTimeout,
+        debugScriptVersion: opts.scriptVersion,
         isActiveStack: opts.isActiveStack,
       },
       {

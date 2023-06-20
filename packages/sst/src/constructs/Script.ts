@@ -276,10 +276,9 @@ export class Script extends Construct implements SSTConstruct {
     //       when rebuilding infrastructure. Otherwise, there will always be
     //       a change when rebuilding infrastructure b/c the "version" property
     //       changes on each build.
-    const version =
-      app.mode === "dev"
-        ? app.debugStartedAt
-        : this.props.version ?? Date.now().toString();
+    const defaultVersion =
+      app.mode === "dev" ? app.debugScriptVersion : Date.now().toString();
+    const version = this.props.version ?? defaultVersion;
     new CustomResource(this, "ScriptResource", {
       serviceToken: crFunction.functionArn,
       resourceType: "Custom::SSTScript",
