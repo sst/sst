@@ -1,11 +1,28 @@
-import { StackContext, Api } from "sst/constructs";
+import { StackContext, Api, EventBus } from "sst/constructs";
 
 export function API({ stack }: StackContext) {
-  const api = new Api(stack, "api", {
-    routes: {
-      "GET /": "packages/functions/src/lambda.handler",
+  const bus = new EventBus(stack, "bus", {
+    defaults: {
+      retries: 10,
     },
   });
+
+  const api = new Api(stack, "api", {
+    defaults: {
+      function: {
+        bind: [bus],
+      },
+    },
+    routes: {
+      "GET /": "packages/functions/src/todo.list",
+      "POST /": "packages/functions/src/todo.create",
+    },
+  });
+
+  bus.subscribe("todo.created", {
+    handler: "packages/functions/src/events/todo-created.handler",
+  });
+
   stack.addOutputs({
     ApiEndpoint: api.url,
   });
