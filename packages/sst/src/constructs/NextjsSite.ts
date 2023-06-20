@@ -33,8 +33,6 @@ import {
   HttpOrigin,
   OriginGroup,
 } from "aws-cdk-lib/aws-cloudfront-origins";
-import { Rule, Schedule } from "aws-cdk-lib/aws-events";
-import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
 import { Queue } from "aws-cdk-lib/aws-sqs";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { Stack } from "./Stack.js";
@@ -57,11 +55,6 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
      */
     memorySize?: number | Size;
   };
-  /**
-   * The number of server functions to keep warm. This option is only supported for the regional mode.
-   * @default Server function is not kept warm
-   */
-  warm?: number;
 }
 
 /**
@@ -95,7 +88,6 @@ export class NextjsSite extends SsrSite {
 
     if (this.doNotDeploy) return;
 
-    this.createWarmer();
     this.createRevalidation();
   }
 
@@ -218,64 +210,6 @@ export class NextjsSite extends SsrSite {
         }),
       ],
     });
-  }
-
-  private createWarmer() {
-    const { warm, edge } = this.props;
-    if (!warm) return;
-
-    if (warm && edge) {
-      throw new Error(
-        `Warming is currently supported only for the regional mode.`
-      );
-    }
-
-    if (!this.serverLambdaForRegional) return;
-
-    // Create warmer function
-    const warmer = new CdkFunction(this, "WarmerFunction", {
-      description: "Next.js warmer",
-      code: Code.fromAsset(
-        path.join(this.props.path, ".open-next/warmer-function")
-      ),
-      runtime: Runtime.NODEJS_18_X,
-      handler: "index.handler",
-      timeout: CdkDuration.minutes(15),
-      memorySize: 1024,
-      environment: {
-        FUNCTION_NAME: this.serverLambdaForRegional.functionName,
-        CONCURRENCY: warm.toString(),
-      },
-    });
-    this.serverLambdaForRegional.grantInvoke(warmer);
-
-    // Create cron job
-    new Rule(this, "WarmerRule", {
-      schedule: Schedule.rate(CdkDuration.minutes(5)),
-      targets: [new LambdaFunction(warmer, { retryAttempts: 0 })],
-    });
-
-    // Create custom resource to prewarm on deploy
-    const stack = Stack.of(this) as Stack;
-    const policy = new Policy(this, "PrewarmerPolicy", {
-      statements: [
-        new PolicyStatement({
-          effect: Effect.ALLOW,
-          actions: ["lambda:InvokeFunction"],
-          resources: [warmer.functionArn],
-        }),
-      ],
-    });
-    stack.customResourceHandler.role?.attachInlinePolicy(policy);
-    const resource = new CustomResource(this, "Prewarmer", {
-      serviceToken: stack.customResourceHandler.functionArn,
-      resourceType: "Custom::FunctionInvoker",
-      properties: {
-        version: Date.now().toString(),
-        functionName: warmer.functionName,
-      },
-    });
-    resource.node.addDependency(policy);
   }
 
   protected createCloudFrontDistributionForRegional(): Distribution {

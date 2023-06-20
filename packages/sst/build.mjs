@@ -129,26 +129,30 @@ await esbuild.build({
 
 // Move support packages that need to be transpiled
 await Promise.all(
-  ["bootstrap-metadata-function", "custom-resources", "script-function"].map(
-    (dir) =>
-      esbuild.build({
-        keepNames: true,
-        bundle: true,
-        platform: "node",
-        target: "esnext",
-        format: "esm",
-        entryPoints: [`./support/${dir}/index.ts`],
-        banner: {
-          js: [
-            `import { createRequire as topLevelCreateRequire } from 'module';`,
-            `const require = topLevelCreateRequire(import.meta.url);`,
-          ].join(""),
-        },
-        outExtension: {
-          ".js": ".mjs",
-        },
-        outdir: `./dist/support/${dir}/`,
-      })
+  [
+    "bootstrap-metadata-function",
+    "custom-resources",
+    "script-function",
+    "warmer-function",
+  ].map((dir) =>
+    esbuild.build({
+      keepNames: true,
+      bundle: true,
+      platform: "node",
+      target: "esnext",
+      format: "esm",
+      entryPoints: [`./support/${dir}/index.ts`],
+      banner: {
+        js: [
+          `import { createRequire as topLevelCreateRequire } from 'module';`,
+          `const require = topLevelCreateRequire(import.meta.url);`,
+        ].join(""),
+      },
+      outExtension: {
+        ".js": ".mjs",
+      },
+      outdir: `./dist/support/${dir}/`,
+    })
   )
 );
 
