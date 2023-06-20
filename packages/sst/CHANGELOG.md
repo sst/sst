@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.16.1
+
+### Patch Changes
+
+- [`a96dd29b2`](https://github.com/serverless-stack/sst/commit/a96dd29b27a3667027400db061c3144619179675) Thanks [@fwang](https://github.com/fwang)! - Script: run once on "sst dev" boot up
+
 ## 2.16.0
 
 ### Minor Changes
