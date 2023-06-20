@@ -63,6 +63,10 @@ export async function load(input: string, shallow?: boolean) {
                 filename: "sst.config.ts",
                 plugins: [ts],
               });
+              if (!ast)
+                throw new Error(
+                  "Your babel config is not defined and interpreted as `null`, please check your config."
+                );
               babel.traverse(ast, {
                 ObjectMethod(path) {
                   const { key } = path.node;
