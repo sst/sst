@@ -8,6 +8,8 @@ import { Duration as CDKDuration, CustomResource } from "aws-cdk-lib/core";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as rds from "aws-cdk-lib/aws-rds";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import { PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { Stack } from "./Stack.js";
 import * as secretsManager from "aws-cdk-lib/aws-secretsmanager";
 import { App } from "./App.js";
 import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct.js";
@@ -549,6 +551,12 @@ export class RDS extends Construct implements SSTConstruct {
       handler: "index.handler",
       timeout: CDKDuration.minutes(15),
       memorySize: 1024,
+      initialPolicy: [
+        new PolicyStatement({
+          actions: ["cloudformation:DescribeStacks"],
+          resources: [Stack.of(this).stackId],
+        }),
+      ],
     });
     this.migratorFunction?.grantInvoke(handler);
 
