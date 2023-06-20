@@ -13,9 +13,7 @@ import { VisibleError } from "../error.js";
 export async function publishAssets(stacks: CloudFormationStackArtifact[]) {
   Logger.debug("Publishing assets");
   const provider = await useAWSProvider();
-  const { publishDeployAssets } = await import(
-    "../cdk/cloudformation-deployments-wrapper.js"
-  );
+  const { publishDeployAssets } = await import("../cdk/deployments-wrapper.js");
 
   const results: Record<string, any> = {};
   for (const stack of stacks) {
@@ -104,12 +102,8 @@ export async function deploy(
   const bus = useBus();
   Logger.debug("Deploying stack", stack.id);
   const provider = await useAWSProvider();
-  const { CloudFormationDeployments } = await import(
-    "../cdk/cloudformation-deployments.js"
-  );
-  const deployment = new CloudFormationDeployments({
-    sdkProvider: provider,
-  });
+  const { Deployments } = await import("../cdk/deployments.js");
+  const deployment = new Deployments({ sdkProvider: provider });
   const stackTags = Object.entries(stack.tags ?? {}).map(([Key, Value]) => ({
     Key,
     Value,
