@@ -5,11 +5,25 @@ import url from "url";
 import * as crypto from "crypto";
 import { Construct } from "constructs";
 import { Duration as CDKDuration, CustomResource } from "aws-cdk-lib/core";
-import * as ec2 from "aws-cdk-lib/aws-ec2";
-import * as rds from "aws-cdk-lib/aws-rds";
-import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as secretsManager from "aws-cdk-lib/aws-secretsmanager";
+import { SubnetSelection, SubnetType, Vpc, IVpc } from "aws-cdk-lib/aws-ec2";
+import {
+  AuroraCapacityUnit,
+  AuroraEngineVersion,
+  AuroraMysqlEngineVersion,
+  AuroraPostgresEngineVersion,
+  DatabaseClusterEngine,
+  Endpoint,
+  IClusterEngine,
+  IServerlessCluster,
+  ServerlessCluster,
+  ServerlessClusterProps,
+  ServerlessScalingOptions,
+} from "aws-cdk-lib/aws-rds";
+import { Code, Function, Runtime } from "aws-cdk-lib/aws-lambda";
+import { PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { ISecret } from "aws-cdk-lib/aws-secretsmanager";
 import { App } from "./App.js";
+import { Stack } from "./Stack.js";
 import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct.js";
 import { Function as Fn } from "./Function.js";
 import { FunctionBindingProps } from "./util/functionBinding.js";
@@ -68,14 +82,14 @@ export interface RDSProps {
      *
      * @default "ACU_2"
      */
-    minCapacity?: keyof typeof rds.AuroraCapacityUnit;
+    minCapacity?: keyof typeof AuroraCapacityUnit;
 
     /**
      * The maximum capacity for the cluster.
      *
      * @default "ACU_16"
      */
-    maxCapacity?: keyof typeof rds.AuroraCapacityUnit;
+    maxCapacity?: keyof typeof AuroraCapacityUnit;
   };
 
   /**
@@ -156,11 +170,11 @@ export interface RDSProps {
      * });
      * ```
      */
-    cluster?: rds.IServerlessCluster | RDSCdkServerlessClusterProps;
+    cluster?: IServerlessCluster | RDSCdkServerlessClusterProps;
     /**
      * Required when importing existing RDS Serverless v1 Cluster.
      */
-    secret?: secretsManager.ISecret;
+    secret?: ISecret;
   };
 }
 
@@ -168,10 +182,10 @@ export type RDSEngineType = RDSProps["engine"];
 
 export interface RDSCdkServerlessClusterProps
   extends Omit<
-    rds.ServerlessClusterProps,
+    ServerlessClusterProps,
     "vpc" | "engine" | "defaultDatabaseName" | "scaling"
   > {
-  vpc?: ec2.IVpc;
+  vpc?: IVpc;
 }
 
 /////////////////////
@@ -198,14 +212,14 @@ export class RDS extends Construct implements SSTConstruct {
     /**
      * The ARN of the internally created CDK ServerlessCluster instance.
      */
-    cluster: rds.ServerlessCluster;
+    cluster: ServerlessCluster;
   };
   /**
    * The ARN of the internally created CDK ServerlessCluster instance.
    */
   public migratorFunction?: Fn;
   private props: RDSProps;
-  private secret: secretsManager.ISecret;
+  private secret: ISecret;
 
   constructor(scope: Construct, id: string, props: RDSProps) {
     super(scope, props.cdk?.id || id);
@@ -255,7 +269,7 @@ export class RDS extends Construct implements SSTConstruct {
   /**
    * The ARN of the internally created RDS Serverless Cluster.
    */
-  public get clusterEndpoint(): rds.Endpoint {
+  public get clusterEndpoint(): Endpoint {
     return this.cdk.cluster.clusterEndpoint;
   }
 
@@ -395,30 +409,30 @@ export class RDS extends Construct implements SSTConstruct {
       );
   }
 
-  private getEngine(engine: RDSEngineType): rds.IClusterEngine {
+  private getEngine(engine: RDSEngineType): IClusterEngine {
     if (engine === "mysql5.6") {
-      return rds.DatabaseClusterEngine.aurora({
-        version: rds.AuroraEngineVersion.VER_10A,
+      return DatabaseClusterEngine.aurora({
+        version: AuroraEngineVersion.VER_10A,
       });
     } else if (engine === "mysql5.7") {
-      return rds.DatabaseClusterEngine.auroraMysql({
-        version: rds.AuroraMysqlEngineVersion.VER_2_07_1,
+      return DatabaseClusterEngine.auroraMysql({
+        version: AuroraMysqlEngineVersion.VER_2_07_1,
       });
     } else if (engine === "postgresql10.14") {
-      return rds.DatabaseClusterEngine.auroraPostgres({
-        version: rds.AuroraPostgresEngineVersion.VER_10_14,
+      return DatabaseClusterEngine.auroraPostgres({
+        version: AuroraPostgresEngineVersion.VER_10_14,
       });
     } else if (engine === "postgresql11.13") {
-      return rds.DatabaseClusterEngine.auroraPostgres({
-        version: rds.AuroraPostgresEngineVersion.VER_11_13,
+      return DatabaseClusterEngine.auroraPostgres({
+        version: AuroraPostgresEngineVersion.VER_11_13,
       });
     } else if (engine === "postgresql11.16") {
-      return rds.DatabaseClusterEngine.auroraPostgres({
-        version: rds.AuroraPostgresEngineVersion.VER_11_16,
+      return DatabaseClusterEngine.auroraPostgres({
+        version: AuroraPostgresEngineVersion.VER_11_16,
       });
     } else if (engine === "postgresql13.9") {
-      return rds.DatabaseClusterEngine.auroraPostgres({
-        version: rds.AuroraPostgresEngineVersion.VER_13_9,
+      return DatabaseClusterEngine.auroraPostgres({
+        version: AuroraPostgresEngineVersion.VER_13_9,
       });
     }
 
@@ -427,9 +441,7 @@ export class RDS extends Construct implements SSTConstruct {
     );
   }
 
-  private getScaling(
-    scaling?: RDSProps["scaling"]
-  ): rds.ServerlessScalingOptions {
+  private getScaling(scaling?: RDSProps["scaling"]): ServerlessScalingOptions {
     return {
       autoPause:
         scaling?.autoPause === false
@@ -437,30 +449,30 @@ export class RDS extends Construct implements SSTConstruct {
           : scaling?.autoPause === true || scaling?.autoPause === undefined
           ? CDKDuration.minutes(5)
           : CDKDuration.minutes(scaling?.autoPause),
-      minCapacity: rds.AuroraCapacityUnit[scaling?.minCapacity || "ACU_2"],
-      maxCapacity: rds.AuroraCapacityUnit[scaling?.maxCapacity || "ACU_16"],
+      minCapacity: AuroraCapacityUnit[scaling?.minCapacity || "ACU_2"],
+      maxCapacity: AuroraCapacityUnit[scaling?.maxCapacity || "ACU_16"],
     };
   }
 
-  private getVpc(props: RDSCdkServerlessClusterProps): ec2.IVpc {
+  private getVpc(props: RDSCdkServerlessClusterProps): IVpc {
     if (props.vpc) {
       return props.vpc;
     }
 
-    return new ec2.Vpc(this, "vpc", {
+    return new Vpc(this, "vpc", {
       natGateways: 0,
     });
   }
 
   private getVpcSubnets(
     props: RDSCdkServerlessClusterProps
-  ): ec2.SubnetSelection | undefined {
+  ): SubnetSelection | undefined {
     if (props.vpc) {
       return props.vpcSubnets;
     }
 
     return {
-      subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
+      subnetType: SubnetType.PRIVATE_ISOLATED,
     };
   }
 
@@ -469,7 +481,7 @@ export class RDS extends Construct implements SSTConstruct {
     const app = this.node.root as App;
     const clusterProps = (cdk?.cluster || {}) as RDSCdkServerlessClusterProps;
 
-    return new rds.ServerlessCluster(this, "Cluster", {
+    return new ServerlessCluster(this, "Cluster", {
       clusterIdentifier: app.logicalPrefixedName(this.node.id),
       ...clusterProps,
       defaultDatabaseName: defaultDatabaseName,
@@ -483,7 +495,7 @@ export class RDS extends Construct implements SSTConstruct {
 
   private importCluster() {
     const { cdk } = this.props;
-    return cdk!.cluster as rds.ServerlessCluster;
+    return cdk!.cluster as ServerlessCluster;
   }
 
   private createMigrationsFunction(migrations: string) {
@@ -541,14 +553,18 @@ export class RDS extends Construct implements SSTConstruct {
     const app = this.node.root as App;
 
     // Create custom resource handler
-    const handler = new lambda.Function(this, "MigrationHandler", {
-      code: lambda.Code.fromAsset(
-        path.join(__dirname, "../support/script-function")
-      ),
-      runtime: lambda.Runtime.NODEJS_16_X,
+    const handler = new Function(this, "MigrationHandler", {
+      code: Code.fromAsset(path.join(__dirname, "../support/script-function")),
+      runtime: Runtime.NODEJS_16_X,
       handler: "index.handler",
       timeout: CDKDuration.minutes(15),
       memorySize: 1024,
+      initialPolicy: [
+        new PolicyStatement({
+          actions: ["cloudformation:DescribeStacks"],
+          resources: [Stack.of(this).stackId],
+        }),
+      ],
     });
     this.migratorFunction?.grantInvoke(handler);
 
