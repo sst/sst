@@ -122,11 +122,11 @@ To use these values while developing, run `sst dev` to start the [Live Lambda De
 npx sst dev
 ```
 
-Then in your Vite app to reference these variables, add the [`sst env`](../packages/sst.md#sst-env) command.
+Then in your Vite app to reference these variables, add the [`sst bind`](../packages/sst.md#sst-bind) command.
 
 ```json title="package.json" {2}
 "scripts": {
-  "dev": "sst env vite",
+  "dev": "sst bind vite",
   "build": "vite build",
   "preview": "vite preview"
 },
@@ -141,12 +141,12 @@ npm run dev
 There are a couple of things happening behind the scenes here:
 
 1. The `sst dev` command generates a file with the values specified by `StaticSite`'s `environment` prop.
-2. The `sst env` CLI will traverse up the directories to look for the root of your SST app.
+2. The `sst bind` CLI will traverse up the directories to look for the root of your SST app.
 3. It'll then find the file that's generated in step 1.
 4. It'll load these as environment variables before running the start command.
 
 :::note
-`sst env` only works if the Next.js app is located inside the SST app or inside one of its subdirectories. For example:
+`sst bind` only works if the Next.js app is located inside the SST app or inside one of its subdirectories. For example:
 
 ```
 /
