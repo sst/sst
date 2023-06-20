@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.14.0
+
+### Minor Changes
+
+- [#2764](https://github.com/serverless-stack/sst/pull/2764) [`0c73f55ea`](https://github.com/serverless-stack/sst/commit/0c73f55eab16d5ec1694c6bc0a34b1e9873f6fcb) Thanks [@conico974](https://github.com/conico974)! - NextjsSite: Improved ISR support
+
 ## 2.13.9
 
 ### Patch Changes
