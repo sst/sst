@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.15.0
+
+### Minor Changes
+
+- [`1fe0692cd`](https://github.com/serverless-stack/sst/commit/1fe0692cde01e0fda1bca1574f3e37d99512b6bf) Thanks [@thdxr](https://github.com/thdxr)! - future auth: code adapter callback api changed to onCodeRequest and onCodeInvalid
+
 ## 2.14.0
 
 ### Minor Changes
