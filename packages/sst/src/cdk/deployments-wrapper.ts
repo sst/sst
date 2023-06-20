@@ -1,10 +1,13 @@
+import * as cxapi from "@aws-cdk/cx-api";
 import { Environment } from "@aws-cdk/cx-api";
+import { AssetManifest } from "cdk-assets";
 import { debug } from "sst-aws-cdk/lib/logging.js";
 import {
   CloudFormationStack,
   TemplateParameters,
   waitForStackDelete,
 } from "sst-aws-cdk/lib/api/util/cloudformation.js";
+import { Mode } from "sst-aws-cdk/lib/api/aws-auth/credentials.js";
 import { ISDK } from "sst-aws-cdk/lib/api/aws-auth/sdk.js";
 import { ToolkitInfo } from "sst-aws-cdk/lib/api/toolkit-info.js";
 import { addMetadataAssetsToManifest } from "sst-aws-cdk/lib/assets.js";
@@ -12,9 +15,9 @@ import { publishAssets } from "sst-aws-cdk/lib/util/asset-publishing.js";
 import { SdkProvider } from "sst-aws-cdk/lib/api/aws-auth/sdk-provider.js";
 import { AssetManifestBuilder } from "sst-aws-cdk/lib/util/asset-manifest-builder.js";
 import {
-  CloudFormationDeployments,
+  Deployments,
   DeployStackOptions as PublishStackAssetsOptions,
-} from "./cloudformation-deployments.js";
+} from "./deployments.js";
 import { makeBodyParameter, DeployStackOptions } from "./deploy-stack.js";
 import { Context } from "../context/context.js";
 
@@ -30,13 +33,30 @@ export async function publishDeployAssets(
     cloudFormationRoleArn,
   } = await useDeployment().get(sdkProvider, options);
 
-  await deployment.publishStackAssets(options.stack, toolkitInfo, {
-    buildAssets: options.buildAssets ?? true,
-    publishOptions: {
+  // TODO
+  // old
+  //await deployment.publishStackAssets(options.stack, toolkitInfo, {
+  //  buildAssets: options.buildAssets ?? true,
+  //  publishOptions: {
+  //    quiet: options.quiet,
+  //    parallel: options.assetParallelism,
+  //  },
+  //});
+
+  // new
+  const assetArtifacts = options.stack.dependencies.filter(
+    cxapi.AssetManifestArtifact.isAssetManifestArtifact
+  );
+  for (const asset of assetArtifacts) {
+    const manifest = AssetManifest.fromFile(asset.file);
+    //await buildAssets(manifest, sdkProvider, resolvedEnvironment, {
+    //});
+    await publishAssets(manifest, sdkProvider, resolvedEnvironment, {
+      buildAssets: true,
       quiet: options.quiet,
       parallel: options.assetParallelism,
-    },
-  });
+    });
+  }
 
   return deployStack({
     stack: options.stack,
@@ -70,7 +90,7 @@ const useDeployment = Context.memo(() => {
   const state = new Map<
     string,
     {
-      deployment: CloudFormationDeployments;
+      deployment: Deployments;
       toolkitInfo: ToolkitInfo;
       stackSdk: ISDK;
       resolvedEnvironment: Environment;
@@ -81,9 +101,13 @@ const useDeployment = Context.memo(() => {
     async get(sdkProvider: SdkProvider, options: PublishStackAssetsOptions) {
       const region = options.stack.environment.region;
       if (!state.has(region)) {
-        const deployment = new CloudFormationDeployments({ sdkProvider });
+        const deployment = new Deployments({ sdkProvider });
         const { stackSdk, resolvedEnvironment, cloudFormationRoleArn } =
-          await deployment.prepareSdkFor(options.stack, options.roleArn);
+          await deployment.prepareSdkFor(
+            options.stack,
+            options.roleArn,
+            Mode.ForWriting
+          );
         const toolkitInfo = await ToolkitInfo.lookup(
           resolvedEnvironment,
           stackSdk,

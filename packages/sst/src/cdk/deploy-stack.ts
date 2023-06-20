@@ -11,6 +11,7 @@ import { publishAssets } from "sst-aws-cdk/lib/util/asset-publishing.js";
 import { contentHash } from "sst-aws-cdk/lib/util/content-hash.js";
 import { ISDK, SdkProvider } from "sst-aws-cdk/lib/api/aws-auth/index.js";
 import { CfnEvaluationException } from "sst-aws-cdk/lib/api/evaluate-cloudformation-template.js";
+import { HotswapMode, ICON } from "sst-aws-cdk/lib/api/hotswap/common.js";
 import { tryHotswapDeployment } from "sst-aws-cdk/lib/api/hotswap-deployments.js";
 import { ToolkitInfo } from "sst-aws-cdk/lib/api/toolkit-info.js";
 import {
@@ -190,9 +191,9 @@ export interface DeployStackOptions {
    * A 'hotswap' deployment will attempt to short-circuit CloudFormation
    * and update the affected resources like Lambda functions directly.
    *
-   * @default - false for regular deployments, true for 'watch' deployments
+   * @default - `HotswapMode.FULL_DEPLOYMENT` for regular deployments, `HotswapMode.HOTSWAP_ONLY` for 'watch' deployments
    */
-  readonly hotswap?: boolean;
+  readonly hotswap?: HotswapMode;
 
   /**
    * The extra string to append to the User-Agent header when performing AWS SDK calls.
@@ -341,14 +342,16 @@ export async function deployStack(
     }
   );
 
-  if (options.hotswap) {
+  const hotswapMode = options.hotswap;
+  if (hotswapMode && hotswapMode !== HotswapMode.FULL_DEPLOYMENT) {
     // attempt to short-circuit the deployment if possible
     try {
       const hotswapDeploymentResult = await tryHotswapDeployment(
         options.sdkProvider,
-        assetParams,
+        stackParams.values,
         cloudFormationStack,
-        stackArtifact
+        stackArtifact,
+        hotswapMode
       );
       if (hotswapDeploymentResult) {
         return hotswapDeploymentResult;
@@ -366,8 +369,16 @@ export async function deployStack(
         e.message
       );
     }
-    print("Falling back to doing a full deployment");
-    options.sdk.appendCustomUserAgent("cdk-hotswap/fallback");
+    if (hotswapMode === HotswapMode.FALL_BACK) {
+      print("Falling back to doing a full deployment");
+      options.sdk.appendCustomUserAgent("cdk-hotswap/fallback");
+    } else {
+      return {
+        noOp: true,
+        stackArn: cloudFormationStack.stackId,
+        outputs: cloudFormationStack.outputs,
+      };
+    }
   }
 
   // could not short-circuit the deployment, perform a full CFN deploy instead
