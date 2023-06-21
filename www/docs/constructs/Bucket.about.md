@@ -196,6 +196,7 @@ const myQueue = new Queue(stack, "MyQueue");
 new Bucket(stack, "Bucket", {
   notifications: {
     myNotification: {
+      type: "queue",
       queue: myQueue,
       events: ["object_created_put"],
       filters: [{ prefix: "imports/" }, { suffix: ".jpg" }],
