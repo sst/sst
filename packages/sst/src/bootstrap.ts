@@ -190,6 +190,7 @@ export async function bootstrapSST() {
     encryption: BucketEncryption.S3_MANAGED,
     removalPolicy: RemovalPolicy.DESTROY,
     autoDeleteObjects: true,
+    enforceSSL: true,
     blockPublicAccess:
       cdk?.publicAccessBlockConfiguration !== false
         ? BlockPublicAccess.BLOCK_ALL
