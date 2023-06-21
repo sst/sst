@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.3.2
+
+### Patch Changes
+
+- [`0cae7b20d`](https://github.com/serverless-stack/sst/commit/0cae7b20dcca2fe671838e13485a6a2b5893eb3e) Thanks [@thdxr](https://github.com/thdxr)! - create-sst: tweak standard preset
+
 ## 2.3.1
 
 ### Patch Changes
