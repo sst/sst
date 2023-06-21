@@ -6,10 +6,15 @@ export const dev = (program: Program) =>
     ["dev", "start"],
     "Work on your app locally",
     (yargs) =>
-      yargs.option("increase-timeout", {
-        type: "boolean",
-        description: "Increase function timeout",
-      }),
+      yargs
+	.option("increase-timeout", {
+          type: "boolean",
+          description: "Increase function timeout",
+	})
+	.option("to", {
+          type: "string",
+          describe: "Output directory, defaults to .sst/dist",
+	}),
     async (args) => {
       const { Colors } = await import("../colors.js");
       const { printHeader } = await import("../ui/header.js");
@@ -190,6 +195,7 @@ export const dev = (program: Program) =>
               increaseTimeout: args["increase-timeout"],
               scriptVersion,
               fn: project.stacks,
+              buildDir: args.to,
               outDir: `.sst/cdk.out`,
               mode: "dev",
             });
