@@ -66,6 +66,7 @@ export interface StaticSiteFileOptions {
   exclude: string | string[];
   include: string | string[];
   cacheControl: string;
+  contentType?: string;
 }
 
 export interface StaticSiteProps {
@@ -697,7 +698,7 @@ interface ImportMeta {
     assets: Asset[],
     filenamesAsset?: Asset
   ): CustomResource {
-    const fileOptions = this.props.fileOptions || [
+    const fileOptions: StaticSiteFileOptions[] = this.props.fileOptions || [
       {
         exclude: "*",
         include: "*.html",
@@ -757,18 +758,19 @@ interface ImportMeta {
           ObjectKey: filenamesAsset.s3ObjectKey,
         },
         FileOptions: (fileOptions || []).map(
-          ({ exclude, include, cacheControl }) => {
+          ({ exclude, include, cacheControl, contentType }) => {
             if (typeof exclude === "string") {
               exclude = [exclude];
             }
             if (typeof include === "string") {
               include = [include];
             }
-            const options = [];
-            exclude.forEach((per) => options.push("--exclude", per));
-            include.forEach((per) => options.push("--include", per));
-            options.push("--cache-control", cacheControl);
-            return options;
+            return [
+              ...exclude.map((per) => ["--exclude", per]),
+              ...include.map((per) => ["--include", per]),
+              ["--cache-control", cacheControl],
+              contentType ? ["--content-type", contentType] : [],
+            ].flat();
           }
         ),
         ReplaceValues: this.getS3ContentReplaceValues(),
