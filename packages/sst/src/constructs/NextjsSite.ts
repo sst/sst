@@ -15,24 +15,17 @@ import {
   Runtime,
   Architecture,
   FunctionUrlAuthType,
-  IVersion,
 } from "aws-cdk-lib/aws-lambda";
 import {
   Distribution,
   ViewerProtocolPolicy,
   AllowedMethods,
-  LambdaEdgeEventType,
   BehaviorOptions,
   CachedMethods,
   CachePolicy,
   ICachePolicy,
-  IOriginRequestPolicy,
 } from "aws-cdk-lib/aws-cloudfront";
-import {
-  S3Origin,
-  HttpOrigin,
-  OriginGroup,
-} from "aws-cdk-lib/aws-cloudfront-origins";
+import { S3Origin, HttpOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
 import { Rule, Schedule } from "aws-cdk-lib/aws-events";
 import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
 import { Queue } from "aws-cdk-lib/aws-sqs";
@@ -42,8 +35,6 @@ import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 import { SsrSite, SsrSiteProps } from "./SsrSite.js";
 import { Size, toCdkSize } from "./util/size.js";
-import { toCdkDuration } from "./util/duration.js";
-import { SSTConstructMetadata } from "./Construct.js";
 
 export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   imageOptimization?: {
@@ -329,19 +320,10 @@ export class NextjsSite extends SsrSite {
      *    - x-vercel-cache: MISS
      */
 
-    const { timeout, cdk } = this.props;
+    const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
     const s3Origin = new S3Origin(this.cdk!.bucket, {
       originPath: "/" + this.buildConfig.clientBuildS3KeyPrefix,
-    });
-    const serverFnUrl = this.serverLambdaForRegional!.addFunctionUrl({
-      authType: FunctionUrlAuthType.NONE,
-    });
-    const serverOrigin = new HttpOrigin(Fn.parseDomainName(serverFnUrl.url), {
-      readTimeout:
-        typeof timeout === "string"
-          ? toCdkDuration(timeout)
-          : CdkDuration.seconds(timeout),
     });
     const cachePolicy =
       cdk?.serverCachePolicy ??
@@ -351,12 +333,7 @@ export class NextjsSite extends SsrSite {
         "next-router-prefetch",
         "next-router-state-tree",
       ]);
-    const originRequestPolicy = this.buildServerOriginRequestPolicy();
-    const serverBehavior = this.buildServerBehaviorForRegional(
-      serverOrigin,
-      cachePolicy,
-      originRequestPolicy
-    );
+    const serverBehavior = this.buildDefaultBehaviorForRegional(cachePolicy);
 
     return new Distribution(this, "Distribution", {
       // these values can be overwritten by cfDistributionProps
@@ -366,17 +343,13 @@ export class NextjsSite extends SsrSite {
       // these values can NOT be overwritten by cfDistributionProps
       domainNames: this.buildDistributionDomainNames(),
       certificate: this.cdk!.certificate,
-      defaultBehavior: this.buildDefaultNextjsBehaviorForRegional(
-        serverOrigin,
-        s3Origin,
-        cachePolicy,
-        originRequestPolicy
-      ),
+      defaultBehavior: serverBehavior,
       additionalBehaviors: {
         "api/*": serverBehavior,
         "_next/data/*": serverBehavior,
         "_next/image*": this.buildImageBehavior(cachePolicy),
         "_next/*": this.buildStaticFileBehavior(s3Origin),
+        ...this.buildStaticFileBehaviors(s3Origin),
         ...(cfDistributionProps.additionalBehaviors || {}),
       },
     });
@@ -396,13 +369,9 @@ export class NextjsSite extends SsrSite {
         "next-router-prefetch",
         "next-router-state-tree",
       ]);
-    const originRequestPolicy = this.buildServerOriginRequestPolicy();
-    const functionVersion = this.serverLambdaForEdge!.currentVersion;
-    const serverBehavior = this.buildServerBehaviorForEdge(
-      functionVersion,
+    const serverBehavior = this.buildDefaultBehaviorForEdge(
       s3Origin,
-      cachePolicy,
-      originRequestPolicy
+      cachePolicy
     );
 
     return new Distribution(this, "Distribution", {
@@ -413,66 +382,16 @@ export class NextjsSite extends SsrSite {
       // these values can NOT be overwritten by cfDistributionProps
       domainNames: this.buildDistributionDomainNames(),
       certificate: this.cdk!.certificate,
-      defaultBehavior: this.buildDefaultNextjsBehaviorForEdge(
-        functionVersion,
-        s3Origin,
-        cachePolicy,
-        originRequestPolicy
-      ),
+      defaultBehavior: serverBehavior,
       additionalBehaviors: {
         "api/*": serverBehavior,
         "_next/data/*": serverBehavior,
         "_next/image*": this.buildImageBehavior(cachePolicy),
         "_next/*": this.buildStaticFileBehavior(s3Origin),
+        ...this.buildStaticFileBehaviors(s3Origin),
         ...(cfDistributionProps.additionalBehaviors || {}),
       },
     });
-  }
-
-  private buildServerBehaviorForRegional(
-    serverOrigin: HttpOrigin,
-    cachePolicy: ICachePolicy,
-    originRequestPolicy: IOriginRequestPolicy
-  ): BehaviorOptions {
-    const { cdk } = this.props;
-    return {
-      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      functionAssociations: this.buildBehaviorFunctionAssociations(),
-      origin: serverOrigin,
-      allowedMethods: AllowedMethods.ALLOW_ALL,
-      cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
-      compress: true,
-      cachePolicy,
-      responseHeadersPolicy: cdk?.responseHeadersPolicy,
-      originRequestPolicy,
-    };
-  }
-
-  private buildServerBehaviorForEdge(
-    functionVersion: IVersion,
-    s3Origin: S3Origin,
-    cachePolicy: ICachePolicy,
-    originRequestPolicy: IOriginRequestPolicy
-  ): BehaviorOptions {
-    const { cdk } = this.props;
-    return {
-      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      functionAssociations: this.buildBehaviorFunctionAssociations(),
-      origin: s3Origin,
-      allowedMethods: AllowedMethods.ALLOW_ALL,
-      cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
-      compress: true,
-      cachePolicy,
-      responseHeadersPolicy: cdk?.responseHeadersPolicy,
-      originRequestPolicy,
-      edgeLambdas: [
-        {
-          includeBody: true,
-          eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
-          functionVersion,
-        },
-      ],
-    };
   }
 
   private buildImageBehavior(cachePolicy: ICachePolicy): BehaviorOptions {
@@ -502,66 +421,6 @@ export class NextjsSite extends SsrSite {
       compress: true,
       cachePolicy: CachePolicy.CACHING_OPTIMIZED,
       responseHeadersPolicy: cdk?.responseHeadersPolicy,
-    };
-  }
-
-  private buildDefaultNextjsBehaviorForRegional(
-    serverOrigin: HttpOrigin,
-    s3Origin: S3Origin,
-    cachePolicy: ICachePolicy,
-    originRequestPolicy: IOriginRequestPolicy
-  ): BehaviorOptions {
-    // Create default behavior
-    // default handler for requests that don't match any other path:
-    //   - try lambda handler first
-    //   - if failed, fall back to S3
-    const { cdk } = this.props;
-    const cfDistributionProps = cdk?.distribution || {};
-    const fallbackOriginGroup = new OriginGroup({
-      primaryOrigin: serverOrigin,
-      fallbackOrigin: s3Origin,
-      fallbackStatusCodes: [503],
-    });
-    return {
-      origin: fallbackOriginGroup,
-      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      functionAssociations: this.buildBehaviorFunctionAssociations(),
-      compress: true,
-      cachePolicy,
-      responseHeadersPolicy: cdk?.responseHeadersPolicy,
-      originRequestPolicy,
-      ...(cfDistributionProps.defaultBehavior || {}),
-    };
-  }
-
-  private buildDefaultNextjsBehaviorForEdge(
-    functionVersion: IVersion,
-    s3Origin: S3Origin,
-    cachePolicy: ICachePolicy,
-    originRequestPolicy: IOriginRequestPolicy
-  ): BehaviorOptions {
-    const { cdk } = this.props;
-    const cfDistributionProps = cdk?.distribution || {};
-
-    return {
-      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      functionAssociations: this.buildBehaviorFunctionAssociations(),
-      origin: s3Origin,
-      allowedMethods: AllowedMethods.ALLOW_ALL,
-      cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
-      compress: true,
-      cachePolicy,
-      responseHeadersPolicy: cdk?.responseHeadersPolicy,
-      originRequestPolicy,
-      ...(cfDistributionProps.defaultBehavior || {}),
-      edgeLambdas: [
-        {
-          includeBody: true,
-          eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
-          functionVersion,
-        },
-        ...(cfDistributionProps.defaultBehavior?.edgeLambdas || []),
-      ],
     };
   }
 
