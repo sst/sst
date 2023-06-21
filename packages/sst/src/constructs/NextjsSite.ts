@@ -15,24 +15,17 @@ import {
   Runtime,
   Architecture,
   FunctionUrlAuthType,
-  IVersion,
 } from "aws-cdk-lib/aws-lambda";
 import {
   Distribution,
   ViewerProtocolPolicy,
   AllowedMethods,
-  LambdaEdgeEventType,
   BehaviorOptions,
   CachedMethods,
   CachePolicy,
   ICachePolicy,
-  IOriginRequestPolicy,
 } from "aws-cdk-lib/aws-cloudfront";
-import {
-  S3Origin,
-  HttpOrigin,
-  OriginGroup,
-} from "aws-cdk-lib/aws-cloudfront-origins";
+import { S3Origin, HttpOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
 import { Rule, Schedule } from "aws-cdk-lib/aws-events";
 import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
 import { Queue } from "aws-cdk-lib/aws-sqs";
@@ -42,8 +35,6 @@ import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 import { SsrSite, SsrSiteProps } from "./SsrSite.js";
 import { Size, toCdkSize } from "./util/size.js";
-import { toCdkDuration } from "./util/duration.js";
-import { SSTConstructMetadata } from "./Construct.js";
 
 export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   imageOptimization?: {

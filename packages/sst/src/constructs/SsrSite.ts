@@ -48,7 +48,6 @@ import { Asset } from "aws-cdk-lib/aws-s3-assets";
 import {
   Distribution,
   ICachePolicy,
-  IOriginRequestPolicy,
   IResponseHeadersPolicy,
   BehaviorOptions,
   ViewerProtocolPolicy,
