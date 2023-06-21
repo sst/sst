@@ -4,11 +4,12 @@ import fs from "fs";
 import url from "url";
 import * as crypto from "crypto";
 import { Construct } from "constructs";
-import { Duration as CDKDuration, CustomResource } from "aws-cdk-lib/core";
+import { Duration as CDKDuration, CustomResource, Fn as CoreFn } from "aws-cdk-lib/core";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as rds from "aws-cdk-lib/aws-rds";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as secretsManager from "aws-cdk-lib/aws-secretsmanager";
+import * as iam from "aws-cdk-lib/aws-iam";
 import { App } from "./App.js";
 import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct.js";
 import { Function as Fn } from "./Function.js";
@@ -549,6 +550,12 @@ export class RDS extends Construct implements SSTConstruct {
       handler: "index.handler",
       timeout: CDKDuration.minutes(15),
       memorySize: 1024,
+      initialPolicy: [new iam.PolicyStatement({
+	sid: "AllowAccessToOwnStack",
+	effect: iam.Effect.ALLOW,
+	actions: ["cloudformation:DescribeStacks"],
+	resources: [CoreFn.sub('arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${AWS::StackName}/${AWS::StackId}')],
+      })],
     });
     this.migratorFunction?.grantInvoke(handler);
 
