@@ -76,7 +76,7 @@ The `SolidStartSite` construct is a higher level CDK construct that makes it eas
 
    :::
 
-4. Also add the `sst bind` command to your SolidStart app's `package.json`. `sst env` enables you to [automatically set the environment variables](#environment-variables) for your SolidStart app directly from the outputs in your SST app.
+4. Also add the `sst bind` command to your SolidStart app's `package.json`. `sst bind` enables you to [automatically set the environment variables](#environment-variables) for your SolidStart app directly from the outputs in your SST app.
 
    ```diff
      "scripts": {

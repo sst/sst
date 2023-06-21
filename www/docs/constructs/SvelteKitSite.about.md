@@ -68,7 +68,7 @@ The `SvelteKitSite` construct is a higher level CDK construct that makes it easy
    npm install --save-dev svelte-kit-sst
    ```
 
-4. Also add the `sst bind` command to your SvelteKit app's `package.json`. `sst env` enables you to [automatically set the environment variables](#environment-variables) for your SvelteKit app directly from the outputs in your SST app.
+4. Also add the `sst bind` command to your SvelteKit app's `package.json`. `sst bind` enables you to [automatically set the environment variables](#environment-variables) for your SvelteKit app directly from the outputs in your SST app.
 
    ```diff
      "scripts": {
