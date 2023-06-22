@@ -60,7 +60,7 @@ public/
 Can be converted to:
 ```
 public/
-  static/
+  files/
     favicon.ico
     avatar.png
     background.png
