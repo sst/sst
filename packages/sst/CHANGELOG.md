@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.16.3
+
+### Patch Changes
+
+- [#3014](https://github.com/serverless-stack/sst/pull/3014) [`af4aa0056`](https://github.com/serverless-stack/sst/commit/af4aa0056290a4323499ae3bf84dc7df12424c33) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: remove failover origin
+
+- [#3010](https://github.com/serverless-stack/sst/pull/3010) [`3e43bc679`](https://github.com/serverless-stack/sst/commit/3e43bc67982bb64a62f7e9614a9df071a49a599a) Thanks [@berenddeboer](https://github.com/berenddeboer)! - fix: use stackName in migrator metadata instead of stack id
+
 ## 2.16.2
 
 ### Patch Changes
