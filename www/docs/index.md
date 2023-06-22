@@ -65,7 +65,7 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 </ul>
 
 :::tip Learn more
-Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
+Watch Fireship's [**SST in 100 seconds**](https://youtu.be/JY_d0vf-rfw) video to learn more.
 :::
 
 <div className={styles.heading}>
