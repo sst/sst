@@ -739,6 +739,35 @@ test("constructor: fileOptions array value", async () => {
   });
 });
 
+test("constructor: fileOptions: contentType", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new StaticSite(stack, "Site", {
+    path: "test/constructs/site",
+    fileOptions: [
+      {
+        exclude: "*",
+        include: ".well-known/site-association",
+        cacheControl: "max-age=0",
+        contentType: "application/json",
+      },
+    ],
+  });
+  hasResource(stack, "Custom::SSTBucketDeployment", {
+    FileOptions: [
+      [
+        "--exclude",
+        "*",
+        "--include",
+        ".well-known/site-association",
+        "--cache-control",
+        "max-age=0",
+        "--content-type",
+        "application/json",
+      ],
+    ],
+  });
+});
+
 test("constructor: replaceValues", async () => {
   const stack = new Stack(await createApp(), "stack");
   new StaticSite(stack, "Site", {

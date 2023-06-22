@@ -1,7 +1,8 @@
 // Copied from https://github.com/aws/aws-cdk/blob/main/packages/aws-cdk/lib/api/cloudformation-deployments.ts
 
 import * as cxapi from "@aws-cdk/cx-api";
-import { AssetManifest } from "cdk-assets";
+import * as cdk_assets from "cdk-assets";
+import { AssetManifest, IManifestEntry } from "cdk-assets";
 import { Tag } from "sst-aws-cdk/lib/cdk-toolkit.js";
 import { debug, warning } from "sst-aws-cdk/lib/logging.js";
 import {
@@ -9,10 +10,16 @@ import {
   publishAssets,
   BuildAssetsOptions,
   PublishAssetsOptions,
+  PublishingAws,
+  EVENT_TO_LOGGER,
 } from "sst-aws-cdk/lib/util/asset-publishing.js";
 import { Mode } from "sst-aws-cdk/lib/api/aws-auth/credentials.js";
 import { ISDK } from "sst-aws-cdk/lib/api/aws-auth/sdk.js";
-import { SdkProvider } from "sst-aws-cdk/lib/api/aws-auth/sdk-provider.js";
+import {
+  CredentialsOptions,
+  SdkForEnvironment,
+  SdkProvider,
+} from "sst-aws-cdk/lib/api/aws-auth/sdk-provider.js";
 import {
   deployStack,
   DeployStackResult,
@@ -34,6 +41,7 @@ import {
 import { StackActivityProgress } from "sst-aws-cdk/lib/api/util/cloudformation/stack-activity-monitor.js";
 import { replaceEnvPlaceholders } from "sst-aws-cdk/lib/api/util/placeholders.js";
 import { callWithRetry } from "./util.js";
+import { HotswapMode } from "sst-aws-cdk/lib/api/hotswap/common.js";
 
 /**
  * SDK obtained by assuming the lookup role
@@ -58,90 +66,6 @@ export interface PreparedSdkWithLookupRoleForEnvironment {
    * the default credentials (not the assume role credentials)
    */
   readonly didAssumeRole: boolean;
-}
-
-/**
- * Try to use the bootstrap lookupRole. There are two scenarios that are handled here
- *  1. The lookup role may not exist (it was added in bootstrap stack version 7)
- *  2. The lookup role may not have the correct permissions (ReadOnlyAccess was added in
- *      bootstrap stack version 8)
- *
- * In the case of 1 (lookup role doesn't exist) `forEnvironment` will either:
- *   1. Return the default credentials if the default credentials are for the stack account
- *   2. Throw an error if the default credentials are not for the stack account.
- *
- * If we successfully assume the lookup role we then proceed to 2 and check whether the bootstrap
- * stack version is valid. If it is not we throw an error which should be handled in the calling
- * function (and fallback to use a different role, etc)
- *
- * If we do not successfully assume the lookup role, but do get back the default credentials
- * then return those and note that we are returning the default credentials. The calling
- * function can then decide to use them or fallback to another role.
- */
-export async function prepareSdkWithLookupRoleFor(
-  sdkProvider: SdkProvider,
-  stack: cxapi.CloudFormationStackArtifact
-): Promise<PreparedSdkWithLookupRoleForEnvironment> {
-  const resolvedEnvironment = await sdkProvider.resolveEnvironment(
-    stack.environment
-  );
-
-  // Substitute any placeholders with information about the current environment
-  const arns = await replaceEnvPlaceholders(
-    {
-      lookupRoleArn: stack.lookupRole?.arn,
-    },
-    resolvedEnvironment,
-    sdkProvider
-  );
-
-  // try to assume the lookup role
-  const warningMessage = `Could not assume ${arns.lookupRoleArn}, proceeding anyway.`;
-  const upgradeMessage = `(To get rid of this warning, please upgrade to bootstrap version >= ${stack.lookupRole?.requiresBootstrapStackVersion})`;
-  try {
-    const stackSdk = await sdkProvider.forEnvironment(
-      resolvedEnvironment,
-      Mode.ForReading,
-      {
-        assumeRoleArn: arns.lookupRoleArn,
-        assumeRoleExternalId: stack.lookupRole?.assumeRoleExternalId,
-      }
-    );
-
-    // if we succeed in assuming the lookup role, make sure we have the correct bootstrap stack version
-    if (
-      stackSdk.didAssumeRole &&
-      stack.lookupRole?.bootstrapStackVersionSsmParameter &&
-      stack.lookupRole.requiresBootstrapStackVersion
-    ) {
-      const version = await ToolkitInfo.versionFromSsmParameter(
-        stackSdk.sdk,
-        stack.lookupRole.bootstrapStackVersionSsmParameter
-      );
-      if (version < stack.lookupRole.requiresBootstrapStackVersion) {
-        throw new Error(
-          `Bootstrap stack version '${stack.lookupRole.requiresBootstrapStackVersion}' is required, found version '${version}'.`
-        );
-      }
-      // we may not have assumed the lookup role because one was not provided
-      // if that is the case then don't print the upgrade warning
-    } else if (
-      !stackSdk.didAssumeRole &&
-      stack.lookupRole?.requiresBootstrapStackVersion
-    ) {
-      warning(upgradeMessage);
-    }
-    return { ...stackSdk, resolvedEnvironment };
-  } catch (e: any) {
-    debug(e);
-    // only print out the warnings if the lookupRole exists AND there is a required
-    // bootstrap version, otherwise the warnings will print `undefined`
-    if (stack.lookupRole && stack.lookupRole.requiresBootstrapStackVersion) {
-      warning(warningMessage);
-      warning(upgradeMessage);
-    }
-    throw e;
-  }
 }
 
 export interface DeployStackOptions {
@@ -268,9 +192,9 @@ export interface DeployStackOptions {
    * A 'hotswap' deployment will attempt to short-circuit CloudFormation
    * and update the affected resources like Lambda functions directly.
    *
-   * @default - false for regular deployments, true for 'watch' deployments
+   * @default - `HotswapMode.FULL_DEPLOYMENT` for regular deployments, `HotswapMode.HOTSWAP_ONLY` for 'watch' deployments
    */
-  readonly hotswap?: boolean;
+  readonly hotswap?: HotswapMode;
 
   /**
    * The extra string to append to the User-Agent header when performing AWS SDK calls.
@@ -292,13 +216,6 @@ export interface DeployStackOptions {
   readonly overrideTemplate?: any;
 
   /**
-   * Whether to build assets before publishing.
-   *
-   * @default true To remain backward compatible.
-   */
-  readonly buildAssets?: boolean;
-
-  /**
    * Whether to build/publish assets in parallel
    *
    * @default true To remain backward compatible.
@@ -306,7 +223,7 @@ export interface DeployStackOptions {
   readonly assetParallelism?: boolean;
 }
 
-export interface BuildStackAssetsOptions {
+interface AssetOptions {
   /**
    * Stack with assets to build.
    */
@@ -325,25 +242,30 @@ export interface BuildStackAssetsOptions {
    * @default - Current role
    */
   readonly roleArn?: string;
+}
 
+export interface BuildStackAssetsOptions extends AssetOptions {
   /**
    * Options to pass on to `buildAsests()` function
    */
   readonly buildOptions?: BuildAssetsOptions;
+
+  /**
+   * Stack name this asset is for
+   */
+  readonly stackName?: string;
 }
 
-interface PublishStackAssetsOptions {
-  /**
-   * Whether to build assets before publishing.
-   *
-   * @default true To remain backward compatible.
-   */
-  readonly buildAssets?: boolean;
-
+interface PublishStackAssetsOptions extends AssetOptions {
   /**
    * Options to pass on to `publishAsests()` function
    */
   readonly publishOptions?: Omit<PublishAssetsOptions, "buildAssets">;
+
+  /**
+   * Stack name this asset is for
+   */
+  readonly stackName?: string;
 }
 
 export interface DestroyStackOptions {
@@ -360,8 +282,9 @@ export interface StackExistsOptions {
   deployName?: string;
 }
 
-export interface ProvisionerProps {
+export interface DeploymentsProps {
   sdkProvider: SdkProvider;
+  readonly quiet?: boolean;
 }
 
 /**
@@ -388,15 +311,20 @@ export interface PreparedSdkForEnvironment {
 }
 
 /**
- * Helper class for CloudFormation deployments
+ * Scope for a single set of deployments from a set of Cloud Assembly Artifacts
  *
- * Looks us the right SDK and Bootstrap stack to deploy a given
- * stack artifact.
+ * Manages lookup of SDKs, Bootstrap stacks, etc.
  */
-export class CloudFormationDeployments {
+export class Deployments {
   private readonly sdkProvider: SdkProvider;
+  private readonly toolkitInfoCache = new Map<string, ToolkitInfo>();
+  private readonly sdkCache = new Map<string, SdkForEnvironment>();
+  private readonly publisherCache = new Map<
+    AssetManifest,
+    cdk_assets.AssetPublishing
+  >();
 
-  constructor(props: ProvisionerProps) {
+  constructor(private readonly props: DeploymentsProps) {
     this.sdkProvider = props.sdkProvider;
   }
 
@@ -440,7 +368,7 @@ export class CloudFormationDeployments {
     );
     const cfn = stackSdk.cloudFormation();
 
-    const toolkitInfo = await ToolkitInfo.lookup(
+    const toolkitInfo = await this.lookupToolkit(
       resolvedEnvironment,
       stackSdk,
       toolkitStackName
@@ -482,26 +410,15 @@ export class CloudFormationDeployments {
     }
 
     const { stackSdk, resolvedEnvironment, cloudFormationRoleArn } =
-      await this.prepareSdkFor(options.stack, options.roleArn);
+      await this.prepareSdkFor(options.stack, options.roleArn, Mode.ForWriting);
 
     const toolkitInfo = await callWithRetry(() =>
-      ToolkitInfo.lookup(
+      this.lookupToolkit(
         resolvedEnvironment,
         stackSdk,
         options.toolkitStackName
       )
     );
-
-    // Publish any assets before doing the actual deploy (do not publish any assets on import operation)
-    if (options.resourcesToImport === undefined) {
-      await this.publishStackAssets(options.stack, toolkitInfo, {
-        buildAssets: options.buildAssets ?? true,
-        publishOptions: {
-          quiet: options.quiet,
-          parallel: options.assetParallelism,
-        },
-      });
-    }
 
     // Do a verification of the bootstrap stack version
     await this.validateBootstrapStackVersion(
@@ -510,6 +427,21 @@ export class CloudFormationDeployments {
       options.stack.bootstrapStackVersionSsmParameter,
       toolkitInfo
     );
+
+    // Deploy assets
+    const assetArtifacts = options.stack.dependencies.filter(
+      cxapi.AssetManifestArtifact.isAssetManifestArtifact
+    );
+    for (const asset of assetArtifacts) {
+      const manifest = AssetManifest.fromFile(asset.file);
+      //await buildAssets(manifest, sdkProvider, resolvedEnvironment, {
+      //});
+      await publishAssets(manifest, this.sdkProvider, resolvedEnvironment, {
+        buildAssets: true,
+        quiet: options.quiet,
+        parallel: options.assetParallelism,
+      });
+    }
 
     return deployStack({
       stack: options.stack,
@@ -541,7 +473,7 @@ export class CloudFormationDeployments {
 
   public async destroyStack(options: DestroyStackOptions): Promise<void> {
     const { stackSdk, cloudFormationRoleArn: roleArn } =
-      await this.prepareSdkFor(options.stack, options.roleArn);
+      await this.prepareSdkFor(options.stack, options.roleArn, Mode.ForWriting);
 
     return destroyStack({
       sdk: stackSdk,
@@ -571,10 +503,7 @@ export class CloudFormationDeployments {
   ): Promise<PreparedSdkForEnvironment> {
     // try to assume the lookup role
     try {
-      const result = await prepareSdkWithLookupRoleFor(
-        this.sdkProvider,
-        stackArtifact
-      );
+      const result = await this.prepareSdkWithLookupRoleFor(stackArtifact);
       if (result.didAssumeRole) {
         return {
           resolvedEnvironment: result.resolvedEnvironment,
@@ -597,8 +526,8 @@ export class CloudFormationDeployments {
    */
   public async prepareSdkFor(
     stack: cxapi.CloudFormationStackArtifact,
-    roleArn?: string,
-    mode = Mode.ForWriting
+    roleArn: string | undefined,
+    mode: Mode
   ): Promise<PreparedSdkForEnvironment> {
     if (!stack.environment) {
       throw new Error(
@@ -622,7 +551,7 @@ export class CloudFormationDeployments {
       this.sdkProvider
     );
 
-    const stackSdk = await this.sdkProvider.forEnvironment(
+    const stackSdk = await this.cachedSdkForEnvironment(
       resolvedEnvironment,
       mode,
       {
@@ -639,73 +568,257 @@ export class CloudFormationDeployments {
   }
 
   /**
-   * Build a stack's assets.
+   * Try to use the bootstrap lookupRole. There are two scenarios that are handled here
+   *  1. The lookup role may not exist (it was added in bootstrap stack version 7)
+   *  2. The lookup role may not have the correct permissions (ReadOnlyAccess was added in
+   *      bootstrap stack version 8)
+   *
+   * In the case of 1 (lookup role doesn't exist) `forEnvironment` will either:
+   *   1. Return the default credentials if the default credentials are for the stack account
+   *   2. Throw an error if the default credentials are not for the stack account.
+   *
+   * If we successfully assume the lookup role we then proceed to 2 and check whether the bootstrap
+   * stack version is valid. If it is not we throw an error which should be handled in the calling
+   * function (and fallback to use a different role, etc)
+   *
+   * If we do not successfully assume the lookup role, but do get back the default credentials
+   * then return those and note that we are returning the default credentials. The calling
+   * function can then decide to use them or fallback to another role.
    */
-  public async buildStackAssets(options: BuildStackAssetsOptions) {
-    const { stackSdk, resolvedEnvironment } = await this.prepareSdkFor(
-      options.stack,
-      options.roleArn
+  public async prepareSdkWithLookupRoleFor(
+    stack: cxapi.CloudFormationStackArtifact
+  ): Promise<PreparedSdkWithLookupRoleForEnvironment> {
+    const resolvedEnvironment = await this.sdkProvider.resolveEnvironment(
+      stack.environment
     );
-    const toolkitInfo = await ToolkitInfo.lookup(
+
+    // Substitute any placeholders with information about the current environment
+    const arns = await replaceEnvPlaceholders(
+      {
+        lookupRoleArn: stack.lookupRole?.arn,
+      },
       resolvedEnvironment,
-      stackSdk,
-      options.toolkitStackName
+      this.sdkProvider
     );
 
-    const stackEnv = await this.sdkProvider.resolveEnvironment(
-      options.stack.environment
-    );
-    const assetArtifacts = options.stack.dependencies.filter(
-      cxapi.AssetManifestArtifact.isAssetManifestArtifact
-    );
-
-    for (const assetArtifact of assetArtifacts) {
-      await this.validateBootstrapStackVersion(
-        options.stack.stackName,
-        assetArtifact.requiresBootstrapStackVersion,
-        assetArtifact.bootstrapStackVersionSsmParameter,
-        toolkitInfo
+    // try to assume the lookup role
+    const warningMessage = `Could not assume ${arns.lookupRoleArn}, proceeding anyway.`;
+    const upgradeMessage = `(To get rid of this warning, please upgrade to bootstrap version >= ${stack.lookupRole?.requiresBootstrapStackVersion})`;
+    try {
+      const stackSdk = await this.cachedSdkForEnvironment(
+        resolvedEnvironment,
+        Mode.ForReading,
+        {
+          assumeRoleArn: arns.lookupRoleArn,
+          assumeRoleExternalId: stack.lookupRole?.assumeRoleExternalId,
+        }
       );
 
-      const manifest = AssetManifest.fromFile(assetArtifact.file);
-      await buildAssets(
-        manifest,
-        this.sdkProvider,
-        stackEnv,
-        options.buildOptions
-      );
+      // if we succeed in assuming the lookup role, make sure we have the correct bootstrap stack version
+      if (
+        stackSdk.didAssumeRole &&
+        stack.lookupRole?.bootstrapStackVersionSsmParameter &&
+        stack.lookupRole.requiresBootstrapStackVersion
+      ) {
+        const version = await ToolkitInfo.versionFromSsmParameter(
+          stackSdk.sdk,
+          stack.lookupRole.bootstrapStackVersionSsmParameter
+        );
+        if (version < stack.lookupRole.requiresBootstrapStackVersion) {
+          throw new Error(
+            `Bootstrap stack version '${stack.lookupRole.requiresBootstrapStackVersion}' is required, found version '${version}'.`
+          );
+        }
+        // we may not have assumed the lookup role because one was not provided
+        // if that is the case then don't print the upgrade warning
+      } else if (
+        !stackSdk.didAssumeRole &&
+        stack.lookupRole?.requiresBootstrapStackVersion
+      ) {
+        warning(upgradeMessage);
+      }
+      return { ...stackSdk, resolvedEnvironment };
+    } catch (e: any) {
+      debug(e);
+      // only print out the warnings if the lookupRole exists AND there is a required
+      // bootstrap version, otherwise the warnings will print `undefined`
+      if (stack.lookupRole && stack.lookupRole.requiresBootstrapStackVersion) {
+        warning(warningMessage);
+        warning(upgradeMessage);
+      }
+      throw e;
     }
   }
 
   /**
-   * Publish all asset manifests that are referenced by the given stack
+   * Look up the toolkit for a given environment, using a given SDK
    */
-  public async publishStackAssets(
-    stack: cxapi.CloudFormationStackArtifact,
-    toolkitInfo: ToolkitInfo,
-    options: PublishStackAssetsOptions = {}
+  public async lookupToolkit(
+    resolvedEnvironment: cxapi.Environment,
+    sdk: ISDK,
+    toolkitStackName?: string
   ) {
-    const stackEnv = await this.sdkProvider.resolveEnvironment(
-      stack.environment
-    );
-    const assetArtifacts = stack.dependencies.filter(
-      cxapi.AssetManifestArtifact.isAssetManifestArtifact
-    );
-
-    for (const assetArtifact of assetArtifacts) {
-      await this.validateBootstrapStackVersion(
-        stack.stackName,
-        assetArtifact.requiresBootstrapStackVersion,
-        assetArtifact.bootstrapStackVersionSsmParameter,
-        toolkitInfo
-      );
-
-      const manifest = AssetManifest.fromFile(assetArtifact.file);
-      await publishAssets(manifest, this.sdkProvider, stackEnv, {
-        ...options.publishOptions,
-        buildAssets: options.buildAssets ?? true,
-      });
+    const key = `${resolvedEnvironment.account}:${resolvedEnvironment.region}:${toolkitStackName}`;
+    const existing = this.toolkitInfoCache.get(key);
+    if (existing) {
+      return existing;
     }
+    const ret = await ToolkitInfo.lookup(
+      resolvedEnvironment,
+      sdk,
+      toolkitStackName
+    );
+    this.toolkitInfoCache.set(key, ret);
+    return ret;
+  }
+
+  private async prepareAndValidateAssets(
+    asset: cxapi.AssetManifestArtifact,
+    options: AssetOptions
+  ) {
+    const { stackSdk, resolvedEnvironment } = await this.prepareSdkFor(
+      options.stack,
+      options.roleArn,
+      Mode.ForWriting
+    );
+    const toolkitInfo = await this.lookupToolkit(
+      resolvedEnvironment,
+      stackSdk,
+      options.toolkitStackName
+    );
+    const stackEnv = await this.sdkProvider.resolveEnvironment(
+      options.stack.environment
+    );
+    await this.validateBootstrapStackVersion(
+      options.stack.stackName,
+      asset.requiresBootstrapStackVersion,
+      asset.bootstrapStackVersionSsmParameter,
+      toolkitInfo
+    );
+
+    const manifest = AssetManifest.fromFile(asset.file);
+
+    return { manifest, stackEnv };
+  }
+
+  /**
+   * Build all assets in a manifest
+   *
+   * @deprecated Use `buildSingleAsset` instead
+   */
+  public async buildAssets(
+    asset: cxapi.AssetManifestArtifact,
+    options: BuildStackAssetsOptions
+  ) {
+    const { manifest, stackEnv } = await this.prepareAndValidateAssets(
+      asset,
+      options
+    );
+    await buildAssets(
+      manifest,
+      this.sdkProvider,
+      stackEnv,
+      options.buildOptions
+    );
+  }
+
+  /**
+   * Publish all assets in a manifest
+   *
+   * @deprecated Use `publishSingleAsset` instead
+   */
+  public async publishAssets(
+    asset: cxapi.AssetManifestArtifact,
+    options: PublishStackAssetsOptions
+  ) {
+    const { manifest, stackEnv } = await this.prepareAndValidateAssets(
+      asset,
+      options
+    );
+    await publishAssets(
+      manifest,
+      this.sdkProvider,
+      stackEnv,
+      options.publishOptions
+    );
+  }
+
+  /**
+   * Build a single asset from an asset manifest
+   */
+  // eslint-disable-next-line max-len
+  public async buildSingleAsset(
+    assetArtifact: cxapi.AssetManifestArtifact,
+    assetManifest: AssetManifest,
+    asset: IManifestEntry,
+    options: BuildStackAssetsOptions
+  ) {
+    const { stackSdk, resolvedEnvironment: stackEnv } =
+      await this.prepareSdkFor(options.stack, options.roleArn, Mode.ForWriting);
+    const toolkitInfo = await this.lookupToolkit(
+      stackEnv,
+      stackSdk,
+      options.toolkitStackName
+    );
+
+    await this.validateBootstrapStackVersion(
+      options.stack.stackName,
+      assetArtifact.requiresBootstrapStackVersion,
+      assetArtifact.bootstrapStackVersionSsmParameter,
+      toolkitInfo
+    );
+
+    const publisher = this.cachedPublisher(
+      assetManifest,
+      stackEnv,
+      options.stackName
+    );
+    await publisher.buildEntry(asset);
+  }
+
+  /**
+   * Publish a single asset from an asset manifest
+   */
+  // eslint-disable-next-line max-len
+  public async publishSingleAsset(
+    assetManifest: AssetManifest,
+    asset: IManifestEntry,
+    options: PublishStackAssetsOptions
+  ) {
+    const { resolvedEnvironment: stackEnv } = await this.prepareSdkFor(
+      options.stack,
+      options.roleArn,
+      Mode.ForWriting
+    );
+
+    // No need to validate anymore, we already did that during build
+    const publisher = this.cachedPublisher(
+      assetManifest,
+      stackEnv,
+      options.stackName
+    );
+    await publisher.publishEntry(asset);
+  }
+
+  /**
+   * Return whether a single asset has been published already
+   */
+  public async isSingleAssetPublished(
+    assetManifest: AssetManifest,
+    asset: IManifestEntry,
+    options: PublishStackAssetsOptions
+  ) {
+    const { resolvedEnvironment: stackEnv } = await this.prepareSdkFor(
+      options.stack,
+      options.roleArn,
+      Mode.ForWriting
+    );
+    const publisher = this.cachedPublisher(
+      assetManifest,
+      stackEnv,
+      options.stackName
+    );
+    return publisher.isEntryPublished(asset);
   }
 
   /**
@@ -730,4 +843,74 @@ export class CloudFormationDeployments {
       throw new Error(`${stackName}: ${e.message}`);
     }
   }
+
+  private async cachedSdkForEnvironment(
+    environment: cxapi.Environment,
+    mode: Mode,
+    options?: CredentialsOptions
+  ) {
+    const cacheKey = [
+      environment.account,
+      environment.region,
+      `${mode}`,
+      options?.assumeRoleArn ?? "",
+      options?.assumeRoleExternalId ?? "",
+    ].join(":");
+    const existing = this.sdkCache.get(cacheKey);
+    if (existing) {
+      return existing;
+    }
+    const ret = await this.sdkProvider.forEnvironment(
+      environment,
+      mode,
+      options
+    );
+    this.sdkCache.set(cacheKey, ret);
+    return ret;
+  }
+
+  private cachedPublisher(
+    assetManifest: cdk_assets.AssetManifest,
+    env: cxapi.Environment,
+    stackName?: string
+  ) {
+    const existing = this.publisherCache.get(assetManifest);
+    if (existing) {
+      return existing;
+    }
+    const prefix = stackName ? `${stackName}: ` : "";
+    const publisher = new cdk_assets.AssetPublishing(assetManifest, {
+      aws: new PublishingAws(this.sdkProvider, env),
+      progressListener: new ParallelSafeAssetProgress(
+        prefix,
+        this.props.quiet ?? false
+      ),
+    });
+    this.publisherCache.set(assetManifest, publisher);
+    return publisher;
+  }
 }
+
+/**
+ * Asset progress that doesn't do anything with percentages (currently)
+ */
+class ParallelSafeAssetProgress implements cdk_assets.IPublishProgressListener {
+  constructor(
+    private readonly prefix: string,
+    private readonly quiet: boolean
+  ) {}
+
+  public onPublishEvent(
+    type: cdk_assets.EventType,
+    event: cdk_assets.IPublishProgress
+  ): void {
+    const handler =
+      this.quiet && type !== "fail" ? debug : EVENT_TO_LOGGER[type];
+    handler(`${this.prefix} ${type}: ${event.message}`);
+  }
+}
+
+/**
+ * @deprecated Use 'Deployments' instead
+ */
+export class CloudFormationDeployments extends Deployments {}

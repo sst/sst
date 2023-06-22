@@ -955,6 +955,7 @@ function handler(event) {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
     const s3Origin = new S3Origin(this.bucket);
+    const cachePolicy = cdk?.serverCachePolicy ?? this.buildServerCachePolicy();
 
     return new Distribution(this, "Distribution", {
       // these values can be overwritten by cfDistributionProps
@@ -964,7 +965,7 @@ function handler(event) {
       // these values can NOT be overwritten by cfDistributionProps
       domainNames: this.buildDistributionDomainNames(),
       certificate: this.certificate,
-      defaultBehavior: this.buildDefaultBehaviorForRegional(),
+      defaultBehavior: this.buildDefaultBehaviorForRegional(cachePolicy),
       additionalBehaviors: {
         ...this.buildStaticFileBehaviors(s3Origin),
         ...(cfDistributionProps.additionalBehaviors || {}),
@@ -976,6 +977,7 @@ function handler(event) {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
     const s3Origin = new S3Origin(this.bucket);
+    const cachePolicy = cdk?.serverCachePolicy ?? this.buildServerCachePolicy();
 
     return new Distribution(this, "Distribution", {
       // these values can be overwritten by cfDistributionProps
@@ -985,7 +987,7 @@ function handler(event) {
       // these values can NOT be overwritten by cfDistributionProps
       domainNames: this.buildDistributionDomainNames(),
       certificate: this.certificate,
-      defaultBehavior: this.buildDefaultBehaviorForEdge(s3Origin),
+      defaultBehavior: this.buildDefaultBehaviorForEdge(s3Origin, cachePolicy),
       additionalBehaviors: {
         ...this.buildStaticFileBehaviors(s3Origin),
         ...(cfDistributionProps.additionalBehaviors || {}),
@@ -1013,7 +1015,9 @@ function handler(event) {
     return domainNames;
   }
 
-  protected buildDefaultBehaviorForRegional(): BehaviorOptions {
+  protected buildDefaultBehaviorForRegional(
+    cachePolicy: ICachePolicy
+  ): BehaviorOptions {
     const { timeout, cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
 
@@ -1032,7 +1036,7 @@ function handler(event) {
       allowedMethods: AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
-      cachePolicy: cdk?.serverCachePolicy ?? this.buildServerCachePolicy(),
+      cachePolicy,
       responseHeadersPolicy: cdk?.responseHeadersPolicy,
       originRequestPolicy: this.buildServerOriginRequestPolicy(),
       ...(cfDistributionProps.defaultBehavior || {}),
@@ -1043,7 +1047,10 @@ function handler(event) {
     };
   }
 
-  private buildDefaultBehaviorForEdge(origin: S3Origin): BehaviorOptions {
+  protected buildDefaultBehaviorForEdge(
+    origin: S3Origin,
+    cachePolicy: ICachePolicy
+  ): BehaviorOptions {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
 
@@ -1053,7 +1060,7 @@ function handler(event) {
       allowedMethods: AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
-      cachePolicy: cdk?.serverCachePolicy ?? this.buildServerCachePolicy(),
+      cachePolicy,
       responseHeadersPolicy: cdk?.responseHeadersPolicy,
       originRequestPolicy: this.buildServerOriginRequestPolicy(),
       ...(cfDistributionProps.defaultBehavior || {}),
@@ -1081,7 +1088,7 @@ function handler(event) {
     ];
   }
 
-  private buildStaticFileBehaviors(
+  protected buildStaticFileBehaviors(
     origin: S3Origin
   ): Record<string, BehaviorOptions> {
     const { cdk } = this.props;

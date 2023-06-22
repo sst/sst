@@ -14,7 +14,11 @@ import { decrypt, encrypt } from "../encryption.js";
 
 export function CodeAdapter(config: {
   length?: number;
-  onCode: (
+  onCodeRequest: (
+    code: string,
+    claims: Record<string, any>
+  ) => Promise<APIGatewayProxyStructuredResultV2>;
+  onCodeInvalid: (
     code: string,
     claims: Record<string, any>
   ) => Promise<APIGatewayProxyStructuredResultV2>;
@@ -53,39 +57,24 @@ export function CodeAdapter(config: {
       );
       return {
         type: "step",
-        properties: await config.onCode(code, claims as any),
+        properties: await config.onCodeRequest(code, claims as any),
       };
     }
 
     if (step === "callback") {
-      const error = new URL(useQueryParam("error") || "");
-      const qp = new URLSearchParams(error.search);
-      qp.set("error", "invalid_code");
-      error.search = qp.toString();
-
       const code = decrypt(useCookie("sst_code")!);
       const claims = decrypt(useCookie("sst_claims")!);
       if (!code || !claims) {
         return {
-          type: "step",
-          properties: {
-            statusCode: 302,
-            headers: {
-              location: error.toString(),
-            },
-          },
+          type: "error",
         };
       }
       const compare = useQueryParam("code");
+      const parsedClaims = JSON.parse(claims);
       if (code !== compare) {
         return {
           type: "step",
-          properties: {
-            statusCode: 302,
-            headers: {
-              location: error.toString(),
-            },
-          },
+          properties: await config.onCodeInvalid(code, parsedClaims),
         };
       }
       useResponse().cookies(
@@ -100,7 +89,7 @@ export function CodeAdapter(config: {
       return {
         type: "success",
         properties: {
-          claims: JSON.parse(claims),
+          claims: parsedClaims,
         },
       };
     }

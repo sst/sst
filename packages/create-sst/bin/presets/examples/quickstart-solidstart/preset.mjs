@@ -4,7 +4,7 @@ export default [
   install({
     packages: [
       "@types/node",
-      "aws-cdk-lib@2.79.1",
+      "aws-cdk-lib@2.84.0",
       "constructs@10.1.156",
       "esbuild",
       "postcss",

@@ -70,7 +70,7 @@ export interface AppDeployProps {
 
   readonly buildDir?: string;
   readonly account?: string;
-  readonly debugStartedAt?: number;
+  readonly debugScriptVersion?: string;
   readonly debugIncreaseTimeout?: boolean;
 
   readonly mode: "deploy" | "dev" | "remove";
@@ -112,7 +112,7 @@ export class App extends CDKApp {
    */
   public readonly account: string;
   /** @internal */
-  public readonly debugStartedAt?: number;
+  public readonly debugScriptVersion?: string;
   /** @internal */
   public readonly debugIncreaseTimeout?: boolean;
   /** @internal */
@@ -152,7 +152,7 @@ export class App extends CDKApp {
     this.defaultFunctionProps = [];
 
     if (this.mode === "dev") {
-      this.debugStartedAt = deployProps.debugStartedAt;
+      this.debugScriptVersion = deployProps.debugScriptVersion;
       this.debugIncreaseTimeout = deployProps.debugIncreaseTimeout;
     }
   }

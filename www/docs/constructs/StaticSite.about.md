@@ -122,11 +122,11 @@ To use these values while developing, run `sst dev` to start the [Live Lambda De
 npx sst dev
 ```
 
-Then in your Vite app to reference these variables, add the [`sst env`](../packages/sst.md#sst-env) command.
+Then in your Vite app to reference these variables, add the [`sst bind`](../packages/sst.md#sst-bind) command.
 
 ```json title="package.json" {2}
 "scripts": {
-  "dev": "sst env vite",
+  "dev": "sst bind vite",
   "build": "vite build",
   "preview": "vite preview"
 },
@@ -141,12 +141,12 @@ npm run dev
 There are a couple of things happening behind the scenes here:
 
 1. The `sst dev` command generates a file with the values specified by `StaticSite`'s `environment` prop.
-2. The `sst env` CLI will traverse up the directories to look for the root of your SST app.
+2. The `sst bind` CLI will traverse up the directories to look for the root of your SST app.
 3. It'll then find the file that's generated in step 1.
 4. It'll load these as environment variables before running the start command.
 
 :::note
-`sst env` only works if the Next.js app is located inside the SST app or inside one of its subdirectories. For example:
+`sst bind` only works if the Next.js app is located inside the SST app or inside one of its subdirectories. For example:
 
 ```
 /
@@ -441,6 +441,37 @@ new StaticSite(stack, "frontend", {
 This configures all the `.html` files to not be cached by the, while the `.js` and `.css` files to be cached forever.
 
 Note that, you need to specify the `exclude: "*"` along with the `include` option. It allows you to pick the files you want, while excluding everything else.
+
+### Content type
+
+The content type for files is automatically assigned based on their extentions by default. For files without an extension, the default content type is `binary/octet-stream`. However, you can override this default setting:
+
+```js {17-22}
+new StaticSite(stack, "frontend", {
+  path: "path/to/site",
+  buildOutput: "build",
+  buildCommand: "npm run build",
+  errorPage: "redirect_to_index_page",
+  fileOptions: [
+    {
+      exclude: "*",
+      include: "*.html",
+      cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
+    },
+    {
+      exclude: "*",
+      include: ["*.js", "*.css"],
+      cacheControl: "max-age=31536000,public,immutable",
+    },
+    {
+      exclude: "*",
+      include: ".well-known/site-association-json",
+      cacheControl: "max-age=31536000,public,immutable",
+      contentType: "application/json",
+    },
+  ],
+});
+```
 
 ### Advanced examples
 

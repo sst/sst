@@ -105,6 +105,7 @@ export const usePythonHandler = Context.memo(async () => {
         installCommands: input.props.python?.installCommands,
         entry: src,
         runtime: RUNTIME_MAP[input.props.runtime!],
+        architecture: input.props.architecture,
         outputPathSuffix: ".",
         out: input.out,
       });

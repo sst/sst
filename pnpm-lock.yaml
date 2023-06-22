@@ -1,7 +1,7 @@
-lockfileVersion: '6.1'
+lockfileVersion: '6.0'
 
 settings:
-  autoInstallPeers: false
+  autoInstallPeers: true
   excludeLinksFromLockfile: false
 
 importers:
@@ -68,7 +68,7 @@ importers:
         version: 3.43.0
       '@aws-sdk/client-s3':
         specifier: 3.43.0
-        version: 3.43.0
+        version: 3.43.0(@aws-sdk/signature-v4-crt@3.292.0)
       '@aws-sdk/client-ssm':
         specifier: 3.43.0
         version: 3.43.0
@@ -77,7 +77,7 @@ importers:
         version: 3.257.0
       '@aws-sdk/s3-request-presigner':
         specifier: 3.43.0
-        version: 3.43.0
+        version: 3.43.0(@aws-sdk/signature-v4-crt@3.292.0)
       '@aws-sdk/util-dynamodb':
         specifier: ^3.52.0
         version: 3.208.0
@@ -128,10 +128,10 @@ importers:
         version: 1.2.8(react@17.0.2)
       '@trpc/client':
         specifier: 9.18.0
-        version: 9.18.0
+        version: 9.18.0(@trpc/server@9.18.0)
       '@trpc/react':
         specifier: 9.18.0
-        version: 9.18.0(@trpc/client@9.18.0)(react-dom@17.0.2)(react-query@3.39.2)(react@17.0.2)
+        version: 9.18.0(@trpc/client@9.18.0)(@trpc/server@9.18.0)(react-dom@17.0.2)(react-query@3.39.2)(react@17.0.2)
       ace-builds:
         specifier: ^1.4.13
         version: 1.12.5
@@ -152,7 +152,7 @@ importers:
         version: 9.0.16
       jotai:
         specifier: ^1.4.7
-        version: 1.9.2(immer@9.0.16)(react@17.0.2)
+        version: 1.9.2(@babel/core@7.21.3)(immer@9.0.16)(react@17.0.2)
       react:
         specifier: ^17.0.2
         version: 17.0.2
@@ -185,7 +185,7 @@ importers:
         version: 6.4.3(react-dom@17.0.2)(react@17.0.2)
       react-spinners:
         specifier: ^0.11.0
-        version: 0.11.0(@types/react@17.0.52)(react-dom@17.0.2)(react@17.0.2)
+        version: 0.11.0(@babel/core@7.21.3)(@types/react@17.0.52)(react-dom@17.0.2)(react@17.0.2)
       react-textarea-autosize:
         specifier: ^8.4.0
         version: 8.4.0(@types/react@17.0.52)(react@17.0.2)
@@ -278,7 +278,7 @@ importers:
     devDependencies:
       solid-start:
         specifier: 0.2.11
-        version: 0.2.11(vite@3.2.5)
+        version: 0.2.11(@solidjs/meta@0.28.5)(@solidjs/router@0.6.0)(solid-js@1.7.6)(vite@3.2.5)
       vite:
         specifier: ^3.1.8
         version: 3.2.5(terser@5.15.1)
@@ -286,23 +286,23 @@ importers:
   packages/sst:
     dependencies:
       '@aws-cdk/aws-apigatewayv2-alpha':
-        specifier: ^2.79.1-alpha.0
-        version: 2.79.1-alpha.0(aws-cdk-lib@2.79.1)(constructs@10.1.156)
+        specifier: ^2.84.0-alpha.0
+        version: 2.84.0-alpha.0(aws-cdk-lib@2.84.0)(constructs@10.1.156)
       '@aws-cdk/aws-apigatewayv2-authorizers-alpha':
-        specifier: ^2.79.1-alpha.0
-        version: 2.79.1-alpha.0(@aws-cdk/aws-apigatewayv2-alpha@2.79.1-alpha.0)(aws-cdk-lib@2.79.1)(constructs@10.1.156)
+        specifier: ^2.84.0-alpha.0
+        version: 2.84.0-alpha.0(@aws-cdk/aws-apigatewayv2-alpha@2.84.0-alpha.0)(aws-cdk-lib@2.84.0)(constructs@10.1.156)
       '@aws-cdk/aws-apigatewayv2-integrations-alpha':
-        specifier: ^2.79.1-alpha.0
-        version: 2.79.1-alpha.0(@aws-cdk/aws-apigatewayv2-alpha@2.79.1-alpha.0)(aws-cdk-lib@2.79.1)(constructs@10.1.156)
+        specifier: ^2.84.0-alpha.0
+        version: 2.84.0-alpha.0(@aws-cdk/aws-apigatewayv2-alpha@2.84.0-alpha.0)(aws-cdk-lib@2.84.0)(constructs@10.1.156)
       '@aws-cdk/cloud-assembly-schema':
-        specifier: 2.79.1
-        version: 2.79.1
+        specifier: 2.84.0
+        version: 2.84.0
       '@aws-cdk/cloudformation-diff':
-        specifier: 2.79.1
-        version: 2.79.1
+        specifier: 2.84.0
+        version: 2.84.0
       '@aws-cdk/cx-api':
-        specifier: 2.79.1
-        version: 2.79.1(@aws-cdk/cloud-assembly-schema@2.79.1)
+        specifier: 2.84.0
+        version: 2.84.0(@aws-cdk/cloud-assembly-schema@2.84.0)
       '@aws-sdk/client-cloudformation':
         specifier: ^3.279.0
         version: 3.279.0
@@ -367,8 +367,8 @@ importers:
         specifier: ^0.5.10
         version: 0.5.10
       aws-cdk-lib:
-        specifier: 2.79.1
-        version: 2.79.1(constructs@10.1.156)
+        specifier: 2.84.0
+        version: 2.84.0(constructs@10.1.156)
       aws-iot-device-sdk:
         specifier: ^2.2.12
         version: 2.2.12
@@ -379,8 +379,8 @@ importers:
         specifier: 3.2.0
         version: 3.2.0
       cdk-assets:
-        specifier: 2.79.1
-        version: 2.79.1
+        specifier: 2.84.0
+        version: 2.84.0
       chalk:
         specifier: ^5.2.0
         version: 5.2.0
@@ -463,8 +463,8 @@ importers:
         specifier: ^1.3.0
         version: 1.3.0
       sst-aws-cdk:
-        specifier: 2.62.2-3
-        version: 2.62.2-3
+        specifier: 2.84.0
+        version: 2.84.0
       tree-kill:
         specifier: ^1.2.2
         version: 1.2.2
@@ -565,7 +565,7 @@ importers:
     devDependencies:
       '@sveltejs/kit':
         specifier: ^1.5.0
-        version: 1.16.2
+        version: 1.16.2(svelte@3.59.2)(vite@4.1.4)
       '@types/aws-lambda':
         specifier: ^8.10.112
         version: 8.10.112
@@ -583,7 +583,7 @@ importers:
         version: 2.4.1(react-dom@17.0.2)(react@17.0.2)(typescript@4.9.5)
       '@docusaurus/preset-classic':
         specifier: 2.0.0-beta.18
-        version: 2.0.0-beta.18(react-dom@17.0.2)(react@17.0.2)(typescript@4.9.5)
+        version: 2.0.0-beta.18(@algolia/client-search@4.14.2)(react-dom@17.0.2)(react@17.0.2)(typescript@4.9.5)
       '@jridgewell/gen-mapping':
         specifier: ^0.3.2
         version: 0.3.2
@@ -624,13 +624,14 @@ packages:
       '@algolia/autocomplete-shared': 1.7.2
     dev: false
 
-  /@algolia/autocomplete-preset-algolia@1.7.2(algoliasearch@4.14.2):
+  /@algolia/autocomplete-preset-algolia@1.7.2(@algolia/client-search@4.14.2)(algoliasearch@4.14.2):
     resolution: {integrity: sha512-+RYEG6B0QiGGfRb2G3MtPfyrl0dALF3cQNTWBzBX6p5o01vCCGTTinAm2UKG3tfc2CnOMAtnPLkzNZyJUpnVJw==}
     peerDependencies:
       '@algolia/client-search': '>= 4.9.1 < 6'
       algoliasearch: '>= 4.9.1 < 6'
     dependencies:
       '@algolia/autocomplete-shared': 1.7.2
+      '@algolia/client-search': 4.14.2
       algoliasearch: 4.14.2
     dev: false
 
@@ -829,52 +830,52 @@ packages:
     resolution: {integrity: sha512-EL2XCW6C3szBPHI4XWQsb68pqc719nR+8sfsEhyjzBNn0idgZg2ViujI3/1/jWnJwHPnvMOKQcmr/bOKzCPAgA==}
     dev: false
 
-  /@aws-cdk/aws-apigatewayv2-alpha@2.79.1-alpha.0(aws-cdk-lib@2.79.1)(constructs@10.1.156):
-    resolution: {integrity: sha512-B5MDJjIa7DmykRxLYu1k2tnLNxllg4hwRWWgsMn+2xgXyZ0xmmdrxCXaAUx+SBiCxxpvumS3ukAGq7u5eYHvvA==}
+  /@aws-cdk/aws-apigatewayv2-alpha@2.84.0-alpha.0(aws-cdk-lib@2.84.0)(constructs@10.1.156):
+    resolution: {integrity: sha512-Iom2VbAt9N6QXJqqjikcG6hHCaYsPIZdLy8gkMkQu/idmaQnGzZ7sNp4uRdLr4EmqtGJOSFxAM9jrGyBIEhYlw==}
     engines: {node: '>= 14.15.0'}
     peerDependencies:
-      aws-cdk-lib: 2.79.1
+      aws-cdk-lib: 2.84.0
       constructs: ^10.0.0
     dependencies:
-      aws-cdk-lib: 2.79.1(constructs@10.1.156)
+      aws-cdk-lib: 2.84.0(constructs@10.1.156)
       constructs: 10.1.156
     dev: false
 
-  /@aws-cdk/aws-apigatewayv2-authorizers-alpha@2.79.1-alpha.0(@aws-cdk/aws-apigatewayv2-alpha@2.79.1-alpha.0)(aws-cdk-lib@2.79.1)(constructs@10.1.156):
-    resolution: {integrity: sha512-H+fb2cP7Fs5tQMBww/hz4w+OKP4eELBB3uhgPUv7LE/frcnKfaoXum6tCj1xfb+SkaieiMbyxBx2JXAiUX/GGQ==}
+  /@aws-cdk/aws-apigatewayv2-authorizers-alpha@2.84.0-alpha.0(@aws-cdk/aws-apigatewayv2-alpha@2.84.0-alpha.0)(aws-cdk-lib@2.84.0)(constructs@10.1.156):
+    resolution: {integrity: sha512-sbYY/PXYWPguC7c0+FEWCxvUtCjmYTkufdYRWsLLMreIFMaZ6ObiPNQezNQkhLibJEdX4N0UNzqM6rur1mpYdA==}
     engines: {node: '>= 14.15.0'}
     peerDependencies:
-      '@aws-cdk/aws-apigatewayv2-alpha': 2.79.1-alpha.0
-      aws-cdk-lib: 2.79.1
+      '@aws-cdk/aws-apigatewayv2-alpha': 2.84.0-alpha.0
+      aws-cdk-lib: 2.84.0
       constructs: ^10.0.0
     dependencies:
-      '@aws-cdk/aws-apigatewayv2-alpha': 2.79.1-alpha.0(aws-cdk-lib@2.79.1)(constructs@10.1.156)
-      aws-cdk-lib: 2.79.1(constructs@10.1.156)
+      '@aws-cdk/aws-apigatewayv2-alpha': 2.84.0-alpha.0(aws-cdk-lib@2.84.0)(constructs@10.1.156)
+      aws-cdk-lib: 2.84.0(constructs@10.1.156)
       constructs: 10.1.156
     dev: false
 
-  /@aws-cdk/aws-apigatewayv2-integrations-alpha@2.79.1-alpha.0(@aws-cdk/aws-apigatewayv2-alpha@2.79.1-alpha.0)(aws-cdk-lib@2.79.1)(constructs@10.1.156):
-    resolution: {integrity: sha512-pfr8pEADDoa6xtB7ZUFR0tBEDlRa0RJ4lqUcHzXbUcBuTBsbuIs5jxvwaf//ZJyRqEJDlblMRAT3WABZlaY0bQ==}
+  /@aws-cdk/aws-apigatewayv2-integrations-alpha@2.84.0-alpha.0(@aws-cdk/aws-apigatewayv2-alpha@2.84.0-alpha.0)(aws-cdk-lib@2.84.0)(constructs@10.1.156):
+    resolution: {integrity: sha512-LgVYXnAAOWL8RJLVDpu/M0qbHMADk3EwZKPsVgtxgSxKXSIU9Wpw25mK9MhYMbEJdtRUUNFz98U7Ra8Zu8AJMg==}
     engines: {node: '>= 14.15.0'}
     peerDependencies:
-      '@aws-cdk/aws-apigatewayv2-alpha': 2.79.1-alpha.0
-      aws-cdk-lib: 2.79.1
+      '@aws-cdk/aws-apigatewayv2-alpha': 2.84.0-alpha.0
+      aws-cdk-lib: 2.84.0
       constructs: ^10.0.0
     dependencies:
-      '@aws-cdk/aws-apigatewayv2-alpha': 2.79.1-alpha.0(aws-cdk-lib@2.79.1)(constructs@10.1.156)
-      aws-cdk-lib: 2.79.1(constructs@10.1.156)
+      '@aws-cdk/aws-apigatewayv2-alpha': 2.84.0-alpha.0(aws-cdk-lib@2.84.0)(constructs@10.1.156)
+      aws-cdk-lib: 2.84.0(constructs@10.1.156)
       constructs: 10.1.156
     dev: false
 
-  /@aws-cdk/cfnspec@2.79.1-alpha.0:
-    resolution: {integrity: sha512-0b6C9yYJFn3fQrcWDGNX5GusZFapYWHohNbXrEAi454pUd0XjvQaef4CY4e9qStR1bfuBlharH5SCv5EMeCF/w==}
+  /@aws-cdk/cfnspec@2.84.0-alpha.0:
+    resolution: {integrity: sha512-gUBBnDa/0uBiqY7oQhiRpmlFV2zBJVNbDDybnPLd0OaLWhpYPLuOTb10rQCUCZNh/r4LnQMW4sxkzOOfm1O30A==}
     dependencies:
       fs-extra: 9.1.0
       md5: 2.3.0
     dev: false
 
-  /@aws-cdk/cloud-assembly-schema@2.79.1:
-    resolution: {integrity: sha512-IFQdZSsEn4kmfIILCfFGlCfUTqXaYIYmfrR2QIZ/SmdGnXZrzG9nlCunMPXbIQ7qvShJ5UQrSQ+yrQDX3YI1oQ==}
+  /@aws-cdk/cloud-assembly-schema@2.84.0:
+    resolution: {integrity: sha512-TLQMexYkev8T1WSevwCibW4Dc9bvm89MUOdv1rJykCg4Vskmmw9WkWBRxW8S4nLgRAsQ0Uw8503sg5FIGjQ7rQ==}
     engines: {node: '>= 14.15.0'}
     dependencies:
       jsonschema: 1.4.1
@@ -884,11 +885,11 @@ packages:
       - jsonschema
       - semver
 
-  /@aws-cdk/cloudformation-diff@2.79.1:
-    resolution: {integrity: sha512-55x2yzNyX1C+l1rzWOOo9U/6pgyzH37zxQHCDqQ9m3aipucM39RnP11zVo81PUVN15JciM9Ad9Ut5NyU+S0XFg==}
+  /@aws-cdk/cloudformation-diff@2.84.0:
+    resolution: {integrity: sha512-ICy5OjHfU5rC6zYqfE6VFlNFIr6Nw7W+Gz9ibDM19RrMVfyTjLcs+FBTjfVt69r96IOBD2wkW+5z1UqAtyiFfg==}
     engines: {node: '>= 14.15.0'}
     dependencies:
-      '@aws-cdk/cfnspec': 2.79.1-alpha.0
+      '@aws-cdk/cfnspec': 2.84.0-alpha.0
       chalk: 4.1.2
       diff: 5.1.0
       fast-deep-equal: 3.1.3
@@ -896,13 +897,13 @@ packages:
       table: 6.8.1
     dev: false
 
-  /@aws-cdk/cx-api@2.79.1(@aws-cdk/cloud-assembly-schema@2.79.1):
-    resolution: {integrity: sha512-o5sQAhySt5xNYqgmISVwdv9tVdVLglPIU2qTcgQWxIR/OFtGj7yggHeuQGJQ+g7EvQmYiq0QVLGr68tHGTAbSQ==}
+  /@aws-cdk/cx-api@2.84.0(@aws-cdk/cloud-assembly-schema@2.84.0):
+    resolution: {integrity: sha512-YcyEjT9TYtuXQgm5w9x4rsWLYRQAL78PEjjg3nRVgX6BPjjyvHtVydsiAh3h87tY00PVUlC+qQLb2FSY5YmMHg==}
     engines: {node: '>= 14.15.0'}
     peerDependencies:
-      '@aws-cdk/cloud-assembly-schema': 2.79.1
+      '@aws-cdk/cloud-assembly-schema': 2.84.0
     dependencies:
-      '@aws-cdk/cloud-assembly-schema': 2.79.1
+      '@aws-cdk/cloud-assembly-schema': 2.84.0
       semver: 7.5.1
     dev: false
     bundledDependencies:
@@ -1942,7 +1943,7 @@ packages:
       - aws-crt
     dev: false
 
-  /@aws-sdk/client-s3@3.43.0:
+  /@aws-sdk/client-s3@3.43.0(@aws-sdk/signature-v4-crt@3.292.0):
     resolution: {integrity: sha512-RwO5aaeg920USk5mEjHvZvWixAOmz8BUXutb0jP6f8Eg5BCnf94AZ0sIRHyQ7Agw+V1A/tMhM0zfs26bsAfKUw==}
     engines: {node: '>=10.0.0'}
     dependencies:
@@ -1968,7 +1969,7 @@ packages:
       '@aws-sdk/middleware-location-constraint': 3.40.0
       '@aws-sdk/middleware-logger': 3.40.0
       '@aws-sdk/middleware-retry': 3.40.0
-      '@aws-sdk/middleware-sdk-s3': 3.41.0
+      '@aws-sdk/middleware-sdk-s3': 3.41.0(@aws-sdk/signature-v4-crt@3.292.0)
       '@aws-sdk/middleware-serde': 3.40.0
       '@aws-sdk/middleware-signing': 3.40.0
       '@aws-sdk/middleware-ssec': 3.40.0
@@ -4367,7 +4368,7 @@ packages:
       tslib: 2.5.0
     dev: false
 
-  /@aws-sdk/middleware-sdk-s3@3.41.0:
+  /@aws-sdk/middleware-sdk-s3@3.41.0(@aws-sdk/signature-v4-crt@3.292.0):
     resolution: {integrity: sha512-B7JOpmIpm1zxERQEMwZCWj3FisTvwfUgpfQglYdqrB6VpIoCM8fk2pmi5KzU/JDeNBlhTouj6mwnhJL/z5jopA==}
     engines: {node: '>= 10.0.0'}
     peerDependencies:
@@ -4375,6 +4376,7 @@ packages:
     dependencies:
       '@aws-sdk/protocol-http': 3.40.0
       '@aws-sdk/signature-v4': 3.40.0
+      '@aws-sdk/signature-v4-crt': 3.292.0
       '@aws-sdk/types': 3.40.0
       '@aws-sdk/util-arn-parser': 3.37.0
       tslib: 2.5.0
@@ -5056,11 +5058,11 @@ packages:
       tslib: 2.5.0
     dev: true
 
-  /@aws-sdk/s3-request-presigner@3.43.0:
+  /@aws-sdk/s3-request-presigner@3.43.0(@aws-sdk/signature-v4-crt@3.292.0):
     resolution: {integrity: sha512-Nc9yAWHE64ocC4Y8uZBjXvD5fIsYkhm52J3NbEbn8jIKx+JOLzw97FEw5bil53Z2v/B+dUE/2r0Vh2g4EP67Ag==}
     engines: {node: '>= 10.0.0'}
     dependencies:
-      '@aws-sdk/middleware-sdk-s3': 3.41.0
+      '@aws-sdk/middleware-sdk-s3': 3.41.0(@aws-sdk/signature-v4-crt@3.292.0)
       '@aws-sdk/protocol-http': 3.40.0
       '@aws-sdk/signature-v4': 3.40.0
       '@aws-sdk/smithy-client': 3.41.0
@@ -7122,15 +7124,6 @@ packages:
       '@babel/core': 7.20.2
       '@babel/helper-plugin-utils': 7.21.5
     dev: true
-
-  /@babel/plugin-syntax-jsx@7.18.6:
-    resolution: {integrity: sha512-6mmljtAedFGTWu2p/8WIORGwy+61PLgOMPOdazc7YoJ9ZCWUyFy3A6CpPkRKLKD1ToAesxX8KGEViAiLo9N+7Q==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/helper-plugin-utils': 7.21.5
-    dev: false
 
   /@babel/plugin-syntax-jsx@7.18.6(@babel/core@7.20.2):
     resolution: {integrity: sha512-6mmljtAedFGTWu2p/8WIORGwy+61PLgOMPOdazc7YoJ9ZCWUyFy3A6CpPkRKLKD1ToAesxX8KGEViAiLo9N+7Q==}
@@ -9219,7 +9212,7 @@ packages:
     resolution: {integrity: sha512-rODCdDtGyudLj+Va8b6w6Y85KE85bXRsps/R4Yjwt5vueXKXZQKYw0aA9knxLBT6a/bI/GMrAcmCR75KYOM6hg==}
     dev: false
 
-  /@docsearch/react@3.3.0(react-dom@17.0.2)(react@17.0.2):
+  /@docsearch/react@3.3.0(@algolia/client-search@4.14.2)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-fhS5adZkae2SSdMYEMVg6pxI5a/cE+tW16ki1V0/ur4Fdok3hBRkmN/H8VvlXnxzggkQIIRIVvYPn00JPjen3A==}
     peerDependencies:
       '@types/react': '>= 16.8.0 < 19.0.0'
@@ -9234,7 +9227,7 @@ packages:
         optional: true
     dependencies:
       '@algolia/autocomplete-core': 1.7.2
-      '@algolia/autocomplete-preset-algolia': 1.7.2(algoliasearch@4.14.2)
+      '@algolia/autocomplete-preset-algolia': 1.7.2(@algolia/client-search@4.14.2)(algoliasearch@4.14.2)
       '@docsearch/css': 3.3.0
       algoliasearch: 4.14.2
       react: 17.0.2
@@ -9320,7 +9313,7 @@ packages:
       tslib: 2.4.1
       update-notifier: 5.1.0
       url-loader: 4.1.1(file-loader@6.2.0)(webpack@5.75.0)
-      wait-on: 6.0.1
+      wait-on: 6.0.1(debug@4.3.4)
       webpack: 5.75.0
       webpack-bundle-analyzer: 4.7.0
       webpack-dev-server: 4.11.1(webpack@5.75.0)
@@ -9417,7 +9410,7 @@ packages:
       tslib: 2.5.0
       update-notifier: 5.1.0
       url-loader: 4.1.1(file-loader@6.2.0)(webpack@5.75.0)
-      wait-on: 6.0.1
+      wait-on: 6.0.1(debug@4.3.4)
       webpack: 5.75.0
       webpack-bundle-analyzer: 4.7.0
       webpack-dev-server: 4.11.1(webpack@5.75.0)
@@ -9722,7 +9715,7 @@ packages:
       fs-extra: 10.1.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
-      react-json-view: 1.21.3(react-dom@17.0.2)(react@17.0.2)
+      react-json-view: 1.21.3(@types/react@17.0.52)(react-dom@17.0.2)(react@17.0.2)
       tslib: 2.5.0
     transitivePeerDependencies:
       - '@parcel/css'
@@ -9861,7 +9854,7 @@ packages:
       - webpack-cli
     dev: false
 
-  /@docusaurus/preset-classic@2.0.0-beta.18(react-dom@17.0.2)(react@17.0.2)(typescript@4.9.5):
+  /@docusaurus/preset-classic@2.0.0-beta.18(@algolia/client-search@4.14.2)(react-dom@17.0.2)(react@17.0.2)(typescript@4.9.5):
     resolution: {integrity: sha512-TfDulvFt/vLWr/Yy7O0yXgwHtJhdkZ739bTlFNwEkRMAy8ggi650e52I1I0T79s67llecb4JihgHPW+mwiVkCQ==}
     engines: {node: '>=14'}
     peerDependencies:
@@ -9878,7 +9871,7 @@ packages:
       '@docusaurus/plugin-sitemap': 2.0.0-beta.18(react-dom@17.0.2)(react@17.0.2)(typescript@4.9.5)
       '@docusaurus/theme-classic': 2.0.0-beta.18(react-dom@17.0.2)(react@17.0.2)(typescript@4.9.5)
       '@docusaurus/theme-common': 2.0.0-beta.18(react-dom@17.0.2)(react@17.0.2)(typescript@4.9.5)
-      '@docusaurus/theme-search-algolia': 2.0.0-beta.18(react-dom@17.0.2)(react@17.0.2)(typescript@4.9.5)
+      '@docusaurus/theme-search-algolia': 2.0.0-beta.18(@algolia/client-search@4.14.2)(react-dom@17.0.2)(react@17.0.2)(typescript@4.9.5)
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
     transitivePeerDependencies:
@@ -9988,14 +9981,14 @@ packages:
       - webpack-cli
     dev: false
 
-  /@docusaurus/theme-search-algolia@2.0.0-beta.18(react-dom@17.0.2)(react@17.0.2)(typescript@4.9.5):
+  /@docusaurus/theme-search-algolia@2.0.0-beta.18(@algolia/client-search@4.14.2)(react-dom@17.0.2)(react@17.0.2)(typescript@4.9.5):
     resolution: {integrity: sha512-2w97KO/gnjI49WVtYQqENpQ8iO1Sem0yaTxw7/qv/ndlmIAQD0syU4yx6GsA7bTQCOGwKOWWzZSetCgUmTnWgA==}
     engines: {node: '>=14'}
     peerDependencies:
       react: ^16.8.4 || ^17.0.0
       react-dom: ^16.8.4 || ^17.0.0
     dependencies:
-      '@docsearch/react': 3.3.0(react-dom@17.0.2)(react@17.0.2)
+      '@docsearch/react': 3.3.0(@algolia/client-search@4.14.2)(react-dom@17.0.2)(react@17.0.2)
       '@docusaurus/core': 2.0.0-beta.18(react-dom@17.0.2)(react@17.0.2)(typescript@4.9.5)
       '@docusaurus/logger': 2.0.0-beta.18
       '@docusaurus/plugin-content-docs': 2.0.0-beta.18(react-dom@17.0.2)(react@17.0.2)(typescript@4.9.5)
@@ -10209,13 +10202,14 @@ packages:
     resolution: {integrity: sha512-8HqW8EVqjnCmWXVpqAOZf+EGESdkR27odcMMMGefgKXtar00SoYNSryGv//TELI4T3QFsECo78p+0lmalk/CFA==}
     dev: true
 
-  /@emotion/babel-plugin@11.10.5:
+  /@emotion/babel-plugin@11.10.5(@babel/core@7.21.3):
     resolution: {integrity: sha512-xE7/hyLHJac7D2Ve9dKroBBZqBT7WuPQmWcq7HSGb84sUuP4mlOWoB8dvVfD9yk5DHkU1m6RW7xSoDtnQHNQeA==}
     peerDependencies:
       '@babel/core': ^7.0.0
     dependencies:
+      '@babel/core': 7.21.3
       '@babel/helper-module-imports': 7.21.4
-      '@babel/plugin-syntax-jsx': 7.18.6
+      '@babel/plugin-syntax-jsx': 7.18.6(@babel/core@7.21.3)
       '@babel/runtime': 7.21.0
       '@emotion/hash': 0.9.0
       '@emotion/memoize': 0.8.0
@@ -10246,7 +10240,7 @@ packages:
     resolution: {integrity: sha512-G/YwXTkv7Den9mXDO7AhLWkE3q+I92B+VqAE+dYG4NGPaHZGvt3G8Q0p9vmE+sq7rTGphUbAvmQ9YpbfMQGGlA==}
     dev: false
 
-  /@emotion/react@11.10.5(@types/react@17.0.52)(react@17.0.2):
+  /@emotion/react@11.10.5(@babel/core@7.21.3)(@types/react@17.0.52)(react@17.0.2):
     resolution: {integrity: sha512-TZs6235tCJ/7iF6/rvTaOH4oxQg2gMAcdHemjwLKIjKz4rRuYe1HJ2TQJKnAcRAfOUDdU8XoDadCe1rl72iv8A==}
     peerDependencies:
       '@babel/core': ^7.0.0
@@ -10258,8 +10252,9 @@ packages:
       '@types/react':
         optional: true
     dependencies:
+      '@babel/core': 7.21.3
       '@babel/runtime': 7.21.0
-      '@emotion/babel-plugin': 11.10.5
+      '@emotion/babel-plugin': 11.10.5(@babel/core@7.21.3)
       '@emotion/cache': 11.10.5
       '@emotion/serialize': 1.1.1
       '@emotion/use-insertion-effect-with-fallbacks': 1.0.0(react@17.0.2)
@@ -11996,6 +11991,22 @@ packages:
     dependencies:
       tslib: 2.5.0
 
+  /@solidjs/meta@0.28.5(solid-js@1.7.6):
+    resolution: {integrity: sha512-52luJR6hVNMA1K8Od5OD0d8WVz/svqZG4is8lrDimiUGxdia3DzuLF+pK56dnEzbNt9cA42qVFL134U9LkC9Gg==}
+    peerDependencies:
+      solid-js: '>=1.4.0'
+    dependencies:
+      solid-js: 1.7.6
+    dev: true
+
+  /@solidjs/router@0.6.0(solid-js@1.7.6):
+    resolution: {integrity: sha512-7ug2fzXXhvvDBL4CQyMvMM9o3dgBE6PoRh38T8UTmMnYz4rcCfROqSZc9yq+YEC96qWt5OvJgZ1Uj/4EAQXlfA==}
+    peerDependencies:
+      solid-js: ^1.5.3
+    dependencies:
+      solid-js: 1.7.6
+    dev: true
+
   /@stitches/react@1.2.8(react@17.0.2):
     resolution: {integrity: sha512-9g9dWI4gsSVe8bNLlb+lMkBYsnIKCZTmvqvDG+Avnn69XfmHZKiaMrx7cgTaddq7aTPPmXiTsbFcUy0xgI4+wA==}
     peerDependencies:
@@ -12004,7 +12015,7 @@ packages:
       react: 17.0.2
     dev: false
 
-  /@sveltejs/kit@1.16.2:
+  /@sveltejs/kit@1.16.2(svelte@3.59.2)(vite@4.1.4):
     resolution: {integrity: sha512-yxcpA4nvlVlJ+VyYnj0zD3QN05kfmoh4OyitlPrVG34nnZSHzFpE4eZ33X1A/tc9prslSFRhpM6rWngCs0nM8w==}
     engines: {node: ^16.14 || >=18}
     hasBin: true
@@ -12013,7 +12024,7 @@ packages:
       svelte: ^3.54.0
       vite: ^4.0.0
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 2.2.0
+      '@sveltejs/vite-plugin-svelte': 2.2.0(svelte@3.59.2)(vite@4.1.4)
       '@types/cookie': 0.5.1
       cookie: 0.5.0
       devalue: 4.3.0
@@ -12024,13 +12035,15 @@ packages:
       sade: 1.8.1
       set-cookie-parser: 2.6.0
       sirv: 2.0.2
+      svelte: 3.59.2
       tiny-glob: 0.2.9
       undici: 5.22.0
+      vite: 4.1.4(@types/node@18.15.3)
     transitivePeerDependencies:
       - supports-color
     dev: true
 
-  /@sveltejs/vite-plugin-svelte@2.2.0:
+  /@sveltejs/vite-plugin-svelte@2.2.0(svelte@3.59.2)(vite@4.1.4):
     resolution: {integrity: sha512-KDtdva+FZrZlyug15KlbXuubntAPKcBau0K7QhAIqC5SAy0uDbjZwoexDRx0L0J2T4niEfC6FnA9GuQQJKg+Aw==}
     engines: {node: ^14.18.0 || >= 16}
     peerDependencies:
@@ -12041,8 +12054,10 @@ packages:
       deepmerge: 4.3.1
       kleur: 4.1.5
       magic-string: 0.30.0
-      svelte-hmr: 0.15.1
-      vitefu: 0.2.4
+      svelte: 3.59.2
+      svelte-hmr: 0.15.1(svelte@3.59.2)
+      vite: 4.1.4(@types/node@18.15.3)
+      vitefu: 0.2.4(vite@4.1.4)
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -12207,15 +12222,16 @@ packages:
       defer-to-connect: 1.1.3
     dev: false
 
-  /@trpc/client@9.18.0:
+  /@trpc/client@9.18.0(@trpc/server@9.18.0):
     resolution: {integrity: sha512-kqC0/nuA+/wVvddaFbSRMbSZ3oGAY4nl2pHVxM7jqDBLkn6nbk0IHK0oJ0g1tDZxyfg4xuZtTrzh0yYpE4C69w==}
     peerDependencies:
       '@trpc/server': 9.18.0
     dependencies:
       '@babel/runtime': 7.20.1
+      '@trpc/server': 9.18.0
     dev: false
 
-  /@trpc/react@9.18.0(@trpc/client@9.18.0)(react-dom@17.0.2)(react-query@3.39.2)(react@17.0.2):
+  /@trpc/react@9.18.0(@trpc/client@9.18.0)(@trpc/server@9.18.0)(react-dom@17.0.2)(react-query@3.39.2)(react@17.0.2):
     resolution: {integrity: sha512-stoHIA/9OJtVnmnR/JtVLs52A3gKfTUjvoID8lQTL3LHJbDOzDxKnefUdMr8RfgeC92ALeIbdzeO08P1/0THjQ==}
     peerDependencies:
       '@trpc/client': 9.18.0
@@ -12225,7 +12241,8 @@ packages:
       react-query: ^3.31.0 || ^4.0.0-alpha.4
     dependencies:
       '@babel/runtime': 7.20.1
-      '@trpc/client': 9.18.0
+      '@trpc/client': 9.18.0(@trpc/server@9.18.0)
+      '@trpc/server': 9.18.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
       react-query: 3.39.2(react-dom@17.0.2)(react@17.0.2)
@@ -12233,6 +12250,12 @@ packages:
 
   /@trpc/server@9.16.0:
     resolution: {integrity: sha512-IENsJs41ZR4oeFUJhsNNTSgEOtuRN0m9u7ec4u3eG/qOc7bIoo1nDoYtx4bl6OJJSQYEytG9tlcVz9G8OAaHbg==}
+    dependencies:
+      tslib: 2.5.0
+    dev: false
+
+  /@trpc/server@9.18.0:
+    resolution: {integrity: sha512-xWBC2+Q5OuJfK4kN9LqvpnncOP3T2I1duc5xDAnYOhhmvnKrfoUQoBReSqA5MohomAB/EDcRVCea2sKoNIoa0g==}
     dependencies:
       tslib: 2.5.0
     dev: false
@@ -13003,8 +13026,10 @@ packages:
       indent-string: 4.0.0
     dev: false
 
-  /ajv-formats@2.1.1:
+  /ajv-formats@2.1.1(ajv@8.11.0):
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
+    peerDependencies:
+      ajv: ^8.0.0
     peerDependenciesMeta:
       ajv:
         optional: true
@@ -13392,7 +13417,7 @@ packages:
       typescript: 4.9.5
       unist-util-visit: 4.1.2
       vfile: 5.3.7
-      vite: 4.1.4
+      vite: 4.1.4(@types/node@18.15.3)
       vitefu: 0.2.4(vite@4.1.4)
       yargs-parser: 21.1.1
       zod: 3.21.4
@@ -13463,8 +13488,8 @@ packages:
     resolution: {integrity: sha512-DMD0KiN46eipeziST1LPP/STfDU0sufISXmjSgvVsoU2tqxctQeASejWcfNtxYKqETM1UxQ8sp2OrSBWpHY6sw==}
     engines: {node: '>= 0.4'}
 
-  /aws-cdk-lib@2.79.1(constructs@10.1.156):
-    resolution: {integrity: sha512-iOPT9hbpP7z9otAzAgSr3HksjZe/QQXdyE7P1A4EESAzmLktOGfzzHydJqU1wfE9BbgK4ioCS0dJ3EaCCtWGpg==}
+  /aws-cdk-lib@2.84.0(constructs@10.1.156):
+    resolution: {integrity: sha512-4zLtCLCIs5Ia4WRGqiXRwxSkpGaNy3NxMexO9qYHSuIYpqf4sHObzZ0tDHZCFL5Wkui3sCu3OLQWrRHrr93HvA==}
     engines: {node: '>= 14.15.0'}
     peerDependencies:
       constructs: ^10.0.0
@@ -13569,17 +13594,9 @@ packages:
   /axios@0.24.0:
     resolution: {integrity: sha512-Q6cWsys88HoPgAaFAVUb0WpPk0O8iTeisR9IMqy9G8AbO4NlpVknrnQS03zzF9PGAWgO3cgletO3VjV/P7VztA==}
     dependencies:
-      follow-redirects: 1.15.2
+      follow-redirects: 1.15.2(debug@4.3.4)
     transitivePeerDependencies:
       - debug
-
-  /axios@0.25.0:
-    resolution: {integrity: sha512-cD8FOb0tRH3uuEe6+evtAbgJtfxr7ly3fQjYcMcuPlgkwVS9xboaVIpcDV+cYQe+yGykgwZCs1pzjntcGa6l5g==}
-    dependencies:
-      follow-redirects: 1.15.2
-    transitivePeerDependencies:
-      - debug
-    dev: false
 
   /axios@0.25.0(debug@4.3.4):
     resolution: {integrity: sha512-cD8FOb0tRH3uuEe6+evtAbgJtfxr7ly3fQjYcMcuPlgkwVS9xboaVIpcDV+cYQe+yGykgwZCs1pzjntcGa6l5g==}
@@ -13587,7 +13604,6 @@ packages:
       follow-redirects: 1.15.2(debug@4.3.4)
     transitivePeerDependencies:
       - debug
-    dev: true
 
   /babel-loader@8.3.0(@babel/core@7.20.2)(webpack@5.75.0):
     resolution: {integrity: sha512-H8SvsMF+m9t15HNLMipppzkC+Y2Yq+v3SonZyU70RBL/h1gxPkH08Ot8pEE9Z4Kd+czyWJClmFS8qzIP9OZ04Q==}
@@ -14249,13 +14265,13 @@ packages:
     resolution: {integrity: sha512-eyrF0jiFpY+3drT6383f1qhkbGsLSifNAjA61IUjZjmLCWjItY6LB9ft9YhoDgwfmclB2zhu51Lc7+95b8NRAg==}
     dev: true
 
-  /cdk-assets@2.79.1:
-    resolution: {integrity: sha512-2S5VGY8jgEB+XHE0vxBKUEDJ94QCY8T/xloMu8ypquEQNHgEJbvB7Z0aRKKd3t+B4bVFIpTbxM8NNkQy0dZt6Q==}
+  /cdk-assets@2.84.0:
+    resolution: {integrity: sha512-7yMZX1v1q+F3EKQ21ida78jscSFTQ7Ikj7knZ/D1KPED6ef+at/xdXjxcz3hLEPaFhDQj9JaBxmWsOzDlp4bmw==}
     engines: {node: '>= 14.15.0'}
     hasBin: true
     dependencies:
-      '@aws-cdk/cloud-assembly-schema': 2.79.1
-      '@aws-cdk/cx-api': 2.79.1(@aws-cdk/cloud-assembly-schema@2.79.1)
+      '@aws-cdk/cloud-assembly-schema': 2.84.0
+      '@aws-cdk/cx-api': 2.84.0(@aws-cdk/cloud-assembly-schema@2.84.0)
       archiver: 5.3.1
       aws-sdk: 2.1383.0
       glob: 7.2.3
@@ -14728,7 +14744,7 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       ajv: 8.11.0
-      ajv-formats: 2.1.1
+      ajv-formats: 2.1.1(ajv@8.11.0)
       atomically: 1.7.0
       debounce-fn: 4.0.0
       dot-prop: 6.0.1
@@ -16225,7 +16241,7 @@ packages:
     dev: true
     optional: true
 
-  /esbuild-plugin-solid@0.4.2(esbuild@0.14.54):
+  /esbuild-plugin-solid@0.4.2(esbuild@0.14.54)(solid-js@1.7.6):
     resolution: {integrity: sha512-T5GphLoud3RumjeNYO3K9WVjWDzVKG5evlS7hUEUI0n9tiCL+CnbvJh3SSwFi3xeeXpZRrnZc1gd6FWQsVobTg==}
     peerDependencies:
       esbuild: '>=0.12'
@@ -16235,6 +16251,7 @@ packages:
       '@babel/preset-typescript': 7.18.6(@babel/core@7.21.3)
       babel-preset-solid: 1.6.7(@babel/core@7.21.3)
       esbuild: 0.14.54
+      solid-js: 1.7.6
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -16900,15 +16917,6 @@ packages:
     transitivePeerDependencies:
       - encoding
     dev: false
-
-  /follow-redirects@1.15.2:
-    resolution: {integrity: sha512-VQLG33o04KaQ8uYi2tVNbdrWp1QWxNNea+nmIB4EVM28v0hmP17z7aG1+wAkNzVq4KeXTq3221ye5qTJP91JwA==}
-    engines: {node: '>=4.0'}
-    peerDependencies:
-      debug: '*'
-    peerDependenciesMeta:
-      debug:
-        optional: true
 
   /follow-redirects@1.15.2(debug@4.3.4):
     resolution: {integrity: sha512-VQLG33o04KaQ8uYi2tVNbdrWp1QWxNNea+nmIB4EVM28v0hmP17z7aG1+wAkNzVq4KeXTq3221ye5qTJP91JwA==}
@@ -17820,7 +17828,7 @@ packages:
     engines: {node: '>=8.0.0'}
     dependencies:
       eventemitter3: 4.0.7
-      follow-redirects: 1.15.2
+      follow-redirects: 1.15.2(debug@4.3.4)
       requires-port: 1.0.0
     transitivePeerDependencies:
       - debug
@@ -18544,7 +18552,7 @@ packages:
     resolution: {integrity: sha512-wLe+lJHeG8Xt6uEubS4x0LVjS/3kXXu9dGoj9BNnlhYq7Kts0Pbb2pvv5KiI0yaKH/eaiR0LUOBhOVo9ktd05A==}
     dev: false
 
-  /jotai@1.9.2(immer@9.0.16)(react@17.0.2):
+  /jotai@1.9.2(@babel/core@7.21.3)(immer@9.0.16)(react@17.0.2):
     resolution: {integrity: sha512-/893WrniZwoVc0+3JR056r0FTC/tGbgyHco9dfgde6K8TU6XNxrOSw4jCRdDicncw67A37v2GNGzXSpHKbHPmw==}
     engines: {node: '>=12.7.0'}
     peerDependencies:
@@ -18575,6 +18583,7 @@ packages:
       xstate:
         optional: true
     dependencies:
+      '@babel/core': 7.21.3
       immer: 9.0.16
       react: 17.0.2
     dev: false
@@ -21987,23 +21996,6 @@ packages:
       - encoding
     dev: false
 
-  /react-json-view@1.21.3(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-13p8IREj9/x/Ye4WI/JpjhoIwuzEgUAtgJZNBJckfzJt1qyh24BdTm6UQNGnyTq9dapQdrqvquZTo3dz1X6Cjw==}
-    peerDependencies:
-      react: ^17.0.0 || ^16.3.0 || ^15.5.4
-      react-dom: ^17.0.0 || ^16.3.0 || ^15.5.4
-    dependencies:
-      flux: 4.0.3(react@17.0.2)
-      react: 17.0.2
-      react-base16-styling: 0.6.0
-      react-dom: 17.0.2(react@17.0.2)
-      react-lifecycles-compat: 3.0.4
-      react-textarea-autosize: 8.4.0(react@17.0.2)
-    transitivePeerDependencies:
-      - '@types/react'
-      - encoding
-    dev: false
-
   /react-lifecycles-compat@3.0.4:
     resolution: {integrity: sha512-fBASbA6LnOU9dOU2eW7aQ8xmYBSXUIWr+UmF9b1efZBazGNO+rcXT/icdKnYm2pTwcRylVUYwW7H1PHfLekVzA==}
     dev: false
@@ -22183,13 +22175,13 @@ packages:
       react: 17.0.2
     dev: false
 
-  /react-spinners@0.11.0(@types/react@17.0.52)(react-dom@17.0.2)(react@17.0.2):
+  /react-spinners@0.11.0(@babel/core@7.21.3)(@types/react@17.0.52)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-rDZc0ABWn/M1OryboGsWVmIPg8uYWl0L35jPUhr40+Yg+syVPjeHwvnB7XWaRpaKus3M0cG9BiJA+ZB0dAwWyw==}
     peerDependencies:
       react: ^16.0.0 || ^17.0.0
       react-dom: ^16.0.0 || ^17.0.0
     dependencies:
-      '@emotion/react': 11.10.5(@types/react@17.0.52)(react@17.0.2)
+      '@emotion/react': 11.10.5(@babel/core@7.21.3)(@types/react@17.0.52)(react@17.0.2)
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
     transitivePeerDependencies:
@@ -22224,20 +22216,6 @@ packages:
       react: 17.0.2
       use-composed-ref: 1.3.0(react@17.0.2)
       use-latest: 1.2.1(@types/react@17.0.52)(react@17.0.2)
-    transitivePeerDependencies:
-      - '@types/react'
-    dev: false
-
-  /react-textarea-autosize@8.4.0(react@17.0.2):
-    resolution: {integrity: sha512-YrTFaEHLgJsi8sJVYHBzYn+mkP3prGkmP2DKb/tm0t7CLJY5t1Rxix8070LAKb0wby7bl/lf2EeHkuMihMZMwQ==}
-    engines: {node: '>=10'}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0 || ^18.0.0
-    dependencies:
-      '@babel/runtime': 7.21.0
-      react: 17.0.2
-      use-composed-ref: 1.3.0(react@17.0.2)
-      use-latest: 1.2.1(react@17.0.2)
     transitivePeerDependencies:
       - '@types/react'
     dev: false
@@ -22955,7 +22933,7 @@ packages:
     dependencies:
       '@types/json-schema': 7.0.11
       ajv: 8.11.0
-      ajv-formats: 2.1.1
+      ajv-formats: 2.1.1(ajv@8.11.0)
       ajv-keywords: 5.1.0(ajv@8.11.0)
     dev: false
 
@@ -23053,6 +23031,11 @@ packages:
     dependencies:
       randombytes: 2.1.0
     dev: false
+
+  /seroval@0.5.1:
+    resolution: {integrity: sha512-ZfhQVB59hmIauJG5Ydynupy8KHyr5imGNtdDhbZG68Ufh1Ynkv9KOYOAABf71oVbQxJ8VkWnMHAjEHE7fWkH5g==}
+    engines: {node: '>=10'}
+    dev: true
 
   /serve-handler@6.1.5:
     resolution: {integrity: sha512-ijPFle6Hwe8zfmBxJdE+5fta53fdIY0lHISJvuikXB3VYFafRjMRpOffSPvCYsbKyBA7pvy9oYr/BT1O3EArlg==}
@@ -23314,7 +23297,14 @@ packages:
       websocket-driver: 0.7.4
     dev: false
 
-  /solid-refresh@0.4.2:
+  /solid-js@1.7.6:
+    resolution: {integrity: sha512-DXVOTjUh/bIAhE0fIqu3ezGLyQaez7v8EOw3uPLIi87DmLjg+hsuCAgKyNIZ+o4jUetOk3ZORccvJmE1yZUk8g==}
+    dependencies:
+      csstype: 3.1.1
+      seroval: 0.5.1
+    dev: true
+
+  /solid-refresh@0.4.2(solid-js@1.7.6):
     resolution: {integrity: sha512-6g1HsgQkY0X0ZmsaydNgHwRaQIhH3bAbagZiYwWnGO7mqli50ehlwQUN18RZ2MH3fTIs9Y1bankZapVhMVuijg==}
     peerDependencies:
       solid-js: ^1.3
@@ -23322,9 +23312,10 @@ packages:
       '@babel/generator': 7.22.3
       '@babel/helper-module-imports': 7.21.4
       '@babel/types': 7.22.4
+      solid-js: 1.7.6
     dev: true
 
-  /solid-start@0.2.11(vite@3.2.5):
+  /solid-start@0.2.11(@solidjs/meta@0.28.5)(@solidjs/router@0.6.0)(solid-js@1.7.6)(vite@3.2.5):
     resolution: {integrity: sha512-CwhzRTmvCrhUFFz4Bw3XTry2Hxnh/t9hqv1URmvlH3zTuDoJuSW9Sn08bbUdu/peOVF46tX3mTFn/pkfnljTfQ==}
     hasBin: true
     peerDependencies:
@@ -23339,6 +23330,8 @@ packages:
       '@babel/preset-env': 7.22.4(@babel/core@7.21.3)
       '@babel/preset-typescript': 7.18.6(@babel/core@7.21.3)
       '@babel/template': 7.20.7
+      '@solidjs/meta': 0.28.5(solid-js@1.7.6)
+      '@solidjs/router': 0.6.0(solid-js@1.7.6)
       '@types/cookie': 0.5.1
       '@vinxi/vite-plugin-inspect': 0.6.27(rollup@2.79.1)(vite@3.2.5)
       chokidar: 3.5.3
@@ -23349,7 +23342,7 @@ packages:
       dotenv: 16.0.3
       es-module-lexer: 1.2.0
       esbuild: 0.14.54
-      esbuild-plugin-solid: 0.4.2(esbuild@0.14.54)
+      esbuild-plugin-solid: 0.4.2(esbuild@0.14.54)(solid-js@1.7.6)
       fast-glob: 3.2.12
       get-port: 6.1.2
       parse-multipart-data: 1.5.0
@@ -23359,11 +23352,12 @@ packages:
       rollup-route-manifest: 1.0.0(rollup@2.79.1)
       sade: 1.8.1
       sirv: 2.0.2
+      solid-js: 1.7.6
       terser: 5.15.1
       undici: 5.22.0
       vite: 3.2.5(terser@5.15.1)
       vite-plugin-inspect: 0.6.1(vite@3.2.5)
-      vite-plugin-solid: 2.5.0(vite@3.2.5)
+      vite-plugin-solid: 2.5.0(solid-js@1.7.6)(vite@3.2.5)
       wait-on: 6.0.1(debug@4.3.4)
     transitivePeerDependencies:
       - supports-color
@@ -23484,8 +23478,8 @@ packages:
   /sprintf-js@1.0.3:
     resolution: {integrity: sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g==}
 
-  /sst-aws-cdk@2.62.2-3:
-    resolution: {integrity: sha512-scNMkuwTm7Gr/8l8/lCNIxVD2z8TX+4Yr5Mb5OzsUeumYCmF0KGegNy/0pYgYArObAExEnbju8kRuB/VwJRhUQ==}
+  /sst-aws-cdk@2.84.0:
+    resolution: {integrity: sha512-gSgfDPqxhkBcEbx+gNFLZ+3DVwZ/ps4m+/Nwk7gKq7Pr/KKEFUbnHGmeuUbD7/jYh9cGbJqpup6gUHqJX4GtHg==}
     engines: {node: '>= 14.15.0'}
     hasBin: true
     dependencies:
@@ -23845,11 +23839,18 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
-  /svelte-hmr@0.15.1:
+  /svelte-hmr@0.15.1(svelte@3.59.2):
     resolution: {integrity: sha512-BiKB4RZ8YSwRKCNVdNxK/GfY+r4Kjgp9jCLEy0DuqAKfmQtpL38cQK3afdpjw4sqSs4PLi3jIPJIFp259NkZtA==}
     engines: {node: ^12.20 || ^14.13.1 || >= 16}
     peerDependencies:
       svelte: '>=3.19.0'
+    dependencies:
+      svelte: 3.59.2
+    dev: true
+
+  /svelte@3.59.2:
+    resolution: {integrity: sha512-vzSyuGr3eEoAtT/A6bmajosJZIUWySzY2CzB3w2pgPvnkUjGqlDnsNnA0PMO+mMAhuyMul6C2uuZzY6ELSkzyA==}
+    engines: {node: '>= 8'}
     dev: true
 
   /svg-parser@2.0.4:
@@ -24730,18 +24731,6 @@ packages:
       react: 17.0.2
     dev: false
 
-  /use-isomorphic-layout-effect@1.1.2(react@17.0.2):
-    resolution: {integrity: sha512-49L8yCO3iGT/ZF9QttjwLF/ZD9Iwto5LnH5LmEdk/6cFmXddqi2ulF0edxTwjj+7mqvpVVGQWvbXZdn32wRSHA==}
-    peerDependencies:
-      '@types/react': '*'
-      react: ^16.8.0 || ^17.0.0 || ^18.0.0
-    peerDependenciesMeta:
-      '@types/react':
-        optional: true
-    dependencies:
-      react: 17.0.2
-    dev: false
-
   /use-latest@1.2.1(@types/react@17.0.52)(react@17.0.2):
     resolution: {integrity: sha512-xA+AVm/Wlg3e2P/JiItTziwS7FK92LWrDB0p+hgXloIMuVCeJJ8v6f0eeHyPZaJrM+usM1FkFfbNCrJGs8A/zw==}
     peerDependencies:
@@ -24754,19 +24743,6 @@ packages:
       '@types/react': 17.0.52
       react: 17.0.2
       use-isomorphic-layout-effect: 1.1.2(@types/react@17.0.52)(react@17.0.2)
-    dev: false
-
-  /use-latest@1.2.1(react@17.0.2):
-    resolution: {integrity: sha512-xA+AVm/Wlg3e2P/JiItTziwS7FK92LWrDB0p+hgXloIMuVCeJJ8v6f0eeHyPZaJrM+usM1FkFfbNCrJGs8A/zw==}
-    peerDependencies:
-      '@types/react': '*'
-      react: ^16.8.0 || ^17.0.0 || ^18.0.0
-    peerDependenciesMeta:
-      '@types/react':
-        optional: true
-    dependencies:
-      react: 17.0.2
-      use-isomorphic-layout-effect: 1.1.2(react@17.0.2)
     dev: false
 
   /use-sidecar@1.1.2(@types/react@17.0.52)(react@17.0.2):
@@ -25002,7 +24978,7 @@ packages:
       - supports-color
     dev: true
 
-  /vite-plugin-solid@2.5.0(vite@3.2.5):
+  /vite-plugin-solid@2.5.0(solid-js@1.7.6)(vite@3.2.5):
     resolution: {integrity: sha512-VneGd3RyFJvwaiffsqgymeMaofn0IzQLPwDzafTV2f1agoWeeJlk5VrI5WqT9BTtLe69vNNbCJWqLhHr9fOdDw==}
     peerDependencies:
       solid-js: ^1.3.17 || ^1.4.0 || ^1.5.0 || ^1.6.0
@@ -25012,7 +24988,8 @@ packages:
       '@babel/preset-typescript': 7.18.6(@babel/core@7.21.3)
       babel-preset-solid: 1.6.7(@babel/core@7.21.3)
       merge-anything: 5.1.4
-      solid-refresh: 0.4.2
+      solid-js: 1.7.6
+      solid-refresh: 0.4.2(solid-js@1.7.6)
       vite: 3.2.5(terser@5.15.1)
       vitefu: 0.2.4(vite@3.2.5)
     transitivePeerDependencies:
@@ -25111,39 +25088,6 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /vite@4.1.4:
-    resolution: {integrity: sha512-3knk/HsbSTKEin43zHu7jTwYWv81f8kgAL99G5NWBcA1LKvtvcVAC4JjBH1arBunO9kQka+1oGbrMKOjk4ZrBg==}
-    engines: {node: ^14.18.0 || >=16.0.0}
-    hasBin: true
-    peerDependencies:
-      '@types/node': '>= 14'
-      less: '*'
-      sass: '*'
-      stylus: '*'
-      sugarss: '*'
-      terser: ^5.4.0
-    peerDependenciesMeta:
-      '@types/node':
-        optional: true
-      less:
-        optional: true
-      sass:
-        optional: true
-      stylus:
-        optional: true
-      sugarss:
-        optional: true
-      terser:
-        optional: true
-    dependencies:
-      esbuild: 0.16.17
-      postcss: 8.4.21
-      resolve: 1.22.1
-      rollup: 3.19.1
-    optionalDependencies:
-      fsevents: 2.3.2
-    dev: true
-
   /vite@4.1.4(@types/node@18.15.3):
     resolution: {integrity: sha512-3knk/HsbSTKEin43zHu7jTwYWv81f8kgAL99G5NWBcA1LKvtvcVAC4JjBH1arBunO9kQka+1oGbrMKOjk4ZrBg==}
     engines: {node: ^14.18.0 || >=16.0.0}
@@ -25178,15 +25122,6 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /vitefu@0.2.4:
-    resolution: {integrity: sha512-fanAXjSaf9xXtOOeno8wZXIhgia+CZury481LsDaV++lSvcU2R9Ch2bPh3PYFyoHW+w9LqAeYRISVQjUIew14g==}
-    peerDependencies:
-      vite: ^3.0.0 || ^4.0.0
-    peerDependenciesMeta:
-      vite:
-        optional: true
-    dev: true
-
   /vitefu@0.2.4(vite@3.2.5):
     resolution: {integrity: sha512-fanAXjSaf9xXtOOeno8wZXIhgia+CZury481LsDaV++lSvcU2R9Ch2bPh3PYFyoHW+w9LqAeYRISVQjUIew14g==}
     peerDependencies:
@@ -25206,7 +25141,7 @@ packages:
       vite:
         optional: true
     dependencies:
-      vite: 4.1.4
+      vite: 4.1.4(@types/node@18.15.3)
     dev: true
 
   /vitest@0.26.3:
@@ -25375,20 +25310,6 @@ packages:
     resolution: {integrity: sha512-eOpPHogvorZRobNqJGhapa0JdwaxpjVvyBp0QIUMRMSf8ZAlqOdEquKuRmw9Qwu0qXtJIWqFtMkmvJjUZmMjVA==}
     dev: true
 
-  /wait-on@6.0.1:
-    resolution: {integrity: sha512-zht+KASY3usTY5u2LgaNqn/Cd8MukxLGjdcZxT2ns5QzDmTFc4XoWBgC+C/na+sMRZTuVygQoMYwdcVjHnYIVw==}
-    engines: {node: '>=10.0.0'}
-    hasBin: true
-    dependencies:
-      axios: 0.25.0
-      joi: 17.7.0
-      lodash: 4.17.21
-      minimist: 1.2.8
-      rxjs: 7.5.7
-    transitivePeerDependencies:
-      - debug
-    dev: false
-
   /wait-on@6.0.1(debug@4.3.4):
     resolution: {integrity: sha512-zht+KASY3usTY5u2LgaNqn/Cd8MukxLGjdcZxT2ns5QzDmTFc4XoWBgC+C/na+sMRZTuVygQoMYwdcVjHnYIVw==}
     engines: {node: '>=10.0.0'}
@@ -25401,7 +25322,6 @@ packages:
       rxjs: 7.5.7
     transitivePeerDependencies:
       - debug
-    dev: true
 
   /watchpack@2.1.1:
     resolution: {integrity: sha512-Oo7LXCmc1eE1AjyuSBmtC3+Wy4HcV8PxWh2kP6fOl8yTlNS7r0K9l1ao2lrrUza7V39Y3D/BbJgY8VeSlc5JKw==}
