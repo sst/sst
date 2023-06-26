@@ -15,6 +15,7 @@ import {
   Runtime,
   Architecture,
   FunctionUrlAuthType,
+  FunctionProps,
 } from "aws-cdk-lib/aws-lambda";
 import {
   Distribution,
@@ -53,6 +54,9 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
    * @default Server function is not kept warm
    */
   warm?: number;
+  cdk?: SsrSiteProps["cdk"] & {
+    revalidation?: Pick<FunctionProps, "vpc" | "vpcSubnets">;
+  };
 }
 
 /**
@@ -93,6 +97,8 @@ export class NextjsSite extends SsrSite {
   protected createRevalidation() {
     if (!this.serverLambdaForRegional && !this.serverLambdaForEdge) return;
 
+    const { cdk } = this.props;
+
     const queue = new Queue(this, "RevalidationQueue", {
       fifo: true,
       receiveMessageWaitTime: CdkDuration.seconds(20),
@@ -105,6 +111,7 @@ export class NextjsSite extends SsrSite {
       ),
       runtime: Runtime.NODEJS_18_X,
       timeout: CdkDuration.seconds(30),
+      ...cdk?.revalidation,
     });
     consumer.addEventSource(new SqsEventSource(queue, { batchSize: 5 }));
 
