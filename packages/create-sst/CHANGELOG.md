@@ -1,5 +1,11 @@
 # create-sst
 
+## 2.17.1
+
+### Patch Changes
+
+- [#3017](https://github.com/serverless-stack/sst/pull/3017) [`a2a48ddb3`](https://github.com/serverless-stack/sst/commit/a2a48ddb3ae41b3179c8f668bf3cb6770fe7e690) Thanks [@Rohithgilla12](https://github.com/Rohithgilla12)! - create-sst: fix selecting "no" for dropin mode error
+
 ## 2.17.0
 
 ## 2.16.4
