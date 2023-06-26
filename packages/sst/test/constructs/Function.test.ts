@@ -1,4 +1,4 @@
-import { test, expect, beforeEach, beforeAll } from "vitest";
+import { test, expect } from "vitest";
 /* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/ban-types, @typescript-eslint/no-empty-function */
 
 import path from "path";
@@ -18,10 +18,7 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
 import {
   Api,
-  AppSyncApi,
   WebSocketApi,
-  ApiGatewayV1Api,
-  App,
   Job,
   RDS,
   Stack,
@@ -797,6 +794,39 @@ test("vpc: securityGroups configured without vpc", async () => {
     });
   }).toThrow(/Cannot configure "securityGroups"/);
 });
+
+test("nodejs.install: valid package", async () => {
+  const app = await createApp({
+    mode: "deploy",
+  });
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    nodejs: {
+      install: ["lodash"],
+    },
+  });
+  await expect(async () => {
+    await app.finish();
+  }).not.toThrowError();
+});
+
+test("nodejs.install: invalid package", async () => {
+  const app = await createApp({
+    mode: "deploy",
+  });
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    nodejs: {
+      install: ["packagethatdoesnotexist"],
+    },
+  });
+  await expect(async () => {
+    await app.finish();
+  }).rejects.toThrow(/Failed to build function/);
+});
+
 /////////////////////////////
 // Test Constructor for Local Debug
 /////////////////////////////

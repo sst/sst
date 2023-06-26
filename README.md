@@ -12,7 +12,7 @@
 
 ---
 
-SST makes it easy to build modern full-stack applications on AWS. [Learn more](https://docs.sst.dev/what-is-sst).
+SST makes it easy to build modern full-stack applications on AWS. Watch the [**SST in 100 seconds**](https://youtu.be/JY_d0vf-rfw) video to learn more.
 
 ```bash
 $ npx create-sst@latest

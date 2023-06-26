@@ -64,7 +64,7 @@ Make sure to import the [`Table`](constructs/Table.md) construct.
 
 ## Bind the table
 
-After adding the bucket, bind your Next.js app to it.
+After adding the table, bind your Next.js app to it.
 
 ```diff title="stacks/Default.ts"
 const site = new NextjsSite(stack, "site", {
