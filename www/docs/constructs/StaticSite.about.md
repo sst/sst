@@ -442,6 +442,37 @@ This configures all the `.html` files to not be cached by the, while the `.js` a
 
 Note that, you need to specify the `exclude: "*"` along with the `include` option. It allows you to pick the files you want, while excluding everything else.
 
+### Content type
+
+The content type for files is automatically assigned based on their extentions by default. For files without an extension, the default content type is `binary/octet-stream`. However, you can override this default setting:
+
+```js {17-22}
+new StaticSite(stack, "frontend", {
+  path: "path/to/site",
+  buildOutput: "build",
+  buildCommand: "npm run build",
+  errorPage: "redirect_to_index_page",
+  fileOptions: [
+    {
+      exclude: "*",
+      include: "*.html",
+      cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
+    },
+    {
+      exclude: "*",
+      include: ["*.js", "*.css"],
+      cacheControl: "max-age=31536000,public,immutable",
+    },
+    {
+      exclude: "*",
+      include: ".well-known/site-association-json",
+      cacheControl: "max-age=31536000,public,immutable",
+      contentType: "application/json",
+    },
+  ],
+});
+```
+
 ### Advanced examples
 
 #### Configuring the S3 Bucket
