@@ -165,6 +165,7 @@ export async function bootstrapSST() {
   // Create bootstrap stack
   const app = new App();
   const stackName = bootstrap?.stackName || SST_STACK_NAME;
+  const toolkitStackName = bootstrap?.toolkitStackName || CDK_STACK_NAME;
   const stack = new Stack(app, stackName, {
     env: {
       region,
@@ -259,7 +260,7 @@ export async function bootstrapSST() {
 
   // Deploy bootstrap stack
   const asm = app.synth();
-  const result = await Stacks.deploy(asm.stacks[0]);
+  const result = await Stacks.deploy(asm.stacks[0], toolkitStackName);
   if (Stacks.isFailed(result.status)) {
     throw new VisibleError(
       `Failed to deploy bootstrap stack:\n${JSON.stringify(

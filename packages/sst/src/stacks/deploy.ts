@@ -97,7 +97,8 @@ export async function deployMany(stacks: CloudFormationStackArtifact[]) {
 }
 
 export async function deploy(
-  stack: CloudFormationStackArtifact
+  stack: CloudFormationStackArtifact,
+  toolkitStackName: string = 'CDKToolkit'
 ): Promise<StackDeploymentResult> {
   const bus = useBus();
   Logger.debug("Deploying stack", stack.id);
@@ -117,6 +118,7 @@ export async function deploy(
       deploymentMethod: {
         method: "direct",
       },
+      toolkitStackName
     });
     if (result?.noOp) {
       bus.publish("stack.status", {

@@ -30,6 +30,7 @@ export interface ConfigOptions {
   bootstrap?: {
     stackName?: string;
     tags?: Record<string, string>;
+    toolkitStackName?: string;
   };
   cdk?: {
     toolkitStackName?: string;
