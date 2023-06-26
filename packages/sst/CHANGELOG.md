@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.16.4
+
+### Patch Changes
+
+- [#3025](https://github.com/serverless-stack/sst/pull/3025) [`2ba152041`](https://github.com/serverless-stack/sst/commit/2ba15204194b51a1cf6a12a6594f69eac97d38d7) Thanks [@ealain](https://github.com/ealain)! - NextjsSite: support vpc settings for revalidation function
+
 ## 2.16.3
 
 ### Patch Changes
