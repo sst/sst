@@ -237,7 +237,6 @@ export const useNodeHandler = Context.memo(async () => {
             process.on("exit", (code) => {
               if (code !== 0) {
                 reject(new VisibleError("Installation Failed"));
-                // throw new VisibleError('Installation failed')
               }
               resolve();
             });
