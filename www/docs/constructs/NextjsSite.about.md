@@ -379,22 +379,6 @@ new NextjsSite(stack, "Site", {
 });
 ```
 
-### Configuring revalidation function
-
-```js {8-10}
-const vpc = Vpc.fromVpcAttributes(stack, 'FrontendVpc', {
-    vpcId: 'vpc-01123456789abcdef0',
-    availabilityZones: ['us-east-1a', 'us-east-1b'],
-});
-
-new NextjsSite(stack, "Site", {
-  path: "my-next-app/",
-  revalidation: {
-    vpc,
-  },
-});
-```
-
 ### Advanced examples
 
 #### Configuring VPC
@@ -409,15 +393,20 @@ const vpc = new Vpc(stack, "myVPC");
 
 // Alternatively use an existing VPC
 const vpc = Vpc.fromLookup(stack, "myVPC", { ... });
+const vpcSubnets = {
+  subnetType: SubnetType.PRIVATE_WITH_NAT,
+};
 
 new NextjsSite(stack, "Site", {
   path: "my-next-app/",
   cdk: {
     server: {
       vpc,
-      vpcSubnets: {
-        subnetType: SubnetType.PRIVATE_WITH_NAT,
-      }
+      vpcSubnets,
+    },
+    revalidation: {
+      vpc,
+      vpcSubnets,
     }
   }
 });

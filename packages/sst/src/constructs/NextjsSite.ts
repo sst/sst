@@ -36,7 +36,6 @@ import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 import { SsrSite, SsrSiteProps } from "./SsrSite.js";
 import { Size, toCdkSize } from "./util/size.js";
-import { IVpc } from "aws-cdk-lib/aws-ec2";
 
 export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   imageOptimization?: {
@@ -50,16 +49,14 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
      */
     memorySize?: number | Size;
   };
-  revalidation?: Pick<
-    FunctionProps,
-    | "vpc"
-    | "vpcSubnets"
-  >;
   /**
    * The number of server functions to keep warm. This option is only supported for the regional mode.
    * @default Server function is not kept warm
    */
   warm?: number;
+  cdk?: SsrSiteProps["cdk"] & {
+    revalidation?: Pick<FunctionProps, "vpc" | "vpcSubnets">;
+  };
 }
 
 /**
@@ -100,7 +97,7 @@ export class NextjsSite extends SsrSite {
   protected createRevalidation() {
     if (!this.serverLambdaForRegional && !this.serverLambdaForEdge) return;
 
-    const { revalidation } = this.props;
+    const { cdk } = this.props;
 
     const queue = new Queue(this, "RevalidationQueue", {
       fifo: true,
@@ -114,7 +111,7 @@ export class NextjsSite extends SsrSite {
       ),
       runtime: Runtime.NODEJS_18_X,
       timeout: CdkDuration.seconds(30),
-      ...revalidation,
+      ...cdk?.revalidation,
     });
     consumer.addEventSource(new SqsEventSource(queue, { batchSize: 5 }));
 

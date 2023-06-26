@@ -11,6 +11,7 @@ import {
   ABSENT,
   createApp,
 } from "./helper.js";
+import { Vpc } from "aws-cdk-lib/aws-ec2";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as cf from "aws-cdk-lib/aws-cloudfront";
 import * as route53 from "aws-cdk-lib/aws-route53";
@@ -105,5 +106,34 @@ test("cdk.distribution.defaultBehavior", async () => {
         ViewerProtocolPolicy: "https-only",
       }),
     }),
+  });
+});
+
+test("cdk.revalidation.vpc: not set", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new NextjsSite(stack, "Site", {
+    path: sitePath,
+    buildCommand: "echo skip",
+  });
+  hasResource(stack, "AWS::Lambda::Function", {
+    Description: "Next.js revalidator",
+    VpcConfig: ABSENT,
+  });
+});
+
+test("cdk.revalidation.vpc: set", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new NextjsSite(stack, "Site", {
+    path: sitePath,
+    buildCommand: "echo skip",
+    cdk: {
+      revalidation: {
+        vpc: new Vpc(stack, "Vpc"),
+      },
+    },
+  });
+  hasResource(stack, "AWS::Lambda::Function", {
+    Description: "Next.js revalidator",
+    VpcConfig: ANY,
   });
 });
