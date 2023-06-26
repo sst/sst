@@ -231,16 +231,9 @@ export const useNodeHandler = Context.memo(async () => {
             );
           }
           await new Promise<void>((resolve, reject) => {
-            const process = exec(cmd.join(" "), {
-              cwd: input.out,
-            });
-            process.on("exit", (code) => {
-              if (code !== 0) {
-                reject(
-                  new VisibleError(
-                    `Failed to install packages specified under "nodejs.install"`
-                  )
-                );
+            exec(cmd.join(" "), { cwd: input.out }, (error) => {
+              if (error) {
+                reject(error);
               }
               resolve();
             });
