@@ -1,5 +1,17 @@
 # @serverless-stack/cli2
 
+## 2.17.0
+
+### Minor Changes
+
+- [#3015](https://github.com/serverless-stack/sst/pull/3015) [`5128f2dd7`](https://github.com/serverless-stack/sst/commit/5128f2dd7533a24b2e6e5ac209552ae519506c25) Thanks [@berenddeboer](https://github.com/berenddeboer)! - Bootstrap: remove use of SQS queue
+
+- [#3015](https://github.com/serverless-stack/sst/pull/3015) [`5128f2dd7`](https://github.com/serverless-stack/sst/commit/5128f2dd7533a24b2e6e5ac209552ae519506c25) Thanks [@berenddeboer](https://github.com/berenddeboer)! - Bootstrap: enforce ssl connections to S3 to stop triggering S3.5 of the AWS Foundational Security Best Practices
+
+### Patch Changes
+
+- [#3024](https://github.com/serverless-stack/sst/pull/3024) [`43e4a0d73`](https://github.com/serverless-stack/sst/commit/43e4a0d73d510e6b59828ca684b9cbb4d1254f7d) Thanks [@ipatka](https://github.com/ipatka)! - Function: fail build when node runtime installation fails
+
 ## 2.16.4
 
 ### Patch Changes
