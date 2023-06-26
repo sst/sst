@@ -156,7 +156,11 @@ export class Distribution extends Construct {
 
     this.hostedZone = this.lookupHostedZone();
     this.certificate = this.createCertificate();
-    this.distribution = this.createDistribution();
+    this.distribution = this.createDistribution("Distribution", {
+      ...props.cdk?.distribution,
+      domainNames: this.buildDistributionDomainNames(),
+      certificate: this.certificate,
+    });
     this.createRoute53Records();
   }
 
@@ -363,16 +367,6 @@ export class Distribution extends Construct {
     return acmCertificate;
   }
 
-  private createDistribution(): CdkDistribution {
-    const { cdk } = this.props;
-
-    return new CdkDistribution(this.scope, "Distribution", {
-      ...(cdk?.distribution as CdkDistributionProps),
-      domainNames: this.buildDistributionDomainNames(),
-      certificate: this.certificate,
-    });
-  }
-
   private buildDistributionDomainNames(): string[] {
     const { customDomain } = this.props;
     const domainNames = [];
@@ -426,5 +420,13 @@ export class Distribution extends Construct {
         targetDomain: recordName,
       });
     }
+  }
+
+  /////////////////////
+  // Factory methods
+  /////////////////////
+
+  protected createDistribution(id: string, props: CdkDistributionProps): CdkDistribution {
+    return new CdkDistribution(this.scope, id, props);
   }
 }

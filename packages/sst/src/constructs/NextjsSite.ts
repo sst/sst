@@ -12,7 +12,6 @@ import {
 import {
   Code,
   Runtime,
-  Function as CdkFunction,
   FunctionProps,
   Architecture,
   LayerVersion,
@@ -21,9 +20,10 @@ import {
   AttributeType,
   Billing,
   TableV2 as Table,
+  TablePropsV2,
 } from "aws-cdk-lib/aws-dynamodb";
 import { Provider } from "aws-cdk-lib/custom-resources";
-import { Queue } from "aws-cdk-lib/aws-sqs";
+import { Queue, QueueProps } from "aws-cdk-lib/aws-sqs";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { Stack } from "./Stack.js";
 import { SsrSite, SsrSiteNormalizedProps, SsrSiteProps } from "./SsrSite.js";
@@ -403,11 +403,11 @@ export class NextjsSite extends SsrSite {
     const { cdk } = this.props;
     const server = this.serverFunction;
 
-    const queue = new Queue(this, "RevalidationQueue", {
+    const queue = this.createQueue("RevalidationQueue", {
       fifo: true,
       receiveMessageWaitTime: CdkDuration.seconds(20),
     });
-    const consumer = new CdkFunction(this, "RevalidationFunction", {
+    const consumer = this.createFunction("RevalidationFunction", {
       description: "Next.js revalidator",
       handler: "index.handler",
       code: Code.fromAsset(
@@ -431,7 +431,7 @@ export class NextjsSite extends SsrSite {
     const { path: sitePath } = this.props;
     const server = this.serverFunction;
 
-    const table = new Table(this, "RevalidationTable", {
+    const table = this.createTable("RevalidationTable", {
       partitionKey: { name: "tag", type: AttributeType.STRING },
       sortKey: { name: "path", type: AttributeType.STRING },
       pointInTimeRecovery: true,
@@ -463,7 +463,7 @@ export class NextjsSite extends SsrSite {
         this.usePrerenderManifest()?.routes ?? {}
       ).length;
 
-      const insertFn = new CdkFunction(this, "RevalidationInsertFunction", {
+      const insertFn = this.createFunction("RevalidationInsertFunction", {
         description: "Next.js revalidation data insert",
         handler: "index.handler",
         code: Code.fromAsset(dynamodbProviderPath),
@@ -878,4 +878,16 @@ export class NextjsSite extends SsrSite {
   public static _test = {
     buildCloudWatchRouteName: NextjsSite.buildCloudWatchRouteName,
   };
+
+  /////////////////////
+  // Factory methods
+  /////////////////////
+
+  protected createQueue(id: string, props?: QueueProps): Queue {
+    return new Queue(this, id, props);
+  }
+
+  protected createTable(id: string, props: TablePropsV2): Table {
+    return new Table(this, id, props);
+  }
 }
