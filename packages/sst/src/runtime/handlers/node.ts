@@ -236,7 +236,11 @@ export const useNodeHandler = Context.memo(async () => {
             });
             process.on("exit", (code) => {
               if (code !== 0) {
-                reject(new VisibleError("Installation Failed"));
+                reject(
+                  new VisibleError(
+                    `Failed to install packages specified under "nodejs.install"`
+                  )
+                );
               }
               resolve();
             });

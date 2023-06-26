@@ -1,5 +1,5 @@
 ---
-"sst": minor
+"sst": patch
 ---
 
-Fail build when node runtime installation fails
+Function: fail build when node runtime installation fails

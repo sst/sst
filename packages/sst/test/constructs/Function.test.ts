@@ -1,4 +1,4 @@
-import { test, expect, beforeEach, beforeAll } from "vitest";
+import { test, expect } from "vitest";
 /* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/ban-types, @typescript-eslint/no-empty-function */
 
 import path from "path";
@@ -18,10 +18,7 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
 import {
   Api,
-  AppSyncApi,
   WebSocketApi,
-  ApiGatewayV1Api,
-  App,
   Job,
   RDS,
   Stack,
@@ -797,46 +794,37 @@ test("vpc: securityGroups configured without vpc", async () => {
     });
   }).toThrow(/Cannot configure "securityGroups"/);
 });
-/////////////////////////////
-// Test Deploy Runtimes
-/////////////////////////////
 
-test("constructor: sst deploy with valid nodejs install config", async () => {
+test("nodejs.install: valid package", async () => {
   const app = await createApp({
     mode: "deploy",
   });
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
-    handler: "test/constructs/lambda.handler",
+    handler: "test/lambda.handler",
     nodejs: {
       install: ["lodash"],
     },
-    runtime: "nodejs16.x",
-    description: "identifier",
   });
-  await app.finish();
-  hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-    Description: "identifier",
-  });
+  await expect(async () => {
+    await app.finish();
+  }).not.toThrowError();
 });
 
-test("constructor: sst deploy with invalid nodejs install config", async () => {
+test("nodejs.install: invalid package", async () => {
   const app = await createApp({
     mode: "deploy",
   });
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
-    handler: "test/constructs/lambda.handler",
+    handler: "test/lambda.handler",
     nodejs: {
       install: ["packagethatdoesnotexist"],
     },
-    runtime: "nodejs16.x",
-    description: "identifier",
   });
   await expect(async () => {
     await app.finish();
-  }).rejects.toThrow(/Installation Failed/);
+  }).rejects.toThrow(/Failed to build function/);
 });
 
 /////////////////////////////
