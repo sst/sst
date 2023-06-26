@@ -10,17 +10,14 @@ import {
   App,
   DefaultStackSynthesizer,
   CfnOutput,
-  Duration,
   Tags,
   Stack,
   RemovalPolicy,
 } from "aws-cdk-lib/core";
 import { Function, Runtime, Code } from "aws-cdk-lib/aws-lambda";
-import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { PolicyStatement } from "aws-cdk-lib/aws-iam";
-import { Queue } from "aws-cdk-lib/aws-sqs";
 import { Rule } from "aws-cdk-lib/aws-events";
-import { SqsQueue } from "aws-cdk-lib/aws-events-targets";
+import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
 import {
   BlockPublicAccess,
   Bucket,
@@ -42,7 +39,7 @@ const CDK_STACK_NAME = "CDKToolkit";
 const SST_STACK_NAME = "SSTBootstrap";
 const OUTPUT_VERSION = "Version";
 const OUTPUT_BUCKET = "BucketName";
-const LATEST_VERSION = "7";
+const LATEST_VERSION = "7.1";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 export const useBootstrap = Context.memo(async () => {
@@ -53,7 +50,7 @@ export const useBootstrap = Context.memo(async () => {
   ]);
   Logger.debug("Loaded bootstrap status");
   const needToBootstrapCDK = !cdkStatus;
-  const needToBootstrapSST = !sstStatus || sstStatus.version !== LATEST_VERSION;
+  const needToBootstrapSST = !sstStatus;
 
   if (needToBootstrapCDK || needToBootstrapSST) {
     const spinner = createSpinner(
@@ -144,7 +141,8 @@ async function loadSSTStatus() {
   }
 
   // Parse stack outputs
-  let version, bucket;
+  let version: string | undefined;
+  let bucket: string | undefined;
   (result.Stacks![0].Outputs || []).forEach((o) => {
     if (o.OutputKey === OUTPUT_VERSION) {
       version = o.OutputValue;
@@ -153,6 +151,25 @@ async function loadSSTStatus() {
     }
   });
   if (!version || !bucket) {
+    return null;
+  }
+
+  // Need to update bootstrap stack:
+  // 1. If current MAJOR version < latest MAJOR version
+  // 2. If current MAJOR version > latest MAJOR version (has breaking change)
+  // 3. If current MAJOR version == latest MAJOR version,
+  //    but current MINOR version < latest MINOR version
+  const latestParts = LATEST_VERSION.split(".");
+  const latestMajor = parseInt(latestParts[0]);
+  const latestMinor = parseInt(latestParts[1] || "0");
+  const currentParts = version.split(".");
+  const currentMajor = parseInt(currentParts[0]);
+  const currentMinor = parseInt(currentParts[1] || "0");
+  if (
+    currentMajor < latestMajor ||
+    currentMajor > latestMajor ||
+    currentMinor < latestMinor
+  ) {
     return null;
   }
 
@@ -226,11 +243,6 @@ export async function bootstrapSST() {
       }),
     ],
   });
-  const queue = new Queue(stack, "MetadataQueue", {
-    visibilityTimeout: Duration.seconds(30),
-    retentionPeriod: Duration.minutes(2),
-  });
-  fn.addEventSource(new SqsEventSource(queue));
   const rule = new Rule(stack, "MetadataRule", {
     eventPattern: {
       source: ["aws.cloudformation"],
@@ -248,11 +260,7 @@ export async function bootstrapSST() {
       },
     },
   });
-  rule.addTarget(
-    new SqsQueue(queue, {
-      retryAttempts: 10,
-    })
-  );
+  rule.addTarget(new LambdaFunction(fn));
 
   // Create stack outputs to store bootstrap stack info
   new CfnOutput(stack, OUTPUT_VERSION, { value: LATEST_VERSION });
