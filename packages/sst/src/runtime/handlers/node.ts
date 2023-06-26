@@ -230,11 +230,13 @@ export const useNodeHandler = Context.memo(async () => {
                 : "--arch=x64"
             );
           }
-          await new Promise<void>((resolve) => {
-            const process = exec(cmd.join(" "), {
-              cwd: input.out,
+          await new Promise<void>((resolve, reject) => {
+            exec(cmd.join(" "), { cwd: input.out }, (error) => {
+              if (error) {
+                reject(error);
+              }
+              resolve();
             });
-            process.on("exit", () => resolve());
           });
         }
 
