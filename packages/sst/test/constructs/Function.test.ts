@@ -798,6 +798,48 @@ test("vpc: securityGroups configured without vpc", async () => {
   }).toThrow(/Cannot configure "securityGroups"/);
 });
 /////////////////////////////
+// Test Deploy Runtimes
+/////////////////////////////
+
+test("constructor: sst deploy with valid nodejs install config", async () => {
+  const app = await createApp({
+    mode: "deploy",
+  });
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    handler: "test/constructs/lambda.handler",
+    nodejs: {
+      install: ["lodash"],
+    },
+    runtime: "nodejs16.x",
+    description: "identifier",
+  });
+  await app.finish();
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "lambda.handler",
+    Description: "identifier",
+  });
+});
+
+test("constructor: sst deploy with invalid nodejs install config", async () => {
+  const app = await createApp({
+    mode: "deploy",
+  });
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    handler: "test/constructs/lambda.handler",
+    nodejs: {
+      install: ["packagethatdoesnotexist"],
+    },
+    runtime: "nodejs16.x",
+    description: "identifier",
+  });
+  await expect(async () => {
+    await app.finish();
+  }).rejects.toThrow(/Installation Failed/);
+});
+
+/////////////////////////////
 // Test Constructor for Local Debug
 /////////////////////////////
 

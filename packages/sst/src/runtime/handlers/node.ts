@@ -230,11 +230,17 @@ export const useNodeHandler = Context.memo(async () => {
                 : "--arch=x64"
             );
           }
-          await new Promise<void>((resolve) => {
+          await new Promise<void>((resolve, reject) => {
             const process = exec(cmd.join(" "), {
               cwd: input.out,
             });
-            process.on("exit", () => resolve());
+            process.on("exit", (code) => {
+              if (code !== 0) {
+                reject(new VisibleError("Installation Failed"));
+                // throw new VisibleError('Installation failed')
+              }
+              resolve();
+            });
           });
         }
 
