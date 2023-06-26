@@ -1,4 +1,4 @@
-import { SQSEvent, EventBridgeEvent } from "aws-lambda";
+import { EventBridgeEvent } from "aws-lambda";
 import {
   S3Client,
   PutObjectCommand,
@@ -12,41 +12,35 @@ import {
   CloudFormationClient,
   DescribeStacksCommand,
 } from "@aws-sdk/client-cloudformation";
-const s3 = new S3Client({ logger: console });
-const iot = new IoTDataPlaneClient({ logger: console });
-const cf = new CloudFormationClient({ logger: console });
+
+const logger = { ...console, trace: () => {}, debug: () => {} };
+const s3 = new S3Client({ logger });
+const iot = new IoTDataPlaneClient({ logger });
+const cf = new CloudFormationClient({ logger });
 const BUCKET_NAME = process.env.BUCKET_NAME!;
 
-export async function handler(event: SQSEvent) {
-  console.log("SQS event:", event);
-
-  for (const record of event.Records) {
-    await processRecord(JSON.parse(record.body));
-  }
-}
-
-async function processRecord(record: EventBridgeEvent<any, any>) {
+export async function handler(event: EventBridgeEvent<any, any>) {
   console.log("EventBridge event details:", {
-    source: record.source,
-    detailType: record["detail-type"],
+    source: event.source,
+    detailType: event["detail-type"],
   });
 
   // Validate event source
   if (
-    record.source !== "aws.cloudformation" ||
-    record["detail-type"] !== "CloudFormation Stack Status Change"
+    event.source !== "aws.cloudformation" ||
+    event["detail-type"] !== "CloudFormation Stack Status Change"
   ) {
     return;
   }
 
   // Validate stack status is *_COMPLETE
-  const stackStatus = record.detail["status-details"]?.status;
+  const stackStatus = event.detail["status-details"]?.status;
   if (!stackStatus.endsWith("_COMPLETE")) {
     return;
   }
 
   // Get metadata
-  const stack = record.detail["stack-id"];
+  const stack = event.detail["stack-id"];
   console.log("Stack id:", stack);
   const res = await getMetadata(stack);
   if (!res) {
