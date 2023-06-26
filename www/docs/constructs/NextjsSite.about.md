@@ -379,6 +379,22 @@ new NextjsSite(stack, "Site", {
 });
 ```
 
+### Configuring revalidation function
+
+```js {8-10}
+const vpc = Vpc.fromVpcAttributes(stack, 'FrontendVpc', {
+    vpcId: 'vpc-01123456789abcdef0',
+    availabilityZones: ['us-east-1a', 'us-east-1b'],
+});
+
+new NextjsSite(stack, "Site", {
+  path: "my-next-app/",
+  revalidation: {
+    vpc,
+  },
+});
+```
+
 ### Advanced examples
 
 #### Configuring VPC
