@@ -504,6 +504,7 @@ export class Bucket extends Construct implements SSTConstruct {
         cors: this.buildCorsConfig(cors),
         blockPublicAccess: this.buildBlockPublicAccessConfig(blockPublicACLs),
         objectOwnership: this.buildObjectOwnershipConfig(blockPublicACLs),
+	enforceSSL: true,
         ...cdk?.bucket,
       });
     }
