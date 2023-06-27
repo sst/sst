@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.17.2
+
+### Patch Changes
+
+- [#3030](https://github.com/serverless-stack/sst/pull/3030) [`b5a6953cf`](https://github.com/serverless-stack/sst/commit/b5a6953cfc61d71d297a98981307b39ad79c1298) Thanks [@jmnavarr](https://github.com/jmnavarr)! - Use correct custom CDK toolkit stack name
+
 ## 2.17.1
 
 ## 2.17.0
