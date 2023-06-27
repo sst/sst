@@ -972,10 +972,10 @@ function handler(event) {
       cachePolicy,
       responseHeadersPolicy: cdk?.responseHeadersPolicy,
       originRequestPolicy: this.buildServerOriginRequestPolicy(),
-      ...(cfDistributionProps?.defaultBehavior || {}),
+      ...(cfDistributionProps.defaultBehavior || {}),
       functionAssociations: [
         ...this.buildBehaviorFunctionAssociations(),
-        ...(cfDistributionProps?.defaultBehavior?.functionAssociations || []),
+        ...(cfDistributionProps.defaultBehavior?.functionAssociations || []),
       ],
       edgeLambdas: edge ? [
         {
@@ -983,7 +983,7 @@ function handler(event) {
           eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
           functionVersion: this.serverLambdaForEdge!.currentVersion,
         },
-        ...(cfDistributionProps?.defaultBehavior?.edgeLambdas || []),
+        ...(cfDistributionProps.defaultBehavior?.edgeLambdas || []),
       ] : undefined,
     };
   }
