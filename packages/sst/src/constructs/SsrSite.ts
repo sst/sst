@@ -46,7 +46,6 @@ import {
 } from "aws-cdk-lib/aws-route53";
 import { Asset } from "aws-cdk-lib/aws-s3-assets";
 import {
-  OriginBase,
   Distribution,
   IDistribution,
   ICachePolicy,
