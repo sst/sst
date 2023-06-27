@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.17.4
+
+### Patch Changes
+
+- [`258497590`](https://github.com/serverless-stack/sst/commit/258497590c76a8a91b0673f3e7a0439d2099d774) Thanks [@thdxr](https://github.com/thdxr)! - eventbus: simplify retry algorithm
+
 ## 2.17.3
 
 ### Patch Changes
