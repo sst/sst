@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.17.5
+
+### Patch Changes
+
+- [`6a4910dae`](https://github.com/serverless-stack/sst/commit/6a4910dae23cfdbc473a29d80edea6fe885bf200) Thanks [@thdxr](https://github.com/thdxr)! - eventbus: fix bug not respecting max retry setting
+
 ## 2.17.4
 
 ### Patch Changes
