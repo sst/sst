@@ -6,6 +6,8 @@ import * as cdk from "aws-cdk-lib";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as rds from "aws-cdk-lib/aws-rds";
 import * as secretsManager from "aws-cdk-lib/aws-secretsmanager";
+import * as kms from "aws-cdk-lib/aws-kms";
+import { Template } from "aws-cdk-lib/assertions"
 import { App, Stack, RDS, RDSProps } from "../../dist/constructs/";
 
 /////////////////////////////
@@ -418,4 +420,73 @@ test("cdk.cluster.credentials SSM error", async () => {
         },
       })
   ).toThrow(/Only credentials managed by SecretManager are supported/);
+});
+
+test("cdk.cluster.credentials support setting secret name", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new RDS(stack, "Cluster", {
+    engine: "postgresql11.13",
+    defaultDatabaseName: "acme",
+    cdk: {
+      cluster: {
+	credentials: {
+	  username: "root",
+	  secretName: "root-secret",
+	},
+      },
+    },
+  });
+  hasResource(stack, "AWS::SecretsManager::Secret", {
+    GenerateSecretString: {
+      ExcludeCharacters: " %+~`#$&*()|[]{}:;<>?!'/@\"\\",
+      GenerateStringKey: "password",
+      PasswordLength: 30,
+      SecretStringTemplate: '{"username":"root"}',
+    },
+  });
+  hasResource(stack, "AWS::RDS::DBCluster", {
+    Engine: "aurora-postgresql",
+    DatabaseName: "acme",
+    DBClusterIdentifier: "test-app-cluster",
+    EnableHttpEndpoint: true,
+    EngineMode: "serverless",
+    EngineVersion: "11.13",
+    MasterUsername: {
+      "Fn::Join": [
+	"",
+	[ "{{resolve:secretsmanager:", { "Ref": "ClusterSecret26E15F5B" }, ":SecretString:username::}}" ],
+      ],
+    },
+  });
+});
+
+test("cdk.cluster.credentials support importing cluster with custom encryption key", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  const cluster = new RDS(stack, "Cluster", {
+    engine: "postgresql11.13",
+    defaultDatabaseName: "acme",
+    cdk: {
+      cluster: rds.ServerlessCluster.fromServerlessClusterAttributes(
+        stack,
+        "CdkCluster",
+        {
+          clusterIdentifier: "my-cluster",
+	}
+      ),
+      secret: secretsManager.Secret.fromSecretAttributes(
+        stack,
+        "PostgresSecret",
+        {
+          secretPartialArn: "arn:aws:secretsmanager:us-east-1:1234567890:secret:my-secret",
+	  encryptionKey: kms.Key.fromKeyArn(
+	    stack,
+	    "SecretKey",
+	    "arn:aws:kms:us-east-1:1234567890:key/d286fa44-84fe-480b-bcb6-96b3c9a20edd"
+	  )
+        },
+      ),
+    },
+  });
+  const bindings = cluster.getFunctionBinding();
+  expect(bindings.permissions["kms:Decrypt"]).toBeDefined();
 });

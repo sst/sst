@@ -22,6 +22,7 @@ import {
 import { Code, Function, Runtime } from "aws-cdk-lib/aws-lambda";
 import { PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { ISecret } from "aws-cdk-lib/aws-secretsmanager";
+import { IKey } from "aws-cdk-lib/aws-kms";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct.js";
@@ -311,6 +312,14 @@ export class RDS extends Construct implements SSTConstruct {
 
   /** @internal */
   public getFunctionBinding(): FunctionBindingProps {
+    // We need to grant explicit permission to `this.secret.encryptionkey` if set,
+    // due to the way we grant permissions, i.e. not using this.secret.grantRead()`
+    let extraPermissions: FunctionBindingProps["permissions"] = {}
+    if (this.secret.encryptionKey) {
+      extraPermissions = {
+	"kms:Decrypt": [this.secret.encryptionKey.keyArn],
+      }
+    }
     return {
       clientPackage: "rds",
       variables: {
@@ -335,6 +344,7 @@ export class RDS extends Construct implements SSTConstruct {
         "secretsmanager:DescribeSecret": [
           this.secret.secretFullArn || `${this.secret.secretArn}*`,
         ],
+	...extraPermissions,
       },
     };
   }
@@ -393,7 +403,7 @@ export class RDS extends Construct implements SSTConstruct {
     }
 
     // Validate Secrets Manager is used for "credentials"
-    if (props.credentials && !props.credentials.secret) {
+    if (props.credentials && !props.credentials.secret && props.credentials.password) {
       throw new Error(
         `Only credentials managed by SecretManager are supported for the "cdk.cluster.credentials".`
       );
