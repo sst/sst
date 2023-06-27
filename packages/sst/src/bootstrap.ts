@@ -40,7 +40,7 @@ const CDK_STACK_NAME = "CDKToolkit";
 const SST_STACK_NAME = "SSTBootstrap";
 const OUTPUT_VERSION = "Version";
 const OUTPUT_BUCKET = "BucketName";
-const LATEST_VERSION = "7.1";
+const LATEST_VERSION = "7.2";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 export const useBootstrap = Context.memo(async () => {
@@ -209,11 +209,13 @@ export async function bootstrapSST() {
     removalPolicy: RemovalPolicy.DESTROY,
     autoDeleteObjects: true,
     enforceSSL: true,
-    lifecycleRules: [{
-      id: "Remove partial uploads after 3 days",
-      enabled: true,
-      abortIncompleteMultipartUploadAfter: Duration.days(3),
-    }],
+    lifecycleRules: [
+      {
+        id: "Remove partial uploads after 3 days",
+        enabled: true,
+        abortIncompleteMultipartUploadAfter: Duration.days(3),
+      },
+    ],
     blockPublicAccess:
       cdk?.publicAccessBlockConfiguration !== false
         ? BlockPublicAccess.BLOCK_ALL
