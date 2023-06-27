@@ -45,8 +45,12 @@ export function CodeAdapter(config: {
       delete claims["provider"];
       useResponse().cookies(
         {
-          sst_code: encrypt(code),
-          sst_claims: encrypt(JSON.stringify(claims)),
+          authorization: encrypt(
+            JSON.stringify({
+              claims,
+              code,
+            })
+          ),
         },
         {
           maxAge: 3600,
@@ -62,25 +66,24 @@ export function CodeAdapter(config: {
     }
 
     if (step === "callback") {
-      const code = decrypt(useCookie("sst_code")!);
-      const claims = decrypt(useCookie("sst_claims")!);
+      const { code, claims } = JSON.parse(
+        decrypt(useCookie("authorization")!)!
+      );
       if (!code || !claims) {
         return {
           type: "error",
         };
       }
       const compare = useQueryParam("code");
-      const parsedClaims = JSON.parse(claims);
       if (code !== compare) {
         return {
           type: "step",
-          properties: await config.onCodeInvalid(code, parsedClaims),
+          properties: await config.onCodeInvalid(code, claims),
         };
       }
       useResponse().cookies(
         {
-          sst_code: "",
-          sst_claims: "",
+          authorization: "",
         },
         {
           expires: new Date(1),
@@ -89,7 +92,7 @@ export function CodeAdapter(config: {
       return {
         type: "success",
         properties: {
-          claims: parsedClaims,
+          claims: claims,
         },
       };
     }
