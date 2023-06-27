@@ -1,5 +1,5 @@
 ---
-"sst": minor
+"sst": patch
 ---
 
-feat: allow a secret to be encrypted with a custom KMS key
+RDS: grant KMS permission if secret is encrypted with custom KMS key
