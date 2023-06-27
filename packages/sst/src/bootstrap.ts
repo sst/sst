@@ -9,6 +9,7 @@ import {
 import {
   App,
   DefaultStackSynthesizer,
+  Duration,
   CfnOutput,
   Tags,
   Stack,
@@ -208,6 +209,11 @@ export async function bootstrapSST() {
     removalPolicy: RemovalPolicy.DESTROY,
     autoDeleteObjects: true,
     enforceSSL: true,
+    lifecycleRules: [{
+      id: "Remove partial uploads after 3 days",
+      enabled: true,
+      abortIncompleteMultipartUploadAfter: Duration.days(3),
+    }],
     blockPublicAccess:
       cdk?.publicAccessBlockConfiguration !== false
         ? BlockPublicAccess.BLOCK_ALL
