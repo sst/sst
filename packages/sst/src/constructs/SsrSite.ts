@@ -1043,15 +1043,15 @@ function handler(event) {
     return new CachePolicy(this, "ServerCache", {
       queryStringBehavior:
         query && query.length > 0
-          ? CacheQueryStringBehavior.allowList(...query, ...queryProps)
+          ? CacheQueryStringBehavior.allowList(...new Set([...query, ...queryProps]))
           : CacheQueryStringBehavior.all(),
       headerBehavior:
         headers && headers.length > 0
-          ? CacheHeaderBehavior.allowList(...headers, ...headersProps)
+          ? CacheHeaderBehavior.allowList(...new Set([...headers, ...headersProps]))
           : CacheHeaderBehavior.none(),
       cookieBehavior:
         cookies && cookies.length > 0
-          ? CacheCookieBehavior.allowList(...cookies, ...cookieProps)
+          ? CacheCookieBehavior.allowList(...new Set([...cookies, ...cookieProps]))
           : CacheCookieBehavior.all(),
       defaultTtl: CdkDuration.days(0),
       maxTtl: CdkDuration.days(365),
