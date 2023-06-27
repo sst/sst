@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.17.3
+
+### Patch Changes
+
+- [#3032](https://github.com/serverless-stack/sst/pull/3032) [`ef61e7db6`](https://github.com/serverless-stack/sst/commit/ef61e7db67760c9bcc9fa92fa23ea936f9517ddc) Thanks [@berenddeboer](https://github.com/berenddeboer)! - Bucket: enforce S3 https connections
+
+- [#3036](https://github.com/serverless-stack/sst/pull/3036) [`48f27bcbb`](https://github.com/serverless-stack/sst/commit/48f27bcbbb89ef0fcb69d26ddbbe7542fadfa29b) Thanks [@berenddeboer](https://github.com/berenddeboer)! - bootstrap: add lifecyle rule to stop triggering rule S3.13 in Security Hub
+
 ## 2.17.2
 
 ### Patch Changes
