@@ -34,7 +34,7 @@ import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { Stack } from "./Stack.js";
 import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
-import { SsrSite, SsrSiteProps } from "./SsrSite.js";
+import { SsrSite, SsrSiteProps, SsrCdkDistributionProps } from "./SsrSite.js";
 import { Size, toCdkSize } from "./util/size.js";
 
 export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
@@ -276,7 +276,7 @@ export class NextjsSite extends SsrSite {
     resource.node.addDependency(policy);
   }
 
-  protected createCloudFrontDistributionForRegional(): Distribution {
+  protected createCloudFrontDistribution(): Distribution {
     /**
      * Next.js requests
      *
@@ -328,77 +328,45 @@ export class NextjsSite extends SsrSite {
      */
 
     const { cdk } = this.props;
-    const cfDistributionProps = cdk?.distribution || {};
+    const cfDistributionProps = cdk?.distribution || {} as SsrCdkDistributionProps;
+
     const s3Origin = new S3Origin(this.cdk!.bucket, {
       originPath: "/" + this.buildConfig.clientBuildS3KeyPrefix,
     });
-    const cachePolicy =
-      cdk?.serverCachePolicy ??
-      this.buildServerCachePolicy([
-        "accept",
-        "rsc",
-        "next-router-prefetch",
-        "next-router-state-tree",
-      ]);
-    const serverBehavior = this.buildDefaultBehaviorForRegional(cachePolicy);
+    const cachePolicy = this.buildServerCachePolicy({ headers: [
+      "accept",
+      "rsc",
+      "next-router-prefetch",
+      "next-router-state-tree",
+    ]});
+    const serverBehavior = this.buildDefaultBehavior(cachePolicy);
+    let distribution = this.getImportedCloudFrontDistribution(cdk?.distribution)
 
-    return new Distribution(this, "Distribution", {
-      // these values can be overwritten by cfDistributionProps
-      defaultRootObject: "",
-      // Override props.
-      ...cfDistributionProps,
-      // these values can NOT be overwritten by cfDistributionProps
-      domainNames: this.buildDistributionDomainNames(),
-      certificate: this.cdk!.certificate,
-      defaultBehavior: serverBehavior,
-      additionalBehaviors: {
-        "api/*": serverBehavior,
-        "_next/data/*": serverBehavior,
-        "_next/image*": this.buildImageBehavior(cachePolicy),
-        "_next/*": this.buildStaticFileBehavior(s3Origin),
-        ...this.buildStaticFileBehaviors(s3Origin),
-        ...(cfDistributionProps.additionalBehaviors || {}),
-      },
-    });
-  }
+    if (!distribution) {
+      distribution = new Distribution(this, "Distribution", {
+        // these values can be overwritten by cfDistributionProps
+        defaultRootObject: "",
+        // Override props.
+        ...cfDistributionProps,
+        // these values can NOT be overwritten by cfDistributionProps
+        domainNames: this.buildDistributionDomainNames(),
+        certificate: this.cdk!.certificate,
+        defaultBehavior: serverBehavior,
+      });
+    }
 
-  protected createCloudFrontDistributionForEdge(): Distribution {
-    const { cdk } = this.props;
-    const cfDistributionProps = cdk?.distribution || {};
-    const s3Origin = new S3Origin(this.cdk!.bucket, {
-      originPath: "/" + this.buildConfig.clientBuildS3KeyPrefix,
-    });
-    const cachePolicy =
-      cdk?.serverCachePolicy ??
-      this.buildServerCachePolicy([
-        "accept",
-        "rsc",
-        "next-router-prefetch",
-        "next-router-state-tree",
-      ]);
-    const serverBehavior = this.buildDefaultBehaviorForEdge(
-      s3Origin,
-      cachePolicy
-    );
+    const behaviors: {[key: string]: BehaviorOptions} = {
+      ...this.buildStaticFileBehaviors(s3Origin),
+      "api/*": serverBehavior,
+      "_next/data/*": serverBehavior,
+      "_next/image*": this.buildImageBehavior(cachePolicy),
+      "_next/*": this.buildStaticFileBehavior(s3Origin),
+    }
 
-    return new Distribution(this, "Distribution", {
-      // these values can be overwritten by cfDistributionProps
-      defaultRootObject: "",
-      // Override props.
-      ...cfDistributionProps,
-      // these values can NOT be overwritten by cfDistributionProps
-      domainNames: this.buildDistributionDomainNames(),
-      certificate: this.cdk!.certificate,
-      defaultBehavior: serverBehavior,
-      additionalBehaviors: {
-        "api/*": serverBehavior,
-        "_next/data/*": serverBehavior,
-        "_next/image*": this.buildImageBehavior(cachePolicy),
-        "_next/*": this.buildStaticFileBehavior(s3Origin),
-        ...this.buildStaticFileBehaviors(s3Origin),
-        ...(cfDistributionProps.additionalBehaviors || {}),
-      },
-    });
+    Object.keys(behaviors).forEach(behavior => {
+      distribution!.addBehavior(behavior, s3Origin, behaviors[behavior])
+    })
+    return distribution
   }
 
   private buildImageBehavior(cachePolicy: ICachePolicy): BehaviorOptions {
