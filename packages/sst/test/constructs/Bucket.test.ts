@@ -18,6 +18,29 @@ const lambdaDefaultPolicy = {
   Resource: "*",
 };
 
+test("default: https enforced", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  new Bucket(stack, "Bucket");
+  hasResource(stack, "AWS::S3::BucketPolicy", {
+    Bucket: {
+      Ref: "BucketD7FEB781",
+    },
+    PolicyDocument: {
+      Statement: [
+        {
+          Action: "s3:*",
+          Condition: {
+            Bool: {
+              "aws:SecureTransport": "false",
+            },
+          },
+          Effect: "Deny",
+        },
+      ],
+    },
+  });
+});
+
 test("cdk.id: undefined", async () => {
   const stack = new Stack(await createApp(), "stack");
   new Bucket(stack, "Bucket");
@@ -223,29 +246,6 @@ test("blockPublicACLs: false", async () => {
       Rules: [
         {
           ObjectOwnership: "BucketOwnerPreferred",
-        },
-      ],
-    },
-  });
-});
-
-test("https enforced", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new Bucket(stack, "Bucket");
-  hasResource(stack, "AWS::S3::BucketPolicy", {
-    Bucket: {
-      Ref: "BucketD7FEB781",
-    },
-    PolicyDocument: {
-      Statement: [
-        {
-          Action: "s3:*",
-          Condition: {
-            Bool: {
-              "aws:SecureTransport": "false",
-            },
-          },
-          Effect: "Deny",
         },
       ],
     },

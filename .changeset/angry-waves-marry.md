@@ -1,5 +1,5 @@
 ---
-"sst": minor
+"sst": patch
 ---
 
-feat: enforce S3 https connections
+Bucket: enforce S3 https connections
