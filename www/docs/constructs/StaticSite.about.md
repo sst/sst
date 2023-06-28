@@ -175,6 +175,7 @@ new StaticSite(stack, "react", {
   },
 });
 ```
+Note: Vite has a convention to only inject environment variables that begin with `VITE_`
 
 ### Creating a Vue.js site
 
