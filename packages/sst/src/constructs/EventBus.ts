@@ -768,7 +768,7 @@ export class EventBus extends Construct implements SSTConstruct {
   ) {
     type = Array.isArray(type) ? type : [type];
     const joined = type.length > 1 ? "multi" : type.join("_");
-    const count = this.subs.get(joined) || 0 + 1;
+    const count = (this.subs.get(joined) || 0) + 1;
     this.subs.set(joined, count);
     const name = `${joined.replaceAll(/[^a-zA-Z_]/g, "_")}_${count}`;
     const retries = props?.retries || this.props.defaults?.retries;
