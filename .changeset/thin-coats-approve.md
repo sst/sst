@@ -1,7 +1,7 @@
 ---
-"create-sst": minor
-"sst": minor
-"@serverless-stack/docs": minor
+"create-sst": patch
+"sst": patch
+"@serverless-stack/docs": patch
 ---
 
-add java17 as a supported runtime for Java functions
+Function: support java17 runtime
