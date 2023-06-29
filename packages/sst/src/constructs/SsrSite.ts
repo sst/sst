@@ -106,7 +106,6 @@ export type SsrBuildConfig = {
   clientBuildS3KeyPrefix?: string;
   prerenderedBuildOutputDir?: string;
   prerenderedBuildS3KeyPrefix?: string;
-  runInDeferredTasks?: () => void;
 };
 
 export interface SsrSiteNodeJSProps extends NodeJSProps {}
@@ -309,6 +308,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   protected props: SsrSiteNormalizedProps;
   protected doNotDeploy: boolean;
   protected buildConfig: SsrBuildConfig;
+  protected deferredTaskCallbacks: (() => void)[] = [];
   private serverLambdaCdkFunctionForEdge?: ICdkFunction;
   protected serverLambdaForEdge?: EdgeFunction;
   protected serverLambdaForRegional?: SsrFunction;
@@ -407,7 +407,9 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       // Invalidate CloudFront
       this.createCloudFrontInvalidation();
 
-      this.buildConfig.runInDeferredTasks?.();
+      for (const task of this.deferredTaskCallbacks) {
+        await task();
+      }
     });
   }
 
