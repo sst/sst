@@ -709,9 +709,11 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
         const itemPath = path.join(clientPath, item);
         fileOptions.push({
           exclude: "*",
-          include: fs.statSync(itemPath).isDirectory()
-            ? `${item}/*`
-            : `${item}`,
+          include: path.posix.join(
+            this.buildConfig.clientBuildS3KeyPrefix ?? "",
+            item,
+            fs.statSync(itemPath).isDirectory() ? "*" : ""
+          ),
           cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
         });
       }
