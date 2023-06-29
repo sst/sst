@@ -439,14 +439,14 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0(ink@4.0.0)(react@18.2.0)
       kysely:
-        specifier: ^0.23.5
-        version: 0.23.5
+        specifier: ^0.25.0
+        version: 0.25.0
       kysely-codegen:
-        specifier: ^0.10.0
-        version: 0.10.0(kysely@0.23.5)
+        specifier: ^0.10.1
+        version: 0.10.1(kysely@0.25.0)
       kysely-data-api:
         specifier: ^0.2.1
-        version: 0.2.1(@aws-sdk/client-rds-data@3.279.0)(kysely@0.23.5)
+        version: 0.2.1(@aws-sdk/client-rds-data@3.279.0)(kysely@0.25.0)
       minimatch:
         specifier: ^6.1.6
         version: 6.1.6
@@ -18750,13 +18750,13 @@ packages:
     resolution: {integrity: sha512-dLkz37Ab97HWMx9KTes3Tbi3D1ln9fCAy2zr2YVExJasDRPGRaKcoE4fycWNtnCAJfjFqe0cnY+f8KT2JePEXQ==}
     dev: true
 
-  /kysely-codegen@0.10.0(kysely@0.23.5):
-    resolution: {integrity: sha512-EV2v9yr9N9WrUPrURvFl5FPTtz39npsi1p1tLpJwEcFeOAKAPJruBpAASvnZWdqu5Pw/aaTssStE3qcI2sfxMQ==}
+  /kysely-codegen@0.10.1(kysely@0.25.0):
+    resolution: {integrity: sha512-8Bslh952gN5gtucRv4jTZDFD18RBioS6M50zHfe5kwb5iSyEAunU4ZYMdHzkHraa4zxjg5/183XlOryBCXLRIw==}
     hasBin: true
     peerDependencies:
       better-sqlite3: '>=7.6.2'
       kysely: '>=0.19.12'
-      mysql2: ^2.3.3
+      mysql2: ^2.3.3 || ^3.0.0
       pg: ^8.8.0
     peerDependenciesMeta:
       better-sqlite3:
@@ -18768,23 +18768,23 @@ packages:
     dependencies:
       chalk: 4.1.2
       dotenv: 16.0.3
-      kysely: 0.23.5
+      kysely: 0.25.0
       micromatch: 4.0.5
       minimist: 1.2.8
     dev: false
 
-  /kysely-data-api@0.2.1(@aws-sdk/client-rds-data@3.279.0)(kysely@0.23.5):
+  /kysely-data-api@0.2.1(@aws-sdk/client-rds-data@3.279.0)(kysely@0.25.0):
     resolution: {integrity: sha512-KmASvF1gmjVqyU9WOUXhCQlv29ofR+xc2DhjaIomz1+Bjd/VtR2/3g4ZuXwG1L4lWGKxMuo5iOvK3XyPbB4LdQ==}
     peerDependencies:
       '@aws-sdk/client-rds-data': 3.x
       kysely: 0.x
     dependencies:
       '@aws-sdk/client-rds-data': 3.279.0
-      kysely: 0.23.5
+      kysely: 0.25.0
     dev: false
 
-  /kysely@0.23.5:
-    resolution: {integrity: sha512-TH+b56pVXQq0tsyooYLeNfV11j6ih7D50dyN8tkM0e7ndiUH28Nziojiog3qRFlmEj9XePYdZUrNJ2079Qjdow==}
+  /kysely@0.25.0:
+    resolution: {integrity: sha512-srn0efIMu5IoEBk0tBmtGnoUss4uwvxtbFQWG/U2MosfqIace1l43IFP1PmEpHRDp+Z79xIcKEqmHH3dAvQdQA==}
     engines: {node: '>=14.0.0'}
     dev: false
 
@@ -19837,7 +19837,7 @@ packages:
       duplexify: 4.1.2
       help-me: 3.0.0
       inherits: 2.0.4
-      minimist: 1.2.8
+      minimist: 1.2.6
       mqtt-packet: 6.10.0
       pump: 3.0.0
       readable-stream: 3.6.2
