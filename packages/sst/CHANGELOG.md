@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.17.7
+
+### Patch Changes
+
+- [#3035](https://github.com/serverless-stack/sst/pull/3035) [`21669e1c7`](https://github.com/serverless-stack/sst/commit/21669e1c72b4910de47c983503cbfe92c100c415) Thanks [@berenddeboer](https://github.com/berenddeboer)! - RDS: grant KMS permission if secret is encrypted with custom KMS key
+
 ## 2.17.6
 
 ### Patch Changes

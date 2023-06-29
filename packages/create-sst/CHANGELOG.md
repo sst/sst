@@ -1,5 +1,11 @@
 # create-sst
 
+## 2.17.7
+
+### Patch Changes
+
+- [`c6f802cc7`](https://github.com/serverless-stack/sst/commit/c6f802cc7641dc8574c0131c9c3363b7a546fcf0) Thanks [@thdxr](https://github.com/thdxr)! - create-sst: fix issue with upstream @tsconfig/node16 changing defaults
+
 ## 2.17.6
 
 ## 2.17.5
