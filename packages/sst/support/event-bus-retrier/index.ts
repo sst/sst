@@ -12,12 +12,20 @@ export const handler: SQSHandler = async (evt) => {
     console.log("body", parsed);
     if (parsed.responsePayload) {
       const attempt = (parsed.requestPayload.attempts || 0) + 1;
-      if (attempt > retries[parsed.requestContext.functionArn]) {
+      const max =
+        retries[parsed.requestContext.functionArn.replace(":$LATEST", "")] || 0;
+      console.log("max retries", max);
+      if (attempt > max) {
         console.log(`giving up after ${attempt} retries`);
         return;
       }
-      const seconds = delay(attempt, 1, 60 * 15, 1);
-      console.log("delaying retry by ", seconds, "seconds");
+      const seconds = Math.min(Math.pow(2, attempt), 900);
+      console.log(
+        "delaying retry by ",
+        seconds,
+        "seconds for attempt",
+        attempt
+      );
       parsed.requestPayload.attempts = attempt;
       await sqs.send(
         new SendMessageCommand({
@@ -44,14 +52,7 @@ export const handler: SQSHandler = async (evt) => {
   }
 };
 
-function delay(
-  attempt: number,
-  baseDelay: number,
-  maxDelay: number,
-  jitterFactor: number
-): number {
+function delay(attempt: number, baseDelay: number, maxDelay: number): number {
   const backoffTime = Math.min(maxDelay, baseDelay * Math.pow(2, attempt));
-  const jitter = Math.random() * backoffTime * jitterFactor;
-  const delay = backoffTime + jitter;
-  return Math.floor(delay);
+  return Math.floor(backoffTime);
 }

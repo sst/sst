@@ -801,14 +801,18 @@ test("nodejs.install: valid package", async () => {
   });
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
-    handler: "test/lambda.handler",
+    handler: "test/constructs/lambda/fn.handler",
     nodejs: {
       install: ["lodash"],
     },
   });
-  await expect(async () => {
+  let error = null;
+  try {
     await app.finish();
-  }).not.toThrowError();
+  } catch (e) {
+    error = e;
+  }
+  expect(error).toBe(null);
 });
 
 test("nodejs.install: invalid package", async () => {
@@ -822,9 +826,7 @@ test("nodejs.install: invalid package", async () => {
       install: ["packagethatdoesnotexist"],
     },
   });
-  await expect(async () => {
-    await app.finish();
-  }).rejects.toThrow(/Failed to build function/);
+  await expect(() => app.finish()).rejects.toThrow(/Failed to build function/);
 });
 
 /////////////////////////////
