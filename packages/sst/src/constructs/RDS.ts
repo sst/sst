@@ -398,12 +398,8 @@ export class RDS extends Construct implements SSTConstruct {
       );
     }
 
-    // Validate Secrets Manager is used for "credentials"
-    if (
-      props.credentials &&
-      !props.credentials.secret &&
-      props.credentials.password
-    ) {
+    // Validate Secrets Manager is used for "credentials" not password
+    if (props.credentials?.password) {
       throw new Error(
         `Only credentials managed by SecretManager are supported for the "cdk.cluster.credentials".`
       );
