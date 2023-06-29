@@ -25,6 +25,8 @@ import * as route53 from "aws-cdk-lib/aws-route53";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Api, Stack, RemixSite } from "../../dist/constructs/";
+import { SsrSiteProps } from "../../dist/constructs/SsrSite";
+import { appendFile } from "fs";
 
 process.env.SST_RESOURCES_TESTS = "enabled";
 const sitePath = "test/constructs/remix-site";
@@ -47,14 +49,25 @@ beforeAll(async () => {
   });
 });
 
+async function createSite(
+  props?: SsrSiteProps | ((stack: Stack) => SsrSiteProps)
+) {
+  const app = await createApp();
+  const stack = new Stack(app, "stack");
+  const site = new RemixSite(stack, "Site", {
+    path: sitePath,
+    ...(typeof props === "function" ? props(stack) : props),
+  });
+  await app.finish();
+  return { app, stack, site };
+}
+
 /////////////////////////////
 // Test Constructor
 /////////////////////////////
 
-test("edge: undefined", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  const site = new RemixSite(stack, "Site", {
-    path: sitePath,
+test("default", async () => {
+  const { site, stack } = await createSite({
     // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
   });
@@ -206,18 +219,16 @@ test("edge: undefined", async () => {
 });
 
 test("edge: undefined: environment set on server function", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  const api = new Api(stack, "Api");
-  new RemixSite(stack, "Site", {
-    path: sitePath,
-    environment: {
-      CONSTANT_ENV: "my-url",
-      REFERENCE_ENV: api.url,
-    },
-    // @ts-expect-error: "sstTest" is not exposed in props
-    sstTest: true,
+  const { site, stack } = await createSite((stack) => {
+    const api = new Api(stack, "Api");
+    return {
+      environment: {
+        CONSTANT_ENV: "my-url",
+        REFERENCE_ENV: api.url,
+      },
+      sstTest: true,
+    };
   });
-
   hasResource(stack, "AWS::Lambda::Function", {
     Environment: {
       Variables: {
@@ -229,9 +240,7 @@ test("edge: undefined: environment set on server function", async () => {
 });
 
 test("edge: false", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  const site = new RemixSite(stack, "Site", {
-    path: sitePath,
+  const { site, stack } = await createSite({
     edge: false,
     // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
@@ -274,9 +283,7 @@ test("edge: false", async () => {
 });
 
 test("edge: true", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  const site = new RemixSite(stack, "Site", {
-    path: sitePath,
+  const { site, stack } = await createSite({
     edge: true,
     // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
@@ -426,21 +433,17 @@ test("edge: true", async () => {
 });
 
 test("edge: true: environment generates placeholders", async () => {
-  const app = await createApp();
-  const stack = new Stack(app, "stack");
-  const api = new Api(stack, "Api");
-  new RemixSite(stack, "Site", {
-    path: sitePath,
-    edge: true,
-    environment: {
-      CONSTANT_ENV: "my-url",
-      REFERENCE_ENV: api.url,
-    },
-    // @ts-expect-error: "sstTest" is not exposed in props
-    sstTest: true,
+  const { site, stack } = await createSite((stack) => {
+    const api = new Api(stack, "Api");
+    return {
+      edge: true,
+      environment: {
+        CONSTANT_ENV: "my-url",
+        REFERENCE_ENV: api.url,
+      },
+      sstTest: true,
+    };
   });
-  await app.finish();
-
   countResourcesLike(stack, "Custom::AssetReplacer", 1, {
     replacements: [
       {
@@ -476,14 +479,12 @@ test("edge: true: environment generates placeholders", async () => {
 });
 
 test("constructor: with domain", async () => {
-  const stack = new Stack(await createApp(), "stack");
   route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
     });
-  const site = new RemixSite(stack, "Site", {
-    path: sitePath,
+  const { site, stack } = await createSite({
     customDomain: "domain.com",
     // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
@@ -552,14 +553,12 @@ test("constructor: with domain", async () => {
 });
 
 test("constructor: with domain with alias", async () => {
-  const stack = new Stack(await createApp(), "stack");
   route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
     });
-  const site = new RemixSite(stack, "Site", {
-    path: sitePath,
+  const { site, stack } = await createSite({
     customDomain: {
       domainName: "domain.com",
       domainAlias: "www.domain.com",
@@ -610,15 +609,12 @@ test("constructor: with domain with alias", async () => {
 });
 
 test("customDomain: string", async () => {
-  const stack = new Stack(await createApp(), "stack");
   route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
     });
-
-  const site = new RemixSite(stack, "Site", {
-    path: sitePath,
+  const { site, stack } = await createSite({
     customDomain: "domain.com",
     // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
@@ -642,15 +638,12 @@ test("customDomain: string", async () => {
 });
 
 test("customDomain: domainName string", async () => {
-  const stack = new Stack(await createApp(), "stack");
   route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
     });
-
-  const site = new RemixSite(stack, "Site", {
-    path: sitePath,
+  const { site, stack } = await createSite({
     customDomain: {
       domainName: "domain.com",
     },
@@ -676,15 +669,12 @@ test("customDomain: domainName string", async () => {
 });
 
 test("customDomain: hostedZone string", async () => {
-  const stack = new Stack(await createApp(), "stack");
   route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
     });
-
-  const site = new RemixSite(stack, "Site", {
-    path: sitePath,
+  const { site, stack } = await createSite({
     customDomain: {
       domainName: "www.domain.com",
       hostedZone: "domain.com",
@@ -711,15 +701,12 @@ test("customDomain: hostedZone string", async () => {
 });
 
 test("customDomain: hostedZone construct", async () => {
-  const stack = new Stack(await createApp(), "stack");
   route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
     });
-
-  const site = new RemixSite(stack, "Site", {
-    path: sitePath,
+  const { site, stack } = await createSite((stack) => ({
     customDomain: {
       domainName: "www.domain.com",
       cdk: {
@@ -728,9 +715,8 @@ test("customDomain: hostedZone construct", async () => {
         }),
       },
     },
-    // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
-  });
+  }));
   expect(route53.HostedZone.fromLookup).toHaveBeenCalledTimes(1);
   expect(site.customDomainUrl).toEqual("https://www.domain.com");
   hasResource(stack, "AWS::CloudFormation::CustomResource", {
@@ -751,15 +737,12 @@ test("customDomain: hostedZone construct", async () => {
 });
 
 test("customDomain: certificate imported", async () => {
-  const stack = new Stack(await createApp(), "stack");
   route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
     });
-
-  const site = new RemixSite(stack, "Site", {
-    path: sitePath,
+  const { site, stack } = await createSite((stack) => ({
     customDomain: {
       domainName: "www.domain.com",
       hostedZone: "domain.com",
@@ -769,9 +752,8 @@ test("customDomain: certificate imported", async () => {
         }),
       },
     },
-    // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
-  });
+  }));
   expect(site.customDomainUrl).toEqual("https://www.domain.com");
   countResources(stack, "AWS::CloudFormation::CustomResource", 0);
   hasResource(stack, "AWS::Route53::RecordSet", {
@@ -788,9 +770,7 @@ test("customDomain: certificate imported", async () => {
 });
 
 test("customDomain: isExternalDomain true", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  const site = new RemixSite(stack, "Site", {
-    path: sitePath,
+  const { site, stack } = await createSite((stack) => ({
     customDomain: {
       domainName: "www.domain.com",
       cdk: {
@@ -800,9 +780,8 @@ test("customDomain: isExternalDomain true", async () => {
       },
       isExternalDomain: true,
     },
-    // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
-  });
+  }));
   expect(site.customDomainUrl).toEqual("https://www.domain.com");
   countResources(stack, "AWS::CloudFront::Distribution", 1);
   hasResource(stack, "AWS::CloudFront::Distribution", {
@@ -816,10 +795,8 @@ test("customDomain: isExternalDomain true", async () => {
 });
 
 test("customDomain: isExternalDomain true and no certificate", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  expect(() => {
-    new RemixSite(stack, "Site", {
-      path: sitePath,
+  expect(async () => {
+    await createSite({
       customDomain: {
         domainName: "www.domain.com",
         isExternalDomain: true,
@@ -827,16 +804,14 @@ test("customDomain: isExternalDomain true and no certificate", async () => {
       // @ts-expect-error: "sstTest" is not exposed in props
       sstTest: true,
     });
-  }).toThrow(
+  }).rejects.toThrow(
     /A valid certificate is required when "isExternalDomain" is set to "true"./
   );
 });
 
 test("customDomain: isExternalDomain true and domainAlias set", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  expect(() => {
-    new RemixSite(stack, "Site", {
-      path: sitePath,
+  expect(async () => {
+    await createSite((stack) => ({
       customDomain: {
         domainName: "domain.com",
         domainAlias: "www.domain.com",
@@ -847,18 +822,16 @@ test("customDomain: isExternalDomain true and domainAlias set", async () => {
         },
         isExternalDomain: true,
       },
-      // @ts-expect-error: "sstTest" is not exposed in props
       sstTest: true,
-    });
-  }).toThrow(
+    }));
+  }).rejects.toThrow(
     /Domain alias is only supported for domains hosted on Amazon Route 53/
   );
 });
 
 test("customDomain: isExternalDomain true and hostedZone set", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  expect(() => {
-    new RemixSite(stack, "Site", {
+  expect(async () => {
+    await createSite((stack) => ({
       path: sitePath,
       customDomain: {
         domainName: "www.domain.com",
@@ -870,18 +843,15 @@ test("customDomain: isExternalDomain true and hostedZone set", async () => {
         },
         isExternalDomain: true,
       },
-      // @ts-expect-error: "sstTest" is not exposed in props
       sstTest: true,
-    });
-  }).toThrow(
+    }));
+  }).rejects.toThrow(
     /Hosted zones can only be configured for domains hosted on Amazon Route 53/
   );
 });
 
 test("timeout undefined", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new RemixSite(stack, "Site", {
-    path: sitePath,
+  const { site, stack } = await createSite({
     // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
   });
@@ -898,9 +868,7 @@ test("timeout undefined", async () => {
   });
 });
 test("timeout defined", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new RemixSite(stack, "Site", {
-    path: sitePath,
+  const { site, stack } = await createSite({
     // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
     timeout: 100,
@@ -918,44 +886,37 @@ test("timeout defined", async () => {
   });
 });
 test("timeout too alrge for regional", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  expect(() => {
-    new RemixSite(stack, "Site", {
-      path: sitePath,
+  expect(async () => {
+    await createSite({
       // @ts-expect-error: "sstTest" is not exposed in props
       sstTest: true,
       timeout: 1000,
     });
-  }).toThrow(/Timeout must be less than or equal to 180 seconds/);
+  }).rejects.toThrow(/Timeout must be less than or equal to 180 seconds/);
 });
 test("timeout too alrge for edge", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  expect(() => {
-    new RemixSite(stack, "Site", {
-      path: sitePath,
+  expect(async () => {
+    await createSite({
       // @ts-expect-error: "sstTest" is not exposed in props
       sstTest: true,
       edge: true,
       timeout: 1000,
     });
-  }).toThrow(/Timeout must be less than or equal to 30 seconds/);
+  }).rejects.toThrow(/Timeout must be less than or equal to 30 seconds/);
 });
 
 test("constructor: path not exist", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  expect(() => {
-    new RemixSite(stack, "Site", {
+  expect(async () => {
+    await createSite({
       path: "does-not-exist",
       // @ts-expect-error: "sstTest" is not exposed in props
       sstTest: true,
     });
-  }).toThrow(/Could not find/);
+  }).rejects.toThrow(/Could not find/);
 });
 
 test("constructor: cdk.serverCachePolicy undefined", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new RemixSite(stack, "Site", {
-    path: sitePath,
+  const { site, stack } = await createSite({
     // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
   });
@@ -968,9 +929,7 @@ test("constructor: cdk.serverCachePolicy undefined", async () => {
 });
 
 test("constructor: cdk.serverCachePolicy override", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new RemixSite(stack, "Site", {
-    path: sitePath,
+  const { site, stack } = await createSite((stack) => ({
     cdk: {
       serverCachePolicy: CachePolicy.fromCachePolicyId(
         stack,
@@ -978,16 +937,13 @@ test("constructor: cdk.serverCachePolicy override", async () => {
         "ServerCachePolicyId"
       ),
     },
-    // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
-  });
+  }));
   countResources(stack, "AWS::CloudFront::CachePolicy", 0);
 });
 
 test("constructor: cdk.responseHeadersPolicy undefined", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new RemixSite(stack, "Site", {
-    path: sitePath,
+  const { site, stack } = await createSite({
     // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
   });
@@ -995,24 +951,19 @@ test("constructor: cdk.responseHeadersPolicy undefined", async () => {
 });
 
 test("constructor: cdk.responseHeadersPolicy override", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new RemixSite(stack, "Site", {
-    path: sitePath,
+  const { site, stack } = await createSite((stack) => ({
     cdk: {
       responseHeadersPolicy: new ResponseHeadersPolicy(stack, "Policy", {
         removeHeaders: ["Server"],
       }),
     },
-    // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
-  });
+  }));
   countResources(stack, "AWS::CloudFront::CachePolicy", 1);
 });
 
 test("constructor: cfDistribution props", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new RemixSite(stack, "Site", {
-    path: sitePath,
+  const { site, stack } = await createSite({
     cdk: {
       distribution: {
         comment: "My Comment",
@@ -1030,9 +981,7 @@ test("constructor: cfDistribution props", async () => {
 });
 
 test("constructor: cfDistribution defaultBehavior override", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new RemixSite(stack, "Site", {
-    path: sitePath,
+  const { site, stack } = await createSite({
     cdk: {
       distribution: {
         defaultBehavior: {
@@ -1064,10 +1013,8 @@ test("constructor: cfDistribution defaultBehavior override", async () => {
 });
 
 test("constructor: cfDistribution certificate conflict", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  expect(() => {
-    new RemixSite(stack, "Site", {
-      path: sitePath,
+  expect(async () => {
+    await createSite((stack) => ({
       cdk: {
         distribution: {
           certificate: new acm.Certificate(stack, "Cert", {
@@ -1075,17 +1022,14 @@ test("constructor: cfDistribution certificate conflict", async () => {
           }),
         },
       },
-      // @ts-expect-error: "sstTest" is not exposed in props
       sstTest: true,
-    });
-  }).toThrow(/Do not configure the "cfDistribution.certificate"/);
+    }));
+  }).rejects.toThrow(/Do not configure the "cfDistribution.certificate"/);
 });
 
 test("constructor: cfDistribution domainNames conflict", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  expect(() => {
-    new RemixSite(stack, "Site", {
-      path: sitePath,
+  expect(async () => {
+    await createSite({
       cdk: {
         distribution: {
           domainNames: ["domain.com"],
@@ -1094,13 +1038,11 @@ test("constructor: cfDistribution domainNames conflict", async () => {
       // @ts-expect-error: "sstTest" is not exposed in props
       sstTest: true,
     });
-  }).toThrow(/Do not configure the "cfDistribution.domainNames"/);
+  }).rejects.toThrow(/Do not configure the "cfDistribution.domainNames"/);
 });
 
 test("constructor: cdk.bucket is props", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new RemixSite(stack, "Site", {
-    path: sitePath,
+  const { site, stack } = await createSite({
     cdk: {
       bucket: {
         bucketName: "my-bucket",
@@ -1116,15 +1058,12 @@ test("constructor: cdk.bucket is props", async () => {
 });
 
 test("constructor: cdk.bucket is construct", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new RemixSite(stack, "Site", {
-    path: sitePath,
+  const { site, stack } = await createSite((stack) => ({
     cdk: {
       bucket: s3.Bucket.fromBucketName(stack, "Bucket", "my-bucket"),
     },
-    // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
-  });
+  }));
   countResources(stack, "AWS::S3::Bucket", 0);
   hasResource(stack, "AWS::CloudFront::Distribution", {
     DistributionConfig: objectLike({
@@ -1154,10 +1093,7 @@ test("constructor: cdk.bucket is construct", async () => {
 });
 
 test("constructor: cdk.distribution.defaultBehavior no functionAssociations", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new RemixSite(stack, "Site", {
-    path: sitePath,
-  });
+  const { site, stack } = await createSite();
   hasResource(stack, "AWS::CloudFront::Distribution", {
     DistributionConfig: objectLike({
       DefaultCacheBehavior: objectLike({
@@ -1173,9 +1109,7 @@ test("constructor: cdk.distribution.defaultBehavior no functionAssociations", as
 });
 
 test("constructor: cdk.distribution.defaultBehavior additional functionAssociations", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new RemixSite(stack, "Site", {
-    path: sitePath,
+  const { site, stack } = await createSite((stack) => ({
     cdk: {
       distribution: {
         defaultBehavior: {
@@ -1190,7 +1124,7 @@ test("constructor: cdk.distribution.defaultBehavior additional functionAssociati
         },
       },
     },
-  });
+  }));
   hasResource(stack, "AWS::CloudFront::Distribution", {
     DistributionConfig: objectLike({
       DefaultCacheBehavior: objectLike({
@@ -1210,9 +1144,7 @@ test("constructor: cdk.distribution.defaultBehavior additional functionAssociati
 });
 
 test("constructor: cdk.server.logRetention", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new RemixSite(stack, "Site", {
-    path: sitePath,
+  const { site, stack } = await createSite({
     cdk: {
       server: {
         logRetention: RetentionDays.ONE_MONTH,
@@ -1227,10 +1159,12 @@ test("constructor: cdk.server.logRetention", async () => {
 });
 
 test("constructor: sst remove", async () => {
-  const stack = new Stack(await createApp({ mode: "remove" }), "stack");
+  const app = await createApp({ mode: "remove" });
+  const stack = new Stack(app, "stack");
   const site = new RemixSite(stack, "Site", {
     path: sitePath,
   });
+  await app.finish();
   expect(site.url).toBeUndefined();
   expect(site.customDomainUrl).toBeUndefined();
   expect(site.cdk).toBeUndefined();
@@ -1250,6 +1184,7 @@ test("constructor: sst deploy inactive stack", async () => {
   const site = new RemixSite(stack, "Site", {
     path: sitePath,
   });
+  await app.finish();
   expect(site.url).toBeUndefined();
   expect(site.customDomainUrl).toBeUndefined();
   expect(site.cdk).toBeUndefined();
@@ -1259,10 +1194,12 @@ test("constructor: sst deploy inactive stack", async () => {
 });
 
 test("constructor: sst dev: dev.url undefined", async () => {
-  const stack = new Stack(await createApp({ mode: "dev" }), "stack");
+  const app = await createApp({ mode: "dev" });
+  const stack = new Stack(app, "stack");
   const site = new RemixSite(stack, "Site", {
     path: sitePath,
   });
+  await app.finish();
   expect(site.url).toBeUndefined();
   expect(site.customDomainUrl).toBeUndefined();
   expect(site.cdk).toBeUndefined();
@@ -1272,18 +1209,21 @@ test("constructor: sst dev: dev.url undefined", async () => {
 });
 
 test("constructor: sst dev: dev.url string", async () => {
-  const stack = new Stack(await createApp({ mode: "dev" }), "stack");
+  const app = await createApp({ mode: "dev" });
+  const stack = new Stack(app, "stack");
   const site = new RemixSite(stack, "Site", {
     path: sitePath,
     dev: {
       url: "localhost:3000",
     },
   });
+  await app.finish();
   expect(site.url).toBe("localhost:3000");
 });
 
 test("constructor: sst dev: disablePlaceholder true", async () => {
-  const stack = new Stack(await createApp({ mode: "dev" }), "stack");
+  const app = await createApp({ mode: "dev" });
+  const stack = new Stack(app, "stack");
   const site = new RemixSite(stack, "Site", {
     path: sitePath,
     dev: {
@@ -1292,15 +1232,18 @@ test("constructor: sst dev: disablePlaceholder true", async () => {
     // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
   });
+  await app.finish();
   expect(site.url).toBeDefined();
   countResources(stack, "AWS::CloudFront::Distribution", 1);
 });
 
 test("constructor: sst remove", async () => {
-  const stack = new Stack(await createApp({ mode: "remove" }), "stack");
+  const app = await createApp({ mode: "remove" });
+  const stack = new Stack(app, "stack");
   const site = new RemixSite(stack, "Site", {
     path: sitePath,
   });
+  await app.finish();
   expect(site.url).toBeUndefined();
   expect(site.customDomainUrl).toBeUndefined();
   expect(site.cdk).toBeUndefined();
@@ -1314,9 +1257,7 @@ test("constructor: sst remove", async () => {
 /////////////////////////////
 
 test("attachPermissions", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  const site = new RemixSite(stack, "Site", {
-    path: sitePath,
+  const { site, stack } = await createSite({
     // @ts-expect-error: "sstTest" is not exposed in props
     sstTest: true,
   });

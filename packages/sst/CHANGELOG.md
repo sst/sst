@@ -1,5 +1,65 @@
 # @serverless-stack/cli2
 
+## 2.17.8
+
+### Patch Changes
+
+- [`26afb063c`](https://github.com/serverless-stack/sst/commit/26afb063c0ddd8cbb1fdfe73b955e21ae831da9a) Thanks [@thdxr](https://github.com/thdxr)! - eventbux: fix issue adding two subscribers to the same event
+
+- [`b07a079be`](https://github.com/serverless-stack/sst/commit/b07a079be18c7585a968f5f3789bc3c3909fefeb) Thanks [@thdxr](https://github.com/thdxr)! - kysely: upgrade kysely
+
+## 2.17.7
+
+### Patch Changes
+
+- [#3035](https://github.com/serverless-stack/sst/pull/3035) [`21669e1c7`](https://github.com/serverless-stack/sst/commit/21669e1c72b4910de47c983503cbfe92c100c415) Thanks [@berenddeboer](https://github.com/berenddeboer)! - RDS: grant KMS permission if secret is encrypted with custom KMS key
+
+## 2.17.6
+
+### Patch Changes
+
+- [`f3ab3b8bc`](https://github.com/serverless-stack/sst/commit/f3ab3b8bc1c1bff87210cc3ce77ce5c4cec8fcd7) Thanks [@thdxr](https://github.com/thdxr)! - future/auth: keep claims and code in same state to avoid hijacking
+
+## 2.17.5
+
+### Patch Changes
+
+- [`6a4910dae`](https://github.com/serverless-stack/sst/commit/6a4910dae23cfdbc473a29d80edea6fe885bf200) Thanks [@thdxr](https://github.com/thdxr)! - eventbus: fix bug not respecting max retry setting
+
+## 2.17.4
+
+### Patch Changes
+
+- [`258497590`](https://github.com/serverless-stack/sst/commit/258497590c76a8a91b0673f3e7a0439d2099d774) Thanks [@thdxr](https://github.com/thdxr)! - eventbus: simplify retry algorithm
+
+## 2.17.3
+
+### Patch Changes
+
+- [#3032](https://github.com/serverless-stack/sst/pull/3032) [`ef61e7db6`](https://github.com/serverless-stack/sst/commit/ef61e7db67760c9bcc9fa92fa23ea936f9517ddc) Thanks [@berenddeboer](https://github.com/berenddeboer)! - Bucket: enforce S3 https connections
+
+- [#3036](https://github.com/serverless-stack/sst/pull/3036) [`48f27bcbb`](https://github.com/serverless-stack/sst/commit/48f27bcbbb89ef0fcb69d26ddbbe7542fadfa29b) Thanks [@berenddeboer](https://github.com/berenddeboer)! - bootstrap: add lifecyle rule to stop triggering rule S3.13 in Security Hub
+
+## 2.17.2
+
+### Patch Changes
+
+- [#3030](https://github.com/serverless-stack/sst/pull/3030) [`b5a6953cf`](https://github.com/serverless-stack/sst/commit/b5a6953cfc61d71d297a98981307b39ad79c1298) Thanks [@jmnavarr](https://github.com/jmnavarr)! - Use correct custom CDK toolkit stack name
+
+## 2.17.1
+
+## 2.17.0
+
+### Minor Changes
+
+- [#3015](https://github.com/serverless-stack/sst/pull/3015) [`5128f2dd7`](https://github.com/serverless-stack/sst/commit/5128f2dd7533a24b2e6e5ac209552ae519506c25) Thanks [@berenddeboer](https://github.com/berenddeboer)! - Bootstrap: remove use of SQS queue
+
+- [#3015](https://github.com/serverless-stack/sst/pull/3015) [`5128f2dd7`](https://github.com/serverless-stack/sst/commit/5128f2dd7533a24b2e6e5ac209552ae519506c25) Thanks [@berenddeboer](https://github.com/berenddeboer)! - Bootstrap: enforce ssl connections to S3 to stop triggering S3.5 of the AWS Foundational Security Best Practices
+
+### Patch Changes
+
+- [#3024](https://github.com/serverless-stack/sst/pull/3024) [`43e4a0d73`](https://github.com/serverless-stack/sst/commit/43e4a0d73d510e6b59828ca684b9cbb4d1254f7d) Thanks [@ipatka](https://github.com/ipatka)! - Function: fail build when node runtime installation fails
+
 ## 2.16.4
 
 ### Patch Changes

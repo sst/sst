@@ -50,6 +50,7 @@ import {
   buildErrorResponsesFor404ErrorPage,
   buildErrorResponsesForRedirectToIndex,
 } from "./BaseSite.js";
+import { useDeferredTasks } from "./deferred_task.js";
 import { HttpsRedirect } from "./cdk/website-redirect.js";
 import { DnsValidatedCertificate } from "./cdk/dns-validated-certificate.js";
 import { SSTConstruct, isCDKConstruct } from "./Construct.js";
@@ -387,18 +388,6 @@ export class StaticSite extends Construct implements SSTConstruct {
       return;
     }
 
-    const cliLayer = new AwsCliLayer(this, "AwsCliLayer");
-
-    // Build app
-    const fileSizeLimit = app.isRunningSSTTest()
-      ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
-        this.props.sstTestFileSizeLimitOverride || 200
-      : 200;
-    this.buildApp();
-    const assets = this.bundleAssets(fileSizeLimit);
-    const filenamesAsset = this.bundleFilenamesAsset();
-
     // Create Bucket
     this.bucket = this.createS3Bucket();
 
@@ -406,23 +395,30 @@ export class StaticSite extends Construct implements SSTConstruct {
     this.hostedZone = this.lookupHostedZone();
     this.certificate = this.createCertificate();
 
-    // Create S3 Deployment
-    const s3deployCR = this.createS3Deployment(
-      cliLayer,
-      assets,
-      filenamesAsset
-    );
-
     // Create CloudFront
     this.distribution = this.createCfDistribution();
-    this.distribution.node.addDependency(s3deployCR);
-
-    // Invalidate CloudFront
-    const invalidationCR = this.createCloudFrontInvalidation(assets);
-    invalidationCR.node.addDependency(this.distribution);
 
     // Connect Custom Domain to CloudFront Distribution
     this.createRoute53Records();
+
+    useDeferredTasks().add(async () => {
+      // Build app
+      this.buildApp();
+
+      // Create S3 Deployment
+      const cliLayer = new AwsCliLayer(this, "AwsCliLayer");
+      const assets = this.createS3Assets();
+      const filenamesAsset = this.bundleFilenamesAsset();
+      const s3deployCR = this.createS3Deployment(
+        cliLayer,
+        assets,
+        filenamesAsset
+      );
+      this.distribution.node.addDependency(s3deployCR);
+
+      // Invalidate CloudFront
+      this.createCloudFrontInvalidation(assets);
+    });
   }
 
   /**
@@ -572,7 +568,7 @@ interface ImportMeta {
     }
   }
 
-  private bundleAssets(fileSizeLimit: number): Asset[] {
+  private createS3Assets(): Asset[] {
     const { path: sitePath } = this.props;
     const buildOutput = this.props.buildOutput || ".";
 
@@ -584,19 +580,26 @@ interface ImportMeta {
       );
     }
 
-    // create zip files
-    const script = path.join(__dirname, "../support/base-site-archiver.mjs");
+    // clear zip path to ensure no partX.zip remain from previous build
     const zipPath = path.resolve(
       path.join(
         useProject().paths.artifacts,
         `StaticSite-${this.node.id}-${this.node.addr}`
       )
     );
-    // clear zip path to ensure no partX.zip remain from previous build
     fs.rmSync(zipPath, {
       force: true,
       recursive: true,
     });
+
+    // create zip files
+    const app = this.node.root as App;
+    const script = path.join(__dirname, "../support/base-site-archiver.mjs");
+    const fileSizeLimit = app.isRunningSSTTest()
+      ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
+        this.props.sstTestFileSizeLimitOverride || 200
+      : 200;
     const cmd = [
       "node",
       script,

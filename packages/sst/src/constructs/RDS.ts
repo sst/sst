@@ -335,6 +335,12 @@ export class RDS extends Construct implements SSTConstruct {
         "secretsmanager:DescribeSecret": [
           this.secret.secretFullArn || `${this.secret.secretArn}*`,
         ],
+        // grant permission to the "encryptionkey" if set
+        ...(this.secret.encryptionKey
+          ? {
+              "kms:Decrypt": [this.secret.encryptionKey.keyArn],
+            }
+          : {}),
       },
     };
   }
@@ -392,8 +398,8 @@ export class RDS extends Construct implements SSTConstruct {
       );
     }
 
-    // Validate Secrets Manager is used for "credentials"
-    if (props.credentials && !props.credentials.secret) {
+    // Validate Secrets Manager is used for "credentials" not password
+    if (props.credentials?.password) {
       throw new Error(
         `Only credentials managed by SecretManager are supported for the "cdk.cluster.credentials".`
       );
