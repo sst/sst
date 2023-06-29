@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.17.8
+
+### Patch Changes
+
+- [`26afb063c`](https://github.com/serverless-stack/sst/commit/26afb063c0ddd8cbb1fdfe73b955e21ae831da9a) Thanks [@thdxr](https://github.com/thdxr)! - eventbux: fix issue adding two subscribers to the same event
+
+- [`b07a079be`](https://github.com/serverless-stack/sst/commit/b07a079be18c7585a968f5f3789bc3c3909fefeb) Thanks [@thdxr](https://github.com/thdxr)! - kysely: upgrade kysely
+
 ## 2.17.7
 
 ### Patch Changes
