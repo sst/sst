@@ -1071,7 +1071,7 @@ function handler(event) {
         allowedHeaders && allowedHeaders.length > 0
           ? CacheHeaderBehavior.allowList(...allowedHeaders)
           : CacheHeaderBehavior.none(),
-      cookieBehavior: CacheCookieBehavior.all(),
+      cookieBehavior: CacheCookieBehavior.none(),
       defaultTtl: CdkDuration.days(0),
       maxTtl: CdkDuration.days(365),
       minTtl: CdkDuration.days(0),
