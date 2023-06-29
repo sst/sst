@@ -696,7 +696,9 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       // But not at the browser level. CDN cache will be invalidated on deploy.
       else {
         const itemPath = path.join(clientPath, item);
-        item = `${this.buildConfig.clientBuildS3KeyPrefix || ''}/${item}`
+        if (this.buildConfig.clientBuildS3KeyPrefix) {
+          item = `${this.buildConfig.clientBuildS3KeyPrefix}/${item}`
+        }
         fileOptions.push({
           exclude: "*",
           include: fs.statSync(itemPath).isDirectory()
