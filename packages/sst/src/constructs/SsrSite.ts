@@ -108,7 +108,6 @@ export type SsrBuildConfig = {
   clientBuildS3KeyPrefix?: string;
   prerenderedBuildOutputDir?: string;
   prerenderedBuildS3KeyPrefix?: string;
-  runInDeferredTasks?: () => void;
 };
 
 export interface SsrSiteNodeJSProps extends NodeJSProps {}
@@ -317,6 +316,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   protected props: SsrSiteNormalizedProps;
   protected doNotDeploy: boolean;
   protected buildConfig: SsrBuildConfig;
+  protected deferredTaskCallbacks: (() => void)[] = [];
   private serverLambdaCdkFunctionForEdge?: ICdkFunction;
   protected serverLambdaForEdge?: EdgeFunction;
   protected serverLambdaForRegional?: SsrFunction;
@@ -418,7 +418,9 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       // Invalidate CloudFront
       this.createCloudFrontInvalidation();
 
-      this.buildConfig.runInDeferredTasks?.();
+      for (const task of this.deferredTaskCallbacks) {
+        await task();
+      }
     });
   }
 
@@ -1136,7 +1138,7 @@ function handler(event) {
         allowedHeaders && allowedHeaders.length > 0
           ? CacheHeaderBehavior.allowList(...allowedHeaders)
           : CacheHeaderBehavior.none(),
-      cookieBehavior: CacheCookieBehavior.all(),
+      cookieBehavior: CacheCookieBehavior.none(),
       defaultTtl: CdkDuration.days(0),
       maxTtl: CdkDuration.days(365),
       minTtl: CdkDuration.days(0),

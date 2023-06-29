@@ -10,10 +10,11 @@ import {
 import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import {
-  Function as CdkFunction,
+  CfnFunction,
   Code,
   Runtime,
   Architecture,
+  Function as CdkFunction,
   FunctionUrlAuthType,
   FunctionProps,
 } from "aws-cdk-lib/aws-lambda";
@@ -79,13 +80,14 @@ export class NextjsSite extends SsrSite {
 
   constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
     super(scope, id, {
-      buildCommand: "npx --yes open-next@2.0.0 build",
+      buildCommand: "npx --yes open-next@2.0.3 build",
       ...props,
     });
 
-    if (this.doNotDeploy) return;
-
-    this.createRevalidation();
+    this.deferredTaskCallbacks.push(() => {
+      this.createWarmer();
+      this.createRevalidation();
+    });
   }
 
   protected createRevalidation() {
@@ -125,14 +127,10 @@ export class NextjsSite extends SsrSite {
       clientBuildS3KeyPrefix: "_assets",
       prerenderedBuildOutputDir: ".open-next/cache",
       prerenderedBuildS3KeyPrefix: "_cache",
-      runInDeferredTasks: () => {
-        this.createWarmer();
-        this.createRevalidation();
-      },
     };
   }
 
-  protected createFunctionForRegional(): SsrFunction {
+  protected createFunctionForRegional() {
     const {
       runtime,
       timeout,
@@ -161,7 +159,7 @@ export class NextjsSite extends SsrSite {
     });
   }
 
-  protected createFunctionForEdge(): EdgeFunction {
+  protected createFunctionForEdge() {
     const { runtime, timeout, memorySize, bind, permissions, environment } =
       this.props;
     return new EdgeFunction(this, "ServerFunction", {
@@ -181,19 +179,17 @@ export class NextjsSite extends SsrSite {
     });
   }
 
-  private createImageOptimizationFunction(): CdkFunction {
+  private createImageOptimizationFunction() {
     const { imageOptimization, path: sitePath } = this.props;
 
-    return new CdkFunction(this, `ImageFunction`, {
+    const fn = new CdkFunction(this, `ImageFunction`, {
       description: "Next.js image optimizer",
       handler: "index.handler",
       currentVersionOptions: {
         removalPolicy: RemovalPolicy.DESTROY,
       },
       logRetention: RetentionDays.THREE_DAYS,
-      code: Code.fromAsset(
-        path.join(sitePath, ".open-next/image-optimization-function")
-      ),
+      code: Code.fromInline("export function handler() {}"),
       runtime: Runtime.NODEJS_18_X,
       memorySize: imageOptimization?.memorySize
         ? typeof imageOptimization.memorySize === "string"
@@ -213,6 +209,23 @@ export class NextjsSite extends SsrSite {
         }),
       ],
     });
+
+    // update code after build
+    this.deferredTaskCallbacks.push(() => {
+      const cfnFunction = fn.node.defaultChild as CfnFunction;
+      const code = Code.fromAsset(
+        path.join(sitePath, ".open-next/image-optimization-function")
+      );
+      const codeConfig = code.bind(fn);
+      cfnFunction.code = {
+        s3Bucket: codeConfig.s3Location?.bucketName,
+        s3Key: codeConfig.s3Location?.objectKey,
+        s3ObjectVersion: codeConfig.s3Location?.objectVersion,
+      };
+      code.bindToResource(cfnFunction);
+    });
+
+    return fn;
   }
 
   protected createCloudFrontDistributionForRegional(): Distribution {
