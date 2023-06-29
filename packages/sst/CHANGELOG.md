@@ -1,5 +1,21 @@
 # @serverless-stack/cli2
 
+## 2.18.0
+
+### Minor Changes
+
+- [`7c71978fa`](https://github.com/serverless-stack/sst/commit/7c71978fa1cd461c6a192a7385c3ca26afbbfdf1) Thanks [@fwang](https://github.com/fwang)! - SsrSite: set cookie behavior to NONE in server cache policy
+
+### Patch Changes
+
+- [`e5fc4de81`](https://github.com/serverless-stack/sst/commit/e5fc4de81b640be37d76862f52aa54d9259fee0b) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: update to OpenNext 2.0.3
+
+- [#3051](https://github.com/serverless-stack/sst/pull/3051) [`2b824b13e`](https://github.com/serverless-stack/sst/commit/2b824b13e4a7a7ffc5864b2e43511ab26e3fd0cb) Thanks [@khuezy](https://github.com/khuezy)! - SsrSite: fix s3 assets cache-control header not set
+
+- [#3054](https://github.com/serverless-stack/sst/pull/3054) [`966d3b0d3`](https://github.com/serverless-stack/sst/commit/966d3b0d3adf367c5416277b8e5c63183f1f1954) Thanks [@berenddeboer](https://github.com/berenddeboer)! - Function: support java17 runtime
+
+- [`a734123f7`](https://github.com/serverless-stack/sst/commit/a734123f718ef12b95834928c14d29e564933bcc) Thanks [@fwang](https://github.com/fwang)! - StaticSite & SsrSite: lazy build
+
 ## 2.17.8
 
 ### Patch Changes
