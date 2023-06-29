@@ -682,7 +682,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       this.props.path,
       this.buildConfig.clientBuildOutputDir
     );
-    for (let item of fs.readdirSync(clientPath)) {
+    for (const item of fs.readdirSync(clientPath)) {
       // Versioned files will be cached for 1 year (immutable) both at
       // CDN and browser level.
       if (item === this.buildConfig.clientBuildVersionedSubDir) {
@@ -696,14 +696,13 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       // But not at the browser level. CDN cache will be invalidated on deploy.
       else {
         const itemPath = path.join(clientPath, item);
-        if (this.buildConfig.clientBuildS3KeyPrefix) {
-          item = `${this.buildConfig.clientBuildS3KeyPrefix}/${item}`
-        }
         fileOptions.push({
           exclude: "*",
-          include: fs.statSync(itemPath).isDirectory()
-            ? `${item}/*`
-            : `${item}`,
+          include: path.posix.join(
+            this.buildConfig.clientBuildS3KeyPrefix ?? "",
+            item,
+            fs.statSync(itemPath).isDirectory() ? "*" : ""
+          ),
           cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
         });
       }
