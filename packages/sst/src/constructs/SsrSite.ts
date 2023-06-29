@@ -83,6 +83,7 @@ import {
   BaseSiteCdkDistributionProps,
   getBuildCmdEnvironment,
 } from "./BaseSite.js";
+import { useDeferredTasks } from "./deferred_task.js";
 import { HttpsRedirect } from "./cdk/website-redirect.js";
 import { DnsValidatedCertificate } from "./cdk/dns-validated-certificate.js";
 import { Size } from "./util/size.js";
@@ -105,6 +106,7 @@ export type SsrBuildConfig = {
   clientBuildS3KeyPrefix?: string;
   prerenderedBuildOutputDir?: string;
   prerenderedBuildS3KeyPrefix?: string;
+  runInDeferredTasks?: () => void;
 };
 
 export interface SsrSiteNodeJSProps extends NodeJSProps {}
@@ -309,7 +311,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   protected buildConfig: SsrBuildConfig;
   private serverLambdaCdkFunctionForEdge?: ICdkFunction;
   protected serverLambdaForEdge?: EdgeFunction;
-  protected serverLambdaForRegional?: CdkFunction;
+  protected serverLambdaForRegional?: SsrFunction;
   private serverLambdaForDev?: CdkFunction;
   protected bucket: Bucket;
   private cfFunction: CfFunction;
@@ -348,11 +350,6 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       return;
     }
 
-    const cliLayer = new AwsCliLayer(this, "AwsCliLayer");
-
-    // Build app
-    this.buildApp();
-
     // Create Bucket which will be utilised to contain the statics
     this.bucket = this.createS3Bucket();
 
@@ -377,29 +374,41 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     this.hostedZone = this.lookupHostedZone();
     this.certificate = this.createCertificate();
 
-    // Create S3 Deployment
-    const assets = this.createS3Assets();
-    const assetFileOptions = this.createS3AssetFileOptions();
-    const s3deployCR = this.createS3Deployment(
-      cliLayer,
-      assets,
-      assetFileOptions
-    );
-
     // Create CloudFront
     this.validateCloudFrontDistributionSettings();
     this.cfFunction = this.createCloudFrontFunction();
     this.distribution = this.props.edge
       ? this.createCloudFrontDistributionForEdge()
       : this.createCloudFrontDistributionForRegional();
-    this.distribution.node.addDependency(s3deployCR);
     this.grantServerCloudFrontPermissions();
-
-    // Invalidate CloudFront
-    this.createCloudFrontInvalidation();
 
     // Connect Custom Domain to CloudFront Distribution
     this.createRoute53Records();
+
+    useDeferredTasks().add(async () => {
+      // Build app
+      this.buildApp();
+
+      // Build server functions
+      await this.serverLambdaForEdge?.build();
+      await this.serverLambdaForRegional?.build();
+
+      // Create S3 Deployment
+      const cliLayer = new AwsCliLayer(this, "AwsCliLayer");
+      const assets = this.createS3Assets();
+      const assetFileOptions = this.createS3AssetFileOptions();
+      const s3deployCR = this.createS3Deployment(
+        cliLayer,
+        assets,
+        assetFileOptions
+      );
+      this.distribution.node.addDependency(s3deployCR);
+
+      // Invalidate CloudFront
+      this.createCloudFrontInvalidation();
+
+      this.buildConfig.runInDeferredTasks?.();
+    });
   }
 
   /////////////////////
@@ -793,8 +802,8 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   // Bundle Lambda Server
   /////////////////////
 
-  protected createFunctionForRegional(): CdkFunction {
-    return {} as CdkFunction;
+  protected createFunctionForRegional(): SsrFunction {
+    return {} as SsrFunction;
   }
 
   protected createFunctionForEdge(): EdgeFunction {

@@ -87,11 +87,6 @@ export class NextjsSite extends SsrSite {
       buildCommand: "npx --yes open-next@2.0.0 build",
       ...props,
     });
-
-    if (this.doNotDeploy) return;
-
-    this.createWarmer();
-    this.createRevalidation();
   }
 
   protected createRevalidation() {
@@ -131,10 +126,14 @@ export class NextjsSite extends SsrSite {
       clientBuildS3KeyPrefix: "_assets",
       prerenderedBuildOutputDir: ".open-next/cache",
       prerenderedBuildS3KeyPrefix: "_cache",
+      runInDeferredTasks: () => {
+        this.createWarmer();
+        this.createRevalidation();
+      },
     };
   }
 
-  protected createFunctionForRegional(): CdkFunction {
+  protected createFunctionForRegional(): SsrFunction {
     const {
       runtime,
       timeout,
@@ -144,7 +143,7 @@ export class NextjsSite extends SsrSite {
       environment,
       cdk,
     } = this.props;
-    const ssrFn = new SsrFunction(this, `ServerFunction`, {
+    return new SsrFunction(this, `ServerFunction`, {
       description: "Next.js server",
       bundle: path.join(this.props.path, ".open-next", "server-function"),
       handler: "index.handler",
@@ -161,7 +160,6 @@ export class NextjsSite extends SsrSite {
       },
       ...cdk?.server,
     });
-    return ssrFn.function;
   }
 
   protected createFunctionForEdge(): EdgeFunction {

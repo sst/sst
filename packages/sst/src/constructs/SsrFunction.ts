@@ -8,6 +8,7 @@ import {
   Policy,
   PolicyStatement,
   CfnPolicy,
+  IGrantable,
 } from "aws-cdk-lib/aws-iam";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import {
@@ -18,9 +19,9 @@ import {
   Code,
   FunctionOptions,
   Function as CdkFunction,
+  FunctionUrlOptions,
 } from "aws-cdk-lib/aws-lambda";
 import { Bucket } from "aws-cdk-lib/aws-s3";
-import { Asset } from "aws-cdk-lib/aws-s3-assets";
 import {
   Duration as CdkDuration,
   CustomResource,
@@ -34,7 +35,6 @@ import {
   NodeJSProps,
   FunctionCopyFilesProps,
 } from "./Function.js";
-import { useDeferredTasks } from "./deferred_task.js";
 import { Secret } from "./Config.js";
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
@@ -86,32 +86,9 @@ export class SsrFunction extends Construct {
       permissions: props.permissions || [],
     };
 
-    const { assetBucket, assetKey } = (
-      props.bundle
-        ? // Case: bundle is pre-built
-          () => {
-            const asset = this.buildAssetFromBundle(props.bundle!);
-            return {
-              assetBucket: asset.s3BucketName,
-              assetKey: asset.s3ObjectKey,
-            };
-          }
-        : // Case: bundle is NOT pre-built
-          () => {
-            this.buildAssetFromHandler((code) => {
-              const codeConfig = code.bind(this.function);
-              const assetBucket = codeConfig.s3Location?.bucketName!;
-              const assetKey = codeConfig.s3Location?.objectKey!;
-              this.updateCodeReplacer(assetBucket, assetKey);
-              this.updateFunction(code, assetBucket, assetKey);
-            });
-            return {
-              assetBucket: "placeholder",
-              assetKey: "placeholder",
-            };
-          }
-    )();
-
+    // Create function with placeholder code
+    const assetBucket = "placeholder";
+    const assetKey = "placeholder";
     const { assetReplacer, assetReplacerPolicy } = this.createCodeReplacer(
       assetBucket,
       assetKey
@@ -119,12 +96,46 @@ export class SsrFunction extends Construct {
     this.function = this.createFunction(assetBucket, assetKey);
     this.attachPermissions(props.permissions || []);
     this.bind(props.bind || []);
-
-    // Create function after the code is updated
     this.function.node.addDependency(assetReplacer);
 
     this.assetReplacer = assetReplacer;
     this.assetReplacerPolicy = assetReplacerPolicy;
+  }
+
+  public get role() {
+    return this.function.role;
+  }
+
+  public get functionArn() {
+    return this.function.functionArn;
+  }
+
+  public get functionName() {
+    return this.function.functionName;
+  }
+
+  public addEnvironment(key: string, value: string) {
+    return this.function.addEnvironment(key, value);
+  }
+
+  public addFunctionUrl(props?: FunctionUrlOptions) {
+    return this.function.addFunctionUrl(props);
+  }
+
+  public grantInvoke(grantee: IGrantable) {
+    return this.function.grantInvoke(grantee);
+  }
+
+  public async build() {
+    const { bundle, handler } = this.props;
+    const code = bundle
+      ? await this.buildAssetFromBundle(bundle)
+      : await this.buildAssetFromHandler();
+    const codeConfig = code.bind(this.function);
+    const assetBucket = codeConfig.s3Location?.bucketName!;
+    const assetKey = codeConfig.s3Location?.objectKey!;
+    this.updateCodeReplacer(assetBucket, assetKey);
+    this.updateFunction(code, assetBucket, assetKey);
   }
 
   public attachPermissions(permissions: Permissions) {
@@ -237,7 +248,7 @@ export class SsrFunction extends Construct {
     });
   }
 
-  private buildAssetFromHandler(onBundled: (code: Code) => void) {
+  private async buildAssetFromHandler() {
     useFunctions().add(this.node.addr, {
       handler: this.props.handler,
       runtime: this.props.runtime,
@@ -245,26 +256,22 @@ export class SsrFunction extends Construct {
       copyFiles: this.props.copyFiles,
     });
 
-    useDeferredTasks().add(async () => {
-      // Build function
-      const bundle = await useRuntimeHandlers().build(this.node.addr, "deploy");
+    // Build function
+    const bundle = await useRuntimeHandlers().build(this.node.addr, "deploy");
 
-      // create wrapper that calls the handler
-      if (bundle.type === "error")
-        throw new Error(
-          [
-            `There was a problem bundling the SSR function for the "${this.node.id}" Site.`,
-            ...bundle.errors,
-          ].join("\n")
-        );
+    // create wrapper that calls the handler
+    if (bundle.type === "error")
+      throw new Error(
+        [
+          `There was a problem bundling the SSR function for the "${this.node.id}" Site.`,
+          ...bundle.errors,
+        ].join("\n")
+      );
 
-      const code = AssetCode.fromAsset(bundle.out);
-
-      onBundled(code);
-    });
+    return AssetCode.fromAsset(bundle.out);
   }
 
-  private buildAssetFromBundle(bundle: string) {
+  private async buildAssetFromBundle(bundle: string) {
     // Note: cannot point the bundle to the `.open-next/server-function`
     //       b/c the folder contains node_modules. And pnpm node_modules
     //       contains symlinks. CDK cannot zip symlinks correctly.
@@ -287,10 +294,7 @@ export class SsrFunction extends Construct {
       throw new Error(`There was a problem generating the assets package.`);
     }
 
-    // Create asset
-    return new Asset(this, `FunctionAsset`, {
-      path: path.join(outputPath, "server-function.zip"),
-    });
+    return AssetCode.fromAsset(path.join(outputPath, "server-function.zip"));
   }
 
   private updateCodeReplacer(assetBucket: string, assetKey: string) {
