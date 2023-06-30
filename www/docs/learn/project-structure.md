@@ -1,6 +1,8 @@
 ---
 title: Project Structure
 ---
+import MultiPackagerCode from "@site/src/components/MultiPackagerCode";
+
 
 While we wait for our local environment to start up, let's look at the starter the [`create sst`](../packages/create-sst.md) CLI has set up for us.
 
@@ -67,22 +69,17 @@ We typically group related resources together into stacks. In the `stacks/` dire
 
   ```ts title="stacks/Api.ts"
   export function Api({ stack }: StackContext) {
-    const rds = use(Database);
-
     const api = new ApiGateway(stack, "api", {
+    defaults: {
+      function: {
+        bind: [use(Database)],
+      },
+    },
 
     // ...
   ```
 
-  The `use(Database)` call gives this stack access to the props that the `Database` stack returns. So `rds` is coming from the return statement of our `Database` stack.
-
-  We _bind_ the database to our API so that the functions that power our API have access to it.
-
-  ```ts {2}
-  function: {
-    bind: [rds],
-  },
-  ```
+  The `use(Database)` call gives this stack access to the props that the `Database` stack returns. So `rds` is coming from the return statement of our `Database` stack. We _bind_ the database to our API so that the functions that power our API have access to it.
 
   The `bind` prop does two things for us. It gives our functions permissions to access the database. Also our functions are loaded with the database details required to query it. You can [read more about Resource Binding](../resource-binding.md).
 
@@ -151,14 +148,34 @@ You'll notice that all these directories have their own `package.json` file.
 
 So when you need to install/uninstall a dependency in one of those workspaces, you can do the following from the project root.
 
+<MultiPackagerCode>
+<TabItem value="npm">
+
 ```bash
 $ npm install <package> -W <workspace>
 $ npm uninstall <package> -W <workspace>
 ```
 
-Or you can do the regular `npm install` in the workspace's directory.
+</TabItem>
+<TabItem value="yarn">
 
-For Yarn, you'll need to run `yarn add` in the workspace directory. And at the root you'll need to run `yarn add` with [the `-W` flag](https://classic.yarnpkg.com/lang/en/docs/cli/add/).
+```bash
+$ yarn add <package> -W <workspace>
+$ yarn remove <package> -W <workspace>
+```
+
+</TabItem>
+<TabItem value="pnpm">
+
+```bash
+$ pnpm add <package> -W <workspace>
+$ pnpm remove <package> -W <workspace>
+```
+
+</TabItem>
+</MultiPackagerCode>
+
+Or you can navigate to the workspace directory and run the commands from there without the `-W` flag.
 
 ---
 
