@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-import { Function as CdkFunction } from "aws-cdk-lib/aws-lambda";
 
 import { SsrSite } from "./SsrSite.js";
 import { SsrFunction } from "./SsrFunction.js";
@@ -39,7 +38,7 @@ export class AstroSite extends SsrSite {
     super.validateBuildOutput();
   }
 
-  protected createFunctionForRegional(): CdkFunction {
+  protected createFunctionForRegional() {
     const {
       runtime,
       timeout,
@@ -51,7 +50,7 @@ export class AstroSite extends SsrSite {
       cdk,
     } = this.props;
 
-    const ssrFn = new SsrFunction(this, `ServerFunction`, {
+    return new SsrFunction(this, `ServerFunction`, {
       description: "Server handler for Astro",
       handler: path.join(this.props.path, "dist", "server", "entry.handler"),
       runtime,
@@ -66,11 +65,9 @@ export class AstroSite extends SsrSite {
       permissions,
       ...cdk?.server,
     });
-
-    return ssrFn.function;
   }
 
-  protected createFunctionForEdge(): EdgeFunction {
+  protected createFunctionForEdge() {
     const {
       runtime,
       timeout,
@@ -95,5 +92,12 @@ export class AstroSite extends SsrSite {
         ...nodejs,
       },
     });
+  }
+
+  public getConstructMetadata() {
+    return {
+      type: "AstroSite" as const,
+      ...this.getConstructMetadataBase(),
+    };
   }
 }

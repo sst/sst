@@ -1,24 +1,52 @@
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
+import {
+  CloudFormationClient,
+  DescribeStacksCommand,
+} from "@aws-sdk/client-cloudformation";
 import { log, wrapper } from "./util.js";
 
-const lambda = new LambdaClient({ logger: console });
+const logger = { ...console, debug: () => {} };
+const lambda = new LambdaClient({ logger });
+const cf = new CloudFormationClient({ logger });
 
 export const handler = wrapper(async (cfnRequest: any) => {
   log("onEventHandler", cfnRequest);
 
+  const { RequestType, ResourceProperties, StackId } = cfnRequest;
+
+  // Do not invoke user function if stack is rolling back
+  if (StackId && (await isStackRollingBack(StackId))) return;
+
   // Invoke user function on Create and on Update
-  const fnCreate = cfnRequest.ResourceProperties.UserCreateFunction;
-  const fnUpdate = cfnRequest.ResourceProperties.UserUpdateFunction;
-  const fnDelete = cfnRequest.ResourceProperties.UserDeleteFunction;
-  const fnParams = JSON.parse(cfnRequest.ResourceProperties.UserParams);
-  if (cfnRequest.RequestType === "Create" && fnCreate) {
+  const fnCreate = ResourceProperties.UserCreateFunction;
+  const fnUpdate = ResourceProperties.UserUpdateFunction;
+  const fnDelete = ResourceProperties.UserDeleteFunction;
+  const fnParams = JSON.parse(ResourceProperties.UserParams);
+  if (RequestType === "Create" && fnCreate) {
     await invokeUserFunction(fnCreate, { params: fnParams });
-  } else if (cfnRequest.RequestType === "Update" && fnUpdate) {
+  } else if (RequestType === "Update" && fnUpdate) {
     await invokeUserFunction(fnUpdate, { params: fnParams });
-  } else if (cfnRequest.RequestType === "Delete" && fnDelete) {
+  } else if (RequestType === "Delete" && fnDelete) {
     await invokeUserFunction(fnDelete, { params: fnParams });
   }
 });
+
+async function isStackRollingBack(stackId: string) {
+  log("isStackRollingBack()", stackId);
+
+  const resp = await cf.send(
+    new DescribeStacksCommand({
+      StackName: stackId,
+    })
+  );
+  const status = resp.Stacks?.[0].StackStatus;
+  const isRollback =
+    status?.startsWith("UPDATE_ROLLBACK") || status?.startsWith("ROLLBACK");
+
+  log({ isRollback });
+
+  return isRollback;
+}
 
 async function invokeUserFunction(functionName: string, payload: any) {
   log("invokeUserFunction()", functionName, payload);

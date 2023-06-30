@@ -2,14 +2,20 @@ import path from "path";
 import url from "url";
 import { Construct } from "constructs";
 import { CustomResource, Duration } from "aws-cdk-lib/core";
-import * as lambda from "aws-cdk-lib/aws-lambda";
+import { PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { Code, Runtime, Function as CdkFunction } from "aws-cdk-lib/aws-lambda";
 import { App } from "./App.js";
+import { Stack } from "./Stack.js";
 import {
   Function as Fn,
   FunctionProps,
   FunctionDefinition,
 } from "./Function.js";
-import { SSTConstruct } from "./Construct.js";
+import {
+  SSTConstruct,
+  SSTConstructMetadata,
+  getFunctionRef,
+} from "./Construct.js";
 import { Permissions } from "./util/permission.js";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -115,7 +121,7 @@ export interface ScriptProps {
  * });
  * ```
  */
-export class Script extends Construct {
+export class Script extends Construct implements SSTConstruct {
   /**
    * The internally created onCreate `Function` instance.
    */
@@ -129,9 +135,11 @@ export class Script extends Construct {
    */
   public readonly deleteFunction?: Fn;
   protected readonly props: ScriptProps;
+  public readonly id: string;
 
   constructor(scope: Construct, id: string, props: ScriptProps) {
     super(scope, id);
+    this.id = id;
     if ((props as any).function) this.checkDeprecatedFunction();
 
     // Validate deprecated "function" prop
@@ -238,15 +246,19 @@ export class Script extends Construct {
     );
   }
 
-  private createCustomResourceFunction(): lambda.Function {
-    const handler = new lambda.Function(this, "ScriptHandler", {
-      code: lambda.Code.fromAsset(
-        path.join(__dirname, "../support/script-function")
-      ),
-      runtime: lambda.Runtime.NODEJS_16_X,
+  private createCustomResourceFunction(): CdkFunction {
+    const handler = new CdkFunction(this, "ScriptHandler", {
+      code: Code.fromAsset(path.join(__dirname, "../support/script-function")),
+      runtime: Runtime.NODEJS_16_X,
       handler: "index.handler",
       timeout: Duration.minutes(15),
       memorySize: 1024,
+      initialPolicy: [
+        new PolicyStatement({
+          actions: ["cloudformation:DescribeStacks"],
+          resources: [Stack.of(this).stackId],
+        }),
+      ],
     });
     this.createFunction?.grantInvoke(handler);
     this.updateFunction?.grantInvoke(handler);
@@ -255,7 +267,7 @@ export class Script extends Construct {
     return handler;
   }
 
-  private createCustomResource(app: App, crFunction: lambda.Function): void {
+  private createCustomResource(app: App, crFunction: CdkFunction): void {
     // Note: "Version" is set to current timestamp to ensure the Custom
     //       Resource function is run on every update.
     //
@@ -264,10 +276,9 @@ export class Script extends Construct {
     //       when rebuilding infrastructure. Otherwise, there will always be
     //       a change when rebuilding infrastructure b/c the "version" property
     //       changes on each build.
-    const version =
-      app.mode === "dev"
-        ? app.debugStartedAt
-        : this.props.version ?? Date.now().toString();
+    const defaultVersion =
+      app.mode === "dev" ? app.debugScriptVersion : Date.now().toString();
+    const version = this.props.version ?? defaultVersion;
     new CustomResource(this, "ScriptResource", {
       serviceToken: crFunction.functionArn,
       resourceType: "Custom::SSTScript",
@@ -285,5 +296,22 @@ export class Script extends Construct {
     throw new Error(
       `The "function" property has been replaced by "onCreate" and "onUpdate". More details on upgrading - https://docs.sst.dev/constructs/Script#upgrading-to-v0460`
     );
+  }
+
+  /** @internal */
+  public getConstructMetadata() {
+    return {
+      type: "Script" as const,
+      data: {
+        createfn: getFunctionRef(this.createFunction),
+        deletefn: getFunctionRef(this.deleteFunction),
+        updatefn: getFunctionRef(this.updateFunction),
+      },
+    };
+  }
+
+  /** @internal */
+  public getFunctionBinding() {
+    return undefined;
   }
 }

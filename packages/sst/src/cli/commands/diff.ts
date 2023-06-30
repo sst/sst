@@ -6,10 +6,15 @@ export const diff = (program: Program) =>
     "diff",
     "Compare your app with what is deployed on AWS",
     (yargs) =>
-      yargs.option("dev", {
-        type: "boolean",
-        describe: "Compare in dev mode",
-      }),
+      yargs
+	.option("dev", {
+          type: "boolean",
+          describe: "Compare in dev mode",
+	})
+	.option("to", {
+          type: "string",
+          describe: "Output directory, defaults to .sst/dist",
+	}),
     async (args) => {
       const { useProject } = await import("../../project.js");
       const { Stacks } = await import("../../stacks/index.js");
@@ -25,6 +30,7 @@ export const diff = (program: Program) =>
       const [_metafile, sstConfig] = await Stacks.load(project.paths.config);
       const assembly = await Stacks.synth({
         fn: sstConfig.stacks,
+        buildDir: args.to,
         mode: args.dev ? "dev" : "deploy",
       });
 

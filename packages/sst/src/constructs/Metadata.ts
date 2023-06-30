@@ -11,7 +11,7 @@ import type { ApiGatewayV1Api } from "./ApiGatewayV1Api.js";
 export type ApiGatewayV1ApiMetadata = ExtractMetadata<ApiGatewayV1Api<any>>;
 
 import type { Cognito } from "./Cognito.js";
-export type AuthMetadata = ExtractMetadata<Cognito>;
+export type CognitoMetadata = ExtractMetadata<Cognito>;
 
 import type { AppSyncApi } from "./AppSyncApi.js";
 export type AppSyncApiMetadata = ExtractMetadata<AppSyncApi>;
@@ -31,9 +31,6 @@ export type FunctionMetadata = ExtractMetadata<Fn>;
 import type { KinesisStream } from "./KinesisStream.js";
 export type KinesisStreamMetadata = ExtractMetadata<KinesisStream>;
 
-import type { NextjsSite } from "./NextjsSite.js";
-export type NextjsMetadata = ExtractMetadata<NextjsSite>;
-
 import type { NextjsSite as SlsNextjsSite } from "./deprecated/NextjsSite.js";
 export type SlsNextjsMetadata = ExtractMetadata<SlsNextjsSite>;
 
@@ -42,9 +39,6 @@ export type QueueMetadata = ExtractMetadata<Queue>;
 
 import type { StaticSite } from "./StaticSite.js";
 export type StaticSiteMetadata = ExtractMetadata<StaticSite>;
-
-import type { SsrSite } from "./SsrSite.js";
-export type SsrSiteMetadata = ExtractMetadata<SsrSite>;
 
 import type { Table } from "./Table.js";
 export type TableMetadata = ExtractMetadata<Table>;
@@ -58,22 +52,57 @@ export type WebSocketApiMetadata = ExtractMetadata<WebSocketApi>;
 import type { RDS } from "./RDS.js";
 export type RDSMetadata = ExtractMetadata<RDS>;
 
+import type { Auth } from "./future/Auth.js";
+export type AuthMetadata = ExtractMetadata<Auth>;
+
+import type { Script } from "./Script.js";
+export type ScriptMetadata = ExtractMetadata<Script>;
+
+import type { Job } from "./Job.js";
+export type JobMetadata = ExtractMetadata<Job>;
+
+// Sites
+
+import type { NextjsSite } from "./NextjsSite.js";
+export type NextjsSiteMetadata = ExtractMetadata<NextjsSite>;
+
+import type { AstroSite } from "./AstroSite.js";
+export type AstroSiteMetadata = ExtractMetadata<AstroSite>;
+
+import type { RemixSite } from "./RemixSite.js";
+export type RemixSiteMetadata = ExtractMetadata<RemixSite>;
+
+import type { SvelteKitSite } from "./SvelteKitSite.js";
+export type SvelteKitSiteMetadata = ExtractMetadata<SvelteKitSite>;
+
+import type { SolidStartSite } from "./SolidStartSite.js";
+export type SolidStartSiteMetadata = ExtractMetadata<SolidStartSite>;
+
+export type SSRSiteMetadata =
+  | NextjsSiteMetadata
+  | AstroSiteMetadata
+  | RemixSiteMetadata
+  | SolidStartSiteMetadata
+  | SvelteKitSiteMetadata;
+
 export type Metadata =
   | ApiMetadata
   | ApiGatewayV1ApiMetadata
-  | AuthMetadata
+  | CognitoMetadata
   | AppSyncApiMetadata
   | BucketMetadata
   | CronMetadata
   | EventBusMetadata
   | FunctionMetadata
   | KinesisStreamMetadata
-  | NextjsMetadata
   | SlsNextjsMetadata
   | QueueMetadata
   | StaticSiteMetadata
-  | SsrSiteMetadata
   | TableMetadata
   | TopicMetadata
   | WebSocketApiMetadata
-  | RDSMetadata;
+  | RDSMetadata
+  | AuthMetadata
+  | ScriptMetadata
+  | JobMetadata
+  | SSRSiteMetadata;

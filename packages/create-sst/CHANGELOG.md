@@ -1,5 +1,89 @@
 # create-sst
 
+## 2.18.0
+
+### Patch Changes
+
+- [#3054](https://github.com/serverless-stack/sst/pull/3054) [`966d3b0d3`](https://github.com/serverless-stack/sst/commit/966d3b0d3adf367c5416277b8e5c63183f1f1954) Thanks [@berenddeboer](https://github.com/berenddeboer)! - Function: support java17 runtime
+
+## 2.17.8
+
+## 2.17.7
+
+### Patch Changes
+
+- [`c6f802cc7`](https://github.com/serverless-stack/sst/commit/c6f802cc7641dc8574c0131c9c3363b7a546fcf0) Thanks [@thdxr](https://github.com/thdxr)! - create-sst: fix issue with upstream @tsconfig/node16 changing defaults
+
+## 2.17.6
+
+## 2.17.5
+
+## 2.17.4
+
+## 2.17.3
+
+## 2.17.2
+
+## 2.17.1
+
+### Patch Changes
+
+- [#3017](https://github.com/serverless-stack/sst/pull/3017) [`a2a48ddb3`](https://github.com/serverless-stack/sst/commit/a2a48ddb3ae41b3179c8f668bf3cb6770fe7e690) Thanks [@Rohithgilla12](https://github.com/Rohithgilla12)! - create-sst: fix selecting "no" for dropin mode error
+
+## 2.17.0
+
+## 2.16.4
+
+## 2.16.3
+
+## 2.16.2
+
+### Patch Changes
+
+- [`0cae7b20d`](https://github.com/serverless-stack/sst/commit/0cae7b20dcca2fe671838e13485a6a2b5893eb3e) Thanks [@thdxr](https://github.com/thdxr)! - create-sst: tweak standard preset
+
+## 2.16.1
+
+## 2.16.0
+
+### Minor Changes
+
+- [#3001](https://github.com/serverless-stack/sst/pull/3001) [`53fd3cb75`](https://github.com/serverless-stack/sst/commit/53fd3cb757baefc4af9129e8cd4183492d23fae4) Thanks [@fwang](https://github.com/fwang)! - Update CDK to v2.84.0
+
+## 2.15.0
+
+## 2.14.0
+
+## 2.13.9
+
+## 2.13.8
+
+## 2.13.7
+
+## 2.13.6
+
+## 2.13.5
+
+## 2.13.4
+
+## 2.13.3
+
+## 2.13.2
+
+## 2.13.1
+
+## 2.13.0
+
+## 2.12.2
+
+## 2.12.1
+
+### Patch Changes
+
+- [`e278f4714`](https://github.com/serverless-stack/sst/commit/e278f47148c6e12214cc3b8dadfd1af3eedea298) Thanks [@thdxr](https://github.com/thdxr)! - default sst project comes with events example
+
+- [`4c32bea82`](https://github.com/serverless-stack/sst/commit/4c32bea82b18849f8c2d9a66d466a031b843d56c) Thanks [@thdxr](https://github.com/thdxr)! - rename events -> event
+
 ## 2.12.0
 
 ## 2.11.18

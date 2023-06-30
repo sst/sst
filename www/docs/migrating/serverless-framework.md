@@ -179,7 +179,7 @@ export function StackA({ stack }: StackContext) {
 import { StackContext, use } from "sst/constructs";
 import { StackA } from "./StackA";
 
-export function StackA({ stack }: StackContext) {
+export function StackB({ stack }: StackContext) {
   // stackA's return value is passed to stackB
   const { bucket } = use(StackA);
 

@@ -3,9 +3,6 @@ import url from "url";
 import path from "path";
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
-
-import { Function as CdkFunction } from "aws-cdk-lib/aws-lambda";
-
 import { SsrSite } from "./SsrSite.js";
 import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
@@ -124,7 +121,7 @@ export class RemixSite extends SsrSite {
     };
   }
 
-  protected createFunctionForRegional(): CdkFunction {
+  protected createFunctionForRegional() {
     const {
       runtime,
       timeout,
@@ -139,7 +136,7 @@ export class RemixSite extends SsrSite {
     const { handler, esbuild } =
       this.createServerLambdaBundle("regional-server.js");
 
-    const ssrFn = new SsrFunction(this, `ServerFunction`, {
+    return new SsrFunction(this, `ServerFunction`, {
       description: "Server handler for Remix",
       handler,
       runtime,
@@ -159,11 +156,9 @@ export class RemixSite extends SsrSite {
       permissions,
       ...cdk?.server,
     });
-
-    return ssrFn.function;
   }
 
-  protected createFunctionForEdge(): EdgeFunction {
+  protected createFunctionForEdge() {
     const {
       runtime,
       timeout,
@@ -196,5 +191,12 @@ export class RemixSite extends SsrSite {
         },
       },
     });
+  }
+
+  public getConstructMetadata() {
+    return {
+      type: "RemixSite" as const,
+      ...this.getConstructMetadataBase(),
+    };
   }
 }

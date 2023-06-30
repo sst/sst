@@ -27,7 +27,7 @@ export function getFunctionRef(fn?: any) {
   if (!(fn instanceof Fn)) return undefined;
   return {
     node: fn.node.addr,
-    stack: Stack.of(fn).node.id,
+    stack: Stack.of(fn).stackName,
   };
 }
 

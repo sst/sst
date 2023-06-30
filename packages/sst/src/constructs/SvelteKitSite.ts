@@ -1,7 +1,5 @@
 import fs from "fs";
 import path from "path";
-import { Architecture, Function as CdkFunction } from "aws-cdk-lib/aws-lambda";
-
 import { SsrSite } from "./SsrSite.js";
 import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
@@ -40,7 +38,7 @@ export class SvelteKitSite extends SsrSite {
     };
   }
 
-  protected createFunctionForRegional(): CdkFunction {
+  protected createFunctionForRegional() {
     const {
       runtime,
       timeout,
@@ -52,7 +50,7 @@ export class SvelteKitSite extends SsrSite {
       cdk,
     } = this.props;
 
-    const ssrFn = new SsrFunction(this, `ServerFunction`, {
+    return new SsrFunction(this, `ServerFunction`, {
       description: "Server handler for SvelteKit",
       handler: path.join(
         this.props.path,
@@ -93,11 +91,9 @@ export class SvelteKitSite extends SsrSite {
       ],
       ...cdk?.server,
     });
-
-    return ssrFn.function;
   }
 
-  protected createFunctionForEdge(): EdgeFunction {
+  protected createFunctionForEdge() {
     const {
       runtime,
       timeout,
@@ -139,12 +135,19 @@ export class SvelteKitSite extends SsrSite {
     });
   }
 
-  protected generateBuildId(): string {
+  protected generateBuildId() {
     const filePath = path.join(
       this.props.path,
       ".svelte-kit/svelte-kit-sst/client/_app/version.json"
     );
     const content = fs.readFileSync(filePath).toString();
     return JSON.parse(content).version;
+  }
+
+  public getConstructMetadata() {
+    return {
+      type: "SvelteKitSite" as const,
+      ...this.getConstructMetadataBase(),
+    };
   }
 }

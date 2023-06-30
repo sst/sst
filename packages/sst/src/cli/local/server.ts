@@ -172,11 +172,6 @@ export async function useLocalServer(opts: Opts) {
     },
   });
 
-  process.on("SIGTERM", () => {
-    handler.broadcastReconnectNotification();
-    wss.close();
-  });
-
   const bus = useBus();
   const pending: DendriformPatch[] = [];
 

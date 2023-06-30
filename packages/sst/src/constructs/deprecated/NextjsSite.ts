@@ -505,7 +505,14 @@ export class NextjsSite extends Construct implements SSTConstruct {
 
     const result = spawn.sync(
       "node",
-      [script, siteOutputPath, zipPath, `${fileSizeLimit}`],
+      [
+        script,
+        Buffer.from(
+          JSON.stringify([{ src: siteOutputPath, tar: "" }])
+        ).toString("base64"),
+        zipPath,
+        `${fileSizeLimit}`,
+      ],
       {
         stdio: "inherit",
       }

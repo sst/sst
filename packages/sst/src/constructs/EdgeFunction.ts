@@ -38,7 +38,6 @@ import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Secret } from "./Config.js";
 import { useFunctions, NodeJSProps } from "./Function.js";
-import { useDeferredTasks } from "./deferred_task.js";
 import {
   bindEnvironment,
   bindPermissions,
@@ -97,45 +96,14 @@ export class EdgeFunction extends Construct {
       permissions: props.permissions || [],
     };
 
-    const { assetBucket, assetKey, handlerFilename } = (
-      props.bundle
-        ? // Case: bundle is pre-built
-          () => {
-            const { asset, handlerFilename } = this.buildAssetFromBundle(
-              props.bundle!,
-              props.handler
-            );
-            return {
-              assetBucket: asset.s3BucketName,
-              assetKey: asset.s3ObjectKey,
-              handlerFilename,
-            };
-          }
-        : // Case: bundle is NOT pre-built
-          () => {
-            this.buildAssetFromHandler((asset, handlerFilename) => {
-              this.updateCodeReplacer(
-                asset.s3BucketName,
-                asset.s3ObjectKey,
-                handlerFilename
-              );
-              this.updateFunctionInUsEast1(
-                asset.s3BucketName,
-                asset.s3ObjectKey
-              );
-            });
-            return {
-              assetBucket: "placeholder",
-              assetKey: "placeholder",
-              handlerFilename: "placeholder",
-            };
-          }
-    )();
-
     // Bind first b/e function's environment variables cannot be added after
     this.bindingEnvs = {};
     this.bind(props.bind || []);
 
+    // Create function with placeholder code
+    const assetBucket = "placeholder";
+    const assetKey = "placeholder";
+    const handlerFilename = "placeholder";
     const { assetReplacer, assetReplacerPolicy } = this.createCodeReplacer(
       assetBucket,
       assetKey,
@@ -149,8 +117,6 @@ export class EdgeFunction extends Construct {
       lambdaBucket
     );
     const { versionId } = this.createVersionInUsEast1(fn, fnArn);
-
-    // Create function after the code is updated
     fn.node.addDependency(assetReplacer);
 
     this.function = fn;
@@ -168,13 +134,41 @@ export class EdgeFunction extends Construct {
     );
   }
 
+  public async build() {
+    const { bundle, handler } = this.props;
+    const { asset, handlerFilename } = bundle
+      ? await this.buildAssetFromBundle(bundle, handler)
+      : await this.buildAssetFromHandler();
+
+    this.updateCodeReplacer(
+      asset.s3BucketName,
+      asset.s3ObjectKey,
+      handlerFilename
+    );
+    this.updateFunctionInUsEast1(asset.s3BucketName, asset.s3ObjectKey);
+  }
+
   public attachPermissions(permissions: Permissions) {
     attachPermissionsToRole(this.role, permissions);
   }
 
-  private buildAssetFromHandler(
-    onBundled: (asset: Asset, filename: string) => void
-  ) {
+  public addEnvironment(key: string, value: string) {
+    // Note: addEnvironment currently only updates AssetReplacer's
+    //       "_SST_FUNCTION_ENVIRONMENT_" replacements
+    this.props.environment[key] = value;
+
+    const cfnReplacer = this.assetReplacer.node
+      .defaultChild as CfnCustomResource;
+    cfnReplacer.addPropertyOverride(
+      "replacements.0.replace",
+      JSON.stringify({
+        ...this.props.environment,
+        ...this.bindingEnvs,
+      })
+    );
+  }
+
+  private async buildAssetFromHandler() {
     const { nodejs } = this.props;
 
     useFunctions().add(this.node.addr, {
@@ -188,34 +182,32 @@ export class EdgeFunction extends Construct {
       },
     });
 
-    useDeferredTasks().add(async () => {
-      // Build function
-      const bundle = await useRuntimeHandlers().build(this.node.addr, "deploy");
+    // Build function
+    const bundle = await useRuntimeHandlers().build(this.node.addr, "deploy");
 
-      // create wrapper that calls the handler
-      if (bundle.type === "error")
-        throw new Error(
-          [
-            `There was a problem bundling the SSR function for the "${this.scope.node.id}" Site.`,
-            ...bundle.errors,
-          ].join("\n")
-        );
+    // create wrapper that calls the handler
+    if (bundle.type === "error")
+      throw new Error(
+        [
+          `There was a problem bundling the SSR function for the "${this.scope.node.id}" Site.`,
+          ...bundle.errors,
+        ].join("\n")
+      );
 
-      const asset = new Asset(this.scope, `FunctionAsset`, {
-        path: bundle.out,
-      });
-
-      // Get handler filename
-      const isESM = (nodejs?.format || "esm") === "esm";
-      const parsed = path.parse(bundle.handler);
-      const handlerFilename = `${parsed.dir}/${parsed.name}${
-        isESM ? ".mjs" : ".cjs"
-      }`;
-      onBundled(asset, handlerFilename);
+    const asset = new Asset(this.scope, `FunctionAsset`, {
+      path: bundle.out,
     });
+
+    // Get handler filename
+    const isESM = (nodejs?.format || "esm") === "esm";
+    const parsed = path.parse(bundle.handler);
+    const handlerFilename = `${parsed.dir}/${parsed.name}${
+      isESM ? ".mjs" : ".cjs"
+    }`;
+    return { asset, handlerFilename };
   }
 
-  private buildAssetFromBundle(bundle: string, handler: string) {
+  private async buildAssetFromBundle(bundle: string, handler: string) {
     // We expose an environment variable token which is used by the code
     // replacer to inject the environment variables assigned to the
     // EdgeFunction construct.

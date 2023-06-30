@@ -84,25 +84,36 @@ export type inferEvent<T extends { shape: ZodObject<any> }> = z.infer<
   T["shape"]
 >;
 
-export function EventHandler<
-  Event extends {
-    shape: {
-      properties: any;
-      metadata: any;
-      metadataFn: any;
-    };
-  }
->(
-  _events: Event,
+type Event = {
+  type: string;
+  shape: {
+    properties: any;
+    metadata: any;
+    metadataFn: any;
+  };
+};
+
+type EventPayload<E extends Event> = {
+  type: E["type"];
+  properties: E["shape"]["properties"];
+  metadata: undefined extends E["shape"]["metadata"]
+    ? E["shape"]["metadataFn"]
+    : E["shape"]["metadata"];
+};
+
+export function EventHandler<Events extends Event>(
+  _events: Events | Events[],
   cb: (
-    properties: Event["shape"]["properties"],
-    metadata: undefined extends Event["shape"]["metadata"]
-      ? Event["shape"]["metadataFn"]
-      : Event["shape"]["metadata"]
+    evt: {
+      [K in Events["type"]]: EventPayload<Extract<Events, { type: K }>>;
+    }[Events["type"]]
   ) => Promise<void>
 ) {
   return async (event: EventBridgeEvent<string, any>) => {
-    console.log("received", event);
-    await cb(event.detail.properties, event.detail.metadata);
+    await cb({
+      type: event["detail-type"],
+      properties: event.detail.properties,
+      metadata: event.detail.metadata,
+    });
   };
 }

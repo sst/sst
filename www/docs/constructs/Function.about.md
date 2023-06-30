@@ -229,7 +229,7 @@ new Function(stack, "MyLambda", {
     buildOutputDir: "output",
   },
   handler: "example.Handler::handleRequest",
-  runtime: "java11",
+  runtime: "java17",
 });
 ```
 

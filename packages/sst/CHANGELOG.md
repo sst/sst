@@ -1,5 +1,219 @@
 # @serverless-stack/cli2
 
+## 2.18.0
+
+### Minor Changes
+
+- [`7c71978fa`](https://github.com/serverless-stack/sst/commit/7c71978fa1cd461c6a192a7385c3ca26afbbfdf1) Thanks [@fwang](https://github.com/fwang)! - SsrSite: set cookie behavior to NONE in server cache policy
+
+### Patch Changes
+
+- [`e5fc4de81`](https://github.com/serverless-stack/sst/commit/e5fc4de81b640be37d76862f52aa54d9259fee0b) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: update to OpenNext 2.0.3
+
+- [#3051](https://github.com/serverless-stack/sst/pull/3051) [`2b824b13e`](https://github.com/serverless-stack/sst/commit/2b824b13e4a7a7ffc5864b2e43511ab26e3fd0cb) Thanks [@khuezy](https://github.com/khuezy)! - SsrSite: fix s3 assets cache-control header not set
+
+- [#3054](https://github.com/serverless-stack/sst/pull/3054) [`966d3b0d3`](https://github.com/serverless-stack/sst/commit/966d3b0d3adf367c5416277b8e5c63183f1f1954) Thanks [@berenddeboer](https://github.com/berenddeboer)! - Function: support java17 runtime
+
+- [`a734123f7`](https://github.com/serverless-stack/sst/commit/a734123f718ef12b95834928c14d29e564933bcc) Thanks [@fwang](https://github.com/fwang)! - StaticSite & SsrSite: lazy build
+
+## 2.17.8
+
+### Patch Changes
+
+- [`26afb063c`](https://github.com/serverless-stack/sst/commit/26afb063c0ddd8cbb1fdfe73b955e21ae831da9a) Thanks [@thdxr](https://github.com/thdxr)! - eventbux: fix issue adding two subscribers to the same event
+
+- [`b07a079be`](https://github.com/serverless-stack/sst/commit/b07a079be18c7585a968f5f3789bc3c3909fefeb) Thanks [@thdxr](https://github.com/thdxr)! - kysely: upgrade kysely
+
+## 2.17.7
+
+### Patch Changes
+
+- [#3035](https://github.com/serverless-stack/sst/pull/3035) [`21669e1c7`](https://github.com/serverless-stack/sst/commit/21669e1c72b4910de47c983503cbfe92c100c415) Thanks [@berenddeboer](https://github.com/berenddeboer)! - RDS: grant KMS permission if secret is encrypted with custom KMS key
+
+## 2.17.6
+
+### Patch Changes
+
+- [`f3ab3b8bc`](https://github.com/serverless-stack/sst/commit/f3ab3b8bc1c1bff87210cc3ce77ce5c4cec8fcd7) Thanks [@thdxr](https://github.com/thdxr)! - future/auth: keep claims and code in same state to avoid hijacking
+
+## 2.17.5
+
+### Patch Changes
+
+- [`6a4910dae`](https://github.com/serverless-stack/sst/commit/6a4910dae23cfdbc473a29d80edea6fe885bf200) Thanks [@thdxr](https://github.com/thdxr)! - eventbus: fix bug not respecting max retry setting
+
+## 2.17.4
+
+### Patch Changes
+
+- [`258497590`](https://github.com/serverless-stack/sst/commit/258497590c76a8a91b0673f3e7a0439d2099d774) Thanks [@thdxr](https://github.com/thdxr)! - eventbus: simplify retry algorithm
+
+## 2.17.3
+
+### Patch Changes
+
+- [#3032](https://github.com/serverless-stack/sst/pull/3032) [`ef61e7db6`](https://github.com/serverless-stack/sst/commit/ef61e7db67760c9bcc9fa92fa23ea936f9517ddc) Thanks [@berenddeboer](https://github.com/berenddeboer)! - Bucket: enforce S3 https connections
+
+- [#3036](https://github.com/serverless-stack/sst/pull/3036) [`48f27bcbb`](https://github.com/serverless-stack/sst/commit/48f27bcbbb89ef0fcb69d26ddbbe7542fadfa29b) Thanks [@berenddeboer](https://github.com/berenddeboer)! - bootstrap: add lifecyle rule to stop triggering rule S3.13 in Security Hub
+
+## 2.17.2
+
+### Patch Changes
+
+- [#3030](https://github.com/serverless-stack/sst/pull/3030) [`b5a6953cf`](https://github.com/serverless-stack/sst/commit/b5a6953cfc61d71d297a98981307b39ad79c1298) Thanks [@jmnavarr](https://github.com/jmnavarr)! - Use correct custom CDK toolkit stack name
+
+## 2.17.1
+
+## 2.17.0
+
+### Minor Changes
+
+- [#3015](https://github.com/serverless-stack/sst/pull/3015) [`5128f2dd7`](https://github.com/serverless-stack/sst/commit/5128f2dd7533a24b2e6e5ac209552ae519506c25) Thanks [@berenddeboer](https://github.com/berenddeboer)! - Bootstrap: remove use of SQS queue
+
+- [#3015](https://github.com/serverless-stack/sst/pull/3015) [`5128f2dd7`](https://github.com/serverless-stack/sst/commit/5128f2dd7533a24b2e6e5ac209552ae519506c25) Thanks [@berenddeboer](https://github.com/berenddeboer)! - Bootstrap: enforce ssl connections to S3 to stop triggering S3.5 of the AWS Foundational Security Best Practices
+
+### Patch Changes
+
+- [#3024](https://github.com/serverless-stack/sst/pull/3024) [`43e4a0d73`](https://github.com/serverless-stack/sst/commit/43e4a0d73d510e6b59828ca684b9cbb4d1254f7d) Thanks [@ipatka](https://github.com/ipatka)! - Function: fail build when node runtime installation fails
+
+## 2.16.4
+
+### Patch Changes
+
+- [#3025](https://github.com/serverless-stack/sst/pull/3025) [`2ba152041`](https://github.com/serverless-stack/sst/commit/2ba15204194b51a1cf6a12a6594f69eac97d38d7) Thanks [@ealain](https://github.com/ealain)! - NextjsSite: support vpc settings for revalidation function
+
+## 2.16.3
+
+### Patch Changes
+
+- [#3014](https://github.com/serverless-stack/sst/pull/3014) [`af4aa0056`](https://github.com/serverless-stack/sst/commit/af4aa0056290a4323499ae3bf84dc7df12424c33) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: remove failover origin
+
+- [#3010](https://github.com/serverless-stack/sst/pull/3010) [`3e43bc679`](https://github.com/serverless-stack/sst/commit/3e43bc67982bb64a62f7e9614a9df071a49a599a) Thanks [@berenddeboer](https://github.com/berenddeboer)! - fix: use stackName in migrator metadata instead of stack id
+
+## 2.16.2
+
+### Patch Changes
+
+- [#3003](https://github.com/serverless-stack/sst/pull/3003) [`d970a4bbe`](https://github.com/serverless-stack/sst/commit/d970a4bbe6731321d36df96e9e26d1edcf7d7443) Thanks [@clawsl](https://github.com/clawsl)! - arm64 docker build support for Python functions
+
+- [`56b237da1`](https://github.com/serverless-stack/sst/commit/56b237da140ae49d54da97f27fd42978a7110944) Thanks [@fwang](https://github.com/fwang)! - StaticSite: allow setting content type
+
+- [#2998](https://github.com/serverless-stack/sst/pull/2998) [`62ff43063`](https://github.com/serverless-stack/sst/commit/62ff43063c91fdae0a736dc56db06250451bee75) Thanks [@berenddeboer](https://github.com/berenddeboer)! - add --to option to diff to prevent it building to .sst/dist
+
+- [`75a77c6e5`](https://github.com/serverless-stack/sst/commit/75a77c6e53a8c81e9cc4ca960ef6ca92a425985e) Thanks [@fwang](https://github.com/fwang)! - StaticSite: preserver .well-known uri path
+
+## 2.16.1
+
+### Patch Changes
+
+- [`a96dd29b2`](https://github.com/serverless-stack/sst/commit/a96dd29b27a3667027400db061c3144619179675) Thanks [@fwang](https://github.com/fwang)! - Script: run once on "sst dev" boot up
+
+## 2.16.0
+
+### Minor Changes
+
+- [#3001](https://github.com/serverless-stack/sst/pull/3001) [`53fd3cb75`](https://github.com/serverless-stack/sst/commit/53fd3cb757baefc4af9129e8cd4183492d23fae4) Thanks [@fwang](https://github.com/fwang)! - Update CDK to v2.84.0
+
+### Patch Changes
+
+- [#3000](https://github.com/serverless-stack/sst/pull/3000) [`aa36e945e`](https://github.com/serverless-stack/sst/commit/aa36e945eed53bd11eb908100d62b42c305f53e3) Thanks [@iloewensen](https://github.com/iloewensen)! - RDS: grant cloudformation DescribeStacks permission
+
+## 2.15.0
+
+### Minor Changes
+
+- [`1fe0692cd`](https://github.com/serverless-stack/sst/commit/1fe0692cde01e0fda1bca1574f3e37d99512b6bf) Thanks [@thdxr](https://github.com/thdxr)! - future auth: code adapter callback api changed to onCodeRequest and onCodeInvalid
+
+## 2.14.0
+
+### Minor Changes
+
+- [#2764](https://github.com/serverless-stack/sst/pull/2764) [`0c73f55ea`](https://github.com/serverless-stack/sst/commit/0c73f55eab16d5ec1694c6bc0a34b1e9873f6fcb) Thanks [@conico974](https://github.com/conico974)! - NextjsSite: Improved ISR support
+
+## 2.13.9
+
+### Patch Changes
+
+- [`bd83933d6`](https://github.com/serverless-stack/sst/commit/bd83933d697dc21209ed2fbfa86e08484c61d2c5) Thanks [@thdxr](https://github.com/thdxr)! - metadata: include script, job and auth metadata
+
+## 2.13.8
+
+### Patch Changes
+
+- [`4b2a95621`](https://github.com/serverless-stack/sst/commit/4b2a95621b86b06e49668ad79b9912c5640b4f97) Thanks [@thdxr](https://github.com/thdxr)! - context: reset should reset itself as well
+
+## 2.13.7
+
+### Patch Changes
+
+- [`7b1956784`](https://github.com/serverless-stack/sst/commit/7b1956784cf89ab72e4f13c0b4effce31c70166f) Thanks [@thdxr](https://github.com/thdxr)! - allow context to be reset
+
+## 2.13.6
+
+### Patch Changes
+
+- [`468f35520`](https://github.com/serverless-stack/sst/commit/468f355204b17f740bc0c92abb926a9be33e2aea) Thanks [@thdxr](https://github.com/thdxr)! - auth: code adapter handles invalid
+
+## 2.13.5
+
+### Patch Changes
+
+- [`a05a1359d`](https://github.com/serverless-stack/sst/commit/a05a1359db965e555d639bda18a607f2a7924c41) Thanks [@thdxr](https://github.com/thdxr)! - StaticSite: include url in metadata
+
+## 2.13.4
+
+### Patch Changes
+
+- [`4f196437a`](https://github.com/serverless-stack/sst/commit/4f196437a2b123174b812f48c8f2e5ea46fbaae9) Thanks [@thdxr](https://github.com/thdxr)! - site: include url in site metadata
+
+## 2.13.3
+
+### Patch Changes
+
+- [`d8970b0fa`](https://github.com/serverless-stack/sst/commit/d8970b0fa36d6ab461b22af0ecd8d3bddcf3cdf4) Thanks [@fwang](https://github.com/fwang)! - Fix stack synthesizer not respect "cdk" props in sst.config
+
+- [`79f678179`](https://github.com/serverless-stack/sst/commit/79f678179761a455ac463e36f630beaabd13e19e) Thanks [@thdxr](https://github.com/thdxr)! - auth: encryption utilities + code adapter
+
+- [`4d9c70f3b`](https://github.com/serverless-stack/sst/commit/4d9c70f3b874fcf55de5ff9b0eade44e2f48fddf) Thanks [@thdxr](https://github.com/thdxr)! - constructs: metadata updates and fixes
+
+- [`1c8a7a39c`](https://github.com/serverless-stack/sst/commit/1c8a7a39c97206e5c90cbac93858c5bf7b2bf6a6) Thanks [@fwang](https://github.com/fwang)! - Script: do not run script on rollback
+
+## 2.13.2
+
+### Patch Changes
+
+- [`80bb4f089`](https://github.com/serverless-stack/sst/commit/80bb4f089d0c071ae072be595e531229eaaa04f2) Thanks [@fwang](https://github.com/fwang)! - SsrSite: CloudFront origin timeout respect server lambda timeout
+
+- [`67ee41566`](https://github.com/serverless-stack/sst/commit/67ee4156662325121f4afeaf42dce07ba6ba28c3) Thanks [@fwang](https://github.com/fwang)! - SsrSite: expose cdk.function for edge mode
+
+- [`6dd69d9c7`](https://github.com/serverless-stack/sst/commit/6dd69d9c74a6941dc64fd1c21fd2064f0869eeb9) Thanks [@thdxr](https://github.com/thdxr)! - auth: allow customizing index page
+
+## 2.13.1
+
+### Patch Changes
+
+- [`e77262351`](https://github.com/serverless-stack/sst/commit/e77262351f15fb31073d6b729345f4263bf678b8) Thanks [@thdxr](https://github.com/thdxr)! - eventbus: handle subscriber name too long
+
+## 2.13.0
+
+### Minor Changes
+
+- [#2965](https://github.com/serverless-stack/sst/pull/2965) [`83909ce36`](https://github.com/serverless-stack/sst/commit/83909ce367e6e247a9b25063624ecbbd13bc1260) Thanks [@michaelgmcd](https://github.com/michaelgmcd)! - Support Postgres 13.9
+
+### Patch Changes
+
+- [`4a5eb23e1`](https://github.com/serverless-stack/sst/commit/4a5eb23e117366672a10c4cb88458b914e713d12) Thanks [@thdxr](https://github.com/thdxr)! - remove sigterm trapping
+
+- [`bec587f0b`](https://github.com/serverless-stack/sst/commit/bec587f0bddb766248095414ee116f79e4d14ba2) Thanks [@thdxr](https://github.com/thdxr)! - eventbus: support subscribing to multiple events
+
+## 2.12.2
+
+### Patch Changes
+
+- [`b5d360c68`](https://github.com/serverless-stack/sst/commit/b5d360c68bbc14357d67387672477465970ac3a3) Thanks [@thdxr](https://github.com/thdxr)! - eventbus: support multiple events in subscription
+
+## 2.12.1
+
 ## 2.12.0
 
 ### Minor Changes

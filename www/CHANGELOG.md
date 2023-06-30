@@ -1,5 +1,23 @@
 # @serverless-stack/docs
 
+## 2.3.4
+
+### Patch Changes
+
+- [#3054](https://github.com/serverless-stack/sst/pull/3054) [`966d3b0d3`](https://github.com/serverless-stack/sst/commit/966d3b0d3adf367c5416277b8e5c63183f1f1954) Thanks [@berenddeboer](https://github.com/berenddeboer)! - Function: support java17 runtime
+
+## 2.3.3
+
+### Patch Changes
+
+- [#3025](https://github.com/serverless-stack/sst/pull/3025) [`2ba152041`](https://github.com/serverless-stack/sst/commit/2ba15204194b51a1cf6a12a6594f69eac97d38d7) Thanks [@ealain](https://github.com/ealain)! - NextjsSite: support vpc settings for revalidation function
+
+## 2.3.2
+
+### Patch Changes
+
+- [`0cae7b20d`](https://github.com/serverless-stack/sst/commit/0cae7b20dcca2fe671838e13485a6a2b5893eb3e) Thanks [@thdxr](https://github.com/thdxr)! - create-sst: tweak standard preset
+
 ## 2.3.1
 
 ### Patch Changes

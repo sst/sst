@@ -762,13 +762,15 @@ export class EventBus extends Construct implements SSTConstruct {
 
   private subs = new Map<string, number>();
   public subscribe(
-    type: string,
+    type: string | string[],
     target: FunctionDefinition,
     props?: { retries?: number }
   ) {
-    const count = this.subs.get(type) || 0 + 1;
-    this.subs.set(type, count);
-    const name = `${type.replaceAll(/[^a-zA-Z_]/g, "_")}_${count}`;
+    type = Array.isArray(type) ? type : [type];
+    const joined = type.length > 1 ? "multi" : type.join("_");
+    const count = (this.subs.get(joined) || 0) + 1;
+    this.subs.set(joined, count);
+    const name = `${joined.replaceAll(/[^a-zA-Z_]/g, "_")}_${count}`;
     const retries = props?.retries || this.props.defaults?.retries;
     const fn = (() => {
       if (retries) {
@@ -786,7 +788,7 @@ export class EventBus extends Construct implements SSTConstruct {
     })();
     this.addRule(this, name + "_rule", {
       pattern: {
-        detailType: [type],
+        detailType: type,
       },
       targets: {
         [name + "_target"]: {

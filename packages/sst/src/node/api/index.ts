@@ -109,8 +109,15 @@ export const useResponse = /* @__PURE__ */ Context.memo(() => {
       input: {
         key: string;
         value: string;
+        encrypted?: string;
       } & CookieOptions
     ) {
+      input = {
+        secure: true,
+        sameSite: "None",
+        httpOnly: true,
+        ...input,
+      };
       const value = encodeURIComponent(input.value);
       const parts = [input.key + "=" + value];
       if (input.domain) parts.push("Domain=" + input.domain);

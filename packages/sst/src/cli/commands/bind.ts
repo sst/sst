@@ -3,7 +3,7 @@ import { VisibleError } from "../../error.js";
 import type { Program } from "../program.js";
 import type {
   SlsNextjsMetadata,
-  SsrSiteMetadata,
+  SSRSiteMetadata,
   StaticSiteMetadata,
 } from "../../constructs/Metadata.js";
 
@@ -217,7 +217,7 @@ export const bind = (program: Program) =>
               (
                 c
               ): c is
-                | SsrSiteMetadata
+                | SSRSiteMetadata
                 | StaticSiteMetadata
                 | SlsNextjsMetadata =>
                 [
@@ -254,7 +254,7 @@ export const bind = (program: Program) =>
         }
 
         async function parseSiteMetadata(
-          metadata: SlsNextjsMetadata | StaticSiteMetadata | SsrSiteMetadata
+          metadata: SlsNextjsMetadata | StaticSiteMetadata | SSRSiteMetadata
         ) {
           const { LambdaClient, GetFunctionCommand } = await import(
             "@aws-sdk/client-lambda"

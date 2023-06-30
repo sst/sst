@@ -272,11 +272,15 @@ test("version: defined", async () => {
   });
 });
 
-test("version: defined", async () => {
+/////////////////////////////
+// Test Constructor for Local Debug
+/////////////////////////////
+
+test("sst dev: version set: uses debugScriptVersion", async () => {
   const stack = new Stack(
     await createApp({
       mode: "dev",
-      debugStartedAt: 123,
+      debugScriptVersion: "123",
     }),
     "stack"
   );
@@ -286,25 +290,25 @@ test("version: defined", async () => {
   });
   countResources(stack, "Custom::SSTScript", 1);
   hasResource(stack, "Custom::SSTScript", {
-    Version: 123,
+    Version: "v5",
   });
 });
 
-/////////////////////////////
-// Test Constructor for Local Debug
-/////////////////////////////
-
-test("constructor: debugIncreaseTimeout true: visibilityTimeout not set", async () => {
-  const app = await createApp({
-    debugIncreaseTimeout: true,
-  });
-  const stack = new Stack(app, "stack");
+test("sst dev: version not set: uses debugScriptVersion", async () => {
+  const stack = new Stack(
+    await createApp({
+      mode: "dev",
+      debugScriptVersion: "123",
+    }),
+    "stack"
+  );
   new Script(stack, "Script", {
     onCreate: "test/lambda.handler",
-    onUpdate: "test/lambda.handler",
-    onDelete: "test/lambda.handler",
   });
   countResources(stack, "Custom::SSTScript", 1);
+  hasResource(stack, "Custom::SSTScript", {
+    Version: "123",
+  });
 });
 
 /////////////////////////////

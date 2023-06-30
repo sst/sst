@@ -92,9 +92,9 @@ Let's make a change to our API. Replace the following in `packages/functions/src
 ```diff title="packages/functions/src/lambda.ts"
 export const handler = ApiHandler(async (_evt) => {
   return {
--   body: `Hello world. The time is ${Time.now()}`,
+-   body: `Hello world. The time is ${new Date().toISOString()}`,
 +   statusCode: 200,
-+   body: `Hi from SST ${Time.now()}`,
++   body: `Hi from SST ${new Date().toISOString()}`,
   };
 });
 ```

@@ -65,7 +65,7 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 </ul>
 
 :::tip Learn more
-Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
+Watch the [**SST in 100 seconds**](https://youtu.be/JY_d0vf-rfw) video to learn more.
 :::
 
 <div className={styles.heading}>
@@ -105,8 +105,8 @@ Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/async-tasks")}>
-      <h3>Async tasks</h3>
+    <a href={useBaseUrl("/events")}>
+      <h3>Events</h3>
       <p>Run tasks after your app has returned to your user.</p>
     </a>
   </li>

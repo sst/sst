@@ -163,6 +163,7 @@ export const dev = (program: Program) =>
         const watcher = useWatcher();
         const project = useProject();
 
+        const scriptVersion = Date.now().toString();
         let lastDeployed: string;
         let isWorking = false;
         let isDirty = false;
@@ -187,6 +188,7 @@ export const dev = (program: Program) =>
             project.stacks = sstConfig.stacks;
             const assembly = await Stacks.synth({
               increaseTimeout: args["increase-timeout"],
+              scriptVersion,
               fn: project.stacks,
               outDir: `.sst/cdk.out`,
               mode: "dev",
