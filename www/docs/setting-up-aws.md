@@ -108,29 +108,29 @@ What's great about this setup is you no longer need to generate API keys for you
 
 1. Create a file at `~/.aws/config` and add an `[sso-session]` block like this
 
-```
-[sso-session acme]
-sso_start_url = https://acme.awsapps.com/start
-sso_region = us-east-1
-```
+   ```
+   [sso-session acme]
+   sso_start_url = https://acme.awsapps.com/start
+   sso_region = us-east-1
+   ```
 
 Be sure to update the URL with your SSO url that you bookmarked and the region where you created IAM Identity Center.
 
 2. Then add an entry for each environment - `dev` and `production`.
 
-```
-[profile acme-dev]
-sso_session = acme
-sso_account_id = <account-id>
-sso_role_name = AdministratorAccess
-region = us-east-1
+   ```
+   [profile acme-dev]
+   sso_session = acme
+   sso_account_id = <account-id>
+   sso_role_name = AdministratorAccess
+   region = us-east-1
 
-[profile acme-production]
-sso_session = acme
-sso_account_id = <account-id>
-sso_role_name = AdministratorAccess
-region = us-east-1
-```
+   [profile acme-production]
+   sso_session = acme
+   sso_account_id = <account-id>
+   sso_role_name = AdministratorAccess
+   region = us-east-1
+   ```
 
 You can find the account ID from your SSO login url. If you expand the account you will see it listed with a `#` sign. The region specified in the config is the default region the CLI will use when one isn't specified.
 
@@ -138,9 +138,9 @@ You can find the account ID from your SSO login url. If you expand the account y
 
 4. Test that everything is working with a simple cli command targeted at your dev account
 
-```
-aws sts get-caller-identity --profile=acme-dev
-```
+   ```bash
+   aws sts get-caller-identity --profile=acme-dev
+   ```
 
 ---
 
@@ -150,20 +150,20 @@ If you have an SST project there's some useful configuration you can add to make
 
 1. In your `sst.config.ts` file you can conditionally choose the right profile depending on the stage you are deploying to. Update the config section like this.
 
-```js
-  config(input) {
-    return {
-      name: "console",
-      region: "us-east-1",
-      profile: input.stage === "production" ? "acme-production" : "acme-dev",
-    };
-  }
-```
+   ```js
+     config(input) {
+       return {
+         name: "console",
+         region: "us-east-1",
+         profile: input.stage === "production" ? "acme-production" : "acme-dev",
+       };
+     }
+   ```
 
 This will use the `acme-production` profile just for production and use `acme-dev` for everything else.
 
 2. Do a production deploy
 
-```
-sst deploy --stage=production
-```
+   ```
+   sst deploy --stage=production
+   ```
