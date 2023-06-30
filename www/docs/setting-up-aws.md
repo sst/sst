@@ -108,7 +108,7 @@ What's great about this setup is you no longer need to generate API keys for you
 
 1. Create a file at `~/.aws/config` and add an `[sso-session]` block like this
 
-   ```
+   ```bash title="~/.aws/config"
    [sso-session acme]
    sso_start_url = https://acme.awsapps.com/start
    sso_region = us-east-1
@@ -118,7 +118,7 @@ Be sure to update the URL with your SSO url that you bookmarked and the region w
 
 2. Then add an entry for each environment - `dev` and `production`.
 
-   ```
+   ```bash title="~/.aws/config"
    [profile acme-dev]
    sso_session = acme
    sso_account_id = <account-id>
@@ -148,16 +148,16 @@ You can find the account ID from your SSO login url. If you expand the account y
 
 If you have an SST project there's some useful configuration you can add to make everything work smoothly.
 
-1. In your `sst.config.ts` file you can conditionally choose the right profile depending on the stage you are deploying to. Update the config section like this.
+1. In your `sst.config.ts` file you can conditionally choose the right profile depending on the stage you are deploying to.
 
-   ```js
-     config(input) {
-       return {
-         name: "console",
-         region: "us-east-1",
-         profile: input.stage === "production" ? "acme-production" : "acme-dev",
-       };
-     }
+   ```js title="sst.config.ts" {5}
+   config(input) {
+     return {
+       name: "my-sst-app",
+       region: "us-east-1",
+       profile: input.stage === "production" ? "acme-production" : "acme-dev",
+     };
+   }
    ```
 
 This will use the `acme-production` profile just for production and use `acme-dev` for everything else.
