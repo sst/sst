@@ -699,7 +699,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       if (item === this.buildConfig.clientBuildVersionedSubDir) {
         fileOptions.push({
           exclude: "*",
-          include: `${this.buildConfig.clientBuildVersionedSubDir}/*`,
+          include: path.posix.join(this.buildConfig.clientBuildS3KeyPrefix ?? "", this.buildConfig.clientBuildVersionedSubDir, "*"),
           cacheControl: "public,max-age=31536000,immutable",
         });
       }
