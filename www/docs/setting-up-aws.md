@@ -34,7 +34,7 @@ Let's get started.
 
 ---
 
-### 1. Create a management account
+### Create a management account
 
 1. The first step is to [create a management account](https://portal.aws.amazon.com/billing/signup?type=enterprise#/start/email).
 
@@ -79,7 +79,7 @@ You're now done setting up the root account!
 
 ---
 
-### 2. Create dev and prod accounts
+### Create dev and prod accounts
 
 As mentioned earlier, your management account isn't meant to actually host any resources. A good initial setup is to create separate `dev` and `production` accounts to create some isolation. The `dev` account will be shared between your team while the `production` account is just for production. You can get fancier with a staging account or an account per dev but we'll start simple.
 
@@ -102,7 +102,7 @@ As mentioned earlier, your management account isn't meant to actually host any r
 
 ---
 
-### 3. Setup the AWS CLI
+### Setup the AWS CLI
 
 What's great about this setup is you no longer need to generate API keys for your local machine - you can just use SSO. A single configuration file will work for the AWS CLI, SST, and any random scripts you want to run and there will never be any long lived credentials stored on disk.
 
@@ -144,7 +144,7 @@ You can find the account ID from your SSO login url. If you expand the account y
 
 ---
 
-### 4. Configure SST
+### Configure SST
 
 If you have an SST project there's some useful configuration you can add to make everything work smoothly.
 
