@@ -1,6 +1,6 @@
 ---
 title: Setting up AWS
-description: "Learn how to correctly sign up for and setup your AWS account."
+description: "Learn how to correctly sign up for and set up your AWS account."
 ---
 
 import HeadlineText from "@site/src/components/HeadlineText";
