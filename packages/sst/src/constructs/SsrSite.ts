@@ -312,7 +312,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   private serverLambdaCdkFunctionForEdge?: ICdkFunction;
   protected serverLambdaForEdge?: EdgeFunction;
   protected serverLambdaForRegional?: SsrFunction;
-  private serverLambdaForDev?: CdkFunction;
+  private serverLambdaForDev?: SsrFunction;
   protected bucket: Bucket;
   private cfFunction: CfFunction;
   private distribution: Distribution;
@@ -806,15 +806,15 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   // Bundle Lambda Server
   /////////////////////
 
-  protected createFunctionForRegional(): SsrFunction {
+  protected createFunctionForRegional() {
     return {} as SsrFunction;
   }
 
-  protected createFunctionForEdge(): EdgeFunction {
+  protected createFunctionForEdge() {
     return {} as EdgeFunction;
   }
 
-  protected createFunctionForDev(): CdkFunction {
+  protected createFunctionForDev() {
     const { runtime, timeout, memorySize, permissions, environment, bind } =
       this.props;
 
@@ -841,7 +841,11 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       // note: do not need to set vpc settings b/c this function is not being used
     });
 
-    return ssrFn.function;
+    useDeferredTasks().add(async () => {
+      await ssrFn.build();
+    });
+
+    return ssrFn;
   }
 
   private grantServerS3Permissions() {
