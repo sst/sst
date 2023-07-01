@@ -160,16 +160,16 @@ $ npm uninstall <package> -W <workspace>
 <TabItem value="yarn">
 
 ```bash
-$ yarn add <package> -W <workspace>
-$ yarn remove <package> -W <workspace>
+$ yarn workspace <workspace> add <package>
+$ yarn workspace <workspace> remove <package>
 ```
 
 </TabItem>
 <TabItem value="pnpm">
 
 ```bash
-$ pnpm add <package> -W <workspace>
-$ pnpm remove <package> -W <workspace>
+$ pnpm add <package> -w <workspace>
+$ pnpm remove <package> -w <workspace>
 ```
 
 </TabItem>
