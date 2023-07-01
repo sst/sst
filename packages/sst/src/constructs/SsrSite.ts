@@ -404,6 +404,9 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       );
       this.distribution.node.addDependency(s3deployCR);
 
+      // Add static file behaviors
+      this.addStaticFileBehaviors();
+
       // Invalidate CloudFront
       this.createCloudFrontInvalidation();
 
@@ -908,7 +911,6 @@ function handler(event) {
   protected createCloudFrontDistributionForRegional(): Distribution {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-    const s3Origin = new S3Origin(this.bucket);
     const cachePolicy = cdk?.serverCachePolicy ?? this.buildServerCachePolicy();
 
     return new Distribution(this, "Distribution", {
@@ -921,7 +923,6 @@ function handler(event) {
       certificate: this.certificate,
       defaultBehavior: this.buildDefaultBehaviorForRegional(cachePolicy),
       additionalBehaviors: {
-        ...this.buildStaticFileBehaviors(s3Origin),
         ...(cfDistributionProps.additionalBehaviors || {}),
       },
     });
@@ -943,7 +944,6 @@ function handler(event) {
       certificate: this.certificate,
       defaultBehavior: this.buildDefaultBehaviorForEdge(s3Origin, cachePolicy),
       additionalBehaviors: {
-        ...this.buildStaticFileBehaviors(s3Origin),
         ...(cfDistributionProps.additionalBehaviors || {}),
       },
     });
@@ -1042,36 +1042,31 @@ function handler(event) {
     ];
   }
 
-  protected buildStaticFileBehaviors(
-    origin: S3Origin
-  ): Record<string, BehaviorOptions> {
+  protected addStaticFileBehaviors() {
     const { cdk } = this.props;
 
-    // Create additional behaviours for statics
-    const staticBehaviourOptions: BehaviorOptions = {
-      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      origin,
-      allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
-      cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
-      compress: true,
-      cachePolicy: CachePolicy.CACHING_OPTIMIZED,
-    };
-
-    // Add behaviour for public folder statics (excluding build)
-    const staticsBehaviours: Record<string, BehaviorOptions> = {};
+    // Create a template for statics behaviours
     const publicDir = path.join(
       this.props.path,
       this.buildConfig.clientBuildOutputDir
     );
     for (const item of fs.readdirSync(publicDir)) {
-      if (fs.statSync(path.join(publicDir, item)).isDirectory()) {
-        staticsBehaviours[`${item}/*`] = staticBehaviourOptions;
-      } else {
-        staticsBehaviours[item] = staticBehaviourOptions;
-      }
+      const isDir = fs.statSync(path.join(publicDir, item)).isDirectory();
+      this.distribution.addBehavior(
+        isDir ? `${item}/*` : item,
+        new S3Origin(this.bucket, {
+          originPath: "/" + this.buildConfig.clientBuildS3KeyPrefix,
+        }),
+        {
+          viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+          cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
+          compress: true,
+          cachePolicy: CachePolicy.CACHING_OPTIMIZED,
+          responseHeadersPolicy: cdk?.responseHeadersPolicy,
+        }
+      );
     }
-
-    return staticsBehaviours;
   }
 
   protected buildServerCachePolicy(allowedHeaders?: string[]) {
