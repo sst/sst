@@ -24,18 +24,18 @@ In `packages/web/src/pages/Article.tsx`, replace the `useTypedQuery` with:
 const context = useMemo(() => ({ additionalTypenames: ["Comment"] }), []);
 const [article] = useTypedQuery({
   query: {
-    article: [
-      { articleID: id },
-      {
-        id: true,
-        url: true,
-        title: true,
-        comments: {
-          id: true,
-          text: true,
-        },
+    article: {
+      __args: {
+        articleID: id
       },
-    ],
+      id: true,
+      url: true,
+      title: true,
+      comments: {
+        id: true,
+        text: true,
+      },
+    },
   },
   context,
 });
@@ -80,17 +80,15 @@ Add this below the `useTypedQuery`.
 </ChangeText>
 
 ```ts title="packages/web/src/pages/Article.tsx"
-const [result, addComment] = useTypedMutation((opts: CommentForm) => ({
-  addComment: [
-    {
-      text: opts.text,
-      articleID: opts.articleID,
-    },
-    {
+  const [result, addComment] = useTypedMutation((opts: CommentForm) => ({
+    addComment: {
+      __args: {
+        text: opts.text,
+        articleID: opts.articleID,
+      },
       id: true,
     },
-  ],
-}));
+  }));
 ```
 
 The `useTypedMutation` hook is similar to the `useTypedQuery` hook that we covered in the [last chapter](render-queries.md#typesafe-graphql-client). It allows us to send mutations that are defined using TypeScript. Here we are calling the `addComment` mutation that we added back in the [Queries and Mutations](queries-and-mutations.md#create-a-new-mutation) chapter.
