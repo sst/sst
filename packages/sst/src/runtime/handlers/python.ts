@@ -19,6 +19,7 @@ const RUNTIME_MAP: Record<string, Runtime> = {
   "python3.7": Runtime.PYTHON_3_7,
   "python3.8": Runtime.PYTHON_3_8,
   "python3.9": Runtime.PYTHON_3_9,
+  "python3.10": Runtime.PYTHON_3_10,
 };
 
 export const usePythonHandler = Context.memo(async () => {
