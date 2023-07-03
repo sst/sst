@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.3.5
+
+### Patch Changes
+
+- [#3055](https://github.com/serverless-stack/sst/pull/3055) [`c1d4fe461`](https://github.com/serverless-stack/sst/commit/c1d4fe461a3534365f22e07b48c97e5c4067ba77) Thanks [@juliankrispel](https://github.com/juliankrispel)! - Remove deprecated rds engine
+
 ## 2.3.4
 
 ### Patch Changes
