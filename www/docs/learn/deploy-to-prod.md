@@ -14,17 +14,17 @@ The easiest way to go to production is by deploying using the CLI.
 
 <ChangeText>
 
-Stop the `npx sst dev` process in the CLI. And run this instead.
+Stop the `sst dev` process in the CLI. And run this instead.
 
 </ChangeText>
 
 ```bash
-npx sst deploy --stage prod
+sst deploy --stage prod
 ```
 
 Make sure to run this at the root of the project.
 
-The key difference here is that we are passing in a `stage` for the command. You might recall from the [Create a New Project](create-a-new-project.md#start-live-lambda-dev) chapter that SST uses the stage to namespace the resources it creates.
+The key difference here is that we are passing in a `stage` for the command. You might recall from the "[Create a New Project](create-a-new-project.md#start-live-lambda-dev)" chapter that SST uses the stage to namespace the resources it creates.
 
 Running `sst deploy` with `--stage prod` is creating a new instance of your application. This separates it from the one you are using for development. So when you make changes locally, your users are not affected by it.
 
@@ -39,12 +39,12 @@ After your app is deployed to prod, you can use the [SST Console](../console.md)
 Run the following from the root of the project.
 
 ```bash
-npx sst console --stage prod
+sst console --stage prod
 ```
 
 This will start up the SST Console and connect it to the given `stage`.
 
-The Console won't have the **Local** tab as the functions are not running locally anymore. Instead you can view the CloudWatch logs for your functions.
+The Console won't have the **Local** tab as the functions are not running locally anymore. Instead, you can view the CloudWatch logs for your functions.
 
 ---
 
@@ -88,7 +88,7 @@ Once your app is in a repo with GitHub, follow these steps in the Seed docs to [
 
 Other general purpose CI/CD providers include:
 
-- [Github Actions](https://github.com/features/actions)
+- [GitHub Actions](https://github.com/features/actions)
 - [Travis CI](https://www.travis-ci.com)
 - [CircleCI](https://circleci.com)
 
@@ -106,4 +106,4 @@ And that's it! You now know the basics of SST and have a solid background on the
 
 Your fully functioning app is also deployed and ready to be shared. You can manage it with the [SST Console](../console.md) and Git push to deploy it with [Seed](https://seed.run)!
 
-If you are looking to extend this setup, check out the [sidebar of the docs](/). We have detailed chapters on specific aspects of building your app.
+If you are looking to extend this setup, check out the [docs sidebar menu](/). We have detailed chapters on specific aspects of building your app.
