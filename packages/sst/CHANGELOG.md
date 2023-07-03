@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.18.3
+
+### Patch Changes
+
+- [`dd8ec0191`](https://github.com/serverless-stack/sst/commit/dd8ec0191947314b5b4a07cb8514cbba594a5022) Thanks [@fwang](https://github.com/fwang)! - Fix type file is incomplete
+
 ## 2.18.2
 
 ### Patch Changes
