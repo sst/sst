@@ -1055,7 +1055,7 @@ function handler(event) {
       this.distribution.addBehavior(
         isDir ? `${item}/*` : item,
         new S3Origin(this.bucket, {
-          originPath: "/" + this.buildConfig.clientBuildS3KeyPrefix,
+          originPath: "/" + (this.buildConfig.clientBuildS3KeyPrefix ?? ""),
         }),
         {
           viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
