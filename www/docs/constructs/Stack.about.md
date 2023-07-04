@@ -108,7 +108,7 @@ Simple add an `async` modifier to your function definition
 import { StackContext } from "sst/constructs";
 
 export async function MyStack({ stack }: StackContext) {
-  const foo = await someAsynCall();
+  const foo = await someAsyncCall();
   // Define stack
 }
 ```
