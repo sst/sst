@@ -86,7 +86,7 @@ export type AppProps = CDKAppProps;
  */
 export class App extends CDKApp {
   /**
-   * Whether or not the app is running locally under `sst start`
+   * Whether or not the app is running locally under `sst dev`
    */
   public readonly local: boolean = false;
 
