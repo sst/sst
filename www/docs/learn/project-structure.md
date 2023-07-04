@@ -67,22 +67,20 @@ We typically group related resources together into stacks. In the `stacks/` dire
 
   ```ts title="stacks/Api.ts"
   export function Api({ stack }: StackContext) {
-    const rds = use(Database);
-
     const api = new ApiGateway(stack, "api", {
 
     // ...
   ```
 
-  The `use(Database)` call gives this stack access to the props that the `Database` stack returns. So `rds` is coming from the return statement of our `Database` stack.
-
   We _bind_ the database to our API so that the functions that power our API have access to it.
 
   ```ts {2}
   function: {
-    bind: [rds],
+    bind: [use(Database)],
   },
   ```
+
+  The `use(Database)` call gives this stack access to the props that the `Database` stack returns (`rds` in this case).
 
   The `bind` prop does two things for us. It gives our functions permissions to access the database. Also our functions are loaded with the database details required to query it. You can [read more about Resource Binding](../resource-binding.md).
 
