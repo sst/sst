@@ -1050,13 +1050,19 @@ function handler(event) {
       this.props.path,
       this.buildConfig.clientBuildOutputDir
     );
-    for (const item of fs.readdirSync(publicDir)) {
+    const items = fs.readdirSync(publicDir)
+    if (!items.length) {
+      return
+    }
+
+    const s3Origin = new S3Origin(this.bucket, {
+      originPath: "/" + (this.buildConfig.clientBuildS3KeyPrefix ?? ""),
+    })
+    for (const item of items) {
       const isDir = fs.statSync(path.join(publicDir, item)).isDirectory();
       this.distribution.addBehavior(
         isDir ? `${item}/*` : item,
-        new S3Origin(this.bucket, {
-          originPath: "/" + (this.buildConfig.clientBuildS3KeyPrefix ?? ""),
-        }),
+        s3Origin,
         {
           viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
