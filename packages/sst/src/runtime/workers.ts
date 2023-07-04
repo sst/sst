@@ -70,6 +70,7 @@ export const useRuntimeWorkers = Context.memo(async () => {
     await handler.startWorker({
       ...build,
       workerID: evt.properties.workerID,
+      functionID: evt.properties.functionID,
       environment: evt.properties.env,
       url: `${server.url}/${evt.properties.workerID}/${server.API_VERSION}`,
       runtime: props.runtime!,

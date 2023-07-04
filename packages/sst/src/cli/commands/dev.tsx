@@ -110,11 +110,25 @@ export const dev = (program: Program) =>
           }
         });
 
+        bus.subscribe("function.build.started", async (evt) => {
+          const info = useFunctions().fromID(evt.properties.functionID);
+          if (!info) return;
+          if (info.enableLiveDev === false) return;
+          if (info.runtime !== "container") return;
+          Colors.line(
+            Colors.dim(Colors.prefix, "Building", info.handler!, "container")
+          );
+        });
+
         bus.subscribe("function.build.success", async (evt) => {
           const info = useFunctions().fromID(evt.properties.functionID);
           if (!info) return;
           if (info.enableLiveDev === false) return;
-          Colors.line(Colors.dim(Colors.prefix, "Built", info.handler!));
+          Colors.line(
+            info.runtime === "container"
+              ? Colors.dim(Colors.prefix, "Built", info.handler!, "container")
+              : Colors.dim(Colors.prefix, "Built", info.handler!)
+          );
         });
 
         bus.subscribe("function.build.failed", async (evt) => {

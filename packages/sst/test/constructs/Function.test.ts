@@ -9,6 +9,8 @@ import {
   stringLike,
   ABSENT,
   createApp,
+  objectLike,
+  ANY,
 } from "./helper";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
@@ -217,7 +219,7 @@ test("copyFiles nonexistent", async () => {
   }).rejects.toThrow(/no such file/);
 });
 
-test("runtime-string", async () => {
+test("runtime: nodejs10.x", async () => {
   const app = await createApp();
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
@@ -230,7 +232,22 @@ test("runtime-string", async () => {
   });
 });
 
-test("runtime-string-invalid", async () => {
+test("runtime: container", async () => {
+  const app = await createApp();
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    runtime: "container",
+    handler: "test/constructs/container-function",
+  });
+  await app.finish();
+  hasResource(stack, "AWS::Lambda::Function", {
+    Code: objectLike({
+      ImageUri: ANY,
+    }),
+  });
+});
+
+test("runtime: invalid", async () => {
   const app = await createApp();
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {

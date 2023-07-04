@@ -12,7 +12,7 @@ import {
   PublishAssetsOptions,
   PublishingAws,
   EVENT_TO_LOGGER,
-} from "sst-aws-cdk/lib/util/asset-publishing.js";
+} from "./asset-publishing.js";
 import { Mode } from "sst-aws-cdk/lib/api/aws-auth/credentials.js";
 import { ISDK } from "sst-aws-cdk/lib/api/aws-auth/sdk.js";
 import {
@@ -434,8 +434,6 @@ export class Deployments {
     );
     for (const asset of assetArtifacts) {
       const manifest = AssetManifest.fromFile(asset.file);
-      //await buildAssets(manifest, sdkProvider, resolvedEnvironment, {
-      //});
       await publishAssets(manifest, this.sdkProvider, resolvedEnvironment, {
         buildAssets: true,
         quiet: options.quiet,

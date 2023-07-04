@@ -24,6 +24,7 @@ import * as functionUrlCors from "./util/functionUrlCors.js";
 import url from "url";
 import { useDeferredTasks } from "./deferred_task.js";
 import { useProject } from "../project.js";
+import { VisibleError } from "../error.js";
 import { useRuntimeHandlers } from "../runtime/handlers.js";
 import { createAppContext } from "./context.js";
 import { useWarning } from "./util/warning.js";
@@ -36,6 +37,7 @@ import {
   FunctionOptions,
   FunctionUrl,
   FunctionUrlAuthType,
+  Handler as CDKHandler,
   ILayerVersion,
   LayerVersion,
   Runtime as CDKRuntime,
@@ -49,10 +51,12 @@ import {
 } from "aws-cdk-lib/core";
 import { Effect, PolicyStatement, Role } from "aws-cdk-lib/aws-iam";
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
+import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import { useBootstrap } from "../bootstrap.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 const supportedRuntimes = {
+  container: CDKRuntime.FROM_IMAGE,
   rust: CDKRuntime.PROVIDED_AL2,
   nodejs: CDKRuntime.NODEJS,
   "nodejs4.3": CDKRuntime.NODEJS_4_3,
@@ -134,6 +138,11 @@ export interface FunctionProps
    * Used to configure python function properties
    */
   python?: PythonProps;
+
+  /**
+   * Used to configure image function properties
+   */
+  //image?: ImageProps;
 
   /**
    * Hooks to run before and after function builds
@@ -642,7 +651,7 @@ export class Function extends CDKFunction implements SSTConstruct {
     const architecture = (() => {
       if (props.architecture === "arm_64") return Architecture.ARM_64;
       if (props.architecture === "x86_64") return Architecture.X86_64;
-      return undefined;
+      return Architecture.X86_64;
     })();
     const memorySize = Function.normalizeMemorySize(props.memorySize);
     const diskSize = Function.normalizeDiskSize(props.diskSize);
@@ -703,17 +712,35 @@ export class Function extends CDKFunction implements SSTConstruct {
 
       super(scope, id, {
         ...props,
+        ...(props.runtime === "container"
+          ? {
+              code: Code.fromAssetImage(
+                path.resolve(__dirname, "../support/bridge"),
+                {
+                  ...(architecture?.dockerPlatform
+                    ? { platform: Platform.custom(architecture.dockerPlatform) }
+                    : {}),
+                }
+              ),
+              handler: CDKHandler.FROM_IMAGE,
+              runtime: CDKRuntime.FROM_IMAGE,
+              layers: undefined,
+            }
+          : {
+              runtime: CDKRuntime.NODEJS_16_X,
+              code: Code.fromAsset(
+                path.resolve(__dirname, "../support/bridge")
+              ),
+              handler: "bridge.handler",
+              layers: [],
+            }),
         architecture,
-        code: Code.fromAsset(path.resolve(__dirname, "../support/bridge")),
-        handler: "bridge.handler",
         functionName,
-        runtime: CDKRuntime.NODEJS_16_X,
         memorySize,
         ephemeralStorageSize: diskSize,
         timeout,
         tracing,
         environment: props.environment,
-        layers: [],
         logRetention,
         logRetentionRetryOptions: logRetention && { maxRetries: 100 },
         retryAttempts: 0,
@@ -742,17 +769,30 @@ export class Function extends CDKFunction implements SSTConstruct {
     else {
       super(scope, id, {
         ...props,
+        ...(props.runtime === "container"
+          ? {
+              code: Code.fromAssetImage(props.handler!, {
+                ...(architecture?.dockerPlatform
+                  ? { platform: Platform.custom(architecture.dockerPlatform) }
+                  : {}),
+              }),
+              handler: CDKHandler.FROM_IMAGE,
+              runtime: CDKRuntime.FROM_IMAGE,
+              layers: undefined,
+            }
+          : {
+              code: Code.fromInline("export function placeholder() {}"),
+              handler: "index.placeholder",
+              runtime: CDKRuntime.NODEJS_16_X,
+              layers: Function.buildLayers(scope, id, props),
+            }),
         architecture,
-        code: Code.fromInline("export function placeholder() {}"),
-        handler: "index.placeholder",
         functionName,
-        runtime: CDKRuntime.NODEJS_16_X,
         memorySize,
         ephemeralStorageSize: diskSize,
         timeout,
         tracing,
         environment: props.environment,
-        layers: Function.buildLayers(scope, id, props),
         logRetention,
         logRetentionRetryOptions: logRetention && { maxRetries: 100 },
       });
@@ -764,13 +804,16 @@ export class Function extends CDKFunction implements SSTConstruct {
           "deploy"
         );
         if (result.type === "error") {
-          throw new Error(
+          throw new VisibleError(
             [
               `Failed to build function "${props.handler}"`,
               ...result.errors,
             ].join("\n")
           );
         }
+
+        // No need to update code if runtime is container
+        if (props.runtime === "container") return;
 
         // Update code
         const cfnFunction = this.node.defaultChild as CfnFunction;
