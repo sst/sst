@@ -2,4 +2,4 @@
 "sst": patch
 ---
 
-SST / NodeJS runtime: await for fs.writeFile
+Function: await fs.writeFile for nodejs runtime
