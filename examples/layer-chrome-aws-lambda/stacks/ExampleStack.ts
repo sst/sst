@@ -12,7 +12,6 @@ export function ExampleStack({ stack }: StackContext) {
       "GET /": {
         function: {
           handler: "packages/functions/src/lambda.handler",
-          // The chrome-aws-lambda layer currently does not work in Node.js 16
           runtime: "nodejs18.x",
           // Increase the timeout for generating screenshots
           timeout: 15,
