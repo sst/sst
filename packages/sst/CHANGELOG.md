@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.19.0
+
+### Minor Changes
+
+- [#3085](https://github.com/serverless-stack/sst/pull/3085) [`134b4f7e1`](https://github.com/serverless-stack/sst/commit/134b4f7e16e3802eedf59c4fd6bbf454589c5543) Thanks [@fwang](https://github.com/fwang)! - Function: container support
+
 ## 2.18.4
 
 ### Patch Changes
