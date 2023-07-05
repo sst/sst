@@ -1,11 +1,10 @@
-import { LayerVersion } from "aws-cdk-lib/aws-lambda";
+import * as lambda from "aws-cdk-lib/aws-lambda";
 import { Api, StackContext } from "sst/constructs";
 
-const layerArn =
-  "arn:aws:lambda:us-east-1:764866452798:layer:chrome-aws-lambda:25";
-
 export function ExampleStack({ stack }: StackContext) {
-  const layer = LayerVersion.fromLayerVersionArn(stack, "Layer", layerArn);
+  const layerChromium = new lambda.LayerVersion(stack, "chromiumLayers", {
+    code: lambda.Code.fromAsset("layers/chromium"),
+  });
 
   // Create a HTTP API
   const api = new Api(stack, "Api", {
@@ -14,15 +13,15 @@ export function ExampleStack({ stack }: StackContext) {
         function: {
           handler: "packages/functions/src/lambda.handler",
           // The chrome-aws-lambda layer currently does not work in Node.js 16
-          runtime: "nodejs14.x",
+          runtime: "nodejs18.x",
           // Increase the timeout for generating screenshots
           timeout: 15,
           // Load Chrome in a Layer
-          layers: [layer],
+          layers: [layerChromium],
           // Exclude bundling it in the Lambda function
           nodejs: {
             esbuild: {
-              external: ["chrome-aws-lambda"],
+              external: ["@sparticuz/chromium"],
             },
           },
         },
