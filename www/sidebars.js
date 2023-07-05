@@ -68,6 +68,7 @@ module.exports = {
         "queues",
         "cron-jobs",
         "databases",
+        "containers",
         "file-uploads",
         "long-running-jobs",
       ],
