@@ -40,15 +40,11 @@ const [article] = useTypedQuery({
   context,
 });
 ```
-In this updated version, we have made a couple of notable changes to enhance the functionality of our GraphQL query:
+In this updated version, we have made a couple of notable changes to our GraphQL query.
 
-1. **Fetching Comments**: In our previous implementation, we fetched the `id`, `url`, and `title` fields of an article. Now, we've expanded our query to also retrieve the `comments` associated with the article. Each comment is represented by its `id` and `text` fields. This allows us to bring in additional relational data in a single query, effectively reducing the need for additional network requests.
+Previously we were fetching the `id`, `url`, and `title` fields of an article. Now, we've expanded our query to also get the `comments` for the article. We are getting each comment's `id` and `text` fields.
 
-2. **Using `useMemo` Hook**: We've introduced the use of the `useMemo` hook from React to create the `context` object. This hook will ensure that our `context` object is memoized and will only be recalculated if its dependencies change. In this case, we have no dependencies (`[]`), so it will only be calculated once. This is beneficial for performance, especially in larger components or applications.
-
-3. **Adding `additionalTypenames`**: Inside the `context` object, we're specifying `additionalTypenames` with a value of `["Comment"]`. This is a list of GraphQL types that may be affected by our query. Urql's [Document Cache](https://formidable.com/open-source/urql/docs/basics/document-caching/#document-cache-gotchas) uses this information to correctly update the cache after a mutation. The Document Cache identifies entities in the cache by their `__typename` and `id` (or `_id`). When a mutation occurs, it knows that it may have to invalidate or update entities of certain types. By explicitly stating that we expect entities of type `Comment`, we're ensuring that the cache can correctly update if any comments are added, modified, or removed. This helps maintain the consistency and accuracy of our cache.
-
-These changes provide us with a more efficient query and ensure a smoother and more accurate interaction with our cache.
+We are also passing in `additionalTypenames` in the `context`. We'll look at why we are doing this below.
 
 <details>
 <summary>Behind the scenes</summary>
