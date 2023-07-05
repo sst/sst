@@ -5,6 +5,9 @@ import chromium from "@sparticuz/chromium";
 
 import { APIGatewayProxyHandlerV2 } from "aws-lambda";
 
+// This is the path to the local Chromium binary
+const YOUR_LOCAL_CHROMIUM_PATH = "/tmp/localChromium/chromium/mac-1165945/chrome-mac/Chromium.app/Contents/MacOS/Chromium";
+
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   // Get the url and dimensions from the query string
   const { url, width, height } = event.queryStringParameters!;
@@ -20,7 +23,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     args: chromium.args,
     defaultViewport: chromium.defaultViewport,
     executablePath: process.env.IS_LOCAL
-      ? "/tmp/localChromium/chromium/mac-1165945/chrome-mac/Chromium.app/Contents/MacOS/Chromium"
+      ? YOUR_LOCAL_CHROMIUM_PATH
       : await chromium.executablePath(),
     headless: chromium.headless,
   });
