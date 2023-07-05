@@ -32,21 +32,21 @@ Let's create our starter. We'll be using the [`create sst`](../packages/create-s
 <TabItem value="npm">
 
 ```bash
-$ npx create-sst@latest --template=graphql/rds
+npx create-sst@latest --template=graphql/rds
 ```
 
 </TabItem>
 <TabItem value="yarn">
 
 ```bash
-$ yarn create sst@latest --template=graphql/rds
+yarn create sst --template=graphql/rds
 ```
 
 </TabItem>
 <TabItem value="pnpm">
 
 ```bash
-$ pnpm dlx create-sst@latest --template=graphql/rds
+pnpm create sst --template=graphql/rds
 ```
 
 </TabItem>
@@ -59,7 +59,7 @@ In this tutorial, we'll be using the **keyboard icon** <img width="18" style={{ 
 Select a name for your app. We'll just use the default.
 
 ```bash
-$ Project name (my-sst-app)
+? Project name (my-sst-app)
 ```
 
 <ChangeText>
@@ -72,24 +72,24 @@ Next, install the dependencies.
 <TabItem value="npm">
 
 ```bash
-$ cd my-sst-app
-$ npm install
+cd my-sst-app
+npm install
 ```
 
 </TabItem>
 <TabItem value="yarn">
 
 ```bash
-$ cd my-sst-app
-$ yarn install
+cd my-sst-app
+yarn
 ```
 
 </TabItem>
 <TabItem value="pnpm">
 
 ```bash
-$ cd my-sst-app
-$ pnpm install
+cd my-sst-app
+pnpm install
 ```
 
 </TabItem>
@@ -108,7 +108,7 @@ Let's start our local development environment. Or what SST calls [Live Lambda De
 </ChangeText>
 
 ```bash
-$ sst dev
+npx sst dev
 ```
 
 The first time the SST command is run, you'll be prompted to enter a default stage name to use. The stage name will be stored locally in a `.sst/` directory; it's automatically ignored from Git.
