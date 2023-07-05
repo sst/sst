@@ -213,7 +213,7 @@ export const useNodeHandler = Context.memo(async () => {
               .readFile(path.join(src, "package.json"))
               .then((x) => x.toString())
           );
-          fs.writeFile(
+          await fs.writeFile(
             path.join(input.out, "package.json"),
             JSON.stringify({
               dependencies: Object.fromEntries(
