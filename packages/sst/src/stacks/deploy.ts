@@ -1,4 +1,5 @@
 import { useBus } from "../bus.js";
+import { useProject } from "../project.js";
 import { useAWSClient, useAWSProvider } from "../credentials.js";
 import { Logger } from "../logger.js";
 import type { CloudFormationStackArtifact } from "aws-cdk-lib/cx-api";
@@ -100,6 +101,7 @@ export async function deploy(
   stack: CloudFormationStackArtifact
 ): Promise<StackDeploymentResult> {
   const bus = useBus();
+  const { cdk } = useProject().config;
   Logger.debug("Deploying stack", stack.id);
   const provider = await useAWSProvider();
   const { Deployments } = await import("../cdk/deployments.js");
@@ -117,6 +119,7 @@ export async function deploy(
       deploymentMethod: {
         method: "direct",
       },
+      toolkitStackName: cdk?.toolkitStackName,
     });
     if (result?.noOp) {
       bus.publish("stack.status", {

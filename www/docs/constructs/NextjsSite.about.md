@@ -393,15 +393,20 @@ const vpc = new Vpc(stack, "myVPC");
 
 // Alternatively use an existing VPC
 const vpc = Vpc.fromLookup(stack, "myVPC", { ... });
+const vpcSubnets = {
+  subnetType: SubnetType.PRIVATE_WITH_NAT,
+};
 
 new NextjsSite(stack, "Site", {
   path: "my-next-app/",
   cdk: {
     server: {
       vpc,
-      vpcSubnets: {
-        subnetType: SubnetType.PRIVATE_WITH_NAT,
-      }
+      vpcSubnets,
+    },
+    revalidation: {
+      vpc,
+      vpcSubnets,
     }
   }
 });

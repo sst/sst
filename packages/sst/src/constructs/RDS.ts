@@ -45,7 +45,6 @@ export interface RDSProps {
   engine:
     | "mysql5.6"
     | "mysql5.7"
-    | "postgresql10.14"
     | "postgresql11.13"
     | "postgresql11.16"
     | "postgresql13.9";
@@ -335,6 +334,12 @@ export class RDS extends Construct implements SSTConstruct {
         "secretsmanager:DescribeSecret": [
           this.secret.secretFullArn || `${this.secret.secretArn}*`,
         ],
+        // grant permission to the "encryptionkey" if set
+        ...(this.secret.encryptionKey
+          ? {
+              "kms:Decrypt": [this.secret.encryptionKey.keyArn],
+            }
+          : {}),
       },
     };
   }
@@ -392,8 +397,8 @@ export class RDS extends Construct implements SSTConstruct {
       );
     }
 
-    // Validate Secrets Manager is used for "credentials"
-    if (props.credentials && !props.credentials.secret) {
+    // Validate Secrets Manager is used for "credentials" not password
+    if (props.credentials?.password) {
       throw new Error(
         `Only credentials managed by SecretManager are supported for the "cdk.cluster.credentials".`
       );
@@ -417,10 +422,6 @@ export class RDS extends Construct implements SSTConstruct {
     } else if (engine === "mysql5.7") {
       return DatabaseClusterEngine.auroraMysql({
         version: AuroraMysqlEngineVersion.VER_2_07_1,
-      });
-    } else if (engine === "postgresql10.14") {
-      return DatabaseClusterEngine.auroraPostgres({
-        version: AuroraPostgresEngineVersion.VER_10_14,
       });
     } else if (engine === "postgresql11.13") {
       return DatabaseClusterEngine.auroraPostgres({

@@ -86,7 +86,7 @@ export type AppProps = CDKAppProps;
  */
 export class App extends CDKApp {
   /**
-   * Whether or not the app is running locally under `sst start`
+   * Whether or not the app is running locally under `sst dev`
    */
   public readonly local: boolean = false;
 
@@ -258,11 +258,18 @@ export class App extends CDKApp {
   public async finish() {
     if (this.isFinished) return;
     this.isFinished = true;
-    await useDeferredTasks().run();
     Auth.injectConfig();
     this.buildConstructsMetadata();
     this.ensureUniqueConstructIds();
     this.codegenTypes();
+
+    // Run deferred tasks
+    // - after codegen b/c some frontend frameworks (ie. Next.js apps) runs
+    //   type checking in the build step
+    // - before remove govcloud unsupported resource properties b/c deferred
+    //   tasks may add govcloud unsupported resource properties
+    await useDeferredTasks().run();
+
     this.createBindingSsmParameters();
     this.removeGovCloudUnsupportedResourceProperties();
     const { config } = useProject();
@@ -568,52 +575,63 @@ export class App extends CDKApp {
       ].join("\n")
     );
 
-    class CodegenTypes implements IAspect {
-      public visit(c: IConstruct): void {
-        if (!isSSTConstruct(c)) {
-          return;
-        }
-        if (c instanceof Function && c._doNotAllowOthersToBind) {
-          return;
-        }
+    this.foreachConstruct((c) => {
+      if (!isSSTConstruct(c)) {
+        return;
+      }
+      if (c instanceof Function && c._doNotAllowOthersToBind) {
+        return;
+      }
 
-        const binding = bindType(c);
-        if (!binding) {
-          return;
-        }
+      const binding = bindType(c);
+      if (!binding) {
+        return;
+      }
 
-        const className = c.constructor.name;
-        const id = c.id;
+      const className = c.constructor.name;
+      const id = c.id;
 
-        // Case 1: variable does not have properties, ie. Secrets and Parameters
+      // Case 1: variable does not have properties, ie. Secrets and Parameters
 
-        fs.appendFileSync(
-          `${typesPath}/index.ts`,
-          (binding.variables[0] === "."
-            ? [
-                `import "sst/node/${binding.clientPackage}";`,
-                `declare module "sst/node/${binding.clientPackage}" {`,
-                `  export interface ${className}Resources {`,
-                `    "${id}": string;`,
-                `  }`,
-                `}`,
-              ]
-            : [
-                `import "sst/node/${binding.clientPackage}";`,
-                `declare module "sst/node/${binding.clientPackage}" {`,
-                `  export interface ${className}Resources {`,
-                `    "${id}": {`,
-                ...binding.variables.map((p) => `      ${p}: string;`),
-                `    }`,
-                `  }`,
-                `}`,
-              ]
-          ).join("\n")
-        );
+      fs.appendFileSync(
+        `${typesPath}/index.ts`,
+        (binding.variables[0] === "."
+          ? [
+              `import "sst/node/${binding.clientPackage}";`,
+              `declare module "sst/node/${binding.clientPackage}" {`,
+              `  export interface ${className}Resources {`,
+              `    "${id}": string;`,
+              `  }`,
+              `}`,
+            ]
+          : [
+              `import "sst/node/${binding.clientPackage}";`,
+              `declare module "sst/node/${binding.clientPackage}" {`,
+              `  export interface ${className}Resources {`,
+              `    "${id}": {`,
+              ...binding.variables.map((p) => `      ${p}: string;`),
+              `    }`,
+              `  }`,
+              `}`,
+            ]
+        ).join("\n")
+      );
+    });
+  }
+
+  private foreachConstruct(fn: (c: IConstruct) => void) {
+    const loop = (parent: IConstruct) => {
+      for (const child of parent.node.children) {
+        fn(child);
+        loop(child);
+      }
+    };
+
+    for (const child of this.node.children) {
+      if (child instanceof Stack) {
+        loop(child);
       }
     }
-
-    Aspects.of(this).add(new CodegenTypes());
   }
 
   // Functional Stack

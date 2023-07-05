@@ -12,7 +12,12 @@ import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as cf from "aws-cdk-lib/aws-cloudfront";
-import { Api, Stack, StaticSite } from "../../dist/constructs/";
+import {
+  Api,
+  Stack,
+  StaticSite,
+  StaticSiteProps,
+} from "../../dist/constructs/";
 
 process.env.SST_RESOURCES_TESTS = "enabled";
 
@@ -23,6 +28,19 @@ beforeEach(async () => {
 afterAll(async () => {
   await clearBuildOutput();
 });
+
+async function createSite(
+  props?: StaticSiteProps | ((stack: Stack) => StaticSiteProps)
+) {
+  const app = await createApp();
+  const stack = new Stack(app, "stack");
+  const site = new StaticSite(stack, "Site", {
+    path: "test/constructs/site",
+    ...(typeof props === "function" ? props(stack) : props),
+  });
+  await app.finish();
+  return { app, stack, site };
+}
 
 async function clearBuildOutput() {
   await fs.rm("test/constructs/vite-static-site/dist", {
@@ -43,11 +61,8 @@ async function clearBuildOutput() {
 // Test Constructor
 /////////////////////////////
 
-test("base: no domain", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  const site = new StaticSite(stack, "Site", {
-    path: "test/constructs/site",
-  });
+test("customDomain: no domain", async () => {
+  const { stack, site } = await createSite();
   expect(site.url).toBeDefined();
   expect(site.customDomainUrl).toBeUndefined();
   expect(site.cdk!.bucket.bucketArn).toBeDefined();
@@ -154,15 +169,13 @@ test("base: no domain", async () => {
   });
 });
 
-test("base: with domain", async () => {
-  const stack = new Stack(await createApp(), "stack");
+test("customDomain: string", async () => {
   route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
     });
-  const site = new StaticSite(stack, "Site", {
-    path: "test/constructs/site",
+  const { stack, site } = await createSite({
     customDomain: "domain.com",
   });
   expect(site.url).toBeDefined();
@@ -228,15 +241,42 @@ test("base: with domain", async () => {
   });
 });
 
-test("base: with domain with alias", async () => {
-  const stack = new Stack(await createApp(), "stack");
+test("customDomain: props", async () => {
   route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
     });
-  const site = new StaticSite(stack, "Site", {
-    path: "test/constructs/site",
+  const { stack, site } = await createSite({
+    customDomain: {
+      domainName: "domain.com",
+    },
+  });
+  expect(site.customDomainUrl).toEqual("https://domain.com");
+  hasResource(stack, "AWS::CloudFormation::CustomResource", {
+    DomainName: "domain.com",
+    Region: "us-east-1",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "domain.com.",
+    Type: "A",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "domain.com.",
+    Type: "AAAA",
+  });
+  hasResource(stack, "AWS::Route53::HostedZone", {
+    Name: "domain.com.",
+  });
+});
+
+test("customDomain: props with domainAlias", async () => {
+  route53.HostedZone.fromLookup = vi
+    .fn()
+    .mockImplementation((scope, id, { domainName }) => {
+      return new route53.HostedZone(scope, id, { zoneName: domainName });
+    });
+  const { stack, site } = await createSite({
     customDomain: {
       domainName: "domain.com",
       domainAlias: "www.domain.com",
@@ -284,78 +324,13 @@ test("base: with domain with alias", async () => {
   countResources(stack, "AWS::Route53::HostedZone", 1);
 });
 
-test("customDomain: string", async () => {
-  const stack = new Stack(await createApp(), "stack");
+test("customDomain: props with hostedZone string", async () => {
   route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
     });
-
-  const site = new StaticSite(stack, "Site", {
-    path: "test/constructs/site",
-    customDomain: "domain.com",
-  });
-  expect(site.customDomainUrl).toEqual("https://domain.com");
-  hasResource(stack, "AWS::CloudFormation::CustomResource", {
-    DomainName: "domain.com",
-    Region: "us-east-1",
-  });
-  hasResource(stack, "AWS::Route53::RecordSet", {
-    Name: "domain.com.",
-    Type: "A",
-  });
-  hasResource(stack, "AWS::Route53::RecordSet", {
-    Name: "domain.com.",
-    Type: "AAAA",
-  });
-  hasResource(stack, "AWS::Route53::HostedZone", {
-    Name: "domain.com.",
-  });
-});
-
-test("customDomain: domainName string", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  route53.HostedZone.fromLookup = vi
-    .fn()
-    .mockImplementation((scope, id, { domainName }) => {
-      return new route53.HostedZone(scope, id, { zoneName: domainName });
-    });
-
-  const site = new StaticSite(stack, "Site", {
-    path: "test/constructs/site",
-    customDomain: {
-      domainName: "domain.com",
-    },
-  });
-  expect(site.customDomainUrl).toEqual("https://domain.com");
-  hasResource(stack, "AWS::CloudFormation::CustomResource", {
-    DomainName: "domain.com",
-    Region: "us-east-1",
-  });
-  hasResource(stack, "AWS::Route53::RecordSet", {
-    Name: "domain.com.",
-    Type: "A",
-  });
-  hasResource(stack, "AWS::Route53::RecordSet", {
-    Name: "domain.com.",
-    Type: "AAAA",
-  });
-  hasResource(stack, "AWS::Route53::HostedZone", {
-    Name: "domain.com.",
-  });
-});
-
-test("customDomain: hostedZone string", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  route53.HostedZone.fromLookup = vi
-    .fn()
-    .mockImplementation((scope, id, { domainName }) => {
-      return new route53.HostedZone(scope, id, { zoneName: domainName });
-    });
-
-  const site = new StaticSite(stack, "Site", {
-    path: "test/constructs/site",
+  const { stack, site } = await createSite({
     customDomain: {
       domainName: "www.domain.com",
       hostedZone: "domain.com",
@@ -379,16 +354,13 @@ test("customDomain: hostedZone string", async () => {
   });
 });
 
-test("customDomain: hostedZone construct", async () => {
-  const stack = new Stack(await createApp(), "stack");
+test("customDomain: props with hostedZone construct", async () => {
   route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
     });
-
-  const site = new StaticSite(stack, "Site", {
-    path: "test/constructs/site",
+  const { stack, site } = await createSite((stack) => ({
     customDomain: {
       domainName: "www.domain.com",
       cdk: {
@@ -397,7 +369,7 @@ test("customDomain: hostedZone construct", async () => {
         }),
       },
     },
-  });
+  }));
   expect(route53.HostedZone.fromLookup).toHaveBeenCalledTimes(1);
   expect(site.customDomainUrl).toEqual("https://www.domain.com");
   hasResource(stack, "AWS::CloudFormation::CustomResource", {
@@ -417,16 +389,13 @@ test("customDomain: hostedZone construct", async () => {
   });
 });
 
-test("customDomain: certificate imported", async () => {
-  const stack = new Stack(await createApp(), "stack");
+test("customDomain: props with certificate imported", async () => {
   route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
     });
-
-  const site = new StaticSite(stack, "Site", {
-    path: "test/constructs/site",
+  const { stack, site } = await createSite((stack) => ({
     customDomain: {
       domainName: "www.domain.com",
       hostedZone: "domain.com",
@@ -436,7 +405,7 @@ test("customDomain: certificate imported", async () => {
         }),
       },
     },
-  });
+  }));
   expect(site.customDomainUrl).toEqual("https://www.domain.com");
   countResources(stack, "AWS::CloudFormation::CustomResource", 0);
   hasResource(stack, "AWS::Route53::RecordSet", {
@@ -452,10 +421,8 @@ test("customDomain: certificate imported", async () => {
   });
 });
 
-test("customDomain: isExternalDomain true", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  const site = new StaticSite(stack, "Site", {
-    path: "test/constructs/site",
+test("customDomain: props with isExternalDomain true", async () => {
+  const { stack, site } = await createSite((stack) => ({
     customDomain: {
       domainName: "www.domain.com",
       cdk: {
@@ -465,7 +432,7 @@ test("customDomain: isExternalDomain true", async () => {
       },
       isExternalDomain: true,
     },
-  });
+  }));
   expect(site.customDomainUrl).toEqual("https://www.domain.com");
   countResources(stack, "AWS::CloudFront::Distribution", 1);
   hasResource(stack, "AWS::CloudFront::Distribution", {
@@ -479,25 +446,21 @@ test("customDomain: isExternalDomain true", async () => {
 });
 
 test("customDomain: isExternalDomain true and no certificate", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  expect(() => {
-    new StaticSite(stack, "Site", {
-      path: "test/constructs/site",
+  expect(async () => {
+    await createSite({
       customDomain: {
         domainName: "www.domain.com",
         isExternalDomain: true,
       },
     });
-  }).toThrow(
+  }).rejects.toThrow(
     /A valid certificate is required when "isExternalDomain" is set to "true"./
   );
 });
 
 test("customDomain: isExternalDomain true and domainAlias set", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  expect(() => {
-    new StaticSite(stack, "Site", {
-      path: "test/constructs/site",
+  expect(async () => {
+    await createSite((stack) => ({
       customDomain: {
         domainName: "domain.com",
         domainAlias: "www.domain.com",
@@ -508,17 +471,15 @@ test("customDomain: isExternalDomain true and domainAlias set", async () => {
         },
         isExternalDomain: true,
       },
-    });
-  }).toThrow(
+    }));
+  }).rejects.toThrow(
     /Domain alias is only supported for domains hosted on Amazon Route 53/
   );
 });
 
 test("customDomain: isExternalDomain true and hostedZone set", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  expect(() => {
-    new StaticSite(stack, "Site", {
-      path: "test/constructs/site",
+  expect(async () => {
+    await createSite((stack) => ({
       customDomain: {
         domainName: "www.domain.com",
         hostedZone: "domain.com",
@@ -529,25 +490,22 @@ test("customDomain: isExternalDomain true and hostedZone set", async () => {
         },
         isExternalDomain: true,
       },
-    });
-  }).toThrow(
+    }));
+  }).rejects.toThrow(
     /Hosted zones can only be configured for domains hosted on Amazon Route 53/
   );
 });
 
 test("constructor: path not exist", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  expect(() => {
-    new StaticSite(stack, "Site", {
+  expect(async () => {
+    await createSite({
       path: "does-not-exist",
     });
-  }).toThrow(/No path found/);
+  }).rejects.toThrow(/No path found/);
 });
 
 test("constructor: errorPage is string", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new StaticSite(stack, "Site", {
-    path: "test/constructs/site",
+  const { stack } = await createSite({
     errorPage: "error.html",
   });
   hasResource(stack, "AWS::CloudFront::Distribution", {
@@ -569,9 +527,7 @@ test("constructor: errorPage is string", async () => {
 });
 
 test("constructor: errorPage is enum", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new StaticSite(stack, "Site", {
-    path: "test/constructs/site",
+  const { stack } = await createSite({
     errorPage: "redirect_to_index_page",
   });
   hasResource(stack, "AWS::CloudFront::Distribution", {
@@ -593,15 +549,16 @@ test("constructor: errorPage is enum", async () => {
 });
 
 test("constructor: buildCommand defined", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  const api = new Api(stack, "Api");
-  new StaticSite(stack, "Site", {
-    path: "test/constructs/vite-static-site",
-    buildCommand: "npm run build",
-    environment: {
-      VITE_CONSTANT_ENV: "my-url",
-      VITE_REFERENCE_ENV: api.url,
-    },
+  await createSite((stack) => {
+    const api = new Api(stack, "Api");
+    return {
+      path: "test/constructs/vite-static-site",
+      buildCommand: "npm run build",
+      environment: {
+        VITE_CONSTANT_ENV: "my-url",
+        VITE_REFERENCE_ENV: api.url,
+      },
+    };
   });
   const indexHtml = await fs.readFile(
     "test/constructs/vite-static-site/dist/index.html"
@@ -610,19 +567,15 @@ test("constructor: buildCommand defined", async () => {
 });
 
 test("constructor: buildCommand error", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  expect(() => {
-    new StaticSite(stack, "Site", {
-      path: "test/constructs/site",
+  expect(async () => {
+    await createSite({
       buildCommand: "garbage command",
     });
-  }).toThrow(/There was a problem building the "Site" StaticSite./);
+  }).rejects.toThrow(/There was a problem building the "Site" StaticSite./);
 });
 
 test("constructor: buildOutput multiple files", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new StaticSite(stack, "Site", {
-    path: "test/constructs/site",
+  const { stack, site } = await createSite({
     buildOutput: "build-with-30b-data",
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
@@ -643,19 +596,15 @@ test("constructor: buildOutput multiple files", async () => {
 });
 
 test("constructor: buildOutput not exist", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  expect(() => {
-    new StaticSite(stack, "Site", {
-      path: "test/constructs/site",
+  expect(async () => {
+    await createSite({
       buildOutput: "does-not-exist",
     });
-  }).toThrow(/No build output found/);
+  }).rejects.toThrow(/No build output found/);
 });
 
 test("constructor: fileOptions", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new StaticSite(stack, "Site", {
-    path: "test/constructs/site",
+  const { stack, site } = await createSite({
     fileOptions: [
       {
         exclude: "*",
@@ -702,9 +651,7 @@ test("constructor: fileOptions", async () => {
 });
 
 test("constructor: fileOptions array value", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new StaticSite(stack, "Site", {
-    path: "test/constructs/site",
+  const { stack, site } = await createSite({
     fileOptions: [
       {
         exclude: "*",
@@ -740,9 +687,7 @@ test("constructor: fileOptions array value", async () => {
 });
 
 test("constructor: fileOptions: contentType", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new StaticSite(stack, "Site", {
-    path: "test/constructs/site",
+  const { stack, site } = await createSite({
     fileOptions: [
       {
         exclude: "*",
@@ -769,9 +714,7 @@ test("constructor: fileOptions: contentType", async () => {
 });
 
 test("constructor: replaceValues", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new StaticSite(stack, "Site", {
-    path: "test/constructs/site",
+  const { stack, site } = await createSite({
     replaceValues: [
       {
         files: "*.js",
@@ -811,8 +754,7 @@ test("constructor: replaceValues", async () => {
 });
 
 test("vite.types: undefined: is vite site", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new StaticSite(stack, "Site", {
+  const { stack, site } = await createSite({
     path: "test/constructs/vite-static-site",
   });
   expect(
@@ -824,9 +766,8 @@ test("vite.types: undefined: is vite site", async () => {
 });
 
 test("vite.types: undefined: not vite site", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new StaticSite(stack, "Site", {
-    path: "test/constructs/site",
+  await createSite({
+    customDomain: "domain.com",
   });
   expect(
     await fs
@@ -837,8 +778,7 @@ test("vite.types: undefined: not vite site", async () => {
 });
 
 test("vite.types: defined", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new StaticSite(stack, "Site", {
+  const { stack, site } = await createSite({
     path: "test/constructs/vite-static-site",
     vite: {
       types: "src/my-env.d.ts",
@@ -859,9 +799,7 @@ test("vite.types: defined", async () => {
 });
 
 test("cdk.bucket is props", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new StaticSite(stack, "Site", {
-    path: "test/constructs/site",
+  const { stack, site } = await createSite({
     cdk: {
       bucket: {
         bucketName: "my-bucket",
@@ -875,41 +813,35 @@ test("cdk.bucket is props", async () => {
 });
 
 test("cdk.bucket is props: s3Bucket websiteIndexDocument", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  expect(() => {
-    new StaticSite(stack, "Site", {
-      path: "test/constructs/site",
+  expect(async () => {
+    await createSite({
       cdk: {
         bucket: {
           websiteIndexDocument: "index.html",
         },
       },
     });
-  }).toThrow(/Do not configure the "s3Bucket.websiteIndexDocument"./);
+  }).rejects.toThrow(/Do not configure the "s3Bucket.websiteIndexDocument"./);
 });
 
 test("cdk.bucket is props: s3Bucket websiteErrorDocument", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  expect(() => {
-    new StaticSite(stack, "Site", {
-      path: "test/constructs/site",
+  expect(async () => {
+    await createSite({
       cdk: {
         bucket: {
           websiteErrorDocument: "error.html",
         },
       },
     });
-  }).toThrow(/Do not configure the "s3Bucket.websiteErrorDocument"./);
+  }).rejects.toThrow(/Do not configure the "s3Bucket.websiteErrorDocument"./);
 });
 
 test("cdk.bucket is construct", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new StaticSite(stack, "Site", {
-    path: "test/constructs/site",
+  const { stack, site } = await createSite((stack) => ({
     cdk: {
       bucket: s3.Bucket.fromBucketName(stack, "Bucket", "my-bucket"),
     },
-  });
+  }));
   countResources(stack, "AWS::S3::Bucket", 0);
   hasResource(stack, "AWS::CloudFront::Distribution", {
     DistributionConfig: objectLike({
@@ -938,9 +870,7 @@ test("cdk.bucket is construct", async () => {
 });
 
 test("constructor: cfDistribution props", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new StaticSite(stack, "Site", {
-    path: "test/constructs/site",
+  const { stack } = await createSite({
     cdk: {
       distribution: {
         comment: "My Comment",
@@ -956,9 +886,7 @@ test("constructor: cfDistribution props", async () => {
 });
 
 test("constructor: cfDistribution is construct", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new StaticSite(stack, "Site", {
-    path: "test/constructs/site",
+  const { stack, site } = await createSite((stack) => ({
     customDomain: "domain.com",
     cdk: {
       distribution: cloudfront.Distribution.fromDistributionAttributes(
@@ -970,7 +898,7 @@ test("constructor: cfDistribution is construct", async () => {
         }
       ),
     },
-  });
+  }));
   countResources(stack, "AWS::CloudFront::Distribution", 0);
   countResources(stack, "Custom::CloudFrontInvalidator", 1);
   hasResource(stack, "Custom::CloudFrontInvalidator", {
@@ -983,9 +911,7 @@ test("constructor: cfDistribution is construct", async () => {
 });
 
 test("constructor: cfDistribution props override errorResponses", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new StaticSite(stack, "Site", {
-    path: "test/constructs/site",
+  const { stack, site } = await createSite({
     cdk: {
       distribution: {
         errorResponses: [
@@ -1013,10 +939,8 @@ test("constructor: cfDistribution props override errorResponses", async () => {
 });
 
 test("constructor: cfDistribution props override errorResponses error", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  expect(() => {
-    new StaticSite(stack, "Site", {
-      path: "test/constructs/site",
+  expect(async () => {
+    await createSite({
       errorPage: "error.html",
       cdk: {
         distribution: {
@@ -1030,15 +954,13 @@ test("constructor: cfDistribution props override errorResponses error", async ()
         },
       },
     });
-  }).toThrow(
+  }).rejects.toThrow(
     /Cannot configure the "cfDistribution.errorResponses" when "errorPage" is passed in./
   );
 });
 
 test("constructor: cfDistribution defaultBehavior override", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new StaticSite(stack, "Site", {
-    path: "test/constructs/site",
+  const { stack, site } = await createSite({
     cdk: {
       distribution: {
         defaultBehavior: {
@@ -1068,10 +990,8 @@ test("constructor: cfDistribution defaultBehavior override", async () => {
 });
 
 test("constructor: cfDistribution certificate conflict", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  expect(() => {
-    new StaticSite(stack, "Site", {
-      path: "test/constructs/site",
+  expect(async () => {
+    await createSite((stack) => ({
       cdk: {
         distribution: {
           certificate: new acm.Certificate(stack, "Cert", {
@@ -1079,33 +999,31 @@ test("constructor: cfDistribution certificate conflict", async () => {
           }),
         },
       },
-    });
-  }).toThrow(/Do not configure the "cfDistribution.certificate"/);
+    }));
+  }).rejects.toThrow(/Do not configure the "cfDistribution.certificate"/);
 });
 
 test("constructor: cfDistribution domainNames conflict", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  expect(() => {
-    new StaticSite(stack, "Site", {
-      path: "test/constructs/site",
+  expect(async () => {
+    await createSite({
       cdk: {
         distribution: {
           domainNames: ["domain.com"],
         },
       },
     });
-  }).toThrow(/Do not configure the "cfDistribution.domainNames"/);
+  }).rejects.toThrow(/Do not configure the "cfDistribution.domainNames"/);
 });
 
 test("constructor: environment generates placeholders", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  const api = new Api(stack, "Api");
-  new StaticSite(stack, "Site", {
-    path: "test/constructs/site",
-    environment: {
-      CONSTANT_ENV: "constant",
-      REFERENCE_ENV: api.url,
-    },
+  const { stack, site } = await createSite((stack) => {
+    const api = new Api(stack, "Api");
+    return {
+      environment: {
+        CONSTANT_ENV: "constant",
+        REFERENCE_ENV: api.url,
+      },
+    };
   });
   hasResource(stack, "Custom::SSTBucketDeployment", {
     ReplaceValues: [
@@ -1124,21 +1042,21 @@ test("constructor: environment generates placeholders", async () => {
 });
 
 test("constructor: environment appends to replaceValues", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  const api = new Api(stack, "Api");
-  new StaticSite(stack, "Site", {
-    path: "test/constructs/site",
-    environment: {
-      CONSTANT_ENV: "constant",
-      REFERENCE_ENV: api.url,
-    },
-    replaceValues: [
-      {
-        files: "*.txt",
-        search: "{{ KEY }}",
-        replace: "value",
+  const { stack, site } = await createSite((stack) => {
+    const api = new Api(stack, "Api");
+    return {
+      environment: {
+        CONSTANT_ENV: "constant",
+        REFERENCE_ENV: api.url,
       },
-    ],
+      replaceValues: [
+        {
+          files: "*.txt",
+          search: "{{ KEY }}",
+          replace: "value",
+        },
+      ],
+    };
   });
   hasResource(stack, "Custom::SSTBucketDeployment", {
     ReplaceValues: [
@@ -1172,6 +1090,7 @@ test("constructor: sst deploy inactive stack", async () => {
   const site = new StaticSite(stack, "Site", {
     path: "test/constructs/site",
   });
+  await app.finish();
   expect(site.url).toBeUndefined();
   expect(site.customDomainUrl).toBeUndefined();
   expect(site.cdk).toBeUndefined();
@@ -1186,6 +1105,7 @@ test("constructor: sst dev: dev.url undefined", async () => {
   const site = new StaticSite(stack, "Site", {
     path: "test/constructs/site",
   });
+  await app.finish();
   expect(site.url).toBeUndefined();
   expect(site.customDomainUrl).toBeUndefined();
   expect(site.cdk).toBeUndefined();
@@ -1203,6 +1123,7 @@ test("constructor: sst dev: dev.url string", async () => {
       url: "localhost:3000",
     },
   });
+  await app.finish();
   expect(site.url).toBe("localhost:3000");
   expect(site.customDomainUrl).toBeUndefined();
   expect(site.cdk).toBeUndefined();
@@ -1214,6 +1135,7 @@ test("constructor: sst remove", async () => {
   const site = new StaticSite(stack, "Site", {
     path: "test/constructs/site",
   });
+  await app.finish();
   expect(site.url).toBeUndefined();
   expect(site.customDomainUrl).toBeUndefined();
   expect(site.cdk).toBeUndefined();
@@ -1235,7 +1157,8 @@ test("constructor: extending createRoute53Records", async () => {
     }
   }
 
-  const stack = new Stack(await createApp(), "stack");
+  const app = await createApp();
+  const stack = new Stack(app, "stack");
   route53.HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
@@ -1245,6 +1168,7 @@ test("constructor: extending createRoute53Records", async () => {
     path: "test/constructs/site",
     customDomain: "domain.com",
   });
+  await app.finish();
   expect(site.url).toBeDefined();
   expect(site.customDomainUrl).toBeDefined();
   expect(dummy!).toMatch("dummy");

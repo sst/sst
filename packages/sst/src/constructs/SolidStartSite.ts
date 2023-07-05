@@ -1,6 +1,4 @@
 import path from "path";
-import { Architecture, Function as CdkFunction } from "aws-cdk-lib/aws-lambda";
-
 import { SsrSite } from "./SsrSite.js";
 import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
@@ -26,7 +24,7 @@ export class SolidStartSite extends SsrSite {
     };
   }
 
-  protected createFunctionForRegional(): CdkFunction {
+  protected createFunctionForRegional() {
     const {
       runtime,
       timeout,
@@ -38,7 +36,7 @@ export class SolidStartSite extends SsrSite {
       cdk,
     } = this.props;
 
-    const ssrFn = new SsrFunction(this, `ServerFunction`, {
+    return new SsrFunction(this, `ServerFunction`, {
       description: "Server handler for Solid",
       handler: path.join(this.props.path, "dist", "server", "index.handler"),
       runtime,
@@ -53,11 +51,9 @@ export class SolidStartSite extends SsrSite {
       permissions,
       ...cdk?.server,
     });
-
-    return ssrFn.function;
   }
 
-  protected createFunctionForEdge(): EdgeFunction {
+  protected createFunctionForEdge() {
     const {
       runtime,
       timeout,

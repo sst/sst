@@ -10,11 +10,13 @@ import {
 import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import {
-  Function as CdkFunction,
+  CfnFunction,
   Code,
   Runtime,
   Architecture,
+  Function as CdkFunction,
   FunctionUrlAuthType,
+  FunctionProps,
 } from "aws-cdk-lib/aws-lambda";
 import {
   Distribution,
@@ -53,6 +55,9 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
    * @default Server function is not kept warm
    */
   warm?: number;
+  cdk?: SsrSiteProps["cdk"] & {
+    revalidation?: Pick<FunctionProps, "vpc" | "vpcSubnets">;
+  };
 }
 
 /**
@@ -80,18 +85,20 @@ export class NextjsSite extends SsrSite {
 
   constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
     super(scope, id, {
-      buildCommand: "npx --yes open-next@2.0.0 build",
+      buildCommand: "npx --yes open-next@2.0.3 build",
       ...props,
     });
 
-    if (this.doNotDeploy) return;
-
-    this.createWarmer();
-    this.createRevalidation();
+    this.deferredTaskCallbacks.push(() => {
+      this.createWarmer();
+      this.createRevalidation();
+    });
   }
 
   protected createRevalidation() {
     if (!this.serverLambdaForRegional && !this.serverLambdaForEdge) return;
+
+    const { cdk } = this.props;
 
     const queue = new Queue(this, "RevalidationQueue", {
       fifo: true,
@@ -105,6 +112,7 @@ export class NextjsSite extends SsrSite {
       ),
       runtime: Runtime.NODEJS_18_X,
       timeout: CdkDuration.seconds(30),
+      ...cdk?.revalidation,
     });
     consumer.addEventSource(new SqsEventSource(queue, { batchSize: 5 }));
 
@@ -127,7 +135,7 @@ export class NextjsSite extends SsrSite {
     };
   }
 
-  protected createFunctionForRegional(): CdkFunction {
+  protected createFunctionForRegional() {
     const {
       runtime,
       timeout,
@@ -137,7 +145,7 @@ export class NextjsSite extends SsrSite {
       environment,
       cdk,
     } = this.props;
-    const ssrFn = new SsrFunction(this, `ServerFunction`, {
+    return new SsrFunction(this, `ServerFunction`, {
       description: "Next.js server",
       bundle: path.join(this.props.path, ".open-next", "server-function"),
       handler: "index.handler",
@@ -154,10 +162,9 @@ export class NextjsSite extends SsrSite {
       },
       ...cdk?.server,
     });
-    return ssrFn.function;
   }
 
-  protected createFunctionForEdge(): EdgeFunction {
+  protected createFunctionForEdge() {
     const { runtime, timeout, memorySize, bind, permissions, environment } =
       this.props;
     return new EdgeFunction(this, "ServerFunction", {
@@ -177,19 +184,17 @@ export class NextjsSite extends SsrSite {
     });
   }
 
-  private createImageOptimizationFunction(): CdkFunction {
+  private createImageOptimizationFunction() {
     const { imageOptimization, path: sitePath } = this.props;
 
-    return new CdkFunction(this, `ImageFunction`, {
+    const fn = new CdkFunction(this, `ImageFunction`, {
       description: "Next.js image optimizer",
       handler: "index.handler",
       currentVersionOptions: {
         removalPolicy: RemovalPolicy.DESTROY,
       },
       logRetention: RetentionDays.THREE_DAYS,
-      code: Code.fromAsset(
-        path.join(sitePath, ".open-next/image-optimization-function")
-      ),
+      code: Code.fromInline("export function handler() {}"),
       runtime: Runtime.NODEJS_18_X,
       memorySize: imageOptimization?.memorySize
         ? typeof imageOptimization.memorySize === "string"
@@ -209,6 +214,23 @@ export class NextjsSite extends SsrSite {
         }),
       ],
     });
+
+    // update code after build
+    this.deferredTaskCallbacks.push(() => {
+      const cfnFunction = fn.node.defaultChild as CfnFunction;
+      const code = Code.fromAsset(
+        path.join(sitePath, ".open-next/image-optimization-function")
+      );
+      const codeConfig = code.bind(fn);
+      cfnFunction.code = {
+        s3Bucket: codeConfig.s3Location?.bucketName,
+        s3Key: codeConfig.s3Location?.objectKey,
+        s3ObjectVersion: codeConfig.s3Location?.objectVersion,
+      };
+      code.bindToResource(cfnFunction);
+    });
+
+    return fn;
   }
 
   private createWarmer() {
@@ -322,9 +344,6 @@ export class NextjsSite extends SsrSite {
 
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-    const s3Origin = new S3Origin(this.cdk!.bucket, {
-      originPath: "/" + this.buildConfig.clientBuildS3KeyPrefix,
-    });
     const cachePolicy =
       cdk?.serverCachePolicy ??
       this.buildServerCachePolicy([
@@ -348,8 +367,6 @@ export class NextjsSite extends SsrSite {
         "api/*": serverBehavior,
         "_next/data/*": serverBehavior,
         "_next/image*": this.buildImageBehavior(cachePolicy),
-        "_next/*": this.buildStaticFileBehavior(s3Origin),
-        ...this.buildStaticFileBehaviors(s3Origin),
         ...(cfDistributionProps.additionalBehaviors || {}),
       },
     });
@@ -387,8 +404,6 @@ export class NextjsSite extends SsrSite {
         "api/*": serverBehavior,
         "_next/data/*": serverBehavior,
         "_next/image*": this.buildImageBehavior(cachePolicy),
-        "_next/*": this.buildStaticFileBehavior(s3Origin),
-        ...this.buildStaticFileBehaviors(s3Origin),
         ...(cfDistributionProps.additionalBehaviors || {}),
       },
     });
@@ -407,19 +422,6 @@ export class NextjsSite extends SsrSite {
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
       cachePolicy,
-      responseHeadersPolicy: cdk?.responseHeadersPolicy,
-    };
-  }
-
-  private buildStaticFileBehavior(s3Origin: S3Origin): BehaviorOptions {
-    const { cdk } = this.props;
-    return {
-      origin: s3Origin,
-      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
-      cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
-      compress: true,
-      cachePolicy: CachePolicy.CACHING_OPTIMIZED,
       responseHeadersPolicy: cdk?.responseHeadersPolicy,
     };
   }
