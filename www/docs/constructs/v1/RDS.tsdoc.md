@@ -25,7 +25,7 @@ Name of a database which is automatically created inside the cluster.
 
 ### engine
 
-_Type_ : <span class='mono'><span class="mono">"mysql5.6"</span> | <span class="mono">"mysql5.7"</span> | <span class="mono">"postgresql10.14"</span> | <span class="mono">"postgresql11.13"</span></span>
+_Type_ : <span class='mono'><span class="mono">"mysql5.6"</span> | <span class="mono">"mysql5.7"</span> | <span class="mono">"postgresql11.13"</span> | <span class="mono">"postgresql11.16"</span> | <span class="mono">"postgresql13.19"</span></span>
 
 Database engine of the cluster. Cannot be changed once set.
 

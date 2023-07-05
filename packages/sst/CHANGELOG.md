@@ -1,5 +1,57 @@
 # @serverless-stack/cli2
 
+## 2.18.4
+
+### Patch Changes
+
+- [#3083](https://github.com/serverless-stack/sst/pull/3083) [`6effd7d35`](https://github.com/serverless-stack/sst/commit/6effd7d351f2a101394845b9acfbb9cbbc2c522e) Thanks [@khuezy](https://github.com/khuezy)! - NextjsSite: update OpenNext 2.0.4
+
+- [#3083](https://github.com/serverless-stack/sst/pull/3083) [`6effd7d35`](https://github.com/serverless-stack/sst/commit/6effd7d351f2a101394845b9acfbb9cbbc2c522e) Thanks [@khuezy](https://github.com/khuezy)! - SsrSite: fix multiple s3 origins created for static assets
+
+- [#3076](https://github.com/serverless-stack/sst/pull/3076) [`f1249013d`](https://github.com/serverless-stack/sst/commit/f1249013d8476856558d2e6baaf25e55b76523b9) Thanks [@alex-klyuchnikov](https://github.com/alex-klyuchnikov)! - Function: await fs.writeFile for nodejs runtime
+
+## 2.18.3
+
+### Patch Changes
+
+- [`dd8ec0191`](https://github.com/serverless-stack/sst/commit/dd8ec0191947314b5b4a07cb8514cbba594a5022) Thanks [@fwang](https://github.com/fwang)! - Fix type file is incomplete
+
+## 2.18.2
+
+### Patch Changes
+
+- [#3055](https://github.com/serverless-stack/sst/pull/3055) [`c1d4fe461`](https://github.com/serverless-stack/sst/commit/c1d4fe461a3534365f22e07b48c97e5c4067ba77) Thanks [@juliankrispel](https://github.com/juliankrispel)! - Remove deprecated rds engine
+
+- [`eebe301c3`](https://github.com/serverless-stack/sst/commit/eebe301c3e0879b87fa58be5c04b8de6922afaf6) Thanks [@thdxr](https://github.com/thdxr)! - cli: fix issue where function invocation when cli starts crashes the whole thing
+
+- [`e2015c456`](https://github.com/serverless-stack/sst/commit/e2015c4569d53e68e52a65abb7b031fdb4b53abb) Thanks [@fwang](https://github.com/fwang)! - SsrSite: fix static assets CloudFront distribution path
+
+## 2.18.1
+
+### Patch Changes
+
+- [`150680d80`](https://github.com/serverless-stack/sst/commit/150680d80733dd85eed26407b647b2440188b8a0) Thanks [@fwang](https://github.com/fwang)! - SsrSite: add static file cache behaviors lazily
+
+- [#3056](https://github.com/serverless-stack/sst/pull/3056) [`06ccb9a9c`](https://github.com/serverless-stack/sst/commit/06ccb9a9c52c408d08ddb50ab64902eed8153d3d) Thanks [@khuezy](https://github.com/khuezy)! - SsrSite: fix s3 assets not setting cache-control
+
+- [`5fff7262d`](https://github.com/serverless-stack/sst/commit/5fff7262d982cd2b791e523930444ae22a7983d0) Thanks [@fwang](https://github.com/fwang)! - SsrSite: fix "sst dev" access denied error
+
+## 2.18.0
+
+### Minor Changes
+
+- [`7c71978fa`](https://github.com/serverless-stack/sst/commit/7c71978fa1cd461c6a192a7385c3ca26afbbfdf1) Thanks [@fwang](https://github.com/fwang)! - SsrSite: set cookie behavior to NONE in server cache policy
+
+### Patch Changes
+
+- [`e5fc4de81`](https://github.com/serverless-stack/sst/commit/e5fc4de81b640be37d76862f52aa54d9259fee0b) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: update to OpenNext 2.0.3
+
+- [#3051](https://github.com/serverless-stack/sst/pull/3051) [`2b824b13e`](https://github.com/serverless-stack/sst/commit/2b824b13e4a7a7ffc5864b2e43511ab26e3fd0cb) Thanks [@khuezy](https://github.com/khuezy)! - SsrSite: fix s3 assets cache-control header not set
+
+- [#3054](https://github.com/serverless-stack/sst/pull/3054) [`966d3b0d3`](https://github.com/serverless-stack/sst/commit/966d3b0d3adf367c5416277b8e5c63183f1f1954) Thanks [@berenddeboer](https://github.com/berenddeboer)! - Function: support java17 runtime
+
+- [`a734123f7`](https://github.com/serverless-stack/sst/commit/a734123f718ef12b95834928c14d29e564933bcc) Thanks [@fwang](https://github.com/fwang)! - StaticSite & SsrSite: lazy build
+
 ## 2.17.8
 
 ### Patch Changes

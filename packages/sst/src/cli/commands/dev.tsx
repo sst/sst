@@ -388,6 +388,7 @@ export const dev = (program: Program) =>
 
       clear();
       await printHeader({ console: true, hint: "ready!" });
+      await useStackBuilder();
       await Promise.all([
         useDisconnector(),
         useRuntimeWorkers(),
@@ -398,7 +399,6 @@ export const dev = (program: Program) =>
         useKyselyTypeGenerator(),
         useRDSWarmer(),
         useFunctionLogger(),
-        useStackBuilder(),
       ]);
     }
   );

@@ -320,9 +320,10 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   private serverLambdaCdkFunctionForEdge?: ICdkFunction;
   protected serverLambdaForEdge?: EdgeFunction;
   protected serverLambdaForRegional?: SsrFunction;
-  private serverLambdaForDev?: CdkFunction;
+  private serverLambdaForDev?: SsrFunction;
   protected bucket: Bucket;
   private cfFunction: CfFunction;
+  private s3Origin: S3Origin;
   private distribution: Distribution;
   private hostedZone?: IHostedZone;
   private certificate?: ICertificate;
@@ -353,7 +354,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
     if (this.doNotDeploy) {
       // @ts-ignore
-      this.cfFunction = this.bucket = this.distribution = null;
+      this.cfFunction = this.bucket = this.s3Origin = this.distribution = null;
       this.serverLambdaForDev = this.createFunctionForDev();
       return;
     }
@@ -384,6 +385,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
     // Create CloudFront
     this.validateCloudFrontDistributionSettings();
+    this.s3Origin = this.createCloudFrontS3Origin();
     this.cfFunction = this.createCloudFrontFunction();
     this.distribution = this.props.edge
       ? this.createCloudFrontDistributionForEdge()
@@ -414,6 +416,9 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
         assetFileOptions
       );
       this.distribution.node.addDependency(s3deployCR);
+
+      // Add static file behaviors
+      this.addStaticFileBehaviors();
 
       // Invalidate CloudFront
       this.createCloudFrontInvalidation();
@@ -710,7 +715,11 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       if (item === this.buildConfig.clientBuildVersionedSubDir) {
         fileOptions.push({
           exclude: "*",
-          include: `${this.buildConfig.clientBuildVersionedSubDir}/*`,
+          include: path.posix.join(
+            this.buildConfig.clientBuildS3KeyPrefix ?? "",
+            this.buildConfig.clientBuildVersionedSubDir,
+            "*"
+          ),
           cacheControl: "public,max-age=31536000,immutable",
         });
       }
@@ -720,9 +729,11 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
         const itemPath = path.join(clientPath, item);
         fileOptions.push({
           exclude: "*",
-          include: fs.statSync(itemPath).isDirectory()
-            ? `${item}/*`
-            : `${item}`,
+          include: path.posix.join(
+            this.buildConfig.clientBuildS3KeyPrefix ?? "",
+            item,
+            fs.statSync(itemPath).isDirectory() ? "*" : ""
+          ),
           cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
         });
       }
@@ -815,15 +826,15 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   // Bundle Lambda Server
   /////////////////////
 
-  protected createFunctionForRegional(): SsrFunction {
+  protected createFunctionForRegional() {
     return {} as SsrFunction;
   }
 
-  protected createFunctionForEdge(): EdgeFunction {
+  protected createFunctionForEdge() {
     return {} as EdgeFunction;
   }
 
-  protected createFunctionForDev(): CdkFunction {
+  protected createFunctionForDev() {
     const { runtime, timeout, memorySize, permissions, environment, bind } =
       this.props;
 
@@ -850,7 +861,11 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       // note: do not need to set vpc settings b/c this function is not being used
     });
 
-    return ssrFn.function;
+    useDeferredTasks().add(async () => {
+      await ssrFn.build();
+    });
+
+    return ssrFn;
   }
 
   private grantServerS3Permissions() {
@@ -950,6 +965,12 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     }
   }
 
+  private createCloudFrontS3Origin() {
+    return new S3Origin(this.bucket, {
+      originPath: "/" + (this.buildConfig.clientBuildS3KeyPrefix ?? ""),
+    });
+  }
+
   private createCloudFrontFunction() {
     return new CfFunction(this, "CloudFrontFunction", {
       code: CfFunctionCode.fromInline(`
@@ -965,7 +986,6 @@ function handler(event) {
   protected createCloudFrontDistributionForRegional(): Distribution {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-    const s3Origin = new S3Origin(this.bucket);
     const cachePolicy = cdk?.serverCachePolicy ?? this.buildServerCachePolicy();
 
     return new Distribution(this, "Distribution", {
@@ -978,7 +998,6 @@ function handler(event) {
       certificate: this.certificate,
       defaultBehavior: this.buildDefaultBehaviorForRegional(cachePolicy),
       additionalBehaviors: {
-        ...this.buildStaticFileBehaviors(s3Origin),
         ...(cfDistributionProps.additionalBehaviors || {}),
       },
     });
@@ -987,7 +1006,6 @@ function handler(event) {
   protected createCloudFrontDistributionForEdge(): Distribution {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-    const s3Origin = new S3Origin(this.bucket);
     const cachePolicy = cdk?.serverCachePolicy ?? this.buildServerCachePolicy();
 
     return new Distribution(this, "Distribution", {
@@ -998,9 +1016,8 @@ function handler(event) {
       // these values can NOT be overwritten by cfDistributionProps
       domainNames: this.buildDistributionDomainNames(),
       certificate: this.certificate,
-      defaultBehavior: this.buildDefaultBehaviorForEdge(s3Origin, cachePolicy),
+      defaultBehavior: this.buildDefaultBehaviorForEdge(cachePolicy),
       additionalBehaviors: {
-        ...this.buildStaticFileBehaviors(s3Origin),
         ...(cfDistributionProps.additionalBehaviors || {}),
       },
     });
@@ -1059,7 +1076,6 @@ function handler(event) {
   }
 
   protected buildDefaultBehaviorForEdge(
-    origin: S3Origin,
     cachePolicy: ICachePolicy
   ): BehaviorOptions {
     const { cdk } = this.props;
@@ -1067,7 +1083,7 @@ function handler(event) {
 
     return {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      origin,
+      origin: this.s3Origin,
       allowedMethods: AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
@@ -1099,36 +1115,25 @@ function handler(event) {
     ];
   }
 
-  protected buildStaticFileBehaviors(
-    origin: S3Origin
-  ): Record<string, BehaviorOptions> {
+  protected addStaticFileBehaviors() {
     const { cdk } = this.props;
 
-    // Create additional behaviours for statics
-    const staticBehaviourOptions: BehaviorOptions = {
-      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      origin,
-      allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
-      cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
-      compress: true,
-      cachePolicy: CachePolicy.CACHING_OPTIMIZED,
-    };
-
-    // Add behaviour for public folder statics (excluding build)
-    const staticsBehaviours: Record<string, BehaviorOptions> = {};
+    // Create a template for statics behaviours
     const publicDir = path.join(
       this.props.path,
       this.buildConfig.clientBuildOutputDir
     );
     for (const item of fs.readdirSync(publicDir)) {
-      if (fs.statSync(path.join(publicDir, item)).isDirectory()) {
-        staticsBehaviours[`${item}/*`] = staticBehaviourOptions;
-      } else {
-        staticsBehaviours[item] = staticBehaviourOptions;
-      }
+      const isDir = fs.statSync(path.join(publicDir, item)).isDirectory();
+      this.distribution.addBehavior(isDir ? `${item}/*` : item, this.s3Origin, {
+        viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+        cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
+        compress: true,
+        cachePolicy: CachePolicy.CACHING_OPTIMIZED,
+        responseHeadersPolicy: cdk?.responseHeadersPolicy,
+      });
     }
-
-    return staticsBehaviours;
   }
 
   protected buildServerCachePolicy(allowedHeaders?: string[]) {

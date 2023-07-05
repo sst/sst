@@ -1,5 +1,17 @@
 # @serverless-stack/docs
 
+## 2.3.5
+
+### Patch Changes
+
+- [#3055](https://github.com/serverless-stack/sst/pull/3055) [`c1d4fe461`](https://github.com/serverless-stack/sst/commit/c1d4fe461a3534365f22e07b48c97e5c4067ba77) Thanks [@juliankrispel](https://github.com/juliankrispel)! - Remove deprecated rds engine
+
+## 2.3.4
+
+### Patch Changes
+
+- [#3054](https://github.com/serverless-stack/sst/pull/3054) [`966d3b0d3`](https://github.com/serverless-stack/sst/commit/966d3b0d3adf367c5416277b8e5c63183f1f1954) Thanks [@berenddeboer](https://github.com/berenddeboer)! - Function: support java17 runtime
+
 ## 2.3.3
 
 ### Patch Changes

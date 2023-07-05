@@ -77,6 +77,7 @@ module.exports = {
         "testing",
         "console",
         "live-lambda-development",
+        "setting-up-aws",
         "configuring-sst",
         "custom-domains",
         "design-principles",

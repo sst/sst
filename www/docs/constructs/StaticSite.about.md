@@ -175,6 +175,7 @@ new StaticSite(stack, "react", {
   },
 });
 ```
+Note that [Vite has a convention](https://vitejs.dev/guide/env-and-mode.html) to only pass the environment variables that begin with `VITE_`.
 
 ### Creating a Vue.js site
 

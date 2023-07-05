@@ -10,7 +10,7 @@ export default {
   },
   stacks(app) {
     app.setDefaultFunctionProps({
-      runtime: "java11",
+      runtime: "java17",
     });
     app.stack(function Stack({ stack }) {
       const api = new Api(stack, "api", {

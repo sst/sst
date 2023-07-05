@@ -27,7 +27,7 @@ import {
   CachePolicy,
   ICachePolicy,
 } from "aws-cdk-lib/aws-cloudfront";
-import { S3Origin, HttpOrigin, OriginGroup } from "aws-cdk-lib/aws-cloudfront-origins";
+import { HttpOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
 import { Rule, Schedule } from "aws-cdk-lib/aws-events";
 import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
 import { Queue } from "aws-cdk-lib/aws-sqs";
@@ -80,7 +80,7 @@ export class NextjsSite extends SsrSite {
 
   constructor(scope: Construct, id: string, props?: NextjsSiteProps) {
     super(scope, id, {
-      buildCommand: "npx --yes open-next@2.0.3 build",
+      buildCommand: "npx --yes open-next@2.0.4 build",
       ...props,
     });
 
@@ -281,9 +281,6 @@ export class NextjsSite extends SsrSite {
 
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-    const s3Origin = new S3Origin(this.cdk!.bucket, {
-      originPath: "/" + this.buildConfig.clientBuildS3KeyPrefix,
-    });
     const cachePolicy =
       cdk?.serverCachePolicy ??
       this.buildServerCachePolicy([
@@ -307,8 +304,6 @@ export class NextjsSite extends SsrSite {
         "api/*": serverBehavior,
         "_next/data/*": serverBehavior,
         "_next/image*": this.buildImageBehavior(cachePolicy),
-        "_next/*": this.buildStaticFileBehavior(s3Origin),
-        ...this.buildStaticFileBehaviors(s3Origin),
         ...(cfDistributionProps.additionalBehaviors || {}),
       },
     });
@@ -317,9 +312,6 @@ export class NextjsSite extends SsrSite {
   protected createCloudFrontDistributionForEdge(): Distribution {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-    const s3Origin = new S3Origin(this.cdk!.bucket, {
-      originPath: "/" + this.buildConfig.clientBuildS3KeyPrefix,
-    });
     const cachePolicy =
       cdk?.serverCachePolicy ??
       this.buildServerCachePolicy([
@@ -328,10 +320,7 @@ export class NextjsSite extends SsrSite {
         "next-router-prefetch",
         "next-router-state-tree",
       ]);
-    const serverBehavior = this.buildDefaultBehaviorForEdge(
-      s3Origin,
-      cachePolicy
-    );
+    const serverBehavior = this.buildDefaultBehaviorForEdge(cachePolicy);
 
     return new Distribution(this, "Distribution", {
       // these values can be overwritten by cfDistributionProps
@@ -346,8 +335,6 @@ export class NextjsSite extends SsrSite {
         "api/*": serverBehavior,
         "_next/data/*": serverBehavior,
         "_next/image*": this.buildImageBehavior(cachePolicy),
-        "_next/*": this.buildStaticFileBehavior(s3Origin),
-        ...this.buildStaticFileBehaviors(s3Origin),
         ...(cfDistributionProps.additionalBehaviors || {}),
       },
     });
@@ -366,19 +353,6 @@ export class NextjsSite extends SsrSite {
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
       cachePolicy,
-      responseHeadersPolicy: cdk?.responseHeadersPolicy,
-    };
-  }
-
-  private buildStaticFileBehavior(s3Origin: S3Origin): BehaviorOptions {
-    const { cdk } = this.props;
-    return {
-      origin: s3Origin,
-      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
-      cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
-      compress: true,
-      cachePolicy: CachePolicy.CACHING_OPTIMIZED,
       responseHeadersPolicy: cdk?.responseHeadersPolicy,
     };
   }

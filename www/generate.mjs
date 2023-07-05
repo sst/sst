@@ -13,6 +13,8 @@ const cmd = process.argv[2];
 
 const CDK_DOCS_MAP = {
   AppProps: "",
+  IGrantable: "aws_iam",
+  RetentionDays: "aws_logs",
   Duration: "",
   Stack: "",
   StackProps: "",
@@ -20,6 +22,7 @@ const CDK_DOCS_MAP = {
   IVpc: "aws_ec2",
   ISecurityGroup: "aws_ec2",
   SubnetSelection: "aws_ec2",
+  FunctionUrlOptions: "aws_lambda",
   LogGroup: "aws_logs",
   LogGroupProps: "aws_logs",
   ILogGroup: "aws_logs",
@@ -434,6 +437,7 @@ function renderType(file, files, prefix, parameter) {
       return parameter.name;
     })();
     if (!link) return `<span class="mono">${parameter.name}</span>`;
+    if (parameter.name === "SsrFunction") return "";
     return `<span class="mono">[${parameter.name}](${link})</span>`;
   }
   return "";
