@@ -39,7 +39,7 @@ We'll use RDS with PostgreSQL in this tutorial because it is the most familiar o
 
 <ChangeText>
 
-Head over to the [Console](../console.md) link in your browser — [https://console.sst.dev/](https://console.sst.dev/)
+Head over to the [Console](../console.md) link in your browser — [console.sst.dev](https://console.sst.dev/)
 
 </ChangeText>
 
@@ -116,21 +116,21 @@ You can create a new migration from a template using a bash script. The script w
 <TabItem value="npm">
 
 ```bash
-$ npm run gen migration new
+npm run gen migration new
 ````
 
 </TabItem>
 <TabItem value="yarn">
 
 ```bash
-$ yarn run gen migration new
+yarn run gen migration new
 ```
 
 </TabItem>
 <TabItem value="pnpm">
 
 ```bash
-$ pnpm run gen migration new
+pnpm run gen migration new
 ```
 
 </TabItem>
