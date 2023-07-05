@@ -17,13 +17,13 @@ Use containers in your Lambda functions.
 
 There may be instances when your code exceeds the 250MB Lambda limit. Examples could be video processing or ML tasks with large dependencies. In such cases, containers can be a viable solution. Lambda container functions allows for a maximum size of 10GB.
 
-Let's look at an example where we invoke a Lambda container function through a cron job.
-
 ---
 
 #### Get started
 
-Start by creating a new SST + Next.js app by running the following command in your terminal. We are using Next.js for this example but you can use your favorite frontend.
+Let's look at an example where we invoke a Lambda container function through a cron job.
+
+Start by creating a new SST app by running the following command in your terminal.
 
 ```bash
 npx create-sst@latest
@@ -33,15 +33,17 @@ npx create-sst@latest
 
 ## Add the construct
 
-Add the `Cron` construct to your stack.
+Import the [`Cron`](constructs/Cron.md) construct, and it to your stack.
 
-```ts title="stacks/Default.ts"
+```ts title="stacks/MyStack.ts"
+import { Cron } from "sst/constructs";
+
 new Cron(stack, "cron", {
   schedule: "rate(1 minute)",
   job: {
     function: {
       runtime: "container",
-      handler: "packages/functions/src",
+      handler: "packages/functions/src/cron",
     }
   }
 });
@@ -49,32 +51,26 @@ new Cron(stack, "cron", {
 
 The cron job will run every minute and points to a container function.
 
-Make sure to import the [`Cron`](constructs/Cron.md) construct.
-
-```diff title="stacks/Default.ts"
-- import { StackContext, NextjsSite } from "sst/constructs";
-+ import { Cron, StackContext, NextjsSite } from "sst/constructs";
-```
-
 ---
 
 ## Add the handler
 
-Let's add the function that'll be invoked. Create a file in `packages/functions/src/cron.py`.
+Now let's implement the function that'll be invoked. Create a file in `packages/functions/src/cron/handler.py`.
 
-```py title="packages/functions/src/cron.py"
+```py title="packages/functions/src/cron/handler.py"
 import numpy
 
-def handler(event, context):
-    print("Running my cron job")
-    return int(numpy.sqrt(16))
+def main(event, context):
+    n = 16
+    print(f"Square root of {n} is {numpy.sqrt(n)}")
+    return "ok"
 ```
 
 This function prints a message and calculates the square root of 16 using numpy.
 
 Create a `requirements.txt` file and listing `numpy` in it.
 
-``` title="packages/functions/src/requirements.txt"
+``` title="packages/functions/src/cron/requirements.txt"
 numpy
 ```
 
@@ -84,7 +80,7 @@ numpy
 
 Next, let's add a Dockerfile to package our function into a container.
 
-```Dockerfile title="packages/functions/src/Dockerfile"
+```Dockerfile title="packages/functions/src/cron/Dockerfile"
 # Start from AWS Python 3.8 base image
 FROM public.ecr.aws/lambda/python:3.8
 
@@ -93,13 +89,13 @@ COPY requirements.txt .
 RUN pip3 install -r requirements.txt --target "${LAMBDA_TASK_ROOT}"
 
 # Copy our function code
-COPY cron.py ${LAMBDA_TASK_ROOT}
+COPY handler.py ${LAMBDA_TASK_ROOT}
 
 # Set the handler function
-CMD [ "cron.handler" ]
+CMD [ "handler.main" ]
 ```
 
-If you run `sst dev`, you will notice `Running my cron job` is printed out every minute in the terminal.
+If you run `sst dev`, you will notice `Square root of 16 is 4.0` printed out every minute in the terminal.
 
 ---
 
