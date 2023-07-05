@@ -1,6 +1,6 @@
 ---
 title: Containers
-description: "Working with Lambda Container Functions in SST."
+description: "Working with Containers in SST."
 ---
 
 import HeadlineText from "@site/src/components/HeadlineText";
@@ -17,7 +17,7 @@ Use containers in your Lambda functions.
 
 There may be instances when your code exceeds the 250MB Lambda limit. Examples could be video processing or ML tasks with large dependencies. In such cases, containers can be a viable solution. Lambda container functions allows for a maximum size of 10GB.
 
-Let's look at how to do this in detail.
+Let's look at an example where we invoke a Lambda container function through a cron job.
 
 ---
 
@@ -26,14 +26,14 @@ Let's look at how to do this in detail.
 Start by creating a new SST + Next.js app by running the following command in your terminal. We are using Next.js for this example but you can use your favorite frontend.
 
 ```bash
-npx create-sst@latest --template standard/nextjs
+npx create-sst@latest
 ```
 
 ---
 
 ## Add the construct
 
-Add the construct to your stacks.
+Add the `Cron` construct to your stack.
 
 ```ts title="stacks/Default.ts"
 new Cron(stack, "cron", {
@@ -47,7 +47,7 @@ new Cron(stack, "cron", {
 });
 ```
 
-In this example, we are going to use a cron job to trigger the container function.  The cron job will run every minute and points to the container function that will be invoked.
+The cron job will run every minute and points to a container function.
 
 Make sure to import the [`Cron`](constructs/Cron.md) construct.
 
@@ -60,25 +60,46 @@ Make sure to import the [`Cron`](constructs/Cron.md) construct.
 
 ## Add the handler
 
-Let's add the function that'll be invoked. Create a file in `packages/functions/src/cron.ts`.
+Let's add the function that'll be invoked. Create a file in `packages/functions/src/cron.py`.
 
-```ts title="packages/functions/src/cron.ts"
-export async function handler() {
-  console.log("Running my cron job");
-}
+```py title="packages/functions/src/cron.py"
+import numpy
+
+def handler(event, context):
+    print("Running my cron job")
+    return int(numpy.sqrt(16))
+```
+
+This function prints a message and calculates the square root of 16 using numpy.
+
+Create a `requirements.txt` file and listing `numpy` in it.
+
+``` title="packages/functions/src/requirements.txt"
+numpy
 ```
 
 ---
 
 ## Add the Dockerfile
 
-Next, let's add a Dockerfile to package our function into a container image.
+Next, let's add a Dockerfile to package our function into a container.
 
-```ts title="packages/functions/src/Dockerfile"
-FROM public.ecr.aws/lambda/nodejs:18
-COPY handler.js ${LAMBDA_TASK_ROOT}
-CMD ["cron.handler"]
+```Dockerfile title="packages/functions/src/Dockerfile"
+# Start from AWS Python 3.8 base image
+FROM public.ecr.aws/lambda/python:3.8
+
+# Install the dependencies
+COPY requirements.txt .
+RUN pip3 install -r requirements.txt --target "${LAMBDA_TASK_ROOT}"
+
+# Copy our function code
+COPY cron.py ${LAMBDA_TASK_ROOT}
+
+# Set the handler function
+CMD [ "cron.handler" ]
 ```
+
+If you run `sst dev`, you will notice `Running my cron job` is printed out every minute in the terminal.
 
 ---
 
@@ -90,8 +111,8 @@ Here are some frequently asked questions about Container Functions.
 
 ### When should I use container function?
 
-Because container functions have a much longer cold start than normal Lambda functions, it is recommended to use them for async tasks. For example, as event subscribers and cron jobs.
+Since container functions have a much longer cold start than normal Lambda functions, it is recommended to use them for async tasks. For example, as event subscribers and cron jobs.
 
-### Why did the function timeout in dev mode?
+### Why did the function timeout locally?
 
-In the dev mode, (ie. `sst dev`), the image for a container function is built on the first function invocation. If there are uncached layers that need building, `docker build` may take longer to run. It is recommended to use the [`--increase-timeout`](packages/sst.md#sst-dev) option when running `sst dev`.
+When running `sst dev`, the image for a container function is built on the first function invocation. If there are uncached layers that need building, `docker build` may take longer to run. It is recommended to use the [`--increase-timeout`](packages/sst.md#sst-dev) option when running `sst dev`.
