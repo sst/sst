@@ -315,6 +315,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   private serverLambdaForDev?: SsrFunction;
   protected bucket: Bucket;
   private cfFunction: CfFunction;
+  private s3Origin: S3Origin;
   private distribution: Distribution;
   private hostedZone?: IHostedZone;
   private certificate?: ICertificate;
@@ -345,7 +346,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
     if (this.doNotDeploy) {
       // @ts-ignore
-      this.cfFunction = this.bucket = this.distribution = null;
+      this.cfFunction = this.bucket = this.s3Origin = this.distribution = null;
       this.serverLambdaForDev = this.createFunctionForDev();
       return;
     }
@@ -376,6 +377,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
     // Create CloudFront
     this.validateCloudFrontDistributionSettings();
+    this.s3Origin = this.createCloudFrontS3Origin();
     this.cfFunction = this.createCloudFrontFunction();
     this.distribution = this.props.edge
       ? this.createCloudFrontDistributionForEdge()
@@ -896,6 +898,12 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     }
   }
 
+  private createCloudFrontS3Origin() {
+    return new S3Origin(this.bucket, {
+      originPath: "/" + (this.buildConfig.clientBuildS3KeyPrefix ?? ""),
+    });
+  }
+
   private createCloudFrontFunction() {
     return new CfFunction(this, "CloudFrontFunction", {
       code: CfFunctionCode.fromInline(`
@@ -931,7 +939,6 @@ function handler(event) {
   protected createCloudFrontDistributionForEdge(): Distribution {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-    const s3Origin = new S3Origin(this.bucket);
     const cachePolicy = cdk?.serverCachePolicy ?? this.buildServerCachePolicy();
 
     return new Distribution(this, "Distribution", {
@@ -942,7 +949,7 @@ function handler(event) {
       // these values can NOT be overwritten by cfDistributionProps
       domainNames: this.buildDistributionDomainNames(),
       certificate: this.certificate,
-      defaultBehavior: this.buildDefaultBehaviorForEdge(s3Origin, cachePolicy),
+      defaultBehavior: this.buildDefaultBehaviorForEdge(cachePolicy),
       additionalBehaviors: {
         ...(cfDistributionProps.additionalBehaviors || {}),
       },
@@ -1002,7 +1009,6 @@ function handler(event) {
   }
 
   protected buildDefaultBehaviorForEdge(
-    origin: S3Origin,
     cachePolicy: ICachePolicy
   ): BehaviorOptions {
     const { cdk } = this.props;
@@ -1010,7 +1016,7 @@ function handler(event) {
 
     return {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      origin,
+      origin: this.s3Origin,
       allowedMethods: AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
@@ -1050,28 +1056,16 @@ function handler(event) {
       this.props.path,
       this.buildConfig.clientBuildOutputDir
     );
-    const items = fs.readdirSync(publicDir)
-    if (!items.length) {
-      return
-    }
-
-    const s3Origin = new S3Origin(this.bucket, {
-      originPath: "/" + (this.buildConfig.clientBuildS3KeyPrefix ?? ""),
-    })
-    for (const item of items) {
+    for (const item of fs.readdirSync(publicDir)) {
       const isDir = fs.statSync(path.join(publicDir, item)).isDirectory();
-      this.distribution.addBehavior(
-        isDir ? `${item}/*` : item,
-        s3Origin,
-        {
-          viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-          allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
-          cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
-          compress: true,
-          cachePolicy: CachePolicy.CACHING_OPTIMIZED,
-          responseHeadersPolicy: cdk?.responseHeadersPolicy,
-        }
-      );
+      this.distribution.addBehavior(isDir ? `${item}/*` : item, this.s3Origin, {
+        viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+        cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
+        compress: true,
+        cachePolicy: CachePolicy.CACHING_OPTIMIZED,
+        responseHeadersPolicy: cdk?.responseHeadersPolicy,
+      });
     }
   }
 
