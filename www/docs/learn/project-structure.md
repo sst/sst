@@ -160,24 +160,24 @@ So when you need to install/uninstall a dependency in one of those workspaces, y
 <TabItem value="npm">
 
 ```bash
-$ npm install <package> -W <workspace>
-$ npm uninstall <package> -W <workspace>
+npm install <package> -W <workspace>
+npm uninstall <package> -W <workspace>
 ```
 
 </TabItem>
 <TabItem value="yarn">
 
 ```bash
-$ yarn workspace <workspace> add <package>
-$ yarn workspace <workspace> remove <package>
+yarn workspace <workspace> add <package>
+yarn workspace <workspace> remove <package>
 ```
 
 </TabItem>
 <TabItem value="pnpm">
 
 ```bash
-$ pnpm add <package> -w <workspace>
-$ pnpm remove <package> -w <workspace>
+pnpm add <package> -w <workspace>
+pnpm remove <package> -w <workspace>
 ```
 
 </TabItem>
