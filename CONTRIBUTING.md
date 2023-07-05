@@ -104,6 +104,7 @@ To run the docs site.
 
 ```bash
 $ cd www
+$ pnpm build
 $ pnpm start
 ```
 
