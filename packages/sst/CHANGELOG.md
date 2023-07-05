@@ -1,5 +1,15 @@
 # @serverless-stack/cli2
 
+## 2.18.4
+
+### Patch Changes
+
+- [#3083](https://github.com/serverless-stack/sst/pull/3083) [`6effd7d35`](https://github.com/serverless-stack/sst/commit/6effd7d351f2a101394845b9acfbb9cbbc2c522e) Thanks [@khuezy](https://github.com/khuezy)! - NextjsSite: update OpenNext 2.0.4
+
+- [#3083](https://github.com/serverless-stack/sst/pull/3083) [`6effd7d35`](https://github.com/serverless-stack/sst/commit/6effd7d351f2a101394845b9acfbb9cbbc2c522e) Thanks [@khuezy](https://github.com/khuezy)! - SsrSite: fix multiple s3 origins created for static assets
+
+- [#3076](https://github.com/serverless-stack/sst/pull/3076) [`f1249013d`](https://github.com/serverless-stack/sst/commit/f1249013d8476856558d2e6baaf25e55b76523b9) Thanks [@alex-klyuchnikov](https://github.com/alex-klyuchnikov)! - Function: await fs.writeFile for nodejs runtime
+
 ## 2.18.3
 
 ### Patch Changes
