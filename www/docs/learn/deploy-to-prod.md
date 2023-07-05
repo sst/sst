@@ -19,7 +19,7 @@ Stop the `sst dev` process in the CLI. And run this instead.
 </ChangeText>
 
 ```bash
-sst deploy --stage prod
+npx sst deploy --stage prod
 ```
 
 Make sure to run this at the root of the project.
@@ -39,7 +39,7 @@ After your app is deployed to prod, you can use the [SST Console](../console.md)
 Run the following from the root of the project.
 
 ```bash
-sst console --stage prod
+npx sst console --stage prod
 ```
 
 This will start up the SST Console and connect it to the given `stage`.
