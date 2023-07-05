@@ -11,7 +11,7 @@ const YOUR_LOCAL_CHROMIUM_PATH = "/tmp/localChromium/chromium/mac-1165945/chrome
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   // Get the url and dimensions from the query string
   const { url, width, height } = event.queryStringParameters!;
-  console.log(url, width, height);
+
   if (!url) {
     return {
       statusCode: 400,
