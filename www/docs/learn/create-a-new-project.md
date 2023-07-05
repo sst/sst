@@ -3,6 +3,7 @@ title: Create a New Project
 ---
 
 import ChangeText from "@site/src/components/ChangeText";
+import MultiPackagerCode from "@site/src/components/MultiPackagerCode";
 
 Let's create our first SST app!
 
@@ -27,10 +28,29 @@ You also need to have an AWS account and AWS credentials configured locally. If 
 Let's create our starter. We'll be using the [`create sst`](../packages/create-sst.md) CLI.
 
 </ChangeText>
+<MultiPackagerCode>
+<TabItem value="npm">
 
 ```bash
-npx create-sst@latest --template=graphql/rds
+$ npx create-sst@latest --template=graphql/rds
 ```
+
+</TabItem>
+<TabItem value="yarn">
+
+```bash
+$ yarn create sst@latest --template=graphql/rds
+```
+
+</TabItem>
+<TabItem value="pnpm">
+
+```bash
+$ pnpm dlx create-sst@latest --template=graphql/rds
+```
+
+</TabItem>
+</MultiPackagerCode>
 
 :::tip
 In this tutorial, we'll be using the **keyboard icon** <img width="18" style={{ "margin": "0 4px", "vertical-align": "text-bottom" }} src="/img/components/keyboard.svg" /> for code snippets where we want you to **make a change**.
@@ -39,7 +59,7 @@ In this tutorial, we'll be using the **keyboard icon** <img width="18" style={{ 
 Select a name for your app. We'll just use the default.
 
 ```bash
-? Project name (my-sst-app)
+$ Project name (my-sst-app)
 ```
 
 <ChangeText>
@@ -48,10 +68,32 @@ Next, install the dependencies.
 
 </ChangeText>
 
+<MultiPackagerCode>
+<TabItem value="npm">
+
 ```bash
-cd my-sst-app
-npm install
+$ cd my-sst-app
+$ npm install
 ```
+
+</TabItem>
+<TabItem value="yarn">
+
+```bash
+$ cd my-sst-app
+$ yarn install
+```
+
+</TabItem>
+<TabItem value="pnpm">
+
+```bash
+$ cd my-sst-app
+$ pnpm install
+```
+
+</TabItem>
+</MultiPackagerCode>
 
 The `create sst` CLI by default bootstraps a full-stack starter that we'll be using in this tutorial. It can also create a more minimal setup, if you don't pass in `--template`. We recommend going that route if you want to piece your stack together.
 
@@ -66,7 +108,7 @@ Let's start our local development environment. Or what SST calls [Live Lambda De
 </ChangeText>
 
 ```bash
-npx sst dev
+$ sst dev
 ```
 
 The first time the SST command is run, you'll be prompted to enter a default stage name to use. The stage name will be stored locally in a `.sst/` directory; it's automatically ignored from Git.
