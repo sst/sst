@@ -1,6 +1,6 @@
 import { Session, AuthHandler, GoogleAdapter } from "sst/node/auth";
 import { Table } from "sst/node/table";
-import { StaticSite } from "sst/node/site";
+import { ViteStaticSite } from "sst/node/site";
 import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { marshall } from "@aws-sdk/util-dynamodb";
 
@@ -37,7 +37,7 @@ export const handler = AuthHandler({
         );
 
         return Session.parameter({
-          redirect: StaticSite.site.url || "http://127.0.0.1:5173",
+          redirect: ViteStaticSite.site.url || "http://127.0.0.1:5173",
           type: "user",
           properties: {
             userID: claims.sub,

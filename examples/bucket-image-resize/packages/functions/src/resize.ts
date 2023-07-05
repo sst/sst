@@ -1,51 +1,33 @@
+import AWS from "aws-sdk";
 import sharp from "sharp";
 import stream from "stream";
-
-import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { Upload } from "@aws-sdk/lib-storage";
 
 const width = 100;
 const prefix = `${width}w`;
 
-const S3 = new S3Client({});
+const S3 = new AWS.S3();
 
 // Read stream for downloading from S3
-async function readStreamFromS3({
-  Bucket,
-  Key,
-}: {
-  Bucket: string;
-  Key: string;
-}) {
-  const commandPullObject = new GetObjectCommand({
-    Bucket,
-    Key,
-  });
-  const response = await S3.send(commandPullObject);
-
-  return response;
+function readStreamFromS3({ Bucket, Key }) {
+  return S3.getObject({ Bucket, Key }).createReadStream();
 }
 
 // Write stream for uploading to S3
-function writeStreamToS3({ Bucket, Key }: { Bucket: string; Key: string }) {
+function writeStreamToS3({ Bucket, Key }) {
   const pass = new stream.PassThrough();
-  const upload = new Upload({
-    client: S3,
-    params: {
-      Bucket,
-      Key,
-      Body: pass,
-    },
-  });
 
   return {
     writeStream: pass,
-    upload,
+    upload: S3.upload({
+      Key,
+      Bucket,
+      Body: pass,
+    }).promise(),
   };
 }
 
 // Sharp resize stream
-function streamToSharp(width: number) {
+function streamToSharp(width) {
   return sharp().resize(width);
 }
 
@@ -67,7 +49,7 @@ export const main: S3Handler = async (event) => {
   const newKey = `${prefix}-${Key}`;
 
   // Stream to read the file from the bucket
-  const readStream = await readStreamFromS3({ Key, Bucket });
+  const readStream = readStreamFromS3({ Key, Bucket });
   // Stream to resize the image
   const resizeStream = streamToSharp(width);
   // Stream to upload to the bucket
@@ -77,14 +59,8 @@ export const main: S3Handler = async (event) => {
   });
 
   // Trigger the streams
-  (readStream?.Body as NodeJS.ReadableStream)
-    .pipe(resizeStream)
-    .pipe(writeStream);
+  readStream.pipe(resizeStream).pipe(writeStream);
 
-  try {
-    // Wait for the file to upload
-    await upload.done();
-  } catch (err) {
-    console.log(err);
-  }
+  // Wait for the file to upload
+  await upload;
 };

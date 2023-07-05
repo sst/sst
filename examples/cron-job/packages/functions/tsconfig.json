@@ -2,6 +2,7 @@
   "extends": "@tsconfig/node16/tsconfig.json",
   "compilerOptions": {
     "module": "esnext",
+    "moduleResolution": "node",
     "baseUrl": ".",
     "paths": {
       "@cron-job/core/*": ["../core/src/*"]
