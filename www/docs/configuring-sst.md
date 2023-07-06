@@ -91,7 +91,7 @@ Here's the full list of config options that can be returned:
   - **`fileAssetPublishingRoleArn`** IAM role used to publish file assets to the S3 bucket
   - **`imageAssetPublishingRoleArn`** IAM role used to publish image assets to the ECR repository
   - **`cloudFormationExecutionRole`** IAM role assumed by the CloudFormation to deploy
-  - **`pathMetadata`** Add CDK path metadata to templates. Default `true`.
+  - **`pathMetadata`** Add CDK path metadata to templates. This enables the CDK Construct tree view in the CloudFormation console. Default `false`.
 - **`bootstrap`**
   - **`stackName`** The name to use for the bootstrap stack
   - **`tags`** Tags to use for the bootstrap stack

@@ -59,7 +59,7 @@ export async function synth(opts: SynthOptions) {
 
   const context = cfg.context.all;
   context[cxapi.PATH_METADATA_ENABLE_CONTEXT] =
-    project.config.cdk?.pathMetadata ?? true;
+    project.config.cdk?.pathMetadata ?? false;
 
   while (true) {
     const app = new App(
