@@ -101,7 +101,7 @@ Here's the full list of config options that can be returned:
 
 ## Stacks function
 
-The `stacks` function is the entry point for you SST application. This is where you can specify the stacks that contain the resources that you want to deploy.
+The `stacks` function is the entry point for your SST application. This is where you can specify the stacks that contain the resources that you want to deploy.
 
 You can either do this inline, like so.
 
