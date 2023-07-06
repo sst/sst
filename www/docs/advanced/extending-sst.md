@@ -62,6 +62,62 @@ Most of these CDK constructs are exposed as properties of the `Api` construct.
 - `api.apiGatewayDomain` gives you the `DomainName`
 - `api.acmCertificate` gives you the `Certificate`
 
+### Using custom low-level Constructs in an SST high-level Construct
+
+When customizing your own low-level constructs, you can use them as building block of SST's higher level constructs.
+
+This is possible for example for the `NextjsSite` by extending the SST construct.
+
+1. define your custom low level construct (here `CustomFunction`)
+
+    ```js
+    class CustomFunction extends Function {
+      constructor(scope, id, props) {
+        if (
+          props.architecture !== undefined &&
+          props.architecture !== Architecture.ARM_64
+        )
+          throw new Error("The architecture used should be ARM_64.");
+
+        if (!supportedRuntimes.includes(props.runtime))
+          throw new Error(
+            `Only use on of the supported runtime : ${supportedRuntimes.join(
+              ", "
+            )}.`
+          );
+
+        super(scope, id, {
+          ...props,
+          architecture: Architecture.ARM_64,
+        });
+      }
+    }
+    ```
+
+2. Extend the SST construct
+
+    ```js
+    import { NextjsSite as SstNextjsSite } from 'sst/constructs'
+
+    class NextjsSite extends SstNextjsSite {
+      protected createFunction(id, props) {
+        return new CustomFunction(this, id, props);
+      }
+    }
+    ```
+
+    :::info
+    Your extension of the SST construct must be named `NextjsSite` to prevent an error when running `sst dev`.
+    :::
+
+3. Instantiate your custom `NextjsSite` in your stack
+
+    ```js
+    new NextjsSite(stack, "Site", {
+      path: "packages/web",
+    })
+    ```
+
 ## Using CloudFormation constructs
 
 Let's suppose you are trying to use a resource that doesn't have an SST or CDK construct; you can fall back to using CFN (CloudFormation) constructs. CFN constructs are the exact resources defined by CloudFormation. You must provide the resource's required configuration yourself, as if you were writing CloudFormation YAML templates.
