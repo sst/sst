@@ -95,8 +95,12 @@ export class RemixSite extends SsrSite {
     // template to create this wrapper within the "core server build" output
     // directory.
 
+    // Ensure build directory exists
+    const buildPath = path.join(this.props.path, "build");
+    fs.mkdirSync(buildPath, { recursive: true });
+    
     // Copy the server lambda handler
-    const handler = path.join(this.props.path, "build", "server.js");
+    const handler = path.join(buildPath, "server.js");
     fs.copyFileSync(
       path.resolve(__dirname, `../support/remix-site-function/${wrapperFile}`),
       handler
@@ -109,14 +113,14 @@ export class RemixSite extends SsrSite {
     // doesn't appear to guarantee this, we therefore leverage ESBUild's
     // `inject` option to ensure that the polyfills are injected at the top of
     // the bundle.
-    const polyfillDest = path.join(this.props.path, "build/polyfill.js");
+    const polyfillDest = path.join(buildPath, "polyfill.js");
     fs.copyFileSync(
       path.resolve(__dirname, "../support/remix-site-function/polyfill.js"),
       polyfillDest
     );
 
     return {
-      handler: path.join(this.props.path, "build", "server.handler"),
+      handler: path.join(buildPath, "server.handler"),
       esbuild: { inject: [polyfillDest] },
     };
   }
