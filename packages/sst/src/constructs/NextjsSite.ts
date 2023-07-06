@@ -6,6 +6,7 @@ import {
   Duration as CdkDuration,
   RemovalPolicy,
   CustomResource,
+  PhysicalName,
 } from "aws-cdk-lib/core";
 import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
@@ -26,6 +27,7 @@ import {
   CachedMethods,
   CachePolicy,
   ICachePolicy,
+  LambdaEdgeEventType,
 } from "aws-cdk-lib/aws-cloudfront";
 import { HttpOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
 import { Rule, Schedule } from "aws-cdk-lib/aws-events";
@@ -190,6 +192,7 @@ export class NextjsSite extends SsrSite {
     const fn = new CdkFunction(this, `ImageFunction`, {
       description: "Next.js image optimizer",
       handler: "index.handler",
+      functionName: PhysicalName.GENERATE_IF_NEEDED,
       currentVersionOptions: {
         removalPolicy: RemovalPolicy.DESTROY,
       },
@@ -407,8 +410,14 @@ export class NextjsSite extends SsrSite {
     const { cdk } = this.props;
     const imageFn = this.createImageOptimizationFunction();
     const imageFnUrl = imageFn.addFunctionUrl({
-      authType: FunctionUrlAuthType.NONE,
+      authType: FunctionUrlAuthType.AWS_IAM,
     });
+    this.signingFunction.addToRolePolicy(
+      new PolicyStatement({
+        actions: ['lambda:InvokeFunctionUrl'],
+        resources: [imageFn.functionArn],
+      })
+    )
     return {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       origin: new HttpOrigin(Fn.parseDomainName(imageFnUrl.url)),
@@ -417,6 +426,13 @@ export class NextjsSite extends SsrSite {
       compress: true,
       cachePolicy,
       responseHeadersPolicy: cdk?.responseHeadersPolicy,
+      edgeLambdas: [
+        {
+          includeBody: true,
+          eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
+          functionVersion: this.signingFunction.currentVersion,
+        },
+      ],
     };
   }
 

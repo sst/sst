@@ -373,7 +373,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   protected bucket: Bucket;
   private cfFunction: CfFunction;
   private s3Origin: S3Origin;
-  private signingFunction: experimental.EdgeFunction;
+  protected signingFunction: experimental.EdgeFunction;
   private distribution: Distribution;
   private hostedZone?: IHostedZone;
   private certificate?: ICertificate;
