@@ -22,11 +22,15 @@ export async function synth(opts: SynthOptions) {
   const { App } = await import("../constructs/App.js");
   const { useNodeHandler } = await import("../runtime/handlers/node.js");
   const { useGoHandler } = await import("../runtime/handlers/go.js");
+  const { useContainerHandler } = await import(
+    "../runtime/handlers/container.js"
+  );
   const { useRustHandler } = await import("../runtime/handlers/rust.js");
   const { usePythonHandler } = await import("../runtime/handlers/python.js");
   const { useJavaHandler } = await import("../runtime/handlers/java.js");
   useNodeHandler();
   useGoHandler();
+  useContainerHandler();
   usePythonHandler();
   useJavaHandler();
   useDotnetHandler();

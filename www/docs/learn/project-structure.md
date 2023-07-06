@@ -1,6 +1,8 @@
 ---
 title: Project Structure
 ---
+import MultiPackagerCode from "@site/src/components/MultiPackagerCode";
+
 
 While we wait for our local environment to start up, let's look at the starter the [`create sst`](../packages/create-sst.md) CLI has set up for us.
 
@@ -68,6 +70,11 @@ We typically group related resources together into stacks. In the `stacks/` dire
   ```ts title="stacks/Api.ts"
   export function Api({ stack }: StackContext) {
     const api = new ApiGateway(stack, "api", {
+    defaults: {
+      function: {
+        bind: [use(Database)],
+      },
+    },
 
     // ...
   ```
@@ -149,14 +156,34 @@ You'll notice that all these directories have their own `package.json` file.
 
 So when you need to install/uninstall a dependency in one of those workspaces, you can do the following from the project root.
 
+<MultiPackagerCode>
+<TabItem value="npm">
+
 ```bash
-$ npm install <package> -W <workspace>
-$ npm uninstall <package> -W <workspace>
+npm install <package> -W <workspace>
+npm uninstall <package> -W <workspace>
 ```
 
-Or you can do the regular `npm install` in the workspace's directory.
+</TabItem>
+<TabItem value="yarn">
 
-For Yarn, you'll need to run `yarn add` in the workspace directory. And at the root you'll need to run `yarn add` with [the `-W` flag](https://classic.yarnpkg.com/lang/en/docs/cli/add/).
+```bash
+yarn workspace <workspace> add <package>
+yarn workspace <workspace> remove <package>
+```
+
+</TabItem>
+<TabItem value="pnpm">
+
+```bash
+pnpm add <package> -w <workspace>
+pnpm remove <package> -w <workspace>
+```
+
+</TabItem>
+</MultiPackagerCode>
+
+Or you can navigate to the workspace directory and run the commands from there without the `-W` flag.
 
 ---
 

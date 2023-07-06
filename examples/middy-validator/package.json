@@ -12,19 +12,19 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "sst": "^2.13.9",
-    "aws-cdk-lib": "2.79.1",
+    "sst": "^2.19.0",
+    "aws-cdk-lib": "2.84.0",
     "constructs": "10.1.156",
-    "typescript": "^5.1.3",
-    "@tsconfig/node16": "^1.0.4"
+    "typescript": "^5.1.6",
+    "@tsconfig/node16": "^16.1.0"
   },
   "workspaces": [
     "packages/*"
   ],
   "dependencies": {
-    "@middy/core": "^4.5.2",
-    "@middy/http-error-handler": "^4.5.2",
-    "@middy/http-json-body-parser": "^4.5.2",
-    "@middy/validator": "^4.5.2"
+    "@middy/core": "^4.5.5",
+    "@middy/http-error-handler": "^4.5.5",
+    "@middy/http-json-body-parser": "^4.5.5",
+    "@middy/validator": "^4.5.5"
   }
 }

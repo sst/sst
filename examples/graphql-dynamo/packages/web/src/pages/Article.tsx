@@ -1,23 +1,23 @@
-import { useParams } from "react-router-dom";
-import { useTypedQuery } from "@graphql-dynamo/graphql/urql";
+import {useParams} from "react-router-dom";
+import {useTypedQuery} from "@graphql-dynamo/graphql/urql";
 import Empty from "../components/Empty";
 import Navbar from "../components/Navbar";
 import Loading from "../components/Loading";
 import styles from "./Article.module.css";
 
 export default function Article() {
-  const { id = "" } = useParams();
+  const {id = ""} = useParams();
 
   const [article] = useTypedQuery({
     query: {
-      article: [
-        { articleID: id },
-        {
-          id: true,
-          url: true,
-          title: true,
+      article: {
+        __args: {
+          articleID: id
         },
-      ],
+        id: true,
+        url: true,
+        title: true,
+      },
     },
   });
 

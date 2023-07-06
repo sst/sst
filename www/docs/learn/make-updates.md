@@ -24,26 +24,27 @@ In `packages/web/src/pages/Article.tsx`, replace the `useTypedQuery` with:
 const context = useMemo(() => ({ additionalTypenames: ["Comment"] }), []);
 const [article] = useTypedQuery({
   query: {
-    article: [
-      { articleID: id },
-      {
-        id: true,
-        url: true,
-        title: true,
-        comments: {
-          id: true,
-          text: true,
-        },
+    article: {
+      __args: {
+        articleID: id
       },
-    ],
+      id: true,
+      url: true,
+      title: true,
+      comments: {
+        id: true,
+        text: true,
+      },
+    },
   },
   context,
 });
 ```
+In this updated version, we have made a couple of notable changes to our GraphQL query.
 
-Like the previous chapter, we are making the query to return the comments as well.
+Previously we were fetching the `id`, `url`, and `title` fields of an article. Now, we've expanded our query to also get the `comments` for the article. We are getting each comment's `id` and `text` fields.
 
-We are doing one extra thing here, we are telling our GraphQL client the type we are expecting in return. This is to fix a quirk of Urql's [Document Cache](https://formidable.com/open-source/urql/docs/basics/document-caching/#document-cache-gotchas).
+We are also passing in `additionalTypenames` in the `context`. We'll look at why we are doing this below.
 
 <details>
 <summary>Behind the scenes</summary>
@@ -75,17 +76,15 @@ Add this below the `useTypedQuery`.
 </ChangeText>
 
 ```ts title="packages/web/src/pages/Article.tsx"
-const [result, addComment] = useTypedMutation((opts: CommentForm) => ({
-  addComment: [
-    {
-      text: opts.text,
-      articleID: opts.articleID,
-    },
-    {
+  const [result, addComment] = useTypedMutation((opts: CommentForm) => ({
+    addComment: {
+      __args: {
+        text: opts.text,
+        articleID: opts.articleID,
+      },
       id: true,
     },
-  ],
-}));
+  }));
 ```
 
 The `useTypedMutation` hook is similar to the `useTypedQuery` hook that we covered in the [last chapter](render-queries.md#typesafe-graphql-client). It allows us to send mutations that are defined using TypeScript. Here we are calling the `addComment` mutation that we added back in the [Queries and Mutations](queries-and-mutations.md#create-a-new-mutation) chapter.

@@ -69,6 +69,7 @@ await esbuild.build({
   },
   outfile: "./dist/support/bridge/bridge.mjs",
 });
+fs.cp(`support/bridge/Dockerfile`, `dist/support/bridge/Dockerfile`);
 
 // support/event-bus-retrier
 await esbuild.build({

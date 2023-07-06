@@ -1,4 +1,4 @@
-import type { SSTConfig } from "sst";
+import { SSTConfig } from "sst";
 import { ExampleStack } from "./stacks/ExampleStack";
 
 export default {

@@ -9,6 +9,9 @@ import { FunctionProps, useFunctions } from "../constructs/Function.js";
 
 declare module "../bus.js" {
   export interface Events {
+    "function.build.started": {
+      functionID: string;
+    };
     "function.build.success": {
       functionID: string;
     };
@@ -29,6 +32,7 @@ interface BuildInput {
 interface StartWorkerInput {
   url: string;
   workerID: string;
+  functionID: string;
   environment: Record<string, string>;
   out: string;
   handler: string;
@@ -86,6 +90,8 @@ export const useRuntimeHandlers = Context.memo(() => {
         const out = path.join(project.paths.artifacts, functionID);
         await fs.rm(out, { recursive: true, force: true });
         await fs.mkdir(out, { recursive: true });
+
+        bus.publish("function.build.started", { functionID });
 
         if (func.hooks?.beforeBuild) await func.hooks.beforeBuild(func, out);
         const built = await handler!.build({

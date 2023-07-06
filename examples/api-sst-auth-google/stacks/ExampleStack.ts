@@ -1,4 +1,4 @@
-import { StackContext, Api, Auth, StaticSite, Table } from "sst/constructs";
+import { StackContext, Api, Auth, ViteStaticSite, Table } from "sst/constructs";
 
 export function ExampleStack({ stack }: StackContext) {
   // Create a database Table
@@ -17,16 +17,14 @@ export function ExampleStack({ stack }: StackContext) {
       },
     },
     routes: {
-      "GET /": "packages/functions/src/auth.handler",
+      "GET /": "packages/functions/src/lambda.handler",
       "GET /session": "packages/functions/src/session.handler",
     },
   });
 
   // Create a React site
-  const site = new StaticSite(stack, "site", {
+  const site = new ViteStaticSite(stack, "site", {
     path: "web",
-    buildCommand: "npm run build",
-    buildOutput: "dist",
     environment: {
       VITE_APP_API_URL: api.url,
     },
