@@ -244,6 +244,27 @@ test("runtime: container", async () => {
   });
 });
 
+test("runtime: container with props", async () => {
+  const app = await createApp();
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    runtime: "container",
+    handler: "test/constructs/container-function",
+    container: {
+      cmd: ['python3']
+    }
+  });
+  await app.finish();
+  hasResource(stack, "AWS::Lambda::Function", {
+    Code: objectLike({
+      ImageUri: ANY,
+    }),
+    ImageConfig: objectLike({Command : ["python3"]})
+  });
+});
+
+
+
 test("runtime: invalid", async () => {
   const app = await createApp();
   const stack = new Stack(app, "stack");

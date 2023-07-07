@@ -31,6 +31,7 @@ import { useWarning } from "./util/warning.js";
 import {
   Architecture,
   AssetCode,
+  AssetImageCodeProps,
   CfnFunction,
   Code,
   Function as CDKFunction,
@@ -142,9 +143,9 @@ export interface FunctionProps
   python?: PythonProps;
 
   /**
-   * Used to configure image function properties
+   * Used to configure container function properties
    */
-  //image?: ImageProps;
+  container?: ContainerProps;
 
   /**
    * Hooks to run before and after function builds
@@ -534,6 +535,23 @@ export interface PythonProps {
   installCommands?: string[];
 }
 
+export interface ContainerProps extends AssetImageCodeProps {
+  /** 
+   * Extends AssetImageCodeProps to allow container implementations to specify additional properties.
+   * ```js
+  * new Function(stack, "Function", {
+  *   container: {
+  *     cmd: ['python3'],
+  *     buildArgs: {
+  *         ARG1 : "ARG"
+  *     }
+  * 
+  *   }
+  * })
+  * ```
+*/
+}
+
 /**
  * Used to configure Java package build options
  */
@@ -720,7 +738,7 @@ export class Function extends CDKFunction implements SSTConstruct {
                 path.resolve(__dirname, "../support/bridge"),
                 {
                   ...(architecture?.dockerPlatform
-                    ? { platform: Platform.custom(architecture.dockerPlatform) }
+                    ? { platform: Platform.custom(architecture.dockerPlatform), ...props.container }
                     : {}),
                 }
               ),
@@ -775,7 +793,7 @@ export class Function extends CDKFunction implements SSTConstruct {
           ? {
               code: Code.fromAssetImage(props.handler!, {
                 ...(architecture?.dockerPlatform
-                  ? { platform: Platform.custom(architecture.dockerPlatform) }
+                  ? { platform: Platform.custom(architecture.dockerPlatform), ...props.container }
                   : {}),
               }),
               handler: CDKHandler.FROM_IMAGE,
