@@ -108,6 +108,13 @@ export type SsrBuildConfig = {
   prerenderedBuildS3KeyPrefix?: string;
 };
 
+export interface SsrSiteFileOptions {
+  exclude: string | string[];
+  include: string | string[];
+  cacheControl: string;
+  contentType?: string;
+}
+
 export interface SsrSiteNodeJSProps extends NodeJSProps {}
 export interface SsrDomainProps extends BaseSiteDomainProps {}
 export interface SsrSiteReplaceProps extends BaseSiteReplaceProps {}
@@ -282,6 +289,23 @@ export interface SsrSiteProps {
       | "logRetention"
     >;
   };
+  /**
+   * Pass in a list of file options to customize cache control and content type specific files.
+   *
+   * Defaults to an empty array.
+   * @example
+   * ```js
+   * new AstroSite(stack, "Site", {
+   *   fileOptions: [{
+   *     exclude: "*",
+   *     include: "*.css",
+   *     cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
+   *     contentType: "text/css; charset=UTF-8",
+   *   }]
+   * });
+   * ```
+   */
+  fileOptions?: SsrSiteFileOptions[];
 }
 
 type SsrSiteNormalizedProps = SsrSiteProps & {
@@ -693,7 +717,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
   private createS3AssetFileOptions() {
     // Build file options
-    const fileOptions = [];
+    const fileOptions = this.props.fileOptions || [];
     const clientPath = path.join(
       this.props.path,
       this.buildConfig.clientBuildOutputDir
@@ -702,7 +726,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       // Versioned files will be cached for 1 year (immutable) both at
       // CDN and browser level.
       if (item === this.buildConfig.clientBuildVersionedSubDir) {
-        fileOptions.push({
+        fileOptions.unshift({
           exclude: "*",
           include: path.posix.join(
             this.buildConfig.clientBuildS3KeyPrefix ?? "",
@@ -716,7 +740,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       // But not at the browser level. CDN cache will be invalidated on deploy.
       else {
         const itemPath = path.join(clientPath, item);
-        fileOptions.push({
+        fileOptions.unshift({
           exclude: "*",
           include: path.posix.join(
             this.buildConfig.clientBuildS3KeyPrefix ?? "",
@@ -751,7 +775,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   private createS3Deployment(
     cliLayer: AwsCliLayer,
     assets: Asset[],
-    fileOptions: { exclude: string; include: string; cacheControl: string }[]
+    fileOptions: SsrSiteFileOptions[]
   ): CustomResource {
     // Create a Lambda function that will be doing the uploading
     const uploader = new CdkFunction(this, "S3Uploader", {
@@ -795,15 +819,19 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
         })),
         DestinationBucketName: this.bucket.bucketName,
         FileOptions: (fileOptions || []).map(
-          ({ exclude, include, cacheControl }) => {
+          ({ exclude, include, cacheControl, contentType }) => {
+            if (typeof exclude === "string") {
+              exclude = [exclude];
+            }
+            if (typeof include === "string") {
+              include = [include];
+            }
             return [
-              "--exclude",
-              exclude,
-              "--include",
-              include,
-              "--cache-control",
-              cacheControl,
-            ];
+              ...exclude.map((per) => ["--exclude", per]),
+              ...include.map((per) => ["--include", per]),
+              ["--cache-control", cacheControl],
+              contentType ? ["--content-type", contentType] : [],
+            ].flat();
           }
         ),
         ReplaceValues: this.getS3ContentReplaceValues(),
