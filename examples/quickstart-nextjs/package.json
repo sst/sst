@@ -9,18 +9,18 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.363.0",
-    "@aws-sdk/s3-request-presigner": "^3.363.0",
+    "@aws-sdk/client-s3": "^3.367.0",
+    "@aws-sdk/s3-request-presigner": "^3.367.0",
     "@types/node": "^20.4.0",
     "@types/react": "^18.2.14",
     "@types/react-dom": "^18.2.6",
-    "next": "^13.4.8",
+    "next": "^13.4.9",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "typescript": "^5.1.6"
   },
   "devDependencies": {
-    "sst": "^2.19.0",
+    "sst": "^2.19.1",
     "aws-cdk-lib": "2.84.0",
     "constructs": "10.1.156"
   }

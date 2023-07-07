@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "sst": "^2.19.0",
+    "sst": "^2.19.1",
     "aws-cdk-lib": "2.84.0",
     "constructs": "10.1.156",
     "typescript": "^5.1.6",
@@ -22,7 +22,7 @@
     "packages/*"
   ],
   "dependencies": {
-    "kysely": "^0.25.0",
+    "kysely": "^0.26.0",
     "kysely-data-api": "^0.2.1"
   }
 }

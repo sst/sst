@@ -7,9 +7,9 @@
     "typecheck": "tsc -noEmit"
   },
   "devDependencies": {
-    "vitest": "^0.32.4",
+    "vitest": "^0.33.0",
     "@types/node": "^20.4.0",
-    "sst": "^2.19.0",
+    "sst": "^2.19.1",
     "@aws-sdk/types": "^3.357.0",
     "@aws-sdk/smithy-client": "^3.360.0"
   },
