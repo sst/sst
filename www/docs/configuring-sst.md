@@ -82,19 +82,19 @@ Here's the full list of config options that can be returned:
 - **`advanced`**
   - **`disableParameterizedStackNameCheck`** Disable the check for stack names to be parameterized with the stage name.
 - **`cdk`**
-  - **`toolkitStackName`** The name of the CDK toolkit stack
   - **`qualifier`** The qualifier for the CDK toolkit stack
-  - **`fileAssetsBucketName`** The name of the CDK toolkit bucket
-  - **`publicAccessBlockConfiguration`** Block public access configuration on the CDK toolkit bucket
+  - **`pathMetadata`** Add CDK path metadata to templates. This enables the CDK Construct tree view in the CloudFormation console. Default `false`.
   - **`deployRoleArn`**: IAM role used to initiate a deployment
   - **`lookupRoleArn`** IAM role used to look up values from the AWS account
+  - **`toolkitStackName`** The name of the CDK toolkit stack
+  - **`fileAssetsBucketName`** The name of the CDK toolkit bucket
   - **`fileAssetPublishingRoleArn`** IAM role used to publish file assets to the S3 bucket
   - **`imageAssetPublishingRoleArn`** IAM role used to publish image assets to the ECR repository
   - **`cloudFormationExecutionRole`** IAM role assumed by the CloudFormation to deploy
-  - **`pathMetadata`** Add CDK path metadata to templates. This enables the CDK Construct tree view in the CloudFormation console. Default `false`.
+  - **`publicAccessBlockConfiguration`** Block public access configuration on the CDK toolkit bucket
 - **`bootstrap`**
-  - **`stackName`** The name to use for the bootstrap stack
   - **`tags`** Tags to use for the bootstrap stack
+  - **`stackName`** The name to use for the bootstrap stack
 
 \*These won't take effect if the CLI flag for it is specified.
 
