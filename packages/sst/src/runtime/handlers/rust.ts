@@ -84,7 +84,7 @@ export const useRustHandler = Context.memo(async () => {
 
       if (input.mode === "deploy") {
         try {
-          await execAsync(`cargo lambda build --release --bin ${parsed.name}`, {
+          await execAsync(`cargo lambda build --release${input.props.architecture === "arm_64" ? " --arm64" : ""} --bin ${parsed.name}`, {
             cwd: project,
             env: {
               ...process.env,
