@@ -1349,9 +1349,7 @@ function handler(event) {
   protected generateBuildId(): string {
     // We will generate a hash based on the contents of the "public" folder
     // which will be used to indicate if we need to invalidate our CloudFront
-    // cache. As the browser build files are always uniquely hash in their
-    // filenames according to their content we can ignore the browser build
-    // files.
+    // cache.
 
     // The below options are needed to support following symlinks when building zip files:
     // - nodir: This will prevent symlinks themselves from being copied into the zip.
@@ -1360,7 +1358,6 @@ function handler(event) {
       dot: true,
       nodir: true,
       follow: true,
-      ignore: [`${this.buildConfig.clientBuildVersionedSubDir}/**`],
       cwd: path.resolve(this.props.path, this.buildConfig.clientBuildOutputDir),
     };
     const files = glob.sync("**", globOptions);

@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.4.1
+
+### Patch Changes
+
+- [`9176d8ad1`](https://github.com/serverless-stack/sst/commit/9176d8ad12a24982abf0d7c0495025faba145727) Thanks [@fwang](https://github.com/fwang)! - Disable pathMetadata by default
+
 ## 2.4.0
 
 ### Minor Changes

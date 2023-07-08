@@ -13,16 +13,16 @@
     "aws-cdk-lib": "2.84.0",
     "constructs": "10.1.156",
     "esbuild": "^0.18.11",
-    "postcss": "^8.4.24",
+    "postcss": "^8.4.25",
     "solid-start-node": "^0.2.26",
-    "solid-start-sst": "^2.19.0",
-    "sst": "^2.19.0",
+    "solid-start-sst": "^2.19.1",
+    "sst": "^2.19.1",
     "typescript": "^5.1.6",
-    "vite": "^4.3.9"
+    "vite": "^4.4.2"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.363.0",
-    "@aws-sdk/s3-request-presigner": "^3.363.0",
+    "@aws-sdk/client-s3": "^3.367.0",
+    "@aws-sdk/s3-request-presigner": "^3.367.0",
     "@solidjs/meta": "^0.28.5",
     "@solidjs/router": "^0.8.2",
     "solid-js": "^1.7.7",

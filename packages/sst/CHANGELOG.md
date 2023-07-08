@@ -1,5 +1,15 @@
 # @serverless-stack/cli2
 
+## 2.19.1
+
+### Patch Changes
+
+- [`9176d8ad1`](https://github.com/serverless-stack/sst/commit/9176d8ad12a24982abf0d7c0495025faba145727) Thanks [@fwang](https://github.com/fwang)! - Disable pathMetadata by default
+
+- [`05dab5b8b`](https://github.com/serverless-stack/sst/commit/05dab5b8b2c814d164be259df2b79858ffccb34c) Thanks [@fwang](https://github.com/fwang)! - SsrSite: fix CloudFront not invalidated when s3 assets unchanged
+
+- [`426713243`](https://github.com/serverless-stack/sst/commit/42671324332dfa114bfefd4a6f7daba374b0ef23) Thanks [@fwang](https://github.com/fwang)! - Support CloudFormation resources tree view
+
 ## 2.19.0
 
 ### Minor Changes
