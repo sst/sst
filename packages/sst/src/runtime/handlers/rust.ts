@@ -78,6 +78,7 @@ export const useRustHandler = Context.memo(async () => {
             path.join(input.out, "handler")
           );
         } catch (ex) {
+          consile.log(ex);
           throw new VisibleError("Failed to build");
         }
       }
@@ -95,6 +96,7 @@ export const useRustHandler = Context.memo(async () => {
             path.join(input.out, "bootstrap")
           );
         } catch (ex) {
+          consile.log(ex);
           throw new VisibleError("Failed to build");
         }
       }
