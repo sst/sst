@@ -283,6 +283,14 @@ function permissionsToStatementsAndGrants(
             [secret.secretArn]
           )
         );
+	if (secret.encryptionKey) {
+          statements.push(
+            buildPolicyStatement(
+              ["kms:Decrypt"],
+              [secret.encryptionKey.keyArn]
+            )
+          );
+	}
       }
     }
     ////////////////////////////////////
