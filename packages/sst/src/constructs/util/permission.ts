@@ -215,7 +215,7 @@ function permissionsToStatementsAndGrants(
       );
     } else if (permission instanceof Job) {
       statements.push(
-        buildPolicyStatement("lambda:*", [permission._jobInvoker.functionArn])
+        buildPolicyStatement("lambda:*", [permission._jobManager.functionArn])
       );
     }
     ////////////////////////////////////
