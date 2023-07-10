@@ -94,6 +94,7 @@ export const useJavaHandler = Context.memo(async () => {
             f.endsWith(".zip")
           )!;
           new AdmZip(path.join(buildOutput, zip)).extractAllTo(input.out);
+	  zippedBuilds[buildBinary] = true;
 	}
         return {
           type: "success",
