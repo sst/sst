@@ -2,7 +2,6 @@ import esbuild from "esbuild";
 import fs from "fs/promises";
 
 const pkg = await fs.readFile("package.json").then(JSON.parse);
-const watch = false;
 
 const result = await esbuild.build({
   entryPoints: ["src/cli/sst.ts"],
@@ -19,9 +18,6 @@ const result = await esbuild.build({
   platform: "node",
   target: "esnext",
   format: "esm",
-  watch: watch && {
-    onRebuild: console.log,
-  },
   banner: {
     js: [
       `import { createRequire as topLevelCreateRequire } from 'module';`,
@@ -217,4 +213,3 @@ await Promise.all(
 );
 
 console.log("Built");
-if (watch) console.log("Watching");
