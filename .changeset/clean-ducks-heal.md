@@ -1,5 +1,5 @@
 ---
-"sst": patch
+"sst": minor
 ---
 
 functions: update esbuild
