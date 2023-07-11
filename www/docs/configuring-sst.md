@@ -95,6 +95,7 @@ Here's the full list of config options that can be returned:
 - **`bootstrap`**
   - **`tags`** Tags to use for the bootstrap stack
   - **`stackName`** The name to use for the bootstrap stack
+  - **`customPermissionsBoundary`** The Name of the IAM permissions boundary policy to use for the CDK toolkit stack and SST Bootstrap stack
 
 \*These won't take effect if the CLI flag for it is specified.
 
