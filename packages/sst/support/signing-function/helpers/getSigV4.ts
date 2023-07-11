@@ -1,7 +1,6 @@
 import { SignatureV4 } from "@smithy/signature-v4";
 import { Sha256 } from "@aws-crypto/sha256-js";
 
-// TODO: (guid) try sdk GetSessionTokenCommand
 export const getSigV4 = (region: string) => {
   const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
   const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;

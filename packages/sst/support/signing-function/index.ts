@@ -1,6 +1,4 @@
-import {
-  CloudFrontRequestHandler,
-} from "aws-lambda";
+import { CloudFrontRequestHandler } from "aws-lambda";
 import {
   cfHeadersToHeaderBag,
   getRegionFromLambdaUrl,

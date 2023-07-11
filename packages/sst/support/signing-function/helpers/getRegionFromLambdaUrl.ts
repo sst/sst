@@ -1,4 +1,3 @@
-// TODO: get region from regexp in isLambdaFunctionUrl
 export const getRegionFromLambdaUrl = (url: string): string => {
   const region = url.split(".").at(2);
   if (!region)
