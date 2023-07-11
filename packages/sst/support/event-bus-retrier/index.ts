@@ -1,6 +1,6 @@
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
-import { SQSHandler } from "aws-lambda";
+import type { SQSHandler } from "aws-lambda";
 
 const lambda = new LambdaClient({});
 const sqs = new SQSClient({});
@@ -51,8 +51,3 @@ export const handler: SQSHandler = async (evt) => {
     }
   }
 };
-
-function delay(attempt: number, baseDelay: number, maxDelay: number): number {
-  const backoffTime = Math.min(maxDelay, baseDelay * Math.pow(2, attempt));
-  return Math.floor(backoffTime);
-}

@@ -50,7 +50,6 @@ await esbuild.build({
 
 // support/bridge
 await esbuild.build({
-  keepNames: true,
   bundle: true,
   minify: true,
   platform: "node",
@@ -69,7 +68,6 @@ fs.cp(`support/bridge/Dockerfile`, `dist/support/bridge/Dockerfile`);
 
 // support/event-bus-retrier
 await esbuild.build({
-  keepNames: true,
   bundle: true,
   minify: true,
   platform: "node",
@@ -89,7 +87,6 @@ await esbuild.build({
 // note: do not add topLevelCreateRequire banner b/c the
 //       migrator function will get built again in RDS.
 await esbuild.build({
-  keepNames: true,
   bundle: true,
   minify: true,
   platform: "node",
@@ -101,7 +98,6 @@ await esbuild.build({
 
 // support/edge-function
 await esbuild.build({
-  keepNames: true,
   bundle: true,
   minify: true,
   platform: "node",
@@ -129,7 +125,6 @@ await Promise.all(
   ["bootstrap-metadata-function", "custom-resources", "script-function"].map(
     (dir) =>
       esbuild.build({
-        keepNames: true,
         bundle: true,
         platform: "node",
         target: "esnext",
@@ -155,7 +150,6 @@ await Promise.all(
 await Promise.all(
   ["job-invoker"].map((dir) =>
     esbuild.build({
-      keepNames: true,
       bundle: true,
       platform: "node",
       target: "esnext",
@@ -173,7 +167,6 @@ await Promise.all(
 await Promise.all(
   ["base-site-archiver", "ssr-site-function-archiver"].map((file) =>
     esbuild.build({
-      keepNames: true,
       bundle: true,
       minify: true,
       platform: "node",
