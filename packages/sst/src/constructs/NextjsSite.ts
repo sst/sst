@@ -145,7 +145,7 @@ export class NextjsSite extends SsrSite {
       environment,
       cdk,
     } = this.props;
-    return new SsrFunction(this, `ServerFunction`, {
+    return new SsrFunction(this, `ServerFunctionRegional`, {
       description: "Next.js server",
       bundle: path.join(this.props.path, ".open-next", "server-function"),
       handler: "index.handler",
@@ -167,7 +167,7 @@ export class NextjsSite extends SsrSite {
   protected createFunctionForEdge() {
     const { runtime, timeout, memorySize, bind, permissions, environment } =
       this.props;
-    return new EdgeFunction(this, "ServerFunction", {
+    return new EdgeFunction(this, "ServerFunctionEdge", {
       bundle: path.join(this.props.path, ".open-next", "server-function"),
       handler: "index.handler",
       runtime,
