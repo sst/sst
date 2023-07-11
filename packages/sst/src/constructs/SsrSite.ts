@@ -339,6 +339,11 @@ export interface SsrSiteProps {
    * ```
    */
   fileOptions?: SsrSiteFileOptions[];
+  /**
+   * Enables the AWS_IAM authentication mechanism on function URL
+   * @default "."
+   */
+  enableIAMAuth?: boolean;
 }
 
 type SsrSiteNormalizedProps = SsrSiteProps & {
@@ -373,7 +378,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   protected bucket: Bucket;
   private cfFunction: CfFunction;
   private s3Origin: S3Origin;
-  protected signingFunction: experimental.EdgeFunction;
+  protected signingFunction?: experimental.EdgeFunction;
   private distribution: Distribution;
   private hostedZone?: IHostedZone;
   private certificate?: ICertificate;
@@ -437,7 +442,9 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     this.validateCloudFrontDistributionSettings();
     this.s3Origin = this.createCloudFrontS3Origin();
     this.cfFunction = this.createCloudFrontFunction();
-    this.signingFunction = this.createSigningFunction();
+    this.signingFunction = this.props.enableIAMAuth
+      ? this.createSigningFunction()
+      : undefined;
     this.distribution = this.props.edge
       ? this.createCloudFrontDistributionForEdge()
       : this.createCloudFrontDistributionForRegional();
@@ -1064,10 +1071,12 @@ function handler(event) {
     const cfDistributionProps = cdk?.distribution || {};
 
     const fnUrl = this.serverLambdaForRegional!.addFunctionUrl({
-      authType: FunctionUrlAuthType.AWS_IAM,
+      authType: this.props.enableIAMAuth
+        ? FunctionUrlAuthType.AWS_IAM
+        : FunctionUrlAuthType.NONE,
     });
 
-    return {
+    const behaviorOptions: BehaviorOptions = {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       origin: new HttpOrigin(Fn.parseDomainName(fnUrl.url), {
         readTimeout:
@@ -1086,6 +1095,20 @@ function handler(event) {
         ...this.buildBehaviorFunctionAssociations(),
         ...(cfDistributionProps.defaultBehavior?.functionAssociations || []),
       ],
+    };
+
+    if (!this.props.enableIAMAuth) {
+      return behaviorOptions;
+    }
+
+    if (!this.signingFunction) {
+      throw new Error(
+        "signingFunction should be defined when IAM Auth is enabled"
+      );
+    }
+
+    return {
+      ...behaviorOptions,
       edgeLambdas: [
         {
           includeBody: true,
