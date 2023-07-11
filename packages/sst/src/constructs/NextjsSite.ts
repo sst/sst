@@ -407,18 +407,15 @@ export class NextjsSite extends SsrSite {
   }
 
   private buildImageBehavior(cachePolicy: ICachePolicy): BehaviorOptions {
-    const { cdk } = this.props;
+    const { cdk, enableIAMAuth } = this.props;
     const imageFn = this.createImageOptimizationFunction();
     const imageFnUrl = imageFn.addFunctionUrl({
-      authType: FunctionUrlAuthType.AWS_IAM,
+      authType: enableIAMAuth
+        ? FunctionUrlAuthType.AWS_IAM
+        : FunctionUrlAuthType.NONE,
     });
-    this.signingFunction.addToRolePolicy(
-      new PolicyStatement({
-        actions: ['lambda:InvokeFunctionUrl'],
-        resources: [imageFn.functionArn],
-      })
-    )
-    return {
+
+    const behaviorOptions: BehaviorOptions = {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       origin: new HttpOrigin(Fn.parseDomainName(imageFnUrl.url)),
       allowedMethods: AllowedMethods.ALLOW_ALL,
@@ -426,6 +423,27 @@ export class NextjsSite extends SsrSite {
       compress: true,
       cachePolicy,
       responseHeadersPolicy: cdk?.responseHeadersPolicy,
+    };
+
+    if (!enableIAMAuth) {
+      return behaviorOptions;
+    }
+
+    if (!this.signingFunction) {
+      throw new Error(
+        "signingFunction should be defined when IAM Auth is enabled"
+      );
+    }
+
+    this.signingFunction.addToRolePolicy(
+      new PolicyStatement({
+        actions: ["lambda:InvokeFunctionUrl"],
+        resources: [imageFn.functionArn],
+      })
+    );
+
+    return {
+      ...behaviorOptions,
       edgeLambdas: [
         {
           includeBody: true,
