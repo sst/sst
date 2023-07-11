@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.20.1
+
+### Patch Changes
+
+- [`640f7c871`](https://github.com/serverless-stack/sst/commit/640f7c8710a136e4bae32ceaeaeff1f35fea292f) Thanks [@thdxr](https://github.com/thdxr)! - fix: esbuild has issues with keepName
+
 ## 2.20.0
 
 ### Minor Changes
