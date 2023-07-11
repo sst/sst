@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.20.0
+
+### Minor Changes
+
+- [`cf1dbb553`](https://github.com/serverless-stack/sst/commit/cf1dbb553ea9a228c50ea30fd7baf4daafc4241c) Thanks [@thdxr](https://github.com/thdxr)! - functions: update esbuild
+
 ## 2.19.2
 
 ### Patch Changes
