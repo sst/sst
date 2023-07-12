@@ -1,5 +1,15 @@
 # @serverless-stack/cli2
 
+## 2.21.0
+
+### Minor Changes
+
+- [#3111](https://github.com/serverless-stack/sst/pull/3111) [`db399a94d`](https://github.com/serverless-stack/sst/commit/db399a94ddf89fe54cbd5c1aae42482433001952) Thanks [@fwang](https://github.com/fwang)! - Job: support container runtime
+
+### Patch Changes
+
+- [#3111](https://github.com/serverless-stack/sst/pull/3111) [`db399a94d`](https://github.com/serverless-stack/sst/commit/db399a94ddf89fe54cbd5c1aae42482433001952) Thanks [@fwang](https://github.com/fwang)! - Job: support canceling job
+
 ## 2.20.1
 
 ### Patch Changes
