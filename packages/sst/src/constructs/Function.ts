@@ -142,9 +142,9 @@ export interface FunctionProps
   python?: PythonProps;
 
   /**
-   * Used to configure image function properties
+   * Used to configure container function properties
    */
-  //image?: ImageProps;
+  container?: ContainerProps;
 
   /**
    * Hooks to run before and after function builds
@@ -583,6 +583,24 @@ export interface JavaProps {
    * ```
    */
   experimentalUseProvidedRuntime?: "provided" | "provided.al2";
+}
+
+export interface ContainerProps {
+  /**
+   * Configure docker build options
+   *
+   * @example
+   * ```js
+   * container: {
+   *   docker: {
+   *     cmd: ["executable", "param1", "param2"]
+   *   }
+   * }
+   * ```
+   */
+  docker: {
+    cmd?: string[];
+  };
 }
 
 /**

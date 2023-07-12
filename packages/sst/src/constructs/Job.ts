@@ -4,13 +4,19 @@ import fs from "fs/promises";
 import { Construct } from "constructs";
 import { Duration as CdkDuration } from "aws-cdk-lib/core";
 import { PolicyStatement, Role, Effect } from "aws-cdk-lib/aws-iam";
-import { AssetCode, Code } from "aws-cdk-lib/aws-lambda";
+import {
+  AssetCode,
+  Code,
+  Runtime,
+  Function as CdkFunction,
+} from "aws-cdk-lib/aws-lambda";
 import {
   Project,
   CfnProject,
   LinuxBuildImage,
   BuildSpec,
   ComputeType,
+  IBuildImage,
 } from "aws-cdk-lib/aws-codebuild";
 import { RetentionDays, LogRetention } from "aws-cdk-lib/aws-logs";
 
@@ -36,13 +42,33 @@ import { ISecurityGroup, IVpc, SubnetSelection } from "aws-cdk-lib/aws-ec2";
 import { useDeferredTasks } from "./deferred_task.js";
 import { useProject } from "../project.js";
 import { useRuntimeHandlers } from "../runtime/handlers.js";
+import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 export type JobMemorySize = "3 GB" | "7 GB" | "15 GB" | "145 GB";
 export interface JobNodeJSProps extends NodeJSProps {}
+export interface JobContainerProps {
+  /**
+   * Configure docker build options
+   *
+   * @example
+   * ```js
+   * container: {
+   *   docker: {
+   *     cmd: ["executable", "param1", "param2"]
+   *   }
+   * }
+   * ```
+   */
+  docker: {
+    cmd: string[];
+  };
+}
 
 export interface JobProps {
+  // TODO add docs
+  runtime?: "nodejs" | "container";
   /**
    * Path to the entry point and handler function. Of the format:
    * `/path/to/file.function`.
@@ -98,6 +124,10 @@ export interface JobProps {
    * Used to configure nodejs function properties
    */
   nodejs?: JobNodeJSProps;
+  /**
+   * Used to configure container properties
+   */
+  container?: JobContainerProps;
   /**
    * Can be used to disable Live Lambda Development when using `sst start`. Useful for things like Custom Resources that need to execute during deployment.
    *
@@ -242,10 +272,10 @@ export interface JobProps {
  */
 export class Job extends Construct implements SSTConstruct {
   public readonly id: string;
-  private readonly localId: string;
   private readonly props: JobProps;
   private readonly job: Project;
-  public readonly _jobInvoker: Function;
+  private readonly liveDevJob?: Function;
+  public readonly _jobManager: CdkFunction;
 
   constructor(scope: Construct, id: string, props: JobProps) {
     super(scope, props.cdk?.id || id);
@@ -254,32 +284,33 @@ export class Job extends Construct implements SSTConstruct {
     const stack = Stack.of(scope) as Stack;
     this.id = id;
     this.props = props;
-    useFunctions().add(this.node.addr, {
-      ...props,
-      runtime: "nodejs16.x",
-    });
-    this.localId = path.posix
-      .join(scope.node.path, id)
-      .replace(/\$/g, "-")
-      .replace(/\//g, "-")
-      .replace(/\./g, "-");
     const isLiveDevEnabled =
       app.mode === "dev" && (this.props.enableLiveDev === false ? false : true);
 
-    this.job = this.createCodeBuildProject();
-    this.createLogRetention();
+    // TODO add test
+    this.validateContainerProps();
+
+    this.job = this.createCodeBuildJob();
     if (!stack.isActive) {
-      this._jobInvoker = this.createCodeBuildInvoker();
+      this._jobManager = this.createJobManager();
     } else if (isLiveDevEnabled) {
-      this._jobInvoker = this.createLocalInvoker();
+      this.liveDevJob = this.createLiveDevJob();
+      this._jobManager = this.createJobManager();
     } else {
-      this._jobInvoker = this.createCodeBuildInvoker();
+      this._jobManager = this.createJobManager();
       this.buildCodeBuildProjectCode();
     }
+
+    this.createLogRetention();
     this.attachPermissions(props.permissions || []);
     this.bind(props.bind || []);
     Object.entries(props.environment || {}).forEach(([key, value]) => {
       this.addEnvironment(key, value);
+    });
+
+    useFunctions().add(this.node.addr, {
+      ...props,
+      runtime: this.convertJobRuntimeToFunctionRuntime(),
     });
   }
 
@@ -299,11 +330,11 @@ export class Job extends Construct implements SSTConstruct {
       variables: {
         functionName: {
           type: "plain",
-          value: this._jobInvoker.functionName,
+          value: this._jobManager.functionName,
         },
       },
       permissions: {
-        "lambda:*": [this._jobInvoker.functionArn],
+        "lambda:*": [this._jobManager.functionArn],
       },
     };
   }
@@ -317,7 +348,7 @@ export class Job extends Construct implements SSTConstruct {
    * ```
    */
   public bind(constructs: SSTConstruct[]): void {
-    this._jobInvoker.bind(constructs);
+    this.liveDevJob?.bind(constructs);
     this.bindForCodeBuild(constructs);
   }
 
@@ -330,7 +361,7 @@ export class Job extends Construct implements SSTConstruct {
    * ```
    */
   public attachPermissions(permissions: Permissions): void {
-    this._jobInvoker.attachPermissions(permissions);
+    this.liveDevJob?.attachPermissions(permissions);
     this.attachPermissionsForCodeBuild(permissions);
   }
 
@@ -345,26 +376,18 @@ export class Job extends Construct implements SSTConstruct {
    * ```
    */
   public addEnvironment(name: string, value: string): void {
-    this._jobInvoker.addEnvironment(name, value);
+    this.liveDevJob?.addEnvironment(name, value);
     this.addEnvironmentForCodeBuild(name, value);
   }
 
-  private createCodeBuildProject(): Project {
-    const { cdk, memorySize, timeout } = this.props;
+  private createCodeBuildJob(): Project {
+    const { cdk, runtime, handler, memorySize, timeout, container } =
+      this.props;
     const app = this.node.root as App;
 
     return new Project(this, "JobProject", {
       projectName: app.logicalPrefixedName(this.node.id),
       environment: {
-        // CodeBuild offers different build images. The newer ones have much quicker
-        // boot time. The latest build image is STANDARD_6_0, which support Node.js 16.
-        // But while testing, I found STANDARD_6_0 took 100s to boot. So for the
-        // purpose of this demo, I use STANDARD_5_0. It takes 30s to boot.
-        //buildImage: codebuild.LinuxBuildImage.STANDARD_6_0,
-        //buildImage: codebuild.LinuxBuildImage.STANDARD_5_0,
-        buildImage: LinuxBuildImage.fromDockerRegistry(
-          "amazon/aws-lambda-nodejs:16"
-        ),
         computeType: this.normalizeMemorySize(memorySize || "3 GB"),
       },
       environmentVariables: {
@@ -389,6 +412,25 @@ export class Job extends Construct implements SSTConstruct {
     });
   }
 
+  private createLiveDevJob(): Function {
+    // Note: make the invoker function the same ID as the Job
+    //       construct so users can identify the invoker function
+    //       in the Console.
+    const fn = new Function(this, this.node.id, {
+      ...this.props,
+      runtime: this.convertJobRuntimeToFunctionRuntime(),
+      container: this.convertJobContainerToFunctionContainer(),
+      memorySize: 1024,
+      timeout: "10 seconds",
+      environment: {
+        ...this.props.environment,
+        SST_DEBUG_JOB: "true",
+      },
+    });
+    fn._doNotAllowOthersToBind = true;
+    return fn;
+  }
+
   private createLogRetention() {
     const { logRetention } = this.props;
     if (!logRetention) return;
@@ -404,22 +446,49 @@ export class Job extends Construct implements SSTConstruct {
   }
 
   private buildCodeBuildProjectCode() {
-    const app = this.node.root as App;
+    const { handler, runtime, container } = this.props;
 
     useDeferredTasks().add(async () => {
       // Build function
       const result = await useRuntimeHandlers().build(this.node.addr, "deploy");
-
-      // create wrapper that calls the handler
       if (result.type === "error") {
         throw new Error(
-          [
-            `Failed to build job "${this.props.handler}"`,
-            ...result.errors,
-          ].join("\n")
+          [`Failed to build job "${handler}"`, ...result.errors].join("\n")
         );
       }
 
+      // No need to update code for container runtime
+      // Note: we could set the commands in `createCodeBuildJob` but
+      //       in `sst dev`, we want to avoid changing the CodeBuild resources
+      //       when `cmd` changes.
+      if (runtime === "container") {
+        const image = LinuxBuildImage.fromAsset(this, "ContainerImage", {
+          directory: handler,
+          platform: Platform.custom("linux/amd64"),
+        });
+        image.repository?.grantPull(this.job.role!);
+        const project = this.job.node.defaultChild as CfnProject;
+        project.environment = {
+          ...project.environment,
+          image: image.imageId,
+          imagePullCredentialsType: "SERVICE_ROLE",
+        };
+        project.source = {
+          type: "NO_SOURCE",
+          buildSpec: [
+            "version: 0.2",
+            "phases:",
+            "  build:",
+            "    commands:",
+            `      - ${container!.docker.cmd
+              .map((arg) => (arg.includes(" ") ? `"${arg}"` : arg))
+              .join(" ")}`,
+          ].join("\n"),
+        };
+        return;
+      }
+
+      // Create wrapper that calls the handler
       const parsed = path.parse(result.handler);
       const importName = parsed.ext.substring(1);
       const importPath = `./${path
@@ -450,82 +519,71 @@ export class Job extends Construct implements SSTConstruct {
         ].join("\n")
       );
 
+      // Update job's commands
       const code = AssetCode.fromAsset(result.out);
-      this.updateCodeBuildProjectCode(code, "handler-wrapper.mjs");
-      // This should always be true b/c runtime is always Node.js
-    });
-  }
+      const codeConfig = code.bind(this);
+      const project = this.job.node.defaultChild as CfnProject;
+      const image = LinuxBuildImage.fromDockerRegistry(
+        "amazon/aws-lambda-nodejs:16"
+      );
+      project.environment = {
+        ...project.environment,
+        image: image.imageId,
+      };
+      image.repository?.grantPull(this.job.role!);
+      project.source = {
+        type: "S3",
+        location: `${codeConfig.s3Location?.bucketName}/${codeConfig.s3Location?.objectKey}`,
+        buildSpec: [
+          "version: 0.2",
+          "phases:",
+          "  build:",
+          "    commands:",
+          `      - node handler-wrapper.mjs`,
+        ].join("\n"),
+      };
 
-  private updateCodeBuildProjectCode(code: Code, script: string) {
-    // Update job's commands
-    const codeConfig = code.bind(this);
-    const project = this.job.node.defaultChild as CfnProject;
-    project.source = {
-      type: "S3",
-      location: `${codeConfig.s3Location?.bucketName}/${codeConfig.s3Location?.objectKey}`,
-      buildSpec: [
-        "version: 0.2",
-        "phases:",
-        "  build:",
-        "    commands:",
-        `      - node ${script}`,
-      ].join("\n"),
-    };
-
-    this.attachPermissions([
-      new PolicyStatement({
-        actions: ["s3:*"],
-        effect: Effect.ALLOW,
-        resources: [
-          `arn:${Stack.of(this).partition}:s3:::${
-            codeConfig.s3Location?.bucketName
-          }/${codeConfig.s3Location?.objectKey}`,
-        ],
-      }),
-    ]);
-  }
-
-  private createLocalInvoker(): Function {
-    // Note: make the invoker function the same ID as the Job
-    //       construct so users can identify the invoker function
-    //       in the Console.
-    const fn = new Function(this, this.node.id, {
-      runtime: "nodejs16.x",
-      memorySize: 1024,
-      environment: {
-        ...this.props.environment,
-        SST_DEBUG_TYPE: "job",
-      },
-      ...this.props,
-      timeout: "15 minutes",
-    });
-    fn._doNotAllowOthersToBind = true;
-    return fn;
-  }
-
-  private createCodeBuildInvoker(): Function {
-    const fn = new Function(this, this.node.id, {
-      handler: path.join(__dirname, "../support/job-invoker/index.main"),
-      runtime: "nodejs18.x",
-      timeout: 10,
-      memorySize: 1024,
-      environment: {
-        PROJECT_NAME: this.job.projectName,
-      },
-      permissions: [
+      this.attachPermissions([
         new PolicyStatement({
+          actions: ["s3:*"],
           effect: Effect.ALLOW,
-          actions: ["codebuild:StartBuild"],
-          resources: [this.job.projectArn],
+          resources: [
+            `arn:${Stack.of(this).partition}:s3:::${
+              codeConfig.s3Location?.bucketName
+            }/${codeConfig.s3Location?.objectKey}`,
+          ],
         }),
-      ],
-      nodejs: {
-        format: "esm",
-      },
-      enableLiveDev: false,
+      ]);
     });
-    fn._doNotAllowOthersToBind = true;
-    return fn;
+  }
+
+  private createJobManager(): CdkFunction {
+    return new CdkFunction(this, "Manager", {
+      code: Code.fromAsset(path.join(__dirname, "../support/job-manager/")),
+      handler: "index.handler",
+      runtime: Runtime.NODEJS_16_X,
+      timeout: CdkDuration.seconds(10),
+      memorySize: 1024,
+      environment: {
+        SST_JOB_PROVIDER: this.liveDevJob ? "lambda" : "codebuild",
+        SST_JOB_RUNNER: this.liveDevJob
+          ? this.liveDevJob.functionArn
+          : this.job.projectName,
+      },
+      initialPolicy: [
+        this.liveDevJob
+          ? new PolicyStatement({
+              effect: Effect.ALLOW,
+              actions: ["lambda:InvokeFunction"],
+              resources: [this.liveDevJob.functionArn],
+            })
+          : new PolicyStatement({
+              effect: Effect.ALLOW,
+              actions: ["codebuild:StartBuild", "codebuild:StopBuild"],
+              resources: [this.job.projectArn],
+            }),
+      ],
+    });
   }
 
   private bindForCodeBuild(constructs: SSTConstruct[]): void {
@@ -568,6 +626,15 @@ export class Job extends Construct implements SSTConstruct {
     envVars.push({ name, value });
   }
 
+  private validateContainerProps() {
+    const { runtime, container } = this.props;
+    if (runtime === "container") {
+      if (!container) {
+        throw new Error(`No commands defined for the ${this.node.id} Job.`);
+      }
+    }
+  }
+
   private normalizeMemorySize(memorySize: JobMemorySize): ComputeType {
     if (memorySize === "3 GB") {
       return ComputeType.SMALL;
@@ -588,5 +655,20 @@ export class Job extends Construct implements SSTConstruct {
       throw new Error(`Invalid timeout value for the ${this.node.id} Job.`);
     }
     return value;
+  }
+
+  private convertJobRuntimeToFunctionRuntime() {
+    const { runtime } = this.props;
+    return runtime === "container" ? "container" : "nodejs16.x";
+  }
+
+  private convertJobContainerToFunctionContainer() {
+    const { runtime, container } = this.props;
+    if (runtime !== "container") return;
+    return {
+      docker: {
+        cmd: container?.docker.cmd,
+      },
+    };
   }
 }
