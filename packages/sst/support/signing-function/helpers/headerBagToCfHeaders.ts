@@ -1,5 +1,5 @@
 import { CloudFrontHeaders } from "aws-lambda";
-import { HeaderBag } from "./types";
+import { HeaderBag } from "@aws-sdk/types";
 
 /**
  * Converts simple header bag (object) to CloudFront headers
