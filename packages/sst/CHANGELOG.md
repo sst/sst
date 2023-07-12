@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.21.1
+
+### Patch Changes
+
+- [`acbdf9fd3`](https://github.com/serverless-stack/sst/commit/acbdf9fd3c5f8874b266331b6ee9fe6af9536d42) Thanks [@fwang](https://github.com/fwang)! - Function: support overriding docker CMD
+
 ## 2.21.0
 
 ### Minor Changes
