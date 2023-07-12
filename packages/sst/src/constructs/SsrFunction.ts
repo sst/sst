@@ -68,7 +68,8 @@ export interface SsrFunctionProps
 // Construct
 /////////////////////
 
-export class SsrFunction extends Construct {
+export class SsrFunction extends Construct implements SSTConstruct {
+  public readonly id: string;
   public function: CdkFunction;
   private assetReplacer: CustomResource;
   private assetReplacerPolicy: Policy;
@@ -79,6 +80,7 @@ export class SsrFunction extends Construct {
 
   constructor(scope: Construct, id: string, props: SsrFunctionProps) {
     super(scope, id);
+    this.id = id;
 
     this.props = {
       ...props,
@@ -319,5 +321,23 @@ export class SsrFunction extends Construct {
       s3Key: assetKey,
     };
     code.bindToResource(cfnFunction);
+  }
+
+  /** @internal */
+  public getConstructMetadata() {
+    return {
+      type: "Function" as const,
+      data: {
+        arn: this.functionArn,
+        handler: this.props.handler,
+        localId: this.node.addr,
+        secrets: [] as string[],
+      },
+    };
+  }
+
+  /** @internal */
+  public getFunctionBinding() {
+    return undefined;
   }
 }

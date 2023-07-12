@@ -1,5 +1,23 @@
 # @serverless-stack/cli2
 
+## 2.20.1
+
+### Patch Changes
+
+- [`640f7c871`](https://github.com/serverless-stack/sst/commit/640f7c8710a136e4bae32ceaeaeff1f35fea292f) Thanks [@thdxr](https://github.com/thdxr)! - fix: esbuild has issues with keepName
+
+## 2.20.0
+
+### Minor Changes
+
+- [`cf1dbb553`](https://github.com/serverless-stack/sst/commit/cf1dbb553ea9a228c50ea30fd7baf4daafc4241c) Thanks [@thdxr](https://github.com/thdxr)! - functions: update esbuild
+
+## 2.19.2
+
+### Patch Changes
+
+- [`86a50659d`](https://github.com/serverless-stack/sst/commit/86a50659d4985d5c6fa359a242762fe80d54b1fa) Thanks [@thdxr](https://github.com/thdxr)! - metadata: add ssrfunction to metadata
+
 ## 2.19.1
 
 ### Patch Changes

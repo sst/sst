@@ -24,6 +24,6 @@
     "eslint-plugin-react-refresh": "^0.4.1",
     "typescript": "^5.0.2",
     "vite": "^4.4.0",
-    "sst": "^2.19.1"
+    "sst": "^2.20.1"
   }
 }

@@ -26,7 +26,10 @@ import type { EventBus } from "./EventBus.js";
 export type EventBusMetadata = ExtractMetadata<EventBus>;
 
 import type { Function as Fn } from "./Function.js";
-export type FunctionMetadata = ExtractMetadata<Fn>;
+import type { SsrFunction } from "./SsrFunction.js";
+export type FunctionMetadata =
+  | ExtractMetadata<Fn>
+  | ExtractMetadata<SsrFunction>;
 
 import type { KinesisStream } from "./KinesisStream.js";
 export type KinesisStreamMetadata = ExtractMetadata<KinesisStream>;
