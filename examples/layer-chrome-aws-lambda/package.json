@@ -16,14 +16,13 @@
     "aws-cdk-lib": "2.84.0",
     "constructs": "10.1.156",
     "typescript": "^5.1.6",
-    "@tsconfig/node16": "^16.1.0"
+    "@tsconfig/node18": "^18.2.0"
   },
   "workspaces": [
     "packages/*"
   ],
   "dependencies": {
-    "chrome-aws-lambda": "^10.1.0",
-    "puppeteer": "^20.8.0",
-    "puppeteer-core": "^20.8.0"
+    "puppeteer-core": "20.1.2",
+    "@sparticuz/chromium": "113.0.1"
   }
 }
