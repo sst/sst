@@ -28,7 +28,6 @@ import {
   Function,
   useFunctions,
   NodeJSProps,
-  FunctionProps,
   FunctionCopyFilesProps,
 } from "./Function.js";
 import { Duration, toCdkDuration } from "./util/duration.js";
@@ -57,14 +56,13 @@ export interface JobContainerProps {
    * ```js
    * container: {
    *   docker: {
-   *     entrypoint: ["executable", "param1", "param2"]
+   *     cmd: ["executable", "param1", "param2"]
    *   }
    * }
    * ```
    */
   docker: {
-    entrypoint: string[];
-    cmd?: string[];
+    cmd: string[];
   };
 }
 
@@ -312,7 +310,7 @@ export class Job extends Construct implements SSTConstruct {
 
     useFunctions().add(this.node.addr, {
       ...props,
-      runtime: this.convertJobRuntimeToLambdaRuntime(),
+      runtime: this.convertJobRuntimeToFunctionRuntime(),
     });
   }
 
@@ -390,13 +388,6 @@ export class Job extends Construct implements SSTConstruct {
     return new Project(this, "JobProject", {
       projectName: app.logicalPrefixedName(this.node.id),
       environment: {
-        buildImage:
-          runtime === "container"
-            ? LinuxBuildImage.fromAsset(this, "ContainerImage", {
-                directory: handler,
-                platform: Platform.custom("linux/amd64"),
-              })
-            : LinuxBuildImage.fromDockerRegistry("amazon/aws-lambda-nodejs:16"),
         computeType: this.normalizeMemorySize(memorySize || "3 GB"),
       },
       environmentVariables: {
@@ -409,17 +400,9 @@ export class Job extends Construct implements SSTConstruct {
         version: "0.2",
         phases: {
           build: {
-            commands:
-              runtime === "container"
-                ? [
-                    [
-                      ...container!.docker.entrypoint,
-                      ...(container!.docker.cmd || []),
-                    ].join(" "),
-                  ]
-                : [
-                    // commands will be set after the code is built
-                  ],
+            commands: [
+              // commands will be set after the code is built
+            ],
           },
         },
       }),
@@ -430,16 +413,19 @@ export class Job extends Construct implements SSTConstruct {
   }
 
   private createLiveDevJob(): Function {
-    const { runtime } = this.props;
-
     // Note: make the invoker function the same ID as the Job
     //       construct so users can identify the invoker function
     //       in the Console.
     const fn = new Function(this, this.node.id, {
       ...this.props,
-      runtime: this.convertJobRuntimeToLambdaRuntime(),
+      runtime: this.convertJobRuntimeToFunctionRuntime(),
+      container: this.convertJobContainerToFunctionContainer(),
       memorySize: 1024,
       timeout: "10 seconds",
+      environment: {
+        ...this.props.environment,
+        SST_DEBUG_JOB: "true",
+      },
     });
     fn._doNotAllowOthersToBind = true;
     return fn;
@@ -460,7 +446,7 @@ export class Job extends Construct implements SSTConstruct {
   }
 
   private buildCodeBuildProjectCode() {
-    const { handler, runtime } = this.props;
+    const { handler, runtime, container } = this.props;
 
     useDeferredTasks().add(async () => {
       // Build function
@@ -472,7 +458,35 @@ export class Job extends Construct implements SSTConstruct {
       }
 
       // No need to update code for container runtime
-      if (runtime === "container") return;
+      // Note: we could set the commands in `createCodeBuildJob` but
+      //       in `sst dev`, we want to avoid changing the CodeBuild resources
+      //       when `cmd` changes.
+      if (runtime === "container") {
+        const image = LinuxBuildImage.fromAsset(this, "ContainerImage", {
+          directory: handler,
+          platform: Platform.custom("linux/amd64"),
+        });
+        image.repository?.grantPull(this.job.role!);
+        const project = this.job.node.defaultChild as CfnProject;
+        project.environment = {
+          ...project.environment,
+          image: image.imageId,
+          imagePullCredentialsType: "SERVICE_ROLE",
+        };
+        project.source = {
+          type: "NO_SOURCE",
+          buildSpec: [
+            "version: 0.2",
+            "phases:",
+            "  build:",
+            "    commands:",
+            `      - ${container!.docker.cmd
+              .map((arg) => (arg.includes(" ") ? `"${arg}"` : arg))
+              .join(" ")}`,
+          ].join("\n"),
+        };
+        return;
+      }
 
       // Create wrapper that calls the handler
       const parsed = path.parse(result.handler);
@@ -509,6 +523,14 @@ export class Job extends Construct implements SSTConstruct {
       const code = AssetCode.fromAsset(result.out);
       const codeConfig = code.bind(this);
       const project = this.job.node.defaultChild as CfnProject;
+      const image = LinuxBuildImage.fromDockerRegistry(
+        "amazon/aws-lambda-nodejs:16"
+      );
+      project.environment = {
+        ...project.environment,
+        image: image.imageId,
+      };
+      image.repository?.grantPull(this.job.role!);
       project.source = {
         type: "S3",
         location: `${codeConfig.s3Location?.bucketName}/${codeConfig.s3Location?.objectKey}`,
@@ -557,7 +579,7 @@ export class Job extends Construct implements SSTConstruct {
             })
           : new PolicyStatement({
               effect: Effect.ALLOW,
-              actions: ["codebuild:StartBuild"],
+              actions: ["codebuild:StartBuild", "codebuild:StopBuild"],
               resources: [this.job.projectArn],
             }),
       ],
@@ -635,8 +657,18 @@ export class Job extends Construct implements SSTConstruct {
     return value;
   }
 
-  private convertJobRuntimeToLambdaRuntime() {
+  private convertJobRuntimeToFunctionRuntime() {
     const { runtime } = this.props;
     return runtime === "container" ? "container" : "nodejs16.x";
+  }
+
+  private convertJobContainerToFunctionContainer() {
+    const { runtime, container } = this.props;
+    if (runtime !== "container") return;
+    return {
+      docker: {
+        cmd: container?.docker.cmd,
+      },
+    };
   }
 }

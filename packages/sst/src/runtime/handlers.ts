@@ -29,7 +29,7 @@ interface BuildInput {
   props: FunctionProps;
 }
 
-interface StartWorkerInput {
+export interface StartWorkerInput {
   url: string;
   workerID: string;
   functionID: string;

@@ -593,13 +593,12 @@ export interface ContainerProps {
    * ```js
    * container: {
    *   docker: {
-   *     entrypoint: ["executable", "param1", "param2"]
+   *     cmd: ["executable", "param1", "param2"]
    *   }
    * }
    * ```
    */
   docker: {
-    entrypoint?: string[];
     cmd?: string[];
   };
 }
