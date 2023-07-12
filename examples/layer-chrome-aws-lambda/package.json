@@ -12,17 +12,17 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "sst": "^2.19.1",
+    "sst": "^2.20.1",
     "aws-cdk-lib": "2.84.0",
     "constructs": "10.1.156",
     "typescript": "^5.1.6",
-    "@tsconfig/node18": "^18.2.0"
+    "@tsconfig/node16": "^16.1.0"
   },
   "workspaces": [
     "packages/*"
   ],
   "dependencies": {
-    "puppeteer-core": "20.1.2",
-    "@sparticuz/chromium": "113.0.1"
+    "puppeteer-core^20.1.2": "^undefined",
+    "@sparticuz/chromium^113.0.1": "^undefined"
   }
 }
