@@ -10,7 +10,6 @@ import {
   createApp,
   stringLike,
   stringNotLike,
-  printResource,
 } from "./helper";
 import {
   App,
@@ -304,7 +303,6 @@ test("sst deploy", async () => {
     handler: "test/constructs/lambda.handler",
   });
   await app.finish();
-  printResource(stack, "AWS::IAM::Policy");
   // Invoker needs to call CodeBuild on `sst start`
   countResourcesLike(stack, "AWS::IAM::Policy", 1, {
     PolicyDocument: objectLike({

@@ -1123,7 +1123,7 @@ test("attachPermissions: array: sst Job", async () => {
         {
           Action: "lambda:*",
           Effect: "Allow",
-          Resource: { "Fn::GetAtt": ["job867F7ADB", "Arn"] },
+          Resource: { "Fn::GetAtt": ["jobManager94F70068", "Arn"] },
         },
       ],
       Version: "2012-10-17",
@@ -1135,7 +1135,7 @@ test("attachPermissions: array: sst Job", async () => {
         AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
         SST_APP: "app",
         SST_STAGE: "test",
-        SST_Job_functionName_job: { Ref: "job867F7ADB" },
+        SST_Job_functionName_job: { Ref: "jobManager94F70068" },
       },
     },
   });
