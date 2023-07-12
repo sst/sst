@@ -1,5 +1,133 @@
 # @serverless-stack/cli2
 
+## 2.21.0
+
+### Minor Changes
+
+- [#3111](https://github.com/serverless-stack/sst/pull/3111) [`db399a94d`](https://github.com/serverless-stack/sst/commit/db399a94ddf89fe54cbd5c1aae42482433001952) Thanks [@fwang](https://github.com/fwang)! - Job: support container runtime
+
+### Patch Changes
+
+- [#3111](https://github.com/serverless-stack/sst/pull/3111) [`db399a94d`](https://github.com/serverless-stack/sst/commit/db399a94ddf89fe54cbd5c1aae42482433001952) Thanks [@fwang](https://github.com/fwang)! - Job: support canceling job
+
+## 2.20.1
+
+### Patch Changes
+
+- [`640f7c871`](https://github.com/serverless-stack/sst/commit/640f7c8710a136e4bae32ceaeaeff1f35fea292f) Thanks [@thdxr](https://github.com/thdxr)! - fix: esbuild has issues with keepName
+
+## 2.20.0
+
+### Minor Changes
+
+- [`cf1dbb553`](https://github.com/serverless-stack/sst/commit/cf1dbb553ea9a228c50ea30fd7baf4daafc4241c) Thanks [@thdxr](https://github.com/thdxr)! - functions: update esbuild
+
+## 2.19.2
+
+### Patch Changes
+
+- [`86a50659d`](https://github.com/serverless-stack/sst/commit/86a50659d4985d5c6fa359a242762fe80d54b1fa) Thanks [@thdxr](https://github.com/thdxr)! - metadata: add ssrfunction to metadata
+
+## 2.19.1
+
+### Patch Changes
+
+- [`9176d8ad1`](https://github.com/serverless-stack/sst/commit/9176d8ad12a24982abf0d7c0495025faba145727) Thanks [@fwang](https://github.com/fwang)! - Disable pathMetadata by default
+
+- [`05dab5b8b`](https://github.com/serverless-stack/sst/commit/05dab5b8b2c814d164be259df2b79858ffccb34c) Thanks [@fwang](https://github.com/fwang)! - SsrSite: fix CloudFront not invalidated when s3 assets unchanged
+
+- [`426713243`](https://github.com/serverless-stack/sst/commit/42671324332dfa114bfefd4a6f7daba374b0ef23) Thanks [@fwang](https://github.com/fwang)! - Support CloudFormation resources tree view
+
+## 2.19.0
+
+### Minor Changes
+
+- [#3085](https://github.com/serverless-stack/sst/pull/3085) [`134b4f7e1`](https://github.com/serverless-stack/sst/commit/134b4f7e16e3802eedf59c4fd6bbf454589c5543) Thanks [@fwang](https://github.com/fwang)! - Function: container support
+
+## 2.18.4
+
+### Patch Changes
+
+- [#3083](https://github.com/serverless-stack/sst/pull/3083) [`6effd7d35`](https://github.com/serverless-stack/sst/commit/6effd7d351f2a101394845b9acfbb9cbbc2c522e) Thanks [@khuezy](https://github.com/khuezy)! - NextjsSite: update OpenNext 2.0.4
+
+- [#3083](https://github.com/serverless-stack/sst/pull/3083) [`6effd7d35`](https://github.com/serverless-stack/sst/commit/6effd7d351f2a101394845b9acfbb9cbbc2c522e) Thanks [@khuezy](https://github.com/khuezy)! - SsrSite: fix multiple s3 origins created for static assets
+
+- [#3076](https://github.com/serverless-stack/sst/pull/3076) [`f1249013d`](https://github.com/serverless-stack/sst/commit/f1249013d8476856558d2e6baaf25e55b76523b9) Thanks [@alex-klyuchnikov](https://github.com/alex-klyuchnikov)! - Function: await fs.writeFile for nodejs runtime
+
+## 2.18.3
+
+### Patch Changes
+
+- [`dd8ec0191`](https://github.com/serverless-stack/sst/commit/dd8ec0191947314b5b4a07cb8514cbba594a5022) Thanks [@fwang](https://github.com/fwang)! - Fix type file is incomplete
+
+## 2.18.2
+
+### Patch Changes
+
+- [#3055](https://github.com/serverless-stack/sst/pull/3055) [`c1d4fe461`](https://github.com/serverless-stack/sst/commit/c1d4fe461a3534365f22e07b48c97e5c4067ba77) Thanks [@juliankrispel](https://github.com/juliankrispel)! - Remove deprecated rds engine
+
+- [`eebe301c3`](https://github.com/serverless-stack/sst/commit/eebe301c3e0879b87fa58be5c04b8de6922afaf6) Thanks [@thdxr](https://github.com/thdxr)! - cli: fix issue where function invocation when cli starts crashes the whole thing
+
+- [`e2015c456`](https://github.com/serverless-stack/sst/commit/e2015c4569d53e68e52a65abb7b031fdb4b53abb) Thanks [@fwang](https://github.com/fwang)! - SsrSite: fix static assets CloudFront distribution path
+
+## 2.18.1
+
+### Patch Changes
+
+- [`150680d80`](https://github.com/serverless-stack/sst/commit/150680d80733dd85eed26407b647b2440188b8a0) Thanks [@fwang](https://github.com/fwang)! - SsrSite: add static file cache behaviors lazily
+
+- [#3056](https://github.com/serverless-stack/sst/pull/3056) [`06ccb9a9c`](https://github.com/serverless-stack/sst/commit/06ccb9a9c52c408d08ddb50ab64902eed8153d3d) Thanks [@khuezy](https://github.com/khuezy)! - SsrSite: fix s3 assets not setting cache-control
+
+- [`5fff7262d`](https://github.com/serverless-stack/sst/commit/5fff7262d982cd2b791e523930444ae22a7983d0) Thanks [@fwang](https://github.com/fwang)! - SsrSite: fix "sst dev" access denied error
+
+## 2.18.0
+
+### Minor Changes
+
+- [`7c71978fa`](https://github.com/serverless-stack/sst/commit/7c71978fa1cd461c6a192a7385c3ca26afbbfdf1) Thanks [@fwang](https://github.com/fwang)! - SsrSite: set cookie behavior to NONE in server cache policy
+
+### Patch Changes
+
+- [`e5fc4de81`](https://github.com/serverless-stack/sst/commit/e5fc4de81b640be37d76862f52aa54d9259fee0b) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: update to OpenNext 2.0.3
+
+- [#3051](https://github.com/serverless-stack/sst/pull/3051) [`2b824b13e`](https://github.com/serverless-stack/sst/commit/2b824b13e4a7a7ffc5864b2e43511ab26e3fd0cb) Thanks [@khuezy](https://github.com/khuezy)! - SsrSite: fix s3 assets cache-control header not set
+
+- [#3054](https://github.com/serverless-stack/sst/pull/3054) [`966d3b0d3`](https://github.com/serverless-stack/sst/commit/966d3b0d3adf367c5416277b8e5c63183f1f1954) Thanks [@berenddeboer](https://github.com/berenddeboer)! - Function: support java17 runtime
+
+- [`a734123f7`](https://github.com/serverless-stack/sst/commit/a734123f718ef12b95834928c14d29e564933bcc) Thanks [@fwang](https://github.com/fwang)! - StaticSite & SsrSite: lazy build
+
+## 2.17.8
+
+### Patch Changes
+
+- [`26afb063c`](https://github.com/serverless-stack/sst/commit/26afb063c0ddd8cbb1fdfe73b955e21ae831da9a) Thanks [@thdxr](https://github.com/thdxr)! - eventbux: fix issue adding two subscribers to the same event
+
+- [`b07a079be`](https://github.com/serverless-stack/sst/commit/b07a079be18c7585a968f5f3789bc3c3909fefeb) Thanks [@thdxr](https://github.com/thdxr)! - kysely: upgrade kysely
+
+## 2.17.7
+
+### Patch Changes
+
+- [#3035](https://github.com/serverless-stack/sst/pull/3035) [`21669e1c7`](https://github.com/serverless-stack/sst/commit/21669e1c72b4910de47c983503cbfe92c100c415) Thanks [@berenddeboer](https://github.com/berenddeboer)! - RDS: grant KMS permission if secret is encrypted with custom KMS key
+
+## 2.17.6
+
+### Patch Changes
+
+- [`f3ab3b8bc`](https://github.com/serverless-stack/sst/commit/f3ab3b8bc1c1bff87210cc3ce77ce5c4cec8fcd7) Thanks [@thdxr](https://github.com/thdxr)! - future/auth: keep claims and code in same state to avoid hijacking
+
+## 2.17.5
+
+### Patch Changes
+
+- [`6a4910dae`](https://github.com/serverless-stack/sst/commit/6a4910dae23cfdbc473a29d80edea6fe885bf200) Thanks [@thdxr](https://github.com/thdxr)! - eventbus: fix bug not respecting max retry setting
+
+## 2.17.4
+
+### Patch Changes
+
+- [`258497590`](https://github.com/serverless-stack/sst/commit/258497590c76a8a91b0673f3e7a0439d2099d774) Thanks [@thdxr](https://github.com/thdxr)! - eventbus: simplify retry algorithm
+
 ## 2.17.3
 
 ### Patch Changes

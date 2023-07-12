@@ -1,4 +1,4 @@
-A construct for a Lambda Function that allows you to [develop it locally](live-lambda-development.md). Supports JS, TypeScript, Python, Golang, and C#. It also applies a couple of defaults:
+A construct for a Lambda Function that allows you to [develop it locally](live-lambda-development.md). Supports JS, TypeScript, Python, Golang, C#, and container runtime. It also applies a couple of defaults:
 
 - Sets the default memory setting to 1024MB.
 - Sets the default Lambda function timeout to 10 seconds.
@@ -13,8 +13,21 @@ A construct for a Lambda Function that allows you to [develop it locally](live-l
 ```js
 import { Function } from "sst/constructs";
 
-new Function(stack, "MySnsLambda", {
-  handler: "src/sns/index.main",
+new Function(stack, "MyFunction", {
+  handler: "src/lambda.handler",
+});
+```
+
+### Creating a Container Function
+
+The `handler` property points to the directory containing the `Dockerfile`.
+
+```js
+import { Function } from "sst/constructs";
+
+new Function(stack, "MyFunction", {
+  runtime: "container",
+  handler: "src/lambda",
 });
 ```
 
@@ -24,7 +37,7 @@ Use the [`cdk.lambda.FunctionOptions`](https://docs.aws.amazon.com/cdk/api/v2/do
 
 ```js
 new Function(stack, "MyFunction", {
-  handler: "src/lambda.main",
+  handler: "src/lambda.handler",
   timeout: 10,
   environment: {
     TABLE_NAME: "notes",
@@ -60,7 +73,7 @@ import { StringParameter } from "aws-cdk-lib/aws-ssm";
 const apiKey = StringParameter.valueFromLookup(stack, "my_api_key");
 
 new Function(stack, "MyFunction", {
-  handler: "src/lambda.main",
+  handler: "src/lambda.handler",
   environment: {
     API_KEY: apiKey,
   },
@@ -87,7 +100,7 @@ export async function main(event) {
 
 The `handler` property points to the path of the entry point and handler function. Uses the format, `/path/to/file.function`. Where the first part is the path to the file, followed by the name of the function that's exported in that file.
 
-For example, if your handler file is in `src/lambda.ts` and it exported a function called `main`. The handler would be `src/lambda.main`.
+For example, if your handler file is in `src/lambda.ts` and it exported a function called `main`. The handler would be `src/lambda.handler`.
 
 SST checks for a file with a `.ts`, `.tsx`, `.js`, or `.jsx` extension.
 
@@ -103,6 +116,12 @@ Path to the entry point and handler function relative to the root. Uses the form
 #### handler
 
 Path to the handler function. Uses the format, `/path/to/file.go` or just `/path/to`.
+
+### Configuring Container runtime
+
+#### handler
+
+Path to the directory containing the `Dockerfile` relative to the root.
 
 ### Configuring C#(.NET) runtime
 
@@ -229,7 +248,7 @@ new Function(stack, "MyLambda", {
     buildOutputDir: "output",
   },
   handler: "example.Handler::handleRequest",
-  runtime: "java11",
+  runtime: "java17",
 });
 ```
 
@@ -239,7 +258,7 @@ new Function(stack, "MyLambda", {
 
 ```js
 new Function(stack, "MyFunction", {
-  handler: "src/lambda.main",
+  handler: "src/lambda.handler",
   url: true,
 });
 ```
@@ -248,7 +267,7 @@ new Function(stack, "MyFunction", {
 
 ```js
 new Function(stack, "MyFunction", {
-  handler: "src/lambda.main",
+  handler: "src/lambda.handler",
   url: {
     authorizer: "iam",
   },
@@ -259,7 +278,7 @@ new Function(stack, "MyFunction", {
 
 ```js
 new Function(stack, "MyFunction", {
-  handler: "src/lambda.main",
+  handler: "src/lambda.handler",
   url: {
     cors: false,
   },
@@ -270,7 +289,7 @@ new Function(stack, "MyFunction", {
 
 ```js
 new Function(stack, "MyFunction", {
-  handler: "src/lambda.main",
+  handler: "src/lambda.handler",
   url: {
     cors: {
       allowMethods: ["GET", "POST"],
@@ -288,7 +307,7 @@ new Function(stack, "MyFunction", {
 const queue = new Queue(stack, "MyDLQ");
 
 new Function(stack, "MyFunction", {
-  handler: "src/lambda.main",
+  handler: "src/lambda.handler",
   deadLetterQueue: queue.cdk.queue,
 });
 ```
@@ -297,7 +316,7 @@ new Function(stack, "MyFunction", {
 
 ```js {3-5,8}
 const fn = new Function(stack, "MyFunction", {
-  handler: "src/lambda.main",
+  handler: "src/lambda.handler",
   currentVersionOptions: {
     provisionedConcurrentExecutions: 5,
   },
@@ -320,7 +339,7 @@ const vpc = new ec2.Vpc(stack, 'MyVPC');
 const vpc = ec2.Vpc.fromLookup(stack, 'VPC', { ... });
 
 new Function(stack, "MyFunction", {
-  handler: "src/lambda.main",
+  handler: "src/lambda.handler",
   vpc,
   vpcSubnets: {
     subnetType: ec2.SubnetType.PRIVATE_WITH_NAT,

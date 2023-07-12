@@ -381,6 +381,10 @@ Import the underlying Route 53 hosted zone.
 
 _Type_ : <span class="mono">string</span>
 
+### contentType?
+
+_Type_ : <span class="mono">string</span>
+
 ### exclude
 
 _Type_ : <span class="mono">string</span><span class='mono'> | </span><span class='mono'>Array&lt;<span class="mono">string</span>&gt;</span>

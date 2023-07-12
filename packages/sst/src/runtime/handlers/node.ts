@@ -15,7 +15,13 @@ import { Colors } from "../../cli/colors.js";
 export const useNodeHandler = Context.memo(async () => {
   const workers = await useRuntimeWorkers();
   const handlers = useRuntimeHandlers();
-  const cache: Record<string, esbuild.BuildResult> = {};
+  const cache: Record<
+    string,
+    {
+      last: esbuild.BuildResult;
+      ctx: esbuild.BuildContext;
+    }
+  > = {};
   const project = useProject();
   const threads = new Map<string, Worker>();
 
@@ -27,7 +33,7 @@ export const useNodeHandler = Context.memo(async () => {
         .relative(project.paths.root, input.file)
         .split(path.sep)
         .join(path.posix.sep);
-      return Boolean(result.metafile?.inputs[relative]);
+      return Boolean(result.last.metafile?.inputs[relative]);
     },
     canHandle: (input) => input.startsWith("nodejs"),
     startWorker: async (input) => {
@@ -106,9 +112,12 @@ export const useNodeHandler = Context.memo(async () => {
         .split(path.sep)
         .join(path.posix.sep);
 
-      if (exists?.rebuild) {
-        const result = await exists.rebuild();
-        cache[input.functionID] = result;
+      if (exists) {
+        const result = await exists.ctx.rebuild();
+        cache[input.functionID] = {
+          ctx: exists.ctx,
+          last: result,
+        };
         return {
           type: "success",
           handler,
@@ -165,7 +174,8 @@ export const useNodeHandler = Context.memo(async () => {
       };
 
       try {
-        const result = await esbuild.build(options);
+        const ctx = await esbuild.context(options);
+        const result = await ctx.rebuild();
 
         // Install node_modules
         const installPackages = [
@@ -213,7 +223,7 @@ export const useNodeHandler = Context.memo(async () => {
               .readFile(path.join(src, "package.json"))
               .then((x) => x.toString())
           );
-          fs.writeFile(
+          await fs.writeFile(
             path.join(input.out, "package.json"),
             JSON.stringify({
               dependencies: Object.fromEntries(
@@ -254,7 +264,10 @@ export const useNodeHandler = Context.memo(async () => {
           } catch {}
         }
 
-        cache[input.functionID] = result;
+        cache[input.functionID] = {
+          ctx,
+          last: result,
+        };
         return {
           type: "success",
           handler,

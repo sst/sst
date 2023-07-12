@@ -22,15 +22,20 @@ export async function synth(opts: SynthOptions) {
   const { App } = await import("../constructs/App.js");
   const { useNodeHandler } = await import("../runtime/handlers/node.js");
   const { useGoHandler } = await import("../runtime/handlers/go.js");
+  const { useContainerHandler } = await import(
+    "../runtime/handlers/container.js"
+  );
   const { useRustHandler } = await import("../runtime/handlers/rust.js");
   const { usePythonHandler } = await import("../runtime/handlers/python.js");
   const { useJavaHandler } = await import("../runtime/handlers/java.js");
   useNodeHandler();
   useGoHandler();
+  useContainerHandler();
   usePythonHandler();
   useJavaHandler();
   useDotnetHandler();
   useRustHandler();
+  const cxapi = await import("@aws-cdk/cx-api");
   const { Configuration } = await import("sst-aws-cdk/lib/settings.js");
   const project = useProject();
   const identity = await useSTSIdentity();
@@ -51,6 +56,11 @@ export async function synth(opts: SynthOptions) {
   const cfg = new Configuration();
   await cfg.load();
   let previous = new Set<string>();
+
+  const context = cfg.context.all;
+  context[cxapi.PATH_METADATA_ENABLE_CONTEXT] =
+    project.config.cdk?.pathMetadata ?? false;
+
   while (true) {
     const app = new App(
       {
@@ -65,7 +75,7 @@ export async function synth(opts: SynthOptions) {
       },
       {
         outdir: opts.buildDir,
-        context: cfg.context.all,
+        context,
       }
     );
 

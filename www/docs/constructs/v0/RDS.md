@@ -33,7 +33,7 @@ _Parameters_
 import { RDS } from "@serverless-stack/resources";
 
 new RDS(this, "Database", {
-  engine: "postgresql10.14",
+  engine: "postgresql13.9",
   defaultDatabaseName: "my_database",
 });
 ```
@@ -62,7 +62,7 @@ const devConfig = {
 };
 
 new RDS(this, "Database", {
-  engine: "postgresql10.14",
+  engine: "postgresql13.9",
   defaultDatabaseName: "acme",
   scaling: app.stage === "prod" ? prodConfig : devConfig,
 });
@@ -74,7 +74,7 @@ new RDS(this, "Database", {
 
 ```js
 new RDS(this, "Database", {
-  engine: "postgresql10.14",
+  engine: "postgresql13.9",
   defaultDatabaseName: "acme",
   migrations: "path/to/migration/scripts",
 });
@@ -156,7 +156,7 @@ You can configure the internally created CDK `ServerlessCluster` instance.
 import * as cdk from "aws-cdk-lib";
 
 new RDS(this, "Database", {
-  engine: "postgresql10.14",
+  engine: "postgresql13.9",
   defaultDatabaseName: "acme",
   rdsServerlessCluster: {
     backupRetention: cdk.Duration.days(7),
@@ -178,7 +178,7 @@ You can override the internally created `VPC` instance.
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 
 new RDS(this, "Database", {
-  engine: "postgresql10.14",
+  engine: "postgresql13.9",
   defaultDatabaseName: "acme",
   rdsServerlessCluster: {  
     vpc: ec2.Vpc.fromLookup(this, "VPC", {
@@ -237,7 +237,7 @@ The internally created CDK `ServerlessCluster` instance.
 
 _Type_ : `string`
 
-Supported engine are `mysql5.6`, `mysql5.7`, and `postgresql10.14` and `postgresql11.13`.
+Supported engine are `mysql5.6`, `mysql5.7`, `postgresql11.13`, `postgresql11.16` and `postgresql13.9`
 
 ### defaultDatabaseName
 

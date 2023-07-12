@@ -1,5 +1,45 @@
 # create-sst
 
+## 2.21.0
+
+## 2.20.1
+
+## 2.20.0
+
+## 2.19.2
+
+## 2.19.1
+
+## 2.19.0
+
+## 2.18.4
+
+## 2.18.3
+
+## 2.18.2
+
+## 2.18.1
+
+## 2.18.0
+
+### Patch Changes
+
+- [#3054](https://github.com/serverless-stack/sst/pull/3054) [`966d3b0d3`](https://github.com/serverless-stack/sst/commit/966d3b0d3adf367c5416277b8e5c63183f1f1954) Thanks [@berenddeboer](https://github.com/berenddeboer)! - Function: support java17 runtime
+
+## 2.17.8
+
+## 2.17.7
+
+### Patch Changes
+
+- [`c6f802cc7`](https://github.com/serverless-stack/sst/commit/c6f802cc7641dc8574c0131c9c3363b7a546fcf0) Thanks [@thdxr](https://github.com/thdxr)! - create-sst: fix issue with upstream @tsconfig/node16 changing defaults
+
+## 2.17.6
+
+## 2.17.5
+
+## 2.17.4
+
 ## 2.17.3
 
 ## 2.17.2

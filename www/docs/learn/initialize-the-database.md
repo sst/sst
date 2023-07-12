@@ -3,6 +3,7 @@ title: Initialize the Database
 ---
 
 import ChangeText from "@site/src/components/ChangeText";
+import MultiPackagerCode from "@site/src/components/MultiPackagerCode";
 
 Now let's check back in on the `sst dev` command that we started in the [Create a New Project](create-a-new-project.md) chapter.
 
@@ -38,7 +39,7 @@ We'll use RDS with PostgreSQL in this tutorial because it is the most familiar o
 
 <ChangeText>
 
-Head over to the [Console](../console.md) link in your browser — `https://console.sst.dev/my-sst-app/Jay/local`
+Head over to the [Console](../console.md) link in your browser — [console.sst.dev](https://console.sst.dev/)
 
 </ChangeText>
 
@@ -109,7 +110,31 @@ In this case, our migration is creating a table, called `article`, to store the 
 Migration files are named with a timestamp to prevent naming conflicts when you are working with your team.
 :::
 
-You can create a new migration by running `npm run gen migration new`. This command will ask for the name of a migration and it'll generate a new file with the current timestamp.
+You can create a new migration from a template using a bash script. The script will ask for the name of a migration, then it'll generate a new file with the current timestamp.
+
+<MultiPackagerCode>
+<TabItem value="npm">
+
+```bash
+npm run gen migration new
+````
+
+</TabItem>
+<TabItem value="yarn">
+
+```bash
+yarn run gen migration new
+```
+
+</TabItem>
+<TabItem value="pnpm">
+
+```bash
+pnpm run gen migration new
+```
+
+</TabItem>
+</MultiPackagerCode>
 
 We'll do this later in the tutorial. For now, let's apply our first migration.
 
@@ -119,7 +144,7 @@ We'll do this later in the tutorial. For now, let's apply our first migration.
 
 <ChangeText>
 
-Click on the **Migrations** button on the top right. And click the **Apply** button on the **article** migration.
+Click on the **Migrations** button on the top right, then click the **Apply** button on the **article** migration.
 
 </ChangeText>
 
@@ -152,9 +177,8 @@ Let's quickly recap what we've done so far:
 2. Deployed the infrastructure for our app to AWS:
    - Including a RDS PostgreSQL database based on `stacks/Database.ts`.
 3. We then opened up the Console and ran a migration in `packages/core/migrations/`.
-4. It created an `article` table that we'll use to store the links our users will submit.
-
-Finally, to test that everything is working, we queried our database.
+4. The migration created an `article` table that we'll use to store the links our users will submit.
+5. Finally, to test that everything is working, we queried our database.
 
 </details>
 

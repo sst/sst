@@ -9,6 +9,8 @@ import {
   stringLike,
   ABSENT,
   createApp,
+  objectLike,
+  ANY,
 } from "./helper";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
@@ -214,7 +216,7 @@ test("copyFiles nonexistent", async () => {
   }).rejects.toThrow(/no such file/);
 });
 
-test("runtime-string", async () => {
+test("runtime: nodejs10.x", async () => {
   const app = await createApp();
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
@@ -227,7 +229,22 @@ test("runtime-string", async () => {
   });
 });
 
-test("runtime-string-invalid", async () => {
+test("runtime: container", async () => {
+  const app = await createApp();
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    runtime: "container",
+    handler: "test/constructs/container-function",
+  });
+  await app.finish();
+  hasResource(stack, "AWS::Lambda::Function", {
+    Code: objectLike({
+      ImageUri: ANY,
+    }),
+  });
+});
+
+test("runtime: invalid", async () => {
   const app = await createApp();
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
@@ -801,14 +818,18 @@ test("nodejs.install: valid package", async () => {
   });
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
-    handler: "test/lambda.handler",
+    handler: "test/constructs/lambda/fn.handler",
     nodejs: {
       install: ["lodash"],
     },
   });
-  await expect(async () => {
+  let error = null;
+  try {
     await app.finish();
-  }).not.toThrowError();
+  } catch (e) {
+    error = e;
+  }
+  expect(error).toBe(null);
 });
 
 test("nodejs.install: invalid package", async () => {
@@ -822,9 +843,7 @@ test("nodejs.install: invalid package", async () => {
       install: ["packagethatdoesnotexist"],
     },
   });
-  await expect(async () => {
-    await app.finish();
-  }).rejects.toThrow(/Failed to build function/);
+  await expect(() => app.finish()).rejects.toThrow(/Failed to build function/);
 });
 
 /////////////////////////////
@@ -1104,7 +1123,7 @@ test("attachPermissions: array: sst Job", async () => {
         {
           Action: "lambda:*",
           Effect: "Allow",
-          Resource: { "Fn::GetAtt": ["job867F7ADB", "Arn"] },
+          Resource: { "Fn::GetAtt": ["jobManager94F70068", "Arn"] },
         },
       ],
       Version: "2012-10-17",
@@ -1116,7 +1135,7 @@ test("attachPermissions: array: sst Job", async () => {
         AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
         SST_APP: "app",
         SST_STAGE: "test",
-        SST_Job_functionName_job: { Ref: "job867F7ADB" },
+        SST_Job_functionName_job: { Ref: "jobManager94F70068" },
       },
     },
   });

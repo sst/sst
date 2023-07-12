@@ -42,6 +42,7 @@ export interface ConfigOptions {
     imageAssetPublishingRoleArn?: string;
     cloudFormationExecutionRole?: string;
     lookupRoleArn?: string;
+    pathMetadata?: boolean;
   };
 }
 

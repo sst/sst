@@ -51,7 +51,7 @@ This defines a cron job that'll run every minute and points to the function that
 The fastest rate a cron job can be run is every minute.
 :::
 
-Make sure to import the [`Cron`](constructs/Bucket.md) construct.
+Make sure to import the [`Cron`](constructs/Cron.md) construct.
 
 ```diff title="stacks/Default.ts"
 - import { StackContext, NextjsSite } from "sst/constructs";

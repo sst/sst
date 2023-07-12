@@ -1,5 +1,39 @@
 # @serverless-stack/docs
 
+## 2.5.0
+
+### Minor Changes
+
+- [#3111](https://github.com/serverless-stack/sst/pull/3111) [`db399a94d`](https://github.com/serverless-stack/sst/commit/db399a94ddf89fe54cbd5c1aae42482433001952) Thanks [@fwang](https://github.com/fwang)! - Job: support container runtime
+
+### Patch Changes
+
+- [#3111](https://github.com/serverless-stack/sst/pull/3111) [`db399a94d`](https://github.com/serverless-stack/sst/commit/db399a94ddf89fe54cbd5c1aae42482433001952) Thanks [@fwang](https://github.com/fwang)! - Job: support canceling job
+
+## 2.4.1
+
+### Patch Changes
+
+- [`9176d8ad1`](https://github.com/serverless-stack/sst/commit/9176d8ad12a24982abf0d7c0495025faba145727) Thanks [@fwang](https://github.com/fwang)! - Disable pathMetadata by default
+
+## 2.4.0
+
+### Minor Changes
+
+- [#3085](https://github.com/serverless-stack/sst/pull/3085) [`134b4f7e1`](https://github.com/serverless-stack/sst/commit/134b4f7e16e3802eedf59c4fd6bbf454589c5543) Thanks [@fwang](https://github.com/fwang)! - Function: container support
+
+## 2.3.5
+
+### Patch Changes
+
+- [#3055](https://github.com/serverless-stack/sst/pull/3055) [`c1d4fe461`](https://github.com/serverless-stack/sst/commit/c1d4fe461a3534365f22e07b48c97e5c4067ba77) Thanks [@juliankrispel](https://github.com/juliankrispel)! - Remove deprecated rds engine
+
+## 2.3.4
+
+### Patch Changes
+
+- [#3054](https://github.com/serverless-stack/sst/pull/3054) [`966d3b0d3`](https://github.com/serverless-stack/sst/commit/966d3b0d3adf367c5416277b8e5c63183f1f1954) Thanks [@berenddeboer](https://github.com/berenddeboer)! - Function: support java17 runtime
+
 ## 2.3.3
 
 ### Patch Changes

@@ -2,7 +2,6 @@ import esbuild from "esbuild";
 import fs from "fs/promises";
 
 const pkg = await fs.readFile("package.json").then(JSON.parse);
-const watch = false;
 
 const result = await esbuild.build({
   entryPoints: ["src/cli/sst.ts"],
@@ -19,9 +18,6 @@ const result = await esbuild.build({
   platform: "node",
   target: "esnext",
   format: "esm",
-  watch: watch && {
-    onRebuild: console.log,
-  },
   banner: {
     js: [
       `import { createRequire as topLevelCreateRequire } from 'module';`,
@@ -54,7 +50,6 @@ await esbuild.build({
 
 // support/bridge
 await esbuild.build({
-  keepNames: true,
   bundle: true,
   minify: true,
   platform: "node",
@@ -69,10 +64,10 @@ await esbuild.build({
   },
   outfile: "./dist/support/bridge/bridge.mjs",
 });
+fs.cp(`support/bridge/Dockerfile`, `dist/support/bridge/Dockerfile`);
 
 // support/event-bus-retrier
 await esbuild.build({
-  keepNames: true,
   bundle: true,
   minify: true,
   platform: "node",
@@ -92,7 +87,6 @@ await esbuild.build({
 // note: do not add topLevelCreateRequire banner b/c the
 //       migrator function will get built again in RDS.
 await esbuild.build({
-  keepNames: true,
   bundle: true,
   minify: true,
   platform: "node",
@@ -104,7 +98,6 @@ await esbuild.build({
 
 // support/edge-function
 await esbuild.build({
-  keepNames: true,
   bundle: true,
   minify: true,
   platform: "node",
@@ -129,41 +122,24 @@ await esbuild.build({
 
 // Move support packages that need to be transpiled
 await Promise.all(
-  ["bootstrap-metadata-function", "custom-resources", "script-function"].map(
-    (dir) =>
-      esbuild.build({
-        keepNames: true,
-        bundle: true,
-        platform: "node",
-        target: "esnext",
-        format: "esm",
-        entryPoints: [`./support/${dir}/index.ts`],
-        banner: {
-          js: [
-            `import { createRequire as topLevelCreateRequire } from 'module';`,
-            `const require = topLevelCreateRequire(import.meta.url);`,
-          ].join(""),
-        },
-        outExtension: {
-          ".js": ".mjs",
-        },
-        outdir: `./dist/support/${dir}/`,
-      })
-  )
-);
-
-// Move support packages that need to be transpiled, but will be used
-// in sst.Function that will get transpiled again.
-// Note: do not add `createRequire` banner.
-await Promise.all(
-  ["job-invoker"].map((dir) =>
+  [
+    "bootstrap-metadata-function",
+    "custom-resources",
+    "script-function",
+    "job-manager",
+  ].map((dir) =>
     esbuild.build({
-      keepNames: true,
       bundle: true,
       platform: "node",
       target: "esnext",
       format: "esm",
       entryPoints: [`./support/${dir}/index.ts`],
+      banner: {
+        js: [
+          `import { createRequire as topLevelCreateRequire } from 'module';`,
+          `const require = topLevelCreateRequire(import.meta.url);`,
+        ].join(""),
+      },
       outExtension: {
         ".js": ".mjs",
       },
@@ -176,7 +152,6 @@ await Promise.all(
 await Promise.all(
   ["base-site-archiver", "ssr-site-function-archiver"].map((file) =>
     esbuild.build({
-      keepNames: true,
       bundle: true,
       minify: true,
       platform: "node",
@@ -216,4 +191,3 @@ await Promise.all(
 );
 
 console.log("Built");
-if (watch) console.log("Watching");

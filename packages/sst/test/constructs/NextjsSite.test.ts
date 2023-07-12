@@ -16,7 +16,7 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 import * as cf from "aws-cdk-lib/aws-cloudfront";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
-import { Api, Stack, NextjsSite } from "../../dist/constructs";
+import { Api, Stack, NextjsSite, NextjsSiteProps } from "../../dist/constructs";
 
 process.env.SST_RESOURCES_TESTS = "enabled";
 const sitePath = "test/constructs/nextjs-site";
@@ -39,16 +39,26 @@ beforeAll(async () => {
   });
 });
 
+async function createSite(
+  props?: NextjsSiteProps | ((stack: Stack) => NextjsSiteProps)
+) {
+  const app = await createApp();
+  const stack = new Stack(app, "stack");
+  const site = new NextjsSite(stack, "Site", {
+    path: sitePath,
+    buildCommand: "echo skip",
+    ...(typeof props === "function" ? props(stack) : props),
+  });
+  await app.finish();
+  return { app, stack, site };
+}
+
 /////////////////////////////
 // Test Constructor
 /////////////////////////////
 
 test("default", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  const site = new NextjsSite(stack, "Site", {
-    path: sitePath,
-    buildCommand: "echo skip",
-  });
+  const { stack, site } = await createSite();
   expect(site.url).toBeDefined();
   expect(site.customDomainUrl).toBeUndefined();
   expect(site.cdk?.bucket.bucketArn).toBeDefined();
@@ -68,10 +78,7 @@ test("default", async () => {
 });
 
 test("timeout defined", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new NextjsSite(stack, "Site", {
-    path: sitePath,
-    buildCommand: "echo skip",
+  const { stack } = await createSite({
     timeout: 100,
   });
   hasResource(stack, "AWS::CloudFront::Distribution", {
@@ -88,10 +95,7 @@ test("timeout defined", async () => {
 });
 
 test("cdk.distribution.defaultBehavior", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new NextjsSite(stack, "Site", {
-    path: sitePath,
-    buildCommand: "echo skip",
+  const { stack, site } = await createSite({
     cdk: {
       distribution: {
         defaultBehavior: {
@@ -110,11 +114,7 @@ test("cdk.distribution.defaultBehavior", async () => {
 });
 
 test("cdk.revalidation.vpc: not set", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new NextjsSite(stack, "Site", {
-    path: sitePath,
-    buildCommand: "echo skip",
-  });
+  const { stack } = await createSite();
   hasResource(stack, "AWS::Lambda::Function", {
     Description: "Next.js revalidator",
     VpcConfig: ABSENT,
@@ -122,16 +122,13 @@ test("cdk.revalidation.vpc: not set", async () => {
 });
 
 test("cdk.revalidation.vpc: set", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new NextjsSite(stack, "Site", {
-    path: sitePath,
-    buildCommand: "echo skip",
+  const { stack } = await createSite((stack) => ({
     cdk: {
       revalidation: {
         vpc: new Vpc(stack, "Vpc"),
       },
     },
-  });
+  }));
   hasResource(stack, "AWS::Lambda::Function", {
     Description: "Next.js revalidator",
     VpcConfig: ANY,
