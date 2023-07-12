@@ -23,9 +23,7 @@ new Job(stack, "MyJob", {
   runtime: "container",
   handler: "src/job",
   container: {
-    docker: {
-      cmd: ["python3", "/var/task/my-script.py"]
-    }
+    cmd: ["python3", "/var/task/my-script.py"]
   }
 });
 ```

@@ -16,7 +16,6 @@ import {
   LinuxBuildImage,
   BuildSpec,
   ComputeType,
-  IBuildImage,
 } from "aws-cdk-lib/aws-codebuild";
 import { RetentionDays, LogRetention } from "aws-cdk-lib/aws-logs";
 
@@ -50,33 +49,49 @@ export type JobMemorySize = "3 GB" | "7 GB" | "15 GB" | "145 GB";
 export interface JobNodeJSProps extends NodeJSProps {}
 export interface JobContainerProps {
   /**
-   * Configure docker build options
-   *
+   * Specify or override the CMD on the Docker image.
    * @example
    * ```js
    * container: {
-   *   docker: {
-   *     cmd: ["executable", "param1", "param2"]
-   *   }
+   *   cmd: ["python3", "my_script.py"]
    * }
    * ```
    */
-  docker: {
-    cmd: string[];
-  };
+  cmd: string[];
 }
 
 export interface JobProps {
-  // TODO add docs
+  /**
+   * The runtime environment for the job.
+   * @default "nodejs"
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   runtime: "container",
+   *   handler: "src/job",
+   * })
+   *```
+   */
   runtime?: "nodejs" | "container";
   /**
-   * Path to the entry point and handler function. Of the format:
-   * `/path/to/file.function`.
+   * For "nodejs" runtime, point to the entry point and handler function.
+   * Of the format: `/path/to/file.function`.
    *
    * @example
    * ```js
    * new Job(stack, "MyJob", {
    *   handler: "src/job.handler",
+   * })
+   *```
+   *
+   * For "container" runtime, point the handler to the directory containing
+   * the Dockerfile.
+   *
+   * @example
+   * ```js
+   * new Job(stack, "MyJob", {
+   *   runtime: "container",
+   *   handler: "src/job", // Dockerfile is at "src/job/Dockerfile"
    * })
    *```
    */
@@ -287,7 +302,6 @@ export class Job extends Construct implements SSTConstruct {
     const isLiveDevEnabled =
       app.mode === "dev" && (this.props.enableLiveDev === false ? false : true);
 
-    // TODO add test
     this.validateContainerProps();
 
     this.job = this.createCodeBuildJob();
@@ -419,7 +433,6 @@ export class Job extends Construct implements SSTConstruct {
     const fn = new Function(this, this.node.id, {
       ...this.props,
       runtime: this.convertJobRuntimeToFunctionRuntime(),
-      container: this.convertJobContainerToFunctionContainer(),
       memorySize: 1024,
       timeout: "10 seconds",
       environment: {
@@ -480,7 +493,7 @@ export class Job extends Construct implements SSTConstruct {
             "phases:",
             "  build:",
             "    commands:",
-            `      - ${container!.docker.cmd
+            `      - ${container!.cmd
               .map((arg) => (arg.includes(" ") ? `"${arg}"` : arg))
               .join(" ")}`,
           ].join("\n"),
@@ -660,15 +673,5 @@ export class Job extends Construct implements SSTConstruct {
   private convertJobRuntimeToFunctionRuntime() {
     const { runtime } = this.props;
     return runtime === "container" ? "container" : "nodejs16.x";
-  }
-
-  private convertJobContainerToFunctionContainer() {
-    const { runtime, container } = this.props;
-    if (runtime !== "container") return;
-    return {
-      docker: {
-        cmd: container?.docker.cmd,
-      },
-    };
   }
 }

@@ -587,20 +587,15 @@ export interface JavaProps {
 
 export interface ContainerProps {
   /**
-   * Configure docker build options
-   *
+   * Specify or override the CMD on the Docker image.
    * @example
    * ```js
    * container: {
-   *   docker: {
-   *     cmd: ["executable", "param1", "param2"]
-   *   }
+   *   cmd: ["index.handler"]
    * }
    * ```
    */
-  docker: {
-    cmd?: string[];
-  };
+  cmd?: string[];
 }
 
 /**
@@ -795,6 +790,7 @@ export class Function extends CDKFunction implements SSTConstruct {
                 ...(architecture?.dockerPlatform
                   ? { platform: Platform.custom(architecture.dockerPlatform) }
                   : {}),
+                ...(props.container?.cmd ? { cmd: props.container.cmd } : {}),
               }),
               handler: CDKHandler.FROM_IMAGE,
               runtime: CDKRuntime.FROM_IMAGE,

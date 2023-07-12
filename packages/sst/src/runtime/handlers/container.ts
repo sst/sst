@@ -155,9 +155,11 @@ export const useContainerHandler = Context.memo(async () => {
   }
 
   function startLambdaWorker(input: StartWorkerInput) {
+    const fn = useFunctions().fromID(input.functionID);
     dockerRun(
       input,
       {
+        cmd: fn?.container?.cmd,
         envs: {
           AWS_LAMBDA_RUNTIME_API: `host.docker.internal:${server.port}/${input.workerID}`,
         },
@@ -175,17 +177,16 @@ export const useContainerHandler = Context.memo(async () => {
     //    - on `sst dev`, set `SST_DEBUG_JOB` env var here
     // 2. Worker exits at the end of the run.
 
-    const fn = useFunctions().fromID(input.functionID);
-
     // Fetch request
     const result = await init();
     const awsRequestId = result.headers["lambda-runtime-aws-request-id"];
+    const fn = useFunctions().fromID(input.functionID);
     try {
       dockerRun(
         input,
         {
           entrypoint: "",
-          cmd: fn?.container?.docker.cmd,
+          cmd: fn?.container?.cmd,
           envs: {
             SST_PAYLOAD: result.body,
           },

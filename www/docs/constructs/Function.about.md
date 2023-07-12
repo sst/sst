@@ -20,14 +20,32 @@ new Function(stack, "MyFunction", {
 
 ### Creating a Container Function
 
-The `handler` property points to the directory containing the `Dockerfile`.
+To create a container function, set `runtime` to "container" and point the handler to the directory containing the Dockerfile.
 
 ```js
-import { Function } from "sst/constructs";
+new Function(stack, "MyFunction", {
+  runtime: "container",
+  handler: "src/lambda",
+});
+```
+
+Lambda will run the function specified in `CMD` section of the Dockerfile. If you want to create multiple functions from the same image but each with a different function, you can override the `CMD`:
+
+```js {5,13}
+new Function(stack, "MyFunction", {
+  runtime: "container",
+  handler: "src/lambda",
+  container: {
+    cmd: ["get.handler"]
+  }
+});
 
 new Function(stack, "MyFunction", {
   runtime: "container",
   handler: "src/lambda",
+  container: {
+    cmd: ["put.handler"]
+  }
 });
 ```
 

@@ -103,9 +103,7 @@ test("runtime: container", async () => {
     handler: "test/constructs/container-function",
     timeout: "1 hour",
     container: {
-      docker: {
-        cmd: ["echo", "hello"],
-      },
+      cmd: ["echo", "hello"],
     },
   });
   hasResource(stack, "AWS::CodeBuild::Project", {
@@ -123,9 +121,7 @@ test("runtime: container: cmd with space", async () => {
     runtime: "container",
     handler: "test/constructs/container-function",
     container: {
-      docker: {
-        cmd: ["echo", "hello world"],
-      },
+      cmd: ["echo", "hello world"],
     },
   });
   hasResource(stack, "AWS::CodeBuild::Project", {
