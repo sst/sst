@@ -42,7 +42,7 @@ export const handler: CloudFrontRequestHandler = async (event) => {
     query,
     protocol: "https",
     body: request.body?.data ? Buffer.from(request.body.data, "base64") : undefined,
-  });
+  }, { unsignableHeaders: new Set(["x-forwarded-for" ]) });
 
   request.headers = headerBagToCloudFrontHeaders(signed.headers);
 
