@@ -7,6 +7,7 @@ import {
   isLambdaUrlRequest,
   queryStringToQuery,
 } from "./helpers";
+import { queryToQueryString } from "./helpers/queryToQueryString";
 
 export const handler: CloudFrontRequestHandler = async (event) => {
   const request = event.Records[0].cf.request;
@@ -19,12 +20,18 @@ export const handler: CloudFrontRequestHandler = async (event) => {
 
   const headerBag = cfHeadersToHeaderBag(request.headers);
 
+  const query = queryStringToQuery(request.querystring);
+
+  if (query.url !== undefined) {
+    query.url = decodeURIComponent(query.url);
+  }
+
   const requestToSign = {
     method: request.method,
     headers: headerBag,
     hostname: headerBag.host,
     path: request.uri,
-    query: queryStringToQuery(request.querystring),
+    query,
     protocol: "https",
   };
 
@@ -43,6 +50,7 @@ export const handler: CloudFrontRequestHandler = async (event) => {
     body: Buffer.from(request.body.data, "base64").toString(),
   });
   request.headers = headerBagToCfHeaders(signed.headers);
+  request.querystring = queryToQueryString(query);
 
   return request;
 };
