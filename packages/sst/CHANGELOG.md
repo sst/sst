@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.21.5
+
+### Patch Changes
+
+- [`616be5f1b`](https://github.com/serverless-stack/sst/commit/616be5f1be7436f756f69592553b6f43f83185b6) Thanks [@fwang](https://github.com/fwang)! - Fix hosted zone not found
+
 ## 2.21.4
 
 ### Patch Changes
