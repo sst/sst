@@ -236,12 +236,6 @@ export async function useLocalServer(opts: Opts) {
     });
   }
 
-  type Log =
-    | ["e", number, string, string]
-    | ["s", number, string, string, boolean]
-    | ["r", number, string, string, number]
-    | ["m", number, string, string, string, string, string];
-
   function publish(type: string, properties: any) {
     const msg = JSON.stringify({
       type,
@@ -251,15 +245,6 @@ export async function useLocalServer(opts: Opts) {
   }
 
   bus.subscribe("function.invoked", async (evt) => {
-    publish("log", [
-      [
-        "s",
-        Date.now(),
-        evt.properties.functionID,
-        evt.properties.requestID,
-        false,
-      ],
-    ] satisfies Log[]);
     publish("function.invoked", evt.properties);
     updateFunction(evt.properties.functionID, (draft) => {
       if (draft.invocations.length >= 25) draft.invocations.pop();
@@ -275,17 +260,7 @@ export async function useLocalServer(opts: Opts) {
   });
 
   bus.subscribe("worker.stdout", (evt) => {
-    publish("log", [
-      [
-        "m",
-        Date.now(),
-        evt.properties.functionID,
-        evt.properties.requestID,
-        "info",
-        evt.properties.message,
-        Math.random().toString(),
-      ],
-    ] satisfies Log[]);
+    publish("worker.stdout", evt.properties);
     updateFunction(evt.properties.functionID, (draft) => {
       const entry = draft.invocations.find(
         (i) => i.id === evt.properties.requestID
@@ -299,9 +274,6 @@ export async function useLocalServer(opts: Opts) {
   });
 
   bus.subscribe("function.success", (evt) => {
-    publish("log", [
-      ["e", Date.now(), evt.properties.functionID, evt.properties.requestID],
-    ] satisfies Log[]);
     publish("function.success", evt.properties);
     updateFunction(evt.properties.functionID, (draft) => {
       const invocation = draft.invocations.find(
@@ -317,9 +289,6 @@ export async function useLocalServer(opts: Opts) {
   });
 
   bus.subscribe("function.error", (evt) => {
-    publish("log", [
-      ["e", Date.now(), evt.properties.functionID, evt.properties.requestID],
-    ] satisfies Log[]);
     publish("function.error", evt.properties);
     updateFunction(evt.properties.functionID, (draft) => {
       const invocation = draft.invocations.find(
