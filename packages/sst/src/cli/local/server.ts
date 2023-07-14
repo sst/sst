@@ -260,6 +260,7 @@ export async function useLocalServer(opts: Opts) {
         false,
       ],
     ] satisfies Log[]);
+    publish("function.invoked", evt.properties);
     updateFunction(evt.properties.functionID, (draft) => {
       if (draft.invocations.length >= 25) draft.invocations.pop();
       draft.invocations.unshift({
@@ -301,6 +302,7 @@ export async function useLocalServer(opts: Opts) {
     publish("log", [
       ["e", Date.now(), evt.properties.functionID, evt.properties.requestID],
     ] satisfies Log[]);
+    publish("function.success", evt.properties);
     updateFunction(evt.properties.functionID, (draft) => {
       const invocation = draft.invocations.find(
         (x) => x.id === evt.properties.requestID
@@ -318,6 +320,7 @@ export async function useLocalServer(opts: Opts) {
     publish("log", [
       ["e", Date.now(), evt.properties.functionID, evt.properties.requestID],
     ] satisfies Log[]);
+    publish("function.error", evt.properties);
     updateFunction(evt.properties.functionID, (draft) => {
       const invocation = draft.invocations.find(
         (x) => x.id === evt.properties.requestID
