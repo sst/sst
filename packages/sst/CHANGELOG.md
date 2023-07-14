@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.21.6
+
+### Patch Changes
+
+- [`3ab8384f8`](https://github.com/serverless-stack/sst/commit/3ab8384f87b81bd956371e0d6805e7493b539731) Thanks [@thdxr](https://github.com/thdxr)! - console: simplified event publishing
+
 ## 2.21.5
 
 ### Patch Changes

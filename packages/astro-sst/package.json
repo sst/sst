@@ -1,7 +1,7 @@
 {
   "name": "astro-sst",
   "description": "Adapter for Astro apps to work on AWS Lambda and AWS Lambda@Edge.",
-  "version": "2.21.5",
+  "version": "2.21.6",
   "type": "module",
   "license": "MIT",
   "author": {
