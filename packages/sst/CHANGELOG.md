@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.21.4
+
+### Patch Changes
+
+- [`7edbb7876`](https://github.com/serverless-stack/sst/commit/7edbb7876687f7704bffe4bec744d3dc30f76a4b) Thanks [@thdxr](https://github.com/thdxr)! - forward all events
+
 ## 2.21.3
 
 ### Patch Changes
