@@ -57,10 +57,6 @@ export async function synth(opts: SynthOptions) {
   await cfg.load();
   let previous = new Set<string>();
 
-  const context = cfg.context.all;
-  context[cxapi.PATH_METADATA_ENABLE_CONTEXT] =
-    project.config.cdk?.pathMetadata ?? false;
-
   while (true) {
     const app = new App(
       {
@@ -75,7 +71,11 @@ export async function synth(opts: SynthOptions) {
       },
       {
         outdir: opts.buildDir,
-        context,
+        context: {
+          ...cfg.context.all,
+          [cxapi.PATH_METADATA_ENABLE_CONTEXT]:
+            project.config.cdk?.pathMetadata ?? false,
+        },
       }
     );
 
