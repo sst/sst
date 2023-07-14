@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.21.2
+
+### Patch Changes
+
+- [`bf06ac82b`](https://github.com/serverless-stack/sst/commit/bf06ac82bee9765ab85fba61593d44d83fd15722) Thanks [@thdxr](https://github.com/thdxr)! - function: make the live debug bridge less chatty
+
 ## 2.21.1
 
 ### Patch Changes
