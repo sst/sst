@@ -551,6 +551,15 @@ export interface GoProps {
   ldFlags?: string[];
 
   /**
+   * The build tags to use when building the Go module.
+   *
+   * @default ""
+   *
+   * @example "enterprise pro"
+   */
+  buildTags?: string;
+
+  /**
    * Whether to enable CGO for the Go build.
    *
    * @default false
