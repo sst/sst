@@ -152,12 +152,7 @@ export async function handler(event: any, context: any) {
         env: ENVIRONMENT,
       },
     })) {
-      device.publish(
-        `${PREFIX}/events`,
-        JSON.stringify(fragment),
-        { qos: 1 },
-        console.log
-      );
+      device.publish(`${PREFIX}/events`, JSON.stringify(fragment), { qos: 1 });
     }
   });
 
