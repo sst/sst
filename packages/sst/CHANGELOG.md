@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.21.3
+
+### Patch Changes
+
+- [`7528d6841`](https://github.com/serverless-stack/sst/commit/7528d6841cc01df7420a4bf45085a6f8af2d63fe) Thanks [@thdxr](https://github.com/thdxr)! - forward realtime events to new console
+
 ## 2.21.2
 
 ### Patch Changes
