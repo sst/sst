@@ -98,12 +98,11 @@ export class RemixSite extends SsrSite {
     // Ensure build directory exists
     const buildPath = path.join(this.props.path, "build");
     fs.mkdirSync(buildPath, { recursive: true });
-    
+
     // Copy the server lambda handler
-    const handler = path.join(buildPath, "server.js");
     fs.copyFileSync(
       path.resolve(__dirname, `../support/remix-site-function/${wrapperFile}`),
-      handler
+      path.join(buildPath, "server.js")
     );
 
     // Copy the Remix polyfil to the server build directory
