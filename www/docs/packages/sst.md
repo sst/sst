@@ -278,7 +278,7 @@ In addition to the [global options](#global-options), the following options are 
 
 ### `sst remove`
 
-Remove your app and all their resources from AWS. Or optionally deploy a specific stack by passing in a `filter`.
+Remove your app and all their resources from AWS. Or optionally remove a specific stack by passing in a `filter`.
 
 ```bash
 npx sst remove [filter] [options]
