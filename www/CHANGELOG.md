@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.5.2
+
+### Patch Changes
+
+- [#3106](https://github.com/serverless-stack/sst/pull/3106) [`ded5370c1`](https://github.com/serverless-stack/sst/commit/ded5370c1f26a16616545f3588a11a3d466277df) Thanks [@MattJenko](https://github.com/MattJenko)! - Bootstrap: support custom permissions boundary
+
 ## 2.5.1
 
 ### Patch Changes
