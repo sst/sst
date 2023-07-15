@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.21.7
+
+### Patch Changes
+
+- [`64723ffca`](https://github.com/serverless-stack/sst/commit/64723ffcaeb755b6a361a3c412236770a219814d) Thanks [@fwang](https://github.com/fwang)! - SsrSite: fix thrashing id when multiple sites are defined
+
 ## 2.21.6
 
 ### Patch Changes
