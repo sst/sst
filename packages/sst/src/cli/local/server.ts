@@ -155,10 +155,32 @@ export async function useLocalServer(opts: Opts) {
   const wss2 = new WebSocketServer({ noServer: true });
 
   const sockets = new Set<WebSocket>();
+  let buffer: any[] = [];
+  function publish(type: string, properties: any) {
+    const msg = {
+      type,
+      properties,
+    };
+    buffer.push(msg);
+    const json = JSON.stringify(msg);
+    [...sockets.values()].map((s) => s.send(json));
+  }
   wss2.on("connection", (socket, req) => {
     sockets.add(socket);
+    for (const msg of buffer) {
+      socket.send(JSON.stringify(msg));
+    }
     socket.on("close", () => {
       sockets.delete(socket);
+    });
+
+    socket.on("message", (data) => {
+      const parsed = JSON.parse(data.toString());
+      if (parsed.type === "log.cleared") {
+        buffer = buffer.filter(
+          (msg) => msg.properties?.functionID !== parsed.properties?.functionID
+        );
+      }
     });
   });
 
@@ -234,14 +256,6 @@ export async function useLocalServer(opts: Opts) {
       }
       cb(func);
     });
-  }
-
-  function publish(type: string, properties: any) {
-    const msg = JSON.stringify({
-      type,
-      properties,
-    });
-    [...sockets.values()].map((s) => s.send(msg));
   }
 
   bus.subscribe("function.invoked", async (evt) => {
