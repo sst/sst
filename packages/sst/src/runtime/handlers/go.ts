@@ -68,9 +68,14 @@ export const useGoHandler = Context.memo(async () => {
           const srcPath =
             os.platform() === "win32" ? src.replaceAll("\\", "\\\\") : src;
           const result = await execAsync(
-            `go build -ldflags "${ldFlags.join(" ")}" ${
-              buildTags ? "-t " + buildTags : ""
-            } -o "${target}" ./${srcPath}`,
+            [
+              "go",
+              "build",
+              `-ldflags "${ldFlags.join(" ")}"`,
+              ...(buildTags ? [`-t ${buildTags}`] : []),
+              `-o "${target}"`,
+              `./${srcPath}`,
+            ].join(" "),
             {
               cwd: project,
               env: {
@@ -92,9 +97,14 @@ export const useGoHandler = Context.memo(async () => {
           const srcPath =
             os.platform() === "win32" ? src.replaceAll("\\", "\\\\") : src;
           await execAsync(
-            `go build -ldflags "${ldFlags.join(" ")}" ${
-              buildTags ? "-t " + buildTags : ""
-            } -o "${target}" ./${srcPath}`,
+            [
+              "go",
+              "build",
+              `-ldflags "${ldFlags.join(" ")}"`,
+              ...(buildTags ? [`-t ${buildTags}`] : []),
+              `-o "${target}"`,
+              `./${srcPath}`,
+            ].join(" "),
             {
               cwd: project,
               env: {

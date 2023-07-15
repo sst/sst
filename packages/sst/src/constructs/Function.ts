@@ -546,7 +546,13 @@ export interface GoProps {
   /**
    * The ldflags to use when building the Go module.
    *
-   * @default "['-s', '-w']"
+   * @default ["-s", "-w"]
+   * @example
+   * ```js
+   * go: {
+   *   ldFlags: ["-X main.version=1.0.0"],
+   * }
+   * ```
    */
   ldFlags?: string[];
 
@@ -554,8 +560,12 @@ export interface GoProps {
    * The build tags to use when building the Go module.
    *
    * @default ""
-   *
-   * @example "enterprise pro"
+   * @example
+   * ```js
+   * go: {
+   *   buildTags: "enterprise pro",
+   * }
+   * ```
    */
   buildTags?: string;
 
@@ -563,14 +573,11 @@ export interface GoProps {
    * Whether to enable CGO for the Go build.
    *
    * @default false
-   *
    * @example
    * ```js
-   * new Function(stack, "Function", {
-   *   go: {
-   *     cgoEnabled: true,
-   *   }
-   * })
+   * go: {
+   *   cgoEnabled: true,
+   * }
    * ```
    */
   cgoEnabled?: boolean;
