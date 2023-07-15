@@ -17,9 +17,15 @@ export const handler: CloudFrontRequestHandler = async (event) => {
     throw new Error("origin must be defined");
   }
 
-  const domainName = request.origin.custom?.domainName;
+  // Do not process requests to S3.
+  // This should not happen because the signing function is
+  // associated to behaviors targeting function URLs.
+  if ('s3' in request.origin) {
+    return request;
+  }
 
-  if (!domainName || !isLambdaUrlRequest(domainName)) return request;
+  const domainName = request.origin.custom.domainName;
+  if (!isLambdaUrlRequest(domainName)) return request;
 
   const region = getRegionFromLambdaUrl(domainName);
   const sigv4 = getSigV4(region);
