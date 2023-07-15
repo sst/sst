@@ -274,13 +274,14 @@ export async function bootstrapSST() {
   });
   rule.addTarget(new LambdaFunction(fn));
 
+  // Create permissions boundary
   if (cdk?.customPermissionsBoundary) {
-    const permBoundary = ManagedPolicy.fromManagedPolicyName(
+    const boundaryPolicy = ManagedPolicy.fromManagedPolicyName(
       stack,
-      stack.stackId,
+      "PermissionBoundaryPolicy",
       cdk.customPermissionsBoundary
     );
-    PermissionsBoundary.of(stack).apply(permBoundary);
+    PermissionsBoundary.of(stack).apply(boundaryPolicy);
   }
 
   // Create stack outputs to store bootstrap stack info

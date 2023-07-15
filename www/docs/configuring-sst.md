@@ -81,21 +81,21 @@ Here's the full list of config options that can be returned:
 - **`ssmPrefix`** SSM prefix for all SSM parameters that SST creates
 - **`advanced`**
   - **`disableParameterizedStackNameCheck`** Disable the check for stack names to be parameterized with the stage name.
-- **`cdk`**
-  - **`qualifier`** The qualifier for the CDK toolkit stack
-  - **`pathMetadata`** Add CDK path metadata to templates. This enables the CDK Construct tree view in the CloudFormation console. Default `false`.
-  - **`deployRoleArn`**: IAM role used to initiate a deployment
-  - **`lookupRoleArn`** IAM role used to look up values from the AWS account
-  - **`toolkitStackName`** The name of the CDK toolkit stack
-  - **`fileAssetsBucketName`** The name of the CDK toolkit bucket
-  - **`fileAssetPublishingRoleArn`** IAM role used to publish file assets to the S3 bucket
-  - **`imageAssetPublishingRoleArn`** IAM role used to publish image assets to the ECR repository
-  - **`cloudFormationExecutionRole`** IAM role assumed by the CloudFormation to deploy
-  - **`publicAccessBlockConfiguration`** Block public access configuration on the CDK toolkit bucket
 - **`bootstrap`**
-  - **`tags`** Tags to use for the bootstrap stack
-  - **`stackName`** The name to use for the bootstrap stack
-  - **`customPermissionsBoundary`** The Name of the IAM permissions boundary policy to use for the CDK toolkit stack and SST Bootstrap stack
+  - **`stackName`** The name to use for the SST bootstrap stack
+  - **`tags`** Tags to use for the SST bootstrap stack
+- **`cdk`**
+  - **`cloudFormationExecutionRole`** IAM role assumed by the CloudFormation to deploy
+  - **`customPermissionsBoundary`** The Name of the IAM permissions boundary policy to use for the CDK toolkit stack and SST bootstrap stack
+  - **`deployRoleArn`**: IAM role used to initiate a deployment
+  - **`fileAssetPublishingRoleArn`** IAM role used to publish file assets to the S3 bucket
+  - **`fileAssetsBucketName`** The name of the CDK toolkit bucket
+  - **`imageAssetPublishingRoleArn`** IAM role used to publish image assets to the ECR repository
+  - **`lookupRoleArn`** IAM role used to look up values from the AWS account
+  - **`pathMetadata`** Add CDK path metadata to templates. This enables the CDK Construct tree view in the CloudFormation console. Default `false`.
+  - **`publicAccessBlockConfiguration`** Block public access configuration on the CDK toolkit bucket and SST bootstrap bucket
+  - **`qualifier`** The qualifier for the CDK toolkit stack
+  - **`toolkitStackName`** The name of the CDK toolkit stack
 
 \*These won't take effect if the CLI flag for it is specified.
 

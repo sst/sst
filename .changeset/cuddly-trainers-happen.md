@@ -3,4 +3,4 @@
 "@serverless-stack/docs": patch
 ---
 
-bootstrap: support custom permissions boundary
+Bootstrap: support custom permissions boundary
