@@ -16,7 +16,11 @@ import {
   RemovalPolicy,
 } from "aws-cdk-lib/core";
 import { Function, Runtime, Code } from "aws-cdk-lib/aws-lambda";
-import { PolicyStatement } from "aws-cdk-lib/aws-iam";
+import {
+  ManagedPolicy,
+  PermissionsBoundary,
+  PolicyStatement,
+} from "aws-cdk-lib/aws-iam";
 import { Rule } from "aws-cdk-lib/aws-events";
 import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
 import {
@@ -269,6 +273,16 @@ export async function bootstrapSST() {
     },
   });
   rule.addTarget(new LambdaFunction(fn));
+
+  // Create permissions boundary
+  if (cdk?.customPermissionsBoundary) {
+    const boundaryPolicy = ManagedPolicy.fromManagedPolicyName(
+      stack,
+      "PermissionBoundaryPolicy",
+      cdk.customPermissionsBoundary
+    );
+    PermissionsBoundary.of(stack).apply(boundaryPolicy);
+  }
 
   // Create stack outputs to store bootstrap stack info
   new CfnOutput(stack, OUTPUT_VERSION, { value: LATEST_VERSION });
