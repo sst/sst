@@ -39,28 +39,14 @@ export const handler: CloudFrontRequestHandler = async (event) => {
     query.url = decodeURIComponent(query.url);
   }
 
-  const requestToSign = {
+  const signed = await sigv4.sign({
     method: request.method,
     hostname: domainName,
     headers: cloudFrontHeadersToHeaderBag(request.headers),
     path: request.uri,
     query,
     protocol: "https",
-  };
-
-  if (!request.body?.data) {
-    const signed = await sigv4.sign({
-      ...requestToSign,
-      body: undefined,
-    });
-    request.headers = headerBagToCfHeaders(signed.headers);
-
-    return request;
-  }
-
-  const signed = await sigv4.sign({
-    ...requestToSign,
-    body: Buffer.from(request.body.data, "base64").toString(),
+    body: request.body?.data ? Buffer.from(request.body.data, "base64") : undefined,
   });
   request.headers = headerBagToCfHeaders(signed.headers);
   request.querystring = queryToQueryString(query);
