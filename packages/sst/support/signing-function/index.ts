@@ -11,7 +11,13 @@ import { queryToQueryString } from "./helpers/queryToQueryString";
 
 export const handler: CloudFrontRequestHandler = async (event) => {
   const request = event.Records[0].cf.request;
-  const domainName = request.origin?.custom?.domainName;
+
+  // The signing function must be triggered by the eventType: 'origin-request'.
+  if (request.origin === undefined) {
+    throw new Error("origin must be defined");
+  }
+
+  const domainName = request.origin.custom?.domainName;
 
   if (!domainName || !isLambdaUrlRequest(domainName)) return request;
 
