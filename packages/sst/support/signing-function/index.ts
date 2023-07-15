@@ -1,6 +1,6 @@
 import { CloudFrontRequestHandler } from "aws-lambda";
 import {
-  cfHeadersToHeaderBag,
+  cloudFrontHeadersToHeaderBag,
   getRegionFromCustomDomainName,
   getSigV4,
   headerBagToCfHeaders,
@@ -27,7 +27,6 @@ export const handler: CloudFrontRequestHandler = async (event) => {
 
   const region = getRegionFromCustomDomainName(domainName);
 
-  const headerBag = cfHeadersToHeaderBag(request.headers);
   // Do not process requests to non-Lambda URLs.
   if (region === undefined) {
     return request;
@@ -42,8 +41,8 @@ export const handler: CloudFrontRequestHandler = async (event) => {
 
   const requestToSign = {
     method: request.method,
-    headers: headerBag,
-    hostname: headerBag.host,
+    hostname: domainName,
+    headers: cloudFrontHeadersToHeaderBag(request.headers),
     path: request.uri,
     query,
     protocol: "https",
