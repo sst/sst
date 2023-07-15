@@ -8,7 +8,7 @@ import {
   isSSTConstruct,
   isStackConstruct,
 } from "./Construct.js";
-import { Function, FunctionProps } from "./Function.js";
+import { FunctionProps } from "./Function.js";
 import { Permissions } from "./util/permission.js";
 import { bindParameters, bindType } from "./util/functionBinding.js";
 import { StackProps } from "./Stack.js";
@@ -322,7 +322,7 @@ export class App extends CDKApp {
         if (!isSSTConstruct(c)) {
           return;
         }
-        if (c instanceof Function && c._doNotAllowOthersToBind) {
+        if ("_doNotAllowOthersToBind" in c && c._doNotAllowOthersToBind) {
           return;
         }
 
@@ -487,7 +487,7 @@ export class App extends CDKApp {
         if (!isSSTConstruct(c)) {
           return;
         }
-        if (c instanceof Function && c._doNotAllowOthersToBind) {
+        if ("_doNotAllowOthersToBind" in c && c._doNotAllowOthersToBind) {
           return;
         }
 
@@ -579,7 +579,7 @@ export class App extends CDKApp {
       if (!isSSTConstruct(c)) {
         return;
       }
-      if (c instanceof Function && c._doNotAllowOthersToBind) {
+      if ("_doNotAllowOthersToBind" in c && c._doNotAllowOthersToBind) {
         return;
       }
 
