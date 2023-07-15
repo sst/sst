@@ -1,5 +1,5 @@
 ---
-"sst": minor
+"sst": patch
 ---
 
-fix: grant migration function permission to decrypt custom secret encryption key
+RDS: grant migration function permission to decrypt custom secret encryption key

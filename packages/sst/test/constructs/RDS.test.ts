@@ -460,7 +460,7 @@ test("cdk.cluster.credentials: using secret name", async () => {
 
 test("cdk.cluster.credentials: using custom kms key", async () => {
   const stack = new Stack(await createApp(), "stack");
-  const key = new kms.Key(stack, "Key")
+  const key = new kms.Key(stack, "Key");
   const cluster = new RDS(stack, "Cluster", {
     engine: "postgresql11.13",
     defaultDatabaseName: "acme",
@@ -470,31 +470,32 @@ test("cdk.cluster.credentials: using custom kms key", async () => {
         credentials: {
           username: "root",
           secretName: "root-secret",
-	  encryptionKey: key,
+          encryptionKey: key,
         },
       },
     },
   });
-  // KMS permissions are granted with custom key
+  // KMS permissions is granted
   const bindings = cluster.getFunctionBinding();
   expect(bindings.permissions["kms:Decrypt"]).toBeDefined();
-  // And migration function has access to this key too
+  // Migration function has permission to this key
   hasResource(stack, "AWS::IAM::Policy", {
     PolicyDocument: {
-      Statement: Match.arrayWith([{
-	Action: "kms:Decrypt",
-	Effect: "Allow",
-	Resource: {
-          "Fn::GetAtt": [
-            "Key961B73FD",
-            "Arn"
-          ],
-	},
-      }]),
+      Statement: Match.arrayWith([
+        {
+          Action: "kms:Decrypt",
+          Effect: "Allow",
+          Resource: {
+            "Fn::GetAtt": ["Key961B73FD", "Arn"],
+          },
+        },
+      ]),
     },
-    Roles: [{
-      Ref: "ClusterMigrationFunctionServiceRole720A9F55"
-    }]
+    Roles: [
+      {
+        Ref: "ClusterMigrationFunctionServiceRole720A9F55",
+      },
+    ],
   });
 });
 
