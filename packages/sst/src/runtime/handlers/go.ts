@@ -60,7 +60,7 @@ export const useGoHandler = Context.memo(async () => {
       const src = path.relative(project, input.props.handler!);
 
       const ldFlags = input.props.go?.ldFlags || ["-s", "-w"];
-      const buildTags = input.props.go?.buildTags;
+      const buildTags = input.props.go?.buildTags || [];
 
       if (input.mode === "start") {
         try {
@@ -72,7 +72,7 @@ export const useGoHandler = Context.memo(async () => {
               "go",
               "build",
               `-ldflags "${ldFlags.join(" ")}"`,
-              ...(buildTags ? [`-t ${buildTags}`] : []),
+              ...(buildTags ? [`-t ${buildTags.join(" ")}`] : []),
               `-o "${target}"`,
               `./${srcPath}`,
             ].join(" "),
@@ -101,7 +101,7 @@ export const useGoHandler = Context.memo(async () => {
               "go",
               "build",
               `-ldflags "${ldFlags.join(" ")}"`,
-              ...(buildTags ? [`-t ${buildTags}`] : []),
+              ...(buildTags ? [`-t ${buildTags.join(" ")}`] : []),
               `-o "${target}"`,
               `./${srcPath}`,
             ].join(" "),

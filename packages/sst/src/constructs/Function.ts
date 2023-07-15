@@ -559,15 +559,15 @@ export interface GoProps {
   /**
    * The build tags to use when building the Go module.
    *
-   * @default ""
+   * @default "[]"
    * @example
    * ```js
    * go: {
-   *   buildTags: "enterprise pro",
+   *   buildTags: ["enterprise", "pro"],
    * }
    * ```
    */
-  buildTags?: string;
+  buildTags?: string[];
 
   /**
    * Whether to enable CGO for the Go build.
