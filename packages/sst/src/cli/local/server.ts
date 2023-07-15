@@ -155,7 +155,15 @@ export async function useLocalServer(opts: Opts) {
   const wss2 = new WebSocketServer({ noServer: true });
 
   const sockets = new Set<WebSocket>();
-  let buffer: any[] = [];
+  let buffer: any[] = [
+    {
+      type: "cli.dev",
+      properties: {
+        stage: project.config.stage,
+        app: project.config.name,
+      },
+    },
+  ];
   function publish(type: string, properties: any) {
     const msg = {
       type,
