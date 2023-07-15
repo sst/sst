@@ -1,10 +1,9 @@
 import { CloudFrontRequestHandler } from "aws-lambda";
 import {
   cfHeadersToHeaderBag,
-  getRegionFromLambdaUrl,
+  getRegionFromCustomDomainName,
   getSigV4,
   headerBagToCfHeaders,
-  isLambdaUrlRequest,
   queryStringToQuery,
 } from "./helpers";
 import { queryToQueryString } from "./helpers/queryToQueryString";
@@ -25,14 +24,17 @@ export const handler: CloudFrontRequestHandler = async (event) => {
   }
 
   const domainName = request.origin.custom.domainName;
-  if (!isLambdaUrlRequest(domainName)) return request;
 
-  const region = getRegionFromLambdaUrl(domainName);
-  const sigv4 = getSigV4(region);
+  const region = getRegionFromCustomDomainName(domainName);
 
   const headerBag = cfHeadersToHeaderBag(request.headers);
+  // Do not process requests to non-Lambda URLs.
+  if (region === undefined) {
+    return request;
+  }
 
   const query = queryStringToQuery(request.querystring);
+  const sigv4 = getSigV4(region);
 
   if (query.url !== undefined) {
     query.url = decodeURIComponent(query.url);
