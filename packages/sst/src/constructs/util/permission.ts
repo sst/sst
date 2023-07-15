@@ -284,6 +284,11 @@ function permissionsToStatementsAndGrants(
           )
         );
       }
+      if (secret?.encryptionKey) {
+        statements.push(
+          buildPolicyStatement(["kms:Decrypt"], [secret.encryptionKey.keyArn])
+        );
+      }
     }
     ////////////////////////////////////
     // Case: grant method
