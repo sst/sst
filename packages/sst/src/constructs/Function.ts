@@ -127,6 +127,11 @@ export interface FunctionProps
   copyFiles?: FunctionCopyFilesProps[];
 
   /**
+   * Used to configure go function properties
+   */
+  go?: GoProps;
+
+  /**
    * Used to configure nodejs function properties
    */
   nodejs?: NodeJSProps;
@@ -532,6 +537,50 @@ export interface PythonProps {
    * ```
    */
   installCommands?: string[];
+}
+
+/**
+ * Used to configure Go bundling options
+ */
+export interface GoProps {
+  /**
+   * The ldflags to use when building the Go module.
+   *
+   * @default ["-s", "-w"]
+   * @example
+   * ```js
+   * go: {
+   *   ldFlags: ["-X main.version=1.0.0"],
+   * }
+   * ```
+   */
+  ldFlags?: string[];
+
+  /**
+   * The build tags to use when building the Go module.
+   *
+   * @default []
+   * @example
+   * ```js
+   * go: {
+   *   buildTags: ["enterprise", "pro"],
+   * }
+   * ```
+   */
+  buildTags?: string[];
+
+  /**
+   * Whether to enable CGO for the Go build.
+   *
+   * @default false
+   * @example
+   * ```js
+   * go: {
+   *   cgoEnabled: true,
+   * }
+   * ```
+   */
+  cgoEnabled?: boolean;
 }
 
 /**

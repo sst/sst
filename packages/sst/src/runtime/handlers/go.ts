@@ -59,13 +59,23 @@ export const useGoHandler = Context.memo(async () => {
       sources.set(input.functionID, project);
       const src = path.relative(project, input.props.handler!);
 
+      const ldFlags = input.props.go?.ldFlags || ["-s", "-w"];
+      const buildTags = input.props.go?.buildTags || [];
+
       if (input.mode === "start") {
         try {
           const target = path.join(input.out, handlerName);
           const srcPath =
             os.platform() === "win32" ? src.replaceAll("\\", "\\\\") : src;
           const result = await execAsync(
-            `go build -ldflags "-s -w" -o "${target}" ./${srcPath}`,
+            [
+              "go",
+              "build",
+              ...(ldFlags ? [`-ldflags "${ldFlags.join(" ")}"`] : []),
+              ...(buildTags ? [`-t ${buildTags.join(" ")}`] : []),
+              `-o "${target}"`,
+              `./${srcPath}`,
+            ].join(" "),
             {
               cwd: project,
               env: {
@@ -87,12 +97,19 @@ export const useGoHandler = Context.memo(async () => {
           const srcPath =
             os.platform() === "win32" ? src.replaceAll("\\", "\\\\") : src;
           await execAsync(
-            `go build -ldflags "-s -w" -o "${target}" ./${srcPath}`,
+            [
+              "go",
+              "build",
+              ...(ldFlags ? [`-ldflags "${ldFlags.join(" ")}"`] : []),
+              ...(buildTags ? [`-t ${buildTags.join(" ")}`] : []),
+              `-o "${target}"`,
+              `./${srcPath}`,
+            ].join(" "),
             {
               cwd: project,
               env: {
                 ...process.env,
-                CGO_ENABLED: "0",
+                CGO_ENABLED: input.props.go?.cgoEnabled ? "1" : "0",
                 GOARCH:
                   input.props.architecture === "arm_64" ? "arm64" : "amd64",
                 GOOS: "linux",
