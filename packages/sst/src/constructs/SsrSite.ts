@@ -320,7 +320,7 @@ export interface SsrSiteProps {
    *     },
    *     {
    *       exclude: "*",
-   *       include: "[{versioned_directory}/*.js]",
+   *       include: "{versioned_directory}/*.js",
    *       cacheControl: "public,max-age=31536000,immutable",
    *     },
    *     {
