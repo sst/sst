@@ -2,4 +2,4 @@
 "sst": minor
 ---
 
-refactor: drop deprecated runtimes
+Function: drop deprecated runtimes

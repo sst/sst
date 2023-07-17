@@ -58,6 +58,7 @@ const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const supportedRuntimes = {
   container: CDKRuntime.FROM_IMAGE,
   rust: CDKRuntime.PROVIDED_AL2,
+  "nodejs12.x": CDKRuntime.NODEJS_12_X,
   "nodejs14.x": CDKRuntime.NODEJS_14_X,
   "nodejs16.x": CDKRuntime.NODEJS_16_X,
   "nodejs18.x": CDKRuntime.NODEJS_18_X,
@@ -65,6 +66,7 @@ const supportedRuntimes = {
   "python3.8": CDKRuntime.PYTHON_3_8,
   "python3.9": CDKRuntime.PYTHON_3_9,
   "python3.10": CDKRuntime.PYTHON_3_10,
+  "dotnetcore3.1": CDKRuntime.DOTNET_CORE_3_1,
   dotnet6: CDKRuntime.DOTNET_6,
   java8: CDKRuntime.JAVA_8,
   java11: CDKRuntime.JAVA_11,
