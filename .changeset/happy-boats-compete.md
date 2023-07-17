@@ -2,4 +2,4 @@
 "sst": patch
 ---
 
-Function: support Golang build options
+Function/go: support Golang build options
