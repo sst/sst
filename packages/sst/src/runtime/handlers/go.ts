@@ -71,7 +71,7 @@ export const useGoHandler = Context.memo(async () => {
             [
               "go",
               "build",
-              `-ldflags "${ldFlags.join(" ")}"`,
+              ...(ldFlags ? [`-ldflags "${ldFlags.join(" ")}"`] : []),
               ...(buildTags ? [`-t ${buildTags.join(" ")}`] : []),
               `-o "${target}"`,
               `./${srcPath}`,
@@ -100,7 +100,7 @@ export const useGoHandler = Context.memo(async () => {
             [
               "go",
               "build",
-              `-ldflags "${ldFlags.join(" ")}"`,
+              ...(ldFlags ? [`-ldflags "${ldFlags.join(" ")}"`] : []),
               ...(buildTags ? [`-t ${buildTags.join(" ")}`] : []),
               `-o "${target}"`,
               `./${srcPath}`,

@@ -559,7 +559,7 @@ export interface GoProps {
   /**
    * The build tags to use when building the Go module.
    *
-   * @default "[]"
+   * @default []
    * @example
    * ```js
    * go: {
