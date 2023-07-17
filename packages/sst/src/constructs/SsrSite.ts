@@ -78,6 +78,7 @@ import { Secret } from "./Secret.js";
 import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 import {
+  BaseSiteFileOptions,
   BaseSiteDomainProps,
   BaseSiteReplaceProps,
   BaseSiteCdkDistributionProps,
@@ -108,15 +109,9 @@ export type SsrBuildConfig = {
   prerenderedBuildS3KeyPrefix?: string;
 };
 
-export interface SsrSiteFileOptions {
-  exclude: string | string[];
-  include: string | string[];
-  cacheControl: string;
-  contentType?: string;
-}
-
 export interface SsrSiteNodeJSProps extends NodeJSProps {}
 export interface SsrDomainProps extends BaseSiteDomainProps {}
+export interface SsrSiteFileOptions extends BaseSiteFileOptions {}
 export interface SsrSiteReplaceProps extends BaseSiteReplaceProps {}
 export interface SsrCdkDistributionProps extends BaseSiteCdkDistributionProps {}
 export interface SsrSiteProps {
@@ -292,16 +287,53 @@ export interface SsrSiteProps {
   /**
    * Pass in a list of file options to customize cache control and content type specific files.
    *
-   * Defaults to an empty array.
+   * @default Versioned files cached for 1 year at the CDN and brower level. Unversioned files cached for 1 year at the CDN level, but not at the browser level.
+   * ```js
+   * [
+   *   {
+   *     exclude: "*",
+   *     include: "{versioned_directory}/*",
+   *     cacheControl: "public,max-age=31536000,immutable",
+   *   },
+   *   {
+   *     exclude: "*",
+   *     include: "[{non_versioned_file1}, {non_versioned_file2}, ...]",
+   *     cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
+   *   },
+   *   {
+   *     exclude: "*",
+   *     include: "[{non_versioned_dir_1}/*, {non_versioned_dir_2}/*, ...]",
+   *     cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
+   *   },
+   * ]
+   * ```
+   *
    * @example
    * ```js
    * new AstroSite(stack, "Site", {
-   *   fileOptions: [{
-   *     exclude: "*",
-   *     include: "*.css",
-   *     cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
-   *     contentType: "text/css; charset=UTF-8",
-   *   }]
+   *   fileOptions: [
+   *     {
+   *       exclude: "*",
+   *       include: "{versioned_directory}/*.css",
+   *       cacheControl: "public,max-age=31536000,immutable",
+   *       contentType: "text/css; charset=UTF-8",
+   *     },
+   *     {
+   *       exclude: "*",
+   *       include: "[{versioned_directory}/*.js]",
+   *       cacheControl: "public,max-age=31536000,immutable",
+   *     },
+   *     {
+   *       exclude: "*",
+   *       include: "[{non_versioned_file1}, {non_versioned_file2}, ...]",
+   *       cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
+   *     },
+   *     {
+   *       exclude: "*",
+   *       include: "[{non_versioned_dir_1}/*, {non_versioned_dir_2}/*, ...]",
+   *       cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
+   *     },
+   *   ]
    * });
    * ```
    */
@@ -716,17 +748,19 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   }
 
   private createS3AssetFileOptions() {
+    if (this.props.fileOptions) return this.props.fileOptions;
+
     // Build file options
-    const fileOptions = this.props.fileOptions || [];
+    const fileOptions = [];
     const clientPath = path.join(
       this.props.path,
       this.buildConfig.clientBuildOutputDir
     );
     for (const item of fs.readdirSync(clientPath)) {
       // Versioned files will be cached for 1 year (immutable) both at
-      // CDN and browser level.
+      // the CDN and browser level.
       if (item === this.buildConfig.clientBuildVersionedSubDir) {
-        fileOptions.unshift({
+        fileOptions.push({
           exclude: "*",
           include: path.posix.join(
             this.buildConfig.clientBuildS3KeyPrefix ?? "",
@@ -740,7 +774,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       // But not at the browser level. CDN cache will be invalidated on deploy.
       else {
         const itemPath = path.join(clientPath, item);
-        fileOptions.unshift({
+        fileOptions.push({
           exclude: "*",
           include: path.posix.join(
             this.buildConfig.clientBuildS3KeyPrefix ?? "",

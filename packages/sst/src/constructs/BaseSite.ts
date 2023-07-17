@@ -8,6 +8,13 @@ import {
 } from "aws-cdk-lib/aws-cloudfront";
 import { ICertificate } from "aws-cdk-lib/aws-certificatemanager";
 
+export interface BaseSiteFileOptions {
+  exclude: string | string[];
+  include: string | string[];
+  cacheControl: string;
+  contentType?: string;
+}
+
 /**
  * The customDomain for this website. SST supports domains that are hosted either on [Route 53](https://aws.amazon.com/route53/) or externally.
  *
