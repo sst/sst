@@ -1,5 +1,5 @@
 ---
-"sst": minor
+"sst": patch
 ---
 
-feat: run only one gradle build per java directory
+Function/java: run only one gradle build per directory

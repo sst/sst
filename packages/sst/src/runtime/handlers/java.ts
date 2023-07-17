@@ -8,7 +8,6 @@ import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { useRuntimeServerConfig } from "../server.js";
 import { existsAsync, findBelow, isChild } from "../../util/fs.js";
 import { useProject } from "../../project.js";
-import { ExecOptions, PromiseWithChild } from "child_process";
 import { execAsync } from "../../util/process.js";
 import url from "url";
 import AdmZip from "adm-zip";
@@ -19,7 +18,8 @@ export const useJavaHandler = Context.memo(async () => {
   const handlers = useRuntimeHandlers();
   const processes = new Map<string, ChildProcessWithoutNullStreams>();
   const sources = new Map<string, string>();
-  const handlerName = process.platform === "win32" ? `handler.exe` : `handler`;
+  const runningBuilds = new Map<string, ReturnType<typeof execAsync>>();
+  const zippedBuilds = new Map<string, boolean>();
 
   handlers.register({
     shouldBuild: (input) => {
@@ -76,9 +76,13 @@ export const useJavaHandler = Context.memo(async () => {
       const outputDir = input.props.java?.buildOutputDir || "distributions";
       sources.set(input.functionID, srcPath);
 
-      try {
-	// Take care to run only one gradle build per directory
-        await buildOnce(buildBinary,
+      // Run gradle build once per directory. Otherwise they'll interfere
+      // with one another.
+      async function buildOnce() {
+        let runningBuild = runningBuilds.get(buildBinary);
+        if (runningBuild) return runningBuild;
+
+        runningBuild = execAsync(
           `${buildBinary} ${buildTask} -Dorg.gradle.logging.level=${
             process.env.DEBUG ? "debug" : "lifecycle"
           }`,
@@ -86,16 +90,25 @@ export const useJavaHandler = Context.memo(async () => {
             cwd: srcPath,
           }
         );
+        runningBuilds.set(buildBinary, runningBuild);
+        return runningBuild;
+      }
 
-	// We also need to zip only once
-	if (!zippedBuilds[buildBinary]) {
-          const buildOutput = path.join(srcPath, "build", outputDir);
-          const zip = (await fs.readdir(buildOutput)).find((f) =>
-            f.endsWith(".zip")
-          )!;
-          new AdmZip(path.join(buildOutput, zip)).extractAllTo(input.out);
-	  zippedBuilds[buildBinary] = true;
-	}
+      // Similarly only zip once per directory
+      async function zipOnce() {
+        if (zippedBuilds.get(buildBinary)) return;
+
+        const buildOutput = path.join(srcPath, "build", outputDir);
+        const zip = (await fs.readdir(buildOutput)).find((f) =>
+          f.endsWith(".zip")
+        )!;
+        new AdmZip(path.join(buildOutput, zip)).extractAllTo(input.out);
+        zippedBuilds.set(buildBinary, true);
+      }
+
+      try {
+        await buildOnce();
+        await zipOnce();
         return {
           type: "success",
           handler: input.props.handler!,
@@ -116,28 +129,3 @@ async function getGradleBinary(srcPath: string) {
   const gradleWrapperPath = path.resolve(path.join(srcPath, "gradlew"));
   return (await existsAsync(gradleWrapperPath)) ? gradleWrapperPath : "gradle";
 }
-
-// Run only one gradle build job per directory, else they'll interfere
-// with one another.
-type runningBuildMap = {
-  [key: string]: PromiseWithChild<{
-    stdout: string;
-    stderr: string;
-  }>;
-};
-const runningBuilds: runningBuildMap = {};
-
-async function buildOnce(buildBinary: string, command: string, options: ExecOptions) {
-  let runningBuild = runningBuilds[buildBinary];
-  if (!runningBuild) {
-    runningBuild = execAsync(command, options);
-    runningBuilds[buildBinary] = runningBuild;
-  }
-  return runningBuild;
-}
-
-// Same for the zipping, we also need to do that only once
-type zippedMap = {
-  [key: string]: boolean;
-};
-const zippedBuilds: zippedMap = {};
