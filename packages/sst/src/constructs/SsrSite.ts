@@ -287,9 +287,11 @@ export interface SsrSiteProps {
   /**
    * Pass in a list of file options to customize cache control and content type specific files.
    *
-   * @default Versioned files cached for 1 year at the CDN and brower level. Unversioned files cached for 1 year at the CDN level, but not at the browser level.
+   * @default
+   * Versioned files cached for 1 year at the CDN and brower level.
+   * Unversioned files cached for 1 year at the CDN level, but not at the browser level.
    * ```js
-   * [
+   * fileOptions: [
    *   {
    *     exclude: "*",
    *     include: "{versioned_directory}/*",
@@ -310,31 +312,29 @@ export interface SsrSiteProps {
    *
    * @example
    * ```js
-   * new AstroSite(stack, "Site", {
-   *   fileOptions: [
-   *     {
-   *       exclude: "*",
-   *       include: "{versioned_directory}/*.css",
-   *       cacheControl: "public,max-age=31536000,immutable",
-   *       contentType: "text/css; charset=UTF-8",
-   *     },
-   *     {
-   *       exclude: "*",
-   *       include: "{versioned_directory}/*.js",
-   *       cacheControl: "public,max-age=31536000,immutable",
-   *     },
-   *     {
-   *       exclude: "*",
-   *       include: "[{non_versioned_file1}, {non_versioned_file2}, ...]",
-   *       cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
-   *     },
-   *     {
-   *       exclude: "*",
-   *       include: "[{non_versioned_dir_1}/*, {non_versioned_dir_2}/*, ...]",
-   *       cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
-   *     },
-   *   ]
-   * });
+   * fileOptions: [
+   *   {
+   *     exclude: "*",
+   *     include: "{versioned_directory}/*.css",
+   *     cacheControl: "public,max-age=31536000,immutable",
+   *     contentType: "text/css; charset=UTF-8",
+   *   },
+   *   {
+   *     exclude: "*",
+   *     include: "{versioned_directory}/*.js",
+   *     cacheControl: "public,max-age=31536000,immutable",
+   *   },
+   *   {
+   *     exclude: "*",
+   *     include: "[{non_versioned_file1}, {non_versioned_file2}, ...]",
+   *     cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
+   *   },
+   *   {
+   *     exclude: "*",
+   *     include: "[{non_versioned_dir_1}/*, {non_versioned_dir_2}/*, ...]",
+   *     cacheControl: "public,max-age=0,s-maxage=31536000,must-revalidate",
+   *   },
+   * ]
    * ```
    */
   fileOptions?: SsrSiteFileOptions[];
