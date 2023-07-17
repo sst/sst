@@ -216,16 +216,16 @@ test("copyFiles nonexistent", async () => {
   }).rejects.toThrow(/no such file/);
 });
 
-test("runtime: nodejs10.x", async () => {
+test("runtime: nodejs18.x", async () => {
   const app = await createApp();
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
     handler: "test/constructs/lambda.handler",
-    runtime: "nodejs10.x",
+    runtime: "nodejs18.x",
   });
   await app.finish();
   hasResource(stack, "AWS::Lambda::Function", {
-    Runtime: "nodejs10.x",
+    Runtime: "nodejs18.x",
   });
 });
 
@@ -2545,7 +2545,7 @@ test("fromDefinition-lambdaFunction", async () => {
       stack,
       "Function",
       new lambda.Function(stack, "Function", {
-        runtime: lambda.Runtime.NODEJS_10_X,
+        runtime: lambda.Runtime.NODEJS_18_X,
         handler: "test/lambda.handler",
         code: lambda.Code.fromAsset("test"),
       }) as Function
