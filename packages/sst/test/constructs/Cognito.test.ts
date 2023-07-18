@@ -50,76 +50,8 @@ test("cdk.userPool is undefined", async () => {
     UserPoolId: { Ref: "AuthUserPool8115E87F" },
     AllowedOAuthFlows: ["implicit", "code"],
   });
-  hasResource(stack, "AWS::Cognito::IdentityPool", {
-    IdentityPoolName: "test-app-Auth",
-    AllowUnauthenticatedIdentities: true,
-    CognitoIdentityProviders: [
-      {
-        ClientId: { Ref: "AuthUserPoolClient0AA456E4" },
-        ProviderName: {
-          "Fn::Join": [
-            "",
-            [
-              "cognito-idp.us-east-1.",
-              { Ref: "AWS::URLSuffix" },
-              "/",
-              { Ref: "AuthUserPool8115E87F" },
-            ],
-          ],
-        },
-      },
-    ],
-    SupportedLoginProviders: {},
-  });
+  countResources(stack, "AWS::Cognito::IdentityPool", 1);
   countResources(stack, "AWS::IAM::Role", 2);
-  hasResource(stack, "AWS::IAM::Role", {
-    AssumeRolePolicyDocument: {
-      Statement: [
-        {
-          Action: "sts:AssumeRoleWithWebIdentity",
-          Condition: {
-            StringEquals: {
-              "cognito-identity.amazonaws.com:aud": {
-                Ref: "AuthIdentityPool12DFB5E1",
-              },
-            },
-            "ForAnyValue:StringLike": {
-              "cognito-identity.amazonaws.com:amr": "authenticated",
-            },
-          },
-          Effect: "Allow",
-          Principal: {
-            Federated: "cognito-identity.amazonaws.com",
-          },
-        },
-      ],
-      Version: "2012-10-17",
-    },
-  });
-  hasResource(stack, "AWS::IAM::Role", {
-    AssumeRolePolicyDocument: {
-      Statement: [
-        {
-          Action: "sts:AssumeRoleWithWebIdentity",
-          Condition: {
-            StringEquals: {
-              "cognito-identity.amazonaws.com:aud": {
-                Ref: "AuthIdentityPool12DFB5E1",
-              },
-            },
-            "ForAnyValue:StringLike": {
-              "cognito-identity.amazonaws.com:amr": "unauthenticated",
-            },
-          },
-          Effect: "Allow",
-          Principal: {
-            Federated: "cognito-identity.amazonaws.com",
-          },
-        },
-      ],
-      Version: "2012-10-17",
-    },
-  });
 });
 
 test("cdk.userPool is prop", async () => {
@@ -432,6 +364,165 @@ test("triggers is redefined error", async () => {
   }).toThrow(/Cannot configure the "cdk.userPool.lambdaTriggers"/);
 });
 
+test("identityPoolFederation: undefined", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  const auth = new Cognito(stack, "Auth", {});
+
+  expect(auth.cognitoIdentityPoolId).toBeDefined();
+  countResources(stack, "AWS::Cognito::IdentityPool", 1);
+  hasResource(stack, "AWS::Cognito::IdentityPool", {
+    IdentityPoolName: "test-app-Auth",
+    AllowUnauthenticatedIdentities: true,
+    CognitoIdentityProviders: [
+      {
+        ClientId: { Ref: "AuthUserPoolClient0AA456E4" },
+        ProviderName: {
+          "Fn::Join": [
+            "",
+            [
+              "cognito-idp.us-east-1.",
+              { Ref: "AWS::URLSuffix" },
+              "/",
+              { Ref: "AuthUserPool8115E87F" },
+            ],
+          ],
+        },
+      },
+    ],
+    SupportedLoginProviders: {},
+  });
+  countResources(stack, "AWS::IAM::Role", 2);
+  hasResource(stack, "AWS::IAM::Role", {
+    AssumeRolePolicyDocument: {
+      Statement: [
+        {
+          Action: "sts:AssumeRoleWithWebIdentity",
+          Condition: {
+            StringEquals: {
+              "cognito-identity.amazonaws.com:aud": {
+                Ref: "AuthIdentityPool12DFB5E1",
+              },
+            },
+            "ForAnyValue:StringLike": {
+              "cognito-identity.amazonaws.com:amr": "authenticated",
+            },
+          },
+          Effect: "Allow",
+          Principal: {
+            Federated: "cognito-identity.amazonaws.com",
+          },
+        },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+  hasResource(stack, "AWS::IAM::Role", {
+    AssumeRolePolicyDocument: {
+      Statement: [
+        {
+          Action: "sts:AssumeRoleWithWebIdentity",
+          Condition: {
+            StringEquals: {
+              "cognito-identity.amazonaws.com:aud": {
+                Ref: "AuthIdentityPool12DFB5E1",
+              },
+            },
+            "ForAnyValue:StringLike": {
+              "cognito-identity.amazonaws.com:amr": "unauthenticated",
+            },
+          },
+          Effect: "Allow",
+          Principal: {
+            Federated: "cognito-identity.amazonaws.com",
+          },
+        },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+});
+
+test("identityPoolFederation: undefined (govcloud)", async () => {
+  const stack = new Stack(
+    await createApp({ region: "us-gov-east-1" }),
+    "stack"
+  );
+  const auth = new Cognito(stack, "Auth", {});
+
+  expect(auth.cognitoIdentityPoolId).toBeDefined();
+  countResources(stack, "AWS::Cognito::IdentityPool", 1);
+  hasResource(stack, "AWS::Cognito::IdentityPool", {
+    IdentityPoolName: "test-app-Auth",
+    AllowUnauthenticatedIdentities: true,
+    CognitoIdentityProviders: [
+      {
+        ClientId: { Ref: "AuthUserPoolClient0AA456E4" },
+        ProviderName: {
+          "Fn::Join": [
+            "",
+            [
+              "cognito-idp.us-gov-east-1.",
+              { Ref: "AWS::URLSuffix" },
+              "/",
+              { Ref: "AuthUserPool8115E87F" },
+            ],
+          ],
+        },
+      },
+    ],
+    SupportedLoginProviders: {},
+  });
+  countResources(stack, "AWS::IAM::Role", 2);
+  hasResource(stack, "AWS::IAM::Role", {
+    AssumeRolePolicyDocument: {
+      Statement: [
+        {
+          Action: "sts:AssumeRoleWithWebIdentity",
+          Condition: {
+            StringEquals: {
+              "cognito-identity-us-gov.amazonaws.com:aud": {
+                Ref: "AuthIdentityPool12DFB5E1",
+              },
+            },
+            "ForAnyValue:StringLike": {
+              "cognito-identity-us-gov.amazonaws.com:amr": "authenticated",
+            },
+          },
+          Effect: "Allow",
+          Principal: {
+            Federated: "cognito-identity-us-gov.amazonaws.com",
+          },
+        },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+  hasResource(stack, "AWS::IAM::Role", {
+    AssumeRolePolicyDocument: {
+      Statement: [
+        {
+          Action: "sts:AssumeRoleWithWebIdentity",
+          Condition: {
+            StringEquals: {
+              "cognito-identity-us-gov.amazonaws.com:aud": {
+                Ref: "AuthIdentityPool12DFB5E1",
+              },
+            },
+            "ForAnyValue:StringLike": {
+              "cognito-identity-us-gov.amazonaws.com:amr": "unauthenticated",
+            },
+          },
+          Effect: "Allow",
+          Principal: {
+            Federated: "cognito-identity-us-gov.amazonaws.com",
+          },
+        },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+});
+
 test("identityPoolFederation auth0", async () => {
   const stack = new Stack(await createApp(), "stack");
   new Cognito(stack, "Auth", {
@@ -468,6 +559,7 @@ test("identityPoolFederation auth0", async () => {
     ],
   });
 });
+
 test("identityPoolFederation auth0-domain-without-https", async () => {
   const stack = new Stack(await createApp(), "stack");
   new Cognito(stack, "Auth", {
