@@ -750,8 +750,11 @@ export class Table extends Construct implements SSTConstruct {
     // set filter pattern
     if (filters && filters.length > 0) {
       const cfnEventSource = fn.node.children.find(
-        (c) => c instanceof lambda.EventSourceMapping
+        (c) =>
+          c instanceof lambda.EventSourceMapping
+            && c.eventSourceMappingArn === eventSource.eventSourceMappingArn
       )?.node.defaultChild as lambda.CfnEventSourceMapping;
+
       cfnEventSource.addPropertyOverride("FilterCriteria", {
         Filters: filters.map((filter) => ({
           Pattern: JSON.stringify(filter),
