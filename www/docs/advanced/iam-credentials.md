@@ -267,9 +267,19 @@ The SST CLI command also makes AWS SDK calls to your AWS account. Here are the I
   ```json
   {
       "Effect": "Allow",
+      "Action": "cloudformation:DescribeStacks",
+      "Resource": [
+          "arn:aws:cloudformation:us-east-1:112245769880:stack/*"
+      ]
+  }
+  ```
+  and
+
+  ```json
+  {
+      "Effect": "Allow",
       "Action": [
           "cloudformation:DeleteStack",
-          "cloudformation:DescribeStacks",
           "cloudformation:DescribeStackEvents",
           "cloudformation:DescribeStackResources",
           "cloudformation:GetTemplate"
