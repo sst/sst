@@ -1,5 +1,19 @@
 # @serverless-stack/cli2
 
+## 2.22.2
+
+### Patch Changes
+
+- [`01aab434c`](https://github.com/serverless-stack/sst/commit/01aab434c0ee86135a3e1dcad9eaa93f37872038) Thanks [@thdxr](https://github.com/thdxr)! - cli: properly dispose of esbuild context on exit
+
+- [`cf9723d87`](https://github.com/serverless-stack/sst/commit/cf9723d8776f367e8a2861bc9ab5b8bbc0021a37) Thanks [@thdxr](https://github.com/thdxr)! - cli: support setting outputs path in config
+
+- [`8612a54f9`](https://github.com/serverless-stack/sst/commit/8612a54f97c3fb9983c13c8f8d05a55b8f176a12) Thanks [@fwang](https://github.com/fwang)! - Cognito: support gov cloud identity name
+
+- [#3133](https://github.com/serverless-stack/sst/pull/3133) [`f708fa980`](https://github.com/serverless-stack/sst/commit/f708fa980c5622149cb8f66d9c29faaeef89c2bd) Thanks [@pzeinlinger](https://github.com/pzeinlinger)! - Function/go: fix incorrect go -tags flag
+
+- [#3131](https://github.com/serverless-stack/sst/pull/3131) [`66546dfee`](https://github.com/serverless-stack/sst/commit/66546dfee511810ed8fba7357247b4f9afb500eb) Thanks [@nick](https://github.com/nick)! - Bump esbuild version
+
 ## 2.22.1
 
 ### Patch Changes
