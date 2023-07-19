@@ -22,6 +22,11 @@ export const useNodeHandler = Context.memo(async () => {
       ctx: esbuild.BuildContext;
     }
   > = {};
+  process.on("exit", () => {
+    for (const { ctx } of Object.values(cache)) {
+      ctx.dispose();
+    }
+  });
   const project = useProject();
   const threads = new Map<string, Worker>();
 
