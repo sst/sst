@@ -6,6 +6,8 @@ import * as contextproviders from "sst-aws-cdk/lib/context-providers/index.js";
 import path from "path";
 import { VisibleError } from "../error.js";
 import { useDotnetHandler } from "../runtime/handlers/dotnet.js";
+import { CloudAssembly } from "aws-cdk-lib/cx-api";
+import * as cas from "aws-cdk-lib/cloud-assembly-schema";
 
 interface SynthOptions {
   buildDir?: string;
@@ -82,6 +84,7 @@ export async function synth(opts: SynthOptions) {
     await opts.fn(app);
     await app.finish();
     const assembly = app.synth();
+    processMetadataMessages(assembly, {});
     Logger.debug(assembly.manifest.missing);
     const { missing } = assembly.manifest;
     const provider = await useAWSProvider();
@@ -105,6 +108,50 @@ export async function synth(opts: SynthOptions) {
     Logger.debug("Finished synthesizing");
     return assembly;
   }
+
+  function processMetadataMessages(assembly: CloudAssembly, options: MetadataMessageOptions = {}) {
+
+    const warning = console.log
+    const error = console.error
+
+    let warnings = false;
+    let errors = false;
+    for (const stack of assembly.stacks) {
+      for (const message of stack.messages) {
+	switch (message.level) {
+          case cxapi.SynthesisMessageLevel.WARNING:
+            warnings = true;
+            printMessage(warning, 'Warning', message.id, message.entry);
+            break;
+          case cxapi.SynthesisMessageLevel.ERROR:
+            errors = true;
+            printMessage(error, 'Error', message.id, message.entry);
+            break;
+          case cxapi.SynthesisMessageLevel.INFO:
+            printMessage(print, 'Info', message.id, message.entry);
+            break;
+	}
+      }
+    }
+
+    if (errors && !options.ignoreErrors) {
+      throw new Error('Found errors');
+    }
+
+    if (options.strict && warnings) {
+      throw new Error('Found warnings (--strict mode)');
+    }
+
+    function printMessage(logFn: (s: string) => void, prefix: string, id: string, entry: cas.MetadataEntry) {
+      logFn(`[${prefix} at ${id}] ${entry.data}`);
+
+      if (options.verbose && entry.trace) {
+	logFn(`  ${entry.trace.join('\n  ')}`);
+      }
+    }
+
+  }
+
 }
 
 function formatErrorMessage(message: string) {
@@ -128,4 +175,27 @@ function formatCustomDomainError(message: string) {
       : `And SST is not able to find the hosted zone in your AWS Route 53 account.`,
     `Please double check and make sure the zone exists, or pass in a different zone.`,
   ].join(" ");
+}
+
+export interface MetadataMessageOptions {
+  /**
+   * Whether to be verbose
+   *
+   * @default false
+   */
+  verbose?: boolean;
+
+  /**
+   * Don't stop on error metadata
+   *
+   * @default false
+   */
+  ignoreErrors?: boolean;
+
+  /**
+   * Treat warnings in metadata as errors
+   *
+   * @default false
+   */
+  strict?: boolean;
 }
