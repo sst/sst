@@ -116,7 +116,7 @@ export const deploy = (program: Program) =>
       if (Object.values(results).some((stack) => Stacks.isFailed(stack.status)))
         process.exit(1);
       fs.writeFile(
-        path.join(project.paths.out, "outputs.json"),
+        project.config.outputs || path.join(project.paths.out, "outputs.json"),
         JSON.stringify(
           mapValues(results, (val) => val.outputs),
           null,

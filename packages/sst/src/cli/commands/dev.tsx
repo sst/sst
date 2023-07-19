@@ -301,7 +301,8 @@ export const dev = (program: Program) =>
 
           // Write outputs.json
           fs.writeFile(
-            path.join(project.paths.out, "outputs.json"),
+            project.config.outputs ||
+              path.join(project.paths.out, "outputs.json"),
             JSON.stringify(
               mapValues(results, (val) => val.outputs),
               null,
