@@ -428,10 +428,15 @@ function renderValue(val: any): string {
     case "object":
       if (ArrayBuffer.isView(val))
         return "Binary: " + Buffer.from(val as any).toString("base64");
-      return JSON.stringify(val, null, 2);
+      return JSON.stringify(val, replacer, 2);
     case "undefined":
       return "<null>";
     default:
       return "<unknown>";
   }
+}
+
+function replacer(_k: string, val: unknown) {
+  if (val instanceof Set) return Array.from(val);
+  return val;
 }
