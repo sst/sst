@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.22.3
+
+### Patch Changes
+
+- [`f77e1c869`](https://github.com/serverless-stack/sst/commit/f77e1c86948b87cff5fb8eed86852a3f2c54d860) Thanks [@fwang](https://github.com/fwang)! - Job: support ARM architecture
+
 ## 2.22.2
 
 ### Patch Changes
