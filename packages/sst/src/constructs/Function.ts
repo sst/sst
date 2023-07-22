@@ -805,23 +805,9 @@ export class Function extends CDKFunction implements SSTConstruct {
         const bootstrap = await useBootstrap();
         this.attachPermissions([
           new PolicyStatement({
-            actions: ["iot:Connect", "iot:DescribeEndpoint"],
+            actions: ["iot:*"],
             effect: Effect.ALLOW,
             resources: ["*"],
-          }),
-          new PolicyStatement({
-            actions: ["iot:Receive", "iot:Publish"],
-            effect: Effect.ALLOW,
-            resources: [
-              `arn:aws:iot:${stack.region}:${stack.account}:topic/sst/*`,
-            ],
-          }),
-          new PolicyStatement({
-            actions: ["iot:Subscribe"],
-            effect: Effect.ALLOW,
-            resources: [
-              `arn:aws:iot:${stack.region}:${stack.account}:topicfilter/sst/*`,
-            ],
           }),
           new PolicyStatement({
             actions: ["s3:*"],
