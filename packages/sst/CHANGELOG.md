@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.22.5
+
+### Patch Changes
+
+- [`95297c4f9`](https://github.com/serverless-stack/sst/commit/95297c4f92d56c420ef37b7c2dbc6dabaa43bfdb) Thanks [@thdxr](https://github.com/thdxr)! - function: revert limited iot permissions
+
 ## 2.22.4
 
 ### Patch Changes
