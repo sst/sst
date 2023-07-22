@@ -1,4 +1,4 @@
-import https from 'https';
+import https from "https";
 
 export function postPayload(endpoint: string, body: any) {
   return new Promise<void>((resolve, reject) => {
