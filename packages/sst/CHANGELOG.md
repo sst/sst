@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.22.6
+
+### Patch Changes
+
+- [`ba2156ff7`](https://github.com/serverless-stack/sst/commit/ba2156ff74b8a8e3d48ea243f17a743c2b134502) Thanks [@fwang](https://github.com/fwang)! - Function: do not cache esbuild context for sst build
+
 ## 2.22.5
 
 ### Patch Changes
