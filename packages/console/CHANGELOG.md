@@ -1,5 +1,7 @@
 # @serverless-stack/console
 
+## 2.22.6
+
 ## 2.22.5
 
 ## 2.22.4
