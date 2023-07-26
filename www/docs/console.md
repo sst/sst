@@ -15,9 +15,15 @@ The <a href={config.console}>SST Console</a> is a web based dashboard to manage 
 
 </HeadlineText>
 
+---
+
 ![SST Console homescreen](/img/console/sst-console-homescreen.png)
 
 With the Console you can view real-time logs, invoke functions, replay invocations, make queries, run migrations, view uploaded files, query your GraphQL APIs, and more!
+
+:::info New Console
+We have a new version of the [SST Console](https://twitter.com/thdxr/status/1681834634374422531) in the works. [Read more about it below](#console-20).
+:::
 
 ---
 
@@ -196,3 +202,90 @@ The SST Console requires the SST CLI to be running (either `sst dev` or `sst con
 When connected to `sst dev`, the Console will display real-time logs from the local invocations of your functions. Whereas, when connected to `sst console`, it'll show you the [CloudWatch](https://aws.amazon.com/cloudwatch/) logs for them instead.
 
 The source for the Console can be viewed in the <a href={`${config.github}/tree/master/packages/console`}>SST GitHub repo</a>.
+
+---
+
+## Console 2.0
+
+We are working on a new version of the SST Console. It'll make it easier to view your logs and manage all your SST apps in production.
+
+![SST Console homescreen](/img/console/sst-console-20.png)
+
+You won't need to run the `sst console` command to view a specific stage. It'll automatically show all the SST apps with their stages in your account.
+
+The new console is also [open source and is built with SST](https://github.com/serverless-stack/console).
+
+:::tip
+The [new console's codebase](https://github.com/serverless-stack/console) is a good example of what a production SST app looks like.
+:::
+
+---
+
+### Join the beta
+
+Console 2.0 is currently in public beta. If you'd like to try it out, <a href={config.discord}>join us in #console on Discord</a>.
+
+---
+
+#### What's changing
+
+We are making some key changes with the new version.
+
+1. You'll need to sign up for it
+
+   - You can create an account and create a workspace.
+
+2. You can use it with your team
+
+   - You can also invite your team members to the workspace.
+
+3. The new console is hosted on our side
+
+   - This lets you connect your AWS accounts. It'll deploy a separate CloudFormation stack and connect to any SST apps in it.
+   - It also stores some data about your account and your logs on our side.
+
+4. You can view all your apps and stages
+
+   - Once you've connected your AWS accounts, all your apps and stages will show up automatically.
+   - You can view logs, invoke functions, or save event payloads as a team.
+   - Just as before, you can also view logs in real-time from your local stage.
+
+5. It doesn't support all the [Explorers](#explorers)
+
+   - We are starting with just functions and logs for now.
+
+6. It'll be a paid product
+
+   - You'll be able to view local logs and stages for free.
+   - But viewing and searching for production logs will be a paid feature.
+   - We'll release pricing details shortly but it'll be based on how often your functions are invoked.
+
+:::info
+Just as before, the new console is completely optional to use.
+:::
+
+---
+
+#### Frequently asked questions
+
+- When is the new console going live?
+
+  It's currently in public beta and will be going live in the coming weeks.
+
+- What will happen to the old console?
+
+  We'll still keep it around for some time but it'll be moved to a different URL.
+
+- Will there be a free tier?
+
+  We haven't finalized this yet but there will most likely be a free tier for apps that don't have a lot of invocations or logs.
+
+- What if I don't want to pay for it?
+
+  You can still invite your team and use it to view your local stages.
+
+- What happens to Seed?
+
+  [Seed](https://seed.run) also lets you view logs for your SST apps, so there is some overlap between the two products. But Seed will continue to work just as before.
+
+If you have any further questions, feel free to ask us on Discord.
