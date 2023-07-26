@@ -21,7 +21,7 @@ The <a href={config.console}>SST Console</a> is a web based dashboard to manage 
 
 With the Console you can view real-time logs, invoke functions, replay invocations, make queries, run migrations, view uploaded files, query your GraphQL APIs, and more!
 
-:::info New Console
+:::info Console 2.0
 We have a new version of the [SST Console](https://twitter.com/thdxr/status/1681834634374422531) in the works. [Read more about it below](#console-20).
 :::
 
