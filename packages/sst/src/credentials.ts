@@ -1,4 +1,3 @@
-import "@aws-sdk/types";
 import { Context } from "./context/context.js";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import { Client } from "@aws-sdk/smithy-client";
