@@ -352,7 +352,7 @@ This command does not instrument your code. It simply uses your local credential
 
 ### `sst secrets`
 
-Manage secrets in your app.
+Manage the secrets in your app. This command is meant to be used alongside [Config](../docs/config.md). 
 
 ```bash
 npx sst secrets <command> [options]
@@ -375,6 +375,8 @@ And remove the secret.
 ```bash
 npx sst secrets remove MY_SECRET
 ```
+
+Behind the scenes the secrets are stored in [AWS SSM](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) or AWS Systems Manager Parameter Store, [read more about how it works](../config.md#how-it-works).
 
 #### Options
 
