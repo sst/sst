@@ -285,8 +285,28 @@ npx sst remove [filter] [options]
 ```
 
 :::info Removal Policy
-By default, AWS does not remove resources like S3 buckets or DynamoDB tables. To let SST remove these, you'd need to [set the default removal policy](../advanced/removal-policy.md).
+By default, AWS does not remove resources like S3 buckets or DynamoDB tables. To let SST remove these, you'd need to [set the default removal policy](../advanced/removal-policy.md#changing-the-removal-policy).
 :::
+
+For example, you can remove your entire app for the current stage.
+
+```bash
+npx sst remove
+```
+
+Or remove it for a specific stage.
+
+```bash
+npx sst remove --stage dev
+```
+
+Or remove a specific stack in your app.
+
+```bash
+npx sst remove MyStack
+```
+
+Where `MyStack` is a stack defined in your stacks code.
 
 ---
 
