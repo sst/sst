@@ -233,7 +233,15 @@ export const useNodeHandler = Context.memo(async () => {
         );
 
         if (input.mode === "deploy" && installPackages) {
-          const src = await find(parsed.dir, "package.json");
+          const src = await findAbove(parsed.dir, "package.json");
+          if (!src) {
+            return {
+              type: "error",
+              errors: [
+                `Could not find package.json for handler "${input.props.handler}"`,
+              ],
+            };
+          }
           const json = JSON.parse(
             await fs
               .readFile(path.join(src, "package.json"))
