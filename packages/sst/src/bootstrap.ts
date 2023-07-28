@@ -16,7 +16,11 @@ import {
   RemovalPolicy,
 } from "aws-cdk-lib/core";
 import { Function, Runtime, Code } from "aws-cdk-lib/aws-lambda";
-import { PolicyStatement } from "aws-cdk-lib/aws-iam";
+import {
+  ManagedPolicy,
+  PermissionsBoundary,
+  PolicyStatement,
+} from "aws-cdk-lib/aws-iam";
 import { Rule } from "aws-cdk-lib/aws-events";
 import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
 import {
@@ -50,12 +54,14 @@ export const useBootstrap = Context.memo(async () => {
     loadSSTStatus(),
   ]);
   Logger.debug("Loaded bootstrap status");
-  const needToBootstrapCDK = !cdkStatus;
-  const needToBootstrapSST = !sstStatus;
+  const needToBootstrapCDK = cdkStatus.status !== "ready";
+  const needToBootstrapSST = sstStatus.status !== "ready";
 
   if (needToBootstrapCDK || needToBootstrapSST) {
     const spinner = createSpinner(
-      "Deploying bootstrap stack, this only needs to happen once"
+      cdkStatus.status === "bootstrap" || sstStatus.status === "bootstrap"
+        ? "Deploying bootstrap stack, this only needs to happen once"
+        : "Updating bootstrap stack"
     ).start();
 
     if (needToBootstrapCDK) {
@@ -66,7 +72,7 @@ export const useBootstrap = Context.memo(async () => {
 
       // fetch bootstrap status
       sstStatus = await loadSSTStatus();
-      if (!sstStatus)
+      if (sstStatus.status !== "ready")
         throw new VisibleError("Failed to load bootstrap stack status");
     }
     spinner.succeed();
@@ -88,13 +94,13 @@ async function loadCDKStatus() {
       new DescribeStacksCommand({ StackName: stackName })
     );
     // Check CDK bootstrap stack exists
-    if (!stacks || stacks.length === 0) return false;
+    if (!stacks || stacks.length === 0) return { status: "bootstrap" };
 
     // Check CDK bootstrap stack deployed successfully
     if (
       !["CREATE_COMPLETE", "UPDATE_COMPLETE"].includes(stacks[0].StackStatus!)
     ) {
-      return false;
+      return { status: "bootstrap" };
     }
 
     // Check CDK bootstrap stack is up to date
@@ -104,15 +110,17 @@ async function loadCDKStatus() {
     const output = stacks[0].Outputs?.find(
       (o) => o.OutputKey === "BootstrapVersion"
     );
-    if (!output || parseInt(output.OutputValue!) < 14) return false;
+    if (!output || parseInt(output.OutputValue!) < 14) {
+      return { status: "update" };
+    }
 
-    return true;
+    return { status: "ready" };
   } catch (e: any) {
     if (
       e.name === "ValidationError" &&
       e.message === `Stack with id ${stackName} does not exist`
     ) {
-      return false;
+      return { status: "bootstrap" };
     } else {
       throw e;
     }
@@ -136,7 +144,7 @@ async function loadSSTStatus() {
       e.Code === "ValidationError" &&
       e.message === `Stack with id ${stackName} does not exist`
     ) {
-      return null;
+      return { status: "bootstrap" };
     }
     throw e;
   }
@@ -152,7 +160,7 @@ async function loadSSTStatus() {
     }
   });
   if (!version || !bucket) {
-    return null;
+    return { status: "bootstrap" };
   }
 
   // Need to update bootstrap stack:
@@ -171,10 +179,10 @@ async function loadSSTStatus() {
     currentMajor > latestMajor ||
     currentMinor < latestMinor
   ) {
-    return null;
+    return { status: "update" };
   }
 
-  return { version, bucket };
+  return { status: "ready", version, bucket };
 }
 
 export async function bootstrapSST() {
@@ -269,6 +277,16 @@ export async function bootstrapSST() {
     },
   });
   rule.addTarget(new LambdaFunction(fn));
+
+  // Create permissions boundary
+  if (cdk?.customPermissionsBoundary) {
+    const boundaryPolicy = ManagedPolicy.fromManagedPolicyName(
+      stack,
+      "PermissionBoundaryPolicy",
+      cdk.customPermissionsBoundary
+    );
+    PermissionsBoundary.of(stack).apply(boundaryPolicy);
+  }
 
   // Create stack outputs to store bootstrap stack info
   new CfnOutput(stack, OUTPUT_VERSION, { value: LATEST_VERSION });

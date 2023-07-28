@@ -6,6 +6,13 @@ import {
   IOrigin,
 } from "aws-cdk-lib/aws-cloudfront";
 
+export interface BaseSiteFileOptions {
+  exclude: string | string[];
+  include: string | string[];
+  cacheControl: string;
+  contentType?: string;
+}
+
 export interface BaseSiteEnvironmentOutputsInfo {
   path: string;
   stack: string;

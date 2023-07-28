@@ -33,6 +33,7 @@ import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import { Distribution, DistributionDomainProps } from "./Distribution.js";
 import {
+  BaseSiteFileOptions,
   BaseSiteReplaceProps,
   BaseSiteCdkDistributionProps,
   getBuildCmdEnvironment,
@@ -49,13 +50,6 @@ import { gray } from "colorette";
 import { useProject } from "../project.js";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
-
-export interface StaticSiteFileOptions {
-  exclude: string | string[];
-  include: string | string[];
-  cacheControl: string;
-  contentType?: string;
-}
 
 export interface StaticSiteProps {
   /**
@@ -122,7 +116,7 @@ export interface StaticSiteProps {
   /**
    * Pass in a list of file options to configure cache control for different files. Behind the scenes, the `StaticSite` construct uses a combination of the `s3 cp` and `s3 sync` commands to upload the website content to the S3 bucket. An `s3 cp` command is run for each file option block, and the options are passed in as the command options.
    *
-   * Defaults to no cache control for HTML files, and a 1 year cache control for JS/CSS files.
+   * @default No cache control for HTML files, and a 1 year cache control for JS/CSS files.
    * ```js
    * [
    *   {
@@ -319,6 +313,7 @@ export interface StaticSiteProps {
 }
 
 export interface StaticSiteDomainProps extends DistributionDomainProps {}
+export interface StaticSiteFileOptions extends BaseSiteFileOptions {}
 export interface StaticSiteReplaceProps extends BaseSiteReplaceProps {}
 export interface StaticSiteCdkDistributionProps
   extends BaseSiteCdkDistributionProps {}

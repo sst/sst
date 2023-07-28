@@ -1,3 +1,4 @@
+import os from "os";
 import path from "path";
 import fs from "fs/promises";
 import { exec } from "child_process";
@@ -11,29 +12,35 @@ import { useRuntimeWorkers } from "../workers.js";
 import { Context } from "../../context/context.js";
 import { VisibleError } from "../../error.js";
 import { Colors } from "../../cli/colors.js";
+import { Logger } from "../../logger.js";
 
 export const useNodeHandler = Context.memo(async () => {
   const workers = await useRuntimeWorkers();
   const handlers = useRuntimeHandlers();
-  const cache: Record<
+  const rebuildCache: Record<
     string,
     {
-      last: esbuild.BuildResult;
+      result: esbuild.BuildResult;
       ctx: esbuild.BuildContext;
     }
   > = {};
+  process.on("exit", () => {
+    for (const { ctx } of Object.values(rebuildCache)) {
+      ctx.dispose();
+    }
+  });
   const project = useProject();
   const threads = new Map<string, Worker>();
 
   handlers.register({
     shouldBuild: (input) => {
-      const result = cache[input.functionID];
-      if (!result) return false;
+      const cache = rebuildCache[input.functionID];
+      if (!cache) return false;
       const relative = path
         .relative(project.paths.root, input.file)
         .split(path.sep)
         .join(path.posix.sep);
-      return Boolean(result.last.metafile?.inputs[relative]);
+      return Boolean(cache.result.metafile?.inputs[relative]);
     },
     canHandle: (input) => input.startsWith("nodejs"),
     startWorker: async (input) => {
@@ -69,7 +76,6 @@ export const useNodeHandler = Context.memo(async () => {
       await worker?.terminate();
     },
     build: async (input) => {
-      const exists = cache[input.functionID];
       const parsed = path.parse(input.props.handler!);
       const file = [
         ".ts",
@@ -112,11 +118,13 @@ export const useNodeHandler = Context.memo(async () => {
         .split(path.sep)
         .join(path.posix.sep);
 
+      // Rebuilt using existing esbuild context
+      const exists = rebuildCache[input.functionID];
       if (exists) {
         const result = await exists.ctx.rebuild();
-        cache[input.functionID] = {
+        rebuildCache[input.functionID] = {
           ctx: exists.ctx,
-          last: result,
+          result,
         };
         return {
           type: "success",
@@ -264,10 +272,13 @@ export const useNodeHandler = Context.memo(async () => {
           } catch {}
         }
 
-        cache[input.functionID] = {
-          ctx,
-          last: result,
-        };
+        // Cache esbuild result and context for rebuild
+        if (input.mode === "start") {
+          rebuildCache[input.functionID] = { ctx, result };
+        }
+
+        logMemoryUsage(input.functionID, input.props.handler!);
+
         return {
           type: "success",
           handler,
@@ -293,3 +304,19 @@ export const useNodeHandler = Context.memo(async () => {
     },
   });
 });
+
+function logMemoryUsage(functionID: string, handler: string) {
+  const printInMB = (bytes: number) => `${Math.round(bytes / 1024 / 1024)} MB`;
+  const used = process.memoryUsage();
+  for (const key in used) {
+    // @ts-ignore
+    used[key] = printInMB(used[key]);
+  }
+  Logger.debug({
+    functionID,
+    handler,
+    freeMemory: printInMB(os.freemem()),
+    totalMemory: printInMB(os.totalmem()),
+    ...used,
+  });
+}

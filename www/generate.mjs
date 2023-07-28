@@ -492,7 +492,7 @@ function renderProperties(file, files, properties, prefix, onlyPublic) {
         lines.push(
           ...examples
             .map(renderTag)
-            .map((x) => x.replace(/new .+\(/g, `new ${file.name}(`))
+            .map((x) => x.replace(/new SsrSite/g, `new ${file.name}`))
         );
       }
       lines.push(
@@ -545,7 +545,7 @@ function renderSignature(file, children, method, signature) {
       lines.push(
         ...examples
           .map(renderTag)
-          .map((x) => x.replace(/new .+\(/g, `new ${file.name}(`))
+          .map((x) => x.replace(/new SsrSite/g, `new ${file.name}`))
       );
     }
     lines.push(...tags.filter((x) => x.tag !== "@example").map(renderTag));
@@ -582,7 +582,7 @@ function renderSignatureForDeprecated(file, method, signature) {
       lines.push(
         ...examples
           .map(renderTag)
-          .map((x) => x.replace(/new .+\(/g, `new ${file.name}(`))
+          .map((x) => x.replace(/new SsrSite/g, `new ${file.name}`))
       );
     }
     lines.push(...tags.filter((x) => x.tag !== "@example").map(renderTag));

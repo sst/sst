@@ -67,35 +67,54 @@ export const useRustHandler = Context.memo(async () => {
 
       if (input.mode === "start") {
         try {
-          await execAsync(`cargo build --bin ${parsed.name}`, {
-            cwd: project,
-            env: {
-              ...process.env,
-            },
-          });
+          await execAsync(
+            ["cargo", "build", `--bin ${parsed.name}`].join(" "),
+            {
+              cwd: project,
+              env: {
+                ...process.env,
+              },
+            }
+          );
           await fs.cp(
             path.join(project, `target/debug`, parsed.name),
             path.join(input.out, "handler")
           );
         } catch (ex) {
-          throw new VisibleError("Failed to build");
+          return {
+            type: "error",
+            errors: [String(ex)],
+          };
         }
       }
 
       if (input.mode === "deploy") {
         try {
-          await execAsync(`cargo lambda build --release --bin ${parsed.name}`, {
-            cwd: project,
-            env: {
-              ...process.env,
-            },
-          });
+          await execAsync(
+            [
+              "cargo",
+              "lambda",
+              "build",
+              "--release",
+              ...(input.props.architecture === "arm_64" ? ["--arm64"] : []),
+              `--bin ${parsed.name}`,
+            ].join(" "),
+            {
+              cwd: project,
+              env: {
+                ...process.env,
+              },
+            }
+          );
           await fs.cp(
             path.join(project, `target/lambda/`, parsed.name, "bootstrap"),
             path.join(input.out, "bootstrap")
           );
         } catch (ex) {
-          throw new VisibleError("Failed to build");
+          return {
+            type: "error",
+            errors: [String(ex)],
+          };
         }
       }
 

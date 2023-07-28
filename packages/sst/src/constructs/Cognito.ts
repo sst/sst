@@ -626,15 +626,16 @@ export class Cognito extends Construct implements SSTConstruct {
   }
 
   private createAuthRole(identityPool: CfnIdentityPool): Role {
+    const identityName = this.cognitoIdentityName();
     const role = new Role(this, "IdentityPoolAuthRole", {
       assumedBy: new FederatedPrincipal(
-        "cognito-identity.amazonaws.com",
+        identityName,
         {
           StringEquals: {
-            "cognito-identity.amazonaws.com:aud": identityPool.ref,
+            [`${identityName}:aud`]: identityPool.ref,
           },
           "ForAnyValue:StringLike": {
-            "cognito-identity.amazonaws.com:amr": "authenticated",
+            [`${identityName}:amr`]: "authenticated",
           },
         },
         "sts:AssumeRoleWithWebIdentity"
@@ -657,15 +658,16 @@ export class Cognito extends Construct implements SSTConstruct {
   }
 
   private createUnauthRole(identityPool: CfnIdentityPool): Role {
+    const identityName = this.cognitoIdentityName();
     const role = new Role(this, "IdentityPoolUnauthRole", {
       assumedBy: new FederatedPrincipal(
-        "cognito-identity.amazonaws.com",
+        identityName,
         {
           StringEquals: {
-            "cognito-identity.amazonaws.com:aud": identityPool.ref,
+            [`${identityName}:aud`]: identityPool.ref,
           },
           "ForAnyValue:StringLike": {
-            "cognito-identity.amazonaws.com:amr": "unauthenticated",
+            [`${identityName}:amr`]: "unauthenticated",
           },
         },
         "sts:AssumeRoleWithWebIdentity"
@@ -696,5 +698,11 @@ export class Cognito extends Construct implements SSTConstruct {
       username: login.includes("username"),
       preferredUsername: login.includes("preferredUsername"),
     };
+  }
+
+  private cognitoIdentityName() {
+    return Stack.of(this).region.startsWith("us-gov-")
+      ? "cognito-identity-us-gov.amazonaws.com"
+      : "cognito-identity.amazonaws.com";
   }
 }

@@ -77,6 +77,8 @@ export class SsrFunction extends Construct implements SSTConstruct {
     environment: Exclude<SsrFunctionProps["environment"], undefined>;
     permissions: Exclude<SsrFunctionProps["permissions"], undefined>;
   };
+  /** @internal */
+  public _doNotAllowOthersToBind = true;
 
   constructor(scope: Construct, id: string, props: SsrFunctionProps) {
     super(scope, id);

@@ -92,6 +92,7 @@ Start your local dev environment.
 ```bash
 # Start SST locally
 npx sst dev
+
 # Start Next.js locally
 npm run dev
 ```
@@ -102,6 +103,7 @@ npm run dev
 ```bash
 # Start SST locally
 yarn sst dev
+
 # Start Next.js locally
 yarn run dev
 ```
@@ -112,12 +114,17 @@ yarn run dev
 ```bash
 # Start SST locally
 pnpm sst dev
+
 # Start Next.js locally
 pnpm run dev
 ```
 
 </TabItem>
 </MultiPackagerCode>
+
+:::info
+When running `sst dev`, SST does not deploy your Next.js app. You are meant to run Next.js locally.
+:::
 
 ---
 

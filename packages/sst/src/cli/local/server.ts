@@ -3,7 +3,7 @@ import express from "express";
 import fs from "fs/promises";
 enablePatches();
 
-import { WebSocketServer } from "ws";
+import { WebSocketServer, WebSocket } from "ws";
 import https from "https";
 import http from "http";
 import { applyWSSHandler } from "@trpc/server/adapters/ws/dist/trpc-server-adapters-ws.cjs.js";
@@ -15,6 +15,7 @@ import { useProject } from "../../project.js";
 import { useBus } from "../../bus.js";
 import getPort from "get-port";
 import { Context } from "../../context/context.js";
+import { useMetadata } from "../../stacks/metadata.js";
 
 type Opts = {
   key: any;
@@ -150,7 +151,47 @@ export async function useLocalServer(opts: Opts) {
 
   // Wire up websocket
 
-  const wss = new WebSocketServer({ server });
+  const wss = new WebSocketServer({ noServer: true });
+  const wss2 = new WebSocketServer({ noServer: true });
+
+  const sockets = new Set<WebSocket>();
+  let buffer: any[] = [
+    {
+      type: "cli.dev",
+      properties: {
+        stage: project.config.stage,
+        app: project.config.name,
+      },
+    },
+  ];
+  function publish(type: string, properties: any) {
+    const msg = {
+      type,
+      properties,
+    };
+    buffer.push(msg);
+    const json = JSON.stringify(msg);
+    [...sockets.values()].map((s) => s.send(json));
+  }
+  wss2.on("connection", (socket, req) => {
+    sockets.add(socket);
+    for (const msg of buffer) {
+      socket.send(JSON.stringify(msg));
+    }
+    socket.on("close", () => {
+      sockets.delete(socket);
+    });
+
+    socket.on("message", (data) => {
+      const parsed = JSON.parse(data.toString());
+      if (parsed.type === "log.cleared") {
+        buffer = buffer.filter(
+          (msg) => msg.properties?.functionID !== parsed.properties?.functionID
+        );
+      }
+    });
+  });
+
   wss.on("connection", (socket, req) => {
     if (req.headers.origin?.endsWith("localhost:3000")) return;
     if (req.headers.origin?.endsWith("localhost:3001")) return;
@@ -159,6 +200,24 @@ export async function useLocalServer(opts: Opts) {
     if (req.headers.origin?.endsWith("--sst-console.netlify.app")) return;
     console.log("Rejecting unauthorized connection from " + req.headers.origin);
     socket.terminate();
+  });
+
+  server.on("upgrade", (req, socket, head) => {
+    if (req.url === "/socket") {
+      wss2.handleUpgrade(req, socket, head, (socket) => {
+        wss2.emit("connection", socket, req);
+      });
+      return;
+    }
+
+    if (req.url === "/") {
+      wss.handleUpgrade(req, socket, head, (socket) => {
+        wss.emit("connection", socket, req);
+      });
+      return;
+    }
+
+    socket.destroy();
   });
 
   server.listen(cfg.port);
@@ -207,7 +266,8 @@ export async function useLocalServer(opts: Opts) {
     });
   }
 
-  bus.subscribe("function.invoked", (evt) => {
+  bus.subscribe("function.invoked", async (evt) => {
+    publish("function.invoked", evt.properties);
     updateFunction(evt.properties.functionID, (draft) => {
       if (draft.invocations.length >= 25) draft.invocations.pop();
       draft.invocations.unshift({
@@ -222,6 +282,7 @@ export async function useLocalServer(opts: Opts) {
   });
 
   bus.subscribe("worker.stdout", (evt) => {
+    publish("worker.stdout", evt.properties);
     updateFunction(evt.properties.functionID, (draft) => {
       const entry = draft.invocations.find(
         (i) => i.id === evt.properties.requestID
@@ -235,6 +296,7 @@ export async function useLocalServer(opts: Opts) {
   });
 
   bus.subscribe("function.success", (evt) => {
+    publish("function.success", evt.properties);
     updateFunction(evt.properties.functionID, (draft) => {
       const invocation = draft.invocations.find(
         (x) => x.id === evt.properties.requestID
@@ -249,6 +311,7 @@ export async function useLocalServer(opts: Opts) {
   });
 
   bus.subscribe("function.error", (evt) => {
+    publish("function.error", evt.properties);
     updateFunction(evt.properties.functionID, (draft) => {
       const invocation = draft.invocations.find(
         (x) => x.id === evt.properties.requestID

@@ -478,6 +478,16 @@ test("edge: true: environment generates placeholders", async () => {
   });
 });
 
+test("constructor: path not exist", async () => {
+  expect(async () => {
+    await createSite({
+      path: "does-not-exist",
+      // @ts-expect-error: "sstTest" is not exposed in props
+      sstTest: true,
+    });
+  }).rejects.toThrow(/Could not find/);
+});
+
 test("constructor: with domain", async () => {
   route53.HostedZone.fromLookup = vi
     .fn()
@@ -905,14 +915,67 @@ test("timeout too alrge for edge", async () => {
   }).rejects.toThrow(/Timeout must be less than or equal to 30 seconds/);
 });
 
-test("constructor: path not exist", async () => {
-  expect(async () => {
-    await createSite({
-      path: "does-not-exist",
-      // @ts-expect-error: "sstTest" is not exposed in props
-      sstTest: true,
-    });
-  }).rejects.toThrow(/Could not find/);
+test("fileOptions: undefined", async () => {
+  const { site, stack } = await createSite({
+    // @ts-expect-error: "sstTest" is not exposed in props
+    sstTest: true,
+  });
+  hasResource(stack, "Custom::SSTBucketDeployment", {
+    FileOptions: [
+      [
+        "--exclude",
+        "*",
+        "--include",
+        "build/*",
+        "--cache-control",
+        "public,max-age=31536000,immutable",
+      ],
+      [
+        "--exclude",
+        "*",
+        "--include",
+        "favicon.ico",
+        "--cache-control",
+        "public,max-age=0,s-maxage=31536000,must-revalidate",
+      ],
+      [
+        "--exclude",
+        "*",
+        "--include",
+        "foo/*",
+        "--cache-control",
+        "public,max-age=0,s-maxage=31536000,must-revalidate",
+      ],
+    ],
+  });
+});
+test("fileOptions: defined", async () => {
+  const { site, stack } = await createSite({
+    // @ts-expect-error: "sstTest" is not exposed in props
+    sstTest: true,
+    fileOptions: [
+      {
+        exclude: "*",
+        include: "build/*",
+        cacheControl: "public,max-age=31536000,immutable",
+        contentType: "text/html; charset=utf-8",
+      },
+    ],
+  });
+  hasResource(stack, "Custom::SSTBucketDeployment", {
+    FileOptions: [
+      [
+        "--exclude",
+        "*",
+        "--include",
+        "build/*",
+        "--cache-control",
+        "public,max-age=31536000,immutable",
+        "--content-type",
+        "text/html; charset=utf-8",
+      ],
+    ],
+  });
 });
 
 test("constructor: cdk.serverCachePolicy undefined", async () => {

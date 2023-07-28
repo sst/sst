@@ -58,6 +58,10 @@ Here's how it works at a high level.
      },
    ```
 
+:::note
+If you are using `getStaticProps` in your app, you'll need to change your build command from `next build` to `sst bind next build`. [Read more about this below](#resource-binding-and-ssg).
+:::
+
 Check out the [full Next.js tutorial](../start/nextjs.md).
 
 ---
@@ -162,6 +166,18 @@ export async function getServerSideProps() {
 ```
 
 You can read more about this over on the [Resource Binding](../resource-binding.md) doc.
+
+---
+
+#### Resource binding and SSG
+
+If your app is using `getStaticProps` and is connecting to resources that've been bound it, you might see an error like this while deploying your app.
+
+```
+Cannot access bound resources. This usually happens if the "sst/node" package is used at build time.
+```
+
+You'll need to wrap your `next build` command with `sst bind next build`. This'll allow Next.js to build while having access to your resources.
 
 ---
 

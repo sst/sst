@@ -1,5 +1,115 @@
 # @serverless-stack/cli2
 
+## 2.22.6
+
+### Patch Changes
+
+- [`ba2156ff7`](https://github.com/serverless-stack/sst/commit/ba2156ff74b8a8e3d48ea243f17a743c2b134502) Thanks [@fwang](https://github.com/fwang)! - Function: do not cache esbuild context for sst build
+
+## 2.22.5
+
+### Patch Changes
+
+- [`95297c4f9`](https://github.com/serverless-stack/sst/commit/95297c4f92d56c420ef37b7c2dbc6dabaa43bfdb) Thanks [@thdxr](https://github.com/thdxr)! - function: revert limited iot permissions
+
+## 2.22.4
+
+### Patch Changes
+
+- [`3503231e8`](https://github.com/serverless-stack/sst/commit/3503231e834823b646288c574a7377a406da6d10) Thanks [@thdxr](https://github.com/thdxr)! - function: limit iot permissions
+
+## 2.22.3
+
+### Patch Changes
+
+- [`f77e1c869`](https://github.com/serverless-stack/sst/commit/f77e1c86948b87cff5fb8eed86852a3f2c54d860) Thanks [@fwang](https://github.com/fwang)! - Job: support ARM architecture
+
+## 2.22.2
+
+### Patch Changes
+
+- [`01aab434c`](https://github.com/serverless-stack/sst/commit/01aab434c0ee86135a3e1dcad9eaa93f37872038) Thanks [@thdxr](https://github.com/thdxr)! - cli: properly dispose of esbuild context on exit
+
+- [`cf9723d87`](https://github.com/serverless-stack/sst/commit/cf9723d8776f367e8a2861bc9ab5b8bbc0021a37) Thanks [@thdxr](https://github.com/thdxr)! - cli: support setting outputs path in config
+
+- [`8612a54f9`](https://github.com/serverless-stack/sst/commit/8612a54f97c3fb9983c13c8f8d05a55b8f176a12) Thanks [@fwang](https://github.com/fwang)! - Cognito: support gov cloud identity name
+
+- [#3133](https://github.com/serverless-stack/sst/pull/3133) [`f708fa980`](https://github.com/serverless-stack/sst/commit/f708fa980c5622149cb8f66d9c29faaeef89c2bd) Thanks [@pzeinlinger](https://github.com/pzeinlinger)! - Function/go: fix incorrect go -tags flag
+
+- [#3131](https://github.com/serverless-stack/sst/pull/3131) [`66546dfee`](https://github.com/serverless-stack/sst/commit/66546dfee511810ed8fba7357247b4f9afb500eb) Thanks [@nick](https://github.com/nick)! - Bump esbuild version
+
+## 2.22.1
+
+### Patch Changes
+
+- [`acf2cca2e`](https://github.com/serverless-stack/sst/commit/acf2cca2ed1bd910c74ace96ec9d41e303b88321) Thanks [@fwang](https://github.com/fwang)! - NextjsSite: update to OpenNext 2.0.5
+
+## 2.22.0
+
+### Minor Changes
+
+- [#3072](https://github.com/serverless-stack/sst/pull/3072) [`cf5d492da`](https://github.com/serverless-stack/sst/commit/cf5d492da821adb3fdf22ff99f3345249621b27e) Thanks [@berenddeboer](https://github.com/berenddeboer)! - Function: drop deprecated runtimes
+
+### Patch Changes
+
+- [#3101](https://github.com/serverless-stack/sst/pull/3101) [`a4b2e7bbc`](https://github.com/serverless-stack/sst/commit/a4b2e7bbc1ed153b2462b29d3487f6c684ae270f) Thanks [@gvidon](https://github.com/gvidon)! - Function/rust: display build errors
+
+- [#3096](https://github.com/serverless-stack/sst/pull/3096) [`c3ca57db0`](https://github.com/serverless-stack/sst/commit/c3ca57db0d1868fddde16fa7ed8df467acba243a) Thanks [@ffxsam](https://github.com/ffxsam)! - SsrSite: support `fileOptions` props
+
+- [#3116](https://github.com/serverless-stack/sst/pull/3116) [`2b9e55979`](https://github.com/serverless-stack/sst/commit/2b9e559790ca98f01f631c97941963c18c3ed21c) Thanks [@pzeinlinger](https://github.com/pzeinlinger)! - Function/go: support Golang build options
+
+- [#3099](https://github.com/serverless-stack/sst/pull/3099) [`f8fb5b284`](https://github.com/serverless-stack/sst/commit/f8fb5b284d4e72f61ed1638b35fd364625a5e5a0) Thanks [@Nirlah](https://github.com/Nirlah)! - Function/rust: support arm64 Rust runtime
+
+- [`efadc8373`](https://github.com/serverless-stack/sst/commit/efadc8373ee9e5e8e589e8af68fbf747dc854906) Thanks [@fwang](https://github.com/fwang)! - Bootstrap: update message when updating the stack
+
+## 2.21.8
+
+### Patch Changes
+
+- [#3106](https://github.com/serverless-stack/sst/pull/3106) [`ded5370c1`](https://github.com/serverless-stack/sst/commit/ded5370c1f26a16616545f3588a11a3d466277df) Thanks [@MattJenko](https://github.com/MattJenko)! - Bootstrap: support custom permissions boundary
+
+- [#3102](https://github.com/serverless-stack/sst/pull/3102) [`2739d664e`](https://github.com/serverless-stack/sst/commit/2739d664e19fc7252ee4ef1a9575cb67a09e5f13) Thanks [@berenddeboer](https://github.com/berenddeboer)! - RDS: grant migration function permission to decrypt custom secret encryption key
+
+- [#3095](https://github.com/serverless-stack/sst/pull/3095) [`b68d57a62`](https://github.com/serverless-stack/sst/commit/b68d57a624a3876af94bbd6c4ae88f8c5c21d858) Thanks [@michaelgmcd](https://github.com/michaelgmcd)! - RemixSite: ensure build directory exists
+
+- [`6649b3cc3`](https://github.com/serverless-stack/sst/commit/6649b3cc3600c4a6c51b84eba40fd4bb747d34d9) Thanks [@thdxr](https://github.com/thdxr)! - console: restores function invocations on console refresh, supports clearing
+
+## 2.21.7
+
+### Patch Changes
+
+- [`64723ffca`](https://github.com/serverless-stack/sst/commit/64723ffcaeb755b6a361a3c412236770a219814d) Thanks [@fwang](https://github.com/fwang)! - SsrSite: fix thrashing id when multiple sites are defined
+
+## 2.21.6
+
+### Patch Changes
+
+- [`3ab8384f8`](https://github.com/serverless-stack/sst/commit/3ab8384f87b81bd956371e0d6805e7493b539731) Thanks [@thdxr](https://github.com/thdxr)! - console: simplified event publishing
+
+## 2.21.5
+
+### Patch Changes
+
+- [`616be5f1b`](https://github.com/serverless-stack/sst/commit/616be5f1be7436f756f69592553b6f43f83185b6) Thanks [@fwang](https://github.com/fwang)! - Fix hosted zone not found
+
+## 2.21.4
+
+### Patch Changes
+
+- [`7edbb7876`](https://github.com/serverless-stack/sst/commit/7edbb7876687f7704bffe4bec744d3dc30f76a4b) Thanks [@thdxr](https://github.com/thdxr)! - forward all events
+
+## 2.21.3
+
+### Patch Changes
+
+- [`7528d6841`](https://github.com/serverless-stack/sst/commit/7528d6841cc01df7420a4bf45085a6f8af2d63fe) Thanks [@thdxr](https://github.com/thdxr)! - forward realtime events to new console
+
+## 2.21.2
+
+### Patch Changes
+
+- [`bf06ac82b`](https://github.com/serverless-stack/sst/commit/bf06ac82bee9765ab85fba61593d44d83fd15722) Thanks [@thdxr](https://github.com/thdxr)! - function: make the live debug bridge less chatty
+
 ## 2.21.1
 
 ### Patch Changes
