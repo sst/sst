@@ -13,6 +13,7 @@ import { Context } from "../../context/context.js";
 import { VisibleError } from "../../error.js";
 import { Colors } from "../../cli/colors.js";
 import { Logger } from "../../logger.js";
+import { findAbove } from "../../util/fs.js";
 
 export const useNodeHandler = Context.memo(async () => {
   const workers = await useRuntimeWorkers();
@@ -118,6 +119,26 @@ export const useNodeHandler = Context.memo(async () => {
         .split(path.sep)
         .join(path.posix.sep);
 
+      if (input.mode === "start") {
+        const root = await findAbove(parsed.dir, "package.json");
+        if (!root) {
+          return {
+            type: "error",
+            errors: [
+              `Could not find package.json for handler "${input.props.handler}"`,
+            ],
+          };
+        }
+        const dir = path.join(root, "node_modules");
+        try {
+          await fs.symlink(
+            path.resolve(dir),
+            path.resolve(path.join(input.out, "node_modules")),
+            "dir"
+          );
+        } catch {}
+      }
+
       // Rebuilt using existing esbuild context
       const exists = rebuildCache[input.functionID];
       if (exists) {
@@ -211,19 +232,6 @@ export const useNodeHandler = Context.memo(async () => {
               })
         );
 
-        async function find(dir: string, target: string): Promise<string> {
-          if (dir === "/")
-            throw new VisibleError("Could not find a package.json file");
-          if (
-            await fs
-              .access(path.join(dir, target))
-              .then(() => true)
-              .catch(() => false)
-          )
-            return dir;
-          return find(path.join(dir, ".."), target);
-        }
-
         if (input.mode === "deploy" && installPackages) {
           const src = await find(parsed.dir, "package.json");
           const json = JSON.parse(
@@ -256,20 +264,6 @@ export const useNodeHandler = Context.memo(async () => {
               resolve();
             });
           });
-        }
-
-        if (input.mode === "start") {
-          const dir = path.join(
-            await find(parsed.dir, "package.json"),
-            "node_modules"
-          );
-          try {
-            await fs.symlink(
-              path.resolve(dir),
-              path.resolve(path.join(input.out, "node_modules")),
-              "dir"
-            );
-          } catch {}
         }
 
         // Cache esbuild result and context for rebuild
