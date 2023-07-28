@@ -2,6 +2,7 @@ import path from "path";
 import { VisibleError } from "../../error.js";
 import type { Program } from "../program.js";
 import type {
+  ServiceMetadata,
   SlsNextjsMetadata,
   SSRSiteMetadata,
   StaticSiteMetadata,
@@ -26,6 +27,10 @@ export const bind = (program: Program) =>
           .option("site", {
             type: "boolean",
             describe: "Run in site mode",
+          })
+          .option("service", {
+            type: "boolean",
+            describe: "Run in service mode",
           })
           .option("script", {
             type: "boolean",
@@ -62,7 +67,13 @@ export const bind = (program: Program) =>
         const project = useProject();
         const command = args.command?.join(" ");
         const isSite = await isRunningInSite();
-        const mode = args.site ? "site" : args.script ? "script" : "auto";
+        const mode = args.site
+          ? "site"
+          : args.service
+          ? "service"
+          : args.script
+          ? "script"
+          : "auto";
         let p: ReturnType<typeof spawn> | undefined;
         let timer: ReturnType<typeof setTimeout> | undefined;
         let siteConfigCache:
@@ -79,19 +90,37 @@ export const bind = (program: Program) =>
         }
 
         // Bind script
-        if (args.script || (!isSite && !args.site)) {
+        if (mode === "script" || (!isSite && mode === "auto")) {
           Logger.debug("Running in script mode.");
-          return await bindScript();
+          return await runScript();
         }
 
-        // Bind site
-        await bindSite("init");
+        // Bind site/service
+        try {
+          await runSite("init");
+        } catch (e: any) {
+          if (
+            !(e instanceof MetadataOutdatedError) &&
+            !(e instanceof MetadataNotFoundError)
+          ) {
+            return;
+          }
+
+          Colors.line(
+            Colors.warning(
+              e instanceof MetadataOutdatedError
+                ? "Warning: This was deployed with an old version of SST. Run `sst dev` or `sst deploy` to update."
+                : "Warning: The site has not been deployed. Some resources might not be available."
+            )
+          );
+          return await runScript();
+        }
 
         bus.subscribe("stacks.metadata.updated", () =>
-          bindSite("metadata_updated")
+          runSite("metadata_updated")
         );
         bus.subscribe("stacks.metadata.deleted", () =>
-          bindSite("metadata_updated")
+          runSite("metadata_updated")
         );
         bus.subscribe("config.secret.updated", (payload) => {
           const secretName = payload.properties.name;
@@ -101,7 +130,7 @@ export const bind = (program: Program) =>
             `\n`,
             `SST secrets have been updated. Restarting \`${command}\`...`
           );
-          bindSite("secrets_updated");
+          runSite("secrets_updated");
         });
 
         async function isRunningInSite() {
@@ -147,34 +176,9 @@ export const bind = (program: Program) =>
           return results.some(Boolean);
         }
 
-        async function bindSite(reason: BIND_REASON) {
+        async function runSite(reason: BIND_REASON) {
           // Get metadata
-          let siteMetadata;
-          try {
-            siteMetadata = await getSiteMetadata();
-          } catch (e: any) {
-            // unhandled error
-            if (
-              !(e instanceof MetadataOutdatedError) &&
-              !(e instanceof MetadataNotFoundError)
-            ) {
-              throw e;
-            }
-
-            // ignore error if previously failed to fetch metadata
-            if (reason !== "init") return;
-
-            // run in script mode
-            Colors.line(
-              Colors.warning(
-                e instanceof MetadataOutdatedError
-                  ? "Warning: This was deployed with an old version of SST. Run `sst dev` or `sst deploy` to update."
-                  : "Warning: The site has not been deployed. Some resources might not be available."
-              )
-            );
-            return await bindScript();
-          }
-
+          const siteMetadata = await getSiteMetadata();
           const siteConfig = await parseSiteMetadata(siteMetadata!);
 
           // Handle rebind due to metadata updated
@@ -200,7 +204,7 @@ export const bind = (program: Program) =>
           });
         }
 
-        async function bindScript() {
+        async function runScript() {
           const { Config } = await import("../../config.js");
           await runCommand({
             ...(await Config.env()),
@@ -217,10 +221,12 @@ export const bind = (program: Program) =>
               (
                 c
               ): c is
+                | ServiceMetadata
                 | SSRSiteMetadata
                 | StaticSiteMetadata
                 | SlsNextjsMetadata =>
                 [
+                  "Service",
                   "StaticSite",
                   "NextjsSite",
                   "AstroSite",
@@ -232,12 +238,14 @@ export const bind = (program: Program) =>
             )
             .find((c) => {
               // Handle metadata prior to SST v2.3.0 doesn't have path
-              const isSsr =
-                c.type !== "StaticSite" && c.type !== "SlsNextjsSite";
+              const isService = c.type === "Service";
+              const isNonSsr =
+                c.type === "StaticSite" || c.type === "SlsNextjsSite";
+              const isSsr = !isService && !isNonSsr;
               if (
                 !c.data.path ||
                 (isSsr && !c.data.server) ||
-                (!isSsr && !c.data.environment)
+                (isNonSsr && !c.data.environment)
               ) {
                 throw new MetadataOutdatedError();
               }
@@ -254,29 +262,80 @@ export const bind = (program: Program) =>
         }
 
         async function parseSiteMetadata(
-          metadata: SlsNextjsMetadata | StaticSiteMetadata | SSRSiteMetadata
+          metadata:
+            | SlsNextjsMetadata
+            | StaticSiteMetadata
+            | SSRSiteMetadata
+            | ServiceMetadata
         ) {
           const { LambdaClient, GetFunctionCommand } = await import(
             "@aws-sdk/client-lambda"
           );
+          const {
+            ECSClient,
+            DescribeTaskDefinitionCommand,
+            DescribeContainerInstancesCommand,
+          } = await import("@aws-sdk/client-ecs");
           const { useAWSClient } = await import("../../credentials.js");
 
-          const isBindSupported =
-            metadata.type !== "StaticSite" && metadata.type !== "SlsNextjsSite";
-
-          // Handle StaticSite
-          if (!isBindSupported) {
+          // Case: Service deployed
+          if (
+            metadata.type === "Service" &&
+            metadata.data.mode === "deployed"
+          ) {
+            // get cluster role
+            // @ts-expect-error
+            const ecs = useAWSClient(ECSClient);
+            const task = await ecs.send(
+              // @ts-expect-error
+              new DescribeTaskDefinitionCommand({
+                taskDefinition: metadata.data.task!,
+              })
+            );
+            const envs: Record<string, string> = {};
+            (
+              task?.taskDefinition?.containerDefinitions![0].environment || []
+            ).forEach(({ name, value }) => (envs[name!] = value!));
+            return {
+              role: task?.taskDefinition?.taskRoleArn!,
+              envs,
+              secrets: metadata.data.secrets,
+            };
+          }
+          // Case: Service placeholder
+          else if (
+            metadata.type === "Service" &&
+            metadata.data.mode === "placeholder"
+          ) {
+            // get server function
+            const lambda = useAWSClient(LambdaClient);
+            const { Configuration: functionConfig } = await lambda.send(
+              new GetFunctionCommand({
+                FunctionName: metadata.data.devFunction,
+              })
+            );
+            return {
+              role: functionConfig?.Role!,
+              envs: functionConfig?.Environment?.Variables || {},
+              secrets: metadata.data.secrets,
+            };
+          }
+          // Case: StaticSite
+          else if (
+            metadata.type === "StaticSite" ||
+            metadata.type === "SlsNextjsSite"
+          ) {
             return { envs: metadata.data.environment };
           }
 
-          // Get function details
+          // Case: SsrSite
+          // get server function
           const lambda = useAWSClient(LambdaClient);
           const { Configuration: functionConfig } = await lambda.send(
             new GetFunctionCommand({
-              FunctionName: metadata.data.server,
+              FunctionName: (metadata as SSRSiteMetadata).data.server,
             })
           );
-
           return {
             role: functionConfig?.Role!,
             envs: functionConfig?.Environment?.Variables || {},
@@ -296,7 +355,7 @@ export const bind = (program: Program) =>
               `\n`,
               `Your AWS session is about to expire. Creating a new session and restarting \`${command}\`...`
             );
-            bindSite("iam_expired");
+            runSite("iam_expired");
           }, expireAt - Date.now());
 
           return {

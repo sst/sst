@@ -19,7 +19,6 @@ import {
   FunctionProps,
 } from "aws-cdk-lib/aws-lambda";
 import {
-  Distribution,
   ViewerProtocolPolicy,
   AllowedMethods,
   BehaviorOptions,
@@ -33,6 +32,7 @@ import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
 import { Queue } from "aws-cdk-lib/aws-sqs";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { Stack } from "./Stack.js";
+import { Distribution } from "./Distribution.js";
 import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 import { SsrSite, SsrSiteProps } from "./SsrSite.js";
@@ -204,13 +204,13 @@ export class NextjsSite extends SsrSite {
       timeout: CdkDuration.seconds(25),
       architecture: Architecture.ARM_64,
       environment: {
-        BUCKET_NAME: this.cdk!.bucket.bucketName,
+        BUCKET_NAME: this.bucket.bucketName,
         BUCKET_KEY_PREFIX: "_assets",
       },
       initialPolicy: [
         new PolicyStatement({
           actions: ["s3:GetObject"],
-          resources: [this.cdk!.bucket.arnForObjects("*")],
+          resources: [this.bucket.arnForObjects("*")],
         }),
       ],
     });
@@ -291,7 +291,7 @@ export class NextjsSite extends SsrSite {
     resource.node.addDependency(policy);
   }
 
-  protected createCloudFrontDistributionForRegional(): Distribution {
+  protected createCloudFrontDistributionForRegional() {
     /**
      * Next.js requests
      *
@@ -342,7 +342,7 @@ export class NextjsSite extends SsrSite {
      *    - x-vercel-cache: MISS
      */
 
-    const { cdk } = this.props;
+    const { customDomain, cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
     const cachePolicy =
       cdk?.serverCachePolicy ??
@@ -354,26 +354,30 @@ export class NextjsSite extends SsrSite {
       ]);
     const serverBehavior = this.buildDefaultBehaviorForRegional(cachePolicy);
 
-    return new Distribution(this, "Distribution", {
-      // these values can be overwritten by cfDistributionProps
-      defaultRootObject: "",
-      // Override props.
-      ...cfDistributionProps,
-      // these values can NOT be overwritten by cfDistributionProps
-      domainNames: this.buildDistributionDomainNames(),
-      certificate: this.cdk!.certificate,
-      defaultBehavior: serverBehavior,
-      additionalBehaviors: {
-        "api/*": serverBehavior,
-        "_next/data/*": serverBehavior,
-        "_next/image*": this.buildImageBehavior(cachePolicy),
-        ...(cfDistributionProps.additionalBehaviors || {}),
+    return new Distribution(this, "CDN", {
+      scopeOverride: this,
+      customDomain,
+      cdk: {
+        distribution: {
+          // these values can be overwritten by cfDistributionProps
+          defaultRootObject: "",
+          // Override props.
+          ...cfDistributionProps,
+          // these values can NOT be overwritten by cfDistributionProps
+          defaultBehavior: serverBehavior,
+          additionalBehaviors: {
+            "api/*": serverBehavior,
+            "_next/data/*": serverBehavior,
+            "_next/image*": this.buildImageBehavior(cachePolicy),
+            ...(cfDistributionProps.additionalBehaviors || {}),
+          },
+        },
       },
     });
   }
 
-  protected createCloudFrontDistributionForEdge(): Distribution {
-    const { cdk } = this.props;
+  protected createCloudFrontDistributionForEdge() {
+    const { customDomain, cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
     const cachePolicy =
       cdk?.serverCachePolicy ??
@@ -385,20 +389,24 @@ export class NextjsSite extends SsrSite {
       ]);
     const serverBehavior = this.buildDefaultBehaviorForEdge(cachePolicy);
 
-    return new Distribution(this, "Distribution", {
-      // these values can be overwritten by cfDistributionProps
-      defaultRootObject: "",
-      // Override props.
-      ...cfDistributionProps,
-      // these values can NOT be overwritten by cfDistributionProps
-      domainNames: this.buildDistributionDomainNames(),
-      certificate: this.cdk!.certificate,
-      defaultBehavior: serverBehavior,
-      additionalBehaviors: {
-        "api/*": serverBehavior,
-        "_next/data/*": serverBehavior,
-        "_next/image*": this.buildImageBehavior(cachePolicy),
-        ...(cfDistributionProps.additionalBehaviors || {}),
+    return new Distribution(this, "CDN", {
+      scopeOverride: this,
+      customDomain,
+      cdk: {
+        distribution: {
+          // these values can be overwritten by cfDistributionProps
+          defaultRootObject: "",
+          // Override props.
+          ...cfDistributionProps,
+          // these values can NOT be overwritten by cfDistributionProps
+          defaultBehavior: serverBehavior,
+          additionalBehaviors: {
+            "api/*": serverBehavior,
+            "_next/data/*": serverBehavior,
+            "_next/image*": this.buildImageBehavior(cachePolicy),
+            ...(cfDistributionProps.additionalBehaviors || {}),
+          },
+        },
       },
     });
   }

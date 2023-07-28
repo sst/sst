@@ -17,20 +17,9 @@ import {
   IBucket,
 } from "aws-cdk-lib/aws-s3";
 import { Asset } from "aws-cdk-lib/aws-s3-assets";
-import { ICertificate } from "aws-cdk-lib/aws-certificatemanager";
-import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { Code, Function, Runtime } from "aws-cdk-lib/aws-lambda";
 import {
-  HostedZone,
-  IHostedZone,
-  ARecord,
-  AaaaRecord,
-  RecordTarget,
-} from "aws-cdk-lib/aws-route53";
-import { CloudFrontTarget } from "aws-cdk-lib/aws-route53-targets";
-import {
   BehaviorOptions,
-  Distribution,
   IDistribution,
   Function as CfFunction,
   FunctionCode as CfFunctionCode,
@@ -42,8 +31,8 @@ import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
 
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
+import { Distribution, DistributionDomainProps } from "./Distribution.js";
 import {
-  BaseSiteDomainProps,
   BaseSiteReplaceProps,
   BaseSiteCdkDistributionProps,
   getBuildCmdEnvironment,
@@ -51,8 +40,6 @@ import {
   buildErrorResponsesForRedirectToIndex,
 } from "./BaseSite.js";
 import { useDeferredTasks } from "./deferred_task.js";
-import { HttpsRedirect } from "./cdk/website-redirect.js";
-import { DnsValidatedCertificate } from "./cdk/dns-validated-certificate.js";
 import { SSTConstruct, isCDKConstruct } from "./Construct.js";
 import {
   FunctionBindingProps,
@@ -331,7 +318,7 @@ export interface StaticSiteProps {
   };
 }
 
-export interface StaticSiteDomainProps extends BaseSiteDomainProps {}
+export interface StaticSiteDomainProps extends DistributionDomainProps {}
 export interface StaticSiteReplaceProps extends BaseSiteReplaceProps {}
 export interface StaticSiteCdkDistributionProps
   extends BaseSiteCdkDistributionProps {}
@@ -361,8 +348,6 @@ export class StaticSite extends Construct implements SSTConstruct {
   private doNotDeploy: boolean;
   private bucket: Bucket;
   private distribution: Distribution;
-  private hostedZone?: IHostedZone;
-  private certificate?: ICertificate;
 
   constructor(scope: Construct, id: string, props?: StaticSiteProps) {
     super(scope, props?.cdk?.id || id);
@@ -379,7 +364,6 @@ export class StaticSite extends Construct implements SSTConstruct {
     this.doNotDeploy =
       !stack.isActive || (app.mode === "dev" && !this.props.dev?.deploy);
 
-    this.validateCustomDomainSettings();
     this.generateViteTypes();
 
     if (this.doNotDeploy) {
@@ -388,18 +372,8 @@ export class StaticSite extends Construct implements SSTConstruct {
       return;
     }
 
-    // Create Bucket
     this.bucket = this.createS3Bucket();
-
-    // Create Custom Domain
-    this.hostedZone = this.lookupHostedZone();
-    this.certificate = this.createCertificate();
-
-    // Create CloudFront
     this.distribution = this.createCfDistribution();
-
-    // Connect Custom Domain to CloudFront Distribution
-    this.createRoute53Records();
 
     useDeferredTasks().add(async () => {
       // Build app
@@ -417,7 +391,7 @@ export class StaticSite extends Construct implements SSTConstruct {
       this.distribution.node.addDependency(s3deployCR);
 
       // Invalidate CloudFront
-      this.createCloudFrontInvalidation(assets);
+      this.distribution.createInvalidation(this.generateInvalidationId(assets));
     });
   }
 
@@ -427,7 +401,7 @@ export class StaticSite extends Construct implements SSTConstruct {
   public get url() {
     if (this.doNotDeploy) return this.props.dev?.url;
 
-    return `https://${this.distribution.distributionDomainName}`;
+    return this.distribution.url;
   }
 
   /**
@@ -454,9 +428,9 @@ export class StaticSite extends Construct implements SSTConstruct {
 
     return {
       bucket: this.bucket,
-      distribution: this.distribution,
-      hostedZone: this.hostedZone,
-      certificate: this.certificate,
+      distribution: this.distribution.cdk.distribution,
+      hostedZone: this.distribution.cdk.hostedZone,
+      certificate: this.distribution.cdk.certificate,
     };
   }
 
@@ -786,111 +760,36 @@ interface ImportMeta {
   /////////////////////
 
   private createCfDistribution(): Distribution {
-    const { cdk, errorPage } = this.props;
-
-    const isImportedCloudFrontDistribution = (
-      distribution?: IDistribution | StaticSiteCdkDistributionProps
-    ): distribution is IDistribution => {
-      return distribution !== undefined && isCDKConstruct(distribution);
-    };
-
-    // cdk.distribution is an imported construct
-    if (isImportedCloudFrontDistribution(cdk?.distribution)) {
-      return cdk?.distribution as Distribution;
-    }
-
-    // Validate input
-    if (cdk?.distribution?.certificate) {
-      throw new Error(
-        `Do not configure the "cfDistribution.certificate". Use the "customDomain" to configure the domain certificate.`
-      );
-    }
-    if (cdk?.distribution?.domainNames) {
-      throw new Error(
-        `Do not configure the "cfDistribution.domainNames". Use the "customDomain" to configure the domain name.`
-      );
-    }
-    if (errorPage && cdk?.distribution?.errorResponses) {
-      throw new Error(
-        `Cannot configure the "cfDistribution.errorResponses" when "errorPage" is passed in. Use one or the other to configure the behavior for error pages.`
-      );
-    }
-
-    // Create CloudFront distribution
+    const { errorPage, customDomain, cdk } = this.props;
     const indexPage = this.props.indexPage || "index.html";
-    return new Distribution(this, "Distribution", {
-      // these values can be overwritten by cfDistributionProps
-      defaultRootObject: indexPage,
-      errorResponses:
-        !errorPage || errorPage === "redirect_to_index_page"
-          ? buildErrorResponsesForRedirectToIndex(indexPage)
-          : buildErrorResponsesFor404ErrorPage(errorPage as string),
-      ...cdk?.distribution,
-      // these values can NOT be overwritten by cfDistributionProps
-      domainNames: this.buildDistributionDomainNames(),
-      certificate: this.certificate,
-      defaultBehavior: this.buildDistributionBehavior(),
+
+    return new Distribution(this, "CDN", {
+      scopeOverride: this,
+      customDomain,
+      cdk: {
+        distribution: {
+          // these values can be overwritten by cfDistributionProps
+          defaultRootObject: indexPage,
+          errorResponses:
+            !errorPage || errorPage === "redirect_to_index_page"
+              ? buildErrorResponsesForRedirectToIndex(indexPage)
+              : buildErrorResponsesFor404ErrorPage(errorPage as string),
+          ...cdk?.distribution,
+          // these values can NOT be overwritten by cfDistributionProps
+          defaultBehavior: this.buildDistributionBehavior(),
+        },
+      },
     });
   }
 
-  private createCloudFrontInvalidation(assets: Asset[]): CustomResource {
+  private generateInvalidationId(assets: Asset[]) {
     const stack = Stack.of(this) as Stack;
 
     // Need the AssetHash field so the CR gets updated on each deploy
-    const assetsHash = crypto
+    return crypto
       .createHash("md5")
       .update(assets.map(({ assetHash }) => assetHash).join(""))
       .digest("hex");
-
-    const policy = new Policy(this, "CloudFrontInvalidatorPolicy", {
-      statements: [
-        new PolicyStatement({
-          effect: Effect.ALLOW,
-          actions: [
-            "cloudfront:GetInvalidation",
-            "cloudfront:CreateInvalidation",
-          ],
-          resources: [
-            `arn:${stack.partition}:cloudfront::${stack.account}:distribution/${this.distribution.distributionId}`,
-          ],
-        }),
-      ],
-    });
-    stack.customResourceHandler.role?.attachInlinePolicy(policy);
-
-    const resource = new CustomResource(this, "CloudFrontInvalidator", {
-      serviceToken: stack.customResourceHandler.functionArn,
-      resourceType: "Custom::CloudFrontInvalidator",
-      properties: {
-        assetsHash,
-        distributionId: this.distribution.distributionId,
-        paths: ["/*"],
-        waitForInvalidation: this.props.waitForInvalidation,
-      },
-    });
-    resource.node.addDependency(policy);
-
-    return resource;
-  }
-
-  protected buildDistributionDomainNames(): string[] {
-    const { customDomain } = this.props;
-    const domainNames = [];
-    if (!customDomain) {
-      // no domain
-    } else if (typeof customDomain === "string") {
-      domainNames.push(customDomain);
-    } else {
-      domainNames.push(customDomain.domainName);
-      if (customDomain.alternateNames) {
-        if (!customDomain.cdk?.certificate)
-          throw new Error(
-            "Certificates for alternate domains cannot be automatically created. Please specify certificate to use"
-          );
-        domainNames.push(...customDomain.alternateNames);
-      }
-    }
-    return domainNames;
   }
 
   private buildDistributionBehavior(): BehaviorOptions {
@@ -928,148 +827,6 @@ function handler(event) {
       ],
       ...(cdk?.distribution as StaticSiteCdkDistributionProps)?.defaultBehavior,
     };
-  }
-
-  /////////////////////
-  // Custom Domain
-  /////////////////////
-
-  protected validateCustomDomainSettings() {
-    const { customDomain } = this.props;
-
-    if (!customDomain) {
-      return;
-    }
-
-    if (typeof customDomain === "string") {
-      return;
-    }
-
-    if (customDomain.isExternalDomain === true) {
-      if (!customDomain.cdk?.certificate) {
-        throw new Error(
-          `A valid certificate is required when "isExternalDomain" is set to "true".`
-        );
-      }
-      if (customDomain.domainAlias) {
-        throw new Error(
-          `Domain alias is only supported for domains hosted on Amazon Route 53. Do not set the "customDomain.domainAlias" when "isExternalDomain" is enabled.`
-        );
-      }
-      if (customDomain.hostedZone) {
-        throw new Error(
-          `Hosted zones can only be configured for domains hosted on Amazon Route 53. Do not set the "customDomain.hostedZone" when "isExternalDomain" is enabled.`
-        );
-      }
-    }
-  }
-
-  protected lookupHostedZone(): IHostedZone | undefined {
-    const { customDomain } = this.props;
-
-    // Skip if customDomain is not configured
-    if (!customDomain) {
-      return;
-    }
-
-    let hostedZone;
-
-    if (typeof customDomain === "string") {
-      hostedZone = HostedZone.fromLookup(this, "HostedZone", {
-        domainName: customDomain,
-      });
-    } else if (customDomain.cdk?.hostedZone) {
-      hostedZone = customDomain.cdk.hostedZone;
-    } else if (typeof customDomain.hostedZone === "string") {
-      hostedZone = HostedZone.fromLookup(this, "HostedZone", {
-        domainName: customDomain.hostedZone,
-      });
-    } else if (typeof customDomain.domainName === "string") {
-      // Skip if domain is not a Route53 domain
-      if (customDomain.isExternalDomain === true) {
-        return;
-      }
-
-      hostedZone = HostedZone.fromLookup(this, "HostedZone", {
-        domainName: customDomain.domainName,
-      });
-    } else {
-      hostedZone = customDomain.hostedZone;
-    }
-
-    return hostedZone;
-  }
-
-  private createCertificate(): ICertificate | undefined {
-    const { customDomain } = this.props;
-
-    if (!customDomain) {
-      return;
-    }
-
-    let acmCertificate;
-
-    // HostedZone is set for Route 53 domains
-    if (this.hostedZone) {
-      if (typeof customDomain === "string") {
-        acmCertificate = new DnsValidatedCertificate(this, "Certificate", {
-          domainName: customDomain,
-          hostedZone: this.hostedZone,
-          region: "us-east-1",
-        });
-      } else if (customDomain.cdk?.certificate) {
-        acmCertificate = customDomain.cdk.certificate;
-      } else {
-        acmCertificate = new DnsValidatedCertificate(this, "Certificate", {
-          domainName: customDomain.domainName,
-          hostedZone: this.hostedZone,
-          region: "us-east-1",
-        });
-      }
-    }
-    // HostedZone is NOT set for non-Route 53 domains
-    else {
-      if (typeof customDomain !== "string") {
-        acmCertificate = customDomain.cdk?.certificate;
-      }
-    }
-
-    return acmCertificate;
-  }
-
-  protected createRoute53Records(): void {
-    const { customDomain } = this.props;
-
-    if (!customDomain || !this.hostedZone) {
-      return;
-    }
-
-    let recordName;
-    let domainAlias;
-    if (typeof customDomain === "string") {
-      recordName = customDomain;
-    } else {
-      recordName = customDomain.domainName;
-      domainAlias = customDomain.domainAlias;
-    }
-
-    // Create DNS record
-    const recordProps = {
-      recordName,
-      zone: this.hostedZone,
-      target: RecordTarget.fromAlias(new CloudFrontTarget(this.distribution)),
-    };
-    new ARecord(this, "AliasRecord", recordProps);
-    new AaaaRecord(this, "AliasRecordAAAA", recordProps);
-
-    // Create Alias redirect record
-    if (domainAlias) {
-      new HttpsRedirect(this, "Redirect", {
-        zone: this.hostedZone,
-        recordNames: [domainAlias],
-        targetDomain: recordName,
-      });
-    }
   }
 
   /////////////////////

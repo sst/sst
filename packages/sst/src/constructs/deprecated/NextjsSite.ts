@@ -37,8 +37,8 @@ import type { RoutesManifest } from "@sls-next/lambda-at-edge";
 import { App } from "../App.js";
 import { Stack } from "../Stack.js";
 import { SSTConstruct, isCDKConstruct } from "../Construct.js";
+import { DistributionDomainProps } from "../Distribution.js";
 import {
-  BaseSiteDomainProps,
   BaseSiteReplaceProps,
   BaseSiteCdkDistributionProps,
   getBuildCmdEnvironment,
@@ -56,7 +56,7 @@ import { useProject } from "../../project.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
-export interface NextjsDomainProps extends BaseSiteDomainProps {}
+export interface NextjsDomainProps extends DistributionDomainProps {}
 export interface NextjsCdkDistributionProps
   extends BaseSiteCdkDistributionProps {}
 export interface NextjsSiteProps {
