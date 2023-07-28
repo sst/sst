@@ -803,6 +803,7 @@ export class Function extends CDKFunction implements SSTConstruct {
       this.addEnvironment("SST_FUNCTION_ID", this.node.addr);
       useDeferredTasks().add(async () => {
         const bootstrap = await useBootstrap();
+        const bootstrapBucketArn = `arn:${Stack.of(this).partition}:s3:::${bootstrap.bucket}`;
         this.attachPermissions([
           new PolicyStatement({
             actions: ["iot:*"],
@@ -813,7 +814,8 @@ export class Function extends CDKFunction implements SSTConstruct {
             actions: ["s3:*"],
             effect: Effect.ALLOW,
             resources: [
-              `arn:${Stack.of(this).partition}:s3:::${bootstrap.bucket}`,
+              bootstrapBucketArn,
+              `${bootstrapBucketArn}/*`,
             ],
           }),
         ]);
