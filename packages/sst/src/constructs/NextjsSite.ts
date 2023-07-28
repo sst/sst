@@ -351,6 +351,7 @@ export class NextjsSite extends SsrSite {
         "rsc",
         "next-router-prefetch",
         "next-router-state-tree",
+        "next-url",
       ]);
     const serverBehavior = this.buildDefaultBehaviorForRegional(cachePolicy);
 
