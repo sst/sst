@@ -474,8 +474,8 @@ export class Service extends Construct implements SSTConstruct {
   private props: ServiceNormalizedProps;
   private doNotDeploy: boolean;
   private devFunction?: Function;
-  private vpc?: IVpc;
-  private cluster?: Cluster;
+  private vpc: IVpc;
+  private cluster: Cluster;
   private container: ContainerDefinition;
   private taskDefinition: FargateTaskDefinition;
   private distribution: Distribution;
@@ -501,8 +501,10 @@ export class Service extends Construct implements SSTConstruct {
     this.validateMemoryAndCpu();
 
     if (this.doNotDeploy) {
-      // @ts-ignore
-      this.container = this.taskDefinition = this.distribution = null;
+      // @ts-expect-error
+      this.vpc = this.cluster = this.container = this.taskDefinition = null;
+      // @ts-expect-error
+      this.distribution = null;
       this.devFunction = this.createDevFunction();
       return;
     }
@@ -515,7 +517,7 @@ export class Service extends Construct implements SSTConstruct {
 
     // Create ECS cluster
     const vpc = this.createVpc();
-    const { container, taskDefinition, service } = this.createService(
+    const { cluster, container, taskDefinition, service } = this.createService(
       vpc,
       outputDir
     );
@@ -525,6 +527,8 @@ export class Service extends Construct implements SSTConstruct {
     // Create Distribution
     this.distribution = this.createDistribution(alb);
 
+    this.vpc = vpc;
+    this.cluster = cluster;
     this.container = container;
     this.taskDefinition = taskDefinition;
     this.bindForService(props?.bind || []);
@@ -534,16 +538,16 @@ export class Service extends Construct implements SSTConstruct {
     );
 
     useDeferredTasks().add(async () => {
-      if (app.isRunningSSTTest()) return;
-
-      // Build app
-      let dockerfile = "Dockerfile";
-      if (!(await existsAsync(path.join(this.props.path, dockerfile)))) {
-        await this.createNixpacksBuilder();
-        dockerfile = await this.runNixpacksBuild(outputDir);
+      if (!app.isRunningSSTTest()) {
+        // Build app
+        let dockerfile = "Dockerfile";
+        if (!(await existsAsync(path.join(this.props.path, dockerfile)))) {
+          await this.createNixpacksBuilder();
+          dockerfile = await this.runNixpacksBuild(outputDir);
+        }
+        await this.runDockerBuild(dockerfile);
+        this.updateContainerImage(dockerfile, taskDefinition, container);
       }
-      await this.runDockerBuild(dockerfile);
-      this.updateContainerImage(dockerfile, taskDefinition, container);
 
       // Invalidate CloudFront
       this.distribution.createInvalidation();
@@ -580,6 +584,8 @@ export class Service extends Construct implements SSTConstruct {
     if (this.doNotDeploy) return;
 
     return {
+      vpc: this.vpc,
+      cluster: this.cluster,
       distribution: this.distribution.cdk.distribution,
       hostedZone: this.distribution.cdk.hostedZone,
       certificate: this.distribution.cdk.certificate,
@@ -764,7 +770,7 @@ export class Service extends Construct implements SSTConstruct {
       taskDefinition,
     });
 
-    return { container, taskDefinition, service };
+    return { cluster, taskDefinition, container, service };
   }
 
   private createLoadBalancer(vpc: IVpc, service: FargateService) {
