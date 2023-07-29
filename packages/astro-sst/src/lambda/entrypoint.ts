@@ -3,14 +3,14 @@ import type { APIGatewayProxyEventV2, Callback, Context } from "aws-lambda";
 import { polyfill } from "@astrojs/webapi";
 import { getRequest, setResponse } from "./transform";
 import { ResponseStream } from ".";
-import { App } from "astro/app";
+import { NodeApp } from "astro/app/node";
 
 polyfill(globalThis, {
   exclude: "window document",
 });
 
 export function createExports(manifest: SSRManifest) {
-  const app = new App(manifest);
+  const app = new NodeApp(manifest);
 
   const handler = async (
     event: APIGatewayProxyEventV2,
@@ -23,21 +23,21 @@ export function createExports(manifest: SSRManifest) {
     try {
       request = await getRequest(event);
     } catch (err: any) {
-      streamError(400, err, responseStream);
-      return;
+      return streamError(400, err, responseStream);
     }
 
     const routeData = app.match(request, { matchNotFound: true });
     if (!routeData) {
-      streamError(404, "Not found", responseStream);
-      return;
+      return streamError(404, "Not found", responseStream);
     }
 
     // Process request
     const response = await app.render(request, routeData);
 
     // Stream response back to Cloudfront
-    await setResponse(app, responseStream, response, callback);
+    await setResponse(app, responseStream, response);
+
+    if (callback) callback(null, "ok");
   };
 
   return {
@@ -51,8 +51,7 @@ export function streamError(
   error: string | Error,
   responseStream: ResponseStream
 ) {
-  console.log("status code", statusCode);
-  console.log("error", error);
+  console.error(error);
 
   responseStream = awslambda.HttpResponseStream.from(responseStream, {
     statusCode,

@@ -1,9 +1,9 @@
 import { ResponseStream } from ".";
 import { splitCookiesString } from "set-cookie-parser";
-import { APIGatewayProxyEventV2, Callback } from "aws-lambda";
-import { App } from "astro/app";
+import { APIGatewayProxyEventV2 } from "aws-lambda";
 import zlib from "zlib";
 import { isBinaryContentType } from "../lib/binary";
+import { NodeApp } from "astro/app/node";
 
 export async function getRequest(event: APIGatewayProxyEventV2) {
   const {
@@ -31,10 +31,9 @@ export async function getRequest(event: APIGatewayProxyEventV2) {
 }
 
 export async function setResponse(
-  app: App,
+  app: NodeApp,
   responseStream: ResponseStream,
-  response: Response,
-  callback?: Callback
+  response: Response
 ) {
   let cookies: string[] = [];
   const contentType = response.headers.get("content-type");
@@ -86,30 +85,27 @@ export async function setResponse(
     return;
   }
 
-  let wrapperStream: ResponseStream | zlib.Gzip;
+  let stream: ResponseStream | zlib.Gzip;
+  if (!isBinaryContent) {
+    let gzip = zlib.createGzip();
+    gzip.pipe(responseStream);
+    stream = gzip;
+  } else {
+    stream = responseStream;
+  }
 
   const cleanup = (error: Error) => {
-    responseStream.off("close", cleanup);
-    responseStream.off("error", cleanup);
+    stream.off("close", cleanup);
+    stream.off("error", cleanup);
     reader.cancel(error).catch(() => {});
 
     // In the case of an error, ensure to end the wrapper stream.
-    wrapperStream.end();
-    if (error) responseStream.destroy(error);
-    if (callback) callback(null, "complete");
+    stream.end();
+    if (error) stream.destroy(error);
   };
 
-  if (!isBinaryContent) {
-    let gzip = zlib.createGzip();
-    gzip.on("error", cleanup);
-    gzip.pipe(responseStream);
-    wrapperStream = gzip;
-  } else {
-    wrapperStream = responseStream;
-  }
-
-  responseStream.on("close", cleanup);
-  responseStream.on("error", cleanup);
+  stream.on("close", cleanup);
+  stream.on("error", cleanup);
 
   next();
 
@@ -121,15 +117,14 @@ export async function setResponse(
         if (done) break;
 
         // Write to the wrapper stream.
-        if (!wrapperStream.write(value)) {
-          wrapperStream.once("drain", next);
+        if (!stream.write(value)) {
+          stream.once("drain", next);
           return;
         }
       }
 
       // End the wrapper stream when you're done.
-      wrapperStream.end();
-      if (callback) callback(null, "complete");
+      stream.end();
     } catch (error) {
       cleanup(error instanceof Error ? error : new Error(String(error)));
     }
