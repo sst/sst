@@ -114,14 +114,14 @@ export const handler = JobHandler("factorial", async (payload) => {
 
 ## Invoke the job
 
-Finally we can invoke the job in our Next.js app. Here we'll invoke it when we call our API. This is useful for cases when you want to return to the user right away but trigger the a long running job in the background.
+We can invoke the job in our Next.js app. Here we'll invoke it when we call our API. This is useful for cases when you want to return to the user right away but trigger the a long running job in the background.
 
 ```ts title="packages/web/pages/api/hello.ts"
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  await Job.factorial.run({
+  const { jobId } = await Job.factorial.run({
     payload: {
       num: 10,
     },
@@ -132,6 +132,14 @@ export default async function handler(
 ```
 
 Now if you hit the API in your browser, you'll see the factorial printed in the `sst dev` terminal.
+
+## Cancel the job
+
+Finally, to cancel a running job, use the `cancel` function and pass in the `jobId` returned from the `run` function.
+
+```ts
+await Job.factorial.cancel(jobId);
+```
 
 ---
 
@@ -302,7 +310,7 @@ We evaluated both CodeBuild and ECS Fargate as the backing service for `Job`.
 Both services are similar in the way that they can run code inside a docker container environment. We decided to go with CodeBuild because:
 
 - It can be deployed without a VPC
-- It offers a free tier of 100 build minutes per month
+- It offers a free tier of 100 build minutes per month (for the general1.small instance type, general1.medium and general1.large aren't included in the free-tier)
 - A CodeBuild project is a single AWS resource, and is much faster to deploy
 
 As we collect more feedback on the usage, we are open to switching to using Fargate. When we do, it will be a seamless switch as the implementation details are not exposed.

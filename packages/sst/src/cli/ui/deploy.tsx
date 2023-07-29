@@ -188,10 +188,21 @@ function logicalIdToCdkPath(
 
 function getHelper(error: string) {
   return (
+    getCloudFrontBehaviorLimitHelper(error) ||
     getApiAccessLogPermissionsHelper(error) ||
     getAppSyncMultiResolverHelper(error) ||
     getApiLogRoleHelper(error)
   );
+}
+
+function getCloudFrontBehaviorLimitHelper(error: string) {
+  if (
+    error.indexOf(
+      "Your request contains more CacheBehaviors than are allowed per distribution."
+    ) > -1
+  ) {
+    return `This error often occurs when deploying a frontend with a large number of top-level files and folders in the assets directory. Check out this doc on how to resolve the issue - https://docs.sst.dev/known-issues#cloudfront-cachebehaviors-limit-exceeded`;
+  }
 }
 
 function getApiAccessLogPermissionsHelper(error: string) {

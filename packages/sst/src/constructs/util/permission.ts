@@ -215,7 +215,7 @@ function permissionsToStatementsAndGrants(
       );
     } else if (permission instanceof Job) {
       statements.push(
-        buildPolicyStatement("lambda:*", [permission._jobInvoker.functionArn])
+        buildPolicyStatement("lambda:*", [permission._jobManager.functionArn])
       );
     }
     ////////////////////////////////////
@@ -282,6 +282,11 @@ function permissionsToStatementsAndGrants(
             ["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"],
             [secret.secretArn]
           )
+        );
+      }
+      if (secret?.encryptionKey) {
+        statements.push(
+          buildPolicyStatement(["kms:Decrypt"], [secret.encryptionKey.keyArn])
         );
       }
     }

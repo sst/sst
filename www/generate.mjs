@@ -13,6 +13,8 @@ const cmd = process.argv[2];
 
 const CDK_DOCS_MAP = {
   AppProps: "",
+  IGrantable: "aws_iam",
+  RetentionDays: "aws_logs",
   Duration: "",
   Stack: "",
   StackProps: "",
@@ -20,6 +22,7 @@ const CDK_DOCS_MAP = {
   IVpc: "aws_ec2",
   ISecurityGroup: "aws_ec2",
   SubnetSelection: "aws_ec2",
+  FunctionUrlOptions: "aws_lambda",
   LogGroup: "aws_logs",
   LogGroupProps: "aws_logs",
   ILogGroup: "aws_logs",
@@ -94,6 +97,7 @@ const CDK_DOCS_MAP = {
   IOriginRequestPolicy: "aws_cloudfront",
   OriginRequestPolicyProps: "aws_cloudfront",
   AddBehaviorOptions: "aws_cloudfront",
+  IResponseHeadersPolicy: "aws_cloudfront",
   GraphqlApi: "aws_appsync",
   IGraphqlApi: "aws_appsync",
   ResolverProps: "aws_appsync",
@@ -433,6 +437,7 @@ function renderType(file, files, prefix, parameter) {
       return parameter.name;
     })();
     if (!link) return `<span class="mono">${parameter.name}</span>`;
+    if (parameter.name === "SsrFunction") return "";
     return `<span class="mono">[${parameter.name}](${link})</span>`;
   }
   return "";
@@ -487,7 +492,7 @@ function renderProperties(file, files, properties, prefix, onlyPublic) {
         lines.push(
           ...examples
             .map(renderTag)
-            .map((x) => x.replace(/new .+\(/g, `new ${file.name}(`))
+            .map((x) => x.replace(/new SsrSite/g, `new ${file.name}`))
         );
       }
       lines.push(
@@ -540,7 +545,7 @@ function renderSignature(file, children, method, signature) {
       lines.push(
         ...examples
           .map(renderTag)
-          .map((x) => x.replace(/new .+\(/g, `new ${file.name}(`))
+          .map((x) => x.replace(/new SsrSite/g, `new ${file.name}`))
       );
     }
     lines.push(...tags.filter((x) => x.tag !== "@example").map(renderTag));
@@ -577,7 +582,7 @@ function renderSignatureForDeprecated(file, method, signature) {
       lines.push(
         ...examples
           .map(renderTag)
-          .map((x) => x.replace(/new .+\(/g, `new ${file.name}(`))
+          .map((x) => x.replace(/new SsrSite/g, `new ${file.name}`))
       );
     }
     lines.push(...tags.filter((x) => x.tag !== "@example").map(renderTag));

@@ -118,8 +118,8 @@ export async function getServerSideProps() {
 }
 ```
 
-:::note
-We don't want to expose the value of the secret in client code.
+:::tip
+Since we are dealing with sensitive info, Config is only supported in the frontend's server side functions.
 :::
 
 ---
@@ -132,7 +132,7 @@ Let's take a look at how secrets and parameters work behind the scenes.
 
 ### Secrets
 
-Behind the scenes, secrets are stored as [AWS SSM](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) Parameters in your AWS account. When you run:
+Behind the scenes, secrets are stored as [AWS SSM](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) or AWS Systems Manager Parameters in your AWS account. When you run:
 
 ```bash
 npx sst secrets set STRIPE_KEY sk_test_abc123
@@ -153,7 +153,7 @@ new Function(stack, "MyFunction", {
 }
 ```
 
-It adds a Lambda environment variables named `SST_Secret_value_STRIPE_KEY` to the function. The environment variable has a placeholder value `__FETCH_FROM_SSM__` to indicate that the value for `STRIPE_KEY` needs to be fetched from SSM at runtime.
+It adds a Lambda environment variables named `SST_Secret_value_STRIPE_KEY` to the function. The environment variable has a placeholder value `__FETCH_FROM_SSM__` to indicate that the value for `STRIPE_KEY` needs to be fetched from SSM at runtime using [top-level await](https://v8.dev/features/top-level-await).
 
 ---
 

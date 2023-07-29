@@ -8,7 +8,7 @@ import {
   isSSTConstruct,
   isStackConstruct,
 } from "./Construct.js";
-import { Function, FunctionProps } from "./Function.js";
+import { FunctionProps } from "./Function.js";
 import { Permissions } from "./util/permission.js";
 import { bindParameters, bindType } from "./util/functionBinding.js";
 import { StackProps } from "./Stack.js";
@@ -31,7 +31,7 @@ import {
   CustomResourceProviderRuntime,
   CustomResource,
   Aspects,
-} from "aws-cdk-lib";
+} from "aws-cdk-lib/core";
 import { CfnFunction, ILayerVersion } from "aws-cdk-lib/aws-lambda";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import { ArnPrincipal, PolicyStatement } from "aws-cdk-lib/aws-iam";
@@ -70,7 +70,7 @@ export interface AppDeployProps {
 
   readonly buildDir?: string;
   readonly account?: string;
-  readonly debugStartedAt?: number;
+  readonly debugScriptVersion?: string;
   readonly debugIncreaseTimeout?: boolean;
 
   readonly mode: "deploy" | "dev" | "remove";
@@ -86,7 +86,7 @@ export type AppProps = CDKAppProps;
  */
 export class App extends CDKApp {
   /**
-   * Whether or not the app is running locally under `sst start`
+   * Whether or not the app is running locally under `sst dev`
    */
   public readonly local: boolean = false;
 
@@ -112,7 +112,7 @@ export class App extends CDKApp {
    */
   public readonly account: string;
   /** @internal */
-  public readonly debugStartedAt?: number;
+  public readonly debugScriptVersion?: string;
   /** @internal */
   public readonly debugIncreaseTimeout?: boolean;
   /** @internal */
@@ -152,7 +152,7 @@ export class App extends CDKApp {
     this.defaultFunctionProps = [];
 
     if (this.mode === "dev") {
-      this.debugStartedAt = deployProps.debugStartedAt;
+      this.debugScriptVersion = deployProps.debugScriptVersion;
       this.debugIncreaseTimeout = deployProps.debugIncreaseTimeout;
     }
   }
@@ -258,11 +258,18 @@ export class App extends CDKApp {
   public async finish() {
     if (this.isFinished) return;
     this.isFinished = true;
-    await useDeferredTasks().run();
     Auth.injectConfig();
     this.buildConstructsMetadata();
     this.ensureUniqueConstructIds();
     this.codegenTypes();
+
+    // Run deferred tasks
+    // - after codegen b/c some frontend frameworks (ie. Next.js apps) runs
+    //   type checking in the build step
+    // - before remove govcloud unsupported resource properties b/c deferred
+    //   tasks may add govcloud unsupported resource properties
+    await useDeferredTasks().run();
+
     this.createBindingSsmParameters();
     this.removeGovCloudUnsupportedResourceProperties();
     const { config } = useProject();
@@ -315,7 +322,7 @@ export class App extends CDKApp {
         if (!isSSTConstruct(c)) {
           return;
         }
-        if (c instanceof Function && c._doNotAllowOthersToBind) {
+        if ("_doNotAllowOthersToBind" in c && c._doNotAllowOthersToBind) {
           return;
         }
 
@@ -480,7 +487,7 @@ export class App extends CDKApp {
         if (!isSSTConstruct(c)) {
           return;
         }
-        if (c instanceof Function && c._doNotAllowOthersToBind) {
+        if ("_doNotAllowOthersToBind" in c && c._doNotAllowOthersToBind) {
           return;
         }
 
@@ -568,52 +575,63 @@ export class App extends CDKApp {
       ].join("\n")
     );
 
-    class CodegenTypes implements IAspect {
-      public visit(c: IConstruct): void {
-        if (!isSSTConstruct(c)) {
-          return;
-        }
-        if (c instanceof Function && c._doNotAllowOthersToBind) {
-          return;
-        }
+    this.foreachConstruct((c) => {
+      if (!isSSTConstruct(c)) {
+        return;
+      }
+      if ("_doNotAllowOthersToBind" in c && c._doNotAllowOthersToBind) {
+        return;
+      }
 
-        const binding = bindType(c);
-        if (!binding) {
-          return;
-        }
+      const binding = bindType(c);
+      if (!binding) {
+        return;
+      }
 
-        const className = c.constructor.name;
-        const id = c.id;
+      const className = c.constructor.name;
+      const id = c.id;
 
-        // Case 1: variable does not have properties, ie. Secrets and Parameters
+      // Case 1: variable does not have properties, ie. Secrets and Parameters
 
-        fs.appendFileSync(
-          `${typesPath}/index.ts`,
-          (binding.variables[0] === "."
-            ? [
-                `import "sst/node/${binding.clientPackage}";`,
-                `declare module "sst/node/${binding.clientPackage}" {`,
-                `  export interface ${className}Resources {`,
-                `    "${id}": string;`,
-                `  }`,
-                `}`,
-              ]
-            : [
-                `import "sst/node/${binding.clientPackage}";`,
-                `declare module "sst/node/${binding.clientPackage}" {`,
-                `  export interface ${className}Resources {`,
-                `    "${id}": {`,
-                ...binding.variables.map((p) => `      ${p}: string;`),
-                `    }`,
-                `  }`,
-                `}`,
-              ]
-          ).join("\n")
-        );
+      fs.appendFileSync(
+        `${typesPath}/index.ts`,
+        (binding.variables[0] === "."
+          ? [
+              `import "sst/node/${binding.clientPackage}";`,
+              `declare module "sst/node/${binding.clientPackage}" {`,
+              `  export interface ${className}Resources {`,
+              `    "${id}": string;`,
+              `  }`,
+              `}`,
+            ]
+          : [
+              `import "sst/node/${binding.clientPackage}";`,
+              `declare module "sst/node/${binding.clientPackage}" {`,
+              `  export interface ${className}Resources {`,
+              `    "${id}": {`,
+              ...binding.variables.map((p) => `      ${p}: string;`),
+              `    }`,
+              `  }`,
+              `}`,
+            ]
+        ).join("\n")
+      );
+    });
+  }
+
+  private foreachConstruct(fn: (c: IConstruct) => void) {
+    const loop = (parent: IConstruct) => {
+      for (const child of parent.node.children) {
+        fn(child);
+        loop(child);
+      }
+    };
+
+    for (const child of this.node.children) {
+      if (child instanceof Stack) {
+        loop(child);
       }
     }
-
-    Aspects.of(this).add(new CodegenTypes());
   }
 
   // Functional Stack

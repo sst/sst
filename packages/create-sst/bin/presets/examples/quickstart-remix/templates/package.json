@@ -1,0 +1,20 @@
+{
+  "name": "@@app",
+  "private": true,
+  "sideEffects": false,
+  "scripts": {
+    "build": "remix build",
+    "dev": "sst bind remix dev",
+    "start": "remix-serve build",
+    "typecheck": "tsc",
+    "sst:deploy": "sst deploy",
+    "sst:dev": "sst dev"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+  },
+  "engines": {
+    "node": ">=14"
+  }
+}

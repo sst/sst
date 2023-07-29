@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/docs",
-  "version": "2.2.1",
+  "version": "2.5.2",
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
@@ -15,7 +15,7 @@
   "dependencies": {
     "@docusaurus/core": "2.0.0-beta.18",
     "@docusaurus/plugin-client-redirects": "2.0.0-beta.18",
-    "@docusaurus/plugin-google-analytics": "2.0.0-beta.18",
+    "@docusaurus/plugin-google-gtag": "^2.4.1",
     "@docusaurus/preset-classic": "2.0.0-beta.18",
     "@jridgewell/gen-mapping": "^0.3.2",
     "@mdx-js/react": "^1.6.21",
@@ -38,6 +38,7 @@
   },
   "devDependencies": {
     "constructs": "10.1.156",
+    "prism-react-renderer": "^2.0.5",
     "typedoc": "^0.23.21",
     "typescript": "^4.9.5"
   }

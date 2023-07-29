@@ -203,8 +203,8 @@ export interface BucketProps {
    */
   cors?: boolean | BucketCorsRule[];
   /**
-   * Block public access to this bucket. Setting this to `true` alllows uploading objects with public ACLs.
-   * Note that setting to `true` does not necessarily mean that the bucket is completely accessible to the public. Rather, it enables the granting of public permissions through public ACLs.
+   * Prevent any files from being uploaded with public access configured. Setting this to `true` prevents uploading objects with public ACLs.
+   * Note that setting to `false` does not necessarily mean that the bucket is completely accessible to the public. Rather, it enables the granting of public permissions on a per file basis.
    * @default false
    * @example
    * ```js
@@ -504,6 +504,7 @@ export class Bucket extends Construct implements SSTConstruct {
         cors: this.buildCorsConfig(cors),
         blockPublicAccess: this.buildBlockPublicAccessConfig(blockPublicACLs),
         objectOwnership: this.buildObjectOwnershipConfig(blockPublicACLs),
+        enforceSSL: true,
         ...cdk?.bucket,
       });
     }

@@ -59,17 +59,17 @@ export const handler = AuthHandler({
   async onAuthorize() {
     // any code you want to run when auth begins
   },
-  async onSuccess(input) {
+  async onSuccess(input, response) {
     let user: User.Info | undefined = undefined
 
     if (input.provider === "github") {
       const user = // lookup or create user
-      return {
+      return response.session({
         type: "user",
         properties: {
           userID: user.userID,
         },
-      }
+      })
     }
 
     throw new Error("Unknown provider")

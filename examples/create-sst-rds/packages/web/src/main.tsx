@@ -2,11 +2,12 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import {
   Client,
+  createClient,
   cacheExchange,
   fetchExchange,
   Provider as UrqlProvider,
 } from "urql";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import {BrowserRouter, Routes, Route, Navigate} from "react-router-dom";
 import Home from "./pages/Home";
 import Article from "./pages/Article";
 import "./globals.css";

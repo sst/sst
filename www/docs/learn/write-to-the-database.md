@@ -3,6 +3,7 @@ title: Write to the Database
 ---
 
 import ChangeText from "@site/src/components/ChangeText";
+import MultiPackagerCode from "@site/src/components/MultiPackagerCode";
 
 We are ready to add our new comments feature.
 
@@ -42,9 +43,29 @@ Run this in the **root of the project** to create a new migration
 
 </ChangeText>
 
+<MultiPackagerCode>
+<TabItem value="npm">
+
 ```bash
 npm run gen migration new
 ```
+</TabItem>
+<TabItem value="yarn">
+
+```bash
+yarn run gen migration new
+```
+
+</TabItem>
+<TabItem value="pnpm">
+
+```bash
+pnpm run gen migration new
+```
+
+</TabItem>
+</MultiPackagerCode>
+
 
 <ChangeText>
 
@@ -104,7 +125,7 @@ Let's go ahead and run the migration.
 
 <ChangeText>
 
-Go to the RDS tab in SST Console and click **Apply** on our `comment` migration.
+Go to the RDS tab in [SST Console](https://console.sst.dev) and click **Apply** on our `comment` migration.
 
 </ChangeText>
 

@@ -2,6 +2,7 @@ import { AuthKeys } from "./auth-keys.js";
 import { AssetReplacer } from "./asset-replacer.js";
 import { CloudFrontInvalidator } from "./cloudfront-invalidator.js";
 import { ApiGatewayCloudWatchRole } from "./apigateway-cloudwatch-role.js";
+import { FunctionInvoker } from "./function-invoker.js";
 import { log, wrapper } from "./util.js";
 
 export const handler = wrapper(async (cfnRequest: any) => {
@@ -19,6 +20,9 @@ export const handler = wrapper(async (cfnRequest: any) => {
       break;
     case "Custom::APIGatewayCloudWatchRole":
       await ApiGatewayCloudWatchRole(cfnRequest);
+      break;
+    case "Custom::FunctionInvoker":
+      await FunctionInvoker(cfnRequest);
       break;
   }
 });

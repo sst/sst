@@ -2,6 +2,7 @@
   "extends": "@tsconfig/node16/tsconfig.json",
   "compilerOptions": {
     "module": "esnext",
+    "moduleResolution": "node",
     "baseUrl": ".",
     "paths": {
       "@kinesisstream/core/*": ["../core/src/*"]

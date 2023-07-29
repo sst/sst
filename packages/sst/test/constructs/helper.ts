@@ -7,6 +7,7 @@ import { usePythonHandler } from "../../dist/runtime/handlers/python.js";
 import { useDotnetHandler } from "../../dist/runtime/handlers/dotnet.js";
 import { useJavaHandler } from "../../dist/runtime/handlers/java.js";
 import { useGoHandler } from "../../dist/runtime/handlers/go.js";
+import { useContainerHandler } from "../../dist/runtime/handlers/container.js";
 import os from "os";
 import path from "path";
 import fs from "fs/promises";
@@ -52,6 +53,7 @@ export async function createApp(props?: Partial<AppDeployProps>) {
   await useDotnetHandler();
   await useJavaHandler();
   await useGoHandler();
+  await useContainerHandler();
 
   return new App({
     mode: "deploy",

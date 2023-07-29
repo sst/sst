@@ -15,7 +15,15 @@ import { useProject } from "./project.js";
 import { useAWSClient } from "./credentials.js";
 import { useIOT } from "./iot.js";
 import { Stacks } from "./stacks/index.js";
-import { FunctionMetadata, SsrSiteMetadata } from "./constructs/Metadata.js";
+import {
+  FunctionMetadata,
+  NextjsSiteMetadata,
+  AstroSiteMetadata,
+  RemixSiteMetadata,
+  SolidStartSiteMetadata,
+  SvelteKitSiteMetadata,
+  SSRSiteMetadata,
+} from "./constructs/Metadata.js";
 
 declare module "./bus.js" {
   export interface Events {
@@ -177,7 +185,14 @@ export namespace Config {
     const siteData = Object.values(metadata)
       .flat()
       .filter(
-        (c): c is SsrSiteMetadata =>
+        (
+          c
+        ): c is
+          | NextjsSiteMetadata
+          | AstroSiteMetadata
+          | RemixSiteMetadata
+          | SolidStartSiteMetadata
+          | SvelteKitSiteMetadata =>
           c.type === "AstroSite" ||
           c.type === "NextjsSite" ||
           c.type === "RemixSite" ||
@@ -210,7 +225,7 @@ export namespace Config {
           return restarted ? s : restarted;
         })
       )
-    ).filter((c): c is SsrSiteMetadata => Boolean(c));
+    ).filter((c): c is SSRSiteMetadata => Boolean(c));
 
     // Restart functions
     const restartedFunctions = (

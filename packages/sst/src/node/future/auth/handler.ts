@@ -17,6 +17,36 @@ import {
 import { SessionValue } from "./session.js";
 import { Config } from "../../config/index.js";
 
+const onSuccessResponse = {
+  session(input: SessionCreateInput) {
+    return {
+      type: "session" as const,
+      properties: input,
+    };
+  },
+  http(input: APIGatewayProxyStructuredResultV2) {
+    return {
+      type: "http" as const,
+      properties: input,
+    };
+  },
+  provider(provider: string) {
+    return {
+      type: "http" as const,
+      properties: {
+        statusCode: 302,
+        headers: {
+          Location:
+            "/authorize?" +
+            new URLSearchParams({
+              provider,
+            }).toString(),
+        },
+      } satisfies APIGatewayProxyStructuredResultV2,
+    };
+  },
+};
+
 export function AuthHandler<
   Providers extends Record<string, Adapter<any>>,
   Result = {
@@ -33,12 +63,23 @@ export function AuthHandler<
   onAuthorize?: (
     event: APIGatewayProxyEventV2
   ) => Promise<void | keyof Providers>;
-  onSuccess: (input: Result) => Promise<SessionCreateInput>;
-  onError: () => Promise<APIGatewayProxyStructuredResultV2>;
+  onSuccess: (
+    input: Result,
+    response: typeof onSuccessResponse
+  ) => Promise<
+    ReturnType<(typeof onSuccessResponse)[keyof typeof onSuccessResponse]>
+  >;
+  onIndex?: (
+    event: APIGatewayProxyEventV2
+  ) => Promise<APIGatewayProxyStructuredResultV2>;
+  onError?: () => Promise<APIGatewayProxyStructuredResultV2>;
 }) {
   return ApiHandler(async (evt) => {
     const step = usePathParam("step");
     if (!step) {
+      if (input.onIndex) {
+        return input.onIndex(evt);
+      }
       const clients = await input.clients();
       return {
         statusCode: 200,
@@ -47,6 +88,9 @@ export function AuthHandler<
         },
         body: `
           <html>
+          <head>
+            <link rel="icon" href="data:,">
+          </head>
             <body>
             <table>
               <tr>${Object.keys(clients).map(
@@ -64,6 +108,12 @@ export function AuthHandler<
             </body>
           </html>
         `,
+      };
+    }
+
+    if (step === "favicon.ico") {
+      return {
+        statusCode: 404,
       };
     }
 
@@ -129,8 +179,10 @@ export function AuthHandler<
         };
       }
 
-      const { response_type, client_id, redirect_uri, state } =
-        useQueryParams();
+      const { response_type, client_id, redirect_uri, state } = {
+        ...useCookies(),
+        ...useQueryParams(),
+      } as Record<string, string>;
 
       if (!provider) {
         return {
@@ -191,79 +243,106 @@ export function AuthHandler<
     if (result.type === "step") {
       return result.properties;
     }
+
     if (result.type === "success") {
-      const { type, properties, ...rest } = await input.onSuccess({
-        provider,
-        ...result.properties,
-      });
+      const onSuccess = await input.onSuccess(
+        {
+          provider,
+          ...result.properties,
+        },
+        onSuccessResponse
+      );
+      console.log("onSuccess", onSuccess);
 
-      // @ts-expect-error
-      const priv = Config[process.env.AUTH_ID + "PrivateKey"] as string;
-      const signer = createSigner({
-        ...rest,
-        key: priv,
-        algorithm: "RS512",
-      });
-      const token = signer({
-        type,
-        properties,
-      });
-      useResponse().cookie({
-        key: "sst_auth_token",
-        value: token,
-        maxAge: 10 * 365 * 24 * 60 * 60,
-        secure: true,
-        sameSite: "None",
-        httpOnly: true,
-      });
-      const { client_id, response_type, redirect_uri, state } = {
-        ...useCookies(),
-        ...useQueryParams(),
-      } as Record<string, string>;
-
-      if (response_type === "token") {
-        const location = new URL(redirect_uri);
-        location.hash = `access_token=${token}&state=${state || ""}`;
-        return {
-          statusCode: 302,
-          headers: {
-            Location: location.href,
-          },
-        };
-      }
-
-      if (response_type === "code") {
-        // This allows the code to be reused within a 30 second window
-        // The code should be single use but we're making this tradeoff to remain stateless
-        // In the future can store this in a dynamo table to ensure single use
-        const code = createSigner({
-          expiresIn: 1000 * 60 * 5,
+      if (onSuccess.type === "session") {
+        const { type, properties, ...rest } = onSuccess.properties;
+        // @ts-expect-error
+        const priv = Config[process.env.AUTH_ID + "PrivateKey"] as string;
+        const signer = createSigner({
+          ...rest,
           key: priv,
           algorithm: "RS512",
-        })({
-          client_id,
-          redirect_uri,
-          token: token,
         });
-        const location = new URL(redirect_uri);
-        location.searchParams.set("code", code);
-        location.searchParams.set("state", state || "");
+        const token = signer({
+          type,
+          properties,
+        });
+        useResponse()
+          .cookie({
+            key: "sst_auth_token",
+            value: token,
+            maxAge: 10 * 365 * 24 * 60 * 60,
+          })
+          .cookies(
+            {
+              provider: "",
+              response_type: "",
+              client_id: "",
+              redirect_uri: "",
+              state: "",
+            },
+            {
+              expires: new Date(1),
+            }
+          );
+
+        const { client_id, response_type, redirect_uri, state } = {
+          ...useCookies(),
+          ...useQueryParams(),
+        } as Record<string, string>;
+
+        if (response_type === "token") {
+          const location = new URL(redirect_uri);
+          location.hash = `access_token=${token}&state=${state || ""}`;
+          return {
+            statusCode: 302,
+            headers: {
+              Location: location.href,
+            },
+          };
+        }
+
+        if (response_type === "code") {
+          // This allows the code to be reused within a 30 second window
+          // The code should be single use but we're making this tradeoff to remain stateless
+          // In the future can store this in a dynamo table to ensure single use
+          const code = createSigner({
+            expiresIn: 1000 * 60 * 5,
+            key: priv,
+            algorithm: "RS512",
+          })({
+            client_id,
+            redirect_uri,
+            token: token,
+          });
+          const location = new URL(redirect_uri);
+          location.searchParams.set("code", code);
+          location.searchParams.set("state", state || "");
+          return {
+            statusCode: 302,
+            headers: {
+              Location: location.href,
+            },
+          };
+        }
+
         return {
-          statusCode: 302,
-          headers: {
-            Location: location.href,
-          },
+          statusCode: 400,
+          body: `Unsupported response_type: ${response_type}`,
         };
       }
 
-      return {
-        statusCode: 400,
-        body: `Unsupported response_type: ${response_type}`,
-      };
+      if (onSuccess.type === "http") {
+        return onSuccess.properties;
+      }
     }
 
     if (result.type === "error") {
-      return input.onError();
+      if (input.onError) return input.onError();
+      return {
+        statusCode: 400,
+        body: "an error has occured",
+      };
     }
   });
 }

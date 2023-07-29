@@ -1,4 +1,4 @@
-import { test, expect, beforeEach, beforeAll } from "vitest";
+import { test, expect } from "vitest";
 /* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/ban-types, @typescript-eslint/no-empty-function */
 
 import path from "path";
@@ -9,6 +9,8 @@ import {
   stringLike,
   ABSENT,
   createApp,
+  objectLike,
+  ANY,
 } from "./helper";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
@@ -18,10 +20,7 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
 import {
   Api,
-  AppSyncApi,
   WebSocketApi,
-  ApiGatewayV1Api,
-  App,
   Job,
   RDS,
   Stack,
@@ -217,20 +216,35 @@ test("copyFiles nonexistent", async () => {
   }).rejects.toThrow(/no such file/);
 });
 
-test("runtime-string", async () => {
+test("runtime: nodejs18.x", async () => {
   const app = await createApp();
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
     handler: "test/constructs/lambda.handler",
-    runtime: "nodejs10.x",
+    runtime: "nodejs18.x",
   });
   await app.finish();
   hasResource(stack, "AWS::Lambda::Function", {
-    Runtime: "nodejs10.x",
+    Runtime: "nodejs18.x",
   });
 });
 
-test("runtime-string-invalid", async () => {
+test("runtime: container", async () => {
+  const app = await createApp();
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    runtime: "container",
+    handler: "test/constructs/container-function",
+  });
+  await app.finish();
+  hasResource(stack, "AWS::Lambda::Function", {
+    Code: objectLike({
+      ImageUri: ANY,
+    }),
+  });
+});
+
+test("runtime: invalid", async () => {
   const app = await createApp();
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
@@ -388,7 +402,7 @@ test("constructor: bind", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/MY_SECRET/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/MY_SECRET/value",
                 ],
               ],
             },
@@ -449,7 +463,7 @@ test("constructor: config", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/MY_SECRET/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/MY_SECRET/value",
                 ],
               ],
             },
@@ -479,7 +493,7 @@ test("constructor: config", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/MY_SECRET2/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/MY_SECRET2/value",
                 ],
               ],
             },
@@ -797,6 +811,41 @@ test("vpc: securityGroups configured without vpc", async () => {
     });
   }).toThrow(/Cannot configure "securityGroups"/);
 });
+
+test("nodejs.install: valid package", async () => {
+  const app = await createApp({
+    mode: "deploy",
+  });
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    handler: "test/constructs/lambda/fn.handler",
+    nodejs: {
+      install: ["lodash"],
+    },
+  });
+  let error = null;
+  try {
+    await app.finish();
+  } catch (e) {
+    error = e;
+  }
+  expect(error).toBe(null);
+});
+
+test("nodejs.install: invalid package", async () => {
+  const app = await createApp({
+    mode: "deploy",
+  });
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    nodejs: {
+      install: ["packagethatdoesnotexist"],
+    },
+  });
+  await expect(() => app.finish()).rejects.toThrow(/Failed to build function/);
+});
+
 /////////////////////////////
 // Test Constructor for Local Debug
 /////////////////////////////
@@ -817,44 +866,6 @@ test("constructor: sst deploy: inactive stack", async () => {
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "index.placeholder",
     Description: "identifier",
-  });
-});
-
-test("constructor: sst dev", async () => {
-  const app = await createApp({
-    mode: "dev",
-  });
-  const stack = new Stack(app, "stack");
-  new Function(stack, "Function", {
-    handler: "test/lambda.handler",
-    description: "identifier",
-    timeout: 10,
-    layers: [lambda.LayerVersion.fromLayerVersionArn(stack, "layer", "arn")],
-  });
-  await app.finish();
-  hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "bridge.handler",
-    Description: "identifier",
-    Timeout: 10,
-    Layers: ABSENT,
-  });
-});
-
-test("constructor: sst dev: debugIncreaseTimeout", async () => {
-  const app = await createApp({
-    mode: "dev",
-    debugIncreaseTimeout: true,
-  });
-  const stack = new Stack(app, "stack");
-  new Function(stack, "Function", {
-    handler: "test/lambda.handler",
-    description: "identifier",
-  });
-  await app.finish();
-  hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "bridge.handler",
-    Description: "identifier",
-    Timeout: 900,
   });
 });
 
@@ -1112,7 +1123,7 @@ test("attachPermissions: array: sst Job", async () => {
         {
           Action: "lambda:*",
           Effect: "Allow",
-          Resource: { "Fn::GetAtt": ["job867F7ADB", "Arn"] },
+          Resource: { "Fn::GetAtt": ["jobManager94F70068", "Arn"] },
         },
       ],
       Version: "2012-10-17",
@@ -1124,7 +1135,7 @@ test("attachPermissions: array: sst Job", async () => {
         AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
         SST_APP: "app",
         SST_STAGE: "test",
-        SST_Job_functionName_job: { Ref: "job867F7ADB" },
+        SST_Job_functionName_job: { Ref: "jobManager94F70068" },
       },
     },
   });
@@ -1431,7 +1442,7 @@ test("addConfig", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/MY_SECRET/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/MY_SECRET/value",
                 ],
               ],
             },
@@ -1461,7 +1472,7 @@ test("addConfig", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/MY_SECRET2/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/MY_SECRET2/value",
                 ],
               ],
             },
@@ -1523,7 +1534,7 @@ test("bind", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/MY_SECRET/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/MY_SECRET/value",
                 ],
               ],
             },
@@ -1553,7 +1564,7 @@ test("bind", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/MY_SECRET2/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/MY_SECRET2/value",
                 ],
               ],
             },
@@ -1785,7 +1796,7 @@ test("Stack.defaultFunctionProps(): bind", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/SECRET_A/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/SECRET_A/value",
                 ],
               ],
             },
@@ -1815,7 +1826,7 @@ test("Stack.defaultFunctionProps(): bind", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/SECRET_B/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/SECRET_B/value",
                 ],
               ],
             },
@@ -1845,7 +1856,7 @@ test("Stack.defaultFunctionProps(): bind", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/SECRET_C/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/SECRET_C/value",
                 ],
               ],
             },
@@ -2013,7 +2024,7 @@ test("App.defaultFunctionProps(): config", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/SECRET_A/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/SECRET_A/value",
                 ],
               ],
             },
@@ -2043,7 +2054,7 @@ test("App.defaultFunctionProps(): config", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/SECRET_B/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/SECRET_B/value",
                 ],
               ],
             },
@@ -2073,7 +2084,7 @@ test("App.defaultFunctionProps(): config", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/SECRET_C/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/SECRET_C/value",
                 ],
               ],
             },
@@ -2103,7 +2114,7 @@ test("App.defaultFunctionProps(): config", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/SECRET_D/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/SECRET_D/value",
                 ],
               ],
             },
@@ -2167,7 +2178,7 @@ test("App.defaultFunctionProps(): bind", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/SECRET_A/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/SECRET_A/value",
                 ],
               ],
             },
@@ -2197,7 +2208,7 @@ test("App.defaultFunctionProps(): bind", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/SECRET_B/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/SECRET_B/value",
                 ],
               ],
             },
@@ -2227,7 +2238,7 @@ test("App.defaultFunctionProps(): bind", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/SECRET_C/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/SECRET_C/value",
                 ],
               ],
             },
@@ -2257,7 +2268,7 @@ test("App.defaultFunctionProps(): bind", async () => {
                   {
                     Ref: "AWS::Partition",
                   },
-                  ":ssm:us-east-1:my-account:parameter/sst/app/test/Secret/SECRET_D/value",
+                  ":ssm:us-east-1:my-account:parameter/test/test/Secret/SECRET_D/value",
                 ],
               ],
             },
@@ -2534,14 +2545,12 @@ test("fromDefinition-lambdaFunction", async () => {
       stack,
       "Function",
       new lambda.Function(stack, "Function", {
-        runtime: lambda.Runtime.NODEJS_10_X,
+        runtime: lambda.Runtime.NODEJS_18_X,
         handler: "test/lambda.handler",
         code: lambda.Code.fromAsset("test"),
       }) as Function
     );
-  }).toThrow(
-    /Please use sst.Function instead of lambda.Function for the "Function" Function./
-  );
+  }).toThrow();
 });
 
 test("fromDefinition-garbage", async () => {

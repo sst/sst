@@ -31,24 +31,39 @@ function JobControl<Name extends keyof JobResources>(
   name: Name,
   vars: Record<string, string>
 ) {
+  const functionName = vars.functionName;
   return {
     async run(props: JobRunProps<Name>) {
-      // Handle job permission not granted
-      const functionName = vars.functionName;
-
       // Invoke the Lambda function
       const ret = await lambda.send(
         new InvokeCommand({
           FunctionName: functionName,
-          Payload:
-            props?.payload === undefined
-              ? undefined
-              : Buffer.from(JSON.stringify(props?.payload)),
+          Payload: Buffer.from(
+            JSON.stringify({ action: "run", payload: props?.payload })
+          ),
         })
       );
       if (ret.FunctionError) {
         throw new Error(
-          `Failed to invoke the ${name} Job. Error: ${ret.FunctionError}`
+          `Failed to invoke the "${name}" job. Error: ${ret.FunctionError}`
+        );
+      }
+      const resp = JSON.parse(Buffer.from(ret.Payload!).toString());
+      return {
+        jobId: resp.jobId as string,
+      };
+    },
+    async cancel(jobId: string) {
+      // Invoke the Lambda function
+      const ret = await lambda.send(
+        new InvokeCommand({
+          FunctionName: functionName,
+          Payload: Buffer.from(JSON.stringify({ action: "cancel", jobId })),
+        })
+      );
+      if (ret.FunctionError) {
+        throw new Error(
+          `Failed to cancel the "${name}" job id ${jobId}. Error: ${ret.FunctionError}`
         );
       }
     },

@@ -257,6 +257,10 @@ import { useSession } from "sst/node/auth";
 export const needsAuthHandler = ApiHandler(async (event) => {
   const session = useSession();
 
+  if (session.type !== "user") {
+    throw new Error("Not authenticated");
+  }
+
   return {
     statusCode: 200,
     body: session.properties.userID,
@@ -265,6 +269,8 @@ export const needsAuthHandler = ApiHandler(async (event) => {
 ```
 
 The `useSession` hook decrypts the session token with your public key and returns a typesafe object. This is the same one that we defined while [creating the session token](#create-a-session).
+
+If the returned `session.type` does not match the defined SessionType (`user` in this case), then we know that the request was not authenticated.
 
 :::tip
 The `useSession` hook can be called in any part of your API.

@@ -45,7 +45,7 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/constructs/RemixSite")}>
+    <a href={useBaseUrl("/start/remix")}>
       <h3><img src="/img/logos/remix.svg" />Remix</h3>
       <p>Create and deploy a serverless Remix app to AWS with SST.</p>
     </a>
@@ -57,7 +57,7 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/constructs/SolidStartSite")}>
+    <a href={useBaseUrl("/start/solid")}>
       <h3><img src="/img/logos/solid.svg" />Solid</h3>
       <p>Create and deploy a serverless SolidStart app to AWS with SST.</p>
     </a>
@@ -65,7 +65,7 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 </ul>
 
 :::tip Learn more
-Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
+Watch the [**SST in 100 seconds**](https://youtu.be/JY_d0vf-rfw) video to learn more.
 :::
 
 <div className={styles.heading}>
@@ -105,8 +105,8 @@ Read the [**What is SST**](what-is-sst.md) chapter to learn more about SST.
     </a>
   </li>
   <li>
-    <a href={useBaseUrl("/async-tasks")}>
-      <h3>Async tasks</h3>
+    <a href={useBaseUrl("/events")}>
+      <h3>Events</h3>
       <p>Run tasks after your app has returned to your user.</p>
     </a>
   </li>

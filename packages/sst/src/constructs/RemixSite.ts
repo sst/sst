@@ -3,9 +3,6 @@ import url from "url";
 import path from "path";
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
-
-import { Function as CdkFunction } from "aws-cdk-lib/aws-lambda";
-
 import { SsrSite } from "./SsrSite.js";
 import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
@@ -98,11 +95,14 @@ export class RemixSite extends SsrSite {
     // template to create this wrapper within the "core server build" output
     // directory.
 
+    // Ensure build directory exists
+    const buildPath = path.join(this.props.path, "build");
+    fs.mkdirSync(buildPath, { recursive: true });
+
     // Copy the server lambda handler
-    const handler = path.join(this.props.path, "build", "server.js");
     fs.copyFileSync(
       path.resolve(__dirname, `../support/remix-site-function/${wrapperFile}`),
-      handler
+      path.join(buildPath, "server.js")
     );
 
     // Copy the Remix polyfil to the server build directory
@@ -112,19 +112,19 @@ export class RemixSite extends SsrSite {
     // doesn't appear to guarantee this, we therefore leverage ESBUild's
     // `inject` option to ensure that the polyfills are injected at the top of
     // the bundle.
-    const polyfillDest = path.join(this.props.path, "build/polyfill.js");
+    const polyfillDest = path.join(buildPath, "polyfill.js");
     fs.copyFileSync(
       path.resolve(__dirname, "../support/remix-site-function/polyfill.js"),
       polyfillDest
     );
 
     return {
-      handler: path.join(this.props.path, "build", "server.handler"),
+      handler: path.join(buildPath, "server.handler"),
       esbuild: { inject: [polyfillDest] },
     };
   }
 
-  protected createFunctionForRegional(): CdkFunction {
+  protected createFunctionForRegional() {
     const {
       runtime,
       timeout,
@@ -139,7 +139,7 @@ export class RemixSite extends SsrSite {
     const { handler, esbuild } =
       this.createServerLambdaBundle("regional-server.js");
 
-    const ssrFn = new SsrFunction(this, `ServerFunction`, {
+    return new SsrFunction(this, `ServerFunction`, {
       description: "Server handler for Remix",
       handler,
       runtime,
@@ -159,11 +159,9 @@ export class RemixSite extends SsrSite {
       permissions,
       ...cdk?.server,
     });
-
-    return ssrFn.function;
   }
 
-  protected createFunctionForEdge(): EdgeFunction {
+  protected createFunctionForEdge() {
     const {
       runtime,
       timeout,
@@ -196,5 +194,12 @@ export class RemixSite extends SsrSite {
         },
       },
     });
+  }
+
+  public getConstructMetadata() {
+    return {
+      type: "RemixSite" as const,
+      ...this.getConstructMetadataBase(),
+    };
   }
 }

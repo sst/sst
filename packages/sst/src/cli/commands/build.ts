@@ -14,8 +14,10 @@ export const build = (program: Program) =>
       const { Stacks } = await import("../../stacks/index.js");
       const { Colors } = await import("../colors.js");
       const path = await import("path");
+      const project = useProject();
+      const [_metafile, sstConfig] = await Stacks.load(project.paths.config);
       const result = await Stacks.synth({
-        fn: useProject().stacks,
+        fn: sstConfig.stacks,
         buildDir: args.to,
         mode: "deploy",
       });

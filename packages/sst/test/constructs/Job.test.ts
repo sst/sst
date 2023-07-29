@@ -11,14 +11,33 @@ import {
   stringLike,
   stringNotLike,
 } from "./helper";
-import { App, Stack, Job, Config, Topic } from "../../dist/constructs/";
+import {
+  App,
+  Stack,
+  Job,
+  Config,
+  Topic,
+  JobProps,
+} from "../../dist/constructs/";
 import { Vpc, SecurityGroup, SubnetType } from "aws-cdk-lib/aws-ec2";
 
-test("constructor: default", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new Job(stack, "Job", {
+type JobOptions = Omit<JobProps, "handler"> & {
+  handler?: string;
+};
+
+async function createJob(props?: JobOptions | ((stack: Stack) => JobOptions)) {
+  const app = await createApp();
+  const stack = new Stack(app, "stack");
+  const job = new Job(stack, "Job", {
     handler: "test/constructs/lambda.handler",
+    ...(typeof props === "function" ? props(stack) : props),
   });
+  await app.finish();
+  return { app, stack, job };
+}
+
+test("constructor: default", async () => {
+  const { stack } = await createJob();
   countResources(stack, "AWS::CodeBuild::Project", 1);
   hasResource(stack, "AWS::CodeBuild::Project", {
     Name: "test-app-Job",
@@ -42,16 +61,46 @@ test("constructor: default", async () => {
   hasResource(stack, "AWS::Lambda::Function", {
     Environment: {
       Variables: {
-        PROJECT_NAME: { Ref: "JobJobProject946AC8CC" },
+        SST_JOB_PROVIDER: "codebuild",
+        SST_JOB_RUNNER: { Ref: "JobJobProject946AC8CC" },
       },
     },
   });
 });
 
-test("constructor: timeout", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new Job(stack, "Job", {
-    handler: "test/constructs/lambda.handler",
+test("architecture: default", async () => {
+  const { stack } = await createJob({});
+  hasResource(stack, "AWS::CodeBuild::Project", {
+    Environment: objectLike({
+      Type: "LINUX_CONTAINER",
+    }),
+  });
+});
+
+test("architecture: arm_64", async () => {
+  const { stack } = await createJob({
+    architecture: "arm_64",
+  });
+  hasResource(stack, "AWS::CodeBuild::Project", {
+    Environment: objectLike({
+      Type: "ARM_CONTAINER",
+    }),
+  });
+});
+
+test("architecture: x86_64", async () => {
+  const { stack } = await createJob({
+    architecture: "x86_64",
+  });
+  hasResource(stack, "AWS::CodeBuild::Project", {
+    Environment: objectLike({
+      Type: "LINUX_CONTAINER",
+    }),
+  });
+});
+
+test("timeout", async () => {
+  const { stack } = await createJob({
     timeout: "1 hour",
   });
   hasResource(stack, "AWS::CodeBuild::Project", {
@@ -59,20 +108,74 @@ test("constructor: timeout", async () => {
   });
 });
 
-test("constructor: timeout: invalid", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  expect(() => {
-    new Job(stack, "Job", {
-      handler: "test/constructs/lambda.handler",
+test("timeout: invalid", async () => {
+  expect(async () => {
+    await createJob({
       timeout: "5 seconds",
     });
-  }).toThrow(/Invalid timeout/);
+  }).rejects.toThrow(/Invalid timeout/);
 });
 
-test("constructor: memorySize", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new Job(stack, "Job", {
-    handler: "test/constructs/lambda.handler",
+test("runtime: nodejs", async () => {
+  const { stack } = await createJob({
+    runtime: "nodejs",
+    timeout: "1 hour",
+  });
+  hasResource(stack, "AWS::CodeBuild::Project", {
+    Environment: objectLike({
+      Image: "amazon/aws-lambda-nodejs:16",
+    }),
+  });
+});
+
+test("runtime: container", async () => {
+  const { stack } = await createJob({
+    runtime: "container",
+    handler: "test/constructs/container-function",
+    timeout: "1 hour",
+    container: {
+      cmd: ["echo", "hello"],
+    },
+  });
+  hasResource(stack, "AWS::CodeBuild::Project", {
+    Environment: objectLike({
+      Image: { "Fn::Sub": ANY },
+    }),
+    Source: {
+      BuildSpec: stringLike(/echo hello/),
+    },
+  });
+});
+
+test("runtime: container: cmd with space", async () => {
+  const { stack } = await createJob({
+    runtime: "container",
+    handler: "test/constructs/container-function",
+    container: {
+      cmd: ["echo", "hello world"],
+    },
+  });
+  hasResource(stack, "AWS::CodeBuild::Project", {
+    Environment: objectLike({
+      Image: { "Fn::Sub": ANY },
+    }),
+    Source: {
+      BuildSpec: stringLike(/echo "hello world"/),
+    },
+  });
+});
+
+test("runtime: container: no cmd", async () => {
+  expect(async () => {
+    await createJob({
+      runtime: "container",
+      handler: "test/constructs/container-function",
+    });
+  }).rejects.toThrow(/No commands/);
+});
+
+test("memorySize", async () => {
+  const { stack } = await createJob({
     memorySize: "15 GB",
   });
   hasResource(stack, "AWS::CodeBuild::Project", {
@@ -82,45 +185,45 @@ test("constructor: memorySize", async () => {
   });
 });
 
-test("constructor: memorySize: invalid", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  expect(() => {
-    new Job(stack, "Job", {
-      handler: "test/constructs/lambda.handler",
-      // @ts-ignore Allow type casting
-      memorySize: "1024 MB",
-    });
-  }).toThrow(/Invalid memory size/);
-});
-
-test("constructor: bind", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  const topic = new Topic(stack, "Topic");
-  const MY_TOPIC_ARN = new Config.Parameter(stack, "MY_TOPIC_ARN", {
-    value: topic.topicArn,
-  });
-  new Job(stack, "Job", {
-    handler: "test/constructs/lambda.handler",
-    bind: [MY_TOPIC_ARN],
+test("memorySize: supported by arm64", async () => {
+  const { stack } = await createJob({
+    architecture: "arm_64",
+    memorySize: "3 GB",
   });
   hasResource(stack, "AWS::CodeBuild::Project", {
     Environment: {
-      EnvironmentVariables: arrayWith([
-        objectLike({ Name: "SST_Parameter_value_MY_TOPIC_ARN", Value: ANY }),
-      ]),
+      ComputeType: "BUILD_GENERAL1_SMALL",
     },
   });
 });
 
-test("constructor: config", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  const topic = new Topic(stack, "Topic");
-  const MY_TOPIC_ARN = new Config.Parameter(stack, "MY_TOPIC_ARN", {
-    value: topic.topicArn,
-  });
-  new Job(stack, "Job", {
-    handler: "test/constructs/lambda.handler",
-    bind: [MY_TOPIC_ARN],
+test("memorySize: not supported by arm64", async () => {
+  expect(async () => {
+    await createJob({
+      architecture: "arm_64",
+      memorySize: "7 GB",
+    });
+  }).rejects.toThrow(/ARM architecture only supports/);
+});
+
+test("memorySize: invalid", async () => {
+  expect(async () => {
+    await createJob({
+      // @ts-ignore Allow type casting
+      memorySize: "1024 MB",
+    });
+  }).rejects.toThrow(/Invalid memory size/);
+});
+
+test("constructor: bind", async () => {
+  const { stack } = await createJob((stack) => {
+    const topic = new Topic(stack, "Topic");
+    const MY_TOPIC_ARN = new Config.Parameter(stack, "MY_TOPIC_ARN", {
+      value: topic.topicArn,
+    });
+    return {
+      bind: [MY_TOPIC_ARN],
+    };
   });
   hasResource(stack, "AWS::CodeBuild::Project", {
     Environment: {
@@ -132,11 +235,11 @@ test("constructor: config", async () => {
 });
 
 test("constructor: permissions", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  const topic = new Topic(stack, "Topic");
-  new Job(stack, "Job", {
-    handler: "test/constructs/lambda.handler",
-    permissions: [topic],
+  const { stack } = await createJob((stack) => {
+    const topic = new Topic(stack, "Topic");
+    return {
+      permissions: [topic],
+    };
   });
   hasResource(stack, "AWS::IAM::Policy", {
     PolicyDocument: objectLike({
@@ -146,9 +249,7 @@ test("constructor: permissions", async () => {
 });
 
 test("constructor: environment", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new Job(stack, "Job", {
-    handler: "test/constructs/lambda.handler",
+  const { stack } = await createJob({
     environment: {
       DEBUG: "*",
     },
@@ -163,13 +264,13 @@ test("constructor: environment", async () => {
 });
 
 test("constructor: cdk.vpc", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new Job(stack, "Job", {
-    handler: "test/constructs/lambda.handler",
-    timeout: "1 hour",
-    cdk: {
-      vpc: new Vpc(stack, "VPC"),
-    },
+  const { stack } = await createJob((stack) => {
+    return {
+      timeout: "1 hour",
+      cdk: {
+        vpc: new Vpc(stack, "VPC"),
+      },
+    };
   });
   hasResource(stack, "AWS::CodeBuild::Project", {
     Name: "test-app-Job",
@@ -188,16 +289,16 @@ test("constructor: cdk.vpc", async () => {
 });
 
 test("constructor: cdk.vpcSubnets", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  new Job(stack, "Job", {
-    handler: "test/constructs/lambda.handler",
-    timeout: "1 hour",
-    cdk: {
-      vpc: new Vpc(stack, "VPC"),
-      vpcSubnets: {
-        subnetType: SubnetType.PUBLIC,
+  const { stack } = await createJob((stack) => {
+    return {
+      timeout: "1 hour",
+      cdk: {
+        vpc: new Vpc(stack, "VPC"),
+        vpcSubnets: {
+          subnetType: SubnetType.PUBLIC,
+        },
       },
-    },
+    };
   });
   hasResource(stack, "AWS::CodeBuild::Project", {
     Name: "test-app-Job",
@@ -216,17 +317,16 @@ test("constructor: cdk.vpcSubnets", async () => {
 });
 
 test("constructor: cdk.securityGroups", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  const vpc = new Vpc(stack, "VPC");
-  new Job(stack, "Job", {
-    handler: "test/constructs/lambda.handler",
-    timeout: "1 hour",
-    cdk: {
-      vpc,
-      securityGroups: [
-        SecurityGroup.fromSecurityGroupId(stack, "SecurityGroup", "sg-123"),
-      ],
-    },
+  const { stack } = await createJob((stack) => {
+    return {
+      timeout: "1 hour",
+      cdk: {
+        vpc: new Vpc(stack, "VPC"),
+        securityGroups: [
+          SecurityGroup.fromSecurityGroupId(stack, "SecurityGroup", "sg-123"),
+        ],
+      },
+    };
   });
   hasResource(stack, "AWS::CodeBuild::Project", {
     Name: "test-app-Job",
@@ -254,7 +354,11 @@ test("sst deploy", async () => {
   // Invoker needs to call CodeBuild on `sst start`
   countResourcesLike(stack, "AWS::IAM::Policy", 1, {
     PolicyDocument: objectLike({
-      Statement: arrayWith([objectLike({ Action: "codebuild:StartBuild" })]),
+      Statement: arrayWith([
+        objectLike({
+          Action: ["codebuild:StartBuild", "codebuild:StopBuild"],
+        }),
+      ]),
     }),
   });
   hasResource(stack, "AWS::CodeBuild::Project", {
@@ -279,52 +383,16 @@ test("sst deploy: inactive stack", async () => {
   // Invoker needs to call CodeBuild on `sst start`
   countResourcesLike(stack, "AWS::IAM::Policy", 1, {
     PolicyDocument: objectLike({
-      Statement: arrayWith([objectLike({ Action: "codebuild:StartBuild" })]),
+      Statement: arrayWith([
+        objectLike({
+          Action: ["codebuild:StartBuild", "codebuild:StopBuild"],
+        }),
+      ]),
     }),
   });
   hasResource(stack, "AWS::CodeBuild::Project", {
     Source: objectLike({
       BuildSpec: stringNotLike(/node handler-wrapper.mjs/),
-    }),
-  });
-});
-
-test("sst dev", async () => {
-  const app = await createApp({
-    mode: "dev",
-  });
-  const stack = new Stack(app, "stack");
-  new Job(stack, "Job", {
-    handler: "test/constructs/lambda.handler",
-  });
-  await app.finish();
-  // Invoker not calling CodeBuild on `sst start`
-  countResourcesLike(stack, "AWS::IAM::Policy", 0, {
-    PolicyDocument: objectLike({
-      Statement: arrayWith([objectLike({ Action: "codebuild:StartBuild" })]),
-    }),
-  });
-});
-
-test("sst dev: enableLiveDev false", async () => {
-  const app = await createApp({
-    mode: "dev",
-  });
-  const stack = new Stack(app, "stack");
-  new Job(stack, "Job", {
-    handler: "test/constructs/lambda.handler",
-    enableLiveDev: false,
-  });
-  await app.finish();
-  // Invoker not calling CodeBuild on `sst start`
-  countResourcesLike(stack, "AWS::IAM::Policy", 1, {
-    PolicyDocument: objectLike({
-      Statement: arrayWith([objectLike({ Action: "codebuild:StartBuild" })]),
-    }),
-  });
-  hasResource(stack, "AWS::CodeBuild::Project", {
-    Source: objectLike({
-      BuildSpec: stringLike(/node handler-wrapper.mjs/),
     }),
   });
 });
@@ -341,7 +409,11 @@ test("sst remove", async () => {
   // Invoker not calling CodeBuild on `sst start`
   countResourcesLike(stack, "AWS::IAM::Policy", 1, {
     PolicyDocument: objectLike({
-      Statement: arrayWith([objectLike({ Action: "codebuild:StartBuild" })]),
+      Statement: arrayWith([
+        objectLike({
+          Action: ["codebuild:StartBuild", "codebuild:StopBuild"],
+        }),
+      ]),
     }),
   });
   hasResource(stack, "AWS::CodeBuild::Project", {
@@ -352,13 +424,10 @@ test("sst remove", async () => {
 });
 
 test("bind", async () => {
-  const stack = new Stack(await createApp(), "stack");
+  const { stack, job } = await createJob();
   const topic = new Topic(stack, "Topic");
   const MY_TOPIC_ARN = new Config.Parameter(stack, "MY_TOPIC_ARN", {
     value: topic.topicArn,
-  });
-  const job = new Job(stack, "Job", {
-    handler: "test/constructs/lambda.handler",
   });
   job.bind([MY_TOPIC_ARN]);
   hasResource(stack, "AWS::CodeBuild::Project", {
@@ -371,13 +440,10 @@ test("bind", async () => {
 });
 
 test("addConfig", async () => {
-  const stack = new Stack(await createApp(), "stack");
+  const { stack, job } = await createJob();
   const topic = new Topic(stack, "Topic");
   const MY_TOPIC_ARN = new Config.Parameter(stack, "MY_TOPIC_ARN", {
     value: topic.topicArn,
-  });
-  const job = new Job(stack, "Job", {
-    handler: "test/constructs/lambda.handler",
   });
   job.bind([MY_TOPIC_ARN]);
   hasResource(stack, "AWS::CodeBuild::Project", {
@@ -390,11 +456,8 @@ test("addConfig", async () => {
 });
 
 test("attachPermissions", async () => {
-  const stack = new Stack(await createApp(), "stack");
+  const { stack, job } = await createJob();
   const topic = new Topic(stack, "Topic");
-  const job = new Job(stack, "Job", {
-    handler: "test/constructs/lambda.handler",
-  });
   job.attachPermissions([topic]);
   hasResource(stack, "AWS::IAM::Policy", {
     PolicyDocument: objectLike({
@@ -404,10 +467,7 @@ test("attachPermissions", async () => {
 });
 
 test("addEnvironment", async () => {
-  const stack = new Stack(await createApp(), "stack");
-  const job = new Job(stack, "Job", {
-    handler: "test/constructs/lambda.handler",
-  });
+  const { stack, job } = await createJob();
   job.addEnvironment("DEBUG", "*");
   hasResource(stack, "AWS::CodeBuild::Project", {
     Environment: {

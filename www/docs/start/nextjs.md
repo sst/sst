@@ -57,6 +57,7 @@ Now initialize SST in your project root.
 <TabItem value="npm">
 
 ```bash
+cd my-app
 npx create-sst@latest
 ```
 
@@ -64,6 +65,7 @@ npx create-sst@latest
 <TabItem value="yarn">
 
 ```bash
+cd my-app
 yarn create sst
 ```
 
@@ -71,6 +73,7 @@ yarn create sst
 <TabItem value="pnpm">
 
 ```bash
+cd my-app
 pnpm create sst
 ```
 
@@ -89,6 +92,7 @@ Start your local dev environment.
 ```bash
 # Start SST locally
 npx sst dev
+
 # Start Next.js locally
 npm run dev
 ```
@@ -99,6 +103,7 @@ npm run dev
 ```bash
 # Start SST locally
 yarn sst dev
+
 # Start Next.js locally
 yarn run dev
 ```
@@ -109,12 +114,17 @@ yarn run dev
 ```bash
 # Start SST locally
 pnpm sst dev
+
 # Start Next.js locally
 pnpm run dev
 ```
 
 </TabItem>
 </MultiPackagerCode>
+
+:::info
+When running `sst dev`, SST does not deploy your Next.js app. You are meant to run Next.js locally.
+:::
 
 ---
 
@@ -144,9 +154,9 @@ const site = new NextjsSite(stack, "site", {
 
 #### Generate a presigned URL
 
-To upload a file to S3 we'll generate a presigned URL. Add this to `pages/index.ts`.
+To upload a file to S3 we'll generate a presigned URL. Add this to `pages/index.tsx`.
 
-```ts title="pages/index.ts" {5}
+```ts title="pages/index.tsx" {5}
 export async function getServerSideProps() {
   const command = new PutObjectCommand({
     ACL: "public-read",

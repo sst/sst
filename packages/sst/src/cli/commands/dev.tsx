@@ -99,9 +99,23 @@ export const dev = (program: Program) =>
         });
 
         bus.subscribe("worker.stdout", async (evt) => {
+          const info = useFunctions().fromID(evt.properties.functionID);
           prefix(evt.properties.requestID);
           const { started } = pending.get(evt.properties.requestID)!;
           for (let line of evt.properties.message.split("\n")) {
+            // Remove prefix from container logs
+            if (info?.runtime === "container") {
+              // handle Node.js container logs
+              // ie. 2023-07-05T00:13:42.448Z\td7330533-2429-4871-a632-ed29a1d32246\tINFO\tfoo!
+              const parts = line.split("\t");
+              if (
+                parts.length >= 4 &&
+                Date.parse(parts[0]) &&
+                parts[1].length === 36
+              ) {
+                line = parts.slice(3).join("\t");
+              }
+            }
             Colors.line(
               prefix(evt.properties.requestID),
               Colors.dim(("+" + (Date.now() - started) + "ms").padEnd(7)),
@@ -110,11 +124,25 @@ export const dev = (program: Program) =>
           }
         });
 
+        bus.subscribe("function.build.started", async (evt) => {
+          const info = useFunctions().fromID(evt.properties.functionID);
+          if (!info) return;
+          if (info.enableLiveDev === false) return;
+          if (info.runtime !== "container") return;
+          Colors.line(
+            Colors.dim(Colors.prefix, "Building", info.handler!, "container")
+          );
+        });
+
         bus.subscribe("function.build.success", async (evt) => {
           const info = useFunctions().fromID(evt.properties.functionID);
           if (!info) return;
           if (info.enableLiveDev === false) return;
-          Colors.line(Colors.dim(Colors.prefix, "Built", info.handler!));
+          Colors.line(
+            info.runtime === "container"
+              ? Colors.dim(Colors.prefix, "Built", info.handler!, "container")
+              : Colors.dim(Colors.prefix, "Built", info.handler!)
+          );
         });
 
         bus.subscribe("function.build.failed", async (evt) => {
@@ -163,6 +191,7 @@ export const dev = (program: Program) =>
         const watcher = useWatcher();
         const project = useProject();
 
+        const scriptVersion = Date.now().toString();
         let lastDeployed: string;
         let isWorking = false;
         let isDirty = false;
@@ -187,6 +216,7 @@ export const dev = (program: Program) =>
             project.stacks = sstConfig.stacks;
             const assembly = await Stacks.synth({
               increaseTimeout: args["increase-timeout"],
+              scriptVersion,
               fn: project.stacks,
               outDir: `.sst/cdk.out`,
               mode: "dev",
@@ -271,7 +301,8 @@ export const dev = (program: Program) =>
 
           // Write outputs.json
           fs.writeFile(
-            path.join(project.paths.out, "outputs.json"),
+            project.config.outputs ||
+              path.join(project.paths.out, "outputs.json"),
             JSON.stringify(
               mapValues(results, (val) => val.outputs),
               null,
@@ -386,6 +417,7 @@ export const dev = (program: Program) =>
 
       clear();
       await printHeader({ console: true, hint: "ready!" });
+      await useStackBuilder();
       await Promise.all([
         useDisconnector(),
         useRuntimeWorkers(),
@@ -396,7 +428,6 @@ export const dev = (program: Program) =>
         useKyselyTypeGenerator(),
         useRDSWarmer(),
         useFunctionLogger(),
-        useStackBuilder(),
       ]);
     }
   );

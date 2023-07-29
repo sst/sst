@@ -22,7 +22,14 @@ export interface OauthBasicConfig {
    * Various scopes requested for the access token
    */
   scope: string;
+  /**
+   * Determines whether users will be prompted for reauthentication and consent
+   */
   prompt?: string;
+  /**
+   * Additional parameters to be passed to the authorization endpoint
+   */
+  params?: Record<string, string>;
 }
 
 export interface OauthConfig extends OauthBasicConfig {
@@ -54,6 +61,7 @@ export const OauthAdapter =
           code_challenge_method: "S256",
           state,
           prompt: config.prompt,
+          ...config.params,
         });
 
         useResponse().cookies(

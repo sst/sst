@@ -4,13 +4,10 @@
 import fs from "fs";
 import url from "url";
 import path from "path";
-import { AssetCode, Code, Runtime } from "aws-cdk-lib/aws-lambda";
-import {
-  AssetHashType,
-  AssetStaging,
-  DockerImage,
-  FileSystem,
-} from "aws-cdk-lib";
+import { Runtime } from "aws-cdk-lib/aws-lambda";
+import { FunctionProps } from "../../constructs/Function.js";
+
+import { AssetHashType, DockerImage, FileSystem } from "aws-cdk-lib/core";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 /**
@@ -36,6 +33,11 @@ export interface BundlingOptions {
    * The runtime of the lambda function
    */
   readonly runtime: Runtime;
+
+  /**
+   * Architecture used by the lambda function
+   */
+  readonly architecture: FunctionProps["architecture"];
 
   /**
    * Output path suffix ('python' for a layer, '.' otherwise)
@@ -89,7 +91,7 @@ export interface BundlingOptions {
  * Produce bundled Lambda asset code
  */
 export function bundle(options: BundlingOptions & { out: string }) {
-  const { entry, runtime, outputPathSuffix, installCommands } = options;
+  const { entry, runtime, architecture, outputPathSuffix, installCommands } = options;
 
   const stagedir = FileSystem.mkdtemp("python-bundling-");
   const hasDeps = stageDependencies(entry, stagedir);
@@ -116,7 +118,10 @@ export function bundle(options: BundlingOptions & { out: string }) {
 
   const image = DockerImage.fromBuild(stagedir, {
     buildArgs: {
-      IMAGE: runtime.bundlingImage.image,
+      IMAGE:
+        runtime.bundlingImage.image +
+        // the default x86_64 doesn't need to be set explicitly
+        (architecture == "arm_64" ? ":latest-arm64" : "")
     },
     file: dockerfile,
   });

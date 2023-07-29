@@ -67,7 +67,7 @@ program
             message: `You are in a ${framework.name} project so SST will be setup in drop-in mode. Continue?`,
           },
         ]);
-        if (!confirm) return;
+        if (!confirm) break;
         return [framework.preset, path.parse(cwd).name, cwd];
       }
 

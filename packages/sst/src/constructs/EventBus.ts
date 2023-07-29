@@ -1,5 +1,6 @@
 import { Construct } from "constructs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as sqs from "aws-cdk-lib/aws-sqs";
 import * as events from "aws-cdk-lib/aws-events";
 import {
   LambdaFunction as LambdaFunctionTarget,
@@ -21,6 +22,11 @@ import {
 } from "./Function.js";
 import { FunctionBindingProps } from "./util/functionBinding.js";
 import { Permissions } from "./util/permission.js";
+import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
+import { SqsDestination } from "aws-cdk-lib/aws-lambda-destinations";
+import url from "url";
+import path from "path";
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 /////////////////////
 // Interfaces
@@ -50,6 +56,10 @@ export interface EventBusFunctionTargetProps {
    * The function to trigger
    */
   function?: FunctionDefinition;
+  /**
+   * Number of retries
+   */
+  retries?: number;
   cdk?: {
     function?: lambda.IFunction;
     target?: LambdaFunctionTargetProps;
@@ -239,6 +249,17 @@ export interface EventBusProps {
      * ```
      */
     function?: FunctionProps;
+    /**
+     * Enable retries with exponential backoff for all lambda function targets in this eventbus
+     *
+     * @example
+     * ```js
+     * new EventBus(stack, "Bus", {
+     *   retries: 20
+     * });
+     * ```
+     */
+    retries?: number;
   };
   /**
    * The rules for the eventbus
@@ -569,6 +590,33 @@ export class EventBus extends Construct implements SSTConstruct {
     };
   }
 
+  private retrierQueue: sqs.Queue | undefined;
+  private retrierFn: lambda.Function | undefined;
+  private retrierMap: Record<string, number> = {};
+  private getRetrier() {
+    const app = this.node.root as App;
+    if (this.retrierFn && this.retrierQueue) {
+      return { fn: this.retrierFn, queue: this.retrierQueue };
+    }
+    this.retrierQueue = new sqs.Queue(this, `RetrierQueue`, {
+      queueName: app.logicalPrefixedName(this.node.id + "Retrier"),
+    });
+    this.retrierFn = new lambda.Function(this, `RetrierFunction`, {
+      functionName: app.logicalPrefixedName(this.node.id + "Retrier"),
+      runtime: lambda.Runtime.NODEJS_14_X,
+      handler: "index.handler",
+      code: lambda.Code.fromAsset(
+        path.join(__dirname, "../support/event-bus-retrier")
+      ),
+      environment: {
+        RETRIER_QUEUE_URL: this.retrierQueue.queueUrl,
+      },
+    });
+    this.retrierFn.addEventSource(new SqsEventSource(this.retrierQueue));
+    this.retrierQueue.grantSendMessages(this.retrierFn);
+    return { fn: this.retrierFn, queue: this.retrierQueue };
+  }
+
   private createEventBus() {
     const app = this.node.root as App;
     const id = this.node.id;
@@ -712,6 +760,47 @@ export class EventBus extends Construct implements SSTConstruct {
     eventsRule.addTarget(new LambdaFunctionTarget(fn, targetProps));
   }
 
+  private subs = new Map<string, number>();
+  public subscribe(
+    type: string | string[],
+    target: FunctionDefinition,
+    props?: { retries?: number }
+  ) {
+    type = Array.isArray(type) ? type : [type];
+    const joined = type.length > 1 ? "multi" : type.join("_");
+    const count = (this.subs.get(joined) || 0) + 1;
+    this.subs.set(joined, count);
+    const name = `${joined.replaceAll(/[^a-zA-Z_]/g, "_")}_${count}`;
+    const retries = props?.retries || this.props.defaults?.retries;
+    const fn = (() => {
+      if (retries) {
+        const retrier = this.getRetrier();
+        const fn = Fn.fromDefinition(this, name, target, {
+          onFailure: new SqsDestination(retrier.queue),
+        });
+        this.retrierMap[fn.functionArn] = retries;
+        retrier.fn.addEnvironment(`RETRIES`, JSON.stringify(this.retrierMap));
+
+        fn.grantInvoke(retrier.fn);
+        return fn;
+      }
+      return Fn.fromDefinition(this, name, target);
+    })();
+    this.addRule(this, name + "_rule", {
+      pattern: {
+        detailType: type,
+      },
+      targets: {
+        [name + "_target"]: {
+          type: "function",
+          function: fn,
+          retries: props?.retries,
+        },
+      },
+    });
+    return this;
+  }
+
   private addFunctionTarget(
     scope: Construct,
     ruleKey: string,
@@ -722,10 +811,12 @@ export class EventBus extends Construct implements SSTConstruct {
     // Parse target props
     let targetProps;
     let functionDefinition;
+    let retries = this.props.defaults?.retries;
     if ((target as EventBusFunctionTargetProps).function) {
       target = target as EventBusFunctionTargetProps;
       targetProps = target.cdk?.target;
       functionDefinition = target.function!;
+      if (target.retries) retries = target.retries;
     } else {
       target = target as FunctionInlineDefinition;
       functionDefinition = target;

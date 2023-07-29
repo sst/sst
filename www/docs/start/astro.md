@@ -57,6 +57,7 @@ Now initialize SST in your project root.
 <TabItem value="npm">
 
 ```bash
+cd astro-project
 npx create-sst@latest
 ```
 
@@ -64,6 +65,7 @@ npx create-sst@latest
 <TabItem value="yarn">
 
 ```bash
+cd astro-project
 yarn create sst
 ```
 
@@ -71,6 +73,7 @@ yarn create sst
 <TabItem value="pnpm">
 
 ```bash
+cd astro-project
 pnpm create sst
 ```
 
@@ -89,6 +92,7 @@ Start your local dev environment.
 ```bash
 # Start SST locally
 npx sst dev
+
 # Start Astro locally
 npm run dev
 ```
@@ -99,6 +103,7 @@ npm run dev
 ```bash
 # Start SST locally
 yarn sst dev
+
 # Start Astro locally
 yarn run dev
 ```
@@ -109,12 +114,17 @@ yarn run dev
 ```bash
 # Start SST locally
 pnpm sst dev
+
 # Start Astro locally
 pnpm run dev
 ```
 
 </TabItem>
 </MultiPackagerCode>
+
+:::info
+When running `sst dev`, SST does not deploy your Astro site. You are meant to run Astro locally.
+:::
 
 ---
 

@@ -1,11 +1,13 @@
 import { test, expect } from "vitest";
 /* eslint-disable @typescript-eslint/ban-ts-comment*/
 
-import { countResources, createApp, hasResource } from "./helper";
+import { countResources, createApp, hasResource, objectLike } from "./helper";
 import * as cdk from "aws-cdk-lib";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as rds from "aws-cdk-lib/aws-rds";
 import * as secretsManager from "aws-cdk-lib/aws-secretsmanager";
+import * as kms from "aws-cdk-lib/aws-kms";
+import { Match } from "aws-cdk-lib/assertions";
 import { App, Stack, RDS, RDSProps } from "../../dist/constructs/";
 
 /////////////////////////////
@@ -401,7 +403,7 @@ test("cdk.cluster.vpc provided", async () => {
   countResources(stack, "AWS::EC2::VPC", 0);
 });
 
-test("cdk.cluster.credentials SSM error", async () => {
+test("cdk.cluster.credentials: using password error", async () => {
   const stack = new Stack(await createApp(), "stack");
   expect(
     () =>
@@ -418,4 +420,112 @@ test("cdk.cluster.credentials SSM error", async () => {
         },
       })
   ).toThrow(/Only credentials managed by SecretManager are supported/);
+});
+
+test("cdk.cluster.credentials: using secret name", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  const cluster = new RDS(stack, "Cluster", {
+    engine: "postgresql11.13",
+    defaultDatabaseName: "acme",
+    cdk: {
+      cluster: {
+        credentials: {
+          username: "root",
+          secretName: "root-secret",
+        },
+      },
+    },
+  });
+  hasResource(stack, "AWS::SecretsManager::Secret", {
+    GenerateSecretString: objectLike({
+      SecretStringTemplate: '{"username":"root"}',
+    }),
+  });
+  hasResource(stack, "AWS::RDS::DBCluster", {
+    MasterUsername: {
+      "Fn::Join": [
+        "",
+        [
+          "{{resolve:secretsmanager:",
+          { Ref: "ClusterSecret26E15F5B" },
+          ":SecretString:username::}}",
+        ],
+      ],
+    },
+  });
+  // KMS permissions is not granted (not necessary b/c not using custom KMS key)
+  const bindings = cluster.getFunctionBinding();
+  expect(bindings.permissions["kms:Decrypt"]).toBeUndefined();
+});
+
+test("cdk.cluster.credentials: using custom kms key", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  const key = new kms.Key(stack, "Key");
+  const cluster = new RDS(stack, "Cluster", {
+    engine: "postgresql11.13",
+    defaultDatabaseName: "acme",
+    migrations: "test/constructs/migrations",
+    cdk: {
+      cluster: {
+        credentials: {
+          username: "root",
+          secretName: "root-secret",
+          encryptionKey: key,
+        },
+      },
+    },
+  });
+  // KMS permissions is granted
+  const bindings = cluster.getFunctionBinding();
+  expect(bindings.permissions["kms:Decrypt"]).toBeDefined();
+  // Migration function has permission to this key
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: Match.arrayWith([
+        {
+          Action: "kms:Decrypt",
+          Effect: "Allow",
+          Resource: {
+            "Fn::GetAtt": ["Key961B73FD", "Arn"],
+          },
+        },
+      ]),
+    },
+    Roles: [
+      {
+        Ref: "ClusterMigrationFunctionServiceRole720A9F55",
+      },
+    ],
+  });
+});
+
+test("cdk.cluster.credentials: imported secret with custom encryption key", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  const cluster = new RDS(stack, "Cluster", {
+    engine: "postgresql11.13",
+    defaultDatabaseName: "acme",
+    cdk: {
+      cluster: rds.ServerlessCluster.fromServerlessClusterAttributes(
+        stack,
+        "CdkCluster",
+        { clusterIdentifier: "my-cluster" }
+      ),
+      secret: secretsManager.Secret.fromSecretAttributes(
+        stack,
+        "PostgresSecret",
+        {
+          secretPartialArn:
+            "arn:aws:secretsmanager:us-east-1:1234567890:secret:my-secret",
+          encryptionKey: kms.Key.fromKeyArn(
+            stack,
+            "SecretKey",
+            "arn:aws:kms:us-east-1:1234567890:key/d286fa44-84fe-480b-bcb6-96b3c9a20edd"
+          ),
+        }
+      ),
+    },
+  });
+  // KMS permissions is granted
+  const bindings = cluster.getFunctionBinding();
+  expect(bindings.permissions["kms:Decrypt"]).toBeDefined();
 });

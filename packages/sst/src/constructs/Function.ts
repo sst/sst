@@ -24,6 +24,7 @@ import * as functionUrlCors from "./util/functionUrlCors.js";
 import url from "url";
 import { useDeferredTasks } from "./deferred_task.js";
 import { useProject } from "../project.js";
+import { VisibleError } from "../error.js";
 import { useRuntimeHandlers } from "../runtime/handlers.js";
 import { createAppContext } from "./context.js";
 import { useWarning } from "./util/warning.js";
@@ -36,41 +37,40 @@ import {
   FunctionOptions,
   FunctionUrl,
   FunctionUrlAuthType,
+  Handler as CDKHandler,
   ILayerVersion,
   LayerVersion,
   Runtime as CDKRuntime,
   Tracing,
 } from "aws-cdk-lib/aws-lambda";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
-import { Token, Size as CDKSize, Duration as CDKDuration } from "aws-cdk-lib";
+import {
+  Token,
+  Size as CDKSize,
+  Duration as CDKDuration,
+} from "aws-cdk-lib/core";
 import { Effect, PolicyStatement, Role } from "aws-cdk-lib/aws-iam";
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
+import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import { useBootstrap } from "../bootstrap.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 const supportedRuntimes = {
+  container: CDKRuntime.FROM_IMAGE,
   rust: CDKRuntime.PROVIDED_AL2,
-  nodejs: CDKRuntime.NODEJS,
-  "nodejs4.3": CDKRuntime.NODEJS_4_3,
-  "nodejs6.10": CDKRuntime.NODEJS_6_10,
-  "nodejs8.10": CDKRuntime.NODEJS_8_10,
-  "nodejs10.x": CDKRuntime.NODEJS_10_X,
   "nodejs12.x": CDKRuntime.NODEJS_12_X,
   "nodejs14.x": CDKRuntime.NODEJS_14_X,
   "nodejs16.x": CDKRuntime.NODEJS_16_X,
   "nodejs18.x": CDKRuntime.NODEJS_18_X,
-  "python2.7": CDKRuntime.PYTHON_2_7,
-  "python3.6": CDKRuntime.PYTHON_3_6,
   "python3.7": CDKRuntime.PYTHON_3_7,
   "python3.8": CDKRuntime.PYTHON_3_8,
   "python3.9": CDKRuntime.PYTHON_3_9,
-  "dotnetcore1.0": CDKRuntime.DOTNET_CORE_1,
-  "dotnetcore2.0": CDKRuntime.DOTNET_CORE_2,
-  "dotnetcore2.1": CDKRuntime.DOTNET_CORE_2_1,
+  "python3.10": CDKRuntime.PYTHON_3_10,
   "dotnetcore3.1": CDKRuntime.DOTNET_CORE_3_1,
   dotnet6: CDKRuntime.DOTNET_6,
   java8: CDKRuntime.JAVA_8,
   java11: CDKRuntime.JAVA_11,
+  java17: CDKRuntime.JAVA_17,
   "go1.x": CDKRuntime.PROVIDED_AL2,
   go: CDKRuntime.PROVIDED_AL2,
 };
@@ -117,6 +117,11 @@ export interface FunctionProps
   copyFiles?: FunctionCopyFilesProps[];
 
   /**
+   * Used to configure go function properties
+   */
+  go?: GoProps;
+
+  /**
    * Used to configure nodejs function properties
    */
   nodejs?: NodeJSProps;
@@ -130,6 +135,11 @@ export interface FunctionProps
    * Used to configure python function properties
    */
   python?: PythonProps;
+
+  /**
+   * Used to configure container function properties
+   */
+  container?: ContainerProps;
 
   /**
    * Hooks to run before and after function builds
@@ -520,6 +530,50 @@ export interface PythonProps {
 }
 
 /**
+ * Used to configure Go bundling options
+ */
+export interface GoProps {
+  /**
+   * The ldflags to use when building the Go module.
+   *
+   * @default ["-s", "-w"]
+   * @example
+   * ```js
+   * go: {
+   *   ldFlags: ["-X main.version=1.0.0"],
+   * }
+   * ```
+   */
+  ldFlags?: string[];
+
+  /**
+   * The build tags to use when building the Go module.
+   *
+   * @default []
+   * @example
+   * ```js
+   * go: {
+   *   buildTags: ["enterprise", "pro"],
+   * }
+   * ```
+   */
+  buildTags?: string[];
+
+  /**
+   * Whether to enable CGO for the Go build.
+   *
+   * @default false
+   * @example
+   * ```js
+   * go: {
+   *   cgoEnabled: true,
+   * }
+   * ```
+   */
+  cgoEnabled?: boolean;
+}
+
+/**
  * Used to configure Java package build options
  */
 export interface JavaProps {
@@ -568,6 +622,19 @@ export interface JavaProps {
    * ```
    */
   experimentalUseProvidedRuntime?: "provided" | "provided.al2";
+}
+
+export interface ContainerProps {
+  /**
+   * Specify or override the CMD on the Docker image.
+   * @example
+   * ```js
+   * container: {
+   *   cmd: ["index.handler"]
+   * }
+   * ```
+   */
+  cmd?: string[];
 }
 
 /**
@@ -638,7 +705,7 @@ export class Function extends CDKFunction implements SSTConstruct {
     const architecture = (() => {
       if (props.architecture === "arm_64") return Architecture.ARM_64;
       if (props.architecture === "x86_64") return Architecture.X86_64;
-      return undefined;
+      return Architecture.X86_64;
     })();
     const memorySize = Function.normalizeMemorySize(props.memorySize);
     const diskSize = Function.normalizeDiskSize(props.diskSize);
@@ -699,17 +766,35 @@ export class Function extends CDKFunction implements SSTConstruct {
 
       super(scope, id, {
         ...props,
+        ...(props.runtime === "container"
+          ? {
+              code: Code.fromAssetImage(
+                path.resolve(__dirname, "../support/bridge"),
+                {
+                  ...(architecture?.dockerPlatform
+                    ? { platform: Platform.custom(architecture.dockerPlatform) }
+                    : {}),
+                }
+              ),
+              handler: CDKHandler.FROM_IMAGE,
+              runtime: CDKRuntime.FROM_IMAGE,
+              layers: undefined,
+            }
+          : {
+              runtime: CDKRuntime.NODEJS_16_X,
+              code: Code.fromAsset(
+                path.resolve(__dirname, "../support/bridge")
+              ),
+              handler: "bridge.handler",
+              layers: [],
+            }),
         architecture,
-        code: Code.fromAsset(path.resolve(__dirname, "../support/bridge")),
-        handler: "bridge.handler",
         functionName,
-        runtime: CDKRuntime.NODEJS_16_X,
         memorySize,
         ephemeralStorageSize: diskSize,
         timeout,
         tracing,
         environment: props.environment,
-        layers: [],
         logRetention,
         logRetentionRetryOptions: logRetention && { maxRetries: 100 },
         retryAttempts: 0,
@@ -718,6 +803,7 @@ export class Function extends CDKFunction implements SSTConstruct {
       this.addEnvironment("SST_FUNCTION_ID", this.node.addr);
       useDeferredTasks().add(async () => {
         const bootstrap = await useBootstrap();
+        const bootstrapBucketArn = `arn:${Stack.of(this).partition}:s3:::${bootstrap.bucket}`;
         this.attachPermissions([
           new PolicyStatement({
             actions: ["iot:*"],
@@ -728,7 +814,8 @@ export class Function extends CDKFunction implements SSTConstruct {
             actions: ["s3:*"],
             effect: Effect.ALLOW,
             resources: [
-              `arn:${Stack.of(this).partition}:s3:::${bootstrap.bucket}`,
+              bootstrapBucketArn,
+              `${bootstrapBucketArn}/*`,
             ],
           }),
         ]);
@@ -738,17 +825,31 @@ export class Function extends CDKFunction implements SSTConstruct {
     else {
       super(scope, id, {
         ...props,
+        ...(props.runtime === "container"
+          ? {
+              code: Code.fromAssetImage(props.handler!, {
+                ...(architecture?.dockerPlatform
+                  ? { platform: Platform.custom(architecture.dockerPlatform) }
+                  : {}),
+                ...(props.container?.cmd ? { cmd: props.container.cmd } : {}),
+              }),
+              handler: CDKHandler.FROM_IMAGE,
+              runtime: CDKRuntime.FROM_IMAGE,
+              layers: undefined,
+            }
+          : {
+              code: Code.fromInline("export function placeholder() {}"),
+              handler: "index.placeholder",
+              runtime: CDKRuntime.NODEJS_16_X,
+              layers: Function.buildLayers(scope, id, props),
+            }),
         architecture,
-        code: Code.fromInline("export function placeholder() {}"),
-        handler: "index.placeholder",
         functionName,
-        runtime: CDKRuntime.NODEJS_16_X,
         memorySize,
         ephemeralStorageSize: diskSize,
         timeout,
         tracing,
         environment: props.environment,
-        layers: Function.buildLayers(scope, id, props),
         logRetention,
         logRetentionRetryOptions: logRetention && { maxRetries: 100 },
       });
@@ -760,13 +861,16 @@ export class Function extends CDKFunction implements SSTConstruct {
           "deploy"
         );
         if (result.type === "error") {
-          throw new Error(
+          throw new VisibleError(
             [
               `Failed to build function "${props.handler}"`,
               ...result.errors,
             ].join("\n")
           );
         }
+
+        // No need to update code if runtime is container
+        if (props.runtime === "container") return;
 
         // Update code
         const cfnFunction = this.node.defaultChild as CfnFunction;
@@ -898,6 +1002,7 @@ export class Function extends CDKFunction implements SSTConstruct {
       type: "Function" as const,
       data: {
         arn: this.functionArn,
+        handler: this.props.handler,
         localId: this.node.addr,
         secrets: this.allBindings
           .filter((c) => c instanceof Secret)

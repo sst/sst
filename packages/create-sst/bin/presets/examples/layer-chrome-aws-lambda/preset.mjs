@@ -4,6 +4,6 @@ export default [
   extend("presets/base/example"),
   extract(),
   install({
-    packages: ["chrome-aws-lambda", "puppeteer", "puppeteer-core"],
+    packages: ["puppeteer-core^20.1.2", "@sparticuz/chromium^113.0.1"],
   }),
 ];

@@ -282,6 +282,34 @@ new WebSocketApi(stack, "Api", {
 });
 ```
 
+#### Using [SST Auth](/auth) 
+
+No changes are required for your CDK construct, but inside of your `$connect` and `$default` functions, you can access the authenticated user's information using the hooks provided by Auth.
+
+```ts
+// src/connect.ts
+import { WebSocketApiHandler } from 'sst/node/websocket-api';
+import { useSession } from 'sst/node/auth';
+
+export const handler = WebSocketApiHandler(async () => {
+  const session = useSession();
+  if (session.type === 'public') {
+    return { statusCode: 401};
+  }
+  // Do something here...
+  return {
+    statusCode: 200,
+  };
+});
+
+```
+
+And to connect, remember to set your Authorization Header. Here's an example using [wscat](https://www.npmjs.com/package/wscat).
+
+```sh
+$ wscat -c wss://abcdef123.execute-api.us-west-2.amazonaws.com/production -H "authorization:Bearer jwt-from-auth"
+```
+
 ### Access log
 
 #### Configuring the log format

@@ -81,11 +81,21 @@ Here's the full list of config options that can be returned:
 - **`ssmPrefix`** SSM prefix for all SSM parameters that SST creates
 - **`advanced`**
   - **`disableParameterizedStackNameCheck`** Disable the check for stack names to be parameterized with the stage name.
+- **`bootstrap`**
+  - **`stackName`** The name to use for the SST bootstrap stack
+  - **`tags`** Tags to use for the SST bootstrap stack
 - **`cdk`**
-  - **`toolkitStackName`** The name of the CDK toolkit stack
-  - **`qualifier`** The qualifier for the CDK toolkit stack
+  - **`cloudFormationExecutionRole`** IAM role assumed by the CloudFormation to deploy
+  - **`customPermissionsBoundary`** The Name of the IAM permissions boundary policy to use for the CDK toolkit stack and SST bootstrap stack
+  - **`deployRoleArn`**: IAM role used to initiate a deployment
+  - **`fileAssetPublishingRoleArn`** IAM role used to publish file assets to the S3 bucket
   - **`fileAssetsBucketName`** The name of the CDK toolkit bucket
-  - **`publicAccessBlockConfiguration`** Block public access configuration on the CDK toolkit bucket
+  - **`imageAssetPublishingRoleArn`** IAM role used to publish image assets to the ECR repository
+  - **`lookupRoleArn`** IAM role used to look up values from the AWS account
+  - **`pathMetadata`** Add CDK path metadata to templates. This enables the CDK Construct tree view in the CloudFormation console. Default `false`.
+  - **`publicAccessBlockConfiguration`** Block public access configuration on the CDK toolkit bucket and SST bootstrap bucket
+  - **`qualifier`** The qualifier for the CDK toolkit stack
+  - **`toolkitStackName`** The name of the CDK toolkit stack
 
 \*These won't take effect if the CLI flag for it is specified.
 
@@ -93,7 +103,7 @@ Here's the full list of config options that can be returned:
 
 ## Stacks function
 
-The `stacks` function is the entry point for you SST application. This is where you can specify the stacks that contain the resources that you want to deploy.
+The `stacks` function is the entry point for your SST application. This is where you can specify the stacks that contain the resources that you want to deploy.
 
 You can either do this inline, like so.
 

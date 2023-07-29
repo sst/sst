@@ -2,6 +2,7 @@
   "extends": "@tsconfig/node16/tsconfig.json",
   "compilerOptions": {
     "module": "esnext",
+    "moduleResolution": "node",
     "baseUrl": ".",
     "paths": {
       "@stack-tests/core/*": ["../core/src/*"]

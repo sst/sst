@@ -9,18 +9,20 @@ import {
 import {
   App,
   DefaultStackSynthesizer,
-  CfnOutput,
   Duration,
+  CfnOutput,
   Tags,
   Stack,
   RemovalPolicy,
-} from "aws-cdk-lib";
+} from "aws-cdk-lib/core";
 import { Function, Runtime, Code } from "aws-cdk-lib/aws-lambda";
-import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
-import { PolicyStatement } from "aws-cdk-lib/aws-iam";
-import { Queue } from "aws-cdk-lib/aws-sqs";
+import {
+  ManagedPolicy,
+  PermissionsBoundary,
+  PolicyStatement,
+} from "aws-cdk-lib/aws-iam";
 import { Rule } from "aws-cdk-lib/aws-events";
-import { SqsQueue } from "aws-cdk-lib/aws-events-targets";
+import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
 import {
   BlockPublicAccess,
   Bucket,
@@ -42,7 +44,7 @@ const CDK_STACK_NAME = "CDKToolkit";
 const SST_STACK_NAME = "SSTBootstrap";
 const OUTPUT_VERSION = "Version";
 const OUTPUT_BUCKET = "BucketName";
-const LATEST_VERSION = "7";
+const LATEST_VERSION = "7.2";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 export const useBootstrap = Context.memo(async () => {
@@ -52,12 +54,14 @@ export const useBootstrap = Context.memo(async () => {
     loadSSTStatus(),
   ]);
   Logger.debug("Loaded bootstrap status");
-  const needToBootstrapCDK = !cdkStatus;
-  const needToBootstrapSST = !sstStatus || sstStatus.version !== LATEST_VERSION;
+  const needToBootstrapCDK = cdkStatus.status !== "ready";
+  const needToBootstrapSST = sstStatus.status !== "ready";
 
   if (needToBootstrapCDK || needToBootstrapSST) {
     const spinner = createSpinner(
-      "Deploying bootstrap stack, this only needs to happen once"
+      cdkStatus.status === "bootstrap" || sstStatus.status === "bootstrap"
+        ? "Deploying bootstrap stack, this only needs to happen once"
+        : "Updating bootstrap stack"
     ).start();
 
     if (needToBootstrapCDK) {
@@ -68,7 +72,7 @@ export const useBootstrap = Context.memo(async () => {
 
       // fetch bootstrap status
       sstStatus = await loadSSTStatus();
-      if (!sstStatus)
+      if (sstStatus.status !== "ready")
         throw new VisibleError("Failed to load bootstrap stack status");
     }
     spinner.succeed();
@@ -90,13 +94,13 @@ async function loadCDKStatus() {
       new DescribeStacksCommand({ StackName: stackName })
     );
     // Check CDK bootstrap stack exists
-    if (!stacks || stacks.length === 0) return false;
+    if (!stacks || stacks.length === 0) return { status: "bootstrap" };
 
     // Check CDK bootstrap stack deployed successfully
     if (
       !["CREATE_COMPLETE", "UPDATE_COMPLETE"].includes(stacks[0].StackStatus!)
     ) {
-      return false;
+      return { status: "bootstrap" };
     }
 
     // Check CDK bootstrap stack is up to date
@@ -106,15 +110,17 @@ async function loadCDKStatus() {
     const output = stacks[0].Outputs?.find(
       (o) => o.OutputKey === "BootstrapVersion"
     );
-    if (!output || parseInt(output.OutputValue!) < 14) return false;
+    if (!output || parseInt(output.OutputValue!) < 14) {
+      return { status: "update" };
+    }
 
-    return true;
+    return { status: "ready" };
   } catch (e: any) {
     if (
       e.name === "ValidationError" &&
       e.message === `Stack with id ${stackName} does not exist`
     ) {
-      return false;
+      return { status: "bootstrap" };
     } else {
       throw e;
     }
@@ -138,13 +144,14 @@ async function loadSSTStatus() {
       e.Code === "ValidationError" &&
       e.message === `Stack with id ${stackName} does not exist`
     ) {
-      return null;
+      return { status: "bootstrap" };
     }
     throw e;
   }
 
   // Parse stack outputs
-  let version, bucket;
+  let version: string | undefined;
+  let bucket: string | undefined;
   (result.Stacks![0].Outputs || []).forEach((o) => {
     if (o.OutputKey === OUTPUT_VERSION) {
       version = o.OutputValue;
@@ -153,10 +160,29 @@ async function loadSSTStatus() {
     }
   });
   if (!version || !bucket) {
-    return null;
+    return { status: "bootstrap" };
   }
 
-  return { version, bucket };
+  // Need to update bootstrap stack:
+  // 1. If current MAJOR version < latest MAJOR version
+  // 2. If current MAJOR version > latest MAJOR version (has breaking change)
+  // 3. If current MAJOR version == latest MAJOR version,
+  //    but current MINOR version < latest MINOR version
+  const latestParts = LATEST_VERSION.split(".");
+  const latestMajor = parseInt(latestParts[0]);
+  const latestMinor = parseInt(latestParts[1] || "0");
+  const currentParts = version.split(".");
+  const currentMajor = parseInt(currentParts[0]);
+  const currentMinor = parseInt(currentParts[1] || "0");
+  if (
+    currentMajor < latestMajor ||
+    currentMajor > latestMajor ||
+    currentMinor < latestMinor
+  ) {
+    return { status: "update" };
+  }
+
+  return { status: "ready", version, bucket };
 }
 
 export async function bootstrapSST() {
@@ -172,6 +198,11 @@ export async function bootstrapSST() {
     synthesizer: new DefaultStackSynthesizer({
       qualifier: cdk?.qualifier,
       fileAssetsBucketName: cdk?.fileAssetsBucketName,
+      deployRoleArn: cdk?.deployRoleArn,
+      fileAssetPublishingRoleArn: cdk?.fileAssetPublishingRoleArn,
+      imageAssetPublishingRoleArn: cdk?.imageAssetPublishingRoleArn,
+      cloudFormationExecutionRole: cdk?.cloudFormationExecutionRole,
+      lookupRoleArn: cdk?.lookupRoleArn,
     }),
   });
 
@@ -185,6 +216,14 @@ export async function bootstrapSST() {
     encryption: BucketEncryption.S3_MANAGED,
     removalPolicy: RemovalPolicy.DESTROY,
     autoDeleteObjects: true,
+    enforceSSL: true,
+    lifecycleRules: [
+      {
+        id: "Remove partial uploads after 3 days",
+        enabled: true,
+        abortIncompleteMultipartUploadAfter: Duration.days(3),
+      },
+    ],
     blockPublicAccess:
       cdk?.publicAccessBlockConfiguration !== false
         ? BlockPublicAccess.BLOCK_ALL
@@ -197,10 +236,9 @@ export async function bootstrapSST() {
       path.resolve(__dirname, "support/bootstrap-metadata-function")
     ),
     handler: "index.handler",
-    runtime:
-      region?.startsWith("us-gov-")
-        ? Runtime.NODEJS_16_X
-        : Runtime.NODEJS_18_X,
+    runtime: region?.startsWith("us-gov-")
+      ? Runtime.NODEJS_16_X
+      : Runtime.NODEJS_18_X,
     environment: {
       BUCKET_NAME: bucket.bucketName,
     },
@@ -221,11 +259,6 @@ export async function bootstrapSST() {
       }),
     ],
   });
-  const queue = new Queue(stack, "MetadataQueue", {
-    visibilityTimeout: Duration.seconds(30),
-    retentionPeriod: Duration.minutes(2),
-  });
-  fn.addEventSource(new SqsEventSource(queue));
   const rule = new Rule(stack, "MetadataRule", {
     eventPattern: {
       source: ["aws.cloudformation"],
@@ -243,11 +276,17 @@ export async function bootstrapSST() {
       },
     },
   });
-  rule.addTarget(
-    new SqsQueue(queue, {
-      retryAttempts: 10,
-    })
-  );
+  rule.addTarget(new LambdaFunction(fn));
+
+  // Create permissions boundary
+  if (cdk?.customPermissionsBoundary) {
+    const boundaryPolicy = ManagedPolicy.fromManagedPolicyName(
+      stack,
+      "PermissionBoundaryPolicy",
+      cdk.customPermissionsBoundary
+    );
+    PermissionsBoundary.of(stack).apply(boundaryPolicy);
+  }
 
   // Create stack outputs to store bootstrap stack info
   new CfnOutput(stack, OUTPUT_VERSION, { value: LATEST_VERSION });

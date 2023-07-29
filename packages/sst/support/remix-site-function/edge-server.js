@@ -85,12 +85,15 @@ function isBinaryType(contentType) {
 
 function convertCfRequestToNode(event) {
   const request = event.Records[0].cf.request;
+  if (request.headers["x-forwarded-host"]) {
+    request.headers.host = request.headers["x-forwarded-host"];
+  }
 
-  const host = request.headers["host"]
-    ? request.headers["host"][0].value
-    : undefined;
   const search = request.querystring.length ? `?${request.querystring}` : "";
-  const url = new URL(request.uri + search, `https://${host}`);
+  const url = new URL(
+    request.uri + search,
+    `https://${request.headers["host"][0].value}`
+  );
 
   // Build headers
   const headers = new NodeHeaders();

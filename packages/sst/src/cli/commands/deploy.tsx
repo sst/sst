@@ -93,8 +93,9 @@ export const deploy = (program: Program) =>
         const spinner = createSpinner({
           text: " Building...",
         });
+        const [_metafile, sstConfig] = await Stacks.load(project.paths.config);
         const result = await Stacks.synth({
-          fn: project.stacks,
+          fn: sstConfig.stacks,
           mode: "deploy",
           isActiveStack,
         });
@@ -115,7 +116,7 @@ export const deploy = (program: Program) =>
       if (Object.values(results).some((stack) => Stacks.isFailed(stack.status)))
         process.exit(1);
       fs.writeFile(
-        path.join(project.paths.out, "outputs.json"),
+        project.config.outputs || path.join(project.paths.out, "outputs.json"),
         JSON.stringify(
           mapValues(results, (val) => val.outputs),
           null,

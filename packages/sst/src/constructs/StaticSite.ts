@@ -7,10 +7,9 @@ import { Construct } from "constructs";
 import {
   Token,
   Duration,
-  CfnOutput,
   RemovalPolicy,
   CustomResource,
-} from "aws-cdk-lib";
+} from "aws-cdk-lib/core";
 import {
   BlockPublicAccess,
   Bucket,
@@ -45,12 +44,14 @@ import { App } from "./App.js";
 import { Stack } from "./Stack.js";
 import {
   BaseSiteDomainProps,
+  BaseSiteFileOptions,
   BaseSiteReplaceProps,
   BaseSiteCdkDistributionProps,
   getBuildCmdEnvironment,
   buildErrorResponsesFor404ErrorPage,
   buildErrorResponsesForRedirectToIndex,
 } from "./BaseSite.js";
+import { useDeferredTasks } from "./deferred_task.js";
 import { HttpsRedirect } from "./cdk/website-redirect.js";
 import { DnsValidatedCertificate } from "./cdk/dns-validated-certificate.js";
 import { SSTConstruct, isCDKConstruct } from "./Construct.js";
@@ -62,12 +63,6 @@ import { gray } from "colorette";
 import { useProject } from "../project.js";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
-
-export interface StaticSiteFileOptions {
-  exclude: string | string[];
-  include: string | string[];
-  cacheControl: string;
-}
 
 export interface StaticSiteProps {
   /**
@@ -134,7 +129,7 @@ export interface StaticSiteProps {
   /**
    * Pass in a list of file options to configure cache control for different files. Behind the scenes, the `StaticSite` construct uses a combination of the `s3 cp` and `s3 sync` commands to upload the website content to the S3 bucket. An `s3 cp` command is run for each file option block, and the options are passed in as the command options.
    *
-   * Defaults to no cache control for HTML files, and a 1 year cache control for JS/CSS files.
+   * @default No cache control for HTML files, and a 1 year cache control for JS/CSS files.
    * ```js
    * [
    *   {
@@ -331,6 +326,7 @@ export interface StaticSiteProps {
 }
 
 export interface StaticSiteDomainProps extends BaseSiteDomainProps {}
+export interface StaticSiteFileOptions extends BaseSiteFileOptions {}
 export interface StaticSiteReplaceProps extends BaseSiteReplaceProps {}
 export interface StaticSiteCdkDistributionProps
   extends BaseSiteCdkDistributionProps {}
@@ -387,18 +383,6 @@ export class StaticSite extends Construct implements SSTConstruct {
       return;
     }
 
-    const cliLayer = new AwsCliLayer(this, "AwsCliLayer");
-
-    // Build app
-    const fileSizeLimit = app.isRunningSSTTest()
-      ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
-        this.props.sstTestFileSizeLimitOverride || 200
-      : 200;
-    this.buildApp();
-    const assets = this.bundleAssets(fileSizeLimit);
-    const filenamesAsset = this.bundleFilenamesAsset();
-
     // Create Bucket
     this.bucket = this.createS3Bucket();
 
@@ -406,23 +390,30 @@ export class StaticSite extends Construct implements SSTConstruct {
     this.hostedZone = this.lookupHostedZone();
     this.certificate = this.createCertificate();
 
-    // Create S3 Deployment
-    const s3deployCR = this.createS3Deployment(
-      cliLayer,
-      assets,
-      filenamesAsset
-    );
-
     // Create CloudFront
     this.distribution = this.createCfDistribution();
-    this.distribution.node.addDependency(s3deployCR);
-
-    // Invalidate CloudFront
-    const invalidationCR = this.createCloudFrontInvalidation(assets);
-    invalidationCR.node.addDependency(this.distribution);
 
     // Connect Custom Domain to CloudFront Distribution
     this.createRoute53Records();
+
+    useDeferredTasks().add(async () => {
+      // Build app
+      this.buildApp();
+
+      // Create S3 Deployment
+      const cliLayer = new AwsCliLayer(this, "AwsCliLayer");
+      const assets = this.createS3Assets();
+      const filenamesAsset = this.bundleFilenamesAsset();
+      const s3deployCR = this.createS3Deployment(
+        cliLayer,
+        assets,
+        filenamesAsset
+      );
+      this.distribution.node.addDependency(s3deployCR);
+
+      // Invalidate CloudFront
+      this.createCloudFrontInvalidation(assets);
+    });
   }
 
   /**
@@ -471,6 +462,7 @@ export class StaticSite extends Construct implements SSTConstruct {
         path: this.props.path,
         environment: this.props.environment || {},
         customDomainUrl: this.customDomainUrl,
+        url: this.url,
       },
     };
   }
@@ -571,7 +563,7 @@ interface ImportMeta {
     }
   }
 
-  private bundleAssets(fileSizeLimit: number): Asset[] {
+  private createS3Assets(): Asset[] {
     const { path: sitePath } = this.props;
     const buildOutput = this.props.buildOutput || ".";
 
@@ -583,22 +575,35 @@ interface ImportMeta {
       );
     }
 
-    // create zip files
-    const script = path.join(__dirname, "../support/base-site-archiver.mjs");
+    // clear zip path to ensure no partX.zip remain from previous build
     const zipPath = path.resolve(
       path.join(
         useProject().paths.artifacts,
         `StaticSite-${this.node.id}-${this.node.addr}`
       )
     );
-    // clear zip path to ensure no partX.zip remain from previous build
     fs.rmSync(zipPath, {
       force: true,
       recursive: true,
     });
-    const cmd = ["node", script, siteOutputPath, zipPath, fileSizeLimit].join(
-      " "
-    );
+
+    // create zip files
+    const app = this.node.root as App;
+    const script = path.join(__dirname, "../support/base-site-archiver.mjs");
+    const fileSizeLimit = app.isRunningSSTTest()
+      ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore: "sstTestFileSizeLimitOverride" not exposed in props
+        this.props.sstTestFileSizeLimitOverride || 200
+      : 200;
+    const cmd = [
+      "node",
+      script,
+      Buffer.from(JSON.stringify([{ src: siteOutputPath, tar: "" }])).toString(
+        "base64"
+      ),
+      zipPath,
+      fileSizeLimit,
+    ].join(" ");
 
     try {
       execSync(cmd, {
@@ -691,7 +696,7 @@ interface ImportMeta {
     assets: Asset[],
     filenamesAsset?: Asset
   ): CustomResource {
-    const fileOptions = this.props.fileOptions || [
+    const fileOptions: StaticSiteFileOptions[] = this.props.fileOptions || [
       {
         exclude: "*",
         include: "*.html",
@@ -751,18 +756,19 @@ interface ImportMeta {
           ObjectKey: filenamesAsset.s3ObjectKey,
         },
         FileOptions: (fileOptions || []).map(
-          ({ exclude, include, cacheControl }) => {
+          ({ exclude, include, cacheControl, contentType }) => {
             if (typeof exclude === "string") {
               exclude = [exclude];
             }
             if (typeof include === "string") {
               include = [include];
             }
-            const options = [];
-            exclude.forEach((per) => options.push("--exclude", per));
-            include.forEach((per) => options.push("--include", per));
-            options.push("--cache-control", cacheControl);
-            return options;
+            return [
+              ...exclude.map((per) => ["--exclude", per]),
+              ...include.map((per) => ["--include", per]),
+              ["--cache-control", cacheControl],
+              contentType ? ["--content-type", contentType] : [],
+            ].flat();
           }
         ),
         ReplaceValues: this.getS3ContentReplaceValues(),
@@ -889,12 +895,19 @@ interface ImportMeta {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       functionAssociations: [
         {
+          // Note: this is required in Frameworks like Astro where `index.html`
+          //       is required in the URL path.
+          //       https://docs.astro.build/en/guides/deploy/aws/#cloudfront-functions-setup
           function: new CfFunction(this, "CloudFrontFunction", {
             code: CfFunctionCode.fromInline(`
 function handler(event) {
   var request = event.request;
   var uri = request.uri;
   
+  if (uri.startsWith("/.well-known/")) {
+    return request;
+  }
+
   if (uri.endsWith("/")) {
     request.uri += "index.html";
   } else if (!uri.split("/").pop().includes(".")) {

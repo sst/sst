@@ -1,5 +1,5 @@
 import { Metric, MetricOptions, Stats } from "aws-cdk-lib/aws-cloudwatch";
-import { Duration, Resource } from "aws-cdk-lib";
+import { Duration, Resource } from "aws-cdk-lib/core";
 import { ICertificate } from "aws-cdk-lib/aws-certificatemanager";
 
 /**

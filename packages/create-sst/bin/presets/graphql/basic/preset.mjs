@@ -12,8 +12,8 @@ export default [
   patch({
     file: "package.json",
     operations: [
-      { op: "add", path: "/overrides", value: {} },
-      { op: "add", path: "/overrides/graphql", value: "16.5.0" },
+      {op: "add", path: "/overrides", value: {}},
+      {op: "add", path: "/overrides/graphql", value: "16.5.0"},
     ],
   }),
   // Vanilla Extract doesn't support Vite 3 yet
@@ -68,7 +68,7 @@ export default [
   }),
   patch({
     file: "packages/web/package.json",
-    operations: [{ op: "add", path: "/scripts/dev", value: "sst bind vite" }],
+    operations: [{op: "add", path: "/scripts/dev", value: "sst bind vite"}],
   }),
   patch({
     file: "packages/web/package.json",
@@ -81,11 +81,11 @@ export default [
     ],
   }),
   install({
-    packages: ["wonka", "@genql/runtime@2.x", "urql", "graphql", "react"],
+    packages: ["wonka", "urql", "graphql", "react"],
     path: "packages/graphql",
   }),
   install({
-    packages: ["@genql/cli@2.x", "@types/react"],
+    packages: ["@genql/cli", "@types/react"],
     dev: true,
     path: "packages/graphql",
   }),
