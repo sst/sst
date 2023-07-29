@@ -39,7 +39,9 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@astrojs/webapi": "^2.1.0"
+    "@astrojs/webapi": "^2.1.0",
+    "@types/set-cookie-parser": "^2.4.3",
+    "set-cookie-parser": "^2.6.0"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.112",

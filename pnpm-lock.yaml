@@ -1,4 +1,4 @@
-lockfileVersion: '6.1'
+lockfileVersion: '6.0'
 
 settings:
   autoInstallPeers: true
@@ -35,6 +35,12 @@ importers:
       '@astrojs/webapi':
         specifier: ^2.1.0
         version: 2.1.0
+      '@types/set-cookie-parser':
+        specifier: ^2.4.3
+        version: 2.4.3
+      set-cookie-parser:
+        specifier: ^2.6.0
+        version: 2.6.0
     devDependencies:
       '@types/aws-lambda':
         specifier: ^8.10.112
@@ -560,6 +566,283 @@ importers:
         specifier: ^0.33.0
         version: 0.33.0
     publishDirectory: dist
+
+  packages/sst/dist:
+    dependencies:
+      '@aws-cdk/aws-apigatewayv2-alpha':
+        specifier: ^2.84.0-alpha.0
+        version: 2.84.0-alpha.0(aws-cdk-lib@2.84.0)(constructs@10.1.156)
+      '@aws-cdk/aws-apigatewayv2-authorizers-alpha':
+        specifier: ^2.84.0-alpha.0
+        version: 2.84.0-alpha.0(@aws-cdk/aws-apigatewayv2-alpha@2.84.0-alpha.0)(aws-cdk-lib@2.84.0)(constructs@10.1.156)
+      '@aws-cdk/aws-apigatewayv2-integrations-alpha':
+        specifier: ^2.84.0-alpha.0
+        version: 2.84.0-alpha.0(@aws-cdk/aws-apigatewayv2-alpha@2.84.0-alpha.0)(aws-cdk-lib@2.84.0)(constructs@10.1.156)
+      '@aws-cdk/cloud-assembly-schema':
+        specifier: 2.84.0
+        version: 2.84.0
+      '@aws-cdk/cloudformation-diff':
+        specifier: 2.84.0
+        version: 2.84.0
+      '@aws-cdk/cx-api':
+        specifier: 2.84.0
+        version: 2.84.0(@aws-cdk/cloud-assembly-schema@2.84.0)
+      '@aws-sdk/client-cloudformation':
+        specifier: ^3.279.0
+        version: 3.279.0
+      '@aws-sdk/client-eventbridge':
+        specifier: ^3.342.0
+        version: 3.342.0(@aws-sdk/signature-v4-crt@3.292.0)
+      '@aws-sdk/client-iam':
+        specifier: ^3.279.0
+        version: 3.279.0
+      '@aws-sdk/client-iot':
+        specifier: ^3.279.0
+        version: 3.279.0
+      '@aws-sdk/client-iot-data-plane':
+        specifier: ^3.279.0
+        version: 3.279.0
+      '@aws-sdk/client-lambda':
+        specifier: ^3.279.0
+        version: 3.279.0
+      '@aws-sdk/client-rds-data':
+        specifier: ^3.279.0
+        version: 3.279.0
+      '@aws-sdk/client-s3':
+        specifier: ^3.279.0
+        version: 3.279.0(@aws-sdk/signature-v4-crt@3.292.0)
+      '@aws-sdk/client-ssm':
+        specifier: ^3.279.0
+        version: 3.279.0
+      '@aws-sdk/client-sts':
+        specifier: ^3.279.0
+        version: 3.279.0
+      '@aws-sdk/config-resolver':
+        specifier: ^3.272.0
+        version: 3.272.0
+      '@aws-sdk/credential-providers':
+        specifier: ^3.279.0
+        version: 3.279.0
+      '@aws-sdk/middleware-retry':
+        specifier: ^3.272.0
+        version: 3.272.0
+      '@aws-sdk/middleware-signing':
+        specifier: ^3.272.0
+        version: 3.272.0
+      '@aws-sdk/signature-v4-crt':
+        specifier: ^3.272.0
+        version: 3.292.0
+      '@aws-sdk/smithy-client':
+        specifier: ^3.279.0
+        version: 3.279.0
+      '@babel/core':
+        specifier: ^7.0.0-0
+        version: 7.12.9
+      '@babel/generator':
+        specifier: ^7.20.5
+        version: 7.20.5
+      '@babel/plugin-syntax-typescript':
+        specifier: ^7.21.4
+        version: 7.21.4(@babel/core@7.12.9)
+      '@trpc/server':
+        specifier: 9.16.0
+        version: 9.16.0
+      adm-zip:
+        specifier: ^0.5.10
+        version: 0.5.10
+      aws-cdk-lib:
+        specifier: 2.84.0
+        version: 2.84.0(constructs@10.1.156)
+      aws-iot-device-sdk:
+        specifier: ^2.2.12
+        version: 2.2.12
+      aws-sdk:
+        specifier: ^2.1326.0
+        version: 2.1326.0
+      builtin-modules:
+        specifier: 3.2.0
+        version: 3.2.0
+      cdk-assets:
+        specifier: 2.84.0
+        version: 2.84.0
+      chalk:
+        specifier: ^5.2.0
+        version: 5.2.0
+      chokidar:
+        specifier: ^3.5.3
+        version: 3.5.3
+      ci-info:
+        specifier: ^3.7.0
+        version: 3.7.0
+      colorette:
+        specifier: ^2.0.19
+        version: 2.0.19
+      conf:
+        specifier: ^10.2.0
+        version: 10.2.0
+      constructs:
+        specifier: 10.1.156
+        version: 10.1.156
+      cross-spawn:
+        specifier: ^7.0.3
+        version: 7.0.3
+      dendriform-immer-patch-optimiser:
+        specifier: ^2.1.0
+        version: 2.1.3(immer@9.0.16)
+      dotenv:
+        specifier: ^16.0.3
+        version: 16.0.3
+      esbuild:
+        specifier: 0.18.13
+        version: 0.18.13
+      express:
+        specifier: ^4.18.2
+        version: 4.18.2
+      fast-jwt:
+        specifier: ^1.6.1
+        version: 1.7.1
+      get-port:
+        specifier: ^6.1.2
+        version: 6.1.2
+      glob:
+        specifier: ^8.0.3
+        version: 8.0.3
+      graphql:
+        specifier: '*'
+        version: 16.6.0
+      graphql-yoga:
+        specifier: ^3.9.0
+        version: 3.9.1(graphql@16.6.0)
+      immer:
+        specifier: '9'
+        version: 9.0.16
+      ink:
+        specifier: ^4.0.0
+        version: 4.0.0(@types/react@17.0.52)(react@18.2.0)
+      ink-spinner:
+        specifier: ^5.0.0
+        version: 5.0.0(ink@4.0.0)(react@18.2.0)
+      kysely:
+        specifier: ^0.25.0
+        version: 0.25.0
+      kysely-codegen:
+        specifier: ^0.10.1
+        version: 0.10.1(kysely@0.25.0)
+      kysely-data-api:
+        specifier: ^0.2.1
+        version: 0.2.1(@aws-sdk/client-rds-data@3.279.0)(kysely@0.25.0)
+      minimatch:
+        specifier: ^6.1.6
+        version: 6.1.6
+      openid-client:
+        specifier: ^5.1.8
+        version: 5.3.0
+      ora:
+        specifier: ^6.1.2
+        version: 6.1.2
+      react:
+        specifier: 18.2.0
+        version: 18.2.0
+      remeda:
+        specifier: ^1.3.0
+        version: 1.3.0
+      sst-aws-cdk:
+        specifier: 2.84.0
+        version: 2.84.0
+      tree-kill:
+        specifier: ^1.2.2
+        version: 1.2.2
+      undici:
+        specifier: ^5.12.0
+        version: 5.12.0
+      uuid:
+        specifier: ^9.0.0
+        version: 9.0.0
+      ws:
+        specifier: ^8.11.0
+        version: 8.11.0
+      yargs:
+        specifier: ^17.6.2
+        version: 17.6.2
+      zod:
+        specifier: ^3.21.4
+        version: 3.21.4
+    devDependencies:
+      '@aws-sdk/client-api-gateway':
+        specifier: ^3.208.0
+        version: 3.208.0
+      '@aws-sdk/client-cloudfront':
+        specifier: ^3.279.0
+        version: 3.279.0
+      '@aws-sdk/client-codebuild':
+        specifier: ^3.279.0
+        version: 3.279.0
+      '@aws-sdk/client-sqs':
+        specifier: ^3.341.0
+        version: 3.341.0
+      '@aws-sdk/types':
+        specifier: ^3.272.0
+        version: 3.272.0
+      '@graphql-tools/merge':
+        specifier: ^8.3.16
+        version: 8.3.16(graphql@16.6.0)
+      '@sls-next/lambda-at-edge':
+        specifier: ^3.7.0
+        version: 3.7.0(@aws-sdk/signature-v4-crt@3.292.0)(@babel/core@7.12.9)(builtin-modules@3.2.0)(typescript@4.9.5)
+      '@tsconfig/node16':
+        specifier: ^1.0.3
+        version: 1.0.3
+      '@types/adm-zip':
+        specifier: ^0.5.0
+        version: 0.5.0
+      '@types/aws-iot-device-sdk':
+        specifier: ^2.2.4
+        version: 2.2.4
+      '@types/aws-lambda':
+        specifier: ^8.10.108
+        version: 8.10.108
+      '@types/babel__core':
+        specifier: ^7.1.20
+        version: 7.1.20
+      '@types/babel__generator':
+        specifier: ^7.6.4
+        version: 7.6.4
+      '@types/cross-spawn':
+        specifier: ^6.0.2
+        version: 6.0.2
+      '@types/express':
+        specifier: ^4.17.14
+        version: 4.17.14
+      '@types/glob':
+        specifier: ^8.0.0
+        version: 8.0.0
+      '@types/node':
+        specifier: ^18.11.9
+        version: 18.11.9
+      '@types/react':
+        specifier: ^17.0.33
+        version: 17.0.52
+      '@types/uuid':
+        specifier: ^8.3.4
+        version: 8.3.4
+      '@types/ws':
+        specifier: ^8.5.3
+        version: 8.5.3
+      '@types/yargs':
+        specifier: ^17.0.13
+        version: 17.0.13
+      archiver:
+        specifier: ^5.3.1
+        version: 5.3.1
+      tsx:
+        specifier: ^3.12.1
+        version: 3.12.1
+      typescript:
+        specifier: ^4.9.5
+        version: 4.9.5
+      vitest:
+        specifier: ^0.33.0
+        version: 0.33.0
 
   packages/svelte-kit-sst:
     devDependencies:
@@ -3532,7 +3815,6 @@ packages:
 
   /@aws-sdk/eventstream-marshaller@3.54.0:
     resolution: {integrity: sha512-blOxssrHCnugxdcudYB3Vmlp7ziG0to9RfnPq+InI98mIDm3G+rt7vW6GtlkgyWu0EYduj6N+aOI7ssRUCOyDQ==}
-    deprecated: The package @aws-sdk/eventstream-marshaller has been renamed to @aws-sdk/eventstream-codec. Please install the renamed package.
     dependencies:
       '@aws-crypto/crc32': 2.0.0
       '@aws-sdk/types': 3.54.0
@@ -6322,7 +6604,6 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/highlight': 7.22.5
-    dev: false
 
   /@babel/compat-data@7.22.3:
     resolution: {integrity: sha512-aNtko9OPOwVESUFp3MZfD8Uzxl7JzSeJpd7npIoxCasU37PFbAQRpKglkaKwlHOyeJdrREpo8TW8ldrkYWwvIQ==}
@@ -6355,7 +6636,6 @@ packages:
       source-map: 0.5.7
     transitivePeerDependencies:
       - supports-color
-    dev: false
 
   /@babel/core@7.20.2:
     resolution: {integrity: sha512-w7DbG8DtMrJcFOi4VrLm+8QM4az8Mo+PuLBKLp2zrYRCow8W/f9xiXm5sN53C8HksCyDQwCKha9JiDoIyPjT2g==}
@@ -6468,7 +6748,6 @@ packages:
       '@jridgewell/gen-mapping': 0.3.3
       '@jridgewell/trace-mapping': 0.3.18
       jsesc: 2.5.2
-    dev: false
 
   /@babel/helper-annotate-as-pure@7.18.6:
     resolution: {integrity: sha512-duORpUiYrEpzKIop6iNbjnwKLAKnJ47csTyRACyEmWj0QdUrm5aqNJGHSSEQSUAvNW0ojX0dOmK9dZduvkfeXA==}
@@ -6694,7 +6973,6 @@ packages:
   /@babel/helper-environment-visitor@7.22.5:
     resolution: {integrity: sha512-XGmhECfVA/5sAt+H+xpSg0mfrHq6FzNr9Oxh7PSEBBRUb/mL7Kz3NICXb194rCqAEdxkhPT1a88teizAFyvk8Q==}
     engines: {node: '>=6.9.0'}
-    dev: false
 
   /@babel/helper-explode-assignable-expression@7.18.6:
     resolution: {integrity: sha512-eyAYAsQmB80jNfg4baAtLeWAQHfHFiR483rzFK+BhETlGZaQC9bsfrugfXDCbRHLQbIA7U5NxhhOxN7p/dWIcg==}
@@ -6715,7 +6993,6 @@ packages:
     dependencies:
       '@babel/template': 7.22.5
       '@babel/types': 7.22.5
-    dev: false
 
   /@babel/helper-hoist-variables@7.18.6:
     resolution: {integrity: sha512-UlJQPkFqFULIcyW5sbzgbkxn2FKRgwWiRexcuaR8RNJRy8+LLveqPjwZV/bwrLZCN0eUHD/x8D0heK1ozuoo6Q==}
@@ -6728,7 +7005,6 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/types': 7.22.5
-    dev: false
 
   /@babel/helper-member-expression-to-functions@7.18.9:
     resolution: {integrity: sha512-RxifAh2ZoVU67PyKIO4AMi1wTenGfMR/O/ae0CCRqwgBAt5v7xjdtRw7UoSbsreKrQn5t7r89eruK/9JjYHuDg==}
@@ -6766,7 +7042,6 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/types': 7.22.5
-    dev: false
 
   /@babel/helper-module-transforms@7.20.2:
     resolution: {integrity: sha512-zvBKyJXRbmK07XhMuujYoJ48B5yvvmM6+wcpv6Ivj4Yg6qO7NOZOSnvZN9CRl1zz1Z4cKf8YejmCMh8clOoOeA==}
@@ -6827,7 +7102,6 @@ packages:
       '@babel/types': 7.22.5
     transitivePeerDependencies:
       - supports-color
-    dev: false
 
   /@babel/helper-optimise-call-expression@7.18.6:
     resolution: {integrity: sha512-HP59oD9/fEHQkdcbgFCnbmgH5vIQTJbxh2yf+CdM89/glUNnuzr87Q8GIjGEnOktTROemO0Pe0iPAYbqZuOUiA==}
@@ -6914,7 +7188,6 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/types': 7.22.5
-    dev: false
 
   /@babel/helper-skip-transparent-expression-wrappers@7.20.0:
     resolution: {integrity: sha512-5y1JYeNKfvnT8sZcK9DVRtpTbGiomYIHviSP3OQWmDPU3DeH4a1ZlT/N2lyQ5P8egjcRaT/Y9aNqUxK0WsnIIg==}
@@ -6933,7 +7206,6 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/types': 7.22.5
-    dev: false
 
   /@babel/helper-string-parser@7.19.4:
     resolution: {integrity: sha512-nHtDoQcuqFmwYNYPz3Rah5ph2p8PFeFCsZk9A/48dPc/rGocJ5J3hAAZ7pb76VWX3fZKu+uEr/FhH5jLx7umrw==}
@@ -7004,7 +7276,6 @@ packages:
       '@babel/types': 7.22.5
     transitivePeerDependencies:
       - supports-color
-    dev: false
 
   /@babel/highlight@7.18.6:
     resolution: {integrity: sha512-u7stbOuYjaPezCuLj29hNW1v64M2Md2qupEKP1fHc7WdOA3DgLh37suiSrZYY7haUB7iBeQZ9P1uiRF359do3g==}
@@ -7329,6 +7600,16 @@ packages:
       '@babel/helper-plugin-utils': 7.21.5
     dev: false
 
+  /@babel/plugin-syntax-jsx@7.14.5(@babel/core@7.12.9):
+    resolution: {integrity: sha512-ohuFIsOMXJnbOMRfX7/w7LocdR6R7whhuRD4ax8IipLcLPlZGJKkBxgHp++U4N/vKyU16/YDQr2f5seajD3jIw==}
+    engines: {node: '>=6.9.0'}
+    peerDependencies:
+      '@babel/core': ^7.0.0-0
+    dependencies:
+      '@babel/core': 7.12.9
+      '@babel/helper-plugin-utils': 7.21.5
+    dev: true
+
   /@babel/plugin-syntax-jsx@7.14.5(@babel/core@7.20.2):
     resolution: {integrity: sha512-ohuFIsOMXJnbOMRfX7/w7LocdR6R7whhuRD4ax8IipLcLPlZGJKkBxgHp++U4N/vKyU16/YDQr2f5seajD3jIw==}
     engines: {node: '>=6.9.0'}
@@ -7515,6 +7796,16 @@ packages:
     dependencies:
       '@babel/core': 7.21.3
       '@babel/helper-plugin-utils': 7.21.5
+
+  /@babel/plugin-syntax-typescript@7.21.4(@babel/core@7.12.9):
+    resolution: {integrity: sha512-xz0D39NvhQn4t4RNsHmDnnsaQizIlUkdtYvLs8La1BlfjQ6JEwxkJGeqJMW2tAXx+q6H+WFuUTXNdYVpEya0YA==}
+    engines: {node: '>=6.9.0'}
+    peerDependencies:
+      '@babel/core': ^7.0.0-0
+    dependencies:
+      '@babel/core': 7.12.9
+      '@babel/helper-plugin-utils': 7.21.5
+    dev: false
 
   /@babel/plugin-syntax-typescript@7.21.4(@babel/core@7.20.2):
     resolution: {integrity: sha512-xz0D39NvhQn4t4RNsHmDnnsaQizIlUkdtYvLs8La1BlfjQ6JEwxkJGeqJMW2tAXx+q6H+WFuUTXNdYVpEya0YA==}
@@ -9133,7 +9424,6 @@ packages:
       '@babel/code-frame': 7.22.5
       '@babel/parser': 7.22.7
       '@babel/types': 7.22.5
-    dev: false
 
   /@babel/traverse@7.20.1:
     resolution: {integrity: sha512-d3tN8fkVJwFLkHkBN479SOsw4DMZnz8cdbL/gvuDuzy3TS6Nfw80HuQqhw1pITbIruHyh7d1fMA47kWzmcUEGA==}
@@ -9202,7 +9492,6 @@ packages:
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
-    dev: false
 
   /@babel/types@7.15.0:
     resolution: {integrity: sha512-OBvfqnllOIdX4ojTHpwZbpvz4j3EWyjkZEdmjH0/cgsd6QOdSgU8rLSk6ard/pcW7rlmjdVSX/AWOaORR1uNOQ==}
@@ -12173,6 +12462,23 @@ packages:
       webpack-sources: 3.2.3
     dev: false
 
+  /@sls-next/aws-common@3.7.0(@aws-sdk/signature-v4-crt@3.292.0)(@babel/core@7.12.9)(typescript@4.9.5):
+    resolution: {integrity: sha512-NNaJkBg+iJBlZW3pj4we3P6dzuLEMloWSnwzNXU518KGWvx7r3+2pD0kMe+LprTRBuOP82DCeYMHxncM3CvC+w==}
+    dependencies:
+      '@aws-sdk/client-s3': 3.54.0(@aws-sdk/signature-v4-crt@3.292.0)
+      '@aws-sdk/client-sqs': 3.54.0
+      '@sls-next/core': 3.7.0(@babel/core@7.12.9)(typescript@4.9.5)
+    transitivePeerDependencies:
+      - '@aws-sdk/signature-v4-crt'
+      - '@babel/core'
+      - fibers
+      - node-sass
+      - sass
+      - supports-color
+      - typescript
+      - webpack
+    dev: true
+
   /@sls-next/aws-common@3.7.0(@aws-sdk/signature-v4-crt@3.292.0)(@babel/core@7.20.2)(typescript@4.9.5):
     resolution: {integrity: sha512-NNaJkBg+iJBlZW3pj4we3P6dzuLEMloWSnwzNXU518KGWvx7r3+2pD0kMe+LprTRBuOP82DCeYMHxncM3CvC+w==}
     dependencies:
@@ -12181,6 +12487,35 @@ packages:
       '@sls-next/core': 3.7.0(@babel/core@7.20.2)(typescript@4.9.5)
     transitivePeerDependencies:
       - '@aws-sdk/signature-v4-crt'
+      - '@babel/core'
+      - fibers
+      - node-sass
+      - sass
+      - supports-color
+      - typescript
+      - webpack
+    dev: true
+
+  /@sls-next/core@3.7.0(@babel/core@7.12.9)(typescript@4.9.5):
+    resolution: {integrity: sha512-fCRV0iI84FboRk8YKATSFVp4dzR27zd6Rez/qfa4Utv9HL9UZbDTpKlyuUp24vEvADAZSp5laxj1JgOZBn2iOQ==}
+    dependencies:
+      '@hapi/accept': 5.0.2
+      cookie: 0.4.2
+      execa: 5.1.1
+      fast-glob: 3.2.11
+      fresh: 0.5.2
+      fs-extra: 9.1.0
+      is-animated: 2.0.2
+      jsonwebtoken: 8.5.1
+      next: 11.1.2(@babel/core@7.12.9)(react-dom@17.0.2)(react@17.0.2)(typescript@4.9.5)
+      node-fetch: 2.6.5
+      normalize-path: 3.0.0
+      path-to-regexp: 6.2.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+      send: 0.17.2
+      sharp: 0.29.1
+    transitivePeerDependencies:
       - '@babel/core'
       - fibers
       - node-sass
@@ -12211,6 +12546,35 @@ packages:
       sharp: 0.29.1
     transitivePeerDependencies:
       - '@babel/core'
+      - fibers
+      - node-sass
+      - sass
+      - supports-color
+      - typescript
+      - webpack
+    dev: true
+
+  /@sls-next/lambda-at-edge@3.7.0(@aws-sdk/signature-v4-crt@3.292.0)(@babel/core@7.12.9)(builtin-modules@3.2.0)(typescript@4.9.5):
+    resolution: {integrity: sha512-7eTqq1baZEuvEhexDchsP3QdOqPYaW123c7TupYB60Rs31KQ12xXvpzgn+mTMuFVIOQUDY5y8EKsuzYGRrQfcw==}
+    hasBin: true
+    peerDependencies:
+      builtin-modules: 3.2.0
+    dependencies:
+      '@aws-sdk/client-s3': 3.54.0(@aws-sdk/signature-v4-crt@3.292.0)
+      '@aws-sdk/client-sqs': 3.54.0
+      '@sls-next/aws-common': 3.7.0(@aws-sdk/signature-v4-crt@3.292.0)(@babel/core@7.12.9)(typescript@4.9.5)
+      '@sls-next/core': 3.7.0(@babel/core@7.12.9)(typescript@4.9.5)
+      '@vercel/nft': 0.17.5
+      builtin-modules: 3.2.0
+      execa: 5.1.1
+      fs-extra: 9.1.0
+      get-stream: 6.0.1
+      node-fetch: 2.6.5
+      normalize-path: 3.0.0
+    transitivePeerDependencies:
+      - '@aws-sdk/signature-v4-crt'
+      - '@babel/core'
+      - encoding
       - fibers
       - node-sass
       - sass
@@ -12383,7 +12747,7 @@ packages:
       svelte: 3.59.2
       tiny-glob: 0.2.9
       undici: 5.22.0
-      vite: 4.4.4(@types/node@18.11.9)
+      vite: 4.4.4(@types/node@18.15.3)
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -12401,7 +12765,7 @@ packages:
       magic-string: 0.30.0
       svelte: 3.59.2
       svelte-hmr: 0.15.1(svelte@3.59.2)
-      vite: 4.4.4(@types/node@18.11.9)
+      vite: 4.4.4(@types/node@18.15.3)
       vitefu: 0.2.4(vite@4.4.4)
     transitivePeerDependencies:
       - supports-color
@@ -12881,9 +13245,6 @@ packages:
   /@types/node@17.0.45:
     resolution: {integrity: sha512-w+tIMs3rq2afQdsPJlODhoUEKzFP1ayaoyl1CcnwtIlsVe7K7bA1NGm4s3PraqTLlXnbIN84zuBlxBWo1u9BLw==}
 
-  /@types/node@18.11.18:
-    resolution: {integrity: sha512-DHQpWGjyQKSHj3ebjFI/wRKcqQcdR+MoFBygntYOZytCqNfkd2ZC4ARDJ2DQqhjH5p85Nnd3jhUJIXrszFX/JA==}
-
   /@types/node@18.11.9:
     resolution: {integrity: sha512-CRpX21/kGdzjOpFsZSkcrXMGIBWMGNIHXXBVFSH+ggkftxg+XYP20TESbh+zFvFj3EQOl5byk0HTRn1IL6hbqg==}
     dev: true
@@ -12981,7 +13342,7 @@ packages:
   /@types/sax@1.2.4:
     resolution: {integrity: sha512-pSAff4IAxJjfAXUG6tFkO7dsSbTmf8CtUpfhhZ5VhkRpC4628tJhh3+V6H1E+/Gs9piSzYKT5yzHO5M4GG9jkw==}
     dependencies:
-      '@types/node': 18.11.18
+      '@types/node': 18.15.3
     dev: false
 
   /@types/scheduler@0.16.3:
@@ -13003,6 +13364,12 @@ packages:
       '@types/mime': 3.0.1
       '@types/node': 18.15.3
 
+  /@types/set-cookie-parser@2.4.3:
+    resolution: {integrity: sha512-7QhnH7bi+6KAhBB+Auejz1uV9DHiopZqu7LfR/5gZZTkejJV5nYeZZpgfFoE0N8aDsXuiYpfKyfyMatCwQhyTQ==}
+    dependencies:
+      '@types/node': 18.15.3
+    dev: false
+
   /@types/sockjs@0.3.33:
     resolution: {integrity: sha512-f0KEEe05NvUnat+boPTZ0dgaLZ4SfSouXUgv5noUiefG2ajgKjmETo9ZJyuqsl7dfl2aHlLJUiki6B4ZYldiiw==}
     dependencies:
@@ -13012,7 +13379,7 @@ packages:
   /@types/through@0.0.30:
     resolution: {integrity: sha512-FvnCJljyxhPM3gkRgWmxmDZyAQSiBQQWLI0A0VFL0K7W1oRUrPJSqNO0NvTnLkBcotdlp3lKvaT0JrnyRDkzOg==}
     dependencies:
-      '@types/node': 18.11.18
+      '@types/node': 18.15.3
     dev: true
 
   /@types/unist@2.0.6:
@@ -20352,6 +20719,88 @@ packages:
     resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
     dev: false
 
+  /next@11.1.2(@babel/core@7.12.9)(react-dom@17.0.2)(react@17.0.2)(typescript@4.9.5):
+    resolution: {integrity: sha512-azEYL0L+wFjv8lstLru3bgvrzPvK0P7/bz6B/4EJ9sYkXeW8r5Bjh78D/Ol7VOg0EIPz0CXoe72hzAlSAXo9hw==}
+    engines: {node: '>=12.0.0'}
+    hasBin: true
+    peerDependencies:
+      fibers: '>= 3.1.0'
+      node-sass: ^4.0.0 || ^5.0.0
+      react: ^17.0.2
+      react-dom: ^17.0.2
+      sass: ^1.3.0
+    peerDependenciesMeta:
+      fibers:
+        optional: true
+      node-sass:
+        optional: true
+      sass:
+        optional: true
+    dependencies:
+      '@babel/runtime': 7.15.3
+      '@hapi/accept': 5.0.2
+      '@next/env': 11.1.2
+      '@next/polyfill-module': 11.1.2
+      '@next/react-dev-overlay': 11.1.2(react-dom@17.0.2)(react@17.0.2)
+      '@next/react-refresh-utils': 11.1.2(react-refresh@0.8.3)
+      '@node-rs/helper': 1.2.1
+      assert: 2.0.0
+      ast-types: 0.13.2
+      browserify-zlib: 0.2.0
+      browserslist: 4.16.6
+      buffer: 5.6.0
+      caniuse-lite: 1.0.30001515
+      chalk: 2.4.2
+      chokidar: 3.5.1
+      constants-browserify: 1.0.0
+      crypto-browserify: 3.12.0
+      cssnano-simple: 3.0.0(postcss@8.2.15)
+      domain-browser: 4.19.0
+      encoding: 0.1.13
+      etag: 1.8.1
+      find-cache-dir: 3.3.1
+      get-orientation: 1.1.2
+      https-browserify: 1.0.0
+      image-size: 1.0.0
+      jest-worker: 27.0.0-next.5
+      native-url: 0.3.4
+      node-fetch: 2.6.1
+      node-html-parser: 1.4.9
+      node-libs-browser: 2.2.1
+      os-browserify: 0.3.0
+      p-limit: 3.1.0
+      path-browserify: 1.0.1
+      pnp-webpack-plugin: 1.6.4(typescript@4.9.5)
+      postcss: 8.2.15
+      process: 0.11.10
+      querystring-es3: 0.2.1
+      raw-body: 2.4.1
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+      react-is: 17.0.2
+      react-refresh: 0.8.3
+      stream-browserify: 3.0.0
+      stream-http: 3.1.1
+      string_decoder: 1.3.0
+      styled-jsx: 4.0.1(@babel/core@7.12.9)(react@17.0.2)
+      timers-browserify: 2.0.12
+      tty-browserify: 0.0.1
+      use-subscription: 1.5.1(react@17.0.2)
+      util: 0.12.4
+      vm-browserify: 1.1.2
+      watchpack: 2.1.1
+    optionalDependencies:
+      '@next/swc-darwin-arm64': 11.1.2
+      '@next/swc-darwin-x64': 11.1.2
+      '@next/swc-linux-x64-gnu': 11.1.2
+      '@next/swc-win32-x64-msvc': 11.1.2
+    transitivePeerDependencies:
+      - '@babel/core'
+      - supports-color
+      - typescript
+      - webpack
+    dev: true
+
   /next@11.1.2(@babel/core@7.20.2)(react-dom@17.0.2)(react@17.0.2)(typescript@4.9.5):
     resolution: {integrity: sha512-azEYL0L+wFjv8lstLru3bgvrzPvK0P7/bz6B/4EJ9sYkXeW8r5Bjh78D/Ol7VOg0EIPz0CXoe72hzAlSAXo9hw==}
     engines: {node: '>=12.0.0'}
@@ -23510,7 +23959,6 @@ packages:
 
   /set-cookie-parser@2.6.0:
     resolution: {integrity: sha512-RVnVQxTXuerk653XfuliOxBP81Sf0+qfQE73LIYKcyMYHG94AuH0kgrQpRDuTZnSmjpysHmzxJXKNfa6PjFhyQ==}
-    dev: true
 
   /setimmediate@1.0.5:
     resolution: {integrity: sha512-MATJdZp8sLqDl/68LfQmbP8zKPLQNV6BIZoIgrscFDQ+RsvK/BxeDQOgyxKKoh0y/8h3BqVFnCqQ/gd+reiIXA==}
@@ -23805,7 +24253,6 @@ packages:
   /source-map@0.5.7:
     resolution: {integrity: sha512-LbrmJOMUSdEVxIKvdcJzQC+nQhe8FUZQTXQy6+I75skNgn3OoQ0DZA8YnFa7gp8tqtL3KPf1kmo0R5DoApeSGQ==}
     engines: {node: '>=0.10.0'}
-    dev: false
 
   /source-map@0.6.1:
     resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==}
@@ -24173,6 +24620,28 @@ packages:
     dependencies:
       inline-style-parser: 0.1.1
     dev: false
+
+  /styled-jsx@4.0.1(@babel/core@7.12.9)(react@17.0.2):
+    resolution: {integrity: sha512-Gcb49/dRB1k8B4hdK8vhW27Rlb2zujCk1fISrizCcToIs+55B4vmUM0N9Gi4nnVfFZWe55jRdWpAqH1ldAKWvQ==}
+    engines: {node: '>= 12.0.0'}
+    peerDependencies:
+      '@babel/core': '*'
+      react: '>= 16.8.0 || 17.x.x || 18.x.x'
+    peerDependenciesMeta:
+      '@babel/core':
+        optional: true
+    dependencies:
+      '@babel/core': 7.12.9
+      '@babel/plugin-syntax-jsx': 7.14.5(@babel/core@7.12.9)
+      '@babel/types': 7.15.0
+      convert-source-map: 1.7.0
+      loader-utils: 1.2.3
+      react: 17.0.2
+      source-map: 0.7.3
+      string-hash: 1.1.3
+      stylis: 3.5.4
+      stylis-rule-sheet: 0.0.10(stylis@3.5.4)
+    dev: true
 
   /styled-jsx@4.0.1(@babel/core@7.20.2)(react@17.0.2):
     resolution: {integrity: sha512-Gcb49/dRB1k8B4hdK8vhW27Rlb2zujCk1fISrizCcToIs+55B4vmUM0N9Gi4nnVfFZWe55jRdWpAqH1ldAKWvQ==}
@@ -25349,7 +25818,7 @@ packages:
       vfile-message: 3.1.4
     dev: true
 
-  /vite-node@0.33.0(@types/node@18.11.9):
+  /vite-node@0.33.0(@types/node@18.15.3):
     resolution: {integrity: sha512-19FpHYbwWWxDr73ruNahC+vtEdza52kA90Qb3La98yZ0xULqV8A5JLNPUff0f5zID4984tW7l3DH2przTJUZSw==}
     engines: {node: '>=v14.18.0'}
     hasBin: true
@@ -25359,7 +25828,7 @@ packages:
       mlly: 1.4.0
       pathe: 1.1.1
       picocolors: 1.0.0
-      vite: 4.4.4(@types/node@18.11.9)
+      vite: 4.4.4(@types/node@18.15.3)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -25508,7 +25977,7 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /vite@4.4.4(@types/node@18.11.9):
+  /vite@4.4.4(@types/node@18.15.3):
     resolution: {integrity: sha512-4mvsTxjkveWrKDJI70QmelfVqTm+ihFAb6+xf4sjEU2TmUCTlVX87tmg/QooPEMQb/lM9qGHT99ebqPziEd3wg==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
@@ -25536,7 +26005,7 @@ packages:
       terser:
         optional: true
     dependencies:
-      '@types/node': 18.11.9
+      '@types/node': 18.15.3
       esbuild: 0.18.13
       postcss: 8.4.26
       rollup: 3.26.3
@@ -25574,7 +26043,7 @@ packages:
       vite:
         optional: true
     dependencies:
-      vite: 4.4.4(@types/node@18.11.9)
+      vite: 4.4.4(@types/node@18.15.3)
     dev: true
 
   /vitest@0.33.0:
@@ -25610,7 +26079,7 @@ packages:
     dependencies:
       '@types/chai': 4.3.5
       '@types/chai-subset': 1.3.3
-      '@types/node': 18.11.9
+      '@types/node': 18.15.3
       '@vitest/expect': 0.33.0
       '@vitest/runner': 0.33.0
       '@vitest/snapshot': 0.33.0
@@ -25629,8 +26098,8 @@ packages:
       strip-literal: 1.0.1
       tinybench: 2.5.0
       tinypool: 0.6.0
-      vite: 4.4.4(@types/node@18.11.9)
-      vite-node: 0.33.0(@types/node@18.11.9)
+      vite: 4.4.4(@types/node@18.15.3)
+      vite-node: 0.33.0(@types/node@18.15.3)
       why-is-node-running: 2.2.2
     transitivePeerDependencies:
       - less
