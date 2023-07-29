@@ -1,7 +1,9 @@
-import { NodeApp } from "astro/app/node";
 import { ResponseStream } from ".";
 import { splitCookiesString } from "set-cookie-parser";
-import { APIGatewayProxyEventV2 } from "aws-lambda";
+import { APIGatewayProxyEventV2, Callback } from "aws-lambda";
+import { App } from "astro/app";
+import zlib from "zlib";
+import { isBinaryContentType } from "../lib/binary";
 
 export async function getRequest(event: APIGatewayProxyEventV2) {
   const {
@@ -29,11 +31,14 @@ export async function getRequest(event: APIGatewayProxyEventV2) {
 }
 
 export async function setResponse(
-  app: NodeApp,
+  app: App,
   responseStream: ResponseStream,
-  response: Response
+  response: Response,
+  callback?: Callback
 ) {
   let cookies: string[] = [];
+  const contentType = response.headers.get("content-type");
+  const isBinaryContent = contentType && isBinaryContentType(contentType);
 
   if (response.headers.has("set-cookie")) {
     const header = response.headers.get("set-cookie")!;
@@ -47,6 +52,8 @@ export async function setResponse(
   }
 
   const headers = Object.fromEntries(response.headers.entries());
+  if (!isBinaryContent) headers["Content-Encoding"] = "gzip";
+
   if (cookies.length > 0) {
     headers["set-cookie"] = cookies.join(";");
   }
@@ -79,20 +86,33 @@ export async function setResponse(
     return;
   }
 
-  const cancel = (error?: Error) => {
-    responseStream.off("close", cancel);
-    responseStream.off("error", cancel);
+  let wrapperStream: ResponseStream | zlib.Gzip;
 
-    // If the reader has already been interrupted with an error earlier,
-    // then it will appear here, it is useless, but it needs to be catch.
+  const cleanup = (error: Error) => {
+    responseStream.off("close", cleanup);
+    responseStream.off("error", cleanup);
     reader.cancel(error).catch(() => {});
+
+    // In the case of an error, ensure to end the wrapper stream.
+    wrapperStream.end();
     if (error) responseStream.destroy(error);
+    if (callback) callback(null, "complete");
   };
 
-  responseStream.on("close", cancel);
-  responseStream.on("error", cancel);
+  if (!isBinaryContent) {
+    let gzip = zlib.createGzip();
+    gzip.on("error", cleanup);
+    gzip.pipe(responseStream);
+    wrapperStream = gzip;
+  } else {
+    wrapperStream = responseStream;
+  }
+
+  responseStream.on("close", cleanup);
+  responseStream.on("error", cleanup);
 
   next();
+
   async function next() {
     try {
       for (;;) {
@@ -100,14 +120,18 @@ export async function setResponse(
 
         if (done) break;
 
-        if (!responseStream.write(value)) {
-          responseStream.once("drain", next);
+        // Write to the wrapper stream.
+        if (!wrapperStream.write(value)) {
+          wrapperStream.once("drain", next);
           return;
         }
       }
-      responseStream.end();
+
+      // End the wrapper stream when you're done.
+      wrapperStream.end();
+      if (callback) callback(null, "complete");
     } catch (error) {
-      cancel(error instanceof Error ? error : new Error(String(error)));
+      cleanup(error instanceof Error ? error : new Error(String(error)));
     }
   }
 }
