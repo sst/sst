@@ -22,7 +22,7 @@ export class AstroSite extends SsrSite {
       typesPath: "src",
       serverBuildOutputFile: "dist/server/entry.mjs",
       clientBuildOutputDir: "dist/client",
-      clientBuildVersionedSubDir: "assets",
+      clientBuildVersionedSubDir: "_astro"
     };
   }
 
