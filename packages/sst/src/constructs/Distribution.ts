@@ -124,7 +124,7 @@ export interface DistributionProps {
   waitForInvalidation?: boolean;
   scopeOverride?: IConstruct;
   cdk: {
-    distribution: CdkDistributionProps;
+    distribution: CdkDistributionProps | IDistribution;
   };
 }
 
@@ -156,7 +156,7 @@ export class Distribution extends Construct {
 
     // cdk.distribution is an imported construct
     if (isImportedCloudFrontDistribution(props.cdk?.distribution)) {
-      this.distribution = props.cdk?.distribution as IDistribution;
+      this.distribution = props.cdk?.distribution;
       return;
     }
 
@@ -238,12 +238,14 @@ export class Distribution extends Construct {
 
   private validateCloudFrontDistributionSettings() {
     const { cdk } = this.props;
-    if (cdk?.distribution?.certificate) {
+    if (!cdk?.distribution) return;
+
+    if ((cdk.distribution as CdkDistributionProps).certificate) {
       throw new Error(
         `Do not configure the "cfDistribution.certificate". Use the "customDomain" to configure the domain certificate.`
       );
     }
-    if (cdk?.distribution?.domainNames) {
+    if ((cdk.distribution as CdkDistributionProps).domainNames) {
       throw new Error(
         `Do not configure the "cfDistribution.domainNames". Use the "customDomain" to configure the domain name.`
       );
@@ -365,7 +367,7 @@ export class Distribution extends Construct {
     const { cdk } = this.props;
 
     return new CdkDistribution(this.scope, "Distribution", {
-      ...cdk?.distribution,
+      ...(cdk?.distribution as CdkDistributionProps),
       domainNames: this.buildDistributionDomainNames(),
       certificate: this.certificate,
     });

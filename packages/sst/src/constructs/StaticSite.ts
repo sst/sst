@@ -366,7 +366,6 @@ export class StaticSite extends Construct implements SSTConstruct {
       this.bucket = this.distribution = null;
       return;
     }
-
     this.bucket = this.createS3Bucket();
     this.distribution = this.createCfDistribution();
 
@@ -762,17 +761,20 @@ interface ImportMeta {
       scopeOverride: this,
       customDomain,
       cdk: {
-        distribution: {
-          // these values can be overwritten by cfDistributionProps
-          defaultRootObject: indexPage,
-          errorResponses:
-            !errorPage || errorPage === "redirect_to_index_page"
-              ? buildErrorResponsesForRedirectToIndex(indexPage)
-              : buildErrorResponsesFor404ErrorPage(errorPage as string),
-          ...cdk?.distribution,
-          // these values can NOT be overwritten by cfDistributionProps
-          defaultBehavior: this.buildDistributionBehavior(),
-        },
+        distribution:
+          cdk?.distribution && isCDKConstruct(cdk.distribution)
+            ? cdk.distribution
+            : {
+                // these values can be overwritten by cfDistributionProps
+                defaultRootObject: indexPage,
+                errorResponses:
+                  !errorPage || errorPage === "redirect_to_index_page"
+                    ? buildErrorResponsesForRedirectToIndex(indexPage)
+                    : buildErrorResponsesFor404ErrorPage(errorPage as string),
+                ...cdk?.distribution,
+                // these values can NOT be overwritten by cfDistributionProps
+                defaultBehavior: this.buildDistributionBehavior(),
+              },
       },
     });
   }

@@ -12,16 +12,7 @@ import {
   createApp,
 } from "./helper.js";
 import * as s3 from "aws-cdk-lib/aws-s3";
-import {
-  Function as CfFunction,
-  FunctionCode as CfFunctionCode,
-  FunctionEventType,
-  CachePolicy,
-  ResponseHeadersPolicy,
-  ViewerProtocolPolicy,
-  AllowedMethods,
-  OriginProtocolPolicy,
-} from "aws-cdk-lib/aws-cloudfront";
+import { Distribution as CdkDistribution } from "aws-cdk-lib/aws-cloudfront";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
@@ -420,6 +411,28 @@ test("cdk.distribution: is props", async () => {
       Comment: "My Comment",
     }),
   });
+});
+
+test("cdk.distribution: is construct", async () => {
+  const { distribution, stack } = await createDistribution((stack) => ({
+    cdk: {
+      distribution: CdkDistribution.fromDistributionAttributes(
+        stack,
+        "IDistribution",
+        {
+          distributionId: "frontend-distribution-id",
+          domainName: "domain.com",
+        }
+      ),
+    },
+  }));
+
+  expect(distribution.url).toBeDefined();
+  expect(distribution.cdk!.distribution.distributionId).toBeDefined();
+  expect(distribution.cdk!.distribution.distributionDomainName).toBeDefined();
+  expect(distribution.cdk!.certificate).toBeUndefined();
+  expect(distribution.cdk!.hostedZone).toBeUndefined();
+  countResources(stack, "AWS::CloudFront::Distribution", 0);
 });
 
 test("cdk.distribution: certificate conflict", async () => {
