@@ -348,6 +348,11 @@ type SsrSiteNormalizedProps = SsrSiteProps & {
   waitForInvalidation: Exclude<SsrSiteProps["waitForInvalidation"], undefined>;
 };
 
+export type ImportedSsrBuildProps = {
+  props?: SsrSiteProps;
+  buildConfig?: SsrSiteProps;
+};
+
 /**
  * The `SsrSite` construct is a higher level CDK construct that makes it easy to create modern web apps with Server Side Rendering capabilities.
  * @example
@@ -364,6 +369,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   protected props: SsrSiteNormalizedProps;
   protected doNotDeploy: boolean;
   protected buildConfig: SsrBuildConfig;
+  protected importedBuildProps?: ImportedSsrBuildProps;
   protected deferredTaskCallbacks: (() => void)[] = [];
   private serverLambdaCdkFunctionForEdge?: ICdkFunction;
   protected serverLambdaForEdge?: EdgeFunction;
@@ -376,7 +382,12 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   private hostedZone?: IHostedZone;
   private certificate?: ICertificate;
 
-  constructor(scope: Construct, id: string, props?: SsrSiteProps) {
+  constructor(
+    scope: Construct,
+    id: string,
+    props?: SsrSiteProps,
+    importedBuildProps?: ImportedSsrBuildProps
+  ) {
     super(scope, props?.cdk?.id || id);
 
     const app = scope.node.root as App;
@@ -388,11 +399,13 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       runtime: "nodejs18.x",
       timeout: "10 seconds",
       memorySize: "1024 MB",
+      ...importedBuildProps?.props,
       ...props,
     };
     this.doNotDeploy =
       !stack.isActive || (app.mode === "dev" && !this.props.dev?.deploy);
 
+    this.importedBuildProps = importedBuildProps;
     this.buildConfig = this.initBuildConfig();
     this.validateSiteExists();
     this.validateTimeout();

@@ -1,9 +1,12 @@
 import fs from "fs";
 import path from "path";
 
-import { SsrSite } from "./SsrSite.js";
+import { Construct } from "constructs";
+import { SsrSite, SsrSiteProps, ImportedSsrBuildProps } from "./SsrSite.js";
 import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
+
+type AstroImportedBuildProps = ImportedSsrBuildProps & {};
 
 /**
  * The `AstroSite` construct is a higher level CDK construct that makes it easy to create a Astro app.
@@ -17,21 +20,42 @@ import { EdgeFunction } from "./EdgeFunction.js";
  * ```
  */
 export class AstroSite extends SsrSite {
+  protected declare importedBuildProps?: AstroImportedBuildProps;
+
+  constructor(scope: Construct, id: string, props: SsrSiteProps) {
+    const buildPropsPath = path.join(
+      props.path ?? "",
+      "dist",
+      "sst.build-props.json"
+    );
+    let importedBuildProps: AstroImportedBuildProps | undefined;
+
+    if (fs.existsSync(buildPropsPath)) {
+      importedBuildProps = JSON.parse(fs.readFileSync(buildPropsPath, "utf8"));
+    }
+
+    super(scope, id, props, importedBuildProps);
+  }
+
   protected initBuildConfig() {
     return {
       typesPath: "src",
       serverBuildOutputFile: "dist/server/entry.mjs",
       clientBuildOutputDir: "dist/client",
-      clientBuildVersionedSubDir: "_astro"
+      clientBuildVersionedSubDir: "_astro",
+      ...this.importedBuildProps?.buildConfig,
     };
   }
 
   protected validateBuildOutput() {
-    const serverDir = path.join(this.props.path, "dist/server");
-    const clientDir = path.join(this.props.path, "dist/client");
-    if (!fs.existsSync(serverDir) || !fs.existsSync(clientDir)) {
+    if (!fs.existsSync(this.buildConfig.serverBuildOutputFile)) {
       throw new Error(
-        `Build output inside "dist/" does not contain the "server" and "client" folders. Make sure Server-side Rendering (SSR) is enabled in your Astro app. If you are looking to deploy the Astro app as a static site, please use the StaticSite construct — https://docs.sst.dev/constructs/StaticSite`
+        `Build output inside "dist/" does not contain the server entry file. Make sure Server-side Rendering (SSR) is enabled in your Astro app. If you are looking to deploy the Astro app as a static site, please use the StaticSite construct — https://docs.sst.dev/constructs/StaticSite`
+      );
+    }
+    if (!fs.existsSync(this.buildConfig.clientBuildOutputDir)) {
+      throw new Error(
+        `Build output inside "dist/" does not contain the client folders. Make sure Server-side Rendering (SSR) is enabled in your Astro app. If you are looking to deploy the Astro app as a static site, please use the StaticSite construct — https://docs.sst.dev/constructs/StaticSite`
       );
     }
 
