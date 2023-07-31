@@ -725,10 +725,6 @@ export class Table extends Construct implements SSTConstruct {
     } else {
       consumerFunction = consumer as FunctionInlineDefinition;
     }
-    eventSourceProps = {
-      startingPosition: lambda.StartingPosition.LATEST,
-      ...(eventSourceProps || {}),
-    };
 
     // create function
     const fn = Fn.fromDefinition(
@@ -741,23 +737,15 @@ export class Table extends Construct implements SSTConstruct {
     this.functions[consumerName] = fn;
 
     // create event source
-    const eventSource = new lambdaEventSources.DynamoEventSource(
-      this.cdk.table,
-      eventSourceProps
-    );
-    fn.addEventSource(eventSource);
-
-    // set filter pattern
-    if (filters && filters.length > 0) {
-      const cfnEventSource = fn.node.children.find(
-        (c) => c instanceof lambda.EventSourceMapping
-      )?.node.defaultChild as lambda.CfnEventSourceMapping;
-      cfnEventSource.addPropertyOverride("FilterCriteria", {
-        Filters: filters.map((filter) => ({
-          Pattern: JSON.stringify(filter),
+    fn.addEventSource(
+      new lambdaEventSources.DynamoEventSource(this.cdk.table, {
+        startingPosition: lambda.StartingPosition.LATEST,
+        filters: filters?.map((filter) => ({
+          pattern: JSON.stringify(filter),
         })),
-      });
-    }
+        ...(eventSourceProps || {}),
+      })
+    );
 
     // attach permissions
     this.permissionsAttachedForAllConsumers.forEach((permissions) => {

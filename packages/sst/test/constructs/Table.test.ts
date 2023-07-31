@@ -8,6 +8,8 @@ import {
   hasResource,
   hasResourceTemplate,
   createApp,
+  countResourcesLike,
+  printResource,
 } from "./helper";
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
@@ -1157,7 +1159,10 @@ test("addConsumers", async () => {
     ...baseTableProps,
     stream: true,
     consumers: {
-      Consumer_0: "test/lambda.handler",
+      Consumer_0: {
+        function: "test/lambda.handler",
+        filters: [{ eventName: "INSERT" }],
+      },
     },
   });
   table.addConsumers(stack, {
@@ -1165,6 +1170,39 @@ test("addConsumers", async () => {
   });
   countResources(stack, "AWS::Lambda::Function", 2);
   countResources(stack, "AWS::Lambda::EventSourceMapping", 2);
+  countResourcesLike(stack, "AWS::Lambda::EventSourceMapping", 1, {
+    FilterCriteria: {
+      Filters: [{ Pattern: '{"eventName":"INSERT"}' }],
+    },
+  });
+});
+
+test("addConsumers: consumer added to multiple tables", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  const consumer = new Function(stack, "Consumer", {
+    handler: "test/lambda.handler",
+  });
+  const tableA = new Table(stack, "TableA", {
+    ...baseTableProps,
+    stream: true,
+  });
+  const tableB = new Table(stack, "TableB", {
+    ...baseTableProps,
+    stream: true,
+  });
+  tableA.addConsumers(stack, {
+    Consumer_0: { function: consumer, filters: [{ eventName: "INSERT" }] },
+  });
+  tableB.addConsumers(stack, {
+    Consumer_0: { function: consumer, filters: [{ eventName: "INSERT" }] },
+  });
+  countResources(stack, "AWS::Lambda::Function", 1);
+  countResources(stack, "AWS::Lambda::EventSourceMapping", 2);
+  countResourcesLike(stack, "AWS::Lambda::EventSourceMapping", 2, {
+    FilterCriteria: {
+      Filters: [{ Pattern: '{"eventName":"INSERT"}' }],
+    },
+  });
 });
 
 test("getFunction", async () => {
