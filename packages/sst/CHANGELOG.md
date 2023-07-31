@@ -1,5 +1,19 @@
 # @serverless-stack/cli2
 
+## 2.22.7
+
+### Patch Changes
+
+- [#2877](https://github.com/serverless-stack/sst/pull/2877) [`ec145f078`](https://github.com/serverless-stack/sst/commit/ec145f0781de07e7c51224f0163326440e198231) Thanks [@relsunkaev](https://github.com/relsunkaev)! - SsrFunction: respect architecture setting
+
+- [#3164](https://github.com/serverless-stack/sst/pull/3164) [`14418e889`](https://github.com/serverless-stack/sst/commit/14418e889f73ed2f334724d18d5905f73f2b2c2c) Thanks [@psolidgold](https://github.com/psolidgold)! - Function: Add policy statement resource for Function to access bootstrap bucket objects during live debugging.
+
+- [`6d076a004`](https://github.com/serverless-stack/sst/commit/6d076a00433ae4ae89073386fbc6996a1e42f76f) Thanks [@thdxr](https://github.com/thdxr)! - dev: fix issue with node_modules not symlinking on devmode rebuilds
+
+- [#3163](https://github.com/serverless-stack/sst/pull/3163) [`e77d397bb`](https://github.com/serverless-stack/sst/commit/e77d397bbb1b775967fbd72c5a6788075bc93b11) Thanks [@khuezy](https://github.com/khuezy)! - NextjsSite: add `next-url` to cache policy
+
+- [#3135](https://github.com/serverless-stack/sst/pull/3135) [`a8fc8208d`](https://github.com/serverless-stack/sst/commit/a8fc8208d5d90f38855dc7f70d01194fc291e181) Thanks [@jonnedeprez](https://github.com/jonnedeprez)! - Table: prevent overwriting FilterCriteria in consumers
+
 ## 2.22.6
 
 ### Patch Changes
