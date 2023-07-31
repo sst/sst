@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.22.8
+
+### Patch Changes
+
+- [`71c9bab6c`](https://github.com/serverless-stack/sst/commit/71c9bab6c54e6f5e41688893797bdd8d13d8effa) Thanks [@fwang](https://github.com/fwang)! - Function/Job: support docker --file option
+
 ## 2.22.7
 
 ### Patch Changes
