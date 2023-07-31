@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.22.9
+
+### Patch Changes
+
+- [`b5d0dd819`](https://github.com/serverless-stack/sst/commit/b5d0dd81986b03faf47e99987ecff9118a07ee5a) Thanks [@fwang](https://github.com/fwang)! - SsrSite: cdk.function return CDK Function instance
+
 ## 2.22.8
 
 ### Patch Changes
