@@ -24,7 +24,7 @@ export class AstroSite extends SsrSite {
 
   constructor(scope: Construct, id: string, props: SsrSiteProps) {
     const buildPropsPath = path.join(
-      props.path ?? "",
+      props.path ?? ".",
       "dist",
       "sst.build-props.json"
     );
