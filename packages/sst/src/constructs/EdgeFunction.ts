@@ -20,6 +20,7 @@ import {
   Code,
   Runtime,
   Function as CdkFunction,
+  IFunction as CdkIFunction,
 } from "aws-cdk-lib/aws-lambda";
 import { Asset } from "aws-cdk-lib/aws-s3-assets";
 import {
@@ -68,7 +69,8 @@ export interface EdgeFunctionProps {
 export class EdgeFunction extends Construct {
   public role: Role;
   public functionArn: string;
-  private function: CustomResource;
+  public function: CdkIFunction;
+  private functionCR: CustomResource;
   private assetReplacer: CustomResource;
   private assetReplacerPolicy: Policy;
   private scope: IConstruct;
@@ -119,7 +121,15 @@ export class EdgeFunction extends Construct {
     const { versionId } = this.createVersionInUsEast1(fn, fnArn);
     fn.node.addDependency(assetReplacer);
 
-    this.function = fn;
+    this.function = CdkFunction.fromFunctionAttributes(
+      this.scope,
+      "ICdkFunction",
+      {
+        functionArn: fnArn,
+        role: this.role,
+      }
+    );
+    this.functionCR = fn;
     this.functionArn = fnArn;
     this.versionId = versionId;
     this.assetReplacer = assetReplacer;
@@ -516,7 +526,7 @@ export class EdgeFunction extends Construct {
   }
 
   private updateFunctionInUsEast1(assetBucket: string, assetKey: string) {
-    const cfnLambda = this.function.node.defaultChild as CfnCustomResource;
+    const cfnLambda = this.functionCR.node.defaultChild as CfnCustomResource;
     cfnLambda.addPropertyOverride("FunctionParams.Code", {
       S3Bucket: assetBucket,
       S3Key: assetKey,
