@@ -14,6 +14,15 @@ declare global {
       ): ResponseStream;
     };
   };
+
+  interface CompressionStream {
+    readonly readable: ReadableStream;
+    readonly writable: WritableStream;
+  }
+  const CompressionStream: {
+    prototype: CompressionStream;
+    new (format: "gzip" | "deflate"): CompressionStream;
+  };
 }
 
 export interface ResponseStream extends Writable {

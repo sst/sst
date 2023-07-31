@@ -1,9 +1,9 @@
 import type { SSRManifest } from "astro";
-import type { APIGatewayProxyEventV2, Callback, Context } from "aws-lambda";
+import type { APIGatewayProxyEventV2 } from "aws-lambda";
 import { polyfill } from "@astrojs/webapi";
 import { getRequest, setResponse } from "./transform";
-import { ResponseStream } from ".";
 import { NodeApp } from "astro/app/node";
+import { ResponseStream } from ".";
 
 polyfill(globalThis, {
   exclude: "window document",
@@ -14,9 +14,7 @@ export function createExports(manifest: SSRManifest) {
 
   const handler = async (
     event: APIGatewayProxyEventV2,
-    responseStream: ResponseStream,
-    _context?: Context,
-    callback?: Callback
+    responseStream: ResponseStream
   ) => {
     let request: Request;
 
@@ -36,8 +34,6 @@ export function createExports(manifest: SSRManifest) {
 
     // Stream response back to Cloudfront
     await setResponse(app, responseStream, response);
-
-    if (callback) callback(null, "ok");
   };
 
   return {

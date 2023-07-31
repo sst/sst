@@ -1,8 +1,6 @@
 import { ResponseStream } from ".";
 import { splitCookiesString } from "set-cookie-parser";
 import { APIGatewayProxyEventV2 } from "aws-lambda";
-import zlib from "zlib";
-import { isBinaryContentType } from "../lib/binary";
 import { NodeApp } from "astro/app/node";
 
 export async function getRequest(event: APIGatewayProxyEventV2) {
@@ -36,8 +34,6 @@ export async function setResponse(
   response: Response
 ) {
   let cookies: string[] = [];
-  const contentType = response.headers.get("content-type");
-  const isBinaryContent = contentType && isBinaryContentType(contentType);
 
   if (response.headers.has("set-cookie")) {
     const header = response.headers.get("set-cookie")!;
@@ -51,16 +47,8 @@ export async function setResponse(
   }
 
   const headers = Object.fromEntries(response.headers.entries());
-  if (!isBinaryContent) headers["Content-Encoding"] = "gzip";
-
-  if (cookies.length > 0) {
-    headers["set-cookie"] = cookies.join(";");
-  }
-
-  const metadata = {
-    statusCode: response.status,
-    headers,
-  };
+  if (cookies.length > 0) headers["set-cookie"] = cookies.join(";");
+  const metadata = { statusCode: response.status, headers };
 
   responseStream = awslambda.HttpResponseStream.from(responseStream, metadata);
 
@@ -85,48 +73,35 @@ export async function setResponse(
     return;
   }
 
-  let stream: ResponseStream | zlib.Gzip;
-  if (!isBinaryContent) {
-    let gzip = zlib.createGzip();
-    gzip.pipe(responseStream);
-    stream = gzip;
-  } else {
-    stream = responseStream;
-  }
+  const cancel = (error?: Error) => {
+    responseStream.off("close", cancel);
+    responseStream.off("error", cancel);
 
-  const cleanup = (error: Error) => {
-    stream.off("close", cleanup);
-    stream.off("error", cleanup);
+    // If the reader has already been interrupted with an error earlier,
+    // then it will appear here, it is useless, but it needs to be catch.
     reader.cancel(error).catch(() => {});
-
-    // In the case of an error, ensure to end the wrapper stream.
-    stream.end();
-    if (error) stream.destroy(error);
+    if (error) responseStream.destroy(error);
   };
 
-  stream.on("close", cleanup);
-  stream.on("error", cleanup);
+  responseStream.on("close", cancel);
+  responseStream.on("error", cancel);
 
   next();
-
   async function next() {
     try {
       for (;;) {
         const { done, value } = await reader.read();
-
         if (done) break;
 
-        // Write to the wrapper stream.
-        if (!stream.write(value)) {
-          stream.once("drain", next);
+        if (!responseStream.write(value)) {
+          responseStream.once("drain", next);
           return;
         }
       }
 
-      // End the wrapper stream when you're done.
-      stream.end();
+      responseStream.end();
     } catch (error) {
-      cleanup(error instanceof Error ? error : new Error(String(error)));
+      cancel(error instanceof Error ? error : new Error(String(error)));
     }
   }
 }
