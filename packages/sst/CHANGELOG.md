@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.22.10
+
+### Patch Changes
+
+- [`f69855c2b`](https://github.com/serverless-stack/sst/commit/f69855c2b03aa92a6262f1a2b0886db1cf81e067) Thanks [@fwang](https://github.com/fwang)! - Allow setting app stage via SST_STAGE environment variable
+
 ## 2.22.9
 
 ### Patch Changes
