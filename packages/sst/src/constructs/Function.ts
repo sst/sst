@@ -635,6 +635,16 @@ export interface ContainerProps {
    * ```
    */
   cmd?: string[];
+  /**
+   * Name of the Dockerfile.
+   * @example
+   * ```js
+   * container: {
+   *   file: "path/to/Dockerfile.prod"
+   * }
+   * ```
+   */
+  file?: string;
 }
 
 /**
@@ -803,7 +813,9 @@ export class Function extends CDKFunction implements SSTConstruct {
       this.addEnvironment("SST_FUNCTION_ID", this.node.addr);
       useDeferredTasks().add(async () => {
         const bootstrap = await useBootstrap();
-        const bootstrapBucketArn = `arn:${Stack.of(this).partition}:s3:::${bootstrap.bucket}`;
+        const bootstrapBucketArn = `arn:${Stack.of(this).partition}:s3:::${
+          bootstrap.bucket
+        }`;
         this.attachPermissions([
           new PolicyStatement({
             actions: ["iot:*"],
@@ -813,10 +825,7 @@ export class Function extends CDKFunction implements SSTConstruct {
           new PolicyStatement({
             actions: ["s3:*"],
             effect: Effect.ALLOW,
-            resources: [
-              bootstrapBucketArn,
-              `${bootstrapBucketArn}/*`,
-            ],
+            resources: [bootstrapBucketArn, `${bootstrapBucketArn}/*`],
           }),
         ]);
       });
@@ -832,6 +841,9 @@ export class Function extends CDKFunction implements SSTConstruct {
                   ? { platform: Platform.custom(architecture.dockerPlatform) }
                   : {}),
                 ...(props.container?.cmd ? { cmd: props.container.cmd } : {}),
+                ...(props.container?.file
+                  ? { file: props.container.file }
+                  : {}),
               }),
               handler: CDKHandler.FROM_IMAGE,
               runtime: CDKRuntime.FROM_IMAGE,
