@@ -371,7 +371,6 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   protected buildConfig: SsrBuildConfig;
   protected importedBuildProps?: ImportedSsrBuildProps;
   protected deferredTaskCallbacks: (() => void)[] = [];
-  private serverLambdaCdkFunctionForEdge?: ICdkFunction;
   protected serverLambdaForEdge?: EdgeFunction;
   protected serverLambdaForRegional?: SsrFunction;
   private serverLambdaForDev?: SsrFunction;
@@ -426,14 +425,6 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     // Create Server functions
     if (this.props.edge) {
       this.serverLambdaForEdge = this.createFunctionForEdge();
-      this.serverLambdaCdkFunctionForEdge = CdkFunction.fromFunctionAttributes(
-        this,
-        "IEdgeFunction",
-        {
-          functionArn: this.serverLambdaForEdge.functionArn,
-          role: this.serverLambdaForEdge.role,
-        }
-      );
     } else {
       this.serverLambdaForRegional = this.createFunctionForRegional();
     }
@@ -525,7 +516,8 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
 
     return {
       function:
-        this.serverLambdaCdkFunctionForEdge || this.serverLambdaForRegional,
+        this.serverLambdaForEdge?.function ||
+        this.serverLambdaForRegional?.function,
       bucket: this.bucket,
       distribution: this.distribution,
       hostedZone: this.hostedZone,
@@ -548,7 +540,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
    */
   public attachPermissions(permissions: Permissions): void {
     const server =
-      this.serverLambdaCdkFunctionForEdge ||
+      this.serverLambdaForEdge ||
       this.serverLambdaForRegional ||
       this.serverLambdaForDev;
     attachPermissionsToRole(server?.role as Role, permissions);
@@ -568,7 +560,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
         server: (
           this.serverLambdaForDev ||
           this.serverLambdaForRegional ||
-          this.serverLambdaCdkFunctionForEdge
+          this.serverLambdaForEdge
         )?.functionArn!,
         secrets: (this.props.bind || [])
           .filter((c) => c instanceof Secret)
@@ -933,15 +925,13 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   }
 
   private grantServerS3Permissions() {
-    const server =
-      this.serverLambdaCdkFunctionForEdge || this.serverLambdaForRegional;
+    const server = this.serverLambdaForEdge || this.serverLambdaForRegional;
     this.bucket.grantReadWrite(server!.role!);
   }
 
   private grantServerCloudFrontPermissions() {
     const stack = Stack.of(this) as Stack;
-    const server =
-      this.serverLambdaCdkFunctionForEdge || this.serverLambdaForRegional;
+    const server = this.serverLambdaForEdge || this.serverLambdaForRegional;
     const policy = new Policy(this, "ServerFunctionInvalidatorPolicy", {
       statements: [
         new PolicyStatement({
