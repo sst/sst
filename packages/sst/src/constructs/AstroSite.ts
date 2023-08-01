@@ -1,9 +1,10 @@
 import fs from "fs";
 import path from "path";
 
-import { SsrSite } from "./SsrSite.js";
+import { SsrSite, SsrSiteProps } from "./SsrSite.js";
 import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
+import { Construct } from "constructs";
 
 /**
  * The `AstroSite` construct is a higher level CDK construct that makes it easy to create a Astro app.
@@ -17,6 +18,15 @@ import { EdgeFunction } from "./EdgeFunction.js";
  * ```
  */
 export class AstroSite extends SsrSite {
+  constructor(
+    scope: Construct,
+    id: string,
+    props?: Omit<SsrSiteProps, "streaming">
+  ) {
+    // Astro apps should always be configured for streaming
+    super(scope, props?.cdk?.id || id, { ...props, streaming: true });
+  }
+
   protected initBuildConfig() {
     return {
       typesPath: "src",
