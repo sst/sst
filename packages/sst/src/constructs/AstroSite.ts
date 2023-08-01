@@ -1,12 +1,32 @@
 import fs from "fs";
 import path from "path";
 
+import type { RouteType } from "astro";
 import { Construct } from "constructs";
 import { SsrSite, SsrSiteProps, ImportedSsrBuildProps } from "./SsrSite.js";
 import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 
-type AstroImportedBuildProps = ImportedSsrBuildProps & {};
+type AstroImportedBuildProps = ImportedSsrBuildProps & {
+  astroSite: {
+    outputMode: "server" | "static" | "hybrid";
+    trailingSlash: boolean;
+    redirects: Record<
+      string,
+      | string
+      | {
+          status: 300 | 301 | 302 | 303 | 304 | 307 | 308;
+          destination: string;
+        }
+    >;
+    routes: Array<{
+      route: string;
+      type: RouteType;
+      pattern: string;
+      prerender: boolean;
+    }>;
+  };
+};
 
 /**
  * The `AstroSite` construct is a higher level CDK construct that makes it easy to create a Astro app.

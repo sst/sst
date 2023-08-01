@@ -45,8 +45,6 @@ export class BuildProps {
     const buildProps = {
       props: {
         customDomain: this.domainName
-          ? { domainName: this.domainName }
-          : undefined,
       },
       buildConfig: {
         typesPath: relative(rootDir, fileURLToPath(this.astroConfig.srcDir)),
@@ -59,6 +57,17 @@ export class BuildProps {
           fileURLToPath(this.astroConfig.build.client)
         ),
         clientBuildVersionedSubDir: this.astroConfig.build.assets,
+      },
+      astroSite: {
+        outputMode: this.astroConfig.output,
+        trailingSlash: this.astroConfig.trailingSlash,
+        redirects: this.astroConfig.build.redirects ? this.astroConfig.redirects : {},
+        routes: this.buildResults.routes.map((route) => ({
+          route: route.route,
+          type: route.type,
+          pattern: route.pattern.toString(),
+          prerender: route.prerender,
+        }))
       },
     };
 
