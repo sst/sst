@@ -6,42 +6,27 @@ import { execAsync } from "../util/process.js";
 import { existsAsync } from "../util/fs.js";
 
 import { Construct } from "constructs";
-import {
-  Fn,
-  Token,
-  Duration as CdkDuration,
-  RemovalPolicy,
-  CustomResource,
-} from "aws-cdk-lib/core";
+import { Duration as CdkDuration } from "aws-cdk-lib/core";
 import {
   Role,
   Effect,
-  Policy,
   PolicyStatement,
   AccountPrincipal,
   ServicePrincipal,
   CompositePrincipal,
 } from "aws-cdk-lib/aws-iam";
 import {
-  Distribution as CdkDistribution,
-  ICachePolicy,
-  IResponseHeadersPolicy,
-  BehaviorOptions,
   ViewerProtocolPolicy,
   AllowedMethods,
   CachedMethods,
-  LambdaEdgeEventType,
   CachePolicy,
   CacheQueryStringBehavior,
   CacheHeaderBehavior,
   CacheCookieBehavior,
   OriginProtocolPolicy,
   OriginRequestPolicy,
-  Function as CfFunction,
-  FunctionCode as CfFunctionCode,
-  FunctionEventType as CfFunctionEventType,
 } from "aws-cdk-lib/aws-cloudfront";
-import { S3Origin, HttpOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
+import { HttpOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
 
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
@@ -63,7 +48,6 @@ import {
   ISecurityGroup,
   IVpc,
   SubnetSelection,
-  SubnetType,
   Vpc,
 } from "aws-cdk-lib/aws-ec2";
 import {
@@ -290,12 +274,12 @@ export interface ServiceProps {
      * ```js
      * {
      *   scaling: {
-     *    requestPerContainer: 1000,
+     *    requestsPerContainer: 1000,
      *   },
      * }
      *```
      */
-    requestPerContainer?: number;
+    requestsPerContainer?: number;
   };
   /**
    * Bind resources for the function
@@ -795,7 +779,7 @@ export class Service extends Construct implements SSTConstruct {
       maxContainers,
       cpuUtilization,
       memoryUtilization,
-      requestPerContainer,
+      requestsPerContainer,
     } = this.props.scaling ?? {};
 
     const scaling = service.autoScaleTaskCount({
@@ -811,7 +795,7 @@ export class Service extends Construct implements SSTConstruct {
       scaleOutCooldown: CdkDuration.seconds(300),
     });
     scaling.scaleOnRequestCount("RequestScaling", {
-      requestsPerTarget: requestPerContainer ?? 500,
+      requestsPerTarget: requestsPerContainer ?? 500,
       targetGroup: target,
     });
   }
