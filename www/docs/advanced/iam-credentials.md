@@ -166,7 +166,8 @@ Below are the permissions required:
           "s3:PutBucketVersioning",
           "s3:PutEncryptionConfiguration",
           "s3:PutLifecycleConfiguration",
-          "s3:PutBucketPublicAccessBlock"
+          "s3:PutBucketPublicAccessBlock",
+          "s3:SetBucketEncryption"
       ],
       "Resource": [
           "arn:aws:s3:::cdk-hnb659fds-assets-*"

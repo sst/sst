@@ -39,8 +39,8 @@ If you prefer to install the adapter manually instead, complete the following tw
 
 You can deploy to different targets:
 
-- `edge`: SSR inside a [Lambda@Edge function](https://aws.amazon.com/lambda/).
-- `lambda`: SSR inside a [Lambda function](https://aws.amazon.com/lambda/edge/).
+- `edge`: SSR inside a [Lambda@Edge function](https://aws.amazon.com/lambda/edge/).
+- `lambda`: SSR inside a [Lambda function](https://aws.amazon.com/lambda/) (supports streaming).
 
 You can change where to target by changing the import:
 
