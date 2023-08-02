@@ -739,7 +739,7 @@ new AppSyncApi(stack, "GraphqlApi", {
 
 Using naive GraphQL resolvers may result in what the GraphQL community calls the "N+1 Problem", which occurs when the system makes too many upstream requests for a given query.
 
-For example, imagine that an an incoming request is asking for 50 `Company` objects, each with its associated list of `Office` objects. Naive GraphQL resolvers will make a request to fetch the 50 `Company` records first, then repeatedly request the `Office` objects for the each of the 50 `Company` records. This results in 51 requests in total.
+For example, imagine that an incoming request is asking for 50 `Company` objects, each with its associated list of `Office` objects. Naive GraphQL resolvers will make a request to fetch the 50 `Company` records first, then repeatedly request the `Office` objects for the each of the 50 `Company` records. This results in 51 requests in total.
 
 Ideally, fetch operations should be batched, so that one request fetches the initial list of `Company` records, and another request fetches all the related `Office` records. This batching approach results in only _two_ requests, and is much more efficient.
 
