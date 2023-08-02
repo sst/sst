@@ -291,6 +291,16 @@ export class NextjsSite extends SsrSite {
     resource.node.addDependency(policy);
   }
 
+  protected buildServerCachePolicy() {
+    return super.buildServerCachePolicy([
+      "accept",
+      "rsc",
+      "next-router-prefetch",
+      "next-router-state-tree",
+      "next-url",
+    ]);
+  }
+
   protected createCloudFrontDistributionForRegional(): Distribution {
     /**
      * Next.js requests
@@ -344,15 +354,7 @@ export class NextjsSite extends SsrSite {
 
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-    const cachePolicy =
-      cdk?.serverCachePolicy ??
-      this.buildServerCachePolicy([
-        "accept",
-        "rsc",
-        "next-router-prefetch",
-        "next-router-state-tree",
-        "next-url",
-      ]);
+    const cachePolicy = cdk?.serverCachePolicy ?? this.buildServerCachePolicy();
     const serverBehavior = this.buildDefaultBehaviorForRegional(cachePolicy);
 
     return new Distribution(this, "Distribution", {
@@ -376,14 +378,7 @@ export class NextjsSite extends SsrSite {
   protected createCloudFrontDistributionForEdge(): Distribution {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-    const cachePolicy =
-      cdk?.serverCachePolicy ??
-      this.buildServerCachePolicy([
-        "accept",
-        "rsc",
-        "next-router-prefetch",
-        "next-router-state-tree",
-      ]);
+    const cachePolicy = cdk?.serverCachePolicy ?? this.buildServerCachePolicy();
     const serverBehavior = this.buildDefaultBehaviorForEdge(cachePolicy);
 
     return new Distribution(this, "Distribution", {
