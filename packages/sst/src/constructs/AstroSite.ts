@@ -69,25 +69,14 @@ export class AstroSite extends SsrSite {
   }
 
   protected initBuildConfig(): SsrBuildConfig {
-    const groupS3PathPrefix = "__statics__";
-    const buildConfig: SsrBuildConfig = {
+    return {
       typesPath: "src",
       serverOperationMode: "ssr-hybrid",
       serverBuildOutputFile: "dist/server/entry.mjs",
       clientBuildOutputDir: "dist/client",
       clientBuildVersionedSubDir: "_astro",
+      serverCFFunctionInjection: this.createCFRoutingFunction(),
       ...this.importedBuildProps.buildConfig,
-    };
-
-    return {
-      ...buildConfig,
-      clientBuildS3KeyPrefix: path.posix.join(
-        buildConfig.clientBuildS3KeyPrefix ?? "",
-        groupS3PathPrefix
-      ),
-      serverCFFunctionInjection:
-        buildConfig.serverCFFunctionInjection ??
-        this.createCFRoutingFunction(groupS3PathPrefix),
     };
   }
 
@@ -118,7 +107,7 @@ export class AstroSite extends SsrSite {
    *   return request;
    * }
    */
-  protected createCFRoutingFunction(staticsS3KeyPrefix: string) {
+  protected createCFRoutingFunction() {
     const serializedRoutes =
       "[\n" +
       this.importedBuildProps.astroSite.routes
@@ -132,26 +121,11 @@ export class AstroSite extends SsrSite {
   var astroRoutes = ${serializedRoutes};
   var matchedRoute = astroRoutes.find(route => route.pattern.test(request.uri));
   if (matchedRoute) {
-    if (matchedRoute.prerender) {
-      if (matchedRoute.type === "page") {
-        request.uri = "/${staticsS3KeyPrefix}" + request.uri + (request.uri.endsWith("/") ? "" : "/") + "index.html";
-      } else {
-        request.uri = "/${staticsS3KeyPrefix}" + request.uri;
-      }
+    if (matchedRoute.type === "page" && matchedRoute.prerender) {
+      request.uri += (request.uri.endsWith("/") ? "" : "/") + "index.html";
     }
-  } else {
-    request.uri = "/${staticsS3KeyPrefix}" + request.uri;
   }
   // End AstroSite CF Routing Function`;
-  }
-
-  protected createCloudFrontS3Origin() {
-    return new S3Origin(this.bucket, {
-      originPath: path.posix.join(
-        `/${this.buildConfig.clientBuildS3KeyPrefix ?? ""}`,
-        ".."
-      ),
-    });
   }
 
   protected createFunctionForRegional() {

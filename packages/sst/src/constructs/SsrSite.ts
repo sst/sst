@@ -65,7 +65,11 @@ import {
 } from "aws-cdk-lib/aws-cloudfront";
 import { ICertificate } from "aws-cdk-lib/aws-certificatemanager";
 import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
-import { S3Origin, HttpOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
+import {
+  S3Origin,
+  HttpOrigin,
+  OriginGroup,
+} from "aws-cdk-lib/aws-cloudfront-origins";
 import { CloudFrontTarget } from "aws-cdk-lib/aws-route53-targets";
 
 import { App } from "./App.js";
@@ -470,7 +474,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       // Add static file behaviors
       switch (this.buildConfig.serverOperationMode) {
         case "ssr-hybrid":
-          this.addGroupedStaticFileBehavior();
+          // Add behavior for SSR routes using POST, PUT, or DELETE methods
           this.addMissingFileFallbackBehavior();
           break;
         default:
@@ -974,7 +978,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     }
   }
 
-  protected createCloudFrontS3Origin() {
+  private createCloudFrontS3Origin() {
     return new S3Origin(this.bucket, {
       originPath: "/" + (this.buildConfig.clientBuildS3KeyPrefix ?? ""),
     });
@@ -1057,20 +1061,34 @@ function handler(event) {
   ): BehaviorOptions {
     const { timeout, cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
+    const shouldBuildFallback =
+      this.buildConfig.serverOperationMode === "ssr-hybrid";
 
     const fnUrl = this.serverLambdaForRegional!.addFunctionUrl({
       authType: FunctionUrlAuthType.NONE,
     });
 
+    const httpOrigin = new HttpOrigin(Fn.parseDomainName(fnUrl.url), {
+      readTimeout:
+        typeof timeout === "string"
+          ? toCdkDuration(timeout)
+          : CdkDuration.seconds(timeout),
+    });
+
+    const origin = shouldBuildFallback
+      ? new OriginGroup({
+          primaryOrigin: this.s3Origin,
+          fallbackOrigin: httpOrigin,
+          fallbackStatusCodes: [403, 404],
+        })
+      : httpOrigin;
+
     return {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      origin: new HttpOrigin(Fn.parseDomainName(fnUrl.url), {
-        readTimeout:
-          typeof timeout === "string"
-            ? toCdkDuration(timeout)
-            : CdkDuration.seconds(timeout),
-      }),
-      allowedMethods: AllowedMethods.ALLOW_ALL,
+      origin,
+      allowedMethods: shouldBuildFallback
+        ? AllowedMethods.ALLOW_GET_HEAD_OPTIONS
+        : AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
       cachePolicy,
@@ -1145,29 +1163,11 @@ function handler(event) {
     }
   }
 
-  protected addGroupedStaticFileBehavior() {
-    const { cdk } = this.props;
-
-    // Create a single behavior for all statics served from a common S3
-    this.distribution.addBehavior(
-      `${this.buildConfig.clientBuildS3KeyPrefix}/*`,
-      this.s3Origin,
-      {
-        viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
-        cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
-        compress: true,
-        cachePolicy: CachePolicy.CACHING_OPTIMIZED,
-        responseHeadersPolicy: cdk?.responseHeadersPolicy,
-      }
-    );
-  }
-
   /**
    * @todo: Implement 404 fallback using Error Page behavior
    */
   protected addMissingFileFallbackBehavior() {
-    return
+    return;
   }
 
   protected buildServerCachePolicy(allowedHeaders?: string[]) {
