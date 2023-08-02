@@ -100,6 +100,7 @@ const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 export type SsrBuildConfig = {
   typesPath: string;
+  serverOperationMode?: "ssr" | "ssr-hybrid";
   serverBuildOutputFile: string;
   serverCFFunctionInjection?: string;
   clientBuildOutputDir: string;
@@ -350,7 +351,7 @@ type SsrSiteNormalizedProps = SsrSiteProps & {
 
 export type ImportedSsrBuildProps = {
   props?: SsrSiteProps;
-  buildConfig?: SsrSiteProps;
+  buildConfig?: SsrBuildConfig;
 };
 
 /**
@@ -467,7 +468,16 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       this.distribution.node.addDependency(s3deployCR);
 
       // Add static file behaviors
-      this.addStaticFileBehaviors();
+      switch (this.buildConfig.serverOperationMode) {
+        case "ssr-hybrid":
+          this.addGroupedStaticFileBehavior();
+          this.addMissingFileFallbackBehavior();
+          break;
+        default:
+        case "ssr":
+          this.addIndividualStaticFileBehaviors();
+          break;
+      }
 
       // Invalidate CloudFront
       this.createCloudFrontInvalidation();
@@ -610,6 +620,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   protected initBuildConfig(): SsrBuildConfig {
     return {
       typesPath: ".",
+      serverOperationMode: "ssr",
       serverBuildOutputFile: "placeholder",
       clientBuildOutputDir: "placeholder",
       clientBuildVersionedSubDir: "placeholder",
@@ -963,7 +974,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     }
   }
 
-  private createCloudFrontS3Origin() {
+  protected createCloudFrontS3Origin() {
     return new S3Origin(this.bucket, {
       originPath: "/" + (this.buildConfig.clientBuildS3KeyPrefix ?? ""),
     });
@@ -1113,10 +1124,10 @@ function handler(event) {
     ];
   }
 
-  protected addStaticFileBehaviors() {
+  protected addIndividualStaticFileBehaviors() {
     const { cdk } = this.props;
 
-    // Create a template for statics behaviours
+    // Create individual behavior for each root level static file and directory
     const publicDir = path.join(
       this.props.path,
       this.buildConfig.clientBuildOutputDir
@@ -1132,6 +1143,31 @@ function handler(event) {
         responseHeadersPolicy: cdk?.responseHeadersPolicy,
       });
     }
+  }
+
+  protected addGroupedStaticFileBehavior() {
+    const { cdk } = this.props;
+
+    // Create a single behavior for all statics served from a common S3
+    this.distribution.addBehavior(
+      `${this.buildConfig.clientBuildS3KeyPrefix}/*`,
+      this.s3Origin,
+      {
+        viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+        cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
+        compress: true,
+        cachePolicy: CachePolicy.CACHING_OPTIMIZED,
+        responseHeadersPolicy: cdk?.responseHeadersPolicy,
+      }
+    );
+  }
+
+  /**
+   * @todo: Implement 404 fallback using Error Page behavior
+   */
+  protected addMissingFileFallbackBehavior() {
+    return
   }
 
   protected buildServerCachePolicy(allowedHeaders?: string[]) {

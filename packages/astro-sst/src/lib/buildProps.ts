@@ -1,4 +1,9 @@
-import type { AstroConfig, RouteData } from "astro";
+import type {
+  AstroConfig,
+  RouteData,
+  RouteType,
+  ValidRedirectStatus,
+} from "astro";
 import { join, relative } from "path";
 import { writeFile } from "fs/promises";
 import { fileURLToPath, parse } from "url";
@@ -13,6 +18,22 @@ type BuildResults = {
   routes: RouteData[];
 };
 
+type RedirectConfig =
+  | string
+  | {
+      status: ValidRedirectStatus;
+      destination: string;
+    };
+
+type SerializableRoute = {
+  route: string;
+  type: RouteType;
+  pattern: string;
+  prerender: boolean;
+  redirect?: RedirectConfig;
+  redirectRoute?: SerializableRoute;
+};
+
 export class BuildProps {
   protected static astroConfig: AstroConfig;
   protected static buildResults: BuildResults;
@@ -23,6 +44,20 @@ export class BuildProps {
 
   public static setBuildResults(buildResults: BuildResults) {
     this.buildResults = buildResults;
+  }
+
+  private static serializableRoute(route: RouteData): SerializableRoute {
+    return {
+      route: route.route,
+      type: route.type,
+      pattern: route.pattern.toString(),
+      prerender: route.prerender,
+      redirect: route.redirect,
+      redirectRoute:
+        typeof route.redirectRoute !== "undefined"
+          ? this.serializableRoute(route.redirectRoute)
+          : undefined,
+    };
   }
 
   private static get domainName() {
@@ -44,7 +79,7 @@ export class BuildProps {
 
     const buildProps = {
       props: {
-        customDomain: this.domainName
+        customDomain: this.domainName,
       },
       buildConfig: {
         typesPath: relative(rootDir, fileURLToPath(this.astroConfig.srcDir)),
@@ -60,14 +95,9 @@ export class BuildProps {
       },
       astroSite: {
         outputMode: this.astroConfig.output,
+        pageResolution: this.astroConfig.build.format,
         trailingSlash: this.astroConfig.trailingSlash,
-        redirects: this.astroConfig.build.redirects ? this.astroConfig.redirects : {},
-        routes: this.buildResults.routes.map((route) => ({
-          route: route.route,
-          type: route.type,
-          pattern: route.pattern.toString(),
-          prerender: route.prerender,
-        }))
+        routes: this.buildResults.routes.map(route => this.serializableRoute(route)),
       },
     };
 

@@ -2,14 +2,21 @@ import fs from "fs";
 import path from "path";
 
 import type { RouteType } from "astro";
+import { S3Origin } from "aws-cdk-lib/aws-cloudfront-origins";
 import { Construct } from "constructs";
-import { SsrSite, SsrSiteProps, ImportedSsrBuildProps } from "./SsrSite.js";
+import {
+  SsrSite,
+  SsrSiteProps,
+  ImportedSsrBuildProps,
+  SsrBuildConfig,
+} from "./SsrSite.js";
 import { SsrFunction } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 
 type AstroImportedBuildProps = ImportedSsrBuildProps & {
   astroSite: {
     outputMode: "server" | "static" | "hybrid";
+    pageResolution: "file" | "directory";
     trailingSlash: boolean;
     redirects: Record<
       string,
@@ -40,7 +47,7 @@ type AstroImportedBuildProps = ImportedSsrBuildProps & {
  * ```
  */
 export class AstroSite extends SsrSite {
-  protected declare importedBuildProps?: AstroImportedBuildProps;
+  protected declare importedBuildProps: AstroImportedBuildProps;
 
   constructor(scope: Construct, id: string, props: SsrSiteProps) {
     const buildPropsPath = path.join(
@@ -48,22 +55,39 @@ export class AstroSite extends SsrSite {
       "dist",
       "sst.build-props.json"
     );
-    let importedBuildProps: AstroImportedBuildProps | undefined;
+    let importedBuildProps: AstroImportedBuildProps;
 
     if (fs.existsSync(buildPropsPath)) {
       importedBuildProps = JSON.parse(fs.readFileSync(buildPropsPath, "utf8"));
+    } else {
+      throw new Error(
+        `Could not find build props file at ${buildPropsPath}. Update your 'astro-sst' package version and rebuild your Astro site.`
+      );
     }
 
     super(scope, id, props, importedBuildProps);
   }
 
-  protected initBuildConfig() {
-    return {
+  protected initBuildConfig(): SsrBuildConfig {
+    const groupS3PathPrefix = "__statics__";
+    const buildConfig: SsrBuildConfig = {
       typesPath: "src",
+      serverOperationMode: "ssr-hybrid",
       serverBuildOutputFile: "dist/server/entry.mjs",
       clientBuildOutputDir: "dist/client",
       clientBuildVersionedSubDir: "_astro",
-      ...this.importedBuildProps?.buildConfig,
+      ...this.importedBuildProps.buildConfig,
+    };
+
+    return {
+      ...buildConfig,
+      clientBuildS3KeyPrefix: path.posix.join(
+        buildConfig.clientBuildS3KeyPrefix ?? "",
+        groupS3PathPrefix
+      ),
+      serverCFFunctionInjection:
+        buildConfig.serverCFFunctionInjection ??
+        this.createCFRoutingFunction(groupS3PathPrefix),
     };
   }
 
@@ -80,6 +104,54 @@ export class AstroSite extends SsrSite {
     }
 
     super.validateBuildOutput();
+  }
+
+  /**
+   * String literal to be injected into the function handler ran by the CloudFront distribution
+   * for performing route rewrites and user redirects.
+   *
+   * Context for code injection:
+   * function handler(event) {
+   *   var request = event.request;
+   *   request.headers["x-forwarded-host"] = request.headers.host;
+   *   ${this.buildConfig.serverCFFunctionInjection || ""}
+   *   return request;
+   * }
+   */
+  protected createCFRoutingFunction(staticsS3KeyPrefix: string) {
+    const serializedRoutes =
+      "[\n" +
+      this.importedBuildProps.astroSite.routes
+        .map((route) => {
+          return `    {pattern: ${route.pattern}, type: "${route.type}", prerender: ${route.prerender}}`;
+        })
+        .join(",\n") +
+      "  \n]";
+
+    return `// AstroSite CF Routing Function
+  var astroRoutes = ${serializedRoutes};
+  var matchedRoute = astroRoutes.find(route => route.pattern.test(request.uri));
+  if (matchedRoute) {
+    if (matchedRoute.prerender) {
+      if (matchedRoute.type === "page") {
+        request.uri = "/${staticsS3KeyPrefix}" + request.uri + (request.uri.endsWith("/") ? "" : "/") + "index.html";
+      } else {
+        request.uri = "/${staticsS3KeyPrefix}" + request.uri;
+      }
+    }
+  } else {
+    request.uri = "/${staticsS3KeyPrefix}" + request.uri;
+  }
+  // End AstroSite CF Routing Function`;
+  }
+
+  protected createCloudFrontS3Origin() {
+    return new S3Origin(this.bucket, {
+      originPath: path.posix.join(
+        `/${this.buildConfig.clientBuildS3KeyPrefix ?? ""}`,
+        ".."
+      ),
+    });
   }
 
   protected createFunctionForRegional() {
