@@ -18,20 +18,13 @@ type BuildResults = {
   routes: RouteData[];
 };
 
-type RedirectConfig =
-  | string
-  | {
-      status: ValidRedirectStatus;
-      destination: string;
-    };
-
 type SerializableRoute = {
   route: string;
   type: RouteType;
   pattern: string;
   prerender: boolean;
-  redirect?: RedirectConfig;
-  redirectRoute?: SerializableRoute;
+  redirectPath?: string;
+  redirectStatus?: ValidRedirectStatus;
 };
 
 export class BuildProps {
@@ -52,11 +45,12 @@ export class BuildProps {
       type: route.type,
       pattern: route.pattern.toString(),
       prerender: route.prerender,
-      redirect: route.redirect,
-      redirectRoute:
-        typeof route.redirectRoute !== "undefined"
-          ? this.serializableRoute(route.redirectRoute)
-          : undefined,
+      redirectPath:
+        typeof route.redirect === "string"
+          ? route.redirect
+          : route.redirect?.destination,
+      redirectStatus:
+        typeof route.redirect === "object" ? route.redirect.status : undefined,
     };
   }
 
@@ -97,7 +91,9 @@ export class BuildProps {
         outputMode: this.astroConfig.output,
         pageResolution: this.astroConfig.build.format,
         trailingSlash: this.astroConfig.trailingSlash,
-        routes: this.buildResults.routes.map(route => this.serializableRoute(route)),
+        routes: this.buildResults.routes.map((route) =>
+          this.serializableRoute(route)
+        ),
       },
     };
 

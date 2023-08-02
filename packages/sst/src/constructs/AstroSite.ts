@@ -18,19 +18,13 @@ type AstroImportedBuildProps = ImportedSsrBuildProps & {
     outputMode: "server" | "static" | "hybrid";
     pageResolution: "file" | "directory";
     trailingSlash: boolean;
-    redirects: Record<
-      string,
-      | string
-      | {
-          status: 300 | 301 | 302 | 303 | 304 | 307 | 308;
-          destination: string;
-        }
-    >;
     routes: Array<{
       route: string;
       type: RouteType;
       pattern: string;
       prerender: boolean;
+      redirectPath?: string;
+      redirectStatus?: 300 | 301 | 302 | 303 | 304 | 307 | 308;
     }>;
   };
 };
@@ -49,7 +43,11 @@ type AstroImportedBuildProps = ImportedSsrBuildProps & {
 export class AstroSite extends SsrSite {
   protected declare importedBuildProps: AstroImportedBuildProps;
 
-  constructor(scope: Construct, id: string, props: Omit<SsrSiteProps, "streaming">) {
+  constructor(
+    scope: Construct,
+    id: string,
+    props: Omit<SsrSiteProps, "streaming">
+  ) {
     const buildPropsPath = path.join(
       props.path ?? ".",
       "dist",
@@ -112,17 +110,51 @@ export class AstroSite extends SsrSite {
       "[\n" +
       this.importedBuildProps.astroSite.routes
         .map((route) => {
-          return `    {pattern: ${route.pattern}, type: "${route.type}", prerender: ${route.prerender}}`;
+          return `    {route: "${route.route}", pattern: ${
+            route.pattern
+          }, type: "${route.type}", prerender: ${route.prerender}, ${
+            route.redirectPath ? `redirectPath: "${route.redirectPath}", ` : ""
+          }${
+            route.redirectStatus
+              ? `redirectStatus: ${route.redirectStatus}`
+              : ""
+          } }`;
         })
         .join(",\n") +
-      "  \n]";
+      "\n  ]";
 
     return `// AstroSite CF Routing Function
   var astroRoutes = ${serializedRoutes};
   var matchedRoute = astroRoutes.find(route => route.pattern.test(request.uri));
   if (matchedRoute) {
     if (matchedRoute.type === "page" && matchedRoute.prerender) {
-      request.uri += (request.uri.endsWith("/") ? "" : "/") + "index.html";
+      ${
+        this.importedBuildProps.astroSite.pageResolution === "file"
+          ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
+          : `request.uri = request.uri.replace(/\\/?$/, "/index.html");`
+      }
+    } else if (matchedRoute.type === "redirect") {
+      var redirectPath = matchedRoute.redirectPath;
+      var slug = matchedRoute.pattern.exec(request.uri)[1];
+
+      if (slug) {
+        var redirectToRoute = astroRoutes.find(route => route.route === redirectPath);
+        redirectPath = redirectToRoute.route.replace(redirectToRoute.pattern.exec(redirectToRoute.route)[1], slug);
+      }
+
+      var statusCode = matchedRoute.redirectStatus || 302;
+      var statusDescription = 
+        statusCode === 302
+        ? "Found"
+        : statusCode === 301
+        ? "Moved Permanently"
+        : "Redirect";
+
+      return {
+        statusCode,
+        statusDescription,
+        headers: { location: { value: redirectPath } }
+      }
     }
   }
   // End AstroSite CF Routing Function`;
