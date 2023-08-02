@@ -49,7 +49,7 @@ type AstroImportedBuildProps = ImportedSsrBuildProps & {
 export class AstroSite extends SsrSite {
   protected declare importedBuildProps: AstroImportedBuildProps;
 
-  constructor(scope: Construct, id: string, props: SsrSiteProps) {
+  constructor(scope: Construct, id: string, props: Omit<SsrSiteProps, "streaming">) {
     const buildPropsPath = path.join(
       props.path ?? ".",
       "dist",
@@ -65,7 +65,7 @@ export class AstroSite extends SsrSite {
       );
     }
 
-    super(scope, id, props, importedBuildProps);
+    super(scope, id, { ...props, streaming: true }, importedBuildProps);
   }
 
   protected initBuildConfig(): SsrBuildConfig {
