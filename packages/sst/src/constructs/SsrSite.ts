@@ -979,8 +979,6 @@ function handler(event) {
     const { timeout, cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
 
-    // TODO
-    console.log({ support: this.supportsStreaming() });
     const fnUrl = this.serverLambdaForRegional!.addFunctionUrl({
       authType: FunctionUrlAuthType.NONE,
       invokeMode: this.supportsStreaming()
