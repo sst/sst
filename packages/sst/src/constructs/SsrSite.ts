@@ -485,7 +485,6 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       switch (this.buildConfig.serverOperationMode) {
         case "ssr-hybrid":
           // Add behavior for SSR routes using POST, PUT, or DELETE methods
-          this.addMissingFileFallbackBehavior();
           break;
         default:
         case "ssr":
@@ -1172,13 +1171,6 @@ function handler(event) {
         responseHeadersPolicy: cdk?.responseHeadersPolicy,
       });
     }
-  }
-
-  /**
-   * @todo: Implement 404 fallback using Error Page behavior
-   */
-  protected addMissingFileFallbackBehavior() {
-    return;
   }
 
   protected buildServerCachePolicy(allowedHeaders?: string[]) {
