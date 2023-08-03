@@ -791,7 +791,7 @@ export class Function extends CDKFunction implements SSTConstruct {
               layers: undefined,
             }
           : {
-              runtime: CDKRuntime.NODEJS_16_X,
+              runtime: CDKRuntime.NODEJS_18_X,
               code: Code.fromAsset(
                 path.resolve(__dirname, "../support/bridge")
               ),
