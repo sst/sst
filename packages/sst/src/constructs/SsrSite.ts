@@ -60,6 +60,7 @@ import {
   CacheHeaderBehavior,
   CacheCookieBehavior,
   OriginRequestPolicy,
+  IOriginRequestPolicy,
   Function as CfFunction,
   FunctionCode as CfFunctionCode,
   FunctionEventType as CfFunctionEventType,
@@ -346,6 +347,18 @@ export interface SsrSiteProps {
   fileOptions?: SsrSiteFileOptions[];
 
   /**
+   * Route paths which should bypass static file serving and be handled by the SSR function directly.
+   * This enables the use of the all HTTP methods (GET, POST, PUT, DELETE, etc) for these routes where
+   * other routes served on an ssr-hybrid environment are limited to GET.
+   * @default undefined
+   * @example
+   * ```js
+   * ssrExclusiveRoutes: ["/api/*", "/login", "/signup"]
+   * ```
+   */
+  ssrExclusiveRoutes?: string[];
+
+  /**
    * The SSR function url supports streaming.
    * [Read more](https://docs.aws.amazon.com/lambda/latest/dg/configuration-response-streaming.html#config-rs-invoke-furls).
    * @default false
@@ -394,6 +407,9 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   private hostedZone?: IHostedZone;
   private certificate?: ICertificate;
   private streaming?: boolean;
+  private _singletonSsrOrigin?: HttpOrigin;
+  private _singletonCachePolicy?: CachePolicy;
+  private _singletonServerOriginRequestPolicy?: IOriginRequestPolicy;
 
   constructor(
     scope: Construct,
@@ -481,15 +497,12 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       );
       this.distribution.node.addDependency(s3deployCR);
 
-      // Add static file behaviors
-      switch (this.buildConfig.serverOperationMode) {
-        case "ssr-hybrid":
-          // Add behavior for SSR routes using POST, PUT, or DELETE methods
-          break;
-        default:
-        case "ssr":
-          this.addIndividualStaticFileBehaviors();
-          break;
+      if (!this.props.edge) {
+        this.addSsrExclusiveRouteBehaviors();
+      }
+
+      if (this.buildConfig.serverOperationMode !== "ssr-hybrid") {
+        this.addStaticFileBehaviors();
       }
 
       // Invalidate CloudFront
@@ -546,6 +559,41 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       hostedZone: this.hostedZone,
       certificate: this.certificate,
     };
+  }
+
+  /** @internal */
+  protected get ssrOrigin() {
+    if (this._singletonSsrOrigin) return this._singletonSsrOrigin;
+
+    const { timeout } = this.props;
+    const fnUrl = this.serverLambdaForRegional!.addFunctionUrl({
+      authType: FunctionUrlAuthType.NONE,
+      invokeMode: this.streaming ? InvokeMode.RESPONSE_STREAM : undefined,
+    });
+    this._singletonSsrOrigin = new HttpOrigin(Fn.parseDomainName(fnUrl.url), {
+      readTimeout:
+        typeof timeout === "string"
+          ? toCdkDuration(timeout)
+          : CdkDuration.seconds(timeout),
+    });
+    return this._singletonSsrOrigin;
+  }
+
+  /** @internal */
+  protected get cachePolicy() {
+    if (this._singletonCachePolicy) return this._singletonCachePolicy;
+    this._singletonCachePolicy = this.buildServerCachePolicy();
+    return this._singletonCachePolicy;
+  }
+
+  /** @internal */
+  protected get serverOriginRequestPolicy() {
+    if (this._singletonServerOriginRequestPolicy) {
+      return this._singletonServerOriginRequestPolicy;
+    }
+    this._singletonServerOriginRequestPolicy =
+      this.buildServerOriginRequestPolicy();
+    return this._singletonServerOriginRequestPolicy;
   }
 
   /////////////////////
@@ -1008,7 +1056,6 @@ function handler(event) {
   protected createCloudFrontDistributionForRegional(): Distribution {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-    const cachePolicy = cdk?.serverCachePolicy ?? this.buildServerCachePolicy();
 
     return new Distribution(this, "Distribution", {
       // these values can be overwritten by cfDistributionProps
@@ -1018,7 +1065,7 @@ function handler(event) {
       // these values can NOT be overwritten by cfDistributionProps
       domainNames: this.buildDistributionDomainNames(),
       certificate: this.certificate,
-      defaultBehavior: this.buildDefaultBehaviorForRegional(cachePolicy),
+      defaultBehavior: this.buildDefaultBehaviorForRegional(),
       additionalBehaviors: {
         ...(cfDistributionProps.additionalBehaviors || {}),
       },
@@ -1028,7 +1075,6 @@ function handler(event) {
   protected createCloudFrontDistributionForEdge(): Distribution {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-    const cachePolicy = cdk?.serverCachePolicy ?? this.buildServerCachePolicy();
 
     return new Distribution(this, "Distribution", {
       // these values can be overwritten by cfDistributionProps
@@ -1038,7 +1084,7 @@ function handler(event) {
       // these values can NOT be overwritten by cfDistributionProps
       domainNames: this.buildDistributionDomainNames(),
       certificate: this.certificate,
-      defaultBehavior: this.buildDefaultBehaviorForEdge(cachePolicy),
+      defaultBehavior: this.buildDefaultBehaviorForEdge(),
       additionalBehaviors: {
         ...(cfDistributionProps.additionalBehaviors || {}),
       },
@@ -1065,33 +1111,19 @@ function handler(event) {
     return domainNames;
   }
 
-  protected buildDefaultBehaviorForRegional(
-    cachePolicy: ICachePolicy
-  ): BehaviorOptions {
-    const { timeout, cdk } = this.props;
+  protected buildDefaultBehaviorForRegional(): BehaviorOptions {
+    const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
     const shouldBuildFallback =
       this.buildConfig.serverOperationMode === "ssr-hybrid";
 
-    const fnUrl = this.serverLambdaForRegional!.addFunctionUrl({
-      authType: FunctionUrlAuthType.NONE,
-      invokeMode: this.streaming ? InvokeMode.RESPONSE_STREAM : undefined,
-    });
-
-    const httpOrigin = new HttpOrigin(Fn.parseDomainName(fnUrl.url), {
-      readTimeout:
-        typeof timeout === "string"
-          ? toCdkDuration(timeout)
-          : CdkDuration.seconds(timeout),
-    });
-
     const origin = shouldBuildFallback
       ? new OriginGroup({
           primaryOrigin: this.s3Origin,
-          fallbackOrigin: httpOrigin,
+          fallbackOrigin: this.ssrOrigin,
           fallbackStatusCodes: [403, 404],
         })
-      : httpOrigin;
+      : this.ssrOrigin;
 
     return {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
@@ -1101,9 +1133,9 @@ function handler(event) {
         : AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
-      cachePolicy,
+      cachePolicy: this.cachePolicy,
       responseHeadersPolicy: cdk?.responseHeadersPolicy,
-      originRequestPolicy: this.buildServerOriginRequestPolicy(),
+      originRequestPolicy: this.serverOriginRequestPolicy,
       ...(cfDistributionProps.defaultBehavior || {}),
       functionAssociations: [
         ...this.buildBehaviorFunctionAssociations(),
@@ -1112,9 +1144,7 @@ function handler(event) {
     };
   }
 
-  protected buildDefaultBehaviorForEdge(
-    cachePolicy: ICachePolicy
-  ): BehaviorOptions {
+  protected buildDefaultBehaviorForEdge(): BehaviorOptions {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
 
@@ -1124,9 +1154,9 @@ function handler(event) {
       allowedMethods: AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
-      cachePolicy,
+      cachePolicy: this.cachePolicy,
       responseHeadersPolicy: cdk?.responseHeadersPolicy,
-      originRequestPolicy: this.buildServerOriginRequestPolicy(),
+      originRequestPolicy: this.serverOriginRequestPolicy,
       ...(cfDistributionProps.defaultBehavior || {}),
       functionAssociations: [
         ...this.buildBehaviorFunctionAssociations(),
@@ -1152,10 +1182,27 @@ function handler(event) {
     ];
   }
 
-  protected addIndividualStaticFileBehaviors() {
+  protected addSsrExclusiveRouteBehaviors() {
     const { cdk } = this.props;
 
-    // Create individual behavior for each root level static file and directory
+    // Create individual behaviors for route paths which should exclusively be handled by SSR
+    for (const route of this.props.ssrExclusiveRoutes ?? []) {
+      this.distribution.addBehavior(route, this.ssrOrigin, {
+        viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        allowedMethods: AllowedMethods.ALLOW_ALL,
+        cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
+        compress: true,
+        cachePolicy: this.cachePolicy,
+        responseHeadersPolicy: cdk?.responseHeadersPolicy,
+        originRequestPolicy: this.serverOriginRequestPolicy,
+      });
+    }
+  }
+
+  protected addStaticFileBehaviors() {
+    const { cdk } = this.props;
+
+    // Create individual behaviors for each root level static file and directory
     const publicDir = path.join(
       this.props.path,
       this.buildConfig.clientBuildOutputDir

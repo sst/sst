@@ -354,8 +354,7 @@ export class NextjsSite extends SsrSite {
 
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-    const cachePolicy = cdk?.serverCachePolicy ?? this.buildServerCachePolicy();
-    const serverBehavior = this.buildDefaultBehaviorForRegional(cachePolicy);
+    const serverBehavior = this.buildDefaultBehaviorForRegional();
 
     return new Distribution(this, "Distribution", {
       // these values can be overwritten by cfDistributionProps
@@ -369,7 +368,7 @@ export class NextjsSite extends SsrSite {
       additionalBehaviors: {
         "api/*": serverBehavior,
         "_next/data/*": serverBehavior,
-        "_next/image*": this.buildImageBehavior(cachePolicy),
+        "_next/image*": this.buildImageBehavior(),
         ...(cfDistributionProps.additionalBehaviors || {}),
       },
     });
@@ -378,8 +377,7 @@ export class NextjsSite extends SsrSite {
   protected createCloudFrontDistributionForEdge(): Distribution {
     const { cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-    const cachePolicy = cdk?.serverCachePolicy ?? this.buildServerCachePolicy();
-    const serverBehavior = this.buildDefaultBehaviorForEdge(cachePolicy);
+    const serverBehavior = this.buildDefaultBehaviorForEdge();
 
     return new Distribution(this, "Distribution", {
       // these values can be overwritten by cfDistributionProps
@@ -393,13 +391,13 @@ export class NextjsSite extends SsrSite {
       additionalBehaviors: {
         "api/*": serverBehavior,
         "_next/data/*": serverBehavior,
-        "_next/image*": this.buildImageBehavior(cachePolicy),
+        "_next/image*": this.buildImageBehavior(),
         ...(cfDistributionProps.additionalBehaviors || {}),
       },
     });
   }
 
-  private buildImageBehavior(cachePolicy: ICachePolicy): BehaviorOptions {
+  private buildImageBehavior(): BehaviorOptions {
     const { cdk } = this.props;
     const imageFn = this.createImageOptimizationFunction();
     const imageFnUrl = imageFn.addFunctionUrl({
@@ -411,7 +409,7 @@ export class NextjsSite extends SsrSite {
       allowedMethods: AllowedMethods.ALLOW_ALL,
       cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
       compress: true,
-      cachePolicy,
+      cachePolicy: this.cachePolicy,
       responseHeadersPolicy: cdk?.responseHeadersPolicy,
     };
   }
