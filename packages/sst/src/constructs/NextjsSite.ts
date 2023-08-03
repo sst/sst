@@ -344,14 +344,7 @@ export class NextjsSite extends SsrSite {
 
     const { customDomain, cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-    const cachePolicy =
-      cdk?.serverCachePolicy ??
-      this.buildServerCachePolicy([
-        "accept",
-        "rsc",
-        "next-router-prefetch",
-        "next-router-state-tree",
-      ]);
+    const cachePolicy = cdk?.serverCachePolicy ?? this.buildServerCachePolicy();
     const serverBehavior = this.buildDefaultBehaviorForRegional(cachePolicy);
 
     return new Distribution(this, "CDN", {
@@ -379,14 +372,7 @@ export class NextjsSite extends SsrSite {
   protected createCloudFrontDistributionForEdge() {
     const { customDomain, cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
-    const cachePolicy =
-      cdk?.serverCachePolicy ??
-      this.buildServerCachePolicy([
-        "accept",
-        "rsc",
-        "next-router-prefetch",
-        "next-router-state-tree",
-      ]);
+    const cachePolicy = cdk?.serverCachePolicy ?? this.buildServerCachePolicy();
     const serverBehavior = this.buildDefaultBehaviorForEdge(cachePolicy);
 
     return new Distribution(this, "CDN", {
@@ -409,6 +395,16 @@ export class NextjsSite extends SsrSite {
         },
       },
     });
+  }
+
+  protected buildServerCachePolicy() {
+    return super.buildServerCachePolicy([
+      "accept",
+      "rsc",
+      "next-router-prefetch",
+      "next-router-state-tree",
+      "next-url",
+    ]);
   }
 
   private buildImageBehavior(cachePolicy: ICachePolicy): BehaviorOptions {

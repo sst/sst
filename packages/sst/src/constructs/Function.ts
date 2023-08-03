@@ -635,6 +635,16 @@ export interface ContainerProps {
    * ```
    */
   cmd?: string[];
+  /**
+   * Name of the Dockerfile.
+   * @example
+   * ```js
+   * container: {
+   *   file: "path/to/Dockerfile.prod"
+   * }
+   * ```
+   */
+  file?: string;
 }
 
 /**
@@ -781,7 +791,7 @@ export class Function extends CDKFunction implements SSTConstruct {
               layers: undefined,
             }
           : {
-              runtime: CDKRuntime.NODEJS_16_X,
+              runtime: CDKRuntime.NODEJS_18_X,
               code: Code.fromAsset(
                 path.resolve(__dirname, "../support/bridge")
               ),
@@ -803,6 +813,9 @@ export class Function extends CDKFunction implements SSTConstruct {
       this.addEnvironment("SST_FUNCTION_ID", this.node.addr);
       useDeferredTasks().add(async () => {
         const bootstrap = await useBootstrap();
+        const bootstrapBucketArn = `arn:${Stack.of(this).partition}:s3:::${
+          bootstrap.bucket
+        }`;
         this.attachPermissions([
           new PolicyStatement({
             actions: ["iot:*"],
@@ -812,9 +825,7 @@ export class Function extends CDKFunction implements SSTConstruct {
           new PolicyStatement({
             actions: ["s3:*"],
             effect: Effect.ALLOW,
-            resources: [
-              `arn:${Stack.of(this).partition}:s3:::${bootstrap.bucket}`,
-            ],
+            resources: [bootstrapBucketArn, `${bootstrapBucketArn}/*`],
           }),
         ]);
       });
@@ -830,6 +841,9 @@ export class Function extends CDKFunction implements SSTConstruct {
                   ? { platform: Platform.custom(architecture.dockerPlatform) }
                   : {}),
                 ...(props.container?.cmd ? { cmd: props.container.cmd } : {}),
+                ...(props.container?.file
+                  ? { file: props.container.file }
+                  : {}),
               }),
               handler: CDKHandler.FROM_IMAGE,
               runtime: CDKRuntime.FROM_IMAGE,

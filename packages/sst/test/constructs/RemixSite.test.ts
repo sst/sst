@@ -26,7 +26,6 @@ import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Api, Stack, RemixSite } from "../../dist/constructs/";
 import { SsrSiteProps } from "../../dist/constructs/SsrSite";
-import { appendFile } from "fs";
 
 process.env.SST_RESOURCES_TESTS = "enabled";
 const sitePath = "test/constructs/remix-site";

@@ -174,6 +174,19 @@ test("runtime: container: no cmd", async () => {
   }).rejects.toThrow(/No commands/);
 });
 
+test("runtime: container: invalid file", async () => {
+  expect(async () => {
+    await createJob({
+      runtime: "container",
+      handler: "test/constructs/container-function",
+      container: {
+        cmd: ["echo", "hello"],
+        file: "Dockerfile.garbage",
+      },
+    });
+  }).rejects.toThrow(/Failed to build job/);
+});
+
 test("memorySize", async () => {
   const { stack } = await createJob({
     memorySize: "15 GB",

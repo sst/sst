@@ -1,5 +1,47 @@
 # @serverless-stack/cli2
 
+## 2.22.11
+
+### Patch Changes
+
+- [#3173](https://github.com/serverless-stack/sst/pull/3173) [`567fc00cf`](https://github.com/serverless-stack/sst/commit/567fc00cff6cba5091de192a1f0ee6f22c8e0391) Thanks [@khuezy](https://github.com/khuezy)! - NextjsSite: add "next-url" to allowed headers
+
+- [`fdfcfb221`](https://github.com/serverless-stack/sst/commit/fdfcfb22181a763f85b59830f10450752194a8af) Thanks [@thdxr](https://github.com/thdxr)! - dev: update bridge function to node18
+
+- [#3179](https://github.com/serverless-stack/sst/pull/3179) [`04851db59`](https://github.com/serverless-stack/sst/commit/04851db59cb52f2cc2beafb3f52f0310c65d5b23) Thanks [@jamesgibbons92](https://github.com/jamesgibbons92)! - fix: dispose of esbuild context when in deploy mode
+
+## 2.22.10
+
+### Patch Changes
+
+- [`f69855c2b`](https://github.com/serverless-stack/sst/commit/f69855c2b03aa92a6262f1a2b0886db1cf81e067) Thanks [@fwang](https://github.com/fwang)! - Allow setting app stage via SST_STAGE environment variable
+
+## 2.22.9
+
+### Patch Changes
+
+- [`b5d0dd819`](https://github.com/serverless-stack/sst/commit/b5d0dd81986b03faf47e99987ecff9118a07ee5a) Thanks [@fwang](https://github.com/fwang)! - SsrSite: cdk.function return CDK Function instance
+
+## 2.22.8
+
+### Patch Changes
+
+- [`71c9bab6c`](https://github.com/serverless-stack/sst/commit/71c9bab6c54e6f5e41688893797bdd8d13d8effa) Thanks [@fwang](https://github.com/fwang)! - Function/Job: support docker --file option
+
+## 2.22.7
+
+### Patch Changes
+
+- [#2877](https://github.com/serverless-stack/sst/pull/2877) [`ec145f078`](https://github.com/serverless-stack/sst/commit/ec145f0781de07e7c51224f0163326440e198231) Thanks [@relsunkaev](https://github.com/relsunkaev)! - SsrFunction: respect architecture setting
+
+- [#3164](https://github.com/serverless-stack/sst/pull/3164) [`14418e889`](https://github.com/serverless-stack/sst/commit/14418e889f73ed2f334724d18d5905f73f2b2c2c) Thanks [@psolidgold](https://github.com/psolidgold)! - Function: Add policy statement resource for Function to access bootstrap bucket objects during live debugging.
+
+- [`6d076a004`](https://github.com/serverless-stack/sst/commit/6d076a00433ae4ae89073386fbc6996a1e42f76f) Thanks [@thdxr](https://github.com/thdxr)! - dev: fix issue with node_modules not symlinking on devmode rebuilds
+
+- [#3163](https://github.com/serverless-stack/sst/pull/3163) [`e77d397bb`](https://github.com/serverless-stack/sst/commit/e77d397bbb1b775967fbd72c5a6788075bc93b11) Thanks [@khuezy](https://github.com/khuezy)! - NextjsSite: add `next-url` to cache policy
+
+- [#3135](https://github.com/serverless-stack/sst/pull/3135) [`a8fc8208d`](https://github.com/serverless-stack/sst/commit/a8fc8208d5d90f38855dc7f70d01194fc291e181) Thanks [@jonnedeprez](https://github.com/jonnedeprez)! - Table: prevent overwriting FilterCriteria in consumers
+
 ## 2.22.6
 
 ### Patch Changes

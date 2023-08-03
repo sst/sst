@@ -58,6 +58,16 @@ export interface JobContainerProps {
    * ```
    */
   cmd: string[];
+  /**
+   * Name of the Dockerfile.
+   * @example
+   * ```js
+   * container: {
+   *   file: "path/to/Dockerfile.prod"
+   * }
+   * ```
+   */
+  file?: string;
 }
 
 export interface JobProps {
@@ -494,6 +504,7 @@ export class Job extends Construct implements SSTConstruct {
             architecture === "arm_64"
               ? Platform.custom("linux/arm64")
               : Platform.custom("linux/amd64"),
+          file: container?.file,
         });
         image.repository?.grantPull(this.job.role!);
         const project = this.job.node.defaultChild as CfnProject;

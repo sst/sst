@@ -122,10 +122,17 @@ export async function initProject(globals: GlobalOptions) {
 
   const config = await Promise.resolve(sstConfig.config(globals));
   const stage =
+    process.env.SST_STAGE ||
     globals.stage ||
     config.stage ||
     (await usePersonalStage(out)) ||
     (await promptPersonalStage(out));
+  // Set stage to SST_STAGE so that if SST spawned processes are aware
+  // of the stage. ie.
+  // `sst deploy --stage prod`: `prod` stage passed in via CLI
+  // -> spawns `open-next build`
+  // -> spawns `sst bind`: `prod` stage read from SST_STAGE
+  process.env.SST_STAGE = stage;
   const [version, cdkVersion, constructsVersion] = await (async () => {
     try {
       const packageJson = JSON.parse(
