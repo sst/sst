@@ -48,6 +48,7 @@ import {
 } from "./util/functionBinding.js";
 import { gray } from "colorette";
 import { useProject } from "../project.js";
+import { createAppContext } from "./context.js";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -318,9 +319,9 @@ export interface StaticSiteReplaceProps extends BaseSiteReplaceProps {}
 export interface StaticSiteCdkDistributionProps
   extends BaseSiteCdkDistributionProps {}
 
-/////////////////////
-// Construct
-/////////////////////
+type StaticSiteNormalizedProps = StaticSiteProps & {
+  path: Exclude<StaticSiteProps["path"], undefined>;
+};
 
 /**
  * The `StaticSite` construct is a higher level CDK construct that makes it easy to create a static website.
@@ -339,7 +340,7 @@ export interface StaticSiteCdkDistributionProps
  */
 export class StaticSite extends Construct implements SSTConstruct {
   public readonly id: string;
-  private props: Omit<StaticSiteProps, "path"> & { path: string };
+  private props: StaticSiteNormalizedProps;
   private doNotDeploy: boolean;
   private bucket: Bucket;
   private distribution: Distribution;
@@ -360,6 +361,7 @@ export class StaticSite extends Construct implements SSTConstruct {
       !stack.isActive || (app.mode === "dev" && !this.props.dev?.deploy);
 
     this.generateViteTypes();
+    useSites().add(stack.stackName, id, this.props);
 
     if (this.doNotDeploy) {
       // @ts-ignore
@@ -854,3 +856,19 @@ function handler(event) {
     return replaceValues;
   }
 }
+
+export const useSites = createAppContext(() => {
+  const sites: {
+    stack: string;
+    name: string;
+    props: StaticSiteNormalizedProps;
+  }[] = [];
+  return {
+    add(stack: string, name: string, props: StaticSiteNormalizedProps) {
+      sites.push({ stack, name, props });
+    },
+    get all() {
+      return sites;
+    },
+  };
+});

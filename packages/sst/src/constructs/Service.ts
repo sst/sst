@@ -65,6 +65,7 @@ import {
   ApplicationLoadBalancer,
   ApplicationTargetGroup,
 } from "aws-cdk-lib/aws-elasticloadbalancingv2";
+import { createAppContext } from "./context.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const NIXPACKS_IMAGE_NAME = "sst-nixpacks";
@@ -483,6 +484,8 @@ export class Service extends Construct implements SSTConstruct {
 
     this.validateServiceExists();
     this.validateMemoryAndCpu();
+
+    useServices().add(stack.stackName, id, this.props);
 
     if (this.doNotDeploy) {
       // @ts-expect-error
@@ -1014,3 +1017,19 @@ export class Service extends Construct implements SSTConstruct {
     );
   }
 }
+
+export const useServices = createAppContext(() => {
+  const sites: {
+    stack: string;
+    name: string;
+    props: ServiceNormalizedProps;
+  }[] = [];
+  return {
+    add(stack: string, name: string, props: ServiceNormalizedProps) {
+      sites.push({ stack, name, props });
+    },
+    get all() {
+      return sites;
+    },
+  };
+});

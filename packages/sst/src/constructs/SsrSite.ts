@@ -384,7 +384,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     this.validateTimeout();
     this.writeTypesFile();
 
-    useSites().add(id, this.constructor.name, this.props);
+    useSites().add(stack.stackName, id, this.constructor.name, this.props);
 
     if (this.doNotDeploy) {
       // @ts-ignore
@@ -1207,13 +1207,19 @@ function handler(event) {
 
 export const useSites = createAppContext(() => {
   const sites: {
+    stack: string;
     name: string;
     type: string;
     props: SsrSiteNormalizedProps;
   }[] = [];
   return {
-    add(name: string, type: string, props: SsrSiteNormalizedProps) {
-      sites.push({ name, type, props });
+    add(
+      stack: string,
+      name: string,
+      type: string,
+      props: SsrSiteNormalizedProps
+    ) {
+      sites.push({ stack, name, type, props });
     },
     get all() {
       return sites;
