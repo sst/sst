@@ -58,7 +58,7 @@ export class AstroSite extends SsrSite {
       );
     }
 
-    super(scope, id, { ...props, streaming: true }, importedBuildProps);
+    super(scope, id, props, importedBuildProps);
   }
 
   protected initBuildConfig(): SsrBuildConfig {
@@ -216,5 +216,9 @@ export class AstroSite extends SsrSite {
       type: "AstroSite" as const,
       ...this.getConstructMetadataBase(),
     };
+  }
+
+  protected supportsStreaming(): boolean {
+    return true;
   }
 }

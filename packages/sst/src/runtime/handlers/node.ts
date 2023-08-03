@@ -279,6 +279,10 @@ export const useNodeHandler = Context.memo(async () => {
           rebuildCache[input.functionID] = { ctx, result };
         }
 
+        if (input.mode === "deploy") {
+          ctx.dispose();
+        }
+
         logMemoryUsage(input.functionID, input.props.handler!);
 
         return {

@@ -734,3 +734,52 @@ new AppSyncApi(stack, "GraphqlApi", {
   },
 });
 ```
+
+### Batching GraphQL Resolvers (N+1)
+
+Using naive GraphQL resolvers may result in what the GraphQL community calls the "N+1 Problem", which occurs when the system makes too many upstream requests for a given query.
+
+For example, imagine that an incoming request is asking for 50 `Company` objects, each with its associated list of `Office` objects. Naive GraphQL resolvers will make a request to fetch the 50 `Company` records first, then repeatedly request the `Office` objects for the each of the 50 `Company` records. This results in 51 requests in total.
+
+Ideally, fetch operations should be batched, so that one request fetches the initial list of `Company` records, and another request fetches all the related `Office` records. This batching approach results in only _two_ requests, and is much more efficient.
+
+#### Defining a Batch Resolver
+
+Create a function that uses a mapping template to create a "BatchInvoke" typed resolver, and use that function when defining the subfield resolver.
+
+Here, we set up the resolvers for fetching companies and offices on their own, then we configure the batch resolver for fetching `Company.offices`, but in batch mode.
+
+```js {7-10}
+const createBatchResolver = (fn: FunctionDefinition): AppSyncApiResolverProps => {
+    return {
+        function: fn,
+        requestMapping: {
+            inline: `{
+            "version" : "2017-02-28", 
+            "operation" : "BatchInvoke",
+            "payload": {
+                "arguments": $utils.toJson($context.arguments),
+                "identity": $utils.toJson($context.identity),
+                "source": $utils.toJson($context.source),
+                "info": $utils.toJson($context.info),
+                "request": $utils.toJson($context.request)
+            }
+        }`
+        },
+    }
+};
+
+new AppSyncApi(stack, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  dataSources: {
+    companiesDS: "src/companies.main",
+    officesDS: "src/offices.main",
+  },
+  resolvers: {
+    "Query   companies": "companiesDS",
+    "Query   offices": "officesDS",
+    "Company offices": createBatchResolver("src/offices.batchMain"), 
+  }
+});
+```
+The handler for the batch resolver (`src/offices.batchMain`) looks very similar to a typical handler, except it accepts an array of `AppSyncEvent` rather than a single instance.

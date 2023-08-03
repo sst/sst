@@ -357,13 +357,6 @@ export interface SsrSiteProps {
    * ```
    */
   ssrExclusiveRoutes?: string[];
-
-  /**
-   * The SSR function url supports streaming.
-   * [Read more](https://docs.aws.amazon.com/lambda/latest/dg/configuration-response-streaming.html#config-rs-invoke-furls).
-   * @default false
-   */
-  streaming?: boolean;
 }
 
 type SsrSiteNormalizedProps = SsrSiteProps & {
@@ -433,7 +426,6 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     };
     this.doNotDeploy =
       !stack.isActive || (app.mode === "dev" && !this.props.dev?.deploy);
-    this.streaming = props?.streaming ?? false;
 
     this.importedBuildProps = importedBuildProps;
     this.buildConfig = this.initBuildConfig();
@@ -565,11 +557,17 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   protected get ssrOrigin() {
     if (this._singletonSsrOrigin) return this._singletonSsrOrigin;
 
-    const { timeout } = this.props;
+    // TODO
+    console.log({ support: this.supportsStreaming() });
+    const { timeout } = this.props;   
     const fnUrl = this.serverLambdaForRegional!.addFunctionUrl({
       authType: FunctionUrlAuthType.NONE,
-      invokeMode: this.streaming ? InvokeMode.RESPONSE_STREAM : undefined,
+      invokeMode: this.supportsStreaming()
+        ? InvokeMode.RESPONSE_STREAM
+        : undefined,
     });
+    
+    
     this._singletonSsrOrigin = new HttpOrigin(Fn.parseDomainName(fnUrl.url), {
       readTimeout:
         typeof timeout === "string"
@@ -1521,6 +1519,10 @@ function handler(event) {
     Logger.debug(`Generated build ID ${buildId}`);
 
     return buildId;
+  }
+
+  protected supportsStreaming(): boolean {
+    return false;
   }
 }
 

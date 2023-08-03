@@ -1,9 +1,10 @@
 import type { SSRManifest } from "astro";
 import type { APIGatewayProxyEventV2 } from "aws-lambda";
-import { polyfill } from "@astrojs/webapi";
-import { getRequest, setResponse } from "./transform";
+import type { ResponseStream } from "../lib/types";
 import { NodeApp } from "astro/app/node";
-import { ResponseStream } from ".";
+import { polyfill } from "@astrojs/webapi";
+import { convertFrom, convertTo } from "../lib/event-mapper.js";
+import { debug } from "../lib/logger.js";
 
 polyfill(globalThis, {
   exclude: "window document",
@@ -12,18 +13,28 @@ polyfill(globalThis, {
 export function createExports(manifest: SSRManifest) {
   const app = new NodeApp(manifest);
 
-  const handler = async (
+  async function handler(
     event: APIGatewayProxyEventV2,
     responseStream: ResponseStream
-  ) => {
-    let request: Request;
+  ) {
+    debug("event", event);
 
-    try {
-      request = await getRequest(event);
-    } catch (err: any) {
-      return streamError(400, err, responseStream);
-    }
+    // Parse Lambda event
+    const internalEvent = convertFrom(event);
 
+    // Build request
+    const requestUrl = internalEvent.url;
+    const requestProps = {
+      method: internalEvent.method,
+      headers: internalEvent.headers,
+      body: ["GET", "HEAD"].includes(internalEvent.method)
+        ? undefined
+        : internalEvent.body,
+    };
+    debug("request", requestUrl, requestProps);
+    const request = new Request(requestUrl, requestProps);
+
+    // Handle page not found
     const routeData = app.match(request, { matchNotFound: true });
     if (!routeData) {
       return streamError(404, "Not found", responseStream);
@@ -31,10 +42,24 @@ export function createExports(manifest: SSRManifest) {
 
     // Process request
     const response = await app.render(request, routeData);
+    debug("response", response);
 
     // Stream response back to Cloudfront
-    await setResponse(app, responseStream, response);
-  };
+    await convertTo({
+      type: internalEvent.type,
+      response,
+      responseStream,
+      cookies: app.setCookieHeaders
+        ? (() => {
+            const cookies: string[] = [];
+            for (const header of app.setCookieHeaders(response)) {
+              cookies.push(header);
+            }
+            return cookies;
+          })()
+        : undefined,
+    });
+  }
 
   return {
     // https://docs.aws.amazon.com/lambda/latest/dg/configuration-response-streaming.html

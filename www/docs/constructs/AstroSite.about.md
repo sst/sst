@@ -142,6 +142,14 @@ Note that, in the case you have a centralized database, Edge locations are often
 We recommend you to deploy to a single region when unsure.
 :::
 
+## Streaming
+
+Astro natively supports [streaming](https://docs.astro.build/en/guides/server-side-rendering/#streaming), allowing a page to be broken down into chunks. These chunks can be sent over the network in sequential order and then incrementally rendered in the browser. This process significantly enhances page performance.
+
+:::info
+Currently streaming is only supported by `AstroSite` when deployed in single region mode.
+:::
+
 ## Custom domains
 
 You can configure the website with a custom domain hosted either on [Route 53](https://aws.amazon.com/route53/) or [externally](#configuring-externally-hosted-domain).
