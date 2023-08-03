@@ -2,7 +2,6 @@ import fs from "fs";
 import path from "path";
 
 import type { RouteType } from "astro";
-import { S3Origin } from "aws-cdk-lib/aws-cloudfront-origins";
 import { Construct } from "constructs";
 import {
   SsrSite,
@@ -43,11 +42,7 @@ type AstroImportedBuildProps = ImportedSsrBuildProps & {
 export class AstroSite extends SsrSite {
   protected declare importedBuildProps: AstroImportedBuildProps;
 
-  constructor(
-    scope: Construct,
-    id: string,
-    props: Omit<SsrSiteProps, "streaming">
-  ) {
+  constructor(scope: Construct, id: string, props: SsrSiteProps) {
     const buildPropsPath = path.join(
       props.path ?? ".",
       "dist",
