@@ -1,5 +1,15 @@
 # @serverless-stack/cli2
 
+## 2.22.11
+
+### Patch Changes
+
+- [#3173](https://github.com/serverless-stack/sst/pull/3173) [`567fc00cf`](https://github.com/serverless-stack/sst/commit/567fc00cff6cba5091de192a1f0ee6f22c8e0391) Thanks [@khuezy](https://github.com/khuezy)! - NextjsSite: add "next-url" to allowed headers
+
+- [`fdfcfb221`](https://github.com/serverless-stack/sst/commit/fdfcfb22181a763f85b59830f10450752194a8af) Thanks [@thdxr](https://github.com/thdxr)! - dev: update bridge function to node18
+
+- [#3179](https://github.com/serverless-stack/sst/pull/3179) [`04851db59`](https://github.com/serverless-stack/sst/commit/04851db59cb52f2cc2beafb3f52f0310c65d5b23) Thanks [@jamesgibbons92](https://github.com/jamesgibbons92)! - fix: dispose of esbuild context when in deploy mode
+
 ## 2.22.10
 
 ### Patch Changes
