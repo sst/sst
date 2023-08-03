@@ -22,7 +22,6 @@ export const update = (program: Program) =>
         describe: "Optionally specify a version to update to",
       }),
     async (args) => {
-      const { green, yellow } = await import("colorette");
       const fs = await import("fs/promises");
       const path = await import("path");
       const { fetch } = await import("undici");
@@ -56,13 +55,12 @@ export const update = (program: Program) =>
 
       const results = new Map<string, Set<[string, string]>>();
       const tasks = files.map(async (file) => {
-        const data = await fs
-          .readFile(file)
-          .then((x) => x.toString())
-          .then(JSON.parse);
+        const data = await fs.readFile(file).then((x) => x.toString());
+        const newline = data.match(/\r?\n$/)?.[0];
+        const pkg = JSON.parse(data);
 
         for (const field of FIELDS) {
-          const deps = data[field];
+          const deps = pkg[field];
           if (!deps) continue;
           for (const [pkg, existing] of Object.entries(deps)) {
             if (!PACKAGE_MATCH.some((x) => pkg.startsWith(x))) continue;
@@ -94,7 +92,10 @@ export const update = (program: Program) =>
         }
 
         if (results.has(file)) {
-          await fs.writeFile(file, JSON.stringify(data, null, 2));
+          await fs.writeFile(
+            file,
+            `${JSON.stringify(pkg, null, 2)}${newline ?? ""}`
+          );
         }
       });
       await Promise.all(tasks);
