@@ -1126,10 +1126,6 @@ function handler(event) {
 
     // Create individual behaviors for route paths which should exclusively be handled by SSR
     for (const route of this.props.ssrExclusiveRoutes ?? []) {
-
-      /**
-       * NOTE: `addBehavior` is not a supported method on the new distribution class.
-       */
       this.distribution.addBehavior(route, this.ssrOrigin, {
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         allowedMethods: AllowedMethods.ALLOW_ALL,

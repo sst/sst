@@ -12,6 +12,8 @@ import {
   Distribution as CdkDistribution,
   DistributionProps as CdkDistributionProps,
   IDistribution,
+  IOrigin,
+  AddBehaviorOptions,
 } from "aws-cdk-lib/aws-cloudfront";
 import { ICertificate } from "aws-cdk-lib/aws-certificatemanager";
 import { CloudFrontTarget } from "aws-cdk-lib/aws-route53-targets";
@@ -234,6 +236,21 @@ export class Distribution extends Construct {
     resource.node.addDependency(policy);
 
     return resource;
+  }
+
+  /**
+   * Allow the dynamic creation of behaviors on the distribution.
+   */
+  public addBehavior(
+    pathPattern: string,
+    origin: IOrigin,
+    behaviorOptions?: AddBehaviorOptions
+  ) {
+    if (this.distribution instanceof CdkDistribution) {
+      this.distribution.addBehavior(pathPattern, origin, behaviorOptions);
+    } else {
+      throw new Error("Unable to extend behavior for imported distribution.");
+    }
   }
 
   private validateCloudFrontDistributionSettings() {
