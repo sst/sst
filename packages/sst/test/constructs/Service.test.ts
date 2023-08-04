@@ -1,5 +1,6 @@
 import { test, expect, beforeAll, vi } from "vitest";
 import { execSync } from "child_process";
+import { HostedZone } from "aws-cdk-lib/aws-route53";
 import {
   countResources,
   countResourcesLike,
@@ -166,10 +167,10 @@ test("path: not exist", async () => {
 });
 
 test("customDomain: string", async () => {
-  route53.HostedZone.fromLookup = vi
+  HostedZone.fromLookup = vi
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
-      return new route53.HostedZone(scope, id, { zoneName: domainName });
+      return new HostedZone(scope, id, { zoneName: domainName });
     });
   const { service, stack } = await createService({
     customDomain: "domain.com",
@@ -340,7 +341,7 @@ test("scaling.memoryUtilization defined", async () => {
   });
 });
 
-test("scaling.requestPerContainer undefined", async () => {
+test("scaling.requestsPerContainer undefined", async () => {
   const { service, stack } = await createService();
   hasResource(stack, "AWS::ApplicationAutoScaling::ScalingPolicy", {
     TargetTrackingScalingPolicyConfiguration: objectLike({
@@ -351,10 +352,10 @@ test("scaling.requestPerContainer undefined", async () => {
     }),
   });
 });
-test("scaling.requestPerContainer defined", async () => {
+test("scaling.requestsPerContainer defined", async () => {
   const { service, stack } = await createService({
     scaling: {
-      requestPerContainer: 1000,
+      requestsPerContainer: 1000,
     },
   });
   hasResource(stack, "AWS::ApplicationAutoScaling::ScalingPolicy", {
