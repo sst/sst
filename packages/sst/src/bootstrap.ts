@@ -66,9 +66,14 @@ export const useBootstrap = Context.memo(async () => {
 
     if (needToBootstrapCDK) {
       await bootstrapCDK();
+
+      // fetch bootstrap status
+      cdkStatus = await loadCDKStatus();
+      if (cdkStatus.status !== "ready")
+        throw new VisibleError("Failed to load bootstrap stack status");
     }
     if (needToBootstrapSST) {
-      await bootstrapSST();
+      await bootstrapSST(cdkStatus.bucket!);
 
       // fetch bootstrap status
       sstStatus = await loadSSTStatus();
@@ -98,7 +103,11 @@ async function loadCDKStatus() {
 
     // Check CDK bootstrap stack deployed successfully
     if (
-      !["CREATE_COMPLETE", "UPDATE_COMPLETE"].includes(stacks[0].StackStatus!)
+      ![
+        "CREATE_COMPLETE",
+        "UPDATE_COMPLETE",
+        "UPDATE_ROLLBACK_COMPLETE",
+      ].includes(stacks[0].StackStatus!)
     ) {
       return { status: "bootstrap" };
     }
@@ -107,14 +116,20 @@ async function loadCDKStatus() {
     // note: there is no a programmatical way to get the minimal required version
     //       of CDK bootstrap stack. We are going to hardcode it to 14 for now,
     //       which is the latest version as of CDK v2.62.2
-    const output = stacks[0].Outputs?.find(
-      (o) => o.OutputKey === "BootstrapVersion"
-    );
-    if (!output || parseInt(output.OutputValue!) < 14) {
+    let version: number | undefined;
+    let bucket: string | undefined;
+    const output = stacks[0].Outputs?.forEach((o) => {
+      if (o.OutputKey === "BootstrapVersion") {
+        version = parseInt(o.OutputValue!);
+      } else if (o.OutputKey === "BucketName") {
+        bucket = o.OutputValue!;
+      }
+    });
+    if (!version || version < 14 || !bucket) {
       return { status: "update" };
     }
 
-    return { status: "ready" };
+    return { status: "ready", version, bucket };
   } catch (e: any) {
     if (
       e.name === "ValidationError" &&
@@ -185,7 +200,7 @@ async function loadSSTStatus() {
   return { status: "ready", version, bucket };
 }
 
-export async function bootstrapSST() {
+export async function bootstrapSST(cdkBucket: string) {
   const { region, bootstrap, cdk } = useProject().config;
 
   // Create bootstrap stack
@@ -212,10 +227,10 @@ export async function bootstrapSST() {
   }
 
   // Create S3 bucket to store stacks metadata
-  const bucket = bootstrap?.useExistingBucket
+  const bucket = bootstrap?.useCdkBucket
     ? {
-        bucketName: bootstrap.useExistingBucket,
-        bucketArn: `arn:${stack.partition}:s3:::${bootstrap.useExistingBucket}`,
+        bucketName: cdkBucket,
+        bucketArn: `arn:${stack.partition}:s3:::${cdkBucket}`,
       }
     : new Bucket(stack, region!, {
         encryption: BucketEncryption.S3_MANAGED,
