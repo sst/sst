@@ -99,6 +99,7 @@ type EventPayload<E extends Event> = {
   metadata: undefined extends E["shape"]["metadata"]
     ? E["shape"]["metadataFn"]
     : E["shape"]["metadata"];
+  attempts: number;
 };
 
 export function EventHandler<Events extends Event>(
@@ -109,11 +110,14 @@ export function EventHandler<Events extends Event>(
     }[Events["type"]]
   ) => Promise<void>
 ) {
-  return async (event: EventBridgeEvent<string, any>) => {
+  return async (
+    event: EventBridgeEvent<string, any> & { attempts?: number }
+  ) => {
     await cb({
       type: event["detail-type"],
       properties: event.detail.properties,
       metadata: event.detail.metadata,
+      attempts: event.attempts ?? 0,
     });
   };
 }

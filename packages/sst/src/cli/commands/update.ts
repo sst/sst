@@ -1,14 +1,6 @@
 import type { Program } from "../program.js";
 
-const PACKAGE_MATCH = [
-  "sst",
-  "astro-sst",
-  "aws-cdk",
-  "@aws-cdk",
-  "constructs",
-  "svelte-kit-sst",
-  "solid-start-sst",
-];
+const PACKAGE_MATCH = ["aws-cdk", "@aws-cdk"];
 
 const FIELDS = ["dependencies", "devDependencies"];
 
@@ -22,7 +14,6 @@ export const update = (program: Program) =>
         describe: "Optionally specify a version to update to",
       }),
     async (args) => {
-      const { green, yellow } = await import("colorette");
       const fs = await import("fs/promises");
       const path = await import("path");
       const { fetch } = await import("undici");
@@ -56,18 +47,15 @@ export const update = (program: Program) =>
 
       const results = new Map<string, Set<[string, string]>>();
       const tasks = files.map(async (file) => {
-        const data = await fs
-          .readFile(file)
-          .then((x) => x.toString())
-          .then(JSON.parse);
+        const data = await fs.readFile(file).then((x) => x.toString());
+        // Note: preserve ending new line characters in package.json
+        const tailingNewline = data.match(/\r?\n$/)?.[0];
+        const json = JSON.parse(data);
 
         for (const field of FIELDS) {
-          const deps = data[field];
-          if (!deps) continue;
-          for (const [pkg, existing] of Object.entries(deps)) {
-            if (!PACKAGE_MATCH.some((x) => pkg.startsWith(x))) continue;
+          const deps = json[field];
+          for (const [pkg, existing] of Object.entries(deps || {})) {
             const desired = (() => {
-              // Both sst and astro-sst should be sharing the same version
               if (
                 [
                   "sst",
@@ -75,14 +63,20 @@ export const update = (program: Program) =>
                   "svelte-kit-sst",
                   "solid-start-sst",
                 ].includes(pkg)
-              )
+              ) {
                 return metadata.version;
-              if (pkg === "constructs") return metadata.dependencies.constructs;
-              if (pkg.endsWith("alpha"))
-                return metadata.dependencies["@aws-cdk/aws-apigatewayv2-alpha"];
-              return metadata.dependencies["aws-cdk-lib"];
+              } else if (pkg === "constructs") {
+                return metadata.dependencies.constructs;
+              } else if (
+                pkg.startsWith("aws-cdk") ||
+                pkg.startsWith("@aws-cdk")
+              ) {
+                return pkg.endsWith("alpha")
+                  ? metadata.dependencies["@aws-cdk/aws-apigatewayv2-alpha"]
+                  : metadata.dependencies["aws-cdk-lib"];
+              }
             })();
-            if (existing === desired) continue;
+            if (!desired || existing === desired) continue;
             let arr = results.get(file);
             if (!arr) {
               arr = new Set();
@@ -94,7 +88,10 @@ export const update = (program: Program) =>
         }
 
         if (results.has(file)) {
-          await fs.writeFile(file, JSON.stringify(data, null, 2));
+          await fs.writeFile(
+            file,
+            `${JSON.stringify(json, null, 2)}${tailingNewline ?? ""}`
+          );
         }
       });
       await Promise.all(tasks);

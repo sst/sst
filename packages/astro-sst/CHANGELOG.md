@@ -1,5 +1,15 @@
 # astro-sst
 
+## 2.23.2
+
+## 2.23.1
+
+## 2.23.0
+
+### Patch Changes
+
+- [#3177](https://github.com/serverless-stack/sst/pull/3177) [`8a31945c4`](https://github.com/serverless-stack/sst/commit/8a31945c44048308b5f8cf4cc7e5fe490eb835c9) Thanks [@fwang](https://github.com/fwang)! - AstroSite: support streaming
+
 ## 2.22.11
 
 ## 2.22.10

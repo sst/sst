@@ -29,6 +29,7 @@ export interface ConfigOptions {
     disableParameterizedStackNameCheck?: boolean;
   };
   bootstrap?: {
+    useCdkBucket?: boolean;
     stackName?: string;
     tags?: Record<string, string>;
   };
