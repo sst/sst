@@ -1,14 +1,6 @@
 import type { Program } from "../program.js";
 
-const PACKAGE_MATCH = [
-  "sst",
-  "astro-sst",
-  "aws-cdk",
-  "@aws-cdk",
-  "constructs",
-  "svelte-kit-sst",
-  "solid-start-sst",
-];
+const PACKAGE_MATCH = ["aws-cdk", "@aws-cdk"];
 
 const FIELDS = ["dependencies", "devDependencies"];
 
@@ -63,9 +55,7 @@ export const update = (program: Program) =>
         for (const field of FIELDS) {
           const deps = json[field];
           for (const [pkg, existing] of Object.entries(deps || {})) {
-            if (!PACKAGE_MATCH.some((x) => pkg.startsWith(x))) continue;
             const desired = (() => {
-              // Both sst and astro-sst should be sharing the same version
               if (
                 [
                   "sst",
@@ -73,14 +63,20 @@ export const update = (program: Program) =>
                   "svelte-kit-sst",
                   "solid-start-sst",
                 ].includes(pkg)
-              )
+              ) {
                 return metadata.version;
-              if (pkg === "constructs") return metadata.dependencies.constructs;
-              if (pkg.endsWith("alpha"))
-                return metadata.dependencies["@aws-cdk/aws-apigatewayv2-alpha"];
-              return metadata.dependencies["aws-cdk-lib"];
+              } else if (pkg === "constructs") {
+                return metadata.dependencies.constructs;
+              } else if (
+                pkg.startsWith("aws-cdk") ||
+                pkg.startsWith("@aws-cdk")
+              ) {
+                return pkg.endsWith("alpha")
+                  ? metadata.dependencies["@aws-cdk/aws-apigatewayv2-alpha"]
+                  : metadata.dependencies["aws-cdk-lib"];
+              }
             })();
-            if (existing === desired) continue;
+            if (!desired || existing === desired) continue;
             let arr = results.get(file);
             if (!arr) {
               arr = new Set();
