@@ -4,6 +4,7 @@ import fs from "fs";
 import { VisibleError } from "../error.js";
 import { execAsync } from "../util/process.js";
 import { existsAsync } from "../util/fs.js";
+import { Colors } from "../cli/colors.js";
 
 import { Construct } from "constructs";
 import { Duration as CdkDuration } from "aws-cdk-lib/core";
@@ -496,18 +497,10 @@ export class Service extends Construct implements SSTConstruct {
       return;
     }
 
-    // TODO
-    //const outputDir = this.createOutputDir();
-    const outputDir =
-      "/Users/frank/Sites/sst-playground/.sst/artifacts/Service-NextJs-c885e92efbccdb72a8ce1dca489790e19125ba5f53";
-    console.log({ outputDir });
-
     // Create ECS cluster
     const vpc = this.createVpc();
-    const { cluster, container, taskDefinition, service } = this.createService(
-      vpc,
-      outputDir
-    );
+    const { cluster, container, taskDefinition, service } =
+      this.createService(vpc);
     const { alb, target } = this.createLoadBalancer(vpc, service);
     this.createAutoScaling(service, target);
 
@@ -526,11 +519,15 @@ export class Service extends Construct implements SSTConstruct {
 
     useDeferredTasks().add(async () => {
       if (!app.isRunningSSTTest()) {
+        Colors.line(
+          `➜  Building container image for the "${this.node.id}" service`
+        );
+
         // Build app
         let dockerfile = "Dockerfile";
         if (!(await existsAsync(path.join(this.props.path, dockerfile)))) {
           await this.createNixpacksBuilder();
-          dockerfile = await this.runNixpacksBuild(outputDir);
+          dockerfile = await this.runNixpacksBuild();
         }
         await this.runDockerBuild(dockerfile);
         this.updateContainerImage(dockerfile, taskDefinition, container);
@@ -717,7 +714,7 @@ export class Service extends Construct implements SSTConstruct {
     );
   }
 
-  private createService(vpc: IVpc, outputDir: string) {
+  private createService(vpc: IVpc) {
     const { cpu, memory, port } = this.props;
     const app = this.node.root as App;
     const clusterName = app.logicalPrefixedName(this.node.id);
@@ -909,18 +906,6 @@ export class Service extends Construct implements SSTConstruct {
   // Build App
   /////////////////////
 
-  private createOutputDir() {
-    const outputDir = path.resolve(
-      path.join(
-        useProject().paths.artifacts,
-        `Service-${this.node.id}-${this.node.addr}`
-      )
-    );
-    fs.rmSync(outputDir, { recursive: true, force: true });
-    fs.mkdirSync(outputDir, { recursive: true });
-    return outputDir;
-  }
-
   private async createNixpacksBuilder() {
     try {
       await execAsync(
@@ -945,7 +930,7 @@ export class Service extends Construct implements SSTConstruct {
     }
   }
 
-  private async runNixpacksBuild(outputDir: string) {
+  private async runNixpacksBuild() {
     const { path: servicePath } = this.props;
     try {
       await execAsync(
@@ -956,10 +941,8 @@ export class Service extends Construct implements SSTConstruct {
           "--network=host",
           `--name=sst-${this.node.id}-service`,
           `-v=${path.resolve(servicePath)}:/service`,
-          //`-v=${outputDir}:/service-output`,
           `-w="/service"`,
           NIXPACKS_IMAGE_NAME,
-          //`build /service --out /service-output`,
           `build . --out .`,
         ].join(" "),
         {
@@ -974,7 +957,6 @@ export class Service extends Construct implements SSTConstruct {
         `Failed to run Nixpacks build for the ${this.node.id} service`
       );
     }
-    //file: path.join(outputDir, ".nixpacks/Dockerfile"),
     return ".nixpacks/Dockerfile";
   }
 
