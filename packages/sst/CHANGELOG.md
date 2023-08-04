@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.23.1
+
+### Patch Changes
+
+- [`cb9744e57`](https://github.com/serverless-stack/sst/commit/cb9744e57d605a2fda82d7e5f1583b212f24b365) Thanks [@fwang](https://github.com/fwang)! - Bootstrap: allow using CDK bootstrap bucket instead of creating a new one
+
 ## 2.23.0
 
 ### Minor Changes
