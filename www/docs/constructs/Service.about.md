@@ -111,11 +111,11 @@ new Service(stack, "MyService", {
 Your cluster can auto-scale as the traffic increases or decreases based on several metrics:
 - CPU utilization (default 70%)
 - Memory utilization (default 70%)
-- Per-container request count (default 500).
+- Per-container request count (default 500)
 
 You can also set the minimum and maximum number of containers to which the cluster can scale.
 
-Auto-scaling is disabled by default as both the minimum and maximum are set to 1.
+Auto-scaling is **disabled by default** as both the minimum and maximum are set to 1.
 
 To configure it:
 
@@ -202,7 +202,7 @@ new Service(stack, "MyService", {
 
 ```js
 new Service(stack, "MyService", {
-  handler: "./service",
+  path: "./service",
   port: 8080,
   cpu: "2 vCPU",
   memory: "8 GB",
@@ -218,13 +218,13 @@ new Service(stack, "MyService", {
 });
 ```
 
-### Create a service in a VPC
+### Using an existing VPC
 
 ```js
 import { Vpc } from "aws-cdk-lib/aws-ec2";
 
 new Service(stack, "MyService", {
-  handler: "src/job.main",
+  path: "./service",
   cdk: {
     vpc: Vpc.fromLookup(stack, "VPC", {
       vpcId: "vpc-xxxxxxxxxx",
