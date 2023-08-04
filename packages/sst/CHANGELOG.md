@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.23.3
+
+### Patch Changes
+
+- [`19cc5c5cb`](https://github.com/serverless-stack/sst/commit/19cc5c5cb22f57876a78b1eea155a5ef03dee2d9) Thanks [@fwang](https://github.com/fwang)! - Service: configure log retention via "logRetention"
+
+- [`fb6f4e208`](https://github.com/serverless-stack/sst/commit/fb6f4e208c0be8a3785d96438e1ca67ba56579f2) Thanks [@fwang](https://github.com/fwang)! - Service: configure container definition via "cdk.container"
+
 ## 2.23.2
 
 ### Patch Changes
