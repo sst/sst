@@ -14,8 +14,6 @@ $ npx create-sst@latest --template=examples/websocket
 $ yarn create sst --template=examples/websocket
 # Or with PNPM
 $ pnpm create sst --template=examples/websocket
-# Or with PNPM
-$ pnpm create sst --template=examples/websocket
 ```
 
 ## Commands

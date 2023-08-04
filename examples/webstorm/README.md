@@ -14,8 +14,6 @@ $ npx create-sst@latest --template=examples/webstorm
 $ yarn create sst --template=examples/webstorm
 # Or with PNPM
 $ pnpm create sst --template=examples/webstorm
-# Or with PNPM
-$ pnpm create sst --template=examples/webstorm
 ```
 
 ## Commands
