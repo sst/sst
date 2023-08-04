@@ -204,6 +204,7 @@ module.exports = {
         "constructs/EventBus",
         "constructs/KinesisStream",
       ],
+      Container: ["constructs/Service"],
       Storage: ["constructs/Bucket"],
       Auth: ["constructs/Auth", "constructs/Cognito"],
       Types: [
