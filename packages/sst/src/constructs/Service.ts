@@ -59,6 +59,7 @@ import {
   FargateService,
   CfnTaskDefinition,
   ContainerDefinition,
+  ContainerDefinitionOptions,
 } from "aws-cdk-lib/aws-ecs";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
@@ -387,6 +388,22 @@ export interface ServiceProps {
    */
   waitForInvalidation?: boolean;
   cdk?: {
+    /**
+     * Customizing the container definition for the ECS task.
+     * @example
+     * ```js
+     * {
+     *   cdk: {
+     *     container: {
+     *       healthCheck: {
+     *         command: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"],
+     *       },
+     *     }
+     *   }
+     * }
+     * ```
+     */
+    container?: Omit<ContainerDefinitionOptions, "image">;
     /**
      * Runs codebuild job in the specified VPC. Note this will only work once deployed.
      *
@@ -735,7 +752,7 @@ export class Service extends Construct implements SSTConstruct {
   }
 
   private createService(vpc: IVpc) {
-    const { cpu, memory, port } = this.props;
+    const { cpu, memory, port, cdk } = this.props;
     const app = this.node.root as App;
     const clusterName = app.logicalPrefixedName(this.node.id);
 
@@ -756,7 +773,6 @@ export class Service extends Construct implements SSTConstruct {
     });
 
     const container = taskDefinition.addContainer("Container", {
-      image: { bind: () => ({ imageName: "placeholder" }) },
       logging: new AwsLogDriver({
         logGroup,
         streamPrefix: "service",
@@ -767,6 +783,8 @@ export class Service extends Construct implements SSTConstruct {
         SST_STAGE: app.stage,
         SST_SSM_PREFIX: useProject().config.ssmPrefix,
       },
+      ...cdk?.container,
+      image: { bind: () => ({ imageName: "placeholder" }) },
     });
 
     const service = new FargateService(this, "Service", {

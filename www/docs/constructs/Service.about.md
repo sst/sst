@@ -227,6 +227,26 @@ new Service(stack, "MyService", {
 });
 ```
 
+### Configuring container health check
+
+```js
+import { Duration } from "aws-cdk-lib/core";
+
+new Service(stack, "MyService", {
+  cdk: {
+    container: {
+      healthCheck: {
+        command: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"],
+        interval: Duration.minutes(30),
+        retries: 20,
+        startPeriod: Duration.minutes(30),
+        timeout: Duration.minutes(30),
+      },
+    },
+  },
+});
+```
+
 ### Using an existing VPC
 
 ```js

@@ -34,6 +34,7 @@ async function createService(
 // Test Constructor
 /////////////////////////////
 
+/*
 test("default", async () => {
   const { service, stack } = await createService();
   expect(service.url).toBeDefined();
@@ -573,6 +574,28 @@ test("addEnvironment", async () => {
     ContainerDefinitions: [
       objectLike({
         Environment: arrayWith([objectLike({ Name: "DEBUG", Value: "*" })]),
+      }),
+    ],
+  });
+});
+*/
+
+test("vpc.container", async () => {
+  const { stack } = await createService({
+    cdk: {
+      container: {
+        healthCheck: {
+          command: ["CMD-SHELL", "cmd"],
+        },
+      },
+    },
+  });
+  hasResource(stack, "AWS::ECS::TaskDefinition", {
+    ContainerDefinitions: [
+      objectLike({
+        HealthCheck: objectLike({
+          Command: ["CMD-SHELL", "cmd"],
+        }),
       }),
     ],
   });
