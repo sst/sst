@@ -1,15 +1,15 @@
-The `Service` construct is a higher level CDK construct that makes it easy to deploy perform container applications. It provides a simple way to build and deploy the app to AWS:
+The `Service` construct is a higher level CDK construct that simplifies the deployment of containerized applications. It provides a simple way to build and deploy your app to AWS with these features:
 
-- The app is deployed to an ECS Fargate cluster, and fronted with Application Load Balancer.
-- The app is auto-scaled based on CPU and memory utilization, as well as requests to each container.
-- You can [reference other AWS resources](#using-aws-services) directly in your app.
-- It enables you to [configure custom domains](#custom-domains) for the website URL.
+- Deployment to an ECS Fargate cluster with an Application Load Balancer as the front end.
+- Auto-scaling based on CPU and memory utilization and per-container request count.
+- Directly [referencing other AWS resources](#using-aws-services) in your app.
+- Configuring [custom domains](#custom-domains) for your website URL.
 
 ---
 
 ## Quick Start
 
-To create a service, set `path` to the directory containing the Dockerfile.
+To create a service, set `path` to the directory that contains the Dockerfile.
 
 ```js
 import { Service } from "sst/constructs";
@@ -44,27 +44,28 @@ app.get("/", (req, res) => {
 app.listen(3000);
 ```
 
-Here, the Docker container uses the Node.js 18 slim image, installs the dependencies specified in the `package.json`, and starts the Express server.
+The Docker container uses the Node.js 18 slim image in this instance, installs the dependencies specified in the `package.json`, and then starts the Express server.
 
 
-When you run `sst deploy`, SST does a couple things.
+When you run `sst deploy`, SST does a couple things:
+
 - Runs `docker build` to build the image
 - Uploads the image to Elastic Container Registry (ECR)
-- Creates a VPC if not provided
+- Creates a VPC if one is not provided
 - Launches an Elastic Container Service (ECS) cluster in the VPC
-- Creates a Fargate service that runs the container image
+- Creates a Fargate service to run the container image
 - Creates an Auto Scaling Group to auto-scale the cluster
 - Creates an Application Load Balancer (ALB) to route traffic to the cluster
-- Creates a CloudFront Distribution to allow configuring caching and custom domains
+- Creates a CloudFront Distribution to allow configuration of caching and custom domains
 
 ---
 
 ## Using Nixpacks
 
-When a `Dockerfile` is not found in the service's path, [Nixpacks](https://nixpacks.com/docs) is used to analyze the service code, and then generate a `Dockerfile` inside `.nixpacks` that will build and run your application. [Read more about customizing the Nixpacks builds.](https://nixpacks.com/docs/guides/configuring-builds)
+If a `Dockerfile` is not found in the service's path, [Nixpacks](https://nixpacks.com/docs) will be used to analyze the service code, and then generate a `Dockerfile` within `.nixpacks`. This file will build and run your application. [Read more about customizing the Nixpacks builds.](https://nixpacks.com/docs/guides/configuring-builds)
 
 :::note
-The `.nixpacks` directory should be git ignored.
+The generated `.nixpacks` directory should be added to your `.gitignore` file.
 :::
 
 ---
@@ -93,7 +94,7 @@ When running `sst dev`, SST does not deploy your app. It's meant to be run local
 
 ## Configuring containers
 
-Fargate [supports a list of CPU and memory combinations](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/fargate-tasks-services.html#fargate-tasks-size) for the containers. The default size used is 0.25 vCPU and 512 MB. You can configure it like this:
+Fargate [supports a variety of CPU and memory combinations](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/fargate-tasks-services.html#fargate-tasks-size) for the containers. The default size used is 0.25 vCPU and 512 MB. To configure it, do the following:
 
 ```js
 new Service(stack, "MyService", {
@@ -107,16 +108,16 @@ new Service(stack, "MyService", {
 
 ## Auto-scaling
 
-As the traffic increases and decreases, your cluster can auto-scale based on a few metrics:
-- CPU utilization, default 70%
-- Memory utilization, default 70%
-- Request count to each container in the cluster, default 500
+Your cluster can auto-scale as the traffic increases or decreases based on several metrics:
+- CPU utilization (default 70%)
+- Memory utilization (default 70%)
+- Per-container request count (default 500).
 
-You can also set the minimum and maximum number of containers the cluster can scale up or down to.
+You can also set the minimum and maximum number of containers to which the cluster can scale.
 
-By default, auto-scaling is disabled as the minimum and maximum are both set to 1.
+Auto-scaling is disabled by default as both the minimum and maximum are set to 1.
 
-You can configure it like this:
+To configure it:
 
 ```js
 new Service(stack, "MyService", {
@@ -146,7 +147,7 @@ new Service(stack, "MyService", {
 
 Note that visitors to `http://` will be redirected to `https://`.
 
-You can also configure an alias domain to point to the main domain. For example, to setup `www.my-app.com` to redirect to `my-app.com`:
+You can also configure an alias domain to point to the main domain. For instance, to set up `www.my-app.com` to redirect to `my-app.com`:
 
 ```js {5}
 new Service(stack, "MyServiceSite", {
@@ -162,7 +163,7 @@ new Service(stack, "MyServiceSite", {
 
 ## Using AWS services
 
-SST makes it very easy for your `Service` construct to access other resources in your AWS account. Imagine you have an S3 bucket created using the [`Bucket`](../constructs/Bucket.md) construct. You can bind it to your Next.js app.
+SST makes it very easy for your `Service` construct to access other resources in your AWS account. If you have an S3 bucket created using the [`Bucket`](../constructs/Bucket.md) construct, you can bind it to your app.
 
 ```ts {5}
 const bucket = new Bucket(stack, "Uploads");
@@ -173,7 +174,7 @@ new Service(stack, "MyService", {
 });
 ```
 
-This will attach the necessary IAM permissions and allow your app to access the bucket through the typesafe [`sst/node`](../clients/index.md) client.
+This will attach the necessary IAM permissions and allow your app to access the bucket via the typesafe [`sst/node`](../clients/index.md) client.
 
 ```ts {4}
 import { Bucket } from "sst/node/bucket";
@@ -181,7 +182,7 @@ import { Bucket } from "sst/node/bucket";
 console.log(Bucket.Uploads.bucketName);
 ```
 
-You can read more about this over on the [Resource Binding](../resource-binding.md) doc.
+Read more about this in the [Resource Binding](../resource-binding.md) doc.
 
 ---
 
