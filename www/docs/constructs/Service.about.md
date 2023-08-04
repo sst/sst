@@ -198,11 +198,20 @@ new Service(stack, "MyService", {
 });
 ```
 
+### Using custom Dockerfile
+
+```js
+import { Service } from "sst/constructs";
+
+new Service(stack, "MyService", {
+  file: "path/to/Dockerfile.prod",
+});
+```
+
 ### Setting additional props
 
 ```js
 new Service(stack, "MyService", {
-  path: "./service",
   port: 8080,
   cpu: "2 vCPU",
   memory: "8 GB",
@@ -224,7 +233,6 @@ new Service(stack, "MyService", {
 import { Vpc } from "aws-cdk-lib/aws-ec2";
 
 new Service(stack, "MyService", {
-  path: "./service",
   cdk: {
     vpc: Vpc.fromLookup(stack, "VPC", {
       vpcId: "vpc-xxxxxxxxxx",
