@@ -180,6 +180,11 @@ export interface ServiceProps {
    */
   path?: string;
   /**
+   * Path to Dockerfile relative to the defined "path".
+   * @default "Dockerfile"
+   */
+  file?: string;
+  /**
    * The amount of cpu allocated.
    * @default "0.25 vCPU"
    * @example
@@ -520,12 +525,18 @@ export class Service extends Construct implements SSTConstruct {
     useDeferredTasks().add(async () => {
       if (!app.isRunningSSTTest()) {
         Colors.line(
-          `➜  Building container image for the "${this.node.id}" service`
+          `➜  Building the container image for the "${this.node.id}" service...`
         );
 
         // Build app
-        let dockerfile = "Dockerfile";
-        if (!(await existsAsync(path.join(this.props.path, dockerfile)))) {
+        let dockerfile: string;
+        if (this.props.file) {
+          dockerfile = this.props.file;
+        } else if (
+          await existsAsync(path.join(this.props.path, "Dockerfile"))
+        ) {
+          dockerfile = "Dockerfile";
+        } else {
           await this.createNixpacksBuilder();
           dockerfile = await this.runNixpacksBuild();
         }
@@ -677,9 +688,18 @@ export class Service extends Construct implements SSTConstruct {
   /////////////////////
 
   private validateServiceExists() {
-    const { path: servicePath } = this.props;
+    const { path: servicePath, file } = this.props;
     if (!fs.existsSync(servicePath)) {
       throw new Error(`No service found at "${path.resolve(servicePath)}"`);
+    }
+
+    if (file) {
+      const dockerfilePath = path.join(servicePath, file);
+      if (!fs.existsSync(dockerfilePath)) {
+        throw new Error(
+          `No Dockerfile found at "${dockerfilePath}". Make sure to set the "file" property to the path of the Dockerfile relative to "${servicePath}".`
+        );
+      }
     }
   }
 

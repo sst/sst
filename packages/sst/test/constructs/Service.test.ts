@@ -1,5 +1,4 @@
 import { test, expect, beforeAll, vi } from "vitest";
-import { execSync } from "child_process";
 import { HostedZone } from "aws-cdk-lib/aws-route53";
 import {
   countResources,
@@ -250,6 +249,22 @@ test("port defined", async () => {
       }),
     ],
   });
+});
+
+test("file defiend", async () => {
+  const { service, stack } = await createService({
+    path: "test/constructs/service-custom-Dockerfile",
+    file: "child/Dockerfile.prod",
+  });
+  countResources(stack, "AWS::ECS::TaskDefinition", 1);
+});
+
+test("file invalid", async () => {
+  expect(async () => {
+    await createService({
+      file: "path/to/garbage",
+    });
+  }).rejects.toThrow(/No Dockerfile found/);
 });
 
 test("scaling.minContainers undefined", async () => {

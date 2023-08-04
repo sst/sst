@@ -53,6 +53,7 @@ import { Effect, PolicyStatement, Role } from "aws-cdk-lib/aws-iam";
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import { useBootstrap } from "../bootstrap.js";
+import { Colors } from "../cli/colors.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 const supportedRuntimes = {
@@ -867,6 +868,11 @@ export class Function extends CDKFunction implements SSTConstruct {
       });
 
       useDeferredTasks().add(async () => {
+        if (props.runtime === "container")
+          Colors.line(
+            `➜  Building the container image for the "${this.node.id}" function...`
+          );
+
         // Build function
         const result = await useRuntimeHandlers().build(
           this.node.addr,
