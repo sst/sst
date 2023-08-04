@@ -212,23 +212,28 @@ export async function bootstrapSST() {
   }
 
   // Create S3 bucket to store stacks metadata
-  const bucket = new Bucket(stack, region!, {
-    encryption: BucketEncryption.S3_MANAGED,
-    removalPolicy: RemovalPolicy.DESTROY,
-    autoDeleteObjects: true,
-    enforceSSL: true,
-    lifecycleRules: [
-      {
-        id: "Remove partial uploads after 3 days",
-        enabled: true,
-        abortIncompleteMultipartUploadAfter: Duration.days(3),
-      },
-    ],
-    blockPublicAccess:
-      cdk?.publicAccessBlockConfiguration !== false
-        ? BlockPublicAccess.BLOCK_ALL
-        : undefined,
-  });
+  const bucket = bootstrap?.useExistingBucket
+    ? {
+        bucketName: bootstrap.useExistingBucket,
+        bucketArn: `arn:${stack.partition}:s3:::${bootstrap.useExistingBucket}`,
+      }
+    : new Bucket(stack, region!, {
+        encryption: BucketEncryption.S3_MANAGED,
+        removalPolicy: RemovalPolicy.DESTROY,
+        autoDeleteObjects: true,
+        enforceSSL: true,
+        lifecycleRules: [
+          {
+            id: "Remove partial uploads after 3 days",
+            enabled: true,
+            abortIncompleteMultipartUploadAfter: Duration.days(3),
+          },
+        ],
+        blockPublicAccess:
+          cdk?.publicAccessBlockConfiguration !== false
+            ? BlockPublicAccess.BLOCK_ALL
+            : undefined,
+      });
 
   // Create Function and subscribe to CloudFormation events
   const fn = new Function(stack, "MetadataHandler", {

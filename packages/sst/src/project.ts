@@ -29,6 +29,7 @@ export interface ConfigOptions {
     disableParameterizedStackNameCheck?: boolean;
   };
   bootstrap?: {
+    useExistingBucket?: string;
     stackName?: string;
     tags?: Record<string, string>;
   };
