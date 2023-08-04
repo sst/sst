@@ -349,6 +349,28 @@ export interface ServiceProps {
    * ```
    */
   environment?: Record<string, string>;
+  /**
+   * The duration logs are kept in CloudWatch Logs.
+   * @default Logs retained indefinitely
+   * @example
+   * ```js
+   * {
+   *   logRetention: "one_week"
+   * }
+   * ```
+   */
+  logRetention?: Lowercase<keyof typeof RetentionDays>;
+  /**
+   * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
+   * @default false
+   * @example
+   * ```js
+   * {
+   *   waitForInvalidation: true
+   * }
+   * ```
+   */
+  waitForInvalidation?: boolean;
   dev?: {
     /**
      * When running `sst dev, site is not deployed. This is to ensure `sst dev` can start up quickly.
@@ -376,17 +398,6 @@ export interface ServiceProps {
      */
     url?: string;
   };
-  /**
-   * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
-   * @default false
-   * @example
-   * ```js
-   * {
-   *   waitForInvalidation: true
-   * }
-   * ```
-   */
-  waitForInvalidation?: boolean;
   cdk?: {
     /**
      * Customizing the container definition for the ECS task.
@@ -463,6 +474,7 @@ type ServiceNormalizedProps = ServiceProps & {
   cpu: Exclude<ServiceProps["cpu"], undefined>;
   memory: Exclude<ServiceProps["memory"], undefined>;
   port: Exclude<ServiceProps["port"], undefined>;
+  logRetention: Exclude<ServiceProps["logRetention"], undefined>;
   waitForInvalidation: Exclude<ServiceProps["waitForInvalidation"], undefined>;
 };
 
@@ -496,10 +508,11 @@ export class Service extends Construct implements SSTConstruct {
     this.id = id;
     this.props = {
       path: ".",
-      waitForInvalidation: false,
       cpu: props?.cpu || "0.25 vCPU",
       memory: props?.memory || "0.5 GB",
       port: props?.port || 3000,
+      logRetention: props?.logRetention || "infinite",
+      waitForInvalidation: false,
       ...props,
     };
     this.doNotDeploy =
@@ -752,13 +765,14 @@ export class Service extends Construct implements SSTConstruct {
   }
 
   private createService(vpc: IVpc) {
-    const { cpu, memory, port, cdk } = this.props;
+    const { cpu, memory, port, logRetention, cdk } = this.props;
     const app = this.node.root as App;
     const clusterName = app.logicalPrefixedName(this.node.id);
 
     const logGroup = new LogGroup(this, "LogGroup", {
       logGroupName: `/sst/service/${clusterName}`,
-      retention: RetentionDays.INFINITE,
+      retention:
+        RetentionDays[logRetention.toUpperCase() as keyof typeof RetentionDays],
     });
 
     const cluster = new Cluster(this, "Cluster", {

@@ -34,7 +34,6 @@ async function createService(
 // Test Constructor
 /////////////////////////////
 
-/*
 test("default", async () => {
   const { service, stack } = await createService();
   expect(service.url).toBeDefined();
@@ -259,13 +258,27 @@ test("file defiend", async () => {
   });
   countResources(stack, "AWS::ECS::TaskDefinition", 1);
 });
-
 test("file invalid", async () => {
   expect(async () => {
     await createService({
       file: "path/to/garbage",
     });
   }).rejects.toThrow(/No Dockerfile found/);
+});
+
+test("logRetention undefined", async () => {
+  const { stack } = await createService({});
+  hasResource(stack, "AWS::Logs::LogGroup", {
+    RetentionInDays: ABSENT,
+  });
+});
+test("logRetention defined", async () => {
+  const { service, stack } = await createService({
+    logRetention: "one_month",
+  });
+  hasResource(stack, "AWS::Logs::LogGroup", {
+    RetentionInDays: 30,
+  });
 });
 
 test("scaling.minContainers undefined", async () => {
@@ -434,6 +447,27 @@ test("environment", async () => {
   });
 });
 
+test("vpc.container", async () => {
+  const { stack } = await createService({
+    cdk: {
+      container: {
+        healthCheck: {
+          command: ["CMD-SHELL", "cmd"],
+        },
+      },
+    },
+  });
+  hasResource(stack, "AWS::ECS::TaskDefinition", {
+    ContainerDefinitions: [
+      objectLike({
+        HealthCheck: objectLike({
+          Command: ["CMD-SHELL", "cmd"],
+        }),
+      }),
+    ],
+  });
+});
+
 test("constructor: sst remove", async () => {
   const app = await createApp({ mode: "remove" });
   const stack = new Stack(app, "stack");
@@ -574,28 +608,6 @@ test("addEnvironment", async () => {
     ContainerDefinitions: [
       objectLike({
         Environment: arrayWith([objectLike({ Name: "DEBUG", Value: "*" })]),
-      }),
-    ],
-  });
-});
-*/
-
-test("vpc.container", async () => {
-  const { stack } = await createService({
-    cdk: {
-      container: {
-        healthCheck: {
-          command: ["CMD-SHELL", "cmd"],
-        },
-      },
-    },
-  });
-  hasResource(stack, "AWS::ECS::TaskDefinition", {
-    ContainerDefinitions: [
-      objectLike({
-        HealthCheck: objectLike({
-          Command: ["CMD-SHELL", "cmd"],
-        }),
       }),
     ],
   });

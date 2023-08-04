@@ -208,7 +208,17 @@ new Service(stack, "MyService", {
 });
 ```
 
-### Setting additional props
+### Configuring log retention
+
+The Service construct creates a CloudWatch log group to store the logs. By default, the logs are retained indefinitely. You can configure the log retention period like this:
+
+```js
+new Service(stack, "MyService", {
+  logRetention: "one_week",
+});
+```
+
+### Configuring additional props
 
 ```js
 new Service(stack, "MyService", {
