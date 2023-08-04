@@ -12,6 +12,7 @@ export * from "./Table.js";
 export * from "./Topic.js";
 export * from "./Bucket.js";
 export * from "./Script.js";
+export * from "./Service.js";
 export * from "./EventBus.js";
 export * from "./Function.js";
 export * from "./AppSyncApi.js";
