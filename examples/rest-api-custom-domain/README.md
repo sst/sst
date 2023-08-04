@@ -12,6 +12,8 @@ Install the example.
 $ npx create-sst@latest --template=examples/rest-api-custom-domain
 # Or with Yarn
 $ yarn create sst --template=examples/rest-api-custom-domain
+# Or with PNPM
+$ pnpm create sst --template=examples/rest-api-custom-domain
 ```
 
 ## Commands

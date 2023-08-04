@@ -12,6 +12,8 @@ Install the example.
 $ npx create-sst@latest --template=examples/api-auth-lambda-authorizer-simple-response
 # Or with Yarn
 $ yarn create sst --template=examples/api-auth-lambda-authorizer-simple-response
+# Or with PNPM
+$ pnpm create sst --template=examples/api-auth-lambda-authorizer-simple-response
 ```
 
 Start the Live Lambda Development environment.
