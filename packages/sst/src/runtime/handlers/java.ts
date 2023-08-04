@@ -18,7 +18,7 @@ export const useJavaHandler = Context.memo(async () => {
   const handlers = useRuntimeHandlers();
   const processes = new Map<string, ChildProcessWithoutNullStreams>();
   const sources = new Map<string, string>();
-  const handlerName = process.platform === "win32" ? `handler.exe` : `handler`;
+  const runningBuilds = new Map<string, Promise<void>>();
 
   handlers.register({
     shouldBuild: (input) => {
@@ -75,7 +75,8 @@ export const useJavaHandler = Context.memo(async () => {
       const outputDir = input.props.java?.buildOutputDir || "distributions";
       sources.set(input.functionID, srcPath);
 
-      try {
+      async function build() {
+        // build
         await execAsync(
           `${buildBinary} ${buildTask} -Dorg.gradle.logging.level=${
             process.env.DEBUG ? "debug" : "lifecycle"
@@ -85,11 +86,27 @@ export const useJavaHandler = Context.memo(async () => {
           }
         );
 
+        // unzip
         const buildOutput = path.join(srcPath, "build", outputDir);
         const zip = (await fs.readdir(buildOutput)).find((f) =>
           f.endsWith(".zip")
         )!;
-        new AdmZip(path.join(buildOutput, zip)).extractAllTo(input.out);
+        await new Promise((resolve, reject) => {
+          const zipper = new AdmZip(path.join(buildOutput, zip));
+          zipper.extractAllToAsync(input.out, false, false, (err) =>
+            err ? reject(err) : resolve(undefined)
+          );
+        });
+      }
+
+      try {
+        // Run gradle build once per directory. Otherwise they'll interfere
+        // with one another
+        const buildPromise = runningBuilds.get(buildBinary) ?? build();
+        runningBuilds.set(buildBinary, buildPromise);
+        await buildPromise;
+        runningBuilds.delete(buildBinary);
+
         return {
           type: "success",
           handler: input.props.handler!,

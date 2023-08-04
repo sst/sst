@@ -1,5 +1,17 @@
 # @serverless-stack/docs
 
+## 2.5.4
+
+### Patch Changes
+
+- [`cb9744e57`](https://github.com/serverless-stack/sst/commit/cb9744e57d605a2fda82d7e5f1583b212f24b365) Thanks [@fwang](https://github.com/fwang)! - Bootstrap: allow using CDK bootstrap bucket instead of creating a new one
+
+## 2.5.3
+
+### Patch Changes
+
+- [#3177](https://github.com/serverless-stack/sst/pull/3177) [`8a31945c4`](https://github.com/serverless-stack/sst/commit/8a31945c44048308b5f8cf4cc7e5fe490eb835c9) Thanks [@fwang](https://github.com/fwang)! - AstroSite: support streaming
+
 ## 2.5.2
 
 ### Patch Changes

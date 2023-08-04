@@ -183,6 +183,8 @@ await Promise.all(
     "dotnet31-bootstrap",
     "dotnet6-bootstrap",
     "certificate-requestor",
+    "nixpacks",
+    "service-dev-function",
   ].map((dir) =>
     fs.cp(`support/${dir}`, `dist/support/${dir}`, {
       recursive: true,

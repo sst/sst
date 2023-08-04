@@ -84,6 +84,7 @@ Here's the full list of config options that can be returned:
 - **`bootstrap`**
   - **`stackName`** The name to use for the SST bootstrap stack
   - **`tags`** Tags to use for the SST bootstrap stack
+  - **`useCdkBucket`** Use the S3 bucket created by the CDK bootstrap process instead of creating a new one
 - **`cdk`**
   - **`cloudFormationExecutionRole`** IAM role assumed by the CloudFormation to deploy
   - **`customPermissionsBoundary`** The Name of the IAM permissions boundary policy to use for the CDK toolkit stack and SST bootstrap stack

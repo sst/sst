@@ -1,5 +1,27 @@
 # @serverless-stack/cli2
 
+## 2.23.1
+
+### Patch Changes
+
+- [`cb9744e57`](https://github.com/serverless-stack/sst/commit/cb9744e57d605a2fda82d7e5f1583b212f24b365) Thanks [@fwang](https://github.com/fwang)! - Bootstrap: allow using CDK bootstrap bucket instead of creating a new one
+
+## 2.23.0
+
+### Minor Changes
+
+- [#3167](https://github.com/serverless-stack/sst/pull/3167) [`e428a9e0a`](https://github.com/serverless-stack/sst/commit/e428a9e0ab030f6852f704dd7f729929168c9d1c) Thanks [@fwang](https://github.com/fwang)! - Service: deploy Fargate services
+
+### Patch Changes
+
+- [#3167](https://github.com/serverless-stack/sst/pull/3167) [`e428a9e0a`](https://github.com/serverless-stack/sst/commit/e428a9e0ab030f6852f704dd7f729929168c9d1c) Thanks [@fwang](https://github.com/fwang)! - sst bind: support binding undeployed Parameter values
+
+- [#3177](https://github.com/serverless-stack/sst/pull/3177) [`8a31945c4`](https://github.com/serverless-stack/sst/commit/8a31945c44048308b5f8cf4cc7e5fe490eb835c9) Thanks [@fwang](https://github.com/fwang)! - AstroSite: support streaming
+
+- [`601da6101`](https://github.com/serverless-stack/sst/commit/601da6101f467111370dc38436e48531a4864815) Thanks [@fwang](https://github.com/fwang)! - Bootstrap: allow using existing S3 buckets
+
+- [#3182](https://github.com/serverless-stack/sst/pull/3182) [`01304e35b`](https://github.com/serverless-stack/sst/commit/01304e35b90e2337cb141a687e9b8c94fee38b64) Thanks [@pawelblaszczyk5](https://github.com/pawelblaszczyk5)! - EventBus: pass attempts count to EventHandler callback
+
 ## 2.22.11
 
 ### Patch Changes
