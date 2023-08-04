@@ -63,7 +63,6 @@ import {
   HttpOrigin,
   OriginGroup,
 } from "aws-cdk-lib/aws-cloudfront-origins";
-import { CloudFrontTarget } from "aws-cdk-lib/aws-route53-targets";
 
 import { App } from "./App.js";
 import { Stack } from "./Stack.js";
@@ -386,9 +385,6 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   private cfFunction: CfFunction;
   private s3Origin: S3Origin;
   private distribution: Distribution;
-  private hostedZone?: IHostedZone;
-  private certificate?: ICertificate;
-  private streaming?: boolean;
   private _singletonSsrOrigin?: HttpOrigin;
   private _singletonCachePolicy?: CachePolicy;
   private _singletonServerOriginRequestPolicy?: IOriginRequestPolicy;
@@ -530,17 +526,15 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   protected get ssrOrigin() {
     if (this._singletonSsrOrigin) return this._singletonSsrOrigin;
 
-    // TODO
     console.log({ support: this.supportsStreaming() });
-    const { timeout } = this.props;   
+    const { timeout } = this.props;
     const fnUrl = this.serverLambdaForRegional!.addFunctionUrl({
       authType: FunctionUrlAuthType.NONE,
       invokeMode: this.supportsStreaming()
         ? InvokeMode.RESPONSE_STREAM
         : undefined,
     });
-    
-    
+
     this._singletonSsrOrigin = new HttpOrigin(Fn.parseDomainName(fnUrl.url), {
       readTimeout:
         typeof timeout === "string"
@@ -1132,6 +1126,10 @@ function handler(event) {
 
     // Create individual behaviors for route paths which should exclusively be handled by SSR
     for (const route of this.props.ssrExclusiveRoutes ?? []) {
+
+      /**
+       * NOTE: `addBehavior` is not a supported method on the new distribution class.
+       */
       this.distribution.addBehavior(route, this.ssrOrigin, {
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         allowedMethods: AllowedMethods.ALLOW_ALL,
