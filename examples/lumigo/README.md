@@ -12,8 +12,6 @@ Install the example.
 $ npx create-sst@latest --template=examples/lumigo
 # Or with Yarn
 $ yarn create sst --template=examples/lumigo
-# Or with PNPM
-$ pnpm create sst --template=examples/lumigo
 ```
 
 ## Commands

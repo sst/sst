@@ -12,8 +12,6 @@ Install the example.
 $ npx create-sst@latest --template=examples/rest-api-mongodb
 # Or with Yarn
 $ yarn create sst --template=examples/rest-api-mongodb
-# Or with PNPM
-$ pnpm create sst --template=examples/rest-api-mongodb
 ```
 
 ## Commands

@@ -12,8 +12,6 @@ Install the example.
 $ npx create-sst@latest --template=examples/intellij-idea
 # Or with Yarn
 $ yarn create sst --template=examples/intellij-idea
-# Or with PNPM
-$ pnpm create sst --template=examples/intellij-idea
 ```
 
 ## Commands

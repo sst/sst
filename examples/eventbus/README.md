@@ -12,8 +12,6 @@ Install the example.
 $ npx create-sst@latest --template=examples/eventbus
 # Or with Yarn
 $ yarn create sst --template=examples/eventbus
-# Or with PNPM
-$ pnpm create sst --template=examples/eventbus
 ```
 
 ## Commands

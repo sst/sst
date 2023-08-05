@@ -12,8 +12,6 @@ Install the example.
 $ npx create-sst@latest --template=examples/cron-job
 # Or with Yarn
 $ yarn create sst --template=examples/cron-job
-# Or with PNPM
-$ pnpm create sst --template=examples/cron-job
 ```
 
 ## Commands

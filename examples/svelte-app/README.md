@@ -12,8 +12,6 @@ Install the example.
 $ npx create-sst@latest --template=examples/svelte-app
 # Or with Yarn
 $ yarn create sst --template=examples/svelte-app
-# Or with PNPM
-$ pnpm create sst --template=examples/svelte-app
 ```
 
 ## Commands

@@ -10,8 +10,6 @@ Install the example.
 $ npx create-sst@latest --template=examples/rest-api-python
 # Or with Yarn
 $ yarn create sst --template=examples/rest-api-python
-# Or with PNPM
-$ pnpm create sst --template=examples/rest-api-python
 ```
 
 ## Commands

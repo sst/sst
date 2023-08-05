@@ -12,8 +12,6 @@ Install the example.
 $ npx create-sst@latest --template=examples/bucket-image-resize
 # Or with Yarn
 $ yarn create sst --template=examples/bucket-image-resize
-# Or with PNPM
-$ pnpm create sst --template=examples/bucket-image-resize
 ```
 
 ## Commands

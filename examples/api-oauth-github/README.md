@@ -12,8 +12,6 @@ Install the example.
 $ npx create-sst@latest --template=examples/api-oauth-github
 # Or with Yarn
 $ yarn create sst --template=examples/api-oauth-github
-# Or with PNPM
-$ pnpm create sst --template=examples/api-oauth-github
 ```
 
 ## Commands

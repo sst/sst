@@ -12,8 +12,6 @@ Install the example.
 $ npx create-sst@latest --template=examples/graphql-apollo
 # Or with Yarn
 $ yarn create sst --template=examples/graphql-apollo
-# Or with PNPM
-$ pnpm create sst --template=examples/graphql-apollo
 ```
 
 ## Commands
