@@ -48,6 +48,7 @@ import {
   Token,
   Size as CDKSize,
   Duration as CDKDuration,
+  IgnoreMode,
 } from "aws-cdk-lib/core";
 import { Effect, PolicyStatement, Role } from "aws-cdk-lib/aws-iam";
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
@@ -845,6 +846,8 @@ export class Function extends CDKFunction implements SSTConstruct {
                 ...(props.container?.file
                   ? { file: props.container.file }
                   : {}),
+                exclude: [".sst"],
+                ignoreMode: IgnoreMode.GLOB,
               }),
               handler: CDKHandler.FROM_IMAGE,
               runtime: CDKRuntime.FROM_IMAGE,

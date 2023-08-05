@@ -2,7 +2,7 @@ import url from "url";
 import path from "path";
 import fs from "fs/promises";
 import { Construct } from "constructs";
-import { Duration as CdkDuration } from "aws-cdk-lib/core";
+import { Duration as CdkDuration, IgnoreMode } from "aws-cdk-lib/core";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import { PolicyStatement, Role, Effect } from "aws-cdk-lib/aws-iam";
 import {
@@ -511,6 +511,8 @@ export class Job extends Construct implements SSTConstruct {
               ? Platform.custom("linux/arm64")
               : Platform.custom("linux/amd64"),
           file: container?.file,
+          exclude: [".sst"],
+          ignoreMode: IgnoreMode.GLOB,
         });
         image.repository?.grantPull(this.job.role!);
         const project = this.job.node.defaultChild as CfnProject;

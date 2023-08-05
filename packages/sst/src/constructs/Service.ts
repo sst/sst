@@ -7,7 +7,7 @@ import { existsAsync } from "../util/fs.js";
 import { Colors } from "../cli/colors.js";
 
 import { Construct } from "constructs";
-import { Duration as CdkDuration } from "aws-cdk-lib/core";
+import { Duration as CdkDuration, IgnoreMode } from "aws-cdk-lib/core";
 import {
   Role,
   Effect,
@@ -1043,6 +1043,8 @@ export class Service extends Construct implements SSTConstruct {
     const image = ContainerImage.fromAsset(this.props.path, {
       platform: Platform.LINUX_AMD64,
       file: dockerfile,
+      exclude: [".sst"],
+      ignoreMode: IgnoreMode.GLOB,
     });
     const cfnTask = taskDefinition.node.defaultChild as CfnTaskDefinition;
     cfnTask.addPropertyOverride(
