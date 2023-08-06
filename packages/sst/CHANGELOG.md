@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.23.6
+
+### Patch Changes
+
+- [`8850d20a4`](https://github.com/serverless-stack/sst/commit/8850d20a44032d2eaa142f4a12b8b65a3233cb0c) Thanks [@thdxr](https://github.com/thdxr)! - Prevent `sst bind` from handling function invocations
+
 ## 2.23.5
 
 ### Patch Changes
