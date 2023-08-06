@@ -1,5 +1,15 @@
 # @serverless-stack/cli2
 
+## 2.23.4
+
+### Patch Changes
+
+- [`137f5059b`](https://github.com/serverless-stack/sst/commit/137f5059b87ac3690ba47f2494ee11e2a50a1db3) Thanks [@fwang](https://github.com/fwang)! - Service: create 1 NAT Gateway as the default VPC setting
+
+- [`75ca05dc1`](https://github.com/serverless-stack/sst/commit/75ca05dc18e011c4661f28a7909af307b4daa745) Thanks [@fwang](https://github.com/fwang)! - Service: docker ignore .sst folder when staging image
+
+- [`435ab9ce2`](https://github.com/serverless-stack/sst/commit/435ab9ce2f32c79e9f8eb2e4099aafebc1246aad) Thanks [@fwang](https://github.com/fwang)! - sst update: detect CDK v1 dependencies
+
 ## 2.23.3
 
 ### Patch Changes
