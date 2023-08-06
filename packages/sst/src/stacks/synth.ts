@@ -28,13 +28,15 @@ export async function synth(opts: SynthOptions) {
   const { useRustHandler } = await import("../runtime/handlers/rust.js");
   const { usePythonHandler } = await import("../runtime/handlers/python.js");
   const { useJavaHandler } = await import("../runtime/handlers/java.js");
-  useNodeHandler();
-  useGoHandler();
-  useContainerHandler();
-  usePythonHandler();
-  useJavaHandler();
-  useDotnetHandler();
-  useRustHandler();
+  if (opts.mode !== "remove") {
+    useNodeHandler();
+    useGoHandler();
+    useContainerHandler();
+    usePythonHandler();
+    useJavaHandler();
+    useDotnetHandler();
+    useRustHandler();
+  }
   const cxapi = await import("@aws-cdk/cx-api");
   const { Configuration } = await import("sst-aws-cdk/lib/settings.js");
   const project = useProject();
