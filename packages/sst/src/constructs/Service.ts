@@ -61,7 +61,7 @@ import {
   ContainerDefinition,
   ContainerDefinitionOptions,
 } from "aws-cdk-lib/aws-ecs";
-import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
+import { LogGroup, LogRetention, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import {
   ApplicationLoadBalancer,
@@ -432,40 +432,6 @@ export interface ServiceProps {
      * ```
      */
     vpc?: IVpc;
-    /**
-     * Where to place the network interfaces within the VPC.
-     * @default All private subnets.
-     * @example
-     * ```js
-     * import { SubnetType } from "aws-cdk-lib/aws-ec2";
-     *
-     * {
-     *   cdk: {
-     *     vpc,
-     *     vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS }
-     *   }
-     * }
-     * ```
-     */
-    vpcSubnets?: SubnetSelection;
-    /**
-     * The list of security groups to associate with the Job's network interfaces.
-     * @default A new security group is created.
-     * @example
-     * ```js
-     * import { SecurityGroup } from "aws-cdk-lib/aws-ec2";
-     *
-     * {
-     *   cdk: {
-     *     vpc,
-     *     securityGroups: [
-     *       new SecurityGroup(stack, "MyJobSG", { vpc })
-     *     ]
-     *   }
-     * }
-     * ```
-     */
-    securityGroups?: ISecurityGroup[];
   };
 }
 
@@ -759,7 +725,7 @@ export class Service extends Construct implements SSTConstruct {
     return (
       cdk?.vpc ??
       new Vpc(this, "Vpc", {
-        natGateways: 0,
+        natGateways: 1,
       })
     );
   }
@@ -769,10 +735,13 @@ export class Service extends Construct implements SSTConstruct {
     const app = this.node.root as App;
     const clusterName = app.logicalPrefixedName(this.node.id);
 
-    const logGroup = new LogGroup(this, "LogGroup", {
+    const logGroup = new LogRetention(this, "LogRetention", {
       logGroupName: `/sst/service/${clusterName}`,
       retention:
         RetentionDays[logRetention.toUpperCase() as keyof typeof RetentionDays],
+      logRetentionRetryOptions: {
+        maxRetries: 100,
+      },
     });
 
     const cluster = new Cluster(this, "Cluster", {
@@ -788,7 +757,11 @@ export class Service extends Construct implements SSTConstruct {
 
     const container = taskDefinition.addContainer("Container", {
       logging: new AwsLogDriver({
-        logGroup,
+        logGroup: LogGroup.fromLogGroupArn(
+          this,
+          "LogGroup",
+          logGroup.logGroupArn
+        ),
         streamPrefix: "service",
       }),
       portMappings: [{ containerPort: port }],
