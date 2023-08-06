@@ -45,7 +45,7 @@ export const update = (program: Program) =>
         }
         Colors.gap();
         throw new VisibleError(
-          "We've detected AWS CDK v1 dependencies in your package.json. SST requires CDK v2. Please update to CDK v2 dependencies, and then execute `sst update`. For guidance, refer to the official AWS CDK migration documentation — https://docs.aws.amazon.com/cdk/v2/guide/migrating-v2.html#migrating-v2-v1-upgrade"
+          "We've detected AWS CDK v1 dependencies in your package.json. SST requires CDK v2. Please update to CDK v2 dependencies, and then execute `sst update`. Refer to the official AWS CDK migration documentation — https://docs.aws.amazon.com/cdk/v2/guide/migrating-v2.html#migrating-v2-v1-upgrade"
         );
       }
 
