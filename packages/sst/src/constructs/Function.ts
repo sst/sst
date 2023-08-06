@@ -48,11 +48,13 @@ import {
   Token,
   Size as CDKSize,
   Duration as CDKDuration,
+  IgnoreMode,
 } from "aws-cdk-lib/core";
 import { Effect, PolicyStatement, Role } from "aws-cdk-lib/aws-iam";
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import { useBootstrap } from "../bootstrap.js";
+import { Colors } from "../cli/colors.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 const supportedRuntimes = {
@@ -635,6 +637,16 @@ export interface ContainerProps {
    * ```
    */
   cmd?: string[];
+  /**
+   * Name of the Dockerfile.
+   * @example
+   * ```js
+   * container: {
+   *   file: "path/to/Dockerfile.prod"
+   * }
+   * ```
+   */
+  file?: string;
 }
 
 /**
@@ -781,7 +793,7 @@ export class Function extends CDKFunction implements SSTConstruct {
               layers: undefined,
             }
           : {
-              runtime: CDKRuntime.NODEJS_16_X,
+              runtime: CDKRuntime.NODEJS_18_X,
               code: Code.fromAsset(
                 path.resolve(__dirname, "../support/bridge")
               ),
@@ -803,6 +815,9 @@ export class Function extends CDKFunction implements SSTConstruct {
       this.addEnvironment("SST_FUNCTION_ID", this.node.addr);
       useDeferredTasks().add(async () => {
         const bootstrap = await useBootstrap();
+        const bootstrapBucketArn = `arn:${Stack.of(this).partition}:s3:::${
+          bootstrap.bucket
+        }`;
         this.attachPermissions([
           new PolicyStatement({
             actions: ["iot:*"],
@@ -812,9 +827,7 @@ export class Function extends CDKFunction implements SSTConstruct {
           new PolicyStatement({
             actions: ["s3:*"],
             effect: Effect.ALLOW,
-            resources: [
-              `arn:${Stack.of(this).partition}:s3:::${bootstrap.bucket}`,
-            ],
+            resources: [bootstrapBucketArn, `${bootstrapBucketArn}/*`],
           }),
         ]);
       });
@@ -830,6 +843,11 @@ export class Function extends CDKFunction implements SSTConstruct {
                   ? { platform: Platform.custom(architecture.dockerPlatform) }
                   : {}),
                 ...(props.container?.cmd ? { cmd: props.container.cmd } : {}),
+                ...(props.container?.file
+                  ? { file: props.container.file }
+                  : {}),
+                exclude: [".sst"],
+                ignoreMode: IgnoreMode.GLOB,
               }),
               handler: CDKHandler.FROM_IMAGE,
               runtime: CDKRuntime.FROM_IMAGE,
@@ -853,6 +871,11 @@ export class Function extends CDKFunction implements SSTConstruct {
       });
 
       useDeferredTasks().add(async () => {
+        if (props.runtime === "container")
+          Colors.line(
+            `➜  Building the container image for the "${this.node.id}" function...`
+          );
+
         // Build function
         const result = await useRuntimeHandlers().build(
           this.node.addr,

@@ -11,6 +11,7 @@ import {
   createApp,
   objectLike,
   ANY,
+  printResource,
 } from "./helper";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
@@ -244,6 +245,20 @@ test("runtime: container", async () => {
   });
 });
 
+test("runtime: container: invalid file", async () => {
+  const app = await createApp();
+  const stack = new Stack(app, "stack");
+  expect(() => {
+    new Function(stack, "Function", {
+      runtime: "container",
+      handler: "test/constructs/container-function",
+      container: {
+        file: "Dockerfile.garbage",
+      },
+    });
+  }).toThrow(/Cannot find file/);
+});
+
 test("runtime: invalid", async () => {
   const app = await createApp();
   const stack = new Stack(app, "stack");
@@ -367,7 +382,7 @@ test("xray-disabled", async () => {
   });
 });
 
-test("constructor: bind", async () => {
+test("bind", async () => {
   const stack = new Stack(await createApp(), "stack");
   const s = new Config.Secret(stack, "MY_SECRET");
   const p = new Config.Parameter(stack, "MY_PARAM", {
@@ -426,7 +441,7 @@ test("constructor: bind", async () => {
   });
 });
 
-test("constructor: config", async () => {
+test("bind: config", async () => {
   const stack = new Stack(await createApp(), "stack");
   const s = new Config.Secret(stack, "MY_SECRET");
   const s2 = new Config.Secret(stack, "MY_SECRET2");

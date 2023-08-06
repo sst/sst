@@ -132,7 +132,7 @@ Let's take a look at how secrets and parameters work behind the scenes.
 
 ### Secrets
 
-Behind the scenes, secrets are stored as [AWS SSM](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) Parameters in your AWS account. When you run:
+Behind the scenes, secrets are stored as [AWS SSM](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) or AWS Systems Manager Parameters in your AWS account. When you run:
 
 ```bash
 npx sst secrets set STRIPE_KEY sk_test_abc123

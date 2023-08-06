@@ -285,8 +285,28 @@ npx sst remove [filter] [options]
 ```
 
 :::info Removal Policy
-By default, AWS does not remove resources like S3 buckets or DynamoDB tables. To let SST remove these, you'd need to [set the default removal policy](../advanced/removal-policy.md).
+By default, AWS does not remove resources like S3 buckets or DynamoDB tables. To let SST remove these, you'd need to [set the default removal policy](../advanced/removal-policy.md#changing-the-removal-policy).
 :::
+
+For example, you can remove your entire app for the current stage.
+
+```bash
+npx sst remove
+```
+
+Or remove it for a specific stage.
+
+```bash
+npx sst remove --stage dev
+```
+
+Or remove a specific stack in your app.
+
+```bash
+npx sst remove MyStack
+```
+
+Where `MyStack` is a stack defined in your stacks code.
 
 ---
 
@@ -352,7 +372,7 @@ This command does not instrument your code. It simply uses your local credential
 
 ### `sst secrets`
 
-Manage secrets in your app.
+Manage the secrets in your app. This command is meant to be used alongside [Config](../docs/config.md). 
 
 ```bash
 npx sst secrets <command> [options]
@@ -375,6 +395,8 @@ And remove the secret.
 ```bash
 npx sst secrets remove MY_SECRET
 ```
+
+Behind the scenes the secrets are stored in [AWS SSM](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) or AWS Systems Manager Parameter Store, [read more about how it works](../config.md#how-it-works).
 
 #### Options
 

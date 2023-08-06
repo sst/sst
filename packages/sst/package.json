@@ -5,7 +5,7 @@
   },
   "sideEffects": false,
   "name": "sst",
-  "version": "2.22.3",
+  "version": "2.23.6",
   "bin": {
     "sst": "cli/sst.js"
   },
@@ -42,6 +42,7 @@
     "@aws-cdk/cx-api": "2.84.0",
     "@aws-crypto/sha256-js": "^5.0.0",
     "@aws-sdk/client-cloudformation": "^3.279.0",
+    "@aws-sdk/client-ecs": "^3.279.0",
     "@aws-sdk/client-eventbridge": "^3.342.0",
     "@aws-sdk/client-iam": "^3.279.0",
     "@aws-sdk/client-iot": "^3.279.0",

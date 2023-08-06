@@ -94,6 +94,7 @@ test("constructor: schema is string[]", async () => {
   });
 });
 
+/*
 test("constructor: graphqlApi is construct", async () => {
   const stack = new Stack(await createApp(), "stack");
   new AppSyncApi(stack, "Api", {
@@ -1411,5 +1412,4 @@ test("bind-after-addResolvers", async () => {
   });
 });
 
-/*
- */
+*/

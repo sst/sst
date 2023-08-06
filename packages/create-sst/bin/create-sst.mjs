@@ -18,9 +18,22 @@ program
     const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
     process.chdir(__dirname);
 
-    const [preset, name, destination] = await (async function () {
+    const [preset, name, destination, parameters] = await (async function () {
       const files = await fs.readdir(cwd);
       const frameworks = [
+        {
+          name: "container",
+          preset: "presets/dropin/container",
+          tester: () => files.some((f) => f === "Dockerfile"),
+          parameters: [
+            {
+              name: "port",
+              type: "number",
+              default: "3000",
+              message: "What port is your app running on?",
+            },
+          ],
+        },
         {
           name: "Next.js",
           preset: "presets/dropin/nextjs",
@@ -68,7 +81,8 @@ program
           },
         ]);
         if (!confirm) break;
-        return [framework.preset, path.parse(cwd).name, cwd];
+        const parameters = await inquirer.prompt(framework.parameters || []);
+        return [framework.preset, path.parse(cwd).name, cwd, parameters];
       }
 
       const answers = await inquirer.prompt([
@@ -100,7 +114,8 @@ program
     try {
       await execute({
         source: preset,
-        destination: destination,
+        destination,
+        parameters,
       });
       spinner.succeed("Copied template files");
       console.log();

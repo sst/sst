@@ -54,7 +54,14 @@ export const useContainerHandler = Context.memo(async () => {
       if (input.mode === "start") {
         try {
           const result = await execAsync(
-            `docker build -t sst-dev:${input.functionID} .`,
+            [
+              `docker build`,
+              `-t sst-dev:${input.functionID}`,
+              ...(input.props.container?.file
+                ? [`-f ${input.props.container.file}`]
+                : []),
+              `.`,
+            ].join(" "),
             {
               cwd: project,
               env: {
@@ -80,6 +87,9 @@ export const useContainerHandler = Context.memo(async () => {
             [
               `docker build`,
               `-t sst-build:${input.functionID}`,
+              ...(input.props.container?.file
+                ? [`-f ${input.props.container.file}`]
+                : []),
               `--platform ${platform}`,
               `.`,
             ].join(" "),

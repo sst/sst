@@ -23,6 +23,27 @@ declare module "../bus.js" {
   }
 }
 
+export async function metadataForStack(stack: String) {
+  const project = useProject();
+  const [credentials, bootstrap] = await Promise.all([
+    useAWSCredentials(),
+    useBootstrap(),
+  ]);
+  const s3 = new S3Client({
+    region: project.config.region,
+    credentials: credentials,
+  });
+
+  const result = await s3.send(
+    new GetObjectCommand({
+      Key: `stackMetadata/app.${project.config.name}/stage.${project.config.stage}/stack.${stack}.json`,
+      Bucket: bootstrap.bucket,
+    })
+  );
+  const body = await result.Body!.transformToString();
+  return JSON.parse(body) as Metadata[];
+}
+
 export async function metadata() {
   Logger.debug("Fetching all metadata");
   const project = useProject();

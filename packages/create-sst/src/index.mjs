@@ -108,6 +108,7 @@ export function extend(path) {
  *   source: string
  *   destination: string
  *   extended?: boolean
+ *   parameters?: Record<string, string>
  * }} opts
  */
 export async function execute(opts) {
@@ -144,6 +145,7 @@ export async function execute(opts) {
         await execute({
           source: step.path,
           destination: opts.destination,
+          parameters: opts.parameters,
           extended: true,
         });
         break;
@@ -224,14 +226,15 @@ export async function execute(opts) {
       )
         continue;
       try {
-        const contents = await fs.readFile(file, "utf8");
         if (file.endsWith(".png") || file.endsWith(".ico")) continue;
-        await fs.writeFile(
-          file,
-          contents
-            .replace(/\@\@app/g, app)
-            .replace(/\@\@normalizedapp/g, appAlpha)
-        );
+        let contents = await fs.readFile(file, "utf8");
+        contents = contents.replace(/\@\@app/g, app);
+        contents = contents.replace(/\@\@normalizedapp/g, appAlpha);
+        Object.entries(opts.parameters).forEach(([key, value]) => {
+          const regex = new RegExp(`\\@\\@${key}`, "g");
+          contents = contents.replace(regex, value);
+        });
+        await fs.writeFile(file, contents);
       } catch {
         continue;
       }

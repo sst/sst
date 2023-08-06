@@ -100,4 +100,8 @@ export class AstroSite extends SsrSite {
       ...this.getConstructMetadataBase(),
     };
   }
+
+  protected supportsStreaming(): boolean {
+    return true;
+  }
 }

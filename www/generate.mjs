@@ -7,7 +7,6 @@ import {
   ReflectionKind,
 } from "typedoc";
 import path from "path";
-import { exit } from "process";
 
 const cmd = process.argv[2];
 
@@ -22,6 +21,8 @@ const CDK_DOCS_MAP = {
   IVpc: "aws_ec2",
   ISecurityGroup: "aws_ec2",
   SubnetSelection: "aws_ec2",
+  Cluster: "aws_ecs",
+  ContainerDefinitionOptions: "aws_ecs",
   FunctionUrlOptions: "aws_lambda",
   LogGroup: "aws_logs",
   LogGroupProps: "aws_logs",
@@ -125,6 +126,7 @@ app.bootstrap({
     "../packages/sst/src/constructs/Parameter.ts",
     "../packages/sst/src/constructs/Script.ts",
     "../packages/sst/src/constructs/Secret.ts",
+    "../packages/sst/src/constructs/Service.ts",
     "../packages/sst/src/constructs/Queue.ts",
     "../packages/sst/src/constructs/Function.ts",
     "../packages/sst/src/constructs/EventBus.ts",

@@ -1,12 +1,9 @@
 import type { SSRManifest } from "astro";
-import type {
-  CloudFrontRequestEvent,
-  CloudFrontRequestResult,
-  CloudFrontHeaders,
-} from "aws-lambda";
+import type { CloudFrontRequestEvent } from "aws-lambda";
 import { NodeApp } from "astro/app/node";
 import { polyfill } from "@astrojs/webapi";
-import { isBinaryContentType } from "../lib/binary.js";
+import { convertFrom, convertTo } from "../lib/event-mapper.js";
+import { debug } from "../lib/logger.js";
 
 polyfill(globalThis, {
   exclude: "window document",
@@ -15,60 +12,42 @@ polyfill(globalThis, {
 export function createExports(manifest: SSRManifest) {
   const app = new NodeApp(manifest);
 
-  return {
-    async handler(
-      event: CloudFrontRequestEvent
-    ): Promise<CloudFrontRequestResult> {
-      const { uri, method, headers, querystring, body } =
-        event.Records[0].cf.request;
+  async function handler(event: CloudFrontRequestEvent) {
+    debug("event", event);
 
-      // Convert CloudFront request to Node request
-      const requestHeaders = new Headers();
-      for (const [key, values] of Object.entries(headers)) {
-        for (const { value } of values) {
-          if (value) {
-            requestHeaders.append(key, value);
-          }
-        }
-      }
-      const host = (headers["x-forwarded-host"] || headers["host"])[0].value;
-      const qs = querystring.length > 0 ? `?${querystring}` : "";
-      const url = new URL(`${uri}${qs}`, `https://${host}`);
-      const request = new Request(url.toString(), {
-        method,
-        headers: requestHeaders,
-        body: body?.data
-          ? body.encoding === "base64"
-            ? Buffer.from(body.data, "base64").toString()
-            : body.data
-          : undefined,
-      });
+    // Parse Lambda event
+    const internalEvent = convertFrom(event);
 
-      // Process request
-      const rendered = await app.render(request);
+    // Build request
+    const requestUrl = internalEvent.url;
+    const requestProps = {
+      method: internalEvent.method,
+      headers: internalEvent.headers,
+      body: ["GET", "HEAD"].includes(internalEvent.method)
+        ? undefined
+        : internalEvent.body,
+    };
+    debug("request", requestUrl, requestProps);
+    const request = new Request(requestUrl, requestProps);
 
-      // Build cookies
-      const responseHeaders: CloudFrontHeaders = {};
-      const rawHeaders = rendered.headers.entries();
-      for (const [key, value] of rawHeaders) {
-        for (const v of value) {
-          responseHeaders[key] = [
-            ...(responseHeaders[key] || []),
-            { key, value: v },
-          ];
-        }
-      }
+    // Process request
+    const response = await app.render(request);
+    debug("response", response);
 
-      // Convert Node response to CloudFront response
-      const contentType = rendered.headers.get("content-type");
-      const responseIsBase64Encoded = isBinaryContentType(contentType);
-      return {
-        status: String(rendered.status),
-        statusDescription: "OK",
-        headers: responseHeaders,
-        bodyEncoding: responseIsBase64Encoded ? "base64" : "text",
-        body: await rendered.text(),
-      };
-    },
-  };
+    return await convertTo({
+      type: internalEvent.type,
+      response,
+      cookies: app.setCookieHeaders
+        ? (() => {
+            const cookies: string[] = [];
+            for (const header of app.setCookieHeaders(response)) {
+              cookies.push(header);
+            }
+            return cookies;
+          })()
+        : undefined,
+    });
+  }
+
+  return { handler };
 }

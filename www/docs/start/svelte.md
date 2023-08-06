@@ -89,6 +89,7 @@ Start your local dev environment.
 ```bash
 # Start SST locally
 npx sst dev
+
 # Start Svelte locally
 npm run dev
 ```
@@ -99,6 +100,7 @@ npm run dev
 ```bash
 # Start SST locally
 yarn sst dev
+
 # Start Svelte locally
 yarn run dev
 ```
@@ -109,12 +111,17 @@ yarn run dev
 ```bash
 # Start SST locally
 pnpm sst dev
+
 # Start Svelte locally
 pnpm run dev
 ```
 
 </TabItem>
 </MultiPackagerCode>
+
+:::info
+When running `sst dev`, SST does not deploy your Svelte app. You are meant to run Svelte locally.
+:::
 
 ---
 

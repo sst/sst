@@ -37,8 +37,8 @@ import type { RoutesManifest } from "@sls-next/lambda-at-edge";
 import { App } from "../App.js";
 import { Stack } from "../Stack.js";
 import { SSTConstruct, isCDKConstruct } from "../Construct.js";
+import { DistributionDomainProps } from "../Distribution.js";
 import {
-  BaseSiteDomainProps,
   BaseSiteReplaceProps,
   BaseSiteCdkDistributionProps,
   getBuildCmdEnvironment,
@@ -53,10 +53,11 @@ import {
 import * as crossRegionHelper from "./cross-region-helper.js";
 import { gray, red } from "colorette";
 import { useProject } from "../../project.js";
+import { createAppContext } from "../context.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
-export interface NextjsDomainProps extends BaseSiteDomainProps {}
+export interface NextjsDomainProps extends DistributionDomainProps {}
 export interface NextjsCdkDistributionProps
   extends BaseSiteCdkDistributionProps {}
 export interface NextjsSiteProps {
@@ -324,6 +325,8 @@ export class NextjsSite extends Construct implements SSTConstruct {
     this.props = props;
     this.cdk = {} as any;
     this.awsCliLayer = new AwsCliLayer(this, "AwsCliLayer");
+
+    useSites().add(stack.stackName, id, this.props);
 
     // Build app
     if (this.isPlaceholder) {
@@ -1516,3 +1519,19 @@ export class NextjsSite extends Construct implements SSTConstruct {
     return lambda.Runtime.NODEJS_16_X;
   }
 }
+
+export const useSites = createAppContext(() => {
+  const sites: {
+    stack: string;
+    name: string;
+    props: NextjsSiteProps;
+  }[] = [];
+  return {
+    add(stack: string, name: string, props: NextjsSiteProps) {
+      sites.push({ stack, name, props });
+    },
+    get all() {
+      return sites;
+    },
+  };
+});
