@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.5.6
+
+### Patch Changes
+
+- [`435ab9ce2`](https://github.com/serverless-stack/sst/commit/435ab9ce2f32c79e9f8eb2e4099aafebc1246aad) Thanks [@fwang](https://github.com/fwang)! - sst update: detect CDK v1 dependencies
+
 ## 2.5.5
 
 ### Patch Changes

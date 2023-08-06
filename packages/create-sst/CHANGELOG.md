@@ -1,5 +1,11 @@
 # create-sst
 
+## 2.23.4
+
+### Patch Changes
+
+- [`7841ed6f5`](https://github.com/serverless-stack/sst/commit/7841ed6f58976f821b0a116f050b4527191ffb96) Thanks [@fwang](https://github.com/fwang)! - Service: support drop-in mode
+
 ## 2.23.3
 
 ## 2.23.2
