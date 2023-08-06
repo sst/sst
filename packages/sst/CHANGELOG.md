@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.23.5
+
+### Patch Changes
+
+- [`54cb27189`](https://github.com/serverless-stack/sst/commit/54cb27189adfede103692318dc4f13ff6c90213e) Thanks [@thdxr](https://github.com/thdxr)! - build: remove bundled cli
+
 ## 2.23.4
 
 ### Patch Changes
