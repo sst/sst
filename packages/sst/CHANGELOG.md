@@ -1,5 +1,7 @@
 # @serverless-stack/cli2
 
+## 2.23.13
+
 ## 2.23.12
 
 ### Patch Changes
