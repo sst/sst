@@ -512,6 +512,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
           ? ("placeholder" as const)
           : ("deployed" as const),
         path: this.props.path,
+        runtime: this.props.runtime,
         customDomainUrl: this.customDomainUrl,
         url: this.url,
         edge: this.props.edge,
