@@ -108,7 +108,7 @@ export function extend(path) {
  *   source: string
  *   destination: string
  *   extended?: boolean
- *   parameters?: Record<string, string>
+ *   parameters: Record<string, string>
  * }} opts
  */
 export async function execute(opts) {

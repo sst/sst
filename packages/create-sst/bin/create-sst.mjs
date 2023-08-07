@@ -115,7 +115,7 @@ program
       await execute({
         source: preset,
         destination,
-        parameters,
+        parameters: parameters ?? {},
       });
       spinner.succeed("Copied template files");
       console.log();
