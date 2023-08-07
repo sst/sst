@@ -97,9 +97,9 @@ program
       answers.name = answers.name || argumentName;
       const destination = path.join(cwd, answers.name);
       if (opts.template) {
-        return [`presets/${opts.template}`, answers.name, destination];
+        return [`presets/${opts.template}`, answers.name, destination, answers];
       }
-      return ["presets/standard/api", answers.name, destination];
+      return ["presets/standard/api", answers.name, destination, answers];
     })();
 
     const spinner = ora();
@@ -115,7 +115,7 @@ program
       await execute({
         source: preset,
         destination,
-        parameters,
+        parameters: parameters ?? {},
       });
       spinner.succeed("Copied template files");
       console.log();

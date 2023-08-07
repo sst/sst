@@ -1,8 +1,8 @@
 {
   "name": "create-sst",
-  "version": "2.23.9",
+  "version": "2.23.11",
   "homepage": "https://sst.dev",
-  "description": "Create Serverless Stack apps.",
+  "description": "Create SST apps",
   "main": "src/index.mjs",
   "bin": {
     "create-sst": "./bin/create-sst.mjs"
