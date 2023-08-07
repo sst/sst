@@ -88,7 +88,7 @@ pnpm test
 
 In this chapter we'll look at the different types of tests and share some tips on how to write them.
 
-To follow along, you can create the GraphQL starter by running `npx create-sst@latest --example graphql/dynamo` > `graphql` > `DynamoDB`. Alternatively, you can refer to [this example repo](https://github.com/serverless-stack/sst/tree/master/examples/graphql-dynamo) based on the same template.
+To follow along, you can create the GraphQL starter by running `npx create-sst@latest --example graphql/dynamo` > `graphql` > `DynamoDB`. Alternatively, you can refer to [this example repo](https://github.com/sst/sst/tree/master/examples/graphql-dynamo) based on the same template.
 
 If you are new to the GraphQL starter, it creates a very simple Reddit clone. You can submit links and it'll display all the links that have been submitted.
 

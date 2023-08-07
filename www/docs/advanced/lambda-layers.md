@@ -85,4 +85,4 @@ Say you wanted to use the [chrome-aws-lambda-layer](https://github.com/shelfio/c
    });
    ```
 
-For further details, [read the example on this use case](https://sst.dev/examples/how-to-use-lambda-layers-in-your-serverless-app.html) and [check out the sample SST app](https://github.com/serverless-stack/examples/tree/main/layer-chrome-aws-lambda).
+For further details, [read the example on this use case](https://sst.dev/examples/how-to-use-lambda-layers-in-your-serverless-app.html) and [check out the sample SST app](https://github.com/sst/examples/tree/main/layer-chrome-aws-lambda).

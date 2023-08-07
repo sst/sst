@@ -8,7 +8,7 @@ module.exports = {
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "throw",
   favicon: "img/favicon.ico",
-  organizationName: "serverless-stack", // Usually your GitHub org/user name.
+  organizationName: "sst", // Usually your GitHub org/user name.
   projectName: "sst", // Usually your repo name.
   scripts: [
     {
@@ -191,12 +191,12 @@ module.exports = {
               const splits = params.docPath.split("/");
               const name = splits[splits.length - 1].replace(".md", ".ts");
               return (
-                "https://github.com/serverless-stack/sst/blob/master/packages/sst/src/constructs/" +
+                "https://github.com/sst/sst/blob/master/packages/sst/src/constructs/" +
                 name
               );
             }
             return (
-              "https://github.com/serverless-stack/sst/blob/master/www/docs/" +
+              "https://github.com/sst/sst/blob/master/www/docs/" +
               params.docPath
             );
           },

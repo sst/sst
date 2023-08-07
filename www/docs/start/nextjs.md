@@ -299,7 +299,7 @@ The `sst deploy` command internally uses OpenNext to build your app.
 ![Next.js app deployed to AWS with SST](/img/start/nextjs-app-deployed-to-aws-with-sst.png)
 
 :::info
-[View the source](https://github.com/serverless-stack/sst/tree/master/examples/quickstart-nextjs) for this example on GitHub.
+[View the source](https://github.com/sst/sst/tree/master/examples/quickstart-nextjs) for this example on GitHub.
 :::
 
 ---
