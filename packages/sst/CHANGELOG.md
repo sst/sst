@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.23.8
+
+### Patch Changes
+
+- [`9326ee600`](https://github.com/sst/sst/commit/9326ee60092df938ad710fcd860aee618184f354) Thanks [@thdxr](https://github.com/thdxr)! - function: include runtime in ssrfunction metadata
+
 ## 2.23.7
 
 ### Patch Changes
