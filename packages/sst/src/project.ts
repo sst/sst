@@ -87,15 +87,21 @@ const CONFIG_EXTENSIONS = [
 ];
 
 interface GlobalOptions {
+  name?: string;
+  stage?: string;
+  region?: string;
   profile?: string;
   role?: string;
-  stage?: string;
   root?: string;
-  region?: string;
+  bootstrap?: {
+    stackName?: string;
+    tags?: Record<string, string>;
+    useCdkBucket?: boolean;
+  }
 }
 
 export async function initProject(globals: GlobalOptions) {
-  // Logger.debug("initing project");
+  // Logger.debug("Initializing the project");
   const root = globals.root || (await findRoot());
   const out = path.join(root, ".sst");
   await fs.mkdir(out, {
