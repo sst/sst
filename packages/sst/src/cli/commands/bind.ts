@@ -155,7 +155,6 @@ export const bind = (program: Program) =>
         function isInSsrSite() {
           const cwd = process.cwd();
           return useSsrSites().all.find(({ props }) => {
-            console.log(path.resolve(project.paths.root, props.path));
             return path.resolve(project.paths.root, props.path) === cwd;
           });
         }
@@ -164,11 +163,9 @@ export const bind = (program: Program) =>
           const cwd = process.cwd();
           return (
             useStaticSites().all.find(({ props }) => {
-              console.log(path.resolve(project.paths.root, props.path));
               return path.resolve(project.paths.root, props.path) === cwd;
             }) ||
             useSlsNextjsSites().all.find(({ props }) => {
-              console.log(path.resolve(project.paths.root, props.path));
               return path.resolve(project.paths.root, props.path) === cwd;
             })
           );
@@ -177,7 +174,6 @@ export const bind = (program: Program) =>
         function isInService() {
           const cwd = process.cwd();
           return useServices().all.find(({ props }) => {
-            console.log(path.resolve(project.paths.root, props.path));
             return path.resolve(project.paths.root, props.path) === cwd;
           });
         }
