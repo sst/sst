@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.23.12
+
+### Patch Changes
+
+- [`1873d697d`](https://github.com/sst/sst/commit/1873d697d1232618b6060134425d1c02cd843dc5) Thanks [@thdxr](https://github.com/thdxr)! - cli: remove log statements
+
+- [#3091](https://github.com/sst/sst/pull/3091) [`d22ea127f`](https://github.com/sst/sst/commit/d22ea127fad1f2314e714338e5aada59e8f7c679) Thanks [@ealain](https://github.com/ealain)! - SsrSite: support protecting server URL with IAM auth
+
 ## 2.23.11
 
 ### Patch Changes
