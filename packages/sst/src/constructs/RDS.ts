@@ -27,7 +27,34 @@ import { Stack } from "./Stack.js";
 import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct.js";
 import { Function as Fn } from "./Function.js";
 import { FunctionBindingProps } from "./util/functionBinding.js";
+import { humanizeArrayString } from "../util/array.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
+
+/////////////////////
+// Constants
+/////////////////////
+
+const ENGINE_TYPE_TO_AURORA_ENGINE_VERSION = {
+  'mysql5.6': AuroraEngineVersion.VER_10A
+};
+
+const ENGINE_TYPE_TO_MYSQL_ENGINE_VERSION = {
+  'mysql5.7': AuroraMysqlEngineVersion.VER_2_07_1,
+}
+
+const ENGINE_TYPE_TO_POSTGRES_ENGINE_VERSION = {
+  'postgresql11.13': AuroraPostgresEngineVersion.VER_11_13,
+  'postgresql11.16': AuroraPostgresEngineVersion.VER_11_16,
+  'postgresql13.9': AuroraPostgresEngineVersion.VER_13_9,
+  'postgresql13.10': AuroraPostgresEngineVersion.VER_13_10,
+  'postgresql14.3': AuroraPostgresEngineVersion.VER_14_3,
+  'postgresql14.5': AuroraPostgresEngineVersion.VER_14_5,
+  'postgresql14.6': AuroraPostgresEngineVersion.VER_14_6,
+  'postgresql14.7': AuroraPostgresEngineVersion.VER_14_7,
+  'postgresql15.2': AuroraPostgresEngineVersion.VER_15_2
+}
+
+const ENGINE_TYPE_TO_ENGINE_VERSION = Object.assign({}, ENGINE_TYPE_TO_MYSQL_ENGINE_VERSION, ENGINE_TYPE_TO_POSTGRES_ENGINE_VERSION, ENGINE_TYPE_TO_AURORA_ENGINE_VERSION);
 
 /////////////////////
 // Interfaces
@@ -42,12 +69,7 @@ export interface RDSProps {
   /**
    * Database engine of the cluster. Cannot be changed once set.
    */
-  engine:
-    | "mysql5.6"
-    | "mysql5.7"
-    | "postgresql11.13"
-    | "postgresql11.16"
-    | "postgresql13.9";
+  engine: RDSEngineType;
 
   /**
    * Name of a database which is automatically created inside the cluster.
@@ -176,9 +198,6 @@ export interface RDSProps {
     secret?: ISecret;
   };
 }
-
-export type RDSEngineType = RDSProps["engine"];
-
 export interface RDSCdkServerlessClusterProps
   extends Omit<
     ServerlessClusterProps,
@@ -186,6 +205,17 @@ export interface RDSCdkServerlessClusterProps
   > {
   vpc?: IVpc;
 }
+
+/////////////////////
+// Types
+/////////////////////
+
+type RDSAuroraEngineType = keyof typeof ENGINE_TYPE_TO_AURORA_ENGINE_VERSION;
+type RDSMysqlEngineType = keyof typeof ENGINE_TYPE_TO_MYSQL_ENGINE_VERSION;
+type RDSPostgresEngineType = keyof typeof ENGINE_TYPE_TO_POSTGRES_ENGINE_VERSION;
+
+export type RDSEngineType = keyof typeof ENGINE_TYPE_TO_ENGINE_VERSION;
+
 
 /////////////////////
 // Construct
@@ -296,8 +326,8 @@ export class RDS extends Construct implements SSTConstruct {
         types:
           typeof types === "string"
             ? {
-                path: types,
-              }
+              path: types,
+            }
             : types,
         clusterArn: this.clusterArn,
         clusterIdentifier: this.clusterIdentifier,
@@ -337,8 +367,8 @@ export class RDS extends Construct implements SSTConstruct {
         // grant permission to the "encryptionkey" if set
         ...(this.secret.encryptionKey
           ? {
-              "kms:Decrypt": [this.secret.encryptionKey.keyArn],
-            }
+            "kms:Decrypt": [this.secret.encryptionKey.keyArn],
+          }
           : {}),
       },
     };
@@ -415,31 +445,39 @@ export class RDS extends Construct implements SSTConstruct {
   }
 
   private getEngine(engine: RDSEngineType): IClusterEngine {
-    if (engine === "mysql5.6") {
+    if (this.isAuroraEngine(engine)) {
       return DatabaseClusterEngine.aurora({
-        version: AuroraEngineVersion.VER_10A,
-      });
-    } else if (engine === "mysql5.7") {
-      return DatabaseClusterEngine.auroraMysql({
-        version: AuroraMysqlEngineVersion.VER_2_07_1,
-      });
-    } else if (engine === "postgresql11.13") {
-      return DatabaseClusterEngine.auroraPostgres({
-        version: AuroraPostgresEngineVersion.VER_11_13,
-      });
-    } else if (engine === "postgresql11.16") {
-      return DatabaseClusterEngine.auroraPostgres({
-        version: AuroraPostgresEngineVersion.VER_11_16,
-      });
-    } else if (engine === "postgresql13.9") {
-      return DatabaseClusterEngine.auroraPostgres({
-        version: AuroraPostgresEngineVersion.VER_13_9,
+        version: ENGINE_TYPE_TO_AURORA_ENGINE_VERSION[engine],
       });
     }
+    else if (this.isMysqlEngine(engine)) {
+      return DatabaseClusterEngine.auroraMysql({
+        version: ENGINE_TYPE_TO_MYSQL_ENGINE_VERSION[engine],
+      });
 
-    throw new Error(
-      `The specified "engine" is not supported for sst.RDS. Only mysql5.6, mysql5.7, postgresql11.13, postgresql11.16, and postgres13.9 engines are currently supported.`
-    );
+    }
+    else if (this.isPostgresEngine(engine)) {
+      return DatabaseClusterEngine.auroraPostgres({
+        version: ENGINE_TYPE_TO_POSTGRES_ENGINE_VERSION[engine],
+      });
+    }
+    else {
+      throw new Error(
+        `The specified "engine" is not supported for sst.RDS. Only ${humanizeArrayString(Object.keys(ENGINE_TYPE_TO_ENGINE_VERSION), 'and')} engines are currently supported.`
+      );
+    }
+  }
+
+  private isAuroraEngine(engine: RDSEngineType): engine is RDSAuroraEngineType {
+    return !ENGINE_TYPE_TO_AURORA_ENGINE_VERSION[engine as RDSAuroraEngineType];
+  }
+
+  private isMysqlEngine(engine: RDSEngineType): engine is RDSMysqlEngineType {
+    return !ENGINE_TYPE_TO_MYSQL_ENGINE_VERSION[engine as RDSMysqlEngineType];
+  }
+
+  private isPostgresEngine(engine: RDSEngineType): engine is RDSPostgresEngineType {
+    return !ENGINE_TYPE_TO_POSTGRES_ENGINE_VERSION[engine as RDSPostgresEngineType];
   }
 
   private getScaling(scaling?: RDSProps["scaling"]): ServerlessScalingOptions {
@@ -448,8 +486,8 @@ export class RDS extends Construct implements SSTConstruct {
         scaling?.autoPause === false
           ? CDKDuration.minutes(0)
           : scaling?.autoPause === true || scaling?.autoPause === undefined
-          ? CDKDuration.minutes(5)
-          : CDKDuration.minutes(scaling?.autoPause),
+            ? CDKDuration.minutes(5)
+            : CDKDuration.minutes(scaling?.autoPause),
       minCapacity: AuroraCapacityUnit[scaling?.minCapacity || "ACU_2"],
       maxCapacity: AuroraCapacityUnit[scaling?.maxCapacity || "ACU_16"],
     };
