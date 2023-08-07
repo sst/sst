@@ -94,29 +94,6 @@ await esbuild.build({
   outdir: "./dist/support/edge-function/",
 });
 
-// support/signing-function
-await esbuild.build({
-  keepNames: true,
-  bundle: true,
-  minify: true,
-  platform: "node",
-  target: "esnext",
-  format: "esm",
-  entryPoints: [
-    "./support/signing-function/index.ts",
-  ],
-  banner: {
-    js: [
-      `import { createRequire as topLevelCreateRequire } from 'module';`,
-      `const require = topLevelCreateRequire(import.meta.url);`,
-    ].join(""),
-  },
-  outExtension: {
-    ".js": ".mjs",
-  },
-  outdir: "./dist/support/signing-function/",
-});
-
 // Move support packages that need to be transpiled
 await Promise.all(
   [
@@ -124,6 +101,7 @@ await Promise.all(
     "custom-resources",
     "script-function",
     "job-manager",
+    "signing-function",
   ].map((dir) =>
     esbuild.build({
       bundle: true,

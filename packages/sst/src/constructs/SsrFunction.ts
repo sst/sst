@@ -26,7 +26,6 @@ import {
   Duration as CdkDuration,
   CustomResource,
   CfnCustomResource,
-  PhysicalName,
 } from "aws-cdk-lib/core";
 
 import { useProject } from "../project.js";
@@ -159,10 +158,6 @@ export class SsrFunction extends Construct implements SSTConstruct {
 
     return new CdkFunction(this, `ServerFunction`, {
       ...this.props,
-      // Prevents "Resolution error: Cannot use resource in a cross-environment
-      // fashion, the resource's physical name must be explicit set or use
-      // `PhysicalName.GENERATE_IF_NEEDED`."
-      functionName: PhysicalName.GENERATE_IF_NEEDED,
       handler: handler.split(path.sep).join(path.posix.sep),
       logRetention: logRetention ?? RetentionDays.THREE_DAYS,
       code: Code.fromBucket(

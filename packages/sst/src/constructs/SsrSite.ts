@@ -30,7 +30,6 @@ import {
 } from "aws-cdk-lib/aws-iam";
 import {
   Function as CdkFunction,
-  IFunction as ICdkFunction,
   Code,
   Runtime,
   FunctionUrlAuthType,
@@ -55,7 +54,6 @@ import {
   Function as CfFunction,
   FunctionCode as CfFunctionCode,
   FunctionEventType as CfFunctionEventType,
-  experimental,
 } from "aws-cdk-lib/aws-cloudfront";
 import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
 import { S3Origin, HttpOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
@@ -208,6 +206,13 @@ export interface SsrSiteProps {
    * ```
    */
   environment?: Record<string, string>;
+  regional?: {
+    /**
+     * Secure the server function URL using AWS IAM authentication. By default, the server function URL is publicly accessible. When this flag is enabled, the server function URL will require IAM authorization, and a Lambda@Edge function will sign the requests. Be aware that this introduces added latency to the requests.
+     * @default false
+     */
+    enableServerUrlIamAuth?: boolean;
+  };
   dev?: {
     /**
      * When running `sst dev, site is not deployed. This is to ensure `sst dev` can start up quickly.
@@ -328,11 +333,6 @@ export interface SsrSiteProps {
    * ```
    */
   fileOptions?: SsrSiteFileOptions[];
-  /**
-   * Enables the AWS_IAM authentication mechanism on function URL
-   * @default "."
-   */
-  enableIAMAuth?: boolean;
 }
 
 type SsrSiteNormalizedProps = SsrSiteProps & {
@@ -363,10 +363,10 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
   protected serverLambdaForEdge?: EdgeFunction;
   protected serverLambdaForRegional?: SsrFunction;
   private serverLambdaForDev?: SsrFunction;
+  private serverUrlSigningFunction?: EdgeFunction;
   protected bucket: Bucket;
   private cfFunction: CfFunction;
   private s3Origin: S3Origin;
-  protected signingFunction?: experimental.EdgeFunction;
   private distribution: Distribution;
 
   constructor(scope: Construct, id: string, props?: SsrSiteProps) {
@@ -396,8 +396,6 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     if (this.doNotDeploy) {
       // @ts-ignore
       this.cfFunction = this.bucket = this.s3Origin = this.distribution = null;
-      // @ts-ignore
-      this.signingFunction = null;
       this.serverLambdaForDev = this.createFunctionForDev();
       return;
     }
@@ -416,9 +414,6 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
     // Create CloudFront
     this.s3Origin = this.createCloudFrontS3Origin();
     this.cfFunction = this.createCloudFrontFunction();
-    this.signingFunction = this.props.enableIAMAuth
-      ? this.createSigningFunction()
-      : undefined;
     this.distribution = this.props.edge
       ? this.createCloudFrontDistributionForEdge()
       : this.createCloudFrontDistributionForRegional();
@@ -431,6 +426,7 @@ export abstract class SsrSite extends Construct implements SSTConstruct {
       // Build server functions
       await this.serverLambdaForEdge?.build();
       await this.serverLambdaForRegional?.build();
+      await this.serverUrlSigningFunction?.build();
 
       // Create S3 Deployment
       const cliLayer = new AwsCliLayer(this, "AwsCliLayer");
@@ -937,22 +933,6 @@ function handler(event) {
     });
   }
 
-  private createSigningFunction() {
-    const fn = new experimental.EdgeFunction(this, "SigningFunction", {
-      runtime: Runtime.NODEJS_18_X,
-      code: Code.fromAsset(path.join(__dirname, "../support/signing-function")),
-      handler: "index.handler",
-      stackId: `${Stack.of(this).stackName}-edge-lambda-stack`,
-    });
-    fn.addToRolePolicy(
-      new PolicyStatement({
-        actions: ["lambda:InvokeFunctionUrl"],
-        resources: [this.serverLambdaForRegional?.functionArn!],
-      })
-    );
-    return fn;
-  }
-
   protected createCloudFrontDistributionForRegional() {
     const { customDomain, cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
@@ -1004,11 +984,11 @@ function handler(event) {
   protected buildDefaultBehaviorForRegional(
     cachePolicy: ICachePolicy
   ): BehaviorOptions {
-    const { timeout, cdk } = this.props;
+    const { timeout, regional, cdk } = this.props;
     const cfDistributionProps = cdk?.distribution || {};
 
     const fnUrl = this.serverLambdaForRegional!.addFunctionUrl({
-      authType: this.props.enableIAMAuth
+      authType: regional?.enableServerUrlIamAuth
         ? FunctionUrlAuthType.AWS_IAM
         : FunctionUrlAuthType.NONE,
       invokeMode: this.supportsStreaming()
@@ -1016,7 +996,7 @@ function handler(event) {
         : undefined,
     });
 
-    const behaviorOptions: BehaviorOptions = {
+    return {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       origin: new HttpOrigin(Fn.parseDomainName(fnUrl.url), {
         readTimeout:
@@ -1035,28 +1015,39 @@ function handler(event) {
         ...this.buildBehaviorFunctionAssociations(),
         ...(cfDistributionProps.defaultBehavior?.functionAssociations || []),
       ],
-    };
-
-    if (!this.props.enableIAMAuth) {
-      return behaviorOptions;
-    }
-
-    if (!this.signingFunction) {
-      throw new Error(
-        "signingFunction should be defined when IAM Auth is enabled"
-      );
-    }
-
-    return {
-      ...behaviorOptions,
       edgeLambdas: [
-        {
-          includeBody: true,
-          eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
-          functionVersion: this.signingFunction.currentVersion,
-        },
+        ...(regional?.enableServerUrlIamAuth
+          ? [
+              {
+                includeBody: true,
+                eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
+                functionVersion:
+                  this.useServerUrlSigningFunction().currentVersion,
+              },
+            ]
+          : []),
+        ...(cfDistributionProps.defaultBehavior?.edgeLambdas || []),
       ],
     };
+  }
+
+  protected useServerUrlSigningFunction() {
+    this.serverUrlSigningFunction =
+      this.serverUrlSigningFunction ??
+      new EdgeFunction(this, "ServerUrlSigningFunction", {
+        bundle: path.join(__dirname, "../support/signing-function"),
+        runtime: "nodejs18.x",
+        handler: "index.handler",
+        timeout: 10,
+        memorySize: 128,
+        permissions: [
+          new PolicyStatement({
+            actions: ["lambda:InvokeFunctionUrl"],
+            resources: [this.serverLambdaForRegional?.functionArn!],
+          }),
+        ],
+      });
+    return this.serverUrlSigningFunction;
   }
 
   protected buildDefaultBehaviorForEdge(

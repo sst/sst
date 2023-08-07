@@ -6,7 +6,6 @@ import {
   Duration as CdkDuration,
   RemovalPolicy,
   CustomResource,
-  PhysicalName,
 } from "aws-cdk-lib/core";
 import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
@@ -192,7 +191,6 @@ export class NextjsSite extends SsrSite {
     const fn = new CdkFunction(this, `ImageFunction`, {
       description: "Next.js image optimizer",
       handler: "index.handler",
-      functionName: PhysicalName.GENERATE_IF_NEEDED,
       currentVersionOptions: {
         removalPolicy: RemovalPolicy.DESTROY,
       },
@@ -411,15 +409,15 @@ export class NextjsSite extends SsrSite {
   }
 
   private buildImageBehavior(cachePolicy: ICachePolicy): BehaviorOptions {
-    const { cdk, enableIAMAuth } = this.props;
+    const { cdk, regional } = this.props;
     const imageFn = this.createImageOptimizationFunction();
     const imageFnUrl = imageFn.addFunctionUrl({
-      authType: enableIAMAuth
+      authType: regional?.enableServerUrlIamAuth
         ? FunctionUrlAuthType.AWS_IAM
         : FunctionUrlAuthType.NONE,
     });
 
-    const behaviorOptions: BehaviorOptions = {
+    return {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       origin: new HttpOrigin(Fn.parseDomainName(imageFnUrl.url)),
       allowedMethods: AllowedMethods.ALLOW_ALL,
@@ -427,34 +425,24 @@ export class NextjsSite extends SsrSite {
       compress: true,
       cachePolicy,
       responseHeadersPolicy: cdk?.responseHeadersPolicy,
-    };
-
-    if (!enableIAMAuth) {
-      return behaviorOptions;
-    }
-
-    if (!this.signingFunction) {
-      throw new Error(
-        "signingFunction should be defined when IAM Auth is enabled"
-      );
-    }
-
-    this.signingFunction.addToRolePolicy(
-      new PolicyStatement({
-        actions: ["lambda:InvokeFunctionUrl"],
-        resources: [imageFn.functionArn],
-      })
-    );
-
-    return {
-      ...behaviorOptions,
-      edgeLambdas: [
-        {
-          includeBody: true,
-          eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
-          functionVersion: this.signingFunction.currentVersion,
-        },
-      ],
+      edgeLambdas: regional?.enableServerUrlIamAuth
+        ? [
+            (() => {
+              const fn = this.useServerUrlSigningFunction();
+              fn.attachPermissions([
+                new PolicyStatement({
+                  actions: ["lambda:InvokeFunctionUrl"],
+                  resources: [imageFn.functionArn],
+                }),
+              ]);
+              return {
+                includeBody: true,
+                eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
+                functionVersion: fn.currentVersion,
+              };
+            })(),
+          ]
+        : [],
     };
   }
 

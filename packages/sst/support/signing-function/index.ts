@@ -18,7 +18,7 @@ export const handler: CloudFrontRequestHandler = async (event) => {
   // Do not process requests to S3.
   // This should not happen because the signing function is
   // associated to behaviors targeting function URLs.
-  if ('s3' in request.origin) {
+  if ("s3" in request.origin) {
     return request;
   }
 
@@ -34,15 +34,20 @@ export const handler: CloudFrontRequestHandler = async (event) => {
   const query = queryStringToQueryParameterBag(request.querystring);
   const sigv4 = getSigV4(region);
 
-  const signed = await sigv4.sign({
-    method: request.method,
-    hostname: domainName,
-    headers: cloudFrontHeadersToHeaderBag(request.headers),
-    path: request.uri,
-    query,
-    protocol: "https",
-    body: request.body?.data ? Buffer.from(request.body.data, "base64") : undefined,
-  }, { unsignableHeaders: new Set(["x-forwarded-for" ]) });
+  const signed = await sigv4.sign(
+    {
+      method: request.method,
+      hostname: domainName,
+      headers: cloudFrontHeadersToHeaderBag(request.headers),
+      path: request.uri,
+      query,
+      protocol: "https",
+      body: request.body?.data
+        ? Buffer.from(request.body.data, "base64")
+        : undefined,
+    },
+    { unsignableHeaders: new Set(["x-forwarded-for"]) }
+  );
 
   request.headers = headerBagToCloudFrontHeaders(signed.headers);
 

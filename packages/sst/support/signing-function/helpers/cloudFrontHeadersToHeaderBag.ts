@@ -1,8 +1,9 @@
 import { CloudFrontHeaders } from "aws-lambda";
 import { HeaderBag } from "@aws-sdk/types";
 
-export const cloudFrontHeadersToHeaderBag = (cloudFrontHeaders: CloudFrontHeaders): HeaderBag => {
-
+export const cloudFrontHeadersToHeaderBag = (
+  cloudFrontHeaders: CloudFrontHeaders
+): HeaderBag => {
   const headerBag: HeaderBag = {};
 
   for (const [lowerCaseHeader, values] of Object.entries(cloudFrontHeaders)) {
@@ -15,7 +16,7 @@ export const cloudFrontHeadersToHeaderBag = (cloudFrontHeaders: CloudFrontHeader
      *   message, by appending each subsequent field-value to the first, each
      *   separated by a comma.
      */
-     headerBag[lowerCaseHeader] = values.map(({ value }) => value).join(",");
+    headerBag[lowerCaseHeader] = values.map(({ value }) => value).join(",");
   }
 
   return headerBag;

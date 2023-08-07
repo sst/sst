@@ -18,7 +18,7 @@ export const queryStringToQueryParameterBag = (
       continue;
     }
 
-    if (value === undefined || value === '') {
+    if (value === undefined || value === "") {
       continue;
     }
 
@@ -31,4 +31,4 @@ export const queryStringToQueryParameterBag = (
   }
 
   return query;
-}
+};
