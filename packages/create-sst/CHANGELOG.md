@@ -1,5 +1,11 @@
 # create-sst
 
+## 2.23.10
+
+### Patch Changes
+
+- [`e676552bf`](https://github.com/sst/sst/commit/e676552bf26c2683c9b99b84ed7269f9bc415a33) Thanks [@fwang](https://github.com/fwang)! - create-sst: fix app name not replaced in sst.config.ts
+
 ## 2.23.9
 
 ## 2.23.8
