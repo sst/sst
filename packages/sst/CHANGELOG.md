@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.23.11
+
+### Patch Changes
+
+- [`32683248f`](https://github.com/sst/sst/commit/32683248fe933805e4c58306a3e4967d851d3b41) Thanks [@thdxr](https://github.com/thdxr)! - create-sst: fix missing replacement of project name
+
 ## 2.23.10
 
 ## 2.23.9
