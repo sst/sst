@@ -19,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/serverless-stack/sst.git",
+    "url": "git+https://github.com/sst/sst.git",
     "directory": "packages/cli"
   },
   "exports": {
@@ -138,7 +138,7 @@
     }
   },
   "bugs": {
-    "url": "https://github.com/serverless-stack/sst/issues"
+    "url": "https://github.com/sst/sst/issues"
   },
   "main": "index.js",
   "directories": {

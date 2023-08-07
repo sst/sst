@@ -20,7 +20,7 @@ export const WebSocketApi =
 export function WebSocketApiHandler(cb: Parameters<typeof Handler<"ws">>[1]) {
   return Handler("ws", async (evt, ctx) => {
     const result = await cb(evt, ctx);
-    // TODO: Once https://github.com/serverless-stack/sst/pull/2838 is merged,
+    // TODO: Once https://github.com/sst/sst/pull/2838 is merged,
     // then we should no longer need to check both casing for the header.
     const token =
       useHeader("Sec-WebSocket-Protocol") ||
