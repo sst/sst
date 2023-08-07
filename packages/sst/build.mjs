@@ -101,6 +101,7 @@ await Promise.all(
     "custom-resources",
     "script-function",
     "job-manager",
+    "signing-function",
   ].map((dir) =>
     esbuild.build({
       bundle: true,
