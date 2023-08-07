@@ -7,13 +7,13 @@
     "typecheck": "tsc -noEmit"
   },
   "devDependencies": {
-    "@types/node": "^20.4.1",
+    "@types/node": "^20.4.8",
     "@types/aws-lambda": "^8.10.119",
-    "vitest": "^0.33.0",
-    "sst": "^2.20.1"
+    "vitest": "^0.34.1",
+    "sst": "^2.23.13"
   },
   "dependencies": {
-    "@pothos/core": "^3.30.0",
+    "@pothos/core": "^3.32.1",
     "graphql": "^16.7.1",
     "ulid": "^2.3.0",
     "@types/aws-lambda": "^8.10.119"
