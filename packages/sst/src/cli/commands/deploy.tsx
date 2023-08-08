@@ -55,7 +55,12 @@ export const deploy = (program: Program) =>
       }
 
       // Check app mode changed
-      if (!getCiInfo().isCI && appMetadata && appMetadata.mode !== "deploy") {
+      if (
+        !project.config.advanced?.disableAppModeCheck &&
+        !getCiInfo().isCI &&
+        appMetadata &&
+        appMetadata.mode !== "deploy"
+      ) {
         if (!(await promptChangeMode())) {
           process.exit(0);
         }
