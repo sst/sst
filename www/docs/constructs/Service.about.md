@@ -25,9 +25,10 @@ Here's an example of the `Dockerfile` for a simple Express app.
 FROM node:18-bullseye-slim
 
 COPY . /app
+WORKDIR /app/
+
 RUN npm install
 
-WORKDIR /app/
 ENTRYPOINT ["node", "app.mjs"]
 ```
 
@@ -198,11 +199,30 @@ new Service(stack, "MyService", {
 });
 ```
 
-### Setting additional props
+### Using custom Dockerfile
+
+```js
+import { Service } from "sst/constructs";
+
+new Service(stack, "MyService", {
+  file: "path/to/Dockerfile.prod",
+});
+```
+
+### Configuring log retention
+
+The Service construct creates a CloudWatch log group to store the logs. By default, the logs are retained indefinitely. You can configure the log retention period like this:
 
 ```js
 new Service(stack, "MyService", {
-  path: "./service",
+  logRetention: "one_week",
+});
+```
+
+### Configuring additional props
+
+```js
+new Service(stack, "MyService", {
   port: 8080,
   cpu: "2 vCPU",
   memory: "8 GB",
@@ -218,13 +238,32 @@ new Service(stack, "MyService", {
 });
 ```
 
+### Configuring container health check
+
+```js
+import { Duration } from "aws-cdk-lib/core";
+
+new Service(stack, "MyService", {
+  cdk: {
+    container: {
+      healthCheck: {
+        command: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"],
+        interval: Duration.minutes(30),
+        retries: 20,
+        startPeriod: Duration.minutes(30),
+        timeout: Duration.minutes(30),
+      },
+    },
+  },
+});
+```
+
 ### Using an existing VPC
 
 ```js
 import { Vpc } from "aws-cdk-lib/aws-ec2";
 
 new Service(stack, "MyService", {
-  path: "./service",
   cdk: {
     vpc: Vpc.fromLookup(stack, "VPC", {
       vpcId: "vpc-xxxxxxxxxx",

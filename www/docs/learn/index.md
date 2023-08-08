@@ -25,7 +25,7 @@ The starter we'll be using creates a very simple Reddit clone called _"Links"_. 
 We'll then walk through the process of adding a new feature. We'll allow our users to add comments for these links!
 
 :::tip
-The source for the app we are builing is on GitHub for reference — [github.com/serverless-stack/tutorial-links-app](https://github.com/serverless-stack/tutorial-links-app)
+The source for the app we are builing is on GitHub for reference — [github.com/sst/tutorial-links-app](https://github.com/sst/tutorial-links-app)
 :::
 
 Let's look at what we'll be covering.

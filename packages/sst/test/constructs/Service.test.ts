@@ -1,5 +1,4 @@
 import { test, expect, beforeAll, vi } from "vitest";
-import { execSync } from "child_process";
 import { HostedZone } from "aws-cdk-lib/aws-route53";
 import {
   countResources,
@@ -252,6 +251,38 @@ test("port defined", async () => {
   });
 });
 
+test("file defiend", async () => {
+  const { service, stack } = await createService({
+    path: "test/constructs/service-custom-Dockerfile",
+    file: "child/Dockerfile.prod",
+  });
+  countResources(stack, "AWS::ECS::TaskDefinition", 1);
+});
+test("file invalid", async () => {
+  expect(async () => {
+    await createService({
+      file: "path/to/garbage",
+    });
+  }).rejects.toThrow(/No Dockerfile found/);
+});
+
+test("logRetention undefined", async () => {
+  const { stack } = await createService({});
+  hasResource(stack, "Custom::LogRetention", {
+    RetentionInDays: ABSENT,
+    LogGroupName: "/sst/service/test-app-Service",
+  });
+});
+test("logRetention defined", async () => {
+  const { service, stack } = await createService({
+    logRetention: "one_month",
+  });
+  hasResource(stack, "Custom::LogRetention", {
+    RetentionInDays: 30,
+    LogGroupName: "/sst/service/test-app-Service",
+  });
+});
+
 test("scaling.minContainers undefined", async () => {
   const { service, stack } = await createService();
   hasResource(stack, "AWS::ApplicationAutoScaling::ScalableTarget", {
@@ -413,6 +444,27 @@ test("environment", async () => {
     ContainerDefinitions: [
       objectLike({
         Environment: arrayWith([objectLike({ Name: "DEBUG", Value: "*" })]),
+      }),
+    ],
+  });
+});
+
+test("vpc.container", async () => {
+  const { stack } = await createService({
+    cdk: {
+      container: {
+        healthCheck: {
+          command: ["CMD-SHELL", "cmd"],
+        },
+      },
+    },
+  });
+  hasResource(stack, "AWS::ECS::TaskDefinition", {
+    ContainerDefinitions: [
+      objectLike({
+        HealthCheck: objectLike({
+          Command: ["CMD-SHELL", "cmd"],
+        }),
       }),
     ],
   });

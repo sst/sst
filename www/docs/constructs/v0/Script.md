@@ -240,7 +240,7 @@ Here we are making use of the idea of [Construct dependencies](https://docs.aws.
 
 ### Upgrading to v0.46.0
 
-The [v0.46.0 release](https://github.com/serverless-stack/sst/releases/tag/v0.46.0) of the Script construct includes a small breaking change. 
+The [v0.46.0 release](https://github.com/sst/sst/releases/tag/v0.46.0) of the Script construct includes a small breaking change. 
 
 If you are configuring the `function` like below, `function` gets run both when the `Script` is creating, and each time the SST app is deployed.
 

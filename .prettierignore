@@ -5,7 +5,7 @@ cdk.out
 # Ignore package lockfile
 package-lock.json
 # Ignore templates
-/packages/create-serverless-stack/templates/**
+/packages/create-sst/bin/presets/dropin/container/templates/sst.config.ts
 # Ignore markdown files in the docs
 # it breaks the formatting
 /www/docs/**/*.md

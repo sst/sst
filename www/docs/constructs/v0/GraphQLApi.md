@@ -11,7 +11,7 @@ The `GraphQLApi` construct is a higher level CDK construct that makes it easy to
 The `GraphQLApi` construct internally extends the [`Api`](Api.md) construct.
 
 :::info
-In [v0.65.1](https://github.com/serverless-stack/sst/releases/tag/v0.65.1), there was a breaking change to rename the `ApolloApi` construct to `GraphQLApi`.
+In [v0.65.1](https://github.com/sst/sst/releases/tag/v0.65.1), there was a breaking change to rename the `ApolloApi` construct to `GraphQLApi`.
 :::
 
 ## Initializer

@@ -1,5 +1,25 @@
 # @serverless-stack/docs
 
+## 2.5.7
+
+### Patch Changes
+
+- [`18e3cf975`](https://github.com/sst/sst/commit/18e3cf975c81f8c077ba6c9a425c80e25fb67b40) Thanks [@fwang](https://github.com/fwang)! - config: add `disableAppModeCheck` to disable confirmation prompt when switching between `sst deploy` and `sst dev` deployment modes
+
+## 2.5.6
+
+### Patch Changes
+
+- [`435ab9ce2`](https://github.com/serverless-stack/sst/commit/435ab9ce2f32c79e9f8eb2e4099aafebc1246aad) Thanks [@fwang](https://github.com/fwang)! - sst update: detect CDK v1 dependencies
+
+## 2.5.5
+
+### Patch Changes
+
+- [`19cc5c5cb`](https://github.com/serverless-stack/sst/commit/19cc5c5cb22f57876a78b1eea155a5ef03dee2d9) Thanks [@fwang](https://github.com/fwang)! - Service: configure log retention via "logRetention"
+
+- [`fb6f4e208`](https://github.com/serverless-stack/sst/commit/fb6f4e208c0be8a3785d96438e1ca67ba56579f2) Thanks [@fwang](https://github.com/fwang)! - Service: configure container definition via "cdk.container"
+
 ## 2.5.4
 
 ### Patch Changes

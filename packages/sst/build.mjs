@@ -3,32 +3,6 @@ import fs from "fs/promises";
 
 const pkg = await fs.readFile("package.json").then(JSON.parse);
 
-const result = await esbuild.build({
-  entryPoints: ["src/cli/sst.ts"],
-  bundle: true,
-  outdir: "dist",
-  metafile: true,
-  external: [
-    ...Object.keys(pkg.dependencies),
-    "kysely",
-    "kysely-codegen",
-    "./src/constructs/*",
-  ],
-  jsx: "automatic",
-  platform: "node",
-  target: "esnext",
-  format: "esm",
-  banner: {
-    js: [
-      `import { createRequire as topLevelCreateRequire } from 'module';`,
-      `global.require = topLevelCreateRequire(import.meta.url);`,
-    ].join("\n"),
-  },
-  outExtension: {
-    ".js": ".mjs",
-  },
-});
-
 // support/nodejs-runtime
 await esbuild.build({
   entryPoints: ["support/nodejs-runtime/index.ts"],
@@ -127,6 +101,7 @@ await Promise.all(
     "custom-resources",
     "script-function",
     "job-manager",
+    "signing-function",
   ].map((dir) =>
     esbuild.build({
       bundle: true,

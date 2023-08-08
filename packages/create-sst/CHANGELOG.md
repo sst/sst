@@ -1,5 +1,43 @@
 # create-sst
 
+## 2.23.14
+
+## 2.23.13
+
+### Patch Changes
+
+- [`b0dd52c2d`](https://github.com/sst/sst/commit/b0dd52c2d4a609683d2701ee1a88a1bd5a003de9) Thanks [@thdxr](https://github.com/thdxr)! - rds: allow migrating from CLI
+
+## 2.23.12
+
+## 2.23.11
+
+## 2.23.10
+
+### Patch Changes
+
+- [`e676552bf`](https://github.com/sst/sst/commit/e676552bf26c2683c9b99b84ed7269f9bc415a33) Thanks [@fwang](https://github.com/fwang)! - create-sst: fix app name not replaced in sst.config.ts
+
+## 2.23.9
+
+## 2.23.8
+
+## 2.23.7
+
+## 2.23.6
+
+## 2.23.5
+
+## 2.23.4
+
+### Patch Changes
+
+- [`7841ed6f5`](https://github.com/serverless-stack/sst/commit/7841ed6f58976f821b0a116f050b4527191ffb96) Thanks [@fwang](https://github.com/fwang)! - Service: support drop-in mode
+
+## 2.23.3
+
+## 2.23.2
+
 ## 2.23.1
 
 ## 2.23.0

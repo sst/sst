@@ -295,7 +295,7 @@ pnpm sst deploy --stage prod
 ![SvelteKit app deployed to AWS with SST](/img/start/sveltekit-app-deployed-to-aws-with-sst.png)
 
 :::info
-[View the source](https://github.com/serverless-stack/sst/tree/master/examples/quickstart-sveltekit) for this example on GitHub.
+[View the source](https://github.com/sst/sst/tree/master/examples/quickstart-sveltekit) for this example on GitHub.
 :::
 
 ---

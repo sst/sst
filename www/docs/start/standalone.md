@@ -237,7 +237,7 @@ pnpm sst deploy --stage prod
 ![Standalone SST app deployed to AWS](/img/start/standalone-sst-app-deployed-to-aws.png)
 
 :::info
-[View the source](https://github.com/serverless-stack/sst/tree/master/examples/quickstart-standalone) for this example on GitHub.
+[View the source](https://github.com/sst/sst/tree/master/examples/quickstart-standalone) for this example on GitHub.
 :::
 
 ---

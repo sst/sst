@@ -213,10 +213,10 @@ We are working on a new version of the SST Console. It'll make it easier to view
 
 You won't need to run the `sst console` command to view a specific stage. It'll automatically show all the SST apps with their stages in your account.
 
-The new console is also [open source and is built with SST](https://github.com/serverless-stack/console).
+The new console is also [open source and is built with SST](https://github.com/sst/console).
 
 :::tip
-The [new console's codebase](https://github.com/serverless-stack/console) is a good example of what a production SST app looks like.
+The [new console's codebase](https://github.com/sst/console) is a good example of what a production SST app looks like.
 :::
 
 ---

@@ -295,7 +295,7 @@ pnpm sst deploy --stage prod
 ![SolidStart app deployed to AWS with SST](/img/start/solidstart-app-deployed-to-aws-with-sst.png)
 
 :::info
-[View the source](https://github.com/serverless-stack/sst/tree/master/examples/quickstart-solidstart) for this example on GitHub.
+[View the source](https://github.com/sst/sst/tree/master/examples/quickstart-solidstart) for this example on GitHub.
 :::
 
 ---

@@ -2,7 +2,8 @@ import url from "url";
 import path from "path";
 import fs from "fs/promises";
 import { Construct } from "constructs";
-import { Duration as CdkDuration } from "aws-cdk-lib/core";
+import { Duration as CdkDuration, IgnoreMode } from "aws-cdk-lib/core";
+import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import { PolicyStatement, Role, Effect } from "aws-cdk-lib/aws-iam";
 import {
   AssetCode,
@@ -41,7 +42,7 @@ import { ISecurityGroup, IVpc, SubnetSelection } from "aws-cdk-lib/aws-ec2";
 import { useDeferredTasks } from "./deferred_task.js";
 import { useProject } from "../project.js";
 import { useRuntimeHandlers } from "../runtime/handlers.js";
-import { Platform } from "aws-cdk-lib/aws-ecr-assets";
+import { Colors } from "../cli/colors.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -485,6 +486,11 @@ export class Job extends Construct implements SSTConstruct {
     const { handler, architecture, runtime, container } = this.props;
 
     useDeferredTasks().add(async () => {
+      if (runtime === "container")
+        Colors.line(
+          `➜  Building the container image for the "${this.node.id}" job...`
+        );
+
       // Build function
       const result = await useRuntimeHandlers().build(this.node.addr, "deploy");
       if (result.type === "error") {
@@ -505,6 +511,8 @@ export class Job extends Construct implements SSTConstruct {
               ? Platform.custom("linux/arm64")
               : Platform.custom("linux/amd64"),
           file: container?.file,
+          exclude: [".sst"],
+          ignoreMode: IgnoreMode.GLOB,
         });
         image.repository?.grantPull(this.job.role!);
         const project = this.job.node.defaultChild as CfnProject;

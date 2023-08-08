@@ -7,7 +7,6 @@ import {
   ReflectionKind,
 } from "typedoc";
 import path from "path";
-import { exit } from "process";
 
 const cmd = process.argv[2];
 
@@ -23,6 +22,7 @@ const CDK_DOCS_MAP = {
   ISecurityGroup: "aws_ec2",
   SubnetSelection: "aws_ec2",
   Cluster: "aws_ecs",
+  ContainerDefinitionOptions: "aws_ecs",
   FunctionUrlOptions: "aws_lambda",
   LogGroup: "aws_logs",
   LogGroupProps: "aws_logs",

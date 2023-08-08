@@ -56,6 +56,8 @@ export const dev = (program: Program) =>
         );
       }
 
+      const project = useProject();
+
       const useFunctionLogger = Context.memo(async () => {
         const bus = useBus();
 
@@ -189,7 +191,6 @@ export const dev = (program: Program) =>
 
       const useStackBuilder = Context.memo(async () => {
         const watcher = useWatcher();
-        const project = useProject();
 
         const scriptVersion = Date.now().toString();
         let lastDeployed: string;
@@ -355,7 +356,6 @@ export const dev = (program: Program) =>
 
       const useDisconnector = Context.memo(async () => {
         const bus = useBus();
-        const project = useProject();
         const iot = await useIOT();
 
         bus.subscribe("cli.dev", async (evt) => {
@@ -398,9 +398,7 @@ export const dev = (program: Program) =>
         return new Promise<boolean>((resolve) => {
           console.log("");
           rl.question(
-            `You have previously deployed the stage "${
-              useProject().config.stage
-            }" in production. It is recommended that you use a different stage for development. Read more here — https://docs.sst.dev/live-lambda-development\n\nAre you sure you want to run this stage in dev mode? [y/N] `,
+            `You have previously deployed the stage "${project.config.stage}" in production. It is recommended that you use a different stage for development. Read more here — https://docs.sst.dev/live-lambda-development\n\nAre you sure you want to run this stage in dev mode? [y/N] `,
             async (input) => {
               rl.close();
               resolve(input.trim() === "y");
@@ -409,7 +407,12 @@ export const dev = (program: Program) =>
         });
       }
       // Check app mode changed
-      if (!getCiInfo().isCI && appMetadata && appMetadata.mode !== "dev") {
+      if (
+        !project.config.advanced?.disableAppModeCheck &&
+        !getCiInfo().isCI &&
+        appMetadata &&
+        appMetadata.mode !== "dev"
+      ) {
         if (!(await promptChangeMode())) {
           process.exit(0);
         }

@@ -1,5 +1,89 @@
 # @serverless-stack/cli2
 
+## 2.23.14
+
+### Patch Changes
+
+- [`18e3cf975`](https://github.com/sst/sst/commit/18e3cf975c81f8c077ba6c9a425c80e25fb67b40) Thanks [@fwang](https://github.com/fwang)! - config: add `disableAppModeCheck` to disable confirmation prompt when switching between `sst deploy` and `sst dev` deployment modes
+
+## 2.23.13
+
+## 2.23.12
+
+### Patch Changes
+
+- [`1873d697d`](https://github.com/sst/sst/commit/1873d697d1232618b6060134425d1c02cd843dc5) Thanks [@thdxr](https://github.com/thdxr)! - cli: remove log statements
+
+- [#3091](https://github.com/sst/sst/pull/3091) [`d22ea127f`](https://github.com/sst/sst/commit/d22ea127fad1f2314e714338e5aada59e8f7c679) Thanks [@ealain](https://github.com/ealain)! - SsrSite: support protecting server URL with IAM auth
+
+## 2.23.11
+
+### Patch Changes
+
+- [`32683248f`](https://github.com/sst/sst/commit/32683248fe933805e4c58306a3e4967d851d3b41) Thanks [@thdxr](https://github.com/thdxr)! - create-sst: fix missing replacement of project name
+
+## 2.23.10
+
+## 2.23.9
+
+### Patch Changes
+
+- [`92e13b161`](https://github.com/sst/sst/commit/92e13b1611e5c88f9489e782d67d494333d2c089) Thanks [@thdxr](https://github.com/thdxr)! - function: include runtime in ssrfunction metadata
+
+## 2.23.8
+
+### Patch Changes
+
+- [`9326ee600`](https://github.com/sst/sst/commit/9326ee60092df938ad710fcd860aee618184f354) Thanks [@thdxr](https://github.com/thdxr)! - function: include runtime in ssrfunction metadata
+
+## 2.23.7
+
+### Patch Changes
+
+- [`5f3c449bc`](https://github.com/sst/sst/commit/5f3c449bcf306195ad137d638d064eb1802106c1) Thanks [@thdxr](https://github.com/thdxr)! - function: include runtime in metadata
+
+## 2.23.6
+
+### Patch Changes
+
+- [`8850d20a4`](https://github.com/serverless-stack/sst/commit/8850d20a44032d2eaa142f4a12b8b65a3233cb0c) Thanks [@thdxr](https://github.com/thdxr)! - Prevent `sst bind` from handling function invocations
+
+## 2.23.5
+
+### Patch Changes
+
+- [`54cb27189`](https://github.com/serverless-stack/sst/commit/54cb27189adfede103692318dc4f13ff6c90213e) Thanks [@thdxr](https://github.com/thdxr)! - build: remove bundled cli
+
+## 2.23.4
+
+### Patch Changes
+
+- [`137f5059b`](https://github.com/serverless-stack/sst/commit/137f5059b87ac3690ba47f2494ee11e2a50a1db3) Thanks [@fwang](https://github.com/fwang)! - Service: create 1 NAT Gateway as the default VPC setting
+
+- [`75ca05dc1`](https://github.com/serverless-stack/sst/commit/75ca05dc18e011c4661f28a7909af307b4daa745) Thanks [@fwang](https://github.com/fwang)! - Service: docker ignore .sst folder when staging image
+
+- [`435ab9ce2`](https://github.com/serverless-stack/sst/commit/435ab9ce2f32c79e9f8eb2e4099aafebc1246aad) Thanks [@fwang](https://github.com/fwang)! - sst update: detect CDK v1 dependencies
+
+## 2.23.3
+
+### Patch Changes
+
+- [`19cc5c5cb`](https://github.com/serverless-stack/sst/commit/19cc5c5cb22f57876a78b1eea155a5ef03dee2d9) Thanks [@fwang](https://github.com/fwang)! - Service: configure log retention via "logRetention"
+
+- [`fb6f4e208`](https://github.com/serverless-stack/sst/commit/fb6f4e208c0be8a3785d96438e1ca67ba56579f2) Thanks [@fwang](https://github.com/fwang)! - Service: configure container definition via "cdk.container"
+
+## 2.23.2
+
+### Patch Changes
+
+- [`ac84ab5c3`](https://github.com/serverless-stack/sst/commit/ac84ab5c39a8edf4b72062bd583d098804dfb598) Thanks [@fwang](https://github.com/fwang)! - sst update: do not update packages prefixed "sst-"
+
+- [#3103](https://github.com/serverless-stack/sst/pull/3103) [`d8cecd35e`](https://github.com/serverless-stack/sst/commit/d8cecd35e0aa422d9bbcb885c5bcb9057e6b398d) Thanks [@berenddeboer](https://github.com/berenddeboer)! - Function/java: run only one gradle build per directory
+
+- [`c2fb7942f`](https://github.com/serverless-stack/sst/commit/c2fb7942fd3e48ecc9a9250226bf1bbb2b29d426) Thanks [@fwang](https://github.com/fwang)! - Service: add "file" prop to allow passing in path to Dockerfile
+
+- [#3180](https://github.com/serverless-stack/sst/pull/3180) [`818e33dd7`](https://github.com/serverless-stack/sst/commit/818e33dd7846bd532417ae926a0c0a3570da2b68) Thanks [@oyed](https://github.com/oyed)! - sst update: respect trailing newline char in package.json
+
 ## 2.23.1
 
 ### Patch Changes

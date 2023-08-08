@@ -7,7 +7,7 @@ import { existsAsync } from "../util/fs.js";
 import { Colors } from "../cli/colors.js";
 
 import { Construct } from "constructs";
-import { Duration as CdkDuration } from "aws-cdk-lib/core";
+import { Duration as CdkDuration, IgnoreMode } from "aws-cdk-lib/core";
 import {
   Role,
   Effect,
@@ -59,8 +59,9 @@ import {
   FargateService,
   CfnTaskDefinition,
   ContainerDefinition,
+  ContainerDefinitionOptions,
 } from "aws-cdk-lib/aws-ecs";
-import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
+import { LogGroup, LogRetention, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import {
   ApplicationLoadBalancer,
@@ -179,6 +180,11 @@ export interface ServiceProps {
    * @default "."
    */
   path?: string;
+  /**
+   * Path to Dockerfile relative to the defined "path".
+   * @default "Dockerfile"
+   */
+  file?: string;
   /**
    * The amount of cpu allocated.
    * @default "0.25 vCPU"
@@ -343,6 +349,28 @@ export interface ServiceProps {
    * ```
    */
   environment?: Record<string, string>;
+  /**
+   * The duration logs are kept in CloudWatch Logs.
+   * @default Logs retained indefinitely
+   * @example
+   * ```js
+   * {
+   *   logRetention: "one_week"
+   * }
+   * ```
+   */
+  logRetention?: Lowercase<keyof typeof RetentionDays>;
+  /**
+   * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
+   * @default false
+   * @example
+   * ```js
+   * {
+   *   waitForInvalidation: true
+   * }
+   * ```
+   */
+  waitForInvalidation?: boolean;
   dev?: {
     /**
      * When running `sst dev, site is not deployed. This is to ensure `sst dev` can start up quickly.
@@ -370,18 +398,23 @@ export interface ServiceProps {
      */
     url?: string;
   };
-  /**
-   * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
-   * @default false
-   * @example
-   * ```js
-   * {
-   *   waitForInvalidation: true
-   * }
-   * ```
-   */
-  waitForInvalidation?: boolean;
   cdk?: {
+    /**
+     * Customizing the container definition for the ECS task.
+     * @example
+     * ```js
+     * {
+     *   cdk: {
+     *     container: {
+     *       healthCheck: {
+     *         command: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"],
+     *       },
+     *     }
+     *   }
+     * }
+     * ```
+     */
+    container?: Omit<ContainerDefinitionOptions, "image">;
     /**
      * Runs codebuild job in the specified VPC. Note this will only work once deployed.
      *
@@ -399,40 +432,6 @@ export interface ServiceProps {
      * ```
      */
     vpc?: IVpc;
-    /**
-     * Where to place the network interfaces within the VPC.
-     * @default All private subnets.
-     * @example
-     * ```js
-     * import { SubnetType } from "aws-cdk-lib/aws-ec2";
-     *
-     * {
-     *   cdk: {
-     *     vpc,
-     *     vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS }
-     *   }
-     * }
-     * ```
-     */
-    vpcSubnets?: SubnetSelection;
-    /**
-     * The list of security groups to associate with the Job's network interfaces.
-     * @default A new security group is created.
-     * @example
-     * ```js
-     * import { SecurityGroup } from "aws-cdk-lib/aws-ec2";
-     *
-     * {
-     *   cdk: {
-     *     vpc,
-     *     securityGroups: [
-     *       new SecurityGroup(stack, "MyJobSG", { vpc })
-     *     ]
-     *   }
-     * }
-     * ```
-     */
-    securityGroups?: ISecurityGroup[];
   };
 }
 
@@ -441,6 +440,7 @@ type ServiceNormalizedProps = ServiceProps & {
   cpu: Exclude<ServiceProps["cpu"], undefined>;
   memory: Exclude<ServiceProps["memory"], undefined>;
   port: Exclude<ServiceProps["port"], undefined>;
+  logRetention: Exclude<ServiceProps["logRetention"], undefined>;
   waitForInvalidation: Exclude<ServiceProps["waitForInvalidation"], undefined>;
 };
 
@@ -474,10 +474,11 @@ export class Service extends Construct implements SSTConstruct {
     this.id = id;
     this.props = {
       path: ".",
-      waitForInvalidation: false,
       cpu: props?.cpu || "0.25 vCPU",
       memory: props?.memory || "0.5 GB",
       port: props?.port || 3000,
+      logRetention: props?.logRetention || "infinite",
+      waitForInvalidation: false,
       ...props,
     };
     this.doNotDeploy =
@@ -520,12 +521,18 @@ export class Service extends Construct implements SSTConstruct {
     useDeferredTasks().add(async () => {
       if (!app.isRunningSSTTest()) {
         Colors.line(
-          `➜  Building container image for the "${this.node.id}" service`
+          `➜  Building the container image for the "${this.node.id}" service...`
         );
 
         // Build app
-        let dockerfile = "Dockerfile";
-        if (!(await existsAsync(path.join(this.props.path, dockerfile)))) {
+        let dockerfile: string;
+        if (this.props.file) {
+          dockerfile = this.props.file;
+        } else if (
+          await existsAsync(path.join(this.props.path, "Dockerfile"))
+        ) {
+          dockerfile = "Dockerfile";
+        } else {
           await this.createNixpacksBuilder();
           dockerfile = await this.runNixpacksBuild();
         }
@@ -677,9 +684,18 @@ export class Service extends Construct implements SSTConstruct {
   /////////////////////
 
   private validateServiceExists() {
-    const { path: servicePath } = this.props;
+    const { path: servicePath, file } = this.props;
     if (!fs.existsSync(servicePath)) {
       throw new Error(`No service found at "${path.resolve(servicePath)}"`);
+    }
+
+    if (file) {
+      const dockerfilePath = path.join(servicePath, file);
+      if (!fs.existsSync(dockerfilePath)) {
+        throw new Error(
+          `No Dockerfile found at "${dockerfilePath}". Make sure to set the "file" property to the path of the Dockerfile relative to "${servicePath}".`
+        );
+      }
     }
   }
 
@@ -709,19 +725,23 @@ export class Service extends Construct implements SSTConstruct {
     return (
       cdk?.vpc ??
       new Vpc(this, "Vpc", {
-        natGateways: 0,
+        natGateways: 1,
       })
     );
   }
 
   private createService(vpc: IVpc) {
-    const { cpu, memory, port } = this.props;
+    const { cpu, memory, port, logRetention, cdk } = this.props;
     const app = this.node.root as App;
     const clusterName = app.logicalPrefixedName(this.node.id);
 
-    const logGroup = new LogGroup(this, "LogGroup", {
+    const logGroup = new LogRetention(this, "LogRetention", {
       logGroupName: `/sst/service/${clusterName}`,
-      retention: RetentionDays.INFINITE,
+      retention:
+        RetentionDays[logRetention.toUpperCase() as keyof typeof RetentionDays],
+      logRetentionRetryOptions: {
+        maxRetries: 100,
+      },
     });
 
     const cluster = new Cluster(this, "Cluster", {
@@ -736,9 +756,12 @@ export class Service extends Construct implements SSTConstruct {
     });
 
     const container = taskDefinition.addContainer("Container", {
-      image: { bind: () => ({ imageName: "placeholder" }) },
       logging: new AwsLogDriver({
-        logGroup,
+        logGroup: LogGroup.fromLogGroupArn(
+          this,
+          "LogGroup",
+          logGroup.logGroupArn
+        ),
         streamPrefix: "service",
       }),
       portMappings: [{ containerPort: port }],
@@ -747,6 +770,8 @@ export class Service extends Construct implements SSTConstruct {
         SST_STAGE: app.stage,
         SST_SSM_PREFIX: useProject().config.ssmPrefix,
       },
+      ...cdk?.container,
+      image: { bind: () => ({ imageName: "placeholder" }) },
     });
 
     const service = new FargateService(this, "Service", {
@@ -991,6 +1016,8 @@ export class Service extends Construct implements SSTConstruct {
     const image = ContainerImage.fromAsset(this.props.path, {
       platform: Platform.LINUX_AMD64,
       file: dockerfile,
+      exclude: [".sst"],
+      ignoreMode: IgnoreMode.GLOB,
     });
     const cfnTask = taskDefinition.node.defaultChild as CfnTaskDefinition;
     cfnTask.addPropertyOverride(

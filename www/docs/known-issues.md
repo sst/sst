@@ -16,21 +16,7 @@ Mismatched versions of AWS CDK packages. SST currently supports 2.7.0. Fix using
   npm install @aws-cdk/aws-apigatewayv2-alpha@2.7.0-alpha.0 --save-exact
 ```
 
-We also created a convenience method to help install the CDK npm packages with the right version — [`sst add-cdk`](packages/sst.md#sst-add-cdk).
-
-So instead of:
-
-```bash
-npm install @aws-cdk/aws-apigatewayv2-alpha
-```
-
-You can do:
-
-```bash
-npx sst add-cdk @aws-cdk/aws-apigatewayv2-alpha
-```
-
-And it'll install those packages using the right CDK versions.
+We also created a convenience method to help update the CDK npm packages to the right version — [`sst update`](packages/sst.md#sst-update).
 
 You can learn more about these issues [here](https://github.com/aws/aws-cdk/issues/9578) and [here](https://github.com/aws/aws-cdk/issues/542).
 

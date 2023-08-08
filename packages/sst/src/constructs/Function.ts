@@ -48,11 +48,13 @@ import {
   Token,
   Size as CDKSize,
   Duration as CDKDuration,
+  IgnoreMode,
 } from "aws-cdk-lib/core";
 import { Effect, PolicyStatement, Role } from "aws-cdk-lib/aws-iam";
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import { useBootstrap } from "../bootstrap.js";
+import { Colors } from "../cli/colors.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 const supportedRuntimes = {
@@ -844,6 +846,8 @@ export class Function extends CDKFunction implements SSTConstruct {
                 ...(props.container?.file
                   ? { file: props.container.file }
                   : {}),
+                exclude: [".sst"],
+                ignoreMode: IgnoreMode.GLOB,
               }),
               handler: CDKHandler.FROM_IMAGE,
               runtime: CDKRuntime.FROM_IMAGE,
@@ -867,6 +871,11 @@ export class Function extends CDKFunction implements SSTConstruct {
       });
 
       useDeferredTasks().add(async () => {
+        if (props.runtime === "container")
+          Colors.line(
+            `➜  Building the container image for the "${this.node.id}" function...`
+          );
+
         // Build function
         const result = await useRuntimeHandlers().build(
           this.node.addr,
@@ -1014,6 +1023,7 @@ export class Function extends CDKFunction implements SSTConstruct {
       type: "Function" as const,
       data: {
         arn: this.functionArn,
+        runtime: this.props.runtime,
         handler: this.props.handler,
         localId: this.node.addr,
         secrets: this.allBindings

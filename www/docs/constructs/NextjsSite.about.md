@@ -196,7 +196,7 @@ Setting `warm` to 20 keeps 20 server function instances active, invoking them ev
 
 Note that warming is currently supported only in regional mode.
 
-[Read more about how warming works and the associated cost.](https://github.com/serverless-stack/open-next#warmer-function)
+[Read more about how warming works and the associated cost.](https://github.com/sst/open-next#warmer-function)
 
 ---
 

@@ -291,7 +291,7 @@ pnpm sst deploy --stage prod
 ![Astro site deployed to AWS with SST](/img/start/astro-site-deployed-to-aws-with-sst.png)
 
 :::info
-[View the source](https://github.com/serverless-stack/sst/tree/master/examples/quickstart-astro) for this example on GitHub.
+[View the source](https://github.com/sst/sst/tree/master/examples/quickstart-astro) for this example on GitHub.
 :::
 
 ---
