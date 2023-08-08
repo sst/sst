@@ -10,7 +10,7 @@ export default [
       "@sveltejs/adapter-auto",
       "@sveltejs/kit",
       "@types/cookie",
-      "aws-cdk-lib@2.84.0",
+      "aws-cdk-lib@2.90.0",
       "constructs@10.1.156",
       "sst",
       "svelte",

@@ -26,7 +26,7 @@
     "@remix-run/eslint-config": "^1.19.2",
     "@types/react": "^18.2.18",
     "@types/react-dom": "^18.2.7",
-    "aws-cdk-lib": "2.84.0",
+    "aws-cdk-lib": "2.90.0",
     "constructs": "10.1.156",
     "eslint": "^8.46.0",
     "sst": "^2.23.13",

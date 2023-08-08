@@ -5,7 +5,7 @@ export default [
   install({
     packages: [
       "sst",
-      "aws-cdk-lib@2.84.0",
+      "aws-cdk-lib@2.90.0",
       "constructs@10.1.156",
       "solid-start-sst",
     ],
