@@ -12,6 +12,8 @@ Install the example.
 $ npx create-sst@latest --template=examples/expo-app
 # Or with Yarn
 $ yarn create sst --template=examples/expo-app
+# Or with PNPM
+$ pnpm create sst --template=examples/expo-app
 ```
 
 ## Commands
