@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.5.7
+
+### Patch Changes
+
+- [`18e3cf975`](https://github.com/sst/sst/commit/18e3cf975c81f8c077ba6c9a425c80e25fb67b40) Thanks [@fwang](https://github.com/fwang)! - config: add `disableAppModeCheck` to disable confirmation prompt when switching between `sst deploy` and `sst dev` deployment modes
+
 ## 2.5.6
 
 ### Patch Changes

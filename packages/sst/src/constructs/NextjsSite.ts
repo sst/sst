@@ -25,6 +25,7 @@ import {
   CachedMethods,
   CachePolicy,
   ICachePolicy,
+  LambdaEdgeEventType,
 } from "aws-cdk-lib/aws-cloudfront";
 import { HttpOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
 import { Rule, Schedule } from "aws-cdk-lib/aws-events";
@@ -408,11 +409,14 @@ export class NextjsSite extends SsrSite {
   }
 
   private buildImageBehavior(cachePolicy: ICachePolicy): BehaviorOptions {
-    const { cdk } = this.props;
+    const { cdk, regional } = this.props;
     const imageFn = this.createImageOptimizationFunction();
     const imageFnUrl = imageFn.addFunctionUrl({
-      authType: FunctionUrlAuthType.NONE,
+      authType: regional?.enableServerUrlIamAuth
+        ? FunctionUrlAuthType.AWS_IAM
+        : FunctionUrlAuthType.NONE,
     });
+
     return {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       origin: new HttpOrigin(Fn.parseDomainName(imageFnUrl.url)),
@@ -421,6 +425,24 @@ export class NextjsSite extends SsrSite {
       compress: true,
       cachePolicy,
       responseHeadersPolicy: cdk?.responseHeadersPolicy,
+      edgeLambdas: regional?.enableServerUrlIamAuth
+        ? [
+            (() => {
+              const fn = this.useServerUrlSigningFunction();
+              fn.attachPermissions([
+                new PolicyStatement({
+                  actions: ["lambda:InvokeFunctionUrl"],
+                  resources: [imageFn.functionArn],
+                }),
+              ]);
+              return {
+                includeBody: true,
+                eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
+                functionVersion: fn.currentVersion,
+              };
+            })(),
+          ]
+        : [],
     };
   }
 

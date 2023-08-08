@@ -1,5 +1,15 @@
 # create-sst
 
+## 2.23.14
+
+## 2.23.13
+
+### Patch Changes
+
+- [`b0dd52c2d`](https://github.com/sst/sst/commit/b0dd52c2d4a609683d2701ee1a88a1bd5a003de9) Thanks [@thdxr](https://github.com/thdxr)! - rds: allow migrating from CLI
+
+## 2.23.12
+
 ## 2.23.11
 
 ## 2.23.10

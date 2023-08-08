@@ -27,6 +27,7 @@ export interface ConfigOptions {
   outputs?: string;
   advanced?: {
     disableParameterizedStackNameCheck?: boolean;
+    disableAppModeCheck?: boolean;
   };
   bootstrap?: {
     useCdkBucket?: boolean;

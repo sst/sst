@@ -7,15 +7,15 @@
     "typecheck": "tsc -noEmit"
   },
   "devDependencies": {
-    "vitest": "^0.33.0",
-    "@types/node": "^20.4.1",
-    "sst": "^2.20.1",
-    "@aws-sdk/types": "^3.369.0",
-    "@aws-sdk/smithy-client": "^3.369.0"
+    "vitest": "^0.34.1",
+    "@types/node": "^20.4.8",
+    "sst": "^2.23.13",
+    "@aws-sdk/types": "^3.378.0",
+    "@aws-sdk/smithy-client": "^3.374.0"
   },
   "dependencies": {
     "ulid": "^2.3.0",
-    "electrodb": "^2.7.1",
-    "@aws-sdk/client-dynamodb": "^3.369.0"
+    "electrodb": "^2.8.1",
+    "@aws-sdk/client-dynamodb": "^3.386.0"
   }
 }

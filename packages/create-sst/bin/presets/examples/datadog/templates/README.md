@@ -12,6 +12,8 @@ Install the example.
 $ npx create-sst@latest --template=examples/datadog
 # Or with Yarn
 $ yarn create sst --template=examples/datadog
+# Or with PNPM
+$ pnpm create sst --template=examples/datadog
 ```
 
 ## Commands
