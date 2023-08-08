@@ -463,7 +463,7 @@ export const bind = (program: Program) =>
             return credentials;
           };
 
-          // Assue role with max duration first. This can fail if chaining roles, or if
+          // Assume role with max duration first. This can fail if chaining roles, or if
           // the role has a max duration set. If it fails, assume role with 1 hour duration.
           let err: any;
           try {
