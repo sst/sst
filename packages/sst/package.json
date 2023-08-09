@@ -74,7 +74,7 @@
     "ci-info": "^3.7.0",
     "colorette": "^2.0.19",
     "conf": "^10.2.0",
-    "constructs": "10.1.156",
+    "constructs": "10.2.69",
     "cross-spawn": "^7.0.3",
     "dendriform-immer-patch-optimiser": "^2.1.0",
     "dotenv": "^16.0.3",
