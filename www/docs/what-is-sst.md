@@ -362,11 +362,11 @@ With this you can **make changes to your backend on AWS**, and see them **direct
 
 ### SST Console
 
-The `sst dev` CLI also powers a **web based dashboard** called the [SST Console](console.md).
+The [SST Console](console.md) is a web based dashboard for managing your SST apps with your team. 
 
-![SST Console homescreen](/img/console/sst-console-homescreen.png)
+![SST Console homescreen](/img/console/sst-console-20.png)
 
-With the Console you can view and interact with your application in real-time. You can manually invoke functions, view logs, replay invocations, and do things like query your database and run migrations.
+With the Console you can view and interact with your application in real-time. You can manually invoke functions, view logs, replay invocations, and more with your team.
 
 ---
 
