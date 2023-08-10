@@ -402,7 +402,7 @@ Or, you can get **automatic preview environments** with [**_SEED_**](https://see
 
 The [SST Console](console.md) is a web based dashboard for managing your SST apps with your team. 
 
-![SST Console homescreen](/img/console/sst-console-20.png)
+![SST Console homescreen](/img/console/sst-console-logs.png)
 
 With the Console you can view and interact with your application in real-time. You can manually invoke functions, view logs, replay invocations, and more with your team.
 

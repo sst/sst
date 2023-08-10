@@ -1,5 +1,5 @@
 ---
-title: SST Console
+title: Console
 description: "The SST Console is a web based dashboard for managing your SST apps with your team."
 ---
 
@@ -17,7 +17,7 @@ The <a href={config.console}>SST Console</a> is a web based dashboard to manage 
 
 ---
 
-![SST Console homescreen](/img/console/sst-console-20.png)
+![SST Console homescreen](/img/console/sst-console-logs.png)
 
 With the SST Console you can invoke functions, view and search logs, and manage all your apps with your team — **<ConsoleUrl url={config.console} />**
 
@@ -29,35 +29,31 @@ Here's how to get started. <a href={config.console}>Head over to the Console</a>
 
 1. **Create a workspace**
 
-   <!--
-   ![SST Console create a workspace](/img/console/sst-console-create-a-workspace.png)
-   -->
+   ![SST Console create a workspace](/img/console/sst-console-create-new-workspace.png)
    
    You can add your apps and invite your team to a workspace. A workspace can be for a personal project or for your team at work. You can create as many workspaces as you want.
 
 2. **Connect your AWS account**
 
-   <!--
-   ![SST Console connect an AWS account](/img/console/sst-console-connect-an-aws-account.png)
-   -->
-   
-   If you have multiple AWS accounts (for staging or production), you can connect them later. Or if you don't have permissions to do this, you can invite a teammate to the workspace.
+   ![SST Console connect an AWS account](/img/console/sst-console-connect-aws-account.png)
 
-   :::info
-   To connect an AWS account, you'll be asked to create a CloudFormation stack in **us-east-1**. This will search for all the SST apps in all the regions in your account.
+   This will ask you to create a CloudFormation stack in your AWS account.
+
+   ![SST Console connect an AWS account](/img/console/sst-console-create-cloudformation-stack.png)
+
+   Make sure that this stack is being added to **us-east-1**. Scroll down and click **Create stack**.
+
+   :::caution
+   The CloudFormation stack needs to be created in **us-east-1**. If you create it in the wrong region by mistake, remove it and create it again.
    :::
 
-   <!--
-   ![SST Console list of apps](/img/console/sst-console-list-of-apps.png)
-   -->
-   
-   Once you connect your account you'll see all your SST apps.
+   This stack will scan all the regions in your account for SST apps and subscribe to them. Once created, you'll see all your apps, stages, and the functions in the apps.
+
+   ![SST Console app resources](/img/console/sst-console-resources.png)
 
 3. **Invite your team**
 
-   <!--
-   ![SST Console invite team](/img/console/sst-console-invite-team.png)
-   -->
+   ![SST Console invite team](/img/console/sst-console-invite-user.png)
 
    Use the email address of your teammates to invite them. They just need to login with the email you've used and they'll be able to join your workspace.
 
