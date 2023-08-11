@@ -63,6 +63,10 @@ Here's how to get started. <a href={config.console}>Head over to the Console</a>
 
 **SST apps v2.19.2 or newer** are supported by the Console. Note that, apps **older than v2** won't be detected by the Console.
 
+:::note
+The SST Console is optional to use. It simply compliments the SST CLI.
+:::
+
 ---
 
 ## How it works
@@ -102,8 +106,8 @@ At a high level, here's how the Console works.
 
    - The Console is a full-stack SST app. You can view the <a href="https://github.com/sst/console">source on GitHub</a>.
 
-:::note
-The SST Console is optional to use. It simply compliments the SST CLI.
+:::tip
+Viewing local logs on the SST Console will always be free.
 :::
 
 ---
