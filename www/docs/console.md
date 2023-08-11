@@ -107,7 +107,7 @@ At a high level, here's how the Console works.
    - The Console is a full-stack SST app. You can view the <a href="https://github.com/sst/console">source on GitHub</a>.
 
 :::tip
-Viewing local logs on the SST Console will always be free.
+Viewing local logs in the SST Console will always be free.
 :::
 
 ---
