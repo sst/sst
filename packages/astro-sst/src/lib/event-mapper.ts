@@ -11,6 +11,7 @@ import type { ResponseStream } from "./types";
 import { splitCookiesString } from "set-cookie-parser";
 import { debug } from "./logger.js";
 import { isBinaryContentType } from "./binary.js";
+import zlib from "zlib";
 
 type InternalEvent = {
   readonly type: "v1" | "v2" | "cf";
@@ -43,6 +44,7 @@ type InternalStreamingResult = {
   headers: Record<string, string | string[]>;
   body: ReadableStream | null;
   responseStream: ResponseStream;
+  isBase64Encoded: boolean;
 };
 
 function isApigV2Event(event: any): event is APIGatewayProxyEventV2 {
@@ -172,6 +174,7 @@ export async function convertTo({
       headers,
       body: response.body,
       responseStream,
+      isBase64Encoded,
     });
   }
 
@@ -249,6 +252,7 @@ function convertToApigV2StreamingResult({
   headers: rawHeaders,
   body,
   responseStream,
+  isBase64Encoded,
 }: InternalStreamingResult) {
   const headers: Record<string, string> = {};
   Object.entries(rawHeaders).forEach(([key, value]) => {
@@ -258,6 +262,7 @@ function convertToApigV2StreamingResult({
     }
     headers[key] = Array.isArray(value) ? value.join(", ") : value.toString();
   });
+  if (!isBase64Encoded) headers["content-encoding"] = "gzip";
   const metadata = { statusCode, headers };
   responseStream = awslambda.HttpResponseStream.from(responseStream, metadata);
 
@@ -282,18 +287,40 @@ function convertToApigV2StreamingResult({
     return;
   }
 
+  let streamToWrite: ResponseStream | zlib.Gzip;
+  if (!isBase64Encoded) {
+    const gzip = zlib.createGzip();
+    gzip.pipe(responseStream);
+    streamToWrite = gzip;
+  } else {
+    streamToWrite = responseStream;
+  }
+
   const cancel = (error?: Error) => {
-    responseStream.off("close", cancel);
-    responseStream.off("error", cancel);
+    streamToWrite.off("close", cancel);
+    streamToWrite.off("error", cancel);
 
     // If the reader has already been interrupted with an error earlier,
     // then it will appear here, it is useless, but it needs to be catch.
     reader.cancel(error).catch(() => {});
-    if (error) responseStream.destroy(error);
+
+    if (!isBase64Encoded) {
+      // Unpipe the gzip stream to ensure no more data is written
+      (streamToWrite as zlib.Gzip).unpipe(responseStream);
+
+      if (error) {
+        streamToWrite.destroy(error);
+      } else {
+        // In case there's no error, just close the gzip stream
+        streamToWrite.end();
+      }
+    } else if (error) {
+      responseStream.destroy(error);
+    }
   };
 
-  responseStream.on("close", cancel);
-  responseStream.on("error", cancel);
+  streamToWrite.on("close", cancel);
+  streamToWrite.on("error", cancel);
 
   next();
   async function next() {
@@ -302,13 +329,21 @@ function convertToApigV2StreamingResult({
         const { done, value } = await reader.read();
         if (done) break;
 
-        if (!responseStream.write(value)) {
-          responseStream.once("drain", next);
-          return;
+        if (!isBase64Encoded) {
+          const writer = streamToWrite as zlib.Gzip;
+          const result = writer.write(value, () => {
+            writer.flush(zlib.constants.Z_SYNC_FLUSH);
+          });
+          if (!result) writer.once("drain", next);
+        } else {
+          if (!streamToWrite.write(value)) {
+            streamToWrite.once("drain", next);
+            return;
+          }
         }
       }
 
-      responseStream.end();
+      streamToWrite.end();
     } catch (error) {
       cancel(error instanceof Error ? error : new Error(String(error)));
     }
