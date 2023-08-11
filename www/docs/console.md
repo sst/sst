@@ -59,6 +59,12 @@ Here's how to get started. <a href={config.console}>Head over to the Console</a>
 
 ---
 
+## Requirements
+
+**SST apps v2.19.2 or newer** are supported by the Console. Note that, apps **older than v2** won't be detected by the Console.
+
+---
+
 ## How it works
 
 At a high level, here's how the Console works.
