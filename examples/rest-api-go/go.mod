@@ -1,4 +1,4 @@
-module github.com/serverless-stack/examples/rest-api-go
+module github.com/sst/examples/rest-api-go
 
 go 1.16
 
