@@ -12,7 +12,7 @@ import {
   PublishAssetsOptions,
   PublishingAws,
   EVENT_TO_LOGGER,
-} from "./asset-publishing.js";
+} from "sst-aws-cdk/lib/util/asset-publishing.js";
 import { Mode } from "sst-aws-cdk/lib/api/aws-auth/credentials.js";
 import { ISDK } from "sst-aws-cdk/lib/api/aws-auth/sdk.js";
 import {

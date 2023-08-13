@@ -360,16 +360,6 @@ With this you can **make changes to your backend on AWS**, and see them **direct
 
 ---
 
-### SST Console
-
-The `sst dev` CLI also powers a **web based dashboard** called the [SST Console](console.md).
-
-![SST Console homescreen](/img/console/sst-console-homescreen.png)
-
-With the Console you can view and interact with your application in real-time. You can manually invoke functions, view logs, replay invocations, and do things like query your database and run migrations.
-
----
-
 ### Deployment
 
 To deploy your application to AWS, you use the [`sst deploy`](packages/sst.md#sst-deploy) command. It uses your local [IAM credentials](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html) and **deploys to your AWS account**.
@@ -405,6 +395,16 @@ npx sst deploy --stage prod
 You can use this in your GitHub Actions workflow to generate pull-request based environments.
 
 Or, you can get **automatic preview environments** with [**_SEED_**](https://seed.run), a service built by the SST team.
+
+---
+
+## SST Console
+
+The [SST Console](console.md) is a web based dashboard for managing your SST apps with your team. 
+
+![SST Console homescreen](/img/console/sst-console-logs.png)
+
+With the Console you can view and interact with your application in real-time. You can manually invoke functions, view logs, replay invocations, and more with your team.
 
 ---
 

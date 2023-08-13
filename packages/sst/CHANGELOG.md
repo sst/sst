@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.23.15
+
+### Patch Changes
+
+- [`cb4bc1a26`](https://github.com/sst/sst/commit/cb4bc1a2654b29378b1c555b987707adbba07230) Thanks [@thdxr](https://github.com/thdxr)! - console: update console URL
+
 ## 2.23.14
 
 ### Patch Changes

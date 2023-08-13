@@ -125,7 +125,7 @@ Let's go ahead and run the migration.
 
 <ChangeText>
 
-Go to the RDS tab in [SST Console](https://console.sst.dev) and click **Apply** on our `comment` migration.
+Go to the RDS tab in SST Console and click **Apply** on our `comment` migration.
 
 </ChangeText>
 

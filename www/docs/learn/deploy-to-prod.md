@@ -31,6 +31,7 @@ Running `sst deploy` with `--stage prod` is creating a new instance of your appl
 ![App deployed to prod](/img/deploy-to-prod/app-deployed-to-prod.png)
 
 ---
+<!--
 
 ## Manage in prod
 
@@ -47,6 +48,7 @@ This will start up the SST Console and connect it to the given `stage`.
 The Console won't have the **Local** tab as the functions are not running locally anymore. Instead, you can view the CloudWatch logs for your functions.
 
 ---
+-->
 
 ## Git push to deploy
 

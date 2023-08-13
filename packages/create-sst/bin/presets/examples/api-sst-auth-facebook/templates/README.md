@@ -4,7 +4,7 @@ An example serverless app created with SST.
 
 ## Getting Started
 
-[**Read the tutorial**](https://sst.dev/examples/how-to-add-facebook-login-to-your-sst-app-with-sst-auth.html)
+[**Read the tutorial**](https://sst.dev/examples/how-to-add-facebook-login-to-your-sst-apps.html)
 
 Install the example.
 
