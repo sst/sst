@@ -1,4 +1,4 @@
-# @serverless-stack/console
+# @sst/console
 
 ## 2.23.15
 
