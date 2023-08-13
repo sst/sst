@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.24.1
+
+### Patch Changes
+
+- [`77bec32bc`](https://github.com/sst/sst/commit/77bec32bcce20a6e045951dbd2a6f730184cfc33) Thanks [@fwang](https://github.com/fwang)! - sst bind: fix cli hanging before site is deployed
+
 ## 2.24.0
 
 ### Minor Changes
