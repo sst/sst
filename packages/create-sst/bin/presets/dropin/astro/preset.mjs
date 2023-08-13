@@ -3,7 +3,7 @@ import { patch, extend, extract, install } from "create-sst";
 export default [
   extract(),
   install({
-    packages: ["sst", "aws-cdk-lib@2.84.0", "constructs@10.1.156", "astro-sst"],
+    packages: ["sst", "aws-cdk-lib@2.91.0", "constructs@10.2.69", "astro-sst"],
     dev: true,
   }),
   patch({
