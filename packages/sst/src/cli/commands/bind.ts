@@ -253,7 +253,7 @@ export const bind = (program: Program) =>
           ]);
           const metadataData = await metadataForStack(ssrSite!.stack);
           const metadata = metadataData
-            .filter((c): c is SSRSiteMetadata =>
+            ?.filter((c): c is SSRSiteMetadata =>
               [
                 "NextjsSite",
                 "AstroSite",
@@ -291,7 +291,7 @@ export const bind = (program: Program) =>
           const { metadataForStack } = await import("../../stacks/metadata.js");
           const metadataData = await metadataForStack(staticSite!.stack);
           const metadata = metadataData
-            .filter((c): c is StaticSiteMetadata | SlsNextjsMetadata =>
+            ?.filter((c): c is StaticSiteMetadata | SlsNextjsMetadata =>
               ["StaticSite", "SlsNextjsSite"].includes(c.type)
             )
             .find((c) => {
@@ -330,7 +330,7 @@ export const bind = (program: Program) =>
           // Get metadata
           const metadataData = await metadataForStack(service!.stack);
           const metadata = metadataData
-            .filter((c): c is ServiceMetadata => ["Service"].includes(c.type))
+            ?.filter((c): c is ServiceMetadata => ["Service"].includes(c.type))
             .find((c) => {
               return (
                 path.resolve(project.paths.root, c.data.path) === process.cwd()
