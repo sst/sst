@@ -1,5 +1,5 @@
 {
-  "name": "serverless-stack",
+  "name": "sst",
   "version": "0.0.0",
   "license": "MIT",
   "private": true,
@@ -10,7 +10,7 @@
     "www"
   ],
   "scripts": {
-    "build": "turbo run build --filter=!@serverless-stack/docs --filter=!@serverless-stack/console --filter=!@serverless-stack/cli-*",
+    "build": "turbo run build --filter=!@sst/docs --filter=!@sst/console --filter=!@sst/cli-*",
     "prettier": "prettier --cache -w --loglevel=error .",
     "version": "./.changeset/version",
     "release": "./.changeset/release",

@@ -1,5 +1,5 @@
 {
-  "name": "@serverless-stack/docs",
+  "name": "@sst/docs",
   "version": "2.5.7",
   "private": true,
   "scripts": {

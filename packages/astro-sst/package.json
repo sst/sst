@@ -10,14 +10,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/serverless-stack/sst.git",
+    "url": "https://github.com/sst/sst.git",
     "directory": "packages/astro-sst"
   },
   "keywords": [
     "withastro",
     "astro-adapter"
   ],
-  "bugs": "https://github.com/serverless-stack/sst/issues",
+  "bugs": "https://github.com/sst/sst/issues",
   "exports": {
     "./edge": "./dist/edge/adapter.js",
     "./edge/entrypoint": "./dist/edge/entrypoint.js",

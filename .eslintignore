@@ -15,7 +15,7 @@ cdk.out
 /packages/cli/test/*/cdk.out/**
 
 # Don't lint templates
-/packages/create-serverless-stack/templates/**
+/packages/create-sst/templates/**
 
 # Don't lint browser console
 /packages/cli/assets/console/**

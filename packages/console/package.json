@@ -1,5 +1,5 @@
 {
-  "name": "@serverless-stack/console",
+  "name": "@sst/console",
   "private": true,
   "version": "2.23.15",
   "scripts": {
