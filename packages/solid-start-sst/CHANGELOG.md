@@ -1,5 +1,11 @@
 # solid-start-sst
 
+## 2.24.0
+
+### Patch Changes
+
+- [#3201](https://github.com/sst/sst/pull/3201) [`f5a7d5609`](https://github.com/sst/sst/commit/f5a7d560930434b48d1970c7eddf3c5044caae58) Thanks [@jayair](https://github.com/jayair)! - Update serverless-stack to sst
+
 ## 2.23.15
 
 ## 2.23.14
