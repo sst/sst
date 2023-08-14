@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.5.9
+
+### Patch Changes
+
+- [`62f78efd7`](https://github.com/sst/sst/commit/62f78efd7367c95d1b58737d18a52bcae293e3f2) Thanks [@fwang](https://github.com/fwang)! - Service: support private services
+
 ## 2.5.8
 
 ### Patch Changes
