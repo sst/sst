@@ -400,6 +400,28 @@ export interface ServiceProps {
   };
   cdk?: {
     /**
+     * By default, SST creates a CloudFront distribution. Set this to `false` to skip creating the distribution.
+     * @default true
+     * @example
+     * ```js
+     * {
+     *   cloudfrontDistribution: false
+     * }
+     * ```
+     */
+    cloudfrontDistribution?: boolean;
+    /**
+     * By default, SST creates an Application Load Balancer to distribute requests across containers. Set this to `false` to skip creating the load balancer.
+     * @default true
+     * @example
+     * ```js
+     * {
+     *   applicationLoadBalancer: false
+     * }
+     * ```
+     */
+    applicationLoadBalancer?: boolean;
+    /**
      * Customizing the container definition for the ECS task.
      * @example
      * ```js
@@ -464,7 +486,7 @@ export class Service extends Construct implements SSTConstruct {
   private cluster: Cluster;
   private container: ContainerDefinition;
   private taskDefinition: FargateTaskDefinition;
-  private distribution: Distribution;
+  private distribution?: Distribution;
 
   constructor(scope: Construct, id: string, props?: ServiceProps) {
     super(scope, id);
@@ -541,7 +563,7 @@ export class Service extends Construct implements SSTConstruct {
       }
 
       // Invalidate CloudFront
-      this.distribution.createInvalidation();
+      this.distribution?.createInvalidation();
     });
   }
 
@@ -555,7 +577,7 @@ export class Service extends Construct implements SSTConstruct {
   public get url() {
     if (this.doNotDeploy) return this.props.dev?.url;
 
-    return this.distribution.url;
+    return this.distribution?.url;
   }
 
   /**
@@ -565,7 +587,7 @@ export class Service extends Construct implements SSTConstruct {
   public get customDomainUrl() {
     if (this.doNotDeploy) return;
 
-    return this.distribution.customDomainUrl;
+    return this.distribution?.customDomainUrl;
   }
 
   /**
@@ -577,9 +599,9 @@ export class Service extends Construct implements SSTConstruct {
     return {
       vpc: this.vpc,
       cluster: this.cluster,
-      distribution: this.distribution.cdk.distribution,
-      hostedZone: this.distribution.cdk.hostedZone,
-      certificate: this.distribution.cdk.certificate,
+      distribution: this.distribution?.cdk.distribution,
+      hostedZone: this.distribution?.cdk.hostedZone,
+      certificate: this.distribution?.cdk.certificate,
     };
   }
 
@@ -610,31 +632,37 @@ export class Service extends Construct implements SSTConstruct {
   /** @internal */
   public getFunctionBinding(): FunctionBindingProps {
     const app = this.node.root as App;
-    return {
-      clientPackage: "service",
-      variables: {
-        url: this.doNotDeploy
-          ? {
-              type: "plain",
-              value: this.props.dev?.url ?? "localhost",
-            }
-          : {
-              // Do not set real value b/c we don't want to make the Lambda function
-              // depend on the Site. B/c often the site depends on the Api, causing
-              // a CloudFormation circular dependency if the Api and the Site belong
-              // to different stacks.
-              type: "site_url",
-              value: this.customDomainUrl || this.url!,
-            },
-      },
-      permissions: {
-        "ssm:GetParameters": [
-          `arn:${Stack.of(this).partition}:ssm:${app.region}:${
-            app.account
-          }:parameter${getParameterPath(this, "url")}`,
-        ],
-      },
-    };
+    return this.distribution
+      ? {
+          clientPackage: "service",
+          variables: {
+            url: this.doNotDeploy
+              ? {
+                  type: "plain",
+                  value: this.props.dev?.url ?? "localhost",
+                }
+              : {
+                  // Do not set real value b/c we don't want to make the Lambda function
+                  // depend on the Site. B/c often the site depends on the Api, causing
+                  // a CloudFormation circular dependency if the Api and the Site belong
+                  // to different stacks.
+                  type: "site_url",
+                  value: this.customDomainUrl || this.url!,
+                },
+          },
+          permissions: {
+            "ssm:GetParameters": [
+              `arn:${Stack.of(this).partition}:ssm:${app.region}:${
+                app.account
+              }:parameter${getParameterPath(this, "url")}`,
+            ],
+          },
+        }
+      : {
+          clientPackage: "service",
+          variables: {},
+          permissions: {},
+        };
   }
 
   /**
@@ -783,6 +811,13 @@ export class Service extends Construct implements SSTConstruct {
   }
 
   private createLoadBalancer(vpc: IVpc, service: FargateService) {
+    const { cdk } = this.props;
+
+    // Do not create load balancer if disabled
+    if (cdk?.applicationLoadBalancer === false) {
+      return {};
+    }
+
     const alb = new ApplicationLoadBalancer(this, "LoadBalancer", {
       vpc,
       internetFacing: true,
@@ -797,7 +832,7 @@ export class Service extends Construct implements SSTConstruct {
 
   private createAutoScaling(
     service: FargateService,
-    target: ApplicationTargetGroup
+    target?: ApplicationTargetGroup
   ) {
     const {
       minContainers,
@@ -819,14 +854,19 @@ export class Service extends Construct implements SSTConstruct {
       targetUtilizationPercent: memoryUtilization ?? 70,
       scaleOutCooldown: CdkDuration.seconds(300),
     });
-    scaling.scaleOnRequestCount("RequestScaling", {
-      requestsPerTarget: requestsPerContainer ?? 500,
-      targetGroup: target,
-    });
+    if (target) {
+      scaling.scaleOnRequestCount("RequestScaling", {
+        requestsPerTarget: requestsPerContainer ?? 500,
+        targetGroup: target,
+      });
+    }
   }
 
-  private createDistribution(alb: ApplicationLoadBalancer) {
-    const { customDomain } = this.props;
+  private createDistribution(alb?: ApplicationLoadBalancer) {
+    const { cdk, customDomain } = this.props;
+
+    // Do not create distribution if disabled or if ALB was not created (ie. disabled)
+    if (!alb || cdk?.cloudfrontDistribution === false) return;
 
     const cachePolicy = new CachePolicy(this, "CachePolicy", {
       queryStringBehavior: CacheQueryStringBehavior.all(),

@@ -61,16 +61,6 @@ When you run `sst deploy`, SST does a couple things:
 
 ---
 
-## Using Nixpacks
-
-If a `Dockerfile` is not found in the service's path, [Nixpacks](https://nixpacks.com/docs) will be used to analyze the service code, and then generate a `Dockerfile` within `.nixpacks`. This file will build and run your application. [Read more about customizing the Nixpacks builds.](https://nixpacks.com/docs/guides/configuring-builds)
-
-:::note
-The generated `.nixpacks` directory should be added to your `.gitignore` file.
-:::
-
----
-
 ## Working locally
 
 To work on your app locally with SST:
@@ -184,6 +174,32 @@ console.log(Bucket.Uploads.bucketName);
 ```
 
 Read more about this in the [Resource Binding](../resource-binding.md) doc.
+
+---
+
+## Private services
+
+If you don't want your service to be publicly accessible, create a private service by disabling the Application Load Balancer and CloudFront distribution.
+
+```ts
+new Service(stack, "MyService", {
+  path: "./service",
+  cdk: {
+    applicationLoadBalancer: false,
+    cloudfrontDistribution: false,
+  },
+});
+```
+
+---
+
+## Using Nixpacks
+
+If a `Dockerfile` is not found in the service's path, [Nixpacks](https://nixpacks.com/docs) will be used to analyze the service code, and then generate a `Dockerfile` within `.nixpacks`. This file will build and run your application. [Read more about customizing the Nixpacks builds.](https://nixpacks.com/docs/guides/configuring-builds)
+
+:::note
+The generated `.nixpacks` directory should be added to your `.gitignore` file.
+:::
 
 ---
 
