@@ -60,6 +60,8 @@ export async function load(input: string, shallow?: boolean) {
                 .then((x) => x.toString());
               const ast = babel.parse(contents, {
                 sourceType: "module",
+                babelrc: false,
+                configFile: false,
                 filename: "sst.config.ts",
                 plugins: [ts],
               });
