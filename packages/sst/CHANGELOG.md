@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.24.3
+
+### Patch Changes
+
+- [`11bb33900`](https://github.com/sst/sst/commit/11bb339009a743f23446a9a1a3fcf0741e54ca6b) Thanks [@thdxr](https://github.com/thdxr)! - cli: fix nodejs rebuilding issue
+
+- [`5ecba62dd`](https://github.com/sst/sst/commit/5ecba62dddcbafc88f43d8a1d1fcc930207076b1) Thanks [@thdxr](https://github.com/thdxr)! - cli: ignore any babel config files
+
 ## 2.24.2
 
 ### Patch Changes
