@@ -251,6 +251,18 @@ In addition to the [global options](#global-options), the following options are 
 
 ---
 
+### `sst genTypes`
+
+Generates your app resource types in `.sst/types`, useful as a quicker way of generating the types before running any type checks as part of your your CI process.
+
+```bash
+npx sst genTypes [options]
+```
+
+Supports [global options](#global-options)
+
+---
+
 #### Build concurrency
 
 SST will build your assets concurrently using the number of cores available. This can be changed using the `SST_BUILD_CONCURRENCY` environment variable. Where `SST_BUILD_CONCURRENCY` defaults to the `number of cores - 1`.

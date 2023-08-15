@@ -549,7 +549,7 @@ export class App extends CDKApp {
     Aspects.of(this).add(new EnsureUniqueConstructIds());
   }
 
-  private codegenTypes() {
+  public codegenTypes() {
     const project = useProject();
 
     const typesPath = path.resolve(project.paths.out, "types");

@@ -30,6 +30,7 @@ import { diff } from "./commands/diff.js";
 import { version } from "./commands/version.js";
 import { telemetry } from "./commands/telemetry.js";
 import { connect } from "./commands/connect.js";
+import { genTypes } from "./commands/genTypes.js";
 
 bootstrap(program);
 dev(program);
@@ -45,6 +46,7 @@ diff(program);
 version(program);
 telemetry(program);
 connect(program);
+genTypes(program);
 
 if ("setSourceMapsEnabled" in process) {
   // @ts-expect-error
