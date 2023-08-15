@@ -397,17 +397,20 @@ export class App extends CDKApp {
     // Had to copy this in to enable deleting objects in bucket
     // https://github.com/aws/aws-cdk/blob/master/packages/%40aws-cdk/aws-s3/lib/bucket.ts#L1910
     if (
+      policy === "destroy" &&
       current instanceof Bucket &&
       !current.node.tryFindChild("AutoDeleteObjectsCustomResource")
     ) {
       const AUTO_DELETE_OBJECTS_RESOURCE_TYPE = "Custom::S3AutoDeleteObjects";
+      const AUTO_DELETE_OBJECTS_TAG = "aws-cdk:auto-delete-objects";
+
       const provider = CustomResourceProvider.getOrCreateProvider(
         current,
         AUTO_DELETE_OBJECTS_RESOURCE_TYPE,
         {
           codeDirectory: path.join(
             require.resolve("aws-cdk-lib/aws-s3"),
-            "../lib/auto-delete-objects-handler"
+            "../../custom-resource-handlers/dist/aws-s3/auto-delete-objects-handler"
           ),
           runtime: CustomResourceProviderRuntime.NODEJS_16_X,
           description: `Lambda function for auto-deleting objects in ${current.bucketName} S3 bucket.`,
@@ -448,6 +451,12 @@ export class App extends CDKApp {
       if (current.policy) {
         customResource.node.addDependency(current.policy);
       }
+      // We also tag the bucket to record the fact that we want it autodeleted.
+      // The custom resource will check this tag before actually doing the delete.
+      // Because tagging and untagging will ALWAYS happen before the CR is deleted,
+      // we can set `autoDeleteObjects: false` without the removal of the CR emptying
+      // the bucket as a side effect.
+      Tags.of(current).add(AUTO_DELETE_OBJECTS_TAG, "true");
     }
     current.node.children.forEach((resource) =>
       this.applyRemovalPolicy(resource, policy)

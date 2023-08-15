@@ -797,3 +797,57 @@ test("bind-after-addNotifications", async () => {
     PolicyName: "NotificationBucket1ServiceRoleDefaultPolicyD9CB4189",
   });
 });
+
+test("auto-delete-objects with no default removal policy", async () => {
+  const app = await createApp();
+  const stack = new Stack(app, "stack");
+  new Bucket(stack, "bucket");
+  await app.finish();
+  countResources(stack, "Custom::S3AutoDeleteObjects", 0);
+  hasResource(stack, "AWS::S3::Bucket", {
+    Tags: not(
+      arrayWith([
+        {
+          Key: "aws-cdk:auto-delete-objects",
+          Value: "true",
+        },
+      ])
+    ),
+  });
+});
+
+test("auto-delete-objects with removal policy DESTROY", async () => {
+  const app = await createApp();
+  const stack = new Stack(app, "stack");
+  app.setDefaultRemovalPolicy("destroy");
+  new Bucket(stack, "bucket");
+  await app.finish();
+  countResources(stack, "Custom::S3AutoDeleteObjects", 1);
+  hasResource(stack, "AWS::S3::Bucket", {
+    Tags: arrayWith([
+      {
+        Key: "aws-cdk:auto-delete-objects",
+        Value: "true",
+      },
+    ]),
+  });
+});
+
+test("auto-delete-objects with removal policy RETAIN", async () => {
+  const app = await createApp();
+  const stack = new Stack(app, "stack");
+  app.setDefaultRemovalPolicy("retain");
+  new Bucket(stack, "bucket");
+  await app.finish();
+  countResources(stack, "Custom::S3AutoDeleteObjects", 0);
+  hasResource(stack, "AWS::S3::Bucket", {
+    Tags: not(
+      arrayWith([
+        {
+          Key: "aws-cdk:auto-delete-objects",
+          Value: "true",
+        },
+      ])
+    ),
+  });
+});
