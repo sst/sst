@@ -13,7 +13,7 @@ import { Context } from "../../context/context.js";
 import { VisibleError } from "../../error.js";
 import { Colors } from "../../cli/colors.js";
 import { Logger } from "../../logger.js";
-import { findAbove } from "../../util/fs.js";
+import { findAbove, findBelow } from "../../util/fs.js";
 
 export const useNodeHandler = Context.memo(async () => {
   const workers = await useRuntimeWorkers();
@@ -186,7 +186,7 @@ export const useNodeHandler = Context.memo(async () => {
                   : undefined,
               }),
           outfile: target,
-          sourcemap: input.mode === "start" ? "linked" : nodejs.sourcemap,
+          sourcemap: input.mode === "start" ? "linked" : true,
           minify: nodejs.minify,
           ...override,
         };
@@ -278,6 +278,11 @@ export const useNodeHandler = Context.memo(async () => {
         return {
           type: "success",
           handler,
+          sourcemap: !nodejs.sourcemap
+            ? Object.keys(result.metafile?.outputs || {}).find((item) =>
+                item.endsWith(".map")
+              )
+            : undefined,
         };
       } catch (ex: any) {
         const result = ex as BuildResult;

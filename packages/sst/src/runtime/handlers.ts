@@ -1,9 +1,11 @@
 import { Context } from "../context/context.js";
 import { Logger } from "../logger.js";
 import path from "path";
+import zlib from "zlib";
 import fs from "fs/promises";
 import { useWatcher } from "../watcher.js";
 import { useBus } from "../bus.js";
+import crypto from "crypto";
 import { useProject } from "../project.js";
 import { FunctionProps, useFunctions } from "../constructs/Function.js";
 
@@ -53,6 +55,7 @@ export interface RuntimeHandler {
     | {
         type: "success";
         handler: string;
+        sourcemap?: string;
       }
     | {
         type: "error";
@@ -136,10 +139,29 @@ export const useRuntimeHandlers = Context.memo(() => {
 
         if (func.hooks?.afterBuild) await func.hooks.afterBuild(func, out);
 
+        let sourcemap: string | undefined;
+        if (built.sourcemap) {
+          const data = await fs.readFile(built.sourcemap);
+          const hash = crypto.createHash("md5").update(data).digest("hex");
+          const dir = path.join(
+            project.paths.artifacts,
+            "sourcemaps",
+            functionID
+          );
+          await fs.rm(dir, { recursive: true, force: true });
+          await fs.mkdir(dir, { recursive: true });
+          sourcemap = dir;
+          await fs.writeFile(
+            path.join(dir, `${hash}.map`),
+            zlib.gzipSync(data)
+          );
+        }
+
         bus.publish("function.build.success", { functionID });
         return {
           ...built,
           out,
+          sourcemap,
         };
       }
 

@@ -55,6 +55,8 @@ import { StringParameter } from "aws-cdk-lib/aws-ssm";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import { useBootstrap } from "../bootstrap.js";
 import { Colors } from "../cli/colors.js";
+import { BucketDeployment, Source } from "aws-cdk-lib/aws-s3-deployment";
+import { Bucket } from "aws-cdk-lib/aws-s3";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 const supportedRuntimes = {
@@ -882,6 +884,7 @@ export class Function extends CDKFunction implements SSTConstruct {
           this.node.addr,
           "deploy"
         );
+
         if (result.type === "error") {
           throw new VisibleError(
             [
@@ -898,6 +901,20 @@ export class Function extends CDKFunction implements SSTConstruct {
         const cfnFunction = this.node.defaultChild as CfnFunction;
         const code = AssetCode.fromAsset(result.out);
         const codeConfig = code.bind(this);
+        const bootstrap = await useBootstrap();
+        if (result.sourcemap)
+          new BucketDeployment(this, "Sourcemap", {
+            sources: [Source.asset(result.sourcemap)],
+            contentEncoding: "gzip",
+            contentType: "application/json",
+            destinationBucket: Bucket.fromBucketName(
+              this,
+              "BootstrapBucket",
+              bootstrap.bucket
+            ),
+            destinationKeyPrefix: `sourcemap/${app.name}/${app.stage}/${this.functionArn}/`,
+          });
+
         cfnFunction.code = {
           s3Bucket: codeConfig.s3Location?.bucketName,
           s3Key: codeConfig.s3Location?.objectKey,
