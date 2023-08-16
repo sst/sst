@@ -262,6 +262,7 @@ function convertToApigV2StreamingResult({
   responseStream = awslambda.HttpResponseStream.from(responseStream, metadata);
 
   if (!body) {
+    responseStream.write(0);
     responseStream.end();
     return;
   }
