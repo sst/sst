@@ -61,7 +61,7 @@
     "@babel/core": "^7.0.0-0",
     "@babel/generator": "^7.20.5",
     "@babel/plugin-syntax-typescript": "^7.21.4",
-    "@smithy/signature-v4": "^2.0.1",
+    "@smithy/signature-v4": "^2.0.4",
     "@trpc/server": "9.16.0",
     "adm-zip": "^0.5.10",
     "aws-cdk-lib": "2.91.0",
