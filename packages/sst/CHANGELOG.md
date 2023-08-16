@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.24.6
+
+### Patch Changes
+
+- [#3232](https://github.com/sst/sst/pull/3232) [`1c8972690`](https://github.com/sst/sst/commit/1c89726905f8ab50d872b517f6be45bcba4608fd) Thanks [@fwang](https://github.com/fwang)! - Respect project region for AWS credentials provider
+
 ## 2.24.5
 
 ### Patch Changes
