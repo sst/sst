@@ -1,5 +1,11 @@
 # astro-sst
 
+## 2.24.4
+
+### Patch Changes
+
+- [#3220](https://github.com/sst/sst/pull/3220) [`a5c917183`](https://github.com/sst/sst/commit/a5c917183e0361781fbf69c34f72200cbf6af2ee) Thanks [@adamelmore](https://github.com/adamelmore)! - AstroSite: fix redirects for streaming response
+
 ## 2.24.3
 
 ## 2.24.2

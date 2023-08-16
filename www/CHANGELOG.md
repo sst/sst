@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.5.10
+
+### Patch Changes
+
+- [#3222](https://github.com/sst/sst/pull/3222) [`a594b1964`](https://github.com/sst/sst/commit/a594b1964afb285308fb31fd0c5748f10b22693e) Thanks [@adolfogc](https://github.com/adolfogc)! - Function: support Python 3.11 runtie
+
 ## 2.5.9
 
 ### Patch Changes
