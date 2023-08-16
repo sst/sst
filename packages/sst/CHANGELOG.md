@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.24.7
+
+### Patch Changes
+
+- [`18ac7b541`](https://github.com/sst/sst/commit/18ac7b5410f9e9dd208791f3e0ef6fe296838170) Thanks [@thdxr](https://github.com/thdxr)! - function: collect and upload sourcemaps
+
 ## 2.24.6
 
 ### Patch Changes
