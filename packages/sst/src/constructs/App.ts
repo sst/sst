@@ -572,6 +572,8 @@ export class App extends CDKApp {
         `    STAGE: string;`,
         `  }`,
         `}`,
+        ``,
+        ``,
       ].join("\n")
     );
 
@@ -603,6 +605,8 @@ export class App extends CDKApp {
               `    "${id}": string;`,
               `  }`,
               `}`,
+              ``,
+              ``,
             ]
           : [
               `import "sst/node/${binding.clientPackage}";`,
@@ -613,6 +617,8 @@ export class App extends CDKApp {
               `    }`,
               `  }`,
               `}`,
+              ``,
+              ``,
             ]
         ).join("\n")
       );

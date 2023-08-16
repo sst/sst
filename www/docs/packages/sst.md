@@ -231,6 +231,18 @@ You can also use the `sst bind` to run any scripts.
 
 ---
 
+### `sst types`
+
+Generates your app resource types in `.sst/types`. This offers a faster way to generate the types without building the assets for your functions and sites.
+
+```bash
+npx sst types [options]
+```
+
+Supports [global options](#global-options)
+
+---
+
 ### `sst build`
 
 Build your app and synthesize your stacks. Builds the assets for your functions and sites. And generates a `.sst/dist/` directory with the synthesized CloudFormation stacks.
@@ -248,18 +260,6 @@ In addition to the [global options](#global-options), the following options are 
   _Default_: `.sst/dist/`
 
   Pass in a path for the build output. This lets you split up the deploy process and deploy without having to build the app again.
-
----
-
-### `sst genTypes`
-
-Generates your app resource types in `.sst/types`, useful as a quicker way of generating the types before running any type checks as part of your your CI process.
-
-```bash
-npx sst genTypes [options]
-```
-
-Supports [global options](#global-options)
 
 ---
 

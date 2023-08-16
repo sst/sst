@@ -1,8 +1,9 @@
+import path from "path";
 import type { Program } from "../program.js";
 
-export const genTypes = (program: Program) =>
+export const types = (program: Program) =>
   program.command(
-    "genTypes",
+    "types",
     "Generate resource types in .sst/types",
     (yargs) => yargs,
     async () => {
@@ -10,9 +11,8 @@ export const genTypes = (program: Program) =>
       const { Stacks } = await import("../../stacks/index.js");
       const { App } = await import("../../constructs/App.js");
       const { Colors } = await import("../colors.js");
-      const path = await import("path");
       const project = useProject();
-      const [_, sstConfig] = await Stacks.load(project.paths.config);
+      const [_metafile, sstConfig] = await Stacks.load(project.paths.config);
       const app = new App({
         mode: "deploy",
         stage: project.config.stage,
@@ -21,11 +21,9 @@ export const genTypes = (program: Program) =>
       });
       sstConfig.stacks(app);
       app.codegenTypes();
-      Colors.line("");
       Colors.line(
-        Colors.success(`✔`),
-        Colors.bold(" Types generated:"),
-        `${path.resolve(project.paths.out, "types")}`
+        Colors.success(`✔ `),
+        `Types generated in ${path.resolve(project.paths.out, "types")}`
       );
       process.exit(0);
     }
