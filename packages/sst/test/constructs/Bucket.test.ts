@@ -1,14 +1,15 @@
 import { test, expect } from "vitest";
 import {
   ABSENT,
+  ANY,
   countResources,
   countResourcesLike,
-  hasResource,
-  templateMatches,
-  objectLike,
-  ANY,
   createApp,
+  hasResource,
+  objectLike,
+  templateMatches,
 } from "./helper";
+import { RemovalPolicy } from "aws-cdk-lib/core";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import { Stack, Bucket, Function, Queue, Topic } from "../../dist/constructs";
 
@@ -52,7 +53,6 @@ test("cdk.id: undefined", async () => {
     },
   });
 });
-
 test("cdk.id: defined", async () => {
   const stack = new Stack(await createApp(), "stack");
   new Bucket(stack, "Bucket", {
@@ -78,7 +78,6 @@ test("cdk.bucket is undefined", async () => {
   countResources(stack, "AWS::S3::Bucket", 1);
   countResources(stack, "Custom::S3BucketNotifications", 0);
 });
-
 test("cdk.bucket is imported construct", async () => {
   const stack = new Stack(await createApp(), "stack");
   const bucket = new Bucket(stack, "Bucket", {
@@ -92,7 +91,6 @@ test("cdk.bucket is imported construct", async () => {
   countResources(stack, "AWS::S3::Bucket", 0);
   countResources(stack, "Custom::S3BucketNotifications", 0);
 });
-
 test("cdk.bucket is created construct", async () => {
   const stack = new Stack(await createApp(), "stack");
   const bucket = new Bucket(stack, "Bucket", {
@@ -106,7 +104,6 @@ test("cdk.bucket is created construct", async () => {
   countResources(stack, "AWS::S3::Bucket", 1);
   countResources(stack, "Custom::S3BucketNotifications", 0);
 });
-
 test("cdk.bucket is props", async () => {
   const stack = new Stack(await createApp(), "stack");
   const bucket = new Bucket(stack, "Bucket", {
@@ -124,6 +121,23 @@ test("cdk.bucket is props", async () => {
     BucketName: "my-bucket",
   });
   countResources(stack, "Custom::S3BucketNotifications", 0);
+});
+test("cdk.bucket.autoDeleteObjects is not set", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  const bucket = new Bucket(stack, "Bucket");
+  countResources(stack, "Custom::S3AutoDeleteObjects", 0);
+});
+test("cdk.bucket.autoDeleteObjects is true", async () => {
+  const stack = new Stack(await createApp(), "stack");
+  const bucket = new Bucket(stack, "Bucket", {
+    cdk: {
+      bucket: {
+        autoDeleteObjects: true,
+        removalPolicy: RemovalPolicy.DESTROY,
+      },
+    },
+  });
+  countResources(stack, "Custom::S3AutoDeleteObjects", 1);
 });
 
 test("cors: undefined", async () => {
