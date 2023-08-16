@@ -191,7 +191,7 @@ new Function(stack, "MyLambda", {
   },
   srcPath: "src",
   handler: "index.main",
-  runtime: "python3.7",
+  runtime: "python3.10",
 });
 ```
 

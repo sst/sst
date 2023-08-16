@@ -10,7 +10,7 @@ export default {
   },
   stacks(app) {
     app.setDefaultFunctionProps({
-      runtime: "python3.10",
+      runtime: "python3.11",
     });
     app.stack(function Stack({ stack }) {
       const api = new Api(stack, "api", {
