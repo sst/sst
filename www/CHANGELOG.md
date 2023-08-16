@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.5.11
+
+### Patch Changes
+
+- [#3227](https://github.com/sst/sst/pull/3227) [`820c8e55c`](https://github.com/sst/sst/commit/820c8e55cbd9349e5c1dc9195e99650fed750e77) Thanks [@jamesgibbons92](https://github.com/jamesgibbons92)! - sst types: add CLI command to generate resource types
+
 ## 2.5.10
 
 ### Patch Changes
