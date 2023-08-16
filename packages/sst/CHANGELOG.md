@@ -1,5 +1,15 @@
 # @serverless-stack/cli2
 
+## 2.24.4
+
+### Patch Changes
+
+- [#3222](https://github.com/sst/sst/pull/3222) [`a594b1964`](https://github.com/sst/sst/commit/a594b1964afb285308fb31fd0c5748f10b22693e) Thanks [@adolfogc](https://github.com/adolfogc)! - Function: support Python 3.11 runtie
+
+- [#3224](https://github.com/sst/sst/pull/3224) [`3b89a6201`](https://github.com/sst/sst/commit/3b89a6201baf222f7640159f5002c9a111228f3a) Thanks [@jamesgibbons92](https://github.com/jamesgibbons92)! - Bucket: fix auto delete objects on destroy removal
+
+- [`caf7f0712`](https://github.com/sst/sst/commit/caf7f07124e39212fd81b967a156230ce9aa7098) Thanks [@fwang](https://github.com/fwang)! - Bump @smithy/signature-v4 to 2.0.4
+
 ## 2.24.3
 
 ### Patch Changes
