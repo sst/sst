@@ -510,7 +510,7 @@ export class App extends CDKApp {
     Aspects.of(this).add(new EnsureUniqueConstructIds());
   }
 
-  private codegenTypes() {
+  public codegenTypes() {
     const project = useProject();
 
     const typesPath = path.resolve(project.paths.out, "types");
@@ -533,6 +533,8 @@ export class App extends CDKApp {
         `    STAGE: string;`,
         `  }`,
         `}`,
+        ``,
+        ``,
       ].join("\n")
     );
 
@@ -564,6 +566,8 @@ export class App extends CDKApp {
               `    "${id}": string;`,
               `  }`,
               `}`,
+              ``,
+              ``,
             ]
           : [
               `import "sst/node/${binding.clientPackage}";`,
@@ -574,6 +578,8 @@ export class App extends CDKApp {
               `    }`,
               `  }`,
               `}`,
+              ``,
+              ``,
             ]
         ).join("\n")
       );

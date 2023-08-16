@@ -29,6 +29,7 @@ import { transform } from "./commands/transform.js";
 import { diff } from "./commands/diff.js";
 import { version } from "./commands/version.js";
 import { telemetry } from "./commands/telemetry.js";
+import { types } from "./commands/types.js";
 import { connect } from "./commands/connect.js";
 
 bootstrap(program);
@@ -44,6 +45,7 @@ consoleCommand(program);
 diff(program);
 version(program);
 telemetry(program);
+types(program);
 connect(program);
 
 if ("setSourceMapsEnabled" in process) {

@@ -231,6 +231,18 @@ You can also use the `sst bind` to run any scripts.
 
 ---
 
+### `sst types`
+
+Generates your app resource types in `.sst/types`. This offers a faster way to generate the types without building the assets for your functions and sites.
+
+```bash
+npx sst types [options]
+```
+
+Supports [global options](#global-options)
+
+---
+
 ### `sst build`
 
 Build your app and synthesize your stacks. Builds the assets for your functions and sites. And generates a `.sst/dist/` directory with the synthesized CloudFormation stacks.
