@@ -200,12 +200,10 @@ export async function initProject(globals: GlobalOptions) {
   })();
 
   dotenv.config({
-    path: path.join(project.paths.root, `.env.${project.config.stage}`),
-    override: true,
+    path: path.join(project.paths.root, `.env.${project.config.stage}`)
   });
   dotenv.config({
-    path: path.join(project.paths.root, `.env.${project.config.stage}.local`),
-    override: true,
+    path: path.join(project.paths.root, `.env.${project.config.stage}.local`)
   });
 
   Logger.debug("Config loaded", project);

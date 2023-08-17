@@ -8,12 +8,9 @@ import { useSpinners } from "./spinner.js";
 import { Logger } from "../logger.js";
 
 import dotenv from "dotenv";
+dotenv.config();
 dotenv.config({
-  override: true,
-});
-dotenv.config({
-  path: ".env.local",
-  override: true,
+  path: ".env.local"
 });
 
 import { bootstrap } from "./commands/bootstrap.js";
