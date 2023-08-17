@@ -22,6 +22,10 @@ The <a href={config.console}>SST Console</a> is a web based dashboard to manage 
 
 With the SST Console you can invoke functions, view and search logs, and manage all your apps with your team — **<ConsoleUrl url={config.console} />**
 
+:::info
+Looking for the Old Console? You can still access it here — <ConsoleUrl url="https://old.console.sst.dev" />
+:::
+
 ---
 
 ## Quick start
