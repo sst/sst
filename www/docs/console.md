@@ -4,6 +4,7 @@ description: "The SST Console is a web based dashboard for managing your SST app
 ---
 
 import config from "../config";
+import Calculator from "../src/components/PricingCalculator";
 import HeadlineText from "@site/src/components/HeadlineText";
 
 export const ConsoleUrl = ({url}) =>
@@ -90,14 +91,6 @@ At a high level, here's how the Console works.
    - You can also save event payloads to your workspace.
    - For your local [`sst dev`](live-lambda-development.md) stage, the logs will be streamed in real-time from your local machine.
 
-4. It'll be a paid service with a free tier
-
-   - You'll be able to view local logs and stages for free.
-   - But viewing and searching for production logs will be a paid feature.
-   - We'll release pricing details shortly. But it'll:
-     - Have a free tier.
-     - Be based on how often your functions are invoked.
-
 4. It doesn't support all the features of the [Old Console](#old-console)
 
    - We are starting with just functions and logs for now. We might add the other [Explorers](#explorers) in the future.
@@ -106,9 +99,16 @@ At a high level, here's how the Console works.
 
    - The Console is a full-stack SST app. You can view the <a href="https://github.com/sst/console">source on GitHub</a>.
 
-:::tip
-Viewing local logs in the SST Console will always be free.
-:::
+---
+
+### AWS account access
+
+The SST Console needs access to your AWS account to do the following things:
+
+1. Discover all the SST apps and stages across the various AWS regions.
+2. Access the resources created while deploying your SST apps.
+3. Access the CloudWatch APIs to let you view your logs in production.
+4. Invoke the Lambda functions in your SST apps when you invoke them in the Console.
 
 ---
 
@@ -116,9 +116,7 @@ Viewing local logs in the SST Console will always be free.
 
 When the Console starts up, it checks if you are running `sst dev` locally. If so, then it'll show you real-time logs from your local terminal.
 
-<!--
 ![SST Console tailing local logs](/img/console/sst-console-tailing-local-logs.png)
--->
 
 This works by connecting to a local server that's run as a part of the SST CLI.
 
@@ -155,19 +153,52 @@ To get started:
 
 The companion app runs locally and creates a tunnelled connection to your Gitpod workspace.
 
+---
+
+## Security
+
+The CloudFormation stack that the SST Console creates in your account, uses an IAM Role. This can be customized to restrict access. We'll be sharing more details on how to do this shortly.
+
+Additionally, if you'd like us to sign a BAA, feel free to <a href={`mailto:${config.email}`}>contact us</a>.
+
+There maybe we cases where you don't want any data leaving your AWS account. For this, we'll be supporting self-hosting the Console in the future. You can let us know if this is a priority for you by sending us a message over on Discord.
+
+---
+
+## Pricing
+
+The SST Console pricing is based on the number of times the Lambda functions in your SST apps are invoked per month and it uses the following tiers.
+
+| Invocations | Rate (per invocation) |
+|-------------|------|
+| First 1M    | Free |
+| 1M - 10M    | $0.00002 |
+| 10M+        | $0.000002 |
+
+These are calculated for a given workspace on a monthly basis.
+
+---
+
+#### Pricing calculator
+
+You can use this pricing calculator to estimate what your monthly cost will be.
+
+<Calculator />
+
+For further details, check out the [Pricing FAQ below](#pricing-faq).
 
 ---
 
 ## Getting help
 
-The SST Console is currently in beta. So if you have any questions or if you need help, <a href={config.discord}>**join us in #console on Discord**</a>.
+If you have any questions or if you need help, <a href={config.discord}>**join us in #console on Discord**</a>.
 
 ---
 
 ## Old Console
 
 
-The Old SST Console is a static single-page app hosted at <ConsoleUrl url="https://old.console.sst.dev" />.
+The Old SST Console is a static single-page app hosted at <ConsoleUrl url="https://old.console.sst.dev" />
 
 :::info
 We'll be moving away from the Old Console in the future.
@@ -227,13 +258,9 @@ The Old Console has separate tabs or _explorers_ for managing the different part
 
 ## FAQ
 
-- How much will it cost to use the Console?
+- Do I need to use the Console to use SST?
 
-  We haven't finalized this yet but it'll be based on how often your functions are invoked in production.
-
-- Will there be a free tier?
-
-  The Console will most likely be free if you are just starting out on your app or it doesn't have a lot of usage yet.
+  You don't need the Console to use SST. It displays the local logs from your terminal in a UI that's more convenient.
 
 - What if I don't want to pay for the Console?
 
@@ -251,4 +278,24 @@ The Old Console has separate tabs or _explorers_ for managing the different part
 
   [Seed](https://seed.run) also lets you view logs for your SST apps, so there is some overlap between the two products. But Seed will continue to work just as before.
 
-If you have any further questions, feel free to ask us on Discord.
+---
+
+### Pricing FAQ
+
+- Do I need a credit card to get started?
+
+  The Console is free to get started and **doesn't need a credit card**.
+
+- Which Lambda functions are included in the number of invocations?
+
+  The number of invocations are only counted for the **Lambda functions in your SST apps**. Other Lambda functions in your AWS accounts are not included.
+
+- Do the functions in my local stages count as a part of the invocations?
+
+  Lambda functions that are invoked **locally are not included**.
+
+- Can I access the local stages if I'm above the free tier?
+
+  If you go above the free tier in your _production_ stages, you **can still access your local stages**. You'll just need to add your billing information to access the _production_ ones.
+
+If you have any further questions, feel free to ask us on Discord or <a href={`mailto:${config.email}`}>send us an email</a>.

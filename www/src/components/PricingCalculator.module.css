@@ -1,0 +1,25 @@
+.form {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: var(--ifm-leading);
+}
+
+.input {
+  padding: 10px;
+  border: 1px solid var(--ifm-table-border-color);
+  border-radius: 4px;
+  height: 35px;
+  min-width: 160px;
+  font-family: var(--ifm-font-family-base);
+  font-size: 14px;
+  background-color: transparent;
+}
+
+.button {
+  padding: 0 15px;
+  height: 35px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: var(--ifm-font-family-base);
+}
