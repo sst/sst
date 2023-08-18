@@ -547,8 +547,10 @@ When deployed to a single region, instead of sending the request to the server f
 import { Fn } from "aws-cdk-lib";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 
+// Create an API Gateway API
 const api = new Api(stack, "Api");
 
+// Configure the CloudFront distribution to route requests to the API endpoint
 const site = new SolidStartSite(stack, "Site", {
   path: "my-solid-app/",
   cdk: {
@@ -560,12 +562,16 @@ const site = new SolidStartSite(stack, "Site", {
   },
 });
 
-api.addRoutes(stack, {
-  "ANY /{proxy+}": {
-    type: "function",
-    cdk: {
-      function: site.cdk.function,
+// Configure the API Gateway to route all incoming requests to the site's SSR function
+// Note: The site is not deployed when using the `sst dev` command
+if (app.local) {
+  api.addRoutes(stack, {
+    "ANY /{proxy+}": {
+      type: "function",
+      cdk: {
+        function: site.cdk.function,
+      },
     },
-  },
-});
+  });
+}
 ```
