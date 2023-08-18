@@ -100,7 +100,230 @@ A comprehensive list of IAM permissions can be found in the [IAM permissions](#i
 
 ## IAM permissions
 
-IAM permissions can be classified into four main types:
+For SST to deploy and manage your applications, it requires certain IAM permissions. Below is an IAM policy with the list of required permissions which you can copy and paste directly into your AWS IAM console.
+
+<details>
+<summary>Copy IAM Policy</summary>
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+          "Sid": "AllowCDKManageToolkitStack",
+          "Effect": "Allow",
+          "Action": [
+              "cloudformation:CreateChangeSet",
+              "cloudformation:DeleteChangeSet",
+              "cloudformation:DeleteStack",
+              "cloudformation:DescribeChangeSet",
+              "cloudformation:DescribeStacks",
+              "cloudformation:DescribeStackEvents",
+              "cloudformation:ExecuteChangeSet",
+              "cloudformation:GetTemplate"
+          ],
+          "Resource": [
+              "arn:aws:cloudformation:us-east-1:112233445566:stack/CDKToolkit/*"
+          ]
+      },
+      {
+          "Sid": "AllowCDKManageToolkitRoles",
+          "Effect": "Allow",
+          "Action": [
+              "iam:AttachRolePolicy",
+              "iam:CreateRole",
+              "iam:DeleteRole",
+              "iam:DeleteRolePolicy",
+              "iam:DetachRolePolicy",
+              "iam:GetRole",
+              "iam:GetRolePolicy",
+              "iam:PutRolePolicy",
+              "iam:TagRole"
+          ],
+          "Resource": [
+              "arn:aws:iam::112233445566:role/cdk-hnb659fds-cfn-exec-role-*",
+              "arn:aws:iam::112233445566:role/cdk-hnb659fds-file-publishing-role-*",
+              "arn:aws:iam::112233445566:role/cdk-hnb659fds-image-publishing-role-*",
+              "arn:aws:iam::112233445566:role/cdk-hnb659fds-lookup-role-*",
+              "arn:aws:iam::112233445566:role/cdk-hnb659fds-deploy-role-*"
+          ]
+      },
+      {
+          "Sid": "AllowCDKManageToolkitBucket",
+          "Effect": "Allow",
+          "Action": [
+              "s3:CreateBucket",
+              "s3:DeleteBucketPolicy",
+              "s3:GetEncryptionConfiguration",
+              "s3:GetBucketPolicy",
+              "s3:PutBucketPolicy",
+              "s3:PutBucketVersioning",
+              "s3:PutEncryptionConfiguration",
+              "s3:PutLifecycleConfiguration",
+              "s3:PutBucketPublicAccessBlock"
+          ],
+          "Resource": [
+              "arn:aws:s3:::cdk-hnb659fds-assets-*"
+          ]
+      },
+      {
+          "Sid": "AllowCDKManageToolkitRepository",
+          "Effect": "Allow",
+          "Action": [
+              "ecr:CreateRepository",
+              "ecr:DeleteRepository",
+              "ecr:DescribeRepositories",
+              "ecr:PutLifecyclePolicy",
+              "ecr:SetRepositoryPolicy"
+          ],
+          "Resource": [
+              "arn:aws:ecr:us-east-1:112233445566:repository/cdk-hnb659fds-container-assets-*"
+          ]
+      },
+      {
+          "Sid": "AllowCDKManageToolkitVersionParameter",
+          "Effect": "Allow",
+          "Action": [
+              "ssm:DeleteParameter",
+              "ssm:GetParameters",
+              "ssm:PutParameter"
+          ],
+          "Resource": [
+              "arn:aws:ssm:us-east-1:112233445566:parameter/cdk-bootstrap/hnb659fds/version"
+          ]
+      },
+      {
+          "Sid": "AllowSSTManageBootstrapStack",
+          "Effect": "Allow",
+          "Action": [
+              "cloudformation:DescribeStacks",
+              "cloudformation:DescribeStackEvents"
+          ],
+          "Resource": [
+              "arn:aws:cloudformation:us-east-1:112233445566:stack/SSTBootstrap/*"
+          ]
+      },
+      {
+          "Sid": "AllowSSTAssumeCDKToolkitRoles",
+          "Effect": "Allow",
+          "Action": "sts:AssumeRole",
+          "Resource": [
+              "arn:aws:iam::112233445566:role/cdk-hnb659fds-cfn-exec-role-*",
+              "arn:aws:iam::112233445566:role/cdk-hnb659fds-file-publishing-role-*",
+              "arn:aws:iam::112233445566:role/cdk-hnb659fds-image-publishing-role-*",
+              "arn:aws:iam::112233445566:role/cdk-hnb659fds-lookup-role-*",
+              "arn:aws:iam::112233445566:role/cdk-hnb659fds-deploy-role-*"
+          ]
+      },
+      {
+          "Sid": "AllowSSTMonitorStackDeployment",
+          "Effect": "Allow",
+          "Action": [
+              "cloudformation:DeleteStack",
+              "cloudformation:DescribeStacks",
+              "cloudformation:DescribeStackEvents",
+              "cloudformation:DescribeStackResources",
+              "cloudformation:GetTemplate"
+          ],
+          "Resource": [
+              "arn:aws:cloudformation:us-east-1:112233445566:stack/*"
+          ]
+      },
+      {
+          "Sid": "AllowSSTManageBootstrapBucket",
+          "Effect": "Allow",
+          "Action": [
+              "s3:DeleteObject",
+              "s3:GetObject",
+              "s3:ListBucket",
+              "s3:PutObject"
+          ],
+          "Resource": [
+              "arn:aws:s3:::sstbootstrap-*"
+          ]
+      },
+      {
+          "Sid": "AllowSSTCLIManageAppSecrets",
+          "Effect": "Allow",
+          "Action": [
+              "ssm:DeleteParameter",
+              "ssm:GetParameter",
+              "ssm:GetParameters",
+              "ssm:GetParametersByPath",
+              "ssm:PutParameter"
+          ],
+          "Resource": [
+              "arn:aws:ssm:us-east-1:112233445566:parameter/sst/*"
+          ]
+      },
+      {
+          "Sid": "AllowSSTCLIRestartAppFunction",
+          "Effect": "Allow",
+          "Action": [
+              "lambda:GetFunctionConfiguration",
+              "lambda:UpdateFunctionConfiguration"
+          ],
+          "Resource": [
+              "arn:aws:lambda:us-east-1:112233445566:function:*"
+          ],
+          "Condition": {
+              "Null": {
+                  "aws:ResourceTag/sst:app": "false"
+              }
+          }
+      },
+      {
+          "Sid": "AllowSSTLiveLambdaSocketConnection",
+          "Effect": "Allow",
+          "Action": [
+              "iot:DescribeEndpoint",
+              "iot:Connect",
+              "iot:Subscribe",
+              "iot:Publish",
+              "iot:Receive"
+          ],
+          "Resource": [
+              "*"
+          ]
+      },
+      {
+          "Sid": "AllowSSTCLIManageRDSMigrations",
+          "Effect": "Allow",
+          "Action": [
+              "rds-data:ExecuteStatement"
+          ],
+          "Resource": [
+              "arn:aws:rds:us-east-1:112233445566:cluster:*"
+          ],
+          "Condition": {
+              "Null": {
+                  "aws:ResourceTag/sst:app": "false"
+              }
+          }
+      },
+      {
+          "Sid": "AllowSSTConsoleInvokeLambda",
+          "Effect": "Allow",
+          "Action": [
+              "lambda:GetFunction",
+              "lambda:InvokeFunction"
+          ],
+          "Resource": [
+              "arn:aws:lambda:us-east-1:112233445566:function:*"
+          ],
+          "Condition": {
+              "Null": {
+                  "aws:ResourceTag/sst:app": "false"
+              }
+          }
+      }
+    ]
+}
+```
+
+</details>
+
+Let's break down the permissions list provided above and examine what each is used for.
 
 ### 1. Permissions required to bootstrap AWS CDK
 
@@ -123,7 +346,7 @@ Below are the permissions required:
           "cloudformation:GetTemplate"
       ],
       "Resource": [
-          "arn:aws:cloudformation:us-east-1:112245769880:stack/CDKToolkit/*"
+          "arn:aws:cloudformation:us-east-1:112233445566:stack/CDKToolkit/*"
       ]
   }
   ```
@@ -144,11 +367,11 @@ Below are the permissions required:
           "iam:TagRole"
       ],
       "Resource": [
-          "arn:aws:iam::112245769880:role/cdk-hnb659fds-cfn-exec-role-*",
-          "arn:aws:iam::112245769880:role/cdk-hnb659fds-file-publishing-role-*",
-          "arn:aws:iam::112245769880:role/cdk-hnb659fds-image-publishing-role-*",
-          "arn:aws:iam::112245769880:role/cdk-hnb659fds-lookup-role-*",
-          "arn:aws:iam::112245769880:role/cdk-hnb659fds-deploy-role-*"
+          "arn:aws:iam::112233445566:role/cdk-hnb659fds-cfn-exec-role-*",
+          "arn:aws:iam::112233445566:role/cdk-hnb659fds-file-publishing-role-*",
+          "arn:aws:iam::112233445566:role/cdk-hnb659fds-image-publishing-role-*",
+          "arn:aws:iam::112233445566:role/cdk-hnb659fds-lookup-role-*",
+          "arn:aws:iam::112233445566:role/cdk-hnb659fds-deploy-role-*"
       ]
   }
   ```
@@ -166,8 +389,7 @@ Below are the permissions required:
           "s3:PutBucketVersioning",
           "s3:PutEncryptionConfiguration",
           "s3:PutLifecycleConfiguration",
-          "s3:PutBucketPublicAccessBlock",
-          "s3:SetBucketEncryption"
+          "s3:PutBucketPublicAccessBlock"
       ],
       "Resource": [
           "arn:aws:s3:::cdk-hnb659fds-assets-*"
@@ -187,7 +409,7 @@ Below are the permissions required:
           "ecr:SetRepositoryPolicy"
       ],
       "Resource": [
-          "arn:aws:ecr:us-east-1:112245769880:repository/cdk-hnb659fds-container-assets-*"
+          "arn:aws:ecr:us-east-1:112233445566:repository/cdk-hnb659fds-container-assets-*"
       ]
   }
   ```
@@ -202,7 +424,7 @@ Below are the permissions required:
           "ssm:PutParameter"
       ],
       "Resource": [
-          "arn:aws:ssm:us-east-1:112245769880:parameter/cdk-bootstrap/hnb659fds/version"
+          "arn:aws:ssm:us-east-1:112233445566:parameter/cdk-bootstrap/hnb659fds/version"
       ]
   }
   ```
@@ -229,7 +451,7 @@ The SST CLI command also makes AWS SDK calls to your AWS account. Here are the I
           "ssm:GetParameter"
       ],
       "Resource": [
-          "arn:aws:ssm:us-east-1:112245769880:parameter/cdk-bootstrap/hnb659fds/version"
+          "arn:aws:ssm:us-east-1:112233445566:parameter/cdk-bootstrap/hnb659fds/version"
       ]
   }
   ```
@@ -243,8 +465,8 @@ The SST CLI command also makes AWS SDK calls to your AWS account. Here are the I
           "cloudformation:DescribeStackEvents"
       ],
       "Resource": [
-          "arn:aws:cloudformation:us-east-1:112245769880:stack/CDKToolkit/*",
-          "arn:aws:cloudformation:us-east-1:112245769880:stack/SSTBootstrap/*"
+          "arn:aws:cloudformation:us-east-1:112233445566:stack/CDKToolkit/*",
+          "arn:aws:cloudformation:us-east-1:112233445566:stack/SSTBootstrap/*"
       ]
   }
   ```
@@ -255,44 +477,30 @@ The SST CLI command also makes AWS SDK calls to your AWS account. Here are the I
       "Effect": "Allow",
       "Action": "sts:AssumeRole",
       "Resource": [
-          "arn:aws:iam::112245769880:role/cdk-hnb659fds-cfn-exec-role-*",
-          "arn:aws:iam::112245769880:role/cdk-hnb659fds-file-publishing-role-*",
-          "arn:aws:iam::112245769880:role/cdk-hnb659fds-image-publishing-role-*",
-          "arn:aws:iam::112245769880:role/cdk-hnb659fds-lookup-role-*",
-          "arn:aws:iam::112245769880:role/cdk-hnb659fds-deploy-role-*"
+          "arn:aws:iam::112233445566:role/cdk-hnb659fds-cfn-exec-role-*",
+          "arn:aws:iam::112233445566:role/cdk-hnb659fds-file-publishing-role-*",
+          "arn:aws:iam::112233445566:role/cdk-hnb659fds-image-publishing-role-*",
+          "arn:aws:iam::112233445566:role/cdk-hnb659fds-lookup-role-*",
+          "arn:aws:iam::112233445566:role/cdk-hnb659fds-deploy-role-*"
       ]
   }
   ```
 
 - Permissions for SST to monitor the deployment progress of your application.
-  ```json
-  {
-      "Effect": "Allow",
-      "Action": "cloudformation:DescribeStacks",
-      "Resource": [
-          "arn:aws:cloudformation:us-east-1:112245769880:stack/*"
-      ]
-  }
-  ```
-  and
 
   ```json
   {
       "Effect": "Allow",
       "Action": [
           "cloudformation:DeleteStack",
+          "cloudformation:DescribeStacks",
           "cloudformation:DescribeStackEvents",
           "cloudformation:DescribeStackResources",
           "cloudformation:GetTemplate"
       ],
       "Resource": [
-          "arn:aws:cloudformation:us-east-1:112245769880:stack/*"
-      ],
-      "Condition": {
-          "Null": {
-              "aws:ResourceTag/sst:app": "false"
-          }
-      }
+          "arn:aws:cloudformation:us-east-1:112233445566:stack/*"
+      ]
   }
   ```
 
@@ -324,7 +532,7 @@ The SST CLI command also makes AWS SDK calls to your AWS account. Here are the I
           "ssm:PutParameter"
       ],
       "Resource": [
-          "arn:aws:ssm:us-east-1:112245769880:parameter/sst/*"
+          "arn:aws:ssm:us-east-1:112233445566:parameter/sst/*"
       ]
   }
   ```
@@ -338,7 +546,7 @@ The SST CLI command also makes AWS SDK calls to your AWS account. Here are the I
           "lambda:UpdateFunctionConfiguration"
       ],
       "Resource": [
-          "arn:aws:lambda:us-east-1:112245769880:function:*"
+          "arn:aws:lambda:us-east-1:112233445566:function:*"
       ],
       "Condition": {
           "Null": {
@@ -365,6 +573,23 @@ The SST CLI command also makes AWS SDK calls to your AWS account. Here are the I
   }
   ```
 
+- If you are using the [`RDS`](../constructs/RDS.md) construct, to let SST Console to [run migrations](../constructs/RDS.md#migrations), you need the following permissions:
+  ```json
+  {
+      "Effect": "Allow",
+      "Action": [
+          "rds-data:ExecuteStatement"
+      ],
+      "Resource": [
+          "arn:aws:rds:us-east-1:112233445566:cluster:*"
+      ],
+      "Condition": {
+          "Null": {
+              "aws:ResourceTag/sst:app": "false"
+          }
+      }
+  }
+  ```
 ### 4. Permissions required by SST Console
 
 [SST Console](../console.md) is a web based dashboard to manage your SST apps. The Console lets you view real-time logs, invoke functions, replay invocations, make queries, run migrations, view uploaded files, query your GraphQL APIs, and more!
@@ -381,25 +606,7 @@ For example, to allow SST Console to [invoke and replay Lambda invocations](../c
         "lambda:InvokeFunction"
     ],
     "Resource": [
-        "arn:aws:lambda:us-east-1:112245769880:function:*"
-    ],
-    "Condition": {
-        "Null": {
-            "aws:ResourceTag/sst:app": "false"
-        }
-    }
-}
-```
-
-If you are using the [`RDS`](../constructs/RDS.md) construct, to let SST Console to [run migrations](../constructs/RDS.md#migrations), you need the following permissions:
-```json
-{
-    "Effect": "Allow",
-    "Action": [
-        "rds-data:ExecuteStatement"
-    ],
-    "Resource": [
-        "arn:aws:rds:us-east-1:112245769880:cluster:*"
+        "arn:aws:lambda:us-east-1:112233445566:function:*"
     ],
     "Condition": {
         "Null": {
