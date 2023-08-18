@@ -563,7 +563,7 @@ const site = new AstroSite(stack, "Site", {
 
 // Configure the API Gateway to route all incoming requests to the site's SSR function
 // Note: The site is not deployed when using the `sst dev` command
-if (app.local) {
+if (!app.local) {
   api.addRoutes(stack, {
     "ANY /{proxy+}": {
       type: "function",
