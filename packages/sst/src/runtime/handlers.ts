@@ -142,6 +142,7 @@ export const useRuntimeHandlers = Context.memo(() => {
         let sourcemap: string | undefined;
         if (built.sourcemap) {
           const data = await fs.readFile(built.sourcemap);
+          await fs.rm(built.sourcemap);
           const hash = crypto.createHash("md5").update(data).digest("hex");
           const dir = path.join(
             project.paths.artifacts,
