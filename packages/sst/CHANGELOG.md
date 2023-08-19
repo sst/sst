@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.24.8
+
+### Patch Changes
+
+- [`04ecc8648`](https://github.com/sst/sst/commit/04ecc864887516999049eaa36804257b2a5d936c) Thanks [@thdxr](https://github.com/thdxr)! - function: delete sourcemap after reading
+
 ## 2.24.7
 
 ### Patch Changes
