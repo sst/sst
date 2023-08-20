@@ -66,7 +66,7 @@ import { createAppContext } from "./context.js";
 import { SSTConstruct, isCDKConstruct } from "./Construct.js";
 import { NodeJSProps } from "./Function.js";
 import { Secret } from "./Secret.js";
-import { SsrFunction } from "./SsrFunction.js";
+import { SsrFunction, SsrFunctionProps } from "./SsrFunction.js";
 import { EdgeFunction } from "./EdgeFunction.js";
 import {
   BaseSiteFileOptions,
@@ -277,7 +277,7 @@ export interface SsrSiteProps {
       | "allowPublicSubnet"
       | "architecture"
       | "logRetention"
-    >;
+    > & Pick<SsrFunctionProps, "copyFiles">;
   };
   /**
    * Pass in a list of file options to customize cache control and content type specific files.
