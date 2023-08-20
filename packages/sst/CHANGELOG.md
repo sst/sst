@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.24.9
+
+### Patch Changes
+
+- [`5bbcc6d0a`](https://github.com/sst/sst/commit/5bbcc6d0ab2f89bdf1fff117d6e9a338f4898a5f) Thanks [@fwang](https://github.com/fwang)! - sst bind: fix .env not loaded
+
 ## 2.24.8
 
 ### Patch Changes
