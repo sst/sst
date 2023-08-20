@@ -199,14 +199,13 @@ export async function initProject(globals: GlobalOptions) {
     }
   })();
 
-  dotenv.config({
-    path: path.join(project.paths.root, `.env.${project.config.stage}`),
-    override: true,
-  });
-  dotenv.config({
-    path: path.join(project.paths.root, `.env.${project.config.stage}.local`),
-    override: true,
-  });
+  // Load .env files
+  [
+    path.join(project.paths.root, `.env`),
+    path.join(project.paths.root, `.env.local`),
+    path.join(project.paths.root, `.env.${project.config.stage}`),
+    path.join(project.paths.root, `.env.${project.config.stage}.local`),
+  ].forEach((path) => dotenv.config({ path, override: true }));
 
   Logger.debug("Config loaded", project);
 }
