@@ -8,9 +8,13 @@ export const EventBus =
 import {
   EventBridgeClient,
   PutEventsCommand,
+  PutEventsCommandOutput,
+  PutEventsRequestEntry,
 } from "@aws-sdk/client-eventbridge";
 import { EventBridgeEvent } from "aws-lambda";
 import { ZodAny, ZodObject, ZodRawShape, z } from "zod";
+import { useLoader } from "../util/loader.js";
+import { Config } from "../config/index.js";
 
 const client = new EventBridgeClient({});
 
@@ -29,7 +33,7 @@ export function createEventBuilder<
     Properties = z.infer<ZodObject<Shape, "strip", ZodAny>>
   >(type: Type, properties: Shape) {
     type Publish = undefined extends MetadataShape
-      ? (properties: Properties) => Promise<void>
+      ? (properties: Properties) => Promise<PutEventsCommandOutput>
       : (
           properties: Properties,
           metadata: z.infer<
@@ -42,30 +46,55 @@ export function createEventBuilder<
       : undefined;
     const publish = async (properties: any, metadata: any) => {
       console.log("publishing", type, properties);
-      await client.send(
-        new PutEventsCommand({
-          Entries: [
-            {
-              // @ts-expect-error
-              EventBusName: EventBus[props.bus].eventBusName,
-              Source: "console",
-              Detail: JSON.stringify({
-                properties: propertiesSchema.parse(properties),
-                metadata: (() => {
-                  if (metadataSchema) {
-                    return metadataSchema.parse(metadata);
-                  }
 
-                  if (props.metadataFn) {
-                    return props.metadataFn();
-                  }
-                })(),
-              }),
-              DetailType: type,
-            },
-          ],
-        })
-      );
+      const result = await useLoader(
+        "sst.bus.publish",
+        async (input: PutEventsRequestEntry[]) => {
+          const size = 10;
+
+          const promises: Promise<any>[] = [];
+          for (let i = 0; i < input.length; i += size) {
+            const chunk = input.slice(i, i + size);
+            promises.push(
+              client.send(
+                new PutEventsCommand({
+                  Entries: chunk,
+                })
+              )
+            );
+          }
+          const settled = await Promise.allSettled(promises);
+          const result = new Array<PutEventsCommandOutput>(input.length);
+          for (let i = 0; i < result.length; i++) {
+            const item = settled[Math.floor(i / 10)];
+            if (item.status === "rejected") {
+              result[i] = item.reason;
+              continue;
+            }
+            result[i] = item.value;
+          }
+          return result;
+        }
+      )({
+        // @ts-expect-error
+        EventBusName: EventBus[props.bus].eventBusName,
+        // @ts-expect-error
+        Source: Config.APP,
+        Detail: JSON.stringify({
+          properties: propertiesSchema.parse(properties),
+          metadata: (() => {
+            if (metadataSchema) {
+              return metadataSchema.parse(metadata);
+            }
+
+            if (props.metadataFn) {
+              return props.metadataFn();
+            }
+          })(),
+        }),
+        DetailType: type,
+      });
+      return result;
     };
 
     return {
