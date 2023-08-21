@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.5.12
+
+### Patch Changes
+
+- [`eab6225a2`](https://github.com/sst/sst/commit/eab6225a214a32590e6874f7c160cd884e7050ac) Thanks [@fwang](https://github.com/fwang)! - Bootstrap: support cdk bootstrapStackVersionSsmParameter and imageAssetsRepositoryName options
+
 ## 2.5.11
 
 ### Patch Changes
