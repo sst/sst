@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.24.11
+
+### Patch Changes
+
+- [`ed586ba15`](https://github.com/sst/sst/commit/ed586ba15508ba0f3d6a856eedeafe5959f6fb5d) Thanks [@thdxr](https://github.com/thdxr)! - eventbus: dataloader pattern for batching events
+
 ## 2.24.10
 
 ### Patch Changes
