@@ -101,6 +101,7 @@ module.exports = {
             "advanced/removal-policy",
             "advanced/lambda-layers",
             "advanced/iam-credentials",
+            //"advanced/console-updates",
             "advanced/tagging-resources",
             "advanced/importing-resources",
             "advanced/connecting-via-proxy",

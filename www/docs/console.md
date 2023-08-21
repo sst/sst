@@ -38,6 +38,10 @@ Here's how to get started. <a href={config.console}>Head over to the Console</a>
    
    You can add your apps and invite your team to a workspace. A workspace can be for a personal project or for your team at work. You can create as many workspaces as you want.
 
+   :::tip
+   Create a workspace for your organization. You can use it to invite your team and connect all your AWS accounts.
+   :::
+
 2. **Connect your AWS account**
 
    ![SST Console connect an AWS account](/img/console/sst-console-connect-aws-account.png)
