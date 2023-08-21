@@ -12,6 +12,8 @@ Install the example.
 $ npx create-sst@latest --template=examples/graphql-appsync
 # Or with Yarn
 $ yarn create sst --template=examples/graphql-appsync
+# Or with PNPM
+$ pnpm create sst --template=examples/graphql-appsync
 ```
 
 Start the Live Lambda Development environment.

@@ -8,6 +8,8 @@ Install the example.
 $ npx create-sst@latest --template=examples/prisma
 # Or with Yarn
 $ yarn create sst --template=examples/prisma
+# Or with PNPM
+$ pnpm create sst --template=examples/prisma
 ```
 
 ## Prisma

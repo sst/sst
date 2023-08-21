@@ -12,6 +12,8 @@ Install the example.
 $ npx create-sst@latest --template=examples/api-auth-jwt-auth0
 # Or with Yarn
 $ yarn create sst --template=examples/api-auth-jwt-auth0
+# Or with PNPM
+$ pnpm create sst --template=examples/api-auth-jwt-auth0
 ```
 
 ## Commands
