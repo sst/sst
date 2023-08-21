@@ -1,5 +1,13 @@
 # @serverless-stack/cli2
 
+## 2.24.12
+
+### Patch Changes
+
+- [#3246](https://github.com/sst/sst/pull/3246) [`a09c72070`](https://github.com/sst/sst/commit/a09c720704573fa6d913ca12acd0867fc35149ac) Thanks [@omikader](https://github.com/omikader)! - Service: Add node client and docs
+
+- [`eab6225a2`](https://github.com/sst/sst/commit/eab6225a214a32590e6874f7c160cd884e7050ac) Thanks [@fwang](https://github.com/fwang)! - Bootstrap: support cdk bootstrapStackVersionSsmParameter and imageAssetsRepositoryName options
+
 ## 2.24.11
 
 ### Patch Changes
