@@ -26,21 +26,11 @@ This module helps with accessing [`Service`](../constructs/Service.md) construct
 import { Service } from "sst/node/service";
 ```
 
-#### customDomainUrl
-
-_Type_ : <span class="mono">string</span>
-
-If the custom domain is enabled, this is the URL of the website with the custom domain.
-
-```ts
-console.log(Service.myService.customDomainUrl);
-```
-
 #### url
 
 _Type_ : <span class="mono">string</span>
 
-The CloudFront URL of the website.
+The URL of the service. If custom domain is enabled, this is the custom domain URL of the service.
 
 ```ts
 console.log(Service.myService.url);

@@ -234,6 +234,7 @@ module.exports = {
         "clients/config",
         "clients/queue",
         "clients/bucket",
+        "clients/service",
         "clients/graphql",
         "clients/function",
         "clients/event-bus",
