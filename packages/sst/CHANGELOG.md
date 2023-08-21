@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.24.10
+
+### Patch Changes
+
+- [`6681ab708`](https://github.com/sst/sst/commit/6681ab70826dd7eef07328c43bd7ae19e19e2417) Thanks [@thdxr](https://github.com/thdxr)! - eventbus: disable aws recursion prevention for eventbus loop
+
 ## 2.24.9
 
 ### Patch Changes
