@@ -212,10 +212,12 @@ export async function bootstrapSST(cdkBucket: string) {
     },
     synthesizer: new DefaultStackSynthesizer({
       qualifier: cdk?.qualifier,
+      bootstrapStackVersionSsmParameter: cdk?.bootstrapStackVersionSsmParameter,
       fileAssetsBucketName: cdk?.fileAssetsBucketName,
       deployRoleArn: cdk?.deployRoleArn,
       fileAssetPublishingRoleArn: cdk?.fileAssetPublishingRoleArn,
       imageAssetPublishingRoleArn: cdk?.imageAssetPublishingRoleArn,
+      imageAssetsRepositoryName: cdk?.imageAssetsRepositoryName,
       cloudFormationExecutionRole: cdk?.cloudFormationExecutionRole,
       lookupRoleArn: cdk?.lookupRoleArn,
     }),

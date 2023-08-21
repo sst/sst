@@ -37,12 +37,14 @@ export interface ConfigOptions {
   cdk?: {
     toolkitStackName?: string;
     qualifier?: string;
+    bootstrapStackVersionSsmParameter?: string;
     fileAssetsBucketName?: string;
     customPermissionsBoundary?: string;
     publicAccessBlockConfiguration?: boolean;
     deployRoleArn?: string;
     fileAssetPublishingRoleArn?: string;
     imageAssetPublishingRoleArn?: string;
+    imageAssetsRepositoryName?: string;
     cloudFormationExecutionRole?: string;
     lookupRoleArn?: string;
     pathMetadata?: boolean;
