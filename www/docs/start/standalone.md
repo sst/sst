@@ -154,7 +154,7 @@ const web = new StaticSite(stack, "web", {
 
 #### Call your API
 
-Start Vite locally and bind SST to it.
+Start Vite locally and bind SST to it by running in `packages/web`.
 
 <MultiPackagerCode>
 <TabItem value="npm">
