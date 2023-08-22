@@ -165,14 +165,19 @@ The companion app runs locally and creates a tunnelled connection to your Gitpod
 
 ## Security
 
-The CloudFormation stack that the SST Console creates in your account, uses an IAM Role. By default, this role is granted `AdministratorAccess`, but you can customize it to restrict access.
+The CloudFormation stack that the SST Console uses creates an IAM Role in your account to manage your resources. If this is a concern for your production environments, we have a couple of options.
 
-:::note
-The SST Console is constantly evolving. As new features are added, additional permissions might be required. It's good practice to periodically review and update the IAM policy to ensure security and functionality.
-:::
+By default, this role is granted `AdministratorAccess`, but you can customize it to restrict access. We'll look at this below. Additionally, if you'd like us to sign a BAA, feel free to <a href={`mailto:${config.email}`}>contact us</a>.
+
+There maybe we cases where you don't want any data leaving your AWS account. For this, we'll be supporting self-hosting the Console in the future. You can let us know if this is a priority for you by sending us a message over on Discord.
+
+---
+
+### IAM permissions
 
 Permissions for the SST Console fall into two categories: read and write.
-- **Read Permissions:** The Console needs specific permissions to display information about resources within your SST apps:
+
+- **Read Permissions** — The Console needs specific permissions to display information about resources within your SST apps:
 
   | Purpose                                | AWS IAM Action                   |
   |----------------------------------------|----------------------------------|
@@ -184,7 +189,7 @@ Permissions for the SST Console fall into two categories: read and write.
 
   Attach the `arn:aws:iam::aws:policy/ReadOnlyAccess` AWS managed policy to the IAM Role for comprehensive read access.
 
-- **Write Permissions:** The Console requires the following write permissions:
+- **Write Permissions** — The Console requires the following write permissions:
 
   | Purpose                                          | AWS IAM Action                                                               |
   |-----------------------------------------------------|------------------------------------------------------------------------------|
@@ -193,7 +198,12 @@ Permissions for the SST Console fall into two categories: read and write.
   | Grant event bus access for SST Console           | `iam:CreateRole`<br/>`iam:PutRolePolicy`<br/>`iam:DeleteRole`<br/>`iam:DeleteRolePolicy` |
   | Invok Lambda functions or replaying invocations  | `lambda:InvokeFunction` |
 
+---
+
+### Customize policy
+
 To customize IAM permissions for the CloudFormation stack:
+
 1. On the CloudFormation create stack page, download the default `template.json`.
 
    ![SST Console template URL](/img/console/sst-console-template-url.png)
@@ -265,11 +275,12 @@ To customize IAM permissions for the CloudFormation stack:
   </details>
 
 3. Upload your edited `template.json` file to an S3 bucket.
+
 4. Return to the CloudFormation create stack page and replace the template URL in the page URL.
 
-Additionally, if you'd like us to sign a BAA, feel free to <a href={`mailto:${config.email}`}>contact us</a>.
-
-There maybe we cases where you don't want any data leaving your AWS account. For this, we'll be supporting self-hosting the Console in the future. You can let us know if this is a priority for you by sending us a message over on Discord.
+:::tip
+The SST Console is constantly evolving. As new features are added, additional permissions might be required. It's good practice to periodically review and update the IAM policy.
+:::
 
 ---
 
