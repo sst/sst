@@ -203,67 +203,64 @@ To customize IAM permissions for the CloudFormation stack:
   <details>
   <summary>View the template changes</summary>
   
-  ```diff
-      "SSTRole": {
-        "Type": "AWS::IAM::Role",
-  
-          ...
-  
-          "ManagedPolicyArns": [
-  -         "arn:aws:iam::aws:policy/AdministratorAccess"
-  +         "arn:aws:iam::aws:policy/ReadOnlyAccess"
-  +       ],
-  +       "Policies": [
-  +         {
-  +           "PolicyName": "SSTPolicy",
-  +           "PolicyDocument": {
-  +             "Version": "2012-10-17",
-  +             "Statement": [
-  +               {
-  +                 "Effect": "Allow",
-  +                 "Action": [
-  +                   "s3:PutBucketNotification"
-  +                 ],
-  +                 "Resource": [
-  +                   "arn:aws:s3:::sstbootstrap-*"
-  +                 ]
-  +               },
-  +               {
-  +                 "Effect": "Allow",
-  +                 "Action": [
-  +                   "events:PutRule",
-  +                   "events:PutTargets"
-  +                 ],
-  +                 "Resource": [
-  +                   "arn:aws:events:us-east-1:112233445566:rule/default"
-  +                 ]
-  +               },
-  +               {
-  +                 "Effect": "Allow",
-  +                 "Action": [
-  +                   "iam:CreateRole",
-  +                   "iam:PutRolePolicy",
-  +                   "iam:DeleteRole",
-  +                   "iam:DeleteRolePolicy"
-  +                 ],
-  +                 "Resource": [
-  +                   "arn:aws:iam::112233445566:role/SSTConsolePublisher*"
-  +                 ]
-  +               },
-  +               {
-  +                 "Effect": "Allow",
-  +                 "Action": [
-  +                   "lambda:InvokeFunction"
-  +                 ],
-  +                 "Resource": [
-  +                   "arn:aws:lambda:us-east-1:112233445566:function:*"
-  +                 ]
-  +               }
-  +             ]
-  +           }
-  +         }
-          ]
-  ```
+    ```diff
+        "SSTRole": {
+          "Type": "AWS::IAM::Role",
+            "ManagedPolicyArns": [
+    -         "arn:aws:iam::aws:policy/AdministratorAccess"
+    +         "arn:aws:iam::aws:policy/ReadOnlyAccess"
+    +       ],
+    +       "Policies": [
+    +         {
+    +           "PolicyName": "SSTPolicy",
+    +           "PolicyDocument": {
+    +             "Version": "2012-10-17",
+    +             "Statement": [
+    +               {
+    +                 "Effect": "Allow",
+    +                 "Action": [
+    +                   "s3:PutBucketNotification"
+    +                 ],
+    +                 "Resource": [
+    +                   "arn:aws:s3:::sstbootstrap-*"
+    +                 ]
+    +               },
+    +               {
+    +                 "Effect": "Allow",
+    +                 "Action": [
+    +                   "events:PutRule",
+    +                   "events:PutTargets"
+    +                 ],
+    +                 "Resource": [
+    +                   "arn:aws:events:us-east-1:112233445566:rule/default"
+    +                 ]
+    +               },
+    +               {
+    +                 "Effect": "Allow",
+    +                 "Action": [
+    +                   "iam:CreateRole",
+    +                   "iam:PutRolePolicy",
+    +                   "iam:DeleteRole",
+    +                   "iam:DeleteRolePolicy"
+    +                 ],
+    +                 "Resource": [
+    +                   "arn:aws:iam::112233445566:role/SSTConsolePublisher*"
+    +                 ]
+    +               },
+    +               {
+    +                 "Effect": "Allow",
+    +                 "Action": [
+    +                   "lambda:InvokeFunction"
+    +                 ],
+    +                 "Resource": [
+    +                   "arn:aws:lambda:us-east-1:112233445566:function:*"
+    +                 ]
+    +               }
+    +             ]
+    +           }
+    +         }
+            ]
+    ```
   
   </details>
 
