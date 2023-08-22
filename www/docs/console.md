@@ -165,7 +165,52 @@ The companion app runs locally and creates a tunnelled connection to your Gitpod
 
 ## Security
 
-The CloudFormation stack that the SST Console creates in your account, uses an IAM Role. This can be customized to restrict access. We'll be sharing more details on how to do this shortly.
+The CloudFormation stack that the SST Console creates in your account, uses an IAM Role. By default, this role is granted `AdministratorAccess`, but you can customize it to restrict access.
+
+Permissions for the SST Console are mainly divided into read and write.
+
+### Read permissions
+
+The Console needs specific read permissions to display information about resources within your SST apps. Here are some of the actions it performs:
+- Fetching stack outputs using `cloudformation:DescribeStacks`
+- Retrieving function details like runtime and size with `lambda:GetFunctionCommand`
+- Accessing stack metadata from the bootstrap bucket via `s3:GetObject` and `s3:ListObjectsV2`
+- Displaying function logs through `logs:DescribeLogStreams`, `logs:FilterLogEvents`, `logs:GetLogEvents`, and `logs:StartQuery`
+
+For comprehensive read access, attach the `arn:aws:iam::aws:policy/ReadOnlyAccess` AWS managed policy to the IAM Role.
+
+### Write permissions
+
+SST Console lets you invoke specific Lambda functions or replay certain invocations. To do this, the Console needs the `lambda:InvokeFunction` permission. You can grant this by attaching the following permission to the IAM Role:
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+          "Sid": "InvokeLambda",
+          "Effect": "Allow",
+          "Action": [
+              "lambda:InvokeFunction"
+          ],
+          "Resource": [
+              "arn:aws:lambda:us-east-1:112233445566:function:*"
+          ],
+          "Condition": {
+              "Null": {
+                  "aws:ResourceTag/sst:app": "false"
+              }
+          }
+      },
+    ]
+}
+```
+
+The `Condition` field ensures that the IAM Role can only trigger functions that are part of your SST apps.
+
+:::note
+The SST Console is constantly evolving. As new features are added, additional permissions might be required. It's good practice to periodically review and update the IAM policy to ensure security and functionality.
+:::
 
 Additionally, if you'd like us to sign a BAA, feel free to <a href={`mailto:${config.email}`}>contact us</a>.
 
