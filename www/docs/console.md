@@ -167,50 +167,108 @@ The companion app runs locally and creates a tunnelled connection to your Gitpod
 
 The CloudFormation stack that the SST Console creates in your account, uses an IAM Role. By default, this role is granted `AdministratorAccess`, but you can customize it to restrict access.
 
-Permissions for the SST Console are mainly divided into read and write.
-
-### Read permissions
-
-The Console needs specific read permissions to display information about resources within your SST apps. Here are some of the actions it performs:
-- Fetching stack outputs using `cloudformation:DescribeStacks`
-- Retrieving function details like runtime and size with `lambda:GetFunctionCommand`
-- Accessing stack metadata from the bootstrap bucket via `s3:GetObject` and `s3:ListObjectsV2`
-- Displaying function logs through `logs:DescribeLogStreams`, `logs:FilterLogEvents`, `logs:GetLogEvents`, and `logs:StartQuery`
-
-For comprehensive read access, attach the `arn:aws:iam::aws:policy/ReadOnlyAccess` AWS managed policy to the IAM Role.
-
-### Write permissions
-
-SST Console lets you invoke specific Lambda functions or replay certain invocations. To do this, the Console needs the `lambda:InvokeFunction` permission. You can grant this by attaching the following permission to the IAM Role:
-
-```json
-{
-    "Version": "2012-10-17",
-    "Statement": [
-      {
-          "Sid": "InvokeLambda",
-          "Effect": "Allow",
-          "Action": [
-              "lambda:InvokeFunction"
-          ],
-          "Resource": [
-              "arn:aws:lambda:us-east-1:112233445566:function:*"
-          ],
-          "Condition": {
-              "Null": {
-                  "aws:ResourceTag/sst:app": "false"
-              }
-          }
-      },
-    ]
-}
-```
-
-The `Condition` field ensures that the IAM Role can only trigger functions that are part of your SST apps.
-
 :::note
 The SST Console is constantly evolving. As new features are added, additional permissions might be required. It's good practice to periodically review and update the IAM policy to ensure security and functionality.
 :::
+
+Permissions for the SST Console fall into two categories: read and write.
+- **Read Permissions:** The Console needs specific permissions to display information about resources within your SST apps:
+
+  | Purpose                                | AWS IAM Action                   |
+  |----------------------------------------|----------------------------------|
+  | Fetch stack outputs                    | `cloudformation:DescribeStacks`  |
+  | Retrieve function runtime and size     | `lambda:GetFunctionCommand`      |
+  | Access stack metadata                  | `s3:GetObject`<br/>`s3:ListObjectsV2`|
+  | Display function logs                  | `logs:DescribeLogStreams`<br/>`logs:FilterLogEvents`<br/>`logs:GetLogEvents`<br/>`logs:StartQuery`|
+  | Monitor invocation usage               | `cloudwatch:GetMetricData`       |
+
+  Attach the `arn:aws:iam::aws:policy/ReadOnlyAccess` AWS managed policy to the IAM Role for comprehensive read access.
+
+- **Write Permissions:** The Console requires the following write permissions:
+
+  | Purpose                                          | AWS IAM Action                                                               |
+  |-----------------------------------------------------|------------------------------------------------------------------------------|
+  | Forward bootstrap bucket events to event bus     | `s3:PutBucketNotification`                                      |
+  | Send events to SST Console                       | `events:PutRule`<br/>`events:PutTargets`                           |
+  | Grant event bus access for SST Console           | `iam:CreateRole`<br/>`iam:PutRolePolicy`<br/>`iam:DeleteRole`<br/>`iam:DeleteRolePolicy` |
+  | Invok Lambda functions or replaying invocations  | `lambda:InvokeFunction` |
+
+To customize IAM permissions for the CloudFormation stack:
+1. On the CloudFormation create stack page, download the default `template.json`.
+
+   ![SST Console template URL](/img/console/sst-console-template-url.png)
+
+2. Edit the template file with necessary changes.
+
+  <details>
+  <summary>View the template changes</summary>
+  
+  ```diff
+      "SSTRole": {
+        "Type": "AWS::IAM::Role",
+  
+          ...
+  
+          "ManagedPolicyArns": [
+  -         "arn:aws:iam::aws:policy/AdministratorAccess"
+  +         "arn:aws:iam::aws:policy/ReadOnlyAccess"
+  +       ],
+  +       "Policies": [
+  +         {
+  +           "PolicyName": "SSTPolicy",
+  +           "PolicyDocument": {
+  +             "Version": "2012-10-17",
+  +             "Statement": [
+  +               {
+  +                 "Effect": "Allow",
+  +                 "Action": [
+  +                   "s3:PutBucketNotification"
+  +                 ],
+  +                 "Resource": [
+  +                   "arn:aws:s3:::sstbootstrap-*"
+  +                 ]
+  +               },
+  +               {
+  +                 "Effect": "Allow",
+  +                 "Action": [
+  +                   "events:PutRule",
+  +                   "events:PutTargets"
+  +                 ],
+  +                 "Resource": [
+  +                   "arn:aws:events:us-east-1:112233445566:rule/default"
+  +                 ]
+  +               },
+  +               {
+  +                 "Effect": "Allow",
+  +                 "Action": [
+  +                   "iam:CreateRole",
+  +                   "iam:PutRolePolicy",
+  +                   "iam:DeleteRole",
+  +                   "iam:DeleteRolePolicy"
+  +                 ],
+  +                 "Resource": [
+  +                   "arn:aws:iam::112233445566:role/SSTConsolePublisher*"
+  +                 ]
+  +               },
+  +               {
+  +                 "Effect": "Allow",
+  +                 "Action": [
+  +                   "lambda:InvokeFunction"
+  +                 ],
+  +                 "Resource": [
+  +                   "arn:aws:lambda:us-east-1:112233445566:function:*"
+  +                 ]
+  +               }
+  +             ]
+  +           }
+  +         }
+          ]
+  ```
+  
+  </details>
+
+3. Upload your edited `template.json` file to an S3 bucket.
+4. Return to the CloudFormation create stack page and replace the template URL in the page URL.
 
 Additionally, if you'd like us to sign a BAA, feel free to <a href={`mailto:${config.email}`}>contact us</a>.
 
