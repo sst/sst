@@ -195,7 +195,7 @@ Permissions for the SST Console fall into two categories: read and write.
   |-----------------------------------------------------|------------------------------------------------------------------------------|
   | Forward bootstrap bucket events to event bus     | `s3:PutBucketNotification`                                      |
   | Send events to SST Console                       | `events:PutRule`<br/>`events:PutTargets`                           |
-  | Grant event bus access for SST Console           | `iam:CreateRole`<br/>`iam:PutRolePolicy`<br/>`iam:DeleteRole`<br/>`iam:DeleteRolePolicy` |
+  | Grant event bus access for SST Console           | `iam:CreateRole`<br/>`iam:DeleteRole`<br/>`iam:DeleteRolePolicy`<br/>`iam:PassRole`<br/>`iam:PutRolePolicy` |
   | Invok Lambda functions or replaying invocations  | `lambda:InvokeFunction` |
 
 ---
@@ -216,6 +216,8 @@ To customize IAM permissions for the CloudFormation stack:
     ```diff
         "SSTRole": {
           "Type": "AWS::IAM::Role",
+          "Properties": {
+            ...
             "ManagedPolicyArns": [
     -         "arn:aws:iam::aws:policy/AdministratorAccess"
     +         "arn:aws:iam::aws:policy/ReadOnlyAccess"
@@ -241,35 +243,38 @@ To customize IAM permissions for the CloudFormation stack:
     +                   "events:PutRule",
     +                   "events:PutTargets"
     +                 ],
-    +                 "Resource": [
-    +                   "arn:aws:events:us-east-1:112233445566:rule/default"
-    +                 ]
+    +                 "Resource": {
+    +                   "Fn::Sub": "arn:aws:events:*:${AWS::AccountId}:rule/SSTConsole*"
+    +                 }
     +               },
     +               {
     +                 "Effect": "Allow",
     +                 "Action": [
     +                   "iam:CreateRole",
-    +                   "iam:PutRolePolicy",
     +                   "iam:DeleteRole",
-    +                   "iam:DeleteRolePolicy"
+    +                   "iam:DeleteRolePolicy",
+    +                   "iam:PassRole",
+    +                   "iam:PutRolePolicy"
     +                 ],
-    +                 "Resource": [
-    +                   "arn:aws:iam::112233445566:role/SSTConsolePublisher*"
-    +                 ]
+    +                 "Resource": {
+    +                   "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:role/SSTConsolePublisher*"
+    +                 }
     +               },
     +               {
     +                 "Effect": "Allow",
     +                 "Action": [
     +                   "lambda:InvokeFunction"
     +                 ],
-    +                 "Resource": [
-    +                   "arn:aws:lambda:us-east-1:112233445566:function:*"
-    +                 ]
+    +                 "Resource": {
+    +                   "Fn::Sub": "arn:aws:lambda:*:${AWS::AccountId}:function:*"
+    +                 }
     +               }
     +             ]
     +           }
     +         }
             ]
+          }
+        }
     ```
   
   </details>
