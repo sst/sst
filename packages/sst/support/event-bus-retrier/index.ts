@@ -3,6 +3,7 @@ import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 import type { SQSHandler } from "aws-lambda";
 
 const lambda = new LambdaClient({});
+lambda.middlewareStack.remove("recursionDetectionMiddleware");
 const sqs = new SQSClient({});
 sqs.middlewareStack.remove("recursionDetectionMiddleware");
 
