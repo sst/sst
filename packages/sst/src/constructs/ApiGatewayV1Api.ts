@@ -183,7 +183,10 @@ export interface ApiGatewayV1ApiProps<
     authorizer?:
       | "none"
       | "iam"
-      | (string extends AuthorizerKeys ? never : AuthorizerKeys);
+      // | (string extends AuthorizerKeys ? never : AuthorizerKeys);
+      | (string extends AuthorizerKeys
+          ? Omit<AuthorizerKeys, "none" | "iam">
+          : AuthorizerKeys);
     /**
      * An array of scopes to include in the authorization when using `user_pool` or `jwt` authorizers. These will be merged with the scopes from the attached authorizer.
      * @default []
@@ -263,7 +266,10 @@ export interface ApiGatewayV1ApiFunctionRouteProps<AuthorizerKeys = never> {
   authorizer?:
     | "none"
     | "iam"
-    | (string extends AuthorizerKeys ? never : AuthorizerKeys);
+    // | (string extends AuthorizerKeys ? never : AuthorizerKeys);
+      | (string extends AuthorizerKeys
+          ? Omit<AuthorizerKeys, "none" | "iam">
+          : AuthorizerKeys);
   authorizationScopes?: string[];
   cdk?: {
     method?: Omit<
@@ -1447,12 +1453,12 @@ export class ApiGatewayV1Api<
       };
     }
 
-    if (!this.props.authorizers || !this.props.authorizers[authorizerKey]) {
+    if (!this.props.authorizers || !this.props.authorizers[authorizerKey as string]) {
       throw new Error(`Cannot find authorizer "${authorizerKey.toString()}"`);
     }
 
     const authorizer = this.authorizersData[authorizerKey as string];
-    const authorizationType = this.props.authorizers[authorizerKey].type;
+    const authorizationType = this.props.authorizers[authorizerKey as string].type;
     if (authorizationType === "user_pools") {
       return {
         authorizationType: apig.AuthorizationType.COGNITO,
