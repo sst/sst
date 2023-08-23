@@ -306,10 +306,12 @@ export const dev = (program: Program) =>
                       path.resolve(props.path) === process.cwd()
                         ? ""
                         : `cd ${props.path} && `;
+                    const devCommand =
+                      props.devCommand || `${cdCmd}npm run dev`;
                     Colors.line(
                       Colors.primary(`➜ `),
                       Colors.bold(`Start ${framework}:`),
-                      `${cdCmd}npm run dev`
+                      devCommand
                     );
                     Colors.gap();
                   }

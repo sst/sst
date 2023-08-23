@@ -121,6 +121,10 @@ export interface SsrSiteProps {
    */
   path?: string;
   /**
+   * The command for running the development server.
+   */
+  devCommand?: string;
+  /**
    * The command for building the website
    * @default `npm run build`
    * @example
