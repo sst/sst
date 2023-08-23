@@ -10,7 +10,7 @@ RUN yum -q list installed rsync &>/dev/null || yum install -y rsync
 RUN pip install --upgrade pip
 
 # Install pipenv and poetry so we can create a requirements.txt if we detect pipfile or poetry.lock respectively
-RUN pip install pipenv poetry
+RUN pip install pipenv poetry==1.5.1
 
 # Install the dependencies in a cacheable layer
 WORKDIR /var/dependencies
