@@ -90,10 +90,34 @@ Start your local dev environment.
 <TabItem value="npm">
 
 ```bash
-# Start SST locally
 npx sst dev
+```
 
-# Start Astro locally
+</TabItem>
+<TabItem value="yarn">
+
+```bash
+yarn sst dev
+```
+
+</TabItem>
+<TabItem value="pnpm">
+
+```bash
+pnpm sst dev
+```
+
+</TabItem>
+</MultiPackagerCode>
+
+---
+
+#### Start Astro
+
+<MultiPackagerCode>
+<TabItem value="npm">
+
+```bash
 npm run dev
 ```
 
@@ -101,10 +125,6 @@ npm run dev
 <TabItem value="yarn">
 
 ```bash
-# Start SST locally
-yarn sst dev
-
-# Start Astro locally
 yarn run dev
 ```
 
@@ -112,10 +132,6 @@ yarn run dev
 <TabItem value="pnpm">
 
 ```bash
-# Start SST locally
-pnpm sst dev
-
-# Start Astro locally
 pnpm run dev
 ```
 
