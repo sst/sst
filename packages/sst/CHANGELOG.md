@@ -1,5 +1,19 @@
 # @serverless-stack/cli2
 
+## 2.24.13
+
+### Patch Changes
+
+- [#3248](https://github.com/sst/sst/pull/3248) [`ffa986a42`](https://github.com/sst/sst/commit/ffa986a4259d820a8200f88365e9c399352b57c1) Thanks [@niklaswallerstedt](https://github.com/niklaswallerstedt)! - future/Auth: Single tenant auth for Azure AD
+
+- [#3210](https://github.com/sst/sst/pull/3210) [`3b005776c`](https://github.com/sst/sst/commit/3b005776c31a29946ee997f9c480e271d48383c5) Thanks [@ipatka](https://github.com/ipatka)! - Fix typings for custom authorizers in ApiGatewayV1 construct
+
+- [`a34f72a3b`](https://github.com/sst/sst/commit/a34f72a3b6ea9f3f8d51735e7c4cb4e016b93e87) Thanks [@thdxr](https://github.com/thdxr)! - bus: remove recursion detection from lambda retries
+
+- [#3250](https://github.com/sst/sst/pull/3250) [`b81d5d8d5`](https://github.com/sst/sst/commit/b81d5d8d50f868d6c8518d01c329d9985ea44d8b) Thanks [@tanquetav](https://github.com/tanquetav)! - python-runtime: pin poetry dependency to fix ssl error
+
+- [`12e7295fa`](https://github.com/sst/sst/commit/12e7295fa7a24d9df3f3091a84ff63dedafd337d) Thanks [@thdxr](https://github.com/thdxr)! - function: allow completely disabling sourcemap
+
 ## 2.24.12
 
 ### Patch Changes
